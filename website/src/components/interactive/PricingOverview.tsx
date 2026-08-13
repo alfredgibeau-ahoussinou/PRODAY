@@ -46,7 +46,10 @@ export function PricingOverview() {
           </thead>
           <tbody className="divide-y divide-white/8">
             {appPlans
-              .filter((plan) => plan.id !== "physio_pro")
+              .filter(
+                (plan) =>
+                  plan.id !== "club_video_pro",
+              )
               .map((plan) => {
               const yearly = yearlyPriceFromMonthly(plan.monthlyEur);
               const universes = plan.universes.map((u) => UNIVERSE_LABELS[u]).join(" · ");

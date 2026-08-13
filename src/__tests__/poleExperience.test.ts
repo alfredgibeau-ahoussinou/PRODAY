@@ -22,9 +22,7 @@ describe('poleExperience', () => {
     expect(rolesForProductLine('amateur')).toEqual(['player']);
     const amateurRoles = getSignupRoleGroups('amateur').flatMap((g) => g.roles);
     expect(amateurRoles).toEqual(['player']);
-    expect(rolesForProductLine('pro_staff')).toEqual(
-      expect.arrayContaining(['coach', 'agent', 'recruiter', 'organizer']),
-    );
+    expect(rolesForProductLine('pro_staff')).toEqual(['coach', 'organizer']);
   });
 
   it('regroupe les supporters sur Supporter', () => {
@@ -33,26 +31,25 @@ describe('poleExperience', () => {
     expect(supporterRoles).toEqual(['supporter']);
   });
 
-  it('regroupe les métiers foot sur Pro (inclut joueur pro)', () => {
+  it('regroupe les métiers foot sur Pro (sans agent / recruteur / santé)', () => {
     const proRoles = getSignupRoleGroups('pro').flatMap((g) => g.roles);
     expect(proRoles).toEqual(
       expect.arrayContaining([
         'player',
         'coach',
-        'agent',
-        'recruiter',
         'club',
         'organizer',
         'sponsor',
       ])
     );
+    expect(proRoles).not.toContain('agent');
+    expect(proRoles).not.toContain('recruiter');
     expect(proRoles).not.toContain('physio');
   });
 
-  it('dédié Santé aux praticiens médicaux', () => {
-    const santeRoles = getSignupRoleGroups('sante').flatMap((g) => g.roles);
-    expect(santeRoles).toEqual(['physio']);
-    expect(rolesForProductLine('sante')).toEqual(['physio']);
+  it('retire le pôle Santé de l’inscription', () => {
+    expect(getSignupRoleGroups('sante')).toEqual([]);
+    expect(rolesForProductLine('sante')).toEqual([]);
   });
 
   it('interdit la publication Mercato aux joueurs', () => {
@@ -84,7 +81,7 @@ describe('poleExperience', () => {
     expect(getVisibleMainTabs('homme', 'player', playerProfile)).not.toContain('famille');
     expect(getVisibleMainTabs('homme', 'player')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'coach')).not.toContain('feed');
-    expect(getVisibleMainTabs('sante', 'physio')).toContain('feed');
+    expect(getVisibleMainTabs('sante', 'physio')).toEqual(['home', 'profil']);
     expect(getVisibleMainTabs('pro', 'sponsor')).toEqual([
       'home',
       'matchs',
@@ -92,16 +89,9 @@ describe('poleExperience', () => {
       'profil',
     ]);
     expect(getVisibleMainTabs('pro', 'sponsor')).not.toContain('shop');
-    expect(getVisibleMainTabs('sante', 'physio')).toEqual([
-      'home',
-      'matchs',
-      'feed',
-      'reels',
-      'messages',
-      'profil',
-    ]);
     expect(getVisibleMainTabs('sante', 'physio')).not.toContain('recrutement');
     expect(getVisibleMainTabs('sante', 'physio')).not.toContain('shop');
+    expect(getVisibleMainTabs('sante', 'physio')).not.toContain('feed');
     expect(getVisibleMainTabs('pro', 'club')).toEqual([
       'home',
       'recrutement',
@@ -124,9 +114,8 @@ describe('poleExperience', () => {
     ]);
     expect(getVisibleMainTabs('pro', 'player')).not.toContain('sante');
     expect(getVisibleMainTabs('pro', 'player').indexOf('feed')).toBe(3);
-    expect(getVisibleMainTabs('pro', 'recruiter')).toContain('recrutement');
-    expect(getVisibleMainTabs('pro', 'recruiter')).toContain('feed');
-    expect(getVisibleMainTabs('pro', 'agent')).toContain('feed');
+    expect(getVisibleMainTabs('pro', 'recruiter')).toEqual(['home', 'profil']);
+    expect(getVisibleMainTabs('pro', 'agent')).toEqual(['home', 'profil']);
     expect(getVisibleMainTabs('pro', 'organizer')).toContain('feed');
     expect(getVisibleMainTabs('pro', 'organizer')).toContain('covoiturage');
     expect(getVisibleMainTabs('pro', 'coach')).toContain('covoiturage');

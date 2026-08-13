@@ -6,7 +6,6 @@ import { ManLogo } from '../ManLogo';
 import { AmateurLogo } from '../AmateurLogo';
 import { SupporterLogo } from '../SupporterLogo';
 import { ProSegmentLogo } from './ProSegmentLogo';
-import { SanteLogo } from '../SanteLogo';
 import { ParentLogo } from '../ParentLogo';
 import { WomanLogo } from '../WomanLogo';
 import { SponsorLogo } from '../SponsorLogo';
@@ -35,9 +34,6 @@ export const ProductLineLogo: React.FC<ProductLineLogoProps> = ({
   }
   if (line === 'supporter') {
     return <SupporterLogo width={width} background={background} centered={centered} />;
-  }
-  if (line === 'sante') {
-    return <SanteLogo width={width} background={background} centered={centered} />;
   }
   if (line === 'sponsor') {
     return <SponsorLogo width={width} background={background} centered={centered} />;

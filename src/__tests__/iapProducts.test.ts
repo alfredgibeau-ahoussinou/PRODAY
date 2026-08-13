@@ -3,15 +3,19 @@ import { SUBSCRIPTION_PLANS, type SubscriptionPlanId } from '../content/subscrip
 
 const PAID_PLANS: SubscriptionPlanId[] = [
   'player_plus',
-  'recruiter_pro',
   'coach_pro',
   'club_amateur',
   'club_pro',
   'club_premium',
-  'agent_elite',
-  'physio_pro',
   'organizer_pro',
   'sponsor_pro',
+];
+
+/** SKU legacy encore mappés (plus vendus). */
+const LEGACY_IAP_PLANS: SubscriptionPlanId[] = [
+  'recruiter_pro',
+  'agent_elite',
+  'physio_pro',
 ];
 
 describe('iapProducts', () => {
@@ -20,7 +24,14 @@ describe('iapProducts', () => {
       expect(getIapSku(planId, 'monthly')).toBe(`com.proday.app.${planId}.monthly`);
       expect(getIapSku(planId, 'yearly')).toBe(`com.proday.app.${planId}.yearly`);
     }
-    expect(Object.keys(IAP_SKUS)).toHaveLength(PAID_PLANS.length);
+    expect(Object.keys(IAP_SKUS)).toHaveLength(PAID_PLANS.length + LEGACY_IAP_PLANS.length);
+  });
+
+  it('conserve les SKU legacy des rôles retirés', () => {
+    for (const planId of LEGACY_IAP_PLANS) {
+      expect(getIapSku(planId, 'monthly')).toBe(`com.proday.app.${planId}.monthly`);
+      expect(SUBSCRIPTION_PLANS[planId].pricing.storeAvailable).toBe(false);
+    }
   });
 
   it('retrouve le plan depuis un SKU', () => {

@@ -7,8 +7,6 @@ const NODES = [
   { id: "mercato", label: "Mercato", x: 50, y: 50, center: true },
   { id: "player", label: "Joueur", x: 12, y: 35 },
   { id: "coach", label: "Coach", x: 88, y: 28 },
-  { id: "agent", label: "Agent", x: 88, y: 52 },
-  { id: "recruiter", label: "Recruteur", x: 72, y: 38 },
   { id: "club", label: "Club", x: 12, y: 68 },
   { id: "organizer", label: "Organisateur", x: 82, y: 78 },
   { id: "arena", label: "Arène", x: 72, y: 12 },
@@ -18,14 +16,12 @@ const NODES = [
 const EDGES: [string, string][] = [
   ["player", "mercato"],
   ["coach", "mercato"],
-  ["agent", "mercato"],
-  ["recruiter", "mercato"],
   ["club", "mercato"],
-  ["organizer", "arena"],
-  ["mercato", "arena"],
-  ["player", "pulse"],
+  ["organizer", "mercato"],
+  ["arena", "player"],
+  ["pulse", "club"],
   ["coach", "club"],
-  ["agent", "club"],
+  ["mercato", "arena"],
 ];
 
 export function EcosystemMap() {

@@ -7,7 +7,8 @@ import { useUnreadMessageCount } from '../hooks/useUnreadMessages';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { DiscoverScreen } from './DiscoverScreen';
-import { PhysioDashboardScreen } from './medical/PhysioDashboardScreen';
+import { RetiredRoleScreen } from './RetiredRoleScreen';
+import { isRetiredUserRole } from '../utils/retiredRoles';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
 import { SupporterHomeDashboard } from '../features/home/roles/SupporterHomeDashboard';
 import { AmateurPlayerHomeDashboard } from '../features/home/roles/AmateurPlayerHomeDashboard';
@@ -107,8 +108,8 @@ export const HomeScreen: React.FC = () => {
 
   const renderHomeDashboard = () => {
     if (!profile) return null;
-    if (profile.role === 'physio') {
-      return <PhysioDashboardScreen profile={profile} />;
+    if (isRetiredUserRole(profile.role)) {
+      return <RetiredRoleScreen />;
     }
     if (profile.role === 'supporter') {
       return (
@@ -154,17 +155,11 @@ export const HomeScreen: React.FC = () => {
     );
   };
 
-  const isPhysioHome = profile?.role === 'physio';
-
   return (
     <CrossfadeSwitch switchKey={switchKey}>
       {profile ? (
         <View style={styles.root}>
-          {isPhysioHome ? (
-            renderHomeDashboard()
-          ) : (
-            <ProDayScreenCanvas>{renderHomeDashboard()}</ProDayScreenCanvas>
-          )}
+          <ProDayScreenCanvas>{renderHomeDashboard()}</ProDayScreenCanvas>
 
           <PushScreenTransition active={overlay === 'team'}>
             {overlay === 'team' ? (

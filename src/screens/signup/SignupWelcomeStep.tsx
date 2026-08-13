@@ -417,7 +417,7 @@ const ProWelcomeBody: React.FC<{ form: SignupForm }> = ({ form }) => {
         </View>
         <Text style={styles.proHeroTitle}>Votre métier</Text>
         <Text style={styles.proHeroSub}>
-          Coach et club d’abord. Agent, recruteur, organisateur ou sponsor en extensions du même graphe.
+          Coach et club d’abord. Organisateur ou sponsor en extensions du même graphe.
         </Text>
       </ShowcaseImageBackground>
 

@@ -110,7 +110,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <SectionKicker>Les cinq pôles</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           Chaque pôle a ses modules et son public. Votre profil ({session.roleLabel}) oriente nos
-          priorités. Santé, agent et recruteur restent des rôles intégrés, consultables dans l&apos;app.
+          priorités. Les rôles agent, recruteur et santé ne sont plus proposés.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SHOWCASE_POLES.map((pole) => (

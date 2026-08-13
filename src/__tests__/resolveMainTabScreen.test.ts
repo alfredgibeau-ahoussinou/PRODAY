@@ -30,24 +30,12 @@ jest.mock('../screens/SupporterProfileTabScreen', () => ({
 jest.mock('../screens/LazyReelsScreen', () => ({ LazyReelsScreen: 'LazyReelsScreen' }));
 jest.mock('../screens/ProfilTabScreen', () => ({ ProfilTabScreen: 'ProfilTabScreen' }));
 jest.mock('../screens/CarpoolScreen', () => ({ CarpoolScreen: 'CarpoolScreen' }));
-jest.mock('../screens/HealthProfessionalsScreen', () => ({
-  HealthProfessionalsScreen: 'HealthProfessionalsScreen',
+jest.mock('../screens/RetiredRoleScreen', () => ({
+  RetiredRoleScreen: 'RetiredRoleScreen',
 }));
 jest.mock('../screens/FamilleTabScreen', () => ({ FamilleTabScreen: 'FamilleTabScreen' }));
 jest.mock('../screens/FeedTabScreen', () => ({ FeedTabScreen: 'FeedTabScreen' }));
 jest.mock('../screens/ShopScreen', () => ({ ShopScreen: 'ShopScreen' }));
-jest.mock('../screens/medical/PhysioAgendaScreen', () => ({
-  PhysioAgendaScreen: 'PhysioAgendaScreen',
-}));
-jest.mock('../screens/medical/PhysioMessagesScreen', () => ({
-  PhysioMessagesScreen: 'PhysioMessagesScreen',
-}));
-jest.mock('../screens/medical/PhysioProfileTabScreen', () => ({
-  PhysioProfileTabScreen: 'PhysioProfileTabScreen',
-}));
-jest.mock('../screens/medical/PhysioRequestsScreen', () => ({
-  PhysioRequestsScreen: 'PhysioRequestsScreen',
-}));
 jest.mock('../screens/AmateurClubScreen', () => ({ AmateurClubScreen: 'AmateurClubScreen' }));
 jest.mock('../screens/proPlayer/ProPlayerCareerScreen', () => ({
   ProPlayerCareerScreen: 'ProPlayerCareerScreen',

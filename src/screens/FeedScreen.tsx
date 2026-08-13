@@ -19,7 +19,6 @@ import { Icon } from '../components/ui/Icon';
 import { platformFeedService } from '../services/platformFeed.service';
 import { storageService } from '../services/storage.service';
 import { pickFeedImage } from '../utils/pickFeedImage';
-import { PhysioCarePanel } from '../components/feed/PhysioCarePanel';
 import { PressableSpring, SkeletonList, InteractiveListItem } from '../components/motion';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import { SearchBar } from '../components/ui/SearchBar';
@@ -538,15 +537,7 @@ export const FeedScreen: React.FC<FeedScreenProps> = ({
               tintColor={c.brand}
             />
           }
-          ListHeaderComponent={
-            panel === 'full' ? (
-              <PhysioCarePanel
-                profile={profile}
-                onOpenChat={onOpenChat}
-                onOpenMessages={onOpenMessages}
-              />
-            ) : null
-          }
+          ListHeaderComponent={null}
           ListEmptyComponent={
             <Text style={[styles.empty, { color: c.textMuted }]}>
               {t('feed.empty')}

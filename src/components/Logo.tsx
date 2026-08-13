@@ -8,7 +8,6 @@ import {
   AMATEUR_BRANDING_LOGOS,
   SUPPORTER_BRANDING_LOGOS,
   PRO_BRANDING_LOGOS,
-  SANTE_BRANDING_LOGOS,
   WOMAN_BRANDING_LOGOS,
   SPONSOR_BRANDING_LOGOS,
 } from '../content/brandingAssets';
@@ -20,7 +19,6 @@ import { ManLogo, manLogoAspect } from './ManLogo';
 import { AmateurLogo, amateurLogoAspect } from './AmateurLogo';
 import { SupporterLogo, supporterLogoAspect } from './SupporterLogo';
 import { ProLogo, proLogoAspect } from './ProLogo';
-import { SanteLogo, santeLogoAspect } from './SanteLogo';
 import { ParentLogo, parentLogoAspect } from './ParentLogo';
 import { WomanLogo, womanLogoAspect } from './WomanLogo';
 import { SponsorLogo, sponsorLogoAspect } from './SponsorLogo';
@@ -95,7 +93,7 @@ function markForLine(line: ProductLineId, sponsor = false): ImageSourcePropType 
   if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
     return PRO_BRANDING_LOGOS.mark;
   }
-  if (line === 'sante') return SANTE_BRANDING_LOGOS.mark;
+  if (line === 'sante') return PRO_BRANDING_LOGOS.mark;
   if (line === 'amateur') return AMATEUR_BRANDING_LOGOS.mark;
   if (line === 'supporter') return SUPPORTER_BRANDING_LOGOS.mark;
   if (line === 'homme') return MAN_BRANDING_LOGOS.mark;
@@ -221,17 +219,6 @@ export const Logo: React.FC<LogoProps> = ({
     );
   }
 
-  if (line === 'sante') {
-    return (
-      <SanteLogo
-        width={width}
-        background={background}
-        opacity={opacity}
-        watermark={false}
-      />
-    );
-  }
-
   if (line === 'parent') {
     return (
       <ParentLogo
@@ -289,7 +276,7 @@ export function logoDisplayAspect(
   if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
     return proLogoAspect(width);
   }
-  if (line === 'sante') return santeLogoAspect(width);
+  if (line === 'sante') return proLogoAspect(width);
   if (line === 'parent') return parentLogoAspect(width);
   if (line === 'homme') return manLogoAspect(width);
   if (line === 'amateur') return amateurLogoAspect(width);

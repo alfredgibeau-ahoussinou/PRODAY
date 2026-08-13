@@ -32,7 +32,7 @@ const POLE_GROUPS: {
   {
     pole: "coach",
     label: "Pôle Coach",
-    journeyIds: ["coach", "recruiter", "agent"],
+    journeyIds: ["coach"],
   },
   {
     pole: "sponsor",

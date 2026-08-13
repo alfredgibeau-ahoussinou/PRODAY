@@ -101,26 +101,6 @@ export const PRO_COACH_SHELL_TABS: MainTabId[] = [
   'profil',
 ];
 
-export const PRO_AGENT_SHELL_TABS: MainTabId[] = [
-  'home',
-  'recrutement',
-  'matchs',
-  'feed',
-  'messages',
-  'shop',
-  'profil',
-];
-
-export const PRO_RECRUITER_SHELL_TABS: MainTabId[] = [
-  'home',
-  'recrutement',
-  'matchs',
-  'feed',
-  'messages',
-  'shop',
-  'profil',
-];
-
 export const PRO_ORGANIZER_SHELL_TABS: MainTabId[] = [
   'home',
   'covoiturage',

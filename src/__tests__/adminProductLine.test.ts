@@ -23,19 +23,18 @@ describe('adminProductLine', () => {
   it('oriente les rôles pro vers le bon split', () => {
     expect(resolveAdminProductLine('player', 'pro_staff')).toBe('pro_player');
     expect(resolveAdminProductLine('club', 'amateur')).toBe('pro_club');
-    expect(resolveAdminProductLine('agent', 'pro_player')).toBe('pro_staff');
+    expect(resolveAdminProductLine('organizer', 'pro_player')).toBe('pro_staff');
   });
 
   it('expose les rôles métier par univers', () => {
     expect(adminRolesForProductLine('pro_staff')).toEqual([
       'coach',
-      'agent',
-      'recruiter',
       'organizer',
     ]);
     expect(adminRolesForProductLine('amateur')).toEqual(['player']);
     expect(adminRolesForProductLine('sponsor')).toEqual(['sponsor']);
     expect(adminRolesForProductLine('parent')).toEqual(['parent']);
+    expect(adminRolesForProductLine('sante')).toEqual([]);
   });
 
   it('expose les pôles admin actuels (sans Santé, sans doublon pro_player)', () => {

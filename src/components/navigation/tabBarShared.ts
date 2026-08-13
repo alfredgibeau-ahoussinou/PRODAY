@@ -4,10 +4,6 @@ import { isProProductLine } from '../../models/ProductLine';
 import type { UserRole } from '../../models/User';
 import type { IconName } from '../ui/Icon';
 import {
-  getPhysioTabIcon,
-  isMedicalPractitionerRole,
-} from '../../content/medicalExperience';
-import {
   getSponsorTabIcon,
   isSponsorRole,
 } from '../../content/sponsorExperience';
@@ -77,7 +73,6 @@ function resolvePoleTabIcon(
 ): IconName | undefined {
   if (productLine === 'amateur') return AMATEUR_TAB_ICONS[tab];
   if (productLine === 'supporter') return SUPPORTER_TAB_ICONS[tab];
-  if (productLine === 'sante') return getPhysioTabIcon(tab);
   if (productLine === 'pro_player' || (isProProductLine(productLine) && role === 'player')) {
     return PRO_PLAYER_TAB_ICONS[tab];
   }
@@ -100,7 +95,6 @@ export function resolveTabIcon(
   role?: UserRole | null,
   productLine?: ProductLineId | null,
 ): IconName {
-  if (isMedicalPractitionerRole(role)) return getPhysioTabIcon(tab);
   if (isSponsorRole(role)) return getSponsorTabIcon(tab);
   if (productLine) {
     const poleIcon = resolvePoleTabIcon(tab, productLine, role);

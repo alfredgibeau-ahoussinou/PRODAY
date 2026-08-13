@@ -50,28 +50,6 @@ const poles = [
     },
   },
   {
-    id: "sante",
-    name: "Santé",
-    color: "#00CCB4",
-    features: {
-      profile: true,
-      stats: false,
-      mercato: false,
-      matches: false,
-      arena: false,
-      covoiturage: false,
-      messaging: true,
-      calendar: true,
-      cvExport: false,
-      visibility: true,
-      recruiting: false,
-      teamManagement: false,
-      booking: true,
-      sponsorship: false,
-      community: false,
-    },
-  },
-  {
     id: "partenaires",
     name: "Partenaires",
     color: "#D4AF37",
@@ -277,9 +255,7 @@ export function PoleComparison() {
             {selectedPole === "joueur" &&
               "Le pôle Joueur est conçu pour les footballeurs et joueuses qui veulent gérer leur carrière, suivre leurs stats et se faire repérer par les clubs."}
             {selectedPole === "pro" &&
-              "Le pôle Pro s'adresse aux coachs, recruteurs, clubs et agents qui ont besoin d'outils avancés pour gérer leurs équipes et trouver des talents."}
-            {selectedPole === "sante" &&
-              "Le pôle Santé est destiné aux professionnels de santé (kinés, médecins, coachs mentaux) qui travaillent avec des sportifs."}
+              "Le pôle Pro s'adresse aux coachs et clubs qui ont besoin d'outils avancés pour gérer leurs équipes et trouver des talents."}
             {selectedPole === "partenaires" &&
               "Le pôle Partenaires est conçu pour les sponsors et marques qui souhaitent s'associer à des événements et clubs de football."}
             {selectedPole === "supporter" &&

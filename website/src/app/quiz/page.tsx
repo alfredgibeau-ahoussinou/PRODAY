@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Vous êtes ?",
   description:
-    "Choisissez votre rôle pour accéder au bon pôle ProDay : Joueur, Supporter, Club, Coach, Recruteur, Santé, Sponsor ou Organisateur.",
+    "Choisissez votre rôle pour accéder au bon pôle ProDay : Joueur, Supporter, Club, Coach, Sponsor ou Organisateur.",
 };
 
 export default function QuizPage() {
@@ -24,7 +24,7 @@ export default function QuizPage() {
       <PremiumSection
         kicker="PÔLES"
         title="Choisissez votre rôle"
-        description="Joueur, Supporter, Club, Coach, Recruteur / Agent, Santé, Sponsor ou Organisateur."
+        description="Joueur, Supporter, Club, Coach, Sponsor ou Organisateur."
         bordered={false}
       >
         <RoleQuiz />

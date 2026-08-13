@@ -3,23 +3,19 @@ import type { MainTabId } from './mainTabConfig';
 import type { ProductLineId } from '../models/ProductLine';
 import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
-import { isMedicalPractitionerRole } from '../content/medicalExperience';
 import { isSponsorRole } from '../content/sponsorExperience';
+import { isRetiredUserRole } from '../utils/retiredRoles';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MercatoScreen } from '../screens/MercatoScreen';
 import { MatchsScreen } from '../screens/MatchsScreen';
 import { CarpoolScreen } from '../screens/CarpoolScreen';
-import { HealthProfessionalsScreen } from '../screens/HealthProfessionalsScreen';
 import { FamilleTabScreen } from '../screens/FamilleTabScreen';
 import { FeedTabScreen } from '../screens/FeedTabScreen';
 import { LazyReelsScreen } from '../screens/LazyReelsScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { ShopScreen } from '../screens/ShopScreen';
-import { PhysioAgendaScreen } from '../screens/medical/PhysioAgendaScreen';
-import { PhysioMessagesScreen } from '../screens/medical/PhysioMessagesScreen';
-import { PhysioProfileTabScreen } from '../screens/medical/PhysioProfileTabScreen';
-import { PhysioRequestsScreen } from '../screens/medical/PhysioRequestsScreen';
+import { RetiredRoleScreen } from '../screens/RetiredRoleScreen';
 import { SupporterMatchsScreen } from '../screens/SupporterMatchsScreen';
 import { SupporterSuivisScreen } from '../screens/SupporterSuivisScreen';
 import { SupporterProfileTabScreen } from '../screens/SupporterProfileTabScreen';
@@ -40,21 +36,13 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   recrutement: MercatoScreen,
   matchs: MatchsScreen,
   covoiturage: CarpoolScreen,
-  sante: HealthProfessionalsScreen,
+  sante: RetiredRoleScreen,
   feed: FeedTabScreen,
   reels: LazyReelsScreen,
   famille: FamilleTabScreen,
   messages: MessagesScreen,
   profil: ProfilTabScreen,
   shop: ShopScreen,
-};
-
-const PHYSIO_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: HomeScreen,
-  matchs: PhysioAgendaScreen,
-  feed: PhysioRequestsScreen,
-  messages: PhysioMessagesScreen,
-  profil: PhysioProfileTabScreen,
 };
 
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
@@ -93,10 +81,8 @@ const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 };
 
 const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  // home → DEFAULT HomeScreen → JoueurAdaptiveHome
   recrutement: ProPlayerSquadScreen,
   feed: SmartTacticsPortalScreen,
-  // matchs → DEFAULT MatchsScreen (hub match, pas le groupe)
 };
 
 export function resolveMainTabScreen(
@@ -104,8 +90,8 @@ export function resolveMainTabScreen(
   role?: UserRole | null,
   line?: ProductLineId | null,
 ): ComponentType {
-  if (isMedicalPractitionerRole(role)) {
-    return PHYSIO_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
+  if (isRetiredUserRole(role) || line === 'sante') {
+    return RetiredRoleScreen;
   }
   if (role === 'supporter') {
     return SUPPORTER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
@@ -128,12 +114,12 @@ export function resolveMainTabScreen(
   return DEFAULT_SCREENS[tab];
 }
 
-/** Shop : tous les pôles sauf Santé (praticien) et sponsor marque. */
+/** Shop : tous les pôles sauf sponsor marque / rôles retirés. */
 export function shouldInjectShopTab(
   role?: UserRole | null,
   line?: ProductLineId | null,
 ): boolean {
-  if (isMedicalPractitionerRole(role) || line === 'sante') return false;
+  if (isRetiredUserRole(role) || line === 'sante') return false;
   if (isSponsorRole(role)) return false;
   if (role === 'supporter' || line === 'supporter') return false;
   if (line === 'amateur' || line === 'homme' || line === 'woman') return true;
@@ -141,8 +127,6 @@ export function shouldInjectShopTab(
     role === 'player' ||
     role === 'club' ||
     role === 'coach' ||
-    role === 'agent' ||
-    role === 'recruiter' ||
     role === 'organizer'
   ) {
     return (

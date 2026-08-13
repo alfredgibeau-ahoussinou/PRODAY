@@ -338,33 +338,8 @@ async function syncEngagementReminders(
   return ids;
 }
 
-async function syncMedicalAppointmentReminders(profile: User): Promise<string[]> {
-  if (profile.role !== 'player') return [];
-  const ids: string[] = [];
-  try {
-    const { medicalAppointmentsService } = await import('./medicalAppointments.service');
-    const appointments = await medicalAppointmentsService.listForPatient(profile.uid);
-    const now = Date.now();
-    for (const appt of appointments) {
-      if (appt.status === 'cancelled' || appt.status === 'completed') continue;
-      const start = appt.start_at.getTime();
-      if (start <= now) continue;
-      const j1 = new Date(start - 24 * 60 * 60 * 1000);
-      j1.setHours(18, 0, 0, 0);
-      if (j1.getTime() <= now + 60_000) continue;
-      const id = await scheduleAt(
-        `medical-j1-${appt.id}`,
-        'RDV kiné demain',
-        `${appt.physio_name ?? 'Kiné'} · ${appt.motif ?? 'Consultation'}`,
-        j1,
-        { type: 'medical_j1', homeTab: 'centre' },
-      );
-      if (id) ids.push(id);
-    }
-  } catch {
-    /* ignore */
-  }
-  return ids;
+async function syncMedicalAppointmentReminders(_profile: User): Promise<string[]> {
+  return [];
 }
 
 /** Planifie rappels convocation, alertes covoiturage et matchs proches (local). */

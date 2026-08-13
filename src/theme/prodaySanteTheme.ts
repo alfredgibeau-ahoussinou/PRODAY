@@ -1,4 +1,4 @@
-/** Palette Santé — teal sur fond FLASH noir. */
+/** Palette legacy Santé — pôle retiré ; conservée pour maps thème / assets orphelins. */
 export const santeColorOverrides = {
   accent: '#2DD4BF',
   accentLight: '#5EEAD4',

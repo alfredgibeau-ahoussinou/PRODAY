@@ -8,9 +8,9 @@ import { MessagesScreen } from '../screens/MessagesScreen';
 import { FamilleTabScreen } from '../screens/FamilleTabScreen';
 import { FeedTabScreen } from '../screens/FeedTabScreen';
 import { ReelsScreen } from '../screens/ReelsScreen';
-import { HealthProfessionalsScreen } from '../screens/HealthProfessionalsScreen';
 import { CarpoolScreen } from '../screens/CarpoolScreen';
 import { ShopScreen } from '../screens/ShopScreen';
+import { RetiredRoleScreen } from '../screens/RetiredRoleScreen';
 import { MAIN_TAB_ITEMS, type MainTabId } from './mainTabConfig';
 
 export type { MainTabId } from './mainTabConfig';
@@ -20,7 +20,7 @@ const TAB_SCREENS: Record<MainTabId, React.ComponentType> = {
   recrutement: MercatoScreen,
   matchs: MatchsScreen,
   covoiturage: CarpoolScreen,
-  sante: HealthProfessionalsScreen,
+  sante: RetiredRoleScreen,
   feed: FeedTabScreen,
   reels: ReelsScreen,
   famille: FamilleTabScreen,

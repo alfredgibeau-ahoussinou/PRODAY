@@ -20,12 +20,17 @@ export const PRO_PLAYER_PRODUCT_ROLES: UserRole[] = ['player'];
 /** Rôles structure club pro. */
 export const PRO_CLUB_PRODUCT_ROLES: UserRole[] = ['club'];
 
-/** Rôles staff pro (sans sponsor — pôle Sponsor séparé). */
+/** Rôles staff pro (sans sponsor — pôle Sponsor séparé). Agent / recruteur / santé retirés du produit. */
 export const PRO_STAFF_PRODUCT_ROLES: UserRole[] = [
   'coach',
+  'organizer',
+];
+
+/** @deprecated Rôles legacy encore présents en base — ne plus proposer à l’inscription. */
+export const LEGACY_REMOVED_PRODUCT_ROLES: UserRole[] = [
   'agent',
   'recruiter',
-  'organizer',
+  'physio',
 ];
 
 /** Rôles Pro Day Sponsor — marques partenaires. */
@@ -39,7 +44,7 @@ export const PRO_PRODUCT_ROLES: UserRole[] = [
   ...SPONSOR_PRODUCT_ROLES,
 ];
 
-/** Rôles ProDay Santé — praticiens médicaux et paramédicaux. */
+/** @deprecated Pôle Santé retiré — rôles legacy `physio` uniquement. */
 export const SANTE_PRODUCT_ROLES: UserRole[] = ['physio'];
 
 /** Rôles Portail Parent / Famille. */
@@ -64,7 +69,8 @@ export function rolesForProductLine(line: ProductLineId): UserRole[] {
     case 'pro':
       return PRO_PRODUCT_ROLES;
     case 'sante':
-      return SANTE_PRODUCT_ROLES;
+      // Pôle retiré : aucun rôle proposé (comptes physio legacy gérés à part).
+      return [];
     case 'parent':
       return PARENT_PRODUCT_ROLES;
     default:
@@ -197,7 +203,7 @@ export function resolveSignupProductLine(
   if (carouselOrContextLine === 'pro' || isProFamilyLine(carouselOrContextLine)) {
     if (role === 'club') return 'pro_club';
     if (role === 'player') return 'pro_player';
-    if (['coach', 'agent', 'recruiter', 'organizer'].includes(role)) {
+    if (['coach', 'organizer'].includes(role)) {
       return 'pro_staff';
     }
   }

@@ -126,8 +126,7 @@ export function FeaturesImmersive() {
             Choisis ton entrée.
           </h2>
           <p className="mt-3 max-w-lg text-sm text-white/55">
-            Santé, agent, recruteur et organisateur restent des rôles intégrés : pas des pôles
-            vitrine.
+            Santé, agent et recruteur ne sont plus des portes produit.
           </p>
 
           <div
@@ -307,7 +306,7 @@ export function FeaturesImmersive() {
             {[
               {
                 title: "Pôles clairs",
-                body: "Cinq portes marketing. Santé, agent et recruteur restent des rôles intégrés : sans diluer la vitrine.",
+                body: "Cinq portes marketing. Agent, recruteur et Santé ne sont plus proposés.",
               },
               {
                 title: "Club au centre",

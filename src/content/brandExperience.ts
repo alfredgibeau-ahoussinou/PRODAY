@@ -276,14 +276,10 @@ export const ACCOUNT_TYPES_BY_LINE = {
     { role: 'club' as const, label: 'Club / Dirigeant', description: 'Équipes, licenciés, matchs, recrutement' },
     { role: 'coach' as const, label: 'Coach', description: 'Effectif, convocations, tactique' },
     { role: 'player' as const, label: 'Joueur', description: 'Profil, stats, matchs' },
-    { role: 'agent' as const, label: 'Agent (intégré)', description: 'Mandats — intégré au club' },
-    { role: 'recruiter' as const, label: 'Recruteur (intégré)', description: 'Scouting — intégré au club' },
     { role: 'organizer' as const, label: 'Événements (intégré)', description: 'Tournois — depuis l’espace Club' },
     { role: 'sponsor' as const, label: 'Sponsor', description: 'Visibilité marque & clubs' },
   ],
-  sante: [
-    { role: 'physio' as const, label: 'Praticien', description: 'Kiné, médecin, prépa, nutrition…' },
-  ],
+  sante: [] as { role: 'physio'; label: string; description: string }[],
 } as const;
 
 export { brandForProductLine };

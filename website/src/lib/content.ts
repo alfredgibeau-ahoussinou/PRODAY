@@ -1247,19 +1247,17 @@ export const UNIVERSE_PAGE_CONFIG = {
       image: "/images/football-pro-01.jpg",
     },
     highlights: [
-      { label: "Rôles", value: "7 profils pro" },
+      { label: "Rôles", value: "Club · Coach · Joueur" },
       { label: "Mercato", value: "Mercato Pro" },
       { label: "Confiance", value: "Profils vérifiés" },
       { label: "Réseau", value: "Messagerie sécurisée" },
     ],
     modulesTitle: "Modules professionnels",
     modulesSubtitle:
-      "Recruteur, coach, agent, club et organisateur. Mercato Pro et suivi des candidatures.",
+      "Coach, club et organisateur. Mercato Pro et suivi des candidatures.",
     modules: PRO_MODULES as readonly UniverseModule[],
     journeyIds: [
       "coach",
-      "recruiter",
-      "agent",
       "club",
       "organizer",
     ] as const,
@@ -1268,17 +1266,15 @@ export const UNIVERSE_PAGE_CONFIG = {
     showPulse: false,
     showVerification: true,
     pricingPlanIds: [
-      "recruiter_pro",
       "coach_pro",
       "club_pro",
-      "agent_elite",
       "organizer_pro",
     ] as const,
     pricingTitle: "Formules Pro",
     cta: {
       title: "Créez votre compte Pro",
       description:
-        "Recruteur, coach, agent, club ou organisateur. Validation métier incluse.",
+        "Coach, club ou organisateur. Validation métier incluse.",
       beta: "Liste d'attente Pro",
     },
   },
@@ -1359,24 +1355,22 @@ export const UNIVERSE_PAGE_CONFIG = {
     ],
     modulesTitle: "Outils du Pôle Coach",
     modulesSubtitle:
-      "Tactique IA, effectif, vidéo et IA. Agent et recruteur restent des rôles réseau.",
+      "Tactique IA, effectif, vidéo et IA pour le banc de touche.",
     modules: PRO_STAFF_MODULES as readonly UniverseModule[],
-    journeyIds: ["coach", "recruiter", "agent", "organizer"] as const,
+    journeyIds: ["coach", "organizer"] as const,
     audienceNote:
       "Joueur sous contrat ? Pro Joueur. Président / DS ? Pro Club. Marque ? Pôle Sponsor.",
     showPulse: false,
     showVerification: true,
     pricingPlanIds: [
-      "recruiter_pro",
       "coach_pro",
-      "agent_elite",
       "organizer_pro",
     ] as const,
-    pricingTitle: "Formules Coach & rôles réseau",
+    pricingTitle: "Formules Coach",
     cta: {
       title: "Rejoindre le Pôle Coach",
       description:
-        "Tactique IA, effectif et IA. Agent / recruteur restent des rôles réseau optionnels.",
+        "Tactique IA, effectif et outils du banc de touche.",
       beta: "Liste d'attente Coach",
     },
   },
@@ -1605,27 +1599,6 @@ export const SUBSCRIPTION_PLANS_WEB = [
     ],
   },
   {
-    id: "recruiter_pro",
-    label: "Recruteur Pro",
-    tagline: "Rôle intégré : scouting et suivi",
-    monthlyEur: 7.99,
-    storeAvailable: true,
-    universes: ["pro"] as ProductLineWeb[],
-    freeIncludes: [
-      "Profil recruteur vérifié",
-      "Territoire & spécialité",
-      "Mercato en lecture (filtres poste, catégorie, zone)",
-      "5 messages recrutement / mois",
-    ],
-    proIncludes: [
-      "Annonces Mercato Pro actives",
-      "Suivi des candidatures",
-      "Filtres joueur (poste, catégorie, zone)",
-      "Messages recrutement illimités",
-      "Statistiques scouting & candidatures",
-    ],
-  },
-  {
     id: "coach_pro",
     label: "Coach Premium",
     tagline: "Tactique IA, IA, vidéo et préparation match",
@@ -1728,53 +1701,6 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Trépied, installation, configuration, formation",
       "Cloud, synchronisation, traitement vidéo",
       "Analyse IA, découpage auto, bibliothèque, export",
-    ],
-  },
-  {
-    id: "agent_elite",
-    label: "Agent ProDay",
-    tagline: "Rôle intégré : lancement 19,99 € puis 29,99 €/mois",
-    monthlyEur: 29.99,
-    storeAvailable: true,
-    premium: true,
-    universes: ["pro"] as ProductLineWeb[],
-    freeIncludes: [
-      "Profil agent et vérification",
-      "10 contacts recrutement / mois",
-      "Mercato en lecture",
-      "Demandes de message joueurs (accept / refuse)",
-    ],
-    proIncludes: [
-      "Contacts illimités",
-      "Alertes géolocalisées",
-      "Suivi des mandats",
-      "Demandes de message illimitées",
-      "Exports et rapports",
-    ],
-  },
-  {
-    id: "physio_pro",
-    label: "Santé Pro",
-    tagline: "Rôle médical intégré : abonnement + commission RDV",
-    monthlyEur: 19.99,
-    storeAvailable: true,
-    commissionPercent: 10,
-    commissionNote:
-      "10 % sur chaque consultation réservée via ProDay (nutrition, coach mental, prépa…). Pas de commission sur les actes médicaux réglementés.",
-    universes: ["pro", "sante"] as ProductLineWeb[],
-    freeIncludes: [
-      "Profil praticien et vérification",
-      "Spécialité et zone d'intervention",
-      "Visibilité annuaire (base)",
-      "Messagerie limitée",
-    ],
-    proIncludes: [
-      "Téléconsultation visio 15/30 min",
-      "Prise de rendez-vous via l'app",
-      "Visibilité prioritaire près des clubs",
-      "Messagerie complète après vérif.",
-      "Prise de rendez-vous prioritaire",
-      "Commission 10 % uniquement si RDV conclu",
     ],
   },
   {
@@ -1904,10 +1830,6 @@ export const PRO_ESSENTIAL_MONTHLY_EUR = webPlanMonthlyPrice("sponsor_pro");
 
 /** Organisateur Arène. Dérivé du plan store. */
 export const ORGANIZER_PRO_MONTHLY_EUR = webPlanMonthlyPrice("organizer_pro");
-
-/** Pôle santé. Dérivé du plan store. */
-export const PHYSIO_PRO_MONTHLY_EUR = webPlanMonthlyPrice("physio_pro");
-export const PHYSIO_BOOKING_COMMISSION_PERCENT = 10;
 
 const faqPricing = (planId: WebSubscriptionPlanBase["id"]) => {
   const plan = SUBSCRIPTION_PLANS_WEB.find((p) => p.id === planId);

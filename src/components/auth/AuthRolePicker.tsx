@@ -50,28 +50,10 @@ export const ROLE_OPTIONS: {
     icon: 'star-four-points',
   },
   {
-    value: 'agent',
-    label: 'Agent (intégré)',
-    description: 'Mandats et réseau — intégré au club',
-    icon: 'briefcase',
-  },
-  {
-    value: 'recruiter',
-    label: 'Recruteur (intégré)',
-    description: 'Scouting et suivi — intégré au club',
-    icon: 'search',
-  },
-  {
     value: 'organizer',
     label: 'Organisateur (intégré)',
     description: 'Tournois et stages — depuis l’espace Club',
     icon: 'trophy',
-  },
-  {
-    value: 'physio',
-    label: 'Staff médical (intégré)',
-    description: 'Suivi sportif privé — permissions strictes',
-    icon: 'heart',
   },
 ];
 
@@ -93,13 +75,6 @@ export const AuthRolePicker: React.FC<AuthRolePickerProps> = ({
     return ROLE_OPTIONS.filter((r) => allowed.has(r.value)).map((r) => {
       if (line === 'woman' && r.value === 'player') {
         return { ...r, label: 'Joueuse', description: 'CV en ligne, stats, Visibilité' };
-      }
-      if (line === 'pro' && r.value === 'physio') {
-        return {
-          ...r,
-          label: 'Staff médical (intégré)',
-          description: 'Suivi sportif privé — permissions strictes',
-        };
       }
       if (line === 'pro' && r.value === 'sponsor') {
         return { ...r, label: 'Sponsor', description: 'Visibilité marque & clubs pro' };

@@ -53,15 +53,15 @@ export function adminUserMatchesProductLineFilter(
 
 /** Rôles métier compatibles avec l’univers sélectionné en admin. */
 export function adminRolesForProductLine(line: ProductLineId): UserRole[] {
-  return rolesForProductLine(line).filter((r) => r !== 'physio');
+  return rolesForProductLine(line).filter(
+    (r) => r !== 'physio' && r !== 'agent' && r !== 'recruiter',
+  );
 }
 
 const ROLE_HINTS: Partial<Record<UserRole, string>> = {
   player: 'CV, Mercato, saison',
   coach: 'Staff technique / entraînement',
   club: 'Structure & recrutement',
-  agent: 'Mandats & représentation',
-  recruiter: 'Scouting & détection',
   organizer: 'Événements & tournois',
   sponsor: 'Marque & campagnes',
   supporter: 'Fan & communauté',
@@ -90,7 +90,8 @@ export function resolveAdminProductLine(
     return 'pro_player';
   }
   if (role === 'club') return 'pro_club';
-  if (['coach', 'agent', 'recruiter', 'organizer'].includes(role)) {
+  if (role === 'agent' || role === 'recruiter') return 'pro_staff';
+  if (['coach', 'organizer'].includes(role)) {
     return 'pro_staff';
   }
 
@@ -104,8 +105,6 @@ export const ADMIN_EDIT_ROLES: UserRole[] = [
   'player',
   'coach',
   'club',
-  'agent',
-  'recruiter',
   'organizer',
   'sponsor',
   'supporter',

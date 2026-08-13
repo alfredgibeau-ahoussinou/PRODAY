@@ -9,7 +9,7 @@ const WORDS = [
   "Club",
   "Coach",
   "Parents",
-  "Santé",
+  "Tribune",
   "Pulse",
 ];
 

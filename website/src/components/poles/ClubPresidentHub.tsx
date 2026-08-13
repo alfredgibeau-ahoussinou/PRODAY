@@ -138,7 +138,7 @@ export function ClubPresidentHub() {
             </p>
             <p className="text-sm leading-relaxed text-white/55">
               Les coachs ont leur pôle dédié. Les organisateurs de tournois restent un rôle
-              intégré ici. Agent et recruteur = outils réseau, pas des pôles vitrine.
+              intégré ici. Agent et recruteur ne sont plus proposés comme rôles produit.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Link

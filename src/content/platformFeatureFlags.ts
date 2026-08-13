@@ -96,8 +96,6 @@ export const TAB_FEATURE_FLAG: Partial<Record<MainTabId, PlatformFeatureFlagKey>
   recrutement: 'mercato',
   shop: 'shop',
   reels: 'community_reels',
-  // `sante` volontairement absent : l’onglet n’existe plus pour les joueurs ;
-  // côté praticiens, le contenu est coupé via FeatureBlockedScreen si `sante_visio` est OFF.
 };
 
 export function isPlatformFeatureEnabled(

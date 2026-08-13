@@ -96,8 +96,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     id: 'recruiter_pro',
     role: 'recruiter',
     label: 'Recruteur Pro',
-    tagline: 'Rôle intégré — scouting et suivi (pas un pôle)',
-    pricing: planPricing(7.99, true),
+    tagline: 'Rôle retiré — plus proposé à la vente',
+    pricing: planPricing(7.99, false),
     limits: { recruitment_messages_per_month: 5 },
     freeIncludes: [
       'Profil recruteur vérifié',
@@ -208,9 +208,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     id: 'agent_elite',
     role: 'agent',
     label: 'Agent Elite',
-    tagline: 'Rôle intégré — CRM et mandats (pas un pôle)',
-    /** Tarif standard post-lancement ; voir agentLaunchPricing pour 19,99 €. */
-    pricing: planPricing(29.99, true),
+    tagline: 'Rôle retiré — plus proposé à la vente',
+    pricing: planPricing(29.99, false),
     limits: { recruitment_messages_per_month: 10 },
     freeIncludes: [
       'Profil agent et vérification',
@@ -229,8 +228,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
     id: 'physio_pro',
     role: 'physio',
     label: 'Santé Pro',
-    tagline: 'Rôle médical intégré — abonnement + commission RDV',
-    pricing: planPricing(19.99, true),
+    tagline: 'Rôle retiré — plus proposé à la vente',
+    pricing: planPricing(19.99, false),
     limits: {},
     bookingCommissionPercent: 10,
     bookingCommissionNote:
@@ -297,12 +296,24 @@ const ROLE_TO_PLAN: Partial<Record<UserRole, SubscriptionPlanId>> = {
   player: 'player_plus',
   coach: 'coach_pro',
   club: 'club_pro',
-  agent: 'agent_elite',
-  recruiter: 'recruiter_pro',
-  physio: 'physio_pro',
   organizer: 'organizer_pro',
   sponsor: 'sponsor_pro',
 };
+
+/** Plans rôles retirés — plus vendus, IDs conservés pour abonnés legacy. */
+export const RETIRED_SUBSCRIPTION_PLAN_IDS: readonly SubscriptionPlanId[] = [
+  'agent_elite',
+  'recruiter_pro',
+  'physio_pro',
+];
+
+export function isRetiredSubscriptionPlan(planId: SubscriptionPlanId): boolean {
+  return (RETIRED_SUBSCRIPTION_PLAN_IDS as readonly string[]).includes(planId);
+}
+
+export function listActiveSubscriptionPlans(): SubscriptionPlanDefinition[] {
+  return Object.values(SUBSCRIPTION_PLANS).filter((p) => !isRetiredSubscriptionPlan(p.id));
+}
 
 export function planIdForRole(role: UserRole): SubscriptionPlanId | null {
   return ROLE_TO_PLAN[role] ?? null;

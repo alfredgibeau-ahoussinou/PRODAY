@@ -93,12 +93,12 @@ import { useParentalScreenTime } from './src/hooks/useParentalScreenTime';
 import { useParentalActivityJournal } from './src/hooks/useParentalActivityJournal';
 import { ParentalScreenTimeBlockedScreen } from './src/screens/ParentalScreenTimeBlockedScreen';
 import { MaintenanceBlockedScreen } from './src/screens/MaintenanceBlockedScreen';
-import { FeatureBlockedScreen } from './src/screens/FeatureBlockedScreen';
 import { FeatureDisabledPanel } from './src/components/platform/FeatureDisabledPanel';
 import { MinorYouthSpaceBridge } from './src/components/appSpace/MinorYouthSpaceBridge';
 import { PlatformConfigProvider, usePlatformConfig } from './src/context/PlatformConfigContext';
 import { usePlatformFeatureFlags } from './src/hooks/usePlatformFeatureFlags';
-import { isMedicalPractitionerRole } from './src/content/medicalExperience';
+import { RetiredRoleScreen } from './src/screens/RetiredRoleScreen';
+import { isRetiredUserRole, isRetiredProductLine } from './src/utils/retiredRoles';
 import type { UserRole } from './src/models/User';
 import type { ProductLineId } from './src/models/ProductLine';
 import { trafficService } from './src/services/traffic.service';
@@ -301,7 +301,7 @@ function AppShell() {
       <EmailVerificationScreen
         uid={profile.uid}
         email={profile.email}
-        variant={profile.role === 'physio' ? 'practitioner' : 'default'}
+        variant="default"
         onCheckVerified={refreshFirebaseUser}
         onResend={resendEmailVerification}
         onSignOut={signOut}
@@ -319,17 +319,15 @@ function AppShell() {
     return <MaintenanceBlockedScreen message={platformConfig.maintenance_message} />;
   }
 
-  // Visio Santé OFF : même UX plein écran que la maintenance pour le pôle Santé / praticiens.
-  const isSanteAudience =
-    productLine === 'sante' ||
-    isMedicalPractitionerRole(sessionProfile?.role ?? profile?.role);
+  // Rôles Agent / Recruteur / Santé retirés du produit.
+  const sessionRole = sessionProfile?.role ?? profile?.role;
   if (
-    !platformConfigLoading &&
-    !isEnabled('sante_visio') &&
-    isSanteAudience &&
+    !authLoading &&
+    profile &&
+    (isRetiredUserRole(sessionRole) || isRetiredProductLine(productLine)) &&
     !bypassMaintenance
   ) {
-    return <FeatureBlockedScreen flag="sante_visio" />;
+    return <RetiredRoleScreen />;
   }
 
   if (!authLoading && profile && screenTime.blocked) {
@@ -424,10 +422,8 @@ function AppShell() {
 
   const Screen = resolveMainTabScreen(activeTab, sessionProfile?.role, productLine);
   const disabledFlag = flagForTab(activeTab);
-  const santeVisioBlocked = activeTab === 'sante' && !isEnabled('sante_visio');
-  const tabFeatureBlocked =
-    santeVisioBlocked || (disabledFlag != null && !isEnabled(disabledFlag));
-  const blockedFlag = santeVisioBlocked ? 'sante_visio' : disabledFlag;
+  const tabFeatureBlocked = disabledFlag != null && !isEnabled(disabledFlag);
+  const blockedFlag = disabledFlag;
   const isSponsor = isSponsorRole(sessionProfile?.role);
   const isClubShell = sessionProfile?.role === 'club';
   const isCoachShell = sessionProfile?.role === 'coach';
@@ -577,11 +573,7 @@ function AppShell() {
               ) : (
                 <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
                   {tabFeatureBlocked && blockedFlag ? (
-                    blockedFlag === 'sante_visio' ? (
-                      <FeatureBlockedScreen flag="sante_visio" />
-                    ) : (
-                      <FeatureDisabledPanel flag={blockedFlag} />
-                    )
+                    <FeatureDisabledPanel flag={blockedFlag} />
                   ) : (
                     <Screen />
                   )}

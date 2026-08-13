@@ -153,7 +153,7 @@ export const LEGACY_STAFF_POLE: PoleDefinition = {
   href: ROUTES.coach,
   pricingHash: "coach",
   logo: "/branding/logo-pro-picto.png",
-  planIds: ["coach_pro", "recruiter_pro", "agent_elite"],
+  planIds: ["coach_pro"],
 };
 
 /** @deprecated Organisateur = rôle intégré au Club. */

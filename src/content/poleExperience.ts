@@ -16,11 +16,6 @@ import {
 import { getMercatoTabLabel } from './mercatoTabLabel';
 import { getDiscoverUniverseCards } from './discoverContentByLine';
 import {
-  getPhysioTabLabel,
-  isMedicalPractitionerRole,
-  PHYSIO_MAIN_TABS,
-} from './medicalExperience';
-import {
   getSponsorTabLabel,
   isSponsorRole,
   SPONSOR_MAIN_TABS,
@@ -28,6 +23,7 @@ import {
 import { canParticipateWeeklyQuestion } from '../utils/weeklyQuestionAccess';
 import { injectFamilyTab } from './familyExperience';
 import type { User } from '../models/User';
+import { isRetiredUserRole } from '../utils/retiredRoles';
 import {
   AMATEUR_CLUB_OVERFLOW_TABS,
   AMATEUR_CLUB_SHELL_TABS,
@@ -35,14 +31,12 @@ import {
   AMATEUR_COACH_SHELL_TABS,
   AMATEUR_PLAYER_OVERFLOW_TABS,
   AMATEUR_PLAYER_SHELL_TABS,
-  PRO_AGENT_SHELL_TABS,
   PRO_CLUB_SHELL_TABS,
   PRO_CLUB_OVERFLOW_TABS,
   PRO_COACH_SHELL_TABS,
   PRO_ORGANIZER_SHELL_TABS,
   PRO_PLAYER_SHELL_TABS,
   PRO_PLAYER_OVERFLOW_TABS,
-  PRO_RECRUITER_SHELL_TABS,
   SUPPORTER_SHELL_TABS,
 } from '../navigation/shells/productShellTabs';
 
@@ -92,12 +86,6 @@ const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
     roles: ['player'],
   },
   {
-    id: 'staff_network',
-    label: 'Réseau (intégré)',
-    hint: 'Agent & recruteur — outils intégrés au club, pas des pôles séparés',
-    roles: ['agent', 'recruiter'],
-  },
-  {
     id: 'events',
     label: 'Événements (intégré)',
     hint: 'Tournois et stages — gérés depuis l’espace Club',
@@ -111,21 +99,13 @@ const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
   },
 ];
 
-const SANTE_SIGNUP_GROUPS: SignupRoleGroup[] = [
-  {
-    id: 'medical',
-    label: 'Praticiens',
-    hint: 'Rôle médical intégré — kiné, médecin, prépa…',
-    roles: ['physio'],
-  },
-];
-
 export function getSignupRoleGroups(
   line: ProductLineId,
   presetRole?: UserRole | null,
 ): SignupRoleGroup[] {
   let groups: SignupRoleGroup[];
-  if (line === 'sante') groups = SANTE_SIGNUP_GROUPS;
+  // Pôle Santé retiré — aucun parcours d’inscription.
+  if (line === 'sante') groups = [];
   else if (line === 'amateur') groups = AMATEUR_SIGNUP_GROUPS;
   else if (line === 'supporter') groups = SUPPORTER_SIGNUP_GROUPS;
   else if (line === 'pro_player') {
@@ -136,9 +116,8 @@ export function getSignupRoleGroups(
       roles: g.roles.filter((r) => r === 'club'),
     }));
   } else if (line === 'pro_staff') {
-    // Coach d’abord ; agent/recruteur/orga en couches fines (rôles conservés).
     groups = PRO_SIGNUP_GROUPS.filter((g) =>
-      g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer'].includes(r)),
+      g.roles.some((r) => ['coach', 'organizer'].includes(r)),
     );
   } else if (line === 'sponsor') {
     groups = PRO_SIGNUP_GROUPS.filter((g) => g.roles.includes('sponsor'));
@@ -170,11 +149,15 @@ export function getSignupRoleGroups(
   if (presetRole === 'coach') {
     return groups.filter((g) => g.roles.includes('coach'));
   }
-  if (presetRole === 'agent' || presetRole === 'recruiter') {
-    return groups.filter((g) => g.roles.includes(presetRole));
+  if (
+    presetRole === 'agent' ||
+    presetRole === 'recruiter' ||
+    presetRole === 'physio'
+  ) {
+    return [];
   }
   return groups.filter((g) =>
-    g.roles.some((r) => ['coach', 'agent', 'recruiter', 'organizer'].includes(r)),
+    g.roles.some((r) => ['coach', 'organizer'].includes(r)),
   );
 }
 
@@ -216,8 +199,8 @@ export function getVisibleMainTabs(
   const effectiveLine = canonicalizeActiveProductLine(line, r);
   let tabs: MainTabId[];
 
-  if (effectiveLine === 'sante') {
-    tabs = [...PHYSIO_MAIN_TABS];
+  if (effectiveLine === 'sante' || isRetiredUserRole(r)) {
+    tabs = ['home', 'profil'];
   } else if (effectiveLine === 'amateur') {
     if (r === 'player') {
       tabs = [...AMATEUR_PLAYER_SHELL_TABS, ...AMATEUR_PLAYER_OVERFLOW_TABS];
@@ -241,10 +224,6 @@ export function getVisibleMainTabs(
       tabs = [...PRO_COACH_SHELL_TABS];
     } else if (r === 'club') {
       tabs = [...PRO_CLUB_SHELL_TABS, ...PRO_CLUB_OVERFLOW_TABS];
-    } else if (r === 'agent') {
-      tabs = [...PRO_AGENT_SHELL_TABS];
-    } else if (r === 'recruiter') {
-      tabs = [...PRO_RECRUITER_SHELL_TABS];
     } else {
       tabs = ['home', 'recrutement', 'matchs', 'messages', 'profil'];
     }
@@ -263,20 +242,16 @@ export function getVisibleMainTabs(
   }
 
   const keepExplicitShell =
+    effectiveLine === 'sante' ||
+    isRetiredUserRole(r) ||
     effectiveLine === 'amateur' ||
     effectiveLine === 'supporter' ||
     effectiveLine === 'sponsor' ||
     (isProFamilyLine(effectiveLine) &&
-      (r === 'player' ||
-        r === 'club' ||
-        r === 'coach' ||
-        r === 'agent' ||
-        r === 'recruiter' ||
-        r === 'organizer'));
+      (r === 'player' || r === 'club' || r === 'coach' || r === 'organizer'));
   const withCommunity = keepExplicitShell ? tabs : injectCommunityFeedTab(tabs, r);
   const withFamily = injectFamilyTab(withCommunity, profile, effectiveLine);
-  // Pôle Joueur : plus d’onglet / module Santé (annuaire RDV).
-  if (r === 'player') {
+  if (r === 'player' || isRetiredUserRole(r) || effectiveLine === 'sante') {
     return withFamily.filter((tab) => tab !== 'sante');
   }
   return withFamily;
@@ -370,13 +345,17 @@ export function getTabShortLabel(
     const translated = translate(key);
     if (translated !== key) return translated;
   }
-  if (isMedicalPractitionerRole(role)) {
-    return getPhysioTabLabel(tab);
+  if (isRetiredUserRole(role)) {
+    return labelsFallback(tab);
   }
   if (isSponsorRole(role)) {
     return getSponsorTabLabel(tab);
   }
   if (tab === 'recrutement') return getMercatoTabLabel(line, role);
+  return labelsFallback(tab);
+}
+
+function labelsFallback(tab: MainTabId): string {
   const labels: Record<MainTabId, string> = {
     home: 'Accueil',
     recrutement: 'Mercato',
