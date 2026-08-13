@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     return jsonResponse({ error: "Session requise" }, { status: 401 });
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `admin-beta-list:${getClientIp(request)}`,
     60,
     60_000,

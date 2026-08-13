@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+import { isSameOriginBrowserRequest } from "@/lib/requestSecurity";
 import { applySecurityHeaders } from "@/lib/securityHeaders";
 
 const DEFAULT_FUNCTION_URL =
@@ -17,7 +18,11 @@ function jsonResponse(body: Record<string, unknown>, init?: ResponseInit) {
 
 /** Proxy léger → Cloud Function recordTrafficVisit (pageview session). */
 export async function POST(request: Request) {
-  const rate = checkRateLimit(
+  if (!isSameOriginBrowserRequest(request)) {
+    return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });
+  }
+
+  const rate = await checkRateLimit(
     `traffic-visit:${getClientIp(request)}`,
     RATE_LIMIT,
     RATE_WINDOW_MS,

@@ -9,7 +9,7 @@ Vous êtes officiellement {{member_role}} — parmi les premiers à façonner Pr
 
 Inscription enregistrée pour : {{to_email}}
 
-ProDay réunit Mercato, matchs, tournois, Pulse et CV joueur dans une seule app — pour le foot amateur et semi-pro, avec les univers Man, Woman et Pro.
+ProDay réunit Mercato, matchs, tournois, Pulse et CV joueur dans une seule app — pour le foot amateur et semi-pro.
 
 PROCHAINES ÉTAPES
 
@@ -17,13 +17,17 @@ PROCHAINES ÉTAPES
    Ouvrez votre espace bêta personnel pour découvrir le programme et les prochaines actions.
 
 2) Explorez le programme bêta
-   Pôles à tester, feuille de route et infos sur les builds à venir.
+   Pôles à tester, feuille de route et infos sur les builds.
 
-3) APK & TestFlight bientôt
-   Vous serez contacté en priorité pour télécharger l'app iOS (TestFlight) et Android (APK).
+3) Installer l'app
+   Android : APK disponible dès maintenant (onglet Installer).
+   iOS : TestFlight ouvre le 15 août 2026 à 18 h — lien envoyé par email.
 
 ACCÉDER À LA BÊTA
 {{beta_url}}
+
+INSTALLER
+{{installer_url}}
 
 Si le lien ne fonctionne pas, copiez-le dans votre navigateur.
 

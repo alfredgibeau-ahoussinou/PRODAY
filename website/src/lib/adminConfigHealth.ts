@@ -31,8 +31,8 @@ export function getAdminConfigHealth(): AdminConfigCheck[] {
     {
       id: "session",
       label: "Secret session (≥ 16 car.)",
-      hint: "BETA_ADMIN_SESSION_SECRET",
-      ok: sessionOk || (pinOk && process.env.NODE_ENV !== "production"),
+      hint: "BETA_ADMIN_SESSION_SECRET (obligatoire en prod)",
+      ok: sessionOk,
     },
     {
       id: "admin_secret",

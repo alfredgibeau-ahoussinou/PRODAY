@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     return jsonResponse({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `admin-traffic:${getClientIp(request)}`,
     30,
     60_000,

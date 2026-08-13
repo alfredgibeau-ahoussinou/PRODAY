@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "Session requise" }, { status: 401 });
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `admin-feedback-resolve:${getClientIp(request)}`,
     40,
     60_000,

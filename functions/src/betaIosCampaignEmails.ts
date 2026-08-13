@@ -368,7 +368,7 @@ export const BETA_ENGAGEMENT_TOPICS: EngagementTopic[] = [
     title: 'Mises à jour régulières',
     lead: 'Nous publions de nouvelles builds iOS (TestFlight) et Android (APK) pendant la bêta.',
     bullets: [
-      'iOS : mettez à jour via TestFlight quand une build arrive',
+      'iOS : mettez à jour via TestFlight quand une build arrive (ouverture 15 août 2026 à 18 h)',
       "Android : retéléchargez l'APK depuis l'onglet Installer",
       'Consultez le programme bêta pour le calendrier',
     ],

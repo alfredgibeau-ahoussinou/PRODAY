@@ -12,11 +12,15 @@ function runtimeEnv(name: string): string {
 }
 
 function getEdgeSessionSecret(): string | null {
-  const secret =
-    runtimeEnv("BETA_ADMIN_SESSION_SECRET") ||
-    runtimeEnv("BETA_ACCESS_SECRET") ||
-    runtimeEnv("BETA_WEBSITE_ADMIN_SECRET");
-  return secret.length >= 16 ? secret : null;
+  const dedicated = runtimeEnv("BETA_ADMIN_SESSION_SECRET");
+  if (dedicated.length >= 16) return dedicated;
+
+  // Aligné Node : aucun fallback en production.
+  if (runtimeEnv("NODE_ENV") === "production") return null;
+
+  const fallback =
+    runtimeEnv("BETA_ACCESS_SECRET") || runtimeEnv("BETA_WEBSITE_ADMIN_SECRET");
+  return fallback.length >= 16 ? fallback : null;
 }
 
 function bufferToBase64Url(buffer: ArrayBuffer): string {

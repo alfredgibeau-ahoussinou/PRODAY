@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "Session bêta requise" }, { status: 401 });
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `beta-feedback:${getClientIp(request)}:${session.email}`,
     8,
     60 * 60_000,

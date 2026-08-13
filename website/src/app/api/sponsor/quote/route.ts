@@ -5,6 +5,10 @@ import {
   isSameOriginBrowserRequest,
 } from "@/lib/requestSecurity";
 import { applySecurityHeaders } from "@/lib/securityHeaders";
+import {
+  sanitizeSponsorQuoteBody,
+  validateSponsorQuote,
+} from "@/lib/sponsorQuotePayload";
 
 const RATE_LIMIT = 8;
 const RATE_WINDOW_MS = 60_000;
@@ -36,23 +40,33 @@ async function submitQuoteToFunction(
   };
 
   if (!upstream.ok) {
-    return { ok: false, status: upstream.status, error: data.error ?? "Enregistrement impossible" };
+    return {
+      ok: false,
+      status: upstream.status,
+      error: data.error ?? "Enregistrement impossible",
+    };
   }
 
   return { ok: true, requestId: data.requestId };
 }
 
 export async function POST(request: Request) {
-  if (!isSameOriginBrowserRequest(request) && !isProdayMobileClientRequest(request)) {
+  if (
+    !isSameOriginBrowserRequest(request) &&
+    !isProdayMobileClientRequest(request)
+  ) {
     return jsonResponse({ error: "Origine non autorisée" }, { status: 403 });
   }
 
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
-    return jsonResponse({ error: "Content-Type application/json requis" }, { status: 415 });
+    return jsonResponse(
+      { error: "Content-Type application/json requis" },
+      { status: 415 },
+    );
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `sponsor-quote:${getClientIp(request)}`,
     RATE_LIMIT,
     RATE_WINDOW_MS,
@@ -62,7 +76,9 @@ export async function POST(request: Request) {
       { error: "Trop de tentatives. Réessayez dans quelques minutes." },
       {
         status: 429,
-        headers: rate.retryAfterSec ? { "Retry-After": String(rate.retryAfterSec) } : undefined,
+        headers: rate.retryAfterSec
+          ? { "Retry-After": String(rate.retryAfterSec) }
+          : undefined,
       },
     );
   }
@@ -74,7 +90,29 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "Corps JSON invalide" }, { status: 400 });
   }
 
-  const quote = await submitQuoteToFunction({ ...body, source: body.source ?? "website" });
+  const payload = sanitizeSponsorQuoteBody(body);
+  const validationError = validateSponsorQuote(payload);
+  if (validationError) {
+    return jsonResponse({ error: validationError }, { status: 400 });
+  }
+
+  const quote = await submitQuoteToFunction({
+    companyName: payload.companyName,
+    contactEmail: payload.contactEmail,
+    contactName: payload.contactName,
+    contactRole: payload.contactRole,
+    phone: payload.phone,
+    budget: payload.budget,
+    goals: payload.goals,
+    audience: payload.audience,
+    regions: payload.regions,
+    sports: payload.sports,
+    message: payload.message,
+    packageTier: payload.packageTier,
+    sector: payload.sector,
+    source: payload.source,
+    sponsorUid: payload.sponsorUid,
+  });
   if (!quote.ok) {
     return jsonResponse(
       { error: quote.error ?? "Enregistrement impossible" },
@@ -85,6 +123,7 @@ export async function POST(request: Request) {
   return jsonResponse({
     ok: true,
     requestId: quote.requestId,
-    message: "Demande de devis enregistrée. Notre équipe vous recontacte sous 48 h ouvrées.",
+    message:
+      "Demande de devis enregistrée. Notre équipe vous recontacte sous 48 h ouvrées.",
   });
 }

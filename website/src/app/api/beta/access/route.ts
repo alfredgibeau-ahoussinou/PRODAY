@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   const token = url.searchParams.get("token")?.trim();
   const jsonOnly = url.searchParams.get("format") === "json";
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `beta-access:${getClientIp(request)}`,
     RATE_LIMIT,
     RATE_WINDOW_MS,

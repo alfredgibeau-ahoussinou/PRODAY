@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `beta-waitlist:${getClientIp(request)}`,
     RATE_LIMIT,
     RATE_WINDOW_MS,

@@ -169,7 +169,7 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "Content-Type application/json requis" }, { status: 415 });
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `sponsor-signup:${getClientIp(request)}`,
     RATE_LIMIT,
     RATE_WINDOW_MS,

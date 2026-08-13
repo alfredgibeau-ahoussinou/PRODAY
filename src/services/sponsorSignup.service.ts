@@ -10,7 +10,12 @@ export async function submitSponsorSignup(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-proday-client': 'proday-mobile',
+        ...(process.env.EXPO_PUBLIC_PRODAY_MOBILE_API_SECRET?.trim()
+          ? {
+              'x-proday-mobile-key':
+                process.env.EXPO_PUBLIC_PRODAY_MOBILE_API_SECRET.trim(),
+            }
+          : {}),
       },
       body: JSON.stringify(payload),
     });

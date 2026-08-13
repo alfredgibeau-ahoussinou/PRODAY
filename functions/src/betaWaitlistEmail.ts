@@ -1,9 +1,15 @@
 import { sendEmailViaEmailJs } from './emailJsClient';
 import {
+  IOS_BETA_LAUNCH_LABEL,
+  IOS_BETA_LAUNCH_LABEL_SHORT,
+} from './betaIosCampaignConstants';
+import {
   buildProdayEmailShell,
   emailCta,
   emailCtaRow,
   emailKicker,
+  emailList,
+  emailPanel,
   emailParagraph,
   emailTitle,
 } from './betaEmailLayout';
@@ -79,35 +85,47 @@ export function buildBetaConfirmationEmail(params: BetaConfirmationEmailParams):
   html: string;
   text: string;
 } {
-  const subject = 'Beta Request Received';
+  const site = (params.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
+  const subject = 'ProDay — demande bêta bien reçue';
 
   const text = [
-    'Thank you for your interest in ProDay.',
+    'Bonjour,',
     '',
-    'We have successfully received your beta access request.',
-    'Our team will review your application as soon as possible.',
+    'Merci pour votre intérêt pour ProDay.',
     '',
-    'You will receive another email once a decision has been made.',
+    'Nous avons bien reçu votre demande d’accès à la bêta.',
+    'Notre équipe l’examine dès que possible.',
     '',
-    'Thank you for your patience.',
-    'The ProDay Team.',
+    `Ouverture iOS (TestFlight) prévue le ${IOS_BETA_LAUNCH_LABEL}.`,
+    'Android : APK disponible dès validation, depuis votre espace bêta.',
+    '',
+    'Vous recevrez un nouvel email dès qu’une décision aura été prise.',
+    '',
+    `Page bêta : ${site}/beta/inscription`,
+    '',
+    'Merci pour votre patience,',
+    'L’équipe ProDay',
   ].join('\n');
 
   const html = buildProdayEmailShell({
     subject,
-    lang: 'en',
-    preheader: 'We received your ProDay beta access request.',
-    footerNote: `Message sent to ${params.email}.`,
+    lang: 'fr',
+    preheader: `Demande reçue. Ouverture iOS le ${IOS_BETA_LAUNCH_LABEL_SHORT}.`,
+    footerNote: `Message envoyé à ${params.email}.`,
     bodyHtml: `
-      ${emailKicker('Beta waitlist')}
-      ${emailTitle('Beta request received')}
-      ${emailParagraph('Thank you for your interest in ProDay.')}
+      ${emailKicker('Liste d’attente')}
+      ${emailTitle('Demande bêta bien reçue')}
+      ${emailParagraph('Merci pour votre intérêt pour ProDay.')}
       ${emailParagraph(
-        'We have successfully received your beta access request. Our team will review your application as soon as possible.',
+        'Nous avons bien reçu votre demande d’accès à la bêta. Notre équipe l’examine dès que possible.',
       )}
-      ${emailParagraph(
-        'You will receive another email once a decision has been made. Thank you for your patience.',
-      )}
+      ${emailPanel({
+        kicker: 'Calendrier',
+        title: IOS_BETA_LAUNCH_LABEL,
+        body: 'Ouverture iOS via <strong style="color:#ffffff;">TestFlight</strong>. Android : APK dès validation.',
+      })}
+      ${emailParagraph('Vous recevrez un nouvel email dès qu’une décision aura été prise.')}
+      ${emailCtaRow(emailCta(`${site}/beta/inscription`, 'Page bêta', false))}
     `,
   });
 
@@ -121,39 +139,55 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
 } {
   const site = (params.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
   const accessUrl = buildBetaAccessUrl(site, params.accessToken);
-  const subject = 'Welcome to the ProDay Beta';
+  const installerUrl = buildBetaInstallerUrl(site, params.accessToken);
+  const subject = 'Bienvenue dans la bêta ProDay';
 
   const text = [
-    'Congratulations!',
+    'Bonjour,',
     '',
-    'Your beta access request has been approved.',
+    `Félicitations — votre accès bêta est approuvé (profil : ${params.roleLabel}).`,
     '',
-    'You can now access ProDay and discover all of its features.',
+    'Vous faites partie des premiers à façonner ProDay sur le terrain.',
     '',
-    'Our team will contact you again soon with additional information.',
+    'Prochaines étapes :',
+    '• Ouvrez votre espace bêta (programme, guides, retours)',
+    '• Android : téléchargez l’APK depuis l’onglet Installer',
+    `• iOS : ouverture TestFlight le ${IOS_BETA_LAUNCH_LABEL} — lien envoyé par email`,
     '',
-    'Welcome to ProDay!',
+    `Espace bêta : ${accessUrl}`,
+    `Installer : ${installerUrl}`,
     '',
-    `Access your beta space: ${accessUrl}`,
-    `Installer (Android APK): ${buildBetaInstallerUrl(site, params.accessToken)}`,
+    'Bienvenue dans ProDay,',
+    'L’équipe ProDay',
   ].join('\n');
 
   const html = buildProdayEmailShell({
     subject,
-    lang: 'en',
-    preheader: 'Your ProDay beta access has been approved.',
-    footerNote: `Message sent to ${params.email}.`,
+    lang: 'fr',
+    preheader: `Accès approuvé. iOS TestFlight le ${IOS_BETA_LAUNCH_LABEL_SHORT}.`,
+    footerNote: `Message envoyé à ${params.email}.`,
     bodyHtml: `
-      ${emailKicker('Approved')}
-      ${emailTitle('Welcome to the ProDay Beta')}
-      ${emailParagraph('Congratulations! Your beta access request has been approved.')}
+      ${emailKicker('Accès approuvé')}
+      ${emailTitle('Bienvenue dans la bêta ProDay')}
       ${emailParagraph(
-        'You can now access ProDay and discover all of its features. Our team will contact you again soon with additional information.',
+        `Félicitations — votre demande a été approuvée. Profil : <strong style="color:#ffffff;">${params.roleLabel}</strong>.`,
       )}
-      ${emailParagraph(`Profile: <strong style="color:#ffffff;">${params.roleLabel}</strong>`)}
+      ${emailParagraph(
+        'Vous êtes officiellement beta-testeur — parmi les premiers à façonner ProDay sur le terrain.',
+      )}
+      ${emailPanel({
+        kicker: 'iOS · TestFlight',
+        title: IOS_BETA_LAUNCH_LABEL,
+        body: 'Le lien TestFlight vous sera envoyé par email à l’ouverture. Android : APK déjà disponible dans Installer.',
+      })}
+      ${emailList([
+        'Ouvrez votre espace bêta (programme et guides)',
+        'Installez l’APK Android depuis l’onglet Installer',
+        `Attendez le mail TestFlight le ${IOS_BETA_LAUNCH_LABEL_SHORT}`,
+      ])}
       ${emailCtaRow(
-        emailCta(accessUrl, 'Open beta space'),
-        emailCta(buildBetaInstallerUrl(site, params.accessToken), 'Installer', false),
+        emailCta(accessUrl, 'Espace bêta'),
+        emailCta(installerUrl, 'Installer', false),
       )}
     `,
   });
@@ -167,38 +201,39 @@ export function buildBetaRejectEmail(params: BetaRejectEmailParams): {
   text: string;
 } {
   const site = (params.siteUrl ?? 'https://proday75.fr').replace(/\/$/, '');
-  const subject = 'Update Regarding Your Beta Request';
+  const subject = 'ProDay — mise à jour sur votre demande bêta';
 
   const text = [
-    'Thank you for your interest in ProDay.',
+    'Bonjour,',
     '',
-    'After reviewing your request, we are unfortunately unable to grant beta access at this time.',
+    'Merci pour votre intérêt pour ProDay.',
     '',
-    'We appreciate your interest and will contact you again if new places become available.',
+    'Après examen, nous ne pouvons malheureusement pas vous octroyer un accès bêta pour le moment.',
     '',
-    'Thank you for your understanding.',
+    'Votre intérêt compte : nous vous recontacterons si de nouvelles places s’ouvrent.',
     '',
-    'The ProDay Team.',
+    `Découvrir ProDay : ${site}`,
     '',
-    `Site: ${site}`,
+    'Merci pour votre compréhension,',
+    'L’équipe ProDay',
   ].join('\n');
 
   const html = buildProdayEmailShell({
     subject,
-    lang: 'en',
-    preheader: 'An update regarding your ProDay beta request.',
-    footerNote: `Message sent to ${params.email}.`,
+    lang: 'fr',
+    preheader: 'Mise à jour concernant votre demande d’accès bêta ProDay.',
+    footerNote: `Message envoyé à ${params.email}.`,
     bodyHtml: `
-      ${emailKicker('Beta waitlist')}
-      ${emailTitle('Update on your beta request')}
-      ${emailParagraph('Thank you for your interest in ProDay.')}
+      ${emailKicker('Liste d’attente')}
+      ${emailTitle('Mise à jour sur votre demande')}
+      ${emailParagraph('Merci pour votre intérêt pour ProDay.')}
       ${emailParagraph(
-        'After reviewing your request, we are unfortunately unable to grant beta access at this time.',
+        'Après examen, nous ne pouvons malheureusement pas vous octroyer un accès bêta pour le moment.',
       )}
       ${emailParagraph(
-        'We appreciate your interest and will contact you again if new places become available.',
+        'Nous vous recontacterons si de nouvelles places s’ouvrent. Merci pour votre compréhension.',
       )}
-      ${emailCtaRow(emailCta(site, 'Discover ProDay', false))}
+      ${emailCtaRow(emailCta(site, 'Découvrir ProDay', false))}
     `,
   });
 
@@ -227,7 +262,9 @@ export function buildBetaEmailJsTemplateParams(
     site_url: site,
     beta_url: buildBetaAccessUrl(site, params.accessToken),
     installer_url: buildBetaInstallerUrl(site, params.accessToken),
-    subject: 'Welcome to the ProDay Beta',
+    subject: 'Bienvenue dans la bêta ProDay',
+    ios_launch_label: IOS_BETA_LAUNCH_LABEL,
+    ios_launch_label_short: IOS_BETA_LAUNCH_LABEL_SHORT,
   };
 }
 

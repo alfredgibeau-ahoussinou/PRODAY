@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "Session requise" }, { status: 401 });
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `admin-beta-campaign:${getClientIp(request)}`,
     10,
     60_000,

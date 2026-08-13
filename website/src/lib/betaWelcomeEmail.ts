@@ -1,5 +1,10 @@
 /** Template email bêta : garder aligné avec functions/src/betaWaitlistEmail.ts + betaEmailLayout.ts */
 
+import {
+  IOS_BETA_LAUNCH_LABEL,
+  IOS_BETA_LAUNCH_LABEL_SHORT,
+} from "@/lib/betaIosLaunch";
+
 export const BETA_MEMBER_ROLE = "Beta-testeur";
 
 /** Rôles waitlist = les 5 pôles vitrine (pas les rôles réseau intégrés). */
@@ -62,16 +67,17 @@ function buildProdayEmailShell(opts: {
   subject: string;
   bodyHtml: string;
   footerNote: string;
+  preheader?: string;
 }): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${opts.subject}</title>
 </head>
 <body style="margin:0;padding:0;background:#050505;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#ffffff;-webkit-text-size-adjust:100%;">
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Your ProDay beta access has been approved.</div>
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${opts.preheader ?? "Votre accès bêta ProDay a été approuvé."}</div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#050505;padding:40px 16px;">
     <tr>
       <td align="center">
@@ -94,7 +100,7 @@ function buildProdayEmailShell(opts: {
             <td style="padding:22px 32px 28px;border-top:1px solid rgba(255,255,255,0.12);background:#09090b;">
               <p style="margin:0;font-size:12px;line-height:1.65;color:#71717a;">
                 ${opts.footerNote}<br />
-                Questions? <a href="mailto:proday.admin@gmail.com" style="color:#4C8BFF;text-decoration:none;">proday.admin@gmail.com</a>
+                Questions ? <a href="mailto:proday.admin@gmail.com" style="color:#4C8BFF;text-decoration:none;">proday.admin@gmail.com</a>
                 · <a href="https://proday75.fr" style="color:#a1a1aa;text-decoration:none;">proday75.fr</a>
               </p>
             </td>
@@ -115,36 +121,50 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   const site = (params.siteUrl ?? "https://proday75.fr").replace(/\/$/, "");
   const accessUrl = buildBetaAccessUrl(site, params.accessToken);
   const installerUrl = buildBetaInstallerUrl(site, params.accessToken);
-  const subject = "Welcome to the ProDay Beta";
+  const subject = "Bienvenue dans la bêta ProDay";
 
   const text = [
-    "Congratulations!",
+    "Bonjour,",
     "",
-    "Your beta access request has been approved.",
+    `Félicitations — votre accès bêta est approuvé (profil : ${params.roleLabel}).`,
     "",
-    "You can now access ProDay and discover all of its features.",
+    "Vous faites partie des premiers à façonner ProDay sur le terrain.",
     "",
-    "Our team will contact you again soon with additional information.",
+    "Prochaines étapes :",
+    "• Ouvrez votre espace bêta (programme, guides, retours)",
+    "• Android : téléchargez l’APK depuis l’onglet Installer",
+    `• iOS : ouverture TestFlight le ${IOS_BETA_LAUNCH_LABEL} — lien envoyé par email`,
     "",
-    "Welcome to ProDay!",
+    `Espace bêta : ${accessUrl}`,
+    `Installer : ${installerUrl}`,
     "",
-    `Access your beta space: ${accessUrl}`,
-    `Installer (Android APK): ${installerUrl}`,
+    "Bienvenue dans ProDay,",
+    "L’équipe ProDay",
   ].join("\n");
 
   const html = buildProdayEmailShell({
     subject,
-    footerNote: `Message sent to ${params.email}.`,
+    preheader: `Accès approuvé. iOS TestFlight le ${IOS_BETA_LAUNCH_LABEL_SHORT}.`,
+    footerNote: `Message envoyé à ${params.email}.`,
     bodyHtml: `
-      <p style="margin:0 0 10px;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#4C8BFF;">Approved</p>
-      <h1 style="margin:0 0 18px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">Welcome to the ProDay Beta</h1>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Congratulations! Your beta access request has been approved.</p>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">You can now access ProDay and discover all of its features. Our team will contact you again soon with additional information.</p>
-      <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:#d4d4d8;">Profile: <strong style="color:#ffffff;">${params.roleLabel}</strong></p>
+      <p style="margin:0 0 10px;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#4C8BFF;">Accès approuvé</p>
+      <h1 style="margin:0 0 18px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">Bienvenue dans la bêta ProDay</h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Félicitations — votre demande a été approuvée. Profil : <strong style="color:#ffffff;">${params.roleLabel}</strong>.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Vous êtes officiellement beta-testeur — parmi les premiers à façonner ProDay sur le terrain.</p>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 20px;background:#111114;border:1px solid rgba(255,255,255,0.12);">
+        <tr>
+          <td style="width:3px;background:#0054F0;font-size:0;line-height:0;">&nbsp;</td>
+          <td style="padding:18px 20px;">
+            <p style="margin:0;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:#4C8BFF;">iOS · TestFlight</p>
+            <p style="margin:8px 0 0;font-size:20px;line-height:1.3;font-weight:600;color:#ffffff;">${IOS_BETA_LAUNCH_LABEL}</p>
+            <p style="margin:8px 0 0;font-size:14px;line-height:1.65;color:#a1a1aa;">Lien TestFlight envoyé par email à l’ouverture. Android : APK déjà disponible dans Installer.</p>
+          </td>
+        </tr>
+      </table>
       <table role="presentation" cellspacing="0" cellpadding="0">
         <tr>
           <td style="padding:0 10px 10px 0;">
-            <a href="${accessUrl}" style="display:inline-block;background:#0054F0;color:#ffffff;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:14px 26px;border:1px solid #0054F0;">Open beta space</a>
+            <a href="${accessUrl}" style="display:inline-block;background:#0054F0;color:#ffffff;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:14px 26px;border:1px solid #0054F0;">Espace bêta</a>
           </td>
           <td style="padding:0 0 10px 0;">
             <a href="${installerUrl}" style="display:inline-block;background:transparent;color:#ffffff;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;padding:14px 26px;border:1px solid rgba(255,255,255,0.2);">Installer</a>

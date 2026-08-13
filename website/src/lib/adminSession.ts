@@ -30,16 +30,19 @@ function getAdminPin(): string | null {
 }
 
 function getSessionSecret(): string | null {
-  const secret =
-    runtimeEnv("BETA_ADMIN_SESSION_SECRET") ||
-    runtimeEnv("BETA_ACCESS_SECRET") ||
-    runtimeEnv("BETA_WEBSITE_ADMIN_SECRET");
-  if (secret.length >= 16) return secret;
+  // Prod : secret dédié uniquement (pas de fallback vers d'autres secrets).
+  const dedicated = runtimeEnv("BETA_ADMIN_SESSION_SECRET");
+  if (dedicated.length >= 16) return dedicated;
+
+  if (runtimeEnv("NODE_ENV") === "production") return null;
+
+  // Dev local uniquement.
+  const fallback =
+    runtimeEnv("BETA_ACCESS_SECRET") || runtimeEnv("BETA_WEBSITE_ADMIN_SECRET");
+  if (fallback.length >= 16) return fallback;
   const pin = getAdminPin();
-  if (pin && runtimeEnv("NODE_ENV") !== "production") {
-    return `dev-admin-session:${pin}`;
-  }
-  return secret || null;
+  if (pin) return `dev-admin-session:${pin}`;
+  return null;
 }
 
 export function isAdminPinConfigured(): boolean {

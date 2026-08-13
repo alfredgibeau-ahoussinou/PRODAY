@@ -34,7 +34,7 @@ function setCors(req: functions.https.Request, res: functions.Response): boolean
     res.set('Access-Control-Allow-Origin', origin);
   }
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, x-proday-client');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, x-proday-client, x-proday-mobile-key, Authorization');
   return req.method === 'OPTIONS';
 }
 

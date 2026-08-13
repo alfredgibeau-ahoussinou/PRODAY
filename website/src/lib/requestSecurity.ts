@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "crypto";
 import { resolveBetaSiteUrl } from "@/lib/betaEmailConfig";
 
 const LOCAL_DEV_HOSTS = new Set(["localhost:3000", "127.0.0.1:3000"]);
@@ -48,9 +49,29 @@ function hostMatchesAllowed(urlString: string, allowed: Set<string>): boolean {
   }
 }
 
-/** Requêtes depuis l'app mobile ProDay (pas d'en-tête Origin). */
+function digest(value: string): Buffer {
+  return createHash("sha256").update(value).digest();
+}
+
+/**
+ * App mobile ProDay : clé partagée (jamais le header public x-proday-client seul).
+ * Headers : x-proday-mobile-key (préféré) ou Authorization: Bearer …
+ */
 export function isProdayMobileClientRequest(request: Request): boolean {
-  return request.headers.get("x-proday-client")?.trim() === "proday-mobile";
+  const expected = process.env.PRODAY_MOBILE_API_SECRET?.trim();
+  if (!expected || expected.length < 16) return false;
+
+  const fromHeader = request.headers.get("x-proday-mobile-key")?.trim() ?? "";
+  const auth = request.headers.get("authorization")?.trim() ?? "";
+  const bearer = auth.toLowerCase().startsWith("bearer ")
+    ? auth.slice(7).trim()
+    : "";
+  const provided = fromHeader || bearer;
+  if (!provided) return false;
+
+  const a = digest(provided);
+  const b = digest(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 /** Vérifie Origin ou Referer pour les POST navigateur (formulaire bêta). */

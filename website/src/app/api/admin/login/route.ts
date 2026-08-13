@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const rate = checkRateLimit(
+  const rate = await checkRateLimit(
     `admin-pin:${getClientIp(request)}`,
     PIN_RATE_LIMIT,
     PIN_RATE_WINDOW_MS,
