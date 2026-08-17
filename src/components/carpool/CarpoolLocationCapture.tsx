@@ -7,13 +7,17 @@ import {
   Alert,
 } from 'react-native';
 import type { GeoPoint } from '../../models/User';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { captureCurrentLocation, formatCoordinates, openMapsAt } from '../../utils/geoLocation';
 import { spacing, radius } from '../../theme/designTokens';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 interface CarpoolLocationCaptureProps {
   label: string;
@@ -34,7 +38,8 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
   disabled = false,
   compact = false,
 }) => {
-  const { colors } = useAppTheme();
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
@@ -58,34 +63,31 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]}>
-      <ProDayText variant="caption" accent style={styles.label}>
+      <ProDayText variant="caption" style={styles.label}>
         {label}
       </ProDayText>
       <TextInput
-        style={[
-          styles.input,
-          { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface },
-        ]}
+        style={styles.input}
         placeholder={t('carpool.location.addressPlaceholder')}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={palette.inkDim}
         value={place}
         onChangeText={onPlaceChange}
         editable={!disabled}
       />
       <View style={styles.actions}>
         <PressableSpring
-          style={[styles.geoBtn, { borderColor: colors.border, backgroundColor: colors.accentSoft }]}
+          style={styles.geoBtn}
           onPress={() => void capture()}
           disabled={disabled || loading}
           scaleTo={0.96}
           haptic
         >
           {loading ? (
-            <ActivityIndicator color={colors.accent} size="small" />
+            <ActivityIndicator color={palette.signal} size="small" />
           ) : (
             <>
-              <Icon name="location" size={16} color={colors.accent} />
-              <ProDayText variant="caption" accent style={styles.geoBtnText}>
+              <Icon name="location" size={16} color={palette.signal} />
+              <ProDayText variant="caption" style={styles.geoBtnText}>
                 {t('carpool.location.useCurrent')}
               </ProDayText>
             </>
@@ -99,7 +101,7 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
             scaleTo={0.96}
             haptic
           >
-            <ProDayText variant="caption" muted>
+            <ProDayText variant="caption" style={styles.mapLinkText}>
               {formatCoordinates(location)} · {t('carpool.location.map')}
             </ProDayText>
           </PressableSpring>
@@ -109,28 +111,36 @@ export const CarpoolLocationCapture: React.FC<CarpoolLocationCaptureProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  wrap: { gap: spacing.xs, marginTop: spacing.sm },
-  wrapCompact: { marginTop: spacing.xs },
-  label: { fontWeight: '700' },
-  input: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 15,
-  },
-  actions: { gap: spacing.xs },
-  geoBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-  },
-  geoBtnText: { fontWeight: '700' },
-  mapLink: { paddingVertical: 4 },
-});
+function createStyles(palette: CarpoolUiPalette) {
+  return StyleSheet.create({
+    wrap: { gap: spacing.xs, marginTop: spacing.sm },
+    wrapCompact: { marginTop: spacing.xs },
+    label: { fontWeight: '700', color: palette.signal },
+    input: {
+      borderWidth: 1,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      fontSize: 15,
+      borderColor: palette.fog,
+      color: palette.ink,
+      backgroundColor: palette.surfaceMuted,
+    },
+    actions: { gap: spacing.xs },
+    geoBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      alignSelf: 'flex-start',
+      borderColor: palette.fog,
+      backgroundColor: palette.signalSoft,
+    },
+    geoBtnText: { fontWeight: '700', color: palette.signal },
+    mapLink: { paddingVertical: 4 },
+    mapLinkText: { color: palette.inkMuted },
+  });
+}

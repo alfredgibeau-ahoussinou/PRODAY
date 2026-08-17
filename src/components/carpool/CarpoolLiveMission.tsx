@@ -12,6 +12,7 @@ import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { useCarpoolUi } from './CarpoolUiContext';
 import { openMapsAt, formatCoordinates } from '../../utils/geoLocation';
 import {
   canEndCarpoolTrip,
@@ -62,6 +63,7 @@ export const CarpoolLiveMission: React.FC<CarpoolLiveMissionProps> = ({
   compact = false,
 }) => {
   const { colors } = useAppTheme();
+  const palette = useCarpoolUi();
   const { t } = useTranslation();
   const {
     busy,
@@ -179,7 +181,7 @@ export const CarpoolLiveMission: React.FC<CarpoolLiveMissionProps> = ({
       style={[
         styles.wrap,
         compact && styles.wrapCompact,
-        { borderColor: colors.border, backgroundColor: colors.surface },
+        { borderColor: palette.fog, backgroundColor: palette.surface },
       ]}
     >
       <View style={styles.header}>
@@ -266,7 +268,7 @@ export const CarpoolLiveMission: React.FC<CarpoolLiveMissionProps> = ({
             <PressableSpring
               onPress={() => openMapsAt(driverLocation, driverName)}
               scaleTo={0.97}
-              style={[styles.mapAction, { backgroundColor: colors.surface }]}
+              style={[styles.mapAction, { backgroundColor: palette.surfaceMuted }]}
             >
               <Icon name="location" size={14} color={colors.accent} />
               <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
@@ -304,10 +306,10 @@ export const CarpoolLiveMission: React.FC<CarpoolLiveMissionProps> = ({
           <PressableSpring onPress={() => void handleStart()} disabled={busy} scaleTo={0.97} haptic>
             <ProDayGradient kind="cta" style={styles.cta}>
               {busy ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={palette.onSignal} />
               ) : (
                 <>
-                  <Icon name="car" size={16} color="#fff" />
+                  <Icon name="car" size={16} color={palette.onSignal} />
                   <ProDayText variant="caption" inverse style={styles.ctaText}>
                     {t('carpool.live.startCta')}
                   </ProDayText>

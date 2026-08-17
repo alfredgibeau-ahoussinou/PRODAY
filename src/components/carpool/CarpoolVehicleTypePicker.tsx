@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -15,8 +15,12 @@ import { Icon, type IconName } from '../ui/Icon';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 import { motion } from '../../theme/motion';
-import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 interface CarpoolVehicleTypePickerProps {
   value?: CarpoolVehicleType | null;
@@ -42,14 +46,17 @@ function VehicleTile({
   disabled,
   onPress,
   label,
+  palette,
+  styles,
 }: {
   type: CarpoolVehicleType;
   active: boolean;
   disabled: boolean;
   onPress: () => void;
   label: string;
+  palette: CarpoolUiPalette;
+  styles: ReturnType<typeof createStyles>;
 }) {
-  const styles = useMemo(() => createStyles(), []);
   const seats = CARPOOL_VEHICLE_DEFAULT_SEATS[type];
   const pop = useSharedValue(active ? 1 : 0);
 
@@ -80,7 +87,7 @@ function VehicleTile({
           <Icon
             name={VEHICLE_ICON[type]}
             size={22}
-            color={active ? CARPOOL_SITE.asphalt : CARPOOL_SITE.signalDeep}
+            color={active ? palette.onSignal : palette.signalDeep}
             variant="filled"
           />
         </View>
@@ -111,7 +118,8 @@ export const CarpoolVehicleTypePicker: React.FC<CarpoolVehicleTypePickerProps> =
   disabled = false,
 }) => {
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(), []);
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
 
   return (
     <View style={styles.wrap}>
@@ -126,6 +134,8 @@ export const CarpoolVehicleTypePicker: React.FC<CarpoolVehicleTypePickerProps> =
             disabled={disabled}
             label={t(`carpool.vehicle.${type}`)}
             onPress={() => onChange(type)}
+            palette={palette}
+            styles={styles}
           />
         ))}
       </View>
@@ -133,7 +143,7 @@ export const CarpoolVehicleTypePicker: React.FC<CarpoolVehicleTypePickerProps> =
   );
 };
 
-function createStyles() {
+function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     wrap: { gap: spacing.sm },
     label: {
@@ -141,11 +151,11 @@ function createStyles() {
       fontWeight: '800',
       letterSpacing: 0.8,
       textTransform: 'uppercase',
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
     },
     help: {
       fontSize: 12,
-      color: CARPOOL_SITE.inkMuted,
+      color: palette.inkMuted,
       marginTop: -4,
     },
     grid: {
@@ -164,14 +174,14 @@ function createStyles() {
       gap: 8,
       alignItems: 'center',
       borderWidth: 1.5,
-      borderColor: CARPOOL_SITE.fog,
-      backgroundColor: CARPOOL_SITE.surface,
+      borderColor: palette.fog,
+      backgroundColor: palette.surface,
       borderRadius: 16,
       minHeight: 118,
     },
     tileOn: {
-      backgroundColor: CARPOOL_SITE.signalSoft,
-      borderColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signalSoft,
+      borderColor: palette.signal,
     },
     iconWrap: {
       width: 44,
@@ -179,20 +189,20 @@ function createStyles() {
       borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: CARPOOL_SITE.surfaceMuted,
+      backgroundColor: palette.surfaceMuted,
     },
     iconWrapOn: {
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
     },
     name: {
       fontSize: 12,
       lineHeight: 15,
       fontWeight: '800',
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       textAlign: 'center',
       minHeight: 30,
     },
-    nameOn: { color: CARPOOL_SITE.asphalt },
+    nameOn: { color: palette.onSignal },
     seatDots: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -204,17 +214,17 @@ function createStyles() {
       width: 7,
       height: 7,
       borderRadius: 4,
-      backgroundColor: CARPOOL_SITE.lane,
+      backgroundColor: palette.lane,
     },
-    dotOn: { backgroundColor: CARPOOL_SITE.signalDeep },
+    dotOn: { backgroundColor: palette.signalDeep },
     dotHidden: { opacity: 0 },
-    more: { fontSize: 9, fontWeight: '800', color: CARPOOL_SITE.inkDim },
-    moreOn: { color: CARPOOL_SITE.signalDeep },
+    more: { fontSize: 9, fontWeight: '800', color: palette.inkDim },
+    moreOn: { color: palette.signalDeep },
     seats: {
       fontSize: 11,
       fontWeight: '700',
-      color: CARPOOL_SITE.inkMuted,
+      color: palette.inkMuted,
     },
-    seatsOn: { color: CARPOOL_SITE.signalDeep },
+    seatsOn: { color: palette.signalDeep },
   });
 }

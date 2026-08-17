@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
@@ -6,6 +6,11 @@ import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 interface CarpoolSeatPickerProps {
   seats: number;
@@ -24,7 +29,8 @@ export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
   label,
 }) => {
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(), []);
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
   const safeSeats = Math.max(0, seats);
   const free = Math.max(0, safeSeats - taken);
 
@@ -34,7 +40,7 @@ export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
       <View style={styles.cabin}>
         <View style={styles.driverRow}>
           <View style={styles.driver}>
-            <Icon name="person" size={14} color={CARPOOL_SITE.asphalt} variant="filled" />
+            <Icon name="person" size={14} color={palette.onSignal} variant="filled" />
             <Text style={styles.seatLabel}>{t('carpool.hub.driverSeat')}</Text>
           </View>
         </View>
@@ -62,7 +68,7 @@ export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
                   <Icon
                     name={occupied ? 'person' : 'checkmark-circle'}
                     size={16}
-                    color={occupied ? '#fff' : CARPOOL_SITE.asphalt}
+                    color={occupied ? palette.onSignal : palette.signalDeep}
                     variant="filled"
                   />
                 ) : null}
@@ -114,7 +120,7 @@ export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
   );
 };
 
-function createStyles() {
+function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     wrap: { gap: spacing.sm },
     title: {
@@ -122,12 +128,12 @@ function createStyles() {
       fontWeight: '800',
       letterSpacing: 0.8,
       textTransform: 'uppercase',
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
     },
     cabin: {
       borderWidth: 1.5,
-      borderColor: CARPOOL_SITE.fog,
-      backgroundColor: CARPOOL_SITE.surfaceMuted,
+      borderColor: palette.fog,
+      backgroundColor: palette.surfaceMuted,
       borderRadius: 18,
       padding: spacing.md,
       gap: spacing.sm,
@@ -142,7 +148,7 @@ function createStyles() {
       gap: 6,
       paddingHorizontal: 14,
       flexDirection: 'row',
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
     },
     seatsGrid: {
       flexDirection: 'row',
@@ -157,24 +163,24 @@ function createStyles() {
       minHeight: 52,
       borderRadius: 14,
       borderWidth: 1.5,
-      borderColor: CARPOOL_SITE.fog,
+      borderColor: palette.fog,
       alignItems: 'center',
       justifyContent: 'center',
       gap: 2,
-      backgroundColor: CARPOOL_SITE.surface,
+      backgroundColor: palette.surface,
     },
     seatOn: {
-      borderColor: CARPOOL_SITE.signal,
-      backgroundColor: CARPOOL_SITE.signalSoft,
+      borderColor: palette.signal,
+      backgroundColor: palette.signalSoft,
     },
     seatTaken: {
-      backgroundColor: CARPOOL_SITE.asphalt,
-      borderColor: CARPOOL_SITE.asphalt,
+      backgroundColor: palette.signalDeep,
+      borderColor: palette.signalDeep,
     },
-    seatLabel: { fontWeight: '700', fontSize: 11, color: CARPOOL_SITE.asphalt },
-    seatNum: { fontWeight: '800', color: CARPOOL_SITE.inkMuted, fontSize: 12 },
-    seatNumOn: { color: CARPOOL_SITE.signalDeep },
-    seatNumTaken: { color: '#fff' },
+    seatLabel: { fontWeight: '700', fontSize: 11, color: palette.onSignal },
+    seatNum: { fontWeight: '800', color: palette.inkMuted, fontSize: 12 },
+    seatNumOn: { color: palette.signalDeep },
+    seatNumTaken: { color: palette.onSignal },
     stepper: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -188,17 +194,17 @@ function createStyles() {
       borderRadius: 20,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: CARPOOL_SITE.asphalt,
+      backgroundColor: palette.signal,
     },
-    stepText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 24 },
+    stepText: { color: palette.onSignal, fontSize: 22, fontWeight: '700', lineHeight: 24 },
     stepValue: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 22,
       fontWeight: '800',
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       minWidth: 28,
       textAlign: 'center',
     },
-    meta: { textAlign: 'center', color: CARPOOL_SITE.inkMuted, fontSize: 12 },
+    meta: { textAlign: 'center', color: palette.inkMuted, fontSize: 12 },
   });
 }
