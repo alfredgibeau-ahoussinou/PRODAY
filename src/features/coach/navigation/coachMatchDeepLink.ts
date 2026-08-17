@@ -1,4 +1,5 @@
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
+import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { MatchsDeepLink } from '../../../utils/navigationDeepLink';
 
 export type CoachMatchHubOverlay = {
@@ -15,6 +16,11 @@ export function resolveCoachMatchHubOverlay(
     eventId: link.eventId,
     hubChapter: link.hubChapter ?? 'apercu',
   };
+}
+
+/** L’overlay hub reste visible uniquement sur l’onglet principal Matchs. */
+export function shouldKeepCoachMatchHubOverlay(activeTab: MainTabId): boolean {
+  return activeTab === 'matchs';
 }
 
 /** Parcours guidé Matchs & parcours — Convoc → pointage effectif. */

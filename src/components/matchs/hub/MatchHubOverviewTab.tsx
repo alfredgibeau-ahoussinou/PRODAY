@@ -10,7 +10,6 @@ import {
 } from '../../../models/TeamEvent';
 import { formatCalendarDate } from '../../../utils/seasonCalendar';
 import { resolveLiveState } from '../../../utils/matchLive';
-import { MatchLiveScoreboard } from './MatchLiveScoreboard';
 import { EventCarpoolPanel } from '../../team/EventCarpoolPanel';
 import { ProDaySurface } from '../../ui/ProDaySurface';
 import { ProDayText } from '../../ui/ProDayText';
@@ -82,8 +81,6 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
 
   return (
     <View style={styles.wrap}>
-      <MatchLiveScoreboard state={live} />
-
       <View style={styles.quickNav}>
         {quickItems.map((item, index) => (
           <StaggerReveal key={item.id} index={index} delayStep={40}>

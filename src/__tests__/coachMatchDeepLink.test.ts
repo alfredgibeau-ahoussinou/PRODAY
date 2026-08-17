@@ -1,6 +1,7 @@
 import {
   COACH_MATCH_FLOW_STEPS,
   resolveCoachMatchHubOverlay,
+  shouldKeepCoachMatchHubOverlay,
 } from '../features/coach/navigation/coachMatchDeepLink';
 
 describe('coachMatchDeepLink', () => {
@@ -32,5 +33,11 @@ describe('coachMatchDeepLink', () => {
       'live',
       'stats',
     ]);
+  });
+
+  it('conserve l’overlay hub uniquement sur l’onglet Matchs', () => {
+    expect(shouldKeepCoachMatchHubOverlay('matchs')).toBe(true);
+    expect(shouldKeepCoachMatchHubOverlay('home')).toBe(false);
+    expect(shouldKeepCoachMatchHubOverlay('profil')).toBe(false);
   });
 });

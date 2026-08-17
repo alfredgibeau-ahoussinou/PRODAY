@@ -14,6 +14,8 @@ const { width: W } = Dimensions.get('window');
 interface PushScreenTransitionProps {
   active: boolean;
   children: React.ReactNode;
+  /** Fond plein écran (ex. #000 coach) — défaut thème produit. */
+  backgroundColor?: string;
 }
 
 /**
@@ -22,6 +24,7 @@ interface PushScreenTransitionProps {
 export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   active,
   children,
+  backgroundColor,
 }) => {
   const { colors } = useAppTheme();
   const [mounted, setMounted] = useState(active);
@@ -48,7 +51,7 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
 
   return (
     <Animated.View
-      style={[styles.overlay, { backgroundColor: colors.background }, style]}
+      style={[styles.overlay, { backgroundColor: backgroundColor ?? colors.background }, style]}
       pointerEvents={active ? 'auto' : 'none'}
     >
       {children}

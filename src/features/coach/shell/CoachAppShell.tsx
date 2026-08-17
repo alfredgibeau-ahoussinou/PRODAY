@@ -45,7 +45,10 @@ import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useTabNavigation } from '../../../context/TabNavigationContext';
 import { MatchEventHubScreen } from '../../../screens/MatchEventHubScreen';
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
-import { resolveCoachMatchHubOverlay } from '../navigation/coachMatchDeepLink';
+import {
+  resolveCoachMatchHubOverlay,
+  shouldKeepCoachMatchHubOverlay,
+} from '../navigation/coachMatchDeepLink';
 import { usersService } from '../../../services/users.service';
 import {
   resolveClubCoversCoachFromMembers,
@@ -151,6 +154,12 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
   }, [activeTab]);
 
   useEffect(() => {
+    if (!shouldKeepCoachMatchHubOverlay(activeTab)) {
+      setMatchHubOverlay(null);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
     if (!pendingMatchsLink) return;
     const hubOverlay = resolveCoachMatchHubOverlay(pendingMatchsLink);
     if (hubOverlay) {
@@ -176,6 +185,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const resolved = findInCoachNavCatalog(catalog, navId);
 
   const onSelect = (id: CoachNavItemId) => {
+    setMatchHubOverlay(null);
     const next = canonicalizeCoachNav(id);
     setNavId(next);
     const nextTab = tabFromCoachNav(next);
@@ -229,7 +239,10 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
 
         <View style={styles.pane}>
           {content}
-          <PushScreenTransition active={Boolean(matchHubOverlay)}>
+          <PushScreenTransition
+            active={Boolean(matchHubOverlay)}
+            backgroundColor={COACH_SITE.bg}
+          >
             {matchHubOverlay ? (
               <MatchEventHubScreen
                 eventId={matchHubOverlay.eventId}
