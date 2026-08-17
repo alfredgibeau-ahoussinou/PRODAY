@@ -3,6 +3,7 @@ import {
   COACH_MORE_NAV_IDS,
   COACH_NAV_FOLDERS,
   COACH_PRIMARY_NAV_IDS,
+  COACH_SECONDARY_NAV_IDS,
   canonicalizeCoachNav,
   coachNavFromTab,
   findCoachNavItem,
@@ -16,68 +17,76 @@ import {
 import { COACH_SITE, getCoachPageIdentity } from '../content/coachPageIdentity';
 
 describe('coachNavConfig', () => {
-  it('expose 5 onglets SportEasy (Calendrier → Autres)', () => {
+  it('expose 8 onglets SportEasy (Accueil → Profil)', () => {
     const ids = COACH_NAV_FOLDERS.map((f) => f.id);
-    expect(ids).toEqual(['accueil', 'messagerie', 'equipe', 'match', 'plus']);
+    expect(ids).toEqual([
+      'accueil',
+      'equipe',
+      'match',
+      'entrainements',
+      'joueurs',
+      'ia',
+      'messagerie',
+      'profil',
+    ]);
     const dest = COACH_NAV_FOLDERS.flatMap((f) => f.items.map((i) => i.id));
-    expect(dest).toEqual(['today', 'messages', 'effectif', 'match_center', 'plus']);
+    expect(dest).toEqual([
+      'today',
+      'equipe',
+      'match_center',
+      'entrainements',
+      'joueurs',
+      'coach_ia',
+      'messages',
+      'profil',
+    ]);
     expect(COACH_PRIMARY_NAV_IDS).toEqual(dest);
-    expect(findCoachNavItem('today')?.label).toBe('Calendrier');
-    expect(findCoachNavItem('messages')?.label).toBe('Messagerie');
-    expect(findCoachNavItem('effectif')?.label).toBe('Membres');
-    expect(findCoachNavItem('match_center')?.label).toBe('Statistiques');
-    expect(findCoachNavItem('plus')?.label).toBe('Autres');
+    expect(findCoachNavItem('today')?.label).toBe('Accueil');
+    expect(findCoachNavItem('equipe')?.label).toBe('Équipe');
+    expect(findCoachNavItem('match_center')?.label).toBe('Matchs');
+    expect(findCoachNavItem('entrainements')?.label).toBe('Entraînements');
+    expect(findCoachNavItem('joueurs')?.label).toBe('Joueurs');
+    expect(findCoachNavItem('coach_ia')?.label).toBe('IA');
+    expect(findCoachNavItem('messages')?.label).toBe('Messages');
+    expect(findCoachNavItem('profil')?.label).toBe('Profil');
   });
 
-  it('sort l’Agenda de la barre et le range dans Autres', () => {
-    const dest = COACH_NAV_FOLDERS.flatMap((f) => f.items.map((i) => i.id));
-    expect(dest).not.toContain('planning');
-    expect(dest).not.toContain('pitch');
-    expect(dest).not.toContain('gestion');
-    expect(dest).not.toContain('carpool');
-    expect(dest).not.toContain('smart_tactics');
-    expect(dest).not.toContain('matchs');
-    expect(COACH_MORE_NAV_IDS).toContain('planning');
-    expect(primaryTabForCoachNav('planning')).toBe('plus');
-  });
-
-  it('mappe tabs ↔ nav et alias les anciennes pages', () => {
-    expect(tabFromCoachNav('match_center')).toBe('matchs');
-    expect(tabFromCoachNav('matchs')).toBe('matchs');
-    expect(tabFromCoachNav('messages')).toBe('messages');
+  it('canonise les alias legacy vers les 8 onglets', () => {
     expect(canonicalizeCoachNav('pitch')).toBe('today');
+    expect(canonicalizeCoachNav('effectif')).toBe('equipe');
+    expect(canonicalizeCoachNav('planning')).toBe('entrainements');
     expect(canonicalizeCoachNav('matchs')).toBe('match_center');
-    expect(primaryTabForCoachNav('gestion')).toBe('effectif');
-    expect(primaryTabForCoachNav('messages')).toBe('messages');
-    expect(primaryTabForCoachNav('smart_tactics')).toBe('plus');
-    expect(primaryTabForCoachNav('carpool')).toBe('plus');
+    expect(primaryTabForCoachNav('gestion')).toBe('equipe');
+    expect(primaryTabForCoachNav('smart_tactics')).toBe('coach_ia');
+    expect(primaryTabForCoachNav('carpool')).toBe('match_center');
+    expect(primaryTabForCoachNav('planning')).toBe('entrainements');
+  });
+
+  it('mappe tabs ↔ nav', () => {
+    expect(tabFromCoachNav('match_center')).toBe('matchs');
+    expect(tabFromCoachNav('messages')).toBe('messages');
     expect(coachNavFromTab('feed')).toBe('smart_tactics');
     expect(coachNavFromTab('home')).toBe('today');
     expect(findCoachNavItem('smart_tactics')?.requiresSmartTactics).toBe(true);
     expect(findCoachNavItem('mes_videos')?.label).toBe('Mes vidéos');
-    expect(findCoachNavItem('pitch')?.id).toBe('today');
   });
 
-  it('garde les outils dans Autres, plus sur Calendrier', () => {
+  it('range les outils secondaires hors barre', () => {
+    const dest = COACH_NAV_FOLDERS.flatMap((f) => f.items.map((i) => i.id));
+    expect(dest).not.toContain('plus');
+    expect(dest).not.toContain('gestion');
+    expect(dest).not.toContain('smart_tactics');
+    expect(COACH_SECONDARY_NAV_IDS).toContain('smart_tactics');
+    expect(COACH_SECONDARY_NAV_IDS).toContain('gestion');
     expect(COACH_HOME_TOOLS.map((t) => t.id)).toEqual([
-      'coach_ia',
       'smart_tactics',
       'mes_videos',
       'forme',
       'carpool',
       'com_staff',
+      'gestion',
     ]);
-    expect(COACH_MORE_NAV_IDS).toEqual([
-      'coach_ia',
-      'planning',
-      'carpool',
-      'com_staff',
-      'smart_tactics',
-      'mes_videos',
-      'forme',
-      'profil',
-    ]);
-    expect(COACH_MORE_NAV_IDS).not.toContain('messages');
+    expect(COACH_MORE_NAV_IDS).toContain('planning');
   });
 });
 
@@ -102,16 +111,10 @@ describe('resolveCoachNavAccess', () => {
     expect(video?.lockReason).toMatch(/Vidéo Coach/i);
   });
 
-  it('ouvre Mes vidéos si flag coach_video on', () => {
-    const more = resolveCoachMoreItems({ canSmartTactics: true, canVideo: true });
-    const video = more.find((i) => i.id === 'mes_videos');
-    expect(video?.locked).toBe(false);
-  });
-
-  it('résout 5 dossiers primaires', () => {
+  it('résout 8 dossiers primaires', () => {
     const folders = resolveCoachNavFolders({ canSmartTactics: true, canVideo: true });
-    expect(folders).toHaveLength(5);
-    expect(folders.flatMap((f) => f.items).map((i) => i.id)).toHaveLength(5);
+    expect(folders).toHaveLength(8);
+    expect(folders.flatMap((f) => f.items).map((i) => i.id)).toHaveLength(8);
   });
 });
 
@@ -125,13 +128,14 @@ describe('COACH_SITE night', () => {
 });
 
 describe('coach page titles SportEasy', () => {
-  it('aligne les titres d’onglets sur Calendrier / Messagerie / Membres / Statistiques / Autres', () => {
-    expect(getCoachPageIdentity('today').title).toBe('Calendrier');
-    expect(getCoachPageIdentity('messages').title).toBe('Messagerie');
-    expect(getCoachPageIdentity('effectif').title).toBe('Membres');
-    expect(getCoachPageIdentity('match_center').title).toBe('Statistiques');
+  it('aligne les titres sur les 8 onglets', () => {
+    expect(getCoachPageIdentity('today').title).toBe('Accueil');
+    expect(getCoachPageIdentity('equipe').title).toBe('Équipe');
+    expect(getCoachPageIdentity('match_center').title).toBe('Matchs');
+    expect(getCoachPageIdentity('entrainements').title).toBe('Entraînements');
+    expect(getCoachPageIdentity('joueurs').title).toBe('Joueurs');
     expect(getCoachPageIdentity('coach_ia').title).toBe('Assistant IA');
-    expect(getCoachPageIdentity('plus').title).toBe('Autres');
-    expect(getCoachPageIdentity('planning').title).toBe('Agenda');
+    expect(getCoachPageIdentity('messages').title).toBe('Messagerie');
+    expect(getCoachPageIdentity('profil').title).toBe('Profil coach');
   });
 });

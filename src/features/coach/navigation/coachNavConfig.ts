@@ -3,20 +3,30 @@ import type { CoachPortalChapterId } from '../../../content/coachPortalChapters'
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 
 /**
- * Navigation Pôle Coach — 5 onglets type SportEasy.
- * Agenda / planning vit dans Calendrier (+) et Autres, pas dans la barre.
+ * Navigation Pôle Coach — 8 onglets type SportEasy.
+ * ACCUEIL | ÉQUIPE | MATCHS | ENTRAÎNEMENTS | JOUEURS | IA | MESSAGES | PROFIL
  */
 
-export type CoachNavFolderId = 'accueil' | 'messagerie' | 'equipe' | 'match' | 'plus';
+export type CoachNavFolderId =
+  | 'accueil'
+  | 'equipe'
+  | 'match'
+  | 'entrainements'
+  | 'joueurs'
+  | 'ia'
+  | 'messagerie'
+  | 'profil';
 
 export type CoachNavItemId =
   | 'today'
-  | 'pitch'
+  | 'equipe'
   | 'effectif'
   | 'gestion'
   | 'planning'
+  | 'entrainements'
   | 'matchs'
   | 'match_center'
+  | 'joueurs'
   | 'smart_tactics'
   | 'coach_ia'
   | 'mes_videos'
@@ -25,7 +35,8 @@ export type CoachNavItemId =
   | 'com_staff'
   | 'carpool'
   | 'profil'
-  | 'plus';
+  | 'plus'
+  | 'pitch';
 
 export type CoachNavItem = {
   id: CoachNavItemId;
@@ -40,6 +51,8 @@ export type CoachNavItem = {
   requiresVideo?: boolean;
   lockMode?: 'soft' | 'hide';
   aiBadge?: boolean;
+  /** Label court pour barre mobile 8 onglets. */
+  shortLabel?: string;
 };
 
 export type CoachNavFolder = {
@@ -50,59 +63,114 @@ export type CoachNavFolder = {
 
 export const COACH_PRIMARY_NAV_IDS: CoachNavItemId[] = [
   'today',
-  'messages',
-  'effectif',
+  'equipe',
   'match_center',
-  'plus',
-];
-
-export const COACH_MORE_NAV_IDS: CoachNavItemId[] = [
+  'entrainements',
+  'joueurs',
   'coach_ia',
-  'planning',
-  'carpool',
-  'com_staff',
-  'smart_tactics',
-  'mes_videos',
-  'forme',
+  'messages',
   'profil',
 ];
 
-const todayItem: CoachNavItem = {
+/** Outils secondaires — plus dans la barre, accessibles depuis sections pertinentes. */
+export const COACH_SECONDARY_NAV_IDS: CoachNavItemId[] = [
+  'smart_tactics',
+  'mes_videos',
+  'forme',
+  'carpool',
+  'com_staff',
+  'gestion',
+  'plus',
+];
+
+/** @deprecated Utiliser COACH_SECONDARY_NAV_IDS — conservé pour compat tests/outils. */
+export const COACH_MORE_NAV_IDS: CoachNavItemId[] = [
+  'smart_tactics',
+  'mes_videos',
+  'forme',
+  'carpool',
+  'com_staff',
+  'gestion',
+  'planning',
+];
+
+const accueilItem: CoachNavItem = {
   id: 'today',
-  label: 'Calendrier',
-  hint: 'Séances, matchs, présences',
-  icon: 'calendar',
+  label: 'Accueil',
+  shortLabel: 'Accueil',
+  hint: 'Briefing · calendrier du jour',
+  icon: 'home',
   chapter: 'cockpit',
 };
 
-const messagesItem: CoachNavItem = {
-  id: 'messages',
-  label: 'Messagerie',
-  hint: 'Staff & parents',
-  icon: 'chat',
-  tab: 'messages',
-};
-
-const effectifItem: CoachNavItem = {
-  id: 'effectif',
-  label: 'Membres',
-  hint: 'Compo · liste',
-  icon: 'people',
+const equipeItem: CoachNavItem = {
+  id: 'equipe',
+  label: 'Équipe',
+  shortLabel: 'Équipe',
+  hint: 'Compo · terrain · gestion',
+  icon: 'football',
   chapter: 'effectif',
 };
 
 const matchCenterItem: CoachNavItem = {
   id: 'match_center',
-  label: 'Statistiques',
-  hint: 'Live · convocs · amicaux',
-  icon: 'stats-chart',
+  label: 'Matchs',
+  shortLabel: 'Matchs',
+  hint: 'Live · convocs · stats',
+  icon: 'trophy',
+  chapter: 'matchs',
   tab: 'matchs',
+};
+
+const entrainementsItem: CoachNavItem = {
+  id: 'entrainements',
+  label: 'Entraînements',
+  shortLabel: 'Séances',
+  hint: 'Planning · séances',
+  icon: 'calendar',
+  chapter: 'planning',
+};
+
+const joueursItem: CoachNavItem = {
+  id: 'joueurs',
+  label: 'Joueurs',
+  shortLabel: 'Joueurs',
+  hint: 'Liste · notes · analyse IA',
+  icon: 'people',
+  chapter: 'effectif',
+};
+
+const coachIaItem: CoachNavItem = {
+  id: 'coach_ia',
+  label: 'IA',
+  shortLabel: 'IA',
+  hint: 'Analyse · stratégie · actions',
+  icon: 'star-four-points',
+  aiBadge: true,
+};
+
+const messagesItem: CoachNavItem = {
+  id: 'messages',
+  label: 'Messages',
+  shortLabel: 'Messages',
+  hint: 'Staff & parents',
+  icon: 'chat',
+  tab: 'messages',
+};
+
+const profilItem: CoachNavItem = {
+  id: 'profil',
+  label: 'Profil',
+  shortLabel: 'Profil',
+  hint: 'Diplômes & vitrine',
+  icon: 'person',
+  tab: 'profil',
 };
 
 const plusItem: CoachNavItem = {
   id: 'plus',
-  label: 'Autres',
-  hint: 'Agenda, outils, compte',
+  label: 'Outils',
+  hint: 'Tactique, vidéos, covoiturage…',
   icon: 'hamburger',
 };
 
@@ -115,24 +183,36 @@ const planningItem: CoachNavItem = {
 };
 
 export const COACH_NAV_CATALOG: CoachNavItem[] = [
-  todayItem,
-  messagesItem,
-  effectifItem,
+  accueilItem,
+  equipeItem,
   matchCenterItem,
+  entrainementsItem,
+  joueursItem,
+  coachIaItem,
+  messagesItem,
+  profilItem,
   plusItem,
   planningItem,
   {
+    id: 'effectif',
+    label: 'Équipe',
+    hint: 'Alias effectif → équipe',
+    icon: 'football',
+    chapter: 'effectif',
+  },
+  {
     id: 'pitch',
-    label: 'Calendrier',
+    label: 'Accueil',
     hint: 'Raccourcis (ex-Terrain)',
-    icon: 'calendar',
+    icon: 'home',
     chapter: 'cockpit',
   },
   {
     id: 'matchs',
-    label: 'Statistiques',
+    label: 'Matchs',
     hint: 'Hub match unique',
-    icon: 'stats-chart',
+    icon: 'trophy',
+    chapter: 'matchs',
     tab: 'matchs',
   },
   {
@@ -140,13 +220,6 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
     label: 'Gestion',
     hint: 'Équipe & licences',
     icon: 'settings',
-  },
-  {
-    id: 'coach_ia',
-    label: 'Assistant IA',
-    hint: 'Analyse · stratégie · actions',
-    icon: 'star-four-points',
-    aiBadge: true,
   },
   {
     id: 'smart_tactics',
@@ -185,51 +258,56 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
     icon: 'car',
     tab: 'covoiturage',
   },
-  {
-    id: 'profil',
-    label: 'Profil coach',
-    hint: 'Diplômes & vitrine',
-    icon: 'person',
-    tab: 'profil',
-  },
 ];
 
-/** 5 onglets primaires — sidebar compacte + barre mobile. */
+/** 8 onglets primaires — sidebar + barre mobile. */
 export const COACH_NAV_FOLDERS: CoachNavFolder[] = [
-  { id: 'accueil', label: 'Calendrier', items: [todayItem] },
-  { id: 'messagerie', label: 'Messagerie', items: [messagesItem] },
-  { id: 'equipe', label: 'Membres', items: [effectifItem] },
-  { id: 'match', label: 'Statistiques', items: [matchCenterItem] },
-  { id: 'plus', label: 'Autres', items: [plusItem] },
+  { id: 'accueil', label: 'Accueil', items: [accueilItem] },
+  { id: 'equipe', label: 'Équipe', items: [equipeItem] },
+  { id: 'match', label: 'Matchs', items: [matchCenterItem] },
+  { id: 'entrainements', label: 'Entraînements', items: [entrainementsItem] },
+  { id: 'joueurs', label: 'Joueurs', items: [joueursItem] },
+  { id: 'ia', label: 'IA', items: [coachIaItem] },
+  { id: 'messagerie', label: 'Messages', items: [messagesItem] },
+  { id: 'profil', label: 'Profil', items: [profilItem] },
 ];
 
-/** Outils déplacés vers Autres (plus dans le dump accueil). */
+/** Raccourcis depuis l’accueil cockpit vers outils secondaires. */
 export const COACH_HOME_TOOLS: {
   id: CoachNavItemId;
   label: string;
   icon: IconName;
 }[] = [
-  { id: 'coach_ia', label: 'Assistant IA', icon: 'star-four-points' },
   { id: 'smart_tactics', label: 'Tactique IA', icon: 'star-four-points' },
   { id: 'mes_videos', label: 'Vidéos', icon: 'videocam' },
   { id: 'forme', label: 'Forme', icon: 'heart' },
   { id: 'carpool', label: 'Covoiturage', icon: 'car' },
   { id: 'com_staff', label: 'Parents', icon: 'mail' },
+  { id: 'gestion', label: 'Gestion', icon: 'settings' },
 ];
 
 /** Deep links d’anciennes pages → onglet parent. */
 export function canonicalizeCoachNav(id: CoachNavItemId): CoachNavItemId {
   if (id === 'pitch') return 'today';
+  if (id === 'effectif') return 'equipe';
+  if (id === 'planning') return 'entrainements';
   if (id === 'matchs') return 'match_center';
   return id;
 }
 
-/** Onglet de barre à allumer pour un dest (y compris outils Plus). */
+/** Onglet de barre à allumer pour un dest (y compris outils secondaires). */
 export function primaryTabForCoachNav(id: CoachNavItemId): CoachNavItemId {
   const canonical = canonicalizeCoachNav(id);
   if (COACH_PRIMARY_NAV_IDS.includes(canonical)) return canonical;
-  if (canonical === 'gestion') return 'effectif';
-  return 'plus';
+  if (canonical === 'gestion') return 'equipe';
+  if (COACH_SECONDARY_NAV_IDS.includes(canonical)) {
+    if (canonical === 'smart_tactics' || canonical === 'mes_videos' || canonical === 'forme') {
+      return 'coach_ia';
+    }
+    if (canonical === 'carpool' || canonical === 'com_staff') return 'match_center';
+    if (canonical === 'plus') return 'today';
+  }
+  return 'today';
 }
 
 export function findCoachNavItem(id: CoachNavItemId): CoachNavItem | undefined {

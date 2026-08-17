@@ -4,7 +4,10 @@ import { TabScreenShell } from '../../components/app/TabScreenShell';
 import { CoachChapterRail } from '../../components/coach/coachPortalUi';
 import { CoachCockpitChapter } from '../../components/coach/CoachCockpitChapter';
 import { CoachPlanningChapter } from '../../components/coach/CoachPlanningChapter';
-import { CoachEffectifChapter } from '../../components/coach/CoachEffectifChapter';
+import {
+  CoachEffectifChapter,
+  type CoachEffectifFocus,
+} from '../../components/coach/CoachEffectifChapter';
 import { CoachMatchsChapter } from '../../components/coach/CoachMatchsChapter';
 import { CoachPerformanceChapter } from '../../components/coach/CoachPerformanceChapter';
 import { CoachCommunicationChapter } from '../../components/coach/CoachCommunicationChapter';
@@ -25,11 +28,14 @@ import {
   userCanAccessSmartTactics,
 } from '../../utils/clubFeatureAccess';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
+import { COACH_SITE } from '../../content/coachPageIdentity';
 
 export type CoachPortalScreenProps = {
   chapter?: CoachPortalChapterId;
   hideRail?: boolean;
   embedded?: boolean;
+  effectifFocus?: CoachEffectifFocus;
 };
 
 /** Portail coach — standalone (onglet) ou embarqué dans CoachAppShell. */
@@ -37,6 +43,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
   chapter: chapterProp,
   hideRail = false,
   embedded = false,
+  effectifFocus,
 }) => {
   const profile = useSessionProfile();
   const { t } = useTranslation();
@@ -83,6 +90,26 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
     }
     setShowSmartTactics(true);
   }, [canSmartTactics, shellNav]);
+
+  const openChapter = useCallback(
+    (id: CoachPortalChapterId) => {
+      if (shellNav) {
+        const map: Record<CoachPortalChapterId, CoachNavItemId> = {
+          cockpit: 'today',
+          planning: 'entrainements',
+          effectif: 'equipe',
+          matchs: 'match_center',
+          performance: 'forme',
+          communication: 'com_staff',
+        };
+        shellNav.requestNav(map[id]);
+        return;
+      }
+      if (chapterProp) return;
+      setChapterState(id);
+    },
+    [shellNav, chapterProp],
+  );
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -161,7 +188,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
     members,
     refreshing,
     onRefresh: () => void load(),
-    onOpenChapter: setChapter,
+    onOpenChapter: openChapter,
     onOpenSmartTactics: openSmartTactics,
   };
 
@@ -179,7 +206,9 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
         <View style={styles.body}>
           {chapter === 'cockpit' ? <CoachCockpitChapter {...chapterProps} /> : null}
           {chapter === 'planning' ? <CoachPlanningChapter {...chapterProps} /> : null}
-          {chapter === 'effectif' ? <CoachEffectifChapter {...chapterProps} /> : null}
+          {chapter === 'effectif' ? (
+            <CoachEffectifChapter {...chapterProps} focus={effectifFocus} />
+          ) : null}
           {chapter === 'matchs' ? <CoachMatchsChapter {...chapterProps} /> : null}
           {chapter === 'performance' ? <CoachPerformanceChapter {...chapterProps} /> : null}
           {chapter === 'communication' ? (
@@ -221,5 +250,5 @@ const styles = StyleSheet.create({
   stack: { flex: 1, minHeight: 0 },
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, minHeight: 0 },
-  embed: { flex: 1, minHeight: 0 },
+  embed: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
 });

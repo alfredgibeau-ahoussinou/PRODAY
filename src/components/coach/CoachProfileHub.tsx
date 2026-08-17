@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { User } from '../../models/User';
+import type { TeamEvent } from '../../models/TeamEvent';
 import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
 import {
   CoachActionRow,
@@ -15,6 +16,10 @@ import { PressableSpring } from '../motion';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { getProfileCompletion } from '../../utils/profileCompletion';
+import { buildCoachAiNowActions } from '../../utils/coachAiInsights';
+import { buildCoachProfileStats, type CoachProfileStats } from '../../utils/coachProfileStats';
+import { teamEventsService } from '../../services/teamEvents.service';
+import { usersService } from '../../services/users.service';
 import { spacing } from '../../theme/designTokens';
 
 type Props = {
@@ -26,7 +31,18 @@ type Props = {
   onSubscriptionPress?: () => void;
   /** Aperçu actions assistant IA (depuis coachAiEngine). */
   aiActionPreview?: { title: string; detail: string }[];
+  /** Charge effectif et événements club pour stats réelles. */
+  selfLoadClubData?: boolean;
+  coachStats?: CoachProfileStats;
+  clubName?: string;
+  teamName?: string;
 };
+
+function splitDisplayName(name: string): { first: string; last: string } {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length <= 1) return { first: parts[0] ?? 'Coach', last: '' };
+  return { first: parts[0]!, last: parts.slice(1).join(' ') };
+}
 
 export function CoachProfileHub({
   profile,
@@ -35,7 +51,11 @@ export function CoachProfileHub({
   onPublicProfile,
   onAvatarPress,
   onSubscriptionPress,
-  aiActionPreview = [],
+  aiActionPreview,
+  selfLoadClubData = true,
+  coachStats: coachStatsProp,
+  clubName,
+  teamName,
 }: Props) {
   const identity = getCoachPageIdentity('profil');
   const shellNav = useCoachShellNav();
@@ -46,13 +66,61 @@ export function CoachProfileHub({
   const title = p.job_title?.trim() || 'Entraîneur';
   const diploma = p.diploma?.trim() || 'Diplôme à renseigner';
   const specialties = p.specialties ?? [];
-  const experiences = p.experiences?.length ?? 0;
+  const experiences = p.experiences ?? [];
   const diplomas = p.diplomas_list?.length ?? (p.diploma ? 1 : 0);
   const initial = (profile.display_name?.trim()?.charAt(0) || 'C').toUpperCase();
+  const { first, last } = splitDisplayName(profile.display_name ?? 'Coach');
+  const category = p.category?.trim() || 'Catégorie à renseigner';
+  const clubLabel = clubName?.trim() || profile.profile.club_id ? 'Club rattaché' : 'Aucun club';
+  const teamLabel = teamName?.trim() || 'Équipe à renseigner';
 
-  const open = (id: 'today' | 'planning' | 'matchs' | 'effectif' | 'smart_tactics' | 'forme' | 'coach_ia') => {
+  const [events, setEvents] = useState<TeamEvent[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (!selfLoadClubData || !profile.profile.club_id) return;
+    const clubId = profile.profile.club_id;
+    void Promise.all([
+      teamEventsService.listForClub(clubId).catch(() => [] as TeamEvent[]),
+      usersService.listMembersByClubId(clubId).catch(() => [] as User[]),
+    ]).then(([ev, mem]) => {
+      setEvents(ev);
+      setMembers(mem);
+    });
+  }, [selfLoadClubData, profile.profile.club_id, profile.uid]);
+
+  const coachStats = useMemo(
+    () =>
+      coachStatsProp ??
+      buildCoachProfileStats(events, members, profile.uid),
+    [coachStatsProp, events, members, profile.uid],
+  );
+
+  const resolvedAiPreview = useMemo(() => {
+    if (aiActionPreview && aiActionPreview.length > 0) return aiActionPreview;
+    return buildCoachAiNowActions({
+      events,
+      members,
+      hasClub: Boolean(profile.profile.club_id),
+    })
+      .slice(0, 3)
+      .map((a) => ({ title: a.title, detail: a.detail }));
+  }, [aiActionPreview, events, members, profile.profile.club_id]);
+
+  const open = (
+    id:
+      | 'today'
+      | 'entrainements'
+      | 'match_center'
+      | 'equipe'
+      | 'joueurs'
+      | 'smart_tactics'
+      | 'forme'
+      | 'coach_ia'
+      | 'gestion',
+  ) => {
     if (shellNav) shellNav.requestNav(id);
-    else if (id === 'matchs') nav.openMatchs();
+    else if (id === 'match_center') nav.openMatchs();
     else if (id === 'smart_tactics' || id === 'forme') nav.openDashboard('smart_tactics');
     else nav.setActiveTab('home');
   };
@@ -104,13 +172,36 @@ export function CoachProfileHub({
         </PressableSpring>
 
         <ProDayText variant="title" numberOfLines={1} style={styles.name}>
-          {profile.display_name}
+          {first}
+          {last ? ` ${last}` : ''}
         </ProDayText>
         <ProDayText variant="caption" numberOfLines={1} style={styles.meta}>
           {title}
           {profile.city ? ` · ${profile.city}` : ''}
           {subscriptionTier === 'pro' ? ' · Coach Pro' : ''}
         </ProDayText>
+        <View style={styles.identityRow}>
+          <View style={styles.identityChip}>
+            <CoachText variant="caption" muted>
+              Club
+            </CoachText>
+            <CoachText variant="caption">{clubLabel}</CoachText>
+          </View>
+          <View style={styles.identityChip}>
+            <CoachText variant="caption" muted>
+              Équipe
+            </CoachText>
+            <CoachText variant="caption" numberOfLines={1}>
+              {teamLabel}
+            </CoachText>
+          </View>
+          <View style={styles.identityChip}>
+            <CoachText variant="caption" muted>
+              Cat.
+            </CoachText>
+            <CoachText variant="caption">{category}</CoachText>
+          </View>
+        </View>
         {p.bio?.trim() ? (
           <ProDayText variant="caption" numberOfLines={3} style={styles.bio}>
             {p.bio.trim()}
@@ -126,7 +217,7 @@ export function CoachProfileHub({
         items={[
           { label: 'Profil', value: `${completion}%` },
           { label: 'Diplômes', value: String(diplomas) },
-          { label: 'Exp.', value: String(experiences) },
+          { label: 'Exp.', value: String(experiences.length) },
           {
             label: 'Note',
             value: p.rating != null ? p.rating.toFixed(1) : '—',
@@ -134,6 +225,21 @@ export function CoachProfileHub({
           },
         ]}
       />
+
+      <CoachSectionCard
+        kicker="Activité coach"
+        title="Stats réelles"
+        body="Compteurs depuis votre calendrier ProDay — pas de chiffres inventés."
+      >
+        <CoachKpiRow
+          items={[
+            { label: 'Séances', value: String(coachStats.sessionsCreated) },
+            { label: 'Matchs', value: String(coachStats.matchesManaged) },
+            { label: 'Feuilles', value: String(coachStats.matchesWithSheets) },
+            { label: 'Effectif', value: String(coachStats.rosterSize) },
+          ]}
+        />
+      </CoachSectionCard>
 
       <CoachSectionCard
         kicker="Identité terrain"
@@ -144,6 +250,21 @@ export function CoachProfileHub({
             : 'Numéro de licence et parcours à compléter.'
         }
       >
+        {experiences.length > 0 ? (
+          <View style={styles.expList}>
+            {experiences.slice(0, 3).map((exp) => (
+              <CoachText key={exp.id} variant="caption" muted>
+                {exp.organization}
+                {exp.title ? ` · ${exp.title}` : ''}
+                {exp.period ? ` (${exp.period})` : ''}
+              </CoachText>
+            ))}
+          </View>
+        ) : (
+          <CoachText variant="caption" muted style={styles.hint}>
+            Parcours et expériences à renseigner dans le profil.
+          </CoachText>
+        )}
         {specialties.length ? (
           <View style={styles.tags}>
             {specialties.slice(0, 6).map((s) => (
@@ -172,9 +293,9 @@ export function CoachProfileHub({
         title="Mon assistant IA"
         body="Synthèse équipe, stratégie et actions — uniquement depuis vos données ProDay."
       >
-        {aiActionPreview.length > 0 ? (
+        {resolvedAiPreview.length > 0 ? (
           <View style={styles.aiPreview}>
-            {aiActionPreview.slice(0, 3).map((a) => (
+            {resolvedAiPreview.map((a) => (
               <View key={a.title} style={styles.aiPreviewRow}>
                 <CoachText variant="caption" style={styles.aiPreviewTitle}>
                   {a.title}
@@ -187,14 +308,30 @@ export function CoachProfileHub({
           </View>
         ) : (
           <CoachText variant="caption" muted style={styles.hint}>
-            Ouvrez l’assistant pour voir vos priorités du moment.
+            Constituez votre effectif et vos feuilles de match pour activer l’assistant.
           </CoachText>
         )}
-        <CoachActionRow
-          primary="Ouvrir l’assistant IA"
-          onPrimary={() => open('coach_ia')}
-        />
+        <CoachActionRow primary="Ouvrir l’assistant IA" onPrimary={() => open('coach_ia')} />
       </CoachSectionCard>
+
+      {coachStats.recentActivity.length > 0 ? (
+        <CoachSectionCard
+          kicker="Fil d’activité"
+          title="Événements récents"
+          body="Derniers items de votre calendrier club."
+        >
+          {coachStats.recentActivity.map((a) => (
+            <View key={`${a.label}-${a.date.getTime()}`} style={styles.activityRow}>
+              <CoachText variant="caption" numberOfLines={1} style={styles.activityLabel}>
+                {a.label}
+              </CoachText>
+              <CoachText variant="caption" muted>
+                {a.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              </CoachText>
+            </View>
+          ))}
+        </CoachSectionCard>
+      ) : null}
 
       <CoachSectionCard
         kicker="Commandes"
@@ -204,12 +341,12 @@ export function CoachProfileHub({
         <View style={styles.grid}>
           {(
             [
-              { id: 'today' as const, label: 'Briefing', icon: 'home' as const },
-              { id: 'planning' as const, label: 'Planning', icon: 'calendar' as const },
-              { id: 'matchs' as const, label: 'Match', icon: 'football' as const },
-              { id: 'effectif' as const, label: 'Effectif', icon: 'people' as const },
-              { id: 'smart_tactics' as const, label: 'Tactique IA', icon: 'star-four-points' as const },
-              { id: 'forme' as const, label: 'Forme', icon: 'heart' as const },
+              { id: 'today' as const, label: 'Accueil', icon: 'home' as const },
+              { id: 'entrainements' as const, label: 'Séances', icon: 'calendar' as const },
+              { id: 'match_center' as const, label: 'Matchs', icon: 'football' as const },
+              { id: 'equipe' as const, label: 'Équipe', icon: 'football' as const },
+              { id: 'joueurs' as const, label: 'Joueurs', icon: 'people' as const },
+              { id: 'coach_ia' as const, label: 'IA', icon: 'star-four-points' as const },
             ] as const
           ).map((item) => (
             <PressableSpring
@@ -327,8 +464,23 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   meta: { color: COACH_SITE.accent, fontWeight: '700' },
+  identityRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  identityChip: {
+    flex: 1,
+    minWidth: 88,
+    padding: spacing.sm,
+    borderRadius: 10,
+    backgroundColor: COACH_SITE.elevated,
+    gap: 2,
+  },
   bio: { color: COACH_SITE.muted, lineHeight: 18, marginTop: 2 },
   bioMuted: { color: COACH_SITE.muted, lineHeight: 18, marginTop: 2 },
+  expList: { gap: 4, marginBottom: spacing.sm },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
   tag: {
     borderWidth: StyleSheet.hairlineWidth,
@@ -346,6 +498,15 @@ const styles = StyleSheet.create({
     backgroundColor: COACH_SITE.elevated,
   },
   aiPreviewTitle: { fontWeight: '700', marginBottom: 4 },
+  activityRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COACH_SITE.border,
+  },
+  activityLabel: { flex: 1, fontWeight: '600' },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

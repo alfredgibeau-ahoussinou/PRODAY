@@ -10,6 +10,8 @@ import {
 
 type Props = Omit<CoachPlayerAiInsightsInput, 'playerName'> & {
   playerName?: string;
+  /** Une ligne dans la liste joueurs. */
+  compact?: boolean;
 };
 
 /** Analyse IA joueur — bullets honnêtes depuis données réelles + notes coach. */
@@ -18,6 +20,17 @@ export function CoachPlayerAiPanel(props: Props) {
     ...props,
     playerName: props.playerName ?? 'Joueur',
   });
+
+  if (props.compact) {
+    const line =
+      insight.bullets[0] ??
+      (insight.level === 'none' ? insight.emptyHint : 'Analyse en cours…');
+    return (
+      <CoachText variant="caption" muted numberOfLines={2} style={styles.compactLine}>
+        {line}
+      </CoachText>
+    );
+  }
 
   if (insight.level === 'none') {
     return (
@@ -56,4 +69,5 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   bulletText: { flex: 1, lineHeight: 18 },
+  compactLine: { fontSize: 11, lineHeight: 15 },
 });

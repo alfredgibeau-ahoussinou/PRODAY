@@ -60,7 +60,7 @@ function CoachGestionPane({ profile }: { profile: User }) {
   return (
     <TeamManagementScreen
       profile={profile}
-      onBack={() => shellNav?.requestNav('effectif')}
+      onBack={() => shellNav?.requestNav('equipe')}
     />
   );
 }
@@ -71,7 +71,7 @@ type Props = {
 };
 
 /**
- * Shell Pôle Coach — 5 onglets (Calendrier, Messagerie, Membres, Statistiques, Autres).
+ * Shell Pôle Coach — 8 onglets (Accueil, Équipe, Matchs, Entraînements, Joueurs, IA, Messages, Profil).
  */
 export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const profile = useSessionProfile();
@@ -220,8 +220,12 @@ function renderCoachPane(
     case 'today':
     case 'pitch':
       return <CoachPortalScreen embedded hideRail chapter="cockpit" />;
+    case 'equipe':
     case 'effectif':
-      return <CoachPortalScreen embedded hideRail chapter="effectif" />;
+      return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="equipe" />;
+    case 'joueurs':
+      return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="joueurs" />;
+    case 'entrainements':
     case 'planning':
       return <CoachPortalScreen embedded hideRail chapter="planning" />;
     case 'forme':
@@ -240,7 +244,7 @@ function renderCoachPane(
       return profile ? <CoachGestionPane profile={profile} /> : null;
     case 'match_center':
     case 'matchs':
-      return <CoachAiHubScreen showSeasonStats />;
+      return <CoachPortalScreen embedded hideRail chapter="matchs" />;
     case 'messages':
       return <MessagesScreen />;
     case 'carpool':

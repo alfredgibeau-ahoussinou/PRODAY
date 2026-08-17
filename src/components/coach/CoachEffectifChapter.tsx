@@ -28,16 +28,25 @@ import type { CoachPlayerEvaluation } from '../../models/CoachEvaluation';
 import type { WellnessSignals } from '../../models/SmartTactics';
 import { Icon } from '../ui/Icon';
 
+import { CoachPlayerAiPanel } from './CoachPlayerAiPanel';
+
+export type CoachEffectifFocus = 'equipe' | 'joueurs' | 'all';
+
+type EffectifProps = CoachChapterCommonProps & {
+  focus?: CoachEffectifFocus;
+};
+
 function jerseyOf(user: User, index: number): number {
   const n = user.profile?.jersey_number;
   return typeof n === 'number' && n > 0 ? n : index + 1;
 }
 
-export const CoachEffectifChapter: React.FC<CoachChapterCommonProps> = ({
+export const CoachEffectifChapter: React.FC<EffectifProps> = ({
   profile,
   members,
   events,
   onRefresh,
+  focus = 'all',
 }) => {
   const { t } = useTranslation();
   const { openChat } = useTabNavigation();
@@ -80,10 +89,14 @@ export const CoachEffectifChapter: React.FC<CoachChapterCommonProps> = ({
     await openCarpoolDriverChat(profile, uid, name, openChat);
   };
 
+  const showPitch = focus === 'equipe' || focus === 'all';
+  const showRoster = focus === 'joueurs' || focus === 'all';
+  const pageId = focus === 'joueurs' ? 'joueurs' : 'equipe';
+
   if (!clubId) {
     return (
       <CoachPane
-        title={getCoachPageIdentity('effectif').title}
+        title={getCoachPageIdentity(pageId).title}
         actions={[{ icon: 'add', onPress: openGestion, accessibilityLabel: 'Ajouter un membre' }]}
       >
         <CoachChapterScroll>
@@ -105,60 +118,84 @@ export const CoachEffectifChapter: React.FC<CoachChapterCommonProps> = ({
 
   return (
     <CoachPane
-      title={getCoachPageIdentity('effectif').title}
+      title={getCoachPageIdentity(pageId).title}
       actions={[{ icon: 'add', onPress: openGestion, accessibilityLabel: 'Ajouter un membre' }]}
     >
       <CoachChapterScroll>
-        <CoachSportEasyPitch
-          teams={teams}
-          memberships={memberships}
-          members={members}
-          clubId={clubId}
-        />
+        {showPitch ? (
+          <CoachSportEasyPitch
+            teams={teams}
+            memberships={memberships}
+            members={members}
+            clubId={clubId}
+          />
+        ) : null}
 
-        <View style={styles.listHead}>
-          <CoachText variant="section" style={styles.listTitle}>
-            {t('coach.portal.effectif.roster')}
-          </CoachText>
-          <PressableSpring onPress={openGestion} scaleTo={0.98} haptic>
-            <CoachText variant="caption" muted style={styles.manageLink}>
-              Gérer licences
-            </CoachText>
-          </PressableSpring>
-        </View>
-
-        {members.length === 0 ? (
-          <CoachText variant="caption" muted>
-            {t('coach.portal.effectif.rosterEmpty')}
-          </CoachText>
-        ) : (
-          members.map((m, index) => (
-            <View key={m.uid} style={styles.playerRow}>
-              <PressableSpring
-                onPress={() => setNotePlayer(m)}
-                scaleTo={0.98}
-                haptic
-                style={styles.playerRowMain}
-              >
-                <View style={styles.playerNumWrap}>
-                  <CoachText variant="caption" style={styles.playerNum}>
-                    {jerseyOf(m, index)}
-                  </CoachText>
-                </View>
-                <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
-                  {m.display_name}
+        {showRoster ? (
+          <>
+            <View style={styles.listHead}>
+              <CoachText variant="section" style={styles.listTitle}>
+                {t('coach.portal.effectif.roster')}
+              </CoachText>
+              {focus === 'joueurs' ? (
+                <CoachText variant="caption" muted style={styles.manageLink}>
+                  Notes & analyse IA
                 </CoachText>
-              </PressableSpring>
-              <Pressable
-                accessibilityLabel="Message"
-                onPress={() => void messageUser(m.uid, m.display_name)}
-                style={styles.msgBtn}
-              >
-                <Icon name="chat" size={16} color={COACH_SITE.muted} />
-              </Pressable>
+              ) : (
+                <PressableSpring onPress={openGestion} scaleTo={0.98} haptic>
+                  <CoachText variant="caption" muted style={styles.manageLink}>
+                    Gérer licences
+                  </CoachText>
+                </PressableSpring>
+              )}
             </View>
-          ))
-        )}
+
+            {members.length === 0 ? (
+              <CoachText variant="caption" muted>
+                {t('coach.portal.effectif.rosterEmpty')}
+              </CoachText>
+            ) : (
+              members.map((m, index) => (
+                <View key={m.uid} style={styles.playerRow}>
+                  <PressableSpring
+                    onPress={() => setNotePlayer(m)}
+                    scaleTo={0.98}
+                    haptic
+                    style={styles.playerRowMain}
+                  >
+                    <View style={styles.playerNumWrap}>
+                      <CoachText variant="caption" style={styles.playerNum}>
+                        {jerseyOf(m, index)}
+                      </CoachText>
+                    </View>
+                    <View style={styles.playerInfo}>
+                      <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
+                        {m.display_name}
+                      </CoachText>
+                      {focus === 'joueurs' ? (
+                        <CoachPlayerAiPanel
+                          playerUid={m.uid}
+                          playerName={m.display_name}
+                          events={events}
+                          evaluations={evaluations}
+                          wellness={wellnessByUid[m.uid]}
+                          compact
+                        />
+                      ) : null}
+                    </View>
+                  </PressableSpring>
+                  <Pressable
+                    accessibilityLabel="Message"
+                    onPress={() => void messageUser(m.uid, m.display_name)}
+                    style={styles.msgBtn}
+                  >
+                    <Icon name="chat" size={16} color={COACH_SITE.muted} />
+                  </Pressable>
+                </View>
+              ))
+            )}
+          </>
+        ) : null}
 
         {pending.length > 0 ? (
           <PressableSpring onPress={openGestion} scaleTo={0.98} haptic style={styles.pendingLine}>
@@ -217,9 +254,10 @@ const styles = StyleSheet.create({
   playerRowMain: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.md,
   },
+  playerInfo: { flex: 1, gap: 4 },
   msgBtn: {
     padding: spacing.sm,
   },

@@ -30,6 +30,10 @@ import {
   type CoachAiActionId,
 } from '../../utils/coachAiInsights';
 import {
+  listRecentPostMatchAnalyses,
+  type PostMatchAnalysis,
+} from '../../utils/coachPostMatchAnalysis';
+import {
   loadCoachPitchLineup,
   normalizeCoachPitchLineup,
   type CoachPitchLineup,
@@ -50,8 +54,9 @@ function actionNavTarget(id: CoachAiActionId | string): CoachNavItemId | null {
     case 'plan-session':
       return 'today';
     case 'complete-lineup':
+      return 'equipe';
     case 'add-player-notes':
-      return 'effectif';
+      return 'joueurs';
     case 'add-wellness':
     case 'open-forme':
       return 'forme';
@@ -128,6 +133,11 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   );
 
   const { overview, strategy, actions } = insights;
+
+  const postMatchAnalyses = useMemo(
+    () => listRecentPostMatchAnalyses(events, members, 3),
+    [events, members],
+  );
 
   return (
     <CoachPane title={getCoachPageIdentity('coach_ia').title}>
@@ -243,6 +253,28 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             </CoachText>
           </Pressable>
 
+          <CoachSectionCard
+            kicker="Après-match"
+            title={
+              postMatchAnalyses.length > 0
+                ? `${postMatchAnalyses.length} analyse${postMatchAnalyses.length > 1 ? 's' : ''} récente${postMatchAnalyses.length > 1 ? 's' : ''}`
+                : 'Aucune feuille finalisée'
+            }
+            body={
+              postMatchAnalyses.length > 0
+                ? 'Synthèse honnête depuis feuilles de match et scores live.'
+                : 'Validez une feuille de match pour générer une analyse post-match.'
+            }
+          >
+            {postMatchAnalyses.length > 0 ? (
+              <View style={styles.postMatchList}>
+                {postMatchAnalyses.map((a) => (
+                  <PostMatchCard key={a.eventId} analysis={a} />
+                ))}
+              </View>
+            ) : null}
+          </CoachSectionCard>
+
           {actions.length > 0 ? (
             <View style={styles.previewActions}>
               {actions.slice(0, 3).map((a) => (
@@ -307,6 +339,61 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     </CoachPane>
   );
 };
+
+function PostMatchCard({ analysis }: { analysis: PostMatchAnalysis }) {
+  const dateStr = analysis.date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+  });
+  return (
+    <View style={styles.postMatchCard}>
+      <View style={styles.postMatchHead}>
+        <CoachText variant="section" numberOfLines={1} style={styles.postMatchTitle}>
+          {analysis.title}
+        </CoachText>
+        <CoachText variant="caption" muted>
+          {dateStr}
+          {analysis.scoreLabel ? ` · ${analysis.scoreLabel}` : ''}
+        </CoachText>
+      </View>
+      {analysis.positives.length > 0 ? (
+        <View style={styles.postMatchBlock}>
+          <CoachText variant="caption" style={styles.postMatchLabel}>
+            Points positifs
+          </CoachText>
+          {analysis.positives.map((p) => (
+            <CoachText key={p} variant="caption" muted>
+              + {p}
+            </CoachText>
+          ))}
+        </View>
+      ) : null}
+      {analysis.improvements.length > 0 ? (
+        <View style={styles.postMatchBlock}>
+          <CoachText variant="caption" style={styles.postMatchLabelWarn}>
+            À améliorer
+          </CoachText>
+          {analysis.improvements.map((p) => (
+            <CoachText key={p} variant="caption" muted>
+              → {p}
+            </CoachText>
+          ))}
+        </View>
+      ) : null}
+      {analysis.mvp ? (
+        <CoachText variant="caption" style={styles.mvpLine}>
+          ⭐ {analysis.mvp.name} — {analysis.mvp.reason}
+        </CoachText>
+      ) : null}
+      <CoachText variant="caption" muted style={styles.recLine}>
+        Prochain match : {analysis.nextMatchRecommendation}
+      </CoachText>
+      <CoachText variant="caption" muted style={styles.videoNote}>
+        {analysis.videoNote}
+      </CoachText>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   stack: { gap: spacing.md, paddingBottom: spacing.xl },
@@ -377,6 +464,33 @@ const styles = StyleSheet.create({
     borderColor: COACH_SITE.border,
   },
   previewTitle: { fontWeight: '700', marginBottom: 4 },
+  postMatchList: { marginTop: spacing.sm, gap: spacing.sm },
+  postMatchCard: {
+    padding: spacing.md,
+    borderRadius: 12,
+    backgroundColor: COACH_SITE.elevated,
+    gap: spacing.xs,
+  },
+  postMatchHead: { gap: 2, marginBottom: spacing.xs },
+  postMatchTitle: { fontWeight: '700' },
+  postMatchBlock: { gap: 2 },
+  postMatchLabel: {
+    color: COACH_SITE.accent,
+    fontWeight: '700',
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  postMatchLabelWarn: {
+    color: '#F59E0B',
+    fontWeight: '700',
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  mvpLine: { fontWeight: '700', marginTop: spacing.xs },
+  recLine: { marginTop: spacing.xs, lineHeight: 17 },
+  videoNote: { fontSize: 10, fontStyle: 'italic', marginTop: 4 },
   statsBlock: { gap: spacing.sm, marginTop: spacing.sm },
   statsTitle: {
     color: COACH_SITE.muted,

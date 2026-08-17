@@ -1,416 +1,431 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { CoachChapterCommonProps } from './coachPortalUi';
-import { CoachChapterScroll, CoachEmptyState } from './coachPortalUi';
-import { ProDaySurface } from '../ui/ProDaySurface';
-import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
+import { CoachChapterScroll, CoachText } from './coachPortalUi';
 import { PressableSpring } from '../motion';
-import { StaffPrioritiesStrip } from '../../features/v3/components/StaffPrioritiesStrip';
-import {
-  buildCoachAiSuggestions,
-  buildCoachPortalPriorities,
-} from '../../utils/coachAiSuggestions';
-import {
-  countAttendanceMark,
-  countRsvpYes,
-  EVENT_TYPE_LABELS,
-  getPendingInviteeUids,
-} from '../../models/TeamEvent';
-import { formatCalendarDate } from '../../utils/seasonCalendar';
+import { Icon } from '../ui/Icon';
+import { countRsvpYes, userRsvp, type RsvpStatus, type TeamEvent } from '../../models/TeamEvent';
 import { isInMatchWindow } from '../../utils/matchLive';
 import { userCanManageConvocations, resolveClubCoversCoachFromMembers } from '../../utils/clubFeatureAccess';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { ImmersivePoleHero } from '../poles';
 import { radius, spacing } from '../../theme/designTokens';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+import { teamEventsService } from '../../services/teamEvents.service';
+import { CreateTeamEventScreen } from '../../screens/CreateTeamEventScreen';
+import { CoachScreenHeader } from './CoachScreenHeader';
 import {
-  buildPlayerFormAnalysis,
-  type PlayerFormRow,
-} from '../../utils/formAnalysis';
-import type { PlayerLoadSignals } from '../../utils/playerLoadAlerts';
-import { CoachFormeDashboardCard } from './CoachAnalyseFormePanel';
+  COACH_CALENDAR_TIPS,
+  coachEventPlaceLabel,
+  formatCoachCalendarDateStack,
+  listCoachCalendarUpcoming,
+} from '../../utils/coachCalendarHome';
+import { findLatestPostMatchAnalysis } from '../../utils/coachPostMatchAnalysis';
+import { CoachSectionCard } from './coachPortalUi';
+
+const PEOPLE_GOLD = '#F5C518';
+const PILL_BORDER = 'rgba(255, 255, 255, 0.88)';
 
 export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
   events,
   members,
-  onOpenChapter,
-  onOpenSmartTactics,
+  onRefresh,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
+  const shellNav = useCoachShellNav();
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
   const canConvoc = userCanManageConvocations(profile, { clubCoversCoach });
   const hasClub = Boolean(profile.profile.club_id);
-  const isEmptySetup = !hasClub || (members.length === 0 && events.length === 0);
+  const [creating, setCreating] = useState(false);
+  const [discoverOn, setDiscoverOn] = useState(true);
+  const [rsvpOverride, setRsvpOverride] = useState<Record<string, RsvpStatus>>({});
 
-  const upcoming = useMemo(
-    () =>
-      [...events]
-        .filter((e) => e.starts_at.getTime() > Date.now())
-        .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime()),
-    [events],
-  );
-  const next = upcoming[0] ?? null;
-  const live = useMemo(() => events.find((e) => isInMatchWindow(e)) ?? null, [events]);
+  const upcoming = useMemo(() => listCoachCalendarUpcoming(events), [events]);
 
-  const pendingConvocations = useMemo(
-    () => upcoming.reduce((acc, e) => acc + getPendingInviteeUids(e).length, 0),
-    [upcoming],
+  const lastPostMatch = useMemo(
+    () => findLatestPostMatchAnalysis(events, members),
+    [events, members],
   );
 
-  const priorities = useMemo(
-    () =>
-      buildCoachPortalPriorities({
-        hasClub,
-        membersCount: members.length,
-        upcomingEvents: upcoming.length,
-        pendingConvocations,
-        canManageConvocations: canConvoc,
-      }),
-    [hasClub, members.length, upcoming.length, pendingConvocations, canConvoc],
-  );
-
-  const ai = useMemo(
-    () => buildCoachAiSuggestions({ events, membersCount: members.length }),
-    [events, members.length],
-  );
-
-  const openEvent = (eventId: string, hubChapter?: 'live' | 'composition') => {
-    if (!eventId) return;
-    tabNav.openMatchs({ eventId, hubChapter });
+  const openNav = (id: CoachNavItemId) => {
+    if (shellNav) shellNav.requestNav(id);
+    else if (id === 'carpool') nav.openCarpool();
+    else if (id === 'match_center' || id === 'matchs') nav.openMatchs();
+    else if (id === 'gestion') nav.openDashboard('gestion');
+    else if (id === 'profil') nav.openProfile();
   };
 
-  const openGestion = () => nav.openDashboard('gestion');
+  const openCreate = () => {
+    if (!hasClub) {
+      openNav('gestion');
+      return;
+    }
+    if (!canConvoc) {
+      Alert.alert(t('coach.portal.proGate.title'), t('coach.portal.proGate.body'));
+      return;
+    }
+    setCreating(true);
+  };
 
-  const formRows: PlayerFormRow[] = useMemo(() => {
-    const weekAgo = Date.now() - 7 * 24 * 3600_000;
-    const signals: PlayerLoadSignals[] = members.slice(0, 20).map((m) => {
-      const recent = events.filter(
-        (e) =>
-          e.starts_at.getTime() >= weekAgo &&
-          e.starts_at.getTime() <= Date.now() &&
-          (e.invitee_uids.includes(m.uid) || Boolean(e.player_match_stats?.[m.uid])),
-      );
-      const matchEvents = recent.filter(
-        (e) =>
-          e.event_type === 'friendly' ||
-          e.event_type === 'competition' ||
-          e.event_type === 'tournament',
-      );
-      const trainings = recent.filter((e) => e.event_type === 'training');
-      const minutes = matchEvents.reduce(
-        (sum, e) => sum + (e.player_match_stats?.[m.uid]?.minutes_played ?? 0),
-        0,
-      );
-      const lastMatch = [...matchEvents].sort(
-        (a, b) => b.starts_at.getTime() - a.starts_at.getTime(),
-      )[0];
-      return {
-        uid: m.uid,
-        displayName: m.display_name,
-        matchesLast7d: matchEvents.length,
-        minutesLast7d: minutes,
-        trainingsLast7d: trainings.length,
-        declaredFatigue: null,
-        daysSinceLastMatch: lastMatch
-          ? Math.floor((Date.now() - lastMatch.starts_at.getTime()) / 86400000)
-          : null,
-      };
-    });
-    return signals.map((s) => buildPlayerFormAnalysis(s));
-  }, [members, events]);
+  const openMoreMenu = () => {
+    Alert.alert(t('coach.calendar.title'), undefined, [
+      { text: t('coach.calendar.agenda'), onPress: () => openNav('planning') },
+      { text: t('coach.calendar.help'), onPress: () => shellNav?.openHelp?.() },
+      { text: t('common.cancel'), style: 'cancel' },
+    ]);
+  };
+
+  const setEventRsvp = async (eventId: string, status: RsvpStatus) => {
+    setRsvpOverride((prev) => ({ ...prev, [eventId]: status }));
+    try {
+      await teamEventsService.updateRsvp(eventId, profile.uid, status);
+      onRefresh();
+    } catch (e) {
+      setRsvpOverride((prev) => {
+        const next = { ...prev };
+        delete next[eventId];
+        return next;
+      });
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.error'));
+    }
+  };
+
+  if (creating) {
+    return (
+      <CreateTeamEventScreen
+        onBack={() => setCreating(false)}
+        onCreated={() => {
+          setCreating(false);
+          onRefresh();
+        }}
+      />
+    );
+  }
 
   return (
-    <CoachChapterScroll>
-      <ImmersivePoleHero
-        kicker="Pôle Coach · Banc de touche"
-        title="Composer. Décider. Gagner."
-        support="Tactique IA, effectif et bourse interne : rattaché à un club. Sous Tout inclus, les coachs ne paient rien."
-        primaryLabel="Tactique IA"
-        onPrimaryPress={() => onOpenSmartTactics?.()}
-        secondaryLabel="Effectif et bourse"
-        onSecondaryPress={() => onOpenChapter('effectif')}
-        mood="coach"
+    <View style={styles.root}>
+      <CoachScreenHeader
+        title={t('coach.calendar.title')}
+        actions={[
+          {
+            icon: 'add',
+            onPress: openCreate,
+            accessibilityLabel: t('coach.calendar.create'),
+          },
+          {
+            icon: 'ellipsis-horizontal',
+            onPress: openMoreMenu,
+            accessibilityLabel: t('coach.calendar.more'),
+          },
+        ]}
       />
 
-      <CoachFormeDashboardCard
-        rows={formRows}
-        onOpenFull={() => onOpenChapter('performance')}
-      />
-
-      <View style={styles.heading}>
-        <ProDayText variant="section">{t('coach.portal.cockpit.title')}</ProDayText>
-        <ProDayText variant="caption" muted>
-          {t('coach.portal.cockpit.subtitle')}
-        </ProDayText>
-      </View>
-
-      {isEmptySetup ? (
-        <ProDaySurface
-          variant="module"
-          style={[styles.setupCard, { borderColor: colors.accent, backgroundColor: colors.accentSoft }]}
-        >
-          <ProDayText variant="section">
-            {!hasClub
-              ? t('coach.portal.cockpit.setupNoClubTitle')
-              : t('coach.portal.cockpit.setupEmptyTitle')}
-          </ProDayText>
-          <ProDayText variant="caption" muted>
-            {!hasClub
-              ? t('coach.portal.cockpit.setupNoClubBody')
-              : t('coach.portal.cockpit.setupEmptyBody')}
-          </ProDayText>
-          <PressableSpring onPress={openGestion} scaleTo={0.96} haptic style={styles.setupCtaWrap}>
-            <ProDayGradient kind="cta" style={styles.setupCta}>
-              <ProDayText variant="caption" inverse style={styles.link}>
-                {!hasClub
-                  ? t('coach.portal.cockpit.setupNoClubCta')
-                  : t('coach.portal.cockpit.setupEmptyCta')}
-              </ProDayText>
-            </ProDayGradient>
-          </PressableSpring>
-          {hasClub ? (
-            <View style={styles.setupLinks}>
-              <PressableSpring onPress={() => onOpenChapter('effectif')} scaleTo={0.96} haptic>
-                <ProDayText variant="caption" accent style={styles.link}>
-                  {t('coach.portal.cockpit.setupInvite')}
-                </ProDayText>
-              </PressableSpring>
-              <PressableSpring onPress={() => onOpenChapter('planning')} scaleTo={0.96} haptic>
-                <ProDayText variant="caption" accent style={styles.link}>
-                  {t('coach.portal.cockpit.setupPlan')}
-                </ProDayText>
+      <CoachChapterScroll>
+        {discoverOn ? (
+          <View style={styles.discoverBlock}>
+            <View style={styles.discoverHead}>
+              <CoachText variant="section" style={styles.discoverTitle} numberOfLines={1}>
+                {t('coach.calendar.discover')}
+              </CoachText>
+              <PressableSpring onPress={() => setDiscoverOn(false)} scaleTo={0.96} haptic>
+                <CoachText variant="caption" muted style={styles.dismiss}>
+                  {t('coach.calendar.dismiss')}
+                </CoachText>
               </PressableSpring>
             </View>
-          ) : null}
-        </ProDaySurface>
-      ) : null}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.discoverRow}
+            >
+              {COACH_CALENDAR_TIPS.map((tip, index) => (
+                <PressableSpring
+                  key={tip.id}
+                  onPress={tip.id === 'create' ? openCreate : () => setDiscoverOn(false)}
+                  scaleTo={0.98}
+                  haptic
+                >
+                  <LinearGradient
+                    colors={index === 0 ? ['#1BA3A0', '#006CFC'] : ['#2C2C2E', '#1C1C1E']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.tipCard}
+                  >
+                    <CoachText variant="caption" style={styles.tipKicker}>
+                      {tip.kicker}
+                    </CoachText>
+                    <CoachText variant="section" numberOfLines={2} style={styles.tipTitle}>
+                      {tip.title}
+                    </CoachText>
+                  </LinearGradient>
+                </PressableSpring>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
 
-      {!isEmptySetup ? (
-        <StaffPrioritiesStrip
-          items={priorities}
-          onPress={(item) => {
-            if (item.id === 'pro-gate') {
-              nav.openProfile();
-              return;
+        {lastPostMatch ? (
+          <CoachSectionCard
+            kicker="Dernier match"
+            title={lastPostMatch.title}
+            body={
+              lastPostMatch.scoreLabel
+                ? `Score ${lastPostMatch.scoreLabel} — ${lastPostMatch.positives[0] ?? lastPostMatch.nextMatchRecommendation}`
+                : lastPostMatch.nextMatchRecommendation
             }
-            if (item.id === 'invite-roster') {
-              onOpenChapter('effectif');
-              return;
-            }
-            if (
-              item.id === 'first-session' ||
-              item.action === 'gestion' ||
-              item.id === 'team-mgmt' ||
-              item.id === 'join-club'
-            ) {
-              if (item.id === 'first-session') {
-                onOpenChapter('planning');
-                return;
-              }
-              openGestion();
-              return;
-            }
-            if (item.tab === 'matchs') {
-              nav.openMatchs({ homeTab: 'convocations' });
-              return;
-            }
-            if (item.tab === 'recrutement') {
-              nav.openMercato();
-            }
-          }}
-        />
-      ) : null}
-
-      {!canConvoc && hasClub && !isEmptySetup ? (
-        <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-          <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-            {t('coach.portal.proGate.title')}
-          </ProDayText>
-          <ProDayText variant="caption" muted>
-            {t('coach.portal.proGate.body')}
-          </ProDayText>
-          <PressableSpring onPress={() => nav.openProfile()} scaleTo={0.96} haptic>
-            <ProDayText variant="caption" accent style={styles.link}>
-              {t('coach.portal.proGate.cta')}
-            </ProDayText>
-          </PressableSpring>
-        </ProDaySurface>
-      ) : null}
-
-      <ProDaySurface
-        variant="module"
-        style={[styles.card, { borderColor: colors.accent, backgroundColor: colors.accentSoft }]}
-      >
-        <ProDayText variant="section">Tactique IA</ProDayText>
-        <ProDayText variant="caption" muted>
-          Match → Composition → Effectif. Pose le XI et synchronise le match.
-        </ProDayText>
-        <PressableSpring
-          onPress={() => {
-            if (onOpenSmartTactics) onOpenSmartTactics();
-            else nav.openDashboard('smart_tactics');
-          }}
-          scaleTo={0.96}
-          haptic
-          style={styles.setupCtaWrap}
-        >
-          <ProDayGradient kind="cta" style={styles.setupCta}>
-            <ProDayText variant="caption" inverse style={styles.link}>
-              Ouvrir Tactique IA
-            </ProDayText>
-          </ProDayGradient>
-        </PressableSpring>
-      </ProDaySurface>
-
-      <ProDayText variant="caption" accent style={styles.section}>
-        {t('coach.portal.cockpit.aiTitle')}
-      </ProDayText>
-      {ai.map((s) => (
-        <PressableSpring
-          key={s.id}
-          onPress={() =>
-            s.id === 'plan-session' ? onOpenChapter('planning') : onOpenChapter('matchs')
-          }
-          scaleTo={0.98}
-          haptic
-        >
-          <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-            <ProDayText variant="caption" muted style={styles.kind}>
-              {s.kind === 'squad'
-                ? t('coach.portal.ai.squad')
-                : s.kind === 'training'
-                  ? t('coach.portal.ai.training')
-                  : t('coach.portal.ai.logistics')}
-            </ProDayText>
-            <ProDayText variant="section">{s.title}</ProDayText>
-            <ProDayText variant="caption" muted>
-              {s.detail}
-            </ProDayText>
-          </ProDaySurface>
-        </PressableSpring>
-      ))}
-
-      <ProDayText variant="caption" accent style={styles.section}>
-        {t('coach.portal.cockpit.nextTitle')}
-      </ProDayText>
-      {upcoming.length === 0 ? (
-        <CoachEmptyState
-          title={t('coach.portal.cockpit.noEvents')}
-          body={t('coach.portal.cockpit.noEventsBody')}
-          cta={t('coach.portal.cockpit.planCta')}
-          onPress={() => (hasClub ? onOpenChapter('planning') : openGestion())}
-        />
-      ) : (
-        upcoming.slice(0, 4).map((event) => (
-          <PressableSpring key={event.id} onPress={() => openEvent(event.id)} scaleTo={0.98} haptic>
-            <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-              <ProDayText variant="section">{event.title}</ProDayText>
-              <ProDayText variant="caption" muted>
-                {EVENT_TYPE_LABELS[event.event_type]} · {formatCalendarDate(event.starts_at)}
-              </ProDayText>
-              {event === next ? (
-                <View style={styles.kpiRow}>
-                  <ProDayText variant="caption" accent>
-                    {t('roleHome.coach.rsvpYes')}: {countRsvpYes(event)}
-                  </ProDayText>
-                  <ProDayText variant="caption" muted>
-                    {t('roleHome.coach.present')}: {countAttendanceMark(event, 'present')}
-                  </ProDayText>
-                </View>
-              ) : null}
-            </ProDaySurface>
-          </PressableSpring>
-        ))
-      )}
-
-      {live ? (
-        <PressableSpring onPress={() => openEvent(live.id, 'live')} scaleTo={0.98} haptic>
-          <ProDaySurface
-            variant="module"
-            style={[styles.card, { borderColor: colors.accent, backgroundColor: colors.accentSoft }]}
           >
-            <ProDayText variant="section">{t('roleHome.coach.liveStats')}</ProDayText>
-            <ProDayText variant="caption" muted>
-              {live.title}
-            </ProDayText>
-          </ProDaySurface>
-        </PressableSpring>
-      ) : null}
+            <PressableSpring
+              onPress={() => openNav('coach_ia')}
+              scaleTo={0.98}
+              haptic
+              style={styles.postMatchLink}
+            >
+              <CoachText variant="caption" accent>
+                Voir l’analyse complète →
+              </CoachText>
+            </PressableSpring>
+          </CoachSectionCard>
+        ) : null}
 
-      <View style={styles.quickRow}>
-        <PressableSpring
-          style={[styles.quickBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
-          onPress={() => (next ? openEvent(next.id, 'composition') : onOpenChapter('planning'))}
-          scaleTo={0.96}
-          haptic
-        >
-          <ProDayText variant="caption" accent style={styles.link}>
-            {t('roleHome.coach.lineup')}
-          </ProDayText>
-        </PressableSpring>
-        <PressableSpring
-          style={[styles.quickBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
-          onPress={() => onOpenChapter('matchs')}
-          scaleTo={0.96}
-          haptic
-        >
-          <ProDayText variant="caption" accent style={styles.link}>
-            {t('coach.portal.cockpit.matchFlow')}
-          </ProDayText>
-        </PressableSpring>
-        <PressableSpring
-          style={[styles.quickBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
-          onPress={() => nav.openCarpool()}
-          scaleTo={0.96}
-          haptic
-        >
-          <ProDayText variant="caption" accent style={styles.link}>
-            {t('coach.portal.cockpit.carpool')}
-          </ProDayText>
-        </PressableSpring>
-      </View>
-    </CoachChapterScroll>
+        <CoachText variant="section" style={styles.sectionTitle}>
+          {t('coach.calendar.upcoming')}
+        </CoachText>
+
+        {upcoming.length === 0 ? (
+          <View style={styles.emptyBlock}>
+            <CoachText variant="body" muted style={styles.emptyText}>
+              {t('coach.calendar.empty')}
+            </CoachText>
+            <PressableSpring onPress={openCreate} scaleTo={0.97} haptic style={styles.emptyCta}>
+              <CoachText variant="section" style={styles.emptyCtaText}>
+                {t('coach.calendar.create')}
+              </CoachText>
+            </PressableSpring>
+          </View>
+        ) : (
+          upcoming.map((event) => (
+            <CalendarEventCard
+              key={event.id}
+              event={event}
+              rsvp={rsvpOverride[event.id] ?? userRsvp(event, profile.uid)}
+              live={isInMatchWindow(event)}
+              presentLabel={t('coach.calendar.present')}
+              absentLabel={t('coach.calendar.absent')}
+              liveLabel={t('coach.calendar.live')}
+              onOpen={() => tabNav.openMatchs({ eventId: event.id })}
+              onRsvp={(status) => void setEventRsvp(event.id, status)}
+            />
+          ))
+        )}
+      </CoachChapterScroll>
+    </View>
   );
 };
 
+function CalendarEventCard({
+  event,
+  rsvp,
+  live,
+  presentLabel,
+  absentLabel,
+  liveLabel,
+  onOpen,
+  onRsvp,
+}: {
+  event: TeamEvent;
+  rsvp: RsvpStatus;
+  live: boolean;
+  presentLabel: string;
+  absentLabel: string;
+  liveLabel: string;
+  onOpen: () => void;
+  onRsvp: (status: RsvpStatus) => void;
+}) {
+  const stack = formatCoachCalendarDateStack(event.starts_at);
+  const presentOn = rsvp === 'yes' || rsvp === 'late_under_10' || rsvp === 'late_over_10' || rsvp === 'late_unknown';
+  const absentOn = rsvp === 'no';
+
+  return (
+    <PressableSpring onPress={onOpen} scaleTo={0.99} haptic style={styles.card}>
+      <View style={styles.dateCol}>
+        <CoachText variant="caption" muted style={styles.dateWeek}>
+          {stack.weekday}
+        </CoachText>
+        <CoachText variant="title" style={styles.dateDay}>
+          {stack.day}
+        </CoachText>
+        <CoachText variant="caption" style={styles.dateMonth}>
+          {stack.month}
+        </CoachText>
+        <CoachText variant="caption" muted style={styles.dateTime}>
+          {stack.time}
+        </CoachText>
+      </View>
+      <View style={styles.cardDivider} />
+      <View style={styles.cardBody}>
+        <View style={styles.cardTitleRow}>
+          <CoachText variant="section" style={styles.eventTitle}>
+            {event.title}
+          </CoachText>
+          {live ? (
+            <View style={styles.liveBadge}>
+              <CoachText variant="caption" style={styles.liveBadgeText}>
+                {liveLabel}
+              </CoachText>
+            </View>
+          ) : null}
+        </View>
+        <View style={styles.rsvpRow}>
+          <RsvpPill label={presentLabel} on={presentOn} onPress={() => onRsvp('yes')} />
+          <RsvpPill label={absentLabel} on={absentOn} onPress={() => onRsvp('no')} />
+        </View>
+        <View style={styles.cardFooter}>
+          <CoachText variant="caption" muted numberOfLines={1} style={styles.place}>
+            {coachEventPlaceLabel(event)}
+          </CoachText>
+          <View style={styles.people}>
+            <Icon name="people" size={16} color={PEOPLE_GOLD} />
+            <CoachText variant="caption" style={styles.peopleCount}>
+              {countRsvpYes(event)}
+            </CoachText>
+          </View>
+        </View>
+      </View>
+    </PressableSpring>
+  );
+}
+
+function RsvpPill({
+  label,
+  on,
+  onPress,
+}: {
+  label: string;
+  on: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <PressableSpring
+      onPress={(e) => {
+        e.stopPropagation();
+        onPress();
+      }}
+      scaleTo={0.97}
+      haptic
+      style={[styles.rsvpPill, on && styles.rsvpPillOn]}
+    >
+      <CoachText variant="caption" style={[styles.rsvpPillText, on && styles.rsvpPillTextOn]}>
+        {label}
+      </CoachText>
+    </PressableSpring>
+  );
+}
+
 const styles = StyleSheet.create({
-  heading: { gap: 2, marginBottom: 2 },
-  section: { fontWeight: '800', marginTop: spacing.xs },
-  kind: { textTransform: 'uppercase', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
-  link: { fontWeight: '800' },
-  kpiRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xs },
-  quickRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xs },
-  quickBtn: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  root: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
+  discoverBlock: { gap: spacing.sm },
+  discoverHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
-  setupCard: {
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.sm + 2,
-    gap: 4,
+  discoverTitle: { flex: 1, fontWeight: '700', color: COACH_SITE.foreground },
+  dismiss: { fontWeight: '600' },
+  discoverRow: { gap: spacing.sm, paddingRight: spacing.md },
+  tipCard: {
+    width: 168,
+    minHeight: 88,
+    borderRadius: 16,
+    padding: spacing.md,
+    justifyContent: 'flex-end',
+    gap: 6,
   },
-  setupCtaWrap: { marginTop: 4, alignSelf: 'stretch' },
-  setupCta: {
+  tipKicker: { color: 'rgba(255,255,255,0.82)', fontWeight: '800', letterSpacing: 0.6 },
+  tipTitle: { color: '#fff', fontWeight: '700' },
+  sectionTitle: {
+    color: COACH_SITE.foreground,
+    fontWeight: '800',
+    fontSize: 22,
+    marginTop: spacing.sm,
+  },
+  emptyBlock: { gap: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
+  emptyText: { fontSize: 16 },
+  emptyCta: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    minHeight: 52,
+    borderRadius: radius.pill,
+    backgroundColor: '#E5E5EA',
+    paddingHorizontal: spacing.xl,
   },
-  setupLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: 2 },
+  emptyCtaText: { color: '#000', fontWeight: '700' },
   card: {
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.sm + 2,
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    backgroundColor: COACH_SITE.surface,
+    borderRadius: 20,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    gap: spacing.md,
   },
+  dateCol: {
+    width: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  dateWeek: { fontSize: 13, fontWeight: '600' },
+  dateDay: { color: COACH_SITE.foreground, fontWeight: '800', fontSize: 22, lineHeight: 24 },
+  dateMonth: { color: COACH_SITE.foreground, fontWeight: '700', fontSize: 13 },
+  dateTime: { fontSize: 12, fontWeight: '600', marginTop: 4 },
+  cardDivider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    marginVertical: 4,
+  },
+  cardBody: { flex: 1, minWidth: 0, gap: spacing.md },
+  cardTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  eventTitle: { flex: 1, color: COACH_SITE.foreground, fontWeight: '700', fontSize: 17 },
+  liveBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    backgroundColor: '#FF3B30',
+  },
+  liveBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  rsvpRow: { flexDirection: 'row', gap: spacing.sm },
+  rsvpPill: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    borderColor: PILL_BORDER,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  rsvpPillOn: {
+    backgroundColor: '#fff',
+    borderColor: '#fff',
+  },
+  rsvpPillText: { color: COACH_SITE.foreground, fontWeight: '700' },
+  rsvpPillTextOn: { color: '#000' },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  place: { flex: 1, fontSize: 13 },
+  people: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  peopleCount: { color: COACH_SITE.foreground, fontWeight: '700' },
+  postMatchLink: { marginTop: spacing.sm },
 });
