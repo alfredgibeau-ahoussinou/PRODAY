@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { TeamEvent } from '../../../models/TeamEvent';
 import { PitchLineupView } from '../../team/PitchLineupView';
+import { CoachStadiumPitch } from '../../coach/CoachStadiumPitch';
 import { ProDaySurface } from '../../ui/ProDaySurface';
 import { ProDayText } from '../../ui/ProDayText';
 import { ProDayGradient } from '../../ui/ProDayGradient';
 import { Icon } from '../../ui/Icon';
 import { PressableSpring, StaggerReveal } from '../../motion';
 import { useAppTheme } from '../../../context/ProductLineContext';
+import { useIsCoachShell } from '../../../features/coach/shell/CoachThemeContext';
+import {
+  eventStartersToStadiumCells,
+  eventSubsToBenchPlayers,
+} from '../../../utils/coachStadiumPitchLayout';
 import { spacing, radius } from '../../../theme/designTokens';
 
 interface MatchHubLineupTabProps {
@@ -22,6 +28,7 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
   onEditLineup,
 }) => {
   const { colors } = useAppTheme();
+  const isCoachShell = useIsCoachShell();
   const lineup = event.lineup;
 
   if (!lineup || lineup.slots.length === 0) {
@@ -49,6 +56,11 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
 
   const starters = lineup.slots.filter((s) => s.role === 'starter');
   const subs = lineup.slots.filter((s) => s.role === 'sub');
+  const coachCells = useMemo(
+    () => eventStartersToStadiumCells(starters, lineup.formation),
+    [starters, lineup.formation],
+  );
+  const coachBench = useMemo(() => eventSubsToBenchPlayers(subs), [subs]);
 
   return (
     <View style={styles.wrap}>
@@ -63,7 +75,18 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
         ) : null}
       </View>
 
-      <PitchLineupView formation={lineup.formation} starters={starters} />
+      {isCoachShell ? (
+        <CoachStadiumPitch
+          formation={lineup.formation}
+          cells={coachCells}
+          bench={coachBench}
+          readOnly
+          showHeader
+          headerTitle="Composition publiée"
+        />
+      ) : (
+        <PitchLineupView formation={lineup.formation} starters={starters} />
+      )}
 
       {starters.length > 0 ? (
         <ProDaySurface variant="module" style={[styles.listCard, { borderColor: colors.border }]}>

@@ -34,6 +34,10 @@ import { SMART_PITCH, SmartTacticsPressable, useSmartTacticsTheme } from './smar
 import { Icon } from '../ui/Icon';
 import { SmartPlayerCard } from './SmartPlayerCard';
 import { PitchFrame, projectPitch } from './PerspectivePitch';
+import {
+  CoachStadiumPitch,
+  type CoachStadiumCell,
+} from '../coach/CoachStadiumPitch';
 
 type StageDef = {
   key: string;
@@ -505,6 +509,17 @@ export const SmartTacticsBoard: React.FC<{
       : 0.12 + (activeVisual / (lineCount - 1)) * 0.76;
   const bandH = Math.max(0.085, 0.65 / lineCount);
 
+  const coachStadiumCells = useMemo((): (CoachStadiumCell | null)[] => {
+    return cells.map((slot) => {
+      if (!slot || isPlaceholderSlot(slot)) return { uid: null };
+      return {
+        uid: slot.uid,
+        shortName: shortName(slot.display_name),
+        jerseyNumber: null,
+      };
+    });
+  }, [cells]);
+
   return (
     <View style={styles.root}>
       {/* Formation */}
@@ -599,6 +614,28 @@ export const SmartTacticsBoard: React.FC<{
         </View>
 
         <View style={styles.scene}>
+          {theme.coach ? (
+            <CoachStadiumPitch
+              variant="embedded"
+              showHeader={false}
+              showBench={false}
+              formation={formation}
+              cells={coachStadiumCells}
+              readOnly={readOnly}
+              selectedSlotIndex={selectedEmptyIdx}
+              selectedUid={selectedUid}
+              highlightLineIndex={activeStage.lineIndex}
+              pitchWidth={pitchW}
+              onSlotPress={(absoluteIndex) => {
+                const row = pitchRows.find(
+                  (r) =>
+                    absoluteIndex >= r.startIdx &&
+                    absoluteIndex < r.startIdx + r.slots.length,
+                );
+                onPressCell(absoluteIndex, row?.lineIndex ?? activeStage.lineIndex);
+              }}
+            />
+          ) : (
           <PitchFrame
             width={pitchW}
             height={pitchH}
@@ -661,6 +698,7 @@ export const SmartTacticsBoard: React.FC<{
               })}
             </View>
           </PitchFrame>
+          )}
         </View>
 
         {/* Banc de touche */}

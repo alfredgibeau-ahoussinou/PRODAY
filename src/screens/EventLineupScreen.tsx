@@ -14,9 +14,15 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
 import { PitchLineupView } from '../components/team/PitchLineupView';
+import { CoachStadiumPitch } from '../components/coach/CoachStadiumPitch';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { useAuth } from '../context/AuthContext';
+import { useIsCoachShell } from '../features/coach/shell/CoachThemeContext';
+import {
+  eventStartersToStadiumCells,
+  eventSubsToBenchPlayers,
+} from '../utils/coachStadiumPitchLayout';
 import type { AppColors } from '../theme/universeTheme';
 import type { ProductLineId } from '../models/ProductLine';
 
@@ -31,6 +37,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
 }) => {
   const { profile } = useAuth();
   const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
+  const isCoachShell = useIsCoachShell();
   const styles = useMemo(() => createStyles(c), [c]);
   const [event, setEvent] = useState<TeamEvent | null>(null);
   const [formation, setFormation] = useState<string>('4-3-3');
@@ -127,6 +134,12 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
     }
   };
 
+  const coachCells = useMemo(
+    () => eventStartersToStadiumCells(starters, formation),
+    [starters, formation],
+  );
+  const coachBench = useMemo(() => eventSubsToBenchPlayers(subs), [subs]);
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -160,7 +173,17 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
           ))}
         </View>
 
-        <PitchLineupView formation={formation} starters={starters} />
+        {isCoachShell ? (
+          <CoachStadiumPitch
+            formation={formation}
+            cells={coachCells}
+            bench={coachBench}
+            readOnly
+            showHeader
+          />
+        ) : (
+          <PitchLineupView formation={formation} starters={starters} />
+        )}
 
         <Section
           title={`Titulaires (${starters.length})`}
