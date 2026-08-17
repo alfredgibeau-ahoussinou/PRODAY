@@ -194,11 +194,11 @@ export function buildOpponentAnalysis(input: {
 
   if (!hasData) {
     return {
-      strengths: ['Données adverses limitées — observez le pressing haut des 15 premières minutes'],
-      weaknesses: ['Profil inconnu — tester les transitions après récupération'],
+      strengths: ['Ils peuvent monter haut dès le coup d’envoi — à confirmer en live'],
+      weaknesses: ['Profil encore flou — teste les transitions après récupération'],
       key_players: [],
-      risk_flags: ['Analyse partielle : peu d’historique disponible'],
-      suggested_approach: 'Démarrer en 4-3-3 compact, ajuster selon le premier quart d’heure',
+      risk_flags: ['Peu d’historique sur cet adversaire'],
+      suggested_approach: 'Démarre en 4-4-2 compact et ajuste après le premier quart d’heure',
       formation_guess: '4-4-2',
       data_confidence: 'low',
     };
@@ -206,25 +206,94 @@ export function buildOpponentAnalysis(input: {
 
   const strengths: string[] = [];
   const weaknesses: string[] = [];
-  if (avgGf >= 1.8) strengths.push('Attaque productive');
-  else strengths.push('Organisation défensive possible');
-  if (avgGa <= 0.9) strengths.push('Bloc solide derrière');
-  if (avgGa >= 1.6) weaknesses.push('Vulnérable dans la surface');
-  if (avgGf <= 1) weaknesses.push('Création d’occasions limitée');
-  weaknesses.push('Transitions à exploiter sur ballons récupérés');
+  if (avgGf >= 1.8) {
+    strengths.push('Ils marquent régulièrement — attention aux espaces dans le dos');
+  } else {
+    strengths.push('Bloc défensif bien organisé');
+  }
+  if (avgGa <= 0.9) strengths.push('Solide derrière, peu de buts encaissés');
+  if (avgGa >= 1.6) weaknesses.push('Fragiles dans la surface — attaque tôt');
+  if (avgGf <= 1) weaknesses.push('Peu d’occasions créées — tu peux prendre le jeu');
+  weaknesses.push('Les transitions après récup peuvent faire mal');
 
   return {
     strengths,
     weaknesses,
     key_players: [],
-    risk_flags: avgGf >= 2 ? ['Risque de buts encaissés si ligne haute'] : [],
+    risk_flags: avgGf >= 2 ? ['Attention si tu montes la ligne — ils punissent les espaces'] : [],
     suggested_approach:
       avgGa >= 1.5
-        ? 'Pressing médian + verticalité dans le dos des latéraux'
-        : 'Patience en possession, variations de largeur',
+        ? 'Presse au milieu et cherche la verticalité dans le dos des latéraux'
+        : 'Patience avec le ballon, varie les côtés',
     formation_guess: avgGf >= 1.8 ? '4-3-3' : '4-4-2',
     data_confidence: results.length >= 3 ? 'high' : 'medium',
   };
+}
+
+function capitalizeFr(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function buildPrepBriefingFr(input: {
+  formation: string;
+  opponent: OpponentAnalysis;
+  opponent_name?: string;
+  formReport: ReturnType<typeof analyzeSquadForm>;
+  pivot?: SmartPlayerCardData;
+  physical_alerts: string[];
+}): string {
+  const { formation, opponent, opponent_name, formReport, pivot, physical_alerts } = input;
+  const adv = opponent_name?.trim() || 'l’adversaire';
+
+  let p1 = `Tu peux partir en ${formation}`;
+  if (formReport.avg_form >= 75) {
+    p1 += ` — l’effectif est chaud (moy. ${formReport.avg_form})`;
+  } else if (formReport.avg_form >= 60) {
+    p1 += ` — forme correcte côté groupe (moy. ${formReport.avg_form})`;
+  } else {
+    p1 += ` — la forme collective traîne un peu (moy. ${formReport.avg_form}), privilégie le ready`;
+  }
+
+  if (opponent.data_confidence === 'low') {
+    p1 += `. On n’a pas grand-chose sur ${adv} — observe les 15 premières minutes`;
+  } else {
+    const s0 = opponent.strengths[0];
+    const w0 = opponent.weaknesses[0];
+    if (s0) p1 += `. ${capitalizeFr(s0)}`;
+    if (w0 && w0 !== s0) p1 += `. ${capitalizeFr(w0)}`;
+  }
+  p1 += '.';
+
+  const p2Parts: string[] = [];
+  if (opponent.suggested_approach) {
+    p2Parts.push(capitalizeFr(opponent.suggested_approach));
+  }
+  if (pivot) {
+    p2Parts.push(
+      pivot.position
+        ? `${pivot.display_name} peut être ton pivot (${pivot.position}, forme ${pivot.form})`
+        : `${pivot.display_name} peut être ton pivot (forme ${pivot.form})`,
+    );
+  }
+  if (formReport.in_form.length > 0) {
+    const hot = formReport.in_form
+      .slice(0, 2)
+      .map((c) => c.display_name)
+      .join(' et ');
+    p2Parts.push(`${hot} ${formReport.in_form.length > 1 ? 'sont' : 'est'} en confiance`);
+  }
+  if (physical_alerts.length > 0) {
+    const names = physical_alerts
+      .slice(0, 2)
+      .map((a) => a.split(' — ')[0]?.trim() || a)
+      .join(', ');
+    p2Parts.push(`Garde un œil sur ${names} côté physique`);
+  }
+
+  const p2 = p2Parts.length > 0 ? `${p2Parts.map((part) => capitalizeFr(part)).join('. ')}.` : '';
+
+  return p2 ? `${p1}\n\n${p2}` : p1;
 }
 
 export function buildAiMatchPreparation(input: {
@@ -244,12 +313,12 @@ export function buildAiMatchPreparation(input: {
 
   const physical_alerts = [
     ...formReport.at_risk.slice(0, 4).map(
-      (c) => `${c.display_name} · forme ${c.form} · ready ${c.readiness_pct}%`,
+      (c) => `${c.display_name} — forme ${c.form}, ready ${c.readiness_pct}%`,
     ),
     ...input.cards
       .filter((c) => c.availability === 'doubtful' && !formReport.at_risk.some((r) => r.uid === c.uid))
       .slice(0, 2)
-      .map((c) => `${c.display_name} · douteux`),
+      .map((c) => `${c.display_name} — incertain pour ce match`),
   ].slice(0, 5);
 
   const byUid = new Map(input.cards.map((c) => [c.uid, c]));
@@ -263,11 +332,11 @@ export function buildAiMatchPreparation(input: {
   const tactical_suggestions = [
     formReport.summary_fr,
     opponent.suggested_approach,
-    `Formation recommandée : ${formation} (XI par postes · forme XI ${xiForm})`,
+    `Partir en ${formation} avec les meilleurs par poste (forme XI ~${xiForm})`,
     pivot
-      ? `Pivot de jeu : ${pivot.display_name}${pivot.position ? ` (${pivot.position})` : ''} · forme ${pivot.form}`
-      : 'Équilibrer les rôles sans pivot unique',
-    opponent.weaknesses[0] ? `Exploiter : ${opponent.weaknesses[0]}` : 'Varier les axes d’attaque',
+      ? `${pivot.display_name} en point d’ancrage${pivot.position ? ` (${pivot.position})` : ''}`
+      : 'Répartir les rôles sans pivot unique',
+    opponent.weaknesses[0] ?? 'Varier les axes d’attaque',
     ...formReport.lines.slice(0, 2),
   ];
 
@@ -279,21 +348,19 @@ export function buildAiMatchPreparation(input: {
     physical_alerts,
     risk_analysis: [
       ...opponent.risk_flags,
-      ...formReport.at_risk.slice(0, 3).map((c) => `Forme fragile : ${c.display_name}`),
-      ...(physical_alerts.length ? ['Charge physique : surveiller les joueurs en doute'] : []),
+      ...formReport.at_risk.slice(0, 3).map((c) => `${c.display_name} en forme fragile`),
+      ...(physical_alerts.length ? ['Surveille la charge physique côté effectif'] : []),
     ],
     fallback: opponent.data_confidence === 'low' || available.length < 8,
     source: 'local',
-    briefing_fr: [
-      `XI ${formation} composé selon postes + forme (moy. effectif ${formReport.avg_form}, ready ${formReport.avg_readiness}).`,
-      formReport.in_form[0]
-        ? `En feu : ${formReport.in_form
-            .slice(0, 3)
-            .map((c) => c.display_name)
-            .join(', ')}.`
-        : 'Aucune peaking claire — privilégier l’équilibre.',
-      opponent.suggested_approach,
-    ].join(' '),
+    briefing_fr: buildPrepBriefingFr({
+      formation,
+      opponent,
+      opponent_name: input.opponent_name,
+      formReport,
+      pivot,
+      physical_alerts,
+    }),
   };
 }
 
@@ -349,15 +416,15 @@ export function analyzeSquadForm(cards: SmartPlayerCardData[]): {
     .filter((g) => g !== 'unknown' && by_position[g].count > 0)
     .map((g) => {
       const row = by_position[g];
-      return `${posLabel[g]} · ${row.count} joueurs · forme ${row.avg_form} · ready ${row.avg_ready}`;
+      return `${row.count} ${posLabel[g].toLowerCase()} · forme ${row.avg_form} · ready ${row.avg_ready}`;
     });
 
   const summary_fr =
     avg_form >= 75
-      ? `Effectif en grande forme (moy. ${avg_form}) — XI offensif possible.`
+      ? `L’effectif est chaud (moy. ${avg_form}) — tu peux viser un XI offensif.`
       : avg_form >= 60
-        ? `Forme correcte (moy. ${avg_form}) — composer sur l’équilibre postes / ready.`
-        : `Forme en baisse (moy. ${avg_form}) — prioriser readiness et rotation.`;
+        ? `Forme correcte (moy. ${avg_form}) — équilibre postes et ready.`
+        : `Forme en baisse (moy. ${avg_form}) — pense rotation et ready.`;
 
   return {
     avg_form,

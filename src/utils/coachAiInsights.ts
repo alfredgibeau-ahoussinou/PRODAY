@@ -163,7 +163,7 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
     return {
       level: 'none',
       headline: 'Club requis',
-      synthesis: 'Rattachez un club pour activer l’analyse de l’équipe.',
+      synthesis: 'Rattache ton club pour que je puisse analyser l’effectif.',
       metrics,
       emptyCta: { label: 'Configurer le club', action: 'join-club' },
     };
@@ -173,7 +173,7 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
     return {
       level: 'none',
       headline: 'Effectif vide',
-      synthesis: 'Invitez vos joueurs pour que l’assistant puisse croiser présences, forme et stats.',
+      synthesis: 'Invite tes joueurs — sans effectif, je ne peux pas croiser présences, forme et stats.',
       metrics,
       emptyCta: { label: 'Inviter des joueurs', action: 'invite-roster' },
     };
@@ -185,18 +185,18 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
       const yes = countRsvpYes(next);
       const pending = getPendingInviteeUids(next).length;
       parts.push(
-        `Prochain : « ${next.title} » (${yes} confirmé${yes > 1 ? 's' : ''}${pending > 0 ? `, ${pending} sans réponse` : ''}).`,
+        `Prochain rendez-vous : « ${next.title} » (${yes} confirmé${yes > 1 ? 's' : ''}${pending > 0 ? `, ${pending} sans réponse` : ''}).`,
       );
     } else {
-      parts.push('Aucun événement planifié.');
+      parts.push('Rien de planifié pour l’instant.');
     }
     if (wellnessAlerts > 0) {
       parts.push(`${wellnessAlerts} joueur(s) signalent une forme à surveiller.`);
     }
     return {
       level: 'partial',
-      headline: 'Données match insuffisantes',
-      synthesis: `${parts.join(' ')} Ajoutez les feuilles de match après vos prochains matchs pour activer l’analyse.`,
+      headline: 'Pas encore assez de matchs',
+      synthesis: `${parts.join(' ')} Renseigne les feuilles de match après tes prochains matchs — l’analyse s’affûtera.`,
       metrics,
       emptyCta: { label: 'Voir le calendrier', action: 'plan-session' },
     };
@@ -217,13 +217,15 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
   const avgRating = rated > 0 ? (ratingSum / rated).toFixed(1) : null;
 
   const parts: string[] = [
-    `${played.length} match${played.length > 1 ? 's' : ''} avec feuille renseignée`,
+    `${played.length} match${played.length > 1 ? 's' : ''} avec feuille`,
     `${totalGoals} but${totalGoals > 1 ? 's' : ''} marqué${totalGoals > 1 ? 's' : ''}`,
   ];
   if (avgRating) parts.push(`note moyenne ${avgRating}/10`);
   const coachAvg = averageCoachRatings(scoredEvals, 'overall');
   if (coachAvg != null) {
-    parts.push(`évaluations coach ${formatCoachRating(coachAvg)} (${scoredEvals.length} joueur${scoredEvals.length > 1 ? 's' : ''})`);
+    parts.push(
+      `évaluations coach ${formatCoachRating(coachAvg)} (${scoredEvals.length} joueur${scoredEvals.length > 1 ? 's' : ''})`,
+    );
   }
   if (wellnessAlerts > 0) {
     parts.push(`${wellnessAlerts} alerte${wellnessAlerts > 1 ? 's' : ''} forme`);
@@ -235,8 +237,8 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
 
   return {
     level: 'ready',
-    headline: 'Analyse de l’équipe',
-    synthesis: `${parts.join(' · ')}.`,
+    headline: 'Ton équipe en bref',
+    synthesis: `${parts.join(', ')}.`,
     metrics,
   };
 }
@@ -326,7 +328,7 @@ export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrate
         playersToStart.push({
           uid,
           name: memberName(members, uid),
-          reason: 'Titulaire dans votre compo enregistrée.',
+          reason: 'Titulaire dans ta compo enregistrée.',
         });
       }
     }
@@ -352,7 +354,7 @@ export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrate
       playersToStart: [],
       playersToWatch: watchList,
       emptyHint:
-        'Renseignez des feuilles de match ou une composition pour obtenir des suggestions tactiques.',
+        'Renseigne des feuilles de match ou une compo — je pourrai te proposer des idées tactiques.',
     };
   }
 
@@ -361,8 +363,8 @@ export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrate
     formation,
     formationDetail: formation
       ? placed >= 7
-        ? `${placed} titulaires placés sur le terrain.`
-        : 'Complétez la composition pour affiner la stratégie.'
+        ? `${placed} titulaires déjà placés sur le terrain.`
+        : 'Complète la compo pour affiner la stratégie.'
       : undefined,
     playersToStart: playersToStart.slice(0, 5),
     playersToWatch: watchList,

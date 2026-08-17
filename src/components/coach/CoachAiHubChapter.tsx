@@ -273,21 +273,21 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             kicker="Stratégie recommandée"
             title={
               strategy.formation
-                ? `Formation ${strategy.formation}`
+                ? `Partir en ${strategy.formation}`
                 : strategy.level === 'none'
-                  ? 'Données insuffisantes'
-                  : 'Suggestions tactiques'
+                  ? 'Pas assez de données'
+                  : 'Pistes tactiques'
             }
             body={
               strategy.formationDetail ??
               strategy.emptyHint ??
-              'Basé sur vos feuilles de match, votre compo et la forme déclarée.'
+              'Basé sur tes feuilles de match, ta compo et la forme déclarée.'
             }
           >
             {strategy.playersToStart.length > 0 ? (
               <View style={styles.listBlock}>
                 <CoachText variant="caption" style={styles.listLabel}>
-                  À privilégier
+                  À faire jouer
                 </CoachText>
                 {strategy.playersToStart.map((p) => (
                   <View key={p.uid} style={styles.playerLine}>

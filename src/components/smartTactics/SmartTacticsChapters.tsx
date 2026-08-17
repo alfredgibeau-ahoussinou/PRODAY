@@ -19,6 +19,7 @@ import {
   type SmartTacticsChapterProps,
 } from './smartTacticsUi';
 import { CoachText } from '../coach/coachPortalUi';
+import { CoachAiMessage } from '../coach/CoachAiMessage';
 import { SmartPlayerCard } from './SmartPlayerCard';
 import { MatchReadinessRing } from './MatchReadinessRing';
 import { SmartTacticsBoard, compactBoardStarters, padStartersForBoard } from './SmartTacticsBoard';
@@ -858,101 +859,37 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
         <SmartTacticsLink onPress={applyXi}>Appliquer le XI sur le board →</SmartTacticsLink>
       </View>
 
-      <SmartTacticsPanel style={[styles.alertColumn, { borderColor: theme.border }]} variant="module">
-        <SmartTacticsAccentText variant="caption" style={{ fontWeight: '800' }}>
-          Source · {prep.source === 'mistral' ? 'Mistral cloud' : 'Moteur local'}
-          {prep.fallback ? ` · ${t('smartTactics.aiFallback')}` : ''}
-        </SmartTacticsAccentText>
-        {prep.briefing_fr ? (
-          theme.coach ? (
-            <CoachText variant="body" style={styles.prepBriefing}>
-              {prep.briefing_fr}
-            </CoachText>
-          ) : (
+      {theme.coach ? (
+        <CoachAiMessage
+          message={
+            prep.briefing_fr ||
+            'Lance l’analyse pour obtenir un briefing sur le match.'
+          }
+          secondary={
+            xiNames.length
+              ? `${prep.formation_recommendation} · ${xiNames.join(' · ')}`
+              : prep.formation_recommendation
+          }
+          footnote={prep.fallback ? 'Analyse locale — données limitées' : undefined}
+        />
+      ) : (
+        <SmartTacticsPanel style={[styles.alertColumn, { borderColor: theme.border }]} variant="module">
+          {prep.briefing_fr ? (
             <ProDayText variant="body" style={styles.prepBriefing}>
               {prep.briefing_fr}
             </ProDayText>
-          )
-        ) : null}
-      </SmartTacticsPanel>
-
-      <SmartTacticsSection title="XI recommandé">
-        <SmartTacticsAccentText variant="caption">{prep.formation_recommendation}</SmartTacticsAccentText>
-        {theme.coach ? (
-          <CoachText variant="caption" muted>
-            {xiNames.length ? xiNames.join(' · ') : 'Effectif insuffisant'}
-          </CoachText>
-        ) : (
+          ) : null}
           <ProDayText variant="caption" muted>
-            {xiNames.length ? xiNames.join(' · ') : 'Effectif insuffisant'}
+            {prep.formation_recommendation}
+            {xiNames.length ? ` · ${xiNames.join(' · ')}` : ''}
           </ProDayText>
-        )}
-      </SmartTacticsSection>
-
-      <SmartTacticsSection title="Forces adverses">
-        {prep.opponent.strengths.map((s) => (
-          theme.coach ? (
-            <CoachText key={s} variant="caption" muted style={styles.bullet}>
-              • {s}
-            </CoachText>
-          ) : (
-            <ProDayText key={s} variant="caption" muted style={styles.bullet}>
-              • {s}
+          {prep.fallback ? (
+            <ProDayText variant="caption" muted style={styles.prepFootnote}>
+              Analyse locale — données limitées
             </ProDayText>
-          )
-        ))}
-      </SmartTacticsSection>
-      <SmartTacticsSection title="Faiblesses">
-        {prep.opponent.weaknesses.map((s) => (
-          theme.coach ? (
-            <CoachText key={s} variant="caption" muted style={styles.bullet}>
-              • {s}
-            </CoachText>
-          ) : (
-            <ProDayText key={s} variant="caption" muted style={styles.bullet}>
-              • {s}
-            </ProDayText>
-          )
-        ))}
-      </SmartTacticsSection>
-      <SmartTacticsSection title="Suggestions">
-        {prep.tactical_suggestions.map((s) => (
-          theme.coach ? (
-            <CoachText key={s} variant="caption" muted style={styles.bullet}>
-              • {s}
-            </CoachText>
-          ) : (
-            <ProDayText key={s} variant="caption" muted style={styles.bullet}>
-              • {s}
-            </ProDayText>
-          )
-        ))}
-      </SmartTacticsSection>
-      <SmartTacticsSection title="Alertes physiques">
-        {prep.physical_alerts.length === 0 ? (
-          theme.coach ? (
-            <CoachText variant="caption" muted>
-              Effectif prêt.
-            </CoachText>
-          ) : (
-            <ProDayText variant="caption" muted>
-              Effectif prêt.
-            </ProDayText>
-          )
-        ) : (
-          prep.physical_alerts.map((a) => (
-            theme.coach ? (
-              <CoachText key={a} variant="caption" style={[styles.bullet, { color: theme.risk }]}>
-                • {a}
-              </CoachText>
-            ) : (
-              <ProDayText key={a} variant="caption" style={[styles.bullet, { color: SMART_PITCH.risk }]}>
-                • {a}
-              </ProDayText>
-            )
-          ))
-        )}
-      </SmartTacticsSection>
+          ) : null}
+        </SmartTacticsPanel>
+      )}
 
       <SmartTacticsSection title="Rapports match">
         <View style={styles.reportRow}>
@@ -1549,6 +1486,7 @@ const styles = StyleSheet.create({
   prepActions: { gap: spacing.sm, alignSelf: 'stretch' },
   prepPrimaryCta: { alignSelf: 'stretch' },
   prepBriefing: { alignSelf: 'stretch', width: '100%' },
+  prepFootnote: { marginTop: 4 },
   bullet: { lineHeight: 18 },
   section: { gap: 6, marginTop: 4 },
   link: { marginTop: 4 },
