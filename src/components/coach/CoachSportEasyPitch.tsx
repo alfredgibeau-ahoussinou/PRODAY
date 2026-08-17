@@ -15,7 +15,11 @@ import Svg, {
 } from 'react-native-svg';
 import { PressableSpring } from '../motion';
 import { CoachText } from './coachPortalUi';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import {
+  useCoachTheme,
+  useCoachThemedStyles,
+} from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import type { Membership } from '../../models/Membership';
 import type { Team } from '../../models/Team';
 import type { User } from '../../models/User';
@@ -38,7 +42,6 @@ import {
   COACH_PITCH_FORMATIONS,
 } from '../../utils/formationPitch';
 
-const ACCENT = '#006CFC';
 const GRASS_A = '#43B05A';
 const GRASS_B = '#348C42';
 const MARK = 'rgba(255,255,255,0.92)';
@@ -187,6 +190,8 @@ function SportEasyPitchMarkings() {
 
 export function CoachSportEasyPitch({ teams, memberships, members, clubId }: Props) {
   const { width: winW } = useWindowDimensions();
+  const { tokens: themeTokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
   const playableTeams = useMemo(
     () => teams.filter((team) => !team.is_default || teams.length === 1),
     [teams],
@@ -254,7 +259,7 @@ export function CoachSportEasyPitch({ teams, memberships, members, clubId }: Pro
     return () => clearTimeout(timer);
   }, [lineup, storageKey, rosterUids.length]);
 
-  const tokens = useMemo(
+  const pitchSlots = useMemo(
     () => fillPitchSlots(lineup.starterUids, lineup.formation),
     [lineup.starterUids, lineup.formation],
   );
@@ -319,7 +324,13 @@ export function CoachSportEasyPitch({ teams, memberships, members, clubId }: Pro
                 scaleTo={0.97}
                 style={[styles.chip, on && styles.chipOn]}
               >
-                <CoachText variant="caption" inverse={on} muted={!on}>
+                <CoachText
+                  variant="caption"
+                  inverse={on && !themeTokens.isLight}
+                  muted={!on}
+                  accent={on && themeTokens.isLight}
+                  style={styles.chipText}
+                >
                   {team.category || team.name}
                 </CoachText>
               </PressableSpring>
@@ -345,7 +356,13 @@ export function CoachSportEasyPitch({ teams, memberships, members, clubId }: Pro
               haptic
               style={[styles.chip, on && styles.chipOn]}
             >
-              <CoachText variant="caption" inverse={on} muted={!on}>
+              <CoachText
+                variant="caption"
+                inverse={on && !themeTokens.isLight}
+                muted={!on}
+                accent={on && themeTokens.isLight}
+                style={styles.chipText}
+              >
                 {formation}
               </CoachText>
             </PressableSpring>
@@ -356,7 +373,7 @@ export function CoachSportEasyPitch({ teams, memberships, members, clubId }: Pro
       <View style={styles.pitchFrame}>
         <View style={[styles.pitch, { width: pitchW, height: pitchH }]}>
           <SportEasyPitchMarkings />
-          {tokens.map((cell) => {
+          {pitchSlots.map((cell) => {
             const player = cell.player ? byUid.get(cell.player) : undefined;
             const selected = selectedSlot === cell.slotIndex;
             const left = cell.x * pitchW - TOKEN / 2;
@@ -450,118 +467,128 @@ export function CoachSportEasyPitch({ teams, memberships, members, clubId }: Pro
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.sm,
-    backgroundColor: COACH_SITE.surface,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    paddingVertical: 2,
-  },
-  chip: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    backgroundColor: COACH_SITE.elevated,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-  },
-  chipOn: {
-    borderColor: ACCENT,
-    backgroundColor: ACCENT,
-  },
-  pitchFrame: {
-    alignItems: 'center',
-    backgroundColor: COACH_SITE.elevated,
-    borderRadius: radius.lg,
-    padding: spacing.sm,
-  },
-  pitch: {
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  tokenWrap: {
-    position: 'absolute',
-    width: TOKEN,
-    alignItems: 'center',
-  },
-  token: {
-    width: TOKEN,
-    height: TOKEN,
-    borderRadius: TOKEN / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-  },
-  tokenFilled: {
-    backgroundColor: '#FFFFFF',
-    borderColor: 'rgba(255,255,255,0.95)',
-  },
-  tokenEmpty: {
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderColor: 'rgba(255,255,255,0.7)',
-    borderStyle: 'dashed',
-  },
-  tokenSelected: {
-    borderColor: ACCENT,
-    backgroundColor: ACCENT,
-    borderStyle: 'solid',
-  },
-  tokenNum: {
-    fontSize: 13,
-    fontWeight: '800',
-    lineHeight: 16,
-  },
-  tokenNumDark: { color: COACH_SITE.foreground },
-  tokenNumLight: { color: '#FFFFFF' },
-  tokenName: {
-    marginTop: 2,
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    width: TOKEN + 18,
-    textShadowColor: 'rgba(0,0,0,0.45)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-    height: TOKEN_LABEL,
-  },
-  benchLabel: {
-    color: COACH_SITE.foreground,
-    fontWeight: '700',
-    marginTop: spacing.xs,
-  },
-  benchRow: {
-    gap: spacing.sm,
-    paddingVertical: 4,
-    paddingRight: spacing.sm,
-  },
-  benchItem: {
-    width: 56,
-    alignItems: 'center',
-    gap: 4,
-  },
-  benchToken: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.elevated,
-    borderWidth: 2,
-    borderColor: COACH_SITE.border,
-  },
-  benchName: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: COACH_SITE.foreground,
-    textAlign: 'center',
-    width: 56,
-  },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    root: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      gap: spacing.sm,
+      backgroundColor: tokens.surface,
+    },
+    chipRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      paddingVertical: 2,
+    },
+    chip: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+    },
+    chipOn: tokens.isLight
+      ? {
+          borderColor: tokens.accent,
+          backgroundColor: tokens.soft,
+        }
+      : {
+          borderColor: tokens.accent,
+          backgroundColor: tokens.accent,
+        },
+    chipText: {
+      fontWeight: '700',
+    },
+    pitchFrame: {
+      alignItems: 'center',
+      backgroundColor: tokens.elevated,
+      borderRadius: radius.lg,
+      padding: spacing.sm,
+    },
+    pitch: {
+      borderRadius: 10,
+      overflow: 'hidden',
+    },
+    tokenWrap: {
+      position: 'absolute',
+      width: TOKEN,
+      alignItems: 'center',
+    },
+    token: {
+      width: TOKEN,
+      height: TOKEN,
+      borderRadius: TOKEN / 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+    },
+    tokenFilled: {
+      backgroundColor: '#FFFFFF',
+      borderColor: 'rgba(255,255,255,0.95)',
+    },
+    tokenEmpty: {
+      backgroundColor: 'rgba(255,255,255,0.22)',
+      borderColor: 'rgba(255,255,255,0.7)',
+      borderStyle: 'dashed',
+    },
+    tokenSelected: {
+      borderColor: tokens.accent,
+      backgroundColor: tokens.accent,
+      borderStyle: 'solid',
+    },
+    tokenNum: {
+      fontSize: 13,
+      fontWeight: '800',
+      lineHeight: 16,
+    },
+    tokenNumDark: { color: tokens.foreground },
+    tokenNumLight: { color: '#FFFFFF' },
+    tokenName: {
+      marginTop: 2,
+      fontSize: 9,
+      fontWeight: '700',
+      color: '#FFFFFF',
+      textAlign: 'center',
+      width: TOKEN + 18,
+      textShadowColor: 'rgba(0,0,0,0.45)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+      height: TOKEN_LABEL,
+    },
+    benchLabel: {
+      color: tokens.foreground,
+      fontWeight: '700',
+      marginTop: spacing.xs,
+    },
+    benchRow: {
+      gap: spacing.sm,
+      paddingVertical: 4,
+      paddingRight: spacing.sm,
+    },
+    benchItem: {
+      width: 56,
+      alignItems: 'center',
+      gap: 4,
+    },
+    benchToken: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
+      borderWidth: 2,
+      borderColor: tokens.border,
+    },
+    benchName: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: tokens.foreground,
+      textAlign: 'center',
+      width: 56,
+    },
+  });
+}

@@ -18,7 +18,12 @@ import { spacing } from '../../theme/designTokens';
 import { CoachSportEasyPitch } from './CoachSportEasyPitch';
 import { CoachPane } from './CoachScreenHeader';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
-import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
+import {
+  useCoachTheme,
+  useCoachThemedStyles,
+} from '../../features/coach/shell/CoachThemeContext';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { teamsService } from '../../services/teams.service';
 import type { Team } from '../../models/Team';
 import { CoachPlayerNoteSheet } from './CoachPlayerNoteSheet';
@@ -54,6 +59,8 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
   const { openChat } = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
   const [segment, setSegment] = useState<EffectifSegment>(
     focus === 'joueurs' ? 'joueurs' : 'effectif',
@@ -230,7 +237,7 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
                     onPress={() => void messageUser(m.uid, m.display_name)}
                     style={styles.msgBtn}
                   >
-                    <Icon name="chat" size={16} color={COACH_SITE.muted} />
+                    <Icon name="chat" size={16} color={tokens.muted} />
                   </Pressable>
                 </View>
               ))
@@ -264,90 +271,93 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  segmentTrack: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-    padding: 3,
-    borderRadius: 12,
-    backgroundColor: COACH_SITE.surface,
-    gap: 4,
-  },
-  segmentBtn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  segmentBtnOn: {
-    backgroundColor: COACH_SITE.elevated,
-  },
-  segmentLabel: {
-    fontWeight: '600',
-    color: COACH_SITE.muted,
-  },
-  segmentLabelOn: {
-    color: COACH_SITE.foreground,
-    fontWeight: '700',
-  },
-  listHead: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  listTitle: {
-    color: COACH_SITE.foreground,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  manageLink: {
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
-  playerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    minHeight: 56,
-    paddingVertical: 10,
-    paddingHorizontal: spacing.md,
-    borderRadius: 18,
-    backgroundColor: COACH_SITE.surface,
-    marginBottom: 2,
-  },
-  playerRowMain: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-  },
-  playerInfo: { flex: 1, gap: 4 },
-  msgBtn: {
-    padding: spacing.sm,
-  },
-  playerNumWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.elevated,
-  },
-  playerNum: {
-    fontWeight: '800',
-    color: COACH_SITE.foreground,
-  },
-  playerName: {
-    flex: 1,
-    fontWeight: '600',
-    color: COACH_SITE.foreground,
-    fontSize: 17,
-  },
-  pendingLine: {
-    paddingVertical: spacing.md,
-  },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    segmentTrack: {
+      flexDirection: 'row',
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+      padding: 3,
+      borderRadius: 12,
+      backgroundColor: tokens.surface,
+      gap: 4,
+    },
+    segmentBtn: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      borderRadius: 10,
+      ...(tokens.isLight ? { backgroundColor: tokens.elevated } : null),
+    },
+    segmentBtnOn: {
+      backgroundColor: tokens.isLight ? tokens.soft : tokens.elevated,
+    },
+    segmentLabel: {
+      fontWeight: '600',
+      color: tokens.muted,
+    },
+    segmentLabelOn: {
+      color: tokens.isLight ? tokens.accent : tokens.foreground,
+      fontWeight: '700',
+    },
+    listHead: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    listTitle: {
+      color: tokens.foreground,
+      fontWeight: '700',
+      letterSpacing: -0.3,
+    },
+    manageLink: {
+      fontWeight: '600',
+      textDecorationLine: 'underline',
+    },
+    playerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      minHeight: 56,
+      paddingVertical: 10,
+      paddingHorizontal: spacing.md,
+      borderRadius: 18,
+      backgroundColor: tokens.surface,
+      marginBottom: 2,
+    },
+    playerRowMain: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.md,
+    },
+    playerInfo: { flex: 1, gap: 4 },
+    msgBtn: {
+      padding: spacing.sm,
+    },
+    playerNumWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
+    },
+    playerNum: {
+      fontWeight: '800',
+      color: tokens.foreground,
+    },
+    playerName: {
+      flex: 1,
+      fontWeight: '600',
+      color: tokens.foreground,
+      fontSize: 17,
+    },
+    pendingLine: {
+      paddingVertical: spacing.md,
+    },
+  });
+}

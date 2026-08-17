@@ -11,7 +11,8 @@ import {
 import { CoachText } from './coachPortalUi';
 import { CoachPlayerAiPanel } from './CoachPlayerAiPanel';
 import { CoachOptionalScoresBlock } from './CoachOptionalScoreInput';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { spacing } from '../../theme/designTokens';
 import { coachEvaluationsService } from '../../services/coachEvaluations.service';
 import type { CoachPlayerEvaluation } from '../../models/CoachEvaluation';
@@ -46,6 +47,8 @@ export function CoachPlayerNoteSheet({
   onClose,
   onSaved,
 }: Props) {
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
   const [note, setNote] = useState('');
   const [scores, setScores] = useState<Partial<Record<CoachRatingField, number | undefined>>>({});
   const [saving, setSaving] = useState(false);
@@ -117,7 +120,7 @@ export function CoachPlayerNoteSheet({
               value={note}
               onChangeText={setNote}
               placeholder="Points forts, axes de progrès, contexte…"
-              placeholderTextColor={COACH_SITE.muted}
+              placeholderTextColor={tokens.muted}
               multiline
               style={styles.input}
             />
@@ -151,46 +154,48 @@ export function CoachPlayerNoteSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: COACH_SITE.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: spacing.lg,
-    maxHeight: '88%',
-    gap: spacing.sm,
-  },
-  title: { fontWeight: '800' },
-  sub: { marginBottom: spacing.xs },
-  input: {
-    minHeight: 88,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    backgroundColor: COACH_SITE.elevated,
-    color: COACH_SITE.foreground,
-    padding: spacing.md,
-    textAlignVertical: 'top',
-    fontSize: 15,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  cancelBtn: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
-  saveBtn: {
-    backgroundColor: COACH_SITE.accent,
-    borderRadius: 10,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-  },
-  saveText: { fontWeight: '700', color: '#fff' },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.65)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: tokens.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: spacing.lg,
+      maxHeight: '88%',
+      gap: spacing.sm,
+    },
+    title: { fontWeight: '800', color: tokens.foreground },
+    sub: { marginBottom: spacing.xs },
+    input: {
+      minHeight: 88,
+      borderRadius: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+      color: tokens.foreground,
+      padding: spacing.md,
+      textAlignVertical: 'top',
+      fontSize: 15,
+    },
+    actions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: spacing.md,
+      alignItems: 'center',
+      marginTop: spacing.sm,
+    },
+    cancelBtn: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
+    saveBtn: {
+      backgroundColor: tokens.accent,
+      borderRadius: 10,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+    },
+    saveText: { fontWeight: '700', color: '#fff' },
+  });
+}
