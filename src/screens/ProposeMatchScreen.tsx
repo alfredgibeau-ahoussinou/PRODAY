@@ -42,7 +42,7 @@ const LEVEL_MAP: Record<(typeof LEVELS)[number], 'loisir' | 'competition' | 'mix
 };
 const KINDS = Object.keys(FRIENDLY_MATCH_KIND_LABELS) as FriendlyMatchKind[];
 const VENUES = Object.keys(FRIENDLY_VENUE_LABELS) as FriendlyVenueSide[];
-const CATEGORIES = ['U9', 'U11', 'U13', 'U15', 'U17', 'U18', 'U19', 'Seniors', 'Féminines'];
+import { FOOTBALL_ROSTER_CATEGORIES } from '../constants/footballCategories';
 
 interface ProposeMatchScreenProps {
   onBack: () => void;
@@ -256,7 +256,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
 
         <Text style={styles.label}>Catégorie / âge</Text>
         <View style={styles.wrapChips}>
-          {CATEGORIES.map((cat) => (
+          {FOOTBALL_ROSTER_CATEGORIES.map((cat) => (
             <PressableSpring
               key={cat}
               style={[styles.chip, category === cat && styles.chipOn]}

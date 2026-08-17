@@ -6,13 +6,14 @@ export const SPONSOR_OFFER_TYPES: { id: SponsorOfferType; label: string; icon: s
   { id: 'money', label: 'Financement', icon: 'briefcase' },
 ];
 
+import { FOOTBALL_AGE_CATEGORIES } from '../constants/footballCategories';
+
 export const SPONSOR_TARGET_CATEGORIES = [
-  'U13',
-  'U15',
-  'U17',
+  ...FOOTBALL_AGE_CATEGORIES.filter((c) =>
+    ['U13', 'U15', 'U17', 'U19', 'Seniors', 'Féminines'].includes(c),
+  ),
   'U20',
   'Senior',
-  'Féminines',
   'Futsal',
 ] as const;
 

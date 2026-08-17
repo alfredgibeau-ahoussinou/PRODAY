@@ -325,6 +325,11 @@ export function useCoachTheme(): CoachThemeContextValue {
   return ctx;
 }
 
+/** Vrai lorsque l'écran est rendu dans le shell coach (CoachThemeProvider actif). */
+export function useIsCoachShell(): boolean {
+  return useContext(CoachThemeContext) !== null;
+}
+
 /** Accès direct aux tokens Pôle Coach (solid / clear). */
 export function useCoachTokens(): CoachThemeTokens {
   return useCoachTheme().tokens;

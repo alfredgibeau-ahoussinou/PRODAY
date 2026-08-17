@@ -545,7 +545,7 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                     style={styles.input}
                     value={level}
                     onChangeText={setLevel}
-                    placeholder="Départemental, R1, N3…"
+                    placeholder="District, Départemental, R1, N3…"
                     placeholderTextColor={adminChrome.textMuted}
                   />
                 </>
@@ -784,7 +784,7 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                 style={styles.input}
                 value={category}
                 onChangeText={setCategory}
-                placeholder="U11, U15, Seniors…"
+                placeholder="U7, U13 District, Seniors…"
                 placeholderTextColor={adminChrome.textMuted}
               />
 

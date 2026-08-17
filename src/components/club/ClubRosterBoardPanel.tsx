@@ -36,7 +36,7 @@ type BoardTab = 'internal' | 'external' | 'moves';
 type Audience = 'club' | 'coach';
 
 const POSITIONS = Object.keys(ROSTER_POSITION_LABELS) as RosterPositionId[];
-const CATEGORIES = ['U9', 'U11', 'U13', 'U15', 'U17', 'U18', 'U19', 'Seniors', 'Féminines'];
+import { FOOTBALL_ROSTER_CATEGORIES } from '../../constants/footballCategories';
 
 const COPY: Record<
   Audience,
@@ -357,7 +357,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
             Catégorie
           </ProDayText>
           <View style={styles.wrapChips}>
-            {CATEGORIES.map((cat) => (
+            {FOOTBALL_ROSTER_CATEGORIES.map((cat) => (
               <PressableSpring
                 key={cat}
                 style={[

@@ -326,4 +326,40 @@ export const SECONDARY_FR: MessageCatalog = {
   'profile.verify.staff.title': 'Vérification requise',
   'profile.verify.staff.body': 'Envoyez votre diplôme ou licence pour débloquer la messagerie.',
   'profile.verify.track': 'Suivi de vérification',
+
+  'football.categoryGroup.poussins': 'Poussins',
+  'football.categoryGroup.jeunes': 'Jeunes',
+  'football.categoryGroup.adultes': 'Seniors & adultes',
+  'football.categoryGroup.district': 'Échelon district',
+
+  'coach.event.create.title': 'Nouvel événement',
+  'coach.event.create.typeKicker': 'Format',
+  'coach.event.create.typeTitle': 'Type d\'événement',
+  'coach.event.create.infoKicker': 'Détails',
+  'coach.event.create.infoTitle': 'Informations',
+  'coach.event.create.titlePlaceholder': 'Titre',
+  'coach.event.create.datePlaceholder': 'Date (JJ/MM/AAAA)',
+  'coach.event.create.timePlaceholder': 'Heure (14:00)',
+  'coach.event.create.cityPlaceholder': 'Ville',
+  'coach.event.create.locationPlaceholder': 'Lieu (stade, adresse…)',
+  'coach.event.create.descriptionPlaceholder': 'Description (optionnel)',
+  'coach.event.create.categoriesKicker': 'Effectif',
+  'coach.event.create.categoriesDetectionTitle': 'Catégories ciblées',
+  'coach.event.create.categoriesConvocTitle': 'Catégories convoquées',
+  'coach.event.create.categoriesDetectionHint':
+    'Sélectionnez les catégories d\'âge et l\'échelon district si besoin.',
+  'coach.event.create.categoriesConvocHintMen':
+    'Filtre optionnel : seuls les joueurs correspondants seront convoqués.',
+  'coach.event.create.categoriesConvocHintWomen':
+    'Filtre optionnel : seules les joueuses correspondantes seront convoquées.',
+  'coach.event.create.maxPlacesPlaceholder': 'Places max',
+  'coach.event.create.convocKicker': 'Convocation',
+  'coach.event.create.convocTitle': 'Qui convoquer ?',
+  'coach.event.create.inviteClub': 'Convoquer tout le club',
+  'coach.event.create.invitedMen': 'Joueurs convoqués',
+  'coach.event.create.invitedWomen': 'Joueuses convoquées',
+  'coach.event.create.noClubHint':
+    'Liez un club à votre profil pour convoquer automatiquement l\'effectif.',
+  'coach.event.create.submit': 'Créer et convoquer',
+  'coach.event.create.submitting': 'Création…',
 };

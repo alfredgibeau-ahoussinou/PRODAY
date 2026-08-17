@@ -22,6 +22,21 @@ import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
 import { userCanManageConvocations } from '../utils/clubFeatureAccess';
+import {
+  useCoachTheme,
+  useIsCoachShell,
+} from '../features/coach/shell/CoachThemeContext';
+import {
+  CoachActionRow,
+  CoachChapterScroll,
+  CoachSectionCard,
+  CoachSettingsGroup,
+  CoachText,
+} from '../components/coach/coachPortalUi';
+import { CoachPane } from '../components/coach/CoachScreenHeader';
+import { FootballCategoryChipPicker } from '../components/football/FootballCategoryChipPicker';
+import type { CoachThemeTokens } from '../utils/coachTeamTheme';
+import { useTranslation } from '../context/LocaleContext';
 
 const EVENT_TYPES: { id: TeamEventType; label: string }[] = [
   { id: 'training', label: 'Entraînement' },
@@ -31,14 +46,14 @@ const EVENT_TYPES: { id: TeamEventType; label: string }[] = [
   { id: 'other', label: 'Autre' },
 ];
 
-const CATEGORIES = ['U13', 'U15', 'U17', 'U19', 'Seniors', 'Vétérans'];
-
 interface CreateTeamEventScreenProps {
   onBack: () => void;
   onCreated: (eventId: string) => void;
   defaultType?: TeamEventType;
   /** Équipe active coach — appliquée aux entraînements créés. */
   activeTeamId?: string;
+  /** Style coach (shell) ou legacy générique. Par défaut : coach si shell actif. */
+  variant?: 'coach' | 'default';
 }
 
 export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
@@ -46,10 +61,17 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   onCreated,
   defaultType = 'training',
   activeTeamId,
+  variant,
 }) => {
   const { profile } = useAuth();
-  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const { t } = useTranslation();
+  const isCoachShell = useIsCoachShell();
+  const isCoach = (variant ?? (isCoachShell ? 'coach' : 'default')) === 'coach';
+  const { colors: c, isWoman, rootStyle } = useThemedScreen();
+  const { tokens } = useCoachTheme();
+  const defaultStyles = useMemo(() => createDefaultStyles(c), [c]);
+  const coachStyles = useMemo(() => createCoachStyles(tokens), [tokens]);
+
   const [eventType, setEventType] = useState<TeamEventType>(defaultType);
   const [title, setTitle] = useState('');
   const [dateStr, setDateStr] = useState('');
@@ -93,12 +115,12 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+      prev.includes(cat) ? prev.filter((x) => x !== cat) : [...prev, cat],
     );
   };
 
   const handleSubmit = async () => {
-    if (!profile) return;
+    if (!profile || submitting) return;
     if (!userCanManageConvocations(profile)) {
       Alert.alert(
         'Convocations',
@@ -162,7 +184,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
         'Événement créé',
         inviteeUids.length > 0
           ? `${inviteeUids.length} personne(s) convoquée(s).`
-          : 'Partagez l’événement à votre effectif.'
+          : "Partagez l'événement à votre effectif.",
       );
       onCreated(id);
     } catch (e) {
@@ -172,64 +194,308 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     }
   };
 
+  const showCategories = eventType === 'detection' || Boolean(profile?.profile.club_id);
+
+  const categoryHint =
+    eventType === 'detection'
+      ? t('coach.event.create.categoriesDetectionHint')
+      : isWoman
+        ? t('coach.event.create.categoriesConvocHintWomen')
+        : t('coach.event.create.categoriesConvocHintMen');
+
+  const categorySection = showCategories ? (
+    <>
+      {isCoach ? (
+        <CoachText variant="caption" muted style={coachStyles.hint}>
+          {categoryHint}
+        </CoachText>
+      ) : (
+        <Text style={defaultStyles.hint}>{categoryHint}</Text>
+      )}
+      <FootballCategoryChipPicker
+        selected={selectedCategories}
+        onToggle={toggleCategory}
+        variant={isCoach ? 'coach' : 'default'}
+        mode="grouped"
+        colors={c}
+      />
+    </>
+  ) : null;
+
+  const convocationSection = profile?.profile.club_id ? (
+    <>
+      <View style={isCoach ? coachStyles.switchRow : defaultStyles.switchRow}>
+        {isCoach ? (
+          <CoachText variant="section" style={coachStyles.switchLabel}>
+            {t('coach.event.create.inviteClub')}
+          </CoachText>
+        ) : (
+          <Text style={defaultStyles.switchLabel}>Convoquer tout le club</Text>
+        )}
+        <Switch
+          value={inviteClub}
+          onValueChange={(v) => {
+            setInviteClub(v);
+            if (!v) setSelectedUids(clubMembers.map((m) => m.uid));
+          }}
+          trackColor={{ false: tokens.border, true: tokens.accent }}
+          thumbColor={isCoach ? tokens.onAccent : undefined}
+        />
+      </View>
+      {!inviteClub && clubMembers.length > 0 ? (
+        <>
+          {isCoach ? (
+            <CoachText variant="caption" muted style={coachStyles.fieldLabel}>
+              {isWoman ? t('coach.event.create.invitedWomen') : t('coach.event.create.invitedMen')}
+            </CoachText>
+          ) : (
+            <Text style={defaultStyles.label}>
+              {isWoman ? 'Joueuses convoquées' : 'Joueurs convoqués'}
+            </Text>
+          )}
+          <View style={isCoach ? coachStyles.chipRow : defaultStyles.typeRow}>
+            {clubMembers.map((m) => {
+              const on = selectedUids.includes(m.uid);
+              return (
+                <PressableSpring
+                  key={m.uid}
+                  style={[
+                    isCoach ? coachStyles.memberChip : defaultStyles.memberChip,
+                    on &&
+                      (isCoach
+                        ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
+                        : defaultStyles.memberChipOn),
+                  ]}
+                  onPress={() =>
+                    setSelectedUids((prev) =>
+                      on ? prev.filter((id) => id !== m.uid) : [...prev, m.uid],
+                    )
+                  }
+                >
+                  {isCoach ? (
+                    <CoachText variant="caption" accent={on} muted={!on}>
+                      {m.name}
+                    </CoachText>
+                  ) : (
+                    <Text
+                      style={[
+                        defaultStyles.memberChipText,
+                        on && defaultStyles.memberChipTextOn,
+                      ]}
+                    >
+                      {m.name}
+                    </Text>
+                  )}
+                </PressableSpring>
+              );
+            })}
+          </View>
+        </>
+      ) : null}
+    </>
+  ) : isCoach ? (
+    <CoachText variant="caption" muted style={coachStyles.hint}>
+      {t('coach.event.create.noClubHint')}
+    </CoachText>
+  ) : (
+    <Text style={defaultStyles.hint}>
+      Liez un club à votre profil pour convoquer automatiquement l&apos;effectif.
+    </Text>
+  );
+
+  if (isCoach) {
+    return (
+      <CoachPane
+        title={t('coach.event.create.title')}
+        actions={[
+          {
+            icon: 'close',
+            onPress: onBack,
+            accessibilityLabel: t('common.close'),
+          },
+        ]}
+      >
+        <CoachChapterScroll>
+          <CoachSectionCard
+            kicker={t('coach.event.create.typeKicker')}
+            title={t('coach.event.create.typeTitle')}
+          >
+            <View style={coachStyles.chipRow}>
+              {EVENT_TYPES.map((item) => {
+                const on = eventType === item.id;
+                return (
+                  <PressableSpring
+                    key={item.id}
+                    style={[
+                      coachStyles.typeChip,
+                      on && {
+                        backgroundColor: tokens.accent,
+                        borderColor: tokens.accent,
+                      },
+                    ]}
+                    onPress={() => setEventType(item.id)}
+                    scaleTo={0.96}
+                    haptic
+                  >
+                    <CoachText variant="caption" accent={on} muted={!on}>
+                      {item.label}
+                    </CoachText>
+                  </PressableSpring>
+                );
+              })}
+            </View>
+          </CoachSectionCard>
+
+          <CoachSectionCard
+            kicker={t('coach.event.create.infoKicker')}
+            title={t('coach.event.create.infoTitle')}
+          >
+            <CoachSettingsGroup>
+              <CoachFormField
+                placeholder={t('coach.event.create.titlePlaceholder')}
+                value={title}
+                onChangeText={setTitle}
+                tokens={tokens}
+              />
+              <CoachFormField
+                placeholder={t('coach.event.create.datePlaceholder')}
+                value={dateStr}
+                onChangeText={setDateStr}
+                tokens={tokens}
+              />
+              <CoachFormField
+                placeholder={t('coach.event.create.timePlaceholder')}
+                value={timeStr}
+                onChangeText={setTimeStr}
+                tokens={tokens}
+              />
+              <CoachFormField
+                placeholder={t('coach.event.create.cityPlaceholder')}
+                value={city}
+                onChangeText={setCity}
+                tokens={tokens}
+              />
+              <CoachFormField
+                placeholder={t('coach.event.create.locationPlaceholder')}
+                value={locationLabel}
+                onChangeText={setLocationLabel}
+                tokens={tokens}
+              />
+              <CoachFormField
+                placeholder={t('coach.event.create.descriptionPlaceholder')}
+                value={description}
+                onChangeText={setDescription}
+                tokens={tokens}
+                multiline
+                last
+              />
+            </CoachSettingsGroup>
+          </CoachSectionCard>
+
+          {showCategories ? (
+            <CoachSectionCard
+              kicker={t('coach.event.create.categoriesKicker')}
+              title={
+                eventType === 'detection'
+                  ? t('coach.event.create.categoriesDetectionTitle')
+                  : t('coach.event.create.categoriesConvocTitle')
+              }
+            >
+              {categorySection}
+              {eventType === 'detection' ? (
+                <CoachFormField
+                  placeholder={t('coach.event.create.maxPlacesPlaceholder')}
+                  value={maxParticipants}
+                  onChangeText={setMaxParticipants}
+                  tokens={tokens}
+                  keyboardType="number-pad"
+                />
+              ) : null}
+            </CoachSectionCard>
+          ) : null}
+
+          <CoachSectionCard
+            kicker={t('coach.event.create.convocKicker')}
+            title={t('coach.event.create.convocTitle')}
+          >
+            {convocationSection}
+          </CoachSectionCard>
+
+          <CoachActionRow
+            primary={
+              submitting ? t('coach.event.create.submitting') : t('coach.event.create.submit')
+            }
+            onPrimary={handleSubmit}
+          />
+          {submitting ? (
+            <ActivityIndicator color={tokens.accent} style={coachStyles.loader} />
+          ) : null}
+        </CoachChapterScroll>
+      </CoachPane>
+    );
+  }
+
   return (
-    <View style={[styles.root, rootStyle]}>
+    <View style={[defaultStyles.root, rootStyle]}>
       <ScreenHeader title="Nouvel événement" onBack={onBack} centered />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Type</Text>
-        <View style={styles.typeRow}>
-          {EVENT_TYPES.map((t) => (
+      <ScrollView contentContainerStyle={defaultStyles.content} keyboardShouldPersistTaps="handled">
+        <Text style={defaultStyles.label}>Type</Text>
+        <View style={defaultStyles.typeRow}>
+          {EVENT_TYPES.map((item) => (
             <PressableSpring
-              key={t.id}
-              style={[styles.typeChip, eventType === t.id && styles.typeChipActive]}
-              onPress={() => setEventType(t.id)}
+              key={item.id}
+              style={[defaultStyles.typeChip, eventType === item.id && defaultStyles.typeChipActive]}
+              onPress={() => setEventType(item.id)}
             >
               <Text
-                style={[styles.typeText, eventType === t.id && styles.typeTextActive]}
+                style={[
+                  defaultStyles.typeText,
+                  eventType === item.id && defaultStyles.typeTextActive,
+                ]}
               >
-                {t.label}
+                {item.label}
               </Text>
             </PressableSpring>
           ))}
         </View>
 
         <TextInput
-          style={styles.input}
+          style={defaultStyles.input}
           placeholder="Titre"
           placeholderTextColor={c.textMuted}
           value={title}
           onChangeText={setTitle}
         />
         <TextInput
-          style={styles.input}
+          style={defaultStyles.input}
           placeholder="Date (JJ/MM/AAAA)"
           placeholderTextColor={c.textMuted}
           value={dateStr}
           onChangeText={setDateStr}
         />
         <TextInput
-          style={styles.input}
+          style={defaultStyles.input}
           placeholder="Heure (14:00)"
           placeholderTextColor={c.textMuted}
           value={timeStr}
           onChangeText={setTimeStr}
         />
         <TextInput
-          style={styles.input}
+          style={defaultStyles.input}
           placeholder="Ville"
           placeholderTextColor={c.textMuted}
           value={city}
           onChangeText={setCity}
         />
         <TextInput
-          style={styles.input}
+          style={defaultStyles.input}
           placeholder="Lieu (stade, adresse…)"
           placeholderTextColor={c.textMuted}
           value={locationLabel}
           onChangeText={setLocationLabel}
         />
         <TextInput
-          style={[styles.input, styles.textArea]}
+          style={[defaultStyles.input, defaultStyles.textArea]}
           placeholder="Description (optionnel)"
           placeholderTextColor={c.textMuted}
           value={description}
@@ -237,128 +503,36 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           multiline
         />
 
-        {eventType === 'detection' && (
+        {showCategories ? (
           <>
-            <Text style={styles.label}>Catégories</Text>
-            <View style={styles.typeRow}>
-              {CATEGORIES.map((cat) => (
-                <PressableSpring
-                  key={cat}
-                  style={[
-                    styles.typeChip,
-                    selectedCategories.includes(cat) && styles.typeChipActive,
-                  ]}
-                  onPress={() => toggleCategory(cat)}
-                >
-                  <Text
-                    style={[
-                      styles.typeText,
-                      selectedCategories.includes(cat) && styles.typeTextActive,
-                    ]}
-                  >
-                    {cat}
-                  </Text>
-                </PressableSpring>
-              ))}
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Places max"
-              placeholderTextColor={c.textMuted}
-              value={maxParticipants}
-              onChangeText={setMaxParticipants}
-              keyboardType="number-pad"
-            />
-          </>
-        )}
-
-        {profile?.profile.club_id && eventType !== 'detection' ? (
-          <>
-            <Text style={styles.label}>Catégories convoquées (optionnel)</Text>
-            <Text style={styles.hint}>
-              {isWoman
-                ? 'Si vous sélectionnez des catégories, seules les joueuses correspondantes seront convoquées lorsque « Convoquer tout le club » est activé.'
-                : 'Si vous sélectionnez des catégories, seuls les joueurs correspondants seront convoqués lorsque « Convoquer tout le club » est activé.'}
+            <Text style={defaultStyles.label}>
+              {eventType === 'detection' ? 'Catégories' : 'Catégories convoquées (optionnel)'}
             </Text>
-            <View style={styles.typeRow}>
-              {CATEGORIES.map((cat) => (
-                <PressableSpring
-                  key={cat}
-                  style={[
-                    styles.typeChip,
-                    selectedCategories.includes(cat) && styles.typeChipActive,
-                  ]}
-                  onPress={() => toggleCategory(cat)}
-                >
-                  <Text
-                    style={[
-                      styles.typeText,
-                      selectedCategories.includes(cat) && styles.typeTextActive,
-                    ]}
-                  >
-                    {cat}
-                  </Text>
-                </PressableSpring>
-              ))}
-            </View>
+            {categorySection}
+            {eventType === 'detection' ? (
+              <TextInput
+                style={defaultStyles.input}
+                placeholder="Places max"
+                placeholderTextColor={c.textMuted}
+                value={maxParticipants}
+                onChangeText={setMaxParticipants}
+                keyboardType="number-pad"
+              />
+            ) : null}
           </>
         ) : null}
 
-        {profile?.profile.club_id ? (
-          <>
-            <View style={styles.switchRow}>
-              <Text style={styles.switchLabel}>Convoquer tout le club</Text>
-              <Switch
-                value={inviteClub}
-                onValueChange={(v) => {
-                  setInviteClub(v);
-                  if (!v) setSelectedUids(clubMembers.map((m) => m.uid));
-                }}
-              />
-            </View>
-            {!inviteClub && clubMembers.length > 0 ? (
-              <>
-                <Text style={styles.label}>
-                  {isWoman ? 'Joueuses convoquées' : 'Joueurs convoqués'}
-                </Text>
-                <View style={styles.memberList}>
-                  {clubMembers.map((m) => {
-                    const on = selectedUids.includes(m.uid);
-                    return (
-                      <PressableSpring
-                        key={m.uid}
-                        style={[styles.memberChip, on && styles.memberChipOn]}
-                        onPress={() =>
-                          setSelectedUids((prev) =>
-                            on ? prev.filter((id) => id !== m.uid) : [...prev, m.uid]
-                          )
-                        }
-                      >
-                        <Text style={[styles.memberChipText, on && styles.memberChipTextOn]}>
-                          {m.name}
-                        </Text>
-                      </PressableSpring>
-                    );
-                  })}
-                </View>
-              </>
-            ) : null}
-          </>
-        ) : (
-          <Text style={styles.hint}>
-            Liez un club à votre profil pour convoquer automatiquement l&apos;effectif.
-          </Text>
-        )}
+        {convocationSection}
 
         <PressableSpring
-          style={[styles.submit, submitting && styles.submitDisabled]}
+          style={[defaultStyles.submit, submitting && defaultStyles.submitDisabled]}
           onPress={handleSubmit}
           disabled={submitting}
         >
           {submitting ? (
             <ActivityIndicator color={c.brandInverse} />
           ) : (
-            <Text style={styles.submitText}>Créer et convoquer</Text>
+            <Text style={defaultStyles.submitText}>Créer et convoquer</Text>
           )}
         </PressableSpring>
       </ScrollView>
@@ -366,70 +540,148 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   );
 };
 
-function createStyles(c: AppColors) {
+function CoachFormField({
+  placeholder,
+  value,
+  onChangeText,
+  tokens,
+  multiline,
+  keyboardType,
+  last,
+}: {
+  placeholder: string;
+  value: string;
+  onChangeText: (v: string) => void;
+  tokens: CoachThemeTokens;
+  multiline?: boolean;
+  keyboardType?: 'number-pad' | 'default';
+  last?: boolean;
+}) {
+  return (
+    <TextInput
+      placeholder={placeholder}
+      placeholderTextColor={tokens.muted}
+      value={value}
+      onChangeText={onChangeText}
+      multiline={multiline}
+      keyboardType={keyboardType}
+      style={[
+        {
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.md,
+          fontSize: 15,
+          color: tokens.foreground,
+          minHeight: multiline ? 80 : 48,
+          textAlignVertical: multiline ? 'top' : 'center',
+        },
+        !last && {
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: tokens.border,
+        },
+      ]}
+    />
+  );
+}
+
+function createCoachStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
-  root: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  label: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: c.textSecondary,
-    marginBottom: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.md },
-  typeChip: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-  },
-  typeChipActive: { backgroundColor: c.accent, borderColor: c.accent },
-  typeText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
-  typeTextActive: { color: c.brandInverse },
-  input: {
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: c.border,
-    fontSize: 15,
-    color: c.text,
-  },
-  textArea: { minHeight: 80, textAlignVertical: 'top' },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginVertical: spacing.md,
-  },
-  switchLabel: { fontSize: 14, fontWeight: '700', color: c.text, flex: 1 },
-  hint: { fontSize: 12, color: c.textMuted, marginBottom: spacing.md, lineHeight: 18 },
-  memberList: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.md },
-  memberChip: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-  },
-  memberChipOn: { backgroundColor: c.accent, borderColor: c.accent },
-  memberChipText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
-  memberChipTextOn: { color: c.brandInverse },
-  submit: {
-    backgroundColor: c.accent,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: c.border,
-    marginTop: spacing.md,
-  },
-  submitDisabled: { opacity: 0.6 },
-  submitText: { color: c.brandInverse, fontWeight: '900', fontSize: 16 },
+    chipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+    },
+    typeChip: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+    },
+    memberChip: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+    },
+    switchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    switchLabel: { flex: 1 },
+    fieldLabel: { marginBottom: spacing.xs },
+    hint: { lineHeight: 18, marginBottom: spacing.sm },
+    loader: { marginTop: spacing.sm },
+  });
+}
+
+function createDefaultStyles(c: AppColors) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    label: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: c.textSecondary,
+      marginBottom: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.md },
+    typeChip: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    typeChipActive: { backgroundColor: c.accent, borderColor: c.accent },
+    typeText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
+    typeTextActive: { color: c.brandInverse },
+    input: {
+      backgroundColor: c.surface,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: c.border,
+      fontSize: 15,
+      color: c.text,
+    },
+    textArea: { minHeight: 80, textAlignVertical: 'top' },
+    switchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginVertical: spacing.md,
+    },
+    switchLabel: { fontSize: 14, fontWeight: '700', color: c.text, flex: 1 },
+    hint: { fontSize: 12, color: c.textMuted, marginBottom: spacing.md, lineHeight: 18 },
+    memberChip: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+    },
+    memberChipOn: { backgroundColor: c.accent, borderColor: c.accent },
+    memberChipText: { fontSize: 11, fontWeight: '700', color: c.textSecondary },
+    memberChipTextOn: { color: c.brandInverse },
+    submit: {
+      backgroundColor: c.accent,
+      borderRadius: radius.md,
+      padding: spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: c.border,
+      marginTop: spacing.md,
+    },
+    submitDisabled: { opacity: 0.6 },
+    submitText: { color: c.brandInverse, fontWeight: '900', fontSize: 16 },
   });
 }
