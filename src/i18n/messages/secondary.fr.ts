@@ -355,7 +355,11 @@ export const SECONDARY_FR: MessageCatalog = {
   'coach.event.create.maxPlacesPlaceholder': 'Places max',
   'coach.event.create.convocKicker': 'Convocation',
   'coach.event.create.convocTitle': 'Qui convoquer ?',
-  'coach.event.create.inviteClub': 'Convoquer tout le club',
+  'coach.event.create.teamsMode': 'Par équipe(s)',
+  'coach.event.create.manualMode': 'Sélection manuelle',
+  'coach.event.create.teamsHint': 'Cochez une ou plusieurs équipes du club.',
+  'coach.event.create.convokedSummaryMen': '{{players}} joueur(s) · {{teams}} équipe(s)',
+  'coach.event.create.convokedSummaryWomen': '{{players}} joueuse(s) · {{teams}} équipe(s)',
   'coach.event.create.invitedMen': 'Joueurs convoqués',
   'coach.event.create.invitedWomen': 'Joueuses convoquées',
   'coach.event.create.noClubHint':

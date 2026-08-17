@@ -7,22 +7,32 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  Switch,
 } from 'react-native';
 import { PressableSpring } from '../components/motion';
 import type { TeamEventType } from '../models/TeamEvent';
 import type { User } from '../models/User';
+import type { Team } from '../models/Team';
+import type { Membership } from '../models/Membership';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
 import { clubsService } from '../services/clubs.service';
+import { teamsService } from '../services/teams.service';
+import { membershipsService } from '../services/memberships.service';
 import { useAuth } from '../context/AuthContext';
 import {
   defaultTrainingSchedule,
   formatFrenchDate,
   parseFrenchDate,
 } from '../utils/parseFrenchDate';
-import { filterMembersByCategory, memberUidsExcluding } from '../utils/clubMembersFilter';
+import { filterMembersByCategory } from '../utils/clubMembersFilter';
+import {
+  countActivePlayersForTeam,
+  resolveConvocationInviteeUids,
+  resolveEventTeamId,
+  resolveInviteesForTeams,
+  teamConvocationChipLabel,
+} from '../utils/teamConvocation';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
@@ -95,7 +105,11 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   const [city, setCity] = useState(profile?.city ?? '');
   const [locationLabel, setLocationLabel] = useState('');
   const [description, setDescription] = useState('');
-  const [inviteClub, setInviteClub] = useState(true);
+  const [convocationMode, setConvocationMode] = useState<'teams' | 'manual'>('teams');
+  const [clubTeams, setClubTeams] = useState<Team[]>([]);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
+  const [teamsInitialized, setTeamsInitialized] = useState(false);
   const [clubMembers, setClubMembers] = useState<{ uid: string; name: string }[]>([]);
   const [clubMembersRaw, setClubMembersRaw] = useState<User[]>([]);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
@@ -108,15 +122,26 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     [title, city, dateStr],
   );
 
-  const convokedCount = useMemo(() => {
-    if (!profile?.profile.club_id) return 0;
-    if (!inviteClub) return selectedUids.length;
-    const pool =
-      selectedCategories.length > 0
-        ? filterMembersByCategory(clubMembersRaw, selectedCategories)
-        : clubMembersRaw;
-    return pool.length;
-  }, [profile?.profile.club_id, inviteClub, selectedUids.length, clubMembersRaw, selectedCategories]);
+  const convokedMembers = useMemo(() => {
+    if (!profile?.profile.club_id) return [] as User[];
+    if (convocationMode === 'manual') {
+      return clubMembersRaw.filter((m) => selectedUids.includes(m.uid));
+    }
+    const fromTeams = resolveInviteesForTeams(clubMembersRaw, memberships, selectedTeamIds);
+    return selectedCategories.length > 0
+      ? filterMembersByCategory(fromTeams, selectedCategories)
+      : fromTeams;
+  }, [
+    profile?.profile.club_id,
+    convocationMode,
+    selectedUids,
+    clubMembersRaw,
+    memberships,
+    selectedTeamIds,
+    selectedCategories,
+  ]);
+
+  const convokedCount = convokedMembers.length;
 
   useEffect(() => {
     if (selectedCategories.length > 0 || eventType === 'meeting') return;
@@ -136,17 +161,37 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     const clubId = profile?.profile.club_id;
     if (!clubId) {
       setClubMembers([]);
+      setClubMembersRaw([]);
+      setClubTeams([]);
+      setMemberships([]);
+      setSelectedTeamIds([]);
+      setTeamsInitialized(false);
       return;
     }
-    void usersService.listMembersByClubId(clubId).then((list) => {
+    void Promise.all([
+      usersService.listMembersByClubId(clubId),
+      teamsService.listByClubId(clubId),
+      membershipsService.listByClub(clubId),
+    ]).then(([list, teams, mems]) => {
       const others = list.filter((m) => m.uid !== profile?.uid);
       setClubMembersRaw(others);
-      setClubMembers(
-        others.map((m) => ({ uid: m.uid, name: m.display_name })),
-      );
-      if (!inviteClub) setSelectedUids(others.map((m) => m.uid));
+      setClubMembers(others.map((m) => ({ uid: m.uid, name: m.display_name })));
+      setClubTeams(teams);
+      setMemberships(mems);
+      setTeamsInitialized(false);
     });
-  }, [profile?.profile.club_id, profile?.uid, inviteClub]);
+  }, [profile?.profile.club_id, profile?.uid]);
+
+  useEffect(() => {
+    if (teamsInitialized || clubTeams.length === 0) return;
+    const preferred = activeTeamId ?? teamId;
+    if (preferred && clubTeams.some((row) => row.id === preferred)) {
+      setSelectedTeamIds([preferred]);
+    } else if (clubTeams.length === 1) {
+      setSelectedTeamIds([clubTeams[0].id]);
+    }
+    setTeamsInitialized(true);
+  }, [clubTeams, activeTeamId, teamId, teamsInitialized]);
 
   useEffect(() => {
     if (eventType === 'detection' && !title) {
@@ -164,6 +209,22 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((x) => x !== cat) : [...prev, cat],
     );
+  };
+
+  const toggleTeam = (teamIdToToggle: string) => {
+    setSelectedTeamIds((prev) =>
+      prev.includes(teamIdToToggle)
+        ? prev.filter((id) => id !== teamIdToToggle)
+        : [...prev, teamIdToToggle],
+    );
+  };
+
+  const switchConvocationMode = (mode: 'teams' | 'manual') => {
+    setConvocationMode(mode);
+    if (mode === 'manual') {
+      const fromTeams = resolveInviteesForTeams(clubMembersRaw, memberships, selectedTeamIds);
+      setSelectedUids(fromTeams.map((m) => m.uid));
+    }
   };
 
   const handleSubmit = async () => {
@@ -196,17 +257,23 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
       if (clubId) {
         const club = await clubsService.getById(clubId);
         clubName = club?.name;
-        if (inviteClub) {
-          const members = await usersService.listMembersByClubId(clubId);
-          const filtered =
-            selectedCategories.length > 0
-              ? filterMembersByCategory(members, selectedCategories)
-              : members;
-          inviteeUids = memberUidsExcluding(filtered, profile.uid);
-        } else if (selectedUids.length > 0) {
+        const members = await usersService.listMembersByClubId(clubId);
+        const clubMemberships = await membershipsService.listByClub(clubId);
+
+        if (convocationMode === 'manual') {
           inviteeUids = selectedUids.filter((uid) => uid !== profile.uid);
+        } else {
+          inviteeUids = resolveConvocationInviteeUids(
+            members,
+            clubMemberships,
+            selectedTeamIds,
+            selectedCategories,
+            profile.uid,
+          );
         }
       }
+
+      const eventTeamId = resolveEventTeamId(selectedTeamIds);
 
       const id = await teamEventsService.create({
         title: title.trim(),
@@ -216,7 +283,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
         organizer_name: profile.display_name,
         club_id: clubId,
         club_name: clubName,
-        team_id: eventType === 'training' && activeTeamId ? activeTeamId : undefined,
+        team_id: eventTeamId,
         starts_at: parsed,
         city: city.trim(),
         location_label: locationLabel.trim() || undefined,
@@ -250,13 +317,23 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     (eventType === 'detection' || Boolean(profile?.profile.club_id));
 
   const convokedCountLabel =
-    convokedCount > 0
+    convocationMode === 'teams' && convokedCount > 0
       ? isWoman
-        ? t('coach.event.create.convokedCountWomen', { count: convokedCount })
-        : t('coach.event.create.convokedCountMen', { count: convokedCount })
-      : isWoman
-        ? t('coach.event.create.convokedCountEmptyWomen')
-        : t('coach.event.create.convokedCountEmptyMen');
+        ? t('coach.event.create.convokedSummaryWomen', {
+            players: convokedCount,
+            teams: selectedTeamIds.length,
+          })
+        : t('coach.event.create.convokedSummaryMen', {
+            players: convokedCount,
+            teams: selectedTeamIds.length,
+          })
+      : convokedCount > 0
+        ? isWoman
+          ? t('coach.event.create.convokedCountWomen', { count: convokedCount })
+          : t('coach.event.create.convokedCountMen', { count: convokedCount })
+        : isWoman
+          ? t('coach.event.create.convokedCountEmptyWomen')
+          : t('coach.event.create.convokedCountEmptyMen');
 
   const categoryHint =
     eventType === 'detection'
@@ -287,34 +364,99 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
 
   const convocationSection = profile?.profile.club_id ? (
     <>
-      <View style={isCoach ? coachStyles.switchRow : defaultStyles.switchRow}>
-        {isCoach ? (
-          <CoachText variant="section" style={coachStyles.switchLabel}>
-            {t('coach.event.create.inviteClub')}
-          </CoachText>
-        ) : (
-          <Text style={defaultStyles.switchLabel}>Convoquer tout le club</Text>
-        )}
-        <Switch
-          value={inviteClub}
-          onValueChange={(v) => {
-            setInviteClub(v);
-            if (!v) setSelectedUids(clubMembers.map((m) => m.uid));
-          }}
-          trackColor={{ false: tokens.border, true: tokens.accent }}
-          thumbColor={isCoach ? tokens.onAccent : undefined}
-        />
+      <View style={isCoach ? coachStyles.modeRow : defaultStyles.typeRow}>
+        {(['teams', 'manual'] as const).map((mode) => {
+          const on = convocationMode === mode;
+          const label =
+            mode === 'teams'
+              ? t('coach.event.create.teamsMode')
+              : t('coach.event.create.manualMode');
+          return (
+            <PressableSpring
+              key={mode}
+              style={[
+                isCoach ? coachStyles.modeChip : defaultStyles.typeChip,
+                isCoach
+                  ? coachChipContainerStyle(on, tokens)
+                  : on && defaultStyles.typeChipActive,
+              ]}
+              onPress={() => switchConvocationMode(mode)}
+              scaleTo={0.96}
+              haptic
+            >
+              {isCoach ? (
+                <CoachText variant="caption" {...coachChipTextProps(on, tokens)}>
+                  {label}
+                </CoachText>
+              ) : (
+                <Text style={[defaultStyles.typeText, on && defaultStyles.typeTextActive]}>
+                  {label}
+                </Text>
+              )}
+            </PressableSpring>
+          );
+        })}
       </View>
-      {inviteClub && showCategories ? (
-        isCoach ? (
-          <CoachText variant="caption" muted style={coachStyles.convokedCount}>
-            {convokedCountLabel}
-          </CoachText>
-        ) : (
-          <Text style={defaultStyles.hint}>{convokedCountLabel}</Text>
-        )
-      ) : null}
-      {!inviteClub && clubMembers.length > 0 ? (
+
+      {convocationMode === 'teams' ? (
+        <>
+          {isCoach ? (
+            <CoachText variant="caption" muted style={coachStyles.hint}>
+              {t('coach.event.create.teamsHint')}
+            </CoachText>
+          ) : (
+            <Text style={defaultStyles.hint}>{t('coach.event.create.teamsHint')}</Text>
+          )}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={isCoach ? coachStyles.teamChipScroll : defaultStyles.typeRow}
+          >
+            {clubTeams.map((team) => {
+              const on = selectedTeamIds.includes(team.id);
+              const playerCount = countActivePlayersForTeam(memberships, team.id);
+              const chipLabel = teamConvocationChipLabel(team.name, team.category, playerCount);
+              return (
+                <PressableSpring
+                  key={team.id}
+                  style={[
+                    isCoach ? coachStyles.teamChip : defaultStyles.typeChip,
+                    isCoach
+                      ? coachChipContainerStyle(on, tokens)
+                      : on && defaultStyles.typeChipActive,
+                  ]}
+                  onPress={() => toggleTeam(team.id)}
+                  scaleTo={0.97}
+                  haptic
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: on }}
+                  accessibilityLabel={chipLabel}
+                >
+                  {isCoach ? (
+                    <CoachText variant="caption" {...coachChipTextProps(on, tokens)} numberOfLines={1}>
+                      {chipLabel}
+                    </CoachText>
+                  ) : (
+                    <Text
+                      style={[defaultStyles.typeText, on && defaultStyles.typeTextActive]}
+                      numberOfLines={1}
+                    >
+                      {chipLabel}
+                    </Text>
+                  )}
+                </PressableSpring>
+              );
+            })}
+          </ScrollView>
+          {isCoach ? (
+            <CoachText variant="caption" muted style={coachStyles.convokedCount}>
+              {convokedCountLabel}
+            </CoachText>
+          ) : (
+            <Text style={defaultStyles.hint}>{convokedCountLabel}</Text>
+          )}
+        </>
+      ) : clubMembers.length > 0 ? (
         <>
           {isCoach ? (
             <CoachText variant="caption" muted style={coachStyles.fieldLabel}>
@@ -359,6 +501,13 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
               );
             })}
           </View>
+          {isCoach ? (
+            <CoachText variant="caption" muted style={coachStyles.convokedCount}>
+              {convokedCountLabel}
+            </CoachText>
+          ) : (
+            <Text style={defaultStyles.hint}>{convokedCountLabel}</Text>
+          )}
         </>
       ) : null}
     </>
@@ -707,6 +856,31 @@ function createCoachStyles(tokens: CoachThemeTokens) {
       paddingVertical: 6,
       borderRadius: radius.pill,
       borderWidth: StyleSheet.hairlineWidth,
+    },
+    modeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      marginBottom: spacing.sm,
+    },
+    modeChip: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    teamChipScroll: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      paddingVertical: 2,
+      marginBottom: spacing.xs,
+    },
+    teamChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: StyleSheet.hairlineWidth,
+      maxWidth: 200,
     },
     switchRow: {
       flexDirection: 'row',
