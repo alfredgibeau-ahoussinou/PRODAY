@@ -1,4 +1,8 @@
-import { parseCoachColorPhrase, normalizeCoachHexColor } from '../utils/coachColorPicker';
+import {
+  parseCoachColorPhrase,
+  normalizeCoachHexColor,
+  COACH_COLOR_FAMILIES,
+} from '../utils/coachColorPicker';
 
 describe('parseCoachColorPhrase', () => {
   it('accepte un hex avec #', () => {
@@ -31,5 +35,22 @@ describe('parseCoachColorPhrase', () => {
 
   it('normalise via normalizeCoachHexColor', () => {
     expect(normalizeCoachHexColor('#abc123')).toBe('#ABC123');
+  });
+});
+
+describe('COACH_COLOR_FAMILIES', () => {
+  it('contient des familles non vides avec des hex valides', () => {
+    expect(COACH_COLOR_FAMILIES.length).toBeGreaterThan(0);
+    for (const family of COACH_COLOR_FAMILIES) {
+      expect(family.colors.length).toBeGreaterThanOrEqual(18);
+      for (const color of family.colors) {
+        expect(normalizeCoachHexColor(color)).toBe(color);
+      }
+    }
+  });
+
+  it('inclut le bleu ProDay dans la famille proday', () => {
+    const proday = COACH_COLOR_FAMILIES.find((f) => f.id === 'proday');
+    expect(proday?.colors).toContain('#006CFC');
   });
 });
