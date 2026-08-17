@@ -2,12 +2,11 @@ import React, { useMemo } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
-import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import type { SmartPlayerCardData } from '../../models/SmartTactics';
 import { radius, spacing } from '../../theme/designTokens';
-import { SMART_PITCH, useSmartTacticsCoachSkin } from './smartTacticsUi';
+import { SMART_PITCH, SmartTacticsPressable, useSmartTacticsCoachSkin } from './smartTacticsUi';
 import { COACH_SITE } from '../../content/coachPageIdentity';
 import { CoachText } from '../coach/coachPortalUi';
 import { Icon } from '../ui/Icon';
@@ -101,9 +100,9 @@ export const SmartPlayerCard: React.FC<{
     );
     if (onPress) {
       return (
-        <PressableSpring onPress={onPress} scaleTo={0.97} haptic>
+        <SmartTacticsPressable onPress={onPress} scaleTo={0.97}>
           {body}
-        </PressableSpring>
+        </SmartTacticsPressable>
       );
     }
     return body;
@@ -221,9 +220,9 @@ export const SmartPlayerCard: React.FC<{
 
   if (onPress) {
     return (
-      <PressableSpring onPress={onPress} scaleTo={0.97} haptic>
+      <SmartTacticsPressable onPress={onPress} scaleTo={0.97}>
         {body}
-      </PressableSpring>
+      </SmartTacticsPressable>
     );
   }
   return body;

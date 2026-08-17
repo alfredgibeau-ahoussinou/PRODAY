@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
 import {
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -66,6 +67,48 @@ export function useSmartTacticsCoachSkin() {
   return useContext(SmartTacticsCoachSkinContext);
 }
 
+/** Coach shell : Pressable statique · joueur : spring scale. */
+export function SmartTacticsPressable({
+  children,
+  onPress,
+  disabled,
+  style,
+  scaleTo = 0.96,
+}: {
+  children: React.ReactNode;
+  onPress?: () => void;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+  scaleTo?: number;
+}) {
+  const coach = useSmartTacticsCoachSkin();
+  if (!onPress) {
+    return <View style={style}>{children}</View>;
+  }
+  if (coach) {
+    return (
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        style={({ pressed }) => [style, pressed && !disabled && { opacity: 0.72 }]}
+      >
+        {children}
+      </Pressable>
+    );
+  }
+  return (
+    <PressableSpring
+      onPress={onPress}
+      scaleTo={scaleTo}
+      haptic
+      disabled={disabled}
+      style={style}
+    >
+      {children}
+    </PressableSpring>
+  );
+}
+
 /** Tokens visuels — coach shell SportEasy vs jeu orange/vert. */
 export function useSmartTacticsTheme() {
   const coach = useSmartTacticsCoachSkin();
@@ -120,11 +163,7 @@ export function SmartTacticsLink({
     </ProDayText>
   );
   if (!onPress) return text;
-  return (
-    <PressableSpring onPress={onPress} scaleTo={0.96} haptic>
-      {text}
-    </PressableSpring>
-  );
+  return <SmartTacticsPressable onPress={onPress}>{text}</SmartTacticsPressable>;
 }
 
 export function SmartTacticsPrimaryCta({
@@ -142,10 +181,8 @@ export function SmartTacticsPrimaryCta({
 }) {
   const theme = useSmartTacticsTheme();
   return (
-    <PressableSpring
+    <SmartTacticsPressable
       onPress={onPress}
-      scaleTo={0.96}
-      haptic
       disabled={disabled}
       style={[
         coachCta.primary,
@@ -157,7 +194,7 @@ export function SmartTacticsPrimaryCta({
       <ProDayText variant="body" style={[coachCta.primaryText, { color: theme.ctaText }]}>
         {label}
       </ProDayText>
-    </PressableSpring>
+    </SmartTacticsPressable>
   );
 }
 
@@ -172,10 +209,8 @@ export function SmartTacticsChip({
 }) {
   const theme = useSmartTacticsTheme();
   return (
-    <PressableSpring
+    <SmartTacticsPressable
       onPress={onPress}
-      scaleTo={0.96}
-      haptic
       style={[
         coachChip.base,
         {
@@ -200,7 +235,7 @@ export function SmartTacticsChip({
           {label}
         </ProDayText>
       )}
-    </PressableSpring>
+    </SmartTacticsPressable>
   );
 }
 
@@ -384,11 +419,9 @@ export function SmartTacticsChapterRail({
         {SMART_TACTICS_CHAPTERS.map((ch) => {
           const on = active === ch.id;
           return (
-            <PressableSpring
+            <SmartTacticsPressable
               key={ch.id}
               onPress={() => onChange(ch.id)}
-              scaleTo={0.97}
-              haptic
               style={[styles.coachPill, on && styles.coachPillOn]}
             >
               <ProDayText
@@ -398,7 +431,7 @@ export function SmartTacticsChapterRail({
               >
                 {ch.label}
               </ProDayText>
-            </PressableSpring>
+            </SmartTacticsPressable>
           );
         })}
       </ScrollView>
@@ -629,11 +662,11 @@ export function SmartTacticsEmpty({
           {body}
         </CoachText>
         {cta && onPress ? (
-          <PressableSpring onPress={onPress} scaleTo={0.96} haptic style={empty.cta}>
+          <SmartTacticsPressable onPress={onPress} style={empty.cta}>
             <CoachText variant="section" accent style={coachPanel.cta}>
               {cta}
             </CoachText>
-          </PressableSpring>
+          </SmartTacticsPressable>
         ) : null}
       </View>
     );

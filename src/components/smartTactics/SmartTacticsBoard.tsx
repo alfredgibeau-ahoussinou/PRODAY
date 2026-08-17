@@ -14,7 +14,6 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
@@ -31,7 +30,7 @@ import {
   type JoueurPositionGroup,
 } from '../../utils/joueurExperienceTheme';
 import { radius, spacing } from '../../theme/designTokens';
-import { SMART_PITCH, useSmartTacticsTheme } from './smartTacticsUi';
+import { SMART_PITCH, SmartTacticsPressable, useSmartTacticsTheme } from './smartTacticsUi';
 import { COACH_SITE } from '../../content/coachPageIdentity';
 import { Icon } from '../ui/Icon';
 import { SmartPlayerCard } from './SmartPlayerCard';
@@ -195,7 +194,7 @@ function PitchToken({
   const theme = useSmartTacticsTheme();
   if (!slot) {
     return (
-      <PressableSpring onPress={onPress} scaleTo={0.94} haptic>
+      <SmartTacticsPressable onPress={onPress} scaleTo={0.94}>
         <View
           style={[
             stand.empty,
@@ -211,7 +210,7 @@ function PitchToken({
         >
           <Icon name="add" size={Math.round(size * 0.38)} color={emptyActive ? theme.ctaText : '#fff'} />
         </View>
-      </PressableSpring>
+      </SmartTacticsPressable>
     );
   }
 
@@ -220,8 +219,8 @@ function PitchToken({
   const ready = card?.readiness_pct ?? 70;
 
   return (
-    <PressableSpring onPress={onPress} scaleTo={0.94} haptic>
-      <View style={[stand.wrap, { width: size + 8 }, selected && stand.wrapOn]}>
+    <SmartTacticsPressable onPress={onPress} scaleTo={0.94}>
+      <View style={[stand.wrap, { width: size + 8 }, selected && !theme.coach && stand.wrapOn]}>
         <View style={[stand.ovr, { borderRadius: 6, backgroundColor: theme.accent }]}>
           <ProDayText variant="caption" style={[stand.ovrTxt, { color: theme.ctaText }]}>
             {ovr}
@@ -252,7 +251,7 @@ function PitchToken({
           {name}
         </ProDayText>
       </View>
-    </PressableSpring>
+    </SmartTacticsPressable>
   );
 }
 
@@ -485,14 +484,16 @@ export const SmartTacticsBoard: React.FC<{
 
   const progress = useSharedValue(0);
   useEffect(() => {
+    if (theme.coach) return;
     progress.value = withSpring(filledInStage / Math.max(1, activeStage.count), {
       damping: 16,
       stiffness: 160,
     });
-  }, [filledInStage, activeStage.count, progress]);
+  }, [filledInStage, activeStage.count, progress, theme.coach]);
   const progressStyle = useAnimatedStyle(() => ({
     width: `${interpolate(progress.value, [0, 1], [4, 100])}%`,
   }));
+  const progressPct = `${(filledInStage / Math.max(1, activeStage.count)) * 100}%`;
 
   const xiCount = cells.filter(Boolean).length;
   const xiTotal = countFormationSlots(formation);
@@ -536,11 +537,9 @@ export const SmartTacticsBoard: React.FC<{
           {SMART_TACTICS_PRESET_FORMATIONS.map((f) => {
             const on = formation === f;
             return (
-              <PressableSpring
+              <SmartTacticsPressable
                 key={f}
                 onPress={() => onChangeFormation(f)}
-                scaleTo={0.96}
-                haptic
                 style={[
                   styles.formPill,
                   {
@@ -555,7 +554,7 @@ export const SmartTacticsBoard: React.FC<{
                 >
                   {f}
                 </ProDayText>
-              </PressableSpring>
+              </SmartTacticsPressable>
             );
           })}
         </ScrollView>
@@ -569,11 +568,11 @@ export const SmartTacticsBoard: React.FC<{
             placeholderTextColor={theme.muted}
             style={[styles.customInput, { color: theme.foreground }]}
           />
-          <PressableSpring onPress={applyCustom} scaleTo={0.96} haptic style={styles.customBtn}>
+          <SmartTacticsPressable onPress={applyCustom} style={styles.customBtn}>
             <ProDayText variant="caption" style={{ color: theme.accent, fontWeight: '800' }}>
               OK
             </ProDayText>
-          </PressableSpring>
+          </SmartTacticsPressable>
         </View>
         ) : null}
       </View>
@@ -584,12 +583,20 @@ export const SmartTacticsBoard: React.FC<{
         style={[styles.stadium, { borderColor: theme.stadiumBorder }]}
       >
         <View style={styles.stadiumHead}>
-          <ProDayText variant="caption" style={styles.kicker}>
-            Terrain 3D
-          </ProDayText>
-          <ProDayText variant="caption" style={{ color: 'rgba(255,255,255,0.55)' }}>
-            ATT ↑ · GB ↓
-          </ProDayText>
+          {!theme.coach ? (
+            <>
+              <ProDayText variant="caption" style={styles.kicker}>
+                Terrain 3D
+              </ProDayText>
+              <ProDayText variant="caption" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                ATT ↑ · GB ↓
+              </ProDayText>
+            </>
+          ) : (
+            <ProDayText variant="caption" style={[styles.kicker, { color: COACH_SITE.muted }]}>
+              Composition · {formation}
+            </ProDayText>
+          )}
         </View>
 
         <View style={styles.scene}>
@@ -693,11 +700,9 @@ export const SmartTacticsBoard: React.FC<{
                 const ready = card?.readiness_pct ?? 70;
                 const on = selectedUid === s.uid;
                 return (
-                  <PressableSpring
+                  <SmartTacticsPressable
                     key={`bench-${s.uid}`}
                     onPress={() => onPickCandidate(s.uid)}
-                    scaleTo={0.96}
-                    haptic
                     style={[
                       styles.benchSeat,
                       on &&
@@ -741,7 +746,7 @@ export const SmartTacticsBoard: React.FC<{
                     >
                       {ovr}
                     </ProDayText>
-                  </PressableSpring>
+                  </SmartTacticsPressable>
                 );
               })
             )}
@@ -768,9 +773,19 @@ export const SmartTacticsBoard: React.FC<{
         </View>
 
         <View style={[styles.track, { backgroundColor: theme.border }]}>
-          <Animated.View
-            style={[styles.fill, progressStyle, theme.coach && { backgroundColor: theme.accent }]}
-          />
+          {theme.coach ? (
+            <View
+              style={[
+                styles.fill,
+                { width: progressPct },
+                { backgroundColor: theme.accent },
+              ]}
+            />
+          ) : (
+            <Animated.View
+              style={[styles.fill, progressStyle, theme.coach && { backgroundColor: theme.accent }]}
+            />
+          )}
         </View>
 
         <ScrollView
@@ -784,15 +799,13 @@ export const SmartTacticsBoard: React.FC<{
               Boolean,
             );
             return (
-              <PressableSpring
+              <SmartTacticsPressable
                 key={st.key}
                 onPress={() => {
                   setStageIdx(i);
                   setSelectedUid(null);
                   setSelectedEmptyIdx(null);
                 }}
-                scaleTo={0.96}
-                haptic
                 style={[
                   styles.stageChip,
                   {
@@ -820,17 +833,15 @@ export const SmartTacticsBoard: React.FC<{
                 >
                   {st.short} · {st.label}
                 </ProDayText>
-              </PressableSpring>
+              </SmartTacticsPressable>
             );
           })}
         </ScrollView>
 
         {selectedUid ? (
           <View style={styles.actions}>
-            <PressableSpring
+            <SmartTacticsPressable
               onPress={() => moveSelectedTo('bench')}
-              scaleTo={0.96}
-              haptic
               style={[
                 styles.action,
                 theme.coach && {
@@ -845,11 +856,9 @@ export const SmartTacticsBoard: React.FC<{
               >
                 → Banc de touche
               </ProDayText>
-            </PressableSpring>
-            <PressableSpring
+            </SmartTacticsPressable>
+            <SmartTacticsPressable
               onPress={() => moveSelectedTo('pool')}
-              scaleTo={0.96}
-              haptic
               style={[
                 styles.action,
                 theme.coach && {
@@ -864,7 +873,7 @@ export const SmartTacticsBoard: React.FC<{
               >
                 → {t('smartTactics.pool')}
               </ProDayText>
-            </PressableSpring>
+            </SmartTacticsPressable>
           </View>
         ) : null}
 
@@ -886,17 +895,15 @@ export const SmartTacticsBoard: React.FC<{
               );
               if (!card) {
                 return (
-                  <PressableSpring
+                  <SmartTacticsPressable
                     key={s.uid}
                     onPress={() => onPickCandidate(s.uid)}
-                    scaleTo={0.97}
-                    haptic
                     style={[styles.fallbackCard, !preferred && { opacity: 0.4 }]}
                   >
                     <ProDayText variant="body" style={{ fontWeight: '800' }}>
                       {s.display_name}
                     </ProDayText>
-                  </PressableSpring>
+                  </SmartTacticsPressable>
                 );
               }
               return (
@@ -914,7 +921,7 @@ export const SmartTacticsBoard: React.FC<{
                   <SmartPlayerCard
                     card={card}
                     compact
-                    fut
+                    fut={!theme.coach}
                     onPress={() => onPickCandidate(s.uid)}
                   />
                 </View>

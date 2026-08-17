@@ -239,7 +239,6 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
                   mode="coach"
                   coachSkin
                 />
-                <SmartTacticsFlowHint active={chapter} mode="coach" coachSkin />
                 {body}
               </>
             )}

@@ -12,6 +12,7 @@ import {
   SmartTacticsPanel,
   SmartTacticsPrimaryCta,
   SmartTacticsSection,
+  SmartTacticsPressable,
   SMART_PITCH,
   useSmartTacticsCoachSkin,
   useSmartTacticsTheme,
@@ -198,6 +199,35 @@ export const SmartDashboardChapter: React.FC<SmartTacticsChapterProps> = ({
         </SmartTacticsPanel>
       )}
 
+      {theme.coach ? (
+        dash.suggested_xi.length > 0 ? (
+          <SmartTacticsSection title={t('smartTactics.section.suggestedXi')}>
+            <View style={styles.cardGrid}>
+              {dash.suggested_xi.slice(0, 4).map((c) => (
+                <View key={c.uid} style={styles.cardHalf}>
+                  <SmartPlayerCard card={c} compact />
+                </View>
+              ))}
+            </View>
+            <SmartTacticsPrimaryCta
+              label={hasLineup ? t('smartTactics.cta.editXi') : t('smartTactics.cta.composeXi')}
+              onPress={() => onOpenChapter('board')}
+              style={{ marginTop: spacing.xs }}
+            />
+            <SmartTacticsLink onPress={() => void applySuggestedXi()} style={{ marginTop: 4 }}>
+              {applyingXi ? 'Composition IA…' : `${t('smartTactics.cta.applyOnBoard')} →`}
+            </SmartTacticsLink>
+          </SmartTacticsSection>
+        ) : (
+          <SmartTacticsEmpty
+            title={t('smartTactics.empty.roster')}
+            body={t('smartTactics.empty.rosterBody')}
+            cta={t('smartTactics.cta.gestion')}
+            onPress={openGestion}
+          />
+        )
+      ) : (
+        <>
       <SmartTacticsKpiRow
         items={[
           { label: t('smartTactics.metric.morale'), value: `${dash.morale}`, tone: 'warm' },
@@ -339,6 +369,8 @@ export const SmartDashboardChapter: React.FC<SmartTacticsChapterProps> = ({
           {`${t('smartTactics.cta.openMatchs')} →`}
         </SmartTacticsLink>
       </SmartTacticsSection>
+        </>
+      )}
     </SmartTacticsChapterScroll>
   );
 };
@@ -552,9 +584,11 @@ export const SmartBoardChapter: React.FC<SmartTacticsChapterProps> = ({
         kicker="Tactique IA"
         title={t('smartTactics.chapter.board')}
         body={
-          hydratePlan
-            ? t('smartTactics.board.hydrated', { title: hydratePlan.title })
-            : 'Terrain 3D · pose les cartes · banc de touche en bas'
+          theme.coach
+            ? 'Compose le XI, synchronise sur le match et enregistre le plan.'
+            : hydratePlan
+              ? t('smartTactics.board.hydrated', { title: hydratePlan.title })
+              : 'Terrain 3D · pose les cartes · banc de touche en bas'
         }
       />
 
@@ -566,20 +600,22 @@ export const SmartBoardChapter: React.FC<SmartTacticsChapterProps> = ({
               {t('smartTactics.board.aiTitle')}
             </CoachText>
           ) : (
-            <ProDayText variant="caption" style={{ flex: 1, fontWeight: '800' }}>
-              {t('smartTactics.board.aiTitle')}
-            </ProDayText>
+            <>
+              <ProDayText variant="caption" style={{ flex: 1, fontWeight: '800' }}>
+                {t('smartTactics.board.aiTitle')}
+              </ProDayText>
+              <SmartMetricChip
+                label={t('smartTactics.board.aiForm')}
+                value={`${formReport.avg_form}`}
+                tone={formReport.avg_form >= 70 ? 'good' : formReport.avg_form >= 55 ? 'warm' : 'warn'}
+              />
+              <SmartMetricChip
+                label={t('smartTactics.board.aiReady')}
+                value={`${formReport.avg_readiness}%`}
+                tone={formReport.avg_readiness >= 70 ? 'good' : 'warm'}
+              />
+            </>
           )}
-          <SmartMetricChip
-            label={t('smartTactics.board.aiForm')}
-            value={`${formReport.avg_form}`}
-            tone={formReport.avg_form >= 70 ? 'good' : formReport.avg_form >= 55 ? 'warm' : 'warn'}
-          />
-          <SmartMetricChip
-            label={t('smartTactics.board.aiReady')}
-            value={`${formReport.avg_readiness}%`}
-            tone={formReport.avg_readiness >= 70 ? 'good' : 'warm'}
-          />
         </View>
         <SmartTacticsPrimaryCta
           label={aiBusy ? t('smartTactics.board.aiBusy') : t('smartTactics.board.aiCompose')}
@@ -660,6 +696,14 @@ export const SmartCardsChapter: React.FC<SmartTacticsChapterProps> = ({
           title={t('smartTactics.empty.roster')}
           body={t('smartTactics.empty.rosterBody')}
         />
+      ) : theme.coach ? (
+        <View style={styles.cardGrid}>
+          {cards.map((c) => (
+            <View key={c.uid} style={styles.cardHalf}>
+              <SmartPlayerCard card={c} compact />
+            </View>
+          ))}
+        </View>
       ) : (
         <ScrollView
           horizontal
@@ -1315,14 +1359,13 @@ export const SmartHistoryChapter: React.FC<SmartTacticsChapterProps> = ({
         )
       ) : (
         plans.map((p) => (
-          <PressableSpring
+          <SmartTacticsPressable
             key={p.id}
             onPress={() => {
               onHydratePlan?.(p);
               onOpenChapter('board');
             }}
             scaleTo={0.98}
-            haptic
           >
             <SmartTacticsPanel variant="module" style={[styles.block, { borderColor: theme.border }]}>
               {theme.coach ? (
@@ -1341,10 +1384,11 @@ export const SmartHistoryChapter: React.FC<SmartTacticsChapterProps> = ({
                 </>
               )}
             </SmartTacticsPanel>
-          </PressableSpring>
+          </SmartTacticsPressable>
         ))
       )}
 
+      {!theme.coach ? (
       <SmartTacticsSection title="Rapports IA">
         {reports.length === 0 ? (
           theme.coach ? (
@@ -1385,20 +1429,17 @@ export const SmartHistoryChapter: React.FC<SmartTacticsChapterProps> = ({
           Ouvrir Préparation IA →
         </SmartTacticsLink>
       </SmartTacticsSection>
+      ) : null}
 
+      {!theme.coach ? (
       <SmartTacticsSection title={t('smartTactics.section.upcoming')}>
-        {events.slice(0, 6).map((e) =>
-          theme.coach ? (
-            <CoachText key={e.id} variant="caption" muted style={styles.bullet}>
-              • {e.title}
-            </CoachText>
-          ) : (
+        {events.slice(0, 6).map((e) => (
             <ProDayText key={e.id} variant="caption" muted style={styles.bullet}>
               • {e.title}
             </ProDayText>
-          ),
-        )}
+        ))}
       </SmartTacticsSection>
+      ) : null}
     </SmartTacticsChapterScroll>
   );
 };
