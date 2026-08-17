@@ -45,9 +45,12 @@ import { useTabNavigation } from '../../../context/TabNavigationContext';
 import { CoachEventHubRouter } from '../../../screens/coach/CoachEventHubRouter';
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
 import {
+  matchChapterFromHomeTab,
   resolveCoachEventHubOverlay,
   shouldKeepCoachEventHubOverlay,
 } from '../navigation/coachMatchDeepLink';
+import { MatchsScreen } from '../../../screens/MatchsScreen';
+import type { MatchChapterId } from '../../../content/matchChapters';
 import { usersService } from '../../../services/users.service';
 import {
   resolveClubCoversCoachFromMembers,
@@ -147,6 +150,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     eventId: string;
     hubChapter?: MatchHubChapterId;
   } | null>(null);
+  const [matchFullChapter, setMatchFullChapter] = useState<MatchChapterId | null>(null);
 
   const syncMatchCenterNav = useCallback(() => {
     setNavId((prev) =>
@@ -173,9 +177,21 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     const hubOverlay = resolveCoachEventHubOverlay(pendingMatchsLink);
     if (hubOverlay) {
       setEventHubOverlay(hubOverlay);
+      setMatchFullChapter(null);
       if (pendingMatchsLink.hubChapter) {
         syncMatchCenterNav();
       }
+      clearPendingMatchs();
+      return;
+    }
+    if (pendingMatchsLink.homeTab || pendingMatchsLink.view) {
+      setEventHubOverlay(null);
+      setMatchFullChapter(matchChapterFromHomeTab(pendingMatchsLink.homeTab));
+      syncMatchCenterNav();
+      if (!pendingMatchsLink.view) {
+        clearPendingMatchs();
+      }
+      return;
     }
     clearPendingMatchs();
   }, [pendingMatchsLink, clearPendingMatchs, syncMatchCenterNav]);
@@ -197,6 +213,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
 
   const onSelect = (id: CoachNavItemId) => {
     setEventHubOverlay(null);
+    setMatchFullChapter(null);
     const next = canonicalizeCoachNav(id);
     setNavId(next);
     const nextTab = tabFromCoachNav(next);
@@ -239,7 +256,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
         <CoachLockedPane item={resolved} />
       </CoachPageFrame>
     ) : (
-      wrapCoachPane(navId, renderCoachPane(navId, profile, toolItems))
+      wrapCoachPane(navId, renderCoachPane(navId, profile, toolItems, matchFullChapter))
     );
 
   return (
@@ -292,6 +309,7 @@ function renderCoachPane(
   navId: CoachNavItemId,
   profile: User | null | undefined,
   toolItems: ReturnType<typeof resolveCoachMenuItems>,
+  matchFullChapter: MatchChapterId | null,
 ) {
   switch (canonicalizeCoachNav(navId)) {
     case 'today':
@@ -321,6 +339,14 @@ function renderCoachPane(
       return profile ? <CoachGestionPane profile={profile} /> : null;
     case 'match_center':
     case 'matchs':
+      if (matchFullChapter) {
+        return (
+          <MatchsScreen
+            key={`coach-match-full-${matchFullChapter}`}
+            defaultChapter={matchFullChapter}
+          />
+        );
+      }
       return (
         <CoachPortalScreen
           key="coach-portal-matchs"

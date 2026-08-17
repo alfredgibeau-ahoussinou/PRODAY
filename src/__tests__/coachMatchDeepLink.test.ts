@@ -4,6 +4,7 @@ import {
 } from '../content/coachMatchHubChapters';
 import {
   COACH_MATCH_FLOW_STEPS,
+  matchChapterFromHomeTab,
   resolveCoachEventHubOverlay,
   resolveCoachMatchHubOverlay,
   shouldKeepCoachEventHubOverlay,
@@ -32,6 +33,14 @@ describe('coachMatchDeepLink', () => {
   it('ignore les liens sans eventId', () => {
     expect(resolveCoachMatchHubOverlay({ homeTab: 'convocations' })).toBeNull();
     expect(resolveCoachMatchHubOverlay(null)).toBeNull();
+  });
+
+  it('mappe homeTab vers chapitre MatchsScreen', () => {
+    expect(matchChapterFromHomeTab('season')).toBe('calendrier');
+    expect(matchChapterFromHomeTab('competitions')).toBe('competitions');
+    expect(matchChapterFromHomeTab('convocations')).toBe('convocations');
+    expect(matchChapterFromHomeTab('stats')).toBe('stats');
+    expect(matchChapterFromHomeTab(undefined)).toBe('calendrier');
   });
 
   it('mappe le parcours guidé Convoc→effectif, Compo→composition, Direct→live, Rapport→stats', () => {

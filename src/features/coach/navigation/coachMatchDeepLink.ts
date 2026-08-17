@@ -1,3 +1,4 @@
+import type { MatchChapterId } from '../../../content/matchChapters';
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { MatchsDeepLink } from '../../../utils/navigationDeepLink';
@@ -12,6 +13,28 @@ export type CoachEventHubOverlay = {
 export type CoachMatchHubOverlay = CoachEventHubOverlay & {
   hubChapter: MatchHubChapterId;
 };
+
+/** Mappe un deep link Matchs vers le chapitre pager du Centre Match. */
+export function matchChapterFromHomeTab(
+  homeTab?: MatchsDeepLink['homeTab'],
+): MatchChapterId {
+  switch (homeTab) {
+    case 'matches':
+      return 'amicaux';
+    case 'convocations':
+      return 'convocations';
+    case 'centre':
+      return 'centre';
+    case 'stats':
+      return 'stats';
+    case 'tournois':
+      return 'tournois';
+    case 'competitions':
+      return 'competitions';
+    default:
+      return 'calendrier';
+  }
+}
 
 /** Ouvre le hub événement coach quand openMatchs fournit un eventId. */
 export function resolveCoachEventHubOverlay(
