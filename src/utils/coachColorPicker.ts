@@ -73,8 +73,21 @@ export const COACH_COLOR_GRID_SIZE = COACH_COLOR_GRID.length;
 
 export type CoachColorFamilyId = 'warm' | 'cool' | 'vivid' | 'pastel' | 'dark' | 'proday';
 
+/** Supprime les doublons hex dans une palette famille (ordre conservé). */
+export function dedupeCoachFamilyColors(colors: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const color of colors) {
+    const hex = normalizeCoachHexColor(color) ?? color.toUpperCase();
+    if (seen.has(hex)) continue;
+    seen.add(hex);
+    result.push(hex);
+  }
+  return result;
+}
+
 /** Palettes curatoriales pour l'assistant couleur (~18–24 teintes par famille). */
-export const COACH_COLOR_FAMILIES: { id: CoachColorFamilyId; colors: string[] }[] = [
+const COACH_COLOR_FAMILIES_RAW: { id: CoachColorFamilyId; colors: string[] }[] = [
   {
     id: 'warm',
     colors: [
@@ -217,7 +230,7 @@ export const COACH_COLOR_FAMILIES: { id: CoachColorFamilyId; colors: string[] }[
       '#48484A',
       '#5D4037',
       '#33691E',
-      '#004D40',
+      '#00332A',
     ],
   },
   {
@@ -250,6 +263,11 @@ export const COACH_COLOR_FAMILIES: { id: CoachColorFamilyId; colors: string[] }[
     ],
   },
 ];
+
+export const COACH_COLOR_FAMILIES = COACH_COLOR_FAMILIES_RAW.map((family) => ({
+  id: family.id,
+  colors: dedupeCoachFamilyColors(family.colors),
+}));
 
 const COACH_NAMED_COLORS: Record<string, { hex: string; label: string }> = {
   rouge: { hex: '#E53935', label: 'Rouge' },

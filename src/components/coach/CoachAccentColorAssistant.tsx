@@ -79,11 +79,11 @@ export function CoachAccentColorAssistant({ selectedColor, onSelect }: Props) {
       </ScrollView>
 
       <View style={styles.swatchGrid}>
-        {activeFamily.colors.map((color) => {
+        {activeFamily.colors.map((color, index) => {
           const isSelected = color === normalizedSelected;
           return (
             <PressableSpring
-              key={color}
+              key={`${familyId}-${index}-${color}`}
               onPress={() => onSelect(color)}
               scaleTo={0.92}
               haptic

@@ -53,4 +53,10 @@ describe('COACH_COLOR_FAMILIES', () => {
     const proday = COACH_COLOR_FAMILIES.find((f) => f.id === 'proday');
     expect(proday?.colors).toContain('#006CFC');
   });
+
+  it('n’a pas de doublons hex dans chaque famille', () => {
+    for (const family of COACH_COLOR_FAMILIES) {
+      expect(new Set(family.colors).size).toBe(family.colors.length);
+    }
+  });
 });
