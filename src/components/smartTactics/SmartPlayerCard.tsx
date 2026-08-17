@@ -6,8 +6,7 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import type { SmartPlayerCardData } from '../../models/SmartTactics';
 import { radius, spacing } from '../../theme/designTokens';
-import { SMART_PITCH, SmartTacticsPressable, useSmartTacticsCoachSkin } from './smartTacticsUi';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import { SMART_PITCH, SmartTacticsPressable, useSmartTacticsCoachSkin, useSmartTacticsTheme } from './smartTacticsUi';
 import { CoachText } from '../coach/coachPortalUi';
 import { Icon } from '../ui/Icon';
 import { ProDayFutCard } from '../cards/ProDayFutCard';
@@ -23,14 +22,13 @@ export const SmartPlayerCard: React.FC<{
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const coach = useSmartTacticsCoachSkin();
-  const styles = useMemo(() => createStyles(), []);
+  const theme = useSmartTacticsTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const readyTone =
     card.readiness_pct >= 75
       ? SMART_PITCH.ready
       : card.readiness_pct >= 50
-        ? coach
-          ? COACH_SITE.accent
-          : SMART_PITCH.warm
+        ? theme.midTone
         : SMART_PITCH.risk;
 
   if (fut) {
@@ -49,11 +47,11 @@ export const SmartPlayerCard: React.FC<{
       <View
         style={[
           styles.coachCompact,
-          { borderColor: card.injured ? SMART_PITCH.risk : COACH_SITE.border },
+          { borderColor: card.injured ? SMART_PITCH.risk : theme.border },
         ]}
       >
         <View style={styles.top}>
-          <View style={[styles.avatar, { backgroundColor: COACH_SITE.elevated }]}>
+          <View style={[styles.avatar, { backgroundColor: theme.elevated }]}>
             {card.photo_url ? (
               <Image source={{ uri: card.photo_url }} style={styles.avatarImg} />
             ) : (
@@ -91,7 +89,7 @@ export const SmartPlayerCard: React.FC<{
             </CoachText>
           </View>
         </View>
-        <View style={[styles.barTrack, { backgroundColor: COACH_SITE.border }]}>
+        <View style={[styles.barTrack, { backgroundColor: theme.border }]}>
           <View
             style={[styles.barFill, { width: `${card.readiness_pct}%`, backgroundColor: readyTone }]}
           />
@@ -228,7 +226,7 @@ export const SmartPlayerCard: React.FC<{
   return body;
 };
 
-function createStyles() {
+function createStyles(theme: ReturnType<typeof useSmartTacticsTheme>) {
   return StyleSheet.create({
     card: {
       borderWidth: 1,
@@ -243,7 +241,7 @@ function createStyles() {
       borderRadius: radius.lg,
       padding: spacing.sm,
       gap: spacing.xs,
-      backgroundColor: COACH_SITE.surface,
+      backgroundColor: theme.surface,
     },
     top: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     avatar: {

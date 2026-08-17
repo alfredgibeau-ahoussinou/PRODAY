@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { AttendanceMark, TeamEvent } from '../../../models/TeamEvent';
 import { RSVP_STATUS_LABELS, userRsvp } from '../../../models/TeamEvent';
@@ -6,8 +6,9 @@ import type { User } from '../../../models/User';
 import { usersService } from '../../../services/users.service';
 import { teamEventsService } from '../../../services/teamEvents.service';
 import { CoachText } from '../coachPortalUi';
-import { COACH_SITE } from '../../../content/coachPageIdentity';
 import { radius, spacing } from '../../../theme/designTokens';
+import { useCoachThemedStyles } from '../../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
 
 const MARKS: { mark: AttendanceMark; label: string }[] = [
   { mark: 'present', label: 'Présent' },
@@ -36,7 +37,7 @@ export function CoachEventAttendanceList({ event, profile, onUpdated }: Props) {
     })();
   }, [event.id, event.invitee_uids.join(',')]);
 
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useCoachThemedStyles(createStyles);
 
   const markAttendance = async (uid: string, mark: AttendanceMark) => {
     await teamEventsService.markAttendance(event.id, uid, mark, { user: profile });
@@ -109,7 +110,7 @@ export function CoachEventAttendanceList({ event, profile, onUpdated }: Props) {
   );
 }
 
-function createStyles() {
+function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     root: { gap: spacing.sm },
     header: {
@@ -120,7 +121,7 @@ function createStyles() {
       fontSize: 11,
     },
     list: {
-      backgroundColor: COACH_SITE.surface,
+      backgroundColor: tokens.surface,
       borderRadius: radius.lg,
       overflow: 'hidden',
     },
@@ -131,7 +132,7 @@ function createStyles() {
     },
     rowBorder: {
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: COACH_SITE.border,
+      borderBottomColor: tokens.border,
     },
     rowHead: { gap: 2 },
     name: { fontWeight: '600', fontSize: 17 },
@@ -140,10 +141,10 @@ function createStyles() {
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: radius.pill,
-      backgroundColor: COACH_SITE.elevated,
+      backgroundColor: tokens.elevated,
     },
-    markBtnOn: { backgroundColor: COACH_SITE.accent },
-    markBtnText: { fontWeight: '600', fontSize: 12, color: COACH_SITE.muted },
+    markBtnOn: { backgroundColor: tokens.accent },
+    markBtnText: { fontWeight: '600', fontSize: 12, color: tokens.muted },
     markBtnTextOn: { color: '#fff', fontWeight: '700' },
   });
 }

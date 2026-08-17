@@ -4,8 +4,9 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 const CoachMatchSkinContext = createContext(false);
 
@@ -25,12 +26,14 @@ function useCoachMatchSkin() {
   return useContext(CoachMatchSkinContext);
 }
 
-function matchSiteTokens(coachSkin: boolean) {
-  return coachSkin ? COACH_SITE : MATCH_SITE;
+type SiteTokens = Pick<CoachThemeTokens, 'surface' | 'border' | 'foreground' | 'muted'>;
+
+function matchSiteTokens(coachSkin: boolean, coachTokens: CoachThemeTokens): SiteTokens {
+  return coachSkin ? coachTokens : MATCH_SITE;
 }
 
-function matchAccent(coachSkin: boolean, themeAccent: string) {
-  return coachSkin ? COACH_SITE.accent : themeAccent;
+function matchAccent(coachSkin: boolean, themeAccent: string, coachTokens: CoachThemeTokens) {
+  return coachSkin ? coachTokens.accent : themeAccent;
 }
 
 /** Section terminal Match Center — kicker / titre / support. */
@@ -49,8 +52,12 @@ export function MatchSectionCard({
 }) {
   const { colors } = useAppTheme();
   const coachSkin = useCoachMatchSkin();
-  const accent = matchAccent(coachSkin, colors.accent);
-  const styles = useMemo(() => createCardStyles(accent, coachSkin), [accent, coachSkin]);
+  const coachTokens = useCoachTokens();
+  const accent = matchAccent(coachSkin, colors.accent, coachTokens);
+  const styles = useMemo(
+    () => createCardStyles(accent, coachSkin, coachTokens),
+    [accent, coachSkin, coachTokens],
+  );
 
   return (
     <View style={[styles.card, style]}>
@@ -79,8 +86,12 @@ export function MatchKpiRow({
 }) {
   const { colors } = useAppTheme();
   const coachSkin = useCoachMatchSkin();
-  const accent = matchAccent(coachSkin, colors.accent);
-  const styles = useMemo(() => createKpiStyles(accent, coachSkin), [accent, coachSkin]);
+  const coachTokens = useCoachTokens();
+  const accent = matchAccent(coachSkin, colors.accent, coachTokens);
+  const styles = useMemo(
+    () => createKpiStyles(accent, coachSkin, coachTokens),
+    [accent, coachSkin, coachTokens],
+  );
 
   return (
     <View style={styles.row}>
@@ -117,8 +128,12 @@ export function MatchActionRow({
 }) {
   const { colors } = useAppTheme();
   const coachSkin = useCoachMatchSkin();
-  const accent = matchAccent(coachSkin, colors.accent);
-  const styles = useMemo(() => createActionStyles(accent, coachSkin), [accent, coachSkin]);
+  const coachTokens = useCoachTokens();
+  const accent = matchAccent(coachSkin, colors.accent, coachTokens);
+  const styles = useMemo(
+    () => createActionStyles(accent, coachSkin, coachTokens),
+    [accent, coachSkin, coachTokens],
+  );
 
   return (
     <View style={styles.row}>
@@ -177,13 +192,17 @@ export function MatchLightPanel({
 }) {
   const { colors } = useAppTheme();
   const coachSkin = useCoachMatchSkin();
-  const accent = matchAccent(coachSkin, colors.accent);
-  const styles = useMemo(() => createCardStyles(accent, coachSkin), [accent, coachSkin]);
+  const coachTokens = useCoachTokens();
+  const accent = matchAccent(coachSkin, colors.accent, coachTokens);
+  const styles = useMemo(
+    () => createCardStyles(accent, coachSkin, coachTokens),
+    [accent, coachSkin, coachTokens],
+  );
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
-function createCardStyles(accent: string, coachSkin = false) {
-  const site = matchSiteTokens(coachSkin);
+function createCardStyles(accent: string, coachSkin: boolean, coachTokens: CoachThemeTokens) {
+  const site = matchSiteTokens(coachSkin, coachTokens);
   return StyleSheet.create({
     card: {
       borderWidth: StyleSheet.hairlineWidth,
@@ -214,8 +233,8 @@ function createCardStyles(accent: string, coachSkin = false) {
   });
 }
 
-function createKpiStyles(accent: string, coachSkin = false) {
-  const site = matchSiteTokens(coachSkin);
+function createKpiStyles(accent: string, coachSkin: boolean, coachTokens: CoachThemeTokens) {
+  const site = matchSiteTokens(coachSkin, coachTokens);
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -250,8 +269,8 @@ function createKpiStyles(accent: string, coachSkin = false) {
   });
 }
 
-function createActionStyles(accent: string, coachSkin = false) {
-  const site = matchSiteTokens(coachSkin);
+function createActionStyles(accent: string, coachSkin: boolean, coachTokens: CoachThemeTokens) {
+  const site = matchSiteTokens(coachSkin, coachTokens);
   return StyleSheet.create({
     row: {
       flexDirection: 'row',

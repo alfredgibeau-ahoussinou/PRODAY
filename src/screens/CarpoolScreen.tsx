@@ -11,13 +11,17 @@ import { CarpoolGuestPrompt } from '../components/carpool/CarpoolGuestPrompt';
 import { PushScreenTransition } from '../components/motion';
 import { useJoueurSession } from '../context/JoueurSessionContext';
 import { JOUEUR_SITE } from '../content/joueurPageIdentity';
+import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
+import { useCoachTokens } from '../features/coach/shell/CoachThemeContext';
 
 export const CarpoolScreen: React.FC = () => {
   const { profile } = useAuth();
   const joueurSession = useJoueurSession();
   const joueurLive =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
-  const screenBg = joueurLive ? JOUEUR_SITE.bg : '#E8F4F8';
+  const coachShell = Boolean(useCoachShellNav());
+  const coachTokens = useCoachTokens();
+  const screenBg = coachShell ? coachTokens.bg : joueurLive ? JOUEUR_SITE.bg : '#E8F4F8';
   const { pendingCarpoolLink, clearPendingCarpool, openAuth } = useTabNavigation();
   const clubId = profile?.profile.club_id;
   const { events, loading, refresh } = useTeamEvents(profile?.uid, clubId);

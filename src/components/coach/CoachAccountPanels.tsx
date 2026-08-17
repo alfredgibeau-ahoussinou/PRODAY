@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { User } from '../../models/User';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import {
   CoachActionRow,
   CoachEmptyState,
@@ -13,8 +12,12 @@ import { PressableSpring } from '../motion';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { spacing } from '../../theme/designTokens';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
+  const styles = useCoachThemedStyles(createStyles);
+
   return (
     <View style={styles.field}>
       <ProDayText variant="caption" style={styles.fieldLabel}>
@@ -36,6 +39,8 @@ export function CoachVitrinePanel({
   onEdit?: () => void;
   onPublicProfile?: () => void;
 }) {
+  const styles = useCoachThemedStyles(createStyles);
+  const { tokens } = useCoachTheme();
   const p = profile.profile;
   const experiences = p.experiences ?? [];
   const diplomas =
@@ -110,7 +115,7 @@ export function CoachVitrinePanel({
           diplomas.map((d) => (
             <View key={d.id} style={styles.diplomaRow}>
               <View style={styles.diplomaIcon}>
-                <Icon name="school" size={16} color={COACH_SITE.accent} />
+                <Icon name="school" size={16} color={tokens.accent} />
               </View>
               <View style={styles.diplomaInfo}>
                 <ProDayText variant="section" style={styles.diplomaName}>
@@ -153,6 +158,7 @@ export function CoachActivitePanel({
   onAnnouncements?: () => void;
 }) {
   const shellNav = useCoachShellNav();
+  const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
 
   return (
@@ -264,6 +270,8 @@ export function CoachParamsPanel({
   onReferral?: () => void;
   onSignOut?: () => void;
 }) {
+  const styles = useCoachThemedStyles(createStyles);
+
   return (
     <View style={styles.stack}>
       <CoachSectionCard kicker="Préférences" title="Langue">
@@ -378,10 +386,13 @@ function MenuRow({
   sub: string;
   onPress: () => void;
 }) {
+  const styles = useCoachThemedStyles(createStyles);
+  const { tokens } = useCoachTheme();
+
   return (
     <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.menuRow}>
       <View style={styles.menuIcon}>
-        <Icon name={icon} size={16} color={COACH_SITE.accent} />
+        <Icon name={icon} size={16} color={tokens.accent} />
       </View>
       <View style={styles.menuCopy}>
         <ProDayText variant="section" style={styles.menuTitle}>
@@ -391,92 +402,94 @@ function MenuRow({
           {sub}
         </ProDayText>
       </View>
-      <Icon name="chevron-forward" size={16} color={COACH_SITE.muted} />
+      <Icon name="chevron-forward" size={16} color={tokens.muted} />
     </PressableSpring>
   );
 }
 
-const styles = StyleSheet.create({
-  stack: {
-    gap: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  field: { gap: 2, marginTop: spacing.sm },
-  fieldLabel: {
-    color: COACH_SITE.accent,
-    textTransform: 'uppercase',
-    letterSpacing: 1.6,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  fieldValue: { color: COACH_SITE.foreground, lineHeight: 20 },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
-  tag: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: `${COACH_SITE.accent}66`,
-    backgroundColor: COACH_SITE.soft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  tagText: { color: COACH_SITE.foreground, fontWeight: '700', fontSize: 11 },
-  timelineRow: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm },
-  timelineBorder: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COACH_SITE.border,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COACH_SITE.accent,
-    marginTop: 6,
-  },
-  timelineBody: { flex: 1, gap: 2 },
-  expTitle: { color: COACH_SITE.foreground, fontWeight: '800' },
-  expOrg: { color: COACH_SITE.accent, fontWeight: '700' },
-  expPeriod: { color: COACH_SITE.muted },
-  diplomaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
-  },
-  diplomaIcon: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.soft,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-  },
-  diplomaInfo: { flex: 1, gap: 2 },
-  diplomaName: { color: COACH_SITE.foreground, fontWeight: '800' },
-  diplomaInst: { color: COACH_SITE.muted },
-  badgeOk: { color: COACH_SITE.accent, fontWeight: '800', fontSize: 10, letterSpacing: 0.8 },
-  badgePending: { color: COACH_SITE.muted, fontWeight: '700', fontSize: 10 },
-  menu: { gap: 4, marginTop: spacing.sm },
-  menuRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
-  },
-  menuIcon: {
-    width: 34,
-    height: 34,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.soft,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-  },
-  menuCopy: { flex: 1, gap: 2 },
-  menuTitle: { color: COACH_SITE.foreground, fontWeight: '800' },
-  menuSub: { color: COACH_SITE.muted },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    stack: {
+      gap: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    field: { gap: 2, marginTop: spacing.sm },
+    fieldLabel: {
+      color: tokens.accent,
+      textTransform: 'uppercase',
+      letterSpacing: 1.6,
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    fieldValue: { color: tokens.foreground, lineHeight: 20 },
+    tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
+    tag: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: `${tokens.accent}66`,
+      backgroundColor: tokens.soft,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    tagText: { color: tokens.foreground, fontWeight: '700', fontSize: 11 },
+    timelineRow: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm },
+    timelineBorder: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: tokens.accent,
+      marginTop: 6,
+    },
+    timelineBody: { flex: 1, gap: 2 },
+    expTitle: { color: tokens.foreground, fontWeight: '800' },
+    expOrg: { color: tokens.accent, fontWeight: '700' },
+    expPeriod: { color: tokens.muted },
+    diplomaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    diplomaIcon: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.soft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    diplomaInfo: { flex: 1, gap: 2 },
+    diplomaName: { color: tokens.foreground, fontWeight: '800' },
+    diplomaInst: { color: tokens.muted },
+    badgeOk: { color: tokens.accent, fontWeight: '800', fontSize: 10, letterSpacing: 0.8 },
+    badgePending: { color: tokens.muted, fontWeight: '700', fontSize: 10 },
+    menu: { gap: 4, marginTop: spacing.sm },
+    menuRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    menuIcon: {
+      width: 34,
+      height: 34,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.soft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    menuCopy: { flex: 1, gap: 2 },
+    menuTitle: { color: tokens.foreground, fontWeight: '800' },
+    menuSub: { color: tokens.muted },
+  });
+}

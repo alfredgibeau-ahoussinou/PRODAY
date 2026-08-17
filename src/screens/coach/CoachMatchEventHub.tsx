@@ -27,11 +27,12 @@ import { CoachMatchSkinProvider } from '../../components/matchs/matchCenterUi';
 import { CoachEventAttendanceList } from '../../components/coach/match/CoachEventAttendanceList';
 import { CoachMatchSummaryTab } from '../../components/coach/match/CoachMatchSummaryTab';
 import { CoachKpiRow, CoachText } from '../../components/coach/coachPortalUi';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { Icon } from '../../components/ui/Icon';
 import { PushScreenTransition } from '../../components/motion';
 import { spacing } from '../../theme/designTokens';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 type SubView = 'hub' | 'lineup_edit';
 
@@ -84,7 +85,8 @@ export function CoachMatchEventHub({
   const canManageLive = Boolean(isStaff || profile?.uid === event?.organizer_uid);
   const reportLocked = Boolean(event?.match_report_finalized_at) && !canManageLive;
 
-  const styles = useMemo(() => createStyles(), []);
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
 
   const pointedCount = useMemo(() => {
     if (!event?.attendance_marks) return 0;
@@ -94,7 +96,7 @@ export function CoachMatchEventHub({
   if (loading) {
     return (
       <View style={[styles.root, styles.centered]}>
-        <ActivityIndicator color={COACH_SITE.accent} size="large" />
+        <ActivityIndicator color={tokens.accent} size="large" />
       </View>
     );
   }
@@ -103,7 +105,7 @@ export function CoachMatchEventHub({
     return (
       <View style={[styles.root, styles.centered]}>
         <Pressable onPress={onBack} style={styles.backRow} accessibilityRole="button">
-          <Icon name="arrow-back" size={22} color={COACH_SITE.foreground} />
+          <Icon name="arrow-back" size={22} color={tokens.foreground} />
           <CoachText variant="body" accent>
             Matchs
           </CoachText>
@@ -119,13 +121,13 @@ export function CoachMatchEventHub({
     return (
       <View style={styles.root}>
         <Pressable onPress={onBack} style={styles.backRow} accessibilityRole="button">
-          <Icon name="arrow-back" size={22} color={COACH_SITE.foreground} />
+          <Icon name="arrow-back" size={22} color={tokens.foreground} />
           <CoachText variant="body" accent>
             Matchs
           </CoachText>
         </Pressable>
         <View style={styles.denied}>
-          <Icon name="lock" size={28} color={COACH_SITE.muted} />
+          <Icon name="lock" size={28} color={tokens.muted} />
           <CoachText variant="section">Accès restreint</CoachText>
           <CoachText variant="body" muted style={styles.deniedBody}>
             Réservé au staff ou aux personnes convoquées.
@@ -184,7 +186,7 @@ export function CoachMatchEventHub({
     <>
       <View style={styles.root}>
         <Pressable onPress={onBack} style={styles.backRow} accessibilityRole="button">
-          <Icon name="arrow-back" size={22} color={COACH_SITE.foreground} />
+          <Icon name="arrow-back" size={22} color={tokens.foreground} />
           <CoachText variant="body" accent>
             Matchs
           </CoachText>
@@ -253,7 +255,7 @@ export function CoachMatchEventHub({
         </ScrollView>
       </View>
 
-      <PushScreenTransition active={subView === 'lineup_edit'} backgroundColor={COACH_SITE.bg}>
+      <PushScreenTransition active={subView === 'lineup_edit'} backgroundColor={tokens.bg}>
         {subView === 'lineup_edit' ? (
           <EventLineupScreen
             eventId={eventId}
@@ -268,12 +270,12 @@ export function CoachMatchEventHub({
   );
 }
 
-function createStyles() {
+function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     root: {
       flex: 1,
       minHeight: 0,
-      backgroundColor: COACH_SITE.bg,
+      backgroundColor: tokens.bg,
     },
     centered: { justifyContent: 'center', alignItems: 'center' },
     backRow: {
@@ -296,7 +298,7 @@ function createStyles() {
       fontSize: 11,
     },
     title: {
-      color: COACH_SITE.foreground,
+      color: tokens.foreground,
       fontWeight: '800',
       fontSize: 26,
       letterSpacing: -0.5,
@@ -310,7 +312,7 @@ function createStyles() {
       marginBottom: spacing.sm,
       padding: 3,
       borderRadius: 12,
-      backgroundColor: COACH_SITE.surface,
+      backgroundColor: tokens.surface,
       gap: 2,
     },
     segmentBtn: {
@@ -321,9 +323,9 @@ function createStyles() {
       borderRadius: 10,
       minWidth: 0,
     },
-    segmentBtnOn: { backgroundColor: COACH_SITE.elevated },
-    segmentLabel: { fontWeight: '600', color: COACH_SITE.muted, fontSize: 11 },
-    segmentLabelOn: { color: COACH_SITE.foreground, fontWeight: '700' },
+    segmentBtnOn: { backgroundColor: tokens.elevated },
+    segmentLabel: { fontWeight: '600', color: tokens.muted, fontSize: 11 },
+    segmentLabelOn: { color: tokens.foreground, fontWeight: '700' },
     scroll: { flex: 1, minHeight: 0 },
     scrollContent: {
       paddingHorizontal: spacing.lg,
@@ -335,7 +337,7 @@ function createStyles() {
       padding: spacing.xl,
       alignItems: 'center',
       gap: spacing.sm,
-      backgroundColor: COACH_SITE.surface,
+      backgroundColor: tokens.surface,
       borderRadius: 18,
     },
     deniedBody: { textAlign: 'center', lineHeight: 22 },

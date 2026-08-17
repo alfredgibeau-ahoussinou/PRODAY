@@ -14,9 +14,11 @@ import {
   CoachSectionCard,
 } from '../components/coach/coachPortalUi';
 import { CoachPageFrame } from '../components/coach/CoachPageFrame';
-import { COACH_SITE, getCoachPageIdentity } from '../content/coachPageIdentity';
+import { getCoachPageIdentity } from '../content/coachPageIdentity';
 import { spacing } from '../theme/designTokens';
 import { useAppTheme } from '../context/ProductLineContext';
+import { useCoachTheme, useCoachThemedStyles } from '../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../utils/coachTeamTheme';
 import { useAuth } from '../context/AuthContext';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
@@ -46,6 +48,8 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
   onHire,
 }) => {
   const { productLine } = useAppTheme();
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
   const { profile: myProfile } = useAuth();
   const useShellHeader =
     isSubScreenShellEnabled(myProfile, 'staff') && myProfile?.uid !== staff.uid;
@@ -79,7 +83,7 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
               </ProDayText>
               {verified ? (
                 <View style={styles.verifiedPill}>
-                  <Icon name="checkmark-circle" size={12} color={COACH_SITE.accent} />
+                  <Icon name="checkmark-circle" size={12} color={tokens.accent} />
                   <ProDayText variant="caption" style={styles.verifiedText}>
                     Vérifié
                   </ProDayText>
@@ -116,7 +120,7 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
               {
                 label: 'Note',
                 value: p.rating != null ? p.rating.toFixed(1) : '—',
-                tone: p.rating != null ? COACH_SITE.accent : undefined,
+                tone: p.rating != null ? tokens.accent : undefined,
               },
             ]}
           />
@@ -214,7 +218,7 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
                 ).map((d) => (
                   <View key={d.id} style={styles.diplomaRow}>
                     <View style={styles.diplomaIcon}>
-                      <Icon name="school" size={16} color={COACH_SITE.accent} />
+                      <Icon name="school" size={16} color={tokens.accent} />
                     </View>
                     <View style={styles.diplomaInfo}>
                       <ProDayText variant="section" style={styles.diplomaName}>
@@ -309,159 +313,161 @@ export const CoachProfileScreen: React.FC<CoachProfileScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: COACH_SITE.bg },
-  root: { flex: 1, minHeight: 0 },
-  scroll: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: 120,
-    gap: spacing.md,
-  },
-  hero: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    borderLeftWidth: 2,
-    borderLeftColor: COACH_SITE.accent,
-    padding: spacing.lg,
-    gap: spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  heroTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  kicker: {
-    color: COACH_SITE.accent,
-    textTransform: 'uppercase',
-    letterSpacing: 2.2,
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  verifiedPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: `${COACH_SITE.accent}88`,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  verifiedText: {
-    color: COACH_SITE.accent,
-    fontWeight: '800',
-    fontSize: 10,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.soft,
-    borderWidth: 1,
-    borderColor: `${COACH_SITE.accent}99`,
-  },
-  avatarLetter: { color: COACH_SITE.foreground, fontWeight: '800' },
-  name: {
-    color: COACH_SITE.foreground,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    fontSize: 26,
-    marginTop: spacing.sm,
-  },
-  job: { color: COACH_SITE.accent, fontWeight: '700' },
-  meta: { color: COACH_SITE.muted },
-  ratingWrap: { marginTop: spacing.xs },
-  tabBar: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  tabOn: {
-    borderColor: COACH_SITE.accent,
-    backgroundColor: COACH_SITE.soft,
-  },
-  tabText: {
-    color: COACH_SITE.muted,
-    fontWeight: '700',
-    fontSize: 11,
-    letterSpacing: 0.4,
-  },
-  tabTextOn: { color: COACH_SITE.foreground },
-  body: { color: COACH_SITE.muted, lineHeight: 20, marginTop: spacing.sm },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
-  tag: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: `${COACH_SITE.accent}66`,
-    backgroundColor: COACH_SITE.soft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  tagText: { color: COACH_SITE.foreground, fontWeight: '700', fontSize: 11 },
-  diplomaLine: { color: COACH_SITE.accent, marginTop: spacing.sm, fontWeight: '700' },
-  timelineRow: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm },
-  timelineBorder: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COACH_SITE.border,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COACH_SITE.accent,
-    marginTop: 6,
-  },
-  timelineBody: { flex: 1, gap: 2 },
-  expTitle: { color: COACH_SITE.foreground, fontWeight: '800' },
-  expOrg: { color: COACH_SITE.accent, fontWeight: '700' },
-  expPeriod: { color: COACH_SITE.muted },
-  diplomaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
-  },
-  diplomaIcon: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.soft,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-  },
-  diplomaInfo: { flex: 1, gap: 2 },
-  diplomaName: { color: COACH_SITE.foreground, fontWeight: '800' },
-  diplomaInst: { color: COACH_SITE.muted },
-  badgeOk: { color: COACH_SITE.accent, fontWeight: '800', fontSize: 10 },
-  badgePending: { color: COACH_SITE.muted, fontWeight: '700', fontSize: 10 },
-  reviewSummary: { alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
-  reviewAvg: { color: COACH_SITE.foreground, fontWeight: '800', fontSize: 36 },
-  reviewCard: {
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COACH_SITE.border,
-  },
-  reviewAuthor: { color: COACH_SITE.foreground, fontWeight: '800' },
-  footer: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COACH_SITE.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    backgroundColor: COACH_SITE.bg,
-  },
-  footerHint: { color: COACH_SITE.muted, marginTop: spacing.xs },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: tokens.bg },
+    root: { flex: 1, minHeight: 0 },
+    scroll: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: 120,
+      gap: spacing.md,
+    },
+    hero: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      borderLeftWidth: 2,
+      borderLeftColor: tokens.accent,
+      padding: spacing.lg,
+      gap: spacing.xs,
+      backgroundColor: 'rgba(255,255,255,0.02)',
+    },
+    heroTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    kicker: {
+      color: tokens.accent,
+      textTransform: 'uppercase',
+      letterSpacing: 2.2,
+      fontSize: 10,
+      fontWeight: '800',
+    },
+    verifiedPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: `${tokens.accent}88`,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    verifiedText: {
+      color: tokens.accent,
+      fontWeight: '800',
+      fontSize: 10,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    avatar: {
+      width: 72,
+      height: 72,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.soft,
+      borderWidth: 1,
+      borderColor: `${tokens.accent}99`,
+    },
+    avatarLetter: { color: tokens.foreground, fontWeight: '800' },
+    name: {
+      color: tokens.foreground,
+      fontWeight: '800',
+      letterSpacing: -0.5,
+      fontSize: 26,
+      marginTop: spacing.sm,
+    },
+    job: { color: tokens.accent, fontWeight: '700' },
+    meta: { color: tokens.muted },
+    ratingWrap: { marginTop: spacing.xs },
+    tabBar: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: 'rgba(255,255,255,0.02)',
+    },
+    tabOn: {
+      borderColor: tokens.accent,
+      backgroundColor: tokens.soft,
+    },
+    tabText: {
+      color: tokens.muted,
+      fontWeight: '700',
+      fontSize: 11,
+      letterSpacing: 0.4,
+    },
+    tabTextOn: { color: tokens.foreground },
+    body: { color: tokens.muted, lineHeight: 20, marginTop: spacing.sm },
+    tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
+    tag: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: `${tokens.accent}66`,
+      backgroundColor: tokens.soft,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    tagText: { color: tokens.foreground, fontWeight: '700', fontSize: 11 },
+    diplomaLine: { color: tokens.accent, marginTop: spacing.sm, fontWeight: '700' },
+    timelineRow: { flexDirection: 'row', gap: spacing.sm, paddingVertical: spacing.sm },
+    timelineBorder: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: tokens.accent,
+      marginTop: 6,
+    },
+    timelineBody: { flex: 1, gap: 2 },
+    expTitle: { color: tokens.foreground, fontWeight: '800' },
+    expOrg: { color: tokens.accent, fontWeight: '700' },
+    expPeriod: { color: tokens.muted },
+    diplomaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    diplomaIcon: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.soft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    diplomaInfo: { flex: 1, gap: 2 },
+    diplomaName: { color: tokens.foreground, fontWeight: '800' },
+    diplomaInst: { color: tokens.muted },
+    badgeOk: { color: tokens.accent, fontWeight: '800', fontSize: 10 },
+    badgePending: { color: tokens.muted, fontWeight: '700', fontSize: 10 },
+    reviewSummary: { alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
+    reviewAvg: { color: tokens.foreground, fontWeight: '800', fontSize: 36 },
+    reviewCard: {
+      gap: spacing.xs,
+      paddingVertical: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+    },
+    reviewAuthor: { color: tokens.foreground, fontWeight: '800' },
+    footer: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      backgroundColor: tokens.bg,
+    },
+    footerHint: { color: tokens.muted, marginTop: spacing.xs },
+  });
+}

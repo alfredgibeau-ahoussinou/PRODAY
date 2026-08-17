@@ -3,8 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { User } from '../../models/User';
 import { CoachSectionCard, CoachText } from './coachPortalUi';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
+import { useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 type Props = {
   events: TeamEvent[];
@@ -49,6 +50,7 @@ function aggregateTeamStats(events: TeamEvent[]) {
 /** Statistiques équipe — onglet coach « Statistiques ». */
 export function CoachSeasonStatsPanel({ events, profile }: Props) {
   const stats = useMemo(() => aggregateTeamStats(events), [events]);
+  const styles = useCoachThemedStyles(createStyles);
 
   return (
     <View style={styles.wrap}>
@@ -129,58 +131,60 @@ export function CoachSeasonStatsPanel({ events, profile }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { gap: spacing.md },
-  lead: { lineHeight: 18 },
-  kpiRow: {
-    flexDirection: 'row',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    borderRadius: 16,
-    backgroundColor: COACH_SITE.surface,
-    overflow: 'hidden',
-  },
-  kpiCell: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    gap: 4,
-  },
-  kpiBorder: {
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: COACH_SITE.border,
-  },
-  kpiValue: {
-    color: COACH_SITE.accent,
-    fontWeight: '800',
-    fontSize: 22,
-  },
-  kpiLabel: {
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  sectionTitle: {
-    color: COACH_SITE.foreground,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontSize: 10,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: 16,
-    backgroundColor: COACH_SITE.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-  },
-  rowMain: { flex: 1, gap: 2 },
-  rowStats: {
-    color: COACH_SITE.accent,
-    fontWeight: '800',
-  },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    wrap: { gap: spacing.md },
+    lead: { lineHeight: 18 },
+    kpiRow: {
+      flexDirection: 'row',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      borderRadius: 16,
+      backgroundColor: tokens.surface,
+      overflow: 'hidden',
+    },
+    kpiCell: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      gap: 4,
+    },
+    kpiBorder: {
+      borderRightWidth: StyleSheet.hairlineWidth,
+      borderRightColor: tokens.border,
+    },
+    kpiValue: {
+      color: tokens.accent,
+      fontWeight: '800',
+      fontSize: 22,
+    },
+    kpiLabel: {
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      fontSize: 9,
+      fontWeight: '700',
+    },
+    sectionTitle: {
+      color: tokens.foreground,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 1.2,
+      fontSize: 10,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: 16,
+      backgroundColor: tokens.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    rowMain: { flex: 1, gap: 2 },
+    rowStats: {
+      color: tokens.accent,
+      fontWeight: '800',
+    },
+  });
+}

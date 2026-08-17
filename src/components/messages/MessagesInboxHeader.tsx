@@ -11,7 +11,8 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 export interface MessagesInboxHeaderProps {
   search: string;
@@ -35,11 +36,12 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const coach = variant === 'coach';
+  const coachTokens = useCoachTokens();
   const threadFilters = useMemo(
     () => (coach ? getCoachMessagesThreadFilters(t) : getMessagesThreadFilters(t)),
     [coach, t],
   );
-  const styles = useMemo(() => createStyles(colors, coach), [colors, coach]);
+  const styles = useMemo(() => createStyles(colors, coach, coachTokens), [colors, coach, coachTokens]);
 
   const threadCountLabel = useMemo(() => {
     if (loading) return t('common.loading');
@@ -56,10 +58,10 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
         palette={
           coach
             ? {
-                surface: COACH_SITE.surface,
+                surface: coachTokens.surface,
                 border: 'transparent',
-                text: COACH_SITE.foreground,
-                textMuted: COACH_SITE.muted,
+                text: coachTokens.foreground,
+                textMuted: coachTokens.muted,
               }
             : undefined
         }
@@ -80,14 +82,14 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                 {
                   backgroundColor: on
                     ? coach
-                      ? COACH_SITE.accent
+                      ? coachTokens.accent
                       : colors.accent
                     : coach
-                      ? COACH_SITE.surface
+                      ? coachTokens.surface
                       : colors.surface,
                   borderColor: on
                     ? coach
-                      ? COACH_SITE.accent
+                      ? coachTokens.accent
                       : colors.accent
                     : coach
                       ? 'transparent'
@@ -106,7 +108,7 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                         ? '#fff'
                         : colors.brandInverse
                       : coach
-                        ? COACH_SITE.muted
+                        ? coachTokens.muted
                         : colors.textSecondary,
                   },
                 ]}
@@ -128,7 +130,11 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   );
 };
 
-function createStyles(c: { text: string; textMuted: string }, coach = false) {
+function createStyles(
+  c: { text: string; textMuted: string },
+  coach: boolean,
+  coachTokens: CoachThemeTokens,
+) {
   return StyleSheet.create({
     block: { gap: spacing.md, marginBottom: spacing.sm },
     filters: {
@@ -162,13 +168,13 @@ function createStyles(c: { text: string; textMuted: string }, coach = false) {
       fontSize: 17,
       fontWeight: '800',
       letterSpacing: -0.2,
-      color: coach ? COACH_SITE.foreground : c.text,
+      color: coach ? coachTokens.foreground : c.text,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     sectionCount: {
       fontFamily: fontFamily.regular,
       fontSize: 12,
-      color: coach ? COACH_SITE.muted : c.textMuted,
+      color: coach ? coachTokens.muted : c.textMuted,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });

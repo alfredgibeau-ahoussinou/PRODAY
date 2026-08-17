@@ -1,8 +1,9 @@
 import React from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { CoachText } from './coachPortalUi';
+import { useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 type Props = {
   message: string;
@@ -13,6 +14,8 @@ type Props = {
 
 /** Bulle assistant IA — paragraphe naturel, sans listes à puces. */
 export function CoachAiMessage({ message, secondary, footnote, style }: Props) {
+  const styles = useCoachThemedStyles(createStyles);
+
   return (
     <View style={[styles.card, style]}>
       <CoachText variant="body" style={styles.message}>
@@ -32,14 +35,16 @@ export function CoachAiMessage({ message, secondary, footnote, style }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COACH_SITE.surface,
-    borderRadius: 18,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  message: { lineHeight: 22 },
-  secondary: { lineHeight: 18 },
-  footnote: { lineHeight: 16, marginTop: 2 },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: tokens.surface,
+      borderRadius: 18,
+      padding: spacing.md,
+      gap: spacing.sm,
+    },
+    message: { lineHeight: 22 },
+    secondary: { lineHeight: 18 },
+    footnote: { lineHeight: 16, marginTop: 2 },
+  });
+}

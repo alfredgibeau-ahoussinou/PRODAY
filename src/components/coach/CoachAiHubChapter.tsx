@@ -17,10 +17,12 @@ import {
 } from './coachPortalUi';
 import { CoachPane } from './CoachScreenHeader';
 import { CoachSeasonStatsPanel } from './CoachSeasonStatsPanel';
-import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { Icon } from '../ui/Icon';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
 import { wellnessCheckinsService } from '../../services/wellnessCheckins.service';
 import { coachEvaluationsService } from '../../services/coachEvaluations.service';
@@ -100,6 +102,8 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   showSeasonStats = true,
 }) => {
   const shellNav = useCoachShellNav();
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
   const [wellnessByUid, setWellnessByUid] = useState<Record<string, WellnessSignals>>({});
   const [evaluations, setEvaluations] = useState<CoachPlayerEvaluation[]>([]);
@@ -399,7 +403,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             ) : null}
 
             <Pressable style={styles.secondaryBtn} onPress={() => openNav('smart_tactics')}>
-              <Icon name="star-four-points" size={14} color={COACH_SITE.accent} />
+              <Icon name="star-four-points" size={14} color={tokens.accent} />
               <CoachText variant="caption" accent>
                 Ouvrir Tactique IA
               </CoachText>
@@ -440,7 +444,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
                     style={styles.videoRow}
                     onPress={() => openNav('mes_videos')}
                   >
-                    <Icon name="videocam" size={14} color={COACH_SITE.accent} />
+                    <Icon name="videocam" size={14} color={tokens.accent} />
                     <View style={styles.videoRowBody}>
                       <CoachText variant="caption" style={styles.videoTitle} numberOfLines={1}>
                         {v.title}
@@ -455,7 +459,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
               </View>
             ) : null}
             <Pressable style={styles.secondaryBtn} onPress={() => openNav('mes_videos')}>
-              <Icon name="videocam" size={14} color={COACH_SITE.accent} />
+              <Icon name="videocam" size={14} color={tokens.accent} />
               <CoachText variant="caption" accent>
                 Ouvrir Mes vidéos
               </CoachText>
@@ -562,6 +566,7 @@ function ComposedPlanCard({
   applying: boolean;
   onApply: () => void;
 }) {
+  const styles = useCoachThemedStyles(createStyles);
   const isMatch = plan.context === 'match';
   const isEmpty = plan.archetype === 'empty';
   const confidenceLabel =
@@ -655,6 +660,7 @@ function PostMatchCard({
   analysis: PostMatchAnalysis;
   onOpenVideos?: () => void;
 }) {
+  const styles = useCoachThemedStyles(createStyles);
   const dateStr = analysis.date.toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -727,161 +733,163 @@ function PostMatchCard({
   );
 }
 
-const styles = StyleSheet.create({
-  stack: { gap: spacing.md, paddingBottom: spacing.xl },
-  metricsRow: {
-    flexDirection: 'row',
-    marginTop: spacing.sm,
-    borderRadius: 12,
-    backgroundColor: COACH_SITE.elevated,
-    overflow: 'hidden',
-  },
-  metricCell: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: 4,
-  },
-  metricBorder: {
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: COACH_SITE.border,
-  },
-  metricValue: { fontWeight: '800', fontSize: 18 },
-  ctaLink: { marginTop: spacing.sm },
-  listBlock: { marginTop: spacing.sm, gap: spacing.xs },
-  listLabel: {
-    color: COACH_SITE.accent,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-    fontSize: 10,
-  },
-  playerLine: {
-    paddingVertical: spacing.xs,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
-  },
-  playerName: { fontWeight: '700', marginBottom: 2 },
-  focusBox: {
-    marginTop: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: 10,
-    backgroundColor: COACH_SITE.elevated,
-    gap: 4,
-  },
-  secondaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    backgroundColor: COACH_SITE.accent,
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: spacing.lg,
-  },
-  primaryBtnText: { fontWeight: '800', color: '#fff' },
-  sessionMeta: { marginTop: spacing.sm, gap: 4 },
-  sessionBlocks: { marginTop: spacing.sm, gap: spacing.xs },
-  sessionBlockRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
-  },
-  sessionBlockMin: { fontWeight: '800', width: 36, color: COACH_SITE.accent },
-  sessionBlockBody: { flex: 1, gap: 2 },
-  sessionBlockLabel: { fontWeight: '700' },
-  sessionMaterial: { fontSize: 10, fontStyle: 'italic' },
-  sessionCreateBtn: { marginTop: spacing.md },
-  sessionCreateDisabled: { opacity: 0.7 },
-  previewActions: { gap: spacing.xs },
-  previewRow: {
-    padding: spacing.md,
-    borderRadius: 12,
-    backgroundColor: COACH_SITE.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-  },
-  previewTitle: { fontWeight: '700', marginBottom: 4 },
-  postMatchList: { marginTop: spacing.sm, gap: spacing.sm },
-  postMatchCard: {
-    padding: spacing.md,
-    borderRadius: 12,
-    backgroundColor: COACH_SITE.elevated,
-    gap: spacing.xs,
-  },
-  postMatchHead: { gap: 2, marginBottom: spacing.xs },
-  postMatchTitle: { fontWeight: '700' },
-  postMatchBlock: { gap: 2 },
-  postMatchLabel: {
-    color: COACH_SITE.accent,
-    fontWeight: '700',
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  postMatchLabelWarn: {
-    color: '#F59E0B',
-    fontWeight: '700',
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  mvpLine: { fontWeight: '700', marginTop: spacing.xs },
-  recLine: { marginTop: spacing.xs, lineHeight: 17 },
-  videoNote: { fontSize: 10, fontStyle: 'italic', marginTop: 4 },
-  videoList: { marginTop: spacing.sm, gap: spacing.xs },
-  videoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
-  },
-  videoRowBody: { flex: 1, gap: 2 },
-  videoTitle: { fontWeight: '700' },
-  videoLinkRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    paddingVertical: 2,
-  },
-  statsBlock: { gap: spacing.sm, marginTop: spacing.sm },
-  statsTitle: {
-    color: COACH_SITE.muted,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    fontSize: 11,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: COACH_SITE.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: spacing.lg,
-    maxHeight: '72%',
-  },
-  modalTitle: { fontWeight: '800', marginBottom: spacing.md },
-  modalScroll: { maxHeight: 360 },
-  actionRow: {
-    paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
-  },
-  actionTitle: { fontWeight: '700', marginBottom: 4 },
-  modalClose: { alignItems: 'center', paddingTop: spacing.md },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    stack: { gap: spacing.md, paddingBottom: spacing.xl },
+    metricsRow: {
+      flexDirection: 'row',
+      marginTop: spacing.sm,
+      borderRadius: 12,
+      backgroundColor: tokens.elevated,
+      overflow: 'hidden',
+    },
+    metricCell: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: 4,
+    },
+    metricBorder: {
+      borderRightWidth: StyleSheet.hairlineWidth,
+      borderRightColor: tokens.border,
+    },
+    metricValue: { fontWeight: '800', fontSize: 18 },
+    ctaLink: { marginTop: spacing.sm },
+    listBlock: { marginTop: spacing.sm, gap: spacing.xs },
+    listLabel: {
+      color: tokens.accent,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
+      fontSize: 10,
+    },
+    playerLine: {
+      paddingVertical: spacing.xs,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    playerName: { fontWeight: '700', marginBottom: 2 },
+    focusBox: {
+      marginTop: spacing.sm,
+      padding: spacing.sm,
+      borderRadius: 10,
+      backgroundColor: tokens.elevated,
+      gap: 4,
+    },
+    secondaryBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    primaryBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      backgroundColor: tokens.accent,
+      borderRadius: 14,
+      paddingVertical: 16,
+      paddingHorizontal: spacing.lg,
+    },
+    primaryBtnText: { fontWeight: '800', color: '#fff' },
+    sessionMeta: { marginTop: spacing.sm, gap: 4 },
+    sessionBlocks: { marginTop: spacing.sm, gap: spacing.xs },
+    sessionBlockRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    sessionBlockMin: { fontWeight: '800', width: 36, color: tokens.accent },
+    sessionBlockBody: { flex: 1, gap: 2 },
+    sessionBlockLabel: { fontWeight: '700' },
+    sessionMaterial: { fontSize: 10, fontStyle: 'italic' },
+    sessionCreateBtn: { marginTop: spacing.md },
+    sessionCreateDisabled: { opacity: 0.7 },
+    previewActions: { gap: spacing.xs },
+    previewRow: {
+      padding: spacing.md,
+      borderRadius: 12,
+      backgroundColor: tokens.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    previewTitle: { fontWeight: '700', marginBottom: 4 },
+    postMatchList: { marginTop: spacing.sm, gap: spacing.sm },
+    postMatchCard: {
+      padding: spacing.md,
+      borderRadius: 12,
+      backgroundColor: tokens.elevated,
+      gap: spacing.xs,
+    },
+    postMatchHead: { gap: 2, marginBottom: spacing.xs },
+    postMatchTitle: { fontWeight: '700' },
+    postMatchBlock: { gap: 2 },
+    postMatchLabel: {
+      color: tokens.accent,
+      fontWeight: '700',
+      fontSize: 10,
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+    },
+    postMatchLabelWarn: {
+      color: '#F59E0B',
+      fontWeight: '700',
+      fontSize: 10,
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+    },
+    mvpLine: { fontWeight: '700', marginTop: spacing.xs },
+    recLine: { marginTop: spacing.xs, lineHeight: 17 },
+    videoNote: { fontSize: 10, fontStyle: 'italic', marginTop: 4 },
+    videoList: { marginTop: spacing.sm, gap: spacing.xs },
+    videoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    videoRowBody: { flex: 1, gap: 2 },
+    videoTitle: { fontWeight: '700' },
+    videoLinkRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      paddingVertical: 2,
+    },
+    statsBlock: { gap: spacing.sm, marginTop: spacing.sm },
+    statsTitle: {
+      color: tokens.muted,
+      fontWeight: '700',
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+      fontSize: 11,
+    },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.65)',
+      justifyContent: 'flex-end',
+    },
+    modalSheet: {
+      backgroundColor: tokens.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: spacing.lg,
+      maxHeight: '72%',
+    },
+    modalTitle: { fontWeight: '800', marginBottom: spacing.md },
+    modalScroll: { maxHeight: 360 },
+    actionRow: {
+      paddingVertical: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    actionTitle: { fontWeight: '700', marginBottom: 4 },
+    modalClose: { alignItems: 'center', paddingTop: spacing.md },
+  });
+}

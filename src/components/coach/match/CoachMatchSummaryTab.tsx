@@ -11,9 +11,9 @@ import { formatCalendarDate } from '../../../utils/seasonCalendar';
 import { resolveLiveState } from '../../../utils/matchLive';
 import { CoachSectionCard, CoachSettingsGroup, CoachSettingsRow, CoachText } from '../coachPortalUi';
 import { Icon } from '../../ui/Icon';
-import { COACH_SITE } from '../../../content/coachPageIdentity';
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
 import { spacing } from '../../../theme/designTokens';
+import { useCoachTheme } from '../../../features/coach/shell/CoachThemeContext';
 
 type Props = {
   event: TeamEvent;
@@ -22,6 +22,7 @@ type Props = {
 };
 
 export function CoachMatchSummaryTab({ event, onOpenChapter, onOpenCarpool }: Props) {
+  const { tokens } = useCoachTheme();
   const live = resolveLiveState(event);
   const yesCount = countRsvpYes(event);
   const pendingCount = getPendingInviteeUids(event).length;
@@ -60,7 +61,7 @@ export function CoachMatchSummaryTab({ event, onOpenChapter, onOpenCarpool }: Pr
           onPress={() => void shareConvocation()}
           style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.7 }]}
         >
-          <Icon name="share" size={18} color={COACH_SITE.accent} />
+          <Icon name="share" size={18} color={tokens.accent} />
           <CoachText variant="section" accent style={styles.shareLabel}>
             Partager la convocation
           </CoachText>

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { CoachText } from './coachPortalUi';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
+import { useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import {
   clampCoachRating,
   COACH_RATING_MAX,
@@ -19,6 +20,7 @@ type Props = {
 
 /** Entrée compacte /10 — optionnelle, +/- par pas de 0,5. */
 export function CoachOptionalScoreInput({ label, field, value, onChange }: Props) {
+  const styles = useCoachThemedStyles(createStyles);
   const display = value != null ? formatCoachRating(value) : '—';
 
   const step = (delta: number) => {
@@ -82,6 +84,8 @@ export function CoachOptionalScoresBlock({
   values: Partial<Record<CoachRatingField, number | undefined>>;
   onChange: (field: CoachRatingField, value: number | undefined) => void;
 }) {
+  const styles = useCoachThemedStyles(createStyles);
+
   return (
     <View style={styles.block}>
       <CoachText variant="caption" muted style={styles.blockHint}>
@@ -108,43 +112,45 @@ export function CoachOptionalScoresBlock({
   );
 }
 
-const styles = StyleSheet.create({
-  block: {
-    gap: 6,
-    paddingVertical: spacing.xs,
-  },
-  blockHint: { marginBottom: 2, fontSize: 11 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  label: { flex: 1, fontSize: 12 },
-  controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  stepBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.elevated,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-  },
-  value: {
-    minWidth: 44,
-    textAlign: 'center',
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
-  },
-  clearBtn: {
-    marginLeft: 2,
-    paddingHorizontal: 4,
-  },
-  clearText: { fontSize: 16, lineHeight: 18 },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    block: {
+      gap: 6,
+      paddingVertical: spacing.xs,
+    },
+    blockHint: { marginBottom: 2, fontSize: 11 },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    label: { flex: 1, fontSize: 12 },
+    controls: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    stepBtn: {
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    value: {
+      minWidth: 44,
+      textAlign: 'center',
+      fontWeight: '700',
+      fontVariant: ['tabular-nums'],
+    },
+    clearBtn: {
+      marginLeft: 2,
+      paddingHorizontal: 4,
+    },
+    clearText: { fontSize: 16, lineHeight: 18 },
+  });
+}

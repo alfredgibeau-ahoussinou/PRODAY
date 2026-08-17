@@ -6,6 +6,8 @@ import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 function formatThreadTime(date: Date): string {
   const now = new Date();
@@ -23,6 +25,7 @@ interface MessageThreadRowProps {
   kineLabel?: string;
   onPress: () => void;
   disabled?: boolean;
+  variant?: 'default' | 'coach';
 }
 
 export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
@@ -30,12 +33,57 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
   kineLabel,
   onPress,
   disabled,
+  variant,
 }) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const coach = variant === 'coach';
+  const coachTokens = useCoachTokens();
+  const styles = useMemo(() => createStyles(colors, coach, coachTokens), [colors, coach, coachTokens]);
   const isTeamGroup = thread.thread_kind === 'team_group';
   const initial = thread.participant_name.charAt(0).toUpperCase();
   const unread = Boolean(thread.unread);
+
+  if (coach) {
+    return (
+      <PressableSpring
+        onPress={onPress}
+        disabled={disabled}
+        haptic
+        scaleTo={0.98}
+        style={styles.coachCard}
+      >
+        <View style={styles.inner}>
+          <View style={[styles.coachAvatar, unread && styles.coachAvatarUnread]}>
+            {isTeamGroup ? (
+              <Icon name="people" size={20} color={coachTokens.foreground} />
+            ) : (
+              <Text style={styles.coachInitial}>{initial}</Text>
+            )}
+          </View>
+          <View style={styles.body}>
+            <View style={styles.head}>
+              <Text style={[styles.coachName, unread && styles.nameUnread]} numberOfLines={1}>
+                {thread.participant_name}
+              </Text>
+              <Text style={styles.coachTime}>{formatThreadTime(thread.updated_at)}</Text>
+            </View>
+            <Text
+              style={[styles.coachPreview, unread && styles.previewUnread]}
+              numberOfLines={1}
+            >
+              {thread.last_message || 'Nouvelle conversation'}
+            </Text>
+            {kineLabel ? (
+              <View style={styles.coachTag}>
+                <Text style={styles.coachTagText}>{kineLabel}</Text>
+              </View>
+            ) : null}
+          </View>
+          {unread ? <View style={styles.coachDot} /> : null}
+        </View>
+      </PressableSpring>
+    );
+  }
 
   return (
     <PressableSpring
@@ -126,7 +174,11 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
   );
 };
 
-function createStyles(c: { accent: string }) {
+function createStyles(
+  c: { accent: string },
+  coach: boolean,
+  coachTokens: CoachThemeTokens,
+) {
   return StyleSheet.create({
     card: {
       borderRadius: radius.lg,
@@ -216,6 +268,73 @@ function createStyles(c: { accent: string }) {
       width: 8,
       height: 8,
       borderRadius: 4,
+    },
+    coachCard: {
+      borderRadius: 18,
+      backgroundColor: coachTokens.surface,
+      overflow: 'hidden',
+      marginBottom: spacing.sm,
+    },
+    coachAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: coachTokens.elevated,
+    },
+    coachAvatarUnread: {
+      backgroundColor: coachTokens.accent,
+    },
+    coachInitial: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 18,
+      fontWeight: '800',
+      color: coachTokens.foreground,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    coachName: {
+      flex: 1,
+      fontFamily: fontFamily.extrabold,
+      fontSize: 16,
+      fontWeight: '700',
+      color: coachTokens.foreground,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    coachTime: {
+      fontFamily: fontFamily.semibold,
+      fontSize: 12,
+      fontWeight: '600',
+      color: coachTokens.muted,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    coachPreview: {
+      fontFamily: fontFamily.regular,
+      fontSize: 14,
+      lineHeight: 18,
+      color: coachTokens.muted,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    coachTag: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+      backgroundColor: coachTokens.elevated,
+    },
+    coachTagText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      color: coachTokens.accent,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    coachDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: coachTokens.accent,
     },
   });
 }

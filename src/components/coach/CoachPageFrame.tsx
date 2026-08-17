@@ -2,7 +2,8 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CoachText } from './coachPortalUi';
-import { COACH_SITE, type CoachPageIdentity } from '../../content/coachPageIdentity';
+import type { CoachPageIdentity } from '../../content/coachPageIdentity';
+import { buildCoachThemeTokens } from '../../utils/coachTeamTheme';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 
@@ -75,4 +76,4 @@ function createStyles(tokens: { bg: string; foreground: string; muted: string })
 }
 
 /** Fallback statique hors shell coach. */
-export const COACH_PAGE_FRAME_FALLBACK_BG = COACH_SITE.bg;
+export const COACH_PAGE_FRAME_FALLBACK_BG = buildCoachThemeTokens({ variant: 'solid' }).bg;

@@ -13,6 +13,8 @@ import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTranslation } from '../../../context/LocaleContext';
 import { spacing, radius } from '../../../theme/designTokens';
 import { MESSAGES_CHAPTER_PAD } from './messagesChapterLayout';
+import { CoachEmptyState } from '../../coach/coachPortalUi';
+import { useCoachTokens } from '../../../features/coach/shell/CoachThemeContext';
 
 const scrollProps = {
   showsVerticalScrollIndicator: false,
@@ -41,6 +43,7 @@ export interface MessagesInboxPageProps {
   onOpenMercato: () => void;
   kineLabelFor: (thread: MessageThread) => string | undefined;
   isWoman: boolean;
+  variant?: 'default' | 'coach';
 }
 
 export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
@@ -63,15 +66,19 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
   onOpenMercato,
   kineLabelFor,
   isWoman,
+  variant,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const coach = variant === 'coach';
+  const coachTokens = useCoachTokens();
+  const refreshTint = coach ? coachTokens.accent : colors.accent;
 
   return (
     <ScrollView
       contentContainerStyle={MESSAGES_CHAPTER_PAD}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={refreshTint} />
       }
       {...scrollProps}
     >
@@ -82,6 +89,7 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
         onThreadFilterChange={onThreadFilterChange}
         resultCount={filteredThreads.length}
         loading={loading}
+        variant={variant}
       />
 
       <MessageRequestsPanel
@@ -105,23 +113,45 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
       {loading ? (
         <SkeletonList count={5} variant="card" />
       ) : threads.length === 0 ? (
-        <ListEmptyPanel
-          icon="chat"
-          title={t('messages.inbox.empty.title')}
-          subtitle={
-            isWoman
-              ? t('messages.inbox.empty.subtitle.woman')
-              : t('messages.inbox.empty.subtitle.default')
-          }
-          primaryCta={{ label: t('messages.inbox.empty.cta'), onPress: onOpenMercato }}
-        />
+        coach ? (
+          <CoachEmptyState
+            title={t('messages.inbox.empty.title')}
+            body={
+              isWoman
+                ? t('messages.inbox.empty.subtitle.woman')
+                : t('messages.inbox.empty.subtitle.default')
+            }
+            cta={t('messages.inbox.empty.cta')}
+            onPress={onOpenMercato}
+          />
+        ) : (
+          <ListEmptyPanel
+            icon="chat"
+            title={t('messages.inbox.empty.title')}
+            subtitle={
+              isWoman
+                ? t('messages.inbox.empty.subtitle.woman')
+                : t('messages.inbox.empty.subtitle.default')
+            }
+            primaryCta={{ label: t('messages.inbox.empty.cta'), onPress: onOpenMercato }}
+          />
+        )
       ) : filteredThreads.length === 0 ? (
-        <ListEmptyPanel
-          icon="search"
-          title={t('messages.inbox.noResults.title')}
-          subtitle={t('messages.inbox.noResults.subtitle')}
-          primaryCta={{ label: t('messages.inbox.noResults.reset'), onPress: onResetFilters }}
-        />
+        coach ? (
+          <CoachEmptyState
+            title={t('messages.inbox.noResults.title')}
+            body={t('messages.inbox.noResults.subtitle')}
+            cta={t('messages.inbox.noResults.reset')}
+            onPress={onResetFilters}
+          />
+        ) : (
+          <ListEmptyPanel
+            icon="search"
+            title={t('messages.inbox.noResults.title')}
+            subtitle={t('messages.inbox.noResults.subtitle')}
+            primaryCta={{ label: t('messages.inbox.noResults.reset'), onPress: onResetFilters }}
+          />
+        )
       ) : (
         <View style={styles.list}>
           {filteredThreads.map((thread, index) => (
@@ -131,6 +161,7 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
                 kineLabel={kineLabelFor(thread)}
                 onPress={() => onOpenThread(thread.id)}
                 disabled={mustVerify}
+                variant={variant}
               />
             </InteractiveListItem>
           ))}

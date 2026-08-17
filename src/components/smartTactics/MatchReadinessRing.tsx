@@ -3,8 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { ProDayText } from '../ui/ProDayText';
 import { useTranslation } from '../../context/LocaleContext';
-import { SMART_PITCH, useSmartTacticsCoachSkin } from './smartTacticsUi';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import { SMART_PITCH, useSmartTacticsTheme } from './smartTacticsUi';
 import { spacing } from '../../theme/designTokens';
 
 export const MatchReadinessRing: React.FC<{
@@ -13,7 +12,7 @@ export const MatchReadinessRing: React.FC<{
   size?: number;
 }> = ({ potential, readinessPct, size = 112 }) => {
   const { t } = useTranslation();
-  const coach = useSmartTacticsCoachSkin();
+  const theme = useSmartTacticsTheme();
   const stroke = 8;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -22,11 +21,9 @@ export const MatchReadinessRing: React.FC<{
     readinessPct >= 75
       ? SMART_PITCH.ready
       : readinessPct >= 50
-        ? coach
-          ? COACH_SITE.accent
-          : SMART_PITCH.warm
+        ? theme.midTone
         : SMART_PITCH.risk;
-  const styles = useMemo(() => createStyles(size, coach), [size, coach]);
+  const styles = useMemo(() => createStyles(size, theme.accent), [size, theme.accent]);
 
   return (
     <View style={styles.wrap}>
@@ -68,7 +65,7 @@ export const MatchReadinessRing: React.FC<{
   );
 };
 
-function createStyles(size: number, coach = false) {
+function createStyles(size: number, accentTone: string) {
   return StyleSheet.create({
     wrap: { width: size, height: size, alignItems: 'center', justifyContent: 'center' },
     center: {
@@ -81,7 +78,7 @@ function createStyles(size: number, coach = false) {
     potential: {
       fontSize: 26,
       fontWeight: '900',
-      color: coach ? COACH_SITE.accent : SMART_PITCH.warm,
+      color: accentTone,
     },
     ready: { fontSize: 11, fontWeight: '800' },
   });

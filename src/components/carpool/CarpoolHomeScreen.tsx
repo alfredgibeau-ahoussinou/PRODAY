@@ -38,6 +38,10 @@ import { useTranslation } from '../../context/LocaleContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { SkeletonList, InteractiveListItem, CrossfadeSwitch } from '../motion';
 import { spacing } from '../../theme/designTokens';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { CoachPane } from '../coach/CoachScreenHeader';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import {
   findActiveCarpoolTripsForUser,
   type ActiveCarpoolTripRef,
@@ -87,6 +91,8 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   onLoginRequired,
 }) => {
   const { t } = useTranslation();
+  const coachShell = Boolean(useCoachShellNav());
+  const coachTokens = useCoachTokens();
 
   const [mode, setMode] = useState<CarpoolHubMode>(() =>
     carpoolChapterToHubMode(initialChapter),
@@ -523,25 +529,49 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   );
 
   return (
-    <View style={styles.root}>
-      <CarpoolSpaceBackground />
+    <View style={[styles.root, coachShell && { backgroundColor: coachTokens.bg }]}>
+      {coachShell ? null : <CarpoolSpaceBackground />}
       <View style={styles.foreground}>
-        <CarpoolHubChrome
-          subtitle={subtitle}
-          mode={mode}
-          onModeChange={setHubMode}
-          liveActive={hasLiveTrip}
-          badges={badges}
-          reminderCount={reminderEvents.length}
-          onReminderPress={() => setHubMode('ride')}
-        />
-        <View style={styles.body}>
-          <CrossfadeSwitch switchKey={mode}>
-            {mode === 'ride' ? renderRide() : null}
-            {mode === 'drive' ? renderDrive() : null}
-            {mode === 'trips' ? renderTrips() : null}
-          </CrossfadeSwitch>
-        </View>
+        {coachShell ? (
+          <CoachPane title={getCoachPageIdentity('carpool').title}>
+            <CarpoolHubChrome
+              subtitle={subtitle}
+              mode={mode}
+              onModeChange={setHubMode}
+              liveActive={hasLiveTrip}
+              badges={badges}
+              reminderCount={reminderEvents.length}
+              onReminderPress={() => setHubMode('ride')}
+              hideHero
+            />
+            <View style={styles.body}>
+              <CrossfadeSwitch switchKey={mode}>
+                {mode === 'ride' ? renderRide() : null}
+                {mode === 'drive' ? renderDrive() : null}
+                {mode === 'trips' ? renderTrips() : null}
+              </CrossfadeSwitch>
+            </View>
+          </CoachPane>
+        ) : (
+          <>
+            <CarpoolHubChrome
+              subtitle={subtitle}
+              mode={mode}
+              onModeChange={setHubMode}
+              liveActive={hasLiveTrip}
+              badges={badges}
+              reminderCount={reminderEvents.length}
+              onReminderPress={() => setHubMode('ride')}
+            />
+            <View style={styles.body}>
+              <CrossfadeSwitch switchKey={mode}>
+                {mode === 'ride' ? renderRide() : null}
+                {mode === 'drive' ? renderDrive() : null}
+                {mode === 'trips' ? renderTrips() : null}
+              </CrossfadeSwitch>
+            </View>
+          </>
+        )}
       </View>
     </View>
   );

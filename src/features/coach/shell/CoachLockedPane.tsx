@@ -1,12 +1,13 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { CoachChapterScroll, CoachEmptyState } from '../../../components/coach/coachPortalUi';
-import { ProDayText } from '../../../components/ui/ProDayText';
+import { CoachChapterScroll, CoachEmptyState, CoachText } from '../../../components/coach/coachPortalUi';
+import { CoachPane } from '../../../components/coach/CoachScreenHeader';
 import { PressableSpring } from '../../../components/motion';
 import { useCoachShellNav } from './CoachShellNavContext';
 import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
-import { COACH_SITE } from '../../../content/coachPageIdentity';
 import { spacing } from '../../../theme/designTokens';
+import { useCoachThemedStyles } from './CoachThemeContext';
+import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
 
 type Props = {
   item: CoachNavResolvedItem;
@@ -14,39 +15,41 @@ type Props = {
 
 export function CoachLockedPane({ item }: Props) {
   const shellNav = useCoachShellNav();
+  const styles = useCoachThemedStyles(createStyles);
 
   return (
-    <CoachChapterScroll>
-      <View style={styles.stack}>
-        <ProDayText variant="section" style={styles.title}>
-          {item.label} · hors formule
-        </ProDayText>
-        <ProDayText variant="caption" muted>
-          {item.lockReason ?? 'Ce module n’est pas inclus dans ton offre actuelle.'}
-        </ProDayText>
-        <CoachEmptyState
-          title="Passe en Coach Pro"
-          body="Ou demande à ton club l’offre Tout inclus pour débloquer Tactique IA."
-          cta="Retour Aujourd’hui"
-          onPress={() => shellNav?.requestNav('today')}
-        />
-        <PressableSpring
-          onPress={() => shellNav?.requestNav('forme')}
-          scaleTo={0.98}
-          style={styles.link}
-        >
-          <ProDayText variant="caption" style={styles.linkText}>
-            Voir Analyse de forme (disponible)
-          </ProDayText>
-        </PressableSpring>
-      </View>
-    </CoachChapterScroll>
+    <CoachPane title={item.label}>
+      <CoachChapterScroll>
+        <View style={styles.stack}>
+          <CoachText variant="section" style={styles.title}>
+            {item.label}
+          </CoachText>
+          <CoachEmptyState
+            title="Coach Pro requis"
+            body={item.lockReason ?? 'Débloque ce module avec Coach Pro ou l’offre club Tout inclus.'}
+            cta="Retour Calendrier"
+            onPress={() => shellNav?.requestNav('today')}
+          />
+          <PressableSpring
+            onPress={() => shellNav?.requestNav('forme')}
+            scaleTo={0.98}
+            style={styles.link}
+          >
+            <CoachText variant="caption" style={styles.linkText}>
+              Voir Analyse de forme
+            </CoachText>
+          </PressableSpring>
+        </View>
+      </CoachChapterScroll>
+    </CoachPane>
   );
 }
 
-const styles = StyleSheet.create({
-  stack: { gap: spacing.md },
-  title: { color: COACH_SITE.foreground, fontWeight: '800' },
-  link: { paddingVertical: spacing.sm },
-  linkText: { color: COACH_SITE.accent, fontWeight: '700' },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    stack: { gap: spacing.md },
+    title: { color: tokens.foreground, fontWeight: '800' },
+    link: { paddingVertical: spacing.sm },
+    linkText: { color: tokens.accent, fontWeight: '700' },
+  });
+}

@@ -9,11 +9,13 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import { Text } from 'react-native';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 
 interface MessagesTabRailProps {
   active: MessagesChapterId;
   onSelect: (id: MessagesChapterId) => void;
   unreadBadge?: number;
+  variant?: 'default' | 'coach';
 }
 
 /** Segments Conversations / Réseau — même style que Candidature. */
@@ -21,15 +23,25 @@ export const MessagesTabRail: React.FC<MessagesTabRailProps> = ({
   active,
   onSelect,
   unreadBadge,
+  variant,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const chapters = useMemo(() => getMessagesChapters(t), [t]);
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const coach = variant === 'coach';
+  const coachTokens = useCoachTokens();
+  const styles = useMemo(() => createStyles(colors, coach), [colors, coach]);
+
+  const trackBg = coach ? coachTokens.surface : colors.surfaceMuted;
+  const trackBorder = coach ? 'transparent' : colors.border;
+  const onBg = coach ? coachTokens.elevated : colors.surface;
+  const onBorder = coach ? 'transparent' : colors.border;
+  const onColor = coach ? coachTokens.foreground : colors.text;
+  const offColor = coach ? coachTokens.muted : colors.textMuted;
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.track, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+      <View style={[styles.track, { backgroundColor: trackBg, borderColor: trackBorder }]}>
         {chapters.map((ch) => {
           const on = ch.id === active;
           const badge = ch.id === 'inbox' && unreadBadge && unreadBadge > 0 ? unreadBadge : null;
@@ -38,7 +50,7 @@ export const MessagesTabRail: React.FC<MessagesTabRailProps> = ({
               key={ch.id}
               style={[
                 styles.segment,
-                on && { backgroundColor: colors.surface, borderColor: colors.border },
+                on && { backgroundColor: onBg, borderColor: onBorder },
               ]}
               onPress={() => {
                 prodayHaptics.tabSwitch();
@@ -47,11 +59,11 @@ export const MessagesTabRail: React.FC<MessagesTabRailProps> = ({
               scaleTo={0.98}
             >
               <View style={styles.segmentInner}>
-                <Text style={[styles.label, { color: on ? colors.text : colors.textMuted }]}>
+                <Text style={[styles.label, { color: on ? onColor : offColor }]}>
                   {ch.label}
                 </Text>
                 {badge ? (
-                  <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+                  <View style={[styles.badge, { backgroundColor: coach ? coachTokens.accent : colors.accent }]}>
                     <Text style={[styles.badgeText, { color: colors.brandInverse }]}>
                       {badge > 9 ? '9+' : badge}
                     </Text>
@@ -66,7 +78,7 @@ export const MessagesTabRail: React.FC<MessagesTabRailProps> = ({
   );
 };
 
-function createStyles(c: { surface: string }) {
+function createStyles(_c: { surface: string }, coach: boolean) {
   return StyleSheet.create({
     wrap: {
       paddingHorizontal: spacing.lg,
@@ -77,7 +89,7 @@ function createStyles(c: { surface: string }) {
       flexDirection: 'row',
       padding: 4,
       borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: coach ? 0 : StyleSheet.hairlineWidth,
       gap: 4,
     },
     segment: {

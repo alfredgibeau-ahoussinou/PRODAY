@@ -9,6 +9,8 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing } from '../../theme/designTokens';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 interface MatchChapterRailProps {
   active: MatchChapterId;
@@ -18,6 +20,8 @@ interface MatchChapterRailProps {
   centreBadge?: number | string;
   /** Labels stages type jeu vidéo (pôle Joueur). */
   gameMode?: boolean;
+  /** Peau Pôle Coach — pills sombres, pas de rail terminal. */
+  coachSkin?: boolean;
 }
 
 const GAME_STAGE_LABELS: Partial<Record<MatchChapterId, string>> = {
@@ -38,11 +42,16 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
   convocationsBadge,
   centreBadge,
   gameMode = false,
+  coachSkin = false,
 }) => {
   const { colors } = useAppTheme();
+  const coachTokens = useCoachTokens();
   const { t } = useTranslation();
   const chapters = useMemo(() => getMatchChapters(t), [t]);
-  const styles = useMemo(() => createStyles(colors.accent, gameMode), [colors.accent, gameMode]);
+  const styles = useMemo(
+    () => createStyles(colors.accent, gameMode, coachSkin, coachTokens),
+    [colors.accent, gameMode, coachSkin, coachTokens],
+  );
 
   return (
     <ScrollView
@@ -97,7 +106,7 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
                 </ProDayText>
               </View>
             ) : null}
-            {on ? <View style={[styles.underline, { backgroundColor: colors.accent }]} /> : null}
+            {on && !coachSkin ? <View style={[styles.underline, { backgroundColor: colors.accent }]} /> : null}
           </PressableSpring>
         );
       })}
@@ -105,13 +114,21 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
   );
 };
 
-function createStyles(accent: string, gameMode = false) {
+function createStyles(
+  accent: string,
+  gameMode = false,
+  coachSkin = false,
+  coachTokens?: CoachThemeTokens,
+) {
+  const coachSurface = coachTokens?.surface ?? '#1C1C1E';
+  const coachElevated = coachTokens?.elevated ?? '#2C2C2E';
+
   return StyleSheet.create({
     wrap: {
       flexGrow: 0,
       flexShrink: 0,
-      maxHeight: gameMode ? 52 : 48,
-      borderBottomWidth: StyleSheet.hairlineWidth,
+      maxHeight: gameMode || coachSkin ? 52 : 48,
+      borderBottomWidth: coachSkin ? 0 : StyleSheet.hairlineWidth,
       borderBottomColor: MATCH_SITE.border,
       backgroundColor: 'transparent',
     },
@@ -119,7 +136,7 @@ function createStyles(accent: string, gameMode = false) {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.xs,
       paddingBottom: 0,
-      gap: gameMode ? 6 : 2,
+      gap: gameMode || coachSkin ? 6 : 2,
       alignItems: 'center',
     },
     tab: {
@@ -129,14 +146,19 @@ function createStyles(accent: string, gameMode = false) {
       gap: 6,
       paddingVertical: 10,
       paddingHorizontal: spacing.md,
-      borderBottomWidth: gameMode ? 0 : 2,
+      borderBottomWidth: gameMode || coachSkin ? 0 : 2,
       borderBottomColor: 'transparent',
-      borderRadius: gameMode ? 10 : 0,
+      borderRadius: gameMode || coachSkin ? 18 : 0,
       borderWidth: gameMode ? StyleSheet.hairlineWidth : 0,
       borderColor: gameMode ? 'rgba(255,255,255,0.1)' : 'transparent',
+      backgroundColor: coachSkin ? coachSurface : 'transparent',
     },
     tabOn: {
-      backgroundColor: gameMode ? `${accent}28` : MATCH_SITE.soft,
+      backgroundColor: gameMode
+        ? `${accent}28`
+        : coachSkin
+          ? coachElevated
+          : MATCH_SITE.soft,
     },
     label: {
       fontWeight: '800',

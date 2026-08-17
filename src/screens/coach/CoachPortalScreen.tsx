@@ -29,7 +29,8 @@ import {
 } from '../../utils/clubFeatureAccess';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import { useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 export type CoachPortalScreenProps = {
   chapter?: CoachPortalChapterId;
@@ -50,6 +51,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
   const { colors } = useAppTheme();
   const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
   const shellNav = useCoachShellNav();
+  const styles = useCoachThemedStyles(createStyles);
   const [chapterState, setChapterState] = useState<CoachPortalChapterId>(
     chapterProp ?? 'cockpit',
   );
@@ -249,9 +251,10 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  stack: { flex: 1, minHeight: 0 },
-  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  body: { flex: 1, minHeight: 0 },
-  embed: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
-});
+const createStyles = (tokens: CoachThemeTokens) =>
+  StyleSheet.create({
+    stack: { flex: 1, minHeight: 0 },
+    loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    body: { flex: 1, minHeight: 0 },
+    embed: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
+  });

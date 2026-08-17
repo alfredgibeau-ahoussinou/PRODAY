@@ -31,7 +31,6 @@ import {
 } from '../../utils/joueurExperienceTheme';
 import { radius, spacing } from '../../theme/designTokens';
 import { SMART_PITCH, SmartTacticsPressable, useSmartTacticsTheme } from './smartTacticsUi';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { Icon } from '../ui/Icon';
 import { SmartPlayerCard } from './SmartPlayerCard';
 import { PitchFrame, projectPitch } from './PerspectivePitch';
@@ -154,9 +153,9 @@ function shortName(displayName: string): string {
   return parts.length ? parts[parts.length - 1] : '—';
 }
 
-function readinessTone(pct: number, coach = false): string {
+function readinessTone(pct: number, midTone = SMART_PITCH.warm): string {
   if (pct >= 75) return SMART_PITCH.ready;
-  if (pct >= 50) return coach ? COACH_SITE.accent : SMART_PITCH.warm;
+  if (pct >= 50) return midTone;
   return SMART_PITCH.risk;
 }
 
@@ -233,7 +232,7 @@ function PitchToken({
               width: size,
               height: size,
               borderRadius: size / 2,
-              borderColor: selected ? theme.accent : readinessTone(ready, theme.coach),
+              borderColor: selected ? theme.accent : readinessTone(ready, theme.midTone),
             },
           ]}
         >
@@ -512,7 +511,7 @@ export const SmartTacticsBoard: React.FC<{
       <View style={styles.topBar}>
         <View style={styles.topMeta}>
           {theme.coach ? (
-            <ProDayText variant="caption" style={[styles.kicker, { color: COACH_SITE.muted }]}>
+            <ProDayText variant="caption" style={[styles.kicker, { color: theme.muted }]}>
               {readOnly ? 'Composition publiée' : 'Composition'}
             </ProDayText>
           ) : (
@@ -593,7 +592,7 @@ export const SmartTacticsBoard: React.FC<{
               </ProDayText>
             </>
           ) : (
-            <ProDayText variant="caption" style={[styles.kicker, { color: COACH_SITE.muted }]}>
+            <ProDayText variant="caption" style={[styles.kicker, { color: theme.muted }]}>
               Composition · {formation}
             </ProDayText>
           )}
@@ -669,9 +668,9 @@ export const SmartTacticsBoard: React.FC<{
           colors={[...theme.benchGradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.touchBench, theme.coach && { borderColor: COACH_SITE.border }]}
+          style={[styles.touchBench, theme.coach && { borderColor: theme.border }]}
         >
-          <View style={[styles.benchRail, theme.coach && { backgroundColor: COACH_SITE.accent }]} />
+          <View style={[styles.benchRail, theme.coach && { backgroundColor: theme.accent }]} />
           <View style={styles.benchHead}>
             <Icon name="people" size={14} color={theme.accent} />
             <ProDayText variant="caption" style={styles.benchTitle}>
@@ -720,7 +719,7 @@ export const SmartTacticsBoard: React.FC<{
                         {
                           borderColor: on
                             ? theme.accent
-                            : readinessTone(ready, theme.coach),
+                            : readinessTone(ready, theme.midTone),
                         },
                       ]}
                     >
@@ -760,7 +759,7 @@ export const SmartTacticsBoard: React.FC<{
         <View style={{ gap: 2 }}>
           <ProDayText
             variant="caption"
-            style={[styles.kicker, theme.coach && { color: COACH_SITE.muted }]}
+            style={[styles.kicker, theme.coach && { color: theme.muted }]}
           >
             Poser · {stageIdx + 1}/{stages.length}
           </ProDayText>
@@ -819,7 +818,7 @@ export const SmartTacticsBoard: React.FC<{
                       : done
                         ? 'rgba(61,220,151,0.12)'
                         : theme.coach
-                          ? COACH_SITE.bg
+                          ? theme.bg
                           : colors.background,
                   },
                 ]}
@@ -934,7 +933,7 @@ export const SmartTacticsBoard: React.FC<{
         <View style={[styles.picker, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <ProDayText
             variant="caption"
-            style={[styles.kicker, theme.coach && { color: COACH_SITE.muted }]}
+            style={[styles.kicker, theme.coach && { color: theme.muted }]}
           >
             Ton poste
           </ProDayText>
