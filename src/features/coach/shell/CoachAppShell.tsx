@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { PushScreenTransition } from '../../../components/motion';
 import { StatusBar } from 'expo-status-bar';
 import { CoachSidebar } from './CoachSidebar';
 import { CoachTabBar } from './CoachTabBar';
@@ -42,6 +43,9 @@ import { ProfilTabScreen } from '../../../screens/ProfilTabScreen';
 import { useAuth } from '../../../context/AuthContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useTabNavigation } from '../../../context/TabNavigationContext';
+import { MatchEventHubScreen } from '../../../screens/MatchEventHubScreen';
+import type { MatchHubChapterId } from '../../../content/matchHubChapters';
+import { resolveCoachMatchHubOverlay } from '../navigation/coachMatchDeepLink';
 import { usersService } from '../../../services/users.service';
 import {
   resolveClubCoversCoachFromMembers,
@@ -77,7 +81,13 @@ type Props = {
 export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const profile = useSessionProfile();
   const { signOut } = useAuth();
-  const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
+  const {
+    pendingDashboardView,
+    clearPendingDashboard,
+    pendingMatchsLink,
+    clearPendingMatchs,
+    openCarpool,
+  } = useTabNavigation();
   const { width } = useWindowDimensions();
   const wide = width >= WIDE_BREAKPOINT;
   const styles = useMemo(() => createStyles(), []);
@@ -121,10 +131,34 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const [navId, setNavId] = useState<CoachNavItemId>(() =>
     canonicalizeCoachNav(coachNavFromTab(activeTab)),
   );
+  const [matchHubOverlay, setMatchHubOverlay] = useState<{
+    eventId: string;
+    hubChapter: MatchHubChapterId;
+  } | null>(null);
+
+  const syncMatchCenterNav = useCallback(() => {
+    setNavId((prev) =>
+      canonicalizeCoachNav(prev) === 'match_center' ? prev : 'match_center',
+    );
+    const nextTab = tabFromCoachNav('match_center');
+    if (nextTab !== activeTab) {
+      onTabChange(nextTab);
+    }
+  }, [activeTab, onTabChange]);
 
   useEffect(() => {
     setNavId((prev) => resolveCoachNavOnTabSync(prev, activeTab));
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!pendingMatchsLink) return;
+    const hubOverlay = resolveCoachMatchHubOverlay(pendingMatchsLink);
+    if (hubOverlay) {
+      setMatchHubOverlay(hubOverlay);
+      syncMatchCenterNav();
+    }
+    clearPendingMatchs();
+  }, [pendingMatchsLink, clearPendingMatchs, syncMatchCenterNav]);
 
   useEffect(() => {
     if (pendingDashboardView === 'smart_tactics') {
@@ -193,7 +227,25 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
       <View style={[styles.root, !wide && styles.rootColumn]}>
         {wide ? <CoachSidebar {...sidebarProps} /> : null}
 
-        <View style={styles.pane}>{content}</View>
+        <View style={styles.pane}>
+          {content}
+          <PushScreenTransition active={Boolean(matchHubOverlay)}>
+            {matchHubOverlay ? (
+              <MatchEventHubScreen
+                eventId={matchHubOverlay.eventId}
+                initialChapter={matchHubOverlay.hubChapter}
+                onBack={() => setMatchHubOverlay(null)}
+                onOpenCarpool={() => {
+                  setMatchHubOverlay(null);
+                  openCarpool({
+                    chapter: 'reserver',
+                    eventId: matchHubOverlay.eventId,
+                  });
+                }}
+              />
+            ) : null}
+          </PushScreenTransition>
+        </View>
 
         {!wide ? (
           <CoachTabBar items={primaryItems} activeId={navId} onSelect={onSelect} />
@@ -245,7 +297,14 @@ function renderCoachPane(
       return profile ? <CoachGestionPane profile={profile} /> : null;
     case 'match_center':
     case 'matchs':
-      return <CoachPortalScreen embedded hideRail chapter="matchs" />;
+      return (
+        <CoachPortalScreen
+          key="coach-portal-matchs"
+          embedded
+          hideRail
+          chapter="matchs"
+        />
+      );
     case 'messages':
       return <MessagesScreen />;
     case 'carpool':

@@ -15,13 +15,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { radius, spacing } from '../../theme/designTokens';
 import { MatchTalkPanel } from './MatchTalkPanel';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
-
-const FLOW: { hub: 'apercu' | 'composition' | 'live' | 'stats'; labelKey: string }[] = [
-  { hub: 'apercu', labelKey: 'coach.portal.matchs.stepConvoc' },
-  { hub: 'composition', labelKey: 'coach.portal.matchs.stepLineup' },
-  { hub: 'live', labelKey: 'coach.portal.matchs.stepLive' },
-  { hub: 'stats', labelKey: 'coach.portal.matchs.stepReport' },
-];
+import { COACH_MATCH_FLOW_STEPS } from '../../features/coach/navigation/coachMatchDeepLink';
 
 export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({
   events,
@@ -82,7 +76,7 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({
             {t('coach.portal.matchs.guided')}
           </ProDayText>
           <View style={styles.flowRow}>
-            {FLOW.map((step) => (
+            {COACH_MATCH_FLOW_STEPS.map((step) => (
               <PressableSpring
                 key={step.hub}
                 onPress={() =>

@@ -60,7 +60,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
   };
   const [events, setEvents] = useState<TeamEvent[]>([]);
   const [members, setMembers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!embedded);
   const [refreshing, setRefreshing] = useState(false);
   const [showGestion, setShowGestion] = useState(false);
   const [showSmartTactics, setShowSmartTactics] = useState(false);
@@ -112,7 +112,10 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
   );
 
   const load = useCallback(async () => {
-    if (!profile) return;
+    if (!profile) {
+      setLoading(false);
+      return;
+    }
     try {
       const [ev, mem] = await Promise.all([
         teamEventsService.listForUser(profile.uid, clubId),
@@ -198,7 +201,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
   const body = (
     <View style={styles.stack}>
       {!hideRail ? <CoachChapterRail active={chapter} onChange={setChapter} /> : null}
-      {loading ? (
+      {loading && !embedded ? (
         <View style={styles.loader}>
           <ActivityIndicator color={colors.accent} />
         </View>
