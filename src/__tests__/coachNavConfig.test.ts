@@ -1,4 +1,5 @@
 import {
+  COACH_HOME_SHELL_NAV_IDS,
   COACH_HOME_TOOLS,
   COACH_HOME_DEST_IDS,
   COACH_MENU_DEST_IDS,
@@ -11,6 +12,7 @@ import {
   coachNavFromTab,
   findCoachNavItem,
   primaryTabForCoachNav,
+  resolveCoachNavOnTabSync,
   tabFromCoachNav,
 } from '../features/coach/navigation/coachNavConfig';
 import {
@@ -56,10 +58,30 @@ describe('coachNavConfig', () => {
   it('mappe tabs ↔ nav', () => {
     expect(tabFromCoachNav('match_center')).toBe('matchs');
     expect(tabFromCoachNav('messages')).toBe('messages');
+    expect(tabFromCoachNav('plus')).toBe('home');
+    expect(tabFromCoachNav('coach_ia')).toBe('home');
+    expect(tabFromCoachNav('equipe')).toBe('home');
     expect(coachNavFromTab('feed')).toBe('smart_tactics');
     expect(coachNavFromTab('home')).toBe('today');
     expect(findCoachNavItem('smart_tactics')?.requiresSmartTactics).toBe(true);
     expect(findCoachNavItem('mes_videos')?.label).toBe('Mes vidéos');
+  });
+
+  it('conserve plus et les onglets home-shell lors de la sync tab', () => {
+    expect(COACH_HOME_SHELL_NAV_IDS).toEqual(['today', 'equipe', 'coach_ia', 'plus']);
+
+    for (const navId of COACH_HOME_SHELL_NAV_IDS) {
+      expect(resolveCoachNavOnTabSync(navId, 'home')).toBe(navId);
+    }
+
+    expect(resolveCoachNavOnTabSync('plus', 'home')).toBe('plus');
+    expect(resolveCoachNavOnTabSync('gestion', 'home')).toBe('gestion');
+    expect(resolveCoachNavOnTabSync('match_center', 'home')).toBe('today');
+    expect(resolveCoachNavOnTabSync('match_center', 'matchs')).toBe('match_center');
+    expect(resolveCoachNavOnTabSync('profil', 'home')).toBe('today');
+    expect(resolveCoachNavOnTabSync('plus', 'profil')).toBe('profil');
+    expect(resolveCoachNavOnTabSync('carpool', 'covoiturage')).toBe('carpool');
+    expect(resolveCoachNavOnTabSync('carpool', 'home')).toBe('today');
   });
 
   it('range les outils secondaires dans Menu (hors barre primaire directe)', () => {

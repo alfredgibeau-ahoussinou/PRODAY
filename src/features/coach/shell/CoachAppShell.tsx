@@ -14,6 +14,7 @@ import { openCoachHelpChatbot } from './coachHelpOpen';
 import {
   canonicalizeCoachNav,
   coachNavFromTab,
+  resolveCoachNavOnTabSync,
   tabFromCoachNav,
   type CoachNavItemId,
 } from '../navigation/coachNavConfig';
@@ -122,10 +123,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
   );
 
   useEffect(() => {
-    setNavId((prev) => {
-      if (tabFromCoachNav(prev) === activeTab) return canonicalizeCoachNav(prev);
-      return canonicalizeCoachNav(coachNavFromTab(activeTab));
-    });
+    setNavId((prev) => resolveCoachNavOnTabSync(prev, activeTab));
   }, [activeTab]);
 
   useEffect(() => {
@@ -146,7 +144,10 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const onSelect = (id: CoachNavItemId) => {
     const next = canonicalizeCoachNav(id);
     setNavId(next);
-    onTabChange(tabFromCoachNav(next));
+    const nextTab = tabFromCoachNav(next);
+    if (nextTab !== activeTab) {
+      onTabChange(nextTab);
+    }
   };
 
   const onOpenHelp = () => {
@@ -265,6 +266,12 @@ function createStyles() {
       minHeight: 0,
     },
     rootColumn: { flexDirection: 'column' },
-    pane: { flex: 1, minWidth: 0, minHeight: 0, backgroundColor: COACH_SITE.bg },
+    pane: {
+      flex: 1,
+      minWidth: 0,
+      minHeight: 0,
+      backgroundColor: COACH_SITE.bg,
+      overflow: 'hidden',
+    },
   });
 }

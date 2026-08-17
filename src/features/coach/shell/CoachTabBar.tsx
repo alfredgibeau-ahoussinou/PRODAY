@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CoachText } from '../../../components/coach/coachPortalUi';
+import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { COACH_SITE } from '../../../content/coachPageIdentity';
 import {
@@ -17,6 +18,8 @@ type Props = {
   onSelect: (id: CoachNavItemId) => void;
 };
 
+const TAB_HIT_SLOP = { top: 10, bottom: 6, left: 6, right: 6 } as const;
+
 /** Barre fixe 5 onglets — compacte, sans scroll ni bounce. */
 export function CoachTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
@@ -30,15 +33,18 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
           const on = item.id === highlight;
           const label = item.shortLabel ?? item.label;
           return (
-            <Pressable
+            <PressableSpring
               key={item.id}
               onPress={() => onSelect(item.id)}
-              style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
+              style={styles.tab}
+              scaleTo={0.92}
+              haptic
+              hitSlop={TAB_HIT_SLOP}
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
               accessibilityLabel={item.label}
             >
-              {on ? <View style={styles.indicator} /> : null}
+              {on ? <View style={styles.indicator} pointerEvents="none" /> : null}
               <View style={styles.iconWrap}>
                 <Icon
                   name={item.icon}
@@ -57,7 +63,7 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
                   {label}
                 </CoachText>
               )}
-            </Pressable>
+            </PressableSpring>
           );
         })}
       </View>
@@ -73,6 +79,8 @@ function createStyles() {
       borderTopColor: 'rgba(255,255,255,0.08)',
       paddingTop: 4,
       flexShrink: 0,
+      zIndex: 20,
+      elevation: Platform.OS === 'android' ? 12 : 0,
     },
     row: {
       flexDirection: 'row',
@@ -85,12 +93,11 @@ function createStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 2,
-      minHeight: 42,
+      minHeight: 48,
       paddingHorizontal: 2,
       paddingTop: 6,
       position: 'relative',
     },
-    tabPressed: { opacity: 0.65 },
     indicator: {
       position: 'absolute',
       top: 0,

@@ -71,6 +71,14 @@ export const COACH_PRIMARY_NAV_IDS: CoachNavItemId[] = [
   'profil',
 ];
 
+/** Destinations de la barre coach mappées sur l’onglet main `home`. */
+export const COACH_HOME_SHELL_NAV_IDS: CoachNavItemId[] = [
+  'today',
+  'equipe',
+  'coach_ia',
+  'plus',
+];
+
 /** Outils secondaires — hors barre, accessibles depuis Accueil, Équipe, IA ou Profil. */
 export const COACH_SECONDARY_NAV_IDS: CoachNavItemId[] = [
   'match_center',
@@ -111,6 +119,7 @@ const accueilItem: CoachNavItem = {
   hint: 'Briefing · calendrier du jour',
   icon: 'home',
   chapter: 'cockpit',
+  tab: 'home',
 };
 
 const equipeItem: CoachNavItem = {
@@ -120,6 +129,7 @@ const equipeItem: CoachNavItem = {
   hint: 'Terrain · effectif · notes joueurs',
   icon: 'football',
   chapter: 'effectif',
+  tab: 'home',
 };
 
 const matchCenterItem: CoachNavItem = {
@@ -157,6 +167,7 @@ const coachIaItem: CoachNavItem = {
   hint: 'Analyse · stratégie · actions',
   icon: 'star-four-points',
   aiBadge: true,
+  tab: 'home',
 };
 
 const messagesItem: CoachNavItem = {
@@ -183,6 +194,7 @@ const plusItem: CoachNavItem = {
   shortLabel: 'Menu',
   hint: 'Matchs, séances, tactique, vidéos…',
   icon: 'hamburger',
+  tab: 'home',
 };
 
 const planningItem: CoachNavItem = {
@@ -360,4 +372,23 @@ export function coachNavFromTab(tab: MainTabId): CoachNavItemId {
   if (tab === 'profil') return 'profil';
   if (tab === 'feed') return 'smart_tactics';
   return 'today';
+}
+
+/**
+ * Synchronise navId interne quand le tab main change.
+ * Sur `home`, conserve today / equipe / coach_ia / plus (et outils secondaires home).
+ */
+export function resolveCoachNavOnTabSync(
+  prevNavId: CoachNavItemId,
+  activeTab: MainTabId,
+): CoachNavItemId {
+  const canonical = canonicalizeCoachNav(prevNavId);
+  const mappedTab = tabFromCoachNav(canonical);
+  if (mappedTab !== activeTab) {
+    return canonicalizeCoachNav(coachNavFromTab(activeTab));
+  }
+  if (activeTab === 'home') {
+    return canonical;
+  }
+  return canonical;
 }
