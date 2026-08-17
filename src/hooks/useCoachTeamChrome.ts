@@ -7,6 +7,7 @@ import { clubsService } from '../services/clubs.service';
 import { teamsService } from '../services/teams.service';
 import { teamEventsService } from '../services/teamEvents.service';
 import { listCoachCalendarUpcoming } from '../utils/coachCalendarHome';
+import { pickCoachTeam } from '../utils/coachTeamTheme';
 
 /** Nom d’équipe, pastilles notif et navigation header — partagé par toutes les pages coach. */
 export function useCoachTeamChrome() {
@@ -14,6 +15,7 @@ export function useCoachTeamChrome() {
   const { t } = useTranslation();
   const shellNav = useCoachShellNav();
   const fallback = t('coach.calendar.teamFallback');
+  const [teamId, setTeamId] = useState<string | undefined>();
   const [teamName, setTeamName] = useState(fallback);
   const [pendingNotifs, setPendingNotifs] = useState(0);
 
@@ -25,6 +27,7 @@ export function useCoachTeamChrome() {
     const clubId = profile?.profile.club_id;
     const uid = profile?.uid;
     if (!clubId || !uid) {
+      setTeamId(undefined);
       setTeamName(fallback);
       setPendingNotifs(0);
       return;
@@ -37,10 +40,8 @@ export function useCoachTeamChrome() {
     ])
       .then(([club, teams, events]) => {
         if (cancelled) return;
-        const mine =
-          teams.find((team) => team.coach_uids.includes(uid)) ??
-          teams.find((team) => team.is_default) ??
-          teams[0];
+        const mine = pickCoachTeam(teams, uid);
+        setTeamId(mine?.id);
         setTeamName(mine?.name || club?.name || fallback);
         const upcoming = listCoachCalendarUpcoming(events);
         setPendingNotifs(
@@ -49,6 +50,7 @@ export function useCoachTeamChrome() {
       })
       .catch(() => {
         if (!cancelled) {
+          setTeamId(undefined);
           setTeamName(fallback);
           setPendingNotifs(0);
         }
@@ -63,6 +65,7 @@ export function useCoachTeamChrome() {
   };
 
   return {
+    teamId,
     teamName,
     pendingNotifs,
     profile,

@@ -4,13 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CoachText } from '../../../components/coach/coachPortalUi';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
-import { COACH_SITE } from '../../../content/coachPageIdentity';
 import {
   primaryTabForCoachNav,
   type CoachNavItemId,
 } from '../navigation/coachNavConfig';
 import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { spacing } from '../../../theme/designTokens';
+import { useCoachTheme } from './CoachThemeContext';
+import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
 
 type Props = {
   items: CoachNavResolvedItem[];
@@ -23,7 +24,8 @@ const TAB_HIT_SLOP = { top: 10, bottom: 6, left: 6, right: 6 } as const;
 /** Barre fixe 5 onglets — compacte, sans scroll ni bounce. */
 export function CoachTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(), []);
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
   const highlight = primaryTabForCoachNav(activeId);
 
   return (
@@ -49,7 +51,7 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
                 <Icon
                   name={item.icon}
                   size={on ? 22 : 20}
-                  color={on ? COACH_SITE.accent : COACH_SITE.muted}
+                  color={on ? tokens.accent : tokens.muted}
                   variant="outline"
                 />
                 {item.aiBadge ? <View style={styles.aiDot} /> : null}
@@ -71,12 +73,12 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
   );
 }
 
-function createStyles() {
+function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     root: {
-      backgroundColor: '#000000',
+      backgroundColor: tokens.bg,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: 'rgba(255,255,255,0.08)',
+      borderTopColor: tokens.border,
       paddingTop: 4,
       flexShrink: 0,
       zIndex: 20,
@@ -104,7 +106,7 @@ function createStyles() {
       width: 28,
       height: 2,
       borderRadius: 1,
-      backgroundColor: COACH_SITE.accent,
+      backgroundColor: tokens.accent,
     },
     iconWrap: { position: 'relative' },
     aiDot: {
@@ -114,19 +116,19 @@ function createStyles() {
       width: 5,
       height: 5,
       borderRadius: 3,
-      backgroundColor: COACH_SITE.accent,
+      backgroundColor: tokens.accent,
     },
     labelOn: {
       fontSize: 10,
       fontWeight: '600',
-      color: COACH_SITE.accent,
+      color: tokens.accent,
       letterSpacing: 0.4,
       maxWidth: 64,
     },
     labelOff: {
       fontSize: 9,
       fontWeight: '500',
-      color: COACH_SITE.muted,
+      color: tokens.muted,
       opacity: 0.7,
       maxWidth: 56,
     },

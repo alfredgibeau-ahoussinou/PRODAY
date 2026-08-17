@@ -28,7 +28,6 @@ import {
 import { CoachPageFrame } from '../../../components/coach/CoachPageFrame';
 import {
   COACH_LOCKED_IDENTITY,
-  COACH_SITE,
   getCoachPageIdentity,
 } from '../../../content/coachPageIdentity';
 import { CoachPortalScreen } from '../../../screens/coach/CoachPortalScreen';
@@ -59,6 +58,7 @@ import { usePlatformFeatureFlags } from '../../../hooks/usePlatformFeatureFlags'
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { User } from '../../../models/User';
 import { useCoachShellNav } from './CoachShellNavContext';
+import { CoachThemeProvider, useCoachTheme } from './CoachThemeContext';
 
 const SIDEBAR_WIDTH = 248;
 const WIDE_BREAKPOINT = 900;
@@ -82,6 +82,15 @@ type Props = {
  * Shell Pôle Coach — 5 onglets (Accueil, Équipe, IA, Menu, Profil).
  */
 export function CoachAppShell({ activeTab, onTabChange }: Props) {
+  return (
+    <CoachThemeProvider>
+      <CoachAppShellInner activeTab={activeTab} onTabChange={onTabChange} />
+    </CoachThemeProvider>
+  );
+}
+
+function CoachAppShellInner({ activeTab, onTabChange }: Props) {
+  const { tokens } = useCoachTheme();
   const profile = useSessionProfile();
   const { signOut } = useAuth();
   const {
@@ -93,7 +102,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
   } = useTabNavigation();
   const { width } = useWindowDimensions();
   const wide = width >= WIDE_BREAKPOINT;
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   const [members, setMembers] = useState<User[]>([]);
   const clubId = profile?.profile.club_id;
@@ -241,7 +250,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
           {content}
           <PushScreenTransition
             active={Boolean(matchHubOverlay)}
-            backgroundColor={COACH_SITE.bg}
+            backgroundColor={tokens.bg}
           >
             {matchHubOverlay ? (
               <CoachMatchEventHub
@@ -329,12 +338,12 @@ function renderCoachPane(
   }
 }
 
-function createStyles() {
+function createStyles(tokens: { bg: string }) {
   return StyleSheet.create({
     root: {
       flex: 1,
       flexDirection: 'row',
-      backgroundColor: COACH_SITE.bg,
+      backgroundColor: tokens.bg,
       minHeight: 0,
     },
     rootColumn: { flexDirection: 'column' },
@@ -342,7 +351,7 @@ function createStyles() {
       flex: 1,
       minWidth: 0,
       minHeight: 0,
-      backgroundColor: COACH_SITE.bg,
+      backgroundColor: tokens.bg,
       overflow: 'hidden',
     },
   });

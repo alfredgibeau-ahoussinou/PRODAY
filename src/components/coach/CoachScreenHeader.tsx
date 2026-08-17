@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Icon } from '../ui/Icon';
 import type { IconName } from '../ui/iconNames';
 import { CoachText } from './coachPortalUi';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { useCoachTeamChrome } from '../../hooks/useCoachTeamChrome';
 import { useTranslation } from '../../context/LocaleContext';
 import { coachCalendarInitials } from '../../utils/coachCalendarHome';
 import { spacing } from '../../theme/designTokens';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 export type CoachHeaderAction = {
   icon: IconName;
@@ -35,6 +36,9 @@ export function CoachCircleIconButton({
   accessibilityLabel: string;
   size?: number;
 }) {
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
+
   return (
     <Pressable
       onPress={onPress}
@@ -45,7 +49,7 @@ export function CoachCircleIconButton({
       ]}
       accessibilityLabel={accessibilityLabel}
     >
-      <Icon name={icon} size={size > 36 ? 22 : 18} color={COACH_SITE.foreground} />
+      <Icon name={icon} size={size > 36 ? 22 : 18} color={tokens.foreground} />
     </Pressable>
   );
 }
@@ -59,6 +63,8 @@ export function CoachScreenHeader({
 }: Props) {
   const { t } = useTranslation();
   const { teamName, profile, openNav, displayName } = useCoachTeamChrome();
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   return (
     <View style={styles.headerPad}>
@@ -80,7 +86,7 @@ export function CoachScreenHeader({
               style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.65 }]}
               accessibilityLabel={t('messages.title')}
             >
-              <Icon name="chat" size={22} color={COACH_SITE.foreground} />
+              <Icon name="chat" size={22} color={tokens.foreground} />
               {unreadMessages > 0 ? (
                 <View style={styles.badge}>
                   <CoachText variant="caption" style={styles.badgeText}>
@@ -134,6 +140,9 @@ export function CoachPane({
   actions?: CoachHeaderAction[];
   children: React.ReactNode;
 }) {
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
+
   return (
     <View style={styles.pane}>
       <CoachScreenHeader title={title} actions={actions} />
@@ -142,81 +151,85 @@ export function CoachPane({
   );
 }
 
-const styles = StyleSheet.create({
-  pane: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
-  paneBody: { flex: 1, minHeight: 0 },
-  headerPad: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    gap: spacing.md,
-  },
-  teamRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  teamLeft: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  teamName: {
-    flex: 1,
-    color: COACH_SITE.foreground,
-    fontWeight: '700',
-    fontSize: 17,
-  },
-  teamActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.elevated,
-  },
-  avatarText: {
-    color: COACH_SITE.foreground,
-    fontWeight: '800',
-    fontSize: 12,
-    letterSpacing: 0.3,
-  },
-  badge: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    minWidth: 16,
-    height: 16,
-    paddingHorizontal: 4,
-    borderRadius: 8,
-    backgroundColor: '#FF3B30',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '800', lineHeight: 12 },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-    paddingBottom: spacing.xs,
-  },
-  pageTitle: {
-    flex: 1,
-    color: COACH_SITE.foreground,
-    fontWeight: '800',
-    fontSize: 32,
-    letterSpacing: -0.6,
-    lineHeight: 36,
-  },
-  titleActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  circleBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.surface,
-  },
-});
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    pane: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
+    paneBody: { flex: 1, minHeight: 0 },
+    headerPad: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      gap: spacing.md,
+    },
+    teamRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    teamLeft: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    teamName: {
+      flex: 1,
+      color: tokens.foreground,
+      fontWeight: '700',
+      fontSize: 17,
+    },
+    teamActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+    avatar: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
+      borderWidth: 2,
+      borderColor: tokens.accent,
+    },
+    avatarText: {
+      color: tokens.foreground,
+      fontWeight: '800',
+      fontSize: 12,
+      letterSpacing: 0.3,
+    },
+    badge: {
+      position: 'absolute',
+      top: 2,
+      right: 2,
+      minWidth: 16,
+      height: 16,
+      paddingHorizontal: 4,
+      borderRadius: 8,
+      backgroundColor: '#FF3B30',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    badgeText: { color: '#fff', fontSize: 10, fontWeight: '800', lineHeight: 12 },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      paddingBottom: spacing.xs,
+    },
+    pageTitle: {
+      flex: 1,
+      color: tokens.foreground,
+      fontWeight: '800',
+      fontSize: 32,
+      letterSpacing: -0.6,
+      lineHeight: 36,
+    },
+    titleActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    circleBtn: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.surface,
+    },
+  });
+}

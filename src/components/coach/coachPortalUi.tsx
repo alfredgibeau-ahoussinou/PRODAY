@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
+import { Icon } from '../ui/Icon';
+import type { IconName } from '../ui/iconNames';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import {
@@ -15,6 +17,8 @@ import {
   type CoachPortalChapterId,
 } from '../../content/coachPortalChapters';
 import { COACH_SITE } from '../../content/coachPageIdentity';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { MATCH_CHAPTER_PAD } from '../matchs/chapters/matchChapterLayout';
 import { radius, spacing } from '../../theme/designTokens';
 
@@ -76,6 +80,57 @@ export function CoachChapterScroll({ children }: { children: React.ReactNode }) 
   );
 }
 
+/** Texte coach — couleurs thème Pôle Coach (fallback COACH_SITE hors shell). */
+export function CoachText({
+  muted,
+  accent,
+  inverse,
+  style,
+  ...rest
+}: React.ComponentProps<typeof ProDayText>) {
+  const { tokens } = useCoachTheme();
+  const color = inverse
+    ? '#FFFFFF'
+    : accent
+      ? tokens.accent
+      : muted
+        ? tokens.muted
+        : tokens.foreground;
+  return <ProDayText {...rest} style={[{ color }, style]} />;
+}
+
+function useCoachCardStyles() {
+  const { tokens } = useCoachTheme();
+  return useMemo(
+    () =>
+      StyleSheet.create({
+        card: {
+          borderRadius: 18,
+          padding: spacing.md,
+          gap: spacing.xs,
+          backgroundColor: tokens.surface,
+          borderLeftWidth: 3,
+          borderLeftColor: tokens.accent,
+        },
+        kicker: {
+          color: tokens.accent,
+          fontSize: 13,
+          fontWeight: '600',
+        },
+        title: {
+          color: tokens.foreground,
+          fontWeight: '700',
+          letterSpacing: -0.3,
+        },
+        body: {
+          color: tokens.muted,
+          lineHeight: 20,
+        },
+      }),
+    [tokens],
+  );
+}
+
 export function CoachSectionCard({
   kicker,
   title,
@@ -89,20 +144,22 @@ export function CoachSectionCard({
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
+  const coachCardStyles = useCoachCardStyles();
+
   return (
     <View style={[coachCardStyles.card, style]}>
       {kicker ? (
-        <ProDayText variant="caption" style={coachCardStyles.kicker}>
+        <CoachText variant="caption" muted style={coachCardStyles.kicker}>
           {kicker}
-        </ProDayText>
+        </CoachText>
       ) : null}
-      <ProDayText variant="section" style={coachCardStyles.title}>
+      <CoachText variant="section" style={coachCardStyles.title}>
         {title}
-      </ProDayText>
+      </CoachText>
       {body ? (
-        <ProDayText variant="caption" style={coachCardStyles.body}>
+        <CoachText variant="caption" muted style={coachCardStyles.body}>
           {body}
-        </ProDayText>
+        </CoachText>
       ) : null}
       {children}
     </View>
@@ -114,6 +171,40 @@ export function CoachKpiRow({
 }: {
   items: { label: string; value: string; tone?: string }[];
 }) {
+  const { tokens } = useCoachTheme();
+  const coachKpiStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        row: {
+          flexDirection: 'row',
+          borderRadius: 18,
+          backgroundColor: tokens.surface,
+          overflow: 'hidden',
+        },
+        cell: {
+          flex: 1,
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.xs,
+          alignItems: 'center',
+          gap: 4,
+        },
+        cellBorder: {
+          borderRightWidth: StyleSheet.hairlineWidth,
+          borderRightColor: tokens.border,
+        },
+        value: {
+          color: tokens.foreground,
+          fontWeight: '800',
+        },
+        label: {
+          color: tokens.muted,
+          fontSize: 11,
+          fontWeight: '600',
+        },
+      }),
+    [tokens],
+  );
+
   return (
     <View style={coachKpiStyles.row}>
       {items.map((item, index) => (
@@ -121,15 +212,15 @@ export function CoachKpiRow({
           key={item.label}
           style={[coachKpiStyles.cell, index < items.length - 1 && coachKpiStyles.cellBorder]}
         >
-          <ProDayText
+          <CoachText
             variant="title"
             style={[coachKpiStyles.value, item.tone ? { color: item.tone } : null]}
           >
             {item.value}
-          </ProDayText>
-          <ProDayText variant="caption" style={coachKpiStyles.label} numberOfLines={1}>
+          </CoachText>
+          <CoachText variant="caption" muted style={coachKpiStyles.label} numberOfLines={1}>
             {item.label}
-          </ProDayText>
+          </CoachText>
         </View>
       ))}
     </View>
@@ -155,9 +246,9 @@ export function CoachActionRow({
         haptic
         style={coachActionStyles.primary}
       >
-        <ProDayText variant="caption" style={coachActionStyles.primaryText}>
+        <CoachText variant="section" style={coachActionStyles.primaryText}>
           {primary}
-        </ProDayText>
+        </CoachText>
       </PressableSpring>
       {secondary && onSecondary ? (
         <PressableSpring
@@ -165,9 +256,9 @@ export function CoachActionRow({
           scaleTo={0.97}
           style={coachActionStyles.secondary}
         >
-          <ProDayText variant="caption" style={coachActionStyles.secondaryText}>
+          <CoachText variant="caption" style={coachActionStyles.secondaryText}>
             {secondary}
-          </ProDayText>
+          </CoachText>
         </PressableSpring>
       ) : null}
     </View>
@@ -181,6 +272,7 @@ export function CoachLightPanel({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
+  const coachCardStyles = useCoachCardStyles();
   return <View style={[coachCardStyles.card, style]}>{children}</View>;
 }
 
@@ -196,9 +288,169 @@ export function CoachEmptyState({
   onPress?: () => void;
 }) {
   return (
-    <CoachSectionCard title={title} body={body}>
-      {cta && onPress ? <CoachActionRow primary={cta} onPrimary={onPress} /> : null}
+    <View style={coachEmptyStyles.block}>
+      <CoachText variant="section" style={coachEmptyStyles.title}>
+        {title}
+      </CoachText>
+      <CoachText variant="body" muted style={coachEmptyStyles.body}>
+        {body}
+      </CoachText>
+      {cta && onPress ? (
+        <PressableSpring onPress={onPress} scaleTo={0.97} haptic style={coachEmptyStyles.cta}>
+          <CoachText variant="section" style={coachEmptyStyles.ctaText}>
+            {cta}
+          </CoachText>
+        </PressableSpring>
+      ) : null}
+    </View>
+  );
+}
+
+export function CoachThemeAppearanceSection() {
+  const { t } = useTranslation();
+  const { tokens, variant, setVariant, teamName } = useCoachTheme();
+  const styles = useMemo(() => createThemeAppearanceStyles(tokens), [tokens]);
+  const resolvedTeam = teamName.trim() || tokens.teamLabel.trim() || t('coach.calendar.teamFallback');
+
+  return (
+    <CoachSectionCard
+      kicker={t('coach.portal.theme.section')}
+      title={t('coach.portal.theme.section')}
+      body={t('coach.portal.theme.variantHint')}
+      style={styles.cardNoAccentBorder}
+    >
+      <View style={styles.segmentRow}>
+        {(['solid', 'clear'] as const).map((option) => {
+          const on = variant === option;
+          return (
+            <PressableSpring
+              key={option}
+              onPress={() => setVariant(option)}
+              scaleTo={0.97}
+              haptic
+              style={[styles.segment, on && styles.segmentOn]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+            >
+              <CoachText variant="caption" style={on ? styles.segmentTextOn : styles.segmentTextOff}>
+                {t(option === 'solid' ? 'coach.portal.theme.solid' : 'coach.portal.theme.clear')}
+              </CoachText>
+            </PressableSpring>
+          );
+        })}
+      </View>
+      <View style={styles.teamColorRow}>
+        <CoachText variant="caption" muted numberOfLines={1} style={styles.teamColorLabel}>
+          {t('coach.portal.theme.teamColor')} · {resolvedTeam}
+        </CoachText>
+        <View style={[styles.colorSwatch, { backgroundColor: tokens.accent }]} />
+      </View>
     </CoachSectionCard>
+  );
+}
+
+function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    cardNoAccentBorder: { borderLeftWidth: 0 },
+    segmentRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    segment: {
+      flex: 1,
+      minHeight: 40,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+    },
+    segmentOn: {
+      borderColor: tokens.accent,
+      backgroundColor: tokens.soft,
+    },
+    segmentTextOn: { color: tokens.accent, fontWeight: '800' },
+    segmentTextOff: { color: tokens.muted, fontWeight: '600' },
+    teamColorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+      paddingTop: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+    },
+    teamColorLabel: { flex: 1, minWidth: 0 },
+    colorSwatch: {
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+    },
+  });
+}
+
+export function CoachSettingsGroup({ children }: { children: React.ReactNode }) {
+  const { tokens } = useCoachTheme();
+  const coachSettingsStyles = useMemo(
+    () => createCoachSettingsStyles(tokens),
+    [tokens],
+  );
+  return <View style={coachSettingsStyles.group}>{children}</View>;
+}
+
+export function CoachSettingsRow({
+  icon,
+  label,
+  onPress,
+  locked,
+  badge,
+  destructive,
+  last,
+}: {
+  icon: IconName;
+  label: string;
+  onPress: () => void;
+  locked?: boolean;
+  badge?: string;
+  destructive?: boolean;
+  last?: boolean;
+}) {
+  const { tokens } = useCoachTheme();
+  const coachSettingsStyles = useMemo(
+    () => createCoachSettingsStyles(tokens),
+    [tokens],
+  );
+  const iconColor = destructive ? '#FF3B30' : tokens.foreground;
+  return (
+    <PressableSpring
+      onPress={onPress}
+      scaleTo={0.98}
+      haptic
+      style={[coachSettingsStyles.row, !last && coachSettingsStyles.rowBorder]}
+    >
+      <View style={coachSettingsStyles.iconCircle}>
+        <Icon name={icon} size={18} color={iconColor} />
+      </View>
+      <CoachText
+        variant="section"
+        numberOfLines={1}
+        style={[coachSettingsStyles.label, destructive && coachSettingsStyles.labelDestructive]}
+      >
+        {label}
+      </CoachText>
+      {badge ? (
+        <View style={coachSettingsStyles.badge}>
+          <CoachText variant="caption" accent style={coachSettingsStyles.badgeText}>
+            {badge}
+          </CoachText>
+        </View>
+      ) : null}
+      {locked ? <Icon name="lock" size={14} color={tokens.muted} /> : null}
+      <Icon name="chevron-forward" size={16} color={tokens.muted} />
+    </PressableSpring>
   );
 }
 
@@ -212,88 +464,82 @@ const stylesPad = StyleSheet.create({
   },
 });
 
-const coachCardStyles = StyleSheet.create({
-  card: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    borderLeftWidth: 2,
-    borderLeftColor: COACH_SITE.accent,
-    borderRadius: 2,
-    padding: spacing.md,
-    gap: spacing.xs,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  kicker: {
-    color: COACH_SITE.accent,
-    textTransform: 'uppercase',
-    letterSpacing: 2.4,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  title: {
-    color: COACH_SITE.foreground,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-  },
-  body: {
-    color: COACH_SITE.muted,
-    lineHeight: 18,
-  },
-});
-
-const coachKpiStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  cell: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
-    alignItems: 'center',
-    gap: 4,
-  },
-  cellBorder: {
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: COACH_SITE.border,
-  },
-  value: {
-    color: COACH_SITE.accent,
-    fontWeight: '800',
-  },
-  label: {
-    color: COACH_SITE.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontSize: 9,
-    fontWeight: '700',
-  },
-});
-
 const coachActionStyles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   primary: {
-    borderRadius: 2,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 12,
-    minHeight: 44,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: 14,
+    minHeight: 52,
+    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COACH_SITE.accent,
+    backgroundColor: '#E5E5EA',
   },
-  primaryText: { color: '#fff', fontWeight: '800', letterSpacing: 0.2 },
+  primaryText: { color: '#000', fontWeight: '700' },
   secondary: {
-    borderRadius: 2,
+    borderRadius: radius.pill,
     paddingHorizontal: spacing.lg,
-    paddingVertical: 12,
-    minHeight: 44,
+    paddingVertical: 14,
+    minHeight: 52,
+    alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.25)',
-    backgroundColor: 'transparent',
+    backgroundColor: COACH_SITE.elevated,
   },
   secondaryText: { color: COACH_SITE.foreground, fontWeight: '700' },
+});
+
+function createCoachSettingsStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    group: {
+      backgroundColor: tokens.surface,
+      borderRadius: 18,
+      overflow: 'hidden',
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      minHeight: 56,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 10,
+    },
+    rowBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    iconCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.elevated,
+    },
+    label: { flex: 1, minWidth: 0, fontWeight: '600', fontSize: 17 },
+    labelDestructive: { color: '#FF3B30' },
+    badge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.soft,
+    },
+    badgeText: { fontSize: 10, fontWeight: '800' },
+  });
+}
+
+const coachEmptyStyles = StyleSheet.create({
+  block: { gap: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.xl },
+  title: { color: COACH_SITE.foreground, fontWeight: '800', fontSize: 22 },
+  body: { fontSize: 16 },
+  cta: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
+    borderRadius: radius.pill,
+    backgroundColor: '#E5E5EA',
+    paddingHorizontal: spacing.xl,
+  },
+  ctaText: { color: '#000', fontWeight: '700' },
 });
 
 function createStyles() {

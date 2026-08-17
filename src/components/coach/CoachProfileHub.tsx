@@ -9,6 +9,7 @@ import {
   CoachKpiRow,
   CoachSectionCard,
   CoachText,
+  CoachThemeAppearanceSection,
 } from './coachPortalUi';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
@@ -231,6 +232,8 @@ export function CoachProfileHub({
           />
         </View>
       ) : null}
+
+      <CoachThemeAppearanceSection />
 
       <CoachKpiRow
         items={[
