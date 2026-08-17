@@ -22,7 +22,10 @@ import {
 } from '../../utils/coachTeamTheme';
 import { CoachAccentColorPickerModal } from './CoachAccentColorPickerModal';
 import { MATCH_CHAPTER_PAD } from '../matchs/chapters/matchChapterLayout';
+import { tabBarScrollInset } from '../../navigation/tabBarLayout';
 import { radius, spacing } from '../../theme/designTokens';
+
+export { coachChipContainerStyle, coachChipTextProps } from '../../utils/coachChipUi';
 
 export function CoachChapterRail({
   active,
@@ -232,11 +235,13 @@ export function CoachKpiRow({
 export function CoachActionRow({
   primary,
   onPrimary,
+  primaryDisabled,
   secondary,
   onSecondary,
 }: {
   primary: string;
   onPrimary: () => void;
+  primaryDisabled?: boolean;
   secondary?: string;
   onSecondary?: () => void;
 }) {
@@ -249,7 +254,11 @@ export function CoachActionRow({
         onPress={onPrimary}
         scaleTo={0.97}
         haptic
-        style={coachActionStyles.primary}
+        disabled={primaryDisabled}
+        style={[
+          coachActionStyles.primary,
+          primaryDisabled && coachActionStyles.primaryDisabled,
+        ]}
       >
         <CoachText variant="section" inverse style={coachActionStyles.primaryText}>
           {primary}
@@ -619,9 +628,9 @@ const stylesPad = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: 'transparent' },
   content: {
     ...MATCH_CHAPTER_PAD,
+    paddingBottom: tabBarScrollInset({ extra: spacing.xl }),
     gap: spacing.md,
     paddingTop: spacing.sm,
-    flexGrow: 0,
   },
 });
 
@@ -637,6 +646,7 @@ function createCoachActionStyles(tokens: CoachThemeTokens) {
       justifyContent: 'center',
       backgroundColor: tokens.accent,
     },
+    primaryDisabled: { opacity: 0.45 },
     primaryText: { fontWeight: '700' },
     secondary: {
       borderRadius: radius.pill,

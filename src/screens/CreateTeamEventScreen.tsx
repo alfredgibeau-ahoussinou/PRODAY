@@ -11,12 +11,17 @@ import {
 } from 'react-native';
 import { PressableSpring } from '../components/motion';
 import type { TeamEventType } from '../models/TeamEvent';
+import type { User } from '../models/User';
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
 import { clubsService } from '../services/clubs.service';
 import { useAuth } from '../context/AuthContext';
-import { parseFrenchDate } from '../utils/parseFrenchDate';
+import {
+  defaultTrainingSchedule,
+  formatFrenchDate,
+  parseFrenchDate,
+} from '../utils/parseFrenchDate';
 import { filterMembersByCategory, memberUidsExcluding } from '../utils/clubMembersFilter';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
@@ -33,6 +38,7 @@ import {
   CoachSettingsGroup,
   CoachText,
 } from '../components/coach/coachPortalUi';
+import { coachChipContainerStyle, coachChipTextProps } from '../utils/coachChipUi';
 import { CoachPane } from '../components/coach/CoachScreenHeader';
 import { FootballCategoryChipPicker } from '../components/football/FootballCategoryChipPicker';
 import type { CoachThemeTokens } from '../utils/coachTeamTheme';
@@ -68,29 +74,63 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   const isCoachShell = useIsCoachShell();
   const isCoach = (variant ?? (isCoachShell ? 'coach' : 'default')) === 'coach';
   const { colors: c, isWoman, rootStyle } = useThemedScreen();
-  const { tokens } = useCoachTheme();
+  const { tokens, coachTeams, teamId, teamName } = useCoachTheme();
+  const trainingDefault = useMemo(() => defaultTrainingSchedule(), []);
   const defaultStyles = useMemo(() => createDefaultStyles(c), [c]);
   const coachStyles = useMemo(() => createCoachStyles(tokens), [tokens]);
 
+  const activeTeamCategory = useMemo(() => {
+    const id = activeTeamId ?? teamId;
+    return coachTeams.find((row) => row.id === id)?.category?.trim();
+  }, [activeTeamId, teamId, coachTeams]);
+
   const [eventType, setEventType] = useState<TeamEventType>(defaultType);
   const [title, setTitle] = useState('');
-  const [dateStr, setDateStr] = useState('');
-  const [timeStr, setTimeStr] = useState('18:00');
+  const [dateStr, setDateStr] = useState(
+    defaultType === 'training' ? trainingDefault.date : '',
+  );
+  const [timeStr, setTimeStr] = useState(
+    defaultType === 'training' ? trainingDefault.time : '18:00',
+  );
   const [city, setCity] = useState(profile?.city ?? '');
   const [locationLabel, setLocationLabel] = useState('');
   const [description, setDescription] = useState('');
   const [inviteClub, setInviteClub] = useState(true);
   const [clubMembers, setClubMembers] = useState<{ uid: string; name: string }[]>([]);
+  const [clubMembersRaw, setClubMembersRaw] = useState<User[]>([]);
   const [selectedUids, setSelectedUids] = useState<string[]>([]);
   const [maxParticipants, setMaxParticipants] = useState('30');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  const formValid = useMemo(
+    () => Boolean(title.trim() && city.trim() && parseFrenchDate(dateStr)),
+    [title, city, dateStr],
+  );
+
+  const convokedCount = useMemo(() => {
+    if (!profile?.profile.club_id) return 0;
+    if (!inviteClub) return selectedUids.length;
+    const pool =
+      selectedCategories.length > 0
+        ? filterMembersByCategory(clubMembersRaw, selectedCategories)
+        : clubMembersRaw;
+    return pool.length;
+  }, [profile?.profile.club_id, inviteClub, selectedUids.length, clubMembersRaw, selectedCategories]);
+
   useEffect(() => {
-    if (eventType === 'detection' && selectedCategories.length === 0) {
+    if (selectedCategories.length > 0 || eventType === 'meeting') return;
+    if (
+      activeTeamCategory &&
+      (eventType === 'training' || eventType === 'friendly' || eventType === 'detection')
+    ) {
+      setSelectedCategories([activeTeamCategory]);
+      return;
+    }
+    if (eventType === 'detection') {
       setSelectedCategories(['Seniors']);
     }
-  }, [eventType, selectedCategories.length]);
+  }, [eventType, activeTeamCategory, selectedCategories.length]);
 
   useEffect(() => {
     const clubId = profile?.profile.club_id;
@@ -99,10 +139,11 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
       return;
     }
     void usersService.listMembersByClubId(clubId).then((list) => {
-      const others = list
-        .filter((m) => m.uid !== profile?.uid)
-        .map((m) => ({ uid: m.uid, name: m.display_name }));
-      setClubMembers(others);
+      const others = list.filter((m) => m.uid !== profile?.uid);
+      setClubMembersRaw(others);
+      setClubMembers(
+        others.map((m) => ({ uid: m.uid, name: m.display_name })),
+      );
       if (!inviteClub) setSelectedUids(others.map((m) => m.uid));
     });
   }, [profile?.profile.club_id, profile?.uid, inviteClub]);
@@ -112,6 +153,12 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
       setTitle('Journée détection ProDay');
     }
   }, [eventType, title]);
+
+  useEffect(() => {
+    if (eventType === 'training' && !title.trim() && teamName) {
+      setTitle(t('coach.event.create.trainingTitleDefault', { team: teamName }));
+    }
+  }, [eventType, teamName, title, t]);
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
@@ -180,13 +227,17 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
         reminder_hours_before: 24,
       });
 
-      Alert.alert(
-        'Événement créé',
-        inviteeUids.length > 0
-          ? `${inviteeUids.length} personne(s) convoquée(s).`
-          : "Partagez l'événement à votre effectif.",
-      );
-      onCreated(id);
+      if (isCoach) {
+        onCreated(id);
+      } else {
+        Alert.alert(
+          'Événement créé',
+          inviteeUids.length > 0
+            ? `${inviteeUids.length} personne(s) convoquée(s).`
+            : "Partagez l'événement à votre effectif.",
+        );
+        onCreated(id);
+      }
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Création impossible.');
     } finally {
@@ -194,7 +245,18 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     }
   };
 
-  const showCategories = eventType === 'detection' || Boolean(profile?.profile.club_id);
+  const showCategories =
+    eventType !== 'meeting' &&
+    (eventType === 'detection' || Boolean(profile?.profile.club_id));
+
+  const convokedCountLabel =
+    convokedCount > 0
+      ? isWoman
+        ? t('coach.event.create.convokedCountWomen', { count: convokedCount })
+        : t('coach.event.create.convokedCountMen', { count: convokedCount })
+      : isWoman
+        ? t('coach.event.create.convokedCountEmptyWomen')
+        : t('coach.event.create.convokedCountEmptyMen');
 
   const categoryHint =
     eventType === 'detection'
@@ -217,6 +279,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
         onToggle={toggleCategory}
         variant={isCoach ? 'coach' : 'default'}
         mode="grouped"
+        prioritizeGroup={eventType === 'detection' ? 'adultes' : undefined}
         colors={c}
       />
     </>
@@ -242,6 +305,15 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           thumbColor={isCoach ? tokens.onAccent : undefined}
         />
       </View>
+      {inviteClub && showCategories ? (
+        isCoach ? (
+          <CoachText variant="caption" muted style={coachStyles.convokedCount}>
+            {convokedCountLabel}
+          </CoachText>
+        ) : (
+          <Text style={defaultStyles.hint}>{convokedCountLabel}</Text>
+        )
+      ) : null}
       {!inviteClub && clubMembers.length > 0 ? (
         <>
           {isCoach ? (
@@ -261,10 +333,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                   key={m.uid}
                   style={[
                     isCoach ? coachStyles.memberChip : defaultStyles.memberChip,
-                    on &&
-                      (isCoach
-                        ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
-                        : defaultStyles.memberChipOn),
+                    isCoach ? coachChipContainerStyle(on, tokens) : on && defaultStyles.memberChipOn,
                   ]}
                   onPress={() =>
                     setSelectedUids((prev) =>
@@ -273,7 +342,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                   }
                 >
                   {isCoach ? (
-                    <CoachText variant="caption" accent={on} muted={!on}>
+                    <CoachText variant="caption" {...coachChipTextProps(on, tokens)}>
                       {m.name}
                     </CoachText>
                   ) : (
@@ -320,30 +389,28 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
             kicker={t('coach.event.create.typeKicker')}
             title={t('coach.event.create.typeTitle')}
           >
-            <View style={coachStyles.chipRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={coachStyles.typeChipScroll}
+            >
               {EVENT_TYPES.map((item) => {
                 const on = eventType === item.id;
                 return (
                   <PressableSpring
                     key={item.id}
-                    style={[
-                      coachStyles.typeChip,
-                      on && {
-                        backgroundColor: tokens.accent,
-                        borderColor: tokens.accent,
-                      },
-                    ]}
+                    style={[coachStyles.typeChip, coachChipContainerStyle(on, tokens)]}
                     onPress={() => setEventType(item.id)}
                     scaleTo={0.96}
                     haptic
                   >
-                    <CoachText variant="caption" accent={on} muted={!on}>
+                    <CoachText variant="caption" {...coachChipTextProps(on, tokens)}>
                       {item.label}
                     </CoachText>
                   </PressableSpring>
                 );
               })}
-            </View>
+            </ScrollView>
           </CoachSectionCard>
 
           <CoachSectionCard
@@ -357,12 +424,25 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                 onChangeText={setTitle}
                 tokens={tokens}
               />
-              <CoachFormField
-                placeholder={t('coach.event.create.datePlaceholder')}
-                value={dateStr}
-                onChangeText={setDateStr}
-                tokens={tokens}
-              />
+              <View style={coachStyles.dateRow}>
+                <CoachFormField
+                  placeholder={t('coach.event.create.datePlaceholder')}
+                  value={dateStr}
+                  onChangeText={setDateStr}
+                  tokens={tokens}
+                  style={coachStyles.dateField}
+                />
+                <PressableSpring
+                  style={[coachStyles.todayBtn, coachChipContainerStyle(false, tokens)]}
+                  onPress={() => setDateStr(formatFrenchDate(new Date()))}
+                  scaleTo={0.96}
+                  haptic
+                >
+                  <CoachText variant="caption" muted>
+                    {t('coach.event.create.today')}
+                  </CoachText>
+                </PressableSpring>
+              </View>
               <CoachFormField
                 placeholder={t('coach.event.create.timePlaceholder')}
                 value={timeStr}
@@ -401,7 +481,6 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                   : t('coach.event.create.categoriesConvocTitle')
               }
             >
-              {categorySection}
               {eventType === 'detection' ? (
                 <CoachFormField
                   placeholder={t('coach.event.create.maxPlacesPlaceholder')}
@@ -411,6 +490,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                   keyboardType="number-pad"
                 />
               ) : null}
+              {categorySection}
             </CoachSectionCard>
           ) : null}
 
@@ -426,6 +506,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
               submitting ? t('coach.event.create.submitting') : t('coach.event.create.submit')
             }
             onPrimary={handleSubmit}
+            primaryDisabled={!formValid || submitting}
           />
           {submitting ? (
             <ActivityIndicator color={tokens.accent} style={coachStyles.loader} />
@@ -548,6 +629,7 @@ function CoachFormField({
   multiline,
   keyboardType,
   last,
+  style,
 }: {
   placeholder: string;
   value: string;
@@ -556,6 +638,7 @@ function CoachFormField({
   multiline?: boolean;
   keyboardType?: 'number-pad' | 'default';
   last?: boolean;
+  style?: object;
 }) {
   return (
     <TextInput
@@ -578,6 +661,7 @@ function CoachFormField({
           borderBottomWidth: StyleSheet.hairlineWidth,
           borderBottomColor: tokens.border,
         },
+        style,
       ]}
     />
   );
@@ -590,21 +674,39 @@ function createCoachStyles(tokens: CoachThemeTokens) {
       flexWrap: 'wrap',
       gap: spacing.xs,
     },
+    typeChipScroll: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      paddingVertical: 2,
+    },
     typeChip: {
       paddingHorizontal: spacing.sm,
       paddingVertical: 6,
       borderRadius: radius.pill,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.border,
-      backgroundColor: tokens.elevated,
+    },
+    dateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    dateField: {
+      flex: 1,
+      borderBottomWidth: 0,
+    },
+    todayBtn: {
+      marginRight: spacing.sm,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: StyleSheet.hairlineWidth,
     },
     memberChip: {
       paddingHorizontal: spacing.sm,
       paddingVertical: 6,
       borderRadius: radius.pill,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.border,
-      backgroundColor: tokens.elevated,
     },
     switchRow: {
       flexDirection: 'row',
@@ -615,6 +717,7 @@ function createCoachStyles(tokens: CoachThemeTokens) {
     switchLabel: { flex: 1 },
     fieldLabel: { marginBottom: spacing.xs },
     hint: { lineHeight: 18, marginBottom: spacing.sm },
+    convokedCount: { marginTop: spacing.xs, lineHeight: 18 },
     loader: { marginTop: spacing.sm },
   });
 }

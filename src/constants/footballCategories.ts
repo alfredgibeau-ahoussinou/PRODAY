@@ -81,6 +81,19 @@ export type FootballCategoryGroup = {
   items: readonly string[];
 };
 
+/** Réordonne les groupes UI — ex. adultes en tête pour détection. */
+export function orderFootballCategoryGroups(
+  prioritize?: FootballCategoryGroup['id'],
+): readonly FootballCategoryGroup[] {
+  if (!prioritize) return FOOTBALL_EVENT_CATEGORY_GROUPS;
+  const match = FOOTBALL_EVENT_CATEGORY_GROUPS.find((g) => g.id === prioritize);
+  if (!match) return FOOTBALL_EVENT_CATEGORY_GROUPS;
+  return [
+    match,
+    ...FOOTBALL_EVENT_CATEGORY_GROUPS.filter((g) => g.id !== prioritize),
+  ];
+}
+
 /** Groupes pour chips UI (événements, convocations). */
 export const FOOTBALL_EVENT_CATEGORY_GROUPS: readonly FootballCategoryGroup[] = [
   {

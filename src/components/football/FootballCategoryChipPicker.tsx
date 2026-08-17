@@ -4,10 +4,15 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { useTranslation } from '../../context/LocaleContext';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
-import { CoachText } from '../coach/coachPortalUi';
+import {
+  CoachText,
+} from '../coach/coachPortalUi';
+import { coachChipContainerStyle, coachChipTextProps } from '../../utils/coachChipUi';
 import {
   FOOTBALL_EVENT_CATEGORY_GROUPS,
   FOOTBALL_ROSTER_CATEGORIES,
+  orderFootballCategoryGroups,
+  type FootballCategoryGroup,
 } from '../../constants/footballCategories';
 import { radius, spacing } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -22,6 +27,8 @@ type FootballCategoryChipPickerProps = {
   /** Groupes complets (événements) ou liste plate roster (match, besoin). */
   mode?: 'grouped' | 'flat';
   flatOptions?: readonly string[];
+  /** Met ce groupe en tête (ex. adultes pour détection). */
+  prioritizeGroup?: FootballCategoryGroup['id'];
   colors?: AppColors;
   style?: StyleProp<ViewStyle>;
 };
@@ -41,7 +48,7 @@ function ChipLabel({
 }) {
   if (variant === 'coach') {
     return (
-      <CoachText variant="caption" accent={active} muted={!active}>
+      <CoachText variant="caption" {...coachChipTextProps(active, coachTokens)}>
         {label}
       </CoachText>
     );
@@ -59,6 +66,7 @@ export function FootballCategoryChipPicker({
   variant = 'default',
   mode = 'grouped',
   flatOptions,
+  prioritizeGroup,
   colors,
   style,
 }: FootballCategoryChipPickerProps) {
@@ -69,18 +77,16 @@ export function FootballCategoryChipPicker({
     () => (colors ? createDefaultChipStyles(colors) : null),
     [colors],
   );
+  const groups = useMemo(
+    () => orderFootballCategoryGroups(prioritizeGroup),
+    [prioritizeGroup],
+  );
 
   const renderChip = (cat: string) => {
     const active = selected.includes(cat);
     const chipStyle =
       variant === 'coach'
-        ? [
-            coachStyles.chip,
-            active && {
-              backgroundColor: tokens.accent,
-              borderColor: tokens.accent,
-            },
-          ]
+        ? [coachStyles.chip, coachChipContainerStyle(active, tokens)]
         : [
             defaultStyles!.chip,
             active && {
@@ -119,7 +125,7 @@ export function FootballCategoryChipPicker({
 
   return (
     <View style={[coachStyles.groups, style]}>
-      {FOOTBALL_EVENT_CATEGORY_GROUPS.map((group) => (
+      {groups.map((group) => (
         <View key={group.id} style={coachStyles.groupBlock}>
           {variant === 'coach' ? (
             <CoachText variant="caption" muted style={coachStyles.groupLabel}>
@@ -157,8 +163,6 @@ function createCoachChipStyles(tokens: CoachThemeTokens) {
       paddingVertical: 6,
       borderRadius: radius.pill,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.border,
-      backgroundColor: tokens.elevated,
     },
   });
 }

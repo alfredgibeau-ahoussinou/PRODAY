@@ -362,4 +362,10 @@ export const SECONDARY_FR: MessageCatalog = {
     'Liez un club à votre profil pour convoquer automatiquement l\'effectif.',
   'coach.event.create.submit': 'Créer et convoquer',
   'coach.event.create.submitting': 'Création…',
+  'coach.event.create.today': 'Aujourd\'hui',
+  'coach.event.create.trainingTitleDefault': 'Entraînement · {{team}}',
+  'coach.event.create.convokedCountMen': '{{count}} joueur(s) convoqué(s)',
+  'coach.event.create.convokedCountWomen': '{{count}} joueuse(s) convoquée(s)',
+  'coach.event.create.convokedCountEmptyMen': 'Aucun joueur convoqué pour cette sélection',
+  'coach.event.create.convokedCountEmptyWomen': 'Aucune joueuse convoquée pour cette sélection',
 };

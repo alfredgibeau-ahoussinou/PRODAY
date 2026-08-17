@@ -7,6 +7,7 @@ import {
   categoriesForRole,
   defaultCategoriesForAppSpace,
   matchesFootballCategory,
+  orderFootballCategoryGroups,
   normalizeFootballCategory,
 } from '../constants/footballCategories';
 import { PLAYER_CATEGORIES, PLAYER_LEVELS } from '../constants/playerProfile';
@@ -40,6 +41,13 @@ describe('footballCategories', () => {
     const allGrouped = FOOTBALL_EVENT_CATEGORY_GROUPS.flatMap((g) => g.items);
     expect(allGrouped).toContain('U11 F');
     expect(allGrouped).toContain('U19 District');
+  });
+
+  it('orderFootballCategoryGroups met adultes en tête pour détection', () => {
+    const ordered = orderFootballCategoryGroups('adultes');
+    expect(ordered.map((g) => g.id)).toEqual(['adultes', 'poussins', 'jeunes', 'district']);
+    expect(orderFootballCategoryGroups()).toEqual(FOOTBALL_EVENT_CATEGORY_GROUPS);
+    expect(orderFootballCategoryGroups('adultes')).toHaveLength(4);
   });
 
   it('inclut District dans les niveaux de compétition', () => {
