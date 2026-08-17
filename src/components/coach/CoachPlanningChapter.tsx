@@ -31,7 +31,9 @@ import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
-import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { radius, spacing } from '../../theme/designTokens';
 
 function isPlanningVisible(event: TeamEvent): boolean {
@@ -48,10 +50,10 @@ function statusLabel(status: EventSessionStatus, t: (key: string) => string): st
   return t('coach.portal.planning.statusScheduled');
 }
 
-function statusTone(status: EventSessionStatus): string {
-  if (status === 'in_progress') return COACH_SITE.accent;
-  if (status === 'finished') return COACH_SITE.muted;
-  return COACH_SITE.foreground;
+function statusTone(status: EventSessionStatus, tokens: CoachThemeTokens): string {
+  if (status === 'in_progress') return tokens.accent;
+  if (status === 'finished') return tokens.muted;
+  return tokens.foreground;
 }
 
 export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
@@ -64,6 +66,16 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const formInputStyle = useMemo(
+    () => ({
+      borderColor: tokens.border,
+      color: tokens.foreground,
+      backgroundColor: tokens.surface,
+    }),
+    [tokens.border, tokens.foreground, tokens.surface],
+  );
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
   const canManage = userCanManageConvocations(profile, { clubCoversCoach });
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -244,12 +256,12 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
         style={[
           styles.statusBadge,
           {
-            borderColor: isTraining ? COACH_SITE.accent : 'rgba(255, 180, 50, 0.55)',
-            backgroundColor: isTraining ? COACH_SITE.soft : 'rgba(255, 180, 50, 0.12)',
+            borderColor: isTraining ? tokens.accent : 'rgba(255, 180, 50, 0.55)',
+            backgroundColor: isTraining ? tokens.soft : 'rgba(255, 180, 50, 0.12)',
           },
         ]}
       >
-        <CoachText variant="caption" style={{ color: statusTone(status), fontWeight: '700' }}>
+        <CoachText variant="caption" style={{ color: statusTone(status, tokens), fontWeight: '700' }}>
           {statusLabel(status, t)}
         </CoachText>
       </View>
@@ -276,7 +288,7 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
             ? t('coach.portal.planning.matchBriefingPlaceholder')
             : t('coach.portal.planning.focusPlaceholder')
         }
-        placeholderTextColor={COACH_SITE.muted}
+        placeholderTextColor={tokens.muted}
       />
       <CoachText variant="caption" muted style={styles.label}>
         {t('coach.portal.planning.duration')}
@@ -286,7 +298,7 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
         value={duration}
         onChangeText={setDuration}
         keyboardType="number-pad"
-        placeholderTextColor={COACH_SITE.muted}
+        placeholderTextColor={tokens.muted}
       />
       <CoachText variant="caption" muted style={styles.label}>
         {isMatch ? t('coach.portal.planning.notes') : t('coach.portal.planning.notes')}
@@ -301,7 +313,7 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
             ? t('coach.portal.planning.matchBriefingPlaceholder')
             : t('coach.portal.planning.notesPlaceholder')
         }
-        placeholderTextColor={COACH_SITE.muted}
+        placeholderTextColor={tokens.muted}
       />
       <PressableSpring onPress={() => void savePlan(event)} disabled={saving} scaleTo={0.96} haptic>
         <CoachText variant="caption" accent style={styles.link}>
@@ -371,12 +383,12 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
     return (
       <View
         key={event.id}
-        style={[styles.eventCard, styles.trainingCard, { backgroundColor: COACH_SITE.surface }]}
+        style={[styles.eventCard, styles.trainingCard, { backgroundColor: tokens.surface }]}
       >
         <PressableSpring onPress={() => selectEvent(event)} scaleTo={0.98} haptic>
           <View style={styles.cardHeader}>
             <View style={styles.cardTitleRow}>
-              <Icon name="calendar" size={16} color={COACH_SITE.accent} />
+              <Icon name="calendar" size={16} color={tokens.accent} />
               <CoachText variant="section" style={styles.cardTitle}>
                 {event.title}
               </CoachText>
@@ -422,7 +434,7 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
     return (
       <View
         key={event.id}
-        style={[styles.eventCard, styles.matchCard, { backgroundColor: COACH_SITE.surface }]}
+        style={[styles.eventCard, styles.matchCard, { backgroundColor: tokens.surface }]}
       >
         <PressableSpring onPress={() => selectEvent(event)} scaleTo={0.98} haptic>
           <View style={styles.cardHeader}>
@@ -475,12 +487,6 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
         ) : null}
       </View>
     );
-  };
-
-  const formInputStyle = {
-    borderColor: COACH_SITE.border,
-    color: COACH_SITE.foreground,
-    backgroundColor: COACH_SITE.bg,
   };
 
   return (
@@ -536,49 +542,50 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  eventCard: {
-    borderRadius: 14,
-    padding: spacing.md,
-    gap: 4,
-    marginTop: spacing.sm,
-    borderWidth: 1,
-  },
-  trainingCard: {
-    borderColor: COACH_SITE.accent,
-  },
-  matchCard: {
-    borderColor: 'rgba(255, 180, 50, 0.45)',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  cardTitleRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  cardTitle: { flex: 1 },
-  statusBadge: {
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  form: { marginTop: spacing.sm, gap: spacing.xs },
-  label: { fontWeight: '700', marginTop: spacing.xs },
-  input: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 14,
-  },
-  multi: { minHeight: 72, textAlignVertical: 'top' },
-  link: { fontWeight: '800' },
-  taskRow: { paddingVertical: 4 },
-});
+const createStyles = (tokens: CoachThemeTokens) =>
+  StyleSheet.create({
+    eventCard: {
+      borderRadius: 14,
+      padding: spacing.md,
+      gap: 4,
+      marginTop: spacing.sm,
+      borderWidth: 1,
+    },
+    trainingCard: {
+      borderColor: tokens.accent,
+    },
+    matchCard: {
+      borderColor: 'rgba(255, 180, 50, 0.45)',
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    cardTitleRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    cardTitle: { flex: 1 },
+    statusBadge: {
+      borderWidth: 1,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+    },
+    form: { marginTop: spacing.sm, gap: spacing.xs },
+    label: { fontWeight: '700', marginTop: spacing.xs },
+    input: {
+      borderWidth: 1,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      fontSize: 14,
+    },
+    multi: { minHeight: 72, textAlignVertical: 'top' },
+    link: { fontWeight: '800' },
+    taskRow: { paddingVertical: 4 },
+  });

@@ -3,7 +3,8 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CoachText } from '../../../components/coach/coachPortalUi';
 import { Icon } from '../../../components/ui/Icon';
-import { COACH_SITE } from '../../../content/coachPageIdentity';
+import { useCoachTheme } from './CoachThemeContext';
+import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
 import { primaryTabForCoachNav, type CoachNavItemId } from '../navigation/coachNavConfig';
 import type { CoachNavResolvedFolder, CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { radius, spacing } from '../../../theme/designTokens';
@@ -32,7 +33,8 @@ export function CoachSidebar({
   inDrawer = false,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(width), [width]);
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(width, tokens), [width, tokens]);
   const highlight = primaryTabForCoachNav(activeId);
   const items = folders.flatMap((folder) => folder.items);
 
@@ -73,6 +75,7 @@ export function CoachSidebar({
             on={item.id === highlight}
             onSelect={onSelect}
             styles={styles}
+            tokens={tokens}
           />
         ))}
 
@@ -83,7 +86,7 @@ export function CoachSidebar({
           onPress={onOpenHelp}
           style={({ pressed }) => [styles.footerItem, pressed && styles.footerPressed]}
         >
-          <Icon name="help" size={18} color={COACH_SITE.foreground} />
+          <Icon name="help" size={18} color={tokens.foreground} />
           <CoachText variant="caption" style={styles.footerLabel}>
             Aide
           </CoachText>
@@ -107,11 +110,13 @@ function SidebarItem({
   on,
   onSelect,
   styles,
+  tokens,
 }: {
   item: CoachNavResolvedItem;
   on: boolean;
   onSelect: (id: CoachNavItemId) => void;
   styles: ReturnType<typeof createStyles>;
+  tokens: CoachThemeTokens;
 }) {
   return (
     <Pressable
@@ -119,7 +124,7 @@ function SidebarItem({
       style={({ pressed }) => [styles.item, on && styles.itemOn, pressed && styles.itemPressed]}
     >
       <View style={[styles.iconWrap, on && styles.iconWrapOn]}>
-        <Icon name={item.icon} size={18} color={on ? '#fff' : COACH_SITE.accent} />
+        <Icon name={item.icon} size={18} color={on ? '#fff' : tokens.accent} />
       </View>
       <CoachText variant="section" style={[styles.itemLabel, on && styles.itemLabelOn]} numberOfLines={1}>
         {item.label}
@@ -128,7 +133,7 @@ function SidebarItem({
   );
 }
 
-function createStyles(width: number) {
+function createStyles(width: number, tokens: CoachThemeTokens) {
   return StyleSheet.create({
     root: {
       width,
@@ -136,8 +141,8 @@ function createStyles(width: number) {
       minHeight: 0,
       alignSelf: 'stretch',
       borderRightWidth: StyleSheet.hairlineWidth,
-      borderRightColor: COACH_SITE.border,
-      backgroundColor: COACH_SITE.surface,
+      borderRightColor: tokens.border,
+      backgroundColor: tokens.surface,
     },
     brand: {
       paddingHorizontal: spacing.md,
@@ -149,19 +154,19 @@ function createStyles(width: number) {
       fontSize: 13,
       fontWeight: '700',
     },
-    name: { color: COACH_SITE.foreground, fontWeight: '700', letterSpacing: -0.3, fontSize: 20 },
+    name: { color: tokens.foreground, fontWeight: '700', letterSpacing: -0.3, fontSize: 20 },
     formulaPill: {
       alignSelf: 'flex-start',
       marginTop: 8,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: radius.pill,
-      backgroundColor: COACH_SITE.soft,
+      backgroundColor: tokens.soft,
     },
     formulaText: {
       fontSize: 12,
       fontWeight: '700',
-      color: COACH_SITE.accent,
+      color: tokens.accent,
     },
     scroll: { flex: 1, minHeight: 0 },
     scrollContent: { paddingVertical: spacing.sm, paddingBottom: spacing.xl, gap: 4 },
@@ -175,7 +180,7 @@ function createStyles(width: number) {
       minHeight: 52,
       borderRadius: radius.md,
     },
-    itemOn: { backgroundColor: COACH_SITE.soft },
+    itemOn: { backgroundColor: tokens.soft },
     itemPressed: { opacity: 0.7 },
     iconWrap: {
       width: 36,
@@ -183,15 +188,15 @@ function createStyles(width: number) {
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: COACH_SITE.bg,
+      backgroundColor: tokens.bg,
     },
-    iconWrapOn: { backgroundColor: COACH_SITE.accent },
-    itemLabel: { flex: 1, fontWeight: '600', color: COACH_SITE.foreground, fontSize: 16 },
-    itemLabelOn: { color: COACH_SITE.accent, fontWeight: '700' },
+    iconWrapOn: { backgroundColor: tokens.accent },
+    itemLabel: { flex: 1, fontWeight: '600', color: tokens.foreground, fontSize: 16 },
+    itemLabelOn: { color: tokens.accent, fontWeight: '700' },
     footer: {
       flexShrink: 0,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: COACH_SITE.border,
+      borderTopColor: tokens.border,
       paddingHorizontal: spacing.sm,
       paddingTop: spacing.sm,
       paddingBottom: spacing.sm,
@@ -207,7 +212,7 @@ function createStyles(width: number) {
       borderRadius: radius.md,
     },
     footerPressed: { opacity: 0.7 },
-    footerLabel: { fontWeight: '600', color: COACH_SITE.foreground },
+    footerLabel: { fontWeight: '600', color: tokens.foreground },
     footerSignOut: { fontWeight: '700', color: '#DC2626' },
   });
 }

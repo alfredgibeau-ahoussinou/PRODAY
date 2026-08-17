@@ -740,7 +740,7 @@ export const TERTIARY_EN: MessageCatalog = {
   'coach.portal.theme.solid': 'Solid',
   'coach.portal.theme.clear': 'Clear',
   'coach.portal.theme.teamColor': 'Team color',
-  'coach.portal.theme.variantHint': 'Coach hub style on this device.',
+  'coach.portal.theme.variantHint': 'Solid: dark background. Clear: white background.',
   'coach.portal.theme.accentAuto': 'Auto (team)',
   'coach.portal.theme.accentCustom': 'Custom',
   'coach.portal.theme.resetAccent': 'Reset team color',

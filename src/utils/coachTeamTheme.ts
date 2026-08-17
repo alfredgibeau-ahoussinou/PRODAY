@@ -15,9 +15,21 @@ export type CoachThemeTokens = {
   border: string;
   foreground: string;
   muted: string;
+  /** Fond clair (variante Clair) — StatusBar, contrastes. */
+  isLight: boolean;
   variant: CoachShellVariant;
   teamLabel: string;
 };
+
+/** Surfaces iOS grouped — variante Clair du Pôle Coach. */
+const COACH_CLEAR_SURFACES = {
+  bg: '#FFFFFF',
+  surface: '#F2F2F7',
+  elevated: '#E5E5EA',
+  border: 'rgba(0, 0, 0, 0.12)',
+  foreground: '#1C1C1E',
+  muted: 'rgba(60, 60, 67, 0.6)',
+} as const;
 
 /** Accents premium lisibles sur fond sombre — index 0 = bleu PRODAY (fallback). */
 export const COACH_TEAM_ACCENT_PALETTE = [
@@ -95,17 +107,10 @@ export function resolveCoachEffectiveAccent(input: {
 
 function shellSurfaces(variant: CoachShellVariant): Pick<
   CoachThemeTokens,
-  'bg' | 'surface' | 'elevated' | 'border' | 'foreground' | 'muted'
+  'bg' | 'surface' | 'elevated' | 'border' | 'foreground' | 'muted' | 'isLight'
 > {
   if (variant === 'clear') {
-    return {
-      bg: 'rgba(0, 0, 0, 0.72)',
-      surface: 'rgba(255, 255, 255, 0.06)',
-      elevated: 'rgba(255, 255, 255, 0.10)',
-      border: 'rgba(255, 255, 255, 0.18)',
-      foreground: COACH_SITE.foreground,
-      muted: COACH_SITE.muted,
-    };
+    return { ...COACH_CLEAR_SURFACES, isLight: true };
   }
   return {
     bg: COACH_SITE.bg,
@@ -114,6 +119,7 @@ function shellSurfaces(variant: CoachShellVariant): Pick<
     border: COACH_SITE.border,
     foreground: COACH_SITE.foreground,
     muted: COACH_SITE.muted,
+    isLight: false,
   };
 }
 
@@ -127,12 +133,14 @@ export function buildCoachThemeTokens(input: {
   const accent = resolveCoachEffectiveAccent(input);
   const surfaces = shellSurfaces(input.variant);
   const teamLabel = input.teamName?.trim() || '';
+  const softAlpha = input.variant === 'clear' ? 0.12 : 0.22;
+  const glowAlpha = input.variant === 'clear' ? 0.18 : 0.28;
 
   return {
     accent,
     deep: darkenHex(accent, 0.45),
-    soft: withAlpha(accent, 0.22),
-    glow: withAlpha(accent, 0.28),
+    soft: withAlpha(accent, softAlpha),
+    glow: withAlpha(accent, glowAlpha),
     ...surfaces,
     variant: input.variant,
     teamLabel,

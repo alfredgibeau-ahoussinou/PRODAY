@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { CoachChapterScroll, CoachSettingsGroup, CoachSettingsRow } from '../../../components/coach/coachPortalUi';
 import { CoachPane } from '../../../components/coach/CoachScreenHeader';
-import { COACH_SITE, getCoachPageIdentity } from '../../../content/coachPageIdentity';
+import { getCoachPageIdentity } from '../../../content/coachPageIdentity';
+import { useCoachTheme } from './CoachThemeContext';
 import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { useCoachShellNav } from './CoachShellNavContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
@@ -17,7 +18,8 @@ type Props = {
 export function CoachMorePane({ items }: Props) {
   const shellNav = useCoachShellNav();
   const profile = useSessionProfile();
-  const styles = useMemo(() => createStyles(), []);
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
   const [sessionRequests, setSessionRequests] = useState<CoachSessionBooking[]>([]);
 
   useEffect(() => {
@@ -136,8 +138,8 @@ export function CoachMorePane({ items }: Props) {
   );
 }
 
-function createStyles() {
+function createStyles(tokens: { bg: string }) {
   return StyleSheet.create({
-    stack: { gap: spacing.lg, paddingBottom: spacing.xl, backgroundColor: COACH_SITE.bg },
+    stack: { gap: spacing.lg, paddingBottom: spacing.xl, backgroundColor: tokens.bg },
   });
 }

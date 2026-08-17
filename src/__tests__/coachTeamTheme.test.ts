@@ -45,7 +45,11 @@ describe('coachTeamTheme', () => {
     expect(solid.variant).toBe('solid');
     expect(clear.variant).toBe('clear');
     expect(solid.bg).toBe(COACH_SITE.bg);
-    expect(clear.surface).toBe('rgba(255, 255, 255, 0.06)');
+    expect(solid.isLight).toBe(false);
+    expect(clear.isLight).toBe(true);
+    expect(clear.bg).toBe('#FFFFFF');
+    expect(clear.foreground).toBe('#1C1C1E');
+    expect(clear.foreground).not.toBe(COACH_SITE.foreground);
   });
 
   it('expose le libellé équipe dans les tokens', () => {

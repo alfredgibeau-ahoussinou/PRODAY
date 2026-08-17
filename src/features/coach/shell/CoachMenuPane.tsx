@@ -6,7 +6,8 @@ import {
   CoachText,
 } from '../../../components/coach/coachPortalUi';
 import { CoachScreenHeader } from '../../../components/coach/CoachScreenHeader';
-import { COACH_SITE, getCoachPageIdentity } from '../../../content/coachPageIdentity';
+import { getCoachPageIdentity } from '../../../content/coachPageIdentity';
+import { useCoachTheme } from './CoachThemeContext';
 import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { COACH_TOOL_GROUPS } from '../navigation/coachNavConfig';
 import { CoachToolsList } from './CoachToolsList';
@@ -23,6 +24,8 @@ const pageIdentity = getCoachPageIdentity('plus');
 /** Hub Menu — outils groupés (Match, Club, Performance). */
 export function CoachMenuPane({ items = [] }: Props) {
   const shellNav = useCoachShellNav();
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
   const resolvedById = useMemo(
     () => new Map(items.map((item) => [item.id, item] as const)),
     [items],
@@ -53,7 +56,8 @@ export function CoachMenuPane({ items = [] }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
-  subtitle: { marginTop: -spacing.sm },
-});
+const createStyles = (tokens: { bg: string }) =>
+  StyleSheet.create({
+    root: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
+    subtitle: { marginTop: -spacing.sm },
+  });

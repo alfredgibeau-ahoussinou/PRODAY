@@ -242,7 +242,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
 
   return (
     <CoachShellNavProvider requestNav={onSelect} openHelp={onOpenHelp} signOut={onSignOut}>
-      <StatusBar style="light" />
+      <StatusBar style={tokens.isLight ? 'dark' : 'light'} />
       <View style={[styles.root, !wide && styles.rootColumn]}>
         {wide ? <CoachSidebar {...sidebarProps} /> : null}
 

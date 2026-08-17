@@ -738,7 +738,7 @@ export const TERTIARY_FR: MessageCatalog = {
   'coach.portal.theme.solid': 'Solide',
   'coach.portal.theme.clear': 'Clair',
   'coach.portal.theme.teamColor': 'Couleur équipe',
-  'coach.portal.theme.variantHint': 'Style du Pôle Coach sur cet appareil.',
+  'coach.portal.theme.variantHint': 'Solide : fond sombre. Clair : fond blanc.',
   'coach.portal.theme.accentAuto': 'Auto (équipe)',
   'coach.portal.theme.accentCustom': 'Personnalisée',
   'coach.portal.theme.resetAccent': 'Réinitialiser la couleur équipe',

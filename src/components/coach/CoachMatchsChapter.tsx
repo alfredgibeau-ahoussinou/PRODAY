@@ -17,7 +17,8 @@ import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { spacing } from '../../theme/designTokens';
 import { COACH_MATCH_FLOW_STEPS } from '../../features/coach/navigation/coachMatchDeepLink';
 import type { MatchHubChapterId } from '../../content/matchHubChapters';
@@ -37,7 +38,8 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
   const { t } = useTranslation();
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
-  const styles = useMemo(() => createStyles(), []);
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   const nextMatch = useMemo(() => {
     const now = Date.now();
@@ -188,9 +190,9 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
   );
 };
 
-function createStyles() {
+function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
-    root: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
+    root: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
     subtitle: { marginTop: -spacing.sm },
     kpiWrap: { marginTop: spacing.sm },
     sectionLabel: {
@@ -212,12 +214,12 @@ function createStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 18,
-      backgroundColor: COACH_SITE.surface,
+      backgroundColor: tokens.surface,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
     },
     actionLabel: {
-      color: COACH_SITE.foreground,
+      color: tokens.foreground,
       fontWeight: '700',
       fontSize: 16,
     },

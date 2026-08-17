@@ -11,8 +11,9 @@ import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
 import { radius, spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { CreateTeamEventScreen } from '../../screens/CreateTeamEventScreen';
 import { CoachScreenHeader } from './CoachScreenHeader';
 import {
@@ -38,6 +39,8 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { count: unreadMessages } = useUnreadMessageCount();
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
   const canConvoc = userCanManageConvocations(profile, { clubCoversCoach });
@@ -134,7 +137,7 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             <CoachText variant="caption" style={styles.discoverText} numberOfLines={1}>
               {firstTip.title}
             </CoachText>
-            <Icon name="close" size={14} color={COACH_SITE.muted} />
+            <Icon name="close" size={14} color={tokens.muted} />
           </Pressable>
         ) : null}
 
@@ -182,6 +185,7 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             <CalendarEventCard
               key={event.id}
               event={event}
+              styles={styles}
               live={isInMatchWindow(event)}
               liveLabel={t('coach.calendar.live')}
               convokedLabel={t('coach.calendar.convoked')}
@@ -199,6 +203,7 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
 
 function CalendarEventCard({
   event,
+  styles,
   live,
   liveLabel,
   convokedLabel,
@@ -208,6 +213,7 @@ function CalendarEventCard({
   onPointage,
 }: {
   event: TeamEvent;
+  styles: ReturnType<typeof createStyles>;
   live: boolean;
   liveLabel: string;
   convokedLabel: string;
@@ -287,96 +293,97 @@ function CalendarEventCard({
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
-  discoverBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    borderRadius: radius.md,
-    backgroundColor: COACH_SITE.surface,
-    marginBottom: spacing.sm,
-  },
-  discoverPressed: { opacity: 0.7 },
-  discoverText: { flex: 1, color: COACH_SITE.foreground, fontWeight: '500' },
-  sectionTitle: {
-    color: COACH_SITE.foreground,
-    fontWeight: '800',
-    fontSize: 22,
-    marginTop: spacing.sm,
-  },
-  emptyBlock: { gap: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.md },
-  emptyText: { fontSize: 16 },
-  emptyCta: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-    borderRadius: radius.pill,
-    backgroundColor: '#E5E5EA',
-    paddingHorizontal: spacing.xl,
-  },
-  emptyCtaText: { color: '#000', fontWeight: '700' },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    backgroundColor: COACH_SITE.surface,
-    borderRadius: 20,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.md,
-    gap: spacing.md,
-  },
-  dateCol: {
-    width: 58,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-  },
-  dateWeek: { fontSize: 13, fontWeight: '600' },
-  dateDay: { color: COACH_SITE.foreground, fontWeight: '800', fontSize: 22, lineHeight: 24 },
-  dateMonth: { color: COACH_SITE.foreground, fontWeight: '700', fontSize: 13 },
-  dateTime: { fontSize: 12, fontWeight: '600', marginTop: 4 },
-  cardDivider: {
-    width: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    marginVertical: 4,
-  },
-  cardBody: { flex: 1, minWidth: 0, gap: spacing.md },
-  cardTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  eventTitle: { flex: 1, color: COACH_SITE.foreground, fontWeight: '700', fontSize: 17 },
-  liveBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-    backgroundColor: '#FF3B30',
-  },
-  liveBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  attendanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  attendanceSummary: { flex: 1, fontSize: 13, fontWeight: '600' },
-  pointageBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    minHeight: 36,
-    borderRadius: radius.pill,
-    backgroundColor: '#fff',
-    paddingHorizontal: spacing.md,
-  },
-  pointageBtnText: { color: '#000', fontWeight: '700' },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  place: { flex: 1, fontSize: 13 },
-  people: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  peopleCount: { color: COACH_SITE.foreground, fontWeight: '700' },
-  postMatchLink: { marginTop: spacing.sm },
-});
+const createStyles = (tokens: CoachThemeTokens) =>
+  StyleSheet.create({
+    root: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
+    discoverBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 10,
+      borderRadius: radius.md,
+      backgroundColor: tokens.surface,
+      marginBottom: spacing.sm,
+    },
+    discoverPressed: { opacity: 0.7 },
+    discoverText: { flex: 1, color: tokens.foreground, fontWeight: '500' },
+    sectionTitle: {
+      color: tokens.foreground,
+      fontWeight: '800',
+      fontSize: 22,
+      marginTop: spacing.sm,
+    },
+    emptyBlock: { gap: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.md },
+    emptyText: { fontSize: 16 },
+    emptyCta: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 52,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.elevated,
+      paddingHorizontal: spacing.xl,
+    },
+    emptyCtaText: { color: tokens.foreground, fontWeight: '700' },
+    card: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      backgroundColor: tokens.surface,
+      borderRadius: 20,
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.md,
+      gap: spacing.md,
+    },
+    dateCol: {
+      width: 58,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 2,
+    },
+    dateWeek: { fontSize: 13, fontWeight: '600' },
+    dateDay: { color: tokens.foreground, fontWeight: '800', fontSize: 22, lineHeight: 24 },
+    dateMonth: { color: tokens.foreground, fontWeight: '700', fontSize: 13 },
+    dateTime: { fontSize: 12, fontWeight: '600', marginTop: 4 },
+    cardDivider: {
+      width: StyleSheet.hairlineWidth,
+      backgroundColor: tokens.border,
+      marginVertical: 4,
+    },
+    cardBody: { flex: 1, minWidth: 0, gap: spacing.md },
+    cardTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    eventTitle: { flex: 1, color: tokens.foreground, fontWeight: '700', fontSize: 17 },
+    liveBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: radius.pill,
+      backgroundColor: '#FF3B30',
+    },
+    liveBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+    attendanceRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    attendanceSummary: { flex: 1, fontSize: 13, fontWeight: '600' },
+    pointageBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      minHeight: 36,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.elevated,
+      paddingHorizontal: spacing.md,
+    },
+    pointageBtnText: { color: tokens.foreground, fontWeight: '700' },
+    cardFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    place: { flex: 1, fontSize: 13 },
+    people: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    peopleCount: { color: tokens.foreground, fontWeight: '700' },
+    postMatchLink: { marginTop: spacing.sm },
+  });
