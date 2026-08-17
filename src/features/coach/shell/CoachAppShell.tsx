@@ -43,7 +43,7 @@ import { ProfilTabScreen } from '../../../screens/ProfilTabScreen';
 import { useAuth } from '../../../context/AuthContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useTabNavigation } from '../../../context/TabNavigationContext';
-import { MatchEventHubScreen } from '../../../screens/MatchEventHubScreen';
+import { CoachMatchEventHub } from '../../../screens/coach/CoachMatchEventHub';
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
 import {
   resolveCoachMatchHubOverlay,
@@ -244,7 +244,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
             backgroundColor={COACH_SITE.bg}
           >
             {matchHubOverlay ? (
-              <MatchEventHubScreen
+              <CoachMatchEventHub
                 eventId={matchHubOverlay.eventId}
                 initialChapter={matchHubOverlay.hubChapter}
                 onBack={() => setMatchHubOverlay(null)}

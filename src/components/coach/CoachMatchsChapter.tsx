@@ -1,37 +1,43 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
-import { CoachChapterScroll, CoachEmptyState } from './coachPortalUi';
-import { ProDaySurface } from '../ui/ProDaySurface';
-import { ProDayText } from '../ui/ProDayText';
-import { PressableSpring } from '../motion';
-import { EVENT_TYPE_LABELS } from '../../models/TeamEvent';
+import {
+  CoachActionRow,
+  CoachChapterScroll,
+  CoachEmptyState,
+  CoachKpiRow,
+  CoachSectionCard,
+  CoachSettingsGroup,
+  CoachSettingsRow,
+  CoachText,
+} from './coachPortalUi';
+import { CoachScreenHeader } from './CoachScreenHeader';
+import { EVENT_TYPE_LABELS, countRsvpYes, getPendingInviteeUids } from '../../models/TeamEvent';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
-import { totalCarpoolAvailableSeats, totalCarpoolSeats } from '../../utils/carpoolBalance';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { radius, spacing } from '../../theme/designTokens';
-import { MatchTalkPanel } from './MatchTalkPanel';
-import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+import { spacing } from '../../theme/designTokens';
 import { COACH_MATCH_FLOW_STEPS } from '../../features/coach/navigation/coachMatchDeepLink';
+import type { MatchHubChapterId } from '../../content/matchHubChapters';
 
-export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({
-  events,
-  profile,
-  members,
-}) => {
-  const { colors } = useAppTheme();
+const ACTION_CHAPTERS: {
+  hub: MatchHubChapterId;
+  label: string;
+  icon: React.ComponentProps<typeof CoachSettingsRow>['icon'];
+}[] = [
+  { hub: 'effectif', label: 'Pointage', icon: 'people' },
+  { hub: 'composition', label: 'Compo', icon: 'football' },
+  { hub: 'live', label: 'Direct', icon: 'time' },
+  { hub: 'stats', label: 'Stats', icon: 'stats-chart' },
+];
+
+export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }) => {
   const { t } = useTranslation();
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
-  const shellNav = useCoachShellNav();
-
-  const openSmartTactics = () => {
-    if (shellNav) shellNav.requestNav('smart_tactics');
-    else nav.openDashboard('smart_tactics');
-  };
+  const styles = useMemo(() => createStyles(), []);
 
   const nextMatch = useMemo(() => {
     const now = Date.now();
@@ -49,155 +55,173 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({
     );
   }, [events]);
 
-  const carpoolSeats = nextMatch ? totalCarpoolSeats(nextMatch.carpool_slots) : 0;
-  const carpoolFree = nextMatch ? totalCarpoolAvailableSeats(nextMatch.carpool_slots) : null;
+  const openHub = (hubChapter: MatchHubChapterId) => {
+    if (!nextMatch) return;
+    tabNav.openMatchs({ eventId: nextMatch.id, hubChapter });
+  };
+
+  const yesCount = nextMatch ? countRsvpYes(nextMatch) : 0;
+  const pendingCount = nextMatch ? getPendingInviteeUids(nextMatch).length : 0;
+  const inviteeCount = nextMatch?.invitee_uids.length ?? 0;
 
   return (
-    <CoachChapterScroll>
-      <ProDayText variant="section">{t('coach.portal.matchs.title')}</ProDayText>
-      <ProDayText variant="caption" muted>
-        {t('coach.portal.matchs.subtitle')}
-      </ProDayText>
+    <View style={styles.root}>
+      <CoachScreenHeader title={t('coach.portal.matchs.title')} showTeamRow={false} />
+      <CoachChapterScroll>
+        <CoachText variant="body" muted style={styles.subtitle}>
+          {t('coach.portal.matchs.subtitle')}
+        </CoachText>
 
-      {!nextMatch ? (
-        <CoachEmptyState
-          title={t('coach.portal.matchs.empty')}
-          body={t('coach.portal.matchs.emptyBody')}
-          cta={t('coach.portal.matchs.openCalendar')}
-          onPress={() => nav.openMatchs({ homeTab: 'season' })}
-        />
-      ) : (
-        <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-          <ProDayText variant="section">{nextMatch.title}</ProDayText>
-          <ProDayText variant="caption" muted>
-            {EVENT_TYPE_LABELS[nextMatch.event_type]} · {formatCalendarDate(nextMatch.starts_at)}
-          </ProDayText>
-          <ProDayText variant="caption" accent style={styles.flowTitle}>
-            {t('coach.portal.matchs.guided')}
-          </ProDayText>
-          <View style={styles.flowRow}>
-            {COACH_MATCH_FLOW_STEPS.map((step) => (
-              <PressableSpring
-                key={step.hub}
-                onPress={() =>
-                  tabNav.openMatchs({ eventId: nextMatch.id, hubChapter: step.hub })
-                }
-                scaleTo={0.96}
-                haptic
-                style={[styles.step, { borderColor: colors.accent, backgroundColor: colors.accentSoft }]}
-              >
-                <ProDayText variant="caption" accent style={styles.stepText}>
-                  {t(step.labelKey)}
-                </ProDayText>
-              </PressableSpring>
-            ))}
-          </View>
-        </ProDaySurface>
-      )}
-
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
-          {t('coach.portal.matchs.carpool')}
-        </ProDayText>
-        {nextMatch ? (
-          <>
-            <ProDayText variant="caption" muted>
-              {carpoolSeats === 0
-                ? t('coach.portal.matchs.carpoolNone')
-                : t('coach.portal.matchs.carpoolMeta', {
-                    seats: carpoolSeats,
-                    free: carpoolFree ?? 0,
-                  })}
-            </ProDayText>
-            <PressableSpring
-              onPress={() => tabNav.openMatchs({ eventId: nextMatch.id })}
-              scaleTo={0.96}
-              haptic
-            >
-              <ProDayText variant="caption" accent style={styles.link}>
-                {t('coach.portal.matchs.openCarpool')}
-              </ProDayText>
-            </PressableSpring>
-          </>
+        {!nextMatch ? (
+          <CoachEmptyState
+            title={t('coach.portal.matchs.empty')}
+            body={t('coach.portal.matchs.emptyBody')}
+            cta={t('coach.portal.matchs.openCalendar')}
+            onPress={() => nav.openMatchs({ homeTab: 'season' })}
+          />
         ) : (
-          <ProDayText variant="caption" muted>
-            {t('coach.portal.matchs.carpoolWait')}
-          </ProDayText>
+          <>
+            <CoachSectionCard
+              kicker={EVENT_TYPE_LABELS[nextMatch.event_type]}
+              title={nextMatch.title}
+              body={`${formatCalendarDate(nextMatch.starts_at)}${nextMatch.city ? `\n${nextMatch.city}` : ''}`}
+            >
+              <View style={styles.kpiWrap}>
+                <CoachKpiRow
+                  items={[
+                    { label: 'Convoqués', value: String(inviteeCount) },
+                    { label: 'Confirmés', value: String(yesCount) },
+                    { label: 'En attente', value: String(pendingCount) },
+                  ]}
+                />
+              </View>
+              <CoachActionRow
+                primary="Ouvrir l'événement"
+                onPrimary={() => openHub('apercu')}
+                secondary="Pointage"
+                onSecondary={() => openHub('effectif')}
+              />
+            </CoachSectionCard>
+
+            <CoachText variant="caption" muted style={styles.sectionLabel}>
+              Actions rapides
+            </CoachText>
+            <View style={styles.actionGrid}>
+              {ACTION_CHAPTERS.map((action) => (
+                <Pressable
+                  key={action.hub}
+                  onPress={() => openHub(action.hub)}
+                  style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={action.label}
+                >
+                  <CoachText variant="section" style={styles.actionLabel}>
+                    {action.label}
+                  </CoachText>
+                </Pressable>
+              ))}
+            </View>
+
+            <CoachText variant="caption" muted style={styles.sectionLabel}>
+              {t('coach.portal.matchs.guided')}
+            </CoachText>
+            <CoachSettingsGroup>
+              {COACH_MATCH_FLOW_STEPS.map((step, index) => (
+                <CoachSettingsRow
+                  key={step.hub}
+                  icon={
+                    step.hub === 'effectif'
+                      ? 'people'
+                      : step.hub === 'composition'
+                        ? 'football'
+                        : step.hub === 'live'
+                          ? 'time'
+                          : 'stats-chart'
+                  }
+                  label={t(step.labelKey)}
+                  onPress={() => openHub(step.hub)}
+                  last={index === COACH_MATCH_FLOW_STEPS.length - 1}
+                />
+              ))}
+            </CoachSettingsGroup>
+          </>
         )}
-        <PressableSpring onPress={() => nav.openCarpool()} scaleTo={0.96} haptic>
-          <ProDayText variant="caption" accent style={styles.link}>
-            {t('coach.portal.matchs.carpoolTab')}
-          </ProDayText>
-        </PressableSpring>
-      </ProDaySurface>
 
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
-          {t('coach.portal.matchs.competitions')}
-        </ProDayText>
-        <ProDayText variant="caption" muted>
-          {t('coach.portal.matchs.competitionsBody')}
-        </ProDayText>
-        <PressableSpring
-          onPress={() => nav.openMatchs({ homeTab: 'competitions' })}
-          scaleTo={0.96}
-          haptic
-        >
-          <ProDayText variant="caption" accent style={styles.link}>
-            {t('coach.portal.matchs.openCompetitions')}
-          </ProDayText>
-        </PressableSpring>
-        <PressableSpring
-          onPress={() => nav.openMatchs({ homeTab: 'convocations' })}
-          scaleTo={0.96}
-          haptic
-        >
-          <ProDayText variant="caption" accent style={styles.link}>
-            {t('coach.portal.matchs.openConvocs')}
-          </ProDayText>
-        </PressableSpring>
-      </ProDaySurface>
+        <CoachSectionCard kicker={t('coach.portal.matchs.competitions')} title="Calendrier & compétitions">
+          <CoachSettingsGroup>
+            <CoachSettingsRow
+              icon="calendar"
+              label={t('coach.portal.matchs.openCalendar')}
+              onPress={() => nav.openMatchs({ homeTab: 'season' })}
+            />
+            <CoachSettingsRow
+              icon="trophy"
+              label={t('coach.portal.matchs.openCompetitions')}
+              onPress={() => nav.openMatchs({ homeTab: 'competitions' })}
+            />
+            <CoachSettingsRow
+              icon="mail"
+              label={t('coach.portal.matchs.openConvocs')}
+              onPress={() => nav.openMatchs({ homeTab: 'convocations' })}
+              last
+            />
+          </CoachSettingsGroup>
+        </CoachSectionCard>
 
-      {nextMatch ? (
-        <MatchTalkPanel
-          event={nextMatch}
-          profile={profile}
-          members={members}
-        />
-      ) : (
-        <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-          <ProDayText variant="caption" accent style={styles.section}>
-            Causerie match
-          </ProDayText>
-          <ProDayText variant="caption" muted>
-            Donnée indisponible — créez un match pour démarrer.
-          </ProDayText>
-          <PressableSpring
-            onPress={openSmartTactics}
-            scaleTo={0.96}
-            haptic
-          >
-            <ProDayText variant="caption" accent style={styles.link}>
-              Tactique IA — composition
-            </ProDayText>
-          </PressableSpring>
-        </ProDaySurface>
-      )}
-    </CoachChapterScroll>
+        {nextMatch ? (
+          <CoachSectionCard kicker="Causerie" title="Briefing avant match">
+            <CoachText variant="caption" muted>
+              Objectifs et consignes depuis l’événement.
+            </CoachText>
+            <Pressable
+              onPress={() => openHub('apercu')}
+              style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]}
+            >
+              <CoachText variant="caption" accent style={styles.link}>
+                Ouvrir le résumé événement →
+              </CoachText>
+            </Pressable>
+          </CoachSectionCard>
+        ) : null}
+      </CoachChapterScroll>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.md, gap: spacing.xs },
-  section: { fontWeight: '800', textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.6 },
-  flowTitle: { fontWeight: '800', marginTop: spacing.sm },
-  flowRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
-  step: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 8,
-  },
-  stepText: { fontWeight: '800', fontSize: 11 },
-  link: { fontWeight: '800', marginTop: 4 },
-});
+function createStyles() {
+  return StyleSheet.create({
+    root: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
+    subtitle: { marginTop: -spacing.sm },
+    kpiWrap: { marginTop: spacing.sm },
+    sectionLabel: {
+      fontWeight: '600',
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      fontSize: 11,
+      marginTop: spacing.xs,
+    },
+    actionGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    actionBtn: {
+      flexGrow: 1,
+      flexBasis: '45%',
+      minHeight: 52,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 18,
+      backgroundColor: COACH_SITE.surface,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    actionLabel: {
+      color: COACH_SITE.foreground,
+      fontWeight: '700',
+      fontSize: 16,
+    },
+    linkRow: { marginTop: spacing.sm },
+    link: { fontWeight: '700' },
+  });
+}
