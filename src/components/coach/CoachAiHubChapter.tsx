@@ -23,6 +23,10 @@ import { Icon } from '../ui/Icon';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import {
+  filterMembersForTeam,
+  teamPlayerUids,
+} from '../../utils/coachTeamTheme';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
 import { wellnessCheckinsService } from '../../services/wellnessCheckins.service';
 import { coachEvaluationsService } from '../../services/coachEvaluations.service';
@@ -51,6 +55,8 @@ import {
   type CoachComposedPlan,
 } from '../../utils/coachTrainingRecommendation';
 import { teamEventsService } from '../../services/teamEvents.service';
+import { membershipsService } from '../../services/memberships.service';
+import type { Membership } from '../../models/Membership';
 import { clubCamerasService } from '../../services/clubCameras.service';
 import type { ClubMatchVideo } from '../../models/ClubCameras';
 import {
@@ -102,7 +108,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   showSeasonStats = true,
 }) => {
   const shellNav = useCoachShellNav();
-  const { tokens } = useCoachTheme();
+  const { tokens, teamId: activeTeamId } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
   const [wellnessByUid, setWellnessByUid] = useState<Record<string, WellnessSignals>>({});
@@ -111,8 +117,17 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const [clubVideos, setClubVideos] = useState<ClubMatchVideo[]>([]);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [applyingPlan, setApplyingPlan] = useState(false);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
 
-  const rosterUids = useMemo(() => members.map((m) => m.uid), [members]);
+  const teamMembers = useMemo(
+    () => filterMembersForTeam(members, memberships, activeTeamId),
+    [members, memberships, activeTeamId],
+  );
+  const teamUids = useMemo(
+    () => teamPlayerUids(memberships, activeTeamId),
+    [memberships, activeTeamId],
+  );
+  const rosterUids = useMemo(() => teamMembers.map((m) => m.uid), [teamMembers]);
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
   const canManage = userCanManageConvocations(profile, { clubCoversCoach });
 
@@ -121,6 +136,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     void wellnessCheckinsService.listLatestForClub(clubId).then(setWellnessByUid).catch(() => {});
     void coachEvaluationsService.listForClub(clubId).then(setEvaluations).catch(() => {});
     void clubCamerasService.listMatchVideos(clubId).then(setClubVideos).catch(() => setClubVideos([]));
+    void membershipsService.listByClub(clubId).then(setMemberships).catch(() => setMemberships([]));
   }, [clubId, members.length]);
 
   useEffect(() => {
@@ -137,13 +153,13 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     () =>
       buildCoachAiInsights({
         events,
-        members,
+        members: teamMembers,
         wellnessByUid,
         evaluations,
         lineup,
         hasClub: Boolean(clubId),
       }),
-    [events, members, wellnessByUid, evaluations, lineup, clubId],
+    [events, teamMembers, wellnessByUid, evaluations, lineup, clubId],
   );
 
   const openNav = useCallback(
@@ -181,14 +197,14 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     () =>
       buildCoachComposedPlan({
         events,
-        members,
+        members: teamMembers,
         wellnessByUid,
         evaluations,
         lineup,
         hasClub: Boolean(clubId),
         postMatchAnalysis: postMatchAnalyses[0] ?? null,
       }),
-    [events, members, wellnessByUid, evaluations, lineup, clubId, postMatchAnalyses],
+    [events, teamMembers, wellnessByUid, evaluations, lineup, clubId, postMatchAnalyses],
   );
 
   const applyComposedPlan = useCallback(async () => {
@@ -251,7 +267,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
       }
 
       const startsAt = defaultRecommendedSessionStart();
-      const inviteeUids = members.filter((m) => m.uid !== profile.uid).map((m) => m.uid);
+      const inviteeUids = teamUids.filter((uid) => uid !== profile.uid);
       const eventId = await teamEventsService.create({
         title: composedPlan.title,
         description: composedPlan.reason,
@@ -259,9 +275,10 @@ export const CoachAiHubChapter: React.FC<Props> = ({
         organizer_uid: profile.uid,
         organizer_name: profile.display_name,
         club_id: clubId,
+        team_id: activeTeamId,
         starts_at: startsAt,
         city: profile.city?.trim() || 'Paris',
-        invitee_uids: inviteeUids,
+        invitee_uids: inviteeUids.length > 0 ? inviteeUids : teamMembers.filter((m) => m.uid !== profile.uid).map((m) => m.uid),
         reminder_hours_before: 24,
       });
       await teamEventsService.updateSessionPlan(
@@ -289,7 +306,9 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     composedPlan,
     calendarContext,
     events,
-    members,
+    teamMembers,
+    teamUids,
+    activeTeamId,
     profile,
     openNav,
   ]);

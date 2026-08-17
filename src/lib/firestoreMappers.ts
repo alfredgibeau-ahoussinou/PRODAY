@@ -411,6 +411,7 @@ export function teamEventFromFirestore(
     organizer_name: String(data.organizer_name ?? ''),
     club_id: data.club_id as string | undefined,
     club_name: data.club_name as string | undefined,
+    team_id: data.team_id ? String(data.team_id) : undefined,
     tournament_id: data.tournament_id as string | undefined,
     friendly_match_id: data.friendly_match_id as string | undefined,
     competition_fixture_id: data.competition_fixture_id as string | undefined,

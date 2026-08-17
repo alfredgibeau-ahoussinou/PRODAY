@@ -274,6 +274,7 @@ export const teamEventsService = {
       organizer_name: input.organizer_name,
       club_id: input.club_id ?? null,
       club_name: input.club_name ?? null,
+      team_id: input.team_id ?? null,
       tournament_id: input.tournament_id ?? null,
       friendly_match_id: input.friendly_match_id ?? null,
       competition_fixture_id: input.competition_fixture_id ?? null,

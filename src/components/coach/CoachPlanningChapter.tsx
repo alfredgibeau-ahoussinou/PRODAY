@@ -23,9 +23,11 @@ import {
 } from '../../models/TeamEvent';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { teamEventsService } from '../../services/teamEvents.service';
+import { membershipsService } from '../../services/memberships.service';
 import { buildCoachComposedPlan, formatRecommendedSessionNotes } from '../../utils/coachTrainingRecommendation';
 import { coachObjectivesService } from '../../services/coachObjectives.service';
 import type { CoachSeasonObjective } from '../../models/CoachSeasonObjective';
+import type { Membership } from '../../models/Membership';
 import { userCanManageConvocations, resolveClubCoversCoachFromMembers } from '../../utils/clubFeatureAccess';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
@@ -33,6 +35,16 @@ import { useTranslation } from '../../context/LocaleContext';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import {
+  filterMembersForTeam,
+  filterTrainingsForTeam,
+  teamPlayerUids,
+} from '../../utils/coachTeamTheme';
+import { CoachTeamSwitcher } from './CoachTeamSwitcher';
+import {
+  CoachTrainingTeamRoster,
+  TrainingRosterPreview,
+} from './CoachTrainingTeamRoster';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { radius, spacing } from '../../theme/designTokens';
 
@@ -66,7 +78,7 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
-  const { tokens } = useCoachTheme();
+  const { tokens, teamId: activeTeamId, teamName } = useCoachTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const formInputStyle = useMemo(
     () => ({
@@ -84,8 +96,23 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
   const [duration, setDuration] = useState('90');
   const [saving, setSaving] = useState(false);
   const [objectives, setObjectives] = useState<CoachSeasonObjective[]>([]);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
 
   const clubId = profile.profile.club_id;
+
+  useEffect(() => {
+    if (!clubId) return;
+    void membershipsService.listByClub(clubId).then(setMemberships).catch(() => setMemberships([]));
+  }, [clubId, members.length]);
+
+  const teamMembers = useMemo(
+    () => filterMembersForTeam(members, memberships, activeTeamId),
+    [members, memberships, activeTeamId],
+  );
+  const teamUids = useMemo(
+    () => teamPlayerUids(memberships, activeTeamId),
+    [memberships, activeTeamId],
+  );
 
   useEffect(() => {
     if (!clubId) return;
@@ -96,11 +123,12 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
     const visible = [...events].filter(isPlanningVisible);
     const sortByStart = (a: TeamEvent, b: TeamEvent) =>
       a.starts_at.getTime() - b.starts_at.getTime();
+    const visibleTrainings = visible.filter(isCoachTrainingEvent);
     return {
-      trainings: visible.filter(isCoachTrainingEvent).sort(sortByStart),
+      trainings: filterTrainingsForTeam(visibleTrainings, activeTeamId, teamUids).sort(sortByStart),
       matches: visible.filter(isCoachMatchEvent).sort(sortByStart),
     };
-  }, [events]);
+  }, [events, activeTeamId, teamUids]);
 
   const hasAny = trainings.length > 0 || matches.length > 0;
 
@@ -150,7 +178,7 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
     const isMatch = isCoachMatchEvent(event);
     const plan = buildCoachComposedPlan({
       events,
-      members,
+      members: teamMembers,
       hasClub: Boolean(clubId),
       targetEvent: event,
     });
@@ -404,10 +432,19 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
               {event.session_plan.focus}
             </CoachText>
           ) : null}
+          <TrainingRosterPreview event={event} teamMembers={teamMembers} />
         </PressableSpring>
 
         {open ? (
           <View style={styles.form}>
+            <CoachTrainingTeamRoster
+              event={event}
+              profile={profile}
+              teamMembers={teamMembers}
+              teamName={teamName || t('coach.portal.team.switchLabel')}
+              canManage={canManage}
+              onUpdated={onRefresh}
+            />
             {renderPlanForm(event, false)}
             {renderTasks(event)}
             <PressableSpring
@@ -501,6 +538,9 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
       ]}
     >
       <CoachChapterScroll>
+        <View style={styles.teamSwitcherWrap}>
+          <CoachTeamSwitcher />
+        </View>
         {!hasAny ? (
           <CoachEmptyState
             title={t('coach.portal.planning.empty')}
@@ -544,6 +584,9 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
 
 const createStyles = (tokens: CoachThemeTokens) =>
   StyleSheet.create({
+    teamSwitcherWrap: {
+      marginBottom: spacing.sm,
+    },
     eventCard: {
       borderRadius: 14,
       padding: spacing.md,

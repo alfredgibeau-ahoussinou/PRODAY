@@ -3,6 +3,9 @@ import {
   COACH_TEAM_ACCENT_PALETTE,
   filterMembersForTeam,
   filterPendingForTeam,
+  filterTrainingsForTeam,
+  eventBelongsToTeam,
+  teamPlayerUids,
   listCoachTeams,
   pickCoachTeam,
   resolveCoachEffectiveAccent,
@@ -15,6 +18,7 @@ import {
   normalizeCoachHexColor,
 } from '../utils/coachColorPicker';
 import { COACH_SITE } from '../content/coachPageIdentity';
+import type { TeamEvent } from '../models/TeamEvent';
 
 describe('coachTeamTheme', () => {
   it('retourne le même accent pour le même teamId', () => {
@@ -197,5 +201,56 @@ describe('coachTeamTheme', () => {
     ];
     expect(filterPendingForTeam(pending, 'team-a')).toHaveLength(1);
     expect(filterPendingForTeam(pending, undefined)).toHaveLength(2);
+  });
+
+  it('teamPlayerUids — joueurs actifs par équipe', () => {
+    const memberships = [
+      { status: 'active', team_id: 'team-a', player_uid: 'p1' },
+      { status: 'active', team_id: 'team-b', player_uid: 'p2' },
+      { status: 'pending', team_id: 'team-a', player_uid: 'p3' },
+    ] as import('../models/Membership').Membership[];
+    expect(teamPlayerUids(memberships, 'team-a')).toEqual(['p1']);
+    expect(teamPlayerUids(memberships, undefined)).toEqual([]);
+  });
+
+  function trainingEvent(partial: Partial<TeamEvent> & Pick<TeamEvent, 'id' | 'invitee_uids'>): TeamEvent {
+    return {
+      title: 'Séance',
+      event_type: 'training',
+      organizer_uid: 'coach',
+      organizer_name: 'Coach',
+      starts_at: new Date(),
+      city: 'Paris',
+      rsvps: {},
+      created_at: new Date(),
+      updated_at: new Date(),
+      ...partial,
+    };
+  }
+
+  it('eventBelongsToTeam — team_id explicite ou chevauchement legacy', () => {
+    const teamUids = ['p1', 'p2', 'p3'];
+    const tagged = trainingEvent({ id: 'e1', team_id: 'team-a', invitee_uids: ['p9'] });
+    const legacyMajority = trainingEvent({ id: 'e2', invitee_uids: ['p1', 'p2', 'x'] });
+    const legacyMinority = trainingEvent({ id: 'e3', invitee_uids: ['p1', 'x', 'y'] });
+    const otherTeam = trainingEvent({ id: 'e4', team_id: 'team-b', invitee_uids: ['p1'] });
+
+    expect(eventBelongsToTeam(tagged, 'team-a', teamUids)).toBe(true);
+    expect(eventBelongsToTeam(tagged, 'team-b', teamUids)).toBe(false);
+    expect(eventBelongsToTeam(legacyMajority, 'team-a', teamUids)).toBe(true);
+    expect(eventBelongsToTeam(legacyMinority, 'team-a', teamUids)).toBe(false);
+    expect(eventBelongsToTeam(otherTeam, 'team-a', teamUids)).toBe(false);
+  });
+
+  it('filterTrainingsForTeam — filtre par équipe active', () => {
+    const teamUids = ['p1', 'p2'];
+    const events = [
+      trainingEvent({ id: 't1', team_id: 'team-a', invitee_uids: ['p1'] }),
+      trainingEvent({ id: 't2', invitee_uids: ['p1', 'p2'] }),
+      trainingEvent({ id: 't3', invitee_uids: ['p9'] }),
+      trainingEvent({ id: 'm1', event_type: 'friendly', invitee_uids: ['p1'] }),
+    ];
+    const filtered = filterTrainingsForTeam(events, 'team-a', teamUids);
+    expect(filtered.map((e) => e.id)).toEqual(['t1', 't2']);
   });
 });

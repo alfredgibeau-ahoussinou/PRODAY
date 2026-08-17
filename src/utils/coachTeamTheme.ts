@@ -1,5 +1,8 @@
 import { COACH_SITE } from '../content/coachPageIdentity';
 import { normalizeCoachHexColor } from './coachColorPicker';
+import type { Membership } from '../models/Membership';
+import type { TeamEvent } from '../models/TeamEvent';
+import { isCoachTrainingEvent } from '../models/TeamEvent';
 
 export type CoachShellVariant = 'solid' | 'clear';
 
@@ -192,6 +195,46 @@ export function filterMembersForTeam<T extends { uid: string }>(
       .map((m) => m.player_uid),
   );
   return members.filter((m) => uids.has(m.uid));
+}
+
+/** UIDs joueurs actifs d’une équipe (memberships). */
+export function teamPlayerUids(memberships: Membership[], teamId?: string): string[] {
+  if (!teamId) return [];
+  return memberships
+    .filter((m) => m.status === 'active' && m.team_id === teamId)
+    .map((m) => m.player_uid);
+}
+
+/** Événement rattaché à l’équipe (team_id explicite ou chevauchement legacy). */
+export function eventBelongsToTeam(
+  event: TeamEvent,
+  teamId: string | undefined,
+  teamUids: string[],
+): boolean {
+  if (!teamId) return true;
+  if (event.team_id) return event.team_id === teamId;
+
+  const invitees = event.invitee_uids;
+  if (invitees.length === 0) return false;
+
+  const teamSet = new Set(teamUids);
+  const overlap = invitees.filter((uid) => teamSet.has(uid)).length;
+  if (overlap === 0) return false;
+
+  const majority = Math.ceil(invitees.length / 2);
+  return overlap >= majority || overlap === invitees.length;
+}
+
+/** Entraînements visibles pour l’équipe active du coach. */
+export function filterTrainingsForTeam(
+  events: TeamEvent[],
+  teamId: string | undefined,
+  teamUids: string[],
+): TeamEvent[] {
+  return events.filter(
+    (event) =>
+      isCoachTrainingEvent(event) && eventBelongsToTeam(event, teamId, teamUids),
+  );
 }
 
 /** Demandes d’affiliation en attente pour une équipe. */

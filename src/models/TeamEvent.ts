@@ -184,6 +184,8 @@ export interface TeamEvent {
   organizer_name: string;
   club_id?: string;
   club_name?: string;
+  /** Équipe cible (entraînements multi-équipes coach). */
+  team_id?: string;
   /** Lien legacy — tournoi associé (données historiques) */
   tournament_id?: string;
   /** Lien match amical — évite les doublons de convocation */
@@ -244,6 +246,7 @@ export interface CreateTeamEventInput {
   organizer_name: string;
   club_id?: string;
   club_name?: string;
+  team_id?: string;
   tournament_id?: string;
   friendly_match_id?: string;
   competition_fixture_id?: string;
