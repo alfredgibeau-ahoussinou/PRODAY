@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -38,6 +40,17 @@ import {
   normalizeCoachPitchLineup,
   type CoachPitchLineup,
 } from '../../utils/coachPitchLineup';
+import {
+  buildRecommendedSession,
+  defaultRecommendedSessionStart,
+  formatRecommendedSessionNotes,
+  type RecommendedTrainingSession,
+} from '../../utils/coachTrainingRecommendation';
+import { teamEventsService } from '../../services/teamEvents.service';
+import {
+  resolveClubCoversCoachFromMembers,
+  userCanManageConvocations,
+} from '../../utils/clubFeatureAccess';
 
 type Props = CoachChapterCommonProps & {
   /** Afficher le panneau stats saison sous l’hub. */
@@ -84,8 +97,12 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const [evaluations, setEvaluations] = useState<CoachPlayerEvaluation[]>([]);
   const [lineup, setLineup] = useState<CoachPitchLineup | null>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [sessionDismissed, setSessionDismissed] = useState(false);
+  const [creatingSession, setCreatingSession] = useState(false);
 
   const rosterUids = useMemo(() => members.map((m) => m.uid), [members]);
+  const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
+  const canManage = userCanManageConvocations(profile, { clubCoversCoach });
 
   useEffect(() => {
     if (!clubId) return;
@@ -138,6 +155,69 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     () => listRecentPostMatchAnalyses(events, members, 3),
     [events, members],
   );
+
+  const recommendedSession = useMemo(
+    () =>
+      buildRecommendedSession({
+        events,
+        members,
+        wellnessByUid,
+        evaluations,
+        lineup,
+        hasClub: Boolean(clubId),
+        postMatchAnalysis: postMatchAnalyses[0] ?? null,
+      }),
+    [events, members, wellnessByUid, evaluations, lineup, clubId, postMatchAnalyses],
+  );
+
+  const createRecommendedSession = useCallback(async () => {
+    if (!canManage) {
+      Alert.alert(
+        'Entraînements',
+        'La création de séances est réservée au coach Premium (ou couvert par un Tout inclus).',
+      );
+      return;
+    }
+    if (!clubId) {
+      Alert.alert('Club requis', 'Rattachez un club pour créer une séance.');
+      return;
+    }
+    setCreatingSession(true);
+    try {
+      const startsAt = defaultRecommendedSessionStart();
+      const inviteeUids = members.filter((m) => m.uid !== profile.uid).map((m) => m.uid);
+      const eventId = await teamEventsService.create({
+        title: recommendedSession.title,
+        description: recommendedSession.reason,
+        event_type: 'training',
+        organizer_uid: profile.uid,
+        organizer_name: profile.display_name,
+        club_id: clubId,
+        starts_at: startsAt,
+        city: profile.city?.trim() || 'Paris',
+        invitee_uids: inviteeUids,
+        reminder_hours_before: 24,
+      });
+      await teamEventsService.updateSessionPlan(
+        eventId,
+        {
+          focus: recommendedSession.focus,
+          notes: formatRecommendedSessionNotes(recommendedSession),
+          duration_min: recommendedSession.totalMinutes,
+        },
+        { user: profile },
+      );
+      Alert.alert(
+        'Séance créée',
+        `« ${recommendedSession.title} » planifiée. Retrouvez-la dans Entraînements.`,
+      );
+      openNav('entrainements');
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Création impossible.');
+    } finally {
+      setCreatingSession(false);
+    }
+  }, [canManage, clubId, members, profile, recommendedSession, openNav]);
 
   return (
     <CoachPane title={getCoachPageIdentity('coach_ia').title}>
@@ -246,6 +326,15 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             </Pressable>
           </CoachSectionCard>
 
+          {!sessionDismissed ? (
+            <RecommendedSessionCard
+              session={recommendedSession}
+              creating={creatingSession}
+              onCreate={() => void createRecommendedSession()}
+              onDismiss={() => setSessionDismissed(true)}
+            />
+          ) : null}
+
           <Pressable style={styles.primaryBtn} onPress={() => setActionsOpen(true)}>
             <Icon name="star-four-points" size={18} color="#fff" />
             <CoachText variant="section" inverse style={styles.primaryBtnText}>
@@ -339,6 +428,87 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     </CoachPane>
   );
 };
+
+function RecommendedSessionCard({
+  session,
+  creating,
+  onCreate,
+  onDismiss,
+}: {
+  session: RecommendedTrainingSession;
+  creating: boolean;
+  onCreate: () => void;
+  onDismiss: () => void;
+}) {
+  const confidenceLabel =
+    session.dataConfidence === 'high'
+      ? 'Données fiables'
+      : session.dataConfidence === 'low'
+        ? 'Données partielles'
+        : 'Modèle générique';
+
+  return (
+    <CoachSectionCard
+      kicker="Séance recommandée"
+      title={session.title}
+      body={session.reason}
+    >
+      <View style={styles.sessionMeta}>
+        <CoachText variant="caption" muted>
+          Focus · {session.focus}
+        </CoachText>
+        <CoachText variant="caption" muted>
+          {confidenceLabel}
+          {session.playerCount != null ? ` · ${session.playerCount} joueurs` : ''}
+          {` · ${session.difficulty}`}
+        </CoachText>
+      </View>
+      <View style={styles.sessionBlocks}>
+        {session.blocks.map((block) => (
+          <View key={block.label} style={styles.sessionBlockRow}>
+            <CoachText variant="section" style={styles.sessionBlockMin}>
+              {block.minutes}'
+            </CoachText>
+            <View style={styles.sessionBlockBody}>
+              <CoachText variant="caption" style={styles.sessionBlockLabel}>
+                {block.label}
+              </CoachText>
+              {block.objective ? (
+                <CoachText variant="caption" muted numberOfLines={2}>
+                  {block.objective}
+                </CoachText>
+              ) : null}
+              {block.material && block.material !== '—' ? (
+                <CoachText variant="caption" muted style={styles.sessionMaterial}>
+                  Matériel : {block.material}
+                </CoachText>
+              ) : null}
+            </View>
+          </View>
+        ))}
+      </View>
+      <Pressable
+        style={[styles.primaryBtn, styles.sessionCreateBtn, creating && styles.sessionCreateDisabled]}
+        onPress={onCreate}
+        disabled={creating}
+      >
+        {creating ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <Icon name="calendar" size={18} color="#fff" />
+        )}
+        <CoachText variant="section" inverse style={styles.primaryBtnText}>
+          {creating ? 'Création…' : 'Créer la séance'}
+        </CoachText>
+      </Pressable>
+      <Pressable style={styles.sessionDismissBtn} onPress={onDismiss}>
+        <CoachText variant="caption" muted>
+          Plus tard
+        </CoachText>
+      </Pressable>
+    </CoachSectionCard>
+  );
+}
 
 function PostMatchCard({ analysis }: { analysis: PostMatchAnalysis }) {
   const dateStr = analysis.date.toLocaleDateString('fr-FR', {
@@ -455,6 +625,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   primaryBtnText: { fontWeight: '800', color: '#fff' },
+  sessionMeta: { marginTop: spacing.sm, gap: 4 },
+  sessionBlocks: { marginTop: spacing.sm, gap: spacing.xs },
+  sessionBlockRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COACH_SITE.border,
+  },
+  sessionBlockMin: { fontWeight: '800', width: 36, color: COACH_SITE.accent },
+  sessionBlockBody: { flex: 1, gap: 2 },
+  sessionBlockLabel: { fontWeight: '700' },
+  sessionMaterial: { fontSize: 10, fontStyle: 'italic' },
+  sessionCreateBtn: { marginTop: spacing.md },
+  sessionCreateDisabled: { opacity: 0.7 },
+  sessionDismissBtn: { alignItems: 'center', paddingTop: spacing.sm },
   previewActions: { gap: spacing.xs },
   previewRow: {
     padding: spacing.md,
