@@ -88,7 +88,6 @@ export function CoachAccentColorBoard({
         maxToRenderPerBatch={16}
         windowSize={7}
         removeClippedSubviews
-        nestedScrollEnabled
         style={[styles.list, { height: boardHeight }]}
         contentContainerStyle={styles.grid}
         showsVerticalScrollIndicator

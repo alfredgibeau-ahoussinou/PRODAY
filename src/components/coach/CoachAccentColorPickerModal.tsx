@@ -90,15 +90,17 @@ export function CoachAccentColorPickerModal({
             })}
           </View>
 
-          <ScrollView
-            style={styles.bodyScroll}
-            contentContainerStyle={styles.bodyContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-          >
+          <View style={styles.body}>
             {tab === 'assistant' ? (
-              <CoachAccentColorAssistant selectedColor={draftColor} onSelect={setDraftColor} />
+              <ScrollView
+                style={styles.bodyScroll}
+                contentContainerStyle={styles.bodyContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+              >
+                <CoachAccentColorAssistant selectedColor={draftColor} onSelect={setDraftColor} />
+              </ScrollView>
             ) : (
               <CoachAccentColorBoard
                 selectedColor={draftColor}
@@ -106,7 +108,7 @@ export function CoachAccentColorPickerModal({
                 boardHeight={gridHeight}
               />
             )}
-          </ScrollView>
+          </View>
 
           <PressableSpring
             onPress={handleApply}
@@ -169,6 +171,9 @@ function createStyles(tokens: CoachThemeTokens) {
     },
     segmentTextOn: { color: tokens.accent, fontWeight: '800' },
     segmentTextOff: { color: tokens.muted, fontWeight: '600' },
+    body: {
+      flexShrink: 1,
+    },
     bodyScroll: {
       flexGrow: 0,
       flexShrink: 1,
