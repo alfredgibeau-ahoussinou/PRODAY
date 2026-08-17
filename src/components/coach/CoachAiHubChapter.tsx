@@ -417,7 +417,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
           />
 
           <Pressable style={styles.primaryBtn} onPress={() => setActionsOpen(true)}>
-            <Icon name="star-four-points" size={18} color="#fff" />
+            <Icon name="star-four-points" size={18} color={tokens.onAccent} />
             <CoachText variant="section" inverse style={styles.primaryBtnText}>
               Que dois-je faire maintenant ?
             </CoachText>
@@ -566,6 +566,7 @@ function ComposedPlanCard({
   applying: boolean;
   onApply: () => void;
 }) {
+  const { tokens } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
   const isMatch = plan.context === 'match';
   const isEmpty = plan.archetype === 'empty';
@@ -641,9 +642,9 @@ function ComposedPlanCard({
         disabled={applying}
       >
         {applying ? (
-          <ActivityIndicator color="#fff" size="small" />
+          <ActivityIndicator color={tokens.onAccent} size="small" />
         ) : (
-          <Icon name={isMatch ? 'football' : 'calendar'} size={18} color="#fff" />
+          <Icon name={isMatch ? 'football' : 'calendar'} size={18} color={tokens.onAccent} />
         )}
         <CoachText variant="section" inverse style={styles.primaryBtnText}>
           {applying ? 'Application…' : ctaLabel}
@@ -793,7 +794,7 @@ function createStyles(tokens: CoachThemeTokens) {
       paddingVertical: 16,
       paddingHorizontal: spacing.lg,
     },
-    primaryBtnText: { fontWeight: '800', color: '#fff' },
+    primaryBtnText: { fontWeight: '800', color: tokens.onAccent },
     sessionMeta: { marginTop: spacing.sm, gap: 4 },
     sessionBlocks: { marginTop: spacing.sm, gap: spacing.xs },
     sessionBlockRow: {

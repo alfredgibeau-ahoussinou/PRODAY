@@ -8,18 +8,22 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { LanguagePickerModal } from './LanguagePickerModal';
 import { spacing, radius } from '../../theme/designTokens';
+import type { AppColors } from '../../theme/universeTheme';
 
 type LanguageSettingVariant = 'row' | 'chip' | 'card';
 
 interface LanguageSettingControlProps {
   variant?: LanguageSettingVariant;
+  colors?: AppColors;
 }
 
 /** Sélecteur de langue réutilisable — invité, profil et préférences. */
 export const LanguageSettingControl: React.FC<LanguageSettingControlProps> = ({
   variant = 'row',
+  colors: colorsProp,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors: themeColors } = useAppTheme();
+  const colors = colorsProp ?? themeColors;
   const { t, locale, languageLabel, setLocale } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -57,31 +61,56 @@ export const LanguageSettingControl: React.FC<LanguageSettingControlProps> = ({
   }
 
   if (variant === 'card') {
+    const cardSurface = colorsProp
+      ? { backgroundColor: colors.surface, borderColor: colors.border }
+      : undefined;
     return (
       <>
         <PressableSpring onPress={() => setOpen(true)} scaleTo={0.99} haptic>
-          <ProDaySurface
-            variant="module"
-            style={[styles.card, { borderColor: colors.border }]}
-          >
-            <View style={styles.cardRow}>
-              <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
-                <Icon name="globe" size={18} color={colors.accent} />
-              </View>
-              <View style={styles.copy}>
-                <ProDayText variant="body">{t('preferences.language')}</ProDayText>
-                <ProDayText variant="caption" muted>
-                  {t('preferences.languageHint')}
-                </ProDayText>
-              </View>
-              <View style={styles.value}>
-                <ProDayText variant="caption" accent numberOfLines={1} style={styles.valueLabel}>
-                  {languageLabel}
-                </ProDayText>
-                <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+          {colorsProp ? (
+            <View style={[styles.card, cardSurface]}>
+              <View style={styles.cardRow}>
+                <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
+                  <Icon name="globe" size={18} color={colors.accent} />
+                </View>
+                <View style={styles.copy}>
+                  <ProDayText variant="body">{t('preferences.language')}</ProDayText>
+                  <ProDayText variant="caption" muted>
+                    {t('preferences.languageHint')}
+                  </ProDayText>
+                </View>
+                <View style={styles.value}>
+                  <ProDayText variant="caption" accent numberOfLines={1} style={styles.valueLabel}>
+                    {languageLabel}
+                  </ProDayText>
+                  <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+                </View>
               </View>
             </View>
-          </ProDaySurface>
+          ) : (
+            <ProDaySurface
+              variant="module"
+              style={[styles.card, { borderColor: colors.border }]}
+            >
+              <View style={styles.cardRow}>
+                <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
+                  <Icon name="globe" size={18} color={colors.accent} />
+                </View>
+                <View style={styles.copy}>
+                  <ProDayText variant="body">{t('preferences.language')}</ProDayText>
+                  <ProDayText variant="caption" muted>
+                    {t('preferences.languageHint')}
+                  </ProDayText>
+                </View>
+                <View style={styles.value}>
+                  <ProDayText variant="caption" accent numberOfLines={1} style={styles.valueLabel}>
+                    {languageLabel}
+                  </ProDayText>
+                  <Icon name="chevron-forward" size={16} color={colors.textMuted} />
+                </View>
+              </View>
+            </ProDaySurface>
+          )}
         </PressableSpring>
         {modal}
       </>

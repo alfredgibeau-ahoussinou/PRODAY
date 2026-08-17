@@ -196,6 +196,6 @@ function createStyles(tokens: CoachThemeTokens) {
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.lg,
     },
-    saveText: { fontWeight: '700', color: '#fff' },
+    saveText: { fontWeight: '700', color: tokens.onAccent },
   });
 }

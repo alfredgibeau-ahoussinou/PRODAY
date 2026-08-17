@@ -132,7 +132,7 @@ function createStyles(tokens: CoachThemeTokens) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    badgeText: { color: '#fff', fontSize: 11, fontWeight: '700', lineHeight: 13 },
+    badgeText: { color: tokens.onAccent, fontSize: 11, fontWeight: '700', lineHeight: 13 },
     separator: {
       marginLeft: spacing.md + 32 + spacing.sm,
       height: StyleSheet.hairlineWidth,

@@ -26,7 +26,7 @@ export function coachTokensAsAppColors(tokens: CoachThemeTokens): AppColors {
     brand: tokens.accent,
     brandLight: tokens.accent,
     brandSoft: tokens.soft,
-    brandInverse: '#FFFFFF',
+    brandInverse: tokens.onAccent,
     tone4: tokens.accent,
   };
 }

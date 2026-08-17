@@ -92,7 +92,7 @@ export function CoachText({
 }: React.ComponentProps<typeof ProDayText>) {
   const { tokens } = useCoachTheme();
   const color = inverse
-    ? '#FFFFFF'
+    ? tokens.onAccent
     : accent
       ? tokens.accent
       : muted

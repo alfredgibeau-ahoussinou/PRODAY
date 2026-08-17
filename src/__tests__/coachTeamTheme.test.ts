@@ -2,6 +2,7 @@ import {
   buildCoachThemeTokens,
   COACH_TEAM_ACCENT_PALETTE,
   resolveCoachEffectiveAccent,
+  resolveCoachOnAccent,
   resolveCoachTeamAccent,
 } from '../utils/coachTeamTheme';
 import {
@@ -127,5 +128,22 @@ describe('coachTeamTheme', () => {
         teamId,
       }),
     ).toBe(autoAccent);
+  });
+
+  it('onAccent — blanc sur accent sombre, sombre sur accent clair', () => {
+    expect(resolveCoachOnAccent('#006CFC')).toBe('#FFFFFF');
+    expect(resolveCoachOnAccent('#FFD60A')).toBe('#1C1C1E');
+    const tokens = buildCoachThemeTokens({
+      variant: 'solid',
+      accentMode: 'manual',
+      accentOverride: '#FFD60A',
+    });
+    expect(tokens.onAccent).toBe('#1C1C1E');
+    const darkTokens = buildCoachThemeTokens({
+      variant: 'solid',
+      accentMode: 'manual',
+      accentOverride: '#006CFC',
+    });
+    expect(darkTokens.onAccent).toBe('#FFFFFF');
   });
 });

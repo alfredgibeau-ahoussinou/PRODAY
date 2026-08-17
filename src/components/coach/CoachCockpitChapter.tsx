@@ -271,7 +271,7 @@ function CalendarEventCard({
             accessibilityRole="button"
             accessibilityLabel={pointageLabel}
           >
-            <Icon name="checkmark-circle" size={16} color="#000" />
+            <Icon name="checkmark-circle" size={16} color={tokens.foreground} />
             <CoachText variant="caption" style={styles.pointageBtnText}>
               {pointageLabel}
             </CoachText>

@@ -63,6 +63,7 @@ import { CoachPane } from '../coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import { coachTokensAsAppColors } from '../../features/coach/shell/coachTokensAsAppColors';
 import {
   CoachActivitePanel,
   CoachParamsPanel,
@@ -148,9 +149,8 @@ const scrollProps = {
 };
 
 export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
-  const { colors } = useAppTheme();
+  const { colors: appColors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(colors), [colors]);
   const brand = getUniverseIdentity(props.productLine);
   const chapters = useMemo(
     () => getProfileChapters(props.profile.role, t),
@@ -168,6 +168,11 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   const coachShellNav = useCoachShellNav();
   const { tokens: coachTokens } = useCoachTheme();
   const inCoachShell = isCoach && Boolean(coachShellNav);
+  const colors = useMemo(
+    () => (inCoachShell ? coachTokensAsAppColors(coachTokens) : appColors),
+    [inCoachShell, coachTokens, appColors],
+  );
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const joueurSession = useJoueurSession();
   const joueurAccent = useMemo(() => {
     if (!isPlayer) return colors.accent;
@@ -705,6 +710,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         showFooter={false}
         variant={useHubChrome ? 'rail' : 'pills'}
         compact={useHubChrome}
+        colors={inCoachShell ? colors : undefined}
         badges={{
           reglages:
             props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,

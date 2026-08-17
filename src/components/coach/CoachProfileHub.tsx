@@ -179,7 +179,7 @@ export function CoachProfileHub({
             </View>
           )}
           <View style={styles.avatarBadge}>
-            <Icon name="camera" size={12} color="#fff" />
+            <Icon name="camera" size={12} color={tokens.onAccent} />
           </View>
         </PressableSpring>
 

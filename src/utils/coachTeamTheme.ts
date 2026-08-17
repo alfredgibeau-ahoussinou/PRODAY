@@ -7,6 +7,8 @@ export type CoachAccentMode = 'auto' | 'manual';
 
 export type CoachThemeTokens = {
   accent: string;
+  /** Texte/icônes sur fond accent (blanc ou sombre selon luminance). */
+  onAccent: string;
   deep: string;
   soft: string;
   glow: string;
@@ -82,6 +84,21 @@ function darkenHex(hex: string, amount: number): string {
   return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
+function relativeLuminance(r: number, g: number, b: number): number {
+  const [rs, gs, bs] = [r, g, b].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+/** Couleur de texte/icône lisible sur un fond accent coach. */
+export function resolveCoachOnAccent(hex: string): string {
+  const rgb = parseHex(hex);
+  if (!rgb) return '#FFFFFF';
+  return relativeLuminance(rgb.r, rgb.g, rgb.b) > 0.62 ? '#1C1C1E' : '#FFFFFF';
+}
+
 export function resolveCoachTeamAccent(teamId?: string, teamName?: string): string {
   const key = teamId?.trim() || teamName?.trim();
   if (!key) return PRODAY_ACCENT;
@@ -135,6 +152,7 @@ export function buildCoachThemeTokens(input: {
 
   return {
     accent,
+    onAccent: resolveCoachOnAccent(accent),
     deep: darkenHex(accent, 0.45),
     soft: withAlpha(accent, softAlpha),
     glow: withAlpha(accent, glowAlpha),

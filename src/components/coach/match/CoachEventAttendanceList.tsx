@@ -145,6 +145,6 @@ function createStyles(tokens: CoachThemeTokens) {
     },
     markBtnOn: { backgroundColor: tokens.accent },
     markBtnText: { fontWeight: '600', fontSize: 12, color: tokens.muted },
-    markBtnTextOn: { color: '#fff', fontWeight: '700' },
+    markBtnTextOn: { color: tokens.onAccent, fontWeight: '700' },
   });
 }

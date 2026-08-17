@@ -13,6 +13,7 @@ import { LanguageSettingControl } from '../settings/LanguageSettingControl';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import { coachTokensAsAppColors } from '../../features/coach/shell/coachTokensAsAppColors';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -271,11 +272,15 @@ export function CoachParamsPanel({
   onSignOut?: () => void;
 }) {
   const styles = useCoachThemedStyles(createStyles);
+  const { tokens } = useCoachTheme();
 
   return (
     <View style={styles.stack}>
       <CoachSectionCard kicker="Préférences" title="Langue">
-        <LanguageSettingControl variant="card" />
+        <LanguageSettingControl
+          variant="card"
+          colors={coachTokensAsAppColors(tokens)}
+        />
       </CoachSectionCard>
 
       <CoachSectionCard

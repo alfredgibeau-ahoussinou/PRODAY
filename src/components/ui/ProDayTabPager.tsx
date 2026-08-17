@@ -21,6 +21,7 @@ import { motion } from '../../theme/motion';
 import { CarouselDot } from '../discover/CarouselDot';
 import { ProDayText } from './ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
+import type { AppColors } from '../../theme/universeTheme';
 import { fontFamily } from '../../theme/typography';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -43,6 +44,8 @@ interface ProDayTabPagerProps<T extends string> {
   compact?: boolean;
   /** Rail souligné (défaut), pills scrollables, ou bandeau jeu. */
   variant?: 'rail' | 'pills' | 'game';
+  /** Palette explicite (ex. shell coach Clair). */
+  colors?: AppColors;
 }
 
 export function ProDayTabPager<T extends string>({
@@ -54,11 +57,14 @@ export function ProDayTabPager<T extends string>({
   showFooter = false,
   compact = false,
   variant = 'rail',
+  colors: colorsProp,
 }: ProDayTabPagerProps<T>) {
-  const { colors } = useAppTheme();
+  const { colors: themeColors } = useAppTheme();
+  const colors = colorsProp ?? themeColors;
   const styles = useMemo(() => createStyles(colors, compact, variant), [colors, compact, variant]);
   const { width: windowWidth } = useWindowDimensions();
   const [layoutWidth, setLayoutWidth] = useState(0);
+  const [pagerHeight, setPagerHeight] = useState(0);
   const [trackW, setTrackW] = useState(0);
   const lineX = useSharedValue(0);
   const tabW = trackW > 0 ? trackW / chapters.length : 0;
@@ -73,6 +79,11 @@ export function ProDayTabPager<T extends string>({
     const w = Math.round(e.nativeEvent.layout.width);
     if (w <= 0) return;
     setLayoutWidth((prev) => (prev !== w ? w : prev));
+  }, []);
+  const onPagerLayout = useCallback((e: LayoutChangeEvent) => {
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (h <= 0) return;
+    setPagerHeight((prev) => (prev !== h ? h : prev));
   }, []);
   const scrollX = useSharedValue(0);
   const suppressChapterSyncRef = useRef(false);
@@ -300,12 +311,22 @@ export function ProDayTabPager<T extends string>({
         scrollEventThrottle={16}
         decelerationRate="fast"
         style={styles.pager}
+        onLayout={onPagerLayout}
+        contentContainerStyle={
+          pagerHeight > 0 ? { height: pagerHeight } : undefined
+        }
         nestedScrollEnabled
         directionalLockEnabled
         keyboardShouldPersistTaps="handled"
       >
         {pages.map((page, index) => (
-          <PagerPage key={page.id} index={index} scrollX={scrollX} pageWidth={pageWidth}>
+          <PagerPage
+            key={page.id}
+            index={index}
+            scrollX={scrollX}
+            pageWidth={pageWidth}
+            pageHeight={pagerHeight}
+          >
             {page.render()}
           </PagerPage>
         ))}
@@ -334,7 +355,15 @@ export function ProDayTabPager<T extends string>({
 }
 
 function createStyles(
-  c: { surface: string; border: string; text: string; textMuted: string; surfaceMuted: string; accent: string },
+  c: {
+    surface: string;
+    border: string;
+    text: string;
+    textMuted: string;
+    surfaceMuted: string;
+    accent: string;
+    brandInverse: string;
+  },
   compact: boolean,
   variant: 'rail' | 'pills' | 'game',
 ) {
@@ -362,7 +391,7 @@ function createStyles(
       borderWidth: 1,
     },
     pillLabel: { fontWeight: '700', fontSize: 13 },
-    pillLabelOn: { fontWeight: '800', color: '#fff' },
+    pillLabelOn: { fontWeight: '800', color: c.brandInverse },
     pillBadge: {
       minWidth: 20,
       height: 20,
