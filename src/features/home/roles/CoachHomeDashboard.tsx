@@ -9,6 +9,7 @@ import {
   StaffEmptyCard,
 } from './staffRoleHomeShared';
 import { useDashboardData } from '../../../hooks/useDashboardData';
+import { useCoachShellNav } from '../../../features/coach/shell/CoachShellNavContext';
 import { useTabNavigation } from '../../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../../context/LocaleContext';
@@ -30,6 +31,7 @@ export const CoachHomeDashboard: React.FC<StaffRoleHomeProps> = ({
   const { data, refresh } = useDashboardData(profile);
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
+  const shellNav = useCoachShellNav();
 
   const upcoming = useMemo(
     () =>
@@ -56,7 +58,8 @@ export const CoachHomeDashboard: React.FC<StaffRoleHomeProps> = ({
 
   const handleQuickAction = (action: RolePanelAction) => {
     if (action.title === 'Calendrier équipe') {
-      nav.openMatchs({ homeTab: 'convocations' });
+      if (shellNav) shellNav.requestNav('entrainements');
+      else nav.openMatchs({ homeTab: 'convocations' });
       return;
     }
     if (action.title === 'Covoiturage') {
@@ -152,6 +155,7 @@ export const CoachHomeDashboard: React.FC<StaffRoleHomeProps> = ({
         subtitle={nextEvent ? nextEvent.title : 'Ouvrir le Centre Match'}
         onPress={() => {
           if (nextEvent) openEvent(nextEvent.id, 'composition');
+          else if (shellNav) shellNav.requestNav('match_center');
           else nav.openMatchs();
         }}
       />
@@ -161,6 +165,7 @@ export const CoachHomeDashboard: React.FC<StaffRoleHomeProps> = ({
         subtitle="Debrief post-match"
         onPress={() => {
           if (nextEvent) tabNav.openMatchs({ eventId: nextEvent.id, hubChapter: 'stats' });
+          else if (shellNav) shellNav.requestNav('match_center');
           else nav.openMatchs();
         }}
       />

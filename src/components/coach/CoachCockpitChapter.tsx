@@ -58,7 +58,7 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   const openNav = (id: CoachNavItemId) => {
     if (shellNav) shellNav.requestNav(id);
     else if (id === 'carpool') nav.openCarpool();
-    else if (id === 'match_center' || id === 'matchs') nav.openMatchs();
+    else if (id === 'match_center' || id === 'matchs') tabNav.openMatchs();
     else if (id === 'gestion') nav.openDashboard('gestion');
     else if (id === 'messages') nav.setActiveTab('messages');
     else if (id === 'profil') nav.openProfile();

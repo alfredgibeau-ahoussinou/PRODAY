@@ -1,4 +1,3 @@
-import type { MatchChapterId } from '../../../content/matchChapters';
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { MatchsDeepLink } from '../../../utils/navigationDeepLink';
@@ -13,28 +12,6 @@ export type CoachEventHubOverlay = {
 export type CoachMatchHubOverlay = CoachEventHubOverlay & {
   hubChapter: MatchHubChapterId;
 };
-
-/** Mappe un deep link Matchs vers le chapitre pager du Centre Match. */
-export function matchChapterFromHomeTab(
-  homeTab?: MatchsDeepLink['homeTab'],
-): MatchChapterId {
-  switch (homeTab) {
-    case 'matches':
-      return 'amicaux';
-    case 'convocations':
-      return 'convocations';
-    case 'centre':
-      return 'centre';
-    case 'stats':
-      return 'stats';
-    case 'tournois':
-      return 'tournois';
-    case 'competitions':
-      return 'competitions';
-    default:
-      return 'calendrier';
-  }
-}
 
 /** Ouvre le hub événement coach quand openMatchs fournit un eventId. */
 export function resolveCoachEventHubOverlay(
@@ -57,6 +34,36 @@ export function resolveCoachMatchHubOverlay(
     eventId: overlay.eventId,
     hubChapter: overlay.hubChapter ?? 'apercu',
   };
+}
+
+/** Mappe un deep link Matchs (sans eventId) vers une destination coach native. */
+export function coachNavFromMatchsHomeTab(
+  homeTab?: MatchsDeepLink['homeTab'],
+): CoachNavItemId {
+  switch (homeTab) {
+    case 'matches':
+    case 'centre':
+    case 'competitions':
+    case 'tournois':
+      return 'match_center';
+    case 'convocations':
+      return 'gestion';
+    case 'stats':
+      return 'forme';
+    case 'season':
+    default:
+      return 'entrainements';
+  }
+}
+
+/** Résout la navigation coach pour un lien Matchs sans hub événement. */
+export function resolveCoachNavFromMatchsLink(
+  link: MatchsDeepLink | null | undefined,
+): CoachNavItemId | null {
+  if (!link || link.eventId) return null;
+  if (link.view) return 'gestion';
+  if (link.homeTab) return coachNavFromMatchsHomeTab(link.homeTab);
+  return 'match_center';
 }
 
 const EVENT_HUB_NAV_IDS: CoachNavItemId[] = ['match_center', 'entrainements', 'planning', 'today'];

@@ -4,9 +4,10 @@ import {
 } from '../content/coachMatchHubChapters';
 import {
   COACH_MATCH_FLOW_STEPS,
-  matchChapterFromHomeTab,
+  coachNavFromMatchsHomeTab,
   resolveCoachEventHubOverlay,
   resolveCoachMatchHubOverlay,
+  resolveCoachNavFromMatchsLink,
   shouldKeepCoachEventHubOverlay,
   shouldKeepCoachMatchHubOverlay,
 } from '../features/coach/navigation/coachMatchDeepLink';
@@ -35,12 +36,20 @@ describe('coachMatchDeepLink', () => {
     expect(resolveCoachMatchHubOverlay(null)).toBeNull();
   });
 
-  it('mappe homeTab vers chapitre MatchsScreen', () => {
-    expect(matchChapterFromHomeTab('season')).toBe('calendrier');
-    expect(matchChapterFromHomeTab('competitions')).toBe('competitions');
-    expect(matchChapterFromHomeTab('convocations')).toBe('convocations');
-    expect(matchChapterFromHomeTab('stats')).toBe('stats');
-    expect(matchChapterFromHomeTab(undefined)).toBe('calendrier');
+  it('mappe homeTab vers navigation coach native', () => {
+    expect(coachNavFromMatchsHomeTab('season')).toBe('entrainements');
+    expect(coachNavFromMatchsHomeTab('competitions')).toBe('match_center');
+    expect(coachNavFromMatchsHomeTab('convocations')).toBe('gestion');
+    expect(coachNavFromMatchsHomeTab('stats')).toBe('forme');
+    expect(coachNavFromMatchsHomeTab(undefined)).toBe('entrainements');
+  });
+
+  it('résout resolveCoachNavFromMatchsLink sans eventId', () => {
+    expect(resolveCoachNavFromMatchsLink({ homeTab: 'convocations' })).toBe('gestion');
+    expect(resolveCoachNavFromMatchsLink({ view: 'organize' })).toBe('gestion');
+    expect(resolveCoachNavFromMatchsLink({})).toBe('match_center');
+    expect(resolveCoachNavFromMatchsLink({ eventId: 'evt-1' })).toBeNull();
+    expect(resolveCoachNavFromMatchsLink(null)).toBeNull();
   });
 
   it('mappe le parcours guidé Convoc→effectif, Compo→composition, Direct→live, Rapport→stats', () => {
@@ -107,5 +116,16 @@ describe('coach match attendance', () => {
     );
     expect(src).toContain('async markAttendance');
     expect(src).toContain('assertManage(event, actor)');
+  });
+});
+
+describe('CoachAppShell', () => {
+  it('ne rend plus MatchsScreen dans le shell coach', () => {
+    const src = fs.readFileSync(
+      path.join(__dirname, '../features/coach/shell/CoachAppShell.tsx'),
+      'utf8',
+    );
+    expect(src).not.toContain('MatchsScreen');
+    expect(src).not.toContain('matchFullChapter');
   });
 });

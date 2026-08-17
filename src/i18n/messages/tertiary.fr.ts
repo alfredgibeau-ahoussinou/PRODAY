@@ -885,6 +885,8 @@ export const TERTIARY_FR: MessageCatalog = {
   'coach.portal.matchs.competitionsBody': 'Classements, fixtures et résultats.',
   'coach.portal.matchs.openCompetitions': 'Ouvrir compétitions',
   'coach.portal.matchs.openConvocs': 'Convocations',
+  'coach.portal.matchs.emptyCta': 'Créer une convocation',
+  'coach.portal.matchs.upcoming': 'Prochains matchs',
   'coach.portal.performance.title': 'Analyse de forme',
   'coach.portal.performance.subtitle':
     'Forme de l’effectif, charge, récupération déclarée, évaluations et objectifs',

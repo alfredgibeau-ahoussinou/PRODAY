@@ -268,7 +268,10 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
       />
 
       <PressableSpring
-        onPress={() => tabNav.openMatchs({ homeTab: 'stats' })}
+        onPress={() => {
+          if (shellNav) shellNav.requestNav('match_center');
+          else tabNav.openMatchs({ homeTab: 'stats' });
+        }}
         scaleTo={0.96}
         haptic
       >

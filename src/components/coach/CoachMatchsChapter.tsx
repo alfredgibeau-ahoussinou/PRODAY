@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
 import {
   CoachActionRow,
@@ -11,17 +11,26 @@ import {
   CoachSettingsRow,
   CoachText,
 } from './coachPortalUi';
-import { CoachScreenHeader } from './CoachScreenHeader';
-import { EVENT_TYPE_LABELS, countRsvpYes, getPendingInviteeUids } from '../../models/TeamEvent';
+import { CoachPane } from './CoachScreenHeader';
+import {
+  EVENT_TYPE_LABELS,
+  countRsvpYes,
+  getPendingInviteeUids,
+  isCoachEventHubReady,
+  isCoachMatchEvent,
+} from '../../models/TeamEvent';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { useTabNavigation } from '../../context/TabNavigationContext';
-import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { spacing } from '../../theme/designTokens';
 import { COACH_MATCH_FLOW_STEPS } from '../../features/coach/navigation/coachMatchDeepLink';
 import type { MatchHubChapterId } from '../../content/matchHubChapters';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { userCanManageConvocations, resolveClubCoversCoachFromMembers } from '../../utils/clubFeatureAccess';
+import { PressableSpring } from '../motion';
 
 const ACTION_CHAPTERS: {
   hub: MatchHubChapterId;
@@ -34,32 +43,52 @@ const ACTION_CHAPTERS: {
   { hub: 'stats', label: 'Stats', icon: 'stats-chart' },
 ];
 
-export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }) => {
+export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({
+  profile,
+  events,
+  members,
+}) => {
   const { t } = useTranslation();
   const tabNav = useTabNavigation();
-  const nav = useTabNavigationActions();
+  const shellNav = useCoachShellNav();
   const { tokens } = useCoachTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
+  const canManage = userCanManageConvocations(profile, { clubCoversCoach });
 
-  const nextMatch = useMemo(() => {
+  const upcomingMatches = useMemo(() => {
     const now = Date.now();
-    return (
-      [...events]
-        .filter(
-          (e) =>
-            e.starts_at.getTime() > now &&
-            (e.event_type === 'friendly' ||
-              e.event_type === 'competition' ||
-              e.event_type === 'tournament' ||
-              e.event_type === 'training'),
-        )
-        .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0] ?? null
-    );
+    return [...events]
+      .filter((e) => e.starts_at.getTime() > now && isCoachMatchEvent(e))
+      .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
   }, [events]);
 
-  const openHub = (hubChapter: MatchHubChapterId) => {
-    if (!nextMatch) return;
-    tabNav.openMatchs({ eventId: nextMatch.id, hubChapter });
+  const nextMatch = upcomingMatches[0] ?? null;
+
+  const openNav = (id: 'entrainements' | 'gestion' | 'match_center') => {
+    if (shellNav) {
+      shellNav.requestNav(id);
+      return;
+    }
+    tabNav.openMatchs(
+      id === 'entrainements'
+        ? { homeTab: 'season' }
+        : id === 'gestion'
+          ? { homeTab: 'convocations' }
+          : undefined,
+    );
+  };
+
+  const openCreate = () => {
+    if (!canManage) {
+      Alert.alert(t('coach.portal.proGate.title'), t('coach.portal.proGate.body'));
+      return;
+    }
+    openNav('gestion');
+  };
+
+  const openHub = (eventId: string, hubChapter: MatchHubChapterId = 'apercu') => {
+    tabNav.openMatchs({ eventId, hubChapter });
   };
 
   const yesCount = nextMatch ? countRsvpYes(nextMatch) : 0;
@@ -67,8 +96,7 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
   const inviteeCount = nextMatch?.invitee_uids.length ?? 0;
 
   return (
-    <View style={styles.root}>
-      <CoachScreenHeader title={t('coach.portal.matchs.title')} showTeamRow={false} />
+    <CoachPane title={getCoachPageIdentity('match_center').title}>
       <CoachChapterScroll>
         <CoachText variant="body" muted style={styles.subtitle}>
           {t('coach.portal.matchs.subtitle')}
@@ -78,8 +106,8 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
           <CoachEmptyState
             title={t('coach.portal.matchs.empty')}
             body={t('coach.portal.matchs.emptyBody')}
-            cta={t('coach.portal.matchs.openCalendar')}
-            onPress={() => nav.openMatchs({ homeTab: 'season' })}
+            cta={t('coach.portal.matchs.emptyCta')}
+            onPress={openCreate}
           />
         ) : (
           <>
@@ -99,9 +127,9 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
               </View>
               <CoachActionRow
                 primary="Ouvrir l'événement"
-                onPrimary={() => openHub('apercu')}
+                onPrimary={() => openHub(nextMatch.id, 'apercu')}
                 secondary="Pointage"
-                onSecondary={() => openHub('effectif')}
+                onSecondary={() => openHub(nextMatch.id, 'effectif')}
               />
             </CoachSectionCard>
 
@@ -112,7 +140,7 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
               {ACTION_CHAPTERS.map((action) => (
                 <Pressable
                   key={action.hub}
-                  onPress={() => openHub(action.hub)}
+                  onPress={() => openHub(nextMatch.id, action.hub)}
                   style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.7 }]}
                   accessibilityRole="button"
                   accessibilityLabel={action.label}
@@ -141,7 +169,7 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
                           : 'stats-chart'
                   }
                   label={t(step.labelKey)}
-                  onPress={() => openHub(step.hub)}
+                  onPress={() => openHub(nextMatch.id, step.hub)}
                   last={index === COACH_MATCH_FLOW_STEPS.length - 1}
                 />
               ))}
@@ -149,22 +177,59 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
           </>
         )}
 
+        {upcomingMatches.length > 0 ? (
+          <CoachSectionCard
+            kicker={t('coach.portal.matchs.upcoming')}
+            title={t('coach.portal.matchs.upcoming')}
+          >
+            {upcomingMatches.map((match, index) => {
+              const ready = isCoachEventHubReady(match);
+              return (
+                <PressableSpring
+                  key={match.id}
+                  onPress={() => (ready ? openHub(match.id) : openCreate())}
+                  scaleTo={0.98}
+                  haptic={ready}
+                >
+                  <View
+                    style={[
+                      styles.matchRow,
+                      index < upcomingMatches.length - 1 && styles.matchRowBorder,
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <CoachText variant="section">{match.title}</CoachText>
+                      <CoachText variant="caption" muted>
+                        {EVENT_TYPE_LABELS[match.event_type]} · {formatCalendarDate(match.starts_at)}
+                        {match.city ? ` · ${match.city}` : ''}
+                      </CoachText>
+                    </View>
+                    <CoachText variant="caption" accent style={styles.matchLink}>
+                      {ready ? 'Ouvrir →' : t('coach.portal.planning.hubIncompleteCta')}
+                    </CoachText>
+                  </View>
+                </PressableSpring>
+              );
+            })}
+          </CoachSectionCard>
+        ) : null}
+
         <CoachSectionCard kicker={t('coach.portal.matchs.competitions')} title="Calendrier & compétitions">
           <CoachSettingsGroup>
             <CoachSettingsRow
               icon="calendar"
               label={t('coach.portal.matchs.openCalendar')}
-              onPress={() => nav.openMatchs({ homeTab: 'season' })}
+              onPress={() => openNav('entrainements')}
             />
             <CoachSettingsRow
               icon="trophy"
               label={t('coach.portal.matchs.openCompetitions')}
-              onPress={() => nav.openMatchs({ homeTab: 'competitions' })}
+              onPress={() => openNav('match_center')}
             />
             <CoachSettingsRow
               icon="mail"
               label={t('coach.portal.matchs.openConvocs')}
-              onPress={() => nav.openMatchs({ homeTab: 'convocations' })}
+              onPress={() => openNav('gestion')}
               last
             />
           </CoachSettingsGroup>
@@ -176,7 +241,7 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
               Objectifs et consignes depuis l’événement.
             </CoachText>
             <Pressable
-              onPress={() => openHub('apercu')}
+              onPress={() => openHub(nextMatch.id, 'apercu')}
               style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]}
             >
               <CoachText variant="caption" accent style={styles.link}>
@@ -186,7 +251,7 @@ export const CoachMatchsChapter: React.FC<CoachChapterCommonProps> = ({ events }
           </CoachSectionCard>
         ) : null}
       </CoachChapterScroll>
-    </View>
+    </CoachPane>
   );
 };
 
@@ -223,6 +288,17 @@ function createStyles(tokens: CoachThemeTokens) {
       fontWeight: '700',
       fontSize: 16,
     },
+    matchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+    },
+    matchRowBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    matchLink: { fontWeight: '700' },
     linkRow: { marginTop: spacing.sm },
     link: { fontWeight: '700' },
   });
