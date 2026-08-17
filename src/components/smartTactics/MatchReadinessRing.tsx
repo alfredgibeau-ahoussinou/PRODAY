@@ -3,7 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { ProDayText } from '../ui/ProDayText';
 import { useTranslation } from '../../context/LocaleContext';
-import { SMART_PITCH } from './smartTacticsUi';
+import { SMART_PITCH, useSmartTacticsCoachSkin } from './smartTacticsUi';
+import { COACH_SITE } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
 
 export const MatchReadinessRing: React.FC<{
@@ -12,13 +13,20 @@ export const MatchReadinessRing: React.FC<{
   size?: number;
 }> = ({ potential, readinessPct, size = 112 }) => {
   const { t } = useTranslation();
+  const coach = useSmartTacticsCoachSkin();
   const stroke = 8;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const progress = Math.max(0, Math.min(100, readinessPct)) / 100;
   const tone =
-    readinessPct >= 75 ? SMART_PITCH.ready : readinessPct >= 50 ? SMART_PITCH.warm : SMART_PITCH.risk;
-  const styles = useMemo(() => createStyles(size), [size]);
+    readinessPct >= 75
+      ? SMART_PITCH.ready
+      : readinessPct >= 50
+        ? coach
+          ? COACH_SITE.accent
+          : SMART_PITCH.warm
+        : SMART_PITCH.risk;
+  const styles = useMemo(() => createStyles(size, coach), [size, coach]);
 
   return (
     <View style={styles.wrap}>
@@ -60,7 +68,7 @@ export const MatchReadinessRing: React.FC<{
   );
 };
 
-function createStyles(size: number) {
+function createStyles(size: number, coach = false) {
   return StyleSheet.create({
     wrap: { width: size, height: size, alignItems: 'center', justifyContent: 'center' },
     center: {
@@ -70,7 +78,11 @@ function createStyles(size: number) {
       paddingHorizontal: spacing.xs,
     },
     label: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
-    potential: { fontSize: 26, fontWeight: '900', color: SMART_PITCH.warm },
+    potential: {
+      fontSize: 26,
+      fontWeight: '900',
+      color: coach ? COACH_SITE.accent : SMART_PITCH.warm,
+    },
     ready: { fontSize: 11, fontWeight: '800' },
   });
 }

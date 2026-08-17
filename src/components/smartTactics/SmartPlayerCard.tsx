@@ -7,7 +7,9 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import type { SmartPlayerCardData } from '../../models/SmartTactics';
 import { radius, spacing } from '../../theme/designTokens';
-import { SMART_PITCH } from './smartTacticsUi';
+import { SMART_PITCH, useSmartTacticsCoachSkin } from './smartTacticsUi';
+import { COACH_SITE } from '../../content/coachPageIdentity';
+import { CoachText } from '../coach/coachPortalUi';
 import { Icon } from '../ui/Icon';
 import { ProDayFutCard } from '../cards/ProDayFutCard';
 import { smartPlayerToProDayCard } from '../../utils/prodayFutCard';
@@ -21,9 +23,16 @@ export const SmartPlayerCard: React.FC<{
 }> = ({ card, compact, fut, onPress }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const coach = useSmartTacticsCoachSkin();
   const styles = useMemo(() => createStyles(), []);
   const readyTone =
-    card.readiness_pct >= 75 ? SMART_PITCH.ready : card.readiness_pct >= 50 ? SMART_PITCH.warm : SMART_PITCH.risk;
+    card.readiness_pct >= 75
+      ? SMART_PITCH.ready
+      : card.readiness_pct >= 50
+        ? coach
+          ? COACH_SITE.accent
+          : SMART_PITCH.warm
+        : SMART_PITCH.risk;
 
   if (fut) {
     return (
@@ -34,6 +43,70 @@ export const SmartPlayerCard: React.FC<{
         onAction={onPress ? () => onPress() : undefined}
       />
     );
+  }
+
+  if (coach && compact) {
+    const body = (
+      <View
+        style={[
+          styles.coachCompact,
+          { borderColor: card.injured ? SMART_PITCH.risk : COACH_SITE.border },
+        ]}
+      >
+        <View style={styles.top}>
+          <View style={[styles.avatar, { backgroundColor: COACH_SITE.elevated }]}>
+            {card.photo_url ? (
+              <Image source={{ uri: card.photo_url }} style={styles.avatarImg} />
+            ) : (
+              <CoachText variant="section" accent>
+                {card.display_name.slice(0, 1).toUpperCase()}
+              </CoachText>
+            )}
+          </View>
+          <View style={styles.meta}>
+            <CoachText variant="body" style={{ fontWeight: '800' }} numberOfLines={1}>
+              {card.display_name}
+            </CoachText>
+            <CoachText variant="caption" muted numberOfLines={1}>
+              {[card.position, card.preferred_foot, card.age ? `${card.age} ans` : null]
+                .filter(Boolean)
+                .join(' · ')}
+            </CoachText>
+          </View>
+          <View style={styles.overall}>
+            <CoachText variant="caption" muted style={styles.overallLabel}>
+              NOTE
+            </CoachText>
+            <CoachText variant="section" accent style={{ fontSize: 22 }}>
+              {card.overall}
+            </CoachText>
+          </View>
+        </View>
+        <View style={styles.readinessRow}>
+          <View style={styles.readinessBlock}>
+            <CoachText variant="caption" muted>
+              {t('smartTactics.ready')}
+            </CoachText>
+            <CoachText variant="section" style={{ color: readyTone }}>
+              {card.readiness_pct}%
+            </CoachText>
+          </View>
+        </View>
+        <View style={[styles.barTrack, { backgroundColor: COACH_SITE.border }]}>
+          <View
+            style={[styles.barFill, { width: `${card.readiness_pct}%`, backgroundColor: readyTone }]}
+          />
+        </View>
+      </View>
+    );
+    if (onPress) {
+      return (
+        <PressableSpring onPress={onPress} scaleTo={0.97} haptic>
+          {body}
+        </PressableSpring>
+      );
+    }
+    return body;
   }
 
   const body = (
@@ -166,6 +239,13 @@ function createStyles() {
       overflow: 'hidden',
     },
     compact: { padding: spacing.sm },
+    coachCompact: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: radius.lg,
+      padding: spacing.sm,
+      gap: spacing.xs,
+      backgroundColor: COACH_SITE.surface,
+    },
     top: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     avatar: {
       width: 44,

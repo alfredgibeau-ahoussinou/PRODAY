@@ -31,7 +31,8 @@ import {
   type JoueurPositionGroup,
 } from '../../utils/joueurExperienceTheme';
 import { radius, spacing } from '../../theme/designTokens';
-import { SMART_PITCH } from './smartTacticsUi';
+import { SMART_PITCH, useSmartTacticsTheme } from './smartTacticsUi';
+import { COACH_SITE } from '../../content/coachPageIdentity';
 import { Icon } from '../ui/Icon';
 import { SmartPlayerCard } from './SmartPlayerCard';
 import { PitchFrame, projectPitch } from './PerspectivePitch';
@@ -154,9 +155,9 @@ function shortName(displayName: string): string {
   return parts.length ? parts[parts.length - 1] : '—';
 }
 
-function readinessTone(pct: number): string {
+function readinessTone(pct: number, coach = false): string {
   if (pct >= 75) return SMART_PITCH.ready;
-  if (pct >= 50) return SMART_PITCH.warm;
+  if (pct >= 50) return coach ? COACH_SITE.accent : SMART_PITCH.warm;
   return SMART_PITCH.risk;
 }
 
@@ -191,6 +192,7 @@ function PitchToken({
   onPress: () => void;
   size: number;
 }) {
+  const theme = useSmartTacticsTheme();
   if (!slot) {
     return (
       <PressableSpring onPress={onPress} scaleTo={0.94} haptic>
@@ -198,10 +200,16 @@ function PitchToken({
           style={[
             stand.empty,
             { width: size, height: size, borderRadius: size / 2 },
-            emptyActive && stand.emptyOn,
+            emptyActive && [
+              stand.emptyOn,
+              theme.coach && {
+                borderColor: theme.accent,
+                backgroundColor: theme.accent,
+              },
+            ],
           ]}
         >
-          <Icon name="add" size={Math.round(size * 0.38)} color={emptyActive ? '#0B1A12' : '#fff'} />
+          <Icon name="add" size={Math.round(size * 0.38)} color={emptyActive ? theme.ctaText : '#fff'} />
         </View>
       </PressableSpring>
     );
@@ -214,8 +222,8 @@ function PitchToken({
   return (
     <PressableSpring onPress={onPress} scaleTo={0.94} haptic>
       <View style={[stand.wrap, { width: size + 8 }, selected && stand.wrapOn]}>
-        <View style={[stand.ovr, { borderRadius: 6 }]}>
-          <ProDayText variant="caption" style={stand.ovrTxt}>
+        <View style={[stand.ovr, { borderRadius: 6, backgroundColor: theme.accent }]}>
+          <ProDayText variant="caption" style={[stand.ovrTxt, { color: theme.ctaText }]}>
             {ovr}
           </ProDayText>
         </View>
@@ -226,7 +234,7 @@ function PitchToken({
               width: size,
               height: size,
               borderRadius: size / 2,
-              borderColor: selected ? SMART_PITCH.warm : readinessTone(ready),
+              borderColor: selected ? theme.accent : readinessTone(ready, theme.coach),
             },
           ]}
         >
@@ -279,6 +287,7 @@ export const SmartTacticsBoard: React.FC<{
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const theme = useSmartTacticsTheme();
   const { width: winW } = useWindowDimensions();
 
   const cardsByUid = useMemo(() => new Map(cards.map((c) => [c.uid, c])), [cards]);
@@ -501,9 +510,15 @@ export const SmartTacticsBoard: React.FC<{
       {/* Formation */}
       <View style={styles.topBar}>
         <View style={styles.topMeta}>
-          <ProDayText variant="caption" style={styles.kicker}>
-            {readOnly ? 'Composition publiée' : 'Composition'}
-          </ProDayText>
+          {theme.coach ? (
+            <ProDayText variant="caption" style={[styles.kicker, { color: COACH_SITE.muted }]}>
+              {readOnly ? 'Composition publiée' : 'Composition'}
+            </ProDayText>
+          ) : (
+            <ProDayText variant="caption" style={styles.kicker}>
+              {readOnly ? 'Composition publiée' : 'Composition'}
+            </ProDayText>
+          )}
           <ProDayText variant="section" style={styles.xiTitle}>
             {formation}
             <ProDayText variant="caption" muted>
@@ -529,14 +544,14 @@ export const SmartTacticsBoard: React.FC<{
                 style={[
                   styles.formPill,
                   {
-                    borderColor: on ? SMART_PITCH.warm : colors.border,
-                    backgroundColor: on ? SMART_PITCH.warmSoft : colors.surface,
+                    borderColor: on ? theme.accent : theme.border,
+                    backgroundColor: on ? theme.accentSoft : theme.surface,
                   },
                 ]}
               >
                 <ProDayText
                   variant="caption"
-                  style={on ? { color: SMART_PITCH.warm, fontWeight: '900' } : { fontWeight: '700' }}
+                  style={on ? { color: theme.accent, fontWeight: '900' } : { fontWeight: '700' }}
                 >
                   {f}
                 </ProDayText>
@@ -546,16 +561,16 @@ export const SmartTacticsBoard: React.FC<{
         </ScrollView>
         ) : null}
         {!readOnly ? (
-        <View style={[styles.customRow, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+        <View style={[styles.customRow, { borderColor: theme.border, backgroundColor: theme.surface }]}>
           <TextInput
             value={customDraft}
             onChangeText={setCustomDraft}
             placeholder={t('smartTactics.customFormation')}
-            placeholderTextColor={colors.textMuted}
-            style={[styles.customInput, { color: colors.text }]}
+            placeholderTextColor={theme.muted}
+            style={[styles.customInput, { color: theme.foreground }]}
           />
           <PressableSpring onPress={applyCustom} scaleTo={0.96} haptic style={styles.customBtn}>
-            <ProDayText variant="caption" style={{ color: SMART_PITCH.warm, fontWeight: '800' }}>
+            <ProDayText variant="caption" style={{ color: theme.accent, fontWeight: '800' }}>
               OK
             </ProDayText>
           </PressableSpring>
@@ -564,7 +579,10 @@ export const SmartTacticsBoard: React.FC<{
       </View>
 
       {/* Terrain perspective + banc */}
-      <LinearGradient colors={['#0B1A12', '#12261A', '#0B1A12']} style={styles.stadium}>
+      <LinearGradient
+        colors={[...theme.stadiumGradient]}
+        style={[styles.stadium, { borderColor: theme.stadiumBorder }]}
+      >
         <View style={styles.stadiumHead}>
           <ProDayText variant="caption" style={styles.kicker}>
             Terrain 3D
@@ -641,14 +659,14 @@ export const SmartTacticsBoard: React.FC<{
 
         {/* Banc de touche */}
         <LinearGradient
-          colors={['#1A2A1E', '#101A14', '#0C1410']}
+          colors={[...theme.benchGradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.touchBench}
+          style={[styles.touchBench, theme.coach && { borderColor: COACH_SITE.border }]}
         >
-          <View style={styles.benchRail} />
+          <View style={[styles.benchRail, theme.coach && { backgroundColor: COACH_SITE.accent }]} />
           <View style={styles.benchHead}>
-            <Icon name="people" size={14} color={SMART_PITCH.warm} />
+            <Icon name="people" size={14} color={theme.accent} />
             <ProDayText variant="caption" style={styles.benchTitle}>
               Banc de touche
             </ProDayText>
@@ -680,7 +698,13 @@ export const SmartTacticsBoard: React.FC<{
                     onPress={() => onPickCandidate(s.uid)}
                     scaleTo={0.96}
                     haptic
-                    style={[styles.benchSeat, on && styles.benchSeatOn]}
+                    style={[
+                      styles.benchSeat,
+                      on &&
+                        (theme.coach
+                          ? { borderColor: theme.accent, backgroundColor: theme.accentSoft }
+                          : styles.benchSeatOn),
+                    ]}
                   >
                     <ProDayText variant="caption" style={styles.benchNum}>
                       {bi + 12}
@@ -688,7 +712,11 @@ export const SmartTacticsBoard: React.FC<{
                     <View
                       style={[
                         styles.benchAvatar,
-                        { borderColor: on ? SMART_PITCH.warm : readinessTone(ready) },
+                        {
+                          borderColor: on
+                            ? theme.accent
+                            : readinessTone(ready, theme.coach),
+                        },
                       ]}
                     >
                       {card?.photo_url ? (
@@ -707,7 +735,10 @@ export const SmartTacticsBoard: React.FC<{
                     <ProDayText variant="caption" numberOfLines={1} style={styles.benchName}>
                       {name}
                     </ProDayText>
-                    <ProDayText variant="caption" style={styles.benchOvr}>
+                    <ProDayText
+                      variant="caption"
+                      style={[styles.benchOvr, theme.coach && { color: theme.accent }]}
+                    >
                       {ovr}
                     </ProDayText>
                   </PressableSpring>
@@ -720,9 +751,12 @@ export const SmartTacticsBoard: React.FC<{
 
       {/* Lignes + cartes */}
       {!readOnly ? (
-      <View style={[styles.picker, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.picker, { backgroundColor: theme.surface, borderColor: theme.border }]}>
         <View style={{ gap: 2 }}>
-          <ProDayText variant="caption" style={styles.kicker}>
+          <ProDayText
+            variant="caption"
+            style={[styles.kicker, theme.coach && { color: COACH_SITE.muted }]}
+          >
             Poser · {stageIdx + 1}/{stages.length}
           </ProDayText>
           <ProDayText variant="section" style={{ fontWeight: '900' }}>
@@ -733,8 +767,10 @@ export const SmartTacticsBoard: React.FC<{
           </ProDayText>
         </View>
 
-        <View style={[styles.track, { backgroundColor: colors.border }]}>
-          <Animated.View style={[styles.fill, progressStyle]} />
+        <View style={[styles.track, { backgroundColor: theme.border }]}>
+          <Animated.View
+            style={[styles.fill, progressStyle, theme.coach && { backgroundColor: theme.accent }]}
+          />
         </View>
 
         <ScrollView
@@ -760,12 +796,18 @@ export const SmartTacticsBoard: React.FC<{
                 style={[
                   styles.stageChip,
                   {
-                    borderColor: on ? SMART_PITCH.warm : done ? SMART_PITCH.ready : colors.border,
+                    borderColor: on
+                      ? theme.accent
+                      : done
+                        ? SMART_PITCH.ready
+                        : theme.border,
                     backgroundColor: on
-                      ? SMART_PITCH.warmSoft
+                      ? theme.accentSoft
                       : done
                         ? 'rgba(61,220,151,0.12)'
-                        : colors.background,
+                        : theme.coach
+                          ? COACH_SITE.bg
+                          : colors.background,
                   },
                 ]}
               >
@@ -773,7 +815,7 @@ export const SmartTacticsBoard: React.FC<{
                   variant="caption"
                   style={{
                     fontWeight: '800',
-                    color: on ? SMART_PITCH.warm : done ? SMART_PITCH.ready : undefined,
+                    color: on ? theme.accent : done ? SMART_PITCH.ready : undefined,
                   }}
                 >
                   {st.short} · {st.label}
@@ -789,9 +831,18 @@ export const SmartTacticsBoard: React.FC<{
               onPress={() => moveSelectedTo('bench')}
               scaleTo={0.96}
               haptic
-              style={styles.action}
+              style={[
+                styles.action,
+                theme.coach && {
+                  backgroundColor: theme.accentSoft,
+                  borderColor: theme.accent,
+                },
+              ]}
             >
-              <ProDayText variant="caption" style={styles.actionTxt}>
+              <ProDayText
+                variant="caption"
+                style={[styles.actionTxt, theme.coach && { color: theme.accent }]}
+              >
                 → Banc de touche
               </ProDayText>
             </PressableSpring>
@@ -799,9 +850,18 @@ export const SmartTacticsBoard: React.FC<{
               onPress={() => moveSelectedTo('pool')}
               scaleTo={0.96}
               haptic
-              style={styles.action}
+              style={[
+                styles.action,
+                theme.coach && {
+                  backgroundColor: theme.accentSoft,
+                  borderColor: theme.accent,
+                },
+              ]}
             >
-              <ProDayText variant="caption" style={styles.actionTxt}>
+              <ProDayText
+                variant="caption"
+                style={[styles.actionTxt, theme.coach && { color: theme.accent }]}
+              >
                 → {t('smartTactics.pool')}
               </ProDayText>
             </PressableSpring>
@@ -844,7 +904,10 @@ export const SmartTacticsBoard: React.FC<{
                   key={s.uid}
                   style={[
                     styles.futWrap,
-                    selectedUid === s.uid && styles.futOn,
+                    selectedUid === s.uid &&
+                      (theme.coach
+                        ? { borderColor: theme.accent, backgroundColor: theme.accentSoft, borderWidth: 2.5 }
+                        : styles.futOn),
                     !preferred && { opacity: 0.4 },
                   ]}
                 >
@@ -861,8 +924,11 @@ export const SmartTacticsBoard: React.FC<{
         </ScrollView>
       </View>
       ) : highlightUid ? (
-        <View style={[styles.picker, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <ProDayText variant="caption" style={styles.kicker}>
+        <View style={[styles.picker, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <ProDayText
+            variant="caption"
+            style={[styles.kicker, theme.coach && { color: COACH_SITE.muted }]}
+          >
             Ton poste
           </ProDayText>
           <ProDayText variant="section" style={{ fontWeight: '900' }}>
