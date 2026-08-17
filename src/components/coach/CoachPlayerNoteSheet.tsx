@@ -3,12 +3,14 @@ import {
   Alert,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
 import { CoachText } from './coachPortalUi';
 import { CoachPlayerAiPanel } from './CoachPlayerAiPanel';
+import { CoachOptionalScoresBlock } from './CoachOptionalScoreInput';
 import { COACH_SITE } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { coachEvaluationsService } from '../../services/coachEvaluations.service';
@@ -16,6 +18,11 @@ import type { CoachPlayerEvaluation } from '../../models/CoachEvaluation';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { WellnessSignals } from '../../models/SmartTactics';
 import type { User } from '../../models/User';
+import {
+  hasAnyCoachRating,
+  normalizeCoachRatings,
+  type CoachRatingField,
+} from '../../utils/coachEvaluationRatings';
 
 type Props = {
   visible: boolean;
@@ -28,7 +35,7 @@ type Props = {
   onSaved: () => void;
 };
 
-/** Fiche joueur coach — note libre + analyse IA. */
+/** Fiche joueur coach — note libre + scores optionnels + analyse IA. */
 export function CoachPlayerNoteSheet({
   visible,
   player,
@@ -40,16 +47,29 @@ export function CoachPlayerNoteSheet({
   onSaved,
 }: Props) {
   const [note, setNote] = useState('');
+  const [scores, setScores] = useState<Partial<Record<CoachRatingField, number | undefined>>>({});
   const [saving, setSaving] = useState(false);
 
   const playerEvals = player
     ? evaluations.filter((e) => e.player_uid === player.uid)
     : [];
   const latestNote = playerEvals.find((e) => e.notes?.trim())?.notes ?? '';
+  const latestEval = playerEvals[0];
 
   useEffect(() => {
-    if (visible && player) setNote(latestNote);
-  }, [visible, player?.uid, latestNote]);
+    if (!visible || !player) return;
+    setNote(latestNote);
+    setScores(latestEval ? normalizeCoachRatings(latestEval.ratings) : {});
+  }, [visible, player?.uid, latestNote, latestEval?.id]);
+
+  const onScoreChange = (field: CoachRatingField, value: number | undefined) => {
+    setScores((prev) => {
+      const next = { ...prev };
+      if (value == null) delete next[field];
+      else next[field] = value;
+      return next;
+    });
+  };
 
   const save = async () => {
     if (!player || !profile.profile.club_id) return;
@@ -60,12 +80,13 @@ export function CoachPlayerNoteSheet({
     }
     setSaving(true);
     try {
+      const ratings = normalizeCoachRatings(scores);
       await coachEvaluationsService.create(profile.uid, profile.display_name, {
         club_id: profile.profile.club_id,
         player_uid: player.uid,
         player_name: player.display_name,
         context: 'season',
-        ratings: { overall: 3 },
+        ratings: hasAnyCoachRating(ratings) ? ratings : {},
         notes: trimmed,
         visible_to_player: false,
       });
@@ -84,42 +105,46 @@ export function CoachPlayerNoteSheet({
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-          <CoachText variant="section" style={styles.title}>
-            {player.display_name}
-          </CoachText>
-          <CoachText variant="caption" muted style={styles.sub}>
-            Note coach (texte libre) — enrichit l’analyse IA.
-          </CoachText>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <CoachText variant="section" style={styles.title}>
+              {player.display_name}
+            </CoachText>
+            <CoachText variant="caption" muted style={styles.sub}>
+              Note coach (texte libre) — enrichit l’analyse IA.
+            </CoachText>
 
-          <TextInput
-            value={note}
-            onChangeText={setNote}
-            placeholder="Points forts, axes de progrès, contexte…"
-            placeholderTextColor={COACH_SITE.muted}
-            multiline
-            style={styles.input}
-          />
+            <TextInput
+              value={note}
+              onChangeText={setNote}
+              placeholder="Points forts, axes de progrès, contexte…"
+              placeholderTextColor={COACH_SITE.muted}
+              multiline
+              style={styles.input}
+            />
 
-          <View style={styles.actions}>
-            <Pressable style={styles.cancelBtn} onPress={onClose} disabled={saving}>
-              <CoachText variant="caption" muted>
-                Annuler
-              </CoachText>
-            </Pressable>
-            <Pressable style={styles.saveBtn} onPress={() => void save()} disabled={saving}>
-              <CoachText variant="caption" inverse style={styles.saveText}>
-                {saving ? 'Enregistrement…' : 'Enregistrer'}
-              </CoachText>
-            </Pressable>
-          </View>
+            <CoachOptionalScoresBlock values={scores} onChange={onScoreChange} />
 
-          <CoachPlayerAiPanel
-            playerUid={player.uid}
-            events={events}
-            evaluations={evaluations}
-            wellness={wellness}
-            note={note.trim() || latestNote}
-          />
+            <View style={styles.actions}>
+              <Pressable style={styles.cancelBtn} onPress={onClose} disabled={saving}>
+                <CoachText variant="caption" muted>
+                  Annuler
+                </CoachText>
+              </Pressable>
+              <Pressable style={styles.saveBtn} onPress={() => void save()} disabled={saving}>
+                <CoachText variant="caption" inverse style={styles.saveText}>
+                  {saving ? 'Enregistrement…' : 'Enregistrer'}
+                </CoachText>
+              </Pressable>
+            </View>
+
+            <CoachPlayerAiPanel
+              playerUid={player.uid}
+              events={events}
+              evaluations={evaluations}
+              wellness={wellness}
+              note={note.trim() || latestNote}
+            />
+          </ScrollView>
         </Pressable>
       </Pressable>
     </Modal>
@@ -137,7 +162,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: spacing.lg,
-    maxHeight: '85%',
+    maxHeight: '88%',
     gap: spacing.sm,
   },
   title: { fontWeight: '800' },
@@ -158,6 +183,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     gap: spacing.md,
     alignItems: 'center',
+    marginTop: spacing.sm,
   },
   cancelBtn: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
   saveBtn: {

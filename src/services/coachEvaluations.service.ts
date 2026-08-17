@@ -16,6 +16,9 @@ import type {
   CoachPlayerEvaluation,
   CreateCoachEvaluationInput,
 } from '../models/CoachEvaluation';
+import {
+  normalizeCoachRatings,
+} from '../utils/coachEvaluationRatings';
 
 const COL = 'coach_evaluations';
 
@@ -28,7 +31,8 @@ function toDate(v: unknown): Date {
 }
 
 function mapEval(id: string, data: Record<string, unknown>): CoachPlayerEvaluation {
-  const ratings = (data.ratings as CoachPlayerEvaluation['ratings']) ?? { overall: 3 };
+  const rawRatings = (data.ratings as CoachPlayerEvaluation['ratings']) ?? {};
+  const ratings = normalizeCoachRatings(rawRatings);
   return {
     id,
     club_id: String(data.club_id ?? ''),
@@ -39,13 +43,7 @@ function mapEval(id: string, data: Record<string, unknown>): CoachPlayerEvaluati
     coach_name: String(data.coach_name ?? ''),
     event_id: data.event_id ? String(data.event_id) : undefined,
     context: (data.context as CoachPlayerEvaluation['context']) ?? 'season',
-    ratings: {
-      technical: ratings.technical,
-      tactical: ratings.tactical,
-      physical: ratings.physical,
-      mental: ratings.mental,
-      overall: typeof ratings.overall === 'number' ? ratings.overall : 3,
-    },
+    ratings,
     notes: data.notes ? String(data.notes) : undefined,
     visible_to_player: data.visible_to_player === true,
     visible_to_parent: data.visible_to_parent === true,
@@ -105,7 +103,14 @@ export const coachEvaluationsService = {
   ): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
-    const overall = Math.min(5, Math.max(1, Math.round(input.ratings.overall)));
+    const normalized = normalizeCoachRatings(input.ratings);
+    const ratingsPayload = {
+      technical: normalized.technical ?? null,
+      tactical: normalized.tactical ?? null,
+      physical: normalized.physical ?? null,
+      mental: normalized.mental ?? null,
+      overall: normalized.overall ?? null,
+    };
     const ref = await addDoc(collection(database, COL), {
       club_id: input.club_id,
       team_id: input.team_id ?? null,
@@ -115,13 +120,7 @@ export const coachEvaluationsService = {
       coach_name: coachName,
       event_id: input.event_id ?? null,
       context: input.context,
-      ratings: {
-        technical: input.ratings.technical ?? null,
-        tactical: input.ratings.tactical ?? null,
-        physical: input.ratings.physical ?? null,
-        mental: input.ratings.mental ?? null,
-        overall,
-      },
+      ratings: ratingsPayload,
       notes: input.notes?.trim() || null,
       visible_to_player: input.visible_to_player === true,
       visible_to_parent: input.visible_to_parent === true,

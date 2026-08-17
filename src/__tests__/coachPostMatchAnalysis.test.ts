@@ -70,7 +70,7 @@ describe('buildPostMatchAnalysis', () => {
     const a = buildPostMatchAnalysis(match, members);
     expect(a).not.toBeNull();
     expect(a!.mvp).toBeNull();
-    expect(a!.videoNote).toMatch(/non disponible/i);
+    expect(a!.videoNote).toMatch(/Aucune vidéo/i);
   });
 });
 

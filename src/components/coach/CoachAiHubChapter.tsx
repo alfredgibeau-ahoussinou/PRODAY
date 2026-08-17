@@ -47,6 +47,12 @@ import {
   type RecommendedTrainingSession,
 } from '../../utils/coachTrainingRecommendation';
 import { teamEventsService } from '../../services/teamEvents.service';
+import { clubCamerasService } from '../../services/clubCameras.service';
+import type { ClubMatchVideo } from '../../models/ClubCameras';
+import {
+  countReadyClubVideos,
+  listRecentClubVideos,
+} from '../../utils/coachVideoInsights';
 import {
   resolveClubCoversCoachFromMembers,
   userCanManageConvocations,
@@ -96,6 +102,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const [wellnessByUid, setWellnessByUid] = useState<Record<string, WellnessSignals>>({});
   const [evaluations, setEvaluations] = useState<CoachPlayerEvaluation[]>([]);
   const [lineup, setLineup] = useState<CoachPitchLineup | null>(null);
+  const [clubVideos, setClubVideos] = useState<ClubMatchVideo[]>([]);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [sessionDismissed, setSessionDismissed] = useState(false);
   const [creatingSession, setCreatingSession] = useState(false);
@@ -108,6 +115,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     if (!clubId) return;
     void wellnessCheckinsService.listLatestForClub(clubId).then(setWellnessByUid).catch(() => {});
     void coachEvaluationsService.listForClub(clubId).then(setEvaluations).catch(() => {});
+    void clubCamerasService.listMatchVideos(clubId).then(setClubVideos).catch(() => setClubVideos([]));
   }, [clubId, members.length]);
 
   useEffect(() => {
@@ -152,9 +160,12 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const { overview, strategy, actions } = insights;
 
   const postMatchAnalyses = useMemo(
-    () => listRecentPostMatchAnalyses(events, members, 3),
-    [events, members],
+    () => listRecentPostMatchAnalyses(events, members, 3, clubVideos),
+    [events, members, clubVideos],
   );
+
+  const recentVideos = useMemo(() => listRecentClubVideos(clubVideos, 4), [clubVideos]);
+  const videoCount = useMemo(() => countReadyClubVideos(clubVideos), [clubVideos]);
 
   const recommendedSession = useMemo(
     () =>
@@ -343,6 +354,49 @@ export const CoachAiHubChapter: React.FC<Props> = ({
           </Pressable>
 
           <CoachSectionCard
+            kicker="Analyse vidéo"
+            title={
+              videoCount > 0
+                ? `${videoCount} captation${videoCount > 1 ? 's' : ''} disponible${videoCount > 1 ? 's' : ''}`
+                : 'Aucune vidéo club'
+            }
+            body={
+              videoCount > 0
+                ? 'Matchs filmés liés à votre club — ouvrez Mes vidéos pour le détail.'
+                : 'Aucune captation ProDay enregistrée pour votre club. Importez ou connectez une caméra depuis Mes vidéos.'
+            }
+          >
+            {recentVideos.length > 0 ? (
+              <View style={styles.videoList}>
+                {recentVideos.map((v) => (
+                  <Pressable
+                    key={v.id}
+                    style={styles.videoRow}
+                    onPress={() => openNav('mes_videos')}
+                  >
+                    <Icon name="videocam" size={14} color={COACH_SITE.accent} />
+                    <View style={styles.videoRowBody}>
+                      <CoachText variant="caption" style={styles.videoTitle} numberOfLines={1}>
+                        {v.title}
+                      </CoachText>
+                      <CoachText variant="caption" muted>
+                        {v.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        {v.aiReady ? ' · IA prête' : ''}
+                      </CoachText>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+            <Pressable style={styles.secondaryBtn} onPress={() => openNav('mes_videos')}>
+              <Icon name="videocam" size={14} color={COACH_SITE.accent} />
+              <CoachText variant="caption" accent>
+                Ouvrir Mes vidéos
+              </CoachText>
+            </Pressable>
+          </CoachSectionCard>
+
+          <CoachSectionCard
             kicker="Après-match"
             title={
               postMatchAnalyses.length > 0
@@ -358,7 +412,11 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             {postMatchAnalyses.length > 0 ? (
               <View style={styles.postMatchList}>
                 {postMatchAnalyses.map((a) => (
-                  <PostMatchCard key={a.eventId} analysis={a} />
+                  <PostMatchCard
+                    key={a.eventId}
+                    analysis={a}
+                    onOpenVideos={() => openNav('mes_videos')}
+                  />
                 ))}
               </View>
             ) : null}
@@ -510,7 +568,13 @@ function RecommendedSessionCard({
   );
 }
 
-function PostMatchCard({ analysis }: { analysis: PostMatchAnalysis }) {
+function PostMatchCard({
+  analysis,
+  onOpenVideos,
+}: {
+  analysis: PostMatchAnalysis;
+  onOpenVideos?: () => void;
+}) {
   const dateStr = analysis.date.toLocaleDateString('fr-FR', {
     day: 'numeric',
     month: 'short',
@@ -558,9 +622,27 @@ function PostMatchCard({ analysis }: { analysis: PostMatchAnalysis }) {
       <CoachText variant="caption" muted style={styles.recLine}>
         Prochain match : {analysis.nextMatchRecommendation}
       </CoachText>
-      <CoachText variant="caption" muted style={styles.videoNote}>
-        {analysis.videoNote}
-      </CoachText>
+      {analysis.hasVideos && analysis.videos.length > 0 ? (
+        <View style={styles.postMatchBlock}>
+          <CoachText variant="caption" style={styles.postMatchLabel}>
+            Analyse vidéo disponible
+          </CoachText>
+          {analysis.videos.map((v) => (
+            <Pressable key={v.id} onPress={onOpenVideos} style={styles.videoLinkRow}>
+              <CoachText variant="caption" accent numberOfLines={1}>
+                {v.title}
+              </CoachText>
+              <CoachText variant="caption" muted>
+                {v.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              </CoachText>
+            </Pressable>
+          ))}
+        </View>
+      ) : (
+        <CoachText variant="caption" muted style={styles.videoNote}>
+          {analysis.videoNote}
+        </CoachText>
+      )}
     </View>
   );
 }
@@ -677,6 +759,23 @@ const styles = StyleSheet.create({
   mvpLine: { fontWeight: '700', marginTop: spacing.xs },
   recLine: { marginTop: spacing.xs, lineHeight: 17 },
   videoNote: { fontSize: 10, fontStyle: 'italic', marginTop: 4 },
+  videoList: { marginTop: spacing.sm, gap: spacing.xs },
+  videoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COACH_SITE.border,
+  },
+  videoRowBody: { flex: 1, gap: 2 },
+  videoTitle: { fontWeight: '700' },
+  videoLinkRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    paddingVertical: 2,
+  },
   statsBlock: { gap: spacing.sm, marginTop: spacing.sm },
   statsTitle: {
     color: COACH_SITE.muted,

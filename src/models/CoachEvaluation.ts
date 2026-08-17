@@ -19,13 +19,13 @@ export interface CoachPlayerEvaluation {
   coach_name: string;
   event_id?: string;
   context: CoachEvaluationContext;
-  /** Notes 1–5 par critère */
+  /** Notes optionnelles /10 par critère — le texte libre reste prioritaire. */
   ratings: {
+    overall?: number;
     technical?: number;
     tactical?: number;
     physical?: number;
     mental?: number;
-    overall: number;
   };
   notes?: string;
   visible_to_player?: boolean;

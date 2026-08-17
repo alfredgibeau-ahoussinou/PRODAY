@@ -1,5 +1,10 @@
 import type { TeamEvent } from '../models/TeamEvent';
 import type { User } from '../models/User';
+import type { ClubMatchVideo } from '../models/ClubCameras';
+import {
+  buildEventVideoStatus,
+  type CoachVideoLink,
+} from './coachVideoInsights';
 
 export type PostMatchDataLevel = 'none' | 'partial' | 'ready';
 
@@ -13,7 +18,9 @@ export interface PostMatchAnalysis {
   improvements: string[];
   mvp: { uid: string; name: string; reason: string } | null;
   nextMatchRecommendation: string;
-  /** Honnête : pas de vidéo disponible si absent. */
+  /** Honnête : vidéos réelles ou message d’absence. */
+  hasVideos: boolean;
+  videos: CoachVideoLink[];
   videoNote: string;
 }
 
@@ -57,6 +64,7 @@ function isAnalyzableMatch(event: TeamEvent): boolean {
 export function buildPostMatchAnalysis(
   event: TeamEvent,
   members: User[],
+  clubVideos: ClubMatchVideo[] = [],
 ): PostMatchAnalysis | null {
   if (!isAnalyzableMatch(event)) return null;
 
@@ -149,8 +157,7 @@ export function buildPostMatchAnalysis(
     nextMatchRecommendation = 'Capitalisez sur cette dynamique — conservez le XI type et le pressing.';
   }
 
-  const videoNote =
-    'Analyse vidéo non disponible — aucune captation ProDay liée à ce match.';
+  const videoStatus = buildEventVideoStatus(event.id, event.title, clubVideos);
 
   const level: PostMatchDataLevel =
     finalized && hasStats ? 'ready' : hasStats || score ? 'partial' : 'none';
@@ -173,7 +180,9 @@ export function buildPostMatchAnalysis(
     improvements: improvements.slice(0, 4),
     mvp,
     nextMatchRecommendation,
-    videoNote,
+    hasVideos: videoStatus.hasVideos,
+    videos: videoStatus.videos,
+    videoNote: videoStatus.note,
   };
 }
 
@@ -182,12 +191,13 @@ export function listRecentPostMatchAnalyses(
   events: TeamEvent[],
   members: User[],
   limit = 5,
+  clubVideos: ClubMatchVideo[] = [],
 ): PostMatchAnalysis[] {
   const now = Date.now();
   return [...events]
     .filter((e) => isMatchEvent(e) && e.starts_at.getTime() < now)
     .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime())
-    .map((e) => buildPostMatchAnalysis(e, members))
+    .map((e) => buildPostMatchAnalysis(e, members, clubVideos))
     .filter((a): a is PostMatchAnalysis => a != null)
     .slice(0, limit);
 }
@@ -195,6 +205,7 @@ export function listRecentPostMatchAnalyses(
 export function findLatestPostMatchAnalysis(
   events: TeamEvent[],
   members: User[],
+  clubVideos: ClubMatchVideo[] = [],
 ): PostMatchAnalysis | null {
-  return listRecentPostMatchAnalyses(events, members, 1)[0] ?? null;
+  return listRecentPostMatchAnalyses(events, members, 1, clubVideos)[0] ?? null;
 }

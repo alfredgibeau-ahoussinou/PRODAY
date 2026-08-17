@@ -20,12 +20,17 @@ import type { WellnessSignals } from '../../models/SmartTactics';
 import { canAccessSensitiveResource, mapUserRoleToPrivacyActor } from '../../utils/privacyAccess';
 import type { PlayerLoadSignals } from '../../utils/playerLoadAlerts';
 import { CoachAnalyseFormePanel } from './CoachAnalyseFormePanel';
+import {
+  formatCoachRating,
+  normalizeCoachRatings,
+} from '../../utils/coachEvaluationRatings';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { CoachPane } from './CoachScreenHeader';
 
 export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
@@ -43,7 +48,7 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
   const [grants, setGrants] = useState<PrivacyAccessGrant[]>([]);
   const [wellnessByUid, setWellnessByUid] = useState<Record<string, WellnessSignals>>({});
   const [playerUid, setPlayerUid] = useState(members[0]?.uid ?? '');
-  const [overall, setOverall] = useState('3');
+  const [overall, setOverall] = useState('');
   const [evalNotes, setEvalNotes] = useState('');
   const [visiblePlayer, setVisiblePlayer] = useState(true);
   const [objTitle, setObjTitle] = useState('');
@@ -76,11 +81,17 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
   const playerTimeline = useMemo(() => {
     const fromEvals = evals
       .filter((e) => e.player_uid === playerUid)
-      .map((e) => ({
-        id: e.id,
-        label: `Éval ${e.ratings.overall}/5`,
-        at: e.created_at,
-      }));
+      .map((e) => {
+        const normalized = normalizeCoachRatings(e.ratings);
+        const label = normalized.overall != null
+          ? `Éval ${formatCoachRating(normalized.overall)}`
+          : 'Éval coach';
+        return {
+          id: e.id,
+          label,
+          at: e.created_at,
+        };
+      });
     const fromSheets = events.flatMap((ev) => {
       const st = ev.player_match_stats?.[playerUid];
       if (!st) return [];
@@ -168,6 +179,10 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
 
   const saveEval = async () => {
     if (!clubId || !selectedPlayer) return;
+    if (!evalNotes.trim() && !overall.trim()) {
+      Alert.alert('Évaluation vide', 'Ajoutez une note globale ou un commentaire.');
+      return;
+    }
     setSaving(true);
     try {
       await coachEvaluationsService.create(profile.uid, profile.display_name, {
@@ -175,12 +190,15 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
         player_uid: selectedPlayer.uid,
         player_name: selectedPlayer.display_name,
         context: 'season',
-        ratings: { overall: parseInt(overall, 10) || 3 },
+        ratings: overall.trim()
+          ? normalizeCoachRatings({ overall: parseFloat(overall.replace(',', '.')) })
+          : {},
         notes: evalNotes.trim() || undefined,
         visible_to_player: visiblePlayer,
         visible_to_parent: false,
       });
       setEvalNotes('');
+      setOverall('');
       await load();
       onRefresh();
       Alert.alert('OK', t('coach.portal.performance.evalSaved'));
@@ -221,16 +239,19 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
 
   if (!clubId) {
     return (
-      <CoachChapterScroll>
-        <CoachEmptyState
-          title={t('coach.portal.effectif.noClub')}
-          body={t('coach.portal.effectif.noClubBody')}
-        />
-      </CoachChapterScroll>
+      <CoachPane title={getCoachPageIdentity('forme').title}>
+        <CoachChapterScroll>
+          <CoachEmptyState
+            title={t('coach.portal.effectif.noClub')}
+            body={t('coach.portal.effectif.noClubBody')}
+          />
+        </CoachChapterScroll>
+      </CoachPane>
     );
   }
 
   return (
+    <CoachPane title={getCoachPageIdentity('forme').title}>
     <CoachChapterScroll>
       <CoachAnalyseFormePanel
         loadSignals={loadSignals}
@@ -341,11 +362,15 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
             if (!saving && selectedPlayer) void saveEval();
           }}
         />
-        {evals.slice(0, 5).map((e) => (
-          <ProDayText key={e.id} variant="caption" style={styles.listMuted}>
-            {e.player_name} · {e.ratings.overall}/5
-          </ProDayText>
-        ))}
+        {evals.slice(0, 5).map((e) => {
+          const normalized = normalizeCoachRatings(e.ratings);
+          const scoreLabel = normalized.overall != null ? formatCoachRating(normalized.overall) : '—';
+          return (
+            <ProDayText key={e.id} variant="caption" style={styles.listMuted}>
+              {e.player_name} · {scoreLabel}
+            </ProDayText>
+          );
+        })}
       </CoachSectionCard>
 
       <CoachSectionCard
@@ -436,6 +461,7 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
         ))}
       </CoachSectionCard>
     </CoachChapterScroll>
+    </CoachPane>
   );
 };
 

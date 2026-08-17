@@ -136,4 +136,28 @@ describe('buildCoachPlayerAiInsights', () => {
     });
     expect(r.bullets.some((b) => b.includes('Note coach'))).toBe(true);
   });
+
+  it('intègre les scores coach /10', () => {
+    const r = buildCoachPlayerAiInsights({
+      playerUid: 'p1',
+      playerName: 'Lucas',
+      events: [],
+      evaluations: [
+        {
+          id: 'e1',
+          club_id: 'c1',
+          player_uid: 'p1',
+          player_name: 'Lucas',
+          coach_uid: 'coach',
+          coach_name: 'Coach',
+          context: 'season',
+          ratings: { overall: 8, technical: 7, tactical: 6 },
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ],
+    });
+    expect(r.bullets.some((b) => /8\/10/.test(b))).toBe(true);
+    expect(r.bullets.some((b) => /technique 7\/10/.test(b))).toBe(true);
+  });
 });

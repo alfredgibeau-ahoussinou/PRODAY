@@ -10,6 +10,13 @@ import {
 import type { CoachPitchLineup } from './coachPitchLineup';
 import { startersPlacedCount } from './coachPitchLineup';
 import { buildCoachAiSuggestions } from './coachAiSuggestions';
+import {
+  averageCoachRatings,
+  formatCoachRating,
+  formatCoachRatingsSummary,
+  hasAnyCoachRating,
+  normalizeCoachRatings,
+} from './coachEvaluationRatings';
 
 export type CoachAiDataLevel = 'none' | 'partial' | 'ready';
 
@@ -132,7 +139,7 @@ function wellnessConcern(w?: WellnessSignals): boolean {
 
 /** Synthèse équipe — règles déterministes, jamais de chiffres inventés. */
 export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTeamOverview {
-  const { events, members, hasClub, wellnessByUid = {} } = input;
+  const { events, members, hasClub, wellnessByUid = {}, evaluations = [] } = input;
   const now = Date.now();
   const played = eventsWithSheets(events);
   const upcoming = events.filter((e) => e.starts_at.getTime() > now);
@@ -146,6 +153,10 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
   ];
   if (wellnessAlerts > 0) {
     metrics.push({ label: 'Alertes forme', value: String(wellnessAlerts) });
+  }
+  const scoredEvals = evaluations.filter((e) => hasAnyCoachRating(e.ratings));
+  if (scoredEvals.length > 0) {
+    metrics.push({ label: 'Notes coach', value: String(scoredEvals.length) });
   }
 
   if (!hasClub) {
@@ -210,6 +221,10 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
     `${totalGoals} but${totalGoals > 1 ? 's' : ''} marqué${totalGoals > 1 ? 's' : ''}`,
   ];
   if (avgRating) parts.push(`note moyenne ${avgRating}/10`);
+  const coachAvg = averageCoachRatings(scoredEvals, 'overall');
+  if (coachAvg != null) {
+    parts.push(`évaluations coach ${formatCoachRating(coachAvg)} (${scoredEvals.length} joueur${scoredEvals.length > 1 ? 's' : ''})`);
+  }
   if (wellnessAlerts > 0) {
     parts.push(`${wellnessAlerts} alerte${wellnessAlerts > 1 ? 's' : ''} forme`);
   }
@@ -228,7 +243,7 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
 
 /** Stratégie recommandée — formation, titulaires, focus séance. */
 export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrategy {
-  const { events, members, wellnessByUid = {}, lineup } = input;
+  const { events, members, wellnessByUid = {}, lineup, evaluations = [] } = input;
   const ratings = aggregatePlayerRatings(events);
   const now = Date.now();
   const nextMatch = [...events]
@@ -272,6 +287,37 @@ export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrate
           : `Note ${p.avg.toFixed(1)}/10 · ${p.goals} but${p.goals !== 1 ? 's' : ''}`,
     };
   });
+
+  if (playersToStart.length < 4) {
+    const evalByPlayer = new Map<string, CoachPlayerEvaluation>();
+    for (const ev of evaluations) {
+      if (!hasAnyCoachRating(ev.ratings)) continue;
+      if (!evalByPlayer.has(ev.player_uid)) evalByPlayer.set(ev.player_uid, ev);
+    }
+    const fromCoachEvals = [...evalByPlayer.entries()]
+      .filter(([uid]) => !playersToStart.some((p) => p.uid === uid))
+      .map(([uid, ev]) => {
+        const normalized = normalizeCoachRatings(ev.ratings);
+        const score = normalized.overall ?? normalized.technical ?? normalized.tactical;
+        return {
+          uid,
+          name: ev.player_name || memberName(members, uid),
+          score: score ?? 0,
+          summary: formatCoachRatingsSummary(normalized),
+        };
+      })
+      .filter((row) => row.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4 - playersToStart.length);
+
+    for (const row of fromCoachEvals) {
+      playersToStart.push({
+        uid: row.uid,
+        name: row.name,
+        reason: row.summary ?? `Éval coach ${formatCoachRating(row.score)}`,
+      });
+    }
+  }
 
   if (placed >= 7 && lineup) {
     const starters = lineup.starterUids.filter(Boolean) as string[];
@@ -398,7 +444,7 @@ export function buildCoachAiNowActions(input: CoachAiInsightsInput): CoachAiActi
     });
   }
 
-  const notesCount = evaluations.filter((e) => e.notes?.trim()).length;
+  const notesCount = evaluations.filter((e) => e.notes?.trim() || hasAnyCoachRating(e.ratings)).length;
   if (notesCount === 0 && members.length > 0 && played.length > 0) {
     actions.push({
       id: 'add-player-notes',
@@ -488,16 +534,9 @@ export function buildCoachPlayerAiInsights(
 
   const latestEval = playerEvals[0];
   if (latestEval) {
-    const r = latestEval.ratings;
-    const dims: string[] = [];
-    if (r.technical != null) dims.push(`technique ${r.technical}/5`);
-    if (r.tactical != null) dims.push(`tactique ${r.tactical}/5`);
-    if (r.physical != null) dims.push(`physique ${r.physical}/5`);
-    if (r.mental != null) dims.push(`mental ${r.mental}/5`);
-    if (dims.length > 0) {
-      bullets.push(`Dernière éval coach : ${dims.join(', ')}.`);
-    } else if (r.overall) {
-      bullets.push(`Dernière éval globale : ${r.overall}/5.`);
+    const summary = formatCoachRatingsSummary(latestEval.ratings);
+    if (summary) {
+      bullets.push(`Dernière éval coach : ${summary}.`);
     }
   }
 
