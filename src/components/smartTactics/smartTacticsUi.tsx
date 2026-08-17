@@ -67,6 +67,8 @@ export function useSmartTacticsCoachSkin() {
   return useContext(SmartTacticsCoachSkinContext);
 }
 
+const SMART_TACTICS_HIT_SLOP = { top: 10, bottom: 10, left: 8, right: 8 };
+
 /** Coach shell : Pressable statique · joueur : spring scale. */
 export function SmartTacticsPressable({
   children,
@@ -90,6 +92,7 @@ export function SmartTacticsPressable({
       <Pressable
         onPress={onPress}
         disabled={disabled}
+        hitSlop={SMART_TACTICS_HIT_SLOP}
         style={({ pressed }) => [style, pressed && !disabled && { opacity: 0.72 }]}
       >
         {children}
@@ -102,6 +105,7 @@ export function SmartTacticsPressable({
       scaleTo={scaleTo}
       haptic
       disabled={disabled}
+      hitSlop={SMART_TACTICS_HIT_SLOP}
       style={style}
     >
       {children}
@@ -163,7 +167,11 @@ export function SmartTacticsLink({
     </ProDayText>
   );
   if (!onPress) return text;
-  return <SmartTacticsPressable onPress={onPress}>{text}</SmartTacticsPressable>;
+  return (
+    <SmartTacticsPressable onPress={onPress} style={linkTouch.wrap}>
+      {text}
+    </SmartTacticsPressable>
+  );
 }
 
 export function SmartTacticsPrimaryCta({
@@ -740,6 +748,10 @@ export type SmartTacticsChapterProps = {
   hydratePlan?: TacticalPlan | null;
   onHydratePlan?: (plan: TacticalPlan | null) => void;
 };
+
+const linkTouch = StyleSheet.create({
+  wrap: { alignSelf: 'flex-start', paddingVertical: 8, paddingHorizontal: 2 },
+});
 
 const hint = StyleSheet.create({
   line: {

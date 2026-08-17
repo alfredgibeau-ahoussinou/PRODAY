@@ -847,29 +847,29 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
         }
       />
 
-      <View style={styles.reportRow}>
+      <View style={styles.prepActions}>
         <SmartTacticsPrimaryCta
           label={busy ? 'Analyse…' : 'Lancer l’IA Mistral'}
           onPress={() => void runAi()}
           disabled={busy}
           icon={<Icon name="star-four-points" size={16} color={theme.ctaText} />}
-          style={{ flex: 1 }}
+          style={styles.prepPrimaryCta}
         />
         <SmartTacticsLink onPress={applyXi}>Appliquer le XI sur le board →</SmartTacticsLink>
       </View>
 
-      <SmartTacticsPanel style={[styles.alert, { borderColor: theme.border }]} variant="module">
+      <SmartTacticsPanel style={[styles.alertColumn, { borderColor: theme.border }]} variant="module">
         <SmartTacticsAccentText variant="caption" style={{ fontWeight: '800' }}>
           Source · {prep.source === 'mistral' ? 'Mistral cloud' : 'Moteur local'}
           {prep.fallback ? ` · ${t('smartTactics.aiFallback')}` : ''}
         </SmartTacticsAccentText>
         {prep.briefing_fr ? (
           theme.coach ? (
-            <CoachText variant="body" style={{ marginTop: 4 }}>
+            <CoachText variant="body" style={styles.prepBriefing}>
               {prep.briefing_fr}
             </CoachText>
           ) : (
-            <ProDayText variant="body" style={{ marginTop: 4 }}>
+            <ProDayText variant="body" style={styles.prepBriefing}>
               {prep.briefing_fr}
             </ProDayText>
           )
@@ -1537,6 +1537,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.sm,
   },
+  alertColumn: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    alignSelf: 'stretch',
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+  },
+  prepActions: { gap: spacing.sm, alignSelf: 'stretch' },
+  prepPrimaryCta: { alignSelf: 'stretch' },
+  prepBriefing: { alignSelf: 'stretch', width: '100%' },
   bullet: { lineHeight: 18 },
   section: { gap: 6, marginTop: 4 },
   link: { marginTop: 4 },

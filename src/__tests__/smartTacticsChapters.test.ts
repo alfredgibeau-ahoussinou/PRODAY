@@ -21,6 +21,7 @@ describe('smartTacticsChapters coach flow', () => {
     ]);
     expect(SMART_TACTICS_PRIMARY_CHAPTERS.every((c) => c.step >= 1 && c.icon)).toBe(true);
     expect(SMART_TACTICS_MORE_CHAPTERS[0].id).toBe('prep');
+    expect(SMART_TACTICS_MORE_CHAPTERS[0].label).toBe('IA adversaire');
     expect(SMART_TACTICS_MORE_CHAPTERS.length).toBeGreaterThanOrEqual(4);
   });
 
