@@ -18,7 +18,7 @@ type Props = {
   onSelect: (id: CoachNavItemId) => void;
 };
 
-/** Barre fixe 5 onglets — pas de scroll horizontal. */
+/** Barre fixe 6 onglets — pas de scroll horizontal. */
 export function CoachTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(), []);

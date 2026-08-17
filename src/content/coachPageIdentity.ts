@@ -210,9 +210,9 @@ export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = 
   }),
   plus: page({
     id: 'plus',
-    eyebrow: 'Menu',
-    title: 'Outils',
-    support: 'Tactique IA, vidéos, forme et covoiturage.',
+    eyebrow: 'Navigation',
+    title: 'Menu',
+    support: 'Matchs, séances, tactique IA, vidéos et plus.',
     icon: 'hamburger',
     motif: 'none',
   }),

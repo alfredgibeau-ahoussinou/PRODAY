@@ -3,9 +3,9 @@ import type { CoachPortalChapterId } from '../../../content/coachPortalChapters'
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 
 /**
- * Navigation Pôle Coach — 5 onglets fixes type SportEasy.
- * ACCUEIL | ÉQUIPE | IA | MESSAGES | PROFIL
- * Matchs, séances et joueurs restent accessibles via raccourcis / deep links.
+ * Navigation Pôle Coach — 6 onglets fixes type SportEasy.
+ * ACCUEIL | ÉQUIPE | IA | MESSAGES | MENU | PROFIL
+ * Outils secondaires regroupés dans l’onglet Menu (+ raccourcis Accueil).
  */
 
 export type CoachNavFolderId =
@@ -16,6 +16,7 @@ export type CoachNavFolderId =
   | 'joueurs'
   | 'ia'
   | 'messagerie'
+  | 'menu'
   | 'profil';
 
 export type CoachNavItemId =
@@ -52,7 +53,7 @@ export type CoachNavItem = {
   requiresVideo?: boolean;
   lockMode?: 'soft' | 'hide';
   aiBadge?: boolean;
-  /** Label court pour barre mobile 5 onglets. */
+  /** Label court pour barre mobile 6 onglets. */
   shortLabel?: string;
 };
 
@@ -67,6 +68,7 @@ export const COACH_PRIMARY_NAV_IDS: CoachNavItemId[] = [
   'equipe',
   'coach_ia',
   'messages',
+  'plus',
   'profil',
 ];
 
@@ -81,7 +83,12 @@ export const COACH_SECONDARY_NAV_IDS: CoachNavItemId[] = [
   'carpool',
   'com_staff',
   'gestion',
-  'plus',
+];
+
+/** Destinations secondaires — surlignent l’onglet Menu dans la barre. */
+export const COACH_MENU_DEST_IDS: CoachNavItemId[] = [
+  ...COACH_SECONDARY_NAV_IDS,
+  'planning',
 ];
 
 /** @deprecated Utiliser COACH_SECONDARY_NAV_IDS — conservé pour compat tests/outils. */
@@ -170,8 +177,9 @@ const profilItem: CoachNavItem = {
 
 const plusItem: CoachNavItem = {
   id: 'plus',
-  label: 'Outils',
-  hint: 'Tactique, vidéos, covoiturage…',
+  label: 'Menu',
+  shortLabel: 'Menu',
+  hint: 'Matchs, séances, tactique, vidéos…',
   icon: 'hamburger',
 };
 
@@ -261,12 +269,13 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
   },
 ];
 
-/** 5 onglets primaires — sidebar + barre mobile. */
+/** 6 onglets primaires — sidebar + barre mobile. */
 export const COACH_NAV_FOLDERS: CoachNavFolder[] = [
   { id: 'accueil', label: 'Accueil', items: [accueilItem] },
   { id: 'equipe', label: 'Équipe', items: [equipeItem] },
   { id: 'ia', label: 'IA', items: [coachIaItem] },
   { id: 'messagerie', label: 'Messages', items: [messagesItem] },
+  { id: 'menu', label: 'Menu', items: [plusItem] },
   { id: 'profil', label: 'Profil', items: [profilItem] },
 ];
 
@@ -299,18 +308,7 @@ export function canonicalizeCoachNav(id: CoachNavItemId): CoachNavItemId {
 export function primaryTabForCoachNav(id: CoachNavItemId): CoachNavItemId {
   const canonical = canonicalizeCoachNav(id);
   if (COACH_PRIMARY_NAV_IDS.includes(canonical)) return canonical;
-  if (canonical === 'gestion' || canonical === 'joueurs') return 'equipe';
-  if (COACH_SECONDARY_NAV_IDS.includes(canonical)) {
-    if (canonical === 'smart_tactics' || canonical === 'mes_videos' || canonical === 'forme') {
-      return 'coach_ia';
-    }
-    if (canonical === 'match_center' || canonical === 'entrainements' || canonical === 'plus') {
-      return 'today';
-    }
-    if (canonical === 'carpool' || canonical === 'com_staff') {
-      return 'profil';
-    }
-  }
+  if (COACH_MENU_DEST_IDS.includes(canonical)) return 'plus';
   return 'today';
 }
 

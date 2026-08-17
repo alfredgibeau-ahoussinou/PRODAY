@@ -20,7 +20,10 @@ import { buildCoachAiNowActions } from '../../utils/coachAiInsights';
 import { buildCoachProfileStats, type CoachProfileStats } from '../../utils/coachProfileStats';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { usersService } from '../../services/users.service';
+import { findCoachNavItem } from '../../features/coach/navigation/coachNavConfig';
 import { spacing } from '../../theme/designTokens';
+
+const PROFILE_QUICK_NAV_IDS = ['today', 'equipe', 'coach_ia', 'messages', 'plus'] as const;
 
 type Props = {
   profile: User;
@@ -336,32 +339,27 @@ export function CoachProfileHub({
       <CoachSectionCard
         kicker="Commandes"
         title="Accès rapide"
-        body="Pilote ton équipe depuis ton identité coach."
+        body="Navigation principale — les outils détaillés sont dans Menu."
       >
         <View style={styles.grid}>
-          {(
-            [
-              { id: 'today' as const, label: 'Accueil', icon: 'home' as const },
-              { id: 'entrainements' as const, label: 'Séances', icon: 'calendar' as const },
-              { id: 'match_center' as const, label: 'Matchs', icon: 'football' as const },
-              { id: 'equipe' as const, label: 'Équipe', icon: 'football' as const },
-              { id: 'joueurs' as const, label: 'Joueurs', icon: 'people' as const },
-              { id: 'coach_ia' as const, label: 'IA', icon: 'star-four-points' as const },
-            ] as const
-          ).map((item) => (
-            <PressableSpring
-              key={item.id}
-              onPress={() => open(item.id)}
-              scaleTo={0.97}
-              haptic
-              style={styles.gridBtn}
-            >
-              <Icon name={item.icon} size={16} color={COACH_SITE.accent} />
-              <ProDayText variant="caption" style={styles.gridLabel}>
-                {item.label}
-              </ProDayText>
-            </PressableSpring>
-          ))}
+          {PROFILE_QUICK_NAV_IDS.map((id) => {
+            const item = findCoachNavItem(id);
+            if (!item) return null;
+            return (
+              <PressableSpring
+                key={item.id}
+                onPress={() => open(item.id)}
+                scaleTo={0.97}
+                haptic
+                style={styles.gridBtn}
+              >
+                <Icon name={item.icon} size={16} color={COACH_SITE.accent} />
+                <ProDayText variant="caption" style={styles.gridLabel}>
+                  {item.shortLabel ?? item.label}
+                </ProDayText>
+              </PressableSpring>
+            );
+          })}
         </View>
         {onSubscriptionPress ? (
           <CoachActionRow

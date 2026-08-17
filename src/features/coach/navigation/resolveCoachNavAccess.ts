@@ -1,4 +1,5 @@
 import {
+  COACH_HOME_TOOLS,
   COACH_NAV_CATALOG,
   COACH_NAV_FOLDERS,
   COACH_SECONDARY_NAV_IDS,
@@ -60,7 +61,7 @@ export function resolveCoachNavCatalog(input: CoachNavAccessInput): CoachNavReso
   return items;
 }
 
-/** Résout le menu Coach (5 onglets primaires). */
+/** Résout le menu Coach (6 onglets primaires). */
 export function resolveCoachNavFolders(input: CoachNavAccessInput): CoachNavResolvedFolder[] {
   const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
   const folders: CoachNavResolvedFolder[] = [];
@@ -82,6 +83,20 @@ export function resolveCoachMoreItems(input: CoachNavAccessInput): CoachNavResol
   return COACH_SECONDARY_NAV_IDS.map((id) => byId.get(id)).filter(
     (item): item is CoachNavResolvedItem => Boolean(item),
   );
+}
+
+/** Tuiles du hub Menu — libellés depuis COACH_HOME_TOOLS + verrous catalogue. */
+export function resolveCoachMenuItems(input: CoachNavAccessInput): CoachNavResolvedItem[] {
+  const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
+  return COACH_HOME_TOOLS.map((tool) => {
+    const resolved = byId.get(tool.id);
+    if (!resolved) return null;
+    return {
+      ...resolved,
+      label: tool.label,
+      shortLabel: tool.label,
+    };
+  }).filter((item): item is CoachNavResolvedItem => Boolean(item));
 }
 
 export function findInCoachNavCatalog(

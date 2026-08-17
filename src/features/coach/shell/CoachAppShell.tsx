@@ -8,7 +8,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { CoachSidebar } from './CoachSidebar';
 import { CoachTabBar } from './CoachTabBar';
-import { CoachMorePane } from './CoachMorePane';
+import { CoachMenuPane } from './CoachMenuPane';
 import { CoachShellNavProvider } from './CoachShellNavContext';
 import { CoachLockedPane } from './CoachLockedPane';
 import { openCoachHelpChatbot } from './coachHelpOpen';
@@ -20,7 +20,7 @@ import {
 } from '../navigation/coachNavConfig';
 import {
   findInCoachNavCatalog,
-  resolveCoachMoreItems,
+  resolveCoachMenuItems,
   resolveCoachNavCatalog,
   resolveCoachNavFolders,
 } from '../navigation/resolveCoachNavAccess';
@@ -71,7 +71,7 @@ type Props = {
 };
 
 /**
- * Shell Pôle Coach — 5 onglets (Accueil, Équipe, IA, Messages, Profil).
+ * Shell Pôle Coach — 6 onglets (Accueil, Équipe, IA, Messages, Menu, Profil).
  */
 export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const profile = useSessionProfile();
@@ -111,7 +111,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
   );
   const catalog = useMemo(() => resolveCoachNavCatalog(access), [access]);
   const folders = useMemo(() => resolveCoachNavFolders(access), [access]);
-  const moreItems = useMemo(() => resolveCoachMoreItems(access), [access]);
+  const menuItems = useMemo(() => resolveCoachMenuItems(access), [access]);
   const primaryItems = useMemo(
     () => folders.flatMap((folder) => folder.items),
     [folders],
@@ -183,7 +183,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
         <CoachLockedPane item={resolved} />
       </CoachPageFrame>
     ) : (
-      wrapCoachPane(navId, renderCoachPane(navId, profile, moreItems))
+      wrapCoachPane(navId, renderCoachPane(navId, profile, menuItems))
     );
 
   return (
@@ -214,7 +214,7 @@ function wrapCoachPane(navId: CoachNavItemId, node: React.ReactNode) {
 function renderCoachPane(
   navId: CoachNavItemId,
   profile: User | null | undefined,
-  moreItems: ReturnType<typeof resolveCoachMoreItems>,
+  menuItems: ReturnType<typeof resolveCoachMenuItems>,
 ) {
   switch (canonicalizeCoachNav(navId)) {
     case 'today':
@@ -233,7 +233,7 @@ function renderCoachPane(
     case 'com_staff':
       return <CoachPortalScreen embedded hideRail chapter="communication" />;
     case 'plus':
-      return <CoachMorePane items={moreItems} />;
+      return <CoachMenuPane items={menuItems} />;
     case 'coach_ia':
       return <CoachAiHubScreen />;
     case 'smart_tactics':
