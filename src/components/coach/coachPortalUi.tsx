@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -20,7 +20,7 @@ import {
   COACH_TEAM_ACCENT_PALETTE,
   type CoachThemeTokens,
 } from '../../utils/coachTeamTheme';
-import { CoachAccentColorBoard } from './CoachAccentColorBoard';
+import { CoachAccentColorPickerModal } from './CoachAccentColorPickerModal';
 import { MATCH_CHAPTER_PAD } from '../matchs/chapters/matchChapterLayout';
 import { radius, spacing } from '../../theme/designTokens';
 
@@ -320,7 +320,6 @@ export function CoachThemeAppearanceSection() {
     tokens,
     variant,
     setVariant,
-    teamName,
     accentMode,
     accentOverride,
     teamAccent,
@@ -329,110 +328,117 @@ export function CoachThemeAppearanceSection() {
     resetAccentToTeam,
   } = useCoachTheme();
   const styles = useMemo(() => createThemeAppearanceStyles(tokens), [tokens]);
-  const resolvedTeam = teamName.trim() || tokens.teamLabel.trim() || t('coach.calendar.teamFallback');
+  const [pickerOpen, setPickerOpen] = useState(false);
   const isManual = accentMode === 'manual';
+  const currentAccent = isManual && accentOverride ? accentOverride : tokens.accent;
 
   return (
-    <CoachSectionCard
-      kicker={t('coach.portal.theme.section')}
-      title={t('coach.portal.theme.section')}
-      body={t('coach.portal.theme.variantHint')}
-      style={styles.cardNoAccentBorder}
-    >
-      <View style={styles.segmentRow}>
-        {(['solid', 'clear'] as const).map((option) => {
-          const on = variant === option;
-          return (
-            <PressableSpring
-              key={option}
-              onPress={() => setVariant(option)}
-              scaleTo={0.97}
-              haptic
-              style={[styles.segment, on && styles.segmentOn]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-            >
-              <CoachText variant="caption" style={on ? styles.segmentTextOn : styles.segmentTextOff}>
-                {t(option === 'solid' ? 'coach.portal.theme.solid' : 'coach.portal.theme.clear')}
-              </CoachText>
-            </PressableSpring>
-          );
-        })}
-      </View>
-      <View style={styles.teamColorHeader}>
-        <CoachText variant="caption" muted numberOfLines={1} style={styles.teamColorLabel}>
-          {t('coach.portal.theme.teamColor')} · {resolvedTeam}
-        </CoachText>
-        {!isManual ? (
-          <CoachText variant="caption" style={styles.teamColorHint}>
-            {t('coach.portal.theme.teamColorHint')}
-          </CoachText>
-        ) : null}
-      </View>
-      <View style={styles.accentModeRow}>
-        {(['auto', 'manual'] as const).map((mode) => {
-          const on = accentMode === mode;
-          return (
-            <PressableSpring
-              key={mode}
-              onPress={() => (mode === 'auto' ? resetAccentToTeam() : setAccentMode('manual'))}
-              scaleTo={0.97}
-              haptic
-              style={[styles.accentModeChip, on && styles.accentModeChipOn]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-            >
-              <CoachText
-                variant="caption"
-                style={on ? styles.accentModeChipTextOn : styles.accentModeChipTextOff}
+    <>
+      <CoachSectionCard
+        kicker={t('coach.portal.theme.section')}
+        title={t('coach.portal.theme.section')}
+        body={t('coach.portal.theme.variantHint')}
+        style={styles.cardNoAccentBorder}
+      >
+        <View style={styles.segmentRow}>
+          {(['solid', 'clear'] as const).map((option) => {
+            const on = variant === option;
+            return (
+              <PressableSpring
+                key={option}
+                onPress={() => setVariant(option)}
+                scaleTo={0.97}
+                haptic
+                style={[styles.segment, on && styles.segmentOn]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
               >
-                {t(mode === 'auto' ? 'coach.portal.theme.accentAuto' : 'coach.portal.theme.accentCustom')}
-              </CoachText>
-            </PressableSpring>
-          );
-        })}
-      </View>
-      <CoachText variant="caption" muted style={styles.pickColorLabel}>
-        {t('coach.portal.theme.recommended')}
-      </CoachText>
-      <View style={styles.paletteGrid}>
-        {COACH_TEAM_ACCENT_PALETTE.map((color) => {
-          const isTeamColor = !isManual && color === teamAccent;
-          const isSelected = isManual ? !!accentOverride && color === accentOverride : isTeamColor;
-          return (
-            <PressableSpring
-              key={color}
-              onPress={() => setAccentOverride(color)}
-              scaleTo={0.92}
-              haptic
-              style={[styles.paletteSwatchWrap, isSelected && { borderColor: tokens.accent }]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={color}
-            >
-              <View style={[styles.paletteSwatch, { backgroundColor: color }]} />
-            </PressableSpring>
-          );
-        })}
-      </View>
-      <CoachText variant="caption" muted style={styles.allColorsLabel}>
-        {t('coach.portal.theme.allColors')}
-      </CoachText>
-      <CoachText variant="caption" muted style={styles.selectedColorLabel}>
-        {t('coach.portal.theme.selectedColor')}
-      </CoachText>
-      <CoachAccentColorBoard
-        selectedColor={isManual && accentOverride ? accentOverride : tokens.accent}
-        onSelect={setAccentOverride}
-      />
-      {isManual ? (
-        <PressableSpring onPress={resetAccentToTeam} scaleTo={0.97} haptic style={styles.resetLink}>
-          <CoachText variant="caption" style={styles.resetLinkText}>
-            {t('coach.portal.theme.resetAccent')}
+                <CoachText variant="caption" style={on ? styles.segmentTextOn : styles.segmentTextOff}>
+                  {t(option === 'solid' ? 'coach.portal.theme.solid' : 'coach.portal.theme.clear')}
+                </CoachText>
+              </PressableSpring>
+            );
+          })}
+        </View>
+
+        <View style={styles.previewRow}>
+          <View style={styles.previewLeft}>
+            <View style={[styles.previewSwatch, { backgroundColor: currentAccent }]} />
+            <CoachText variant="caption" style={styles.previewHex}>
+              {currentAccent.toUpperCase()}
+            </CoachText>
+          </View>
+          <View style={styles.accentModeRow}>
+            {(['auto', 'manual'] as const).map((mode) => {
+              const on = accentMode === mode;
+              return (
+                <PressableSpring
+                  key={mode}
+                  onPress={() => (mode === 'auto' ? resetAccentToTeam() : setAccentMode('manual'))}
+                  scaleTo={0.97}
+                  haptic
+                  style={[styles.accentModeChip, on && styles.accentModeChipOn]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                >
+                  <CoachText
+                    variant="caption"
+                    style={on ? styles.accentModeChipTextOn : styles.accentModeChipTextOff}
+                  >
+                    {t(mode === 'auto' ? 'coach.portal.theme.accentAuto' : 'coach.portal.theme.accentCustom')}
+                  </CoachText>
+                </PressableSpring>
+              );
+            })}
+          </View>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.paletteRow}
+          keyboardShouldPersistTaps="handled"
+        >
+          {COACH_TEAM_ACCENT_PALETTE.map((color) => {
+            const isTeamColor = !isManual && color === teamAccent;
+            const isSelected = isManual ? !!accentOverride && color === accentOverride : isTeamColor;
+            return (
+              <PressableSpring
+                key={color}
+                onPress={() => setAccentOverride(color)}
+                scaleTo={0.92}
+                haptic
+                style={[styles.paletteSwatchWrap, isSelected && { borderColor: tokens.accent }]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={color}
+              >
+                <View style={[styles.paletteSwatch, { backgroundColor: color }]} />
+              </PressableSpring>
+            );
+          })}
+        </ScrollView>
+
+        <PressableSpring
+          onPress={() => setPickerOpen(true)}
+          scaleTo={0.97}
+          haptic
+          style={styles.chooseBtn}
+          accessibilityRole="button"
+        >
+          <CoachText variant="caption" style={styles.chooseBtnText}>
+            {t('coach.portal.theme.chooseColor')}
           </CoachText>
         </PressableSpring>
-      ) : null}
-    </CoachSectionCard>
+      </CoachSectionCard>
+
+      <CoachAccentColorPickerModal
+        visible={pickerOpen}
+        selectedColor={currentAccent}
+        onClose={() => setPickerOpen(false)}
+        onApply={setAccentOverride}
+      />
+    </>
   );
 }
 
@@ -460,23 +466,42 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
     },
     segmentTextOn: { color: tokens.accent, fontWeight: '800' },
     segmentTextOff: { color: tokens.muted, fontWeight: '600' },
-    teamColorHeader: {
+    previewRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
       marginTop: spacing.md,
       paddingTop: spacing.sm,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: tokens.border,
-      gap: 2,
     },
-    teamColorLabel: { minWidth: 0 },
-    teamColorHint: { color: tokens.accent, fontWeight: '700' },
+    previewLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      flexShrink: 1,
+    },
+    previewSwatch: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    previewHex: {
+      color: tokens.foreground,
+      fontWeight: '700',
+      fontVariant: ['tabular-nums'],
+    },
     accentModeRow: {
       flexDirection: 'row',
-      gap: spacing.sm,
-      marginTop: spacing.sm,
+      gap: spacing.xs,
+      flexShrink: 0,
     },
     accentModeChip: {
-      flex: 1,
-      minHeight: 34,
+      minHeight: 32,
+      paddingHorizontal: spacing.sm,
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
@@ -490,21 +515,11 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
     },
     accentModeChipTextOn: { color: tokens.accent, fontWeight: '800' },
     accentModeChipTextOff: { color: tokens.muted, fontWeight: '600' },
-    pickColorLabel: {
-      marginTop: spacing.sm,
-      marginBottom: spacing.xs,
-    },
-    allColorsLabel: {
-      marginTop: spacing.md,
-      marginBottom: spacing.xs,
-    },
-    selectedColorLabel: {
-      marginBottom: spacing.xs,
-    },
-    paletteGrid: {
+    paletteRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       gap: spacing.sm,
+      marginTop: spacing.sm,
+      paddingVertical: spacing.xs,
     },
     paletteSwatchWrap: {
       width: 32,
@@ -520,15 +535,20 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
       height: 24,
       borderRadius: 12,
     },
-    resetLink: {
-      alignSelf: 'flex-start',
+    chooseBtn: {
+      alignSelf: 'stretch',
+      minHeight: 40,
       marginTop: spacing.sm,
-      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
     },
-    resetLinkText: {
+    chooseBtnText: {
       color: tokens.accent,
-      fontWeight: '700',
-      textDecorationLine: 'underline',
+      fontWeight: '800',
     },
   });
 }

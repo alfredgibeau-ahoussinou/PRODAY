@@ -70,3 +70,44 @@ export function buildCoachColorGrid(): string[] {
 
 export const COACH_COLOR_GRID = buildCoachColorGrid();
 export const COACH_COLOR_GRID_SIZE = COACH_COLOR_GRID.length;
+
+const COACH_NAMED_COLORS: Record<string, { hex: string; label: string }> = {
+  rouge: { hex: '#E53935', label: 'Rouge' },
+  bleu: { hex: '#1E88E5', label: 'Bleu' },
+  'bleu marine': { hex: '#0D47A1', label: 'Bleu marine' },
+  marine: { hex: '#0D47A1', label: 'Bleu marine' },
+  vert: { hex: '#43A047', label: 'Vert' },
+  orange: { hex: '#FB8C00', label: 'Orange' },
+  violet: { hex: '#8E24AA', label: 'Violet' },
+  rose: { hex: '#EC407A', label: 'Rose' },
+  jaune: { hex: '#FDD835', label: 'Jaune' },
+  noir: { hex: '#212121', label: 'Noir' },
+  blanc: { hex: '#FAFAFA', label: 'Blanc' },
+  gris: { hex: '#757575', label: 'Gris' },
+  bordeaux: { hex: '#880E4F', label: 'Bordeaux' },
+  turquoise: { hex: '#26A69A', label: 'Turquoise' },
+  proday: { hex: '#006CFC', label: 'Bleu ProDay' },
+  'bleu proday': { hex: '#006CFC', label: 'Bleu ProDay' },
+};
+
+const NAMED_COLOR_KEYS = Object.keys(COACH_NAMED_COLORS).sort((a, b) => b.length - a.length);
+
+/** Parse une phrase ou un code couleur coach (hex, noms FR, alias ProDay). */
+export function parseCoachColorPhrase(text: string): { hex: string; label: string } | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  const hex = normalizeCoachHexColor(trimmed);
+  if (hex) return { hex, label: hex };
+
+  const normalized = trimmed
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '');
+
+  for (const key of NAMED_COLOR_KEYS) {
+    if (normalized === key) return COACH_NAMED_COLORS[key];
+  }
+
+  return null;
+}

@@ -27,9 +27,11 @@ const COLOR_ROWS: ColorRow[] = (() => {
 export function CoachAccentColorBoard({
   selectedColor,
   onSelect,
+  boardHeight = BOARD_HEIGHT,
 }: {
   selectedColor: string;
   onSelect: (color: string) => void;
+  boardHeight?: number;
 }) {
   const { tokens } = useCoachTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
@@ -87,7 +89,7 @@ export function CoachAccentColorBoard({
         windowSize={7}
         removeClippedSubviews
         nestedScrollEnabled
-        style={styles.list}
+        style={[styles.list, { height: boardHeight }]}
         contentContainerStyle={styles.grid}
         showsVerticalScrollIndicator
       />
