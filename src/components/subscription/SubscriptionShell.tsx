@@ -5,6 +5,7 @@ import { useSubscription } from '../../context/SubscriptionContext';
 import { UpgradePaywall } from './UpgradePaywall';
 import { SubscriptionScreen } from '../../screens/SubscriptionScreen';
 import { PushScreenTransition } from '../motion';
+import { SubscriptionCheckoutBridge } from './SubscriptionCheckoutBridge';
 
 interface SubscriptionShellProps {
   profile: User;
@@ -26,6 +27,7 @@ export const SubscriptionShell: React.FC<SubscriptionShellProps> = ({
 
   return (
     <View style={styles.root}>
+      <SubscriptionCheckoutBridge />
       {children}
       <UpgradePaywall
         visible={upgradeFeature != null}

@@ -217,6 +217,8 @@ export interface User {
   subscription_plan_id?: string;
   subscription_status?: 'active' | 'trialing' | 'canceled' | 'past_due';
   subscription_period_end?: Date;
+  /** Client Stripe Billing (Checkout / Portal). */
+  stripe_customer_id?: string;
 
   /** Formule sponsor commerciale (Territorial validé par admin — hors IAP) */
   sponsor_tier?: 'starter' | 'territorial' | 'national';

@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import { callFunction } from '../lib/firebaseFunctions';
 import type { SubscriptionPlanId } from '../content/subscriptionPlans';
+import { parseSubscriptionCheckoutReturn } from '../utils/subscriptionCheckoutReturn';
 
 export async function startSubscriptionCheckout(
   planId: SubscriptionPlanId,
@@ -12,11 +13,17 @@ export async function startSubscriptionCheckout(
   >('createSubscriptionCheckoutSession', { planId, billing });
 
   const result = await WebBrowser.openAuthSessionAsync(url, 'proday://subscription');
-  if (result.type === 'success') {
-    return {
-      ok: true,
-      message: 'Paiement Stripe terminé. Votre abonnement Pro s’active sous quelques secondes.',
-    };
+  if (result.type === 'success' && result.url) {
+    const parsed = parseSubscriptionCheckoutReturn(result.url);
+    if (parsed?.status === 'success') {
+      return {
+        ok: true,
+        message: 'Paiement Stripe terminé. Votre abonnement Pro s’active sous quelques secondes.',
+      };
+    }
+    if (parsed?.status === 'cancel') {
+      return { ok: false, message: 'Paiement annulé.' };
+    }
   }
   if (result.type === 'cancel') {
     return { ok: false, message: 'Paiement annulé.' };

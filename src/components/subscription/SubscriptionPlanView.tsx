@@ -29,9 +29,13 @@ import {
   type SubscriptionPlanVisual,
 } from '../../content/subscriptionPlanVisuals';
 import { subscriptionService } from '../../services/subscription.service';
+import { subscriptionUpgradeRequestService } from '../../services/subscriptionUpgradeRequest.service';
 import { iapService } from '../../services/iap.service';
 import { useSubscription } from '../../context/SubscriptionContext';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { isBetaProRequestEnabled } from '../../utils/betaProAccess';
+import { isStripeCheckoutEnabled } from '../../utils/stripeSubscriptions';
+import type { SubscriptionUpgradeRequest } from '../../models/SubscriptionUpgradeRequest';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
@@ -62,8 +66,12 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
   const [upgrading, setUpgrading] = useState(false);
   const [billing, setBilling] = useState<BillingCycle>('monthly');
   const [showClubQuote, setShowClubQuote] = useState(false);
+  const [betaRequest, setBetaRequest] = useState<SubscriptionUpgradeRequest | null>(null);
 
   const isPro = subscription?.tier === 'pro';
+  const stripeCheckoutEnabled = isStripeCheckoutEnabled();
+  const betaProRequestMode = isBetaProRequestEnabled();
+  const hasStripeBilling = Boolean(profile.stripe_customer_id) || isPro;
   const noStorePlan = ROLES_WITHOUT_STORE_PLAN.includes(profile.role);
   const iapReady = iapService.isAvailable();
   const isDarkHero = visual ? isDarkSubscriptionVisual(visual) : false;
@@ -97,10 +105,64 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
     return rows;
   }, [plan, visual, isPro, noStorePlan, usage, profile.role, productLine, playerSegment]);
 
+  React.useEffect(() => {
+    if (!betaProRequestMode || isPro || !profile.uid) {
+      setBetaRequest(null);
+      return;
+    }
+    void subscriptionUpgradeRequestService.getLatestForUser(profile.uid).then(setBetaRequest);
+  }, [betaProRequestMode, isPro, profile.uid, subscription?.tier]);
+
+  const handleBetaProRequest = useCallback(async () => {
+    if (!plan) return;
+    setUpgrading(true);
+    try {
+      const res = await subscriptionUpgradeRequestService.submitRequest({
+        user: profile,
+        planId: plan.id,
+        billing,
+      });
+      const messages: Record<string, string> = {
+        'subscription.betaRequest.success.pending':
+          'Demande envoyée à l’équipe ProDay. Vous serez notifié dès activation (sous 48 h ouvrées en bêta).',
+        'subscription.betaRequest.error.firebase':
+          'Service indisponible. Réessayez plus tard.',
+        'subscription.betaRequest.error.profile':
+          'Complétez votre profil avant d’envoyer la demande.',
+      };
+      Alert.alert(
+        res.ok ? 'Demande Pro (bêta)' : 'Demande impossible',
+        messages[res.messageKey] ?? 'Une erreur est survenue.',
+      );
+      if (res.ok) {
+        const latest = await subscriptionUpgradeRequestService.getLatestForUser(profile.uid);
+        setBetaRequest(latest);
+      }
+    } finally {
+      setUpgrading(false);
+    }
+  }, [plan, billing, profile]);
+
+  const handleIapUpgrade = useCallback(async () => {
+    if (!plan) return;
+    setUpgrading(true);
+    try {
+      const res = await iapService.purchasePlan(plan.id, billing);
+      Alert.alert(res.ok ? 'Abonnement' : 'Paiement', res.message);
+      if (res.ok) await refresh();
+    } finally {
+      setUpgrading(false);
+    }
+  }, [plan, billing, refresh]);
+
   const handleUpgrade = useCallback(async () => {
     if (!plan) return;
     if (plan.pricing.quoteOnly) {
       setShowClubQuote(true);
+      return;
+    }
+    if (betaProRequestMode) {
+      await handleBetaProRequest();
       return;
     }
     setUpgrading(true);
@@ -111,7 +173,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
     } finally {
       setUpgrading(false);
     }
-  }, [plan, billing, refresh]);
+  }, [plan, billing, refresh, betaProRequestMode, handleBetaProRequest]);
 
   const handleManage = useCallback(async () => {
     try {
@@ -260,6 +322,25 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
             </>
           )}
 
+          {betaProRequestMode && !isPro && betaRequest?.status === 'pending' ? (
+            <ProDaySurface variant="module" style={[styles.noteCard, { borderColor: colors.border }]}>
+              <Icon name="time" size={18} color={colors.warning} />
+              <ProDayText variant="caption" muted style={styles.noteText}>
+                Demande Pro en attente — l’équipe admin active votre formule sous 48 h ouvrées.
+              </ProDayText>
+            </ProDaySurface>
+          ) : null}
+
+          {betaProRequestMode && !isPro && betaRequest?.status === 'rejected' ? (
+            <ProDaySurface variant="module" style={[styles.noteCard, { borderColor: colors.border }]}>
+              <Icon name="close" size={18} color={colors.warning} />
+              <ProDayText variant="caption" muted style={styles.noteText}>
+                Dernière demande refusée
+                {betaRequest.admin_note ? ` : ${betaRequest.admin_note}` : ''}. Vous pouvez renvoyer une demande.
+              </ProDayText>
+            </ProDaySurface>
+          ) : null}
+
           {plan.bookingCommissionNote ? (
             <ProDaySurface variant="module" style={[styles.noteCard, { borderColor: colors.border }]}>
               <Icon name="heart" size={18} color={visual.primary} />
@@ -335,13 +416,25 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
 
         {!isPro ? (
           <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
-            <TouchableOpacity onPress={() => void handleUpgrade()} disabled={upgrading} activeOpacity={0.9}>
+            <TouchableOpacity
+              onPress={() => void handleUpgrade()}
+              disabled={upgrading || (betaProRequestMode && betaRequest?.status === 'pending')}
+              activeOpacity={0.9}
+            >
               <ProDayGradient kind="cta" style={styles.cta}>
                 {upgrading ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <ProDayText variant="caption" inverse style={styles.ctaText}>
-                    {plan.pricing.quoteOnly ? 'Demander un devis' : visual.ctaVerb}
+                    {plan.pricing.quoteOnly
+                      ? 'Demander un devis'
+                      : betaProRequestMode
+                        ? betaRequest?.status === 'pending'
+                          ? 'Demande envoyée'
+                          : 'Demander l’accès Pro (bêta)'
+                        : stripeCheckoutEnabled
+                          ? 'S’abonner · Stripe'
+                          : visual.ctaVerb}
                   </ProDayText>
                 )}
               </ProDayGradient>
@@ -349,9 +442,24 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
             <ProDayText variant="caption" muted style={styles.footnote}>
               {plan.pricing.quoteOnly
                 ? 'Tarif personnalisé selon adhérents, équipes, coachs et options.'
-                : 'Paiement sécurisé par carte (Stripe). Repli App Store / Play si Stripe indisponible.'}
+                : betaProRequestMode
+                  ? 'Pendant la bêta : pas de paiement in-app — demande à l’admin ProDay pour activer Pro.'
+                  : stripeCheckoutEnabled
+                    ? 'Paiement sécurisé par carte (Stripe). Chiffrement TLS · aucune donnée bancaire stockée sur ProDay.'
+                    : 'Paiement sécurisé par carte (Stripe). Repli App Store / Play si Stripe indisponible.'}
             </ProDayText>
-            {iapReady ? (
+            {stripeCheckoutEnabled && !betaProRequestMode && iapReady ? (
+              <TouchableOpacity
+                style={styles.refreshLink}
+                onPress={() => void handleIapUpgrade()}
+                disabled={upgrading}
+              >
+                <ProDayText variant="caption" muted>
+                  Payer via App Store / Play
+                </ProDayText>
+              </TouchableOpacity>
+            ) : null}
+            {!betaProRequestMode && !stripeCheckoutEnabled && iapReady ? (
               <TouchableOpacity style={styles.refreshLink} onPress={() => void handleRestore()} disabled={upgrading}>
                 <ProDayText variant="caption" muted>
                   Restaurer un achat store
@@ -364,7 +472,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
             <TouchableOpacity onPress={() => void handleManage()} activeOpacity={0.9}>
               <ProDayGradient kind="cta" style={styles.cta}>
                 <ProDayText variant="caption" inverse style={styles.ctaText}>
-                  Gérer / annuler / renouveler
+                  {hasStripeBilling ? 'Gérer via Stripe' : 'Gérer / annuler / renouveler'}
                 </ProDayText>
               </ProDayGradient>
             </TouchableOpacity>

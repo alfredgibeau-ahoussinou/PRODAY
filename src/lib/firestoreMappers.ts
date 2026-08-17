@@ -208,6 +208,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     subscription_period_end: data.subscription_period_end
       ? toDate(data.subscription_period_end)
       : undefined,
+    stripe_customer_id: data.stripe_customer_id ? String(data.stripe_customer_id) : undefined,
     sponsor_tier: data.sponsor_tier as User['sponsor_tier'],
     sponsor_territorial_approved_at: data.sponsor_territorial_approved_at
       ? toDate(data.sponsor_territorial_approved_at)
