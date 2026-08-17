@@ -1,64 +1,65 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
-import { CoachChapterScroll, CoachEmptyState } from './coachPortalUi';
-import { ProDaySurface } from '../ui/ProDaySurface';
-import { ProDayText } from '../ui/ProDayText';
+import {
+  CoachChapterScroll,
+  CoachEmptyState,
+  CoachText,
+} from './coachPortalUi';
 import { PressableSpring } from '../motion';
-import { ProDayFutCard } from '../cards/ProDayFutCard';
 import { membershipsService } from '../../services/memberships.service';
-import { usersService } from '../../services/users.service';
-import { teamStaffService } from '../../services/teamStaff.service';
 import { openCarpoolDriverChat } from '../../utils/openCarpoolDriverChat';
-import { userToProDayCard } from '../../utils/prodayFutCard';
 import type { Membership } from '../../models/Membership';
 import type { User } from '../../models/User';
-import type { TeamStaffMember, TeamStaffRole } from '../../models/TeamStaffMember';
-import { TEAM_STAFF_ROLE_LABELS } from '../../models/TeamStaffMember';
-import { countAttendanceMark, countRsvpYes } from '../../models/TeamEvent';
-import { canManageClubEntity } from '../../utils/roleCapabilities';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { radius, spacing } from '../../theme/designTokens';
-import { ClubRosterBoardPanel } from '../club/ClubRosterBoardPanel';
-import { ClubTeamStadiumPanel } from '../club/ClubTeamStadiumPanel';
-import { ImmersivePoleHero } from '../poles';
-import { coachingSessionsService } from '../../services/homeTraining.service';
-import type { CoachSessionBooking } from '../../models/HomeTraining';
+import { spacing } from '../../theme/designTokens';
+import { CoachSportEasyPitch } from './CoachSportEasyPitch';
+import { CoachPane } from './CoachScreenHeader';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { teamsService } from '../../services/teams.service';
 import type { Team } from '../../models/Team';
+import { CoachPlayerNoteSheet } from './CoachPlayerNoteSheet';
+import { coachEvaluationsService } from '../../services/coachEvaluations.service';
+import { wellnessCheckinsService } from '../../services/wellnessCheckins.service';
+import type { CoachPlayerEvaluation } from '../../models/CoachEvaluation';
+import type { WellnessSignals } from '../../models/SmartTactics';
+import { Icon } from '../ui/Icon';
+
+function jerseyOf(user: User, index: number): number {
+  const n = user.profile?.jersey_number;
+  return typeof n === 'number' && n > 0 ? n : index + 1;
+}
 
 export const CoachEffectifChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
-  events,
   members,
+  events,
   onRefresh,
-  onOpenSmartTactics,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { openChat } = useTabNavigation();
   const nav = useTabNavigationActions();
+  const shellNav = useCoachShellNav();
   const clubId = profile.profile.club_id;
-  const canManage = canManageClubEntity(profile.role);
   const [pending, setPending] = useState<Membership[]>([]);
-  const [staff, setStaff] = useState<TeamStaffMember[]>([]);
-  const [sessionRequests, setSessionRequests] = useState<CoachSessionBooking[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [memberships, setMemberships] = useState<Membership[]>([]);
-  const [search, setSearch] = useState('');
-  const [results, setResults] = useState<User[]>([]);
-  const [staffUid, setStaffUid] = useState('');
-  const [staffName, setStaffName] = useState('');
-  const [staffRole, setStaffRole] = useState<TeamStaffRole>('assistant');
+  const [evaluations, setEvaluations] = useState<CoachPlayerEvaluation[]>([]);
+  const [wellnessByUid, setWellnessByUid] = useState<Record<string, WellnessSignals>>({});
+  const [notePlayer, setNotePlayer] = useState<User | null>(null);
 
-  useEffect(() => {
-    void coachingSessionsService.listForCoach(profile.uid).then((rows) => {
-      setSessionRequests(rows.filter((b) => b.status === 'requested').slice(0, 8));
-    });
-  }, [profile.uid]);
+  const loadNotesData = useCallback(async () => {
+    if (!clubId) return;
+    const [evals, wellness] = await Promise.all([
+      coachEvaluationsService.listForClub(clubId).catch(() => [] as CoachPlayerEvaluation[]),
+      wellnessCheckinsService.listLatestForClub(clubId).catch(() => ({})),
+    ]);
+    setEvaluations(evals);
+    setWellnessByUid(wellness);
+  }, [clubId]);
 
   useEffect(() => {
     if (!clubId) return;
@@ -66,427 +67,181 @@ export const CoachEffectifChapter: React.FC<CoachChapterCommonProps> = ({
       setPending(rows.filter((m) => m.status === 'pending'));
       setMemberships(rows);
     });
-    void teamStaffService.listForClub(clubId).then(setStaff);
     void teamsService.listByClubId(clubId).then(setTeams).catch(() => setTeams([]));
-  }, [clubId, members.length]);
+    void loadNotesData();
+  }, [clubId, members.length, loadNotesData]);
 
-  const attendanceRollup = useMemo(() => {
-    const recent = [...events]
-      .filter((e) => e.starts_at.getTime() < Date.now())
-      .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime())
-      .slice(0, 5);
-    return recent.map((e) => ({
-      id: e.id,
-      title: e.title,
-      yes: countRsvpYes(e),
-      present: countAttendanceMark(e, 'present'),
-      absent: countAttendanceMark(e, 'absent'),
-    }));
-  }, [events]);
+  const openGestion = () => {
+    if (shellNav) shellNav.requestNav('gestion');
+    else nav.openDashboard('gestion');
+  };
 
   const messageUser = async (uid: string, name: string) => {
     await openCarpoolDriverChat(profile, uid, name, openChat);
   };
 
-  const runSearch = async () => {
-    if (!search.trim()) return;
-    const players = await usersService.listPlayers(search.trim());
-    const memberUids = new Set(members.map((m) => m.uid));
-    const pendingUids = new Set(pending.map((m) => m.player_uid));
-    setResults(players.filter((p) => !memberUids.has(p.uid) && !pendingUids.has(p.uid)).slice(0, 8));
-  };
-
-  const invite = async (player: User) => {
-    if (!clubId || !canManage) return;
-    try {
-      await membershipsService.invitePlayer({
-        club_id: clubId,
-        player_uid: player.uid,
-        player_name: player.display_name,
-        invited_by_uid: profile.uid,
-      });
-      Alert.alert('OK', t('coach.portal.effectif.invited'));
-      setSearch('');
-      setResults([]);
-      onRefresh();
-    } catch (e) {
-      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.error'));
-    }
-  };
-
-  const approve = async (id: string) => {
-    try {
-      await membershipsService.approve(id, profile.uid);
-      setPending((p) => p.filter((m) => m.id !== id));
-      onRefresh();
-    } catch (e) {
-      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.saveFailed'));
-    }
-  };
-
-  const addStaff = async () => {
-    if (!clubId || !staffUid.trim()) return;
-    try {
-      await teamStaffService.add({
-        club_id: clubId,
-        uid: staffUid.trim(),
-        display_name: staffName.trim() || staffUid.trim(),
-        staff_role: staffRole,
-      });
-      setStaffUid('');
-      setStaffName('');
-      setStaff(await teamStaffService.listForClub(clubId));
-    } catch (e) {
-      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.saveFailed'));
-    }
-  };
-
   if (!clubId) {
     return (
-      <CoachChapterScroll>
-        <CoachEmptyState
-          title={t('coach.portal.effectif.noClub')}
-          body={t('coach.portal.effectif.noClubBody')}
-        />
-      </CoachChapterScroll>
+      <CoachPane
+        title={getCoachPageIdentity('effectif').title}
+        actions={[{ icon: 'add', onPress: openGestion, accessibilityLabel: 'Ajouter un membre' }]}
+      >
+        <CoachChapterScroll>
+          <CoachEmptyState
+            title={t('coach.portal.effectif.noClub')}
+            body={t('coach.portal.effectif.noClubBody')}
+            cta="Ouvrir la gestion"
+            onPress={openGestion}
+          />
+        </CoachChapterScroll>
+      </CoachPane>
     );
   }
 
-  return (
-    <CoachChapterScroll>
-      <ImmersivePoleHero
-        kicker="Effectif · Bourse"
-        title="Besoin pour samedi ? Proposez une montée."
-        support={t('coach.portal.effectif.bourseHint')}
-        primaryLabel="Tactique IA"
-        onPrimaryPress={() => onOpenSmartTactics?.()}
-      />
-      <ProDayText variant="section">{t('coach.portal.effectif.title')}</ProDayText>
-      <ProDayText variant="caption" muted>
-        {t('coach.portal.effectif.subtitle', { n: members.length })}
-      </ProDayText>
+  const pendingLabel =
+    pending.length === 1
+      ? '1 demande → Gérer'
+      : `${pending.length} demandes → Gérer`;
 
-      {clubId && teams.length > 0 ? (
-        <ClubTeamStadiumPanel
+  return (
+    <CoachPane
+      title={getCoachPageIdentity('effectif').title}
+      actions={[{ icon: 'add', onPress: openGestion, accessibilityLabel: 'Ajouter un membre' }]}
+    >
+      <CoachChapterScroll>
+        <CoachSportEasyPitch
           teams={teams}
           memberships={memberships}
           members={members}
+          clubId={clubId}
         />
-      ) : null}
 
-      <ClubRosterBoardPanel
-        clubId={clubId}
-        profile={profile}
-        members={members}
-        audience="coach"
-        defaultTeamLabel={profile.profile.category}
-        onOpenMercato={() => nav.openMercato('home')}
-      />
-
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
-          Coaching à l’heure
-        </ProDayText>
-        <ProDayText variant="caption" muted>
-          Ouvre tes créneaux pour les joueurs (Train Hub). Tarif indicatif ~30 €/h, tu fixes le tien.
-        </ProDayText>
-        <PressableSpring
-          onPress={() => {
-            void (async () => {
-              try {
-                await coachingSessionsService.upsertHourlyProfile({
-                  coach_uid: profile.uid,
-                  display_name: profile.display_name,
-                  bio: profile.profile.bio,
-                  specialties: profile.profile.specialties ?? [],
-                  age_categories: profile.profile.category
-                    ? [profile.profile.category]
-                    : [],
-                  positions_coached: [],
-                  city: profile.city ?? 'France',
-                  hourly_rate_eur: 30,
-                  club_id: profile.profile.club_id,
-                  available: true,
-                });
-                Alert.alert(
-                  'Créneaux ouverts',
-                  'Tu es visible dans Train Hub à 30 €/h. Modifie ton tarif plus tard dans ton profil.',
-                );
-              } catch (e) {
-                Alert.alert(
-                  t('common.error'),
-                  e instanceof Error ? e.message : t('common.saveFailed'),
-                );
-              }
-            })();
-          }}
-          scaleTo={0.96}
-          haptic
-        >
-          <ProDayText variant="caption" accent style={styles.link}>
-            Ouvrir mes créneaux (30 €/h)
-          </ProDayText>
-        </PressableSpring>
-        {sessionRequests.length > 0 ? (
-          <View style={{ gap: 4, marginTop: spacing.xs }}>
-            <ProDayText variant="caption" style={{ fontWeight: '800' }}>
-              Demandes en attente
-            </ProDayText>
-            {sessionRequests.map((b) => (
-              <View key={b.id} style={styles.row}>
-                <ProDayText variant="caption" style={{ flex: 1 }} numberOfLines={2}>
-                  {b.player_name} · {b.duration_min} min · {b.price_eur} € ·{' '}
-                  {b.starts_at.toLocaleDateString('fr-FR')}
-                </ProDayText>
-                <PressableSpring
-                  onPress={() => {
-                    void coachingSessionsService.setStatus(b.id, 'accepted').then(() => {
-                      setSessionRequests((prev) => prev.filter((x) => x.id !== b.id));
-                      Alert.alert(
-                        'Séance acceptée',
-                        'Le joueur est notifié et peut payer la séance par carte.',
-                      );
-                    });
-                  }}
-                  scaleTo={0.96}
-                  haptic
-                >
-                  <ProDayText variant="caption" accent style={styles.link}>
-                    Accepter
-                  </ProDayText>
-                </PressableSpring>
-                <PressableSpring
-                  onPress={() => {
-                    void coachingSessionsService.setStatus(b.id, 'declined').then(() => {
-                      setSessionRequests((prev) => prev.filter((x) => x.id !== b.id));
-                    });
-                  }}
-                  scaleTo={0.96}
-                >
-                  <ProDayText variant="caption" muted>
-                    Refuser
-                  </ProDayText>
-                </PressableSpring>
-              </View>
-            ))}
-          </View>
-        ) : null}
-      </ProDaySurface>
-
-      {members.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cardsRow}
-        >
-          {members.slice(0, 8).map((m) => (
-            <View key={`card_${m.uid}`} style={styles.cardSlot}>
-              <ProDayFutCard card={userToProDayCard(m)} width={148} />
-            </View>
-          ))}
-        </ScrollView>
-      ) : null}
-
-      {pending.length > 0 ? (
-        <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-          <ProDayText variant="caption" accent style={styles.section}>
-            {t('coach.portal.effectif.pending')}
-          </ProDayText>
-          {pending.map((m) => (
-            <View key={m.id} style={styles.row}>
-              <ProDayText variant="caption" style={{ flex: 1 }}>
-                {m.player_name}
-              </ProDayText>
-              <PressableSpring onPress={() => void approve(m.id)} scaleTo={0.96} haptic>
-                <ProDayText variant="caption" accent style={styles.link}>
-                  OK
-                </ProDayText>
-              </PressableSpring>
-            </View>
-          ))}
-        </ProDaySurface>
-      ) : null}
-
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
-          {t('coach.portal.effectif.roster')}
-        </ProDayText>
-        {members.length === 0 ? (
-          <ProDayText variant="caption" muted>
-            {t('coach.portal.effectif.rosterEmpty')}
-          </ProDayText>
-        ) : (
-          members.slice(0, 24).map((m) => (
-            <View key={m.uid} style={styles.row}>
-              <View style={{ flex: 1 }}>
-                <ProDayText variant="caption" style={{ fontWeight: '700' }}>
-                  {m.display_name}
-                </ProDayText>
-                <ProDayText variant="caption" muted>
-                  {m.city ?? m.email}
-                </ProDayText>
-              </View>
-              <PressableSpring
-                onPress={() => void messageUser(m.uid, m.display_name)}
-                scaleTo={0.96}
-                haptic
-              >
-                <ProDayText variant="caption" accent style={styles.link}>
-                  Msg
-                </ProDayText>
-              </PressableSpring>
-            </View>
-          ))
-        )}
-      </ProDaySurface>
-
-      {canManage ? (
-        <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-          <ProDayText variant="caption" accent style={styles.section}>
-            {t('coach.portal.effectif.invite')}
-          </ProDayText>
-          <TextInput
-            style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
-            value={search}
-            onChangeText={setSearch}
-            placeholder={t('coach.portal.effectif.searchPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            onSubmitEditing={() => void runSearch()}
-          />
-          <PressableSpring onPress={() => void runSearch()} scaleTo={0.96} haptic>
-            <ProDayText variant="caption" accent style={styles.link}>
-              {t('common.search')}
-            </ProDayText>
+        <View style={styles.listHead}>
+          <CoachText variant="section" style={styles.listTitle}>
+            {t('coach.portal.effectif.roster')}
+          </CoachText>
+          <PressableSpring onPress={openGestion} scaleTo={0.98} haptic>
+            <CoachText variant="caption" muted style={styles.manageLink}>
+              Gérer licences
+            </CoachText>
           </PressableSpring>
-          {results.map((u) => (
-            <View key={u.uid} style={styles.row}>
-              <ProDayText variant="caption" style={{ flex: 1 }}>
-                {u.display_name}
-              </ProDayText>
-              <PressableSpring
-                onPress={() => void invite(u)}
-                scaleTo={0.96}
-                haptic
-              >
-                <ProDayText variant="caption" accent style={styles.link}>
-                  {t('coach.portal.effectif.inviteCta')}
-                </ProDayText>
-              </PressableSpring>
-            </View>
-          ))}
-        </ProDaySurface>
-      ) : null}
+        </View>
 
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
-          {t('coach.portal.effectif.staff')}
-        </ProDayText>
-        {staff.map((s) => (
-          <View key={s.id} style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <ProDayText variant="caption" style={{ fontWeight: '700' }}>
-                {s.display_name}
-              </ProDayText>
-              <ProDayText variant="caption" muted>
-                {TEAM_STAFF_ROLE_LABELS[s.staff_role]}
-              </ProDayText>
-            </View>
-            <PressableSpring
-              onPress={() => void messageUser(s.uid, s.display_name)}
-              scaleTo={0.96}
-              haptic
-            >
-              <ProDayText variant="caption" accent style={styles.link}>
-                Msg
-              </ProDayText>
-            </PressableSpring>
-          </View>
-        ))}
-        {canManage ? (
-          <View style={styles.form}>
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
-              value={staffName}
-              onChangeText={setStaffName}
-              placeholder={t('coach.portal.effectif.staffName')}
-              placeholderTextColor={colors.textMuted}
-            />
-            <TextInput
-              style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
-              value={staffUid}
-              onChangeText={setStaffUid}
-              placeholder={t('coach.portal.effectif.staffUid')}
-              placeholderTextColor={colors.textMuted}
-            />
-            <View style={styles.roleRow}>
-              {(['assistant', 'analyst', 'physio', 'coach'] as TeamStaffRole[]).map((r) => (
-                <PressableSpring
-                  key={r}
-                  onPress={() => setStaffRole(r)}
-                  scaleTo={0.96}
-                  style={[
-                    styles.roleChip,
-                    {
-                      borderColor: staffRole === r ? colors.accent : colors.border,
-                      backgroundColor: staffRole === r ? colors.accentSoft : colors.surfaceMuted,
-                    },
-                  ]}
-                >
-                  <ProDayText variant="caption" accent={staffRole === r} muted={staffRole !== r}>
-                    {TEAM_STAFF_ROLE_LABELS[r]}
-                  </ProDayText>
-                </PressableSpring>
-              ))}
-            </View>
-            <PressableSpring onPress={() => void addStaff()} scaleTo={0.96} haptic>
-              <ProDayText variant="caption" accent style={styles.link}>
-                {t('coach.portal.effectif.addStaff')}
-              </ProDayText>
-            </PressableSpring>
-          </View>
-        ) : null}
-      </ProDaySurface>
-
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
-          {t('coach.portal.effectif.attendanceRollup')}
-        </ProDayText>
-        {attendanceRollup.length === 0 ? (
-          <ProDayText variant="caption" muted>
-            {t('coach.portal.effectif.attendanceEmpty')}
-          </ProDayText>
+        {members.length === 0 ? (
+          <CoachText variant="caption" muted>
+            {t('coach.portal.effectif.rosterEmpty')}
+          </CoachText>
         ) : (
-          attendanceRollup.map((r) => (
-            <ProDayText key={r.id} variant="caption" muted>
-              {r.title} — oui {r.yes} · présent {r.present} · absent {r.absent}
-            </ProDayText>
+          members.map((m, index) => (
+            <View key={m.uid} style={styles.playerRow}>
+              <PressableSpring
+                onPress={() => setNotePlayer(m)}
+                scaleTo={0.98}
+                haptic
+                style={styles.playerRowMain}
+              >
+                <View style={styles.playerNumWrap}>
+                  <CoachText variant="caption" style={styles.playerNum}>
+                    {jerseyOf(m, index)}
+                  </CoachText>
+                </View>
+                <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
+                  {m.display_name}
+                </CoachText>
+              </PressableSpring>
+              <Pressable
+                accessibilityLabel="Message"
+                onPress={() => void messageUser(m.uid, m.display_name)}
+                style={styles.msgBtn}
+              >
+                <Icon name="chat" size={16} color={COACH_SITE.muted} />
+              </Pressable>
+            </View>
           ))
         )}
-      </ProDaySurface>
-    </CoachChapterScroll>
+
+        {pending.length > 0 ? (
+          <PressableSpring onPress={openGestion} scaleTo={0.98} haptic style={styles.pendingLine}>
+            <CoachText variant="caption" muted>
+              {pendingLabel}
+            </CoachText>
+          </PressableSpring>
+        ) : null}
+      </CoachChapterScroll>
+
+      <CoachPlayerNoteSheet
+        visible={notePlayer != null}
+        player={notePlayer}
+        profile={profile}
+        events={events}
+        evaluations={evaluations}
+        wellness={notePlayer ? wellnessByUid[notePlayer.uid] : undefined}
+        onClose={() => setNotePlayer(null)}
+        onSaved={() => {
+          void loadNotesData();
+          onRefresh();
+        }}
+      />
+    </CoachPane>
   );
 };
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.md, gap: spacing.xs },
-  cardsRow: { gap: spacing.sm, paddingVertical: spacing.sm, paddingRight: spacing.md },
-  cardSlot: { marginRight: spacing.xs },
-  section: { fontWeight: '800', textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.6 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 4 },
-  link: { fontWeight: '800' },
-  input: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 14,
+  listHead: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
-  form: { gap: spacing.xs, marginTop: spacing.xs },
-  roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  roleChip: {
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+  listTitle: {
+    color: COACH_SITE.foreground,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  manageLink: {
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  playerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    minHeight: 56,
+    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+    borderRadius: 18,
+    backgroundColor: COACH_SITE.surface,
+    marginBottom: 2,
+  },
+  playerRowMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  msgBtn: {
+    padding: spacing.sm,
+  },
+  playerNumWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COACH_SITE.elevated,
+  },
+  playerNum: {
+    fontWeight: '800',
+    color: COACH_SITE.foreground,
+  },
+  playerName: {
+    flex: 1,
+    fontWeight: '600',
+    color: COACH_SITE.foreground,
+    fontSize: 17,
+  },
+  pendingLine: {
+    paddingVertical: spacing.md,
   },
 });

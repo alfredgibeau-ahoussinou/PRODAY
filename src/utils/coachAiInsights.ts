@@ -1,0 +1,524 @@
+import type { CoachPlayerEvaluation } from '../models/CoachEvaluation';
+import type { WellnessSignals } from '../models/SmartTactics';
+import type { TeamEvent } from '../models/TeamEvent';
+import type { User } from '../models/User';
+import {
+  countAttendanceMark,
+  countRsvpYes,
+  getPendingInviteeUids,
+} from '../models/TeamEvent';
+import type { CoachPitchLineup } from './coachPitchLineup';
+import { startersPlacedCount } from './coachPitchLineup';
+import { buildCoachAiSuggestions } from './coachAiSuggestions';
+
+export type CoachAiDataLevel = 'none' | 'partial' | 'ready';
+
+export type CoachAiActionId =
+  | 'add-match-sheets'
+  | 'plan-session'
+  | 'remind-rsvp'
+  | 'complete-lineup'
+  | 'add-wellness'
+  | 'add-player-notes'
+  | 'open-tactics'
+  | 'open-forme'
+  | 'invite-roster'
+  | 'join-club';
+
+export interface CoachAiAction {
+  id: CoachAiActionId | string;
+  title: string;
+  detail: string;
+  priority: number;
+}
+
+export interface CoachAiTeamOverview {
+  level: CoachAiDataLevel;
+  headline: string;
+  synthesis: string;
+  metrics: { label: string; value: string }[];
+  emptyCta?: { label: string; action: CoachAiActionId };
+}
+
+export interface CoachAiStrategyPlayer {
+  uid: string;
+  name: string;
+  reason: string;
+}
+
+export interface CoachAiStrategy {
+  level: CoachAiDataLevel;
+  formation?: string;
+  formationDetail?: string;
+  playersToStart: CoachAiStrategyPlayer[];
+  playersToWatch: CoachAiStrategyPlayer[];
+  trainingFocus?: string;
+  emptyHint?: string;
+}
+
+export interface CoachAiInsightsInput {
+  events: TeamEvent[];
+  members: User[];
+  wellnessByUid?: Record<string, WellnessSignals>;
+  evaluations?: CoachPlayerEvaluation[];
+  lineup?: CoachPitchLineup | null;
+  hasClub: boolean;
+}
+
+export interface CoachAiInsights {
+  overview: CoachAiTeamOverview;
+  strategy: CoachAiStrategy;
+  actions: CoachAiAction[];
+}
+
+export interface CoachPlayerAiInsightsInput {
+  playerUid: string;
+  playerName: string;
+  events: TeamEvent[];
+  evaluations: CoachPlayerEvaluation[];
+  wellness?: WellnessSignals;
+  note?: string;
+}
+
+export interface CoachPlayerAiInsights {
+  level: CoachAiDataLevel;
+  bullets: string[];
+  emptyHint: string;
+}
+
+function isMatchEvent(e: TeamEvent): boolean {
+  return (
+    e.event_type === 'friendly' ||
+    e.event_type === 'competition' ||
+    e.event_type === 'tournament'
+  );
+}
+
+function eventsWithSheets(events: TeamEvent[]): TeamEvent[] {
+  return events.filter(
+    (e) => e.player_match_stats && Object.keys(e.player_match_stats).length > 0,
+  );
+}
+
+function aggregatePlayerRatings(events: TeamEvent[]): Map<string, { sum: number; n: number; goals: number }> {
+  const map = new Map<string, { sum: number; n: number; goals: number }>();
+  for (const ev of eventsWithSheets(events)) {
+    for (const [uid, row] of Object.entries(ev.player_match_stats ?? {})) {
+      const prev = map.get(uid) ?? { sum: 0, n: 0, goals: 0 };
+      if (row.rating != null) {
+        prev.sum += row.rating;
+        prev.n += 1;
+      }
+      prev.goals += row.goals ?? 0;
+      map.set(uid, prev);
+    }
+  }
+  return map;
+}
+
+function memberName(members: User[], uid: string): string {
+  return members.find((m) => m.uid === uid)?.display_name ?? 'Joueur';
+}
+
+function wellnessConcern(w?: WellnessSignals): boolean {
+  if (!w) return false;
+  if (w.injured || w.suspended) return true;
+  if (typeof w.fatigue === 'number' && w.fatigue >= 7) return true;
+  if (typeof w.recovery === 'number' && w.recovery <= 4) return true;
+  if (typeof w.pain === 'number' && w.pain >= 5) return true;
+  if (typeof w.wellness_score === 'number' && w.wellness_score <= 4) return true;
+  return false;
+}
+
+/** Synthèse équipe — règles déterministes, jamais de chiffres inventés. */
+export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTeamOverview {
+  const { events, members, hasClub, wellnessByUid = {} } = input;
+  const now = Date.now();
+  const played = eventsWithSheets(events);
+  const upcoming = events.filter((e) => e.starts_at.getTime() > now);
+  const next = [...upcoming].sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0];
+  const wellnessAlerts = members.filter((m) => wellnessConcern(wellnessByUid[m.uid])).length;
+
+  const metrics: { label: string; value: string }[] = [
+    { label: 'Joueurs', value: String(members.length) },
+    { label: 'Feuilles', value: String(played.length) },
+    { label: 'À venir', value: String(upcoming.length) },
+  ];
+  if (wellnessAlerts > 0) {
+    metrics.push({ label: 'Alertes forme', value: String(wellnessAlerts) });
+  }
+
+  if (!hasClub) {
+    return {
+      level: 'none',
+      headline: 'Club requis',
+      synthesis: 'Rattachez un club pour activer l’analyse de l’équipe.',
+      metrics,
+      emptyCta: { label: 'Configurer le club', action: 'join-club' },
+    };
+  }
+
+  if (members.length === 0) {
+    return {
+      level: 'none',
+      headline: 'Effectif vide',
+      synthesis: 'Invitez vos joueurs pour que l’assistant puisse croiser présences, forme et stats.',
+      metrics,
+      emptyCta: { label: 'Inviter des joueurs', action: 'invite-roster' },
+    };
+  }
+
+  if (played.length === 0) {
+    const parts: string[] = [];
+    if (next) {
+      const yes = countRsvpYes(next);
+      const pending = getPendingInviteeUids(next).length;
+      parts.push(
+        `Prochain : « ${next.title} » (${yes} confirmé${yes > 1 ? 's' : ''}${pending > 0 ? `, ${pending} sans réponse` : ''}).`,
+      );
+    } else {
+      parts.push('Aucun événement planifié.');
+    }
+    if (wellnessAlerts > 0) {
+      parts.push(`${wellnessAlerts} joueur(s) signalent une forme à surveiller.`);
+    }
+    return {
+      level: 'partial',
+      headline: 'Données match insuffisantes',
+      synthesis: `${parts.join(' ')} Ajoutez les feuilles de match après vos prochains matchs pour activer l’analyse.`,
+      metrics,
+      emptyCta: { label: 'Voir le calendrier', action: 'plan-session' },
+    };
+  }
+
+  let totalGoals = 0;
+  let rated = 0;
+  let ratingSum = 0;
+  for (const ev of played) {
+    for (const row of Object.values(ev.player_match_stats ?? {})) {
+      totalGoals += row.goals ?? 0;
+      if (row.rating != null) {
+        rated += 1;
+        ratingSum += row.rating;
+      }
+    }
+  }
+  const avgRating = rated > 0 ? (ratingSum / rated).toFixed(1) : null;
+
+  const parts: string[] = [
+    `${played.length} match${played.length > 1 ? 's' : ''} avec feuille renseignée`,
+    `${totalGoals} but${totalGoals > 1 ? 's' : ''} marqué${totalGoals > 1 ? 's' : ''}`,
+  ];
+  if (avgRating) parts.push(`note moyenne ${avgRating}/10`);
+  if (wellnessAlerts > 0) {
+    parts.push(`${wellnessAlerts} alerte${wellnessAlerts > 1 ? 's' : ''} forme`);
+  }
+  if (next && isMatchEvent(next)) {
+    const yes = countRsvpYes(next);
+    parts.push(`prochain match « ${next.title} » : ${yes} présent${yes > 1 ? 's' : ''}`);
+  }
+
+  return {
+    level: 'ready',
+    headline: 'Analyse de l’équipe',
+    synthesis: `${parts.join(' · ')}.`,
+    metrics,
+  };
+}
+
+/** Stratégie recommandée — formation, titulaires, focus séance. */
+export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrategy {
+  const { events, members, wellnessByUid = {}, lineup } = input;
+  const ratings = aggregatePlayerRatings(events);
+  const now = Date.now();
+  const nextMatch = [...events]
+    .filter((e) => e.starts_at.getTime() > now && isMatchEvent(e))
+    .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0];
+  const nextTraining = [...events]
+    .filter((e) => e.starts_at.getTime() > now && e.event_type === 'training')
+    .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0];
+
+  const formation = lineup?.formation ?? nextMatch?.lineup?.formation ?? undefined;
+  const placed = lineup ? startersPlacedCount(lineup) : 0;
+
+  const topRated = [...ratings.entries()]
+    .filter(([, v]) => v.n > 0)
+    .map(([uid, v]) => ({
+      uid,
+      name: memberName(members, uid),
+      avg: v.sum / v.n,
+      goals: v.goals,
+    }))
+    .sort((a, b) => b.avg - a.avg || b.goals - a.goals)
+    .slice(0, 5);
+
+  const watchList = members
+    .filter((m) => wellnessConcern(wellnessByUid[m.uid]))
+    .slice(0, 4)
+    .map((m) => ({
+      uid: m.uid,
+      name: m.display_name,
+      reason: 'Forme ou récupération à surveiller (check-in joueur).',
+    }));
+
+  const playersToStart = topRated.slice(0, 4).map((p) => {
+    const matchCount = ratings.get(p.uid)?.n ?? 0;
+    return {
+      uid: p.uid,
+      name: p.name,
+      reason:
+        matchCount > 1
+          ? `Note moy. ${p.avg.toFixed(1)}/10 sur ${matchCount} matchs`
+          : `Note ${p.avg.toFixed(1)}/10 · ${p.goals} but${p.goals !== 1 ? 's' : ''}`,
+    };
+  });
+
+  if (placed >= 7 && lineup) {
+    const starters = lineup.starterUids.filter(Boolean) as string[];
+    for (const uid of starters) {
+      if (!playersToStart.some((p) => p.uid === uid)) {
+        playersToStart.push({
+          uid,
+          name: memberName(members, uid),
+          reason: 'Titulaire dans votre compo enregistrée.',
+        });
+      }
+    }
+  }
+
+  let trainingFocus: string | undefined;
+  if (nextTraining) {
+    const absent = countAttendanceMark(nextTraining, 'absent');
+    const yes = countRsvpYes(nextTraining);
+    trainingFocus =
+      absent > 2
+        ? 'Groupe réduit — technique individuelle et duels.'
+        : yes >= 12
+          ? 'Effectif large — jeu opposé et transitions.'
+          : 'Séance mixte — activation, jeu réduit, finition.';
+  }
+
+  const hasData = playersToStart.length > 0 || formation || trainingFocus;
+
+  if (!hasData) {
+    return {
+      level: 'none',
+      playersToStart: [],
+      playersToWatch: watchList,
+      emptyHint:
+        'Renseignez des feuilles de match ou une composition pour obtenir des suggestions tactiques.',
+    };
+  }
+
+  return {
+    level: playersToStart.length > 0 ? 'ready' : 'partial',
+    formation,
+    formationDetail: formation
+      ? placed >= 7
+        ? `${placed} titulaires placés sur le terrain.`
+        : 'Complétez la composition pour affiner la stratégie.'
+      : undefined,
+    playersToStart: playersToStart.slice(0, 5),
+    playersToWatch: watchList,
+    trainingFocus,
+  };
+}
+
+/** Actions prioritaires — 3 à 5 items concrets. */
+export function buildCoachAiNowActions(input: CoachAiInsightsInput): CoachAiAction[] {
+  const { events, members, hasClub, evaluations = [], lineup, wellnessByUid = {} } = input;
+  const actions: CoachAiAction[] = [];
+  const now = Date.now();
+  const played = eventsWithSheets(events);
+  const upcoming = events.filter((e) => e.starts_at.getTime() > now);
+  const next = [...upcoming].sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0];
+
+  if (!hasClub) {
+    actions.push({
+      id: 'join-club',
+      title: 'Configurer le club',
+      detail: 'Sans club, l’assistant ne peut pas analyser votre effectif.',
+      priority: 100,
+    });
+    return actions;
+  }
+
+  if (members.length === 0) {
+    actions.push({
+      id: 'invite-roster',
+      title: 'Constituer l’effectif',
+      detail: 'Invitez vos joueurs pour débloquer convocations et analyses.',
+      priority: 98,
+    });
+  }
+
+  const pastMatches = events.filter(
+    (e) => e.starts_at.getTime() < now && isMatchEvent(e),
+  );
+  const missingSheets = pastMatches.filter(
+    (e) => !e.player_match_stats || Object.keys(e.player_match_stats).length === 0,
+  );
+  if (missingSheets.length > 0) {
+    actions.push({
+      id: 'add-match-sheets',
+      title: 'Compléter les feuilles de match',
+      detail: `${missingSheets.length} match${missingSheets.length > 1 ? 's' : ''} sans stats — « ${missingSheets[0]?.title ?? ''} » en attente.`,
+      priority: 92,
+    });
+  }
+
+  if (next) {
+    const pending = getPendingInviteeUids(next).length;
+    if (pending > 0) {
+      actions.push({
+        id: 'remind-rsvp',
+        title: 'Relancer les convocations',
+        detail: `${pending} joueur(s) n’ont pas répondu à « ${next.title} ».`,
+        priority: 95,
+      });
+    }
+  }
+
+  if (lineup && startersPlacedCount(lineup) < 7 && members.length >= 7) {
+    actions.push({
+      id: 'complete-lineup',
+      title: 'Finaliser la composition',
+      detail: 'Moins de 7 titulaires placés — complétez le XI type.',
+      priority: 88,
+    });
+  }
+
+  const wellnessMissing = members.filter((m) => !wellnessByUid[m.uid]).length;
+  if (wellnessMissing > members.length * 0.6 && members.length > 3) {
+    actions.push({
+      id: 'add-wellness',
+      title: 'Encourager les check-ins forme',
+      detail: `${wellnessMissing} joueur(s) sans signalement récent.`,
+      priority: 75,
+    });
+  }
+
+  const notesCount = evaluations.filter((e) => e.notes?.trim()).length;
+  if (notesCount === 0 && members.length > 0 && played.length > 0) {
+    actions.push({
+      id: 'add-player-notes',
+      title: 'Ajouter des notes joueurs',
+      detail: 'Vos observations enrichissent l’analyse individuelle.',
+      priority: 70,
+    });
+  }
+
+  const suggestions = buildCoachAiSuggestions({ events, membersCount: members.length });
+  for (const s of suggestions) {
+    if (actions.some((a) => a.id === s.id)) continue;
+    actions.push({
+      id: s.id,
+      title: s.title,
+      detail: s.detail,
+      priority: s.priority,
+    });
+  }
+
+  if (upcoming.length === 0) {
+    actions.push({
+      id: 'plan-session',
+      title: 'Planifier une séance',
+      detail: 'Aucun événement à venir — créez un entraînement ou une convocation.',
+      priority: 85,
+    });
+  }
+
+  return [...actions].sort((a, b) => b.priority - a.priority).slice(0, 5);
+}
+
+export function buildCoachAiInsights(input: CoachAiInsightsInput): CoachAiInsights {
+  return {
+    overview: buildCoachAiTeamOverview(input),
+    strategy: buildCoachAiStrategy(input),
+    actions: buildCoachAiNowActions(input),
+  };
+}
+
+/** Analyse joueur — données réelles + notes coach uniquement. */
+export function buildCoachPlayerAiInsights(
+  input: CoachPlayerAiInsightsInput,
+): CoachPlayerAiInsights {
+  const { playerUid, events, evaluations, wellness, note } = input;
+  const bullets: string[] = [];
+  const playerEvals = evaluations.filter((e) => e.player_uid === playerUid);
+  const sheets = events
+    .map((ev) => {
+      const st = ev.player_match_stats?.[playerUid];
+      return st ? { ev, st } : null;
+    })
+    .filter(Boolean) as { ev: TeamEvent; st: NonNullable<TeamEvent['player_match_stats']>[string] }[];
+
+  if (sheets.length === 0 && playerEvals.length === 0 && !note?.trim() && !wellness) {
+    return {
+      level: 'none',
+      bullets: [],
+      emptyHint:
+        'Pas encore de feuille de match, d’évaluation ni de note pour ce joueur. Ajoutez une observation ou attendez un match joué.',
+    };
+  }
+
+  if (sheets.length > 0) {
+    const ratings = sheets.map((s) => s.st.rating).filter((r): r is number => r != null);
+    const goals = sheets.reduce((n, s) => n + (s.st.goals ?? 0), 0);
+    const assists = sheets.reduce((n, s) => n + (s.st.assists ?? 0), 0);
+    if (ratings.length >= 2) {
+      const recent = ratings.slice(0, 3);
+      const older = ratings.slice(3);
+      const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+      const olderAvg =
+        older.length > 0 ? older.reduce((a, b) => a + b, 0) / older.length : recentAvg;
+      if (recentAvg > olderAvg + 0.4) {
+        bullets.push(`Forme en hausse — note récente ${recentAvg.toFixed(1)}/10.`);
+      } else if (recentAvg < olderAvg - 0.4) {
+        bullets.push(`Forme en baisse — note récente ${recentAvg.toFixed(1)}/10.`);
+      } else {
+        bullets.push(`Niveau stable — moyenne ${recentAvg.toFixed(1)}/10 sur les derniers matchs.`);
+      }
+    } else if (ratings.length === 1) {
+      bullets.push(`Dernière note : ${ratings[0]!.toFixed(1)}/10.`);
+    }
+    if (goals > 0) bullets.push(`${goals} but${goals > 1 ? 's' : ''} cette saison.`);
+    if (assists > 0) bullets.push(`${assists} passe${assists > 1 ? 's' : ''} décisive${assists > 1 ? 's' : ''}.`);
+  }
+
+  const latestEval = playerEvals[0];
+  if (latestEval) {
+    const r = latestEval.ratings;
+    const dims: string[] = [];
+    if (r.technical != null) dims.push(`technique ${r.technical}/5`);
+    if (r.tactical != null) dims.push(`tactique ${r.tactical}/5`);
+    if (r.physical != null) dims.push(`physique ${r.physical}/5`);
+    if (r.mental != null) dims.push(`mental ${r.mental}/5`);
+    if (dims.length > 0) {
+      bullets.push(`Dernière éval coach : ${dims.join(', ')}.`);
+    } else if (r.overall) {
+      bullets.push(`Dernière éval globale : ${r.overall}/5.`);
+    }
+  }
+
+  if (wellness) {
+    if (wellnessConcern(wellness)) {
+      bullets.push('Check-in forme : vigilance recommandée avant la prochaine séance.');
+    } else {
+      bullets.push('Check-in forme récent : disponibilité OK.');
+    }
+  }
+
+  if (note?.trim()) {
+    bullets.push(`Note coach : « ${note.trim().slice(0, 120)}${note.trim().length > 120 ? '…' : ''} ».`);
+  }
+
+  return {
+    level: bullets.length >= 2 ? 'ready' : bullets.length === 1 ? 'partial' : 'none',
+    bullets: bullets.slice(0, 5),
+    emptyHint:
+      bullets.length === 0
+        ? 'Données insuffisantes — ajoutez une note ou une feuille de match.'
+        : '',
+  };
+}

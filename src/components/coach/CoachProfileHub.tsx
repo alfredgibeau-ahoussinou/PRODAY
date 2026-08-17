@@ -7,6 +7,7 @@ import {
   CoachActionRow,
   CoachKpiRow,
   CoachSectionCard,
+  CoachText,
 } from './coachPortalUi';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
@@ -23,6 +24,8 @@ type Props = {
   onPublicProfile?: () => void;
   onAvatarPress?: () => void;
   onSubscriptionPress?: () => void;
+  /** Aperçu actions assistant IA (depuis coachAiEngine). */
+  aiActionPreview?: { title: string; detail: string }[];
 };
 
 export function CoachProfileHub({
@@ -32,6 +35,7 @@ export function CoachProfileHub({
   onPublicProfile,
   onAvatarPress,
   onSubscriptionPress,
+  aiActionPreview = [],
 }: Props) {
   const identity = getCoachPageIdentity('profil');
   const shellNav = useCoachShellNav();
@@ -46,7 +50,7 @@ export function CoachProfileHub({
   const diplomas = p.diplomas_list?.length ?? (p.diploma ? 1 : 0);
   const initial = (profile.display_name?.trim()?.charAt(0) || 'C').toUpperCase();
 
-  const open = (id: 'today' | 'planning' | 'matchs' | 'effectif' | 'smart_tactics' | 'forme') => {
+  const open = (id: 'today' | 'planning' | 'matchs' | 'effectif' | 'smart_tactics' | 'forme' | 'coach_ia') => {
     if (shellNav) shellNav.requestNav(id);
     else if (id === 'matchs') nav.openMatchs();
     else if (id === 'smart_tactics' || id === 'forme') nav.openDashboard('smart_tactics');
@@ -57,7 +61,7 @@ export function CoachProfileHub({
     <View style={styles.root}>
       <View style={styles.hero}>
         <LinearGradient
-          colors={[COACH_SITE.pitchDeep, 'rgba(0,0,0,0.55)', COACH_SITE.bg]}
+          colors={[COACH_SITE.soft, COACH_SITE.surface]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
@@ -164,6 +168,35 @@ export function CoachProfileHub({
       </CoachSectionCard>
 
       <CoachSectionCard
+        kicker="Intelligence"
+        title="Mon assistant IA"
+        body="Synthèse équipe, stratégie et actions — uniquement depuis vos données ProDay."
+      >
+        {aiActionPreview.length > 0 ? (
+          <View style={styles.aiPreview}>
+            {aiActionPreview.slice(0, 3).map((a) => (
+              <View key={a.title} style={styles.aiPreviewRow}>
+                <CoachText variant="caption" style={styles.aiPreviewTitle}>
+                  {a.title}
+                </CoachText>
+                <CoachText variant="caption" muted numberOfLines={2}>
+                  {a.detail}
+                </CoachText>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <CoachText variant="caption" muted style={styles.hint}>
+            Ouvrez l’assistant pour voir vos priorités du moment.
+          </CoachText>
+        )}
+        <CoachActionRow
+          primary="Ouvrir l’assistant IA"
+          onPrimary={() => open('coach_ia')}
+        />
+      </CoachSectionCard>
+
+      <CoachSectionCard
         kicker="Commandes"
         title="Accès rapide"
         body="Pilote ton équipe depuis ton identité coach."
@@ -211,15 +244,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   hero: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    borderLeftWidth: 2,
-    borderLeftColor: COACH_SITE.accent,
-    borderRadius: 2,
+    borderRadius: 18,
     padding: spacing.lg,
     overflow: 'hidden',
     gap: spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: COACH_SITE.surface,
   },
   heroTop: {
     flexDirection: 'row',
@@ -230,10 +259,8 @@ const styles = StyleSheet.create({
   heroTopLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   kicker: {
     color: COACH_SITE.accent,
-    textTransform: 'uppercase',
-    letterSpacing: 2.2,
-    fontSize: 10,
-    fontWeight: '800',
+    fontSize: 13,
+    fontWeight: '700',
   },
   verifiedPill: {
     flexDirection: 'row',
@@ -248,8 +275,7 @@ const styles = StyleSheet.create({
     color: COACH_SITE.accent,
     fontWeight: '800',
     fontSize: 10,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   pendingPill: {
     borderWidth: StyleSheet.hairlineWidth,
@@ -261,22 +287,21 @@ const styles = StyleSheet.create({
     color: COACH_SITE.muted,
     fontWeight: '700',
     fontSize: 10,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   avatarWrap: { alignSelf: 'flex-start', marginTop: spacing.xs },
   avatar: {
     width: 72,
     height: 72,
-    borderRadius: 2,
-    borderWidth: 1,
+    borderRadius: 36,
+    borderWidth: 2,
     borderColor: `${COACH_SITE.accent}99`,
   },
   avatarFallback: {
     width: 72,
     height: 72,
-    borderRadius: 2,
-    borderWidth: 1,
+    borderRadius: 36,
+    borderWidth: 2,
     borderColor: `${COACH_SITE.accent}99`,
     backgroundColor: COACH_SITE.soft,
     alignItems: 'center',
@@ -289,7 +314,7 @@ const styles = StyleSheet.create({
     bottom: -4,
     width: 24,
     height: 24,
-    borderRadius: 2,
+    borderRadius: 12,
     backgroundColor: COACH_SITE.accent,
     alignItems: 'center',
     justifyContent: 'center',
@@ -303,7 +328,7 @@ const styles = StyleSheet.create({
   },
   meta: { color: COACH_SITE.accent, fontWeight: '700' },
   bio: { color: COACH_SITE.muted, lineHeight: 18, marginTop: 2 },
-  bioMuted: { color: 'rgba(245,245,240,0.35)', lineHeight: 18, marginTop: 2 },
+  bioMuted: { color: COACH_SITE.muted, lineHeight: 18, marginTop: 2 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
   tag: {
     borderWidth: StyleSheet.hairlineWidth,
@@ -314,6 +339,13 @@ const styles = StyleSheet.create({
   },
   tagText: { color: COACH_SITE.foreground, fontWeight: '700', fontSize: 11 },
   hint: { color: COACH_SITE.muted, marginTop: spacing.xs },
+  aiPreview: { gap: spacing.sm, marginTop: spacing.sm, marginBottom: spacing.sm },
+  aiPreviewRow: {
+    padding: spacing.sm,
+    borderRadius: 10,
+    backgroundColor: COACH_SITE.elevated,
+  },
+  aiPreviewTitle: { fontWeight: '700', marginBottom: 4 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -324,9 +356,8 @@ const styles = StyleSheet.create({
     width: '31%',
     minWidth: 96,
     flexGrow: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: COACH_SITE.elevated,
+    borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 8,
     alignItems: 'center',
