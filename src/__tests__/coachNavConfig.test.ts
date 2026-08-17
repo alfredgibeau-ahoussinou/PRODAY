@@ -102,6 +102,8 @@ describe('coachNavConfig', () => {
     expect(COACH_MENU_DEST_IDS).toContain('planning');
     expect(COACH_HOME_DEST_IDS).toEqual(COACH_MENU_DEST_IDS);
     expect(COACH_TOOL_GROUPS.flatMap((g) => g.toolIds)).toHaveLength(8);
+    expect(COACH_TOOL_GROUPS.map((g) => g.id)).toEqual(['match', 'club', 'performance']);
+    expect(COACH_TOOL_GROUPS.map((g) => g.label)).toEqual(['Match', 'Club', 'Performance']);
     expect(COACH_HOME_TOOLS.map((t) => t.id)).toEqual([
       'match_center',
       'entrainements',

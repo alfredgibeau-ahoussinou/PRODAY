@@ -7,6 +7,7 @@ import {
 } from '../../../components/coach/coachPortalUi';
 import { CoachScreenHeader } from '../../../components/coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../../content/coachPageIdentity';
+import { useTranslation } from '../../../context/LocaleContext';
 import { useCoachTheme } from './CoachThemeContext';
 import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { COACH_TOOL_GROUPS } from '../navigation/coachNavConfig';
@@ -24,6 +25,7 @@ const pageIdentity = getCoachPageIdentity('plus');
 /** Hub Menu — outils groupés (Match, Club, Performance). */
 export function CoachMenuPane({ items = [] }: Props) {
   const shellNav = useCoachShellNav();
+  const { t } = useTranslation();
   const { tokens } = useCoachTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const resolvedById = useMemo(
@@ -35,8 +37,8 @@ export function CoachMenuPane({ items = [] }: Props) {
     <View style={styles.root}>
       <CoachScreenHeader title={pageIdentity.title} showTeamRow={false} />
       <CoachChapterScroll>
-        <CoachText variant="body" muted style={styles.subtitle}>
-          {pageIdentity.support}
+        <CoachText variant="body" muted style={styles.subtitle} numberOfLines={1}>
+          {t('coach.portal.menu.subtitle')}
         </CoachText>
 
         {items.length === 0 ? (
