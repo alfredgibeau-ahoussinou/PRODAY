@@ -23,6 +23,9 @@ import { CarpoolProposePanel } from './CarpoolProposePanel';
 import { StandaloneCarpoolRideCard } from './StandaloneCarpoolRideCard';
 import { CarpoolEmptyState, CarpoolFilterChips } from './carpoolUi';
 import { CarpoolHubChrome } from './CarpoolHubChrome';
+import { CoachCarpoolModeBar } from './CoachCarpoolModeBar';
+import { CoachCarpoolReminder } from './CoachCarpoolReminder';
+import { CoachText } from '../coach/coachPortalUi';
 import { CarpoolLiveMission } from './CarpoolLiveMission';
 import { CarpoolSpaceBackground } from './CarpoolSpaceBackground';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
@@ -37,7 +40,8 @@ import {
 import { useTranslation } from '../../context/LocaleContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { SkeletonList, InteractiveListItem, CrossfadeSwitch } from '../motion';
-import { spacing } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
+import { PressableSpring } from '../motion';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { CoachPane } from '../coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
@@ -101,10 +105,19 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   const [rideFilter, setRideFilter] = useState<RideFilter>('all');
   const [myTripsTab, setMyTripsTab] = useState<'upcoming' | 'past'>('upcoming');
   const [refreshing, setRefreshing] = useState(false);
+  const [rideFiltersOpen, setRideFiltersOpen] = useState(false);
+  const [showAllSeats, setShowAllSeats] = useState(false);
 
   useEffect(() => {
     setMode(carpoolChapterToHubMode(initialChapter));
   }, [initialChapter]);
+
+  useEffect(() => {
+    if (coachShell) {
+      setShowAllSeats(false);
+      setRideFiltersOpen(false);
+    }
+  }, [mode, coachShell]);
 
   const setHubMode = useCallback((next: CarpoolHubMode) => {
     setMode(next);
@@ -339,10 +352,84 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={CARPOOL_SITE.signal} />
   );
 
+  const COACH_SEAT_CAP = 5;
+  const COACH_EVENT_CAP = 6;
+
+  const allSeatOffers = useMemo(
+    () => [...bookableStandalone.map((offer) => ({ kind: 'standalone' as const, offer })), ...sortedAvailableRides.map((ride) => ({ kind: 'event' as const, ...ride }))],
+    [bookableStandalone, sortedAvailableRides],
+  );
+
+  const visibleSeatOffers = coachShell && !showAllSeats
+    ? allSeatOffers.slice(0, COACH_SEAT_CAP)
+    : allSeatOffers;
+
+  const renderRideFilters = () => (
+    <>
+      <View style={styles.search}>
+        <Icon name="search" size={16} color={CARPOOL_SITE.inkDim} />
+        <TextInput
+          style={styles.searchInput}
+          value={searchCity}
+          onChangeText={setSearchCity}
+          placeholder={t('carpool.reserve.filter.city')}
+          placeholderTextColor={CARPOOL_SITE.inkDim}
+        />
+      </View>
+      <CarpoolFilterChips options={rideFilterOptions} value={rideFilter} onChange={setRideFilter} />
+    </>
+  );
+
+  const renderSeatOffer = (
+    item: (typeof allSeatOffers)[number],
+    index: number,
+  ) => {
+    if (!profile) return null;
+    if (item.kind === 'standalone') {
+      return (
+        <InteractiveListItem key={`solo-${item.offer.id}`} index={index}>
+          <StandaloneCarpoolRideCard
+            offer={item.offer}
+            profile={profile}
+            driverHistory={standaloneAllOffers}
+            onUpdated={onRefresh}
+            compact
+          />
+        </InteractiveListItem>
+      );
+    }
+    const { event, slot } = item;
+    const rec = findCarpoolRec(carpoolRecs, event.id, slot.driver_uid);
+    const trip = summarizeCarpoolTrip({
+      userLocation: profile.location,
+      slot,
+      rec,
+    });
+    return (
+      <InteractiveListItem key={`${event.id}-${slot.driver_uid}`} index={index}>
+        <CarpoolRideCard
+          event={event}
+          slot={slot}
+          profile={profile}
+          onUpdated={onRefresh}
+          onOpenDetail={() => onOpenEvent(event.id)}
+          iaScore={trip.iaScore}
+          distanceKm={trip.distanceKm}
+          etaLabel={trip.etaLabel}
+          compact
+        />
+      </InteractiveListItem>
+    );
+  };
+
   const renderRide = () => (
     <ScrollView contentContainerStyle={pagePad} refreshControl={refreshControl} {...scrollProps}>
-      <Text style={styles.modeTitle}>{t('carpool.hub.rideTitle')}</Text>
-      <Text style={styles.modeSupport}>{t('carpool.hub.rideSupport')}</Text>
+      {coachShell ? null : (
+        <>
+          <Text style={styles.modeTitle}>{t('carpool.hub.rideTitle')}</Text>
+          <Text style={styles.modeSupport}>{t('carpool.hub.rideSupport')}</Text>
+        </>
+      )}
 
       {!profile ? (
         <CarpoolEmptyState
@@ -354,19 +441,77 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
         />
       ) : loading && standaloneLoading ? (
         <SkeletonList count={3} variant="card" />
+      ) : coachShell ? (
+        <>
+          {needsRideEvents.length > 0 ? (
+            <View style={styles.sectionBlock}>
+              <CoachText variant="caption" accent style={styles.coachSectionLabel}>
+                {t('carpool.hub.eventsWithoutRide')}
+              </CoachText>
+              {needsRideEvents.slice(0, COACH_EVENT_CAP).map((event, index) => (
+                <InteractiveListItem key={`need-${event.id}`} index={index}>
+                  <CarpoolEventCard
+                    event={event}
+                    profileUid={profile.uid}
+                    onPress={() => onOpenEvent(event.id)}
+                    onQuickBook={() => onOpenEvent(event.id)}
+                  />
+                </InteractiveListItem>
+              ))}
+            </View>
+          ) : null}
+
+          {allSeatOffers.length > 0 ? (
+            <View style={styles.sectionBlock}>
+              <CoachText variant="caption" accent style={styles.coachSectionLabel}>
+                {t('coach.portal.carpool.availableSeats')}
+              </CoachText>
+              {visibleSeatOffers.map((item, index) => renderSeatOffer(item, index))}
+              {allSeatOffers.length > COACH_SEAT_CAP && !showAllSeats ? (
+                <PressableSpring
+                  onPress={() => setShowAllSeats(true)}
+                  scaleTo={0.97}
+                  haptic
+                  style={styles.coachSeeAll}
+                >
+                  <CoachText variant="caption" accent>
+                    {t('coach.portal.carpool.seeAllSeats', { n: allSeatOffers.length })}
+                  </CoachText>
+                </PressableSpring>
+              ) : null}
+            </View>
+          ) : null}
+
+          {needsRideEvents.length === 0 && allSeatOffers.length === 0 ? (
+            <CarpoolEmptyState
+              icon="car"
+              title={t('carpool.reserve.empty.title')}
+              subtitle={t('carpool.reserve.empty.subtitle')}
+              ctaLabel={t('carpool.cta.proposeTrip')}
+              onCta={() => setHubMode('drive')}
+            />
+          ) : null}
+
+          <PressableSpring
+            onPress={() => setRideFiltersOpen((prev) => !prev)}
+            scaleTo={0.97}
+            haptic
+            style={styles.coachFilterToggle}
+          >
+            <Icon
+              name={rideFiltersOpen ? 'chevron-up' : 'tune'}
+              size={16}
+              color={coachTokens.accent}
+            />
+            <CoachText variant="caption" accent>
+              {t('coach.portal.carpool.filterToggle')}
+            </CoachText>
+          </PressableSpring>
+          {rideFiltersOpen ? renderRideFilters() : null}
+        </>
       ) : (
         <>
-          <View style={styles.search}>
-            <Icon name="search" size={16} color={CARPOOL_SITE.inkDim} />
-            <TextInput
-              style={styles.searchInput}
-              value={searchCity}
-              onChangeText={setSearchCity}
-              placeholder={t('carpool.reserve.filter.city')}
-              placeholderTextColor={CARPOOL_SITE.inkDim}
-            />
-          </View>
-          <CarpoolFilterChips options={rideFilterOptions} value={rideFilter} onChange={setRideFilter} />
+          {renderRideFilters()}
 
           {sortedAvailableRides.length === 0 &&
           bookableStandalone.length === 0 &&
@@ -452,19 +597,30 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       scrollProps={scrollProps}
       pagePad={pagePad}
       onLoginRequired={onLoginRequired}
+      coachShell={coachShell}
     />
   );
 
   const renderTrips = () => (
     <ScrollView contentContainerStyle={pagePad} refreshControl={refreshControl} {...scrollProps}>
-      <Text style={styles.modeTitle}>{t('carpool.hub.tripsTitle')}</Text>
-      <Text style={styles.modeSupport}>{t('carpool.hub.tripsSupport')}</Text>
+      {coachShell ? null : (
+        <>
+          <Text style={styles.modeTitle}>{t('carpool.hub.tripsTitle')}</Text>
+          <Text style={styles.modeSupport}>{t('carpool.hub.tripsSupport')}</Text>
+        </>
+      )}
 
       {profile && activeTrips.length > 0 ? (
         <View style={styles.liveBlock}>
-          <Text style={styles.sectionLabelAccent}>
-            {t('carpool.hub.activeSection', { n: activeTrips.length })}
-          </Text>
+          {coachShell ? (
+            <CoachText variant="caption" accent style={styles.coachSectionLabel}>
+              {t('carpool.hub.activeSection', { n: activeTrips.length })}
+            </CoachText>
+          ) : (
+            <Text style={styles.sectionLabelAccent}>
+              {t('carpool.hub.activeSection', { n: activeTrips.length })}
+            </Text>
+          )}
           {activeTrips.map((ref) => (
             <CarpoolLiveMission key={ref.tripId} {...liveMissionProps(ref)} />
           ))}
@@ -521,7 +677,13 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
 
       {profile ? (
         <View style={styles.sectionBlock}>
-          <Text style={styles.sectionLabel}>{t('carpool.hub.teamBalance')}</Text>
+          {coachShell ? (
+            <CoachText variant="caption" accent style={styles.coachSectionLabel}>
+              {t('carpool.hub.teamBalance')}
+            </CoachText>
+          ) : (
+            <Text style={styles.sectionLabel}>{t('carpool.hub.teamBalance')}</Text>
+          )}
           <CarpoolBalancePanel events={upcoming} onPropose={() => setHubMode('drive')} />
         </View>
       ) : null}
@@ -534,16 +696,21 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
       <View style={styles.foreground}>
         {coachShell ? (
           <CoachPane title={getCoachPageIdentity('carpool').title}>
-            <CarpoolHubChrome
-              subtitle={subtitle}
-              mode={mode}
-              onModeChange={setHubMode}
-              liveActive={hasLiveTrip}
-              badges={badges}
-              reminderCount={reminderEvents.length}
-              onReminderPress={() => setHubMode('ride')}
-              hideHero
-            />
+            <View style={styles.coachHeader}>
+              <CoachText variant="caption" muted>
+                {t('coach.portal.carpool.subtitle')}
+              </CoachText>
+              <CoachCarpoolModeBar
+                mode={mode}
+                onChange={setHubMode}
+                liveActive={hasLiveTrip}
+                badges={badges}
+              />
+              <CoachCarpoolReminder
+                count={reminderEvents.length}
+                onPress={() => setHubMode('ride')}
+              />
+            </View>
             <View style={styles.body}>
               <CrossfadeSwitch switchKey={mode}>
                 {mode === 'ride' ? renderRide() : null}
@@ -629,5 +796,32 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: CARPOOL_SITE.ink,
     paddingVertical: spacing.sm,
+  },
+  coachHeader: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  coachSectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  coachFilterToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.pill,
+    marginTop: spacing.sm,
+  },
+  coachSeeAll: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
   },
 });

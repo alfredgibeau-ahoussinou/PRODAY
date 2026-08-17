@@ -28,6 +28,8 @@ interface CarpoolProposePanelProps {
   scrollProps: Record<string, unknown>;
   pagePad: { paddingHorizontal: number; paddingBottom: number };
   onLoginRequired?: () => void;
+  /** Coach shell — masque l’intro titre du mode. */
+  coachShell?: boolean;
 }
 
 function canParticipateInCarpool(event: TeamEvent, uid: string): boolean {
@@ -46,6 +48,7 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
   scrollProps,
   pagePad,
   onLoginRequired,
+  coachShell = false,
 }) => {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -114,11 +117,13 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
       }
       {...scrollProps}
     >
-      <CarpoolSectionIntro
-        icon="add"
-        title={t('carpool.hub.driveTitle')}
-        subtitle={t('carpool.hub.driveSupport')}
-      />
+      {coachShell ? null : (
+        <CarpoolSectionIntro
+          icon="add"
+          title={t('carpool.hub.driveTitle')}
+          subtitle={t('carpool.hub.driveSupport')}
+        />
+      )}
 
       {standaloneLoading ? (
         <ActivityIndicator color={CARPOOL_SITE.signal} style={styles.loader} />
