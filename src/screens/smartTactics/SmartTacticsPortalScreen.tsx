@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import {
   SmartTacticsChapterRail,
+  SmartTacticsCoachSkinProvider,
   SmartTacticsFlowHint,
 } from '../../components/smartTactics/smartTacticsUi';
 import {
@@ -37,6 +38,9 @@ import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { spacing } from '../../theme/designTokens';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { CoachPane } from '../../components/coach/CoachScreenHeader';
+import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
 
 interface SmartTacticsPortalScreenProps {
   onBack?: () => void;
@@ -53,6 +57,7 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
   const playerMode = profile?.role === 'player';
   const mode: 'coach' | 'player' = playerMode ? 'player' : 'coach';
   const { colors } = useAppTheme();
+  const inCoachShell = Boolean(useCoachShellNav());
   const { metrics: wearableMetrics } = useWearableHealth();
   const [chapter, setChapter] = useState<SmartTacticsChapterId>(
     initialChapter ?? (playerMode ? 'inbox' : 'dashboard'),
@@ -214,6 +219,33 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
         <ScreenHeader title={t('smartTactics.title')} onBack={onBack} />
         {chrome}
       </View>
+    );
+  }
+
+  if (inCoachShell) {
+    return (
+      <CoachPane title={getCoachPageIdentity('smart_tactics').title}>
+        <SmartTacticsCoachSkinProvider enabled>
+          <View style={[styles.fill, { backgroundColor: COACH_SITE.bg }]}>
+            {loading ? (
+              <View style={styles.loader}>
+                <ActivityIndicator color={COACH_SITE.accent} />
+              </View>
+            ) : (
+              <>
+                <SmartTacticsChapterRail
+                  active={chapter}
+                  onChange={openChapter}
+                  mode="coach"
+                  coachSkin
+                />
+                <SmartTacticsFlowHint active={chapter} mode="coach" coachSkin />
+                {body}
+              </>
+            )}
+          </View>
+        </SmartTacticsCoachSkinProvider>
+      </CoachPane>
     );
   }
 

@@ -17,7 +17,11 @@ import {
 import { TabScreenShell } from '../app/TabScreenShell';
 import { ImmersivePoleHero } from '../poles';
 import { MatchPager } from './MatchPager';
+import { CoachPane } from '../coach/CoachScreenHeader';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { MatchCenterPanel } from './MatchCenterPanel';
+import { CoachSeasonStatsPanel } from '../coach/CoachSeasonStatsPanel';
+import { CoachMatchSkinProvider } from './matchCenterUi';
 import { MatchSeasonStatsPanel } from './MatchSeasonStatsPanel';
 import { isInMatchWindow } from '../../utils/matchLive';
 import { useTabNavigation } from '../../context/TabNavigationContext';
@@ -436,6 +440,41 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     };
   }, [isJoueur, joueurSession, t]);
 
+  if (embeddedInShell) {
+    return (
+      <CoachPane
+        title={getCoachPageIdentity('match_center').title}
+        actions={
+          canManageEvents
+            ? [
+                {
+                  icon: 'add',
+                  onPress: onCreateEvent,
+                  accessibilityLabel: 'Créer un événement',
+                },
+              ]
+            : undefined
+        }
+      >
+        <CoachMatchSkinProvider enabled>
+          <ScrollView
+            contentContainerStyle={MATCH_CHAPTER_PAD}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={colors.accent}
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          >
+            <CoachSeasonStatsPanel events={teamEvents} profile={profile} />
+          </ScrollView>
+        </CoachMatchSkinProvider>
+      </CoachPane>
+    );
+  }
+
   const body = (
     <>
       <OfflineCacheBanner visible={fromCache} onRefresh={onRefresh} />
@@ -469,6 +508,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
         convocationsBadge={pendingConvocations.length}
         centreBadge={liveMatchCount > 0 ? 'LIVE' : undefined}
         gameMode={isJoueur}
+        coachSkin={embeddedInShell}
       />
     </>
   );

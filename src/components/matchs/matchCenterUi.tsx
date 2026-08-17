@@ -1,10 +1,37 @@
-import React, { useMemo } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { COACH_SITE } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
+
+const CoachMatchSkinContext = createContext(false);
+
+export function CoachMatchSkinProvider({
+  children,
+  enabled,
+}: {
+  children: React.ReactNode;
+  enabled: boolean;
+}) {
+  return (
+    <CoachMatchSkinContext.Provider value={enabled}>{children}</CoachMatchSkinContext.Provider>
+  );
+}
+
+function useCoachMatchSkin() {
+  return useContext(CoachMatchSkinContext);
+}
+
+function matchSiteTokens(coachSkin: boolean) {
+  return coachSkin ? COACH_SITE : MATCH_SITE;
+}
+
+function matchAccent(coachSkin: boolean, themeAccent: string) {
+  return coachSkin ? COACH_SITE.accent : themeAccent;
+}
 
 /** Section terminal Match Center — kicker / titre / support. */
 export function MatchSectionCard({
@@ -21,7 +48,9 @@ export function MatchSectionCard({
   style?: StyleProp<ViewStyle>;
 }) {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createCardStyles(colors.accent), [colors.accent]);
+  const coachSkin = useCoachMatchSkin();
+  const accent = matchAccent(coachSkin, colors.accent);
+  const styles = useMemo(() => createCardStyles(accent, coachSkin), [accent, coachSkin]);
 
   return (
     <View style={[styles.card, style]}>
@@ -49,7 +78,9 @@ export function MatchKpiRow({
   items: { label: string; value: string; tone?: string }[];
 }) {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createKpiStyles(colors.accent), [colors.accent]);
+  const coachSkin = useCoachMatchSkin();
+  const accent = matchAccent(coachSkin, colors.accent);
+  const styles = useMemo(() => createKpiStyles(accent, coachSkin), [accent, coachSkin]);
 
   return (
     <View style={styles.row}>
@@ -85,7 +116,9 @@ export function MatchActionRow({
   onSecondary?: () => void;
 }) {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createActionStyles(colors.accent), [colors.accent]);
+  const coachSkin = useCoachMatchSkin();
+  const accent = matchAccent(coachSkin, colors.accent);
+  const styles = useMemo(() => createActionStyles(accent, coachSkin), [accent, coachSkin]);
 
   return (
     <View style={styles.row}>
@@ -143,21 +176,24 @@ export function MatchLightPanel({
   style?: StyleProp<ViewStyle>;
 }) {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createCardStyles(colors.accent), [colors.accent]);
+  const coachSkin = useCoachMatchSkin();
+  const accent = matchAccent(coachSkin, colors.accent);
+  const styles = useMemo(() => createCardStyles(accent, coachSkin), [accent, coachSkin]);
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
-function createCardStyles(accent: string) {
+function createCardStyles(accent: string, coachSkin = false) {
+  const site = matchSiteTokens(coachSkin);
   return StyleSheet.create({
     card: {
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: MATCH_SITE.border,
-      borderLeftWidth: 2,
-      borderLeftColor: accent,
-      borderRadius: 2,
+      borderColor: site.border,
+      borderLeftWidth: coachSkin ? StyleSheet.hairlineWidth : 2,
+      borderLeftColor: coachSkin ? site.border : accent,
+      borderRadius: coachSkin ? 16 : 2,
       padding: spacing.md,
       gap: spacing.xs,
-      backgroundColor: MATCH_SITE.surface,
+      backgroundColor: site.surface,
     },
     kicker: {
       color: accent,
@@ -167,24 +203,27 @@ function createCardStyles(accent: string) {
       fontWeight: '700',
     },
     title: {
-      color: MATCH_SITE.foreground,
+      color: site.foreground,
       fontWeight: '800',
       letterSpacing: -0.4,
     },
     body: {
-      color: MATCH_SITE.muted,
+      color: site.muted,
       lineHeight: 18,
     },
   });
 }
 
-function createKpiStyles(accent: string) {
+function createKpiStyles(accent: string, coachSkin = false) {
+  const site = matchSiteTokens(coachSkin);
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: MATCH_SITE.border,
-      backgroundColor: MATCH_SITE.surface,
+      borderColor: site.border,
+      backgroundColor: site.surface,
+      borderRadius: coachSkin ? 16 : 0,
+      overflow: 'hidden',
     },
     cell: {
       flex: 1,
@@ -195,14 +234,14 @@ function createKpiStyles(accent: string) {
     },
     cellBorder: {
       borderRightWidth: StyleSheet.hairlineWidth,
-      borderRightColor: MATCH_SITE.border,
+      borderRightColor: site.border,
     },
     value: {
       color: accent,
       fontWeight: '800',
     },
     label: {
-      color: MATCH_SITE.muted,
+      color: site.muted,
       textTransform: 'uppercase',
       letterSpacing: 1,
       fontSize: 9,
@@ -211,7 +250,8 @@ function createKpiStyles(accent: string) {
   });
 }
 
-function createActionStyles(accent: string) {
+function createActionStyles(accent: string, coachSkin = false) {
+  const site = matchSiteTokens(coachSkin);
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -220,7 +260,7 @@ function createActionStyles(accent: string) {
       marginTop: spacing.sm,
     },
     primary: {
-      borderRadius: 2,
+      borderRadius: coachSkin ? 18 : 2,
       paddingHorizontal: spacing.lg,
       paddingVertical: 12,
       minHeight: 44,
@@ -229,16 +269,16 @@ function createActionStyles(accent: string) {
     },
     primaryText: { color: '#fff', fontWeight: '800', letterSpacing: 0.2 },
     secondary: {
-      borderRadius: 2,
+      borderRadius: coachSkin ? 18 : 2,
       paddingHorizontal: spacing.lg,
       paddingVertical: 12,
       minHeight: 44,
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(255,255,255,0.25)',
+      borderColor: site.border,
       backgroundColor: 'transparent',
     },
-    secondaryText: { color: MATCH_SITE.foreground, fontWeight: '700' },
+    secondaryText: { color: site.foreground, fontWeight: '700' },
   });
 }
 

@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import React, { createContext, useContext, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
@@ -11,9 +11,11 @@ import {
   SMART_TACTICS_MORE_CHAPTERS,
   SMART_TACTICS_PLAYER_PRIMARY_CHAPTERS,
   SMART_TACTICS_PRIMARY_CHAPTERS,
+  SMART_TACTICS_CHAPTERS,
   isSmartTacticsPrimaryChapter,
   type SmartTacticsChapterId,
 } from '../../content/smartTacticsChapters';
+import { COACH_SITE } from '../../content/coachPageIdentity';
 import { MATCH_CHAPTER_PAD } from '../matchs/chapters/matchChapterLayout';
 import { radius, spacing } from '../../theme/designTokens';
 import type { User } from '../../models/User';
@@ -31,26 +33,102 @@ export const SMART_PITCH = {
   risk: '#FF6B4A',
 };
 
+const SmartTacticsCoachSkinContext = createContext(false);
+
+export function SmartTacticsCoachSkinProvider({
+  children,
+  enabled,
+}: {
+  children: React.ReactNode;
+  enabled: boolean;
+}) {
+  return (
+    <SmartTacticsCoachSkinContext.Provider value={enabled}>
+      {children}
+    </SmartTacticsCoachSkinContext.Provider>
+  );
+}
+
+export function useSmartTacticsCoachSkin() {
+  return useContext(SmartTacticsCoachSkinContext);
+}
+
+/** Carte chapitre — ProDaySurface ou panneau coach sombre. */
+export function SmartTacticsPanel({
+  children,
+  style,
+  variant = 'module',
+}: {
+  children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+  variant?: 'module';
+}) {
+  const coach = useSmartTacticsCoachSkin();
+  const { colors } = useAppTheme();
+  if (coach) {
+    return <View style={[coachPanel.card, style]}>{children}</View>;
+  }
+  return (
+    <ProDaySurface variant={variant} style={style}>
+      {children}
+    </ProDaySurface>
+  );
+}
+
 export function SmartTacticsChapterRail({
   active,
   onChange,
   mode = 'coach',
+  coachSkin = false,
 }: {
   active: SmartTacticsChapterId;
   onChange: (id: SmartTacticsChapterId) => void;
   mode?: 'coach' | 'player';
+  coachSkin?: boolean;
 }) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createRailStyles(), []);
+  const styles = useMemo(() => createRailStyles(coachSkin), [coachSkin]);
   const [moreOpen, setMoreOpen] = useState(() =>
-    mode === 'coach' ? !isSmartTacticsPrimaryChapter(active) : false,
+    mode === 'coach' && !coachSkin ? !isSmartTacticsPrimaryChapter(active) : false,
   );
   const inMore =
     mode === 'coach' && SMART_TACTICS_MORE_CHAPTERS.some((c) => c.id === active);
   const activeMore = SMART_TACTICS_MORE_CHAPTERS.find((c) => c.id === active);
   const primary =
     mode === 'player' ? SMART_TACTICS_PLAYER_PRIMARY_CHAPTERS : SMART_TACTICS_PRIMARY_CHAPTERS;
+
+  if (coachSkin && mode === 'coach') {
+    return (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.coachScroll}
+        bounces={false}
+      >
+        {SMART_TACTICS_CHAPTERS.map((ch) => {
+          const on = active === ch.id;
+          return (
+            <PressableSpring
+              key={ch.id}
+              onPress={() => onChange(ch.id)}
+              scaleTo={0.97}
+              haptic
+              style={[styles.coachPill, on && styles.coachPillOn]}
+            >
+              <ProDayText
+                variant="caption"
+                style={[styles.coachPillLabel, on && styles.coachPillLabelOn]}
+                numberOfLines={1}
+              >
+                {ch.label}
+              </ProDayText>
+            </PressableSpring>
+          );
+        })}
+      </ScrollView>
+    );
+  }
 
   return (
     <View style={styles.wrap}>
@@ -190,11 +268,14 @@ export function SmartTacticsChapterRail({
 export function SmartTacticsFlowHint({
   active,
   mode = 'coach',
+  coachSkin = false,
 }: {
   active: SmartTacticsChapterId;
   mode?: 'coach' | 'player';
+  coachSkin?: boolean;
 }) {
   const { t } = useTranslation();
+  const coach = coachSkin || useSmartTacticsCoachSkin();
   if (mode === 'player') {
     const player = SMART_TACTICS_PLAYER_PRIMARY_CHAPTERS.find((c) => c.id === active);
     const hints: Record<string, string> = {
@@ -212,13 +293,13 @@ export function SmartTacticsFlowHint({
   const primary = SMART_TACTICS_PRIMARY_CHAPTERS.find((c) => c.id === active);
   if (!primary) {
     return (
-      <ProDayText variant="caption" muted style={hint.line}>
+      <ProDayText variant="caption" muted style={[hint.line, coach && hint.coachLine]}>
         {t('smartTactics.flow.moreHint')}
       </ProDayText>
     );
   }
   return (
-    <ProDayText variant="caption" muted style={hint.line}>
+    <ProDayText variant="caption" muted style={[hint.line, coach && hint.coachLine]}>
       {t(`smartTactics.flow.step${primary.step}`)}
     </ProDayText>
   );
@@ -249,6 +330,26 @@ export function SmartTacticsEmpty({
   onPress?: () => void;
 }) {
   const { colors } = useAppTheme();
+  const coach = useSmartTacticsCoachSkin();
+  if (coach) {
+    return (
+      <View style={coachPanel.card}>
+        <ProDayText variant="section" style={coachPanel.title}>
+          {title}
+        </ProDayText>
+        <ProDayText variant="caption" style={coachPanel.body}>
+          {body}
+        </ProDayText>
+        {cta && onPress ? (
+          <PressableSpring onPress={onPress} scaleTo={0.96} haptic style={empty.cta}>
+            <ProDayText variant="caption" style={coachPanel.cta}>
+              {cta}
+            </ProDayText>
+          </PressableSpring>
+        ) : null}
+      </View>
+    );
+  }
   return (
     <ProDaySurface variant="module" style={[empty.card, { borderColor: colors.border }]}>
       <ProDayText variant="section">{title}</ProDayText>
@@ -276,6 +377,7 @@ export function SmartMetricChip({
   tone?: 'neutral' | 'good' | 'warn' | 'warm';
 }) {
   const { colors } = useAppTheme();
+  const coach = useSmartTacticsCoachSkin();
   const accent =
     tone === 'good'
       ? SMART_PITCH.ready
@@ -283,9 +385,18 @@ export function SmartMetricChip({
         ? SMART_PITCH.risk
         : tone === 'warm'
           ? SMART_PITCH.warm
-          : colors.textMuted;
+          : coach
+            ? COACH_SITE.muted
+            : colors.textMuted;
   return (
-    <View style={[metric.chip, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+    <View
+      style={[
+        metric.chip,
+        coach
+          ? { borderColor: COACH_SITE.border, backgroundColor: COACH_SITE.surface }
+          : { borderColor: colors.border, backgroundColor: colors.surface },
+      ]}
+    >
       <ProDayText variant="caption" muted style={metric.label}>
         {label}
       </ProDayText>
@@ -315,6 +426,23 @@ const hint = StyleSheet.create({
     paddingBottom: 4,
     fontWeight: '600',
   },
+  coachLine: {
+    color: COACH_SITE.muted,
+  },
+});
+
+const coachPanel = StyleSheet.create({
+  card: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: COACH_SITE.border,
+    borderRadius: 16,
+    padding: spacing.md,
+    gap: spacing.xs,
+    backgroundColor: COACH_SITE.surface,
+  },
+  title: { color: COACH_SITE.foreground, fontWeight: '800' },
+  body: { color: COACH_SITE.muted, lineHeight: 18 },
+  cta: { color: COACH_SITE.accent, fontWeight: '800' },
 });
 
 const pad = StyleSheet.create({
@@ -347,8 +475,34 @@ const metric = StyleSheet.create({
   label: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
 });
 
-function createRailStyles() {
+function createRailStyles(coachSkin = false) {
   return StyleSheet.create({
+    coachScroll: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.xs,
+      gap: 6,
+      alignItems: 'center',
+    },
+    coachPill: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 10,
+      borderRadius: 18,
+      backgroundColor: COACH_SITE.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: COACH_SITE.border,
+    },
+    coachPillOn: {
+      backgroundColor: COACH_SITE.elevated,
+      borderColor: COACH_SITE.accent,
+    },
+    coachPillLabel: {
+      color: COACH_SITE.muted,
+      fontWeight: '800',
+      fontSize: 12,
+    },
+    coachPillLabelOn: {
+      color: COACH_SITE.accent,
+    },
     wrap: {
       flexGrow: 0,
       flexShrink: 0,

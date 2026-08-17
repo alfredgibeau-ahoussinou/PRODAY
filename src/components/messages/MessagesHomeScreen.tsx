@@ -12,6 +12,9 @@ import { MessagesInboxPage } from './chapters/MessagesInboxPage';
 import { MessagesNetworkPage } from './chapters/MessagesNetworkPage';
 import { ListEmptyPanel } from '../ui/ListEmptyPanel';
 import { spacing } from '../../theme/designTokens';
+import { CoachEmptyState } from '../coach/coachPortalUi';
+import { CoachPane } from '../coach/CoachScreenHeader';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 
 export interface MessagesHomeScreenProps {
   profile: { uid: string } | null;
@@ -44,6 +47,7 @@ export interface MessagesHomeScreenProps {
   onResetFilters: () => void;
   kineLabelFor: (thread: MessageThread) => string | undefined;
   isWoman: boolean;
+  variant?: 'default' | 'coach';
 }
 
 export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => {
@@ -52,6 +56,7 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
   const joueurLive =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const [chapter, setChapter] = useState<MessagesChapterId>('inbox');
+  const coachSkin = props.variant === 'coach';
 
   const joueurTitles = useMemo(() => {
     if (!joueurLive || !joueurSession) return null;
@@ -110,6 +115,7 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
             onOpenMercato={props.onOpenMercato}
             kineLabelFor={props.kineLabelFor}
             isWoman={props.isWoman}
+            variant={props.variant}
           />
         ),
       },
@@ -135,9 +141,16 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
   );
 
   if (!props.authLoading && !props.profile) {
-    return (
-      <TabScreenShell caption={t('messages.caption')} title={t('messages.title')} subtitle={t('messages.subtitle.guest')} flat>
-        <View style={styles.guestPad}>
+    const guestBody = (
+      <View style={styles.guestPad}>
+        {coachSkin ? (
+          <CoachEmptyState
+            title={t('common.guest.loginTitle')}
+            body={t('messages.guest.loginSubtitle')}
+            cta={t('common.guest.login')}
+            onPress={props.onLogin}
+          />
+        ) : (
           <ListEmptyPanel
             icon="chat"
             title={t('common.guest.loginTitle')}
@@ -145,10 +158,38 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
             primaryCta={{ label: t('common.guest.login'), onPress: props.onLogin }}
             secondaryCta={{ label: t('common.guest.signup'), onPress: props.onSignup }}
           />
-        </View>
+        )}
+      </View>
+    );
+    if (coachSkin) {
+      return <CoachPane title={getCoachPageIdentity('messages').title}>{guestBody}</CoachPane>;
+    }
+    return (
+      <TabScreenShell caption={t('messages.caption')} title={t('messages.title')} subtitle={t('messages.subtitle.guest')} flat>
+        {guestBody}
       </TabScreenShell>
     );
   }
+
+  const inboxPage = pages[0]?.render() ?? null;
+
+  if (coachSkin) {
+    return (
+      <CoachPane title={getCoachPageIdentity('messages').title}>
+        {inboxPage}
+      </CoachPane>
+    );
+  }
+
+  const pager = (
+    <MessagesPager
+      pages={pages}
+      activeChapter={chapter}
+      onChapterChange={setChapter}
+      unreadBadge={props.unreadCount}
+      variant={props.variant}
+    />
+  );
 
   return (
     <TabScreenShell
@@ -157,12 +198,7 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
       subtitle={subtitle}
       flat
     >
-      <MessagesPager
-        pages={pages}
-        activeChapter={chapter}
-        onChapterChange={setChapter}
-        unreadBadge={props.unreadCount}
-      />
+      {pager}
     </TabScreenShell>
   );
 };

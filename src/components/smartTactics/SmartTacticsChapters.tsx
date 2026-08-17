@@ -4,13 +4,13 @@ import {
   SmartMetricChip,
   SmartTacticsChapterScroll,
   SmartTacticsEmpty,
+  SmartTacticsPanel,
   SMART_PITCH,
   type SmartTacticsChapterProps,
 } from './smartTacticsUi';
 import { SmartPlayerCard } from './SmartPlayerCard';
 import { MatchReadinessRing } from './MatchReadinessRing';
 import { SmartTacticsBoard, compactBoardStarters, padStartersForBoard } from './SmartTacticsBoard';
-import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
@@ -115,7 +115,7 @@ export const SmartDashboardChapter: React.FC<SmartTacticsChapterProps> = ({
 
   return (
     <SmartTacticsChapterScroll>
-      <ProDaySurface variant="module" style={[styles.mission, { borderColor: colors.border }]}>
+      <SmartTacticsPanel variant="module" style={[styles.mission, { borderColor: colors.border }]}>
         <ProDayText variant="caption" muted style={styles.missionKicker}>
           {t('smartTactics.flow.mission')}
         </ProDayText>
@@ -161,7 +161,7 @@ export const SmartDashboardChapter: React.FC<SmartTacticsChapterProps> = ({
             </PressableSpring>
           )}
         </View>
-      </ProDaySurface>
+      </SmartTacticsPanel>
 
       <View style={styles.metrics}>
         <SmartMetricChip label={t('smartTactics.metric.morale')} value={`${dash.morale}`} tone="warm" />
@@ -236,12 +236,12 @@ export const SmartDashboardChapter: React.FC<SmartTacticsChapterProps> = ({
           </ProDayText>
         ) : (
           dash.ai_alerts.map((a) => (
-            <ProDaySurface key={a} variant="module" style={[styles.alert, { borderColor: colors.border }]}>
+            <SmartTacticsPanel key={a} variant="module" style={[styles.alert, { borderColor: colors.border }]}>
               <Icon name="warning" size={14} color={SMART_PITCH.warm} />
               <ProDayText variant="caption" style={{ flex: 1 }}>
                 {a}
               </ProDayText>
-            </ProDaySurface>
+            </SmartTacticsPanel>
           ))
         )}
       </Section>
@@ -495,7 +495,7 @@ export const SmartBoardChapter: React.FC<SmartTacticsChapterProps> = ({
         </ProDayText>
       </View>
 
-      <ProDaySurface variant="module" style={[styles.aiStrip, { borderColor: colors.border }]}>
+      <SmartTacticsPanel variant="module" style={[styles.aiStrip, { borderColor: colors.border }]}>
         <View style={styles.aiStripTop}>
           <Icon name="tune" size={16} color={SMART_PITCH.warm} />
           <ProDayText variant="caption" style={{ flex: 1, fontWeight: '800' }}>
@@ -530,7 +530,7 @@ export const SmartBoardChapter: React.FC<SmartTacticsChapterProps> = ({
             {aiPrep.briefing_fr ? ` — ${aiPrep.briefing_fr}` : ''}
           </ProDayText>
         ) : null}
-      </ProDaySurface>
+      </SmartTacticsPanel>
 
       {matchCandidates.length > 0 ? (
         <View style={styles.section}>
@@ -788,7 +788,7 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
         </PressableSpring>
       </View>
 
-      <ProDaySurface style={[styles.alert, { borderColor: colors.border }]} variant="module">
+      <SmartTacticsPanel style={[styles.alert, { borderColor: colors.border }]} variant="module">
         <ProDayText variant="caption" style={{ fontWeight: '800', color: SMART_PITCH.warm }}>
           Source · {prep.source === 'mistral' ? 'Mistral cloud' : 'Moteur local'}
           {prep.fallback ? ` · ${t('smartTactics.aiFallback')}` : ''}
@@ -798,7 +798,7 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
             {prep.briefing_fr}
           </ProDayText>
         ) : null}
-      </ProDaySurface>
+      </SmartTacticsPanel>
 
       <Section title="XI recommandé">
         <ProDayText variant="caption" style={{ color: SMART_PITCH.warm, fontWeight: '800' }}>
@@ -861,14 +861,14 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
           ))}
         </View>
         {reports.map((r) => (
-          <ProDaySurface key={r.id} variant="module" style={[styles.block, { borderColor: colors.border }]}>
+          <SmartTacticsPanel key={r.id} variant="module" style={[styles.block, { borderColor: colors.border }]}>
             <ProDayText variant="caption" style={{ fontWeight: '800' }}>
               {r.title}
             </ProDayText>
             <ProDayText variant="caption" muted>
               {r.summary}
             </ProDayText>
-          </ProDaySurface>
+          </SmartTacticsPanel>
         ))}
       </Section>
     </SmartTacticsChapterScroll>
@@ -920,7 +920,7 @@ export const SmartTrainingChapter: React.FC<SmartTacticsChapterProps> = ({
         {session.total_duration_min} min · {session.based_on.join(' · ')}
       </ProDayText>
       {session.blocks.map((b) => (
-        <ProDaySurface
+        <SmartTacticsPanel
           key={`${b.kind}-${b.title}`}
           variant="module"
           style={[styles.block, { borderColor: colors.border }]}
@@ -932,7 +932,7 @@ export const SmartTrainingChapter: React.FC<SmartTacticsChapterProps> = ({
           <ProDayText variant="caption" muted>
             {b.focus}
           </ProDayText>
-        </ProDaySurface>
+        </SmartTacticsPanel>
       ))}
 
       {individual ? (
@@ -944,7 +944,7 @@ export const SmartTrainingChapter: React.FC<SmartTacticsChapterProps> = ({
             Focus : {individual.focus.map((f) => INDIVIDUAL_SKILL_LABELS[f]).join(', ')}
           </ProDayText>
           {individual.weekly_sessions.map((s) => (
-            <ProDaySurface
+            <SmartTacticsPanel
               key={`${s.day}-${s.title}`}
               variant="module"
               style={[styles.block, { borderColor: colors.border }]}
@@ -956,7 +956,7 @@ export const SmartTrainingChapter: React.FC<SmartTacticsChapterProps> = ({
               <ProDayText variant="caption" muted>
                 {s.drills.join(' · ')}
               </ProDayText>
-            </ProDaySurface>
+            </SmartTacticsPanel>
           ))}
         </>
       ) : null}
@@ -983,7 +983,7 @@ export const SmartDevelopmentChapter: React.FC<SmartTacticsChapterProps> = ({
         const xp = c.progress * 12 + c.form;
         const level = Math.max(1, Math.floor(xp / 100) + 1);
         return (
-          <ProDaySurface key={c.uid} variant="module" style={[styles.block, { borderColor: colors.border }]}>
+          <SmartTacticsPanel key={c.uid} variant="module" style={[styles.block, { borderColor: colors.border }]}>
             <View style={styles.devHead}>
               <ProDayText variant="body" style={{ fontWeight: '800', flex: 1 }}>
                 {c.display_name}
@@ -1001,7 +1001,7 @@ export const SmartDevelopmentChapter: React.FC<SmartTacticsChapterProps> = ({
             <ProDayText variant="caption" style={{ color: SMART_PITCH.warm }}>
               Badges : {(c.badges.length ? c.badges : ['Prospect']).join(' · ')}
             </ProDayText>
-          </ProDaySurface>
+          </SmartTacticsPanel>
         );
       })}
     </SmartTacticsChapterScroll>
@@ -1062,9 +1062,9 @@ export const SmartVideoChapter: React.FC<SmartTacticsChapterProps> = ({ profile,
         </PressableSpring>
       </View>
       {jobs.map((j) => (
-        <ProDaySurface key={j} variant="module" style={[styles.block, { borderColor: colors.border }]}>
+        <SmartTacticsPanel key={j} variant="module" style={[styles.block, { borderColor: colors.border }]}>
           <ProDayText variant="caption">{j}</ProDayText>
-        </ProDaySurface>
+        </SmartTacticsPanel>
       ))}
     </SmartTacticsChapterScroll>
   );
@@ -1185,12 +1185,12 @@ export const SmartHistoryChapter: React.FC<SmartTacticsChapterProps> = ({
             scaleTo={0.98}
             haptic
           >
-            <ProDaySurface variant="module" style={[styles.block, { borderColor: colors.border }]}>
+            <SmartTacticsPanel variant="module" style={[styles.block, { borderColor: colors.border }]}>
               <ProDayText variant="body">{p.title}</ProDayText>
               <ProDayText variant="caption" muted>
                 {p.board.formation} · {t('smartTactics.history.openBoard')}
               </ProDayText>
-            </ProDaySurface>
+            </SmartTacticsPanel>
           </PressableSpring>
         ))
       )}
@@ -1202,14 +1202,14 @@ export const SmartHistoryChapter: React.FC<SmartTacticsChapterProps> = ({
           </ProDayText>
         ) : (
           reports.map((r) => (
-            <ProDaySurface key={r.id} variant="module" style={[styles.block, { borderColor: colors.border }]}>
+            <SmartTacticsPanel key={r.id} variant="module" style={[styles.block, { borderColor: colors.border }]}>
               <ProDayText variant="caption" style={{ fontWeight: '800' }}>
                 {r.title}
               </ProDayText>
               <ProDayText variant="caption" muted>
                 {r.summary}
               </ProDayText>
-            </ProDaySurface>
+            </SmartTacticsPanel>
           ))
         )}
         <PressableSpring onPress={() => onOpenChapter('prep')} scaleTo={0.96} haptic style={styles.link}>

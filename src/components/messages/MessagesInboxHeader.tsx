@@ -1,13 +1,17 @@
 import React, { useMemo } from 'react';
 import { View, ScrollView, Text, StyleSheet, Platform } from 'react-native';
 import type { MessagesThreadFilter } from '../../content/messagesChapters';
-import { getMessagesThreadFilters } from '../../i18n/localizedChapters';
+import {
+  getCoachMessagesThreadFilters,
+  getMessagesThreadFilters,
+} from '../../i18n/localizedChapters';
 import { SearchBar } from '../ui/SearchBar';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
+import { COACH_SITE } from '../../content/coachPageIdentity';
 
 export interface MessagesInboxHeaderProps {
   search: string;
@@ -16,6 +20,7 @@ export interface MessagesInboxHeaderProps {
   onThreadFilterChange: (value: MessagesThreadFilter) => void;
   resultCount: number;
   loading: boolean;
+  variant?: 'default' | 'coach';
 }
 
 export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
@@ -25,11 +30,16 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   onThreadFilterChange,
   resultCount,
   loading,
+  variant,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const threadFilters = useMemo(() => getMessagesThreadFilters(t), [t]);
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const coach = variant === 'coach';
+  const threadFilters = useMemo(
+    () => (coach ? getCoachMessagesThreadFilters(t) : getMessagesThreadFilters(t)),
+    [coach, t],
+  );
+  const styles = useMemo(() => createStyles(colors, coach), [colors, coach]);
 
   const threadCountLabel = useMemo(() => {
     if (loading) return t('common.loading');
@@ -43,6 +53,16 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
         value={search}
         onChangeText={onSearchChange}
         embedded
+        palette={
+          coach
+            ? {
+                surface: COACH_SITE.surface,
+                border: 'transparent',
+                text: COACH_SITE.foreground,
+                textMuted: COACH_SITE.muted,
+              }
+            : undefined
+        }
       />
 
       <ScrollView
@@ -58,8 +78,20 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
               style={[
                 styles.chip,
                 {
-                  backgroundColor: on ? colors.accent : colors.surface,
-                  borderColor: on ? colors.accent : colors.border,
+                  backgroundColor: on
+                    ? coach
+                      ? COACH_SITE.accent
+                      : colors.accent
+                    : coach
+                      ? COACH_SITE.surface
+                      : colors.surface,
+                  borderColor: on
+                    ? coach
+                      ? COACH_SITE.accent
+                      : colors.accent
+                    : coach
+                      ? 'transparent'
+                      : colors.border,
                 },
               ]}
               onPress={() => onThreadFilterChange(opt.id)}
@@ -68,7 +100,15 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
               <Text
                 style={[
                   styles.chipText,
-                  { color: on ? colors.brandInverse : colors.textSecondary },
+                  {
+                    color: on
+                      ? coach
+                        ? '#fff'
+                        : colors.brandInverse
+                      : coach
+                        ? COACH_SITE.muted
+                        : colors.textSecondary,
+                  },
                 ]}
               >
                 {opt.label}
@@ -88,7 +128,7 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   );
 };
 
-function createStyles(c: { text: string; textMuted: string }) {
+function createStyles(c: { text: string; textMuted: string }, coach = false) {
   return StyleSheet.create({
     block: { gap: spacing.md, marginBottom: spacing.sm },
     filters: {
@@ -101,7 +141,7 @@ function createStyles(c: { text: string; textMuted: string }) {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: coach ? 0 : StyleSheet.hairlineWidth,
       minHeight: 34,
       justifyContent: 'center',
     },
@@ -122,13 +162,13 @@ function createStyles(c: { text: string; textMuted: string }) {
       fontSize: 17,
       fontWeight: '800',
       letterSpacing: -0.2,
-      color: c.text,
+      color: coach ? COACH_SITE.foreground : c.text,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     sectionCount: {
       fontFamily: fontFamily.regular,
       fontSize: 12,
-      color: c.textMuted,
+      color: coach ? COACH_SITE.muted : c.textMuted,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });

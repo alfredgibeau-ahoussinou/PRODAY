@@ -100,6 +100,11 @@ export function getMessagesThreadFilters(t: TranslateFn) {
   ] satisfies { id: MessagesThreadFilter; label: string }[];
 }
 
+/** Filtres messagerie coach — sans Kiné. */
+export function getCoachMessagesThreadFilters(t: TranslateFn) {
+  return getMessagesThreadFilters(t).filter((f) => f.id !== 'care');
+}
+
 export function getCarpoolChapters(t: TranslateFn) {
   return [
     { id: 'evenements' as const, label: tr(t, 'carpool.chapter.events', 'Événements') },

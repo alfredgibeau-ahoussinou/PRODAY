@@ -25,6 +25,7 @@ import { trackV3Event } from '../core/analytics/v3Events';
 import type { MessagesThreadFilter } from '../content/messagesChapters';
 import { MessagesHomeScreen } from '../components/messages/MessagesHomeScreen';
 import { useTranslation } from '../context/LocaleContext';
+import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
 import {
   MessagesNetworkSheet,
   type NetworkSheetAction,
@@ -36,6 +37,7 @@ export const MessagesScreen: React.FC = () => {
   const { profile, loading: authLoading } = useAuth();
   const { pendingChatThreadId, clearPendingChat, openAuth } = useTabNavigation();
   const nav = useTabNavigationActions();
+  const coachShell = Boolean(useCoachShellNav());
   const { threads, loading, refresh } = useMessagesData(profile?.uid);
   const { data: dashboardData } = useDashboardData(profile);
   const favorites = useFavorites(profile?.uid);
@@ -93,6 +95,12 @@ export const MessagesScreen: React.FC = () => {
   useEffect(() => {
     void loadSocialSuggestions();
   }, [loadSocialSuggestions]);
+
+  useEffect(() => {
+    if (coachShell && threadFilter === 'care') {
+      setThreadFilter('all');
+    }
+  }, [coachShell, threadFilter]);
 
   useEffect(() => {
     if (!profile?.uid) {
@@ -363,6 +371,7 @@ export const MessagesScreen: React.FC = () => {
         }}
         kineLabelFor={(thread) => physioCareThreadLabel(thread.thread_kind) ?? undefined}
         isWoman={isWoman}
+        variant={coachShell ? 'coach' : 'default'}
       />
 
       <MessagesNetworkSheet
