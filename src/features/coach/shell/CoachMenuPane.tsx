@@ -14,7 +14,7 @@ type Props = {
   items?: CoachNavResolvedItem[];
 };
 
-/** Hub Menu legacy — délègue à CoachToolsList sur Accueil. */
+/** Hub Menu — liste Outils groupés (Match, Club, Performance). */
 export function CoachMenuPane({ items = [] }: Props) {
   const shellNav = useCoachShellNav();
   const resolvedById = useMemo(
@@ -27,7 +27,7 @@ export function CoachMenuPane({ items = [] }: Props) {
       <CoachPane title={getCoachPageIdentity('plus').title}>
         <CoachChapterScroll>
           <CoachText variant="caption" muted style={styles.lead}>
-            Les outils sont disponibles depuis l’onglet Accueil.
+            Aucun outil disponible pour le moment.
           </CoachText>
         </CoachChapterScroll>
       </CoachPane>
@@ -40,6 +40,7 @@ export function CoachMenuPane({ items = [] }: Props) {
         <CoachToolsList
           groups={COACH_TOOL_GROUPS}
           resolvedById={resolvedById}
+          title=""
           onSelect={(id) => shellNav?.requestNav(id)}
         />
       </CoachChapterScroll>

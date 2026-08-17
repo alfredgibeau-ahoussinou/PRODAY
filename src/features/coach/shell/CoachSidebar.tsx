@@ -4,10 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CoachText } from '../../../components/coach/coachPortalUi';
 import { Icon } from '../../../components/ui/Icon';
 import { COACH_SITE } from '../../../content/coachPageIdentity';
-import { COACH_TOOL_GROUPS, primaryTabForCoachNav, type CoachNavItemId } from '../navigation/coachNavConfig';
+import { primaryTabForCoachNav, type CoachNavItemId } from '../navigation/coachNavConfig';
 import type { CoachNavResolvedFolder, CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
-import { CoachNavRow } from './CoachNavRow';
-import { useCoachShellNav } from './CoachShellNavContext';
 import { radius, spacing } from '../../../theme/designTokens';
 
 type Props = {
@@ -15,7 +13,6 @@ type Props = {
   coachName: string;
   formulaLabel: string;
   folders: CoachNavResolvedFolder[];
-  toolItems?: CoachNavResolvedItem[];
   onSelect: (id: CoachNavItemId) => void;
   onOpenHelp: () => void;
   onSignOut: () => void;
@@ -28,7 +25,6 @@ export function CoachSidebar({
   coachName,
   formulaLabel,
   folders,
-  toolItems = [],
   onSelect,
   onOpenHelp,
   onSignOut,
@@ -39,11 +35,6 @@ export function CoachSidebar({
   const styles = useMemo(() => createStyles(width), [width]);
   const highlight = primaryTabForCoachNav(activeId);
   const items = folders.flatMap((folder) => folder.items);
-  const shellNav = useCoachShellNav();
-  const toolsById = useMemo(
-    () => new Map(toolItems.map((item) => [item.id, item])),
-    [toolItems],
-  );
 
   return (
     <View
@@ -85,32 +76,6 @@ export function CoachSidebar({
           />
         ))}
 
-        {toolItems.length > 0 ? (
-          <View style={styles.toolsBlock}>
-            <CoachText variant="caption" muted style={styles.toolsKicker}>
-              OUTILS
-            </CoachText>
-            <View style={styles.toolsCard}>
-              {COACH_TOOL_GROUPS.flatMap((group) =>
-                group.toolIds
-                  .map((id) => toolsById.get(id))
-                  .filter((item): item is CoachNavResolvedItem => Boolean(item)),
-              ).map((item, index, arr) => (
-                <CoachNavRow
-                  key={item.id}
-                  icon={item.icon}
-                  label={item.label}
-                  locked={item.locked}
-                  aiBadge={item.aiBadge}
-                  onPress={() => {
-                    if (!item.locked) shellNav?.requestNav(item.id);
-                  }}
-                  showSeparator={index < arr.length - 1}
-                />
-              ))}
-            </View>
-          </View>
-        ) : null}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -212,19 +177,6 @@ function createStyles(width: number) {
     },
     itemOn: { backgroundColor: COACH_SITE.soft },
     itemPressed: { opacity: 0.7 },
-    toolsBlock: { marginTop: spacing.md, gap: spacing.xs },
-    toolsKicker: {
-      fontSize: 11,
-      fontWeight: '600',
-      letterSpacing: 0.8,
-      paddingHorizontal: spacing.md,
-    },
-    toolsCard: {
-      marginHorizontal: spacing.sm,
-      backgroundColor: COACH_SITE.bg,
-      borderRadius: radius.lg,
-      overflow: 'hidden',
-    },
     iconWrap: {
       width: 36,
       height: 36,

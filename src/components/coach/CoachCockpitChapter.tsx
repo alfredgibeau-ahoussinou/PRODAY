@@ -24,10 +24,6 @@ import {
 } from '../../utils/coachCalendarHome';
 import { findLatestPostMatchAnalysis } from '../../utils/coachPostMatchAnalysis';
 import { CoachSectionCard } from './coachPortalUi';
-import { CoachToolsList } from '../../features/coach/shell/CoachToolsList';
-import { resolveCoachToolGroups } from '../../features/coach/navigation/resolveCoachNavAccess';
-import { usePlatformFeatureFlags } from '../../hooks/usePlatformFeatureFlags';
-import { userCanAccessSmartTactics } from '../../utils/clubFeatureAccess';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 
 const PEOPLE_GOLD = '#F5C518';
@@ -43,25 +39,9 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
-  const { isEnabled } = usePlatformFeatureFlags();
   const { count: unreadMessages } = useUnreadMessageCount();
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
   const canConvoc = userCanManageConvocations(profile, { clubCoversCoach });
-  const canSmartTactics = userCanAccessSmartTactics(profile, { clubCoversCoach });
-  const canVideo = isEnabled('coach_video');
-  const toolGroups = useMemo(
-    () => resolveCoachToolGroups({ canSmartTactics, canVideo }),
-    [canSmartTactics, canVideo],
-  );
-  const resolvedById = useMemo(() => {
-    const map = new Map<string, (typeof toolGroups)[number]['items'][number]>();
-    for (const group of toolGroups) {
-      for (const item of group.items) {
-        map.set(item.id, item);
-      }
-    }
-    return map;
-  }, [toolGroups]);
   const hasClub = Boolean(profile.profile.club_id);
   const [creating, setCreating] = useState(false);
   const [discoverOn, setDiscoverOn] = useState(true);
@@ -225,8 +205,6 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             />
           ))
         )}
-
-        <CoachToolsList groups={toolGroups} resolvedById={resolvedById} />
       </CoachChapterScroll>
     </View>
   );

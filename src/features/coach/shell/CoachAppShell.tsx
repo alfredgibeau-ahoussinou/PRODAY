@@ -71,7 +71,7 @@ type Props = {
 };
 
 /**
- * Shell Pôle Coach — 4 onglets (Accueil, Équipe, IA, Profil).
+ * Shell Pôle Coach — 5 onglets (Accueil, Équipe, IA, Menu, Profil).
  */
 export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const profile = useSessionProfile();
@@ -171,7 +171,6 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
     coachName,
     formulaLabel,
     folders,
-    toolItems,
     onSelect,
     onOpenHelp,
     onSignOut,

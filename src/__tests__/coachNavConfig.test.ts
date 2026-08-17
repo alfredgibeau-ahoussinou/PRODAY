@@ -22,32 +22,33 @@ import {
 import { COACH_SITE, getCoachPageIdentity } from '../content/coachPageIdentity';
 
 describe('coachNavConfig', () => {
-  it('expose 4 onglets premium (Accueil → Profil)', () => {
+  it('expose 5 onglets premium (Accueil → Profil)', () => {
     const ids = COACH_NAV_FOLDERS.map((f) => f.id);
-    expect(ids).toEqual(['accueil', 'equipe', 'ia', 'profil']);
+    expect(ids).toEqual(['accueil', 'equipe', 'ia', 'menu', 'profil']);
     const dest = COACH_NAV_FOLDERS.flatMap((f) => f.items.map((i) => i.id));
-    expect(dest).toEqual(['today', 'equipe', 'coach_ia', 'profil']);
+    expect(dest).toEqual(['today', 'equipe', 'coach_ia', 'plus', 'profil']);
     expect(COACH_PRIMARY_NAV_IDS).toEqual(dest);
     expect(findCoachNavItem('today')?.label).toBe('Accueil');
     expect(findCoachNavItem('equipe')?.label).toBe('Équipe');
     expect(findCoachNavItem('coach_ia')?.label).toBe('IA');
+    expect(findCoachNavItem('plus')?.label).toBe('Menu');
     expect(findCoachNavItem('profil')?.label).toBe('Profil');
     expect(findCoachNavItem('messages')?.label).toBe('Messages');
   });
 
-  it('canonise les alias legacy et surligne Accueil pour les outils secondaires', () => {
+  it('canonise les alias legacy et surligne Menu pour les outils secondaires', () => {
     expect(canonicalizeCoachNav('pitch')).toBe('today');
     expect(canonicalizeCoachNav('effectif')).toBe('equipe');
     expect(canonicalizeCoachNav('planning')).toBe('entrainements');
     expect(canonicalizeCoachNav('matchs')).toBe('match_center');
-    expect(primaryTabForCoachNav('gestion')).toBe('today');
-    expect(primaryTabForCoachNav('joueurs')).toBe('today');
-    expect(primaryTabForCoachNav('smart_tactics')).toBe('today');
-    expect(primaryTabForCoachNav('match_center')).toBe('today');
-    expect(primaryTabForCoachNav('entrainements')).toBe('today');
-    expect(primaryTabForCoachNav('carpool')).toBe('today');
-    expect(primaryTabForCoachNav('planning')).toBe('today');
-    expect(primaryTabForCoachNav('plus')).toBe('today');
+    expect(primaryTabForCoachNav('gestion')).toBe('plus');
+    expect(primaryTabForCoachNav('joueurs')).toBe('plus');
+    expect(primaryTabForCoachNav('smart_tactics')).toBe('plus');
+    expect(primaryTabForCoachNav('match_center')).toBe('plus');
+    expect(primaryTabForCoachNav('entrainements')).toBe('plus');
+    expect(primaryTabForCoachNav('carpool')).toBe('plus');
+    expect(primaryTabForCoachNav('planning')).toBe('plus');
+    expect(primaryTabForCoachNav('plus')).toBe('plus');
     expect(primaryTabForCoachNav('messages')).toBe('profil');
     expect(primaryTabForCoachNav('today')).toBe('today');
   });
@@ -61,9 +62,9 @@ describe('coachNavConfig', () => {
     expect(findCoachNavItem('mes_videos')?.label).toBe('Mes vidéos');
   });
 
-  it('range les outils secondaires sur Accueil (hors barre primaire)', () => {
+  it('range les outils secondaires dans Menu (hors barre primaire directe)', () => {
     const dest = COACH_NAV_FOLDERS.flatMap((f) => f.items.map((i) => i.id));
-    expect(dest).not.toContain('plus');
+    expect(dest).toContain('plus');
     expect(dest).not.toContain('messages');
     expect(dest).not.toContain('gestion');
     expect(dest).not.toContain('smart_tactics');
@@ -76,8 +77,8 @@ describe('coachNavConfig', () => {
     expect(COACH_SECONDARY_NAV_IDS).toContain('smart_tactics');
     expect(COACH_SECONDARY_NAV_IDS).toContain('gestion');
     expect(COACH_SECONDARY_NAV_IDS).not.toContain('plus');
-    expect(COACH_HOME_DEST_IDS).toContain('planning');
-    expect(COACH_MENU_DEST_IDS).toEqual(COACH_HOME_DEST_IDS);
+    expect(COACH_MENU_DEST_IDS).toContain('planning');
+    expect(COACH_HOME_DEST_IDS).toEqual(COACH_MENU_DEST_IDS);
     expect(COACH_TOOL_GROUPS.flatMap((g) => g.toolIds)).toHaveLength(8);
     expect(COACH_HOME_TOOLS.map((t) => t.id)).toEqual([
       'match_center',
@@ -114,10 +115,11 @@ describe('resolveCoachNavAccess', () => {
     expect(video?.lockReason).toMatch(/Vidéo Coach/i);
   });
 
-  it('résout 4 dossiers primaires', () => {
+  it('résout 5 dossiers primaires', () => {
     const folders = resolveCoachNavFolders({ canSmartTactics: true, canVideo: true });
-    expect(folders).toHaveLength(4);
-    expect(folders.flatMap((f) => f.items).map((i) => i.id)).toHaveLength(4);
+    expect(folders).toHaveLength(5);
+    expect(folders.flatMap((f) => f.items).map((i) => i.id)).toHaveLength(5);
+    expect(folders.flatMap((f) => f.items).map((i) => i.id)).toContain('plus');
   });
 
   it('expose les 8 lignes Outils depuis COACH_TOOL_GROUPS', () => {

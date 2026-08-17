@@ -3,9 +3,9 @@ import type { CoachPortalChapterId } from '../../../content/coachPortalChapters'
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 
 /**
- * Navigation Pôle Coach — 4 onglets premium minimal.
- * ACCUEIL | ÉQUIPE | IA | PROFIL
- * Outils secondaires sur Accueil (liste Outils) ; Messages depuis Profil ou header Accueil.
+ * Navigation Pôle Coach — 5 onglets premium.
+ * ACCUEIL | ÉQUIPE | IA | MENU | PROFIL
+ * Outils secondaires dans l’onglet Menu ; Messages depuis Profil ou header Accueil.
  */
 
 export type CoachNavFolderId =
@@ -67,6 +67,7 @@ export const COACH_PRIMARY_NAV_IDS: CoachNavItemId[] = [
   'today',
   'equipe',
   'coach_ia',
+  'plus',
   'profil',
 ];
 
@@ -83,14 +84,14 @@ export const COACH_SECONDARY_NAV_IDS: CoachNavItemId[] = [
   'gestion',
 ];
 
-/** Destinations secondaires — surlignent l’onglet Accueil dans la barre. */
-export const COACH_HOME_DEST_IDS: CoachNavItemId[] = [
+/** Destinations secondaires — surlignent l’onglet Menu dans la barre. */
+export const COACH_MENU_DEST_IDS: CoachNavItemId[] = [
   ...COACH_SECONDARY_NAV_IDS,
   'planning',
 ];
 
-/** @deprecated Utiliser COACH_HOME_DEST_IDS */
-export const COACH_MENU_DEST_IDS: CoachNavItemId[] = COACH_HOME_DEST_IDS;
+/** @deprecated Utiliser COACH_MENU_DEST_IDS */
+export const COACH_HOME_DEST_IDS: CoachNavItemId[] = COACH_MENU_DEST_IDS;
 
 /** @deprecated Utiliser COACH_SECONDARY_NAV_IDS — conservé pour compat tests/outils. */
 export const COACH_MORE_NAV_IDS: CoachNavItemId[] = [
@@ -270,11 +271,12 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
   },
 ];
 
-/** 4 onglets primaires — sidebar + barre mobile. */
+/** 5 onglets primaires — sidebar + barre mobile. */
 export const COACH_NAV_FOLDERS: CoachNavFolder[] = [
   { id: 'accueil', label: 'Accueil', items: [accueilItem] },
   { id: 'equipe', label: 'Équipe', items: [equipeItem] },
   { id: 'ia', label: 'IA', items: [coachIaItem] },
+  { id: 'menu', label: 'Menu', items: [plusItem] },
   { id: 'profil', label: 'Profil', items: [profilItem] },
 ];
 
@@ -286,7 +288,7 @@ export type CoachToolGroup = {
   toolIds: CoachNavItemId[];
 };
 
-/** Groupes Outils — liste unique sur Accueil (max 8 lignes). */
+/** Groupes Outils — liste unique dans l’onglet Menu (max 8 lignes). */
 export const COACH_TOOL_GROUPS: CoachToolGroup[] = [
   { id: 'match', label: 'Match', toolIds: ['match_center', 'entrainements'] },
   { id: 'club', label: 'Club', toolIds: ['gestion', 'com_staff', 'carpool'] },
@@ -297,7 +299,7 @@ export const COACH_TOOL_GROUPS: CoachToolGroup[] = [
   },
 ];
 
-/** Libellés courts pour la liste Outils sur Accueil. */
+/** Libellés courts pour la liste Outils dans Menu. */
 export const COACH_HOME_TOOLS: {
   id: CoachNavItemId;
   label: string;
@@ -336,8 +338,7 @@ export function primaryTabForCoachNav(id: CoachNavItemId): CoachNavItemId {
   const canonical = canonicalizeCoachNav(id);
   if (COACH_PRIMARY_NAV_IDS.includes(canonical)) return canonical;
   if (canonical === 'messages') return 'profil';
-  if (canonical === 'plus') return 'today';
-  if (COACH_HOME_DEST_IDS.includes(canonical)) return 'today';
+  if (COACH_MENU_DEST_IDS.includes(canonical)) return 'plus';
   return 'today';
 }
 

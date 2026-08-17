@@ -63,7 +63,7 @@ export function resolveCoachNavCatalog(input: CoachNavAccessInput): CoachNavReso
   return items;
 }
 
-/** Résout le menu Coach (4 onglets primaires). */
+/** Résout le menu Coach (5 onglets primaires). */
 export function resolveCoachNavFolders(input: CoachNavAccessInput): CoachNavResolvedFolder[] {
   const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
   const folders: CoachNavResolvedFolder[] = [];
@@ -87,7 +87,7 @@ export function resolveCoachMoreItems(input: CoachNavAccessInput): CoachNavResol
   );
 }
 
-/** Tuiles / lignes Outils sur Accueil — libellés depuis COACH_HOME_TOOLS + verrous catalogue. */
+/** Tuiles / lignes Outils dans Menu — libellés depuis COACH_HOME_TOOLS + verrous catalogue. */
 export function resolveCoachMenuItems(input: CoachNavAccessInput): CoachNavResolvedItem[] {
   const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
   const items: CoachNavResolvedItem[] = [];
@@ -107,7 +107,7 @@ export type CoachToolGroupResolved = CoachToolGroup & {
   items: CoachNavResolvedItem[];
 };
 
-/** Groupes Outils pour la liste Accueil (Settings style). */
+/** Groupes Outils pour la liste Menu (Settings style). */
 export function resolveCoachToolGroups(input: CoachNavAccessInput): CoachToolGroupResolved[] {
   const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
   const toolsById = new Map(

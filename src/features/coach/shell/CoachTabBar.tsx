@@ -17,7 +17,7 @@ type Props = {
   onSelect: (id: CoachNavItemId) => void;
 };
 
-/** Barre fixe 4 onglets — compacte, sans scroll ni bounce. */
+/** Barre fixe 5 onglets — compacte, sans scroll ni bounce. */
 export function CoachTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(), []);
@@ -114,14 +114,14 @@ function createStyles() {
       fontWeight: '600',
       color: COACH_SITE.accent,
       letterSpacing: 0.4,
-      maxWidth: 80,
+      maxWidth: 64,
     },
     labelOff: {
       fontSize: 9,
       fontWeight: '500',
       color: COACH_SITE.muted,
       opacity: 0.7,
-      maxWidth: 72,
+      maxWidth: 56,
     },
   });
 }
