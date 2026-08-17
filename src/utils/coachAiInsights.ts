@@ -465,16 +465,15 @@ export function buildCoachAiNowActions(input: CoachAiInsightsInput): CoachAiActi
     });
   }
 
-  if (upcoming.length === 0) {
-    actions.push({
-      id: 'plan-session',
-      title: 'Planifier une séance',
-      detail: 'Aucun événement à venir — créez un entraînement ou une convocation.',
-      priority: 85,
-    });
-  }
-
-  return [...actions].sort((a, b) => b.priority - a.priority).slice(0, 5);
+  const seen = new Set<string>();
+  return [...actions]
+    .sort((a, b) => b.priority - a.priority)
+    .filter((a) => {
+      if (seen.has(a.id)) return false;
+      seen.add(a.id);
+      return true;
+    })
+    .slice(0, 5);
 }
 
 export function buildCoachAiInsights(input: CoachAiInsightsInput): CoachAiInsights {

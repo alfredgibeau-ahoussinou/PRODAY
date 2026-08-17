@@ -98,6 +98,17 @@ describe('buildCoachAiNowActions', () => {
     });
     expect(actions.length).toBeLessThanOrEqual(5);
   });
+
+  it('n’émet pas de clés d’action dupliquées sans événement à venir', () => {
+    const actions = buildCoachAiNowActions({
+      events: [],
+      members: [{ uid: 'p1', display_name: 'A' } as never],
+      hasClub: true,
+    });
+    const ids = actions.map((a) => a.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.filter((id) => id === 'plan-session').length).toBeLessThanOrEqual(1);
+  });
 });
 
 describe('buildCoachAiInsights', () => {
