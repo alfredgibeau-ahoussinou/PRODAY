@@ -285,9 +285,11 @@ export function CoachMesVideosScreen({ profile }: Props) {
                     scaleTo={0.96}
                     style={styles.eventBtn}
                   >
-                    <ProDayText variant="caption" style={styles.eventSymbol}>
-                      {e.symbol}
-                    </ProDayText>
+                    <Icon
+                      name={e.icon}
+                      color={e.iconColor ?? tokens.accent}
+                      size={22}
+                    />
                     <ProDayText variant="caption" style={styles.eventLabel}>
                       {e.label}
                     </ProDayText>
@@ -524,14 +526,13 @@ function createStyles(tokens: CoachThemeTokens) {
     flexGrow: 1,
     minWidth: 96,
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     paddingVertical: 12,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: tokens.border,
-    backgroundColor: tokens.isLight ? tokens.surface : 'transparent',
+    backgroundColor: tokens.elevated,
   },
-  eventSymbol: { fontSize: 16 },
-  eventLabel: { color: tokens.foreground, fontWeight: '700', fontSize: 10 },
+  eventLabel: { color: tokens.foreground, fontWeight: '700', fontSize: 10, textAlign: 'center' },
   stages: { gap: 6, marginTop: spacing.sm },
   stageRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   stageIndex: { color: tokens.accent, fontWeight: '800', width: 24 },

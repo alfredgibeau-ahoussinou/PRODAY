@@ -30,6 +30,9 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   search: 'search-outline',
   chat: 'chatbubble-outline',
   notifications: 'notifications-outline',
+  gift: 'gift-outline',
+  hamburger: 'menu-outline',
+  'stats-chart': 'stats-chart-outline',
   person: 'person-outline',
   handshake: 'people-outline',
   calendar: 'calendar-outline',
@@ -54,6 +57,7 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   'chevron-down': 'chevron-down',
   'chevron-up': 'chevron-up',
   menu: 'ellipsis-vertical',
+  'ellipsis-horizontal': 'ellipsis-horizontal',
   settings: 'options-outline',
   add: 'add',
   close: 'close',
@@ -82,6 +86,8 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   call: 'call-outline',
   'log-out': 'log-out-outline',
   help: 'help-circle-outline',
+  'swap-horizontal': 'swap-horizontal-outline',
+  flag: 'flag-outline',
 };
 
 const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {
@@ -95,6 +101,10 @@ const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {
   shield: 'shield-checkmark',
   trophy: 'trophy',
   bag: 'bag',
+  people: 'people',
+  gift: 'gift',
+  hamburger: 'menu',
+  'stats-chart': 'stats-chart',
 };
 
 interface IconProps {

@@ -28,6 +28,9 @@ describe('clubVideoCenter content', () => {
     ]);
     expect(VIDEO_PROCESSING_STAGES.map((s) => s.id)).toContain('ready');
     expect(VIDEO_LIVE_EVENTS.length).toBeGreaterThanOrEqual(7);
+    expect(VIDEO_LIVE_EVENTS.every((e) => e.icon && !('symbol' in e))).toBe(true);
+    expect(VIDEO_LIVE_EVENTS.find((e) => e.id === 'yellow')?.iconColor).toBe('#FFD60A');
+    expect(VIDEO_LIVE_EVENTS.find((e) => e.id === 'red')?.iconColor).toBe('#FF375F');
     expect(VIDEO_LIBRARY_BUCKETS.map((b) => b.id)).toEqual(
       expect.arrayContaining(['matches', 'talks', 'clips', 'highlights']),
     );

@@ -3,6 +3,8 @@
  * Caméra → Match → Vidéo → IA → Clips → Causerie → Joueurs.
  */
 
+import type { IconName } from '../components/ui/iconNames';
+
 export type VideoCenterTabId =
   | 'dashboard'
   | 'cameras'
@@ -71,16 +73,17 @@ export const VIDEO_PROCESSING_STAGES: {
 export const VIDEO_LIVE_EVENTS: {
   id: VideoLiveEventKind;
   label: string;
-  symbol: string;
+  icon: IconName;
+  iconColor?: string;
 }[] = [
-  { id: 'goal', label: 'But', symbol: '⚽' },
-  { id: 'yellow', label: 'Carton jaune', symbol: '🟨' },
-  { id: 'red', label: 'Carton rouge', symbol: '🟥' },
-  { id: 'sub', label: 'Remplacement', symbol: '🔄' },
-  { id: 'highlight', label: 'Action importante', symbol: '⭐' },
-  { id: 'error', label: 'Erreur', symbol: '❌' },
-  { id: 'set_piece', label: 'Coup arrêté', symbol: '🎯' },
-  { id: 'note', label: 'Note', symbol: '📝' },
+  { id: 'goal', label: 'But', icon: 'football' },
+  { id: 'yellow', label: 'Carton jaune', icon: 'warning', iconColor: '#FFD60A' },
+  { id: 'red', label: 'Carton rouge', icon: 'alert-circle', iconColor: '#FF375F' },
+  { id: 'sub', label: 'Remplacement', icon: 'swap-horizontal' },
+  { id: 'highlight', label: 'Action importante', icon: 'star' },
+  { id: 'error', label: 'Erreur', icon: 'close' },
+  { id: 'set_piece', label: 'Coup arrêté', icon: 'flag' },
+  { id: 'note', label: 'Note', icon: 'document' },
 ];
 
 export const VIDEO_AI_PROMPTS: string[] = [

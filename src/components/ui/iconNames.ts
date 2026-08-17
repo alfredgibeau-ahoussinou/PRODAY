@@ -3,6 +3,9 @@ export type IconName =
   | 'search'
   | 'chat'
   | 'notifications'
+  | 'gift'
+  | 'hamburger'
+  | 'stats-chart'
   | 'person'
   | 'handshake'
   | 'calendar'
@@ -27,6 +30,7 @@ export type IconName =
   | 'chevron-down'
   | 'chevron-up'
   | 'menu'
+  | 'ellipsis-horizontal'
   | 'settings'
   | 'add'
   | 'close'
@@ -54,4 +58,6 @@ export type IconName =
   | 'globe'
   | 'call'
   | 'log-out'
-  | 'help';
+  | 'help'
+  | 'swap-horizontal'
+  | 'flag';
