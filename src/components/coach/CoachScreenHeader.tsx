@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Icon } from '../ui/Icon';
 import type { IconName } from '../ui/iconNames';
@@ -9,6 +9,7 @@ import { coachCalendarInitials } from '../../utils/coachCalendarHome';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { CoachTeamSwitcher } from './CoachTeamSwitcher';
 
 export type CoachHeaderAction = {
   icon: IconName;
@@ -62,25 +63,47 @@ export function CoachScreenHeader({
   unreadMessages = 0,
 }: Props) {
   const { t } = useTranslation();
-  const { teamName, profile, openNav, displayName } = useCoachTeamChrome();
+  const { teamName, coachTeams, profile, openNav, displayName } = useCoachTeamChrome();
   const { tokens } = useCoachTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const [teamSwitcherOpen, setTeamSwitcherOpen] = useState(false);
+  const canSwitchTeam = coachTeams.length > 1;
 
   return (
     <View style={styles.headerPad}>
       {showTeamRow ? (
-        <View style={styles.teamRow}>
-          <View style={styles.teamLeft}>
-            <View style={styles.avatar}>
-              <CoachText variant="caption" style={styles.avatarText}>
-                {coachCalendarInitials(teamName)}
-              </CoachText>
+        <>
+          <View style={styles.teamRow}>
+            <View style={styles.teamLeft}>
+              <View style={styles.avatar}>
+                <CoachText variant="caption" style={styles.avatarText}>
+                  {coachCalendarInitials(teamName)}
+                </CoachText>
+              </View>
+              {canSwitchTeam ? (
+                <Pressable
+                  onPress={() => setTeamSwitcherOpen((open) => !open)}
+                  style={({ pressed }) => [styles.teamNamePress, pressed && { opacity: 0.65 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('coach.portal.team.switchLabel')}
+                  accessibilityState={{ expanded: teamSwitcherOpen }}
+                >
+                  <CoachText variant="section" numberOfLines={1} style={styles.teamName}>
+                    {teamName}
+                  </CoachText>
+                  <Icon
+                    name={teamSwitcherOpen ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={tokens.muted}
+                  />
+                </Pressable>
+              ) : (
+                <CoachText variant="section" numberOfLines={1} style={styles.teamName}>
+                  {teamName}
+                </CoachText>
+              )}
             </View>
-            <CoachText variant="section" numberOfLines={1} style={styles.teamName}>
-              {teamName}
-            </CoachText>
-          </View>
-          <View style={styles.teamActions}>
+            <View style={styles.teamActions}>
             <Pressable
               onPress={() => openNav('messages')}
               style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.65 }]}
@@ -108,6 +131,10 @@ export function CoachScreenHeader({
             </Pressable>
           </View>
         </View>
+          {canSwitchTeam && teamSwitcherOpen ? (
+            <CoachTeamSwitcher showLabel={false} />
+          ) : null}
+        </>
       ) : null}
 
       <View style={styles.titleRow}>
@@ -173,8 +200,15 @@ function createStyles(tokens: CoachThemeTokens) {
       alignItems: 'center',
       gap: spacing.sm,
     },
-    teamName: {
+    teamNamePress: {
       flex: 1,
+      minWidth: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    teamName: {
+      flexShrink: 1,
       color: tokens.foreground,
       fontWeight: '700',
       fontSize: 17,

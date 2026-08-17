@@ -65,7 +65,7 @@ export function CoachProfileHub({
 }: Props) {
   const identity = getCoachPageIdentity('profil');
   const shellNav = useCoachShellNav();
-  const { tokens } = useCoachTheme();
+  const { tokens, teamName: themeTeamName } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
   const nav = useTabNavigationActions();
   const { count: unreadMessages } = useUnreadMessageCount();
@@ -82,7 +82,7 @@ export function CoachProfileHub({
   const { first, last } = splitDisplayName(profile.display_name ?? 'Coach');
   const category = p.category?.trim() || 'Catégorie à renseigner';
   const clubLabel = clubName?.trim() || profile.profile.club_id ? 'Club rattaché' : 'Aucun club';
-  const teamLabel = teamName?.trim() || 'Équipe à renseigner';
+  const teamLabel = teamName?.trim() || themeTeamName.trim() || 'Équipe à renseigner';
 
   const [events, setEvents] = useState<TeamEvent[]>([]);
   const [members, setMembers] = useState<User[]>([]);

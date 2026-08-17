@@ -1,6 +1,10 @@
 import {
   buildCoachThemeTokens,
   COACH_TEAM_ACCENT_PALETTE,
+  filterMembersForTeam,
+  filterPendingForTeam,
+  listCoachTeams,
+  pickCoachTeam,
   resolveCoachEffectiveAccent,
   resolveCoachOnAccent,
   resolveCoachTeamAccent,
@@ -145,5 +149,53 @@ describe('coachTeamTheme', () => {
       accentOverride: '#006CFC',
     });
     expect(darkTokens.onAccent).toBe('#FFFFFF');
+  });
+
+  it('listCoachTeams — retourne toutes les équipes du coach', () => {
+    const teams = [
+      { id: 'a', coach_uids: ['coach-1'], is_default: false },
+      { id: 'b', coach_uids: ['coach-1', 'coach-2'], is_default: false },
+      { id: 'c', coach_uids: ['coach-2'], is_default: true },
+    ];
+    expect(listCoachTeams(teams, 'coach-1').map((t) => t.id)).toEqual(['a', 'b']);
+    expect(listCoachTeams(teams, 'coach-3')).toEqual([]);
+  });
+
+  it('pickCoachTeam — première équipe assignée ou fallback', () => {
+    const teams = [
+      { id: 'default', coach_uids: [], is_default: true },
+      { id: 'mine', coach_uids: ['coach-1'], is_default: false },
+    ];
+    expect(pickCoachTeam(teams, 'coach-1')?.id).toBe('mine');
+    expect(pickCoachTeam(teams, 'coach-9')?.id).toBe('default');
+  });
+
+  it('filterMembersForTeam — joueurs actifs de l’équipe sélectionnée', () => {
+    const members = [
+      { uid: 'p1', display_name: 'Alice' },
+      { uid: 'p2', display_name: 'Bob' },
+      { uid: 'p3', display_name: 'Chloé' },
+    ];
+    const memberships = [
+      { status: 'active', team_id: 'team-a', player_uid: 'p1' },
+      { status: 'active', team_id: 'team-b', player_uid: 'p2' },
+      { status: 'pending', team_id: 'team-a', player_uid: 'p3' },
+    ];
+    expect(filterMembersForTeam(members, memberships, 'team-a').map((m) => m.uid)).toEqual(['p1']);
+    expect(filterMembersForTeam(members, memberships, undefined).map((m) => m.uid)).toEqual([
+      'p1',
+      'p2',
+      'p3',
+    ]);
+  });
+
+  it('filterPendingForTeam — demandes en attente par équipe', () => {
+    const pending = [
+      { status: 'pending', team_id: 'team-a' },
+      { status: 'pending', team_id: 'team-b' },
+      { status: 'active', team_id: 'team-a' },
+    ];
+    expect(filterPendingForTeam(pending, 'team-a')).toHaveLength(1);
+    expect(filterPendingForTeam(pending, undefined)).toHaveLength(2);
   });
 });

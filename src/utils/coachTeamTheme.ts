@@ -162,13 +162,44 @@ export function buildCoachThemeTokens(input: {
   };
 }
 
+/** Toutes les équipes où le coach est dans `coach_uids`. */
+export function listCoachTeams<T extends { id: string; coach_uids: string[] }>(
+  teams: T[],
+  uid: string,
+): T[] {
+  return teams.filter((team) => team.coach_uids.includes(uid));
+}
+
 /** Résout l’équipe coach préférée dans un club. */
 export function pickCoachTeam<
   T extends { id: string; coach_uids: string[]; is_default: boolean },
 >(teams: T[], uid: string): T | undefined {
-  return (
-    teams.find((team) => team.coach_uids.includes(uid)) ??
-    teams.find((team) => team.is_default) ??
-    teams[0]
+  const assigned = listCoachTeams(teams, uid);
+  if (assigned.length > 0) return assigned[0];
+  return teams.find((team) => team.is_default) ?? teams[0];
+}
+
+/** Joueurs actifs rattachés à une équipe via membership. */
+export function filterMembersForTeam<T extends { uid: string }>(
+  members: T[],
+  memberships: Array<{ status: string; team_id: string; player_uid: string }>,
+  teamId: string | undefined,
+): T[] {
+  if (!teamId) return members;
+  const uids = new Set(
+    memberships
+      .filter((m) => m.status === 'active' && m.team_id === teamId)
+      .map((m) => m.player_uid),
   );
+  return members.filter((m) => uids.has(m.uid));
+}
+
+/** Demandes d’affiliation en attente pour une équipe. */
+export function filterPendingForTeam<T extends { status: string; team_id: string }>(
+  pending: T[],
+  teamId: string | undefined,
+): T[] {
+  const rows = pending.filter((m) => m.status === 'pending');
+  if (!teamId) return rows;
+  return rows.filter((m) => m.team_id === teamId);
 }

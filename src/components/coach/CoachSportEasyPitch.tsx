@@ -21,7 +21,6 @@ import {
 } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import type { Membership } from '../../models/Membership';
-import type { Team } from '../../models/Team';
 import type { User } from '../../models/User';
 import { radius, spacing } from '../../theme/designTokens';
 import {
@@ -56,7 +55,6 @@ type PitchPlayer = {
 };
 
 type Props = {
-  teams: Team[];
   memberships: Membership[];
   members: User[];
   clubId: string;
@@ -188,28 +186,17 @@ function SportEasyPitchMarkings() {
   );
 }
 
-export function CoachSportEasyPitch({ teams, memberships, members, clubId }: Props) {
+export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
   const { width: winW } = useWindowDimensions();
-  const { tokens: themeTokens } = useCoachTheme();
+  const { tokens: themeTokens, teamId: contextTeamId } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
-  const playableTeams = useMemo(
-    () => teams.filter((team) => !team.is_default || teams.length === 1),
-    [teams],
-  );
-  const [teamId, setTeamId] = useState<string | null>(playableTeams[0]?.id ?? null);
+  const teamId = contextTeamId ?? null;
   const [lineup, setLineup] = useState<CoachPitchLineup>(() => emptyCoachPitchLineup());
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [pendingUid, setPendingUid] = useState<string | null>(null);
   const loadedKey = useRef<string | null>(null);
   const pendingRaw = useRef<Partial<CoachPitchLineup> | null>(null);
   const rosterUidsRef = useRef<string[]>([]);
-
-  useEffect(() => {
-    if (!teamId && playableTeams[0]) setTeamId(playableTeams[0].id);
-    if (teamId && playableTeams.length > 0 && !playableTeams.some((t) => t.id === teamId)) {
-      setTeamId(playableTeams[0]!.id);
-    }
-  }, [teamId, playableTeams]);
 
   const roster = useMemo(
     () => buildRoster(teamId, memberships, members),
@@ -309,36 +296,6 @@ export function CoachSportEasyPitch({ teams, memberships, members, clubId }: Pro
 
   return (
     <View style={styles.root}>
-      {playableTeams.length > 1 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-        >
-          {playableTeams.map((team) => {
-            const on = team.id === teamId;
-            return (
-              <PressableSpring
-                key={team.id}
-                onPress={() => setTeamId(team.id)}
-                scaleTo={0.97}
-                style={[styles.chip, on && styles.chipOn]}
-              >
-                <CoachText
-                  variant="caption"
-                  inverse={on && !themeTokens.isLight}
-                  muted={!on}
-                  accent={on && themeTokens.isLight}
-                  style={styles.chipText}
-                >
-                  {team.category || team.name}
-                </CoachText>
-              </PressableSpring>
-            );
-          })}
-        </ScrollView>
-      ) : null}
-
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

@@ -13,6 +13,7 @@ import { clubsService } from '../../../services/clubs.service';
 import { teamsService } from '../../../services/teams.service';
 import {
   buildCoachThemeTokens,
+  listCoachTeams,
   pickCoachTeam,
   resolveCoachTeamAccent,
   type CoachAccentMode,
@@ -23,6 +24,13 @@ import { normalizeCoachHexColor } from '../../../utils/coachColorPicker';
 
 const VARIANT_STORAGE_PREFIX = '@proday/coach_shell_variant';
 const ACCENT_STORAGE_PREFIX = '@proday/coach_shell_accent';
+const ACTIVE_TEAM_STORAGE_PREFIX = '@proday/coach_active_team';
+
+export type CoachTeamOption = {
+  id: string;
+  name: string;
+  category?: string;
+};
 
 type StoredAccent = {
   mode: CoachAccentMode;
@@ -39,8 +47,10 @@ type CoachThemeContextValue = {
   setAccentMode: (mode: CoachAccentMode) => void;
   setAccentOverride: (color: string) => void;
   resetAccentToTeam: () => void;
+  coachTeams: CoachTeamOption[];
   teamId?: string;
   teamName: string;
+  setActiveTeamId: (id: string) => void;
 };
 
 const CoachThemeContext = createContext<CoachThemeContextValue | null>(null);
@@ -51,6 +61,10 @@ function variantStorageKey(uid: string): string {
 
 function accentStorageKey(uid: string): string {
   return `${ACCENT_STORAGE_PREFIX}:${uid}`;
+}
+
+function activeTeamStorageKey(uid: string): string {
+  return `${ACTIVE_TEAM_STORAGE_PREFIX}:${uid}`;
 }
 
 function parseStoredAccent(raw: string | null): StoredAccent {
@@ -77,8 +91,10 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
   const [variant, setVariantState] = useState<CoachShellVariant>('solid');
   const [accentMode, setAccentModeState] = useState<CoachAccentMode>('auto');
   const [accentOverride, setAccentOverrideState] = useState('');
+  const [coachTeams, setCoachTeams] = useState<CoachTeamOption[]>([]);
   const [teamId, setTeamId] = useState<string | undefined>();
   const [teamName, setTeamName] = useState('');
+  const [clubFallbackName, setClubFallbackName] = useState('');
 
   useEffect(() => {
     if (!uid) {
@@ -119,28 +135,74 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     const clubId = profile?.profile.club_id;
     if (!clubId || !uid) {
+      setCoachTeams([]);
       setTeamId(undefined);
       setTeamName('');
+      setClubFallbackName('');
       return;
     }
     let cancelled = false;
-    void Promise.all([clubsService.getById(clubId), teamsService.listByClubId(clubId)])
-      .then(([club, teams]) => {
+    void Promise.all([
+      clubsService.getById(clubId),
+      teamsService.listByClubId(clubId),
+      AsyncStorage.getItem(activeTeamStorageKey(uid)),
+    ])
+      .then(([club, teams, storedTeamId]) => {
         if (cancelled) return;
-        const mine = pickCoachTeam(teams, uid);
-        setTeamId(mine?.id);
-        setTeamName(mine?.name || club?.name || '');
+        const fallbackName = club?.name || '';
+        setClubFallbackName(fallbackName);
+        const assigned = listCoachTeams(teams, uid);
+        const fallbackTeam = pickCoachTeam(teams, uid);
+        const options: CoachTeamOption[] =
+          assigned.length > 0
+            ? assigned.map((team) => ({
+                id: team.id,
+                name: team.name,
+                category: team.category,
+              }))
+            : fallbackTeam
+              ? [
+                  {
+                    id: fallbackTeam.id,
+                    name: fallbackTeam.name,
+                    category: fallbackTeam.category,
+                  },
+                ]
+              : [];
+        setCoachTeams(options);
+        const stored =
+          storedTeamId && options.some((team) => team.id === storedTeamId)
+            ? options.find((team) => team.id === storedTeamId)
+            : undefined;
+        const active = stored ?? fallbackTeam ?? options[0];
+        setTeamId(active?.id);
+        setTeamName(active?.name || fallbackName);
       })
       .catch(() => {
         if (!cancelled) {
+          setCoachTeams([]);
           setTeamId(undefined);
           setTeamName('');
+          setClubFallbackName('');
         }
       });
     return () => {
       cancelled = true;
     };
   }, [profile?.profile.club_id, uid]);
+
+  const setActiveTeamId = useCallback(
+    (id: string) => {
+      const team = coachTeams.find((row) => row.id === id);
+      if (!team) return;
+      setTeamId(team.id);
+      setTeamName(team.name || clubFallbackName);
+      if (uid) {
+        void AsyncStorage.setItem(activeTeamStorageKey(uid), team.id);
+      }
+    },
+    [coachTeams, clubFallbackName, uid],
+  );
 
   const setVariant = useCallback(
     (next: CoachShellVariant) => {
@@ -215,8 +277,10 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
       setAccentMode,
       setAccentOverride,
       resetAccentToTeam,
+      coachTeams,
       teamId,
       teamName,
+      setActiveTeamId,
     }),
     [
       tokens,
@@ -228,8 +292,10 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
       setAccentMode,
       setAccentOverride,
       resetAccentToTeam,
+      coachTeams,
       teamId,
       teamName,
+      setActiveTeamId,
     ],
   );
 
@@ -250,8 +316,10 @@ export function useCoachTheme(): CoachThemeContextValue {
       setAccentMode: () => {},
       setAccentOverride: () => {},
       resetAccentToTeam: () => {},
+      coachTeams: [],
       teamId: undefined,
       teamName: '',
+      setActiveTeamId: () => {},
     };
   }
   return ctx;

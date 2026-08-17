@@ -724,6 +724,7 @@ export const TERTIARY_EN: MessageCatalog = {
   'coach.calendar.discover': 'Discover more on ProDay',
   'coach.calendar.dismiss': 'Close',
   'coach.calendar.teamFallback': 'My team',
+  'coach.portal.team.switchLabel': 'Active team',
   'coach.calendar.agenda': 'Agenda',
   'coach.calendar.help': 'Help',
   'coach.calendar.gift': 'Perks',

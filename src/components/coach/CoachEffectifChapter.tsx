@@ -23,9 +23,12 @@ import {
   useCoachThemedStyles,
 } from '../../features/coach/shell/CoachThemeContext';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
-import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
-import { teamsService } from '../../services/teams.service';
-import type { Team } from '../../models/Team';
+import {
+  filterMembersForTeam,
+  filterPendingForTeam,
+  type CoachThemeTokens,
+} from '../../utils/coachTeamTheme';
+import { CoachTeamSwitcher } from './CoachTeamSwitcher';
 import { CoachPlayerNoteSheet } from './CoachPlayerNoteSheet';
 import { coachEvaluationsService } from '../../services/coachEvaluations.service';
 import { wellnessCheckinsService } from '../../services/wellnessCheckins.service';
@@ -59,14 +62,13 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
   const { openChat } = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
-  const { tokens } = useCoachTheme();
+  const { tokens, teamId: activeTeamId } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
   const [segment, setSegment] = useState<EffectifSegment>(
     focus === 'joueurs' ? 'joueurs' : 'effectif',
   );
   const [pending, setPending] = useState<Membership[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [evaluations, setEvaluations] = useState<CoachPlayerEvaluation[]>([]);
   const [wellnessByUid, setWellnessByUid] = useState<Record<string, WellnessSignals>>({});
@@ -88,7 +90,6 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
       setPending(rows.filter((m) => m.status === 'pending'));
       setMemberships(rows);
     });
-    void teamsService.listByClubId(clubId).then(setTeams).catch(() => setTeams([]));
     void loadNotesData();
   }, [clubId, members.length, loadNotesData]);
 
@@ -116,6 +117,15 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
   const showSegment = focus === 'all';
   const pageId = resolvedFocus === 'joueurs' ? 'joueurs' : 'equipe';
 
+  const teamMembers = useMemo(
+    () => filterMembersForTeam(members, memberships, activeTeamId),
+    [members, memberships, activeTeamId],
+  );
+  const teamPending = useMemo(
+    () => filterPendingForTeam(pending, activeTeamId),
+    [pending, activeTeamId],
+  );
+
   if (!clubId) {
     return (
       <CoachPane
@@ -135,15 +145,18 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
   }
 
   const pendingLabel =
-    pending.length === 1
+    teamPending.length === 1
       ? '1 demande → Gérer'
-      : `${pending.length} demandes → Gérer`;
+      : `${teamPending.length} demandes → Gérer`;
 
   return (
     <CoachPane
       title={getCoachPageIdentity(pageId).title}
       actions={[{ icon: 'add', onPress: openGestion, accessibilityLabel: 'Ajouter un membre' }]}
     >
+      <View style={styles.teamSwitcherWrap}>
+        <CoachTeamSwitcher />
+      </View>
       {showSegment ? (
         <View style={styles.segmentTrack}>
           {(
@@ -172,9 +185,8 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
       <CoachChapterScroll>
         {showPitch ? (
           <CoachSportEasyPitch
-            teams={teams}
             memberships={memberships}
-            members={members}
+            members={teamMembers}
             clubId={clubId}
           />
         ) : null}
@@ -198,12 +210,12 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
               )}
             </View>
 
-            {members.length === 0 ? (
+            {teamMembers.length === 0 ? (
               <CoachText variant="caption" muted>
                 {t('coach.portal.effectif.rosterEmpty')}
               </CoachText>
             ) : (
-              members.map((m, index) => (
+              teamMembers.map((m, index) => (
                 <View key={m.uid} style={styles.playerRow}>
                   <PressableSpring
                     onPress={() => setNotePlayer(m)}
@@ -245,7 +257,7 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
           </>
         ) : null}
 
-        {pending.length > 0 ? (
+        {teamPending.length > 0 ? (
           <PressableSpring onPress={openGestion} scaleTo={0.98} haptic style={styles.pendingLine}>
             <CoachText variant="caption" muted>
               {pendingLabel}
@@ -273,6 +285,10 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
 
 function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
+    teamSwitcherWrap: {
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+    },
     segmentTrack: {
       flexDirection: 'row',
       marginHorizontal: spacing.md,

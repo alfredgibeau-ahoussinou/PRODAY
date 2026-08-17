@@ -3,11 +3,9 @@ import { useTranslation } from '../context/LocaleContext';
 import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
 import type { CoachNavItemId } from '../features/coach/navigation/coachNavConfig';
 import { useSessionProfile } from './useSessionProfile';
-import { clubsService } from '../services/clubs.service';
-import { teamsService } from '../services/teams.service';
+import { useCoachTheme } from '../features/coach/shell/CoachThemeContext';
 import { teamEventsService } from '../services/teamEvents.service';
 import { listCoachCalendarUpcoming } from '../utils/coachCalendarHome';
-import { pickCoachTeam } from '../utils/coachTeamTheme';
 
 /** Nom d’équipe, pastilles notif et navigation header — partagé par toutes les pages coach. */
 export function useCoachTeamChrome() {
@@ -15,50 +13,40 @@ export function useCoachTeamChrome() {
   const { t } = useTranslation();
   const shellNav = useCoachShellNav();
   const fallback = t('coach.calendar.teamFallback');
-  const [teamId, setTeamId] = useState<string | undefined>();
-  const [teamName, setTeamName] = useState(fallback);
+  const {
+    teamId,
+    teamName: contextTeamName,
+    coachTeams,
+    setActiveTeamId,
+  } = useCoachTheme();
   const [pendingNotifs, setPendingNotifs] = useState(0);
 
-  useEffect(() => {
-    setTeamName(fallback);
-  }, [fallback]);
+  const teamName = contextTeamName.trim() ? contextTeamName : fallback;
 
   useEffect(() => {
     const clubId = profile?.profile.club_id;
     const uid = profile?.uid;
     if (!clubId || !uid) {
-      setTeamId(undefined);
-      setTeamName(fallback);
       setPendingNotifs(0);
       return;
     }
     let cancelled = false;
-    void Promise.all([
-      clubsService.getById(clubId),
-      teamsService.listByClubId(clubId),
-      teamEventsService.listForUser(uid, clubId),
-    ])
-      .then(([club, teams, events]) => {
+    void teamEventsService
+      .listForUser(uid, clubId)
+      .then((events) => {
         if (cancelled) return;
-        const mine = pickCoachTeam(teams, uid);
-        setTeamId(mine?.id);
-        setTeamName(mine?.name || club?.name || fallback);
         const upcoming = listCoachCalendarUpcoming(events);
         setPendingNotifs(
           upcoming.reduce((acc, event) => acc + (event.rsvps[uid] === 'pending' ? 1 : 0), 0),
         );
       })
       .catch(() => {
-        if (!cancelled) {
-          setTeamId(undefined);
-          setTeamName(fallback);
-          setPendingNotifs(0);
-        }
+        if (!cancelled) setPendingNotifs(0);
       });
     return () => {
       cancelled = true;
     };
-  }, [profile?.profile.club_id, profile?.uid, fallback]);
+  }, [profile?.profile.club_id, profile?.uid]);
 
   const openNav = (id: CoachNavItemId) => {
     shellNav?.requestNav(id);
@@ -67,6 +55,8 @@ export function useCoachTeamChrome() {
   return {
     teamId,
     teamName,
+    coachTeams,
+    setActiveTeamId,
     pendingNotifs,
     profile,
     openNav,
