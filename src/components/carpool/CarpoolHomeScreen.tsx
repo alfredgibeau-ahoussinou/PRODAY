@@ -30,6 +30,11 @@ import { CarpoolLiveMission } from './CarpoolLiveMission';
 import { CarpoolSpaceBackground } from './CarpoolSpaceBackground';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
 import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
+import {
   isStandalonePassenger,
   isUpcomingStandaloneOffer,
   isPastStandaloneOffer,
@@ -97,6 +102,8 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   const { t } = useTranslation();
   const coachShell = Boolean(useCoachShellNav());
   const coachTokens = useCoachTokens();
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
 
   const [mode, setMode] = useState<CarpoolHubMode>(() =>
     carpoolChapterToHubMode(initialChapter),
@@ -349,7 +356,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
     profile?.role === 'player' ? t('carpool.subtitle.player') : t('carpool.subtitle.staff');
 
   const refreshControl = (
-    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={CARPOOL_SITE.signal} />
+    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={palette.signal} />
   );
 
   const COACH_SEAT_CAP = 5;
@@ -367,13 +374,13 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   const renderRideFilters = () => (
     <>
       <View style={styles.search}>
-        <Icon name="search" size={16} color={CARPOOL_SITE.inkDim} />
+        <Icon name="search" size={16} color={palette.inkDim} />
         <TextInput
           style={styles.searchInput}
           value={searchCity}
           onChangeText={setSearchCity}
           placeholder={t('carpool.reserve.filter.city')}
-          placeholderTextColor={CARPOOL_SITE.inkDim}
+          placeholderTextColor={palette.inkDim}
         />
       </View>
       <CarpoolFilterChips options={rideFilterOptions} value={rideFilter} onChange={setRideFilter} />
@@ -744,84 +751,86 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: CARPOOL_SITE.sky },
-  foreground: { flex: 1, zIndex: 1 },
-  body: { flex: 1, minHeight: 0, backgroundColor: 'transparent' },
-  modeTitle: {
-    fontFamily: CARPOOL_SITE.display,
-    fontSize: 26,
-    lineHeight: 30,
-    fontWeight: '800',
-    color: CARPOOL_SITE.ink,
-    letterSpacing: -0.5,
-  },
-  modeSupport: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: CARPOOL_SITE.inkMuted,
-    marginBottom: spacing.sm,
-  },
-  sectionBlock: { gap: spacing.sm, marginTop: spacing.md },
-  sectionLabel: {
-    fontFamily: CARPOOL_SITE.display,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontSize: 11,
-    color: CARPOOL_SITE.inkDim,
-  },
-  sectionLabelAccent: {
-    fontFamily: CARPOOL_SITE.display,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontSize: 11,
-    color: CARPOOL_SITE.signalDeep,
-  },
-  liveBlock: { gap: spacing.sm, marginBottom: spacing.sm },
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: CARPOOL_SITE.fog,
-    backgroundColor: CARPOOL_SITE.surface,
-    borderRadius: 14,
-    paddingHorizontal: spacing.md,
-    minHeight: 48,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: CARPOOL_SITE.ink,
-    paddingVertical: spacing.sm,
-  },
-  coachHeader: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  coachSectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
-  },
-  coachFilterToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
-    marginTop: spacing.sm,
-  },
-  coachSeeAll: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    marginTop: spacing.xs,
-  },
-});
+function createStyles(palette: CarpoolUiPalette) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: palette.bg },
+    foreground: { flex: 1, zIndex: 1 },
+    body: { flex: 1, minHeight: 0, backgroundColor: 'transparent' },
+    modeTitle: {
+      fontFamily: CARPOOL_SITE.display,
+      fontSize: 26,
+      lineHeight: 30,
+      fontWeight: '800',
+      color: palette.ink,
+      letterSpacing: -0.5,
+    },
+    modeSupport: {
+      fontSize: 14,
+      lineHeight: 20,
+      color: palette.inkMuted,
+      marginBottom: spacing.sm,
+    },
+    sectionBlock: { gap: spacing.sm, marginTop: spacing.md },
+    sectionLabel: {
+      fontFamily: CARPOOL_SITE.display,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      fontSize: 11,
+      color: palette.inkDim,
+    },
+    sectionLabelAccent: {
+      fontFamily: CARPOOL_SITE.display,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      fontSize: 11,
+      color: palette.signalDeep,
+    },
+    liveBlock: { gap: spacing.sm, marginBottom: spacing.sm },
+    search: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      borderWidth: 1.5,
+      borderColor: palette.fog,
+      backgroundColor: palette.surface,
+      borderRadius: 14,
+      paddingHorizontal: spacing.md,
+      minHeight: 48,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 15,
+      color: palette.ink,
+      paddingVertical: spacing.sm,
+    },
+    coachHeader: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.sm,
+      gap: spacing.sm,
+    },
+    coachSectionLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+      marginBottom: spacing.xs,
+    },
+    coachFilterToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      alignSelf: 'flex-start',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.pill,
+      marginTop: spacing.sm,
+    },
+    coachSeeAll: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      marginTop: spacing.xs,
+    },
+  });
+}

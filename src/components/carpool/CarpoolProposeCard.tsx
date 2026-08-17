@@ -26,6 +26,11 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 interface CarpoolProposeCardProps {
   event: TeamEvent;
@@ -45,6 +50,8 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
   onOpenDetail,
 }) => {
   const { t } = useTranslation();
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
   const slot = carpoolSlotForDriver(event, profile.uid);
   const isEditing = Boolean(slot);
 
@@ -171,7 +178,7 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
             </ProDayText>
           ) : null}
         </View>
-        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={CARPOOL_SITE.inkDim} />
+        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={palette.inkDim} />
       </PressableSpring>
 
       {expanded ? (
@@ -183,7 +190,7 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
           <TextInput
             style={styles.input}
             placeholder={t('carpool.propose.seatsPlaceholder')}
-            placeholderTextColor={CARPOOL_SITE.inkDim}
+            placeholderTextColor={palette.inkDim}
             keyboardType="number-pad"
             value={seats}
             onChangeText={setSeats}
@@ -192,14 +199,14 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
           <TextInput
             style={styles.input}
             placeholder={t('carpool.propose.departurePlaceholder')}
-            placeholderTextColor={CARPOOL_SITE.inkDim}
+            placeholderTextColor={palette.inkDim}
             value={meetingTime}
             onChangeText={setMeetingTime}
           />
           <TextInput
             style={styles.input}
             placeholder={t('carpool.propose.meetingPlaceholder')}
-            placeholderTextColor={CARPOOL_SITE.inkDim}
+            placeholderTextColor={palette.inkDim}
             value={meetingPlace}
             onChangeText={setMeetingPlace}
           />
@@ -224,7 +231,7 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
           <TextInput
             style={[styles.input, styles.inputMulti]}
             placeholder={t('carpool.propose.notesPlaceholder')}
-            placeholderTextColor={CARPOOL_SITE.inkDim}
+            placeholderTextColor={palette.inkDim}
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -265,73 +272,75 @@ export const CarpoolProposeCard: React.FC<CarpoolProposeCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1.5,
-    borderColor: CARPOOL_SITE.fog,
-    backgroundColor: CARPOOL_SITE.surface,
-    borderRadius: 18,
-    marginBottom: spacing.sm,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    padding: spacing.md,
-  },
-  headerCopy: { flex: 1, gap: 4 },
-  kind: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: CARPOOL_SITE.signal,
-  },
-  title: { color: CARPOOL_SITE.ink, fontFamily: CARPOOL_SITE.display },
-  meta: { color: CARPOOL_SITE.inkMuted },
-  liveBadge: { fontWeight: '700', marginTop: 4, color: CARPOOL_SITE.signal },
-  form: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-    gap: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: CARPOOL_SITE.fog,
-  },
-  formLead: { marginBottom: spacing.xs, color: CARPOOL_SITE.inkMuted },
-  input: {
-    borderWidth: 1.5,
-    borderColor: CARPOOL_SITE.fog,
-    backgroundColor: CARPOOL_SITE.surfaceMuted,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 15,
-    color: CARPOOL_SITE.ink,
-  },
-  inputMulti: { minHeight: 72, textAlignVertical: 'top' },
-  mapLink: { fontWeight: '700', color: CARPOOL_SITE.signalDeep },
-  publishBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    marginTop: spacing.xs,
-    backgroundColor: CARPOOL_SITE.asphalt,
-    borderRadius: 999,
-  },
-  publishText: { fontWeight: '800', color: '#fff' },
-  withdrawBtn: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: CARPOOL_SITE.fog,
-    borderRadius: 999,
-  },
-  withdrawText: { fontWeight: '700', color: CARPOOL_SITE.inkMuted },
-  detailLink: {
-    fontWeight: '700',
-    textAlign: 'center',
-    marginTop: spacing.xs,
-    color: CARPOOL_SITE.signalDeep,
-  },
-});
+function createStyles(palette: CarpoolUiPalette) {
+  return StyleSheet.create({
+    card: {
+      borderWidth: 1.5,
+      borderColor: palette.fog,
+      backgroundColor: palette.surface,
+      borderRadius: 18,
+      marginBottom: spacing.sm,
+      overflow: 'hidden',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+      padding: spacing.md,
+    },
+    headerCopy: { flex: 1, gap: 4 },
+    kind: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      color: palette.signal,
+    },
+    title: { color: palette.ink, fontFamily: CARPOOL_SITE.display },
+    meta: { color: palette.inkMuted },
+    liveBadge: { fontWeight: '700', marginTop: 4, color: palette.signal },
+    form: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.md,
+      gap: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.fog,
+    },
+    formLead: { marginBottom: spacing.xs, color: palette.inkMuted },
+    input: {
+      borderWidth: 1.5,
+      borderColor: palette.fog,
+      backgroundColor: palette.surfaceMuted,
+      borderRadius: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      fontSize: 15,
+      color: palette.ink,
+    },
+    inputMulti: { minHeight: 72, textAlignVertical: 'top' },
+    mapLink: { fontWeight: '700', color: palette.signalDeep },
+    publishBtn: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.md,
+      marginTop: spacing.xs,
+      backgroundColor: palette.signal,
+      borderRadius: 999,
+    },
+    publishText: { fontWeight: '800', color: palette.onSignal },
+    withdrawBtn: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      borderWidth: 1.5,
+      borderColor: palette.fog,
+      borderRadius: 999,
+    },
+    withdrawText: { fontWeight: '700', color: palette.inkMuted },
+    detailLink: {
+      fontWeight: '700',
+      textAlign: 'center',
+      marginTop: spacing.xs,
+      color: palette.signalDeep,
+    },
+  });
+}

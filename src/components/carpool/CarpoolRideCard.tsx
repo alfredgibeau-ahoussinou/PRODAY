@@ -23,8 +23,12 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { spacing, radius, shadows } from '../../theme/designTokens';
-import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { CarpoolCardAccent } from './carpoolUi';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 import { CarpoolTripTicket } from './CarpoolTripTicket';
 import { openCarpoolDriverChat } from '../../utils/openCarpoolDriverChat';
 import { CarpoolLiveTripPanel } from './CarpoolLiveTripPanel';
@@ -59,6 +63,8 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
   compact = false,
 }) => {
   const { colors } = useAppTheme();
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createTicketStyles);
   const { t } = useTranslation();
   const tabNav = useTabNavigationOptional();
   const [busy, setBusy] = useState(false);
@@ -152,10 +158,10 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
           scaleTo={0.97}
         >
           {contactBusy ? (
-            <ActivityIndicator color={CARPOOL_SITE.signal} size="small" />
+            <ActivityIndicator color={palette.signal} size="small" />
           ) : (
             <>
-              <Icon name="chat" size={14} color={CARPOOL_SITE.signal} />
+              <Icon name="chat" size={14} color={palette.signal} />
               <ProDayText variant="caption" style={styles.ticketGhostText}>
                 {t('carpool.ride.contactDriver')}
               </ProDayText>
@@ -171,7 +177,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
           scaleTo={0.97}
         >
           {busy ? (
-            <ActivityIndicator color={CARPOOL_SITE.signal} size="small" />
+            <ActivityIndicator color={palette.signal} size="small" />
           ) : (
             <ProDayText variant="caption" style={styles.ticketGhostText}>
               Annuler ma place
@@ -234,22 +240,22 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
 
   return (
     <PressableSpring
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
+      style={[cardStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
       onPress={onOpenDetail}
       scaleTo={0.98}
       haptic
     >
       <CarpoolCardAccent kind="cta" />
-      <View style={styles.body}>
+      <View style={cardStyles.body}>
         <ProDayText variant="caption" muted>
           {formatCalendarDate(event.starts_at)} · {event.title}
         </ProDayText>
 
-        <View style={styles.driverRow}>
-          <View style={[styles.avatar, { backgroundColor: colors.accentSoft }]}>
+        <View style={cardStyles.driverRow}>
+          <View style={[cardStyles.avatar, { backgroundColor: colors.accentSoft }]}>
             <Icon name="person" size={18} color={colors.accent} />
           </View>
-          <View style={styles.driverCopy}>
+          <View style={cardStyles.driverCopy}>
             <ProDayText variant="section">{slot.driver_name}</ProDayText>
             <ProDayText variant="caption" muted>
               {slot.volunteered ? t('carpool.ride.volunteer') : t('carpool.ride.assigned')}
@@ -259,8 +265,8 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
             </ProDayText>
           </View>
           {available != null ? (
-            <View style={[styles.seatsPill, { backgroundColor: colors.accentSoft }]}>
-              <ProDayText variant="caption" accent style={styles.seatsText}>
+            <View style={[cardStyles.seatsPill, { backgroundColor: colors.accentSoft }]}>
+              <ProDayText variant="caption" accent style={cardStyles.seatsText}>
                 {available} place{available !== 1 ? 's' : ''}
               </ProDayText>
             </View>
@@ -272,7 +278,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
         </View>
 
         {(distanceKm != null || etaLabel || iaScore != null) ? (
-          <ProDayText variant="caption" muted style={styles.etaText}>
+          <ProDayText variant="caption" muted style={cardStyles.etaText}>
             {[
               distanceKm != null ? formatDistanceKm(distanceKm) : null,
               etaLabel,
@@ -283,9 +289,9 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
           </ProDayText>
         ) : null}
 
-        <View style={styles.route}>
+        <View style={cardStyles.route}>
           <Icon name="location" size={14} color={colors.textMuted} />
-          <ProDayText variant="body" muted numberOfLines={compact ? 1 : 2} style={styles.routeText}>
+          <ProDayText variant="body" muted numberOfLines={compact ? 1 : 2} style={cardStyles.routeText}>
             {slot.meeting_place?.trim() || t('carpool.ride.meetingTbd')} → {destination || event.city}
           </ProDayText>
         </View>
@@ -294,26 +300,26 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
             onPress={() => openMapsAt(slot.meeting_location!, slot.meeting_place)}
             scaleTo={0.98}
           >
-            <ProDayText variant="caption" accent style={styles.mapLink}>
+            <ProDayText variant="caption" accent style={cardStyles.mapLink}>
               RDV conducteur sur la carte
             </ProDayText>
           </PressableSpring>
         ) : null}
 
         {slot.meeting_time ? (
-          <ProDayText variant="caption" accent style={styles.time}>
+          <ProDayText variant="caption" accent style={cardStyles.time}>
             Départ {slot.meeting_time}
           </ProDayText>
         ) : null}
 
         {!compact && slot.notes ? (
-          <ProDayText variant="caption" muted numberOfLines={2} style={styles.notes}>
+          <ProDayText variant="caption" muted numberOfLines={2} style={cardStyles.notes}>
             {slot.notes}
           </ProDayText>
         ) : null}
 
         {!compact && (slot.passengers?.length ?? 0) > 0 ? (
-          <View style={styles.passengers}>
+          <View style={cardStyles.passengers}>
             <ProDayText variant="caption" muted>
               Passagers : {(slot.passengers ?? []).map((p) => p.name).join(', ')}
             </ProDayText>
@@ -330,11 +336,11 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
           </View>
         ) : null}
 
-        <View style={styles.actions}>
+        <View style={cardStyles.actions}>
           {!isMine && tabNav ? (
             <PressableSpring
               style={[
-                styles.ghostBtn,
+                cardStyles.ghostBtn,
                 { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
               ]}
               onPress={() => void handleContactDriver()}
@@ -346,7 +352,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
               ) : (
                 <>
                   <Icon name="chat" size={14} color={colors.accent} />
-                  <ProDayText variant="caption" accent style={styles.btnText}>
+                  <ProDayText variant="caption" accent style={cardStyles.btnText}>
                     {t('carpool.ride.contactDriver')}
                   </ProDayText>
                 </>
@@ -356,7 +362,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
           {bookedHere ? (
             <PressableSpring
               style={[
-                styles.ghostBtn,
+                cardStyles.ghostBtn,
                 { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
               ]}
               onPress={() => void handleCancel()}
@@ -366,7 +372,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
               {busy ? (
                 <ActivityIndicator color={colors.accent} size="small" />
               ) : (
-                <ProDayText variant="caption" accent style={styles.btnText}>
+                <ProDayText variant="caption" accent style={cardStyles.btnText}>
                   Annuler ma place
                 </ProDayText>
               )}
@@ -391,13 +397,13 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
               scaleTo={0.96}
               haptic={!busy}
             >
-              <ProDayGradient kind="cta" style={styles.primaryBtn}>
+              <ProDayGradient kind="cta" style={cardStyles.primaryBtn}>
                 {busy ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <>
                     <Icon name="checkmark-circle" size={14} color="#FFFFFF" />
-                    <ProDayText variant="caption" inverse style={styles.btnText}>
+                    <ProDayText variant="caption" inverse style={cardStyles.btnText}>
                       Réserver une place
                     </ProDayText>
                   </>
@@ -434,7 +440,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const cardStyles = StyleSheet.create({
   card: {
     borderRadius: radius.xl,
     borderWidth: 1,
@@ -493,26 +499,31 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   btnText: { fontWeight: '800' },
-  ticketActions: { gap: spacing.sm },
-  ticketGhost: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: CARPOOL_SITE.fog,
-    borderRadius: 999,
-    backgroundColor: CARPOOL_SITE.surfaceMuted,
-  },
-  ticketGhostText: { fontWeight: '800', color: CARPOOL_SITE.ink },
-  ticketCta: {
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: 999,
-    backgroundColor: CARPOOL_SITE.asphalt,
-  },
-  ticketCtaText: { fontWeight: '800', color: '#fff' },
 });
+
+function createTicketStyles(palette: CarpoolUiPalette) {
+  return StyleSheet.create({
+    ticketActions: { gap: spacing.sm },
+    ticketGhost: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderWidth: 1.5,
+      borderColor: palette.fog,
+      borderRadius: 999,
+      backgroundColor: palette.surfaceMuted,
+    },
+    ticketGhostText: { fontWeight: '800', color: palette.ink },
+    ticketCta: {
+      alignSelf: 'stretch',
+      alignItems: 'center',
+      paddingVertical: 14,
+      borderRadius: 999,
+      backgroundColor: palette.signal,
+    },
+    ticketCtaText: { fontWeight: '800', color: palette.onSignal },
+  });
+}

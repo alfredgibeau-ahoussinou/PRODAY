@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import type { TeamEvent } from '../../models/TeamEvent';
 import { aggregateCarpoolBalance } from '../../utils/carpoolBalance';
@@ -8,6 +8,11 @@ import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { CarpoolEmptyState, CarpoolSectionIntro } from './carpoolUi';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 interface CarpoolBalancePanelProps {
   events: TeamEvent[];
@@ -16,7 +21,8 @@ interface CarpoolBalancePanelProps {
 
 export const CarpoolBalancePanel: React.FC<CarpoolBalancePanelProps> = ({ events, onPropose }) => {
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(), []);
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
   const balance = aggregateCarpoolBalance(events);
 
   if (balance.length === 0) {
@@ -44,7 +50,7 @@ export const CarpoolBalancePanel: React.FC<CarpoolBalancePanelProps> = ({ events
       {leader ? (
         <View style={styles.leaderCard}>
           <View style={styles.leaderBadge}>
-            <Icon name="car" size={18} color={CARPOOL_SITE.asphalt} variant="filled" />
+            <Icon name="car" size={18} color={palette.onSignal} variant="filled" />
           </View>
           <View style={styles.leaderCopy}>
             <Text style={styles.leaderKicker}>{t('carpool.balance.topDriver')}</Text>
@@ -88,7 +94,7 @@ export const CarpoolBalancePanel: React.FC<CarpoolBalancePanelProps> = ({ events
   );
 };
 
-function createStyles() {
+function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     list: { gap: spacing.sm },
     leaderCard: {
@@ -96,7 +102,7 @@ function createStyles() {
       alignItems: 'center',
       gap: spacing.md,
       padding: spacing.md,
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
       borderRadius: 16,
       marginBottom: spacing.sm,
     },
@@ -106,7 +112,7 @@ function createStyles() {
       borderRadius: 20,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(11,18,32,0.12)',
+      backgroundColor: palette.signalSoft,
     },
     leaderCopy: { flex: 1, gap: 2 },
     leaderKicker: {
@@ -114,23 +120,23 @@ function createStyles() {
       fontWeight: '800',
       letterSpacing: 1,
       textTransform: 'uppercase',
-      color: CARPOOL_SITE.asphalt,
+      color: palette.onSignal,
       opacity: 0.7,
     },
     leaderName: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 18,
       fontWeight: '800',
-      color: CARPOOL_SITE.asphalt,
+      color: palette.onSignal,
     },
-    leaderMeta: { fontSize: 12, fontWeight: '700', color: CARPOOL_SITE.asphalt },
+    leaderMeta: { fontSize: 12, fontWeight: '700', color: palette.onSignal },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
       borderWidth: 1.5,
-      borderColor: CARPOOL_SITE.fog,
-      backgroundColor: CARPOOL_SITE.surface,
+      borderColor: palette.fog,
+      backgroundColor: palette.surface,
       borderRadius: 14,
       padding: spacing.md,
       marginBottom: spacing.xs,
@@ -141,17 +147,17 @@ function createStyles() {
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: CARPOOL_SITE.signalSoft,
+      backgroundColor: palette.signalSoft,
     },
-    rankText: { fontWeight: '900', color: CARPOOL_SITE.signalDeep, fontSize: 12 },
+    rankText: { fontWeight: '900', color: palette.signalDeep, fontSize: 12 },
     copy: { flex: 1 },
-    rowName: { fontWeight: '800', color: CARPOOL_SITE.ink, fontSize: 15 },
-    rowMeta: { fontSize: 12, color: CARPOOL_SITE.inkMuted, marginTop: 2 },
+    rowName: { fontWeight: '800', color: palette.ink, fontSize: 15 },
+    rowMeta: { fontSize: 12, color: palette.inkMuted, marginTop: 2 },
     trips: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 18,
       fontWeight: '800',
-      color: CARPOOL_SITE.signalDeep,
+      color: palette.signalDeep,
     },
   });
 }

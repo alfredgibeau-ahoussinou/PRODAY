@@ -6,6 +6,7 @@ import type { CarpoolChapterId } from '../content/carpoolChapters';
 import { useTeamEvents } from '../hooks/useAppData';
 import { useCarpoolOffers } from '../hooks/useCarpoolOffers';
 import { CarpoolHomeScreen } from '../components/carpool/CarpoolHomeScreen';
+import { CarpoolUiProvider } from '../components/carpool/CarpoolUiContext';
 import { CarpoolEventDetailScreen } from '../components/carpool/CarpoolEventDetailScreen';
 import { CarpoolGuestPrompt } from '../components/carpool/CarpoolGuestPrompt';
 import { PushScreenTransition } from '../components/motion';
@@ -48,41 +49,45 @@ export const CarpoolScreen: React.FC = () => {
 
   if (!profile) {
     return (
-      <View style={{ flex: 1, backgroundColor: screenBg }}>
-        <CarpoolGuestPrompt
-          onLogin={() => openAuth('login')}
-          onSignup={() => openAuth('signup')}
-        />
-      </View>
+      <CarpoolUiProvider coachShell={coachShell}>
+        <View style={{ flex: 1, backgroundColor: screenBg }}>
+          <CarpoolGuestPrompt
+            onLogin={() => openAuth('login')}
+            onSignup={() => openAuth('signup')}
+          />
+        </View>
+      </CarpoolUiProvider>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: screenBg }}>
-      <CarpoolHomeScreen
-        profile={profile}
-        events={events}
-        standaloneOffers={standaloneOffers}
-        standaloneAllOffers={standaloneAllOffers}
-        standaloneLoading={standaloneLoading}
-        loading={loading || standaloneLoading}
-        initialChapter={initialChapter}
-        onOpenEvent={setSelectedEventId}
-        onRefresh={refreshAll}
-        onLoginRequired={() => openAuth('login')}
-      />
-      <PushScreenTransition active={selectedEventId != null}>
-        {selectedEventId ? (
-          <CarpoolEventDetailScreen
-            eventId={selectedEventId}
-            profile={profile}
-            onBack={() => {
-              setSelectedEventId(null);
-              void refreshAll();
-            }}
-          />
-        ) : null}
-      </PushScreenTransition>
-    </View>
+    <CarpoolUiProvider coachShell={coachShell}>
+      <View style={{ flex: 1, backgroundColor: screenBg }}>
+        <CarpoolHomeScreen
+          profile={profile}
+          events={events}
+          standaloneOffers={standaloneOffers}
+          standaloneAllOffers={standaloneAllOffers}
+          standaloneLoading={standaloneLoading}
+          loading={loading || standaloneLoading}
+          initialChapter={initialChapter}
+          onOpenEvent={setSelectedEventId}
+          onRefresh={refreshAll}
+          onLoginRequired={() => openAuth('login')}
+        />
+        <PushScreenTransition active={selectedEventId != null}>
+          {selectedEventId ? (
+            <CarpoolEventDetailScreen
+              eventId={selectedEventId}
+              profile={profile}
+              onBack={() => {
+                setSelectedEventId(null);
+                void refreshAll();
+              }}
+            />
+          ) : null}
+        </PushScreenTransition>
+      </View>
+    </CarpoolUiProvider>
   );
 };

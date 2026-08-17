@@ -1,9 +1,14 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PressableSpring, AnimatedEntrance } from '../motion';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { spacing } from '../../theme/designTokens';
 import { Icon } from '../ui/Icon';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 type Props = {
   meta: string;
@@ -29,12 +34,13 @@ export function CarpoolTripTicket({
   onPress,
   footer,
 }: Props) {
-  const styles = useMemo(() => createStyles(), []);
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
 
   const body = (
     <View style={styles.ticket}>
       <View style={styles.stub}>
-        <Icon name="car" size={16} color={CARPOOL_SITE.asphalt} variant="filled" />
+        <Icon name="car" size={16} color={palette.onSignal} variant="filled" />
       </View>
 
       <View style={styles.main}>
@@ -74,7 +80,7 @@ export function CarpoolTripTicket({
         <View style={styles.footerRow}>
           <View style={styles.driverRow}>
             <View style={styles.avatar}>
-              <Icon name="person" size={12} color={CARPOOL_SITE.signalDeep} />
+              <Icon name="person" size={12} color={palette.signalDeep} />
             </View>
             <Text style={styles.driver} numberOfLines={1}>
               {driver}
@@ -112,14 +118,14 @@ export function CarpoolTripTicket({
   );
 }
 
-function createStyles() {
+function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     wrap: { marginBottom: spacing.md },
     ticket: {
       flexDirection: 'row',
-      backgroundColor: CARPOOL_SITE.surface,
+      backgroundColor: palette.surface,
       borderWidth: 1,
-      borderColor: CARPOOL_SITE.fog,
+      borderColor: palette.fog,
       borderRadius: 18,
       overflow: 'hidden',
       shadowColor: '#0B1220',
@@ -130,7 +136,7 @@ function createStyles() {
     },
     stub: {
       width: 40,
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -150,12 +156,12 @@ function createStyles() {
       fontWeight: '700',
       letterSpacing: 0.4,
       textTransform: 'uppercase',
-      color: CARPOOL_SITE.inkDim,
+      color: palette.inkDim,
     },
     metaRight: {
       fontSize: 11,
       fontWeight: '800',
-      color: CARPOOL_SITE.signalDeep,
+      color: palette.signalDeep,
     },
     itinerary: { flexDirection: 'row', gap: 12 },
     rail: {
@@ -169,31 +175,31 @@ function createStyles() {
       height: 10,
       borderRadius: 5,
       borderWidth: 2,
-      borderColor: CARPOOL_SITE.signal,
-      backgroundColor: '#fff',
+      borderColor: palette.signal,
+      backgroundColor: palette.surface,
     },
     nodeEnd: {
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
     },
     railLine: {
       flex: 1,
       width: 2,
       marginVertical: 4,
-      backgroundColor: CARPOOL_SITE.signalMuted,
+      backgroundColor: palette.lane,
     },
     stops: { flex: 1, gap: 12 },
     stopKicker: {
       fontSize: 9,
       fontWeight: '800',
       letterSpacing: 1,
-      color: CARPOOL_SITE.inkDim,
+      color: palette.inkDim,
       marginBottom: 2,
     },
     stop: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 16,
       lineHeight: 20,
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       fontWeight: '800',
     },
     footerRow: {
@@ -203,7 +209,7 @@ function createStyles() {
       gap: spacing.sm,
       paddingTop: spacing.xs,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: CARPOOL_SITE.fog,
+      borderTopColor: palette.fog,
     },
     driverRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
     avatar: {
@@ -212,22 +218,22 @@ function createStyles() {
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: CARPOOL_SITE.signalSoft,
+      backgroundColor: palette.signalSoft,
     },
     driver: {
       flex: 1,
       fontSize: 13,
       fontWeight: '700',
-      color: CARPOOL_SITE.inkMuted,
+      color: palette.inkMuted,
     },
     tags: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     tag: {
       fontSize: 12,
       fontWeight: '800',
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
     },
     seatsPill: {
-      backgroundColor: CARPOOL_SITE.asphalt,
+      backgroundColor: palette.signal,
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: 999,
@@ -235,7 +241,7 @@ function createStyles() {
     seats: {
       fontSize: 11,
       fontWeight: '900',
-      color: '#fff',
+      color: palette.onSignal,
     },
     actions: { gap: spacing.sm, marginTop: 4 },
   });

@@ -1,10 +1,15 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PressableSpring, AnimatedEntrance } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 type CarpoolEmptyStateProps = {
   icon: IconName;
@@ -21,13 +26,14 @@ export const CarpoolEmptyState: React.FC<CarpoolEmptyStateProps> = ({
   ctaLabel,
   onCta,
 }) => {
-  const styles = useMemo(() => createEmptyStyles(), []);
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createEmptyStyles);
 
   return (
     <AnimatedEntrance kind="fadeUp">
       <View style={styles.wrap}>
         <View style={styles.iconMark}>
-          <Icon name={icon} size={24} color={CARPOOL_SITE.asphalt} variant="filled" />
+          <Icon name={icon} size={24} color={palette.onSignal} variant="filled" />
         </View>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.sub}>{subtitle}</Text>
@@ -51,7 +57,7 @@ export const CarpoolSectionIntro: React.FC<CarpoolSectionIntroProps> = ({
   title,
   subtitle,
 }) => {
-  const styles = useMemo(() => createIntroStyles(), []);
+  const styles = useCarpoolThemedStyles(createIntroStyles);
 
   return (
     <View style={styles.wrap}>
@@ -73,7 +79,7 @@ export function CarpoolFilterChips<T extends string>({
   value,
   onChange,
 }: CarpoolFilterChipsProps<T>) {
-  const styles = useMemo(() => createChipStyles(), []);
+  const styles = useCarpoolThemedStyles(createChipStyles);
 
   return (
     <ScrollView
@@ -111,7 +117,7 @@ export const CarpoolReminderBanner: React.FC<CarpoolReminderBannerProps> = ({
   onPropose,
 }) => {
   const { t } = useTranslation();
-  const styles = useMemo(() => createBannerStyles(), []);
+  const styles = useCarpoolThemedStyles(createBannerStyles);
 
   return (
     <View style={styles.shell}>
@@ -134,9 +140,17 @@ export const CarpoolReminderBanner: React.FC<CarpoolReminderBannerProps> = ({
   );
 };
 
-export const CarpoolCardAccent: React.FC<{ kind?: 'cta' | 'card' }> = () => (
-  <View style={cardAccentStyles.bar} />
-);
+export const CarpoolCardAccent: React.FC<{ kind?: 'cta' | 'card' }> = () => {
+  const palette = useCarpoolUi();
+  return (
+    <View
+      style={[
+        cardAccentStyles.bar,
+        { backgroundColor: palette.signal },
+      ]}
+    />
+  );
+};
 
 const cardAccentStyles = StyleSheet.create({
   bar: {
@@ -145,13 +159,12 @@ const cardAccentStyles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    backgroundColor: CARPOOL_SITE.signal,
     borderTopLeftRadius: 18,
     borderBottomLeftRadius: 18,
   },
 });
 
-function createEmptyStyles() {
+function createEmptyStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     wrap: {
       alignItems: 'center',
@@ -160,8 +173,8 @@ function createEmptyStyles() {
       gap: spacing.sm,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: CARPOOL_SITE.fog,
-      backgroundColor: CARPOOL_SITE.surface,
+      borderColor: palette.fog,
+      backgroundColor: palette.surface,
     },
     iconMark: {
       width: 56,
@@ -169,21 +182,21 @@ function createEmptyStyles() {
       borderRadius: 28,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
       marginBottom: spacing.xs,
     },
     title: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 22,
       lineHeight: 26,
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       fontWeight: '800',
       textAlign: 'center',
     },
     sub: {
       fontSize: 14,
       lineHeight: 21,
-      color: CARPOOL_SITE.inkMuted,
+      color: palette.inkMuted,
       textAlign: 'center',
     },
     cta: {
@@ -191,18 +204,18 @@ function createEmptyStyles() {
       paddingHorizontal: spacing.xl,
       paddingVertical: 14,
       borderRadius: 999,
-      backgroundColor: CARPOOL_SITE.asphalt,
+      backgroundColor: palette.signal,
     },
     ctaText: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 14,
       fontWeight: '800',
-      color: '#fff',
+      color: palette.onSignal,
     },
   });
 }
 
-function createIntroStyles() {
+function createIntroStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     wrap: {
       gap: 8,
@@ -213,24 +226,24 @@ function createIntroStyles() {
       width: 40,
       height: 4,
       borderRadius: 2,
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
     },
     title: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 24,
       lineHeight: 28,
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       fontWeight: '800',
     },
     sub: {
       fontSize: 14,
       lineHeight: 21,
-      color: CARPOOL_SITE.inkMuted,
+      color: palette.inkMuted,
     },
   });
 }
 
-function createChipStyles() {
+function createChipStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -243,26 +256,26 @@ function createChipStyles() {
       paddingVertical: 10,
       borderRadius: 999,
       borderWidth: 1.5,
-      borderColor: CARPOOL_SITE.fog,
-      backgroundColor: CARPOOL_SITE.surface,
+      borderColor: palette.fog,
+      backgroundColor: palette.surface,
     },
     chipOn: {
-      backgroundColor: CARPOOL_SITE.asphalt,
-      borderColor: CARPOOL_SITE.asphalt,
+      backgroundColor: palette.signal,
+      borderColor: palette.signal,
     },
     chipText: {
       fontSize: 13,
       fontWeight: '700',
-      color: CARPOOL_SITE.inkMuted,
+      color: palette.inkMuted,
     },
     chipTextOn: {
-      color: '#fff',
+      color: palette.onSignal,
       fontWeight: '800',
     },
   });
 }
 
-function createBannerStyles() {
+function createBannerStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     shell: {
       marginHorizontal: spacing.lg,
@@ -270,28 +283,28 @@ function createBannerStyles() {
       padding: spacing.md,
       gap: spacing.sm,
       borderRadius: 16,
-      backgroundColor: CARPOOL_SITE.surface,
+      backgroundColor: palette.surface,
       borderWidth: 1,
-      borderColor: CARPOOL_SITE.signal,
+      borderColor: palette.signal,
     },
     left: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     count: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 28,
-      color: CARPOOL_SITE.signalDeep,
+      color: palette.signalDeep,
       fontWeight: '800',
       minWidth: 36,
     },
     copy: { flex: 1, gap: 2 },
-    title: { fontWeight: '800', color: CARPOOL_SITE.ink, fontSize: 14 },
-    hint: { color: CARPOOL_SITE.inkMuted, fontSize: 12 },
+    title: { fontWeight: '800', color: palette.ink, fontSize: 14 },
+    hint: { color: palette.inkMuted, fontSize: 12 },
     actions: { flexDirection: 'row', gap: spacing.sm },
     actionBtn: {
       flex: 1,
       alignItems: 'center',
       paddingVertical: 12,
       borderRadius: 999,
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
     },
     actionGhost: {
       flex: 1,
@@ -299,17 +312,17 @@ function createBannerStyles() {
       paddingVertical: 12,
       borderRadius: 999,
       borderWidth: 1.5,
-      borderColor: CARPOOL_SITE.fog,
-      backgroundColor: CARPOOL_SITE.surfaceMuted,
+      borderColor: palette.fog,
+      backgroundColor: palette.surfaceMuted,
     },
     actionText: {
       fontWeight: '800',
-      color: CARPOOL_SITE.asphalt,
+      color: palette.onSignal,
       fontSize: 12,
     },
     actionGhostText: {
       fontWeight: '800',
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       fontSize: 12,
     },
   });

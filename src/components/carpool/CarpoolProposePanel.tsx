@@ -14,6 +14,11 @@ import { StandaloneCarpoolForm } from './StandaloneCarpoolForm';
 import { isUpcomingStandaloneOffer } from '../../utils/standaloneCarpool';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 interface CarpoolProposePanelProps {
@@ -51,6 +56,8 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
   coachShell = false,
 }) => {
   const { t } = useTranslation();
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [standaloneExpanded, setStandaloneExpanded] = useState<string | 'new' | null>('new');
 
@@ -113,7 +120,7 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
     <ScrollView
       contentContainerStyle={pagePad}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={CARPOOL_SITE.signal} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.signal} />
       }
       {...scrollProps}
     >
@@ -126,7 +133,7 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
       )}
 
       {standaloneLoading ? (
-        <ActivityIndicator color={CARPOOL_SITE.signal} style={styles.loader} />
+        <ActivityIndicator color={palette.signal} style={styles.loader} />
       ) : (
         <>
           <ProDayText variant="section" style={styles.sectionTitle}>
@@ -169,7 +176,7 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
       ) : null}
 
       {loading ? (
-        <ActivityIndicator color={CARPOOL_SITE.signal} style={styles.loader} />
+        <ActivityIndicator color={palette.signal} style={styles.loader} />
       ) : proposeEvents.length === 0 ? (
         <CarpoolEmptyState
           icon="calendar"
@@ -234,20 +241,22 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  hint: {
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: CARPOOL_SITE.signal,
-    backgroundColor: CARPOOL_SITE.signalSoft,
-  },
-  hintText: { color: CARPOOL_SITE.ink, fontWeight: '700' },
-  sectionTitle: {
-    marginBottom: spacing.sm,
-    marginTop: spacing.xs,
-    color: CARPOOL_SITE.ink,
-    fontFamily: CARPOOL_SITE.display,
-  },
-  loader: { marginVertical: spacing.xl },
-});
+function createStyles(palette: CarpoolUiPalette) {
+  return StyleSheet.create({
+    hint: {
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderLeftWidth: 3,
+      borderLeftColor: palette.signal,
+      backgroundColor: palette.signalSoft,
+    },
+    hintText: { color: palette.ink, fontWeight: '700' },
+    sectionTitle: {
+      marginBottom: spacing.sm,
+      marginTop: spacing.xs,
+      color: palette.ink,
+      fontFamily: CARPOOL_SITE.display,
+    },
+    loader: { marginVertical: spacing.xl },
+  });
+}

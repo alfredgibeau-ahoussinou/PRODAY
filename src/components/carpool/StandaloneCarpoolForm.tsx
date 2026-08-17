@@ -27,6 +27,11 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 interface StandaloneCarpoolFormProps {
   profile: User;
@@ -44,6 +49,8 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
   onSaved,
 }) => {
   const { t } = useTranslation();
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
   const isEditing = Boolean(offer);
 
   const [title, setTitle] = useState('');
@@ -190,7 +197,7 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
               : 'Places, horaire, RDV et destination. Sans convocation'}
           </ProDayText>
         </View>
-        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={CARPOOL_SITE.inkDim} />
+        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={palette.inkDim} />
       </PressableSpring>
 
       {expanded ? (
@@ -198,14 +205,14 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
           <TextInput
             style={styles.input}
             placeholder={t('carpool.standalone.form.titlePlaceholder')}
-            placeholderTextColor={CARPOOL_SITE.inkDim}
+            placeholderTextColor={palette.inkDim}
             value={title}
             onChangeText={setTitle}
           />
           <TextInput
             style={styles.input}
             placeholder={t('carpool.standalone.form.destinationPlaceholder')}
-            placeholderTextColor={CARPOOL_SITE.inkDim}
+            placeholderTextColor={palette.inkDim}
             value={destination}
             onChangeText={setDestination}
           />
@@ -213,14 +220,14 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
             <TextInput
               style={[styles.input, styles.half]}
               placeholder={t('carpool.standalone.form.datePlaceholder')}
-              placeholderTextColor={CARPOOL_SITE.inkDim}
+              placeholderTextColor={palette.inkDim}
               value={departureDate}
               onChangeText={setDepartureDate}
             />
             <TextInput
               style={[styles.input, styles.half]}
               placeholder={t('carpool.standalone.form.timePlaceholder')}
-              placeholderTextColor={CARPOOL_SITE.inkDim}
+              placeholderTextColor={palette.inkDim}
               value={meetingTime}
               onChangeText={setMeetingTime}
             />
@@ -239,7 +246,7 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
           <TextInput
             style={styles.input}
             placeholder={t('carpool.propose.meetingPlaceholder')}
-            placeholderTextColor={CARPOOL_SITE.inkDim}
+            placeholderTextColor={palette.inkDim}
             value={meetingPlace}
             onChangeText={setMeetingPlace}
           />
@@ -266,7 +273,7 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
           <TextInput
             style={[styles.input, styles.inputMulti]}
             placeholder={t('carpool.standalone.form.detailsPlaceholder')}
-            placeholderTextColor={CARPOOL_SITE.inkDim}
+            placeholderTextColor={palette.inkDim}
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -280,8 +287,8 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
               <Switch
                 value={clubOnly}
                 onValueChange={setClubOnly}
-                trackColor={{ false: CARPOOL_SITE.lane, true: CARPOOL_SITE.signalSoft }}
-                thumbColor={clubOnly ? CARPOOL_SITE.signal : CARPOOL_SITE.inkDim}
+                trackColor={{ false: palette.lane, true: palette.signalSoft }}
+                thumbColor={clubOnly ? palette.signal : palette.inkDim}
               />
             </View>
           ) : null}
@@ -315,73 +322,75 @@ export const StandaloneCarpoolForm: React.FC<StandaloneCarpoolFormProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1.5,
-    borderColor: CARPOOL_SITE.fog,
-    backgroundColor: CARPOOL_SITE.surface,
-    borderRadius: 18,
-    marginBottom: spacing.sm,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    padding: spacing.md,
-  },
-  headerCopy: { flex: 1, gap: 4 },
-  kindText: {
-    fontWeight: '800',
-    fontSize: 10,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: CARPOOL_SITE.signal,
-  },
-  title: { color: CARPOOL_SITE.ink, fontFamily: CARPOOL_SITE.display },
-  meta: { color: CARPOOL_SITE.inkMuted },
-  form: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-    gap: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: CARPOOL_SITE.fog,
-  },
-  row: { flexDirection: 'row', gap: spacing.sm },
-  half: { flex: 1 },
-  input: {
-    borderWidth: 1.5,
-    borderColor: CARPOOL_SITE.fog,
-    backgroundColor: CARPOOL_SITE.surfaceMuted,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: CARPOOL_SITE.ink,
-  },
-  inputMulti: { minHeight: 72, textAlignVertical: 'top' },
-  mapLink: { fontWeight: '700', color: CARPOOL_SITE.signalDeep },
-  clubRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  publishBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    marginTop: spacing.xs,
-    backgroundColor: CARPOOL_SITE.asphalt,
-    borderRadius: 999,
-  },
-  publishText: { fontWeight: '800', color: '#fff' },
-  withdrawBtn: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: CARPOOL_SITE.fog,
-    borderRadius: 999,
-  },
-  withdrawText: { fontWeight: '700', color: CARPOOL_SITE.inkMuted },
-});
+function createStyles(palette: CarpoolUiPalette) {
+  return StyleSheet.create({
+    card: {
+      borderWidth: 1.5,
+      borderColor: palette.fog,
+      backgroundColor: palette.surface,
+      borderRadius: 18,
+      marginBottom: spacing.sm,
+      overflow: 'hidden',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+      padding: spacing.md,
+    },
+    headerCopy: { flex: 1, gap: 4 },
+    kindText: {
+      fontWeight: '800',
+      fontSize: 10,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      color: palette.signal,
+    },
+    title: { color: palette.ink, fontFamily: CARPOOL_SITE.display },
+    meta: { color: palette.inkMuted },
+    form: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.md,
+      gap: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.fog,
+    },
+    row: { flexDirection: 'row', gap: spacing.sm },
+    half: { flex: 1 },
+    input: {
+      borderWidth: 1.5,
+      borderColor: palette.fog,
+      backgroundColor: palette.surfaceMuted,
+      borderRadius: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+      fontSize: 14,
+      color: palette.ink,
+    },
+    inputMulti: { minHeight: 72, textAlignVertical: 'top' },
+    mapLink: { fontWeight: '700', color: palette.signalDeep },
+    clubRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    publishBtn: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.md,
+      marginTop: spacing.xs,
+      backgroundColor: palette.signal,
+      borderRadius: 999,
+    },
+    publishText: { fontWeight: '800', color: palette.onSignal },
+    withdrawBtn: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      borderWidth: 1.5,
+      borderColor: palette.fog,
+      borderRadius: 999,
+    },
+    withdrawText: { fontWeight: '700', color: palette.inkMuted },
+  });
+}
