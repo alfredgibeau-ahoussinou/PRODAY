@@ -743,7 +743,7 @@ export const TERTIARY_FR: MessageCatalog = {
   'coach.portal.theme.accentCustom': 'Personnalisée',
   'coach.portal.theme.resetAccent': 'Réinitialiser la couleur équipe',
   'coach.portal.theme.pickColor': 'Choisir une couleur',
-  'coach.portal.theme.chooseColor': 'Choisir une couleur…',
+  'coach.portal.theme.chooseColor': 'Planche de couleurs',
   'coach.portal.theme.colorAssistant': 'Assistant couleur',
   'coach.portal.theme.colorGrid': 'Grille',
   'coach.portal.theme.colorAssistantTitle': 'Quelle couleur pour ton équipe ?',
