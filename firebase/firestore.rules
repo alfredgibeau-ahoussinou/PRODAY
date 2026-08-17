@@ -346,6 +346,24 @@ service cloud.firestore {
             .hasOnly(['carpool_slots', 'carpool_messages', 'updated_at']);
     }
 
+    /** Organisateur ou staff club rattaché à l’événement. */
+    function canManageTeamEventDoc() {
+      return isAdmin()
+        || resource.data.organizer_uid == request.auth.uid
+        || (
+          resource.data.get('club_id', null) != null
+          && isClubStaffForClub(resource.data.club_id)
+        );
+    }
+
+    /** Pointage présence / RSVP staff sur team_events (pas live, compo, stats). */
+    function isTeamEventStaffManageUpdate() {
+      return canManageTeamEventDoc()
+        && resource.data.match_report_finalized_at == null
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['attendance_marks', 'rsvps', 'rsvp_notes', 'invitee_uids', 'updated_at']);
+    }
+
     function guardianEmail() {
       return request.auth.token.get('email', '');
     }
@@ -621,12 +639,14 @@ service cloud.firestore {
         && (
           isStaffOrAdmin()
           || isCarpoolCoordinationUpdate()
+          || isTeamEventStaffManageUpdate()
           || (
             resource.data.match_report_finalized_at == null
             && (
               resource.data.organizer_uid == request.auth.uid
               || (
-                request.resource.data.diff(resource.data).affectedKeys()
+                isEventInvitee()
+                && request.resource.data.diff(resource.data).affectedKeys()
                   .hasOnly(['rsvps', 'rsvp_notes', 'invitee_uids', 'updated_at'])
                 && !request.resource.data.diff(resource.data).affectedKeys()
                   .hasAny([
@@ -791,6 +811,27 @@ service cloud.firestore {
           || (resource.data.status == 'contacted'
             && request.resource.data.status in ['approved', 'rejected'])
         );
+      allow delete: if isAdmin();
+    }
+
+    match /subscription_upgrade_requests/{requestId} {
+      allow read: if isSignedIn()
+        && (resource.data.user_uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn()
+        && request.resource.data.user_uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.plan_id is string
+        && request.resource.data.plan_id.size() > 0
+        && request.resource.data.role is string
+        && request.resource.data.display_name is string
+        && request.resource.data.email is string;
+      allow update: if isAdmin()
+        && request.resource.data.user_uid == resource.data.user_uid
+        && request.resource.data.plan_id == resource.data.plan_id
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.created_at == resource.data.created_at
+        && request.resource.data.status in ['approved', 'rejected']
+        && resource.data.status == 'pending';
       allow delete: if isAdmin();
     }
 

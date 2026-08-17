@@ -375,6 +375,48 @@ export const teamEventsService = {
     }
   },
 
+  /** Staff — met à jour le RSVP d’un joueur convoqué (pointage / correction). */
+  async updateRsvpAsStaff(
+    eventId: string,
+    uid: string,
+    status: RsvpStatus,
+    actor: TeamEventActor,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+
+    if (
+      event.event_type === 'detection' &&
+      event.max_participants &&
+      status === 'yes'
+    ) {
+      const yesCount = Object.values({ ...event.rsvps, [uid]: 'yes' }).filter(
+        (s) => s === 'yes',
+      ).length;
+      if (yesCount > event.max_participants) {
+        throw new Error('Places complètes pour cette détection.');
+      }
+    }
+
+    const payload: Record<string, unknown> = {
+      [`rsvps.${uid}`]: status,
+      updated_at: serverTimestamp(),
+    };
+    if (!event.invitee_uids.includes(uid)) {
+      payload.invitee_uids = arrayUnion(uid);
+    }
+    await updateDoc(doc(database, COL, eventId), payload);
+    if (status === 'yes' || isLateRsvp(status)) {
+      const updated = { ...event, rsvps: { ...event.rsvps, [uid]: status } };
+      const { teamChatService } = await import('./teamChat.service');
+      await teamChatService.ensureTeamThread(updated);
+      await syncPlayerActivityFromEvent(updated, uid);
+    }
+  },
+
   async updateRsvpWithReason(
     eventId: string,
     uid: string,

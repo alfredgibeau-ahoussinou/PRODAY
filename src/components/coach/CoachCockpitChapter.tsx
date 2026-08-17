@@ -3,7 +3,7 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
 import { CoachChapterScroll, CoachText } from './coachPortalUi';
 import { Icon } from '../ui/Icon';
-import { countRsvpYes, userRsvp, type RsvpStatus, type TeamEvent } from '../../models/TeamEvent';
+import { type TeamEvent } from '../../models/TeamEvent';
 import { isInMatchWindow } from '../../utils/matchLive';
 import { userCanManageConvocations, resolveClubCoversCoachFromMembers } from '../../utils/clubFeatureAccess';
 import { useTabNavigation } from '../../context/TabNavigationContext';
@@ -13,11 +13,11 @@ import { radius, spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
 import { COACH_SITE } from '../../content/coachPageIdentity';
-import { teamEventsService } from '../../services/teamEvents.service';
 import { CreateTeamEventScreen } from '../../screens/CreateTeamEventScreen';
 import { CoachScreenHeader } from './CoachScreenHeader';
 import {
   COACH_CALENDAR_TIPS,
+  coachCalendarEventSummary,
   coachEventPlaceLabel,
   formatCoachCalendarDateStack,
   listCoachCalendarUpcoming,
@@ -27,7 +27,6 @@ import { CoachSectionCard } from './coachPortalUi';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 
 const PEOPLE_GOLD = '#F5C518';
-const PILL_BORDER = 'rgba(255, 255, 255, 0.88)';
 
 export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
@@ -45,7 +44,6 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   const hasClub = Boolean(profile.profile.club_id);
   const [creating, setCreating] = useState(false);
   const [discoverOn, setDiscoverOn] = useState(true);
-  const [rsvpOverride, setRsvpOverride] = useState<Record<string, RsvpStatus>>({});
 
   const upcoming = useMemo(() => listCoachCalendarUpcoming(events), [events]);
 
@@ -83,19 +81,8 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
     ]);
   };
 
-  const setEventRsvp = async (eventId: string, status: RsvpStatus) => {
-    setRsvpOverride((prev) => ({ ...prev, [eventId]: status }));
-    try {
-      await teamEventsService.updateRsvp(eventId, profile.uid, status);
-      onRefresh();
-    } catch (e) {
-      setRsvpOverride((prev) => {
-        const next = { ...prev };
-        delete next[eventId];
-        return next;
-      });
-      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.error'));
-    }
+  const openPointage = (eventId: string) => {
+    tabNav.openMatchs({ eventId, hubChapter: 'effectif' });
   };
 
   if (creating) {
@@ -195,13 +182,13 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             <CalendarEventCard
               key={event.id}
               event={event}
-              rsvp={rsvpOverride[event.id] ?? userRsvp(event, profile.uid)}
               live={isInMatchWindow(event)}
-              presentLabel={t('coach.calendar.present')}
-              absentLabel={t('coach.calendar.absent')}
               liveLabel={t('coach.calendar.live')}
+              convokedLabel={t('coach.calendar.convoked')}
+              confirmedLabel={t('coach.calendar.confirmed')}
+              pointageLabel={t('coach.calendar.pointage')}
               onOpen={() => tabNav.openMatchs({ eventId: event.id })}
-              onRsvp={(status) => void setEventRsvp(event.id, status)}
+              onPointage={() => openPointage(event.id)}
             />
           ))
         )}
@@ -212,26 +199,25 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
 
 function CalendarEventCard({
   event,
-  rsvp,
   live,
-  presentLabel,
-  absentLabel,
   liveLabel,
+  convokedLabel,
+  confirmedLabel,
+  pointageLabel,
   onOpen,
-  onRsvp,
+  onPointage,
 }: {
   event: TeamEvent;
-  rsvp: RsvpStatus;
   live: boolean;
-  presentLabel: string;
-  absentLabel: string;
   liveLabel: string;
+  convokedLabel: string;
+  confirmedLabel: string;
+  pointageLabel: string;
   onOpen: () => void;
-  onRsvp: (status: RsvpStatus) => void;
+  onPointage: () => void;
 }) {
   const stack = formatCoachCalendarDateStack(event.starts_at);
-  const presentOn = rsvp === 'yes' || rsvp === 'late_under_10' || rsvp === 'late_over_10' || rsvp === 'late_unknown';
-  const absentOn = rsvp === 'no';
+  const summary = coachCalendarEventSummary(event);
 
   return (
     <Pressable
@@ -266,9 +252,24 @@ function CalendarEventCard({
             </View>
           ) : null}
         </View>
-        <View style={styles.rsvpRow}>
-          <RsvpPill label={presentLabel} on={presentOn} onPress={() => onRsvp('yes')} />
-          <RsvpPill label={absentLabel} on={absentOn} onPress={() => onRsvp('no')} />
+        <View style={styles.attendanceRow}>
+          <CoachText variant="caption" muted style={styles.attendanceSummary}>
+            {convokedLabel} {summary.invited} · {confirmedLabel} {summary.confirmed}
+          </CoachText>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onPointage();
+            }}
+            style={({ pressed }) => [styles.pointageBtn, pressed && { opacity: 0.85 }]}
+            accessibilityRole="button"
+            accessibilityLabel={pointageLabel}
+          >
+            <Icon name="checkmark-circle" size={16} color="#000" />
+            <CoachText variant="caption" style={styles.pointageBtnText}>
+              {pointageLabel}
+            </CoachText>
+          </Pressable>
         </View>
         <View style={styles.cardFooter}>
           <CoachText variant="caption" muted numberOfLines={1} style={styles.place}>
@@ -277,39 +278,11 @@ function CalendarEventCard({
           <View style={styles.people}>
             <Icon name="people" size={16} color={PEOPLE_GOLD} />
             <CoachText variant="caption" style={styles.peopleCount}>
-              {countRsvpYes(event)}
+              {summary.confirmed}
             </CoachText>
           </View>
         </View>
       </View>
-    </Pressable>
-  );
-}
-
-function RsvpPill({
-  label,
-  on,
-  onPress,
-}: {
-  label: string;
-  on: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={(e) => {
-        e.stopPropagation();
-        onPress();
-      }}
-      style={({ pressed }) => [
-        styles.rsvpPill,
-        on && styles.rsvpPillOn,
-        pressed && { opacity: 0.85 },
-      ]}
-    >
-      <CoachText variant="caption" style={[styles.rsvpPillText, on && styles.rsvpPillTextOn]}>
-        {label}
-      </CoachText>
     </Pressable>
   );
 }
@@ -379,23 +352,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF3B30',
   },
   liveBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  rsvpRow: { flexDirection: 'row', gap: spacing.sm },
-  rsvpPill: {
-    flex: 1,
-    minHeight: 40,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    borderColor: PILL_BORDER,
+  attendanceRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
-  rsvpPillOn: {
+  attendanceSummary: { flex: 1, fontSize: 13, fontWeight: '600' },
+  pointageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 36,
+    borderRadius: radius.pill,
     backgroundColor: '#fff',
-    borderColor: '#fff',
+    paddingHorizontal: spacing.md,
   },
-  rsvpPillText: { color: COACH_SITE.foreground, fontWeight: '700' },
-  rsvpPillTextOn: { color: '#000' },
+  pointageBtnText: { color: '#000', fontWeight: '700' },
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',

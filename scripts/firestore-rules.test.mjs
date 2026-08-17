@@ -101,6 +101,20 @@ async function run() {
     })
   );
 
+  await assertSucceeds(
+    updateDoc(doc(bobDb, 'team_events/ev1'), {
+      attendance_marks: { alice: 'present' },
+      updated_at: new Date(),
+    })
+  );
+
+  await assertSucceeds(
+    updateDoc(doc(bobDb, 'team_events/ev1'), {
+      'rsvps.alice': 'yes',
+      updated_at: new Date(),
+    })
+  );
+
   await assertFails(
     updateDoc(doc(aliceDb, 'users/alice'), {
       profile: {
