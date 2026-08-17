@@ -1,7 +1,11 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { CoachChapterScroll, CoachText } from '../../../components/coach/coachPortalUi';
-import { CoachPane } from '../../../components/coach/CoachScreenHeader';
+import {
+  CoachChapterScroll,
+  CoachEmptyState,
+  CoachText,
+} from '../../../components/coach/coachPortalUi';
+import { CoachScreenHeader } from '../../../components/coach/CoachScreenHeader';
 import { COACH_SITE, getCoachPageIdentity } from '../../../content/coachPageIdentity';
 import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { COACH_TOOL_GROUPS } from '../navigation/coachNavConfig';
@@ -14,7 +18,9 @@ type Props = {
   items?: CoachNavResolvedItem[];
 };
 
-/** Hub Menu — liste Outils groupés (Match, Club, Performance). */
+const pageIdentity = getCoachPageIdentity('plus');
+
+/** Hub Menu — outils groupés (Match, Club, Performance). */
 export function CoachMenuPane({ items = [] }: Props) {
   const shellNav = useCoachShellNav();
   const resolvedById = useMemo(
@@ -22,36 +28,32 @@ export function CoachMenuPane({ items = [] }: Props) {
     [items],
   );
 
-  if (items.length === 0) {
-    return (
-      <CoachPane title={getCoachPageIdentity('plus').title}>
-        <CoachChapterScroll>
-          <CoachText variant="caption" muted style={styles.lead}>
-            Aucun outil disponible pour le moment.
-          </CoachText>
-        </CoachChapterScroll>
-      </CoachPane>
-    );
-  }
-
   return (
-    <CoachPane title={getCoachPageIdentity('plus').title}>
+    <View style={styles.root}>
+      <CoachScreenHeader title={pageIdentity.title} showTeamRow={false} />
       <CoachChapterScroll>
-        <CoachToolsList
-          groups={COACH_TOOL_GROUPS}
-          resolvedById={resolvedById}
-          title=""
-          onSelect={(id) => shellNav?.requestNav(id)}
-        />
+        <CoachText variant="body" muted style={styles.subtitle}>
+          {pageIdentity.support}
+        </CoachText>
+
+        {items.length === 0 ? (
+          <CoachEmptyState
+            title="Aucun outil"
+            body="Aucun outil disponible pour le moment."
+          />
+        ) : (
+          <CoachToolsList
+            groups={COACH_TOOL_GROUPS}
+            resolvedById={resolvedById}
+            onSelect={(id) => shellNav?.requestNav(id)}
+          />
+        )}
       </CoachChapterScroll>
-    </CoachPane>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  lead: {
-    marginBottom: spacing.md,
-    lineHeight: 18,
-    color: COACH_SITE.muted,
-  },
+  root: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
+  subtitle: { marginTop: -spacing.sm },
 });
