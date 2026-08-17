@@ -35,6 +35,7 @@ import { CoachAiHubScreen } from '../../../screens/coach/CoachAiHubScreen';
 import { SmartTacticsPortalScreen } from '../../../screens/smartTactics/SmartTacticsPortalScreen';
 import { TeamManagementScreen } from '../../../screens/TeamManagementScreen';
 import { MessagesScreen } from '../../../screens/MessagesScreen';
+import { CoachMenuPane } from './CoachMenuPane';
 import { CarpoolScreen } from '../../../screens/CarpoolScreen';
 import { ProfilTabScreen } from '../../../screens/ProfilTabScreen';
 import { useAuth } from '../../../context/AuthContext';
@@ -183,7 +184,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
         <CoachLockedPane item={resolved} />
       </CoachPageFrame>
     ) : (
-      wrapCoachPane(navId, renderCoachPane(navId, profile))
+      wrapCoachPane(navId, renderCoachPane(navId, profile, toolItems))
     );
 
   return (
@@ -214,12 +215,14 @@ function wrapCoachPane(navId: CoachNavItemId, node: React.ReactNode) {
 function renderCoachPane(
   navId: CoachNavItemId,
   profile: User | null | undefined,
+  toolItems: ReturnType<typeof resolveCoachMenuItems>,
 ) {
   switch (canonicalizeCoachNav(navId)) {
     case 'today':
     case 'pitch':
-    case 'plus':
       return <CoachPortalScreen embedded hideRail chapter="cockpit" />;
+    case 'plus':
+      return <CoachMenuPane items={toolItems} />;
     case 'equipe':
     case 'effectif':
       return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="all" />;

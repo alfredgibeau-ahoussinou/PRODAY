@@ -12,7 +12,6 @@ import { useTranslation } from '../../context/LocaleContext';
 import { radius, spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
-import { COACH_TOOL_GROUPS } from '../../features/coach/navigation/coachNavConfig';
 import { COACH_SITE } from '../../content/coachPageIdentity';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { CreateTeamEventScreen } from '../../screens/CreateTeamEventScreen';
@@ -227,7 +226,7 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
           ))
         )}
 
-        <CoachToolsList groups={COACH_TOOL_GROUPS} resolvedById={resolvedById} />
+        <CoachToolsList groups={toolGroups} resolvedById={resolvedById} />
       </CoachChapterScroll>
     </View>
   );

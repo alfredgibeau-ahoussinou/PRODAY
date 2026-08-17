@@ -14,16 +14,18 @@ type Props = {
   resolvedById: Map<string, CoachNavResolvedItem>;
   /** Titre de section — omit pour liste nue. */
   title?: string;
+  onSelect?: (id: CoachNavResolvedItem['id']) => void;
 };
 
 /** Liste Outils style iOS Settings — une colonne, groupes optionnels. */
-export function CoachToolsList({ groups, resolvedById, title = 'Outils' }: Props) {
+export function CoachToolsList({ groups, resolvedById, title = 'Outils', onSelect }: Props) {
   const shellNav = useCoachShellNav();
   const styles = useMemo(() => createStyles(), []);
 
-  const onSelect = (item: CoachNavResolvedItem) => {
+  const handleSelect = (item: CoachNavResolvedItem) => {
     if (item.locked) return;
-    shellNav?.requestNav(item.id);
+    if (onSelect) onSelect(item.id);
+    else shellNav?.requestNav(item.id);
   };
 
   return (
@@ -54,7 +56,7 @@ export function CoachToolsList({ groups, resolvedById, title = 'Outils' }: Props
                   label={item.label}
                   locked={item.locked}
                   aiBadge={item.aiBadge}
-                  onPress={() => onSelect(item)}
+                  onPress={() => handleSelect(item)}
                   showSeparator={index < items.length - 1}
                 />
               ))}
