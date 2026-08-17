@@ -1,26 +1,56 @@
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { MatchsDeepLink } from '../../../utils/navigationDeepLink';
+import { canonicalizeCoachNav, type CoachNavItemId } from './coachNavConfig';
 
-export type CoachMatchHubOverlay = {
+export type CoachEventHubOverlay = {
   eventId: string;
+  hubChapter?: MatchHubChapterId;
+};
+
+/** @deprecated Utiliser CoachEventHubOverlay */
+export type CoachMatchHubOverlay = CoachEventHubOverlay & {
   hubChapter: MatchHubChapterId;
 };
 
 /** Ouvre le hub événement coach quand openMatchs fournit un eventId. */
-export function resolveCoachMatchHubOverlay(
+export function resolveCoachEventHubOverlay(
   link: MatchsDeepLink | null | undefined,
-): CoachMatchHubOverlay | null {
+): CoachEventHubOverlay | null {
   if (!link?.eventId) return null;
   return {
     eventId: link.eventId,
-    hubChapter: link.hubChapter ?? 'apercu',
+    hubChapter: link.hubChapter,
   };
 }
 
-/** L’overlay hub reste visible uniquement sur l’onglet principal Matchs. */
+/** @deprecated Utiliser resolveCoachEventHubOverlay */
+export function resolveCoachMatchHubOverlay(
+  link: MatchsDeepLink | null | undefined,
+): CoachMatchHubOverlay | null {
+  const overlay = resolveCoachEventHubOverlay(link);
+  if (!overlay) return null;
+  return {
+    eventId: overlay.eventId,
+    hubChapter: overlay.hubChapter ?? 'apercu',
+  };
+}
+
+const EVENT_HUB_NAV_IDS: CoachNavItemId[] = ['match_center', 'entrainements', 'planning', 'today'];
+
+/** Conserve l’overlay hub sur Matchs ou depuis le planning / cockpit coach. */
+export function shouldKeepCoachEventHubOverlay(
+  activeTab: MainTabId,
+  navId?: CoachNavItemId,
+): boolean {
+  if (activeTab === 'matchs') return true;
+  if (!navId) return false;
+  return EVENT_HUB_NAV_IDS.includes(canonicalizeCoachNav(navId));
+}
+
+/** @deprecated Utiliser shouldKeepCoachEventHubOverlay */
 export function shouldKeepCoachMatchHubOverlay(activeTab: MainTabId): boolean {
-  return activeTab === 'matchs';
+  return shouldKeepCoachEventHubOverlay(activeTab);
 }
 
 /** Parcours guidé Matchs & parcours — Convoc → pointage effectif. */

@@ -42,11 +42,11 @@ import { ProfilTabScreen } from '../../../screens/ProfilTabScreen';
 import { useAuth } from '../../../context/AuthContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useTabNavigation } from '../../../context/TabNavigationContext';
-import { CoachMatchEventHub } from '../../../screens/coach/CoachMatchEventHub';
+import { CoachEventHubRouter } from '../../../screens/coach/CoachEventHubRouter';
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
 import {
-  resolveCoachMatchHubOverlay,
-  shouldKeepCoachMatchHubOverlay,
+  resolveCoachEventHubOverlay,
+  shouldKeepCoachEventHubOverlay,
 } from '../navigation/coachMatchDeepLink';
 import { usersService } from '../../../services/users.service';
 import {
@@ -143,9 +143,9 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   const [navId, setNavId] = useState<CoachNavItemId>(() =>
     canonicalizeCoachNav(coachNavFromTab(activeTab)),
   );
-  const [matchHubOverlay, setMatchHubOverlay] = useState<{
+  const [eventHubOverlay, setEventHubOverlay] = useState<{
     eventId: string;
-    hubChapter: MatchHubChapterId;
+    hubChapter?: MatchHubChapterId;
   } | null>(null);
 
   const syncMatchCenterNav = useCallback(() => {
@@ -163,17 +163,19 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   }, [activeTab]);
 
   useEffect(() => {
-    if (!shouldKeepCoachMatchHubOverlay(activeTab)) {
-      setMatchHubOverlay(null);
+    if (!shouldKeepCoachEventHubOverlay(activeTab, navId)) {
+      setEventHubOverlay(null);
     }
-  }, [activeTab]);
+  }, [activeTab, navId]);
 
   useEffect(() => {
     if (!pendingMatchsLink) return;
-    const hubOverlay = resolveCoachMatchHubOverlay(pendingMatchsLink);
+    const hubOverlay = resolveCoachEventHubOverlay(pendingMatchsLink);
     if (hubOverlay) {
-      setMatchHubOverlay(hubOverlay);
-      syncMatchCenterNav();
+      setEventHubOverlay(hubOverlay);
+      if (pendingMatchsLink.hubChapter) {
+        syncMatchCenterNav();
+      }
     }
     clearPendingMatchs();
   }, [pendingMatchsLink, clearPendingMatchs, syncMatchCenterNav]);
@@ -194,7 +196,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   const resolved = findInCoachNavCatalog(catalog, navId);
 
   const onSelect = (id: CoachNavItemId) => {
-    setMatchHubOverlay(null);
+    setEventHubOverlay(null);
     const next = canonicalizeCoachNav(id);
     setNavId(next);
     const nextTab = tabFromCoachNav(next);
@@ -249,19 +251,19 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
         <View style={styles.pane}>
           {content}
           <PushScreenTransition
-            active={Boolean(matchHubOverlay)}
+            active={Boolean(eventHubOverlay)}
             backgroundColor={tokens.bg}
           >
-            {matchHubOverlay ? (
-              <CoachMatchEventHub
-                eventId={matchHubOverlay.eventId}
-                initialChapter={matchHubOverlay.hubChapter}
-                onBack={() => setMatchHubOverlay(null)}
+            {eventHubOverlay ? (
+              <CoachEventHubRouter
+                eventId={eventHubOverlay.eventId}
+                initialChapter={eventHubOverlay.hubChapter ?? 'apercu'}
+                onBack={() => setEventHubOverlay(null)}
                 onOpenCarpool={() => {
-                  setMatchHubOverlay(null);
+                  setEventHubOverlay(null);
                   openCarpool({
                     chapter: 'reserver',
-                    eventId: matchHubOverlay.eventId,
+                    eventId: eventHubOverlay.eventId,
                   });
                 }}
               />

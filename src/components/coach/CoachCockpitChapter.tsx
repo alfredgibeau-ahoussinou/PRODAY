@@ -39,7 +39,7 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
-  const { tokens } = useCoachTheme();
+  const { tokens, teamId: activeTeamId } = useCoachTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { count: unreadMessages } = useUnreadMessageCount();
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
@@ -91,10 +91,12 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   if (creating) {
     return (
       <CreateTeamEventScreen
+        activeTeamId={activeTeamId}
         onBack={() => setCreating(false)}
-        onCreated={() => {
+        onCreated={(eventId) => {
           setCreating(false);
           onRefresh();
+          tabNav.openMatchs({ eventId });
         }}
       />
     );
@@ -222,6 +224,7 @@ function CalendarEventCard({
   onOpen: () => void;
   onPointage: () => void;
 }) {
+  const { tokens } = useCoachTheme();
   const stack = formatCoachCalendarDateStack(event.starts_at);
   const summary = coachCalendarEventSummary(event);
 

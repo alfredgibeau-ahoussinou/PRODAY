@@ -4,7 +4,9 @@ import {
 } from '../content/coachMatchHubChapters';
 import {
   COACH_MATCH_FLOW_STEPS,
+  resolveCoachEventHubOverlay,
   resolveCoachMatchHubOverlay,
+  shouldKeepCoachEventHubOverlay,
   shouldKeepCoachMatchHubOverlay,
 } from '../features/coach/navigation/coachMatchDeepLink';
 import * as fs from 'fs';
@@ -41,10 +43,26 @@ describe('coachMatchDeepLink', () => {
     ]);
   });
 
-  it('conserve l’overlay hub uniquement sur l’onglet Matchs', () => {
+  it('conserve l’overlay hub sur Matchs et depuis le planning coach', () => {
+    expect(shouldKeepCoachEventHubOverlay('matchs')).toBe(true);
+    expect(shouldKeepCoachEventHubOverlay('home', 'entrainements')).toBe(true);
+    expect(shouldKeepCoachEventHubOverlay('home', 'planning')).toBe(true);
+    expect(shouldKeepCoachEventHubOverlay('home', 'today')).toBe(true);
+    expect(shouldKeepCoachEventHubOverlay('home', 'equipe')).toBe(false);
+    expect(shouldKeepCoachEventHubOverlay('profil')).toBe(false);
     expect(shouldKeepCoachMatchHubOverlay('matchs')).toBe(true);
     expect(shouldKeepCoachMatchHubOverlay('home')).toBe(false);
-    expect(shouldKeepCoachMatchHubOverlay('profil')).toBe(false);
+  });
+
+  it('resolveCoachEventHubOverlay sans chapitre explicite', () => {
+    expect(resolveCoachEventHubOverlay({ eventId: 'evt-2' })).toEqual({
+      eventId: 'evt-2',
+      hubChapter: undefined,
+    });
+    expect(resolveCoachMatchHubOverlay({ eventId: 'evt-2' })).toEqual({
+      eventId: 'evt-2',
+      hubChapter: 'apercu',
+    });
   });
 });
 

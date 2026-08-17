@@ -334,6 +334,65 @@ export function resolveEventSessionStatus(e: TeamEvent): EventSessionStatus {
   return 'scheduled';
 }
 
+export type CoachEventHubKind = 'match' | 'training' | 'detection' | 'meeting' | 'fallback';
+
+/** Type d’écran hub coach selon l’événement. */
+export function coachEventHubKind(e: TeamEvent): CoachEventHubKind {
+  if (isCoachMatchEvent(e)) return 'match';
+  if (e.event_type === 'training') return 'training';
+  if (e.event_type === 'detection') return 'detection';
+  if (e.event_type === 'meeting' || e.event_type === 'other') return 'meeting';
+  return 'fallback';
+}
+
+function hasCoachEventHubBasics(e: TeamEvent): boolean {
+  return Boolean(
+    e.title?.trim() &&
+      e.starts_at instanceof Date &&
+      !Number.isNaN(e.starts_at.getTime()),
+  );
+}
+
+/** Hub coach complet uniquement pour les événements créés via le flux (pas legacy/incomplets). */
+export function isCoachEventHubReady(e: TeamEvent): boolean {
+  if (!hasCoachEventHubBasics(e)) return false;
+
+  switch (coachEventHubKind(e)) {
+    case 'training':
+      return Boolean(e.team_id || (e.invitee_uids?.length ?? 0) > 0);
+    case 'detection':
+      return Boolean(
+        e.max_participants != null &&
+          e.max_participants > 0 &&
+          (e.categories?.length ?? 0) > 0,
+      );
+    case 'match':
+      return Boolean(
+        (e.invitee_uids?.length ?? 0) > 0 ||
+          e.friendly_match_id ||
+          e.competition_fixture_id ||
+          e.tournament_id,
+      );
+    case 'meeting':
+      return (e.invitee_uids?.length ?? 0) > 0;
+    default:
+      return false;
+  }
+}
+
+export function isCoachDetectionEvent(e: TeamEvent): boolean {
+  return e.event_type === 'detection';
+}
+
+export function isCoachMeetingEvent(e: TeamEvent): boolean {
+  return e.event_type === 'meeting';
+}
+
 export function isCoachPlanningRelevant(e: TeamEvent): boolean {
-  return isCoachMatchEvent(e) || isCoachTrainingEvent(e);
+  return (
+    isCoachMatchEvent(e) ||
+    isCoachTrainingEvent(e) ||
+    isCoachDetectionEvent(e) ||
+    isCoachMeetingEvent(e)
+  );
 }

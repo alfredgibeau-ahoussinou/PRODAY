@@ -37,12 +37,15 @@ interface CreateTeamEventScreenProps {
   onBack: () => void;
   onCreated: (eventId: string) => void;
   defaultType?: TeamEventType;
+  /** Équipe active coach — appliquée aux entraînements créés. */
+  activeTeamId?: string;
 }
 
 export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   onBack,
   onCreated,
   defaultType = 'training',
+  activeTeamId,
 }) => {
   const { profile } = useAuth();
   const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
@@ -144,6 +147,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
         organizer_name: profile.display_name,
         club_id: clubId,
         club_name: clubName,
+        team_id: eventType === 'training' && activeTeamId ? activeTeamId : undefined,
         starts_at: parsed,
         city: city.trim(),
         location_label: locationLabel.trim() || undefined,
