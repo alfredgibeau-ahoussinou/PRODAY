@@ -71,7 +71,7 @@ type Props = {
 };
 
 /**
- * Shell Pôle Coach — 8 onglets (Accueil, Équipe, Matchs, Entraînements, Joueurs, IA, Messages, Profil).
+ * Shell Pôle Coach — 5 onglets (Accueil, Équipe, IA, Messages, Profil).
  */
 export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const profile = useSessionProfile();
@@ -222,7 +222,7 @@ function renderCoachPane(
       return <CoachPortalScreen embedded hideRail chapter="cockpit" />;
     case 'equipe':
     case 'effectif':
-      return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="equipe" />;
+      return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="all" />;
     case 'joueurs':
       return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="joueurs" />;
     case 'entrainements':

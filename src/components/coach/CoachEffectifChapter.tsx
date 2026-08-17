@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
 import {
@@ -32,6 +32,8 @@ import { CoachPlayerAiPanel } from './CoachPlayerAiPanel';
 
 export type CoachEffectifFocus = 'equipe' | 'joueurs' | 'all';
 
+type EffectifSegment = 'effectif' | 'joueurs';
+
 type EffectifProps = CoachChapterCommonProps & {
   focus?: CoachEffectifFocus;
 };
@@ -53,6 +55,9 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
   const clubId = profile.profile.club_id;
+  const [segment, setSegment] = useState<EffectifSegment>(
+    focus === 'joueurs' ? 'joueurs' : 'effectif',
+  );
   const [pending, setPending] = useState<Membership[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [memberships, setMemberships] = useState<Membership[]>([]);
@@ -80,6 +85,16 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
     void loadNotesData();
   }, [clubId, members.length, loadNotesData]);
 
+  useEffect(() => {
+    if (focus === 'joueurs') setSegment('joueurs');
+    else if (focus === 'equipe') setSegment('effectif');
+  }, [focus]);
+
+  const resolvedFocus = useMemo((): Exclude<CoachEffectifFocus, 'all'> => {
+    if (focus === 'equipe' || focus === 'joueurs') return focus;
+    return segment === 'joueurs' ? 'joueurs' : 'equipe';
+  }, [focus, segment]);
+
   const openGestion = () => {
     if (shellNav) shellNav.requestNav('gestion');
     else nav.openDashboard('gestion');
@@ -89,9 +104,10 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
     await openCarpoolDriverChat(profile, uid, name, openChat);
   };
 
-  const showPitch = focus === 'equipe' || focus === 'all';
-  const showRoster = focus === 'joueurs' || focus === 'all';
-  const pageId = focus === 'joueurs' ? 'joueurs' : 'equipe';
+  const showPitch = resolvedFocus === 'equipe';
+  const showRoster = resolvedFocus === 'joueurs';
+  const showSegment = focus === 'all';
+  const pageId = resolvedFocus === 'joueurs' ? 'joueurs' : 'equipe';
 
   if (!clubId) {
     return (
@@ -121,6 +137,31 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
       title={getCoachPageIdentity(pageId).title}
       actions={[{ icon: 'add', onPress: openGestion, accessibilityLabel: 'Ajouter un membre' }]}
     >
+      {showSegment ? (
+        <View style={styles.segmentTrack}>
+          {(
+            [
+              { id: 'effectif' as const, label: 'Effectif' },
+              { id: 'joueurs' as const, label: 'Joueurs' },
+            ] as const
+          ).map((tab) => {
+            const on = segment === tab.id;
+            return (
+              <PressableSpring
+                key={tab.id}
+                onPress={() => setSegment(tab.id)}
+                scaleTo={0.98}
+                haptic
+                style={[styles.segmentBtn, on && styles.segmentBtnOn]}
+              >
+                <CoachText variant="caption" style={[styles.segmentLabel, on && styles.segmentLabelOn]}>
+                  {tab.label}
+                </CoachText>
+              </PressableSpring>
+            );
+          })}
+        </View>
+      ) : null}
       <CoachChapterScroll>
         {showPitch ? (
           <CoachSportEasyPitch
@@ -137,7 +178,7 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
               <CoachText variant="section" style={styles.listTitle}>
                 {t('coach.portal.effectif.roster')}
               </CoachText>
-              {focus === 'joueurs' ? (
+              {resolvedFocus === 'joueurs' ? (
                 <CoachText variant="caption" muted style={styles.manageLink}>
                   Notes & analyse IA
                 </CoachText>
@@ -172,7 +213,7 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
                       <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
                         {m.display_name}
                       </CoachText>
-                      {focus === 'joueurs' ? (
+                      {resolvedFocus === 'joueurs' ? (
                         <CoachPlayerAiPanel
                           playerUid={m.uid}
                           playerName={m.display_name}
@@ -224,6 +265,33 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
 };
 
 const styles = StyleSheet.create({
+  segmentTrack: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    padding: 3,
+    borderRadius: 12,
+    backgroundColor: COACH_SITE.surface,
+    gap: 4,
+  },
+  segmentBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  segmentBtnOn: {
+    backgroundColor: COACH_SITE.elevated,
+  },
+  segmentLabel: {
+    fontWeight: '600',
+    color: COACH_SITE.muted,
+  },
+  segmentLabelOn: {
+    color: COACH_SITE.foreground,
+    fontWeight: '700',
+  },
   listHead: {
     flexDirection: 'row',
     alignItems: 'baseline',

@@ -60,7 +60,7 @@ export function resolveCoachNavCatalog(input: CoachNavAccessInput): CoachNavReso
   return items;
 }
 
-/** Résout le menu Coach (8 onglets primaires). */
+/** Résout le menu Coach (5 onglets primaires). */
 export function resolveCoachNavFolders(input: CoachNavAccessInput): CoachNavResolvedFolder[] {
   const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
   const folders: CoachNavResolvedFolder[] = [];

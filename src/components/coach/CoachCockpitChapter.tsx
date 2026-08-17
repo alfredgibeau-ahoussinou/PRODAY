@@ -14,6 +14,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { radius, spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
+import { COACH_HOME_TOOLS } from '../../features/coach/navigation/coachNavConfig';
 import { COACH_SITE } from '../../content/coachPageIdentity';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { CreateTeamEventScreen } from '../../screens/CreateTeamEventScreen';
@@ -126,6 +127,25 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
           },
         ]}
       />
+
+      <View style={styles.shortcutRow}>
+        {COACH_HOME_TOOLS.filter((tool) => tool.id === 'match_center' || tool.id === 'entrainements').map(
+          (tool) => (
+            <PressableSpring
+              key={tool.id}
+              onPress={() => openNav(tool.id)}
+              scaleTo={0.97}
+              haptic
+              style={styles.shortcutBtn}
+            >
+              <Icon name={tool.icon} size={16} color={COACH_SITE.accent} />
+              <CoachText variant="caption" style={styles.shortcutLabel}>
+                {tool.label}
+              </CoachText>
+            </PressableSpring>
+          ),
+        )}
+      </View>
 
       <CoachChapterScroll>
         {discoverOn ? (
@@ -330,6 +350,27 @@ function RsvpPill({
 
 const styles = StyleSheet.create({
   root: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
+  shortcutRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  shortcutBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 44,
+    borderRadius: 14,
+    backgroundColor: COACH_SITE.surface,
+    paddingHorizontal: spacing.md,
+  },
+  shortcutLabel: {
+    color: COACH_SITE.foreground,
+    fontWeight: '700',
+  },
   discoverBlock: { gap: spacing.sm },
   discoverHead: {
     flexDirection: 'row',

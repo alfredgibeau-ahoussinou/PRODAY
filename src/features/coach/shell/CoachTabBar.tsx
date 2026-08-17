@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../../components/motion';
 import { CoachText } from '../../../components/coach/coachPortalUi';
@@ -18,68 +18,51 @@ type Props = {
   onSelect: (id: CoachNavItemId) => void;
 };
 
-const TAB_MIN_WIDTH = 56;
-
+/** Barre fixe 5 onglets — pas de scroll horizontal. */
 export function CoachTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(), []);
   const highlight = primaryTabForCoachNav(activeId);
-  const scrollable = items.length > 5;
-
-  const tabs = (
-    <>
-      {items.map((item) => {
-        const on = item.id === highlight;
-        const label = item.shortLabel ?? item.label;
-        return (
-          <PressableSpring
-            key={item.id}
-            onPress={() => onSelect(item.id)}
-            scaleTo={0.94}
-            haptic
-            style={[styles.tab, scrollable && styles.tabScroll]}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            accessibilityLabel={item.label}
-          >
-            <View style={styles.iconWrap}>
-              <Icon
-                name={item.icon}
-                size={20}
-                color={on ? COACH_SITE.accent : COACH_SITE.muted}
-                variant="outline"
-              />
-              {item.aiBadge ? <View style={styles.aiDot} /> : null}
-            </View>
-            <CoachText
-              variant="caption"
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.75}
-              style={[styles.label, on ? styles.labelOn : styles.labelOff]}
-            >
-              {label}
-            </CoachText>
-          </PressableSpring>
-        );
-      })}
-    </>
-  );
 
   return (
     <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      {scrollable ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {tabs}
-        </ScrollView>
-      ) : (
-        <View style={styles.row}>{tabs}</View>
-      )}
+      <View style={styles.row}>
+        {items.map((item) => {
+          const on = item.id === highlight;
+          const label = item.shortLabel ?? item.label;
+          return (
+            <PressableSpring
+              key={item.id}
+              onPress={() => onSelect(item.id)}
+              scaleTo={0.94}
+              haptic
+              style={styles.tab}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={item.label}
+            >
+              <View style={styles.iconWrap}>
+                <Icon
+                  name={item.icon}
+                  size={20}
+                  color={on ? COACH_SITE.accent : COACH_SITE.muted}
+                  variant="outline"
+                />
+                {item.aiBadge ? <View style={styles.aiDot} /> : null}
+              </View>
+              <CoachText
+                variant="caption"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                style={[styles.label, on ? styles.labelOn : styles.labelOff]}
+              >
+                {label}
+              </CoachText>
+            </PressableSpring>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -99,12 +82,6 @@ function createStyles() {
       justifyContent: 'space-around',
       paddingHorizontal: spacing.xs,
     },
-    scrollContent: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      paddingHorizontal: spacing.xs,
-      gap: 2,
-    },
     tab: {
       flex: 1,
       alignItems: 'center',
@@ -112,11 +89,6 @@ function createStyles() {
       gap: 3,
       minHeight: 46,
       paddingHorizontal: 2,
-    },
-    tabScroll: {
-      flex: 0,
-      minWidth: TAB_MIN_WIDTH,
-      paddingHorizontal: 6,
     },
     iconWrap: { position: 'relative' },
     aiDot: {
@@ -128,7 +100,7 @@ function createStyles() {
       borderRadius: 3,
       backgroundColor: COACH_SITE.accent,
     },
-    label: { fontSize: 10, fontWeight: '600', maxWidth: TAB_MIN_WIDTH + 8 },
+    label: { fontSize: 10, fontWeight: '600', maxWidth: 72 },
     labelOn: { color: COACH_SITE.accent, fontWeight: '700' },
     labelOff: { color: COACH_SITE.muted },
   });
