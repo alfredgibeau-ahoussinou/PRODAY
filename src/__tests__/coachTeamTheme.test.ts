@@ -1,5 +1,7 @@
 import {
   buildCoachThemeTokens,
+  COACH_TEAM_ACCENT_PALETTE,
+  resolveCoachEffectiveAccent,
   resolveCoachTeamAccent,
 } from '../utils/coachTeamTheme';
 import { COACH_SITE } from '../content/coachPageIdentity';
@@ -52,5 +54,43 @@ describe('coachTeamTheme', () => {
       teamName: 'U15 Filles',
     });
     expect(tokens.teamLabel).toBe('U15 Filles');
+  });
+
+  it('manual override remplace le hash équipe', () => {
+    const teamId = 'team-u17-a';
+    const autoAccent = resolveCoachTeamAccent(teamId);
+    const manualColor = COACH_TEAM_ACCENT_PALETTE.find((c) => c !== autoAccent) ?? '#FF6B35';
+    const tokens = buildCoachThemeTokens({
+      variant: 'solid',
+      teamId,
+      accentMode: 'manual',
+      accentOverride: manualColor,
+    });
+    expect(tokens.accent).toBe(manualColor);
+    expect(tokens.accent).not.toBe(autoAccent);
+  });
+
+  it('auto utilise le hash équipe même si accentOverride est présent', () => {
+    const teamId = 'team-beta';
+    const autoAccent = resolveCoachTeamAccent(teamId);
+    const tokens = buildCoachThemeTokens({
+      variant: 'solid',
+      teamId,
+      accentMode: 'auto',
+      accentOverride: '#FF6B35',
+    });
+    expect(tokens.accent).toBe(autoAccent);
+  });
+
+  it('resolveCoachEffectiveAccent — manual invalide retombe sur hash', () => {
+    const teamId = 'team-gamma';
+    const autoAccent = resolveCoachTeamAccent(teamId);
+    expect(
+      resolveCoachEffectiveAccent({
+        accentMode: 'manual',
+        accentOverride: '#NOTPALETTE',
+        teamId,
+      }),
+    ).toBe(autoAccent);
   });
 });

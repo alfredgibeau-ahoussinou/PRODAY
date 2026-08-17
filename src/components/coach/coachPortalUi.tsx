@@ -18,7 +18,10 @@ import {
 } from '../../content/coachPortalChapters';
 import { COACH_SITE } from '../../content/coachPageIdentity';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
-import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import {
+  COACH_TEAM_ACCENT_PALETTE,
+  type CoachThemeTokens,
+} from '../../utils/coachTeamTheme';
 import { MATCH_CHAPTER_PAD } from '../matchs/chapters/matchChapterLayout';
 import { radius, spacing } from '../../theme/designTokens';
 
@@ -308,9 +311,21 @@ export function CoachEmptyState({
 
 export function CoachThemeAppearanceSection() {
   const { t } = useTranslation();
-  const { tokens, variant, setVariant, teamName } = useCoachTheme();
+  const {
+    tokens,
+    variant,
+    setVariant,
+    teamName,
+    accentMode,
+    accentOverride,
+    teamAccent,
+    setAccentMode,
+    setAccentOverride,
+    resetAccentToTeam,
+  } = useCoachTheme();
   const styles = useMemo(() => createThemeAppearanceStyles(tokens), [tokens]);
   const resolvedTeam = teamName.trim() || tokens.teamLabel.trim() || t('coach.calendar.teamFallback');
+  const isManual = accentMode === 'manual';
 
   return (
     <CoachSectionCard
@@ -339,12 +354,69 @@ export function CoachThemeAppearanceSection() {
           );
         })}
       </View>
-      <View style={styles.teamColorRow}>
+      <View style={styles.teamColorHeader}>
         <CoachText variant="caption" muted numberOfLines={1} style={styles.teamColorLabel}>
           {t('coach.portal.theme.teamColor')} · {resolvedTeam}
         </CoachText>
-        <View style={[styles.colorSwatch, { backgroundColor: tokens.accent }]} />
+        {!isManual ? (
+          <CoachText variant="caption" style={styles.teamColorHint}>
+            {t('coach.portal.theme.teamColorHint')}
+          </CoachText>
+        ) : null}
       </View>
+      <View style={styles.accentModeRow}>
+        {(['auto', 'manual'] as const).map((mode) => {
+          const on = accentMode === mode;
+          return (
+            <PressableSpring
+              key={mode}
+              onPress={() => (mode === 'auto' ? resetAccentToTeam() : setAccentMode('manual'))}
+              scaleTo={0.97}
+              haptic
+              style={[styles.accentModeChip, on && styles.accentModeChipOn]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+            >
+              <CoachText
+                variant="caption"
+                style={on ? styles.accentModeChipTextOn : styles.accentModeChipTextOff}
+              >
+                {t(mode === 'auto' ? 'coach.portal.theme.accentAuto' : 'coach.portal.theme.accentCustom')}
+              </CoachText>
+            </PressableSpring>
+          );
+        })}
+      </View>
+      <CoachText variant="caption" muted style={styles.pickColorLabel}>
+        {t('coach.portal.theme.pickColor')}
+      </CoachText>
+      <View style={styles.paletteGrid}>
+        {COACH_TEAM_ACCENT_PALETTE.map((color) => {
+          const isTeamColor = !isManual && color === teamAccent;
+          const isSelected = isManual ? !!accentOverride && color === accentOverride : isTeamColor;
+          return (
+            <PressableSpring
+              key={color}
+              onPress={() => setAccentOverride(color)}
+              scaleTo={0.92}
+              haptic
+              style={[styles.paletteSwatchWrap, isSelected && { borderColor: tokens.accent }]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={color}
+            >
+              <View style={[styles.paletteSwatch, { backgroundColor: color }]} />
+            </PressableSpring>
+          );
+        })}
+      </View>
+      {isManual ? (
+        <PressableSpring onPress={resetAccentToTeam} scaleTo={0.97} haptic style={styles.resetLink}>
+          <CoachText variant="caption" style={styles.resetLinkText}>
+            {t('coach.portal.theme.resetAccent')}
+          </CoachText>
+        </PressableSpring>
+      ) : null}
     </CoachSectionCard>
   );
 }
@@ -373,21 +445,68 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
     },
     segmentTextOn: { color: tokens.accent, fontWeight: '800' },
     segmentTextOff: { color: tokens.muted, fontWeight: '600' },
-    teamColorRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
+    teamColorHeader: {
       marginTop: spacing.md,
       paddingTop: spacing.sm,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: tokens.border,
+      gap: 2,
     },
-    teamColorLabel: { flex: 1, minWidth: 0 },
-    colorSwatch: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
+    teamColorLabel: { minWidth: 0 },
+    teamColorHint: { color: tokens.accent, fontWeight: '700' },
+    accentModeRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    accentModeChip: {
+      flex: 1,
+      minHeight: 34,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+    },
+    accentModeChipOn: {
+      borderColor: tokens.accent,
+      backgroundColor: tokens.soft,
+    },
+    accentModeChipTextOn: { color: tokens.accent, fontWeight: '800' },
+    accentModeChipTextOff: { color: tokens.muted, fontWeight: '600' },
+    pickColorLabel: {
+      marginTop: spacing.sm,
+      marginBottom: spacing.xs,
+    },
+    paletteGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    paletteSwatchWrap: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    paletteSwatch: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+    },
+    resetLink: {
+      alignSelf: 'flex-start',
+      marginTop: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    resetLinkText: {
+      color: tokens.accent,
+      fontWeight: '700',
+      textDecorationLine: 'underline',
     },
   });
 }

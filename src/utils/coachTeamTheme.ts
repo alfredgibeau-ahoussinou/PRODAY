@@ -2,6 +2,8 @@ import { COACH_SITE } from '../content/coachPageIdentity';
 
 export type CoachShellVariant = 'solid' | 'clear';
 
+export type CoachAccentMode = 'auto' | 'manual';
+
 export type CoachThemeTokens = {
   accent: string;
   deep: string;
@@ -74,6 +76,23 @@ export function resolveCoachTeamAccent(teamId?: string, teamName?: string): stri
   return COACH_TEAM_ACCENT_PALETTE[index] ?? PRODAY_ACCENT;
 }
 
+function isPaletteAccent(hex: string): boolean {
+  const normalized = hex.trim().toUpperCase();
+  return COACH_TEAM_ACCENT_PALETTE.some((color) => color.toUpperCase() === normalized);
+}
+
+export function resolveCoachEffectiveAccent(input: {
+  accentMode?: CoachAccentMode;
+  accentOverride?: string;
+  teamId?: string;
+  teamName?: string;
+}): string {
+  if (input.accentMode === 'manual' && input.accentOverride && isPaletteAccent(input.accentOverride)) {
+    return input.accentOverride;
+  }
+  return resolveCoachTeamAccent(input.teamId, input.teamName);
+}
+
 function shellSurfaces(variant: CoachShellVariant): Pick<
   CoachThemeTokens,
   'bg' | 'surface' | 'elevated' | 'border' | 'foreground' | 'muted'
@@ -102,8 +121,10 @@ export function buildCoachThemeTokens(input: {
   variant: CoachShellVariant;
   teamId?: string;
   teamName?: string;
+  accentMode?: CoachAccentMode;
+  accentOverride?: string;
 }): CoachThemeTokens {
-  const accent = resolveCoachTeamAccent(input.teamId, input.teamName);
+  const accent = resolveCoachEffectiveAccent(input);
   const surfaces = shellSurfaces(input.variant);
   const teamLabel = input.teamName?.trim() || '';
 
