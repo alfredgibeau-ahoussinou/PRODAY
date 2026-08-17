@@ -6,6 +6,7 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   query,
   orderBy,
   limit,
@@ -27,7 +28,7 @@ import type {
   LiveMatchAction,
   LiveActionType,
 } from '../models/TeamEvent';
-import { isLateRsvp, EVENT_TYPE_LABELS } from '../models/TeamEvent';
+import { isLateRsvp, EVENT_TYPE_LABELS, isCoachMatchEvent, isCoachTrainingEvent } from '../models/TeamEvent';
 import type { CarpoolSlot, EventTask, CarpoolMessage, MatchLiveState } from '../models/TeamEvent';
 import type { GeoPoint } from '../models/User';
 import {
@@ -696,6 +697,43 @@ export const teamEventsService = {
         : null,
       updated_at: serverTimestamp(),
     });
+  },
+
+  async deleteEvent(eventId: string, actor: TeamEventActor): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+    await deleteDoc(doc(database, COL, eventId));
+  },
+
+  async endSession(eventId: string, actor: TeamEventActor): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    assertManage(event, actor);
+
+    if (isCoachMatchEvent(event)) {
+      await this.updateMatchLiveState(eventId, { status: 'finished' }, actor);
+      return;
+    }
+
+    if (isCoachTrainingEvent(event)) {
+      const now = new Date();
+      const patch: Record<string, unknown> = {
+        live_state: { status: 'finished', home_score: 0, away_score: 0 },
+        updated_at: serverTimestamp(),
+      };
+      if (!event.ends_at) {
+        patch.ends_at = Timestamp.fromDate(now);
+      }
+      await updateDoc(doc(database, COL, eventId), patch);
+      return;
+    }
+
+    throw new Error('Type d’événement non pris en charge.');
   },
 
   async updateEventTasks(

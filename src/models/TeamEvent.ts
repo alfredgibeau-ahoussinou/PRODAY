@@ -2,6 +2,7 @@ import type { GeoPoint } from './User';
 import type { CarpoolTripStatus } from './CarpoolLiveTrip';
 import type { CarpoolVehicleType } from './CarpoolVehicle';
 import type { TrainingSessionPlan } from './CoachEvaluation';
+import { inferMatchStatus } from '../utils/matchLive';
 
 export type TeamEventType =
   | 'training'
@@ -292,4 +293,44 @@ export function countAttendanceMark(
 
 export function userRsvp(event: TeamEvent, uid: string): RsvpStatus {
   return event.rsvps[uid] ?? (event.invitee_uids.includes(uid) ? 'pending' : 'pending');
+}
+
+export type EventSessionStatus = 'scheduled' | 'in_progress' | 'finished';
+
+export function isCoachMatchEvent(e: TeamEvent): boolean {
+  return (
+    e.event_type === 'friendly' ||
+    e.event_type === 'competition' ||
+    e.event_type === 'tournament'
+  );
+}
+
+export function isCoachTrainingEvent(e: TeamEvent): boolean {
+  return e.event_type === 'training' || e.event_type === 'other';
+}
+
+/** Statut unifié séance / match pour le planning coach. */
+export function resolveEventSessionStatus(e: TeamEvent): EventSessionStatus {
+  if (isCoachMatchEvent(e)) {
+    const status = inferMatchStatus(e);
+    if (status === 'finished') return 'finished';
+    if (status === 'live' || status === 'halftime') return 'in_progress';
+    return 'scheduled';
+  }
+
+  if (isCoachTrainingEvent(e)) {
+    if (e.live_state?.status === 'finished') return 'finished';
+    const now = Date.now();
+    const start = e.starts_at.getTime();
+    const end = e.ends_at?.getTime() ?? start + 90 * 60 * 1000;
+    if (now > end) return 'finished';
+    if (now >= start) return 'in_progress';
+    return 'scheduled';
+  }
+
+  return 'scheduled';
+}
+
+export function isCoachPlanningRelevant(e: TeamEvent): boolean {
+  return isCoachMatchEvent(e) || isCoachTrainingEvent(e);
 }

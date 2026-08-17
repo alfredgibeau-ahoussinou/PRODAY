@@ -1,7 +1,7 @@
 import type { WellnessSignals } from '../models/SmartTactics';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { User } from '../models/User';
-import { countRsvpYes } from '../models/TeamEvent';
+import { countRsvpYes, isCoachMatchEvent, isCoachTrainingEvent } from '../models/TeamEvent';
 import type { CoachAiInsightsInput } from './coachAiInsights';
 import {
   findLatestPostMatchAnalysis,
@@ -61,18 +61,6 @@ export interface CoachComposedPlanInput extends CoachAiInsightsInput {
 const MATCH_PREP_HOURS = 72;
 const RECOVERY_AFTER_MATCH_HOURS = 48;
 
-function isMatchEvent(e: TeamEvent): boolean {
-  return (
-    e.event_type === 'friendly' ||
-    e.event_type === 'competition' ||
-    e.event_type === 'tournament'
-  );
-}
-
-function isTrainingEvent(e: TeamEvent): boolean {
-  return e.event_type === 'training' || e.event_type === 'other';
-}
-
 function wellnessConcern(w?: WellnessSignals): boolean {
   if (!w) return false;
   if (w.injured || w.suspended) return true;
@@ -93,7 +81,7 @@ function lastPastMatch(events: TeamEvent[]): TeamEvent | null {
   const now = Date.now();
   return (
     [...events]
-      .filter((e) => isMatchEvent(e) && e.starts_at.getTime() < now)
+      .filter((e) => isCoachMatchEvent(e) && e.starts_at.getTime() < now)
       .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime())[0] ?? null
   );
 }
@@ -120,7 +108,7 @@ function estimatePlayerCount(events: TeamEvent[], members: User[]): number | und
     if (yes > 0) return yes;
   }
   const nextTraining = [...events]
-    .filter((e) => e.starts_at.getTime() > now && isTrainingEvent(e))
+    .filter((e) => e.starts_at.getTime() > now && isCoachTrainingEvent(e))
     .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0];
   if (nextTraining) {
     const yes = countRsvpYes(nextTraining);
@@ -145,12 +133,12 @@ export function resolveCoachCalendarContext(events: TeamEvent[]): CoachCalendarC
 
   const nextTraining =
     [...upcoming]
-      .filter(isTrainingEvent)
+      .filter(isCoachTrainingEvent)
       .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0] ?? null;
 
   const nextMatch =
     [...upcoming]
-      .filter(isMatchEvent)
+      .filter(isCoachMatchEvent)
       .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0] ?? null;
 
   if (!nextTraining && !nextMatch) {
@@ -715,7 +703,7 @@ function buildTrainingPlan(
     postMatch,
     wellnessAlerts,
     memberCount: input.members.length,
-    hasSheets: hasSheetData(events.filter((e) => isMatchEvent(e) && e.starts_at.getTime() < Date.now())),
+    hasSheets: hasSheetData(events.filter((e) => isCoachMatchEvent(e) && e.starts_at.getTime() < Date.now())),
     hoursSinceLastMatch: hoursSinceMatch,
     nextMatchKnown: Boolean(calendar.nextMatch),
   });
@@ -759,10 +747,10 @@ export function buildCoachComposedPlan(input: CoachComposedPlanInput): CoachComp
 
   const explicit = input.targetEvent ?? null;
   if (explicit) {
-    if (isMatchEvent(explicit)) {
+    if (isCoachMatchEvent(explicit)) {
       return buildMatchPlan(input, explicit, postMatch, wellnessAlerts, playerCount);
     }
-    if (isTrainingEvent(explicit)) {
+    if (isCoachTrainingEvent(explicit)) {
       return buildTrainingPlan(input, explicit, postMatch, wellnessAlerts, playerCount);
     }
   }

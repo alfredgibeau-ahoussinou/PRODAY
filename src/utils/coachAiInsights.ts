@@ -6,6 +6,7 @@ import {
   countAttendanceMark,
   countRsvpYes,
   getPendingInviteeUids,
+  isCoachMatchEvent,
 } from '../models/TeamEvent';
 import type { CoachPitchLineup } from './coachPitchLineup';
 import { startersPlacedCount } from './coachPitchLineup';
@@ -99,14 +100,6 @@ export interface CoachPlayerAiInsights {
   emptyHint: string;
 }
 
-function isMatchEvent(e: TeamEvent): boolean {
-  return (
-    e.event_type === 'friendly' ||
-    e.event_type === 'competition' ||
-    e.event_type === 'tournament'
-  );
-}
-
 function eventsWithSheets(events: TeamEvent[]): TeamEvent[] {
   return events.filter(
     (e) => e.player_match_stats && Object.keys(e.player_match_stats).length > 0,
@@ -190,7 +183,7 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
     if (next) {
       const yes = countRsvpYes(next);
       const pending = getPendingInviteeUids(next).length;
-      const typeLabel = isMatchEvent(next)
+      const typeLabel = isCoachMatchEvent(next)
         ? 'match'
         : next.event_type === 'training'
           ? 'entraînement'
@@ -243,7 +236,7 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
   }
   if (next) {
     const yes = countRsvpYes(next);
-    if (isMatchEvent(next)) {
+    if (isCoachMatchEvent(next)) {
       parts.push(`prochain match « ${next.title} » : ${yes} présent${yes > 1 ? 's' : ''}`);
     } else if (next.event_type === 'training') {
       parts.push(`prochain entraînement « ${next.title} » : ${yes} présent${yes > 1 ? 's' : ''}`);
@@ -423,7 +416,7 @@ export function buildCoachAiNowActions(input: CoachAiInsightsInput): CoachAiActi
   }
 
   const pastMatches = events.filter(
-    (e) => e.starts_at.getTime() < now && isMatchEvent(e),
+    (e) => e.starts_at.getTime() < now && isCoachMatchEvent(e),
   );
   const missingSheets = pastMatches.filter(
     (e) => !e.player_match_stats || Object.keys(e.player_match_stats).length === 0,
