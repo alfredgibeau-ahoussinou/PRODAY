@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PressableSpring } from '../../../components/motion';
 import { CoachText } from '../../../components/coach/coachPortalUi';
 import { Icon } from '../../../components/ui/Icon';
 import { COACH_SITE } from '../../../content/coachPageIdentity';
@@ -18,48 +17,47 @@ type Props = {
   onSelect: (id: CoachNavItemId) => void;
 };
 
-/** Barre fixe 6 onglets — pas de scroll horizontal. */
+/** Barre fixe 4 onglets — compacte, sans scroll ni bounce. */
 export function CoachTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(), []);
   const highlight = primaryTabForCoachNav(activeId);
 
   return (
-    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 6) }]}>
       <View style={styles.row}>
         {items.map((item) => {
           const on = item.id === highlight;
           const label = item.shortLabel ?? item.label;
           return (
-            <PressableSpring
+            <Pressable
               key={item.id}
               onPress={() => onSelect(item.id)}
-              scaleTo={0.94}
-              haptic
-              style={styles.tab}
+              style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
               accessibilityLabel={item.label}
             >
+              {on ? <View style={styles.indicator} /> : null}
               <View style={styles.iconWrap}>
                 <Icon
                   name={item.icon}
-                  size={20}
+                  size={on ? 22 : 20}
                   color={on ? COACH_SITE.accent : COACH_SITE.muted}
                   variant="outline"
                 />
                 {item.aiBadge ? <View style={styles.aiDot} /> : null}
               </View>
-              <CoachText
-                variant="caption"
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.75}
-                style={[styles.label, on ? styles.labelOn : styles.labelOff]}
-              >
-                {label}
-              </CoachText>
-            </PressableSpring>
+              {on ? (
+                <CoachText variant="caption" numberOfLines={1} style={styles.labelOn}>
+                  {label}
+                </CoachText>
+              ) : (
+                <CoachText variant="caption" numberOfLines={1} style={styles.labelOff}>
+                  {label}
+                </CoachText>
+              )}
+            </Pressable>
           );
         })}
       </View>
@@ -70,15 +68,15 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
 function createStyles() {
   return StyleSheet.create({
     root: {
-      backgroundColor: COACH_SITE.bg,
+      backgroundColor: '#000000',
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: 'rgba(255,255,255,0.08)',
-      paddingTop: 6,
+      paddingTop: 4,
       flexShrink: 0,
     },
     row: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
+      alignItems: 'flex-end',
       justifyContent: 'space-around',
       paddingHorizontal: spacing.xs,
     },
@@ -86,22 +84,44 @@ function createStyles() {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 3,
-      minHeight: 46,
+      gap: 2,
+      minHeight: 42,
       paddingHorizontal: 2,
+      paddingTop: 6,
+      position: 'relative',
+    },
+    tabPressed: { opacity: 0.65 },
+    indicator: {
+      position: 'absolute',
+      top: 0,
+      width: 28,
+      height: 2,
+      borderRadius: 1,
+      backgroundColor: COACH_SITE.accent,
     },
     iconWrap: { position: 'relative' },
     aiDot: {
       position: 'absolute',
       top: -2,
       right: -4,
-      width: 6,
-      height: 6,
+      width: 5,
+      height: 5,
       borderRadius: 3,
       backgroundColor: COACH_SITE.accent,
     },
-    label: { fontSize: 10, fontWeight: '600', maxWidth: 72 },
-    labelOn: { color: COACH_SITE.accent, fontWeight: '700' },
-    labelOff: { color: COACH_SITE.muted },
+    labelOn: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: COACH_SITE.accent,
+      letterSpacing: 0.4,
+      maxWidth: 80,
+    },
+    labelOff: {
+      fontSize: 9,
+      fontWeight: '500',
+      color: COACH_SITE.muted,
+      opacity: 0.7,
+      maxWidth: 72,
+    },
   });
 }

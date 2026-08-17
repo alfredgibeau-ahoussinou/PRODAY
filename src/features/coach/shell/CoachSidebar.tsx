@@ -1,19 +1,21 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PressableSpring } from '../../../components/motion';
-import { ProDayText } from '../../../components/ui/ProDayText';
+import { CoachText } from '../../../components/coach/coachPortalUi';
 import { Icon } from '../../../components/ui/Icon';
 import { COACH_SITE } from '../../../content/coachPageIdentity';
-import type { CoachNavFolderId, CoachNavItemId } from '../navigation/coachNavConfig';
-import type { CoachNavResolvedFolder } from '../navigation/resolveCoachNavAccess';
-import { spacing } from '../../../theme/designTokens';
+import { COACH_TOOL_GROUPS, primaryTabForCoachNav, type CoachNavItemId } from '../navigation/coachNavConfig';
+import type { CoachNavResolvedFolder, CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
+import { CoachNavRow } from './CoachNavRow';
+import { useCoachShellNav } from './CoachShellNavContext';
+import { radius, spacing } from '../../../theme/designTokens';
 
 type Props = {
   activeId: CoachNavItemId;
   coachName: string;
   formulaLabel: string;
   folders: CoachNavResolvedFolder[];
+  toolItems?: CoachNavResolvedItem[];
   onSelect: (id: CoachNavItemId) => void;
   onOpenHelp: () => void;
   onSignOut: () => void;
@@ -26,6 +28,7 @@ export function CoachSidebar({
   coachName,
   formulaLabel,
   folders,
+  toolItems = [],
   onSelect,
   onOpenHelp,
   onSignOut,
@@ -34,14 +37,13 @@ export function CoachSidebar({
 }: Props) {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(width), [width]);
-  const [openFolders, setOpenFolders] = useState<Record<CoachNavFolderId, boolean>>({
-    accueil: true,
-    equipe: true,
-    match: true,
-    performance: true,
-    communication: true,
-    compte: true,
-  });
+  const highlight = primaryTabForCoachNav(activeId);
+  const items = folders.flatMap((folder) => folder.items);
+  const shellNav = useCoachShellNav();
+  const toolsById = useMemo(
+    () => new Map(toolItems.map((item) => [item.id, item])),
+    [toolItems],
+  );
 
   return (
     <View
@@ -54,18 +56,17 @@ export function CoachSidebar({
       ]}
     >
       <View style={styles.brand}>
-        <ProDayText variant="caption" style={styles.kicker}>
-          Pro Day Coach
-        </ProDayText>
-        <ProDayText variant="section" numberOfLines={2} style={styles.name}>
+        <CoachText variant="caption" accent style={styles.kicker}>
+          ProDay Coach
+        </CoachText>
+        <CoachText variant="section" numberOfLines={2} style={styles.name}>
           {coachName}
-        </ProDayText>
+        </CoachText>
         <View style={styles.formulaPill}>
-          <ProDayText variant="caption" style={styles.formulaText}>
+          <CoachText variant="caption" muted style={styles.formulaText}>
             {formulaLabel}
-          </ProDayText>
+          </CoachText>
         </View>
-        <View style={styles.brandRule} />
       </View>
 
       <ScrollView
@@ -74,107 +75,91 @@ export function CoachSidebar({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {folders.map((folder) => {
-          const open = openFolders[folder.id] ?? true;
-          return (
-            <View key={folder.id} style={styles.folder}>
-              <Pressable
-                onPress={() =>
-                  setOpenFolders((prev) => ({ ...prev, [folder.id]: !prev[folder.id] }))
-                }
-                style={styles.folderHeader}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: open }}
-              >
-                <Icon
-                  name={open ? 'chevron-down' : 'chevron-forward'}
-                  size={12}
-                  color={COACH_SITE.muted}
+        {items.map((item) => (
+          <SidebarItem
+            key={item.id}
+            item={item}
+            on={item.id === highlight}
+            onSelect={onSelect}
+            styles={styles}
+          />
+        ))}
+
+        {toolItems.length > 0 ? (
+          <View style={styles.toolsBlock}>
+            <CoachText variant="caption" muted style={styles.toolsKicker}>
+              OUTILS
+            </CoachText>
+            <View style={styles.toolsCard}>
+              {COACH_TOOL_GROUPS.flatMap((group) =>
+                group.toolIds
+                  .map((id) => toolsById.get(id))
+                  .filter((item): item is CoachNavResolvedItem => Boolean(item)),
+              ).map((item, index, arr) => (
+                <CoachNavRow
+                  key={item.id}
+                  icon={item.icon}
+                  label={item.label}
+                  locked={item.locked}
+                  aiBadge={item.aiBadge}
+                  onPress={() => {
+                    if (!item.locked) shellNav?.requestNav(item.id);
+                  }}
+                  showSeparator={index < arr.length - 1}
                 />
-                <ProDayText variant="caption" style={styles.folderLabel}>
-                  {folder.label}
-                </ProDayText>
-              </Pressable>
-              {open
-                ? folder.items.map((item) => {
-                    const on = item.id === activeId;
-                    return (
-                      <PressableSpring
-                        key={item.id}
-                        onPress={() => onSelect(item.id)}
-                        scaleTo={0.98}
-                        haptic
-                        style={[
-                          styles.item,
-                          on && styles.itemOn,
-                          item.locked && !on && styles.itemLocked,
-                        ]}
-                      >
-                        <Icon
-                          name={item.icon}
-                          size={15}
-                          color={
-                            item.locked
-                              ? COACH_SITE.muted
-                              : on
-                                ? COACH_SITE.accent
-                                : COACH_SITE.foreground
-                          }
-                        />
-                        <View style={styles.itemText}>
-                          <View style={styles.itemTitleRow}>
-                            <ProDayText
-                              variant="caption"
-                              style={[
-                                styles.itemLabel,
-                                on && styles.itemLabelOn,
-                                item.locked && styles.itemLabelLocked,
-                              ]}
-                              numberOfLines={1}
-                            >
-                              {item.label}
-                            </ProDayText>
-                            {item.aiBadge ? (
-                              <View style={styles.aiBadge}>
-                                <ProDayText variant="caption" style={styles.aiBadgeText}>
-                                  IA
-                                </ProDayText>
-                              </View>
-                            ) : null}
-                            {item.locked ? (
-                              <Icon name="lock" size={11} color={COACH_SITE.muted} />
-                            ) : null}
-                          </View>
-                          {item.hint ? (
-                            <ProDayText variant="caption" numberOfLines={1} style={styles.hint}>
-                              {item.hint}
-                            </ProDayText>
-                          ) : null}
-                        </View>
-                      </PressableSpring>
-                    );
-                  })
-                : null}
+              ))}
             </View>
-          );
-        })}
+          </View>
+        ) : null}
       </ScrollView>
 
       <View style={styles.footer}>
-        <PressableSpring onPress={onOpenHelp} scaleTo={0.98} haptic style={styles.footerItem}>
-          <Icon name="help" size={15} color={COACH_SITE.foreground} />
-          <ProDayText variant="caption" style={styles.footerLabel}>
+        <Pressable
+          onPress={onOpenHelp}
+          style={({ pressed }) => [styles.footerItem, pressed && styles.footerPressed]}
+        >
+          <Icon name="help" size={18} color={COACH_SITE.foreground} />
+          <CoachText variant="caption" style={styles.footerLabel}>
             Aide
-          </ProDayText>
-        </PressableSpring>
-        <PressableSpring onPress={onSignOut} scaleTo={0.98} haptic style={styles.footerItem}>
-          <Icon name="log-out" size={15} color="#F87171" />
-          <ProDayText variant="caption" style={styles.footerSignOut}>
+          </CoachText>
+        </Pressable>
+        <Pressable
+          onPress={onSignOut}
+          style={({ pressed }) => [styles.footerItem, pressed && styles.footerPressed]}
+        >
+          <Icon name="log-out" size={18} color="#DC2626" />
+          <CoachText variant="caption" style={styles.footerSignOut}>
             Se déconnecter
-          </ProDayText>
-        </PressableSpring>
+          </CoachText>
+        </Pressable>
       </View>
     </View>
+  );
+}
+
+function SidebarItem({
+  item,
+  on,
+  onSelect,
+  styles,
+}: {
+  item: CoachNavResolvedItem;
+  on: boolean;
+  onSelect: (id: CoachNavItemId) => void;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  return (
+    <Pressable
+      onPress={() => onSelect(item.id)}
+      style={({ pressed }) => [styles.item, on && styles.itemOn, pressed && styles.itemPressed]}
+    >
+      <View style={[styles.iconWrap, on && styles.iconWrapOn]}>
+        <Icon name={item.icon} size={18} color={on ? '#fff' : COACH_SITE.accent} />
+      </View>
+      <CoachText variant="section" style={[styles.itemLabel, on && styles.itemLabelOn]} numberOfLines={1}>
+        {item.label}
+      </CoachText>
+    </Pressable>
   );
 }
 
@@ -187,100 +172,70 @@ function createStyles(width: number) {
       alignSelf: 'stretch',
       borderRightWidth: StyleSheet.hairlineWidth,
       borderRightColor: COACH_SITE.border,
-      backgroundColor: COACH_SITE.bg,
+      backgroundColor: COACH_SITE.surface,
     },
     brand: {
       paddingHorizontal: spacing.md,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
       gap: 4,
     },
     kicker: {
-      color: COACH_SITE.accent,
-      textTransform: 'uppercase',
-      letterSpacing: 2.8,
-      fontSize: 10,
-      fontWeight: '800',
+      fontSize: 13,
+      fontWeight: '700',
     },
-    name: { color: COACH_SITE.foreground, fontWeight: '800', letterSpacing: -0.4 },
+    name: { color: COACH_SITE.foreground, fontWeight: '700', letterSpacing: -0.3, fontSize: 20 },
     formulaPill: {
       alignSelf: 'flex-start',
-      marginTop: 6,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 999,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: COACH_SITE.border,
-      backgroundColor: 'rgba(255,255,255,0.03)',
-    },
-    formulaText: {
-      color: COACH_SITE.muted,
-      fontSize: 10,
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      letterSpacing: 1.2,
-    },
-    brandRule: {
-      marginTop: spacing.sm,
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: COACH_SITE.border,
-    },
-    scroll: { flex: 1, minHeight: 0 },
-    scrollContent: { paddingVertical: spacing.sm, paddingBottom: spacing.xl * 2 },
-    folder: {
-      marginBottom: spacing.xs,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: 'rgba(255,255,255,0.06)',
-      paddingBottom: spacing.xs,
-    },
-    folderHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-    },
-    folderLabel: {
-      color: COACH_SITE.muted,
-      fontWeight: '800',
-      textTransform: 'uppercase',
-      letterSpacing: 1.6,
-      fontSize: 10,
-    },
-    item: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.sm,
-      marginHorizontal: spacing.sm,
-      marginVertical: 1,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 10,
-      borderRadius: 2,
-      borderLeftWidth: 2,
-      borderLeftColor: 'transparent',
-    },
-    itemOn: { backgroundColor: COACH_SITE.soft, borderLeftColor: COACH_SITE.accent },
-    itemLocked: { opacity: 0.7 },
-    itemText: { flex: 1, minWidth: 0, gap: 1 },
-    itemTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    itemLabel: { flexShrink: 1, fontWeight: '600', color: COACH_SITE.foreground },
-    itemLabelOn: { color: COACH_SITE.accent, fontWeight: '800' },
-    itemLabelLocked: { color: COACH_SITE.muted },
-    hint: { fontSize: 10, lineHeight: 13, color: COACH_SITE.muted },
-    aiBadge: {
-      paddingHorizontal: 5,
-      paddingVertical: 1,
-      borderRadius: 999,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: COACH_SITE.accent,
+      marginTop: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
       backgroundColor: COACH_SITE.soft,
     },
-    aiBadgeText: {
-      fontSize: 9,
-      fontWeight: '800',
-      letterSpacing: 0.6,
+    formulaText: {
+      fontSize: 12,
+      fontWeight: '700',
       color: COACH_SITE.accent,
     },
+    scroll: { flex: 1, minHeight: 0 },
+    scrollContent: { paddingVertical: spacing.sm, paddingBottom: spacing.xl, gap: 4 },
+    item: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginHorizontal: spacing.sm,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 10,
+      minHeight: 52,
+      borderRadius: radius.md,
+    },
+    itemOn: { backgroundColor: COACH_SITE.soft },
+    itemPressed: { opacity: 0.7 },
+    toolsBlock: { marginTop: spacing.md, gap: spacing.xs },
+    toolsKicker: {
+      fontSize: 11,
+      fontWeight: '600',
+      letterSpacing: 0.8,
+      paddingHorizontal: spacing.md,
+    },
+    toolsCard: {
+      marginHorizontal: spacing.sm,
+      backgroundColor: COACH_SITE.bg,
+      borderRadius: radius.lg,
+      overflow: 'hidden',
+    },
+    iconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: COACH_SITE.bg,
+    },
+    iconWrapOn: { backgroundColor: COACH_SITE.accent },
+    itemLabel: { flex: 1, fontWeight: '600', color: COACH_SITE.foreground, fontSize: 16 },
+    itemLabelOn: { color: COACH_SITE.accent, fontWeight: '700' },
     footer: {
       flexShrink: 0,
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -295,10 +250,12 @@ function createStyles(width: number) {
       alignItems: 'center',
       gap: spacing.sm,
       paddingHorizontal: spacing.sm,
-      paddingVertical: 10,
-      borderRadius: 2,
+      paddingVertical: 12,
+      minHeight: 48,
+      borderRadius: radius.md,
     },
+    footerPressed: { opacity: 0.7 },
     footerLabel: { fontWeight: '600', color: COACH_SITE.foreground },
-    footerSignOut: { fontWeight: '700', color: '#F87171' },
+    footerSignOut: { fontWeight: '700', color: '#DC2626' },
   });
 }

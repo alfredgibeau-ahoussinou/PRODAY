@@ -3,10 +3,12 @@ import {
   COACH_NAV_CATALOG,
   COACH_NAV_FOLDERS,
   COACH_SECONDARY_NAV_IDS,
+  COACH_TOOL_GROUPS,
   canonicalizeCoachNav,
   type CoachNavFolder,
   type CoachNavItem,
   type CoachNavItemId,
+  type CoachToolGroup,
 } from './coachNavConfig';
 
 export type CoachNavResolvedItem = CoachNavItem & {
@@ -61,7 +63,7 @@ export function resolveCoachNavCatalog(input: CoachNavAccessInput): CoachNavReso
   return items;
 }
 
-/** Résout le menu Coach (6 onglets primaires). */
+/** Résout le menu Coach (4 onglets primaires). */
 export function resolveCoachNavFolders(input: CoachNavAccessInput): CoachNavResolvedFolder[] {
   const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
   const folders: CoachNavResolvedFolder[] = [];
@@ -85,18 +87,39 @@ export function resolveCoachMoreItems(input: CoachNavAccessInput): CoachNavResol
   );
 }
 
-/** Tuiles du hub Menu — libellés depuis COACH_HOME_TOOLS + verrous catalogue. */
+/** Tuiles / lignes Outils sur Accueil — libellés depuis COACH_HOME_TOOLS + verrous catalogue. */
 export function resolveCoachMenuItems(input: CoachNavAccessInput): CoachNavResolvedItem[] {
   const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
-  return COACH_HOME_TOOLS.map((tool) => {
+  const items: CoachNavResolvedItem[] = [];
+  for (const tool of COACH_HOME_TOOLS) {
     const resolved = byId.get(tool.id);
-    if (!resolved) return null;
-    return {
+    if (!resolved) continue;
+    items.push({
       ...resolved,
       label: tool.label,
       shortLabel: tool.label,
-    };
-  }).filter((item): item is CoachNavResolvedItem => Boolean(item));
+    });
+  }
+  return items;
+}
+
+export type CoachToolGroupResolved = CoachToolGroup & {
+  items: CoachNavResolvedItem[];
+};
+
+/** Groupes Outils pour la liste Accueil (Settings style). */
+export function resolveCoachToolGroups(input: CoachNavAccessInput): CoachToolGroupResolved[] {
+  const byId = new Map(resolveCoachNavCatalog(input).map((item) => [item.id, item]));
+  const toolsById = new Map(
+    resolveCoachMenuItems(input).map((item) => [item.id, item] as const),
+  );
+
+  return COACH_TOOL_GROUPS.map((group) => ({
+    ...group,
+    items: group.toolIds
+      .map((id) => toolsById.get(id) ?? byId.get(id))
+      .filter((item): item is CoachNavResolvedItem => Boolean(item)),
+  })).filter((group) => group.items.length > 0);
 }
 
 export function findInCoachNavCatalog(

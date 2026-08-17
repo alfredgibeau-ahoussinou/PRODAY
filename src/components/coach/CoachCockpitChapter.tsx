@@ -1,9 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
 import { CoachChapterScroll, CoachText } from './coachPortalUi';
-import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { countRsvpYes, userRsvp, type RsvpStatus, type TeamEvent } from '../../models/TeamEvent';
 import { isInMatchWindow } from '../../utils/matchLive';
@@ -14,7 +12,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { radius, spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
-import { COACH_HOME_TOOLS } from '../../features/coach/navigation/coachNavConfig';
+import { COACH_TOOL_GROUPS } from '../../features/coach/navigation/coachNavConfig';
 import { COACH_SITE } from '../../content/coachPageIdentity';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { CreateTeamEventScreen } from '../../screens/CreateTeamEventScreen';
@@ -27,6 +25,11 @@ import {
 } from '../../utils/coachCalendarHome';
 import { findLatestPostMatchAnalysis } from '../../utils/coachPostMatchAnalysis';
 import { CoachSectionCard } from './coachPortalUi';
+import { CoachToolsList } from '../../features/coach/shell/CoachToolsList';
+import { resolveCoachToolGroups } from '../../features/coach/navigation/resolveCoachNavAccess';
+import { usePlatformFeatureFlags } from '../../hooks/usePlatformFeatureFlags';
+import { userCanAccessSmartTactics } from '../../utils/clubFeatureAccess';
+import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 
 const PEOPLE_GOLD = '#F5C518';
 const PILL_BORDER = 'rgba(255, 255, 255, 0.88)';
@@ -41,8 +44,25 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
+  const { isEnabled } = usePlatformFeatureFlags();
+  const { count: unreadMessages } = useUnreadMessageCount();
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
   const canConvoc = userCanManageConvocations(profile, { clubCoversCoach });
+  const canSmartTactics = userCanAccessSmartTactics(profile, { clubCoversCoach });
+  const canVideo = isEnabled('coach_video');
+  const toolGroups = useMemo(
+    () => resolveCoachToolGroups({ canSmartTactics, canVideo }),
+    [canSmartTactics, canVideo],
+  );
+  const resolvedById = useMemo(() => {
+    const map = new Map<string, (typeof toolGroups)[number]['items'][number]>();
+    for (const group of toolGroups) {
+      for (const item of group.items) {
+        map.set(item.id, item);
+      }
+    }
+    return map;
+  }, [toolGroups]);
   const hasClub = Boolean(profile.profile.club_id);
   const [creating, setCreating] = useState(false);
   const [discoverOn, setDiscoverOn] = useState(true);
@@ -60,6 +80,7 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
     else if (id === 'carpool') nav.openCarpool();
     else if (id === 'match_center' || id === 'matchs') nav.openMatchs();
     else if (id === 'gestion') nav.openDashboard('gestion');
+    else if (id === 'messages') nav.setActiveTab('messages');
     else if (id === 'profil') nav.openProfile();
   };
 
@@ -110,11 +131,19 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
     );
   }
 
+  const firstTip = COACH_CALENDAR_TIPS[0];
+
   return (
     <View style={styles.root}>
       <CoachScreenHeader
         title={t('coach.calendar.title')}
+        unreadMessages={unreadMessages}
         actions={[
+          {
+            icon: 'chat',
+            onPress: () => openNav('messages'),
+            accessibilityLabel: t('messages.title'),
+          },
           {
             icon: 'add',
             onPress: openCreate,
@@ -128,67 +157,19 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
         ]}
       />
 
-      <View style={styles.shortcutRow}>
-        {COACH_HOME_TOOLS.filter((tool) => tool.id === 'match_center' || tool.id === 'entrainements').map(
-          (tool) => (
-            <PressableSpring
-              key={tool.id}
-              onPress={() => openNav(tool.id)}
-              scaleTo={0.97}
-              haptic
-              style={styles.shortcutBtn}
-            >
-              <Icon name={tool.icon} size={16} color={COACH_SITE.accent} />
-              <CoachText variant="caption" style={styles.shortcutLabel}>
-                {tool.label}
-              </CoachText>
-            </PressableSpring>
-          ),
-        )}
-      </View>
-
       <CoachChapterScroll>
-        {discoverOn ? (
-          <View style={styles.discoverBlock}>
-            <View style={styles.discoverHead}>
-              <CoachText variant="section" style={styles.discoverTitle} numberOfLines={1}>
-                {t('coach.calendar.discover')}
-              </CoachText>
-              <PressableSpring onPress={() => setDiscoverOn(false)} scaleTo={0.96} haptic>
-                <CoachText variant="caption" muted style={styles.dismiss}>
-                  {t('coach.calendar.dismiss')}
-                </CoachText>
-              </PressableSpring>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.discoverRow}
-            >
-              {COACH_CALENDAR_TIPS.map((tip, index) => (
-                <PressableSpring
-                  key={tip.id}
-                  onPress={tip.id === 'create' ? openCreate : () => setDiscoverOn(false)}
-                  scaleTo={0.98}
-                  haptic
-                >
-                  <LinearGradient
-                    colors={index === 0 ? ['#1BA3A0', '#006CFC'] : ['#2C2C2E', '#1C1C1E']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.tipCard}
-                  >
-                    <CoachText variant="caption" style={styles.tipKicker}>
-                      {tip.kicker}
-                    </CoachText>
-                    <CoachText variant="section" numberOfLines={2} style={styles.tipTitle}>
-                      {tip.title}
-                    </CoachText>
-                  </LinearGradient>
-                </PressableSpring>
-              ))}
-            </ScrollView>
-          </View>
+        {discoverOn && firstTip ? (
+          <Pressable
+            onPress={() => setDiscoverOn(false)}
+            style={({ pressed }) => [styles.discoverBanner, pressed && styles.discoverPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={t('coach.calendar.dismiss')}
+          >
+            <CoachText variant="caption" style={styles.discoverText} numberOfLines={1}>
+              {firstTip.title}
+            </CoachText>
+            <Icon name="close" size={14} color={COACH_SITE.muted} />
+          </Pressable>
         ) : null}
 
         {lastPostMatch ? (
@@ -201,16 +182,14 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
                 : lastPostMatch.nextMatchRecommendation
             }
           >
-            <PressableSpring
+            <Pressable
               onPress={() => openNav('coach_ia')}
-              scaleTo={0.98}
-              haptic
-              style={styles.postMatchLink}
+              style={({ pressed }) => [styles.postMatchLink, pressed && { opacity: 0.65 }]}
             >
               <CoachText variant="caption" accent>
                 Voir l’analyse complète →
               </CoachText>
-            </PressableSpring>
+            </Pressable>
           </CoachSectionCard>
         ) : null}
 
@@ -223,11 +202,14 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             <CoachText variant="body" muted style={styles.emptyText}>
               {t('coach.calendar.empty')}
             </CoachText>
-            <PressableSpring onPress={openCreate} scaleTo={0.97} haptic style={styles.emptyCta}>
+            <Pressable
+              onPress={openCreate}
+              style={({ pressed }) => [styles.emptyCta, pressed && { opacity: 0.85 }]}
+            >
               <CoachText variant="section" style={styles.emptyCtaText}>
                 {t('coach.calendar.create')}
               </CoachText>
-            </PressableSpring>
+            </Pressable>
           </View>
         ) : (
           upcoming.map((event) => (
@@ -244,6 +226,8 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             />
           ))
         )}
+
+        <CoachToolsList groups={COACH_TOOL_GROUPS} resolvedById={resolvedById} />
       </CoachChapterScroll>
     </View>
   );
@@ -273,7 +257,10 @@ function CalendarEventCard({
   const absentOn = rsvp === 'no';
 
   return (
-    <PressableSpring onPress={onOpen} scaleTo={0.99} haptic style={styles.card}>
+    <Pressable
+      onPress={onOpen}
+      style={({ pressed }) => [styles.card, pressed && { opacity: 0.92 }]}
+    >
       <View style={styles.dateCol}>
         <CoachText variant="caption" muted style={styles.dateWeek}>
           {stack.weekday}
@@ -318,7 +305,7 @@ function CalendarEventCard({
           </View>
         </View>
       </View>
-    </PressableSpring>
+    </Pressable>
   );
 }
 
@@ -332,72 +319,45 @@ function RsvpPill({
   onPress: () => void;
 }) {
   return (
-    <PressableSpring
+    <Pressable
       onPress={(e) => {
         e.stopPropagation();
         onPress();
       }}
-      scaleTo={0.97}
-      haptic
-      style={[styles.rsvpPill, on && styles.rsvpPillOn]}
+      style={({ pressed }) => [
+        styles.rsvpPill,
+        on && styles.rsvpPillOn,
+        pressed && { opacity: 0.85 },
+      ]}
     >
       <CoachText variant="caption" style={[styles.rsvpPillText, on && styles.rsvpPillTextOn]}>
         {label}
       </CoachText>
-    </PressableSpring>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, minHeight: 0, backgroundColor: COACH_SITE.bg },
-  shortcutRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  shortcutBtn: {
-    flex: 1,
+  discoverBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    minHeight: 44,
-    borderRadius: 14,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    borderRadius: radius.md,
     backgroundColor: COACH_SITE.surface,
-    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
   },
-  shortcutLabel: {
-    color: COACH_SITE.foreground,
-    fontWeight: '700',
-  },
-  discoverBlock: { gap: spacing.sm },
-  discoverHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  discoverTitle: { flex: 1, fontWeight: '700', color: COACH_SITE.foreground },
-  dismiss: { fontWeight: '600' },
-  discoverRow: { gap: spacing.sm, paddingRight: spacing.md },
-  tipCard: {
-    width: 168,
-    minHeight: 88,
-    borderRadius: 16,
-    padding: spacing.md,
-    justifyContent: 'flex-end',
-    gap: 6,
-  },
-  tipKicker: { color: 'rgba(255,255,255,0.82)', fontWeight: '800', letterSpacing: 0.6 },
-  tipTitle: { color: '#fff', fontWeight: '700' },
+  discoverPressed: { opacity: 0.7 },
+  discoverText: { flex: 1, color: COACH_SITE.foreground, fontWeight: '500' },
   sectionTitle: {
     color: COACH_SITE.foreground,
     fontWeight: '800',
     fontSize: 22,
     marginTop: spacing.sm,
   },
-  emptyBlock: { gap: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
+  emptyBlock: { gap: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.md },
   emptyText: { fontSize: 16 },
   emptyCta: {
     alignItems: 'center',

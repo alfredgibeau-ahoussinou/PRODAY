@@ -15,15 +15,15 @@ import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
+import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
+import { CoachNavRow } from '../../features/coach/shell/CoachNavRow';
 import { getProfileCompletion } from '../../utils/profileCompletion';
 import { buildCoachAiNowActions } from '../../utils/coachAiInsights';
 import { buildCoachProfileStats, type CoachProfileStats } from '../../utils/coachProfileStats';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { usersService } from '../../services/users.service';
 import { findCoachNavItem } from '../../features/coach/navigation/coachNavConfig';
-import { spacing } from '../../theme/designTokens';
-
-const PROFILE_QUICK_NAV_IDS = ['today', 'equipe', 'coach_ia', 'messages', 'plus'] as const;
+import { spacing, radius } from '../../theme/designTokens';
 
 type Props = {
   profile: User;
@@ -63,6 +63,8 @@ export function CoachProfileHub({
   const identity = getCoachPageIdentity('profil');
   const shellNav = useCoachShellNav();
   const nav = useTabNavigationActions();
+  const { count: unreadMessages } = useUnreadMessageCount();
+  const messagesItem = findCoachNavItem('messages');
   const p = profile.profile;
   const completion = useMemo(() => getProfileCompletion(profile).percent, [profile]);
   const verified = profile.is_verified && profile.verification_status === 'VERIFIED';
@@ -120,11 +122,13 @@ export function CoachProfileHub({
       | 'smart_tactics'
       | 'forme'
       | 'coach_ia'
-      | 'gestion',
+      | 'gestion'
+      | 'messages',
   ) => {
     if (shellNav) shellNav.requestNav(id);
     else if (id === 'match_center') nav.openMatchs();
     else if (id === 'smart_tactics' || id === 'forme') nav.openDashboard('smart_tactics');
+    else if (id === 'messages') nav.setActiveTab('messages');
     else nav.setActiveTab('home');
   };
 
@@ -215,6 +219,18 @@ export function CoachProfileHub({
           </ProDayText>
         )}
       </View>
+
+      {messagesItem ? (
+        <View style={styles.messagesCard}>
+          <CoachNavRow
+            icon={messagesItem.icon}
+            label={messagesItem.label}
+            badge={unreadMessages}
+            onPress={() => open('messages')}
+            showSeparator={false}
+          />
+        </View>
+      ) : null}
 
       <CoachKpiRow
         items={[
@@ -317,57 +333,18 @@ export function CoachProfileHub({
         <CoachActionRow primary="Ouvrir l’assistant IA" onPrimary={() => open('coach_ia')} />
       </CoachSectionCard>
 
-      {coachStats.recentActivity.length > 0 ? (
+      {onSubscriptionPress ? (
         <CoachSectionCard
-          kicker="Fil d’activité"
-          title="Événements récents"
-          body="Derniers items de votre calendrier club."
+          kicker="Abonnement"
+          title={subscriptionTier === 'pro' ? 'Coach Pro actif' : 'Passer Coach Pro'}
+          body="Tactique IA, vidéos et outils avancés."
         >
-          {coachStats.recentActivity.map((a) => (
-            <View key={`${a.label}-${a.date.getTime()}`} style={styles.activityRow}>
-              <CoachText variant="caption" numberOfLines={1} style={styles.activityLabel}>
-                {a.label}
-              </CoachText>
-              <CoachText variant="caption" muted>
-                {a.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-              </CoachText>
-            </View>
-          ))}
-        </CoachSectionCard>
-      ) : null}
-
-      <CoachSectionCard
-        kicker="Commandes"
-        title="Accès rapide"
-        body="Navigation principale — les outils détaillés sont dans Menu."
-      >
-        <View style={styles.grid}>
-          {PROFILE_QUICK_NAV_IDS.map((id) => {
-            const item = findCoachNavItem(id);
-            if (!item) return null;
-            return (
-              <PressableSpring
-                key={item.id}
-                onPress={() => open(item.id)}
-                scaleTo={0.97}
-                haptic
-                style={styles.gridBtn}
-              >
-                <Icon name={item.icon} size={16} color={COACH_SITE.accent} />
-                <ProDayText variant="caption" style={styles.gridLabel}>
-                  {item.shortLabel ?? item.label}
-                </ProDayText>
-              </PressableSpring>
-            );
-          })}
-        </View>
-        {onSubscriptionPress ? (
           <CoachActionRow
-            primary={subscriptionTier === 'pro' ? 'Abonnement' : 'Passer Coach Pro'}
+            primary={subscriptionTier === 'pro' ? 'Gérer l’abonnement' : 'Passer Coach Pro'}
             onPrimary={onSubscriptionPress}
           />
-        ) : null}
-      </CoachSectionCard>
+        </CoachSectionCard>
+      ) : null}
     </View>
   );
 }
@@ -478,6 +455,11 @@ const styles = StyleSheet.create({
   },
   bio: { color: COACH_SITE.muted, lineHeight: 18, marginTop: 2 },
   bioMuted: { color: COACH_SITE.muted, lineHeight: 18, marginTop: 2 },
+  messagesCard: {
+    backgroundColor: COACH_SITE.surface,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
   expList: { gap: 4, marginBottom: spacing.sm },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
   tag: {
@@ -496,36 +478,4 @@ const styles = StyleSheet.create({
     backgroundColor: COACH_SITE.elevated,
   },
   aiPreviewTitle: { fontWeight: '700', marginBottom: 4 },
-  activityRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
-  },
-  activityLabel: { flex: 1, fontWeight: '600' },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  gridBtn: {
-    width: '31%',
-    minWidth: 96,
-    flexGrow: 1,
-    backgroundColor: COACH_SITE.elevated,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    gap: 6,
-  },
-  gridLabel: {
-    color: COACH_SITE.foreground,
-    fontWeight: '700',
-    fontSize: 11,
-    letterSpacing: 0.3,
-  },
 });

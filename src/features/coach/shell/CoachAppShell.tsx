@@ -8,7 +8,6 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { CoachSidebar } from './CoachSidebar';
 import { CoachTabBar } from './CoachTabBar';
-import { CoachMenuPane } from './CoachMenuPane';
 import { CoachShellNavProvider } from './CoachShellNavContext';
 import { CoachLockedPane } from './CoachLockedPane';
 import { openCoachHelpChatbot } from './coachHelpOpen';
@@ -71,7 +70,7 @@ type Props = {
 };
 
 /**
- * Shell Pôle Coach — 6 onglets (Accueil, Équipe, IA, Messages, Menu, Profil).
+ * Shell Pôle Coach — 4 onglets (Accueil, Équipe, IA, Profil).
  */
 export function CoachAppShell({ activeTab, onTabChange }: Props) {
   const profile = useSessionProfile();
@@ -111,7 +110,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
   );
   const catalog = useMemo(() => resolveCoachNavCatalog(access), [access]);
   const folders = useMemo(() => resolveCoachNavFolders(access), [access]);
-  const menuItems = useMemo(() => resolveCoachMenuItems(access), [access]);
+  const toolItems = useMemo(() => resolveCoachMenuItems(access), [access]);
   const primaryItems = useMemo(
     () => folders.flatMap((folder) => folder.items),
     [folders],
@@ -171,6 +170,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
     coachName,
     formulaLabel,
     folders,
+    toolItems,
     onSelect,
     onOpenHelp,
     onSignOut,
@@ -183,7 +183,7 @@ export function CoachAppShell({ activeTab, onTabChange }: Props) {
         <CoachLockedPane item={resolved} />
       </CoachPageFrame>
     ) : (
-      wrapCoachPane(navId, renderCoachPane(navId, profile, menuItems))
+      wrapCoachPane(navId, renderCoachPane(navId, profile))
     );
 
   return (
@@ -214,11 +214,11 @@ function wrapCoachPane(navId: CoachNavItemId, node: React.ReactNode) {
 function renderCoachPane(
   navId: CoachNavItemId,
   profile: User | null | undefined,
-  menuItems: ReturnType<typeof resolveCoachMenuItems>,
 ) {
   switch (canonicalizeCoachNav(navId)) {
     case 'today':
     case 'pitch':
+    case 'plus':
       return <CoachPortalScreen embedded hideRail chapter="cockpit" />;
     case 'equipe':
     case 'effectif':
@@ -232,8 +232,6 @@ function renderCoachPane(
       return <CoachPortalScreen embedded hideRail chapter="performance" />;
     case 'com_staff':
       return <CoachPortalScreen embedded hideRail chapter="communication" />;
-    case 'plus':
-      return <CoachMenuPane items={menuItems} />;
     case 'coach_ia':
       return <CoachAiHubScreen />;
     case 'smart_tactics':

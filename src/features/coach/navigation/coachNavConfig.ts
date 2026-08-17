@@ -3,9 +3,9 @@ import type { CoachPortalChapterId } from '../../../content/coachPortalChapters'
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 
 /**
- * Navigation Pôle Coach — 6 onglets fixes type SportEasy.
- * ACCUEIL | ÉQUIPE | IA | MESSAGES | MENU | PROFIL
- * Outils secondaires regroupés dans l’onglet Menu (+ raccourcis Accueil).
+ * Navigation Pôle Coach — 4 onglets premium minimal.
+ * ACCUEIL | ÉQUIPE | IA | PROFIL
+ * Outils secondaires sur Accueil (liste Outils) ; Messages depuis Profil ou header Accueil.
  */
 
 export type CoachNavFolderId =
@@ -67,8 +67,6 @@ export const COACH_PRIMARY_NAV_IDS: CoachNavItemId[] = [
   'today',
   'equipe',
   'coach_ia',
-  'messages',
-  'plus',
   'profil',
 ];
 
@@ -85,11 +83,14 @@ export const COACH_SECONDARY_NAV_IDS: CoachNavItemId[] = [
   'gestion',
 ];
 
-/** Destinations secondaires — surlignent l’onglet Menu dans la barre. */
-export const COACH_MENU_DEST_IDS: CoachNavItemId[] = [
+/** Destinations secondaires — surlignent l’onglet Accueil dans la barre. */
+export const COACH_HOME_DEST_IDS: CoachNavItemId[] = [
   ...COACH_SECONDARY_NAV_IDS,
   'planning',
 ];
+
+/** @deprecated Utiliser COACH_HOME_DEST_IDS */
+export const COACH_MENU_DEST_IDS: CoachNavItemId[] = COACH_HOME_DEST_IDS;
 
 /** @deprecated Utiliser COACH_SECONDARY_NAV_IDS — conservé pour compat tests/outils. */
 export const COACH_MORE_NAV_IDS: CoachNavItemId[] = [
@@ -269,31 +270,57 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
   },
 ];
 
-/** 6 onglets primaires — sidebar + barre mobile. */
+/** 4 onglets primaires — sidebar + barre mobile. */
 export const COACH_NAV_FOLDERS: CoachNavFolder[] = [
   { id: 'accueil', label: 'Accueil', items: [accueilItem] },
   { id: 'equipe', label: 'Équipe', items: [equipeItem] },
   { id: 'ia', label: 'IA', items: [coachIaItem] },
-  { id: 'messagerie', label: 'Messages', items: [messagesItem] },
-  { id: 'menu', label: 'Menu', items: [plusItem] },
   { id: 'profil', label: 'Profil', items: [profilItem] },
 ];
 
-/** Raccourcis depuis l’accueil cockpit vers outils secondaires. */
+export type CoachToolGroupId = 'match' | 'club' | 'performance';
+
+export type CoachToolGroup = {
+  id: CoachToolGroupId;
+  label: string;
+  toolIds: CoachNavItemId[];
+};
+
+/** Groupes Outils — liste unique sur Accueil (max 8 lignes). */
+export const COACH_TOOL_GROUPS: CoachToolGroup[] = [
+  { id: 'match', label: 'Match', toolIds: ['match_center', 'entrainements'] },
+  { id: 'club', label: 'Club', toolIds: ['gestion', 'com_staff', 'carpool'] },
+  {
+    id: 'performance',
+    label: 'Performance',
+    toolIds: ['smart_tactics', 'mes_videos', 'forme'],
+  },
+];
+
+/** Libellés courts pour la liste Outils sur Accueil. */
 export const COACH_HOME_TOOLS: {
   id: CoachNavItemId;
   label: string;
   icon: IconName;
-}[] = [
-  { id: 'match_center', label: 'Matchs', icon: 'trophy' },
-  { id: 'entrainements', label: 'Séances', icon: 'calendar' },
-  { id: 'smart_tactics', label: 'Tactique IA', icon: 'star-four-points' },
-  { id: 'mes_videos', label: 'Vidéos', icon: 'videocam' },
-  { id: 'forme', label: 'Forme', icon: 'heart' },
-  { id: 'carpool', label: 'Covoiturage', icon: 'car' },
-  { id: 'com_staff', label: 'Parents', icon: 'mail' },
-  { id: 'gestion', label: 'Gestion', icon: 'settings' },
-];
+}[] = COACH_TOOL_GROUPS.flatMap((group) =>
+  group.toolIds.map((id) => {
+    const item = COACH_NAV_CATALOG.find((entry) => entry.id === id);
+    return {
+      id,
+      label:
+        id === 'entrainements'
+          ? 'Séances'
+          : id === 'com_staff'
+            ? 'Parents'
+            : id === 'mes_videos'
+              ? 'Vidéos'
+              : id === 'smart_tactics'
+                ? 'Tactique'
+                : (item?.label ?? id),
+      icon: item?.icon ?? 'settings',
+    };
+  }),
+);
 
 /** Deep links d’anciennes pages → onglet parent. */
 export function canonicalizeCoachNav(id: CoachNavItemId): CoachNavItemId {
@@ -308,7 +335,9 @@ export function canonicalizeCoachNav(id: CoachNavItemId): CoachNavItemId {
 export function primaryTabForCoachNav(id: CoachNavItemId): CoachNavItemId {
   const canonical = canonicalizeCoachNav(id);
   if (COACH_PRIMARY_NAV_IDS.includes(canonical)) return canonical;
-  if (COACH_MENU_DEST_IDS.includes(canonical)) return 'plus';
+  if (canonical === 'messages') return 'profil';
+  if (canonical === 'plus') return 'today';
+  if (COACH_HOME_DEST_IDS.includes(canonical)) return 'today';
   return 'today';
 }
 
