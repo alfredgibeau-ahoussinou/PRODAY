@@ -9,7 +9,7 @@ import {
   StaffEmptyCard,
 } from './staffRoleHomeShared';
 import { useDashboardData } from '../../../hooks/useDashboardData';
-import { useCoachShellNav } from '../../../features/coach/shell/CoachShellNavContext';
+import { useCoachShellNav } from '../../coach/shell/CoachShellNavContext';
 import { useTabNavigation } from '../../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../../context/LocaleContext';
