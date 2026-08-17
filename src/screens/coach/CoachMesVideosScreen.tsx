@@ -20,7 +20,11 @@ import {
   VIDEO_PROCESSING_STAGES,
   VIDEO_TALK_SECTIONS,
 } from '../../content/clubVideoCenter';
-import { COACH_SITE } from '../../content/coachPageIdentity';
+import { CoachPane } from '../../components/coach/CoachScreenHeader';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import {
   CoachActionRow,
   CoachEmptyState,
@@ -40,6 +44,8 @@ type CoachVideoPane = 'library' | 'prepare' | 'live' | 'ai';
 
 export function CoachMesVideosScreen({ profile }: Props) {
   const shellNav = useCoachShellNav();
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
   const [pane, setPane] = useState<CoachVideoPane>('library');
   const [loading, setLoading] = useState(true);
@@ -74,18 +80,21 @@ export function CoachMesVideosScreen({ profile }: Props) {
 
   if (!clubId) {
     return (
-      <ScrollView contentContainerStyle={styles.pad}>
-        <CoachEmptyState
-          title="Club requis"
-          body="Lie ton compte coach à un club pour voir les matchs filmés de tes équipes."
-          cta="Ouvrir effectif"
-          onPress={() => shellNav?.requestNav('effectif')}
-        />
-      </ScrollView>
+      <CoachPane title={getCoachPageIdentity('mes_videos').title}>
+        <ScrollView contentContainerStyle={styles.pad}>
+          <CoachEmptyState
+            title="Club requis"
+            body="Lie ton compte coach à un club pour voir les matchs filmés de tes équipes."
+            cta="Ouvrir Membres"
+            onPress={() => shellNav?.requestNav('effectif')}
+          />
+        </ScrollView>
+      </CoachPane>
     );
   }
 
   return (
+    <CoachPane title={getCoachPageIdentity('mes_videos').title}>
     <View style={styles.root}>
         <ScrollView
           horizontal
@@ -125,7 +134,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
           contentContainerStyle={styles.pad}
           showsVerticalScrollIndicator={false}
         >
-          {loading ? <ActivityIndicator color={COACH_SITE.accent} /> : null}
+          {loading ? <ActivityIndicator color={tokens.accent} /> : null}
 
           {!loading && pane === 'library' ? (
             <>
@@ -233,7 +242,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                   <Icon
                     name={preflightOk ? 'checkmark-circle' : 'time'}
                     size={16}
-                    color={preflightOk ? COACH_SITE.accent : COACH_SITE.muted}
+                    color={preflightOk ? tokens.accent : tokens.muted}
                   />
                   <ProDayText variant="caption" style={styles.preflightLabel}>
                     {c.label}
@@ -341,7 +350,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                     <ProDayText variant="caption" style={styles.promptText}>
                       {p}
                     </ProDayText>
-                    <Icon name="chevron-forward" size={14} color={COACH_SITE.muted} />
+                    <Icon name="chevron-forward" size={14} color={tokens.muted} />
                   </PressableSpring>
                 ))}
               </CoachSectionCard>
@@ -377,10 +386,12 @@ export function CoachMesVideosScreen({ profile }: Props) {
           ) : null}
         </ScrollView>
     </View>
+    </CoachPane>
   );
 }
 
 function Badge({ label }: { label: string }) {
+  const styles = useCoachThemedStyles(createStyles);
   return (
     <View style={styles.badge}>
       <ProDayText variant="caption" style={styles.badgeText}>
@@ -391,6 +402,7 @@ function Badge({ label }: { label: string }) {
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const styles = useCoachThemedStyles(createStyles);
   return (
     <View style={styles.metaRow}>
       <ProDayText variant="caption" style={styles.metaLabel}>
@@ -404,6 +416,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 function LiveStat({ label, value }: { label: string; value: string }) {
+  const styles = useCoachThemedStyles(createStyles);
   return (
     <View style={styles.liveStat}>
       <ProDayText variant="caption" style={styles.metaLabel}>
@@ -416,7 +429,8 @@ function LiveStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
   root: { flex: 1, minHeight: 0 },
   railScroll: { flexGrow: 0, maxHeight: 44 },
   rail: {
@@ -427,16 +441,17 @@ const styles = StyleSheet.create({
   railPill: {
     paddingHorizontal: 12,
     paddingVertical: 8,
+    borderRadius: 18,
+    backgroundColor: tokens.elevated,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: tokens.border,
   },
   railPillOn: {
-    borderColor: COACH_SITE.accent,
-    backgroundColor: COACH_SITE.soft,
+    backgroundColor: tokens.soft,
+    borderColor: tokens.accent,
   },
-  railText: { color: COACH_SITE.muted, fontWeight: '700', fontSize: 11 },
-  railTextOn: { color: COACH_SITE.foreground },
+  railText: { color: tokens.muted, fontWeight: '700', fontSize: 11 },
+  railTextOn: { color: tokens.accent, fontWeight: '800' },
   scroll: { flex: 1 },
   pad: {
     paddingHorizontal: spacing.md,
@@ -445,27 +460,27 @@ const styles = StyleSheet.create({
   },
   matchCard: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
+    borderColor: tokens.border,
     padding: spacing.md,
     gap: 6,
     marginTop: spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: tokens.isLight ? tokens.surface : 'rgba(255,255,255,0.02)',
   },
   matchCardOn: {
-    borderColor: COACH_SITE.accent,
-    backgroundColor: COACH_SITE.soft,
+    borderColor: tokens.accent,
+    backgroundColor: tokens.soft,
   },
-  matchTitle: { color: COACH_SITE.foreground, fontWeight: '800' },
-  muted: { color: COACH_SITE.muted },
+  matchTitle: { color: tokens.foreground, fontWeight: '800' },
+  muted: { color: tokens.muted },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   badge: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: `${COACH_SITE.accent}66`,
+    borderColor: `${tokens.accent}66`,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   badgeText: {
-    color: COACH_SITE.accent,
+    color: tokens.accent,
     fontWeight: '800',
     fontSize: 10,
     letterSpacing: 0.6,
@@ -475,33 +490,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 6,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
+    borderBottomColor: tokens.border,
   },
   metaLabel: {
-    color: COACH_SITE.accent,
+    color: tokens.accent,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     fontSize: 10,
     fontWeight: '700',
   },
-  metaValue: { color: COACH_SITE.foreground, fontWeight: '600' },
+  metaValue: { color: tokens.foreground, fontWeight: '600' },
   preflightRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
+    borderBottomColor: tokens.border,
   },
-  preflightLabel: { color: COACH_SITE.foreground, fontWeight: '600' },
+  preflightLabel: { color: tokens.foreground, fontWeight: '600' },
   liveStats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm },
   liveStat: {
     width: '47%',
     flexGrow: 1,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
+    borderColor: tokens.border,
     padding: spacing.sm,
     gap: 4,
+    backgroundColor: tokens.isLight ? tokens.surface : 'transparent',
   },
   eventGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm },
   eventBtn: {
@@ -512,28 +528,30 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
+    borderColor: tokens.border,
+    backgroundColor: tokens.isLight ? tokens.surface : 'transparent',
   },
   eventSymbol: { fontSize: 16 },
-  eventLabel: { color: COACH_SITE.foreground, fontWeight: '700', fontSize: 10 },
+  eventLabel: { color: tokens.foreground, fontWeight: '700', fontSize: 10 },
   stages: { gap: 6, marginTop: spacing.sm },
   stageRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  stageIndex: { color: COACH_SITE.accent, fontWeight: '800', width: 24 },
-  stageLabel: { color: COACH_SITE.foreground, fontWeight: '600' },
+  stageIndex: { color: tokens.accent, fontWeight: '800', width: 24 },
+  stageLabel: { color: tokens.foreground, fontWeight: '600' },
   promptRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
+    borderBottomColor: tokens.border,
   },
-  promptText: { flex: 1, color: COACH_SITE.foreground, lineHeight: 18 },
+  promptText: { flex: 1, color: tokens.foreground, lineHeight: 18 },
   talkRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
+    borderBottomColor: tokens.border,
   },
-});
+  });
+}

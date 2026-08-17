@@ -40,7 +40,8 @@ import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { CoachPane } from '../../components/coach/CoachScreenHeader';
-import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 
 interface SmartTacticsPortalScreenProps {
   onBack?: () => void;
@@ -58,6 +59,7 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
   const mode: 'coach' | 'player' = playerMode ? 'player' : 'coach';
   const { colors } = useAppTheme();
   const inCoachShell = Boolean(useCoachShellNav());
+  const { tokens: coachTokens } = useCoachTheme();
   const { metrics: wearableMetrics } = useWearableHealth();
   const [chapter, setChapter] = useState<SmartTacticsChapterId>(
     initialChapter ?? (playerMode ? 'inbox' : 'dashboard'),
@@ -226,10 +228,10 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
     return (
       <CoachPane title={getCoachPageIdentity('smart_tactics').title}>
         <SmartTacticsCoachSkinProvider enabled>
-          <View style={[styles.fill, { backgroundColor: COACH_SITE.bg }]}>
+          <View style={[styles.fill, { backgroundColor: coachTokens.bg }]}>
             {loading ? (
               <View style={styles.loader}>
-                <ActivityIndicator color={COACH_SITE.accent} />
+                <ActivityIndicator color={coachTokens.accent} />
               </View>
             ) : (
               <>

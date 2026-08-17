@@ -59,6 +59,10 @@ import {
   JoueurVitrinePanel,
 } from '../player/JoueurAccountPanels';
 import { CoachProfileHub } from '../coach/CoachProfileHub';
+import { CoachPane } from '../coach/CoachScreenHeader';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import {
   CoachActivitePanel,
   CoachParamsPanel,
@@ -161,6 +165,9 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   const isPlayer = props.profile.role === 'player';
   const isCoach = props.profile.role === 'coach';
   const useHubChrome = isPlayer || isCoach;
+  const coachShellNav = useCoachShellNav();
+  const { tokens: coachTokens } = useCoachTheme();
+  const inCoachShell = isCoach && Boolean(coachShellNav);
   const joueurSession = useJoueurSession();
   const joueurAccent = useMemo(() => {
     if (!isPlayer) return colors.accent;
@@ -229,6 +236,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         id: 'apercu' as const,
         render: () => (
           <ScrollView
+            style={styles.chapterScroll}
             contentContainerStyle={useHubChrome ? { paddingBottom: spacing.xl } : pagePad}
             {...scrollProps}
           >
@@ -344,7 +352,11 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       {
         id: 'cv' as const,
         render: () => (
-          <ScrollView contentContainerStyle={useHubChrome ? styles.managementPad : pagePad} {...scrollProps}>
+          <ScrollView
+            style={styles.chapterScroll}
+            contentContainerStyle={useHubChrome ? styles.managementPad : pagePad}
+            {...scrollProps}
+          >
             {props.profile.role === 'player' ? (
               <JoueurVitrinePanel
                 profile={props.profile}
@@ -395,7 +407,11 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       {
         id: 'activite' as const,
         render: () => (
-          <ScrollView contentContainerStyle={useHubChrome ? styles.managementPad : pagePad} {...scrollProps}>
+          <ScrollView
+            style={styles.chapterScroll}
+            contentContainerStyle={useHubChrome ? styles.managementPad : pagePad}
+            {...scrollProps}
+          >
             {props.profile.role === 'player' ? (
               <JoueurActivitePanel
                 accent={joueurAccent}
@@ -466,7 +482,11 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       {
         id: 'reglages' as const,
         render: () => (
-          <ScrollView contentContainerStyle={useHubChrome ? styles.managementPad : pagePad} {...scrollProps}>
+          <ScrollView
+            style={styles.chapterScroll}
+            contentContainerStyle={useHubChrome ? styles.managementPad : pagePad}
+            {...scrollProps}
+          >
             {isPlayer ? (
               <JoueurParamsPanel
                 accent={joueurAccent}
@@ -693,12 +713,16 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     </View>
   );
 
-  return (
-    <View style={styles.root}>
+  const content = (
+    <View style={[styles.root, inCoachShell && { backgroundColor: coachTokens.bg }]}>
       {identityHeader}
       <View style={useHubChrome ? styles.playerPager : undefined}>{pager}</View>
     </View>
   );
+  if (inCoachShell) {
+    return <CoachPane title={getCoachPageIdentity('profil').title}>{content}</CoachPane>;
+  }
+  return content;
 };
 
 const JerseyNumberField: React.FC<{
@@ -825,6 +849,7 @@ function createStyles(_c: AppColors) {
     root: { flex: 1, minHeight: 0 },
     pager: { flex: 1, minHeight: 0, marginTop: spacing.xs },
     playerPager: { flex: 1, minHeight: 0 },
+    chapterScroll: { flex: 1, minHeight: 0 },
     managementPad: {
       paddingHorizontal: spacing.md,
       paddingTop: spacing.sm,

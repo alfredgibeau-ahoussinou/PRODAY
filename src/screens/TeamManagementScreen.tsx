@@ -19,6 +19,12 @@ import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
 import { membershipsService } from '../services/memberships.service';
 import type { Membership } from '../models/Membership';
+import {
+  TEAM_STAFF_ROLE_LABELS,
+  type TeamStaffMember,
+  type TeamStaffRole,
+} from '../models/TeamStaffMember';
+import { teamStaffService } from '../services/teamStaff.service';
 import { isOrganizerCapable } from '../utils/roleCapabilities';
 import { userCanManageConvocations } from '../utils/clubFeatureAccess';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +40,11 @@ import { aggregateCarpoolBalance } from '../utils/carpoolBalance';
 import { radius, spacing } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
+import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
+import { CoachScreenHeader } from '../components/coach/CoachScreenHeader';
+import { getCoachPageIdentity } from '../content/coachPageIdentity';
+import { useCoachTheme } from '../features/coach/shell/CoachThemeContext';
+import { coachTokensAsAppColors } from '../features/coach/shell/coachThemeStyles';
 
 type TeamTab = 'planning' | 'roster' | 'attendance' | 'stats';
 type HubView = 'hub' | 'event' | 'create' | 'join' | 'announcements' | 'club';
@@ -50,7 +61,13 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const { isAdmin } = useAuth();
   const { openChat, setActiveTab } = useTabNavigation();
   const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const inCoachShell = Boolean(useCoachShellNav());
+  const { tokens: coachTokens } = useCoachTheme();
+  const screenColors = useMemo(
+    () => (inCoachShell ? coachTokensAsAppColors(coachTokens) : c),
+    [inCoachShell, coachTokens, c],
+  );
+  const styles = useMemo(() => createStyles(screenColors), [screenColors]);
   
   const [hubView, setHubView] = useState<HubView>(profile.profile.club_id ? 'hub' : 'join');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -67,6 +84,10 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [invitingUid, setInvitingUid] = useState<string | null>(null);
+  const [staff, setStaff] = useState<TeamStaffMember[]>([]);
+  const [staffUid, setStaffUid] = useState('');
+  const [staffName, setStaffName] = useState('');
+  const [staffRole, setStaffRole] = useState<TeamStaffRole>('assistant');
 
   const clubId = profile.profile.club_id;
   const canManageRoster = isOrganizerCapable(profile.role) || isAdmin;
@@ -75,18 +96,20 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [listEvents, members, clubSeasonEvents, pending] = await Promise.all([
+      const [listEvents, members, clubSeasonEvents, pending, staffRows] = await Promise.all([
         teamEventsService.listForUser(profile.uid, clubId),
         clubId ? usersService.listMembersByClubId(clubId) : Promise.resolve([]),
         clubId ? teamEventsService.listForClub(clubId, 120) : Promise.resolve([]),
         clubId && canManageRoster
           ? membershipsService.listByClub(clubId, 'pending')
           : Promise.resolve([]),
+        clubId ? teamStaffService.listForClub(clubId) : Promise.resolve([]),
       ]);
       setEvents(listEvents);
       setMembersCount(members.length);
       setMembers(members);
       setPendingMemberships(pending);
+      setStaff(staffRows);
       setSeasonEvents(clubSeasonEvents);
       if (!selectedStatUid && members[0]) setSelectedStatUid(members[0].uid);
     } finally {
@@ -369,6 +392,23 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     }
   };
 
+  const handleAddStaff = async () => {
+    if (!clubId || !staffUid.trim()) return;
+    try {
+      await teamStaffService.add({
+        club_id: clubId,
+        uid: staffUid.trim(),
+        display_name: staffName.trim() || staffUid.trim(),
+        staff_role: staffRole,
+      });
+      setStaffUid('');
+      setStaffName('');
+      setStaff(await teamStaffService.listForClub(clubId));
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d’ajouter le staff.');
+    }
+  };
+
   const handleInvitePlayer = async (player: User) => {
     if (!clubId) return;
     setInvitingUid(player.uid);
@@ -402,8 +442,12 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
           }}
         />
       ) : (
-        <View style={[styles.root, rootStyle]}>
-      <ScreenHeader title="Gestion équipe" onBack={onBack} centered />
+        <View style={[styles.root, rootStyle, inCoachShell && { backgroundColor: coachTokens.bg }]}>
+      {inCoachShell ? (
+        <CoachScreenHeader title={getCoachPageIdentity('gestion').title} />
+      ) : (
+        <ScreenHeader title="Gestion équipe" onBack={onBack} centered />
+      )}
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.tabs}>
           <TabBtn styles={styles} id="planning" label="Planning" tab={tab} setTab={setTab} />
@@ -436,7 +480,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         )}
 
         {loading ? (
-          <ActivityIndicator color={c.accent} style={styles.loader} />
+          <ActivityIndicator color={screenColors.accent} style={styles.loader} />
         ) : null}
 
         {!loading && tab === 'planning' ? (
@@ -509,7 +553,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                       </Text>
                     </View>
                     <PressableSpring
-                      style={[styles.pendingBtn, { backgroundColor: c.brand }]}
+                      style={[styles.pendingBtn, { backgroundColor: screenColors.brand }]}
                       onPress={() => void handleMembershipDecision(m.id, true)}
                       scaleTo={0.97}
                     >
@@ -534,16 +578,16 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                 </Text>
                 <View style={styles.inviteRow}>
                   <TextInput
-                    style={[styles.inviteInput, { borderColor: c.border, color: c.text }]}
+                    style={[styles.inviteInput, { borderColor: screenColors.border, color: screenColors.text }]}
                     placeholder="Nom du joueur…"
-                    placeholderTextColor={c.textMuted}
+                    placeholderTextColor={screenColors.textMuted}
                     value={playerSearch}
                     onChangeText={setPlayerSearch}
                     onSubmitEditing={() => void searchPlayers()}
                     returnKeyType="search"
                   />
                   <PressableSpring
-                    style={[styles.pendingBtn, { backgroundColor: c.brand }]}
+                    style={[styles.pendingBtn, { backgroundColor: screenColors.brand }]}
                     onPress={() => void searchPlayers()}
                     disabled={searchLoading}
                     scaleTo={0.97}
@@ -562,7 +606,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                       </Text>
                     </View>
                     <PressableSpring
-                      style={[styles.pendingBtn, { backgroundColor: c.brand }]}
+                      style={[styles.pendingBtn, { backgroundColor: screenColors.brand }]}
                       onPress={() => void handleInvitePlayer(player)}
                       disabled={invitingUid === player.uid}
                       scaleTo={0.97}
@@ -573,6 +617,68 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                 ))}
               </View>
             ) : null}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Staff</Text>
+              {staff.map((s) => (
+                <Row
+                  styles={styles}
+                  key={s.id}
+                  title={s.display_name}
+                  subtitle={TEAM_STAFF_ROLE_LABELS[s.staff_role]}
+                  right=""
+                />
+              ))}
+              {staff.length === 0 ? (
+                <Text style={styles.empty}>Aucun membre staff pour le moment.</Text>
+              ) : null}
+              {canManageRoster ? (
+                <View style={{ gap: spacing.xs, marginTop: spacing.xs }}>
+                  <TextInput
+                    style={[styles.inviteInput, { flexGrow: 0, borderColor: screenColors.border, color: screenColors.text }]}
+                    placeholder="Nom affiché"
+                    placeholderTextColor={screenColors.textMuted}
+                    value={staffName}
+                    onChangeText={setStaffName}
+                  />
+                  <TextInput
+                    style={[styles.inviteInput, { flexGrow: 0, borderColor: screenColors.border, color: screenColors.text }]}
+                    placeholder="UID ProDay"
+                    placeholderTextColor={screenColors.textMuted}
+                    value={staffUid}
+                    onChangeText={setStaffUid}
+                  />
+                  <View style={styles.roleRow}>
+                    {(['assistant', 'analyst', 'physio', 'coach'] as TeamStaffRole[]).map((r) => (
+                      <PressableSpring
+                        key={r}
+                        onPress={() => setStaffRole(r)}
+                        scaleTo={0.97}
+                        style={[
+                          styles.roleChip,
+                          staffRole === r ? { borderColor: screenColors.brand, backgroundColor: screenColors.surfaceMuted } : null,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.miniBtnText,
+                            staffRole === r ? { color: screenColors.brand, fontWeight: '800' } : null,
+                          ]}
+                        >
+                          {TEAM_STAFF_ROLE_LABELS[r]}
+                        </Text>
+                      </PressableSpring>
+                    ))}
+                  </View>
+                  <PressableSpring
+                    style={[styles.pendingBtn, { backgroundColor: screenColors.brand, alignSelf: 'flex-start' }]}
+                    onPress={() => void handleAddStaff()}
+                    scaleTo={0.97}
+                  >
+                    <Text style={styles.pendingBtnText}>Ajouter au staff</Text>
+                  </PressableSpring>
+                </View>
+              ) : null}
+            </View>
             <View style={styles.card}>
             <Text style={styles.sectionTitle}>Effectif club</Text>
             <Text style={styles.body}>
@@ -670,7 +776,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
                 : 'Les actions live de match peuvent être appliquées aux stats joueurs depuis les écrans Matchs (but, passe, cartons, remplacements).'}
             </Text>
             <View style={styles.infoBox}>
-              <Icon name="document" size={18} color={c.accent} />
+              <Icon name="document" size={18} color={screenColors.accent} />
               <Text style={styles.infoText}>
                 Base prête: lineup, live actions et agrégation automatique vers les stats saison.
               </Text>
@@ -976,6 +1082,15 @@ function createStyles(c: AppColors) {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     fontSize: 14,
+  },
+  roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  roleChip: {
+    borderWidth: 1,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
   },
   });
 }

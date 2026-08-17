@@ -16,7 +16,6 @@ import {
   COACH_PORTAL_CHAPTERS,
   type CoachPortalChapterId,
 } from '../../content/coachPortalChapters';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import {
   COACH_TEAM_ACCENT_PALETTE,
@@ -241,6 +240,9 @@ export function CoachActionRow({
   secondary?: string;
   onSecondary?: () => void;
 }) {
+  const { tokens } = useCoachTheme();
+  const coachActionStyles = useMemo(() => createCoachActionStyles(tokens), [tokens]);
+
   return (
     <View style={coachActionStyles.row}>
       <PressableSpring
@@ -249,7 +251,7 @@ export function CoachActionRow({
         haptic
         style={coachActionStyles.primary}
       >
-        <CoachText variant="section" style={coachActionStyles.primaryText}>
+        <CoachText variant="section" inverse style={coachActionStyles.primaryText}>
           {primary}
         </CoachText>
       </PressableSpring>
@@ -290,6 +292,9 @@ export function CoachEmptyState({
   cta?: string;
   onPress?: () => void;
 }) {
+  const { tokens } = useCoachTheme();
+  const coachEmptyStyles = useMemo(() => createCoachEmptyStyles(tokens), [tokens]);
+
   return (
     <View style={coachEmptyStyles.block}>
       <CoachText variant="section" style={coachEmptyStyles.title}>
@@ -300,7 +305,7 @@ export function CoachEmptyState({
       </CoachText>
       {cta && onPress ? (
         <PressableSpring onPress={onPress} scaleTo={0.97} haptic style={coachEmptyStyles.cta}>
-          <CoachText variant="section" style={coachEmptyStyles.ctaText}>
+          <CoachText variant="section" inverse style={coachEmptyStyles.ctaText}>
             {cta}
           </CoachText>
         </PressableSpring>
@@ -583,29 +588,50 @@ const stylesPad = StyleSheet.create({
   },
 });
 
-const coachActionStyles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
-  primary: {
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: 14,
-    minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E5E5EA',
-  },
-  primaryText: { color: '#000', fontWeight: '700' },
-  secondary: {
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-    minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COACH_SITE.elevated,
-  },
-  secondaryText: { color: COACH_SITE.foreground, fontWeight: '700' },
-});
+function createCoachActionStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
+    primary: {
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: 14,
+      minHeight: 52,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.accent,
+    },
+    primaryText: { fontWeight: '700' },
+    secondary: {
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: 14,
+      minHeight: 52,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.isLight ? tokens.surface : tokens.elevated,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    secondaryText: { color: tokens.foreground, fontWeight: '700' },
+  });
+}
+
+function createCoachEmptyStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    block: { gap: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.xl },
+    title: { color: tokens.foreground, fontWeight: '800', fontSize: 22 },
+    body: { fontSize: 16 },
+    cta: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 52,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.accent,
+      paddingHorizontal: spacing.xl,
+    },
+    ctaText: { fontWeight: '700' },
+  });
+}
 
 function createCoachSettingsStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
@@ -645,21 +671,6 @@ function createCoachSettingsStyles(tokens: CoachThemeTokens) {
     badgeText: { fontSize: 10, fontWeight: '800' },
   });
 }
-
-const coachEmptyStyles = StyleSheet.create({
-  block: { gap: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.xl },
-  title: { color: COACH_SITE.foreground, fontWeight: '800', fontSize: 22 },
-  body: { fontSize: 16 },
-  cta: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-    borderRadius: radius.pill,
-    backgroundColor: '#E5E5EA',
-    paddingHorizontal: spacing.xl,
-  },
-  ctaText: { color: '#000', fontWeight: '700' },
-});
 
 function createStyles() {
   return StyleSheet.create({

@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { User } from '../../models/User';
 import type { TeamEvent } from '../../models/TeamEvent';
-import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import {
   CoachActionRow,
   CoachKpiRow,
@@ -24,6 +24,9 @@ import { buildCoachProfileStats, type CoachProfileStats } from '../../utils/coac
 import { teamEventsService } from '../../services/teamEvents.service';
 import { usersService } from '../../services/users.service';
 import { findCoachNavItem } from '../../features/coach/navigation/coachNavConfig';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { spacing, radius } from '../../theme/designTokens';
 
 type Props = {
@@ -63,6 +66,8 @@ export function CoachProfileHub({
 }: Props) {
   const identity = getCoachPageIdentity('profil');
   const shellNav = useCoachShellNav();
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
   const nav = useTabNavigationActions();
   const { count: unreadMessages } = useUnreadMessageCount();
   const messagesItem = findCoachNavItem('messages');
@@ -137,20 +142,20 @@ export function CoachProfileHub({
     <View style={styles.root}>
       <View style={styles.hero}>
         <LinearGradient
-          colors={[COACH_SITE.soft, COACH_SITE.surface]}
+          colors={[tokens.soft, tokens.surface]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
         <View style={styles.heroTop}>
           <View style={styles.heroTopLeft}>
-            <Icon name={identity.icon} size={12} color={COACH_SITE.accent} />
+            <Icon name={identity.icon} size={12} color={tokens.accent} />
             <ProDayText variant="caption" style={styles.kicker}>
               {identity.eyebrow}
             </ProDayText>
           </View>
           {verified ? (
             <View style={styles.verifiedPill}>
-              <Icon name="checkmark-circle" size={12} color={COACH_SITE.accent} />
+              <Icon name="checkmark-circle" size={12} color={tokens.accent} />
               <ProDayText variant="caption" style={styles.verifiedText}>
                 Vérifié
               </ProDayText>
@@ -243,7 +248,7 @@ export function CoachProfileHub({
           {
             label: 'Note',
             value: p.rating != null ? p.rating.toFixed(1) : '—',
-            tone: p.rating != null ? COACH_SITE.accent : undefined,
+            tone: p.rating != null ? tokens.accent : undefined,
           },
         ]}
       />
@@ -352,7 +357,8 @@ export function CoachProfileHub({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
   root: {
     gap: spacing.md,
     paddingHorizontal: spacing.md,
@@ -363,7 +369,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     overflow: 'hidden',
     gap: spacing.sm,
-    backgroundColor: COACH_SITE.surface,
+    backgroundColor: tokens.surface,
   },
   heroTop: {
     flexDirection: 'row',
@@ -373,7 +379,7 @@ const styles = StyleSheet.create({
   },
   heroTopLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   kicker: {
-    color: COACH_SITE.accent,
+    color: tokens.accent,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -382,24 +388,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: `${COACH_SITE.accent}88`,
+    borderColor: `${tokens.accent}88`,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   verifiedText: {
-    color: COACH_SITE.accent,
+    color: tokens.accent,
     fontWeight: '800',
     fontSize: 10,
     letterSpacing: 0.4,
   },
   pendingPill: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
+    borderColor: tokens.border,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   pendingText: {
-    color: COACH_SITE.muted,
+    color: tokens.muted,
     fontWeight: '700',
     fontSize: 10,
     letterSpacing: 0.4,
@@ -410,19 +416,19 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 36,
     borderWidth: 2,
-    borderColor: `${COACH_SITE.accent}99`,
+    borderColor: `${tokens.accent}99`,
   },
   avatarFallback: {
     width: 72,
     height: 72,
     borderRadius: 36,
     borderWidth: 2,
-    borderColor: `${COACH_SITE.accent}99`,
-    backgroundColor: COACH_SITE.soft,
+    borderColor: `${tokens.accent}99`,
+    backgroundColor: tokens.soft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarLetter: { color: COACH_SITE.foreground, fontWeight: '800' },
+  avatarLetter: { color: tokens.foreground, fontWeight: '800' },
   avatarBadge: {
     position: 'absolute',
     right: -4,
@@ -430,18 +436,18 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: COACH_SITE.accent,
+    backgroundColor: tokens.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   name: {
-    color: COACH_SITE.foreground,
+    color: tokens.foreground,
     fontWeight: '800',
     letterSpacing: -0.5,
     fontSize: 26,
     marginTop: spacing.sm,
   },
-  meta: { color: COACH_SITE.accent, fontWeight: '700' },
+  meta: { color: tokens.accent, fontWeight: '700' },
   identityRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -453,13 +459,13 @@ const styles = StyleSheet.create({
     minWidth: 88,
     padding: spacing.sm,
     borderRadius: 10,
-    backgroundColor: COACH_SITE.elevated,
+    backgroundColor: tokens.elevated,
     gap: 2,
   },
-  bio: { color: COACH_SITE.muted, lineHeight: 18, marginTop: 2 },
-  bioMuted: { color: COACH_SITE.muted, lineHeight: 18, marginTop: 2 },
+  bio: { color: tokens.muted, lineHeight: 18, marginTop: 2 },
+  bioMuted: { color: tokens.muted, lineHeight: 18, marginTop: 2 },
   messagesCard: {
-    backgroundColor: COACH_SITE.surface,
+    backgroundColor: tokens.surface,
     borderRadius: radius.lg,
     overflow: 'hidden',
   },
@@ -467,18 +473,19 @@ const styles = StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.sm },
   tag: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: `${COACH_SITE.accent}66`,
-    backgroundColor: COACH_SITE.soft,
+    borderColor: `${tokens.accent}66`,
+    backgroundColor: tokens.soft,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  tagText: { color: COACH_SITE.foreground, fontWeight: '700', fontSize: 11 },
-  hint: { color: COACH_SITE.muted, marginTop: spacing.xs },
+  tagText: { color: tokens.foreground, fontWeight: '700', fontSize: 11 },
+  hint: { color: tokens.muted, marginTop: spacing.xs },
   aiPreview: { gap: spacing.sm, marginTop: spacing.sm, marginBottom: spacing.sm },
   aiPreviewRow: {
     padding: spacing.sm,
     borderRadius: 10,
-    backgroundColor: COACH_SITE.elevated,
+    backgroundColor: tokens.elevated,
   },
   aiPreviewTitle: { fontWeight: '700', marginBottom: 4 },
-});
+  });
+}

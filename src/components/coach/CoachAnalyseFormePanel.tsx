@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
-import { COACH_SITE } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
+import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import type { WellnessSignals } from '../../models/SmartTactics';
 import type { PlayerLoadSignals } from '../../utils/playerLoadAlerts';
 import {
@@ -37,7 +38,7 @@ const BAND_COLOR: Record<FormBand, string> = {
   optimal: '#34d399',
   watch: '#fbbf24',
   low: '#fb7185',
-  unknown: 'rgba(245,245,240,0.35)',
+  unknown: '#94A3B8',
 };
 
 /** Section principale coach — Analyse de forme (effectif + avant match). */
@@ -49,6 +50,7 @@ export const CoachAnalyseFormePanel: React.FC<Props> = ({
 }) => {
   const [view, setView] = useState<ViewMode>('effectif');
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
+  const styles = useCoachThemedStyles(createStyles);
 
   const rows: PlayerFormRow[] = useMemo(
     () => loadSignals.map((s) => buildPlayerFormAnalysis(s, wellnessByUid[s.uid])),
@@ -256,6 +258,7 @@ export const CoachFormeDashboardCard: React.FC<{
   onOpenFull: () => void;
 }> = ({ rows, onOpenFull }) => {
   const summary = summarizeSquadForm(rows);
+  const styles = useCoachThemedStyles(createStyles);
   return (
     <PressableSpring onPress={onOpenFull} scaleTo={0.97} haptic>
       <CoachSectionCard
@@ -290,7 +293,8 @@ export const CoachFormeDashboardCard: React.FC<{
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
   wrap: { gap: spacing.md },
   tabs: {
     flexDirection: 'row',
@@ -299,39 +303,41 @@ const styles = StyleSheet.create({
   },
   tab: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
+    borderColor: tokens.border,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 999,
+    backgroundColor: tokens.elevated,
   },
   tabOn: {
-    borderColor: COACH_SITE.accent,
-    backgroundColor: COACH_SITE.soft,
+    borderColor: tokens.accent,
+    backgroundColor: tokens.soft,
   },
   tabText: { fontWeight: '800', fontSize: 12 },
-  tabTextOn: { color: COACH_SITE.accent },
-  tabTextOff: { color: COACH_SITE.muted },
+  tabTextOn: { color: tokens.accent },
+  tabTextOff: { color: tokens.muted },
   tableKicker: {
-    color: COACH_SITE.muted,
+    color: tokens.muted,
     textTransform: 'uppercase',
     letterSpacing: 1.6,
     fontSize: 10,
     fontWeight: '700',
     marginBottom: 4,
   },
-  muted: { color: COACH_SITE.muted, lineHeight: 18 },
+  muted: { color: tokens.muted, lineHeight: 18 },
   row: {
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 10,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
+    borderBottomColor: tokens.border,
   },
   rowOn: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: tokens.soft,
     marginHorizontal: -4,
     paddingHorizontal: 4,
+    borderRadius: 8,
   },
   bandBar: { width: 3, borderRadius: 1 },
   rowBody: { flex: 1, gap: 4, minWidth: 0 },
@@ -342,38 +348,39 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   playerName: {
-    color: COACH_SITE.foreground,
+    color: tokens.foreground,
     fontWeight: '700',
     flex: 1,
   },
   score: {
-    color: COACH_SITE.foreground,
+    color: tokens.foreground,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
   },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   bandLabel: { fontWeight: '700', fontSize: 11 },
-  meta: { color: COACH_SITE.muted, fontSize: 11 },
+  meta: { color: tokens.muted, fontSize: 11 },
   detail: {
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COACH_SITE.border,
+    borderTopColor: tokens.border,
     gap: 4,
   },
-  detailBody: { color: COACH_SITE.foreground, lineHeight: 18, opacity: 0.85 },
-  detailHint: { color: COACH_SITE.accent, lineHeight: 18, fontWeight: '600' },
+  detailBody: { color: tokens.foreground, lineHeight: 18, opacity: 0.85 },
+  detailHint: { color: tokens.accent, lineHeight: 18, fontWeight: '600' },
   insightRow: {
     flexDirection: 'row',
     gap: 10,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
+    borderBottomColor: tokens.border,
   },
   insightBody: { flex: 1, gap: 4, minWidth: 0 },
   ctaLink: {
-    color: COACH_SITE.accent,
+    color: tokens.accent,
     fontWeight: '800',
     marginTop: spacing.xs,
   },
-});
+  });
+}

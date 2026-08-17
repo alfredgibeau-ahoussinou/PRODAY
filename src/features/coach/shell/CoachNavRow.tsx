@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { CoachText } from '../../../components/coach/coachPortalUi';
 import { Icon } from '../../../components/ui/Icon';
-import { COACH_SITE } from '../../../content/coachPageIdentity';
 import { spacing } from '../../../theme/designTokens';
+import { useCoachThemedStyles } from './coachThemeStyles';
+import { useCoachTheme } from './CoachThemeContext';
+import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
 
 type Props = {
   icon: React.ComponentProps<typeof Icon>['name'];
@@ -27,7 +29,8 @@ export function CoachNavRow({
   accessibilityLabel,
   showSeparator = true,
 }: Props) {
-  const styles = useMemo(() => createStyles(), []);
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
 
   return (
     <View>
@@ -43,13 +46,13 @@ export function CoachNavRow({
           <Icon
             name={icon}
             size={18}
-            color={locked ? COACH_SITE.muted : COACH_SITE.accent}
+            color={locked ? tokens.muted : tokens.accent}
             variant="outline"
           />
           {aiBadge ? <View style={styles.aiDot} /> : null}
           {locked ? (
             <View style={styles.lockBadge}>
-              <Icon name="lock" size={9} color={COACH_SITE.muted} />
+              <Icon name="lock" size={9} color={tokens.muted} />
             </View>
           ) : null}
         </View>
@@ -67,14 +70,14 @@ export function CoachNavRow({
             </CoachText>
           </View>
         ) : null}
-        <Icon name="chevron-forward" size={16} color={COACH_SITE.muted} variant="outline" />
+        <Icon name="chevron-forward" size={16} color={tokens.muted} variant="outline" />
       </Pressable>
       {showSeparator ? <View style={styles.separator} /> : null}
     </View>
   );
 }
 
-function createStyles() {
+function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -91,7 +94,7 @@ function createStyles() {
       borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: COACH_SITE.surface,
+      backgroundColor: tokens.elevated,
     },
     iconCircleLocked: { opacity: 0.6 },
     aiDot: {
@@ -101,7 +104,7 @@ function createStyles() {
       width: 6,
       height: 6,
       borderRadius: 3,
-      backgroundColor: COACH_SITE.accent,
+      backgroundColor: tokens.accent,
     },
     lockBadge: {
       position: 'absolute',
@@ -112,21 +115,21 @@ function createStyles() {
       borderRadius: 7,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: COACH_SITE.elevated,
+      backgroundColor: tokens.elevated,
     },
     label: {
       flex: 1,
       fontSize: 16,
       fontWeight: '500',
-      color: COACH_SITE.foreground,
+      color: tokens.foreground,
     },
-    labelLocked: { color: COACH_SITE.muted },
+    labelLocked: { color: tokens.muted },
     badge: {
       minWidth: 20,
       height: 20,
       paddingHorizontal: 6,
       borderRadius: 10,
-      backgroundColor: COACH_SITE.accent,
+      backgroundColor: tokens.accent,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -134,7 +137,7 @@ function createStyles() {
     separator: {
       marginLeft: spacing.md + 32 + spacing.sm,
       height: StyleSheet.hairlineWidth,
-      backgroundColor: COACH_SITE.border,
+      backgroundColor: tokens.border,
     },
   });
 }

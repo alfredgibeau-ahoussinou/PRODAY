@@ -25,6 +25,8 @@ import {
   type SmartTacticsChapterId,
 } from '../../content/smartTacticsChapters';
 import { COACH_SITE } from '../../content/coachPageIdentity';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import {
   CoachKpiRow,
   CoachSectionCard,
@@ -117,29 +119,32 @@ export function SmartTacticsPressable({
 export function useSmartTacticsTheme() {
   const coach = useSmartTacticsCoachSkin();
   const { colors } = useAppTheme();
+  const { tokens } = useCoachTheme();
   return useMemo(
     () => ({
       coach,
-      accent: coach ? COACH_SITE.accent : SMART_PITCH.warm,
-      accentSoft: coach ? COACH_SITE.soft : SMART_PITCH.warmSoft,
-      ctaBg: coach ? '#E5E5EA' : SMART_PITCH.warm,
-      ctaText: coach ? '#000000' : '#0B1A12',
-      surface: coach ? COACH_SITE.surface : colors.surface,
-      border: coach ? COACH_SITE.border : colors.border,
-      muted: coach ? COACH_SITE.muted : colors.textMuted,
-      foreground: coach ? COACH_SITE.foreground : colors.text,
+      accent: coach ? tokens.accent : SMART_PITCH.warm,
+      accentSoft: coach ? tokens.soft : SMART_PITCH.warmSoft,
+      ctaBg: coach ? tokens.accent : SMART_PITCH.warm,
+      ctaText: coach ? '#FFFFFF' : '#0B1A12',
+      surface: coach ? tokens.surface : colors.surface,
+      elevated: coach ? tokens.elevated : colors.surfaceMuted,
+      bg: coach ? tokens.bg : colors.background,
+      border: coach ? tokens.border : colors.border,
+      muted: coach ? tokens.muted : colors.textMuted,
+      foreground: coach ? tokens.foreground : colors.text,
       ready: SMART_PITCH.ready,
       risk: SMART_PITCH.risk,
-      midTone: coach ? COACH_SITE.accent : SMART_PITCH.warm,
+      midTone: coach ? tokens.accent : SMART_PITCH.warm,
       stadiumGradient: coach
-        ? ([COACH_SITE.bg, COACH_SITE.pitchDeep, COACH_SITE.bg] as const)
+        ? ([tokens.bg, COACH_SITE.pitchDeep, tokens.bg] as const)
         : (['#0B1A12', '#12261A', '#0B1A12'] as const),
       benchGradient: coach
-        ? ([COACH_SITE.surface, COACH_SITE.elevated, COACH_SITE.surface] as const)
+        ? ([tokens.surface, tokens.elevated, tokens.surface] as const)
         : (['#1A2A1E', '#101A14', '#0C1410'] as const),
-      stadiumBorder: coach ? COACH_SITE.border : 'rgba(245,165,36,0.28)',
+      stadiumBorder: coach ? tokens.border : 'rgba(245,165,36,0.28)',
     }),
-    [coach, colors.border, colors.surface, colors.text, colors.textMuted],
+    [coach, colors.background, colors.border, colors.surface, colors.surfaceMuted, colors.text, colors.textMuted, tokens],
   );
 }
 
@@ -382,8 +387,10 @@ export function SmartTacticsPanel({
 }) {
   const coach = useSmartTacticsCoachSkin();
   const { colors } = useAppTheme();
+  const { tokens } = useCoachTheme();
+  const panelStyles = useMemo(() => createCoachPanelStyles(tokens), [tokens]);
   if (coach) {
-    return <View style={[coachPanel.card, style]}>{children}</View>;
+    return <View style={[panelStyles.card, style]}>{children}</View>;
   }
   return (
     <ProDaySurface variant={variant} style={style}>
@@ -405,7 +412,8 @@ export function SmartTacticsChapterRail({
 }) {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const styles = useMemo(() => createRailStyles(coachSkin), [coachSkin]);
+  const { tokens } = useCoachTheme();
+  const styles = useMemo(() => createRailStyles(coachSkin ? tokens : undefined), [coachSkin, tokens]);
   const [moreOpen, setMoreOpen] = useState(() =>
     mode === 'coach' && !coachSkin ? !isSmartTacticsPrimaryChapter(active) : false,
   );
@@ -592,6 +600,7 @@ export function SmartTacticsFlowHint({
 }) {
   const { t } = useTranslation();
   const coach = coachSkin || useSmartTacticsCoachSkin();
+  const theme = useSmartTacticsTheme();
   if (mode === 'player') {
     const player = SMART_TACTICS_PLAYER_PRIMARY_CHAPTERS.find((c) => c.id === active);
     const hints: Record<string, string> = {
@@ -609,13 +618,13 @@ export function SmartTacticsFlowHint({
   const primary = SMART_TACTICS_PRIMARY_CHAPTERS.find((c) => c.id === active);
   if (!primary) {
     return (
-      <ProDayText variant="caption" muted style={[hint.line, coach && hint.coachLine]}>
+      <ProDayText variant="caption" muted style={[hint.line, coach && { color: theme.muted }]}>
         {t('smartTactics.flow.moreHint')}
       </ProDayText>
     );
   }
   return (
-    <ProDayText variant="caption" muted style={[hint.line, coach && hint.coachLine]}>
+    <ProDayText variant="caption" muted style={[hint.line, coach && { color: theme.muted }]}>
       {t(`smartTactics.flow.step${primary.step}`)}
     </ProDayText>
   );
@@ -660,18 +669,20 @@ export function SmartTacticsEmpty({
 }) {
   const { colors } = useAppTheme();
   const coach = useSmartTacticsCoachSkin();
+  const { tokens } = useCoachTheme();
+  const panelStyles = useMemo(() => createCoachPanelStyles(tokens), [tokens]);
   if (coach) {
     return (
-      <View style={coachPanel.card}>
-        <CoachText variant="section" style={coachPanel.title}>
+      <View style={panelStyles.card}>
+        <CoachText variant="section" style={panelStyles.title}>
           {title}
         </CoachText>
-        <CoachText variant="caption" muted style={coachPanel.body}>
+        <CoachText variant="caption" muted style={panelStyles.body}>
           {body}
         </CoachText>
         {cta && onPress ? (
-          <SmartTacticsPressable onPress={onPress} style={empty.cta}>
-            <CoachText variant="section" accent style={coachPanel.cta}>
+          <SmartTacticsPressable onPress={onPress} style={panelStyles.ctaTouch}>
+            <CoachText variant="section" accent style={panelStyles.cta}>
               {cta}
             </CoachText>
           </SmartTacticsPressable>
@@ -705,8 +716,7 @@ export function SmartMetricChip({
   value: string;
   tone?: 'neutral' | 'good' | 'warn' | 'warm';
 }) {
-  const { colors } = useAppTheme();
-  const coach = useSmartTacticsCoachSkin();
+  const theme = useSmartTacticsTheme();
   const accent =
     tone === 'good'
       ? SMART_PITCH.ready
@@ -714,16 +724,14 @@ export function SmartMetricChip({
         ? SMART_PITCH.risk
         : tone === 'warm'
           ? SMART_PITCH.warm
-          : coach
-            ? COACH_SITE.muted
-            : colors.textMuted;
+          : theme.muted;
   return (
     <View
       style={[
         metric.chip,
-        coach
-          ? { borderColor: COACH_SITE.border, backgroundColor: COACH_SITE.surface }
-          : { borderColor: colors.border, backgroundColor: colors.surface },
+        theme.coach
+          ? { borderColor: theme.border, backgroundColor: theme.surface }
+          : { borderColor: theme.border, backgroundColor: theme.surface },
       ]}
     >
       <ProDayText variant="caption" muted style={metric.label}>
@@ -759,24 +767,24 @@ const hint = StyleSheet.create({
     paddingBottom: 4,
     fontWeight: '600',
   },
-  coachLine: {
-    color: COACH_SITE.muted,
-  },
 });
 
-const coachPanel = StyleSheet.create({
-  card: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
-    borderRadius: 16,
-    padding: spacing.md,
-    gap: spacing.xs,
-    backgroundColor: COACH_SITE.surface,
-  },
-  title: { color: COACH_SITE.foreground, fontWeight: '800' },
-  body: { color: COACH_SITE.muted, lineHeight: 18 },
-  cta: { color: COACH_SITE.accent, fontWeight: '800' },
-});
+function createCoachPanelStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
+    card: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      borderRadius: 16,
+      padding: spacing.md,
+      gap: spacing.xs,
+      backgroundColor: tokens.surface,
+    },
+    title: { color: tokens.foreground, fontWeight: '800' },
+    body: { color: tokens.muted, lineHeight: 18 },
+    ctaTouch: { alignSelf: 'flex-start', marginTop: spacing.xs },
+    cta: { fontWeight: '800' },
+  });
+}
 
 const pad = StyleSheet.create({
   scroll: { flex: 1 },
@@ -861,7 +869,13 @@ const metric = StyleSheet.create({
   label: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
 });
 
-function createRailStyles(coachSkin = false) {
+function createRailStyles(tokens?: CoachThemeTokens) {
+  const coachPillBg = tokens?.elevated ?? COACH_SITE.surface;
+  const coachPillOnBg = tokens?.soft ?? COACH_SITE.elevated;
+  const coachBorder = tokens?.border ?? COACH_SITE.border;
+  const coachAccent = tokens?.accent ?? COACH_SITE.accent;
+  const coachMuted = tokens?.muted ?? COACH_SITE.muted;
+
   return StyleSheet.create({
     coachWrap: {
       flexGrow: 0,
@@ -880,13 +894,13 @@ function createRailStyles(coachSkin = false) {
       paddingHorizontal: spacing.md,
       paddingVertical: 10,
       borderRadius: 18,
-      backgroundColor: COACH_SITE.surface,
+      backgroundColor: coachPillBg,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: COACH_SITE.border,
+      borderColor: coachBorder,
     },
     coachPillOn: {
-      backgroundColor: COACH_SITE.elevated,
-      borderColor: COACH_SITE.accent,
+      backgroundColor: coachPillOnBg,
+      borderColor: coachAccent,
     },
     coachPillLabel: {
       fontWeight: '800',
@@ -894,10 +908,10 @@ function createRailStyles(coachSkin = false) {
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     coachPillLabelOff: {
-      color: COACH_SITE.muted,
+      color: coachMuted,
     },
     coachPillLabelOn: {
-      color: COACH_SITE.accent,
+      color: coachAccent,
     },
     wrap: {
       flexGrow: 0,

@@ -27,9 +27,12 @@ import {
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
-import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { CoachPane } from './CoachScreenHeader';
 
 export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
@@ -42,6 +45,8 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
+  const { tokens } = useCoachTheme();
+  const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
   const [evals, setEvals] = useState<CoachPlayerEvaluation[]>([]);
   const [objectives, setObjectives] = useState<CoachSeasonObjective[]>([]);
@@ -335,7 +340,7 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
           onChangeText={setOverall}
           keyboardType="number-pad"
           placeholder={t('coach.portal.performance.overall')}
-          placeholderTextColor={COACH_SITE.muted}
+          placeholderTextColor={tokens.muted}
         />
         <TextInput
           style={[styles.input, styles.multi]}
@@ -343,7 +348,7 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
           onChangeText={setEvalNotes}
           multiline
           placeholder={t('coach.portal.performance.evalNotes')}
-          placeholderTextColor={COACH_SITE.muted}
+          placeholderTextColor={tokens.muted}
         />
         <View style={styles.switchRow}>
           <ProDayText variant="caption" style={styles.listMuted}>
@@ -352,8 +357,8 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
           <Switch
             value={visiblePlayer}
             onValueChange={setVisiblePlayer}
-            trackColor={{ false: COACH_SITE.border, true: COACH_SITE.soft }}
-            thumbColor={visiblePlayer ? COACH_SITE.accent : COACH_SITE.elevated}
+            trackColor={{ false: tokens.border, true: tokens.soft }}
+            thumbColor={visiblePlayer ? tokens.accent : tokens.elevated}
           />
         </View>
         <CoachActionRow
@@ -404,7 +409,7 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
           value={objTitle}
           onChangeText={setObjTitle}
           placeholder={t('coach.portal.performance.objPlaceholder')}
-          placeholderTextColor={COACH_SITE.muted}
+          placeholderTextColor={tokens.muted}
         />
         <CoachActionRow
           primary={t('coach.portal.performance.addObjective')}
@@ -465,31 +470,32 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(tokens: CoachThemeTokens) {
+  return StyleSheet.create({
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: 4 },
   chip: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
+    borderColor: tokens.border,
     paddingHorizontal: spacing.sm,
     paddingVertical: 7,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: tokens.isLight ? tokens.surface : 'rgba(255,255,255,0.02)',
   },
   chipOn: {
-    borderColor: COACH_SITE.accent,
-    backgroundColor: COACH_SITE.soft,
+    borderColor: tokens.accent,
+    backgroundColor: tokens.soft,
   },
   chipText: { fontWeight: '700', fontSize: 12 },
-  chipTextOn: { color: COACH_SITE.accent },
-  chipTextOff: { color: COACH_SITE.muted },
+  chipTextOn: { color: tokens.accent },
+  chipTextOff: { color: tokens.muted },
   input: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
+    borderColor: tokens.border,
     borderRadius: 2,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: 14,
-    color: COACH_SITE.foreground,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    color: tokens.foreground,
+    backgroundColor: tokens.isLight ? tokens.surface : 'rgba(255,255,255,0.03)',
     marginTop: 6,
   },
   multi: { minHeight: 72, textAlignVertical: 'top' },
@@ -500,18 +506,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
   },
-  link: { color: COACH_SITE.accent, fontWeight: '800' },
+  link: { color: tokens.accent, fontWeight: '800' },
   listRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COACH_SITE.border,
+    borderBottomColor: tokens.border,
   },
-  listName: { color: COACH_SITE.foreground, fontWeight: '700', flex: 1 },
-  listValue: { color: COACH_SITE.accent, fontWeight: '700' },
-  listMuted: { color: COACH_SITE.muted },
+  listName: { color: tokens.foreground, fontWeight: '700', flex: 1 },
+  listValue: { color: tokens.accent, fontWeight: '700' },
+  listMuted: { color: tokens.muted },
   timelineRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -522,23 +528,25 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: COACH_SITE.accent,
+    backgroundColor: tokens.accent,
   },
   progressTrack: {
     height: 3,
-    backgroundColor: COACH_SITE.border,
+    backgroundColor: tokens.border,
     borderRadius: 1,
     overflow: 'hidden',
     marginTop: 4,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COACH_SITE.accent,
+    backgroundColor: tokens.accent,
   },
   bumpBtn: {
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COACH_SITE.border,
+    borderColor: tokens.border,
+    backgroundColor: tokens.isLight ? tokens.surface : 'transparent',
   },
-});
+  });
+}

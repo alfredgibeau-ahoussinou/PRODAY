@@ -48,6 +48,8 @@ describe('coachTeamTheme', () => {
     expect(solid.isLight).toBe(false);
     expect(clear.isLight).toBe(true);
     expect(clear.bg).toBe('#FFFFFF');
+    expect(clear.surface).toBe('#F2F2F7');
+    expect(clear.surface).not.toBe('#1C1C1E');
     expect(clear.foreground).toBe('#1C1C1E');
     expect(clear.foreground).not.toBe(COACH_SITE.foreground);
   });

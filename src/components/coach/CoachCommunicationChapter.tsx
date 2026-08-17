@@ -2,9 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Linking, StyleSheet, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import type { CoachChapterCommonProps } from './coachPortalUi';
-import { CoachChapterScroll, CoachEmptyState } from './coachPortalUi';
-import { ProDaySurface } from '../ui/ProDaySurface';
-import { ProDayText } from '../ui/ProDayText';
+import { CoachChapterScroll, CoachEmptyState, CoachText } from './coachPortalUi';
+import { CoachPane } from './CoachScreenHeader';
 import { PressableSpring } from '../motion';
 import { clubAnnouncementsService } from '../../services/clubAnnouncements.service';
 import { teamDocumentsService } from '../../services/teamDocuments.service';
@@ -17,9 +16,12 @@ import type { ClubAnnouncement } from '../../models/ClubAnnouncement';
 import type { TeamDocument } from '../../models/TeamDocument';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { radius, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 
 export const CoachCommunicationChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
@@ -27,10 +29,11 @@ export const CoachCommunicationChapter: React.FC<CoachChapterCommonProps> = ({
   events,
   onRefresh,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
+  const shellNav = useCoachShellNav();
+  const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
   const [announcements, setAnnouncements] = useState<ClubAnnouncement[]>([]);
   const [docs, setDocs] = useState<TeamDocument[]>([]);
@@ -125,30 +128,28 @@ export const CoachCommunicationChapter: React.FC<CoachChapterCommonProps> = ({
 
   if (!clubId) {
     return (
-      <CoachChapterScroll>
-        <CoachEmptyState
-          title={t('coach.portal.effectif.noClub')}
-          body={t('coach.portal.effectif.noClubBody')}
-        />
-      </CoachChapterScroll>
+      <CoachPane title={getCoachPageIdentity('com_staff').title}>
+        <CoachChapterScroll>
+          <CoachEmptyState
+            title={t('coach.portal.effectif.noClub')}
+            body={t('coach.portal.effectif.noClubBody')}
+          />
+        </CoachChapterScroll>
+      </CoachPane>
     );
   }
 
   return (
+    <CoachPane title={getCoachPageIdentity('com_staff').title}>
     <CoachChapterScroll>
-      <ProDayText variant="section">{t('coach.portal.communication.title')}</ProDayText>
-      <ProDayText variant="caption" muted>
-        {t('coach.portal.communication.subtitle')}
-      </ProDayText>
-
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
+      <View style={styles.card}>
+        <CoachText variant="caption" muted style={styles.section}>
           Alertes staff
-        </ProDayText>
+        </CoachText>
         {staffNotifs.length === 0 ? (
-          <ProDayText variant="caption" muted>
+          <CoachText variant="caption" muted>
             Aucun retard ni alerte récente.
-          </ProDayText>
+          </CoachText>
         ) : (
           staffNotifs.slice(0, 8).map((n) => (
             <PressableSpring
@@ -161,54 +162,54 @@ export const CoachCommunicationChapter: React.FC<CoachChapterCommonProps> = ({
             >
               <View style={styles.row}>
                 <View style={{ flex: 1 }}>
-                  <ProDayText variant="caption" style={{ fontWeight: n.read_at ? '500' : '800' }}>
+                  <CoachText variant="caption" style={{ fontWeight: n.read_at ? '500' : '800' }}>
                     {n.title}
-                  </ProDayText>
-                  <ProDayText variant="caption" muted numberOfLines={2}>
+                  </CoachText>
+                  <CoachText variant="caption" muted numberOfLines={2}>
                     {n.body}
-                  </ProDayText>
+                  </CoachText>
                 </View>
               </View>
             </PressableSpring>
           ))
         )}
-      </ProDaySurface>
+      </View>
 
       <PressableSpring onPress={() => tabNav.setActiveTab('messages')} scaleTo={0.96} haptic>
-        <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-          <ProDayText variant="section">{t('coach.portal.communication.messages')}</ProDayText>
-          <ProDayText variant="caption" muted>
+        <View style={styles.card}>
+          <CoachText variant="section">{t('coach.portal.communication.messages')}</CoachText>
+          <CoachText variant="caption" muted>
             {t('coach.portal.communication.messagesBody')}
-          </ProDayText>
-        </ProDaySurface>
+          </CoachText>
+        </View>
       </PressableSpring>
 
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
+      <View style={styles.card}>
+        <CoachText variant="caption" muted style={styles.section}>
           {t('coach.portal.communication.parents')}
-        </ProDayText>
-        <ProDayText variant="caption" muted>
+        </CoachText>
+        <CoachText variant="caption" muted>
           {t('coach.portal.communication.parentsBody')}
-        </ProDayText>
+        </CoachText>
         {parentHints.length === 0 ? (
-          <ProDayText variant="caption" muted>
+          <CoachText variant="caption" muted>
             {t('coach.portal.communication.parentsEmpty')}
-          </ProDayText>
+          </CoachText>
         ) : (
           parentHints.map(({ player, note }) => (
             <View key={player.uid} style={styles.row}>
               <View style={{ flex: 1 }}>
-                <ProDayText variant="caption" style={{ fontWeight: '700' }}>
+                <CoachText variant="caption" style={{ fontWeight: '700' }}>
                   {player.display_name}
-                </ProDayText>
+                </CoachText>
                 {note ? (
-                  <ProDayText variant="caption" muted>
+                  <CoachText variant="caption" muted>
                     {note}
-                  </ProDayText>
+                  </CoachText>
                 ) : (
-                  <ProDayText variant="caption" muted>
+                  <CoachText variant="caption" muted>
                     {t('coach.portal.communication.noAbsenceNote')}
-                  </ProDayText>
+                  </CoachText>
                 )}
               </View>
             </View>
@@ -221,42 +222,49 @@ export const CoachCommunicationChapter: React.FC<CoachChapterCommonProps> = ({
             scaleTo={0.96}
             haptic
           >
-            <ProDayText variant="caption" accent style={styles.link}>
+            <CoachText variant="caption" accent style={styles.link}>
               {t('coach.portal.communication.remindConvoc')}
-            </ProDayText>
+            </CoachText>
           </PressableSpring>
         ) : null}
-      </ProDaySurface>
+      </View>
 
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
+      <View style={styles.card}>
+        <CoachText variant="caption" muted style={styles.section}>
           {t('coach.portal.communication.announcements')}
-        </ProDayText>
+        </CoachText>
         {announcements.length === 0 ? (
-          <ProDayText variant="caption" muted>
+          <CoachText variant="caption" muted>
             {t('coach.portal.communication.announcementsEmpty')}
-          </ProDayText>
+          </CoachText>
         ) : (
           announcements.map((a) => (
-            <ProDayText key={a.id} variant="caption" muted>
+            <CoachText key={a.id} variant="caption" muted>
               {a.title}
-            </ProDayText>
+            </CoachText>
           ))
         )}
-        <PressableSpring onPress={() => nav.openDashboard('gestion')} scaleTo={0.96} haptic>
-          <ProDayText variant="caption" accent style={styles.link}>
+        <PressableSpring
+          onPress={() => {
+            if (shellNav) shellNav.requestNav('gestion');
+            else nav.openDashboard('gestion');
+          }}
+          scaleTo={0.96}
+          haptic
+        >
+          <CoachText variant="caption" accent style={styles.link}>
             {t('coach.portal.communication.openAnnouncements')}
-          </ProDayText>
+          </CoachText>
         </PressableSpring>
-      </ProDaySurface>
+      </View>
 
-      <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
-        <ProDayText variant="caption" accent style={styles.section}>
+      <View style={styles.card}>
+        <CoachText variant="caption" muted style={styles.section}>
           {t('coach.portal.communication.docs')}
-        </ProDayText>
-        <ProDayText variant="caption" muted>
+        </CoachText>
+        <CoachText variant="caption" muted>
           {t('coach.portal.communication.docsBody')}
-        </ProDayText>
+        </CoachText>
         {docs.map((d) => (
           <PressableSpring
             key={d.id}
@@ -267,27 +275,34 @@ export const CoachCommunicationChapter: React.FC<CoachChapterCommonProps> = ({
             haptic
             style={styles.row}
           >
-            <ProDayText variant="caption" style={{ flex: 1, fontWeight: '700' }}>
+            <CoachText variant="caption" style={{ flex: 1, fontWeight: '700' }}>
               {d.title}
-            </ProDayText>
-            <ProDayText variant="caption" muted>
+            </CoachText>
+            <CoachText variant="caption" muted>
               {d.kind}
-            </ProDayText>
+            </CoachText>
           </PressableSpring>
         ))}
         <PressableSpring onPress={() => void uploadDoc()} disabled={busy} scaleTo={0.96} haptic>
-          <ProDayText variant="caption" accent style={styles.link}>
+          <CoachText variant="caption" accent style={styles.link}>
             {t('coach.portal.communication.upload')}
-          </ProDayText>
+          </CoachText>
         </PressableSpring>
-      </ProDaySurface>
+      </View>
     </CoachChapterScroll>
+    </CoachPane>
   );
 };
 
-const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.md, gap: spacing.xs },
-  section: { fontWeight: '800', textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.6 },
+const createStyles = (tokens: CoachThemeTokens) =>
+  StyleSheet.create({
+  card: {
+    borderRadius: 18,
+    padding: spacing.md,
+    gap: spacing.xs,
+    backgroundColor: tokens.surface,
+  },
+  section: { fontWeight: '700', fontSize: 15 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 4 },
   link: { fontWeight: '800', marginTop: 4 },
 });
