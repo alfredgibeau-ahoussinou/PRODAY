@@ -600,12 +600,213 @@ export function generateMatchReport(input: {
   };
 }
 
+export function generateMatchPrepBlocks(input: {
+  opponent_name?: string;
+  hours_until_match?: number;
+  emphasize_set_pieces?: boolean;
+}): TrainingBlock[] {
+  const hours = input.hours_until_match ?? 48;
+  const opp = input.opponent_name?.trim();
+
+  if (hours <= 24) {
+    return [
+      {
+        kind: 'warmup',
+        title: 'Activation légère',
+        duration_min: 12,
+        focus: 'Mobilité et passes courtes — pas de fatigue',
+        intensity: 'low',
+      },
+      {
+        kind: 'technical',
+        title: 'Rondo dynamique',
+        duration_min: 10,
+        focus: 'Prise de confiance collective',
+        intensity: 'low',
+      },
+      {
+        kind: 'finishing',
+        title: 'Finitions courtes',
+        duration_min: 10,
+        focus: '2–3 séries rapides vers le but',
+        intensity: 'balanced',
+      },
+      {
+        kind: 'tactical',
+        title: 'Brief final',
+        duration_min: 12,
+        focus: 'Consignes avant vestiaire — plan A et rôles clés',
+        intensity: 'low',
+      },
+    ];
+  }
+
+  if (input.emphasize_set_pieces) {
+    return [
+      {
+        kind: 'warmup',
+        title: 'Activation',
+        duration_min: 10,
+        focus: 'Passes et centres à faible intensité',
+        intensity: 'low',
+      },
+      {
+        kind: 'tactical',
+        title: 'Corners offensifs',
+        duration_min: 12,
+        focus: 'Trajectoires, écrans, 2e ballon',
+        intensity: 'balanced',
+      },
+      {
+        kind: 'tactical',
+        title: 'Coups francs',
+        duration_min: 12,
+        focus: 'Frappes directes et combinaisons',
+        intensity: 'balanced',
+      },
+      {
+        kind: 'tactical',
+        title: 'CPA défensifs',
+        duration_min: 12,
+        focus: 'Marquage zone / individuel',
+        intensity: 'balanced',
+      },
+      {
+        kind: 'tactical',
+        title: 'Revue consignes CPA',
+        duration_min: 8,
+        focus: 'Responsables et déclencheurs',
+        intensity: 'low',
+      },
+    ];
+  }
+
+  if (opp) {
+    return [
+      {
+        kind: 'warmup',
+        title: 'Activation',
+        duration_min: 10,
+        focus: 'Montée progressive en intensité',
+        intensity: 'low',
+      },
+      {
+        kind: 'tactical',
+        title: `Analyse ${opp}`,
+        duration_min: 12,
+        focus: 'Forces, faiblesses et déclencheurs',
+        intensity: 'balanced',
+      },
+      {
+        kind: 'tactical',
+        title: 'Situations ciblées',
+        duration_min: 18,
+        focus: 'Scénarios liés au profil adverse',
+        intensity: 'high',
+      },
+      {
+        kind: 'tactical',
+        title: 'Consignes pressing',
+        duration_min: 10,
+        focus: 'Où presser, quand reculer',
+        intensity: 'balanced',
+      },
+      {
+        kind: 'tactical',
+        title: 'Brief final',
+        duration_min: 8,
+        focus: 'Plan A / plan B',
+        intensity: 'low',
+      },
+    ];
+  }
+
+  return [
+    {
+      kind: 'warmup',
+      title: 'Activation',
+      duration_min: 10,
+      focus: 'Échauffement court sans fatigue',
+      intensity: 'low',
+    },
+    {
+      kind: 'tactical',
+      title: 'Causerie tactique',
+      duration_min: 15,
+      focus: 'Schéma, rôles et déclencheurs',
+      intensity: 'balanced',
+    },
+    {
+      kind: 'tactical',
+      title: 'Situations clés',
+      duration_min: 15,
+      focus: 'Pressing, relance, couvertures',
+      intensity: 'balanced',
+    },
+    {
+      kind: 'tactical',
+      title: 'Consignes individuelles',
+      duration_min: 10,
+      focus: 'Marquage et consignes par poste',
+      intensity: 'low',
+    },
+    {
+      kind: 'tactical',
+      title: 'Mental & focus',
+      duration_min: 8,
+      focus: 'Objectifs du match',
+      intensity: 'low',
+    },
+  ];
+}
+
+export function generateMatchPrepSession(input: {
+  event?: TeamEvent | null;
+  opponent_name?: string;
+  emphasize_set_pieces?: boolean;
+}): CollectiveTrainingSession {
+  const event = input.event ?? null;
+  const hoursUntil = event
+    ? (event.starts_at.getTime() - Date.now()) / 3_600_000
+    : 48;
+  const opponent =
+    input.opponent_name?.trim() ||
+    event?.live_state?.opponent_name?.trim() ||
+    event?.title?.trim();
+  const blocks = generateMatchPrepBlocks({
+    opponent_name: opponent,
+    hours_until_match: hoursUntil,
+    emphasize_set_pieces: input.emphasize_set_pieces,
+  });
+  const total = blocks.reduce((a, b) => a + b.duration_min, 0);
+  return {
+    id: uid(),
+    title: opponent ? `Préparation match · ${opponent}` : 'Préparation match',
+    total_duration_min: total,
+    blocks,
+    based_on: ['Calendrier match', opponent ? `Adversaire · ${opponent}` : 'Briefing collectif'],
+    objectives: ['Briefing clair', 'Activation sans surcharge'],
+    created_at: new Date(),
+  };
+}
+
 export function generateCollectiveTraining(input: {
   previous_match?: TeamEvent | null;
   opponent_profile?: OpponentAnalysis;
   team_weaknesses?: string[];
   season_objectives?: string[];
+  mode?: 'training' | 'match';
+  target_event?: TeamEvent | null;
+  opponent_name?: string;
 }): CollectiveTrainingSession {
+  if (input.mode === 'match') {
+    return generateMatchPrepSession({
+      event: input.target_event,
+      opponent_name: input.opponent_name,
+      emphasize_set_pieces: input.team_weaknesses?.some((w) => /CPA|corner|arrêt/i.test(w)),
+    });
+  }
+
   const based_on: string[] = [];
   if (input.previous_match) based_on.push(`Match précédent · ${input.previous_match.title}`);
   if (input.opponent_profile) based_on.push('Profil adversaire');

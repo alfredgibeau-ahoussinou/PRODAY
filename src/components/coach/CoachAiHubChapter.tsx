@@ -41,10 +41,12 @@ import {
   type CoachPitchLineup,
 } from '../../utils/coachPitchLineup';
 import {
-  buildRecommendedSession,
+  buildCoachComposedPlan,
+  coachArchetypeLabel,
   defaultRecommendedSessionStart,
   formatRecommendedSessionNotes,
-  type RecommendedTrainingSession,
+  resolveCoachCalendarContext,
+  type CoachComposedPlan,
 } from '../../utils/coachTrainingRecommendation';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { clubCamerasService } from '../../services/clubCameras.service';
@@ -104,8 +106,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const [lineup, setLineup] = useState<CoachPitchLineup | null>(null);
   const [clubVideos, setClubVideos] = useState<ClubMatchVideo[]>([]);
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [sessionDismissed, setSessionDismissed] = useState(false);
-  const [creatingSession, setCreatingSession] = useState(false);
+  const [applyingPlan, setApplyingPlan] = useState(false);
 
   const rosterUids = useMemo(() => members.map((m) => m.uid), [members]);
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
@@ -167,9 +168,14 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const recentVideos = useMemo(() => listRecentClubVideos(clubVideos, 4), [clubVideos]);
   const videoCount = useMemo(() => countReadyClubVideos(clubVideos), [clubVideos]);
 
-  const recommendedSession = useMemo(
+  const calendarContext = useMemo(
+    () => resolveCoachCalendarContext(events),
+    [events],
+  );
+
+  const composedPlan = useMemo(
     () =>
-      buildRecommendedSession({
+      buildCoachComposedPlan({
         events,
         members,
         wellnessByUid,
@@ -181,25 +187,70 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     [events, members, wellnessByUid, evaluations, lineup, clubId, postMatchAnalyses],
   );
 
-  const createRecommendedSession = useCallback(async () => {
+  const applyComposedPlan = useCallback(async () => {
     if (!canManage) {
       Alert.alert(
-        'Entraînements',
-        'La création de séances est réservée au coach Premium (ou couvert par un Tout inclus).',
+        'Composition IA',
+        'La modification du calendrier est réservée au coach Premium (ou couvert par un Tout inclus).',
       );
       return;
     }
     if (!clubId) {
-      Alert.alert('Club requis', 'Rattachez un club pour créer une séance.');
+      Alert.alert('Club requis', 'Rattachez un club pour appliquer un plan.');
       return;
     }
-    setCreatingSession(true);
+
+    const isMatch = composedPlan.context === 'match';
+    const targetId = composedPlan.targetEventId;
+    const targetEvent =
+      (targetId ? events.find((e) => e.id === targetId) : null) ??
+      (isMatch ? calendarContext.nextMatch : calendarContext.nextTraining);
+
+    if (composedPlan.archetype === 'empty') {
+      if (isMatch || !calendarContext.nextTraining) {
+        openNav('today');
+      } else {
+        openNav('entrainements');
+      }
+      return;
+    }
+
+    setApplyingPlan(true);
     try {
+      if (targetEvent) {
+        await teamEventsService.updateSessionPlan(
+          targetEvent.id,
+          {
+            focus: composedPlan.focus,
+            notes: formatRecommendedSessionNotes(composedPlan),
+            duration_min: composedPlan.totalMinutes || undefined,
+          },
+          { user: profile },
+        );
+        Alert.alert(
+          isMatch ? 'Match enrichi' : 'Plan appliqué',
+          isMatch
+            ? `Briefing ajouté à « ${targetEvent.title} ».`
+            : `« ${targetEvent.title} » mis à jour avec le plan proposé.`,
+        );
+        openNav(isMatch ? 'today' : 'entrainements');
+        return;
+      }
+
+      if (isMatch) {
+        Alert.alert(
+          'Match requis',
+          'Planifiez d’abord une convocation match — la préparation ne crée pas d’entraînement.',
+        );
+        openNav('today');
+        return;
+      }
+
       const startsAt = defaultRecommendedSessionStart();
       const inviteeUids = members.filter((m) => m.uid !== profile.uid).map((m) => m.uid);
       const eventId = await teamEventsService.create({
-        title: recommendedSession.title,
-        description: recommendedSession.reason,
+        title: composedPlan.title,
+        description: composedPlan.reason,
         event_type: 'training',
         organizer_uid: profile.uid,
         organizer_name: profile.display_name,
@@ -212,23 +263,32 @@ export const CoachAiHubChapter: React.FC<Props> = ({
       await teamEventsService.updateSessionPlan(
         eventId,
         {
-          focus: recommendedSession.focus,
-          notes: formatRecommendedSessionNotes(recommendedSession),
-          duration_min: recommendedSession.totalMinutes,
+          focus: composedPlan.focus,
+          notes: formatRecommendedSessionNotes(composedPlan),
+          duration_min: composedPlan.totalMinutes,
         },
         { user: profile },
       );
       Alert.alert(
-        'Séance créée',
-        `« ${recommendedSession.title} » planifiée. Retrouvez-la dans Entraînements.`,
+        'Entraînement créé',
+        `« ${composedPlan.title} » planifié. Retrouvez-le dans Entraînements.`,
       );
       openNav('entrainements');
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Création impossible.');
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
     } finally {
-      setCreatingSession(false);
+      setApplyingPlan(false);
     }
-  }, [canManage, clubId, members, profile, recommendedSession, openNav]);
+  }, [
+    canManage,
+    clubId,
+    composedPlan,
+    calendarContext,
+    events,
+    members,
+    profile,
+    openNav,
+  ]);
 
   return (
     <CoachPane title={getCoachPageIdentity('coach_ia').title}>
@@ -320,10 +380,19 @@ export const CoachAiHubChapter: React.FC<Props> = ({
               </View>
             ) : null}
 
+            {strategy.matchBrief ? (
+              <View style={styles.focusBox}>
+                <CoachText variant="caption" muted>
+                  Brief match
+                </CoachText>
+                <CoachText variant="caption">{strategy.matchBrief}</CoachText>
+              </View>
+            ) : null}
+
             {strategy.trainingFocus ? (
               <View style={styles.focusBox}>
                 <CoachText variant="caption" muted>
-                  Focus séance
+                  Focus entraînement
                 </CoachText>
                 <CoachText variant="caption">{strategy.trainingFocus}</CoachText>
               </View>
@@ -337,14 +406,11 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             </Pressable>
           </CoachSectionCard>
 
-          {!sessionDismissed ? (
-            <RecommendedSessionCard
-              session={recommendedSession}
-              creating={creatingSession}
-              onCreate={() => void createRecommendedSession()}
-              onDismiss={() => setSessionDismissed(true)}
-            />
-          ) : null}
+          <ComposedPlanCard
+            plan={composedPlan}
+            applying={applyingPlan}
+            onApply={() => void applyComposedPlan()}
+          />
 
           <Pressable style={styles.primaryBtn} onPress={() => setActionsOpen(true)}>
             <Icon name="star-four-points" size={18} color="#fff" />
@@ -487,81 +553,95 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   );
 };
 
-function RecommendedSessionCard({
-  session,
-  creating,
-  onCreate,
-  onDismiss,
+function ComposedPlanCard({
+  plan,
+  applying,
+  onApply,
 }: {
-  session: RecommendedTrainingSession;
-  creating: boolean;
-  onCreate: () => void;
-  onDismiss: () => void;
+  plan: CoachComposedPlan;
+  applying: boolean;
+  onApply: () => void;
 }) {
+  const isMatch = plan.context === 'match';
+  const isEmpty = plan.archetype === 'empty';
   const confidenceLabel =
-    session.dataConfidence === 'high'
+    plan.dataConfidence === 'high'
       ? 'Données fiables'
-      : session.dataConfidence === 'low'
+      : plan.dataConfidence === 'low'
         ? 'Données partielles'
         : 'Modèle générique';
 
+  const ctaLabel = isEmpty
+    ? plan.context === 'match'
+      ? 'Planifier un match'
+      : 'Planifier un entraînement'
+    : isMatch
+      ? 'Enrichir l’événement'
+      : plan.targetEventId
+        ? 'Appliquer au créneau'
+        : 'Créer l’entraînement';
+
   return (
     <CoachSectionCard
-      kicker="Séance recommandée"
-      title={session.title}
-      body={session.reason}
+      kicker={isMatch ? 'Match' : 'Entraînement'}
+      title={plan.title}
+      body={plan.reason}
     >
-      <View style={styles.sessionMeta}>
-        <CoachText variant="caption" muted>
-          Focus · {session.focus}
-        </CoachText>
-        <CoachText variant="caption" muted>
-          {confidenceLabel}
-          {session.playerCount != null ? ` · ${session.playerCount} joueurs` : ''}
-          {` · ${session.difficulty}`}
-        </CoachText>
-      </View>
-      <View style={styles.sessionBlocks}>
-        {session.blocks.map((block) => (
-          <View key={block.label} style={styles.sessionBlockRow}>
-            <CoachText variant="section" style={styles.sessionBlockMin}>
-              {block.minutes}'
+      {!isEmpty ? (
+        <>
+          <View style={styles.sessionMeta}>
+            <CoachText variant="caption" muted>
+              {isMatch ? 'Préparation' : 'Archétype'} · {coachArchetypeLabel(plan)}
             </CoachText>
-            <View style={styles.sessionBlockBody}>
-              <CoachText variant="caption" style={styles.sessionBlockLabel}>
-                {block.label}
-              </CoachText>
-              {block.objective ? (
-                <CoachText variant="caption" muted numberOfLines={2}>
-                  {block.objective}
-                </CoachText>
-              ) : null}
-              {block.material && block.material !== '—' ? (
-                <CoachText variant="caption" muted style={styles.sessionMaterial}>
-                  Matériel : {block.material}
-                </CoachText>
-              ) : null}
-            </View>
+            <CoachText variant="caption" muted>
+              Focus · {plan.focus}
+            </CoachText>
+            <CoachText variant="caption" muted>
+              {confidenceLabel}
+              {plan.playerCount != null ? ` · ${plan.playerCount} joueurs` : ''}
+              {plan.totalMinutes > 0 ? ` · ${plan.totalMinutes} min · ${plan.difficulty}` : ''}
+            </CoachText>
           </View>
-        ))}
-      </View>
+          <View style={styles.sessionBlocks}>
+            {plan.blocks.map((block) => (
+              <View key={block.label} style={styles.sessionBlockRow}>
+                {block.minutes > 0 ? (
+                  <CoachText variant="section" style={styles.sessionBlockMin}>
+                    {block.minutes}'
+                  </CoachText>
+                ) : null}
+                <View style={styles.sessionBlockBody}>
+                  <CoachText variant="caption" style={styles.sessionBlockLabel}>
+                    {block.label}
+                  </CoachText>
+                  {block.objective ? (
+                    <CoachText variant="caption" muted numberOfLines={2}>
+                      {block.objective}
+                    </CoachText>
+                  ) : null}
+                  {block.material && block.material !== '—' ? (
+                    <CoachText variant="caption" muted style={styles.sessionMaterial}>
+                      Matériel : {block.material}
+                    </CoachText>
+                  ) : null}
+                </View>
+              </View>
+            ))}
+          </View>
+        </>
+      ) : null}
       <Pressable
-        style={[styles.primaryBtn, styles.sessionCreateBtn, creating && styles.sessionCreateDisabled]}
-        onPress={onCreate}
-        disabled={creating}
+        style={[styles.primaryBtn, styles.sessionCreateBtn, applying && styles.sessionCreateDisabled]}
+        onPress={onApply}
+        disabled={applying}
       >
-        {creating ? (
+        {applying ? (
           <ActivityIndicator color="#fff" size="small" />
         ) : (
-          <Icon name="calendar" size={18} color="#fff" />
+          <Icon name={isMatch ? 'football' : 'calendar'} size={18} color="#fff" />
         )}
         <CoachText variant="section" inverse style={styles.primaryBtnText}>
-          {creating ? 'Création…' : 'Créer la séance'}
-        </CoachText>
-      </Pressable>
-      <Pressable style={styles.sessionDismissBtn} onPress={onDismiss}>
-        <CoachText variant="caption" muted>
-          Plus tard
+          {applying ? 'Application…' : ctaLabel}
         </CoachText>
       </Pressable>
     </CoachSectionCard>
@@ -722,7 +802,6 @@ const styles = StyleSheet.create({
   sessionMaterial: { fontSize: 10, fontStyle: 'italic' },
   sessionCreateBtn: { marginTop: spacing.md },
   sessionCreateDisabled: { opacity: 0.7 },
-  sessionDismissBtn: { alignItems: 'center', paddingTop: spacing.sm },
   previewActions: { gap: spacing.xs },
   previewRow: {
     padding: spacing.md,

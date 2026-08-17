@@ -9,7 +9,9 @@ import {
 } from '../models/TeamEvent';
 import type { CoachPitchLineup } from './coachPitchLineup';
 import { startersPlacedCount } from './coachPitchLineup';
+import { resolveCoachCalendarContext } from './coachTrainingRecommendation';
 import { buildCoachAiSuggestions } from './coachAiSuggestions';
+import { EVENT_TYPE_LABELS } from '../models/TeamEvent';
 import {
   averageCoachRatings,
   formatCoachRating,
@@ -55,10 +57,14 @@ export interface CoachAiStrategyPlayer {
 
 export interface CoachAiStrategy {
   level: CoachAiDataLevel;
+  primaryContext?: 'training' | 'match';
   formation?: string;
   formationDetail?: string;
   playersToStart: CoachAiStrategyPlayer[];
   playersToWatch: CoachAiStrategyPlayer[];
+  /** Brief pré-match — affiché quand le prochain RDV est un match. */
+  matchBrief?: string;
+  /** Focus séance — uniquement pertinent si prochain RDV = entraînement. */
   trainingFocus?: string;
   emptyHint?: string;
 }
@@ -184,8 +190,13 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
     if (next) {
       const yes = countRsvpYes(next);
       const pending = getPendingInviteeUids(next).length;
+      const typeLabel = isMatchEvent(next)
+        ? 'match'
+        : next.event_type === 'training'
+          ? 'entraînement'
+          : EVENT_TYPE_LABELS[next.event_type].toLowerCase();
       parts.push(
-        `Prochain rendez-vous : « ${next.title} » (${yes} confirmé${yes > 1 ? 's' : ''}${pending > 0 ? `, ${pending} sans réponse` : ''}).`,
+        `Prochain ${typeLabel} : « ${next.title} » (${yes} confirmé${yes > 1 ? 's' : ''}${pending > 0 ? `, ${pending} sans réponse` : ''}).`,
       );
     } else {
       parts.push('Rien de planifié pour l’instant.');
@@ -230,9 +241,13 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
   if (wellnessAlerts > 0) {
     parts.push(`${wellnessAlerts} alerte${wellnessAlerts > 1 ? 's' : ''} forme`);
   }
-  if (next && isMatchEvent(next)) {
+  if (next) {
     const yes = countRsvpYes(next);
-    parts.push(`prochain match « ${next.title} » : ${yes} présent${yes > 1 ? 's' : ''}`);
+    if (isMatchEvent(next)) {
+      parts.push(`prochain match « ${next.title} » : ${yes} présent${yes > 1 ? 's' : ''}`);
+    } else if (next.event_type === 'training') {
+      parts.push(`prochain entraînement « ${next.title} » : ${yes} présent${yes > 1 ? 's' : ''}`);
+    }
   }
 
   return {
@@ -243,17 +258,14 @@ export function buildCoachAiTeamOverview(input: CoachAiInsightsInput): CoachAiTe
   };
 }
 
-/** Stratégie recommandée — formation, titulaires, focus séance. */
+/** Stratégie recommandée — formation, titulaires, brief match ou focus entraînement. */
 export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrategy {
   const { events, members, wellnessByUid = {}, lineup, evaluations = [] } = input;
   const ratings = aggregatePlayerRatings(events);
-  const now = Date.now();
-  const nextMatch = [...events]
-    .filter((e) => e.starts_at.getTime() > now && isMatchEvent(e))
-    .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0];
-  const nextTraining = [...events]
-    .filter((e) => e.starts_at.getTime() > now && e.event_type === 'training')
-    .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0];
+  const calendar = resolveCoachCalendarContext(events);
+  const nextMatch = calendar.nextMatch;
+  const nextTraining = calendar.nextTraining;
+  const primaryContext = calendar.primary;
 
   const formation = lineup?.formation ?? nextMatch?.lineup?.formation ?? undefined;
   const placed = lineup ? startersPlacedCount(lineup) : 0;
@@ -335,7 +347,9 @@ export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrate
   }
 
   let trainingFocus: string | undefined;
-  if (nextTraining) {
+  let matchBrief: string | undefined;
+
+  if (primaryContext === 'training' && nextTraining) {
     const absent = countAttendanceMark(nextTraining, 'absent');
     const yes = countRsvpYes(nextTraining);
     trainingFocus =
@@ -346,7 +360,13 @@ export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrate
           : 'Séance mixte — activation, jeu réduit, finition.';
   }
 
-  const hasData = playersToStart.length > 0 || formation || trainingFocus;
+  if (primaryContext === 'match' && nextMatch) {
+    const opp = nextMatch.live_state?.opponent_name?.trim() || nextMatch.title;
+    const yes = countRsvpYes(nextMatch);
+    matchBrief = `Match « ${opp} » — ${yes} présent${yes > 1 ? 's' : ''}. Finalise la compo et le briefing avant le coup d’envoi.`;
+  }
+
+  const hasData = playersToStart.length > 0 || formation || trainingFocus || matchBrief;
 
   if (!hasData) {
     return {
@@ -360,6 +380,7 @@ export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrate
 
   return {
     level: playersToStart.length > 0 ? 'ready' : 'partial',
+    primaryContext,
     formation,
     formationDetail: formation
       ? placed >= 7
@@ -368,7 +389,8 @@ export function buildCoachAiStrategy(input: CoachAiInsightsInput): CoachAiStrate
       : undefined,
     playersToStart: playersToStart.slice(0, 5),
     playersToWatch: watchList,
-    trainingFocus,
+    matchBrief,
+    trainingFocus: primaryContext === 'training' ? trainingFocus : undefined,
   };
 }
 

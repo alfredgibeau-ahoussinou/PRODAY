@@ -1,21 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, TextInput, View } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
-import { CoachChapterScroll, CoachEmptyState } from './coachPortalUi';
-import { ProDaySurface } from '../ui/ProDaySurface';
-import { ProDayText } from '../ui/ProDayText';
+import { CoachChapterScroll, CoachEmptyState, CoachText } from './coachPortalUi';
+import { CoachPane } from './CoachScreenHeader';
 import { PressableSpring } from '../motion';
 import { EVENT_TYPE_LABELS, type EventTask, type TeamEvent } from '../../models/TeamEvent';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { teamEventsService } from '../../services/teamEvents.service';
-import { smartTacticsService } from '../../services/smartTactics.service';
+import { buildCoachComposedPlan, formatRecommendedSessionNotes } from '../../utils/coachTrainingRecommendation';
 import { coachObjectivesService } from '../../services/coachObjectives.service';
 import type { CoachSeasonObjective } from '../../models/CoachSeasonObjective';
 import { userCanManageConvocations, resolveClubCoversCoachFromMembers } from '../../utils/clubFeatureAccess';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
+import { COACH_SITE, getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { radius, spacing } from '../../theme/designTokens';
 
 export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
@@ -24,10 +24,10 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
   members,
   onRefresh,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const tabNav = useTabNavigation();
   const nav = useTabNavigationActions();
+  const shellNav = useCoachShellNav();
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
   const canManage = userCanManageConvocations(profile, { clubCoversCoach });
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -57,7 +57,8 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
       Alert.alert(t('coach.portal.proGate.title'), t('coach.portal.proGate.body'));
       return;
     }
-    nav.openDashboard('gestion');
+    if (shellNav) shellNav.requestNav('gestion');
+    else nav.openDashboard('gestion');
   };
 
   const selectEvent = (event: TeamEvent) => {
@@ -94,29 +95,27 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
       Alert.alert(t('coach.portal.proGate.title'), t('coach.portal.proGate.body'));
       return;
     }
-    const previous = [...events]
-      .filter(
-        (e) =>
-          e.id !== event.id &&
-          (e.event_type === 'friendly' || e.event_type === 'competition') &&
-          e.starts_at.getTime() < event.starts_at.getTime(),
-      )
-      .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime())[0];
-    const session = smartTacticsService.generateTraining({
-      previous_match: previous,
-      season_objectives: objectives.slice(0, 4).map((o) => o.title),
-      team_weaknesses: previous ? ['Transitions', 'Finition'] : undefined,
+    const isMatch =
+      event.event_type === 'friendly' ||
+      event.event_type === 'competition' ||
+      event.event_type === 'tournament';
+
+    const plan = buildCoachComposedPlan({
+      events,
+      members,
+      hasClub: Boolean(clubId),
+      targetEvent: event,
     });
-    const blockNotes = session.blocks
-      .map((b) => `• ${b.title} (${b.duration_min}') — ${b.focus}`)
-      .join('\n');
-    setFocus(session.blocks.find((b) => b.kind === 'tactical')?.title ?? session.blocks[0]?.title ?? '');
-    setNotes(blockNotes);
-    setDuration(String(session.total_duration_min));
+
+    setFocus(plan.focus);
+    setNotes(formatRecommendedSessionNotes(plan));
+    setDuration(String(plan.totalMinutes || 90));
     setExpandedId(event.id);
     Alert.alert(
-      t('coach.portal.planning.aiTitle'),
-      t('coach.portal.planning.aiBody', { min: session.total_duration_min }),
+      isMatch ? 'Préparation match' : t('coach.portal.planning.aiTitle'),
+      isMatch
+        ? `Briefing ${plan.totalMinutes} min — ${plan.focus}`
+        : t('coach.portal.planning.aiBody', { min: plan.totalMinutes }),
     );
   };
 
@@ -152,21 +151,17 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
   };
 
   return (
+    <CoachPane
+      title={getCoachPageIdentity('planning').title}
+      actions={[
+        {
+          icon: 'add',
+          onPress: openCreate,
+          accessibilityLabel: t('coach.portal.planning.create'),
+        },
+      ]}
+    >
     <CoachChapterScroll>
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <ProDayText variant="section">{t('coach.portal.planning.title')}</ProDayText>
-          <ProDayText variant="caption" muted>
-            {t('coach.portal.planning.subtitle')}
-          </ProDayText>
-        </View>
-        <PressableSpring onPress={openCreate} scaleTo={0.96} haptic>
-          <ProDayText variant="caption" accent style={styles.link}>
-            {t('coach.portal.planning.create')}
-          </ProDayText>
-        </PressableSpring>
-      </View>
-
       {upcoming.length === 0 ? (
         <CoachEmptyState
           title={t('coach.portal.planning.empty')}
@@ -178,70 +173,78 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
         upcoming.map((event) => {
           const open = expandedId === event.id;
           return (
-            <ProDaySurface
+            <View
               key={event.id}
-              variant="module"
-              style={[styles.card, { borderColor: colors.border }]}
+              style={[styles.card, { backgroundColor: COACH_SITE.surface }]}
             >
               <PressableSpring onPress={() => selectEvent(event)} scaleTo={0.98} haptic>
-                <ProDayText variant="section">{event.title}</ProDayText>
-                <ProDayText variant="caption" muted>
+                <CoachText variant="section">{event.title}</CoachText>
+                <CoachText variant="caption" muted>
                   {EVENT_TYPE_LABELS[event.event_type]} · {formatCalendarDate(event.starts_at)}
-                </ProDayText>
+                </CoachText>
                 {event.session_plan?.focus ? (
-                  <ProDayText variant="caption" accent>
+                  <CoachText variant="caption" accent>
                     {event.session_plan.focus}
-                  </ProDayText>
+                  </CoachText>
                 ) : null}
               </PressableSpring>
 
               {open ? (
                 <View style={styles.form}>
-                  {(event.event_type === 'training' || event.event_type === 'other') && (
+                  <PressableSpring
+                    onPress={() => void generateAiPlan(event)}
+                    scaleTo={0.96}
+                    haptic
+                  >
+                    <CoachText variant="caption" accent style={styles.link}>
+                      {event.event_type === 'friendly' ||
+                      event.event_type === 'competition' ||
+                      event.event_type === 'tournament'
+                        ? 'Générer briefing match (IA)'
+                        : t('coach.portal.planning.generateAi')}
+                    </CoachText>
+                  </PressableSpring>
+
+                  {(event.event_type === 'training' ||
+                    event.event_type === 'other' ||
+                    event.event_type === 'friendly' ||
+                    event.event_type === 'competition' ||
+                    event.event_type === 'tournament') && (
                     <>
-                      <PressableSpring
-                        onPress={() => void generateAiPlan(event)}
-                        scaleTo={0.96}
-                        haptic
-                      >
-                        <ProDayText variant="caption" accent style={styles.link}>
-                          {t('coach.portal.planning.generateAi')}
-                        </ProDayText>
-                      </PressableSpring>
-                      <ProDayText variant="caption" muted style={styles.label}>
+                      <CoachText variant="caption" muted style={styles.label}>
                         {t('coach.portal.planning.focus')}
-                      </ProDayText>
+                      </CoachText>
                       <TextInput
-                        style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+                        style={[styles.input, { borderColor: COACH_SITE.border, color: COACH_SITE.foreground, backgroundColor: COACH_SITE.bg }]}
                         value={focus}
                         onChangeText={setFocus}
                         placeholder={t('coach.portal.planning.focusPlaceholder')}
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor={COACH_SITE.muted}
                       />
-                      <ProDayText variant="caption" muted style={styles.label}>
+                      <CoachText variant="caption" muted style={styles.label}>
                         {t('coach.portal.planning.duration')}
-                      </ProDayText>
+                      </CoachText>
                       <TextInput
-                        style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+                        style={[styles.input, { borderColor: COACH_SITE.border, color: COACH_SITE.foreground, backgroundColor: COACH_SITE.bg }]}
                         value={duration}
                         onChangeText={setDuration}
                         keyboardType="number-pad"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor={COACH_SITE.muted}
                       />
-                      <ProDayText variant="caption" muted style={styles.label}>
+                      <CoachText variant="caption" muted style={styles.label}>
                         {t('coach.portal.planning.notes')}
-                      </ProDayText>
+                      </CoachText>
                       <TextInput
                         style={[
                           styles.input,
                           styles.multi,
-                          { borderColor: colors.border, color: colors.ink },
+                          { borderColor: COACH_SITE.border, color: COACH_SITE.foreground, backgroundColor: COACH_SITE.bg },
                         ]}
                         value={notes}
                         onChangeText={setNotes}
                         multiline
                         placeholder={t('coach.portal.planning.notesPlaceholder')}
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor={COACH_SITE.muted}
                       />
                       <PressableSpring
                         onPress={() => void savePlan(event)}
@@ -249,21 +252,21 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
                         scaleTo={0.96}
                         haptic
                       >
-                        <ProDayText variant="caption" accent style={styles.link}>
+                        <CoachText variant="caption" accent style={styles.link}>
                           {t('coach.portal.planning.savePlan')}
-                        </ProDayText>
+                        </CoachText>
                       </PressableSpring>
                     </>
                   )}
 
-                  <ProDayText variant="caption" accent style={styles.label}>
+                  <CoachText variant="caption" accent style={styles.label}>
                     {t('coach.portal.planning.prep')}
-                  </ProDayText>
+                  </CoachText>
                   {(event.event_tasks ?? []).length === 0 ? (
                     <PressableSpring onPress={() => void addDefaultTasks(event)} scaleTo={0.96} haptic>
-                      <ProDayText variant="caption" muted>
+                      <CoachText variant="caption" muted>
                         {t('coach.portal.planning.addTasks')}
-                      </ProDayText>
+                      </CoachText>
                     </PressableSpring>
                   ) : (
                     (event.event_tasks ?? []).map((task) => (
@@ -274,36 +277,48 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
                         haptic
                         style={styles.taskRow}
                       >
-                        <ProDayText variant="caption" accent={task.done} muted={!task.done}>
+                        <CoachText variant="caption" accent={task.done} muted={!task.done}>
                           {task.done ? '✓ ' : '○ '}
                           {task.label}
-                        </ProDayText>
+                        </CoachText>
                       </PressableSpring>
                     ))
                   )}
 
                   <PressableSpring
+                    onPress={() => {
+                      if (shellNav) shellNav.requestNav('carpool');
+                      else nav.openCarpool();
+                    }}
+                    scaleTo={0.96}
+                    haptic
+                  >
+                    <CoachText variant="caption" accent style={styles.link}>
+                      Covoiturage
+                    </CoachText>
+                  </PressableSpring>
+                  <PressableSpring
                     onPress={() => tabNav.openMatchs({ eventId: event.id })}
                     scaleTo={0.96}
                     haptic
                   >
-                    <ProDayText variant="caption" accent style={styles.link}>
+                    <CoachText variant="caption" accent style={styles.link}>
                       {t('coach.portal.planning.openEvent')}
-                    </ProDayText>
+                    </CoachText>
                   </PressableSpring>
                 </View>
               ) : null}
-            </ProDaySurface>
+            </View>
           );
         })
       )}
     </CoachChapterScroll>
+    </CoachPane>
   );
 };
 
 const styles = StyleSheet.create({
-  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  card: { borderWidth: 1, borderRadius: radius.lg, padding: spacing.md, gap: 4 },
+  card: { borderRadius: 18, padding: spacing.md, gap: 4 },
   form: { marginTop: spacing.sm, gap: spacing.xs },
   label: { fontWeight: '700', marginTop: spacing.xs },
   input: {

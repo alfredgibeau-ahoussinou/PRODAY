@@ -5,6 +5,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 import {
   buildCoachAiInsights,
   buildCoachAiNowActions,
+  buildCoachAiStrategy,
   buildCoachAiTeamOverview,
   buildCoachPlayerAiInsights,
 } from '../utils/coachAiInsights';
@@ -46,6 +47,7 @@ describe('buildCoachAiTeamOverview', () => {
     });
     expect(o.level).toBe('partial');
     expect(o.synthesis).toMatch(/feuilles de match/i);
+    expect(o.synthesis).toMatch(/Prochain match/i);
     expect(o.synthesis).not.toMatch(/note moyenne/i);
   });
 
@@ -108,6 +110,48 @@ describe('buildCoachAiNowActions', () => {
     const ids = actions.map((a) => a.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.filter((id) => id === 'plan-session').length).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('buildCoachAiStrategy', () => {
+  it('affiche matchBrief et pas trainingFocus quand le match est prioritaire', () => {
+    const match = baseEvent({
+      id: 'm1',
+      title: 'Amical',
+      event_type: 'friendly',
+      starts_at: new Date(Date.now() + 86_400_000),
+    });
+    const training = baseEvent({
+      id: 't1',
+      title: 'Séance',
+      event_type: 'training',
+      starts_at: new Date(Date.now() + 3 * 86_400_000),
+    });
+    const s = buildCoachAiStrategy({
+      events: [match, training],
+      members: [{ uid: 'p1', display_name: 'Lucas' } as never],
+      hasClub: true,
+    });
+    expect(s.primaryContext).toBe('match');
+    expect(s.matchBrief).toMatch(/Match/i);
+    expect(s.trainingFocus).toBeUndefined();
+  });
+
+  it('affiche trainingFocus quand l’entraînement est prioritaire', () => {
+    const training = baseEvent({
+      id: 't1',
+      title: 'Séance',
+      event_type: 'training',
+      starts_at: new Date(Date.now() + 86_400_000),
+    });
+    const s = buildCoachAiStrategy({
+      events: [training],
+      members: [{ uid: 'p1', display_name: 'Lucas' } as never],
+      hasClub: true,
+    });
+    expect(s.primaryContext).toBe('training');
+    expect(s.trainingFocus).toBeDefined();
+    expect(s.matchBrief).toBeUndefined();
   });
 });
 
