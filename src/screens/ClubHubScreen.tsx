@@ -6,21 +6,21 @@ import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { ProDayText } from '../components/ui/ProDayText';
 import { ListEmptyPanel } from '../components/ui/ListEmptyPanel';
-import { Icon, type IconName } from '../components/ui/Icon';
+import { Icon } from '../components/ui/Icon';
 import { PressableSpring } from '../components/motion';
 import { useAppTheme } from '../context/ProductLineContext';
 import { spacing, radius } from '../theme/designTokens';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 import { teamThreadId } from '../utils/teamChatIds';
+import {
+  CLUB_COMMUNITY_CHANNELS,
+  type ClubChannelId,
+} from '../content/clubCommunityChannels';
+import { useClubCommunityChannelNav } from '../utils/clubCommunityNav';
+import { useTabNavigation } from '../context/TabNavigationContext';
+import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
 
-export type ClubChannelId = 'general' | 'mercato' | 'covoit' | 'convocations';
-
-const CHANNELS: { id: ClubChannelId; label: string; icon: IconName; description: string }[] = [
-  { id: 'general', label: 'Général', icon: 'chat', description: 'Annonces et discussions club' },
-  { id: 'mercato', label: 'Mercato', icon: 'briefcase', description: 'Recrutement et détections' },
-  { id: 'covoit', label: 'Covoiturage', icon: 'car', description: 'Trajets vers matchs et stages' },
-  { id: 'convocations', label: 'Convocations', icon: 'calendar', description: 'Événements et RSVP' },
-];
+export type { ClubChannelId };
 
 type ClubHubScreenProps = {
   profile: User;
@@ -29,6 +29,8 @@ type ClubHubScreenProps = {
   onChannel: (channel: ClubChannelId) => void;
   onOpenEvent?: (eventId: string) => void;
   onOpenTeamChat?: (threadId: string, title: string) => void;
+  /** Nom club affiché — fallback display_name */
+  clubName?: string;
 };
 
 /** Hub club type Discord — salons thématiques. */
@@ -39,9 +41,13 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
   onChannel,
   onOpenEvent,
   onOpenTeamChat,
+  clubName: clubNameProp,
 }) => {
-  const { colors, productLine } = useAppTheme();
-  const clubName = profile.display_name;
+  const { colors } = useAppTheme();
+  const tabNav = useTabNavigation();
+  const shellNav = useCoachShellNav();
+  const clubName = clubNameProp?.trim() || events[0]?.club_name?.trim() || 'Communauté';
+  const openCoachChannel = useClubCommunityChannelNav();
 
   const upcoming = useMemo(
     () =>
@@ -49,14 +55,34 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
         .filter((e) => e.starts_at.getTime() > Date.now())
         .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())
         .slice(0, 5),
-    [events]
+    [events],
   );
+
+  const handleChannel = (channel: ClubChannelId) => {
+    if (openCoachChannel(channel)) return;
+    onChannel(channel);
+  };
+
+  const handleOpenEvent = (eventId: string) => {
+    if (shellNav) {
+      tabNav.openMatchs({ eventId });
+      return;
+    }
+    if (onOpenTeamChat) {
+      const event = events.find((e) => e.id === eventId);
+      if (event) {
+        onOpenTeamChat(teamThreadId(event.id), `Équipe · ${event.title}`);
+        return;
+      }
+    }
+    onOpenEvent?.(eventId);
+  };
 
   return (
     <TabScreenShell
       caption="Communauté"
       title={clubName}
-      subtitle="Salons équipe. Messagerie, mercato, trajets"
+      subtitle="Salons équipe · Messagerie, mercato, trajets"
       left={<ScreenBackButton onPress={onBack} />}
       flat
     >
@@ -68,11 +94,11 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
           Salons
         </ProDayText>
         <View style={styles.channelGrid}>
-          {CHANNELS.map((ch) => (
+          {CLUB_COMMUNITY_CHANNELS.map((ch) => (
             <PressableSpring
               key={ch.id}
               style={[styles.channel, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              onPress={() => onChannel(ch.id)}
+              onPress={() => handleChannel(ch.id)}
               scaleTo={0.97}
               haptic
             >
@@ -103,13 +129,7 @@ export const ClubHubScreen: React.FC<ClubHubScreenProps> = ({
             <PressableSpring
               key={event.id}
               style={[styles.eventRow, { borderColor: colors.border }]}
-              onPress={() => {
-                if (onOpenTeamChat) {
-                  onOpenTeamChat(teamThreadId(event.id), `Équipe · ${event.title}`);
-                } else {
-                  onOpenEvent?.(event.id);
-                }
-              }}
+              onPress={() => handleOpenEvent(event.id)}
               scaleTo={0.98}
             >
               <Icon name="people" size={18} color={colors.accent} />
@@ -149,7 +169,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   channelLabel: { fontSize: 15 },
-  empty: { padding: spacing.lg },
   eventRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -10,7 +10,7 @@ import {
 } from '../../components/coach/CoachEffectifChapter';
 import { CoachMatchsChapter } from '../../components/coach/CoachMatchsChapter';
 import { CoachPerformanceChapter } from '../../components/coach/CoachPerformanceChapter';
-import { CoachCommunicationChapter } from '../../components/coach/CoachCommunicationChapter';
+import { CoachCommunityChapter } from '../../components/coach/CoachCommunityChapter';
 import type { CoachPortalChapterId } from '../../content/coachPortalChapters';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useTranslation } from '../../context/LocaleContext';
@@ -216,7 +216,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
           {chapter === 'matchs' ? <CoachMatchsChapter {...chapterProps} /> : null}
           {chapter === 'performance' ? <CoachPerformanceChapter {...chapterProps} /> : null}
           {chapter === 'communication' ? (
-            <CoachCommunicationChapter {...chapterProps} />
+            <CoachCommunityChapter {...chapterProps} />
           ) : null}
         </View>
       )}

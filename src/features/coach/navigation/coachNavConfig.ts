@@ -269,9 +269,9 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
   },
   {
     id: 'com_staff',
-    label: 'Parents & alertes',
-    hint: 'Notifs · docs · annonces',
-    icon: 'mail',
+    label: 'Communauté',
+    hint: 'Salons · alertes · docs',
+    icon: 'chat',
     chapter: 'communication',
   },
   {
@@ -325,7 +325,7 @@ export const COACH_HOME_TOOLS: {
         id === 'entrainements'
           ? 'Séances'
           : id === 'com_staff'
-            ? 'Parents'
+            ? 'Communauté'
             : id === 'mes_videos'
               ? 'Vidéos'
               : id === 'smart_tactics'

@@ -186,10 +186,10 @@ export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = 
   }),
   com_staff: page({
     id: 'com_staff',
-    eyebrow: 'Relais',
-    title: 'Parents & alertes',
-    support: 'Notifications, documents, annonces club.',
-    icon: 'mail',
+    eyebrow: 'Communauté',
+    title: 'Communauté',
+    support: 'Salons équipe · messagerie, mercato, trajets',
+    icon: 'chat',
     motif: 'none',
   }),
   carpool: page({

@@ -151,7 +151,7 @@ describe('resolveCoachNavAccess', () => {
     expect(menu.map((i) => i.id)).toEqual(COACH_HOME_TOOLS.map((t) => t.id));
     expect(menu.find((i) => i.id === 'match_center')?.label).toBe('Matchs');
     expect(menu.find((i) => i.id === 'entrainements')?.label).toBe('Séances');
-    expect(menu.find((i) => i.id === 'com_staff')?.label).toBe('Parents');
+    expect(menu.find((i) => i.id === 'com_staff')?.label).toBe('Communauté');
     const groups = resolveCoachToolGroups({ canSmartTactics: true, canVideo: true });
     expect(groups).toHaveLength(3);
     expect(groups.flatMap((g) => g.items)).toHaveLength(8);
@@ -178,5 +178,6 @@ describe('coach page titles SportEasy', () => {
     expect(getCoachPageIdentity('messages').title).toBe('Messagerie');
     expect(getCoachPageIdentity('plus').title).toBe('Menu');
     expect(getCoachPageIdentity('profil').title).toBe('Profil coach');
+    expect(getCoachPageIdentity('com_staff').title).toBe('Communauté');
   });
 });

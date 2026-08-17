@@ -61,6 +61,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const { openChat, setActiveTab } = useTabNavigation();
   const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const inCoachShell = Boolean(useCoachShellNav());
+  const shellNav = useCoachShellNav();
   const { tokens: coachTokens } = useCoachTheme();
   const screenColors = useMemo(
     () => (inCoachShell ? coachTokensAsAppColors(coachTokens) : c),
@@ -468,7 +469,16 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
             >
               <Text style={styles.secondaryHubBtnText}>Annonces club</Text>
             </PressableSpring>
-            <PressableSpring style={styles.secondaryHubBtn} onPress={() => setHubView('club')}>
+            <PressableSpring
+              style={styles.secondaryHubBtn}
+              onPress={() => {
+                if (inCoachShell && shellNav) {
+                  shellNav.requestNav('com_staff');
+                } else {
+                  setHubView('club');
+                }
+              }}
+            >
               <Text style={styles.secondaryHubBtnText}>Communauté club</Text>
             </PressableSpring>
           </>
