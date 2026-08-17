@@ -35,9 +35,9 @@ import { Icon } from '../ui/Icon';
 import { SmartPlayerCard } from './SmartPlayerCard';
 import { PitchFrame, projectPitch } from './PerspectivePitch';
 import {
-  CoachStadiumPitch,
-  type CoachStadiumCell,
-} from '../coach/CoachStadiumPitch';
+  CoachSportEasyPitchSurface,
+  type CoachEasyPitchCell,
+} from '../coach/CoachSportEasyPitchSurface';
 
 type StageDef = {
   key: string;
@@ -509,7 +509,7 @@ export const SmartTacticsBoard: React.FC<{
       : 0.12 + (activeVisual / (lineCount - 1)) * 0.76;
   const bandH = Math.max(0.085, 0.65 / lineCount);
 
-  const coachStadiumCells = useMemo((): (CoachStadiumCell | null)[] => {
+  const coachEasyCells = useMemo((): (CoachEasyPitchCell | null)[] => {
     return cells.map((slot) => {
       if (!slot || isPlaceholderSlot(slot)) return { uid: null };
       return {
@@ -591,36 +591,16 @@ export const SmartTacticsBoard: React.FC<{
         ) : null}
       </View>
 
-      {/* Terrain perspective + banc */}
-      <LinearGradient
-        colors={[...theme.stadiumGradient]}
-        style={[styles.stadium, { borderColor: theme.stadiumBorder }]}
-      >
-        <View style={styles.stadiumHead}>
-          {!theme.coach ? (
-            <>
-              <ProDayText variant="caption" style={styles.kicker}>
-                Terrain 3D
-              </ProDayText>
-              <ProDayText variant="caption" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                ATT ↑ · GB ↓
-              </ProDayText>
-            </>
-          ) : (
-            <ProDayText variant="caption" style={[styles.kicker, { color: theme.muted }]}>
-              Composition · {formation}
-            </ProDayText>
-          )}
-        </View>
-
-        <View style={styles.scene}>
-          {theme.coach ? (
-            <CoachStadiumPitch
+      {/* Terrain + banc */}
+      {theme.coach ? (
+        <View style={[styles.coachPitchWrap, { borderColor: theme.border }]}>
+          <View style={styles.scene}>
+            <CoachSportEasyPitchSurface
               variant="embedded"
               showHeader={false}
               showBench={false}
               formation={formation}
-              cells={coachStadiumCells}
+              cells={coachEasyCells}
               readOnly={readOnly}
               selectedSlotIndex={selectedEmptyIdx}
               selectedUid={selectedUid}
@@ -635,7 +615,23 @@ export const SmartTacticsBoard: React.FC<{
                 onPressCell(absoluteIndex, row?.lineIndex ?? activeStage.lineIndex);
               }}
             />
-          ) : (
+          </View>
+        </View>
+      ) : (
+      <LinearGradient
+        colors={[...theme.stadiumGradient]}
+        style={[styles.stadium, { borderColor: theme.stadiumBorder }]}
+      >
+        <View style={styles.stadiumHead}>
+          <ProDayText variant="caption" style={styles.kicker}>
+            Terrain 3D
+          </ProDayText>
+          <ProDayText variant="caption" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            ATT ↑ · GB ↓
+          </ProDayText>
+        </View>
+
+        <View style={styles.scene}>
           <PitchFrame
             width={pitchW}
             height={pitchH}
@@ -698,17 +694,16 @@ export const SmartTacticsBoard: React.FC<{
               })}
             </View>
           </PitchFrame>
-          )}
         </View>
 
-        {/* Banc de touche */}
+        {/* Banc de touche (joueur — perspective) */}
         <LinearGradient
           colors={[...theme.benchGradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.touchBench, theme.coach && { borderColor: theme.border }]}
+          style={styles.touchBench}
         >
-          <View style={[styles.benchRail, theme.coach && { backgroundColor: theme.accent }]} />
+          <View style={styles.benchRail} />
           <View style={styles.benchHead}>
             <Icon name="people" size={14} color={theme.accent} />
             <ProDayText variant="caption" style={styles.benchTitle}>
@@ -740,13 +735,7 @@ export const SmartTacticsBoard: React.FC<{
                   <SmartTacticsPressable
                     key={`bench-${s.uid}`}
                     onPress={() => onPickCandidate(s.uid)}
-                    style={[
-                      styles.benchSeat,
-                      on &&
-                        (theme.coach
-                          ? { borderColor: theme.accent, backgroundColor: theme.accentSoft }
-                          : styles.benchSeatOn),
-                    ]}
+                    style={[styles.benchSeat, on && styles.benchSeatOn]}
                   >
                     <ProDayText variant="caption" style={styles.benchNum}>
                       {bi + 12}
@@ -777,10 +766,7 @@ export const SmartTacticsBoard: React.FC<{
                     <ProDayText variant="caption" numberOfLines={1} style={styles.benchName}>
                       {name}
                     </ProDayText>
-                    <ProDayText
-                      variant="caption"
-                      style={[styles.benchOvr, theme.coach && { color: theme.accent }]}
-                    >
+                    <ProDayText variant="caption" style={styles.benchOvr}>
                       {ovr}
                     </ProDayText>
                   </SmartTacticsPressable>
@@ -790,6 +776,77 @@ export const SmartTacticsBoard: React.FC<{
           </ScrollView>
         </LinearGradient>
       </LinearGradient>
+      )}
+
+      {theme.coach ? (
+        <View style={[styles.coachBenchWrap, { borderColor: theme.border, backgroundColor: theme.surface }]}>
+          <View style={styles.benchHead}>
+            <Icon name="people" size={14} color={theme.accent} />
+            <ProDayText variant="caption" style={[styles.benchTitle, { color: theme.foreground }]}>
+              Banc de touche
+            </ProDayText>
+            <View style={[styles.benchCount, { backgroundColor: theme.accentSoft, borderColor: theme.border }]}>
+              <ProDayText variant="caption" style={[styles.benchCountTxt, { color: theme.accent }]}>
+                {bench.length} remp.
+              </ProDayText>
+            </View>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.benchRow}
+          >
+            {bench.length === 0 ? (
+              <ProDayText variant="caption" muted>
+                Vide — sélectionne un titulaire puis « Banc de touche »
+              </ProDayText>
+            ) : (
+              bench.map((s, bi) => {
+                const card = cardsByUid.get(s.uid);
+                const name = shortName(s.display_name);
+                const ovr = card?.overall ?? 70;
+                const on = selectedUid === s.uid;
+                return (
+                  <SmartTacticsPressable
+                    key={`bench-${s.uid}`}
+                    onPress={() => onPickCandidate(s.uid)}
+                    style={[
+                      styles.benchSeat,
+                      on && { borderColor: theme.accent, backgroundColor: theme.accentSoft },
+                    ]}
+                  >
+                    <ProDayText variant="caption" style={[styles.benchNum, { color: theme.foreground }]}>
+                      {bi + 12}
+                    </ProDayText>
+                    <View
+                      style={[
+                        styles.benchAvatar,
+                        { borderColor: on ? theme.accent : theme.border },
+                      ]}
+                    >
+                      {card?.photo_url ? (
+                        <Image source={{ uri: card.photo_url }} style={styles.benchPhoto} />
+                      ) : (
+                        <View style={[styles.benchFallback, { backgroundColor: theme.elevated }]}>
+                          <ProDayText variant="caption" style={{ color: theme.foreground }}>
+                            {name.slice(0, 1).toUpperCase()}
+                          </ProDayText>
+                        </View>
+                      )}
+                    </View>
+                    <ProDayText variant="caption" numberOfLines={1} style={{ color: theme.foreground }}>
+                      {name}
+                    </ProDayText>
+                    <ProDayText variant="caption" style={{ color: theme.accent, fontWeight: '800' }}>
+                      {ovr}
+                    </ProDayText>
+                  </SmartTacticsPressable>
+                );
+              })
+            )}
+          </ScrollView>
+        </View>
+      ) : null}
 
       {/* Lignes + cartes */}
       {!readOnly ? (
@@ -814,7 +871,7 @@ export const SmartTacticsBoard: React.FC<{
             <View
               style={[
                 styles.fill,
-                { width: progressPct },
+                { width: progressPct as `${number}%` },
                 { backgroundColor: theme.accent },
               ]}
             />
@@ -1115,6 +1172,19 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     overflow: 'hidden',
     gap: spacing.sm,
+  },
+  coachPitchWrap: {
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingBottom: spacing.sm,
+    overflow: 'hidden',
+    gap: spacing.sm,
+  },
+  coachBenchWrap: {
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: spacing.sm,
+    gap: 10,
   },
   stadiumHead: {
     flexDirection: 'row',

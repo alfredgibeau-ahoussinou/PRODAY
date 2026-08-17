@@ -39,16 +39,6 @@ export function cellsByFormationLine<T>(
   });
 }
 
-/** ny normalisé pour la projection perspective (ATT haut → GB bas). */
-export function perspectiveLineNy(visualIndex: number, lineCount: number): number {
-  if (lineCount <= 1) return 0.5;
-  return 0.12 + (visualIndex / (lineCount - 1)) * 0.76;
-}
-
-export function perspectiveHighlightBand(lineCount: number): number {
-  return Math.max(0.085, 0.65 / Math.max(1, lineCount));
-}
-
 export function starterUidsToStadiumCells(
   starterUids: (string | null | undefined)[],
   formation: string,

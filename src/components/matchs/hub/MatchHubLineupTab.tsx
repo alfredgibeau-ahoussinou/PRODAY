@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { TeamEvent } from '../../../models/TeamEvent';
 import { PitchLineupView } from '../../team/PitchLineupView';
-import { CoachStadiumPitch } from '../../coach/CoachStadiumPitch';
+import { CoachSportEasyPitchSurface } from '../../coach/CoachSportEasyPitchSurface';
 import { ProDaySurface } from '../../ui/ProDaySurface';
 import { ProDayText } from '../../ui/ProDayText';
 import { ProDayGradient } from '../../ui/ProDayGradient';
@@ -76,7 +76,7 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
       </View>
 
       {isCoachShell ? (
-        <CoachStadiumPitch
+        <CoachSportEasyPitchSurface
           formation={lineup.formation}
           cells={coachCells}
           bench={coachBench}

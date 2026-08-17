@@ -5,7 +5,14 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { PitchFrame, projectPitch } from '../smartTactics/PerspectivePitch';
+import Svg, {
+  Circle,
+  ClipPath,
+  Defs,
+  G,
+  Line,
+  Rect,
+} from 'react-native-svg';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { CoachText } from './coachPortalUi';
@@ -15,23 +22,30 @@ import {
 } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { radius, spacing } from '../../theme/designTokens';
-import {
-  cellsByFormationLine,
-  perspectiveHighlightBand,
-  perspectiveLineNy,
-  type CoachStadiumBenchPlayer,
-  type CoachStadiumCell,
-} from '../../utils/coachStadiumPitchLayout';
-import { parseFormationLines } from '../../utils/formationPitch';
+import { fillPitchSlots } from '../../utils/formationPitch';
 
+const GRASS_A = '#43B05A';
+const GRASS_B = '#348C42';
+const MARK = 'rgba(255,255,255,0.92)';
 const TOKEN = 34;
 const TOKEN_LABEL = 15;
+const STRIPE_COUNT = 12;
 
-export type { CoachStadiumCell, CoachStadiumBenchPlayer };
+export type CoachEasyPitchCell = {
+  uid: string | null;
+  jerseyNumber?: number | null;
+  shortName?: string;
+};
 
-export type CoachStadiumPitchProps = {
+export type CoachEasyPitchBenchPlayer = {
+  uid: string;
+  jerseyNumber: number;
+  shortName: string;
+};
+
+export type CoachSportEasyPitchSurfaceProps = {
   formation: string;
-  cells: (CoachStadiumCell | null)[];
+  cells: (CoachEasyPitchCell | null)[];
   readOnly?: boolean;
   selectedSlotIndex?: number | null;
   selectedUid?: string | null;
@@ -39,12 +53,11 @@ export type CoachStadiumPitchProps = {
   highlightLineIndex?: number | null;
   onSlotPress?: (slotIndex: number) => void;
   onSlotLongPress?: (slotIndex: number) => void;
-  bench?: CoachStadiumBenchPlayer[];
+  bench?: CoachEasyPitchBenchPlayer[];
   onBenchPress?: (uid: string) => void;
   pendingBenchUid?: string | null;
   formations?: readonly string[];
   onFormationChange?: (formation: string) => void;
-  /** Carte coach complète ou terrain seul (Smart Tactics). */
   variant?: 'card' | 'embedded';
   showHeader?: boolean;
   showBench?: boolean;
@@ -52,27 +65,109 @@ export type CoachStadiumPitchProps = {
   headerTitle?: string;
 };
 
-function isFilled(cell: CoachStadiumCell | null | undefined): boolean {
+function isFilled(cell: CoachEasyPitchCell | null | undefined): boolean {
   return Boolean(cell?.uid);
 }
 
-function CoachPitchToken({
+export function SportEasyPitchMarkings() {
+  const stripes = Array.from({ length: STRIPE_COUNT }, (_, i) => {
+    const h = 105 / STRIPE_COUNT;
+    return (
+      <Rect
+        key={`stripe_${i}`}
+        x={0}
+        y={i * h}
+        width={68}
+        height={h + 0.05}
+        fill={i % 2 === 0 ? GRASS_A : GRASS_B}
+      />
+    );
+  });
+
+  return (
+    <Svg width="100%" height="100%" viewBox="-2 -2 72 109" preserveAspectRatio="none">
+      <Defs>
+        <ClipPath id="coachEasyPitchClip">
+          <Rect x={0} y={0} width={68} height={105} rx={0.6} />
+        </ClipPath>
+        <ClipPath id="coachEasyTopD">
+          <Rect x={12} y={16.5} width={44} height={36} />
+        </ClipPath>
+        <ClipPath id="coachEasyBottomD">
+          <Rect x={12} y={52} width={44} height={36.5} />
+        </ClipPath>
+      </Defs>
+      <G clipPath="url(#coachEasyPitchClip)">
+        {stripes}
+        <Rect
+          x={0.35}
+          y={0.35}
+          width={67.3}
+          height={104.3}
+          fill="none"
+          stroke={MARK}
+          strokeWidth={0.45}
+        />
+        <Line x1={0.35} y1={52.5} x2={67.65} y2={52.5} stroke={MARK} strokeWidth={0.4} />
+        <Circle cx={34} cy={52.5} r={9.15} fill="none" stroke={MARK} strokeWidth={0.4} />
+        <Circle cx={34} cy={52.5} r={0.38} fill={MARK} />
+
+        <Rect x={13.84} y={0.35} width={40.32} height={16.15} fill="none" stroke={MARK} strokeWidth={0.4} />
+        <Rect x={24.84} y={0.35} width={18.32} height={5.15} fill="none" stroke={MARK} strokeWidth={0.4} />
+        <Circle cx={34} cy={11} r={0.38} fill={MARK} />
+        <Circle
+          cx={34}
+          cy={11}
+          r={9.15}
+          fill="none"
+          stroke={MARK}
+          strokeWidth={0.4}
+          clipPath="url(#coachEasyTopD)"
+        />
+
+        <Rect x={13.84} y={88.5} width={40.32} height={16.15} fill="none" stroke={MARK} strokeWidth={0.4} />
+        <Rect x={24.84} y={99.5} width={18.32} height={5.15} fill="none" stroke={MARK} strokeWidth={0.4} />
+        <Circle cx={34} cy={94} r={0.38} fill={MARK} />
+        <Circle
+          cx={34}
+          cy={94}
+          r={9.15}
+          fill="none"
+          stroke={MARK}
+          strokeWidth={0.4}
+          clipPath="url(#coachEasyBottomD)"
+        />
+
+        <Circle cx={0} cy={0} r={1} fill="none" stroke={MARK} strokeWidth={0.4} />
+        <Circle cx={68} cy={0} r={1} fill="none" stroke={MARK} strokeWidth={0.4} />
+        <Circle cx={0} cy={105} r={1} fill="none" stroke={MARK} strokeWidth={0.4} />
+        <Circle cx={68} cy={105} r={1} fill="none" stroke={MARK} strokeWidth={0.4} />
+      </G>
+    </Svg>
+  );
+}
+
+function CoachEasyPitchToken({
   cell,
   selected,
   emptyActive,
+  lineActive,
   readOnly,
   onPress,
   onLongPress,
-  size,
+  left,
+  top,
   styles,
 }: {
-  cell: CoachStadiumCell | null;
+  cell: CoachEasyPitchCell | null;
   selected: boolean;
   emptyActive: boolean;
+  lineActive: boolean;
   readOnly: boolean;
   onPress: () => void;
   onLongPress?: () => void;
-  size: number;
+  left: number;
+  top: number;
   styles: ReturnType<typeof createStyles>;
 }) {
   const filled = isFilled(cell);
@@ -89,14 +184,13 @@ function CoachPitchToken({
       onLongPress={onLongPress}
       scaleTo={0.94}
       haptic={!readOnly}
-      style={[styles.tokenWrap, { width: size }]}
+      style={[styles.tokenWrap, { left, top }]}
     >
       <View
         style={[
           styles.token,
-          { width: size, height: size, borderRadius: size / 2 },
           filled ? styles.tokenFilled : styles.tokenEmpty,
-          (selected || emptyActive) && styles.tokenSelected,
+          (selected || emptyActive || lineActive) && styles.tokenSelected,
         ]}
       >
         {filled ? (
@@ -104,7 +198,9 @@ function CoachPitchToken({
             variant="caption"
             style={[
               styles.tokenNum,
-              selected || emptyActive ? styles.tokenNumLight : styles.tokenNumDark,
+              selected || emptyActive || lineActive
+                ? styles.tokenNumLight
+                : styles.tokenNumDark,
             ]}
           >
             {label}
@@ -112,8 +208,8 @@ function CoachPitchToken({
         ) : (
           <Icon
             name="add"
-            size={Math.round(size * 0.38)}
-            color={emptyActive ? '#FFFFFF' : 'rgba(255,255,255,0.92)'}
+            size={14}
+            color={emptyActive || selected ? '#FFFFFF' : 'rgba(255,255,255,0.92)'}
           />
         )}
       </View>
@@ -124,7 +220,7 @@ function CoachPitchToken({
   );
 }
 
-export function CoachStadiumPitch({
+export function CoachSportEasyPitchSurface({
   formation,
   cells,
   readOnly = false,
@@ -144,116 +240,66 @@ export function CoachStadiumPitch({
   showBench = true,
   pitchWidth: pitchWidthProp,
   headerTitle,
-}: CoachStadiumPitchProps) {
+}: CoachSportEasyPitchSurfaceProps) {
   const { width: winW } = useWindowDimensions();
   const { tokens: themeTokens } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
 
   const pitchW = pitchWidthProp ?? Math.min(winW - spacing.md * 4, 360);
-  const pitchH = Math.round(pitchW * 1.32);
-  const maxInLine = Math.max(1, ...parseFormationLines(formation));
-  const tokenSize = Math.max(34, Math.min(52, Math.floor((pitchW * 0.86) / maxInLine) - 6));
+  const pitchH = Math.round(pitchW * (105 / 68));
 
-  const pitchRows = useMemo(
-    () => [...cellsByFormationLine(cells, formation)].reverse(),
+  const pitchSlots = useMemo(
+    () => fillPitchSlots(cells, formation),
     [cells, formation],
   );
-  const lineCount = Math.max(1, pitchRows.length);
-  const activeVisual =
-    highlightLineIndex == null
-      ? -1
-      : pitchRows.findIndex((r) => r.lineIndex === highlightLineIndex);
-  const activeNy =
-    activeVisual < 0
-      ? undefined
-      : perspectiveLineNy(activeVisual, lineCount);
-  const bandH = perspectiveHighlightBand(lineCount);
 
   const pitchScene = (
     <View style={variant === 'card' ? styles.pitchFrame : styles.embeddedFrame}>
       {showHeader ? (
-        <View style={styles.stadiumHead}>
+        <View style={styles.pitchHead}>
           <CoachText variant="caption" muted style={styles.headerKicker}>
             {headerTitle ?? (readOnly ? 'Composition publiée' : 'Composition')} · {formation}
           </CoachText>
         </View>
       ) : null}
+      <View style={[styles.pitch, { width: pitchW, height: pitchH }]}>
+        <SportEasyPitchMarkings />
+        {pitchSlots.map((cell) => {
+          const slotCell = cell.player;
+          const filled = isFilled(slotCell);
+          const selected =
+            selectedSlotIndex === cell.slotIndex ||
+            Boolean(slotCell?.uid && selectedUid === slotCell.uid);
+          const lineActive =
+            !readOnly &&
+            highlightLineIndex != null &&
+            cell.lineIndex === highlightLineIndex &&
+            !filled;
+          const emptyActive =
+            !readOnly &&
+            !filled &&
+            (selectedSlotIndex === cell.slotIndex || lineActive);
+          const left = cell.x * pitchW - TOKEN / 2;
+          const top = cell.y * pitchH - TOKEN / 2;
 
-      <View style={styles.scene}>
-        <PitchFrame
-          width={pitchW}
-          height={pitchH}
-          highlightNy0={
-            activeNy == null ? undefined : Math.max(0.02, activeNy - bandH / 2)
-          }
-          highlightNy1={
-            activeNy == null ? undefined : Math.min(0.98, activeNy + bandH / 2)
-          }
-        >
-          <View style={styles.ends} pointerEvents="none">
-            <CoachText variant="caption" style={styles.endBadge}>
-              ATT
-            </CoachText>
-            <CoachText variant="caption" style={styles.endBadge}>
-              GB
-            </CoachText>
-          </View>
-
-          <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-            {pitchRows.map((row, visualIndex) => {
-              const ny = perspectiveLineNy(visualIndex, lineCount);
-              const n = Math.max(1, row.slots.length);
-              const lineActive = row.lineIndex === highlightLineIndex;
-
-              return row.slots.map((cell, i) => {
-                const absoluteIndex = row.startIdx + i;
-                const nx = n === 1 ? 0.5 : 0.14 + (i / (n - 1)) * 0.72;
-                const pos = projectPitch(nx, ny, pitchW, pitchH);
-                const box = tokenSize + 28;
-                const filled = isFilled(cell);
-                const selected =
-                  selectedSlotIndex === absoluteIndex ||
-                  Boolean(cell?.uid && selectedUid === cell.uid);
-                const emptyActive =
-                  !readOnly &&
-                  !filled &&
-                  (selectedSlotIndex === absoluteIndex || (lineActive && !filled));
-
-                return (
-                  <View
-                    key={`slot_${absoluteIndex}`}
-                    style={{
-                      position: 'absolute',
-                      left: pos.x - box / 2,
-                      top: pos.y - box * 0.55,
-                      width: box,
-                      height: box + 22,
-                      alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      transform: [{ scale: pos.scale }],
-                      zIndex: Math.round(10 + pos.scale * 20) + (lineActive ? 5 : 0),
-                    }}
-                  >
-                    <CoachPitchToken
-                      cell={cell}
-                      selected={selected}
-                      emptyActive={emptyActive}
-                      readOnly={readOnly}
-                      size={tokenSize}
-                      styles={styles}
-                      onPress={() => onSlotPress?.(absoluteIndex)}
-                      onLongPress={
-                        !readOnly && filled
-                          ? () => onSlotLongPress?.(absoluteIndex)
-                          : undefined
-                      }
-                    />
-                  </View>
-                );
-              });
-            })}
-          </View>
-        </PitchFrame>
+          return (
+            <CoachEasyPitchToken
+              key={`slot_${cell.slotIndex}`}
+              cell={slotCell}
+              selected={selected}
+              emptyActive={emptyActive}
+              lineActive={lineActive}
+              readOnly={readOnly}
+              left={left}
+              top={top}
+              styles={styles}
+              onPress={() => onSlotPress?.(cell.slotIndex)}
+              onLongPress={
+                !readOnly && filled ? () => onSlotLongPress?.(cell.slotIndex) : undefined
+              }
+            />
+          );
+        })}
       </View>
     </View>
   );
@@ -270,7 +316,7 @@ export function CoachStadiumPitch({
           contentContainerStyle={styles.benchRow}
         >
           {bench.map((player) => {
-            const on = pendingBenchUid === player.uid;
+            const on = pendingBenchUid === player.uid || pendingUid === player.uid;
             return (
               <PressableSpring
                 key={`bench_${player.uid}`}
@@ -339,11 +385,7 @@ export function CoachStadiumPitch({
     ) : null;
 
   if (variant === 'embedded') {
-    return (
-      <View style={styles.embeddedRoot}>
-        {pitchScene}
-      </View>
-    );
+    return <View style={styles.embeddedRoot}>{pitchScene}</View>;
   }
 
   return (
@@ -403,7 +445,7 @@ function createStyles(tokens: CoachThemeTokens) {
     embeddedFrame: {
       alignItems: 'center',
     },
-    stadiumHead: {
+    pitchHead: {
       alignSelf: 'stretch',
       paddingHorizontal: spacing.xs,
     },
@@ -413,32 +455,19 @@ function createStyles(tokens: CoachThemeTokens) {
       textTransform: 'uppercase',
       fontSize: 10,
     },
-    scene: {
-      alignItems: 'center',
-    },
-    ends: {
-      position: 'absolute',
-      top: '5%',
-      bottom: '4%',
-      left: 8,
-      justifyContent: 'space-between',
-      zIndex: 2,
-    },
-    endBadge: {
-      color: '#0B1A12',
-      fontWeight: '900',
-      fontSize: 10,
-      letterSpacing: 1,
-      backgroundColor: 'rgba(255,255,255,0.9)',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 6,
+    pitch: {
+      borderRadius: 10,
       overflow: 'hidden',
     },
     tokenWrap: {
+      position: 'absolute',
+      width: TOKEN,
       alignItems: 'center',
     },
     token: {
+      width: TOKEN,
+      height: TOKEN,
+      borderRadius: TOKEN / 2,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,

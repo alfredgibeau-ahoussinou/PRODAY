@@ -1,11 +1,9 @@
 import type { EventLineupSlot } from '../models/TeamEvent';
-import { projectPitch } from '../components/smartTactics/PerspectivePitch';
+import { layoutPitchTokens } from '../utils/formationPitch';
 import {
   cellsByFormationLine,
   eventStartersToStadiumCells,
   eventSubsToBenchPlayers,
-  perspectiveHighlightBand,
-  perspectiveLineNy,
   shortPitchName,
   starterUidsToStadiumCells,
 } from '../utils/coachStadiumPitchLayout';
@@ -15,7 +13,7 @@ function starter(uid: string, name = uid): EventLineupSlot {
   return { uid, display_name: name, role: 'starter' };
 }
 
-describe('coachStadiumPitchLayout', () => {
+describe('coachSportEasyPitchLayout', () => {
   it('raccourcit les noms pour les jetons', () => {
     expect(shortPitchName('Jean Dupont')).toBe('J. Dupont');
     expect(shortPitchName('Mbappé')).toBe('Mbappé');
@@ -33,18 +31,12 @@ describe('coachStadiumPitchLayout', () => {
     expect(pitchSlotCount('4-3-3')).toBe(11);
   });
 
-  it('projette ATT plus haut que GB sur le trapèze', () => {
-    const w = 320;
-    const h = 422;
-    const att = projectPitch(0.5, perspectiveLineNy(0, 4), w, h);
-    const gb = projectPitch(0.5, perspectiveLineNy(3, 4), w, h);
-    expect(att.y).toBeLessThan(gb.y);
-    expect(gb.scale).toBeGreaterThan(att.scale);
-  });
-
-  it('calcule une bande de surlignage par ligne', () => {
-    expect(perspectiveHighlightBand(4)).toBeCloseTo(0.1625);
-    expect(perspectiveHighlightBand(1)).toBe(0.65);
+  it('layout plat SportEasy : gardien plus bas que l’attaque', () => {
+    const layout = layoutPitchTokens('4-3-3');
+    const gk = layout[0]!;
+    const attackers = layout.filter((c) => c.lineIndex === 3);
+    expect(gk.y).toBeGreaterThan(attackers[0]!.y);
+    expect(gk.x).toBeCloseTo(0.5);
   });
 
   it('mappe les titulaires coach avec maillot et banc match', () => {

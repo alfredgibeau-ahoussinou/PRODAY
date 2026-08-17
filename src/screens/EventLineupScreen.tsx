@@ -14,7 +14,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
 import { PitchLineupView } from '../components/team/PitchLineupView';
-import { CoachStadiumPitch } from '../components/coach/CoachStadiumPitch';
+import { CoachSportEasyPitchSurface } from '../components/coach/CoachSportEasyPitchSurface';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { useAuth } from '../context/AuthContext';
@@ -174,7 +174,7 @@ export const EventLineupScreen: React.FC<EventLineupScreenProps> = ({
         </View>
 
         {isCoachShell ? (
-          <CoachStadiumPitch
+          <CoachSportEasyPitchSurface
             formation={formation}
             cells={coachCells}
             bench={coachBench}

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { CoachStadiumPitch } from './CoachStadiumPitch';
+import { CoachSportEasyPitchSurface } from './CoachSportEasyPitchSurface';
 import { CoachText } from './coachPortalUi';
 import {
   useCoachTheme,
@@ -27,10 +27,7 @@ import {
   COACH_PITCH_FORMATIONS,
   type CoachPitchFormation,
 } from '../../utils/formationPitch';
-import {
-  shortPitchName,
-  starterUidsToStadiumCells,
-} from '../../utils/coachStadiumPitchLayout';
+import { shortPitchName, starterUidsToStadiumCells } from '../../utils/coachStadiumPitchLayout';
 
 type PitchPlayer = {
   uid: string;
@@ -212,7 +209,7 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
   }
 
   return (
-    <CoachStadiumPitch
+    <CoachSportEasyPitchSurface
       formation={lineup.formation}
       cells={cells}
       selectedSlotIndex={selectedSlot}
@@ -232,6 +229,7 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
           changeCoachPitchFormation(prev, formation as CoachPitchFormation),
         )
       }
+      showHeader={false}
     />
   );
 }
