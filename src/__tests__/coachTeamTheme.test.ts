@@ -4,6 +4,11 @@ import {
   resolveCoachEffectiveAccent,
   resolveCoachTeamAccent,
 } from '../utils/coachTeamTheme';
+import {
+  buildCoachColorGrid,
+  COACH_COLOR_GRID_SIZE,
+  normalizeCoachHexColor,
+} from '../utils/coachColorPicker';
 import { COACH_SITE } from '../content/coachPageIdentity';
 
 describe('coachTeamTheme', () => {
@@ -74,6 +79,30 @@ describe('coachTeamTheme', () => {
     });
     expect(tokens.accent).toBe(manualColor);
     expect(tokens.accent).not.toBe(autoAccent);
+  });
+
+  it('manual override accepte un hex arbitraire hors palette', () => {
+    const teamId = 'team-u17-a';
+    const custom = '#E91E63';
+    const tokens = buildCoachThemeTokens({
+      variant: 'solid',
+      teamId,
+      accentMode: 'manual',
+      accentOverride: custom,
+    });
+    expect(tokens.accent).toBe('#E91E63');
+    expect(tokens.accent).not.toBe(resolveCoachTeamAccent(teamId));
+  });
+
+  it('buildCoachColorGrid expose plus de 1000 couleurs', () => {
+    expect(COACH_COLOR_GRID_SIZE).toBeGreaterThan(1000);
+    expect(buildCoachColorGrid().length).toBe(COACH_COLOR_GRID_SIZE);
+  });
+
+  it('normalizeCoachHexColor accepte #RRGGBB et RRGGBB', () => {
+    expect(normalizeCoachHexColor('#e91e63')).toBe('#E91E63');
+    expect(normalizeCoachHexColor('E91E63')).toBe('#E91E63');
+    expect(normalizeCoachHexColor('#NOTHEX')).toBeNull();
   });
 
   it('auto utilise le hash équipe même si accentOverride est présent', () => {

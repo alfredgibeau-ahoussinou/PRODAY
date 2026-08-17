@@ -10,7 +10,6 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import type { IconName } from '../ui/iconNames';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import {
   COACH_PORTAL_CHAPTERS,
@@ -21,6 +20,7 @@ import {
   COACH_TEAM_ACCENT_PALETTE,
   type CoachThemeTokens,
 } from '../../utils/coachTeamTheme';
+import { CoachAccentColorBoard } from './CoachAccentColorBoard';
 import { MATCH_CHAPTER_PAD } from '../matchs/chapters/matchChapterLayout';
 import { radius, spacing } from '../../theme/designTokens';
 
@@ -31,7 +31,7 @@ export function CoachChapterRail({
   active: CoachPortalChapterId;
   onChange: (id: CoachPortalChapterId) => void;
 }) {
-  const { colors } = useAppTheme();
+  const { tokens } = useCoachTheme();
   const { t } = useTranslation();
   const styles = useMemo(() => createStyles(), []);
 
@@ -54,14 +54,14 @@ export function CoachChapterRail({
             style={[
               styles.pill,
               {
-                borderColor: on ? colors.accent : colors.border,
-                backgroundColor: on ? colors.accentSoft : colors.surface,
+                borderColor: on ? tokens.accent : tokens.border,
+                backgroundColor: on ? tokens.soft : tokens.surface,
               },
             ]}
           >
-            <ProDayText variant="caption" accent={on} muted={!on} style={styles.pillText}>
+            <CoachText variant="caption" accent={on} muted={!on} style={styles.pillText}>
               {t(ch.shortLabelKey)}
-            </ProDayText>
+            </CoachText>
           </PressableSpring>
         );
       })}
@@ -393,7 +393,7 @@ export function CoachThemeAppearanceSection() {
         })}
       </View>
       <CoachText variant="caption" muted style={styles.pickColorLabel}>
-        {t('coach.portal.theme.pickColor')}
+        {t('coach.portal.theme.recommended')}
       </CoachText>
       <View style={styles.paletteGrid}>
         {COACH_TEAM_ACCENT_PALETTE.map((color) => {
@@ -415,6 +415,16 @@ export function CoachThemeAppearanceSection() {
           );
         })}
       </View>
+      <CoachText variant="caption" muted style={styles.allColorsLabel}>
+        {t('coach.portal.theme.allColors')}
+      </CoachText>
+      <CoachText variant="caption" muted style={styles.selectedColorLabel}>
+        {t('coach.portal.theme.selectedColor')}
+      </CoachText>
+      <CoachAccentColorBoard
+        selectedColor={isManual && accentOverride ? accentOverride : tokens.accent}
+        onSelect={setAccentOverride}
+      />
       {isManual ? (
         <PressableSpring onPress={resetAccentToTeam} scaleTo={0.97} haptic style={styles.resetLink}>
           <CoachText variant="caption" style={styles.resetLinkText}>
@@ -482,6 +492,13 @@ function createThemeAppearanceStyles(tokens: CoachThemeTokens) {
     accentModeChipTextOff: { color: tokens.muted, fontWeight: '600' },
     pickColorLabel: {
       marginTop: spacing.sm,
+      marginBottom: spacing.xs,
+    },
+    allColorsLabel: {
+      marginTop: spacing.md,
+      marginBottom: spacing.xs,
+    },
+    selectedColorLabel: {
       marginBottom: spacing.xs,
     },
     paletteGrid: {

@@ -9,7 +9,8 @@ import type { MatchTalkBrief } from '../../models/MatchTalkBrief';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { User } from '../../models/User';
 import { recipientsForAudience } from '../../models/TacticalShare';
-import { useAppTheme } from '../../context/ProductLineContext';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
+import { coachTokensAsAppColors } from '../../features/coach/shell/coachTokensAsAppColors';
 import { radius, spacing } from '../../theme/designTokens';
 
 /** Causerie match + partage consigne tactique (clips uniquement si analysis_verified). */
@@ -18,7 +19,8 @@ export const MatchTalkPanel: React.FC<{
   profile: User;
   members: User[];
 }> = ({ event, profile, members }) => {
-  const { colors } = useAppTheme();
+  const { tokens } = useCoachTheme();
+  const colors = coachTokensAsAppColors(tokens);
   const [brief, setBrief] = useState<MatchTalkBrief | null>(null);
   const [objective, setObjective] = useState('');
   const [points, setPoints] = useState('');

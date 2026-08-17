@@ -1,4 +1,5 @@
 import { COACH_SITE } from '../content/coachPageIdentity';
+import { normalizeCoachHexColor } from './coachColorPicker';
 
 export type CoachShellVariant = 'solid' | 'clear';
 
@@ -88,19 +89,15 @@ export function resolveCoachTeamAccent(teamId?: string, teamName?: string): stri
   return COACH_TEAM_ACCENT_PALETTE[index] ?? PRODAY_ACCENT;
 }
 
-function isPaletteAccent(hex: string): boolean {
-  const normalized = hex.trim().toUpperCase();
-  return COACH_TEAM_ACCENT_PALETTE.some((color) => color.toUpperCase() === normalized);
-}
-
 export function resolveCoachEffectiveAccent(input: {
   accentMode?: CoachAccentMode;
   accentOverride?: string;
   teamId?: string;
   teamName?: string;
 }): string {
-  if (input.accentMode === 'manual' && input.accentOverride && isPaletteAccent(input.accentOverride)) {
-    return input.accentOverride;
+  if (input.accentMode === 'manual' && input.accentOverride) {
+    const hex = normalizeCoachHexColor(input.accentOverride);
+    if (hex) return hex;
   }
   return resolveCoachTeamAccent(input.teamId, input.teamName);
 }

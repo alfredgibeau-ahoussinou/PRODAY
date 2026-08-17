@@ -19,6 +19,7 @@ import {
   type CoachShellVariant,
   type CoachThemeTokens,
 } from '../../../utils/coachTeamTheme';
+import { normalizeCoachHexColor } from '../../../utils/coachColorPicker';
 
 const VARIANT_STORAGE_PREFIX = '@proday/coach_shell_variant';
 const ACCENT_STORAGE_PREFIX = '@proday/coach_shell_accent';
@@ -167,10 +168,12 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
 
   const setAccentOverride = useCallback(
     (color: string) => {
+      const hex = normalizeCoachHexColor(color);
+      if (!hex) return;
       setAccentModeState('manual');
-      setAccentOverrideState(color);
+      setAccentOverrideState(hex);
       if (uid) {
-        persistAccent(uid, { mode: 'manual', color });
+        persistAccent(uid, { mode: 'manual', color: hex });
       }
     },
     [uid],

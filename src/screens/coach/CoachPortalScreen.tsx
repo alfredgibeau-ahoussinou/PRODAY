@@ -14,7 +14,6 @@ import { CoachCommunicationChapter } from '../../components/coach/CoachCommunica
 import type { CoachPortalChapterId } from '../../content/coachPortalChapters';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useTranslation } from '../../context/LocaleContext';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { usersService } from '../../services/users.service';
 import type { TeamEvent } from '../../models/TeamEvent';
@@ -29,7 +28,7 @@ import {
 } from '../../utils/clubFeatureAccess';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
-import { useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 
 export type CoachPortalScreenProps = {
@@ -48,7 +47,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
 }) => {
   const profile = useSessionProfile();
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { tokens } = useCoachTheme();
   const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
   const shellNav = useCoachShellNav();
   const styles = useCoachThemedStyles(createStyles);
@@ -154,8 +153,8 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
 
   if (!profile) {
     return (
-      <View style={[styles.loader, { backgroundColor: colors.background }]}>
-        <ActivityIndicator color={colors.accent} />
+      <View style={[styles.loader, { backgroundColor: tokens.bg }]}>
+        <ActivityIndicator color={tokens.accent} />
       </View>
     );
   }
@@ -205,7 +204,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
       {!hideRail ? <CoachChapterRail active={chapter} onChange={setChapter} /> : null}
       {loading && !embedded ? (
         <View style={styles.loader}>
-          <ActivityIndicator color={colors.accent} />
+          <ActivityIndicator color={tokens.accent} />
         </View>
       ) : (
         <View style={styles.body}>
