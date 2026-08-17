@@ -3,8 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { CoachText } from '../../../components/coach/coachPortalUi';
 import { Icon } from '../../../components/ui/Icon';
 import { spacing } from '../../../theme/designTokens';
-import { useCoachThemedStyles } from './coachThemeStyles';
-import { useCoachTheme } from './CoachThemeContext';
+import { useCoachTheme, useCoachThemedStyles } from './CoachThemeContext';
 import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
 
 type Props = {

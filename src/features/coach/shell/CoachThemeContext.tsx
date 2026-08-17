@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import type { StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { clubsService } from '../../../services/clubs.service';
@@ -252,3 +253,18 @@ export function useCoachTheme(): CoachThemeContextValue {
   }
   return ctx;
 }
+
+/** Accès direct aux tokens Pôle Coach (solid / clear). */
+export function useCoachTokens(): CoachThemeTokens {
+  return useCoachTheme().tokens;
+}
+
+/** Styles memoïsés sur les tokens — évite COACH_SITE statique en module. */
+export function useCoachThemedStyles<T extends StyleSheet.NamedStyles<T>>(
+  createStyles: (tokens: CoachThemeTokens) => T,
+): T {
+  const { tokens } = useCoachTheme();
+  return useMemo(() => createStyles(tokens), [tokens]);
+}
+
+export { coachTokensAsAppColors } from './coachTokensAsAppColors';

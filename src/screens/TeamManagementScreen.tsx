@@ -43,8 +43,7 @@ import type { AppColors } from '../theme/universeTheme';
 import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
 import { CoachScreenHeader } from '../components/coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../content/coachPageIdentity';
-import { useCoachTheme } from '../features/coach/shell/CoachThemeContext';
-import { coachTokensAsAppColors } from '../features/coach/shell/coachThemeStyles';
+import { coachTokensAsAppColors, useCoachTheme } from '../features/coach/shell/CoachThemeContext';
 
 type TeamTab = 'planning' | 'roster' | 'attendance' | 'stats';
 type HubView = 'hub' | 'event' | 'create' | 'join' | 'announcements' | 'club';

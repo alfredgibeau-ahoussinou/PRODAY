@@ -19,7 +19,7 @@ import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
-import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import { useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 

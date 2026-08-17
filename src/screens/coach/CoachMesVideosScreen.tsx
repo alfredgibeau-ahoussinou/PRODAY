@@ -22,8 +22,7 @@ import {
 } from '../../content/clubVideoCenter';
 import { CoachPane } from '../../components/coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
-import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
-import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import {
   CoachActionRow,

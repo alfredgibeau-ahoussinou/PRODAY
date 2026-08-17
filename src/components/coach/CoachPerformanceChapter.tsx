@@ -30,8 +30,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
-import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
-import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { CoachPane } from './CoachScreenHeader';
 

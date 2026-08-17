@@ -3,8 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import type { LoadAlert, LoadAlertLevel } from '../../utils/playerLoadAlerts';
 import { spacing } from '../../theme/designTokens';
-import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
-import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { CoachSectionCard } from './coachPortalUi';
 

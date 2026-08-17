@@ -24,8 +24,7 @@ import { buildCoachProfileStats, type CoachProfileStats } from '../../utils/coac
 import { teamEventsService } from '../../services/teamEvents.service';
 import { usersService } from '../../services/users.service';
 import { findCoachNavItem } from '../../features/coach/navigation/coachNavConfig';
-import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
-import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { spacing, radius } from '../../theme/designTokens';
 

@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { spacing } from '../../theme/designTokens';
-import { useCoachThemedStyles } from '../../features/coach/shell/coachThemeStyles';
+import { useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import type { WellnessSignals } from '../../models/SmartTactics';
 import type { PlayerLoadSignals } from '../../utils/playerLoadAlerts';
