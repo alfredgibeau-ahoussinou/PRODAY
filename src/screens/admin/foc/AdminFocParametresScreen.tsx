@@ -30,7 +30,6 @@ const TABS = ADMIN_FOC_TABS.parametres;
 type TabId = (typeof TABS)[number]['id'];
 
 type Props = {
-  initialTab?: string;
   prefs?: AdminFocPreferences;
   onChangePrefs?: (p: AdminFocPreferences) => void;
   onSavePrefs?: () => void;
@@ -38,7 +37,6 @@ type Props = {
 };
 
 export function AdminFocParametresScreen({
-  initialTab,
   prefs: externalPrefs,
   onChangePrefs,
   onSavePrefs,
@@ -47,9 +45,7 @@ export function AdminFocParametresScreen({
   const insets = useSafeAreaInsets();
   const { profile, signOut, refreshAdminClaim, firebaseUser } = useAuth();
   const { refresh, stats } = useAdminData();
-  const [tab, setTab] = useState<TabId>(
-    TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'personnaliser',
-  );
+  const [tab, setTab] = useState<TabId>('personnaliser');
   const [localPrefs, setLocalPrefs] = useState<AdminFocPreferences>(externalPrefs ?? { ...DEFAULT_ADMIN_FOC_PREFS });
   const [busy, setBusy] = useState(false);
 

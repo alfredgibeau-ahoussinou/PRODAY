@@ -1,45 +1,79 @@
-# Console Admin ProDay — Centre de contrôle
+# Console Admin ProDay — Football Operations Center
 
 ## Modèle
 
-L'interface admin est le **centre de contrôle ProDay** — thème clair premium, sidebar rétractable
-avec groupes **Principal** + **Administration**, navigation par sections fonctionnelles uniquement
-(pas de boutons fictifs ni de stubs).
+L'interface admin est le **Football Operations Center (FOC)** — thème clair, sidebar rétractable,
+navigation par sections et feuilles. Les 5 modes HQ (`pilotage`, `decisions`, `gestion`,
+`abonnements`, `systeme`) sont conservés comme bridge interne.
 
-Registre : `src/navigation/adminNavConfig.ts` · RBAC : `src/utils/adminPermissions.ts`
+### Sections FOC (sidebar)
 
-### Sections menu (21 entrées fonctionnelles)
-
-| Groupe | Sections |
-|--------|----------|
-| **Principal** | Accueil, Utilisateurs, Clubs, Coachs, Joueurs, Parents, Équipes, Matchs & Événements, Recrutement, Vidéo, Abonnements, Marketplace, Sponsors, Contenus, Messagerie, Signalements, Statistiques, Paramètres |
-| **Administration** | Journal d'activité, Sécurité, Configuration plateforme |
-
-**Reportées** (pas d'écran/service dédié) : IA ProDay, Notifications push admin, Gestion admins, Rôles & permissions UI.
+| Section | Contenu |
+|---------|---------|
+| **Tableau de bord** | Vue d'ensemble de la plateforme |
+| **Adhérents** | Joueurs, parents, coachs, éducateurs, dirigeants |
+| **Clubs & équipes** | Clubs, équipes, effectifs, saisons |
+| **Matchs** | Calendrier, résultats, invitations, feuilles de match |
+| **Compétitions** | Événements, tournois, plateaux, organisation, live |
+| **Recrutement** | Bassin, détections, mobilité, essais |
+| **Performance** | Stats, vidéo, analyse, entraînements, progression |
+| **Communication** | Notifications, messages, annonces |
+| **Finances** | Abonnements, paiements, revenus, commissions, sponsors |
+| **Caméras & vidéo** | Caméras, matchs filmés, vidéos |
+| **Paramètres** | Personnaliser l'espace, système plateforme |
 
 ### Thème et layout
 
-- Thème clair dynamique (`buildAdminChrome`) — couleur, accent terrain, radius
-- **Desktop** (≥ 768 px) : sidebar + TopBar + contenu
-- **Mobile** : TopBar + menu overlay plein écran
-- Sidebar : 260 px / 72 px réduite
+- **Thème clair** (`adminChrome.shell = #FFFFFF`) — `StatusBar style="dark"`
+- **Desktop** (≥ 900 px) : sidebar rétractable + colonne TopBar + contenu
+- **Mobile** : TopBar avec bouton menu → sidebar en overlay modal
+- Sidebar largeur : 268 px développée, 72 px réduite (`ADMIN_FOC_SIDEBAR_WIDTH/COLLAPSED`)
 
-### Personnalisation
+### Personnalisation (`param_personnaliser`)
 
-Écran **Paramètres → Personnaliser** : couleurs, radius, densité, sections visibles, ordre des blocs dashboard.
-Persistance AsyncStorage `proday_admin_prefs_v3:{uid}`.
+L'écran **Personnaliser mon espace** permet :
+- Couleur principale (presets : ProDay `#006CFC`, Terrain, Nuit, Ambre, Rouge)
+- Accent terrain (verts pelouse)
+- Nom d'affichage dans la sidebar
+- Densité : Confortable / Compact
+- Masquer / afficher des sections de la sidebar
+- Réordonner les blocs du tableau de bord (Monter / Descendre)
 
-### RBAC
+Préférences persistées en AsyncStorage (`proday_admin_foc_prefs_v1:{uid}`)
+via `loadAdminFocPreferences` / `saveAdminFocPreferences` (`src/services/adminPreferences.service.ts`).
 
-Rôles : `super_admin`, `admin`, `moderateur`, `admin_finance`, `admin_clubs`.
-Emails `PLATFORM_ADMIN_EMAILS` → super_admin. Gate sidebar via `canAccessSection`.
+## Abonnements
+
+Depuis **Finances → Abonnements** (ou directement depuis Gestion → compte → Gérer l'abonnement) :
+
+- Voir l'état effectif **Gratuit** / **Payant**
+- Catalogue des formules (inclus gratuit vs payant)
+- Passer en payant / offrir un essai / prolonger / changer de formule
+- Résilier en fin de période ou couper immédiatement
+- Historique des achats (store + cadeaux admin)
+
+Les écritures vont sur `users/{uid}` (`subscription_*`) + journal d'audit.
 
 ## Auth
 
-- Claim Firebase `admin: true`
-- Setup : `npm run admin:setup` puis reconnexion app
+- Droit Firebase `admin: true`
+- Liste d'e-mails autorisés → écran d'accès seulement
+- Site `/admin` = code fondateur (bêta / trafic), surface séparée
+
+## Setup
+
+```bash
+ADMIN_SETUP_EMAIL=proday.admin@gmail.com
+ADMIN_SETUP_PASSWORD=…
+npm run admin:setup
+```
+
+Puis reconnecte-toi dans l'app pour recharger le jeton.
+
+```bash
+firebase deploy --only firestore:rules,storage,functions
+```
 
 ## Sécurité
 
-- Messagerie admin : modération/signalements uniquement (`AdminMessagesPanel`)
-- Protection mineurs : fiche joueur (`AdminFocAccountEditor`)
+`request.auth.token.admin == true` sur Firestore / Storage / Functions.

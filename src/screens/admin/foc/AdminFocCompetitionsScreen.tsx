@@ -136,7 +136,7 @@ function tournamentStatusTextStyle(status: string): object {
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocCompetitionsScreen({ embedded }: { embedded?: boolean } = {}) {
+export function AdminFocCompetitionsScreen() {
   const { events, tournaments, refresh, refreshing } = useAdminData();
   const [tab, setTab] = useState<TabId>('events');
 
@@ -191,17 +191,15 @@ export function AdminFocCompetitionsScreen({ embedded }: { embedded?: boolean } 
   );
 
   return (
-    <View style={[s.root, embedded && s.embedded]}>
-      {!embedded ? (
-        <AdminFocPageHeader
-          title="Compétitions"
-          subtitle={
-            tab === 'events'
-              ? `${events.length} événement${events.length !== 1 ? 's' : ''}`
-              : `${tournaments.length} tournoi${tournaments.length !== 1 ? 's' : ''}`
-          }
-        />
-      ) : null}
+    <View style={s.root}>
+      <AdminFocPageHeader
+        title="Compétitions"
+        subtitle={
+          tab === 'events'
+            ? `${events.length} événement${events.length !== 1 ? 's' : ''}`
+            : `${tournaments.length} tournoi${tournaments.length !== 1 ? 's' : ''}`
+        }
+      />
       <AdminFocTabs tabs={TABS} value={tab} onChange={(id) => setTab(id as TabId)} />
 
       {tab === 'events' ? (
@@ -253,7 +251,6 @@ export function AdminFocCompetitionsScreen({ embedded }: { embedded?: boolean } 
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: adminChrome.band },
-  embedded: { backgroundColor: 'transparent' },
   list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 80 },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
   empty: { alignItems: 'center', gap: spacing.md, paddingTop: spacing.xl * 2 },

@@ -3,39 +3,37 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../ui/Icon';
-import { PressableSpring } from '../../motion';
 import {
-  ADMIN_NAV,
-  ADMIN_NAV_GROUPS,
-  ADMIN_SIDEBAR_COLLAPSED,
-  ADMIN_SIDEBAR_WIDTH,
-  navItemsByGroup,
-  type AdminNavItem,
-  type AdminSectionId,
-} from '../../../navigation/adminNavConfig';
+  ADMIN_FOC_NAV,
+  ADMIN_FOC_SIDEBAR_COLLAPSED,
+  ADMIN_FOC_SIDEBAR_WIDTH,
+  type AdminFocNavItem,
+  type AdminFocSectionId,
+} from '../../../navigation/adminFocConfig';
 import { adminChrome, adminType } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 
 type Props = {
   collapsed: boolean;
-  activeSection: AdminSectionId;
-  sectionOrder: AdminSectionId[];
-  hiddenSections: AdminSectionId[];
-  visibleSections: AdminSectionId[];
+  activeSection: AdminFocSectionId;
+  sectionOrder: AdminFocSectionId[];
+  hiddenSections: AdminFocSectionId[];
   primaryColor?: string;
-  badges?: Partial<Record<AdminSectionId, number>>;
+  badges?: Partial<Record<AdminFocSectionId, number>>;
   clubDisplayName?: string;
   footerLabel?: string;
   onToggleCollapse: () => void;
-  onSelectSection: (section: AdminSectionId) => void;
+  onSelectSection: (section: AdminFocSectionId) => void;
 };
 
+/**
+ * Rail latéral FOC — marque ProDay dominante, items plats, rail actif.
+ */
 export function AdminFocSidebar({
   collapsed,
   activeSection,
   sectionOrder,
   hiddenSections,
-  visibleSections,
   primaryColor,
   badges = {},
   clubDisplayName,
@@ -47,67 +45,22 @@ export function AdminFocSidebar({
   const accent = primaryColor ?? adminChrome.accent;
   const styles = useMemo(() => createStyles(), []);
 
-  const itemsByGroup = useMemo(() => {
-    const map = new Map(ADMIN_NAV.map((n) => [n.id, n]));
-    const ordered: AdminNavItem[] = [];
+  const items = useMemo(() => {
+    const map = new Map(ADMIN_FOC_NAV.map((n) => [n.id, n]));
+    const ordered: AdminFocNavItem[] = [];
     for (const id of sectionOrder) {
       const item = map.get(id);
-      if (
-        item &&
-        !hiddenSections.includes(id) &&
-        visibleSections.includes(id)
-      ) {
+      if (item && !hiddenSections.includes(id)) ordered.push(item);
+    }
+    for (const item of ADMIN_FOC_NAV) {
+      if (!ordered.some((o) => o.id === item.id) && !hiddenSections.includes(item.id)) {
         ordered.push(item);
       }
     }
-    for (const item of ADMIN_NAV) {
-      if (
-        !ordered.some((o) => o.id === item.id) &&
-        !hiddenSections.includes(item.id) &&
-        visibleSections.includes(item.id)
-      ) {
-        ordered.push(item);
-      }
-    }
-    return ADMIN_NAV_GROUPS.map((group) => ({
-      ...group,
-      items: ordered.filter((i) => i.group === group.id),
-    })).filter((g) => g.items.length > 0);
-  }, [sectionOrder, hiddenSections, visibleSections]);
+    return ordered;
+  }, [sectionOrder, hiddenSections]);
 
-  const width = collapsed ? ADMIN_SIDEBAR_COLLAPSED : ADMIN_SIDEBAR_WIDTH;
-
-  const renderItem = (item: AdminNavItem) => {
-    const on = item.id === activeSection;
-    const badge = badges[item.id] ?? 0;
-    return (
-      <PressableSpring
-        key={item.id}
-        onPress={() => onSelectSection(item.id)}
-        style={[styles.item, on && styles.itemOn]}
-        scaleTo={0.98}
-        haptic
-      >
-        {on ? <View style={[styles.activeRail, { backgroundColor: accent }]} /> : null}
-        <View style={[styles.iconBox, on && { backgroundColor: `${accent}24` }]}>
-          <Icon name={item.icon} size={17} color={on ? accent : adminChrome.textMuted} />
-        </View>
-        {!collapsed ? (
-          <Text style={[styles.label, on && { color: accent }]} numberOfLines={1}>
-            {item.label}
-          </Text>
-        ) : null}
-        {!collapsed && badge > 0 ? (
-          <View style={[styles.badge, { backgroundColor: accent }]}>
-            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
-          </View>
-        ) : null}
-        {collapsed && badge > 0 ? (
-          <View style={[styles.dot, { backgroundColor: accent }]} />
-        ) : null}
-      </PressableSpring>
-    );
-  };
+  const width = collapsed ? ADMIN_FOC_SIDEBAR_COLLAPSED : ADMIN_FOC_SIDEBAR_WIDTH;
 
   return (
     <View style={[styles.root, { width, paddingTop: insets.top + 10 }]}>
@@ -128,9 +81,9 @@ export function AdminFocSidebar({
         ) : (
           <>
             <Text style={[styles.brandTitle, { color: accent }]}>ProDay</Text>
-            <Text style={styles.brandOps}>ADMIN</Text>
+            <Text style={styles.brandOps}>OPS</Text>
             <Text style={styles.brandSub} numberOfLines={1}>
-              {clubDisplayName || 'Centre de contrôle'}
+              {clubDisplayName || 'Centre d’ops'}
             </Text>
           </>
         )}
@@ -141,16 +94,43 @@ export function AdminFocSidebar({
         contentContainerStyle={styles.scrollInner}
         showsVerticalScrollIndicator={false}
       >
-        {itemsByGroup.map((group) => (
-          <View key={group.id} style={styles.group}>
-            {!collapsed ? (
-              <Text style={styles.groupLabel}>{group.label}</Text>
-            ) : (
-              <View style={styles.groupDivider} />
-            )}
-            {group.items.map(renderItem)}
-          </View>
-        ))}
+        {items.map((item) => {
+          const on = item.id === activeSection;
+          const badge = badges[item.id] ?? 0;
+          return (
+            <Pressable
+              key={item.id}
+              onPress={() => onSelectSection(item.id)}
+              style={[styles.item, on && styles.itemOn]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={item.label}
+              hitSlop={4}
+            >
+              {on ? <View style={[styles.activeRail, { backgroundColor: accent }]} /> : null}
+              <View style={[styles.iconBox, on && { backgroundColor: 'rgba(0,108,252,0.14)' }]}>
+                <Icon
+                  name={item.icon}
+                  size={17}
+                  color={on ? accent : adminChrome.textMuted}
+                />
+              </View>
+              {!collapsed ? (
+                <Text style={[styles.label, on && { color: accent }]} numberOfLines={1}>
+                  {item.label}
+                </Text>
+              ) : null}
+              {!collapsed && badge > 0 ? (
+                <View style={[styles.badge, { backgroundColor: accent }]}>
+                  <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+                </View>
+              ) : null}
+              {collapsed && badge > 0 ? (
+                <View style={[styles.dot, { backgroundColor: accent }]} />
+              ) : null}
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       <Pressable
@@ -175,7 +155,7 @@ function createStyles() {
   return StyleSheet.create({
     root: {
       flex: 1,
-      maxWidth: ADMIN_SIDEBAR_WIDTH,
+      maxWidth: ADMIN_FOC_SIDEBAR_WIDTH,
       backgroundColor: adminChrome.shell,
       borderRightWidth: StyleSheet.hairlineWidth,
       borderRightColor: adminChrome.shellBorder,
@@ -186,15 +166,15 @@ function createStyles() {
       left: 0,
       top: 0,
       bottom: 0,
-      width: 3,
-      opacity: 0.9,
+      width: 2,
+      opacity: 0.85,
     },
     brand: {
       paddingHorizontal: spacing.md,
       paddingBottom: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: adminChrome.shellBorder,
-      minHeight: 68,
+      minHeight: 64,
       justifyContent: 'center',
       gap: 2,
     },
@@ -228,7 +208,7 @@ function createStyles() {
       right: spacing.md,
       top: 4,
       fontFamily: adminType.bodyExtra,
-      fontSize: 9,
+      fontSize: 10,
       fontWeight: '800',
       letterSpacing: 1.6,
       color: adminChrome.textMuted,
@@ -241,25 +221,7 @@ function createStyles() {
       marginTop: 2,
     },
     scroll: { flex: 1 },
-    scrollInner: { paddingVertical: 10, paddingHorizontal: 8, gap: spacing.sm },
-    group: { gap: 3 },
-    groupLabel: {
-      fontFamily: adminType.bodyExtra,
-      fontSize: 9,
-      fontWeight: '800',
-      letterSpacing: 1.4,
-      textTransform: 'uppercase',
-      color: adminChrome.textMuted,
-      paddingHorizontal: 10,
-      paddingTop: 4,
-      paddingBottom: 2,
-    },
-    groupDivider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: adminChrome.shellBorder,
-      marginVertical: 6,
-      marginHorizontal: 8,
-    },
+    scrollInner: { paddingVertical: 10, paddingHorizontal: 8, gap: 3 },
     item: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -338,6 +300,3 @@ function createStyles() {
     },
   });
 }
-
-/** @deprecated alias */
-export const AdminFocSidebarLegacy = AdminFocSidebar;

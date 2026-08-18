@@ -11,29 +11,36 @@ import {
 import { Icon } from '../ui/Icon';
 import { globalAdminSearch, type GlobalSearchResult } from '../../utils/adminInsights';
 import { useAdminData } from '../../context/AdminDataContext';
-import {
-  ADMIN_NAV,
-  ADMIN_SEARCH_KIND_LABELS,
-  type AdminSectionId,
-} from '../../navigation/adminNavConfig';
+import type { AdminHqRoute } from '../../navigation/adminTabConfig';
+import { ADMIN_SEARCH_KIND_LABELS, hqRouteFromLegacyTab } from '../../navigation/adminTabConfig';
+import type { AdminFocSectionId } from '../../navigation/adminFocConfig';
 import { adminChrome } from '../../theme/adminTheme';
 import { spacing } from '../../theme/designTokens';
 
 interface AdminGlobalSearchProps {
   visible: boolean;
   onClose: () => void;
-  onNavigateSection: (section: AdminSectionId, tab?: string) => void;
+  onNavigate: (route: AdminHqRoute) => void;
+  onNavigateSection?: (section: AdminFocSectionId) => void;
 }
 
-const QUICK_JUMPS = ADMIN_NAV.filter((n) =>
-  ['accueil', 'utilisateurs', 'clubs', 'matchs_events', 'signalements', 'abonnements', 'parametres'].includes(
-    n.id,
-  ),
-);
+const QUICK_JUMPS: {
+  section: AdminFocSectionId;
+  label: string;
+  icon: 'home' | 'mail' | 'people' | 'football' | 'bag' | 'settings';
+}[] = [
+  { section: 'dashboard', label: 'Tableau de bord', icon: 'home' },
+  { section: 'adherents', label: 'Adhérents', icon: 'people' },
+  { section: 'matchs', label: 'Matchs', icon: 'football' },
+  { section: 'communication', label: 'Communication', icon: 'mail' },
+  { section: 'finances', label: 'Finances', icon: 'bag' },
+  { section: 'parametres', label: 'Paramètres', icon: 'settings' },
+];
 
 export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
   visible,
   onClose,
+  onNavigate,
   onNavigateSection,
 }) => {
   const { users, clubs, posts, events } = useAdminData();
@@ -46,13 +53,25 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
   );
 
   const handlePick = (item: GlobalSearchResult) => {
-    onNavigateSection(item.targetSection, item.targetTab);
+    const mapped = hqRouteFromLegacyTab(item.targetTab, item.targetSegment);
+    onNavigate(mapped);
     onClose();
     setQuery('');
   };
 
-  const handleJump = (section: AdminSectionId, tab?: string) => {
-    onNavigateSection(section, tab);
+  const handleJump = (section: AdminFocSectionId) => {
+    if (onNavigateSection) onNavigateSection(section);
+    else {
+      const map: Partial<Record<AdminFocSectionId, AdminHqRoute>> = {
+        dashboard: { mode: 'pilotage' },
+        adherents: { mode: 'gestion', atelier: 'comptes' },
+        matchs: { mode: 'gestion', atelier: 'matchs' },
+        communication: { mode: 'decisions' },
+        finances: { mode: 'abonnements' },
+        parametres: { mode: 'systeme' },
+      };
+      onNavigate(map[section] ?? { mode: 'pilotage' });
+    }
     onClose();
     setQuery('');
   };
@@ -66,7 +85,7 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
     >
       <View style={styles.root}>
         <View style={styles.header}>
-          <Text style={styles.title}>Recherche globale</Text>
+          <Text style={styles.title}>Recherche</Text>
           <Pressable onPress={onClose} hitSlop={12}>
             <Icon name="close" size={22} color={adminChrome.text} />
           </Pressable>
@@ -76,7 +95,7 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
           <Icon name="search" size={18} color={adminChrome.textMuted} />
           <TextInput
             style={styles.input}
-            placeholder="Compte, club, annonce, événement…"
+            placeholder="Compte, club, match, annonce…"
             placeholderTextColor={adminChrome.textMuted}
             value={query}
             onChangeText={setQuery}
@@ -90,11 +109,7 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
           <View style={styles.quick}>
             <Text style={styles.section}>Raccourcis</Text>
             {QUICK_JUMPS.map((j) => (
-              <Pressable
-                key={j.id}
-                onPress={() => handleJump(j.id, j.route.tab)}
-                style={styles.row}
-              >
+              <Pressable key={j.section} onPress={() => handleJump(j.section)} style={styles.row}>
                 <Icon name={j.icon} size={18} color={adminChrome.accent} />
                 <Text style={styles.rowTitle}>{j.label}</Text>
               </Pressable>
@@ -104,26 +119,25 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
           <FlatList
             data={results}
             keyExtractor={(item) => item.id}
-            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.list}
+            ListEmptyComponent={
+              <Text style={styles.empty}>Aucun résultat pour « {query.trim()} »</Text>
+            }
             renderItem={({ item }) => (
               <Pressable onPress={() => handlePick(item)} style={styles.row}>
-                <View style={styles.kindBadge}>
-                  <Text style={styles.kindText}>
-                    {ADMIN_SEARCH_KIND_LABELS[item.kind] ?? item.kind}
+                <Text style={styles.kind}>
+                  {ADMIN_SEARCH_KIND_LABELS[item.kind] ?? item.kind}
+                </Text>
+                <View style={styles.rowCopy}>
+                  <Text style={styles.rowTitle} numberOfLines={1}>
+                    {item.title}
                   </Text>
-                </View>
-                <View style={styles.rowBody}>
-                  <Text style={styles.rowTitle}>{item.title}</Text>
                   <Text style={styles.rowSub} numberOfLines={1}>
                     {item.subtitle}
                   </Text>
                 </View>
-                <Icon name="chevron-forward" size={14} color={adminChrome.textMuted} />
               </Pressable>
             )}
-            ListEmptyComponent={
-              <Text style={styles.empty}>Aucun résultat pour « {query.trim()} ».</Text>
-            }
           />
         )}
       </View>
@@ -133,67 +147,57 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
 
 function createStyles() {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: adminChrome.shellElevated },
+    root: { flex: 1, backgroundColor: adminChrome.shell, paddingTop: spacing.lg },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: adminChrome.shellBorder,
+      marginBottom: spacing.md,
     },
-    title: { flex: 1, fontSize: 18, fontWeight: '800', color: adminChrome.text },
+    title: { fontSize: 22, fontWeight: '800', color: adminChrome.text },
     inputWrap: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      margin: spacing.md,
+      marginHorizontal: spacing.lg,
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      backgroundColor: adminChrome.shell,
-      borderRadius: adminChrome.radius,
+      paddingVertical: spacing.sm + 2,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: adminChrome.shellBorder,
+      backgroundColor: adminChrome.shellElevated,
+      borderRadius: 12,
     },
-    input: { flex: 1, fontSize: 16, color: adminChrome.text, paddingVertical: 6 },
-    quick: { paddingHorizontal: spacing.md, gap: spacing.xs },
+    input: { flex: 1, color: adminChrome.text, fontSize: 15, paddingVertical: 4 },
+    quick: { padding: spacing.lg, gap: spacing.sm },
     section: {
       fontSize: 11,
-      fontWeight: '700',
-      letterSpacing: 1,
+      fontWeight: '800',
+      letterSpacing: 1.4,
       textTransform: 'uppercase',
       color: adminChrome.textMuted,
-      marginBottom: spacing.sm,
+      marginBottom: spacing.xs,
     },
+    list: { padding: spacing.lg },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
+      gap: spacing.md,
       paddingVertical: 12,
-      paddingHorizontal: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: adminChrome.shellBorder,
     },
-    rowBody: { flex: 1, minWidth: 0 },
-    rowTitle: { fontSize: 15, fontWeight: '700', color: adminChrome.text },
-    rowSub: { fontSize: 12, color: adminChrome.textMuted, marginTop: 2 },
-    kindBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-      backgroundColor: adminChrome.soft,
-    },
-    kindText: {
+    kind: {
       fontSize: 10,
       fontWeight: '800',
-      color: adminChrome.accent,
+      letterSpacing: 0.6,
       textTransform: 'uppercase',
+      color: adminChrome.accent,
+      minWidth: 64,
     },
-    empty: {
-      padding: spacing.xl,
-      textAlign: 'center',
-      color: adminChrome.textMuted,
-      fontSize: 14,
-    },
+    rowCopy: { flex: 1, minWidth: 0, gap: 2 },
+    rowTitle: { color: adminChrome.text, fontSize: 15, fontWeight: '700' },
+    rowSub: { color: adminChrome.textMuted, fontSize: 12 },
+    empty: { color: adminChrome.textMuted, textAlign: 'center', marginTop: spacing.xl },
   });
 }

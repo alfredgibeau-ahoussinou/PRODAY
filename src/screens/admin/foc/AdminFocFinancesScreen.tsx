@@ -91,11 +91,9 @@ function ShopOrderRow({ order }: { order: ShopOrder }) {
 
 /* ─── Screen ─────────────────────────────────────────────────────────── */
 
-export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } = {}) {
+export function AdminFocFinancesScreen() {
   const { payments, refresh, refreshing } = useAdminData();
-  const [tab, setTab] = useState<TabId>(
-    TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'abonnements',
-  );
+  const [tab, setTab] = useState<TabId>('abonnements');
   const [shopOrders, setShopOrders] = useState<ShopOrder[]>([]);
   const [loadingShop, setLoadingShop] = useState(false);
 

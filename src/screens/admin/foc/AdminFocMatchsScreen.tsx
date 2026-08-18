@@ -144,7 +144,7 @@ function AdminFocMatchCard({ match, onPress }: CardProps) {
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocMatchsScreen({ embedded }: { embedded?: boolean } = {}) {
+export function AdminFocMatchsScreen() {
   const { matches, refresh, refreshing } = useAdminData();
   const [filter, setFilter] = useState<FilterId>('tous');
 

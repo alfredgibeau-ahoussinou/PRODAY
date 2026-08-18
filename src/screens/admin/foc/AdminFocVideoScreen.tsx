@@ -28,7 +28,7 @@ function statusVisual(status: ClubCamera['status'], sync: ClubCamera['sync_statu
 }
 
 /** Caméras & vidéo — données Firestore réelles (OAuth vendeurs encore stub). */
-export function AdminFocVideoScreen(_props: { initialTab?: string } = {}) {
+export function AdminFocVideoScreen() {
   const styles = useMemo(() => createStyles(), []);
   const [cameras, setCameras] = useState<ClubCamera[]>([]);
   const [refreshing, setRefreshing] = useState(false);

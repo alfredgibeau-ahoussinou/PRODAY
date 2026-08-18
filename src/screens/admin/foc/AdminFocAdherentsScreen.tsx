@@ -70,22 +70,12 @@ const GENDER_FILTERS: { id: GenderFilter; label: string }[] = [
   { id: 'women', label: 'Femme' },
 ];
 
-type AccountFilter = 'all' | 'active' | 'suspended' | 'verified';
-
-const ACCOUNT_FILTERS: { id: AccountFilter; label: string }[] = [
-  { id: 'all', label: 'Tous statuts' },
-  { id: 'active', label: 'Actifs' },
-  { id: 'suspended', label: 'Suspendus' },
-  { id: 'verified', label: 'Vérifiés' },
-];
-
 function filterUsers(
   users: User[],
   tab: TabId,
   query: string,
   ageFilter: AgeFilter,
   genderFilter: GenderFilter,
-  accountFilter: AccountFilter,
 ): User[] {
   const q = query.trim().toLowerCase();
   let list = users;
@@ -114,12 +104,6 @@ function filterUsers(
   }
   if (genderFilter !== 'all') {
     list = list.filter((u) => u.profile?.gender === genderFilter);
-  }
-
-  if (accountFilter === 'active') list = list.filter((u) => u.is_active !== false);
-  else if (accountFilter === 'suspended') list = list.filter((u) => u.is_active === false);
-  else if (accountFilter === 'verified') {
-    list = list.filter((u) => u.verification_status === 'VERIFIED');
   }
 
   if (q) {
@@ -486,26 +470,18 @@ function CreateUserModal({
   );
 }
 
-export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } = {}) {
+export function AdminFocAdherentsScreen() {
   const { users, refreshing, refresh } = useAdminData();
-  const validTab = TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'all';
-  const [tab, setTab] = useState<TabId>(validTab);
+  const [tab, setTab] = useState<TabId>('all');
   const [query, setQuery] = useState('');
-  React.useEffect(() => {
-    if (initialTab && TABS.some((t) => t.id === initialTab)) {
-      setTab(initialTab as TabId);
-    }
-  }, [initialTab]);
-
   const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
-  const [accountFilter, setAccountFilter] = useState<AccountFilter>('all');
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
   const filtered = useMemo(
-    () => filterUsers(users, tab, query, ageFilter, genderFilter, accountFilter),
-    [users, tab, query, ageFilter, genderFilter, accountFilter],
+    () => filterUsers(users, tab, query, ageFilter, genderFilter),
+    [users, tab, query, ageFilter, genderFilter],
   );
   const selected = selectedUid ? users.find((u) => u.uid === selectedUid) ?? null : null;
 
@@ -569,20 +545,6 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
             style={[s.filterChip, genderFilter === f.id && s.filterChipOn]}
           >
             <Text style={[s.filterChipText, genderFilter === f.id && s.filterChipTextOn]}>
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <View style={s.filterRow}>
-        {ACCOUNT_FILTERS.map((f) => (
-          <Pressable
-            key={f.id}
-            onPress={() => setAccountFilter(f.id)}
-            style={[s.filterChip, accountFilter === f.id && s.filterChipOn]}
-          >
-            <Text style={[s.filterChipText, accountFilter === f.id && s.filterChipTextOn]}>
               {f.label}
             </Text>
           </Pressable>

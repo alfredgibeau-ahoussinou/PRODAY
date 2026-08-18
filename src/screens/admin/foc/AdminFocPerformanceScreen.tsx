@@ -33,13 +33,11 @@ function StatRow({ label, value, sub }: { label: string; value: string | number;
 
 /* ─── Screen ─────────────────────────────────────────────────────────── */
 
-export function AdminFocPerformanceScreen({ initialTab }: { initialTab?: string } = {}) {
+export function AdminFocPerformanceScreen() {
   const insets = useSafeAreaInsets();
   const { stats, trafficTotals, trafficDaily, roleBreakdown, users, clubs, workQueue, refresh, refreshing } =
     useAdminData();
-  const [tab, setTab] = useState<TabId>(
-    TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'stats',
-  );
+  const [tab, setTab] = useState<TabId>('stats');
 
   const pending = useMemo(() => workQueue.length, [workQueue]);
 
