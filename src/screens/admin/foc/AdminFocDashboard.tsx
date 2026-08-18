@@ -30,6 +30,7 @@ import { JOUEUR_UNIVERSE_LABELS } from '../../../utils/joueurBirthAge';
 
 interface AdminFocDashboardProps {
   onNavigateSection: (section: string) => void;
+  onOpenDecisions?: () => void;
 }
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -66,6 +67,7 @@ function matchStatusLabel(tone: MatchStatusTone, match: FriendlyMatch): string {
 
 export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
   onNavigateSection,
+  onOpenDecisions,
 }) => {
   const onNavigateLeaf = onNavigateSection;
   const insets = useSafeAreaInsets();
@@ -356,7 +358,10 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
 
       {/* Decisions teaser */}
       <PressableSpring
-        onPress={() => onNavigateLeaf('publications')}
+        onPress={() => {
+          if (onOpenDecisions) onOpenDecisions();
+          else onNavigateLeaf('publications');
+        }}
         style={styles.decisionsBanner}
         scaleTo={0.97}
         haptic

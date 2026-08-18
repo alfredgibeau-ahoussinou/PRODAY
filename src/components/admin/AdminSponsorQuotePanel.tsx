@@ -23,6 +23,7 @@ import {
 import { adminAuditService } from '../../services/adminAudit.service';
 import { useAuth } from '../../context/AuthContext';
 import { AnimatedModalShell } from '../motion/AnimatedModalShell';
+import { AdminButton } from './AdminButton';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
 import { AdminFilterChips } from './AdminFilterChips';
@@ -261,17 +262,14 @@ export const AdminSponsorQuotePanel: React.FC = () => {
               </View>
             )}
 
-            <TouchableOpacity
-              style={[styles.sendBtn, sending && styles.btnDisabled]}
+            <AdminButton
+              label="Envoyer le devis"
+              variant="primary"
               onPress={() => void handleSend()}
+              loading={sending}
               disabled={sending}
-            >
-              {sending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.sendBtnText}>Envoyer le devis</Text>
-              )}
-            </TouchableOpacity>
+              style={styles.sendBtn}
+            />
           </ScrollView>
         ) : null}
       </AnimatedModalShell>

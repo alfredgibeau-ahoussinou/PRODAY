@@ -91,7 +91,7 @@ export const AdminButton: React.FC<AdminButtonProps> = ({
   flex,
 }) => {
   const vs = useMemo(() => variantStyles(variant), [variant]);
-  const isDisabled = disabled || loading;
+  const isDisabled = disabled || loading || !onPress;
   const isIconOnly = variant === 'icon' || (!label && !!icon);
   const iconSize = size === 'sm' ? 14 : 16;
 
@@ -134,13 +134,15 @@ export const AdminButton: React.FC<AdminButtonProps> = ({
 };
 
 export type AdminActionRowProps = {
-  onApprove: () => void;
-  onReject: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
   approveLoading?: boolean;
   rejectLoading?: boolean;
   disabled?: boolean;
   approveLabel?: string;
   rejectLabel?: string;
+  showApprove?: boolean;
+  showReject?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -153,28 +155,34 @@ export const AdminActionRow: React.FC<AdminActionRowProps> = ({
   disabled = false,
   approveLabel = 'Approuver',
   rejectLabel = 'Refuser',
+  showApprove = true,
+  showReject = true,
   style,
 }) => (
-  <View style={[styles.actionRow, style]}>
-    <AdminButton
-      label={approveLabel}
-      variant="outline"
-      size="sm"
-      flex
-      onPress={onApprove}
-      loading={approveLoading}
-      disabled={disabled || rejectLoading}
-      style={styles.approveOutline}
-    />
-    <AdminButton
-      label={rejectLabel}
-      variant="danger"
-      size="sm"
-      flex
-      onPress={onReject}
-      loading={rejectLoading}
-      disabled={disabled || approveLoading}
-    />
+  <View style={[styles.actionRow, style]} pointerEvents="box-none">
+    {showApprove ? (
+      <AdminButton
+        label={approveLabel}
+        variant="outline"
+        size="sm"
+        flex
+        onPress={onApprove}
+        loading={approveLoading}
+        disabled={disabled || rejectLoading}
+        style={styles.approveOutline}
+      />
+    ) : null}
+    {showReject ? (
+      <AdminButton
+        label={rejectLabel}
+        variant="danger"
+        size="sm"
+        flex
+        onPress={onReject}
+        loading={rejectLoading}
+        disabled={disabled || approveLoading}
+      />
+    ) : null}
   </View>
 );
 

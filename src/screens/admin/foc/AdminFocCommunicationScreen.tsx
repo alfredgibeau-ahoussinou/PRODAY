@@ -22,11 +22,15 @@ import type { AdminWorkItem } from '../../../utils/adminInsights';
 import type { ClubAnnouncement } from '../../../models/ClubAnnouncement';
 import { adminService } from '../../../services/admin.service';
 import {
+  adminWorkItemNeedsOpenToTreat,
+  canAdminWorkInlineAction,
   confirmAdminWorkApprove,
   confirmAdminWorkReject,
   runAdminWorkApprove,
   runAdminWorkReject,
 } from '../../../utils/adminWorkQueueActions';
+
+const COMMUNICATION_DECISION_KINDS = new Set<AdminWorkItem['kind']>(['reel', 'report']);
 
 const TABS = ADMIN_FOC_SCREEN_TABS.communication;
 type TabId = (typeof TABS)[number]['id'];
@@ -51,6 +55,9 @@ function DecisionRow({
   const kindLabel = ADMIN_WORK_KIND_LABELS[item.kind] ?? item.kind;
   const priorityLabel = ADMIN_PRIORITY_LABELS[item.priority] ?? item.priority;
   const isPending = item.priority === 'high' || item.priority === 'critical';
+  const showApprove = canAdminWorkInlineAction(item, 'approve');
+  const showReject = canAdminWorkInlineAction(item, 'reject');
+  const needsOpenHint = adminWorkItemNeedsOpenToTreat(item);
 
   return (
     <View style={s.decisionRow}>
@@ -67,13 +74,19 @@ function DecisionRow({
       {item.subtitle ? (
         <Text style={s.decisionSub} numberOfLines={1}>{item.subtitle}</Text>
       ) : null}
-      <AdminActionRow
-        onApprove={onApprove}
-        onReject={onReject}
-        approveLoading={busyId === `${item.id}:approve`}
-        rejectLoading={busyId === `${item.id}:reject`}
-        disabled={!!busyId}
-      />
+      {showApprove || showReject ? (
+        <AdminActionRow
+          onApprove={showApprove ? onApprove : undefined}
+          onReject={showReject ? onReject : undefined}
+          approveLoading={busyId === `${item.id}:approve`}
+          rejectLoading={busyId === `${item.id}:reject`}
+          disabled={!!busyId}
+          showApprove={showApprove}
+          showReject={showReject}
+        />
+      ) : needsOpenHint ? (
+        <Text style={s.openHint}>Ouvrir pour traiter</Text>
+      ) : null}
     </View>
   );
 }
@@ -120,6 +133,7 @@ export function AdminFocCommunicationScreen({ initialTab }: Props) {
   }, [initialTab]);
 
   const handleApprove = (item: AdminWorkItem) => {
+    if (!canAdminWorkInlineAction(item, 'approve')) return;
     confirmAdminWorkApprove(item, async () => {
       setBusyId(`${item.id}:approve`);
       try {
@@ -131,6 +145,7 @@ export function AdminFocCommunicationScreen({ initialTab }: Props) {
   };
 
   const handleReject = (item: AdminWorkItem) => {
+    if (!canAdminWorkInlineAction(item, 'reject')) return;
     confirmAdminWorkReject(item, async () => {
       setBusyId(`${item.id}:reject`);
       try {
@@ -163,6 +178,11 @@ export function AdminFocCommunicationScreen({ initialTab }: Props) {
     [refresh],
   );
 
+  const communicationDecisions = useMemo(
+    () => workQueue.filter((item) => COMMUNICATION_DECISION_KINDS.has(item.kind)),
+    [workQueue],
+  );
+
   return (
     <View style={s.root}>
       <AdminFocPageHeader title="Communication" />
@@ -170,7 +190,7 @@ export function AdminFocCommunicationScreen({ initialTab }: Props) {
 
       {tab === 'decisions' ? (
         <FlatList
-          data={workQueue}
+          data={communicationDecisions}
           keyExtractor={(i) => i.id}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={adminChrome.accent} />
@@ -191,7 +211,7 @@ export function AdminFocCommunicationScreen({ initialTab }: Props) {
               <Text style={s.emptySub}>Tout est à jour — bravo !</Text>
             </View>
           }
-          contentContainerStyle={workQueue.length === 0 ? s.emptyContainer : s.list}
+          contentContainerStyle={communicationDecisions.length === 0 ? s.emptyContainer : s.list}
           showsVerticalScrollIndicator={false}
         />
       ) : tab === 'messages' ? (
@@ -270,6 +290,12 @@ const s = StyleSheet.create({
   decisionTime: { fontSize: 11, color: adminChrome.textMuted, marginLeft: 'auto' },
   decisionTitle: { fontSize: 14, fontWeight: '700', color: adminChrome.text, lineHeight: 20 },
   decisionSub: { fontSize: 12, color: adminChrome.textMuted },
+  openHint: {
+    fontSize: 12,
+    color: adminChrome.textMuted,
+    fontStyle: 'italic',
+    marginTop: spacing.xs,
+  },
 
   row: {
     flexDirection: 'row',

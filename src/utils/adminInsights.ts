@@ -95,6 +95,7 @@ export function buildAdminWorkQueue(input: {
       meta: report.bookmark_key.slice(0, 24),
       targetTab: 'moderation',
       contentSegment: 'reports',
+      entityId: report.bookmark_key,
       createdAt: report.created_at,
     });
   }

@@ -18,6 +18,8 @@ import { adminChrome } from '../../theme/adminTheme';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AdminWorkItem } from '../../utils/adminInsights';
 import {
+  adminWorkItemNeedsOpenToTreat,
+  canAdminWorkInlineAction,
   confirmAdminWorkApprove,
   confirmAdminWorkReject,
   runAdminWorkApprove,
@@ -55,33 +57,39 @@ function DecisionItem({
   const isHot = item.priority === 'critical' || item.priority === 'high';
   const loadingApprove = busyId === `${item.id}:approve`;
   const loadingReject = busyId === `${item.id}:reject`;
+  const showApprove = canAdminWorkInlineAction(item, 'approve');
+  const showReject = canAdminWorkInlineAction(item, 'reject');
+  const needsOpenHint = adminWorkItemNeedsOpenToTreat(item);
 
   return (
-    <Pressable
-      onPress={onOpen}
-      style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
-      accessibilityRole="button"
-    >
-      <View style={styles.itemHead}>
-        <View style={[styles.kindTag, isHot && styles.kindTagHot]}>
-          <Text style={[styles.kindText, isHot && styles.kindTextHot]}>{kindLabel}</Text>
+    <View style={styles.item}>
+      <Pressable
+        onPress={onOpen}
+        style={({ pressed }) => [styles.itemBody, pressed && styles.itemBodyPressed]}
+        accessibilityRole="button"
+        accessibilityLabel={`Ouvrir ${item.title}`}
+      >
+        <View style={styles.itemHead}>
+          <View style={[styles.kindTag, isHot && styles.kindTagHot]}>
+            <Text style={[styles.kindText, isHot && styles.kindTextHot]}>{kindLabel}</Text>
+          </View>
+          <View style={[styles.priorityTag, isHot && styles.priorityTagHot]}>
+            <Text style={[styles.priorityText, isHot && styles.priorityTextHot]}>
+              {priorityLabel}
+            </Text>
+          </View>
+          {item.meta ? <Text style={styles.itemMeta}>{item.meta}</Text> : null}
         </View>
-        <View style={[styles.priorityTag, isHot && styles.priorityTagHot]}>
-          <Text style={[styles.priorityText, isHot && styles.priorityTextHot]}>
-            {priorityLabel}
-          </Text>
-        </View>
-        {item.meta ? <Text style={styles.itemMeta}>{item.meta}</Text> : null}
-      </View>
-      <Text style={styles.itemTitle} numberOfLines={2}>
-        {item.title}
-      </Text>
-      {item.subtitle ? (
-        <Text style={styles.itemSub} numberOfLines={2}>
-          {item.subtitle}
+        <Text style={styles.itemTitle} numberOfLines={2}>
+          {item.title}
         </Text>
-      ) : null}
-      <View style={styles.itemActions}>
+        {item.subtitle ? (
+          <Text style={styles.itemSub} numberOfLines={2}>
+            {item.subtitle}
+          </Text>
+        ) : null}
+      </Pressable>
+      <View style={styles.itemActions} pointerEvents="box-none">
         <AdminButton
           label="Ouvrir"
           variant="secondary"
@@ -90,15 +98,21 @@ function DecisionItem({
           onPress={onOpen}
           disabled={!!busyId}
         />
-        <AdminActionRow
-          onApprove={onApprove}
-          onReject={onReject}
-          approveLoading={loadingApprove}
-          rejectLoading={loadingReject}
-          disabled={!!busyId && !loadingApprove && !loadingReject}
-        />
+        {showApprove || showReject ? (
+          <AdminActionRow
+            onApprove={showApprove ? onApprove : undefined}
+            onReject={showReject ? onReject : undefined}
+            approveLoading={loadingApprove}
+            rejectLoading={loadingReject}
+            disabled={!!busyId && !loadingApprove && !loadingReject}
+            showApprove={showApprove}
+            showReject={showReject}
+          />
+        ) : needsOpenHint ? (
+          <Text style={styles.openHint}>Ouvrir pour traiter</Text>
+        ) : null}
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -123,6 +137,7 @@ export const AdminPendingDecisionsModal: React.FC<Props> = ({
 
   const handleApprove = useCallback(
     (item: AdminWorkItem) => {
+      if (!canAdminWorkInlineAction(item, 'approve')) return;
       confirmAdminWorkApprove(item, async () => {
         setBusyId(`${item.id}:approve`);
         try {
@@ -137,6 +152,7 @@ export const AdminPendingDecisionsModal: React.FC<Props> = ({
 
   const handleReject = useCallback(
     (item: AdminWorkItem) => {
+      if (!canAdminWorkInlineAction(item, 'reject')) return;
       confirmAdminWorkReject(item, async () => {
         setBusyId(`${item.id}:reject`);
         try {
@@ -229,7 +245,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
-  itemPressed: { backgroundColor: adminChrome.rowHover },
+  itemBody: { gap: spacing.xs },
+  itemBodyPressed: { opacity: 0.85 },
   itemHead: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -267,6 +284,12 @@ const styles = StyleSheet.create({
   itemTitle: { fontSize: 14, fontWeight: '700', color: adminChrome.text, lineHeight: 20 },
   itemSub: { fontSize: 12, color: adminChrome.textMuted, lineHeight: 17 },
   itemActions: { gap: spacing.sm, marginTop: spacing.xs },
+  openHint: {
+    fontSize: 12,
+    color: adminChrome.textMuted,
+    fontStyle: 'italic',
+    paddingVertical: spacing.xs,
+  },
   empty: { alignItems: 'center', gap: spacing.md, padding: spacing.xl },
   emptyTitle: { fontSize: 16, fontWeight: '800', color: adminChrome.text },
   emptySub: { fontSize: 13, color: adminChrome.textMuted, textAlign: 'center' },

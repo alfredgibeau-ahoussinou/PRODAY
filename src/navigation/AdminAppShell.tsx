@@ -255,7 +255,12 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   const renderContent = useCallback(() => {
     switch (section) {
       case 'dashboard':
-        return <AdminFocDashboard onNavigateSection={handleNavigateSection} />;
+        return (
+          <AdminFocDashboard
+            onNavigateSection={handleNavigateSection}
+            onOpenDecisions={() => setNotifOpen(true)}
+          />
+        );
       case 'personnes':
         return <AdminFocAdherentsScreen initialTab={screenTab} />;
       case 'clubs':
