@@ -16,7 +16,7 @@ import { adminChrome } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 import { getRoleLabel } from '../../signup/signupFlowConfig';
 import { Alert, useWindowDimensions } from 'react-native';
-import { ADMIN_INSPECTOR_WIDTH, ADMIN_WIDE_BREAKPOINT } from '../../../navigation/adminTabConfig';
+import { ADMIN_WIDE_BREAKPOINT, ADMIN_INSPECTOR_WIDTH } from '../../../navigation/adminNavConfig';
 
 type FilterId = 'bassin' | 'annonces' | 'candidatures' | 'joueurs';
 
@@ -31,12 +31,20 @@ type RecRow = {
 /**
  * Bassin de recrutement — annonces, candidatures, joueurs filtrables.
  */
-export function AdminFocRecrutementScreen() {
+export function AdminFocRecrutementScreen({ initialTab }: { initialTab?: string } = {}) {
   const data = useAdminData();
   const { width } = useWindowDimensions();
   const wide = width >= ADMIN_WIDE_BREAKPOINT;
   const styles = useMemo(() => createStyles(wide), [wide]);
-  const [filter, setFilter] = useState<FilterId>('bassin');
+  const tabToFilter: Record<string, FilterId> = {
+    bassin: 'bassin',
+    posts: 'annonces',
+    apps: 'candidatures',
+    players: 'joueurs',
+  };
+  const [filter, setFilter] = useState<FilterId>(
+    tabToFilter[initialTab ?? ''] ?? 'bassin',
+  );
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

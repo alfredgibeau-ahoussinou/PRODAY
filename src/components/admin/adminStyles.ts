@@ -1,22 +1,23 @@
 import { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
-import { ADMIN_NAV_INSET } from '../../navigation/adminTabConfig';
+import { ADMIN_NAV_INSET } from '../../navigation/adminNavConfig';
 import { spacing, radius, shadows } from '../../theme/designTokens';
-import { ADMIN_COLORS, adminChrome } from '../../theme/adminTheme';
+import { ADMIN_COLORS, adminChrome, buildAdminColors, type AdminThemePrefs } from '../../theme/adminTheme';
 import type { AppColors } from '../../theme/universeTheme';
 
-export { adminChrome, ADMIN_COLORS };
+export { adminChrome, ADMIN_COLORS, buildAdminColors };
+export type { AdminThemePrefs };
 
-export function createAdminStyles(c: AppColors) {
+export function createAdminStyles(c: AppColors, chrome = adminChrome) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: c.background },
+    root: { flex: 1, backgroundColor: c.backgroundAlt },
     rootAlt: { flex: 1, backgroundColor: c.backgroundAlt },
     header: {
       backgroundColor: c.surface,
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
-      borderBottomWidth: 1,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: c.border,
     },
     headerBrand: {
@@ -58,18 +59,62 @@ export function createAdminStyles(c: AppColors) {
     loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     card: {
       backgroundColor: c.surface,
-      borderRadius: radius.lg,
-      borderWidth: 1,
+      borderRadius: chrome.radiusLg,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       padding: spacing.md,
       ...shadows.card,
     },
     cardMuted: {
       backgroundColor: c.surfaceMuted,
-      borderRadius: radius.lg,
-      borderWidth: 1,
+      borderRadius: chrome.radiusLg,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       padding: spacing.md,
+    },
+    kpiCard: {
+      backgroundColor: c.surface,
+      borderRadius: chrome.radiusLg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+      padding: spacing.md,
+      minHeight: 96,
+      gap: spacing.xs,
+    },
+    table: {
+      backgroundColor: c.surface,
+      borderRadius: chrome.radius,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+      overflow: 'hidden',
+    },
+    tableRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+      gap: spacing.sm,
+    },
+    tableRowHover: { backgroundColor: chrome.rowHover },
+    statusBadge: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 3,
+      borderRadius: radius.pill,
+      alignSelf: 'flex-start',
+    },
+    statusBadgeText: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+    },
+    filterBar: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      paddingVertical: spacing.sm,
     },
     sectionLabel: {
       fontSize: 11,
@@ -81,7 +126,7 @@ export function createAdminStyles(c: AppColors) {
     },
     btn: {
       backgroundColor: c.accent,
-      borderRadius: radius.md,
+      borderRadius: chrome.radiusSm,
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.md,
       alignItems: 'center',
@@ -89,8 +134,8 @@ export function createAdminStyles(c: AppColors) {
     btnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
     btnGhost: {
       backgroundColor: c.surface,
-      borderRadius: radius.md,
-      borderWidth: 1,
+      borderRadius: chrome.radiusSm,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.md,
@@ -99,8 +144,8 @@ export function createAdminStyles(c: AppColors) {
     btnGhostText: { color: c.text, fontWeight: '700', fontSize: 14 },
     input: {
       backgroundColor: c.surface,
-      borderRadius: radius.md,
-      borderWidth: 1,
+      borderRadius: chrome.radiusSm,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm + 2,
@@ -111,7 +156,7 @@ export function createAdminStyles(c: AppColors) {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       backgroundColor: c.surface,
     },
@@ -128,9 +173,22 @@ export function createAdminStyles(c: AppColors) {
   });
 }
 
-export function useAdminStyles() {
-  return useMemo(
-    () => ({ styles: createAdminStyles(ADMIN_COLORS), colors: ADMIN_COLORS }),
-    [],
-  );
+export function useAdminStyles(prefs?: AdminThemePrefs) {
+  return useMemo(() => {
+    const colors = prefs ? buildAdminColors(prefs) : ADMIN_COLORS;
+    const chrome = prefs ? buildAdminColors(prefs) && adminChrome : adminChrome;
+    return {
+      styles: createAdminStyles(colors),
+      colors,
+      chrome: prefs
+        ? {
+            ...adminChrome,
+            accent: colors.accent,
+            radius: prefs.radius ?? adminChrome.radius,
+            radiusSm: Math.max(6, (prefs.radius ?? adminChrome.radius) - 4),
+            radiusLg: (prefs.radius ?? adminChrome.radius) + 4,
+          }
+        : adminChrome,
+    };
+  }, [prefs?.primaryColor, prefs?.secondaryColor, prefs?.pitchAccent, prefs?.radius]);
 }

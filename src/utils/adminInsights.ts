@@ -1,11 +1,14 @@
 import type { User, UserRole } from '../models/User';
 import type { PlatformStats } from '../services/admin.service';
-import type { AdminMainTabId, AdminContentSegment } from '../navigation/adminTabConfig';
+import type { AdminSectionId } from '../navigation/adminNavConfig';
+import { adminSectionForSearchKind } from '../navigation/adminNavConfig';
 import type { Application, RecruitmentPost } from '../models/Player';
 import type { SponsorQuoteRequest } from '../models/SponsorQuoteRequest';
+import type { SubscriptionUpgradeRequest } from '../models/SubscriptionUpgradeRequest';
 import type { CommunityReel } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
 import type { TeamPaymentRequest } from '../models/TeamFinance';
+import type { Membership } from '../models/Membership';
 import { userNeedsAdminVerificationReview } from './adminUserVerification';
 import { getRoleLabel } from '../screens/signup/signupFlowConfig';
 
@@ -13,13 +16,22 @@ export type AdminWorkPriority = 'critical' | 'high' | 'medium' | 'low';
 
 export type AdminWorkItem = {
   id: string;
-  kind: 'verification' | 'reel' | 'report' | 'payment' | 'application' | 'post' | 'quote';
+  kind:
+    | 'verification'
+    | 'reel'
+    | 'report'
+    | 'payment'
+    | 'application'
+    | 'post'
+    | 'quote'
+    | 'subscription_request'
+    | 'membership';
   priority: AdminWorkPriority;
   title: string;
   subtitle: string;
   meta?: string;
-  targetTab: AdminMainTabId;
-  contentSegment?: AdminContentSegment;
+  targetSection: AdminSectionId;
+  targetTab?: string;
   entityId?: string;
   createdAt?: Date;
 };
@@ -54,6 +66,9 @@ export function buildAdminWorkQueue(input: {
   applications: Application[];
   posts: RecruitmentPost[];
   sponsorQuotes?: SponsorQuoteRequest[];
+  subscriptionUpgradeRequests?: SubscriptionUpgradeRequest[];
+  memberships?: Membership[];
+  clubsById?: Record<string, string>;
 }): AdminWorkItem[] {
   const items: AdminWorkItem[] = [];
 
@@ -65,9 +80,24 @@ export function buildAdminWorkQueue(input: {
       title: `Vérifier ${u.display_name}`,
       subtitle: `${getRoleLabel(u.role)} · ${u.email}`,
       meta: u.city ?? undefined,
-      targetTab: 'users',
+      targetSection: 'utilisateurs',
       entityId: u.uid,
       createdAt: u.created_at,
+    });
+  }
+
+  for (const m of (input.memberships ?? []).filter((x) => x.status === 'pending')) {
+    const clubName = input.clubsById?.[m.club_id] ?? m.club_id;
+    items.push({
+      id: `membership-${m.id}`,
+      kind: 'membership',
+      priority: 'high',
+      title: `Adhésion club · ${m.player_name}`,
+      subtitle: `Demande pour ${clubName}`,
+      meta: m.club_id,
+      targetSection: 'utilisateurs',
+      entityId: m.id,
+      createdAt: m.requested_at,
     });
   }
 
@@ -79,8 +109,8 @@ export function buildAdminWorkQueue(input: {
       title: `Modérer publication · ${reel.author_name}`,
       subtitle: reel.caption?.slice(0, 80) || 'Sans légende',
       meta: reel.theme,
-      targetTab: 'moderation',
-      contentSegment: 'reels',
+      targetSection: 'contenus',
+      targetTab: 'fil',
       createdAt: reel.created_at,
     });
   }
@@ -93,8 +123,8 @@ export function buildAdminWorkQueue(input: {
       title: 'Signalement publication',
       subtitle: report.reason,
       meta: report.bookmark_key.slice(0, 24),
-      targetTab: 'moderation',
-      contentSegment: 'reports',
+      targetSection: 'signalements',
+      targetTab: 'decisions',
       createdAt: report.created_at,
     });
   }
@@ -107,8 +137,8 @@ export function buildAdminWorkQueue(input: {
       title: `Paiement en attente · ${pay.label}`,
       subtitle: `${pay.amount_eur} €`,
       meta: pay.club_id,
-      targetTab: 'plateforme',
-      contentSegment: 'payments',
+      targetSection: 'abonnements',
+      targetTab: 'paiements',
       createdAt: pay.created_at,
     });
   }
@@ -120,8 +150,8 @@ export function buildAdminWorkQueue(input: {
       priority: 'medium',
       title: `Candidature · ${app.player_name ?? 'Joueur'}`,
       subtitle: app.cover_letter.slice(0, 72),
-      targetTab: 'plateforme',
-      contentSegment: 'applications',
+      targetSection: 'recrutement',
+      targetTab: 'apps',
       createdAt: app.created_at,
     });
   }
@@ -134,9 +164,23 @@ export function buildAdminWorkQueue(input: {
       title: `Devis partenaire · ${quote.company_name}`,
       subtitle: `${quote.contact_name} · ${quote.contact_email}`,
       meta: quote.package_tier,
-      targetTab: 'plateforme',
-      contentSegment: 'sponsors',
+      targetSection: 'sponsors',
+      targetTab: 'sponsors',
       createdAt: quote.created_at,
+    });
+  }
+
+  for (const req of (input.subscriptionUpgradeRequests ?? []).filter((r) => r.status === 'pending')) {
+    items.push({
+      id: `sub-req-${req.id}`,
+      kind: 'subscription_request',
+      priority: 'high',
+      title: `Demande Pro bêta · ${req.display_name}`,
+      subtitle: `${req.email} · ${req.plan_id}`,
+      targetSection: 'abonnements',
+      targetTab: 'abonnements',
+      entityId: req.user_uid,
+      createdAt: req.created_at,
     });
   }
 
@@ -158,6 +202,8 @@ export function countWorkByKind(items: AdminWorkItem[]): Record<AdminWorkItem['k
     application: 0,
     post: 0,
     quote: 0,
+    subscription_request: 0,
+    membership: 0,
   };
   for (const item of items) base[item.kind] += 1;
   return base;
@@ -177,8 +223,8 @@ export type GlobalSearchResult = {
   kind: 'user' | 'club' | 'post' | 'event';
   title: string;
   subtitle: string;
-  targetTab: AdminMainTabId;
-  targetSegment?: AdminContentSegment;
+  targetSection: AdminSectionId;
+  targetTab?: string;
   entityId?: string;
   focusQuery?: string;
 };
@@ -209,7 +255,7 @@ export function globalAdminSearch(
         kind: 'user',
         title: u.display_name,
         subtitle: `${getRoleLabel(u.role)} · ${u.email}`,
-        targetTab: 'users',
+        targetSection: adminSectionForSearchKind('user'),
         entityId: u.uid,
         focusQuery: u.display_name,
       });
@@ -223,7 +269,7 @@ export function globalAdminSearch(
         kind: 'club',
         title: c.name,
         subtitle: c.city,
-        targetTab: 'clubs',
+        targetSection: adminSectionForSearchKind('club'),
         entityId: c.id,
         focusQuery: c.name,
       });
@@ -241,8 +287,8 @@ export function globalAdminSearch(
         kind: 'post',
         title: p.title,
         subtitle: `${p.club_name} · ${p.city}`,
-        targetTab: 'plateforme',
-        targetSegment: 'mercato',
+        targetSection: adminSectionForSearchKind('post'),
+        targetTab: 'posts',
         entityId: p.id,
         focusQuery: p.title,
       });
@@ -256,8 +302,8 @@ export function globalAdminSearch(
         kind: 'event',
         title: e.title,
         subtitle: e.city,
-        targetTab: 'plateforme',
-        targetSegment: 'events',
+        targetSection: adminSectionForSearchKind('event'),
+        targetTab: 'competitions',
         entityId: e.id,
         focusQuery: e.title,
       });

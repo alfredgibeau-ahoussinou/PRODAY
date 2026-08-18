@@ -16,6 +16,8 @@ import { useAdminData } from '../../../context/AdminDataContext';
 import { useAuth } from '../../../context/AuthContext';
 import { adminService } from '../../../services/admin.service';
 import { adminAuditService } from '../../../services/adminAudit.service';
+import { subscriptionUpgradeRequestService } from '../../../services/subscriptionUpgradeRequest.service';
+import type { SubscriptionUpgradeRequest } from '../../../models/SubscriptionUpgradeRequest';
 import {
   SUBSCRIPTION_PLANS,
   planIdForRole,
@@ -43,7 +45,7 @@ type Props = {
   focusQuery?: string;
 };
 
-type TabId = 'membres' | 'formules' | 'achats';
+type TabId = 'membres' | 'demandes' | 'formules' | 'achats';
 
 /**
  * Abonnements — transitions Gratuit ↔ Payant, catalogue, historique.
@@ -65,6 +67,11 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
   >([]);
   const [grantMonths, setGrantMonths] = useState(1);
   const [pickedPlan, setPickedPlan] = useState<SubscriptionPlanId | null>(null);
+  const [proRequests, setProRequests] = useState<SubscriptionUpgradeRequest[]>([]);
+
+  useEffect(() => {
+    void subscriptionUpgradeRequestService.listPendingForAdmin(80).then(setProRequests);
+  }, [refreshing]);
 
   useEffect(() => {
     if (focusId) setSelectedId(focusId);
@@ -185,6 +192,86 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
 
   const userPurchases = purchases.filter((p) => p.user_uid === selected?.uid);
 
+  const handleApproveProRequest = async (request: SubscriptionUpgradeRequest) => {
+    setBusy(true);
+    try {
+      await adminService.grantProSubscription(
+        request.user_uid,
+        request.plan_id,
+        1,
+        'Demande bêta approuvée par admin',
+        true,
+      );
+      const res = await subscriptionUpgradeRequestService.updateRequestStatus(
+        request.id,
+        'approved',
+        'Activé en bêta (essai 1 mois)',
+      );
+      if (!res.ok) {
+        Alert.alert('Demande', 'Pro activé mais mise à jour de la demande impossible.');
+      }
+      await adminAuditService.log({
+        action: 'subscription_granted',
+        actor_uid: actor.uid,
+        actor_email: actor.email,
+        target_type: 'subscription_upgrade_request',
+        target_id: request.id,
+        summary: `Bêta Pro · ${request.display_name} · ${request.plan_id}`,
+      });
+      await refresh();
+      setProRequests(await subscriptionUpgradeRequestService.listPendingForAdmin(80));
+      setSelectedId(request.user_uid);
+      setTab('membres');
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Approbation impossible');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRejectProRequest = (request: SubscriptionUpgradeRequest) => {
+    Alert.alert(
+      'Refuser la demande',
+      `Refuser l’accès Pro pour ${request.display_name} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Refuser',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setBusy(true);
+              try {
+                const res = await subscriptionUpgradeRequestService.updateRequestStatus(
+                  request.id,
+                  'rejected',
+                  'Refusé en bêta',
+                );
+                if (!res.ok) {
+                  Alert.alert('Demande', 'Refus impossible.');
+                  return;
+                }
+                await adminAuditService.log({
+                  action: 'other',
+                  actor_uid: actor.uid,
+                  actor_email: actor.email,
+                  target_type: 'subscription_upgrade_request',
+                  target_id: request.id,
+                  summary: `Demande Pro refusée · ${request.display_name}`,
+                });
+                setProRequests(await subscriptionUpgradeRequestService.listPendingForAdmin(80));
+              } catch (e) {
+                Alert.alert('Erreur', e instanceof Error ? e.message : 'Refus impossible');
+              } finally {
+                setBusy(false);
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <View style={styles.root}>
       <View style={styles.main}>
@@ -205,6 +292,7 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
             {(
               [
                 ['membres', 'Membres'],
+                ['demandes', `Demandes bêta${proRequests.length ? ` (${proRequests.length})` : ''}`],
                 ['formules', 'Catalogue formules'],
                 ['achats', 'Historique achats'],
               ] as const
@@ -281,6 +369,67 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
               }}
             />
           </>
+        ) : null}
+
+        {tab === 'demandes' ? (
+          <FlatList
+            data={proRequests}
+            keyExtractor={(r) => r.id}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={refresh}
+                tintColor={adminChrome.accent}
+              />
+            }
+            ListEmptyComponent={
+              <Text style={styles.empty}>
+                Aucune demande Pro en attente. Les testeurs envoient depuis Abonnement → « Demander l’accès Pro (bêta) ».
+              </Text>
+            }
+            renderItem={({ item }) => {
+              const plan = SUBSCRIPTION_PLANS[item.plan_id];
+              return (
+                <View style={styles.requestCard}>
+                  <AdminDataRow
+                    title={item.display_name}
+                    subtitle={`${getRoleLabel(item.role)} · ${item.email}`}
+                    trailing={plan?.label ?? item.plan_id}
+                    onPress={() => {
+                      setSelectedId(item.user_uid);
+                      setTab('membres');
+                    }}
+                  />
+                  <Text style={styles.requestMeta}>
+                    Demandé le {item.created_at.toLocaleDateString('fr-FR')} · {item.billing === 'yearly' ? 'Annuel' : 'Mensuel'}
+                  </Text>
+                  {item.message ? (
+                    <Text style={styles.requestMessage}>{item.message}</Text>
+                  ) : null}
+                  <View style={styles.requestActions}>
+                    <PressableSpring
+                      onPress={() => void handleApproveProRequest(item)}
+                      scaleTo={0.97}
+                      haptic
+                      disabled={busy}
+                      style={[styles.requestBtn, styles.requestApprove]}
+                    >
+                      <Text style={styles.requestApproveText}>Approuver · essai 1 mois</Text>
+                    </PressableSpring>
+                    <PressableSpring
+                      onPress={() => handleRejectProRequest(item)}
+                      scaleTo={0.97}
+                      haptic
+                      disabled={busy}
+                      style={[styles.requestBtn, styles.requestReject]}
+                    >
+                      <Text style={styles.requestRejectText}>Refuser</Text>
+                    </PressableSpring>
+                  </View>
+                </View>
+              );
+            }}
+          />
         ) : null}
 
         {tab === 'formules' ? (
@@ -936,5 +1085,44 @@ function createStyles(wide: boolean) {
       color: adminChrome.textMuted,
       lineHeight: 16,
     },
+    requestCard: {
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+      padding: spacing.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: adminChrome.shellBorder,
+      backgroundColor: adminChrome.shellElevated,
+      gap: spacing.sm,
+    },
+    requestMeta: {
+      color: adminChrome.textMuted,
+      fontSize: 11,
+      fontFamily: adminChrome.mono,
+      paddingHorizontal: spacing.xs,
+    },
+    requestMessage: {
+      color: adminChrome.text,
+      fontSize: 12,
+      lineHeight: 17,
+      paddingHorizontal: spacing.xs,
+    },
+    requestActions: { flexDirection: 'row', gap: spacing.sm, paddingTop: spacing.xs },
+    requestBtn: {
+      flex: 1,
+      paddingVertical: 10,
+      paddingHorizontal: spacing.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      alignItems: 'center',
+    },
+    requestApprove: {
+      borderColor: adminChrome.accent,
+      backgroundColor: adminChrome.soft,
+    },
+    requestApproveText: { color: adminChrome.accent, fontWeight: '800', fontSize: 12 },
+    requestReject: {
+      borderColor: adminChrome.danger,
+      backgroundColor: 'rgba(255,92,92,0.06)',
+    },
+    requestRejectText: { color: adminChrome.danger, fontWeight: '700', fontSize: 12 },
   });
 }

@@ -9,14 +9,16 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
+import { useAuth } from '../../../context/AuthContext';
 import { adminService } from '../../../services/admin.service';
+import { membershipsService } from '../../../services/memberships.service';
 import { ADMIN_FOC_TABS } from '../../../navigation/adminFocConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
 import { AdminMessagesPanel } from '../../../components/admin/AdminMessagesPanel';
 import { AdminPlatformFeedPanel } from '../../../components/admin/AdminPlatformFeedPanel';
 import { AdminWeeklyQuestionPanel } from '../../../components/admin/AdminWeeklyQuestionPanel';
 import { Icon } from '../../../components/ui/Icon';
-import { ADMIN_WORK_KIND_LABELS } from '../../../navigation/adminTabConfig';
+import { ADMIN_WORK_KIND_LABELS } from '../../../navigation/adminNavConfig';
 import { adminChrome } from '../../../theme/adminTheme';
 import { spacing, radius } from '../../../theme/designTokens';
 import { recruitmentService } from '../../../services/recruitment.service';
@@ -113,9 +115,12 @@ function AnnouncementRow({
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocCommunicationScreen() {
+export function AdminFocCommunicationScreen({ initialTab }: { initialTab?: string } = {}) {
   const { workQueue, announcements, refresh, refreshing } = useAdminData();
-  const [tab, setTab] = useState<TabId>('decisions');
+  const { firebaseUser } = useAuth();
+  const [tab, setTab] = useState<TabId>(
+    TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'decisions',
+  );
 
   const handleApprove = useMemo(
     () => (item: AdminWorkItem) => {
@@ -126,6 +131,9 @@ export function AdminFocCommunicationScreen() {
           } else if (item.kind === 'reel') {
             const reelId = item.id.replace(/^reel-/, '');
             await adminService.updateCommunityReelStatus(reelId, 'approved');
+          } else if (item.kind === 'membership' && item.entityId) {
+            if (!firebaseUser?.uid) throw new Error('Session admin requise');
+            await membershipsService.approve(item.entityId, firebaseUser.uid);
           } else if (item.kind === 'application') {
             const appId = item.id.replace(/^app-/, '');
             await recruitmentService.updateApplicationStatus(appId, 'ACCEPTED');
@@ -143,7 +151,7 @@ export function AdminFocCommunicationScreen() {
         { text: 'Approuver', onPress: () => void act() },
       ]);
     },
-    [refresh],
+    [refresh, firebaseUser?.uid],
   );
 
   const handleReject = useMemo(
@@ -155,6 +163,9 @@ export function AdminFocCommunicationScreen() {
           } else if (item.kind === 'reel') {
             const reelId = item.id.replace(/^reel-/, '');
             await adminService.updateCommunityReelStatus(reelId, 'rejected');
+          } else if (item.kind === 'membership' && item.entityId) {
+            if (!firebaseUser?.uid) throw new Error('Session admin requise');
+            await membershipsService.reject(item.entityId, firebaseUser.uid);
           } else if (item.kind === 'application') {
             const appId = item.id.replace(/^app-/, '');
             await recruitmentService.updateApplicationStatus(appId, 'REJECTED');
@@ -172,7 +183,7 @@ export function AdminFocCommunicationScreen() {
         { text: 'Confirmer', style: 'destructive', onPress: () => void act() },
       ]);
     },
-    [refresh],
+    [refresh, firebaseUser?.uid],
   );
 
   const handleDeleteAnnouncement = useMemo(

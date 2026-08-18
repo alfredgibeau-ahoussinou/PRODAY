@@ -1,122 +1,107 @@
 import {
-  ADMIN_HQ_MODES,
-  ADMIN_GESTION_ATELIERS,
-  adminHqRouteKey,
-  hqRouteFromLegacyTab,
-} from '../../navigation/adminTabConfig';
+  ADMIN_NAV,
+  ADMIN_NAV_GROUPS,
+  ADMIN_SCREEN_TABS,
+  ADMIN_WORK_KIND_LABELS,
+  adminSectionForWorkKind,
+  adminSectionForSearchKind,
+  type AdminSectionId,
+} from '../../navigation/adminNavConfig';
 import {
-  ADMIN_FOC_NAV,
-  ADMIN_FOC_TABS,
-  type AdminFocSectionId,
-} from '../../navigation/adminFocConfig';
+  canAccessSection,
+  resolveAdminRole,
+  ADMIN_ROLE_LABELS,
+} from '../../utils/adminPermissions';
 
 describe('e2e. Navigation shell admin console', () => {
-  /* ── Legacy HQ modes (bridge conservé) ── */
-
-  it('expose exactement 5 modes', () => {
-    expect(ADMIN_HQ_MODES.map((m) => m.id)).toEqual([
-      'pilotage',
-      'decisions',
-      'gestion',
-      'abonnements',
-      'systeme',
-    ]);
-    expect(ADMIN_HQ_MODES.map((m) => m.label)).toEqual([
-      'Pilotage',
-      'Décisions',
-      'Gestion',
-      'Abonnements',
-      'Système',
-    ]);
-  });
-
-  it('gestion couvre les ateliers clés', () => {
-    const ids = ADMIN_GESTION_ATELIERS.map((s) => s.id);
+  it('ADMIN_NAV contient les sections fonctionnelles Phase 1', () => {
+    const ids = ADMIN_NAV.map((n) => n.id);
     expect(ids).toEqual(
       expect.arrayContaining([
-        'comptes',
+        'accueil',
+        'utilisateurs',
         'clubs',
-        'publications',
-        'fil',
-        'messages',
-        'devis',
-        'matchs',
-        'stages',
-      ]),
-    );
-  });
-
-  it('clés de route', () => {
-    expect(adminHqRouteKey({ mode: 'decisions' })).toBe('decisions');
-    expect(adminHqRouteKey({ mode: 'gestion', atelier: 'comptes' })).toBe('gestion:comptes');
-    expect(adminHqRouteKey({ mode: 'abonnements' })).toBe('abonnements');
-  });
-
-  it('mappe les anciens onglets', () => {
-    expect(hqRouteFromLegacyTab('pilotage')).toEqual({ mode: 'pilotage' });
-    expect(hqRouteFromLegacyTab('inbox')).toEqual({ mode: 'decisions' });
-    expect(hqRouteFromLegacyTab('users')).toEqual({
-      mode: 'gestion',
-      atelier: 'comptes',
-    });
-    expect(hqRouteFromLegacyTab('plateforme', 'sponsors')).toEqual({
-      mode: 'gestion',
-      atelier: 'devis',
-    });
-    expect(hqRouteFromLegacyTab('system')).toEqual({ mode: 'systeme' });
-  });
-
-  /* ── Football Operations Center (FOC) nav ── */
-
-  it('ADMIN_FOC_NAV contient les 11 sections attendues', () => {
-    const sectionIds: AdminFocSectionId[] = ADMIN_FOC_NAV.map((n) => n.id);
-    expect(sectionIds).toEqual(
-      expect.arrayContaining([
-        'dashboard',
-        'adherents',
-        'clubs',
-        'matchs',
-        'competitions',
+        'coachs',
+        'joueurs',
+        'parents',
+        'equipes',
+        'matchs_events',
         'recrutement',
-        'performance',
-        'communication',
-        'finances',
         'video',
+        'abonnements',
+        'marketplace',
+        'sponsors',
+        'contenus',
+        'messagerie',
+        'signalements',
+        'statistiques',
         'parametres',
-      ] as AdminFocSectionId[]),
+        'audit',
+        'securite',
+        'config_plateforme',
+      ] as AdminSectionId[]),
     );
-    expect(sectionIds).toHaveLength(11);
+    expect(ids.length).toBeGreaterThanOrEqual(20);
   });
 
-  it('chaque section FOC a des sous-onglets dans ADMIN_FOC_TABS', () => {
-    for (const section of ADMIN_FOC_NAV) {
-      const tabs = ADMIN_FOC_TABS[section.id];
-      expect(Array.isArray(tabs)).toBe(true);
-      expect(tabs.length).toBeGreaterThan(0);
+  it('regroupe Principal et Administration', () => {
+    expect(ADMIN_NAV_GROUPS.map((g) => g.id)).toEqual(['principal', 'administration']);
+    const adminItems = ADMIN_NAV.filter((n) => n.group === 'administration');
+    expect(adminItems.map((n) => n.id)).toEqual(
+      expect.arrayContaining(['audit', 'securite', 'config_plateforme']),
+    );
+  });
+
+  it('chaque écran a des sous-onglets', () => {
+    for (const key of Object.keys(ADMIN_SCREEN_TABS) as (keyof typeof ADMIN_SCREEN_TABS)[]) {
+      expect(ADMIN_SCREEN_TABS[key].length).toBeGreaterThan(0);
     }
   });
 
-  it('ADMIN_FOC_TABS.adherents contient le tab à valider', () => {
-    const tabs = ADMIN_FOC_TABS.adherents.map((t) => t.id);
+  it('ADMIN_SCREEN_TABS.adherents contient le tab à valider', () => {
+    const tabs = ADMIN_SCREEN_TABS.adherents.map((t) => t.id);
     expect(tabs).toContain('decisions');
-    expect(tabs).toEqual(
-      expect.arrayContaining(['all', 'player', 'youth', 'teen', 'adult', 'decisions']),
-    );
   });
 
-  it('ADMIN_FOC_TABS.finances contient abonnements et paiements', () => {
-    const tabs = ADMIN_FOC_TABS.finances.map((t) => t.id);
+  it('ADMIN_SCREEN_TABS.finances contient boutique (marketplace)', () => {
+    const tabs = ADMIN_SCREEN_TABS.finances.map((t) => t.id);
+    expect(tabs).toContain('boutique');
     expect(tabs).toContain('abonnements');
-    expect(tabs).toContain('paiements');
   });
 
-  it('ADMIN_FOC_TABS.parametres contient systeme, audit et beta', () => {
-    const tabs = ADMIN_FOC_TABS.parametres.map((t) => t.id);
-    expect(tabs).toEqual(expect.arrayContaining(['personnaliser', 'systeme', 'audit', 'beta']));
+  it('mappe les kinds workQueue vers des sections menu', () => {
+    expect(adminSectionForWorkKind('verification')).toBe('utilisateurs');
+    expect(adminSectionForWorkKind('report')).toBe('signalements');
+    expect(adminSectionForWorkKind('quote')).toBe('sponsors');
   });
 
-  it('ADMIN_FOC_TABS.communication contient question semaine', () => {
-    const tabs = ADMIN_FOC_TABS.communication.map((t) => t.id);
-    expect(tabs).toContain('questions');
+  it('mappe la recherche globale vers des sections', () => {
+    expect(adminSectionForSearchKind('user')).toBe('utilisateurs');
+    expect(adminSectionForSearchKind('event')).toBe('matchs_events');
+  });
+
+  it('labels workQueue en français', () => {
+    expect(ADMIN_WORK_KIND_LABELS.verification).toBe('Vérification');
+    expect(ADMIN_WORK_KIND_LABELS.membership).toBe('Adhésion');
+  });
+});
+
+describe('adminPermissions', () => {
+  it('super_admin via email fondateur', () => {
+    expect(resolveAdminRole('proday.admin@gmail.com')).toBe('super_admin');
+  });
+
+  it('modérateur limité aux sections modération', () => {
+    expect(canAccessSection('moderateur', 'contenus')).toBe(true);
+    expect(canAccessSection('moderateur', 'abonnements')).toBe(false);
+  });
+
+  it('admin_finance accède aux finances', () => {
+    expect(canAccessSection('admin_finance', 'marketplace')).toBe(true);
+    expect(canAccessSection('admin_finance', 'config_plateforme')).toBe(false);
+  });
+
+  it('expose les libellés de rôles', () => {
+    expect(ADMIN_ROLE_LABELS.super_admin).toContain('Super');
   });
 });

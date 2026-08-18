@@ -15,6 +15,7 @@ interface AdminFocTopBarProps {
   notificationCount: number;
   onMenu?: () => void;
   showMenu?: boolean;
+  accentColor?: string;
 }
 
 export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
@@ -25,8 +26,10 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
   notificationCount,
   onMenu,
   showMenu = false,
+  accentColor,
 }) => {
   const styles = useMemo(() => createStyles(), []);
+  const accent = accentColor ?? adminChrome.accent;
 
   return (
     <View style={styles.bar}>
@@ -46,7 +49,7 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
       ) : null}
 
       <View style={styles.titleCol}>
-        <Text style={styles.kicker}>ProDay OPS</Text>
+        <Text style={styles.kicker}>ProDay ADMIN</Text>
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
@@ -59,13 +62,13 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
 
       <View style={styles.actions}>
         <PressableSpring onPress={onSearch} style={styles.iconBtn} scaleTo={0.94} haptic>
-          <Icon name="search" size={17} color={adminChrome.accent} />
+          <Icon name="search" size={17} color={accent} />
         </PressableSpring>
 
         <PressableSpring onPress={onNotifications} style={styles.iconBtn} scaleTo={0.94} haptic>
           <Icon name="notifications" size={17} color={adminChrome.text} />
           {notificationCount > 0 ? (
-            <View style={styles.badge}>
+            <View style={[styles.badge, { backgroundColor: accent }]}>
               <Text style={styles.badgeText}>
                 {notificationCount > 99 ? '99+' : notificationCount}
               </Text>

@@ -89,9 +89,10 @@ function TeamRow({ team, onDelete }: { team: AdminTeam; onDelete: (id: string, n
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocClubsScreen() {
+export function AdminFocClubsScreen({ initialTab }: { initialTab?: string } = {}) {
   const { clubs, refresh, refreshing } = useAdminData();
-  const [tab, setTab] = useState<TabId>('clubs');
+  const validTab = TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'clubs';
+  const [tab, setTab] = useState<TabId>(validTab);
   const [teams, setTeams] = useState<AdminTeam[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const styles = useMemo(() => s, []);

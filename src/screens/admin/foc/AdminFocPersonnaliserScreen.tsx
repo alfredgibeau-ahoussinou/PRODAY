@@ -9,14 +9,15 @@ import {
   Alert,
 } from 'react-native';
 import {
-  ADMIN_FOC_NAV,
-  type AdminFocSectionId,
-} from '../../../navigation/adminFocConfig';
+  ADMIN_NAV,
+  type AdminSectionId,
+  type AdminDashboardBlockId,
+  DEFAULT_ADMIN_DASHBOARD_ORDER,
+} from '../../../navigation/adminNavConfig';
 import type {
   AdminFocPreferences,
   AdminFocDensity,
 } from '../../../services/adminPreferences.service';
-import { DEFAULT_FOC_DASHBOARD_ORDER, type FocDashboardBlockId } from '../../../navigation/adminFocConfig';
 import { adminChrome } from '../../../theme/adminTheme';
 import { spacing, radius } from '../../../theme/designTokens';
 import { Icon } from '../../../components/ui/Icon';
@@ -37,12 +38,12 @@ const SECONDARY_PRESETS: { color: string; label: string }[] = [
   { color: '#22C55E', label: 'Terrain' },
 ];
 
-const BLOCK_LABELS: Record<FocDashboardBlockId, string> = {
-  kpis: 'KPIs & indicateurs',
+const BLOCK_LABELS: Record<AdminDashboardBlockId, string> = {
+  work_today: "À traiter aujourd'hui",
+  users: 'Utilisateurs',
+  clubs: 'Clubs & équipes',
   activity: 'Activité récente',
-  matchs: 'Matchs amicaux',
-  decisions: 'File de décisions',
-  recrutement: 'Recrutement',
+  business: 'Business & finances',
 };
 
 const DENSITY_OPTIONS: { id: AdminFocDensity; label: string; desc: string }[] = [
@@ -63,7 +64,7 @@ export function AdminFocPersonnaliserScreen({ prefs, onChange, onSave }: Props) 
     onChange({ ...prefs, ...partial });
   };
 
-  const toggleSection = (id: AdminFocSectionId) => {
+  const toggleSection = (id: AdminSectionId) => {
     const hidden = prefs.hiddenSections.includes(id)
       ? prefs.hiddenSections.filter((s) => s !== id)
       : [...prefs.hiddenSections, id];
@@ -190,14 +191,36 @@ export function AdminFocPersonnaliserScreen({ prefs, onChange, onSave }: Props) 
         </View>
       </Section>
 
+      <Section title="Coins arrondis">
+        <View style={styles.densityRow}>
+          {[8, 12, 16, 20].map((r) => {
+            const on = prefs.cornerRadius === r;
+            return (
+              <Pressable
+                key={r}
+                onPress={() => update({ cornerRadius: r })}
+                style={[
+                  styles.densityCard,
+                  on && { borderColor: prefs.primaryColor, borderWidth: 2 },
+                ]}
+              >
+                <Text style={[styles.densityLabel, on && { color: prefs.primaryColor }]}>
+                  {r}px
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Section>
+
       {/* Sections visibles */}
       <Section title="Sections de la sidebar">
         <Text style={styles.sectionHint}>
           Masquer les sections que vous n'utilisez pas.
         </Text>
-        {ADMIN_FOC_NAV.map((nav) => {
+        {ADMIN_NAV.map((nav) => {
           const hidden = prefs.hiddenSections.includes(nav.id);
-          const isDashboard = nav.id === 'dashboard';
+          const isAccueil = nav.id === 'accueil';
           return (
             <View key={nav.id} style={styles.toggleRow}>
               <Icon
@@ -208,7 +231,7 @@ export function AdminFocPersonnaliserScreen({ prefs, onChange, onSave }: Props) 
               <Text style={[styles.toggleLabel, hidden && { opacity: 0.45 }]}>
                 {nav.label}
               </Text>
-              {!isDashboard ? (
+              {!isAccueil ? (
                 <Pressable
                   onPress={() => toggleSection(nav.id)}
                   style={[styles.toggle, !hidden && { backgroundColor: prefs.primaryColor }]}
@@ -343,9 +366,15 @@ function PreviewCard({ prefs }: { prefs: AdminFocPreferences }) {
           </View>
           <View style={previewStyles.body}>
             <View
-              style={[previewStyles.kpiBar, { backgroundColor: prefs.primaryColor + '18' }]}
+              style={[
+                previewStyles.kpiBar,
+                {
+                  backgroundColor: prefs.primaryColor + '18',
+                  borderRadius: prefs.cornerRadius,
+                },
+              ]}
             />
-            <View style={previewStyles.kpiBarShort} />
+            <View style={[previewStyles.kpiBarShort, { borderRadius: prefs.cornerRadius }]} />
           </View>
         </View>
       </View>
