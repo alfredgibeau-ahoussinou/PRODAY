@@ -62,7 +62,9 @@ function createStyles() {
       justifyContent: 'center',
       position: 'relative',
     },
-    chipOn: {},
+    chipOn: {
+      backgroundColor: adminChrome.rowActive,
+    },
     chipText: {
       color: adminChrome.textMuted,
       fontFamily: adminType.bodyBold,
@@ -71,7 +73,7 @@ function createStyles() {
       letterSpacing: -0.1,
     },
     chipTextOn: {
-      color: adminChrome.accent,
+      color: adminChrome.accentHot,
     },
     underline: {
       position: 'absolute',

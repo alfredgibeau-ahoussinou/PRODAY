@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { ADMIN_NAV_INSET } from '../../navigation/adminTabConfig';
 import { spacing, radius, shadows } from '../../theme/designTokens';
-import { ADMIN_COLORS, adminChrome } from '../../theme/adminTheme';
+import { ADMIN_COLORS, ADMIN_ON_ACCENT, adminChrome } from '../../theme/adminTheme';
 import type { AppColors } from '../../theme/universeTheme';
 
-export { adminChrome, ADMIN_COLORS };
+export { adminChrome, ADMIN_COLORS, ADMIN_ON_ACCENT };
 
 export function createAdminStyles(c: AppColors) {
   return StyleSheet.create({
@@ -16,7 +16,7 @@ export function createAdminStyles(c: AppColors) {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.lg,
-      borderBottomWidth: 1,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: c.border,
     },
     headerBrand: {
@@ -58,18 +58,26 @@ export function createAdminStyles(c: AppColors) {
     loaderBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     card: {
       backgroundColor: c.surface,
-      borderRadius: radius.lg,
-      borderWidth: 1,
+      borderRadius: adminChrome.radiusLg,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       padding: spacing.md,
-      ...shadows.card,
+      shadowColor: adminChrome.cardShadow,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 1,
+      shadowRadius: 20,
+      elevation: 3,
     },
     cardMuted: {
       backgroundColor: c.surfaceMuted,
-      borderRadius: radius.lg,
-      borderWidth: 1,
+      borderRadius: adminChrome.radiusLg,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       padding: spacing.md,
+    },
+    cardAccent: {
+      borderColor: adminChrome.accentMuted,
+      backgroundColor: adminChrome.soft,
     },
     sectionLabel: {
       fontSize: 11,
@@ -81,16 +89,16 @@ export function createAdminStyles(c: AppColors) {
     },
     btn: {
       backgroundColor: c.accent,
-      borderRadius: radius.md,
+      borderRadius: adminChrome.radiusSm,
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.md,
       alignItems: 'center',
     },
-    btnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
+    btnText: { color: ADMIN_ON_ACCENT, fontWeight: '800', fontSize: 14 },
     btnGhost: {
-      backgroundColor: c.surface,
-      borderRadius: radius.md,
-      borderWidth: 1,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: adminChrome.radiusSm,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       paddingHorizontal: spacing.xl,
       paddingVertical: spacing.md,
@@ -98,9 +106,9 @@ export function createAdminStyles(c: AppColors) {
     },
     btnGhostText: { color: c.text, fontWeight: '700', fontSize: 14 },
     input: {
-      backgroundColor: c.surface,
-      borderRadius: radius.md,
-      borderWidth: 1,
+      backgroundColor: c.surfaceMuted,
+      borderRadius: adminChrome.radiusSm,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm + 2,
@@ -111,16 +119,47 @@ export function createAdminStyles(c: AppColors) {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
-      backgroundColor: c.surface,
+      backgroundColor: c.surfaceMuted,
     },
     chipActive: {
       backgroundColor: c.accent,
       borderColor: c.accent,
     },
     chipText: { fontSize: 12, fontWeight: '700', color: c.textSecondary },
-    chipTextActive: { color: '#FFFFFF' },
+    chipTextActive: { color: ADMIN_ON_ACCENT },
+    tableRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: 12,
+      paddingHorizontal: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: c.border,
+    },
+    tableRowHover: {
+      backgroundColor: adminChrome.rowHover,
+    },
+    statusBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: adminChrome.radiusSm,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    statusBadgeText: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+    },
+    filterTrack: {
+      backgroundColor: c.surfaceMuted,
+      borderRadius: radius.xl,
+      padding: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+    },
     emptyTitle: { fontSize: 16, fontWeight: '800', color: c.text, textAlign: 'center' },
     emptySub: { fontSize: 13, color: c.textSecondary, textAlign: 'center', lineHeight: 20 },
     statValue: { fontSize: 24, fontWeight: '800', color: c.text },

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ScrollView, Text, StyleSheet, View } from 'react-native';
 import { PressableSpring } from '../motion';
-import { useAdminStyles, adminChrome } from './adminStyles';
+import { useAdminStyles, adminChrome, ADMIN_ON_ACCENT } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -86,7 +86,7 @@ function createStyles(c: AppColors, compact: boolean) {
       elevation: 2,
     },
     label: { fontSize: compact ? 12 : 13, fontWeight: '700', color: c.textMuted },
-    labelActive: { color: '#FFFFFF' },
+    labelActive: { color: ADMIN_ON_ACCENT },
     countPill: {
       minWidth: 18,
       height: 18,
@@ -105,7 +105,7 @@ function createStyles(c: AppColors, compact: boolean) {
       color: c.brand,
     },
     countActive: {
-      color: '#FFFFFF',
+      color: ADMIN_ON_ACCENT,
     },
   });
 }

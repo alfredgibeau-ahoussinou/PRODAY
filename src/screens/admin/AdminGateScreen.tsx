@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
 import { PressableSpring } from '../../components/motion';
 import { PLATFORM_ADMIN_EMAIL } from '../../config/admin';
-import { useAdminStyles, adminChrome } from '../../components/admin/adminStyles';
-import { spacing, radius } from '../../theme/designTokens';
+import { useAdminStyles, adminChrome, ADMIN_ON_ACCENT } from '../../components/admin/adminStyles';
+import { spacing } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
 export const AdminGateScreen: React.FC = () => {
@@ -25,15 +26,23 @@ export const AdminGateScreen: React.FC = () => {
 
   return (
     <View style={styles.root} testID="admin-gate">
+      <LinearGradient
+        colors={[adminChrome.atmosphereTop, adminChrome.band]}
+        style={StyleSheet.absoluteFillObject}
+        pointerEvents="none"
+      />
       <View style={styles.hero}>
         <View style={styles.logoMark}>
           <Text style={styles.logoLetter}>P</Text>
         </View>
-        <Text style={styles.brand}>ProDay</Text>
-        <Text style={styles.heroTitle}>{needsSetup ? 'Configuration requise' : 'Accès refusé'}</Text>
+        <Text style={styles.brand}>ProDay OPS</Text>
+        <Text style={styles.heroTitle}>
+          {needsSetup ? 'Configuration requise' : 'Accès refusé'}
+        </Text>
       </View>
       <View style={styles.body}>
         <View style={styles.card}>
+          <View style={styles.cardAccent} />
           <Text style={styles.title}>Droits administrateur requis</Text>
           <Text style={styles.sub}>
             {needsSetup
@@ -74,9 +83,6 @@ function createStyles(c: AppColors) {
       paddingTop: spacing.xxl + spacing.lg,
       paddingBottom: spacing.xl,
       paddingHorizontal: spacing.lg,
-      backgroundColor: adminChrome.shellElevated,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: adminChrome.shellBorder,
     },
     logoMark: {
       width: 56,
@@ -86,10 +92,14 @@ function createStyles(c: AppColors) {
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing.md,
+      shadowColor: adminChrome.accentGlow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 1,
+      shadowRadius: 16,
     },
-    logoLetter: { color: '#FFFFFF', fontSize: 26, fontWeight: '900' },
+    logoLetter: { color: ADMIN_ON_ACCENT, fontSize: 26, fontWeight: '900' },
     brand: {
-      color: adminChrome.accent,
+      color: adminChrome.accentHot,
       fontSize: 12,
       fontWeight: '900',
       letterSpacing: 2,
@@ -107,12 +117,22 @@ function createStyles(c: AppColors) {
       marginTop: -spacing.lg,
     },
     card: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      borderColor: c.border,
+      backgroundColor: adminChrome.shell,
+      borderRadius: adminChrome.radiusLg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: adminChrome.shellBorderStrong,
       padding: spacing.lg,
       gap: spacing.md,
+      overflow: 'hidden',
+    },
+    cardAccent: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 2,
+      backgroundColor: adminChrome.accent,
+      opacity: 0.7,
     },
     title: {
       fontSize: 17,
@@ -128,12 +148,12 @@ function createStyles(c: AppColors) {
     },
     btn: {
       backgroundColor: adminChrome.accent,
-      borderRadius: radius.lg,
+      borderRadius: adminChrome.radiusSm,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.xl,
       alignItems: 'center',
     },
-    btnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 14 },
+    btnText: { color: ADMIN_ON_ACCENT, fontWeight: '800', fontSize: 14 },
     email: { fontSize: 12, color: c.textMuted, textAlign: 'center' },
   });
 }

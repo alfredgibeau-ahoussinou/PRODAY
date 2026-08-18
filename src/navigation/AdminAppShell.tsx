@@ -117,7 +117,7 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
   if (claimLoading) {
     return (
       <SafeAreaView style={shellStyles.loaderRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <ActivityIndicator size="large" color={adminChrome.accent} />
         <Text style={shellStyles.loaderText}>Chargement du centre d'ops…</Text>
       </SafeAreaView>
@@ -127,7 +127,7 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
   if (!isAdmin) {
     return (
       <SafeAreaView style={shellStyles.gateRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <AdminGateScreen />
       </SafeAreaView>
     );
@@ -335,7 +335,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   if (!prefsLoaded) {
     return (
       <SafeAreaView style={shellStyles.loaderRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <ActivityIndicator size="small" color={adminChrome.accent} />
       </SafeAreaView>
     );
@@ -343,7 +343,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
 
   return (
     <View style={shellStyles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       {isDesktop ? (
         /* Desktop layout */
@@ -462,14 +462,14 @@ const shellStyles = StyleSheet.create({
   mobileOverlay: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: 'rgba(7,20,40,0.48)',
+    backgroundColor: adminChrome.scrim,
   },
   mobileOverlayBg: { flex: 1 },
   mobileSidebarWrap: {
     width: 288,
     height: '100%',
     backgroundColor: adminChrome.shell,
-    shadowColor: '#071428',
+    shadowColor: adminChrome.cardShadow,
     shadowOffset: { width: 6, height: 0 },
     shadowOpacity: 0.18,
     shadowRadius: 24,

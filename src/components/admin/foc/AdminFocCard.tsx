@@ -53,7 +53,7 @@ function createStyles() {
       right: 0,
       height: 2,
       backgroundColor: adminChrome.accent,
-      opacity: 0.35,
+      opacity: 0.55,
     },
     header: {
       flexDirection: 'row',

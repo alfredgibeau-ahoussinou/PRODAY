@@ -10,7 +10,7 @@ import {
   type AdminFocNavItem,
   type AdminFocSectionId,
 } from '../../../navigation/adminFocConfig';
-import { adminChrome, adminType } from '../../../theme/adminTheme';
+import { adminChrome, adminType, ADMIN_ON_ACCENT } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 
 type Props = {
@@ -27,7 +27,7 @@ type Props = {
 };
 
 /**
- * Rail latéral FOC — marque ProDay dominante, items plats, rail actif.
+ * Rail latéral FOC — cockpit ops sombre, marque ProDay, rail actif signal.
  */
 export function AdminFocSidebar({
   collapsed,
@@ -65,13 +65,13 @@ export function AdminFocSidebar({
   return (
     <View style={[styles.root, { width, paddingTop: insets.top + 10 }]}>
       <LinearGradient
-        colors={['#FFFFFF', adminChrome.atmosphereMid]}
+        colors={[adminChrome.atmosphereTop, adminChrome.shell, adminChrome.rail]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFillObject}
         pointerEvents="none"
       />
-      <View style={[styles.pitchEdge, { backgroundColor: accent }]} />
+      <View style={[styles.signalEdge, { backgroundColor: accent }]} />
 
       <View style={[styles.brand, collapsed && styles.brandCollapsed]}>
         {collapsed ? (
@@ -80,8 +80,12 @@ export function AdminFocSidebar({
           </View>
         ) : (
           <>
-            <Text style={[styles.brandTitle, { color: accent }]}>ProDay</Text>
-            <Text style={styles.brandOps}>OPS</Text>
+            <View style={styles.brandRow}>
+              <Text style={[styles.brandTitle, { color: accent }]}>ProDay</Text>
+              <View style={[styles.opsPill, { borderColor: accent }]}>
+                <Text style={[styles.opsText, { color: accent }]}>OPS</Text>
+              </View>
+            </View>
             <Text style={styles.brandSub} numberOfLines={1}>
               {clubDisplayName || 'Centre d’ops'}
             </Text>
@@ -108,7 +112,12 @@ export function AdminFocSidebar({
               hitSlop={4}
             >
               {on ? <View style={[styles.activeRail, { backgroundColor: accent }]} /> : null}
-              <View style={[styles.iconBox, on && { backgroundColor: 'rgba(0,108,252,0.14)' }]}>
+              <View
+                style={[
+                  styles.iconBox,
+                  on && { backgroundColor: adminChrome.overlayStrong, borderColor: accent },
+                ]}
+              >
                 <Icon
                   name={item.icon}
                   size={17}
@@ -161,26 +170,31 @@ function createStyles() {
       borderRightColor: adminChrome.shellBorder,
       overflow: 'hidden',
     },
-    pitchEdge: {
+    signalEdge: {
       position: 'absolute',
       left: 0,
       top: 0,
       bottom: 0,
       width: 2,
-      opacity: 0.85,
+      opacity: 0.9,
     },
     brand: {
       paddingHorizontal: spacing.md,
       paddingBottom: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: adminChrome.shellBorder,
-      minHeight: 64,
+      minHeight: 68,
       justifyContent: 'center',
-      gap: 2,
+      gap: 4,
     },
     brandCollapsed: {
       alignItems: 'center',
       paddingHorizontal: 8,
+    },
+    brandRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
     },
     markBox: {
       width: 36,
@@ -190,7 +204,7 @@ function createStyles() {
       justifyContent: 'center',
     },
     mark: {
-      color: '#FFFFFF',
+      color: ADMIN_ON_ACCENT,
       fontFamily: adminType.display,
       fontWeight: '800',
       fontSize: 13,
@@ -203,22 +217,24 @@ function createStyles() {
       letterSpacing: -0.6,
       lineHeight: 26,
     },
-    brandOps: {
-      position: 'absolute',
-      right: spacing.md,
-      top: 4,
+    opsPill: {
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: 6,
+      borderWidth: StyleSheet.hairlineWidth,
+      backgroundColor: adminChrome.overlay,
+    },
+    opsText: {
       fontFamily: adminType.bodyExtra,
-      fontSize: 10,
+      fontSize: 9,
       fontWeight: '800',
-      letterSpacing: 1.6,
-      color: adminChrome.textMuted,
+      letterSpacing: 1.4,
     },
     brandSub: {
       color: adminChrome.textMuted,
       fontFamily: adminType.bodySemi,
       fontSize: 12,
       fontWeight: '600',
-      marginTop: 2,
     },
     scroll: { flex: 1 },
     scrollInner: { paddingVertical: 10, paddingHorizontal: 8, gap: 3 },
@@ -233,7 +249,7 @@ function createStyles() {
       overflow: 'hidden',
     },
     itemOn: {
-      backgroundColor: adminChrome.soft,
+      backgroundColor: adminChrome.rowActive,
     },
     activeRail: {
       position: 'absolute',
@@ -250,6 +266,8 @@ function createStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: adminChrome.shellElevated,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: adminChrome.shellBorder,
     },
     label: {
       flex: 1,
@@ -268,7 +286,7 @@ function createStyles() {
       paddingHorizontal: 5,
     },
     badgeText: {
-      color: '#FFF',
+      color: ADMIN_ON_ACCENT,
       fontFamily: adminType.bodyExtra,
       fontSize: 10,
       fontWeight: '800',
@@ -290,7 +308,7 @@ function createStyles() {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: adminChrome.shellBorder,
       minHeight: 48,
-      backgroundColor: 'rgba(255,255,255,0.7)',
+      backgroundColor: adminChrome.rail,
     },
     collapseText: {
       color: adminChrome.textMuted,

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
-import { useAdminStyles, adminChrome } from './adminStyles';
+import { useAdminStyles, adminChrome, ADMIN_ON_ACCENT } from './adminStyles';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -100,7 +100,7 @@ function createStyles(c: AppColors) {
       paddingVertical: 9,
       borderRadius: radius.md,
     },
-    primaryText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
+    primaryText: { color: ADMIN_ON_ACCENT, fontSize: 11, fontWeight: '800' },
     secondaryBtn: {
       backgroundColor: c.surfaceMuted,
       borderWidth: 1,

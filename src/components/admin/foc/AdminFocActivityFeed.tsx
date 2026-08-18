@@ -102,7 +102,7 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      backgroundColor: adminChrome.shellElevated,
+      backgroundColor: adminChrome.shellMid,
       borderRadius: adminChrome.radius,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: adminChrome.shellBorder,

@@ -201,7 +201,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
       {/* Greeting */}
       <View style={styles.greetingBlock}>
         <LinearGradient
-          colors={[adminChrome.soft, 'rgba(255,255,255,0.4)', 'transparent']}
+          colors={[adminChrome.overlayStrong, adminChrome.soft, 'transparent']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.greetingGlow}
@@ -398,7 +398,7 @@ function createStyles() {
       overflow: 'hidden',
       backgroundColor: adminChrome.shell,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: adminChrome.shellBorder,
+      borderColor: adminChrome.shellBorderStrong,
     },
     greetingGlow: {
       ...StyleSheet.absoluteFillObject,
@@ -482,7 +482,7 @@ function createStyles() {
       borderRadius: adminChrome.radiusLg,
       backgroundColor: adminChrome.shell,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: adminChrome.shellBorder,
+      borderColor: adminChrome.accentMuted,
       overflow: 'hidden',
     },
     decisionsInner: {

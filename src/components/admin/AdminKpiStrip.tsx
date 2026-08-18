@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
-import { useAdminStyles, adminChrome } from './adminStyles';
+import { useAdminStyles, adminChrome, ADMIN_ON_ACCENT } from './adminStyles';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { computeStatDelta } from '../../utils/adminInsights';
@@ -30,7 +30,7 @@ export const AdminKpiStrip: React.FC<{ items: AdminKpiItem[] }> = ({ items }) =>
           <View style={[styles.card, isAlert && styles.cardAlert]}>
             <View style={styles.top}>
               <View style={[styles.iconWrap, isAlert && styles.iconWrapAlert]}>
-                <Icon name={item.icon} size={15} color={isAlert ? '#FFFFFF' : adminChrome.accentHot} />
+                <Icon name={item.icon} size={15} color={isAlert ? ADMIN_ON_ACCENT : adminChrome.accentHot} />
               </View>
               {delta != null && delta !== 0 ? (
                 <Text style={[styles.delta, delta > 0 ? styles.deltaUp : styles.deltaDown]}>
@@ -82,8 +82,8 @@ function createStyles(c: AppColors) {
       ...shadows.card,
     },
     cardAlert: {
-      borderColor: adminChrome.accent,
-      backgroundColor: adminChrome.soft,
+      borderColor: adminChrome.accentMuted,
+      backgroundColor: adminChrome.overlayStrong,
     },
     top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     iconWrap: {

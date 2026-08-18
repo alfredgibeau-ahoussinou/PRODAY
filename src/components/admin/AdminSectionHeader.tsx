@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useAdminStyles, adminChrome } from './adminStyles';
+import { useAdminStyles, adminChrome, ADMIN_ON_ACCENT } from './adminStyles';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -70,6 +70,6 @@ function createStyles(c: AppColors) {
       minWidth: 28,
       alignItems: 'center',
     },
-    badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
+    badgeText: { color: ADMIN_ON_ACCENT, fontSize: 11, fontWeight: '800' },
   });
 }

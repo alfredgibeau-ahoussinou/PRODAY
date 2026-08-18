@@ -20,8 +20,8 @@ interface AdminFocMatchCardProps {
 
 const TONE_COLORS: Record<MatchStatusTone, { bg: string; text: string; border: string }> = {
   upcoming: {
-    bg: adminChrome.soft,
-    text: adminChrome.accent,
+    bg: adminChrome.overlayStrong,
+    text: adminChrome.accentHot,
     border: adminChrome.accentMuted,
   },
   live: {
@@ -30,7 +30,7 @@ const TONE_COLORS: Record<MatchStatusTone, { bg: string; text: string; border: s
     border: adminChrome.pitch,
   },
   done: {
-    bg: adminChrome.shellElevated,
+    bg: adminChrome.shellMid,
     text: adminChrome.textMuted,
     border: adminChrome.shellBorder,
   },

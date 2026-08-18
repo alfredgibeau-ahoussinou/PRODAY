@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Animated } from 'react-native';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
 import type { IconName } from '../../ui/iconNames';
-import { adminChrome, adminType } from '../../../theme/adminTheme';
+import { adminChrome, adminType, ADMIN_ON_ACCENT } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 
 interface AdminFocKpiCardProps {
@@ -79,7 +79,7 @@ const KpiContent: React.FC<AdminFocKpiCardProps> = ({ label, value, icon, hot })
       <View style={styles.top}>
         {icon ? (
           <View style={[styles.iconWrap, hot && styles.iconWrapHot]}>
-            <Icon name={icon} size={15} color={hot ? '#FFFFFF' : adminChrome.accent} />
+            <Icon name={icon} size={15} color={hot ? ADMIN_ON_ACCENT : adminChrome.accentHot} />
           </View>
         ) : null}
         {hot ? <View style={styles.hotDot} /> : null}
@@ -122,8 +122,8 @@ function createStyles() {
       elevation: 2,
     },
     cardHot: {
-      borderColor: 'rgba(0,108,252,0.35)',
-      backgroundColor: adminChrome.soft,
+      borderColor: adminChrome.accentMuted,
+      backgroundColor: adminChrome.overlayStrong,
     },
     sideRail: {
       position: 'absolute',

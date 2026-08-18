@@ -38,7 +38,7 @@ function createStyles(c: AppColors) {
       paddingHorizontal: spacing.xl,
       backgroundColor: c.surface,
       borderRadius: radius.lg,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
     iconCircle: {
@@ -46,7 +46,7 @@ function createStyles(c: AppColors) {
       height: 72,
       borderRadius: 36,
       backgroundColor: c.brandSoft,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.accentMuted,
       alignItems: 'center',
       justifyContent: 'center',

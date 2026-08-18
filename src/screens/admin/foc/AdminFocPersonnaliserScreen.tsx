@@ -17,7 +17,7 @@ import type {
   AdminFocDensity,
 } from '../../../services/adminPreferences.service';
 import { DEFAULT_FOC_DASHBOARD_ORDER, type FocDashboardBlockId } from '../../../navigation/adminFocConfig';
-import { adminChrome } from '../../../theme/adminTheme';
+import { adminChrome, ADMIN_ON_ACCENT } from '../../../theme/adminTheme';
 import { spacing, radius } from '../../../theme/designTokens';
 import { Icon } from '../../../components/ui/Icon';
 
@@ -140,7 +140,7 @@ export function AdminFocPersonnaliserScreen({ prefs, onChange, onSave }: Props) 
               accessibilityLabel={p.label}
             >
               {prefs.primaryColor === p.color ? (
-                <Icon name="checkmark-circle" size={16} color="#FFFFFF" />
+                <Icon name="checkmark-circle" size={16} color={ADMIN_ON_ACCENT} />
               ) : null}
             </Pressable>
           ))}
@@ -290,15 +290,16 @@ export function AdminFocPersonnaliserScreen({ prefs, onChange, onSave }: Props) 
 function PreviewCard({ prefs }: { prefs: AdminFocPreferences }) {
   return (
     <View style={previewStyles.card}>
-      <Text style={previewStyles.label}>Aperçu</Text>
+      <Text style={previewStyles.label}>Aperçu cockpit ops</Text>
       <View style={previewStyles.shell}>
         {/* Sidebar mock */}
         <View
           style={[
             previewStyles.sidebar,
-            { backgroundColor: adminChrome.shell, borderRightColor: adminChrome.shellBorder },
+            { borderRightColor: adminChrome.shellBorder },
           ]}
         >
+          <View style={[previewStyles.signalEdge, { backgroundColor: prefs.primaryColor }]} />
           <Text style={[previewStyles.brand, { color: prefs.primaryColor }]}>
             {prefs.clubDisplayName.slice(0, 8)}
           </Text>
@@ -314,7 +315,7 @@ function PreviewCard({ prefs }: { prefs: AdminFocPreferences }) {
                 style={[
                   previewStyles.navDot,
                   { backgroundColor: i === 0 ? prefs.primaryColor : prefs.secondaryColor },
-                  i !== 0 && { opacity: 0.3 },
+                  i !== 0 && { opacity: 0.35 },
                 ]}
               />
               <Text
@@ -331,19 +332,14 @@ function PreviewCard({ prefs }: { prefs: AdminFocPreferences }) {
 
         {/* Content area */}
         <View style={previewStyles.content}>
-          <View
-            style={[
-              previewStyles.topbar,
-              { borderBottomColor: adminChrome.shellBorder },
-            ]}
-          >
+          <View style={previewStyles.topbar}>
             <View
               style={[previewStyles.topbarDot, { backgroundColor: prefs.primaryColor }]}
             />
           </View>
           <View style={previewStyles.body}>
             <View
-              style={[previewStyles.kpiBar, { backgroundColor: prefs.primaryColor + '18' }]}
+              style={[previewStyles.kpiBar, { backgroundColor: prefs.primaryColor + '28' }]}
             />
             <View style={previewStyles.kpiBarShort} />
           </View>
@@ -401,13 +397,23 @@ const previewStyles = StyleSheet.create({
     borderRadius: 10,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: adminChrome.shellBorder,
+    borderColor: adminChrome.shellBorderStrong,
+    backgroundColor: adminChrome.band,
   },
   sidebar: {
     width: 72,
     borderRightWidth: StyleSheet.hairlineWidth,
     padding: 6,
     gap: 3,
+    backgroundColor: adminChrome.shell,
+    overflow: 'hidden',
+  },
+  signalEdge: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 2,
   },
   brand: {
     fontSize: 7,
@@ -425,11 +431,12 @@ const previewStyles = StyleSheet.create({
   },
   navDot: { width: 5, height: 5, borderRadius: 3 },
   navLabel: { fontSize: 5, fontWeight: '700' },
-  content: { flex: 1, backgroundColor: adminChrome.shellElevated },
+  content: { flex: 1, backgroundColor: adminChrome.band },
   topbar: {
     height: 18,
-    backgroundColor: adminChrome.shell,
+    backgroundColor: adminChrome.shellElevated,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: adminChrome.shellBorder,
     justifyContent: 'center',
     paddingHorizontal: 6,
   },
@@ -564,10 +571,10 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: ADMIN_ON_ACCENT,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.25,
     shadowRadius: 2,
   },
   toggleThumbOn: {
@@ -608,7 +615,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   saveBtnText: {
-    color: '#FFFFFF',
+    color: ADMIN_ON_ACCENT,
     fontWeight: '800',
     fontSize: 15,
   },

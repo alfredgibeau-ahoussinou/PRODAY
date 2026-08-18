@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
-import { adminChrome, adminType } from '../../../theme/adminTheme';
+import { adminChrome, adminType, ADMIN_ON_ACCENT } from '../../../theme/adminTheme';
 import { ADMIN_FOC_TOPBAR_HEIGHT } from '../../../navigation/adminFocConfig';
 import { spacing } from '../../../theme/designTokens';
 
@@ -31,13 +31,13 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
   return (
     <View style={styles.bar}>
       <LinearGradient
-        colors={['#FFFFFF', adminChrome.atmosphereMid]}
+        colors={[adminChrome.atmosphereTop, adminChrome.shellElevated]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
         style={StyleSheet.absoluteFillObject}
         pointerEvents="none"
       />
-      <View style={styles.pitchLine} />
+      <View style={styles.signalLine} />
 
       {showMenu && onMenu ? (
         <PressableSpring onPress={onMenu} style={styles.iconBtn} scaleTo={0.94} haptic>
@@ -58,8 +58,8 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
       </View>
 
       <View style={styles.actions}>
-        <PressableSpring onPress={onSearch} style={styles.iconBtn} scaleTo={0.94} haptic>
-          <Icon name="search" size={17} color={adminChrome.accent} />
+        <PressableSpring onPress={onSearch} style={styles.iconBtnAccent} scaleTo={0.94} haptic>
+          <Icon name="search" size={17} color={adminChrome.accentHot} />
         </PressableSpring>
 
         <PressableSpring onPress={onNotifications} style={styles.iconBtn} scaleTo={0.94} haptic>
@@ -90,14 +90,14 @@ function createStyles() {
       borderBottomColor: adminChrome.shellBorder,
       overflow: 'hidden',
     },
-    pitchLine: {
+    signalLine: {
       position: 'absolute',
       left: 0,
       right: 0,
       bottom: 0,
       height: 2,
       backgroundColor: adminChrome.accent,
-      opacity: 0.55,
+      opacity: 0.65,
     },
     iconBtn: {
       width: 38,
@@ -109,13 +109,23 @@ function createStyles() {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: adminChrome.shellBorder,
     },
+    iconBtnAccent: {
+      width: 38,
+      height: 38,
+      borderRadius: adminChrome.radiusSm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: adminChrome.soft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: adminChrome.accentMuted,
+    },
     titleCol: {
       flex: 1,
       minWidth: 0,
       gap: 1,
     },
     kicker: {
-      color: adminChrome.accent,
+      color: adminChrome.accentHot,
       fontFamily: adminType.bodyExtra,
       fontSize: 9,
       fontWeight: '800',
@@ -154,7 +164,7 @@ function createStyles() {
       borderColor: adminChrome.shell,
     },
     badgeText: {
-      color: '#FFFFFF',
+      color: ADMIN_ON_ACCENT,
       fontFamily: adminType.bodyExtra,
       fontSize: 9,
       fontWeight: '800',
