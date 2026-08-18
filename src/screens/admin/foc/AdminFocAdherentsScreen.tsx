@@ -424,8 +424,8 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
   );
   const selected = selectedUid ? users.find((u) => u.uid === selectedUid) ?? null : null;
 
-  const handleSaved = useCallback(() => {
-    void refresh();
+  const handleSaved = useCallback(async () => {
+    await refresh();
   }, [refresh]);
 
   const resetAdvancedFilters = useCallback(() => {

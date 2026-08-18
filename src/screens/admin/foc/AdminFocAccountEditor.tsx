@@ -45,7 +45,8 @@ import { adminChrome } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 import { Icon } from '../../../components/ui/Icon';
 import { BirthDateFields } from '../../../components/player/BirthDateFields';
-import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
+import { userNeedsAdminVerificationReview, adminEffectiveVerificationLabel } from '../../../utils/adminUserVerification';
+import { AdminButton } from '../../../components/admin/AdminButton';
 import {
   JOUEUR_UNIVERSE_LABELS,
   birthDateIsoForAgeGroup,
@@ -121,7 +122,7 @@ type EditorTab = 'profil' | 'univers' | 'famille' | 'role' | 'offre' | 'docs' | 
 type Props = {
   user: User;
   onBack: () => void;
-  onSaved: () => void;
+  onSaved: () => void | Promise<void>;
 };
 
 /**
@@ -200,7 +201,10 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
     const current = user.subscription_plan_id as SubscriptionPlanId | undefined;
     setPickedPlan(current && SUBSCRIPTION_PLANS[current] ? current : def);
     setGrantMonths(1);
-  }, [user.uid]);
+  }, [user]);
+
+  const needsReview = userNeedsAdminVerificationReview(user);
+  const effectiveVerifyLabel = adminEffectiveVerificationLabel(user);
 
   useEffect(() => {
     let cancelled = false;
@@ -302,12 +306,69 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
         target_id: user.uid,
         summary,
       });
-      onSaved();
+      await onSaved();
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible');
     } finally {
       setBusy(false);
     }
+  };
+
+  const runAccountValidation = async (
+    action: 'approve' | 'reject',
+    rejectionReason?: string,
+    auditSummary?: string,
+  ) => {
+    const summary =
+      auditSummary ??
+      (action === 'approve'
+        ? 'Profil approuvé après revue documents'
+        : 'Profil refusé après revue documents');
+    setBusy(true);
+    try {
+      await adminService.validateProfile(user.uid, action, rejectionReason);
+      await adminAuditService.log({
+        action: 'user_updated',
+        actor_uid: profile?.uid ?? '',
+        actor_email: firebaseUser?.email ?? profile?.email,
+        target_type: 'user',
+        target_id: user.uid,
+        summary,
+      });
+      await onSaved();
+      Alert.alert(
+        action === 'approve' ? 'Compte validé' : 'Compte refusé',
+        action === 'approve'
+          ? 'Le compte a été validé avec succès.'
+          : 'Le compte a été refusé.',
+      );
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmAccountValidation = (
+    action: 'approve' | 'reject',
+    rejectionReason?: string,
+    auditSummary?: string,
+  ) => {
+    const name = user.display_name?.trim() || 'cet adhérent';
+    Alert.alert(
+      action === 'approve' ? 'Valider le compte ?' : 'Refuser le compte ?',
+      action === 'approve'
+        ? `Confirmer la validation du compte de ${name} ?`
+        : `Confirmer le refus du compte de ${name} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: action === 'approve' ? 'Valider' : 'Refuser',
+          style: action === 'approve' ? 'default' : 'destructive',
+          onPress: () => void runAccountValidation(action, rejectionReason, auditSummary),
+        },
+      ],
+    );
   };
 
   const saveProfile = () => {
@@ -1190,44 +1251,29 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
               </Text>
               <View style={styles.verifyBanner}>
                 <Text style={styles.verifyBannerTitle}>
-                  Statut compte ·{' '}
-                  {VERIFY.find((v) => v.id === user.verification_status)?.label ??
-                    user.verification_status}
+                  Statut compte · {effectiveVerifyLabel}
                 </Text>
-                {userNeedsAdminVerificationReview(user) ? (
+                {needsReview ? (
                   <Text style={styles.verifyBannerSub}>Revue manuelle recommandée</Text>
                 ) : null}
               </View>
 
-              <Pressable
+              <AdminButton
+                label="Valider le compte"
+                variant="primary"
+                loading={busy}
                 disabled={busy}
-                style={[styles.primaryBtn, busy && styles.disabled]}
-                onPress={() =>
-                  void run(
-                    () => adminService.validateProfile(user.uid, 'approve'),
-                    'Profil approuvé après revue documents',
-                  )
-                }
-              >
-                <Text style={styles.primaryBtnText}>Valider le compte</Text>
-              </Pressable>
-              <Pressable
+                onPress={() => confirmAccountValidation('approve')}
+              />
+              <AdminButton
+                label="Refuser le compte"
+                variant="danger"
+                loading={busy}
                 disabled={busy}
-                style={[styles.dangerBtn, busy && styles.disabled]}
                 onPress={() =>
-                  void run(
-                    () =>
-                      adminService.validateProfile(
-                        user.uid,
-                        'reject',
-                        'Document non conforme (revue admin)',
-                      ),
-                    'Profil refusé après revue documents',
-                  )
+                  confirmAccountValidation('reject', 'Document non conforme (revue admin)')
                 }
-              >
-                <Text style={styles.dangerBtnText}>Refuser le compte</Text>
-              </Pressable>
+              />
 
               <Text style={styles.label}>Fichiers</Text>
               {docsLoading ? (
@@ -1283,30 +1329,22 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
 
           {tab === 'actions' ? (
             <>
-              <Pressable
+              <AdminButton
+                label="Approuver le profil"
+                variant="secondary"
+                loading={busy}
                 disabled={busy}
-                style={[styles.secondaryBtn, busy && styles.disabled]}
-                onPress={() =>
-                  void run(
-                    () => adminService.validateProfile(user.uid, 'approve'),
-                    'Profil approuvé',
-                  )
-                }
-              >
-                <Text style={styles.secondaryBtnText}>Approuver le profil</Text>
-              </Pressable>
-              <Pressable
+                onPress={() => confirmAccountValidation('approve', undefined, 'Profil approuvé')}
+              />
+              <AdminButton
+                label="Refuser le profil"
+                variant="secondary"
+                loading={busy}
                 disabled={busy}
-                style={[styles.secondaryBtn, busy && styles.disabled]}
                 onPress={() =>
-                  void run(
-                    () => adminService.validateProfile(user.uid, 'reject', 'Refus admin'),
-                    'Profil refusé',
-                  )
+                  confirmAccountValidation('reject', 'Refus admin', 'Profil refusé')
                 }
-              >
-                <Text style={styles.secondaryBtnText}>Refuser le profil</Text>
-              </Pressable>
+              />
               <Pressable
                 disabled={busy}
                 style={[styles.dangerBtn, busy && styles.disabled]}

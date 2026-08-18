@@ -18,10 +18,8 @@ import {
   arrayRemove,
 } from 'firebase/firestore';
 import type { User, UserRole, VerificationStatus, PlayerVerificationCheckId } from '../models/User';
-import {
-  computePlayerVerificationStatus,
-  defaultPlayerVerificationState,
-} from '../models/User';
+import { computePlayerVerificationStatus } from '../models/User';
+import { applyAdminPlayerVerificationDecision } from '../utils/adminUserVerification';
 import type { ProductLineId } from '../models/ProductLine';
 import { resolveAdminProductLine } from '../utils/adminProductLine';
 import type { TeamEvent } from '../models/TeamEvent';
@@ -39,6 +37,7 @@ import {
   fundingGoalFromFirestore,
   clubAnnouncementFromFirestore,
   applicationFromFirestore,
+  membershipFromFirestore,
 } from '../lib/firestoreMappers';
 import {
   callFunction,
@@ -51,6 +50,7 @@ import type { Application } from '../models/Player';
 import type { Club } from '../models/Club';
 import type { CommunityReel, CommunityReelStatus } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
+import type { Membership } from '../models/Membership';
 import type { PlatformFeedPost, FeedAudience } from '../models/PlatformFeed';
 import type { PlatformConfig } from '../models/PlatformConfig';
 import type { StageOffer, StageApplication } from '../models/Stage';
@@ -531,7 +531,6 @@ export const adminService = {
     const data = snap.data() as Record<string, unknown>;
     const role = data.role as UserRole;
     const verified = action === 'approve';
-    const checkStatus = verified ? 'verified' : 'rejected';
 
     const update: Record<string, unknown> = {
       is_verified: verified,
@@ -547,28 +546,13 @@ export const adminService = {
     }
 
     if (role === 'player' && data.player_verification) {
-      const pv = {
-        ...defaultPlayerVerificationState(false),
-        ...(data.player_verification as Record<string, unknown>),
-      } as ReturnType<typeof defaultPlayerVerificationState>;
-
-      (['identity', 'club_license', 'parental_consent'] as const).forEach((key) => {
-        const check = pv[key];
-        if (check?.status === 'pending') {
-          pv[key] = {
-            ...check,
-            status: checkStatus,
-            ...(verified ? {} : { rejection_reason: rejectionReason?.trim() || 'Refusé par l’administrateur' }),
-          };
-        }
-      });
-
-      update.player_verification = pv;
-      update.verification_status = verified
-        ? 'VERIFIED'
-        : computePlayerVerificationStatus(pv);
-      if (verified) {
-        update.onboarding_documents_submitted = true;
+      const pvPatch = applyAdminPlayerVerificationDecision(
+        data.player_verification as Parameters<typeof applyAdminPlayerVerificationDecision>[0],
+        action,
+        rejectionReason,
+      );
+      if (pvPatch) {
+        Object.assign(update, pvPatch);
       }
     }
 
@@ -871,6 +855,34 @@ export const adminService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await deleteDoc(doc(database, 'club_funding_goals', goalId));
+  },
+
+  async listPendingMemberships(max = 100): Promise<Membership[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, 'memberships'),
+          where('status', '==', 'pending'),
+          limit(max),
+        ),
+      );
+      return snap.docs
+        .map((d) => membershipFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => b.requested_at.getTime() - a.requested_at.getTime());
+    } catch {
+      try {
+        const snap = await getDocs(query(collection(database, 'memberships'), limit(max)));
+        return snap.docs
+          .map((d) => membershipFromFirestore(d.id, d.data() as Record<string, unknown>))
+          .filter((m) => m.status === 'pending')
+          .sort((a, b) => b.requested_at.getTime() - a.requested_at.getTime());
+      } catch {
+        return [];
+      }
+    }
   },
 
   async listCommunityReels(max = 100, status?: CommunityReelStatus): Promise<CommunityReel[]> {

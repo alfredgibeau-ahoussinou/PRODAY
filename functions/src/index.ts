@@ -143,6 +143,23 @@ export const verifyOnboardingDocument = functions
     }
   });
 
+type PlayerVerificationCheckState = { status?: string };
+
+function computePlayerVerificationStatusFromState(
+  state: Record<string, PlayerVerificationCheckState>,
+): 'VERIFIED' | 'REJECTED' | 'PENDING' {
+  const identity = state.identity?.status;
+  const clubLicense = state.club_license?.status;
+  if (identity === 'rejected' || clubLicense === 'rejected') return 'REJECTED';
+  if (identity === 'verified') {
+    if (clubLicense === 'verified') return 'VERIFIED';
+    if (clubLicense === 'pending') return 'PENDING';
+    return 'VERIFIED';
+  }
+  if (identity === 'pending' || clubLicense === 'pending') return 'PENDING';
+  return 'PENDING';
+}
+
 /** Callable admin — approuver ou rejeter un profil */
 export const validateProfile = functions.https.onCall(async (data, context) => {
   if (!context.auth?.token?.admin) {
@@ -155,7 +172,8 @@ export const validateProfile = functions.https.onCall(async (data, context) => {
   };
   const verified = action === 'approve';
   const userSnap = await db.doc(`users/${uid}`).get();
-  const role = String(userSnap.data()?.role ?? '');
+  const userData = userSnap.data() ?? {};
+  const role = String(userData.role ?? '');
   const update: Record<string, unknown> = {
     is_verified: verified,
     verification_status: verified ? 'VERIFIED' : 'REJECTED',
@@ -170,6 +188,35 @@ export const validateProfile = functions.https.onCall(async (data, context) => {
   if (role === 'sponsor') {
     update.sponsor_approved = verified;
     update.product_line = 'sponsor';
+  }
+  if (role === 'player' && userData.player_verification) {
+    const checkStatus = verified ? 'verified' : 'rejected';
+    const pv = { ...(userData.player_verification as Record<string, unknown>) } as Record<
+      string,
+      { status?: string; rejection_reason?: string; [k: string]: unknown }
+    >;
+    for (const key of ['identity', 'club_license', 'parental_consent']) {
+      const check = pv[key];
+      if (check?.status === 'pending') {
+        pv[key] = {
+          ...check,
+          status: checkStatus,
+          ...(verified
+            ? {}
+            : {
+                rejection_reason:
+                  rejectionReason?.trim() || 'Refusé par l’administrateur',
+              }),
+        };
+      }
+    }
+    update.player_verification = pv;
+    update.verification_status = verified
+      ? 'VERIFIED'
+      : computePlayerVerificationStatusFromState(pv);
+    if (verified) {
+      update.onboarding_documents_submitted = true;
+    }
   }
   await db.doc(`users/${uid}`).update(update);
 
