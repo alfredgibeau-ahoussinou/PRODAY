@@ -344,7 +344,11 @@ export function CoachProfileHub({
         <CoachSectionCard
           kicker="Abonnement"
           title={subscriptionTier === 'pro' ? 'Coach Pro actif' : 'Passer Coach Pro'}
-          body="Tactique IA, vidéos et outils avancés."
+          body={
+            subscriptionTier === 'pro'
+              ? 'Convocations, Tactique IA, entraînements IA et multi-équipes actifs.'
+              : 'Débloquez convocations, Tactique IA, entraînements IA et multi-équipes.'
+          }
         >
           <CoachActionRow
             primary={subscriptionTier === 'pro' ? 'Gérer l’abonnement' : 'Passer Coach Pro'}

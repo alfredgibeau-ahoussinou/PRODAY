@@ -39,6 +39,8 @@ export interface SubscriptionPlanVisual {
   featureIconPro: IconName;
   priceStyle: 'standard' | 'premium' | 'medical';
   proHighlight?: string;
+  unlockHeadline?: string;
+  unlockSubtitle?: string;
 }
 
 const VISUALS: Record<SubscriptionVisualVariant, SubscriptionPlanVisual> = {
@@ -100,14 +102,16 @@ const VISUALS: Record<SubscriptionVisualVariant, SubscriptionPlanVisual> = {
     heroSubtext: '#93C5FD',
     onPrimary: '#FFFFFF',
     rootBg: '#F8FAFC',
-    freeColumnTitle: 'Staff gratuit',
-    compareTitle: 'Comparer Outils coach',
+    freeColumnTitle: 'Coach gratuit',
+    compareTitle: 'Gratuit vs Coach Pro',
     quotaTitle: 'Messages Mercato Pro',
-    ctaVerb: 'Activer Coach Pro',
+    ctaVerb: 'Passer Coach Pro',
     featureIconFree: 'people',
     featureIconPro: 'star',
     priceStyle: 'standard',
-    proHighlight: 'Multi-équipes',
+    proHighlight: 'Tactique IA & convocations',
+    unlockHeadline: 'Ce que vous débloquez',
+    unlockSubtitle: 'Outils Pro alignés sur les gates réels du banc technique',
   },
   recruiter: {
     variant: 'recruiter',

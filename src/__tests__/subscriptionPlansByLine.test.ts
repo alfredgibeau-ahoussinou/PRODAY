@@ -10,7 +10,7 @@ describe('subscriptionPlansByLine', () => {
     const man = getPlanForRoleAndLine('player', 'homme');
     const woman = getPlanForRoleAndLine('player', 'woman');
 
-    expect(man?.label).toBe('Joueur Plus');
+    expect(man?.label).toBe('Pass Joueur Premium');
     expect(woman?.label).toBe('Joueuse Plus');
     expect(man?.freeIncludes.some((i) => i.includes('Mercato M'))).toBe(true);
     expect(woman?.freeIncludes.some((i) => i.includes('Mercato F'))).toBe(true);
@@ -31,20 +31,23 @@ describe('subscriptionPlansByLine', () => {
     expect(getPlanForRoleAndLine('physio', 'woman')).toBeNull();
   });
 
-  it('personnalise les métiers sur Pro', () => {
-    const recruiter = getPlanForRoleAndLine('recruiter', 'pro');
+  it('personnalise les métiers actifs sur Pro et ignore les rôles retirés', () => {
+    const coach = getPlanForRoleAndLine('coach', 'pro');
 
+    expect(coach?.label).toBe('Coach Pro');
+    expect(coach?.freeIncludes.some((i) => i.includes('Mercato Pro'))).toBe(true);
+    expect(coach?.proIncludes.some((i) => i.includes('Convocations'))).toBe(true);
+    expect(coach?.proIncludes.some((i) => i.includes('Tactique IA'))).toBe(true);
+    expect(coach?.proIncludes.some((i) => i.includes('Multi-équipes'))).toBe(true);
+    expect(getPlanForRoleAndLine('recruiter', 'pro')).toBeNull();
+    expect(getPlanForRoleAndLine('agent', 'pro')).toBeNull();
     expect(getPlanForRoleAndLine('physio', 'pro')).toBeNull();
-    expect(recruiter?.label).toBe('Recruteur Pro');
-    expect(recruiter?.freeIncludes.some((i) => i.includes('Mercato Pro'))).toBe(true);
   });
 
-  it('expose le plan praticien sur Santé', () => {
-    const physio = getPlanForRoleAndLine('physio', 'sante');
-
-    expect(physio?.label).toBe('Cabinet Santé');
-    expect(physio?.proIncludes.some((i) => i.includes('RDV'))).toBe(true);
+  it('ne mappe plus de plan rôle sur Santé (ligne retirée)', () => {
+    expect(getPlanForRoleAndLine('physio', 'sante')).toBeNull();
     expect(plansForProductLine('sante')).toHaveLength(1);
+    expect(plansForProductLine('sante')[0].id).toBe('physio_pro');
   });
 
   it('expose le plan joueur seul sur Joueur / Amateur (coach → Staff)', () => {
@@ -73,6 +76,7 @@ describe('subscriptionPlansByLine', () => {
 
   it('liste les offres par univers', () => {
     expect(plansForProductLine('homme')).toHaveLength(1);
+    expect(plansForProductLine('homme')[0].label).toBe('Pass Joueur Premium');
     expect(plansForProductLine('woman')[0].label).toBe('Joueuse Plus');
     expect(plansForProductLine('pro').length).toBeGreaterThanOrEqual(5);
   });

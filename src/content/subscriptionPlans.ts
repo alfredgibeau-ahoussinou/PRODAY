@@ -115,8 +115,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
   coach_pro: {
     id: 'coach_pro',
     role: 'coach',
-    label: 'Coach Premium',
-    tagline: 'Tactique IA, IA, vidéo et préparation match',
+    label: 'Coach Pro',
+    tagline: 'Convocations, Tactique IA et banc technique complet',
     pricing: planPricing(7.99, true),
     limits: {
       club_teams: 1,
@@ -126,14 +126,14 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, SubscriptionPlanDefi
       'Profil coach (parcours, diplômes, philosophie)',
       '1 équipe liée',
       'Calendrier & communication de base',
+      'Mercato Pro en lecture (5 messages / mois)',
     ],
     proIncludes: [
+      'Convocations & suivi des présences',
       'Tactique IA (tableau, formations, banc)',
-      'Assistant IA & rapports automatiques',
-      'Analyse vidéo & adversaires',
-      'Préparation des matchs',
       'Entraînements IA (collectifs & individuels)',
-      'Convocations, présences, multi-équipes',
+      'Préparation match & hubs séance/match',
+      'Multi-équipes & édition calendrier structure',
     ],
   },
   club_amateur: {

@@ -121,19 +121,20 @@ const LINE_PLAN_PATCHES: Record<
     },
     coach_pro: {
       label: 'Coach Pro',
-      tagline: 'Banc technique. Mercato Pro et multi-équipes',
+      tagline: 'Convocations, Tactique IA et banc technique complet',
       mercatoQuotaLabel: 'Messages Mercato Pro',
       freeIncludes: [
-        'Profil staff et vérification',
+        'Profil coach (parcours, diplômes, philosophie)',
         '1 équipe liée',
-        '5 messages Mercato Pro / mois',
-        'Annonces Mercato Pro en lecture',
+        'Calendrier & communication de base',
+        'Mercato Pro en lecture (5 messages / mois)',
       ],
       proIncludes: [
-        'Équipes illimitées',
-        'Messages Mercato Pro illimités',
-        'Annonces Mercato Pro actives',
-        'Statistiques candidatures',
+        'Convocations & suivi des présences',
+        'Tactique IA (tableau, formations, banc)',
+        'Entraînements IA (collectifs & individuels)',
+        'Préparation match & hubs séance/match',
+        'Multi-équipes & édition calendrier structure',
       ],
     },
     club_pro: {

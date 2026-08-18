@@ -43,6 +43,7 @@ import { ProDayGradient } from '../ui/ProDayGradient';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { radius, spacing, shadows } from '../../theme/designTokens';
 import { ClubQuoteRequestScreen } from '../../screens/club/ClubQuoteRequestScreen';
+import { coachSubscriptionFeatureIcon } from '../../content/coachSubscriptionFeatures';
 
 type BillingCycle = 'monthly' | 'yearly';
 
@@ -75,6 +76,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
   const noStorePlan = ROLES_WITHOUT_STORE_PLAN.includes(profile.role);
   const iapReady = iapService.isAvailable();
   const isDarkHero = visual ? isDarkSubscriptionVisual(visual) : false;
+  const isCoachPlan = profile.role === 'coach' && visual?.variant === 'coach';
   const isSponsorPlan = visual?.variant === 'sponsor';
 
   const meters = useMemo(() => {
@@ -235,6 +237,23 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
       ? 'Facturation mensuelle'
       : `${formatEur(plan.pricing.yearlyEur)} € / an · −${ANNUAL_DISCOUNT_PERCENT} %`;
 
+  const stripeCtaLabel = plan.pricing.quoteOnly
+    ? 'Demander un devis'
+    : betaProRequestMode
+      ? betaRequest?.status === 'pending'
+        ? 'Demande envoyée'
+        : 'Demander l’accès Pro (bêta)'
+      : stripeCheckoutEnabled
+        ? `S’abonner · ${formatEur(displayPrice)} €/mois`
+        : visual.ctaVerb;
+
+  const resolveFeatureIcon = (item: string, tier: 'free' | 'pro', index: number): IconName =>
+    isCoachPlan
+      ? coachSubscriptionFeatureIcon(tier, index, tier === 'pro' ? visual.featureIconPro : visual.featureIconFree)
+      : tier === 'pro'
+        ? visual.featureIconPro
+        : visual.featureIconFree;
+
   return (
     <ProDayScreenCanvas>
       <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -365,6 +384,37 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
             </View>
           ) : null}
 
+          {!isPro && isCoachPlan && visual.unlockHeadline ? (
+            <View style={styles.section}>
+              <ProDayText variant="eyebrow" muted>
+                {visual.unlockHeadline}
+              </ProDayText>
+              {visual.unlockSubtitle ? (
+                <ProDayText variant="caption" muted style={styles.unlockSubtitle}>
+                  {visual.unlockSubtitle}
+                </ProDayText>
+              ) : null}
+              <ProDaySurface
+                variant="module"
+                style={[
+                  styles.unlockCard,
+                  { borderColor: visual.primary, backgroundColor: visual.primarySoft },
+                ]}
+              >
+                {plan.proIncludes.map((item, index) => (
+                  <FeatureRow
+                    key={item}
+                    text={item}
+                    icon={resolveFeatureIcon(item, 'pro', index)}
+                    color={visual.primary}
+                    iconBg={visual.primarySoft}
+                    prominent
+                  />
+                ))}
+              </ProDaySurface>
+            </View>
+          ) : null}
+
           <View style={styles.section}>
             <ProDayText variant="eyebrow" muted>
               {visual.compareTitle}
@@ -398,8 +448,14 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
               <ProDayText variant="section" style={{ color: visual.primary }}>
                 {plan.label}
               </ProDayText>
-              {plan.proIncludes.map((item) => (
-                <FeatureRow key={item} text={item} icon={visual.featureIconPro} color={visual.primary} />
+              {plan.proIncludes.map((item, index) => (
+                <FeatureRow
+                  key={item}
+                  text={item}
+                  icon={resolveFeatureIcon(item, 'pro', index)}
+                  color={visual.primary}
+                  iconBg={isCoachPlan ? `${visual.primary}18` : undefined}
+                />
               ))}
             </ProDaySurface>
 
@@ -407,8 +463,15 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
               <ProDayText variant="caption" muted style={styles.freeLabel}>
                 {visual.freeColumnTitle} · {FREE_TIER_LABEL}
               </ProDayText>
-              {plan.freeIncludes.map((item) => (
-                <FeatureRow key={item} text={item} icon={visual.featureIconFree} color={colors.textMuted} muted />
+              {plan.freeIncludes.map((item, index) => (
+                <FeatureRow
+                  key={item}
+                  text={item}
+                  icon={resolveFeatureIcon(item, 'free', index)}
+                  color={colors.textMuted}
+                  muted
+                  iconBg={isCoachPlan ? colors.surfaceMuted : undefined}
+                />
               ))}
             </ProDaySurface>
           </View>
@@ -426,15 +489,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <ProDayText variant="caption" inverse style={styles.ctaText}>
-                    {plan.pricing.quoteOnly
-                      ? 'Demander un devis'
-                      : betaProRequestMode
-                        ? betaRequest?.status === 'pending'
-                          ? 'Demande envoyée'
-                          : 'Demander l’accès Pro (bêta)'
-                        : stripeCheckoutEnabled
-                          ? 'S’abonner · Stripe'
-                          : visual.ctaVerb}
+                    {stripeCtaLabel}
                   </ProDayText>
                 )}
               </ProDayGradient>
@@ -445,7 +500,7 @@ export const SubscriptionPlanView: React.FC<SubscriptionPlanViewProps> = ({
                 : betaProRequestMode
                   ? 'Pendant la bêta : pas de paiement in-app — demande à l’admin ProDay pour activer Pro.'
                   : stripeCheckoutEnabled
-                    ? 'Paiement sécurisé par carte (Stripe). Chiffrement TLS · aucune donnée bancaire stockée sur ProDay.'
+                    ? 'Paiement sécurisé par carte (Stripe). Annulable à tout moment · aucune donnée bancaire stockée sur ProDay.'
                     : 'Paiement sécurisé par carte (Stripe). Repli App Store / Play si Stripe indisponible.'}
             </ProDayText>
             {stripeCheckoutEnabled && !betaProRequestMode && iapReady ? (
@@ -634,10 +689,24 @@ const FeatureRow: React.FC<{
   icon: IconName;
   color: string;
   muted?: boolean;
-}> = ({ text, icon, color, muted }) => (
-  <View style={styles.featureRow}>
-    <Icon name={icon} size={15} color={color} variant="filled" />
-    <ProDayText variant="caption" muted={muted} style={styles.featureText}>
+  prominent?: boolean;
+  iconBg?: string;
+}> = ({ text, icon, color, muted, prominent, iconBg }) => (
+  <View style={[styles.featureRow, prominent ? styles.featureRowProminent : null]}>
+    <View
+      style={[
+        styles.featureIconWrap,
+        iconBg ? { backgroundColor: iconBg } : null,
+        prominent ? styles.featureIconWrapProminent : null,
+      ]}
+    >
+      <Icon name={icon} size={prominent ? 16 : 15} color={color} variant="filled" />
+    </View>
+    <ProDayText
+      variant="caption"
+      muted={muted}
+      style={[styles.featureText, prominent ? styles.featureTextProminent : null]}
+    >
       {text}
     </ProDayText>
   </View>
@@ -753,8 +822,24 @@ const styles = StyleSheet.create({
   proBadgeText: { fontWeight: '800', fontSize: 10 },
   freePlanCard: { borderWidth: 1, padding: spacing.md, gap: spacing.xs },
   freeLabel: { fontWeight: '800', marginBottom: spacing.xs, textTransform: 'uppercase', letterSpacing: 0.5 },
+  unlockSubtitle: { marginBottom: spacing.xs, lineHeight: 18 },
+  unlockCard: { borderWidth: 2, padding: spacing.md, gap: spacing.xs },
   featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginTop: spacing.xs },
+  featureRowProminent: { marginTop: spacing.sm },
+  featureIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureIconWrapProminent: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
   featureText: { flex: 1, lineHeight: 18 },
+  featureTextProminent: { fontWeight: '600', lineHeight: 20 },
   loader: { marginVertical: spacing.lg },
   footer: {
     paddingHorizontal: spacing.lg,
