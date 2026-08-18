@@ -1,30 +1,39 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
-  Pressable,
   StyleSheet,
   Alert,
   RefreshControl,
 } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
-import { adminService } from '../../../services/admin.service';
 import { ADMIN_FOC_SCREEN_TABS } from '../../../navigation/adminFocConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
 import { AdminMessagesPanel } from '../../../components/admin/AdminMessagesPanel';
 import { AdminPlatformFeedPanel } from '../../../components/admin/AdminPlatformFeedPanel';
 import { AdminWeeklyQuestionPanel } from '../../../components/admin/AdminWeeklyQuestionPanel';
+import { AdminActionRow, AdminButton } from '../../../components/admin/AdminButton';
 import { Icon } from '../../../components/ui/Icon';
-import { ADMIN_WORK_KIND_LABELS } from '../../../navigation/adminTabConfig';
+import { ADMIN_WORK_KIND_LABELS, ADMIN_PRIORITY_LABELS } from '../../../navigation/adminTabConfig';
 import { adminChrome } from '../../../theme/adminTheme';
 import { spacing, radius } from '../../../theme/designTokens';
-import { recruitmentService } from '../../../services/recruitment.service';
 import type { AdminWorkItem } from '../../../utils/adminInsights';
 import type { ClubAnnouncement } from '../../../models/ClubAnnouncement';
+import { adminService } from '../../../services/admin.service';
+import {
+  confirmAdminWorkApprove,
+  confirmAdminWorkReject,
+  runAdminWorkApprove,
+  runAdminWorkReject,
+} from '../../../utils/adminWorkQueueActions';
 
 const TABS = ADMIN_FOC_SCREEN_TABS.communication;
 type TabId = (typeof TABS)[number]['id'];
+
+type Props = {
+  initialTab?: string;
+};
 
 /* ─── Decision row ──────────────────────────────────────────────────── */
 
@@ -32,13 +41,16 @@ function DecisionRow({
   item,
   onApprove,
   onReject,
+  busyId,
 }: {
   item: AdminWorkItem;
-  onApprove: (item: AdminWorkItem) => void;
-  onReject: (item: AdminWorkItem) => void;
+  onApprove: () => void;
+  onReject: () => void;
+  busyId: string | null;
 }) {
   const kindLabel = ADMIN_WORK_KIND_LABELS[item.kind] ?? item.kind;
-  const isPending = item.priority === 'high' || item.kind === 'verification';
+  const priorityLabel = ADMIN_PRIORITY_LABELS[item.priority] ?? item.priority;
+  const isPending = item.priority === 'high' || item.priority === 'critical';
 
   return (
     <View style={s.decisionRow}>
@@ -46,28 +58,22 @@ function DecisionRow({
         <View style={[s.kindTag, isPending && s.kindTagHot]}>
           <Text style={[s.kindText, isPending && s.kindTextHot]}>{kindLabel}</Text>
         </View>
+        <View style={[s.priorityTag, isPending && s.priorityTagHot]}>
+          <Text style={[s.priorityText, isPending && s.priorityTextHot]}>{priorityLabel}</Text>
+        </View>
         {item.meta ? <Text style={s.decisionTime}>{item.meta}</Text> : null}
       </View>
       <Text style={s.decisionTitle} numberOfLines={2}>{item.title}</Text>
       {item.subtitle ? (
         <Text style={s.decisionSub} numberOfLines={1}>{item.subtitle}</Text>
       ) : null}
-      <View style={s.decisionActions}>
-        <Pressable
-          style={[s.actionBtn, s.approveBtn]}
-          onPress={() => onApprove(item)}
-          accessibilityRole="button"
-        >
-          <Text style={[s.actionBtnText, { color: adminChrome.pitch }]}>Approuver</Text>
-        </Pressable>
-        <Pressable
-          style={[s.actionBtn, s.rejectBtn]}
-          onPress={() => onReject(item)}
-          accessibilityRole="button"
-        >
-          <Text style={[s.actionBtnText, { color: adminChrome.danger }]}>Refuser</Text>
-        </Pressable>
-      </View>
+      <AdminActionRow
+        onApprove={onApprove}
+        onReject={onReject}
+        approveLoading={busyId === `${item.id}:approve`}
+        rejectLoading={busyId === `${item.id}:reject`}
+        disabled={!!busyId}
+      />
     </View>
   );
 }
@@ -82,98 +88,58 @@ function AnnouncementRow({
   onDelete: (id: string) => void;
 }) {
   return (
-    <Pressable
-      style={({ pressed }) => [s.row, pressed && s.rowPressed]}
-      onPress={() => {
-        Alert.alert(
-          ann.title,
-          ann.body?.slice(0, 200) || '—',
-          [
-            {
-              text: 'Supprimer',
-              style: 'destructive',
-              onPress: () => onDelete(ann.id),
-            },
-            { text: 'Fermer', style: 'cancel' },
-          ],
-          { cancelable: true },
-        );
-      }}
-    >
+    <View style={s.row}>
       <View style={s.rowMain}>
         <Text style={s.rowTitle} numberOfLines={1}>{ann.title}</Text>
         {ann.body ? (
           <Text style={s.rowSub} numberOfLines={2}>{ann.body}</Text>
         ) : null}
       </View>
-      <Icon name="chevron-forward" size={14} color={adminChrome.textMuted} />
-    </Pressable>
+      <AdminButton
+        label="Supprimer"
+        variant="danger"
+        size="sm"
+        icon="close"
+        onPress={() => onDelete(ann.id)}
+      />
+    </View>
   );
 }
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocCommunicationScreen() {
+export function AdminFocCommunicationScreen({ initialTab }: Props) {
   const { workQueue, announcements, refresh, refreshing } = useAdminData();
   const [tab, setTab] = useState<TabId>('decisions');
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  const handleApprove = useMemo(
-    () => (item: AdminWorkItem) => {
-      const act = async () => {
-        try {
-          if (item.kind === 'verification' && item.entityId) {
-            await adminService.validateProfile(item.entityId, 'approve');
-          } else if (item.kind === 'reel') {
-            const reelId = item.id.replace(/^reel-/, '');
-            await adminService.updateCommunityReelStatus(reelId, 'approved');
-          } else if (item.kind === 'application') {
-            const appId = item.id.replace(/^app-/, '');
-            await recruitmentService.updateApplicationStatus(appId, 'ACCEPTED');
-          } else if (item.kind === 'payment') {
-            const payId = item.id.replace(/^pay-/, '');
-            await adminService.updatePaymentStatus(payId, 'paid');
-          }
-          void refresh();
-        } catch {
-          Alert.alert('Erreur', 'Impossible d\'effectuer cette action.');
-        }
-      };
-      Alert.alert('Approuver ?', item.title, [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Approuver', onPress: () => void act() },
-      ]);
-    },
-    [refresh],
-  );
+  useEffect(() => {
+    if (initialTab && TABS.some((t) => t.id === initialTab)) {
+      setTab(initialTab as TabId);
+    }
+  }, [initialTab]);
 
-  const handleReject = useMemo(
-    () => (item: AdminWorkItem) => {
-      const act = async () => {
-        try {
-          if (item.kind === 'verification' && item.entityId) {
-            await adminService.validateProfile(item.entityId, 'reject', 'Refus admin');
-          } else if (item.kind === 'reel') {
-            const reelId = item.id.replace(/^reel-/, '');
-            await adminService.updateCommunityReelStatus(reelId, 'rejected');
-          } else if (item.kind === 'application') {
-            const appId = item.id.replace(/^app-/, '');
-            await recruitmentService.updateApplicationStatus(appId, 'REJECTED');
-          } else if (item.kind === 'report') {
-            const reportId = item.id.replace(/^report-/, '');
-            await adminService.deleteReelReport(reportId);
-          }
-          void refresh();
-        } catch {
-          Alert.alert('Erreur', 'Impossible d\'effectuer cette action.');
-        }
-      };
-      Alert.alert('Refuser / Clôturer ?', item.title, [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Confirmer', style: 'destructive', onPress: () => void act() },
-      ]);
-    },
-    [refresh],
-  );
+  const handleApprove = (item: AdminWorkItem) => {
+    confirmAdminWorkApprove(item, async () => {
+      setBusyId(`${item.id}:approve`);
+      try {
+        await runAdminWorkApprove(item, refresh);
+      } finally {
+        setBusyId(null);
+      }
+    });
+  };
+
+  const handleReject = (item: AdminWorkItem) => {
+    confirmAdminWorkReject(item, async () => {
+      setBusyId(`${item.id}:reject`);
+      try {
+        await runAdminWorkReject(item, refresh);
+      } finally {
+        setBusyId(null);
+      }
+    });
+  };
 
   const handleDeleteAnnouncement = useMemo(
     () => (id: string) => {
@@ -186,6 +152,7 @@ export function AdminFocCommunicationScreen() {
             try {
               await adminService.deleteClubAnnouncement(id);
               void refresh();
+              Alert.alert('Annonce supprimée', 'L\'annonce a été retirée.');
             } catch {
               Alert.alert('Erreur', 'Impossible de supprimer cette annonce.');
             }
@@ -209,7 +176,12 @@ export function AdminFocCommunicationScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={adminChrome.accent} />
           }
           renderItem={({ item }) => (
-            <DecisionRow item={item} onApprove={handleApprove} onReject={handleReject} />
+            <DecisionRow
+              item={item}
+              onApprove={() => handleApprove(item)}
+              onReject={() => handleReject(item)}
+              busyId={busyId}
+            />
           )}
           ItemSeparatorComponent={() => <View style={s.sep} />}
           ListEmptyComponent={
@@ -263,7 +235,6 @@ const s = StyleSheet.create({
   emptySub: { fontSize: 13, color: adminChrome.textMuted, textAlign: 'center', lineHeight: 20 },
   sep: { height: spacing.sm },
 
-  /* Decision rows */
   decisionRow: {
     backgroundColor: adminChrome.shell,
     borderRadius: adminChrome.radius,
@@ -272,7 +243,7 @@ const s = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
-  decisionMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  decisionMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
   kindTag: {
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -287,28 +258,19 @@ const s = StyleSheet.create({
   },
   kindText: { fontSize: 11, fontWeight: '700', color: adminChrome.textMuted },
   kindTextHot: { color: adminChrome.accent },
+  priorityTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    backgroundColor: adminChrome.shellElevated,
+  },
+  priorityTagHot: { backgroundColor: 'rgba(245, 158, 11, 0.12)' },
+  priorityText: { fontSize: 10, fontWeight: '700', color: adminChrome.textMuted },
+  priorityTextHot: { color: adminChrome.warning },
   decisionTime: { fontSize: 11, color: adminChrome.textMuted, marginLeft: 'auto' },
   decisionTitle: { fontSize: 14, fontWeight: '700', color: adminChrome.text, lineHeight: 20 },
   decisionSub: { fontSize: 12, color: adminChrome.textMuted },
-  decisionActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
-  actionBtn: {
-    flex: 1,
-    paddingVertical: 9,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  approveBtn: {
-    backgroundColor: 'rgba(22,101,52,0.07)',
-    borderColor: 'rgba(22,101,52,0.25)',
-  },
-  rejectBtn: {
-    backgroundColor: 'rgba(225,29,72,0.06)',
-    borderColor: 'rgba(225,29,72,0.2)',
-  },
-  actionBtnText: { fontSize: 13, fontWeight: '700' },
 
-  /* Announcement / generic rows */
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -317,7 +279,6 @@ const s = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: adminChrome.shell,
   },
-  rowPressed: { backgroundColor: adminChrome.rowHover },
   rowMain: { flex: 1, minWidth: 0, gap: 2 },
   rowTitle: { fontSize: 14, fontWeight: '700', color: adminChrome.text },
   rowSub: { fontSize: 12, color: adminChrome.textMuted, lineHeight: 17 },

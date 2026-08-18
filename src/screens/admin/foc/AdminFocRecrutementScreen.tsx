@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   FlatList,
   RefreshControl,
@@ -31,7 +31,7 @@ type RecRow = {
 /**
  * Bassin de recrutement — annonces, candidatures, joueurs filtrables.
  */
-export function AdminFocRecrutementScreen() {
+export function AdminFocRecrutementScreen({ initialTab }: { initialTab?: string } = {}) {
   const data = useAdminData();
   const { width } = useWindowDimensions();
   const wide = width >= ADMIN_WIDE_BREAKPOINT;
@@ -40,6 +40,21 @@ export function AdminFocRecrutementScreen() {
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const map: Record<string, FilterId> = {
+      bassin: 'bassin',
+      posts: 'annonces',
+      annonces: 'annonces',
+      apps: 'candidatures',
+      candidatures: 'candidatures',
+      players: 'joueurs',
+      joueurs: 'joueurs',
+    };
+    if (initialTab && map[initialTab]) {
+      setFilter(map[initialTab]);
+    }
+  }, [initialTab]);
 
   const q = query.trim().toLowerCase();
 

@@ -150,4 +150,27 @@ describe('e2e. Navigation shell admin console', () => {
     });
     expect(resolveAdminFocNavigation('personnes')).toEqual({ section: 'personnes' });
   });
+
+  it('resolveAdminFocNavigation ouvre les onglets Personnes profonds', () => {
+    expect(resolveAdminFocNavigation('adherents')).toEqual({
+      section: 'personnes',
+      screenTab: 'all',
+    });
+    expect(resolveAdminFocNavigation('coaches')).toEqual({
+      section: 'personnes',
+      screenTab: 'coach',
+    });
+    expect(resolveAdminFocNavigation('decisions')).toEqual({
+      section: 'personnes',
+      screenTab: 'decisions',
+    });
+  });
+
+  it('resolveAdminFocNavigation ouvre Communication › Décisions pour publications', () => {
+    expect(resolveAdminFocNavigation('publications')).toEqual({
+      section: 'operations',
+      hubTab: 'communication',
+      screenTab: 'decisions',
+    });
+  });
 });

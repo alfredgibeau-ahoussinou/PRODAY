@@ -248,7 +248,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
             label="Coachs actifs"
             value={kpiCoachs}
             icon="person"
-            onPress={() => onNavigateLeaf('adherents')}
+            onPress={() => onNavigateLeaf('coaches')}
           />
         </View>
         <View style={styles.kpiCell}>
@@ -257,7 +257,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
             value={kpiPendingPosts}
             icon="document"
             hot={kpiPendingPosts > 0}
-            onPress={() => onNavigateLeaf('communication')}
+            onPress={() => onNavigateLeaf('publications')}
           />
         </View>
         <View style={styles.kpiCell}>
@@ -314,7 +314,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
           <AdminFocActivityFeed
             items={activityItems}
             onPressItem={(id) => {
-              if (id.startsWith('wq-')) onNavigateLeaf('communication');
+              if (id.startsWith('wq-')) onNavigateLeaf('publications');
               else if (id.startsWith('match-')) onNavigateLeaf('matchs');
               else if (id.startsWith('user-')) onNavigateLeaf('adherents');
             }}
@@ -356,7 +356,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
 
       {/* Decisions teaser */}
       <PressableSpring
-        onPress={() => onNavigateLeaf('communication')}
+        onPress={() => onNavigateLeaf('publications')}
         style={styles.decisionsBanner}
         scaleTo={0.97}
         haptic

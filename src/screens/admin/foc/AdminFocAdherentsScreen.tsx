@@ -17,6 +17,7 @@ import { useAdminData } from '../../../context/AdminDataContext';
 import { useAuth } from '../../../context/AuthContext';
 import { ADMIN_FOC_TABS } from '../../../navigation/adminFocConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
+import { AdminButton } from '../../../components/admin/AdminButton';
 import { AdminFocAccountEditor } from './AdminFocAccountEditor';
 import { Icon } from '../../../components/ui/Icon';
 import { adminChrome, adminType } from '../../../theme/adminTheme';
@@ -470,7 +471,7 @@ function CreateUserModal({
   );
 }
 
-export function AdminFocAdherentsScreen() {
+export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } = {}) {
   const { users, refreshing, refresh } = useAdminData();
   const [tab, setTab] = useState<TabId>('all');
   const [query, setQuery] = useState('');
@@ -488,6 +489,12 @@ export function AdminFocAdherentsScreen() {
   const handleSaved = useCallback(() => {
     void refresh();
   }, [refresh]);
+
+  React.useEffect(() => {
+    if (initialTab && TABS.some((t) => t.id === initialTab)) {
+      setTab(initialTab as TabId);
+    }
+  }, [initialTab]);
 
   React.useEffect(() => {
     if (selectedUid && !users.some((u) => u.uid === selectedUid)) {
@@ -511,15 +518,14 @@ export function AdminFocAdherentsScreen() {
         title="Adhérents"
         subtitle={`${filtered.length} profil${filtered.length !== 1 ? 's' : ''} · créer, filtrer, personnaliser`}
         right={
-          <Pressable
+          <AdminButton
+            label="Nouveau"
+            icon="add"
+            variant="primary"
+            size="sm"
             onPress={() => setCreateOpen(true)}
-            style={s.addBtn}
-            accessibilityRole="button"
             accessibilityLabel="Créer un compte"
-          >
-            <Icon name="add" size={18} color="#FFF" />
-            <Text style={s.addBtnText}>Nouveau</Text>
-          </Pressable>
+          />
         }
       />
       <AdminFocTabs tabs={TABS} value={tab} onChange={(id) => setTab(id as TabId)} />

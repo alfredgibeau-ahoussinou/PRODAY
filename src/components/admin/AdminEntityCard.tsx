@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { PressableSpring } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
-import { useAdminStyles, adminChrome, ADMIN_ON_ACCENT } from './adminStyles';
+import { AdminButton } from './AdminButton';
+import { useAdminStyles, adminChrome } from './adminStyles';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -48,19 +48,13 @@ export const AdminEntityCard: React.FC<AdminEntityCardProps> = ({
       </View>
       <View style={styles.actionsCol}>
         {onPrimary && primaryLabel ? (
-          <PressableSpring style={styles.primaryBtn} onPress={onPrimary} scaleTo={0.96} haptic>
-            <Text style={styles.primaryText}>{primaryLabel}</Text>
-          </PressableSpring>
+          <AdminButton label={primaryLabel} variant="primary" size="sm" onPress={onPrimary} />
         ) : null}
         {onSecondary && secondaryLabel ? (
-          <PressableSpring style={styles.secondaryBtn} onPress={onSecondary} scaleTo={0.96} haptic>
-            <Text style={styles.secondaryText}>{secondaryLabel}</Text>
-          </PressableSpring>
+          <AdminButton label={secondaryLabel} variant="secondary" size="sm" onPress={onSecondary} />
         ) : null}
         {onDelete ? (
-          <PressableSpring style={styles.deleteBtn} onPress={onDelete} scaleTo={0.94} haptic>
-            <Icon name="close" size={16} color={c.error} />
-          </PressableSpring>
+          <AdminButton variant="icon" icon="close" onPress={onDelete} accessibilityLabel="Supprimer" />
         ) : null}
       </View>
     </View>
@@ -94,29 +88,5 @@ function createStyles(c: AppColors) {
     subtitle: { fontSize: 12, color: c.textSecondary, lineHeight: 17 },
     meta: { fontSize: 10, fontWeight: '700', color: c.textMuted, marginTop: 2 },
     actionsCol: { gap: spacing.xs, alignItems: 'flex-end' },
-    primaryBtn: {
-      backgroundColor: adminChrome.accent,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 9,
-      borderRadius: radius.md,
-    },
-    primaryText: { color: ADMIN_ON_ACCENT, fontSize: 11, fontWeight: '800' },
-    secondaryBtn: {
-      backgroundColor: c.surfaceMuted,
-      borderWidth: 1,
-      borderColor: c.border,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 9,
-      borderRadius: radius.md,
-    },
-    secondaryText: { color: c.text, fontSize: 11, fontWeight: '700' },
-    deleteBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: radius.md,
-      backgroundColor: c.errorBg,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
   });
 }

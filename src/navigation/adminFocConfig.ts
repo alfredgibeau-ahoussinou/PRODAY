@@ -148,6 +148,21 @@ export const ADMIN_FOC_LEGACY_HUB_TAB: Partial<
   parametres: 'parametres',
 };
 
+/** Cibles legacy avec onglet in-page (Personnes, Communication, Finances…). */
+export type AdminFocDeepLinkId =
+  | AdminFocLegacySectionId
+  | 'coaches'
+  | 'publications'
+  | 'decisions';
+
+/** Onglet in-page quand on navigue via une cible legacy profonde. */
+export const ADMIN_FOC_LEGACY_SCREEN_TAB: Partial<Record<AdminFocDeepLinkId, string>> = {
+  adherents: 'all',
+  coaches: 'coach',
+  decisions: 'decisions',
+  publications: 'decisions',
+};
+
 const SECTION_IDS = new Set<string>(ADMIN_FOC_NAV.map((n) => n.id));
 
 export function isAdminFocSectionId(id: string): id is AdminFocSectionId {
@@ -157,14 +172,35 @@ export function isAdminFocSectionId(id: string): id is AdminFocSectionId {
 export function resolveAdminFocNavigation(target: string): {
   section: AdminFocSectionId;
   hubTab?: string;
+  screenTab?: string;
 } {
   if (isAdminFocSectionId(target)) {
     return { section: target };
   }
+
+  if (target === 'coaches') {
+    return { section: 'personnes', screenTab: 'coach' };
+  }
+  if (target === 'publications') {
+    return {
+      section: 'operations',
+      hubTab: 'communication',
+      screenTab: 'decisions',
+    };
+  }
+  if (target === 'decisions') {
+    return { section: 'personnes', screenTab: 'decisions' };
+  }
+
   const legacy = target as AdminFocLegacySectionId;
   const section = ADMIN_FOC_LEGACY_SECTION_MAP[legacy];
   if (section) {
-    return { section, hubTab: ADMIN_FOC_LEGACY_HUB_TAB[legacy] };
+    const screenTab = ADMIN_FOC_LEGACY_SCREEN_TAB[legacy as AdminFocDeepLinkId];
+    return {
+      section,
+      hubTab: ADMIN_FOC_LEGACY_HUB_TAB[legacy],
+      screenTab,
+    };
   }
   return { section: 'dashboard' };
 }

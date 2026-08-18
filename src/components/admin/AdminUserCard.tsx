@@ -5,6 +5,7 @@ import type { User } from '../../models/User';
 import { userNeedsAdminVerificationReview } from '../../utils/adminUserVerification';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
+import { AdminButton } from './AdminButton';
 import { useAdminStyles, adminChrome } from './adminStyles';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
@@ -148,86 +149,46 @@ export const AdminUserCard: React.FC<AdminUserCardProps> = ({
 
         <View style={styles.actions}>
           {onViewDocuments ? (
-            <AdminAction icon="document" label="Documents" onPress={onViewDocuments} styles={styles} c={c} />
+            <AdminButton label="Documents" icon="document" variant="secondary" size="sm" onPress={onViewDocuments} />
           ) : null}
           {showVerify && onApprove && onReject ? (
             <>
-              <AdminAction
-                icon="checkmark-circle"
+              <AdminButton
                 label={approving ? '…' : 'Confirmer'}
+                icon="checkmark-circle"
+                variant="primary"
+                size="sm"
                 onPress={onApprove}
-                primary
+                loading={approving}
                 disabled={approving}
-                styles={styles}
-                c={c}
               />
-              <AdminAction
-                icon="close"
+              <AdminButton
                 label="Rejeter"
+                icon="close"
+                variant="outline"
+                size="sm"
                 onPress={onReject}
                 disabled={approving}
-                styles={styles}
-                c={c}
               />
             </>
           ) : null}
           {onToggleActive ? (
-            <AdminAction
-              icon={user.is_active === false ? 'checkmark-circle' : 'warning'}
+            <AdminButton
               label={user.is_active === false ? t('admin.user.activate') : t('admin.user.deactivate')}
+              icon={user.is_active === false ? 'checkmark-circle' : 'warning'}
+              variant="secondary"
+              size="sm"
               onPress={onToggleActive}
-              styles={styles}
-              c={c}
             />
           ) : null}
           {onDelete ? (
-            <AdminAction icon="close" label="Supprimer" onPress={onDelete} danger styles={styles} c={c} />
+            <AdminButton label="Supprimer" icon="close" variant="danger" size="sm" onPress={onDelete} />
           ) : null}
         </View>
       </View>
     </View>
   );
 };
-
-type CardStyles = ReturnType<typeof createStyles>;
-
-const AdminAction: React.FC<{
-  icon: 'checkmark-circle' | 'close' | 'warning' | 'settings' | 'document';
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-  danger?: boolean;
-  disabled?: boolean;
-  styles: CardStyles;
-  c: AppColors;
-}> = ({ icon, label, onPress, primary, danger, disabled, styles, c }) => (
-  <PressableSpring
-    style={[
-      styles.actionBtn,
-      primary && styles.actionPrimary,
-      danger && styles.actionDanger,
-      disabled && styles.actionDisabled,
-    ]}
-    onPress={onPress}
-    scaleTo={0.96}
-    haptic={!disabled}
-    disabled={disabled}
-  >
-    <Icon
-      name={icon}
-      size={14}
-      color={primary || danger ? '#FFFFFF' : c.text}
-    />
-    <Text
-      style={[
-        styles.actionLabel,
-        (primary || danger) && styles.actionLabelLight,
-      ]}
-    >
-      {label}
-    </Text>
-  </PressableSpring>
-);
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({

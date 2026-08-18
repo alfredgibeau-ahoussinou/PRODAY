@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Pressable,
   ScrollView,
   StyleSheet,
   Alert,
@@ -13,6 +12,7 @@ import { AdminBetaProgramPanel } from '../../../components/admin/AdminBetaProgra
 import { AdminAuditLogPanel } from '../../../components/admin/AdminAuditLogPanel';
 import { AdminOpsDataPanel } from '../../../components/admin/AdminOpsDataPanel';
 import { AdminFocPersonnaliserScreen } from './AdminFocPersonnaliserScreen';
+import { AdminButton } from '../../../components/admin/AdminButton';
 import { ADMIN_FOC_SCREEN_TABS } from '../../../navigation/adminFocConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
 import { adminChrome } from '../../../theme/adminTheme';
@@ -116,6 +116,7 @@ export function AdminFocParametresScreen({
                 sub="Recharge les droits admin sans déconnexion"
                 onPress={() => void handleRefreshToken()}
                 disabled={busy}
+                loading={busy}
               />
               <View style={s.divider} />
               <SessionRow
@@ -175,24 +176,28 @@ function SessionRow({
   onPress,
   tone,
   disabled,
+  loading,
 }: {
   label: string;
   sub?: string;
   onPress: () => void;
   tone?: 'danger';
   disabled?: boolean;
+  loading?: boolean;
 }) {
   return (
-    <Pressable
-      style={({ pressed }) => [s.sessionRow, pressed && s.sessionRowPressed, disabled && { opacity: 0.5 }]}
-      onPress={onPress}
-      disabled={disabled}
-    >
-      <View style={s.sessionMain}>
-        <Text style={[s.sessionLabel, tone === 'danger' && { color: adminChrome.danger }]}>{label}</Text>
-        {sub ? <Text style={s.sessionSub} numberOfLines={1}>{sub}</Text> : null}
-      </View>
-    </Pressable>
+    <View style={s.sessionRowWrap}>
+      <AdminButton
+        label={label}
+        variant={tone === 'danger' ? 'danger' : 'secondary'}
+        size="sm"
+        onPress={onPress}
+        disabled={disabled}
+        loading={loading}
+        style={s.sessionBtn}
+      />
+      {sub ? <Text style={s.sessionSub} numberOfLines={1}>{sub}</Text> : null}
+    </View>
   );
 }
 
@@ -219,13 +224,11 @@ const s = StyleSheet.create({
     backgroundColor: adminChrome.shellBorder,
     marginLeft: spacing.md,
   },
-  sessionRow: {
+  sessionRowWrap: {
     paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    backgroundColor: adminChrome.shell,
+    paddingVertical: 10,
+    gap: 2,
   },
-  sessionRowPressed: { backgroundColor: adminChrome.rowHover },
-  sessionMain: { gap: 2 },
-  sessionLabel: { fontSize: 14, fontWeight: '600', color: adminChrome.text },
-  sessionSub: { fontSize: 12, color: adminChrome.textMuted },
+  sessionBtn: { alignSelf: 'flex-start' },
+  sessionSub: { fontSize: 12, color: adminChrome.textMuted, paddingHorizontal: spacing.sm },
 });

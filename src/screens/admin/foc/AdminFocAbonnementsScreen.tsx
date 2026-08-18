@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { PressableSpring } from '../../../components/motion';
+import { AdminButton } from '../../../components/admin/AdminButton';
 import { AdminDataRow } from '../../../components/admin/hq/AdminDataRow';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { useAuth } from '../../../context/AuthContext';
@@ -609,71 +610,64 @@ function SubscriptionInspector({
             ))}
           </View>
 
-          <PressableSpring
+          <AdminButton
+            label="Passer en payant"
+            variant="primary"
+            size="sm"
             onPress={() => onGrant(false)}
+            loading={busy}
             disabled={busy}
-            scaleTo={0.98}
-            haptic
-            style={[styles.actionPrimary, busy && styles.disabled]}
-          >
-            <Text style={styles.actionPrimaryText}>Passer en payant</Text>
-          </PressableSpring>
-          <PressableSpring
+          />
+          <AdminButton
+            label="Offrir un essai"
+            variant="secondary"
+            size="sm"
             onPress={() => onGrant(true)}
+            loading={busy}
             disabled={busy}
-            scaleTo={0.98}
-            haptic
-            style={[styles.action, busy && styles.disabled]}
-          >
-            <Text style={styles.actionText}>Offrir un essai</Text>
-          </PressableSpring>
+          />
           {active ? (
             <>
-              <PressableSpring
+              <AdminButton
+                label="Changer de formule"
+                variant="secondary"
+                size="sm"
                 onPress={onChangePlan}
+                loading={busy}
                 disabled={busy}
-                scaleTo={0.98}
-                haptic
-                style={[styles.action, busy && styles.disabled]}
-              >
-                <Text style={styles.actionText}>Changer de formule</Text>
-              </PressableSpring>
-              <PressableSpring
+              />
+              <AdminButton
+                label="Prolonger +7 jours"
+                variant="outline"
+                size="sm"
                 onPress={() => onExtend(7)}
+                loading={busy}
                 disabled={busy}
-                scaleTo={0.98}
-                haptic
-                style={[styles.action, busy && styles.disabled]}
-              >
-                <Text style={styles.actionText}>Prolonger +7 jours</Text>
-              </PressableSpring>
-              <PressableSpring
+              />
+              <AdminButton
+                label="Prolonger +30 jours"
+                variant="outline"
+                size="sm"
                 onPress={() => onExtend(30)}
+                loading={busy}
                 disabled={busy}
-                scaleTo={0.98}
-                haptic
-                style={[styles.action, busy && styles.disabled]}
-              >
-                <Text style={styles.actionText}>Prolonger +30 jours</Text>
-              </PressableSpring>
-              <PressableSpring
+              />
+              <AdminButton
+                label="Résilier (fin de période)"
+                variant="secondary"
+                size="sm"
                 onPress={onSoftCancel}
+                loading={busy}
                 disabled={busy}
-                scaleTo={0.98}
-                haptic
-                style={[styles.action, busy && styles.disabled]}
-              >
-                <Text style={styles.actionText}>Résilier (fin de période)</Text>
-              </PressableSpring>
-              <PressableSpring
+              />
+              <AdminButton
+                label="Passer en gratuit maintenant"
+                variant="danger"
+                size="sm"
                 onPress={onHardFree}
+                loading={busy}
                 disabled={busy}
-                scaleTo={0.98}
-                haptic
-                style={[styles.actionDanger, busy && styles.disabled]}
-              >
-                <Text style={styles.actionDangerText}>Passer en gratuit maintenant</Text>
-              </PressableSpring>
+              />
             </>
           ) : null}
         </>

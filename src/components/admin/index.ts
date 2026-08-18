@@ -9,3 +9,6 @@ export { AdminEmptyState } from './AdminEmptyState';
 export { AdminSearchField } from './AdminSearchField';
 export { AdminCreateUserPanel } from './AdminCreateUserPanel';
 export { AdminUserEditModal, AdminRejectModal } from './AdminUserModals';
+export { AdminButton, AdminActionRow } from './AdminButton';
+export type { AdminButtonVariant, AdminButtonSize, AdminButtonProps } from './AdminButton';
+export { AdminPendingDecisionsModal } from './AdminPendingDecisionsModal';

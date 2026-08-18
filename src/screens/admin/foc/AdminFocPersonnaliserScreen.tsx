@@ -20,6 +20,7 @@ import { DEFAULT_FOC_DASHBOARD_ORDER, type FocDashboardBlockId } from '../../../
 import { adminChrome, ADMIN_ON_ACCENT } from '../../../theme/adminTheme';
 import { spacing, radius } from '../../../theme/designTokens';
 import { Icon } from '../../../components/ui/Icon';
+import { AdminButton } from '../../../components/admin/AdminButton';
 
 const PRIMARY_PRESETS: { color: string; label: string }[] = [
   { color: '#006CFC', label: 'ProDay' },
@@ -236,49 +237,36 @@ export function AdminFocPersonnaliserScreen({ prefs, onChange, onSave }: Props) 
           <View key={blockId} style={styles.blockRow}>
             <Text style={styles.blockLabel}>{BLOCK_LABELS[blockId] ?? blockId}</Text>
             <View style={styles.blockActions}>
-              <Pressable
+              <AdminButton
+                variant="icon"
+                size="sm"
+                icon="chevron-up"
                 onPress={() => moveBlock(i, 'up')}
                 disabled={i === 0}
-                style={[styles.blockBtn, i === 0 && styles.blockBtnDisabled]}
                 accessibilityLabel="Monter"
-              >
-                <Icon name="chevron-up" size={14} color={i === 0 ? adminChrome.textMuted : adminChrome.text} />
-              </Pressable>
-              <Pressable
+              />
+              <AdminButton
+                variant="icon"
+                size="sm"
+                icon="chevron-down"
                 onPress={() => moveBlock(i, 'down')}
                 disabled={i === prefs.dashboardOrder.length - 1}
-                style={[
-                  styles.blockBtn,
-                  i === prefs.dashboardOrder.length - 1 && styles.blockBtnDisabled,
-                ]}
                 accessibilityLabel="Descendre"
-              >
-                <Icon
-                  name="chevron-down"
-                  size={14}
-                  color={
-                    i === prefs.dashboardOrder.length - 1
-                      ? adminChrome.textMuted
-                      : adminChrome.text
-                  }
-                />
-              </Pressable>
+              />
             </View>
           </View>
         ))}
       </Section>
 
       {/* Enregistrer */}
-      <Pressable
-        onPress={handleSave}
+      <AdminButton
+        label={saving ? 'Enregistrement…' : 'Enregistrer les préférences'}
+        variant="primary"
+        loading={saving}
         disabled={saving}
-        style={[styles.saveBtn, { backgroundColor: prefs.primaryColor }, saving && { opacity: 0.6 }]}
-        accessibilityRole="button"
-      >
-        <Text style={styles.saveBtnText}>
-          {saving ? 'Enregistrement…' : 'Enregistrer les préférences'}
-        </Text>
-      </Pressable>
+        onPress={handleSave}
+        style={{ marginTop: spacing.md }}
+      />
 
       <View style={{ height: spacing.xl * 2 }} />
     </ScrollView>

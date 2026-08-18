@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
-import { PressableSpring } from '../../components/motion';
-import { PLATFORM_ADMIN_EMAIL } from '../../config/admin';
 import { useAdminStyles, adminChrome, ADMIN_ON_ACCENT } from '../../components/admin/adminStyles';
+import { AdminButton } from '../../components/admin/AdminButton';
+import { PLATFORM_ADMIN_EMAIL } from '../../config/admin';
 import { spacing } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -49,15 +49,12 @@ export const AdminGateScreen: React.FC = () => {
               ? `Votre compte (${PLATFORM_ADMIN_EMAIL}) est reconnu, mais le jeton Firebase n’a pas encore le droit administrateur.\n\nExécutez npm run admin:setup, puis reconnectez-vous.`
               : `Connectez-vous avec le compte administrateur (${PLATFORM_ADMIN_EMAIL}).`}
           </Text>
-          <PressableSpring
-            style={styles.btn}
+          <AdminButton
+            label="Rafraîchir le jeton"
+            variant="primary"
             onPress={() => refreshAdminClaim()}
-            scaleTo={0.97}
-            haptic
             testID="admin-gate-refresh"
-          >
-            <Text style={styles.btnText}>Rafraîchir le jeton</Text>
-          </PressableSpring>
+          />
           {profile?.email ? (
             <Text style={styles.email}>Connecté : {profile.email}</Text>
           ) : null}

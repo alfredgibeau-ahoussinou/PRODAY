@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { PressableSpring } from '../../motion';
+import { AdminButton } from '../AdminButton';
 import { adminChrome, adminType } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 
@@ -20,9 +20,12 @@ export const AdminFocCard: React.FC<AdminFocCardProps> = ({ children, title, act
         <View style={styles.header}>
           {title ? <Text style={styles.title}>{title}</Text> : null}
           {action ? (
-            <PressableSpring onPress={action.onPress} scaleTo={0.95}>
-              <Text style={styles.actionLabel}>{action.label}</Text>
-            </PressableSpring>
+            <AdminButton
+              label={action.label}
+              variant="ghost"
+              size="sm"
+              onPress={action.onPress}
+            />
           ) : null}
         </View>
       ) : null}
@@ -67,12 +70,6 @@ function createStyles() {
       fontWeight: '800',
       color: adminChrome.text,
       letterSpacing: -0.3,
-    },
-    actionLabel: {
-      fontFamily: adminType.bodyBold,
-      fontSize: 12,
-      fontWeight: '700',
-      color: adminChrome.accent,
     },
   });
 }

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Modal,
   Pressable,
   StyleSheet,
@@ -10,9 +9,10 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AdminDataProvider, useAdminData } from '../context/AdminDataContext';
 import { AdminGlobalSearch } from '../components/admin/AdminGlobalSearch';
+import { AdminPendingDecisionsModal } from '../components/admin/AdminPendingDecisionsModal';
 import { AdminGateScreen } from '../screens/admin/AdminGateScreen';
 import { AdminFocSidebar } from '../components/admin/foc/AdminFocSidebar';
 import { AdminFocTopBar } from '../components/admin/foc/AdminFocTopBar';
@@ -33,6 +33,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   ADMIN_FOC_NAV,
   ADMIN_FOC_TABS,
+  isAdminFocSectionId,
   resolveAdminFocNavigation,
   type AdminFocSectionId,
 } from './adminFocConfig';
@@ -146,8 +147,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
   const { profile } = useAuth();
-  const { workQueue } = useAdminData();
-  const insets = useSafeAreaInsets();
+  const { workQueue, refresh } = useAdminData();
 
   /* ── Prefs ── */
   const [prefs, setPrefs] = useState<AdminFocPreferences>(DEFAULT_ADMIN_FOC_PREFS);
@@ -179,6 +179,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   /* ── Nav state ── */
   const [section, setSection] = useState<AdminFocSectionId>('dashboard');
   const [hubTab, setHubTab] = useState<string | undefined>();
+  const [screenTab, setScreenTab] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     DEFAULT_ADMIN_FOC_PREFS.sidebarCollapsed,
   );
@@ -193,6 +194,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     (newSection: AdminFocSectionId) => {
       setSection(newSection);
       setHubTab(undefined);
+      setScreenTab(undefined);
       if (!isDesktop) setMobileMenu(false);
     },
     [isDesktop],
@@ -202,7 +204,25 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     const resolved = resolveAdminFocNavigation(target);
     setSection(resolved.section);
     setHubTab(resolved.hubTab);
+    setScreenTab(resolved.screenTab);
   }, []);
+
+  const handleNavigateTarget = useCallback(
+    (target: { section: string; hubTab?: string; screenTab?: string }) => {
+      if (isAdminFocSectionId(target.section)) {
+        setSection(target.section);
+      } else {
+        const resolved = resolveAdminFocNavigation(target.section);
+        setSection(resolved.section);
+        setHubTab(target.hubTab ?? resolved.hubTab);
+        setScreenTab(target.screenTab ?? resolved.screenTab);
+        return;
+      }
+      setHubTab(target.hubTab);
+      setScreenTab(target.screenTab);
+    },
+    [],
+  );
 
   const handleHqNavigate = useCallback((route: AdminHqRoute) => {
     setSection(hqRouteToFocSection(route));
@@ -237,7 +257,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
       case 'dashboard':
         return <AdminFocDashboard onNavigateSection={handleNavigateSection} />;
       case 'personnes':
-        return <AdminFocAdherentsScreen />;
+        return <AdminFocAdherentsScreen initialTab={screenTab} />;
       case 'clubs':
         return <AdminFocClubsScreen />;
       case 'competition':
@@ -264,15 +284,19 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
               id: tab.id,
               label: tab.label,
               render: () => {
-                if (tab.id === 'recrutement') return <AdminFocRecrutementScreen />;
-                if (tab.id === 'communication') return <AdminFocCommunicationScreen />;
+                if (tab.id === 'recrutement') {
+                  return <AdminFocRecrutementScreen initialTab={screenTab} />;
+                }
+                if (tab.id === 'communication') {
+                  return <AdminFocCommunicationScreen initialTab={screenTab} />;
+                }
                 return <AdminFocVideoScreen />;
               },
             }))}
           />
         );
       case 'finances':
-        return <AdminFocFinancesScreen />;
+        return <AdminFocFinancesScreen initialTab={screenTab} />;
       case 'plateforme':
         return (
           <AdminFocSectionHub
@@ -300,6 +324,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   }, [
     section,
     hubTab,
+    screenTab,
     prefs,
     handleNavigateSection,
     handleSavePrefs,
@@ -392,44 +417,13 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
       )}
 
       {/* Notifications modal */}
-      <Modal
+      <AdminPendingDecisionsModal
         visible={notifOpen}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setNotifOpen(false)}
-      >
-        <View style={[notifStyles.root, { paddingTop: insets.top }]}>
-          <View style={notifStyles.header}>
-            <Text style={notifStyles.title}>Décisions en attente</Text>
-            <Pressable
-              onPress={() => setNotifOpen(false)}
-              style={notifStyles.closeBtn}
-              accessibilityLabel="Fermer"
-            >
-              <Text style={notifStyles.closeText}>Fermer</Text>
-            </Pressable>
-          </View>
-          <FlatList
-            data={workQueue}
-            keyExtractor={(_, i) => String(i)}
-            renderItem={({ item }) => (
-              <View style={notifStyles.item}>
-                <Text style={notifStyles.itemKind}>{item.kind ?? '—'}</Text>
-                <Text style={notifStyles.itemId} numberOfLines={1}>
-                  {item.entityId ?? item.id ?? '—'}
-                </Text>
-                <Text style={notifStyles.itemPriority}>{item.priority ?? ''}</Text>
-              </View>
-            )}
-            ListEmptyComponent={
-              <View style={notifStyles.empty}>
-                <Text style={notifStyles.emptyText}>Aucune décision en attente.</Text>
-              </View>
-            }
-            contentContainerStyle={notifStyles.list}
-          />
-        </View>
-      </Modal>
+        items={workQueue}
+        onClose={() => setNotifOpen(false)}
+        onNavigate={handleNavigateTarget}
+        onRefresh={refresh}
+      />
 
       {/* Global search */}
       <AdminGlobalSearch
@@ -475,64 +469,4 @@ const shellStyles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 16,
   },
-});
-
-const notifStyles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: adminChrome.shellElevated },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: adminChrome.shellBorder,
-    backgroundColor: adminChrome.shell,
-  },
-  title: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '800',
-    color: adminChrome.text,
-    letterSpacing: -0.3,
-  },
-  closeBtn: { paddingHorizontal: spacing.sm, paddingVertical: 4 },
-  closeText: {
-    fontSize: 15,
-    color: adminChrome.accent,
-    fontWeight: '700',
-  },
-  list: { padding: spacing.md, gap: spacing.sm },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.md,
-    backgroundColor: adminChrome.shell,
-    borderRadius: adminChrome.radius,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: adminChrome.shellBorder,
-  },
-  itemKind: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    color: adminChrome.accent,
-    textTransform: 'uppercase',
-    minWidth: 80,
-  },
-  itemId: {
-    flex: 1,
-    fontSize: 13,
-    color: adminChrome.text,
-    fontWeight: '600',
-  },
-  itemPriority: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: adminChrome.textMuted,
-    textTransform: 'uppercase',
-  },
-  empty: { padding: spacing.xl, alignItems: 'center' },
-  emptyText: { fontSize: 14, color: adminChrome.textMuted },
 });
