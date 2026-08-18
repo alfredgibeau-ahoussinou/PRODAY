@@ -93,12 +93,12 @@ describe('e2e. Navigation shell admin console', () => {
     }
   });
 
-  it('ADMIN_FOC_TABS.personnes contient le tab à valider', () => {
+  it('ADMIN_FOC_TABS.personnes contient les filtres primaires sans univers âge', () => {
     const tabs = ADMIN_FOC_TABS.personnes.map((t) => t.id);
-    expect(tabs).toContain('decisions');
-    expect(tabs).toEqual(
-      expect.arrayContaining(['all', 'player', 'youth', 'teen', 'adult', 'decisions']),
-    );
+    expect(tabs).toEqual(['all', 'decisions', 'player', 'coach', 'parent', 'club']);
+    expect(tabs).not.toContain('youth');
+    expect(tabs).not.toContain('teen');
+    expect(tabs).not.toContain('adult');
   });
 
   it('ADMIN_FOC_TABS.finances contient abonnements et paiements', () => {

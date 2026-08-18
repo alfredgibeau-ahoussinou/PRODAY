@@ -8,3 +8,5 @@ export type { MatchStatusTone } from './AdminFocMatchCard';
 export { AdminFocCard } from './AdminFocCard';
 export { AdminFocTabs, AdminFocPageHeader } from './AdminFocTabs';
 export { AdminFocSectionHub } from './AdminFocSectionHub';
+export { AdminPersonRow } from './AdminPersonRow';
+export { AdminPersonFiltersSheet } from './AdminPersonFiltersSheet';

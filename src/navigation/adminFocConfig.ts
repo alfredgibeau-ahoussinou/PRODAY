@@ -50,14 +50,11 @@ export const ADMIN_FOC_TABS: Record<
   dashboard: [{ id: 'overview', label: 'Vue d’ensemble' }],
   personnes: [
     { id: 'all', label: 'Tous' },
-    { id: 'player', label: 'Joueurs' },
-    { id: 'youth', label: 'Monde -13' },
-    { id: 'teen', label: '13–17' },
-    { id: 'adult', label: '18+' },
-    { id: 'parent', label: 'Parents' },
-    { id: 'coach', label: 'Coachs' },
-    { id: 'club', label: 'Dirigeants' },
     { id: 'decisions', label: 'À valider' },
+    { id: 'player', label: 'Joueurs' },
+    { id: 'coach', label: 'Coachs' },
+    { id: 'parent', label: 'Parents' },
+    { id: 'club', label: 'Dirigeants' },
   ],
   clubs: [
     { id: 'clubs', label: 'Clubs' },

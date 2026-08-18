@@ -15,16 +15,17 @@ import {
 } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { useAuth } from '../../../context/AuthContext';
-import { ADMIN_FOC_TABS } from '../../../navigation/adminFocConfig';
-import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
+import { AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
+import { AdminPersonRow } from '../../../components/admin/foc/AdminPersonRow';
+import { AdminPersonFiltersSheet } from '../../../components/admin/foc/AdminPersonFiltersSheet';
+import { AdminFilterChips } from '../../../components/admin/AdminFilterChips';
+import { AdminEmptyState } from '../../../components/admin/AdminEmptyState';
 import { AdminButton } from '../../../components/admin/AdminButton';
 import { AdminFocAccountEditor } from './AdminFocAccountEditor';
 import { Icon } from '../../../components/ui/Icon';
-import { adminChrome, adminType } from '../../../theme/adminTheme';
+import { adminChrome } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 import { getRoleLabel } from '../../signup/signupFlowConfig';
-import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
-import { isSubscriptionAccessActive } from '../../../utils/subscriptionLogic';
 import type { User, UserRole } from '../../../models/User';
 import type { ProductLineId } from '../../../models/ProductLine';
 import { adminService } from '../../../services/admin.service';
@@ -43,135 +44,22 @@ import {
   isValidPlayerBirthDate,
   toBirthDateIso,
 } from '../../../utils/joueurBirthAge';
-import type { JoueurAgeGroup } from '../../../utils/joueurExperienceTheme';
 import {
-  adminPlayerIdentityLine,
-  adminUniverseShortLabel,
-  resolveAdminPlayerAgeGroup,
   suggestAppSpaceForPlayer,
   type AdminEditableGender,
 } from '../../../utils/adminPlayerUniverse';
-
-const TABS = ADMIN_FOC_TABS.personnes;
-type TabId = (typeof TABS)[number]['id'];
-
-type AgeFilter = 'all' | JoueurAgeGroup;
-type GenderFilter = 'all' | AdminEditableGender;
-
-const AGE_FILTERS: { id: AgeFilter; label: string }[] = [
-  { id: 'all', label: 'Tous âges' },
-  { id: 'youth', label: 'Monde -13' },
-  { id: 'teen', label: '13–17' },
-  { id: 'adult', label: '18+' },
-];
-
-const GENDER_FILTERS: { id: GenderFilter; label: string }[] = [
-  { id: 'all', label: 'H / F' },
-  { id: 'men', label: 'Homme' },
-  { id: 'women', label: 'Femme' },
-];
-
-function filterUsers(
-  users: User[],
-  tab: TabId,
-  query: string,
-  ageFilter: AgeFilter,
-  genderFilter: GenderFilter,
-): User[] {
-  const q = query.trim().toLowerCase();
-  let list = users;
-  if (tab === 'player') list = list.filter((u) => u.role === 'player');
-  else if (tab === 'parent') list = list.filter((u) => u.role === 'parent');
-  else if (tab === 'coach') list = list.filter((u) => u.role === 'coach');
-  else if (tab === 'club') list = list.filter((u) => u.role === 'club');
-  else if (tab === 'youth') {
-    list = list.filter(
-      (u) => u.role === 'player' && resolveAdminPlayerAgeGroup(u) === 'youth',
-    );
-  } else if (tab === 'teen') {
-    list = list.filter(
-      (u) => u.role === 'player' && resolveAdminPlayerAgeGroup(u) === 'teen',
-    );
-  } else if (tab === 'adult') {
-    list = list.filter(
-      (u) => u.role === 'player' && resolveAdminPlayerAgeGroup(u) === 'adult',
-    );
-  } else if (tab === 'decisions') list = list.filter(userNeedsAdminVerificationReview);
-
-  if (ageFilter !== 'all') {
-    list = list.filter(
-      (u) => u.role === 'player' && resolveAdminPlayerAgeGroup(u) === ageFilter,
-    );
-  }
-  if (genderFilter !== 'all') {
-    list = list.filter((u) => u.profile?.gender === genderFilter);
-  }
-
-  if (q) {
-    list = list.filter((u) => {
-      const identity = adminPlayerIdentityLine(u)?.toLowerCase() ?? '';
-      return (
-        u.display_name?.toLowerCase().includes(q) ||
-        u.email?.toLowerCase().includes(q) ||
-        u.city?.toLowerCase().includes(q) ||
-        u.role?.toLowerCase().includes(q) ||
-        identity.includes(q)
-      );
-    });
-  }
-  return list;
-}
-
-function UserRow({ user, onPress }: { user: User; onPress: (u: User) => void }) {
-  const payant = isSubscriptionAccessActive(user);
-  const pending = userNeedsAdminVerificationReview(user);
-  const identity = adminPlayerIdentityLine(user);
-  const ageGroup = resolveAdminPlayerAgeGroup(user);
-
-  return (
-    <Pressable
-      onPress={() => onPress(user)}
-      style={({ pressed }) => [s.row, pressed && s.rowPressed]}
-      accessibilityRole="button"
-      accessibilityLabel={`Ouvrir ${user.display_name}`}
-    >
-      <View style={s.rowMain}>
-        <Text style={s.rowName} numberOfLines={1}>
-          {user.display_name || '—'}
-        </Text>
-        <Text style={s.rowSub} numberOfLines={1}>
-          {getRoleLabel(user.role)}
-          {user.city ? ` · ${user.city}` : ''}
-          {pending ? ' · À valider' : ''}
-        </Text>
-        {identity ? (
-          <Text style={s.rowIdentity} numberOfLines={1}>
-            {identity}
-          </Text>
-        ) : (
-          <Text style={s.rowEmail} numberOfLines={1}>
-            {user.email || '—'}
-          </Text>
-        )}
-      </View>
-      <View style={s.badges}>
-        {ageGroup ? (
-          <View style={[s.badge, s.badgeUniverse]}>
-            <Text style={[s.badgeText, s.badgeUniverseText]}>
-              {adminUniverseShortLabel(ageGroup)}
-            </Text>
-          </View>
-        ) : null}
-        <View style={[s.badge, payant ? s.badgePay : s.badgeFree]}>
-          <Text style={[s.badgeText, payant ? s.badgePayText : s.badgeFreeText]}>
-            {payant ? 'Payant' : 'Gratuit'}
-          </Text>
-        </View>
-      </View>
-      <Icon name="chevron-forward" size={14} color={adminChrome.textMuted} />
-    </Pressable>
-  );
-}
+import {
+  ADMIN_PERSON_PRIMARY_TABS,
+  adminPersonAdvancedFiltersActive,
+  adminPersonShowPlayerFilters,
+  countAdminPersonPending,
+  filterAdminPersons,
+  resolveAdminPersonInitialTab,
+  type AdminPersonAgeFilter,
+  type AdminPersonGenderFilter,
+  type AdminPersonSubscriptionFilter,
+  type AdminPersonTabId,
+} from '../../../utils/adminPersonFilters';
 
 type CreateForm = {
   email: string;
@@ -454,35 +342,85 @@ function CreateUserModal({
             </>
           ) : null}
 
-          <Pressable
-            style={[s.createBtn, busy && { opacity: 0.5 }]}
+          <AdminButton
+            label="Créer le compte"
+            variant="primary"
+            loading={busy}
             disabled={busy}
             onPress={() => void submit()}
-          >
-            {busy ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={s.createBtnText}>Créer le compte</Text>
-            )}
-          </Pressable>
+            style={s.createBtnWrap}
+          />
         </ScrollView>
       </View>
     </Modal>
   );
 }
 
+function emptyMessage(tab: AdminPersonTabId, query: string, filtersActive: boolean) {
+  if (query.trim()) {
+    return {
+      title: 'Aucun résultat',
+      subtitle: 'Essayez un autre nom, e-mail ou ville.',
+    };
+  }
+  if (tab === 'decisions') {
+    return {
+      title: 'Rien à valider',
+      subtitle: 'Tous les profils en attente ont été traités.',
+    };
+  }
+  if (filtersActive) {
+    return {
+      title: 'Aucun profil',
+      subtitle: 'Ajustez les filtres avancés pour élargir la liste.',
+    };
+  }
+  return {
+    title: 'Aucun profil',
+    subtitle: 'Créez un compte ou changez de filtre.',
+  };
+}
+
 export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } = {}) {
   const { users, refreshing, refresh } = useAdminData();
-  const [tab, setTab] = useState<TabId>('all');
+  const initial = useMemo(() => resolveAdminPersonInitialTab(initialTab), [initialTab]);
+  const [tab, setTab] = useState<AdminPersonTabId>(initial.tab);
   const [query, setQuery] = useState('');
-  const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
-  const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
+  const [ageFilter, setAgeFilter] = useState<AdminPersonAgeFilter>(initial.ageFilter);
+  const [genderFilter, setGenderFilter] = useState<AdminPersonGenderFilter>('all');
+  const [subscriptionFilter, setSubscriptionFilter] =
+    useState<AdminPersonSubscriptionFilter>('all');
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const pendingCount = useMemo(() => countAdminPersonPending(users), [users]);
+  const primaryTabs = useMemo(
+    () =>
+      ADMIN_PERSON_PRIMARY_TABS.map((t) =>
+        t.id === 'decisions' ? { ...t, count: pendingCount } : t,
+      ),
+    [pendingCount],
+  );
+
+  const filtersActive = adminPersonAdvancedFiltersActive(
+    ageFilter,
+    genderFilter,
+    subscriptionFilter,
+  );
+  const showPlayerFilters = adminPersonShowPlayerFilters(tab);
 
   const filtered = useMemo(
-    () => filterUsers(users, tab, query, ageFilter, genderFilter),
-    [users, tab, query, ageFilter, genderFilter],
+    () =>
+      filterAdminPersons(
+        users,
+        tab,
+        query,
+        ageFilter,
+        genderFilter,
+        subscriptionFilter,
+      ),
+    [users, tab, query, ageFilter, genderFilter, subscriptionFilter],
   );
   const selected = selectedUid ? users.find((u) => u.uid === selectedUid) ?? null : null;
 
@@ -490,10 +428,16 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
     void refresh();
   }, [refresh]);
 
+  const resetAdvancedFilters = useCallback(() => {
+    setAgeFilter('all');
+    setGenderFilter('all');
+    setSubscriptionFilter('all');
+  }, []);
+
   React.useEffect(() => {
-    if (initialTab && TABS.some((t) => t.id === initialTab)) {
-      setTab(initialTab as TabId);
-    }
+    const resolved = resolveAdminPersonInitialTab(initialTab);
+    setTab(resolved.tab);
+    setAgeFilter(resolved.ageFilter);
   }, [initialTab]);
 
   React.useEffect(() => {
@@ -512,11 +456,13 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
     );
   }
 
+  const empty = emptyMessage(tab, query, filtersActive);
+
   return (
     <View style={s.root}>
       <AdminFocPageHeader
-        title="Adhérents"
-        subtitle={`${filtered.length} profil${filtered.length !== 1 ? 's' : ''} · créer, filtrer, personnaliser`}
+        title="Personnes"
+        subtitle={`${filtered.length} profil${filtered.length !== 1 ? 's' : ''} · créer, filtrer, gérer`}
         right={
           <AdminButton
             label="Nouveau"
@@ -528,47 +474,54 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
           />
         }
       />
-      <AdminFocTabs tabs={TABS} value={tab} onChange={(id) => setTab(id as TabId)} />
 
-      <View style={s.filterRow}>
-        {AGE_FILTERS.map((f) => (
+      <View style={s.searchBlock}>
+        <View style={s.searchWrap}>
+          <Icon name="search" size={16} color={adminChrome.textMuted} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Nom, e-mail, ville, rôle…"
+            placeholderTextColor={adminChrome.textMuted}
+            style={s.search}
+            autoCapitalize="none"
+            clearButtonMode="while-editing"
+          />
           <Pressable
-            key={f.id}
-            onPress={() => setAgeFilter(f.id)}
-            style={[s.filterChip, ageFilter === f.id && s.filterChipOn]}
+            onPress={() => setFiltersOpen(true)}
+            style={[s.filterBtn, filtersActive && s.filterBtnActive]}
+            accessibilityLabel="Filtres avancés"
           >
-            <Text style={[s.filterChipText, ageFilter === f.id && s.filterChipTextOn]}>
-              {f.label}
-            </Text>
+            <Icon
+              name="tune"
+              size={18}
+              color={filtersActive ? '#FFF' : adminChrome.textMuted}
+            />
           </Pressable>
-        ))}
-      </View>
-      <View style={s.filterRow}>
-        {GENDER_FILTERS.map((f) => (
-          <Pressable
-            key={f.id}
-            onPress={() => setGenderFilter(f.id)}
-            style={[s.filterChip, genderFilter === f.id && s.filterChipOn]}
-          >
-            <Text style={[s.filterChipText, genderFilter === f.id && s.filterChipTextOn]}>
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
+        </View>
       </View>
 
-      <View style={s.searchWrap}>
-        <Icon name="search" size={16} color={adminChrome.textMuted} />
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Nom, e-mail, ville, univers…"
-          placeholderTextColor={adminChrome.textMuted}
-          style={s.search}
-          autoCapitalize="none"
-          clearButtonMode="while-editing"
+      <View style={s.chipsWrap}>
+        <AdminFilterChips
+          options={primaryTabs}
+          value={tab}
+          onChange={(id) => setTab(id)}
+          compact
         />
       </View>
+
+      {filtersActive ? (
+        <View style={s.refineBanner}>
+          <Pressable style={s.refinePress} onPress={() => setFiltersOpen(true)}>
+            <Text style={s.refineText} numberOfLines={1}>
+              Filtres actifs · Affiner
+            </Text>
+          </Pressable>
+          <Pressable onPress={resetAdvancedFilters} hitSlop={8} accessibilityLabel="Effacer les filtres">
+            <Icon name="close" size={14} color={adminChrome.accent} />
+          </Pressable>
+        </View>
+      ) : null}
 
       <FlatList
         data={filtered}
@@ -577,21 +530,28 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
           <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={adminChrome.accent} />
         }
         renderItem={({ item }) => (
-          <UserRow user={item} onPress={(u) => setSelectedUid(u.uid)} />
+          <AdminPersonRow user={item} onPress={(u) => setSelectedUid(u.uid)} />
         )}
         ItemSeparatorComponent={() => <View style={s.sep} />}
         ListEmptyComponent={
-          <View style={s.empty}>
-            <Icon name="people" size={32} color={adminChrome.textMuted} />
-            <Text style={s.emptyTitle}>Aucun adhérent</Text>
-            <Text style={s.emptySub}>
-              {tab === 'decisions'
-                ? 'Aucun profil en attente de validation.'
-                : 'Aucun profil ne correspond à ce filtre.'}
-            </Text>
+          <View style={s.emptyWrap}>
+            <AdminEmptyState icon="people" title={empty.title} subtitle={empty.subtitle} />
           </View>
         }
         contentContainerStyle={filtered.length === 0 ? s.emptyContainer : s.list}
+      />
+
+      <AdminPersonFiltersSheet
+        visible={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        showPlayerFilters={showPlayerFilters}
+        ageFilter={ageFilter}
+        genderFilter={genderFilter}
+        subscriptionFilter={subscriptionFilter}
+        onAgeChange={setAgeFilter}
+        onGenderChange={setGenderFilter}
+        onSubscriptionChange={setSubscriptionFilter}
+        onReset={resetAdvancedFilters}
       />
 
       <CreateUserModal
@@ -607,84 +567,70 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
 
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: adminChrome.band },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: adminChrome.accent,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: adminChrome.radiusSm,
-  },
-  addBtnText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  searchBlock: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
     backgroundColor: adminChrome.shell,
   },
-  filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: adminChrome.radiusSm,
-    backgroundColor: adminChrome.shellElevated,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: adminChrome.shellBorder,
-  },
-  filterChipOn: { backgroundColor: adminChrome.accent, borderColor: adminChrome.accent },
-  filterChipText: { fontSize: 11, fontWeight: '700', color: adminChrome.textMuted },
-  filterChipTextOn: { color: '#FFF' },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginHorizontal: spacing.md,
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: 11,
+    paddingVertical: 10,
     borderRadius: adminChrome.radius,
+    backgroundColor: adminChrome.shellElevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: adminChrome.shellBorder,
+  },
+  search: { flex: 1, fontSize: 15, color: adminChrome.text, padding: 0, fontWeight: '600' },
+  filterBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: adminChrome.radiusSm,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: adminChrome.shell,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: adminChrome.shellBorder,
   },
-  search: { flex: 1, fontSize: 14, color: adminChrome.text, padding: 0 },
-  list: { paddingBottom: spacing.xl },
-  row: {
+  filterBtnActive: {
+    backgroundColor: adminChrome.accent,
+    borderColor: adminChrome.accent,
+  },
+  chipsWrap: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+    backgroundColor: adminChrome.shell,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: adminChrome.shellBorder,
+  },
+  refineBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
     paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    backgroundColor: adminChrome.shell,
-  },
-  rowPressed: { backgroundColor: adminChrome.rowHover },
-  rowMain: { flex: 1, minWidth: 0, gap: 2 },
-  rowName: { fontSize: 15, fontWeight: '800', color: adminChrome.text, letterSpacing: -0.2 },
-  rowSub: { fontSize: 12, color: adminChrome.textMuted, fontWeight: '600' },
-  rowIdentity: { fontSize: 12, color: adminChrome.accent, fontWeight: '700' },
-  rowEmail: { fontSize: 12, color: adminChrome.textMuted },
-  badges: { alignItems: 'flex-end', gap: 4 },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 8,
     borderRadius: adminChrome.radiusSm,
+    backgroundColor: adminChrome.soft,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: adminChrome.accentMuted,
   },
-  badgePay: { backgroundColor: adminChrome.soft },
-  badgeFree: { backgroundColor: adminChrome.shellElevated },
-  badgeUniverse: { backgroundColor: adminChrome.pitchSoft },
-  badgeText: { fontSize: 10, fontWeight: '800' },
-  badgePayText: { color: adminChrome.accent },
-  badgeFreeText: { color: adminChrome.textMuted },
-  badgeUniverseText: { color: adminChrome.pitch },
+  refinePress: { flex: 1, minWidth: 0 },
+  refineText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
+    color: adminChrome.accent,
+  },
+  list: { paddingBottom: spacing.xl },
   sep: { height: StyleSheet.hairlineWidth, backgroundColor: adminChrome.shellBorder },
-  emptyContainer: { flexGrow: 1, justifyContent: 'center' },
-  empty: { alignItems: 'center', gap: spacing.sm, padding: spacing.xl },
-  emptyTitle: { fontSize: 16, fontWeight: '800', color: adminChrome.text },
-  emptySub: { fontSize: 13, color: adminChrome.textMuted, textAlign: 'center' },
+  emptyContainer: { flexGrow: 1, justifyContent: 'center', padding: spacing.md },
+  emptyWrap: { marginHorizontal: spacing.sm },
   modalRoot: { flex: 1, backgroundColor: adminChrome.band },
   modalHead: {
     flexDirection: 'row',
@@ -743,12 +689,5 @@ const s = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   switchLabel: { fontSize: 14, fontWeight: '600', color: adminChrome.text },
-  createBtn: {
-    marginTop: spacing.md,
-    backgroundColor: adminChrome.accent,
-    borderRadius: adminChrome.radius,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  createBtnText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
+  createBtnWrap: { marginTop: spacing.md },
 });
