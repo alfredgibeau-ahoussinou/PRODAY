@@ -7,3 +7,4 @@ export { AdminFocMatchCard } from './AdminFocMatchCard';
 export type { MatchStatusTone } from './AdminFocMatchCard';
 export { AdminFocCard } from './AdminFocCard';
 export { AdminFocTabs, AdminFocPageHeader } from './AdminFocTabs';
+export { AdminFocSectionHub } from './AdminFocSectionHub';

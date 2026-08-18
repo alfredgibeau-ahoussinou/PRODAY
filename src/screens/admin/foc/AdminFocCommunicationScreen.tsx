@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
-import { ADMIN_FOC_TABS } from '../../../navigation/adminFocConfig';
+import { ADMIN_FOC_SCREEN_TABS } from '../../../navigation/adminFocConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
 import { AdminMessagesPanel } from '../../../components/admin/AdminMessagesPanel';
 import { AdminPlatformFeedPanel } from '../../../components/admin/AdminPlatformFeedPanel';
@@ -23,7 +23,7 @@ import { recruitmentService } from '../../../services/recruitment.service';
 import type { AdminWorkItem } from '../../../utils/adminInsights';
 import type { ClubAnnouncement } from '../../../models/ClubAnnouncement';
 
-const TABS = ADMIN_FOC_TABS.communication;
+const TABS = ADMIN_FOC_SCREEN_TABS.communication;
 type TabId = (typeof TABS)[number]['id'];
 
 /* ─── Decision row ──────────────────────────────────────────────────── */

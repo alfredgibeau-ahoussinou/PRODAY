@@ -16,6 +16,7 @@ import { AdminGlobalSearch } from '../components/admin/AdminGlobalSearch';
 import { AdminGateScreen } from '../screens/admin/AdminGateScreen';
 import { AdminFocSidebar } from '../components/admin/foc/AdminFocSidebar';
 import { AdminFocTopBar } from '../components/admin/foc/AdminFocTopBar';
+import { AdminFocSectionHub } from '../components/admin/foc/AdminFocSectionHub';
 import { AdminFocDashboard } from '../screens/admin/foc/AdminFocDashboard';
 import { AdminFocMatchsScreen } from '../screens/admin/foc/AdminFocMatchsScreen';
 import { AdminFocVideoScreen } from '../screens/admin/foc/AdminFocVideoScreen';
@@ -31,6 +32,8 @@ import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useAuth } from '../context/AuthContext';
 import {
   ADMIN_FOC_NAV,
+  ADMIN_FOC_TABS,
+  resolveAdminFocNavigation,
   type AdminFocSectionId,
 } from './adminFocConfig';
 import { type AdminHqRoute } from './adminTabConfig';
@@ -53,31 +56,53 @@ interface AdminAppShellProps {
 
 function hqRouteToFocSection(route: AdminHqRoute): AdminFocSectionId {
   if (route.mode === 'pilotage') return 'dashboard';
-  if (route.mode === 'decisions') return 'communication';
+  if (route.mode === 'decisions') return 'operations';
   if (route.mode === 'abonnements') return 'finances';
+  if (route.mode === 'systeme') return 'plateforme';
+  if (route.mode === 'gestion') {
+    switch (route.atelier) {
+      case 'comptes': return 'personnes';
+      case 'clubs': return 'clubs';
+      case 'matchs': return 'competition';
+      case 'evenements':
+      case 'tournois': return 'competition';
+      case 'recrutement':
+      case 'candidatures':
+      case 'stages': return 'operations';
+      case 'paiements':
+      case 'devis':
+      case 'partenaires': return 'finances';
+      case 'publications':
+      case 'signalements':
+      case 'annonces':
+      case 'messages':
+      case 'fil': return 'operations';
+      default: return 'personnes';
+    }
+  }
+  return 'dashboard';
+}
+
+function hqRouteHubTab(route: AdminHqRoute): string | undefined {
+  if (route.mode === 'decisions') return 'communication';
   if (route.mode === 'systeme') return 'parametres';
   if (route.mode === 'gestion') {
     switch (route.atelier) {
-      case 'comptes': return 'adherents';
-      case 'clubs': return 'clubs';
       case 'matchs': return 'matchs';
       case 'evenements':
       case 'tournois': return 'competitions';
       case 'recrutement':
-      case 'candidatures': return 'recrutement';
-      case 'paiements':
-      case 'devis': return 'finances';
+      case 'candidatures':
+      case 'stages': return 'recrutement';
       case 'publications':
-      case 'signalements': return 'communication';
+      case 'signalements':
+      case 'fil':
       case 'annonces':
       case 'messages': return 'communication';
-      case 'stages': return 'recrutement';
-      case 'partenaires': return 'finances';
-      case 'fil': return 'communication';
-      default: return 'adherents';
+      default: return undefined;
     }
   }
-  return 'dashboard';
+  return undefined;
 }
 
 function sectionTitle(section: AdminFocSectionId): string {
@@ -153,6 +178,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
 
   /* ── Nav state ── */
   const [section, setSection] = useState<AdminFocSectionId>('dashboard');
+  const [hubTab, setHubTab] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     DEFAULT_ADMIN_FOC_PREFS.sidebarCollapsed,
   );
@@ -166,17 +192,21 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   const handleSelectSection = useCallback(
     (newSection: AdminFocSectionId) => {
       setSection(newSection);
+      setHubTab(undefined);
       if (!isDesktop) setMobileMenu(false);
     },
     [isDesktop],
   );
 
-  const handleNavigateSection = useCallback((newSection: string) => {
-    setSection(newSection as AdminFocSectionId);
+  const handleNavigateSection = useCallback((target: string) => {
+    const resolved = resolveAdminFocNavigation(target);
+    setSection(resolved.section);
+    setHubTab(resolved.hubTab);
   }, []);
 
   const handleHqNavigate = useCallback((route: AdminHqRoute) => {
     setSection(hqRouteToFocSection(route));
+    setHubTab(hqRouteHubTab(route));
     setSearchOpen(false);
   }, []);
 
@@ -195,8 +225,8 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   /* ── Sidebar badges ── */
   const sidebarBadges = useMemo<Partial<Record<AdminFocSectionId, number>>>(
     () => ({
-      communication: workQueue.length,
-      adherents: workQueue.filter((w) => w.kind === 'verification').length,
+      operations: workQueue.length,
+      personnes: workQueue.filter((w) => w.kind === 'verification').length,
     }),
     [workQueue],
   );
@@ -206,31 +236,62 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     switch (section) {
       case 'dashboard':
         return <AdminFocDashboard onNavigateSection={handleNavigateSection} />;
-      case 'adherents':
+      case 'personnes':
         return <AdminFocAdherentsScreen />;
       case 'clubs':
         return <AdminFocClubsScreen />;
-      case 'matchs':
-        return <AdminFocMatchsScreen />;
-      case 'competitions':
-        return <AdminFocCompetitionsScreen />;
-      case 'recrutement':
-        return <AdminFocRecrutementScreen />;
-      case 'performance':
-        return <AdminFocPerformanceScreen />;
-      case 'communication':
-        return <AdminFocCommunicationScreen />;
+      case 'competition':
+        return (
+          <AdminFocSectionHub
+            initialTab={hubTab}
+            tabs={ADMIN_FOC_TABS.competition.map((tab) => ({
+              id: tab.id,
+              label: tab.label,
+              render: () =>
+                tab.id === 'matchs' ? (
+                  <AdminFocMatchsScreen />
+                ) : (
+                  <AdminFocCompetitionsScreen />
+                ),
+            }))}
+          />
+        );
+      case 'operations':
+        return (
+          <AdminFocSectionHub
+            initialTab={hubTab}
+            tabs={ADMIN_FOC_TABS.operations.map((tab) => ({
+              id: tab.id,
+              label: tab.label,
+              render: () => {
+                if (tab.id === 'recrutement') return <AdminFocRecrutementScreen />;
+                if (tab.id === 'communication') return <AdminFocCommunicationScreen />;
+                return <AdminFocVideoScreen />;
+              },
+            }))}
+          />
+        );
       case 'finances':
         return <AdminFocFinancesScreen />;
-      case 'video':
-        return <AdminFocVideoScreen />;
-      case 'parametres':
+      case 'plateforme':
         return (
-          <AdminFocParametresScreen
-            prefs={prefs}
-            onChangePrefs={setPrefs}
-            onSavePrefs={handleSavePrefs}
-            onPreviewUserApp={onPreviewUserApp}
+          <AdminFocSectionHub
+            initialTab={hubTab}
+            tabs={ADMIN_FOC_TABS.plateforme.map((tab) => ({
+              id: tab.id,
+              label: tab.label,
+              render: () =>
+                tab.id === 'performance' ? (
+                  <AdminFocPerformanceScreen />
+                ) : (
+                  <AdminFocParametresScreen
+                    prefs={prefs}
+                    onChangePrefs={setPrefs}
+                    onSavePrefs={handleSavePrefs}
+                    onPreviewUserApp={onPreviewUserApp}
+                  />
+                ),
+            }))}
           />
         );
       default:
@@ -238,6 +299,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     }
   }, [
     section,
+    hubTab,
     prefs,
     handleNavigateSection,
     handleSavePrefs,

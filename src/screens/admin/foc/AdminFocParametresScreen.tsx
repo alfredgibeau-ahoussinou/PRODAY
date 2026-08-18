@@ -13,7 +13,7 @@ import { AdminBetaProgramPanel } from '../../../components/admin/AdminBetaProgra
 import { AdminAuditLogPanel } from '../../../components/admin/AdminAuditLogPanel';
 import { AdminOpsDataPanel } from '../../../components/admin/AdminOpsDataPanel';
 import { AdminFocPersonnaliserScreen } from './AdminFocPersonnaliserScreen';
-import { ADMIN_FOC_TABS } from '../../../navigation/adminFocConfig';
+import { ADMIN_FOC_SCREEN_TABS } from '../../../navigation/adminFocConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
 import { adminChrome } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
@@ -26,7 +26,7 @@ import {
   DEFAULT_ADMIN_FOC_PREFS,
 } from '../../../services/adminPreferences.service';
 
-const TABS = ADMIN_FOC_TABS.parametres;
+const TABS = ADMIN_FOC_SCREEN_TABS.parametres;
 type TabId = (typeof TABS)[number]['id'];
 
 type Props = {

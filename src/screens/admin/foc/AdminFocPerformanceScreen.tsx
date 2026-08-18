@@ -8,13 +8,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdminData } from '../../../context/AdminDataContext';
-import { ADMIN_FOC_TABS } from '../../../navigation/adminFocConfig';
+import { ADMIN_FOC_SCREEN_TABS } from '../../../navigation/adminFocConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
 import { AdminFocKpiCard } from '../../../components/admin/foc';
 import { adminChrome } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 
-const TABS = ADMIN_FOC_TABS.performance;
+const TABS = ADMIN_FOC_SCREEN_TABS.performance;
 type TabId = (typeof TABS)[number]['id'];
 
 /* ─── KPI Card mini ─────────────────────────────────────────────────── */

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
-import { ADMIN_FOC_TABS } from '../../../navigation/adminFocConfig';
+import { ADMIN_FOC_SCREEN_TABS } from '../../../navigation/adminFocConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
 import { Icon } from '../../../components/ui/Icon';
 import { adminChrome } from '../../../theme/adminTheme';
@@ -18,7 +18,7 @@ import { spacing, radius } from '../../../theme/designTokens';
 import type { TeamEvent } from '../../../models/TeamEvent';
 import type { AdminTournament } from '../../../services/admin.service';
 
-const TABS = ADMIN_FOC_TABS.competitions;
+const TABS = ADMIN_FOC_SCREEN_TABS.competitions;
 type TabId = (typeof TABS)[number]['id'];
 
 function formatDate(d: Date | null | undefined): string {

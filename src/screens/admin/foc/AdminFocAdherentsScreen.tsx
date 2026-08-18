@@ -51,7 +51,7 @@ import {
   type AdminEditableGender,
 } from '../../../utils/adminPlayerUniverse';
 
-const TABS = ADMIN_FOC_TABS.adherents;
+const TABS = ADMIN_FOC_TABS.personnes;
 type TabId = (typeof TABS)[number]['id'];
 
 type AgeFilter = 'all' | JoueurAgeGroup;

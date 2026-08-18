@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ADMIN_FOC_NAV,
   DEFAULT_FOC_DASHBOARD_ORDER,
+  migrateAdminFocSectionId,
   type AdminFocSectionId,
   type FocDashboardBlockId,
 } from '../navigation/adminFocConfig';
@@ -41,19 +42,27 @@ export async function loadAdminFocPreferences(uid: string): Promise<AdminFocPref
     if (!raw) return { ...DEFAULT_ADMIN_FOC_PREFS };
     const parsed = JSON.parse(raw) as Partial<AdminFocPreferences>;
     const validIds = new Set(ADMIN_FOC_NAV.map((n) => n.id));
-    const sectionOrder = (parsed.sectionOrder ?? DEFAULT_ADMIN_FOC_PREFS.sectionOrder).filter(
-      (id): id is AdminFocSectionId => validIds.has(id as AdminFocSectionId),
+    const migrate = (id: string): AdminFocSectionId | null => {
+      const next = migrateAdminFocSectionId(id);
+      return validIds.has(next) ? next : null;
+    };
+    const sectionOrder = (parsed.sectionOrder ?? DEFAULT_ADMIN_FOC_PREFS.sectionOrder)
+      .map((id) => migrate(String(id)))
+      .filter((id): id is AdminFocSectionId => id != null);
+    const dedupedOrder = sectionOrder.filter(
+      (id, index) => sectionOrder.indexOf(id) === index,
     );
     return {
       ...DEFAULT_ADMIN_FOC_PREFS,
       ...parsed,
-      sectionOrder: sectionOrder.length ? sectionOrder : DEFAULT_ADMIN_FOC_PREFS.sectionOrder,
+      sectionOrder: dedupedOrder.length ? dedupedOrder : DEFAULT_ADMIN_FOC_PREFS.sectionOrder,
       dashboardOrder: parsed.dashboardOrder?.length
         ? parsed.dashboardOrder
         : DEFAULT_ADMIN_FOC_PREFS.dashboardOrder,
-      hiddenSections: (parsed.hiddenSections ?? []).filter((id) =>
-        validIds.has(id as AdminFocSectionId),
-      ) as AdminFocSectionId[],
+      hiddenSections: (parsed.hiddenSections ?? [])
+        .map((id) => migrate(String(id)))
+        .filter((id): id is AdminFocSectionId => id != null)
+        .filter((id, index, arr) => arr.indexOf(id) === index),
     };
   } catch {
     return { ...DEFAULT_ADMIN_FOC_PREFS };

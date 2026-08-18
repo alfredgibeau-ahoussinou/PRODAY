@@ -29,12 +29,12 @@ const QUICK_JUMPS: {
   label: string;
   icon: 'home' | 'mail' | 'people' | 'football' | 'bag' | 'settings';
 }[] = [
-  { section: 'dashboard', label: 'Tableau de bord', icon: 'home' },
-  { section: 'adherents', label: 'Adhérents', icon: 'people' },
-  { section: 'matchs', label: 'Matchs', icon: 'football' },
-  { section: 'communication', label: 'Communication', icon: 'mail' },
+  { section: 'dashboard', label: 'Accueil', icon: 'home' },
+  { section: 'personnes', label: 'Personnes', icon: 'people' },
+  { section: 'competition', label: 'Compétition', icon: 'football' },
+  { section: 'operations', label: 'Opérations', icon: 'mail' },
   { section: 'finances', label: 'Finances', icon: 'bag' },
-  { section: 'parametres', label: 'Paramètres', icon: 'settings' },
+  { section: 'plateforme', label: 'Plateforme', icon: 'settings' },
 ];
 
 export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
@@ -64,11 +64,11 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
     else {
       const map: Partial<Record<AdminFocSectionId, AdminHqRoute>> = {
         dashboard: { mode: 'pilotage' },
-        adherents: { mode: 'gestion', atelier: 'comptes' },
-        matchs: { mode: 'gestion', atelier: 'matchs' },
-        communication: { mode: 'decisions' },
+        personnes: { mode: 'gestion', atelier: 'comptes' },
+        competition: { mode: 'gestion', atelier: 'matchs' },
+        operations: { mode: 'decisions' },
         finances: { mode: 'abonnements' },
-        parametres: { mode: 'systeme' },
+        plateforme: { mode: 'systeme' },
       };
       onNavigate(map[section] ?? { mode: 'pilotage' });
     }
