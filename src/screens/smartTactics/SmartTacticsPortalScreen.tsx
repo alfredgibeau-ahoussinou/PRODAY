@@ -163,7 +163,7 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
     const body = loading ? (
       <SmartTacticsPlayerHomeLoading accent={playerColors.accent} />
     ) : (
-      <SmartTacticsPlayerHome {...chapterProps} />
+      <SmartTacticsPlayerHome {...chapterProps} embedded={!onBack} />
     );
 
     if (onBack) {

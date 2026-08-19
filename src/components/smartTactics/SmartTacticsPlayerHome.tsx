@@ -26,7 +26,10 @@ import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { JoueurArcadeShell } from '../../features/joueur/JoueurGameFx';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
-import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
+import {
+  PLAYER_FAB_CONTENT_INSET,
+  TAB_BAR_CONTENT_INSET,
+} from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 
 function pickNextMatch(events: SmartTacticsChapterProps['events']) {
@@ -45,6 +48,11 @@ function pickNextMatch(events: SmartTacticsChapterProps['events']) {
  * Smart Tactics joueur — hub premium (briefing / XI / match).
  * Pas de compose coach, pas de « tactics run » arcade.
  */
+type SmartTacticsPlayerHomeProps = SmartTacticsChapterProps & {
+  /** Dans un shell parent (Saison) — pas de JoueurArcadeShell ni header dupliqué. */
+  embedded?: boolean;
+};
+
 export function SmartTacticsPlayerHome({
   profile,
   events,
@@ -52,7 +60,8 @@ export function SmartTacticsPlayerHome({
   wellnessByUid,
   refreshing,
   onRefresh,
-}: SmartTacticsChapterProps) {
+  embedded = false,
+}: SmartTacticsPlayerHomeProps) {
   const session = useJoueurSession();
   const joueurTheme = useJoueurTheme();
   const playerColors = usePlayerThemeColors();
@@ -105,31 +114,34 @@ export function SmartTacticsPlayerHome({
 
   const inLineup = Boolean(next?.lineup?.slots.some((s) => s.uid === profile.uid));
 
-  return (
-    <JoueurArcadeShell identity={identity} liveLabel="TACTIQUE" bootSound={false}>
-      <ScrollView
-        style={styles.root}
-        contentContainerStyle={styles.pad}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={Boolean(refreshing)}
-            onRefresh={onRefresh}
-            tintColor={accent}
-          />
-        }
-      >
-        <ProDayText variant="caption" style={[styles.kicker, { color: accent }]}>
-          {identity.hudLabel}
-        </ProDayText>
-        <ProDayText variant="title" style={styles.title}>
-          Tactique
-        </ProDayText>
-        <ProDayText variant="caption" style={styles.support}>
-          Briefing coach · XI publié · Coach IA pour progresser tactiquement.
-        </ProDayText>
+  const scroll = (
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={[styles.pad, embedded ? styles.padEmbedded : styles.padStandalone]}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={Boolean(refreshing)}
+          onRefresh={onRefresh}
+          tintColor={accent}
+        />
+      }
+    >
+      {!embedded ? (
+        <>
+          <ProDayText variant="caption" style={[styles.kicker, { color: accent }]}>
+            {identity.hudLabel}
+          </ProDayText>
+          <ProDayText variant="title" style={styles.title}>
+            Tactique
+          </ProDayText>
+          <ProDayText variant="caption" style={styles.support}>
+            Briefing coach · XI publié · Coach IA pour progresser tactiquement.
+          </ProDayText>
+        </>
+      ) : null}
 
-        <PressableSpring
+      <PressableSpring
           onPress={() => {
             joueurGamePress();
             nav.openDashboard('tactics_coach');
@@ -393,7 +405,16 @@ export function SmartTacticsPlayerHome({
             </ProDayText>
           </PressableSpring>
         </View>
-      </ScrollView>
+    </ScrollView>
+  );
+
+  if (embedded) {
+    return scroll;
+  }
+
+  return (
+    <JoueurArcadeShell identity={identity} liveLabel="TACTIQUE" bootSound={false}>
+      {scroll}
     </JoueurArcadeShell>
   );
 }
@@ -409,10 +430,17 @@ export function SmartTacticsPlayerHomeLoading({ accent }: { accent: string }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   pad: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xl + 10,
+    paddingHorizontal: spacing.lg,
+    paddingLeft: spacing.lg + 4,
+    paddingRight: PLAYER_FAB_CONTENT_INSET,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
     gap: spacing.md,
+  },
+  padEmbedded: {
+    paddingTop: spacing.sm,
+  },
+  padStandalone: {
+    paddingTop: spacing.xl + 10,
   },
   loader: {
     flex: 1,
@@ -429,13 +457,15 @@ const styles = StyleSheet.create({
     color: PLAYER_DARK.text,
     fontWeight: '700',
     fontSize: 34,
-    letterSpacing: -1,
+    letterSpacing: -0.3,
     marginTop: -4,
+    flexShrink: 1,
   },
   support: {
     color: PLAYER_DARK.textMuted,
     lineHeight: 20,
     marginTop: -8,
+    flexShrink: 1,
   },
   hero: {
     borderWidth: 1,
@@ -457,7 +487,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     letterSpacing: -0.5,
   },
-  heroBody: { color: PLAYER_DARK.textMuted, lineHeight: 18 },
+  heroBody: { color: PLAYER_DARK.textMuted, lineHeight: 20, flexShrink: 1 },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -502,7 +532,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 26,
   },
-  empty: { color: PLAYER_DARK.textMuted, lineHeight: 18 },
+  empty: { color: PLAYER_DARK.textMuted, lineHeight: 20, flexShrink: 1 },
   briefList: { gap: 10 },
   briefRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   briefDot: {
@@ -515,7 +545,7 @@ const styles = StyleSheet.create({
     color: PLAYER_DARK.text,
     fontWeight: '700',
   },
-  briefBody: { color: PLAYER_DARK.textMuted, lineHeight: 17 },
+  briefBody: { color: PLAYER_DARK.textMuted, lineHeight: 20, flexShrink: 1 },
   chipRow: { gap: 8, paddingTop: 4 },
   chip: {
     paddingHorizontal: 12,
