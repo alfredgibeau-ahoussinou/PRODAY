@@ -1,27 +1,37 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { Icon } from '../ui/Icon';
 import { PressableSpring, AnimatedEntrance } from '../motion';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
-import { CARPOOL_SITE } from '../../content/carpoolSite';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 import { CarpoolSpaceBackground } from './CarpoolSpaceBackground';
 
 interface CarpoolGuestPromptProps {
   onLogin: () => void;
   onSignup: () => void;
+  joueurShell?: boolean;
 }
 
-export const CarpoolGuestPrompt: React.FC<CarpoolGuestPromptProps> = ({ onLogin, onSignup }) => {
+export const CarpoolGuestPrompt: React.FC<CarpoolGuestPromptProps> = ({
+  onLogin,
+  onSignup,
+  joueurShell = false,
+}) => {
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(), []);
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
 
   return (
     <View style={styles.wrap}>
-      <CarpoolSpaceBackground />
+      {joueurShell ? null : <CarpoolSpaceBackground />}
       <AnimatedEntrance kind="fadeUp" style={styles.content}>
         <View style={styles.brandOrb}>
-          <Icon name="car" size={28} color={CARPOOL_SITE.asphalt} variant="filled" />
+          <Icon name="car" size={28} color={palette.onSignal} variant="filled" />
         </View>
         <Text style={styles.kicker}>{t('carpool.caption').toUpperCase()}</Text>
         <Text style={styles.title}>{t('carpool.guest.title')}</Text>
@@ -37,11 +47,11 @@ export const CarpoolGuestPrompt: React.FC<CarpoolGuestPromptProps> = ({ onLogin,
   );
 };
 
-function createStyles() {
+function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     wrap: {
       flex: 1,
-      backgroundColor: CARPOOL_SITE.sky,
+      backgroundColor: palette.bg,
     },
     content: {
       flex: 1,
@@ -57,21 +67,19 @@ function createStyles() {
       borderRadius: 32,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
       marginBottom: spacing.sm,
     },
     kicker: {
-      fontFamily: CARPOOL_SITE.display,
       fontSize: 11,
       letterSpacing: 2.4,
-      color: CARPOOL_SITE.signalDeep,
+      color: palette.signalDeep,
       fontWeight: '800',
     },
     title: {
-      fontFamily: CARPOOL_SITE.display,
       fontSize: 34,
       lineHeight: 38,
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       fontWeight: '800',
       letterSpacing: -0.6,
       maxWidth: 320,
@@ -79,7 +87,7 @@ function createStyles() {
     body: {
       fontSize: 15,
       lineHeight: 22,
-      color: CARPOOL_SITE.inkMuted,
+      color: palette.inkMuted,
       maxWidth: 320,
       marginBottom: spacing.md,
     },
@@ -88,31 +96,30 @@ function createStyles() {
       justifyContent: 'center',
       paddingHorizontal: spacing.xl,
       paddingVertical: 16,
-      backgroundColor: CARPOOL_SITE.asphalt,
+      backgroundColor: palette.signal,
       borderRadius: 999,
       alignSelf: 'flex-start',
       minWidth: 220,
     },
     primaryText: {
-      fontFamily: CARPOOL_SITE.display,
       fontWeight: '800',
-      color: '#fff',
+      color: palette.onSignal,
       fontSize: 15,
     },
     secondary: {
       paddingHorizontal: spacing.xl,
       paddingVertical: 14,
       borderWidth: 1.5,
-      borderColor: CARPOOL_SITE.fog,
+      borderColor: palette.fog,
       borderRadius: 999,
       alignSelf: 'flex-start',
       minWidth: 220,
       alignItems: 'center',
-      backgroundColor: CARPOOL_SITE.surface,
+      backgroundColor: palette.surface,
     },
     secondaryText: {
       fontWeight: '800',
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       fontSize: 14,
     },
   });

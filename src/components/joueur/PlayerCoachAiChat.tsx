@@ -77,6 +77,9 @@ function navigateTab(nav: ReturnType<typeof useTabNavigationActions>, tab: Playe
     case 'train_ai':
       nav.openDashboard('train_ai');
       break;
+    case 'train_coach':
+      nav.openDashboard('train_coach');
+      break;
     default:
       break;
   }

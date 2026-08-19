@@ -117,6 +117,14 @@ export function buildJoueurPlusMenuItems({
       action: { kind: 'dashboard', view: 'train_ai' },
       visible: true,
     },
+    {
+      id: 'coach_humain',
+      label: 'Coach humain',
+      subtitle: 'Réserver un coach réel',
+      icon: 'football',
+      action: { kind: 'dashboard', view: 'train_coach' },
+      visible: true,
+    },
   ];
 
   return items.filter((item) => item.visible !== false);

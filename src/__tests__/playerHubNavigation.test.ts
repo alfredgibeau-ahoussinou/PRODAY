@@ -67,5 +67,13 @@ describe('player hub navigation', () => {
     it('mémorise Accueil → Messages', () => {
       expect(resolveAutoReturnTab('home', 'messages', PLAYER_DOCK)).toBe('home');
     });
+
+    it('respecte returnTo explicite depuis Feed vers Home (overlay train)', () => {
+      expect(resolveAutoReturnTab('feed', 'home', PLAYER_DOCK, 'feed')).toBe('feed');
+    });
+
+    it('respecte returnTo explicite depuis Profil vers Home (overlay train)', () => {
+      expect(resolveAutoReturnTab('profil', 'home', PLAYER_DOCK, 'profil')).toBe('profil');
+    });
   });
 });

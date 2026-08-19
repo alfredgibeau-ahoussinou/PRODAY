@@ -524,6 +524,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
       }
       flat={hidePoleHero}
       hideHeader={embeddedInShell}
+      hideWorldScene={isJoueur}
       atmosphere={hidePoleHero ? undefined : 'dynamic_competitive'}
     >
       <JoueurMatchSkinProvider enabled={isJoueur}>

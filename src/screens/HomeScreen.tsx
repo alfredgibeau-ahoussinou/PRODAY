@@ -38,6 +38,7 @@ type HomeOverlay =
   | 'smart_tactics'
   | 'train'
   | 'train_ai'
+  | 'train_coach'
   | 'tactics_coach'
   | null;
 
@@ -51,7 +52,7 @@ export const HomeScreen: React.FC = () => {
   const { productLine } = useAppTheme();
   const { count: unreadMessages } = useUnreadMessageCount();
   const { refresh } = useDashboardData(profile);
-  const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
+  const { pendingDashboardView, clearPendingDashboard, goBackTab, returnTab } = useTabNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [overlay, setOverlay] = useState<HomeOverlay>(null);
   const joueurSession = useJoueurSession();
@@ -70,12 +71,21 @@ export const HomeScreen: React.FC = () => {
     else if (pendingDashboardView === 'smart_tactics') setOverlay('smart_tactics');
     else if (pendingDashboardView === 'train') setOverlay('train');
     else if (pendingDashboardView === 'train_ai') setOverlay('train_ai');
+    else if (pendingDashboardView === 'train_coach') setOverlay('train_coach');
     else if (pendingDashboardView === 'tactics_coach') setOverlay('tactics_coach');
     else if (pendingDashboardView === 'sponsors') {
       setOverlay(profile.role === 'sponsor' ? 'partner-hub' : 'sponsors');
     }
     clearPendingDashboard();
   }, [pendingDashboardView, clearPendingDashboard, profile]);
+
+  const closeDashboardOverlay = useCallback(() => {
+    setOverlay(null);
+    if (returnTab) goBackTab();
+  }, [goBackTab, returnTab]);
+
+  const trainInitialView =
+    overlay === 'train_ai' ? 'ai' : overlay === 'train_coach' ? 'coach' : 'hub';
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -175,18 +185,18 @@ export const HomeScreen: React.FC = () => {
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai'}>
-            {overlay === 'train' || overlay === 'train_ai' ? (
+          <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach'}>
+            {overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach' ? (
               <TrainHubScreen
-                onBack={() => setOverlay(null)}
-                initialView={overlay === 'train_ai' ? 'ai' : 'hub'}
+                onBack={closeDashboardOverlay}
+                initialView={trainInitialView}
               />
             ) : null}
           </PushScreenTransition>
 
           <PushScreenTransition active={overlay === 'tactics_coach'}>
             {overlay === 'tactics_coach' ? (
-              <JoueurTacticsCoachScreen onBack={() => setOverlay(null)} />
+              <JoueurTacticsCoachScreen onBack={closeDashboardOverlay} />
             ) : null}
           </PushScreenTransition>
 

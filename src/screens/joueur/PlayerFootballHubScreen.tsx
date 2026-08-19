@@ -34,14 +34,14 @@ import { useJoueurProgress } from '../../context/JoueurProgressContext';
 import { PlayerShieldCard } from '../../components/joueur/PlayerShieldCard';
 import { userToProDayCard } from '../../utils/prodayFutCard';
 
-type HubOverlay = 'train' | 'train_ai' | 'tactics_coach' | null;
+type HubOverlay = 'train' | 'train_ai' | 'train_coach' | 'tactics_coach' | null;
 
 /** Accueil Football Hub — données réelles, pas de stats inventées. */
 export function PlayerFootballHubScreen() {
   const profile = useSessionProfile();
   const session = useJoueurSession();
   const nav = useTabNavigationActions();
-  const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
+  const { pendingDashboardView, clearPendingDashboard, goBackTab, returnTab } = useTabNavigation();
   const hub = usePlayerHubData(profile);
   const [refreshing, setRefreshing] = useState(false);
   const [overlay, setOverlay] = useState<HubOverlay>(null);
@@ -50,6 +50,7 @@ export function PlayerFootballHubScreen() {
     if (!pendingDashboardView || !profile) return;
     if (pendingDashboardView === 'train') setOverlay('train');
     else if (pendingDashboardView === 'train_ai') setOverlay('train_ai');
+    else if (pendingDashboardView === 'train_coach') setOverlay('train_coach');
     else if (pendingDashboardView === 'tactics_coach') setOverlay('tactics_coach');
     clearPendingDashboard();
   }, [pendingDashboardView, clearPendingDashboard, profile]);
@@ -93,6 +94,14 @@ export function PlayerFootballHubScreen() {
     () => getJoueurDailyQuests(ageGroup === 'youth' ? 'youth' : ageGroup === 'teen' ? 'teen' : 'adult')[0],
     [ageGroup],
   );
+
+  const closeDashboardOverlay = useCallback(() => {
+    setOverlay(null);
+    if (returnTab) goBackTab();
+  }, [goBackTab, returnTab]);
+
+  const trainInitialView =
+    overlay === 'train_ai' ? 'ai' : overlay === 'train_coach' ? 'coach' : 'hub';
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -225,18 +234,18 @@ export function PlayerFootballHubScreen() {
         </ScrollView>
       </JoueurScreenChrome>
 
-      <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai'}>
-        {overlay === 'train' || overlay === 'train_ai' ? (
+      <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach'}>
+        {overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach' ? (
           <TrainHubScreen
-            onBack={() => setOverlay(null)}
-            initialView={overlay === 'train_ai' ? 'ai' : 'hub'}
+            onBack={closeDashboardOverlay}
+            initialView={trainInitialView}
           />
         ) : null}
       </PushScreenTransition>
 
       <PushScreenTransition active={overlay === 'tactics_coach'}>
         {overlay === 'tactics_coach' ? (
-          <JoueurTacticsCoachScreen onBack={() => setOverlay(null)} />
+          <JoueurTacticsCoachScreen onBack={closeDashboardOverlay} />
         ) : null}
       </PushScreenTransition>
     </>

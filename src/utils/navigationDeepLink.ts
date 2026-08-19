@@ -18,6 +18,7 @@ export type DashboardDeepLink =
   | 'smart_tactics'
   | 'train'
   | 'train_ai'
+  | 'train_coach'
   | 'tactics_coach';
 export type MatchsDeepLink = {
   eventId?: string;

@@ -10,10 +10,11 @@ import { CarpoolUiProvider } from '../components/carpool/CarpoolUiContext';
 import { CarpoolEventDetailScreen } from '../components/carpool/CarpoolEventDetailScreen';
 import { CarpoolGuestPrompt } from '../components/carpool/CarpoolGuestPrompt';
 import { PushScreenTransition } from '../components/motion';
+import { TabScreenShell } from '../components/app/TabScreenShell';
 import { useJoueurSession } from '../context/JoueurSessionContext';
-import { JOUEUR_SITE } from '../content/joueurPageIdentity';
 import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
 import { useCoachTokens } from '../features/coach/shell/CoachThemeContext';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 
 export const CarpoolScreen: React.FC = () => {
   const { profile } = useAuth();
@@ -22,7 +23,7 @@ export const CarpoolScreen: React.FC = () => {
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const coachShell = Boolean(useCoachShellNav());
   const coachTokens = useCoachTokens();
-  const screenBg = coachShell ? coachTokens.bg : joueurLive ? JOUEUR_SITE.bg : '#E8F4F8';
+  const screenBg = coachShell ? coachTokens.bg : joueurLive ? PLAYER_DARK.bg : undefined;
   const { pendingCarpoolLink, clearPendingCarpool, openAuth } = useTabNavigation();
   const clubId = profile?.profile.club_id;
   const { events, loading, refresh } = useTeamEvents(profile?.uid, clubId);
@@ -47,39 +48,38 @@ export const CarpoolScreen: React.FC = () => {
     clearPendingCarpool();
   }, [pendingCarpoolLink, clearPendingCarpool]);
 
-  if (!profile) {
-    return (
-      <CarpoolUiProvider coachShell={coachShell} joueurShell={joueurLive && !coachShell}>
-        <View style={{ flex: 1, backgroundColor: screenBg }}>
+  const joueurShell = joueurLive && !coachShell;
+
+  const inner = (
+    <CarpoolUiProvider coachShell={coachShell} joueurShell={joueurShell}>
+      <View style={{ flex: 1, backgroundColor: screenBg }}>
+        {!profile ? (
           <CarpoolGuestPrompt
             onLogin={() => openAuth('login')}
             onSignup={() => openAuth('signup')}
+            joueurShell={joueurShell}
           />
-        </View>
-      </CarpoolUiProvider>
-    );
-  }
-
-  return (
-    <CarpoolUiProvider coachShell={coachShell} joueurShell={joueurLive && !coachShell}>
-      <View style={{ flex: 1, backgroundColor: screenBg }}>
-        <CarpoolHomeScreen
-          profile={profile}
-          events={events}
-          standaloneOffers={standaloneOffers}
-          standaloneAllOffers={standaloneAllOffers}
-          standaloneLoading={standaloneLoading}
-          loading={loading || standaloneLoading}
-          initialChapter={initialChapter}
-          onOpenEvent={setSelectedEventId}
-          onRefresh={refreshAll}
-          onLoginRequired={() => openAuth('login')}
-        />
+        ) : (
+          <CarpoolHomeScreen
+            profile={profile}
+            events={events}
+            standaloneOffers={standaloneOffers}
+            standaloneAllOffers={standaloneAllOffers}
+            standaloneLoading={standaloneLoading}
+            loading={loading || standaloneLoading}
+            initialChapter={initialChapter}
+            onOpenEvent={setSelectedEventId}
+            onRefresh={refreshAll}
+            onLoginRequired={() => openAuth('login')}
+            hideHero={joueurShell}
+            joueurShell={joueurShell}
+          />
+        )}
         <PushScreenTransition active={selectedEventId != null}>
           {selectedEventId ? (
             <CarpoolEventDetailScreen
               eventId={selectedEventId}
-              profile={profile}
+              profile={profile!}
               onBack={() => {
                 setSelectedEventId(null);
                 void refreshAll();
@@ -90,4 +90,20 @@ export const CarpoolScreen: React.FC = () => {
       </View>
     </CarpoolUiProvider>
   );
+
+  if (joueurShell) {
+    return (
+      <TabScreenShell
+        caption="Covoiturage"
+        title="Trajets"
+        subtitle="Match & entraînement — propose ou réserve une place."
+        flat
+        hideWorldScene
+      >
+        {inner}
+      </TabScreenShell>
+    );
+  }
+
+  return inner;
 };

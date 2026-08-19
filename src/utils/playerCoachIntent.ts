@@ -15,7 +15,8 @@ export type PlayerNavigateTab =
   | 'profil'
   | 'plus'
   | 'messages'
-  | 'train_ai';
+  | 'train_ai'
+  | 'train_coach';
 
 export type PlayerCoachLateDelay = 'under_10' | 'over_10' | 'unknown';
 
@@ -52,6 +53,8 @@ export function resolveNavigationIntent(text: string): PlayerNavigateTab | null 
   if (n === 'mes matchs' || n === 'matchs') return 'matchs';
   if (n === 'ma progression' || n === 'progression') return 'feed';
   if (n === 'mon profil' || n === 'profil') return 'profil';
+  if (n === 'coach humain' || n.includes('coach humain') || n.includes('coach reel')) return 'train_coach';
+  if (n.includes('reserver un coach') || n.includes('reserver coach')) return 'train_coach';
   return null;
 }
 

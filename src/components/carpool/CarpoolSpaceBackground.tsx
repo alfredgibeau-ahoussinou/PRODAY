@@ -8,13 +8,14 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { CARPOOL_SITE } from '../../content/carpoolSite';
+import { useCarpoolUi } from './CarpoolUiContext';
 
 /**
- * Fond immersif animé — route qui défile, lueur cyan, ciel clair.
+ * Fond immersif animé — route qui défile, lueur accent, fond sombre joueur.
  */
 export function CarpoolSpaceBackground() {
-  const styles = useMemo(() => createStyles(), []);
+  const palette = useCarpoolUi();
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const travel = useSharedValue(0);
 
   useEffect(() => {
@@ -32,14 +33,14 @@ export function CarpoolSpaceBackground() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
       <LinearGradient
-        colors={CARPOOL_SITE.wash}
+        colors={[palette.bg, palette.surfaceMuted, palette.bg]}
         locations={[0, 0.4, 1]}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
       <LinearGradient
-        colors={CARPOOL_SITE.horizon}
+        colors={['rgba(0,0,0,0)', `${palette.signal}2E`, 'rgba(0,0,0,0)']}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={styles.horizon}
@@ -54,7 +55,7 @@ export function CarpoolSpaceBackground() {
         <View style={styles.edgeRight} />
       </View>
       <LinearGradient
-        colors={['rgba(232,244,248,0)', 'rgba(244,250,252,0.75)', '#F4FAFC']}
+        colors={['rgba(0,0,0,0)', `${palette.bg}CC`, palette.bg]}
         locations={[0, 0.55, 1]}
         style={styles.bottomFade}
       />
@@ -62,7 +63,7 @@ export function CarpoolSpaceBackground() {
   );
 }
 
-function createStyles() {
+function createStyles(palette: ReturnType<typeof useCarpoolUi>) {
   return StyleSheet.create({
     horizon: {
       position: 'absolute',
@@ -85,7 +86,7 @@ function createStyles() {
       top: 0,
       bottom: 0,
       width: 3,
-      backgroundColor: CARPOOL_SITE.signalMuted,
+      backgroundColor: palette.lane,
       borderRadius: 2,
     },
     edgeRight: {
@@ -94,32 +95,30 @@ function createStyles() {
       top: 0,
       bottom: 0,
       width: 3,
-      backgroundColor: CARPOOL_SITE.signalMuted,
+      backgroundColor: palette.lane,
       borderRadius: 2,
     },
     dashes: {
       position: 'absolute',
       left: '50%',
       marginLeft: -2,
-      top: -60,
-      bottom: -60,
-      width: 4,
-      justifyContent: 'space-between',
+      top: -56,
+      gap: 18,
       alignItems: 'center',
     },
     dash: {
       width: 4,
-      height: 28,
+      height: 22,
       borderRadius: 2,
-      backgroundColor: CARPOOL_SITE.signal,
-      opacity: 0.55,
+      backgroundColor: palette.signal,
+      opacity: 0.45,
     },
     bottomFade: {
       position: 'absolute',
       left: 0,
       right: 0,
       bottom: 0,
-      height: '48%',
+      height: '28%',
     },
   });
 }

@@ -52,9 +52,10 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
   const playerTheme = usePlayerThemeColors();
   const { t } = useTranslation();
   const chapters = useMemo(() => getMatchChapters(t), [t]);
+  const chipAccent = gameMode ? playerTheme.accent : colors.accent;
   const styles = useMemo(
-    () => createStyles(colors.accent, gameMode, coachSkin, coachTokens, playerTheme),
-    [colors.accent, gameMode, coachSkin, coachTokens, playerTheme],
+    () => createStyles(chipAccent, gameMode, coachSkin, coachTokens, playerTheme),
+    [chipAccent, gameMode, coachSkin, coachTokens, playerTheme],
   );
 
   return (
@@ -104,7 +105,7 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
                   styles.badge,
                   {
                     backgroundColor:
-                      ch.id === 'centre' ? MATCH_SITE.live : on ? colors.accent : MATCH_SITE.elevated,
+                      ch.id === 'centre' ? MATCH_SITE.live : on ? chipAccent : MATCH_SITE.elevated,
                   },
                 ]}
               >
@@ -113,7 +114,7 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
                 </ProDayText>
               </View>
             ) : null}
-            {on && !coachSkin ? <View style={[styles.underline, { backgroundColor: colors.accent }]} /> : null}
+            {on && !coachSkin ? <View style={[styles.underline, { backgroundColor: chipAccent }]} /> : null}
           </PressableSpring>
         );
       })}

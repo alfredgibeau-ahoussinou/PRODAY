@@ -32,9 +32,14 @@ describe('joueurPlusMenu', () => {
         'progression',
         'settings',
         'coach_ia',
+        'coach_humain',
       ]),
     );
     expect(ids).not.toContain('famille');
+
+    const coachHumain = items.find((i) => i.id === 'coach_humain');
+    expect(coachHumain?.label).toBe('Coach humain');
+    expect(coachHumain?.action).toEqual({ kind: 'dashboard', view: 'train_coach' });
 
     const messages = items.find((i) => i.id === 'messages');
     expect(messages?.badge).toBe(3);

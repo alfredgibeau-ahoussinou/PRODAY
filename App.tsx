@@ -572,9 +572,10 @@ function AppShell() {
               return;
             }
             setPendingDashboardView(view);
+            const preserveOrigin = activeTab !== 'home';
             handleTabPress(
               'home',
-              activeTab === 'plus' ? { returnTo: 'plus' } : undefined,
+              preserveOrigin ? { returnTo: activeTab } : undefined,
             );
           },
           clearPendingDashboard: () => setPendingDashboardView(null),

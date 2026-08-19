@@ -1,6 +1,8 @@
 import { CARPOOL_SITE } from '../content/carpoolSite';
 import { JOUEUR_CARPOOL } from '../theme/joueurDesignSystem';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import type { CoachThemeTokens } from './coachTeamTheme';
+import type { ResolvedPlayerThemeColors } from './resolvePlayerThemeColors';
 
 export type CarpoolUiPalette = {
   bg: string;
@@ -48,6 +50,24 @@ export function carpoolPaletteFromJoueur(): CarpoolUiPalette {
     lane: JOUEUR_CARPOOL.lane,
     fog: JOUEUR_CARPOOL.fog,
     onSignal: JOUEUR_CARPOOL.asphalt,
+  };
+}
+
+/** Palette covoiturage joueur — accent dynamique (thème utilisateur). */
+export function carpoolPaletteFromPlayerTheme(colors: ResolvedPlayerThemeColors): CarpoolUiPalette {
+  return {
+    bg: colors.bg,
+    surface: colors.surface,
+    surfaceMuted: colors.surfaceRaised,
+    ink: PLAYER_DARK.text,
+    inkMuted: PLAYER_DARK.textMuted,
+    inkDim: PLAYER_DARK.textDim,
+    signal: colors.accent,
+    signalSoft: colors.accentSoft,
+    signalDeep: colors.accentAlt,
+    lane: PLAYER_DARK.border,
+    fog: PLAYER_DARK.border,
+    onSignal: PLAYER_DARK.bg,
   };
 }
 

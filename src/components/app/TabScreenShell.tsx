@@ -31,6 +31,8 @@ export type TabScreenShellProps = {
   hideHeader?: boolean;
   atmosphere?: ImmersivePitchMood;
   joueurUniverse?: boolean;
+  /** Masque la scène 2.5D décorative dans le header joueur (ex. onglet Matchs). */
+  hideWorldScene?: boolean;
   children: React.ReactNode;
 };
 
@@ -47,6 +49,7 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
   hideHeader = false,
   atmosphere,
   joueurUniverse,
+  hideWorldScene = false,
   children,
 }) => {
   const session = useJoueurSession();
@@ -96,13 +99,15 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
                         </ProDayText>
                       ) : null}
                     </View>
-                    <View style={{ width: 88 }}>
-                      <JoueurWorldScene
-                        identity={identity}
-                        compact
-                        height={56}
-                        showBanner={false}
-                      />
+                    <View style={{ width: hideWorldScene ? 0 : 88, overflow: 'hidden' }}>
+                      {hideWorldScene ? null : (
+                        <JoueurWorldScene
+                          identity={identity}
+                          compact
+                          height={56}
+                          showBanner={false}
+                        />
+                      )}
                     </View>
                   </View>
                   {stats && stats.length > 0 ? (

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -153,6 +153,15 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
   const screenRootStyle = joueurLive ? { backgroundColor: PLAYER_DARK.bg } : rootStyle;
 
   const [view, setView] = useState<TrainHubView>(initialView);
+  const enteredDirectRef = useRef(initialView !== 'hub');
+
+  const exitSubView = () => {
+    if (enteredDirectRef.current && view === initialView) {
+      onBack();
+      return;
+    }
+    setView('hub');
+  };
   const [modeFilter, setModeFilter] = useState<HomeExerciseMode | undefined>();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<HomeExercise | null>(null);
@@ -318,7 +327,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
             if (aiResult) {
               setAiResult(null);
             } else {
-              setView('hub');
+              exitSubView();
             }
           }}
         />
@@ -631,7 +640,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
           title={bookingCoach ? 'Réserver' : 'Coach humain'}
           onBack={() => {
             if (bookingCoach) setBookingCoach(null);
-            else setView('hub');
+            else exitSubView();
           }}
         />
         <ScrollView contentContainerStyle={styles.pad}>

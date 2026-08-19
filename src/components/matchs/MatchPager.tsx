@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
   useWindowDimensions,
+  type LayoutChangeEvent,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from 'react-native';
@@ -15,6 +16,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { PagerPage } from '../motion/PagerPage';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing } from '../../theme/designTokens';
+import { useMatchSkinTokens } from './matchCenterUi';
 
 export interface MatchPage {
   id: MatchChapterId;
@@ -29,6 +31,7 @@ interface MatchPagerProps {
   convocationsBadge?: number;
   centreBadge?: number | string;
   gameMode?: boolean;
+  coachSkin?: boolean;
 }
 
 export const MatchPager: React.FC<MatchPagerProps> = ({
@@ -39,10 +42,14 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   convocationsBadge,
   centreBadge,
   gameMode = false,
+  coachSkin = false,
 }) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors.accent), [colors.accent]);
+  const skin = useMatchSkinTokens();
+  const accent = gameMode && skin.joueurSkin ? skin.accent : colors.accent;
+  const styles = useMemo(() => createStyles(accent, skin), [accent, skin]);
   const { width: pageWidth } = useWindowDimensions();
+  const [pagerHeight, setPagerHeight] = useState(0);
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
   const suppressChapterSyncRef = useRef(false);
@@ -50,6 +57,12 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   pagesRef.current = pages;
   const activeChapterRef = useRef(activeChapter);
   activeChapterRef.current = activeChapter;
+
+  const onPagerLayout = useCallback((e: LayoutChangeEvent) => {
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (h <= 0) return;
+    setPagerHeight((prev) => (prev !== h ? h : prev));
+  }, []);
 
   const goToIndex = useCallback(
     (index: number, animated = true) => {
@@ -136,6 +149,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         convocationsBadge={convocationsBadge}
         centreBadge={centreBadge}
         gameMode={gameMode}
+        coachSkin={coachSkin}
       />
 
       <Animated.ScrollView
@@ -149,12 +163,22 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         scrollEventThrottle={16}
         decelerationRate="fast"
         style={styles.pager}
+        onLayout={onPagerLayout}
+        contentContainerStyle={
+          pagerHeight > 0 ? { height: pagerHeight } : undefined
+        }
         nestedScrollEnabled
         directionalLockEnabled
         keyboardShouldPersistTaps="handled"
       >
         {pages.map((page, index) => (
-          <PagerPage key={page.id} index={index} scrollX={scrollX} pageWidth={pageWidth}>
+          <PagerPage
+            key={page.id}
+            index={index}
+            scrollX={scrollX}
+            pageWidth={pageWidth}
+            pageHeight={pagerHeight}
+          >
             {page.render()}
           </PagerPage>
         ))}
@@ -180,7 +204,9 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   );
 };
 
-function createStyles(_accent: string) {
+function createStyles(accent: string, skin: ReturnType<typeof useMatchSkinTokens>) {
+  const border = skin.joueurSkin ? skin.border : MATCH_SITE.border;
+  const muted = skin.joueurSkin ? skin.muted : MATCH_SITE.muted;
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
     pager: { flex: 1, minHeight: 0 },
@@ -191,13 +217,13 @@ function createStyles(_accent: string) {
       marginHorizontal: spacing.lg,
       marginBottom: spacing.xs,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: MATCH_SITE.border,
+      borderTopColor: border,
     },
     dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
     hint: {
       fontSize: 10,
       fontWeight: '600',
-      color: MATCH_SITE.muted,
+      color: muted,
       letterSpacing: 0.4,
     },
   });

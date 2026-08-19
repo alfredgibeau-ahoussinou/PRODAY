@@ -10,6 +10,7 @@ import { spacing } from '../../theme/designTokens';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { useJoueurPageIdentity } from '../player/joueurPortalUi';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 
 const CoachMatchSkinContext = createContext(false);
 const JoueurMatchSkinContext = createContext(false);
@@ -68,6 +69,7 @@ export function useMatchSkinTokens(): MatchSkinTokens {
   const joueurSkin = useJoueurMatchSkin();
   const coachTokens = useCoachTokens();
   const identity = useJoueurPageIdentity();
+  const playerTheme = usePlayerThemeColors();
 
   return useMemo(() => {
     if (coachSkin) {
@@ -88,8 +90,8 @@ export function useMatchSkinTokens(): MatchSkinTokens {
     }
     if (joueurSkin) {
       return {
-        accent: PLAYER_DARK.accent,
-        soft: PLAYER_DARK.accentSoft,
+        accent: playerTheme.accent,
+        soft: playerTheme.accentSoft,
         live: JOUEUR_SITE.live,
         warn: JOUEUR_SITE.warn,
         border: PLAYER_DARK.border,
@@ -116,7 +118,7 @@ export function useMatchSkinTokens(): MatchSkinTokens {
       joueurSkin: false,
       coachSkin: false,
     };
-  }, [coachSkin, joueurSkin, coachTokens, identity, colors.accent]);
+  }, [coachSkin, joueurSkin, coachTokens, identity, colors.accent, playerTheme]);
 }
 
 type SiteTokens = Pick<CoachThemeTokens, 'surface' | 'border' | 'foreground' | 'muted'>;
