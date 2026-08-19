@@ -17,7 +17,13 @@ import {
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore';
-import type { User, UserRole, VerificationStatus, PlayerVerificationCheckId } from '../models/User';
+import type {
+  User,
+  UserRole,
+  VerificationStatus,
+  PlayerVerificationCheckId,
+  PlayerVerificationState,
+} from '../models/User';
 import { computePlayerVerificationStatus } from '../models/User';
 import { applyAdminPlayerVerificationDecision } from '../utils/adminUserVerification';
 import type { ProductLineId } from '../models/ProductLine';
@@ -516,12 +522,16 @@ export const adminService = {
     );
   },
 
-  /** Mise à jour directe Firestore (règles admin) — fonctionne sans Cloud Functions déployées */
+  /** Mise à jour directe Firestore (règles admin) — source de vérité, sans claim `admin`. */
   async validateProfileDirect(
     uid: string,
     action: 'approve' | 'reject',
     rejectionReason?: string
-  ): Promise<void> {
+  ): Promise<{
+    verification_status: VerificationStatus;
+    is_verified: boolean;
+    player_verification?: PlayerVerificationState;
+  }> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
@@ -545,37 +555,43 @@ export const adminService = {
       update.product_line = 'sponsor';
     }
 
-    if (role === 'player' && data.player_verification) {
+    if (role === 'player') {
       const pvPatch = applyAdminPlayerVerificationDecision(
         data.player_verification as Parameters<typeof applyAdminPlayerVerificationDecision>[0],
         action,
         rejectionReason,
       );
-      if (pvPatch) {
-        Object.assign(update, pvPatch);
-      }
+      Object.assign(update, pvPatch);
     }
 
     await updateDoc(doc(database, 'users', uid), update);
+    return {
+      verification_status: (update.verification_status as VerificationStatus) ?? (verified ? 'VERIFIED' : 'REJECTED'),
+      is_verified: verified,
+      player_verification: update.player_verification as PlayerVerificationState | undefined,
+    };
   },
 
   /**
-   * Approuver / rejeter un compte — callable (push FCM) ou repli Firestore.
+   * Approuver / rejeter un compte — Firestore d’abord (source de vérité),
+   * puis callable pour FCM (permission-denied / unavailable ignorés).
    */
   async validateProfile(
     uid: string,
     action: 'approve' | 'reject',
     rejectionReason?: string
-  ): Promise<{ via: 'callable' | 'firestore' }> {
+  ): Promise<{
+    via: 'callable' | 'firestore';
+    verification_status: VerificationStatus;
+    is_verified: boolean;
+    player_verification?: PlayerVerificationState;
+  }> {
+    const written = await this.validateProfileDirect(uid, action, rejectionReason);
     try {
       await callFunction('validateProfile', { uid, action, rejectionReason });
-      return { via: 'callable' };
-    } catch (e) {
-      if (!isFunctionsUnavailable(e)) {
-        throw new Error(getCallableErrorMessage(e));
-      }
-      await this.validateProfileDirect(uid, action, rejectionReason);
-      return { via: 'firestore' };
+      return { via: 'callable', ...written };
+    } catch {
+      return { via: 'firestore', ...written };
     }
   },
 

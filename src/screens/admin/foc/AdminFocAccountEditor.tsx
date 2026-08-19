@@ -45,7 +45,11 @@ import { adminChrome } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 import { Icon } from '../../../components/ui/Icon';
 import { BirthDateFields } from '../../../components/player/BirthDateFields';
-import { userNeedsAdminVerificationReview, adminEffectiveVerificationLabel } from '../../../utils/adminUserVerification';
+import {
+  userNeedsAdminVerificationReview,
+  adminEffectiveVerificationLabel,
+  applyAdminPlayerVerificationDecision,
+} from '../../../utils/adminUserVerification';
 import { AdminButton } from '../../../components/admin/AdminButton';
 import {
   JOUEUR_UNIVERSE_LABELS,
@@ -132,6 +136,11 @@ type Props = {
 export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
   const { profile, firebaseUser } = useAuth();
   const styles = useMemo(() => createStyles(), []);
+  const [localPatch, setLocalPatch] = useState<Partial<User> | null>(null);
+  const viewUser = useMemo(
+    () => (localPatch ? { ...user, ...localPatch } : user),
+    [user, localPatch],
+  );
 
   const [tab, setTab] = useState<EditorTab>(
     userNeedsAdminVerificationReview(user) ? 'docs' : 'profil',
@@ -170,13 +179,27 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
   const [parentOfDraft, setParentOfDraft] = useState<string[]>([]);
 
   useEffect(() => {
+    setLocalPatch(null);
     setTab(userNeedsAdminVerificationReview(user) ? 'docs' : 'profil');
+  }, [user.uid]);
+
+  useEffect(() => {
+    if (!localPatch) return;
+    if (
+      user.verification_status === localPatch.verification_status &&
+      user.is_verified === localPatch.is_verified
+    ) {
+      setLocalPatch(null);
+    }
+  }, [user, localPatch]);
+
+  useEffect(() => {
     setDisplayName(user.display_name ?? '');
     setCity(user.city ?? '');
     setJobTitle(user.profile?.job_title ?? '');
     setRole(user.role);
     setProductLine(getUserProductLine(user));
-    setVerificationStatus(user.verification_status ?? 'NOT_REQUIRED');
+    setVerificationStatus(viewUser.verification_status ?? user.verification_status ?? 'NOT_REQUIRED');
     setSponsorApproved(user.sponsor_approved === true);
     setSponsorTier(user.sponsor_tier ?? null);
     setPlayerLevel(user.player_level ?? 'amateur');
@@ -201,10 +224,10 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
     const current = user.subscription_plan_id as SubscriptionPlanId | undefined;
     setPickedPlan(current && SUBSCRIPTION_PLANS[current] ? current : def);
     setGrantMonths(1);
-  }, [user]);
+  }, [user, viewUser.verification_status]);
 
-  const needsReview = userNeedsAdminVerificationReview(user);
-  const effectiveVerifyLabel = adminEffectiveVerificationLabel(user);
+  const needsReview = userNeedsAdminVerificationReview(viewUser);
+  const effectiveVerifyLabel = adminEffectiveVerificationLabel(viewUser);
 
   useEffect(() => {
     let cancelled = false;
@@ -327,7 +350,21 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
         : 'Profil refusé après revue documents');
     setBusy(true);
     try {
-      await adminService.validateProfile(user.uid, action, rejectionReason);
+      const result = await adminService.validateProfile(user.uid, action, rejectionReason);
+      const pvPatch =
+        user.role === 'player'
+          ? applyAdminPlayerVerificationDecision(
+              user.player_verification,
+              action,
+              rejectionReason,
+            )
+          : null;
+      setLocalPatch({
+        is_verified: result.is_verified,
+        verification_status: result.verification_status,
+        player_verification: result.player_verification ?? pvPatch?.player_verification,
+      });
+      setVerificationStatus(result.verification_status);
       await adminAuditService.log({
         action: 'user_updated',
         actor_uid: profile?.uid ?? '',
@@ -340,11 +377,16 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
       Alert.alert(
         action === 'approve' ? 'Compte validé' : 'Compte refusé',
         action === 'approve'
-          ? 'Le compte a été validé avec succès.'
+          ? 'Le compte est maintenant vérifié. La revue manuelle n’est plus requise.'
           : 'Le compte a été refusé.',
       );
     } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible');
+      Alert.alert(
+        'Validation impossible',
+        e instanceof Error && e.message.trim()
+          ? e.message
+          : 'L’écriture Firestore a échoué. Réessayez.',
+      );
     } finally {
       setBusy(false);
     }
@@ -1239,13 +1281,19 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                 Documents d’onboarding. L’IA analyse à l’upload ; tu peux ouvrir le fichier puis
                 valider ou refuser le compte.
               </Text>
-              <View style={styles.verifyBanner}>
+              <View style={[styles.verifyBanner, !needsReview && styles.verifyBannerOk]}>
                 <Text style={styles.verifyBannerTitle}>
                   Statut compte · {effectiveVerifyLabel}
                 </Text>
                 {needsReview ? (
                   <Text style={styles.verifyBannerSub}>Revue manuelle recommandée</Text>
-                ) : null}
+                ) : viewUser.verification_status === 'REJECTED' ? (
+                  <Text style={styles.verifyBannerSub}>Compte refusé</Text>
+                ) : viewUser.is_verified || viewUser.verification_status === 'VERIFIED' ? (
+                  <Text style={styles.verifyBannerOkText}>Compte validé</Text>
+                ) : (
+                  <Text style={styles.verifyBannerHint}>Aucune revue en attente</Text>
+                )}
               </View>
 
               <AdminButton
@@ -1575,8 +1623,14 @@ function createStyles() {
       borderColor: adminChrome.shellBorder,
       gap: 4,
     },
+    verifyBannerOk: {
+      borderColor: adminChrome.accent,
+      backgroundColor: adminChrome.soft,
+    },
     verifyBannerTitle: { fontSize: 14, fontWeight: '800', color: adminChrome.text },
     verifyBannerSub: { fontSize: 12, color: adminChrome.warning, fontWeight: '600' },
+    verifyBannerOkText: { fontSize: 12, color: adminChrome.accent, fontWeight: '700' },
+    verifyBannerHint: { fontSize: 12, color: adminChrome.textMuted, fontWeight: '600' },
     docCard: {
       padding: spacing.md,
       borderRadius: adminChrome.radius,

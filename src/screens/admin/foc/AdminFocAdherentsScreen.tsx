@@ -381,6 +381,15 @@ function emptyMessage(tab: AdminPersonTabId, query: string, filtersActive: boole
   };
 }
 
+function findAdherentByUid(users: User[], uid: string | null): User | null {
+  if (!uid) return null;
+  return (
+    users.find((u) => u.uid === uid) ??
+    users.find((u) => String((u as { id?: string }).id ?? '') === uid) ??
+    null
+  );
+}
+
 export function AdminFocAdherentsScreen({
   initialTab,
   initialUserId,
@@ -394,6 +403,7 @@ export function AdminFocAdherentsScreen({
   const [subscriptionFilter, setSubscriptionFilter] =
     useState<AdminPersonSubscriptionFilter>('all');
   const [selectedUid, setSelectedUid] = useState<string | null>(initialUserId ?? null);
+  const [selectedOverride, setSelectedOverride] = useState<User | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -425,11 +435,28 @@ export function AdminFocAdherentsScreen({
       ),
     [users, tab, query, ageFilter, genderFilter, subscriptionFilter],
   );
-  const selected = selectedUid ? users.find((u) => u.uid === selectedUid) ?? null : null;
+  const selectedFromList = findAdherentByUid(users, selectedUid);
+  const selected = useMemo(() => {
+    if (!selectedUid) return null;
+    if (selectedOverride?.uid === selectedUid) {
+      if (
+        selectedFromList &&
+        selectedFromList.verification_status === selectedOverride.verification_status &&
+        selectedFromList.is_verified === selectedOverride.is_verified
+      ) {
+        return selectedFromList;
+      }
+      return selectedOverride;
+    }
+    return selectedFromList;
+  }, [selectedUid, selectedFromList, selectedOverride]);
 
   const handleSaved = useCallback(async () => {
     await refresh();
-  }, [refresh]);
+    if (!selectedUid) return;
+    const fresh = await adminService.getUser(selectedUid);
+    if (fresh) setSelectedOverride(fresh);
+  }, [refresh, selectedUid]);
 
   const resetAdvancedFilters = useCallback(() => {
     setAgeFilter('all');
@@ -448,10 +475,15 @@ export function AdminFocAdherentsScreen({
   }, [initialUserId]);
 
   React.useEffect(() => {
-    if (selectedUid && users.length > 0 && !users.some((u) => u.uid === selectedUid)) {
+    setSelectedOverride(null);
+  }, [selectedUid]);
+
+  React.useEffect(() => {
+    if (refreshing) return;
+    if (selectedUid && users.length > 0 && !findAdherentByUid(users, selectedUid) && !selectedOverride) {
       setSelectedUid(null);
     }
-  }, [selectedUid, users]);
+  }, [selectedUid, users, refreshing, selectedOverride]);
 
   if (selected) {
     return (

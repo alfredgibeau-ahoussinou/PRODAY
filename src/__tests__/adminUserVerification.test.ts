@@ -33,12 +33,12 @@ describe('adminUserVerification', () => {
         before.player_verification,
         'approve',
       );
-      expect(patch).not.toBeNull();
 
       const after = {
         ...before,
-        verification_status: patch!.verification_status,
-        player_verification: patch!.player_verification,
+        verification_status: patch.verification_status,
+        is_verified: patch.is_verified,
+        player_verification: patch.player_verification,
       } as User;
 
       expect(after.player_verification?.identity.status).toBe('verified');
@@ -52,6 +52,30 @@ describe('adminUserVerification', () => {
         player_verification: {
           identity: { status: 'verified' },
           club_license: { status: 'verified' },
+        },
+      });
+      expect(userNeedsAdminVerificationReview(user)).toBe(false);
+    });
+
+    it('ne signale pas un joueur VERIFIED même si les checks sont encore pending', () => {
+      const user = playerWithPendingChecks({ verification_status: 'VERIFIED' });
+      expect(userNeedsAdminVerificationReview(user)).toBe(false);
+    });
+
+    it('ne signale pas un joueur is_verified même si verification_status est PENDING', () => {
+      const user = playerWithPendingChecks({
+        is_verified: true,
+        verification_status: 'PENDING',
+      });
+      expect(userNeedsAdminVerificationReview(user)).toBe(false);
+    });
+
+    it('ne signale pas un joueur REJECTED', () => {
+      const user = playerWithPendingChecks({
+        verification_status: 'REJECTED',
+        player_verification: {
+          identity: { status: 'rejected' },
+          club_license: { status: 'pending' },
         },
       });
       expect(userNeedsAdminVerificationReview(user)).toBe(false);
@@ -88,14 +112,50 @@ describe('adminUserVerification', () => {
         },
         'approve',
       );
-      expect(patch?.verification_status).toBe('VERIFIED');
-      expect(patch?.player_verification.identity.status).toBe('verified');
-      expect(patch?.player_verification.club_license.status).toBe('verified');
-      expect(patch?.player_verification.parental_consent?.status).toBe('verified');
-      expect(patch?.onboarding_documents_submitted).toBe(true);
+      expect(patch.verification_status).toBe('VERIFIED');
+      expect(patch.is_verified).toBe(true);
+      expect(patch.player_verification.identity.status).toBe('verified');
+      expect(patch.player_verification.club_license.status).toBe('verified');
+      expect(patch.player_verification.parental_consent?.status).toBe('verified');
+      expect(patch.onboarding_documents_submitted).toBe(true);
     });
 
-    it('rejette les checks pending et calcule le statut agrégé', () => {
+    it('crée un état par défaut puis valide si player_verification est absent', () => {
+      const patch = applyAdminPlayerVerificationDecision(undefined, 'approve');
+      expect(patch.verification_status).toBe('VERIFIED');
+      expect(patch.is_verified).toBe(true);
+      expect(patch.player_verification.identity.status).toBe('verified');
+      expect(patch.player_verification.club_license.status).toBe('verified');
+      expect(userNeedsAdminVerificationReview({
+        uid: 'p-new',
+        role: 'player',
+        verification_status: patch.verification_status,
+        is_verified: patch.is_verified,
+        player_verification: patch.player_verification,
+      } as User)).toBe(false);
+    });
+
+    it('force verified même si les checks ne sont pas pending', () => {
+      const patch = applyAdminPlayerVerificationDecision(
+        {
+          identity: { status: 'not_submitted' },
+          club_license: { status: 'rejected' },
+        },
+        'approve',
+      );
+      expect(patch.verification_status).toBe('VERIFIED');
+      expect(patch.player_verification.identity.status).toBe('verified');
+      expect(patch.player_verification.club_license.status).toBe('verified');
+      expect(userNeedsAdminVerificationReview({
+        uid: 'p2',
+        role: 'player',
+        verification_status: patch.verification_status,
+        is_verified: patch.is_verified,
+        player_verification: patch.player_verification,
+      } as User)).toBe(false);
+    });
+
+    it('rejette identity et licence même si elles n’étaient pas pending', () => {
       const patch = applyAdminPlayerVerificationDecision(
         {
           identity: { status: 'pending' },
@@ -104,9 +164,11 @@ describe('adminUserVerification', () => {
         'reject',
         'Document illisible',
       );
-      expect(patch?.player_verification.identity.status).toBe('rejected');
-      expect(patch?.player_verification.identity.rejection_reason).toBe('Document illisible');
-      expect(patch?.verification_status).toBe('REJECTED');
+      expect(patch.player_verification.identity.status).toBe('rejected');
+      expect(patch.player_verification.club_license.status).toBe('rejected');
+      expect(patch.player_verification.identity.rejection_reason).toBe('Document illisible');
+      expect(patch.verification_status).toBe('REJECTED');
+      expect(patch.is_verified).toBe(false);
     });
   });
 });

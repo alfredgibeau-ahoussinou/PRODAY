@@ -65,6 +65,10 @@ import {
 import { getVisioJoinUrl } from './getVisioJoinUrl';
 import { incrementSubscriptionUsage } from './subscriptionUsage';
 import { sendSponsorClubMessage } from './sendSponsorClubMessage';
+import {
+  applyAdminPlayerVerificationDecision,
+  assertCanValidateProfile,
+} from './adminProfileValidation';
 
 export { onCompetitionFixtureValidated, syncExternalCompetitions } from './competitionEngine';
 export { getSensitiveDocumentUrl, onMedicalDocumentWrite } from './privacyDocuments';
@@ -143,28 +147,9 @@ export const verifyOnboardingDocument = functions
     }
   });
 
-type PlayerVerificationCheckState = { status?: string };
-
-function computePlayerVerificationStatusFromState(
-  state: Record<string, PlayerVerificationCheckState>,
-): 'VERIFIED' | 'REJECTED' | 'PENDING' {
-  const identity = state.identity?.status;
-  const clubLicense = state.club_license?.status;
-  if (identity === 'rejected' || clubLicense === 'rejected') return 'REJECTED';
-  if (identity === 'verified') {
-    if (clubLicense === 'verified') return 'VERIFIED';
-    if (clubLicense === 'pending') return 'PENDING';
-    return 'VERIFIED';
-  }
-  if (identity === 'pending' || clubLicense === 'pending') return 'PENDING';
-  return 'PENDING';
-}
-
 /** Callable admin — approuver ou rejeter un profil */
 export const validateProfile = functions.https.onCall(async (data, context) => {
-  if (!context.auth?.token?.admin) {
-    throw new functions.https.HttpsError('permission-denied', 'Admin only');
-  }
+  assertCanValidateProfile(context);
   const { uid, action, rejectionReason } = data as {
     uid: string;
     action: 'approve' | 'reject';
@@ -189,34 +174,13 @@ export const validateProfile = functions.https.onCall(async (data, context) => {
     update.sponsor_approved = verified;
     update.product_line = 'sponsor';
   }
-  if (role === 'player' && userData.player_verification) {
-    const checkStatus = verified ? 'verified' : 'rejected';
-    const pv = { ...(userData.player_verification as Record<string, unknown>) } as Record<
-      string,
-      { status?: string; rejection_reason?: string; [k: string]: unknown }
-    >;
-    for (const key of ['identity', 'club_license', 'parental_consent']) {
-      const check = pv[key];
-      if (check?.status === 'pending') {
-        pv[key] = {
-          ...check,
-          status: checkStatus,
-          ...(verified
-            ? {}
-            : {
-                rejection_reason:
-                  rejectionReason?.trim() || 'Refusé par l’administrateur',
-              }),
-        };
-      }
-    }
-    update.player_verification = pv;
-    update.verification_status = verified
-      ? 'VERIFIED'
-      : computePlayerVerificationStatusFromState(pv);
-    if (verified) {
-      update.onboarding_documents_submitted = true;
-    }
+  if (role === 'player') {
+    const pvPatch = applyAdminPlayerVerificationDecision(
+      userData.player_verification,
+      action,
+      rejectionReason,
+    );
+    Object.assign(update, pvPatch);
   }
   await db.doc(`users/${uid}`).update(update);
 

@@ -104,7 +104,7 @@ function sectionTitle(section: AdminNavSectionId): string {
 }
 
 export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) => {
-  const { isAdmin, claimLoading } = useIsAdmin();
+  const { isAdmin, claimLoading, emailHint } = useIsAdmin();
 
   if (claimLoading) {
     return (
@@ -116,7 +116,7 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !emailHint) {
     return (
       <SafeAreaView style={shellStyles.gateRoot} edges={['top', 'left', 'right', 'bottom']}>
         <StatusBar style="dark" />

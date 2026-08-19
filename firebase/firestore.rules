@@ -10,8 +10,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isPlatformAdminEmail() {
+      return isSignedIn()
+        && request.auth.token.email in [
+          'proday.admin@gmail.com',
+          'semedoyohan1@gmail.com',
+        ];
+    }
+
     function isAdmin() {
-      return isSignedIn() && request.auth.token.get('admin', false) == true;
+      return isSignedIn()
+        && (request.auth.token.get('admin', false) == true || isPlatformAdminEmail());
     }
 
     function userDoc(uid) {
