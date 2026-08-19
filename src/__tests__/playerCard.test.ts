@@ -68,14 +68,15 @@ describe('PlayerCard age-adaptive logic', () => {
     expect(JOUEUR_AGE_MOODS.youth.radius).toBeGreaterThan(JOUEUR_AGE_MOODS.adult.radius);
   });
 
-  it('each age×gender combo has distinct accent', () => {
+  it('player pole uses unified mint accent across age×gender (dark premium)', () => {
     const accents = new Set<string>();
     for (const age of ['youth', 'teen', 'adult'] as const) {
       for (const g of ['male', 'female'] as const) {
         accents.add(JOUEUR_AGE_GENDER_ACCENTS[age][g].accent);
       }
     }
-    expect(accents.size).toBe(6);
+    expect(accents.size).toBe(1);
+    expect([...accents][0]).toBe('#00E676');
   });
 
   it('defaults to adult when no birth_date', () => {
