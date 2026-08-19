@@ -9,6 +9,7 @@ import type { JoueurPageIdentity } from '../content/joueurPageIdentity';
 
 export { JOUEUR_SITE, JOUEUR_AGE_MOODS, JOUEUR_AGE_GENDER_ACCENTS } from '../content/joueurPageIdentity';
 export { FUT18_PREMIUM, FUT18_TIER_THEME } from './fut18PremiumPalette';
+export { PLAYER_DARK, PLAYER_DARK_RADIUS } from './playerDarkPremium';
 
 /** Surfaces liste / panneau joueur — jamais blanc plat. */
 export const JOUEUR_SURFACES = {

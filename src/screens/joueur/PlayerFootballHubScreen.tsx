@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -29,10 +28,12 @@ import { TrainHubScreen } from '../training/TrainHubScreen';
 import { JoueurTacticsCoachScreen } from './JoueurTacticsCoachScreen';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
-import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { resolveJoueurAgeGroup } from '../../utils/joueurExperienceTheme';
 import { getJoueurDailyQuests } from '../../features/joueur/constants';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
+import { PlayerShieldCard } from '../../components/joueur/PlayerShieldCard';
+import { userToProDayCard } from '../../utils/prodayFutCard';
 
 type HubOverlay = 'train' | 'train_ai' | 'tactics_coach' | null;
 
@@ -55,7 +56,27 @@ export function PlayerFootballHubScreen() {
   }, [pendingDashboardView, clearPendingDashboard, profile]);
 
   const identity = session?.identity;
-  const accent = identity?.accent ?? '#4C8BFF';
+  const accent = PLAYER_DARK.accent;
+  const progressApi = useJoueurProgress();
+
+  const shieldCard = useMemo(() => {
+    if (!profile) return null;
+    const card = userToProDayCard(profile, { clubName: hub.clubName ?? undefined });
+    const ovr = progressApi?.ovr ?? card.overall;
+    return {
+      displayName: profile.display_name,
+      position: profile.profile.position,
+      photoUrl: profile.avatar_url,
+      clubName: hub.clubName ?? card.clubName,
+      stats: {
+        matches: card.matches,
+        notes: card.formPct > 0 ? card.formPct / 10 : null,
+        goals: card.goals,
+        assists: card.assists,
+        rating: ovr > 0 ? ovr / 10 : null,
+      },
+    };
+  }, [profile, hub.clubName, progressApi?.ovr]);
 
   const ageGroup = useMemo(
     () =>
@@ -68,7 +89,6 @@ export function PlayerFootballHubScreen() {
     [session?.ageGroup, profile],
   );
 
-  const progressApi = useJoueurProgress();
   const dailyDone = new Set(progressApi?.progress.dailyCompletedIds ?? []);
 
   const dailyQuest = useMemo(
@@ -93,7 +113,6 @@ export function PlayerFootballHubScreen() {
     );
   }
 
-  const avatarUri = profile.avatar_url;
   const nextDefiTitle = dailyQuest?.title ?? 'Connecte-toi chaque jour';
   const nextDefiProgress = dailyDone.has('daily-login') || hub.streakDays > 0 ? 1 : 0;
   const nextDefiMax = 1;
@@ -105,7 +124,7 @@ export function PlayerFootballHubScreen() {
 
   return (
     <>
-      <JoueurScreenChrome variant="page" kicker="Football Hub" title={`Bonjour ${hub.firstName}`}>
+      <JoueurScreenChrome variant="page" kicker="Parcours" title={`Bonjour ${hub.firstName}`}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + 88 }]}
@@ -114,16 +133,21 @@ export function PlayerFootballHubScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
           }
         >
+          {shieldCard ? (
+            <View style={styles.shieldWrap}>
+              <PlayerShieldCard
+                displayName={shieldCard.displayName}
+                position={shieldCard.position}
+                photoUrl={shieldCard.photoUrl}
+                clubName={shieldCard.clubName}
+                stats={shieldCard.stats}
+                width={240}
+                onPress={() => nav.setActiveTab('profil')}
+              />
+            </View>
+          ) : null}
+
           <View style={styles.heroRow}>
-            {avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={styles.avatar} accessibilityLabel="Photo profil" />
-            ) : (
-              <View style={[styles.avatar, styles.avatarFallback]}>
-                <ProDayText variant="title" style={styles.avatarLetter}>
-                  {hub.firstName.charAt(0).toUpperCase()}
-                </ProDayText>
-              </View>
-            )}
             <View style={styles.heroCopy}>
               <ProDayText variant="caption" style={styles.muted}>
                 {hub.clubName ?? 'Sans club pour l’instant'}
@@ -175,7 +199,7 @@ export function PlayerFootballHubScreen() {
             progressLabel={`${nextDefiProgress}/${nextDefiMax}`}
             done={nextDefiProgress >= nextDefiMax}
             accent={accent}
-            onPress={() => nav.setActiveTab('progression')}
+            onPress={() => nav.setActiveTab('feed')}
           />
 
           <JoueurSectionHeader title="Ma forme" />
@@ -197,7 +221,7 @@ export function PlayerFootballHubScreen() {
               value={hub.level}
               hint={`OVR ${hub.ovr || '—'}`}
               accent={accent}
-              onPress={() => nav.setActiveTab('progression')}
+              onPress={() => nav.setActiveTab('feed')}
             />
           </View>
 
@@ -210,10 +234,12 @@ export function PlayerFootballHubScreen() {
           <JoueurSectionHeader title="Raccourcis" />
           <View style={styles.actions}>
             <JoueurCard variant="list" title="Matchs" subtitle="Calendrier & convocations" onPress={() => nav.setActiveTab('matchs')} />
-            <JoueurCard variant="list" title="Performance" subtitle="Stats & forme" onPress={() => nav.setActiveTab('feed')} />
+            <JoueurCard variant="list" title="Saison" subtitle="Stats & progression" onPress={() => nav.setActiveTab('feed')} />
             <JoueurCard variant="list" title="Équipe" subtitle="Club & groupe" onPress={() => nav.setActiveTab('recrutement')} />
             <JoueurCard variant="list" title="Messages" subtitle="Chat équipe" onPress={() => nav.setActiveTab('messages')} />
             <JoueurCard variant="list" title="Reels" subtitle="Clips communauté" onPress={() => nav.setActiveTab('reels')} />
+            <JoueurCard variant="list" title="Covoiturage" subtitle="Trajets équipe" onPress={() => nav.setActiveTab('covoiturage')} />
+            <JoueurCard variant="list" title="Boutique" subtitle="Shop ProDay" onPress={() => nav.setActiveTab('shop')} />
             <JoueurActionButton label="Entraînement IA" variant="secondary" onPress={() => nav.openDashboard('train_ai')} />
           </View>
         </ScrollView>
@@ -238,18 +264,16 @@ export function PlayerFootballHubScreen() {
 }
 
 const styles = StyleSheet.create({
-  loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: JOUEUR_SITE.bg },
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: PLAYER_DARK.bg },
   scroll: { flex: 1 },
   pad: { padding: spacing.lg, gap: spacing.md },
+  shieldWrap: { alignItems: 'center', marginBottom: spacing.sm },
   heroRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
-  avatar: { width: 72, height: 72, borderRadius: 20, backgroundColor: JOUEUR_SITE.surface },
-  avatarFallback: { alignItems: 'center', justifyContent: 'center' },
-  avatarLetter: { color: JOUEUR_SITE.foreground },
   heroCopy: { flex: 1, gap: spacing.xs },
-  heroTitle: { color: JOUEUR_SITE.foreground },
-  muted: { color: JOUEUR_SITE.muted },
+  heroTitle: { color: PLAYER_DARK.text },
+  muted: { color: PLAYER_DARK.textMuted },
   inlineLoader: { marginVertical: spacing.md },
-  empty: { color: JOUEUR_SITE.muted, paddingVertical: spacing.sm },
+  empty: { color: PLAYER_DARK.textMuted, paddingVertical: spacing.sm },
   statRow: { flexDirection: 'row', gap: spacing.sm },
   actions: { gap: spacing.xs },
 });

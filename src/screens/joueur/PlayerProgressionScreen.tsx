@@ -22,11 +22,12 @@ import { ProDayText } from '../../components/ui/ProDayText';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { JOUEUR_SEASON_OBJECTIVES, getJoueurDailyQuests } from '../../features/joueur/constants';
 import { resolveJoueurAgeGroup } from '../../utils/joueurExperienceTheme';
 
 /** Progression — objectifs, défis adaptés âge, barres sur données réelles. */
-export function PlayerProgressionScreen() {
+export function PlayerProgressionScreen({ embedded = false }: { embedded?: boolean }) {
   const profile = useSessionProfile();
   const session = useJoueurSession();
   const progressApi = useJoueurProgress();
@@ -76,8 +77,7 @@ export function PlayerProgressionScreen() {
     );
   }
 
-  return (
-    <JoueurScreenChrome variant="page" kicker="Parcours" title="Progression">
+  const body = (
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + 24 }]}
@@ -157,12 +157,21 @@ export function PlayerProgressionScreen() {
           </ProDayText>
         ) : null}
       </ScrollView>
+  );
+
+  if (embedded) {
+    return body;
+  }
+
+  return (
+    <JoueurScreenChrome variant="page" kicker="Parcours" title="Progression">
+      {body}
     </JoueurScreenChrome>
   );
 }
 
 const styles = StyleSheet.create({
-  loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: JOUEUR_SITE.bg },
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: PLAYER_DARK.bg },
   scroll: { flex: 1 },
   pad: { padding: spacing.lg, gap: spacing.md },
   statRow: { flexDirection: 'row', gap: spacing.sm },

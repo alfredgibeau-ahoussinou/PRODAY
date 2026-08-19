@@ -46,6 +46,15 @@ jest.mock('../screens/proPlayer/ProPlayerGroupScreen', () => ({
 jest.mock('../screens/coach/CoachPortalScreen', () => ({
   CoachPortalScreen: 'CoachPortalScreen',
 }));
+jest.mock('../screens/joueur/PlayerFootballHubScreen', () => ({
+  PlayerFootballHubScreen: 'PlayerFootballHubScreen',
+}));
+jest.mock('../screens/joueur/PlayerSaisonScreen', () => ({
+  PlayerSaisonScreen: 'PlayerSaisonScreen',
+}));
+jest.mock('../screens/joueur/PlayerProgressionScreen', () => ({
+  PlayerProgressionScreen: 'PlayerProgressionScreen',
+}));
 jest.mock('../screens/smartTactics/SmartTacticsPortalScreen', () => ({
   SmartTacticsPortalScreen: 'SmartTacticsPortalScreen',
 }));
@@ -70,10 +79,11 @@ describe('resolveMainTabScreen', () => {
   });
 
   it('utilise les écrans pro joueur hors rôle club', () => {
-    expect(resolveMainTabScreen('home', 'player', 'pro')).toBe('HomeScreen');
-    expect(resolveMainTabScreen('home', 'player', 'pro_player')).toBe('HomeScreen');
+    expect(resolveMainTabScreen('home', 'player', 'pro')).toBe('PlayerFootballHubScreen');
+    expect(resolveMainTabScreen('home', 'player', 'pro_player')).toBe('PlayerFootballHubScreen');
     expect(resolveMainTabScreen('recrutement', 'player', 'pro')).toBe('ProPlayerSquadScreen');
     expect(resolveMainTabScreen('reels', 'player', 'pro')).toBe('LazyReelsScreen');
+    expect(resolveMainTabScreen('feed', 'player', 'pro')).toBe('PlayerSaisonScreen');
     expect(resolveMainTabScreen('matchs', 'player', 'pro')).toBe('MatchsScreen');
     expect(resolveMainTabScreen('matchs', 'coach', 'pro')).toBe('MatchsScreen');
   });
@@ -91,6 +101,6 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('home', 'coach', 'amateur')).toBe('CoachPortalScreen');
     expect(resolveMainTabScreen('matchs', 'coach', 'amateur')).toBe('MatchsScreen');
     expect(resolveMainTabScreen('feed', 'coach', 'amateur')).toBe('SmartTacticsPortalScreen');
-    expect(resolveMainTabScreen('feed', 'player', 'amateur')).toBe('SmartTacticsPortalScreen');
+    expect(resolveMainTabScreen('feed', 'player', 'amateur')).toBe('PlayerSaisonScreen');
   });
 });

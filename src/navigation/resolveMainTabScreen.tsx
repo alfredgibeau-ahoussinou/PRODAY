@@ -32,8 +32,8 @@ import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerSquadScreen } from '../screens/proPlayer/ProPlayerSquadScreen';
 import { SmartTacticsPortalScreen } from '../screens/smartTactics/SmartTacticsPortalScreen';
 import { PlayerFootballHubScreen } from '../screens/joueur/PlayerFootballHubScreen';
-import { PlayerPerformanceScreen } from '../screens/joueur/PlayerPerformanceScreen';
 import { PlayerProgressionScreen } from '../screens/joueur/PlayerProgressionScreen';
+import { PlayerSaisonScreen } from '../screens/joueur/PlayerSaisonScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -82,14 +82,14 @@ const COACH_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 
 const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   home: PlayerFootballHubScreen,
-  feed: PlayerPerformanceScreen,
+  feed: PlayerSaisonScreen,
   progression: PlayerProgressionScreen,
   recrutement: AmateurClubScreen,
 };
 
 const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   home: PlayerFootballHubScreen,
-  feed: PlayerPerformanceScreen,
+  feed: PlayerSaisonScreen,
   progression: PlayerProgressionScreen,
   recrutement: ProPlayerSquadScreen,
 };

@@ -18,7 +18,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { FORM_BAND_LABELS, formatFormScore, playerFormFromHealthSnapshot } from '../../utils/formAnalysis';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
 type Props = {
@@ -165,12 +165,8 @@ export const JoueurProfileHub: React.FC<Props> = ({
             <View style={styles.futCardWrap}>
               <PlayerCardReveal
                 card={card}
-                width={228}
-                onAction={(action) => {
-                  if (action === 'message') nav.setActiveTab('messages');
-                  if (action === 'view_club' || action === 'recruit') nav.openMercato('home');
-                  if (action === 'invite') nav.openMatchs();
-                }}
+                width={240}
+                onPress={() => nav.setActiveTab('profil')}
               />
             </View>
             <View style={styles.actionsGrid}>
@@ -352,10 +348,10 @@ const styles = StyleSheet.create({
     width: '23%',
     minWidth: 72,
     borderWidth: 1,
-    borderColor: FUT18_PREMIUM.panelBorder,
+    borderColor: PLAYER_DARK.border,
     borderRadius: 14,
     padding: spacing.sm,
-    backgroundColor: FUT18_PREMIUM.panelBg,
+    backgroundColor: PLAYER_DARK.surface,
   },
   metricLabel: {
     color: JOUEUR_SITE.muted,
@@ -370,10 +366,10 @@ const styles = StyleSheet.create({
   },
   futCardBlock: {
     borderWidth: 1,
-    borderColor: FUT18_PREMIUM.panelBorder,
+    borderColor: PLAYER_DARK.border,
     borderRadius: 20,
     padding: spacing.md,
-    backgroundColor: FUT18_PREMIUM.panelBg,
+    backgroundColor: PLAYER_DARK.surface,
     gap: spacing.md,
     overflow: 'hidden',
   },
@@ -406,8 +402,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: spacing.md,
     gap: spacing.sm,
-    backgroundColor: JOUEUR_SITE.surface,
-    borderColor: JOUEUR_SITE.border,
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderColor: PLAYER_DARK.border,
   },
   panelHead: {
     flexDirection: 'row',

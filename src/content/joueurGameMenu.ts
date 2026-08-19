@@ -2,7 +2,7 @@ import type { MainTabId } from '../navigation/mainTabConfig';
 import type { JoueurAgeGroup } from '../utils/joueurExperienceTheme';
 
 /**
- * Labels dock joueur — 5 onglets : Accueil · Matchs · Performance · Progression · Profil.
+ * Labels dock joueur — 4 onglets : Parcours · Matchs · Saison · Profil.
  */
 export function getJoueurGameTabLabel(
   tab: MainTabId,
@@ -13,11 +13,11 @@ export function getJoueurGameTabLabel(
 
   switch (tab) {
     case 'home':
-      return youth ? 'JOUER' : teen ? 'QG' : 'ACCUEIL';
+      return youth ? 'JOUER' : teen ? 'PARCOURS' : 'ACCUEIL';
     case 'matchs':
       return youth ? 'MATCH' : teen ? 'MATCHS' : 'MATCHS';
     case 'feed':
-      return youth ? 'STATS' : teen ? 'PERF' : 'PERFORMANCE';
+      return youth ? 'SAISON' : teen ? 'SAISON' : 'SAISON';
     case 'progression':
       return youth ? 'NIVEAU' : teen ? 'PROGRESS' : 'PROGRESSION';
     case 'profil':
