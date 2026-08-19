@@ -145,7 +145,7 @@ export const ScoutReportSheet: React.FC<ScoutReportSheetProps> = ({
                       borderColor: attr.rating === n ? c.brand : c.border,
                     },
                   ]}
-                  scaleTo={0.94}
+                  scaleTo={0.97}
                 >
                   <ProDayText
                     variant="caption"

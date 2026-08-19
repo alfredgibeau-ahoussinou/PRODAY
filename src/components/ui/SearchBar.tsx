@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { Icon } from './Icon';
 
@@ -10,6 +10,12 @@ interface SearchBarProps {
   onChangeText?: (text: string) => void;
   /** Sans marges externes — pour barres d’outils intégrées. */
   embedded?: boolean;
+  palette?: {
+    surface: string;
+    border: string;
+    text: string;
+    textMuted: string;
+  };
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -17,8 +23,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChangeText,
   embedded = false,
+  palette,
 }) => {
   const { colors } = useAppTheme();
+  const surface = palette?.surface ?? colors.surface;
+  const border = palette?.border ?? colors.border;
+  const text = palette?.text ?? colors.text;
+  const textMuted = palette?.textMuted ?? colors.textMuted;
 
   return (
     <View
@@ -26,17 +37,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         styles.wrap,
         embedded && styles.wrapEmbedded,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
+          backgroundColor: surface,
+          borderColor: border,
         },
-        shadows.soft,
       ]}
     >
       <Icon name="search" size={18} color={colors.textMuted} />
       <TextInput
-        style={[styles.input, { color: colors.text }]}
+        style={[styles.input, { color: text }]}
         placeholder={placeholder}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={textMuted}
         value={value}
         onChangeText={onChangeText}
       />

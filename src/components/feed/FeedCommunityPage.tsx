@@ -118,7 +118,7 @@ export const FeedCommunityPage: React.FC<FeedCommunityPageProps> = ({
   const publishButton = canPublish ? (
     <PressableSpring
       onPress={() => setPublishOpen(true)}
-      scaleTo={0.95}
+      scaleTo={0.98}
       haptic
       style={[styles.publishBtn, { backgroundColor: tribune ? SUPPORTER_SITE.accent : c.brand }]}
     >

@@ -35,7 +35,7 @@ export const AdminSearchField: React.FC<AdminSearchFieldProps> = ({
         autoCorrect={false}
       />
       {value.length > 0 ? (
-        <PressableSpring onPress={() => onChangeText('')} scaleTo={0.9} haptic style={styles.clear}>
+        <PressableSpring onPress={() => onChangeText('')} scaleTo={0.97} haptic style={styles.clear}>
           <Icon name="close" size={14} color={c.textMuted} />
         </PressableSpring>
       ) : null}

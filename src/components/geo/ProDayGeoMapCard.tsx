@@ -88,7 +88,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
 
         <PressableSpring
           onPress={onRefreshLocation}
-          scaleTo={0.94}
+          scaleTo={0.97}
           haptic
           style={[styles.locateBtn, { backgroundColor: colors.accent }]}
         >

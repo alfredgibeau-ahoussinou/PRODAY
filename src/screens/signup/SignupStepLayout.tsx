@@ -17,6 +17,7 @@ import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { brandForAuthContext } from '../../utils/authBrandContext';
+import { AUTH_SHEET } from '../../components/auth/authSheetPalette';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -86,9 +87,9 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
           {onBack ? (
             <PressableSpring
               onPress={onBack}
-              style={authStyles.backBtn}
+              style={authStyles.backBtnLight}
               hitSlop={8}
-              scaleTo={0.92}
+              scaleTo={0.97}
               haptic
               accessibilityLabel="Retour"
             >
@@ -110,9 +111,9 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
             {onClose ? (
               <PressableSpring
                 onPress={onClose}
-                style={authStyles.backBtn}
+                style={authStyles.backBtnLight}
                 hitSlop={8}
-                scaleTo={0.92}
+                scaleTo={0.97}
                 haptic
                 accessibilityLabel="Fermer"
               >
@@ -160,13 +161,13 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
                   style={[
                     authStyles.title,
                     compact && authStyles.titleCompact,
-                    { color: colors.text, textAlign: 'left' },
+                    { color: AUTH_SHEET.text, textAlign: 'left' },
                   ]}
                 >
                   {title}
                 </Text>
                   {subtitle ? (
-                    <Text style={[authStyles.sub, styles.subtitle, { color: colors.textSecondary }]}>
+                    <Text style={[authStyles.sub, styles.subtitle, { color: AUTH_SHEET.textSecondary }]}>
                       {subtitle}
                     </Text>
                   ) : null}
@@ -194,12 +195,12 @@ const createStyles = (colors: AppColors, contentMaxWidth: number) =>
   StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: AUTH_SHEET.background,
     },
     header: {
-      backgroundColor: colors.surface,
+      backgroundColor: AUTH_SHEET.background,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.border,
+      borderBottomColor: AUTH_SHEET.border,
       paddingHorizontal: spacing.md,
       paddingBottom: spacing.md,
       zIndex: 2,
@@ -223,13 +224,13 @@ const createStyles = (colors: AppColors, contentMaxWidth: number) =>
       fontWeight: '700',
       letterSpacing: 2,
       textTransform: 'uppercase',
-      color: colors.textMuted,
+      color: AUTH_SHEET.textMuted,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     headerTitle: {
       fontSize: 15,
       fontWeight: '800',
-      color: colors.text,
+      color: AUTH_SHEET.text,
       marginTop: 2,
       textAlign: 'center',
     },
@@ -243,9 +244,9 @@ const createStyles = (colors: AppColors, contentMaxWidth: number) =>
       gap: 4,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm + 2,
-      backgroundColor: colors.surface,
+      backgroundColor: AUTH_SHEET.background,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.border,
+      borderBottomColor: AUTH_SHEET.border,
     },
     scroll: { flex: 1 },
     scrollContent: {
@@ -289,8 +290,8 @@ const createStyles = (colors: AppColors, contentMaxWidth: number) =>
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
-      backgroundColor: colors.surface,
+      borderTopColor: AUTH_SHEET.border,
+      backgroundColor: AUTH_SHEET.background,
     },
     footerInner: {
       width: '100%',

@@ -154,7 +154,7 @@ export const ShopCartSheet: React.FC<ShopCartSheetProps> = ({
                       <PressableSpring
                         style={[styles.qtyBtn, { borderColor: c.border }]}
                         onPress={() => onSetQty?.(product.id, qty - 1)}
-                        scaleTo={0.92}
+                        scaleTo={0.97}
                       >
                         <ProDayText variant="section" accent>
                           −
@@ -167,7 +167,7 @@ export const ShopCartSheet: React.FC<ShopCartSheetProps> = ({
                           prodayHaptics.cartAdd();
                           onSetQty?.(product.id, qty + 1);
                         }}
-                        scaleTo={0.92}
+                        scaleTo={0.97}
                         haptic
                       >
                         <Icon name="add" size={16} color={c.accent} />

@@ -210,7 +210,7 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
                         key={kind}
                         onPress={() => void toggleReaction(act.id, kind)}
                         disabled={busyReaction === act.id}
-                        scaleTo={0.94}
+                        scaleTo={0.97}
                         haptic
                         style={[
                           styles.reactionChip,

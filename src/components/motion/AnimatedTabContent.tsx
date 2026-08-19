@@ -35,20 +35,20 @@ export const AnimatedTabContent: React.FC<AnimatedTabContentProps> = ({
   const entering =
     direction > 0
       ? SlideInRight.springify()
-          .damping(18)
-          .stiffness(165)
-          .mass(0.85)
+          .damping(24)
+          .stiffness(200)
+          .mass(0.75)
           .duration(motion.duration.normal)
       : SlideInLeft.springify()
-          .damping(18)
-          .stiffness(165)
-          .mass(0.85)
+          .damping(24)
+          .stiffness(200)
+          .mass(0.75)
           .duration(motion.duration.normal);
 
   const exiting =
     direction > 0
-      ? SlideOutLeft.duration(motion.duration.fast).easing(motion.easing.in)
-      : SlideOutRight.duration(motion.duration.fast).easing(motion.easing.in);
+      ? SlideOutLeft.duration(motion.duration.fast).easing(motion.easing.out)
+      : SlideOutRight.duration(motion.duration.fast).easing(motion.easing.out);
 
   return (
     <Animated.View key={activeTab} style={styles.fill} entering={entering} exiting={exiting}>

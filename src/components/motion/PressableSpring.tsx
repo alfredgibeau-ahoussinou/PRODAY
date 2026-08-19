@@ -20,7 +20,7 @@ interface PressableSpringProps extends Omit<PressableProps, 'style'> {
 export const PressableSpring: React.FC<PressableSpringProps> = ({
   children,
   style,
-  scaleTo = 0.96,
+  scaleTo = 0.98,
   haptic = false,
   onPressIn,
   onPressOut,

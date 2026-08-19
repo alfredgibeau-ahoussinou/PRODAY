@@ -46,7 +46,7 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
         <PressableSpring
           key={item.id}
           onPress={() => onPress(item.id)}
-          scaleTo={0.96}
+          scaleTo={0.98}
           haptic
           style={styles.tile}
         >

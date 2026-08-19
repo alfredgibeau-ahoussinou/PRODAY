@@ -19,7 +19,7 @@ export const CrossfadeSwitch: React.FC<CrossfadeSwitchProps> = ({ switchKey, chi
 
   useEffect(() => {
     opacity.value = 0;
-    opacity.value = withTiming(1, { duration: motion.duration.slow });
+    opacity.value = withTiming(1, { duration: motion.duration.normal });
   }, [switchKey, opacity]);
 
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));

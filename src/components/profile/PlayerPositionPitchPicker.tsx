@@ -60,7 +60,7 @@ export const PlayerPositionPitchPicker: React.FC<PlayerPositionPitchPickerProps>
               <PressableSpring
                 onPress={() => onChange(position)}
                 disabled={saving}
-                scaleTo={0.94}
+                scaleTo={0.97}
                 haptic
               >
                 <View style={[styles.slot, selected && styles.slotSelected]}>

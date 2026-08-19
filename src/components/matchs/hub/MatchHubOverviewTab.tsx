@@ -87,7 +87,7 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
             <PressableSpring
               style={[styles.quickBtn, { borderColor: colors.border }]}
               onPress={() => handleQuickNav(item.action)}
-              scaleTo={0.94}
+              scaleTo={0.97}
               haptic
             >
               <Icon name={item.icon} size={18} color={colors.accent} />
@@ -166,7 +166,7 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
                   <PressableSpring
                     onPress={() => onRsvp(opt.status)}
                     disabled={rsvpBusy}
-                    scaleTo={0.94}
+                    scaleTo={0.97}
                     haptic
                   >
                     <ProDayGradient

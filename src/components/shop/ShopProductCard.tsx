@@ -67,7 +67,7 @@ export const ShopProductCard: React.FC<ShopProductCardProps> = ({
             </ProDayText>
           </View>
         ) : null}
-        <PressableSpring style={styles.wishBtn} onPress={onToggleWish} scaleTo={0.9} haptic>
+        <PressableSpring style={styles.wishBtn} onPress={onToggleWish} scaleTo={0.97} haptic>
           <Icon
             name="bookmark"
             size={17}
@@ -85,7 +85,7 @@ export const ShopProductCard: React.FC<ShopProductCardProps> = ({
               prodayHaptics.cartAdd();
               onQuickAdd();
             }}
-            scaleTo={0.9}
+            scaleTo={0.97}
             haptic
           >
             <Icon name="add" size={18} color={c.ink} />

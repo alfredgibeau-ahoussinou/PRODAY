@@ -41,7 +41,7 @@ export const PoleHelpWidget: React.FC<PoleHelpWidgetProps> = ({
         <AnimatedEntrance kind="fadeUp" index={0}>
           <PressableSpring
             onPress={onOpen}
-            scaleTo={0.94}
+            scaleTo={0.97}
             haptic
             style={styles.miniPressable}
             accessibilityRole="button"
@@ -100,7 +100,7 @@ export const PoleHelpWidget: React.FC<PoleHelpWidgetProps> = ({
           </PressableSpring>
           <PressableSpring
             onPress={onCollapse}
-            scaleTo={0.9}
+            scaleTo={0.97}
             haptic
             hitSlop={8}
             style={[styles.collapseBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}

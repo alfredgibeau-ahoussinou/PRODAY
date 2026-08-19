@@ -119,7 +119,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
           clean && styles.sideTabClean,
         ]}
         onPress={() => onTabPress(tab)}
-        scaleTo={0.92}
+        scaleTo={0.97}
         accessibilityRole="tab"
         accessibilityState={{ selected: active }}
         accessibilityLabel={label}
@@ -187,7 +187,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
           clean && styles.sideTabClean,
         ]}
         onPress={() => setMenuOpen(true)}
-        scaleTo={0.92}
+        scaleTo={0.97}
         accessibilityRole="button"
         accessibilityLabel={menuA11y}
         accessibilityState={{ selected: active }}
@@ -279,7 +279,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({
                   testID={`main-tab-${centerTab}`}
                   style={styles.centerWrap}
                   onPress={() => onTabPress(centerTab)}
-                  scaleTo={0.94}
+                  scaleTo={0.97}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: centerActive }}
                   accessibilityLabel={centerLabel}

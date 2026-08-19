@@ -112,7 +112,7 @@ export function JoueurGameTabBar({
         key={tab}
         testID={`main-tab-${tab}`}
         onPress={() => pressTab(tab)}
-        scaleTo={0.92}
+        scaleTo={0.97}
         haptic
         style={[styles.slot, isHome && styles.slotHome]}
         accessibilityRole="tab"
@@ -205,7 +205,7 @@ export function JoueurGameTabBar({
                   joueurGamePress();
                   setPauseOpen(true);
                 }}
-                scaleTo={0.92}
+                scaleTo={0.97}
                 haptic
                 style={styles.slot}
                 accessibilityRole="button"
@@ -280,11 +280,11 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.35,
-        shadowRadius: 16,
-        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.18,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
       },
-      android: { elevation: 12 },
+      android: { elevation: 6 },
       default: {},
     }),
   },
