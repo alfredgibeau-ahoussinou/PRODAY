@@ -26,6 +26,7 @@ import { TrainHubScreen } from '../training/TrainHubScreen';
 import { JoueurTacticsCoachScreen } from './JoueurTacticsCoachScreen';
 import { screenScrollPad } from '../../navigation/screenLayout';
 import { resolvePlayerShieldWidth } from '../../utils/playerShieldLayout';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { spacing } from '../../theme/designTokens';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { resolveJoueurAgeGroup } from '../../utils/joueurExperienceTheme';
@@ -55,7 +56,9 @@ export function PlayerFootballHubScreen() {
     clearPendingDashboard();
   }, [pendingDashboardView, clearPendingDashboard, profile]);
 
-  const accent = PLAYER_DARK.accent;
+  const playerTheme = usePlayerThemeColors();
+  const accent = playerTheme.accent;
+  const accentAlt = playerTheme.accentAlt;
   const progressApi = useJoueurProgress();
 
   const shieldCard = useMemo(() => {
@@ -183,7 +186,7 @@ export function PlayerFootballHubScreen() {
               <JoueurSectionHeader title="Prochain entraînement" />
               <PlayerMatchCard
                 event={hub.nextTraining}
-                accent="#22C55E"
+                accent={accentAlt}
                 onPress={() => nav.openTeamEvent(hub.nextTraining!.id)}
               />
             </>

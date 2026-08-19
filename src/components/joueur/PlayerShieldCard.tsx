@@ -200,7 +200,7 @@ export function PlayerShieldCard({
               </LinearGradient>
             )}
             {pos ? (
-              <View style={styles.posBadge}>
+              <View style={[styles.posBadge, { backgroundColor: playerTheme.accent }]}>
                 <ProDayText variant="caption" style={styles.posText}>
                   {pos}
                 </ProDayText>
@@ -360,7 +360,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: PLAYER_DARK.accent,
     borderRadius: PLAYER_DARK_RADIUS.pill,
     paddingHorizontal: 8,
     paddingVertical: 3,

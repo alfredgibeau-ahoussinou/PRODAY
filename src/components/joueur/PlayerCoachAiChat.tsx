@@ -38,7 +38,7 @@ import {
   isPlayerThemeSettingsIntent,
   parsePlayerThemeAiIntent,
 } from '../../utils/playerThemeAiIntent';
-import { usePlayerTheme } from '../../context/PlayerThemeContext';
+import { usePlayerTheme, usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { careerPreferencesService } from '../../services/careerPreferences.service';
 
@@ -93,9 +93,9 @@ export function PlayerCoachAiChat({
   const session = useJoueurSession();
   const { profile } = useAuth();
   const nav = useTabNavigationActions();
-  const playerTheme = usePlayerTheme();
-  const accent = session?.identity?.accent ?? PLAYER_DARK.accent;
-  const accentBright = session?.identity?.accentBright ?? PLAYER_DARK.accentAlt;
+  const { colors: playerTheme, setPrefs: setPlayerThemePrefs } = usePlayerTheme();
+  const accent = playerTheme.accent;
+  const accentBright = playerTheme.accentAlt;
 
   const [messages, setMessages] = useState<Bubble[]>([
     { id: 'welcome', role: 'assistant', content: WELCOME },
@@ -149,7 +149,7 @@ export function PlayerCoachAiChat({
             );
             return;
           }
-          await playerTheme.setPrefs(action.prefs);
+          await setPlayerThemePrefs(action.prefs);
           Alert.alert('Couleurs appliquées', action.label);
           break;
         case 'report_late':
@@ -175,7 +175,7 @@ export function PlayerCoachAiChat({
           break;
       }
     },
-    [nav, profile?.uid, playerTheme],
+    [nav, profile?.uid, setPlayerThemePrefs],
   );
 
   const runClientIntents = useCallback(
@@ -507,7 +507,7 @@ function createStyles(accent: string, accentBright: string) {
       borderWidth: 1,
       borderColor: '#2A2A38',
     },
-    chipText: { color: PLAYER_DARK.accent, fontWeight: '700' },
+    chipText: { color: accent, fontWeight: '700' },
     composer: {
       flexDirection: 'row',
       alignItems: 'flex-end',

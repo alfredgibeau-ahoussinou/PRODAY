@@ -9,6 +9,14 @@ export type MatchChapterId =
   | 'tournois'
   | 'competitions';
 
+/** Onglets Match visibles en mode joueur (4 max). */
+export const JOUEUR_MATCH_CHAPTER_IDS: MatchChapterId[] = [
+  'calendrier',
+  'convocations',
+  'amicaux',
+  'stats',
+];
+
 export const MATCH_CHAPTERS: {
   id: MatchChapterId;
   label: string;
@@ -32,6 +40,24 @@ export const CALENDAR_KIND_FILTERS: { id: CalendarKindFilter; label: string }[] 
   { id: 'friendly_match', label: 'Matchs' },
   { id: 'competition_fixture', label: 'Compét.' },
 ];
+
+/** Chapitres joueur filtrés depuis la liste complète (ordre rail joueur). */
+export function filterJoueurMatchChapters<
+  T extends { id: MatchChapterId },
+>(chapters: T[]): T[] {
+  const byId = new Map(chapters.map((ch) => [ch.id, ch]));
+  return JOUEUR_MATCH_CHAPTER_IDS.map((id) => byId.get(id)).filter(
+    (ch): ch is T => ch != null,
+  );
+}
+
+/** Mappe les deep links legacy (centre, tournois, compétitions) vers un onglet joueur. */
+export function normalizeJoueurMatchChapter(id: MatchChapterId): MatchChapterId {
+  if (JOUEUR_MATCH_CHAPTER_IDS.includes(id)) return id;
+  if (id === 'centre') return 'calendrier';
+  if (id === 'tournois' || id === 'competitions') return 'amicaux';
+  return 'calendrier';
+}
 
 export type AmicauxStatusFilter = 'all' | 'open' | 'confirmed' | 'mine';
 

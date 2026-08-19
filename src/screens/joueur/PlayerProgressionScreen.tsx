@@ -22,6 +22,7 @@ import { ProDayText } from '../../components/ui/ProDayText';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { JOUEUR_SEASON_OBJECTIVES, getJoueurDailyQuests } from '../../features/joueur/constants';
 import { resolveJoueurAgeGroup } from '../../utils/joueurExperienceTheme';
@@ -35,7 +36,8 @@ export function PlayerProgressionScreen({ embedded = false }: { embedded?: boole
   const nav = useTabNavigationActions();
   const [refreshing, setRefreshing] = useState(false);
 
-  const accent = PLAYER_DARK.accent;
+  const theme = useJoueurTheme();
+  const accent = theme.accent;
 
   const ageGroup = useMemo(
     () =>

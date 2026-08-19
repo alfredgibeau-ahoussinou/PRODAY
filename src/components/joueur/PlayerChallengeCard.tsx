@@ -4,6 +4,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { PlayerProgressBar } from './PlayerProgressBar';
 import { JOUEUR_SURFACES, JOUEUR_RADIUS } from '../../theme/joueurDesignSystem';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
@@ -27,10 +28,12 @@ export function PlayerChallengeCard({
   progressMax = 100,
   progressLabel,
   done = false,
-  accent = PLAYER_DARK.accent,
+  accent: accentProp,
   onPress,
   style,
 }: Props) {
+  const theme = useJoueurTheme();
+  const accent = accentProp ?? theme.accent;
   const body = (
     <View style={[styles.card, done && styles.done, style]}>
       <ProDayText variant="section" style={styles.title}>

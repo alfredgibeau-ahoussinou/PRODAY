@@ -49,18 +49,24 @@ function SectionCard({
   children,
   actionLabel,
   onAction,
+  accent,
+  accentAlt,
+  accentSoft,
 }: {
   kicker: string;
   title: string;
   children: React.ReactNode;
   actionLabel?: string;
   onAction?: () => void;
+  accent: string;
+  accentAlt: string;
+  accentSoft: string;
 }) {
   return (
     <View style={styles.section}>
       <View style={styles.sectionHead}>
         <View style={styles.sectionTitles}>
-          <ProDayText variant="caption" style={styles.sectionKicker}>
+          <ProDayText variant="caption" style={[styles.sectionKicker, { color: accent }]}>
             {kicker}
           </ProDayText>
           <ProDayText variant="section" style={styles.sectionTitle}>
@@ -68,8 +74,19 @@ function SectionCard({
           </ProDayText>
         </View>
         {actionLabel && onAction ? (
-          <PressableSpring onPress={onAction} scaleTo={0.98} haptic style={styles.sectionAction}>
-            <ProDayText variant="caption" style={styles.sectionActionText}>
+          <PressableSpring
+            onPress={onAction}
+            scaleTo={0.98}
+            haptic
+            style={[
+              styles.sectionAction,
+              {
+                borderColor: `${accent}66`,
+                backgroundColor: accentSoft,
+              },
+            ]}
+          >
+            <ProDayText variant="caption" style={[styles.sectionActionText, { color: accentAlt }]}>
               {actionLabel}
             </ProDayText>
           </PressableSpring>
@@ -86,12 +103,16 @@ function GoalRow({
   value,
   hint,
   onPress,
+  accentAlt,
+  accentSoft,
 }: {
   icon: IconName;
   label: string;
   value: string;
   hint?: string;
   onPress?: () => void;
+  accentAlt: string;
+  accentSoft: string;
 }) {
   return (
     <PressableSpring
@@ -101,8 +122,8 @@ function GoalRow({
       disabled={!onPress}
       style={styles.goalRow}
     >
-      <View style={styles.goalIcon}>
-        <Icon name={icon} size={18} color={PLAYER_DARK.accentAlt} variant="outline" />
+      <View style={[styles.goalIcon, { backgroundColor: accentSoft }]}>
+        <Icon name={icon} size={18} color={accentAlt} variant="outline" />
       </View>
       <View style={styles.goalCopy}>
         <ProDayText variant="caption" style={styles.goalLabel}>
@@ -209,7 +230,15 @@ export const JoueurProfileHub: React.FC<Props> = ({
           </View>
         </View>
 
-        <SectionCard kicker="Stats" title="Performance" actionLabel="Saison" onAction={() => press(() => nav.setActiveTab('feed'))}>
+        <SectionCard
+          kicker="Stats"
+          title="Performance"
+          actionLabel="Saison"
+          onAction={() => press(() => nav.setActiveTab('feed'))}
+          accent={playerTheme.accent}
+          accentAlt={playerTheme.accentAlt}
+          accentSoft={playerTheme.accentSoft}
+        >
           <View style={styles.statsGrid}>
             <View style={styles.statBox}>
               <ProDayText variant="caption" style={styles.statLabel}>
@@ -247,25 +276,37 @@ export const JoueurProfileHub: React.FC<Props> = ({
           </View>
         </SectionCard>
 
-        <SectionCard kicker="Objectifs" title="Prochaines actions">
+        <SectionCard
+          kicker="Objectifs"
+          title="Prochaines actions"
+          accent={playerTheme.accent}
+          accentAlt={playerTheme.accentAlt}
+          accentSoft={playerTheme.accentSoft}
+        >
           <GoalRow
             icon="football"
             label="Entraînement IA"
             value="Programme du jour"
             hint="Coach personnalisé"
             onPress={() => press(() => nav.openDashboard('train_ai'))}
+            accentAlt={playerTheme.accentAlt}
+            accentSoft={playerTheme.accentSoft}
           />
           <GoalRow
             icon="trophy"
             label="Matchs"
             value="Calendrier & convocations"
             onPress={() => press(() => nav.setActiveTab('matchs'))}
+            accentAlt={playerTheme.accentAlt}
+            accentSoft={playerTheme.accentSoft}
           />
           <GoalRow
             icon="stats-chart"
             label="Progression XP"
             value={`Niv. ${level} · ${progressApi?.level.xpIntoLevel ?? 0}/${progressApi?.level.xpForNext ?? 100} XP`}
             onPress={() => press(() => nav.setActiveTab('feed'))}
+            accentAlt={playerTheme.accentAlt}
+            accentSoft={playerTheme.accentSoft}
           />
         </SectionCard>
 
@@ -310,18 +351,42 @@ export const JoueurProfileHub: React.FC<Props> = ({
         ) : null}
 
         <View style={styles.metaChips}>
-          <View style={styles.chip}>
-            <ProDayText variant="caption" style={styles.chipText}>
+          <View
+            style={[
+              styles.chip,
+              {
+                backgroundColor: playerTheme.accentSoft,
+                borderColor: `${playerTheme.accent}44`,
+              },
+            ]}
+          >
+            <ProDayText variant="caption" style={[styles.chipText, { color: playerTheme.accentAlt }]}>
               {stars} étoiles
             </ProDayText>
           </View>
-          <View style={styles.chip}>
-            <ProDayText variant="caption" style={styles.chipText}>
+          <View
+            style={[
+              styles.chip,
+              {
+                backgroundColor: playerTheme.accentSoft,
+                borderColor: `${playerTheme.accent}44`,
+              },
+            ]}
+          >
+            <ProDayText variant="caption" style={[styles.chipText, { color: playerTheme.accentAlt }]}>
               Profil {completion.percent}%
             </ProDayText>
           </View>
-          <View style={styles.chip}>
-            <ProDayText variant="caption" style={styles.chipText}>
+          <View
+            style={[
+              styles.chip,
+              {
+                backgroundColor: playerTheme.accentSoft,
+                borderColor: `${playerTheme.accent}44`,
+              },
+            ]}
+          >
+            <ProDayText variant="caption" style={[styles.chipText, { color: playerTheme.accentAlt }]}>
               {clubLabel}
             </ProDayText>
           </View>
@@ -394,7 +459,6 @@ const styles = StyleSheet.create({
   },
   sectionTitles: { flex: 1, gap: 2 },
   sectionKicker: {
-    color: PLAYER_DARK.accent,
     fontWeight: '800',
     letterSpacing: 1.6,
     fontSize: 10,
@@ -405,14 +469,11 @@ const styles = StyleSheet.create({
   },
   sectionAction: {
     borderWidth: 1,
-    borderColor: `${PLAYER_DARK.accent}66`,
     borderRadius: PLAYER_DARK_RADIUS.pill,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: PLAYER_DARK.accentSoft,
   },
   sectionActionText: {
-    color: PLAYER_DARK.accentAlt,
     fontWeight: '800',
     fontSize: 11,
   },
@@ -422,12 +483,9 @@ const styles = StyleSheet.create({
     borderRadius: PLAYER_DARK_RADIUS.pill,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    backgroundColor: PLAYER_DARK.accentSoft,
     borderWidth: 1,
-    borderColor: `${PLAYER_DARK.accent}44`,
   },
   chipText: {
-    color: PLAYER_DARK.accentAlt,
     fontWeight: '700',
     fontSize: 11,
   },
@@ -478,7 +536,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: PLAYER_DARK.accentSoft,
   },
   goalCopy: { flex: 1, gap: 1, minWidth: 0 },
   goalLabel: {

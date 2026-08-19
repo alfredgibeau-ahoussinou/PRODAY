@@ -1,6 +1,12 @@
 import type { IconName } from '../components/ui/iconNames';
 import type { TranslateFn } from './types';
-import type { MatchChapterId, CalendarKindFilter, AmicauxStatusFilter } from '../content/matchChapters';
+import {
+  JOUEUR_MATCH_CHAPTER_IDS,
+  filterJoueurMatchChapters,
+  type MatchChapterId,
+  type CalendarKindFilter,
+  type AmicauxStatusFilter,
+} from '../content/matchChapters';
 import type { MessagesChapterId, MessagesThreadFilter } from '../content/messagesChapters';
 import type { CarpoolChapterId, CarpoolEventFilter, CarpoolScopeFilter } from '../content/carpoolChapters';
 import type { FeedChapterId, FeedTypeFilter } from '../content/feedChapters';
@@ -13,6 +19,10 @@ const tr = (t: TranslateFn, key: string, fallback: string) => {
 };
 
 export function getMatchChapters(t: TranslateFn) {
+  return buildMatchChapters(t);
+}
+
+function buildMatchChapters(t: TranslateFn) {
   return [
     {
       id: 'calendrier' as const,
@@ -62,6 +72,12 @@ export function getMatchChapters(t: TranslateFn) {
     shortLabel: string;
     icon: IconName;
   }[];
+}
+
+/** Chapitres Match Center visibles pôle joueur (Calendrier · Convocs · Matchs · Stats). */
+export function getJoueurMatchChapters(t: TranslateFn) {
+  const allowed = new Set<MatchChapterId>(JOUEUR_MATCH_CHAPTER_IDS);
+  return buildMatchChapters(t).filter((ch) => allowed.has(ch.id));
 }
 
 export function getCalendarKindFilters(t: TranslateFn) {

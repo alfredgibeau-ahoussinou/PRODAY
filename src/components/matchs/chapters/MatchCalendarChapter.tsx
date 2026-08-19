@@ -71,6 +71,8 @@ export interface MatchCalendarChapterProps {
   onPropose: () => void;
   onLogin: () => void;
   geoMap?: React.ReactNode;
+  /** Panneau live (Centre Match) — mode joueur, affiché en tête du calendrier. */
+  livePanel?: React.ReactNode;
 }
 
 export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
@@ -93,6 +95,7 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
   onPropose,
   onLogin,
   geoMap,
+  livePanel,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
@@ -122,6 +125,8 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
         title={t('matchs.calendar.intro.title')}
         subtitle={t('matchs.calendar.intro.subtitle')}
       />
+
+      {livePanel}
 
       <MatchKpiRow
         items={[

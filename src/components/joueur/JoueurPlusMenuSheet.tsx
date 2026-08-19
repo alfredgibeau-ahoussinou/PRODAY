@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AnimatedModalShell } from '../motion/AnimatedModalShell';
@@ -7,6 +7,7 @@ import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
 import { formatTabBadge } from '../navigation/tabBarShared';
 import type { JoueurPlusMenuItem } from '../../content/joueurPlusMenu';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
@@ -19,6 +20,105 @@ type Props = {
 
 /** Grille dark premium mint — raccourcis secondaires joueur. */
 export function JoueurPlusMenuSheet({ visible, onClose, items, onSelect }: Props) {
+  const playerTheme = usePlayerThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        sheet: {
+          padding: spacing.lg,
+          gap: spacing.sm,
+          minHeight: 280,
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          overflow: 'hidden',
+        },
+        kicker: {
+          color: playerTheme.accent,
+          fontWeight: '800',
+          letterSpacing: 2.4,
+          fontSize: 10,
+        },
+        title: {
+          color: PLAYER_DARK.text,
+          fontWeight: '800',
+          letterSpacing: -0.5,
+          marginTop: -4,
+        },
+        sub: {
+          color: PLAYER_DARK.textMuted,
+          marginTop: -4,
+          marginBottom: spacing.xs,
+        },
+        grid: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: spacing.sm,
+          paddingVertical: spacing.xs,
+        },
+        tile: {
+          width: '47%',
+          minHeight: 96,
+          borderRadius: PLAYER_DARK_RADIUS.card,
+          borderWidth: 1,
+          borderColor: PLAYER_DARK.border,
+          padding: spacing.md,
+          gap: 6,
+          backgroundColor: PLAYER_DARK.surface,
+        },
+        iconWrap: {
+          width: 40,
+          height: 40,
+          borderRadius: 12,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: playerTheme.accentSoft,
+          borderWidth: 1,
+          borderColor: `${playerTheme.accent}44`,
+        },
+        tileLabel: {
+          color: PLAYER_DARK.text,
+          fontWeight: '800',
+          fontSize: 12,
+          letterSpacing: 0.3,
+        },
+        tileSub: {
+          color: PLAYER_DARK.textMuted,
+          fontSize: 10,
+          lineHeight: 14,
+        },
+        badge: {
+          position: 'absolute',
+          top: -4,
+          right: -4,
+          minWidth: 16,
+          height: 16,
+          borderRadius: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 4,
+          backgroundColor: PLAYER_DARK.statYellow,
+        },
+        badgeText: {
+          color: PLAYER_DARK.bg,
+          fontSize: 8,
+          fontWeight: '900',
+        },
+        closeBtn: {
+          marginTop: spacing.sm,
+          borderRadius: PLAYER_DARK_RADIUS.pill,
+          paddingVertical: 14,
+          alignItems: 'center',
+          backgroundColor: playerTheme.accent,
+        },
+        closeText: {
+          color: PLAYER_DARK.bg,
+          fontWeight: '800',
+          letterSpacing: 0.4,
+        },
+      }),
+    [playerTheme.accent, playerTheme.accentAlt, playerTheme.accentSoft],
+  );
+
   return (
     <AnimatedModalShell visible={visible} onClose={onClose} variant="compact" handleOnly>
       <View style={styles.sheet}>
@@ -47,7 +147,7 @@ export function JoueurPlusMenuSheet({ visible, onClose, items, onSelect }: Props
               haptic
             >
               <View style={styles.iconWrap}>
-                <Icon name={item.icon} size={24} color={PLAYER_DARK.accentAlt} variant="outline" />
+                <Icon name={item.icon} size={24} color={playerTheme.accentAlt} variant="outline" />
                 {item.badge && item.badge > 0 ? (
                   <View style={styles.badge}>
                     <ProDayText variant="caption" style={styles.badgeText}>
@@ -77,97 +177,3 @@ export function JoueurPlusMenuSheet({ visible, onClose, items, onSelect }: Props
     </AnimatedModalShell>
   );
 }
-
-const styles = StyleSheet.create({
-  sheet: {
-    padding: spacing.lg,
-    gap: spacing.sm,
-    minHeight: 280,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    overflow: 'hidden',
-  },
-  kicker: {
-    color: PLAYER_DARK.accent,
-    fontWeight: '800',
-    letterSpacing: 2.4,
-    fontSize: 10,
-  },
-  title: {
-    color: PLAYER_DARK.text,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginTop: -4,
-  },
-  sub: {
-    color: PLAYER_DARK.textMuted,
-    marginTop: -4,
-    marginBottom: spacing.xs,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  tile: {
-    width: '47%',
-    minHeight: 96,
-    borderRadius: PLAYER_DARK_RADIUS.card,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-    padding: spacing.md,
-    gap: 6,
-    backgroundColor: PLAYER_DARK.surface,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: PLAYER_DARK.accentSoft,
-    borderWidth: 1,
-    borderColor: `${PLAYER_DARK.accent}44`,
-  },
-  tileLabel: {
-    color: PLAYER_DARK.text,
-    fontWeight: '800',
-    fontSize: 12,
-    letterSpacing: 0.3,
-  },
-  tileSub: {
-    color: PLAYER_DARK.textMuted,
-    fontSize: 10,
-    lineHeight: 14,
-  },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    backgroundColor: PLAYER_DARK.statYellow,
-  },
-  badgeText: {
-    color: PLAYER_DARK.bg,
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  closeBtn: {
-    marginTop: spacing.sm,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    paddingVertical: 14,
-    alignItems: 'center',
-    backgroundColor: PLAYER_DARK.accent,
-  },
-  closeText: {
-    color: PLAYER_DARK.bg,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-  },
-});

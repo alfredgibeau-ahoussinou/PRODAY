@@ -43,6 +43,15 @@ describe('resolvePlayerThemeColors', () => {
     expect(colors.accentAlt).toBe('#FFD60A');
   });
 
+  it('priorise custom rouge sur le mint identity', () => {
+    const colors = resolvePlayerThemeColors(
+      { mode: 'custom', custom: { accent: '#E53935', accentSecondary: '#FFCDD2' } },
+      null,
+    );
+    expect(colors.accent).toBe('#E53935');
+    expect(colors.accent).not.toBe(PLAYER_DARK.accent);
+  });
+
   it('ignore un hex custom invalide', () => {
     const colors = resolvePlayerThemeColors(
       { mode: 'custom', custom: { accent: 'not-a-color' } },

@@ -14,6 +14,7 @@ import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { resolveLiveState, isInMatchWindow, MATCH_LIVE_STATUS_LABELS } from '../../utils/matchLive';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useMatchSkinTokens } from './matchCenterUi';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
 import { spacing } from '../../theme/designTokens';
 
@@ -25,6 +26,9 @@ interface MatchLiveEventCardProps {
 /** Carte match pour le Centre — ticket live / à venir. */
 export const MatchLiveEventCard: React.FC<MatchLiveEventCardProps> = ({ event, onPress }) => {
   const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
+  const accent = skin.joueurSkin ? skin.accent : colors.accent;
+  const liveColor = skin.live;
   const live = resolveLiveState(event);
   const isLive = isInMatchWindow(event);
   const isFinished = live.status === 'finished';
@@ -44,17 +48,17 @@ export const MatchLiveEventCard: React.FC<MatchLiveEventCardProps> = ({ event, o
     opacity: isLive ? 0.12 + aura.value * 0.28 : 0,
   }));
 
-  const barColor = isLive ? MATCH_SITE.live : isFinished ? MATCH_SITE.muted : colors.accent;
-  const statusColor = isLive ? MATCH_SITE.live : isFinished ? MATCH_SITE.muted : colors.accent;
+  const barColor = isLive ? liveColor : isFinished ? skin.muted : accent;
+  const statusColor = isLive ? liveColor : isFinished ? skin.muted : accent;
 
   return (
     <View style={styles.cardWrap}>
       <Animated.View
         pointerEvents="none"
-        style={[styles.liveAura, { backgroundColor: MATCH_SITE.live }, auraStyle]}
+        style={[styles.liveAura, { backgroundColor: liveColor }, auraStyle]}
       />
       <PressableSpring
-        style={[styles.card, { borderColor: MATCH_SITE.border }]}
+        style={[styles.card, { borderColor: skin.border }]}
         onPress={onPress}
         scaleTo={0.98}
         haptic
@@ -63,7 +67,7 @@ export const MatchLiveEventCard: React.FC<MatchLiveEventCardProps> = ({ event, o
         <View style={styles.body}>
           <View style={styles.head}>
             <View style={styles.statusRow}>
-              {isLive ? <LivePulseDot active size={6} color={MATCH_SITE.live} /> : null}
+              {isLive ? <LivePulseDot active size={6} color={liveColor} /> : null}
               <ProDayText variant="caption" style={[styles.statusText, { color: statusColor }]}>
                 {isLive
                   ? `${MATCH_LIVE_STATUS_LABELS[live.status]}${live.minute != null ? ` · ${live.minute}'` : ''}`

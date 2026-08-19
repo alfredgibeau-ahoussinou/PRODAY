@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Platform, View } from 'react-native';
 import type { MatchChapterId } from '../../content/matchChapters';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
 import { useTranslation } from '../../context/LocaleContext';
-import { getMatchChapters } from '../../i18n/localizedChapters';
+import { getMatchChapters, getJoueurMatchChapters } from '../../i18n/localizedChapters';
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
@@ -29,12 +29,9 @@ interface MatchChapterRailProps {
 
 const GAME_STAGE_LABELS: Partial<Record<MatchChapterId, string>> = {
   calendrier: 'Calendrier',
+  convocations: 'Convocations',
   centre: 'En direct',
-  convocations: 'Convocs',
-  stats: 'Stats',
-  amicaux: 'Amical',
-  tournois: 'Coupe',
-  competitions: 'Championnat',
+  amicaux: 'Amicaux',
 };
 
 /** Navigation Match Center — onglets terminal (hairline, pas de pills). */
@@ -51,8 +48,12 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
   const coachTokens = useCoachTokens();
   const playerTheme = usePlayerThemeColors();
   const { t } = useTranslation();
-  const chapters = useMemo(() => getMatchChapters(t), [t]);
+  const chapters = useMemo(
+    () => (gameMode ? getJoueurMatchChapters(t) : getMatchChapters(t)),
+    [gameMode, t],
+  );
   const chipAccent = gameMode ? playerTheme.accent : colors.accent;
+  const joueurChipBg = playerTheme.surface ?? PLAYER_DARK.surface;
   const styles = useMemo(
     () => createStyles(chipAccent, gameMode, coachSkin, coachTokens, playerTheme),
     [chipAccent, gameMode, coachSkin, coachTokens, playerTheme],
@@ -104,8 +105,7 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
                 style={[
                   styles.badge,
                   {
-                    backgroundColor:
-                      ch.id === 'centre' ? MATCH_SITE.live : on ? chipAccent : MATCH_SITE.elevated,
+                    backgroundColor: on ? chipAccent : gameMode ? joueurChipBg : MATCH_SITE.elevated,
                   },
                 ]}
               >

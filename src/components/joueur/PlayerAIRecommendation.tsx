@@ -4,6 +4,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { JOUEUR_SURFACES, JOUEUR_RADIUS } from '../../theme/joueurDesignSystem';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
@@ -21,10 +22,12 @@ export function PlayerAIRecommendation({
   title,
   body,
   cta = 'Demander à mon Coach IA',
-  accent = PLAYER_DARK.accent,
+  accent: accentProp,
   onPress,
   style,
 }: Props) {
+  const theme = useJoueurTheme();
+  const accent = accentProp ?? theme.accent;
   return (
     <PressableSpring onPress={onPress} scaleTo={0.98} haptic disabled={!onPress}>
       <View style={[styles.card, style]}>

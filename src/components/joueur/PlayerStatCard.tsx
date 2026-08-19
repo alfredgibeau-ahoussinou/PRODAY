@@ -3,6 +3,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { JOUEUR_SURFACES, JOUEUR_RADIUS } from '../../theme/joueurDesignSystem';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
@@ -21,11 +22,13 @@ export function PlayerStatCard({
   label,
   value,
   hint,
-  accent = PLAYER_DARK.accent,
+  accent: accentProp,
   empty = false,
   onPress,
   style,
 }: Props) {
+  const theme = useJoueurTheme();
+  const accent = accentProp ?? theme.accent;
   const body = (
     <View style={[styles.card, style]}>
       <ProDayText variant="caption" style={styles.label}>

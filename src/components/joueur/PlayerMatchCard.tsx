@@ -4,6 +4,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { JOUEUR_SURFACES, JOUEUR_RADIUS } from '../../theme/joueurDesignSystem';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 import type { TeamEvent } from '../../models/TeamEvent';
@@ -30,11 +31,13 @@ function formatWhen(d: Date): string {
 /** Carte événement match / entraînement — données teamEvents. */
 export function PlayerMatchCard({
   event,
-  accent = PLAYER_DARK.accent,
+  accent: accentProp,
   subtitle,
   onPress,
   style,
 }: Props) {
+  const theme = useJoueurTheme();
+  const accent = accentProp ?? theme.accent;
   const typeLabel = EVENT_TYPE_LABELS[event.event_type] ?? event.event_type;
   const body = (
     <View style={[styles.card, style]}>
