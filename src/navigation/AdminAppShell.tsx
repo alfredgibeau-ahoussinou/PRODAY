@@ -169,7 +169,9 @@ const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) =
   const [mobileMenu, setMobileMenu] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+      return undefined;
+    }
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
