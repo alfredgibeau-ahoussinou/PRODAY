@@ -19,9 +19,18 @@ interface StandingRow {
   points: number;
 }
 
+interface PointsRules {
+  points_win: number;
+  points_draw: number;
+  points_loss: number;
+}
+
+const DEFAULT_RULES: PointsRules = { points_win: 3, points_draw: 1, points_loss: 0 };
+
 function recomputeStandingsFromFixtures(
   teams: { id: string; display_name: string }[],
   fixtures: FirebaseFirestore.QueryDocumentSnapshot[],
+  rules: PointsRules = DEFAULT_RULES,
 ): StandingRow[] {
   const rows = new Map<string, StandingRow>();
   for (const t of teams) {
@@ -41,8 +50,8 @@ function recomputeStandingsFromFixtures(
 
   for (const doc of fixtures) {
     const f = doc.data();
-    if (f.status !== 'validated') continue;
     if (f.status === 'contested' || f.status === 'void') continue;
+    if (f.status !== 'validated') continue;
     if (typeof f.home_score !== 'number' || typeof f.away_score !== 'number') continue;
     const home = rows.get(String(f.home_team_id));
     const away = rows.get(String(f.away_team_id));
@@ -55,17 +64,19 @@ function recomputeStandingsFromFixtures(
     away.goals_against += f.home_score;
     if (f.home_score > f.away_score) {
       home.won += 1;
-      home.points += 3;
+      home.points += rules.points_win;
       away.lost += 1;
+      away.points += rules.points_loss;
     } else if (f.home_score < f.away_score) {
       away.won += 1;
-      away.points += 3;
+      away.points += rules.points_win;
       home.lost += 1;
+      home.points += rules.points_loss;
     } else {
       home.drawn += 1;
       away.drawn += 1;
-      home.points += 1;
-      away.points += 1;
+      home.points += rules.points_draw;
+      away.points += rules.points_draw;
     }
   }
 
@@ -76,7 +87,8 @@ function recomputeStandingsFromFixtures(
   return [...rows.values()].sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
     if (b.goal_difference !== a.goal_difference) return b.goal_difference - a.goal_difference;
-    return b.goals_for - a.goals_for;
+    if (b.goals_for !== a.goals_for) return b.goals_for - a.goals_for;
+    return a.display_name.localeCompare(b.display_name, 'fr');
   });
 }
 
@@ -98,16 +110,28 @@ export const onCompetitionFixtureValidated = functions.firestore
     const seasonId = String(after.season_id ?? '');
     if (!seasonId) return;
 
-    const [teamsSnap, fixturesSnap] = await Promise.all([
+    const competitionId = String(after.competition_id ?? '');
+
+    const [teamsSnap, fixturesSnap, compSnap] = await Promise.all([
       db.collection('competition_teams').where('season_id', '==', seasonId).get(),
       db.collection('competition_fixtures').where('season_id', '==', seasonId).get(),
+      competitionId
+        ? db.collection('competitions').doc(competitionId).get()
+        : Promise.resolve(null),
     ]);
+
+    const compData = compSnap?.exists ? compSnap.data() : null;
+    const rules: PointsRules = {
+      points_win: compData?.rules?.points_win ?? 3,
+      points_draw: compData?.rules?.points_draw ?? 1,
+      points_loss: compData?.rules?.points_loss ?? 0,
+    };
 
     const teams = teamsSnap.docs.map((d) => ({
       id: d.id,
       display_name: String(d.data().display_name ?? ''),
     }));
-    const rows = recomputeStandingsFromFixtures(teams, fixturesSnap.docs);
+    const rows = recomputeStandingsFromFixtures(teams, fixturesSnap.docs, rules);
 
     await db.collection('competition_standings').doc(seasonId).set(
       {
