@@ -243,6 +243,12 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       setChapter('cv');
       return;
     }
+    setChapter('apercu');
+    props.onEdit();
+  };
+
+  const handleEdit = () => {
+    setChapter('apercu');
     props.onEdit();
   };
 
@@ -270,13 +276,13 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                   joueurSession?.gate?.gender ?? props.profile.profile.gender
                 }
                 gateAgeGroup={joueurSession?.ageGroup}
-                onEdit={props.onEdit}
+                onEdit={handleEdit}
               />
             ) : isCoach ? (
               <CoachProfileHub
                 profile={props.profile}
                 subscriptionTier={props.subscriptionTier}
-                onEdit={props.onEdit}
+                onEdit={handleEdit}
                 onPublicProfile={props.onPublicProfile}
                 onAvatarPress={props.onAvatarPress}
                 onSubscriptionPress={props.onSubscriptionPress}
@@ -334,7 +340,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 >
                   <ProfileCompletionPanel
                     user={props.profile}
-                    onCompletePress={props.onEdit}
+                    onCompletePress={handleEdit}
                     onItemPress={handleCompletionItem}
                   />
                 </ProfileSection>
@@ -408,7 +414,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             ) : isCoach ? (
               <CoachVitrinePanel
                 profile={props.profile}
-                onEdit={props.onEdit}
+                onEdit={handleEdit}
                 onPublicProfile={props.onPublicProfile}
               />
             ) : (

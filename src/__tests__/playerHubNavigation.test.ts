@@ -5,6 +5,10 @@ import {
   PRO_PLAYER_OVERFLOW_TABS,
 } from '../navigation/shells/productShellTabs';
 import { getMobileRailLayout } from '../navigation/mobileTabConfig';
+import { resolveAutoReturnTab } from '../utils/navigationDeepLink';
+import type { MainTabId } from '../navigation/mainTabConfig';
+
+const PLAYER_DOCK = new Set<MainTabId>(AMATEUR_PLAYER_SHELL_TABS);
 
 describe('player hub navigation', () => {
   it('définit 5 onglets shell joueur amateur', () => {
@@ -37,5 +41,31 @@ describe('player hub navigation', () => {
   it('aligne le rail mobile joueur sur les 5 onglets', () => {
     const rail = getMobileRailLayout('amateur', 'player');
     expect(rail.flat).toEqual(AMATEUR_PLAYER_SHELL_TABS);
+  });
+
+  describe('resolveAutoReturnTab', () => {
+    it('mémorise Plus → Messages', () => {
+      expect(resolveAutoReturnTab('plus', 'messages', PLAYER_DOCK)).toBe('plus');
+    });
+
+    it('mémorise Plus → Mercato', () => {
+      expect(resolveAutoReturnTab('plus', 'recrutement', PLAYER_DOCK)).toBe('plus');
+    });
+
+    it('respecte returnTo explicite', () => {
+      expect(resolveAutoReturnTab('home', 'messages', PLAYER_DOCK, 'plus')).toBe('plus');
+    });
+
+    it('efface returnTab en revenant au dock', () => {
+      expect(resolveAutoReturnTab('messages', 'plus', PLAYER_DOCK)).toBe(null);
+    });
+
+    it('conserve returnTab entre onglets overflow', () => {
+      expect(resolveAutoReturnTab('messages', 'recrutement', PLAYER_DOCK)).toBeUndefined();
+    });
+
+    it('mémorise Accueil → Messages', () => {
+      expect(resolveAutoReturnTab('home', 'messages', PLAYER_DOCK)).toBe('home');
+    });
   });
 });

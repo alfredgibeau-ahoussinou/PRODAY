@@ -27,6 +27,8 @@ interface AnimatedModalShellProps {
   handleOnly?: boolean;
   /** Override palette (ex. admin clair + teal, hors thème produit). */
   themeColors?: AppColors;
+  /** Fond de la sheet (ex. PLAYER_DARK pour Coach IA joueur). */
+  sheetBackgroundColor?: string;
 }
 
 const COMPACT_SHEET_MAX_HEIGHT = '58%';
@@ -43,6 +45,7 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   variant = 'full',
   handleOnly = false,
   themeColors,
+  sheetBackgroundColor,
 }) => {
   const insets = useSafeAreaInsets();
   const { colors: appColors } = useAppTheme();
@@ -94,7 +97,10 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
             isCompact ? styles.sheetCompact : styles.sheetFull,
             isCompact && styles.sheetCompactRadius,
             sheetStyle,
-            { paddingTop: sheetPaddingTop },
+            {
+              paddingTop: sheetPaddingTop,
+              backgroundColor: sheetBackgroundColor ?? c.background,
+            },
           ]}
         >
           {handleOnly ? (

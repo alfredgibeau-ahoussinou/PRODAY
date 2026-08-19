@@ -79,12 +79,13 @@ import { ProDayAiChat } from './src/components/ai/ProDayAiChat';
 import { isJoueurPoleProductLine } from './src/utils/joueurPoleAccess';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
 import { isPlatformAdminEmail } from './src/config/admin';
-import type {
-  CarpoolDeepLink,
-  DashboardDeepLink,
-  MatchsDeepLink,
-  MercatoDeepLink,
-  ProfileDeepLink,
+import {
+  resolveAutoReturnTab,
+  type CarpoolDeepLink,
+  type DashboardDeepLink,
+  type MatchsDeepLink,
+  type MercatoDeepLink,
+  type ProfileDeepLink,
 } from './src/utils/navigationDeepLink';
 import { profileMatchesActiveLine, getUserProductLine } from './src/utils/productLineAccess';
 import { getVisibleMainTabs } from './src/content/poleExperience';
@@ -419,10 +420,14 @@ function AppShell() {
 
   const handleTabPress = (tab: MainTabId, options?: SetActiveTabOptions) => {
     if (tab !== activeTab) prodayHaptics.tabSwitch();
-    if (options?.returnTo) {
-      setReturnTab(options.returnTo);
-    } else if (primaryDockTabs.has(tab)) {
-      setReturnTab(null);
+    const nextReturn = resolveAutoReturnTab(
+      activeTab,
+      tab,
+      primaryDockTabs,
+      options?.returnTo,
+    );
+    if (nextReturn !== undefined) {
+      setReturnTab(nextReturn);
     }
     setActiveTab(isGuest ? resolveGuestTab(tab, productLine) : tab);
   };
@@ -441,7 +446,7 @@ function AppShell() {
       return;
     }
     setPendingChatThreadId(threadId);
-    setActiveTab('messages');
+    handleTabPress('messages');
   };
 
   const Screen = resolveMainTabScreen(activeTab, sessionProfile?.role, productLine);
@@ -505,7 +510,7 @@ function AppShell() {
               return;
             }
             setPendingMatchsLink(link ?? { homeTab: 'season' });
-            handleTabPress('matchs');
+            handleTabPress('matchs', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
           },
           clearPendingMatchs: () => setPendingMatchsLink(null),
           pendingMercatoView,
@@ -516,7 +521,7 @@ function AppShell() {
               return;
             }
             setPendingMercatoView(view ?? 'home');
-            handleTabPress('recrutement');
+            handleTabPress('recrutement', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
           },
           clearPendingMercato: () => setPendingMercatoView(null),
           pendingProfileView,
@@ -581,7 +586,7 @@ function AppShell() {
               return;
             }
             setPendingCarpoolLink(link ?? { chapter: 'reserver' });
-            handleTabPress('covoiturage');
+            handleTabPress('covoiturage', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
           },
           clearPendingCarpool: () => setPendingCarpoolLink(null),
         }}

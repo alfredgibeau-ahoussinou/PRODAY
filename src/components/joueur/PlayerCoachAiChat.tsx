@@ -167,7 +167,7 @@ export function PlayerCoachAiChat({
       }
       return false;
     },
-    [profile?.uid],
+    [profile?.uid, nav],
   );
 
   const send = async (text: string) => {
@@ -327,10 +327,17 @@ export function PlayerCoachAiChat({
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.starters}
+          style={styles.startersScroll}
         >
           {chips.map((s) => (
             <PressableSpring key={s} style={styles.chip} onPress={() => send(s)} scaleTo={0.97}>
-              <ProDayText variant="caption" style={styles.chipText}>
+              <ProDayText
+                variant="caption"
+                style={styles.chipText}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.85}
+              >
                 {s}
               </ProDayText>
             </PressableSpring>
@@ -412,20 +419,25 @@ function createStyles(accent: string, accentBright: string) {
       marginTop: spacing.xs,
     },
     trainingCtaText: { fontWeight: '800' },
+    startersScroll: { flexGrow: 0, minHeight: 44 },
     starters: {
       paddingHorizontal: spacing.md,
       gap: spacing.sm,
       paddingBottom: spacing.sm,
+      paddingVertical: spacing.xs,
+      alignItems: 'center',
     },
     chip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm + 2,
+      minHeight: 36,
+      justifyContent: 'center',
       borderRadius: radius.pill,
-      backgroundColor: 'rgba(255,255,255,0.08)',
+      backgroundColor: PLAYER_DARK.surface,
       borderWidth: 1,
-      borderColor: `${accentBright}44`,
+      borderColor: '#2A2A38',
     },
-    chipText: { color: accentBright },
+    chipText: { color: PLAYER_DARK.accent, fontWeight: '700' },
     composer: {
       flexDirection: 'row',
       alignItems: 'flex-end',

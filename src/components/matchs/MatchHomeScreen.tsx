@@ -421,22 +421,22 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     const g = joueurSession.ageGroup;
     if (g === 'youth') {
       return {
-        caption: 'STAGE MATCH',
+        caption: 'Matchs',
         title: 'Arena',
-        subtitle: 'Fixture · Callout · Live — joue ta semaine.',
+        subtitle: 'Calendrier · Convocs · En direct — joue ta semaine.',
       };
     }
     if (g === 'teen') {
       return {
-        caption: 'RANKED MATCH',
-        title: 'Match stages',
+        caption: 'Matchs',
+        title: 'Centre match',
         subtitle: 'Convocs, stats, missions terrain.',
       };
     }
     return {
-      caption: 'ULTIMATE MATCH',
+      caption: 'Matchs',
       title: 'Centre Match',
-      subtitle: 'Stages : Fixture · Live · League.',
+      subtitle: 'Calendrier · En direct · Championnat.',
     };
   }, [isJoueur, joueurSession, t]);
 
@@ -506,7 +506,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
         }}
         amicauxBadge={openMatchesCount}
         convocationsBadge={pendingConvocations.length}
-        centreBadge={liveMatchCount > 0 ? 'LIVE' : undefined}
+        centreBadge={liveMatchCount > 0 ? 'Direct' : undefined}
         gameMode={isJoueur}
         coachSkin={embeddedInShell}
       />

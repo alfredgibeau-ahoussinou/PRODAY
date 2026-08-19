@@ -36,6 +36,19 @@ export type SetActiveTabOptions = {
   returnTo?: MainTabId;
 };
 
+/** Calcule returnTab : explicite > retour dock > conserver l’existant. */
+export function resolveAutoReturnTab(
+  fromTab: MainTabId,
+  toTab: MainTabId,
+  primaryDockTabs: ReadonlySet<MainTabId>,
+  explicitReturnTo?: MainTabId,
+): MainTabId | null | undefined {
+  if (explicitReturnTo !== undefined) return explicitReturnTo;
+  if (primaryDockTabs.has(toTab)) return null;
+  if (primaryDockTabs.has(fromTab) && !primaryDockTabs.has(toTab)) return fromTab;
+  return undefined;
+}
+
 export interface TabNavigationActions {
   setActiveTab: (tab: MainTabId, options?: SetActiveTabOptions) => void;
   goBackTab: () => void;
