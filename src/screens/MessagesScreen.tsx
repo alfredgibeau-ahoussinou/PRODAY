@@ -103,10 +103,10 @@ export const MessagesScreen: React.FC = () => {
   }, [loadSocialSuggestions]);
 
   useEffect(() => {
-    if (coachShell && threadFilter === 'care') {
+    if ((coachShell || (joueurLive && !coachShell)) && threadFilter === 'care') {
       setThreadFilter('all');
     }
-  }, [coachShell, threadFilter]);
+  }, [coachShell, joueurLive, threadFilter]);
 
   useEffect(() => {
     if (!profile?.uid) {

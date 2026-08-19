@@ -3,6 +3,7 @@ import { View, ScrollView, Text, StyleSheet, Platform } from 'react-native';
 import type { MessagesThreadFilter } from '../../content/messagesChapters';
 import {
   getCoachMessagesThreadFilters,
+  getJoueurMessagesThreadFilters,
   getMessagesThreadFilters,
 } from '../../i18n/localizedChapters';
 import { SearchBar } from '../ui/SearchBar';
@@ -42,8 +43,13 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   const coachTokens = useCoachTokens();
   const joueurTheme = useJoueurTheme();
   const threadFilters = useMemo(
-    () => (coach ? getCoachMessagesThreadFilters(t) : getMessagesThreadFilters(t)),
-    [coach, t],
+    () =>
+      coach
+        ? getCoachMessagesThreadFilters(t)
+        : joueur
+          ? getJoueurMessagesThreadFilters(t)
+          : getMessagesThreadFilters(t),
+    [coach, joueur, t],
   );
   const styles = useMemo(
     () => createStyles(colors, coach, joueur, coachTokens, joueurTheme),

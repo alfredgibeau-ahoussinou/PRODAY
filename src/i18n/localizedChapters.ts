@@ -120,6 +120,9 @@ export function getCoachMessagesThreadFilters(t: TranslateFn) {
   return getMessagesThreadFilters(t).filter((f) => f.id !== 'care');
 }
 
+/** Filtres messagerie joueur — sans Kiné (Tous + Non lus). */
+export const getJoueurMessagesThreadFilters = getCoachMessagesThreadFilters;
+
 export function getCarpoolChapters(t: TranslateFn) {
   return [
     { id: 'evenements' as const, label: tr(t, 'carpool.chapter.events', 'Événements') },
