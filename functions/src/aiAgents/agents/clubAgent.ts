@@ -13,7 +13,15 @@ export async function clubAgent(ctx: AgentContext): Promise<AgentResult> {
     ]);
 
     const club = clubSnap.data() ?? {};
-    const teams = teamsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const teams = teamsSnap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        name: typeof data.name === 'string' ? data.name : undefined,
+        category: typeof data.category === 'string' ? data.category : undefined,
+        coach_uids: Array.isArray(data.coach_uids) ? (data.coach_uids as string[]) : undefined,
+      };
+    });
     const memberships = membershipsSnap.docs.map((d) => d.data());
 
     const active = memberships.filter((m) => m.status === 'approved' || m.status === 'active').length;
