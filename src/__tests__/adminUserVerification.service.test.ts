@@ -84,7 +84,7 @@ describe('adminService.validateProfile', () => {
     expect(result.player_verification?.identity.status).toBe('verified');
     expect(result.player_verification?.club_license.status).toBe('verified');
 
-    const written = mockUpdateDoc.mock.calls[0]?.[1] as Record<string, unknown>;
+    const written = mockUpdateDoc.mock.calls[0]?.[1] as unknown as Record<string, unknown>;
     expect(written.is_verified).toBe(true);
     expect(written.verification_status).toBe('VERIFIED');
   });

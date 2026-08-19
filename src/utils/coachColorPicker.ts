@@ -53,9 +53,9 @@ export function buildCoachColorGrid(): string[] {
   for (let hi = 0; hi < HUE_COUNT; hi += 1) {
     const h = Math.round((hi * 360) / HUE_COUNT) % 360;
     for (let si = 0; si < SAT_COUNT; si += 1) {
-      const s = SAT_COUNT === 1 ? 65 : 30 + (si * 70) / (SAT_COUNT - 1);
+      const s = 30 + (si * 70) / (SAT_COUNT - 1);
       for (let li = 0; li < LIGHT_COUNT; li += 1) {
-        const l = LIGHT_COUNT === 1 ? 45 : 25 + (li * 45) / (LIGHT_COUNT - 1);
+        const l = 25 + (li * 45) / (LIGHT_COUNT - 1);
         const hex = normalizeCoachHexColor(hslToHex(h, s, l));
         if (hex && !seen.has(hex)) {
           seen.add(hex);
