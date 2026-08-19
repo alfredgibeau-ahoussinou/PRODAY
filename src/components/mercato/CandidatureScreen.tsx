@@ -15,7 +15,7 @@ import { TabScreenShell } from '../app/TabScreenShell';
 import { useCandidatureMercato } from '../../hooks/useCandidatureMercato';
 import { trackV3Event } from '../../core/analytics/v3Events';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 
 interface CandidatureScreenProps {
   profile: User;
@@ -122,7 +122,7 @@ export const CandidatureScreen: React.FC<CandidatureScreenProps> = ({
       style={[
         styles.topStat,
         {
-          backgroundColor: FUT18_PREMIUM.chipBg,
+          backgroundColor: JOUEUR_SURFACES.chipActive,
           borderColor: joueurTheme.border,
         },
       ]}

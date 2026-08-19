@@ -14,7 +14,7 @@ import { fontFamily } from '../../theme/typography';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 
 export interface MessagesInboxHeaderProps {
   search: string;
@@ -72,8 +72,8 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
               }
             : joueur
               ? {
-                  surface: FUT18_PREMIUM.listBg,
-                  border: FUT18_PREMIUM.listBorder,
+                  surface: JOUEUR_SURFACES.listRow,
+                  border: joueurTheme.border,
                   text: joueurTheme.ink,
                   textMuted: joueurTheme.inkMuted,
                 }
@@ -103,7 +103,7 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                     : coach
                       ? coachTokens.surface
                       : joueur
-                        ? FUT18_PREMIUM.chipBg
+                        ? JOUEUR_SURFACES.chip
                         : colors.surface,
                   borderColor: on
                     ? coach
@@ -114,7 +114,7 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                     : coach
                       ? 'transparent'
                       : joueur
-                        ? FUT18_PREMIUM.listBorder
+                        ? joueurTheme.border
                         : colors.border,
                 },
               ]}

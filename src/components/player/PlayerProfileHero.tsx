@@ -5,9 +5,9 @@ import type { User } from '../../models/User';
 import { Icon, type IconName } from '../ui/Icon';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
-import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import {
   availabilityLabel,
   availabilityTone,
@@ -49,9 +49,9 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
   if (p.weight_kg) metaParts.push(`${p.weight_kg} kg`);
 
   return (
-    <View style={[styles.card, shadows.card, { borderColor: `${joueurTheme.accent}44`, backgroundColor: FUT18_PREMIUM.panelBg }]}>
+    <View style={[styles.card, shadows.card, { borderColor: `${joueurTheme.accent}44`, backgroundColor: PLAYER_DARK.surface }]}>
       <LinearGradient
-        colors={[joueurTheme.accent, FUT18_PREMIUM.nightBlue, FUT18_PREMIUM.nightDeep]}
+        colors={[joueurTheme.accent, PLAYER_DARK.surfaceRaised, PLAYER_DARK.bg]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.hero}
@@ -142,8 +142,8 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
                     : 'Complétez pour être repéré'}
                 </Text>
               </View>
-              <View style={[styles.completionRing, { borderColor: FUT18_PREMIUM.goldAccent }]}>
-                <Text style={[styles.completionPct, { color: FUT18_PREMIUM.goldAccent }]}>{completionPercent}%</Text>
+              <View style={[styles.completionRing, { borderColor: joueurTheme.accent }]}>
+                <Text style={[styles.completionPct, { color: joueurTheme.accent }]}>{completionPercent}%</Text>
               </View>
             </View>
           ) : null}
@@ -155,8 +155,8 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
                   Stats · activité · profil
                 </Text>
               </View>
-              <View style={[styles.completionRing, { borderColor: FUT18_PREMIUM.goldAccent }]}>
-                <Text style={[styles.completionPct, { color: FUT18_PREMIUM.goldAccent }]}>{careerScore}</Text>
+              <View style={[styles.completionRing, { borderColor: joueurTheme.accent }]}>
+                <Text style={[styles.completionPct, { color: joueurTheme.accent }]}>{careerScore}</Text>
               </View>
             </View>
           ) : null}

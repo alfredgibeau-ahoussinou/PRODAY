@@ -31,7 +31,7 @@ import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import type { AppColors } from '../../theme/universeTheme';
 import { isJoueurProductLine } from '../../utils/playerLevelBadge';
-import { JOUEUR_SITE } from '../../theme/joueurDesignSystem';
+import { JOUEUR_DISCOVER, JOUEUR_SITE } from '../../theme/joueurDesignSystem';
 import { JoueurScreenChrome } from '../joueur/JoueurScreenChrome';
 import { resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
 
@@ -83,8 +83,8 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   const { t } = useTranslation();
   const metrics = useDiscoverMetrics();
   const homeCopy = getLocalizedDiscoverCopy(productLine, t);
-  const local = useMemo(() => createLocalStyles(c), [c]);
   const joueurLine = isJoueurProductLine(productLine);
+  const local = useMemo(() => createLocalStyles(c, joueurLine), [c, joueurLine]);
   const guestIdentity = useMemo(
     () =>
       joueurLine
@@ -255,7 +255,7 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   );
 };
 
-function createLocalStyles(c: AppColors) {
+function createLocalStyles(c: AppColors, joueurLine = false) {
   return StyleSheet.create({
     section: {
       marginBottom: spacing.xl,
@@ -270,9 +270,9 @@ function createLocalStyles(c: AppColors) {
       gap: spacing.sm,
       padding: spacing.md,
       borderRadius: radius.xl,
-      backgroundColor: c.surfaceMuted,
+      backgroundColor: joueurLine ? JOUEUR_DISCOVER.tileBg : c.surfaceMuted,
       borderWidth: 1.5,
-      borderColor: c.borderStrong,
+      borderColor: joueurLine ? JOUEUR_DISCOVER.tileBorder : c.borderStrong,
       marginBottom: spacing.xl,
       ...shadows.soft,
     },
@@ -281,7 +281,7 @@ function createLocalStyles(c: AppColors) {
       fontSize: 13,
       lineHeight: 19,
       fontWeight: '500',
-      color: c.textSecondary,
+      color: joueurLine ? JOUEUR_DISCOVER.heroMuted : c.textSecondary,
     },
     finalCta: {
       marginBottom: spacing.md,

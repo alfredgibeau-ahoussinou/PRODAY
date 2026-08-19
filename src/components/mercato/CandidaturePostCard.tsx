@@ -6,7 +6,6 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 
 interface CandidaturePostCardProps {
@@ -64,7 +63,7 @@ export const CandidaturePostCard: React.FC<CandidaturePostCardProps> = ({
             {clubName}
           </Text>
           {iaScore != null ? (
-            <View style={[styles.matchBadge, { backgroundColor: joueur ? FUT18_PREMIUM.chipBg : colors.accentSoft }]}>
+            <View style={[styles.matchBadge, { backgroundColor: joueur ? JOUEUR_SURFACES.chipActive : colors.accentSoft }]}>
               <Text style={[styles.matchText, { color: accent }]}>{iaScore}%</Text>
             </View>
           ) : (
@@ -136,7 +135,7 @@ function createStyles(
       width: 44,
       height: 44,
       borderRadius: radius.md,
-      backgroundColor: joueur ? FUT18_PREMIUM.chipBg : c.accentSoft,
+      backgroundColor: joueur ? JOUEUR_SURFACES.chip : c.accentSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },

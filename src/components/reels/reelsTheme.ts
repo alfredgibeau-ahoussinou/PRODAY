@@ -1,27 +1,28 @@
 import { fontFamily } from '../../theme/typography';
 import { spacing as globalSpacing, radius as globalRadius } from '../../theme/designTokens';
 import { JOUEUR_REELS } from '../../theme/joueurDesignSystem';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 
 /**
- * ProDay Reels — skin FUT 18 Color Premium (dock sombre + or).
+ * ProDay Reels — skin dark premium mint (dock sombre + accent #00E676).
  * Spacing / radius aliasent les tokens globaux (+ pas aéré via xxl).
  */
 export const reelsTheme = {
   color: {
     stage: JOUEUR_REELS.stage,
     ink: JOUEUR_REELS.stage,
-    surface: 'rgba(10,16,28,0.92)',
-    surfaceRaised: 'rgba(14,22,38,0.94)',
+    surface: 'rgba(26,26,36,0.92)',
+    surfaceRaised: 'rgba(34,34,48,0.94)',
 
     cyan: JOUEUR_REELS.accent,
     cyanSoft: JOUEUR_REELS.accentSoft,
     cyanLine: JOUEUR_REELS.accentLine,
-    onCyan: '#1A1408',
-    /** @deprecated alias → accent or FUT18 */
+    onCyan: PLAYER_DARK.bg,
+    /** @deprecated alias → accent mint */
     amber: JOUEUR_REELS.accent,
     amberSoft: JOUEUR_REELS.accentSoft,
     amberLine: JOUEUR_REELS.accentLine,
-    onAmber: '#1A1408',
+    onAmber: PLAYER_DARK.bg,
 
     ember: JOUEUR_REELS.ember,
 

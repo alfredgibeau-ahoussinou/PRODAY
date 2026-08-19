@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { JOUEUR_SITE } from '../content/joueurPageIdentity';
-import { FUT18_PREMIUM } from '../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 
 const ReelsScreen = lazy(() =>
   import('./ReelsScreen').then((module) => ({ default: module.ReelsScreen }))
@@ -12,7 +12,7 @@ export const LazyReelsScreen: React.FC = () => (
   <Suspense
     fallback={
       <View style={styles.fallback}>
-        <ActivityIndicator color={FUT18_PREMIUM.goldAccent} size="large" />
+        <ActivityIndicator color={PLAYER_DARK.accent} size="large" />
       </View>
     }
   >

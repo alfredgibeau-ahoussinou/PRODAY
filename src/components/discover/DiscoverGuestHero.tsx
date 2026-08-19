@@ -14,7 +14,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import { AUTH_SHEET } from '../auth/authSheetPalette';
 import { isJoueurProductLine } from '../../utils/playerLevelBadge';
 import { JOUEUR_DISCOVER, JOUEUR_SITE } from '../../theme/joueurDesignSystem';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 
 interface DiscoverGuestHeroProps {
   productLine: ProductLineId;
@@ -44,7 +44,7 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
   const copy = getLocalizedDiscoverCopy(productLine, t);
   const brand = brandForProductLine(productLine);
   const joueurLine = isJoueurProductLine(productLine);
-  const accent = joueurLine ? FUT18_PREMIUM.goldAccent : c.accent;
+  const accent = joueurLine ? PLAYER_DARK.accent : c.accent;
   const styles = useMemo(() => createStyles(c, joueurLine), [c, joueurLine]);
 
   return (
@@ -116,7 +116,7 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
 function createStyles(_c: ReturnType<typeof useAppTheme>['colors'], joueurLine = false) {
   const heroBg = joueurLine ? JOUEUR_DISCOVER.heroBg : AUTH_SHEET.heroBackground;
   const heroMuted = joueurLine ? JOUEUR_DISCOVER.heroMuted : AUTH_SHEET.heroMuted;
-  const accent = joueurLine ? FUT18_PREMIUM.goldAccent : _c.accent;
+  const accent = joueurLine ? PLAYER_DARK.accent : _c.accent;
 
   return StyleSheet.create({
     shell: {
@@ -240,7 +240,7 @@ function createStyles(_c: ReturnType<typeof useAppTheme>['colors'], joueurLine =
     signupText: {
       fontSize: 15,
       fontWeight: '800',
-      color: joueurLine ? JOUEUR_SITE.bg : '#0A0A0A',
+      color: joueurLine ? PLAYER_DARK.bg : '#0A0A0A',
     },
     signupTextSponsor: {
       color: '#1C1917',

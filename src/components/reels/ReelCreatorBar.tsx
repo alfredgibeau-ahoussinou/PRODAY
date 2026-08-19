@@ -10,7 +10,7 @@ import Animated, {
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion/PressableSpring';
 import { motion } from '../../theme/motion';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { reelsTheme } from './reelsTheme';
 
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -58,7 +58,7 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
         <View style={styles.identityRow}>
           <Pressable style={styles.authorRow} onPress={onOpenProfile}>
             <LinearGradient
-              colors={[FUT18_PREMIUM.nightBlue, FUT18_PREMIUM.nightDeep]}
+              colors={[PLAYER_DARK.surfaceRaised, PLAYER_DARK.bg]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.avatar}

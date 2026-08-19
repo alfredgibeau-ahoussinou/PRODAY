@@ -11,6 +11,7 @@ import {
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import {
@@ -43,8 +44,8 @@ export function PlayerCoachAiChat({
 }: Props) {
   const session = useJoueurSession();
   const nav = useTabNavigationActions();
-  const accent = session?.identity?.accent ?? '#4C8BFF';
-  const accentBright = session?.identity?.accentBright ?? '#93C5FD';
+  const accent = session?.identity?.accent ?? PLAYER_DARK.accent;
+  const accentBright = session?.identity?.accentBright ?? PLAYER_DARK.accentAlt;
 
   const [messages, setMessages] = useState<Bubble[]>([
     { id: 'welcome', role: 'assistant', content: WELCOME },
@@ -169,7 +170,7 @@ export function PlayerCoachAiChat({
           value={draft}
           onChangeText={setDraft}
           placeholder="Demande à ton Coach IA…"
-          placeholderTextColor="rgba(243,248,255,0.4)"
+          placeholderTextColor={PLAYER_DARK.textDim}
           style={styles.input}
           multiline
           maxLength={1200}
@@ -211,8 +212,8 @@ function createStyles(accent: string, accentBright: string) {
       borderWidth: 1,
       borderColor: JOUEUR_SITE.border,
     },
-    userText: { color: '#F3F8FF' },
-    aiText: { color: 'rgba(243,248,255,0.9)' },
+    userText: { color: PLAYER_DARK.text },
+    aiText: { color: PLAYER_DARK.text },
     error: { color: '#F87171', marginTop: spacing.xs },
     trainingCta: {
       flexDirection: 'row',
@@ -256,7 +257,7 @@ function createStyles(accent: string, accentBright: string) {
       paddingVertical: spacing.sm,
       borderRadius: radius.lg,
       backgroundColor: 'rgba(255,255,255,0.06)',
-      color: '#F3F8FF',
+      color: PLAYER_DARK.text,
       fontSize: 15,
     },
     send: {

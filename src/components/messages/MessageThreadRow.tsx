@@ -9,7 +9,7 @@ import { fontFamily } from '../../theme/typography';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 
 function formatThreadTime(date: Date): string {
   const now = new Date();
@@ -107,7 +107,7 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
           <View
             style={[
               styles.joueurAvatar,
-              { backgroundColor: unread ? accent : FUT18_PREMIUM.chipBg },
+              { backgroundColor: unread ? accent : JOUEUR_SURFACES.chip },
             ]}
           >
             {isTeamGroup ? (
@@ -404,9 +404,9 @@ function createStyles(
     },
     joueurCard: {
       borderRadius: joueurTheme.cardRadius,
-      backgroundColor: FUT18_PREMIUM.panelBg,
+      backgroundColor: JOUEUR_SURFACES.card,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: FUT18_PREMIUM.listBorder,
+      borderColor: joueurTheme.border,
       overflow: 'hidden',
       marginBottom: spacing.sm,
     },

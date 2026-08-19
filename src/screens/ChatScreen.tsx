@@ -35,7 +35,7 @@ import { useTranslation } from '../context/LocaleContext';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
 import { useJoueurSession } from '../context/JoueurSessionContext';
 import { useJoueurTheme } from '../hooks/useJoueurTheme';
-import { FUT18_PREMIUM } from '../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import {
   subscriptionService,
   SubscriptionLimitError,
@@ -102,13 +102,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         : joueurLive
           ? {
               bg: joueurTheme.shellBg,
-              surface: FUT18_PREMIUM.panelBg,
-              surfaceMuted: FUT18_PREMIUM.listBg,
-              border: FUT18_PREMIUM.listBorder,
+              surface: PLAYER_DARK.surface,
+              surfaceMuted: PLAYER_DARK.bgElevated,
+              border: PLAYER_DARK.border,
               text: joueurTheme.ink,
               textMuted: joueurTheme.inkMuted,
               accent: joueurTheme.accent,
-              onAccent: '#FFFFFF',
+              onAccent: PLAYER_DARK.bg,
               warning: themeColors.warning,
               warningBg: 'rgba(251,191,36,0.12)',
             }
@@ -445,7 +445,7 @@ function createStyles(_c: AppColors, joueurLive = false) {
       paddingVertical: spacing.sm,
       borderBottomWidth: StyleSheet.hairlineWidth,
       gap: spacing.sm,
-      ...(joueurLive ? { borderLeftWidth: 3, borderLeftColor: FUT18_PREMIUM.goldAccent } : null),
+      ...(joueurLive ? { borderLeftWidth: 3, borderLeftColor: PLAYER_DARK.accent } : null),
     },
     backBtn: {
       width: 40,

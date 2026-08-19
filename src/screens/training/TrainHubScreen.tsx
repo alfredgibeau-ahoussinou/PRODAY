@@ -36,6 +36,7 @@ import {
 } from '../../components/player/joueurPortalUi';
 import { JoueurUniverseWorld } from '../../components/player/JoueurUniverseWorld';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { isFunctionsUnavailable } from '../../lib/firebaseFunctions';
@@ -131,6 +132,25 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
   const joueurSession = useJoueurSession();
   const joueurLive =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
+
+  const jc = useMemo(() => {
+    if (!joueurLive || !joueurSession) return null;
+    const accent = joueurSession.identity.accent;
+    return {
+      background: PLAYER_DARK.bg,
+      surface: PLAYER_DARK.surface,
+      border: PLAYER_DARK.border,
+      text: PLAYER_DARK.text,
+      textSecondary: PLAYER_DARK.textMuted,
+      textMuted: PLAYER_DARK.textDim,
+      brand: accent,
+      brandInverse: PLAYER_DARK.bg,
+      accentSoft: PLAYER_DARK.accentSoft,
+    };
+  }, [joueurLive, joueurSession]);
+
+  const ui = jc ?? c;
+  const screenRootStyle = joueurLive ? { backgroundColor: PLAYER_DARK.bg } : rootStyle;
 
   const [view, setView] = useState<TrainHubView>(initialView);
   const [modeFilter, setModeFilter] = useState<HomeExerciseMode | undefined>();
@@ -291,7 +311,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
 
   if (view === 'ai') {
     return (
-      <View style={[styles.root, rootStyle]}>
+      <View style={[styles.root, screenRootStyle]}>
         <ScreenHeader
           title={aiResult ? 'Programme IA' : 'Entraînement IA'}
           onBack={() => {
@@ -316,8 +336,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     key={obj}
                     style={[
                       styles.chip,
-                      { borderColor: c.border },
-                      aiObjective === obj && { backgroundColor: c.brand },
+                      { borderColor: ui.border },
+                      aiObjective === obj && { backgroundColor: ui.brand },
                     ]}
                     onPress={() => setAiObjective(obj)}
                     scaleTo={0.96}
@@ -325,7 +345,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     <ProDayText
                       variant="caption"
                       inverse={aiObjective === obj}
-                      style={aiObjective !== obj ? { color: c.textSecondary } : undefined}
+                      style={aiObjective !== obj ? { color: ui.textSecondary } : undefined}
                     >
                       {TRAINING_OBJECTIVE_LABELS[obj]}
                     </ProDayText>
@@ -340,8 +360,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     key={d}
                     style={[
                       styles.chip,
-                      { borderColor: c.border },
-                      aiDuration === d && { backgroundColor: c.brand },
+                      { borderColor: ui.border },
+                      aiDuration === d && { backgroundColor: ui.brand },
                     ]}
                     onPress={() => setAiDuration(d)}
                     scaleTo={0.96}
@@ -349,7 +369,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     <ProDayText
                       variant="caption"
                       inverse={aiDuration === d}
-                      style={aiDuration !== d ? { color: c.textSecondary } : undefined}
+                      style={aiDuration !== d ? { color: ui.textSecondary } : undefined}
                     >
                       {d} min
                     </ProDayText>
@@ -364,8 +384,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     key={lvl}
                     style={[
                       styles.chip,
-                      { borderColor: c.border },
-                      aiLevel === lvl && { backgroundColor: c.brand },
+                      { borderColor: ui.border },
+                      aiLevel === lvl && { backgroundColor: ui.brand },
                     ]}
                     onPress={() => setAiLevel(lvl)}
                     scaleTo={0.96}
@@ -373,7 +393,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     <ProDayText
                       variant="caption"
                       inverse={aiLevel === lvl}
-                      style={aiLevel !== lvl ? { color: c.textSecondary } : undefined}
+                      style={aiLevel !== lvl ? { color: ui.textSecondary } : undefined}
                     >
                       {TRAINING_LEVEL_LABELS[lvl]}
                     </ProDayText>
@@ -388,8 +408,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     key={eq}
                     style={[
                       styles.chip,
-                      { borderColor: c.border },
-                      aiEquipment.includes(eq) && { backgroundColor: c.brand },
+                      { borderColor: ui.border },
+                      aiEquipment.includes(eq) && { backgroundColor: ui.brand },
                     ]}
                     onPress={() => toggleEquipment(eq)}
                     scaleTo={0.96}
@@ -397,7 +417,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     <ProDayText
                       variant="caption"
                       inverse={aiEquipment.includes(eq)}
-                      style={!aiEquipment.includes(eq) ? { color: c.textSecondary } : undefined}
+                      style={!aiEquipment.includes(eq) ? { color: ui.textSecondary } : undefined}
                     >
                       {eq}
                     </ProDayText>
@@ -412,8 +432,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     key={String(val)}
                     style={[
                       styles.chip,
-                      { borderColor: c.border },
-                      aiPartner === val && { backgroundColor: c.brand },
+                      { borderColor: ui.border },
+                      aiPartner === val && { backgroundColor: ui.brand },
                     ]}
                     onPress={() => setAiPartner(val)}
                     scaleTo={0.96}
@@ -421,7 +441,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     <ProDayText
                       variant="caption"
                       inverse={aiPartner === val}
-                      style={aiPartner !== val ? { color: c.textSecondary } : undefined}
+                      style={aiPartner !== val ? { color: ui.textSecondary } : undefined}
                     >
                       {val ? 'Avec quelqu\u2019un' : 'Seul'}
                     </ProDayText>
@@ -430,7 +450,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
               </View>
 
               <PressableSpring
-                style={[styles.cta, { backgroundColor: c.brand, marginTop: spacing.lg }]}
+                style={[styles.cta, { backgroundColor: ui.brand, marginTop: spacing.lg }]}
                 onPress={() => void generateAiTraining()}
                 disabled={aiGenerating}
                 scaleTo={0.97}
@@ -454,7 +474,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                 <ProDaySurface
                   key={`${phase.name}-${i}`}
                   variant="module"
-                  style={[styles.card, { borderColor: c.border }]}
+                  style={[styles.card, { borderColor: ui.border }]}
                 >
                   <ProDayText variant="section">
                     {phase.label || phaseLabel(phase.name)} · {phase.duration_min} min
@@ -488,7 +508,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                 </ProDaySurface>
               ))}
               <PressableSpring
-                style={[styles.cta, { backgroundColor: c.brand }]}
+                style={[styles.cta, { backgroundColor: ui.brand }]}
                 onPress={() => {
                   setAiResult(null);
                 }}
@@ -508,7 +528,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
 
   if (view === 'exercise' && selected) {
     return (
-      <View style={[styles.root, rootStyle]}>
+      <View style={[styles.root, screenRootStyle]}>
         <ScreenHeader title={selected.title} onBack={() => setView(modeFilter === 'family' ? 'family' : 'home')} />
         <ScrollView contentContainerStyle={styles.pad}>
           <ProDayText variant="caption" accent>
@@ -519,7 +539,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
             {selected.summary}
           </ProDayText>
           {selected.modes.map((m) => (
-            <ProDaySurface key={m} variant="module" style={[styles.modeBanner, { borderColor: c.border }]}>
+            <ProDaySurface key={m} variant="module" style={[styles.modeBanner, { borderColor: ui.border }]}>
               <ProDayText variant="caption" accent>
                 {HOME_EXERCISE_MODE_LABELS[m]}
               </ProDayText>
@@ -560,23 +580,23 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
 
   if (view === 'home' || view === 'family') {
     return (
-      <View style={[styles.root, rootStyle]}>
+      <View style={[styles.root, screenRootStyle]}>
         <ScreenHeader
           title={view === 'family' ? 'Avec ma famille' : 'À la maison'}
           onBack={() => setView('hub')}
         />
         <ScrollView contentContainerStyle={styles.pad}>
           <TextInput
-            style={[styles.input, { borderColor: c.border, color: c.text }]}
+            style={[styles.input, { borderColor: ui.border, color: ui.text }]}
             placeholder="Chercher un exercice…"
-            placeholderTextColor={c.textMuted}
+            placeholderTextColor={ui.textMuted}
             value={query}
             onChangeText={setQuery}
           />
           {exercises.map((ex) => (
             <PressableSpring
               key={ex.id}
-              style={[styles.card, { borderColor: c.border, backgroundColor: c.surface }]}
+              style={[styles.card, { borderColor: ui.border, backgroundColor: ui.surface }]}
               onPress={() => {
                 setSelected(ex);
                 setView('exercise');
@@ -606,7 +626,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
 
   if (view === 'coach' || view === 'book' || bookingCoach) {
     return (
-      <View style={[styles.root, rootStyle]}>
+      <View style={[styles.root, screenRootStyle]}>
         <ScreenHeader
           title={bookingCoach ? 'Réserver' : 'Coach humain'}
           onBack={() => {
@@ -620,7 +640,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
           </ProDayText>
 
           {bookingCoach ? (
-            <ProDaySurface variant="module" style={[styles.card, { borderColor: c.brand }]}>
+            <ProDaySurface variant="module" style={[styles.card, { borderColor: ui.brand }]}>
               <ProDayText variant="section">{bookingCoach.display_name}</ProDayText>
               <ProDayText variant="caption" muted>
                 {bookingCoach.hourly_rate_eur} €/h · {bookingCoach.city}
@@ -630,11 +650,11 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                 Date (jj/mm/aaaa)
               </ProDayText>
               <TextInput
-                style={[styles.input, { borderColor: c.border, color: c.text }]}
+                style={[styles.input, { borderColor: ui.border, color: ui.text }]}
                 value={dateStr}
                 onChangeText={setDateStr}
                 placeholder="12/09/2026"
-                placeholderTextColor={c.textMuted}
+                placeholderTextColor={ui.textMuted}
               />
               <ProDayText variant="caption" style={styles.mt}>
                 Durée
@@ -645,8 +665,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     key={d}
                     style={[
                       styles.chip,
-                      duration === d && { backgroundColor: c.brand },
-                      { borderColor: c.border },
+                      duration === d && { backgroundColor: ui.brand },
+                      { borderColor: ui.border },
                     ]}
                     onPress={() => setDuration(d)}
                     scaleTo={0.96}
@@ -654,7 +674,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     <ProDayText
                       variant="caption"
                       inverse={duration === d}
-                      style={duration !== d ? { color: c.textSecondary } : undefined}
+                      style={duration !== d ? { color: ui.textSecondary } : undefined}
                     >
                       {d} min
                     </ProDayText>
@@ -662,14 +682,14 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                 ))}
               </View>
               <PressableSpring
-                style={[styles.cta, { backgroundColor: c.brand }]}
+                style={[styles.cta, { backgroundColor: ui.brand }]}
                 onPress={() => void requestBooking()}
                 disabled={submitting}
                 scaleTo={0.97}
                 haptic
               >
                 {submitting ? (
-                  <ActivityIndicator color={c.brandInverse} />
+                  <ActivityIndicator color={ui.brandInverse} />
                 ) : (
                   <ProDayText variant="caption" inverse>
                     Demander la séance
@@ -678,12 +698,12 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
               </PressableSpring>
             </ProDaySurface>
           ) : loadingCoaches ? (
-            <ActivityIndicator color={c.brand} style={styles.mt} />
+            <ActivityIndicator color={ui.brand} style={styles.mt} />
           ) : (
             coaches.map((coach) => (
               <PressableSpring
                 key={coach.coach_uid}
-                style={[styles.card, { borderColor: c.border, backgroundColor: c.surface }]}
+                style={[styles.card, { borderColor: ui.border, backgroundColor: ui.surface }]}
                 onPress={() => setBookingCoach(coach)}
                 scaleTo={0.98}
                 haptic
@@ -712,7 +732,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
         styles.root,
         joueurLive && joueurSession
           ? { backgroundColor: JOUEUR_SITE.bg }
-          : rootStyle,
+          : screenRootStyle,
       ]}
     >
       <ScreenHeader
@@ -820,19 +840,19 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
             <ImmersiveStepStrip
               steps={['Maison / famille', 'Pass IA 3,99 €', 'Coach ~30 €/h', 'Match']}
             />
-            <ProDaySurface variant="module" style={[styles.card, { borderColor: c.border }]}>
+            <ProDaySurface variant="module" style={[styles.card, { borderColor: ui.border }]}>
               <ProDayText variant="section">Pass / assistant IA · 3,99 €/mois</ProDayText>
               <ProDayText variant="caption" muted>
                 Programmes perso générés par l’IA. Pas un coach humain.
               </ProDayText>
             </ProDaySurface>
-            <ProDaySurface variant="module" style={[styles.card, { borderColor: c.border }]}>
+            <ProDaySurface variant="module" style={[styles.card, { borderColor: ui.border }]}>
               <ProDayText variant="section">Coach humain · ~30 €/h</ProDayText>
               <ProDayText variant="caption" muted>
                 Séance à l’heure, tarif du coach. Demande → acceptation → paiement carte.
               </ProDayText>
               <PressableSpring
-                style={[styles.cta, { backgroundColor: c.brand, marginTop: spacing.sm }]}
+                style={[styles.cta, { backgroundColor: ui.brand, marginTop: spacing.sm }]}
                 onPress={() => setView('book')}
                 scaleTo={0.97}
                 haptic
@@ -850,7 +870,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
             style={[
               styles.card,
               {
-                borderColor: joueurLive ? JOUEUR_SITE.border : c.border,
+                borderColor: joueurLive ? JOUEUR_SITE.border : ui.border,
                 backgroundColor: joueurLive ? JOUEUR_SITE.surface : undefined,
               },
             ]}
@@ -886,7 +906,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                       {
                         backgroundColor: joueurLive
                           ? joueurSession!.identity.accent
-                          : c.brand,
+                          : ui.brand,
                       },
                     ]}
                     onPress={() => void payBooking(b.id)}
@@ -920,7 +940,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     borderLeftColor: joueurSession!.identity.accent,
                     borderRadius: joueurSession!.identity.radius,
                   }
-                : { borderColor: c.border, backgroundColor: c.surface },
+                : { borderColor: ui.border, backgroundColor: ui.surface },
             ]}
             onPress={() => {
               if (action.id === 'home') openLibrary('solo');
@@ -936,14 +956,14 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                 {
                   backgroundColor: joueurLive
                     ? joueurSession!.identity.soft
-                    : c.accentSoft,
+                    : ui.accentSoft,
                 },
               ]}
             >
               <Icon
                 name={action.icon}
                 size={22}
-                color={joueurLive ? joueurSession!.identity.accent : c.brand}
+                color={joueurLive ? joueurSession!.identity.accent : ui.brand}
               />
             </View>
             <View style={styles.hubText}>

@@ -26,7 +26,7 @@ import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
 import { JoueurScreenChrome } from '../components/joueur/JoueurScreenChrome';
 import { useJoueurSession } from '../context/JoueurSessionContext';
-import { FUT18_PREMIUM } from '../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import { ProDayTabPager } from '../components/ui/ProDayTabPager';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
 import { ProDayText } from '../components/ui/ProDayText';
@@ -147,14 +147,14 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
           }
         : joueurLive && joueurSession
           ? {
-              surface: FUT18_PREMIUM.panelBg,
-              surfaceMuted: FUT18_PREMIUM.listBg,
-              border: FUT18_PREMIUM.listBorder,
+              surface: PLAYER_DARK.surface,
+              surfaceMuted: PLAYER_DARK.bgElevated,
+              border: PLAYER_DARK.border,
               text: joueurSession.identity.ink,
               textSecondary: joueurSession.identity.inkMuted,
               textMuted: joueurSession.identity.inkMuted,
               accent: joueurSession.identity.accent,
-              onAccent: '#FFFFFF',
+              onAccent: PLAYER_DARK.bg,
             }
           : {
               surface: c.surface,
@@ -687,7 +687,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         )}
       </View>
 
-      <View style={[styles.footer, { borderTopColor: ui.border, backgroundColor: isSponsor ? SPONSOR_THEME.surface : joueurLive ? FUT18_PREMIUM.panelBg : c.surface }]}>
+      <View style={[styles.footer, { borderTopColor: ui.border, backgroundColor: isSponsor ? SPONSOR_THEME.surface : joueurLive ? PLAYER_DARK.surface : c.surface }]}>
         <PressableSpring
           style={[
             styles.primary,

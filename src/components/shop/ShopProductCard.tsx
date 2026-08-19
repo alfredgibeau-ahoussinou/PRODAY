@@ -13,7 +13,7 @@ import type { ProductLineId } from '../../models/ProductLine';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { spacing, radius, shadows } from '../../theme/designTokens';
@@ -45,12 +45,12 @@ export const ShopProductCard: React.FC<ShopProductCardProps> = ({
   const colors = joueurSkin
     ? {
         ...c,
-        surface: FUT18_PREMIUM.panelBg,
-        surfaceMuted: FUT18_PREMIUM.listBg,
-        border: FUT18_PREMIUM.panelBorder,
-        ink: '#F8FAFC',
-        textMuted: 'rgba(148,163,184,0.92)',
-        accent: joueurSession?.identity?.accent ?? c.accent,
+        surface: PLAYER_DARK.surface,
+        surfaceMuted: PLAYER_DARK.bgElevated,
+        border: PLAYER_DARK.border,
+        ink: PLAYER_DARK.text,
+        textMuted: PLAYER_DARK.textMuted,
+        accent: joueurSession?.identity?.accent ?? PLAYER_DARK.accent,
       }
     : c;
   const styles = useMemo(() => createStyles(colors), [colors]);
