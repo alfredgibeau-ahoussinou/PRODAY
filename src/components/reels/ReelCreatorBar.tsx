@@ -89,7 +89,7 @@ export const ReelCreatorBar: React.FC<ReelCreatorBarProps> = ({
           </Pressable>
 
           <PressableSpring
-            scaleTo={0.94}
+            scaleTo={0.97}
             haptic
             onPress={onToggleFollow}
             accessibilityRole="button"

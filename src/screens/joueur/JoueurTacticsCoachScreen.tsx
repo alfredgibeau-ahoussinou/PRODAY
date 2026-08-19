@@ -52,7 +52,7 @@ export function JoueurTacticsCoachScreen({ onBack }: Props) {
             joueurGamePress();
             onBack();
           }}
-          scaleTo={0.94}
+          scaleTo={0.97}
           haptic
           style={[styles.backBtn, { borderColor: JOUEUR_SITE.border }]}
           accessibilityLabel="Retour"

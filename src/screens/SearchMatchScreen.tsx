@@ -185,7 +185,7 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
                   prodayHaptics.tabSwitch();
                   setChip(chipId);
                 }}
-                scaleTo={0.94}
+                scaleTo={0.97}
                 haptic
               >
                 <Text style={[styles.chipText, chip === chipId && styles.chipTextActive]}>
@@ -283,7 +283,7 @@ export const SearchMatchScreen: React.FC<SearchMatchScreenProps> = ({
                   key={opt.id}
                   style={[styles.chip, sortMode === opt.id && styles.chipActive]}
                   onPress={() => setSortMode(opt.id)}
-                  scaleTo={0.94}
+                  scaleTo={0.97}
                   haptic
                 >
                   <Text style={[styles.chipText, sortMode === opt.id && styles.chipTextActive]}>

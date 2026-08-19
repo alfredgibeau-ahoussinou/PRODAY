@@ -200,21 +200,26 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
     );
   }, [productLine, allowedPoles]);
 
+  const reloadActorSeeds = useCallback(async () => {
+    const actorSeeds = await fetchActorReelSeeds({
+      clubId: profile?.profile?.club_id,
+      productLine,
+    });
+    setExtraSeeds(actorSeeds);
+    return actorSeeds;
+  }, [productLine, profile?.profile?.club_id]);
+
   useEffect(() => {
     setActorSeedsLoading(true);
     void (async () => {
       try {
-        const [bm, lk, fl, counts, hidden, resume, actorSeeds] = await Promise.all([
+        const [bm, lk, fl, counts, hidden, resume] = await Promise.all([
           loadReelBookmarks(),
           loadReelLikes(),
           loadReelFollows(),
           loadReelCommentCounts(),
           loadHiddenReels(),
           loadReelResume(productLine, pole, theme),
-          fetchActorReelSeeds({
-            clubId: profile?.profile?.club_id,
-            productLine,
-          }),
         ]);
         setBookmarks(bm);
         setLikes(lk);
@@ -223,12 +228,12 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         setHiddenKeys(hidden);
         setBookmarkEntries(await loadReelBookmarkEntries());
         setResumeBookmarkKey(resume?.bookmarkKey);
-        setExtraSeeds(actorSeeds);
+        await reloadActorSeeds();
       } finally {
         setActorSeedsLoading(false);
       }
     })();
-  }, [productLine, pole, theme, profile?.profile?.club_id]);
+  }, [productLine, pole, theme, profile?.profile?.club_id, reloadActorSeeds]);
 
   useEffect(() => {
     if (resumeIndex > 0 && reels.length > resumeIndex) {
@@ -381,6 +386,11 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
           video_url,
         }, profile.email);
         setPickedVideo(null);
+        setUploadOpen(false);
+        // Affiche le thème du reel publié, sinon le filtre courant le masque.
+        setTheme(uploadTheme);
+        setResumeBookmarkKey(undefined);
+        await reloadActorSeeds();
         trackV3Event('reel_upload_submitted', { theme: uploadTheme });
       } catch (error) {
         throw error instanceof Error ? error : new Error(t('common.error'));
@@ -388,7 +398,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
         setUploading(false);
       }
     },
-    [profile, pickedVideo, t],
+    [profile, pickedVideo, t, reloadActorSeeds],
   );
 
   const renderItem = useCallback(
@@ -518,7 +528,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
             <View style={styles.topActions}>
               <PressableSpring
                 style={styles.control}
-                scaleTo={0.9}
+                scaleTo={0.98}
                 haptic
                 onPress={() => setCollectionOpen(true)}
                 accessibilityRole="button"
@@ -530,7 +540,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
                 <PressableSpring
                   testID="reels-upload-open"
                   style={styles.control}
-                  scaleTo={0.9}
+                  scaleTo={0.98}
                   haptic
                   onPress={() => setUploadOpen(true)}
                   accessibilityRole="button"

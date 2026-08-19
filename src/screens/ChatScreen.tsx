@@ -270,7 +270,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
     >
       <View style={[styles.header, { backgroundColor: ui.surface, borderBottomColor: ui.border }]}>
-        <PressableSpring style={[styles.backBtn, { borderColor: ui.border }]} onPress={onBack} scaleTo={0.92} haptic>
+        <PressableSpring style={[styles.backBtn, { borderColor: ui.border }]} onPress={onBack} scaleTo={0.97} haptic>
           <Icon name="arrow-back" size={20} color={ui.text} />
         </PressableSpring>
         <View style={styles.headerCenter}>
@@ -387,7 +387,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           <PressableSpring
             onPress={handleSend}
             disabled={!text.trim() || sending || Boolean(sendBlocked)}
-            scaleTo={0.9}
+            scaleTo={0.97}
             haptic
           >
             <View

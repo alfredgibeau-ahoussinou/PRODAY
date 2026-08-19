@@ -219,7 +219,7 @@ export function JoueurTacticsCoachChat({
           />
           <PressableSpring
             onPress={() => void send(draft)}
-            scaleTo={0.94}
+            scaleTo={0.97}
             haptic
             disabled={sending || !draft.trim()}
             style={[

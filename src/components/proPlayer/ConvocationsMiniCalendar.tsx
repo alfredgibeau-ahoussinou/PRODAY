@@ -127,7 +127,7 @@ export const ConvocationsMiniCalendar: React.FC<ConvocationsMiniCalendarProps> =
         <PressableSpring
           style={[styles.navBtn, { borderColor: colors.border }]}
           onPress={() => goMonth(-1)}
-          scaleTo={0.92}
+          scaleTo={0.97}
           haptic
           accessibilityLabel="Mois précédent"
         >
@@ -139,7 +139,7 @@ export const ConvocationsMiniCalendar: React.FC<ConvocationsMiniCalendarProps> =
         <PressableSpring
           style={[styles.navBtn, { borderColor: colors.border }]}
           onPress={() => goMonth(1)}
-          scaleTo={0.92}
+          scaleTo={0.97}
           haptic
           accessibilityLabel="Mois suivant"
         >
@@ -182,7 +182,7 @@ export const ConvocationsMiniCalendar: React.FC<ConvocationsMiniCalendarProps> =
                 !cell.isSelected && cell.isToday && { borderColor: colors.accent, borderWidth: 1.5 },
               ]}
               onPress={onPress}
-              scaleTo={0.9}
+              scaleTo={0.97}
               haptic
             >
               <ProDayText

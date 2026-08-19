@@ -351,7 +351,7 @@ export function YouthUniverseScreen({
                   ) : null}
                   <PressableSpring
                     onPress={() => openNode(node.id)}
-                    scaleTo={0.92}
+                    scaleTo={0.97}
                     haptic
                     style={[
                       styles.pathOrb,
@@ -416,7 +416,7 @@ export function YouthUniverseScreen({
                       if (!isDone) void complete(c.id, c.xp);
                       else joueurGamePress();
                     }}
-                    scaleTo={0.94}
+                    scaleTo={0.97}
                     haptic
                     style={[
                       styles.stampCard,
