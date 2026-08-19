@@ -8,6 +8,8 @@ import {
 import { adminService } from '../services/admin.service';
 import { recruitmentService } from '../services/recruitment.service';
 import { sponsorQuoteService } from '../services/sponsorQuote.service';
+import { membershipsService } from '../services/memberships.service';
+import { subscriptionUpgradeRequestService } from '../services/subscriptionUpgradeRequest.service';
 
 jest.mock('../services/admin.service', () => ({
   adminService: {
@@ -17,6 +19,7 @@ jest.mock('../services/admin.service', () => ({
     deletePaymentRequest: jest.fn(),
     deleteReelReport: jest.fn(),
     updateRecruitmentPost: jest.fn(),
+    grantProSubscription: jest.fn(),
   },
 }));
 
@@ -30,6 +33,24 @@ jest.mock('../services/sponsorQuote.service', () => ({
   sponsorQuoteService: {
     rejectQuote: jest.fn(),
   },
+}));
+
+jest.mock('../services/memberships.service', () => ({
+  membershipsService: {
+    approve: jest.fn(),
+    reject: jest.fn(),
+  },
+}));
+
+jest.mock('../services/subscriptionUpgradeRequest.service', () => ({
+  subscriptionUpgradeRequestService: {
+    getById: jest.fn(),
+    updateRequestStatus: jest.fn(),
+  },
+}));
+
+jest.mock('../lib/firebase', () => ({
+  getFirebaseAuth: () => ({ currentUser: { uid: 'admin-1' } }),
 }));
 
 function item(kind: AdminWorkItem['kind'], id: string, entityId?: string): AdminWorkItem {
@@ -50,8 +71,16 @@ describe('adminWorkQueueActions', () => {
   });
 
   describe('canAdminWorkInlineAction', () => {
-    it('autorise approve pour verification, reel, application, payment, report', () => {
-      for (const kind of ['verification', 'reel', 'application', 'payment', 'report'] as const) {
+    it('autorise approve pour verification, reel, application, payment, report, membership, subscription_request', () => {
+      for (const kind of [
+        'verification',
+        'reel',
+        'application',
+        'payment',
+        'report',
+        'membership',
+        'subscription_request',
+      ] as const) {
         expect(canAdminWorkInlineAction(item(kind, `${kind}-1`), 'approve')).toBe(true);
       }
     });
@@ -70,6 +99,8 @@ describe('adminWorkQueueActions', () => {
         'application',
         'quote',
         'post',
+        'membership',
+        'subscription_request',
       ];
       for (const kind of kinds) {
         expect(canAdminWorkInlineAction(item(kind, `${kind}-1`), 'reject')).toBe(true);
@@ -111,6 +142,35 @@ describe('adminWorkQueueActions', () => {
         'Action non supportée',
       );
     });
+
+    it('valide une adhésion club', async () => {
+      await executeAdminWorkApprove(item('membership', 'mem-m9'));
+      expect(membershipsService.approve).toHaveBeenCalledWith('m9', 'admin-1');
+    });
+
+    it('approuve une demande d abonnement et accorde la formule', async () => {
+      (subscriptionUpgradeRequestService.getById as jest.Mock).mockResolvedValue({
+        id: 's2',
+        user_uid: 'u9',
+        plan_id: 'player_pro',
+        billing: 'monthly',
+      });
+      (subscriptionUpgradeRequestService.updateRequestStatus as jest.Mock).mockResolvedValue({
+        ok: true,
+      });
+      await executeAdminWorkApprove(item('subscription_request', 'subreq-s2'));
+      expect(subscriptionUpgradeRequestService.updateRequestStatus).toHaveBeenCalledWith(
+        's2',
+        'approved',
+      );
+      expect(adminService.grantProSubscription).toHaveBeenCalledWith(
+        'u9',
+        'player_pro',
+        1,
+        'Demande d’abonnement approuvée',
+        false,
+      );
+    });
   });
 
   describe('executeAdminWorkReject', () => {
@@ -138,6 +198,22 @@ describe('adminWorkQueueActions', () => {
       await executeAdminWorkReject(item('report', 'report-r2', 'proday-x'));
       expect(adminService.updateCommunityReelStatus).not.toHaveBeenCalled();
       expect(adminService.deleteReelReport).toHaveBeenCalledWith('r2');
+    });
+
+    it('refuse une adhésion club', async () => {
+      await executeAdminWorkReject(item('membership', 'mem-m1'));
+      expect(membershipsService.reject).toHaveBeenCalledWith('m1', 'admin-1');
+    });
+
+    it('refuse une demande d abonnement', async () => {
+      (subscriptionUpgradeRequestService.updateRequestStatus as jest.Mock).mockResolvedValue({
+        ok: true,
+      });
+      await executeAdminWorkReject(item('subscription_request', 'subreq-s1'));
+      expect(subscriptionUpgradeRequestService.updateRequestStatus).toHaveBeenCalledWith(
+        's1',
+        'rejected',
+      );
     });
   });
 });

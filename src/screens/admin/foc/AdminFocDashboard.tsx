@@ -27,9 +27,20 @@ import {
   resolveAdminPlayerAgeGroup,
 } from '../../../utils/adminPlayerUniverse';
 import { JOUEUR_UNIVERSE_LABELS } from '../../../utils/joueurBirthAge';
+import {
+  ADMIN_WORK_KIND_SHORTCUTS,
+  countWorkByKind,
+} from '../../../utils/adminInsights';
+import { resolveAdminWorkItemNavigation } from '../../../utils/adminWorkNavigation';
+import { AdminButton } from '../../../components/admin/AdminButton';
 
 interface AdminFocDashboardProps {
   onNavigateSection: (section: string) => void;
+  onNavigateTarget?: (target: {
+    section: string;
+    hubTab?: string;
+    screenTab?: string;
+  }) => void;
   onOpenDecisions?: () => void;
 }
 
@@ -67,6 +78,7 @@ function matchStatusLabel(tone: MatchStatusTone, match: FriendlyMatch): string {
 
 export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
   onNavigateSection,
+  onNavigateTarget,
   onOpenDecisions,
 }) => {
   const onNavigateLeaf = onNavigateSection;
@@ -181,9 +193,23 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
     return items.slice(0, 8);
   }, [workQueue, matches, users]);
 
+  const goTarget = useCallback(
+    (target: { section: string; hubTab?: string; screenTab?: string }) => {
+      if (onNavigateTarget) onNavigateTarget(target);
+      else onNavigateLeaf(target.section);
+    },
+    [onNavigateTarget, onNavigateLeaf],
+  );
+
   const onRefresh = useCallback(() => {
     refresh();
   }, [refresh]);
+
+  const workByKind = useMemo(() => countWorkByKind(workQueue), [workQueue]);
+  const treatShortcuts = useMemo(
+    () => ADMIN_WORK_KIND_SHORTCUTS.filter((s) => workByKind[s.kind] > 0),
+    [workByKind],
+  );
 
   const styles = useMemo(() => createStyles(), []);
 
@@ -316,8 +342,16 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
           <AdminFocActivityFeed
             items={activityItems}
             onPressItem={(id) => {
-              if (id.startsWith('wq-')) onNavigateLeaf('publications');
-              else if (id.startsWith('match-')) onNavigateLeaf('matchs');
+              if (id.startsWith('wq-')) {
+                const workId = id.slice(3);
+                const item = workQueue.find((w) => w.id === workId);
+                if (item) {
+                  goTarget(resolveAdminWorkItemNavigation(item));
+                  return;
+                }
+                if (onOpenDecisions) onOpenDecisions();
+                else onNavigateLeaf('publications');
+              } else if (id.startsWith('match-')) onNavigateLeaf('matchs');
               else if (id.startsWith('user-')) onNavigateLeaf('adherents');
             }}
           />
@@ -349,6 +383,38 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
                   statusTone={tone}
                   competition={m.category}
                   onPress={() => onNavigateLeaf('matchs')}
+                />
+              );
+            })}
+          </View>
+        </AdminFocCard>
+      ) : null}
+
+      {/* À traiter — raccourcis par kind */}
+      {treatShortcuts.length > 0 ? (
+        <AdminFocCard
+          title="À traiter"
+          action={{
+            label: 'Tout voir',
+            onPress: () => {
+              if (onOpenDecisions) onOpenDecisions();
+              else onNavigateLeaf('publications');
+            },
+          }}
+        >
+          <View style={styles.treatRow}>
+            {treatShortcuts.map((s) => {
+              const dummy = workQueue.find((w) => w.kind === s.kind);
+              return (
+                <AdminButton
+                  key={s.kind}
+                  label={`${s.label} · ${workByKind[s.kind]}`}
+                  variant="secondary"
+                  size="sm"
+                  onPress={() => {
+                    if (dummy) goTarget(resolveAdminWorkItemNavigation(dummy));
+                    else if (onOpenDecisions) onOpenDecisions();
+                  }}
                 />
               );
             })}
@@ -481,6 +547,11 @@ function createStyles() {
       color: adminChrome.textMuted,
     },
     matchList: {
+      gap: spacing.sm,
+    },
+    treatRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
     },
     decisionsBanner: {

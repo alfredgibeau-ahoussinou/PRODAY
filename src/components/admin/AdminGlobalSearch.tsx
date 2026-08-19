@@ -12,8 +12,10 @@ import { Icon } from '../ui/Icon';
 import { globalAdminSearch, type GlobalSearchResult } from '../../utils/adminInsights';
 import { useAdminData } from '../../context/AdminDataContext';
 import type { AdminHqRoute } from '../../navigation/adminTabConfig';
-import { ADMIN_SEARCH_KIND_LABELS, hqRouteFromLegacyTab } from '../../navigation/adminTabConfig';
+import { ADMIN_SEARCH_KIND_LABELS } from '../../navigation/adminTabConfig';
 import type { AdminFocSectionId } from '../../navigation/adminFocConfig';
+import type { AdminFocNavigationTarget } from '../../utils/adminWorkNavigation';
+import { resolveAdminSearchHitNavigation } from '../../utils/adminWorkNavigation';
 import { adminChrome } from '../../theme/adminTheme';
 import { spacing } from '../../theme/designTokens';
 
@@ -22,15 +24,17 @@ interface AdminGlobalSearchProps {
   onClose: () => void;
   onNavigate: (route: AdminHqRoute) => void;
   onNavigateSection?: (section: AdminFocSectionId) => void;
+  onNavigateTarget?: (target: AdminFocNavigationTarget) => void;
 }
 
 const QUICK_JUMPS: {
   section: AdminFocSectionId;
   label: string;
-  icon: 'home' | 'mail' | 'people' | 'football' | 'bag' | 'settings';
+  icon: 'home' | 'mail' | 'people' | 'football' | 'bag' | 'settings' | 'business';
 }[] = [
   { section: 'dashboard', label: 'Accueil', icon: 'home' },
   { section: 'personnes', label: 'Personnes', icon: 'people' },
+  { section: 'clubs', label: 'Clubs', icon: 'business' },
   { section: 'competition', label: 'Compétition', icon: 'football' },
   { section: 'operations', label: 'Opérations', icon: 'mail' },
   { section: 'finances', label: 'Finances', icon: 'bag' },
@@ -42,6 +46,7 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
   onClose,
   onNavigate,
   onNavigateSection,
+  onNavigateTarget,
 }) => {
   const { users, clubs, posts, events } = useAdminData();
   const styles = useMemo(() => createStyles(), []);
@@ -53,8 +58,10 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
   );
 
   const handlePick = (item: GlobalSearchResult) => {
-    const mapped = hqRouteFromLegacyTab(item.targetTab, item.targetSegment);
-    onNavigate(mapped);
+    const target = resolveAdminSearchHitNavigation(item);
+    if (onNavigateTarget) onNavigateTarget(target);
+    else if (onNavigateSection) onNavigateSection(target.section);
+    else onNavigate({ mode: 'gestion', atelier: item.kind === 'club' ? 'clubs' : 'comptes' });
     onClose();
     setQuery('');
   };

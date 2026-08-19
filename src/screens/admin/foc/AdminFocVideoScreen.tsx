@@ -51,7 +51,7 @@ export function AdminFocVideoScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Caméras & vidéo</Text>
         <Text style={styles.sub}>
-          Veo, XbotGo, smartphones et imports — statut live des appareils connectés.
+          Statut lecture seule. La connexion caméra se fait depuis l’espace Club (Centre Vidéo), pas depuis cet écran admin.
         </Text>
       </View>
       <FlatList
@@ -73,14 +73,14 @@ export function AdminFocVideoScreen() {
               <Text style={styles.explainBody}>{ADMIN_VIDEO_VEO_DEMO.lead}</Text>
               <Text style={styles.explainPitch}>{ADMIN_VIDEO_VEO_DEMO.pitch}</Text>
               <Text style={styles.explainHint}>
-                Détail complet + script démo : Paramètres → Système.
+                Connexion caméra : via Club → Centre Vidéo. Pas de bouton Connect ici (OAuth fabricant non branché).
               </Text>
             </AdminFocCard>
           </View>
         }
         ListEmptyComponent={
           <Text style={styles.empty}>
-            Aucune caméra enregistrée. Les clubs connectent leurs appareils depuis l’espace Club.
+            Aucune caméra enregistrée. Les clubs connectent leurs appareils depuis l’espace Club — cet écran n’ajoute pas de connexion OAuth.
           </Text>
         }
         renderItem={({ item }) => {

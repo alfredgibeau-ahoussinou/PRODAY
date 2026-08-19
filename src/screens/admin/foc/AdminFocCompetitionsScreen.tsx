@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -136,9 +136,15 @@ function tournamentStatusTextStyle(status: string): object {
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocCompetitionsScreen() {
+export function AdminFocCompetitionsScreen({ initialTab }: { initialTab?: string } = {}) {
   const { events, tournaments, refresh, refreshing } = useAdminData();
   const [tab, setTab] = useState<TabId>('events');
+
+  useEffect(() => {
+    if (initialTab && TABS.some((t) => t.id === initialTab)) {
+      setTab(initialTab as TabId);
+    }
+  }, [initialTab]);
 
   const handleDeleteEvent = useMemo(
     () => (id: string) => {

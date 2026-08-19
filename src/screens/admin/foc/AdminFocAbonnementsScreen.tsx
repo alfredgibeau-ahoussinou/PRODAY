@@ -177,6 +177,7 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
       await refresh();
       const nextPurchases = await adminService.listSubscriptionPurchases(120);
       setPurchases(nextPurchases);
+      Alert.alert('Abonnement', audit.summary);
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible');
     } finally {

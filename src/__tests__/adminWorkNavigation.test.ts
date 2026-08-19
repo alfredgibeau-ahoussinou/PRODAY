@@ -1,4 +1,4 @@
-import { resolveAdminWorkItemNavigation } from '../utils/adminWorkNavigation';
+import { resolveAdminWorkItemNavigation, resolveAdminSearchHitNavigation } from '../utils/adminWorkNavigation';
 import type { AdminWorkItem } from '../utils/adminInsights';
 
 function navItem(kind: AdminWorkItem['kind']): AdminWorkItem {
@@ -55,11 +55,37 @@ describe('adminWorkNavigation', () => {
     });
   });
 
-  it('envoie post vers communication / annonces', () => {
+  it('envoie post vers recrutement / posts', () => {
     expect(resolveAdminWorkItemNavigation(navItem('post'))).toEqual({
       section: 'operations',
-      hubTab: 'communication',
-      screenTab: 'annonces',
+      hubTab: 'recrutement',
+      screenTab: 'posts',
     });
+  });
+
+  it('envoie membership vers clubs', () => {
+    expect(resolveAdminWorkItemNavigation(navItem('membership'))).toEqual({
+      section: 'clubs',
+      screenTab: 'clubs',
+    });
+  });
+
+  it('envoie subscription_request vers finances / abonnements', () => {
+    expect(resolveAdminWorkItemNavigation(navItem('subscription_request'))).toEqual({
+      section: 'finances',
+      screenTab: 'abonnements',
+    });
+  });
+
+  it('mappe un hit recherche club vers Clubs', () => {
+    expect(
+      resolveAdminSearchHitNavigation({
+        id: 'c-1',
+        kind: 'club',
+        title: 'AS Test',
+        subtitle: 'Paris',
+        targetTab: 'clubs',
+      }),
+    ).toEqual({ section: 'clubs', screenTab: 'clubs' });
   });
 });

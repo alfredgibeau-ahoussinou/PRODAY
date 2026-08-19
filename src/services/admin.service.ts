@@ -1655,6 +1655,15 @@ export const adminService = {
       .slice(0, max);
   },
 
+  async updateShopOrderStatus(orderId: string, status: ShopOrder['status']): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'shop_orders', orderId), {
+      status,
+      updated_at: serverTimestamp(),
+    });
+  },
+
   async listAllStageOffers(max = 80): Promise<StageOffer[]> {
     if (!isFirebaseConfigured()) return [];
     const database = getDb();

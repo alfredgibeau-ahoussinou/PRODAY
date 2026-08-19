@@ -245,8 +245,14 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
   /* ── Sidebar badges ── */
   const sidebarBadges = useMemo<Partial<Record<AdminFocSectionId, number>>>(
     () => ({
-      operations: workQueue.length,
+      operations: workQueue.filter((w) =>
+        ['reel', 'report', 'application', 'post'].includes(w.kind),
+      ).length,
       personnes: workQueue.filter((w) => w.kind === 'verification').length,
+      finances: workQueue.filter((w) =>
+        ['payment', 'quote', 'subscription_request'].includes(w.kind),
+      ).length,
+      clubs: workQueue.filter((w) => w.kind === 'membership').length,
     }),
     [workQueue],
   );
@@ -258,6 +264,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
         return (
           <AdminFocDashboard
             onNavigateSection={handleNavigateSection}
+            onNavigateTarget={handleNavigateTarget}
             onOpenDecisions={() => setNotifOpen(true)}
           />
         );
@@ -274,9 +281,9 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
               label: tab.label,
               render: () =>
                 tab.id === 'matchs' ? (
-                  <AdminFocMatchsScreen />
+                  <AdminFocMatchsScreen initialTab={screenTab} />
                 ) : (
-                  <AdminFocCompetitionsScreen />
+                  <AdminFocCompetitionsScreen initialTab={screenTab} />
                 ),
             }))}
           />
@@ -332,6 +339,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     screenTab,
     prefs,
     handleNavigateSection,
+    handleNavigateTarget,
     handleSavePrefs,
     onPreviewUserApp,
   ]);
@@ -436,6 +444,7 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
         onClose={() => setSearchOpen(false)}
         onNavigate={handleHqNavigate}
         onNavigateSection={handleSelectSection}
+        onNavigateTarget={handleNavigateTarget}
       />
     </View>
   );

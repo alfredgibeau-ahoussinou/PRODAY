@@ -1,7 +1,10 @@
 import { Alert } from 'react-native';
+import { getFirebaseAuth } from '../lib/firebase';
 import { adminService } from '../services/admin.service';
+import { membershipsService } from '../services/memberships.service';
 import { recruitmentService } from '../services/recruitment.service';
 import { sponsorQuoteService } from '../services/sponsorQuote.service';
+import { subscriptionUpgradeRequestService } from '../services/subscriptionUpgradeRequest.service';
 import type { AdminWorkItem } from './adminInsights';
 
 export type AdminWorkInlineAction = 'approve' | 'reject';
@@ -12,6 +15,8 @@ const INLINE_APPROVE_KINDS = new Set<AdminWorkItem['kind']>([
   'application',
   'payment',
   'report',
+  'membership',
+  'subscription_request',
 ]);
 
 const INLINE_REJECT_KINDS = new Set<AdminWorkItem['kind']>([
@@ -22,7 +27,13 @@ const INLINE_REJECT_KINDS = new Set<AdminWorkItem['kind']>([
   'report',
   'quote',
   'post',
+  'membership',
+  'subscription_request',
 ]);
+
+function currentAdminUid(): string {
+  return getFirebaseAuth()?.currentUser?.uid?.trim() || 'admin';
+}
 
 export function canAdminWorkInlineAction(
   item: AdminWorkItem,
@@ -82,6 +93,32 @@ export async function executeAdminWorkApprove(item: AdminWorkItem): Promise<void
     await adminService.deleteReelReport(reportId);
     return;
   }
+  if (item.kind === 'membership') {
+    const membershipId = parseWorkItemId(item, 'mem');
+    await membershipsService.approve(membershipId, currentAdminUid());
+    return;
+  }
+  if (item.kind === 'subscription_request') {
+    const requestId = parseWorkItemId(item, 'subreq');
+    const req = await subscriptionUpgradeRequestService.getById(requestId);
+    const result = await subscriptionUpgradeRequestService.updateRequestStatus(
+      requestId,
+      'approved',
+    );
+    if (!result.ok) {
+      throw new Error('Impossible d’approuver cette demande d’abonnement.');
+    }
+    if (req?.user_uid && req.plan_id) {
+      await adminService.grantProSubscription(
+        req.user_uid,
+        req.plan_id,
+        req.billing === 'yearly' ? 12 : 1,
+        'Demande d’abonnement approuvée',
+        false,
+      );
+    }
+    return;
+  }
   throw new Error('Action non supportée pour ce type de décision.');
 }
 
@@ -122,6 +159,22 @@ export async function executeAdminWorkReject(item: AdminWorkItem): Promise<void>
   if (item.kind === 'post') {
     const postId = parseWorkItemId(item, 'post');
     await adminService.updateRecruitmentPost(postId, 'CLOSED');
+    return;
+  }
+  if (item.kind === 'membership') {
+    const membershipId = parseWorkItemId(item, 'mem');
+    await membershipsService.reject(membershipId, currentAdminUid());
+    return;
+  }
+  if (item.kind === 'subscription_request') {
+    const requestId = parseWorkItemId(item, 'subreq');
+    const result = await subscriptionUpgradeRequestService.updateRequestStatus(
+      requestId,
+      'rejected',
+    );
+    if (!result.ok) {
+      throw new Error('Impossible de refuser cette demande d’abonnement.');
+    }
     return;
   }
   throw new Error('Action non supportée pour ce type de décision.');

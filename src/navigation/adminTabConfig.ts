@@ -189,6 +189,8 @@ export const ADMIN_WORK_KIND_LABELS: Record<string, string> = {
   application: 'Candidature',
   post: 'Annonce',
   quote: 'Devis',
+  subscription_request: 'Abonnement',
+  membership: 'Adhésion',
 };
 
 export const ADMIN_PRIORITY_LABELS: Record<string, string> = {

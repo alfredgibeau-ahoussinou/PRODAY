@@ -12,6 +12,7 @@ import { AdminDataRow } from '../../../components/admin/hq/AdminDataRow';
 import { AdminInspector } from '../../../components/admin/hq/AdminInspector';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { recruitmentService } from '../../../services/recruitment.service';
+import { adminService } from '../../../services/admin.service';
 import { adminChrome } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 import { getRoleLabel } from '../../signup/signupFlowConfig';
@@ -94,12 +95,14 @@ export function AdminFocRecrutementScreen({ initialTab }: { initialTab?: string 
   }, [data.posts, data.applications, data.users, filter, q]);
 
   const selected = rows.find((r) => r.id === selectedId) ?? null;
+  const selectedPost = selected?.kind === 'post' ? data.posts.find((p) => p.id === selected.id) : null;
 
-  const run = async (fn: () => Promise<void>) => {
+  const run = async (fn: () => Promise<void>, okMessage?: string) => {
     setBusy(true);
     try {
       await fn();
       await data.refresh();
+      if (okMessage) Alert.alert('Recrutement', okMessage);
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible');
     } finally {
@@ -116,7 +119,10 @@ export function AdminFocRecrutementScreen({ initialTab }: { initialTab?: string 
             tone: 'primary' as const,
             disabled: busy,
             onPress: () =>
-              void run(() => recruitmentService.updateApplicationStatus(selected.id, 'ACCEPTED')),
+              void run(
+                () => recruitmentService.updateApplicationStatus(selected.id, 'ACCEPTED'),
+                'Candidature acceptée.',
+              ),
           },
           {
             id: 'no',
@@ -124,10 +130,38 @@ export function AdminFocRecrutementScreen({ initialTab }: { initialTab?: string 
             tone: 'danger' as const,
             disabled: busy,
             onPress: () =>
-              void run(() => recruitmentService.updateApplicationStatus(selected.id, 'REJECTED')),
+              void run(
+                () => recruitmentService.updateApplicationStatus(selected.id, 'REJECTED'),
+                'Candidature refusée.',
+              ),
           },
         ]
-      : [];
+      : selected?.kind === 'post' && selectedPost
+        ? [
+            {
+              id: 'open',
+              label: selectedPost.status === 'OPEN' ? 'Annonce déjà ouverte' : 'Rouvrir l’annonce',
+              tone: 'primary' as const,
+              disabled: busy || selectedPost.status === 'OPEN',
+              onPress: () =>
+                void run(
+                  () => adminService.updateRecruitmentPost(selected.id, 'OPEN'),
+                  'Annonce rouverte.',
+                ),
+            },
+            {
+              id: 'close',
+              label: selectedPost.status === 'CLOSED' ? 'Annonce déjà fermée' : 'Fermer l’annonce',
+              tone: 'danger' as const,
+              disabled: busy || selectedPost.status === 'CLOSED',
+              onPress: () =>
+                void run(
+                  () => adminService.updateRecruitmentPost(selected.id, 'CLOSED'),
+                  'Annonce fermée.',
+                ),
+            },
+          ]
+        : [];
 
   return (
     <View style={styles.root}>
@@ -186,7 +220,64 @@ export function AdminFocRecrutementScreen({ initialTab }: { initialTab?: string 
               subtitle={item.subtitle}
               trailing={item.trailing}
               selected={item.id === selectedId}
-              onPress={() => setSelectedId(item.id)}
+              onPress={() => {
+                setSelectedId(item.id);
+                if (wide) return;
+                if (item.kind === 'app') {
+                  Alert.alert(item.title, item.subtitle, [
+                    {
+                      text: 'Accepter',
+                      onPress: () =>
+                        void run(
+                          () => recruitmentService.updateApplicationStatus(item.id, 'ACCEPTED'),
+                          'Candidature acceptée.',
+                        ),
+                    },
+                    {
+                      text: 'Refuser',
+                      style: 'destructive',
+                      onPress: () =>
+                        void run(
+                          () => recruitmentService.updateApplicationStatus(item.id, 'REJECTED'),
+                          'Candidature refusée.',
+                        ),
+                    },
+                    { text: 'Fermer', style: 'cancel' },
+                  ]);
+                  return;
+                }
+                if (item.kind === 'post') {
+                  const post = data.posts.find((p) => p.id === item.id);
+                  Alert.alert(item.title, item.subtitle, [
+                    ...(post?.status !== 'OPEN'
+                      ? [
+                          {
+                            text: 'Rouvrir',
+                            onPress: () =>
+                              void run(
+                                () => adminService.updateRecruitmentPost(item.id, 'OPEN'),
+                                'Annonce rouverte.',
+                              ),
+                          },
+                        ]
+                      : []),
+                    ...(post?.status !== 'CLOSED'
+                      ? [
+                          {
+                            text: 'Fermer l’annonce',
+                            style: 'destructive' as const,
+                            onPress: () =>
+                              void run(
+                                () => adminService.updateRecruitmentPost(item.id, 'CLOSED'),
+                                'Annonce fermée.',
+                              ),
+                          },
+                        ]
+                      : []),
+                    { text: 'Fermer', style: 'cancel' },
+                  ]);
+                }
+              }}
             />
           )}
         />

@@ -1,5 +1,8 @@
 /** Emails autorisés pour la console admin (custom claim `admin` requis côté Firestore). */
-export const PLATFORM_ADMIN_EMAILS = ['proday.admin@gmail.com'] as const;
+export const PLATFORM_ADMIN_EMAILS = [
+  'proday.admin@gmail.com',
+  'semedoyohan1@gmail.com',
+] as const;
 
 /** Email principal affiché dans la console et la doc setup. */
 export const PLATFORM_ADMIN_EMAIL = PLATFORM_ADMIN_EMAILS[0];

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -144,9 +144,23 @@ function AdminFocMatchCard({ match, onPress }: CardProps) {
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocMatchsScreen() {
+export function AdminFocMatchsScreen({ initialTab }: { initialTab?: string } = {}) {
   const { matches, refresh, refreshing } = useAdminData();
   const [filter, setFilter] = useState<FilterId>('tous');
+
+  useEffect(() => {
+    const map: Record<string, FilterId> = {
+      all: 'tous',
+      tous: 'tous',
+      upcoming: 'avenir',
+      avenir: 'avenir',
+      done: 'termines',
+      termines: 'termines',
+      invites: 'invitations',
+      invitations: 'invitations',
+    };
+    if (initialTab && map[initialTab]) setFilter(map[initialTab]);
+  }, [initialTab]);
 
   const filtered = useMemo(
     () => filterMatches(matches ?? [], filter),

@@ -7,7 +7,7 @@ import { useAdminStyles } from './adminStyles';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
-const KIND_ICON: Record<AdminWorkItem['kind'], 'shield' | 'time' | 'warning' | 'document' | 'mail'> = {
+const KIND_ICON: Record<AdminWorkItem['kind'], 'shield' | 'time' | 'warning' | 'document' | 'mail' | 'people' | 'star'> = {
   verification: 'shield',
   reel: 'time',
   report: 'warning',
@@ -15,6 +15,8 @@ const KIND_ICON: Record<AdminWorkItem['kind'], 'shield' | 'time' | 'warning' | '
   application: 'mail',
   post: 'document',
   quote: 'document',
+  membership: 'people',
+  subscription_request: 'star',
 };
 
 const PRIORITY_COLOR = (c: AppColors, p: AdminWorkItem['priority']) => {

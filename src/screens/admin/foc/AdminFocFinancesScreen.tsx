@@ -68,9 +68,18 @@ function PaymentRow({
 
 /* ─── Shop order row ─────────────────────────────────────────────────── */
 
-function ShopOrderRow({ order }: { order: ShopOrder }) {
+function ShopOrderRow({
+  order,
+  onAction,
+}: {
+  order: ShopOrder;
+  onAction: (o: ShopOrder) => void;
+}) {
   return (
-    <View style={s.row}>
+    <Pressable
+      style={({ pressed }) => [s.row, pressed && s.rowPressed]}
+      onPress={() => onAction(order)}
+    >
       <View style={s.rowMain}>
         <Text style={s.rowTitle} numberOfLines={1}>
           {order.lines?.[0]?.name || `Commande #${order.id.slice(0, 8)}`}
@@ -85,7 +94,8 @@ function ShopOrderRow({ order }: { order: ShopOrder }) {
           {order.status === 'paid' ? 'Payé' : order.status === 'cancelled' ? 'Annulé' : 'En attente'}
         </Text>
       </View>
-    </View>
+      <Icon name="chevron-forward" size={14} color={adminChrome.textMuted} />
+    </Pressable>
   );
 }
 
@@ -173,6 +183,46 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
     [refresh],
   );
 
+  const handleShopAction = useCallback((order: ShopOrder) => {
+    const buttons: Parameters<typeof Alert.alert>[2] = [];
+    if (order.status !== 'paid') {
+      buttons.push({
+        text: 'Marquer payé',
+        onPress: async () => {
+          try {
+            await adminService.updateShopOrderStatus(order.id, 'paid');
+            await loadShop();
+            Alert.alert('Boutique', 'Commande marquée payée.');
+          } catch {
+            Alert.alert('Erreur', 'Impossible de mettre à jour cette commande.');
+          }
+        },
+      });
+    }
+    if (order.status !== 'cancelled') {
+      buttons.push({
+        text: 'Annuler la commande',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await adminService.updateShopOrderStatus(order.id, 'cancelled');
+            await loadShop();
+            Alert.alert('Boutique', 'Commande annulée.');
+          } catch {
+            Alert.alert('Erreur', 'Impossible d’annuler cette commande.');
+          }
+        },
+      });
+    }
+    buttons.push({ text: 'Fermer', style: 'cancel' });
+    Alert.alert(
+      order.lines?.[0]?.name || 'Commande',
+      `Montant : ${order.total_eur != null ? `${order.total_eur} €` : '—'}\nStatut : ${order.status}`,
+      buttons,
+      { cancelable: true },
+    );
+  }, [loadShop]);
+
 
   return (
     <View style={s.root}>
@@ -215,7 +265,7 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
               tintColor={adminChrome.accent}
             />
           }
-          renderItem={({ item }) => <ShopOrderRow order={item} />}
+          renderItem={({ item }) => <ShopOrderRow order={item} onAction={handleShopAction} />}
           ItemSeparatorComponent={() => <View style={s.sep} />}
           ListEmptyComponent={
             <View style={s.empty}>

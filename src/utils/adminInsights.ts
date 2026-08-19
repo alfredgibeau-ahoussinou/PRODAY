@@ -3,6 +3,8 @@ import type { PlatformStats } from '../services/admin.service';
 import type { AdminMainTabId, AdminContentSegment } from '../navigation/adminTabConfig';
 import type { Application, RecruitmentPost } from '../models/Player';
 import type { SponsorQuoteRequest } from '../models/SponsorQuoteRequest';
+import type { SubscriptionUpgradeRequest } from '../models/SubscriptionUpgradeRequest';
+import type { Membership } from '../models/Membership';
 import type { CommunityReel } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
 import type { TeamPaymentRequest } from '../models/TeamFinance';
@@ -11,9 +13,20 @@ import { getRoleLabel } from '../screens/signup/signupFlowConfig';
 
 export type AdminWorkPriority = 'critical' | 'high' | 'medium' | 'low';
 
+export type AdminWorkKind =
+  | 'verification'
+  | 'reel'
+  | 'report'
+  | 'payment'
+  | 'application'
+  | 'post'
+  | 'quote'
+  | 'membership'
+  | 'subscription_request';
+
 export type AdminWorkItem = {
   id: string;
-  kind: 'verification' | 'reel' | 'report' | 'payment' | 'application' | 'post' | 'quote';
+  kind: AdminWorkKind;
   priority: AdminWorkPriority;
   title: string;
   subtitle: string;
@@ -54,6 +67,9 @@ export function buildAdminWorkQueue(input: {
   applications: Application[];
   posts: RecruitmentPost[];
   sponsorQuotes?: SponsorQuoteRequest[];
+  subscriptionUpgradeRequests?: SubscriptionUpgradeRequest[];
+  memberships?: Membership[];
+  clubsById?: Record<string, string>;
 }): AdminWorkItem[] {
   const items: AdminWorkItem[] = [];
 
@@ -137,7 +153,37 @@ export function buildAdminWorkQueue(input: {
       meta: quote.package_tier,
       targetTab: 'plateforme',
       contentSegment: 'sponsors',
+      entityId: quote.id,
       createdAt: quote.created_at,
+    });
+  }
+
+  for (const mem of (input.memberships ?? []).filter((m) => m.status === 'pending')) {
+    const clubName = input.clubsById?.[mem.club_id] ?? mem.club_id;
+    items.push({
+      id: `mem-${mem.id}`,
+      kind: 'membership',
+      priority: 'high',
+      title: `Adhésion · ${mem.player_name}`,
+      subtitle: clubName,
+      meta: mem.license_number,
+      targetTab: 'clubs',
+      entityId: mem.id,
+      createdAt: mem.requested_at ?? mem.created_at,
+    });
+  }
+
+  for (const req of (input.subscriptionUpgradeRequests ?? []).filter((r) => r.status === 'pending')) {
+    items.push({
+      id: `subreq-${req.id}`,
+      kind: 'subscription_request',
+      priority: 'high',
+      title: `Demande abo · ${req.display_name}`,
+      subtitle: `${req.plan_id} · ${req.billing === 'yearly' ? 'annuel' : 'mensuel'}`,
+      meta: req.email,
+      targetTab: 'users',
+      entityId: req.user_uid,
+      createdAt: req.created_at,
     });
   }
 
@@ -150,8 +196,8 @@ export function buildAdminWorkQueue(input: {
   });
 }
 
-export function countWorkByKind(items: AdminWorkItem[]): Record<AdminWorkItem['kind'], number> {
-  const base: Record<AdminWorkItem['kind'], number> = {
+export function countWorkByKind(items: AdminWorkItem[]): Record<AdminWorkKind, number> {
+  const base: Record<AdminWorkKind, number> = {
     verification: 0,
     reel: 0,
     report: 0,
@@ -159,10 +205,27 @@ export function countWorkByKind(items: AdminWorkItem[]): Record<AdminWorkItem['k
     application: 0,
     post: 0,
     quote: 0,
+    membership: 0,
+    subscription_request: 0,
   };
   for (const item of items) base[item.kind] += 1;
   return base;
 }
+
+/** Raccourcis Accueil « À traiter » — uniquement les kinds avec un vrai flux d’action. */
+export const ADMIN_WORK_KIND_SHORTCUTS: {
+  kind: AdminWorkKind;
+  label: string;
+}[] = [
+  { kind: 'verification', label: 'Vérifs' },
+  { kind: 'reel', label: 'Publications' },
+  { kind: 'report', label: 'Signalements' },
+  { kind: 'payment', label: 'Paiements' },
+  { kind: 'application', label: 'Candidatures' },
+  { kind: 'quote', label: 'Devis' },
+  { kind: 'membership', label: 'Adhésions' },
+  { kind: 'subscription_request', label: 'Demandes abo' },
+];
 
 export function moderationLoadScore(stats: PlatformStats): number {
   return (

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { PressableSpring } from '../../motion';
+import { AdminButton } from '../AdminButton';
 import { adminChrome } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 
@@ -60,29 +60,19 @@ export function AdminInspector({
       {actions && actions.length > 0 ? (
         <ScrollView style={styles.actions} contentContainerStyle={styles.actionsInner}>
           {actions.map((action) => (
-            <PressableSpring
+            <AdminButton
               key={action.id}
-              onPress={action.onPress}
+              label={action.label}
+              variant={
+                action.tone === 'danger'
+                  ? 'danger'
+                  : action.tone === 'primary'
+                    ? 'primary'
+                    : 'secondary'
+              }
               disabled={action.disabled}
-              scaleTo={0.98}
-              haptic
-              style={[
-                styles.action,
-                action.tone === 'primary' && styles.actionPrimary,
-                action.tone === 'danger' && styles.actionDanger,
-                action.disabled && styles.actionDisabled,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.actionLabel,
-                  action.tone === 'primary' && styles.actionLabelPrimary,
-                  action.tone === 'danger' && styles.actionLabelDanger,
-                ]}
-              >
-                {action.label}
-              </Text>
-            </PressableSpring>
+              onPress={action.onPress}
+            />
           ))}
         </ScrollView>
       ) : null}

@@ -2,7 +2,7 @@ import {
   resolveAdminFocNavigation,
   type AdminFocSectionId,
 } from '../navigation/adminFocConfig';
-import type { AdminWorkItem } from './adminInsights';
+import type { AdminWorkItem, GlobalSearchResult } from './adminInsights';
 
 export type AdminFocNavigationTarget = {
   section: AdminFocSectionId;
@@ -25,8 +25,28 @@ export function resolveAdminWorkItemNavigation(item: AdminWorkItem): AdminFocNav
     case 'quote':
       return { section: 'finances', screenTab: 'sponsors' };
     case 'post':
-      return { section: 'operations', hubTab: 'communication', screenTab: 'annonces' };
+      return { section: 'operations', hubTab: 'recrutement', screenTab: 'posts' };
+    case 'membership':
+      return { section: 'clubs', screenTab: 'clubs' };
+    case 'subscription_request':
+      return { section: 'finances', screenTab: 'abonnements' };
     default:
       return resolveAdminFocNavigation('communication');
+  }
+}
+
+/** Mappe un hit de recherche globale vers la section FOC. */
+export function resolveAdminSearchHitNavigation(hit: GlobalSearchResult): AdminFocNavigationTarget {
+  switch (hit.kind) {
+    case 'user':
+      return { section: 'personnes' };
+    case 'club':
+      return { section: 'clubs', screenTab: 'clubs' };
+    case 'post':
+      return { section: 'operations', hubTab: 'recrutement', screenTab: 'posts' };
+    case 'event':
+      return { section: 'competition', hubTab: 'competitions', screenTab: 'events' };
+    default:
+      return { section: 'dashboard' };
   }
 }

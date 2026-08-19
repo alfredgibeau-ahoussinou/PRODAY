@@ -307,6 +307,7 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
         summary,
       });
       await onSaved();
+      Alert.alert('Enregistré', summary);
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible');
     } finally {
@@ -655,17 +656,13 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                 </Pressable>
               ) : null}
 
-              <Pressable
-                onPress={saveProfile}
+              <AdminButton
+                label="Enregistrer le profil"
+                variant="primary"
+                loading={busy}
                 disabled={busy}
-                style={[styles.primaryBtn, busy && styles.disabled]}
-              >
-                {busy ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={styles.primaryBtnText}>Enregistrer le profil</Text>
-                )}
-              </Pressable>
+                onPress={saveProfile}
+              />
             </>
           ) : null}
 
@@ -879,17 +876,13 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                 placeholderTextColor={adminChrome.textMuted}
               />
 
-              <Pressable
-                onPress={saveUnivers}
+              <AdminButton
+                label="Enregistrer l’univers joueur"
+                variant="primary"
+                loading={busy}
                 disabled={busy}
-                style={[styles.primaryBtn, busy && styles.disabled]}
-              >
-                {busy ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={styles.primaryBtnText}>Enregistrer l’univers joueur</Text>
-                )}
-              </Pressable>
+                onPress={saveUnivers}
+              />
             </>
           ) : null}
 
@@ -926,18 +919,19 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                             : ''}
                         </Text>
                       ) : null}
-                      <Pressable
+                      <AdminButton
+                        label="Détacher"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        loading={busy}
                         onPress={() =>
                           void run(async () => {
                             await adminService.unlinkParentFromChild(user.uid, childUid);
                             setParentOfDraft((prev) => prev.filter((id) => id !== childUid));
                           }, `Enfant détaché · ${child?.display_name ?? childUid}`)
                         }
-                        disabled={busy}
-                        style={styles.secondaryBtn}
-                      >
-                        <Text style={styles.secondaryBtnText}>Détacher</Text>
-                      </Pressable>
+                      />
                     </View>
                   );
                 })
@@ -954,7 +948,11 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                 placeholder="player.demo@proday.app ou proday_demo_player_login"
                 placeholderTextColor={adminChrome.textMuted}
               />
-              <Pressable
+              <AdminButton
+                label="Lier l’enfant"
+                variant="primary"
+                loading={busy}
+                disabled={busy}
                 onPress={() => {
                   const q = linkChildQuery.trim();
                   if (!q) {
@@ -980,15 +978,7 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                     setLinkChildQuery('');
                   }, `Enfant lié · ${q}`);
                 }}
-                disabled={busy}
-                style={[styles.primaryBtn, busy && styles.disabled]}
-              >
-                {busy ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={styles.primaryBtnText}>Lier l’enfant</Text>
-                )}
-              </Pressable>
+              />
             </>
           ) : null}
 
@@ -1065,17 +1055,17 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                 </>
               ) : null}
 
-              <Pressable
-                onPress={saveProfile}
-                disabled={busy}
-                style={[styles.primaryBtn, busy && styles.disabled]}
-              >
-                <Text style={styles.primaryBtnText}>
-                  {role !== user.role
+              <AdminButton
+                label={
+                  role !== user.role
                     ? `Passer en ${getRoleLabel(role)}`
-                    : 'Enregistrer le rôle'}
-                </Text>
-              </Pressable>
+                    : 'Enregistrer le rôle'
+                }
+                variant="primary"
+                loading={busy}
+                disabled={busy}
+                onPress={saveProfile}
+              />
             </>
           ) : null}
 
@@ -1142,9 +1132,11 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                     ))}
                   </View>
 
-                  <Pressable
+                  <AdminButton
+                    label="Passer en payant / Premium"
+                    variant="primary"
+                    loading={busy}
                     disabled={busy || !pickedPlan}
-                    style={[styles.primaryBtn, (busy || !pickedPlan) && styles.disabled]}
                     onPress={() => {
                       if (!pickedPlan) return;
                       void run(
@@ -1159,13 +1151,13 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                         `Passage payant · ${pickedPlan} · ${grantMonths} mois`,
                       );
                     }}
-                  >
-                    <Text style={styles.primaryBtnText}>Passer en payant / Premium</Text>
-                  </Pressable>
+                  />
 
-                  <Pressable
+                  <AdminButton
+                    label="Offrir un essai"
+                    variant="secondary"
+                    loading={busy}
                     disabled={busy || !pickedPlan}
-                    style={[styles.secondaryBtn, busy && styles.disabled]}
                     onPress={() => {
                       if (!pickedPlan) return;
                       void run(
@@ -1180,15 +1172,15 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                         `Essai · ${pickedPlan} · ${grantMonths} mois`,
                       );
                     }}
-                  >
-                    <Text style={styles.secondaryBtnText}>Offrir un essai</Text>
-                  </Pressable>
+                  />
 
                   {payant ? (
                     <>
-                      <Pressable
+                      <AdminButton
+                        label="Prolonger +30 jours"
+                        variant="secondary"
+                        loading={busy}
                         disabled={busy}
-                        style={[styles.secondaryBtn, busy && styles.disabled]}
                         onPress={() =>
                           void run(
                             () =>
@@ -1200,12 +1192,12 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                             'Prolongation +30 jours',
                           )
                         }
-                      >
-                        <Text style={styles.secondaryBtnText}>Prolonger +30 jours</Text>
-                      </Pressable>
-                      <Pressable
+                      />
+                      <AdminButton
+                        label="Passer en gratuit"
+                        variant="danger"
+                        loading={busy}
                         disabled={busy}
-                        style={[styles.dangerBtn, busy && styles.disabled]}
                         onPress={() =>
                           Alert.alert(
                             'Passer en gratuit',
@@ -1229,9 +1221,7 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                             ],
                           )
                         }
-                      >
-                        <Text style={styles.dangerBtnText}>Passer en gratuit</Text>
-                      </Pressable>
+                      />
                     </>
                   ) : null}
                 </>
@@ -1345,9 +1335,37 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                   confirmAccountValidation('reject', 'Refus admin', 'Profil refusé')
                 }
               />
-              <Pressable
+              <AdminButton
+                label={isActive ? 'Suspendre le compte' : 'Réactiver le compte'}
+                variant="secondary"
+                loading={busy}
                 disabled={busy}
-                style={[styles.dangerBtn, busy && styles.disabled]}
+                onPress={() =>
+                  Alert.alert(
+                    isActive ? 'Suspendre le compte ?' : 'Réactiver le compte ?',
+                    isActive
+                      ? `${user.display_name} ne pourra plus se connecter.`
+                      : `${user.display_name} pourra à nouveau se connecter.`,
+                    [
+                      { text: 'Annuler', style: 'cancel' },
+                      {
+                        text: isActive ? 'Suspendre' : 'Réactiver',
+                        style: isActive ? 'destructive' : 'default',
+                        onPress: () =>
+                          void run(async () => {
+                            await adminService.updateUser(user.uid, { is_active: !isActive });
+                            setIsActive(!isActive);
+                          }, isActive ? 'Compte suspendu' : 'Compte réactivé'),
+                      },
+                    ],
+                  )
+                }
+              />
+              <AdminButton
+                label="Supprimer le compte"
+                variant="danger"
+                loading={busy}
+                disabled={busy}
                 onPress={() =>
                   Alert.alert(
                     'Supprimer le compte',
@@ -1366,9 +1384,7 @@ export function AdminFocAccountEditor({ user, onBack, onSaved }: Props) {
                     ],
                   )
                 }
-              >
-                <Text style={styles.dangerBtnText}>Supprimer le compte</Text>
-              </Pressable>
+              />
             </>
           ) : null}
       </ScrollView>

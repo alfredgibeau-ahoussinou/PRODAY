@@ -1,6 +1,7 @@
 import {
   ADMIN_HQ_MODES,
   ADMIN_GESTION_ATELIERS,
+  ADMIN_WORK_KIND_LABELS,
   adminHqRouteKey,
   hqRouteFromLegacyTab,
 } from '../../navigation/adminTabConfig';
@@ -99,6 +100,11 @@ describe('e2e. Navigation shell admin console', () => {
     expect(tabs).not.toContain('youth');
     expect(tabs).not.toContain('teen');
     expect(tabs).not.toContain('adult');
+  });
+
+  it('ADMIN_WORK_KIND_LABELS couvre membership et subscription_request', () => {
+    expect(ADMIN_WORK_KIND_LABELS.membership).toBe('Adhésion');
+    expect(ADMIN_WORK_KIND_LABELS.subscription_request).toBe('Abonnement');
   });
 
   it('ADMIN_FOC_TABS.finances contient abonnements et paiements', () => {
