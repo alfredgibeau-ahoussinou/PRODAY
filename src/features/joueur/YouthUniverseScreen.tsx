@@ -6,7 +6,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import type { User } from '../../models/User';
 import type { JoueurExperienceTheme } from '../../utils/joueurExperienceTheme';
 import type { JoueurPageIdentity } from '../../content/joueurPageIdentity';
@@ -14,7 +13,6 @@ import { ProDayText } from '../../components/ui/ProDayText';
 import { Icon, type IconName } from '../../components/ui/Icon';
 import { PressableSpring } from '../../components/motion';
 import { JoueurIdentityProvider } from '../../components/player/joueurPortalUi';
-import { JoueurWorldScene } from './JoueurWorldScene';
 import {
   getJoueurYouthChallenges,
   getJoueurDailyQuests,
@@ -23,7 +21,7 @@ import {
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { spacing } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { JoueurArcadeShell, JoueurScorePop } from './JoueurGameFx';
 import { joueurGamePress, joueurGameReward } from './joueurSfx';
 
@@ -49,6 +47,8 @@ type PathNode = {
   label: string;
   sub: string;
 };
+
+const PITCH = '#16A34A';
 
 function pathFor(isGirl: boolean): PathNode[] {
   if (isGirl) {
@@ -79,31 +79,15 @@ function challengeIcon(id: string, isGirl: boolean): IconName {
 
 const DAILY_ICONS: IconName[] = ['star-four-points', 'football', 'calendar', 'person'];
 
-function BounceOrb({
-  children,
-  color,
-  size = 88,
-}: {
-  children: React.ReactNode;
-  color: string;
-  size?: number;
-}) {
+function StatPill({ label, value }: { label: string; value: string }) {
   return (
-    <View
-      style={[
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          backgroundColor: color,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.55)',
-        },
-      ]}
-    >
-      {children}
+    <View style={{ alignItems: 'center', gap: 2 }}>
+      <ProDayText variant="caption" style={{ color: '#64748B', fontSize: 10 }}>
+        {label}
+      </ProDayText>
+      <ProDayText variant="section" style={{ color: '#0F172A', fontWeight: '800', fontSize: 16 }}>
+        {value}
+      </ProDayText>
     </View>
   );
 }
@@ -190,11 +174,8 @@ export function YouthUniverseScreen({
     else onOpenPass();
   };
 
-  const skyTop = isGirl ? '#F9EEF8' : '#FFF6DB';
-  const skyMid = isGirl ? '#F3D2E8' : '#F9E7A8';
-  const ground = isGirl ? '#BCEEDC' : '#BEEAB3';
-  const mascotIcon: IconName = isGirl ? 'star-four-points' : 'football';
-  const worldTitle = isGirl ? 'Île magique' : 'Terrain secret';
+  const ground = '#FFFFFF';
+  const worldTitle = 'Accueil';
 
   return (
     <JoueurIdentityProvider identity={identity}>
@@ -214,65 +195,41 @@ export function YouthUniverseScreen({
             ) : undefined
           }
         >
-          <View style={[styles.mapFrame, { borderColor: accent, width: mapW }]}>
-            <LinearGradient
-              colors={[skyTop, skyMid, ground]}
-              locations={[0, 0.62, 1]}
-              style={StyleSheet.absoluteFill}
-            />
-            <View style={styles.mapScene} pointerEvents="none">
-              <JoueurWorldScene
-                identity={identity}
-                kind="pitch_playful"
-                height={168}
-                compact
-                showBanner={false}
-              />
-            </View>
-
-            <View style={styles.mapHud}>
-              <View style={[styles.candyPill, { backgroundColor: 'rgba(255,255,255,0.92)' }]}>
-                <Icon name="star" size={16} color={accent} variant="filled" />
-                <ProDayText variant="section" style={{ color: ink, fontWeight: '800', fontSize: 18 }}>
-                  {stars}
-                </ProDayText>
-              </View>
-              <View style={[styles.candyPill, { backgroundColor: 'rgba(255,255,255,0.92)' }]}>
-                <Icon name="time" size={15} color={accent} variant="filled" />
-                <ProDayText variant="caption" style={{ color: ink, fontWeight: '800' }}>
-                  {streak} j
-                </ProDayText>
-              </View>
-            </View>
+          <View style={[styles.mapFrame, { width: mapW }]}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: ground }]} />
 
             <View style={styles.mapCenter}>
-              <BounceOrb color={identity.soft} size={96}>
-                <Icon name={mascotIcon} size={44} color={accent} variant="filled" />
-              </BounceOrb>
-              <View style={[styles.speech, { borderColor: accent }]}>
-                <ProDayText variant="caption" style={{ color: accent, fontWeight: '800' }}>
-                  {isGirl ? 'Salut' : 'Hey'} {firstName} !
-                </ProDayText>
-                <ProDayText
-                  variant="section"
-                  style={{ color: ink, fontWeight: '800', fontSize: 20, textAlign: 'center' }}
-                >
-                  {identity.title}
-                </ProDayText>
-              </View>
+              <ProDayText variant="caption" style={{ color: PITCH, fontWeight: '600' }}>
+                {isGirl ? 'Salut' : 'Hey'} {firstName}
+              </ProDayText>
+              <ProDayText
+                variant="title"
+                style={{ color: ink, fontWeight: '700', fontSize: 22, textAlign: 'center' }}
+              >
+                {identity.title}
+              </ProDayText>
+              <ProDayText variant="caption" style={{ color: muted, textAlign: 'center' }}>
+                {identity.support}
+              </ProDayText>
+            </View>
+
+            <View style={styles.statsLine}>
+              <StatPill label="Étoiles" value={String(stars)} />
+              <StatPill label="Série" value={`${streak} j`} />
+              <StatPill label="Niveau" value={String(level)} />
             </View>
 
             <View style={styles.xpWrap}>
-              <View style={[styles.xpTrack, { backgroundColor: 'rgba(255,255,255,0.55)' }]}>
+              <View style={styles.xpTrack}>
                 <View
                   style={[
                     styles.xpFill,
-                    { width: `${Math.round(xpPct * 100)}%`, backgroundColor: accent },
+                    { width: `${Math.round(xpPct * 100)}%`, backgroundColor: PITCH },
                   ]}
                 />
               </View>
-              <ProDayText variant="caption" style={{ color: ink, fontWeight: '800' }}>
-                Niveau {level} · {xpInto}/{xpMax} XP
+              <ProDayText variant="caption" style={{ color: muted }}>
+                {xpInto}/{xpMax} XP
               </ProDayText>
             </View>
           </View>
@@ -282,27 +239,16 @@ export function YouthUniverseScreen({
               joueurGamePress();
               onOpenTrain();
             }}
-            scaleTo={0.96}
+            scaleTo={0.98}
             haptic
-            style={[styles.playBtn, { backgroundColor: accent }]}
+            style={[styles.playBtn, { backgroundColor: PITCH }]}
           >
-            <View style={styles.playIconWrap}>
-              <Icon
-                name={isGirl ? 'play' : 'football'}
-                size={26}
-                color="#fff"
-                variant="filled"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <ProDayText variant="section" style={styles.playBtnTitle}>
-                {isGirl ? 'Jouer maintenant' : 'C’est parti !'}
-              </ProDayText>
-              <ProDayText variant="caption" style={styles.playBtnSub}>
-                {isGirl ? 'Un défi maison tout doux' : 'Un mini-défi sur le terrain'}
-              </ProDayText>
-            </View>
-            <Icon name="chevron-forward" size={22} color="#fff" />
+            <ProDayText variant="section" style={styles.playBtnTitle}>
+              {isGirl ? 'Jouer maintenant' : 'C’est parti'}
+            </ProDayText>
+            <ProDayText variant="caption" style={styles.playBtnSub}>
+              {isGirl ? 'Un défi maison tout doux' : 'Un mini-défi sur le terrain'}
+            </ProDayText>
           </PressableSpring>
 
           <ProDayText variant="section" style={[styles.blockTitle, { color: ink }]}>
@@ -328,7 +274,7 @@ export function YouthUniverseScreen({
                   ) : null}
                   <PressableSpring
                     onPress={() => openNode(node.id)}
-                    scaleTo={0.97}
+                    scaleTo={0.98}
                     haptic
                     style={[
                       styles.pathOrb,
@@ -393,7 +339,7 @@ export function YouthUniverseScreen({
                       if (!isDone) void complete(c.id, c.xp);
                       else joueurGamePress();
                     }}
-                    scaleTo={0.97}
+                    scaleTo={0.98}
                     haptic
                     style={[
                       styles.stampCard,
@@ -512,7 +458,7 @@ export function YouthUniverseScreen({
                 joueurGamePress();
                 onOpenCoach();
               }}
-              scaleTo={0.96}
+              scaleTo={0.98}
               style={[styles.helpCard, { backgroundColor: accent }]}
             >
               <Icon name="chat" size={22} color="#fff" variant="filled" />
@@ -525,7 +471,7 @@ export function YouthUniverseScreen({
                 joueurGamePress();
                 onOpenPass();
               }}
-              scaleTo={0.96}
+              scaleTo={0.98}
               style={[
                 styles.helpCard,
                 { backgroundColor: identity.elevated, borderColor: accent, borderWidth: 2 },
@@ -541,7 +487,7 @@ export function YouthUniverseScreen({
                 joueurGamePress();
                 onOpenClub();
               }}
-              scaleTo={0.96}
+              scaleTo={0.98}
               style={[
                 styles.helpCard,
                 { backgroundColor: identity.elevated, borderColor: accent, borderWidth: 2 },
@@ -574,83 +520,52 @@ const styles = StyleSheet.create({
   },
   mapFrame: {
     alignSelf: 'center',
-    borderRadius: 24,
-    borderWidth: 1,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     overflow: 'hidden',
-    minHeight: 300,
-    paddingBottom: 14,
-  },
-  mapScene: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 40,
-    opacity: 0.55,
-  },
-  mapHud: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingTop: 12,
-  },
-  candyPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
+    minHeight: 220,
+    paddingBottom: spacing.md,
+    paddingTop: spacing.lg,
+    backgroundColor: '#FFFFFF',
   },
   mapCenter: {
     alignItems: 'center',
-    gap: 10,
-    paddingTop: 8,
-    paddingHorizontal: 16,
+    gap: 6,
+    paddingHorizontal: spacing.lg,
   },
-  speech: {
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    alignItems: 'center',
-    gap: 2,
-    maxWidth: '92%',
+  statsLine: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.md,
   },
   xpWrap: {
-    marginTop: 12,
-    paddingHorizontal: 16,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
     gap: 6,
     alignItems: 'center',
   },
   xpTrack: {
     width: '100%',
-    height: 14,
+    height: 6,
     borderRadius: 999,
     overflow: 'hidden',
+    backgroundColor: 'rgba(15, 23, 42, 0.06)',
   },
   xpFill: {
     height: '100%',
     borderRadius: 999,
   },
   playBtn: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    borderRadius: 18,
+    gap: 4,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
   },
-  playIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  playBtnTitle: { color: '#fff', fontWeight: '800', fontSize: 18 },
-  playBtnSub: { color: 'rgba(255,255,255,0.88)', marginTop: 2 },
+  playBtnTitle: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  playBtnSub: { color: 'rgba(255,255,255,0.88)' },
   blockTitle: {
     fontWeight: '800',
     fontSize: 18,

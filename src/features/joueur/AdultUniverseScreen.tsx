@@ -4,19 +4,16 @@ import type { User } from '../../models/User';
 import type { HealthSnapshot } from '../../core/types/health';
 import type { JoueurExperienceTheme } from '../../utils/joueurExperienceTheme';
 import type { JoueurPageIdentity } from '../../content/joueurPageIdentity';
-import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
 import {
   JoueurActionRow,
   JoueurIdentityProvider,
-  JoueurLevelBadge,
   JoueurXpBar,
 } from '../../components/player/joueurPortalUi';
 import { PlayerMaFormeCard } from '../../components/player/PlayerMaFormeCard';
 import { ProDayFutCard } from '../../components/cards/ProDayFutCard';
 import { userToProDayCard } from '../../utils/prodayFutCard';
-import { JoueurWorldScene } from './JoueurWorldScene';
 import { JoueurPricingStrip } from './JoueurPricingStrip';
 import { JoueurDailyQuestBoard } from './JoueurDailyQuestBoard';
 import { JoueurArcadeShell, JoueurScorePop } from './JoueurGameFx';
@@ -46,7 +43,9 @@ type Props = {
   health: HealthSnapshot;
 } & Actions;
 
-/** Hub Ultimate — boucle de jeu (XP, quêtes, carte FUT, forme). */
+const PITCH = '#16A34A';
+
+/** Hub joueur adulte — carte FUT épurée, palette claire. */
 export function AdultUniverseScreen({
   profile,
   theme,
@@ -64,7 +63,6 @@ export function AdultUniverseScreen({
   const progressApi = useJoueurProgress();
   const nav = useTabNavigationActions();
   const [pop, setPop] = useState<string | null>(null);
-  const accent = identity.accent;
   const isWoman = theme.gender === 'female';
   const card = useMemo(() => userToProDayCard(profile), [profile]);
 
@@ -119,8 +117,8 @@ export function AdultUniverseScreen({
 
   return (
     <JoueurIdentityProvider identity={identity}>
-      <JoueurArcadeShell identity={identity} liveLabel="PRO">
-        <JoueurScorePop text={pop ?? ''} color={JOUEUR_SITE.xp} visible={Boolean(pop)} />
+      <JoueurArcadeShell identity={identity} liveLabel="Accueil">
+        <JoueurScorePop text={pop ?? ''} color={PITCH} visible={Boolean(pop)} />
         <ScrollView
           style={styles.root}
           contentContainerStyle={styles.pad}
@@ -130,19 +128,11 @@ export function AdultUniverseScreen({
               <RefreshControl
                 refreshing={Boolean(refreshing)}
                 onRefresh={onRefresh}
-                tintColor={accent}
+                tintColor={PITCH}
               />
             ) : undefined
           }
         >
-          <ProDayText variant="caption" style={[styles.switchLabel, { color: JOUEUR_SITE.muted }]}>
-            PRO · {identity.genderLabel}
-            {isWoman ? ' · PERFORMANCE' : ' · MODE PRO'}
-          </ProDayText>
-
-          <ProDayText variant="caption" style={[styles.brand, { color: accent }]}>
-            {identity.eyebrow} · {theme.copy.brand.toUpperCase()}
-          </ProDayText>
           <ProDayText variant="title" style={styles.hero}>
             {identity.title}
           </ProDayText>
@@ -150,27 +140,24 @@ export function AdultUniverseScreen({
             {identity.support}
           </ProDayText>
 
-          <View style={[styles.hud, { borderColor: accent }]}>
-            <JoueurLevelBadge level={level?.level ?? 1} />
-            <View style={styles.hudMid}>
-              <View style={styles.hudRow}>
-                <ProDayText variant="caption" style={[styles.hudStat, { color: accent }]}>
-                  NOTE {ovr}
-                </ProDayText>
-                <ProDayText variant="caption" style={styles.hudStatMuted}>
-                  ★ {stars}
-                </ProDayText>
-                <ProDayText variant="caption" style={styles.hudStatMuted}>
-                  SÉRIE {streak}j
-                </ProDayText>
-              </View>
-              <JoueurXpBar
-                label="XP"
-                value={level?.xpIntoLevel ?? 0}
-                max={level?.xpForNext ?? 100}
-                color={accent}
-              />
+          <View style={styles.hud}>
+            <View style={styles.hudRow}>
+              <ProDayText variant="caption" style={styles.hudStat}>
+                Note {ovr}
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.hudStatMuted}>
+                Niv. {level?.level ?? 1}
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.hudStatMuted}>
+                Série {streak}j
+              </ProDayText>
             </View>
+            <JoueurXpBar
+              label="XP"
+              value={level?.xpIntoLevel ?? 0}
+              max={level?.xpForNext ?? 100}
+              color={PITCH}
+            />
           </View>
 
           <View style={styles.cardStage}>
@@ -186,18 +173,18 @@ export function AdultUniverseScreen({
           </View>
 
           <JoueurDailyQuestBoard
-            accent={accent}
+            accent={PITCH}
             completedIds={dailyDone}
             quests={dailyQuests}
-            title="QUÊTES PRO"
+            title="Quêtes du jour"
             onClaim={onClaimDaily}
             onHintTab={onHintTab}
           />
 
+          <ProDayText variant="section" style={styles.sectionTitle}>
+            Objectifs saison
+          </ProDayText>
           <View style={styles.seasonWrap}>
-            <ProDayText variant="caption" style={[styles.brand, { color: accent }]}>
-              OBJECTIFS SAISON
-            </ProDayText>
             {JOUEUR_SEASON_OBJECTIVES.map((obj) => {
               const locked =
                 (obj.id === 'season-streak-3' && streak < 3) ||
@@ -214,10 +201,7 @@ export function AdultUniverseScreen({
                   scaleTo={0.98}
                   style={[
                     styles.seasonRow,
-                    {
-                      borderColor: done ? `${accent}44` : JOUEUR_SITE.border,
-                      opacity: done || locked ? 0.55 : 1,
-                    },
+                    { opacity: done || locked ? 0.55 : 1 },
                   ]}
                 >
                   <View style={{ flex: 1 }}>
@@ -229,8 +213,8 @@ export function AdultUniverseScreen({
                       {locked ? ' · verrouillé' : ''}
                     </ProDayText>
                   </View>
-                  <ProDayText variant="caption" style={{ color: accent, fontWeight: '900' }}>
-                    {done ? 'PRIS' : `+${obj.xp}`}
+                  <ProDayText variant="caption" style={{ color: PITCH, fontWeight: '700' }}>
+                    {done ? 'Pris' : `+${obj.xp}`}
                   </ProDayText>
                 </PressableSpring>
               );
@@ -268,9 +252,9 @@ export function AdultUniverseScreen({
                   joueurGamePress();
                   tile.a();
                 }}
-                scaleTo={0.97}
+                scaleTo={0.98}
                 haptic
-                style={[styles.tile, { borderColor: JOUEUR_SITE.border }]}
+                style={styles.tile}
               >
                 <ProDayText variant="section" style={styles.tileTitle}>
                   {tile.t}
@@ -287,13 +271,9 @@ export function AdultUniverseScreen({
             displayName={profile.display_name}
             health={health}
             ageGroup="adult"
-            accent={accent}
+            accent={PITCH}
             onOpenTraining={onOpenTrain}
           />
-
-          <View style={styles.sceneWrap}>
-            <JoueurWorldScene identity={identity} kind="pitch_data" height={148} compact showBanner={false} />
-          </View>
 
           <JoueurActionRow
             primary="Coach humain"
@@ -303,7 +283,7 @@ export function AdultUniverseScreen({
           />
 
           <JoueurPricingStrip
-            accent={accent}
+            accent={PITCH}
             onOpenPass={onOpenPass}
             onOpenCoach={onOpenCoach}
             onOpenFree={onOpenClub}
@@ -322,56 +302,48 @@ const styles = StyleSheet.create({
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
     gap: spacing.md,
   },
-  switchLabel: {
-    fontWeight: '600',
-    letterSpacing: 0.2,
-    fontSize: 13,
-  },
-  brand: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 2.8,
-    marginTop: 4,
-  },
   hero: {
-    color: JOUEUR_SITE.foreground,
+    color: '#0F172A',
     fontWeight: '700',
-    fontSize: 30,
-    letterSpacing: -0.6,
-    lineHeight: 34,
+    fontSize: 28,
+    letterSpacing: -0.5,
+    lineHeight: 32,
   },
   support: {
-    color: JOUEUR_SITE.muted,
+    color: '#64748B',
     lineHeight: 20,
     fontSize: 14,
-    marginTop: -4,
   },
   hud: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
+    gap: spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     borderRadius: 14,
     padding: spacing.md,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: '#FFFFFF',
   },
-  hudMid: { flex: 1, gap: 8 },
   hudRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  hudStat: { fontWeight: '900', fontSize: 12, letterSpacing: 0.6 },
-  hudStatMuted: { color: JOUEUR_SITE.muted, fontWeight: '800', fontSize: 11 },
+  hudStat: { color: PITCH, fontWeight: '700', fontSize: 12 },
+  hudStatMuted: { color: '#64748B', fontWeight: '600', fontSize: 11 },
   cardStage: {
     alignItems: 'center',
     paddingVertical: spacing.sm,
+  },
+  sectionTitle: {
+    color: '#0F172A',
+    fontWeight: '700',
+    fontSize: 16,
   },
   seasonWrap: { gap: 8 },
   seasonRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
     borderRadius: 12,
     padding: spacing.md,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: '#FFFFFF',
   },
   tileGrid: {
     flexDirection: 'row',
@@ -381,22 +353,19 @@ const styles = StyleSheet.create({
   tile: {
     width: '47%',
     flexGrow: 1,
-    minHeight: 78,
+    minHeight: 72,
     borderRadius: 12,
-    borderWidth: 1,
-    backgroundColor: JOUEUR_SITE.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+    backgroundColor: '#FFFFFF',
     padding: spacing.md,
     justifyContent: 'flex-end',
     gap: 2,
   },
   tileTitle: {
-    color: JOUEUR_SITE.foreground,
-    fontWeight: '800',
+    color: '#0F172A',
+    fontWeight: '700',
     fontSize: 15,
   },
-  tileSub: { color: JOUEUR_SITE.muted, fontSize: 12 },
-  sceneWrap: {
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
+  tileSub: { color: '#64748B', fontSize: 12 },
 });

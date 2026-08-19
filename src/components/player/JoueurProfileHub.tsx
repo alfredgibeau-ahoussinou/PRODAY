@@ -1,14 +1,12 @@
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import type { User } from '../../models/User';
 import type { HealthSnapshot } from '../../core/types/health';
 import { ProDayFutCard } from '../cards/ProDayFutCard';
 import { userToProDayCard } from '../../utils/prodayFutCard';
 import { resolveJoueurAgeGroup, resolveJoueurGenderVisual } from '../../utils/joueurExperienceTheme';
 import { resolveJoueurPageIdentity, JOUEUR_SITE } from '../../content/joueurPageIdentity';
-import { JoueurIdentityProvider, JoueurLevelBadge, JoueurXpBar } from './joueurPortalUi';
-import { JoueurWorldScene } from '../../features/joueur/JoueurWorldScene';
+import { JoueurIdentityProvider, JoueurXpBar } from './joueurPortalUi';
 import { JoueurArcadeShell } from '../../features/joueur/JoueurGameFx';
 import { JoueurPricingStrip } from '../../features/joueur/JoueurPricingStrip';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
@@ -19,6 +17,15 @@ import { PressableSpring } from '../motion';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { FORM_BAND_LABELS, formatFormScore, playerFormFromHealthSnapshot } from '../../utils/formAnalysis';
 import { spacing, radius } from '../../theme/designTokens';
+
+const PITCH = '#16A34A';
+const LIGHT = {
+  bg: '#F8FAFC',
+  surface: '#FFFFFF',
+  border: 'rgba(15, 23, 42, 0.08)',
+  ink: '#0F172A',
+  muted: '#64748B',
+};
 
 type Props = {
   profile: User;
@@ -84,11 +91,10 @@ export const JoueurProfileHub: React.FC<Props> = ({
     [profile.uid, profile.display_name, health],
   );
 
-  const sceneKind =
-    ageGroup === 'youth' ? 'pitch_playful' : ageGroup === 'teen' ? 'pitch_dynamic' : 'pitch_data';
-
   const position = profile.profile.position || '—';
   const club = profile.profile.club_id ? 'Club lié' : 'Sans club';
+  const ovr = progressApi?.ovr ?? card.overall;
+  const level = progressApi?.level.level ?? 1;
 
   const openPass = () => {
     joueurGamePress();
@@ -103,138 +109,88 @@ export const JoueurProfileHub: React.FC<Props> = ({
 
   return (
     <JoueurIdentityProvider identity={identity}>
-      <JoueurArcadeShell identity={identity} liveLabel="CARTE" bootSound={false}>
+      <JoueurArcadeShell identity={identity} liveLabel="Profil" bootSound={false}>
         <View style={styles.stack}>
-          <View style={styles.heroShell}>
-            <JoueurWorldScene identity={identity} kind={sceneKind} height={186} compact showBanner={false} />
-            <LinearGradient
-              colors={['transparent', 'rgba(7,11,20,0.70)', 'rgba(7,11,20,0.95)']}
-              style={styles.heroFade}
-              pointerEvents="none"
-            />
-            <View style={styles.heroOverlay}>
-              <View style={styles.heroTop}>
-                <View style={styles.heroTopLeft}>
-                  <ProDayText variant="caption" style={[styles.heroKicker, { color: identity.accent }]}>
-                    {identity.hudLabel}
-                  </ProDayText>
-                  <View style={[styles.verifiedPill, { borderColor: `${identity.accent}88` }]}>
-                    <ProDayText variant="caption" style={[styles.verifiedText, { color: identity.accent }]}>
-                      JOUEUR VÉRIFIÉ
-                    </ProDayText>
-                  </View>
-                </View>
-                <JoueurLevelBadge level={progressApi?.level.level ?? 1} label="NIV" />
-              </View>
-              <ProDayText variant="title" numberOfLines={1} style={styles.heroName}>
-                {profile.display_name}
-              </ProDayText>
-              <ProDayText variant="caption" numberOfLines={1} style={styles.heroMeta}>
-                {position} · {club} · {profile.email ?? 'profil@proday.app'}
-              </ProDayText>
+          <View style={styles.header}>
+            <ProDayText variant="title" numberOfLines={1} style={styles.heroName}>
+              {profile.display_name}
+            </ProDayText>
+            <ProDayText variant="caption" numberOfLines={1} style={styles.heroMeta}>
+              {position} · {club}
+            </ProDayText>
+            <View style={styles.inlineStats}>
+              <TextStat label="Note" value={String(ovr)} />
+              <TextStat label="Niveau" value={String(level)} />
             </View>
           </View>
 
-          <View style={styles.metricRow}>
+          <View style={styles.futCardWrap}>
+            <ProDayFutCard
+              card={card}
+              width={220}
+              onAction={(action) => {
+                if (action === 'message') nav.setActiveTab('messages');
+                if (action === 'view_club' || action === 'recruit') nav.openMercato('home');
+                if (action === 'invite') nav.openMatchs();
+              }}
+            />
+          </View>
+
+          <View style={styles.actionsRow}>
             {(
               [
-                { label: 'NOTE', value: String(progressApi?.ovr ?? card.overall) },
-                { label: 'NIV', value: String(progressApi?.level.level ?? 1) },
-                { label: 'ÉTOILES', value: String(progressApi?.progress.stars ?? 0) },
-                { label: 'SÉRIE', value: `${progressApi?.progress.streakDays ?? 0}j` },
+                { label: 'Entraîner', run: () => nav.openDashboard('train') },
+                { label: 'Matchs', run: () => nav.openMatchs() },
+                { label: 'Messages', run: () => nav.setActiveTab('messages') },
+                { label: 'Mercato', run: () => nav.openMercato('home') },
               ] as const
-            ).map((m) => (
-              <View key={m.label} style={styles.metricCard}>
-                <ProDayText variant="caption" style={styles.metricLabel}>
-                  {m.label}
-                </ProDayText>
-                <ProDayText variant="section" style={styles.metricValue}>
-                  {m.value}
-                </ProDayText>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.futCardBlock}>
-            <View style={styles.futCardWrap}>
-              <ProDayFutCard
-                card={card}
-                width={228}
-                onAction={(action) => {
-                  if (action === 'message') nav.setActiveTab('messages');
-                  if (action === 'view_club' || action === 'recruit') nav.openMercato('home');
-                  if (action === 'invite') nav.openMatchs();
+            ).map((a) => (
+              <PressableSpring
+                key={a.label}
+                onPress={() => {
+                  joueurGamePress();
+                  a.run();
                 }}
-              />
-            </View>
-            <View style={styles.actionsGrid}>
-              {(
-                [
-                  { label: 'ENTRAÎNER', run: () => nav.openDashboard('train') },
-                  { label: 'TERRAIN', run: () => nav.openMatchs() },
-                  { label: 'MESSAGES', run: () => nav.setActiveTab('messages') },
-                  { label: 'MERCATO', run: () => nav.openMercato('home') },
-                ] as const
-              ).map((a) => (
-                <PressableSpring
-                  key={a.label}
-                  onPress={() => {
-                    joueurGamePress();
-                    a.run();
-                  }}
-                  scaleTo={0.98}
-                  haptic
-                  style={[
-                    styles.actionBtn,
-                    { borderColor: `${identity.accent}66`, backgroundColor: 'rgba(8,14,24,0.52)' },
-                  ]}
-                >
-                  <ProDayText variant="caption" style={styles.actionText}>
-                    {a.label}
-                  </ProDayText>
-                </PressableSpring>
-              ))}
-            </View>
+                scaleTo={0.98}
+                haptic
+                style={styles.actionBtn}
+              >
+                <ProDayText variant="caption" style={styles.actionText}>
+                  {a.label}
+                </ProDayText>
+              </PressableSpring>
+            ))}
           </View>
 
           <View style={styles.panel}>
             <View style={styles.panelHead}>
-              <ProDayText variant="caption" style={[styles.panelKicker, { color: identity.accent }]}>
-                PERFORMANCE
+              <ProDayText variant="caption" style={styles.panelKicker}>
+                Forme
               </ProDayText>
-              <ProDayText variant="title" style={[styles.formScore, { color: identity.accentBright }]}>
+              <ProDayText variant="section" style={styles.formScore}>
                 {formatFormScore(form.formScore)}
               </ProDayText>
             </View>
             <ProDayText variant="caption" style={styles.formBand}>
               {FORM_BAND_LABELS[form.band]}
             </ProDayText>
-            <JoueurXpBar label="Récupération" value={Math.round(health.recoveryScore)} color={identity.accent} />
-            <JoueurXpBar label="Charge" value={Math.round(health.trainingLoad)} color={JOUEUR_SITE.warn} />
-            <JoueurXpBar
-              label="XP vers prochain niveau"
-              value={progressApi?.level.xpIntoLevel ?? 0}
-              max={progressApi?.level.xpForNext ?? 100}
-              color={identity.accent}
-            />
+            <JoueurXpBar label="Récupération" value={Math.round(health.recoveryScore)} color={PITCH} />
+            <JoueurXpBar label="Charge" value={Math.round(health.trainingLoad)} color={LIGHT.muted} />
           </View>
 
           <View style={styles.panel}>
-            <ProDayText variant="caption" style={[styles.panelKicker, { color: identity.accent }]}>
-              PROGRESSION
-            </ProDayText>
             <ProDayText variant="section" style={styles.boostTitle}>
               Passe IA + Coach terrain
             </ProDayText>
             <ProDayText variant="caption" style={styles.boostBody}>
-              Construis une routine complète entre séances IA, feedback humain et plan de montée.
+              Routine complète entre séances IA, feedback humain et plan de montée.
             </ProDayText>
             <View style={styles.boostActions}>
               <PressableSpring
                 onPress={openPass}
                 scaleTo={0.98}
                 haptic
-                style={[styles.primaryCta, { backgroundColor: identity.accent }]}
+                style={styles.primaryCta}
               >
                 <ProDayText variant="caption" style={styles.primaryCtaText}>
                   Activer Pass IA
@@ -249,7 +205,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
           </View>
 
           <JoueurPricingStrip
-            accent={identity.accent}
+            accent={PITCH}
             onOpenPass={openPass}
             onOpenCoach={openCoach}
             onOpenFree={() => nav.setActiveTab('home')}
@@ -279,99 +235,48 @@ export const JoueurProfileHub: React.FC<Props> = ({
   );
 };
 
+const TextStat: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <View style={styles.textStat}>
+    <ProDayText variant="caption" style={styles.textStatLabel}>
+      {label}
+    </ProDayText>
+    <ProDayText variant="section" style={styles.textStatValue}>
+      {value}
+    </ProDayText>
+  </View>
+);
+
 const styles = StyleSheet.create({
   stack: {
-    gap: spacing.md,
+    gap: spacing.lg,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
   },
-  heroShell: {
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    minHeight: 186,
-  },
-  heroFade: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  heroOverlay: {
-    position: 'absolute',
-    left: spacing.md,
-    right: spacing.md,
-    bottom: spacing.md,
+  header: {
     gap: 4,
-  },
-  heroTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  heroTopLeft: {
-    gap: spacing.sm,
-  },
-  heroKicker: {
-    fontWeight: '900',
-    letterSpacing: 2,
-    fontSize: 10,
-  },
-  verifiedPill: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(8,14,24,0.75)',
-  },
-  verifiedText: {
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.8,
+    paddingTop: spacing.sm,
   },
   heroName: {
-    color: JOUEUR_SITE.foreground,
-    fontWeight: '800',
-    fontSize: 28,
+    color: LIGHT.ink,
+    fontWeight: '700',
+    fontSize: 26,
     letterSpacing: -0.4,
   },
   heroMeta: {
-    color: JOUEUR_SITE.muted,
-    fontWeight: '600',
+    color: LIGHT.muted,
+    fontWeight: '500',
   },
-  metricRow: {
+  inlineStats: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: spacing.lg,
+    marginTop: spacing.sm,
   },
-  metricCard: {
-    width: '23%',
-    minWidth: 72,
-    borderWidth: 1,
-    borderColor: JOUEUR_SITE.border,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    backgroundColor: 'rgba(12,18,30,0.86)',
-  },
-  metricLabel: {
-    color: JOUEUR_SITE.muted,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-  },
-  metricValue: {
-    color: JOUEUR_SITE.foreground,
-    marginTop: 2,
-    fontWeight: '800',
-  },
-  futCardBlock: {
-    borderWidth: 1,
-    borderColor: JOUEUR_SITE.border,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    backgroundColor: 'rgba(10,16,30,0.94)',
-    gap: spacing.md,
-  },
-  futCardWrap: { alignItems: 'center' },
-  actionsGrid: {
+  textStat: { gap: 2 },
+  textStatLabel: { color: LIGHT.muted, fontSize: 11, fontWeight: '600' },
+  textStatValue: { color: PITCH, fontWeight: '800', fontSize: 18 },
+  futCardWrap: { alignItems: 'center', paddingVertical: spacing.xs },
+  actionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
@@ -379,24 +284,25 @@ const styles = StyleSheet.create({
   actionBtn: {
     width: '47%',
     flexGrow: 1,
-    borderWidth: 1,
     borderRadius: radius.md,
     paddingVertical: 12,
     alignItems: 'center',
-    backgroundColor: 'rgba(8,14,24,0.72)',
+    backgroundColor: LIGHT.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: LIGHT.border,
   },
   actionText: {
-    color: JOUEUR_SITE.foreground,
-    fontWeight: '700',
+    color: LIGHT.ink,
+    fontWeight: '600',
     fontSize: 12,
   },
   panel: {
-    borderWidth: 1,
     borderRadius: radius.md,
     padding: spacing.md,
     gap: spacing.sm,
-    backgroundColor: JOUEUR_SITE.surface,
-    borderColor: JOUEUR_SITE.border,
+    backgroundColor: LIGHT.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: LIGHT.border,
   },
   panelHead: {
     flexDirection: 'row',
@@ -404,43 +310,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   panelKicker: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 2,
+    fontSize: 11,
+    fontWeight: '600',
+    color: LIGHT.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
-  formBand: { color: JOUEUR_SITE.muted, marginTop: 2 },
-  formScore: { fontWeight: '800', fontSize: 32, letterSpacing: -1 },
+  formBand: { color: LIGHT.muted },
+  formScore: { fontWeight: '800', fontSize: 28, letterSpacing: -0.5, color: PITCH },
   boostTitle: {
-    color: JOUEUR_SITE.foreground,
+    color: LIGHT.ink,
     fontWeight: '700',
   },
   boostBody: {
-    color: JOUEUR_SITE.muted,
+    color: LIGHT.muted,
     lineHeight: 18,
   },
   boostActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
   primaryCta: {
     flex: 1,
-    borderRadius: 999,
+    borderRadius: radius.md,
     paddingVertical: 12,
     alignItems: 'center',
+    backgroundColor: PITCH,
   },
   primaryCtaText: {
-    color: '#070b14',
-    fontWeight: '800',
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   secondaryCta: {
     flex: 1,
-    borderRadius: 999,
+    borderRadius: radius.md,
     paddingVertical: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderColor: JOUEUR_SITE.border,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: LIGHT.border,
+    backgroundColor: LIGHT.bg,
   },
   secondaryCtaText: {
-    color: JOUEUR_SITE.foreground,
-    fontWeight: '800',
+    color: LIGHT.ink,
+    fontWeight: '700',
   },
   footerLinks: {
     flexDirection: 'row',
@@ -450,8 +359,7 @@ const styles = StyleSheet.create({
   },
   footerLink: { paddingVertical: 6 },
   footerText: {
-    color: JOUEUR_SITE.muted,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
+    color: LIGHT.muted,
+    fontWeight: '600',
   },
 });

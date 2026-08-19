@@ -5,7 +5,6 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { FeedHomeScreen } from '../components/feed/FeedHomeScreen';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ProDayText } from '../components/ui/ProDayText';
-import { ProDayGradient } from '../components/ui/ProDayGradient';
 import { PressableSpring } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
 import { spacing, radius } from '../theme/designTokens';
@@ -45,12 +44,10 @@ export const FeedTabScreen: React.FC = () => {
       <ProDayText variant="body" muted style={styles.guestSub}>
         {t('feed.guest.body')}
       </ProDayText>
-      <PressableSpring onPress={() => openAuth('login')} scaleTo={0.98} haptic>
-        <ProDayGradient kind="cta" style={styles.guestCta}>
-          <ProDayText variant="caption" inverse style={styles.guestCtaText}>
-            {t('common.login')}
-          </ProDayText>
-        </ProDayGradient>
+      <PressableSpring onPress={() => openAuth('login')} scaleTo={0.98} haptic style={styles.guestCta}>
+        <ProDayText variant="caption" style={styles.guestCtaText}>
+          {t('common.login')}
+        </ProDayText>
       </PressableSpring>
     </View>
   );
@@ -86,7 +83,8 @@ function createStyles(c: AppColors) {
       borderRadius: radius.md,
       paddingVertical: spacing.md,
       alignItems: 'center',
+      backgroundColor: '#16A34A',
     },
-    guestCtaText: { fontWeight: '800', letterSpacing: 0.3 },
+    guestCtaText: { fontWeight: '700', letterSpacing: 0.2, color: '#FFFFFF' },
   });
 }

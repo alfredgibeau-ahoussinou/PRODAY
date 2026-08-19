@@ -422,22 +422,22 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     const g = joueurSession.ageGroup;
     if (g === 'youth') {
       return {
-        caption: 'STAGE MATCH',
-        title: 'Arena',
-        subtitle: 'Fixture · Callout · Live — joue ta semaine.',
+        caption: 'Matchs',
+        title: 'Calendrier',
+        subtitle: 'Convocations et matchs de la semaine.',
       };
     }
     if (g === 'teen') {
       return {
-        caption: 'RANKED MATCH',
-        title: 'Match stages',
-        subtitle: 'Convocs, stats, missions terrain.',
+        caption: 'Matchs',
+        title: 'Centre match',
+        subtitle: 'Convocations, stats et calendrier.',
       };
     }
     return {
-      caption: 'ULTIMATE MATCH',
-      title: 'Centre Match',
-      subtitle: 'Stages : Fixture · Live · League.',
+      caption: 'Matchs',
+      title: 'Centre match',
+      subtitle: 'Calendrier, live et compétitions.',
     };
   }, [isJoueur, joueurSession, t]);
 

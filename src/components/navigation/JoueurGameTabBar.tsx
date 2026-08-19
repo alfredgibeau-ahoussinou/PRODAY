@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MainTabId } from '../../navigation/mainTabConfig';
 import { getMobileRailLayout } from '../../navigation/mobileTabConfig';
@@ -9,14 +9,19 @@ import type { IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
-import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { getJoueurGameTabLabel } from '../../content/joueurGameMenu';
 import { formatTabBadge } from './tabBarShared';
 import { JoueurGamePauseSheet } from './JoueurGamePauseSheet';
 import { joueurGamePress, playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
-import { useJoueurProgress } from '../../context/JoueurProgressContext';
-import { JoueurXpBar } from '../player/joueurPortalUi';
 import { spacing } from '../../theme/designTokens';
+
+const PITCH = '#16A34A';
+const DOCK = {
+  bg: 'rgba(255,255,255,0.98)',
+  border: 'rgba(15, 23, 42, 0.08)',
+  dim: '#94A3B8',
+  ink: '#0F172A',
+};
 
 const GAME_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
   home: 'football',
@@ -39,9 +44,7 @@ type Props = {
   visibleTabs?: MainTabId[];
 };
 
-/**
- * Dock Ultimate Team — barre glass premium, pas pad arcade.
- */
+/** Dock joueur épuré — fond clair, accent vert discret. */
 export function JoueurGameTabBar({
   activeTab,
   onTabPress,
@@ -51,31 +54,11 @@ export function JoueurGameTabBar({
   const { productLine } = useAppTheme();
   const profile = useSessionProfile();
   const session = useJoueurSession();
-  const progressApi = useJoueurProgress();
   const insets = useSafeAreaInsets();
   const [pauseOpen, setPauseOpen] = useState(false);
 
-  const identity = session?.identity;
-  const accent = identity?.accent ?? '#4C8BFF';
-  const accentBright = identity?.accentBright ?? '#93C5FD';
   const ageGroup = session?.ageGroup;
-  const isYouth = ageGroup === 'youth';
-  const isTeen = ageGroup === 'teen';
   const role = profile?.role;
-  const level = progressApi?.level;
-  const stars = progressApi?.progress.stars ?? 0;
-  const dockBg = isYouth
-    ? 'rgba(255,248,228,0.97)'
-    : isTeen
-      ? 'rgba(12,18,28,0.96)'
-      : 'rgba(10,14,22,0.96)';
-  const dimColor = isYouth
-    ? identity?.inkMuted ?? 'rgba(63,42,10,0.55)'
-    : JOUEUR_SITE.dim;
-  const dockBorder = isYouth
-    ? identity?.border ?? 'rgba(63,42,10,0.14)'
-    : JOUEUR_SITE.border;
-  const labelActive = isYouth ? identity?.ink ?? '#3F2A0A' : accentBright;
 
   const rail = useMemo(
     () => getMobileRailLayout(productLine, role, visibleTabs),
@@ -104,7 +87,6 @@ export function JoueurGameTabBar({
     const label = getJoueurGameTabLabel(tab, session?.ageGroup);
     const icon = GAME_TAB_ICONS[tab] ?? 'star';
     const badge = tab === 'messages' ? unreadCount : 0;
-    const isHome = tab === 'home';
 
     return (
       <PressableSpring
@@ -113,32 +95,25 @@ export function JoueurGameTabBar({
         onPress={() => pressTab(tab)}
         scaleTo={0.98}
         haptic
-        style={[styles.slot, isHome && styles.slotHome]}
+        style={styles.slot}
         accessibilityRole="tab"
         accessibilityState={{ selected: active }}
         accessibilityLabel={label}
       >
         <View
           style={[
-            isHome ? styles.homeOrb : styles.iconWrap,
-            {
-              borderColor: active ? accent : 'transparent',
-              backgroundColor: active
-                ? identity?.soft ?? 'rgba(76,139,255,0.18)'
-                : isHome
-                  ? 'rgba(255,255,255,0.06)'
-                  : 'transparent',
-            },
+            styles.iconWrap,
+            active && { backgroundColor: 'rgba(22, 163, 74, 0.1)' },
           ]}
         >
           <Icon
             name={icon}
-            size={isHome ? 22 : 20}
-            color={active ? (isYouth ? accent : accentBright) : dimColor}
+            size={20}
+            color={active ? PITCH : DOCK.dim}
             variant={active ? 'filled' : 'outline'}
           />
           {badge > 0 ? (
-            <View style={[styles.badge, { backgroundColor: JOUEUR_SITE.live }]}>
+            <View style={styles.badge}>
               <Text style={styles.badgeText}>{formatTabBadge(badge)}</Text>
             </View>
           ) : null}
@@ -146,16 +121,12 @@ export function JoueurGameTabBar({
         <Text
           style={[
             styles.slotLabel,
-            {
-              color: active ? labelActive : dimColor,
-              fontSize: isYouth ? 9 : 8,
-            },
+            { color: active ? PITCH : DOCK.dim },
           ]}
           numberOfLines={1}
         >
           {label}
         </Text>
-        {active ? <View style={[styles.activeDot, { backgroundColor: accent }]} /> : null}
       </PressableSpring>
     );
   };
@@ -170,32 +141,7 @@ export function JoueurGameTabBar({
           },
         ]}
       >
-        <View
-          style={[
-            styles.dock,
-            {
-              borderColor: dockBorder,
-              backgroundColor: dockBg,
-              borderRadius: isYouth ? 24 : isTeen ? 18 : 22,
-              borderWidth: 1,
-            },
-          ]}
-        >
-          {progressApi?.ready ? (
-            <View style={styles.hudStrip}>
-              <Text style={[styles.hudLvl, { color: isYouth ? identity?.ink ?? accent : accentBright }]}>
-                {isYouth ? `NIV ${level?.level ?? 1}` : isTeen ? `DIV ${level?.level ?? 1}` : `LVL ${level?.level ?? 1}`}
-              </Text>
-              <View style={styles.hudXp}>
-                <JoueurXpBar
-                  value={level?.xpIntoLevel ?? 0}
-                  max={level?.xpForNext ?? 100}
-                  color={accent}
-                />
-              </View>
-              <Text style={[styles.hudStars, isYouth && { color: accent }]}>★ {stars}</Text>
-            </View>
-          ) : null}
+        <View style={styles.dock}>
           <View style={styles.row}>
             {slots.map((t) => renderSlot(t))}
             {overflow.length > 0 ? (
@@ -214,28 +160,23 @@ export function JoueurGameTabBar({
                 <View
                   style={[
                     styles.iconWrap,
-                    {
-                      borderColor: pauseActive ? accent : 'transparent',
-                      backgroundColor: pauseActive
-                        ? identity?.soft ?? 'rgba(76,139,255,0.18)'
-                        : 'transparent',
-                    },
+                    pauseActive && { backgroundColor: 'rgba(22, 163, 74, 0.1)' },
                   ]}
                 >
                   <Icon
                     name="menu"
                     size={20}
-                    color={pauseActive ? (isYouth ? accent : accentBright) : dimColor}
+                    color={pauseActive ? PITCH : DOCK.dim}
                     variant={pauseActive ? 'filled' : 'outline'}
                   />
                 </View>
                 <Text
                   style={[
                     styles.slotLabel,
-                    { color: pauseActive ? labelActive : dimColor },
+                    { color: pauseActive ? PITCH : DOCK.dim },
                   ]}
                 >
-                  {isYouth ? 'PLUS' : 'MENU'}
+                  {ageGroup === 'youth' ? 'Plus' : 'Menu'}
                 </Text>
               </PressableSpring>
             ) : null}
@@ -249,8 +190,8 @@ export function JoueurGameTabBar({
         tabs={overflow}
         activeTab={activeTab}
         unreadCount={unreadCount}
-        accent={accent}
-        accentBright={accentBright}
+        accent={PITCH}
+        accentBright={PITCH}
         ageGroup={session?.ageGroup}
         onSelect={(tab) => {
           setPauseOpen(false);
@@ -269,99 +210,52 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   dock: {
-    borderWidth: 1,
-    borderRadius: 28,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-    paddingHorizontal: 6,
-    overflow: 'hidden',
-    gap: spacing.sm,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 1 },
-      },
-      android: { elevation: 2 },
-      default: {},
-    }),
-  },
-  hudStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingTop: 2,
-  },
-  hudLvl: {
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-  },
-  hudXp: { flex: 1 },
-  hudStars: {
-    color: JOUEUR_SITE.xp,
-    fontSize: 10,
-    fontWeight: '900',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 20,
+    borderColor: DOCK.border,
+    backgroundColor: DOCK.bg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: 4,
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
   slot: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
     minWidth: 0,
-    paddingBottom: 2,
-  },
-  slotHome: {
-    marginTop: -2,
+    paddingVertical: 2,
   },
   iconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-  },
-  homeOrb: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
   },
   slotLabel: {
-    fontSize: 8,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginTop: 1,
+    fontSize: 9,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   badge: {
     position: 'absolute',
-    top: -3,
-    right: -3,
-    minWidth: 15,
-    height: 15,
-    borderRadius: 8,
+    top: -2,
+    right: -2,
+    minWidth: 14,
+    height: 14,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
+    backgroundColor: PITCH,
   },
   badgeText: {
     color: '#fff',
     fontSize: 8,
-    fontWeight: '900',
+    fontWeight: '700',
   },
 });

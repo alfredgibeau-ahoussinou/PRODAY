@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import type { User } from '../../models/User';
 import { Icon, type IconName } from '../ui/Icon';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import {
   availabilityLabel,
-  availabilityTone,
   strongFootLabel,
 } from '../../utils/playerProfileLabels';
+
+const PITCH = '#16A34A';
 
 interface PlayerProfileHeroProps {
   player: User;
@@ -28,28 +29,18 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
   const p = player.profile;
   const verified = player.is_verified === true;
   const availability = availabilityLabel(p.availability);
-  const availTone = availabilityTone(p.availability);
-
-  const chips = [
-    p.position,
-    p.category,
-    p.level,
-    strongFootLabel(p.strong_foot),
-  ].filter(Boolean) as string[];
 
   const metaParts: string[] = [];
+  if (p.position) metaParts.push(p.position);
+  if (p.category) metaParts.push(p.category);
   if (p.age) metaParts.push(`${p.age} ans`);
   if (player.city) metaParts.push(player.city);
-  if (p.height_cm) metaParts.push(`${p.height_cm} cm`);
-  if (p.weight_kg) metaParts.push(`${p.weight_kg} kg`);
 
   return (
-    <View style={[styles.card, shadows.card, { borderColor: c.border, backgroundColor: c.surface }]}>
-      <View style={[styles.hero, { backgroundColor: c.surfaceMuted }]}>
+    <View style={[styles.card, { borderColor: c.border, backgroundColor: c.surface }]}>
+      <View style={styles.hero}>
         {isOwnProfile ? (
-          <View style={[styles.ownPill, { borderColor: c.border }]}>
-            <Text style={[styles.ownPillText, { color: c.textMuted }]}>Mon profil</Text>
-          </View>
+          <Text style={[styles.ownLabel, { color: c.textMuted }]}>Mon profil</Text>
         ) : null}
 
         <View style={styles.heroRow}>
@@ -57,99 +48,72 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
             <Image source={{ uri: player.avatar_url }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatar, styles.avatarPh]}>
-              <Text style={styles.avatarLetter}>{player.display_name.charAt(0).toUpperCase()}</Text>
+              <Text style={[styles.avatarLetter, { color: PITCH }]}>
+                {player.display_name.charAt(0).toUpperCase()}
+              </Text>
             </View>
           )}
 
           <View style={styles.heroInfo}>
             <View style={styles.nameRow}>
-              <Text
-                style={styles.heroName}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.75}
-              >
+              <Text style={[styles.heroName, { color: c.text }]} numberOfLines={2}>
                 {player.display_name}
               </Text>
-              {verified ? <Icon name="checkmark-circle" size={18} color={c.brand} /> : null}
+              {verified ? <Icon name="checkmark-circle" size={16} color={PITCH} /> : null}
             </View>
-            <Text style={styles.heroSub}>
-              {metaParts.length > 0 ? metaParts.join(' · ') : player.city ?? 'France'}
+            <Text style={[styles.heroSub, { color: c.textMuted }]}>
+              {metaParts.length > 0 ? metaParts.join(' · ') : 'Profil joueur'}
             </Text>
+            {availability ? (
+              <Text style={[styles.availLine, { color: c.textMuted }]}>{availability}</Text>
+            ) : null}
             {p.cv_headline?.trim() ? (
-              <Text style={styles.headline} numberOfLines={2}>
+              <Text style={[styles.headline, { color: c.textMuted }]} numberOfLines={2}>
                 {p.cv_headline.trim()}
               </Text>
             ) : null}
           </View>
-        </View>
-
-        {chips.length > 0 ? (
-          <View style={styles.chipRow}>
-            {chips.map((chip) => (
-              <View key={chip} style={[styles.chip, { borderColor: c.border }]}>
-                <Text style={[styles.chipText, { color: c.text }]}>{chip}</Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
-
-        <View style={styles.badgesRow}>
-          {availability ? (
-            <View
-              style={[
-                styles.availBadge,
-                availTone === 'positive' && styles.availPositive,
-                availTone === 'neutral' && styles.availNeutral,
-              ]}
-            >
-              <Icon name="calendar" size={12} color={c.text} />
-              <Text style={styles.availText}>{availability}</Text>
-            </View>
-          ) : null}
-          {verified ? (
-            <View style={[styles.verifiedBadge, { borderColor: c.border }]}>
-              <Text style={[styles.verifiedText, { color: c.textMuted }]}>Profil vérifié</Text>
-            </View>
-          ) : null}
         </View>
       </View>
 
       {isOwnProfile && (completionPercent != null || careerScore != null) ? (
         <View style={[styles.completionRow, { borderTopColor: c.border }]}>
           {completionPercent != null ? (
-            <View style={styles.metricBlock}>
-              <View style={styles.completionCopy}>
-                <Text style={[styles.completionTitle, { color: c.text }]}>Profil complété</Text>
-                <Text style={[styles.completionSub, { color: c.textMuted }]}>
-                  {completionPercent >= 80
-                    ? 'Bonne visibilité Mercato'
-                    : 'Complétez pour être repéré'}
-                </Text>
-              </View>
-              <View style={[styles.completionRing, { borderColor: c.brand }]}>
-                <Text style={[styles.completionPct, { color: c.brand }]}>{completionPercent}%</Text>
-              </View>
-            </View>
+            <MetricInline
+              title="Profil complété"
+              value={`${completionPercent}%`}
+              hint={completionPercent >= 80 ? 'Bonne visibilité' : 'Complétez pour être repéré'}
+              colors={c}
+            />
           ) : null}
           {careerScore != null ? (
-            <View style={styles.metricBlock}>
-              <View style={styles.completionCopy}>
-                <Text style={[styles.completionTitle, { color: c.text }]}>Score carrière</Text>
-                <Text style={[styles.completionSub, { color: c.textMuted }]}>
-                  Stats · activité · profil
-                </Text>
-              </View>
-              <View style={[styles.completionRing, { borderColor: c.brand }]}>
-                <Text style={[styles.completionPct, { color: c.brand }]}>{careerScore}</Text>
-              </View>
-            </View>
+            <MetricInline
+              title="Score carrière"
+              value={String(careerScore)}
+              hint="Stats · activité · profil"
+              colors={c}
+            />
           ) : null}
         </View>
       ) : null}
     </View>
   );
 };
+
+const MetricInline: React.FC<{
+  title: string;
+  value: string;
+  hint: string;
+  colors: AppColors;
+}> = ({ title, value, hint, colors: c }) => (
+  <View style={styles.metricBlock}>
+    <View style={styles.completionCopy}>
+      <Text style={[styles.completionTitle, { color: c.text }]}>{title}</Text>
+      <Text style={[styles.completionSub, { color: c.textMuted }]}>{hint}</Text>
+    </View>
+    <Text style={[styles.metricValue, { color: PITCH }]}>{value}</Text>
+  </View>
+);
 
 const InfoRow: React.FC<{
   icon: IconName;
@@ -159,9 +123,7 @@ const InfoRow: React.FC<{
   isLast?: boolean;
 }> = ({ icon, label, value, colors: c, isLast }) => (
   <View style={[infoStyles.row, !isLast && { borderBottomColor: c.border }]}>
-    <View style={[infoStyles.iconWrap, { backgroundColor: c.accentSoft }]}>
-      <Icon name={icon} size={16} color={c.brand} />
-    </View>
+    <Icon name={icon} size={16} color={c.textMuted} />
     <View style={infoStyles.copy}>
       <Text style={[infoStyles.label, { color: c.textMuted }]}>{label}</Text>
       <Text style={[infoStyles.value, { color: c.text }]}>{value}</Text>
@@ -257,96 +219,50 @@ export const PlayerGalleryGrid: React.FC<{
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     marginBottom: spacing.lg,
   },
   hero: {
     padding: spacing.lg,
-    paddingTop: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  ownPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    backgroundColor: 'transparent',
-  },
-  ownPillText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.2 },
+  ownLabel: { fontSize: 11, fontWeight: '600' },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
-    width: 84,
-    height: 84,
-    borderRadius: radius.lg,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.2)',
+    width: 72,
+    height: 72,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(22, 163, 74, 0.06)',
   },
   avatarPh: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarLetter: { fontSize: 32, fontWeight: '800', color: '#FFFFFF' },
-  heroInfo: { flex: 1, minWidth: 0 },
+  avatarLetter: { fontSize: 28, fontWeight: '700' },
+  heroInfo: { flex: 1, minWidth: 0, gap: 4 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   heroName: {
     flex: 1,
-    flexShrink: 1,
-    minWidth: 0,
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '800',
-    color: '#E6E8EC',
-    letterSpacing: -0.4,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
-  heroSub: { color: '#C7CEDA', fontSize: 13, marginTop: spacing.xs, lineHeight: 20 },
+  heroSub: { fontSize: 13, lineHeight: 18 },
+  availLine: { fontSize: 12, lineHeight: 16 },
   headline: {
-    color: '#B7C1D3',
     fontSize: 13,
-    marginTop: spacing.sm,
-    fontStyle: 'italic',
+    marginTop: spacing.xs,
     lineHeight: 18,
   },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  chip: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-  },
-  chipText: { fontSize: 11, fontWeight: '600' },
-  badgesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  availBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-  },
-  availPositive: { backgroundColor: 'rgba(52,211,153,0.18)' },
-  availNeutral: { backgroundColor: 'rgba(251,191,36,0.18)' },
-  availText: { color: '#F1F4FA', fontSize: 11, fontWeight: '600' },
-  verifiedBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    backgroundColor: 'transparent',
-  },
-  verifiedText: { fontSize: 11, fontWeight: '600' },
   completionRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'stretch',
     gap: spacing.md,
     padding: spacing.md,
-    borderTopWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   metricBlock: {
     flex: 1,
@@ -354,22 +270,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  completionCopy: { flex: 1, gap: spacing.xs },
-  completionTitle: { fontSize: 15, fontWeight: '800' },
-  completionSub: { fontSize: 12, lineHeight: 18 },
-  completionRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  completionPct: { fontSize: 13, fontWeight: '900' },
+  completionCopy: { flex: 1, gap: 2 },
+  completionTitle: { fontSize: 14, fontWeight: '700' },
+  completionSub: { fontSize: 12, lineHeight: 16 },
+  metricValue: { fontSize: 18, fontWeight: '800' },
 });
 
 const infoStyles = StyleSheet.create({
-  card: { borderRadius: radius.lg, borderWidth: 1, overflow: 'hidden' },
+  card: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -378,22 +286,15 @@ const infoStyles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   copy: { flex: 1 },
   label: { fontSize: 11, fontWeight: '600' },
-  value: { fontSize: 14, fontWeight: '700', marginTop: 1 },
+  value: { fontSize: 14, fontWeight: '600', marginTop: 1 },
   empty: { fontSize: 13, lineHeight: 20 },
   galleryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   galleryCell: {
     width: '31%' as unknown as number,
     aspectRatio: 1,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
 });
