@@ -1,4 +1,5 @@
 import { callFunction } from '../lib/firebaseFunctions';
+import type { PlayerThemePrefs } from '../models/PlayerThemePrefs';
 
 export type PlayerCoachAiMessage = {
   role: 'user' | 'assistant';
@@ -19,7 +20,8 @@ export type PlayerAiAction =
   | { type: 'open_training'; params?: Record<string, unknown> }
   | { type: 'report_late'; eventId: string; delay: 'under_10' | 'over_10' | 'unknown' }
   | { type: 'generate_training'; objective: string; durationMin: number }
-  | { type: 'save_weekly_goal'; goal: string };
+  | { type: 'save_weekly_goal'; goal: string }
+  | { type: 'apply_theme'; prefs: PlayerThemePrefs; label: string };
 
 export type PlayerCoachAiResult = {
   reply: string;

@@ -8,6 +8,11 @@ import {
   sanitizePlayerThemePrefs,
 } from '../../utils/resolvePlayerThemeColors';
 import { normalizeCoachHexColor } from '../../utils/coachColorPicker';
+import {
+  parsePlayerThemeAiIntent,
+  THEME_AI_EXAMPLE_CHIPS,
+  THEME_AI_FALLBACK_MESSAGE,
+} from '../../utils/playerThemeAiIntent';
 import type { PlayerThemeMode, PlayerThemePrefs } from '../../models/PlayerThemePrefs';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
@@ -98,6 +103,9 @@ export function PlayerThemeSettingsPanel() {
   const [hexInput, setHexInput] = useState(theme.prefs.custom?.accent ?? PLAYER_THEME_SWATCHES[0]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiReply, setAiReply] = useState<string | null>(null);
+  const [aiApplying, setAiApplying] = useState(false);
 
   const preview = useMemo(
     () =>
@@ -205,11 +213,38 @@ export function PlayerThemeSettingsPanel() {
       await theme.resetPrefs();
       setDraft({ mode: 'default' });
       setHexInput(PLAYER_THEME_SWATCHES[0]);
+      setAiReply(null);
       setSaved(true);
     } finally {
       setSaving(false);
     }
   }, [theme]);
+
+  const applyAiTheme = useCallback(
+    async (phrase: string) => {
+      const trimmed = phrase.trim();
+      if (!trimmed) return;
+      setAiApplying(true);
+      setSaved(false);
+      setAiReply(null);
+      try {
+        const result = parsePlayerThemeAiIntent(trimmed);
+        if (!result.ok) {
+          setAiReply(result.message);
+          return;
+        }
+        const next = sanitizePlayerThemePrefs(result.prefs);
+        setDraft(next);
+        if (next.custom?.accent) setHexInput(next.custom.accent);
+        setAiReply(result.label);
+        await theme.setPrefs(next);
+        setSaved(true);
+      } finally {
+        setAiApplying(false);
+      }
+    },
+    [theme],
+  );
 
   return (
     <View style={styles.root}>
@@ -218,6 +253,65 @@ export function PlayerThemeSettingsPanel() {
       </ProDayText>
 
       <ShieldPreview accent={previewColors[0]} accentAlt={previewColors[1]} />
+
+      <View style={styles.aiBlock}>
+        <ProDayText variant="caption" style={styles.customLabel}>
+          Coach couleurs IA
+        </ProDayText>
+        <ProDayText variant="caption" style={styles.aiLead}>
+          Décris les couleurs que tu veux — clubs, mélanges ou teinte unique.
+        </ProDayText>
+        <TextInput
+          value={aiPrompt}
+          onChangeText={setAiPrompt}
+          placeholder="Décris les couleurs que tu veux…"
+          placeholderTextColor={PLAYER_DARK.textDim}
+          style={styles.aiInput}
+          multiline
+          maxLength={200}
+        />
+        <View style={styles.chipRow}>
+          {THEME_AI_EXAMPLE_CHIPS.map((chip) => (
+            <PressableSpring
+              key={chip}
+              onPress={() => {
+                setAiPrompt(chip);
+                void applyAiTheme(chip);
+              }}
+              scaleTo={0.97}
+              style={styles.aiChip}
+            >
+              <ProDayText variant="caption" style={styles.aiChipText}>
+                {chip}
+              </ProDayText>
+            </PressableSpring>
+          ))}
+        </View>
+        <PressableSpring
+          onPress={() => void applyAiTheme(aiPrompt)}
+          disabled={aiApplying || !aiPrompt.trim()}
+          scaleTo={0.98}
+          haptic
+          style={[
+            styles.aiApplyBtn,
+            { backgroundColor: previewColors[0], opacity: aiApplying || !aiPrompt.trim() ? 0.5 : 1 },
+          ]}
+        >
+          <ProDayText variant="caption" style={styles.primaryBtnText}>
+            {aiApplying ? 'Application…' : 'Appliquer'}
+          </ProDayText>
+        </PressableSpring>
+        {aiReply ? (
+          <ProDayText variant="caption" style={styles.aiReply}>
+            {aiReply}
+          </ProDayText>
+        ) : null}
+        {!aiReply ? (
+          <ProDayText variant="caption" style={styles.aiHint}>
+            {THEME_AI_FALLBACK_MESSAGE}
+          </ProDayText>
+        ) : null}
+      </View>
 
       <View style={styles.modeList}>
         {modeOptions.map((option) => (
@@ -506,5 +600,60 @@ const styles = StyleSheet.create({
   savedHint: {
     color: PLAYER_DARK.accentAlt,
     textAlign: 'center',
+  },
+  aiBlock: {
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+    borderRadius: 14,
+    padding: spacing.md,
+    backgroundColor: PLAYER_DARK.bgElevated,
+  },
+  aiLead: {
+    color: PLAYER_DARK.textMuted,
+    lineHeight: 16,
+  },
+  aiInput: {
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 10,
+    color: PLAYER_DARK.text,
+    minHeight: 44,
+    maxHeight: 80,
+    backgroundColor: PLAYER_DARK.surface,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  aiChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+    backgroundColor: PLAYER_DARK.surface,
+  },
+  aiChipText: {
+    color: PLAYER_DARK.textMuted,
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  aiApplyBtn: {
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  aiReply: {
+    color: PLAYER_DARK.accentAlt,
+    lineHeight: 18,
+  },
+  aiHint: {
+    color: PLAYER_DARK.textDim,
+    lineHeight: 16,
+    fontSize: 11,
   },
 });

@@ -50,5 +50,6 @@ describe('playerCoachAi client', () => {
   it('inclut des starters command center', () => {
     expect(PLAYER_COACH_STARTERS).toContain('Mon tir');
     expect(PLAYER_COACH_STARTERS).toContain('Créer séance');
+    expect(PLAYER_COACH_STARTERS).toContain('Mes couleurs');
   });
 });

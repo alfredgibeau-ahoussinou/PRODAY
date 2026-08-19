@@ -34,6 +34,11 @@ import {
   resolveNavigationIntent,
   type PlayerNavigateTab,
 } from '../../utils/playerCoachIntent';
+import {
+  isPlayerThemeSettingsIntent,
+  parsePlayerThemeAiIntent,
+} from '../../utils/playerThemeAiIntent';
+import { usePlayerTheme } from '../../context/PlayerThemeContext';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { careerPreferencesService } from '../../services/careerPreferences.service';
 
@@ -85,6 +90,7 @@ export function PlayerCoachAiChat({
   const session = useJoueurSession();
   const { profile } = useAuth();
   const nav = useTabNavigationActions();
+  const playerTheme = usePlayerTheme();
   const accent = session?.identity?.accent ?? PLAYER_DARK.accent;
   const accentBright = session?.identity?.accentBright ?? PLAYER_DARK.accentAlt;
 
@@ -125,6 +131,24 @@ export function PlayerCoachAiChat({
             await careerPreferencesService.setWeeklyFocus(profile.uid, action.goal);
           }
           break;
+        case 'apply_theme':
+          if (!confirmed) {
+            Alert.alert(
+              'Appliquer ces couleurs ?',
+              action.label,
+              [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                  text: 'Appliquer',
+                  onPress: () => void executeAction(action, true),
+                },
+              ],
+            );
+            return;
+          }
+          await playerTheme.setPrefs(action.prefs);
+          Alert.alert('Couleurs appliquées', action.label);
+          break;
         case 'report_late':
           if (!confirmed) {
             Alert.alert(
@@ -148,7 +172,7 @@ export function PlayerCoachAiChat({
           break;
       }
     },
-    [nav, profile?.uid],
+    [nav, profile?.uid, playerTheme],
   );
 
   const runClientIntents = useCallback(
@@ -157,6 +181,14 @@ export function PlayerCoachAiChat({
       if (navTab) {
         navigateTab(nav, navTab);
         return true;
+      }
+      if (isPlayerThemeSettingsIntent(content)) {
+        navigateTab(nav, 'profil');
+        return true;
+      }
+      const themeResult = parsePlayerThemeAiIntent(content);
+      if (themeResult.ok) {
+        return false;
       }
       if (isWeeklySummaryIntent(content)) {
         return false;
@@ -181,6 +213,39 @@ export function PlayerCoachAiChat({
     setDraft('');
 
     runClientIntents(content);
+
+    const themeIntent = parsePlayerThemeAiIntent(content);
+    if (themeIntent.ok) {
+      const userMsg: Bubble = { id: `u-${Date.now()}`, role: 'user', content };
+      setMessages((prev) => [
+        ...prev.filter((m) => m.id !== 'welcome'),
+        userMsg,
+        {
+          id: `a-${Date.now()}`,
+          role: 'assistant',
+          content: themeIntent.label,
+        },
+      ]);
+      setPendingActions([
+        { type: 'apply_theme', prefs: themeIntent.prefs, label: themeIntent.label },
+      ]);
+      return;
+    }
+
+    if (isPlayerThemeSettingsIntent(content)) {
+      const userMsg: Bubble = { id: `u-${Date.now()}`, role: 'user', content };
+      setMessages((prev) => [
+        ...prev.filter((m) => m.id !== 'welcome'),
+        userMsg,
+        {
+          id: `a-${Date.now()}`,
+          role: 'assistant',
+          content:
+            'Ouvre ton profil → Paramètres → Couleurs de mon espace pour personnaliser ton pôle joueur.',
+        },
+      ]);
+      return;
+    }
 
     const trainingIntent = isHomeTrainingIntent(content);
     const userMsg: Bubble = { id: `u-${Date.now()}`, role: 'user', content };
@@ -248,6 +313,8 @@ export function PlayerCoachAiChat({
         return 'Signaler mon retard';
       case 'save_weekly_goal':
         return 'Objectif enregistré';
+      case 'apply_theme':
+        return 'Appliquer mes couleurs';
       default:
         return 'Action';
     }

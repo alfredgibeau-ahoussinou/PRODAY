@@ -5,4 +5,5 @@ export const PLAYER_COACH_STARTERS = [
   'Ma forme',
   'Prochain match',
   'Créer séance',
+  'Mes couleurs',
 ];
