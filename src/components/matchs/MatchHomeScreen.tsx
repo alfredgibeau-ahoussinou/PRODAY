@@ -43,7 +43,6 @@ import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
 import { playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
 import type { Competition, CompetitionFixture, CompetitionSeason } from '../../models/Competition';
-import { spacing } from '../../theme/designTokens';
 
 interface MatchHomeScreenProps {
   profile: User | null;
@@ -422,22 +421,22 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     const g = joueurSession.ageGroup;
     if (g === 'youth') {
       return {
-        caption: 'Matchs',
-        title: 'Calendrier',
-        subtitle: 'Convocations et matchs de la semaine.',
+        caption: 'STAGE MATCH',
+        title: 'Arena',
+        subtitle: 'Fixture · Callout · Live — joue ta semaine.',
       };
     }
     if (g === 'teen') {
       return {
-        caption: 'Matchs',
-        title: 'Centre match',
-        subtitle: 'Convocations, stats et calendrier.',
+        caption: 'RANKED MATCH',
+        title: 'Match stages',
+        subtitle: 'Convocs, stats, missions terrain.',
       };
     }
     return {
-      caption: 'Matchs',
-      title: 'Centre match',
-      subtitle: 'Calendrier, live et compétitions.',
+      caption: 'ULTIMATE MATCH',
+      title: 'Centre Match',
+      subtitle: 'Stages : Fixture · Live · League.',
     };
   }, [isJoueur, joueurSession, t]);
 
@@ -480,7 +479,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     <>
       <OfflineCacheBanner visible={fromCache} onRefresh={onRefresh} />
       {!hidePoleHero ? (
-        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.xs }}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
           <ImmersivePoleHero
             kicker={t('matchs.caption')}
             title={t('matchs.title')}

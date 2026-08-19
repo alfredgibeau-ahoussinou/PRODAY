@@ -5,9 +5,10 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { FeedHomeScreen } from '../components/feed/FeedHomeScreen';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ProDayText } from '../components/ui/ProDayText';
+import { ProDayGradient } from '../components/ui/ProDayGradient';
 import { PressableSpring } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { spacing, radius } from '../theme/designTokens';
+import { spacing } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { useTranslation } from '../context/LocaleContext';
 import type { AppColors } from '../theme/universeTheme';
@@ -44,10 +45,12 @@ export const FeedTabScreen: React.FC = () => {
       <ProDayText variant="body" muted style={styles.guestSub}>
         {t('feed.guest.body')}
       </ProDayText>
-      <PressableSpring onPress={() => openAuth('login')} scaleTo={0.98} haptic style={styles.guestCta}>
-        <ProDayText variant="caption" style={styles.guestCtaText}>
-          {t('common.login')}
-        </ProDayText>
+      <PressableSpring onPress={() => openAuth('login')} scaleTo={0.98} haptic>
+        <ProDayGradient kind="cta" style={styles.guestCta}>
+          <ProDayText variant="caption" inverse style={styles.guestCtaText}>
+            {t('common.login')}
+          </ProDayText>
+        </ProDayGradient>
       </PressableSpring>
     </View>
   );
@@ -75,16 +78,15 @@ function createStyles(c: AppColors) {
       paddingHorizontal: spacing.lg,
       paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
       justifyContent: 'center',
-      gap: spacing.md,
+      gap: spacing.sm,
     },
     guestSub: { lineHeight: 22 },
     guestCta: {
       marginTop: spacing.lg,
-      borderRadius: radius.md,
+      borderRadius: 12,
       paddingVertical: spacing.md,
       alignItems: 'center',
-      backgroundColor: '#16A34A',
     },
-    guestCtaText: { fontWeight: '700', letterSpacing: 0.2, color: '#FFFFFF' },
+    guestCtaText: { fontWeight: '800', letterSpacing: 0.3 },
   });
 }

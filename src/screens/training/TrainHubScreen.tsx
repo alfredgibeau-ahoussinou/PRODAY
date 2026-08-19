@@ -318,7 +318,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                       aiObjective === obj && { backgroundColor: c.brand },
                     ]}
                     onPress={() => setAiObjective(obj)}
-                    scaleTo={0.98}
+                    scaleTo={0.96}
                   >
                     <ProDayText
                       variant="caption"
@@ -342,7 +342,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                       aiDuration === d && { backgroundColor: c.brand },
                     ]}
                     onPress={() => setAiDuration(d)}
-                    scaleTo={0.98}
+                    scaleTo={0.96}
                   >
                     <ProDayText
                       variant="caption"
@@ -366,7 +366,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                       aiLevel === lvl && { backgroundColor: c.brand },
                     ]}
                     onPress={() => setAiLevel(lvl)}
-                    scaleTo={0.98}
+                    scaleTo={0.96}
                   >
                     <ProDayText
                       variant="caption"
@@ -390,7 +390,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                       aiEquipment.includes(eq) && { backgroundColor: c.brand },
                     ]}
                     onPress={() => toggleEquipment(eq)}
-                    scaleTo={0.98}
+                    scaleTo={0.96}
                   >
                     <ProDayText
                       variant="caption"
@@ -414,7 +414,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                       aiPartner === val && { backgroundColor: c.brand },
                     ]}
                     onPress={() => setAiPartner(val)}
-                    scaleTo={0.98}
+                    scaleTo={0.96}
                   >
                     <ProDayText
                       variant="caption"
@@ -431,7 +431,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                 style={[styles.cta, { backgroundColor: c.brand, marginTop: spacing.lg }]}
                 onPress={() => void generateAiTraining()}
                 disabled={aiGenerating}
-                scaleTo={0.98}
+                scaleTo={0.97}
                 haptic
               >
                 {aiGenerating ? (
@@ -490,7 +490,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                 onPress={() => {
                   setAiResult(null);
                 }}
-                scaleTo={0.98}
+                scaleTo={0.97}
                 haptic
               >
                 <ProDayText variant="caption" inverse>
@@ -647,7 +647,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                       { borderColor: c.border },
                     ]}
                     onPress={() => setDuration(d)}
-                    scaleTo={0.98}
+                    scaleTo={0.96}
                   >
                     <ProDayText
                       variant="caption"
@@ -663,7 +663,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                 style={[styles.cta, { backgroundColor: c.brand }]}
                 onPress={() => void requestBooking()}
                 disabled={submitting}
-                scaleTo={0.98}
+                scaleTo={0.97}
                 haptic
               >
                 {submitting ? (
@@ -832,7 +832,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
               <PressableSpring
                 style={[styles.cta, { backgroundColor: c.brand, marginTop: spacing.sm }]}
                 onPress={() => setView('book')}
-                scaleTo={0.98}
+                scaleTo={0.97}
                 haptic
               >
                 <ProDayText variant="caption" inverse>
@@ -889,7 +889,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                     ]}
                     onPress={() => void payBooking(b.id)}
                     disabled={payingId === b.id}
-                    scaleTo={0.98}
+                    scaleTo={0.97}
                     haptic
                   >
                     {payingId === b.id ? (
@@ -914,6 +914,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                 ? {
                     borderColor: JOUEUR_SITE.border,
                     backgroundColor: JOUEUR_SITE.surface,
+                    borderLeftWidth: 3,
+                    borderLeftColor: joueurSession!.identity.accent,
                     borderRadius: joueurSession!.identity.radius,
                   }
                 : { borderColor: c.border, backgroundColor: c.surface },
@@ -938,7 +940,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
             >
               <Icon
                 name={action.icon}
-                size={20}
+                size={22}
                 color={joueurLive ? joueurSession!.identity.accent : c.brand}
               />
             </View>
@@ -967,7 +969,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background },
-    pad: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
+    pad: { padding: spacing.lg, gap: spacing.sm, paddingBottom: spacing.xxl },
     hubCard: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -975,7 +977,7 @@ function createStyles(c: AppColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderRadius: radius.lg,
       padding: spacing.md,
-      marginTop: spacing.md,
+      marginTop: spacing.sm,
     },
     iconWrap: {
       width: 44,
@@ -989,18 +991,18 @@ function createStyles(c: AppColors) {
       borderWidth: StyleSheet.hairlineWidth,
       borderRadius: radius.lg,
       padding: spacing.md,
-      marginTop: spacing.md,
-      gap: spacing.sm,
+      marginTop: spacing.sm,
+      gap: 4,
     },
     input: {
       borderWidth: StyleSheet.hairlineWidth,
       borderRadius: radius.md,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
-      marginBottom: spacing.md,
+      marginBottom: spacing.sm,
     },
     modeBanner: {
-      marginTop: spacing.md,
+      marginTop: spacing.sm,
       padding: spacing.sm,
       borderWidth: StyleSheet.hairlineWidth,
       borderRadius: radius.md,
