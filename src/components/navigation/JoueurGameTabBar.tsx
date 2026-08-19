@@ -111,7 +111,7 @@ export function JoueurGameTabBar({
         key={tab}
         testID={`main-tab-${tab}`}
         onPress={() => pressTab(tab)}
-        scaleTo={0.97}
+        scaleTo={0.98}
         haptic
         style={[styles.slot, isHome && styles.slotHome]}
         accessibilityRole="tab"
@@ -133,7 +133,7 @@ export function JoueurGameTabBar({
         >
           <Icon
             name={icon}
-            size={isHome ? (isYouth ? 24 : 22) : isYouth ? 22 : 20}
+            size={isHome ? 22 : 20}
             color={active ? (isYouth ? accent : accentBright) : dimColor}
             variant={active ? 'filled' : 'outline'}
           />
@@ -176,7 +176,7 @@ export function JoueurGameTabBar({
             {
               borderColor: dockBorder,
               backgroundColor: dockBg,
-              borderRadius: isYouth ? 28 : isTeen ? 18 : 22,
+              borderRadius: isYouth ? 24 : isTeen ? 18 : 22,
               borderWidth: 1,
             },
           ]}
@@ -204,7 +204,7 @@ export function JoueurGameTabBar({
                   joueurGamePress();
                   setPauseOpen(true);
                 }}
-                scaleTo={0.97}
+                scaleTo={0.98}
                 haptic
                 style={styles.slot}
                 accessibilityRole="button"
@@ -271,27 +271,27 @@ const styles = StyleSheet.create({
   dock: {
     borderWidth: 1,
     borderRadius: 28,
-    paddingTop: 8,
-    paddingBottom: 8,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
     paddingHorizontal: 6,
     overflow: 'hidden',
-    gap: 6,
+    gap: spacing.sm,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
       },
-      android: { elevation: 3 },
+      android: { elevation: 2 },
       default: {},
     }),
   },
   hudStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
     paddingTop: 2,
   },
   hudLvl: {
@@ -343,9 +343,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     marginTop: 1,
   },
   badge: {

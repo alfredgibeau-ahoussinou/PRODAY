@@ -206,6 +206,6 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
 const styles = StyleSheet.create({
   guestPad: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
   },
 });

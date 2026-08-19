@@ -8,7 +8,7 @@ import { ProDayText } from '../components/ui/ProDayText';
 import { ProDayGradient } from '../components/ui/ProDayGradient';
 import { PressableSpring } from '../components/motion';
 import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
-import { spacing } from '../theme/designTokens';
+import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { useTranslation } from '../context/LocaleContext';
 import type { AppColors } from '../theme/universeTheme';
@@ -78,12 +78,12 @@ function createStyles(c: AppColors) {
       paddingHorizontal: spacing.lg,
       paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
       justifyContent: 'center',
-      gap: spacing.sm,
+      gap: spacing.md,
     },
     guestSub: { lineHeight: 22 },
     guestCta: {
       marginTop: spacing.lg,
-      borderRadius: 12,
+      borderRadius: radius.md,
       paddingVertical: spacing.md,
       alignItems: 'center',
     },

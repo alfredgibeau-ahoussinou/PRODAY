@@ -682,9 +682,6 @@ const styles = StyleSheet.create({
     fontFamily: reelsTheme.type.masthead.fontFamily,
     fontSize: reelsTheme.type.masthead.fontSize,
     letterSpacing: reelsTheme.type.masthead.letterSpacing,
-    textShadowColor: 'rgba(0,0,0,0.45)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
   },
   brandWordCompact: {
     fontSize: 14,

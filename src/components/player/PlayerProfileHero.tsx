@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   hero: {
     padding: spacing.lg,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.lg,
     gap: spacing.md,
   },
   ownPill: {
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 84,
     height: 84,
-    borderRadius: 22,
+    borderRadius: radius.lg,
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.2)',
   },
@@ -291,22 +291,22 @@ const styles = StyleSheet.create({
   },
   avatarLetter: { fontSize: 32, fontWeight: '800', color: '#FFFFFF' },
   heroInfo: { flex: 1, minWidth: 0 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   heroName: {
     flex: 1,
     flexShrink: 1,
     minWidth: 0,
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: '800',
     color: '#E6E8EC',
     letterSpacing: -0.4,
   },
-  heroSub: { color: '#B4BAC8', fontSize: 13, marginTop: 4, lineHeight: 18 },
+  heroSub: { color: '#C7CEDA', fontSize: 13, marginTop: spacing.xs, lineHeight: 20 },
   headline: {
-    color: '#A5ADBF',
+    color: '#B7C1D3',
     fontSize: 13,
-    marginTop: 6,
+    marginTop: spacing.sm,
     fontStyle: 'italic',
     lineHeight: 18,
   },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   },
   availPositive: { backgroundColor: 'rgba(52,211,153,0.18)' },
   availNeutral: { backgroundColor: 'rgba(251,191,36,0.18)' },
-  availText: { color: '#E6E8EC', fontSize: 11, fontWeight: '600' },
+  availText: { color: '#F1F4FA', fontSize: 11, fontWeight: '600' },
   verifiedBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -346,6 +346,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
     borderTopWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
   metricBlock: {
     flex: 1,
@@ -353,9 +354,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  completionCopy: { flex: 1, gap: 2 },
-  completionTitle: { fontSize: 14, fontWeight: '800' },
-  completionSub: { fontSize: 12, lineHeight: 17 },
+  completionCopy: { flex: 1, gap: spacing.xs },
+  completionTitle: { fontSize: 15, fontWeight: '800' },
+  completionSub: { fontSize: 12, lineHeight: 18 },
   completionRing: {
     width: 52,
     height: 52,
@@ -368,7 +369,7 @@ const styles = StyleSheet.create({
 });
 
 const infoStyles = StyleSheet.create({
-  card: { borderRadius: radius.md, borderWidth: 1, overflow: 'hidden' },
+  card: { borderRadius: radius.lg, borderWidth: 1, overflow: 'hidden' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -380,7 +381,7 @@ const infoStyles = StyleSheet.create({
   iconWrap: {
     width: 32,
     height: 32,
-    borderRadius: 10,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },

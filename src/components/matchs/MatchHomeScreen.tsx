@@ -43,6 +43,7 @@ import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
 import { playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
 import type { Competition, CompetitionFixture, CompetitionSeason } from '../../models/Competition';
+import { spacing } from '../../theme/designTokens';
 
 interface MatchHomeScreenProps {
   profile: User | null;
@@ -479,7 +480,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     <>
       <OfflineCacheBanner visible={fromCache} onRefresh={onRefresh} />
       {!hidePoleHero ? (
-        <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.xs }}>
           <ImmersivePoleHero
             kicker={t('matchs.caption')}
             title={t('matchs.title')}

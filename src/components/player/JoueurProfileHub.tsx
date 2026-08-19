@@ -18,7 +18,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { FORM_BAND_LABELS, formatFormScore, playerFormFromHealthSnapshot } from '../../utils/formAnalysis';
-import { spacing } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 
 type Props = {
   profile: User;
@@ -182,7 +182,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
                     joueurGamePress();
                     a.run();
                   }}
-                  scaleTo={0.97}
+                  scaleTo={0.98}
                   haptic
                   style={[
                     styles.actionBtn,
@@ -232,7 +232,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
             <View style={styles.boostActions}>
               <PressableSpring
                 onPress={openPass}
-                scaleTo={0.97}
+                scaleTo={0.98}
                 haptic
                 style={[styles.primaryCta, { backgroundColor: identity.accent }]}
               >
@@ -240,7 +240,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
                   Activer Pass IA
                 </ProDayText>
               </PressableSpring>
-              <PressableSpring onPress={openCoach} scaleTo={0.97} style={styles.secondaryCta}>
+              <PressableSpring onPress={openCoach} scaleTo={0.98} style={styles.secondaryCta}>
                 <ProDayText variant="caption" style={styles.secondaryCtaText}>
                   Coach {JOUEUR_SITE.coachPriceEur}€
                 </ProDayText>
@@ -258,14 +258,14 @@ export const JoueurProfileHub: React.FC<Props> = ({
           {(onEdit || onPreferences) && (
             <View style={styles.footerLinks}>
               {onEdit ? (
-                <PressableSpring onPress={onEdit} scaleTo={0.97} style={styles.footerLink}>
+                <PressableSpring onPress={onEdit} scaleTo={0.98} style={styles.footerLink}>
                   <ProDayText variant="caption" style={styles.footerText}>
                     Modifier profil
                   </ProDayText>
                 </PressableSpring>
               ) : null}
               {onPreferences ? (
-                <PressableSpring onPress={onPreferences} scaleTo={0.97} style={styles.footerLink}>
+                <PressableSpring onPress={onPreferences} scaleTo={0.98} style={styles.footerLink}>
                   <ProDayText variant="caption" style={styles.footerText}>
                     Préférences
                   </ProDayText>
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
   heroShell: {
-    borderRadius: 14,
+    borderRadius: radius.lg,
     overflow: 'hidden',
     minHeight: 186,
   },
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroTopLeft: {
-    gap: 6,
+    gap: spacing.sm,
   },
   heroKicker: {
     fontWeight: '900',
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     minWidth: 72,
     borderWidth: 1,
     borderColor: JOUEUR_SITE.border,
-    borderRadius: 10,
+    borderRadius: radius.md,
     padding: spacing.sm,
     backgroundColor: 'rgba(12,18,30,0.86)',
   },
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   futCardBlock: {
     borderWidth: 1,
     borderColor: JOUEUR_SITE.border,
-    borderRadius: 14,
+    borderRadius: radius.lg,
     padding: spacing.md,
     backgroundColor: 'rgba(10,16,30,0.94)',
     gap: spacing.md,
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     width: '47%',
     flexGrow: 1,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: radius.md,
     paddingVertical: 12,
     alignItems: 'center',
     backgroundColor: 'rgba(8,14,24,0.72)',
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   },
   panel: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: radius.md,
     padding: spacing.md,
     gap: spacing.sm,
     backgroundColor: JOUEUR_SITE.surface,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     color: JOUEUR_SITE.muted,
     lineHeight: 18,
   },
-  boostActions: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  boostActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
   primaryCta: {
     flex: 1,
     borderRadius: 999,
