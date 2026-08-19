@@ -3,6 +3,12 @@ import { configStr } from './runtimeConfig';
 import { MISTRAL_CHAT_MODEL, extractMistralChatText } from './mistralModels';
 import { stripDashTypography } from './clubAssistantChat';
 import { playerAgent, formatPlayerAgentFacts } from './aiAgents/agents/playerAgent';
+import {
+  buildPlayerCoachSuggestions,
+  detectPlayerCoachActions,
+  savePlayerWeeklyFocus,
+  type PlayerAiAction,
+} from './playerCoachActions';
 
 const MAX_HISTORY = 16;
 const MAX_USER_CHARS = 1200;
@@ -40,6 +46,8 @@ Règles absolues:
 4. Pas de tirets (-, –, —). Phrases courtes ou numéros 1. 2. 3.
 5. 3 à 8 phrases max. Suggestions, pas ordres.
 6. Entraînement maison: tu peux proposer des idées générales; pour une séance structurée, suggère « Créer mon entraînement » dans l'app.
+7. Résumé semaine: utilise weekly_session_count, weekly_goal_percent, wellness_score et next_event du contexte.
+8. Navigation: tu peux inviter le joueur à ouvrir Matchs, Saison, Profil ou Entraînement IA dans l'app.
 
 Contexte joueur (données réelles):
 ${contextBlock || 'Aucune donnée disponible.'}`;
@@ -79,7 +87,7 @@ async function callMistralChat(
   return stripDashTypography(text.slice(0, MAX_REPLY_CHARS));
 }
 
-/** Coach IA joueur — contexte enrichi via playerAgent. */
+/** Coach IA joueur — contexte enrichi via playerAgent + actions structurées. */
 export const playerCoachAiChat = onCall(
   {
     region: 'europe-west1',
@@ -102,19 +110,33 @@ export const playerCoachAiChat = onCall(
       throw new HttpsError('invalid-argument', 'Message requis.');
     }
 
+    const query = messages.at(-1)?.content ?? '';
     const agentResult = await playerAgent({
       uid,
       role: 'player',
-      query: messages.at(-1)?.content ?? '',
+      query,
     });
+    const facts = (agentResult.facts ?? {}) as Record<string, unknown>;
     const contextBlock = formatPlayerAgentFacts(agentResult);
     const system = buildSystemPrompt(contextBlock);
 
     const reply = await callMistralChat(apiKey, system, messages);
+
+    const actions: PlayerAiAction[] = detectPlayerCoachActions(query, facts);
+    for (const action of actions) {
+      if (action.type === 'save_weekly_goal') {
+        await savePlayerWeeklyFocus(uid, action.goal);
+      }
+    }
+
+    const suggestions = buildPlayerCoachSuggestions(facts);
+
     return {
       reply,
       model: MISTRAL_CHAT_MODEL,
       agents_used: ['player'],
+      actions: actions.length > 0 ? actions : undefined,
+      suggestions,
     };
   },
 );

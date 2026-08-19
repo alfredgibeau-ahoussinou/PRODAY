@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MainTabId } from '../../navigation/mainTabConfig';
 import { getMobileRailLayout } from '../../navigation/mobileTabConfig';
@@ -43,6 +43,8 @@ export function JoueurGameTabBar({
   const profile = useSessionProfile();
   const session = useJoueurSession();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const compactLabels = screenWidth < 360;
 
   const accent = PLAYER_DARK.accent;
   const accentBright = PLAYER_DARK.accentAlt;
@@ -104,15 +106,19 @@ export function JoueurGameTabBar({
             </View>
           ) : null}
         </View>
-        <Text
-          style={[
-            styles.slotLabel,
-            { color: active ? accentBright : dimColor },
-          ]}
-          numberOfLines={1}
-        >
-          {label}
-        </Text>
+        {!compactLabels ? (
+          <Text
+            style={[
+              styles.slotLabel,
+              { color: active ? accentBright : dimColor },
+            ]}
+            adjustsFontSizeToFit
+            minimumFontScale={0.82}
+            numberOfLines={1}
+          >
+            {label}
+          </Text>
+        ) : null}
         {active ? <View style={[styles.activeLine, { backgroundColor: accent }]} /> : null}
       </PressableSpring>
     );
@@ -146,7 +152,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 10,
     paddingHorizontal: 8,
-    overflow: 'hidden',
+    overflow: 'visible',
     backgroundColor: PLAYER_DARK.dockBg,
     borderColor: PLAYER_DARK.dockBorder,
     ...Platform.select({
@@ -182,10 +188,12 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   slotLabel: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '800',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
     textTransform: 'uppercase',
+    width: '100%',
+    textAlign: 'center',
   },
   activeLine: {
     width: 18,

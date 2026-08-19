@@ -24,7 +24,8 @@ import { ProDayText } from '../../components/ui/ProDayText';
 import { PushScreenTransition } from '../../components/motion';
 import { TrainHubScreen } from '../training/TrainHubScreen';
 import { JoueurTacticsCoachScreen } from './JoueurTacticsCoachScreen';
-import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
+import { screenScrollPad } from '../../navigation/screenLayout';
+import { resolvePlayerShieldWidth } from '../../utils/playerShieldLayout';
 import { spacing } from '../../theme/designTokens';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { resolveJoueurAgeGroup } from '../../utils/joueurExperienceTheme';
@@ -119,12 +120,14 @@ export function PlayerFootballHubScreen() {
       ? `${hub.pendingConvocations.length} convocation(s) en attente`
       : undefined;
 
+  const shieldWidth = resolvePlayerShieldWidth();
+
   return (
     <>
       <JoueurScreenChrome variant="page" kicker="Parcours" title={`Bonjour ${hub.firstName}`}>
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + 88 }]}
+          contentContainerStyle={[styles.pad, screenScrollPad(spacing.md)]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
@@ -138,14 +141,14 @@ export function PlayerFootballHubScreen() {
                 photoUrl={shieldCard.photoUrl}
                 clubName={shieldCard.clubName}
                 stats={shieldCard.stats}
-                width={280}
+                width={shieldWidth}
                 onPress={() => nav.setActiveTab('profil')}
               />
               <PlayerProgressBar
                 value={hub.profileCompletion}
                 label={`Profil ${hub.profileCompletion}%`}
                 accent={accent}
-                style={styles.profileBar}
+                style={[styles.profileBar, { width: shieldWidth }]}
               />
             </View>
           ) : null}
@@ -245,7 +248,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   pad: { padding: spacing.lg, gap: spacing.md },
   shieldWrap: { alignItems: 'center', marginBottom: spacing.sm, gap: spacing.sm, width: '100%' },
-  profileBar: { width: 280, opacity: 0.85 },
+  profileBar: { opacity: 0.85 },
   muted: { color: PLAYER_DARK.textMuted },
   inlineLoader: { marginVertical: spacing.md },
   empty: { color: PLAYER_DARK.textMuted, paddingVertical: spacing.sm },

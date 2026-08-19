@@ -50,7 +50,7 @@ function CompactRating({ rating }: { rating: number | null | undefined }) {
   const display = rating != null && rating > 0 ? rating.toFixed(1) : '—';
 
   return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <Svg width={size} height={size}>
         <Defs>
           <SvgGradient id="compactRatingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -123,7 +123,7 @@ export function PlayerShieldCardCompact({
           </View>
 
           <View style={compactStyles.copy}>
-            <ProDayText variant="section" style={compactStyles.name} numberOfLines={1}>
+            <ProDayText variant="section" style={compactStyles.name} numberOfLines={2}>
               {displayName}
             </ProDayText>
             <ProDayText variant="caption" style={compactStyles.club} numberOfLines={1}>

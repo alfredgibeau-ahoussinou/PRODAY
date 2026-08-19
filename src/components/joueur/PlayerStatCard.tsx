@@ -35,7 +35,7 @@ export function PlayerStatCard({
         {empty ? '—' : value}
       </ProDayText>
       {hint ? (
-        <ProDayText variant="caption" style={styles.hint}>
+        <ProDayText variant="caption" style={styles.hint} numberOfLines={3}>
           {hint}
         </ProDayText>
       ) : null}

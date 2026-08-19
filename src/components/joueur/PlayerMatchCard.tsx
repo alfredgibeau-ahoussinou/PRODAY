@@ -43,15 +43,15 @@ export function PlayerMatchCard({
         <ProDayText variant="caption" style={styles.kicker}>
           {typeLabel.toUpperCase()}
         </ProDayText>
-        <ProDayText variant="section" style={styles.title}>
+        <ProDayText variant="section" style={styles.title} numberOfLines={2}>
           {event.title}
         </ProDayText>
-        <ProDayText variant="caption" style={styles.meta}>
+        <ProDayText variant="caption" style={styles.meta} numberOfLines={2}>
           {formatWhen(event.starts_at)}
           {event.location_label ? ` · ${event.location_label}` : ''}
         </ProDayText>
         {subtitle ? (
-          <ProDayText variant="caption" style={[styles.sub, { color: accent }]}>
+          <ProDayText variant="caption" style={[styles.sub, { color: accent }]} numberOfLines={2}>
             {subtitle}
           </ProDayText>
         ) : null}
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: 2,
   },
-  body: { flex: 1, gap: 2 },
+  body: { flex: 1, minWidth: 0, gap: 2 },
   kicker: { color: PLAYER_DARK.textMuted, letterSpacing: 0.8 },
   title: { color: PLAYER_DARK.text },
   meta: { color: PLAYER_DARK.textDim },

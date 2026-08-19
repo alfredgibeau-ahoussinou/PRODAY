@@ -17,6 +17,7 @@ import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 import { Icon, type IconName } from '../ui/Icon';
 import { getProfileCompletion } from '../../utils/profileCompletion';
+import { resolvePlayerShieldWidth } from '../../utils/playerShieldLayout';
 
 type Props = {
   profile: User;
@@ -183,6 +184,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
   const streak = progressApi?.progress.streakDays ?? 0;
   const clubLabel = profile.profile.club_id ? 'Club lié' : 'Sans club';
   const position = profile.profile.position || '—';
+  const cardWidth = resolvePlayerShieldWidth();
 
   const press = (run: () => void) => {
     joueurGamePress();
@@ -193,11 +195,11 @@ export const JoueurProfileHub: React.FC<Props> = ({
     <JoueurIdentityProvider identity={identity}>
       <View style={styles.root}>
         <View style={styles.heroBlock}>
-          <PlayerCardReveal card={card} width={280} onPress={onEdit} />
-          <ProDayText variant="title" numberOfLines={1} style={styles.displayName}>
+          <PlayerCardReveal card={card} width={cardWidth} onPress={onEdit} />
+          <ProDayText variant="title" numberOfLines={2} style={styles.displayName}>
             {profile.display_name}
           </ProDayText>
-          <ProDayText variant="caption" style={styles.meta} numberOfLines={1}>
+          <ProDayText variant="caption" style={styles.meta} numberOfLines={2}>
             {position} · {clubLabel}
           </ProDayText>
           <View style={styles.socialRow}>
@@ -424,6 +426,7 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
+    minWidth: 0,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: PLAYER_DARK.border,
@@ -466,7 +469,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: PLAYER_DARK.accentSoft,
   },
-  goalCopy: { flex: 1, gap: 1 },
+  goalCopy: { flex: 1, gap: 1, minWidth: 0 },
   goalLabel: {
     color: PLAYER_DARK.textMuted,
     fontWeight: '700',

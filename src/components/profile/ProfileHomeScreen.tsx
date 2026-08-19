@@ -41,6 +41,7 @@ import { isAmateurProductLine, type ProductLineId } from '../../models/ProductLi
 import type { OrganizerReminderItem } from '../../hooks/useOrganizerReminders';
 import type { SubscriptionUsagePeriod } from '../../models/Subscription';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
+import { screenScrollPad } from '../../navigation/screenLayout';
 import { spacing, radius } from '../../theme/designTokens';
 import { ProfilePreferencesCard } from './ProfilePreferencesCard';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
@@ -243,7 +244,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         render: () => (
           <ScrollView
             style={styles.chapterScroll}
-            contentContainerStyle={useHubChrome ? { paddingBottom: spacing.xl } : pagePad}
+            contentContainerStyle={useHubChrome ? screenScrollPad(spacing.lg) : pagePad}
             {...scrollProps}
           >
             {isPlayer ? (

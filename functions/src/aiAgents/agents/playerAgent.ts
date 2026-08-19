@@ -10,6 +10,27 @@ function todayKey(d = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
+function startOfWeek(d = new Date()): Date {
+  const copy = new Date(d);
+  const day = copy.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  copy.setDate(copy.getDate() - diff);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function countActivitiesSince(
+  activities: admin.firestore.DocumentData[],
+  since: Date,
+): number {
+  return activities.filter((a) => {
+    const created = a.created_at?.toDate?.() as Date | undefined;
+    const date = a.date?.toDate?.() as Date | undefined;
+    const ref = created ?? date;
+    return ref ? ref >= since : false;
+  }).length;
+}
+
 /**
  * Agent joueur — contexte profil, activités, wellness, calendrier.
  * Ne invente jamais de stats : facts = données Firestore ou null.
@@ -17,7 +38,7 @@ function todayKey(d = new Date()): string {
 export async function playerAgent(ctx: AgentContext): Promise<AgentResult> {
   try {
     const uid = ctx.uid;
-    const [userSnap, activitiesSnap, wellnessSnap] = await Promise.all([
+    const [userSnap, activitiesSnap, wellnessSnap, careerPrefsSnap] = await Promise.all([
       db.doc(`users/${uid}`).get(),
       db
         .collection('player_activities')
@@ -33,12 +54,25 @@ export async function playerAgent(ctx: AgentContext): Promise<AgentResult> {
         .limit(1)
         .get()
         .catch(() => ({ docs: [] as admin.firestore.QueryDocumentSnapshot[] })),
+      db.doc(`users/${uid}/v3_prefs/career`).get().catch(() => null),
     ]);
 
     const user = userSnap.data() ?? {};
     const profile = (user.profile as Record<string, unknown>) ?? {};
     const activities = activitiesSnap.docs.map((d) => d.data());
     const wellnessDoc = wellnessSnap.docs[0]?.data();
+    const careerPrefs = careerPrefsSnap?.data?.() ?? {};
+
+    const weekStart = startOfWeek();
+    const weeklySessionCount = countActivitiesSince(activities, weekStart);
+    const weeklyTarget =
+      typeof careerPrefs.weekly_sessions_target === 'number' && careerPrefs.weekly_sessions_target > 0
+        ? careerPrefs.weekly_sessions_target
+        : 3;
+    const weeklyGoalPercent = Math.min(
+      100,
+      Math.round((weeklySessionCount / weeklyTarget) * 100),
+    );
 
     let nextEvent: Record<string, unknown> | null = null;
     try {
@@ -60,11 +94,13 @@ export async function playerAgent(ctx: AgentContext): Promise<AgentResult> {
           memberUids.includes(uid) ||
           (clubId && eventClub === clubId)
         ) {
+          const rsvps = (data.rsvps as Record<string, string> | undefined) ?? {};
           nextEvent = {
             id: doc.id,
             title: data.title ?? null,
             event_type: data.event_type ?? null,
             starts_at: data.starts_at?.toDate?.()?.toISOString?.() ?? null,
+            rsvp_status: rsvps[uid] ?? null,
           };
           break;
         }
@@ -86,6 +122,10 @@ export async function playerAgent(ctx: AgentContext): Promise<AgentResult> {
       wellness_date: wellnessDoc?.date_key ?? null,
       wellness_fatigue: wellnessDoc?.fatigue ?? null,
       wellness_recovery: wellnessDoc?.recovery ?? null,
+      weekly_session_count: weeklySessionCount,
+      weekly_session_target: weeklyTarget,
+      weekly_goal_percent: weeklyGoalPercent,
+      weekly_focus: typeof careerPrefs.weekly_focus === 'string' ? careerPrefs.weekly_focus : null,
       next_event: nextEvent,
       today: todayKey(),
     };
@@ -99,9 +139,11 @@ export async function playerAgent(ctx: AgentContext): Promise<AgentResult> {
       ? `Prochain événement: ${nextEvent.title} (${nextEvent.event_type})`
       : 'Prochain événement: aucun chargé';
 
+    const weeklyLine = `Semaine: ${weeklySessionCount}/${weeklyTarget} séances (${weeklyGoalPercent}%)`;
+
     return {
       agent: 'player',
-      summary: `Joueur « ${facts.player_name} » · ${activities.length} activités · ${wellnessLine} · ${eventLine}`,
+      summary: `Joueur « ${facts.player_name} » · ${activities.length} activités · ${wellnessLine} · ${weeklyLine} · ${eventLine}`,
       facts,
     };
   } catch (e) {

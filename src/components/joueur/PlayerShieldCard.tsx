@@ -94,7 +94,7 @@ function StatRing({
           {value}
         </ProDayText>
       </View>
-      <ProDayText variant="caption" style={ringStyles.label} numberOfLines={1}>
+      <ProDayText variant="caption" style={ringStyles.label} numberOfLines={2}>
         {label}
       </ProDayText>
     </View>
@@ -149,7 +149,7 @@ export function PlayerShieldCard({
   onPress,
   style,
 }: PlayerShieldCardProps) {
-  const height = Math.round(width * 1.5);
+  const height = Math.max(Math.round(width * 1.48), Math.round(width * 1.5));
   const pos = positionShort(position);
   const goals = stats?.goals ?? null;
   const assists = stats?.assists ?? null;
@@ -206,7 +206,7 @@ export function PlayerShieldCard({
             ) : null}
           </View>
 
-          <ProDayText variant="section" style={styles.name} numberOfLines={1}>
+          <ProDayText variant="section" style={styles.name} numberOfLines={2}>
             {displayName}
           </ProDayText>
 
@@ -218,7 +218,7 @@ export function PlayerShieldCard({
                 <Icon name="shield" size={12} color={PLAYER_DARK.bg} variant="filled" />
               </View>
             )}
-            <ProDayText variant="caption" style={styles.clubText} numberOfLines={1}>
+            <ProDayText variant="caption" style={styles.clubText} numberOfLines={2}>
               {clubName?.trim() || 'Sans club'}
             </ProDayText>
           </View>
@@ -279,11 +279,13 @@ const ringStyles = StyleSheet.create({
   },
   label: {
     color: PLAYER_DARK.textMuted,
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '700',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
     marginTop: 2,
     textTransform: 'uppercase',
+    textAlign: 'center',
+    width: '100%',
   },
 });
 
@@ -318,7 +320,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xl + 4,
     alignItems: 'center',
     gap: spacing.sm,
   },

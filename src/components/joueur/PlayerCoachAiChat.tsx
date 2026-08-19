@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,8 +15,10 @@ import { Icon } from '../ui/Icon';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   sendPlayerCoachMessage,
+  type PlayerAiAction,
   type PlayerCoachAiMessage,
 } from '../../services/playerCoachAi.service';
 import { PLAYER_COACH_STARTERS } from '../../content/playerCoachAiCopy';
@@ -23,7 +26,16 @@ import { stripDashTypography } from '../../utils/stripDashTypography';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { radius, spacing } from '../../theme/designTokens';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { isHomeTrainingIntent } from '../../utils/playerCoachTrainingIntent';
+import {
+  isHomeTrainingIntent,
+  isWeeklySummaryIntent,
+  parseTrainingParams,
+  parseWeeklyGoalIntent,
+  resolveNavigationIntent,
+  type PlayerNavigateTab,
+} from '../../utils/playerCoachIntent';
+import { teamEventsService } from '../../services/teamEvents.service';
+import { careerPreferencesService } from '../../services/careerPreferences.service';
 
 type Bubble = PlayerCoachAiMessage & { id: string };
 
@@ -37,12 +49,41 @@ type Props = {
   compact?: boolean;
 };
 
-/** Chat Coach IA joueur — contexte réel via playerCoachAiChat. */
+function navigateTab(nav: ReturnType<typeof useTabNavigationActions>, tab: PlayerNavigateTab) {
+  switch (tab) {
+    case 'home':
+      nav.setActiveTab('home');
+      break;
+    case 'matchs':
+      nav.setActiveTab('matchs');
+      break;
+    case 'feed':
+      nav.setActiveTab('feed');
+      break;
+    case 'profil':
+      nav.setActiveTab('profil');
+      break;
+    case 'plus':
+      nav.setActiveTab('plus');
+      break;
+    case 'messages':
+      nav.setActiveTab('messages');
+      break;
+    case 'train_ai':
+      nav.openDashboard('train_ai');
+      break;
+    default:
+      break;
+  }
+}
+
+/** Chat Coach IA joueur — Command Center avec actions structurées. */
 export function PlayerCoachAiChat({
   starters = PLAYER_COACH_STARTERS,
   compact = false,
 }: Props) {
   const session = useJoueurSession();
+  const { profile } = useAuth();
   const nav = useTabNavigationActions();
   const accent = session?.identity?.accent ?? PLAYER_DARK.accent;
   const accentBright = session?.identity?.accentBright ?? PLAYER_DARK.accentAlt;
@@ -54,14 +95,80 @@ export function PlayerCoachAiChat({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [trainingCta, setTrainingCta] = useState(false);
+  const [followUpChips, setFollowUpChips] = useState<string[]>([]);
+  const [pendingActions, setPendingActions] = useState<PlayerAiAction[]>([]);
   const scrollRef = useRef<ScrollView>(null);
 
   const styles = useMemo(() => createStyles(accent, accentBright), [accent, accentBright]);
+  const showStarters = messages.length <= 1;
 
   useEffect(() => {
     const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
     return () => clearTimeout(t);
-  }, [messages, sending]);
+  }, [messages, sending, pendingActions]);
+
+  const executeAction = useCallback(
+    async (action: PlayerAiAction, confirmed = false) => {
+      joueurGamePress();
+      switch (action.type) {
+        case 'navigate':
+          navigateTab(nav, action.tab as PlayerNavigateTab);
+          break;
+        case 'open_training':
+          nav.openDashboard('train_ai');
+          break;
+        case 'generate_training':
+          nav.openDashboard('train_ai');
+          break;
+        case 'save_weekly_goal':
+          if (profile?.uid) {
+            await careerPreferencesService.setWeeklyFocus(profile.uid, action.goal);
+          }
+          break;
+        case 'report_late':
+          if (!confirmed) {
+            Alert.alert(
+              'Confirmer le retard',
+              'Signaler ton retard au staff pour le prochain événement ?',
+              [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                  text: 'Confirmer',
+                  onPress: () => void executeAction(action, true),
+                },
+              ],
+            );
+            return;
+          }
+          if (profile?.uid) {
+            await teamEventsService.reportLate(action.eventId, profile.uid, action.delay);
+          }
+          break;
+        default:
+          break;
+      }
+    },
+    [nav, profile?.uid],
+  );
+
+  const runClientIntents = useCallback(
+    (content: string) => {
+      const navTab = resolveNavigationIntent(content);
+      if (navTab) {
+        navigateTab(nav, navTab);
+        return true;
+      }
+      if (isWeeklySummaryIntent(content)) {
+        return false;
+      }
+      const goal = parseWeeklyGoalIntent(content);
+      if (goal && profile?.uid) {
+        void careerPreferencesService.setWeeklyFocus(profile.uid, goal);
+      }
+      return false;
+    },
+    [profile?.uid],
+  );
 
   const send = async (text: string) => {
     const content = text.trim();
@@ -69,12 +176,18 @@ export function PlayerCoachAiChat({
     joueurGamePress();
     setError(null);
     setTrainingCta(false);
+    setFollowUpChips([]);
+    setPendingActions([]);
     setDraft('');
+
+    runClientIntents(content);
+
     const trainingIntent = isHomeTrainingIntent(content);
     const userMsg: Bubble = { id: `u-${Date.now()}`, role: 'user', content };
     const next = [...messages.filter((m) => m.id !== 'welcome'), userMsg];
     setMessages([...next]);
     setSending(true);
+
     try {
       const history: PlayerCoachAiMessage[] = next.map(({ role, content: c }) => ({
         role,
@@ -86,7 +199,33 @@ export function PlayerCoachAiChat({
         ...prev,
         { id: `a-${Date.now()}`, role: 'assistant', content: reply },
       ]);
-      if (trainingIntent || isHomeTrainingIntent(reply)) {
+
+      if (result.suggestions?.length) {
+        setFollowUpChips(result.suggestions);
+      }
+
+      const actions = result.actions ?? [];
+      const autoActions = actions.filter((a) => a.type === 'save_weekly_goal');
+      const confirmActions = actions.filter((a) => a.type !== 'save_weekly_goal');
+
+      for (const action of autoActions) {
+        await executeAction(action, true);
+      }
+
+      if (confirmActions.length > 0) {
+        setPendingActions(confirmActions);
+      }
+
+      if (
+        trainingIntent ||
+        isHomeTrainingIntent(reply) ||
+        actions.some((a) => a.type === 'generate_training' || a.type === 'open_training')
+      ) {
+        setTrainingCta(true);
+      }
+
+      const trainingParams = parseTrainingParams(content);
+      if (trainingParams && trainingIntent) {
         setTrainingCta(true);
       }
     } catch (e) {
@@ -97,6 +236,24 @@ export function PlayerCoachAiChat({
       setSending(false);
     }
   };
+
+  const actionLabel = (action: PlayerAiAction): string => {
+    switch (action.type) {
+      case 'navigate':
+        return `Ouvrir ${action.tab}`;
+      case 'open_training':
+      case 'generate_training':
+        return 'Créer ma séance';
+      case 'report_late':
+        return 'Signaler mon retard';
+      case 'save_weekly_goal':
+        return 'Objectif enregistré';
+      default:
+        return 'Action';
+    }
+  };
+
+  const chips = showStarters ? starters : followUpChips;
 
   return (
     <KeyboardAvoidingView
@@ -133,6 +290,20 @@ export function PlayerCoachAiChat({
             {error}
           </ProDayText>
         ) : null}
+        {pendingActions.map((action, idx) => (
+          <PressableSpring
+            key={`action-${idx}`}
+            style={[styles.actionCta, { borderColor: accent, backgroundColor: `${accent}22` }]}
+            onPress={() => void executeAction(action)}
+            scaleTo={0.97}
+            haptic
+          >
+            <Icon name="star-four-points" size={16} color={accentBright} />
+            <ProDayText variant="caption" style={[styles.actionCtaText, { color: accentBright }]}>
+              {actionLabel(action)}
+            </ProDayText>
+          </PressableSpring>
+        ))}
         {trainingCta ? (
           <PressableSpring
             style={[styles.trainingCta, { borderColor: accent, backgroundColor: `${accent}22` }]}
@@ -151,19 +322,21 @@ export function PlayerCoachAiChat({
         ) : null}
       </ScrollView>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.starters}
-      >
-        {starters.map((s) => (
-          <PressableSpring key={s} style={styles.chip} onPress={() => send(s)} scaleTo={0.97}>
-            <ProDayText variant="caption" style={styles.chipText}>
-              {s}
-            </ProDayText>
-          </PressableSpring>
-        ))}
-      </ScrollView>
+      {chips.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.starters}
+        >
+          {chips.map((s) => (
+            <PressableSpring key={s} style={styles.chip} onPress={() => send(s)} scaleTo={0.97}>
+              <ProDayText variant="caption" style={styles.chipText}>
+                {s}
+              </ProDayText>
+            </PressableSpring>
+          ))}
+        </ScrollView>
+      ) : null}
 
       <View style={styles.composer}>
         <TextInput
@@ -215,6 +388,18 @@ function createStyles(accent: string, accentBright: string) {
     userText: { color: PLAYER_DARK.text },
     aiText: { color: PLAYER_DARK.text },
     error: { color: '#F87171', marginTop: spacing.xs },
+    actionCta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      marginTop: spacing.xs,
+    },
+    actionCtaText: { fontWeight: '800' },
     trainingCta: {
       flexDirection: 'row',
       alignItems: 'center',
