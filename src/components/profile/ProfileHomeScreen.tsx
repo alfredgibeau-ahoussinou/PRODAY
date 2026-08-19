@@ -72,6 +72,7 @@ import {
 } from '../coach/CoachAccountPanels';
 import { computeHealthSnapshot } from '../../core/health/healthState.engine';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import {
   resolveJoueurAgeGroup,
   resolveJoueurGenderVisual,
@@ -176,6 +177,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   );
   const styles = useMemo(() => createStyles(colors), [colors]);
   const joueurSession = useJoueurSession();
+  const playerTheme = usePlayerThemeColors();
   const joueurIdentity = useMemo(() => {
     if (!isPlayer) return null;
     const ageGroup =
@@ -198,20 +200,20 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     props.profile.profile.gender,
     props.profile.profile.birth_date,
   ]);
-  const joueurAccent = joueurIdentity?.accent ?? colors.accent;
+  const joueurAccent = playerTheme.accent;
   const joueurPagerColors = useMemo(
     () =>
       ({
         ...appColors,
-        background: PLAYER_DARK.bg,
-        surface: PLAYER_DARK.surfaceRaised,
+        background: playerTheme.bg,
+        surface: playerTheme.surfaceRaised,
         border: PLAYER_DARK.border,
         text: PLAYER_DARK.text,
         textMuted: PLAYER_DARK.textMuted,
-        accent: PLAYER_DARK.accent,
-        brandInverse: PLAYER_DARK.bg,
+        accent: playerTheme.accent,
+        brandInverse: playerTheme.bg,
       }) as AppColors,
-    [appColors],
+    [appColors, playerTheme.accent, playerTheme.bg, playerTheme.surfaceRaised],
   );
   const { activities, loading: activitiesLoading, refresh: refreshActivities } =
     usePlayerActivities(isPlayer ? props.profile.uid : undefined);
@@ -277,6 +279,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 }
                 gateAgeGroup={joueurSession?.ageGroup}
                 onEdit={handleEdit}
+                onOpenThemeSettings={() => setChapter('reglages')}
               />
             ) : isCoach ? (
               <CoachProfileHub

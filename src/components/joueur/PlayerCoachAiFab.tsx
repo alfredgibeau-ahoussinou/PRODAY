@@ -7,6 +7,7 @@ import { AnimatedModalShell } from '../motion/AnimatedModalShell';
 import { PlayerCoachAiChat } from './PlayerCoachAiChat';
 import { ProDayText } from '../ui/ProDayText';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
@@ -18,9 +19,10 @@ type Props = {
 /** FAB global « Demander à mon Coach IA » dans le shell joueur. */
 export function PlayerCoachAiFab({ bottomOffset }: Props) {
   const session = useJoueurSession();
+  const playerTheme = usePlayerThemeColors();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
-  const accent = PLAYER_DARK.accent;
+  const accent = playerTheme.accent;
   const bottom =
     bottomOffset ?? TAB_BAR_CONTENT_INSET + insets.bottom + spacing.md;
 
@@ -31,7 +33,7 @@ export function PlayerCoachAiFab({ bottomOffset }: Props) {
           onPress={() => setOpen(true)}
           scaleTo={0.97}
           haptic
-          style={[styles.fab, { backgroundColor: accent, shadowColor: PLAYER_DARK.accentGlow }]}
+          style={[styles.fab, { backgroundColor: accent, shadowColor: playerTheme.accentGlow }]}
           accessibilityRole="button"
           accessibilityLabel="Demander à mon Coach IA"
           testID="player-coach-ai-fab"
@@ -55,11 +57,17 @@ export function PlayerCoachAiFab({ bottomOffset }: Props) {
             <PressableSpring
               onPress={() => setOpen(false)}
               scaleTo={0.97}
-              style={styles.closeBtn}
+              style={[
+                styles.closeBtn,
+                {
+                  borderColor: `${accent}55`,
+                  backgroundColor: playerTheme.accentSoft,
+                },
+              ]}
               accessibilityRole="button"
               accessibilityLabel="Fermer"
             >
-              <ProDayText variant="caption" style={styles.closeText}>
+              <ProDayText variant="caption" style={[styles.closeText, { color: accent }]}>
                 Fermer
               </ProDayText>
             </PressableSpring>
@@ -113,11 +121,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: `${PLAYER_DARK.accent}55`,
-    backgroundColor: PLAYER_DARK.accentSoft,
   },
   closeText: {
-    color: PLAYER_DARK.accent,
     fontWeight: '800',
   },
 });

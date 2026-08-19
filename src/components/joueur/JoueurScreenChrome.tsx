@@ -41,7 +41,7 @@ export function JoueurScreenChrome({
 }: Props) {
   const theme = useJoueurTheme();
   const identity = identityProp ?? theme.identity;
-  const accent = PLAYER_DARK.accent;
+  const accent = theme.accent;
 
   if (!identity) {
     return (

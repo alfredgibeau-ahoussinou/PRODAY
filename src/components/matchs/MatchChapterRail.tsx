@@ -10,6 +10,8 @@ import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import type { ResolvedPlayerThemeColors } from '../../utils/resolvePlayerThemeColors';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 
@@ -47,11 +49,12 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
 }) => {
   const { colors } = useAppTheme();
   const coachTokens = useCoachTokens();
+  const playerTheme = usePlayerThemeColors();
   const { t } = useTranslation();
   const chapters = useMemo(() => getMatchChapters(t), [t]);
   const styles = useMemo(
-    () => createStyles(colors.accent, gameMode, coachSkin, coachTokens),
-    [colors.accent, gameMode, coachSkin, coachTokens],
+    () => createStyles(colors.accent, gameMode, coachSkin, coachTokens, playerTheme),
+    [colors.accent, gameMode, coachSkin, coachTokens, playerTheme],
   );
 
   return (
@@ -123,13 +126,15 @@ function createStyles(
   gameMode = false,
   coachSkin = false,
   coachTokens?: CoachThemeTokens,
+  playerTheme?: Pick<ResolvedPlayerThemeColors, 'accent' | 'accentSoft' | 'surface'>,
 ) {
   const coachSurface = coachTokens?.surface ?? '#1C1C1E';
   const coachElevated = coachTokens?.elevated ?? '#2C2C2E';
-  const joueurChipBg = PLAYER_DARK.surface;
+  const joueurChipBg = playerTheme?.surface ?? PLAYER_DARK.surface;
   const joueurChipBorder = '#2A2A38';
-  const joueurChipOnBg = PLAYER_DARK.accentSoft;
-  const joueurChipOnBorder = PLAYER_DARK.accent;
+  const joueurChipOnBg = playerTheme?.accentSoft ?? PLAYER_DARK.accentSoft;
+  const joueurChipOnBorder = playerTheme?.accent ?? PLAYER_DARK.accent;
+  const joueurAccent = playerTheme?.accent ?? PLAYER_DARK.accent;
 
   return StyleSheet.create({
     wrap: {
@@ -177,7 +182,7 @@ function createStyles(
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     labelOn: {
-      color: gameMode ? PLAYER_DARK.accent : accent,
+      color: gameMode ? joueurAccent : accent,
     },
     labelOff: {
       color: gameMode ? PLAYER_DARK.textMuted : MATCH_SITE.muted,

@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion/PressableSpring';
 import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { spacing } from '../../theme/designTokens';
 import { Icon } from '../ui/Icon';
 
@@ -149,6 +150,7 @@ export function PlayerShieldCard({
   onPress,
   style,
 }: PlayerShieldCardProps) {
+  const playerTheme = usePlayerThemeColors();
   const height = Math.round(width * 1.62);
   const pos = positionShort(position);
   const goals = stats?.goals ?? null;
@@ -177,7 +179,7 @@ export function PlayerShieldCard({
 
           <View style={styles.hexTop} pointerEvents="none">
             <LinearGradient
-              colors={['rgba(0,230,118,0.12)', 'transparent']}
+              colors={[`${playerTheme.accent}1F`, 'transparent']}
               style={StyleSheet.absoluteFill}
             />
           </View>
@@ -187,7 +189,7 @@ export function PlayerShieldCard({
               <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
             ) : (
               <LinearGradient
-                colors={[PLAYER_DARK.accent, '#0D9488', '#121218']}
+                colors={[playerTheme.accent, playerTheme.accentAlt, '#121218']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={[styles.photo, styles.photoPh]}
@@ -248,6 +250,8 @@ export function PlayerShieldCard({
       notes,
       ga,
       stats?.rating,
+      playerTheme.accent,
+      playerTheme.accentAlt,
     ],
   );
 

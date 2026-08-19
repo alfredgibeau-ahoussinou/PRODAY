@@ -15,6 +15,7 @@ import { PlayerPositionPitchPicker } from '../profile/PlayerPositionPitchPicker'
 import { PlayerCvLivePreview } from '../profile/PlayerCvLivePreview';
 import { ProfileGalleryEditor } from '../profile/ProfileGalleryEditor';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
+import { PlayerThemeSettingsPanel } from './PlayerThemeSettingsPanel';
 import { AppSpacePill } from '../appSpace/AppSpaceBanner';
 import { JoueurMesVideosPanel } from './JoueurMesVideosPanel';
 import { spacing } from '../../theme/designTokens';
@@ -337,6 +338,12 @@ export function JoueurParamsPanel(props: ParamsProps) {
       <Block accent={props.accent} label="LANGUE">
         <LanguageSettingControl variant="card" />
       </Block>
+
+      {props.isPlayer ? (
+        <Block accent={props.accent} label="COULEURS DE MON ESPACE">
+          <PlayerThemeSettingsPanel />
+        </Block>
+      ) : null}
 
       {props.showPlayerVerificationReminder && props.playerVerifyLabel ? (
         <Block accent={props.accent} label="VÉRIFICATION">

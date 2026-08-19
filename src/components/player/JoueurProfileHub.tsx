@@ -13,6 +13,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { FORM_BAND_LABELS, formatFormScore, playerFormFromHealthSnapshot } from '../../utils/formAnalysis';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 import { Icon, type IconName } from '../ui/Icon';
@@ -26,7 +27,7 @@ type Props = {
   gateGender?: string | null;
   gateAgeGroup?: 'youth' | 'teen' | 'adult' | null;
   onEdit?: () => void;
-  onPreferences?: () => void;
+  onOpenThemeSettings?: () => void;
 };
 
 function SocialStat({ label, value }: { label: string; value: string }) {
@@ -130,9 +131,11 @@ export const JoueurProfileHub: React.FC<Props> = ({
   gateGender,
   gateAgeGroup,
   onEdit,
+  onOpenThemeSettings,
 }) => {
   const nav = useTabNavigationActions();
   const progressApi = useJoueurProgress();
+  const playerTheme = usePlayerThemeColors();
 
   useEffect(() => {
     if (!progressApi?.ready) return;
@@ -271,12 +274,38 @@ export const JoueurProfileHub: React.FC<Props> = ({
             onPress={() => press(onEdit)}
             scaleTo={0.98}
             haptic
-            style={styles.editCta}
+            style={[styles.editCta, { backgroundColor: playerTheme.accent }]}
           >
             <Icon name="person" size={18} color={PLAYER_DARK.bg} variant="filled" />
             <ProDayText variant="caption" style={styles.editCtaText}>
               Modifier profil
             </ProDayText>
+          </PressableSpring>
+        ) : null}
+
+        {onOpenThemeSettings ? (
+          <PressableSpring
+            onPress={() => press(onOpenThemeSettings)}
+            scaleTo={0.98}
+            haptic
+            style={[
+              styles.themeShortcut,
+              {
+                borderColor: `${playerTheme.accent}55`,
+                backgroundColor: playerTheme.accentSoft,
+              },
+            ]}
+          >
+            <Icon name="tune" size={18} color={playerTheme.accentAlt} variant="outline" />
+            <View style={styles.themeShortcutCopy}>
+              <ProDayText variant="section" style={styles.themeShortcutTitle}>
+                Personnaliser mes couleurs
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.themeShortcutSub}>
+                ProDay, club ou palette perso
+              </ProDayText>
+            </View>
+            <Icon name="chevron-forward" size={16} color={PLAYER_DARK.textMuted} variant="outline" />
           </PressableSpring>
         ) : null}
 
@@ -475,12 +504,31 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderRadius: PLAYER_DARK_RADIUS.pill,
     paddingVertical: 14,
-    backgroundColor: PLAYER_DARK.accent,
   },
   editCtaText: {
     color: PLAYER_DARK.bg,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+  themeShortcut: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderRadius: PLAYER_DARK_RADIUS.card,
+    padding: spacing.md,
+  },
+  themeShortcutCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  themeShortcutTitle: {
+    color: PLAYER_DARK.text,
+    fontWeight: '800',
+  },
+  themeShortcutSub: {
+    color: PLAYER_DARK.textMuted,
+    fontSize: 11,
   },
   metaChips: {
     flexDirection: 'row',

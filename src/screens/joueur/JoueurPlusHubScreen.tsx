@@ -16,6 +16,7 @@ import {
 import { isMinorUser } from '../../utils/minor';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 import { formatTabBadge } from '../../components/navigation/tabBarShared';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
@@ -27,6 +28,7 @@ export function JoueurPlusHubScreen() {
   const nav = useTabNavigationActions();
   const { productLine } = useAppTheme();
   const { count: unreadCount } = useUnreadMessageCount();
+  const playerTheme = usePlayerThemeColors();
 
   const visibleTabs = useMemo(
     () => getVisibleMainTabs(productLine, profile?.role, profile ?? undefined),
@@ -82,8 +84,16 @@ export function JoueurPlusHubScreen() {
               testID={`plus-menu-${item.id}`}
             >
               <View style={styles.tileTop}>
-                <View style={styles.iconWrap}>
-                  <Icon name={item.icon} size={26} color={PLAYER_DARK.accentAlt} variant="outline" />
+                <View
+                  style={[
+                    styles.iconWrap,
+                    {
+                      backgroundColor: playerTheme.accentSoft,
+                      borderColor: `${playerTheme.accent}55`,
+                    },
+                  ]}
+                >
+                  <Icon name={item.icon} size={26} color={playerTheme.accentAlt} variant="outline" />
                 </View>
                 {item.badge && item.badge > 0 ? (
                   <View style={styles.badge}>
@@ -143,9 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: PLAYER_DARK.accentSoft,
     borderWidth: 1,
-    borderColor: `${PLAYER_DARK.accent}55`,
   },
   tileLabel: {
     color: PLAYER_DARK.text,

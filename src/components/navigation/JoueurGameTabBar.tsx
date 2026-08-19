@@ -9,6 +9,7 @@ import type { IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { getJoueurGameTabLabel } from '../../content/joueurGameMenu';
 import { formatTabBadge } from './tabBarShared';
 import { joueurGamePress, playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
@@ -46,8 +47,10 @@ export function JoueurGameTabBar({
   const { width: screenWidth } = useWindowDimensions();
   const compactLabels = screenWidth < 360;
 
-  const accent = PLAYER_DARK.accent;
-  const accentBright = PLAYER_DARK.accentAlt;
+  const playerTheme = usePlayerThemeColors();
+
+  const accent = playerTheme.accent;
+  const accentBright = playerTheme.accentAlt;
   const dimColor = PLAYER_DARK.textMuted;
   const role = profile?.role;
 
@@ -90,7 +93,7 @@ export function JoueurGameTabBar({
             styles.iconWrap,
             active && {
               borderColor: accent,
-              backgroundColor: PLAYER_DARK.accentSoft,
+              backgroundColor: playerTheme.accentSoft,
             },
           ]}
         >

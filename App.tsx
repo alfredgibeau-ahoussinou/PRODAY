@@ -40,6 +40,7 @@ import { AppSpaceProvider } from './src/context/AppSpaceContext';
 import { ProductLineProvider, useProductLine } from './src/context/ProductLineContext';
 import { LaunchIntroProvider } from './src/context/LaunchIntroContext';
 import { JoueurSessionProvider } from './src/context/JoueurSessionContext';
+import { PlayerThemeProvider } from './src/context/PlayerThemeContext';
 import { JoueurProgressProvider } from './src/context/JoueurProgressContext';
 import { JoueurLevelUpOverlay } from './src/features/joueur/JoueurLevelUpOverlay';
 import { JoueurShellExtras } from './src/features/joueur/JoueurShellExtras';
@@ -477,6 +478,7 @@ function AppShell() {
 
   const mainApp = (
     <JoueurSessionProvider profile={sessionProfile ?? profile}>
+    <PlayerThemeProvider>
     <JoueurProgressProvider profile={sessionProfile ?? profile}>
     <AppSpaceProvider>
       <WomanSpaceDefaults />
@@ -636,6 +638,7 @@ function AppShell() {
       </TabNavigationProvider>
     </AppSpaceProvider>
     </JoueurProgressProvider>
+    </PlayerThemeProvider>
     </JoueurSessionProvider>
   );
 

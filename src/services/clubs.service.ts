@@ -28,6 +28,8 @@ function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
       longitude: loc?.longitude ?? 0,
     },
     logo_url: data.logo_url as string | undefined,
+    primary_color: data.primary_color as string | undefined,
+    secondary_color: data.secondary_color as string | undefined,
     verified: Boolean(data.verified),
     categories: (data.categories as string[]) ?? [],
     sponsor_ids: (data.sponsor_ids as string[]) ?? [],
