@@ -6,6 +6,10 @@ import {
   type AdminDashboardBlockId,
   type AdminNavSectionId,
 } from '../navigation/adminNavConfig';
+import {
+  DEFAULT_ADMIN_AUTOMATION_TOGGLES,
+  type AdminAutomationRuleId,
+} from '../utils/adminIntel';
 import { CLUB_SITE } from '../content/clubPageIdentity';
 
 const KEY = 'proday_admin_nav_prefs_v3';
@@ -22,6 +26,7 @@ export type AdminFocPreferences = {
   sectionOrder: AdminNavSectionId[];
   hiddenSections: AdminNavSectionId[];
   dashboardOrder: AdminDashboardBlockId[];
+  automations: Record<AdminAutomationRuleId, boolean>;
 };
 
 export type FocDashboardBlockId = AdminDashboardBlockId;
@@ -36,6 +41,7 @@ export const DEFAULT_ADMIN_FOC_PREFS: AdminFocPreferences = {
   sectionOrder: ADMIN_NAV_ITEMS.map((n) => n.id),
   hiddenSections: [],
   dashboardOrder: [...DEFAULT_ADMIN_DASHBOARD_ORDER],
+  automations: { ...DEFAULT_ADMIN_AUTOMATION_TOGGLES },
 };
 
 export async function loadAdminFocPreferences(uid: string): Promise<AdminFocPreferences> {
@@ -69,6 +75,10 @@ export async function loadAdminFocPreferences(uid: string): Promise<AdminFocPref
         .map((id) => migrate(String(id)))
         .filter((id): id is AdminNavSectionId => id != null)
         .filter((id, index, arr) => arr.indexOf(id) === index),
+      automations: {
+        ...DEFAULT_ADMIN_AUTOMATION_TOGGLES,
+        ...(parsed.automations ?? {}),
+      },
     };
   } catch {
     return { ...DEFAULT_ADMIN_FOC_PREFS };

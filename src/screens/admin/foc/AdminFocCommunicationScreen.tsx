@@ -30,7 +30,8 @@ import {
   runAdminWorkReject,
 } from '../../../utils/adminWorkQueueActions';
 
-const COMMUNICATION_DECISION_KINDS = new Set<AdminWorkItem['kind']>(['reel', 'report']);
+const COMMUNICATION_DECISION_KINDS = new Set<AdminWorkItem['kind']>(['reel']);
+const COMMUNICATION_REPORT_KINDS = new Set<AdminWorkItem['kind']>(['report']);
 
 const TABS = ADMIN_FOC_SCREEN_TABS.communication;
 type TabId = (typeof TABS)[number]['id'];
@@ -190,6 +191,10 @@ export function AdminFocCommunicationScreen({ initialTab, title, allowedTabs }: 
     () => workQueue.filter((item) => COMMUNICATION_DECISION_KINDS.has(item.kind)),
     [workQueue],
   );
+  const communicationReports = useMemo(
+    () => workQueue.filter((item) => COMMUNICATION_REPORT_KINDS.has(item.kind)),
+    [workQueue],
+  );
 
   return (
     <View style={s.root}>
@@ -247,6 +252,31 @@ export function AdminFocCommunicationScreen({ initialTab, title, allowedTabs }: 
         />
       ) : tab === 'fil' ? (
         <AdminPlatformFeedPanel />
+      ) : tab === 'signalements' ? (
+        <FlatList
+          data={communicationReports}
+          keyExtractor={(i) => i.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={adminChrome.accent} />
+          }
+          renderItem={({ item }) => (
+            <DecisionRow
+              item={item}
+              onApprove={() => handleApprove(item)}
+              onReject={() => handleReject(item)}
+              busyId={busyId}
+            />
+          )}
+          ItemSeparatorComponent={() => <View style={s.sep} />}
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <Icon name="flag" size={32} color={adminChrome.textMuted} />
+              <Text style={s.emptyTitle}>Aucun signalement</Text>
+              <Text style={s.emptySub}>Les reelReports en file s’affichent ici.</Text>
+            </View>
+          }
+          contentContainerStyle={communicationReports.length === 0 ? s.emptyContainer : s.list}
+        />
       ) : tab === 'questions' ? (
         <AdminWeeklyQuestionPanel />
       ) : null}

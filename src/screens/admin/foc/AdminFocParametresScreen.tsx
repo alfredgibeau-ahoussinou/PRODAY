@@ -9,7 +9,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdminPlatformConfigPanel } from '../../../components/admin/AdminPlatformConfigPanel';
 import { AdminBetaProgramPanel } from '../../../components/admin/AdminBetaProgramPanel';
-import { AdminAuditLogPanel } from '../../../components/admin/AdminAuditLogPanel';
 import { AdminOpsDataPanel } from '../../../components/admin/AdminOpsDataPanel';
 import { AdminFocPersonnaliserScreen } from './AdminFocPersonnaliserScreen';
 import { AdminButton } from '../../../components/admin/AdminButton';
@@ -116,8 +115,6 @@ export function AdminFocParametresScreen({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[s.content, { paddingBottom: insets.bottom + 40 }]}
         >
-          <AdminPlatformConfigPanel />
-
           <View style={s.section}>
             <Text style={s.sectionTitle}>Session & actions</Text>
             <View style={s.card}>
@@ -160,19 +157,19 @@ export function AdminFocParametresScreen({
             </View>
           </View>
         </ScrollView>
-      ) : tab === 'beta' ? (
-        <AdminBetaProgramPanel />
-      ) : tab === 'audit' ? (
+      ) : tab === 'config' ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[s.content, { paddingBottom: insets.bottom + 40 }]}
         >
-          <AdminAuditLogPanel />
+          <AdminPlatformConfigPanel />
           <View style={s.section}>
             <Text style={s.sectionTitle}>Données ops</Text>
             <AdminOpsDataPanel />
           </View>
         </ScrollView>
+      ) : tab === 'beta' ? (
+        <AdminBetaProgramPanel />
       ) : null}
     </View>
   );

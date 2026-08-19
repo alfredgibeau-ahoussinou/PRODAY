@@ -408,13 +408,18 @@ export function AdminFocAdherentsScreen({
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const pendingCount = useMemo(() => countAdminPersonPending(users), [users]);
-  const primaryTabs = useMemo(
-    () =>
-      ADMIN_PERSON_PRIMARY_TABS.map((t) =>
-        t.id === 'decisions' ? { ...t, count: pendingCount } : t,
-      ),
-    [pendingCount],
-  );
+  const primaryTabs = useMemo(() => {
+    const tabs = ADMIN_PERSON_PRIMARY_TABS.map((t) =>
+      t.id === 'decisions' ? { ...t, count: pendingCount } : t,
+    );
+    if (tab === 'decisions' && !tabs.some((t) => t.id === 'decisions')) {
+      tabs.splice(1, 0, { id: 'decisions' as const, label: 'À valider', count: pendingCount });
+    }
+    if (tab === 'club' && !tabs.some((t) => t.id === 'club')) {
+      tabs.push({ id: 'club', label: 'Dirigeants' });
+    }
+    return tabs;
+  }, [pendingCount, tab]);
 
   const filtersActive = adminPersonAdvancedFiltersActive(
     ageFilter,

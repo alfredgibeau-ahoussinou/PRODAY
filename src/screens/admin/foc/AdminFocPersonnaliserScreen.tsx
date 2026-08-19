@@ -39,11 +39,10 @@ const SECONDARY_PRESETS: { color: string; label: string }[] = [
 ];
 
 const BLOCK_LABELS: Record<FocDashboardBlockId, string> = {
-  kpis: 'KPIs & indicateurs',
-  queue: 'À traiter aujourd’hui',
-  business: 'Abonnements',
-  activity: 'Activité récente',
-  matchs: 'Matchs amicaux',
+  attention: 'ProDay AI — attention',
+  queue: 'File réelle',
+  domains: 'Cartes domaines',
+  activity: 'Activité 7 j',
 };
 
 const DENSITY_OPTIONS: { id: AdminFocDensity; label: string; desc: string }[] = [

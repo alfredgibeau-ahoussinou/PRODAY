@@ -25,6 +25,12 @@ import type { User } from '../../../models/User';
 const TABS = ADMIN_FOC_TABS.clubs;
 type TabId = (typeof TABS)[number]['id'];
 
+function resolveClubTab(initial?: string): TabId {
+  if (initial === 'clubs') return 'all';
+  if (initial && TABS.some((t) => t.id === initial)) return initial as TabId;
+  return 'all';
+}
+
 function userClubId(user: User): string | undefined {
   return user.profile?.club_id;
 }
@@ -213,14 +219,10 @@ function ClubDetail({
 
 export function AdminFocClubsScreen({ initialTab }: { initialTab?: string } = {}) {
   const { clubs, users, events, refresh, refreshing } = useAdminData();
-  const [tab, setTab] = useState<TabId>(
-    initialTab && TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'clubs',
-  );
+  const [tab, setTab] = useState<TabId>(resolveClubTab(initialTab));
 
   useEffect(() => {
-    if (initialTab && TABS.some((t) => t.id === initialTab)) {
-      setTab(initialTab as TabId);
-    }
+    setTab(resolveClubTab(initialTab));
   }, [initialTab]);
   const [teams, setTeams] = useState<AdminTeam[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
@@ -345,6 +347,41 @@ export function AdminFocClubsScreen({ initialTab }: { initialTab?: string } = {}
     [loadTeams],
   );
 
+  const lastEventByClub = useMemo(() => {
+    const map = new Map<string, Date>();
+    for (const e of events) {
+      if (!e.club_id) continue;
+      const prev = map.get(e.club_id);
+      if (!prev || e.starts_at > prev) map.set(e.club_id, e.starts_at);
+    }
+    return map;
+  }, [events]);
+
+  const visibleClubs = useMemo(() => {
+    if (tab === 'validation') return clubs.filter((c) => !c.verified);
+    return clubs;
+  }, [clubs, tab]);
+
+  const coaches = useMemo(
+    () => users.filter((u) => u.role === 'coach'),
+    [users],
+  );
+
+  const headerCopy = useMemo(() => {
+    switch (tab) {
+      case 'validation':
+        return { title: 'Validation', sub: `${visibleClubs.length} club${visibleClubs.length === 1 ? '' : 's'} non vérifié${visibleClubs.length === 1 ? '' : 's'}` };
+      case 'activity':
+        return { title: 'Activité', sub: `${clubs.length} club${clubs.length === 1 ? '' : 's'} · dernier événement connu` };
+      case 'teams':
+        return { title: 'Équipes', sub: `${teams.length} équipe${teams.length === 1 ? '' : 's'}` };
+      case 'coaches':
+        return { title: 'Coachs', sub: `${coaches.length} coach${coaches.length === 1 ? '' : 's'}` };
+      default:
+        return { title: 'Clubs', sub: `${clubs.length} club${clubs.length === 1 ? '' : 's'}` };
+    }
+  }, [tab, visibleClubs.length, clubs.length, teams.length, coaches.length]);
+
   if (selected) {
     const clubEvents = events
       .filter((e) => e.club_id === selected.id)
@@ -366,42 +403,10 @@ export function AdminFocClubsScreen({ initialTab }: { initialTab?: string } = {}
 
   return (
     <View style={s.root}>
-      <AdminFocPageHeader
-        title={tab === 'clubs' ? 'Clubs' : 'Équipes'}
-        subtitle={
-          tab === 'clubs'
-            ? `${clubs.length} club${clubs.length !== 1 ? 's' : ''}`
-            : `${teams.length} équipe${teams.length !== 1 ? 's' : ''}`
-        }
-      />
+      <AdminFocPageHeader title={headerCopy.title} subtitle={headerCopy.sub} />
       <AdminFocTabs tabs={TABS} value={tab} onChange={(id) => setTab(id as TabId)} />
 
-      {tab === 'clubs' ? (
-        <FlatList
-          data={clubs}
-          keyExtractor={(c) => c.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={adminChrome.accent} />
-          }
-          renderItem={({ item }) => (
-            <ClubRow
-              club={item}
-              memberCount={(membersByClub[item.id] ?? []).length}
-              onOpen={(c) => setSelectedId(c.id)}
-            />
-          )}
-          ItemSeparatorComponent={() => <View style={s.sep} />}
-          ListEmptyComponent={
-            <View style={s.empty}>
-              <Icon name="business" size={32} color={adminChrome.textMuted} />
-              <Text style={s.emptyTitle}>Aucun club</Text>
-              <Text style={s.emptySub}>Aucun club enregistré sur la plateforme.</Text>
-            </View>
-          }
-          contentContainerStyle={clubs.length === 0 ? s.emptyContainer : s.list}
-          showsVerticalScrollIndicator={false}
-        />
-      ) : (
+      {tab === 'teams' ? (
         <FlatList
           data={teams}
           keyExtractor={(t) => t.id}
@@ -424,6 +429,74 @@ export function AdminFocClubsScreen({ initialTab }: { initialTab?: string } = {}
             </View>
           }
           contentContainerStyle={teams.length === 0 ? s.emptyContainer : s.list}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : tab === 'coaches' ? (
+        <FlatList
+          data={coaches}
+          keyExtractor={(u) => u.uid}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={adminChrome.accent} />
+          }
+          renderItem={({ item }) => (
+            <View style={s.row}>
+              <View style={s.rowMain}>
+                <Text style={s.rowTitle} numberOfLines={1}>{item.display_name}</Text>
+                <Text style={s.rowSub} numberOfLines={1}>
+                  {item.email}
+                  {item.profile?.club_id
+                    ? ` · ${clubs.find((c) => c.id === item.profile?.club_id)?.name ?? item.profile.club_id}`
+                    : ''}
+                </Text>
+              </View>
+            </View>
+          )}
+          ItemSeparatorComponent={() => <View style={s.sep} />}
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <Icon name="person" size={32} color={adminChrome.textMuted} />
+              <Text style={s.emptyTitle}>Aucun coach</Text>
+              <Text style={s.emptySub}>Aucun compte rôle coach.</Text>
+            </View>
+          }
+          contentContainerStyle={coaches.length === 0 ? s.emptyContainer : s.list}
+        />
+      ) : (
+        <FlatList
+          data={visibleClubs}
+          keyExtractor={(c) => c.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={adminChrome.accent} />
+          }
+          renderItem={({ item }) => (
+            <View>
+              <ClubRow
+                club={item}
+                memberCount={(membersByClub[item.id] ?? []).length}
+                onOpen={(c) => setSelectedId(c.id)}
+              />
+              {tab === 'activity' ? (
+                <Text style={s.activityHint}>
+                  {lastEventByClub.get(item.id)
+                    ? `Dernier événement : ${lastEventByClub.get(item.id)!.toLocaleDateString('fr-FR')}`
+                    : 'Aucun événement daté pour ce club.'}
+                </Text>
+              ) : null}
+            </View>
+          )}
+          ItemSeparatorComponent={() => <View style={s.sep} />}
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <Icon name="business" size={32} color={adminChrome.textMuted} />
+              <Text style={s.emptyTitle}>{tab === 'validation' ? 'Rien à valider' : 'Aucun club'}</Text>
+              <Text style={s.emptySub}>
+                {tab === 'validation'
+                  ? 'Tous les clubs chargés sont déjà vérifiés.'
+                  : 'Aucun club enregistré sur la plateforme.'}
+              </Text>
+            </View>
+          }
+          contentContainerStyle={visibleClubs.length === 0 ? s.emptyContainer : s.list}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -489,4 +562,10 @@ const s = StyleSheet.create({
     color: adminChrome.accent,
   },
   memberLine: { fontSize: 13, color: adminChrome.text, lineHeight: 20 },
+  activityHint: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: 10,
+    fontSize: 12,
+    color: adminChrome.textMuted,
+  },
 });

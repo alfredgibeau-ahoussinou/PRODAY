@@ -1,22 +1,37 @@
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AdminButton } from '../../../components/admin/AdminButton';
-import { AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
+import { AdminAuditLogPanel } from '../../../components/admin/AdminAuditLogPanel';
+import { AdminIntelCard } from '../../../components/admin/AdminIntelCard';
+import { AdminFocPageHeader, AdminFocTabs } from '../../../components/admin/foc/AdminFocTabs';
+import { ADMIN_SECURITE_TABS } from '../../../navigation/adminNavConfig';
 import { useAuth } from '../../../context/AuthContext';
+import { useAdminData } from '../../../context/AdminDataContext';
 import { adminChrome, adminType } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
+import type { AdminNavTarget } from '../../../navigation/adminNavConfig';
+
+type TabId = (typeof ADMIN_SECURITE_TABS)[number]['id'];
 
 type Props = {
   onPreviewUserApp?: () => void;
+  initialTab?: string;
+  onNavigateTarget?: (t: AdminNavTarget) => void;
 };
 
-/**
- * Sessions admin + rappel des actions irréversibles (toujours confirmées).
- */
-export function AdminFocSecuriteScreen({ onPreviewUserApp }: Props) {
+export function AdminFocSecuriteScreen({
+  onPreviewUserApp,
+  initialTab,
+  onNavigateTarget,
+}: Props) {
   const { profile, firebaseUser, signOut, refreshAdminClaim } = useAuth();
+  const { reelReports, workQueue } = useAdminData();
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<TabId>(
+    ADMIN_SECURITE_TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'audit',
+  );
   const styles = useMemo(() => createStyles(), []);
+  const securityReports = workQueue.filter((w) => w.kind === 'report').length;
 
   const refreshToken = async () => {
     setBusy(true);
@@ -33,13 +48,7 @@ export function AdminFocSecuriteScreen({ onPreviewUserApp }: Props) {
   const confirmSignOut = () => {
     Alert.alert('Déconnexion', 'Quitter la console admin ?', [
       { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Se déconnecter',
-        style: 'destructive',
-        onPress: () => {
-          void signOut();
-        },
-      },
+      { text: 'Se déconnecter', style: 'destructive', onPress: () => void signOut() },
     ]);
   };
 
@@ -47,51 +56,73 @@ export function AdminFocSecuriteScreen({ onPreviewUserApp }: Props) {
     <View style={styles.root}>
       <AdminFocPageHeader
         title="Sécurité"
-        subtitle="Session courante et garde-fous sur les suppressions."
+        subtitle="Audit réel, session courante — pas d’incidents inventés."
       />
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          <Text style={styles.kicker}>Session</Text>
-          <Text style={styles.title}>{profile?.display_name || 'Admin'}</Text>
-          <Text style={styles.meta}>{firebaseUser?.email ?? profile?.email ?? '—'}</Text>
-          <Text style={styles.meta}>UID · {profile?.uid ?? '—'}</Text>
-          <AdminButton
-            label="Rafraîchir le jeton admin"
-            variant="secondary"
-            size="sm"
-            loading={busy}
-            disabled={busy}
-            onPress={() => void refreshToken()}
-          />
-          {onPreviewUserApp ? (
-            <AdminButton
-              label="Prévisualiser l’app utilisateur"
-              variant="ghost"
-              size="sm"
-              onPress={onPreviewUserApp}
-            />
-          ) : null}
-          <AdminButton
-            label="Se déconnecter"
-            variant="danger"
-            size="sm"
-            onPress={confirmSignOut}
-          />
-        </View>
+      <AdminFocTabs
+        tabs={[...ADMIN_SECURITE_TABS]}
+        value={tab}
+        onChange={(id) => setTab(id as TabId)}
+      />
 
-        <View style={styles.card}>
-          <Text style={styles.kicker}>Actions irréversibles</Text>
-          <Text style={styles.bodyText}>
-            Toute suppression (compte, club, message, paiement) et tout passage en gratuit
-            immédiat demandent une confirmation. Aucun bouton destructif n’exécute l’action
-            au premier tap.
-          </Text>
-          <Text style={styles.bullet}>· Valider / refuser un joueur</Text>
-          <Text style={styles.bullet}>· Accorder ou révoquer un abonnement</Text>
-          <Text style={styles.bullet}>· Supprimer un club ou une équipe</Text>
-          <Text style={styles.bullet}>· Marquer un paiement payé ou le supprimer</Text>
+      {tab === 'audit' ? (
+        <View style={styles.panel}>
+          <AdminAuditLogPanel />
         </View>
-      </ScrollView>
+      ) : tab === 'signalements' ? (
+        <ScrollView contentContainerStyle={styles.body}>
+          <AdminIntelCard
+            title={`${reelReports.length} signalement${reelReports.length === 1 ? '' : 's'} publication`}
+            body={`${securityReports} item${securityReports === 1 ? '' : 's'} encore dans la file (kind report).`}
+            cta={{
+              label: 'Ouvrir Contenu → Signalements',
+              onPress: () =>
+                onNavigateTarget?.({ section: 'contenus', screenTab: 'signalements' }),
+            }}
+          />
+        </ScrollView>
+      ) : (
+        <ScrollView contentContainerStyle={styles.body}>
+          <View style={styles.card}>
+            <Text style={styles.kicker}>Session</Text>
+            <Text style={styles.title}>{profile?.display_name || 'Admin'}</Text>
+            <Text style={styles.meta}>{firebaseUser?.email ?? profile?.email ?? '—'}</Text>
+            <Text style={styles.meta}>UID · {profile?.uid ?? '—'}</Text>
+            <AdminButton
+              label="Rafraîchir le jeton admin"
+              variant="secondary"
+              size="sm"
+              loading={busy}
+              disabled={busy}
+              onPress={() => void refreshToken()}
+            />
+            {onPreviewUserApp ? (
+              <AdminButton
+                label="Prévisualiser l’app utilisateur"
+                variant="ghost"
+                size="sm"
+                onPress={onPreviewUserApp}
+              />
+            ) : null}
+            <AdminButton
+              label="Se déconnecter"
+              variant="danger"
+              size="sm"
+              onPress={confirmSignOut}
+            />
+          </View>
+          <AdminIntelCard
+            title="Connexions inhabituelles"
+            body="Non branché — ProDay n’expose pas encore de journal de sessions suspectes. Aucun incident fictif n’est affiché."
+            tone="warn"
+          />
+          <View style={styles.card}>
+            <Text style={styles.kicker}>Actions irréversibles</Text>
+            <Text style={styles.bodyText}>
+              Toute suppression et tout passage en gratuit immédiat demandent une confirmation.
+            </Text>
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -99,6 +130,7 @@ export function AdminFocSecuriteScreen({ onPreviewUserApp }: Props) {
 function createStyles() {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: adminChrome.band },
+    panel: { flex: 1, minHeight: 0 },
     body: { padding: spacing.md, gap: spacing.md, paddingBottom: 80 },
     card: {
       backgroundColor: adminChrome.shell,
@@ -132,11 +164,6 @@ function createStyles() {
       fontSize: 13,
       lineHeight: 19,
       color: adminChrome.textSecondary,
-    },
-    bullet: {
-      fontFamily: adminType.body,
-      fontSize: 13,
-      color: adminChrome.textMuted,
     },
   });
 }

@@ -51,6 +51,20 @@ describe('adminPersonFilters', () => {
     expect(search[0].uid).toBe('p1');
   });
 
+  it('filterAdminPersons onglet Admins via email plateforme', () => {
+    const withAdmin = [
+      ...users,
+      mockUser({
+        uid: 'a1',
+        role: 'club',
+        display_name: 'Fondateur',
+        email: 'proday.admin@gmail.com',
+      }),
+    ];
+    const admins = filterAdminPersons(withAdmin, 'admin', '', 'all', 'all', 'all');
+    expect(admins.map((u) => u.uid)).toEqual(['a1']);
+  });
+
   it('filterAdminPersons applique univers joueur en filtre avancé', () => {
     const adults = filterAdminPersons(users, 'player', '', 'adult', 'all', 'all');
     expect(adults.map((u) => u.uid)).toEqual(['p1']);

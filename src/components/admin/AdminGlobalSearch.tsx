@@ -15,7 +15,9 @@ import type { AdminHqRoute } from '../../navigation/adminTabConfig';
 import { ADMIN_SEARCH_KIND_LABELS } from '../../navigation/adminTabConfig';
 import type { AdminFocSectionId } from '../../navigation/adminFocConfig';
 import type { AdminFocNavigationTarget } from '../../utils/adminWorkNavigation';
-import { resolveAdminSearchHitNavigation } from '../../utils/adminWorkNavigation';
+import { resolveAdminSearchHitNavigation, isAdminCopilotShortQuery } from '../../utils/adminWorkNavigation';
+import { useAdminAiCopilot } from './AdminAiCopilot';
+import type { AdminNavSectionId } from '../../navigation/adminNavConfig';
 import { adminChrome } from '../../theme/adminTheme';
 import { spacing } from '../../theme/designTokens';
 
@@ -28,16 +30,18 @@ interface AdminGlobalSearchProps {
 }
 
 const QUICK_JUMPS: {
-  section: AdminFocSectionId;
+  section: AdminNavSectionId;
   label: string;
-  icon: 'home' | 'people' | 'business' | 'star' | 'flag' | 'settings' | 'football';
+  icon: 'home' | 'people' | 'business' | 'star-four-points' | 'calendar' | 'stats-chart' | 'image' | 'shield' | 'settings';
 }[] = [
   { section: 'dashboard', label: 'Accueil', icon: 'home' },
+  { section: 'ia', label: 'IA ProDay', icon: 'star-four-points' },
   { section: 'users', label: 'Utilisateurs', icon: 'people' },
   { section: 'clubs', label: 'Clubs', icon: 'business' },
-  { section: 'matchs', label: 'Matchs', icon: 'football' },
-  { section: 'abonnements', label: 'Abonnements', icon: 'star' },
-  { section: 'signalements', label: 'Signalements', icon: 'flag' },
+  { section: 'activite', label: 'Activité', icon: 'calendar' },
+  { section: 'business', label: 'Business', icon: 'stats-chart' },
+  { section: 'contenus', label: 'Contenu', icon: 'image' },
+  { section: 'securite', label: 'Sécurité', icon: 'shield' },
   { section: 'parametres', label: 'Paramètres', icon: 'settings' },
 ];
 
@@ -49,6 +53,7 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
   onNavigateTarget,
 }) => {
   const { users, clubs, posts, events } = useAdminData();
+  const copilot = useAdminAiCopilot();
   const styles = useMemo(() => createStyles(), []);
   const [query, setQuery] = useState('');
 
@@ -72,10 +77,10 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
       const map: Partial<Record<AdminFocSectionId, AdminHqRoute>> = {
         dashboard: { mode: 'pilotage' },
         users: { mode: 'gestion', atelier: 'comptes' },
-        matchs: { mode: 'gestion', atelier: 'matchs' },
-        signalements: { mode: 'decisions' },
-        abonnements: { mode: 'abonnements' },
-        config: { mode: 'systeme' },
+        activite: { mode: 'gestion', atelier: 'matchs' },
+        contenus: { mode: 'decisions' },
+        business: { mode: 'abonnements' },
+        parametres: { mode: 'systeme' },
       };
       onNavigate(map[section] ?? { mode: 'pilotage' });
     }
@@ -114,13 +119,29 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
 
         {query.trim().length < 2 ? (
           <View style={styles.quick}>
-            <Text style={styles.section}>Raccourcis</Text>
+            <Text style={styles.section}>Raccourcis · Cmd+K</Text>
             {QUICK_JUMPS.map((j) => (
               <Pressable key={j.section} onPress={() => handleJump(j.section)} style={styles.row}>
                 <Icon name={j.icon} size={18} color={adminChrome.accent} />
                 <Text style={styles.rowTitle}>{j.label}</Text>
               </Pressable>
             ))}
+          </View>
+        ) : isAdminCopilotShortQuery(query) ? (
+          <View style={styles.quick}>
+            <Text style={styles.section}>ProDay AI</Text>
+            <Pressable
+              onPress={() => {
+                copilot.ask(query);
+                copilot.setOpen(true);
+                onClose();
+                setQuery('');
+              }}
+              style={styles.row}
+            >
+              <Icon name="star-four-points" size={18} color={adminChrome.accent} />
+              <Text style={styles.rowTitle}>Poser « {query.trim()} » au copilote</Text>
+            </Pressable>
           </View>
         ) : (
           <FlatList

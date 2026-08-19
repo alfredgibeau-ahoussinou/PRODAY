@@ -20,6 +20,7 @@ import type { SponsorQuoteRequest } from '../models/SponsorQuoteRequest';
 import type { SubscriptionUpgradeRequest } from '../models/SubscriptionUpgradeRequest';
 import type { Membership } from '../models/Membership';
 import type { StageOffer } from '../models/Stage';
+import type { ClubCamera } from '../models/ClubCameras';
 import {
   adminService,
   type AdminTournament,
@@ -66,6 +67,7 @@ interface AdminDataContextValue {
   subscriptionUpgradeRequests: SubscriptionUpgradeRequest[];
   stageOffers: StageOffer[];
   tournaments: AdminTournament[];
+  cameras: ClubCamera[];
   userDocCounts: Record<string, number>;
   refresh: () => Promise<void>;
 }
@@ -106,6 +108,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   >([]);
   const [stageOffers, setStageOffers] = useState<StageOffer[]>([]);
   const [tournaments, setTournaments] = useState<AdminTournament[]>([]);
+  const [cameras, setCameras] = useState<ClubCamera[]>([]);
   const [userDocCounts, setUserDocCounts] = useState<Record<string, number>>({});
 
   const load = useCallback(async () => {
@@ -131,6 +134,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       tourneys,
       subUpgradeReqs,
       memberships,
+      cams,
     ] = await Promise.all([
       adminService.getPlatformStats(),
       adminService.listAllUsers(),
@@ -153,6 +157,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       adminService.listAllTournaments(100),
       subscriptionUpgradeRequestService.listPendingForAdmin(50),
       adminService.listPendingMemberships(100),
+      adminService.listAllClubCameras(120),
     ]);
     setStats(s);
     setDailySnapshots(snapshots);
@@ -175,6 +180,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setSubscriptionUpgradeRequests(subUpgradeReqs);
     setStageOffers(stages);
     setTournaments(tourneys);
+    setCameras(cams);
     setLastRefreshedAt(new Date());
 
     const pendingReview = u.filter((x) => userNeedsAdminVerificationReview(x));
@@ -267,6 +273,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       subscriptionUpgradeRequests,
       stageOffers,
       tournaments,
+      cameras,
       userDocCounts,
       refresh,
     }),
@@ -298,6 +305,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       subscriptionUpgradeRequests,
       stageOffers,
       tournaments,
+      cameras,
       userDocCounts,
       refresh,
     ],

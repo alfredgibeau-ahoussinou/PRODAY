@@ -11,6 +11,7 @@ interface AdminFocTopBarProps {
   subtitle?: string;
   onSearch: () => void;
   onNotifications: () => void;
+  onCommand?: () => void;
   notificationCount: number;
   onMenu?: () => void;
   showMenu?: boolean;
@@ -21,6 +22,7 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
   subtitle,
   onSearch,
   onNotifications,
+  onCommand,
   notificationCount,
   onMenu,
   showMenu = false,
@@ -36,7 +38,7 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
       ) : null}
 
       <View style={styles.titleCol}>
-        <Text style={styles.kicker}>Console</Text>
+        <Text style={styles.kicker}>Intelligence</Text>
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
@@ -48,6 +50,12 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
       </View>
 
       <View style={styles.actions}>
+        {onCommand ? (
+          <PressableSpring onPress={onCommand} style={styles.iconBtnAccent} scaleTo={0.94} haptic>
+            <Icon name="star-four-points" size={17} color={adminChrome.accent} />
+          </PressableSpring>
+        ) : null}
+
         <PressableSpring onPress={onSearch} style={styles.iconBtnAccent} scaleTo={0.94} haptic>
           <Icon name="search" size={17} color={adminChrome.accent} />
         </PressableSpring>

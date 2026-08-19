@@ -101,7 +101,7 @@ export function AdminFocPageHeader({
     <View style={headerStyles.wrap}>
       <View style={headerStyles.row}>
         <View style={headerStyles.copy}>
-          <Text style={headerStyles.kicker}>Console</Text>
+          <Text style={headerStyles.kicker}>Intelligence</Text>
           <Text style={headerStyles.title}>{title}</Text>
           {subtitle ? <Text style={headerStyles.sub}>{subtitle}</Text> : null}
         </View>

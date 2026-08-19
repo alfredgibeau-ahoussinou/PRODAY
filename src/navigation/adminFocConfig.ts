@@ -1,5 +1,5 @@
 /**
- * Compat FOC → nouveau registre `adminNavConfig`.
+ * Compat FOC → nouveau registre `adminNavConfig` (9 items cockpit IA).
  * Les écrans existants importent encore ce module (onglets in-page, deep links).
  */
 
@@ -50,49 +50,73 @@ export const ADMIN_FOC_NAV: AdminFocNavItem[] = ADMIN_NAV_ITEMS.map((n) => ({
 /** Onglets in-page des hubs / feuilles (pas le menu sidebar). */
 export const ADMIN_FOC_TABS: Record<string, { id: string; label: string }[]> = {
   dashboard: [{ id: 'overview', label: 'Vue d’ensemble' }],
+  ia: [
+    { id: 'alertes', label: 'Alertes' },
+    { id: 'chat', label: 'Chat' },
+    { id: 'automations', label: 'Automatisations' },
+  ],
   users: [
     { id: 'all', label: 'Tous' },
-    { id: 'decisions', label: 'À valider' },
     { id: 'player', label: 'Joueurs' },
     { id: 'coach', label: 'Coachs' },
     { id: 'parent', label: 'Parents' },
-    { id: 'club', label: 'Dirigeants' },
+    { id: 'admin', label: 'Admins' },
   ],
   personnes: [
     { id: 'all', label: 'Tous' },
-    { id: 'decisions', label: 'À valider' },
     { id: 'player', label: 'Joueurs' },
     { id: 'coach', label: 'Coachs' },
     { id: 'parent', label: 'Parents' },
-    { id: 'club', label: 'Dirigeants' },
+    { id: 'admin', label: 'Admins' },
   ],
   clubs: [
-    { id: 'clubs', label: 'Clubs' },
+    { id: 'all', label: 'Tous' },
+    { id: 'validation', label: 'Validation' },
+    { id: 'activity', label: 'Activité' },
     { id: 'teams', label: 'Équipes' },
+    { id: 'coaches', label: 'Coachs' },
+  ],
+  activite: [
+    { id: 'matchs', label: 'Matchs' },
+    { id: 'evenements', label: 'Entraînements' },
+    { id: 'video', label: 'Vidéo' },
   ],
   matchs: [
     { id: 'matchs', label: 'Matchs' },
-    { id: 'competitions', label: 'Événements' },
+    { id: 'evenements', label: 'Entraînements' },
+    { id: 'video', label: 'Vidéo' },
   ],
-  competition: [
-    { id: 'matchs', label: 'Matchs' },
-    { id: 'competitions', label: 'Compétitions' },
+  business: [
+    { id: 'vue', label: 'Vue' },
+    { id: 'abonnements', label: 'Abonnements' },
+    { id: 'paiements', label: 'Paiements' },
+    { id: 'boutique', label: 'Boutique' },
+    { id: 'sponsors', label: 'Sponsors' },
   ],
   abonnements: [
     { id: 'vue', label: 'Vue' },
-    { id: 'demandes', label: 'Demandes' },
-    { id: 'comptes', label: 'Comptes Pro' },
+    { id: 'abonnements', label: 'Abonnements' },
     { id: 'paiements', label: 'Paiements' },
     { id: 'boutique', label: 'Boutique' },
     { id: 'sponsors', label: 'Sponsors' },
   ],
   finances: [
     { id: 'vue', label: 'Vue' },
-    { id: 'demandes', label: 'Demandes' },
-    { id: 'comptes', label: 'Comptes Pro' },
+    { id: 'abonnements', label: 'Abonnements' },
     { id: 'paiements', label: 'Paiements' },
     { id: 'boutique', label: 'Boutique' },
     { id: 'sponsors', label: 'Sponsors' },
+  ],
+  contenus: [
+    { id: 'decisions', label: 'Décisions' },
+    { id: 'fil', label: 'Fil' },
+    { id: 'messages', label: 'Messagerie' },
+    { id: 'signalements', label: 'Signalements' },
+  ],
+  securite: [
+    { id: 'audit', label: 'Audit' },
+    { id: 'session', label: 'Session' },
+    { id: 'signalements', label: 'Signalements' },
   ],
 };
 
@@ -119,43 +143,45 @@ export const ADMIN_FOC_SCREEN_TABS = {
   ],
   communication: [
     { id: 'decisions', label: 'Décisions' },
-    { id: 'messages', label: 'Messages' },
+    { id: 'fil', label: 'Fil' },
+    { id: 'messages', label: 'Messagerie' },
+    { id: 'signalements', label: 'Signalements' },
     { id: 'annonces', label: 'Annonces' },
-    { id: 'fil', label: 'Fil plateforme' },
     { id: 'questions', label: 'Question semaine' },
   ],
   contenus: [
-    { id: 'annonces', label: 'Annonces' },
-    { id: 'fil', label: 'Fil plateforme' },
-    { id: 'questions', label: 'Question semaine' },
+    { id: 'decisions', label: 'Décisions' },
+    { id: 'fil', label: 'Fil' },
+    { id: 'messages', label: 'Messagerie' },
+    { id: 'signalements', label: 'Signalements' },
   ],
   parametres: [
     { id: 'personnaliser', label: 'Personnaliser' },
     { id: 'systeme', label: 'Système' },
-    { id: 'audit', label: 'Audit' },
+    { id: 'config', label: 'Config' },
     { id: 'beta', label: 'Bêta' },
   ],
 } as const;
 
 export const ADMIN_FOC_LEGACY_SECTION_MAP: Record<AdminFocLegacySectionId, AdminFocSectionId> = {
   adherents: 'users',
-  matchs: 'matchs',
-  competitions: 'matchs',
-  recrutement: 'recrutement',
+  matchs: 'activite',
+  competitions: 'activite',
+  recrutement: 'clubs',
   communication: 'contenus',
-  video: 'video',
-  performance: 'statistiques',
+  video: 'activite',
+  performance: 'business',
   parametres: 'parametres',
   personnes: 'users',
-  competition: 'matchs',
+  competition: 'activite',
   operations: 'contenus',
-  finances: 'abonnements',
+  finances: 'business',
   plateforme: 'parametres',
 };
 
 export const ADMIN_FOC_LEGACY_HUB_TAB: Partial<Record<AdminFocLegacySectionId, string>> = {
   matchs: 'matchs',
-  competitions: 'competitions',
+  competitions: 'evenements',
 };
 
 export type AdminFocDeepLinkId =

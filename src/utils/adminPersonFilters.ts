@@ -1,4 +1,5 @@
 import type { User } from '../models/User';
+import { isPlatformAdminEmail } from '../config/admin';
 import { userNeedsAdminVerificationReview } from './adminUserVerification';
 import { isSubscriptionAccessActive } from './subscriptionLogic';
 import {
@@ -15,7 +16,8 @@ export type AdminPersonTabId =
   | 'player'
   | 'coach'
   | 'parent'
-  | 'club';
+  | 'club'
+  | 'admin';
 
 export type AdminPersonAgeFilter = 'all' | JoueurAgeGroup;
 export type AdminPersonGenderFilter = 'all' | AdminEditableGender;
@@ -23,11 +25,10 @@ export type AdminPersonSubscriptionFilter = 'all' | 'free' | 'paid';
 
 export const ADMIN_PERSON_PRIMARY_TABS: { id: AdminPersonTabId; label: string }[] = [
   { id: 'all', label: 'Tous' },
-  { id: 'decisions', label: 'À valider' },
   { id: 'player', label: 'Joueurs' },
   { id: 'coach', label: 'Coachs' },
   { id: 'parent', label: 'Parents' },
-  { id: 'club', label: 'Dirigeants' },
+  { id: 'admin', label: 'Admins' },
 ];
 
 const LEGACY_AGE_TABS = new Set<string>(['youth', 'teen', 'adult']);
@@ -60,6 +61,7 @@ export function filterAdminPersons(
   else if (tab === 'parent') list = list.filter((u) => u.role === 'parent');
   else if (tab === 'coach') list = list.filter((u) => u.role === 'coach');
   else if (tab === 'club') list = list.filter((u) => u.role === 'club');
+  else if (tab === 'admin') list = list.filter((u) => isPlatformAdminEmail(u.email));
   else if (tab === 'decisions') list = list.filter(userNeedsAdminVerificationReview);
 
   if (ageFilter !== 'all') {

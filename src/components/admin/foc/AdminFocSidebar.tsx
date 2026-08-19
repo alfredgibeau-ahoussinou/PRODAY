@@ -75,7 +75,7 @@ export function AdminFocSidebar({
           <>
             <Text style={[styles.brandTitle, { color: accent }]}>ProDay</Text>
             <Text style={styles.brandSub} numberOfLines={1}>
-              {clubDisplayName || 'Console admin'}
+              {clubDisplayName || 'Cockpit IA'}
             </Text>
           </>
         )}

@@ -17,7 +17,7 @@ import { AdminGateScreen } from '../screens/admin/AdminGateScreen';
 import { AdminFocSidebar } from '../components/admin/foc/AdminFocSidebar';
 import { AdminFocTopBar } from '../components/admin/foc/AdminFocTopBar';
 import { AdminFocSectionHub } from '../components/admin/foc/AdminFocSectionHub';
-import { AdminFocDashboard } from '../screens/admin/foc/AdminFocDashboard';
+import { AdminIntelligenceHome } from '../screens/admin/foc/AdminIntelligenceHome';
 import { AdminFocMatchsScreen } from '../screens/admin/foc/AdminFocMatchsScreen';
 import { AdminFocVideoScreen } from '../screens/admin/foc/AdminFocVideoScreen';
 import { AdminFocRecrutementScreen } from '../screens/admin/foc/AdminFocRecrutementScreen';
@@ -26,13 +26,9 @@ import { AdminFocClubsScreen } from '../screens/admin/foc/AdminFocClubsScreen';
 import { AdminFocCompetitionsScreen } from '../screens/admin/foc/AdminFocCompetitionsScreen';
 import { AdminFocCommunicationScreen } from '../screens/admin/foc/AdminFocCommunicationScreen';
 import { AdminFocFinancesScreen } from '../screens/admin/foc/AdminFocFinancesScreen';
-import { AdminFocPerformanceScreen } from '../screens/admin/foc/AdminFocPerformanceScreen';
 import { AdminFocParametresScreen } from '../screens/admin/foc/AdminFocParametresScreen';
 import { AdminFocIaScreen } from '../screens/admin/foc/AdminFocIaScreen';
 import { AdminFocSecuriteScreen } from '../screens/admin/foc/AdminFocSecuriteScreen';
-import { AdminFocMessagerieScreen } from '../screens/admin/foc/AdminFocMessagerieScreen';
-import { AdminAuditLogPanel } from '../components/admin/AdminAuditLogPanel';
-import { AdminFocConfigScreen } from '../screens/admin/foc/AdminFocConfigScreen';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -52,7 +48,7 @@ import {
 } from '../services/adminPreferences.service';
 import { adminChrome } from '../theme/adminTheme';
 import { spacing } from '../theme/designTokens';
-import { AdminFocPageHeader } from '../components/admin/foc/AdminFocTabs';
+import { AdminAiCopilotProvider, AdminAiCopilotFab } from '../components/admin/AdminAiCopilot';
 
 interface AdminAppShellProps {
   onPreviewUserApp: () => void;
@@ -60,9 +56,9 @@ interface AdminAppShellProps {
 
 function hqRouteToNav(route: AdminHqRoute): AdminNavSectionId {
   if (route.mode === 'pilotage') return 'dashboard';
-  if (route.mode === 'decisions') return 'signalements';
-  if (route.mode === 'abonnements') return 'abonnements';
-  if (route.mode === 'systeme') return 'config';
+  if (route.mode === 'decisions') return 'contenus';
+  if (route.mode === 'abonnements') return 'business';
+  if (route.mode === 'systeme') return 'parametres';
   if (route.mode === 'gestion') {
     switch (route.atelier) {
       case 'comptes':
@@ -70,28 +66,23 @@ function hqRouteToNav(route: AdminHqRoute): AdminNavSectionId {
       case 'clubs':
         return 'clubs';
       case 'matchs':
-        return 'matchs';
       case 'evenements':
       case 'tournois':
-        return 'matchs';
+        return 'activite';
       case 'recrutement':
       case 'candidatures':
       case 'stages':
-        return 'recrutement';
+        return 'clubs';
       case 'paiements':
-        return 'abonnements';
       case 'devis':
       case 'partenaires':
-        return 'sponsors';
+        return 'business';
       case 'publications':
-        return 'contenus';
       case 'signalements':
-        return 'signalements';
       case 'annonces':
       case 'fil':
-        return 'contenus';
       case 'messages':
-        return 'messagerie';
+        return 'contenus';
       default:
         return 'users';
     }
@@ -109,7 +100,7 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
   if (claimLoading) {
     return (
       <SafeAreaView style={shellStyles.loaderRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <ActivityIndicator size="large" color={adminChrome.accent} />
         <Text style={shellStyles.loaderText}>Chargement de la console…</Text>
       </SafeAreaView>
@@ -119,7 +110,7 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
   if (!isAdmin && !emailHint) {
     return (
       <SafeAreaView style={shellStyles.gateRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <AdminGateScreen />
       </SafeAreaView>
     );
@@ -176,6 +167,18 @@ const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) =
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const handleSelectSection = useCallback(
     (newSection: AdminNavSectionId) => {
@@ -244,40 +247,53 @@ const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) =
   const sidebarBadges = useMemo<Partial<Record<AdminNavSectionId, number>>>(
     () => ({
       users: workQueue.filter((w) => w.kind === 'verification').length,
-      clubs: workQueue.filter((w) => w.kind === 'membership').length,
-      recrutement: workQueue.filter((w) => ['application', 'post'].includes(w.kind)).length,
-      abonnements: workQueue.filter((w) =>
+      clubs: workQueue.filter((w) =>
+        ['membership', 'application', 'post'].includes(w.kind),
+      ).length,
+      business: workQueue.filter((w) =>
         ['payment', 'quote', 'subscription_request'].includes(w.kind),
       ).length,
-      signalements: workQueue.filter((w) => ['reel', 'report'].includes(w.kind)).length,
-      contenus: workQueue.filter((w) => w.kind === 'reel').length,
+      contenus: workQueue.filter((w) => ['reel', 'report'].includes(w.kind)).length,
+      ia: workQueue.length,
     }),
     [workQueue],
   );
 
   const renderContent = useCallback(() => {
+    const recutTab = ['apps', 'posts', 'bassin', 'players', 'recrutement'].includes(screenTab ?? '');
     switch (section) {
       case 'dashboard':
         return (
-          <AdminFocDashboard
+          <AdminIntelligenceHome
             onNavigateSection={handleNavigateSection}
             onNavigateTarget={handleNavigateTarget}
             onOpenDecisions={() => setNotifOpen(true)}
           />
         );
+      case 'ia':
+        return (
+          <AdminFocIaScreen
+            initialTab={screenTab}
+            prefs={prefs}
+            onChangePrefs={(next) => {
+              setPrefs(next);
+              void savePrefs(next);
+            }}
+            onNavigateTarget={handleNavigateTarget}
+          />
+        );
       case 'users':
         return <AdminFocAdherentsScreen initialTab={screenTab ?? 'all'} initialUserId={focusId} />;
-      case 'coaches':
-        return <AdminFocAdherentsScreen initialTab="coach" initialUserId={focusId} />;
-      case 'players':
-        return <AdminFocAdherentsScreen initialTab="player" initialUserId={focusId} />;
-      case 'parents':
-        return <AdminFocAdherentsScreen initialTab="parent" initialUserId={focusId} />;
       case 'clubs':
-        return <AdminFocClubsScreen initialTab={screenTab ?? 'clubs'} />;
-      case 'teams':
-        return <AdminFocClubsScreen initialTab="teams" />;
-      case 'matchs':
+        if (recutTab) {
+          return (
+            <AdminFocRecrutementScreen
+              initialTab={screenTab === 'recrutement' ? 'bassin' : screenTab}
+            />
+          );
+        }
+        return <AdminFocClubsScreen initialTab={screenTab ?? 'all'} />;
+      case 'activite':
         return (
           <AdminFocSectionHub
             initialTab={hubTab}
@@ -288,77 +304,54 @@ const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) =
                 render: () => <AdminFocMatchsScreen initialTab={screenTab} />,
               },
               {
-                id: 'competitions',
-                label: 'Événements',
+                id: 'evenements',
+                label: 'Entraînements',
                 render: () => <AdminFocCompetitionsScreen initialTab={screenTab} />,
+              },
+              {
+                id: 'video',
+                label: 'Vidéo',
+                render: () => <AdminFocVideoScreen />,
               },
             ]}
           />
         );
-      case 'recrutement':
-        return <AdminFocRecrutementScreen initialTab={screenTab} />;
-      case 'ia':
-        return <AdminFocIaScreen />;
-      case 'video':
-        return <AdminFocVideoScreen />;
-      case 'abonnements':
+      case 'business':
         return (
           <AdminFocFinancesScreen
             initialTab={screenTab ?? 'vue'}
             onOpenUser={handleOpenUser}
           />
         );
-      case 'marketplace':
-        return <AdminFocFinancesScreen initialTab="boutique" onOpenUser={handleOpenUser} />;
-      case 'sponsors':
-        return <AdminFocFinancesScreen initialTab="sponsors" onOpenUser={handleOpenUser} />;
       case 'contenus':
         return (
           <AdminFocCommunicationScreen
-            initialTab={screenTab ?? 'annonces'}
-            title="Contenus"
-            allowedTabs={['annonces', 'fil', 'questions']}
+            initialTab={screenTab ?? 'decisions'}
+            title="Contenu"
+            allowedTabs={['decisions', 'fil', 'messages', 'signalements']}
           />
         );
-      case 'messagerie':
-        return <AdminFocMessagerieScreen />;
-      case 'signalements':
+      case 'securite':
         return (
-          <AdminFocCommunicationScreen
-            initialTab="decisions"
-            title="Signalements"
-            allowedTabs={['decisions']}
+          <AdminFocSecuriteScreen
+            onPreviewUserApp={onPreviewUserApp}
+            initialTab={screenTab}
+            onNavigateTarget={handleNavigateTarget}
           />
         );
-      case 'statistiques':
-        return <AdminFocPerformanceScreen />;
       case 'parametres':
         return (
           <AdminFocParametresScreen
-            initialTab="personnaliser"
+            initialTab={screenTab ?? 'personnaliser'}
             prefs={prefs}
             onChangePrefs={setPrefs}
             onSavePrefs={handleSavePrefs}
             onPreviewUserApp={onPreviewUserApp}
           />
         );
-      case 'audit':
-        return (
-          <View style={shellStyles.panelPage}>
-            <AdminFocPageHeader
-              title="Journal d’activité"
-              subtitle="Actions admin enregistrées (abonnements, comptes, contenus)."
-            />
-            <AdminAuditLogPanel />
-          </View>
-        );
-      case 'securite':
-        return <AdminFocSecuriteScreen onPreviewUserApp={onPreviewUserApp} />;
-      case 'config':
-        return <AdminFocConfigScreen />;
       default:
         return (
-          <AdminFocDashboard
+          <AdminIntelligenceHome
             onNavigateSection={handleNavigateSection}
             onNavigateTarget={handleNavigateTarget}
           />
@@ -375,6 +368,7 @@ const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) =
     handleSavePrefs,
     handleOpenUser,
     onPreviewUserApp,
+    savePrefs,
   ]);
 
   const railCollapsed = isTablet ? true : sidebarCollapsed;
@@ -398,6 +392,7 @@ const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) =
       title={sectionTitle(section)}
       onSearch={() => setSearchOpen(true)}
       onNotifications={() => setNotifOpen(true)}
+      onCommand={() => setSearchOpen(true)}
       notificationCount={workQueue.length}
       onMenu={() => setMobileMenu(true)}
       showMenu={!isDesktop && !isTablet}
@@ -407,15 +402,16 @@ const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) =
   if (!prefsLoaded) {
     return (
       <SafeAreaView style={shellStyles.loaderRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <ActivityIndicator size="small" color={adminChrome.accent} />
       </SafeAreaView>
     );
   }
 
   return (
+    <AdminAiCopilotProvider onNavigate={handleNavigateTarget}>
     <View style={shellStyles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       {isDesktop || isTablet ? (
         <View style={shellStyles.desktopRow}>
@@ -477,7 +473,9 @@ const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) =
         onNavigateSection={handleSelectSection}
         onNavigateTarget={handleNavigateTarget}
       />
+      <AdminAiCopilotFab />
     </View>
+    </AdminAiCopilotProvider>
   );
 };
 

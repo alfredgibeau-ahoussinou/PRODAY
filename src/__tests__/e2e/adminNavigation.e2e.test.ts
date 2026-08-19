@@ -77,7 +77,7 @@ describe('e2e. Navigation shell admin console', () => {
 
   /* ── Nouveau menu groupé ── */
 
-  it('ADMIN_NAV_ITEMS n’est plus le menu FOC 7 sections', () => {
+  it('ADMIN_NAV_ITEMS est le cockpit IA à 9 items', () => {
     const ids = ADMIN_NAV_ITEMS.map((n) => n.id);
     expect(ids).not.toEqual([
       'dashboard',
@@ -88,41 +88,25 @@ describe('e2e. Navigation shell admin console', () => {
       'finances',
       'plateforme',
     ]);
-    expect(ids).toEqual(
-      expect.arrayContaining([
-        'dashboard',
-        'users',
-        'clubs',
-        'coaches',
-        'players',
-        'parents',
-        'teams',
-        'matchs',
-        'recrutement',
-        'ia',
-        'video',
-        'abonnements',
-        'marketplace',
-        'sponsors',
-        'contenus',
-        'messagerie',
-        'signalements',
-        'statistiques',
-        'parametres',
-        'audit',
-        'securite',
-        'config',
-      ]),
-    );
-    expect(ids).toHaveLength(22);
+    expect(ids).toEqual([
+      'dashboard',
+      'ia',
+      'users',
+      'clubs',
+      'activite',
+      'business',
+      'contenus',
+      'securite',
+      'parametres',
+    ]);
+    expect(ids).toHaveLength(9);
   });
 
-  it('le menu est groupé Principal / Administration', () => {
-    expect(ADMIN_NAV_GROUPS.map((g) => g.id)).toEqual(['principal', 'administration']);
-    expect(ADMIN_NAV_ITEMS.filter((n) => n.group === 'administration').map((n) => n.id)).toEqual([
-      'audit',
+  it('le menu est groupé Intelligence / Pilotage / Système', () => {
+    expect(ADMIN_NAV_GROUPS.map((g) => g.id)).toEqual(['intelligence', 'pilotage', 'systeme']);
+    expect(ADMIN_NAV_ITEMS.filter((n) => n.group === 'systeme').map((n) => n.id)).toEqual([
       'securite',
-      'config',
+      'parametres',
     ]);
   });
 
@@ -132,7 +116,7 @@ describe('e2e. Navigation shell admin console', () => {
 
   it('ADMIN_FOC_TABS.users / personnes conserve les filtres primaires', () => {
     const tabs = ADMIN_FOC_TABS.users.map((t) => t.id);
-    expect(tabs).toEqual(['all', 'decisions', 'player', 'coach', 'parent', 'club']);
+    expect(tabs).toEqual(['all', 'player', 'coach', 'parent', 'admin']);
     expect(tabs).not.toContain('youth');
   });
 
@@ -141,15 +125,15 @@ describe('e2e. Navigation shell admin console', () => {
     expect(ADMIN_WORK_KIND_LABELS.subscription_request).toBe('Abonnement');
   });
 
-  it('ADMIN_FOC_TABS.abonnements / finances a Vue, Demandes, Comptes Pro', () => {
+  it('ADMIN_FOC_TABS.abonnements / finances a Vue, Abonnements, Paiements', () => {
     const tabs = ADMIN_FOC_TABS.abonnements.map((t) => t.id);
-    expect(tabs).toEqual(['vue', 'demandes', 'comptes', 'paiements', 'boutique', 'sponsors']);
+    expect(tabs).toEqual(['vue', 'abonnements', 'paiements', 'boutique', 'sponsors']);
     expect(ADMIN_FOC_TABS.finances.map((t) => t.id)).toEqual(tabs);
   });
 
-  it('ADMIN_FOC_SCREEN_TABS.parametres contient personnaliser, audit et beta', () => {
+  it('ADMIN_FOC_SCREEN_TABS.parametres contient personnaliser, système, config et beta', () => {
     const tabs = ADMIN_FOC_SCREEN_TABS.parametres.map((t) => t.id);
-    expect(tabs).toEqual(expect.arrayContaining(['personnaliser', 'systeme', 'audit', 'beta']));
+    expect(tabs).toEqual(expect.arrayContaining(['personnaliser', 'systeme', 'config', 'beta']));
   });
 
   it('ADMIN_FOC_SCREEN_TABS.communication contient question semaine', () => {
@@ -159,15 +143,15 @@ describe('e2e. Navigation shell admin console', () => {
 
   it('mappe les anciens ids sidebar vers le nouveau menu', () => {
     expect(ADMIN_FOC_LEGACY_SECTION_MAP.adherents).toBe('users');
-    expect(ADMIN_FOC_LEGACY_SECTION_MAP.matchs).toBe('matchs');
+    expect(ADMIN_FOC_LEGACY_SECTION_MAP.matchs).toBe('activite');
     expect(ADMIN_FOC_LEGACY_SECTION_MAP.communication).toBe('contenus');
     expect(ADMIN_FOC_LEGACY_SECTION_MAP.parametres).toBe('parametres');
-    expect(ADMIN_FOC_LEGACY_SECTION_MAP.finances).toBe('abonnements');
+    expect(ADMIN_FOC_LEGACY_SECTION_MAP.finances).toBe('business');
   });
 
   it('resolveAdminFocNavigation ouvre les onglets profonds', () => {
     expect(resolveAdminFocNavigation('matchs')).toEqual({
-      section: 'matchs',
+      section: 'activite',
       hubTab: 'matchs',
     });
     expect(resolveAdminFocNavigation('communication')).toEqual({ section: 'contenus' });
@@ -180,11 +164,11 @@ describe('e2e. Navigation shell admin console', () => {
       screenTab: 'all',
     });
     expect(resolveAdminFocNavigation('coaches')).toEqual({
-      section: 'coaches',
+      section: 'users',
       screenTab: 'coach',
     });
     expect(resolveAdminFocNavigation('decisions')).toEqual({
-      section: 'users',
+      section: 'contenus',
       screenTab: 'decisions',
     });
   });

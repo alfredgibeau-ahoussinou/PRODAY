@@ -1,35 +1,22 @@
 /**
- * Console admin ProDay — menu groupé (Principal / Administration).
+ * Console admin ProDay — cockpit IA, 9 items max.
  * Source de vérité navigation. Les écrans FOC restent les cibles.
  */
 
 import type { IconName } from '../components/ui/iconNames';
 
-export type AdminNavGroupId = 'principal' | 'administration';
+export type AdminNavGroupId = 'intelligence' | 'pilotage' | 'systeme';
 
 export type AdminNavSectionId =
   | 'dashboard'
+  | 'ia'
   | 'users'
   | 'clubs'
-  | 'coaches'
-  | 'players'
-  | 'parents'
-  | 'teams'
-  | 'matchs'
-  | 'recrutement'
-  | 'ia'
-  | 'video'
-  | 'abonnements'
-  | 'marketplace'
-  | 'sponsors'
+  | 'activite'
+  | 'business'
   | 'contenus'
-  | 'messagerie'
-  | 'signalements'
-  | 'statistiques'
-  | 'parametres'
-  | 'audit'
   | 'securite'
-  | 'config';
+  | 'parametres';
 
 export type AdminNavItem = {
   id: AdminNavSectionId;
@@ -40,33 +27,21 @@ export type AdminNavItem = {
 };
 
 export const ADMIN_NAV_GROUPS: { id: AdminNavGroupId; label: string }[] = [
-  { id: 'principal', label: 'Principal' },
-  { id: 'administration', label: 'Administration' },
+  { id: 'intelligence', label: 'Intelligence' },
+  { id: 'pilotage', label: 'Pilotage' },
+  { id: 'systeme', label: 'Système' },
 ];
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { id: 'dashboard', label: 'Accueil', short: 'Accueil', icon: 'home', group: 'principal' },
-  { id: 'users', label: 'Utilisateurs', short: 'Users', icon: 'people', group: 'principal' },
-  { id: 'clubs', label: 'Clubs', short: 'Clubs', icon: 'business', group: 'principal' },
-  { id: 'coaches', label: 'Coachs', short: 'Coachs', icon: 'person', group: 'principal' },
-  { id: 'players', label: 'Joueurs', short: 'Joueurs', icon: 'football', group: 'principal' },
-  { id: 'parents', label: 'Parents', short: 'Parents', icon: 'people', group: 'principal' },
-  { id: 'teams', label: 'Équipes', short: 'Équipes', icon: 'shirt', group: 'principal' },
-  { id: 'matchs', label: 'Matchs & Événements', short: 'Matchs', icon: 'calendar', group: 'principal' },
-  { id: 'recrutement', label: 'Recrutement', short: 'Recrut.', icon: 'briefcase', group: 'principal' },
-  { id: 'ia', label: 'IA ProDay', short: 'IA', icon: 'star-four-points', group: 'principal' },
-  { id: 'video', label: 'Vidéo', short: 'Vidéo', icon: 'videocam', group: 'principal' },
-  { id: 'abonnements', label: 'Abonnements & Paiements', short: 'Abos', icon: 'star', group: 'principal' },
-  { id: 'marketplace', label: 'Marketplace', short: 'Shop', icon: 'bag', group: 'principal' },
-  { id: 'sponsors', label: 'Sponsors', short: 'Sponsors', icon: 'handshake', group: 'principal' },
-  { id: 'contenus', label: 'Contenus', short: 'Contenus', icon: 'image', group: 'principal' },
-  { id: 'messagerie', label: 'Messagerie', short: 'Msgs', icon: 'chat', group: 'principal' },
-  { id: 'signalements', label: 'Signalements', short: 'Signal.', icon: 'flag', group: 'principal' },
-  { id: 'statistiques', label: 'Statistiques', short: 'Stats', icon: 'stats-chart', group: 'principal' },
-  { id: 'parametres', label: 'Paramètres', short: 'Réglages', icon: 'settings', group: 'principal' },
-  { id: 'audit', label: 'Journal d’activité', short: 'Journal', icon: 'document', group: 'administration' },
-  { id: 'securite', label: 'Sécurité', short: 'Sécu.', icon: 'shield', group: 'administration' },
-  { id: 'config', label: 'Configuration plateforme', short: 'Config', icon: 'tune', group: 'administration' },
+  { id: 'dashboard', label: 'Accueil', short: 'Accueil', icon: 'home', group: 'intelligence' },
+  { id: 'ia', label: 'IA ProDay', short: 'IA', icon: 'star-four-points', group: 'intelligence' },
+  { id: 'users', label: 'Utilisateurs', short: 'Users', icon: 'people', group: 'pilotage' },
+  { id: 'clubs', label: 'Clubs', short: 'Clubs', icon: 'business', group: 'pilotage' },
+  { id: 'activite', label: 'Activité', short: 'Acti.', icon: 'calendar', group: 'pilotage' },
+  { id: 'business', label: 'Business', short: 'Biz', icon: 'stats-chart', group: 'pilotage' },
+  { id: 'contenus', label: 'Contenu', short: 'Contenu', icon: 'image', group: 'pilotage' },
+  { id: 'securite', label: 'Sécurité', short: 'Sécu.', icon: 'shield', group: 'systeme' },
+  { id: 'parametres', label: 'Paramètres', short: 'Réglages', icon: 'settings', group: 'systeme' },
 ];
 
 export const ADMIN_NAV_SECTION_IDS = ADMIN_NAV_ITEMS.map((n) => n.id);
@@ -85,7 +60,7 @@ export function adminNavItemsInGroup(group: AdminNavGroupId): AdminNavItem[] {
   return ADMIN_NAV_ITEMS.filter((n) => n.group === group);
 }
 
-/** Anciens ids 7-sections FOC + feuilles / HQ. */
+/** Anciens ids 7-sections FOC + menu 22 + feuilles / HQ. */
 export type AdminNavLegacyId =
   | 'personnes'
   | 'competition'
@@ -106,7 +81,18 @@ export type AdminNavLegacyId =
   | 'pilotage'
   | 'gestion'
   | 'systeme'
-  | 'abonnements';
+  | 'abonnements'
+  | 'players'
+  | 'parents'
+  | 'teams'
+  | 'marketplace'
+  | 'sponsors'
+  | 'messagerie'
+  | 'signalements'
+  | 'statistiques'
+  | 'audit'
+  | 'config'
+  | 'ia';
 
 export type AdminNavTarget = {
   section: AdminNavSectionId;
@@ -120,38 +106,40 @@ const LEGACY_TO_NAV: Record<string, AdminNavTarget> = {
   personnes: { section: 'users' },
   users: { section: 'users' },
   clubs: { section: 'clubs' },
-  coaches: { section: 'coaches', screenTab: 'coach' },
-  players: { section: 'players', screenTab: 'player' },
-  parents: { section: 'parents', screenTab: 'parent' },
-  teams: { section: 'teams', screenTab: 'teams' },
-  competition: { section: 'matchs' },
-  matchs: { section: 'matchs', hubTab: 'matchs' },
-  competitions: { section: 'matchs', hubTab: 'competitions' },
+  coaches: { section: 'users', screenTab: 'coach' },
+  players: { section: 'users', screenTab: 'player' },
+  parents: { section: 'users', screenTab: 'parent' },
+  teams: { section: 'clubs', screenTab: 'teams' },
+  competition: { section: 'activite' },
+  matchs: { section: 'activite', hubTab: 'matchs' },
+  competitions: { section: 'activite', hubTab: 'evenements' },
   operations: { section: 'contenus' },
-  recrutement: { section: 'recrutement' },
+  recrutement: { section: 'clubs', screenTab: 'recrutement' },
   communication: { section: 'contenus' },
-  video: { section: 'video' },
-  finances: { section: 'abonnements' },
-  abonnements: { section: 'abonnements', screenTab: 'vue' },
-  marketplace: { section: 'marketplace', screenTab: 'boutique' },
-  sponsors: { section: 'sponsors', screenTab: 'sponsors' },
+  video: { section: 'activite', hubTab: 'video' },
+  finances: { section: 'business' },
+  abonnements: { section: 'business', screenTab: 'abonnements' },
+  marketplace: { section: 'business', screenTab: 'boutique' },
+  sponsors: { section: 'business', screenTab: 'sponsors' },
   plateforme: { section: 'parametres' },
-  performance: { section: 'statistiques' },
-  statistiques: { section: 'statistiques' },
+  performance: { section: 'business', screenTab: 'vue' },
+  statistiques: { section: 'business', screenTab: 'vue' },
   parametres: { section: 'parametres' },
   adherents: { section: 'users', screenTab: 'all' },
   publications: { section: 'contenus', screenTab: 'fil' },
-  decisions: { section: 'users', screenTab: 'decisions' },
+  decisions: { section: 'contenus', screenTab: 'decisions' },
   pilotage: { section: 'dashboard' },
-  systeme: { section: 'config' },
+  systeme: { section: 'parametres', screenTab: 'systeme' },
   gestion: { section: 'users' },
   ia: { section: 'ia' },
   contenus: { section: 'contenus' },
-  messagerie: { section: 'messagerie' },
-  signalements: { section: 'signalements' },
-  audit: { section: 'audit' },
+  messagerie: { section: 'contenus', screenTab: 'messages' },
+  signalements: { section: 'contenus', screenTab: 'signalements' },
+  audit: { section: 'securite', screenTab: 'audit' },
   securite: { section: 'securite' },
-  config: { section: 'config' },
+  config: { section: 'parametres', screenTab: 'config' },
+  activite: { section: 'activite' },
+  business: { section: 'business' },
 };
 
 export function resolveAdminNav(target: string): AdminNavTarget {
@@ -175,20 +163,30 @@ export const ADMIN_NAV_DESKTOP_BREAKPOINT = 1024;
 export const ADMIN_NAV_TABLET_BREAKPOINT = 768;
 
 export const DEFAULT_ADMIN_DASHBOARD_ORDER = [
-  'kpis',
+  'attention',
   'queue',
-  'business',
+  'domains',
   'activity',
-  'matchs',
 ] as const;
 
 export type AdminDashboardBlockId = (typeof DEFAULT_ADMIN_DASHBOARD_ORDER)[number];
 
 export const ADMIN_ABONNEMENTS_TABS = [
   { id: 'vue', label: 'Vue' },
-  { id: 'demandes', label: 'Demandes' },
-  { id: 'comptes', label: 'Comptes Pro' },
+  { id: 'abonnements', label: 'Abonnements' },
   { id: 'paiements', label: 'Paiements' },
   { id: 'boutique', label: 'Boutique' },
   { id: 'sponsors', label: 'Sponsors' },
+] as const;
+
+export const ADMIN_IA_TABS = [
+  { id: 'alertes', label: 'Alertes' },
+  { id: 'chat', label: 'Chat' },
+  { id: 'automations', label: 'Automatisations' },
+] as const;
+
+export const ADMIN_SECURITE_TABS = [
+  { id: 'audit', label: 'Audit' },
+  { id: 'session', label: 'Session' },
+  { id: 'signalements', label: 'Signalements' },
 ] as const;

@@ -27,6 +27,7 @@ import type { ShopOrder } from '../../../models/ShopOrder';
 import type { SubscriptionUpgradeRequest } from '../../../models/SubscriptionUpgradeRequest';
 import { SUBSCRIPTION_PLANS, type SubscriptionPlanId } from '../../../content/subscriptionPlans';
 import { isSubscriptionAccessActive } from '../../../utils/subscriptionLogic';
+import { weeklyDeltaSentence, computeWeeklyDeltaPct } from '../../../utils/adminCopilot';
 import {
   canAdminWorkInlineAction,
   confirmAdminWorkApprove,
@@ -40,13 +41,13 @@ const TABS = ADMIN_ABONNEMENTS_TABS;
 type TabId = (typeof TABS)[number]['id'];
 
 const LEGACY_TAB: Record<string, TabId> = {
-  abonnements: 'comptes',
+  abonnements: 'abonnements',
   paiements: 'paiements',
   sponsors: 'sponsors',
   boutique: 'boutique',
   vue: 'vue',
-  demandes: 'demandes',
-  comptes: 'comptes',
+  demandes: 'abonnements',
+  comptes: 'abonnements',
 };
 
 function formatDate(d: Date | null | undefined): string {
@@ -134,6 +135,7 @@ export function AdminFocFinancesScreen({
     sponsorQuoteRequests,
     refresh,
     refreshing,
+    dailySnapshots,
   } = useAdminData();
   const { profile, firebaseUser } = useAuth();
   const [tab, setTab] = useState<TabId>('vue');
@@ -371,8 +373,8 @@ export function AdminFocFinancesScreen({
   return (
     <View style={s.root}>
       <AdminFocPageHeader
-        title="Abonnements & Paiements"
-        subtitle="Grants, Stripe, file d’attente — tout est actionnable ici."
+        title="Business"
+        subtitle="Revenus et abos réels — grants toujours ici. Aucun KPI inventé."
       />
       <AdminFocTabs tabs={[...TABS]} value={tab} onChange={(id) => setTab(id as TabId)} />
 
@@ -393,6 +395,9 @@ export function AdminFocFinancesScreen({
                 <Kpi label="Impayés" value={stats.pastDue} warn={stats.pastDue > 0} />
                 <Kpi label="Paiements club" value={stats.pendingClubPay} warn={stats.pendingClubPay > 0} />
               </View>
+              <Text style={s.deltaLine}>
+                {weeklyDeltaSentence(computeWeeklyDeltaPct(dailySnapshots, 'users'), 'Users')}
+              </Text>
               <Text style={s.sectionTitle}>À traiter</Text>
             </View>
           }
@@ -446,67 +451,7 @@ export function AdminFocFinancesScreen({
           }
           contentContainerStyle={queueItems.length === 0 ? s.emptyContainer : s.list}
         />
-      ) : tab === 'demandes' ? (
-        <FlatList
-          data={subscriptionUpgradeRequests}
-          keyExtractor={(r) => r.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={adminChrome.accent} />
-          }
-          ListHeaderComponent={
-            Platform.OS !== 'ios' ? (
-              <TextInput
-                value={rejectNote}
-                onChangeText={setRejectNote}
-                placeholder="Note admin (refus)"
-                placeholderTextColor={adminChrome.textMuted}
-                style={s.noteInput}
-              />
-            ) : null
-          }
-          renderItem={({ item }) => {
-            const plan = SUBSCRIPTION_PLANS[item.plan_id as SubscriptionPlanId];
-            return (
-              <View style={s.queueCard}>
-                <Text style={s.kind}>{item.billing === 'yearly' ? 'Annuel' : 'Mensuel'}</Text>
-                <Text style={s.rowTitle}>{item.display_name}</Text>
-                <Text style={s.rowSub}>
-                  {item.email} · {plan?.label ?? item.plan_id}
-                  {plan && !plan.pricing.quoteOnly
-                    ? ` · ${plan.pricing.monthlyEur.toFixed(2)} € / mois`
-                    : ''}
-                </Text>
-                {item.message ? <Text style={s.rowSub}>{item.message}</Text> : null}
-                <AdminActionRow
-                  onApprove={() => void approveRequest(item)}
-                  onReject={() => askReject(item)}
-                  approveLoading={busyId === item.id}
-                  rejectLoading={busyId === item.id}
-                  disabled={busyId === item.id}
-                />
-                {onOpenUser ? (
-                  <AdminButton
-                    label="Ouvrir la fiche"
-                    variant="ghost"
-                    size="sm"
-                    onPress={() => onOpenUser(item.user_uid)}
-                  />
-                ) : null}
-              </View>
-            );
-          }}
-          ListEmptyComponent={
-            <View style={s.empty}>
-              <Icon name="star" size={32} color={adminChrome.textMuted} />
-              <Text style={s.emptyTitle}>Aucune demande</Text>
-              <Text style={s.emptySub}>Les demandes de passage Pro s’affichent ici.</Text>
-            </View>
-          }
-          contentContainerStyle={
-            subscriptionUpgradeRequests.length === 0 ? s.emptyContainer : s.list
-          }
-        />
-      ) : tab === 'comptes' ? (
+      ) : tab === 'abonnements' ? (
         <AdminFocAbonnementsScreen onOpenUser={onOpenUser} embedded />
       ) : tab === 'paiements' ? (
         <FlatList
@@ -583,6 +528,12 @@ const s = StyleSheet.create({
     marginLeft: spacing.md,
   },
   vueHead: { gap: spacing.md, marginBottom: spacing.sm },
+  deltaLine: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: adminChrome.textSecondary,
+    paddingHorizontal: spacing.xs,
+  },
   kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   kpi: {
     minWidth: 96,
