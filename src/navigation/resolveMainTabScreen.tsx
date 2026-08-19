@@ -34,6 +34,7 @@ import { SmartTacticsPortalScreen } from '../screens/smartTactics/SmartTacticsPo
 import { PlayerFootballHubScreen } from '../screens/joueur/PlayerFootballHubScreen';
 import { PlayerProgressionScreen } from '../screens/joueur/PlayerProgressionScreen';
 import { PlayerSaisonScreen } from '../screens/joueur/PlayerSaisonScreen';
+import { JoueurPlusHubScreen } from '../screens/joueur/JoueurPlusHubScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -48,6 +49,7 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   messages: MessagesScreen,
   profil: ProfilTabScreen,
   shop: ShopScreen,
+  plus: JoueurPlusHubScreen,
 };
 
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
@@ -85,6 +87,7 @@ const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   feed: PlayerSaisonScreen,
   progression: PlayerProgressionScreen,
   recrutement: AmateurClubScreen,
+  plus: JoueurPlusHubScreen,
 };
 
 const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
@@ -92,6 +95,7 @@ const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   feed: PlayerSaisonScreen,
   progression: PlayerProgressionScreen,
   recrutement: ProPlayerSquadScreen,
+  plus: JoueurPlusHubScreen,
 };
 
 export function resolveMainTabScreen(

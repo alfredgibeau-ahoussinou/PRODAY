@@ -141,6 +141,7 @@ const CTA_BY_TAB: Record<MainTabId, string> = {
   messages: 'Messages',
   profil: 'Mon profil',
   shop: 'Boutique',
+  plus: 'Plus',
 };
 
 /** IA Core — orchestration multi-cerveaux (spec §6, §10). */

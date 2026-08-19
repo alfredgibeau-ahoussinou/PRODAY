@@ -63,7 +63,7 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
   },
   {
     match: (line, role) => line === 'amateur' && role === 'player',
-    primary: ['home', 'matchs', 'feed', 'profil'],
+    primary: ['home', 'matchs', 'feed', 'profil', 'plus'],
     overflow: ['progression', 'recrutement', 'reels', 'messages', 'covoiturage', 'shop', 'famille'],
   },
   {
@@ -87,7 +87,7 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
         line === 'homme' ||
         line === 'woman' ||
         isProProductLine(line)),
-    primary: ['home', 'matchs', 'feed', 'profil'],
+    primary: ['home', 'matchs', 'feed', 'profil', 'plus'],
     overflow: ['progression', 'recrutement', 'reels', 'messages', 'covoiturage', 'shop', 'famille'],
   },
   {

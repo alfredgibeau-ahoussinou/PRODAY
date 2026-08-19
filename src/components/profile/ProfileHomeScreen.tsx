@@ -76,6 +76,7 @@ import {
   resolveJoueurGenderVisual,
 } from '../../utils/joueurExperienceTheme';
 import { resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 
 export interface ProfileHomeScreenProps {
   profile: User;
@@ -723,7 +724,13 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   );
 
   const content = (
-    <View style={[styles.root, inCoachShell && { backgroundColor: coachTokens.bg }]}>
+    <View
+      style={[
+        styles.root,
+        inCoachShell && { backgroundColor: coachTokens.bg },
+        isPlayer && useHubChrome && { backgroundColor: PLAYER_DARK.bg },
+      ]}
+    >
       {identityHeader}
       <View style={useHubChrome ? styles.playerPager : undefined}>{pager}</View>
     </View>

@@ -21,6 +21,7 @@ export const TAB_ICONS: Record<MainTabId, IconName> = {
   messages: 'chat',
   profil: 'person',
   shop: 'bag',
+  plus: 'hamburger',
 };
 
 const AMATEUR_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {

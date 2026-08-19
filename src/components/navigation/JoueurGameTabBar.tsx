@@ -20,6 +20,7 @@ const GAME_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
   matchs: 'trophy',
   feed: 'stats-chart',
   profil: 'person',
+  plus: 'hamburger',
 };
 
 type Props = {
@@ -30,7 +31,7 @@ type Props = {
 };
 
 /**
- * Dock joueur dark premium — 4 onglets max, accent mint néon.
+ * Dock joueur dark premium — 5 onglets, accent mint néon.
  */
 export function JoueurGameTabBar({
   activeTab,
@@ -181,9 +182,9 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   slotLabel: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
   activeLine: {

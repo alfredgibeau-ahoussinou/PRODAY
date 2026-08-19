@@ -12,14 +12,14 @@ describe('player hub navigation', () => {
       'home',
       'matchs',
       'feed',
-      'progression',
       'profil',
+      'plus',
     ]);
   });
 
   it('met équipe et secondaires en overflow amateur', () => {
     expect(AMATEUR_PLAYER_OVERFLOW_TABS).toEqual(
-      expect.arrayContaining(['recrutement', 'reels', 'messages', 'covoiturage', 'shop']),
+      expect.arrayContaining(['progression', 'recrutement', 'reels', 'messages', 'covoiturage', 'shop']),
     );
   });
 
@@ -28,8 +28,8 @@ describe('player hub navigation', () => {
       'home',
       'matchs',
       'feed',
-      'progression',
       'profil',
+      'plus',
     ]);
     expect(PRO_PLAYER_OVERFLOW_TABS).toContain('recrutement');
   });

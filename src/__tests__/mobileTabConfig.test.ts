@@ -10,9 +10,9 @@ describe('mobileTabConfig', () => {
     expect(rail.right).toContain('profil');
   });
 
-  it('canonise joueur homme vers dock 4 onglets (ACCUEIL / MATCHS / SAISON / PROFIL)', () => {
+  it('canonise joueur homme vers dock 5 onglets (ACCUEIL / MATCHS / SAISON / PROFIL / PLUS)', () => {
     const rail = getMobileRailLayout('homme', 'player');
-    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil', 'plus']);
     expect(rail.overflow).toEqual(
       expect.arrayContaining(['progression', 'recrutement', 'covoiturage', 'reels', 'messages', 'shop']),
     );
@@ -29,9 +29,9 @@ describe('mobileTabConfig', () => {
     expect(rail.right).toEqual([]);
   });
 
-  it('affiche le menu amateur joueur en dock 4 onglets', () => {
+  it('affiche le menu amateur joueur en dock 5 onglets', () => {
     const rail = getMobileRailLayout('amateur', 'player');
-    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil', 'plus']);
     expect(rail.overflow).toEqual(
       expect.arrayContaining(['progression', 'recrutement', 'covoiturage', 'reels', 'messages', 'shop']),
     );
@@ -87,9 +87,9 @@ describe('mobileTabConfig', () => {
     ]);
   });
 
-  it('affiche le menu pro joueur en dock 4 onglets', () => {
+  it('affiche le menu pro joueur en dock 5 onglets', () => {
     const rail = getMobileRailLayout('pro', 'player');
-    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil', 'plus']);
     expect(rail.overflow).toEqual(
       expect.arrayContaining(['progression', 'recrutement', 'covoiturage', 'reels', 'messages', 'shop']),
     );
@@ -106,5 +106,6 @@ describe('joueurGameMenu labels', () => {
     expect(getJoueurGameTabLabel('feed', 'adult')).toBe('SAISON');
     expect(getJoueurGameTabLabel('progression', 'teen')).toBe('PROGRESS');
     expect(getJoueurGameTabLabel('profil', 'adult')).toBe('PROFIL');
+    expect(getJoueurGameTabLabel('plus', 'adult')).toBe('PLUS');
   });
 });

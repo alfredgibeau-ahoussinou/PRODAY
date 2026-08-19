@@ -11,7 +11,8 @@ export type MainTabId =
   | 'famille'
   | 'messages'
   | 'profil'
-  | 'shop';
+  | 'shop'
+  | 'plus';
 
 export const MAIN_TAB_ITEMS: {
   id: MainTabId;
@@ -30,4 +31,5 @@ export const MAIN_TAB_ITEMS: {
   { id: 'messages', label: 'Messages', icon: 'chat' },
   { id: 'profil', label: 'Profil', icon: 'user' },
   { id: 'shop', label: 'Shop', icon: 'bag' },
+  { id: 'plus', label: 'Plus', icon: 'hamburger' },
 ];

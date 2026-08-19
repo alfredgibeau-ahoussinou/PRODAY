@@ -36,6 +36,8 @@ export function getJoueurGameTabLabel(
       return youth ? 'CLIPS' : 'CLIPS';
     case 'famille':
       return 'FAMILLE';
+    case 'plus':
+      return youth ? 'PLUS' : teen ? 'MENU' : 'PLUS';
     default: {
       const _exhaustive: never = tab;
       return String(_exhaustive);

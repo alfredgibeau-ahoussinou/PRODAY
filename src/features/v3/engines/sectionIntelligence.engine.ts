@@ -246,6 +246,7 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
     messages: 'Réseau',
     profil: 'Identité',
     shop: 'Boutique',
+    plus: 'Menu',
   };
 
   return {

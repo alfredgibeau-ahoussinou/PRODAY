@@ -1,19 +1,20 @@
 import type { MainTabId } from '../mainTabConfig';
 
 /**
- * Pôle joueur — 5 onglets : Accueil · Matchs · Performance · Progression · Profil.
- * Secondaires (équipe, reels, messages, covoit, shop, mercato) via overflow / hubs.
+ * Pôle joueur — 5 onglets dock : Accueil · Matchs · Saison · Profil · Plus.
+ * Secondaires (équipe, reels, messages, covoit, shop…) via hub Plus.
  */
 
 export const AMATEUR_PLAYER_SHELL_TABS: MainTabId[] = [
   'home',
   'matchs',
   'feed',
-  'progression',
   'profil',
+  'plus',
 ];
 
 export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'progression',
   'recrutement',
   'reels',
   'messages',
@@ -73,11 +74,12 @@ export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
   'home',
   'matchs',
   'feed',
-  'progression',
   'profil',
+  'plus',
 ];
 
 export const PRO_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'progression',
   'recrutement',
   'reels',
   'messages',

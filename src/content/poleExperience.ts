@@ -371,6 +371,7 @@ function labelsFallback(tab: MainTabId): string {
     famille: 'Famille',
     messages: 'Messages',
     profil: 'Profil',
+    plus: 'Plus',
   };
   return labels[tab];
 }

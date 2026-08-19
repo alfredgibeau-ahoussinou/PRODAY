@@ -10,6 +10,7 @@ import { FeedTabScreen } from '../screens/FeedTabScreen';
 import { ReelsScreen } from '../screens/ReelsScreen';
 import { CarpoolScreen } from '../screens/CarpoolScreen';
 import { ShopScreen } from '../screens/ShopScreen';
+import { JoueurPlusHubScreen } from '../screens/joueur/JoueurPlusHubScreen';
 import { RetiredRoleScreen } from '../screens/RetiredRoleScreen';
 import { MAIN_TAB_ITEMS, type MainTabId } from './mainTabConfig';
 
@@ -28,6 +29,7 @@ const TAB_SCREENS: Record<MainTabId, React.ComponentType> = {
   messages: MessagesScreen,
   profil: ProfilTabScreen,
   shop: ShopScreen,
+  plus: JoueurPlusHubScreen,
 };
 
 export const MAIN_TABS: {

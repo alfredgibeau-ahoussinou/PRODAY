@@ -55,6 +55,9 @@ jest.mock('../screens/joueur/PlayerSaisonScreen', () => ({
 jest.mock('../screens/joueur/PlayerProgressionScreen', () => ({
   PlayerProgressionScreen: 'PlayerProgressionScreen',
 }));
+jest.mock('../screens/joueur/JoueurPlusHubScreen', () => ({
+  JoueurPlusHubScreen: 'JoueurPlusHubScreen',
+}));
 jest.mock('../screens/smartTactics/SmartTacticsPortalScreen', () => ({
   SmartTacticsPortalScreen: 'SmartTacticsPortalScreen',
 }));
@@ -84,6 +87,7 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('recrutement', 'player', 'pro')).toBe('ProPlayerSquadScreen');
     expect(resolveMainTabScreen('reels', 'player', 'pro')).toBe('LazyReelsScreen');
     expect(resolveMainTabScreen('feed', 'player', 'pro')).toBe('PlayerSaisonScreen');
+    expect(resolveMainTabScreen('plus', 'player', 'pro')).toBe('JoueurPlusHubScreen');
     expect(resolveMainTabScreen('matchs', 'player', 'pro')).toBe('MatchsScreen');
     expect(resolveMainTabScreen('matchs', 'coach', 'pro')).toBe('MatchsScreen');
   });
