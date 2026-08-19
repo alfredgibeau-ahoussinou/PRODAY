@@ -17,11 +17,9 @@ import {
   PlayerMatchCard,
   PlayerStatCard,
   PlayerChallengeCard,
-  PlayerAIRecommendation,
   PlayerProgressBar,
   JoueurCard,
 } from '../../components/joueur';
-import { JoueurActionButton } from '../../components/joueur/JoueurActionButton';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PushScreenTransition } from '../../components/motion';
 import { TrainHubScreen } from '../training/TrainHubScreen';
@@ -55,7 +53,6 @@ export function PlayerFootballHubScreen() {
     clearPendingDashboard();
   }, [pendingDashboardView, clearPendingDashboard, profile]);
 
-  const identity = session?.identity;
   const accent = PLAYER_DARK.accent;
   const progressApi = useJoueurProgress();
 
@@ -141,27 +138,17 @@ export function PlayerFootballHubScreen() {
                 photoUrl={shieldCard.photoUrl}
                 clubName={shieldCard.clubName}
                 stats={shieldCard.stats}
-                width={240}
+                width={280}
                 onPress={() => nav.setActiveTab('profil')}
               />
-            </View>
-          ) : null}
-
-          <View style={styles.heroRow}>
-            <View style={styles.heroCopy}>
-              <ProDayText variant="caption" style={styles.muted}>
-                {hub.clubName ?? 'Sans club pour l’instant'}
-              </ProDayText>
-              <ProDayText variant="section" style={styles.heroTitle}>
-                {identity?.title ?? 'Ton parcours'}
-              </ProDayText>
               <PlayerProgressBar
                 value={hub.profileCompletion}
                 label={`Profil ${hub.profileCompletion}%`}
                 accent={accent}
+                style={styles.profileBar}
               />
             </View>
-          </View>
+          ) : null}
 
           <JoueurSectionHeader title="Prochain événement" />
           {hub.loading ? (
@@ -225,22 +212,12 @@ export function PlayerFootballHubScreen() {
             />
           </View>
 
-          <PlayerAIRecommendation
-            title="Mon Coach IA"
-            body="Entraînement, tactique, préparation match — avec tes vraies données."
-            onPress={() => nav.openDashboard('tactics_coach')}
-          />
-
           <JoueurSectionHeader title="Raccourcis" />
           <View style={styles.actions}>
             <JoueurCard variant="list" title="Matchs" subtitle="Calendrier & convocations" onPress={() => nav.setActiveTab('matchs')} />
-            <JoueurCard variant="list" title="Saison" subtitle="Stats & progression" onPress={() => nav.setActiveTab('feed')} />
-            <JoueurCard variant="list" title="Équipe" subtitle="Club & groupe" onPress={() => nav.setActiveTab('recrutement')} />
             <JoueurCard variant="list" title="Messages" subtitle="Chat équipe" onPress={() => nav.setActiveTab('messages')} />
-            <JoueurCard variant="list" title="Reels" subtitle="Clips communauté" onPress={() => nav.setActiveTab('reels')} />
-            <JoueurCard variant="list" title="Covoiturage" subtitle="Trajets équipe" onPress={() => nav.setActiveTab('covoiturage')} />
-            <JoueurCard variant="list" title="Boutique" subtitle="Shop ProDay" onPress={() => nav.setActiveTab('shop')} />
-            <JoueurActionButton label="Entraînement IA" variant="secondary" onPress={() => nav.openDashboard('train_ai')} />
+            <JoueurCard variant="list" title="Entraînement IA" subtitle="Programme personnalisé" onPress={() => nav.openDashboard('train_ai')} />
+            <JoueurCard variant="list" title="Équipe" subtitle="Club & groupe" onPress={() => nav.setActiveTab('recrutement')} />
           </View>
         </ScrollView>
       </JoueurScreenChrome>
@@ -267,10 +244,8 @@ const styles = StyleSheet.create({
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: PLAYER_DARK.bg },
   scroll: { flex: 1 },
   pad: { padding: spacing.lg, gap: spacing.md },
-  shieldWrap: { alignItems: 'center', marginBottom: spacing.sm },
-  heroRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
-  heroCopy: { flex: 1, gap: spacing.xs },
-  heroTitle: { color: PLAYER_DARK.text },
+  shieldWrap: { alignItems: 'center', marginBottom: spacing.sm, gap: spacing.sm, width: '100%' },
+  profileBar: { width: 280, opacity: 0.85 },
   muted: { color: PLAYER_DARK.textMuted },
   inlineLoader: { marginVertical: spacing.md },
   empty: { color: PLAYER_DARK.textMuted, paddingVertical: spacing.sm },

@@ -74,6 +74,7 @@ import { COACH_SITE } from './src/content/coachPageIdentity';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { PoleHelpChatbot } from './src/components/help/PoleHelpChatbot';
 import { ProDayAiChat } from './src/components/ai/ProDayAiChat';
+import { isJoueurPoleProductLine } from './src/utils/joueurPoleAccess';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
 import { isPlatformAdminEmail } from './src/config/admin';
 import type {
@@ -431,6 +432,7 @@ function AppShell() {
   const isClubShell = sessionProfile?.role === 'club';
   const isCoachShell = sessionProfile?.role === 'coach';
   const usesRoleShell = isClubShell || isCoachShell;
+  const joueurPoleActive = isJoueurPoleProductLine(productLine);
   const shellBackground = isSponsor
     ? SPONSOR_THEME.background
     : isCoachShell
@@ -570,8 +572,8 @@ function AppShell() {
           {profile ? <ProdayNotificationBridge /> : null}
           {profile ? <ProdayBrainBridge /> : null}
           {profile ? <ProdayCalendarSyncBridge /> : null}
-          {profile ? <PoleHelpChatbot /> : null}
-          {profile ? <ProDayAiChat /> : null}
+          {profile && !joueurPoleActive ? <PoleHelpChatbot /> : null}
+          {profile && !joueurPoleActive ? <ProDayAiChat /> : null}
           <View style={styles.screen}>
             <JoueurGateGuard>
               {isClubShell ? (

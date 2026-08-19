@@ -28,8 +28,8 @@ export type PlayerShieldCardProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-function positionShort(pos: string | undefined | null): string {
-  if (!pos) return '—';
+function positionShort(pos: string | undefined | null): string | null {
+  if (!pos?.trim()) return null;
   const p = pos
     .toLowerCase()
     .normalize('NFD')
@@ -145,12 +145,12 @@ export function PlayerShieldCard({
   clubName,
   clubLogoUrl,
   stats,
-  width = 220,
+  width = 280,
   onPress,
   style,
 }: PlayerShieldCardProps) {
-  const height = Math.round(width * 1.42);
-  const pos = positionShort(position ?? undefined);
+  const height = Math.round(width * 1.5);
+  const pos = positionShort(position);
   const goals = stats?.goals ?? null;
   const assists = stats?.assists ?? null;
   const ga =
@@ -186,17 +186,24 @@ export function PlayerShieldCard({
             {photoUrl ? (
               <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
             ) : (
-              <View style={[styles.photo, styles.photoPh]}>
+              <LinearGradient
+                colors={[PLAYER_DARK.accent, '#0D9488', '#121218']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.photo, styles.photoPh]}
+              >
                 <ProDayText variant="title" style={styles.photoLetter}>
                   {displayName.charAt(0).toUpperCase()}
                 </ProDayText>
-              </View>
+              </LinearGradient>
             )}
-            <View style={styles.posBadge}>
-              <ProDayText variant="caption" style={styles.posText}>
-                {pos}
-              </ProDayText>
-            </View>
+            {pos ? (
+              <View style={styles.posBadge}>
+                <ProDayText variant="caption" style={styles.posText}>
+                  {pos}
+                </ProDayText>
+              </View>
+            ) : null}
           </View>
 
           <ProDayText variant="section" style={styles.name} numberOfLines={1}>
@@ -311,7 +318,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.xl,
     alignItems: 'center',
     gap: spacing.sm,
   },
@@ -332,7 +339,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   photoZone: {
-    width: '72%',
+    width: '68%',
     aspectRatio: 0.85,
     borderRadius: 16,
     overflow: 'hidden',
@@ -400,6 +407,7 @@ const styles = StyleSheet.create({
   },
   ratingWrap: {
     marginTop: spacing.xs,
+    marginBottom: 2,
     alignItems: 'center',
   },
 });
