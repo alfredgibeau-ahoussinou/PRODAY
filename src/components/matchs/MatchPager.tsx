@@ -46,7 +46,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
 }) => {
   const { colors } = useAppTheme();
   const skin = useMatchSkinTokens();
-  const accent = gameMode && skin.joueurSkin ? skin.accent : colors.accent;
+  const accent = skin.joueurSkin || skin.coachSkin ? skin.accent : colors.accent;
   const styles = useMemo(() => createStyles(accent, skin), [accent, skin]);
   const { width: pageWidth } = useWindowDimensions();
   const [pagerHeight, setPagerHeight] = useState(0);
@@ -193,6 +193,8 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
               scrollX={scrollX}
               snap={pageWidth}
               onPress={() => goToIndex(i)}
+              activeColor={skin.joueurSkin ? skin.accent : undefined}
+              inactiveColor={skin.joueurSkin ? skin.border : undefined}
             />
           ))}
         </View>

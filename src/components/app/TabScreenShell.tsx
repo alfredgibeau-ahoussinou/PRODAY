@@ -13,6 +13,7 @@ import {
 } from '../player/joueurPortalUi';
 import { JoueurWorldScene } from '../../features/joueur/JoueurWorldScene';
 import { JoueurParticleField } from '../../features/joueur/JoueurGameFx';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { ProDayText } from '../ui/ProDayText';
 import { spacing } from '../../theme/designTokens';
@@ -54,6 +55,7 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
 }) => {
   const session = useJoueurSession();
   const tabBack = useJoueurSecondaryTabBack();
+  const joueurTheme = useJoueurTheme();
   const useJoueur =
     joueurUniverse === true ||
     (joueurUniverse !== false &&
@@ -61,31 +63,33 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
 
   if (useJoueur && session) {
     const { identity, universeLabel } = session;
+    const accent = joueurTheme.accent;
+    const accentBright = joueurTheme.accentBright;
     const headerLeft =
       left ?? (tabBack.showBack ? <ScreenBackButton onPress={tabBack.onBack} /> : null);
 
     return (
       <ProDayScreenCanvas flat immersive={false}>
         <JoueurIdentityProvider identity={identity}>
-          <View style={[styles.root, { backgroundColor: PLAYER_DARK.bg }]}>
+          <View style={[styles.root, { backgroundColor: joueurTheme.shellBg }]}>
             <LinearGradient
               colors={[PLAYER_DARK.bgElevated, PLAYER_DARK.bg, PLAYER_DARK.bg]}
               locations={[0, 0.45, 1]}
               style={StyleSheet.absoluteFill}
               pointerEvents="none"
             />
-            <JoueurParticleField accent={identity.accent} density={identity.density} />
-            <View style={[styles.accentBar, { backgroundColor: identity.accent }]} />
+            <JoueurParticleField accent={accent} density={identity.density} />
+            <View style={[styles.accentBar, { backgroundColor: accent }]} />
             {!hideHeader ? (
               <View style={styles.headPad}>
                 {headerLeft ? <View style={styles.backRow}>{headerLeft}</View> : null}
-                <View style={[styles.hudPlate, { borderColor: identity.accent }]}>
-                  <JoueurHudCorners color={identity.accent} size={12} thickness={2} />
+                <View style={[styles.hudPlate, { borderColor: accent }]}>
+                  <JoueurHudCorners color={accent} size={12} thickness={2} />
                   <View style={styles.hudTop}>
                     <View style={{ flex: 1, gap: 4 }}>
                       <ProDayText
                         variant="caption"
-                        style={[styles.kicker, { color: identity.accent }]}
+                        style={[styles.kicker, { color: accent }]}
                       >
                         ▶ {(caption ?? universeLabel.short).toUpperCase()} ·{' '}
                         {identity.hudLabel}

@@ -74,10 +74,9 @@ function buildMatchChapters(t: TranslateFn) {
   }[];
 }
 
-/** Chapitres Match Center visibles pôle joueur (Calendrier · Convocs · Matchs · Stats). */
+/** Chapitres Match Center visibles pôle joueur (Calendrier · Convocs · En direct · Amicaux). */
 export function getJoueurMatchChapters(t: TranslateFn) {
-  const allowed = new Set<MatchChapterId>(JOUEUR_MATCH_CHAPTER_IDS);
-  return buildMatchChapters(t).filter((ch) => allowed.has(ch.id));
+  return filterJoueurMatchChapters(buildMatchChapters(t));
 }
 
 export function getCalendarKindFilters(t: TranslateFn) {
