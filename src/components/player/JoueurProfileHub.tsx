@@ -183,7 +183,6 @@ export const JoueurProfileHub: React.FC<Props> = ({
   const stars = progressApi?.progress.stars ?? 0;
   const streak = progressApi?.progress.streakDays ?? 0;
   const clubLabel = profile.profile.club_id ? 'Club lié' : 'Sans club';
-  const position = profile.profile.position || '—';
   const cardWidth = resolvePlayerShieldWidth();
 
   const press = (run: () => void) => {
@@ -196,12 +195,6 @@ export const JoueurProfileHub: React.FC<Props> = ({
       <View style={styles.root}>
         <View style={styles.heroBlock}>
           <PlayerCardReveal card={card} width={cardWidth} onPress={onEdit} />
-          <ProDayText variant="title" numberOfLines={2} style={styles.displayName}>
-            {profile.display_name}
-          </ProDayText>
-          <ProDayText variant="caption" style={styles.meta} numberOfLines={2}>
-            {position} · {clubLabel}
-          </ProDayText>
           <View style={styles.socialRow}>
             <SocialStat label="Matchs" value={String(matchCount)} />
             <View style={styles.socialDivider} />
@@ -212,24 +205,6 @@ export const JoueurProfileHub: React.FC<Props> = ({
             <SocialStat label="Série" value={`${streak}j`} />
           </View>
         </View>
-
-        <SectionCard kicker="Carte" title="Ta carte ProDay" actionLabel="Voir" onAction={() => press(() => nav.setActiveTab('feed'))}>
-          <View style={styles.cardPreview}>
-            <PlayerCardReveal card={card} width={220} />
-          </View>
-          <View style={styles.chipRow}>
-            <View style={styles.chip}>
-              <ProDayText variant="caption" style={styles.chipText}>
-                {stars} étoiles
-              </ProDayText>
-            </View>
-            <View style={styles.chip}>
-              <ProDayText variant="caption" style={styles.chipText}>
-                Profil {completion.percent}%
-              </ProDayText>
-            </View>
-          </View>
-        </SectionCard>
 
         <SectionCard kicker="Stats" title="Performance" actionLabel="Saison" onAction={() => press(() => nav.setActiveTab('feed'))}>
           <View style={styles.statsGrid}>
@@ -304,6 +279,24 @@ export const JoueurProfileHub: React.FC<Props> = ({
             </ProDayText>
           </PressableSpring>
         ) : null}
+
+        <View style={styles.metaChips}>
+          <View style={styles.chip}>
+            <ProDayText variant="caption" style={styles.chipText}>
+              {stars} étoiles
+            </ProDayText>
+          </View>
+          <View style={styles.chip}>
+            <ProDayText variant="caption" style={styles.chipText}>
+              Profil {completion.percent}%
+            </ProDayText>
+          </View>
+          <View style={styles.chip}>
+            <ProDayText variant="caption" style={styles.chipText}>
+              {clubLabel}
+            </ProDayText>
+          </View>
+        </View>
       </View>
     </JoueurIdentityProvider>
   );
@@ -312,26 +305,15 @@ export const JoueurProfileHub: React.FC<Props> = ({
 const styles = StyleSheet.create({
   root: {
     gap: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.xl + spacing.lg,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     backgroundColor: PLAYER_DARK.bg,
   },
   heroBlock: {
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingTop: spacing.xs,
-  },
-  displayName: {
-    color: PLAYER_DARK.text,
-    fontWeight: '800',
-    fontSize: 28,
-    letterSpacing: -0.6,
-    marginTop: spacing.xs,
-  },
-  meta: {
-    color: PLAYER_DARK.textMuted,
-    fontWeight: '600',
   },
   socialRow: {
     flexDirection: 'row',
@@ -499,5 +481,12 @@ const styles = StyleSheet.create({
     color: PLAYER_DARK.bg,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+  metaChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
   },
 });

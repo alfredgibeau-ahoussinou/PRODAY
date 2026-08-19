@@ -149,7 +149,7 @@ export function PlayerShieldCard({
   onPress,
   style,
 }: PlayerShieldCardProps) {
-  const height = Math.max(Math.round(width * 1.48), Math.round(width * 1.5));
+  const height = Math.round(width * 1.62);
   const pos = positionShort(position);
   const goals = stats?.goals ?? null;
   const assists = stats?.assists ?? null;
@@ -230,7 +230,7 @@ export function PlayerShieldCard({
           </View>
 
           <View style={styles.ratingWrap}>
-            <RatingCircle rating={stats?.rating} size={Math.round(width * 0.34)} />
+            <RatingCircle rating={stats?.rating} size={Math.round(width * 0.32)} />
           </View>
         </LinearGradient>
       </View>
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    paddingBottom: spacing.xl + 4,
+    paddingBottom: spacing.xl + 14,
     alignItems: 'center',
     gap: spacing.sm,
   },
@@ -341,8 +341,8 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   photoZone: {
-    width: '68%',
-    aspectRatio: 0.85,
+    width: '62%',
+    aspectRatio: 0.88,
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
@@ -409,7 +409,8 @@ const styles = StyleSheet.create({
   },
   ratingWrap: {
     marginTop: spacing.xs,
-    marginBottom: 2,
+    marginBottom: spacing.sm,
     alignItems: 'center',
+    paddingBottom: 2,
   },
 });

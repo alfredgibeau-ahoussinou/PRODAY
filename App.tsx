@@ -20,6 +20,7 @@ import {
   resolveMainTabScreen,
   shouldInjectShopTab,
 } from './src/navigation/resolveMainTabScreen';
+import { getMobileRailLayout } from './src/navigation/mobileTabConfig';
 import {
   getGuestVisibleTabs,
   isGuestTabAllowed,
@@ -28,6 +29,7 @@ import {
 import {
   TabNavigationProvider,
   type AuthIntent,
+  type SetActiveTabOptions,
 } from './src/context/TabNavigationContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { LocaleProvider } from './src/context/LocaleContext';
@@ -228,6 +230,7 @@ function AppShell() {
   const [pendingDashboardView, setPendingDashboardView] = useState<DashboardDeepLink | null>(
     null
   );
+  const [returnTab, setReturnTab] = useState<MainTabId | null>(null);
   const { count: unreadCount, refresh: refreshUnread } = useUnreadMessageCount();
   const screenTime = useParentalScreenTime(profile);
   useParentalActivityJournal(profile, activeTab);
@@ -252,6 +255,11 @@ function AppShell() {
     if (visibleTabs.includes('shop')) return visibleTabs;
     return [...visibleTabs, 'shop'];
   }, [visibleTabs, sessionProfile?.role, productLine, isEnabled]);
+
+  const primaryDockTabs = useMemo(() => {
+    const rail = getMobileRailLayout(productLine, sessionProfile?.role, screenTabs);
+    return new Set(rail.flat ?? []);
+  }, [productLine, sessionProfile?.role, screenTabs]);
 
   useEffect(() => {
     if (activeTab === 'messages') refreshUnread();
@@ -409,9 +417,21 @@ function AppShell() {
     );
   }
 
-  const handleTabPress = (tab: MainTabId) => {
+  const handleTabPress = (tab: MainTabId, options?: SetActiveTabOptions) => {
     if (tab !== activeTab) prodayHaptics.tabSwitch();
+    if (options?.returnTo) {
+      setReturnTab(options.returnTo);
+    } else if (primaryDockTabs.has(tab)) {
+      setReturnTab(null);
+    }
     setActiveTab(isGuest ? resolveGuestTab(tab, productLine) : tab);
+  };
+
+  const goBackTab = () => {
+    if (!returnTab) return;
+    const target = returnTab;
+    setReturnTab(null);
+    setActiveTab(isGuest ? resolveGuestTab(target, productLine) : target);
   };
 
   const openChat = (threadId: string) => {
@@ -460,6 +480,8 @@ function AppShell() {
         value={{
           activeTab,
           setActiveTab: handleTabPress,
+          returnTab,
+          goBackTab,
           pendingChatThreadId,
           openChat,
           clearPendingChat: () => setPendingChatThreadId(null),
@@ -543,10 +565,14 @@ function AppShell() {
               return;
             }
             setPendingDashboardView(view);
-            handleTabPress('home');
+            handleTabPress(
+              'home',
+              activeTab === 'plus' ? { returnTo: 'plus' } : undefined,
+            );
           },
           clearPendingDashboard: () => setPendingDashboardView(null),
-          openShop: () => handleTabPress('shop'),
+          openShop: () =>
+            handleTabPress('shop', activeTab === 'plus' ? { returnTo: 'plus' } : undefined),
           pendingCarpoolLink,
           openCarpool: (link) => {
             if (isGuest) {
@@ -600,9 +626,9 @@ function AppShell() {
             />
           )}
         </SafeAreaView>
+        <JoueurLevelUpOverlay />
+        <JoueurShellExtras />
       </TabNavigationProvider>
-      <JoueurLevelUpOverlay />
-      <JoueurShellExtras />
     </AppSpaceProvider>
     </JoueurProgressProvider>
     </JoueurSessionProvider>

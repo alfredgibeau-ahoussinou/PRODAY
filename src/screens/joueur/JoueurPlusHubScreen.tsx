@@ -47,7 +47,7 @@ export function JoueurPlusHubScreen() {
   const runItem = (item: JoueurPlusMenuItem) => {
     const { action } = item;
     if (action.kind === 'tab') {
-      nav.setActiveTab(action.tab);
+      nav.setActiveTab(action.tab, { returnTo: 'plus' });
       return;
     }
     if (action.kind === 'dashboard') {

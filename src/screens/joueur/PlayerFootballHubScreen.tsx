@@ -127,7 +127,7 @@ export function PlayerFootballHubScreen() {
       <JoueurScreenChrome variant="page" kicker="Parcours" title={`Bonjour ${hub.firstName}`}>
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[styles.pad, screenScrollPad(spacing.md)]}
+          contentContainerStyle={[styles.pad, screenScrollPad(spacing.xl + spacing.md)]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />

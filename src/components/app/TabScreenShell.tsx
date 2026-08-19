@@ -16,6 +16,8 @@ import { JoueurParticleField } from '../../features/joueur/JoueurGameFx';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { ProDayText } from '../ui/ProDayText';
 import { spacing } from '../../theme/designTokens';
+import { ScreenBackButton } from '../ui/ScreenBackButton';
+import { useJoueurSecondaryTabBack } from '../../hooks/useJoueurSecondaryTabBack';
 
 export type TabScreenShellProps = {
   caption?: string;
@@ -48,6 +50,7 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
   children,
 }) => {
   const session = useJoueurSession();
+  const tabBack = useJoueurSecondaryTabBack();
   const useJoueur =
     joueurUniverse === true ||
     (joueurUniverse !== false &&
@@ -55,6 +58,8 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
 
   if (useJoueur && session) {
     const { identity, universeLabel } = session;
+    const headerLeft =
+      left ?? (tabBack.showBack ? <ScreenBackButton onPress={tabBack.onBack} /> : null);
 
     return (
       <ProDayScreenCanvas flat immersive={false}>
@@ -70,6 +75,7 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
             <View style={[styles.accentBar, { backgroundColor: identity.accent }]} />
             {!hideHeader ? (
               <View style={styles.headPad}>
+                {headerLeft ? <View style={styles.backRow}>{headerLeft}</View> : null}
                 <View style={[styles.hudPlate, { borderColor: identity.accent }]}>
                   <JoueurHudCorners color={identity.accent} size={12} thickness={2} />
                   <View style={styles.hudTop}>
@@ -154,6 +160,10 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
     zIndex: 2,
+  },
+  backRow: {
+    marginBottom: spacing.xs,
+    alignSelf: 'flex-start',
   },
   hudPlate: {
     borderWidth: 1.5,

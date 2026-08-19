@@ -95,6 +95,8 @@ export const SupporterAppShell: React.FC = () => {
       value={{
         activeTab,
         setActiveTab: handleTabPress,
+        returnTab: null,
+        goBackTab: () => undefined,
         pendingChatThreadId,
         openChat,
         clearPendingChat: () => setPendingChatThreadId(null),

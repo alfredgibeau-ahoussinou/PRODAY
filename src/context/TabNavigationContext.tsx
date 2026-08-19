@@ -13,9 +13,17 @@ import type {
   ProfileDeepLink,
 } from '../utils/navigationDeepLink';
 
+export type SetActiveTabOptions = {
+  /** Onglet à restaurer via goBackTab (ex. Plus → Messages). */
+  returnTo?: MainTabId;
+};
+
 export interface TabNavigationContextValue {
   activeTab: MainTabId;
-  setActiveTab: (tab: MainTabId) => void;
+  setActiveTab: (tab: MainTabId, options?: SetActiveTabOptions) => void;
+  /** Onglet mémorisé pour le bouton retour sur les écrans secondaires. */
+  returnTab: MainTabId | null;
+  goBackTab: () => void;
 
   pendingChatThreadId: string | null;
   openChat: (threadId: string) => void;

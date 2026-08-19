@@ -39,6 +39,8 @@ export function useSponsorTabNavigationBridge({
     () => ({
       activeTab: 'home',
       setActiveTab: (tab: MainTabId) => navigate(mapMainTabToSponsor(tab)),
+      returnTab: null,
+      goBackTab: noop,
       pendingChatThreadId,
       openChat,
       clearPendingChat,

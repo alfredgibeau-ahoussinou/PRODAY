@@ -32,8 +32,13 @@ export type CarpoolDeepLink = {
   eventId?: string;
 };
 
+export type SetActiveTabOptions = {
+  returnTo?: MainTabId;
+};
+
 export interface TabNavigationActions {
-  setActiveTab: (tab: MainTabId) => void;
+  setActiveTab: (tab: MainTabId, options?: SetActiveTabOptions) => void;
+  goBackTab: () => void;
   openTeamEvent: (eventId: string) => void;
   openMatchs: (opts?: MatchsDeepLink) => void;
   openMercato: (view?: MercatoDeepLink) => void;

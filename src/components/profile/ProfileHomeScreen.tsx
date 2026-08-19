@@ -199,6 +199,20 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     props.profile.profile.birth_date,
   ]);
   const joueurAccent = joueurIdentity?.accent ?? colors.accent;
+  const joueurPagerColors = useMemo(
+    () =>
+      ({
+        ...appColors,
+        background: PLAYER_DARK.bg,
+        surface: PLAYER_DARK.surfaceRaised,
+        border: PLAYER_DARK.border,
+        text: PLAYER_DARK.text,
+        textMuted: PLAYER_DARK.textMuted,
+        accent: PLAYER_DARK.accent,
+        brandInverse: PLAYER_DARK.bg,
+      }) as AppColors,
+    [appColors],
+  );
   const { activities, loading: activitiesLoading, refresh: refreshActivities } =
     usePlayerActivities(isPlayer ? props.profile.uid : undefined);
   const career = useCareerProgression(isPlayer ? props.profile : null, {
@@ -713,9 +727,15 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         activeChapter={chapter}
         onChapterChange={setChapter}
         showFooter={false}
-        variant={useHubChrome ? 'rail' : 'pills'}
+        variant={useHubChrome ? (isPlayer ? 'pills' : 'rail') : 'pills'}
         compact={useHubChrome}
-        colors={inCoachShell ? colors : undefined}
+        colors={
+          isPlayer && useHubChrome
+            ? joueurPagerColors
+            : inCoachShell
+              ? colors
+              : undefined
+        }
         badges={{
           reglages:
             props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,
@@ -870,7 +890,7 @@ function createStyles(_c: AppColors) {
     managementPad: {
       paddingHorizontal: spacing.md,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.xl + 24,
+      paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
       gap: spacing.xs,
     },
     managementScreen: {

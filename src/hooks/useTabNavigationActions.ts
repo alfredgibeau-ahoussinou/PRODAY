@@ -9,6 +9,7 @@ export function useTabNavigationActions(): TabNavigationActions {
   return useMemo(
     () => ({
       setActiveTab: nav.setActiveTab,
+      goBackTab: nav.goBackTab,
       openTeamEvent: nav.openTeamEvent,
       openMatchs: (opts) => {
         nav.setActiveTab('matchs');
