@@ -115,7 +115,7 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
             onOpenMercato={props.onOpenMercato}
             kineLabelFor={props.kineLabelFor}
             isWoman={props.isWoman}
-            variant={props.variant}
+            variant={joueurLive && props.variant !== 'coach' ? 'joueur' : props.variant}
           />
         ),
       },

@@ -49,7 +49,7 @@ export const CarpoolScreen: React.FC = () => {
 
   if (!profile) {
     return (
-      <CarpoolUiProvider coachShell={coachShell}>
+      <CarpoolUiProvider coachShell={coachShell} joueurShell={joueurLive && !coachShell}>
         <View style={{ flex: 1, backgroundColor: screenBg }}>
           <CarpoolGuestPrompt
             onLogin={() => openAuth('login')}

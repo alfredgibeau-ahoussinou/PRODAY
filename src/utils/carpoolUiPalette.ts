@@ -1,4 +1,5 @@
 import { CARPOOL_SITE } from '../content/carpoolSite';
+import { JOUEUR_CARPOOL } from '../theme/joueurDesignSystem';
 import type { CoachThemeTokens } from './coachTeamTheme';
 
 export type CarpoolUiPalette = {
@@ -30,6 +31,23 @@ export function carpoolPaletteDefault(): CarpoolUiPalette {
     lane: CARPOOL_SITE.lane,
     fog: CARPOOL_SITE.fog,
     onSignal: CARPOOL_SITE.asphalt,
+  };
+}
+
+export function carpoolPaletteFromJoueur(): CarpoolUiPalette {
+  return {
+    bg: JOUEUR_CARPOOL.sky,
+    surface: JOUEUR_CARPOOL.surface,
+    surfaceMuted: JOUEUR_CARPOOL.surfaceMuted,
+    ink: JOUEUR_CARPOOL.ink,
+    inkMuted: JOUEUR_CARPOOL.inkMuted,
+    inkDim: JOUEUR_CARPOOL.inkDim,
+    signal: JOUEUR_CARPOOL.signal,
+    signalSoft: JOUEUR_CARPOOL.signalSoft,
+    signalDeep: JOUEUR_CARPOOL.signalDeep,
+    lane: JOUEUR_CARPOOL.lane,
+    fog: JOUEUR_CARPOOL.fog,
+    onSignal: JOUEUR_CARPOOL.asphalt,
   };
 }
 

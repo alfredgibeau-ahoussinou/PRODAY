@@ -8,6 +8,8 @@ import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 
 function formatThreadTime(date: Date): string {
   const now = new Date();
@@ -25,7 +27,7 @@ interface MessageThreadRowProps {
   kineLabel?: string;
   onPress: () => void;
   disabled?: boolean;
-  variant?: 'default' | 'coach';
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
@@ -37,8 +39,13 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
 }) => {
   const { colors } = useAppTheme();
   const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
   const coachTokens = useCoachTokens();
-  const styles = useMemo(() => createStyles(colors, coach, coachTokens), [colors, coach, coachTokens]);
+  const joueurTheme = useJoueurTheme();
+  const styles = useMemo(
+    () => createStyles(colors, coach, joueur, coachTokens, joueurTheme),
+    [colors, coach, joueur, coachTokens, joueurTheme],
+  );
   const isTeamGroup = thread.thread_kind === 'team_group';
   const initial = thread.participant_name.charAt(0).toUpperCase();
   const unread = Boolean(thread.unread);
@@ -80,6 +87,63 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
             ) : null}
           </View>
           {unread ? <View style={styles.coachDot} /> : null}
+        </View>
+      </PressableSpring>
+    );
+  }
+
+  if (joueur) {
+    const accent = joueurTheme.accent;
+    return (
+      <PressableSpring
+        onPress={onPress}
+        disabled={disabled}
+        haptic
+        scaleTo={0.98}
+        style={[styles.joueurCard, unread && { borderColor: accent }]}
+      >
+        {unread ? <View style={[styles.stripe, { backgroundColor: accent }]} /> : null}
+        <View style={styles.inner}>
+          <View
+            style={[
+              styles.joueurAvatar,
+              { backgroundColor: unread ? accent : FUT18_PREMIUM.chipBg },
+            ]}
+          >
+            {isTeamGroup ? (
+              <Icon name="people" size={20} color={unread ? '#fff' : accent} variant="filled" />
+            ) : (
+              <Text style={[styles.joueurInitial, { color: unread ? '#fff' : accent }]}>
+                {initial}
+              </Text>
+            )}
+          </View>
+          <View style={styles.body}>
+            <View style={styles.head}>
+              <Text
+                style={[styles.joueurName, unread && styles.nameUnread]}
+                numberOfLines={1}
+              >
+                {thread.participant_name}
+              </Text>
+              <Text style={styles.joueurTime}>{formatThreadTime(thread.updated_at)}</Text>
+            </View>
+            <Text
+              style={[styles.joueurPreview, unread && styles.previewUnread]}
+              numberOfLines={2}
+            >
+              {thread.last_message || 'Nouvelle conversation'}
+            </Text>
+            {kineLabel ? (
+              <View style={[styles.joueurTag, { backgroundColor: joueurTheme.surface }]}>
+                <Text style={[styles.joueurTagText, { color: accent }]}>{kineLabel}</Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={styles.trail}>
+            {unread ? <View style={[styles.dot, { backgroundColor: accent }]} /> : null}
+            <Icon name="chevron-forward" size={16} color={joueurTheme.inkMuted} />
+          </View>
         </View>
       </PressableSpring>
     );
@@ -177,7 +241,9 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
 function createStyles(
   c: { accent: string },
   coach: boolean,
+  joueur: boolean,
   coachTokens: CoachThemeTokens,
+  joueurTheme: ReturnType<typeof useJoueurTheme>,
 ) {
   return StyleSheet.create({
     card: {
@@ -335,6 +401,63 @@ function createStyles(
       height: 10,
       borderRadius: 5,
       backgroundColor: coachTokens.accent,
+    },
+    joueurCard: {
+      borderRadius: joueurTheme.cardRadius,
+      backgroundColor: FUT18_PREMIUM.panelBg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: FUT18_PREMIUM.listBorder,
+      overflow: 'hidden',
+      marginBottom: spacing.sm,
+    },
+    joueurAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: joueurTheme.cardRadius,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    joueurInitial: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 18,
+      fontWeight: '800',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurName: {
+      flex: 1,
+      fontFamily: fontFamily.extrabold,
+      fontSize: 16,
+      fontWeight: '800',
+      color: joueurTheme.ink,
+      letterSpacing: -0.2,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurTime: {
+      fontFamily: fontFamily.semibold,
+      fontSize: 11,
+      fontWeight: '600',
+      color: joueurTheme.inkMuted,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurPreview: {
+      fontFamily: fontFamily.regular,
+      fontSize: 13,
+      lineHeight: 18,
+      color: joueurTheme.inkMuted,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurTag: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+    },
+    joueurTagText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });
 }

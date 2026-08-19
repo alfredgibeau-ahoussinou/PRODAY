@@ -5,25 +5,33 @@ import {
   type CarpoolUiPalette,
   carpoolPaletteDefault,
   carpoolPaletteFromCoach,
+  carpoolPaletteFromJoueur,
 } from '../../utils/carpoolUiPalette';
 
 export type { CarpoolUiPalette } from '../../utils/carpoolUiPalette';
-export { carpoolPaletteDefault, carpoolPaletteFromCoach } from '../../utils/carpoolUiPalette';
+export {
+  carpoolPaletteDefault,
+  carpoolPaletteFromCoach,
+  carpoolPaletteFromJoueur,
+} from '../../utils/carpoolUiPalette';
 
 const CarpoolUiContext = createContext<CarpoolUiPalette>(carpoolPaletteDefault());
 
 export function CarpoolUiProvider({
   children,
   coachShell = false,
+  joueurShell = false,
 }: {
   children: React.ReactNode;
   coachShell?: boolean;
+  joueurShell?: boolean;
 }) {
   const coachTokens = useCoachTokens();
-  const palette = useMemo(
-    () => (coachShell ? carpoolPaletteFromCoach(coachTokens) : carpoolPaletteDefault()),
-    [coachShell, coachTokens],
-  );
+  const palette = useMemo(() => {
+    if (coachShell) return carpoolPaletteFromCoach(coachTokens);
+    if (joueurShell) return carpoolPaletteFromJoueur();
+    return carpoolPaletteDefault();
+  }, [coachShell, joueurShell, coachTokens]);
 
   return <CarpoolUiContext.Provider value={palette}>{children}</CarpoolUiContext.Provider>;
 }
@@ -32,7 +40,7 @@ export function useCarpoolUi(): CarpoolUiPalette {
   return useContext(CarpoolUiContext);
 }
 
-/** Styles memoïsés sur la palette covoiturage (coach ou joueur). */
+/** Styles memoïsés sur la palette covoiturage (coach / joueur / défaut). */
 export function useCarpoolThemedStyles<T extends StyleSheet.NamedStyles<T>>(
   createStyles: (palette: CarpoolUiPalette) => T,
 ): T {

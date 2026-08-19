@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { ProDayText } from '../ui/ProDayText';
-import { useAppTheme } from '../../context/ProductLineContext';
-import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { useMatchSkinTokens } from './matchCenterUi';
 import { spacing } from '../../theme/designTokens';
 
 interface MatchCalendarCardProps {
@@ -25,32 +24,33 @@ export const MatchCalendarCard: React.FC<MatchCalendarCardProps> = ({
   linkLabel,
   onPress,
 }) => {
-  const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
+  const styles = useMemo(() => createStyles(skin), [skin]);
 
   return (
     <PressableSpring
-      style={[styles.card, { borderColor: MATCH_SITE.border }]}
+      style={[styles.card, { borderColor: skin.border }]}
       onPress={onPress}
       scaleTo={0.98}
       haptic
     >
-      <View style={[styles.bar, { backgroundColor: colors.accent }]} />
+      <View style={[styles.bar, { backgroundColor: skin.accent }]} />
       <View style={styles.body}>
         <View style={styles.top}>
-          <ProDayText variant="caption" style={[styles.kind, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.kind, { color: skin.accent }]}>
             {kindLabel}
           </ProDayText>
-          <ProDayText variant="caption" style={styles.date}>
+          <ProDayText variant="caption" style={[styles.date, { color: skin.muted }]}>
             {dateLabel}
           </ProDayText>
         </View>
-        <ProDayText variant="section" numberOfLines={2} style={styles.title}>
+        <ProDayText variant="section" numberOfLines={2} style={[styles.title, { color: skin.foreground }]}>
           {title}
         </ProDayText>
-        <ProDayText variant="caption" style={styles.meta} numberOfLines={1}>
+        <ProDayText variant="caption" style={[styles.meta, { color: skin.muted }]} numberOfLines={1}>
           {subtitle} · {city}
         </ProDayText>
-        <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
+        <ProDayText variant="caption" style={[styles.link, { color: skin.accent }]}>
           {linkLabel}
         </ProDayText>
       </View>
@@ -58,39 +58,42 @@ export const MatchCalendarCard: React.FC<MatchCalendarCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    borderWidth: StyleSheet.hairlineWidth,
-    backgroundColor: MATCH_SITE.surface,
-    marginBottom: 2,
-    overflow: 'hidden',
-  },
-  bar: { width: 3 },
-  body: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    gap: 4,
-  },
-  top: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  kind: {
-    fontWeight: '800',
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-  },
-  date: { color: MATCH_SITE.muted, fontSize: 11 },
-  title: {
-    fontWeight: '800',
-    letterSpacing: -0.3,
-    color: MATCH_SITE.foreground,
-  },
-  meta: { color: MATCH_SITE.muted },
-  link: { fontWeight: '800', marginTop: 2 },
-});
+function createStyles(skin: ReturnType<typeof useMatchSkinTokens>) {
+  return StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      borderWidth: StyleSheet.hairlineWidth,
+      backgroundColor: skin.surface,
+      borderRadius: skin.cardRadius,
+      marginBottom: spacing.xs,
+      overflow: 'hidden',
+    },
+    bar: { width: 3 },
+    body: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      gap: 4,
+    },
+    top: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    kind: {
+      textTransform: 'uppercase',
+      letterSpacing: 1.2,
+      fontSize: 9,
+      fontWeight: '800',
+    },
+    date: { fontSize: 10, fontWeight: '600' },
+    title: { fontWeight: '800' },
+    meta: { fontSize: 12 },
+    link: {
+      marginTop: 2,
+      fontWeight: '800',
+      fontSize: 11,
+    },
+  });
+}

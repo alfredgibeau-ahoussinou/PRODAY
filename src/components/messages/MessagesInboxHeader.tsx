@@ -13,6 +13,8 @@ import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 
 export interface MessagesInboxHeaderProps {
   search: string;
@@ -21,7 +23,7 @@ export interface MessagesInboxHeaderProps {
   onThreadFilterChange: (value: MessagesThreadFilter) => void;
   resultCount: number;
   loading: boolean;
-  variant?: 'default' | 'coach';
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
@@ -36,12 +38,17 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
   const coachTokens = useCoachTokens();
+  const joueurTheme = useJoueurTheme();
   const threadFilters = useMemo(
     () => (coach ? getCoachMessagesThreadFilters(t) : getMessagesThreadFilters(t)),
     [coach, t],
   );
-  const styles = useMemo(() => createStyles(colors, coach, coachTokens), [colors, coach, coachTokens]);
+  const styles = useMemo(
+    () => createStyles(colors, coach, joueur, coachTokens, joueurTheme),
+    [colors, coach, joueur, coachTokens, joueurTheme],
+  );
 
   const threadCountLabel = useMemo(() => {
     if (loading) return t('common.loading');
@@ -63,7 +70,14 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                 text: coachTokens.foreground,
                 textMuted: coachTokens.muted,
               }
-            : undefined
+            : joueur
+              ? {
+                  surface: FUT18_PREMIUM.listBg,
+                  border: FUT18_PREMIUM.listBorder,
+                  text: joueurTheme.ink,
+                  textMuted: joueurTheme.inkMuted,
+                }
+              : undefined
         }
       />
 
@@ -83,17 +97,25 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                   backgroundColor: on
                     ? coach
                       ? coachTokens.accent
-                      : colors.accent
+                      : joueur
+                        ? joueurTheme.accent
+                        : colors.accent
                     : coach
                       ? coachTokens.surface
-                      : colors.surface,
+                      : joueur
+                        ? FUT18_PREMIUM.chipBg
+                        : colors.surface,
                   borderColor: on
                     ? coach
                       ? coachTokens.accent
-                      : colors.accent
+                      : joueur
+                        ? joueurTheme.accent
+                        : colors.accent
                     : coach
                       ? 'transparent'
-                      : colors.border,
+                      : joueur
+                        ? FUT18_PREMIUM.listBorder
+                        : colors.border,
                 },
               ]}
               onPress={() => onThreadFilterChange(opt.id)}
@@ -104,12 +126,14 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                   styles.chipText,
                   {
                     color: on
-                      ? coach
+                      ? coach || joueur
                         ? '#fff'
                         : colors.brandInverse
                       : coach
                         ? coachTokens.muted
-                        : colors.textSecondary,
+                        : joueur
+                          ? joueurTheme.inkMuted
+                          : colors.textSecondary,
                   },
                 ]}
               >
@@ -133,7 +157,9 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
 function createStyles(
   c: { text: string; textMuted: string },
   coach: boolean,
+  joueur: boolean,
   coachTokens: CoachThemeTokens,
+  joueurTheme: ReturnType<typeof useJoueurTheme>,
 ) {
   return StyleSheet.create({
     block: { gap: spacing.md, marginBottom: spacing.sm },
@@ -147,7 +173,7 @@ function createStyles(
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      borderWidth: coach ? 0 : StyleSheet.hairlineWidth,
+      borderWidth: coach || joueur ? StyleSheet.hairlineWidth : StyleSheet.hairlineWidth,
       minHeight: 34,
       justifyContent: 'center',
     },
@@ -168,13 +194,13 @@ function createStyles(
       fontSize: 17,
       fontWeight: '800',
       letterSpacing: -0.2,
-      color: coach ? coachTokens.foreground : c.text,
+      color: coach ? coachTokens.foreground : joueur ? joueurTheme.ink : c.text,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     sectionCount: {
       fontFamily: fontFamily.regular,
       fontSize: 12,
-      color: coach ? coachTokens.muted : c.textMuted,
+      color: coach ? coachTokens.muted : joueur ? joueurTheme.inkMuted : c.textMuted,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });

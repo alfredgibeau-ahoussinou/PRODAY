@@ -62,8 +62,15 @@ export const FUT18_PREMIUM = {
   nightDeep: '#070B14',
   goldAccent: '#E8C872',
   goldSoft: 'rgba(232,200,114,0.22)',
+  bronzeAccent: '#C9A018',
+  violetAccent: '#A855F7',
   cardShadow: 'rgba(0,0,0,0.35)',
   dockBorder: 'rgba(255,255,255,0.12)',
   panelBg: 'rgba(10,16,28,0.92)',
   panelBorder: 'rgba(255,255,255,0.08)',
+  /** Listes / inbox — fond sombre premium, jamais blanc. */
+  listBg: 'rgba(8,14,24,0.94)',
+  listBorder: 'rgba(255,255,255,0.07)',
+  chipBg: 'rgba(255,255,255,0.06)',
+  chipActive: 'rgba(255,255,255,0.14)',
 } as const;

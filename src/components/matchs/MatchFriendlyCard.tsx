@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
@@ -12,7 +12,7 @@ import {
   matchStatusStyle,
 } from '../../utils/matchDisplay';
 import { tr } from '../../i18n/translate';
-import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { useMatchSkinTokens } from './matchCenterUi';
 import { spacing } from '../../theme/designTokens';
 
 const LEVEL_TYPE_FALLBACK: Record<FriendlyMatch['level_type'], string> = {
@@ -45,6 +45,9 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
   onMarkPlayed,
 }) => {
   const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
+  const accent = skin.joueurSkin ? skin.accent : colors.accent;
+  const styles = useMemo(() => createCardStyles(skin), [skin]);
   const { t } = useTranslation();
   const levelLabels: Record<FriendlyMatch['level_type'], string> = {
     loisir: tr(t, 'match.level.loisir', LEVEL_TYPE_FALLBACK.loisir),
@@ -60,7 +63,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
       scaleTo={0.98}
       haptic
     >
-      <View style={[styles.bar, { backgroundColor: st.color ?? colors.accent }]} />
+      <View style={[styles.bar, { backgroundColor: st.color ?? accent }]} />
       <View style={styles.body}>
         <View style={styles.top}>
           <ProDayText variant="caption" style={styles.date}>
@@ -68,7 +71,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
           </ProDayText>
           <View style={styles.topBadges}>
             {iaScore != null ? (
-              <ProDayText variant="caption" style={[styles.metaAccent, { color: colors.accent }]}>
+              <ProDayText variant="caption" style={[styles.metaAccent, { color: accent }]}>
                 {iaScore}%
               </ProDayText>
             ) : null}
@@ -112,7 +115,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
               <PressableSpring
                 scaleTo={0.96}
                 haptic
-                style={[styles.btnPrimary, { backgroundColor: colors.accent }]}
+                style={[styles.btnPrimary, { backgroundColor: accent }]}
                 onPress={() => {
                   prodayHaptics.confirm();
                   onAccept();
@@ -127,7 +130,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
             (match.status === 'OPEN' || match.status === 'INVITED') &&
             onCancel ? (
               <PressableSpring style={styles.btnGhost} scaleTo={0.97} haptic onPress={onCancel}>
-                <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
+                <ProDayText variant="caption" style={[styles.link, { color: accent }]}>
                   {t('matchs.friendly.cancel')}
                 </ProDayText>
               </PressableSpring>
@@ -139,7 +142,7 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
                 haptic
                 onPress={onMarkPlayed}
               >
-                <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
+                <ProDayText variant="caption" style={[styles.link, { color: accent }]}>
                   {t('matchs.friendly.markPlayed')}
                 </ProDayText>
               </PressableSpring>
@@ -151,50 +154,54 @@ export const MatchFriendlyCard: React.FC<MatchFriendlyCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: MATCH_SITE.border,
-    backgroundColor: MATCH_SITE.surface,
-    marginBottom: 2,
-    overflow: 'hidden',
-  },
-  bar: { width: 3 },
-  body: { flex: 1, padding: spacing.md, gap: 4 },
-  top: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  date: { fontWeight: '800', letterSpacing: 0.3, flex: 1, color: MATCH_SITE.muted },
-  topBadges: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  metaAccent: { fontWeight: '800', fontSize: 10 },
-  title: { fontWeight: '800', color: MATCH_SITE.foreground, letterSpacing: -0.3 },
-  muted: { color: MATCH_SITE.muted },
-  warn: { fontStyle: 'italic' },
-  message: { fontStyle: 'italic', marginTop: 2 },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  btnPrimary: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    minHeight: 40,
-    justifyContent: 'center',
-  },
-  btnPrimaryText: { color: '#fff', fontWeight: '800' },
-  btnGhost: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    minHeight: 40,
-    justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: MATCH_SITE.border,
-  },
-  link: { fontWeight: '800' },
-});
+const createCardStyles = (skin: ReturnType<typeof useMatchSkinTokens>) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: skin.border,
+      backgroundColor: skin.surface,
+      borderRadius: skin.cardRadius,
+      marginBottom: spacing.xs,
+      overflow: 'hidden',
+    },
+    bar: { width: 3 },
+    body: { flex: 1, padding: spacing.md, gap: 4 },
+    top: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    date: { fontWeight: '800', letterSpacing: 0.3, flex: 1, color: skin.muted },
+    topBadges: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+    metaAccent: { fontWeight: '800', fontSize: 10 },
+    title: { fontWeight: '800', color: skin.foreground, letterSpacing: -0.3 },
+    muted: { color: skin.muted },
+    warn: { fontStyle: 'italic' },
+    message: { fontStyle: 'italic', marginTop: 2 },
+    actions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    btnPrimary: {
+      borderRadius: skin.cardRadius,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      minHeight: 40,
+      justifyContent: 'center',
+    },
+    btnPrimaryText: { color: '#fff', fontWeight: '800' },
+    btnGhost: {
+      borderRadius: skin.cardRadius,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      minHeight: 40,
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: skin.border,
+    },
+    link: { fontWeight: '800' },
+  });

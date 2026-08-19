@@ -21,7 +21,7 @@ import { CoachPane } from '../coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { MatchCenterPanel } from './MatchCenterPanel';
 import { CoachSeasonStatsPanel } from '../coach/CoachSeasonStatsPanel';
-import { CoachMatchSkinProvider } from './matchCenterUi';
+import { CoachMatchSkinProvider, JoueurMatchSkinProvider } from './matchCenterUi';
 import { MatchSeasonStatsPanel } from './MatchSeasonStatsPanel';
 import { isInMatchWindow } from '../../utils/matchLive';
 import { useTabNavigation } from '../../context/TabNavigationContext';
@@ -526,7 +526,9 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
       hideHeader={embeddedInShell}
       atmosphere={hidePoleHero ? undefined : 'dynamic_competitive'}
     >
-      {body}
+      <JoueurMatchSkinProvider enabled={isJoueur}>
+        {body}
+      </JoueurMatchSkinProvider>
     </TabScreenShell>
   );
 };

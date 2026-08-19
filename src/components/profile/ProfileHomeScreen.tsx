@@ -174,8 +174,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   );
   const styles = useMemo(() => createStyles(colors), [colors]);
   const joueurSession = useJoueurSession();
-  const joueurAccent = useMemo(() => {
-    if (!isPlayer) return colors.accent;
+  const joueurIdentity = useMemo(() => {
+    if (!isPlayer) return null;
     const ageGroup =
       joueurSession?.ageGroup ??
       resolveJoueurAgeGroup({
@@ -186,10 +186,9 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     const gender = resolveJoueurGenderVisual(
       joueurSession?.gate?.gender ?? props.profile.profile.gender,
     );
-    return resolveJoueurPageIdentity({ ageGroup, gender }).accent;
+    return resolveJoueurPageIdentity({ ageGroup, gender });
   }, [
     isPlayer,
-    colors.accent,
     joueurSession?.ageGroup,
     joueurSession?.ageYears,
     joueurSession?.gate?.gender,
@@ -197,6 +196,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     props.profile.profile.gender,
     props.profile.profile.birth_date,
   ]);
+  const joueurAccent = joueurIdentity?.accent ?? colors.accent;
   const { activities, loading: activitiesLoading, refresh: refreshActivities } =
     usePlayerActivities(isPlayer ? props.profile.uid : undefined);
   const career = useCareerProgression(isPlayer ? props.profile : null, {
@@ -368,6 +368,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 colors={colors}
                 productLine={props.productLine}
                 accent={joueurAccent}
+                wash={joueurIdentity?.wash}
                 gallery={props.gallery}
                 videos={props.videos}
                 uploadingGallery={props.uploadingGallery}
@@ -420,6 +421,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             {props.profile.role === 'player' ? (
               <JoueurActivitePanel
                 accent={joueurAccent}
+                wash={joueurIdentity?.wash}
                 productLine={props.productLine}
                 playerUid={props.profile.uid}
                 clubId={props.profile.profile.club_id}
@@ -495,6 +497,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             {isPlayer ? (
               <JoueurParamsPanel
                 accent={joueurAccent}
+                wash={joueurIdentity?.wash}
                 colors={colors}
                 AlertCard={AlertCard}
                 showPlayerVerificationReminder={props.showPlayerVerificationReminder}
