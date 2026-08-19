@@ -18,6 +18,7 @@ import {
   filterApprovedClips,
   type MatchTalkBrief,
   type MatchTalkClipSuggestion,
+  type MatchTalkConsigne,
 } from '../models/MatchTalkBrief';
 import type { TacticalSharePayload } from '../models/TacticalShare';
 
@@ -49,6 +50,9 @@ function mapTalk(id: string, data: Record<string, unknown>): MatchTalkBrief {
     clips: Array.isArray(data.clips)
       ? (data.clips as MatchTalkClipSuggestion[])
       : [],
+    consignes: Array.isArray(data.consignes) ? (data.consignes as MatchTalkConsigne[]) : [],
+    clip_order: Array.isArray(data.clip_order) ? data.clip_order.map(String) : [],
+    shared: Boolean(data.shared),
     created_by: String(data.created_by ?? ''),
     updated_at: toDate(data.updated_at),
   };
@@ -84,6 +88,9 @@ export const matchTalkService = {
       tactical_phase_ids: brief.tactical_phase_ids,
       messages_by_uid: brief.messages_by_uid,
       clips: brief.clips.filter((c) => c.analysis_verified),
+      consignes: brief.consignes ?? [],
+      clip_order: brief.clip_order ?? [],
+      shared: brief.shared ?? false,
       created_by: brief.created_by,
       updated_at: serverTimestamp(),
     };
