@@ -7,6 +7,8 @@ export type RosterNeedScope = 'internal' | 'external';
 
 export type RosterNeedStatus = 'open' | 'filled' | 'closed';
 
+export type RosterNeedUrgency = 'low' | 'medium' | 'high' | 'critical';
+
 export type InternalMoveStatus =
   | 'proposed'
   | 'discussing'
@@ -36,6 +38,13 @@ export const ROSTER_POSITION_LABELS: Record<RosterPositionId, string> = {
   other: 'Autre',
 };
 
+export const ROSTER_URGENCY_LABELS: Record<RosterNeedUrgency, string> = {
+  low: 'Faible',
+  medium: 'Moyenne',
+  high: 'Urgente',
+  critical: 'Critique',
+};
+
 export const INTERNAL_MOVE_STATUS_LABELS: Record<InternalMoveStatus, string> = {
   proposed: 'Proposition envoyée',
   discussing: 'En discussion',
@@ -56,6 +65,8 @@ export interface ClubRosterNeed {
   level?: string;
   preferred_foot?: 'left' | 'right' | 'both' | 'any';
   profile_notes?: string;
+  qualities?: string[];
+  urgency: RosterNeedUrgency;
   players_needed: number;
   needed_by?: Date;
   scope: RosterNeedScope;
@@ -76,6 +87,8 @@ export interface CreateClubRosterNeedInput {
   level?: string;
   preferred_foot?: ClubRosterNeed['preferred_foot'];
   profile_notes?: string;
+  qualities?: string[];
+  urgency?: RosterNeedUrgency;
   players_needed: number;
   needed_by?: Date;
   scope?: RosterNeedScope;

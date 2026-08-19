@@ -2,6 +2,14 @@
  * Fiche d’essai numérique — confidentialité stricte, mineurs protégés.
  */
 
+export type TrialSheetDecision = 'retained' | 'not_retained' | 'to_review';
+
+export const TRIAL_SHEET_DECISION_LABELS: Record<TrialSheetDecision, string> = {
+  retained: 'Retenu',
+  not_retained: 'Non retenu',
+  to_review: 'À revoir',
+};
+
 export type TrialSheetRatingKey =
   | 'technique'
   | 'game_understanding'
@@ -33,6 +41,7 @@ export interface ClubTrialSheet {
   ratings: Partial<Record<TrialSheetRatingKey, number>>;
   overall?: number | null;
   notes?: string;
+  decision?: TrialSheetDecision | null;
   /** Mineur : consentement parent requis pour conservation. */
   is_minor: boolean;
   parental_consent_at?: Date | null;
