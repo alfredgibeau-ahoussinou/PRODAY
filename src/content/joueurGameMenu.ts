@@ -2,8 +2,7 @@ import type { MainTabId } from '../navigation/mainTabConfig';
 import type { JoueurAgeGroup } from '../utils/joueurExperienceTheme';
 
 /**
- * Labels dock jeu — vraiment distincts par âge.
- * Youth = arcade fun · Teen = ranked career · Adult = ultimate.
+ * Labels dock joueur — 5 onglets : Accueil · Matchs · Performance · Progression · Profil.
  */
 export function getJoueurGameTabLabel(
   tab: MainTabId,
@@ -15,14 +14,16 @@ export function getJoueurGameTabLabel(
   switch (tab) {
     case 'home':
       return youth ? 'JOUER' : teen ? 'QG' : 'ACCUEIL';
-    case 'recrutement':
-      return youth ? 'ÉQUIPE' : teen ? 'GROUPE' : 'CLUB';
     case 'matchs':
-      return youth ? 'MATCH' : teen ? 'MATCHS' : 'TERRAIN';
+      return youth ? 'MATCH' : teen ? 'MATCHS' : 'MATCHS';
     case 'feed':
-      return youth ? 'DÉFI' : teen ? 'TACTIQUE' : 'TABLEAU';
+      return youth ? 'STATS' : teen ? 'PERF' : 'PERFORMANCE';
+    case 'progression':
+      return youth ? 'NIVEAU' : teen ? 'PROGRESS' : 'PROGRESSION';
     case 'profil':
-      return youth ? 'MOI' : teen ? 'CARTE' : 'CARTE';
+      return youth ? 'MOI' : teen ? 'CARTE' : 'PROFIL';
+    case 'recrutement':
+      return youth ? 'ÉQUIPE' : teen ? 'GROUPE' : 'ÉQUIPE';
     case 'messages':
       return youth ? 'MSG' : 'MESSAGES';
     case 'covoiturage':

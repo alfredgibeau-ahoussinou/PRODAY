@@ -151,4 +151,26 @@ export const wellnessCheckinsService = {
       return {};
     }
   },
+
+  /** Dernier check-in wellness du joueur (uid). */
+  async listLatestForUser(uid: string, max = 5): Promise<WellnessCheckin | null> {
+    if (!isFirebaseConfigured() || !uid) return null;
+    const database = getDb();
+    if (!database) return null;
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, COL),
+          where('uid', '==', uid),
+          orderBy('created_at', 'desc'),
+          limit(max),
+        ),
+      );
+      const first = snap.docs[0];
+      if (!first) return null;
+      return mapRow(first.id, first.data() as Record<string, unknown>);
+    } catch {
+      return null;
+    }
+  },
 };

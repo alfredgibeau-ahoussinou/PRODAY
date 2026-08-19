@@ -22,10 +22,11 @@ import { spacing } from '../../theme/designTokens';
 
 const GAME_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
   home: 'football',
-  recrutement: 'people',
   matchs: 'trophy',
   feed: 'star-four-points',
+  progression: 'stats-chart',
   profil: 'person',
+  recrutement: 'people',
   messages: 'chat',
   covoiturage: 'car',
   sante: 'heart',

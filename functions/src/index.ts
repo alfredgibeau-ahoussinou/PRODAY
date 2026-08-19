@@ -53,6 +53,7 @@ import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivity
 import { analyzeActivityHighlight } from './analyzeActivityHighlight';
 import { clubAssistantChat } from './clubAssistantChat';
 import { playerTacticsChat } from './playerTacticsChat';
+import { playerCoachAiChat } from './playerCoachAiChat';
 import { sendAuthPasswordResetEmail, sendAuthVerificationEmail } from './authCustomEmails';
 import {
   onMinorUserCreatedProvisionParent,
@@ -88,6 +89,7 @@ export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { clubAssistantChat };
 export { playerTacticsChat };
+export { playerCoachAiChat };
 export { smartTacticsMatchPrep } from './smartTacticsMatchPrep';
 export { generateTrainingSession } from './generateTrainingSession';
 export { generateHomeTraining } from './generateHomeTraining';

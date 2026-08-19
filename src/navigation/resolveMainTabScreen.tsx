@@ -3,6 +3,7 @@ import type { MainTabId } from './mainTabConfig';
 import type { ProductLineId } from '../models/ProductLine';
 import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
+import { isJoueurPoleProductLine } from '../utils/joueurPoleAccess';
 import { isSponsorRole } from '../content/sponsorExperience';
 import { isRetiredUserRole } from '../utils/retiredRoles';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -30,6 +31,9 @@ import { SupporterTribuneFeedScreen } from '../screens/supporter/SupporterTribun
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerSquadScreen } from '../screens/proPlayer/ProPlayerSquadScreen';
 import { SmartTacticsPortalScreen } from '../screens/smartTactics/SmartTacticsPortalScreen';
+import { PlayerFootballHubScreen } from '../screens/joueur/PlayerFootballHubScreen';
+import { PlayerPerformanceScreen } from '../screens/joueur/PlayerPerformanceScreen';
+import { PlayerProgressionScreen } from '../screens/joueur/PlayerProgressionScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -38,6 +42,7 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   covoiturage: CarpoolScreen,
   sante: RetiredRoleScreen,
   feed: FeedTabScreen,
+  progression: RetiredRoleScreen,
   reels: LazyReelsScreen,
   famille: FamilleTabScreen,
   messages: MessagesScreen,
@@ -76,13 +81,17 @@ const COACH_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 };
 
 const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  home: PlayerFootballHubScreen,
+  feed: PlayerPerformanceScreen,
+  progression: PlayerProgressionScreen,
   recrutement: AmateurClubScreen,
-  feed: SmartTacticsPortalScreen,
 };
 
 const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  home: PlayerFootballHubScreen,
+  feed: PlayerPerformanceScreen,
+  progression: PlayerProgressionScreen,
   recrutement: ProPlayerSquadScreen,
-  feed: SmartTacticsPortalScreen,
 };
 
 export function resolveMainTabScreen(
@@ -108,7 +117,12 @@ export function resolveMainTabScreen(
   if (role === 'coach') {
     return COACH_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
-  if (line === 'amateur' && role === 'player') {
+  if (
+    role === 'player' &&
+    line != null &&
+    isJoueurPoleProductLine(line) &&
+    line !== 'pro_player'
+  ) {
     return AMATEUR_PLAYER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   return DEFAULT_SCREENS[tab];

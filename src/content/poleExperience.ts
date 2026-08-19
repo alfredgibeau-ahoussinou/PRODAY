@@ -292,6 +292,7 @@ export function getTabShortLabel(
     if (tab === 'messages') return 'Messages';
     if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'recrutement') return 'Équipe';
+    if (tab === 'progression') return 'Progression';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
     if (tab === 'sante') return 'Santé';
@@ -337,6 +338,7 @@ export function getTabShortLabel(
     if (tab === 'messages') return 'Messages';
     if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'recrutement') return 'Opportunités';
+    if (tab === 'progression') return 'Progression';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
   }
@@ -364,6 +366,7 @@ function labelsFallback(tab: MainTabId): string {
     shop: 'Shop',
     sante: 'Santé',
     feed: 'Fil',
+    progression: 'Progression',
     reels: 'Reels',
     famille: 'Famille',
     messages: 'Messages',

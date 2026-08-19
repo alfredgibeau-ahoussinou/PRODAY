@@ -135,6 +135,7 @@ const CTA_BY_TAB: Record<MainTabId, string> = {
   covoiturage: 'Covoiturage',
   sante: 'Espace praticien',
   feed: 'Fil communauté',
+  progression: 'Progression',
   reels: 'Voir les réels',
   famille: 'Espace famille',
   messages: 'Messages',

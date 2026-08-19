@@ -15,6 +15,7 @@ export const TAB_ICONS: Record<MainTabId, IconName> = {
   covoiturage: 'car',
   sante: 'heart',
   feed: 'star-four-points',
+  progression: 'stats-chart',
   reels: 'videocam',
   famille: 'shield',
   messages: 'chat',

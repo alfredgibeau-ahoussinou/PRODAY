@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { User } from '../../models/User';
 import type { HealthSnapshot } from '../../core/types/health';
-import { ProDayFutCard } from '../cards/ProDayFutCard';
+import { PlayerCardReveal } from '../joueur/PlayerCardReveal';
 import { userToProDayCard } from '../../utils/prodayFutCard';
 import { resolveJoueurAgeGroup, resolveJoueurGenderVisual } from '../../utils/joueurExperienceTheme';
 import { resolveJoueurPageIdentity, JOUEUR_SITE } from '../../content/joueurPageIdentity';
@@ -163,7 +163,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
               pointerEvents="none"
             />
             <View style={styles.futCardWrap}>
-              <ProDayFutCard
+              <PlayerCardReveal
                 card={card}
                 width={228}
                 onAction={(action) => {

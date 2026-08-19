@@ -22,6 +22,7 @@ const TAB_SCREENS: Record<MainTabId, React.ComponentType> = {
   covoiturage: CarpoolScreen,
   sante: RetiredRoleScreen,
   feed: FeedTabScreen,
+  progression: RetiredRoleScreen,
   reels: ReelsScreen,
   famille: FamilleTabScreen,
   messages: MessagesScreen,

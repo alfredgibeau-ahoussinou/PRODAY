@@ -82,6 +82,13 @@ export const JOUEUR_DISCOVER = {
   chipBg: JOUEUR_SURFACES.chip,
 } as const;
 
+/** Composants hub joueur — rayons & micro-interactions. */
+export const JOUEUR_HUB = {
+  pressScale: 0.98,
+  cardRevealMs: 320,
+  sectionGap: JOUEUR_SPACE.lg,
+} as const;
+
 /** Tokens covoiturage en mode joueur — fond sombre FUT18. */
 export const JOUEUR_CARPOOL = {
   sky: JOUEUR_SITE.bg,

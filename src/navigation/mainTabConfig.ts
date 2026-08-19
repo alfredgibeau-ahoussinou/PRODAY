@@ -6,6 +6,7 @@ export type MainTabId =
   | 'covoiturage'
   | 'sante'
   | 'feed'
+  | 'progression'
   | 'reels'
   | 'famille'
   | 'messages'
@@ -23,6 +24,7 @@ export const MAIN_TAB_ITEMS: {
   { id: 'covoiturage', label: 'Covoiturage', icon: 'car' },
   { id: 'sante', label: 'Santé', icon: 'heart' },
   { id: 'feed', label: 'Fil', icon: 'star-four-points' },
+  { id: 'progression', label: 'Progression', icon: 'stats-chart' },
   { id: 'reels', label: 'Reels', icon: 'videocam' },
   { id: 'famille', label: 'Famille', icon: 'shield' },
   { id: 'messages', label: 'Messages', icon: 'chat' },

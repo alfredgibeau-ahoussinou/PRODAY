@@ -240,6 +240,7 @@ export function buildSectionIntelligence(input: SectionIntelligenceInput): Secti
     covoiturage: 'Trajets équipe',
     sante: 'Bien-être',
     feed: 'Communauté',
+    progression: 'Progression',
     reels: 'Réels sportifs',
     famille: 'Famille',
     messages: 'Réseau',
