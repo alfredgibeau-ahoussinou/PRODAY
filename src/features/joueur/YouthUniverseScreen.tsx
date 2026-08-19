@@ -7,14 +7,6 @@ import {
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 import type { User } from '../../models/User';
 import type { JoueurExperienceTheme } from '../../utils/joueurExperienceTheme';
 import type { JoueurPageIdentity } from '../../content/joueurPageIdentity';
@@ -96,22 +88,8 @@ function BounceOrb({
   color: string;
   size?: number;
 }) {
-  const y = useSharedValue(0);
-  useEffect(() => {
-    y.value = withRepeat(
-      withSequence(
-        withTiming(-8, { duration: 700, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 700, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-  }, [y]);
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: y.value }],
-  }));
   return (
-    <Animated.View
+    <View
       style={[
         {
           width: size,
@@ -120,14 +98,13 @@ function BounceOrb({
           backgroundColor: color,
           alignItems: 'center',
           justifyContent: 'center',
-          borderWidth: 3,
-          borderColor: 'rgba(255,255,255,0.85)',
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.55)',
         },
-        style,
       ]}
     >
       {children}
-    </Animated.View>
+    </View>
   );
 }
 
@@ -213,9 +190,9 @@ export function YouthUniverseScreen({
     else onOpenPass();
   };
 
-  const skyTop = isGirl ? '#FFF0F7' : '#FFF9E0';
-  const skyMid = isGirl ? '#FBCFE8' : '#FDE68A';
-  const ground = isGirl ? '#A7F3D0' : '#86EFAC';
+  const skyTop = isGirl ? '#F9EEF8' : '#FFF6DB';
+  const skyMid = isGirl ? '#F3D2E8' : '#F9E7A8';
+  const ground = isGirl ? '#BCEEDC' : '#BEEAB3';
   const mascotIcon: IconName = isGirl ? 'star-four-points' : 'football';
   const worldTitle = isGirl ? 'Île magique' : 'Terrain secret';
 
@@ -240,7 +217,7 @@ export function YouthUniverseScreen({
           <View style={[styles.mapFrame, { borderColor: accent, width: mapW }]}>
             <LinearGradient
               colors={[skyTop, skyMid, ground]}
-              locations={[0, 0.55, 1]}
+              locations={[0, 0.62, 1]}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.mapScene} pointerEvents="none">
@@ -597,8 +574,8 @@ const styles = StyleSheet.create({
   },
   mapFrame: {
     alignSelf: 'center',
-    borderRadius: 32,
-    borderWidth: 3,
+    borderRadius: 24,
+    borderWidth: 1,
     overflow: 'hidden',
     minHeight: 300,
     paddingBottom: 14,
@@ -632,8 +609,8 @@ const styles = StyleSheet.create({
   },
   speech: {
     backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: 22,
-    borderWidth: 2.5,
+    borderRadius: 16,
+    borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
     alignItems: 'center',
@@ -662,7 +639,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 16,
     paddingHorizontal: 18,
-    borderRadius: 28,
+    borderRadius: 18,
   },
   playIconWrap: {
     width: 44,
@@ -700,16 +677,16 @@ const styles = StyleSheet.create({
   pathOrb: {
     width: 86,
     minHeight: 108,
-    borderRadius: 24,
-    borderWidth: 2.5,
+    borderRadius: 16,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 8,
     gap: 4,
   },
   album: {
-    borderRadius: 28,
-    borderWidth: 2.5,
+    borderRadius: 18,
+    borderWidth: 1,
     padding: spacing.md,
   },
   albumHead: {
@@ -732,8 +709,8 @@ const styles = StyleSheet.create({
     width: '47%',
     flexGrow: 1,
     minHeight: 124,
-    borderRadius: 24,
-    borderWidth: 2.5,
+    borderRadius: 16,
+    borderWidth: 1,
     padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -753,8 +730,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 12,
-    borderRadius: 22,
-    borderWidth: 2.5,
+    borderRadius: 14,
+    borderWidth: 1,
   },
   stickerIcon: {
     width: 48,
@@ -775,6 +752,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 14,
-    borderRadius: 22,
+    borderRadius: 14,
   },
 });

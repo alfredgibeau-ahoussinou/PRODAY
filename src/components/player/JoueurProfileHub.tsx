@@ -156,11 +156,6 @@ export const JoueurProfileHub: React.FC<Props> = ({
           </View>
 
           <View style={styles.futCardBlock}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.01)']}
-              style={styles.futTopShine}
-              pointerEvents="none"
-            />
             <View style={styles.futCardWrap}>
               <ProDayFutCard
                 card={card}
@@ -292,7 +287,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
   heroShell: {
-    borderRadius: 22,
+    borderRadius: 14,
     overflow: 'hidden',
     minHeight: 186,
   },
@@ -335,8 +330,8 @@ const styles = StyleSheet.create({
   heroName: {
     color: JOUEUR_SITE.foreground,
     fontWeight: '800',
-    fontSize: 31,
-    letterSpacing: -0.7,
+    fontSize: 28,
+    letterSpacing: -0.4,
   },
   heroMeta: {
     color: JOUEUR_SITE.muted,
@@ -352,7 +347,7 @@ const styles = StyleSheet.create({
     minWidth: 72,
     borderWidth: 1,
     borderColor: JOUEUR_SITE.border,
-    borderRadius: 14,
+    borderRadius: 10,
     padding: spacing.sm,
     backgroundColor: 'rgba(12,18,30,0.86)',
   },
@@ -370,15 +365,10 @@ const styles = StyleSheet.create({
   futCardBlock: {
     borderWidth: 1,
     borderColor: JOUEUR_SITE.border,
-    borderRadius: 20,
+    borderRadius: 14,
     padding: spacing.md,
     backgroundColor: 'rgba(10,16,30,0.94)',
     gap: spacing.md,
-    overflow: 'hidden',
-  },
-  futTopShine: {
-    ...StyleSheet.absoluteFillObject,
-    bottom: '70%',
   },
   futCardWrap: { alignItems: 'center' },
   actionsGrid: {
@@ -390,7 +380,7 @@ const styles = StyleSheet.create({
     width: '47%',
     flexGrow: 1,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
     backgroundColor: 'rgba(8,14,24,0.72)',
@@ -402,7 +392,7 @@ const styles = StyleSheet.create({
   },
   panel: {
     borderWidth: 1,
-    borderRadius: 18,
+    borderRadius: 12,
     padding: spacing.md,
     gap: spacing.sm,
     backgroundColor: JOUEUR_SITE.surface,

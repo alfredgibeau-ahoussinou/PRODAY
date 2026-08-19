@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Image,
   Modal,
@@ -6,18 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  type ViewStyle,
 } from 'react-native';
-import Animated, {
-  Easing,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
@@ -78,78 +67,26 @@ function clampStat(n: number) {
 }
 
 export const ProDayFutCard: React.FC<Props> = ({ card, width = 220, onAction, onSelect }) => {
-  const [flipped, setFlipped] = useState(false);
   const [preview, setPreview] = useState(false);
-  const progress = useSharedValue(0);
-  const idle = useSharedValue(0);
   const styles = useMemo(() => createStyles(width), [width]);
   const theme = TIER_FIFA[card.tier];
-
-  useEffect(() => {
-    idle.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-  }, [idle]);
-
-  const flip = () => {
-    const next = !flipped;
-    setFlipped(next);
-    progress.value = withSpring(next ? 1 : 0, { damping: 16, stiffness: 180 });
-  };
-
-  const shellStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 900 },
-      { rotateY: `${interpolate(idle.value, [0, 1], [-7, 7])}deg` },
-      { rotateX: `${interpolate(idle.value, [0, 1], [4, -3])}deg` },
-      { translateY: interpolate(idle.value, [0, 1], [0, -5]) },
-    ],
-  }));
-
-  const frontStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 1000 },
-      { rotateY: `${interpolate(progress.value, [0, 1], [0, 180])}deg` },
-    ],
-    backfaceVisibility: 'hidden',
-  }));
-
-  const backStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 1000 },
-      { rotateY: `${interpolate(progress.value, [0, 1], [180, 360])}deg` },
-    ],
-    backfaceVisibility: 'hidden',
-  }));
 
   return (
     <>
       <PressableSpring
         onPress={() => {
           if (onSelect) onSelect();
-          else flip();
+          else setPreview(true);
         }}
         onLongPress={() => setPreview(true)}
-        scaleTo={0.97}
+        scaleTo={0.98}
         haptic
       >
-        <Animated.View style={[styles.shell, { shadowColor: theme.frame[1] }, shellStyle]}>
-          <Animated.View style={[styles.face, frontStyle]}>
-            <FifaChrome theme={theme} tier={card.tier}>
-              <FrontFace card={card} styles={styles} theme={theme} />
-            </FifaChrome>
-          </Animated.View>
-          <Animated.View style={[styles.face, backStyle]}>
-            <FifaChrome theme={theme} tier={card.tier}>
-              <BackFace card={card} styles={styles} theme={theme} />
-            </FifaChrome>
-          </Animated.View>
-        </Animated.View>
+        <View style={[styles.shell, { shadowColor: theme.frame[1] }]}>
+          <FifaChrome theme={theme} tier={card.tier}>
+            <FrontFace card={card} styles={styles} theme={theme} />
+          </FifaChrome>
+        </View>
       </PressableSpring>
 
       <Modal visible={preview} transparent animationType="fade" onRequestClose={() => setPreview(false)}>
@@ -203,8 +140,18 @@ function FifaChrome({
   tier: string;
 }) {
   return (
-    <LinearGradient colors={theme.frame} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={chrome.frame}>
-      <LinearGradient colors={theme.face} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={chrome.face}>
+    <LinearGradient
+      colors={[theme.frame[0], theme.frame[2]]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={chrome.frame}
+    >
+      <LinearGradient
+        colors={[theme.face[0], theme.face[1]]}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={chrome.face}
+      >
         <ProDayText variant="caption" style={[chrome.brand, { color: theme.ink }]}>
           ProDay · {tier}
         </ProDayText>
@@ -307,46 +254,6 @@ function FrontFace({
   );
 }
 
-function BackFace({
-  card,
-  styles,
-  theme,
-}: {
-  card: ProDayCardData;
-  styles: ReturnType<typeof createStyles>;
-  theme: (typeof TIER_FIFA)[ProDayCardTier];
-}) {
-  return (
-    <View style={[styles.col, { paddingTop: spacing.sm }]}>
-      <ProDayText variant="section" style={[styles.backTitle, { color: theme.ink }]}>
-        {card.displayName}
-      </ProDayText>
-      {card.role === 'player' ? (
-        <>
-          <StatGrid
-            stats={[
-              { l: 'MAT', v: card.matches },
-              { l: 'BUT', v: card.goals },
-              { l: 'PAS', v: card.assists },
-              { l: 'FRM', v: card.formPct },
-              { l: 'POT', v: card.potential },
-              { l: 'MIN', v: card.minutesPlayed },
-            ]}
-            ink={theme.ink}
-          />
-          <ProDayText variant="caption" style={{ color: theme.ink, opacity: 0.75, marginTop: 8 }}>
-            {card.recruitmentStatus}
-          </ProDayText>
-        </>
-      ) : (
-        <ProDayText variant="caption" style={{ color: theme.ink, opacity: 0.8, marginTop: 8 }}>
-          {card.role} · {card.tier}
-        </ProDayText>
-      )}
-    </View>
-  );
-}
-
 function Photo({
   photoUrl,
   styles,
@@ -399,8 +306,8 @@ function StatGrid({ stats, ink }: { stats: Array<{ l: string; v: string | number
 }
 
 const chrome = StyleSheet.create({
-  frame: { flex: 1, borderRadius: 14, padding: 4, overflow: 'hidden' },
-  face: { flex: 1, borderRadius: 11, padding: spacing.sm, paddingTop: spacing.md, overflow: 'hidden' },
+  frame: { flex: 1, borderRadius: 14, padding: 2, overflow: 'hidden' },
+  face: { flex: 1, borderRadius: 12, padding: spacing.sm, paddingTop: spacing.md, overflow: 'hidden' },
   brand: {
     position: 'absolute',
     top: 4,
@@ -451,12 +358,11 @@ function createStyles(width: number) {
       width,
       height,
       borderRadius: 14,
-      shadowOffset: { width: 0, height: 14 },
-      shadowOpacity: 0.5,
-      shadowRadius: 18,
-      elevation: 14,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.22,
+      shadowRadius: 8,
+      elevation: 4,
     },
-    face: { ...StyleSheet.absoluteFillObject } as ViewStyle,
     col: { flex: 1 },
     topRow: { flex: 1, flexDirection: 'row', gap: 4, minHeight: 0 },
     ratingCol: { width: 56, alignItems: 'center', paddingTop: 4 },
@@ -465,7 +371,6 @@ function createStyles(width: number) {
     photoWrap: { flex: 1, borderRadius: radius.sm, overflow: 'hidden' },
     photo: { width: '100%', height: '100%' },
     photoFallback: { backgroundColor: 'rgba(0,0,0,0.15)' },
-    backTitle: { fontWeight: '900', textTransform: 'uppercase', textAlign: 'center' },
     modalBackdrop: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.72)',

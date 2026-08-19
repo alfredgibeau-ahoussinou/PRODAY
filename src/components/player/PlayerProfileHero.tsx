@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import type { User } from '../../models/User';
 import { Icon, type IconName } from '../ui/Icon';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import {
@@ -46,10 +45,10 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
 
   return (
     <View style={[styles.card, shadows.card, { borderColor: c.border, backgroundColor: c.surface }]}>
-      <ProDayGradient kind="hero" style={styles.hero}>
+      <View style={[styles.hero, { backgroundColor: c.surfaceMuted }]}>
         {isOwnProfile ? (
-          <View style={styles.ownPill}>
-            <Text style={styles.ownPillText}>Mon profil</Text>
+          <View style={[styles.ownPill, { borderColor: c.border }]}>
+            <Text style={[styles.ownPillText, { color: c.textMuted }]}>Mon profil</Text>
           </View>
         ) : null}
 
@@ -72,7 +71,7 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
               >
                 {player.display_name}
               </Text>
-              {verified ? <Icon name="checkmark-circle" size={20} color="#A7F3D0" /> : null}
+              {verified ? <Icon name="checkmark-circle" size={18} color={c.brand} /> : null}
             </View>
             <Text style={styles.heroSub}>
               {metaParts.length > 0 ? metaParts.join(' · ') : player.city ?? 'France'}
@@ -88,8 +87,8 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
         {chips.length > 0 ? (
           <View style={styles.chipRow}>
             {chips.map((chip) => (
-              <View key={chip} style={styles.chip}>
-                <Text style={styles.chipText}>{chip}</Text>
+              <View key={chip} style={[styles.chip, { borderColor: c.border }]}>
+                <Text style={[styles.chipText, { color: c.text }]}>{chip}</Text>
               </View>
             ))}
           </View>
@@ -104,17 +103,17 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
                 availTone === 'neutral' && styles.availNeutral,
               ]}
             >
-              <Icon name="calendar" size={12} color="#FFFFFF" />
+              <Icon name="calendar" size={12} color={c.text} />
               <Text style={styles.availText}>{availability}</Text>
             </View>
           ) : null}
           {verified ? (
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedText}>Profil vérifié</Text>
+            <View style={[styles.verifiedBadge, { borderColor: c.border }]}>
+              <Text style={[styles.verifiedText, { color: c.textMuted }]}>Profil vérifié</Text>
             </View>
           ) : null}
         </View>
-      </ProDayGradient>
+      </View>
 
       {isOwnProfile && (completionPercent != null || careerScore != null) ? (
         <View style={[styles.completionRow, { borderTopColor: c.border }]}>
@@ -273,16 +272,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    backgroundColor: 'transparent',
   },
-  ownPillText: { color: '#FFFFFF', fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
+  ownPillText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.2 },
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
     width: 84,
     height: 84,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.45)',
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   avatarPh: {
     backgroundColor: 'rgba(255,255,255,0.18)',
@@ -299,12 +299,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 24,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#E6E8EC',
     letterSpacing: -0.4,
   },
-  heroSub: { color: 'rgba(255,255,255,0.9)', fontSize: 13, marginTop: 4, lineHeight: 18 },
+  heroSub: { color: '#B4BAC8', fontSize: 13, marginTop: 4, lineHeight: 18 },
   headline: {
-    color: 'rgba(255,255,255,0.82)',
+    color: '#A5ADBF',
     fontSize: 13,
     marginTop: 6,
     fontStyle: 'italic',
@@ -312,12 +312,13 @@ const styles = StyleSheet.create({
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   chip: {
-    backgroundColor: 'rgba(255,255,255,0.16)',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.pill,
   },
-  chipText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  chipText: { fontSize: 11, fontWeight: '600' },
   badgesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   availBadge: {
     flexDirection: 'row',
@@ -328,16 +329,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: 'rgba(255,255,255,0.14)',
   },
-  availPositive: { backgroundColor: 'rgba(52,211,153,0.35)' },
-  availNeutral: { backgroundColor: 'rgba(251,191,36,0.35)' },
-  availText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  availPositive: { backgroundColor: 'rgba(52,211,153,0.18)' },
+  availNeutral: { backgroundColor: 'rgba(251,191,36,0.18)' },
+  availText: { color: '#E6E8EC', fontSize: 11, fontWeight: '600' },
   verifiedBadge: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderWidth: 1,
+    backgroundColor: 'transparent',
   },
-  verifiedText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  verifiedText: { fontSize: 11, fontWeight: '600' },
   completionRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -292,7 +292,7 @@ export function AdultUniverseScreen({
           />
 
           <View style={styles.sceneWrap}>
-            <JoueurWorldScene identity={identity} kind="pitch_data" height={180} />
+            <JoueurWorldScene identity={identity} kind="pitch_data" height={148} compact showBanner={false} />
           </View>
 
           <JoueurActionRow
@@ -336,9 +336,9 @@ const styles = StyleSheet.create({
   hero: {
     color: JOUEUR_SITE.foreground,
     fontWeight: '700',
-    fontSize: 34,
-    letterSpacing: -1,
-    lineHeight: 38,
+    fontSize: 30,
+    letterSpacing: -0.6,
+    lineHeight: 34,
   },
   support: {
     color: JOUEUR_SITE.muted,
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 18,
+    borderRadius: 14,
     padding: spacing.md,
     backgroundColor: JOUEUR_SITE.surface,
   },
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 12,
     padding: spacing.md,
     backgroundColor: JOUEUR_SITE.surface,
   },
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     width: '47%',
     flexGrow: 1,
     minHeight: 78,
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     backgroundColor: JOUEUR_SITE.surface,
     padding: spacing.md,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   },
   tileSub: { color: JOUEUR_SITE.muted, fontSize: 12 },
   sceneWrap: {
-    borderRadius: 20,
+    borderRadius: 14,
     overflow: 'hidden',
   },
 });

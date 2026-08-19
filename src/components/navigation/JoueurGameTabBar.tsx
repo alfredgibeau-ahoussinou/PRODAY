@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import type { MainTabId } from '../../navigation/mainTabConfig';
 import { getMobileRailLayout } from '../../navigation/mobileTabConfig';
 import { PressableSpring } from '../motion/PressableSpring';
@@ -65,11 +64,11 @@ export function JoueurGameTabBar({
   const role = profile?.role;
   const level = progressApi?.level;
   const stars = progressApi?.progress.stars ?? 0;
-  const dockColors: [string, string] = isYouth
-    ? ['rgba(255,252,240,0.96)', 'rgba(255,236,179,0.98)']
+  const dockBg = isYouth
+    ? 'rgba(255,248,228,0.97)'
     : isTeen
-      ? ['rgba(14,22,34,0.94)', 'rgba(10,16,26,0.98)']
-      : ['rgba(12,18,30,0.92)', 'rgba(7,11,20,0.98)'];
+      ? 'rgba(12,18,28,0.96)'
+      : 'rgba(10,14,22,0.96)';
   const dimColor = isYouth
     ? identity?.inkMuted ?? 'rgba(63,42,10,0.55)'
     : JOUEUR_SITE.dim;
@@ -171,14 +170,14 @@ export function JoueurGameTabBar({
           },
         ]}
       >
-        <LinearGradient
-          colors={dockColors}
+        <View
           style={[
             styles.dock,
             {
               borderColor: dockBorder,
-              borderRadius: isYouth ? 32 : isTeen ? 20 : 28,
-              borderWidth: isYouth ? 2 : 1,
+              backgroundColor: dockBg,
+              borderRadius: isYouth ? 28 : isTeen ? 18 : 22,
+              borderWidth: 1,
             },
           ]}
         >
@@ -241,7 +240,7 @@ export function JoueurGameTabBar({
               </PressableSpring>
             ) : null}
           </View>
-        </LinearGradient>
+        </View>
       </View>
 
       <JoueurGamePauseSheet
@@ -280,11 +279,11 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.18,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
       },
-      android: { elevation: 6 },
+      android: { elevation: 3 },
       default: {},
     }),
   },
@@ -322,20 +321,20 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
   homeOrb: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   slotLabel: {
     fontSize: 8,

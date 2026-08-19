@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring } from '../motion';
@@ -218,14 +217,11 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   const form = formPercent ?? (seasonStats.matches > 0 ? Math.min(99, 55 + seasonStats.matches * 2) : undefined);
 
   const card = (
-    <LinearGradient
-      colors={theme.bg}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <View
       style={[
         styles.card,
-        shadows.card,
         {
+          backgroundColor: theme.surface,
           borderRadius: theme.cardRadius,
           borderColor: theme.border,
         },
@@ -356,7 +352,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           </ProDayText>
         </View>
       ) : null}
-    </LinearGradient>
+    </View>
   );
 
   if (onPress) {
@@ -414,6 +410,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: spacing.lg,
     gap: spacing.md,
+    ...shadows.soft,
   },
   compact: {
     padding: spacing.md,
