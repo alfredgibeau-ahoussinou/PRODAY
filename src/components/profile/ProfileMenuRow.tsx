@@ -3,6 +3,9 @@ import { View, Text, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { Icon, type IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -24,7 +27,13 @@ export const ProfileMenuRow: React.FC<ProfileMenuRowProps> = ({
   badge,
 }) => {
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
+  const accent = isPlayer ? joueurTheme.accent : c.brand;
+  const accentSoft = isPlayer ? playerColors.accentSoft : c.brandSoft;
+  const styles = useMemo(() => createStyles(c, accent, accentSoft), [c, accent, accentSoft]);
 
   return (
     <PressableSpring style={styles.row} onPress={onPress} scaleTo={0.96} haptic>
@@ -45,7 +54,7 @@ export const ProfileMenuRow: React.FC<ProfileMenuRowProps> = ({
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles(c: AppColors, accent: string, accentSoft: string) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -71,13 +80,13 @@ function createStyles(c: AppColors) {
     titleDanger: { color: c.text },
     sub: { fontSize: 12, color: c.textMuted, marginTop: 2 },
     badge: {
-      backgroundColor: c.brandSoft,
+      backgroundColor: accentSoft,
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: radius.pill,
       borderWidth: 1,
-      borderColor: c.brand,
+      borderColor: accent,
     },
-    badgeText: { fontSize: 10, fontWeight: '800', color: c.brand },
+    badgeText: { fontSize: 10, fontWeight: '800', color: accent },
   });
 }

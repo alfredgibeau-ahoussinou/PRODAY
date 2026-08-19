@@ -10,6 +10,9 @@ import {
 import { Icon } from '../ui/Icon';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { spacing, radius } from '../../theme/designTokens';
 
 const MAX = 6;
@@ -30,22 +33,29 @@ export const ProfileGalleryEditor: React.FC<ProfileGalleryEditorProps> = ({
   onRemove,
 }) => {
   const { colors: c, isWoman } = useAppTheme();
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
+  const accent = isPlayer ? joueurTheme.accent : c.brand;
+  const accentSoft = isPlayer ? playerColors.accentSoft : c.accentSoft;
+  const accentInverse = isPlayer ? '#FFFFFF' : c.brandInverse;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: c.text }]}>Galerie photos</Text>
-        <Text style={[styles.count, { color: c.brand }]}>{urls.length}/{MAX}</Text>
+        <Text style={[styles.count, { color: accent }]}>{urls.length}/{MAX}</Text>
       </View>
       <View style={styles.grid}>
         {urls.map((uri) => (
           <View key={uri} style={[styles.cell, { borderColor: c.border }]}>
             <Image source={{ uri }} style={styles.photo} />
             <TouchableOpacity
-              style={[styles.removeBtn, { backgroundColor: c.brand }]}
+              style={[styles.removeBtn, { backgroundColor: accent }]}
               onPress={() => onRemove(uri)}
             >
-              <Icon name="close" size={14} color={c.brandInverse} />
+              <Icon name="close" size={14} color={accentInverse} />
             </TouchableOpacity>
           </View>
         ))}
@@ -54,19 +64,19 @@ export const ProfileGalleryEditor: React.FC<ProfileGalleryEditorProps> = ({
             style={[
               styles.addCell,
               {
-                borderColor: c.brand,
-                backgroundColor: c.accentSoft,
+                borderColor: accent,
+                backgroundColor: accentSoft,
               },
             ]}
             onPress={onAdd}
             disabled={uploading}
           >
             {uploading ? (
-              <ActivityIndicator color={c.brand} />
+              <ActivityIndicator color={accent} />
             ) : (
               <>
-                <Icon name="add" size={28} color={c.brand} />
-                <Text style={[styles.addLabel, { color: c.brand }]}>Ajouter</Text>
+                <Icon name="add" size={28} color={accent} />
+                <Text style={[styles.addLabel, { color: accent }]}>Ajouter</Text>
               </>
             )}
           </TouchableOpacity>

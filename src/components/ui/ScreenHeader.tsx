@@ -4,6 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import type { AppColors } from '../../theme/universeTheme';
 import { Icon } from './Icon';
 import { Logo } from '../Logo';
@@ -36,6 +39,10 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   sponsorDark = false,
 }) => {
   const { colors: c } = useAppTheme();
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
   const styles = useMemo(() => createStyles(c), [c]);
   const isDarkHeader = dark || sponsorDark;
   const ink = isDarkHeader
@@ -61,10 +68,12 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
     ? SPONSOR_THEME.heroSubtext
     : dark
       ? c.brandInverse
-      : c.brand;
+      : isPlayer
+        ? joueurTheme.accent
+        : c.brand;
   const backBtnStyle = sponsorDark
     ? { backgroundColor: SPONSOR_THEME.primarySoft }
-    : { backgroundColor: c.brandSoft };
+    : { backgroundColor: isPlayer ? playerColors.accentSoft : c.brandSoft };
 
   if (centered || onBack) {
     return (

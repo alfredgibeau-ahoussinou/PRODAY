@@ -8,6 +8,9 @@ import {
 import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { spacing, radius } from '../../theme/designTokens';
 
 const MAX = 3;
@@ -26,6 +29,13 @@ export const ProfileVideoEditor: React.FC<ProfileVideoEditorProps> = ({
   onRemove,
 }) => {
   const { colors: c } = useAppTheme();
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
+  const accent = isPlayer ? joueurTheme.accent : c.brand;
+  const accentSoft = isPlayer ? playerColors.accentSoft : c.accentSoft;
+  const accentInverse = isPlayer ? '#FFFFFF' : c.brandInverse;
 
   return (
     <View style={styles.wrap}>
@@ -38,17 +48,17 @@ export const ProfileVideoEditor: React.FC<ProfileVideoEditorProps> = ({
       <View style={styles.grid}>
         {urls.map((uri, index) => (
           <View key={uri} style={[styles.cell, { borderColor: c.border, backgroundColor: c.surfaceMuted }]}>
-            <View style={[styles.playBadge, { backgroundColor: c.accentSoft }]}>
-              <Icon name="time" size={22} color={c.accent} />
+            <View style={[styles.playBadge, { backgroundColor: accentSoft }]}>
+              <Icon name="time" size={22} color={accent} />
             </View>
             <ProDayText variant="caption" muted style={styles.videoLabel}>
               Vidéo {index + 1}
             </ProDayText>
             <TouchableOpacity
-              style={[styles.removeBtn, { backgroundColor: c.brand }]}
+              style={[styles.removeBtn, { backgroundColor: accent }]}
               onPress={() => onRemove(uri)}
             >
-              <Icon name="close" size={14} color={c.brandInverse} />
+              <Icon name="close" size={14} color={accentInverse} />
             </TouchableOpacity>
           </View>
         ))}
@@ -57,18 +67,18 @@ export const ProfileVideoEditor: React.FC<ProfileVideoEditorProps> = ({
             style={[
               styles.addCell,
               {
-                borderColor: c.brand,
-                backgroundColor: c.accentSoft,
+                borderColor: accent,
+                backgroundColor: accentSoft,
               },
             ]}
             onPress={onAdd}
             disabled={uploading}
           >
             {uploading ? (
-              <ActivityIndicator color={c.brand} />
+              <ActivityIndicator color={accent} />
             ) : (
               <>
-                <Icon name="add" size={28} color={c.brand} />
+                <Icon name="add" size={28} color={accent} />
                 <ProDayText variant="caption" accent style={styles.addLabel}>
                   Ajouter
                 </ProDayText>

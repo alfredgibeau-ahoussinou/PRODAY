@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { spacing } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -28,7 +30,12 @@ export const ProfileAvatarButton: React.FC<ProfileAvatarButtonProps> = ({
   size = 96,
 }) => {
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const accent = isPlayer ? joueurTheme.accent : c.brand;
+  const accentInverse = isPlayer ? '#FFFFFF' : c.brandInverse;
+  const styles = useMemo(() => createStyles(c, accent, accentInverse), [c, accent, accentInverse]);
   const letter = displayName.trim().charAt(0).toUpperCase() || '?';
   const compact = size < 56;
   const badgeSize = compact ? 22 : 30;
@@ -66,20 +73,20 @@ export const ProfileAvatarButton: React.FC<ProfileAvatarButtonProps> = ({
         ]}
       >
         {uploading ? (
-          <ActivityIndicator size="small" color={c.brandInverse} />
+          <ActivityIndicator size="small" color={accentInverse} />
         ) : (
-          <Icon name="image" size={badgeIcon} color={c.brandInverse} />
+          <Icon name="image" size={badgeIcon} color={accentInverse} />
         )}
       </View>
     </TouchableOpacity>
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles(c: AppColors, accent: string, accentInverse: string) {
   return StyleSheet.create({
     wrap: {
       borderWidth: 3,
-      borderColor: c.brand,
+      borderColor: accent,
       overflow: 'hidden',
       backgroundColor: c.surfaceMuted,
     },
@@ -88,20 +95,20 @@ function createStyles(c: AppColors) {
     },
     image: { resizeMode: 'cover' },
     placeholder: {
-      backgroundColor: c.accent,
+      backgroundColor: accent,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    letter: { color: c.brandInverse, fontWeight: '900' },
+    letter: { color: accentInverse, fontWeight: '900' },
     badge: {
       position: 'absolute',
       right: -1,
       bottom: -1,
-      backgroundColor: c.brand,
+      backgroundColor: accent,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: c.brandInverse,
+      borderColor: accentInverse,
     },
   });
 }

@@ -340,8 +340,9 @@ export function JoueurActionRow({
   onSecondary?: () => void;
 }) {
   const identity = useJoueurPageIdentity();
-  const accent = identity?.accent ?? '#2F7BFF';
-  const accentBright = identity?.accentBright ?? accent;
+  const theme = useJoueurTheme();
+  const accent = theme.accent;
+  const accentBright = theme.accentBright;
   const radius = identity?.radius ?? 4;
   const styles = useMemo(
     () => createActionStyles(accent, accentBright, radius),
