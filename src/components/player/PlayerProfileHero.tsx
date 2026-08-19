@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { User } from '../../models/User';
 import { Icon, type IconName } from '../ui/Icon';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
+import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 import {
   availabilityLabel,
   availabilityTone,
@@ -45,8 +46,18 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
   if (p.weight_kg) metaParts.push(`${p.weight_kg} kg`);
 
   return (
-    <View style={[styles.card, shadows.card, { borderColor: c.border, backgroundColor: c.surface }]}>
-      <ProDayGradient kind="hero" style={styles.hero}>
+    <View style={[styles.card, shadows.card, { borderColor: `${c.brand}44`, backgroundColor: FUT18_PREMIUM.panelBg }]}>
+      <LinearGradient
+        colors={[c.brand, FUT18_PREMIUM.nightBlue, FUT18_PREMIUM.nightDeep]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.hero}
+      >
+        <LinearGradient
+          colors={['rgba(255,255,255,0.14)', 'transparent']}
+          style={styles.heroShine}
+          pointerEvents="none"
+        />
         {isOwnProfile ? (
           <View style={styles.ownPill}>
             <Text style={styles.ownPillText}>Mon profil</Text>
@@ -114,7 +125,7 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
             </View>
           ) : null}
         </View>
-      </ProDayGradient>
+      </LinearGradient>
 
       {isOwnProfile && (completionPercent != null || careerScore != null) ? (
         <View style={[styles.completionRow, { borderTopColor: c.border }]}>
@@ -128,8 +139,8 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
                     : 'Complétez pour être repéré'}
                 </Text>
               </View>
-              <View style={[styles.completionRing, { borderColor: c.brand }]}>
-                <Text style={[styles.completionPct, { color: c.brand }]}>{completionPercent}%</Text>
+              <View style={[styles.completionRing, { borderColor: FUT18_PREMIUM.goldAccent }]}>
+                <Text style={[styles.completionPct, { color: FUT18_PREMIUM.goldAccent }]}>{completionPercent}%</Text>
               </View>
             </View>
           ) : null}
@@ -141,8 +152,8 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
                   Stats · activité · profil
                 </Text>
               </View>
-              <View style={[styles.completionRing, { borderColor: c.brand }]}>
-                <Text style={[styles.completionPct, { color: c.brand }]}>{careerScore}</Text>
+              <View style={[styles.completionRing, { borderColor: FUT18_PREMIUM.goldAccent }]}>
+                <Text style={[styles.completionPct, { color: FUT18_PREMIUM.goldAccent }]}>{careerScore}</Text>
               </View>
             </View>
           ) : null}
@@ -267,6 +278,10 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingTop: spacing.xl,
     gap: spacing.md,
+    overflow: 'hidden',
+  },
+  heroShine: {
+    ...StyleSheet.absoluteFillObject,
   },
   ownPill: {
     alignSelf: 'flex-start',

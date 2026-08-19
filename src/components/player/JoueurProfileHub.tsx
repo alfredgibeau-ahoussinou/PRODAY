@@ -18,6 +18,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { FORM_BAND_LABELS, formatFormScore, playerFormFromHealthSnapshot } from '../../utils/formAnalysis';
+import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 import { spacing } from '../../theme/designTokens';
 
 type Props = {
@@ -157,7 +158,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
 
           <View style={styles.futCardBlock}>
             <LinearGradient
-              colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.01)']}
+              colors={[`${identity.accent}22`, 'transparent']}
               style={styles.futTopShine}
               pointerEvents="none"
             />
@@ -187,7 +188,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
                     joueurGamePress();
                     a.run();
                   }}
-                  scaleTo={0.97}
+                  scaleTo={0.98}
                   haptic
                   style={[
                     styles.actionBtn,
@@ -237,7 +238,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
             <View style={styles.boostActions}>
               <PressableSpring
                 onPress={openPass}
-                scaleTo={0.97}
+                scaleTo={0.98}
                 haptic
                 style={[styles.primaryCta, { backgroundColor: identity.accent }]}
               >
@@ -245,7 +246,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
                   Activer Pass IA
                 </ProDayText>
               </PressableSpring>
-              <PressableSpring onPress={openCoach} scaleTo={0.97} style={styles.secondaryCta}>
+              <PressableSpring onPress={openCoach} scaleTo={0.98} style={styles.secondaryCta}>
                 <ProDayText variant="caption" style={styles.secondaryCtaText}>
                   Coach {JOUEUR_SITE.coachPriceEur}€
                 </ProDayText>
@@ -263,14 +264,14 @@ export const JoueurProfileHub: React.FC<Props> = ({
           {(onEdit || onPreferences) && (
             <View style={styles.footerLinks}>
               {onEdit ? (
-                <PressableSpring onPress={onEdit} scaleTo={0.97} style={styles.footerLink}>
+                <PressableSpring onPress={onEdit} scaleTo={0.98} style={styles.footerLink}>
                   <ProDayText variant="caption" style={styles.footerText}>
                     Modifier profil
                   </ProDayText>
                 </PressableSpring>
               ) : null}
               {onPreferences ? (
-                <PressableSpring onPress={onPreferences} scaleTo={0.97} style={styles.footerLink}>
+                <PressableSpring onPress={onPreferences} scaleTo={0.98} style={styles.footerLink}>
                   <ProDayText variant="caption" style={styles.footerText}>
                     Préférences
                   </ProDayText>
@@ -351,10 +352,10 @@ const styles = StyleSheet.create({
     width: '23%',
     minWidth: 72,
     borderWidth: 1,
-    borderColor: JOUEUR_SITE.border,
+    borderColor: FUT18_PREMIUM.panelBorder,
     borderRadius: 14,
     padding: spacing.sm,
-    backgroundColor: 'rgba(12,18,30,0.86)',
+    backgroundColor: FUT18_PREMIUM.panelBg,
   },
   metricLabel: {
     color: JOUEUR_SITE.muted,
@@ -369,10 +370,10 @@ const styles = StyleSheet.create({
   },
   futCardBlock: {
     borderWidth: 1,
-    borderColor: JOUEUR_SITE.border,
+    borderColor: FUT18_PREMIUM.panelBorder,
     borderRadius: 20,
     padding: spacing.md,
-    backgroundColor: 'rgba(10,16,30,0.94)',
+    backgroundColor: FUT18_PREMIUM.panelBg,
     gap: spacing.md,
     overflow: 'hidden',
   },

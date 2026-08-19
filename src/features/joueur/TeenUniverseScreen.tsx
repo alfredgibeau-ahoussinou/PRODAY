@@ -364,7 +364,7 @@ export function TeenUniverseScreen({
             </ProDayText>
             <PressableSpring
               onPress={() => void nextMission()}
-              scaleTo={0.97}
+              scaleTo={0.98}
               haptic
               style={[styles.missionBtn, { borderColor: accent }]}
             >

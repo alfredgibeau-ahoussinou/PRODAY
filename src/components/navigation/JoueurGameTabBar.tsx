@@ -17,6 +17,7 @@ import { JoueurGamePauseSheet } from './JoueurGamePauseSheet';
 import { joueurGamePress, playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
 import { JoueurXpBar } from '../player/joueurPortalUi';
+import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 import { spacing } from '../../theme/designTokens';
 
 const GAME_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
@@ -41,7 +42,7 @@ type Props = {
 };
 
 /**
- * Dock Ultimate Team — barre glass premium, pas pad arcade.
+ * Dock FUT 18 Color Premium — sombre/coloré, finition premium discrète.
  */
 export function JoueurGameTabBar({
   activeTab,
@@ -66,17 +67,13 @@ export function JoueurGameTabBar({
   const level = progressApi?.level;
   const stars = progressApi?.progress.stars ?? 0;
   const dockColors: [string, string] = isYouth
-    ? ['rgba(255,252,240,0.96)', 'rgba(255,236,179,0.98)']
+    ? ['rgba(42,24,8,0.94)', 'rgba(26,16,6,0.98)']
     : isTeen
-      ? ['rgba(14,22,34,0.94)', 'rgba(10,16,26,0.98)']
+      ? ['rgba(14,28,44,0.94)', 'rgba(8,16,28,0.98)']
       : ['rgba(12,18,30,0.92)', 'rgba(7,11,20,0.98)'];
-  const dimColor = isYouth
-    ? identity?.inkMuted ?? 'rgba(63,42,10,0.55)'
-    : JOUEUR_SITE.dim;
-  const dockBorder = isYouth
-    ? identity?.border ?? 'rgba(63,42,10,0.14)'
-    : JOUEUR_SITE.border;
-  const labelActive = isYouth ? identity?.ink ?? '#3F2A0A' : accentBright;
+  const dimColor = identity?.inkMuted ?? JOUEUR_SITE.dim;
+  const dockBorder = identity?.border ?? FUT18_PREMIUM.dockBorder;
+  const labelActive = identity?.accentBright ?? accentBright;
 
   const rail = useMemo(
     () => getMobileRailLayout(productLine, role, visibleTabs),
@@ -112,7 +109,7 @@ export function JoueurGameTabBar({
         key={tab}
         testID={`main-tab-${tab}`}
         onPress={() => pressTab(tab)}
-        scaleTo={0.92}
+        scaleTo={0.98}
         haptic
         style={[styles.slot, isHome && styles.slotHome]}
         accessibilityRole="tab"
@@ -135,7 +132,7 @@ export function JoueurGameTabBar({
           <Icon
             name={icon}
             size={isHome ? (isYouth ? 24 : 22) : isYouth ? 22 : 20}
-            color={active ? (isYouth ? accent : accentBright) : dimColor}
+            color={active ? labelActive : dimColor}
             variant={active ? 'filled' : 'outline'}
           />
           {badge > 0 ? (
@@ -184,8 +181,8 @@ export function JoueurGameTabBar({
         >
           {progressApi?.ready ? (
             <View style={styles.hudStrip}>
-              <Text style={[styles.hudLvl, { color: isYouth ? identity?.ink ?? accent : accentBright }]}>
-                {isYouth ? `NIV ${level?.level ?? 1}` : isTeen ? `DIV ${level?.level ?? 1}` : `LVL ${level?.level ?? 1}`}
+              <Text style={[styles.hudLvl, { color: labelActive }]}>
+                NIV {level?.level ?? 1}
               </Text>
               <View style={styles.hudXp}>
                 <JoueurXpBar
@@ -194,7 +191,7 @@ export function JoueurGameTabBar({
                   color={accent}
                 />
               </View>
-              <Text style={[styles.hudStars, isYouth && { color: accent }]}>★ {stars}</Text>
+              <Text style={[styles.hudStars, { color: FUT18_PREMIUM.goldAccent }]}>★ {stars}</Text>
             </View>
           ) : null}
           <View style={styles.row}>
@@ -205,7 +202,7 @@ export function JoueurGameTabBar({
                   joueurGamePress();
                   setPauseOpen(true);
                 }}
-                scaleTo={0.92}
+                scaleTo={0.98}
                 haptic
                 style={styles.slot}
                 accessibilityRole="button"
@@ -226,7 +223,7 @@ export function JoueurGameTabBar({
                   <Icon
                     name="menu"
                     size={20}
-                    color={pauseActive ? (isYouth ? accent : accentBright) : dimColor}
+                    color={pauseActive ? labelActive : dimColor}
                     variant={pauseActive ? 'filled' : 'outline'}
                   />
                 </View>
@@ -294,17 +291,17 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 10,
     paddingTop: 2,
+    opacity: 0.92,
   },
   hudLvl: {
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.8,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.6,
   },
   hudXp: { flex: 1 },
   hudStars: {
-    color: JOUEUR_SITE.xp,
-    fontSize: 10,
-    fontWeight: '900',
+    fontSize: 9,
+    fontWeight: '800',
   },
   row: {
     flexDirection: 'row',

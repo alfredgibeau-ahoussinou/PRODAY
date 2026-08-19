@@ -5,6 +5,7 @@ import type { HealthSnapshot } from '../../core/types/health';
 import type { JoueurExperienceTheme } from '../../utils/joueurExperienceTheme';
 import type { JoueurPageIdentity } from '../../content/joueurPageIdentity';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
 import {
@@ -268,7 +269,7 @@ export function AdultUniverseScreen({
                   joueurGamePress();
                   tile.a();
                 }}
-                scaleTo={0.97}
+                scaleTo={0.98}
                 haptic
                 style={[styles.tile, { borderColor: JOUEUR_SITE.border }]}
               >
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 18,
     padding: spacing.md,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: FUT18_PREMIUM.panelBg,
   },
   hudMid: { flex: 1, gap: 8 },
   hudRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
@@ -371,7 +372,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 14,
     padding: spacing.md,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: FUT18_PREMIUM.panelBg,
   },
   tileGrid: {
     flexDirection: 'row',
@@ -384,7 +385,7 @@ const styles = StyleSheet.create({
     minHeight: 78,
     borderRadius: 16,
     borderWidth: 1,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: FUT18_PREMIUM.panelBg,
     padding: spacing.md,
     justifyContent: 'flex-end',
     gap: 2,

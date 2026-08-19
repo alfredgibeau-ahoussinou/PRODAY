@@ -2,9 +2,9 @@ import React, { useMemo } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring } from '../motion';
-import { radius, spacing, shadows } from '../../theme/designTokens';
+import { radius, spacing } from '../../theme/designTokens';
+import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 import type { User } from '../../models/User';
 import type {
   JoueurAgeGroup,
@@ -13,16 +13,11 @@ import type {
 import {
   resolveJoueurAgeGroup,
   resolveJoueurGenderVisual,
-  resolvePlayerAgeYears,
 } from '../../utils/joueurExperienceTheme';
 import {
   JOUEUR_AGE_GENDER_ACCENTS,
   JOUEUR_AGE_MOODS,
 } from '../../content/joueurPageIdentity';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export type PlayerCardTrend = 'up' | 'down' | 'stable';
 
@@ -55,30 +50,20 @@ export interface PlayerCardProps {
   player: User;
   stats?: PlayerCardStats;
   trend?: PlayerCardTrend;
-  /** 0-100 wellness / form indicator */
   formPercent?: number;
   clubColors?: { primary: string; secondary: string };
   compact?: boolean;
   onPress?: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Age-adaptive theme
-// ---------------------------------------------------------------------------
-
 interface CardTheme {
-  bg: [string, string];
+  frame: [string, string, string];
+  face: [string, string];
   ink: string;
   inkMuted: string;
-  accent: string;
-  accentSoft: string;
-  surface: string;
-  border: string;
-  cardRadius: number;
-  statFontSize: number;
-  nameFontSize: number;
-  showFormBar: boolean;
-  showTrend: boolean;
+  rim: string;
+  cardWidth: number;
+  cardHeight: number;
 }
 
 function resolveCardTheme(
@@ -90,63 +75,43 @@ function resolveCardTheme(
   const accents = JOUEUR_AGE_GENDER_ACCENTS[ageGroup][gKey];
   const mood = JOUEUR_AGE_MOODS[ageGroup];
 
-  const base = {
-    accent: clubColors?.primary ?? accents.accent,
-    accentSoft: accents.soft,
-    border: mood.border,
-    surface: mood.surface,
-  };
+  const primary = clubColors?.primary ?? accents.accent;
+  const secondary = clubColors?.secondary ?? accents.accentBright;
 
   if (ageGroup === 'youth') {
     return {
-      ...base,
-      bg: clubColors
-        ? [clubColors.primary, clubColors.secondary]
-        : [mood.wash[0], mood.wash[1]],
+      frame: [secondary, primary, mood.wash[2]],
+      face: [mood.wash[1], mood.wash[0]],
       ink: mood.ink,
       inkMuted: mood.inkMuted,
-      cardRadius: 24,
-      statFontSize: 18,
-      nameFontSize: 18,
-      showFormBar: false,
-      showTrend: false,
+      rim: `${primary}66`,
+      cardWidth: 168,
+      cardHeight: 228,
     };
   }
 
   if (ageGroup === 'teen') {
     return {
-      ...base,
-      bg: clubColors
-        ? [clubColors.primary, clubColors.secondary]
-        : [mood.wash[0], mood.wash[1]],
+      frame: [secondary, primary, mood.wash[1]],
+      face: [mood.wash[0], mood.wash[2]],
       ink: mood.ink,
       inkMuted: mood.inkMuted,
-      cardRadius: 18,
-      statFontSize: 15,
-      nameFontSize: 17,
-      showFormBar: true,
-      showTrend: true,
+      rim: `${primary}55`,
+      cardWidth: 156,
+      cardHeight: 214,
     };
   }
 
   return {
-    ...base,
-    bg: clubColors
-      ? [clubColors.primary, clubColors.secondary]
-      : [mood.wash[0], mood.wash[1]],
+    frame: [secondary, primary, FUT18_PREMIUM.nightBlue],
+    face: [mood.wash[0], mood.wash[2]],
     ink: mood.ink,
     inkMuted: mood.inkMuted,
-    cardRadius: 14,
-    statFontSize: 14,
-    nameFontSize: 16,
-    showFormBar: true,
-    showTrend: true,
+    rim: `${primary}44`,
+    cardWidth: 148,
+    cardHeight: 204,
   };
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function positionShort(pos: string | undefined): string {
   if (!pos) return '—';
@@ -167,26 +132,15 @@ function positionShort(pos: string | undefined): string {
   return pos.slice(0, 3).toUpperCase();
 }
 
-function trendIcon(trend: PlayerCardTrend): { name: IconName; color: string } {
-  if (trend === 'up') return { name: 'chevron-up', color: '#34D399' };
-  if (trend === 'down') return { name: 'chevron-down', color: '#F87171' };
-  return { name: 'ellipsis-horizontal', color: '#94A3B8' };
+function estimateOvr(matches: number, goals: number, assists: number): number {
+  const base = 58 + Math.min(20, matches);
+  const boost = Math.min(12, goals * 2 + assists);
+  return Math.max(55, Math.min(99, base + boost));
 }
-
-function formColor(pct: number): string {
-  if (pct >= 75) return '#34D399';
-  if (pct >= 50) return '#FBBF24';
-  return '#F87171';
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({
   player,
   stats,
-  trend = 'stable',
   formPercent,
   clubColors,
   compact,
@@ -198,10 +152,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     age: p.age,
   });
   const gender = resolveJoueurGenderVisual(p.gender);
-  const age = resolvePlayerAgeYears({
-    birthDate: p.birth_date,
-    age: p.age,
-  });
 
   const theme = useMemo(
     () => resolveCardTheme(ageGroup, gender, clubColors),
@@ -209,159 +159,76 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   );
 
   const pos = positionShort(p.position);
-  const jersey = p.jersey_number;
   const seasonStats = stats ?? {
     goals: p.season_stats?.goals ?? 0,
     assists: p.season_stats?.assists ?? 0,
     matches: p.season_stats?.matches ?? 0,
   };
+  const ovr = estimateOvr(seasonStats.matches, seasonStats.goals, seasonStats.assists);
   const form = formPercent ?? (seasonStats.matches > 0 ? Math.min(99, 55 + seasonStats.matches * 2) : undefined);
+  const lastName = player.display_name.trim().split(/\s+/).pop() ?? player.display_name;
+
+  const w = compact ? Math.round(theme.cardWidth * 0.88) : theme.cardWidth;
+  const h = compact ? Math.round(theme.cardHeight * 0.88) : theme.cardHeight;
 
   const card = (
-    <LinearGradient
-      colors={theme.bg}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[
-        styles.card,
-        shadows.card,
-        {
-          borderRadius: theme.cardRadius,
-          borderColor: theme.border,
-        },
-        compact && styles.compact,
-      ]}
-    >
-      {/* Header: avatar + name + position + jersey */}
-      <View style={styles.header}>
-        <View style={styles.avatarWrap}>
-          {player.avatar_url ? (
-            <Image
-              source={{ uri: player.avatar_url }}
-              style={[styles.avatar, { borderColor: theme.accent }]}
-            />
-          ) : (
-            <View
-              style={[
-                styles.avatar,
-                styles.avatarPlaceholder,
-                { backgroundColor: theme.accentSoft, borderColor: theme.accent },
-              ]}
-            >
-              <ProDayText
-                variant="section"
-                style={{ color: theme.accent, fontSize: 24, fontWeight: '900' }}
-              >
-                {player.display_name.charAt(0).toUpperCase()}
+    <View style={[styles.shell, { width: w, height: h, shadowColor: theme.frame[1] }]}>
+      <LinearGradient colors={theme.frame} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.frame}>
+        <LinearGradient colors={theme.face} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={styles.face}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.12)', 'transparent']}
+            style={styles.shine}
+            pointerEvents="none"
+          />
+          <View style={styles.topRow}>
+            <View style={styles.ratingCol}>
+              <ProDayText variant="section" style={[styles.ovr, { color: theme.ink }]}>
+                {ovr}
               </ProDayText>
-            </View>
-          )}
-          {jersey != null ? (
-            <View style={[styles.jerseyBadge, { backgroundColor: theme.accent }]}>
-              <ProDayText variant="caption" style={styles.jerseyText}>
-                {jersey}
-              </ProDayText>
-            </View>
-          ) : null}
-        </View>
-
-        <View style={styles.nameCol}>
-          <View style={styles.nameRow}>
-            <ProDayText
-              variant="body"
-              style={[styles.name, { color: theme.ink, fontSize: theme.nameFontSize }]}
-              numberOfLines={1}
-            >
-              {player.display_name}
-            </ProDayText>
-            {theme.showTrend ? (
-              <Icon {...trendIcon(trend)} size={16} />
-            ) : null}
-          </View>
-          <View style={styles.metaRow}>
-            <View style={[styles.posBadge, { backgroundColor: theme.accentSoft }]}>
-              <ProDayText
-                variant="caption"
-                style={[styles.posText, { color: theme.accent }]}
-              >
+              <ProDayText variant="caption" style={[styles.pos, { color: theme.ink }]}>
                 {pos}
               </ProDayText>
+              {p.jersey_number != null ? (
+                <ProDayText variant="caption" style={[styles.jersey, { color: theme.inkMuted }]}>
+                  #{p.jersey_number}
+                </ProDayText>
+              ) : null}
             </View>
-            {age != null ? (
-              <ProDayText variant="caption" style={{ color: theme.inkMuted }}>
-                {age} ans
-              </ProDayText>
-            ) : null}
-            {player.city ? (
-              <ProDayText variant="caption" style={{ color: theme.inkMuted }} numberOfLines={1}>
-                {player.city}
-              </ProDayText>
+            <View style={styles.photoWrap}>
+              {player.avatar_url ? (
+                <Image source={{ uri: player.avatar_url }} style={styles.photo} resizeMode="cover" />
+              ) : (
+                <View style={[styles.photo, styles.photoPh]}>
+                  <ProDayText variant="section" style={{ color: theme.ink, fontWeight: '900' }}>
+                    {player.display_name.charAt(0).toUpperCase()}
+                  </ProDayText>
+                </View>
+              )}
+            </View>
+          </View>
+          <View style={[styles.namePlate, { backgroundColor: 'rgba(0,0,0,0.35)', borderColor: theme.rim }]}>
+            <ProDayText variant="caption" style={[styles.nameText, { color: theme.ink }]} numberOfLines={1}>
+              {lastName}
+            </ProDayText>
+          </View>
+          <View style={styles.statsGrid}>
+            <StatCell label="BUT" value={seasonStats.goals} ink={theme.ink} />
+            <StatCell label="PAS" value={seasonStats.assists} ink={theme.ink} />
+            <StatCell label="MAT" value={seasonStats.matches} ink={theme.ink} />
+            {form != null ? (
+              <StatCell label="FRM" value={`${form}%`} ink={theme.ink} />
+            ) : seasonStats.avgRating != null ? (
+              <StatCell label="NOTE" value={seasonStats.avgRating.toFixed(1)} ink={theme.ink} />
             ) : null}
           </View>
-        </View>
-      </View>
-
-      {/* Stats row */}
-      <View style={[styles.statsRow, { borderTopColor: theme.border }]}>
-        <StatCell
-          label={ageGroup === 'youth' ? 'Buts' : 'BUT'}
-          value={seasonStats.goals}
-          theme={theme}
-          ageGroup={ageGroup}
-        />
-        <StatCell
-          label={ageGroup === 'youth' ? 'Passes' : 'PAS'}
-          value={seasonStats.assists}
-          theme={theme}
-          ageGroup={ageGroup}
-        />
-        <StatCell
-          label={ageGroup === 'youth' ? 'Matchs' : 'MAT'}
-          value={seasonStats.matches}
-          theme={theme}
-          ageGroup={ageGroup}
-        />
-        {seasonStats.avgRating != null ? (
-          <StatCell
-            label="NOTE"
-            value={seasonStats.avgRating.toFixed(1)}
-            theme={theme}
-            ageGroup={ageGroup}
-          />
-        ) : null}
-      </View>
-
-      {/* Form bar (teen + adult only) */}
-      {theme.showFormBar && form != null ? (
-        <View style={styles.formRow}>
-          <ProDayText variant="caption" style={{ color: theme.inkMuted, fontSize: 11 }}>
-            Forme
-          </ProDayText>
-          <View style={[styles.formTrack, { backgroundColor: theme.surface }]}>
-            <View
-              style={[
-                styles.formFill,
-                {
-                  width: `${Math.min(100, form)}%`,
-                  backgroundColor: formColor(form),
-                },
-              ]}
-            />
-          </View>
-          <ProDayText
-            variant="caption"
-            style={{ color: formColor(form), fontSize: 11, fontWeight: '800' }}
-          >
-            {form}%
-          </ProDayText>
-        </View>
-      ) : null}
-    </LinearGradient>
+        </LinearGradient>
+      </LinearGradient>
+    </View>
   );
 
   if (onPress) {
     return (
-      <PressableSpring onPress={onPress} scaleTo={0.97}>
+      <PressableSpring onPress={onPress} scaleTo={0.98}>
         {card}
       </PressableSpring>
     );
@@ -369,141 +236,66 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   return card;
 };
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-const StatCell: React.FC<{
-  label: string;
-  value: number | string;
-  theme: CardTheme;
-  ageGroup: JoueurAgeGroup;
-}> = ({ label, value, theme, ageGroup }) => (
+const StatCell: React.FC<{ label: string; value: number | string; ink: string }> = ({
+  label,
+  value,
+  ink,
+}) => (
   <View style={styles.statCell}>
-    <ProDayText
-      variant="caption"
-      style={{
-        color: theme.inkMuted,
-        fontSize: ageGroup === 'youth' ? 10 : 9,
-        fontWeight: '700',
-        letterSpacing: 0.5,
-      }}
-    >
+    <ProDayText variant="caption" style={[styles.statLabel, { color: ink }]}>
       {label}
     </ProDayText>
-    <ProDayText
-      variant="section"
-      style={{
-        color: theme.ink,
-        fontSize: theme.statFontSize,
-        fontWeight: '900',
-      }}
-    >
+    <ProDayText variant="caption" style={[styles.statValue, { color: ink }]}>
       {value}
     </ProDayText>
   </View>
 );
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    overflow: 'hidden',
-    padding: spacing.lg,
-    gap: spacing.md,
+  shell: {
+    borderRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.26,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  compact: {
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  avatarWrap: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
-    borderWidth: 2,
-  },
-  avatarPlaceholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  jerseyBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  jerseyText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  nameCol: {
-    flex: 1,
-    gap: 4,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  name: {
-    fontWeight: '800',
-    flex: 1,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  posBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-  },
-  posText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  statsRow: {
-    flexDirection: 'row',
+  frame: { flex: 1, borderRadius: 14, padding: 3 },
+  face: { flex: 1, borderRadius: 12, padding: spacing.sm, paddingTop: spacing.md, overflow: 'hidden' },
+  shine: { ...StyleSheet.absoluteFillObject, borderRadius: 12 },
+  topRow: { flex: 1, flexDirection: 'row', gap: 4, minHeight: 0 },
+  ratingCol: { width: 44, alignItems: 'center', paddingTop: 4 },
+  ovr: { fontSize: 28, fontWeight: '900', lineHeight: 30 },
+  pos: { fontWeight: '900', fontSize: 10, letterSpacing: 0.8, marginTop: 2 },
+  jersey: { fontSize: 9, fontWeight: '700', marginTop: 4 },
+  photoWrap: { flex: 1, borderRadius: radius.sm, overflow: 'hidden' },
+  photo: { width: '100%', height: '100%' },
+  photoPh: { backgroundColor: 'rgba(0,0,0,0.2)', alignItems: 'center', justifyContent: 'center' },
+  namePlate: {
+    marginTop: 6,
+    paddingVertical: 4,
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  nameText: {
+    textAlign: 'center',
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontSize: 11,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 6,
+    paddingHorizontal: 2,
   },
   statCell: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  formRow: {
+    width: '50%',
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
-  formTrack: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  formFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
+  statLabel: { opacity: 0.7, fontSize: 9, fontWeight: '800' },
+  statValue: { fontSize: 11, fontWeight: '900' },
 });

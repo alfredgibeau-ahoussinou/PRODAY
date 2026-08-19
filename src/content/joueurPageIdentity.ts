@@ -80,26 +80,26 @@ export const JOUEUR_AGE_MOODS = {
   youth: {
     id: 'youth' as const,
     label: 'AVENTURE',
-    /** Fond clair ludique — garçon (soleil). */
-    wash: ['#FFF8E7', '#FFE08A', '#FBBF24'] as [string, string, string],
-    band: '#FFF3C4',
+    /** FUT 18 color premium — ambre pitch riche, pas blanc plat. */
+    wash: ['#2A1808', '#7C4A12', '#F59E0B'] as [string, string, string],
+    band: '#3D2810',
     motif: 'dots' as const,
     density: 'playful' as const,
     radius: 28,
     motion: 'bouncy' as const,
     hudLabel: 'PETIT JEU',
-    shellBg: '#FFF6D6',
-    ink: '#3F2A0A',
-    inkMuted: 'rgba(63, 42, 10, 0.62)',
-    surface: 'rgba(255,255,255,0.72)',
-    elevated: 'rgba(255,255,255,0.9)',
-    border: 'rgba(63, 42, 10, 0.12)',
+    shellBg: '#1A1008',
+    ink: '#FFF4E0',
+    inkMuted: 'rgba(255, 244, 224, 0.72)',
+    surface: 'rgba(255,255,255,0.08)',
+    elevated: 'rgba(255,255,255,0.12)',
+    border: 'rgba(245, 158, 11, 0.28)',
   },
   teen: {
     id: 'teen' as const,
     label: 'CARRIÈRE',
-    wash: ['#0B1520', '#0E1C2A', '#081018'] as [string, string, string],
-    band: '#0C1824',
+    wash: ['#0E2238', '#142E48', '#081420'] as [string, string, string],
+    band: '#0F1E30',
     motif: 'grid' as const,
     density: 'hud' as const,
     radius: 18,
@@ -195,14 +195,14 @@ export function resolveJoueurPageIdentity(input: {
 
   if (input.ageGroup === 'youth') {
     const wash: [string, string, string] = isF
-      ? ['#FFF1F7', '#CCFBF1', '#F9A8D4']
+      ? ['#2A0A1F', '#6B1A52', '#EC4899']
       : mood.wash;
     return {
       ageGroup: 'youth',
       gender: input.gender,
       ...accents,
       wash,
-      band: isF ? '#FCE7F3' : mood.band,
+      band: isF ? '#3D1028' : mood.band,
       motif: mood.motif,
       density: mood.density,
       radius: mood.radius,
@@ -219,12 +219,12 @@ export function resolveJoueurPageIdentity(input: {
         ? 'Collecte des étoiles, gagne des défis doux, joue à ton rythme.'
         : 'Collecte des étoiles, relève des défis fun, explore ton terrain.',
       genderLabel,
-      ink: isF ? '#4A1942' : mood.ink,
-      inkMuted: isF ? 'rgba(74, 25, 66, 0.62)' : mood.inkMuted,
-      shellBg: isF ? '#FDF2F8' : mood.shellBg,
+      ink: isF ? '#FFF0F7' : mood.ink,
+      inkMuted: isF ? 'rgba(255, 240, 247, 0.72)' : mood.inkMuted,
+      shellBg: isF ? '#1A0814' : mood.shellBg,
       surface: mood.surface,
       elevated: mood.elevated,
-      border: isF ? 'rgba(74, 25, 66, 0.12)' : mood.border,
+      border: isF ? 'rgba(236, 72, 153, 0.28)' : mood.border,
       worldTag: isF ? 'FILLE · -13' : 'GARÇON · -13',
     };
   }
