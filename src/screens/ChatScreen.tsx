@@ -80,8 +80,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const joueurTheme = useJoueurTheme();
   const { colors: themeColors } = useAppTheme();
   const styles = useMemo(
-    () => createStyles(themeColors, joueurLive),
-    [themeColors, joueurLive],
+    () => createStyles(themeColors, joueurLive, joueurTheme.accent),
+    [themeColors, joueurLive, joueurTheme.accent],
   );
 
   const ui = useMemo(
@@ -435,7 +435,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   return sponsorDark || joueurLive ? shell : <ProDayScreenCanvas flat>{shell}</ProDayScreenCanvas>;
 };
 
-function createStyles(_c: AppColors, joueurLive = false) {
+function createStyles(_c: AppColors, joueurLive = false, joueurAccent: string = PLAYER_DARK.accent) {
   return StyleSheet.create({
     root: { flex: 1 },
     header: {
@@ -445,7 +445,7 @@ function createStyles(_c: AppColors, joueurLive = false) {
       paddingVertical: spacing.sm,
       borderBottomWidth: StyleSheet.hairlineWidth,
       gap: spacing.sm,
-      ...(joueurLive ? { borderLeftWidth: 3, borderLeftColor: PLAYER_DARK.accent } : null),
+      ...(joueurLive ? { borderLeftWidth: 3, borderLeftColor: joueurAccent } : null),
     },
     backBtn: {
       width: 40,

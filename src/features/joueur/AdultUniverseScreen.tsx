@@ -28,6 +28,7 @@ import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import type { JoueurDailyQuestDef } from './constants';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 type Actions = {
   onOpenTrain: () => void;
@@ -65,7 +66,8 @@ export function AdultUniverseScreen({
   const progressApi = useJoueurProgress();
   const nav = useTabNavigationActions();
   const [pop, setPop] = useState<string | null>(null);
-  const accent = identity.accent;
+  const joueurTheme = useJoueurTheme();
+  const accent = joueurTheme.accent;
   const isWoman = theme.gender === 'female';
   const card = useMemo(() => userToProDayCard(profile), [profile]);
 

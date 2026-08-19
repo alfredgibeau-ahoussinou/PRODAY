@@ -25,6 +25,7 @@ import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { JoueurArcadeShell, JoueurScorePop } from './JoueurGameFx';
 import { joueurGameReward, joueurGamePress } from './joueurSfx';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 type Actions = {
   onOpenTrain: () => void;
@@ -86,7 +87,8 @@ export function TeenUniverseScreen({
   const progressApi = useJoueurProgress();
   const nav = useTabNavigationActions();
   const [pop, setPop] = useState<string | null>(null);
-  const accent = identity.accent;
+  const joueurTheme = useJoueurTheme();
+  const accent = joueurTheme.accent;
   const isGirl = theme.gender === 'female';
   const STATS = statsFor(isGirl);
   const PATH = pathSteps(isGirl);

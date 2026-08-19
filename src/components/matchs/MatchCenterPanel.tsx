@@ -123,7 +123,7 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
 
       {upcoming.length > 0 ? (
         <View style={styles.section}>
-          <ProDayText variant="caption" style={[styles.sectionKicker, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.sectionKicker, { color: accent }]}>
             {t('matchs.center.upcoming')} · {upcoming.length}
           </ProDayText>
           {upcoming.map((e, index) => (
@@ -151,10 +151,10 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
 };
 
 function MatchChapterHero({ title, subtitle }: { title: string; subtitle: string }) {
-  const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
   return (
     <View style={styles.hero}>
-      <ProDayText variant="caption" style={[styles.kicker, { color: colors.accent }]}>
+      <ProDayText variant="caption" style={[styles.kicker, { color: skin.accent }]}>
         Centre Match
       </ProDayText>
       <ProDayText variant="section" style={styles.heroTitle}>
@@ -238,7 +238,7 @@ function FeaturedMatchCard({
 
           <View style={styles.featuredMeta}>
             {event.lineup ? (
-              <ProDayText variant="caption" style={{ color: colors.accent, fontWeight: '700' }}>
+              <ProDayText variant="caption" style={{ color: accent, fontWeight: '700' }}>
                 {event.lineup.formation}
               </ProDayText>
             ) : (
@@ -251,7 +251,7 @@ function FeaturedMatchCard({
             </ProDayText>
           </View>
 
-          <ProDayText variant="caption" style={[styles.featuredCta, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.featuredCta, { color: accent }]}>
             Ouvrir le hub match →
           </ProDayText>
         </View>

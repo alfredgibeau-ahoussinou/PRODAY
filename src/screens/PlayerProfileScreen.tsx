@@ -17,6 +17,7 @@ import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
 import { openPlayerCvHtml } from '../utils/openCvHtml';
 import { useAuth } from '../context/AuthContext';
 import { useJoueurSession } from '../context/JoueurSessionContext';
+import { usePlayerThemeColors } from '../context/PlayerThemeContext';
 import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import { useSupporterPlayerFollow } from '../hooks/useSupporterPlayerFollow';
 import { useRequireAuth } from '../hooks/useRequireAuth';
@@ -127,6 +128,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
 }) => {
   const { colors: themeColors, productLine, isWoman } = useAppTheme();
   const joueurSession = useJoueurSession();
+  const playerColors = usePlayerThemeColors();
   const joueurLive =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const { profile: myProfile } = useAuth();
@@ -149,12 +151,12 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       text: PLAYER_DARK.text,
       textSecondary: PLAYER_DARK.textMuted,
       textMuted: PLAYER_DARK.textMuted,
-      brand: PLAYER_DARK.accent,
-      accent: PLAYER_DARK.accent,
-      accentSoft: PLAYER_DARK.accentSoft,
-      accentMuted: PLAYER_DARK.accentSoft,
+      brand: playerColors.accent,
+      accent: playerColors.accent,
+      accentSoft: playerColors.accentSoft,
+      accentMuted: playerColors.accentSoft,
     };
-  }, [joueurLive, isStaffView, themeColors]);
+  }, [joueurLive, isStaffView, playerColors.accent, playerColors.accentSoft, themeColors]);
 
   const styles = useMemo(() => createStyles(profileColors), [profileColors]);
   const { activities } = usePlayerActivities(isOwnProfile ? player.uid : undefined);

@@ -4,6 +4,7 @@ import { GlassCard } from '../aurora/GlassCard';
 import { ProDayText } from '../ui/ProDayText';
 import { AnimatedEntrance } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import type { CareerProgressionResult } from '../../utils/careerProgressionScore';
 import { spacing, radius } from '../../theme/designTokens';
@@ -15,6 +16,7 @@ interface CareerScoreCardProps {
 /** Score carrière calculé à partir de stats et activités réelles. */
 export const CareerScoreCard: React.FC<CareerScoreCardProps> = ({ career }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
 
   const label =
@@ -34,7 +36,7 @@ export const CareerScoreCard: React.FC<CareerScoreCardProps> = ({ career }) => {
             </ProDayText>
             <ProDayText variant="section">{label}</ProDayText>
           </View>
-          <View style={[styles.ring, { borderColor: colors.accent, backgroundColor: colors.accentSoft }]}>
+          <View style={[styles.ring, { borderColor: playerColors.accent, backgroundColor: playerColors.accentSoft }]}>
             <ProDayText variant="hero" accent style={styles.scoreNum}>
               {career.total}
             </ProDayText>
@@ -45,7 +47,7 @@ export const CareerScoreCard: React.FC<CareerScoreCardProps> = ({ career }) => {
           <View
             style={[
               styles.fill,
-              { width: `${career.total}%`, backgroundColor: colors.accent },
+              { width: `${career.total}%`, backgroundColor: playerColors.accent },
             ]}
           />
         </View>

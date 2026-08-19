@@ -21,6 +21,8 @@ import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { JoueurXpBar } from '../player/joueurPortalUi';
 import { resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { JoueurArcadeShell } from '../../features/joueur/JoueurGameFx';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
@@ -52,10 +54,14 @@ export function SmartTacticsPlayerHome({
   onRefresh,
 }: SmartTacticsChapterProps) {
   const session = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
   const identity =
     session?.identity ??
     resolveJoueurPageIdentity({ ageGroup: 'adult', gender: 'neutral' });
-  const accent = PLAYER_DARK.accent;
+  const accent = joueurTheme.accent;
+  const accentAlt = joueurTheme.accentBright;
+  const accentSoft = playerColors.accentSoft;
   const nav = useTabNavigationActions();
 
   const [briefs, setBriefs] = useState<TacticalSharePayload[]>([]);
@@ -130,7 +136,7 @@ export function SmartTacticsPlayerHome({
           }}
           scaleTo={0.97}
           haptic
-          style={[styles.coachCta, { borderColor: accent, backgroundColor: PLAYER_DARK.accentSoft }]}
+          style={[styles.coachCta, { borderColor: accent, backgroundColor: accentSoft }]}
         >
           <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
             COACH IA
@@ -181,7 +187,7 @@ export function SmartTacticsPlayerHome({
                     styles.statusPill,
                     {
                       backgroundColor: inLineup
-                        ? PLAYER_DARK.accentSoft
+                        ? accentSoft
                         : 'rgba(255,255,255,0.06)',
                     },
                   ]}
@@ -189,7 +195,7 @@ export function SmartTacticsPlayerHome({
                   <ProDayText
                     variant="caption"
                     style={{
-                      color: inLineup ? PLAYER_DARK.accentAlt : PLAYER_DARK.accent,
+                      color: inLineup ? accentAlt : accent,
                       fontWeight: '800',
                     }}
                   >
@@ -233,7 +239,7 @@ export function SmartTacticsPlayerHome({
                   label="Disponibilité"
                   value={me.readiness_pct}
                   max={100}
-                  color={PLAYER_DARK.accentAlt}
+                  color={accentAlt}
                 />
               </View>
               <View style={[styles.ovrBadge, { borderColor: accent }]}>
@@ -331,12 +337,12 @@ export function SmartTacticsPlayerHome({
                         styles.chip,
                         {
                           borderColor: mine
-                            ? PLAYER_DARK.accent
+                            ? accent
                             : on
                               ? accent
                               : PLAYER_DARK.border,
                           backgroundColor: mine
-                            ? PLAYER_DARK.accentSoft
+                            ? accentSoft
                             : PLAYER_DARK.surface,
                         },
                       ]}
@@ -344,7 +350,7 @@ export function SmartTacticsPlayerHome({
                       <ProDayText
                         variant="caption"
                         style={{
-                          color: mine ? PLAYER_DARK.accent : PLAYER_DARK.text,
+                          color: mine ? accent : PLAYER_DARK.text,
                           fontWeight: '800',
                           fontSize: 11,
                         }}

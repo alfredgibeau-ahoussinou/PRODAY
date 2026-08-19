@@ -8,6 +8,7 @@ import {
 } from '../../components/player/joueurPortalUi';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { spacing } from '../../theme/designTokens';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 type Props = {
   identity: JoueurPageIdentity;
@@ -25,6 +26,7 @@ export function JoueurUniverseChrome({
   kicker,
   children,
 }: Props) {
+  const theme = useJoueurTheme();
   return (
     <JoueurIdentityProvider identity={identity}>
       <View style={[styles.root, { backgroundColor: JOUEUR_SITE.bg }]}>
@@ -34,13 +36,13 @@ export function JoueurUniverseChrome({
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-        <View style={[styles.accentBar, { backgroundColor: identity.accent }]} />
+        <View style={[styles.accentBar, { backgroundColor: theme.accent }]} />
         {title ? (
           <View style={styles.head}>
             {kicker ? (
               <ProDayText
                 variant="caption"
-                style={[styles.kicker, { color: identity.accent }]}
+                style={[styles.kicker, { color: theme.accent }]}
               >
                 {kicker.toUpperCase()}
               </ProDayText>

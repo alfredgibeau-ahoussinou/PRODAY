@@ -4,6 +4,7 @@ import type { User } from '../../models/User';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon, type IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { spacing, radius } from '../../theme/designTokens';
 
 export type ProfileBlockId =
@@ -43,6 +44,7 @@ export const PlayerProfileBlocks: React.FC<PlayerProfileBlocksProps> = ({
   editable = false,
 }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const [blocks, setBlocks] = useState<ProfileBlockConfig[]>(DEFAULT_BLOCKS);
   const [collapsed, setCollapsed] = useState<Set<ProfileBlockId>>(new Set());
 
@@ -83,8 +85,8 @@ export const PlayerProfileBlocks: React.FC<PlayerProfileBlocksProps> = ({
             style={[styles.block, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
             <Pressable style={styles.blockHeader} onPress={() => toggleCollapse(block.id)}>
-              <View style={[styles.blockIcon, { backgroundColor: colors.accentSoft }]}>
-                <Icon name={block.icon} size={16} color={colors.accent} />
+              <View style={[styles.blockIcon, { backgroundColor: playerColors.accentSoft }]}>
+                <Icon name={block.icon} size={16} color={playerColors.accent} />
               </View>
               <ProDayText variant="section" style={styles.blockTitle}>
                 {block.label}

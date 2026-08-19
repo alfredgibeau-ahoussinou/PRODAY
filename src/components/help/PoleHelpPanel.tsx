@@ -7,6 +7,8 @@ import { AnimatedEntrance, PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import {
   getPoleHelpQuickSuggestions,
@@ -46,7 +48,22 @@ export const PoleHelpPanel: React.FC<PoleHelpPanelProps> = ({
   usesBriefcaseIcon,
   onClose,
 }) => {
-  const { colors } = useAppTheme();
+  const { colors: appColors } = useAppTheme();
+  const profile = useSessionProfile();
+  const playerColors = usePlayerThemeColors();
+  const colors = useMemo(
+    () =>
+      profile?.role === 'player'
+        ? {
+            ...appColors,
+            brand: playerColors.accent,
+            brandSoft: playerColors.accentSoft,
+            accent: playerColors.accent,
+            accentSoft: playerColors.accentSoft,
+          }
+        : appColors,
+    [appColors, playerColors.accent, playerColors.accentSoft, profile?.role],
+  );
   const insets = useSafeAreaInsets();
   const nav = useTabNavigationActions();
   const panelStyles = useMemo(() => createPanelStyles(colors), [colors]);

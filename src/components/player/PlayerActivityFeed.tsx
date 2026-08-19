@@ -6,6 +6,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { LogActivityScreen } from '../../screens/LogActivityScreen';
 import { playerActivityService } from '../../services/playerActivity.service';
@@ -51,6 +52,7 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
   onActivityLogged,
 }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
   const [logOpen, setLogOpen] = useState(false);
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
@@ -104,9 +106,9 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
             onPress={() => setLogOpen(true)}
             scaleTo={0.96}
             haptic
-            style={[styles.addBtn, { backgroundColor: colors.accentSoft }]}
+            style={[styles.addBtn, { backgroundColor: playerColors.accentSoft }]}
           >
-            <Icon name="add" size={14} color={colors.accent} />
+            <Icon name="add" size={14} color={playerColors.accent} />
             <ProDayText variant="caption" accent style={styles.addText}>
               {t('activity.feed.add')}
             </ProDayText>
@@ -215,9 +217,9 @@ export const PlayerActivityFeed: React.FC<PlayerActivityFeedProps> = ({
                         style={[
                           styles.reactionChip,
                           {
-                            borderColor: mine === kind ? colors.accent : colors.border,
+                            borderColor: mine === kind ? playerColors.accent : colors.border,
                             backgroundColor:
-                              mine === kind ? colors.accentSoft : colors.surfaceMuted,
+                              mine === kind ? playerColors.accentSoft : colors.surfaceMuted,
                           },
                         ]}
                       >

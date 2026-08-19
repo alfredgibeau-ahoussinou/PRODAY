@@ -21,7 +21,7 @@ import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTranslation } from '../../../context/LocaleContext';
 import { spacing } from '../../../theme/designTokens';
 import { MATCH_CHAPTER_PAD } from './matchChapterLayout';
-import { MatchEmptyState, MatchFilterBar, MatchKpiRow } from '../matchCenterUi';
+import { MatchEmptyState, MatchFilterBar, MatchKpiRow, useMatchSkinTokens } from '../matchCenterUi';
 
 const scrollProps = {
   showsVerticalScrollIndicator: false,
@@ -98,6 +98,7 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
   livePanel,
 }) => {
   const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
   const { t } = useTranslation();
   const calendarKindFilters = useMemo(() => getCalendarKindFilters(t), [t]);
 
@@ -116,7 +117,7 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
     <ScrollView
       contentContainerStyle={[MATCH_CHAPTER_PAD, styles.stack]}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={skin.accent} />
       }
       {...scrollProps}
     >
@@ -130,7 +131,7 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
 
       <MatchKpiRow
         items={[
-          { label: 'Semaine', value: String(weekEventCount), tone: colors.accent },
+          { label: 'Semaine', value: String(weekEventCount), tone: skin.accent },
           { label: 'À venir', value: String(filteredCalendar.length), tone: MATCH_SITE.foreground },
           {
             label: 'Prochain',

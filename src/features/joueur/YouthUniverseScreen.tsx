@@ -34,6 +34,7 @@ import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { JoueurArcadeShell, JoueurScorePop } from './JoueurGameFx';
 import { joueurGamePress, joueurGameReward } from './joueurSfx';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 type Actions = {
   onOpenTrain: () => void;
@@ -166,9 +167,10 @@ export function YouthUniverseScreen({
   const xpPct = Math.max(0, Math.min(1, xpInto / Math.max(1, xpMax)));
   const stampsDone = challenges.filter((c) => done.has(c.id)).length;
 
+  const joueurTheme = useJoueurTheme();
   const ink = identity.ink;
   const muted = identity.inkMuted;
-  const accent = identity.accent;
+  const accent = joueurTheme.accent;
   const firstName =
     profile.display_name?.trim().split(/\s+/)[0] || (isGirl ? 'Championne' : 'Champion');
 

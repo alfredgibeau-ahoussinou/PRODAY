@@ -33,6 +33,7 @@ import { useThemedScreen } from '../hooks/useThemedScreen';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 import { spacing } from '../theme/designTokens';
 import { useJoueurSession } from '../context/JoueurSessionContext';
+import { useJoueurTheme } from '../hooks/useJoueurTheme';
 import {
   JoueurMatchSkinProvider,
 } from '../components/matchs/matchCenterUi';
@@ -56,6 +57,7 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
   const { profile, isAdmin } = useAuth();
   const { openAuth } = useTabNavigation();
   const joueurSession = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
   const joueurLive =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const { colors: c, rootStyle } = useThemedScreen();
@@ -286,14 +288,14 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
   ];
 
   const hubShell = (
-    <View style={[styles.root, joueurLive ? { backgroundColor: joueurSession!.identity.shellBg } : rootStyle]}>
+    <View style={[styles.root, joueurLive ? { backgroundColor: joueurTheme.shellBg } : rootStyle]}>
       <PressableSpring style={styles.backRow} onPress={onBack} scaleTo={0.98} haptic>
         <Icon
           name="arrow-back"
           size={22}
-          color={joueurLive ? joueurSession!.identity.ink : c.text}
+          color={joueurLive ? joueurTheme.ink : c.text}
         />
-        <ProDayText variant="body" accent style={joueurLive ? { color: joueurSession!.identity.accent } : undefined}>
+        <ProDayText variant="body" accent style={joueurLive ? { color: joueurTheme.accent } : undefined}>
           Matchs
         </ProDayText>
       </PressableSpring>

@@ -111,7 +111,7 @@ export const MatchLiveEventCard: React.FC<MatchLiveEventCardProps> = ({ event, o
 
           <View style={styles.metaRow}>
             {event.lineup ? (
-              <ProDayText variant="caption" style={{ color: colors.accent, fontWeight: '700' }}>
+              <ProDayText variant="caption" style={{ color: accent, fontWeight: '700' }}>
                 {event.lineup.formation}
               </ProDayText>
             ) : (
@@ -129,7 +129,7 @@ export const MatchLiveEventCard: React.FC<MatchLiveEventCardProps> = ({ event, o
             ) : null}
           </View>
 
-          <ProDayText variant="caption" style={[styles.cta, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.cta, { color: accent }]}>
             Ouvrir le hub →
           </ProDayText>
         </View>

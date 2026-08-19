@@ -569,7 +569,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
             secondaryLabel="Chercher"
             onSecondaryPress={onSearch}
             mood="dynamic_competitive"
-            accentHex={colors.accent}
+            accentHex={isJoueur ? playerTheme.accent : colors.accent}
           />
         </View>
       ) : null}

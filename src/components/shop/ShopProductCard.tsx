@@ -13,6 +13,7 @@ import type { ProductLineId } from '../../models/ProductLine';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
@@ -39,6 +40,7 @@ export const ShopProductCard: React.FC<ShopProductCardProps> = ({
 }) => {
   const { colors: c } = useAppTheme();
   const joueurSession = useJoueurSession();
+  const playerColors = usePlayerThemeColors();
   const joueurSkin = Boolean(
     joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate,
   );
@@ -50,7 +52,7 @@ export const ShopProductCard: React.FC<ShopProductCardProps> = ({
         border: PLAYER_DARK.border,
         ink: PLAYER_DARK.text,
         textMuted: PLAYER_DARK.textMuted,
-        accent: joueurSession?.identity?.accent ?? PLAYER_DARK.accent,
+        accent: playerColors.accent,
       }
     : c;
   const styles = useMemo(() => createStyles(colors), [colors]);

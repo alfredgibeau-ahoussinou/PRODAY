@@ -6,6 +6,7 @@ import { GlassCard } from '../aurora/GlassCard';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing } from '../../theme/designTokens';
 
@@ -16,6 +17,7 @@ interface OpponentScoutingCardProps {
 /** Insights légers prochain adversaire (amical / club). */
 export const OpponentScoutingCard: React.FC<OpponentScoutingCardProps> = ({ clubId }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
   const [match, setMatch] = useState<FriendlyMatch | null>(null);
 
@@ -43,7 +45,7 @@ export const OpponentScoutingCard: React.FC<OpponentScoutingCardProps> = ({ club
   return (
     <GlassCard variant="default" style={styles.card}>
       <View style={styles.header}>
-        <Icon name="eye" size={18} color={colors.accent} />
+        <Icon name="eye" size={18} color={playerColors.accent} />
         <ProDayText variant="section">{t('pulse.scouting.title')}</ProDayText>
       </View>
       <ProDayText variant="caption" muted style={styles.sub}>

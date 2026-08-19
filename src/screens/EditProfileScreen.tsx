@@ -26,6 +26,7 @@ import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
 import { JoueurScreenChrome } from '../components/joueur/JoueurScreenChrome';
 import { useJoueurSession } from '../context/JoueurSessionContext';
+import { useJoueurTheme } from '../hooks/useJoueurTheme';
 import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import { ProDayTabPager } from '../components/ui/ProDayTabPager';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
@@ -121,6 +122,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
     user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter';
   const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const joueurSession = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
   const joueurLive =
     isPlayer &&
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
@@ -153,7 +155,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
               text: joueurSession.identity.ink,
               textSecondary: joueurSession.identity.inkMuted,
               textMuted: joueurSession.identity.inkMuted,
-              accent: joueurSession.identity.accent,
+              accent: joueurTheme.accent,
               onAccent: PLAYER_DARK.bg,
             }
           : {
@@ -166,7 +168,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
               accent: c.accent,
               onAccent: c.brandInverse,
             },
-    [isSponsor, joueurLive, joueurSession, c]
+    [isSponsor, joueurLive, joueurSession, joueurTheme.accent, c]
   );
 
   const pagePad = styles.pagePad;

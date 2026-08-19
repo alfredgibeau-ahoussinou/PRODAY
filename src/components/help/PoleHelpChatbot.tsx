@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { usePoleHelpChatbot } from '../../hooks/usePoleHelpChatbot';
 import { getPoleHelpQuestionCount } from '../../content/poleHelpContent';
 import { PoleHelpPanel } from './PoleHelpPanel';
@@ -9,6 +11,21 @@ import { registerCoachHelpOpener } from '../../features/coach/shell/coachHelpOpe
 
 export const PoleHelpChatbot: React.FC = () => {
   const { colors, productLine } = useAppTheme();
+  const profile = useSessionProfile();
+  const playerColors = usePlayerThemeColors();
+  const helpColors = useMemo(
+    () =>
+      profile?.role === 'player'
+        ? {
+            ...colors,
+            brand: playerColors.accent,
+            brandSoft: playerColors.accentSoft,
+            accent: playerColors.accent,
+            accentSoft: playerColors.accentSoft,
+          }
+        : colors,
+    [colors, playerColors.accent, playerColors.accentSoft, profile?.role],
+  );
   const { visible, content, usesBriefcaseIcon, showBubble, dismissBubble } =
     usePoleHelpChatbot(productLine);
   const [open, setOpen] = useState(false);
@@ -41,7 +58,7 @@ export const PoleHelpChatbot: React.FC = () => {
           expanded={showBubble}
           teaser={content.bubbleTeaser}
           usesBriefcaseIcon={usesBriefcaseIcon}
-          colors={colors}
+          colors={helpColors}
           onOpen={openChat}
           onCollapse={dismissBubble}
         />

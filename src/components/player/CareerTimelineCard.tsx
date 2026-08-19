@@ -5,6 +5,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { AnimatedEntrance } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import type { PlayerActivity } from '../../models/PlayerActivity';
 import {
@@ -29,6 +30,7 @@ export const CareerTimelineCard: React.FC<CareerTimelineCardProps> = ({
   loading = false,
 }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
 
   const timeline = useMemo(() => recentActivitiesForTimeline(activities), [activities]);
@@ -64,9 +66,9 @@ export const CareerTimelineCard: React.FC<CareerTimelineCardProps> = ({
                     index > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
                   ]}
                 >
-                  <View style={[styles.dot, { backgroundColor: colors.accent, borderColor: colors.accentSoft }]} />
+                  <View style={[styles.dot, { backgroundColor: playerColors.accent, borderColor: playerColors.accentSoft }]} />
                   <View style={[styles.iconWrap, { backgroundColor: colors.surfaceMuted }]}>
-                    <Icon name={activityTypeIcon(act.type)} size={14} color={colors.accent} />
+                    <Icon name={activityTypeIcon(act.type)} size={14} color={playerColors.accent} />
                   </View>
                   <View style={styles.body}>
                     <ProDayText variant="caption" style={styles.dateLine}>

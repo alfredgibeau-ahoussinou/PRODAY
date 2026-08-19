@@ -4,6 +4,7 @@ import type { PlayerActivity } from '../../models/PlayerActivity';
 import { GlassCard } from '../aurora/GlassCard';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { aggregatePerformanceTags, PERFORMANCE_TAGS } from '../../utils/performanceTags';
 import { spacing, radius } from '../../theme/designTokens';
@@ -21,6 +22,7 @@ export const PlayerActivityPublicSummary: React.FC<PlayerActivityPublicSummaryPr
   maxItems = 5,
 }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
 
   const tagCounts = useMemo(() => aggregatePerformanceTags(activities), [activities]);
@@ -84,7 +86,7 @@ export const PlayerActivityPublicSummary: React.FC<PlayerActivityPublicSummaryPr
             {PERFORMANCE_TAGS.filter((tag) => tagCounts[tag] > 0).map((tag) => (
               <View
                 key={tag}
-                style={[styles.tagChip, { backgroundColor: colors.accentSoft, borderColor: colors.accentMuted }]}
+                style={[styles.tagChip, { backgroundColor: playerColors.accentSoft, borderColor: playerColors.accentGlow }]}
               >
                 <ProDayText variant="caption" accent>
                   {t(`activity.performance.${tag}`)} · {tagCounts[tag]}

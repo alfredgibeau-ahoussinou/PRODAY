@@ -28,6 +28,8 @@ import {
 import { parseFrenchDate } from '../../utils/parseFrenchDate';
 import { ImmersivePoleHero, ImmersiveStepStrip } from '../../components/poles';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import {
   JoueurPageFrame,
   JoueurSectionCard,
@@ -130,12 +132,14 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
   const { colors: c, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
   const joueurSession = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
   const joueurLive =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
 
   const jc = useMemo(() => {
     if (!joueurLive || !joueurSession) return null;
-    const accent = joueurSession.identity.accent;
+    const accent = joueurTheme.accent;
     return {
       background: PLAYER_DARK.bg,
       surface: PLAYER_DARK.surface,
@@ -145,9 +149,9 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
       textMuted: PLAYER_DARK.textDim,
       brand: accent,
       brandInverse: PLAYER_DARK.bg,
-      accentSoft: PLAYER_DARK.accentSoft,
+      accentSoft: playerColors.accentSoft,
     };
-  }, [joueurLive, joueurSession]);
+  }, [joueurLive, joueurSession, joueurTheme.accent, playerColors.accentSoft]);
 
   const ui = jc ?? c;
   const screenRootStyle = joueurLive ? { backgroundColor: PLAYER_DARK.bg } : rootStyle;
@@ -773,7 +777,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                             : 'Forme',
                       value:
                         joueurSession.ageGroup === 'adult' ? 'Pro' : 'Go',
-                      tone: joueurSession.identity.accent,
+                      tone: joueurTheme.accent,
                     },
                     { label: 'IA', value: '3,99€' },
                     { label: 'Coach', value: `${JOUEUR_SITE.coachPriceEur}€` },
@@ -914,7 +918,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                       styles.cta,
                       {
                         backgroundColor: joueurLive
-                          ? joueurSession!.identity.accent
+                          ? joueurTheme.accent
                           : ui.brand,
                       },
                     ]}
@@ -946,7 +950,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                     borderColor: JOUEUR_SITE.border,
                     backgroundColor: JOUEUR_SITE.surface,
                     borderLeftWidth: 3,
-                    borderLeftColor: joueurSession!.identity.accent,
+                    borderLeftColor: joueurTheme.accent,
                     borderRadius: joueurSession!.identity.radius,
                   }
                 : { borderColor: ui.border, backgroundColor: ui.surface },
@@ -972,7 +976,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
               <Icon
                 name={action.icon}
                 size={22}
-                color={joueurLive ? joueurSession!.identity.accent : ui.brand}
+                color={joueurLive ? joueurTheme.accent : ui.brand}
               />
             </View>
             <View style={styles.hubText}>

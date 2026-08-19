@@ -4,6 +4,7 @@ import { GlassCard } from '../aurora/GlassCard';
 import { ProDayText } from '../ui/ProDayText';
 import { AnimatedEntrance } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -22,6 +23,7 @@ export const WeeklyGoalSettings: React.FC<WeeklyGoalSettingsProps> = ({
   onChangeTarget,
 }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
 
@@ -45,7 +47,7 @@ export const WeeklyGoalSettings: React.FC<WeeklyGoalSettingsProps> = ({
             </ProDayText>
             <ProDayText variant="body">{t('career.weekly.subtitle', { count: target })}</ProDayText>
           </View>
-          {saving ? <ActivityIndicator size="small" color={colors.accent} /> : null}
+          {saving ? <ActivityIndicator size="small" color={playerColors.accent} /> : null}
         </View>
 
         <ProDayText variant="caption" muted>
@@ -63,8 +65,8 @@ export const WeeklyGoalSettings: React.FC<WeeklyGoalSettingsProps> = ({
                 style={[
                   styles.chip,
                   {
-                    backgroundColor: selected ? colors.accentSoft : colors.surfaceMuted,
-                    borderColor: selected ? colors.accent : colors.border,
+                    backgroundColor: selected ? playerColors.accentSoft : colors.surfaceMuted,
+                    borderColor: selected ? playerColors.accent : colors.border,
                   },
                 ]}
               >
