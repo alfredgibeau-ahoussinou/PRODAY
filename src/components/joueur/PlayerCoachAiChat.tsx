@@ -21,6 +21,8 @@ import { PLAYER_COACH_STARTERS } from '../../content/playerCoachAiCopy';
 import { stripDashTypography } from '../../utils/stripDashTypography';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { radius, spacing } from '../../theme/designTokens';
+import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
+import { isHomeTrainingIntent } from '../../utils/playerCoachTrainingIntent';
 
 type Bubble = PlayerCoachAiMessage & { id: string };
 
@@ -40,6 +42,7 @@ export function PlayerCoachAiChat({
   compact = false,
 }: Props) {
   const session = useJoueurSession();
+  const nav = useTabNavigationActions();
   const accent = session?.identity?.accent ?? '#4C8BFF';
   const accentBright = session?.identity?.accentBright ?? '#93C5FD';
 
@@ -49,6 +52,7 @@ export function PlayerCoachAiChat({
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [trainingCta, setTrainingCta] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
   const styles = useMemo(() => createStyles(accent, accentBright), [accent, accentBright]);
@@ -63,7 +67,9 @@ export function PlayerCoachAiChat({
     if (!content || sending) return;
     joueurGamePress();
     setError(null);
+    setTrainingCta(false);
     setDraft('');
+    const trainingIntent = isHomeTrainingIntent(content);
     const userMsg: Bubble = { id: `u-${Date.now()}`, role: 'user', content };
     const next = [...messages.filter((m) => m.id !== 'welcome'), userMsg];
     setMessages([...next]);
@@ -79,6 +85,9 @@ export function PlayerCoachAiChat({
         ...prev,
         { id: `a-${Date.now()}`, role: 'assistant', content: reply },
       ]);
+      if (trainingIntent || isHomeTrainingIntent(reply)) {
+        setTrainingCta(true);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Coach IA indisponible.');
       setMessages((prev) => prev.slice(0, -1));
@@ -122,6 +131,22 @@ export function PlayerCoachAiChat({
           <ProDayText variant="caption" style={styles.error}>
             {error}
           </ProDayText>
+        ) : null}
+        {trainingCta ? (
+          <PressableSpring
+            style={[styles.trainingCta, { borderColor: accent, backgroundColor: `${accent}22` }]}
+            onPress={() => {
+              joueurGamePress();
+              nav.openDashboard('train_ai');
+            }}
+            scaleTo={0.97}
+            haptic
+          >
+            <Icon name="star-four-points" size={18} color={accentBright} />
+            <ProDayText variant="caption" style={[styles.trainingCtaText, { color: accentBright }]}>
+              Créer mon entraînement
+            </ProDayText>
+          </PressableSpring>
         ) : null}
       </ScrollView>
 
@@ -189,6 +214,18 @@ function createStyles(accent: string, accentBright: string) {
     userText: { color: '#F3F8FF' },
     aiText: { color: 'rgba(243,248,255,0.9)' },
     error: { color: '#F87171', marginTop: spacing.xs },
+    trainingCta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      marginTop: spacing.xs,
+    },
+    trainingCtaText: { fontWeight: '800' },
     starters: {
       paddingHorizontal: spacing.md,
       gap: spacing.sm,

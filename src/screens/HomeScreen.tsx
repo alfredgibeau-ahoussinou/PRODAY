@@ -37,6 +37,7 @@ type HomeOverlay =
   | 'partner-hub'
   | 'smart_tactics'
   | 'train'
+  | 'train_ai'
   | 'tactics_coach'
   | null;
 
@@ -68,6 +69,7 @@ export const HomeScreen: React.FC = () => {
     if (pendingDashboardView === 'gestion') setOverlay('team');
     else if (pendingDashboardView === 'smart_tactics') setOverlay('smart_tactics');
     else if (pendingDashboardView === 'train') setOverlay('train');
+    else if (pendingDashboardView === 'train_ai') setOverlay('train_ai');
     else if (pendingDashboardView === 'tactics_coach') setOverlay('tactics_coach');
     else if (pendingDashboardView === 'sponsors') {
       setOverlay(profile.role === 'sponsor' ? 'partner-hub' : 'sponsors');
@@ -173,9 +175,12 @@ export const HomeScreen: React.FC = () => {
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'train'}>
-            {overlay === 'train' ? (
-              <TrainHubScreen onBack={() => setOverlay(null)} />
+          <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai'}>
+            {overlay === 'train' || overlay === 'train_ai' ? (
+              <TrainHubScreen
+                onBack={() => setOverlay(null)}
+                initialView={overlay === 'train_ai' ? 'ai' : 'hub'}
+              />
             ) : null}
           </PushScreenTransition>
 

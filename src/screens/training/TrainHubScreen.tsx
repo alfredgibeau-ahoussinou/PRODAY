@@ -54,6 +54,8 @@ type TrainHubView = 'hub' | 'home' | 'family' | 'coach' | 'book' | 'exercise' | 
 
 interface TrainHubScreenProps {
   onBack: () => void;
+  /** Vue initiale — ex. `ai` depuis le Coach IA joueur. */
+  initialView?: TrainHubView;
 }
 
 const DEMO_COACHES: CoachHourlyProfile[] = [
@@ -122,7 +124,7 @@ const HUB_ACTIONS: {
   },
 ];
 
-export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
+export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialView = 'hub' }) => {
   const { profile } = useAuth();
   const { colors: c, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -130,7 +132,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
   const joueurLive =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
 
-  const [view, setView] = useState<TrainHubView>('hub');
+  const [view, setView] = useState<TrainHubView>(initialView);
   const [modeFilter, setModeFilter] = useState<HomeExerciseMode | undefined>();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<HomeExercise | null>(null);

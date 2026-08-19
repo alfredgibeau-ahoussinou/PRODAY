@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -10,6 +10,7 @@ import {
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { usePlayerHubData } from '../../hooks/usePlayerHubData';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
+import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { JoueurScreenChrome } from '../../components/joueur/JoueurScreenChrome';
 import {
@@ -23,6 +24,9 @@ import {
 } from '../../components/joueur';
 import { JoueurActionButton } from '../../components/joueur/JoueurActionButton';
 import { ProDayText } from '../../components/ui/ProDayText';
+import { PushScreenTransition } from '../../components/motion';
+import { TrainHubScreen } from '../training/TrainHubScreen';
+import { JoueurTacticsCoachScreen } from './JoueurTacticsCoachScreen';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
@@ -30,13 +34,25 @@ import { resolveJoueurAgeGroup } from '../../utils/joueurExperienceTheme';
 import { getJoueurDailyQuests } from '../../features/joueur/constants';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
 
+type HubOverlay = 'train' | 'train_ai' | 'tactics_coach' | null;
+
 /** Accueil Football Hub — données réelles, pas de stats inventées. */
 export function PlayerFootballHubScreen() {
   const profile = useSessionProfile();
   const session = useJoueurSession();
   const nav = useTabNavigationActions();
+  const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
   const hub = usePlayerHubData(profile);
   const [refreshing, setRefreshing] = useState(false);
+  const [overlay, setOverlay] = useState<HubOverlay>(null);
+
+  useEffect(() => {
+    if (!pendingDashboardView || !profile) return;
+    if (pendingDashboardView === 'train') setOverlay('train');
+    else if (pendingDashboardView === 'train_ai') setOverlay('train_ai');
+    else if (pendingDashboardView === 'tactics_coach') setOverlay('tactics_coach');
+    clearPendingDashboard();
+  }, [pendingDashboardView, clearPendingDashboard, profile]);
 
   const identity = session?.identity;
   const accent = identity?.accent ?? '#4C8BFF';
@@ -88,119 +104,136 @@ export function PlayerFootballHubScreen() {
       : undefined;
 
   return (
-    <JoueurScreenChrome variant="page" kicker="Football Hub" title={`Bonjour ${hub.firstName}`}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + 88 }]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
-        }
-      >
-        <View style={styles.heroRow}>
-          {avatarUri ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatar} accessibilityLabel="Photo profil" />
-          ) : (
-            <View style={[styles.avatar, styles.avatarFallback]}>
-              <ProDayText variant="title" style={styles.avatarLetter}>
-                {hub.firstName.charAt(0).toUpperCase()}
+    <>
+      <JoueurScreenChrome variant="page" kicker="Football Hub" title={`Bonjour ${hub.firstName}`}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + 88 }]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
+          }
+        >
+          <View style={styles.heroRow}>
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatar} accessibilityLabel="Photo profil" />
+            ) : (
+              <View style={[styles.avatar, styles.avatarFallback]}>
+                <ProDayText variant="title" style={styles.avatarLetter}>
+                  {hub.firstName.charAt(0).toUpperCase()}
+                </ProDayText>
+              </View>
+            )}
+            <View style={styles.heroCopy}>
+              <ProDayText variant="caption" style={styles.muted}>
+                {hub.clubName ?? 'Sans club pour l’instant'}
               </ProDayText>
+              <ProDayText variant="section" style={styles.heroTitle}>
+                {identity?.title ?? 'Ton parcours'}
+              </ProDayText>
+              <PlayerProgressBar
+                value={hub.profileCompletion}
+                label={`Profil ${hub.profileCompletion}%`}
+                accent={accent}
+              />
             </View>
-          )}
-          <View style={styles.heroCopy}>
-            <ProDayText variant="caption" style={styles.muted}>
-              {hub.clubName ?? 'Sans club pour l’instant'}
-            </ProDayText>
-            <ProDayText variant="section" style={styles.heroTitle}>
-              {identity?.title ?? 'Ton parcours'}
-            </ProDayText>
-            <PlayerProgressBar
-              value={hub.profileCompletion}
-              label={`Profil ${hub.profileCompletion}%`}
-              accent={accent}
-            />
           </View>
-        </View>
 
-        <JoueurSectionHeader title="Prochain événement" />
-        {hub.loading ? (
-          <ActivityIndicator color={accent} style={styles.inlineLoader} />
-        ) : hub.nextEvent ? (
-          <PlayerMatchCard
-            event={hub.nextEvent}
-            accent={accent}
-            subtitle={convocationSubtitle}
-            onPress={() => nav.openTeamEvent(hub.nextEvent!.id)}
-          />
-        ) : (
-          <ProDayText variant="body" style={styles.empty}>
-            Aucun match ou entraînement planifié. Consulte l’onglet Matchs ou ton équipe.
-          </ProDayText>
-        )}
-
-        {hub.nextTraining && hub.nextTraining.id !== hub.nextEvent?.id ? (
-          <>
-            <JoueurSectionHeader title="Prochain entraînement" />
+          <JoueurSectionHeader title="Prochain événement" />
+          {hub.loading ? (
+            <ActivityIndicator color={accent} style={styles.inlineLoader} />
+          ) : hub.nextEvent ? (
             <PlayerMatchCard
-              event={hub.nextTraining}
-              accent="#22C55E"
-              onPress={() => nav.openTeamEvent(hub.nextTraining!.id)}
+              event={hub.nextEvent}
+              accent={accent}
+              subtitle={convocationSubtitle}
+              onPress={() => nav.openTeamEvent(hub.nextEvent!.id)}
             />
-          </>
-        ) : null}
+          ) : (
+            <ProDayText variant="body" style={styles.empty}>
+              Aucun match ou entraînement planifié. Consulte l’onglet Matchs ou ton équipe.
+            </ProDayText>
+          )}
 
-        <JoueurSectionHeader title="Ton prochain défi" />
-        <PlayerChallengeCard
-          title={nextDefiTitle}
-          description={dailyQuest?.body}
-          progress={nextDefiProgress}
-          progressMax={nextDefiMax}
-          progressLabel={`${nextDefiProgress}/${nextDefiMax}`}
-          done={nextDefiProgress >= nextDefiMax}
-          accent={accent}
-          onPress={() => nav.setActiveTab('progression')}
-        />
+          {hub.nextTraining && hub.nextTraining.id !== hub.nextEvent?.id ? (
+            <>
+              <JoueurSectionHeader title="Prochain entraînement" />
+              <PlayerMatchCard
+                event={hub.nextTraining}
+                accent="#22C55E"
+                onPress={() => nav.openTeamEvent(hub.nextTraining!.id)}
+              />
+            </>
+          ) : null}
 
-        <JoueurSectionHeader title="Ma forme" />
-        <View style={styles.statRow}>
-          <PlayerStatCard
-            label="Forme"
-            value={hub.formPercent != null ? `${hub.formPercent}%` : '—'}
-            hint={
-              hub.formPercent != null
-                ? 'Basé sur ton dernier check wellness'
-                : 'Pas encore de check-in wellness'
-            }
-            empty={hub.formPercent == null}
-            accent={accent}
-            onPress={() => nav.setActiveTab('feed')}
-          />
-          <PlayerStatCard
-            label="Niveau"
-            value={hub.level}
-            hint={`OVR ${hub.ovr || '—'}`}
+          <JoueurSectionHeader title="Ton prochain défi" />
+          <PlayerChallengeCard
+            title={nextDefiTitle}
+            description={dailyQuest?.body}
+            progress={nextDefiProgress}
+            progressMax={nextDefiMax}
+            progressLabel={`${nextDefiProgress}/${nextDefiMax}`}
+            done={nextDefiProgress >= nextDefiMax}
             accent={accent}
             onPress={() => nav.setActiveTab('progression')}
           />
-        </View>
 
-        <PlayerAIRecommendation
-          title="Mon Coach IA"
-          body="Entraînement, tactique, préparation match — avec tes vraies données."
-          onPress={() => nav.openDashboard('tactics_coach')}
-        />
+          <JoueurSectionHeader title="Ma forme" />
+          <View style={styles.statRow}>
+            <PlayerStatCard
+              label="Forme"
+              value={hub.formPercent != null ? `${hub.formPercent}%` : '—'}
+              hint={
+                hub.formPercent != null
+                  ? 'Basé sur ton dernier check wellness'
+                  : 'Pas encore de check-in wellness'
+              }
+              empty={hub.formPercent == null}
+              accent={accent}
+              onPress={() => nav.setActiveTab('feed')}
+            />
+            <PlayerStatCard
+              label="Niveau"
+              value={hub.level}
+              hint={`OVR ${hub.ovr || '—'}`}
+              accent={accent}
+              onPress={() => nav.setActiveTab('progression')}
+            />
+          </View>
 
-        <JoueurSectionHeader title="Raccourcis" />
-        <View style={styles.actions}>
-          <JoueurCard variant="list" title="Matchs" subtitle="Calendrier & convocations" onPress={() => nav.setActiveTab('matchs')} />
-          <JoueurCard variant="list" title="Performance" subtitle="Stats & forme" onPress={() => nav.setActiveTab('feed')} />
-          <JoueurCard variant="list" title="Équipe" subtitle="Club & groupe" onPress={() => nav.setActiveTab('recrutement')} />
-          <JoueurCard variant="list" title="Messages" subtitle="Chat équipe" onPress={() => nav.setActiveTab('messages')} />
-          <JoueurCard variant="list" title="Reels" subtitle="Clips communauté" onPress={() => nav.setActiveTab('reels')} />
-          <JoueurActionButton label="Entraînement IA" variant="secondary" onPress={() => nav.openDashboard('train')} />
-        </View>
-      </ScrollView>
-    </JoueurScreenChrome>
+          <PlayerAIRecommendation
+            title="Mon Coach IA"
+            body="Entraînement, tactique, préparation match — avec tes vraies données."
+            onPress={() => nav.openDashboard('tactics_coach')}
+          />
+
+          <JoueurSectionHeader title="Raccourcis" />
+          <View style={styles.actions}>
+            <JoueurCard variant="list" title="Matchs" subtitle="Calendrier & convocations" onPress={() => nav.setActiveTab('matchs')} />
+            <JoueurCard variant="list" title="Performance" subtitle="Stats & forme" onPress={() => nav.setActiveTab('feed')} />
+            <JoueurCard variant="list" title="Équipe" subtitle="Club & groupe" onPress={() => nav.setActiveTab('recrutement')} />
+            <JoueurCard variant="list" title="Messages" subtitle="Chat équipe" onPress={() => nav.setActiveTab('messages')} />
+            <JoueurCard variant="list" title="Reels" subtitle="Clips communauté" onPress={() => nav.setActiveTab('reels')} />
+            <JoueurActionButton label="Entraînement IA" variant="secondary" onPress={() => nav.openDashboard('train_ai')} />
+          </View>
+        </ScrollView>
+      </JoueurScreenChrome>
+
+      <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai'}>
+        {overlay === 'train' || overlay === 'train_ai' ? (
+          <TrainHubScreen
+            onBack={() => setOverlay(null)}
+            initialView={overlay === 'train_ai' ? 'ai' : 'hub'}
+          />
+        ) : null}
+      </PushScreenTransition>
+
+      <PushScreenTransition active={overlay === 'tactics_coach'}>
+        {overlay === 'tactics_coach' ? (
+          <JoueurTacticsCoachScreen onBack={() => setOverlay(null)} />
+        ) : null}
+      </PushScreenTransition>
+    </>
   );
 }
 
