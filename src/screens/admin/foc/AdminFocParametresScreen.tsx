@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -34,6 +34,7 @@ type Props = {
   onChangePrefs?: (p: AdminFocPreferences) => void;
   onSavePrefs?: () => void;
   onPreviewUserApp?: () => void;
+  initialTab?: string;
 };
 
 export function AdminFocParametresScreen({
@@ -41,13 +42,22 @@ export function AdminFocParametresScreen({
   onChangePrefs,
   onSavePrefs,
   onPreviewUserApp,
+  initialTab,
 }: Props) {
   const insets = useSafeAreaInsets();
   const { profile, signOut, refreshAdminClaim, firebaseUser } = useAuth();
   const { refresh, stats } = useAdminData();
-  const [tab, setTab] = useState<TabId>('personnaliser');
+  const [tab, setTab] = useState<TabId>(
+    initialTab && TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'personnaliser',
+  );
   const [localPrefs, setLocalPrefs] = useState<AdminFocPreferences>(externalPrefs ?? { ...DEFAULT_ADMIN_FOC_PREFS });
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (initialTab && TABS.some((t) => t.id === initialTab)) {
+      setTab(initialTab as TabId);
+    }
+  }, [initialTab]);
 
   const prefs = externalPrefs ?? localPrefs;
   const handleChange = onChangePrefs ?? setLocalPrefs;

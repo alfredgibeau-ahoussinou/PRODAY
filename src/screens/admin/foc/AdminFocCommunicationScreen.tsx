@@ -37,6 +37,8 @@ type TabId = (typeof TABS)[number]['id'];
 
 type Props = {
   initialTab?: string;
+  title?: string;
+  allowedTabs?: readonly string[];
 };
 
 /* ─── Decision row ──────────────────────────────────────────────────── */
@@ -121,16 +123,22 @@ function AnnouncementRow({
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocCommunicationScreen({ initialTab }: Props) {
+export function AdminFocCommunicationScreen({ initialTab, title, allowedTabs }: Props) {
   const { workQueue, announcements, refresh, refreshing } = useAdminData();
-  const [tab, setTab] = useState<TabId>('decisions');
+  const visibleTabs = useMemo(
+    () => (allowedTabs ? TABS.filter((t) => allowedTabs.includes(t.id)) : [...TABS]),
+    [allowedTabs],
+  );
+  const [tab, setTab] = useState<TabId>(
+    (initialTab as TabId) || (visibleTabs[0]?.id as TabId) || 'decisions',
+  );
   const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialTab && TABS.some((t) => t.id === initialTab)) {
+    if (initialTab && visibleTabs.some((t) => t.id === initialTab)) {
       setTab(initialTab as TabId);
     }
-  }, [initialTab]);
+  }, [initialTab, visibleTabs]);
 
   const handleApprove = (item: AdminWorkItem) => {
     if (!canAdminWorkInlineAction(item, 'approve')) return;
@@ -185,8 +193,8 @@ export function AdminFocCommunicationScreen({ initialTab }: Props) {
 
   return (
     <View style={s.root}>
-      <AdminFocPageHeader title="Communication" />
-      <AdminFocTabs tabs={TABS} value={tab} onChange={(id) => setTab(id as TabId)} />
+      <AdminFocPageHeader title={title ?? 'Communication'} />
+      <AdminFocTabs tabs={visibleTabs} value={tab} onChange={(id) => setTab(id as TabId)} />
 
       {tab === 'decisions' ? (
         <FlatList

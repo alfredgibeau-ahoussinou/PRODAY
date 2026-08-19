@@ -40,10 +40,10 @@ const SECONDARY_PRESETS: { color: string; label: string }[] = [
 
 const BLOCK_LABELS: Record<FocDashboardBlockId, string> = {
   kpis: 'KPIs & indicateurs',
+  queue: 'À traiter aujourd’hui',
+  business: 'Abonnements',
   activity: 'Activité récente',
   matchs: 'Matchs amicaux',
-  decisions: 'File de décisions',
-  recrutement: 'Recrutement',
 };
 
 const DENSITY_OPTIONS: { id: AdminFocDensity; label: string; desc: string }[] = [
@@ -278,7 +278,7 @@ export function AdminFocPersonnaliserScreen({ prefs, onChange, onSave }: Props) 
 function PreviewCard({ prefs }: { prefs: AdminFocPreferences }) {
   return (
     <View style={previewStyles.card}>
-      <Text style={previewStyles.label}>Aperçu cockpit ops</Text>
+      <Text style={previewStyles.label}>Aperçu console claire</Text>
       <View style={previewStyles.shell}>
         {/* Sidebar mock */}
         <View
@@ -291,7 +291,7 @@ function PreviewCard({ prefs }: { prefs: AdminFocPreferences }) {
           <Text style={[previewStyles.brand, { color: prefs.primaryColor }]}>
             {prefs.clubDisplayName.slice(0, 8)}
           </Text>
-          {(['Accueil', 'Adhérents', 'Matchs'] as const).map((label, i) => (
+          {(['Accueil', 'Utilisateurs', 'Abos'] as const).map((label, i) => (
             <View
               key={label}
               style={[

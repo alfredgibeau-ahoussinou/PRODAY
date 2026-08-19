@@ -35,7 +35,7 @@ export const AdminGateScreen: React.FC = () => {
         <View style={styles.logoMark}>
           <Text style={styles.logoLetter}>P</Text>
         </View>
-        <Text style={styles.brand}>ProDay OPS</Text>
+        <Text style={styles.brand}>ProDay Admin</Text>
         <Text style={styles.heroTitle}>
           {needsSetup ? 'Configuration requise' : 'Accès refusé'}
         </Text>

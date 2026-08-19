@@ -1,51 +1,49 @@
 import {
-  resolveAdminFocNavigation,
-  type AdminFocSectionId,
-} from '../navigation/adminFocConfig';
+  resolveAdminNav,
+  type AdminNavSectionId,
+  type AdminNavTarget,
+} from '../navigation/adminNavConfig';
 import type { AdminWorkItem, GlobalSearchResult } from './adminInsights';
 
-export type AdminFocNavigationTarget = {
-  section: AdminFocSectionId;
-  hubTab?: string;
-  screenTab?: string;
-};
+export type AdminFocNavigationTarget = AdminNavTarget;
 
-/** Mappe un item de la file de décisions vers la section / onglets FOC. */
+/** Mappe un item de la file de décisions vers la section / onglets admin. */
 export function resolveAdminWorkItemNavigation(item: AdminWorkItem): AdminFocNavigationTarget {
   switch (item.kind) {
     case 'verification':
-      return { section: 'personnes', screenTab: 'decisions' };
+      return { section: 'users', screenTab: 'decisions' };
     case 'reel':
+      return { section: 'contenus', screenTab: 'fil' };
     case 'report':
-      return { section: 'operations', hubTab: 'communication', screenTab: 'decisions' };
+      return { section: 'signalements' };
     case 'payment':
-      return { section: 'finances', screenTab: 'paiements' };
+      return { section: 'abonnements', screenTab: 'paiements' };
     case 'application':
-      return { section: 'operations', hubTab: 'recrutement', screenTab: 'candidatures' };
+      return { section: 'recrutement', screenTab: 'apps' };
     case 'quote':
-      return { section: 'finances', screenTab: 'sponsors' };
+      return { section: 'sponsors', screenTab: 'sponsors' };
     case 'post':
-      return { section: 'operations', hubTab: 'recrutement', screenTab: 'posts' };
+      return { section: 'recrutement', screenTab: 'posts' };
     case 'membership':
       return { section: 'clubs', screenTab: 'clubs' };
     case 'subscription_request':
-      return { section: 'finances', screenTab: 'abonnements' };
+      return { section: 'abonnements', screenTab: 'demandes' };
     default:
-      return resolveAdminFocNavigation('communication');
+      return resolveAdminNav('signalements');
   }
 }
 
-/** Mappe un hit de recherche globale vers la section FOC. */
+/** Mappe un hit de recherche globale vers la section admin. */
 export function resolveAdminSearchHitNavigation(hit: GlobalSearchResult): AdminFocNavigationTarget {
   switch (hit.kind) {
     case 'user':
-      return { section: 'personnes' };
+      return { section: 'users', focusId: hit.id };
     case 'club':
-      return { section: 'clubs', screenTab: 'clubs' };
+      return { section: 'clubs', screenTab: 'clubs', focusId: hit.id };
     case 'post':
-      return { section: 'operations', hubTab: 'recrutement', screenTab: 'posts' };
+      return { section: 'recrutement', screenTab: 'posts' };
     case 'event':
-      return { section: 'competition', hubTab: 'competitions', screenTab: 'events' };
+      return { section: 'matchs', hubTab: 'competitions', screenTab: 'events' };
     default:
       return { section: 'dashboard' };
   }

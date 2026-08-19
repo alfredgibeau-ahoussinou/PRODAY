@@ -6,7 +6,7 @@ import { spacing } from '../../../theme/designTokens';
 type Tab = { id: string; label: string };
 
 type Props = {
-  tabs: Tab[];
+  tabs: readonly Tab[];
   value: string;
   onChange: (id: string) => void;
 };
@@ -101,7 +101,7 @@ export function AdminFocPageHeader({
     <View style={headerStyles.wrap}>
       <View style={headerStyles.row}>
         <View style={headerStyles.copy}>
-          <Text style={headerStyles.kicker}>ProDay</Text>
+          <Text style={headerStyles.kicker}>Console</Text>
           <Text style={headerStyles.title}>{title}</Text>
           {subtitle ? <Text style={headerStyles.sub}>{subtitle}</Text> : null}
         </View>
@@ -137,7 +137,7 @@ const headerStyles = StyleSheet.create({
   },
   title: {
     color: adminChrome.text,
-    fontFamily: adminType.display,
+    fontFamily: adminType.bodyExtra,
     fontSize: 26,
     fontWeight: '800',
     letterSpacing: -0.6,

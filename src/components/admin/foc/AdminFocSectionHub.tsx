@@ -25,7 +25,7 @@ export function AdminFocSectionHub({ tabs, initialTab }: Props) {
     if (initialTab && tabs.some((t) => t.id === initialTab)) {
       setTab(initialTab);
     }
-  }, [initialTab, tabs]);
+  }, [initialTab]);
 
   const active = tabs.find((t) => t.id === tab) ?? tabs[0];
   if (!active) return null;

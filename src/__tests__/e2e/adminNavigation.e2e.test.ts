@@ -11,8 +11,13 @@ import {
   ADMIN_FOC_SCREEN_TABS,
   ADMIN_FOC_LEGACY_SECTION_MAP,
   resolveAdminFocNavigation,
-  type AdminFocSectionId,
 } from '../../navigation/adminFocConfig';
+import {
+  ADMIN_NAV_GROUPS,
+  ADMIN_NAV_ITEMS,
+  resolveAdminNav,
+  isAdminNavSectionId,
+} from '../../navigation/adminNavConfig';
 
 describe('e2e. Navigation shell admin console', () => {
   /* ── Legacy HQ modes (bridge conservé) ── */
@@ -70,11 +75,11 @@ describe('e2e. Navigation shell admin console', () => {
     expect(hqRouteFromLegacyTab('system')).toEqual({ mode: 'systeme' });
   });
 
-  /* ── Football Operations Center (FOC) nav simplifié ── */
+  /* ── Nouveau menu groupé ── */
 
-  it('ADMIN_FOC_NAV contient les 7 sections regroupées', () => {
-    const sectionIds: AdminFocSectionId[] = ADMIN_FOC_NAV.map((n) => n.id);
-    expect(sectionIds).toEqual([
+  it('ADMIN_NAV_ITEMS n’est plus le menu FOC 7 sections', () => {
+    const ids = ADMIN_NAV_ITEMS.map((n) => n.id);
+    expect(ids).not.toEqual([
       'dashboard',
       'personnes',
       'clubs',
@@ -83,23 +88,52 @@ describe('e2e. Navigation shell admin console', () => {
       'finances',
       'plateforme',
     ]);
-    expect(sectionIds).toHaveLength(7);
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        'dashboard',
+        'users',
+        'clubs',
+        'coaches',
+        'players',
+        'parents',
+        'teams',
+        'matchs',
+        'recrutement',
+        'ia',
+        'video',
+        'abonnements',
+        'marketplace',
+        'sponsors',
+        'contenus',
+        'messagerie',
+        'signalements',
+        'statistiques',
+        'parametres',
+        'audit',
+        'securite',
+        'config',
+      ]),
+    );
+    expect(ids).toHaveLength(22);
   });
 
-  it('chaque section FOC a des sous-onglets dans ADMIN_FOC_TABS', () => {
-    for (const section of ADMIN_FOC_NAV) {
-      const tabs = ADMIN_FOC_TABS[section.id];
-      expect(Array.isArray(tabs)).toBe(true);
-      expect(tabs.length).toBeGreaterThan(0);
-    }
+  it('le menu est groupé Principal / Administration', () => {
+    expect(ADMIN_NAV_GROUPS.map((g) => g.id)).toEqual(['principal', 'administration']);
+    expect(ADMIN_NAV_ITEMS.filter((n) => n.group === 'administration').map((n) => n.id)).toEqual([
+      'audit',
+      'securite',
+      'config',
+    ]);
   });
 
-  it('ADMIN_FOC_TABS.personnes contient les filtres primaires sans univers âge', () => {
-    const tabs = ADMIN_FOC_TABS.personnes.map((t) => t.id);
+  it('ADMIN_FOC_NAV reflète le nouveau registre', () => {
+    expect(ADMIN_FOC_NAV.map((n) => n.id)).toEqual(ADMIN_NAV_ITEMS.map((n) => n.id));
+  });
+
+  it('ADMIN_FOC_TABS.users / personnes conserve les filtres primaires', () => {
+    const tabs = ADMIN_FOC_TABS.users.map((t) => t.id);
     expect(tabs).toEqual(['all', 'decisions', 'player', 'coach', 'parent', 'club']);
     expect(tabs).not.toContain('youth');
-    expect(tabs).not.toContain('teen');
-    expect(tabs).not.toContain('adult');
   });
 
   it('ADMIN_WORK_KIND_LABELS couvre membership et subscription_request', () => {
@@ -107,25 +141,10 @@ describe('e2e. Navigation shell admin console', () => {
     expect(ADMIN_WORK_KIND_LABELS.subscription_request).toBe('Abonnement');
   });
 
-  it('ADMIN_FOC_TABS.finances contient abonnements et paiements', () => {
-    const tabs = ADMIN_FOC_TABS.finances.map((t) => t.id);
-    expect(tabs).toContain('abonnements');
-    expect(tabs).toContain('paiements');
-  });
-
-  it('ADMIN_FOC_TABS.competition regroupe matchs et compétitions', () => {
-    const tabs = ADMIN_FOC_TABS.competition.map((t) => t.id);
-    expect(tabs).toEqual(['matchs', 'competitions']);
-  });
-
-  it('ADMIN_FOC_TABS.operations regroupe recrutement, communication et vidéo', () => {
-    const tabs = ADMIN_FOC_TABS.operations.map((t) => t.id);
-    expect(tabs).toEqual(['recrutement', 'communication', 'video']);
-  });
-
-  it('ADMIN_FOC_TABS.plateforme regroupe performance et paramètres', () => {
-    const tabs = ADMIN_FOC_TABS.plateforme.map((t) => t.id);
-    expect(tabs).toEqual(['performance', 'parametres']);
+  it('ADMIN_FOC_TABS.abonnements / finances a Vue, Demandes, Comptes Pro', () => {
+    const tabs = ADMIN_FOC_TABS.abonnements.map((t) => t.id);
+    expect(tabs).toEqual(['vue', 'demandes', 'comptes', 'paiements', 'boutique', 'sponsors']);
+    expect(ADMIN_FOC_TABS.finances.map((t) => t.id)).toEqual(tabs);
   });
 
   it('ADMIN_FOC_SCREEN_TABS.parametres contient personnaliser, audit et beta', () => {
@@ -138,45 +157,48 @@ describe('e2e. Navigation shell admin console', () => {
     expect(tabs).toContain('questions');
   });
 
-  it('mappe les anciens ids sidebar vers les sections regroupées', () => {
-    expect(ADMIN_FOC_LEGACY_SECTION_MAP.adherents).toBe('personnes');
-    expect(ADMIN_FOC_LEGACY_SECTION_MAP.matchs).toBe('competition');
-    expect(ADMIN_FOC_LEGACY_SECTION_MAP.communication).toBe('operations');
-    expect(ADMIN_FOC_LEGACY_SECTION_MAP.parametres).toBe('plateforme');
+  it('mappe les anciens ids sidebar vers le nouveau menu', () => {
+    expect(ADMIN_FOC_LEGACY_SECTION_MAP.adherents).toBe('users');
+    expect(ADMIN_FOC_LEGACY_SECTION_MAP.matchs).toBe('matchs');
+    expect(ADMIN_FOC_LEGACY_SECTION_MAP.communication).toBe('contenus');
+    expect(ADMIN_FOC_LEGACY_SECTION_MAP.parametres).toBe('parametres');
+    expect(ADMIN_FOC_LEGACY_SECTION_MAP.finances).toBe('abonnements');
   });
 
-  it('resolveAdminFocNavigation conserve l’onglet hub pour les liens legacy', () => {
+  it('resolveAdminFocNavigation ouvre les onglets profonds', () => {
     expect(resolveAdminFocNavigation('matchs')).toEqual({
-      section: 'competition',
+      section: 'matchs',
       hubTab: 'matchs',
     });
-    expect(resolveAdminFocNavigation('communication')).toEqual({
-      section: 'operations',
-      hubTab: 'communication',
-    });
-    expect(resolveAdminFocNavigation('personnes')).toEqual({ section: 'personnes' });
+    expect(resolveAdminFocNavigation('communication')).toEqual({ section: 'contenus' });
+    expect(resolveAdminFocNavigation('users')).toEqual({ section: 'users' });
   });
 
   it('resolveAdminFocNavigation ouvre les onglets Personnes profonds', () => {
     expect(resolveAdminFocNavigation('adherents')).toEqual({
-      section: 'personnes',
+      section: 'users',
       screenTab: 'all',
     });
     expect(resolveAdminFocNavigation('coaches')).toEqual({
-      section: 'personnes',
+      section: 'coaches',
       screenTab: 'coach',
     });
     expect(resolveAdminFocNavigation('decisions')).toEqual({
-      section: 'personnes',
+      section: 'users',
       screenTab: 'decisions',
     });
   });
 
-  it('resolveAdminFocNavigation ouvre Communication › Décisions pour publications', () => {
+  it('resolveAdminFocNavigation ouvre Contenus pour publications', () => {
     expect(resolveAdminFocNavigation('publications')).toEqual({
-      section: 'operations',
-      hubTab: 'communication',
-      screenTab: 'decisions',
+      section: 'contenus',
+      screenTab: 'fil',
     });
+  });
+
+  it('resolveAdminNav refuse les ids inconnus vers l’accueil', () => {
+    expect(isAdminNavSectionId('dashboard')).toBe(true);
+    expect(isAdminNavSectionId('personnes')).toBe(false);
+    expect(resolveAdminNav('inconnu-xyz')).toEqual({ section: 'dashboard' });
   });
 });

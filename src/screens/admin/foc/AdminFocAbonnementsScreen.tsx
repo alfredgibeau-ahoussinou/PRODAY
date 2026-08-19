@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Linking,
+  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -42,14 +44,35 @@ import type { User } from '../../../models/User';
 type Props = {
   focusId?: string;
   focusQuery?: string;
+  onOpenUser?: (uid: string) => void;
+  embedded?: boolean;
 };
+
+function subscriptionSourceLabel(
+  user: User,
+  purchases: { user_uid?: string; source?: string }[],
+): string {
+  if (user.stripe_customer_id) return 'Stripe';
+  const last =
+    purchases.find((p) => p.user_uid === user.uid) ?? purchases.find((p) => !p.user_uid);
+  if (last?.source === 'admin_gift') return 'Grant admin';
+  if (
+    last?.source &&
+    ['iap', 'app_store', 'play_store', 'revenuecat', 'store'].includes(last.source)
+  ) {
+    return 'IAP';
+  }
+  if (last?.source) return last.source;
+  if (isSubscriptionAccessActive(user)) return 'Grant admin';
+  return '—';
+}
 
 type TabId = 'membres' | 'formules' | 'achats';
 
 /**
  * Abonnements — transitions Gratuit ↔ Payant, catalogue, historique.
  */
-export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
+export function AdminFocAbonnementsScreen({ focusId, focusQuery, onOpenUser, embedded }: Props) {
   const { users, refreshing, refresh } = useAdminData();
   const { profile, firebaseUser } = useAuth();
   const { width } = useWindowDimensions();
@@ -85,6 +108,7 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
     let trialing = 0;
     let pastDue = 0;
     let expiring = 0;
+    let canceled = 0;
     const week = Date.now() + 7 * 24 * 60 * 60 * 1000;
     for (const u of users) {
       const active = isSubscriptionAccessActive(u);
@@ -98,8 +122,9 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
         free += 1;
       }
       if (u.subscription_status === 'past_due') pastDue += 1;
+      if (u.subscription_status === 'canceled') canceled += 1;
     }
-    return { free, pro, trialing, pastDue, expiring, total: users.length };
+    return { free, pro, trialing, pastDue, expiring, canceled, total: users.length };
   }, [users]);
 
   const rows = useMemo(() => {
@@ -191,16 +216,21 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
     <View style={styles.root}>
       <View style={styles.main}>
         <View style={styles.header}>
-          <Text style={styles.title}>Abonnements</Text>
-          <Text style={styles.sub}>
-            Gratuit et payant, formules, essais, transitions — tout se pilote ici.
-          </Text>
+          {embedded ? null : (
+            <>
+              <Text style={styles.title}>Comptes Pro</Text>
+              <Text style={styles.sub}>
+                Accorder, prolonger, changer de formule ou repasser en gratuit.
+              </Text>
+            </>
+          )}
           <View style={styles.kpiRow}>
             <Kpi label="Comptes" value={stats.total} />
             <Kpi label="Gratuit" value={stats.free} />
             <Kpi label="Payant" value={stats.pro} hot />
             <Kpi label="Essai" value={stats.trialing} />
             <Kpi label="Impayé" value={stats.pastDue} warn={stats.pastDue > 0} />
+            <Kpi label="Résilié" value={stats.canceled} />
             <Kpi label="Expire 7j" value={stats.expiring} warn={stats.expiring > 0} />
           </View>
           <View style={styles.tabs}>
@@ -274,7 +304,11 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
                   <AdminDataRow
                     title={item.display_name}
                     subtitle={`${getRoleLabel(item.role)} · ${item.email}`}
-                    trailing={active ? `Payant · ${plan?.label ?? 'Pro'}` : 'Gratuit'}
+                    trailing={
+                      active
+                        ? `Payant · ${plan?.label ?? 'Pro'} · ${subscriptionSourceLabel(item, purchases)}`
+                        : `Gratuit · ${subscriptionSourceLabel(item, purchases)}`
+                    }
                     priority={active ? 'high' : undefined}
                     selected={item.uid === selectedId}
                     onPress={() => setSelectedId(item.uid)}
@@ -349,8 +383,8 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
         ) : null}
       </View>
 
-      {wide && tab === 'membres' ? (
-        <View style={styles.inspector}>
+      {tab === 'membres' && (wide || selected) ? (
+        <InspectorShell wide={wide} onClose={() => setSelectedId(null)}>
           {selected ? (
             <SubscriptionInspector
               user={selected}
@@ -453,13 +487,37 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery }: Props) {
                   ],
                 )
               }
+              onOpenUser={onOpenUser ? () => onOpenUser(selected.uid) : undefined}
             />
           ) : (
             <Text style={styles.empty}>Sélectionne un compte pour piloter son offre.</Text>
           )}
-        </View>
+        </InspectorShell>
       ) : null}
     </View>
+  );
+}
+
+function InspectorShell({
+  wide,
+  onClose,
+  children,
+}: {
+  wide: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const styles = useMemo(() => createStyles(true), []);
+  if (wide) {
+    return <View style={styles.inspector}>{children}</View>;
+  }
+  return (
+    <Modal visible animationType="slide" onRequestClose={onClose}>
+      <View style={[styles.inspector, { width: '100%', flex: 1, paddingTop: 48 }]}>
+        <AdminButton label="Fermer" variant="ghost" size="sm" onPress={onClose} />
+        {children}
+      </View>
+    </Modal>
   );
 }
 
@@ -504,6 +562,7 @@ function SubscriptionInspector({
   onExtend,
   onSoftCancel,
   onHardFree,
+  onOpenUser,
 }: {
   user: User;
   busy: boolean;
@@ -517,6 +576,7 @@ function SubscriptionInspector({
   onExtend: (days: number) => void;
   onSoftCancel: () => void;
   onHardFree: () => void;
+  onOpenUser?: () => void;
 }) {
   const styles = useMemo(() => createStyles(true), []);
   const effective = subscriptionFromUserFields(user);
@@ -532,6 +592,30 @@ function SubscriptionInspector({
       <Text style={styles.inspSub}>
         {getRoleLabel(user.role)} · {user.email}
       </Text>
+      <Text style={styles.inspSub}>
+        Source · {subscriptionSourceLabel(user, purchases)}
+        {user.stripe_customer_id ? ` · ${user.stripe_customer_id.slice(0, 14)}…` : ''}
+      </Text>
+      {onOpenUser ? (
+        <AdminButton
+          label="Ouvrir la fiche"
+          variant="ghost"
+          size="sm"
+          onPress={onOpenUser}
+        />
+      ) : null}
+      {user.stripe_customer_id ? (
+        <AdminButton
+          label="Portail Stripe"
+          variant="secondary"
+          size="sm"
+          onPress={() => {
+            void Linking.openURL(
+              `https://dashboard.stripe.com/customers/${user.stripe_customer_id}`,
+            );
+          }}
+        />
+      ) : null}
 
       <View style={[styles.tierBanner, active ? styles.tierPro : styles.tierFree]}>
         <Text style={styles.tierBannerLabel}>{active ? 'PAYANT' : 'GRATUIT'}</Text>

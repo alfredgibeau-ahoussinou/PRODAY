@@ -33,6 +33,7 @@ import {
 } from '../../../utils/adminInsights';
 import { resolveAdminWorkItemNavigation } from '../../../utils/adminWorkNavigation';
 import { AdminButton } from '../../../components/admin/AdminButton';
+import { isSubscriptionAccessActive } from '../../../utils/subscriptionLogic';
 
 interface AdminFocDashboardProps {
   onNavigateSection: (section: string) => void;
@@ -89,9 +90,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
     refresh,
     users,
     matches,
-    events,
     clubs,
-    posts,
     workQueue,
     roleBreakdown,
   } = useAdminData();
@@ -105,6 +104,10 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const kpiAdherents = users.length;
+  const kpiPro = useMemo(
+    () => users.filter((u) => isSubscriptionAccessActive(u)).length,
+    [users],
+  );
 
   const kpiMatchsToday = useMemo(
     () => matches.filter((m) => isSameDay(m.date, today)).length,
@@ -128,16 +131,6 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
     }
     return { total: players.length, ...counts };
   }, [users]);
-
-  const kpiPendingPosts = useMemo(
-    () => (posts as Array<{ status?: string }>).filter((p) => p.status === 'pending').length,
-    [posts],
-  );
-
-  const kpiEventsAVenir = useMemo(
-    () => events.filter((e) => e.starts_at > today).length,
-    [events, today],
-  );
 
   // ── Upcoming matches (next 7 days, non-terminal) ─────────────────────────
   const upcomingMatches = useMemo(() => {
@@ -235,12 +228,12 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
           style={styles.greetingGlow}
           pointerEvents="none"
         />
-        <Text style={styles.greetingKicker}>Centre d’ops · Aujourd’hui</Text>
+        <Text style={styles.greetingKicker}>Console · Aujourd’hui</Text>
         <Text style={styles.greeting}>
           {firstName ? `Bonjour ${firstName}` : 'Bonjour'}
         </Text>
         <Text style={styles.greetingSub}>
-          Pilotage ProDay — adhérents, matchs, clubs et décisions en un regard.
+          Utilisateurs, clubs, activité et abonnements — cliquez un KPI pour ouvrir la section.
         </Text>
       </View>
 
@@ -248,10 +241,10 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
       <View style={styles.kpiGrid}>
         <View style={styles.kpiCell}>
           <AdminFocKpiCard
-            label="Adhérents actifs"
+            label="Utilisateurs"
             value={kpiAdherents}
             icon="people"
-            onPress={() => onNavigateLeaf('adherents')}
+            onPress={() => onNavigateLeaf('users')}
           />
         </View>
         <View style={styles.kpiCell}>
@@ -265,7 +258,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
         </View>
         <View style={styles.kpiCell}>
           <AdminFocKpiCard
-            label="Clubs actifs"
+            label="Clubs"
             value={kpiClubs}
             icon="business"
             onPress={() => onNavigateLeaf('clubs')}
@@ -273,7 +266,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
         </View>
         <View style={styles.kpiCell}>
           <AdminFocKpiCard
-            label="Coachs actifs"
+            label="Coachs"
             value={kpiCoachs}
             icon="person"
             onPress={() => onNavigateLeaf('coaches')}
@@ -281,19 +274,31 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
         </View>
         <View style={styles.kpiCell}>
           <AdminFocKpiCard
-            label="Publications en attente"
-            value={kpiPendingPosts}
-            icon="document"
-            hot={kpiPendingPosts > 0}
-            onPress={() => onNavigateLeaf('publications')}
+            label="Joueurs"
+            value={playerUniverseCounts.total}
+            icon="football"
+            onPress={() => onNavigateLeaf('players')}
           />
         </View>
         <View style={styles.kpiCell}>
           <AdminFocKpiCard
-            label="Événements à venir"
-            value={kpiEventsAVenir}
-            icon="calendar"
-            onPress={() => onNavigateLeaf('competitions')}
+            label="À traiter"
+            value={workQueue.length}
+            icon="alert-circle"
+            hot={workQueue.length > 0}
+            onPress={() => {
+              if (onOpenDecisions) onOpenDecisions();
+              else onNavigateLeaf('signalements');
+            }}
+          />
+        </View>
+        <View style={styles.kpiCell}>
+          <AdminFocKpiCard
+            label="Abonnements Pro"
+            value={kpiPro}
+            icon="star"
+            hot={kpiPro > 0}
+            onPress={() => onNavigateLeaf('abonnements')}
           />
         </View>
       </View>
@@ -301,7 +306,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
       {/* Univers joueurs */}
       <AdminFocCard
         title="Univers joueurs"
-        action={{ label: 'Gérer', onPress: () => onNavigateLeaf('adherents') }}
+        action={{ label: 'Gérer', onPress: () => onNavigateLeaf('players') }}
       >
         <View style={styles.universeRow}>
           {(
@@ -313,7 +318,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
           ).map(([id, count]) => (
             <PressableSpring
               key={id}
-              onPress={() => onNavigateLeaf('adherents')}
+              onPress={() => onNavigateLeaf('players')}
               style={styles.universeCell}
             >
               <Text style={styles.universeCount}>{count}</Text>
@@ -350,9 +355,9 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
                   return;
                 }
                 if (onOpenDecisions) onOpenDecisions();
-                else onNavigateLeaf('publications');
+                else onNavigateLeaf('signalements');
               } else if (id.startsWith('match-')) onNavigateLeaf('matchs');
-              else if (id.startsWith('user-')) onNavigateLeaf('adherents');
+              else if (id.startsWith('user-')) onNavigateLeaf('users');
             }}
           />
         </AdminFocCard>
@@ -398,7 +403,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
             label: 'Tout voir',
             onPress: () => {
               if (onOpenDecisions) onOpenDecisions();
-              else onNavigateLeaf('publications');
+              else onNavigateLeaf('signalements');
             },
           }}
         >
@@ -426,7 +431,7 @@ export const AdminFocDashboard: React.FC<AdminFocDashboardProps> = ({
       <PressableSpring
         onPress={() => {
           if (onOpenDecisions) onOpenDecisions();
-          else onNavigateLeaf('publications');
+          else onNavigateLeaf('signalements');
         }}
         style={styles.decisionsBanner}
         scaleTo={0.97}

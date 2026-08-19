@@ -1,33 +1,33 @@
 import React, { useMemo } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../ui/Icon';
 import {
-  ADMIN_FOC_NAV,
-  ADMIN_FOC_SIDEBAR_COLLAPSED,
-  ADMIN_FOC_SIDEBAR_WIDTH,
-  type AdminFocNavItem,
-  type AdminFocSectionId,
-} from '../../../navigation/adminFocConfig';
+  ADMIN_NAV_GROUPS,
+  ADMIN_NAV_ITEMS,
+  ADMIN_NAV_SIDEBAR_COLLAPSED,
+  ADMIN_NAV_SIDEBAR_WIDTH,
+  type AdminNavItem,
+  type AdminNavSectionId,
+} from '../../../navigation/adminNavConfig';
 import { adminChrome, adminType, ADMIN_ON_ACCENT } from '../../../theme/adminTheme';
 import { spacing } from '../../../theme/designTokens';
 
 type Props = {
   collapsed: boolean;
-  activeSection: AdminFocSectionId;
-  sectionOrder: AdminFocSectionId[];
-  hiddenSections: AdminFocSectionId[];
+  activeSection: AdminNavSectionId;
+  sectionOrder: AdminNavSectionId[];
+  hiddenSections: AdminNavSectionId[];
   primaryColor?: string;
-  badges?: Partial<Record<AdminFocSectionId, number>>;
+  badges?: Partial<Record<AdminNavSectionId, number>>;
   clubDisplayName?: string;
   footerLabel?: string;
   onToggleCollapse: () => void;
-  onSelectSection: (section: AdminFocSectionId) => void;
+  onSelectSection: (section: AdminNavSectionId) => void;
 };
 
 /**
- * Rail latéral FOC — cockpit ops sombre, marque ProDay, rail actif signal.
+ * Rail admin clair — groupes Principal / Administration, compact ou étendu.
  */
 export function AdminFocSidebar({
   collapsed,
@@ -46,13 +46,13 @@ export function AdminFocSidebar({
   const styles = useMemo(() => createStyles(), []);
 
   const items = useMemo(() => {
-    const map = new Map(ADMIN_FOC_NAV.map((n) => [n.id, n]));
-    const ordered: AdminFocNavItem[] = [];
+    const map = new Map(ADMIN_NAV_ITEMS.map((n) => [n.id, n]));
+    const ordered: AdminNavItem[] = [];
     for (const id of sectionOrder) {
       const item = map.get(id);
       if (item && !hiddenSections.includes(id)) ordered.push(item);
     }
-    for (const item of ADMIN_FOC_NAV) {
+    for (const item of ADMIN_NAV_ITEMS) {
       if (!ordered.some((o) => o.id === item.id) && !hiddenSections.includes(item.id)) {
         ordered.push(item);
       }
@@ -60,17 +60,10 @@ export function AdminFocSidebar({
     return ordered;
   }, [sectionOrder, hiddenSections]);
 
-  const width = collapsed ? ADMIN_FOC_SIDEBAR_COLLAPSED : ADMIN_FOC_SIDEBAR_WIDTH;
+  const width = collapsed ? ADMIN_NAV_SIDEBAR_COLLAPSED : ADMIN_NAV_SIDEBAR_WIDTH;
 
   return (
-    <View style={[styles.root, { width, paddingTop: insets.top + 10 }]}>
-      <LinearGradient
-        colors={[adminChrome.atmosphereTop, adminChrome.shell, adminChrome.rail]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFillObject}
-        pointerEvents="none"
-      />
+    <View style={[styles.root, { width, paddingTop: insets.top + 8 }]}>
       <View style={[styles.signalEdge, { backgroundColor: accent }]} />
 
       <View style={[styles.brand, collapsed && styles.brandCollapsed]}>
@@ -80,14 +73,9 @@ export function AdminFocSidebar({
           </View>
         ) : (
           <>
-            <View style={styles.brandRow}>
-              <Text style={[styles.brandTitle, { color: accent }]}>ProDay</Text>
-              <View style={[styles.opsPill, { borderColor: accent }]}>
-                <Text style={[styles.opsText, { color: accent }]}>OPS</Text>
-              </View>
-            </View>
+            <Text style={[styles.brandTitle, { color: accent }]}>ProDay</Text>
             <Text style={styles.brandSub} numberOfLines={1}>
-              {clubDisplayName || 'Centre d’ops'}
+              {clubDisplayName || 'Console admin'}
             </Text>
           </>
         )}
@@ -98,53 +86,66 @@ export function AdminFocSidebar({
         contentContainerStyle={styles.scrollInner}
         showsVerticalScrollIndicator={false}
       >
-        {items.map((item) => {
-          const on = item.id === activeSection;
-          const badge = badges[item.id] ?? 0;
+        {ADMIN_NAV_GROUPS.map((group) => {
+          const groupItems = items.filter((item) => item.group === group.id);
+          if (groupItems.length === 0) return null;
           return (
-            <Pressable
-              key={item.id}
-              onPress={() => onSelectSection(item.id)}
-              style={[styles.item, on && styles.itemOn]}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              accessibilityLabel={item.label}
-              hitSlop={4}
-            >
-              {on ? <View style={[styles.activeRail, { backgroundColor: accent }]} /> : null}
-              <View
-                style={[
-                  styles.iconBox,
-                  on && { backgroundColor: adminChrome.overlayStrong, borderColor: accent },
-                ]}
-              >
-                <Icon
-                  name={item.icon}
-                  size={17}
-                  color={on ? accent : adminChrome.textMuted}
-                />
-              </View>
+            <View key={group.id} style={styles.group}>
               {!collapsed ? (
-                <Text style={[styles.label, on && { color: accent }]} numberOfLines={1}>
-                  {item.label}
-                </Text>
-              ) : null}
-              {!collapsed && badge > 0 ? (
-                <View style={[styles.badge, { backgroundColor: accent }]}>
-                  <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
-                </View>
-              ) : null}
-              {collapsed && badge > 0 ? (
-                <View style={[styles.dot, { backgroundColor: accent }]} />
-              ) : null}
-            </Pressable>
+                <Text style={styles.groupLabel}>{group.label}</Text>
+              ) : (
+                <View style={styles.groupDot} />
+              )}
+              {groupItems.map((item) => {
+                const on = item.id === activeSection;
+                const badge = badges[item.id] ?? 0;
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => onSelectSection(item.id)}
+                    style={[styles.item, on && styles.itemOn]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    accessibilityLabel={item.label}
+                    hitSlop={4}
+                  >
+                    {on ? <View style={[styles.activeRail, { backgroundColor: accent }]} /> : null}
+                    <View
+                      style={[
+                        styles.iconBox,
+                        on && { backgroundColor: adminChrome.soft, borderColor: accent },
+                      ]}
+                    >
+                      <Icon
+                        name={item.icon}
+                        size={16}
+                        color={on ? accent : adminChrome.textMuted}
+                      />
+                    </View>
+                    {!collapsed ? (
+                      <Text style={[styles.label, on && { color: adminChrome.text }]} numberOfLines={1}>
+                        {item.label}
+                      </Text>
+                    ) : null}
+                    {!collapsed && badge > 0 ? (
+                      <View style={[styles.badge, { backgroundColor: accent }]}>
+                        <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+                      </View>
+                    ) : null}
+                    {collapsed && badge > 0 ? (
+                      <View style={[styles.dot, { backgroundColor: accent }]} />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </View>
           );
         })}
       </ScrollView>
 
       <Pressable
         onPress={onToggleCollapse}
-        style={[styles.collapse, { paddingBottom: Math.max(insets.bottom, 14) }]}
+        style={[styles.collapse, { paddingBottom: Math.max(insets.bottom, 12) }]}
         accessibilityLabel={collapsed ? 'Agrandir le menu' : 'Réduire le menu'}
       >
         <Icon
@@ -164,37 +165,30 @@ function createStyles() {
   return StyleSheet.create({
     root: {
       flex: 1,
-      maxWidth: ADMIN_FOC_SIDEBAR_WIDTH,
-      backgroundColor: adminChrome.shell,
+      maxWidth: ADMIN_NAV_SIDEBAR_WIDTH,
+      backgroundColor: adminChrome.rail,
       borderRightWidth: StyleSheet.hairlineWidth,
       borderRightColor: adminChrome.shellBorder,
-      overflow: 'hidden',
     },
     signalEdge: {
       position: 'absolute',
       left: 0,
       top: 0,
       bottom: 0,
-      width: 2,
-      opacity: 0.9,
+      width: 3,
     },
     brand: {
       paddingHorizontal: spacing.md,
       paddingBottom: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: adminChrome.shellBorder,
-      minHeight: 68,
+      minHeight: 64,
       justifyContent: 'center',
-      gap: 4,
+      gap: 2,
     },
     brandCollapsed: {
       alignItems: 'center',
       paddingHorizontal: 8,
-    },
-    brandRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
     },
     markBox: {
       width: 36,
@@ -205,10 +199,10 @@ function createStyles() {
     },
     mark: {
       color: ADMIN_ON_ACCENT,
-      fontFamily: adminType.display,
+      fontFamily: adminType.bodyExtra,
       fontWeight: '800',
       fontSize: 13,
-      letterSpacing: 0.5,
+      letterSpacing: 0.4,
     },
     brandTitle: {
       fontFamily: adminType.display,
@@ -217,19 +211,6 @@ function createStyles() {
       letterSpacing: -0.6,
       lineHeight: 26,
     },
-    opsPill: {
-      paddingHorizontal: 7,
-      paddingVertical: 3,
-      borderRadius: 6,
-      borderWidth: StyleSheet.hairlineWidth,
-      backgroundColor: adminChrome.overlay,
-    },
-    opsText: {
-      fontFamily: adminType.bodyExtra,
-      fontSize: 9,
-      fontWeight: '800',
-      letterSpacing: 1.4,
-    },
     brandSub: {
       color: adminChrome.textMuted,
       fontFamily: adminType.bodySemi,
@@ -237,15 +218,34 @@ function createStyles() {
       fontWeight: '600',
     },
     scroll: { flex: 1 },
-    scrollInner: { paddingVertical: 10, paddingHorizontal: 8, gap: 3 },
+    scrollInner: { paddingVertical: 8, paddingHorizontal: 8, paddingBottom: 24 },
+    group: { marginBottom: 10 },
+    groupLabel: {
+      fontFamily: adminType.bodyExtra,
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1.1,
+      textTransform: 'uppercase',
+      color: adminChrome.textMuted,
+      paddingHorizontal: 10,
+      paddingTop: 8,
+      paddingBottom: 6,
+    },
+    groupDot: {
+      height: 8,
+      marginVertical: 6,
+      marginHorizontal: 18,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: adminChrome.shellBorder,
+    },
     item: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      paddingVertical: 10,
+      paddingVertical: 8,
       paddingHorizontal: 10,
       borderRadius: adminChrome.radiusSm,
-      minHeight: 44,
+      minHeight: 40,
       overflow: 'hidden',
     },
     itemOn: {
@@ -260,12 +260,12 @@ function createStyles() {
       borderRadius: 2,
     },
     iconBox: {
-      width: 32,
-      height: 32,
-      borderRadius: 9,
+      width: 30,
+      height: 30,
+      borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: adminChrome.shellElevated,
+      backgroundColor: adminChrome.shell,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: adminChrome.shellBorder,
     },
@@ -278,12 +278,12 @@ function createStyles() {
       letterSpacing: -0.1,
     },
     badge: {
-      minWidth: 20,
-      height: 20,
+      minWidth: 18,
+      height: 18,
       borderRadius: 6,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 5,
+      paddingHorizontal: 4,
     },
     badgeText: {
       color: ADMIN_ON_ACCENT,
@@ -308,7 +308,7 @@ function createStyles() {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: adminChrome.shellBorder,
       minHeight: 48,
-      backgroundColor: adminChrome.rail,
+      backgroundColor: adminChrome.shell,
     },
     collapseText: {
       color: adminChrome.textMuted,

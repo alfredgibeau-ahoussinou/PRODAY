@@ -381,7 +381,10 @@ function emptyMessage(tab: AdminPersonTabId, query: string, filtersActive: boole
   };
 }
 
-export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } = {}) {
+export function AdminFocAdherentsScreen({
+  initialTab,
+  initialUserId,
+}: { initialTab?: string; initialUserId?: string } = {}) {
   const { users, refreshing, refresh } = useAdminData();
   const initial = useMemo(() => resolveAdminPersonInitialTab(initialTab), [initialTab]);
   const [tab, setTab] = useState<AdminPersonTabId>(initial.tab);
@@ -390,7 +393,7 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
   const [genderFilter, setGenderFilter] = useState<AdminPersonGenderFilter>('all');
   const [subscriptionFilter, setSubscriptionFilter] =
     useState<AdminPersonSubscriptionFilter>('all');
-  const [selectedUid, setSelectedUid] = useState<string | null>(null);
+  const [selectedUid, setSelectedUid] = useState<string | null>(initialUserId ?? null);
   const [createOpen, setCreateOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -441,7 +444,11 @@ export function AdminFocAdherentsScreen({ initialTab }: { initialTab?: string } 
   }, [initialTab]);
 
   React.useEffect(() => {
-    if (selectedUid && !users.some((u) => u.uid === selectedUid)) {
+    if (initialUserId) setSelectedUid(initialUserId);
+  }, [initialUserId]);
+
+  React.useEffect(() => {
+    if (selectedUid && users.length > 0 && !users.some((u) => u.uid === selectedUid)) {
       setSelectedUid(null);
     }
   }, [selectedUid, users]);

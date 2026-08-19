@@ -30,15 +30,15 @@ interface AdminGlobalSearchProps {
 const QUICK_JUMPS: {
   section: AdminFocSectionId;
   label: string;
-  icon: 'home' | 'mail' | 'people' | 'football' | 'bag' | 'settings' | 'business';
+  icon: 'home' | 'people' | 'business' | 'star' | 'flag' | 'settings' | 'football';
 }[] = [
   { section: 'dashboard', label: 'Accueil', icon: 'home' },
-  { section: 'personnes', label: 'Personnes', icon: 'people' },
+  { section: 'users', label: 'Utilisateurs', icon: 'people' },
   { section: 'clubs', label: 'Clubs', icon: 'business' },
-  { section: 'competition', label: 'Compétition', icon: 'football' },
-  { section: 'operations', label: 'Opérations', icon: 'mail' },
-  { section: 'finances', label: 'Finances', icon: 'bag' },
-  { section: 'plateforme', label: 'Plateforme', icon: 'settings' },
+  { section: 'matchs', label: 'Matchs', icon: 'football' },
+  { section: 'abonnements', label: 'Abonnements', icon: 'star' },
+  { section: 'signalements', label: 'Signalements', icon: 'flag' },
+  { section: 'parametres', label: 'Paramètres', icon: 'settings' },
 ];
 
 export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
@@ -71,11 +71,11 @@ export const AdminGlobalSearch: React.FC<AdminGlobalSearchProps> = ({
     else {
       const map: Partial<Record<AdminFocSectionId, AdminHqRoute>> = {
         dashboard: { mode: 'pilotage' },
-        personnes: { mode: 'gestion', atelier: 'comptes' },
-        competition: { mode: 'gestion', atelier: 'matchs' },
-        operations: { mode: 'decisions' },
-        finances: { mode: 'abonnements' },
-        plateforme: { mode: 'systeme' },
+        users: { mode: 'gestion', atelier: 'comptes' },
+        matchs: { mode: 'gestion', atelier: 'matchs' },
+        signalements: { mode: 'decisions' },
+        abonnements: { mode: 'abonnements' },
+        config: { mode: 'systeme' },
       };
       onNavigate(map[section] ?? { mode: 'pilotage' });
     }

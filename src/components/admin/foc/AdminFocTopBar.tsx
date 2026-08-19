@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
 import { adminChrome, adminType, ADMIN_ON_ACCENT } from '../../../theme/adminTheme';
-import { ADMIN_FOC_TOPBAR_HEIGHT } from '../../../navigation/adminFocConfig';
+import { ADMIN_NAV_TOPBAR_HEIGHT } from '../../../navigation/adminNavConfig';
 import { spacing } from '../../../theme/designTokens';
 
 interface AdminFocTopBarProps {
@@ -30,15 +29,6 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
 
   return (
     <View style={styles.bar}>
-      <LinearGradient
-        colors={[adminChrome.atmosphereTop, adminChrome.shellElevated]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={StyleSheet.absoluteFillObject}
-        pointerEvents="none"
-      />
-      <View style={styles.signalLine} />
-
       {showMenu && onMenu ? (
         <PressableSpring onPress={onMenu} style={styles.iconBtn} scaleTo={0.94} haptic>
           <Icon name="menu" size={20} color={adminChrome.text} />
@@ -46,7 +36,7 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
       ) : null}
 
       <View style={styles.titleCol}>
-        <Text style={styles.kicker}>ProDay OPS</Text>
+        <Text style={styles.kicker}>Console</Text>
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
@@ -59,7 +49,7 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
 
       <View style={styles.actions}>
         <PressableSpring onPress={onSearch} style={styles.iconBtnAccent} scaleTo={0.94} haptic>
-          <Icon name="search" size={17} color={adminChrome.accentHot} />
+          <Icon name="search" size={17} color={adminChrome.accent} />
         </PressableSpring>
 
         <PressableSpring onPress={onNotifications} style={styles.iconBtn} scaleTo={0.94} haptic>
@@ -80,7 +70,7 @@ export const AdminFocTopBar: React.FC<AdminFocTopBarProps> = ({
 function createStyles() {
   return StyleSheet.create({
     bar: {
-      height: ADMIN_FOC_TOPBAR_HEIGHT + 4,
+      height: ADMIN_NAV_TOPBAR_HEIGHT,
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
@@ -88,16 +78,6 @@ function createStyles() {
       backgroundColor: adminChrome.shell,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: adminChrome.shellBorder,
-      overflow: 'hidden',
-    },
-    signalLine: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-      height: 2,
-      backgroundColor: adminChrome.accent,
-      opacity: 0.65,
     },
     iconBtn: {
       width: 38,
@@ -117,7 +97,7 @@ function createStyles() {
       justifyContent: 'center',
       backgroundColor: adminChrome.soft,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: adminChrome.accentMuted,
+      borderColor: 'rgba(0, 108, 252, 0.22)',
     },
     titleCol: {
       flex: 1,
@@ -125,19 +105,19 @@ function createStyles() {
       gap: 1,
     },
     kicker: {
-      color: adminChrome.accentHot,
+      color: adminChrome.accent,
       fontFamily: adminType.bodyExtra,
       fontSize: 9,
       fontWeight: '800',
-      letterSpacing: 1.5,
+      letterSpacing: 1.4,
       textTransform: 'uppercase',
     },
     title: {
       color: adminChrome.text,
-      fontFamily: adminType.display,
+      fontFamily: adminType.bodyExtra,
       fontSize: 17,
       fontWeight: '800',
-      letterSpacing: -0.4,
+      letterSpacing: -0.3,
     },
     subtitle: {
       color: adminChrome.textMuted,

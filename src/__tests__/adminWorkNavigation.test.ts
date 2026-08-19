@@ -13,52 +13,47 @@ function navItem(kind: AdminWorkItem['kind']): AdminWorkItem {
 }
 
 describe('adminWorkNavigation', () => {
-  it('envoie verification vers personnes / decisions', () => {
+  it('envoie verification vers users / decisions', () => {
     expect(resolveAdminWorkItemNavigation(navItem('verification'))).toEqual({
-      section: 'personnes',
+      section: 'users',
       screenTab: 'decisions',
     });
   });
 
-  it('envoie reel et report vers communication / decisions', () => {
+  it('envoie reel vers contenus et report vers signalements', () => {
     expect(resolveAdminWorkItemNavigation(navItem('reel'))).toEqual({
-      section: 'operations',
-      hubTab: 'communication',
-      screenTab: 'decisions',
+      section: 'contenus',
+      screenTab: 'fil',
     });
     expect(resolveAdminWorkItemNavigation(navItem('report'))).toEqual({
-      section: 'operations',
-      hubTab: 'communication',
-      screenTab: 'decisions',
+      section: 'signalements',
     });
   });
 
-  it('envoie payment vers finances / paiements', () => {
+  it('envoie payment vers abonnements / paiements', () => {
     expect(resolveAdminWorkItemNavigation(navItem('payment'))).toEqual({
-      section: 'finances',
+      section: 'abonnements',
       screenTab: 'paiements',
     });
   });
 
   it('envoie application vers recrutement / candidatures', () => {
     expect(resolveAdminWorkItemNavigation(navItem('application'))).toEqual({
-      section: 'operations',
-      hubTab: 'recrutement',
-      screenTab: 'candidatures',
+      section: 'recrutement',
+      screenTab: 'apps',
     });
   });
 
-  it('envoie quote vers finances / sponsors', () => {
+  it('envoie quote vers sponsors', () => {
     expect(resolveAdminWorkItemNavigation(navItem('quote'))).toEqual({
-      section: 'finances',
+      section: 'sponsors',
       screenTab: 'sponsors',
     });
   });
 
   it('envoie post vers recrutement / posts', () => {
     expect(resolveAdminWorkItemNavigation(navItem('post'))).toEqual({
-      section: 'operations',
-      hubTab: 'recrutement',
+      section: 'recrutement',
       screenTab: 'posts',
     });
   });
@@ -70,10 +65,10 @@ describe('adminWorkNavigation', () => {
     });
   });
 
-  it('envoie subscription_request vers finances / abonnements', () => {
+  it('envoie subscription_request vers abonnements / demandes', () => {
     expect(resolveAdminWorkItemNavigation(navItem('subscription_request'))).toEqual({
-      section: 'finances',
-      screenTab: 'abonnements',
+      section: 'abonnements',
+      screenTab: 'demandes',
     });
   });
 
@@ -86,6 +81,6 @@ describe('adminWorkNavigation', () => {
         subtitle: 'Paris',
         targetTab: 'clubs',
       }),
-    ).toEqual({ section: 'clubs', screenTab: 'clubs' });
+    ).toEqual({ section: 'clubs', screenTab: 'clubs', focusId: 'c-1' });
   });
 });

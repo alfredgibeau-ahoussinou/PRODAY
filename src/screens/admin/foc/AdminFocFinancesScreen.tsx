@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,21 +7,47 @@ import {
   StyleSheet,
   Alert,
   RefreshControl,
+  Platform,
+  TextInput,
 } from 'react-native';
 import { useAdminData } from '../../../context/AdminDataContext';
 import { adminService } from '../../../services/admin.service';
+import { adminAuditService } from '../../../services/adminAudit.service';
+import { subscriptionUpgradeRequestService } from '../../../services/subscriptionUpgradeRequest.service';
 import { AdminFocAbonnementsScreen } from './AdminFocAbonnementsScreen';
 import { AdminSponsorQuotePanel } from '../../../components/admin/AdminSponsorQuotePanel';
-import { ADMIN_FOC_TABS } from '../../../navigation/adminFocConfig';
+import { AdminActionRow, AdminButton } from '../../../components/admin/AdminButton';
+import { ADMIN_ABONNEMENTS_TABS } from '../../../navigation/adminNavConfig';
 import { AdminFocTabs, AdminFocPageHeader } from '../../../components/admin/foc/AdminFocTabs';
 import { Icon } from '../../../components/ui/Icon';
-import { adminChrome } from '../../../theme/adminTheme';
+import { adminChrome, adminType } from '../../../theme/adminTheme';
 import { spacing, radius } from '../../../theme/designTokens';
 import type { TeamPaymentRequest } from '../../../models/TeamFinance';
 import type { ShopOrder } from '../../../models/ShopOrder';
+import type { SubscriptionUpgradeRequest } from '../../../models/SubscriptionUpgradeRequest';
+import { SUBSCRIPTION_PLANS, type SubscriptionPlanId } from '../../../content/subscriptionPlans';
+import { isSubscriptionAccessActive } from '../../../utils/subscriptionLogic';
+import {
+  canAdminWorkInlineAction,
+  confirmAdminWorkApprove,
+  confirmAdminWorkReject,
+  runAdminWorkApprove,
+  runAdminWorkReject,
+} from '../../../utils/adminWorkQueueActions';
+import { useAuth } from '../../../context/AuthContext';
 
-const TABS = ADMIN_FOC_TABS.finances;
+const TABS = ADMIN_ABONNEMENTS_TABS;
 type TabId = (typeof TABS)[number]['id'];
+
+const LEGACY_TAB: Record<string, TabId> = {
+  abonnements: 'comptes',
+  paiements: 'paiements',
+  sponsors: 'sponsors',
+  boutique: 'boutique',
+  vue: 'vue',
+  demandes: 'demandes',
+  comptes: 'comptes',
+};
 
 function formatDate(d: Date | null | undefined): string {
   if (!d) return '—';
@@ -31,8 +57,6 @@ function formatDate(d: Date | null | undefined): string {
     return '—';
   }
 }
-
-/* ─── Payment row ───────────────────────────────────────────────────── */
 
 function PaymentRow({
   payment,
@@ -52,8 +76,7 @@ function PaymentRow({
           {payment.label || payment.member_name}
         </Text>
         <Text style={s.rowSub} numberOfLines={1}>
-          {payment.amount_eur != null ? `${payment.amount_eur} €` : '—'} ·{' '}
-          {formatDate(payment.due_at)}
+          {payment.amount_eur != null ? `${payment.amount_eur} €` : '—'} · {formatDate(payment.due_at)}
         </Text>
       </View>
       <View style={[s.badge, isPaid ? s.badgePaid : s.badgePending]}>
@@ -65,8 +88,6 @@ function PaymentRow({
     </Pressable>
   );
 }
-
-/* ─── Shop order row ─────────────────────────────────────────────────── */
 
 function ShopOrderRow({
   order,
@@ -85,8 +106,7 @@ function ShopOrderRow({
           {order.lines?.[0]?.name || `Commande #${order.id.slice(0, 8)}`}
         </Text>
         <Text style={s.rowSub} numberOfLines={1}>
-          {order.total_eur != null ? `${order.total_eur} €` : '—'} ·{' '}
-          {formatDate(order.created_at)}
+          {order.total_eur != null ? `${order.total_eur} €` : '—'} · {formatDate(order.created_at)}
         </Text>
       </View>
       <View style={[s.badge, order.status === 'paid' ? s.badgePaid : s.badgePending]}>
@@ -99,18 +119,33 @@ function ShopOrderRow({
   );
 }
 
-/* ─── Screen ─────────────────────────────────────────────────────────── */
-
-export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } = {}) {
-  const { payments, refresh, refreshing } = useAdminData();
-  const [tab, setTab] = useState<TabId>('abonnements');
+export function AdminFocFinancesScreen({
+  initialTab,
+  onOpenUser,
+}: {
+  initialTab?: string;
+  onOpenUser?: (uid: string) => void;
+} = {}) {
+  const {
+    payments,
+    users,
+    workQueue,
+    subscriptionUpgradeRequests,
+    sponsorQuoteRequests,
+    refresh,
+    refreshing,
+  } = useAdminData();
+  const { profile, firebaseUser } = useAuth();
+  const [tab, setTab] = useState<TabId>('vue');
   const [shopOrders, setShopOrders] = useState<ShopOrder[]>([]);
   const [loadingShop, setLoadingShop] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
 
   useEffect(() => {
-    if (initialTab && TABS.some((t) => t.id === initialTab)) {
-      setTab(initialTab as TabId);
-    }
+    if (!initialTab) return;
+    const mapped = LEGACY_TAB[initialTab] ?? (TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : null);
+    if (mapped) setTab(mapped);
   }, [initialTab]);
 
   const loadShop = useCallback(async () => {
@@ -131,6 +166,38 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
     await refresh();
     if (tab === 'boutique') await loadShop();
   }, [refresh, tab, loadShop]);
+
+  const stats = useMemo(() => {
+    let pro = 0;
+    let free = 0;
+    let canceled = 0;
+    let pastDue = 0;
+    for (const u of users) {
+      if (isSubscriptionAccessActive(u)) pro += 1;
+      else free += 1;
+      if (u.subscription_status === 'canceled') canceled += 1;
+      if (u.subscription_status === 'past_due') pastDue += 1;
+    }
+    const pendingClubPay = payments.filter((p) => p.status !== 'paid').length;
+    const pendingQuotes = sponsorQuoteRequests.filter((q) => q.status === 'pending').length;
+    return {
+      pro,
+      free,
+      canceled,
+      pastDue,
+      pendingRequests: subscriptionUpgradeRequests.length,
+      pendingClubPay,
+      pendingQuotes,
+    };
+  }, [users, payments, subscriptionUpgradeRequests, sponsorQuoteRequests]);
+
+  const queueItems = useMemo(
+    () =>
+      workQueue.filter((w) =>
+        ['subscription_request', 'payment', 'quote', 'membership'].includes(w.kind),
+      ),
+    [workQueue],
+  );
 
   const handlePaymentAction = useCallback(
     (p: TeamPaymentRequest) => {
@@ -156,8 +223,8 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
             : []),
           {
             text: 'Supprimer',
-            style: 'destructive',
-            onPress: async () => {
+            style: 'destructive' as const,
+            onPress: () => {
               Alert.alert('Supprimer ?', 'Cette action est irréversible.', [
                 { text: 'Annuler', style: 'cancel' },
                 {
@@ -183,54 +250,264 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
     [refresh],
   );
 
-  const handleShopAction = useCallback((order: ShopOrder) => {
-    const buttons: Parameters<typeof Alert.alert>[2] = [];
-    if (order.status !== 'paid') {
-      buttons.push({
-        text: 'Marquer payé',
-        onPress: async () => {
-          try {
-            await adminService.updateShopOrderStatus(order.id, 'paid');
-            await loadShop();
-            Alert.alert('Boutique', 'Commande marquée payée.');
-          } catch {
-            Alert.alert('Erreur', 'Impossible de mettre à jour cette commande.');
-          }
-        },
-      });
-    }
-    if (order.status !== 'cancelled') {
-      buttons.push({
-        text: 'Annuler la commande',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await adminService.updateShopOrderStatus(order.id, 'cancelled');
-            await loadShop();
-            Alert.alert('Boutique', 'Commande annulée.');
-          } catch {
-            Alert.alert('Erreur', 'Impossible d’annuler cette commande.');
-          }
-        },
-      });
-    }
-    buttons.push({ text: 'Fermer', style: 'cancel' });
-    Alert.alert(
-      order.lines?.[0]?.name || 'Commande',
-      `Montant : ${order.total_eur != null ? `${order.total_eur} €` : '—'}\nStatut : ${order.status}`,
-      buttons,
-      { cancelable: true },
-    );
-  }, [loadShop]);
+  const handleShopAction = useCallback(
+    (order: ShopOrder) => {
+      const buttons: Parameters<typeof Alert.alert>[2] = [];
+      if (order.status !== 'paid') {
+        buttons.push({
+          text: 'Marquer payé',
+          onPress: async () => {
+            try {
+              await adminService.updateShopOrderStatus(order.id, 'paid');
+              await loadShop();
+              Alert.alert('Boutique', 'Commande marquée payée.');
+            } catch {
+              Alert.alert('Erreur', 'Impossible de mettre à jour cette commande.');
+            }
+          },
+        });
+      }
+      if (order.status !== 'cancelled') {
+        buttons.push({
+          text: 'Annuler la commande',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await adminService.updateShopOrderStatus(order.id, 'cancelled');
+              await loadShop();
+              Alert.alert('Boutique', 'Commande annulée.');
+            } catch {
+              Alert.alert('Erreur', 'Impossible d’annuler cette commande.');
+            }
+          },
+        });
+      }
+      buttons.push({ text: 'Fermer', style: 'cancel' });
+      Alert.alert(
+        order.lines?.[0]?.name || 'Commande',
+        `Montant : ${order.total_eur != null ? `${order.total_eur} €` : '—'}\nStatut : ${order.status}`,
+        buttons,
+        { cancelable: true },
+      );
+    },
+    [loadShop],
+  );
 
+  const approveRequest = async (req: SubscriptionUpgradeRequest) => {
+    setBusyId(req.id);
+    try {
+      const work = workQueue.find((w) => w.id === `subreq-${req.id}`);
+      if (work && canAdminWorkInlineAction(work, 'approve')) {
+        await runAdminWorkApprove(work, refresh);
+      } else {
+        const result = await subscriptionUpgradeRequestService.updateRequestStatus(req.id, 'approved');
+        if (!result.ok) throw new Error('Impossible d’approuver.');
+        await adminService.grantProSubscription(
+          req.user_uid,
+          req.plan_id,
+          req.billing === 'yearly' ? 12 : 1,
+          'Demande d’abonnement approuvée',
+          false,
+        );
+        await adminAuditService.log({
+          action: 'subscription_granted',
+          actor_uid: profile?.uid ?? '',
+          actor_email: firebaseUser?.email ?? profile?.email,
+          target_type: 'user_subscription',
+          target_id: req.user_uid,
+          summary: `Demande approuvée · ${req.plan_id}`,
+        });
+        await refresh();
+        Alert.alert('Abonnement', 'Formule accordée automatiquement.');
+      }
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const rejectRequest = async (req: SubscriptionUpgradeRequest, note: string) => {
+    setBusyId(req.id);
+    try {
+      const result = await subscriptionUpgradeRequestService.updateRequestStatus(
+        req.id,
+        'rejected',
+        note.trim() || 'Refus admin',
+      );
+      if (!result.ok) throw new Error('Impossible de refuser.');
+      await adminAuditService.log({
+        action: 'subscription_revoked',
+        actor_uid: profile?.uid ?? '',
+        actor_email: firebaseUser?.email ?? profile?.email,
+        target_type: 'user_subscription',
+        target_id: req.user_uid,
+        summary: `Demande refusée · ${note.trim() || 'Refus admin'}`,
+      });
+      await refresh();
+      Alert.alert('Demande', 'Refus enregistré.');
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const askReject = (req: SubscriptionUpgradeRequest) => {
+    const submit = (note: string) => void rejectRequest(req, note);
+    if (Platform.OS === 'ios') {
+      Alert.prompt('Refuser la demande', 'Note admin (optionnel)', [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Refuser', style: 'destructive', onPress: (v?: string) => submit(v ?? rejectNote) },
+      ]);
+      return;
+    }
+    Alert.alert('Refuser la demande', rejectNote.trim() ? `Note : ${rejectNote}` : 'Confirmer le refus ?', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Refuser', style: 'destructive', onPress: () => submit(rejectNote) },
+    ]);
+  };
 
   return (
     <View style={s.root}>
-      <AdminFocPageHeader title="Finances" />
-      <AdminFocTabs tabs={TABS} value={tab} onChange={(id) => setTab(id as TabId)} />
+      <AdminFocPageHeader
+        title="Abonnements & Paiements"
+        subtitle="Grants, Stripe, file d’attente — tout est actionnable ici."
+      />
+      <AdminFocTabs tabs={[...TABS]} value={tab} onChange={(id) => setTab(id as TabId)} />
 
-      {tab === 'abonnements' ? (
-        <AdminFocAbonnementsScreen />
+      {tab === 'vue' ? (
+        <FlatList
+          data={queueItems}
+          keyExtractor={(i) => i.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={adminChrome.accent} />
+          }
+          ListHeaderComponent={
+            <View style={s.vueHead}>
+              <View style={s.kpiRow}>
+                <Kpi label="Pro actifs" value={stats.pro} hot />
+                <Kpi label="Gratuit" value={stats.free} />
+                <Kpi label="Demandes" value={stats.pendingRequests} warn={stats.pendingRequests > 0} />
+                <Kpi label="Résiliés" value={stats.canceled} />
+                <Kpi label="Impayés" value={stats.pastDue} warn={stats.pastDue > 0} />
+                <Kpi label="Paiements club" value={stats.pendingClubPay} warn={stats.pendingClubPay > 0} />
+              </View>
+              <Text style={s.sectionTitle}>À traiter</Text>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <View style={s.queueCard}>
+              <Text style={s.kind}>{item.kind === 'subscription_request' ? 'Abonnement' : item.kind}</Text>
+              <Text style={s.rowTitle}>{item.title}</Text>
+              {item.subtitle ? <Text style={s.rowSub}>{item.subtitle}</Text> : null}
+              <AdminActionRow
+                showApprove={canAdminWorkInlineAction(item, 'approve')}
+                showReject={canAdminWorkInlineAction(item, 'reject')}
+                onApprove={() =>
+                  confirmAdminWorkApprove(item, async () => {
+                    setBusyId(item.id);
+                    try {
+                      await runAdminWorkApprove(item, refresh);
+                    } finally {
+                      setBusyId(null);
+                    }
+                  })
+                }
+                onReject={() =>
+                  confirmAdminWorkReject(item, async () => {
+                    setBusyId(item.id);
+                    try {
+                      await runAdminWorkReject(item, refresh);
+                    } finally {
+                      setBusyId(null);
+                    }
+                  })
+                }
+                approveLoading={busyId === item.id}
+                rejectLoading={busyId === item.id}
+              />
+              {item.kind === 'subscription_request' && onOpenUser && item.entityId ? (
+                <AdminButton
+                  label="Ouvrir la fiche"
+                  variant="ghost"
+                  size="sm"
+                  onPress={() => onOpenUser(item.entityId!)}
+                />
+              ) : null}
+            </View>
+          )}
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <Icon name="checkmark-circle" size={32} color={adminChrome.pitch} />
+              <Text style={s.emptyTitle}>File vide</Text>
+              <Text style={s.emptySub}>Aucune demande d’abonnement, paiement club ou devis en attente.</Text>
+            </View>
+          }
+          contentContainerStyle={queueItems.length === 0 ? s.emptyContainer : s.list}
+        />
+      ) : tab === 'demandes' ? (
+        <FlatList
+          data={subscriptionUpgradeRequests}
+          keyExtractor={(r) => r.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={adminChrome.accent} />
+          }
+          ListHeaderComponent={
+            Platform.OS !== 'ios' ? (
+              <TextInput
+                value={rejectNote}
+                onChangeText={setRejectNote}
+                placeholder="Note admin (refus)"
+                placeholderTextColor={adminChrome.textMuted}
+                style={s.noteInput}
+              />
+            ) : null
+          }
+          renderItem={({ item }) => {
+            const plan = SUBSCRIPTION_PLANS[item.plan_id as SubscriptionPlanId];
+            return (
+              <View style={s.queueCard}>
+                <Text style={s.kind}>{item.billing === 'yearly' ? 'Annuel' : 'Mensuel'}</Text>
+                <Text style={s.rowTitle}>{item.display_name}</Text>
+                <Text style={s.rowSub}>
+                  {item.email} · {plan?.label ?? item.plan_id}
+                  {plan && !plan.pricing.quoteOnly
+                    ? ` · ${plan.pricing.monthlyEur.toFixed(2)} € / mois`
+                    : ''}
+                </Text>
+                {item.message ? <Text style={s.rowSub}>{item.message}</Text> : null}
+                <AdminActionRow
+                  onApprove={() => void approveRequest(item)}
+                  onReject={() => askReject(item)}
+                  approveLoading={busyId === item.id}
+                  rejectLoading={busyId === item.id}
+                  disabled={busyId === item.id}
+                />
+                {onOpenUser ? (
+                  <AdminButton
+                    label="Ouvrir la fiche"
+                    variant="ghost"
+                    size="sm"
+                    onPress={() => onOpenUser(item.user_uid)}
+                  />
+                ) : null}
+              </View>
+            );
+          }}
+          ListEmptyComponent={
+            <View style={s.empty}>
+              <Icon name="star" size={32} color={adminChrome.textMuted} />
+              <Text style={s.emptyTitle}>Aucune demande</Text>
+              <Text style={s.emptySub}>Les demandes de passage Pro s’affichent ici.</Text>
+            </View>
+          }
+          contentContainerStyle={
+            subscriptionUpgradeRequests.length === 0 ? s.emptyContainer : s.list
+          }
+        />
+      ) : tab === 'comptes' ? (
+        <AdminFocAbonnementsScreen onOpenUser={onOpenUser} embedded />
       ) : tab === 'paiements' ? (
         <FlatList
           data={payments}
@@ -238,9 +515,7 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={adminChrome.accent} />
           }
-          renderItem={({ item }) => (
-            <PaymentRow payment={item} onAction={handlePaymentAction} />
-          )}
+          renderItem={({ item }) => <PaymentRow payment={item} onAction={handlePaymentAction} />}
           ItemSeparatorComponent={() => <View style={s.sep} />}
           ListEmptyComponent={
             <View style={s.empty}>
@@ -250,7 +525,6 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
             </View>
           }
           contentContainerStyle={payments.length === 0 ? s.emptyContainer : s.list}
-          showsVerticalScrollIndicator={false}
         />
       ) : tab === 'sponsors' ? (
         <AdminSponsorQuotePanel />
@@ -259,11 +533,7 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
           data={shopOrders}
           keyExtractor={(o) => o.id}
           refreshControl={
-            <RefreshControl
-              refreshing={loadingShop}
-              onRefresh={loadShop}
-              tintColor={adminChrome.accent}
-            />
+            <RefreshControl refreshing={loadingShop} onRefresh={loadShop} tintColor={adminChrome.accent} />
           }
           renderItem={({ item }) => <ShopOrderRow order={item} onAction={handleShopAction} />}
           ItemSeparatorComponent={() => <View style={s.sep} />}
@@ -275,24 +545,105 @@ export function AdminFocFinancesScreen({ initialTab }: { initialTab?: string } =
             </View>
           }
           contentContainerStyle={shopOrders.length === 0 ? s.emptyContainer : s.list}
-          showsVerticalScrollIndicator={false}
         />
       ) : null}
     </View>
   );
 }
 
+function Kpi({
+  label,
+  value,
+  hot,
+  warn,
+}: {
+  label: string;
+  value: number;
+  hot?: boolean;
+  warn?: boolean;
+}) {
+  return (
+    <View style={s.kpi}>
+      <Text style={s.kpiLabel}>{label}</Text>
+      <Text style={[s.kpiValue, hot && s.kpiHot, warn && s.kpiWarn]}>{value}</Text>
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: adminChrome.band },
-  list: { paddingBottom: 80 },
+  list: { padding: spacing.md, paddingBottom: 80, gap: spacing.sm },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  empty: { alignItems: 'center', gap: spacing.md, paddingTop: 64 },
+  empty: { alignItems: 'center', gap: spacing.md, paddingTop: 48 },
   emptyTitle: { fontSize: 16, fontWeight: '800', color: adminChrome.text },
   emptySub: { fontSize: 13, color: adminChrome.textMuted, textAlign: 'center', lineHeight: 20 },
   sep: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: adminChrome.shellBorder,
     marginLeft: spacing.md,
+  },
+  vueHead: { gap: spacing.md, marginBottom: spacing.sm },
+  kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  kpi: {
+    minWidth: 96,
+    flexGrow: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: adminChrome.radiusSm,
+    backgroundColor: adminChrome.shell,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: adminChrome.shellBorder,
+  },
+  kpiLabel: {
+    fontFamily: adminType.bodyExtra,
+    fontSize: 9,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: adminChrome.textMuted,
+  },
+  kpiValue: {
+    fontFamily: adminType.bodyExtra,
+    fontSize: 20,
+    fontWeight: '800',
+    color: adminChrome.text,
+    marginTop: 2,
+  },
+  kpiHot: { color: adminChrome.accent },
+  kpiWarn: { color: adminChrome.danger },
+  sectionTitle: {
+    fontFamily: adminType.bodyExtra,
+    fontSize: 13,
+    fontWeight: '800',
+    color: adminChrome.text,
+  },
+  queueCard: {
+    backgroundColor: adminChrome.shell,
+    borderRadius: adminChrome.radius,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: adminChrome.shellBorder,
+    padding: spacing.md,
+    gap: 4,
+    marginBottom: spacing.sm,
+  },
+  kind: {
+    fontFamily: adminType.bodyExtra,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: adminChrome.accent,
+  },
+  noteInput: {
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: adminChrome.shellBorder,
+    backgroundColor: adminChrome.shell,
+    color: adminChrome.text,
+    borderRadius: adminChrome.radiusSm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
   },
   row: {
     flexDirection: 'row',
@@ -313,8 +664,8 @@ const s = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   badgePaid: {
-    backgroundColor: 'rgba(22,101,52,0.08)',
-    borderColor: 'rgba(22,101,52,0.25)',
+    backgroundColor: adminChrome.pitchSoft,
+    borderColor: 'rgba(22,163,74,0.25)',
   },
   badgePending: {
     backgroundColor: adminChrome.shellMid,

@@ -211,9 +211,17 @@ function ClubDetail({
 
 /* ─── Screen ────────────────────────────────────────────────────────── */
 
-export function AdminFocClubsScreen() {
+export function AdminFocClubsScreen({ initialTab }: { initialTab?: string } = {}) {
   const { clubs, users, events, refresh, refreshing } = useAdminData();
-  const [tab, setTab] = useState<TabId>('clubs');
+  const [tab, setTab] = useState<TabId>(
+    initialTab && TABS.some((t) => t.id === initialTab) ? (initialTab as TabId) : 'clubs',
+  );
+
+  useEffect(() => {
+    if (initialTab && TABS.some((t) => t.id === initialTab)) {
+      setTab(initialTab as TabId);
+    }
+  }, [initialTab]);
   const [teams, setTeams] = useState<AdminTeam[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);

@@ -28,15 +28,21 @@ import { AdminFocCommunicationScreen } from '../screens/admin/foc/AdminFocCommun
 import { AdminFocFinancesScreen } from '../screens/admin/foc/AdminFocFinancesScreen';
 import { AdminFocPerformanceScreen } from '../screens/admin/foc/AdminFocPerformanceScreen';
 import { AdminFocParametresScreen } from '../screens/admin/foc/AdminFocParametresScreen';
+import { AdminFocIaScreen } from '../screens/admin/foc/AdminFocIaScreen';
+import { AdminFocSecuriteScreen } from '../screens/admin/foc/AdminFocSecuriteScreen';
+import { AdminFocMessagerieScreen } from '../screens/admin/foc/AdminFocMessagerieScreen';
+import { AdminAuditLogPanel } from '../components/admin/AdminAuditLogPanel';
+import { AdminFocConfigScreen } from '../screens/admin/foc/AdminFocConfigScreen';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useAuth } from '../context/AuthContext';
 import {
-  ADMIN_FOC_NAV,
-  ADMIN_FOC_TABS,
-  isAdminFocSectionId,
-  resolveAdminFocNavigation,
-  type AdminFocSectionId,
-} from './adminFocConfig';
+  ADMIN_NAV_DESKTOP_BREAKPOINT,
+  ADMIN_NAV_ITEMS,
+  ADMIN_NAV_TABLET_BREAKPOINT,
+  isAdminNavSectionId,
+  resolveAdminNav,
+  type AdminNavSectionId,
+} from './adminNavConfig';
 import { type AdminHqRoute } from './adminTabConfig';
 import {
   loadAdminFocPreferences,
@@ -46,71 +52,56 @@ import {
 } from '../services/adminPreferences.service';
 import { adminChrome } from '../theme/adminTheme';
 import { spacing } from '../theme/designTokens';
-
-const DESKTOP_BREAKPOINT = 768;
+import { AdminFocPageHeader } from '../components/admin/foc/AdminFocTabs';
 
 interface AdminAppShellProps {
   onPreviewUserApp: () => void;
 }
 
-/* ─── Helper: AdminHqRoute → FOC section ───────────────────────────── */
-
-function hqRouteToFocSection(route: AdminHqRoute): AdminFocSectionId {
+function hqRouteToNav(route: AdminHqRoute): AdminNavSectionId {
   if (route.mode === 'pilotage') return 'dashboard';
-  if (route.mode === 'decisions') return 'operations';
-  if (route.mode === 'abonnements') return 'finances';
-  if (route.mode === 'systeme') return 'plateforme';
+  if (route.mode === 'decisions') return 'signalements';
+  if (route.mode === 'abonnements') return 'abonnements';
+  if (route.mode === 'systeme') return 'config';
   if (route.mode === 'gestion') {
     switch (route.atelier) {
-      case 'comptes': return 'personnes';
-      case 'clubs': return 'clubs';
-      case 'matchs': return 'competition';
+      case 'comptes':
+        return 'users';
+      case 'clubs':
+        return 'clubs';
+      case 'matchs':
+        return 'matchs';
       case 'evenements':
-      case 'tournois': return 'competition';
+      case 'tournois':
+        return 'matchs';
       case 'recrutement':
       case 'candidatures':
-      case 'stages': return 'operations';
+      case 'stages':
+        return 'recrutement';
       case 'paiements':
+        return 'abonnements';
       case 'devis':
-      case 'partenaires': return 'finances';
+      case 'partenaires':
+        return 'sponsors';
       case 'publications':
+        return 'contenus';
       case 'signalements':
+        return 'signalements';
       case 'annonces':
+      case 'fil':
+        return 'contenus';
       case 'messages':
-      case 'fil': return 'operations';
-      default: return 'personnes';
+        return 'messagerie';
+      default:
+        return 'users';
     }
   }
   return 'dashboard';
 }
 
-function hqRouteHubTab(route: AdminHqRoute): string | undefined {
-  if (route.mode === 'decisions') return 'communication';
-  if (route.mode === 'systeme') return 'parametres';
-  if (route.mode === 'gestion') {
-    switch (route.atelier) {
-      case 'matchs': return 'matchs';
-      case 'evenements':
-      case 'tournois': return 'competitions';
-      case 'recrutement':
-      case 'candidatures':
-      case 'stages': return 'recrutement';
-      case 'publications':
-      case 'signalements':
-      case 'fil':
-      case 'annonces':
-      case 'messages': return 'communication';
-      default: return undefined;
-    }
-  }
-  return undefined;
+function sectionTitle(section: AdminNavSectionId): string {
+  return ADMIN_NAV_ITEMS.find((n) => n.id === section)?.label ?? 'Console';
 }
-
-function sectionTitle(section: AdminFocSectionId): string {
-  return ADMIN_FOC_NAV.find((n) => n.id === section)?.label ?? 'Centre d\'ops';
-}
-
-/* ─── Gate / loader ─────────────────────────────────────────────────── */
 
 export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) => {
   const { isAdmin, claimLoading } = useIsAdmin();
@@ -118,9 +109,9 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
   if (claimLoading) {
     return (
       <SafeAreaView style={shellStyles.loaderRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <ActivityIndicator size="large" color={adminChrome.accent} />
-        <Text style={shellStyles.loaderText}>Chargement du centre d'ops…</Text>
+        <Text style={shellStyles.loaderText}>Chargement de la console…</Text>
       </SafeAreaView>
     );
   }
@@ -128,7 +119,7 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
   if (!isAdmin) {
     return (
       <SafeAreaView style={shellStyles.gateRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <AdminGateScreen />
       </SafeAreaView>
     );
@@ -136,20 +127,18 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
 
   return (
     <AdminDataProvider>
-      <AdminFocShellInner onPreviewUserApp={onPreviewUserApp} />
+      <AdminConsoleInner onPreviewUserApp={onPreviewUserApp} />
     </AdminDataProvider>
   );
 };
 
-/* ─── Inner shell (inside AdminDataProvider) ────────────────────────── */
-
-const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) => {
+const AdminConsoleInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) => {
   const { width } = useWindowDimensions();
-  const isDesktop = width >= DESKTOP_BREAKPOINT;
+  const isDesktop = width >= ADMIN_NAV_DESKTOP_BREAKPOINT;
+  const isTablet = width >= ADMIN_NAV_TABLET_BREAKPOINT && width < ADMIN_NAV_DESKTOP_BREAKPOINT;
   const { profile } = useAuth();
   const { workQueue, refresh } = useAdminData();
 
-  /* ── Prefs ── */
   const [prefs, setPrefs] = useState<AdminFocPreferences>(DEFAULT_ADMIN_FOC_PREFS);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
 
@@ -162,11 +151,11 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     loadAdminFocPreferences(uid)
       .then((p) => {
         setPrefs(p);
-        setSidebarCollapsed(p.sidebarCollapsed);
+        setSidebarCollapsed(p.sidebarCollapsed || isTablet);
       })
       .catch(() => {})
       .finally(() => setPrefsLoaded(true));
-  }, [profile?.uid]);
+  }, [profile?.uid, isTablet]);
 
   const savePrefs = useCallback(
     async (next: AdminFocPreferences) => {
@@ -176,57 +165,60 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     [profile?.uid],
   );
 
-  /* ── Nav state ── */
-  const [section, setSection] = useState<AdminFocSectionId>('dashboard');
+  const [section, setSection] = useState<AdminNavSectionId>('dashboard');
   const [hubTab, setHubTab] = useState<string | undefined>();
   const [screenTab, setScreenTab] = useState<string | undefined>();
+  const [focusId, setFocusId] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(
     DEFAULT_ADMIN_FOC_PREFS.sidebarCollapsed,
   );
 
-  /* ── UI state ── */
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
 
-  /* ── Navigation handlers ── */
   const handleSelectSection = useCallback(
-    (newSection: AdminFocSectionId) => {
+    (newSection: AdminNavSectionId) => {
       setSection(newSection);
       setHubTab(undefined);
       setScreenTab(undefined);
+      setFocusId(undefined);
       if (!isDesktop) setMobileMenu(false);
     },
     [isDesktop],
   );
 
   const handleNavigateSection = useCallback((target: string) => {
-    const resolved = resolveAdminFocNavigation(target);
+    const resolved = resolveAdminNav(target);
     setSection(resolved.section);
     setHubTab(resolved.hubTab);
     setScreenTab(resolved.screenTab);
+    setFocusId(resolved.focusId);
   }, []);
 
   const handleNavigateTarget = useCallback(
-    (target: { section: string; hubTab?: string; screenTab?: string }) => {
-      if (isAdminFocSectionId(target.section)) {
+    (target: { section: string; hubTab?: string; screenTab?: string; focusId?: string }) => {
+      if (isAdminNavSectionId(target.section)) {
         setSection(target.section);
-      } else {
-        const resolved = resolveAdminFocNavigation(target.section);
-        setSection(resolved.section);
-        setHubTab(target.hubTab ?? resolved.hubTab);
-        setScreenTab(target.screenTab ?? resolved.screenTab);
+        setHubTab(target.hubTab);
+        setScreenTab(target.screenTab);
+        setFocusId(target.focusId);
         return;
       }
-      setHubTab(target.hubTab);
-      setScreenTab(target.screenTab);
+      const resolved = resolveAdminNav(target.section);
+      setSection(resolved.section);
+      setHubTab(target.hubTab ?? resolved.hubTab);
+      setScreenTab(target.screenTab ?? resolved.screenTab);
+      setFocusId(target.focusId ?? resolved.focusId);
     },
     [],
   );
 
   const handleHqNavigate = useCallback((route: AdminHqRoute) => {
-    setSection(hqRouteToFocSection(route));
-    setHubTab(hqRouteHubTab(route));
+    setSection(hqRouteToNav(route));
+    setHubTab(undefined);
+    setScreenTab(undefined);
+    setFocusId(route.focusId);
     setSearchOpen(false);
   }, []);
 
@@ -242,22 +234,27 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     void savePrefs(prefs);
   }, [prefs, savePrefs]);
 
-  /* ── Sidebar badges ── */
-  const sidebarBadges = useMemo<Partial<Record<AdminFocSectionId, number>>>(
+  const handleOpenUser = useCallback((uid: string) => {
+    setSection('users');
+    setScreenTab('all');
+    setFocusId(uid);
+    setHubTab(undefined);
+  }, []);
+
+  const sidebarBadges = useMemo<Partial<Record<AdminNavSectionId, number>>>(
     () => ({
-      operations: workQueue.filter((w) =>
-        ['reel', 'report', 'application', 'post'].includes(w.kind),
-      ).length,
-      personnes: workQueue.filter((w) => w.kind === 'verification').length,
-      finances: workQueue.filter((w) =>
+      users: workQueue.filter((w) => w.kind === 'verification').length,
+      clubs: workQueue.filter((w) => w.kind === 'membership').length,
+      recrutement: workQueue.filter((w) => ['application', 'post'].includes(w.kind)).length,
+      abonnements: workQueue.filter((w) =>
         ['payment', 'quote', 'subscription_request'].includes(w.kind),
       ).length,
-      clubs: workQueue.filter((w) => w.kind === 'membership').length,
+      signalements: workQueue.filter((w) => ['reel', 'report'].includes(w.kind)).length,
+      contenus: workQueue.filter((w) => w.kind === 'reel').length,
     }),
     [workQueue],
   );
 
-  /* ── Content renderer ── */
   const renderContent = useCallback(() => {
     switch (section) {
       case 'dashboard':
@@ -268,86 +265,123 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
             onOpenDecisions={() => setNotifOpen(true)}
           />
         );
-      case 'personnes':
-        return <AdminFocAdherentsScreen initialTab={screenTab} />;
+      case 'users':
+        return <AdminFocAdherentsScreen initialTab={screenTab ?? 'all'} initialUserId={focusId} />;
+      case 'coaches':
+        return <AdminFocAdherentsScreen initialTab="coach" initialUserId={focusId} />;
+      case 'players':
+        return <AdminFocAdherentsScreen initialTab="player" initialUserId={focusId} />;
+      case 'parents':
+        return <AdminFocAdherentsScreen initialTab="parent" initialUserId={focusId} />;
       case 'clubs':
-        return <AdminFocClubsScreen />;
-      case 'competition':
+        return <AdminFocClubsScreen initialTab={screenTab ?? 'clubs'} />;
+      case 'teams':
+        return <AdminFocClubsScreen initialTab="teams" />;
+      case 'matchs':
         return (
           <AdminFocSectionHub
             initialTab={hubTab}
-            tabs={ADMIN_FOC_TABS.competition.map((tab) => ({
-              id: tab.id,
-              label: tab.label,
-              render: () =>
-                tab.id === 'matchs' ? (
-                  <AdminFocMatchsScreen initialTab={screenTab} />
-                ) : (
-                  <AdminFocCompetitionsScreen initialTab={screenTab} />
-                ),
-            }))}
-          />
-        );
-      case 'operations':
-        return (
-          <AdminFocSectionHub
-            initialTab={hubTab}
-            tabs={ADMIN_FOC_TABS.operations.map((tab) => ({
-              id: tab.id,
-              label: tab.label,
-              render: () => {
-                if (tab.id === 'recrutement') {
-                  return <AdminFocRecrutementScreen initialTab={screenTab} />;
-                }
-                if (tab.id === 'communication') {
-                  return <AdminFocCommunicationScreen initialTab={screenTab} />;
-                }
-                return <AdminFocVideoScreen />;
+            tabs={[
+              {
+                id: 'matchs',
+                label: 'Matchs',
+                render: () => <AdminFocMatchsScreen initialTab={screenTab} />,
               },
-            }))}
+              {
+                id: 'competitions',
+                label: 'Événements',
+                render: () => <AdminFocCompetitionsScreen initialTab={screenTab} />,
+              },
+            ]}
           />
         );
-      case 'finances':
-        return <AdminFocFinancesScreen initialTab={screenTab} />;
-      case 'plateforme':
+      case 'recrutement':
+        return <AdminFocRecrutementScreen initialTab={screenTab} />;
+      case 'ia':
+        return <AdminFocIaScreen />;
+      case 'video':
+        return <AdminFocVideoScreen />;
+      case 'abonnements':
         return (
-          <AdminFocSectionHub
-            initialTab={hubTab}
-            tabs={ADMIN_FOC_TABS.plateforme.map((tab) => ({
-              id: tab.id,
-              label: tab.label,
-              render: () =>
-                tab.id === 'performance' ? (
-                  <AdminFocPerformanceScreen />
-                ) : (
-                  <AdminFocParametresScreen
-                    prefs={prefs}
-                    onChangePrefs={setPrefs}
-                    onSavePrefs={handleSavePrefs}
-                    onPreviewUserApp={onPreviewUserApp}
-                  />
-                ),
-            }))}
+          <AdminFocFinancesScreen
+            initialTab={screenTab ?? 'vue'}
+            onOpenUser={handleOpenUser}
           />
         );
+      case 'marketplace':
+        return <AdminFocFinancesScreen initialTab="boutique" onOpenUser={handleOpenUser} />;
+      case 'sponsors':
+        return <AdminFocFinancesScreen initialTab="sponsors" onOpenUser={handleOpenUser} />;
+      case 'contenus':
+        return (
+          <AdminFocCommunicationScreen
+            initialTab={screenTab ?? 'annonces'}
+            title="Contenus"
+            allowedTabs={['annonces', 'fil', 'questions']}
+          />
+        );
+      case 'messagerie':
+        return <AdminFocMessagerieScreen />;
+      case 'signalements':
+        return (
+          <AdminFocCommunicationScreen
+            initialTab="decisions"
+            title="Signalements"
+            allowedTabs={['decisions']}
+          />
+        );
+      case 'statistiques':
+        return <AdminFocPerformanceScreen />;
+      case 'parametres':
+        return (
+          <AdminFocParametresScreen
+            initialTab="personnaliser"
+            prefs={prefs}
+            onChangePrefs={setPrefs}
+            onSavePrefs={handleSavePrefs}
+            onPreviewUserApp={onPreviewUserApp}
+          />
+        );
+      case 'audit':
+        return (
+          <View style={shellStyles.panelPage}>
+            <AdminFocPageHeader
+              title="Journal d’activité"
+              subtitle="Actions admin enregistrées (abonnements, comptes, contenus)."
+            />
+            <AdminAuditLogPanel />
+          </View>
+        );
+      case 'securite':
+        return <AdminFocSecuriteScreen onPreviewUserApp={onPreviewUserApp} />;
+      case 'config':
+        return <AdminFocConfigScreen />;
       default:
-        return <AdminFocDashboard onNavigateSection={handleNavigateSection} />;
+        return (
+          <AdminFocDashboard
+            onNavigateSection={handleNavigateSection}
+            onNavigateTarget={handleNavigateTarget}
+          />
+        );
     }
   }, [
     section,
     hubTab,
     screenTab,
+    focusId,
     prefs,
     handleNavigateSection,
     handleNavigateTarget,
     handleSavePrefs,
+    handleOpenUser,
     onPreviewUserApp,
   ]);
 
-  /* ── Sidebar (shared between desktop and mobile overlay) ── */
+  const railCollapsed = isTablet ? true : sidebarCollapsed;
+
   const sidebar = (
     <AdminFocSidebar
-      collapsed={sidebarCollapsed}
+      collapsed={railCollapsed}
       activeSection={section}
       sectionOrder={prefs.sectionOrder}
       hiddenSections={prefs.hiddenSections}
@@ -366,14 +400,14 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
       onNotifications={() => setNotifOpen(true)}
       notificationCount={workQueue.length}
       onMenu={() => setMobileMenu(true)}
-      showMenu={!isDesktop}
+      showMenu={!isDesktop && !isTablet}
     />
   );
 
   if (!prefsLoaded) {
     return (
       <SafeAreaView style={shellStyles.loaderRoot} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
         <ActivityIndicator size="small" color={adminChrome.accent} />
       </SafeAreaView>
     );
@@ -381,10 +415,9 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
 
   return (
     <View style={shellStyles.root}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
 
-      {isDesktop ? (
-        /* Desktop layout */
+      {isDesktop || isTablet ? (
         <View style={shellStyles.desktopRow}>
           {sidebar}
           <View style={shellStyles.desktopMain}>
@@ -393,19 +426,24 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
           </View>
         </View>
       ) : (
-        /* Mobile layout — menu gauche plein écran, toujours déplié */
         <SafeAreaView style={shellStyles.mobileRoot} edges={['top', 'left', 'right', 'bottom']}>
           {topBar}
           <View style={shellStyles.content}>{renderContent()}</View>
 
           <Modal
             visible={mobileMenu}
-            animationType="fade"
+            animationType="slide"
             transparent
             onRequestClose={() => setMobileMenu(false)}
           >
             <View style={shellStyles.mobileOverlay}>
-              <View style={shellStyles.mobileSidebarWrap}>
+              <Pressable
+                style={shellStyles.mobileOverlayBg}
+                onPress={() => setMobileMenu(false)}
+                accessibilityLabel="Fermer le menu"
+              />
+              <View style={shellStyles.mobileSheet}>
+                <View style={shellStyles.sheetHandle} />
                 <AdminFocSidebar
                   collapsed={false}
                   activeSection={section}
@@ -419,17 +457,11 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
                   onSelectSection={handleSelectSection}
                 />
               </View>
-              <Pressable
-                style={shellStyles.mobileOverlayBg}
-                onPress={() => setMobileMenu(false)}
-                accessibilityLabel="Fermer le menu"
-              />
             </View>
           </Modal>
         </SafeAreaView>
       )}
 
-      {/* Notifications modal */}
       <AdminPendingDecisionsModal
         visible={notifOpen}
         items={workQueue}
@@ -438,7 +470,6 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
         onRefresh={refresh}
       />
 
-      {/* Global search */}
       <AdminGlobalSearch
         visible={searchOpen}
         onClose={() => setSearchOpen(false)}
@@ -449,8 +480,6 @@ const AdminFocShellInner: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) 
     </View>
   );
 };
-
-/* ─── Styles ─────────────────────────────────────────────────────────── */
 
 const shellStyles = StyleSheet.create({
   loaderRoot: {
@@ -467,20 +496,32 @@ const shellStyles = StyleSheet.create({
   desktopMain: { flex: 1, minWidth: 0, backgroundColor: adminChrome.band },
   mobileRoot: { flex: 1, backgroundColor: adminChrome.band },
   content: { flex: 1, backgroundColor: adminChrome.band },
+  panelPage: { flex: 1, backgroundColor: adminChrome.band },
   mobileOverlay: {
     flex: 1,
-    flexDirection: 'row',
+    justifyContent: 'flex-end',
     backgroundColor: adminChrome.scrim,
   },
   mobileOverlayBg: { flex: 1 },
-  mobileSidebarWrap: {
-    width: 288,
-    height: '100%',
+  mobileSheet: {
+    height: '88%',
     backgroundColor: adminChrome.shell,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
     shadowColor: adminChrome.cardShadow,
-    shadowOffset: { width: 6, height: 0 },
-    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 1,
     shadowRadius: 24,
     elevation: 16,
+  },
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: adminChrome.shellBorderStrong,
+    marginTop: 8,
+    marginBottom: 4,
   },
 });

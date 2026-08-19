@@ -1,14 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  ADMIN_FOC_NAV,
-  DEFAULT_FOC_DASHBOARD_ORDER,
-  migrateAdminFocSectionId,
-  type AdminFocSectionId,
-  type FocDashboardBlockId,
-} from '../navigation/adminFocConfig';
+  ADMIN_NAV_ITEMS,
+  DEFAULT_ADMIN_DASHBOARD_ORDER,
+  migrateAdminNavSectionId,
+  type AdminDashboardBlockId,
+  type AdminNavSectionId,
+} from '../navigation/adminNavConfig';
 import { CLUB_SITE } from '../content/clubPageIdentity';
 
-const KEY = 'proday_admin_foc_prefs_v2';
+const KEY = 'proday_admin_nav_prefs_v3';
 
 export type AdminFocDensity = 'comfortable' | 'compact';
 
@@ -19,10 +19,12 @@ export type AdminFocPreferences = {
   density: AdminFocDensity;
   clubDisplayName: string;
   sidebarCollapsed: boolean;
-  sectionOrder: AdminFocSectionId[];
-  hiddenSections: AdminFocSectionId[];
-  dashboardOrder: FocDashboardBlockId[];
+  sectionOrder: AdminNavSectionId[];
+  hiddenSections: AdminNavSectionId[];
+  dashboardOrder: AdminDashboardBlockId[];
 };
+
+export type FocDashboardBlockId = AdminDashboardBlockId;
 
 export const DEFAULT_ADMIN_FOC_PREFS: AdminFocPreferences = {
   primaryColor: CLUB_SITE.accent,
@@ -31,9 +33,9 @@ export const DEFAULT_ADMIN_FOC_PREFS: AdminFocPreferences = {
   density: 'comfortable',
   clubDisplayName: 'ProDay',
   sidebarCollapsed: false,
-  sectionOrder: ADMIN_FOC_NAV.map((n) => n.id),
+  sectionOrder: ADMIN_NAV_ITEMS.map((n) => n.id),
   hiddenSections: [],
-  dashboardOrder: [...DEFAULT_FOC_DASHBOARD_ORDER],
+  dashboardOrder: [...DEFAULT_ADMIN_DASHBOARD_ORDER],
 };
 
 export async function loadAdminFocPreferences(uid: string): Promise<AdminFocPreferences> {
@@ -41,27 +43,31 @@ export async function loadAdminFocPreferences(uid: string): Promise<AdminFocPref
     const raw = await AsyncStorage.getItem(`${KEY}:${uid}`);
     if (!raw) return { ...DEFAULT_ADMIN_FOC_PREFS };
     const parsed = JSON.parse(raw) as Partial<AdminFocPreferences>;
-    const validIds = new Set(ADMIN_FOC_NAV.map((n) => n.id));
-    const migrate = (id: string): AdminFocSectionId | null => {
-      const next = migrateAdminFocSectionId(id);
+    const validIds = new Set(ADMIN_NAV_ITEMS.map((n) => n.id));
+    const migrate = (id: string): AdminNavSectionId | null => {
+      const next = migrateAdminNavSectionId(id);
       return validIds.has(next) ? next : null;
     };
     const sectionOrder = (parsed.sectionOrder ?? DEFAULT_ADMIN_FOC_PREFS.sectionOrder)
       .map((id) => migrate(String(id)))
-      .filter((id): id is AdminFocSectionId => id != null);
+      .filter((id): id is AdminNavSectionId => id != null);
     const dedupedOrder = sectionOrder.filter(
       (id, index) => sectionOrder.indexOf(id) === index,
+    );
+    const validBlocks = new Set<string>(DEFAULT_ADMIN_DASHBOARD_ORDER);
+    const dashboardOrder = (parsed.dashboardOrder ?? DEFAULT_ADMIN_FOC_PREFS.dashboardOrder).filter(
+      (id): id is AdminDashboardBlockId => validBlocks.has(String(id)),
     );
     return {
       ...DEFAULT_ADMIN_FOC_PREFS,
       ...parsed,
       sectionOrder: dedupedOrder.length ? dedupedOrder : DEFAULT_ADMIN_FOC_PREFS.sectionOrder,
-      dashboardOrder: parsed.dashboardOrder?.length
-        ? parsed.dashboardOrder
+      dashboardOrder: dashboardOrder.length
+        ? dashboardOrder
         : DEFAULT_ADMIN_FOC_PREFS.dashboardOrder,
       hiddenSections: (parsed.hiddenSections ?? [])
         .map((id) => migrate(String(id)))
-        .filter((id): id is AdminFocSectionId => id != null)
+        .filter((id): id is AdminNavSectionId => id != null)
         .filter((id, index, arr) => arr.indexOf(id) === index),
     };
   } catch {
