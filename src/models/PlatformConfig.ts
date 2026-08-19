@@ -28,6 +28,11 @@ export interface PlatformConfig {
     hourly_rate_min_eur: number;
     hourly_rate_max_eur: number;
   };
+  /** Commission ProDay sur les transactions sponsor (configurable admin). */
+  sponsor_commission?: {
+    proday_percent: number;
+    min_amount_eur: number;
+  };
   updated_at?: Date;
   updated_by_uid?: string;
 }

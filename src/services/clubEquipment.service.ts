@@ -15,6 +15,7 @@ import { isFirebaseConfigured } from '../config/firebase';
 import type {
   ClubEquipmentListing,
   EquipmentCondition,
+  EquipmentCategory,
   EquipmentListingKind,
 } from '../models/ClubEquipmentListing';
 
@@ -48,6 +49,8 @@ function mapListing(id: string, data: Record<string, unknown>): ClubEquipmentLis
     created_at: toDate(data.created_at),
     updated_at: toDate(data.updated_at),
     status: (data.status as ClubEquipmentListing['status']) ?? 'draft',
+    buyer_uid: data.buyer_uid ? String(data.buyer_uid) : null,
+    sold_at: data.sold_at ? toDate(data.sold_at) : null,
   };
 }
 
@@ -166,5 +169,47 @@ export const clubEquipmentService = {
       status: 'published',
       updated_at: serverTimestamp(),
     });
+  },
+
+  async markAsSold(id: string, buyerUid?: string): Promise<void> {
+    if (!isFirebaseConfigured()) return;
+    const database = getDb();
+    if (!database) return;
+    await updateDoc(doc(database, COL, id), {
+      status: 'sold',
+      buyer_uid: buyerUid ?? null,
+      sold_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async markAsGiven(id: string, receiverUid?: string): Promise<void> {
+    if (!isFirebaseConfigured()) return;
+    const database = getDb();
+    if (!database) return;
+    await updateDoc(doc(database, COL, id), {
+      status: 'given',
+      buyer_uid: receiverUid ?? null,
+      sold_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  async update(
+    id: string,
+    fields: Partial<Pick<ClubEquipmentListing, 'title' | 'description' | 'category' | 'size' | 'condition' | 'price_cents' | 'kind'>>,
+  ): Promise<void> {
+    if (!isFirebaseConfigured()) return;
+    const database = getDb();
+    if (!database) return;
+    const payload: Record<string, unknown> = { updated_at: serverTimestamp() };
+    if (fields.title !== undefined) payload.title = fields.title.trim();
+    if (fields.description !== undefined) payload.description = fields.description.trim();
+    if (fields.category !== undefined) payload.category = fields.category;
+    if (fields.size !== undefined) payload.size = fields.size || null;
+    if (fields.condition !== undefined) payload.condition = fields.condition;
+    if (fields.price_cents !== undefined) payload.price_cents = fields.price_cents;
+    if (fields.kind !== undefined) payload.kind = fields.kind;
+    await updateDoc(doc(database, COL, id), payload);
   },
 };
