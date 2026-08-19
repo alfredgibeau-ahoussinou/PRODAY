@@ -9,6 +9,7 @@ import {
   PLAYER_DARK_RADIUS,
 } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { Icon } from '../ui/Icon';
 import type { PlayerShieldCardStats } from './PlayerShieldCard';
 
@@ -91,6 +92,7 @@ export function PlayerShieldCardCompact({
   onPress,
   style,
 }: PlayerShieldCardCompactProps) {
+  const playerTheme = usePlayerThemeColors();
   const pos = positionShort(position ?? undefined);
   const matches =
     stats?.matches != null && stats.matches >= 0 ? String(stats.matches) : '—';
@@ -104,7 +106,10 @@ export function PlayerShieldCardCompact({
           end={{ x: 1, y: 1 }}
           style={compactStyles.face}
         >
-          <View style={compactStyles.hexTop} pointerEvents="none" />
+          <View
+            style={[compactStyles.hexTop, { backgroundColor: playerTheme.accentSoft }]}
+            pointerEvents="none"
+          />
           <View style={compactStyles.photoWrap}>
             {photoUrl ? (
               <Image source={{ uri: photoUrl }} style={compactStyles.photo} resizeMode="cover" />
@@ -115,7 +120,7 @@ export function PlayerShieldCardCompact({
                 </ProDayText>
               </View>
             )}
-            <View style={compactStyles.posBadge}>
+            <View style={[compactStyles.posBadge, { backgroundColor: playerTheme.accent }]}>
               <ProDayText variant="caption" style={compactStyles.posText}>
                 {pos}
               </ProDayText>
@@ -138,7 +143,7 @@ export function PlayerShieldCardCompact({
         </LinearGradient>
       </View>
     ),
-    [style, photoUrl, displayName, pos, clubName, matches, stats?.rating],
+    [style, photoUrl, displayName, pos, clubName, matches, stats?.rating, playerTheme.accent, playerTheme.accentSoft],
   );
 
   if (onPress) {
@@ -173,7 +178,6 @@ const compactStyles = StyleSheet.create({
     height: 6,
     borderBottomLeftRadius: 4,
     borderBottomRightRadius: 4,
-    backgroundColor: 'rgba(0,230,118,0.18)',
   },
   photoWrap: {
     width: 52,
@@ -191,7 +195,6 @@ const compactStyles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    backgroundColor: PLAYER_DARK.accent,
     borderRadius: PLAYER_DARK_RADIUS.pill,
     paddingHorizontal: 5,
     paddingVertical: 1,
