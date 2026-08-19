@@ -8,6 +8,8 @@ import { ListEmptyPanel } from '../../ui/ListEmptyPanel';
 import { PressableSpring } from '../../motion';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { useTranslation } from '../../../context/LocaleContext';
+import { useCoachTokens } from '../../../features/coach/shell/CoachThemeContext';
+import { useJoueurTheme } from '../../../hooks/useJoueurTheme';
 import { spacing } from '../../../theme/designTokens';
 import { fontFamily } from '../../../theme/typography';
 import { MESSAGES_CHAPTER_PAD } from './messagesChapterLayout';
@@ -29,6 +31,7 @@ export interface MessagesNetworkPageProps {
   onRefresh: () => void;
   onPressSuggestion: (suggestion: SocialProfileSuggestion) => void;
   onOpenMercato: () => void;
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 export const MessagesNetworkPage: React.FC<MessagesNetworkPageProps> = ({
@@ -42,9 +45,15 @@ export const MessagesNetworkPage: React.FC<MessagesNetworkPageProps> = ({
   onRefresh,
   onPressSuggestion,
   onOpenMercato,
+  variant,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
+  const coachTokens = useCoachTokens();
+  const joueurTheme = useJoueurTheme();
+  const accent = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
 
   const profileCountLabel = useMemo(() => {
     if (loading) return t('common.loading');
@@ -55,11 +64,11 @@ export const MessagesNetworkPage: React.FC<MessagesNetworkPageProps> = ({
     <ScrollView
       contentContainerStyle={MESSAGES_CHAPTER_PAD}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
       }
       {...scrollProps}
     >
-      <MessagesNetworkIntro savedCount={savedCount} />
+      <MessagesNetworkIntro savedCount={savedCount} variant={variant} />
 
       <View style={styles.sectionHead}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('messages.network.suggestions')}</Text>
@@ -85,6 +94,7 @@ export const MessagesNetworkPage: React.FC<MessagesNetworkPageProps> = ({
                 suggestion={item}
                 isSaved={isSaved(item.targetUid)}
                 onPress={() => onPressSuggestion(item)}
+                variant={variant}
               />
             </InteractiveListItem>
           ))}

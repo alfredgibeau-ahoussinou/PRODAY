@@ -57,6 +57,8 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const [chapter, setChapter] = useState<MessagesChapterId>('inbox');
   const coachSkin = props.variant === 'coach';
+  const messagesVariant =
+    joueurLive && props.variant !== 'coach' ? 'joueur' : props.variant;
 
   const joueurTitles = useMemo(() => {
     if (!joueurLive || !joueurSession) return null;
@@ -115,7 +117,7 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
             onOpenMercato={props.onOpenMercato}
             kineLabelFor={props.kineLabelFor}
             isWoman={props.isWoman}
-            variant={joueurLive && props.variant !== 'coach' ? 'joueur' : props.variant}
+            variant={messagesVariant}
           />
         ),
       },
@@ -133,11 +135,12 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
             onRefresh={props.onRefresh}
             onPressSuggestion={props.onSocialSuggestion}
             onOpenMercato={props.onOpenMercato}
+            variant={messagesVariant}
           />
         ),
       },
     ],
-    [props]
+    [messagesVariant, props]
   );
 
   if (!props.authLoading && !props.profile) {
@@ -187,7 +190,7 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
       activeChapter={chapter}
       onChapterChange={setChapter}
       unreadBadge={props.unreadCount}
-      variant={props.variant}
+      variant={messagesVariant}
     />
   );
 

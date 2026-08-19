@@ -4,20 +4,39 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 import { spacing, radius } from '../../theme/designTokens';
 
 interface MessagesNetworkIntroProps {
   savedCount: number;
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
-export const MessagesNetworkIntro: React.FC<MessagesNetworkIntroProps> = ({ savedCount }) => {
+export const MessagesNetworkIntro: React.FC<MessagesNetworkIntroProps> = ({
+  savedCount,
+  variant,
+}) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
+  const coachTokens = useCoachTokens();
+  const joueurTheme = useJoueurTheme();
+  const accent = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
+  const iconWrapBg = coach
+    ? coachTokens.elevated
+    : joueur
+      ? JOUEUR_SURFACES.chipActive
+      : colors.accentSoft;
+  const cardBg = coach ? coachTokens.surface : joueur ? joueurTheme.surface : colors.surfaceMuted;
+  const cardBorder = coach ? 'transparent' : joueur ? joueurTheme.border : colors.border;
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-      <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
-        <Icon name="people" size={20} color={colors.accent} />
+    <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+      <View style={[styles.iconWrap, { backgroundColor: iconWrapBg }]}>
+        <Icon name="people" size={20} color={accent} />
       </View>
       <View style={styles.copy}>
         <ProDayText variant="section" style={styles.title}>
@@ -27,7 +46,11 @@ export const MessagesNetworkIntro: React.FC<MessagesNetworkIntroProps> = ({ save
           {t('messages.network.intro.body')}
         </ProDayText>
         {savedCount > 0 ? (
-          <ProDayText variant="caption" accent style={styles.saved}>
+          <ProDayText
+            variant="caption"
+            accent={!joueur}
+            style={[styles.saved, joueur ? { color: accent, fontWeight: '700' } : undefined]}
+          >
             {t('messages.network.savedCount', { n: savedCount })}
           </ProDayText>
         ) : null}

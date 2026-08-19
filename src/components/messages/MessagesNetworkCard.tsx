@@ -5,6 +5,9 @@ import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 
@@ -12,14 +15,26 @@ interface MessagesNetworkCardProps {
   suggestion: SocialProfileSuggestion;
   isSaved?: boolean;
   onPress: () => void;
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 export const MessagesNetworkCard: React.FC<MessagesNetworkCardProps> = ({
   suggestion,
   isSaved,
   onPress,
+  variant,
 }) => {
   const { colors } = useAppTheme();
+  const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
+  const coachTokens = useCoachTokens();
+  const joueurTheme = useJoueurTheme();
+  const accent = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
+  const accentSoft = coach
+    ? coachTokens.elevated
+    : joueur
+      ? JOUEUR_SURFACES.chipActive
+      : colors.accentSoft;
   const styles = useMemo(() => createStyles(colors), [colors]);
   const initial = suggestion.displayName.charAt(0).toUpperCase();
   const ctaLabel =
@@ -38,10 +53,10 @@ export const MessagesNetworkCard: React.FC<MessagesNetworkCardProps> = ({
     >
       <ProDayGradient kind="cta" style={styles.accent} />
       <View style={styles.body}>
-        <View style={[styles.avatar, { backgroundColor: colors.accentSoft }]}>
-          <Text style={[styles.initial, { color: colors.accent }]}>{initial}</Text>
+        <View style={[styles.avatar, { backgroundColor: accentSoft }]}>
+          <Text style={[styles.initial, { color: accent }]}>{initial}</Text>
           {isSaved ? (
-            <View style={[styles.savedBadge, { backgroundColor: colors.accent }]}>
+            <View style={[styles.savedBadge, { backgroundColor: accent }]}>
               <Icon name="bookmark" size={10} color={colors.brandInverse} />
             </View>
           ) : null}
@@ -52,8 +67,8 @@ export const MessagesNetworkCard: React.FC<MessagesNetworkCardProps> = ({
             <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
               {suggestion.displayName}
             </Text>
-            <View style={[styles.score, { backgroundColor: colors.accentSoft }]}>
-              <Text style={[styles.scoreText, { color: colors.accent }]}>
+            <View style={[styles.score, { backgroundColor: accentSoft }]}>
+              <Text style={[styles.scoreText, { color: accent }]}>
                 {suggestion.matchScore}%
               </Text>
             </View>
@@ -69,8 +84,8 @@ export const MessagesNetworkCard: React.FC<MessagesNetworkCardProps> = ({
 
           <View style={styles.footer}>
             <View style={styles.cta}>
-              <Text style={[styles.ctaText, { color: colors.accent }]}>{ctaLabel}</Text>
-              <Icon name="chevron-forward" size={14} color={colors.accent} />
+              <Text style={[styles.ctaText, { color: accent }]}>{ctaLabel}</Text>
+              <Icon name="chevron-forward" size={14} color={accent} />
             </View>
           </View>
         </View>

@@ -103,6 +103,7 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
         onAccept={onAcceptRequest}
         onRefuse={onRefuseRequest}
         onOpen={onOpenThread}
+        variant={variant}
       />
 
       {mustVerify ? (

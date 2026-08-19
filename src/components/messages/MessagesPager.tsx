@@ -20,6 +20,7 @@ interface MessagesPagerProps {
   activeChapter: MessagesChapterId;
   onChapterChange: (id: MessagesChapterId) => void;
   unreadBadge?: number;
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 export const MessagesPager: React.FC<MessagesPagerProps> = ({
@@ -27,6 +28,7 @@ export const MessagesPager: React.FC<MessagesPagerProps> = ({
   activeChapter,
   onChapterChange,
   unreadBadge,
+  variant,
 }) => {
   const styles = useMemo(() => createStyles(), []);
   const { width: pageWidth } = useWindowDimensions();
@@ -118,6 +120,7 @@ export const MessagesPager: React.FC<MessagesPagerProps> = ({
         active={activeChapter}
         onSelect={(id) => goToChapter(id, false)}
         unreadBadge={unreadBadge}
+        variant={variant}
       />
 
       <Animated.ScrollView

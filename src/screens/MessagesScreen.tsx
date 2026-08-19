@@ -26,6 +26,7 @@ import type { MessagesThreadFilter } from '../content/messagesChapters';
 import { MessagesHomeScreen } from '../components/messages/MessagesHomeScreen';
 import { useTranslation } from '../context/LocaleContext';
 import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
+import { useJoueurSession } from '../context/JoueurSessionContext';
 import {
   MessagesNetworkSheet,
   type NetworkSheetAction,
@@ -38,6 +39,11 @@ export const MessagesScreen: React.FC = () => {
   const { pendingChatThreadId, clearPendingChat, openAuth } = useTabNavigation();
   const nav = useTabNavigationActions();
   const coachShell = Boolean(useCoachShellNav());
+  const joueurSession = useJoueurSession();
+  const joueurLive = Boolean(
+    joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate,
+  );
+  const messagesVariant = coachShell ? 'coach' : joueurLive ? 'joueur' : 'default';
   const { threads, loading, refresh } = useMessagesData(profile?.uid);
   const { data: dashboardData } = useDashboardData(profile);
   const favorites = useFavorites(profile?.uid);
@@ -387,6 +393,7 @@ export const MessagesScreen: React.FC = () => {
         messageBlockedReason={messagePermission.message}
         onClose={closeNetworkSheet}
         onAction={(action) => void handleNetworkSheetAction(action)}
+        variant={messagesVariant}
       />
 
       <PushScreenTransition active={Boolean(networkProfileUser)}>{profileOverlay}</PushScreenTransition>
