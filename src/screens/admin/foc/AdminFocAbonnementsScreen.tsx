@@ -166,8 +166,8 @@ export function AdminFocAbonnementsScreen({ focusId, focusQuery, onOpenUser, emb
   }, [users, query, filter]);
 
   useEffect(() => {
-    if (!selectedId && rows[0]) setSelectedId(rows[0].uid);
-  }, [rows, selectedId]);
+    if (wide && !selectedId && rows[0]) setSelectedId(rows[0].uid);
+  }, [rows, selectedId, wide]);
 
   const selected = users.find((u) => u.uid === selectedId) ?? null;
 
