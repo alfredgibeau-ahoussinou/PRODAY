@@ -3,11 +3,14 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import type { IconName } from '../ui/Icon';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { getLocalizedQuickAccessItems } from '../../i18n/localizedContent';
 import type { AppColors } from '../../theme/universeTheme';
+import { isJoueurProductLine } from '../../utils/playerLevelBadge';
+import { JOUEUR_DISCOVER } from '../../theme/joueurDesignSystem';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 export type DiscoverQuickId = 'mercato' | 'matchs' | 'reels' | 'shop' | 'sponsors';
 
@@ -22,9 +25,14 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   onPress,
   hideReels = false,
 }) => {
-  const { colors: c } = useAppTheme();
+  const { colors: c, productLine } = useAppTheme();
+  const joueurTheme = useJoueurTheme();
+  const joueurLine = isJoueurProductLine(productLine);
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const styles = useMemo(
+    () => createStyles(c, joueurLine, joueurTheme),
+    [c, joueurLine, joueurTheme],
+  );
   const iconById: Partial<Record<DiscoverQuickId, IconName>> = {
     mercato: 'search',
     matchs: 'handshake',
@@ -51,7 +59,12 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
           style={styles.tile}
         >
           <View style={styles.iconWrap}>
-            <Icon name={item.icon} size={20} color={c.ink} variant="filled" />
+            <Icon
+              name={item.icon}
+              size={20}
+              color={joueurLine ? joueurTheme.accent : c.ink}
+              variant="filled"
+            />
           </View>
           <Text style={styles.label}>{item.label}</Text>
           <Text style={styles.sub}>{item.sub}</Text>
@@ -61,7 +74,11 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles(
+  c: AppColors,
+  joueurLine: boolean,
+  joueurTheme: ReturnType<typeof useJoueurTheme>,
+) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -73,17 +90,16 @@ function createStyles(c: AppColors) {
       paddingVertical: spacing.md + 2,
       paddingHorizontal: spacing.xs,
       borderRadius: radius.xl,
-      backgroundColor: c.surface,
+      backgroundColor: joueurLine ? JOUEUR_DISCOVER.tileBg : c.surface,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
+      borderColor: joueurLine ? JOUEUR_DISCOVER.tileBorder : c.border,
       gap: 5,
-      ...shadows.soft,
     },
     iconWrap: {
       width: 44,
       height: 44,
       borderRadius: radius.lg,
-      backgroundColor: c.accentSoft,
+      backgroundColor: joueurLine ? JOUEUR_DISCOVER.chipBg : c.accentSoft,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 2,
@@ -91,14 +107,14 @@ function createStyles(c: AppColors) {
     label: {
       fontSize: 12,
       fontWeight: '800',
-      color: c.text,
+      color: joueurLine ? joueurTheme.ink : c.text,
       textAlign: 'center',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     sub: {
       fontSize: 9,
       fontWeight: '600',
-      color: c.textMuted,
+      color: joueurLine ? joueurTheme.inkMuted : c.textMuted,
       textAlign: 'center',
     },
   });

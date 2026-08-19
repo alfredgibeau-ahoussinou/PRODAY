@@ -30,6 +30,10 @@ import { spacing, BRAND, radius, shadows } from '../../theme/designTokens';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 import { ProDayGradient } from '../ui/ProDayGradient';
 import type { AppColors } from '../../theme/universeTheme';
+import { isJoueurProductLine } from '../../utils/playerLevelBadge';
+import { JOUEUR_SITE } from '../../theme/joueurDesignSystem';
+import { JoueurScreenChrome } from '../joueur/JoueurScreenChrome';
+import { resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
 
 const STICKY_CTA_HEIGHT = 56;
 
@@ -80,6 +84,17 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   const metrics = useDiscoverMetrics();
   const homeCopy = getLocalizedDiscoverCopy(productLine, t);
   const local = useMemo(() => createLocalStyles(c), [c]);
+  const joueurLine = isJoueurProductLine(productLine);
+  const guestIdentity = useMemo(
+    () =>
+      joueurLine
+        ? resolveJoueurPageIdentity({
+            ageGroup: 'adult',
+            gender: productLine === 'woman' ? 'female' : 'male',
+          })
+        : null,
+    [joueurLine, productLine],
+  );
 
   if (productLine === 'sponsor') {
     return (
@@ -117,105 +132,125 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
     }
   };
 
-  return (
-    <ProDayScreenCanvas>
-      <View style={discoverStyles.canvas}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          bounces
-          contentContainerStyle={{
-            paddingBottom: STICKY_CTA_HEIGHT + spacing.xl * 2,
-          }}
-        >
-          <DiscoverGuestHero
-            productLine={productLine}
-            statsLabel={showHeaderStats ? statsLabel : undefined}
-            loading={loading && !stats}
-            onSignup={onSignup}
-            onLogin={onLogin}
-            onStatsPress={showHeaderStats ? onPress : undefined}
-            universeLabel={universeLabel}
-            onUniversePress={onUniversePress}
+  const scrollBody = (
+    <>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        bounces
+        contentContainerStyle={{
+          paddingBottom: STICKY_CTA_HEIGHT + spacing.xl * 2,
+        }}
+      >
+        <DiscoverGuestHero
+          productLine={productLine}
+          statsLabel={showHeaderStats ? statsLabel : undefined}
+          loading={loading && !stats}
+          onSignup={onSignup}
+          onLogin={onLogin}
+          onStatsPress={showHeaderStats ? onPress : undefined}
+          universeLabel={universeLabel}
+          onUniversePress={onUniversePress}
+        />
+
+        <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+          <DiscoverSectionLabel>{t('discover.quickAccess')}</DiscoverSectionLabel>
+          <DiscoverQuickAccess onPress={onQuickPress} hideReels={productLine === 'sante'} />
+        </View>
+
+        <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+          <DiscoverSectionLabel>{t('preferences.language')}</DiscoverSectionLabel>
+          <LanguageSettingControl variant="card" />
+        </View>
+
+        <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+          <DiscoverSectionLabel>{t('discover.journey')}</DiscoverSectionLabel>
+          <DiscoverGuestJourney productLine={productLine} onStepPress={onStepPress} />
+        </View>
+
+        <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
+          <DiscoverSectionLabel>{homeCopy.sectionExplore}</DiscoverSectionLabel>
+          <ProDayModuleGrid
+            onModulePress={onModulePress}
+            liveRecruitment={liveRecruitment}
+            animated
+            fullWidthModuleId="gestion"
           />
+        </View>
 
+        {hasActivity || loading ? (
           <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-            <DiscoverSectionLabel>{t('discover.quickAccess')}</DiscoverSectionLabel>
-            <DiscoverQuickAccess onPress={onQuickPress} hideReels={productLine === 'sante'} />
-          </View>
-
-          <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-            <DiscoverSectionLabel>{t('preferences.language')}</DiscoverSectionLabel>
-            <LanguageSettingControl variant="card" />
-          </View>
-
-          <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-            <DiscoverSectionLabel>{t('discover.journey')}</DiscoverSectionLabel>
-            <DiscoverGuestJourney productLine={productLine} onStepPress={onStepPress} />
-          </View>
-
-          <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-            <DiscoverSectionLabel>{homeCopy.sectionExplore}</DiscoverSectionLabel>
-            <ProDayModuleGrid
-              onModulePress={onModulePress}
-              liveRecruitment={liveRecruitment}
-              animated
-              fullWidthModuleId="gestion"
+            <DiscoverSectionLabel>{t('discover.live')}</DiscoverSectionLabel>
+            {!loading && stats ? (
+              <PressableSpring
+                style={discoverStyles.statsRow}
+                onPress={onPress}
+                scaleTo={0.98}
+              >
+                <View style={discoverStyles.liveDot} />
+                <Text style={discoverStyles.statsRowText} numberOfLines={2}>
+                  {statsLabel}
+                </Text>
+                <Icon name="chevron-forward" size={16} color={discoverPalette.faint} />
+              </PressableSpring>
+            ) : loading ? (
+              <ActivityIndicator color={discoverPalette.ink} style={local.loader} />
+            ) : null}
+            <DiscoverActivityStrip
+              posts={posts}
+              loading={loading}
+              onPress={onPress}
+              variant="editorial"
             />
           </View>
+        ) : null}
 
-          {hasActivity || loading ? (
-            <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-              <DiscoverSectionLabel>{t('discover.live')}</DiscoverSectionLabel>
-              {!loading && stats ? (
-                <PressableSpring
-                  style={discoverStyles.statsRow}
-                  onPress={onPress}
-                  scaleTo={0.98}
-                >
-                  <View style={discoverStyles.liveDot} />
-                  <Text style={discoverStyles.statsRowText} numberOfLines={2}>
-                    {statsLabel}
-                  </Text>
-                  <Icon name="chevron-forward" size={16} color={discoverPalette.faint} />
-                </PressableSpring>
-              ) : loading ? (
-                <ActivityIndicator color={discoverPalette.ink} style={local.loader} />
-              ) : null}
-              <DiscoverActivityStrip
-                posts={posts}
-                loading={loading}
-                onPress={onPress}
-                variant="editorial"
-              />
-            </View>
-          ) : null}
+        <View style={[local.trust, { marginHorizontal: metrics.pad }]}>
+          <Icon name="shield" size={18} color={discoverPalette.ink} variant="filled" />
+          <Text style={local.trustText}>{homeCopy.trustText}</Text>
+        </View>
 
-          <View style={[local.trust, { marginHorizontal: metrics.pad }]}>
-            <Icon name="shield" size={18} color={discoverPalette.ink} variant="filled" />
-            <Text style={local.trustText}>{homeCopy.trustText}</Text>
-          </View>
+        <View style={[local.finalCta, { paddingHorizontal: metrics.pad }]}>
+          <Text style={local.foot}>{BRAND.tagline}</Text>
+        </View>
+      </ScrollView>
 
-          <View style={[local.finalCta, { paddingHorizontal: metrics.pad }]}>
-            <Text style={local.foot}>{BRAND.tagline}</Text>
-          </View>
-        </ScrollView>
-
-        <View style={local.stickyDock}>
-          <LinearGradient
-            colors={['transparent', c.background]}
-            style={local.stickyFade}
-            pointerEvents="none"
-          />
-          <View style={[local.stickyBar, { backgroundColor: c.background, borderTopColor: c.border }]}>
-            <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={[local.stickyBtnWrap, shadows.soft]}>
-              <ProDayGradient kind="cta" style={local.stickyBtn}>
-                <Text style={local.stickyBtnText}>{t('discover.signupFree')}</Text>
-                <Icon name="chevron-forward" size={18} color={c.brandInverse} />
-              </ProDayGradient>
-            </PressableSpring>
-          </View>
+      <View style={local.stickyDock}>
+        <LinearGradient
+          colors={['transparent', joueurLine ? JOUEUR_SITE.bg : c.background]}
+          style={local.stickyFade}
+          pointerEvents="none"
+        />
+        <View
+          style={[
+            local.stickyBar,
+            {
+              backgroundColor: joueurLine ? JOUEUR_SITE.bg : c.background,
+              borderTopColor: joueurLine ? JOUEUR_SITE.border : c.border,
+            },
+          ]}
+        >
+          <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={[local.stickyBtnWrap, shadows.soft]}>
+            <ProDayGradient kind="cta" style={local.stickyBtn}>
+              <Text style={local.stickyBtnText}>{t('discover.signupFree')}</Text>
+              <Icon name="chevron-forward" size={18} color={c.brandInverse} />
+            </ProDayGradient>
+          </PressableSpring>
         </View>
       </View>
+    </>
+  );
+
+  if (joueurLine && guestIdentity) {
+    return (
+      <JoueurScreenChrome identity={guestIdentity} variant="tab">
+        <View style={discoverStyles.canvas}>{scrollBody}</View>
+      </JoueurScreenChrome>
+    );
+  }
+
+  return (
+    <ProDayScreenCanvas>
+      <View style={discoverStyles.canvas}>{scrollBody}</View>
     </ProDayScreenCanvas>
   );
 };

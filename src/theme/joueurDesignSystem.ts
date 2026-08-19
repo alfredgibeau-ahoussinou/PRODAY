@@ -55,6 +55,33 @@ export type JoueurThemeTokens = {
   cardRadius: number;
 };
 
+/** Tokens Reels joueur — dock sombre + accent or FUT18. */
+export const JOUEUR_REELS = {
+  stage: FUT18_PREMIUM.nightDeep,
+  backdrop: 'rgba(2,4,8,0.72)',
+  accent: FUT18_PREMIUM.goldAccent,
+  accentSoft: FUT18_PREMIUM.goldSoft,
+  accentLine: 'rgba(232,200,114,0.42)',
+  ember: '#FF4F7A',
+  text: '#F3F8FF',
+  textDim: 'rgba(243,248,255,0.68)',
+  hairline: FUT18_PREMIUM.dockBorder,
+  scrimTop: 'rgba(4,8,14,0.58)',
+  scrimStrong: 'rgba(3,6,12,0.92)',
+  atmosphere: [FUT18_PREMIUM.nightBlue, FUT18_PREMIUM.nightDeep] as [string, string],
+  glow: ['rgba(232,200,114,0.14)', 'transparent'] as [string, string],
+} as const;
+
+/** Tokens Discover invité — hero sombre premium. */
+export const JOUEUR_DISCOVER = {
+  heroBg: FUT18_PREMIUM.panelBg,
+  heroBorder: FUT18_PREMIUM.panelBorder,
+  heroMuted: 'rgba(243,248,255,0.68)',
+  tileBg: JOUEUR_SURFACES.card,
+  tileBorder: JOUEUR_SURFACES.cardBorder,
+  chipBg: JOUEUR_SURFACES.chip,
+} as const;
+
 /** Tokens covoiturage en mode joueur — fond sombre FUT18. */
 export const JOUEUR_CARPOOL = {
   sky: JOUEUR_SITE.bg,

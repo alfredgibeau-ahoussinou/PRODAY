@@ -1,41 +1,41 @@
 import { fontFamily } from '../../theme/typography';
 import { spacing as globalSpacing, radius as globalRadius } from '../../theme/designTokens';
+import { JOUEUR_REELS } from '../../theme/joueurDesignSystem';
 
 /**
- * ProDay Reels — skin « Night glass ».
+ * ProDay Reels — skin FUT 18 Color Premium (dock sombre + or).
  * Spacing / radius aliasent les tokens globaux (+ pas aéré via xxl).
  */
 export const reelsTheme = {
   color: {
-    stage: '#000000',
-    ink: '#070B12',
-    surface: '#101722',
-    surfaceRaised: '#182232',
+    stage: JOUEUR_REELS.stage,
+    ink: JOUEUR_REELS.stage,
+    surface: 'rgba(10,16,28,0.92)',
+    surfaceRaised: 'rgba(14,22,38,0.94)',
 
-    /** Accent glacial (FLASH-adjacent) — anciennement mal nommé « amber » */
-    cyan: '#45E6FF',
-    cyanSoft: 'rgba(69, 230, 255, 0.16)',
-    cyanLine: 'rgba(69, 230, 255, 0.42)',
-    onCyan: '#00141A',
-    /** @deprecated alias → cyan */
-    amber: '#45E6FF',
-    amberSoft: 'rgba(69, 230, 255, 0.16)',
-    amberLine: 'rgba(69, 230, 255, 0.42)',
-    onAmber: '#00141A',
+    cyan: JOUEUR_REELS.accent,
+    cyanSoft: JOUEUR_REELS.accentSoft,
+    cyanLine: JOUEUR_REELS.accentLine,
+    onCyan: '#1A1408',
+    /** @deprecated alias → accent or FUT18 */
+    amber: JOUEUR_REELS.accent,
+    amberSoft: JOUEUR_REELS.accentSoft,
+    amberLine: JOUEUR_REELS.accentLine,
+    onAmber: '#1A1408',
 
-    ember: '#FF4F7A',
+    ember: JOUEUR_REELS.ember,
 
-    text: '#F3F8FF',
-    textDim: 'rgba(243, 248, 255, 0.68)',
+    text: JOUEUR_REELS.text,
+    textDim: JOUEUR_REELS.textDim,
     textFaint: 'rgba(243, 248, 255, 0.42)',
 
-    hairline: 'rgba(243, 248, 255, 0.12)',
-    hairlineStrong: 'rgba(243, 248, 255, 0.24)',
+    hairline: JOUEUR_REELS.hairline,
+    hairlineStrong: 'rgba(255,255,255,0.18)',
 
-    scrimTop: 'rgba(4, 8, 14, 0.56)',
+    scrimTop: JOUEUR_REELS.scrimTop,
     scrimSoft: 'rgba(4, 8, 14, 0.28)',
-    scrimStrong: 'rgba(3, 6, 12, 0.9)',
-    backdrop: 'rgba(2, 4, 8, 0.7)',
+    scrimStrong: JOUEUR_REELS.scrimStrong,
+    backdrop: JOUEUR_REELS.backdrop,
   },
 
   space: {
@@ -98,5 +98,5 @@ export const REEL_BOTTOM_SCRIM = [
 
 export const REEL_TOP_SCRIM = [reelsTheme.color.scrimTop, 'transparent'] as const;
 
-export const REEL_STAGE_ATMOSPHERE = ['#060A12', '#000000'] as const;
-export const REEL_STAGE_GLOW = ['rgba(69, 230, 255, 0.16)', 'transparent'] as const;
+export const REEL_STAGE_ATMOSPHERE = JOUEUR_REELS.atmosphere;
+export const REEL_STAGE_GLOW = JOUEUR_REELS.glow;

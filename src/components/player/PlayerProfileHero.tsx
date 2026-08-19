@@ -6,6 +6,8 @@ import { Icon, type IconName } from '../ui/Icon';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 import {
   availabilityLabel,
   availabilityTone,
@@ -27,6 +29,7 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
   completionPercent,
   careerScore,
 }) => {
+  const joueurTheme = useJoueurTheme();
   const p = player.profile;
   const verified = player.is_verified === true;
   const availability = availabilityLabel(p.availability);
@@ -46,9 +49,9 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
   if (p.weight_kg) metaParts.push(`${p.weight_kg} kg`);
 
   return (
-    <View style={[styles.card, shadows.card, { borderColor: `${c.brand}44`, backgroundColor: FUT18_PREMIUM.panelBg }]}>
+    <View style={[styles.card, shadows.card, { borderColor: `${joueurTheme.accent}44`, backgroundColor: FUT18_PREMIUM.panelBg }]}>
       <LinearGradient
-        colors={[c.brand, FUT18_PREMIUM.nightBlue, FUT18_PREMIUM.nightDeep]}
+        colors={[joueurTheme.accent, FUT18_PREMIUM.nightBlue, FUT18_PREMIUM.nightDeep]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.hero}
@@ -128,12 +131,12 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
       </LinearGradient>
 
       {isOwnProfile && (completionPercent != null || careerScore != null) ? (
-        <View style={[styles.completionRow, { borderTopColor: c.border }]}>
+        <View style={[styles.completionRow, { borderTopColor: joueurTheme.border, backgroundColor: JOUEUR_SURFACES.listRow }]}>
           {completionPercent != null ? (
             <View style={styles.metricBlock}>
               <View style={styles.completionCopy}>
-                <Text style={[styles.completionTitle, { color: c.text }]}>Profil complété</Text>
-                <Text style={[styles.completionSub, { color: c.textMuted }]}>
+                <Text style={[styles.completionTitle, { color: joueurTheme.ink }]}>Profil complété</Text>
+                <Text style={[styles.completionSub, { color: joueurTheme.inkMuted }]}>
                   {completionPercent >= 80
                     ? 'Bonne visibilité Mercato'
                     : 'Complétez pour être repéré'}
@@ -147,8 +150,8 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
           {careerScore != null ? (
             <View style={styles.metricBlock}>
               <View style={styles.completionCopy}>
-                <Text style={[styles.completionTitle, { color: c.text }]}>Score carrière</Text>
-                <Text style={[styles.completionSub, { color: c.textMuted }]}>
+                <Text style={[styles.completionTitle, { color: joueurTheme.ink }]}>Score carrière</Text>
+                <Text style={[styles.completionSub, { color: joueurTheme.inkMuted }]}>
                   Stats · activité · profil
                 </Text>
               </View>
@@ -193,6 +196,7 @@ export const PlayerIdentityDetails: React.FC<{
   /** Coordonnées déjà filtrées selon `contact_privacy` + relation viewer. */
   visibleContacts?: VisibleProfileContacts | null;
 }> = ({ player, colors: c, visibleContacts }) => {
+  const joueurTheme = useJoueurTheme();
   const p = player.profile;
   const rows: { icon: IconName; label: string; value: string }[] = [];
 
@@ -230,7 +234,7 @@ export const PlayerIdentityDetails: React.FC<{
   }
 
   return (
-    <View style={[infoStyles.card, { backgroundColor: c.surfaceMuted, borderColor: c.border }]}>
+    <View style={[infoStyles.card, { backgroundColor: JOUEUR_SURFACES.card, borderColor: joueurTheme.border }]}>
       {rows.map((row, index) => (
         <InfoRow
           key={row.label}
