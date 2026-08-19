@@ -89,6 +89,8 @@ export { analyzeActivityHighlight };
 export { clubAssistantChat };
 export { playerTacticsChat };
 export { smartTacticsMatchPrep } from './smartTacticsMatchPrep';
+export { generateTrainingSession } from './generateTrainingSession';
+export { generateHomeTraining } from './generateHomeTraining';
 export { onSmartTacticsVideoJobCreated } from './smartTacticsVideoJobs';
 export { activateStoreSubscription };
 export { revenueCatWebhook };

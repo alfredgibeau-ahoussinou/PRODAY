@@ -39,8 +39,18 @@ import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { isFunctionsUnavailable } from '../../lib/firebaseFunctions';
+import { aiTrainingService } from '../../services/aiTraining.service';
+import type { TrainingPhase, TrainingObjective, TrainingLevel } from '../../models/TrainingSession';
+import {
+  INDIVIDUAL_OBJECTIVES,
+  INDIVIDUAL_DURATIONS,
+  EQUIPMENT_OPTIONS,
+  TRAINING_OBJECTIVE_LABELS,
+  TRAINING_LEVEL_LABELS,
+  phaseLabel,
+} from '../../models/TrainingSession';
 
-type TrainHubView = 'hub' | 'home' | 'family' | 'coach' | 'book' | 'exercise';
+type TrainHubView = 'hub' | 'home' | 'family' | 'coach' | 'book' | 'exercise' | 'ai';
 
 interface TrainHubScreenProps {
   onBack: () => void;
@@ -75,11 +85,17 @@ const DEMO_COACHES: CoachHourlyProfile[] = [
 ];
 
 const HUB_ACTIONS: {
-  id: 'home' | 'family' | 'coach' | 'book';
+  id: 'home' | 'family' | 'coach' | 'book' | 'ai';
   title: string;
   body: string;
   icon: IconName;
 }[] = [
+  {
+    id: 'ai',
+    title: 'Programme IA',
+    body: 'L\u2019IA crée ton programme perso en 10 secondes.',
+    icon: 'star-four-points',
+  },
   {
     id: 'home',
     title: 'À la maison',
@@ -126,6 +142,13 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
   const [submitting, setSubmitting] = useState(false);
   const [myBookings, setMyBookings] = useState<CoachSessionBooking[]>([]);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [aiObjective, setAiObjective] = useState<TrainingObjective>('pied_faible');
+  const [aiLevel, setAiLevel] = useState<TrainingLevel>('intermediate');
+  const [aiDuration, setAiDuration] = useState(30);
+  const [aiEquipment, setAiEquipment] = useState<string[]>(['ballon']);
+  const [aiPartner, setAiPartner] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiResult, setAiResult] = useState<TrainingPhase[] | null>(null);
 
   const exercises = useMemo(
     () =>
@@ -178,6 +201,43 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
     }
   };
 
+  const generateAiTraining = async () => {
+    setAiGenerating(true);
+    try {
+      const result = await aiTrainingService.generateIndividual({
+        objective: aiObjective,
+        position: profile?.profile.position,
+        level: aiLevel,
+        duration_min: aiDuration,
+        equipment: aiEquipment.filter((e) => e !== 'rien'),
+        partner: aiPartner,
+      });
+      setAiResult(result.phases);
+    } catch (e) {
+      const msg = isFunctionsUnavailable(e)
+        ? 'IA indisponible. Réessaie plus tard.'
+        : e instanceof Error
+          ? e.message
+          : 'Génération impossible.';
+      Alert.alert('Erreur', msg);
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  const toggleEquipment = (item: string) => {
+    if (item === 'rien') {
+      setAiEquipment(['rien']);
+      return;
+    }
+    setAiEquipment((prev) => {
+      const filtered = prev.filter((e) => e !== 'rien');
+      return filtered.includes(item)
+        ? filtered.filter((e) => e !== item)
+        : [...filtered, item];
+    });
+  };
+
   const openLibrary = (mode?: HomeExerciseMode) => {
     setModeFilter(mode);
     setView(mode === 'family' || mode === 'partner' ? 'family' : 'home');
@@ -226,6 +286,223 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
       setSubmitting(false);
     }
   };
+
+  if (view === 'ai') {
+    return (
+      <View style={[styles.root, rootStyle]}>
+        <ScreenHeader
+          title={aiResult ? 'Programme IA' : 'Entraînement IA'}
+          onBack={() => {
+            if (aiResult) {
+              setAiResult(null);
+            } else {
+              setView('hub');
+            }
+          }}
+        />
+        <ScrollView contentContainerStyle={styles.pad}>
+          {!aiResult ? (
+            <>
+              <ProDayText variant="caption" muted>
+                L'IA génère un programme personnalisé selon tes paramètres.
+              </ProDayText>
+
+              <ProDayText variant="section" style={styles.mt}>Objectif</ProDayText>
+              <View style={styles.row}>
+                {INDIVIDUAL_OBJECTIVES.map((obj) => (
+                  <PressableSpring
+                    key={obj}
+                    style={[
+                      styles.chip,
+                      { borderColor: c.border },
+                      aiObjective === obj && { backgroundColor: c.brand },
+                    ]}
+                    onPress={() => setAiObjective(obj)}
+                    scaleTo={0.96}
+                  >
+                    <ProDayText
+                      variant="caption"
+                      inverse={aiObjective === obj}
+                      style={aiObjective !== obj ? { color: c.textSecondary } : undefined}
+                    >
+                      {TRAINING_OBJECTIVE_LABELS[obj]}
+                    </ProDayText>
+                  </PressableSpring>
+                ))}
+              </View>
+
+              <ProDayText variant="section" style={styles.mt}>Durée</ProDayText>
+              <View style={styles.row}>
+                {INDIVIDUAL_DURATIONS.map((d) => (
+                  <PressableSpring
+                    key={d}
+                    style={[
+                      styles.chip,
+                      { borderColor: c.border },
+                      aiDuration === d && { backgroundColor: c.brand },
+                    ]}
+                    onPress={() => setAiDuration(d)}
+                    scaleTo={0.96}
+                  >
+                    <ProDayText
+                      variant="caption"
+                      inverse={aiDuration === d}
+                      style={aiDuration !== d ? { color: c.textSecondary } : undefined}
+                    >
+                      {d} min
+                    </ProDayText>
+                  </PressableSpring>
+                ))}
+              </View>
+
+              <ProDayText variant="section" style={styles.mt}>Niveau</ProDayText>
+              <View style={styles.row}>
+                {(['beginner', 'intermediate', 'advanced'] as TrainingLevel[]).map((lvl) => (
+                  <PressableSpring
+                    key={lvl}
+                    style={[
+                      styles.chip,
+                      { borderColor: c.border },
+                      aiLevel === lvl && { backgroundColor: c.brand },
+                    ]}
+                    onPress={() => setAiLevel(lvl)}
+                    scaleTo={0.96}
+                  >
+                    <ProDayText
+                      variant="caption"
+                      inverse={aiLevel === lvl}
+                      style={aiLevel !== lvl ? { color: c.textSecondary } : undefined}
+                    >
+                      {TRAINING_LEVEL_LABELS[lvl]}
+                    </ProDayText>
+                  </PressableSpring>
+                ))}
+              </View>
+
+              <ProDayText variant="section" style={styles.mt}>Matériel disponible</ProDayText>
+              <View style={styles.row}>
+                {EQUIPMENT_OPTIONS.map((eq) => (
+                  <PressableSpring
+                    key={eq}
+                    style={[
+                      styles.chip,
+                      { borderColor: c.border },
+                      aiEquipment.includes(eq) && { backgroundColor: c.brand },
+                    ]}
+                    onPress={() => toggleEquipment(eq)}
+                    scaleTo={0.96}
+                  >
+                    <ProDayText
+                      variant="caption"
+                      inverse={aiEquipment.includes(eq)}
+                      style={!aiEquipment.includes(eq) ? { color: c.textSecondary } : undefined}
+                    >
+                      {eq}
+                    </ProDayText>
+                  </PressableSpring>
+                ))}
+              </View>
+
+              <ProDayText variant="section" style={styles.mt}>Partenaire</ProDayText>
+              <View style={styles.row}>
+                {[false, true].map((val) => (
+                  <PressableSpring
+                    key={String(val)}
+                    style={[
+                      styles.chip,
+                      { borderColor: c.border },
+                      aiPartner === val && { backgroundColor: c.brand },
+                    ]}
+                    onPress={() => setAiPartner(val)}
+                    scaleTo={0.96}
+                  >
+                    <ProDayText
+                      variant="caption"
+                      inverse={aiPartner === val}
+                      style={aiPartner !== val ? { color: c.textSecondary } : undefined}
+                    >
+                      {val ? 'Avec quelqu\u2019un' : 'Seul'}
+                    </ProDayText>
+                  </PressableSpring>
+                ))}
+              </View>
+
+              <PressableSpring
+                style={[styles.cta, { backgroundColor: c.brand, marginTop: spacing.lg }]}
+                onPress={() => void generateAiTraining()}
+                disabled={aiGenerating}
+                scaleTo={0.97}
+                haptic
+              >
+                {aiGenerating ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <ProDayText variant="caption" inverse>
+                    Générer mon programme
+                  </ProDayText>
+                )}
+              </PressableSpring>
+            </>
+          ) : (
+            <>
+              <ProDayText variant="caption" accent>
+                {TRAINING_OBJECTIVE_LABELS[aiObjective]} · {aiDuration} min · {TRAINING_LEVEL_LABELS[aiLevel]}
+              </ProDayText>
+              {aiResult.map((phase, i) => (
+                <ProDaySurface
+                  key={`${phase.name}-${i}`}
+                  variant="module"
+                  style={[styles.card, { borderColor: c.border }]}
+                >
+                  <ProDayText variant="section">
+                    {phase.label || phaseLabel(phase.name)} · {phase.duration_min} min
+                  </ProDayText>
+                  {phase.exercises.map((ex, j) => (
+                    <View key={`ex-${i}-${j}`} style={{ marginTop: spacing.xs }}>
+                      <ProDayText variant="caption" style={{ fontWeight: '700' }}>
+                        {ex.name}
+                      </ProDayText>
+                      <ProDayText variant="caption" muted>{ex.description}</ProDayText>
+                      {(ex.reps || ex.sets || ex.duration_min) ? (
+                        <ProDayText variant="caption" muted>
+                          {ex.duration_min ? `${ex.duration_min} min` : ''}
+                          {ex.reps ? ` · ${ex.reps} reps` : ''}
+                          {ex.sets ? ` × ${ex.sets} séries` : ''}
+                          {ex.rest_sec ? ` · ${ex.rest_sec}s repos` : ''}
+                        </ProDayText>
+                      ) : null}
+                      {ex.equipment?.length ? (
+                        <ProDayText variant="caption" muted>
+                          Matériel : {ex.equipment.join(', ')}
+                        </ProDayText>
+                      ) : null}
+                      {ex.tips?.map((tip, k) => (
+                        <ProDayText key={`tip-${k}`} variant="caption" accent>
+                          {tip}
+                        </ProDayText>
+                      ))}
+                    </View>
+                  ))}
+                </ProDaySurface>
+              ))}
+              <PressableSpring
+                style={[styles.cta, { backgroundColor: c.brand }]}
+                onPress={() => {
+                  setAiResult(null);
+                }}
+                scaleTo={0.97}
+                haptic
+              >
+                <ProDayText variant="caption" inverse>
+                  Regénérer
+                </ProDayText>
+              </PressableSpring>
+            </>
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
 
   if (view === 'exercise' && selected) {
     return (
@@ -507,7 +784,12 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack }) => {
                   kicker="Pass IA"
                   title="Assistant IA · 3,99 €/mois"
                   body="Programmes perso — pas un coach humain."
-                />
+                >
+                  <JoueurActionRow
+                    primary="Programme IA"
+                    onPrimary={() => setView('ai')}
+                  />
+                </JoueurSectionCard>
                 <JoueurSectionCard
                   kicker="Coach"
                   title={`Séance · ~${JOUEUR_SITE.coachPriceEur} €/h`}

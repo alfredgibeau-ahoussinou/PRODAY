@@ -37,6 +37,15 @@ import { useTranslation } from '../../context/LocaleContext';
 import { userCanManageConvocations, resolveClubCoversCoachFromMembers } from '../../utils/clubFeatureAccess';
 import type { Membership } from '../../models/Membership';
 import type { User } from '../../models/User';
+import { aiTrainingService } from '../../services/aiTraining.service';
+import type { TrainingPhase, TrainingObjective, TrainingLevel } from '../../models/TrainingSession';
+import {
+  COLLECTIVE_OBJECTIVES,
+  COLLECTIVE_DURATIONS,
+  TRAINING_OBJECTIVE_LABELS,
+  TRAINING_LEVEL_LABELS,
+  phaseLabel,
+} from '../../models/TrainingSession';
 
 export type CoachTrainingEventHubProps = {
   eventId: string;
@@ -62,6 +71,14 @@ export function CoachTrainingEventHub({
   const [notes, setNotes] = useState('');
   const [duration, setDuration] = useState('90');
   const [saving, setSaving] = useState(false);
+  const [showAiForm, setShowAiForm] = useState(false);
+  const [aiObjective, setAiObjective] = useState<TrainingObjective>('technique');
+  const [aiLevel, setAiLevel] = useState<TrainingLevel>('intermediate');
+  const [aiDuration, setAiDuration] = useState(90);
+  const [aiPlayerCount, setAiPlayerCount] = useState('18');
+  const [aiNotes, setAiNotes] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiResult, setAiResult] = useState<TrainingPhase[] | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -109,6 +126,27 @@ export function CoachTrainingEventHub({
     const [matched] = filterTrainingsForTeam([event], activeTeamId, teamUids);
     return matched ?? event;
   }, [event, activeTeamId, teamUids]);
+
+  const generateAiSession = async () => {
+    if (!profile || !clubId) return;
+    setAiGenerating(true);
+    try {
+      const result = await aiTrainingService.generateCollective({
+        club_id: clubId,
+        team_id: activeTeamId,
+        objective: aiObjective,
+        duration_min: aiDuration,
+        level: aiLevel,
+        player_count: parseInt(aiPlayerCount, 10) || 18,
+        coach_notes: aiNotes || undefined,
+      });
+      setAiResult(result.phases);
+    } catch (e) {
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : 'Génération impossible.');
+    } finally {
+      setAiGenerating(false);
+    }
+  };
 
   const savePlan = async () => {
     if (!event || !profile) return;
@@ -347,6 +385,193 @@ export function CoachTrainingEventHub({
           </PressableSpring>
         ) : null}
 
+        {canManage ? (
+          <>
+            <CoachText variant="caption" accent style={styles.label}>
+              Séance IA
+            </CoachText>
+            {!showAiForm && !aiResult ? (
+              <PressableSpring onPress={() => setShowAiForm(true)} scaleTo={0.96} haptic>
+                <View style={[styles.aiCta, { backgroundColor: tokens.accent }]}>
+                  <Icon name="star-four-points" size={18} color={tokens.bg} />
+                  <CoachText variant="caption" style={{ color: tokens.bg, fontWeight: '700' }}>
+                    Générer une séance IA
+                  </CoachText>
+                </View>
+              </PressableSpring>
+            ) : null}
+
+            {showAiForm && !aiResult ? (
+              <View style={[styles.aiForm, { borderColor: tokens.border, backgroundColor: tokens.surface }]}>
+                <CoachText variant="caption" muted style={styles.label}>Objectif</CoachText>
+                <View style={styles.chipRow}>
+                  {COLLECTIVE_OBJECTIVES.map((obj) => (
+                    <PressableSpring
+                      key={obj}
+                      style={[
+                        styles.chip,
+                        { borderColor: tokens.border },
+                        aiObjective === obj && { backgroundColor: tokens.accent },
+                      ]}
+                      onPress={() => setAiObjective(obj)}
+                      scaleTo={0.96}
+                    >
+                      <CoachText
+                        variant="caption"
+                        style={aiObjective === obj ? { color: tokens.bg } : { color: tokens.foreground }}
+                      >
+                        {TRAINING_OBJECTIVE_LABELS[obj]}
+                      </CoachText>
+                    </PressableSpring>
+                  ))}
+                </View>
+
+                <CoachText variant="caption" muted style={styles.label}>Durée</CoachText>
+                <View style={styles.chipRow}>
+                  {COLLECTIVE_DURATIONS.map((d) => (
+                    <PressableSpring
+                      key={d}
+                      style={[
+                        styles.chip,
+                        { borderColor: tokens.border },
+                        aiDuration === d && { backgroundColor: tokens.accent },
+                      ]}
+                      onPress={() => setAiDuration(d)}
+                      scaleTo={0.96}
+                    >
+                      <CoachText
+                        variant="caption"
+                        style={aiDuration === d ? { color: tokens.bg } : { color: tokens.foreground }}
+                      >
+                        {d} min
+                      </CoachText>
+                    </PressableSpring>
+                  ))}
+                </View>
+
+                <CoachText variant="caption" muted style={styles.label}>Niveau</CoachText>
+                <View style={styles.chipRow}>
+                  {(['beginner', 'intermediate', 'advanced'] as TrainingLevel[]).map((lvl) => (
+                    <PressableSpring
+                      key={lvl}
+                      style={[
+                        styles.chip,
+                        { borderColor: tokens.border },
+                        aiLevel === lvl && { backgroundColor: tokens.accent },
+                      ]}
+                      onPress={() => setAiLevel(lvl)}
+                      scaleTo={0.96}
+                    >
+                      <CoachText
+                        variant="caption"
+                        style={aiLevel === lvl ? { color: tokens.bg } : { color: tokens.foreground }}
+                      >
+                        {TRAINING_LEVEL_LABELS[lvl]}
+                      </CoachText>
+                    </PressableSpring>
+                  ))}
+                </View>
+
+                <CoachText variant="caption" muted style={styles.label}>Joueurs</CoachText>
+                <TextInput
+                  style={[styles.input, { borderColor: tokens.border, color: tokens.foreground, backgroundColor: tokens.surface }]}
+                  value={aiPlayerCount}
+                  onChangeText={setAiPlayerCount}
+                  keyboardType="number-pad"
+                  placeholderTextColor={tokens.muted}
+                />
+
+                <CoachText variant="caption" muted style={styles.label}>Notes (optionnel)</CoachText>
+                <TextInput
+                  style={[styles.input, styles.multi, { borderColor: tokens.border, color: tokens.foreground, backgroundColor: tokens.surface }]}
+                  value={aiNotes}
+                  onChangeText={setAiNotes}
+                  multiline
+                  placeholder="Précisions pour l'IA…"
+                  placeholderTextColor={tokens.muted}
+                />
+
+                <PressableSpring
+                  onPress={() => void generateAiSession()}
+                  disabled={aiGenerating}
+                  scaleTo={0.96}
+                  haptic
+                >
+                  <View style={[styles.aiCta, { backgroundColor: tokens.accent }]}>
+                    {aiGenerating ? (
+                      <ActivityIndicator color={tokens.bg} />
+                    ) : (
+                      <>
+                        <Icon name="star-four-points" size={18} color={tokens.bg} />
+                        <CoachText variant="caption" style={{ color: tokens.bg, fontWeight: '700' }}>
+                          Générer
+                        </CoachText>
+                      </>
+                    )}
+                  </View>
+                </PressableSpring>
+
+                <PressableSpring onPress={() => setShowAiForm(false)} scaleTo={0.96}>
+                  <CoachText variant="caption" muted style={styles.link}>Annuler</CoachText>
+                </PressableSpring>
+              </View>
+            ) : null}
+
+            {aiResult ? (
+              <View style={[styles.aiForm, { borderColor: tokens.accent, backgroundColor: tokens.surface }]}>
+                <CoachText variant="section" style={{ color: tokens.foreground }}>
+                  Séance générée par l'IA
+                </CoachText>
+                {aiResult.map((phase, i) => (
+                  <View key={`${phase.name}-${i}`} style={{ marginTop: spacing.sm }}>
+                    <CoachText variant="caption" accent style={{ fontWeight: '800' }}>
+                      {phase.label || phaseLabel(phase.name)} · {phase.duration_min} min
+                    </CoachText>
+                    {phase.exercises.map((ex, j) => (
+                      <View key={`ex-${i}-${j}`} style={{ marginTop: spacing.xs }}>
+                        <CoachText variant="caption" style={{ fontWeight: '700', color: tokens.foreground }}>
+                          {ex.name}
+                        </CoachText>
+                        <CoachText variant="caption" muted>{ex.description}</CoachText>
+                        {ex.duration_min ? (
+                          <CoachText variant="caption" muted>
+                            {ex.duration_min} min
+                            {ex.reps ? ` · ${ex.reps} reps` : ''}
+                            {ex.sets ? ` × ${ex.sets} séries` : ''}
+                            {ex.rest_sec ? ` · ${ex.rest_sec}s repos` : ''}
+                          </CoachText>
+                        ) : null}
+                        {ex.equipment?.length ? (
+                          <CoachText variant="caption" muted>
+                            Matériel : {ex.equipment.join(', ')}
+                          </CoachText>
+                        ) : null}
+                        {ex.tips?.map((tip, k) => (
+                          <CoachText key={`tip-${i}-${j}-${k}`} variant="caption" muted>
+                            → {tip}
+                          </CoachText>
+                        ))}
+                      </View>
+                    ))}
+                  </View>
+                ))}
+                <PressableSpring
+                  onPress={() => {
+                    setAiResult(null);
+                    setShowAiForm(false);
+                  }}
+                  scaleTo={0.96}
+                  haptic
+                >
+                  <CoachText variant="caption" accent style={styles.link}>
+                    Fermer
+                  </CoachText>
+                </PressableSpring>
+              </View>
+            ) : null}
+          </>
+        ) : null}
+
         {canManage && status === 'in_progress' ? (
           <PressableSpring
             onPress={() => {
@@ -424,5 +649,28 @@ function createStyles(tokens: CoachThemeTokens) {
       borderRadius: 18,
     },
     deniedBody: { textAlign: 'center', lineHeight: 22 },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
+    chip: {
+      borderWidth: 1,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+    },
+    aiCta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+      borderRadius: radius.md,
+      paddingVertical: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    aiForm: {
+      borderWidth: 1,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginTop: spacing.sm,
+      gap: 2,
+    },
   });
 }
