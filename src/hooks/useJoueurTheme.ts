@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useJoueurSession } from '../context/JoueurSessionContext';
 import { JOUEUR_SITE, type JoueurPageIdentity } from '../content/joueurPageIdentity';
-import { FUT18_PREMIUM } from '../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import { radius } from '../theme/designTokens';
 import { JOUEUR_RADIUS, type JoueurThemeTokens } from '../theme/joueurDesignSystem';
 
@@ -10,15 +10,15 @@ export type { JoueurThemeTokens } from '../theme/joueurDesignSystem';
 const FALLBACK: JoueurThemeTokens = {
   ready: false,
   identity: null,
-  accent: JOUEUR_SITE.gold,
-  accentBright: FUT18_PREMIUM.goldAccent,
-  ink: JOUEUR_SITE.foreground,
-  inkMuted: JOUEUR_SITE.muted,
-  surface: JOUEUR_SITE.surface,
-  elevated: JOUEUR_SITE.elevated,
-  border: JOUEUR_SITE.border,
-  panel: JOUEUR_SITE.panel,
-  shellBg: JOUEUR_SITE.bg,
+  accent: PLAYER_DARK.accent,
+  accentBright: PLAYER_DARK.accentAlt,
+  ink: PLAYER_DARK.text,
+  inkMuted: PLAYER_DARK.textMuted,
+  surface: PLAYER_DARK.surface,
+  elevated: PLAYER_DARK.surfaceRaised,
+  border: PLAYER_DARK.border,
+  panel: PLAYER_DARK.surface,
+  shellBg: PLAYER_DARK.bg,
   radius: radius.md,
   cardRadius: JOUEUR_RADIUS.md,
 };
@@ -32,15 +32,15 @@ export function useJoueurTheme(): JoueurThemeTokens {
     return {
       ready: Boolean(session?.ready && !session?.needsGate),
       identity,
-      accent: identity.accent,
-      accentBright: identity.accentBright,
-      ink: identity.ink,
-      inkMuted: identity.inkMuted,
-      surface: identity.surface,
-      elevated: identity.elevated,
-      border: identity.border,
-      panel: JOUEUR_SITE.panel,
-      shellBg: identity.shellBg,
+      accent: PLAYER_DARK.accent,
+      accentBright: PLAYER_DARK.accentAlt,
+      ink: PLAYER_DARK.text,
+      inkMuted: PLAYER_DARK.textMuted,
+      surface: PLAYER_DARK.surface,
+      elevated: PLAYER_DARK.surfaceRaised,
+      border: PLAYER_DARK.border,
+      panel: PLAYER_DARK.surface,
+      shellBg: PLAYER_DARK.bg,
       radius: identity.radius,
       cardRadius: identity.density === 'playful' ? JOUEUR_RADIUS.lg : JOUEUR_RADIUS.md,
     };

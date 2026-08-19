@@ -4,6 +4,7 @@
  */
 import { JOUEUR_SITE } from '../content/joueurPageIdentity';
 import { FUT18_PREMIUM, FUT18_TIER_THEME } from './fut18PremiumPalette';
+import { PLAYER_DARK } from './playerDarkPremium';
 import { spacing } from './designTokens';
 import type { JoueurPageIdentity } from '../content/joueurPageIdentity';
 
@@ -11,17 +12,17 @@ export { JOUEUR_SITE, JOUEUR_AGE_MOODS, JOUEUR_AGE_GENDER_ACCENTS } from '../con
 export { FUT18_PREMIUM, FUT18_TIER_THEME } from './fut18PremiumPalette';
 export { PLAYER_DARK, PLAYER_DARK_RADIUS } from './playerDarkPremium';
 
-/** Surfaces liste / panneau joueur — jamais blanc plat. */
+/** Surfaces liste / panneau joueur — dark premium (#1A1A24). */
 export const JOUEUR_SURFACES = {
-  card: FUT18_PREMIUM.panelBg,
-  cardBorder: FUT18_PREMIUM.panelBorder,
-  cardRim: FUT18_PREMIUM.dockBorder,
-  listRow: 'rgba(10,16,28,0.88)',
-  listRowBorder: 'rgba(255,255,255,0.06)',
-  filterBar: 'rgba(8,14,24,0.92)',
+  card: PLAYER_DARK.surface,
+  cardBorder: PLAYER_DARK.border,
+  cardRim: PLAYER_DARK.borderStrong,
+  listRow: PLAYER_DARK.bgElevated,
+  listRowBorder: PLAYER_DARK.border,
+  filterBar: PLAYER_DARK.bgElevated,
   chip: 'rgba(255,255,255,0.06)',
-  chipActive: 'rgba(255,255,255,0.14)',
-  shadow: FUT18_PREMIUM.cardShadow,
+  chipActive: PLAYER_DARK.accentSoft,
+  shadow: 'rgba(0,0,0,0.45)',
 } as const;
 
 /** Espacements standard pôle joueur. */
@@ -56,28 +57,28 @@ export type JoueurThemeTokens = {
   cardRadius: number;
 };
 
-/** Tokens Reels joueur — dock sombre + accent or FUT18. */
+/** Tokens Reels joueur — dark premium + accent mint. */
 export const JOUEUR_REELS = {
-  stage: FUT18_PREMIUM.nightDeep,
-  backdrop: 'rgba(2,4,8,0.72)',
-  accent: FUT18_PREMIUM.goldAccent,
-  accentSoft: FUT18_PREMIUM.goldSoft,
-  accentLine: 'rgba(232,200,114,0.42)',
+  stage: PLAYER_DARK.bg,
+  backdrop: 'rgba(10,10,15,0.72)',
+  accent: PLAYER_DARK.accent,
+  accentSoft: PLAYER_DARK.accentSoft,
+  accentLine: 'rgba(0,230,118,0.42)',
   ember: '#FF4F7A',
-  text: '#F3F8FF',
-  textDim: 'rgba(243,248,255,0.68)',
-  hairline: FUT18_PREMIUM.dockBorder,
-  scrimTop: 'rgba(4,8,14,0.58)',
-  scrimStrong: 'rgba(3,6,12,0.92)',
-  atmosphere: [FUT18_PREMIUM.nightBlue, FUT18_PREMIUM.nightDeep] as [string, string],
-  glow: ['rgba(232,200,114,0.14)', 'transparent'] as [string, string],
+  text: PLAYER_DARK.text,
+  textDim: PLAYER_DARK.textMuted,
+  hairline: PLAYER_DARK.border,
+  scrimTop: 'rgba(10,10,15,0.58)',
+  scrimStrong: 'rgba(10,10,15,0.92)',
+  atmosphere: [PLAYER_DARK.bgElevated, PLAYER_DARK.bg] as [string, string],
+  glow: [PLAYER_DARK.accentSoft, 'transparent'] as [string, string],
 } as const;
 
-/** Tokens Discover invité — hero sombre premium. */
+/** Tokens Discover invité — hero dark premium. */
 export const JOUEUR_DISCOVER = {
-  heroBg: FUT18_PREMIUM.panelBg,
-  heroBorder: FUT18_PREMIUM.panelBorder,
-  heroMuted: 'rgba(243,248,255,0.68)',
+  heroBg: PLAYER_DARK.surface,
+  heroBorder: PLAYER_DARK.border,
+  heroMuted: PLAYER_DARK.textMuted,
   tileBg: JOUEUR_SURFACES.card,
   tileBorder: JOUEUR_SURFACES.cardBorder,
   chipBg: JOUEUR_SURFACES.chip,
@@ -90,28 +91,28 @@ export const JOUEUR_HUB = {
   sectionGap: JOUEUR_SPACE.lg,
 } as const;
 
-/** Tokens covoiturage en mode joueur — fond sombre FUT18. */
+/** Tokens covoiturage en mode joueur — dark premium mint. */
 export const JOUEUR_CARPOOL = {
-  sky: JOUEUR_SITE.bg,
-  asphalt: JOUEUR_SITE.foreground,
+  sky: PLAYER_DARK.bg,
+  asphalt: PLAYER_DARK.text,
   asphaltRaised: JOUEUR_SURFACES.card,
   asphaltLane: JOUEUR_SURFACES.listRowBorder,
   surface: JOUEUR_SURFACES.card,
   surfaceMuted: JOUEUR_SURFACES.listRow,
   fog: 'rgba(0,0,0,0.25)',
-  lane: JOUEUR_SITE.border,
-  laneDash: 'rgba(232,200,114,0.35)',
-  signal: FUT18_PREMIUM.goldAccent,
-  signalSoft: FUT18_PREMIUM.goldSoft,
-  signalDeep: FUT18_PREMIUM.pitchGreen,
-  signalMuted: 'rgba(34,197,94,0.35)',
-  ink: JOUEUR_SITE.foreground,
-  inkMuted: JOUEUR_SITE.muted,
-  inkDim: JOUEUR_SITE.dim,
+  lane: PLAYER_DARK.border,
+  laneDash: 'rgba(0,230,118,0.35)',
+  signal: PLAYER_DARK.accent,
+  signalSoft: PLAYER_DARK.accentSoft,
+  signalDeep: PLAYER_DARK.accentAlt,
+  signalMuted: 'rgba(45,212,191,0.35)',
+  ink: PLAYER_DARK.text,
+  inkMuted: PLAYER_DARK.textMuted,
+  inkDim: PLAYER_DARK.textDim,
   live: JOUEUR_SITE.live,
-  wash: [JOUEUR_SITE.bg, '#0E1A2E', '#070B14'] as [string, string, string],
-  heroWash: ['#0E1A2E', JOUEUR_SITE.bg] as [string, string],
-  horizon: ['rgba(232,200,114,0)', 'rgba(232,200,114,0.18)', 'rgba(232,200,114,0)'] as [
+  wash: [PLAYER_DARK.bgElevated, PLAYER_DARK.bg, PLAYER_DARK.bg] as [string, string, string],
+  heroWash: [PLAYER_DARK.bgElevated, PLAYER_DARK.bg] as [string, string],
+  horizon: ['rgba(0,230,118,0)', 'rgba(0,230,118,0.18)', 'rgba(0,230,118,0)'] as [
     string,
     string,
     string,

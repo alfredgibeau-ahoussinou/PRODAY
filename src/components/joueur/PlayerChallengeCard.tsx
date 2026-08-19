@@ -4,6 +4,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { PlayerProgressBar } from './PlayerProgressBar';
 import { JOUEUR_SURFACES, JOUEUR_RADIUS } from '../../theme/joueurDesignSystem';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
 type Props = {
@@ -26,7 +27,7 @@ export function PlayerChallengeCard({
   progressMax = 100,
   progressLabel,
   done = false,
-  accent = '#4C8BFF',
+  accent = PLAYER_DARK.accent,
   onPress,
   style,
 }: Props) {
@@ -44,7 +45,7 @@ export function PlayerChallengeCard({
         value={progress}
         max={progressMax}
         label={progressLabel}
-        accent={done ? '#22C55E' : accent}
+        accent={done ? PLAYER_DARK.statGreen : accent}
       />
       {done ? (
         <ProDayText variant="caption" style={styles.badge}>
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   done: { borderColor: 'rgba(34,197,94,0.35)' },
-  title: { color: '#F3F8FF' },
-  desc: { color: 'rgba(243,248,255,0.68)' },
-  badge: { color: '#22C55E', marginTop: 2 },
+  title: { color: PLAYER_DARK.text },
+  desc: { color: PLAYER_DARK.textMuted },
+  badge: { color: PLAYER_DARK.statGreen, marginTop: 2 },
 });

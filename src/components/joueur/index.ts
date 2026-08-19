@@ -11,3 +11,4 @@ export { PlayerCoachAiChat, PLAYER_COACH_STARTERS } from './PlayerCoachAiChat';
 export { PlayerCoachAiFab } from './PlayerCoachAiFab';
 export { PlayerCardReveal } from './PlayerCardReveal';
 export { PlayerShieldCard } from './PlayerShieldCard';
+export { PlayerShieldCardCompact } from './PlayerShieldCardCompact';

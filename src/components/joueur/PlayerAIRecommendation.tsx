@@ -4,6 +4,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { JOUEUR_SURFACES, JOUEUR_RADIUS } from '../../theme/joueurDesignSystem';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
 type Props = {
@@ -20,7 +21,7 @@ export function PlayerAIRecommendation({
   title,
   body,
   cta = 'Demander à mon Coach IA',
-  accent = '#4C8BFF',
+  accent = PLAYER_DARK.accent,
   onPress,
   style,
 }: Props) {
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
   },
   copy: { flex: 1, gap: 4 },
   kicker: { letterSpacing: 0.6 },
-  title: { color: '#F3F8FF' },
-  body: { color: 'rgba(243,248,255,0.68)' },
+  title: { color: PLAYER_DARK.text },
+  body: { color: PLAYER_DARK.textMuted },
   cta: { marginTop: 6, fontWeight: '600' },
 });

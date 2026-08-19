@@ -5,7 +5,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
-import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
@@ -87,17 +87,16 @@ export function useMatchSkinTokens(): MatchSkinTokens {
       };
     }
     if (joueurSkin) {
-      const accent = identity?.accent ?? JOUEUR_SITE.gold;
       return {
-        accent,
-        soft: identity?.soft ?? FUT18_PREMIUM.goldSoft,
+        accent: PLAYER_DARK.accent,
+        soft: PLAYER_DARK.accentSoft,
         live: JOUEUR_SITE.live,
         warn: JOUEUR_SITE.warn,
-        border: identity?.border ?? FUT18_PREMIUM.panelBorder,
-        foreground: identity?.ink ?? JOUEUR_SITE.foreground,
-        muted: identity?.inkMuted ?? JOUEUR_SITE.muted,
-        surface: FUT18_PREMIUM.panelBg,
-        elevated: identity?.elevated ?? JOUEUR_SITE.elevated,
+        border: PLAYER_DARK.border,
+        foreground: PLAYER_DARK.text,
+        muted: PLAYER_DARK.textMuted,
+        surface: PLAYER_DARK.surface,
+        elevated: PLAYER_DARK.surfaceRaised,
         cardRadius: identity?.density === 'playful' ? 20 : 16,
         joueurSkin: true,
         coachSkin: false,
@@ -437,7 +436,7 @@ function createFilterStyles(skin: MatchSkinTokens) {
       borderRadius: skin.cardRadius,
       padding: spacing.sm,
       gap: spacing.sm,
-      backgroundColor: skin.joueurSkin ? FUT18_PREMIUM.listBg : skin.surface,
+      backgroundColor: skin.joueurSkin ? PLAYER_DARK.bgElevated : skin.surface,
     },
   });
 }

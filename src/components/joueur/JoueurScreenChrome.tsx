@@ -9,6 +9,7 @@ import {
 import { ProDayText } from '../ui/ProDayText';
 import { spacing } from '../../theme/designTokens';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 
 type Variant = 'tab' | 'page' | 'minimal';
 
@@ -26,8 +27,7 @@ type Props = {
 };
 
 /**
- * Chrome écran joueur unifié — wash FUT18, barre accent, option hero HUD.
- * Variantes : tab (fond seul), page (+ hero), minimal (fond + barre).
+ * Chrome écran joueur unifié — dark premium #0A0A0F, accent mint.
  */
 export function JoueurScreenChrome({
   identity: identityProp,
@@ -41,42 +41,48 @@ export function JoueurScreenChrome({
 }: Props) {
   const theme = useJoueurTheme();
   const identity = identityProp ?? theme.identity;
+  const accent = PLAYER_DARK.accent;
+
   if (!identity) {
-    return <View style={[styles.fallback, style]}>{children}</View>;
+    return (
+      <View style={[styles.fallback, { backgroundColor: PLAYER_DARK.bg }, style]}>
+        {children}
+      </View>
+    );
   }
 
   const showHero = variant === 'page' && !hideHero && (title || kicker);
 
   return (
     <JoueurIdentityProvider identity={identity}>
-      <View style={[styles.root, { backgroundColor: identity.shellBg }, style]}>
+      <View style={[styles.root, { backgroundColor: PLAYER_DARK.bg }, style]}>
         <LinearGradient
-          colors={identity.wash}
+          colors={[PLAYER_DARK.bgElevated, PLAYER_DARK.bg, PLAYER_DARK.bg]}
           locations={[0, 0.45, 1]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
         <View
-          style={[styles.accentBar, { backgroundColor: identity.accent }]}
+          style={[styles.accentBar, { backgroundColor: accent }]}
           pointerEvents="none"
         />
 
         {showHero ? (
           <View style={styles.hero}>
-            <View style={[styles.heroPlate, { borderColor: identity.border }]}>
-              <JoueurHudCorners color={identity.accent} size={8} thickness={1.5} />
+            <View style={[styles.heroPlate, { borderColor: PLAYER_DARK.border }]}>
+              <JoueurHudCorners color={accent} size={8} thickness={1.5} />
               {kicker ? (
-                <ProDayText variant="caption" style={[styles.kicker, { color: identity.accent }]}>
+                <ProDayText variant="caption" style={[styles.kicker, { color: accent }]}>
                   {kicker.toUpperCase()}
                 </ProDayText>
               ) : null}
               {title ? (
-                <ProDayText variant="title" style={[styles.title, { color: identity.ink }]}>
+                <ProDayText variant="title" style={[styles.title, { color: PLAYER_DARK.text }]}>
                   {title}
                 </ProDayText>
               ) : null}
               {subtitle ? (
-                <ProDayText variant="caption" style={[styles.subtitle, { color: identity.inkMuted }]}>
+                <ProDayText variant="caption" style={[styles.subtitle, { color: PLAYER_DARK.textMuted }]}>
                   {subtitle}
                 </ProDayText>
               ) : null}
@@ -112,7 +118,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: spacing.md,
     gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: PLAYER_DARK.surface,
     overflow: 'hidden',
   },
   kicker: {

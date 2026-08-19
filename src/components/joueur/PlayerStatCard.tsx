@@ -3,6 +3,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { JOUEUR_SURFACES, JOUEUR_RADIUS } from '../../theme/joueurDesignSystem';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
 type Props = {
@@ -20,7 +21,7 @@ export function PlayerStatCard({
   label,
   value,
   hint,
-  accent = '#4C8BFF',
+  accent = PLAYER_DARK.accent,
   empty = false,
   onPress,
   style,
@@ -61,10 +62,10 @@ const styles = StyleSheet.create({
     minHeight: 88,
     justifyContent: 'center',
   },
-  label: { color: 'rgba(243,248,255,0.6)', marginBottom: 4 },
-  value: { color: '#F3F8FF', fontSize: 28 },
-  empty: { color: 'rgba(243,248,255,0.35)', fontSize: 22 },
-  hint: { color: 'rgba(243,248,255,0.55)', marginTop: 4 },
+  label: { color: PLAYER_DARK.textMuted, marginBottom: 4 },
+  value: { color: PLAYER_DARK.text, fontSize: 28 },
+  empty: { color: PLAYER_DARK.textDim, fontSize: 22 },
+  hint: { color: PLAYER_DARK.textMuted, marginTop: 4 },
   glow: {
     position: 'absolute',
     top: -20,

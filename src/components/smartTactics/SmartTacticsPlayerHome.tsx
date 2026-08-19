@@ -19,10 +19,11 @@ import type { TacticalSharePayload } from '../../models/TacticalShare';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { JoueurXpBar } from '../player/joueurPortalUi';
-import { JOUEUR_SITE, resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
+import { resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { JoueurArcadeShell } from '../../features/joueur/JoueurGameFx';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 
@@ -54,7 +55,7 @@ export function SmartTacticsPlayerHome({
   const identity =
     session?.identity ??
     resolveJoueurPageIdentity({ ageGroup: 'adult', gender: 'neutral' });
-  const accent = identity.accent;
+  const accent = PLAYER_DARK.accent;
   const nav = useTabNavigationActions();
 
   const [briefs, setBriefs] = useState<TacticalSharePayload[]>([]);
@@ -129,7 +130,7 @@ export function SmartTacticsPlayerHome({
           }}
           scaleTo={0.97}
           haptic
-          style={[styles.coachCta, { borderColor: accent, backgroundColor: identity.soft }]}
+          style={[styles.coachCta, { borderColor: accent, backgroundColor: PLAYER_DARK.accentSoft }]}
         >
           <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
             COACH IA
@@ -143,7 +144,7 @@ export function SmartTacticsPlayerHome({
         </PressableSpring>
 
         {/* Next match hero */}
-        <View style={[styles.hero, { borderColor: JOUEUR_SITE.border }]}>
+        <View style={[styles.hero, { borderColor: PLAYER_DARK.border }]}>
           <LinearGradient
             colors={['rgba(255,255,255,0.06)', 'transparent']}
             style={StyleSheet.absoluteFill}
@@ -180,15 +181,15 @@ export function SmartTacticsPlayerHome({
                     styles.statusPill,
                     {
                       backgroundColor: inLineup
-                        ? 'rgba(94,234,212,0.16)'
-                        : JOUEUR_SITE.goldSoft,
+                        ? PLAYER_DARK.accentSoft
+                        : 'rgba(255,255,255,0.06)',
                     },
                   ]}
                 >
                   <ProDayText
                     variant="caption"
                     style={{
-                      color: inLineup ? JOUEUR_SITE.ok : JOUEUR_SITE.gold,
+                      color: inLineup ? PLAYER_DARK.accentAlt : PLAYER_DARK.accent,
                       fontWeight: '800',
                     }}
                   >
@@ -202,7 +203,7 @@ export function SmartTacticsPlayerHome({
                   </ProDayText>
                 </View>
                 {mySlot?.position_label ? (
-                  <ProDayText variant="caption" style={{ color: JOUEUR_SITE.muted }}>
+                  <ProDayText variant="caption" style={{ color: PLAYER_DARK.textMuted }}>
                     {mySlot.position_label}
                   </ProDayText>
                 ) : null}
@@ -213,7 +214,7 @@ export function SmartTacticsPlayerHome({
 
         {/* My readiness */}
         {me ? (
-          <View style={[styles.panel, { borderColor: JOUEUR_SITE.border }]}>
+          <View style={[styles.panel, { borderColor: PLAYER_DARK.border }]}>
             <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
               TA FORME
             </ProDayText>
@@ -232,7 +233,7 @@ export function SmartTacticsPlayerHome({
                   label="Disponibilité"
                   value={me.readiness_pct}
                   max={100}
-                  color={JOUEUR_SITE.ok}
+                  color={PLAYER_DARK.accentAlt}
                 />
               </View>
               <View style={[styles.ovrBadge, { borderColor: accent }]}>
@@ -248,7 +249,7 @@ export function SmartTacticsPlayerHome({
         ) : null}
 
         {/* Briefings */}
-        <View style={[styles.panel, { borderColor: JOUEUR_SITE.border }]}>
+        <View style={[styles.panel, { borderColor: PLAYER_DARK.border }]}>
           <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
             BRIEFING COACH
           </ProDayText>
@@ -277,13 +278,13 @@ export function SmartTacticsPlayerHome({
         </View>
 
         {/* Published XI */}
-        <View style={[styles.panel, { borderColor: JOUEUR_SITE.border }]}>
+        <View style={[styles.panel, { borderColor: PLAYER_DARK.border }]}>
           <View style={styles.panelHead}>
             <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
               COMPOSITION
             </ProDayText>
             {board ? (
-              <ProDayText variant="caption" style={{ color: JOUEUR_SITE.muted }}>
+              <ProDayText variant="caption" style={{ color: PLAYER_DARK.textMuted }}>
                 {board.formation}
               </ProDayText>
             ) : null}
@@ -330,20 +331,20 @@ export function SmartTacticsPlayerHome({
                         styles.chip,
                         {
                           borderColor: mine
-                            ? JOUEUR_SITE.gold
+                            ? PLAYER_DARK.accent
                             : on
                               ? accent
-                              : JOUEUR_SITE.border,
+                              : PLAYER_DARK.border,
                           backgroundColor: mine
-                            ? JOUEUR_SITE.goldSoft
-                            : JOUEUR_SITE.surface,
+                            ? PLAYER_DARK.accentSoft
+                            : PLAYER_DARK.surface,
                         },
                       ]}
                     >
                       <ProDayText
                         variant="caption"
                         style={{
-                          color: mine ? JOUEUR_SITE.gold : JOUEUR_SITE.foreground,
+                          color: mine ? PLAYER_DARK.accent : PLAYER_DARK.text,
                           fontWeight: '800',
                           fontSize: 11,
                         }}
@@ -379,7 +380,7 @@ export function SmartTacticsPlayerHome({
               nav.setActiveTab('recrutement');
             }}
             scaleTo={0.97}
-            style={[styles.ctaSecondary, { borderColor: JOUEUR_SITE.border }]}
+            style={[styles.ctaSecondary, { borderColor: PLAYER_DARK.border }]}
           >
             <ProDayText variant="caption" style={styles.ctaSecondaryText}>
               Squad
@@ -411,7 +412,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: JOUEUR_SITE.bg,
+    backgroundColor: PLAYER_DARK.bg,
   },
   kicker: {
     fontSize: 10,
@@ -419,14 +420,14 @@ const styles = StyleSheet.create({
     letterSpacing: 2.6,
   },
   title: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '700',
     fontSize: 34,
     letterSpacing: -1,
     marginTop: -4,
   },
   support: {
-    color: JOUEUR_SITE.muted,
+    color: PLAYER_DARK.textMuted,
     lineHeight: 20,
     marginTop: -8,
   },
@@ -435,7 +436,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: spacing.md,
     gap: 6,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: PLAYER_DARK.surface,
     overflow: 'hidden',
     minHeight: 132,
   },
@@ -445,12 +446,12 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   heroTitle: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '700',
     fontSize: 24,
     letterSpacing: -0.5,
   },
-  heroBody: { color: JOUEUR_SITE.muted, lineHeight: 18 },
+  heroBody: { color: PLAYER_DARK.textMuted, lineHeight: 18 },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -467,7 +468,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: spacing.md,
     gap: spacing.sm,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: PLAYER_DARK.surface,
   },
   panelHead: {
     flexDirection: 'row',
@@ -480,7 +481,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   meRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
-  meName: { color: JOUEUR_SITE.foreground, fontWeight: '700' },
+  meName: { color: PLAYER_DARK.text, fontWeight: '700' },
   ovrBadge: {
     width: 72,
     height: 72,
@@ -491,11 +492,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.25)',
   },
   ovrValue: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '800',
     fontSize: 26,
   },
-  empty: { color: JOUEUR_SITE.muted, lineHeight: 18 },
+  empty: { color: PLAYER_DARK.textMuted, lineHeight: 18 },
   briefList: { gap: 10 },
   briefRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   briefDot: {
@@ -505,10 +506,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   briefTitle: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '700',
   },
-  briefBody: { color: JOUEUR_SITE.muted, lineHeight: 17 },
+  briefBody: { color: PLAYER_DARK.textMuted, lineHeight: 17 },
   chipRow: { gap: 8, paddingTop: 4 },
   chip: {
     paddingHorizontal: 12,
@@ -532,7 +533,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ctaPrimaryText: {
-    color: '#070b14',
+    color: PLAYER_DARK.bg,
     fontWeight: '800',
     fontSize: 13,
   },
@@ -542,10 +543,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     borderWidth: 1,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: PLAYER_DARK.surface,
   },
   ctaSecondaryText: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '800',
     fontSize: 13,
   },

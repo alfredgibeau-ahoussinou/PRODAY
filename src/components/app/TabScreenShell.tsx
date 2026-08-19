@@ -13,7 +13,7 @@ import {
 } from '../player/joueurPortalUi';
 import { JoueurWorldScene } from '../../features/joueur/JoueurWorldScene';
 import { JoueurParticleField } from '../../features/joueur/JoueurGameFx';
-import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { ProDayText } from '../ui/ProDayText';
 import { spacing } from '../../theme/designTokens';
 
@@ -59,9 +59,9 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
     return (
       <ProDayScreenCanvas flat immersive={false}>
         <JoueurIdentityProvider identity={identity}>
-          <View style={[styles.root, { backgroundColor: JOUEUR_SITE.bg }]}>
+          <View style={[styles.root, { backgroundColor: PLAYER_DARK.bg }]}>
             <LinearGradient
-              colors={identity.wash}
+              colors={[PLAYER_DARK.bgElevated, PLAYER_DARK.bg, PLAYER_DARK.bg]}
               locations={[0, 0.45, 1]}
               style={StyleSheet.absoluteFill}
               pointerEvents="none"
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   hudPlate: {
     borderWidth: 1.5,
     borderRadius: 22,
-    backgroundColor: JOUEUR_SITE.panel,
+    backgroundColor: PLAYER_DARK.surface,
     padding: spacing.md,
     gap: spacing.sm,
     overflow: 'hidden',
@@ -175,11 +175,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   title: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '900',
     letterSpacing: 0.4,
     fontSize: 20,
   },
-  sub: { color: JOUEUR_SITE.muted, lineHeight: 17 },
+  sub: { color: PLAYER_DARK.textMuted, lineHeight: 17 },
   stats: { marginTop: 2 },
 });

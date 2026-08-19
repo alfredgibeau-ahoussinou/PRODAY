@@ -35,7 +35,7 @@ export function PlayerProgressionScreen({ embedded = false }: { embedded?: boole
   const nav = useTabNavigationActions();
   const [refreshing, setRefreshing] = useState(false);
 
-  const accent = session?.identity?.accent ?? '#4C8BFF';
+  const accent = PLAYER_DARK.accent;
 
   const ageGroup = useMemo(
     () =>
@@ -175,5 +175,5 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   pad: { padding: spacing.lg, gap: spacing.md },
   statRow: { flexDirection: 'row', gap: spacing.sm },
-  empty: { color: JOUEUR_SITE.muted, marginTop: spacing.sm },
+  empty: { color: PLAYER_DARK.textMuted, marginTop: spacing.sm },
 });

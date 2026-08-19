@@ -6,6 +6,7 @@ import { Icon } from '../ui/Icon';
 import { AnimatedModalShell } from '../motion/AnimatedModalShell';
 import { PlayerCoachAiChat } from './PlayerCoachAiChat';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 
@@ -18,7 +19,7 @@ export function PlayerCoachAiFab({ bottomOffset }: Props) {
   const session = useJoueurSession();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
-  const accent = session?.identity?.accent ?? '#4C8BFF';
+  const accent = PLAYER_DARK.accent;
   const bottom =
     bottomOffset ?? TAB_BAR_CONTENT_INSET + insets.bottom + spacing.md;
 
@@ -29,12 +30,12 @@ export function PlayerCoachAiFab({ bottomOffset }: Props) {
           onPress={() => setOpen(true)}
           scaleTo={0.97}
           haptic
-          style={[styles.fab, { backgroundColor: accent }]}
+          style={[styles.fab, { backgroundColor: accent, shadowColor: PLAYER_DARK.accentGlow }]}
           accessibilityRole="button"
           accessibilityLabel="Demander à mon Coach IA"
           testID="player-coach-ai-fab"
         >
-          <Icon name="star-four-points" size={22} color="#fff" />
+          <Icon name="star-four-points" size={22} color={PLAYER_DARK.bg} />
         </PressableSpring>
       </View>
 

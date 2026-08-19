@@ -3,6 +3,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { JOUEUR_SURFACES, JOUEUR_RADIUS } from '../../theme/joueurDesignSystem';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
 type Props = {
@@ -18,7 +19,7 @@ export function PlayerProgressBar({
   value,
   max = 100,
   label,
-  accent = '#4C8BFF',
+  accent = PLAYER_DARK.accent,
   style,
 }: Props) {
   const pct = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
@@ -43,7 +44,7 @@ export function PlayerProgressBar({
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.xs },
-  label: { color: 'rgba(243,248,255,0.72)' },
+  label: { color: PLAYER_DARK.textMuted },
   track: {
     height: 8,
     borderRadius: JOUEUR_RADIUS.pill,
