@@ -8,10 +8,10 @@ import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubEquipmentMarketPanel } from '../../components/club/ClubEquipmentMarketPanel';
 import { ClubEventOrganization } from '../../components/club/ClubEventOrganization';
 import {
@@ -26,6 +26,7 @@ import {
 import type { ClubNavItemId } from '../../features/club/navigation/clubNavConfig';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import type { IconName } from '../../components/ui/iconNames';
+import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 
 function ClubStubShell({
   title,
@@ -45,7 +46,7 @@ function ClubStubShell({
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubScreenHeader title={title} subtitle={subtitle} />
+        <ClubBrandHeader title={title} subtitle={subtitle} />
         <ClubEmptyState title={title} body={body} icon={icon} />
         {children}
       </ClubChapterScroll>
@@ -63,7 +64,7 @@ export function ClubEventsScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title="Événements"
           subtitle="Tournois · poules IA (suggestion)"
         />
@@ -110,7 +111,7 @@ export function ClubAutomationsScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubScreenHeader title="Automatisations" subtitle="Rappels & règles simples" />
+        <ClubBrandHeader title="Automatisations" subtitle="Rappels & règles simples" />
         <ClubSectionCard>
           <View style={styles.switchRow}>
             <ClubText variant="body">Rappel J-1 match / séance</ClubText>
@@ -170,7 +171,7 @@ export function ClubEquipmentScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubScreenHeader title="Bourse équipements" subtitle="Échanges entre membres" />
+        <ClubBrandHeader title="Bourse équipements" subtitle="Échanges entre membres" />
         {ws.clubId && profile ? (
           <ClubEquipmentMarketPanel clubId={ws.clubId} profile={profile} />
         ) : (
@@ -235,7 +236,7 @@ export function ClubNotificationsScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={loading} onRefresh={() => void load()}>
-        <ClubScreenHeader title="Notifications" subtitle="Centre d’alertes club" />
+        <ClubBrandHeader title="Notifications" subtitle="Centre d’alertes club" />
         {items.length === 0 ? (
           <ClubEmptyState
             title="Aucune alerte"
@@ -294,7 +295,7 @@ export function ClubPermissionsScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubScreenHeader title="Permissions" subtitle="Visibilité documents par rôle" />
+        <ClubBrandHeader title="Permissions" subtitle="Visibilité documents par rôle" />
         <ClubSectionCard>
           {ROLE_ROWS.map((r) => (
             <View key={r.id} style={styles.switchRow}>

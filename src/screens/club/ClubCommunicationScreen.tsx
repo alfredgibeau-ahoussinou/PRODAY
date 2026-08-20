@@ -6,15 +6,17 @@ import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import {
   ClubActionRow,
   ClubChapterScroll,
-  ClubScreenHeader,
   ClubSectionCard,
+  ClubSegmentedControl,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { clubRadius, clubShadow, clubSpace } from '../../features/club/theme/clubDesignSystem';
 
 type Channel = 'hub' | 'inbox';
 
-/** Communication — équipe / coachs / parents / annonces. */
+/** Communication — esthétique messaging moderne (logique MessagesScreen inchangée). */
 export function ClubCommunicationScreen() {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -24,6 +26,13 @@ export function ClubCommunicationScreen() {
   if (channel === 'inbox') {
     return (
       <View style={styles.root}>
+        <View style={styles.inboxBar}>
+          <ClubActionRow
+            icon="arrow-back"
+            label="Retour aux canaux"
+            onPress={() => setChannel('hub')}
+          />
+        </View>
         <MessagesScreen />
       </View>
     );
@@ -32,10 +41,37 @@ export function ClubCommunicationScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title="Communication"
           subtitle="Équipes · coachs · parents · annonces"
         />
+
+        <ClubSegmentedControl
+          options={[
+            { id: 'hub' as const, label: 'Canaux' },
+            { id: 'inbox' as const, label: 'Messagerie' },
+          ]}
+          value={channel}
+          onChange={setChannel}
+        />
+
+        <ClubSectionCard title="Annonces">
+          <View style={styles.announce}>
+            <ClubText variant="label" muted>
+              Broadcast
+            </ClubText>
+            <ClubText variant="h3">Annonces club</ClubText>
+            <ClubText variant="body" muted>
+              Publiez une info officielle vers l’effectif via la messagerie ProDay.
+            </ClubText>
+            <ClubActionRow
+              icon="notifications"
+              label="Ouvrir les annonces"
+              hint="Messagerie existante"
+              onPress={() => setChannel('inbox')}
+            />
+          </View>
+        </ClubSectionCard>
 
         <ClubSectionCard title="Canaux">
           <ClubActionRow
@@ -62,12 +98,6 @@ export function ClubCommunicationScreen() {
             hint="Infos licenciés mineurs"
             onPress={() => setChannel('inbox')}
           />
-          <ClubActionRow
-            icon="notifications"
-            label="Annonces club"
-            hint="Broadcast officiel"
-            onPress={() => setChannel('inbox')}
-          />
         </ClubSectionCard>
 
         <ClubText variant="caption" muted>
@@ -81,4 +111,20 @@ export function ClubCommunicationScreen() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
+    inboxBar: {
+      paddingHorizontal: clubSpace.lg,
+      paddingTop: clubSpace.sm,
+      backgroundColor: tokens.surface,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    announce: {
+      gap: clubSpace.sm,
+      padding: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.headerWash,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.soft,
+    },
   });

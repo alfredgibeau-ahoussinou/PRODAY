@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
@@ -9,9 +10,9 @@ import {
   type ClubNavItemId,
 } from '../navigation/clubNavConfig';
 import { ClubText } from '../ui/clubUi';
-import { spacing } from '../../../theme/designTokens';
 import { useClubTheme } from './ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
+import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   visible: boolean;
@@ -19,20 +20,23 @@ type Props = {
   onSelect: (action: ClubCreateActionId, nav?: ClubNavItemId) => void;
 };
 
-/** Sheet + CRÉER — match, entraînement, joueur, coach, inviter, événement, invitation club. */
+/** Sheet + CRÉER — match, entraînement, joueur, club… (logique inchangée). */
 export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.root}>
-        <Pressable style={styles.scrim} onPress={onClose} />
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+        <Pressable style={styles.scrim} onPress={onClose}>
+          <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: tokens.scrim }]} />
+        </Pressable>
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, clubSpace.lg) }]}>
           <View style={styles.handle} />
-          <ClubText variant="section">Créer</ClubText>
-          <ClubText variant="caption" muted style={{ marginBottom: spacing.sm }}>
+          <ClubText variant="h3">Créer</ClubText>
+          <ClubText variant="caption" muted style={{ marginBottom: clubSpace.sm }}>
             Choisissez ce que vous voulez ajouter
           </ClubText>
           {CLUB_CREATE_ACTIONS.map((action) => (
@@ -52,7 +56,7 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
               <ClubText variant="body" style={{ fontWeight: '600', flex: 1 }}>
                 {action.label}
               </ClubText>
-              <Icon name="chevron-forward" size={16} color={tokens.muted} />
+              <Icon name="chevron-forward" size={16} color={tokens.faint} />
             </PressableSpring>
           ))}
         </View>
@@ -85,55 +89,57 @@ export function ClubCreateFab({ onPress }: { onPress: () => void }) {
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
     root: { flex: 1, justifyContent: 'flex-end' },
-    scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,22,40,0.45)' },
+    scrim: { ...StyleSheet.absoluteFillObject },
     sheet: {
-      backgroundColor: tokens.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      gap: spacing.xs,
+      backgroundColor: tokens.raised,
+      borderTopLeftRadius: clubRadius.xxl,
+      borderTopRightRadius: clubRadius.xxl,
+      paddingHorizontal: clubSpace.lg,
+      paddingTop: clubSpace.sm,
+      gap: clubSpace.xs,
+      borderTopWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.lift,
     },
     handle: {
       alignSelf: 'center',
       width: 40,
       height: 4,
       borderRadius: 2,
-      backgroundColor: tokens.border,
-      marginBottom: spacing.sm,
+      backgroundColor: tokens.borderStrong,
+      marginBottom: clubSpace.sm,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.sm,
+      paddingHorizontal: 4,
+      borderRadius: clubRadius.md,
     },
     icon: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+      width: 40,
+      height: 40,
+      borderRadius: clubRadius.sm,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.accentSoft,
     },
     fab: {
       position: 'absolute',
-      right: spacing.lg,
+      right: clubSpace.lg,
       bottom: 72,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
       backgroundColor: tokens.accent,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: 999,
+      paddingHorizontal: 18,
+      paddingVertical: 13,
+      borderRadius: clubRadius.pill,
       zIndex: 30,
       elevation: 8,
-      shadowColor: '#000',
-      shadowOpacity: 0.2,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 4 },
+      ...clubShadow.accent(tokens),
     },
-    fabLabel: { color: '#fff', fontWeight: '800', letterSpacing: 0.8 },
+    fabLabel: { fontWeight: '800', letterSpacing: 0.8 },
   });
 }

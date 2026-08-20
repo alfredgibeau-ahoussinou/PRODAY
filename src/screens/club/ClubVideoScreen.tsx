@@ -9,10 +9,10 @@ import {
   ClubActionRow,
   ClubChapterScroll,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
 /** Vidéo & caméras — Veo / XbotGo / Smartphone / autre (jamais forcé). */
@@ -27,7 +27,7 @@ export function ClubVideoScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title="Vidéo"
           subtitle="Choisissez votre captation — aucun vendeur imposé"
         />

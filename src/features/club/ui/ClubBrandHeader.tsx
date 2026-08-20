@@ -10,7 +10,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { ClubText } from './clubUi';
 import { useClubTheme } from '../shell/ClubThemeContext';
-import { spacing } from '../../../theme/designTokens';
+import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { motion } from '../../../theme/motion';
 
@@ -23,7 +23,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** En-tête Club premium — logo + lavage accent (parallax léger si scrollY fourni). */
+/** En-tête Club premium — logo + lavage accent. */
 export function ClubBrandHeader({
   title,
   subtitle,
@@ -50,7 +50,7 @@ export function ClubBrandHeader({
               <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="cover" />
             ) : (
               <View style={[styles.logo, styles.logoPh, { backgroundColor: tokens.accentSoft }]}>
-                <ClubText variant="section" style={{ color: tokens.accent }}>
+                <ClubText variant="h3" style={{ color: tokens.accent }}>
                   {title.charAt(0).toUpperCase()}
                 </ClubText>
               </View>
@@ -58,7 +58,7 @@ export function ClubBrandHeader({
           </View>
         ) : null}
         <View style={styles.textCol}>
-          <ClubText variant="title">{title}</ClubText>
+          <ClubText variant="h1">{title}</ClubText>
           {subtitle ? (
             <ClubText variant="caption" muted>
               {subtitle}
@@ -97,41 +97,37 @@ export function useClubHeaderParallax() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     wrap: {
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
-      gap: spacing.sm,
+      paddingTop: clubSpace.sm,
+      paddingBottom: clubSpace.sm,
+      gap: clubSpace.sm,
       overflow: 'hidden',
     },
     wash: {
       ...StyleSheet.absoluteFillObject,
-      height: 120,
+      height: 128,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.md,
+      gap: clubSpace.md,
     },
     logoWrap: {
-      width: 56,
-      height: 56,
-      borderRadius: 16,
+      width: 58,
+      height: 58,
+      borderRadius: clubRadius.lg,
       overflow: 'hidden',
       borderWidth: 2,
       backgroundColor: tokens.surface,
-      shadowColor: tokens.accent,
-      shadowOpacity: 0.18,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 3,
+      ...clubShadow.accent(tokens),
     },
     logo: { width: '100%', height: '100%' },
     logoPh: { alignItems: 'center', justifyContent: 'center' },
     textCol: { flex: 1, minWidth: 0, gap: 4 },
     accentBar: {
       height: 3,
-      width: 48,
+      width: 52,
       borderRadius: 2,
-      opacity: 0.9,
+      opacity: 0.95,
     },
   });
 

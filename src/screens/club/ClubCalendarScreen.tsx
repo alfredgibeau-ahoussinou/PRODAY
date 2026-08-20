@@ -7,14 +7,15 @@ import {
   ClubActionRow,
   ClubChapterScroll,
   ClubEmptyState,
+  ClubEventBadge,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
-  ClubText,
+  ClubSegmentedControl,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
-import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { clubSpace, type ClubEventKind } from '../../features/club/theme/clubDesignSystem';
 
 type Range = 'day' | 'week' | 'month';
 
@@ -46,7 +47,28 @@ function inRange(date: Date, range: Range, now: Date): boolean {
   return t >= a.getTime() && t < b.getTime();
 }
 
-/** Calendrier global club — filtres jour / semaine / mois. */
+function eventKind(
+  e: { title?: string | null; type?: string },
+  match: boolean,
+  training: boolean,
+): ClubEventKind {
+  if (match) return 'match';
+  if (training) return 'training';
+  const t = `${e.title ?? ''} ${e.type ?? ''}`.toLowerCase();
+  if (t.includes('tournoi') || t.includes('tournament')) return 'tournament';
+  if (t.includes('réunion') || t.includes('reunion') || t.includes('meeting')) return 'meeting';
+  return 'event';
+}
+
+function clubLabel(kind: ClubEventKind): string {
+  if (kind === 'match') return 'Match';
+  if (kind === 'training') return 'Entraînement';
+  if (kind === 'tournament') return 'Tournoi';
+  if (kind === 'meeting') return 'Réunion';
+  return 'Événement';
+}
+
+/** Calendrier global club — Jour / Semaine / Mois + codes visuels. */
 export function ClubCalendarScreen() {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -64,30 +86,17 @@ export function ClubCalendarScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader title="Calendrier" subtitle="Matchs, séances, événements" />
+        <ClubBrandHeader title="Calendrier" subtitle="Matchs, séances, événements" />
 
-        <View style={styles.filters}>
-          {(
-            [
-              ['day', 'Jour'],
-              ['week', 'Semaine'],
-              ['month', 'Mois'],
-            ] as const
-          ).map(([id, label]) => (
-            <ClubActionRow
-              key={id}
-              label={label}
-              trailing={
-                range === id ? (
-                  <ClubText variant="caption" style={{ color: tokens.accent }}>
-                    ●
-                  </ClubText>
-                ) : undefined
-              }
-              onPress={() => setRange(id)}
-            />
-          ))}
-        </View>
+        <ClubSegmentedControl
+          options={[
+            { id: 'day' as const, label: 'Jour' },
+            { id: 'week' as const, label: 'Semaine' },
+            { id: 'month' as const, label: 'Mois' },
+          ]}
+          value={range}
+          onChange={setRange}
+        />
 
         {items.length === 0 ? (
           <ClubEmptyState
@@ -100,27 +109,23 @@ export function ClubCalendarScreen() {
         ) : (
           <ClubSectionCard title={`${items.length} événement(s)`}>
             {items.map((e) => {
-              const kind = isCoachMatchEvent(e)
-                ? 'Match'
-                : isCoachTrainingEvent(e)
-                  ? 'Entraînement'
-                  : 'Événement';
+              const match = isCoachMatchEvent(e);
+              const training = isCoachTrainingEvent(e);
+              const kind = eventKind(e, match, training);
               return (
-                <ClubActionRow
-                  key={e.id}
-                  icon={isCoachMatchEvent(e) ? 'trophy' : isCoachTrainingEvent(e) ? 'football' : 'flag'}
-                  label={e.title || kind}
-                  hint={`${kind} · ${e.starts_at.toLocaleString('fr-FR')}`}
-                  onPress={() =>
-                    shellNav?.requestNav(
-                      isCoachMatchEvent(e)
-                        ? 'matches'
-                        : isCoachTrainingEvent(e)
-                          ? 'trainings'
-                          : 'events',
-                    )
-                  }
-                />
+                <View key={e.id} style={styles.eventRow}>
+                  <ClubEventBadge kind={kind} />
+                  <ClubActionRow
+                    icon={match ? 'trophy' : training ? 'football' : 'flag'}
+                    label={e.title || clubLabel(kind)}
+                    hint={e.starts_at.toLocaleString('fr-FR')}
+                    onPress={() =>
+                      shellNav?.requestNav(
+                        match ? 'matches' : training ? 'trainings' : 'events',
+                      )
+                    }
+                  />
+                </View>
               );
             })}
           </ClubSectionCard>
@@ -133,5 +138,5 @@ export function ClubCalendarScreen() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
-    filters: { gap: spacing.xs },
+    eventRow: { gap: clubSpace.xs, paddingBottom: clubSpace.xs },
   });

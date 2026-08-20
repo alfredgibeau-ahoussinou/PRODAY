@@ -1,20 +1,21 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ClubText, ClubChapterScroll, ClubEmptyState, ClubScreenHeader } from '../ui/clubUi';
+import { ClubText, ClubChapterScroll, ClubEmptyState } from '../ui/clubUi';
+import { ClubBrandHeader } from '../ui/ClubBrandHeader';
 import { useClubShellNav } from './ClubShellNavContext';
 import { useClubTheme } from './ClubThemeContext';
 import { CLUB_TOOL_GROUPS } from '../navigation/clubNavConfig';
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
-import { spacing } from '../../../theme/designTokens';
 import type { ClubThemeTokens } from '../theme/clubTokens';
+import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   items?: ClubNavResolvedItem[];
 };
 
-/** Hub Menu — outils groupés (mobile). */
+/** Hub Menu — outils groupés (mobile), cartes premium. */
 export function ClubMenuPane({ items = [] }: Props) {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -26,8 +27,8 @@ export function ClubMenuPane({ items = [] }: Props) {
 
   return (
     <View style={styles.root}>
-      <ClubScreenHeader title="Menu" subtitle="Tous les outils du club" />
       <ClubChapterScroll>
+        <ClubBrandHeader title="Menu" subtitle="Tous les outils du club" />
         {items.length === 0 ? (
           <ClubEmptyState title="Aucun outil" body="Aucun outil disponible pour le moment." />
         ) : (
@@ -38,37 +39,39 @@ export function ClubMenuPane({ items = [] }: Props) {
             if (rows.length === 0) return null;
             return (
               <View key={group.title} style={styles.group}>
-                <ClubText variant="caption" muted style={styles.groupTitle}>
+                <ClubText variant="label" muted style={styles.groupTitle}>
                   {group.title}
                 </ClubText>
-                {rows.map((item) => (
-                  <PressableSpring
-                    key={item.id}
-                    onPress={() => shellNav?.requestNav(item.id)}
-                    scaleTo={0.98}
-                    haptic
-                    style={styles.row}
-                  >
-                    <View style={styles.icon}>
-                      <Icon name={item.icon} size={18} color={tokens.accent} />
-                    </View>
-                    <View style={styles.col}>
-                      <ClubText variant="body" style={{ fontWeight: '600' }}>
-                        {item.label}
-                      </ClubText>
-                      {item.hint ? (
-                        <ClubText variant="caption" muted numberOfLines={1}>
-                          {item.hint}
+                <View style={styles.card}>
+                  {rows.map((item) => (
+                    <PressableSpring
+                      key={item.id}
+                      onPress={() => shellNav?.requestNav(item.id)}
+                      scaleTo={0.98}
+                      haptic
+                      style={styles.row}
+                    >
+                      <View style={styles.icon}>
+                        <Icon name={item.icon} size={18} color={tokens.accent} />
+                      </View>
+                      <View style={styles.col}>
+                        <ClubText variant="body" style={{ fontWeight: '600' }}>
+                          {item.label}
                         </ClubText>
-                      ) : null}
-                    </View>
-                    {item.locked ? (
-                      <Icon name="lock" size={14} color={tokens.muted} />
-                    ) : (
-                      <Icon name="chevron-forward" size={16} color={tokens.muted} />
-                    )}
-                  </PressableSpring>
-                ))}
+                        {item.hint ? (
+                          <ClubText variant="caption" muted numberOfLines={1}>
+                            {item.hint}
+                          </ClubText>
+                        ) : null}
+                      </View>
+                      {item.locked ? (
+                        <Icon name="lock" size={14} color={tokens.muted} />
+                      ) : (
+                        <Icon name="chevron-forward" size={16} color={tokens.faint} />
+                      )}
+                    </PressableSpring>
+                  ))}
+                </View>
               </View>
             );
           })
@@ -78,34 +81,36 @@ export function ClubMenuPane({ items = [] }: Props) {
   );
 }
 
-const createStyles = (tokens: ClubThemeTokens) =>
-  StyleSheet.create({
-    root: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
-    group: { gap: spacing.xs, marginBottom: spacing.md },
-    groupTitle: {
-      textTransform: 'uppercase',
-      letterSpacing: 1.2,
-      fontWeight: '800',
-      fontSize: 11,
+function createStyles(tokens: ClubThemeTokens) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: tokens.bg },
+    group: { gap: clubSpace.sm },
+    groupTitle: { marginLeft: 4 },
+    card: {
+      backgroundColor: tokens.surface,
+      borderRadius: clubRadius.xl,
+      padding: clubSpace.sm,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: 2,
+      ...clubShadow.soft,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.sm,
-      backgroundColor: tokens.surface,
-      borderRadius: 12,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.border,
+      gap: clubSpace.sm,
+      paddingVertical: 10,
+      paddingHorizontal: clubSpace.sm,
+      borderRadius: clubRadius.md,
     },
     icon: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+      width: 38,
+      height: 38,
+      borderRadius: clubRadius.sm,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.accentSoft,
     },
     col: { flex: 1, minWidth: 0, gap: 2 },
   });
+}

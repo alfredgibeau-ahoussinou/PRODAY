@@ -7,10 +7,10 @@ import {
   ClubSectionCard,
   ClubText,
 } from '../ui/clubUi';
+import { ClubBrandHeader } from '../ui/ClubBrandHeader';
 import { useClubShellNav } from './ClubShellNavContext';
 import { useClubTheme } from './ClubThemeContext';
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
-import { spacing } from '../../../theme/designTokens';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 
 type Props = {
@@ -26,8 +26,9 @@ export function ClubLockedPane({ item }: Props) {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubSectionCard title={item.label}>
-          <ClubText variant="section">Hors formule actuelle</ClubText>
+        <ClubBrandHeader title={item.label} subtitle="Module verrouillé" />
+        <ClubSectionCard title="Accès">
+          <ClubText variant="h3">Hors formule actuelle</ClubText>
           <ClubText variant="body" muted>
             {item.lockReason ?? 'Ce module n’est pas inclus dans votre offre.'}
           </ClubText>
@@ -55,7 +56,8 @@ export function ClubLockedPane({ item }: Props) {
   );
 }
 
-const createStyles = (tokens: ClubThemeTokens) =>
-  StyleSheet.create({
-    root: { flex: 1, backgroundColor: tokens.bg, gap: spacing.md },
+function createStyles(tokens: ClubThemeTokens) {
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: tokens.bg },
   });
+}

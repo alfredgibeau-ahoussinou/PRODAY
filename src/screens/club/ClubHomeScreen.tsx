@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
@@ -10,13 +10,14 @@ import {
   ClubEmptyState,
   ClubLoading,
   ClubSectionCard,
+  ClubSmartCard,
   ClubStatusPill,
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { formatTeamRowLabel } from '../../utils/clubStructureView';
-import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { clubChrome, clubSpace } from '../../features/club/theme/clubDesignSystem';
 
 function greetingForHour(h: number): string {
   if (h < 12) return 'Bonjour';
@@ -24,18 +25,44 @@ function greetingForHour(h: number): string {
   return 'Bonsoir';
 }
 
-/** Accueil Club — centre de contrôle (AUJOURD’HUI · À FAIRE · statut). */
+function nextMatchHint(ws: ReturnType<typeof useClubWorkspace>): string {
+  const m = ws.todayMatches[0] ?? ws.events.find((e) => e.starts_at && e.starts_at >= new Date());
+  if (!m?.starts_at) return 'Aucun match planifié';
+  return m.starts_at.toLocaleString('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function nextTrainingHint(ws: ReturnType<typeof useClubWorkspace>): string {
+  const t = ws.todayTrainings[0];
+  if (!t?.starts_at) return 'Aucune séance aujourd’hui';
+  return t.starts_at.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+/** Accueil Club — greeting + ligne dynamique + smart cards premium. */
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
+  const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const multiCol = width >= clubChrome.tabletBreakpoint;
 
   if (ws.loading) return <ClubLoading />;
 
   const name = ws.club?.name ?? profile?.display_name ?? 'Club';
   const greet = greetingForHour(new Date().getHours());
+  const dynamicLine =
+    ws.briefingHeadline?.trim() ||
+    (ws.todoCount > 0
+      ? `${ws.todoCount} point(s) à traiter aujourd’hui`
+      : 'Le club est à jour — bonne session.');
+
   const hasToday =
     ws.todayMatches.length > 0 || ws.todayTrainings.length > 0 || ws.pendingMemberships > 0;
 
@@ -47,6 +74,62 @@ export function ClubHomeScreen() {
           subtitle={name}
           right={<ClubStatusPill label={ws.statusLabel} tone={ws.statusTone} />}
         />
+
+        <ClubText variant="body" muted style={styles.dynamic}>
+          {dynamicLine}
+        </ClubText>
+
+        <View style={[styles.smartGrid, multiCol && styles.smartGridWide]}>
+          <ClubSmartCard
+            index={0}
+            label="Prochain match"
+            value={ws.todayMatches.length || '—'}
+            hint={nextMatchHint(ws)}
+            icon="trophy"
+            tone="accent"
+            onPress={() => shellNav?.requestNav('matches')}
+          />
+          <ClubSmartCard
+            index={1}
+            label="Entraînement"
+            value={ws.todayTrainings.length || '—'}
+            hint={nextTrainingHint(ws)}
+            icon="football"
+            tone="pitch"
+            onPress={() => shellNav?.requestNav('trainings')}
+          />
+          <ClubSmartCard
+            index={2}
+            label="Effectif"
+            value={ws.players.length}
+            hint={`${ws.pendingMemberships} adhésion(s) en attente`}
+            icon="people"
+            tone="default"
+            onPress={() => shellNav?.requestNav('players')}
+          />
+          <ClubSmartCard
+            index={3}
+            label="Coachs"
+            value={ws.coaches.length}
+            hint={
+              ws.teamsWithoutCoach > 0
+                ? `${ws.teamsWithoutCoach} équipe(s) sans coach`
+                : 'Staff à jour'
+            }
+            icon="school"
+            tone={ws.teamsWithoutCoach > 0 ? 'warning' : 'success'}
+            onPress={() => shellNav?.requestNav('coaches')}
+          />
+          <ClubSmartCard
+            index={4}
+            label="À faire"
+            value={ws.todoCount}
+            hint={ws.briefingSummary || 'Rien d’urgent'}
+            icon="checkmark-circle"
+            tone={ws.todoCount > 0 ? 'warning' : 'success'}
+            onPress={() => shellNav?.requestNav('assistant')}
+          />
+        </View>
 
         <ClubSectionCard title="Aujourd’hui">
           {!hasToday ? (
@@ -60,7 +143,14 @@ export function ClubHomeScreen() {
                   key={e.id}
                   icon="trophy"
                   label={e.title || 'Match'}
-                  hint={e.starts_at ? new Date(e.starts_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : undefined}
+                  hint={
+                    e.starts_at
+                      ? new Date(e.starts_at).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : undefined
+                  }
                   onPress={() => shellNav?.requestNav('matches')}
                 />
               ))}
@@ -69,7 +159,14 @@ export function ClubHomeScreen() {
                   key={e.id}
                   icon="football"
                   label={e.title || 'Entraînement'}
-                  hint={e.starts_at ? new Date(e.starts_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : undefined}
+                  hint={
+                    e.starts_at
+                      ? new Date(e.starts_at).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : undefined
+                  }
                   onPress={() => shellNav?.requestNav('trainings')}
                 />
               ))}
@@ -179,5 +276,12 @@ export function ClubHomeScreen() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
-    list: { gap: spacing.xs },
+    dynamic: { marginTop: -4, marginBottom: 4, lineHeight: 21 },
+    list: { gap: clubSpace.xs },
+    smartGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: clubSpace.md,
+    },
+    smartGridWide: {},
   });

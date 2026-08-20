@@ -17,8 +17,8 @@ import {
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { teamsService } from '../../services/teams.service';
 import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
-import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { clubRadius, clubShadow, clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { User } from '../../models/User';
 import type { Team } from '../../models/Team';
 
@@ -352,21 +352,22 @@ function ClubCoachDetail({
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
-    list: { gap: spacing.sm },
+    list: { gap: clubSpace.sm },
     coachCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.md,
-      borderRadius: 16,
+      gap: clubSpace.md,
+      padding: clubSpace.md,
+      borderRadius: clubRadius.xl,
       backgroundColor: tokens.surface,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: tokens.border,
+      ...clubShadow.card,
     },
     avatar: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
+      width: 48,
+      height: 48,
+      borderRadius: clubRadius.md,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -376,6 +377,6 @@ const createStyles = (tokens: ClubThemeTokens) =>
       alignItems: 'center',
       gap: 6,
       alignSelf: 'flex-start',
-      paddingVertical: spacing.xs,
+      paddingVertical: clubSpace.xs,
     },
   });

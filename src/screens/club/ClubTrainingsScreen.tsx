@@ -8,10 +8,11 @@ import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
+  ClubPresenceBar,
   ClubSectionCard,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { PressableSpring } from '../../components/motion';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { teamEventsService } from '../../services/teamEvents.service';
@@ -23,7 +24,7 @@ import {
   type TeamEvent,
 } from '../../models/TeamEvent';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
-import { spacing } from '../../theme/designTokens';
+import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
 
 type PresenceChoice = 'present' | 'absent' | 'late_under_10' | 'late_over_10' | 'pending';
 
@@ -107,7 +108,7 @@ export function ClubTrainingsScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader title="Entraînements" subtitle="Présences & retards" />
+        <ClubBrandHeader title="Entraînements" subtitle="Présences & retards" />
 
         {trainings.length === 0 ? (
           <ClubEmptyState
@@ -133,6 +134,16 @@ export function ClubTrainingsScreen() {
 
         {selected ? (
           <ClubSectionCard title={`Présences · ${selected.title || 'Séance'}`}>
+            {(() => {
+              const presentCount = roster.filter((uid) => {
+                const mark = selected.attendance_marks?.[uid];
+                const rsvp = userRsvp(selected, uid);
+                return mark === 'present' || rsvp === 'yes';
+              }).length;
+              return roster.length > 0 ? (
+                <ClubPresenceBar present={presentCount} total={roster.length} />
+              ) : null;
+            })()}
             <ClubText variant="body" muted>
               Marquez chaque joueur. Retard &lt; 10 min ou ≥ 10 min.
             </ClubText>
@@ -202,7 +213,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
     root: { flex: 1, backgroundColor: tokens.bg },
     playerBlock: {
       gap: 4,
-      paddingVertical: spacing.sm,
+      paddingVertical: clubSpace.sm,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: tokens.border,
     },
@@ -210,7 +221,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
     markBtn: {
       paddingHorizontal: 8,
       paddingVertical: 6,
-      borderRadius: 8,
+      borderRadius: clubRadius.xs,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: tokens.border,
       backgroundColor: tokens.elevated,

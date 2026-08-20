@@ -6,15 +6,16 @@ import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
+  ClubSmartCard,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
-import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 
-/** Statistiques — insight cards, peu de graphiques. */
+/** Statistiques — insight cards premium, peu de graphiques. */
 export function ClubStatsScreen() {
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
@@ -24,12 +25,14 @@ export function ClubStatsScreen() {
 
   const matchCount = ws.events.filter((e) => isCoachMatchEvent(e)).length;
   const trainingCount = ws.events.filter((e) => isCoachTrainingEvent(e)).length;
-  const hasData = ws.teams.length > 0 || matchCount > 0 || ws.players.length > 0;
+  const playerCount =
+    ws.players.length || ws.memberships.filter((m) => m.status === 'active').length;
+  const hasData = ws.teams.length > 0 || matchCount > 0 || playerCount > 0;
 
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader title="Statistiques" subtitle="Insights club — pas 50 graphiques" />
+        <ClubBrandHeader title="Statistiques" subtitle="Insights club — pas 50 graphiques" />
 
         {!hasData ? (
           <ClubEmptyState
@@ -40,12 +43,12 @@ export function ClubStatsScreen() {
         ) : (
           <>
             <View style={styles.row}>
-              <InsightCard label="Équipes" value={String(ws.teams.length)} tokens={tokens} />
-              <InsightCard label="Joueurs" value={String(ws.players.length || ws.memberships.filter((m) => m.status === 'active').length)} tokens={tokens} />
+              <ClubSmartCard index={0} label="Équipes" value={ws.teams.length} icon="football" tone="accent" />
+              <ClubSmartCard index={1} label="Joueurs" value={playerCount} icon="people" tone="default" />
             </View>
             <View style={styles.row}>
-              <InsightCard label="Matchs" value={String(matchCount)} tokens={tokens} />
-              <InsightCard label="Séances" value={String(trainingCount)} tokens={tokens} />
+              <ClubSmartCard index={2} label="Matchs" value={matchCount} icon="trophy" tone="accent" />
+              <ClubSmartCard index={3} label="Séances" value={trainingCount} icon="time" tone="pitch" />
             </View>
             <ClubSectionCard title="Lecture">
               <ClubText variant="body" muted>
@@ -66,37 +69,8 @@ export function ClubStatsScreen() {
   );
 }
 
-function InsightCard({
-  label,
-  value,
-  tokens,
-}: {
-  label: string;
-  value: string;
-  tokens: ClubThemeTokens;
-}) {
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: tokens.surface,
-        borderRadius: 16,
-        padding: spacing.md,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: tokens.border,
-        gap: 4,
-      }}
-    >
-      <ClubText variant="caption" muted>
-        {label}
-      </ClubText>
-      <ClubText variant="title">{value}</ClubText>
-    </View>
-  );
-}
-
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
-    row: { flexDirection: 'row', gap: spacing.sm },
+    row: { flexDirection: 'row', gap: clubSpace.md },
   });

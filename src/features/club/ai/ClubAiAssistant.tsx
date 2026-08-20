@@ -7,10 +7,10 @@ import { useClubWorkspace } from '../hooks/useClubWorkspace';
 import {
   ClubActionRow,
   ClubChapterScroll,
-  ClubScreenHeader,
   ClubSectionCard,
   ClubText,
 } from '../ui/clubUi';
+import { ClubBrandHeader } from '../ui/ClubBrandHeader';
 import { planClubAiReply } from './clubAiExecutor';
 import { teamEventsService } from '../../../services/teamEvents.service';
 import { isCoachTrainingEvent } from '../../../models/TeamEvent';
@@ -100,7 +100,7 @@ export function ClubAiAssistant() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title="Assistant IA"
           subtitle="Recommandations · confirmation obligatoire"
         />

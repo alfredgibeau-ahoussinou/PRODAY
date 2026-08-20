@@ -10,11 +10,12 @@ import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
+  ClubSegmentedControl,
   ClubText,
 } from '../../features/club/ui/clubUi';
-import { spacing } from '../../theme/designTokens';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
 type Tab = 'internal' | 'external' | 'ai';
@@ -32,46 +33,20 @@ export function ClubRecruitmentScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title="Recrutement"
           subtitle="Interne d’abord · Suivi des recrutements"
         />
 
-        <View style={styles.tabs}>
-          <ClubActionRow
-            label="Bassin interne"
-            trailing={
-              tab === 'internal' ? (
-                <ClubText variant="caption" style={{ color: tokens.accent }}>
-                  ●
-                </ClubText>
-              ) : undefined
-            }
-            onPress={() => setTab('internal')}
-          />
-          <ClubActionRow
-            label="Suivi des recrutements"
-            trailing={
-              tab === 'external' ? (
-                <ClubText variant="caption" style={{ color: tokens.accent }}>
-                  ●
-                </ClubText>
-              ) : undefined
-            }
-            onPress={() => setTab('external')}
-          />
-          <ClubActionRow
-            label="Suggestions IA"
-            trailing={
-              tab === 'ai' ? (
-                <ClubText variant="caption" style={{ color: tokens.accent }}>
-                  ●
-                </ClubText>
-              ) : undefined
-            }
-            onPress={() => setTab('ai')}
-          />
-        </View>
+        <ClubSegmentedControl
+          options={[
+            { id: 'internal' as const, label: 'Interne' },
+            { id: 'external' as const, label: 'Suivi' },
+            { id: 'ai' as const, label: 'IA' },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
 
         {tab === 'internal' ? (
           <ClubSectionCard title="Vivier club">
@@ -121,5 +96,4 @@ export function ClubRecruitmentScreen() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
-    tabs: { gap: spacing.xs },
   });

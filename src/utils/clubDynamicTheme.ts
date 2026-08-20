@@ -306,6 +306,6 @@ export function buildClubThemeTokens(
     secondary,
     onAccent,
     glow: withAlpha(accent, 0.28),
-    headerWash: lightenHex(blendHex('#F4F6F9', accent, 0.14), 0.08),
+    headerWash: lightenHex(blendHex(CLUB_TOKENS.bg, accent, 0.16), 0.06),
   };
 }

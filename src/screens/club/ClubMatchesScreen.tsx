@@ -5,23 +5,24 @@ import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import {
-  ClubActionRow,
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
+  ClubMatchScoreCard,
   ClubSectionCard,
+  ClubSegmentedControl,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubMatchInvitePanel } from '../../components/club/ClubMatchInvitePanel';
 import { ClubFriendlyMatchesPanel } from '../../components/club/ClubFriendlyMatchesPanel';
 import { isCoachMatchEvent } from '../../models/TeamEvent';
-import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 
 type Tab = 'list' | 'invites';
 
-/** Matchs — liste + convocations + invitation autre club. */
+/** Matchs — présentation score-forward (pas de score inventé) + convocations. */
 export function ClubMatchesScreen() {
   const shellNav = useClubShellNav();
   const profile = useSessionProfile();
@@ -39,32 +40,16 @@ export function ClubMatchesScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader title="Matchs" subtitle="Convocations & invitations inter-clubs" />
+        <ClubBrandHeader title="Matchs" subtitle="Convocations & invitations inter-clubs" />
 
-        <View style={styles.tabs}>
-          <ClubActionRow
-            label="Calendrier matchs"
-            trailing={
-              tab === 'list' ? (
-                <ClubText variant="caption" style={{ color: tokens.accent }}>
-                  ●
-                </ClubText>
-              ) : undefined
-            }
-            onPress={() => setTab('list')}
-          />
-          <ClubActionRow
-            label="Invitation autre club"
-            trailing={
-              tab === 'invites' ? (
-                <ClubText variant="caption" style={{ color: tokens.accent }}>
-                  ●
-                </ClubText>
-              ) : undefined
-            }
-            onPress={() => setTab('invites')}
-          />
-        </View>
+        <ClubSegmentedControl
+          options={[
+            { id: 'list' as const, label: 'Calendrier' },
+            { id: 'invites' as const, label: 'Invitations' },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
 
         {tab === 'invites' ? (
           <>
@@ -103,13 +88,13 @@ export function ClubMatchesScreen() {
             icon="trophy"
           />
         ) : (
-          <ClubSectionCard title={`${matches.length} match(s)`}>
-            {matches.map((e) => (
-              <ClubActionRow
+          <View style={styles.list}>
+            {matches.map((e, index) => (
+              <ClubMatchScoreCard
                 key={e.id}
-                icon="trophy"
-                label={e.title || 'Match'}
-                hint={e.starts_at.toLocaleString('fr-FR')}
+                index={index}
+                title={e.title || 'Match'}
+                when={e.starts_at.toLocaleString('fr-FR')}
                 onPress={() =>
                   Alert.alert(
                     e.title || 'Match',
@@ -129,7 +114,7 @@ export function ClubMatchesScreen() {
                 }
               />
             ))}
-          </ClubSectionCard>
+          </View>
         )}
       </ClubChapterScroll>
     </View>
@@ -139,5 +124,5 @@ export function ClubMatchesScreen() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
-    tabs: { gap: spacing.xs },
+    list: { gap: clubSpace.md },
   });

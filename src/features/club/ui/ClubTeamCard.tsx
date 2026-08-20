@@ -6,10 +6,10 @@ import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { ClubText } from './clubUi';
 import { useClubTheme } from '../shell/ClubThemeContext';
-import { spacing } from '../../../theme/designTokens';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import type { ClubTeamRow } from '../../../utils/clubStructureView';
 import { formatTeamRowLabel } from '../../../utils/clubStructureView';
+import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   row: ClubTeamRow;
@@ -18,7 +18,7 @@ type Props = {
   onPress: () => void;
 };
 
-/** Carte équipe premium — logo, accent, scale press, entrée légère. */
+/** Carte équipe premium — personnalité, press, entrée légère. */
 export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
@@ -46,7 +46,7 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
             )}
           </View>
           <View style={styles.copy}>
-            <ClubText variant="section" numberOfLines={1}>
+            <ClubText variant="h3" numberOfLines={1}>
               {label}
             </ClubText>
             <ClubText variant="caption" muted numberOfLines={2}>
@@ -65,22 +65,23 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    press: { borderRadius: 18 },
+    press: { borderRadius: clubRadius.xl },
     card: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.md,
-      borderRadius: 18,
-      borderWidth: StyleSheet.hairlineWidth,
+      gap: clubSpace.md,
+      padding: clubSpace.md,
+      borderRadius: clubRadius.xl,
+      borderWidth: 1,
       borderColor: tokens.border,
       overflow: 'hidden',
-      minHeight: 76,
+      minHeight: 84,
+      ...clubShadow.card,
     },
     logoWrap: {
-      width: 48,
-      height: 48,
-      borderRadius: 14,
+      width: 52,
+      height: 52,
+      borderRadius: clubRadius.md,
       overflow: 'hidden',
       borderWidth: 1.5,
       backgroundColor: tokens.elevated,
@@ -89,17 +90,17 @@ const createStyles = (tokens: ClubThemeTokens) =>
     logoPh: { alignItems: 'center', justifyContent: 'center' },
     copy: { flex: 1, minWidth: 0, gap: 4 },
     chevron: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
+      width: 34,
+      height: 34,
+      borderRadius: clubRadius.sm,
       alignItems: 'center',
       justifyContent: 'center',
     },
     stripe: {
       position: 'absolute',
       left: 0,
-      top: 12,
-      bottom: 12,
+      top: 14,
+      bottom: 14,
       width: 3,
       borderTopRightRadius: 2,
       borderBottomRightRadius: 2,

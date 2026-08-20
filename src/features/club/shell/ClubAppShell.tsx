@@ -54,9 +54,8 @@ import { CLUB_OFFERS } from '../../../content/clubOffers';
 import { resolveClubOfferId } from '../../../utils/clubFeatureAccess';
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-
-const SIDEBAR_WIDTH = 248;
-const WIDE_BREAKPOINT = 900;
+import { clubChrome } from '../theme/clubDesignSystem';
+import { ClubPageChrome } from '../ui/ClubPageChrome';
 
 type Props = {
   activeTab: MainTabId;
@@ -64,7 +63,8 @@ type Props = {
 };
 
 /**
- * Shell Pôle Club v1 — mobile dock 5 + FAB CRÉER · desktop sidebar.
+ * Shell Pôle Club — mobile dock 5 + FAB CRÉER · desktop sidebar collapsible + header chrome.
+ * Visuel uniquement : routes, actions et permissions inchangées.
  */
 export function ClubAppShell({ activeTab, onTabChange }: Props) {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
@@ -94,8 +94,9 @@ function ClubAppShellInner({
   const { signOut } = useAuth();
   const { isEnabled } = usePlatformFeatureFlags();
   const { width } = useWindowDimensions();
-  const wide = width >= WIDE_BREAKPOINT;
+  const wide = width >= clubChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const offerId = resolveClubOfferId(profile);
   const formulaLabel = offerId ? CLUB_OFFERS[offerId].label : 'Sans formule';
@@ -122,6 +123,7 @@ function ClubAppShellInner({
 
   const clubName = profile?.display_name ?? 'Club';
   const resolved = findInClubNavCatalog(catalog, navId);
+  const pageTitle = resolved?.label ?? 'Club';
 
   const onSelect = (id: ClubNavItemId) => {
     const next = canonicalizeClubNav(id);
@@ -160,6 +162,10 @@ function ClubAppShellInner({
     setCreateFormAction(action);
   };
 
+  const sidebarWidth = sidebarCollapsed
+    ? clubChrome.sidebarCollapsed
+    : clubChrome.sidebarExpanded;
+
   const sidebarProps = {
     activeId: navId,
     clubName,
@@ -168,7 +174,9 @@ function ClubAppShellInner({
     onSelect,
     onOpenHelp,
     onSignOut,
-    width: SIDEBAR_WIDTH,
+    width: sidebarWidth,
+    collapsed: sidebarCollapsed,
+    onToggleCollapse: () => setSidebarCollapsed((v) => !v),
   } as const;
 
   const content =
@@ -196,6 +204,14 @@ function ClubAppShellInner({
         {wide ? <ClubSidebar {...sidebarProps} /> : null}
 
         <View style={styles.pane}>
+          <ClubPageChrome
+            title={pageTitle}
+            visible={wide}
+            clubName={clubName}
+            onNotifications={() => onSelect('notifications')}
+            onSearch={() => onSelect('plus')}
+            onProfile={() => onSelect('club')}
+          />
           {content}
           {showFab ? <ClubCreateFab onPress={() => setCreateOpen(true)} /> : null}
         </View>

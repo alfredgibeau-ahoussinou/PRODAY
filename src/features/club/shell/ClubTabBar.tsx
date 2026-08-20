@@ -9,9 +9,9 @@ import {
   type ClubNavItemId,
 } from '../navigation/clubNavConfig';
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
-import { spacing } from '../../../theme/designTokens';
 import { useClubTheme } from './ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
+import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   items: ClubNavResolvedItem[];
@@ -21,7 +21,7 @@ type Props = {
 
 const TAB_HIT_SLOP = { top: 10, bottom: 6, left: 6, right: 6 } as const;
 
-/** Barre mobile 5 onglets — Accueil · Équipes · Matchs · Menu · Club. */
+/** Barre mobile premium — Accueil · Équipes · Matchs · Menu · Club. */
 export function ClubTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
@@ -29,7 +29,7 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
   const highlight = primaryTabForClubNav(activeId);
 
   return (
-    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       <View style={styles.row}>
         {items.map((item) => {
           const on = item.id === highlight;
@@ -47,11 +47,11 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
               accessibilityLabel={item.label}
             >
               {on ? <View style={styles.indicator} pointerEvents="none" /> : null}
-              <View style={styles.iconWrap}>
+              <View style={[styles.iconWrap, on && styles.iconWrapOn]}>
                 <Icon
                   name={item.icon}
                   size={on ? 22 : 20}
-                  color={on ? tokens.accent : tokens.muted}
+                  color={on ? tokens.accent : tokens.faint}
                   variant="outline"
                 />
                 {item.aiBadge ? <View style={styles.aiDot} /> : null}
@@ -80,37 +80,49 @@ function createStyles(tokens: ClubThemeTokens) {
       paddingTop: 4,
       flexShrink: 0,
       zIndex: 20,
-      elevation: Platform.OS === 'android' ? 12 : 0,
+      shadowColor: clubShadow.soft.shadowColor,
+      shadowOffset: clubShadow.soft.shadowOffset,
+      shadowOpacity: clubShadow.soft.shadowOpacity,
+      shadowRadius: clubShadow.soft.shadowRadius,
+      elevation: Platform.OS === 'android' ? 12 : clubShadow.soft.elevation ?? 2,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'flex-end',
       justifyContent: 'space-around',
-      paddingHorizontal: spacing.xs,
+      paddingHorizontal: clubSpace.xs,
     },
     tab: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
       gap: 2,
-      minHeight: 48,
+      minHeight: 52,
       paddingHorizontal: 2,
-      paddingTop: 6,
+      paddingTop: 8,
       position: 'relative',
     },
     indicator: {
       position: 'absolute',
       top: 0,
       width: 28,
-      height: 2,
-      borderRadius: 1,
+      height: 3,
+      borderRadius: 2,
       backgroundColor: tokens.accent,
     },
-    iconWrap: { position: 'relative' },
+    iconWrap: {
+      position: 'relative',
+      width: 36,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: clubRadius.xs,
+    },
+    iconWrapOn: { backgroundColor: tokens.accentSoft },
     aiDot: {
       position: 'absolute',
-      top: -2,
-      right: -4,
+      top: 0,
+      right: 2,
       width: 5,
       height: 5,
       borderRadius: 3,
@@ -118,16 +130,15 @@ function createStyles(tokens: ClubThemeTokens) {
     },
     labelOn: {
       fontSize: 10,
-      fontWeight: '600',
+      fontWeight: '700',
       color: tokens.accent,
-      letterSpacing: 0.4,
+      letterSpacing: 0.3,
       maxWidth: 64,
     },
     labelOff: {
       fontSize: 9,
       fontWeight: '500',
-      color: tokens.muted,
-      opacity: 0.7,
+      color: tokens.faint,
       maxWidth: 56,
     },
   });
