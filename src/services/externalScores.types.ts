@@ -62,6 +62,8 @@ export type ExternalScoresSource =
   | 'mock'
   | 'api_football'
   | 'football_data'
+  /** API-Football primaire + football-data.org en complément. */
+  | 'merged'
   | 'demo'
   /** @deprecated alias historique — résolu comme `demo` */
   | 'api_stub';
@@ -93,6 +95,8 @@ export interface ExternalScoresProvider {
   listUpcomingFixtures(options?: ListUpcomingFixturesOptions): Promise<ExternalFixture[]>;
   listTeamFixtures?(teamId: number, options?: ListTeamFixturesOptions): Promise<ExternalFixture[]>;
   listRecentFinishedFixtures?(): Promise<ExternalFixture[]>;
+  /** Charge une fixture par id provider (`api_123` / `fd_456`). */
+  getFixtureById?(fixtureId: string): Promise<ExternalFixture | null>;
   getFixtureLineups?(fixtureId: string): Promise<ExternalFixtureLineupsResult>;
   getFixtureEvents?(fixtureId: string): Promise<ExternalFixtureEventsResult>;
   getFixtureStatistics?(fixtureId: string): Promise<ExternalFixtureStatisticsResult>;

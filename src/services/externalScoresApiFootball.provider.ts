@@ -307,7 +307,12 @@ function writeJsonCache<T>(key: string, value: T, ttlMs: number): void {
 }
 
 function parseNumericFixtureId(fixtureId: string): number | null {
-  const raw = fixtureId.startsWith('api_') ? fixtureId.slice(4) : fixtureId;
+  const raw = fixtureId.startsWith('api_')
+    ? fixtureId.slice(4)
+    : fixtureId.startsWith('fd_')
+      ? null
+      : fixtureId;
+  if (raw == null) return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 }
@@ -446,6 +451,25 @@ export function createApiFootballProvider(): ExternalScoresProvider {
         return [];
       }
     },
+    async getFixtureById(fixtureId: string): Promise<ExternalFixture | null> {
+      const apiKey = readApiKey();
+      const numericId = parseNumericFixtureId(fixtureId);
+      if (!apiKey || numericId == null) return null;
+      const cacheKey = `fixture:${numericId}`;
+      const cached = readCached(cacheKey);
+      if (cached?.[0]) return cached[0];
+      try {
+        const fixtures = await fetchApiRows(
+          `${readBaseUrl()}/fixtures?id=${numericId}`,
+          apiKey,
+          cacheKey,
+          UPCOMING_CACHE_TTL_MS,
+        );
+        return fixtures[0] ?? null;
+      } catch {
+        return null;
+      }
+    },
     async getFixtureLineups(fixtureId: string) {
       const apiKey = readApiKey();
       const numericId = parseNumericFixtureId(fixtureId);
@@ -561,11 +585,16 @@ export function createApiFootballProvider(): ExternalScoresProvider {
       }
     },
     async getState(): Promise<ExternalScoresProviderState> {
+      const hasKey = Boolean(readApiKey());
       return {
         source: 'api_football',
         last_sync_at: lastSyncAt ?? new Date(),
-        healthy: lastHealthy,
-        message: lastMessage,
+        healthy: lastSyncAt == null ? hasKey : lastHealthy,
+        message:
+          lastMessage ??
+          (hasKey
+            ? undefined
+            : 'Ajoutez EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY'),
       };
     },
   };

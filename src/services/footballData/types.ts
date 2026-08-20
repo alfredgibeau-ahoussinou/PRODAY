@@ -43,7 +43,10 @@ export interface FootballDataProvider {
   listLiveFixtures(): Promise<ExternalFixture[]>;
   listUpcomingFixtures(days?: number, leagueIds?: number[]): Promise<ExternalFixture[]>;
   searchTeams(query: string): Promise<FootballTeamHit[]>;
-  getMatchDetail(matchId: string): Promise<FootballMatchDetail | null>;
+  getMatchDetail(
+    matchId: string,
+    seedItem?: SupporterMatchViewItem | null,
+  ): Promise<FootballMatchDetail | null>;
   getFixtureStatistics(fixtureId: string): Promise<FootballMatchStatistics | null>;
   listCompetitionsByCountry(countryCode?: string): Promise<FootballCompetitionEntry[]>;
   getProviderState(): Promise<ExternalScoresProviderState>;

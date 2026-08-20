@@ -37,7 +37,8 @@ export function useSupporterMatchHub(
     providerState: {
       source: 'demo',
       last_sync_at: new Date(),
-      healthy: false,
+      healthy: true,
+      message: undefined,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,7 @@ export function useSupporterMatchHub(
       source: 'demo',
       last_sync_at: new Date(),
       healthy: false,
+      message: 'Impossible de charger les scores',
     },
   };
 

@@ -79,11 +79,13 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchMatchCenterData(item.id);
+      const data = await fetchMatchCenterData(item.id, { seedItem: item });
       if (data) {
         setCenter(data);
         setLiveItem(data.item);
-        setTab(data.availableTabs[0] ?? 'resume');
+        setTab((current) =>
+          data.availableTabs.includes(current) ? current : data.availableTabs[0] ?? 'resume',
+        );
         const video = await supporterVideoService.videoForMatch(
           data.prodayEvent,
           data.events ?? [],
@@ -96,7 +98,7 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
     } finally {
       setLoading(false);
     }
-  }, [item.id]);
+  }, [item]);
 
   useEffect(() => {
     void load();
@@ -482,6 +484,29 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
         {liveItem.competitionLabel ?? (liveItem.source === 'proday' ? 'ProDay' : '')}
       </ProDayText>
 
+      {liveItem.meta || liveItem.startsAt ? (
+        <ProDayText variant="caption" style={styles.metaLine}>
+          {[
+            liveItem.meta,
+            liveItem.startsAt
+              ? new Intl.DateTimeFormat('fr-FR', {
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }).format(
+                  liveItem.startsAt instanceof Date
+                    ? liveItem.startsAt
+                    : new Date(liveItem.startsAt),
+                )
+              : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </ProDayText>
+      ) : null}
+
       <MatchLiveScoreboard state={liveState} />
 
       {officialWatch ? (
@@ -569,6 +594,12 @@ const styles = StyleSheet.create({
     letterSpacing: 1.8,
     fontSize: 10,
     textTransform: 'uppercase',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  metaLine: {
+    color: SUPPORTER_SITE.muted,
+    fontSize: 12,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },

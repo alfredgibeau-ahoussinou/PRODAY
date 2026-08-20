@@ -112,4 +112,28 @@ describe('externalScoresService', () => {
     const state = await externalScoresService.getProviderState();
     expect(state.source).toBe('football_data');
   });
+
+  it('fusionne les deux providers quand les deux clés sont présentes', async () => {
+    delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
+    process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY = 'test-key';
+    process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN = 'free-token';
+    resetExternalScoresProviderCache();
+    const state = await externalScoresService.getProviderState();
+    expect(state.source).toBe('merged');
+  });
+
+  it('avec clé API ne retombe pas sur la démo en cas d’erreur', async () => {
+    delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
+    process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY = 'test-key';
+    delete process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN;
+    resetExternalScoresProviderCache();
+
+    const fetchSpy = jest.spyOn(global, 'fetch').mockRejectedValue(new Error('network'));
+    const live = await externalScoresService.listLiveFixtures();
+    const upcoming = await externalScoresService.listUpcomingFixtures({ days: 7 });
+    expect(live).toEqual([]);
+    expect(upcoming).toEqual([]);
+    expect(live.some((f) => f.home_team.includes('Paris'))).toBe(false);
+    fetchSpy.mockRestore();
+  });
 });

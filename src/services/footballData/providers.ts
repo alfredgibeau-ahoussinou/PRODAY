@@ -1,7 +1,10 @@
 import { externalScoresService } from '../externalScores.service';
 import type { ExternalFixture } from '../externalScores.types';
 import type { ExternalFixtureLineup } from '../../utils/supporterMatchDetail';
-import { parseProdayEventId, parseWorldFixtureApiId } from '../../utils/supporterMatchDetail';
+import {
+  parseProdayEventId,
+  parseWorldFixtureRef,
+} from '../../utils/supporterMatchDetail';
 import { teamEventsService } from '../teamEvents.service';
 import {
   externalFixtureToMatchItem,
@@ -24,14 +27,8 @@ async function fetchApiStatistics(fixtureKey: string): Promise<FootballMatchStat
   const cached = statsCache.get(fixtureKey);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
 
-  const apiId = parseWorldFixtureApiId(fixtureKey);
-  if (apiId == null) {
-    statsCache.set(fixtureKey, { expiresAt: Date.now() + STATS_CACHE_TTL_MS, data: null });
-    return null;
-  }
-
   try {
-    const stats = await externalScoresService.getFixtureStatistics(`api_${apiId}`);
+    const stats = await externalScoresService.getFixtureStatistics(fixtureKey);
     statsCache.set(fixtureKey, { expiresAt: Date.now() + STATS_CACHE_TTL_MS, data: stats });
     return stats;
   } catch {
@@ -42,6 +39,23 @@ async function fetchApiStatistics(fixtureKey: string): Promise<FootballMatchStat
 
 function resolveWorldItem(fixture: ExternalFixture): SupporterMatchViewItem {
   return externalFixtureToMatchItem(fixture);
+}
+
+function mergeSeedIntoItem(
+  item: SupporterMatchViewItem,
+  seed?: SupporterMatchViewItem | null,
+): SupporterMatchViewItem {
+  if (!seed) return item;
+  return {
+    ...seed,
+    ...item,
+    scoreHome: item.scoreHome ?? seed.scoreHome,
+    scoreAway: item.scoreAway ?? seed.scoreAway,
+    minute: item.minute ?? seed.minute,
+    competitionLabel: item.competitionLabel ?? seed.competitionLabel,
+    meta: item.meta ?? seed.meta,
+    startsAt: item.startsAt ?? seed.startsAt,
+  };
 }
 
 export class ExternalFootballDataProvider implements FootballDataProvider {
@@ -66,27 +80,44 @@ export class ExternalFootballDataProvider implements FootballDataProvider {
     }));
   }
 
-  async getMatchDetail(matchId: string): Promise<FootballMatchDetail | null> {
-    const apiId = parseWorldFixtureApiId(matchId);
-    if (apiId == null) return null;
+  async getMatchDetail(
+    matchId: string,
+    seedItem?: SupporterMatchViewItem | null,
+  ): Promise<FootballMatchDetail | null> {
+    const ref = parseWorldFixtureRef(matchId);
+    if (!ref) return null;
 
-    const fixtureKey = `api_${apiId}`;
-    const [lineupRes, eventRes, statistics] = await Promise.all([
+    const fixtureKey = ref.fixtureKey;
+
+    const [byId, lineupRes, eventRes, statistics] = await Promise.all([
+      externalScoresService.getFixtureById(fixtureKey),
       externalScoresService.getFixtureLineups(fixtureKey),
       externalScoresService.getFixtureEvents(fixtureKey),
       this.getFixtureStatistics(fixtureKey),
     ]);
 
-    const live = await this.listLiveFixtures();
-    const upcoming = await this.listUpcomingFixtures(30);
-    const fixture =
-      live.find((f) => f.api_fixture_id === apiId || f.id === `api_${apiId}`) ??
-      upcoming.find((f) => f.api_fixture_id === apiId || f.id === `api_${apiId}`);
+    let fixture = byId;
+    if (!fixture) {
+      const [live, upcoming, recent] = await Promise.all([
+        this.listLiveFixtures().catch(() => [] as ExternalFixture[]),
+        this.listUpcomingFixtures(30).catch(() => [] as ExternalFixture[]),
+        externalScoresService.listRecentFinishedFixtures().catch(() => [] as ExternalFixture[]),
+      ]);
+      fixture =
+        live.find((f) => f.id === fixtureKey || f.api_fixture_id === ref.numericId) ??
+        upcoming.find((f) => f.id === fixtureKey || f.api_fixture_id === ref.numericId) ??
+        recent.find((f) => f.id === fixtureKey || f.api_fixture_id === ref.numericId) ??
+        null;
+    }
 
-    if (!fixture) return null;
+    if (!fixture && !seedItem) return null;
+
+    const item = fixture
+      ? mergeSeedIntoItem(resolveWorldItem(fixture), seedItem)
+      : seedItem!;
 
     return {
-      item: resolveWorldItem(fixture),
+      item,
       source: 'world',
       lineups: lineupRes.lineups,
       events: eventRes.events,

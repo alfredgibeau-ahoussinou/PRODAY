@@ -207,7 +207,7 @@ export const SupporterMatchsScreen: React.FC = () => {
   const providerBanner = !hub.providerState.healthy ? (
     <View style={styles.providerBanner}>
       <ProDayText variant="caption" style={styles.providerTitle}>
-        {hub.providerState.message ?? t('supporter.api.stub')}
+        {hub.providerState.message ?? t('supporter.api.loadError')}
       </ProDayText>
       <ProDayText variant="caption" style={styles.emptyText}>
         {t('supporter.api.stubHint')}

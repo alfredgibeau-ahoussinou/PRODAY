@@ -3,6 +3,7 @@ import {
   mapApiFootballLineup,
   parseProdayEventId,
   parseWorldFixtureApiId,
+  parseWorldFixtureRef,
   liveStateFromMatchItem,
 } from '../utils/supporterMatchDetail';
 import {
@@ -45,9 +46,20 @@ describe('supporterMatchDetail mappers', () => {
     expect(yellow?.type).toBe('yellow_card');
   });
 
-  it('parse les ids de détail', () => {
+  it('parse les ids de détail api et football-data', () => {
     expect(parseWorldFixtureApiId('world-fixture-api_123')).toBe(123);
+    expect(parseWorldFixtureApiId('world-fixture-fd_456')).toBeNull();
     expect(parseWorldFixtureApiId('world-fixture-ligue1_psg_om')).toBeNull();
+    expect(parseWorldFixtureRef('world-fixture-api_123')).toEqual({
+      provider: 'api_football',
+      numericId: 123,
+      fixtureKey: 'api_123',
+    });
+    expect(parseWorldFixtureRef('world-fixture-fd_456')).toEqual({
+      provider: 'football_data',
+      numericId: 456,
+      fixtureKey: 'fd_456',
+    });
     expect(parseProdayEventId('proday-event-abc')).toBe('abc');
   });
 

@@ -1,5 +1,7 @@
 import {
   mapFootballDataMatch,
+  mapFootballDataLineups,
+  mapFootballDataEvents,
   hasFootballDataToken,
   resetFootballDataCache,
   createFootballDataProvider,
@@ -101,13 +103,18 @@ describe('football-data.org provider', () => {
     expect(hasFootballDataToken()).toBe(true);
   });
 
-  it('résout api-football avant football-data puis démo', () => {
+  it('résout merged si les deux clés, sinon api, fd, puis démo', () => {
     process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY = 'paid-key';
     process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN = 'free-token';
+    resetExternalScoresProviderCache();
+    expect(resolveExternalScoresProvider().source).toBe('merged');
+
+    delete process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN;
     resetExternalScoresProviderCache();
     expect(resolveExternalScoresProvider().source).toBe('api_football');
 
     delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY;
+    process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN = 'free-token';
     resetExternalScoresProviderCache();
     expect(resolveExternalScoresProvider().source).toBe('football_data');
 
@@ -116,12 +123,42 @@ describe('football-data.org provider', () => {
     expect(resolveExternalScoresProvider().source).toBe('demo');
   });
 
+  it('ne choisit pas la démo si un token football-data est présent', () => {
+    process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN = 'free-token';
+    resetExternalScoresProviderCache();
+    expect(resolveExternalScoresProvider().source).not.toBe('demo');
+    expect(resolveExternalScoresProvider().source).toBe('football_data');
+  });
+
   it('provider football_data expose getState', async () => {
     process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN = 'tok';
     const provider = createFootballDataProvider();
     const state = await provider.getState();
     expect(state.source).toBe('football_data');
     expect(state.healthy).toBe(true);
+  });
+
+  it('mappe lineups / events FD quand présents (sinon vide honnête)', () => {
+    const row = {
+      id: 99,
+      utcDate: '2026-08-20T19:00:00Z',
+      status: 'FINISHED',
+      homeTeam: {
+        name: 'PSG',
+        formation: '4-3-3',
+        lineup: [{ id: 1, name: 'Donnarumma', position: 'Goalkeeper', shirtNumber: 1 }],
+        bench: [{ id: 2, name: 'Barcola', position: 'Offence', shirtNumber: 29 }],
+      },
+      awayTeam: { name: 'OM', lineup: [], bench: [] },
+      goals: [{ minute: 12, scorer: { id: 7, name: 'Dembélé' } }],
+      bookings: [{ minute: 40, card: 'YELLOW', player: { name: 'Rongier' } }],
+      substitutions: [],
+    };
+    const lineups = mapFootballDataLineups(row);
+    const events = mapFootballDataEvents(row);
+    expect(lineups[0]?.formation).toBe('4-3-3');
+    expect(events.some((e) => e.type === 'goal')).toBe(true);
+    expect(events.some((e) => e.type === 'yellow_card')).toBe(true);
   });
 });
 

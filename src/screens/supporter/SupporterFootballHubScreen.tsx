@@ -286,7 +286,7 @@ export const SupporterFootballHubScreen: React.FC = () => {
           ) : (
             <View style={styles.emptyBlock}>
               <ProDayText variant="body" style={styles.emptyTitle}>
-                Aucun match en direct — reviens bientôt
+                Aucun match en direct pour le moment
               </ProDayText>
               <View style={styles.emptyActions}>
                 <Pressable

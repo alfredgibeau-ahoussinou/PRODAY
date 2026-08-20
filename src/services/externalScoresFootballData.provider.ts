@@ -12,6 +12,8 @@ import type {
   ListTeamFixturesOptions,
   ListUpcomingFixturesOptions,
 } from './externalScores.types';
+import type { LiveMatchAction } from '../models/TeamEvent';
+import type { ExternalFixtureLineup } from '../utils/supporterMatchDetail';
 import {
   mergeTeamSearchHits,
   resolvePopularClubApiIdByName,
@@ -77,6 +79,42 @@ interface FdMatchTeam {
   name?: string;
   shortName?: string;
   tla?: string;
+  formation?: string | null;
+  lineup?: Array<{
+    id?: number;
+    name?: string;
+    position?: string | null;
+    shirtNumber?: number | null;
+  }>;
+  bench?: Array<{
+    id?: number;
+    name?: string;
+    position?: string | null;
+    shirtNumber?: number | null;
+  }>;
+}
+
+interface FdMatchGoal {
+  minute?: number | null;
+  injuryTime?: number | null;
+  type?: string | null;
+  scorer?: { id?: number; name?: string | null } | null;
+  assist?: { id?: number; name?: string | null } | null;
+  team?: FdMatchTeam | null;
+}
+
+interface FdMatchBooking {
+  minute?: number | null;
+  card?: string | null;
+  player?: { id?: number; name?: string | null } | null;
+  team?: FdMatchTeam | null;
+}
+
+interface FdMatchSubstitution {
+  minute?: number | null;
+  playerOut?: { id?: number; name?: string | null } | null;
+  playerIn?: { id?: number; name?: string | null } | null;
+  team?: FdMatchTeam | null;
 }
 
 interface FdMatchRow {
@@ -92,6 +130,9 @@ interface FdMatchRow {
     halfTime?: { home?: number | null; away?: number | null };
   };
   competition?: { id?: number; name?: string; code?: string };
+  goals?: FdMatchGoal[];
+  bookings?: FdMatchBooking[];
+  substitutions?: FdMatchSubstitution[];
 }
 
 interface CacheEntry {
@@ -185,6 +226,151 @@ export function mapFootballDataMatch(row: FdMatchRow): ExternalFixture {
     minute: status === 'live' ? row.minute ?? undefined : undefined,
     venue: row.venue ?? undefined,
   };
+}
+
+function mapFdTeamLineup(team: FdMatchTeam): ExternalFixtureLineup | null {
+  const teamName = teamDisplayName(team);
+  const formation = (team.formation ?? '').trim() || '4-4-2';
+  const starters = (team.lineup ?? [])
+    .map((player, index) => {
+      const name = player.name?.trim();
+      if (!name) return null;
+      return {
+        uid: player.id != null ? String(player.id) : `fd-starter-${index}`,
+        display_name: name,
+        role: 'starter' as const,
+        position_label:
+          [player.position, player.shirtNumber != null ? String(player.shirtNumber) : undefined]
+            .filter(Boolean)
+            .join(' · ') || undefined,
+      };
+    })
+    .filter((slot): slot is NonNullable<typeof slot> => Boolean(slot));
+  const subs = (team.bench ?? [])
+    .map((player, index) => {
+      const name = player.name?.trim();
+      if (!name) return null;
+      return {
+        uid: player.id != null ? String(player.id) : `fd-sub-${index}`,
+        display_name: name,
+        role: 'sub' as const,
+        position_label:
+          [player.position, player.shirtNumber != null ? String(player.shirtNumber) : undefined]
+            .filter(Boolean)
+            .join(' · ') || undefined,
+      };
+    })
+    .filter((slot): slot is NonNullable<typeof slot> => Boolean(slot));
+  if (starters.length === 0 && subs.length === 0) return null;
+  return {
+    teamName,
+    teamId: resolveAppTeamId(team),
+    formation,
+    lineup: { formation, slots: [...starters, ...subs] },
+  };
+}
+
+export function mapFootballDataLineups(row: FdMatchRow): ExternalFixtureLineup[] {
+  return [mapFdTeamLineup(row.homeTeam), mapFdTeamLineup(row.awayTeam)].filter(
+    (row): row is ExternalFixtureLineup => Boolean(row),
+  );
+}
+
+export function mapFootballDataEvents(row: FdMatchRow): LiveMatchAction[] {
+  const events: LiveMatchAction[] = [];
+  let index = 0;
+  for (const goal of row.goals ?? []) {
+    const name = goal.scorer?.name?.trim();
+    if (!name) continue;
+    events.push({
+      id: `fd-goal-${goal.scorer?.id ?? index}-${goal.minute ?? index}`,
+      type: 'goal',
+      player_uid: goal.scorer?.id != null ? String(goal.scorer.id) : `fd-g-${index}`,
+      player_name: name,
+      minute: goal.minute ?? 0,
+      created_at: new Date(),
+    });
+    index += 1;
+  }
+  for (const booking of row.bookings ?? []) {
+    const name = booking.player?.name?.trim();
+    if (!name) continue;
+    const card = (booking.card ?? '').toLowerCase();
+    events.push({
+      id: `fd-card-${booking.player?.id ?? index}-${booking.minute ?? index}`,
+      type: card.includes('red') ? 'red_card' : 'yellow_card',
+      player_uid: booking.player?.id != null ? String(booking.player.id) : `fd-c-${index}`,
+      player_name: name,
+      minute: booking.minute ?? 0,
+      created_at: new Date(),
+    });
+    index += 1;
+  }
+  for (const sub of row.substitutions ?? []) {
+    const outName = sub.playerOut?.name?.trim();
+    const inName = sub.playerIn?.name?.trim();
+    if (outName) {
+      events.push({
+        id: `fd-sub-out-${sub.playerOut?.id ?? index}-${sub.minute ?? index}`,
+        type: 'sub_out',
+        player_uid: sub.playerOut?.id != null ? String(sub.playerOut.id) : `fd-so-${index}`,
+        player_name: outName,
+        minute: sub.minute ?? 0,
+        created_at: new Date(),
+      });
+      index += 1;
+    }
+    if (inName) {
+      events.push({
+        id: `fd-sub-in-${sub.playerIn?.id ?? index}-${sub.minute ?? index}`,
+        type: 'sub_in',
+        player_uid: sub.playerIn?.id != null ? String(sub.playerIn.id) : `fd-si-${index}`,
+        player_name: inName,
+        minute: sub.minute ?? 0,
+        created_at: new Date(),
+      });
+      index += 1;
+    }
+  }
+  return events;
+}
+
+async function fetchMatchDetail(matchId: number): Promise<FdMatchRow | null> {
+  const token = readToken();
+  if (!token) return null;
+  const cacheKey = `fd:match:${matchId}`;
+  const cached = readCached(cacheKey);
+  if (cached?.[0]) {
+    /* fixture cache only — detail fetched fresh below when needed */
+  }
+  const url = `${readBaseUrl()}/matches/${matchId}`;
+  const response = await fetch(url, {
+    headers: { 'X-Auth-Token': token },
+  });
+  if (response.status === 429) {
+    throw new Error('Quota football-data.org dépassé.');
+  }
+  if (!response.ok) {
+    throw new Error(`football-data.org indisponible (${response.status}).`);
+  }
+  const row = (await response.json()) as FdMatchRow;
+  if (!row?.id) return null;
+  writeCache(cacheKey, [mapFootballDataMatch(row)], TEAM_CACHE_TTL_MS);
+  lastSyncAt = new Date();
+  lastHealthy = true;
+  lastMessage = undefined;
+  return row;
+}
+
+function parseFdNumericId(fixtureId: string): number | null {
+  const raw = fixtureId.startsWith('fd_')
+    ? fixtureId.slice(3)
+    : fixtureId.startsWith('api_')
+      ? null
+      : fixtureId;
+  if (raw == null) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
 }
 
 function cloneFixtures(fixtures: ExternalFixture[]): ExternalFixture[] {
@@ -430,15 +616,41 @@ export function createFootballDataProvider(): ExternalScoresProvider {
       }
     },
 
-    async getFixtureLineups() {
-      return { lineups: [] };
+    async getFixtureById(fixtureId: string): Promise<ExternalFixture | null> {
+      const numericId = parseFdNumericId(fixtureId);
+      if (numericId == null) return null;
+      try {
+        const row = await fetchMatchDetail(numericId);
+        return row ? mapFootballDataMatch(row) : null;
+      } catch {
+        return readCached(`fd:match:${numericId}`)?.[0] ?? null;
+      }
     },
 
-    async getFixtureEvents() {
-      return { events: [] };
+    async getFixtureLineups(fixtureId: string) {
+      const numericId = parseFdNumericId(fixtureId);
+      if (numericId == null) return { lineups: [] };
+      try {
+        const row = await fetchMatchDetail(numericId);
+        return { lineups: row ? mapFootballDataLineups(row) : [] };
+      } catch {
+        return { lineups: [] };
+      }
+    },
+
+    async getFixtureEvents(fixtureId: string) {
+      const numericId = parseFdNumericId(fixtureId);
+      if (numericId == null) return { events: [] };
+      try {
+        const row = await fetchMatchDetail(numericId);
+        return { events: row ? mapFootballDataEvents(row) : [] };
+      } catch {
+        return { events: [] };
+      }
     },
 
     async getFixtureStatistics() {
+      // Stats avancées hors tier free — ne pas inventer.
       return { statistics: null };
     },
 

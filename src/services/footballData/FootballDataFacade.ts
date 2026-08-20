@@ -34,7 +34,8 @@ const externalProvider = new ExternalFootballDataProvider();
 export function resolveMatchCenterTabs(detail: FootballMatchDetail, hasVideo: boolean): MatchCenterTabId[] {
   const tabs: MatchCenterTabId[] = ['resume'];
   if (detail.item.status === 'live' || detail.events.length > 0) tabs.push('live');
-  if (detail.statistics) tabs.push('stats');
+  // Stats toujours proposées pour le monde — message honnête si l’API ne renvoie rien.
+  if (detail.source === 'world' || detail.statistics) tabs.push('stats');
   if (hasVideo) tabs.push('video');
   tabs.push('analyse');
   if (detail.events.length > 0) tabs.push('moments');
@@ -46,6 +47,7 @@ export async function fetchMatchCenterData(
   context?: {
     calendarEvents?: TeamEvent[];
     tournaments?: Tournament[];
+    seedItem?: SupporterMatchViewItem;
   },
 ): Promise<MatchCenterData | null> {
   const proday = new ProDayFootballDataProvider(
@@ -53,7 +55,8 @@ export async function fetchMatchCenterData(
     context?.tournaments ?? [],
   );
   const detail =
-    (await proday.getMatchDetail(matchId)) ?? (await externalProvider.getMatchDetail(matchId));
+    (await proday.getMatchDetail(matchId)) ??
+    (await externalProvider.getMatchDetail(matchId, context?.seedItem ?? null));
   if (!detail) return null;
 
   const hasVideo = Boolean(detail.prodayEvent?.public_watch_url?.trim());
