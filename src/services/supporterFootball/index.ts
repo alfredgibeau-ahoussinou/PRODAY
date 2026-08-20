@@ -6,6 +6,7 @@ export type {
   UnifiedTeamRef,
   UnifiedCompetitionRef,
   UnifiedScore,
+  UnifiedLineupPlayer,
   UnifiedLineups,
   UnifiedMatchEvent,
   UnifiedStatistics,
@@ -28,7 +29,17 @@ export {
   type MatchCenterTabId,
   type MatchCenterPayload,
 } from './MergedSupporterFootballFacade';
-export { mapSmFixtureToUnified, mapSmStatus, inferGenderScope } from './mappers';export {
+export {
+  mapSmFixtureToUnified,
+  mapSmStatus,
+  inferGenderScope,
+  parseFormationField,
+} from './mappers';
+export {
+  FIXTURE_DETAIL_INCLUDES,
+  FIXTURE_LIST_INCLUDES,
+} from './SportmonksFootballProvider';
+export {
   isSportmonksTokenConfigured,
   isSupporterFootballDemoForced,
   clearSportmonksCache,

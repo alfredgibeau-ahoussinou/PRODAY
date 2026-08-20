@@ -15,9 +15,10 @@
  * ## Endpoints utilisés
  * | Méthode façade | Endpoint Sportmonks |
  * |---|---|
- * | getLive | `GET /livescores/inplay?include=participants;scores;state;league;events;lineups;formations;statistics;venue` |
+ * | getLive | `GET /livescores/inplay?include=…` (liste) |
  * | getFixtures / upcoming / finished | `GET /fixtures/between/{from}/{to}` |
- * | getMatch / lineups / events / stats | `GET /fixtures/{id}` (+ includes) |
+ * | getMatch / lineups / events / stats | `GET /fixtures/{id}` + `FIXTURE_DETAIL_INCLUDES` |
+ *   `participants;scores;state;league;venue;events;lineups.player;lineups.details;lineups.xGLineup;formations;statistics.type;xGFixture` |
  * | getTeams | `GET /teams/search/{query}` |
  * | getTeam | `GET /teams/{id}` |
  * | getCompetitions | `GET /leagues?include=country` |

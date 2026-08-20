@@ -35,6 +35,9 @@ export interface UnifiedCompetitionRef {
 export interface UnifiedScore {
   home: number | null;
   away: number | null;
+  /** Score à la mi-temps (description 1ST_HALF) — null si absent. */
+  halfTimeHome?: number | null;
+  halfTimeAway?: number | null;
   minute?: number | null;
   period?: string | null;
 }
@@ -46,7 +49,19 @@ export interface UnifiedLineupPlayer {
   position?: string | null;
   /** 1–11 starter order or formation slot */
   formationPosition?: number | null;
+  /** Sportmonks `formation_field` row (1 = gardien → attaque). */
+  pitchRow?: number | null;
+  /** Sportmonks `formation_field` col within row (1-based). */
+  pitchCol?: number | null;
   role: 'starter' | 'bench';
+  photoUrl?: string | null;
+  captain?: boolean;
+  rating?: number | null;
+  minutes?: number | null;
+  goals?: number | null;
+  shots?: number | null;
+  /** Expected goals joueur (xglineup / details) — réel uniquement. */
+  xg?: number | null;
 }
 
 export interface UnifiedLineupSide {

@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Linking,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,7 +22,9 @@ import {
 import type {
   MatchCenterTabId,
   MergedSupporterFootballFacade,
+  UnifiedLineupPlayer,
   UnifiedMatch,
+  UnifiedMatchEvent,
 } from '../../services/supporterFootball';
 import { resolveMatchCenterTabs } from '../../services/supporterFootball';
 import { SupporterSpaceMatchDebateScreen } from './SupporterSpaceMatchDebateScreen';
@@ -32,6 +36,31 @@ const TAB_LABELS: Record<MatchCenterTabId, string> = {
   evenements: 'Événements',
   video: 'Vidéo',
 };
+
+const EVENT_FR: Record<UnifiedMatchEvent['type'], string> = {
+  goal: 'But',
+  own_goal: 'CSC',
+  penalty: 'Pénalty',
+  yellow_card: 'Carton jaune',
+  red_card: 'Carton rouge',
+  substitution: 'Remplacement',
+  var: 'VAR',
+  other: 'Événement',
+};
+
+function statusFr(match: UnifiedMatch): string {
+  if (match.status === 'live') {
+    return match.score.minute != null ? `Live ${match.score.minute}'` : 'Live';
+  }
+  if (match.status === 'halftime') return 'Mi-temps';
+  if (match.status === 'finished') {
+    return match.score.period || 'FT';
+  }
+  if (match.status === 'scheduled') {
+    return `Coup d’envoi ${match.date.toLocaleString('fr-FR')}`;
+  }
+  return match.status;
+}
 
 type Props = {
   matchId: string;
@@ -50,6 +79,7 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
   const [tab, setTab] = useState<MatchCenterTabId>('resume');
   const [loading, setLoading] = useState(!seed);
   const [showDebate, setShowDebate] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<UnifiedLineupPlayer | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -94,6 +124,10 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
     match &&
     (match.status === 'live' || match.status === 'halftime' || match.status === 'finished');
 
+  const htAvailable =
+    match &&
+    (match.score.halfTimeHome != null || match.score.halfTimeAway != null);
+
   return (
     <View style={styles.root}>
       <View style={styles.header}>
@@ -103,14 +137,32 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
         <View style={{ flex: 1 }}>
           <ProDayText variant="caption" style={styles.comp} numberOfLines={1}>
             {match?.competition.name ?? 'Match'}
+            {match?.score.period ? ` · ${match.score.period}` : ''}
           </ProDayText>
           {match ? (
-            <ProDayText variant="title" style={styles.scoreboard}>
-              {match.homeTeam.shortName || match.homeTeam.name}
-              {'  '}
-              {showScore ? `${match.score.home ?? '–'} – ${match.score.away ?? '–'}` : 'vs'}
-              {'  '}
-              {match.awayTeam.shortName || match.awayTeam.name}
+            <View style={styles.scoreboardRow}>
+              {match.homeTeam.logoUrl ? (
+                <Image source={{ uri: match.homeTeam.logoUrl }} style={styles.logo} />
+              ) : (
+                <View style={[styles.logo, styles.logoPh]} />
+              )}
+              <ProDayText variant="title" style={styles.scoreboard}>
+                {match.homeTeam.shortName || match.homeTeam.name}
+                {'  '}
+                {showScore ? `${match.score.home ?? '–'} – ${match.score.away ?? '–'}` : 'vs'}
+                {'  '}
+                {match.awayTeam.shortName || match.awayTeam.name}
+              </ProDayText>
+              {match.awayTeam.logoUrl ? (
+                <Image source={{ uri: match.awayTeam.logoUrl }} style={styles.logo} />
+              ) : (
+                <View style={[styles.logo, styles.logoPh]} />
+              )}
+            </View>
+          ) : null}
+          {match?.venue ? (
+            <ProDayText variant="caption" style={styles.venue} numberOfLines={1}>
+              {match.venue}
             </ProDayText>
           ) : null}
         </View>
@@ -146,15 +198,18 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
         {match && tab === 'resume' ? (
           <View style={styles.block}>
             <ProDayText variant="body" style={styles.muted}>
-              Statut :{' '}
-              {match.status === 'live'
-                ? `Live${match.score.minute != null ? ` ${match.score.minute}'` : ''}`
-                : match.status === 'finished'
-                  ? 'Terminé'
-                  : match.status === 'scheduled'
-                    ? `Coup d’envoi ${match.date.toLocaleString('fr-FR')}`
-                    : match.status}
+              Statut : {statusFr(match)}
             </ProDayText>
+            {showScore ? (
+              <ProDayText variant="body" style={styles.eventLine}>
+                Score FT : {match.score.home ?? '–'} – {match.score.away ?? '–'}
+              </ProDayText>
+            ) : null}
+            {htAvailable ? (
+              <ProDayText variant="body" style={styles.muted}>
+                Score HT : {match.score.halfTimeHome ?? '–'} – {match.score.halfTimeAway ?? '–'}
+              </ProDayText>
+            ) : null}
             {match.venue ? (
               <ProDayText variant="body" style={styles.muted}>
                 Lieu : {match.venue}
@@ -163,19 +218,33 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
             <ProDayText variant="caption" style={styles.source}>
               Source : {match.source}
             </ProDayText>
-            {(match.events ?? []).slice(0, 5).map((ev) => (
-              <ProDayText key={ev.id} variant="body" style={styles.eventLine}>
-                {ev.minute != null ? `${ev.minute}' ` : ''}
-                {ev.type} — {ev.playerName || '—'}
+            {(match.events ?? []).length ? (
+              (match.events ?? []).slice(0, 8).map((ev) => (
+                <ProDayText key={ev.id} variant="body" style={styles.eventLine}>
+                  {ev.minute != null ? `${ev.minute}' ` : ''}
+                  {EVENT_FR[ev.type]} — {ev.playerName || '—'}
+                </ProDayText>
+              ))
+            ) : (
+              <ProDayText variant="body" style={styles.muted}>
+                Pas encore d’événements publiés.
               </ProDayText>
-            ))}
+            )}
           </View>
         ) : null}
 
         {match && tab === 'composition' ? (
           <View style={styles.block}>
-            <LineupPitch side={match.lineup?.home} title={match.homeTeam.name} />
-            <LineupPitch side={match.lineup?.away} title={match.awayTeam.name} />
+            <LineupPitch
+              side={match.lineup?.home}
+              title={match.homeTeam.name}
+              onPlayerPress={setSelectedPlayer}
+            />
+            <LineupPitch
+              side={match.lineup?.away}
+              title={match.awayTeam.name}
+              onPlayerPress={setSelectedPlayer}
+            />
           </View>
         ) : null}
 
@@ -199,7 +268,7 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
                   </ProDayText>
                   <View style={{ flex: 1 }}>
                     <ProDayText variant="body" style={styles.eventLine}>
-                      {ev.type.replace('_', ' ')} · {ev.playerName || '—'}
+                      {EVENT_FR[ev.type]} · {ev.playerName || '—'}
                     </ProDayText>
                     {ev.detail ? (
                       <ProDayText variant="caption" style={styles.muted}>
@@ -236,9 +305,85 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
           </View>
         ) : null}
       </ScrollView>
+
+      <Modal
+        visible={selectedPlayer != null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelectedPlayer(null)}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={() => setSelectedPlayer(null)}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            {selectedPlayer ? (
+              <>
+                <View style={styles.sheetHead}>
+                  {selectedPlayer.photoUrl ? (
+                    <Image source={{ uri: selectedPlayer.photoUrl }} style={styles.sheetPhoto} />
+                  ) : (
+                    <View style={[styles.sheetPhoto, styles.logoPh]} />
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <ProDayText variant="title" style={styles.scoreboard}>
+                      {selectedPlayer.captain
+                        ? `(C) ${selectedPlayer.name}`
+                        : selectedPlayer.name}
+                    </ProDayText>
+                    {selectedPlayer.number != null ? (
+                      <ProDayText variant="caption" style={styles.muted}>
+                        N° {selectedPlayer.number}
+                        {selectedPlayer.role === 'bench' ? ' · Remplaçant' : ' · Titulaire'}
+                      </ProDayText>
+                    ) : null}
+                  </View>
+                  <Pressable onPress={() => setSelectedPlayer(null)} hitSlop={12}>
+                    <Icon name="close" size={22} color={SUPPORTER_SPACE.foreground} />
+                  </Pressable>
+                </View>
+                <View style={styles.sheetStats}>
+                  {selectedPlayer.rating != null ? (
+                    <SheetStat label="Note" value={String(selectedPlayer.rating)} />
+                  ) : null}
+                  {selectedPlayer.minutes != null ? (
+                    <SheetStat label="Minutes" value={`${selectedPlayer.minutes}'`} />
+                  ) : null}
+                  {selectedPlayer.goals != null ? (
+                    <SheetStat label="Buts" value={String(selectedPlayer.goals)} />
+                  ) : null}
+                  {selectedPlayer.shots != null ? (
+                    <SheetStat label="Tirs" value={String(selectedPlayer.shots)} />
+                  ) : null}
+                  {selectedPlayer.xg != null ? (
+                    <SheetStat label="xG" value={String(selectedPlayer.xg)} />
+                  ) : null}
+                  {selectedPlayer.rating == null &&
+                  selectedPlayer.minutes == null &&
+                  selectedPlayer.goals == null &&
+                  selectedPlayer.shots == null &&
+                  selectedPlayer.xg == null ? (
+                    <ProDayText variant="body" style={styles.muted}>
+                      Aucune statistique joueur publiée pour ce match.
+                    </ProDayText>
+                  ) : null}
+                </View>
+              </>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
+
+const SheetStat: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  <View style={styles.sheetStat}>
+    <ProDayText variant="caption" style={styles.muted}>
+      {label}
+    </ProDayText>
+    <ProDayText variant="title" style={styles.scoreboard}>
+      {value}
+    </ProDayText>
+  </View>
+);
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: SUPPORTER_SPACE.bg },
@@ -253,7 +398,11 @@ const styles = StyleSheet.create({
   },
   back: { padding: 4 },
   comp: { color: SUPPORTER_SPACE.muted },
-  scoreboard: { color: SUPPORTER_SPACE.foreground, fontSize: 16 },
+  venue: { color: SUPPORTER_SPACE.muted, marginTop: 2 },
+  scoreboardRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  scoreboard: { color: SUPPORTER_SPACE.foreground, fontSize: 16, flexShrink: 1 },
+  logo: { width: 22, height: 22, borderRadius: 11 },
+  logoPh: { backgroundColor: SUPPORTER_SPACE.elevated },
   debateBtn: {
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -289,4 +438,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   videoBtnText: { color: '#fff' },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: SUPPORTER_SPACE.surface,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: SUPPORTER_SPACE.border,
+    gap: 14,
+  },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  sheetPhoto: { width: 56, height: 56, borderRadius: 28 },
+  sheetStats: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  sheetStat: {
+    minWidth: 72,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: SUPPORTER_SPACE.elevated,
+  },
 });

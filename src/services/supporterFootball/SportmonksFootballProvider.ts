@@ -28,8 +28,17 @@ import type {
   UnifiedTeamRef,
 } from './types';
 
-const FIXTURE_INCLUDES =
+/** Includes légers pour listes / livescores (payload réduit). */
+export const FIXTURE_LIST_INCLUDES =
   'participants;scores;state;league;events;lineups;formations;statistics;venue';
+
+/**
+ * Includes riches pour le Match Center / getMatch.
+ * Syntaxe Sportmonks v3 (docs) : `xGFixture`, `lineups.xGLineup`, nested `.player` / `.details`.
+ * La réponse JSON utilise souvent les clés minuscules `xgfixture` / `xglineup`.
+ */
+export const FIXTURE_DETAIL_INCLUDES =
+  'participants;scores;state;league;venue;events;lineups.player;lineups.details;lineups.xGLineup;formations;statistics.type;xGFixture';
 
 export class SportmonksFootballProvider implements SupporterFootballProvider {
   readonly name = 'sportmonks';
@@ -52,7 +61,7 @@ export class SportmonksFootballProvider implements SupporterFootballProvider {
     const to = query.to ?? ymd(addDays(new Date(), 7));
     const res = await sportmonksFetch<SportmonksListResponse<SmFixture>>({
       path: `/fixtures/between/${from}/${to}`,
-      query: { include: FIXTURE_INCLUDES, per_page: 50 },
+      query: { include: FIXTURE_LIST_INCLUDES, per_page: 50 },
       ttlMs: 60_000,
     });
     let list = (res.data ?? []).map(mapSmFixtureToUnified);
@@ -68,7 +77,7 @@ export class SportmonksFootballProvider implements SupporterFootballProvider {
   async getLive(): Promise<UnifiedMatch[]> {
     const res = await sportmonksFetch<SportmonksListResponse<SmFixture>>({
       path: '/livescores/inplay',
-      query: { include: FIXTURE_INCLUDES },
+      query: { include: FIXTURE_LIST_INCLUDES },
       ttlMs: sportmonksLiveTtl(),
     });
     return (res.data ?? []).map(mapSmFixtureToUnified);
@@ -93,7 +102,7 @@ export class SportmonksFootballProvider implements SupporterFootballProvider {
     if (fixtureId == null) return null;
     const res = await sportmonksFetch<SportmonksItemResponse<SmFixture>>({
       path: `/fixtures/${fixtureId}`,
-      query: { include: FIXTURE_INCLUDES },
+      query: { include: FIXTURE_DETAIL_INCLUDES },
       ttlMs: sportmonksLiveTtl(),
     });
     if (!res.data) return null;
