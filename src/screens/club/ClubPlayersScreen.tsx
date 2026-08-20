@@ -18,7 +18,7 @@ import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
 type FilterId = 'all' | 'pending' | 'active';
 
-/** Liste joueurs + recherche / filtres → fiches style pôle Joueur. */
+/** Liste joueurs + recherche / filtres → fiches identité Club (maillot / crest). */
 export function ClubPlayersScreen() {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();

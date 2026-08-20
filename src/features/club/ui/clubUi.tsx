@@ -504,6 +504,7 @@ export function ClubSmartCard({
     <AnimatedEntrance kind="fadeUp" index={index} delayStep={48}>
       <PressableSpring onPress={onPress} disabled={!onPress} scaleTo={0.97} haptic={Boolean(onPress)} style={styles.press}>
         <LinearGradient colors={wash as [string, string]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>
+          <View style={[styles.kitEdge, { backgroundColor: iconColor }]} />
           <View style={[styles.iconWrap, { backgroundColor: `${iconColor}18` }]}>
             <Icon name={icon} size={18} color={iconColor} />
           </View>
@@ -735,13 +736,11 @@ const cardStyles = (tokens: ClubThemeTokens) =>
       borderRadius: clubRadius.xl,
       padding: clubSpace.lg,
       borderWidth: 1,
-      borderColor: tokens.borderStrong,
-      borderLeftWidth: 3,
-      borderLeftColor: tokens.accent,
+      borderColor: tokens.border,
       gap: clubSpace.sm,
-      ...clubShadow.card,
+      ...clubShadow.soft,
     },
-    title: { marginBottom: 2, color: tokens.accent },
+    title: { marginBottom: 2, color: tokens.faint },
   });
 
 const rowStyles = (tokens: ClubThemeTokens) =>
@@ -852,11 +851,22 @@ const smartStyles = (tokens: ClubThemeTokens) =>
     card: {
       borderRadius: clubRadius.xl,
       padding: clubSpace.md,
+      paddingLeft: clubSpace.md + 4,
       gap: 6,
       borderWidth: 1,
       borderColor: tokens.border,
       minHeight: 128,
-      ...clubShadow.card,
+      overflow: 'hidden',
+      ...clubShadow.soft,
+    },
+    kitEdge: {
+      position: 'absolute',
+      left: 0,
+      top: 14,
+      bottom: 14,
+      width: 3,
+      borderTopRightRadius: 2,
+      borderBottomRightRadius: 2,
     },
     iconWrap: {
       width: 34,

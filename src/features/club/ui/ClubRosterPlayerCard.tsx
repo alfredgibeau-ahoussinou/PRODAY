@@ -1,12 +1,8 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React from 'react';
 import { AnimatedEntrance } from '../../../components/motion';
-import { PlayerShieldCardCompact } from '../../../components/joueur/PlayerShieldCardCompact';
-import { ClubStatusPill } from './clubUi';
-import { useClubTheme } from '../shell/ClubThemeContext';
+import { ClubPlayerCard } from './ClubPlayerCard';
 import type { User } from '../../../models/User';
 import type { Membership } from '../../../models/Membership';
-import { spacing } from '../../../theme/designTokens';
 
 type Props = {
   player: User;
@@ -37,8 +33,8 @@ function membershipLabel(status: Membership['status'] | undefined, hasLicense: b
 }
 
 /**
- * Carte joueur style pôle Joueur (bouclier compact) — données club réelles uniquement
- * (poste, licence, catégorie). Pas de score inventé.
+ * Carte effectif Club — identité maillot/crest (pas le bouclier pôle Joueur).
+ * Données club réelles uniquement (poste, licence, catégorie, n°).
  */
 export function ClubRosterPlayerCard({
   player,
@@ -48,12 +44,10 @@ export function ClubRosterPlayerCard({
   index = 0,
   onPress,
 }: Props) {
-  const { tokens } = useClubTheme();
   const season = player.profile?.season_stats;
   const hasLicense = Boolean(membership?.license_number?.trim());
   const status = membership?.status;
   const metaParts = [
-    membershipLabel(status, hasLicense),
     player.profile?.category,
     membership?.license_number ? `N° ${membership.license_number}` : null,
   ].filter(Boolean);
@@ -69,27 +63,18 @@ export function ClubRosterPlayerCard({
 
   return (
     <AnimatedEntrance kind="fadeUp" index={index} delayStep={36}>
-      <View style={styles.wrap}>
-        <PlayerShieldCardCompact
-          displayName={player.display_name || 'Joueur'}
-          position={player.profile?.position}
-          photoUrl={player.avatar_url}
-          clubName={teamName || clubName || undefined}
-          stats={stats}
-          accent={tokens.accent}
-          accentSoft={tokens.accentSoft}
-          metaLabel={metaParts.join(' · ')}
-          onPress={onPress}
-        />
-        <View style={styles.pill}>
-          <ClubStatusPill label={membershipLabel(status, hasLicense)} tone={membershipTone(status)} />
-        </View>
-      </View>
+      <ClubPlayerCard
+        displayName={player.display_name || 'Joueur'}
+        position={player.profile?.position}
+        jerseyNumber={player.profile?.jersey_number}
+        photoUrl={player.avatar_url}
+        teamOrClub={teamName || clubName || undefined}
+        statusLabel={membershipLabel(status, hasLicense)}
+        statusTone={membershipTone(status)}
+        metaLabel={metaParts.join(' · ') || undefined}
+        stats={stats}
+        onPress={onPress}
+      />
     </AnimatedEntrance>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { gap: spacing.xs },
-  pill: { paddingLeft: 4 },
-});

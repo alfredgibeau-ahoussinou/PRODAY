@@ -91,7 +91,10 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
           ) : null}
         </ClubSectionCard>
 
-        <ClubSectionCard title={`Effectif · ${roster.length}`}>
+        <View style={styles.chapter}>
+          <ClubText variant="label" muted>
+            {`Effectif · ${roster.length}`}
+          </ClubText>
           {roster.length === 0 ? (
             <ClubText variant="body" muted>
               Aucun joueur actif dans cette équipe.
@@ -123,7 +126,7 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
               ) : null}
             </View>
           )}
-        </ClubSectionCard>
+        </View>
 
         <ClubSectionCard title="Sections">
           <ClubActionRow
@@ -182,5 +185,6 @@ const createStyles = (tokens: ClubThemeTokens) =>
       alignSelf: 'flex-start',
       paddingVertical: spacing.xs,
     },
+    chapter: { gap: spacing.sm },
     roster: { gap: spacing.sm },
   });

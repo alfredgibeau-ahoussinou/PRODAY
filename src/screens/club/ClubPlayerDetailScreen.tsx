@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { Alert, Linking, StyleSheet, View } from 'react-native';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
-import { PlayerShieldCard } from '../../components/joueur/PlayerShieldCard';
 import { AnimatedEntrance } from '../../components/motion';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
@@ -12,11 +11,10 @@ import {
   ClubEmptyState,
   ClubLoading,
   ClubSectionCard,
-  ClubStatusPill,
   ClubText,
 } from '../../features/club/ui/clubUi';
-import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
-import { spacing } from '../../theme/designTokens';
+import { ClubPlayerHero } from '../../features/club/ui/ClubPlayerHero';
+import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
 type Props = {
@@ -25,8 +23,8 @@ type Props = {
 };
 
 /**
- * Fiche joueur club — carte style pôle Joueur + infos club.
- * Pas de dossier médical. Pas de score inventé.
+ * Fiche joueur club — hero maillot/crest + infos club.
+ * Pas de dossier médical. Pas de score inventé. Pas de carte pôle Joueur.
  */
 export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
   const { tokens, logoUrl } = useClubTheme();
@@ -66,6 +64,13 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
           : 'Actif'
         : membership?.status ?? '—';
 
+  const statusTone =
+    membership?.status === 'active'
+      ? 'ok'
+      : membership?.status === 'pending'
+        ? 'warn'
+        : 'neutral';
+
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
@@ -76,43 +81,27 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
           </ClubText>
         </PressableSpring>
 
-        <ClubBrandHeader
-          title={player.display_name || 'Joueur'}
-          subtitle={[team?.name, statusLabel].filter(Boolean).join(' · ')}
-          right={
-            <ClubStatusPill
-              label={statusLabel}
-              tone={
-                membership?.status === 'active'
-                  ? 'ok'
-                  : membership?.status === 'pending'
-                    ? 'warn'
-                    : 'neutral'
-              }
-            />
-          }
-        />
-
         <AnimatedEntrance kind="zoom" index={0}>
-          <View style={styles.cardCenter}>
-            <PlayerShieldCard
-              displayName={player.display_name || 'Joueur'}
-              position={player.profile?.position}
-              photoUrl={player.avatar_url}
-              clubName={ws.club?.name ?? team?.name}
-              clubLogoUrl={logoUrl}
-              stats={
-                season
-                  ? {
-                      matches: season.matches,
-                      goals: season.goals,
-                      assists: season.assists,
-                    }
-                  : undefined
-              }
-              width={220}
-            />
-          </View>
+          <ClubPlayerHero
+            displayName={player.display_name || 'Joueur'}
+            position={player.profile?.position}
+            jerseyNumber={player.profile?.jersey_number}
+            photoUrl={player.avatar_url}
+            clubName={ws.club?.name ?? team?.name}
+            clubLogoUrl={logoUrl}
+            subtitle={[team?.name, player.profile?.category].filter(Boolean).join(' · ') || undefined}
+            statusLabel={statusLabel}
+            statusTone={statusTone}
+            stats={
+              season
+                ? {
+                    matches: season.matches,
+                    goals: season.goals,
+                    assists: season.assists,
+                  }
+                : undefined
+            }
+          />
         </AnimatedEntrance>
 
         <ClubSectionCard title="Identité club">
@@ -189,7 +178,7 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
   );
 }
 
-const createStyles = (tokens: ClubThemeTokens) =>
+const createStyles = (_tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
     back: {
@@ -197,7 +186,6 @@ const createStyles = (tokens: ClubThemeTokens) =>
       alignItems: 'center',
       gap: 6,
       alignSelf: 'flex-start',
-      paddingVertical: spacing.xs,
+      paddingVertical: clubSpace.xs,
     },
-    cardCenter: { alignItems: 'center', paddingVertical: spacing.sm },
   });

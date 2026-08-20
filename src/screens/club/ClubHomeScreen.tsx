@@ -15,7 +15,7 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
-import { formatTeamRowLabel } from '../../utils/clubStructureView';
+import { ClubTeamCard } from '../../features/club/ui/ClubTeamCard';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubChrome, clubSpace } from '../../features/club/theme/clubDesignSystem';
 
@@ -47,7 +47,7 @@ function nextTrainingHint(ws: ReturnType<typeof useClubWorkspace>): string {
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
   const shellNav = useClubShellNav();
-  const { tokens } = useClubTheme();
+  const { tokens, logoUrl } = useClubTheme();
   const ws = useClubWorkspace();
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
@@ -217,7 +217,10 @@ export function ClubHomeScreen() {
           )}
         </ClubSectionCard>
 
-        <ClubSectionCard title="Mes équipes">
+        <View style={styles.chapter}>
+          <ClubText variant="label" muted>
+            Mes équipes
+          </ClubText>
           {ws.teamRows.length === 0 ? (
             <ClubEmptyState
               title="Aucune équipe"
@@ -227,12 +230,12 @@ export function ClubHomeScreen() {
             />
           ) : (
             <View style={styles.list}>
-              {ws.teamRows.slice(0, 4).map((row) => (
-                <ClubActionRow
+              {ws.teamRows.slice(0, 4).map((row, index) => (
+                <ClubTeamCard
                   key={row.teamId}
-                  icon="football"
-                  label={formatTeamRowLabel(row)}
-                  hint={`${row.licensedCount} joueur(s)${row.coachNames.length ? ` · ${row.coachNames.join(', ')}` : ''}`}
+                  row={row}
+                  index={index}
+                  logoUrl={logoUrl}
                   onPress={() => {
                     shellNav?.setSelectedTeamId?.(row.teamId);
                     shellNav?.requestNav('teams');
@@ -247,7 +250,7 @@ export function ClubHomeScreen() {
               ) : null}
             </View>
           )}
-        </ClubSectionCard>
+        </View>
 
         <ClubSectionCard title="Raccourcis">
           <ClubActionRow
@@ -277,7 +280,8 @@ const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
     dynamic: { marginTop: -4, marginBottom: 4, lineHeight: 21 },
-    list: { gap: clubSpace.xs },
+    list: { gap: clubSpace.sm },
+    chapter: { gap: clubSpace.sm },
     smartGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',

@@ -18,7 +18,7 @@ type Props = {
   onPress: () => void;
 };
 
-/** Carte équipe premium — personnalité, press, entrée légère. */
+/** Carte équipe — crest / kit stripe, même famille que les cartes joueur Club. */
 export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
@@ -36,7 +36,9 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
           end={{ x: 1, y: 1 }}
           style={styles.card}
         >
-          <View style={[styles.logoWrap, { borderColor: tokens.accentSoft }]}>
+          <View style={styles.pitchWash} pointerEvents="none" />
+          <View style={[styles.kitStripe, { backgroundColor: tokens.accent }]} />
+          <View style={[styles.crestWrap, { borderColor: tokens.accentSoft }]}>
             {logoUrl ? (
               <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="cover" />
             ) : (
@@ -44,6 +46,7 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
                 <Icon name="football" size={20} color={tokens.accent} />
               </View>
             )}
+            <View style={[styles.crestCap, { backgroundColor: tokens.accent }]} />
           </View>
           <View style={styles.copy}>
             <ClubText variant="h3" numberOfLines={1}>
@@ -56,7 +59,6 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
           <View style={[styles.chevron, { backgroundColor: tokens.accentSoft }]}>
             <Icon name="chevron-forward" size={16} color={tokens.accent} />
           </View>
-          <View style={[styles.stripe, { backgroundColor: tokens.accent }]} />
         </LinearGradient>
       </PressableSpring>
     </AnimatedEntrance>
@@ -70,21 +72,48 @@ const createStyles = (tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.md,
-      padding: clubSpace.md,
+      paddingVertical: clubSpace.md,
+      paddingRight: clubSpace.md,
+      paddingLeft: clubSpace.md + 4,
       borderRadius: clubRadius.xl,
       borderWidth: 1,
-      borderColor: tokens.borderStrong,
+      borderColor: tokens.border,
       overflow: 'hidden',
       minHeight: 84,
-      ...clubShadow.card,
+      ...clubShadow.soft,
     },
-    logoWrap: {
+    pitchWash: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: tokens.pitchSoft,
+      opacity: 0.18,
+    },
+    kitStripe: {
+      position: 'absolute',
+      left: 0,
+      top: 14,
+      bottom: 14,
+      width: 3,
+      borderTopRightRadius: 2,
+      borderBottomRightRadius: 2,
+    },
+    crestWrap: {
       width: 52,
-      height: 52,
+      height: 60,
       borderRadius: clubRadius.md,
+      borderTopLeftRadius: clubRadius.lg,
+      borderTopRightRadius: clubRadius.lg,
       overflow: 'hidden',
       borderWidth: 1.5,
       backgroundColor: tokens.elevated,
+    },
+    crestCap: {
+      position: 'absolute',
+      top: 0,
+      left: '24%',
+      right: '24%',
+      height: 4,
+      borderBottomLeftRadius: 2,
+      borderBottomRightRadius: 2,
     },
     logo: { width: '100%', height: '100%' },
     logoPh: { alignItems: 'center', justifyContent: 'center' },
@@ -95,14 +124,5 @@ const createStyles = (tokens: ClubThemeTokens) =>
       borderRadius: clubRadius.sm,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    stripe: {
-      position: 'absolute',
-      left: 0,
-      top: 14,
-      bottom: 14,
-      width: 3,
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
     },
   });
