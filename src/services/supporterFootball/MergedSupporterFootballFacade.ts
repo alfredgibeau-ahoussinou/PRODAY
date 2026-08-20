@@ -1,11 +1,11 @@
 import type { Follow } from '../../models/Follow';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { Tournament } from '../../models/Tournament';
+import { CompositeExternalFootballProvider } from './CompositeExternalFootballProvider';
 import { DemoFootballProvider } from './DemoFootballProvider';
 import { ProDayFootballProvider } from './ProDayFootballProvider';
 import type { SupporterFootballProvider } from './provider';
 import { isSupporterFootballDemoForced } from './sportmonksClient';
-import { SportmonksFootballProvider } from './SportmonksFootballProvider';
 import type {
   FixtureQuery,
   ProviderHealth,
@@ -53,13 +53,13 @@ export function rejectDemoUnlessForced(matches: UnifiedMatch[], demoForced: bool
 
 function resolveExternalProvider(demoForced: boolean): SupporterFootballProvider {
   // Demo ONLY when EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1. Otherwise Sportmonks
-  // (client token or Cloud proxy) — never invent fixtures when the API is empty.
+  // + football-data.org composite — never invent fixtures when the API is empty.
   if (demoForced) return new DemoFootballProvider();
-  return new SportmonksFootballProvider();
+  return new CompositeExternalFootballProvider();
 }
 
 /**
- * Merged facade — ProDay (teamEvents) + external Sportmonks.
+ * Merged facade — ProDay (teamEvents) + external Sportmonks + football-data.org.
  * Demo fixtures are never mixed into Live / lists unless DEMO=1 is forced.
  */
 export class MergedSupporterFootballFacade implements SupporterFootballProvider {

@@ -24,7 +24,17 @@ describe('sportmonksLeagues coverage', () => {
     });
     expect(msg).toMatch(/Ligue 1/);
     expect(msg).toMatch(/Superliga|Premiership/);
+    expect(msg).toMatch(/FOOTBALL_DATA|football-data/i);
     expect(msg).not.toMatch(/PSG|faux|démo/i);
+  });
+
+  it('mentionne football-data quand le token FD est actif', () => {
+    const msg = buildLeagueCoverageMessage({
+      availableNames: ['Superliga'],
+      missingPreferred: [301],
+      footballDataEnabled: true,
+    });
+    expect(msg).toMatch(/football-data\.org/i);
   });
 
   it('parse EXPO_PUBLIC_SPORTMONKS_PREFERRED_LEAGUES', () => {

@@ -1,70 +1,69 @@
 /**
- * Supporter Space V3 — architecture football (Sportmonks + ProDay).
+ * Supporter Space V3 — architecture football (Sportmonks + football-data.org + ProDay).
  *
- * ## API choisie
- * **Sportmonks Soccer API v3** (https://www.sportmonks.com / docs.sportmonks.com/v3)
+ * ## APIs
+ * 1. **Sportmonks Soccer API v3** (https://www.sportmonks.com / docs.sportmonks.com/v3)
+ *    — plan Free : Superliga DK (`271`) + Premiership Écosse (`501`) uniquement.
+ * 2. **football-data.org v4** (https://www.football-data.org) — **secondaire gratuit**
+ *    pour les ligues hors plan Sportmonks Free (Ligue 1, top 5, C1…).
+ * 3. **ProDay** — `teamEvents` / tournois (jamais remplacés par de la démo).
  *
- * Pourquoi :
- * - Free / freemium avec fixtures, livescores, lineups, events, statistics, teams, leagues, standings
- * - Base REST claire : `https://api.sportmonks.com/v3/football`
- * - Auth `api_token` — proxy Cloud Function recommandé pour garder la clé serveur
- * - Remplace API-Football (api-sports.io) et football-data.org pour le **nouveau** stack Supporter
+ * ### Pourquoi le dual-provider
+ * Le Free Plan Sportmonks ne sert **pas** la Ligue 1 (`301`). Sans second provider,
+ * les rails Accueil / Matchs Ligues resteraient vides pour le football français.
+ * football-data.org Free expose notamment `FL1`, `PL`, `PD`, `SA`, `BL1`, `CL`
+ * (12 compétitions, ~10 req/min, scores parfois différés — données **réelles**, pas démo).
  *
- * Fallback calendrier uniquement (non branché en Phase 1) : TheSportsDB — pas pour lineups.
- *
- * ## Endpoints utilisés
+ * ## Endpoints Sportmonks
  * | Méthode façade | Endpoint Sportmonks |
  * |---|---|
- * | getLive | `GET /livescores/inplay?include=participants;scores;periods;events;league.country;round` (`LIVE_INPLAY_INCLUDES`) |
- * | getFixtures / upcoming / finished | `GET /fixtures/between/{from}/{to}` + `FIXTURE_LIST_INCLUDES` |
+ * | getLive | `GET /livescores/inplay?include=…` (`LIVE_INPLAY_INCLUDES`) |
+ * | getFixtures / upcoming / finished | `GET /fixtures/between/{from}/{to}` |
  * | getMatch / lineups / events / stats | `GET /fixtures/{id}` + `FIXTURE_DETAIL_INCLUDES` |
- *   `participants;scores;state;league;venue;events;lineups.player;lineups.details;lineups.xGLineup;formations;statistics.type;xGFixture` |
- * | getTeams | `GET /teams/search/{query}` |
- * | getTeam | `GET /teams/{id}` |
- * | getCompetitions | `GET /leagues?include=country` |
- * | search competitions | `GET /leagues/search/{query}` |
- * | getStandings | `GET /standings/seasons/{seasonId}` |
+ * | getTeams / getCompetitions / getStandings | search / leagues / standings seasons |
  *
- * ## Token
- * 1. Compte Sportmonks → API token
- * 2. **Préféré (serveur)** : `SPORTMONKS_API_TOKEN` ou `FOOTBALL_API_KEY` dans `functions/.env.<projectId>`
- *    puis déployer `supporterFootballProxy`
- * 3. **Dev local (client)** : `EXPO_PUBLIC_SPORTMONKS_API_TOKEN` dans `.env` (jamais committer)
- * 4. **Démo** : uniquement si `EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1` → matches `source: 'demo'`
- *    (jamais mélangés silencieusement avec du live Sportmonks ; sans token → Ligues vides + ProDay)
- * 5. **Ligues préférées** (optionnel) : `EXPO_PUBLIC_SPORTMONKS_PREFERRED_LEAGUES=301,8,564,…`
- *    (défaut : Ligue 1, PL, Liga, Serie A, Bundesliga, C1, C3). Fetch `filters=fixtureLeagues:{id}`
- *    seulement pour les IDs **inclus dans l’abonnement**.
+ * ## Endpoints football-data.org
+ * | Méthode | Endpoint |
+ * |---|---|
+ * | fixtures / upcoming / finished | `GET /v4/matches?competitions=FL1,PL,…&dateFrom=&dateTo=` |
+ * | live | `GET /v4/matches?competitions=…&status=LIVE` |
+ * | match | `GET /v4/matches/{id}` |
+ * | standings | `GET /v4/competitions/{code}/standings` |
+ * Header : `X-Auth-Token: <token>`
  *
- * ### Couverture Free Plan (août 2025+)
- * Le Free Plan Sportmonks ne couvre **que** Superliga (DK, `271`) et Premiership (Écosse, `501`).
- * **Ligue 1 (`301`) n’est pas accessible** tant qu’un plan payant n’ajoute pas cette ligue
- * (Starter 5 ligues / Growth 30 / Pro 120 / Enterprise). L’app affiche les matchs du plan
- * (ex. Premiership) et un bandeau honnête si Ligue 1 / top ligues manquent — jamais de faux L1.
+ * Codes Free utilisés en priorité : `FL1` `PL` `PD` `SA` `BL1` `CL`
+ * (+ `DED` `PPL` `ELC` `BSA` `WC` `EC` listés dans le mapper).
  *
- * Anciennes clés `EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY` / `EXPO_PUBLIC_FOOTBALL_DATA_TOKEN`
- * restent pour d’autres modules legacy — **non utilisées** par Supporter Space V3.
+ * ## Merge Ligues
+ * `CompositeExternalFootballProvider` = Sportmonks ∪ football-data.
+ * Dédoublonnage `date UTC + home + away` (noms normalisés) ; on garde le payload le plus riche.
+ * Jamais de fixtures `source: 'demo'` sauf `EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1`.
+ *
+ * ## Tokens
+ * 1. Sportmonks — préféré serveur : `SPORTMONKS_API_TOKEN` / proxy `supporterFootballProxy`
+ *    · Dev : `EXPO_PUBLIC_SPORTMONKS_API_TOKEN`
+ * 2. football-data.org — `EXPO_PUBLIC_FOOTBALL_DATA_TOKEN` (compte free sur football-data.org)
+ *    · Optionnel : `EXPO_PUBLIC_FOOTBALL_DATA_URL` (défaut `https://api.football-data.org/v4`)
+ * 3. Démo uniquement si `EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1`
+ * 4. Sans aucun token → Ligues vides + CTA honnête ; ProDay reste réel.
+ *
+ * ### Couverture Free Plan Sportmonks
+ * Superliga + Premiership seulement. Ligue 1 / top 5 viennent de **football-data**
+ * quand le token FD est présent — le bandeau « plan limité » disparaît pour ces ligues.
+ *
+ * `EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY` (API-Football RapidAPI) reste **legacy**
+ * (hors stack V3) — non utilisé comme primaire.
  *
  * ## Navigation mobile
  * Accueil · Matchs · ProDay · Clubs · Profil
  * (`home` · `matchs` · `feed` · `plus` · `profil`)
  *
- * Desktop (Phase 2) : sidebar Accueil / Matchs / ProDay / Mes clubs / Explorer.
- *
  * ## Dossiers
  * - `src/features/supporterSpace/` — thème + composants
  * - `src/screens/supporterSpace/` — pages
- * - `src/services/supporterFootball/` — provider Sportmonks + ProDay + merge UnifiedMatch
+ * - `src/services/supporterFootball/` — Sportmonks + FootballData + ProDay + merge UnifiedMatch
  * - `src/hooks/supporterFootball/`
  * - `functions/src/supporterFootballProxy.ts`
- *
- * ## Suppressions Phase 0
- * - `src/screens/footballHub/*`
- * - `src/features/footballHub/*`
- * - `src/components/footballHub/*`
- * - tests `footballHub*.test.ts`
- *
- * Conservé : `formationPitch`, `follows.service`, `SupporterAppShell`, services `externalScores*` (hors nouveau stack).
  *
  * ## Phase 2 (non livré)
  * - WebSocket live Sportmonks
@@ -72,5 +71,4 @@
  * - Panneau admin football
  * - Sidebar desktop
  * - Pipeline Veo
- * - Classement club complet (saison id dynamique)
  */

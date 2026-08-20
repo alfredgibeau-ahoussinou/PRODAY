@@ -43,12 +43,13 @@ export const SUPPORTER_SPACE_COPY = {
   emptyClubs: 'Suis des clubs pour personnaliser ton espace.',
   emptySearch: 'Aucun résultat. Essaie un autre club ou une compétition.',
   emptyCategory: 'Cette catégorie n’est pas exposée par l’API pour le moment.',
-  configureSportmonks: 'Configurer Sportmonks pour les scores ligues.',
+  configureSportmonks:
+    'Configure Sportmonks et/ou EXPO_PUBLIC_FOOTBALL_DATA_TOKEN (Ligue 1 gratuite via football-data.org).',
   demoBanner: 'Mode démo forcé (EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1).',
   apiBanner: 'Scores ligues indisponibles. Les matchs ProDay restent visibles.',
-  /** Shown when token works but preferred majors (Ligue 1…) are outside the plan. */
+  /** Shown when Sportmonks Free lacks majors and football-data token is missing. */
   planLimitedBanner:
-    'Plan Sportmonks limité : pas de Ligue 1 / top 5. Upgrade sur my.sportmonks.com pour les débloquer.',
+    'Plan Sportmonks limité : ajoute EXPO_PUBLIC_FOOTBALL_DATA_TOKEN pour Ligue 1 / top 5 (API gratuite), ou upgrade Sportmonks.',
   searchPlaceholder: 'Clubs, matchs, compétitions…',
   notifStub: 'Notifications — bientôt',
   debateCta: 'Débattre',

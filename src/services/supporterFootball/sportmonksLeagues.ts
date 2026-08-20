@@ -60,16 +60,21 @@ export function looksLikeFreePlanCoverage(availableIds: readonly number[]): bool
 export function buildLeagueCoverageMessage(opts: {
   availableNames: string[];
   missingPreferred: number[];
+  /** When football-data.org token covers FL1 / top 5, banner stays soft or cleared upstream. */
+  footballDataEnabled?: boolean;
 }): string | undefined {
-  const { availableNames, missingPreferred } = opts;
+  const { availableNames, missingPreferred, footballDataEnabled } = opts;
   if (!missingPreferred.length) return undefined;
   const names =
     availableNames.length > 0
       ? availableNames.slice(0, 4).join(', ')
       : 'ligues du plan Free';
   const wantsLigue1 = missingPreferred.includes(301);
+  if (footballDataEnabled && wantsLigue1) {
+    return `Plan Sportmonks limité (${names}). Ligue 1 et top ligues via football-data.org (EXPO_PUBLIC_FOOTBALL_DATA_TOKEN).`;
+  }
   if (wantsLigue1) {
-    return `Plan Sportmonks limité (${names}). Ligue 1 et top ligues hors abonnement — upgrade Sportmonks (essai payant) pour les débloquer.`;
+    return `Plan Sportmonks limité (${names}). Ligue 1 hors abonnement — ajoute EXPO_PUBLIC_FOOTBALL_DATA_TOKEN (API gratuite) ou upgrade Sportmonks.`;
   }
   return `Plan Sportmonks limité (${names}). Certaines ligues majeures ne sont pas dans ton abonnement.`;
 }

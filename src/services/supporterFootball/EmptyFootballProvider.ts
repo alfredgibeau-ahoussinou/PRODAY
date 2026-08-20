@@ -25,7 +25,7 @@ export class EmptyFootballProvider implements SupporterFootballProvider {
       ready: true,
       mode: 'empty',
       message:
-        'Scores ligues indisponibles. Configure EXPO_PUBLIC_SPORTMONKS_API_TOKEN ou le proxy — aucun match fictif.',
+        'Scores ligues indisponibles. Configure EXPO_PUBLIC_SPORTMONKS_API_TOKEN et/ou EXPO_PUBLIC_FOOTBALL_DATA_TOKEN — aucun match fictif.',
     };
   }
 

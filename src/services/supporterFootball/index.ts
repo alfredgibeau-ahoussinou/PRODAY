@@ -18,6 +18,8 @@ export type {
 
 export type { SupporterFootballProvider } from './provider';
 export { SportmonksFootballProvider } from './SportmonksFootballProvider';
+export { FootballDataFootballProvider } from './FootballDataFootballProvider';
+export { CompositeExternalFootballProvider } from './CompositeExternalFootballProvider';
 export { ProDayFootballProvider } from './ProDayFootballProvider';
 export { DemoFootballProvider } from './DemoFootballProvider';
 export { EmptyFootballProvider } from './EmptyFootballProvider';
@@ -38,6 +40,14 @@ export {
   parseFormationField,
 } from './mappers';
 export {
+  mapFdMatchToUnified,
+  mapFdStatus,
+  FOOTBALL_DATA_FREE_COMPETITION_CODES,
+  FOOTBALL_DATA_PRIMARY_CODES,
+  FOOTBALL_DATA_COVERED_SPORTMONKS_IDS,
+  mergeExternalMatchesPreferRicher,
+} from './footballDataMappers';
+export {
   FIXTURE_DETAIL_INCLUDES,
   FIXTURE_LIST_INCLUDES,
   LIVE_INPLAY_INCLUDES,
@@ -47,6 +57,10 @@ export {
   isSupporterFootballDemoForced,
   clearSportmonksCache,
 } from './sportmonksClient';
+export {
+  isFootballDataTokenConfigured,
+  clearFootballDataCache,
+} from './footballDataClient';
 export {
   DEFAULT_PREFERRED_LEAGUE_IDS,
   SPORTMONKS_FREE_PLAN_LEAGUE_IDS,
