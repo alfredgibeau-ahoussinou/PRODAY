@@ -103,6 +103,22 @@ export function JoueurPlusMenuSheet({ visible, onClose, items, onSelect }: Props
           fontSize: 8,
           fontWeight: '900',
         },
+        soonBadge: {
+          position: 'absolute',
+          top: -4,
+          right: -4,
+          paddingHorizontal: 5,
+          paddingVertical: 2,
+          borderRadius: 6,
+          backgroundColor: PLAYER_DARK.surfaceRaised,
+          borderWidth: 1,
+          borderColor: PLAYER_DARK.border,
+        },
+        soonBadgeText: {
+          color: PLAYER_DARK.textMuted,
+          fontSize: 7,
+          fontWeight: '800',
+        },
         closeBtn: {
           marginTop: spacing.sm,
           borderRadius: PLAYER_DARK_RADIUS.pill,
@@ -152,6 +168,12 @@ export function JoueurPlusMenuSheet({ visible, onClose, items, onSelect }: Props
                   <View style={styles.badge}>
                     <ProDayText variant="caption" style={styles.badgeText}>
                       {formatTabBadge(item.badge)}
+                    </ProDayText>
+                  </View>
+                ) : item.unavailable ? (
+                  <View style={styles.soonBadge}>
+                    <ProDayText variant="caption" style={styles.soonBadgeText}>
+                      Bientôt
                     </ProDayText>
                   </View>
                 ) : null}

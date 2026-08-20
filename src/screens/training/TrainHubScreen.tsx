@@ -36,7 +36,6 @@ import {
   JoueurActionRow,
   JoueurKpiRow,
 } from '../../components/player/joueurPortalUi';
-import { JoueurUniverseWorld } from '../../components/player/JoueurUniverseWorld';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing, radius } from '../../theme/designTokens';
@@ -764,8 +763,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
         {joueurLive && joueurSession ? (
           <>
             <JoueurPageFrame identity={joueurSession.identity} showHero={false}>
-              <JoueurUniverseWorld identity={joueurSession.identity} compact />
-              <View style={{ gap: spacing.md, marginTop: spacing.sm }}>
+              <View style={{ gap: spacing.md }}>
                 <JoueurKpiRow
                   items={[
                     {

@@ -19,10 +19,19 @@ import { trackV3Event } from '../core/analytics/v3Events';
 import { userStateStore } from '../core/state/userState.store';
 import { flushBrainState } from '../services/brainState.service';
 import { PushScreenTransition } from '../components/motion';
+import { JOUEUR_UNAVAILABLE_FEATURES } from '../content/joueurPlusMenu';
+import { JoueurUnavailableScreen } from '../components/joueur/JoueurUnavailableScreen';
 
 export const ShopScreen: React.FC = () => {
   const { productLine } = useThemedScreen();
   const { profile } = useAuth();
+
+  if (profile?.role === 'player') {
+    const copy = JOUEUR_UNAVAILABLE_FEATURES.shop;
+    return (
+      <JoueurUnavailableScreen title={copy.title} message={copy.message} icon="bag" />
+    );
+  }
   const { requireAuth } = useRequireAuth();
   const copy = useMemo(() => getShopCopy(productLine), [productLine]);
   const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);

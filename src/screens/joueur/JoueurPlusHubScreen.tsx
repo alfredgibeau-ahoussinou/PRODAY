@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { JoueurScreenChrome } from '../../components/joueur/JoueurScreenChrome';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
@@ -11,6 +11,7 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { getVisibleMainTabs } from '../../content/poleExperience';
 import {
   buildJoueurPlusMenuItems,
+  getJoueurUnavailableFeature,
   type JoueurPlusMenuItem,
 } from '../../content/joueurPlusMenu';
 import { isMinorUser } from '../../utils/minor';
@@ -47,6 +48,11 @@ export function JoueurPlusHubScreen() {
   );
 
   const runItem = (item: JoueurPlusMenuItem) => {
+    if (item.unavailable) {
+      const info = getJoueurUnavailableFeature(item.id);
+      if (info) Alert.alert(info.title, info.message);
+      return;
+    }
     const { action } = item;
     if (action.kind === 'tab') {
       nav.setActiveTab(action.tab, { returnTo: 'plus' });
@@ -99,6 +105,12 @@ export function JoueurPlusHubScreen() {
                   <View style={styles.badge}>
                     <ProDayText variant="caption" style={styles.badgeText}>
                       {formatTabBadge(item.badge)}
+                    </ProDayText>
+                  </View>
+                ) : item.unavailable ? (
+                  <View style={styles.soonBadge}>
+                    <ProDayText variant="caption" style={styles.soonBadgeText}>
+                      Bientôt
                     </ProDayText>
                   </View>
                 ) : null}
@@ -178,5 +190,19 @@ const styles = StyleSheet.create({
     color: PLAYER_DARK.bg,
     fontSize: 9,
     fontWeight: '900',
+  },
+  soonBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+  },
+  soonBadgeText: {
+    color: PLAYER_DARK.textMuted,
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 });

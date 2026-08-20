@@ -50,7 +50,7 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
   hideHeader = false,
   atmosphere,
   joueurUniverse,
-  hideWorldScene = false,
+  hideWorldScene = true,
   children,
 }) => {
   const session = useJoueurSession();

@@ -265,7 +265,8 @@ export function JoueurSectionCard({
   quest?: boolean;
 }) {
   const identity = useJoueurPageIdentity();
-  const accent = identity?.accent ?? JOUEUR_SITE.ok;
+  const theme = useJoueurTheme();
+  const accent = theme.accent;
   const radius = identity?.radius ?? 4;
   const density = identity?.density ?? 'pro';
   const styles = useMemo(

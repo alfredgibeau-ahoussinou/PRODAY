@@ -17,7 +17,30 @@ export type JoueurPlusMenuItem = {
   action: JoueurPlusMenuAction;
   badge?: number;
   visible?: boolean;
+  /** Module beta non ouvert — alerte au tap, pas de navigation. */
+  unavailable?: boolean;
 };
+
+export const JOUEUR_UNAVAILABLE_FEATURES: Record<string, { title: string; message: string }> = {
+  reels: {
+    title: 'Clips',
+    message: 'Les clips ne sont pas encore disponibles dans cette version beta.',
+  },
+  shop: {
+    title: 'Boutique',
+    message: "La boutique n'est pas encore disponible dans cette version beta.",
+  },
+};
+
+export function getJoueurUnavailableFeature(
+  itemId: string,
+): { title: string; message: string } | null {
+  return JOUEUR_UNAVAILABLE_FEATURES[itemId] ?? null;
+}
+
+export function isJoueurUnavailableTab(tab: MainTabId): boolean {
+  return tab === 'reels' || tab === 'shop';
+}
 
 type BuildPlusMenuOptions = {
   ageGroup?: JoueurAgeGroup | null;
@@ -68,6 +91,7 @@ export function buildJoueurPlusMenuItems({
       icon: 'videocam',
       action: { kind: 'tab', tab: 'reels' },
       visible: has('reels'),
+      unavailable: true,
     },
     {
       id: 'covoiturage',
@@ -84,6 +108,7 @@ export function buildJoueurPlusMenuItems({
       icon: 'bag',
       action: { kind: 'shop' },
       visible: has('shop'),
+      unavailable: true,
     },
     {
       id: 'famille',

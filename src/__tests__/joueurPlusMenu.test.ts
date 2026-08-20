@@ -44,6 +44,11 @@ describe('joueurPlusMenu', () => {
     const messages = items.find((i) => i.id === 'messages');
     expect(messages?.badge).toBe(3);
     expect(messages?.action).toEqual({ kind: 'tab', tab: 'messages' });
+
+    const reels = items.find((i) => i.id === 'reels');
+    expect(reels?.unavailable).toBe(true);
+    const shop = items.find((i) => i.id === 'shop');
+    expect(shop?.unavailable).toBe(true);
   });
 
   it('affiche Famille pour un mineur', () => {
