@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SupporterPageFrame } from '../../components/supporter/SupporterPageFrame';
 import { PressableSpring } from '../../components/motion';
@@ -9,20 +9,30 @@ import { buildSupporterPlusMenuItems } from '../../content/supporterPlusMenu';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 import { formatTabBadge } from '../../components/navigation/tabBarShared';
-import { openClubHelpChatbot } from '../../features/club/shell/clubHelpOpen';
+import { registerClubHelpFallback } from '../../features/club/shell/clubHelpOpen';
+import { PoleHelpPanel } from '../../components/help/PoleHelpPanel';
+import { getPoleHelpContent, getPoleHelpQuestionCount } from '../../content/poleHelpContent';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing, radius } from '../../theme/designTokens';
 import { SupporterLiveNowScreen } from './SupporterLiveNowScreen';
 import { SupporterFootballMapScreen } from './SupporterFootballMapScreen';
 import { SupporterSuivisScreen } from '../SupporterSuivisScreen';
 
-type Overlay = 'live' | 'map' | 'suivis' | null;
+type Overlay = 'live' | 'map' | 'suivis' | 'ia' | null;
 
 /** Hub Plus supporter — tuiles vers Live, Explorer, Vidéos, Fil, carte, suivis, IA, shop. */
 export function SupporterPlusHubScreen() {
   const nav = useTabNavigationActions();
   const { count: unreadCount } = useUnreadMessageCount();
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const helpContent = useMemo(() => getPoleHelpContent('supporter', 'supporter'), []);
+  const helpCount = useMemo(() => getPoleHelpQuestionCount(helpContent), [helpContent]);
+
+  useEffect(() => {
+    const openIa = () => setOverlay('ia');
+    registerClubHelpFallback(openIa);
+    return () => registerClubHelpFallback(null);
+  }, []);
 
   const items = useMemo(
     () =>
@@ -53,6 +63,7 @@ export function SupporterPlusHubScreen() {
   }
 
   return (
+    <>
     <SupporterPageFrame
       identity={{
         ...getSupporterPageIdentity('compte'),
@@ -94,7 +105,9 @@ export function SupporterPlusHubScreen() {
                   setOverlay('suivis');
                   return;
                 }
-                openClubHelpChatbot();
+                if (action.kind === 'ia') {
+                  setOverlay('ia');
+                }
               }}
               scaleTo={0.98}
               haptic
@@ -123,6 +136,14 @@ export function SupporterPlusHubScreen() {
         </View>
       </ScrollView>
     </SupporterPageFrame>
+    <PoleHelpPanel
+      visible={overlay === 'ia'}
+      content={helpContent}
+      questionCount={helpCount}
+      usesBriefcaseIcon={false}
+      onClose={() => setOverlay(null)}
+    />
+    </>
   );
 }
 

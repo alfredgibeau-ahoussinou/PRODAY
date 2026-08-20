@@ -46,7 +46,12 @@ export function useSupporterGlobalSearch(prodayEvents: TeamEvent[] = []) {
         const groups: SupporterGlobalSearchResult[] = [];
 
         const curatedClubs = searchCuratedPopularClubs(trimmed, 8);
-        const remoteTeams: FootballTeamHit[] = await footballDataFacade.searchTeams(trimmed);
+        let remoteTeams: FootballTeamHit[] = [];
+        try {
+          remoteTeams = await footballDataFacade.searchTeams(trimmed);
+        } catch {
+          remoteTeams = [];
+        }
         const clubItems = [...curatedClubs, ...remoteTeams]
           .filter((c, i, arr) => arr.findIndex((x) => x.name === c.name) === i)
           .slice(0, 8)
@@ -76,9 +81,18 @@ export function useSupporterGlobalSearch(prodayEvents: TeamEvent[] = []) {
           });
         }
 
-        const upcoming = await footballDataFacade.listUpcomingFixtures(14);
-        const live = await footballDataFacade.listLiveFixtures();
-        const matchItems = [...live, ...upcoming]
+        let upcoming: Awaited<ReturnType<typeof footballDataFacade.listUpcomingFixtures>> = [];
+        let live: Awaited<ReturnType<typeof footballDataFacade.listLiveFixtures>> = [];
+        try {
+          [upcoming, live] = await Promise.all([
+            footballDataFacade.listUpcomingFixtures(14),
+            footballDataFacade.listLiveFixtures(),
+          ]);
+        } catch {
+          upcoming = [];
+          live = [];
+        }
+        const matchItems = [...(live ?? []), ...(upcoming ?? [])]
           .map(externalFixtureToMatchItem)
           .filter(
             (m) =>
@@ -98,7 +112,7 @@ export function useSupporterGlobalSearch(prodayEvents: TeamEvent[] = []) {
         }
 
         if (lower.includes('proday')) {
-          const prodayItems = prodayEvents.slice(0, 6).map((ev) => {
+          const prodayItems = (prodayEvents ?? []).slice(0, 6).map((ev) => {
             const item = teamEventToMatchItem(ev);
             return {
               id: item.id,
@@ -110,10 +124,15 @@ export function useSupporterGlobalSearch(prodayEvents: TeamEvent[] = []) {
           groups.push({ group: 'proday', label: 'ProDay', items: prodayItems });
         }
 
-        const videos: SupporterVideo[] = await supporterVideoService.listAvailable({
-          prodayEvents,
-          max: 6,
-        });
+        let videos: SupporterVideo[] = [];
+        try {
+          videos = await supporterVideoService.listAvailable({
+            prodayEvents,
+            max: 6,
+          });
+        } catch {
+          videos = [];
+        }
         const videoHits = videos
           .filter((v) => v.title.toLowerCase().includes(lower))
           .slice(0, 6)
@@ -123,6 +142,8 @@ export function useSupporterGlobalSearch(prodayEvents: TeamEvent[] = []) {
         }
 
         setResults(groups);
+      } catch {
+        setResults([]);
       } finally {
         setLoading(false);
       }

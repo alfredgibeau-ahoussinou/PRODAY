@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SupporterPageFrame } from '../../components/supporter/SupporterPageFrame';
+import { SupporterPlusBackBar } from '../../components/supporter/SupporterPlusBackBar';
 import { getSupporterPageIdentity, SUPPORTER_SITE } from '../../content/supporterPageIdentity';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
@@ -28,7 +29,7 @@ const SECTIONS: { kind: SupporterVideoKind | 'all'; label: string }[] = [
 /** Vidéos — feed filtré par droits AVAILABLE uniquement. */
 export const SupporterVideosScreen: React.FC = () => {
   const { profile } = useAuth();
-  const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
+  const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const [videos, setVideos] = useState<SupporterVideo[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +37,9 @@ export const SupporterVideosScreen: React.FC = () => {
     setLoading(true);
     try {
       const list = await supporterVideoService.listAvailable({ prodayEvents: events, max: 32 });
-      setVideos(list);
+      setVideos(Array.isArray(list) ? list : []);
+    } catch {
+      setVideos([]);
     } finally {
       setLoading(false);
     }
@@ -48,6 +51,7 @@ export const SupporterVideosScreen: React.FC = () => {
 
   return (
     <SupporterPageFrame identity={getSupporterPageIdentity('moments')}>
+      <SupporterPlusBackBar />
       {loading ? (
         <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginTop: spacing.xl }} />
       ) : videos.length === 0 ? (

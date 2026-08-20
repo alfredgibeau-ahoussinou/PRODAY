@@ -43,16 +43,36 @@ export function useSupporterMatchHub(
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
 
+  const EMPTY: SupporterMatchHubResult = {
+    sections: { upcoming: [], live: [], recent: [], proday: [], world: [], follows: [], broadcasts: [] },
+    tournaments: [],
+    liveCount: 0,
+    upcomingCount: 0,
+    heroKickoffs: [],
+    providerState: {
+      source: 'api_stub',
+      last_sync_at: new Date(),
+      healthy: false,
+    },
+  };
+
   const refresh = useCallback(async () => {
-    const result = await fetchSupporterMatchHub({
-      calendarEvents,
-      tournaments,
-      follows,
-      filters,
-    });
-    if (mountedRef.current) {
-      setData(result);
-      setLoading(false);
+    try {
+      const result = await fetchSupporterMatchHub({
+        calendarEvents: calendarEvents ?? [],
+        tournaments: tournaments ?? [],
+        follows: follows ?? [],
+        filters,
+      });
+      if (mountedRef.current) {
+        setData(result);
+        setLoading(false);
+      }
+    } catch {
+      if (mountedRef.current) {
+        setData(EMPTY);
+        setLoading(false);
+      }
     }
   }, [calendarEvents, tournaments, follows, filters]);
 

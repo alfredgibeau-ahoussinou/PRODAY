@@ -38,10 +38,17 @@ export const SupporterProfileTabScreen: React.FC = () => {
 
   const loadFollows = useCallback(async () => {
     if (!profile?.uid) return;
-    const follows = await followsService.listByFollower(profile.uid);
-    setClubCount(follows.filter((f) => f.target_type === 'club').length);
-    setPlayerCount(follows.filter((f) => f.target_type === 'player').length);
-    setTournamentCount(follows.filter((f) => f.target_type === 'tournament').length);
+    try {
+      const follows = await followsService.listByFollower(profile.uid);
+      const list = Array.isArray(follows) ? follows : [];
+      setClubCount(list.filter((f) => f.target_type === 'club').length);
+      setPlayerCount(list.filter((f) => f.target_type === 'player').length);
+      setTournamentCount(list.filter((f) => f.target_type === 'tournament').length);
+    } catch {
+      setClubCount(0);
+      setPlayerCount(0);
+      setTournamentCount(0);
+    }
   }, [profile?.uid]);
 
   const loadNotifPrefs = useCallback(async () => {
@@ -52,11 +59,15 @@ export const SupporterProfileTabScreen: React.FC = () => {
 
   const loadWatchStats = useCallback(async () => {
     if (!profile?.uid) return;
-    const stats = await supporterWatchHistoryService.getStats(
-      profile.uid,
-      clubCount + tournamentCount,
-    );
-    setWatchStats(stats);
+    try {
+      const stats = await supporterWatchHistoryService.getStats(
+        profile.uid,
+        clubCount + tournamentCount,
+      );
+      setWatchStats(stats ?? { watched: 0, saved: 0, followed: 0 });
+    } catch {
+      setWatchStats({ watched: 0, saved: 0, followed: clubCount + tournamentCount });
+    }
   }, [profile?.uid, clubCount, tournamentCount]);
 
   useEffect(() => {

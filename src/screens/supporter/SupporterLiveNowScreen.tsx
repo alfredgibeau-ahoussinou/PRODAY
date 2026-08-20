@@ -24,14 +24,14 @@ type Props = {
 /** Scores live — toujours le chapitre direct, indépendant du dock Matchs. */
 export const SupporterLiveNowScreen: React.FC<Props> = ({ onBack }) => {
   const { profile } = useAuth();
-  const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
+  const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { tournaments } = useTournaments();
   const [follows, setFollows] = useState<Follow[]>([]);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
 
   useEffect(() => {
     if (!profile?.uid) return;
-    void followsService.listByFollower(profile.uid).then(setFollows).catch(() => undefined);
+    void followsService.listByFollower(profile.uid).then(setFollows).catch(() => setFollows([]));
   }, [profile?.uid]);
 
   const hub = useSupporterMatchHub({

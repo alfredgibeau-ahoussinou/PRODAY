@@ -35,6 +35,10 @@ export const SupporterMatchCommunityPanel: React.FC<Props> = ({
     setLoading(true);
     try {
       setSnapshot(await supporterMatchCommunityService.loadSnapshot(matchId));
+      setError(null);
+    } catch {
+      setSnapshot(null);
+      setError('Communauté indisponible pour le moment.');
     } finally {
       setLoading(false);
     }

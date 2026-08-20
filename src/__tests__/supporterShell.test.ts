@@ -20,6 +20,8 @@ import {
   stampMatchsDeepLink,
   supporterChapterFromPendingLink,
 } from '../utils/supporterMatchsDeepLink';
+import { openClubHelpChatbot, registerClubHelpOpener } from '../features/club/shell/clubHelpOpen';
+import { resolveCityCoords } from '../utils/supporterCityGeo';
 
 describe('supporter shell navigation', () => {
   it('expose le dock Accueil · Matchs · Profil · Plus', () => {
@@ -71,6 +73,28 @@ describe('supporter shell navigation', () => {
     expect(matchs).not.toHaveBeenCalled();
     openSupporterLive({ openMatchsLive: matchs });
     expect(matchs).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('supporter help opener', () => {
+  afterEach(() => {
+    registerClubHelpOpener(null);
+  });
+
+  it('retourne false sans listener, true avec listener', () => {
+    expect(openClubHelpChatbot()).toBe(false);
+    const open = jest.fn();
+    registerClubHelpOpener(open);
+    expect(openClubHelpChatbot()).toBe(true);
+    expect(open).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('supporter city geo', () => {
+  it('ne crash pas sans ville', () => {
+    const paris = resolveCityCoords(undefined);
+    expect(paris.latitude).toBeCloseTo(48.8566, 2);
+    expect(resolveCityCoords('').latitude).toBeCloseTo(48.8566, 2);
   });
 });
 

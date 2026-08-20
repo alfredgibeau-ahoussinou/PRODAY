@@ -48,7 +48,7 @@ type PlayerCard = {
 };
 
 function playerToCard(player: User): PlayerCard {
-  const meta = [player.profile.position, player.city, player.profile.level]
+  const meta = [player.profile?.position, player.city, player.profile?.level]
     .filter(Boolean)
     .join(' · ');
   return {

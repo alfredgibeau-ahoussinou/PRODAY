@@ -164,19 +164,24 @@ export const ProDayLiveMap: React.FC<ProDayLiveMapProps> = ({
             strokeColor={accent}
             strokeWidth={1.5}
           />
-          {markers.map((marker) => (
-            <NativeMarker
-              key={marker.id}
-              coordinate={{
-                latitude: marker.location.latitude,
-                longitude: marker.location.longitude,
-              }}
-              onPress={() => onMarkerPress?.(marker.id)}
-              tracksViewChanges={false}
-            >
-              <GeoMapPin kind={marker.kind} accent={accent} />
-            </NativeMarker>
-          ))}
+          {markers.map((marker) => {
+            const lat = marker.location?.latitude;
+            const lng = marker.location?.longitude;
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+            return (
+              <NativeMarker
+                key={marker.id}
+                coordinate={{
+                  latitude: lat,
+                  longitude: lng,
+                }}
+                onPress={() => onMarkerPress?.(marker.id)}
+                tracksViewChanges={false}
+              >
+                <GeoMapPin kind={marker.kind} accent={accent} />
+              </NativeMarker>
+            );
+          })}
         </NativeMapView>
       </NativeMapErrorBoundary>
     ) : (

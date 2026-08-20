@@ -78,19 +78,24 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
 
   const load = useCallback(async () => {
     setLoading(true);
-    const data = await fetchMatchCenterData(item.id);
-    if (data) {
-      setCenter(data);
-      setLiveItem(data.item);
-      setTab(data.availableTabs[0] ?? 'resume');
-      const video = await supporterVideoService.videoForMatch(
-        data.prodayEvent,
-        data.events,
-        data.item.watchUrl,
-      );
-      setMatchVideo(video);
+    try {
+      const data = await fetchMatchCenterData(item.id);
+      if (data) {
+        setCenter(data);
+        setLiveItem(data.item);
+        setTab(data.availableTabs[0] ?? 'resume');
+        const video = await supporterVideoService.videoForMatch(
+          data.prodayEvent,
+          data.events ?? [],
+          data.item.watchUrl,
+        );
+        setMatchVideo(video);
+      }
+    } catch {
+      setCenter(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [item.id]);
 
   useEffect(() => {
@@ -161,6 +166,14 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
   const lineups: ExternalFixtureLineup[] = center?.lineups ?? [];
   const actions: LiveMatchAction[] = center?.events ?? [];
   const statistics = center?.statistics;
+  const statKeys = statistics
+    ? Array.from(
+        new Set([
+          ...Object.keys(statistics.home ?? {}),
+          ...Object.keys(statistics.away ?? {}),
+        ]),
+      )
+    : [];
 
   const lineupEvents = useMemo(() => {
     if (center?.prodayEvent?.lineup) {
@@ -259,7 +272,7 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
               {action.minute}'
             </ProDayText>
             <ProDayText variant="caption" style={styles.muted}>
-              {LIVE_ACTION_LABELS[action.type]} — {action.player_name}
+              {LIVE_ACTION_LABELS[action.type] ?? action.type} — {action.player_name ?? ''}
             </ProDayText>
           </View>
         ))}
@@ -275,7 +288,7 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
   };
 
   const renderVideoTab = () => {
-    if (playableVideo?.watchUrl) {
+    if (playableVideo?.watchUrl && canPlaySupporterVideo(playableVideo)) {
       return (
         <SupporterReplayPlayer
           watchUrl={playableVideo.watchUrl}
@@ -312,7 +325,7 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
   };
 
   const renderMomentsTab = () => {
-    if (playableVideo?.watchUrl) {
+    if (playableVideo?.watchUrl && canPlaySupporterVideo(playableVideo)) {
       return (
         <>
           <SupporterReplayPlayer
@@ -326,7 +339,7 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
                 {action.minute}'
               </ProDayText>
               <ProDayText variant="section" style={styles.actionTitle}>
-                {LIVE_ACTION_LABELS[action.type]} — {action.player_name}
+                {LIVE_ACTION_LABELS[action.type] ?? action.type} — {action.player_name ?? ''}
               </ProDayText>
             </View>
           ))}
@@ -345,9 +358,9 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
         <ProDayText variant="caption" style={styles.minute}>
           {action.minute}'
         </ProDayText>
-        <ProDayText variant="section" style={styles.actionTitle}>
-          {LIVE_ACTION_LABELS[action.type]}
-        </ProDayText>
+                    <ProDayText variant="section" style={styles.actionTitle}>
+                      {LIVE_ACTION_LABELS[action.type] ?? action.type}
+                    </ProDayText>
       </Pressable>
     ));
   };
@@ -374,10 +387,10 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
                   </ProDayText>
                   <View style={styles.actionCopy}>
                     <ProDayText variant="section" style={styles.actionTitle}>
-                      {LIVE_ACTION_LABELS[action.type]}
+                      {LIVE_ACTION_LABELS[action.type] ?? action.type}
                     </ProDayText>
                     <ProDayText variant="caption" style={styles.muted}>
-                      {action.player_name}
+                      {action.player_name ?? ''}
                     </ProDayText>
                   </View>
                 </View>
@@ -388,28 +401,34 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
               homeScore={liveItem.scoreHome}
               awayScore={liveItem.scoreAway}
               matchStatus={liveItem.status}
-              kickoffAt={liveItem.startsAt instanceof Date ? liveItem.startsAt : new Date(liveItem.startsAt)}
+              kickoffAt={
+                liveItem.startsAt instanceof Date
+                  ? liveItem.startsAt
+                  : liveItem.startsAt
+                    ? new Date(liveItem.startsAt)
+                    : undefined
+              }
             />
           </>
         );
       case 'stats':
-        if (!statistics) {
+        if (!statistics || statKeys.length === 0) {
           return (
             <ProDayText variant="body" style={styles.muted}>
               Statistique non disponible
             </ProDayText>
           );
         }
-        return Object.keys(statistics.home).map((key) => (
+        return statKeys.map((key) => (
           <View key={key} style={styles.statRow}>
             <ProDayText variant="caption" style={styles.statVal}>
-              {String(statistics.home[key] ?? '—')}
+              {String(statistics.home?.[key] ?? '—')}
             </ProDayText>
             <ProDayText variant="caption" style={styles.statKey}>
               {key}
             </ProDayText>
             <ProDayText variant="caption" style={styles.statVal}>
-              {String(statistics.away[key] ?? '—')}
+              {String(statistics.away?.[key] ?? '—')}
             </ProDayText>
           </View>
         ));
@@ -420,7 +439,10 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
           <>
             <PressableSpring
               style={styles.iaCta}
-              onPress={() => center && void agent.ask('Résume le match', center, summary)}
+              onPress={() => {
+                if (!center) return;
+                void agent.ask('Résume le match', center, summary);
+              }}
               scaleTo={0.98}
             >
               <ProDayText variant="caption" style={styles.iaCtaText}>

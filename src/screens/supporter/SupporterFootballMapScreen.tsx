@@ -16,7 +16,6 @@ import { useTournaments } from '../../hooks/useTournaments';
 import { spacing, radius } from '../../theme/designTokens';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { GeoMarker } from '../../core/types/geo';
-import type { MainTabId } from '../../navigation/mainTabConfig';
 import { captureCurrentLocation, requestForegroundLocationPermission } from '../../utils/geoLocation';
 import { distanceKm } from '../../utils/geofencing';
 import { resolveCityCoords, isWithinWeek } from '../../utils/supporterCityGeo';
@@ -26,22 +25,24 @@ import { SupporterMatchDetailScreen } from './SupporterMatchDetailScreen';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 
 function eventToMatchItem(event: TeamEvent): SupporterMatchViewItem {
-  const opponent = event.live_state?.opponent_name ?? event.title;
+  const live = event.live_state;
+  const opponent = live?.opponent_name ?? event.title;
+  const startsAt = event.starts_at instanceof Date ? event.starts_at : new Date(event.starts_at);
   return {
     id: `proday-event-${event.id}`,
     source: 'proday',
     status:
-      event.live_state?.status === 'live' || event.live_state?.status === 'halftime'
+      live?.status === 'live' || live?.status === 'halftime'
         ? 'live'
-        : event.starts_at > new Date()
+        : startsAt.getTime() > Date.now()
           ? 'upcoming'
           : 'finished',
     genderScope: 'unspecified',
     homeLabel: event.club_name ?? 'ProDay',
     awayLabel: opponent,
-    startsAt: event.starts_at,
-    scoreHome: event.live_state?.home_score,
-    scoreAway: event.live_state?.away_score,
+    startsAt,
+    scoreHome: live?.home_score,
+    scoreAway: live?.away_score,
     meta: event.city,
     watchUrl: event.public_watch_url,
   };
@@ -54,7 +55,7 @@ type Props = {
 /** Carte football amateur — matchs ProDay cette semaine près de l'utilisateur. */
 export const SupporterFootballMapScreen: React.FC<Props> = ({ onBack }) => {
   const { profile } = useAuth();
-  const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
+  const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { tournaments } = useTournaments();
   const [userLoc, setUserLoc] = useState<GeoPoint | null>(null);
   const [loadingLoc, setLoadingLoc] = useState(true);
@@ -65,9 +66,15 @@ export const SupporterFootballMapScreen: React.FC<Props> = ({ onBack }) => {
     setLoadingLoc(true);
     try {
       const ok = await requestForegroundLocationPermission();
-      if (ok) setUserLoc(await captureCurrentLocation());
+      if (ok) {
+        setUserLoc(await captureCurrentLocation());
+      } else {
+        setUserLoc(null);
+        setListMode(true);
+      }
     } catch {
       setUserLoc(null);
+      setListMode(true);
     } finally {
       setLoadingLoc(false);
     }
@@ -79,7 +86,7 @@ export const SupporterFootballMapScreen: React.FC<Props> = ({ onBack }) => {
 
   const weekEvents = useMemo(
     () =>
-      events.filter(
+      (events ?? []).filter(
         (e) =>
           (e.event_type === 'friendly' || e.event_type === 'competition' || e.event_type === 'tournament') &&
           isWithinWeek(e.starts_at),
@@ -89,21 +96,24 @@ export const SupporterFootballMapScreen: React.FC<Props> = ({ onBack }) => {
 
   const markers: GeoMarker[] = useMemo(() => {
     const center = userLoc ?? resolveCityCoords('Paris');
-    return weekEvents.map((event) => {
+    const rows: GeoMarker[] = [];
+    for (const event of weekEvents) {
       const loc = resolveCityCoords(event.city);
+      if (!Number.isFinite(loc.latitude) || !Number.isFinite(loc.longitude)) continue;
       const dist = distanceKm(center, loc);
-      return {
+      rows.push({
         id: event.id,
-        kind: 'match' as const,
+        kind: 'match',
         title: event.club_name ?? event.title,
-        subtitle: event.live_state?.opponent_name ?? event.location_label ?? event.city,
-        city: event.city,
+        subtitle: event.live_state?.opponent_name ?? event.location_label ?? event.city ?? 'ProDay',
+        city: event.city ?? '',
         location: loc,
-        distanceKm: dist,
-        tab: 'matchs' as MainTabId,
+        distanceKm: Number.isFinite(dist) ? dist : 0,
+        tab: 'matchs',
         entityId: event.id,
-      };
-    }).sort((a, b) => a.distanceKm - b.distanceKm);
+      });
+    }
+    return rows.sort((a, b) => a.distanceKm - b.distanceKm);
   }, [userLoc, weekEvents]);
 
   const mapCenter = userLoc ?? (markers[0]?.location ?? resolveCityCoords('Paris'));

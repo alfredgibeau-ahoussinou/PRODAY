@@ -1,5 +1,6 @@
 import React from 'react';
 import { FeedHomeScreen } from '../../components/feed/FeedHomeScreen';
+import { SupporterPlusBackBar } from '../../components/supporter/SupporterPlusBackBar';
 import { SupporterPageFrame } from '../../components/supporter/SupporterPageFrame';
 import { getSupporterPageIdentity } from '../../content/supporterPageIdentity';
 import { useAuth } from '../../context/AuthContext';
@@ -36,6 +37,7 @@ export const SupporterTribuneFeedScreen: React.FC = () => {
         showHero
         badge="100 % gratuit"
       >
+        <SupporterPlusBackBar />
         <FeedHomeScreen
           profile={profile}
           embedded
@@ -49,6 +51,7 @@ export const SupporterTribuneFeedScreen: React.FC = () => {
 
   return (
     <SupporterPageFrame identity={getSupporterPageIdentity('debats')} badge="Gratuit">
+      <SupporterPlusBackBar />
       <View style={styles.guestBody}>
         <View style={styles.guestIcon}>
           <Icon name="chat" size={28} color={SUPPORTER_SITE.accent} />

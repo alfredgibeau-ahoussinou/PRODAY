@@ -49,11 +49,11 @@ export const PoleHelpChatbot: React.FC = () => {
     };
   }, [openChat]);
 
-  if (!visible) return null;
+  if (!visible && !open) return null;
 
   return (
     <>
-      {!open ? (
+      {visible && !open ? (
         <PoleHelpWidget
           expanded={showBubble}
           teaser={content.bubbleTeaser}

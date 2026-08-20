@@ -34,8 +34,10 @@ function hashCityCoords(city: string): GeoPoint {
   return { latitude: lat, longitude: lng };
 }
 
-export function resolveCityCoords(city: string): GeoPoint {
+export function resolveCityCoords(city?: string | null): GeoPoint {
+  if (!city || typeof city !== 'string') return CITY_COORDS.paris;
   const key = normalizeCity(city);
+  if (!key) return CITY_COORDS.paris;
   if (CITY_COORDS[key]) return CITY_COORDS[key];
   const partial = Object.entries(CITY_COORDS).find(([k]) => key.includes(k) || k.includes(key));
   if (partial) return partial[1];
@@ -43,6 +45,7 @@ export function resolveCityCoords(city: string): GeoPoint {
 }
 
 export function isWithinWeek(date: Date, now = new Date()): boolean {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return false;
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
   const end = new Date(start);

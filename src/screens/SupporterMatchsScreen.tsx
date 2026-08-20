@@ -14,7 +14,7 @@ import { useTournaments } from '../hooks/useTournaments';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { supporterChapterFromPendingLink } from '../utils/supporterMatchsDeepLink';
-import { SUPPORTER_COUNTRY_CHIPS } from '../content/supporterCompetitionsCatalog';
+import { SUPPORTER_COUNTRY_CHIPS, listCompetitionsForCountry } from '../content/supporterCompetitionsCatalog';
 import { useSupporterMatchHub } from '../hooks/useSupporterMatchHub';
 import { spacing } from '../theme/designTokens';
 import { followsService } from '../services/follows.service';
@@ -58,12 +58,12 @@ export const SupporterMatchsScreen: React.FC = () => {
   const { t, locale } = useTranslation();
   const nav = useTabNavigationActions();
   const { pendingMatchsLink, clearPendingMatchs } = useTabNavigation();
-  const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
+  const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { tournaments } = useTournaments();
   const [chapter, setChapter] = useState<SupporterMatchsChapter>(DEFAULT_SUPPORTER_MATCHS_CHAPTER);
   const [follows, setFollows] = useState<Follow[]>([]);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
-  const [dateWindow, setDateWindow] = useState<DateWindow>('today');
+  const [dateWindow, setDateWindow] = useState<DateWindow>('week');
   const [countryCode, setCountryCode] = useState<string | undefined>(undefined);
   const [filters, setFilters] = useState<SupporterMatchFilters>({
     gender: 'all',
@@ -101,8 +101,12 @@ export const SupporterMatchsScreen: React.FC = () => {
 
   const loadFollows = useCallback(async () => {
     if (!profile?.uid) return;
-    const list = await followsService.listByFollower(profile.uid);
-    setFollows(list);
+    try {
+      const list = await followsService.listByFollower(profile.uid);
+      setFollows(Array.isArray(list) ? list : []);
+    } catch {
+      setFollows([]);
+    }
   }, [profile?.uid]);
 
   useEffect(() => {
@@ -144,6 +148,16 @@ export const SupporterMatchsScreen: React.FC = () => {
       await loadFollows();
     },
     [profile?.uid, loadFollows],
+  );
+
+  const matchesCountry = useCallback(
+    (item: SupporterMatchViewItem) => {
+      if (!countryCode) return true;
+      if (item.source === 'proday') return true;
+      const slugs = new Set(listCompetitionsForCountry(countryCode).map((c) => c.id));
+      return item.competitionSlug ? slugs.has(item.competitionSlug) : false;
+    },
+    [countryCode],
   );
 
   const renderCard = (item: SupporterMatchViewItem, hero = false) => (
@@ -222,7 +236,8 @@ export const SupporterMatchsScreen: React.FC = () => {
     const heroIds = new Set(hub.heroKickoffs.map((item) => item.id));
     const rest = hub.sections.upcoming
       .filter((item) => !heroIds.has(item.id))
-      .filter((item) => matchesDateWindow(item.startsAt));
+      .filter((item) => matchesDateWindow(item.startsAt))
+      .filter(matchesCountry);
     const groups = groupUpcomingByDateThenCompetition(rest);
     content =
       groups.length > 0 ? (
@@ -302,7 +317,7 @@ export const SupporterMatchsScreen: React.FC = () => {
         renderEmpty('supporter.empty.proday')
       );
   } else if (chapter === 'world') {
-    const groups = groupWorldItemsByCompetition(hub.sections.world);
+    const groups = groupWorldItemsByCompetition(hub.sections.world.filter(matchesCountry));
     content =
       groups.length > 0 ? (
         groups.map((group) => (
@@ -437,7 +452,7 @@ export const SupporterMatchsScreen: React.FC = () => {
               <ProDayText variant="caption" style={styles.heroKicker}>
                 {t('supporter.matchs.heroKickoffs')}
               </ProDayText>
-              {hub.heroKickoffs.map((item) => renderCard(item, true))}
+          {hub.heroKickoffs.filter(matchesCountry).map((item) => renderCard(item, true))}
             </View>
           ) : null}
           {content}

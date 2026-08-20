@@ -200,7 +200,11 @@ export async function fetchSupporterMatchHub(
         .catch(() => []),
       externalScoresService.listRecentFinishedFixtures().catch(() => []),
       teamEventsService.listUpcoming(60).catch(() => [] as TeamEvent[]),
-      externalScoresService.getProviderState(),
+      externalScoresService.getProviderState().catch(() => ({
+        source: 'api_stub' as const,
+        last_sync_at: new Date(),
+        healthy: false,
+      })),
       hasFollows
         ? fetchFixturesForFollowedTeams(followedTeamIds, 'scheduled')
         : Promise.resolve([] as ExternalFixture[]),
@@ -253,9 +257,16 @@ export async function fetchSupporterMatchHub(
     ...followsRaw,
   ]).filter(isListedBroadcastItem);
 
+  const liveFilters: SupporterMatchFilters = {
+    gender: filters.gender,
+    source: 'all',
+    scope: 'all',
+    competition: 'all',
+  };
+
   const sections: SupporterMatchHubSections = {
     upcoming: filterMatchItems(upcomingFollowed, filters, followContext, follows),
-    live: filterMatchItems(liveRaw, filters, followContext, follows),
+    live: filterMatchItems(liveRaw, liveFilters, followContext, follows),
     recent: filterMatchItems(recentRaw, filters, followContext, follows),
     proday: filterMatchItems(prodayRaw, filters, followContext, follows),
     world: filterMatchItems(worldRaw, filters, followContext, follows),

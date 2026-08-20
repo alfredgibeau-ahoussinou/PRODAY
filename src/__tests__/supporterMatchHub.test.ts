@@ -200,6 +200,18 @@ describe('supporterMatchHub', () => {
     expect(result.sections.upcoming.some((item) => item.homeLabel === 'Paris SG')).toBe(true);
   });
 
+  it('garde les lives même si le filtre compétition / source est restrictif', async () => {
+    (teamEventsService.listUpcoming as jest.Mock).mockResolvedValue([]);
+    const result = await fetchSupporterMatchHub({
+      calendarEvents: [],
+      tournaments: [],
+      follows: [],
+      filters: { ...ALL_FILTERS, source: 'proday', competition: 'pl', scope: 'follows' },
+    });
+    expect(result.liveCount).toBeGreaterThan(0);
+    expect(result.sections.live.some((item) => item.source === 'world')).toBe(true);
+  });
+
   it('respecte le filtre compétition monde', async () => {
     (teamEventsService.listUpcoming as jest.Mock).mockResolvedValue([]);
 

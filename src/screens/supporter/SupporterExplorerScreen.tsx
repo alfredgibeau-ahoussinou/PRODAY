@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SupporterPageFrame } from '../../components/supporter/SupporterPageFrame';
+import { SupporterPlusBackBar } from '../../components/supporter/SupporterPlusBackBar';
 import { getSupporterPageIdentity, SUPPORTER_SITE } from '../../content/supporterPageIdentity';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring, PushScreenTransition } from '../../components/motion';
@@ -26,7 +27,7 @@ import { SUPPORTER_COUNTRY_CHIPS } from '../../content/supporterCompetitionsCata
 export const SupporterExplorerScreen: React.FC = () => {
   const { profile } = useAuth();
   const nav = useTabNavigationActions();
-  const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
+  const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { query, setQuery, search, loading, results } = useSupporterGlobalSearch(events);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
   const [showMap, setShowMap] = useState(false);
@@ -79,6 +80,7 @@ export const SupporterExplorerScreen: React.FC = () => {
 
   return (
     <SupporterPageFrame identity={getSupporterPageIdentity('suivis')}>
+      <SupporterPlusBackBar />
       <View style={styles.searchBox}>
         <TextInput
           value={query}

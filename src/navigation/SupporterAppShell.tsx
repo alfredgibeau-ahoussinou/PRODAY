@@ -184,7 +184,6 @@ export const SupporterAppShell: React.FC = () => {
             <StatusBar style="light" />
             <ProdayNotificationBridge />
             <ProdayBrainBridge />
-            <PoleHelpChatbot />
             <View style={[styles.screen, { backgroundColor: themeColors.background }]}>
               <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
                 <Screen />
@@ -196,6 +195,9 @@ export const SupporterAppShell: React.FC = () => {
               unreadCount={unreadCount}
               visibleTabs={[...SUPPORTER_SHELL_TABS]}
             />
+            <View style={styles.helpLayer} pointerEvents="box-none">
+              <PoleHelpChatbot />
+            </View>
           </SafeAreaView>
         </SupporterShellProvider>
     </TabNavigationProvider>
@@ -205,4 +207,9 @@ export const SupporterAppShell: React.FC = () => {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   screen: { flex: 1 },
+  helpLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 80,
+    elevation: 80,
+  },
 });

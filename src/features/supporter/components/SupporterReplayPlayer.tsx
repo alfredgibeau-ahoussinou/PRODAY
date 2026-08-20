@@ -21,11 +21,12 @@ export const SupporterReplayPlayer: React.FC<Props> = ({
   title,
   onProgress,
 }) => {
+  const safeUrl = watchUrl?.trim() ?? '';
   const [playing, setPlaying] = useState(true);
   const [speedIdx, setSpeedIdx] = useState(2);
   const [activeChapter, setActiveChapter] = useState<string | null>(null);
 
-  const source = useMemo((): VideoSource => watchUrl, [watchUrl]);
+  const source = useMemo((): VideoSource => safeUrl, [safeUrl]);
 
   const player = useVideoPlayer(source, (instance) => {
     instance.loop = false;
@@ -61,6 +62,14 @@ export const SupporterReplayPlayer: React.FC<Props> = ({
   const cycleSpeed = () => {
     setSpeedIdx((i) => (i + 1) % SPEEDS.length);
   };
+
+  if (!safeUrl) {
+    return (
+      <ProDayText variant="body" style={styles.missing}>
+        Vidéo non disponible pour ce match.
+      </ProDayText>
+    );
+  }
 
   return (
     <View style={styles.root}>
@@ -119,6 +128,7 @@ export const SupporterReplayPlayer: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   root: { gap: spacing.sm },
+  missing: { color: SUPPORTER_SITE.muted, lineHeight: 20 },
   video: {
     width: '100%',
     aspectRatio: 16 / 9,

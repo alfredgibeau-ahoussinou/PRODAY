@@ -22,7 +22,6 @@ import { useTournaments } from '../../hooks/useTournaments';
 import { useSupporterMatchHub } from '../../hooks/useSupporterMatchHub';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { followsService } from '../../services/follows.service';
-import { loadSupporterMatchFilters } from '../../services/supporterPreferences.service';
 import { supporterVideoService } from '../../services/supporterVideo.service';
 import type { Follow } from '../../models/Follow';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
@@ -38,13 +37,15 @@ import type { SupporterVideo } from '../../models/SupporterVideo';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { openClubHelpChatbot } from '../../features/club/shell/clubHelpOpen';
+import { PoleHelpPanel } from '../../components/help/PoleHelpPanel';
+import { getPoleHelpContent, getPoleHelpQuestionCount } from '../../content/poleHelpContent';
 import { openSupporterLive } from '../../utils/supporterMatchsDeepLink';
 
 /** Accueil — Centre du football (hub V2). */
 export const SupporterFootballHubScreen: React.FC = () => {
   const { profile } = useAuth();
   const nav = useTabNavigationActions();
-  const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
+  const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { tournaments } = useTournaments();
   const [follows, setFollows] = useState<Follow[]>([]);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
@@ -52,15 +53,21 @@ export const SupporterFootballHubScreen: React.FC = () => {
   const [showLive, setShowLive] = useState(false);
   const [showSuivis, setShowSuivis] = useState(false);
   const [videos, setVideos] = useState<SupporterVideo[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
 
   const loadFollows = useCallback(async () => {
     if (!profile?.uid) return;
-    const list = await followsService.listByFollower(profile.uid);
-    setFollows(list);
-    setFollowedIds(new Set(list.map((f) => f.target_id)));
+    try {
+      const list = await followsService.listByFollower(profile.uid);
+      setFollows(Array.isArray(list) ? list : []);
+      setFollowedIds(new Set((list ?? []).map((f) => f.target_id)));
+    } catch {
+      setFollows([]);
+      setFollowedIds(new Set());
+    }
   }, [profile?.uid]);
 
   const toggleFollow = useCallback(
@@ -85,8 +92,12 @@ export const SupporterFootballHubScreen: React.FC = () => {
   });
 
   const loadVideos = useCallback(async () => {
-    const list = await supporterVideoService.listAvailable({ prodayEvents: events, max: 8 });
-    setVideos(list);
+    try {
+      const list = await supporterVideoService.listAvailable({ prodayEvents: events ?? [], max: 8 });
+      setVideos(Array.isArray(list) ? list : []);
+    } catch {
+      setVideos([]);
+    }
   }, [events]);
 
   useEffect(() => {
@@ -96,26 +107,36 @@ export const SupporterFootballHubScreen: React.FC = () => {
   useEffect(() => {
     if (!profile?.uid) return;
     void (async () => {
-      const prefs = await loadSupporterNotificationPrefs(profile.uid);
-      const followed = new Set(follows.map((f) => f.target_id));
-      const upcoming = [
-        ...hub.sections.upcoming,
-        ...hub.sections.follows,
-        ...hub.heroKickoffs,
-      ];
-      const reminders = supporterNotificationPlanner.buildKickoffReminders(upcoming, followed);
-      await supporterNotificationPlanner.scheduleNotifications(prefs, reminders);
+      try {
+        const prefs = await loadSupporterNotificationPrefs(profile.uid);
+        const followed = new Set((follows ?? []).map((f) => f.target_id));
+        const upcoming = [
+          ...(hub.sections.upcoming ?? []),
+          ...(hub.sections.follows ?? []),
+          ...(hub.heroKickoffs ?? []),
+        ];
+        const reminders = supporterNotificationPlanner.buildKickoffReminders(upcoming, followed);
+        await supporterNotificationPlanner.scheduleNotifications(prefs, reminders);
+      } catch {
+        /* notifications optionnelles */
+      }
     })();
   }, [profile?.uid, follows, hub.sections.upcoming, hub.sections.follows, hub.heroKickoffs]);
 
   const pourToiItems = useMemo(() => {
-    const fromFollows = hub.sections.follows.slice(0, 3);
+    const fromFollows = (hub.sections.follows ?? []).slice(0, 3);
     if (fromFollows.length >= 3) return fromFollows;
     const ids = new Set(fromFollows.map((m) => m.id));
-    const extra = hub.sections.upcoming.filter((m) => !ids.has(m.id));
+    const extra = (hub.sections.upcoming ?? []).filter((m) => !ids.has(m.id));
     return [...fromFollows, ...extra].slice(0, 3);
   }, [hub.sections.follows, hub.sections.upcoming]);
 
+  const helpContent = useMemo(() => getPoleHelpContent('supporter', 'supporter'), []);
+  const helpCount = useMemo(() => getPoleHelpQuestionCount(helpContent), [helpContent]);
+
+  const openHelp = useCallback(() => {
+    if (!openClubHelpChatbot()) setShowHelp(true);
+  }, []);
   const firstName = profile?.display_name?.split(' ')[0]?.trim() || 'Supporter';
   const liveItems = hub.sections.live.slice(0, 4);
   const upcomingHero = hub.heroKickoffs[0] ?? hub.sections.upcoming[0];
@@ -181,6 +202,7 @@ export const SupporterFootballHubScreen: React.FC = () => {
   }
 
   return (
+    <>
     <SupporterPageFrame identity={getSupporterPageIdentity('tribune')} showHero={false}>
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -315,7 +337,7 @@ export const SupporterFootballHubScreen: React.FC = () => {
 
         <PressableSpring
           style={styles.iaCta}
-          onPress={() => openClubHelpChatbot()}
+          onPress={openHelp}
           scaleTo={0.97}
         >
           <Icon name="star-four-points" size={18} color={SUPPORTER_SITE.foreground} />
@@ -325,6 +347,14 @@ export const SupporterFootballHubScreen: React.FC = () => {
         </PressableSpring>
       </ScrollView>
     </SupporterPageFrame>
+    <PoleHelpPanel
+      visible={showHelp}
+      content={helpContent}
+      questionCount={helpCount}
+      usesBriefcaseIcon={false}
+      onClose={() => setShowHelp(false)}
+    />
+    </>
   );
 };
 

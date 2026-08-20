@@ -21,6 +21,7 @@ import {
 
 /** Heure de coup d’envoi tabulaire (21:00). */
 export function formatKickoffClock(date: Date): string {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '--:--';
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
