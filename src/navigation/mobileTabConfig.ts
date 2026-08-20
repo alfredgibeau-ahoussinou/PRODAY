@@ -34,7 +34,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
   pro_club: ['home', 'recrutement', 'matchs', 'messages'],
   pro_staff: ['home', 'covoiturage', 'matchs', 'recrutement'],
   sponsor: ['home', 'matchs', 'messages', 'profil'],
-  supporter: ['home', 'matchs', 'feed', 'messages'],
+  supporter: ['home', 'matchs', 'profil', 'plus'],
   sante: ['home', 'matchs', 'feed', 'messages'],
   parent: ['home', 'messages', 'matchs', 'profil'],
 };
@@ -58,8 +58,8 @@ type FlatRailRule = {
 const FLAT_RAIL_RULES: FlatRailRule[] = [
   {
     match: (line, role) => line === 'supporter' && role === 'supporter',
-    primary: ['home', 'matchs', 'feed', 'reels', 'profil'],
-    overflow: ['messages', 'shop'],
+    primary: ['home', 'matchs', 'profil', 'plus'],
+    overflow: [],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'player',

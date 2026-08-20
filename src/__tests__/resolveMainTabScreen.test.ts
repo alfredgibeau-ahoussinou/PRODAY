@@ -32,6 +32,9 @@ jest.mock('../screens/supporter/SupporterTribuneFeedScreen', () => ({
 jest.mock('../screens/SupporterProfileTabScreen', () => ({
   SupporterProfileTabScreen: 'SupporterProfileTabScreen',
 }));
+jest.mock('../screens/supporter/SupporterPlusHubScreen', () => ({
+  SupporterPlusHubScreen: 'SupporterPlusHubScreen',
+}));
 jest.mock('../screens/LazyReelsScreen', () => ({ LazyReelsScreen: 'LazyReelsScreen' }));
 jest.mock('../screens/ProfilTabScreen', () => ({ ProfilTabScreen: 'ProfilTabScreen' }));
 jest.mock('../screens/CarpoolScreen', () => ({ CarpoolScreen: 'CarpoolScreen' }));
@@ -98,13 +101,15 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('matchs', 'coach', 'pro')).toBe('MatchsScreen');
   });
 
-  it('mappe le shell supporter V2 media center', () => {
+  it('mappe le shell supporter Accueil · Matchs · Profil · Plus', () => {
     expect(resolveMainTabScreen('home', 'supporter', 'supporter')).toBe('SupporterFootballHubScreen');
     expect(resolveMainTabScreen('matchs', 'supporter', 'supporter')).toBe('SupporterMatchsScreen');
+    expect(resolveMainTabScreen('plus', 'supporter', 'supporter')).toBe('SupporterPlusHubScreen');
     expect(resolveMainTabScreen('feed', 'supporter', 'supporter')).toBe('SupporterExplorerScreen');
     expect(resolveMainTabScreen('reels', 'supporter', 'supporter')).toBe('SupporterVideosScreen');
     expect(resolveMainTabScreen('messages', 'supporter', 'supporter')).toBe('SupporterTribuneFeedScreen');
     expect(resolveMainTabScreen('profil', 'supporter', 'supporter')).toBe('SupporterProfileTabScreen');
+    expect(resolveMainTabScreen('shop', 'supporter', 'supporter')).toBe('ShopScreen');
   });
 
   it('mappe le portail coach sur home', () => {

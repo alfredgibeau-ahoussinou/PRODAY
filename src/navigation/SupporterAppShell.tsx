@@ -9,9 +9,9 @@ import {
 } from './resolveMainTabScreen';
 import { TabNavigationProvider } from '../context/TabNavigationContext';
 import { SupporterShellProvider } from '../context/SupporterShellContext';
-import { SupporterMediaTabBar } from '../components/navigation/SupporterMediaTabBar';
+import { BottomTabBar } from '../components/navigation/BottomTabBar';
 import {
-  SUPPORTER_OVERFLOW_TABS,
+  SUPPORTER_PLUS_DESTINATION_TABS,
   SUPPORTER_SHELL_TABS,
 } from './shells/productShellTabs';
 import { AnimatedTabContent } from '../components/motion';
@@ -23,23 +23,28 @@ import { useUnreadMessageCount } from '../hooks/useUnreadMessages';
 import { getVisibleMainTabs } from '../content/poleExperience';
 import { useProductLine } from '../context/ProductLineContext';
 import { prodayHaptics } from '../utils/prodayHaptics';
-import type {
-  CarpoolDeepLink,
-  DashboardDeepLink,
-  MatchsDeepLink,
-  MercatoDeepLink,
-  ProfileDeepLink,
+import {
+  resolveAutoReturnTab,
+  type CarpoolDeepLink,
+  type DashboardDeepLink,
+  type MatchsDeepLink,
+  type ProfileDeepLink,
+  type SetActiveTabOptions,
 } from '../utils/navigationDeepLink';
+import { stampMatchsDeepLink } from '../utils/supporterMatchsDeepLink';
 
 export const SupporterAppShell: React.FC = () => {
   const profile = useSessionProfile();
   const { productLine, colors: themeColors } = useProductLine();
   const [activeTab, setActiveTab] = useState<MainTabId>('home');
+  const [returnTab, setReturnTab] = useState<MainTabId | null>(null);
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
   const [pendingMatchsLink, setPendingMatchsLink] = useState<MatchsDeepLink | null>(null);
   const [pendingProfileView, setPendingProfileView] = useState<ProfileDeepLink | null>(null);
   const [pendingDashboardView, setPendingDashboardView] = useState<DashboardDeepLink | null>(null);
   const { count: unreadCount, refresh: refreshUnread } = useUnreadMessageCount();
+
+  const dockTabs = useMemo(() => new Set<MainTabId>(SUPPORTER_SHELL_TABS), []);
 
   const visibleTabs = useMemo(
     () => getVisibleMainTabs(productLine, profile?.role, profile),
@@ -47,9 +52,14 @@ export const SupporterAppShell: React.FC = () => {
   );
 
   const screenTabs = useMemo((): MainTabId[] => {
-    if (!shouldInjectShopTab(profile?.role, productLine)) return visibleTabs;
-    if (visibleTabs.includes('shop')) return visibleTabs;
-    return [...visibleTabs, 'shop'];
+    const merged = [...visibleTabs];
+    for (const tab of SUPPORTER_PLUS_DESTINATION_TABS) {
+      if (!merged.includes(tab)) merged.push(tab);
+    }
+    if (shouldInjectShopTab(profile?.role, productLine) && !merged.includes('shop')) {
+      merged.push('shop');
+    }
+    return merged;
   }, [visibleTabs, profile?.role, productLine]);
 
   useEffect(() => {
@@ -63,19 +73,38 @@ export const SupporterAppShell: React.FC = () => {
   }, [activeTab, refreshUnread]);
 
   const handleTabPress = useCallback(
-    (tab: MainTabId) => {
+    (tab: MainTabId, options?: SetActiveTabOptions) => {
       if (tab !== activeTab) prodayHaptics.tabSwitch();
+      const nextReturn = resolveAutoReturnTab(activeTab, tab, dockTabs, options?.returnTo);
+      if (nextReturn !== undefined) {
+        setReturnTab(nextReturn);
+      }
       setActiveTab(tab);
     },
-    [activeTab],
+    [activeTab, dockTabs],
   );
+
+  const goBackTab = useCallback(() => {
+    if (!returnTab) return;
+    const target = returnTab;
+    setReturnTab(null);
+    setActiveTab(target);
+  }, [returnTab]);
 
   const openChat = useCallback(
     (threadId: string) => {
       setPendingChatThreadId(threadId);
-      handleTabPress('messages');
+      handleTabPress('messages', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
     },
-    [handleTabPress],
+    [handleTabPress, activeTab],
+  );
+
+  const openMatchs = useCallback(
+    (link?: MatchsDeepLink) => {
+      setPendingMatchsLink(stampMatchsDeepLink(link ?? { supporterChapter: 'upcoming' }));
+      handleTabPress('matchs', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
+    },
+    [handleTabPress, activeTab],
   );
 
   const navigate = useCallback(
@@ -99,25 +128,22 @@ export const SupporterAppShell: React.FC = () => {
       value={{
         activeTab,
         setActiveTab: handleTabPress,
-        returnTab: null,
-        goBackTab: () => undefined,
+        returnTab,
+        goBackTab,
         pendingChatThreadId,
         openChat,
         clearPendingChat: () => setPendingChatThreadId(null),
         pendingTeamEventId: null,
         openTeamEvent: (eventId) => {
-          setPendingMatchsLink({ eventId, homeTab: 'season' });
+          setPendingMatchsLink(stampMatchsDeepLink({ eventId, homeTab: 'season' }));
           handleTabPress('matchs');
         },
         clearPendingTeamEvent: () => undefined,
         pendingMatchsLink,
-        openMatchs: (link) => {
-          setPendingMatchsLink(link ?? { homeTab: 'season' });
-          handleTabPress('matchs');
-        },
+        openMatchs,
         clearPendingMatchs: () => setPendingMatchsLink(null),
         pendingMercatoView: null,
-        openMercato: () => handleTabPress('feed'),
+        openMercato: () => handleTabPress('feed', activeTab === 'plus' ? { returnTo: 'plus' } : undefined),
         clearPendingMercato: () => undefined,
         pendingProfileView,
         openProfile: (view) => {
@@ -136,14 +162,15 @@ export const SupporterAppShell: React.FC = () => {
         pendingDashboardView,
         openDashboard: (view) => {
           if (view === 'feed') {
-            handleTabPress('feed');
+            handleTabPress('feed', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
             return;
           }
           setPendingDashboardView(view);
           handleTabPress('home');
         },
         clearPendingDashboard: () => setPendingDashboardView(null),
-        openShop: () => handleTabPress('shop'),
+        openShop: () =>
+          handleTabPress('shop', activeTab === 'plus' ? { returnTo: 'plus' } : undefined),
         pendingCarpoolLink: null as CarpoolDeepLink | null,
         openCarpool: () => undefined,
         clearPendingCarpool: () => undefined,
@@ -163,18 +190,11 @@ export const SupporterAppShell: React.FC = () => {
                 <Screen />
               </AnimatedTabContent>
             </View>
-            <SupporterMediaTabBar
-              activeTab={activeTab}
+            <BottomTabBar
+              activeTab={dockTabs.has(activeTab) ? activeTab : 'plus'}
               onTabPress={handleTabPress}
-              onLivePress={() => {
-                setPendingMatchsLink({ supporterChapter: 'live' });
-                handleTabPress('matchs');
-              }}
               unreadCount={unreadCount}
-              visibleTabs={screenTabs.filter((t) => SUPPORTER_SHELL_TABS.includes(t))}
-              overflowTabs={SUPPORTER_OVERFLOW_TABS.filter((t) =>
-                screenTabs.includes(t) || SUPPORTER_OVERFLOW_TABS.includes(t),
-              )}
+              visibleTabs={[...SUPPORTER_SHELL_TABS]}
             />
           </SafeAreaView>
         </SupporterShellProvider>

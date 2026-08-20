@@ -30,12 +30,14 @@ import { spacing, radius } from '../../theme/designTokens';
 import { PushScreenTransition } from '../../components/motion';
 import { SupporterMatchDetailScreen } from './SupporterMatchDetailScreen';
 import { SupporterFootballMapScreen } from './SupporterFootballMapScreen';
+import { SupporterLiveNowScreen } from './SupporterLiveNowScreen';
+import { SupporterSuivisScreen } from '../SupporterSuivisScreen';
 import { loadSupporterNotificationPrefs } from '../../services/supporterPreferences.service';
 import { supporterNotificationPlanner } from '../../services/supporterNotificationPlanner';
 import type { SupporterVideo } from '../../models/SupporterVideo';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
-import { useSupporterAgent } from '../../agents/supporterAgent/useSupporterAgent';
+import { openClubHelpChatbot } from '../../features/club/shell/clubHelpOpen';
 
 /** Accueil — Centre du football (hub V2). */
 export const SupporterFootballHubScreen: React.FC = () => {
@@ -46,9 +48,10 @@ export const SupporterFootballHubScreen: React.FC = () => {
   const [follows, setFollows] = useState<Follow[]>([]);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
   const [showMap, setShowMap] = useState(false);
+  const [showLive, setShowLive] = useState(false);
+  const [showSuivis, setShowSuivis] = useState(false);
   const [videos, setVideos] = useState<SupporterVideo[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const agent = useSupporterAgent();
 
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
 
@@ -131,10 +134,37 @@ export const SupporterFootballHubScreen: React.FC = () => {
     }
   }, [hub, loadFollows, loadVideos]);
 
+  if (showLive) {
+    return (
+      <PushScreenTransition active={showLive}>
+        <SupporterLiveNowScreen onBack={() => setShowLive(false)} />
+      </PushScreenTransition>
+    );
+  }
+
   if (showMap) {
     return (
       <PushScreenTransition active={showMap}>
         <SupporterFootballMapScreen onBack={() => setShowMap(false)} />
+      </PushScreenTransition>
+    );
+  }
+
+  if (showSuivis) {
+    return (
+      <PushScreenTransition active={showSuivis}>
+        <View style={{ flex: 1, backgroundColor: SUPPORTER_SITE.bg }}>
+          <PressableSpring
+            style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md }}
+            onPress={() => setShowSuivis(false)}
+            haptic
+          >
+            <ProDayText variant="caption" style={styles.link}>
+              ← Accueil
+            </ProDayText>
+          </PressableSpring>
+          <SupporterSuivisScreen />
+        </View>
       </PushScreenTransition>
     );
   }
@@ -166,18 +196,23 @@ export const SupporterFootballHubScreen: React.FC = () => {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          <View style={styles.chip}>
+          <Pressable onPress={() => setShowSuivis(true)} style={styles.chip}>
             <ProDayText variant="caption" style={styles.chipText}>
               {followedClubCount} club{followedClubCount !== 1 ? 's' : ''} suivi{followedClubCount !== 1 ? 's' : ''}
             </ProDayText>
-          </View>
-          {hub.liveCount > 0 ? (
-            <Pressable onPress={() => nav.openMatchs({ supporterChapter: 'live' })} style={[styles.chip, styles.chipLive]}>
-              <ProDayText variant="caption" style={styles.chipLiveText}>
-                {hub.liveCount} en direct
-              </ProDayText>
-            </Pressable>
-          ) : null}
+          </Pressable>
+          <Pressable
+            onPress={() => nav.openMatchs({ supporterChapter: 'live' })}
+            style={[styles.chip, styles.chipLive]}
+          >
+            <ProDayText variant="caption" style={styles.chipLiveText}>
+              {hub.liveCount > 0 ? `${hub.liveCount} en direct` : 'LIVE'}
+            </ProDayText>
+          </Pressable>
+            <ProDayText variant="caption" style={styles.chipLiveText}>
+              {hub.liveCount > 0 ? `${hub.liveCount} en direct` : 'LIVE'}
+            </ProDayText>
+          </Pressable>
           <Pressable onPress={() => nav.setActiveTab('messages')} style={styles.chip}>
             <ProDayText variant="caption" style={styles.chipText}>
               Fil communauté
@@ -190,7 +225,17 @@ export const SupporterFootballHubScreen: React.FC = () => {
         ) : null}
 
         {liveItems.length > 0 ? (
-          <SupporterHubSection title="Matchs en direct" subtitle={`${hub.liveCount} match${hub.liveCount > 1 ? 's' : ''}`}>
+          <SupporterHubSection
+            title="Matchs en direct"
+            subtitle={`${hub.liveCount} match${hub.liveCount > 1 ? 's' : ''}`}
+            action={
+              <Pressable onPress={() => setShowLive(true)}>
+                <ProDayText variant="caption" style={styles.link}>
+                  Tout voir
+                </ProDayText>
+              </Pressable>
+            }
+          >
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveStrip}>
               {liveItems.map((item) => (
                 <View key={item.id} style={styles.liveCardWrap}>
@@ -235,12 +280,22 @@ export const SupporterFootballHubScreen: React.FC = () => {
           >
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.videoStrip}>
               {videos.map((v) => (
-                <View key={v.id} style={styles.videoTile}>
+                <Pressable
+                  key={v.id}
+                  style={styles.videoTile}
+                  onPress={() => {
+                    if (v.watchUrl) {
+                      void nav.setActiveTab('reels');
+                      return;
+                    }
+                    nav.setActiveTab('reels');
+                  }}
+                >
                   <Icon name="videocam" size={18} color={SUPPORTER_SITE.accent} />
                   <ProDayText variant="caption" style={styles.videoTitle} numberOfLines={2}>
                     {v.title}
                   </ProDayText>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           </SupporterHubSection>
@@ -258,9 +313,7 @@ export const SupporterFootballHubScreen: React.FC = () => {
 
         <PressableSpring
           style={styles.agentFab}
-          onPress={() => {
-            if (upcomingHero) setSelected(upcomingHero);
-          }}
+          onPress={() => openClubHelpChatbot()}
           scaleTo={0.97}
         >
           <Icon name="star-four-points" size={18} color={SUPPORTER_SITE.foreground} />
@@ -268,13 +321,6 @@ export const SupporterFootballHubScreen: React.FC = () => {
             IA Supporter
           </ProDayText>
         </PressableSpring>
-        {agent.lastReply ? (
-          <View style={styles.agentReply}>
-            <ProDayText variant="caption" style={styles.agentReplyText}>
-              {agent.lastReply.text}
-            </ProDayText>
-          </View>
-        ) : null}
       </ScrollView>
     </SupporterPageFrame>
   );
@@ -331,12 +377,4 @@ const styles = StyleSheet.create({
     borderColor: SUPPORTER_SITE.border,
   },
   agentFabText: { color: SUPPORTER_SITE.foreground, letterSpacing: 0.5 },
-  agentReply: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: SUPPORTER_SITE.elevated,
-  },
-  agentReplyText: { color: SUPPORTER_SITE.muted, lineHeight: 18 },
 });

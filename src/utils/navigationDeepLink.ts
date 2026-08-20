@@ -26,6 +26,8 @@ export type MatchsDeepLink = {
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
   /** Chapitre supporter Matchs (live, proday, …). */
   supporterChapter?: 'upcoming' | 'live' | 'proday' | 'world' | 'follows' | 'broadcasts';
+  /** Force la conso du deep link même si l’onglet Matchs est déjà actif. */
+  applyNonce?: number;
   /** Ouvre directement Matchs à organiser / proposer / chercher. */
   view?: 'organize' | 'propose' | 'search';
 };

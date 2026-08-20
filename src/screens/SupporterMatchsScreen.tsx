@@ -13,6 +13,7 @@ import { useSeasonCalendar } from '../hooks/useAppData';
 import { useTournaments } from '../hooks/useTournaments';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useTabNavigation } from '../context/TabNavigationContext';
+import { supporterChapterFromPendingLink } from '../utils/supporterMatchsDeepLink';
 import { SUPPORTER_COUNTRY_CHIPS } from '../content/supporterCompetitionsCatalog';
 import { useSupporterMatchHub } from '../hooks/useSupporterMatchHub';
 import { spacing } from '../theme/designTokens';
@@ -37,12 +38,10 @@ import { SupporterMatchDetailScreen } from './supporter/SupporterMatchDetailScre
 type SupporterMatchsChapter = SupporterMatchHubSection;
 
 const CHAPTER_KEYS: { id: SupporterMatchsChapter; labelKey: string }[] = [
-  { id: 'upcoming', labelKey: 'supporter.chapters.upcoming' },
   { id: 'live', labelKey: 'supporter.chapters.live' },
-  { id: 'broadcasts', labelKey: 'supporter.chapters.broadcasts' },
+  { id: 'upcoming', labelKey: 'supporter.chapters.upcoming' },
   { id: 'proday', labelKey: 'supporter.chapters.proday' },
   { id: 'world', labelKey: 'supporter.chapters.world' },
-  { id: 'follows', labelKey: 'supporter.chapters.follows' },
 ];
 
 type DateWindow = 'today' | 'tomorrow' | 'week' | 'weekend';
@@ -74,10 +73,11 @@ export const SupporterMatchsScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!pendingMatchsLink?.supporterChapter) return;
-    setChapter(pendingMatchsLink.supporterChapter);
+    const next = supporterChapterFromPendingLink(pendingMatchsLink);
+    if (!next) return;
+    setChapter(next);
     clearPendingMatchs();
-  }, [pendingMatchsLink, clearPendingMatchs]);
+  }, [pendingMatchsLink, pendingMatchsLink?.applyNonce, clearPendingMatchs]);
 
   const matchesDateWindow = useCallback(
     (startsAt?: Date) => {
@@ -354,6 +354,7 @@ export const SupporterMatchsScreen: React.FC = () => {
   return (
     <>
       <SupporterPageFrame identity={getSupporterPageIdentity('matchs')} badge="100 % gratuit">
+        {chapter === 'upcoming' ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -374,6 +375,7 @@ export const SupporterMatchsScreen: React.FC = () => {
             );
           })}
         </ScrollView>
+        ) : null}
         {(chapter === 'world' || chapter === 'upcoming') ? (
           <ScrollView
             horizontal

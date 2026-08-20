@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Linking,
   ScrollView,
   StyleSheet,
@@ -72,7 +73,14 @@ export const SupporterVideosScreen: React.FC = () => {
                     key={v.id}
                     style={styles.card}
                     onPress={() => {
-                      if (v.watchUrl) void Linking.openURL(v.watchUrl);
+                      if (v.watchUrl) {
+                        void Linking.openURL(v.watchUrl);
+                        return;
+                      }
+                      Alert.alert(
+                        v.title,
+                        'Replay pas encore en ligne. Dès qu’un lien officiel est publié, il s’ouvrira ici.',
+                      );
                     }}
                     scaleTo={0.98}
                   >

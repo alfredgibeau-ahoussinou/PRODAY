@@ -20,9 +20,9 @@ describe('mobileTabConfig', () => {
     expect(rail.center).toBeNull();
   });
 
-  it('affiche une rangée plate pour Supporter V2 (Accueil · Matchs · Explorer · Vidéos · Profil)', () => {
+  it('affiche une rangée plate pour Supporter (Accueil · Matchs · Profil · Plus)', () => {
     const rail = getMobileRailLayout('supporter', 'supporter');
-    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'reels', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'profil', 'plus']);
     expect(rail.center).toBeNull();
     expect(rail.overflow).toEqual([]);
     expect(rail.left).toEqual([]);

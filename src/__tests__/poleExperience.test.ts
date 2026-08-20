@@ -69,10 +69,12 @@ describe('poleExperience', () => {
 
     expect(getVisibleMainTabs('homme', 'player')).toEqual([
       'home',
-      'recrutement',
       'matchs',
       'feed',
       'profil',
+      'plus',
+      'progression',
+      'recrutement',
       'reels',
       'messages',
       'covoiturage',
@@ -103,17 +105,19 @@ describe('poleExperience', () => {
     ]);
     expect(getVisibleMainTabs('pro', 'player')).toEqual([
       'home',
-      'recrutement',
       'matchs',
       'feed',
       'profil',
+      'plus',
+      'progression',
+      'recrutement',
       'reels',
       'messages',
       'covoiturage',
       'shop',
     ]);
     expect(getVisibleMainTabs('pro', 'player')).not.toContain('sante');
-    expect(getVisibleMainTabs('pro', 'player').indexOf('feed')).toBe(3);
+    expect(getVisibleMainTabs('pro', 'player').indexOf('feed')).toBe(2);
     expect(getVisibleMainTabs('pro', 'recruiter')).toEqual(['home', 'profil']);
     expect(getVisibleMainTabs('pro', 'agent')).toEqual(['home', 'profil']);
     expect(getVisibleMainTabs('pro', 'organizer')).toContain('feed');
@@ -154,14 +158,18 @@ describe('poleExperience', () => {
     expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
       'home',
       'matchs',
+      'profil',
+      'plus',
       'feed',
       'reels',
-      'profil',
+      'messages',
+      'shop',
     ]);
     expect(getVisibleMainTabs('supporter', 'supporter')).toContain('profil');
     expect(getVisibleMainTabs('supporter', 'supporter')).toContain('reels');
-    expect(getVisibleMainTabs('supporter', 'supporter')).not.toContain('messages');
-    expect(getVisibleMainTabs('supporter', 'supporter')).not.toContain('shop');
+    expect(getVisibleMainTabs('supporter', 'supporter')).toContain('messages');
+    expect(getVisibleMainTabs('supporter', 'supporter')).toContain('shop');
+    expect(getVisibleMainTabs('supporter', 'supporter')).toContain('plus');
     expect(getVisibleMainTabs('supporter', 'supporter')).not.toContain('recrutement');
     expect(getVisibleMainTabs('supporter', 'supporter')).not.toContain('covoiturage');
     expect(getVisibleMainTabs('supporter', 'supporter')).not.toContain('sante');

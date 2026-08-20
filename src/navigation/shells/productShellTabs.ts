@@ -53,12 +53,19 @@ export const AMATEUR_CLUB_OVERFLOW_TABS: MainTabId[] = [
 export const SUPPORTER_SHELL_TABS: MainTabId[] = [
   'home',
   'matchs',
-  'feed',
-  'reels',
   'profil',
+  'plus',
 ];
 
-export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = ['messages', 'shop'];
+/** Plus remplace la feuille overflow — destinations toujours montables. */
+export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = [];
+
+export const SUPPORTER_PLUS_DESTINATION_TABS: MainTabId[] = [
+  'feed',
+  'reels',
+  'messages',
+  'shop',
+];
 
 export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
   'home',

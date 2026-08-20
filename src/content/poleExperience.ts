@@ -37,6 +37,7 @@ import {
   PRO_ORGANIZER_SHELL_TABS,
   PRO_PLAYER_SHELL_TABS,
   PRO_PLAYER_OVERFLOW_TABS,
+  SUPPORTER_PLUS_DESTINATION_TABS,
   SUPPORTER_SHELL_TABS,
 } from '../navigation/shells/productShellTabs';
 
@@ -212,7 +213,7 @@ export function getVisibleMainTabs(
       tabs = [...AMATEUR_COACH_SHELL_TABS, ...AMATEUR_COACH_OVERFLOW_TABS];
     }
   } else if (effectiveLine === 'supporter') {
-    tabs = [...SUPPORTER_SHELL_TABS];
+    tabs = [...SUPPORTER_SHELL_TABS, ...SUPPORTER_PLUS_DESTINATION_TABS];
   } else if (effectiveLine === 'sponsor' || r === 'sponsor') {
     tabs = [...SPONSOR_MAIN_TABS];
   } else if (isProFamilyLine(effectiveLine)) {
@@ -305,6 +306,7 @@ export function getTabShortLabel(
     if (tab === 'messages') return 'Fil';
     if (tab === 'reels') return 'Vidéos';
     if (tab === 'profil') return 'Profil';
+    if (tab === 'plus') return 'Plus';
     if (tab === 'shop') return 'Shop';
   }
   if (isProFamilyLine(line) && role === 'club') {

@@ -36,6 +36,7 @@ import { PlayerFootballHubScreen } from '../screens/joueur/PlayerFootballHubScre
 import { PlayerProgressionScreen } from '../screens/joueur/PlayerProgressionScreen';
 import { PlayerSaisonScreen } from '../screens/joueur/PlayerSaisonScreen';
 import { JoueurPlusHubScreen } from '../screens/joueur/JoueurPlusHubScreen';
+import { SupporterPlusHubScreen } from '../screens/supporter/SupporterPlusHubScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -60,6 +61,8 @@ const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   reels: SupporterVideosScreen,
   messages: SupporterTribuneFeedScreen,
   profil: SupporterProfileTabScreen,
+  plus: SupporterPlusHubScreen,
+  shop: ShopScreen,
 };
 
 const PRO_CLUB_SCREENS: Partial<Record<MainTabId, ComponentType>> = {

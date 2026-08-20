@@ -1,6 +1,7 @@
-import { getVisibleMainTabs } from '../content/poleExperience';
+import { getVisibleMainTabs, getTabShortLabel } from '../content/poleExperience';
 import {
   SUPPORTER_OVERFLOW_TABS,
+  SUPPORTER_PLUS_DESTINATION_TABS,
   SUPPORTER_SHELL_TABS,
 } from '../navigation/shells/productShellTabs';
 import {
@@ -13,18 +14,52 @@ import {
   getSupporterPageIdentity,
   supporterPageFromTab,
 } from '../content/supporterPageIdentity';
+import { buildSupporterPlusMenuItems } from '../content/supporterPlusMenu';
+import {
+  stampMatchsDeepLink,
+  supporterChapterFromPendingLink,
+} from '../utils/supporterMatchsDeepLink';
 
 describe('supporter shell navigation', () => {
-  it('expose 5 onglets media center + overflow fil', () => {
-    expect(getVisibleMainTabs('supporter', 'supporter')).toEqual(SUPPORTER_SHELL_TABS);
-    expect(SUPPORTER_SHELL_TABS).toEqual([
+  it('expose le dock Accueil · Matchs · Profil · Plus', () => {
+    expect(SUPPORTER_SHELL_TABS).toEqual(['home', 'matchs', 'profil', 'plus']);
+    expect(SUPPORTER_OVERFLOW_TABS).toEqual([]);
+    expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
+      ...SUPPORTER_SHELL_TABS,
+      ...SUPPORTER_PLUS_DESTINATION_TABS,
+    ]);
+    expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
       'home',
       'matchs',
+      'profil',
+      'plus',
       'feed',
       'reels',
-      'profil',
+      'messages',
+      'shop',
     ]);
-    expect(SUPPORTER_OVERFLOW_TABS).toEqual(['messages', 'shop']);
+    expect(getTabShortLabel('plus', 'supporter', 'supporter')).toBe('Plus');
+  });
+
+  it('liste les destinations Plus attendues', () => {
+    const ids = buildSupporterPlusMenuItems().map((item) => item.id);
+    expect(ids).toEqual([
+      'live',
+      'explorer',
+      'videos',
+      'fil',
+      'carte',
+      'suivis',
+      'ia',
+      'shop',
+    ]);
+  });
+
+  it('applique le chapitre Live même si Matchs est déjà ouvert', () => {
+    const first = stampMatchsDeepLink({ supporterChapter: 'live' });
+    const second = stampMatchsDeepLink(first);
+    expect(supporterChapterFromPendingLink(first)).toBe('live');
+    expect(second.applyNonce).toBeGreaterThan(first.applyNonce ?? 0);
   });
 });
 
@@ -49,6 +84,7 @@ describe('supporterPageIdentity', () => {
     expect(getSupporterPageIdentity('tribune').eyebrow).toBe('Centre du football');
     expect(supporterPageFromTab('feed')).toBe('suivis');
     expect(supporterPageFromTab('reels')).toBe('moments');
+    expect(supporterPageFromTab('plus')).toBe('tribune');
     expect(getSupporterPageIdentity('moments').title).toBe('Vidéos');
   });
 });

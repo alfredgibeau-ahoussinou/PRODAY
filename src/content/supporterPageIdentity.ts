@@ -141,6 +141,8 @@ export function supporterPageFromTab(tab: MainTabId): SupporterPageId {
       return 'moments';
     case 'shop':
       return 'shop';
+    case 'plus':
+      return 'tribune';
     case 'profil':
       return 'compte';
     default:

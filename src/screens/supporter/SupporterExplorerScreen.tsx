@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -13,19 +14,23 @@ import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { useAuth } from '../../context/AuthContext';
 import { useSeasonCalendar } from '../../hooks/useAppData';
 import { useSupporterGlobalSearch } from '../../hooks/useSupporterGlobalSearch';
+import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { spacing, radius } from '../../theme/designTokens';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { SupporterMatchDetailScreen } from './SupporterMatchDetailScreen';
 import { SupporterFootballMapScreen } from './SupporterFootballMapScreen';
+import { SupporterSuivisScreen } from '../SupporterSuivisScreen';
 import { SUPPORTER_COUNTRY_CHIPS } from '../../content/supporterCompetitionsCatalog';
 
 /** Explorer — recherche globale clubs / matchs / compétitions / vidéos. */
 export const SupporterExplorerScreen: React.FC = () => {
   const { profile } = useAuth();
+  const nav = useTabNavigationActions();
   const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
   const { query, setQuery, search, loading, results } = useSupporterGlobalSearch(events);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
   const [showMap, setShowMap] = useState(false);
+  const [showSuivis, setShowSuivis] = useState(false);
 
   const onChangeText = useCallback(
     (text: string) => {
@@ -39,6 +44,25 @@ export const SupporterExplorerScreen: React.FC = () => {
     return (
       <PushScreenTransition active={showMap}>
         <SupporterFootballMapScreen onBack={() => setShowMap(false)} />
+      </PushScreenTransition>
+    );
+  }
+
+  if (showSuivis) {
+    return (
+      <PushScreenTransition active={showSuivis}>
+        <View style={{ flex: 1, backgroundColor: SUPPORTER_SITE.bg }}>
+          <PressableSpring
+            style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md }}
+            onPress={() => setShowSuivis(false)}
+            haptic
+          >
+            <ProDayText variant="caption" style={styles.rowSub}>
+              ← Explorer
+            </ProDayText>
+          </PressableSpring>
+          <SupporterSuivisScreen />
+        </View>
       </PushScreenTransition>
     );
   }
@@ -118,7 +142,26 @@ export const SupporterExplorerScreen: React.FC = () => {
                   key={item.id}
                   style={styles.row}
                   onPress={() => {
-                    if (item.matchItem) setSelected(item.matchItem);
+                    if (item.matchItem) {
+                      setSelected(item.matchItem);
+                      return;
+                    }
+                    if (group.group === 'videos') {
+                      nav.setActiveTab('reels', { returnTo: 'plus' });
+                      return;
+                    }
+                    if (group.group === 'clubs') {
+                      setShowSuivis(true);
+                      return;
+                    }
+                    if (group.group === 'competitions') {
+                      nav.openMatchs({ supporterChapter: 'world' });
+                      return;
+                    }
+                    Alert.alert(
+                      item.title,
+                      item.subtitle ?? 'Ouvre Matchs pour voir le calendrier.',
+                    );
                   }}
                   scaleTo={0.98}
                 >

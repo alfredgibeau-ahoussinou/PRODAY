@@ -35,11 +35,12 @@ const AMATEUR_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
 
 const SUPPORTER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
   matchs: 'football',
-  feed: 'star-four-points',
+  feed: 'search',
   messages: 'chat',
   reels: 'videocam',
   shop: 'bag',
   profil: 'person',
+  plus: 'hamburger',
 };
 
 const PRO_PLAYER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {

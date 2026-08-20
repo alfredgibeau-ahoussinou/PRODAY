@@ -3,8 +3,7 @@ import type { IconName } from '../../../components/ui/iconNames';
 import type { SupporterPageId } from '../../../content/supporterPageIdentity';
 
 /**
- * Navigation Pôle Supporter — 5 onglets primaires.
- * Moments & Shop accessibles depuis la Tribune / Compte.
+ * Navigation Pôle Supporter — dock Accueil · Matchs · Profil · Plus.
  */
 
 export type SupporterNavFolderId = 'live' | 'communaute' | 'compte';
