@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
@@ -13,6 +14,7 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubMatchInvitePanel } from '../../components/club/ClubMatchInvitePanel';
+import { ClubFriendlyMatchesPanel } from '../../components/club/ClubFriendlyMatchesPanel';
 import { isCoachMatchEvent } from '../../models/TeamEvent';
 import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
@@ -22,6 +24,7 @@ type Tab = 'list' | 'invites';
 /** Matchs — liste + convocations + invitation autre club. */
 export function ClubMatchesScreen() {
   const shellNav = useClubShellNav();
+  const profile = useSessionProfile();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
   const [tab, setTab] = useState<Tab>('list');
@@ -41,33 +44,56 @@ export function ClubMatchesScreen() {
         <View style={styles.tabs}>
           <ClubActionRow
             label="Calendrier matchs"
-            trailing={tab === 'list' ? <ClubText variant="caption" style={{ color: tokens.accent }}>●</ClubText> : undefined}
+            trailing={
+              tab === 'list' ? (
+                <ClubText variant="caption" style={{ color: tokens.accent }}>
+                  ●
+                </ClubText>
+              ) : undefined
+            }
             onPress={() => setTab('list')}
           />
           <ClubActionRow
             label="Invitation autre club"
-            trailing={tab === 'invites' ? <ClubText variant="caption" style={{ color: tokens.accent }}>●</ClubText> : undefined}
+            trailing={
+              tab === 'invites' ? (
+                <ClubText variant="caption" style={{ color: tokens.accent }}>
+                  ●
+                </ClubText>
+              ) : undefined
+            }
             onPress={() => setTab('invites')}
           />
         </View>
 
         {tab === 'invites' ? (
-          <ClubSectionCard title="Inter-clubs">
-            {ws.clubId ? (
-              <ClubMatchInvitePanel
-                onOrganize={() => shellNav?.openCreate?.('invite_club')}
-                onPropose={() => shellNav?.openCreate?.('invite_club')}
-                onOpenConvocations={() => setTab('list')}
-              />
-            ) : (
-              <ClubText variant="body" muted>
-                Liez un club à votre compte pour envoyer ou recevoir des invitations.
+          <>
+            <ClubSectionCard title="Inter-clubs">
+              {ws.clubId ? (
+                <ClubMatchInvitePanel
+                  onOrganize={() => shellNav?.openCreate?.('invite_club')}
+                  onPropose={() => shellNav?.openCreate?.('invite_club')}
+                  onOpenConvocations={() => setTab('list')}
+                />
+              ) : (
+                <ClubText variant="body" muted>
+                  Liez un club à votre compte pour envoyer ou recevoir des invitations.
+                </ClubText>
+              )}
+              <ClubText variant="caption" muted>
+                Accepter · Refuser · Proposer une autre date — flux de premier ordre.
               </ClubText>
-            )}
-            <ClubText variant="caption" muted>
-              Accepter · Refuser · Proposer une autre date — flux de premier ordre.
-            </ClubText>
-          </ClubSectionCard>
+            </ClubSectionCard>
+            {ws.clubId && profile ? (
+              <ClubSectionCard title="Invitations & réponses">
+                <ClubFriendlyMatchesPanel
+                  clubId={ws.clubId}
+                  clubName={ws.club?.name ?? profile.display_name}
+                  profile={profile}
+                />
+              </ClubSectionCard>
+            ) : null}
+          </>
         ) : matches.length === 0 ? (
           <ClubEmptyState
             title="Aucun match"
@@ -87,12 +113,16 @@ export function ClubMatchesScreen() {
                 onPress={() =>
                   Alert.alert(
                     e.title || 'Match',
-                    'Convocations et feuille de match : détail disponible. Les invitations inter-clubs sont dans l’onglet dédié.',
+                    'Pas de score inventé. Convocations via l’effectif ; invitations inter-clubs dans l’onglet dédié.',
                     [
                       { text: 'OK', style: 'cancel' },
                       {
                         text: 'Inviter un club',
                         onPress: () => setTab('invites'),
+                      },
+                      {
+                        text: 'Créer un match',
+                        onPress: () => shellNav?.openCreate?.('match'),
                       },
                     ],
                   )

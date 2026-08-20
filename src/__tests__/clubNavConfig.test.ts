@@ -1,14 +1,23 @@
 import {
+  CLUB_CREATE_ACTIONS,
+  CLUB_MENU_DEST_IDS,
   CLUB_NAV_FOLDERS,
   CLUB_PRIMARY_NAV_IDS,
+  CLUB_TOOL_GROUPS,
+  canonicalizeClubNav,
   clubNavFromTab,
   findClubNavItem,
+  primaryTabForClubNav,
+  resolveClubNavOnTabSync,
   tabFromClubNav,
 } from '../features/club/navigation/clubNavConfig';
 import {
+  resolveClubMenuItems,
   resolveClubNavFolders,
   resolveClubPrimaryNav,
 } from '../features/club/navigation/resolveClubNavAccess';
+import { planClubAiReply } from '../features/club/ai/clubAiExecutor';
+import type { ClubWorkspace } from '../features/club/hooks/useClubWorkspace';
 
 describe('clubNavConfig', () => {
   it('expose dossiers Pilotage / Effectifs / Sport / Ops / Club', () => {
@@ -40,6 +49,42 @@ describe('clubNavConfig', () => {
     expect(tabFromClubNav('recruitment')).toBe('recrutement');
     expect(tabFromClubNav('calendar')).toBe('matchs');
     expect(tabFromClubNav('matches')).toBe('matchs');
+  });
+
+  it('surligne Menu pour les destinations secondaires', () => {
+    expect(primaryTabForClubNav('players')).toBe('plus');
+    expect(primaryTabForClubNav('trainings')).toBe('plus');
+    expect(primaryTabForClubNav('assistant')).toBe('plus');
+    expect(primaryTabForClubNav('today')).toBe('today');
+    expect(primaryTabForClubNav('matches')).toBe('matches');
+    expect(CLUB_MENU_DEST_IDS).toContain('coaches');
+    expect(CLUB_MENU_DEST_IDS).toContain('notifications');
+    expect(CLUB_MENU_DEST_IDS).toContain('permissions');
+    expect(canonicalizeClubNav('players')).toBe('players');
+  });
+
+  it('conserve plus / outils lors de la sync tab', () => {
+    expect(resolveClubNavOnTabSync('plus', 'home')).toBe('plus');
+    expect(resolveClubNavOnTabSync('players', 'home')).toBe('players');
+    expect(resolveClubNavOnTabSync('matches', 'home')).toBe('today');
+    expect(resolveClubNavOnTabSync('matches', 'matchs')).toBe('matches');
+    expect(resolveClubNavOnTabSync('carpool', 'covoiturage')).toBe('carpool');
+  });
+
+  it('expose 7 actions CRÉER en français', () => {
+    expect(CLUB_CREATE_ACTIONS.map((a) => a.id)).toEqual([
+      'match',
+      'training',
+      'player',
+      'coach',
+      'invite_member',
+      'event',
+      'invite_club',
+    ]);
+    expect(CLUB_CREATE_ACTIONS.find((a) => a.id === 'training')?.label).toBe('Entraînement');
+    expect(CLUB_CREATE_ACTIONS.find((a) => a.id === 'invite_club')?.label).toBe(
+      'Invitation autre club',
+    );
   });
 
   it('retrouve Pack Club et Assistant', () => {
@@ -123,5 +168,43 @@ describe('resolveClubNavAccess', () => {
       isFeatureEnabled: allOn,
     });
     expect(primary.map((i) => i.id)).toEqual(['today', 'teams', 'matches', 'plus', 'club']);
+  });
+
+  it('groupe les outils Menu (Effectifs / Sport / Ops / Club)', () => {
+    expect(CLUB_TOOL_GROUPS.map((g) => g.title)).toEqual([
+      'Effectifs',
+      'Sport',
+      'Opérations',
+      'Club',
+    ]);
+    const menu = resolveClubMenuItems({
+      offerId: 'club_premium',
+      isFeatureEnabled: allOn,
+    });
+    expect(menu.map((i) => i.id)).toContain('players');
+    expect(menu.map((i) => i.id)).toContain('assistant');
+    expect(menu.map((i) => i.id)).toContain('notifications');
+  });
+});
+
+describe('planClubAiReply', () => {
+  const ws = {
+    briefingHeadline: 'Brief',
+    briefingSummary: 'Résumé',
+    statusLabel: 'OK',
+    teamsWithoutCoach: 1,
+    todayTrainings: [],
+    events: [],
+  } as unknown as ClubWorkspace;
+
+  it('refuse l’auto-mouvement de joueurs', () => {
+    const plan = planClubAiReply('Peux-tu déplacer le joueur ?', ws);
+    expect(plan.reply).toMatch(/jamais/i);
+    expect(plan.sensitive?.id).toBe('refuse_auto_move');
+  });
+
+  it('demande confirmation pour les rappels de convocation', () => {
+    const plan = planClubAiReply('Envoie les rappels de convocation', ws);
+    expect(plan.sensitive?.id).toBe('nav_trainings');
   });
 });

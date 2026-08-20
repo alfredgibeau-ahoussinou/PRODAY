@@ -12,11 +12,13 @@ import { ClubShellNavProvider } from './ClubShellNavContext';
 import { ClubThemeProvider, useClubTheme } from './ClubThemeContext';
 import { ClubMenuPane } from './ClubMenuPane';
 import { ClubCreateFab, ClubCreateSheet } from './ClubCreateSheet';
+import { ClubCreateFormModal } from '../create/ClubCreateFormModal';
 import { ClubLockedPane } from './ClubLockedPane';
 import { openClubHelpChatbot } from './clubHelpOpen';
 import {
   canonicalizeClubNav,
   clubNavFromTab,
+  CLUB_CREATE_ACTIONS,
   resolveClubNavOnTabSync,
   tabFromClubNav,
   type ClubCreateActionId,
@@ -97,6 +99,7 @@ function ClubAppShellInner({ activeTab, onTabChange }: Props) {
     canonicalizeClubNav(clubNavFromTab(activeTab)),
   );
   const [createOpen, setCreateOpen] = useState(false);
+  const [createFormAction, setCreateFormAction] = useState<ClubCreateActionId | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [selectedPlayerUid, setSelectedPlayerUid] = useState<string | null>(null);
 
@@ -129,23 +132,19 @@ function ClubAppShellInner({ activeTab, onTabChange }: Props) {
     ]);
   };
 
-  const openCreate = (_action?: ClubCreateActionId) => setCreateOpen(true);
+  const openCreate = (action?: ClubCreateActionId) => {
+    if (action) {
+      const meta = CLUB_CREATE_ACTIONS.find((a) => a.id === action);
+      if (meta?.nav) onSelect(meta.nav);
+      setCreateFormAction(action);
+      return;
+    }
+    setCreateOpen(true);
+  };
 
   const onCreateSelect = (action: ClubCreateActionId, nav?: ClubNavItemId) => {
     if (nav) onSelect(nav);
-    const labels: Record<ClubCreateActionId, string> = {
-      match: 'Création de match',
-      training: 'Création d’entraînement',
-      player: 'Ajout joueur',
-      coach: 'Ajout coach',
-      invite_member: 'Invitation membre',
-      event: 'Création d’événement',
-      invite_club: 'Invitation autre club',
-    };
-    Alert.alert(
-      labels[action],
-      'Le formulaire dédié s’ouvre depuis cet écran. Flux scaffoldé si le backend est incomplet.',
-    );
+    setCreateFormAction(action);
   };
 
   const sidebarProps = {
@@ -197,6 +196,11 @@ function ClubAppShellInner({ activeTab, onTabChange }: Props) {
         visible={createOpen}
         onClose={() => setCreateOpen(false)}
         onSelect={onCreateSelect}
+      />
+      <ClubCreateFormModal
+        visible={createFormAction != null}
+        action={createFormAction}
+        onClose={() => setCreateFormAction(null)}
       />
     </ClubShellNavProvider>
   );

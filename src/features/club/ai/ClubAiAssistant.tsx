@@ -11,14 +11,17 @@ import {
   ClubSectionCard,
   ClubText,
 } from '../ui/clubUi';
+import { planClubAiReply } from './clubAiExecutor';
+import { teamEventsService } from '../../../services/teamEvents.service';
+import { isCoachTrainingEvent } from '../../../models/TeamEvent';
 import { spacing } from '../../../theme/designTokens';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 
 type Msg = { id: string; role: 'user' | 'assistant'; text: string };
 
 /**
- * Assistant IA Club — chat UI + confirmation pour actions sensibles.
- * Stub executor : jamais d’auto-mouvement de joueurs.
+ * Assistant IA Club — planificateur local + confirmation avant actions sensibles.
+ * Stub LLM distant : exécute seulement des actions locales autorisées après OK.
  */
 export function ClubAiAssistant() {
   const shellNav = useClubShellNav();
@@ -34,38 +37,64 @@ export function ClubAiAssistant() {
   ]);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
+  const runSensitive = (id: string) => {
+    if (id === 'propose_assign_coach' || id === 'refuse_auto_move') {
+      shellNav?.requestNav(id === 'refuse_auto_move' ? 'recruitment' : 'coaches');
+      return;
+    }
+    if (id === 'nav_trainings') {
+      shellNav?.requestNav('trainings');
+      return;
+    }
+    if (id === 'propose_send_reminders') {
+      const target =
+        ws.todayTrainings[0] ??
+        ws.events.find((e) => isCoachTrainingEvent(e));
+      if (!target) {
+        Alert.alert('Rappels', 'Aucune séance trouvée.');
+        return;
+      }
+      void (async () => {
+        try {
+          const pending = await teamEventsService.sendReminders(target.id);
+          Alert.alert(
+            'Rappels envoyés',
+            pending > 0
+              ? `${pending} joueur(s) encore en attente ont été relancés.`
+              : 'Aucun rappel en attente pour cette séance.',
+          );
+        } catch (e) {
+          Alert.alert(
+            'Rappels',
+            e instanceof Error
+              ? e.message
+              : 'Envoi distant indisponible — ouvrez la séance pour relancer manuellement.',
+          );
+          shellNav?.requestNav('trainings');
+        }
+      })();
+    }
+  };
+
   const send = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     const userMsg: Msg = { id: `u-${Date.now()}`, role: 'user', text: trimmed };
-    const lower = trimmed.toLowerCase();
-
-    let reply =
-      'Je note. Pour l’instant je fournis des recommandations structurées — exécution branchée au prochain passage.';
-    if (lower.includes('brief') || lower.includes('aujourd')) {
-      reply = `${ws.briefingHeadline} — ${ws.briefingSummary} Statut : ${ws.statusLabel}.`;
-    } else if (lower.includes('déplac') || lower.includes('transfert') || lower.includes('bouger')) {
-      reply =
-        'Je peux suggérer un mouvement entre équipes, mais jamais l’appliquer sans votre confirmation explicite.';
-    }
-
-    const assistantMsg: Msg = { id: `a-${Date.now()}`, role: 'assistant', text: reply };
+    const plan = planClubAiReply(trimmed, ws);
+    const assistantMsg: Msg = { id: `a-${Date.now()}`, role: 'assistant', text: plan.reply };
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
     setInput('');
-  };
 
-  const proposeSensitive = () => {
-    Alert.alert(
-      'Confirmer l’action sensible',
-      'Suggestion : examiner l’affectation coach sur les équipes sans staff. Aucun joueur ne sera déplacé automatiquement.',
-      [
+    if (plan.safeNav) {
+      shellNav?.requestNav(plan.safeNav);
+    }
+    if (plan.sensitive) {
+      const s = plan.sensitive;
+      Alert.alert(s.title, s.body, [
         { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Voir les coachs',
-          onPress: () => shellNav?.requestNav('coaches'),
-        },
-      ],
-    );
+        { text: s.confirmLabel, onPress: () => runSensitive(s.id) },
+      ]);
+    }
   };
 
   return (
@@ -112,10 +141,21 @@ export function ClubAiAssistant() {
             onPress={() => send('Donne-moi le briefing aujourd’hui')}
           />
           <ClubActionRow
+            icon="notifications"
+            label="Ouvrir les notifications"
+            onPress={() => send('Montre les notifications')}
+          />
+          <ClubActionRow
             icon="warning"
-            label="Action sensible (exemple)"
+            label="Rappels de convocation"
             hint="Demande toujours confirmation"
-            onPress={proposeSensitive}
+            onPress={() => send('Envoie les rappels de convocation')}
+          />
+          <ClubActionRow
+            icon="school"
+            label="Affectation coach"
+            hint="Confirmation avant ouverture"
+            onPress={() => send('Aide-moi à affecter un coach')}
           />
         </ClubSectionCard>
       </ClubChapterScroll>
