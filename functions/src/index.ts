@@ -96,6 +96,7 @@ export { generateHomeTraining } from './generateHomeTraining';
 export { onSmartTacticsVideoJobCreated } from './smartTacticsVideoJobs';
 export { prodayAiChat } from './prodayAiChat';
 export { generateSupporterMatchSummary } from './generateSupporterMatchSummary';
+export { supporterFootballProxy } from './supporterFootballProxy';
 export { activateStoreSubscription };
 export { revenueCatWebhook };
 export { claimAgentLaunchSeat };

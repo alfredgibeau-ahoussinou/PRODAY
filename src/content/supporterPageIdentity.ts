@@ -1,26 +1,26 @@
 import type { IconName } from '../components/ui/iconNames';
 import type { MainTabId } from '../navigation/mainTabConfig';
-import { FOOTBALL_HUB } from '../features/footballHub/theme/footballHubTheme';
+import { SUPPORTER_SPACE } from '../features/supporterSpace/theme/supporterSpaceTheme';
 
 /**
  * Tokens Football Hub (ex-pôle Supporter) — violet ProDay immersif.
- * Alignés sur `FOOTBALL_HUB` ; conservés pour écrans secondaires / legacy.
+ * Alignés sur `SUPPORTER_SPACE` ; conservés pour écrans secondaires / legacy.
  */
 export const SUPPORTER_SITE = {
-  accent: FOOTBALL_HUB.accent,
-  deep: FOOTBALL_HUB.deep,
-  soft: FOOTBALL_HUB.soft,
-  glow: FOOTBALL_HUB.glow,
-  bright: FOOTBALL_HUB.bright,
-  bg: FOOTBALL_HUB.bg,
-  band: FOOTBALL_HUB.band,
-  surface: FOOTBALL_HUB.surface,
-  elevated: FOOTBALL_HUB.elevated,
-  border: FOOTBALL_HUB.border,
-  foreground: FOOTBALL_HUB.foreground,
-  muted: FOOTBALL_HUB.muted,
-  live: FOOTBALL_HUB.live,
-  free: FOOTBALL_HUB.bright,
+  accent: SUPPORTER_SPACE.accent,
+  deep: SUPPORTER_SPACE.deep,
+  soft: SUPPORTER_SPACE.soft,
+  glow: SUPPORTER_SPACE.glow,
+  bright: SUPPORTER_SPACE.bright,
+  bg: SUPPORTER_SPACE.bg,
+  band: SUPPORTER_SPACE.band,
+  surface: SUPPORTER_SPACE.surface,
+  elevated: SUPPORTER_SPACE.elevated,
+  border: SUPPORTER_SPACE.border,
+  foreground: SUPPORTER_SPACE.foreground,
+  muted: SUPPORTER_SPACE.muted,
+  live: SUPPORTER_SPACE.live,
+  free: SUPPORTER_SPACE.bright,
 } as const;
 
 export type SupporterPageId =
@@ -67,7 +67,7 @@ function page(
 export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIdentity> = {
   tribune: page({
     id: 'tribune',
-    eyebrow: 'Football Hub',
+    eyebrow: 'Supporter Space',
     title: 'Accueil',
     support: 'Tout le football, au même endroit.',
     icon: 'home',

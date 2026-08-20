@@ -302,7 +302,7 @@ export function getTabShortLabel(
     if (tab === 'home') return 'Accueil';
     if (tab === 'matchs') return 'Matchs';
     if (tab === 'feed') return 'ProDay';
-    if (tab === 'plus') return 'Favoris';
+    if (tab === 'plus') return 'Clubs';
     if (tab === 'profil') return 'Profil';
     if (tab === 'reels') return 'Vidéos';
     if (tab === 'messages') return 'Tribune';
@@ -515,8 +515,8 @@ export function getDashboardMetaForLine(
   if (line === 'supporter') {
     return {
       ...meta,
-      eyebrow: role === 'supporter' ? 'FOOTBALL HUB' : meta.eyebrow,
-      title: role === 'supporter' ? 'PRODAY Football Hub' : meta.title,
+      eyebrow: role === 'supporter' ? 'SUPPORTER SPACE' : meta.eyebrow,
+      title: role === 'supporter' ? 'PRODAY Supporter' : meta.title,
     };
   }
   if (isProFamilyLine(line)) {

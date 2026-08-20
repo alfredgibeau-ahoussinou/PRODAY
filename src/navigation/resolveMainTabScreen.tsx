@@ -23,12 +23,12 @@ import { ClubRecruitmentScreen } from '../screens/club/ClubRecruitmentScreen';
 import { ClubCalendarScreen } from '../screens/club/ClubCalendarScreen';
 import { ClubCommunicationScreen } from '../screens/club/ClubCommunicationScreen';
 import { ClubVitrineScreen } from '../screens/club/ClubVitrineScreen';
-import { FootballHubHomeScreen } from '../screens/footballHub/FootballHubHomeScreen';
-import { FootballHubMatchsScreen } from '../screens/footballHub/FootballHubMatchsScreen';
-import { FootballHubProDayScreen } from '../screens/footballHub/FootballHubProDayScreen';
-import { FootballHubFavoritesScreen } from '../screens/footballHub/FootballHubFavoritesScreen';
-import { FootballHubProfileScreen } from '../screens/footballHub/FootballHubProfileScreen';
-import { FootballHubDebateFeedScreen } from '../screens/footballHub/FootballHubDebateFeedScreen';
+import { SupporterSpaceHomeScreen } from '../screens/supporterSpace/SupporterSpaceHomeScreen';
+import { SupporterSpaceMatchsScreen } from '../screens/supporterSpace/SupporterSpaceMatchsScreen';
+import { SupporterSpaceProDayScreen } from '../screens/supporterSpace/SupporterSpaceProDayScreen';
+import { SupporterSpaceClubsScreen } from '../screens/supporterSpace/SupporterSpaceClubsScreen';
+import { SupporterSpaceProfileScreen } from '../screens/supporterSpace/SupporterSpaceProfileScreen';
+import { SupporterSpaceDebateFeedScreen } from '../screens/supporterSpace/SupporterSpaceDebateFeedScreen';
 import { SupporterVideosScreen } from '../screens/supporter/SupporterVideosScreen';
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerSquadScreen } from '../screens/proPlayer/ProPlayerSquadScreen';
@@ -55,14 +55,14 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
 };
 
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: FootballHubHomeScreen,
-  matchs: FootballHubMatchsScreen,
-  feed: FootballHubProDayScreen,
-  plus: FootballHubFavoritesScreen,
-  profil: FootballHubProfileScreen,
-  /** Secondaires hors dock — accessibles via Accueil / Match Center. */
+  home: SupporterSpaceHomeScreen,
+  matchs: SupporterSpaceMatchsScreen,
+  feed: SupporterSpaceProDayScreen,
+  plus: SupporterSpaceClubsScreen,
+  profil: SupporterSpaceProfileScreen,
+  /** Secondaires hors dock — tribune / vidéos. */
   reels: SupporterVideosScreen,
-  messages: FootballHubDebateFeedScreen,
+  messages: SupporterSpaceDebateFeedScreen,
   shop: ShopScreen,
 };
 

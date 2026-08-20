@@ -21,7 +21,7 @@ import { flushBrainState } from '../services/brainState.service';
 import { PushScreenTransition } from '../components/motion';
 import { JoueurUnavailableScreen } from '../components/joueur/JoueurUnavailableScreen';
 import { usePlatformFeatureFlags } from '../hooks/usePlatformFeatureFlags';
-import { FootballHubBackBar } from '../components/footballHub/FootballHubBackBar';
+import { SupporterSpaceBackBar } from '../components/supporterSpace/SupporterSpaceBackBar';
 
 export const ShopScreen: React.FC = () => {
   const { productLine } = useThemedScreen();
@@ -133,7 +133,7 @@ export const ShopScreen: React.FC = () => {
 
   return (
     <>
-      <FootballHubBackBar />
+      <SupporterSpaceBackBar />
       <ShopHomeScreen
         productLine={productLine}
         profile={profile}

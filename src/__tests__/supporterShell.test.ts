@@ -15,10 +15,11 @@ import {
 } from '../utils/supporterMatchsDeepLink';
 import { openClubHelpChatbot, registerClubHelpOpener } from '../features/club/shell/clubHelpOpen';
 import { resolveCityCoords } from '../utils/supporterCityGeo';
-import { FOOTBALL_HUB_COPY } from '../features/footballHub/theme/footballHubTheme';
+import { SUPPORTER_SPACE_COPY } from '../features/supporterSpace/theme/supporterSpaceTheme';
+import { resolveTabIcon } from '../components/navigation/tabBarShared';
 
-describe('Football Hub shell navigation', () => {
-  it('expose le dock Accueil · Matchs · ProDay · Favoris · Profil', () => {
+describe('Supporter Space shell navigation', () => {
+  it('expose le dock Accueil · Matchs · ProDay · Clubs · Profil', () => {
     expect(SUPPORTER_SHELL_TABS).toEqual(['home', 'matchs', 'feed', 'plus', 'profil']);
     expect(SUPPORTER_OVERFLOW_TABS).toEqual(['reels', 'messages', 'shop']);
     expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
@@ -31,14 +32,19 @@ describe('Football Hub shell navigation', () => {
     expect(getTabShortLabel('home', 'supporter', 'supporter')).toBe('Accueil');
     expect(getTabShortLabel('matchs', 'supporter', 'supporter')).toBe('Matchs');
     expect(getTabShortLabel('feed', 'supporter', 'supporter')).toBe('ProDay');
-    expect(getTabShortLabel('plus', 'supporter', 'supporter')).toBe('Favoris');
+    expect(getTabShortLabel('plus', 'supporter', 'supporter')).toBe('Clubs');
     expect(getTabShortLabel('profil', 'supporter', 'supporter')).toBe('Profil');
   });
 
-  it('définit le hero Accueil Football Hub', () => {
-    expect(FOOTBALL_HUB_COPY.heroTitle).toMatch(/Tout le football/i);
+  it('définit le hero Accueil Supporter Space', () => {
+    expect(SUPPORTER_SPACE_COPY.heroTitle).toMatch(/Ton football/i);
     expect(SUPPORTER_SITE.accent).toBe('#3C00F0');
     expect(SUPPORTER_SITE.live).toBe('#22C55E');
+  });
+
+  it('Clubs = shield, ProDay ≠ heart', () => {
+    expect(resolveTabIcon('plus', 'supporter', 'supporter')).toBe('shield');
+    expect(resolveTabIcon('feed', 'supporter', 'supporter')).toBe('star-four-points');
   });
 
   it('applique le chapitre Live même si Matchs est déjà ouvert', () => {
@@ -81,9 +87,9 @@ describe('supporter city geo', () => {
   });
 });
 
-describe('supporterPageIdentity Football Hub', () => {
-  it('aligne l’identité Accueil sur le Football Hub', () => {
-    expect(getSupporterPageIdentity('tribune').eyebrow).toBe('Football Hub');
+describe('supporterPageIdentity Supporter Space', () => {
+  it('aligne l’identité Accueil sur Supporter Space', () => {
+    expect(getSupporterPageIdentity('tribune').eyebrow).toBe('Supporter Space');
     expect(getSupporterPageIdentity('tribune').title).toMatch(/accueil/i);
     expect(supporterPageFromTab('feed')).toBe('suivis');
     expect(supporterPageFromTab('plus')).toBe('suivis');

@@ -27,7 +27,7 @@ import {
 } from '../utils/navigationDeepLink';
 import { stampMatchsDeepLink } from '../utils/supporterMatchsDeepLink';
 
-/** Shell Football Hub — dock Accueil · Matchs · ProDay · Favoris · Profil. */
+/** Shell Supporter Space V3 — dock Accueil · Matchs · ProDay · Clubs · Profil. */
 export const SupporterAppShell: React.FC = () => {
   const profile = useSessionProfile();
   const { productLine, colors: themeColors } = useProductLine();

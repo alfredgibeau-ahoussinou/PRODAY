@@ -20,7 +20,7 @@ describe('mobileTabConfig', () => {
     expect(rail.center).toBeNull();
   });
 
-  it('affiche une rangée plate pour Football Hub (Accueil · Matchs · ProDay · Favoris · Profil)', () => {
+  it('affiche une rangée plate pour Supporter Space (Accueil · Matchs · ProDay · Clubs · Profil)', () => {
     const rail = getMobileRailLayout('supporter', 'supporter');
     expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'plus', 'profil']);
     expect(rail.center).toBeNull();
