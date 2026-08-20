@@ -850,11 +850,14 @@ service cloud.firestore {
         && canManageClubEntity()
         && request.resource.data.owner_uid == request.auth.uid
         && request.resource.data.verified == false;
+      // Owner OU compte rôle club rattaché (pôle Club) — owner_uid / verified immuables.
       allow update: if isAdmin()
         || (isSignedIn()
-            && resource.data.owner_uid == request.auth.uid
             && request.resource.data.owner_uid == resource.data.owner_uid
-            && request.resource.data.verified == resource.data.verified);
+            && request.resource.data.verified == resource.data.verified
+            && (resource.data.owner_uid == request.auth.uid
+                || (userDoc(request.auth.uid).data.role == 'club'
+                    && userDoc(request.auth.uid).data.get('profile', {}).get('club_id', '') == clubId)));
       allow delete: if isAdmin();
     }
 

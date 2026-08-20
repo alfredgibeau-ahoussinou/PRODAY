@@ -2,11 +2,13 @@ import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { clubsService } from '../../../services/clubs.service';
+import { canEditClubBranding } from '../../../utils/roleCapabilities';
 import { pickProfileImage } from '../../../utils/pickMedia';
 import { useClubTheme } from '../shell/ClubThemeContext';
 
 /**
  * Parcours unique Accueil / Hub : picker → upload → persist logo_url → refresh thème.
+ * Éditable par tout compte rôle Club rattaché (pôle Club), pas seulement owner_uid.
  */
 export function useClubLogoUpload(onUploaded?: () => void | Promise<void>) {
   const profile = useSessionProfile();
@@ -15,19 +17,17 @@ export function useClubLogoUpload(onUploaded?: () => void | Promise<void>) {
 
   const clubId = club?.id ?? profile?.profile.club_id ?? null;
   const hasLogo = Boolean(logoUrl);
-  const canEdit = Boolean(
-    profile?.uid && clubId && (!club || club.owner_uid === profile.uid),
-  );
+  const canEdit = canEditClubBranding(profile?.role, profile?.profile.club_id, clubId);
 
   const pickAndUpload = useCallback(async () => {
     if (!profile?.uid || !clubId) {
       Alert.alert('Club', 'Aucun club lié à ce compte.');
       return;
     }
-    if (club && club.owner_uid !== profile.uid) {
+    if (!canEditClubBranding(profile.role, profile.profile.club_id, clubId)) {
       Alert.alert(
         'Logo du club',
-        'Seul le propriétaire du club peut ajouter ou changer le logo.',
+        'Seuls les comptes Club rattachés à ce club peuvent ajouter ou changer le logo.',
       );
       return;
     }
@@ -49,7 +49,7 @@ export function useClubLogoUpload(onUploaded?: () => void | Promise<void>) {
     } finally {
       setUploading(false);
     }
-  }, [profile?.uid, clubId, club, applyLogoUrl, refreshClub, onUploaded]);
+  }, [profile, clubId, applyLogoUrl, refreshClub, onUploaded]);
 
   return {
     uploading,

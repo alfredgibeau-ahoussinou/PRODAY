@@ -86,7 +86,7 @@ export function ClubHomeScreen() {
   const priority = resolvePriority(ws);
 
   const todoItems = [
-    ...(!logoUrl
+    ...(!logoUrl && logo.canEdit
       ? [
           {
             id: 'logo',
@@ -190,7 +190,7 @@ export function ClubHomeScreen() {
           clubName={name}
           statusLabel={ws.statusLabel}
           statusTone={ws.statusTone}
-          onPressCrest={() => void logo.pickAndUpload()}
+          onPressCrest={logo.canEdit ? () => void logo.pickAndUpload() : undefined}
           crestUploading={logo.uploading}
         />
 

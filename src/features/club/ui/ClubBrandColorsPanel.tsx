@@ -115,7 +115,7 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
       if (!brandColors.canEdit) {
         Alert.alert(
           'Couleurs du club',
-          'Seul le propriétaire du club peut modifier les couleurs.',
+          'Seuls les comptes Club rattachés à ce club peuvent modifier les couleurs.',
         );
         return;
       }
@@ -134,7 +134,7 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
     if (!brandColors.canEdit) {
       Alert.alert(
         'Couleurs du club',
-        'Seul le propriétaire du club peut modifier les couleurs.',
+        'Seuls les comptes Club rattachés à ce club peuvent modifier les couleurs.',
       );
       return;
     }

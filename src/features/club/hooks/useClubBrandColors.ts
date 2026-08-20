@@ -3,10 +3,11 @@ import { Alert } from 'react-native';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { clubsService } from '../../../services/clubs.service';
 import { normalizeCoachHexColor } from '../../../utils/coachColorPicker';
+import { canEditClubBranding } from '../../../utils/roleCapabilities';
 import { useClubTheme } from '../shell/ClubThemeContext';
 
 /**
- * Enregistre primary/secondary sur le document club (owner only) + refresh thème.
+ * Enregistre primary/secondary sur le document club (staff pôle Club) + refresh thème.
  */
 export function useClubBrandColors(onSaved?: () => void | Promise<void>) {
   const profile = useSessionProfile();
@@ -14,9 +15,7 @@ export function useClubBrandColors(onSaved?: () => void | Promise<void>) {
   const [saving, setSaving] = useState(false);
 
   const clubId = club?.id ?? profile?.profile.club_id ?? null;
-  const canEdit = Boolean(
-    profile?.uid && clubId && (!club || club.owner_uid === profile.uid),
-  );
+  const canEdit = canEditClubBranding(profile?.role, profile?.profile.club_id, clubId);
 
   const saveColors = useCallback(
     async (primary: string, secondary: string) => {
@@ -24,10 +23,10 @@ export function useClubBrandColors(onSaved?: () => void | Promise<void>) {
         Alert.alert('Club', 'Aucun club lié à ce compte.');
         return false;
       }
-      if (club && club.owner_uid !== profile.uid) {
+      if (!canEditClubBranding(profile.role, profile.profile.club_id, clubId)) {
         Alert.alert(
           'Couleurs du club',
-          'Seul le propriétaire du club peut modifier les couleurs.',
+          'Seuls les comptes Club rattachés à ce club peuvent modifier les couleurs.',
         );
         return false;
       }
@@ -59,7 +58,7 @@ export function useClubBrandColors(onSaved?: () => void | Promise<void>) {
         setSaving(false);
       }
     },
-    [profile?.uid, clubId, club, applyBrandColors, refreshClub, onSaved],
+    [profile, clubId, applyBrandColors, refreshClub, onSaved],
   );
 
   return {

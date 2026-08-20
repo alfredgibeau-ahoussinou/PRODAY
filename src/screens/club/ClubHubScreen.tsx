@@ -72,13 +72,13 @@ export function ClubHubScreen() {
         <ClubSectionCard title="Identité">
           <View style={styles.identityRow}>
             <PressableSpring
-              onPress={() => void logo.pickAndUpload()}
-              disabled={logo.uploading}
+              onPress={logo.canEdit ? () => void logo.pickAndUpload() : undefined}
+              disabled={!logo.canEdit || logo.uploading}
               scaleTo={0.97}
-              haptic
+              haptic={logo.canEdit}
               style={[styles.logoBig, { borderColor: tokens.accentSoft }]}
-              accessibilityRole="button"
-              accessibilityLabel={logo.actionLabel}
+              accessibilityRole={logo.canEdit ? 'button' : undefined}
+              accessibilityLabel={logo.canEdit ? logo.actionLabel : undefined}
             >
               {logo.uploading ? (
                 <View style={[styles.logoImg, styles.logoBusy]}>
@@ -112,13 +112,19 @@ export function ClubHubScreen() {
             icon="image"
             label={logo.actionLabel}
             hint={
-              logo.uploading
-                ? 'Envoi en cours…'
-                : logoUrl
-                  ? 'Remplacer le crest affiché partout dans le pôle Club'
-                  : 'Importer le crest du club — thème et en-têtes s’adaptent'
+              !logo.canEdit
+                ? 'Rattaché à un autre club — logo non modifiable ici'
+                : logo.uploading
+                  ? 'Envoi en cours…'
+                  : logoUrl
+                    ? 'Remplacer le crest affiché partout dans le pôle Club'
+                    : 'Importer le crest du club — thème et en-têtes s’adaptent'
             }
-            onPress={logo.uploading ? undefined : () => void logo.pickAndUpload()}
+            onPress={
+              !logo.canEdit || logo.uploading
+                ? undefined
+                : () => void logo.pickAndUpload()
+            }
             trailing={
               logo.uploading ? <ActivityIndicator color={tokens.accent} /> : undefined
             }

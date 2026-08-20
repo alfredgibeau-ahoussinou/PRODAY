@@ -14,10 +14,11 @@ import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import type { Club } from '../models/Club';
 import type { GeoPoint, User } from '../models/User';
-import { canManageClubEntity } from '../utils/roleCapabilities';
+import { canEditClubBranding, canManageClubEntity } from '../utils/roleCapabilities';
 import { validateClubInput } from '../utils/clubValidation';
 import { normalizeCoachHexColor } from '../utils/coachColorPicker';
 import { storageService, type UploadFileInput } from './storage.service';
+import { usersService } from './users.service';
 
 function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
   const loc = data.location as { latitude?: number; longitude?: number } | undefined;
@@ -132,7 +133,7 @@ export const clubsService = {
 
   /**
    * Met à jour le logo club (Storage avatars/{uid} + champ logo_url).
-   * Réservé au propriétaire (règles Firestore clubs).
+   * Tout compte rôle Club rattaché au clubId (pôle Club), pas seulement owner_uid.
    */
   async updateLogo(clubId: string, actorUid: string, file: UploadFileInput): Promise<string> {
     const database = getDb();
@@ -140,8 +141,15 @@ export const clubsService = {
 
     const club = await this.getById(clubId);
     if (!club) throw new Error('Club introuvable.');
-    if (club.owner_uid !== actorUid) {
-      throw new Error('Seul le propriétaire du club peut changer le logo.');
+
+    const actor = await usersService.getById(actorUid);
+    const allowed =
+      club.owner_uid === actorUid ||
+      canEditClubBranding(actor?.role, actor?.profile.club_id, clubId);
+    if (!allowed) {
+      throw new Error(
+        'Seuls les comptes Club rattachés à ce club peuvent changer le logo.',
+      );
     }
 
     const url = await storageService.uploadProfileImage(actorUid, file, 'avatars');
@@ -151,7 +159,7 @@ export const clubsService = {
 
   /**
    * Met à jour primary_color / secondary_color du club.
-   * Réservé au propriétaire (règles Firestore clubs) — hérité par joueurs/coachs licenciés.
+   * Même ACL que le logo (staff pôle Club rattaché) — hérité par joueurs/coachs licenciés.
    */
   async updateBrandColors(
     clubId: string,
@@ -169,8 +177,15 @@ export const clubsService = {
 
     const club = await this.getById(clubId);
     if (!club) throw new Error('Club introuvable.');
-    if (club.owner_uid !== actorUid) {
-      throw new Error('Seul le propriétaire du club peut changer les couleurs.');
+
+    const actor = await usersService.getById(actorUid);
+    const allowed =
+      club.owner_uid === actorUid ||
+      canEditClubBranding(actor?.role, actor?.profile.club_id, clubId);
+    if (!allowed) {
+      throw new Error(
+        'Seuls les comptes Club rattachés à ce club peuvent changer les couleurs.',
+      );
     }
 
     await updateDoc(doc(database, 'clubs', clubId), {
