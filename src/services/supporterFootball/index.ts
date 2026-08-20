@@ -20,11 +20,13 @@ export type { SupporterFootballProvider } from './provider';
 export { SportmonksFootballProvider } from './SportmonksFootballProvider';
 export { ProDayFootballProvider } from './ProDayFootballProvider';
 export { DemoFootballProvider } from './DemoFootballProvider';
+export { EmptyFootballProvider } from './EmptyFootballProvider';
 export {
   MergedSupporterFootballFacade,
   createSupporterFootballFacade,
   resolveMatchCenterTabs,
   filterMatchesForFollows,
+  rejectDemoUnlessForced,
   supporterFootballFacade,
   type MatchCenterTabId,
   type MatchCenterPayload,

@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  title: { color: SUPPORTER_SPACE.foreground, fontSize: 17 },
-  action: { color: SUPPORTER_SPACE.bright },
+  title: { color: SUPPORTER_SPACE.foreground, fontSize: 17, fontWeight: '700' },
+  action: { color: SUPPORTER_SPACE.accent, fontWeight: '600' },
 });

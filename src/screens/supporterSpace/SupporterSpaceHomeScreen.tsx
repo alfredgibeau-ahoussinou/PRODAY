@@ -27,24 +27,29 @@ import {
 } from '../../features/supporterSpace/theme/supporterSpaceTheme';
 import { followsService } from '../../services/follows.service';
 import type { Follow } from '../../models/Follow';
-import type { UnifiedCompetitionRef, UnifiedMatch } from '../../services/supporterFootball';
+import type { UnifiedMatch } from '../../services/supporterFootball';
+import { ymd } from '../../services/supporterFootball/mappers';
 import { SupporterSpaceMatchCenterScreen } from './SupporterSpaceMatchCenterScreen';
 import { SupporterSpaceSearchScreen } from './SupporterSpaceSearchScreen';
 
 const EMPTY_EVENTS: never[] = [];
 const EMPTY_TOURNAMENTS: never[] = [];
 
-/** Accueil Supporter Space V3. */
+function matchOnDate(m: UnifiedMatch, dateKey: string): boolean {
+  return ymd(m.date) === dateKey;
+}
+
+/** Accueil Supporter Space — Live Score kit, dual rails ProDay | Ligues. */
 export const SupporterSpaceHomeScreen: React.FC = () => {
   const { profile } = useAuth();
   const nav = useTabNavigationActions();
   const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { tournaments } = useTournaments();
   const [follows, setFollows] = useState<Follow[]>([]);
-  const [comps, setComps] = useState<UnifiedCompetitionRef[]>([]);
   const [selected, setSelected] = useState<UnifiedMatch | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedDateKey, setSelectedDateKey] = useState(() => ymd(new Date()));
 
   const calendarEvents = events ?? EMPTY_EVENTS;
   const tournamentList = tournaments ?? EMPTY_TOURNAMENTS;
@@ -73,22 +78,39 @@ export const SupporterSpaceHomeScreen: React.FC = () => {
     void loadFollows();
   }, [loadFollows]);
 
-  useEffect(() => {
-    void feed.facade.getCompetitions().then(setComps).catch(() => setComps([]));
-  }, [feed.facade]);
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([feed.refresh({ silent: true }), loadFollows()]);
     setRefreshing(false);
   }, [feed, loadFollows]);
 
+  const liveForHero = useMemo(() => {
+    const pool = [...feed.liveLeagues, ...feed.liveProday];
+    return pool.find((m) => matchOnDate(m, selectedDateKey)) ?? pool[0] ?? null;
+  }, [feed.liveLeagues, feed.liveProday, selectedDateKey]);
+
   const heroMatch = useMemo(() => {
-    if (feed.favorites[0]) return feed.favorites[0];
-    if (feed.live[0]) return feed.live[0];
-    if (feed.proday[0]) return feed.proday[0];
-    return feed.upcoming[0] ?? null;
-  }, [feed.favorites, feed.live, feed.proday, feed.upcoming]);
+    if (liveForHero) return liveForHero;
+    const fav = feed.favorites.find((m) => matchOnDate(m, selectedDateKey));
+    if (fav) return fav;
+    const dayProday = feed.proday.find((m) => matchOnDate(m, selectedDateKey));
+    if (dayProday) return dayProday;
+    const dayLeague = feed.leagues.find((m) => matchOnDate(m, selectedDateKey));
+    return dayLeague ?? null;
+  }, [liveForHero, feed.favorites, feed.proday, feed.leagues, selectedDateKey]);
+
+  const prodayRail = useMemo(() => {
+    const dated = feed.proday.filter((m) => matchOnDate(m, selectedDateKey));
+    return dated.length ? dated : feed.proday.slice(0, 8);
+  }, [feed.proday, selectedDateKey]);
+
+  const leaguesRail = useMemo(() => {
+    const dated = feed.leagues.filter((m) => matchOnDate(m, selectedDateKey));
+    const week = dated.length ? dated : feed.upcomingLeagues.slice(0, 10);
+    return week.length ? week : feed.leagues.slice(0, 10);
+  }, [feed.leagues, feed.upcomingLeagues, selectedDateKey]);
+
+  const greetingName = profile?.display_name || profile?.email?.split('@')[0] || null;
 
   if (selected) {
     return (
@@ -120,11 +142,14 @@ export const SupporterSpaceHomeScreen: React.FC = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={SUPPORTER_SPACE.bright}
+          tintColor={SUPPORTER_SPACE.accent}
         />
       }
     >
       <SpaceHero
+        greetingName={greetingName}
+        selectedDateKey={selectedDateKey}
+        onSelectDate={setSelectedDateKey}
         heroMatch={heroMatch}
         onOpenMatch={setSelected}
         onSearch={() => setShowSearch(true)}
@@ -139,14 +164,22 @@ export const SupporterSpaceHomeScreen: React.FC = () => {
         </View>
       ) : null}
 
-      {feed.loading && !feed.live.length && !feed.upcoming.length ? (
-        <ActivityIndicator color={SUPPORTER_SPACE.bright} style={{ marginVertical: 24 }} />
+      {feed.health?.mode === 'empty' ? (
+        <View style={styles.bannerMuted}>
+          <ProDayText variant="caption" style={styles.bannerMutedText}>
+            {SUPPORTER_SPACE_COPY.configureSportmonks}
+          </ProDayText>
+        </View>
+      ) : null}
+
+      {feed.loading && !feed.live.length && !feed.proday.length && !feed.leagues.length ? (
+        <ActivityIndicator color={SUPPORTER_SPACE.accent} style={{ marginVertical: 24 }} />
       ) : null}
 
       <SpaceSection title="En direct" actionLabel="Matchs" onAction={() => nav.setActiveTab('matchs')}>
-        {feed.live.length ? (
+        {feed.liveLeagues.length || feed.liveProday.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {feed.live.map((m) => (
+            {[...feed.liveLeagues, ...feed.liveProday].map((m) => (
               <LiveMatchCard key={m.id} match={m} onPress={() => setSelected(m)} />
             ))}
           </ScrollView>
@@ -157,54 +190,56 @@ export const SupporterSpaceHomeScreen: React.FC = () => {
         )}
       </SpaceSection>
 
-      <SpaceSection title="Vos prochains">
-        {feed.favorites.length ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {feed.favorites.slice(0, 8).map((m) => (
-              <MatchCard key={m.id} match={m} compact onPress={() => setSelected(m)} />
-            ))}
-          </ScrollView>
-        ) : (
-          <ProDayText variant="body" style={styles.empty}>
-            {SUPPORTER_SPACE_COPY.emptyClubs}
-          </ProDayText>
-        )}
-      </SpaceSection>
+      <View style={styles.dualRails}>
+        <View style={styles.rail}>
+          <SpaceSection title={SUPPORTER_SPACE_COPY.sectionProday} actionLabel="ProDay" onAction={() => nav.setActiveTab('feed')}>
+            {prodayRail.length ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {prodayRail.map((m) => (
+                  <MatchCard key={m.id} match={m} compact onPress={() => setSelected(m)} />
+                ))}
+              </ScrollView>
+            ) : (
+              <ProDayText variant="body" style={styles.empty}>
+                {SUPPORTER_SPACE_COPY.emptyProday}
+              </ProDayText>
+            )}
+          </SpaceSection>
+        </View>
 
-      <SpaceSection title="Matchs ProDay" actionLabel="ProDay" onAction={() => nav.setActiveTab('feed')}>
-        {feed.proday.length ? (
-          feed.proday.slice(0, 5).map((m) => (
-            <MatchCard key={m.id} match={m} onPress={() => setSelected(m)} />
-          ))
-        ) : (
-          <ProDayText variant="body" style={styles.empty}>
-            {SUPPORTER_SPACE_COPY.emptyProday}
-          </ProDayText>
-        )}
-      </SpaceSection>
+        <View style={styles.rail}>
+          <SpaceSection
+            title={SUPPORTER_SPACE_COPY.sectionLeagues}
+            actionLabel="Matchs"
+            onAction={() => nav.setActiveTab('matchs')}
+          >
+            {leaguesRail.length ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {leaguesRail.map((m) => (
+                  <MatchCard key={m.id} match={m} compact onPress={() => setSelected(m)} />
+                ))}
+              </ScrollView>
+            ) : (
+              <ProDayText variant="body" style={styles.empty}>
+                {feed.health?.mode === 'empty'
+                  ? SUPPORTER_SPACE_COPY.configureSportmonks
+                  : SUPPORTER_SPACE_COPY.emptyLeagues}
+              </ProDayText>
+            )}
+          </SpaceSection>
+        </View>
+      </View>
 
-      <SpaceSection title="À venir">
-        {feed.upcoming.length ? (
+      <SpaceSection title={SUPPORTER_SPACE_COPY.matchThisWeek}>
+        {feed.upcomingLeagues.length || feed.upcomingProday.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {feed.upcoming.slice(0, 10).map((m) => (
+            {[...feed.upcomingProday, ...feed.upcomingLeagues].slice(0, 12).map((m) => (
               <MatchCard key={m.id} match={m} compact onPress={() => setSelected(m)} />
             ))}
           </ScrollView>
         ) : (
           <ProDayText variant="body" style={styles.empty}>
             {SUPPORTER_SPACE_COPY.emptyUpcoming}
-          </ProDayText>
-        )}
-      </SpaceSection>
-
-      <SpaceSection title="Résultats récents">
-        {feed.finished.length ? (
-          feed.finished.slice(0, 6).map((m) => (
-            <MatchCard key={m.id} match={m} onPress={() => setSelected(m)} />
-          ))
-        ) : (
-          <ProDayText variant="body" style={styles.empty}>
-            {SUPPORTER_SPACE_COPY.emptyFinished}
           </ProDayText>
         )}
       </SpaceSection>
@@ -230,68 +265,36 @@ export const SupporterSpaceHomeScreen: React.FC = () => {
           </ProDayText>
         )}
       </SpaceSection>
-
-      <SpaceSection title="À découvrir">
-        <ProDayText variant="body" style={styles.empty}>
-          Explore les compétitions ci-dessous ou cherche un club.
-        </ProDayText>
-      </SpaceSection>
-
-      <SpaceSection title="Compétitions">
-        {comps.length ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {comps.slice(0, 16).map((c) => (
-              <View key={c.id} style={styles.compCard}>
-                <ProDayText variant="body" style={styles.compName} numberOfLines={2}>
-                  {c.name}
-                </ProDayText>
-                {c.country ? (
-                  <ProDayText variant="caption" style={styles.empty}>
-                    {c.country}
-                  </ProDayText>
-                ) : null}
-              </View>
-            ))}
-          </ScrollView>
-        ) : (
-          <ProDayText variant="body" style={styles.empty}>
-            Compétitions chargées depuis l’API quand le token est actif.
-          </ProDayText>
-        )}
-      </SpaceSection>
     </SpaceScreen>
   );
 };
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: 'rgba(251, 191, 36, 0.12)',
-    borderRadius: 10,
-    padding: 10,
+    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    borderRadius: 14,
+    padding: 12,
     marginBottom: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.3)',
   },
   bannerText: { color: SUPPORTER_SPACE.demo },
+  bannerMuted: {
+    backgroundColor: SUPPORTER_SPACE.band,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  bannerMutedText: { color: SUPPORTER_SPACE.muted },
   empty: { color: SUPPORTER_SPACE.muted, marginBottom: 4 },
+  dualRails: { gap: 4 },
+  rail: {},
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   clubChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: SUPPORTER_SPACE.elevated,
-    borderWidth: 1,
-    borderColor: SUPPORTER_SPACE.border,
-  },
-  clubChipText: { color: SUPPORTER_SPACE.foreground },
-  compCard: {
-    width: 140,
-    marginRight: 10,
-    padding: 12,
-    borderRadius: 12,
+    borderRadius: 999,
     backgroundColor: SUPPORTER_SPACE.surface,
     borderWidth: 1,
     borderColor: SUPPORTER_SPACE.border,
   },
-  compName: { color: SUPPORTER_SPACE.foreground, marginBottom: 4 },
+  clubChipText: { color: SUPPORTER_SPACE.foreground },
 });

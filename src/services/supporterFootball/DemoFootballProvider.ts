@@ -14,8 +14,9 @@ import type {
 import { addDays, ymd } from './mappers';
 
 /**
- * Demo provider — ONLY when EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1 or no token.
- * All matches tagged source: 'demo'. Never mixed silently with live API data.
+ * Demo provider — ONLY when EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1 (explicit opt-in).
+ * All matches tagged source: 'demo'. Never mixed into Live/lists unless forced.
+ * Absence of Sportmonks token alone does NOT enable this provider.
  */
 function buildDemoMatches(): UnifiedMatch[] {
   const now = Date.now();

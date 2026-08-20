@@ -46,20 +46,20 @@ export const StatsBars: React.FC<Props> = ({ statistics, homeLabel, awayLabel })
         const aPct = (a / total) * 100;
         return (
           <View key={row.key} style={styles.row}>
+            <ProDayText variant="caption" style={styles.label}>
+              {row.label}
+            </ProDayText>
             <View style={styles.values}>
               <ProDayText variant="caption" style={styles.val}>
                 {row.home ?? '–'}
               </ProDayText>
-              <ProDayText variant="caption" style={styles.label}>
-                {row.label}
-              </ProDayText>
+              <View style={styles.barTrack}>
+                <View style={[styles.barHome, { width: `${hPct}%` }]} />
+                <View style={[styles.barAway, { width: `${aPct}%` }]} />
+              </View>
               <ProDayText variant="caption" style={styles.val}>
                 {row.away ?? '–'}
               </ProDayText>
-            </View>
-            <View style={styles.barTrack}>
-              <View style={[styles.barHome, { width: `${hPct}%` }]} />
-              <View style={[styles.barAway, { width: `${aPct}%` }]} />
             </View>
           </View>
         );
@@ -69,22 +69,28 @@ export const StatsBars: React.FC<Props> = ({ statistics, homeLabel, awayLabel })
 };
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12 },
+  wrap: { gap: 16 },
   empty: { color: SUPPORTER_SPACE.muted },
   head: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  side: { color: SUPPORTER_SPACE.bright },
-  sideRight: { color: SUPPORTER_SPACE.muted },
-  row: { gap: 6 },
-  values: { flexDirection: 'row', alignItems: 'center' },
-  val: { color: SUPPORTER_SPACE.foreground, width: 40, textAlign: 'center' },
-  label: { color: SUPPORTER_SPACE.muted, flex: 1, textAlign: 'center' },
+  side: { color: SUPPORTER_SPACE.yellow, fontWeight: '700' },
+  sideRight: { color: SUPPORTER_SPACE.accent, fontWeight: '700' },
+  row: { gap: 8 },
+  label: { color: SUPPORTER_SPACE.muted, textAlign: 'center', fontSize: 12 },
+  values: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  val: {
+    color: SUPPORTER_SPACE.foreground,
+    width: 36,
+    textAlign: 'center',
+    fontWeight: '700',
+  },
   barTrack: {
-    height: 6,
-    borderRadius: 3,
+    flex: 1,
+    height: 8,
+    borderRadius: 999,
     backgroundColor: SUPPORTER_SPACE.band,
     flexDirection: 'row',
     overflow: 'hidden',
   },
-  barHome: { height: 6, backgroundColor: SUPPORTER_SPACE.accent },
-  barAway: { height: 6, backgroundColor: SUPPORTER_SPACE.bright },
+  barHome: { height: 8, backgroundColor: SUPPORTER_SPACE.yellow },
+  barAway: { height: 8, backgroundColor: SUPPORTER_SPACE.accent },
 });

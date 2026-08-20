@@ -6,3 +6,5 @@ export { LiveMatchCard } from './LiveMatchCard';
 export { LineupPitch } from './LineupPitch';
 export { StatsBars } from './StatsBars';
 export { FilterChips, type FilterChip } from './FilterChips';
+export { DateStrip, buildDateStripDays, type DateStripDay } from './DateStrip';
+export { SourceSegment, type SupporterSourceSide } from './SourceSegment';

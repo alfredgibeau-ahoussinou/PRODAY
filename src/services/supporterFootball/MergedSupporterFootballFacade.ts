@@ -4,10 +4,7 @@ import type { Tournament } from '../../models/Tournament';
 import { DemoFootballProvider } from './DemoFootballProvider';
 import { ProDayFootballProvider } from './ProDayFootballProvider';
 import type { SupporterFootballProvider } from './provider';
-import {
-  isSportmonksTokenConfigured,
-  isSupporterFootballDemoForced,
-} from './sportmonksClient';
+import { isSupporterFootballDemoForced } from './sportmonksClient';
 import { SportmonksFootballProvider } from './SportmonksFootballProvider';
 import type {
   FixtureQuery,
@@ -48,37 +45,59 @@ function sortByDateDesc(a: UnifiedMatch, b: UnifiedMatch): number {
   return b.date.getTime() - a.date.getTime();
 }
 
+/** Strip demo fixtures unless demo mode is explicitly forced. */
+export function rejectDemoUnlessForced(matches: UnifiedMatch[], demoForced: boolean): UnifiedMatch[] {
+  if (demoForced) return matches;
+  return matches.filter((m) => m.source !== 'demo');
+}
+
+function resolveExternalProvider(demoForced: boolean): SupporterFootballProvider {
+  // Demo ONLY when EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1. Otherwise Sportmonks
+  // (client token or Cloud proxy) — never invent fixtures when the API is empty.
+  if (demoForced) return new DemoFootballProvider();
+  return new SportmonksFootballProvider();
+}
+
 /**
- * Merged facade — ProDay (teamEvents) + external Sportmonks OR demo.
- * Demo is never mixed silently with live Sportmonks data.
+ * Merged facade — ProDay (teamEvents) + external Sportmonks.
+ * Demo fixtures are never mixed into Live / lists unless DEMO=1 is forced.
  */
 export class MergedSupporterFootballFacade implements SupporterFootballProvider {
   readonly name = 'merged-supporter';
 
   private external: SupporterFootballProvider;
   private proday: ProDayFootballProvider;
-  private demoMode: boolean;
+  private demoForced: boolean;
 
   constructor(
     calendarEvents: TeamEvent[] = [],
     tournaments: Tournament[] = [],
   ) {
     this.proday = new ProDayFootballProvider(calendarEvents, tournaments);
-    this.demoMode = isSupporterFootballDemoForced() || !isSportmonksTokenConfigured();
-    this.external = this.demoMode
-      ? new DemoFootballProvider()
-      : new SportmonksFootballProvider();
+    this.demoForced = isSupporterFootballDemoForced();
+    this.external = resolveExternalProvider(this.demoForced);
+  }
+
+  private sanitize(matches: UnifiedMatch[]): UnifiedMatch[] {
+    return rejectDemoUnlessForced(matches, this.demoForced);
   }
 
   async getHealth(): Promise<ProviderHealth> {
     const ext = await this.external.getHealth();
+    if (this.demoForced) {
+      return {
+        name: this.name,
+        ready: true,
+        mode: 'demo',
+        message:
+          'Mode démo forcé (EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1). ProDay reste réel.',
+      };
+    }
     return {
       name: this.name,
       ready: true,
-      mode: this.demoMode ? 'demo' : ext.mode,
-      message: this.demoMode
-        ? 'Mode démo (source: demo). ProDay reste réel. Ajoute EXPO_PUBLIC_SPORTMONKS_API_TOKEN ou le proxy.'
-        : ext.message,
+      mode: ext.mode === 'live' ? 'live' : 'empty',
+      message: ext.message,
     };
   }
 
@@ -87,7 +106,7 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
       this.proday.getFixtures(query),
       this.external.getFixtures(query).catch(() => [] as UnifiedMatch[]),
     ]);
-    return dedupeById([...proday, ...external]).sort(sortByDateAsc);
+    return this.sanitize(dedupeById([...proday, ...external])).sort(sortByDateAsc);
   }
 
   async getLive(): Promise<UnifiedMatch[]> {
@@ -95,7 +114,7 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
       this.proday.getLive(),
       this.external.getLive().catch(() => [] as UnifiedMatch[]),
     ]);
-    return dedupeById([...proday, ...external]).sort(sortByDateAsc);
+    return this.sanitize(dedupeById([...proday, ...external])).sort(sortByDateAsc);
   }
 
   async getUpcoming(days = 7): Promise<UnifiedMatch[]> {
@@ -103,7 +122,7 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
       this.proday.getUpcoming(days),
       this.external.getUpcoming(days).catch(() => [] as UnifiedMatch[]),
     ]);
-    return dedupeById([...proday, ...external]).sort(sortByDateAsc);
+    return this.sanitize(dedupeById([...proday, ...external])).sort(sortByDateAsc);
   }
 
   async getFinished(days = 3): Promise<UnifiedMatch[]> {
@@ -111,13 +130,13 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
       this.proday.getFinished(days),
       this.external.getFinished(days).catch(() => [] as UnifiedMatch[]),
     ]);
-    return dedupeById([...proday, ...external]).sort(sortByDateDesc);
+    return this.sanitize(dedupeById([...proday, ...external])).sort(sortByDateDesc);
   }
 
   async getMatch(id: string): Promise<UnifiedMatch | null> {
     if (id.startsWith('proday-')) return this.proday.getMatch(id);
     if (id.startsWith('demo-')) {
-      if (!this.demoMode) return null;
+      if (!this.demoForced) return null;
       return this.external.getMatch(id);
     }
     const external = await this.external.getMatch(id).catch(() => null);
@@ -172,7 +191,7 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
       ),
     ]);
     return {
-      matches: dedupeById([...proday.matches, ...external.matches]),
+      matches: this.sanitize(dedupeById([...proday.matches, ...external.matches])),
       teams: external.teams,
       competitions: [...proday.competitions, ...external.competitions],
     };
@@ -181,6 +200,7 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
   async getMatchCenter(matchId: string): Promise<MatchCenterPayload | null> {
     const match = await this.getMatch(matchId);
     if (!match) return null;
+    if (match.source === 'demo' && !this.demoForced) return null;
     const [lineup, events, statistics] = await Promise.all([
       match.lineup ? Promise.resolve(match.lineup) : this.getLineups(matchId),
       match.events ? Promise.resolve(match.events) : this.getEvents(matchId),
@@ -195,9 +215,30 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
     return { match: full, tabs: resolveMatchCenterTabs(full) };
   }
 
-  /** ProDay-only slice for Accueil carousel. */
+  /** ProDay-only slice (real calendar / tournaments — never demo). */
   async getProDayMatches(): Promise<UnifiedMatch[]> {
     return this.proday.getFixtures();
+  }
+
+  /** League / Sportmonks-only slice (never ProDay, never demo unless forced). */
+  async getLeagueMatches(query?: FixtureQuery): Promise<UnifiedMatch[]> {
+    const list = await this.external.getFixtures(query).catch(() => [] as UnifiedMatch[]);
+    return this.sanitize(list).filter((m) => m.source === 'external' || (this.demoForced && m.source === 'demo'));
+  }
+
+  async getLeagueLive(): Promise<UnifiedMatch[]> {
+    const list = await this.external.getLive().catch(() => [] as UnifiedMatch[]);
+    return this.sanitize(list);
+  }
+
+  async getLeagueUpcoming(days = 7): Promise<UnifiedMatch[]> {
+    const list = await this.external.getUpcoming(days).catch(() => [] as UnifiedMatch[]);
+    return this.sanitize(list);
+  }
+
+  async getLeagueFinished(days = 3): Promise<UnifiedMatch[]> {
+    const list = await this.external.getFinished(days).catch(() => [] as UnifiedMatch[]);
+    return this.sanitize(list);
   }
 }
 
@@ -224,6 +265,7 @@ export function filterMatchesForFollows(matches: UnifiedMatch[], follows: Follow
     follows.map((f) => (f.target_label || '').toLowerCase()).filter(Boolean),
   );
   return matches.filter((m) => {
+    if (m.source === 'demo') return false;
     if (clubIds.has(m.homeTeam.id) || clubIds.has(m.awayTeam.id)) return true;
     const home = m.homeTeam.name.toLowerCase();
     const away = m.awayTeam.name.toLowerCase();

@@ -4,6 +4,7 @@ import {
   RefreshControl,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { useAuth } from '../../context/AuthContext';
@@ -11,9 +12,13 @@ import { useSeasonCalendar } from '../../hooks/useAppData';
 import { useTournaments } from '../../hooks/useTournaments';
 import { useSupporterFootballFeed } from '../../hooks/supporterFootball';
 import {
+  DateStrip,
   FilterChips,
   MatchCard,
+  SourceSegment,
   SpaceScreen,
+  SpaceSection,
+  type SupporterSourceSide,
 } from '../../features/supporterSpace/components';
 import {
   SUPPORTER_SPACE,
@@ -30,8 +35,6 @@ const STATUS_CHIPS = [
   { id: 'live', label: 'Live' },
   { id: 'upcoming', label: 'À venir' },
   { id: 'finished', label: 'Terminés' },
-  { id: 'proday', label: 'ProDay' },
-  { id: 'external', label: 'Externes' },
 ];
 
 const GENDER_CHIPS = [
@@ -41,16 +44,12 @@ const GENDER_CHIPS = [
   { id: 'youth', label: 'Jeunes' },
 ];
 
-const DATE_CHIPS = [
-  { id: 'today', label: 'Aujourd’hui' },
-  { id: 'tomorrow', label: 'Demain' },
-  { id: 'week', label: 'Semaine' },
-  { id: 'weekend', label: 'Week-end' },
-];
-
 function inDateBucket(match: UnifiedMatch, bucket: string): boolean {
   const d = match.date;
   if (Number.isNaN(d.getTime())) return false;
+  if (bucket.length === 10 && bucket.includes('-')) {
+    return ymd(d) === bucket;
+  }
   const today = ymd(new Date());
   const tomorrow = ymd(addDays(new Date(), 1));
   const key = ymd(d);
@@ -67,28 +66,27 @@ function inDateBucket(match: UnifiedMatch, bucket: string): boolean {
   return true;
 }
 
-function groupByDateThenComp(matches: UnifiedMatch[]): Array<{
-  dateKey: string;
-  competition: string;
-  items: UnifiedMatch[];
-}> {
-  const map = new Map<string, UnifiedMatch[]>();
-  for (const m of matches) {
-    const dateKey = ymd(m.date);
-    const key = `${dateKey}||${m.competition.name}`;
-    const list = map.get(key) ?? [];
-    list.push(m);
-    map.set(key, list);
+function applyFilters(
+  list: UnifiedMatch[],
+  status: string,
+  gender: string,
+  dateKey: string,
+): UnifiedMatch[] {
+  let out =
+    status === 'live'
+      ? list.filter((m) => m.status === 'live' || m.status === 'halftime')
+      : list.filter((m) => inDateBucket(m, dateKey));
+  if (status === 'upcoming') out = out.filter((m) => m.status === 'scheduled');
+  if (status === 'finished') out = out.filter((m) => m.status === 'finished');
+  if (gender !== 'all') {
+    out = out.filter((m) => (m.genderScope as GenderScope | undefined) === gender);
   }
-  return [...map.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, items]) => {
-      const [dateKey, competition] = key.split('||');
-      return { dateKey, competition, items };
-    });
+  return out;
 }
 
 export const SupporterSpaceMatchsScreen: React.FC = () => {
+  const { width } = useWindowDimensions();
+  const sideBySide = width >= 720;
   const { profile } = useAuth();
   const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { tournaments } = useTournaments();
@@ -100,40 +98,40 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
   });
   const [status, setStatus] = useState('all');
   const [gender, setGender] = useState('all');
-  const [dateBucket, setDateBucket] = useState('week');
+  const [selectedDateKey, setSelectedDateKey] = useState(() => ymd(new Date()));
+  const [sourceSide, setSourceSide] = useState<SupporterSourceSide>('all');
   const [selected, setSelected] = useState<UnifiedMatch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const pool = useMemo(() => {
-    const all = dedupe([...feed.live, ...feed.upcoming, ...feed.finished, ...feed.proday]);
-    return all;
-  }, [feed.live, feed.upcoming, feed.finished, feed.proday]);
+  const prodayPool = useMemo(
+    () => dedupe([...feed.liveProday, ...feed.proday, ...feed.upcomingProday]),
+    [feed.liveProday, feed.proday, feed.upcomingProday],
+  );
 
-  const filtered = useMemo(() => {
-    // Onglet Live : toutes les fixtures inplay, sans filtre date (évite de masquer le live).
-    let list =
-      status === 'live'
-        ? pool.filter((m) => m.status === 'live' || m.status === 'halftime')
-        : pool.filter((m) => inDateBucket(m, dateBucket));
-    if (status === 'upcoming') list = list.filter((m) => m.status === 'scheduled');
-    if (status === 'finished') list = list.filter((m) => m.status === 'finished');
-    if (status === 'proday') list = list.filter((m) => m.source === 'proday');
-    if (status === 'external') list = list.filter((m) => m.source === 'external' || m.source === 'demo');
-    if (gender !== 'all') {
-      list = list.filter((m) => (m.genderScope as GenderScope | undefined) === gender);
-    }
-    return list;
-  }, [pool, status, gender, dateBucket]);
+  const leaguesPool = useMemo(
+    () =>
+      dedupe([
+        ...feed.liveLeagues,
+        ...feed.upcomingLeagues,
+        ...feed.finishedLeagues,
+        ...feed.leagues,
+      ]).filter((m) => m.source === 'external'),
+    [feed.liveLeagues, feed.upcomingLeagues, feed.finishedLeagues, feed.leagues],
+  );
 
-  const groups = useMemo(() => groupByDateThenComp(filtered), [filtered]);
+  const prodayFiltered = useMemo(
+    () => applyFilters(prodayPool, status, gender, selectedDateKey),
+    [prodayPool, status, gender, selectedDateKey],
+  );
 
-  const genderEmptyHonest =
-    gender !== 'all' &&
-    filtered.length === 0 &&
-    pool.some((m) => status === 'live' || inDateBucket(m, dateBucket));
+  const leaguesFiltered = useMemo(
+    () => applyFilters(leaguesPool, status, gender, selectedDateKey),
+    [leaguesPool, status, gender, selectedDateKey],
+  );
 
-  const liveEmptyHonest =
-    !feed.loading && status === 'live' && filtered.length === 0 && !genderEmptyHonest;
+  const showProday = sourceSide === 'all' || sourceSide === 'proday';
+  const showLeagues = sourceSide === 'all' || sourceSide === 'leagues';
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await feed.refresh({ silent: true });
@@ -157,51 +155,67 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={SUPPORTER_SPACE.bright}
+          tintColor={SUPPORTER_SPACE.accent}
         />
       }
     >
       <ProDayText variant="title" style={styles.title}>
         Matchs
       </ProDayText>
+
+      <SourceSegment value={sourceSide} onChange={setSourceSide} showAll />
+      <View style={styles.gap} />
       <FilterChips chips={STATUS_CHIPS} selectedId={status} onSelect={setStatus} />
       <View style={styles.gap} />
-      <FilterChips chips={DATE_CHIPS} selectedId={dateBucket} onSelect={setDateBucket} />
+      <DateStrip selectedKey={selectedDateKey} onSelect={setSelectedDateKey} />
       <View style={styles.gap} />
       <FilterChips chips={GENDER_CHIPS} selectedId={gender} onSelect={setGender} />
 
       {feed.loading ? (
-        <ActivityIndicator color={SUPPORTER_SPACE.bright} style={{ marginTop: 24 }} />
+        <ActivityIndicator color={SUPPORTER_SPACE.accent} style={{ marginTop: 24 }} />
       ) : null}
 
-      {genderEmptyHonest ? (
-        <ProDayText variant="body" style={styles.empty}>
-          {SUPPORTER_SPACE_COPY.emptyCategory}
+      {feed.health?.mode === 'empty' && showLeagues ? (
+        <ProDayText variant="body" style={styles.hint}>
+          {SUPPORTER_SPACE_COPY.configureSportmonks}
         </ProDayText>
       ) : null}
 
-      {liveEmptyHonest ? (
-        <ProDayText variant="body" style={styles.empty}>
-          {SUPPORTER_SPACE_COPY.emptyLive}
-        </ProDayText>
-      ) : null}
+      <View style={[styles.dual, sideBySide && styles.dualWide]}>
+        {showProday ? (
+          <View style={[styles.column, sideBySide && styles.columnWide]}>
+            <SpaceSection title={SUPPORTER_SPACE_COPY.sectionProday}>
+              {prodayFiltered.length ? (
+                prodayFiltered.map((m) => (
+                  <MatchCard key={m.id} match={m} onPress={() => setSelected(m)} />
+                ))
+              ) : (
+                <ProDayText variant="body" style={styles.empty}>
+                  {SUPPORTER_SPACE_COPY.emptyProday}
+                </ProDayText>
+              )}
+            </SpaceSection>
+          </View>
+        ) : null}
 
-      {!feed.loading && groups.length === 0 && !liveEmptyHonest ? (
-        <ProDayText variant="body" style={styles.empty}>
-          Aucun match pour ces filtres.
-        </ProDayText>
-      ) : null}
-
-      {groups.map((g) => (
-        <View key={`${g.dateKey}-${g.competition}`} style={styles.group}>
-          <ProDayText variant="caption" style={styles.groupLabel}>
-            {g.dateKey} · {g.competition}
-          </ProDayText>
-          {g.items.map((m) => (
-            <MatchCard key={m.id} match={m} onPress={() => setSelected(m)} />
-          ))}
-        </View>
-      ))}
+        {showLeagues ? (
+          <View style={[styles.column, sideBySide && styles.columnWide]}>
+            <SpaceSection title={SUPPORTER_SPACE_COPY.sectionLeagues}>
+              {leaguesFiltered.length ? (
+                leaguesFiltered.map((m) => (
+                  <MatchCard key={m.id} match={m} onPress={() => setSelected(m)} />
+                ))
+              ) : (
+                <ProDayText variant="body" style={styles.empty}>
+                  {status === 'live'
+                    ? SUPPORTER_SPACE_COPY.emptyLive
+                    : SUPPORTER_SPACE_COPY.emptyLeagues}
+                </ProDayText>
+              )}
+            </SpaceSection>
+          </View>
+        ) : null}
+      </View>
     </SpaceScreen>
   );
 };
@@ -216,9 +230,12 @@ function dedupe(list: UnifiedMatch[]): UnifiedMatch[] {
 }
 
 const styles = StyleSheet.create({
-  title: { color: SUPPORTER_SPACE.foreground, marginBottom: 12, fontSize: 22 },
-  gap: { height: 8 },
-  empty: { color: SUPPORTER_SPACE.muted, marginTop: 16 },
-  group: { marginTop: 16 },
-  groupLabel: { color: SUPPORTER_SPACE.bright, marginBottom: 8 },
+  title: { color: SUPPORTER_SPACE.foreground, marginBottom: 12, fontSize: 22, fontWeight: '700' },
+  gap: { height: 10 },
+  empty: { color: SUPPORTER_SPACE.muted, marginTop: 4 },
+  hint: { color: SUPPORTER_SPACE.muted, marginTop: 12, marginBottom: 4 },
+  dual: { marginTop: 8, gap: 4 },
+  dualWide: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
+  column: { flex: 1 },
+  columnWide: { flex: 1, minWidth: 0 },
 });

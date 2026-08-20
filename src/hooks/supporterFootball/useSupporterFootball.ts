@@ -10,12 +10,23 @@ import {
   type UnifiedMatch,
 } from '../../services/supporterFootball';
 
+function isLive(m: UnifiedMatch): boolean {
+  return m.status === 'live' || m.status === 'halftime';
+}
+
 export type SupporterFootballFeed = {
   health: ProviderHealth | null;
+  /** Live ProDay + Ligues (demo stripped). Prefer `liveProday` / `liveLeagues` for dual rails. */
   live: UnifiedMatch[];
+  liveProday: UnifiedMatch[];
+  liveLeagues: UnifiedMatch[];
   upcoming: UnifiedMatch[];
+  upcomingProday: UnifiedMatch[];
+  upcomingLeagues: UnifiedMatch[];
   finished: UnifiedMatch[];
+  finishedLeagues: UnifiedMatch[];
   proday: UnifiedMatch[];
+  leagues: UnifiedMatch[];
   favorites: UnifiedMatch[];
   loading: boolean;
   error: string | null;
@@ -39,6 +50,7 @@ export function useSupporterFootballFeed(opts: {
   const [upcoming, setUpcoming] = useState<UnifiedMatch[]>([]);
   const [finished, setFinished] = useState<UnifiedMatch[]>([]);
   const [proday, setProday] = useState<UnifiedMatch[]>([]);
+  const [leagues, setLeagues] = useState<UnifiedMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
@@ -48,12 +60,15 @@ export function useSupporterFootballFeed(opts: {
       if (!refreshOpts?.silent) setLoading(true);
       setError(null);
       try {
-        const [h, l, u, f, p] = await Promise.all([
+        const [h, l, u, f, p, leagueUp, leagueLive, leagueFin] = await Promise.all([
           facade.getHealth(),
           facade.getLive(),
           facade.getUpcoming(10),
           facade.getFinished(5),
           facade.getProDayMatches(),
+          facade.getLeagueUpcoming(10),
+          facade.getLeagueLive(),
+          facade.getLeagueFinished(5),
         ]);
         if (!mounted.current) return;
         setHealth(h);
@@ -61,6 +76,10 @@ export function useSupporterFootballFeed(opts: {
         setUpcoming(u);
         setFinished(f);
         setProday(p);
+        const leaguePool = dedupe([...leagueLive, ...leagueUp, ...leagueFin]).filter(
+          (m) => m.source === 'external' || (h.mode === 'demo' && m.source === 'demo'),
+        );
+        setLeagues(leaguePool);
       } catch (e) {
         if (!mounted.current) return;
         setError(e instanceof Error ? e.message : 'Chargement impossible');
@@ -87,6 +106,27 @@ export function useSupporterFootballFeed(opts: {
     return () => clearInterval(id);
   }, [opts.pollLive, refresh]);
 
+  const liveProday = useMemo(
+    () => live.filter((m) => m.source === 'proday' && isLive(m)),
+    [live],
+  );
+  const liveLeagues = useMemo(
+    () => live.filter((m) => m.source === 'external' && isLive(m)),
+    [live],
+  );
+  const upcomingProday = useMemo(
+    () => upcoming.filter((m) => m.source === 'proday'),
+    [upcoming],
+  );
+  const upcomingLeagues = useMemo(
+    () => upcoming.filter((m) => m.source === 'external'),
+    [upcoming],
+  );
+  const finishedLeagues = useMemo(
+    () => finished.filter((m) => m.source === 'external'),
+    [finished],
+  );
+
   const favorites = useMemo(
     () => filterMatchesForFollows([...live, ...upcoming], opts.follows),
     [live, upcoming, opts.follows],
@@ -95,15 +135,30 @@ export function useSupporterFootballFeed(opts: {
   return {
     health,
     live,
+    liveProday,
+    liveLeagues,
     upcoming,
+    upcomingProday,
+    upcomingLeagues,
     finished,
+    finishedLeagues,
     proday,
+    leagues,
     favorites,
     loading,
     error,
     refresh,
     facade,
   };
+}
+
+function dedupe(list: UnifiedMatch[]): UnifiedMatch[] {
+  const seen = new Set<string>();
+  return list.filter((m) => {
+    if (seen.has(m.id)) return false;
+    seen.add(m.id);
+    return true;
+  });
 }
 
 export function useLiveMatchPoll(

@@ -1,6 +1,8 @@
 import {
   createSupporterFootballFacade,
   DemoFootballProvider,
+  EmptyFootballProvider,
+  rejectDemoUnlessForced,
   resolveMatchCenterTabs,
   mapSmFixtureToUnified,
 } from '../services/supporterFootball';
@@ -62,7 +64,19 @@ describe('supporterFootball UnifiedMatch + providers', () => {
     expect(await demo.getLineups('demo-live')).toBeNull();
   });
 
-  it('facade merge ProDay + démo sans token', async () => {
+  it('facade n’injecte PAS de démo sans DEMO=1 (même sans token)', async () => {
+    delete process.env.EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO;
+    delete process.env.EXPO_PUBLIC_SPORTMONKS_API_TOKEN;
+    const facade = createSupporterFootballFacade([], []);
+    const health = await facade.getHealth();
+    expect(health.mode).not.toBe('demo');
+    const live = await facade.getLive();
+    expect(live.every((m) => m.source !== 'demo')).toBe(true);
+    const leagues = await facade.getLeagueLive();
+    expect(leagues.every((m) => m.source !== 'demo')).toBe(true);
+  });
+
+  it('facade merge ProDay + démo seulement si DEMO=1 forcé', async () => {
     process.env.EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO = '1';
     delete process.env.EXPO_PUBLIC_SPORTMONKS_API_TOKEN;
     const facade = createSupporterFootballFacade([], []);
@@ -70,6 +84,22 @@ describe('supporterFootball UnifiedMatch + providers', () => {
     expect(health.mode).toBe('demo');
     const live = await facade.getLive();
     expect(live.some((m) => m.source === 'demo')).toBe(true);
+  });
+
+  it('rejectDemoUnlessForced filtre source demo hors mode forcé', () => {
+    const demoish = [
+      { id: '1', source: 'demo' as const },
+      { id: '2', source: 'external' as const },
+      { id: '3', source: 'proday' as const },
+    ] as any[];
+    expect(rejectDemoUnlessForced(demoish, false).map((m) => m.id)).toEqual(['2', '3']);
+    expect(rejectDemoUnlessForced(demoish, true)).toHaveLength(3);
+  });
+
+  it('EmptyFootballProvider ne fabrique aucun match', async () => {
+    const empty = new EmptyFootballProvider();
+    expect(await empty.getLive()).toEqual([]);
+    expect((await empty.getHealth()).mode).toBe('empty');
   });
 
   it('Match Center tabs = Résumé | Composition | Statistiques | Événements (+ Vidéo)', () => {

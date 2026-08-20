@@ -30,9 +30,9 @@ import { resolveMatchCenterTabs } from '../../services/supporterFootball';
 import { SupporterSpaceMatchDebateScreen } from './SupporterSpaceMatchDebateScreen';
 
 const TAB_LABELS: Record<MatchCenterTabId, string> = {
-  resume: 'Résumé',
-  composition: 'Composition',
-  statistiques: 'Statistiques',
+  resume: 'Match Day',
+  composition: 'Line Up',
+  statistiques: 'Match Status',
   evenements: 'Événements',
   video: 'Vidéo',
 };
@@ -130,47 +130,61 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
 
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
-        <Pressable onPress={onClose} hitSlop={12} style={styles.back}>
-          <Icon name="arrow-back" size={22} color={SUPPORTER_SPACE.foreground} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
+      <View style={styles.headerBand}>
+        <View style={styles.headerTop}>
+          <Pressable onPress={onClose} hitSlop={12} style={styles.back}>
+            <Icon name="arrow-back" size={22} color={SUPPORTER_SPACE.onBlue} />
+          </Pressable>
+          <Pressable onPress={() => setShowDebate(true)} style={styles.debateBtn}>
+            <ProDayText variant="caption" style={styles.debateText}>
+              {SUPPORTER_SPACE_COPY.debateCta}
+            </ProDayText>
+          </Pressable>
+        </View>
+
+        <View style={styles.scoreCard}>
           <ProDayText variant="caption" style={styles.comp} numberOfLines={1}>
-            {match?.competition.name ?? 'Match'}
-            {match?.score.period ? ` · ${match.score.period}` : ''}
+            {match?.venue || match?.competition.name || 'Match'}
+            {match ? ` · ${match.date.toLocaleDateString('fr-FR')}` : ''}
           </ProDayText>
           {match ? (
             <View style={styles.scoreboardRow}>
-              {match.homeTeam.logoUrl ? (
-                <Image source={{ uri: match.homeTeam.logoUrl }} style={styles.logo} />
-              ) : (
-                <View style={[styles.logo, styles.logoPh]} />
-              )}
-              <ProDayText variant="title" style={styles.scoreboard}>
-                {match.homeTeam.shortName || match.homeTeam.name}
-                {'  '}
-                {showScore ? `${match.score.home ?? '–'} – ${match.score.away ?? '–'}` : 'vs'}
-                {'  '}
-                {match.awayTeam.shortName || match.awayTeam.name}
+              <View style={styles.teamBlock}>
+                {match.homeTeam.logoUrl ? (
+                  <Image source={{ uri: match.homeTeam.logoUrl }} style={styles.logoLg} />
+                ) : (
+                  <View style={[styles.logoLg, styles.logoPh]} />
+                )}
+                <ProDayText variant="caption" style={styles.teamLabel} numberOfLines={1}>
+                  {match.homeTeam.shortName || match.homeTeam.name}
+                </ProDayText>
+              </View>
+              <ProDayText variant="hero" style={styles.scoreBig}>
+                {showScore ? `${match.score.home ?? '–'} - ${match.score.away ?? '–'}` : 'vs'}
               </ProDayText>
-              {match.awayTeam.logoUrl ? (
-                <Image source={{ uri: match.awayTeam.logoUrl }} style={styles.logo} />
-              ) : (
-                <View style={[styles.logo, styles.logoPh]} />
-              )}
+              <View style={styles.teamBlock}>
+                {match.awayTeam.logoUrl ? (
+                  <Image source={{ uri: match.awayTeam.logoUrl }} style={styles.logoLg} />
+                ) : (
+                  <View style={[styles.logoLg, styles.logoPh]} />
+                )}
+                <ProDayText variant="caption" style={styles.teamLabel} numberOfLines={1}>
+                  {match.awayTeam.shortName || match.awayTeam.name}
+                </ProDayText>
+              </View>
             </View>
           ) : null}
-          {match?.venue ? (
-            <ProDayText variant="caption" style={styles.venue} numberOfLines={1}>
-              {match.venue}
+          {match ? (
+            <ProDayText variant="caption" style={styles.statusLine}>
+              {statusFr(match)}
+              {match.source === 'proday'
+                ? ` · ${SUPPORTER_SPACE_COPY.sourceProday}`
+                : match.source === 'external'
+                  ? ` · ${SUPPORTER_SPACE_COPY.sourceLeagues}`
+                  : ''}
             </ProDayText>
           ) : null}
         </View>
-        <Pressable onPress={() => setShowDebate(true)} style={styles.debateBtn}>
-          <ProDayText variant="caption" style={styles.debateText}>
-            {SUPPORTER_SPACE_COPY.debateCta}
-          </ProDayText>
-        </Pressable>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
@@ -387,42 +401,57 @@ const SheetStat: React.FC<{ label: string; value: string }> = ({ label, value })
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: SUPPORTER_SPACE.bg },
-  header: {
+  headerBand: {
+    backgroundColor: SUPPORTER_SPACE.accent,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 22,
+  },
+  headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: SUPPORTER_SPACE.border,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   back: { padding: 4 },
-  comp: { color: SUPPORTER_SPACE.muted },
-  venue: { color: SUPPORTER_SPACE.muted, marginTop: 2 },
-  scoreboardRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  scoreboard: { color: SUPPORTER_SPACE.foreground, fontSize: 16, flexShrink: 1 },
-  logo: { width: 22, height: 22, borderRadius: 11 },
-  logoPh: { backgroundColor: SUPPORTER_SPACE.elevated },
-  debateBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: SUPPORTER_SPACE.soft,
-  },
-  debateText: { color: SUPPORTER_SPACE.bright },
-  tabs: { paddingHorizontal: 12, paddingVertical: 10, gap: 8 },
-  tab: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+  scoreCard: {
     backgroundColor: SUPPORTER_SPACE.surface,
-    borderWidth: 1,
-    borderColor: SUPPORTER_SPACE.border,
+    borderRadius: 20,
+    padding: 16,
+    gap: 12,
+  },
+  comp: { color: SUPPORTER_SPACE.muted, textAlign: 'center' },
+  scoreboardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  teamBlock: { width: 88, alignItems: 'center', gap: 6 },
+  teamLabel: { color: SUPPORTER_SPACE.foreground, textAlign: 'center', fontWeight: '600' },
+  scoreBig: { color: SUPPORTER_SPACE.foreground, fontSize: 28, fontWeight: '700' },
+  scoreboard: { color: SUPPORTER_SPACE.foreground, fontSize: 16, flexShrink: 1 },
+  statusLine: { color: SUPPORTER_SPACE.muted, textAlign: 'center' },
+  logoLg: { width: 44, height: 44, borderRadius: 22 },
+  logoPh: { backgroundColor: SUPPORTER_SPACE.band },
+  debateBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  debateText: { color: SUPPORTER_SPACE.onBlue, fontWeight: '600' },
+  tabs: { paddingHorizontal: 12, paddingVertical: 14, gap: 8 },
+  tab: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: SUPPORTER_SPACE.band,
     marginRight: 8,
   },
-  tabActive: { borderColor: SUPPORTER_SPACE.accent, backgroundColor: SUPPORTER_SPACE.soft },
-  tabLabel: { color: SUPPORTER_SPACE.muted },
-  tabLabelActive: { color: SUPPORTER_SPACE.foreground },
+  tabActive: { backgroundColor: SUPPORTER_SPACE.accent },
+  tabLabel: { color: SUPPORTER_SPACE.muted, fontWeight: '600' },
+  tabLabelActive: { color: SUPPORTER_SPACE.onBlue },
   body: { flex: 1 },
   bodyContent: { padding: 16, paddingBottom: 40 },
   block: { gap: 10 },
@@ -430,26 +459,24 @@ const styles = StyleSheet.create({
   source: { color: SUPPORTER_SPACE.proday, marginTop: 8 },
   eventLine: { color: SUPPORTER_SPACE.foreground },
   timelineRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
-  minute: { color: SUPPORTER_SPACE.bright, width: 36 },
+  minute: { color: SUPPORTER_SPACE.accent, width: 36, fontWeight: '700' },
   videoBtn: {
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 999,
     backgroundColor: SUPPORTER_SPACE.accent,
     alignItems: 'center',
   },
-  videoBtnText: { color: '#fff' },
+  videoBtnText: { color: SUPPORTER_SPACE.onBlue, fontWeight: '600' },
   sheetBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(15,23,42,0.45)',
     justifyContent: 'flex-end',
   },
   sheet: {
     backgroundColor: SUPPORTER_SPACE.surface,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     padding: 18,
-    borderWidth: 1,
-    borderColor: SUPPORTER_SPACE.border,
     gap: 14,
   },
   sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -459,7 +486,7 @@ const styles = StyleSheet.create({
     minWidth: 72,
     paddingVertical: 8,
     paddingHorizontal: 10,
-    borderRadius: 10,
-    backgroundColor: SUPPORTER_SPACE.elevated,
+    borderRadius: 14,
+    backgroundColor: SUPPORTER_SPACE.band,
   },
 });

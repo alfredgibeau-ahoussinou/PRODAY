@@ -37,17 +37,14 @@ export const FilterChips: React.FC<Props> = ({ chips, selectedId, onSelect }) =>
 const styles = StyleSheet.create({
   row: { gap: 8, paddingVertical: 4, paddingRight: 8 },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
-    backgroundColor: SUPPORTER_SPACE.surface,
-    borderWidth: 1,
-    borderColor: SUPPORTER_SPACE.border,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    backgroundColor: SUPPORTER_SPACE.band,
   },
   chipActive: {
-    backgroundColor: SUPPORTER_SPACE.soft,
-    borderColor: SUPPORTER_SPACE.accent,
+    backgroundColor: SUPPORTER_SPACE.accent,
   },
-  label: { color: SUPPORTER_SPACE.muted },
-  labelActive: { color: SUPPORTER_SPACE.foreground },
+  label: { color: SUPPORTER_SPACE.muted, fontWeight: '600' },
+  labelActive: { color: SUPPORTER_SPACE.onBlue },
 });
