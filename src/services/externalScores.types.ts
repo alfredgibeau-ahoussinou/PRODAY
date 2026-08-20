@@ -68,11 +68,20 @@ export interface ListUpcomingFixturesOptions {
   leagueIds?: number[];
 }
 
+export interface ListTeamFixturesOptions {
+  /** Nombre de prochains matchs (API `next`). */
+  next?: number;
+  /** Fenêtre calendaire pour filtrer les matchs programmés. */
+  days?: number;
+  status?: ExternalFixtureStatus;
+}
+
 export interface ExternalScoresProvider {
   readonly source: ExternalScoresProviderState['source'];
   listFixtures(competition?: ExternalCompetitionId): Promise<ExternalFixture[]>;
   listLiveFixtures(): Promise<ExternalFixture[]>;
   listUpcomingFixtures(options?: ListUpcomingFixturesOptions): Promise<ExternalFixture[]>;
+  listTeamFixtures?(teamId: number, options?: ListTeamFixturesOptions): Promise<ExternalFixture[]>;
   listRecentFinishedFixtures?(): Promise<ExternalFixture[]>;
   getFixtureLineups?(fixtureId: string): Promise<ExternalFixtureLineupsResult>;
   getFixtureEvents?(fixtureId: string): Promise<ExternalFixtureEventsResult>;

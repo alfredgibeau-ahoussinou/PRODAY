@@ -1,6 +1,7 @@
 import type { Follow } from '../models/Follow';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { Tournament } from '../models/Tournament';
+import type { ExternalFixture } from './externalScores.types';
 import { externalScoresService } from './externalScores.service';
 import type { ExternalScoresProviderState } from './externalScores.types';
 import { teamEventsService } from './teamEvents.service';
@@ -15,6 +16,7 @@ import {
 import { isListedBroadcastItem } from '../utils/supporterBroadcast';
 import {
   buildWorldFollowIndex,
+  collectFollowedWorldTeamIds,
   hasClubOrWorldTeamFollows,
   matchItemTouchesFollows,
 } from '../utils/supporterWorldFollows';
@@ -33,6 +35,8 @@ export const DEFAULT_SUPPORTER_MATCHS_CHAPTER: SupporterMatchHubSection = 'upcom
 
 /** Fenêtre monde pour le chapitre À venir. */
 export const SUPPORTER_UPCOMING_WORLD_DAYS = 14;
+
+const MAX_FOLLOWED_TEAM_FETCH = 8;
 
 export const SUPPORTER_HERO_KICKOFF_COUNT = 3;
 
@@ -116,6 +120,37 @@ function dedupeMatchItems(items: SupporterMatchViewItem[]): SupporterMatchViewIt
   });
 }
 
+function dedupeExternalFixtures(fixtures: ExternalFixture[]): ExternalFixture[] {
+  const seen = new Set<string>();
+  return fixtures.filter((fixture) => {
+    if (seen.has(fixture.id)) return false;
+    seen.add(fixture.id);
+    return true;
+  });
+}
+
+async function fetchFixturesForFollowedTeams(
+  teamIds: number[],
+  status: 'scheduled' | 'live' | 'finished',
+): Promise<ExternalFixture[]> {
+  if (teamIds.length === 0) return [];
+
+  const options =
+    status === 'scheduled'
+      ? { status: 'scheduled' as const, next: 15, days: SUPPORTER_UPCOMING_WORLD_DAYS }
+      : status === 'live'
+        ? { status: 'live' as const }
+        : { status: 'finished' as const, next: 5 };
+
+  const batches = await Promise.all(
+    teamIds.map((teamId) =>
+      externalScoresService.listTeamFixtures(teamId, options).catch(() => [] as ExternalFixture[]),
+    ),
+  );
+
+  return dedupeExternalFixtures(batches.flat()).filter((fixture) => fixture.status === status);
+}
+
 function startOfLocalDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -154,20 +189,33 @@ export async function fetchSupporterMatchHub(
 ): Promise<SupporterMatchHubResult> {
   const { calendarEvents, tournaments, follows, filters } = params;
   const followContext = buildFollowContext(follows);
+  const followedTeamIds = collectFollowedWorldTeamIds(follows, MAX_FOLLOWED_TEAM_FETCH);
+  const hasFollows = hasClubOrWorldTeamFollows(follows);
 
-  const [liveWorld, upcomingWorld, recentWorld, upcomingProday, providerState] = await Promise.all([
-    externalScoresService.listLiveFixtures().catch(() => []),
-    externalScoresService
-      .listUpcomingFixtures({ days: SUPPORTER_UPCOMING_WORLD_DAYS })
-      .catch(() => []),
-    externalScoresService.listRecentFinishedFixtures().catch(() => []),
-    teamEventsService.listUpcoming(60).catch(() => [] as TeamEvent[]),
-    externalScoresService.getProviderState(),
-  ]);
+  const [liveWorld, upcomingWorld, recentWorld, upcomingProday, providerState, teamUpcoming, teamLive] =
+    await Promise.all([
+      externalScoresService.listLiveFixtures().catch(() => []),
+      externalScoresService
+        .listUpcomingFixtures({ days: SUPPORTER_UPCOMING_WORLD_DAYS })
+        .catch(() => []),
+      externalScoresService.listRecentFinishedFixtures().catch(() => []),
+      teamEventsService.listUpcoming(60).catch(() => [] as TeamEvent[]),
+      externalScoresService.getProviderState(),
+      hasFollows
+        ? fetchFixturesForFollowedTeams(followedTeamIds, 'scheduled')
+        : Promise.resolve([] as ExternalFixture[]),
+      hasFollows
+        ? fetchFixturesForFollowedTeams(followedTeamIds, 'live')
+        : Promise.resolve([] as ExternalFixture[]),
+    ]);
 
   const mergedEvents = dedupeEvents([...upcomingProday, ...calendarEvents]);
+  const worldIndex = buildWorldFollowIndex(follows);
 
-  const worldLive = liveWorld
+  const mergedUpcomingWorld = dedupeExternalFixtures([...teamUpcoming, ...upcomingWorld]);
+  const mergedLiveWorld = dedupeExternalFixtures([...teamLive, ...liveWorld]);
+
+  const worldLive = mergedLiveWorld
     .filter((fixture) => fixture.status === 'live')
     .map(externalFixtureToMatchItem);
   const prodayLive = mergedEvents
@@ -175,21 +223,23 @@ export async function fetchSupporterMatchHub(
     .map(teamEventToMatchItem)
     .filter((item) => item.status === 'live');
 
-  const liveRaw: SupporterMatchViewItem[] = [...worldLive, ...prodayLive];
+  const liveRaw: SupporterMatchViewItem[] = dedupeMatchItems([...worldLive, ...prodayLive]);
+
   const recentRaw = recentWorld
     .filter((fixture) => fixture.status === 'finished')
     .map(externalFixtureToMatchItem);
   const prodayRaw = buildProdayUpcomingItems(mergedEvents);
-  const worldRaw = upcomingWorld.map(externalFixtureToMatchItem);
+  const worldRaw = mergedUpcomingWorld.map(externalFixtureToMatchItem);
   const followsRaw = buildFollowedMatchItems(mergedEvents, followContext);
-  const worldIndex = buildWorldFollowIndex(follows);
+
   const followedWorldUpcoming = worldRaw.filter((item) =>
     matchItemTouchesFollows(item, followContext, worldIndex),
   );
+
   const followedProdayUpcoming = prodayRaw.filter((item) =>
     matchItemTouchesFollows(item, followContext, worldIndex),
   );
-  const upcomingFollowed = hasClubOrWorldTeamFollows(follows)
+  const upcomingFollowed = hasFollows
     ? dedupeMatchItems([...followedProdayUpcoming, ...followedWorldUpcoming]).sort(
         (a, b) => a.startsAt.getTime() - b.startsAt.getTime(),
       )

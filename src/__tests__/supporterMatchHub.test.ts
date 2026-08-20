@@ -150,6 +150,56 @@ describe('supporterMatchHub', () => {
     ).toBe(true);
   });
 
+  it('affiche À venir PSG via wt:id:85 (fetch par équipe)', async () => {
+    (teamEventsService.listUpcoming as jest.Mock).mockResolvedValue([]);
+    const follows: Follow[] = [
+      {
+        id: 'f-psg-id',
+        follower_uid: 'u1',
+        target_type: 'club',
+        target_id: 'wt:id:85',
+        target_label: 'Paris Saint-Germain',
+        created_at: new Date(),
+      },
+    ];
+    const result = await fetchSupporterMatchHub({
+      calendarEvents: [],
+      tournaments: [],
+      follows,
+      filters: ALL_FILTERS,
+    });
+    expect(result.sections.upcoming.length).toBeGreaterThan(0);
+    expect(result.heroKickoffs.length).toBeGreaterThan(0);
+    expect(
+      result.sections.upcoming.some(
+        (item) =>
+          item.homeLabel.toLowerCase().includes('paris') ||
+          item.awayLabel.toLowerCase().includes('paris'),
+      ),
+    ).toBe(true);
+  });
+
+  it('matche Paris Saint-Germain suivi avec fixture Paris SG (alias)', async () => {
+    (teamEventsService.listUpcoming as jest.Mock).mockResolvedValue([]);
+    const follows: Follow[] = [
+      {
+        id: 'f-psg-label',
+        follower_uid: 'u1',
+        target_type: 'club',
+        target_id: 'wt:id:85',
+        target_label: 'Paris Saint-Germain',
+        created_at: new Date(),
+      },
+    ];
+    const result = await fetchSupporterMatchHub({
+      calendarEvents: [],
+      tournaments: [],
+      follows,
+      filters: ALL_FILTERS,
+    });
+    expect(result.sections.upcoming.some((item) => item.homeLabel === 'Paris SG')).toBe(true);
+  });
+
   it('respecte le filtre compétition monde', async () => {
     (teamEventsService.listUpcoming as jest.Mock).mockResolvedValue([]);
 

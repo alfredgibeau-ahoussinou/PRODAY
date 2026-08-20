@@ -107,6 +107,17 @@ export function getFeaturedPopularClubs(limit = 12): ExternalTeamHit[] {
   return featured.slice(0, limit).map(clubToHit);
 }
 
+/** Résout l’id API-Football d’un nom d’équipe (mock / alias). */
+export function resolvePopularClubApiIdByName(name: string): number | undefined {
+  const key = normalizeTeamKey(name);
+  for (const club of SUPPORTER_POPULAR_CLUBS) {
+    if (club.apiTeamId == null) continue;
+    const keys = [club.name, ...(club.aliases ?? [])].map(normalizeTeamKey);
+    if (keys.includes(key)) return club.apiTeamId;
+  }
+  return undefined;
+}
+
 /** Recherche locale sur la liste curatée — fonctionne offline / sans clé API. */
 export function searchCuratedPopularClubs(query: string, limit = 12): ExternalTeamHit[] {
   const q = query.trim();

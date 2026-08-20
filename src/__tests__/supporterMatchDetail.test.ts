@@ -92,4 +92,24 @@ describe('supporterWorldFollows', () => {
       fixtureMatchesWorldFollows({ home_team: 'Lyon', away_team: 'Nice' }, index),
     ).toBe(false);
   });
+
+  it('relie Paris SG à un suivi wt:id:85 via alias catalogue', () => {
+    const follows: Follow[] = [
+      {
+        id: '1',
+        follower_uid: 'u',
+        target_type: 'club',
+        target_id: 'wt:id:85',
+        target_label: 'Paris Saint-Germain',
+        created_at: new Date(),
+      },
+    ];
+    const index = buildWorldFollowIndex(follows);
+    expect(
+      fixtureMatchesWorldFollows(
+        { home_team: 'Paris SG', away_team: 'Marseille' },
+        index,
+      ),
+    ).toBe(true);
+  });
 });

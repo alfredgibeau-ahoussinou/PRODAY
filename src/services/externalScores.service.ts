@@ -8,14 +8,17 @@ import type {
   ExternalScoresProvider,
   ExternalScoresProviderState,
   ExternalTeamHit,
+  ListTeamFixturesOptions,
   ListUpcomingFixturesOptions,
 } from './externalScores.types';
 import type { LiveMatchAction } from '../models/TeamEvent';
 import type { ExternalFixtureLineup } from '../utils/supporterMatchDetail';
 import {
   mergeTeamSearchHits,
+  resolvePopularClubApiIdByName,
   searchCuratedPopularClubs,
 } from '../content/supporterPopularClubs';
+import { listDemoTeamFixtures } from '../content/supporterDemoFixtures';
 
 export type {
   ExternalCompetitionId,
@@ -25,14 +28,30 @@ export type {
   ExternalScoresProviderState,
   ExternalScoresSource,
   ExternalTeamHit,
+  ListTeamFixturesOptions,
   ListUpcomingFixturesOptions,
 } from './externalScores.types';
 
 const MOCK_NOW = new Date('2026-07-01T18:00:00.000Z');
 
+function enrichFixtureTeamIds(
+  fixture: Omit<ExternalFixture, 'home_team_id' | 'away_team_id'> & {
+    home_team_id?: number;
+    away_team_id?: number;
+  },
+): ExternalFixture {
+  return {
+    ...fixture,
+    home_team_id:
+      fixture.home_team_id ?? resolvePopularClubApiIdByName(fixture.home_team),
+    away_team_id:
+      fixture.away_team_id ?? resolvePopularClubApiIdByName(fixture.away_team),
+  };
+}
+
 /** Fixtures de démo — uniquement si EXPO_PUBLIC_EXTERNAL_SCORES_MOCK=1 (dev). */
 const MOCK_FIXTURES: ExternalFixture[] = [
-  {
+  enrichFixtureTeamIds({
     id: 'ligue1_psg_om',
     competition: 'ligue1',
     competition_label: 'Ligue 1',
@@ -45,8 +64,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     score_away: 1,
     minute: 63,
     venue: 'Paris',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'pl_arsenal_chelsea',
     competition: 'pl',
     competition_label: 'Premier League',
@@ -59,8 +78,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     score_away: 1,
     minute: 52,
     venue: 'London',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'laliga_barca_madrid',
     competition: 'laliga',
     competition_label: 'La Liga',
@@ -73,8 +92,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     score_away: 0,
     minute: 12,
     venue: 'Barcelone',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'ligue1_losc_lens',
     competition: 'ligue1',
     competition_label: 'Ligue 1',
@@ -84,8 +103,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-03T21:00:00.000Z'),
     status: 'scheduled',
     venue: 'Lille',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'pl_liverpool_city',
     competition: 'pl',
     competition_label: 'Premier League',
@@ -95,8 +114,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-05T16:30:00.000Z'),
     status: 'scheduled',
     venue: 'Liverpool',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'd1f_ol_psg',
     competition: 'd1f',
     competition_label: 'D1 Arkema',
@@ -110,8 +129,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     venue: 'Décines',
     broadcast_listed: true,
     broadcast_label: 'France 2',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'd1f_mhsc_hac',
     competition: 'd1f',
     competition_label: 'D1 Arkema',
@@ -121,8 +140,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-02T16:00:00.000Z'),
     status: 'scheduled',
     venue: 'Montpellier',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'ucl_final',
     competition: 'ucl',
     competition_label: 'UEFA Champions League',
@@ -132,8 +151,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-06T21:00:00.000Z'),
     status: 'scheduled',
     venue: 'Munich',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'ligue1_psg_ol',
     competition: 'ligue1',
     competition_label: 'Ligue 1',
@@ -143,8 +162,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-04T19:00:00.000Z'),
     status: 'scheduled',
     venue: 'Paris',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'seriea_juv_mil',
     competition: 'seriea',
     competition_label: 'Serie A',
@@ -154,8 +173,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-08T18:45:00.000Z'),
     status: 'scheduled',
     venue: 'Turin',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'bundesliga_bay_dor',
     competition: 'bundesliga',
     competition_label: 'Bundesliga',
@@ -165,8 +184,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-09T18:30:00.000Z'),
     status: 'scheduled',
     venue: 'Munich',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'ligue1_monaco_nice',
     competition: 'ligue1',
     competition_label: 'Ligue 1',
@@ -176,8 +195,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-11T19:00:00.000Z'),
     status: 'scheduled',
     venue: 'Monaco',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'uel_roma_lev',
     competition: 'uel',
     competition_label: 'UEFA Europa League',
@@ -187,8 +206,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-13T19:00:00.000Z'),
     status: 'scheduled',
     venue: 'Rome',
-  },
-  {
+  }),
+  enrichFixtureTeamIds({
     id: 'ligue2_tfc_rcs',
     competition: 'ligue2',
     competition_label: 'Ligue 2',
@@ -198,8 +217,104 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     starts_at: new Date('2026-07-14T18:00:00.000Z'),
     status: 'scheduled',
     venue: 'Toulouse',
-  },
+  }),
+  enrichFixtureTeamIds({
+    id: 'ucl_psg_real',
+    competition: 'ucl',
+    competition_label: 'UEFA Champions League',
+    league_id: 2,
+    home_team: 'Paris SG',
+    away_team: 'Real Madrid',
+    starts_at: new Date('2026-07-07T21:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Paris',
+  }),
+  enrichFixtureTeamIds({
+    id: 'ligue1_om_psg',
+    competition: 'ligue1',
+    competition_label: 'Ligue 1',
+    league_id: 61,
+    home_team: 'Marseille',
+    away_team: 'Paris SG',
+    starts_at: new Date('2026-07-10T20:45:00.000Z'),
+    status: 'scheduled',
+    venue: 'Marseille',
+  }),
+  enrichFixtureTeamIds({
+    id: 'laliga_real_barca',
+    competition: 'laliga',
+    competition_label: 'La Liga',
+    league_id: 140,
+    home_team: 'Real Madrid',
+    away_team: 'Barcelone',
+    starts_at: new Date('2026-07-12T21:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Madrid',
+  }),
+  enrichFixtureTeamIds({
+    id: 'ucl_barca_bayern',
+    competition: 'ucl',
+    competition_label: 'UEFA Champions League',
+    league_id: 2,
+    home_team: 'Barcelone',
+    away_team: 'Bayern',
+    starts_at: new Date('2026-07-08T21:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Barcelone',
+  }),
+  enrichFixtureTeamIds({
+    id: 'ligue1_psg_monaco',
+    competition: 'ligue1',
+    competition_label: 'Ligue 1',
+    league_id: 61,
+    home_team: 'Paris SG',
+    away_team: 'Monaco',
+    starts_at: new Date('2026-07-02T17:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Paris',
+  }),
+  enrichFixtureTeamIds({
+    id: 'ligue1_om_nice',
+    competition: 'ligue1',
+    competition_label: 'Ligue 1',
+    league_id: 61,
+    home_team: 'Marseille',
+    away_team: 'Nice',
+    starts_at: new Date('2026-07-05T19:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Marseille',
+  }),
 ];
+
+function cloneFixture(fixture: ExternalFixture): ExternalFixture {
+  return {
+    ...fixture,
+    starts_at: new Date(fixture.starts_at),
+  };
+}
+
+function filterMockTeamFixtures(
+  teamId: number,
+  options?: ListTeamFixturesOptions,
+): ExternalFixture[] {
+  const status = options?.status ?? 'scheduled';
+  const days = options?.days ?? 14;
+  const next = options?.next ?? 15;
+  const cutoff = new Date(MOCK_NOW);
+  cutoff.setDate(cutoff.getDate() + days);
+
+  return MOCK_FIXTURES.filter((fixture) => {
+    const touchesTeam =
+      fixture.home_team_id === teamId || fixture.away_team_id === teamId;
+    if (!touchesTeam) return false;
+    if (fixture.status !== status) return false;
+    if (status === 'scheduled' && fixture.starts_at > cutoff) return false;
+    return true;
+  })
+    .slice(0, next)
+    .map(cloneFixture)
+    .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+}
 
 function uniqueMockTeams(): ExternalTeamHit[] {
   const seen = new Map<string, ExternalTeamHit>();
@@ -212,13 +327,6 @@ function uniqueMockTeams(): ExternalTeamHit[] {
     }
   }
   return Array.from(seen.values());
-}
-
-function cloneFixture(fixture: ExternalFixture): ExternalFixture {
-  return {
-    ...fixture,
-    starts_at: new Date(fixture.starts_at),
-  };
 }
 
 function filterMockByCompetition(
@@ -257,6 +365,9 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
     })
       .map(cloneFixture)
       .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+  },
+  async listTeamFixtures(teamId: number, options?: ListTeamFixturesOptions): Promise<ExternalFixture[]> {
+    return filterMockTeamFixtures(teamId, options);
   },
   async listRecentFinishedFixtures(): Promise<ExternalFixture[]> {
     return MOCK_FIXTURES.filter((f) => f.status === 'finished')
@@ -299,6 +410,9 @@ const apiStubProvider: ExternalScoresProvider = {
   async listUpcomingFixtures(): Promise<ExternalFixture[]> {
     return [];
   },
+  async listTeamFixtures(teamId: number, options?: ListTeamFixturesOptions): Promise<ExternalFixture[]> {
+    return listDemoTeamFixtures(teamId, options);
+  },
   async listRecentFinishedFixtures(): Promise<ExternalFixture[]> {
     return [];
   },
@@ -315,8 +429,9 @@ const apiStubProvider: ExternalScoresProvider = {
     return {
       source: 'api_stub',
       last_sync_at: new Date(),
-      healthy: false,
-      message: 'Connecteur scores monde non configuré.',
+      healthy: true,
+      message:
+        'Scores démo — ajoutez EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY pour données live réelles',
     };
   },
 };
@@ -391,6 +506,21 @@ export const externalScoresService = {
     return withProviderFallback(
       (provider) => provider.listUpcomingFixtures(options),
       () => mockExternalScoresProvider.listUpcomingFixtures(options),
+    );
+  },
+
+  async listTeamFixtures(
+    teamId: number,
+    options?: ListTeamFixturesOptions,
+  ): Promise<ExternalFixture[]> {
+    return withProviderFallback(
+      async (provider) => {
+        if (provider.listTeamFixtures) {
+          return provider.listTeamFixtures(teamId, options);
+        }
+        return mockExternalScoresProvider.listTeamFixtures!(teamId, options);
+      },
+      () => mockExternalScoresProvider.listTeamFixtures!(teamId, options),
     );
   },
 

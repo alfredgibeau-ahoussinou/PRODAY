@@ -5,6 +5,7 @@ import type {
   ExternalScoresProvider,
   ExternalScoresProviderState,
   ExternalTeamHit,
+  ListTeamFixturesOptions,
   ListUpcomingFixturesOptions,
 } from './externalScores.types';
 import { inferBroadcastFromApiPayload } from '../utils/supporterBroadcast';
@@ -19,6 +20,9 @@ const DEFAULT_BASE_URL = 'https://v3.football.api-sports.io';
 const LEAGUE_CACHE_TTL_MS = 60_000;
 const LIVE_CACHE_TTL_MS = 30_000;
 const UPCOMING_CACHE_TTL_MS = 5 * 60_000;
+const TEAM_UPCOMING_CACHE_TTL_MS = 5 * 60_000;
+const TEAM_LIVE_CACHE_TTL_MS = 30_000;
+const TEAM_RECENT_CACHE_TTL_MS = 120_000;
 
 /** Ligue majeures — extensible via env ou proxy Firebase. */
 export const LEAGUE_IDS: Record<ExternalCompetitionId, number | null> = {
@@ -234,6 +238,52 @@ async function fetchUpcomingByLeagues(
     .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
 }
 
+async function fetchTeamFixtures(
+  teamId: number,
+  apiKey: string,
+  options?: ListTeamFixturesOptions,
+): Promise<ExternalFixture[]> {
+  const status = options?.status ?? 'scheduled';
+
+  if (status === 'live') {
+    const cacheKey = `team:${teamId}:live`;
+    const url = `${readBaseUrl()}/fixtures?team=${teamId}&live=all`;
+    const fixtures = await fetchApiRows(url, apiKey, cacheKey, TEAM_LIVE_CACHE_TTL_MS);
+    return fixtures.filter((fixture) => fixture.status === 'live');
+  }
+
+  if (status === 'finished') {
+    const last = options?.next ?? 5;
+    const cacheKey = `team:${teamId}:last:${last}`;
+    const url = `${readBaseUrl()}/fixtures?team=${teamId}&last=${last}&status=FT`;
+    const fixtures = await fetchApiRows(url, apiKey, cacheKey, TEAM_RECENT_CACHE_TTL_MS);
+    return fixtures.filter((fixture) => fixture.status === 'finished');
+  }
+
+  const next = options?.next ?? 15;
+  const cacheKey = `team:${teamId}:next:${next}`;
+  const url = `${readBaseUrl()}/fixtures?team=${teamId}&next=${next}&timezone=Europe/Paris`;
+  let fixtures = await fetchApiRows(url, apiKey, cacheKey, TEAM_UPCOMING_CACHE_TTL_MS);
+
+  const days = options?.days;
+  if (days != null) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() + days);
+    fixtures = fixtures.filter(
+      (fixture) =>
+        fixture.status === 'scheduled' &&
+        fixture.starts_at.getTime() >= Date.now() &&
+        fixture.starts_at <= cutoff,
+    );
+  } else {
+    fixtures = fixtures.filter(
+      (fixture) => fixture.status === 'scheduled' && fixture.starts_at.getTime() >= Date.now(),
+    );
+  }
+
+  return fixtures.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+}
+
 let lastSyncAt: Date | null = null;
 let lastHealthy = false;
 let lastMessage: string | undefined;
@@ -345,6 +395,39 @@ export function createApiFootballProvider(): ExternalScoresProvider {
         lastSyncAt = new Date();
         lastHealthy = false;
         lastMessage = error instanceof Error ? error.message : 'Erreur API scores monde.';
+        throw error;
+      }
+    },
+    async listTeamFixtures(
+      teamId: number,
+      options?: ListTeamFixturesOptions,
+    ): Promise<ExternalFixture[]> {
+      const apiKey = readApiKey();
+      if (!apiKey) {
+        lastHealthy = false;
+        lastMessage = 'Clé API scores monde absente.';
+        return [];
+      }
+
+      try {
+        const fixtures = await fetchTeamFixtures(teamId, apiKey, options);
+        lastSyncAt = new Date();
+        lastHealthy = true;
+        lastMessage = undefined;
+        return fixtures;
+      } catch (error) {
+        lastSyncAt = new Date();
+        lastHealthy = false;
+        lastMessage = error instanceof Error ? error.message : 'Erreur API scores monde.';
+        const status = options?.status ?? 'scheduled';
+        const cacheKey =
+          status === 'live'
+            ? `team:${teamId}:live`
+            : status === 'finished'
+              ? `team:${teamId}:last:${options?.next ?? 5}`
+              : `team:${teamId}:next:${options?.next ?? 15}`;
+        const stale = readCached(cacheKey);
+        if (stale) return stale;
         throw error;
       }
     },

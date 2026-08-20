@@ -49,6 +49,20 @@ describe('externalScoresService', () => {
     expect(fortnight.every((fixture) => fixture.status === 'scheduled')).toBe(true);
   });
 
+  it('listTeamFixtures mock retourne des matchs PSG programmés', async () => {
+    const psg = await externalScoresService.listTeamFixtures(85, {
+      status: 'scheduled',
+      days: 14,
+    });
+    expect(psg.length).toBeGreaterThanOrEqual(1);
+    expect(
+      psg.every(
+        (fixture) => fixture.home_team_id === 85 || fixture.away_team_id === 85,
+      ),
+    ).toBe(true);
+    expect(psg.every((fixture) => fixture.home_team_id != null)).toBe(true);
+  });
+
   it('expose un état provider mock par défaut', async () => {
     const state = await externalScoresService.getProviderState();
     expect(state.source).toBe('mock');
@@ -62,7 +76,18 @@ describe('externalScoresService', () => {
     const state = await externalScoresService.getProviderState();
     expect(fixtures).toEqual([]);
     expect(state.source).toBe('api_stub');
-    expect(state.healthy).toBe(false);
+    expect(state.healthy).toBe(true);
+  });
+
+  it('api_stub retourne des fixtures démo par équipe (PSG)', async () => {
+    delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
+    resetExternalScoresProviderCache();
+    const psg = await externalScoresService.listTeamFixtures(85, {
+      status: 'scheduled',
+      days: 14,
+    });
+    expect(psg.length).toBeGreaterThanOrEqual(1);
+    expect(psg.some((f) => f.home_team_id === 85 || f.away_team_id === 85)).toBe(true);
   });
 
   it('sélectionne le provider API quand une clé est configurée', async () => {

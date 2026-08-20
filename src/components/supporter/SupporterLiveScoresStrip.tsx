@@ -94,7 +94,11 @@ export const SupporterLiveScoresStrip: React.FC<SupporterLiveScoresStripProps> =
         ))
       ) : (
         <ProDayText variant="caption" style={styles.empty}>
-          {hasFollows ? t('supporter.empty.upcomingFollowed') : t('supporter.empty.upcomingNoFollows')}
+          {hub.loading
+            ? t('supporter.home.liveLoading')
+            : hasFollows
+              ? t('supporter.empty.upcomingFollowed')
+              : t('supporter.empty.upcomingNoFollows')}
         </ProDayText>
       )}
     </View>
