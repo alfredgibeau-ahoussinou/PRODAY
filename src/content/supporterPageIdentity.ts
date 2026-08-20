@@ -76,7 +76,7 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
     id: 'matchs',
     eyebrow: 'Jour J',
     title: 'Matchs',
-    support: 'Live, aujourd’hui, tournois et clubs suivis.',
+    support: 'En direct, PRODAY, monde entier et clubs suivis.',
     icon: 'football',
     motif: 'grid',
   }),

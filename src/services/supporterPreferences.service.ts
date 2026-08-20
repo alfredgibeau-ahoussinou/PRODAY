@@ -8,11 +8,13 @@ const NOTIF_STORAGE_KEY = 'proday_supporter_notif_v1';
 export type SupporterGenderFilter = 'all' | 'men' | 'women' | 'mixed';
 export type SupporterSourceFilter = 'all' | 'proday' | 'world';
 export type SupporterScopeFilter = 'all' | 'follows';
+export type SupporterCompetitionFilter = 'all' | 'ligue1' | 'pl' | 'laliga' | 'd1f';
 
 export interface SupporterMatchFilters {
   gender: SupporterGenderFilter;
   source: SupporterSourceFilter;
   scope: SupporterScopeFilter;
+  competition: SupporterCompetitionFilter;
 }
 
 export interface SupporterNotificationPreferences {
@@ -26,6 +28,7 @@ export const DEFAULT_SUPPORTER_MATCH_FILTERS: SupporterMatchFilters = {
   gender: 'all',
   source: 'all',
   scope: 'all',
+  competition: 'all',
 };
 
 export const DEFAULT_SUPPORTER_NOTIF_PREFS: SupporterNotificationPreferences = {

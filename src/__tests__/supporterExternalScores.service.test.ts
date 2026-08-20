@@ -34,6 +34,19 @@ describe('externalScoresService', () => {
     expect(ligue1.every((fixture) => fixture.competition === 'ligue1')).toBe(true);
   });
 
+  it('expose listLiveFixtures mock avec matchs monde live', async () => {
+    const live = await externalScoresService.listLiveFixtures();
+    expect(live.length).toBeGreaterThanOrEqual(2);
+    expect(live.every((fixture) => fixture.status === 'live')).toBe(true);
+    expect(live.some((fixture) => fixture.competition === 'pl')).toBe(true);
+  });
+
+  it('expose listUpcomingFixtures mock sur 7 jours', async () => {
+    const upcoming = await externalScoresService.listUpcomingFixtures({ days: 7 });
+    expect(upcoming.length).toBeGreaterThan(0);
+    expect(upcoming.every((fixture) => fixture.status === 'scheduled')).toBe(true);
+  });
+
   it('expose un état provider mock par défaut', async () => {
     const state = await externalScoresService.getProviderState();
     expect(state.source).toBe('mock');
@@ -58,4 +71,3 @@ describe('externalScoresService', () => {
     expect(state.source).toBe('api_football');
   });
 });
-

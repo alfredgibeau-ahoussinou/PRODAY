@@ -2,7 +2,9 @@ import type { ExternalFixture } from '../services/externalScores.service';
 import type { Follow } from '../models/Follow';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { Tournament } from '../models/Tournament';
+import type { ExternalCompetitionId } from '../services/externalScores.types';
 import type {
+  SupporterCompetitionFilter,
   SupporterGenderFilter,
   SupporterMatchFilters,
   SupporterScopeFilter,
@@ -35,6 +37,8 @@ export interface SupporterMatchViewItem {
   scorers?: string[];
   clubId?: string;
   tournamentId?: string;
+  competitionSlug?: ExternalCompetitionId;
+  competitionLabel?: string;
   followTarget?: { type: 'club' | 'tournament'; id: string; label: string };
   meta?: string;
   timeLabel?: string;
@@ -53,7 +57,9 @@ export function inferGenderFromCategories(categories: string[] | undefined): Sup
 
 export function inferGenderFromExternalFixture(fixture: ExternalFixture): SupporterGenderScope {
   if (fixture.competition === 'd1f') return 'women';
-  if (fixture.competition === 'ligue1') return 'men';
+  if (['ligue1', 'pl', 'laliga', 'seriea', 'bundesliga', 'ligue2', 'ucl', 'uel'].includes(fixture.competition)) {
+    return 'men';
+  }
   return inferGenderFromCategories([fixture.competition_label]);
 }
 
@@ -124,6 +130,8 @@ export function externalFixtureToMatchItem(fixture: ExternalFixture): SupporterM
     minute: fixture.minute,
     startsAt: fixture.starts_at,
     clubId: undefined,
+    competitionSlug: fixture.competition,
+    competitionLabel: fixture.competition_label,
     meta: [fixture.competition_label, fixture.venue].filter(Boolean).join(' · ') || undefined,
     timeLabel:
       status === 'live' && fixture.minute != null
@@ -170,6 +178,15 @@ function matchesScope(
   return false;
 }
 
+function matchesCompetition(
+  item: SupporterMatchViewItem,
+  filter: SupporterCompetitionFilter,
+): boolean {
+  if (filter === 'all') return true;
+  if (item.source !== 'world') return true;
+  return item.competitionSlug === filter;
+}
+
 export function filterMatchItems(
   items: SupporterMatchViewItem[],
   filters: SupporterMatchFilters,
@@ -179,7 +196,8 @@ export function filterMatchItems(
     (item) =>
       matchesGender(item.genderScope, filters.gender) &&
       matchesSource(item.source, filters.source) &&
-      matchesScope(item, filters.scope, ctx)
+      matchesScope(item, filters.scope, ctx) &&
+      matchesCompetition(item, filters.competition ?? 'all')
   );
 }
 

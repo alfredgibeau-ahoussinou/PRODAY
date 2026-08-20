@@ -192,6 +192,30 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
           <SupporterLiveScoresStrip onViewAll={() => nav.openMatchs({ homeTab: 'season' })} />
 
           <ProDayText variant="caption" style={styles.kicker}>
+            {t('supporter.home.matchChapters')}
+          </ProDayText>
+          <View style={styles.chapterRow}>
+            {(
+              [
+                { key: 'live', label: t('supporter.home.chapterLive') },
+                { key: 'proday', label: t('supporter.home.chapterProday') },
+                { key: 'world', label: t('supporter.home.chapterWorld') },
+                { key: 'follows', label: t('supporter.home.chapterFollows') },
+              ] as const
+            ).map((entry) => (
+              <PressableSpring
+                key={entry.key}
+                onPress={() => nav.openMatchs({ homeTab: 'season' })}
+                style={styles.chapterChip}
+              >
+                <ProDayText variant="caption" style={styles.chapterChipText}>
+                  {entry.label}
+                </ProDayText>
+              </PressableSpring>
+            ))}
+          </View>
+
+          <ProDayText variant="caption" style={styles.kicker}>
             Zones tribune
           </ProDayText>
           <View style={styles.zoneGrid}>
@@ -434,6 +458,25 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   unread: { color: SUPPORTER_SITE.live, fontWeight: '700', fontSize: 11 },
+  chapterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: spacing.xs,
+  },
+  chapterChip: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+    backgroundColor: 'rgba(60, 0, 240, 0.08)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  chapterChipText: {
+    color: SUPPORTER_SITE.bright,
+    fontWeight: '700',
+    fontSize: 11,
+  },
   zoneGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   zone: {
     width: '31%',

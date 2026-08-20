@@ -6,6 +6,7 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { radius, spacing } from '../../theme/designTokens';
 import type {
+  SupporterCompetitionFilter,
   SupporterGenderFilter,
   SupporterMatchFilters,
   SupporterScopeFilter,
@@ -35,14 +36,24 @@ const SCOPE_OPTIONS: FilterRow<SupporterScopeFilter>[] = [
   { key: 'follows', labelKey: 'supporter.filters.scope.follows' },
 ];
 
+const COMPETITION_OPTIONS: FilterRow<SupporterCompetitionFilter>[] = [
+  { key: 'all', labelKey: 'supporter.filters.competition.all' },
+  { key: 'ligue1', labelKey: 'supporter.filters.competition.ligue1' },
+  { key: 'pl', labelKey: 'supporter.filters.competition.pl' },
+  { key: 'laliga', labelKey: 'supporter.filters.competition.laliga' },
+  { key: 'd1f', labelKey: 'supporter.filters.competition.d1f' },
+];
+
 export type SupporterFilterBarProps = {
   filters: SupporterMatchFilters;
   onChange: (next: SupporterMatchFilters) => void;
+  showCompetition?: boolean;
 };
 
 export const SupporterFilterBar: React.FC<SupporterFilterBarProps> = ({
   filters,
   onChange,
+  showCompetition = true,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
@@ -86,6 +97,9 @@ export const SupporterFilterBar: React.FC<SupporterFilterBarProps> = ({
       {renderRow('supporter.filters.gender', 'gender', GENDER_OPTIONS)}
       {renderRow('supporter.filters.source', 'source', SOURCE_OPTIONS)}
       {renderRow('supporter.filters.scope', 'scope', SCOPE_OPTIONS)}
+      {showCompetition
+        ? renderRow('supporter.filters.competition', 'competition', COMPETITION_OPTIONS)
+        : null}
     </View>
   );
 };

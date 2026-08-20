@@ -89,6 +89,7 @@ export const SupporterSuivisScreen: React.FC = () => {
     gender: 'all',
     source: 'all',
     scope: 'all',
+    competition: 'all',
   });
 
   useEffect(() => {

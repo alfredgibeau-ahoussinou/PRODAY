@@ -96,15 +96,27 @@ describe('supporterMatchFilters', () => {
       }),
     ];
 
-    const womenOnly = filterMatchItems(items, { gender: 'women', source: 'all', scope: 'all' }, ctx);
+    const womenOnly = filterMatchItems(
+      items,
+      { gender: 'women', source: 'all', scope: 'all', competition: 'all' },
+      ctx,
+    );
     expect(womenOnly).toHaveLength(1);
     expect(womenOnly[0].source).toBe('proday');
 
-    const worldOnly = filterMatchItems(items, { gender: 'all', source: 'world', scope: 'all' }, ctx);
+    const worldOnly = filterMatchItems(
+      items,
+      { gender: 'all', source: 'world', scope: 'all', competition: 'all' },
+      ctx,
+    );
     expect(worldOnly).toHaveLength(1);
     expect(worldOnly[0].source).toBe('world');
 
-    const followsOnly = filterMatchItems(items, { gender: 'all', source: 'all', scope: 'follows' }, ctx);
+    const followsOnly = filterMatchItems(
+      items,
+      { gender: 'all', source: 'all', scope: 'follows', competition: 'all' },
+      ctx,
+    );
     expect(followsOnly).toHaveLength(1);
     expect(followsOnly[0].clubId).toBe('club-a');
   });
@@ -176,7 +188,7 @@ describe('supporterMatchFilters', () => {
 
     const ctx = buildFollowContext([]);
     const parisWeek = filterTournamentsBySearch(
-      filterTournaments(tournaments, { gender: 'all', source: 'all', scope: 'all' }, ctx),
+      filterTournaments(tournaments, { gender: 'all', source: 'all', scope: 'all', competition: 'all' }, ctx),
       'paris',
       'week'
     );

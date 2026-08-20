@@ -1,10 +1,11 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 import { PressableSpring } from '../motion';
 import { ProDaySurface } from '../ui/ProDaySurface';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
 import { radius, spacing } from '../../theme/designTokens';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 
@@ -14,6 +15,7 @@ export type SupporterMatchCardProps = {
   onToggleFollow?: () => void;
   onDebate?: () => void;
   onMoment?: () => void;
+  compact?: boolean;
 };
 
 function statusLabelKey(status: SupporterMatchViewItem['status']): string {
@@ -29,27 +31,75 @@ function genderLabelKey(scope: SupporterMatchViewItem['genderScope']): string | 
   return null;
 }
 
+function LivePulse({ color }: { color: string }) {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.35, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={[styles.liveDot, { backgroundColor: color, opacity }]}
+    />
+  );
+}
+
 export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
   item,
   isFollowed = false,
   onToggleFollow,
   onDebate,
   onMoment,
+  compact = false,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const genderKey = genderLabelKey(item.genderScope);
+  const isLive = item.status === 'live';
   const showScore = item.status !== 'upcoming' && item.scoreHome != null && item.scoreAway != null;
+  const sourceIsProday = item.source === 'proday';
 
   return (
-    <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
+    <ProDaySurface
+      variant="module"
+      style={[
+        styles.card,
+        compact && styles.cardCompact,
+        {
+          borderColor: isLive ? SUPPORTER_SITE.live : colors.border,
+          backgroundColor: isLive ? 'rgba(52, 211, 153, 0.04)' : undefined,
+        },
+      ]}
+    >
       <View style={styles.badges}>
-        <Badge label={t(statusLabelKey(item.status))} accent={item.status === 'live'} colors={colors} />
+        {isLive ? (
+          <View style={[styles.badge, styles.liveBadge, { borderColor: SUPPORTER_SITE.live }]}>
+            <LivePulse color={SUPPORTER_SITE.live} />
+            <ProDayText variant="caption" style={{ color: SUPPORTER_SITE.live, fontWeight: '800' }}>
+              {t(statusLabelKey(item.status))}
+            </ProDayText>
+          </View>
+        ) : (
+          <Badge label={t(statusLabelKey(item.status))} colors={colors} />
+        )}
         <Badge
-          label={item.source === 'proday' ? t('supporter.match.source.proday') : t('supporter.match.source.world')}
+          label={
+            sourceIsProday
+              ? t('supporter.match.source.proday')
+              : t('supporter.match.source.world')
+          }
           colors={colors}
+          proday={sourceIsProday}
         />
-        {genderKey ? <Badge label={t(genderKey)} colors={colors} /> : null}
+        {genderKey ? <Badge label={t(genderKey)} colors={colors} muted /> : null}
       </View>
 
       <View style={styles.teamsRow}>
@@ -57,7 +107,10 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
           {item.homeLabel}
         </ProDayText>
         {showScore ? (
-          <ProDayText variant="title" style={{ color: colors.accent }}>
+          <ProDayText
+            variant={isLive ? 'hero' : 'title'}
+            style={[styles.score, { color: isLive ? SUPPORTER_SITE.live : colors.accent }]}
+          >
             {item.scoreHome} - {item.scoreAway}
           </ProDayText>
         ) : (
@@ -70,40 +123,49 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
         </ProDayText>
       </View>
 
-      {item.status === 'live' && item.minute != null ? (
-        <ProDayText variant="caption" style={{ color: colors.accent }}>
-          {t('supporter.match.minute', { n: String(item.minute) })}
-        </ProDayText>
-      ) : item.timeLabel && item.status !== 'live' ? (
+      {isLive && item.minute != null ? (
+        <View style={styles.minuteRow}>
+          <LivePulse color={SUPPORTER_SITE.live} />
+          <ProDayText variant="caption" style={{ color: SUPPORTER_SITE.live, fontWeight: '700' }}>
+            {t('supporter.match.minute', { n: String(item.minute) })}
+          </ProDayText>
+        </View>
+      ) : item.timeLabel && !isLive ? (
         <ProDayText variant="caption" muted>
           {item.timeLabel}
         </ProDayText>
       ) : null}
 
       {item.meta ? (
-        <ProDayText variant="caption" muted>
+        <ProDayText variant="caption" muted numberOfLines={1}>
           {item.meta}
         </ProDayText>
       ) : null}
 
-      {item.scorers && item.scorers.length > 0 ? (
+      {!compact && item.scorers && item.scorers.length > 0 ? (
         <ProDayText variant="caption" muted numberOfLines={2}>
           {t('supporter.match.scorers')}: {item.scorers.join(' · ')}
         </ProDayText>
       ) : null}
 
-      <View style={styles.actions}>
-        {item.followTarget && onToggleFollow ? (
-          <ActionChip
-            label={isFollowed ? t('supporter.match.action.following') : t('supporter.match.action.follow')}
-            active={isFollowed}
-            onPress={onToggleFollow}
-            colors={colors}
-          />
-        ) : null}
-        <ActionChip label={t('supporter.match.action.debate')} onPress={onDebate} colors={colors} />
-        <ActionChip label={t('supporter.match.action.moment')} onPress={onMoment} colors={colors} />
-      </View>
+      {!compact ? (
+        <View style={styles.actions}>
+          {item.followTarget && onToggleFollow ? (
+            <ActionChip
+              label={
+                isFollowed
+                  ? t('supporter.match.action.following')
+                  : t('supporter.match.action.follow')
+              }
+              active={isFollowed}
+              onPress={onToggleFollow}
+              colors={colors}
+            />
+          ) : null}
+          <ActionChip label={t('supporter.match.action.debate')} onPress={onDebate} colors={colors} />
+          <ActionChip label={t('supporter.match.action.moment')} onPress={onMoment} colors={colors} />
+        </View>
+      ) : null}
     </ProDaySurface>
   );
 };
@@ -111,23 +173,41 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
 function Badge({
   label,
   accent,
+  proday,
+  muted,
   colors,
 }: {
   label: string;
   accent?: boolean;
+  proday?: boolean;
+  muted?: boolean;
   colors: ReturnType<typeof useAppTheme>['colors'];
 }) {
+  const bg = proday
+    ? SUPPORTER_SITE.soft
+    : muted
+      ? 'rgba(255,255,255,0.03)'
+      : accent
+        ? colors.accentSoft
+        : 'rgba(255,255,255,0.04)';
+  const border = proday
+    ? SUPPORTER_SITE.accent
+    : muted
+      ? colors.border
+      : accent
+        ? colors.accent
+        : colors.border;
+  const text = proday
+    ? SUPPORTER_SITE.bright
+    : muted
+      ? colors.textSecondary
+      : accent
+        ? colors.accent
+        : colors.textSecondary;
+
   return (
-    <View
-      style={[
-        styles.badge,
-        {
-          backgroundColor: accent ? colors.accentSoft : 'rgba(255,255,255,0.04)',
-          borderColor: accent ? colors.accent : colors.border,
-        },
-      ]}
-    >
-      <ProDayText variant="caption" style={{ color: accent ? colors.accent : colors.textSecondary }}>
+    <View style={[styles.badge, { backgroundColor: bg, borderColor: border }]}>
+      <ProDayText variant="caption" style={{ color: text, fontWeight: proday ? '800' : '600' }}>
         {label}
       </ProDayText>
     </View>
@@ -170,6 +250,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.xs,
   },
+  cardCompact: {
+    padding: spacing.sm,
+  },
   badges: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -180,6 +263,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(52, 211, 153, 0.1)',
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   teamsRow: {
     flexDirection: 'row',
@@ -192,6 +286,17 @@ const styles = StyleSheet.create({
   },
   teamAway: {
     textAlign: 'right',
+  },
+  score: {
+    fontWeight: '900',
+    letterSpacing: 1,
+    minWidth: 72,
+    textAlign: 'center',
+  },
+  minuteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   actions: {
     flexDirection: 'row',

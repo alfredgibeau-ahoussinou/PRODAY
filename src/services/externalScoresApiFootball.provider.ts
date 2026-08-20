@@ -4,20 +4,34 @@ import type {
   ExternalFixtureStatus,
   ExternalScoresProvider,
   ExternalScoresProviderState,
+  ListUpcomingFixturesOptions,
 } from './externalScores.types';
 
 const DEFAULT_BASE_URL = 'https://v3.football.api-sports.io';
-const CACHE_TTL_MS = 60_000;
+const LEAGUE_CACHE_TTL_MS = 60_000;
+const LIVE_CACHE_TTL_MS = 30_000;
+const UPCOMING_CACHE_TTL_MS = 5 * 60_000;
 
-const LEAGUE_IDS: Record<ExternalCompetitionId, number> = {
+/** Ligue majeures — extensible via env ou proxy Firebase. */
+export const LEAGUE_IDS: Record<ExternalCompetitionId, number | null> = {
   ligue1: 61,
   d1f: 64,
+  pl: 39,
+  laliga: 140,
+  seriea: 135,
+  bundesliga: 78,
+  ucl: 2,
+  uel: 3,
+  ligue2: 62,
+  world_cup: 1,
+  other: null,
 };
 
-const LEAGUE_LABELS: Record<ExternalCompetitionId, string> = {
-  ligue1: 'Ligue 1',
-  d1f: 'D1 Arkema',
-};
+const LEAGUE_ID_TO_COMPETITION = new Map<number, ExternalCompetitionId>(
+  (Object.entries(LEAGUE_IDS) as [ExternalCompetitionId, number | null][])
+    .filter(([, id]) => id != null)
+    .map(([slug, id]) => [id as number, slug]),
+);
 
 interface ApiFootballFixtureRow {
   fixture: {
@@ -56,15 +70,45 @@ function mapStatus(short: string): ExternalFixtureStatus {
   return 'scheduled';
 }
 
-export function mapApiFootballFixture(
-  row: ApiFootballFixtureRow,
-  competition: ExternalCompetitionId,
-): ExternalFixture {
+function resolveCompetition(leagueId: number): ExternalCompetitionId {
+  return LEAGUE_ID_TO_COMPETITION.get(leagueId) ?? 'other';
+}
+
+function cloneFixtures(fixtures: ExternalFixture[]): ExternalFixture[] {
+  return fixtures.map((fixture) => ({
+    ...fixture,
+    starts_at: new Date(fixture.starts_at),
+  }));
+}
+
+function readCached(key: string): ExternalFixture[] | null {
+  const cached = cache.get(key);
+  if (!cached || cached.expiresAt <= Date.now()) return null;
+  return cloneFixtures(cached.fixtures);
+}
+
+function writeCache(key: string, fixtures: ExternalFixture[], ttlMs: number): void {
+  cache.set(key, {
+    expiresAt: Date.now() + ttlMs,
+    fixtures: fixtures.map((fixture) => ({
+      ...fixture,
+      starts_at: new Date(fixture.starts_at),
+    })),
+  });
+}
+
+function formatApiDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+export function mapApiFootballFixture(row: ApiFootballFixtureRow): ExternalFixture {
+  const competition = resolveCompetition(row.league.id);
   const status = mapStatus(row.fixture.status.short);
   return {
     id: `api_${row.fixture.id}`,
     competition,
-    competition_label: LEAGUE_LABELS[competition],
+    competition_label: row.league.name,
+    league_id: row.league.id,
     home_team: row.teams.home.name,
     away_team: row.teams.away.name,
     starts_at: new Date(row.fixture.date),
@@ -76,29 +120,26 @@ export function mapApiFootballFixture(
   };
 }
 
-async function fetchLeagueFixtures(
-  competition: ExternalCompetitionId,
+async function fetchApiRows(
+  url: string,
   apiKey: string,
+  cacheKey: string,
+  cacheTtlMs: number,
 ): Promise<ExternalFixture[]> {
-  const cacheKey = competition;
-  const cached = cache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.fixtures.map((fixture) => ({
-      ...fixture,
-      starts_at: new Date(fixture.starts_at),
-    }));
-  }
-
-  const season = new Date().getFullYear();
-  const url = `${readBaseUrl()}/fixtures?league=${LEAGUE_IDS[competition]}&season=${season}&timezone=Europe/Paris`;
+  const cached = readCached(cacheKey);
+  if (cached) return cached;
 
   const response = await fetch(url, {
-    headers: {
-      'x-apisports-key': apiKey,
-    },
+    headers: { 'x-apisports-key': apiKey },
   });
 
   if (response.status === 429) {
+    const stale = cache.get(cacheKey);
+    if (stale) {
+      lastHealthy = true;
+      lastMessage = 'Quota API — affichage du dernier cache.';
+      return cloneFixtures(stale.fixtures);
+    }
     throw new Error('Quota API scores monde dépassé. Réessayez dans quelques minutes.');
   }
 
@@ -116,12 +157,64 @@ async function fetchLeagueFixtures(
     throw new Error(message || 'Erreur API scores monde.');
   }
 
-  const fixtures = (payload.response ?? []).map((row) => mapApiFootballFixture(row, competition));
-  cache.set(cacheKey, {
-    expiresAt: Date.now() + CACHE_TTL_MS,
-    fixtures,
-  });
+  const fixtures = (payload.response ?? []).map(mapApiFootballFixture);
+  writeCache(cacheKey, fixtures, cacheTtlMs);
   return fixtures;
+}
+
+async function fetchLeagueFixtures(
+  competition: ExternalCompetitionId,
+  apiKey: string,
+): Promise<ExternalFixture[]> {
+  const leagueId = LEAGUE_IDS[competition];
+  if (leagueId == null) return [];
+
+  const cacheKey = `league:${competition}`;
+  const season = new Date().getFullYear();
+  const url = `${readBaseUrl()}/fixtures?league=${leagueId}&season=${season}&timezone=Europe/Paris`;
+  return fetchApiRows(url, apiKey, cacheKey, LEAGUE_CACHE_TTL_MS);
+}
+
+async function fetchLiveAll(apiKey: string): Promise<ExternalFixture[]> {
+  const cacheKey = 'live:all';
+  const url = `${readBaseUrl()}/fixtures?live=all`;
+  return fetchApiRows(url, apiKey, cacheKey, LIVE_CACHE_TTL_MS);
+}
+
+async function fetchUpcomingByLeagues(
+  apiKey: string,
+  options?: ListUpcomingFixturesOptions,
+): Promise<ExternalFixture[]> {
+  const days = options?.days ?? 7;
+  const leagueIds =
+    options?.leagueIds ??
+    (Object.values(LEAGUE_IDS).filter((id): id is number => id != null) as number[]);
+
+  const from = new Date();
+  const to = new Date(from);
+  to.setDate(from.getDate() + days);
+  const fromStr = formatApiDate(from);
+  const toStr = formatApiDate(to);
+  const season = from.getFullYear();
+
+  const batches = await Promise.all(
+    leagueIds.map(async (leagueId) => {
+      const cacheKey = `upcoming:${leagueId}:${fromStr}:${toStr}`;
+      const url = `${readBaseUrl()}/fixtures?league=${leagueId}&season=${season}&from=${fromStr}&to=${toStr}&timezone=Europe/Paris`;
+      try {
+        return await fetchApiRows(url, apiKey, cacheKey, UPCOMING_CACHE_TTL_MS);
+      } catch {
+        const stale = readCached(cacheKey);
+        return stale ?? [];
+      }
+    }),
+  );
+
+  const now = Date.now();
+  return batches
+    .flat()
+    .filter((fixture) => fixture.status === 'scheduled' && fixture.starts_at.getTime() >= now)
+    .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
 }
 
 let lastSyncAt: Date | null = null;
@@ -142,7 +235,9 @@ export function createApiFootballProvider(): ExternalScoresProvider {
       try {
         const competitions: ExternalCompetitionId[] = competition
           ? [competition]
-          : (Object.keys(LEAGUE_IDS) as ExternalCompetitionId[]);
+          : (Object.keys(LEAGUE_IDS).filter(
+              (id) => LEAGUE_IDS[id as ExternalCompetitionId] != null,
+            ) as ExternalCompetitionId[]);
         const batches = await Promise.all(
           competitions.map((id) => fetchLeagueFixtures(id, apiKey)),
         );
@@ -152,6 +247,50 @@ export function createApiFootballProvider(): ExternalScoresProvider {
         return batches
           .flat()
           .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+      } catch (error) {
+        lastSyncAt = new Date();
+        lastHealthy = false;
+        lastMessage = error instanceof Error ? error.message : 'Erreur API scores monde.';
+        throw error;
+      }
+    },
+    async listLiveFixtures(): Promise<ExternalFixture[]> {
+      const apiKey = readApiKey();
+      if (!apiKey) {
+        lastHealthy = false;
+        lastMessage = 'Clé API scores monde absente.';
+        return [];
+      }
+
+      try {
+        const fixtures = await fetchLiveAll(apiKey);
+        lastSyncAt = new Date();
+        lastHealthy = true;
+        lastMessage = undefined;
+        return fixtures.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+      } catch (error) {
+        lastSyncAt = new Date();
+        lastHealthy = false;
+        lastMessage = error instanceof Error ? error.message : 'Erreur API scores monde.';
+        const stale = readCached('live:all');
+        if (stale) return stale;
+        throw error;
+      }
+    },
+    async listUpcomingFixtures(options?: ListUpcomingFixturesOptions): Promise<ExternalFixture[]> {
+      const apiKey = readApiKey();
+      if (!apiKey) {
+        lastHealthy = false;
+        lastMessage = 'Clé API scores monde absente.';
+        return [];
+      }
+
+      try {
+        const fixtures = await fetchUpcomingByLeagues(apiKey, options);
+        lastSyncAt = new Date();
+        lastHealthy = true;
+        lastMessage = undefined;
+        return fixtures;
       } catch (error) {
         lastSyncAt = new Date();
         lastHealthy = false;
