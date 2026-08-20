@@ -61,7 +61,7 @@ function JoueurTabBarSlot(props: {
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { BottomTabBar } from './src/components/navigation/BottomTabBar';
 import { WomanSpaceDefaults } from './src/components/appSpace/WomanSpaceDefaults';
-import { AnimatedTabContent } from './src/components/motion';
+import { AnimatedTabContent, PoleShellTransition } from './src/components/motion';
 import { colors, spacing } from './src/theme/designTokens';
 import { EmailVerificationScreen } from './src/screens/EmailVerificationScreen';
 import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
@@ -392,24 +392,15 @@ function AppShell() {
     (sessionProfile ?? profile) &&
     parentPortalService.isParentRole((sessionProfile ?? profile)!.role)
   ) {
-    if (parentGuestSupporter && isEnabled('supporter')) {
-      return (
-        <SubscriptionProvider profile={sessionProfile ?? profile}>
-          <SupporterAppShell />
-        </SubscriptionProvider>
-      );
-    }
+    const showSupporterGuest = parentGuestSupporter && isEnabled('supporter');
     if (parentGuestSupporter && !isEnabled('supporter')) {
       void returnParentFromSupporterGuest();
-      return (
-        <SubscriptionProvider profile={sessionProfile ?? profile}>
-          <ParentAppShell />
-        </SubscriptionProvider>
-      );
     }
     return (
       <SubscriptionProvider profile={sessionProfile ?? profile}>
-        <ParentAppShell />
+        <PoleShellTransition shellKey={showSupporterGuest ? 'supporter' : 'parent'}>
+          {showSupporterGuest ? <SupporterAppShell /> : <ParentAppShell />}
+        </PoleShellTransition>
       </SubscriptionProvider>
     );
   }
