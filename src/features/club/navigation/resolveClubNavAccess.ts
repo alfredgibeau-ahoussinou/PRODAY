@@ -3,6 +3,9 @@ import { clubOfferHasFeature, CLUB_OFFERS } from '../../../content/clubOffers';
 import type { PlatformFeatureFlagKey } from '../../../content/platformFeatureFlags';
 import {
   CLUB_NAV_FOLDERS,
+  CLUB_PRIMARY_NAV_IDS,
+  CLUB_TOOL_GROUPS,
+  findClubNavItem,
   type ClubNavFolder,
   type ClubNavItem,
   type ClubNavItemId,
@@ -10,7 +13,6 @@ import {
 
 export type ClubNavResolvedItem = ClubNavItem & {
   locked: boolean;
-  /** Raison courte si locked. */
   lockReason?: string;
 };
 
@@ -21,7 +23,6 @@ export type ClubNavResolvedFolder = {
 };
 
 export type ClubNavAccessInput = {
-  /** Null = compte club sans abonnement pro → features verrouillées. */
   offerId: ClubOfferId | null;
   isFeatureEnabled: (key: PlatformFeatureFlagKey) => boolean;
 };
@@ -45,22 +46,39 @@ function hasRequiredFeature(
 
 function lockReasonFor(item: ClubNavItem, offerId: ClubOfferId | null): string {
   if (isVideoNavItem(item)) {
-    return 'Vidéo : activez « Vidéo Club (Veo) » dans l’admin, ou passez en Tout inclus / Pro + Veo.';
+    return 'Vidéo : activez le module vidéo club, ou passez en formule adaptée (Veo, XbotGo ou smartphone).';
   }
   if (!offerId) {
     return 'Abonnez votre club pour débloquer ce module.';
   }
   const offer = CLUB_OFFERS[offerId];
   if (item.requiresAnyFeature?.includes('competitions')) {
-    return `Tournois inclus dès Club Essentiel (votre formule : ${offer.shortLabel}).`;
-  }
-  if (item.requiresAnyFeature?.includes('ai_assistant')) {
-    return `Assistant IA avancé inclus dès Tout inclus (votre formule : ${offer.shortLabel}).`;
+    return `Événements inclus dès Club Essentiel (votre formule : ${offer.shortLabel}).`;
   }
   if (item.requiresAnyFeature?.includes('full_admin')) {
     return `Module disponible dès Club Essentiel (votre formule : ${offer.shortLabel}).`;
   }
-  return `Non inclus dans ${offer.shortLabel}. Voir Offres & formule.`;
+  return `Non inclus dans ${offer.shortLabel}. Voir Pack Club.`;
+}
+
+function resolveItem(
+  item: ClubNavItem,
+  input: ClubNavAccessInput,
+): ClubNavResolvedItem | null {
+  if (item.platformFlag && !input.isFeatureEnabled(item.platformFlag)) {
+    return null;
+  }
+  const offerOk = hasRequiredFeature(input.offerId, item.requiresAnyFeature);
+  const entitled =
+    offerOk || (isVideoNavItem(item) && input.isFeatureEnabled('club_video'));
+  if (!entitled && (item.lockMode ?? 'soft') === 'hide') {
+    return null;
+  }
+  return {
+    ...item,
+    locked: !entitled,
+    lockReason: entitled ? undefined : lockReasonFor(item, input.offerId),
+  };
 }
 
 /** Résout le menu Club selon formule + flags plateforme. */
@@ -70,20 +88,8 @@ export function resolveClubNavFolders(input: ClubNavAccessInput): ClubNavResolve
   for (const folder of CLUB_NAV_FOLDERS) {
     const items: ClubNavResolvedItem[] = [];
     for (const item of folder.items) {
-      if (item.platformFlag && !input.isFeatureEnabled(item.platformFlag)) {
-        continue;
-      }
-      const offerOk = hasRequiredFeature(input.offerId, item.requiresAnyFeature);
-      const entitled =
-        offerOk || (isVideoNavItem(item) && input.isFeatureEnabled('club_video'));
-      if (!entitled && (item.lockMode ?? 'soft') === 'hide') {
-        continue;
-      }
-      items.push({
-        ...item,
-        locked: !entitled,
-        lockReason: entitled ? undefined : lockReasonFor(item, input.offerId),
-      });
+      const resolved = resolveItem(item, input);
+      if (resolved) items.push(resolved);
     }
     if (items.length > 0) {
       folders.push({ id: folder.id, label: folder.label, items });
@@ -91,6 +97,36 @@ export function resolveClubNavFolders(input: ClubNavAccessInput): ClubNavResolve
   }
 
   return folders;
+}
+
+/** Catalogue plat (sidebar + recherche). */
+export function resolveClubNavCatalog(input: ClubNavAccessInput): ClubNavResolvedItem[] {
+  return resolveClubNavFolders(input).flatMap((f) => f.items);
+}
+
+/** Onglets barre mobile. */
+export function resolveClubPrimaryNav(input: ClubNavAccessInput): ClubNavResolvedItem[] {
+  return CLUB_PRIMARY_NAV_IDS.map((id) => {
+    const base = findClubNavItem(id);
+    if (!base) return null;
+    if (id === 'plus' || id === 'today' || id === 'club') {
+      return { ...base, locked: false };
+    }
+    return resolveItem(base, input) ?? { ...base, locked: false };
+  }).filter(Boolean) as ClubNavResolvedItem[];
+}
+
+/** Outils Menu (groupés). */
+export function resolveClubMenuItems(input: ClubNavAccessInput): ClubNavResolvedItem[] {
+  const ids = CLUB_TOOL_GROUPS.flatMap((g) => g.ids);
+  const out: ClubNavResolvedItem[] = [];
+  for (const id of ids) {
+    const base = findClubNavItem(id);
+    if (!base) continue;
+    const resolved = resolveItem(base, input);
+    if (resolved) out.push(resolved);
+  }
+  return out;
 }
 
 export function findResolvedClubNavItem(
@@ -101,5 +137,14 @@ export function findResolvedClubNavItem(
     const hit = folder.items.find((i) => i.id === id);
     if (hit) return hit;
   }
+  const plus = findClubNavItem('plus');
+  if (id === 'plus' && plus) return { ...plus, locked: false };
   return undefined;
+}
+
+export function findInClubNavCatalog(
+  catalog: ClubNavResolvedItem[],
+  id: ClubNavItemId,
+): ClubNavResolvedItem | undefined {
+  return catalog.find((i) => i.id === id) ?? findResolvedClubNavItem([], id);
 }
