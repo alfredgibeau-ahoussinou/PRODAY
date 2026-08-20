@@ -33,7 +33,7 @@ export const BETA_FEATURES = [
   "Visibilité : score et dynamique de profil",
   "Fil, Reels et Arène : communauté, contenus et événements",
   "CV joueur : profil alimenté par vos matchs et stats",
-  "Étapes selon votre rôle : joueur, coach, staff ou autre",
+  "Étapes selon votre rôle : Joueur, Club, Coach, Supporter ou Sponsor",
 ] as const;
 
 const BETA_TIMELINE_BASE = [
