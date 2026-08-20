@@ -40,15 +40,33 @@ export function ClubHomeIdentityHeader({
   clubName,
   statusLabel,
   statusTone,
+  onPressCrest,
+  crestUploading,
 }: {
   greeting: string;
   clubName: string;
   statusLabel: string;
   statusTone: 'ok' | 'warn' | 'alert';
+  /** Tap crest → ajouter / changer le logo. */
+  onPressCrest?: () => void;
+  crestUploading?: boolean;
 }) {
   const { tokens, logoUrl } = useClubTheme();
   const styles = useMemo(() => identityStyles(tokens), [tokens]);
   const crestLetter = (clubName.trim().charAt(0) || 'C').toUpperCase();
+
+  const crestInner = logoUrl ? (
+    <Image source={{ uri: logoUrl }} style={styles.crestImg} resizeMode="cover" />
+  ) : (
+    <LinearGradient
+      colors={[tokens.accentDeep, tokens.accent]}
+      start={{ x: 0.2, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={styles.crestPh}
+    >
+      <ClubText style={styles.crestLetter}>{crestLetter}</ClubText>
+    </LinearGradient>
+  );
 
   return (
     <View style={styles.wrap}>
@@ -60,20 +78,32 @@ export function ClubHomeIdentityHeader({
         pointerEvents="none"
       />
       <View style={styles.row}>
-        <View style={[styles.crest, { borderColor: tokens.accentSoft }]}>
-          {logoUrl ? (
-            <Image source={{ uri: logoUrl }} style={styles.crestImg} resizeMode="cover" />
-          ) : (
-            <LinearGradient
-              colors={[tokens.accentDeep, tokens.accent]}
-              start={{ x: 0.2, y: 0 }}
-              end={{ x: 0.9, y: 1 }}
-              style={styles.crestPh}
-            >
-              <ClubText style={styles.crestLetter}>{crestLetter}</ClubText>
-            </LinearGradient>
-          )}
-        </View>
+        <PressableSpring
+          onPress={onPressCrest}
+          disabled={!onPressCrest || crestUploading}
+          scaleTo={0.97}
+          haptic={Boolean(onPressCrest)}
+          style={[styles.crest, { borderColor: tokens.accentSoft }]}
+          accessibilityRole={onPressCrest ? 'button' : undefined}
+          accessibilityLabel={logoUrl ? 'Changer le logo du club' : 'Ajouter le logo du club'}
+        >
+          <View style={styles.crestInner}>
+            {crestUploading ? (
+              <View style={[styles.crestPh, { backgroundColor: tokens.elevated }]}>
+                <ClubText variant="caption" muted>
+                  …
+                </ClubText>
+              </View>
+            ) : (
+              crestInner
+            )}
+          </View>
+          {onPressCrest && !crestUploading ? (
+            <View style={[styles.crestBadge, { backgroundColor: tokens.accent }]}>
+              <Icon name="camera" size={11} color={tokens.onAccent} />
+            </View>
+          ) : null}
+        </PressableSpring>
         <View style={styles.textCol}>
           <ClubText variant="caption" muted style={styles.greet}>
             {greeting}
@@ -81,6 +111,11 @@ export function ClubHomeIdentityHeader({
           <ClubText variant="h1" numberOfLines={2} style={styles.clubName}>
             {clubName}
           </ClubText>
+          {onPressCrest ? (
+            <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              {logoUrl ? 'Changer le logo' : 'Ajouter le logo'}
+            </ClubText>
+          ) : null}
         </View>
         <ClubStatusPill label={statusLabel} tone={statusTone} />
       </View>
@@ -466,13 +501,30 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       width: 64,
       height: 64,
       borderRadius: clubRadius.lg,
-      overflow: 'hidden',
       borderWidth: 2,
       backgroundColor: tokens.elevated,
       ...clubShadow.soft,
     },
+    crestInner: {
+      ...StyleSheet.absoluteFillObject,
+      borderRadius: clubRadius.lg - 2,
+      overflow: 'hidden',
+    },
     crestImg: { width: '100%', height: '100%' },
     crestPh: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    crestBadge: {
+      position: 'absolute',
+      right: -4,
+      bottom: -4,
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: tokens.bg,
+      zIndex: 2,
+    },
     crestLetter: {
       ...clubType.h1,
       color: tokens.onAccent,

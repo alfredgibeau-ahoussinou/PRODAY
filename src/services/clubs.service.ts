@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
   query,
   where,
   limit,
@@ -15,6 +16,7 @@ import type { Club } from '../models/Club';
 import type { GeoPoint, User } from '../models/User';
 import { canManageClubEntity } from '../utils/roleCapabilities';
 import { validateClubInput } from '../utils/clubValidation';
+import { storageService, type UploadFileInput } from './storage.service';
 
 function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
   const loc = data.location as { latitude?: number; longitude?: number } | undefined;
@@ -125,5 +127,24 @@ export const clubsService = {
       created_at: serverTimestamp(),
     });
     return ref.id;
+  },
+
+  /**
+   * Met à jour le logo club (Storage avatars/{uid} + champ logo_url).
+   * Réservé au propriétaire (règles Firestore clubs).
+   */
+  async updateLogo(clubId: string, actorUid: string, file: UploadFileInput): Promise<string> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const club = await this.getById(clubId);
+    if (!club) throw new Error('Club introuvable.');
+    if (club.owner_uid !== actorUid) {
+      throw new Error('Seul le propriétaire du club peut changer le logo.');
+    }
+
+    const url = await storageService.uploadProfileImage(actorUid, file, 'avatars');
+    await updateDoc(doc(database, 'clubs', clubId), { logo_url: url });
+    return url;
   },
 };

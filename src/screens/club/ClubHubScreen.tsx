@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
-import { Alert, Image, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { ActivityIndicator, Alert, Image, StyleSheet, View } from 'react-native';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { ClubOffersComparePanel } from '../../components/club/ClubOffersComparePanel';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useClubLogoUpload } from '../../features/club/hooks/useClubLogoUpload';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import {
   ClubActionRow,
@@ -15,12 +16,17 @@ import {
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { PressableSpring } from '../../components/motion';
 
 /** Hub Club — identité, couleurs/logo, staff, pack, contacts. */
 export function ClubHubScreen() {
   const shellNav = useClubShellNav();
   const { tokens, logoUrl, brand } = useClubTheme();
   const ws = useClubWorkspace();
+  const onLogoUploaded = useCallback(() => {
+    void ws.refresh();
+  }, [ws.refresh]);
+  const logo = useClubLogoUpload(onLogoUploaded);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   if (ws.loading) return <ClubLoading />;
@@ -44,13 +50,25 @@ export function ClubHubScreen() {
 
         <ClubSectionCard title="Identité">
           <View style={styles.identityRow}>
-            <View style={[styles.logoBig, { borderColor: tokens.accentSoft }]}>
-              {logoUrl ? (
+            <PressableSpring
+              onPress={() => void logo.pickAndUpload()}
+              disabled={logo.uploading}
+              scaleTo={0.97}
+              haptic
+              style={[styles.logoBig, { borderColor: tokens.accentSoft }]}
+              accessibilityRole="button"
+              accessibilityLabel={logo.actionLabel}
+            >
+              {logo.uploading ? (
+                <View style={[styles.logoImg, styles.logoBusy]}>
+                  <ActivityIndicator color={tokens.accent} />
+                </View>
+              ) : logoUrl ? (
                 <Image source={{ uri: logoUrl }} style={styles.logoImg} resizeMode="cover" />
               ) : (
                 <View style={[styles.logoImg, { backgroundColor: tokens.accentSoft }]} />
               )}
-            </View>
+            </PressableSpring>
             <View style={{ flex: 1, gap: 4 }}>
               <ClubText variant="section">{ws.club?.name ?? '—'}</ClubText>
               <ClubText variant="caption" muted>
@@ -82,6 +100,21 @@ export function ClubHubScreen() {
             Source : {brandSource}
             {logoUrl ? ' · Logo affiché dans le chrome' : ' · Ajoutez un logo pour adapter le thème'}
           </ClubText>
+          <ClubActionRow
+            icon="image"
+            label={logo.actionLabel}
+            hint={
+              logo.uploading
+                ? 'Envoi en cours…'
+                : logoUrl
+                  ? 'Remplacer le crest affiché partout dans le pôle Club'
+                  : 'Importer le crest du club — thème et en-têtes s’adaptent'
+            }
+            onPress={logo.uploading ? undefined : () => void logo.pickAndUpload()}
+            trailing={
+              logo.uploading ? <ActivityIndicator color={tokens.accent} /> : undefined
+            }
+          />
         </ClubSectionCard>
 
         <ClubSectionCard title="Staff & structure">
@@ -225,6 +258,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
       backgroundColor: tokens.elevated,
     },
     logoImg: { width: '100%', height: '100%' },
+    logoBusy: { alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.elevated },
     swatches: { flexDirection: 'row', gap: spacing.lg },
     swatchCol: { alignItems: 'center', gap: 6 },
     swatch: {

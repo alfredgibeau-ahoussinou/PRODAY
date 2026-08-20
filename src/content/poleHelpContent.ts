@@ -568,7 +568,8 @@ const PRO_CLUB_HELP: PoleHelpContent = {
       {
         id: 'logo-club',
         question: 'Comment changer le logo du club ?',
-        answer: 'Vitrine > Identité / galerie : importez un nouveau logo et mettez à jour les visuels.',
+        answer:
+          'Accueil (crest) ou onglet Club > Couleurs & logo : Ajouter / Changer le logo. Le crest s’affiche partout dans le pôle.',
         navigate: { kind: 'profile' },
         navigateLabel: 'Identité club',
       },

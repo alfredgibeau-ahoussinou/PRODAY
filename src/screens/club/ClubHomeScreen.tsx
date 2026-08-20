@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
+import { useClubLogoUpload } from '../../features/club/hooks/useClubLogoUpload';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import {
@@ -72,6 +73,10 @@ export function ClubHomeScreen() {
   const shellNav = useClubShellNav();
   const { tokens, logoUrl } = useClubTheme();
   const ws = useClubWorkspace();
+  const onLogoUploaded = useCallback(() => {
+    void ws.refresh();
+  }, [ws.refresh]);
+  const logo = useClubLogoUpload(onLogoUploaded);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   if (ws.loading) return <ClubLoading />;
@@ -81,6 +86,17 @@ export function ClubHomeScreen() {
   const priority = resolvePriority(ws);
 
   const todoItems = [
+    ...(!logoUrl
+      ? [
+          {
+            id: 'logo',
+            icon: 'image' as const,
+            label: 'Ajouter le logo du club',
+            hint: 'Crest Accueil + thème dynamique',
+            onPress: () => void logo.pickAndUpload(),
+          },
+        ]
+      : []),
     ...(ws.teamsWithoutCoach > 0
       ? [
           {
@@ -174,6 +190,8 @@ export function ClubHomeScreen() {
           clubName={name}
           statusLabel={ws.statusLabel}
           statusTone={ws.statusTone}
+          onPressCrest={() => void logo.pickAndUpload()}
+          crestUploading={logo.uploading}
         />
 
         <ClubHomePriorityHero priority={priority} onPress={onHeroPress} />

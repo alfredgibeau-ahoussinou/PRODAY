@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -22,6 +23,10 @@ type ClubThemeContextValue = {
   logoUrl: string | null;
   activeTeamId: string | null;
   ready: boolean;
+  /** Applique tout de suite une nouvelle URL logo (après upload). */
+  applyLogoUrl: (url: string) => void;
+  /** Recharge le document club + palette. */
+  refreshClub: () => Promise<void>;
 };
 
 const ClubThemeContext = createContext<ClubThemeContextValue | null>(null);
@@ -38,6 +43,34 @@ export function ClubThemeProvider({ children, activeTeamId = null }: ProviderPro
   const [club, setClub] = useState<Club | null>(null);
   const [brand, setBrand] = useState<ClubDynamicBrand | null>(null);
   const [ready, setReady] = useState(false);
+
+  const loadClub = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!clubId) {
+        setClub(null);
+        setBrand(null);
+        setReady(true);
+        return;
+      }
+      try {
+        const doc = await clubsService.getById(clubId);
+        setClub(doc);
+        const next = await resolveClubDynamicBrand({
+          club: doc,
+          teamId: activeTeamId,
+        });
+        setBrand(next);
+      } catch {
+        if (!opts?.silent) {
+          setClub(null);
+          setBrand(null);
+        }
+      } finally {
+        setReady(true);
+      }
+    },
+    [clubId, activeTeamId],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +106,26 @@ export function ClubThemeProvider({ children, activeTeamId = null }: ProviderPro
     };
   }, [clubId, activeTeamId]);
 
+  const applyLogoUrl = useCallback(
+    (url: string) => {
+      setClub((prev) => {
+        const next = prev ? { ...prev, logo_url: url } : prev;
+        if (next) {
+          void resolveClubDynamicBrand({
+            club: next,
+            teamId: activeTeamId,
+          }).then(setBrand);
+        }
+        return next;
+      });
+    },
+    [activeTeamId],
+  );
+
+  const refreshClub = useCallback(async () => {
+    await loadClub({ silent: true });
+  }, [loadClub]);
+
   const tokens = useMemo(() => buildClubThemeTokens(brand), [brand]);
   const logoUrl = club?.logo_url?.trim() || null;
 
@@ -84,14 +137,18 @@ export function ClubThemeProvider({ children, activeTeamId = null }: ProviderPro
       logoUrl,
       activeTeamId: activeTeamId ?? null,
       ready,
+      applyLogoUrl,
+      refreshClub,
     }),
-    [tokens, brand, club, logoUrl, activeTeamId, ready],
+    [tokens, brand, club, logoUrl, activeTeamId, ready, applyLogoUrl, refreshClub],
   );
 
   return (
     <ClubThemeContext.Provider value={value}>{children}</ClubThemeContext.Provider>
   );
 }
+
+const NOOP_ASYNC = async () => undefined;
 
 export function useClubTheme(): ClubThemeContextValue {
   const ctx = useContext(ClubThemeContext);
@@ -103,6 +160,8 @@ export function useClubTheme(): ClubThemeContextValue {
       logoUrl: null,
       activeTeamId: null,
       ready: true,
+      applyLogoUrl: () => undefined,
+      refreshClub: NOOP_ASYNC,
     };
   }
   return ctx;
