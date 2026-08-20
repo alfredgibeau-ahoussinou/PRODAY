@@ -29,6 +29,31 @@ export const SUPPORTER_SPACE = {
   league: '#243A8C',
 } as const;
 
+/**
+ * Match Center + fiche joueur — charcoal / bleu vif / blanc.
+ * Ne remplace pas `SUPPORTER_SPACE` sur Accueil / rails.
+ */
+export const SUPPORTER_SPACE_MATCH = {
+  bg: '#0B0D12',
+  surface: '#161A22',
+  elevated: '#1C212B',
+  border: 'rgba(255,255,255,0.08)',
+  foreground: '#FFFFFF',
+  muted: '#9AA3B5',
+  accent: '#2F6BFF',
+  accentSoft: 'rgba(47, 107, 255, 0.18)',
+  onAccent: '#FFFFFF',
+  heroOverlay: 'rgba(11, 13, 18, 0.72)',
+  pill: 'rgba(0,0,0,0.45)',
+  gaugeTrack: 'rgba(255,255,255,0.12)',
+  gaugeBlue: '#2F6BFF',
+  gaugeCyan: '#2EC5C0',
+  gaugeGreen: '#3DDC97',
+  gaugeOrange: '#F5A524',
+  gaugeYellow: '#F5C518',
+  gaugeRed: '#E53935',
+} as const;
+
 export const SUPPORTER_SPACE_COPY = {
   heroTitle: 'Ton football, en direct.',
   heroSubtitle:
@@ -67,4 +92,14 @@ export const SUPPORTER_SPACE_COPY = {
   liveBadge: 'Live',
   sourceProday: 'ProDay',
   sourceLeagues: 'Ligues',
+  matchDetails: 'Détails du match',
+  playerRatings: 'Notes des joueurs',
+  watchHighlights: 'Voir les highlights',
+  headToHead: 'Face à face',
+  playerRatingSection: 'Notes du match',
+  noPlayerStats: 'Aucune statistique joueur publiée pour ce match.',
+  noMatchStats: 'Statistiques non disponibles pour ce match.',
+  noEventsYet: 'Pas encore d’événements publiés.',
+  noVideoRights: 'Aucune vidéo avec droits de diffusion.',
+  positionLabel: 'Poste',
 } as const;

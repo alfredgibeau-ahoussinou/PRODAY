@@ -179,6 +179,19 @@ export const SM_DETAIL_GOALS = 52;
 export const SM_DETAIL_RATING = 118;
 export const SM_DETAIL_MINUTES = 119;
 
+/** Core Sportmonks position_id → libellé FR (réel uniquement). */
+const SM_POSITION_FR: Record<number, string> = {
+  24: 'Gardien',
+  25: 'Défenseur',
+  26: 'Milieu',
+  27: 'Attaquant',
+};
+
+export function mapSmPositionLabel(positionId?: number | null): string | null {
+  if (positionId == null) return null;
+  return SM_POSITION_FR[positionId] ?? null;
+}
+
 /** Team / player expected metrics type_ids. */
 export const SM_XG = 5304;
 export const SM_XGOT = 5305;
@@ -421,7 +434,7 @@ function mapSmLineupPlayer(l: SmLineup): UnifiedLineupPlayer {
     id: `sm-player-${l.player_id ?? l.player?.id ?? l.id}`,
     name,
     number: l.jersey_number ?? null,
-    position: null,
+    position: mapSmPositionLabel(l.position_id),
     formationPosition: l.formation_position ?? null,
     pitchRow: field?.row ?? null,
     pitchCol: field?.col ?? null,

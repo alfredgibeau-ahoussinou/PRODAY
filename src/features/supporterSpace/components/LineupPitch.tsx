@@ -6,7 +6,7 @@ import type {
   UnifiedLineupSide,
 } from '../../../services/supporterFootball/types';
 import { parseFormationLines } from '../../../utils/formationPitch';
-import { SUPPORTER_SPACE } from '../theme/supporterSpaceTheme';
+import { SUPPORTER_SPACE_MATCH } from '../theme/supporterSpaceTheme';
 
 type Props = {
   side: UnifiedLineupSide | null | undefined;
@@ -203,8 +203,8 @@ export const LineupPitch: React.FC<Props> = ({
 const styles = StyleSheet.create({
   wrap: { marginBottom: 16 },
   emptyWrap: { marginBottom: 16, padding: 12 },
-  title: { color: SUPPORTER_SPACE.foreground, marginBottom: 8, fontSize: 15 },
-  empty: { color: SUPPORTER_SPACE.muted },
+  title: { color: SUPPORTER_SPACE_MATCH.foreground, marginBottom: 8, fontSize: 15 },
+  empty: { color: SUPPORTER_SPACE_MATCH.muted },
   pitch: {
     backgroundColor: '#0F3D24',
     borderRadius: 16,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: SUPPORTER_SPACE.accent,
+    backgroundColor: SUPPORTER_SPACE_MATCH.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
@@ -245,12 +245,12 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     marginBottom: 2,
-    backgroundColor: SUPPORTER_SPACE.elevated,
+    backgroundColor: SUPPORTER_SPACE_MATCH.elevated,
   },
   num: { color: '#fff', fontSize: 11 },
   name: { color: '#E8FFE8', fontSize: 10, textAlign: 'center' },
   listTitle: {
-    color: SUPPORTER_SPACE.bright,
+    color: SUPPORTER_SPACE_MATCH.accent,
     marginTop: 10,
     marginBottom: 4,
     textTransform: 'uppercase',
@@ -262,9 +262,9 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 6,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: SUPPORTER_SPACE.border,
+    borderBottomColor: SUPPORTER_SPACE_MATCH.border,
   },
-  listNum: { color: SUPPORTER_SPACE.muted, width: 28, textAlign: 'center' },
-  listName: { color: SUPPORTER_SPACE.foreground, flex: 1 },
-  listMeta: { color: SUPPORTER_SPACE.bright },
+  listNum: { color: SUPPORTER_SPACE_MATCH.muted, width: 28, textAlign: 'center' },
+  listName: { color: SUPPORTER_SPACE_MATCH.foreground, flex: 1 },
+  listMeta: { color: SUPPORTER_SPACE_MATCH.accent },
 });

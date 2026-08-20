@@ -13,11 +13,14 @@ import { ProDayText } from '../../components/ui/ProDayText';
 import { Icon } from '../../components/ui/Icon';
 import {
   LineupPitch,
+  MatchDetailsCard,
+  MatchPlayerSheet,
+  PlayerRatingsList,
   StatsBars,
 } from '../../features/supporterSpace/components';
 import {
-  SUPPORTER_SPACE,
   SUPPORTER_SPACE_COPY,
+  SUPPORTER_SPACE_MATCH,
 } from '../../features/supporterSpace/theme/supporterSpaceTheme';
 import type {
   MatchCenterTabId,
@@ -30,9 +33,9 @@ import { resolveMatchCenterTabs } from '../../services/supporterFootball';
 import { SupporterSpaceMatchDebateScreen } from './SupporterSpaceMatchDebateScreen';
 
 const TAB_LABELS: Record<MatchCenterTabId, string> = {
-  resume: 'Match Day',
-  composition: 'Line Up',
-  statistiques: 'Match Status',
+  resume: 'Résumé',
+  composition: 'Compo',
+  statistiques: 'Stats',
   evenements: 'Événements',
   video: 'Vidéo',
 };
@@ -50,16 +53,21 @@ const EVENT_FR: Record<UnifiedMatchEvent['type'], string> = {
 
 function statusFr(match: UnifiedMatch): string {
   if (match.status === 'live') {
-    return match.score.minute != null ? `Live ${match.score.minute}'` : 'Live';
+    return match.score.minute != null ? `${match.score.minute}'` : 'Live';
   }
-  if (match.status === 'halftime') return 'Mi-temps';
+  if (match.status === 'halftime') return 'MT';
   if (match.status === 'finished') {
+    if (match.score.minute != null && match.score.minute >= 90) return '90:00';
     return match.score.period || 'FT';
   }
   if (match.status === 'scheduled') {
-    return `Coup d’envoi ${match.date.toLocaleString('fr-FR')}`;
+    return match.date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   }
   return match.status;
+}
+
+function hasRealHighlights(match: UnifiedMatch): boolean {
+  return Boolean(match.video?.rightsOk && match.video.url);
 }
 
 type Props = {
@@ -128,13 +136,19 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
     match &&
     (match.score.halfTimeHome != null || match.score.halfTimeAway != null);
 
+  const highlightsOk = match ? hasRealHighlights(match) : false;
+
   return (
     <View style={styles.root}>
-      <View style={styles.headerBand}>
+      <View style={styles.hero}>
         <View style={styles.headerTop}>
           <Pressable onPress={onClose} hitSlop={12} style={styles.back}>
-            <Icon name="arrow-back" size={22} color={SUPPORTER_SPACE.onBlue} />
+            <Icon name="arrow-back" size={22} color={SUPPORTER_SPACE_MATCH.foreground} />
           </Pressable>
+          <ProDayText variant="caption" style={styles.compTitle} numberOfLines={1}>
+            {match?.competition.name || 'Match'}
+            {match?.round ? ` · J${match.round}` : ''}
+          </ProDayText>
           <Pressable onPress={() => setShowDebate(true)} style={styles.debateBtn}>
             <ProDayText variant="caption" style={styles.debateText}>
               {SUPPORTER_SPACE_COPY.debateCta}
@@ -142,49 +156,56 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
           </Pressable>
         </View>
 
-        <View style={styles.scoreCard}>
-          <ProDayText variant="caption" style={styles.comp} numberOfLines={1}>
-            {match?.venue || match?.competition.name || 'Match'}
-            {match ? ` · ${match.date.toLocaleDateString('fr-FR')}` : ''}
-          </ProDayText>
-          {match ? (
-            <View style={styles.scoreboardRow}>
-              <View style={styles.teamBlock}>
-                {match.homeTeam.logoUrl ? (
-                  <Image source={{ uri: match.homeTeam.logoUrl }} style={styles.logoLg} />
-                ) : (
-                  <View style={[styles.logoLg, styles.logoPh]} />
-                )}
-                <ProDayText variant="caption" style={styles.teamLabel} numberOfLines={1}>
-                  {match.homeTeam.shortName || match.homeTeam.name}
-                </ProDayText>
-              </View>
-              <ProDayText variant="hero" style={styles.scoreBig}>
-                {showScore ? `${match.score.home ?? '–'} - ${match.score.away ?? '–'}` : 'vs'}
+        {match ? (
+          <View style={styles.scoreboard}>
+            <View style={styles.teamBlock}>
+              {match.homeTeam.logoUrl ? (
+                <Image source={{ uri: match.homeTeam.logoUrl }} style={styles.logoLg} />
+              ) : (
+                <View style={[styles.logoLg, styles.logoPh]} />
+              )}
+              <ProDayText variant="caption" style={styles.teamLabel} numberOfLines={2}>
+                {match.homeTeam.shortName || match.homeTeam.name}
               </ProDayText>
-              <View style={styles.teamBlock}>
-                {match.awayTeam.logoUrl ? (
-                  <Image source={{ uri: match.awayTeam.logoUrl }} style={styles.logoLg} />
-                ) : (
-                  <View style={[styles.logoLg, styles.logoPh]} />
-                )}
-                <ProDayText variant="caption" style={styles.teamLabel} numberOfLines={1}>
-                  {match.awayTeam.shortName || match.awayTeam.name}
+            </View>
+
+            <View style={styles.scoreMid}>
+              <ProDayText variant="hero" style={styles.scoreBig}>
+                {showScore
+                  ? `${match.score.home ?? '–'} - ${match.score.away ?? '–'}`
+                  : 'vs'}
+              </ProDayText>
+              <View style={styles.timePill}>
+                <ProDayText variant="caption" style={styles.timePillText}>
+                  {statusFr(match)}
                 </ProDayText>
               </View>
             </View>
-          ) : null}
-          {match ? (
-            <ProDayText variant="caption" style={styles.statusLine}>
-              {statusFr(match)}
-              {match.source === 'proday'
-                ? ` · ${SUPPORTER_SPACE_COPY.sourceProday}`
-                : match.source === 'external'
-                  ? ` · ${SUPPORTER_SPACE_COPY.sourceLeagues}`
-                  : ''}
+
+            <View style={styles.teamBlock}>
+              {match.awayTeam.logoUrl ? (
+                <Image source={{ uri: match.awayTeam.logoUrl }} style={styles.logoLg} />
+              ) : (
+                <View style={[styles.logoLg, styles.logoPh]} />
+              )}
+              <ProDayText variant="caption" style={styles.teamLabel} numberOfLines={2}>
+                {match.awayTeam.shortName || match.awayTeam.name}
+              </ProDayText>
+            </View>
+          </View>
+        ) : null}
+
+        {highlightsOk && match?.video?.url ? (
+          <Pressable
+            onPress={() => void Linking.openURL(match.video!.url)}
+            style={styles.highlightsBtn}
+          >
+            <Icon name="play" size={18} color={SUPPORTER_SPACE_MATCH.onAccent} />
+            <ProDayText variant="body" style={styles.highlightsText}>
+              {match.video.label || SUPPORTER_SPACE_COPY.watchHighlights}
             </ProDayText>
-          ) : null}
-        </View>
+          </Pressable>
+        ) : null}
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
@@ -206,44 +227,41 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
 
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
         {loading && !match ? (
-          <ActivityIndicator color={SUPPORTER_SPACE.bright} />
+          <ActivityIndicator color={SUPPORTER_SPACE_MATCH.accent} />
         ) : null}
 
         {match && tab === 'resume' ? (
           <View style={styles.block}>
-            <ProDayText variant="body" style={styles.muted}>
-              Statut : {statusFr(match)}
-            </ProDayText>
-            {showScore ? (
-              <ProDayText variant="body" style={styles.eventLine}>
-                Score FT : {match.score.home ?? '–'} – {match.score.away ?? '–'}
-              </ProDayText>
-            ) : null}
             {htAvailable ? (
-              <ProDayText variant="body" style={styles.muted}>
-                Score HT : {match.score.halfTimeHome ?? '–'} – {match.score.halfTimeAway ?? '–'}
+              <ProDayText variant="caption" style={styles.mutedCenter}>
+                Mi-temps {match.score.halfTimeHome ?? '–'} – {match.score.halfTimeAway ?? '–'}
+                {match.venue ? ` · ${match.venue}` : ''}
+              </ProDayText>
+            ) : match.venue ? (
+              <ProDayText variant="caption" style={styles.mutedCenter}>
+                {match.venue}
               </ProDayText>
             ) : null}
-            {match.venue ? (
-              <ProDayText variant="body" style={styles.muted}>
-                Lieu : {match.venue}
-              </ProDayText>
-            ) : null}
-            <ProDayText variant="caption" style={styles.source}>
-              Source : {match.source}
-            </ProDayText>
+
+            <MatchDetailsCard statistics={match.statistics} />
+
+            <PlayerRatingsList
+              lineup={match.lineup}
+              homeTeam={match.homeTeam}
+              awayTeam={match.awayTeam}
+              onPlayerPress={setSelectedPlayer}
+            />
+
             {(match.events ?? []).length ? (
-              (match.events ?? []).slice(0, 8).map((ev) => (
-                <ProDayText key={ev.id} variant="body" style={styles.eventLine}>
-                  {ev.minute != null ? `${ev.minute}' ` : ''}
-                  {EVENT_FR[ev.type]} — {ev.playerName || '—'}
-                </ProDayText>
-              ))
-            ) : (
-              <ProDayText variant="body" style={styles.muted}>
-                Pas encore d’événements publiés.
-              </ProDayText>
-            )}
+              <View style={styles.eventsPreview}>
+                {(match.events ?? []).slice(0, 6).map((ev) => (
+                  <ProDayText key={ev.id} variant="body" style={styles.eventLine}>
+                    {ev.minute != null ? `${ev.minute}' ` : ''}
+                    {EVENT_FR[ev.type]} — {ev.playerName || '—'}
+                  </ProDayText>
+                ))}
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -263,11 +281,12 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
         ) : null}
 
         {match && tab === 'statistiques' ? (
-          <View style={styles.block}>
+          <View style={[styles.block, styles.statsCard]}>
             <StatsBars
               statistics={match.statistics}
               homeLabel={match.homeTeam.shortName || match.homeTeam.name}
               awayLabel={match.awayTeam.shortName || match.awayTeam.name}
+              variant="dark"
             />
           </View>
         ) : null}
@@ -294,7 +313,7 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
               ))
             ) : (
               <ProDayText variant="body" style={styles.muted}>
-                Pas encore d’événements publiés.
+                {SUPPORTER_SPACE_COPY.noEventsYet}
               </ProDayText>
             )}
           </View>
@@ -302,18 +321,19 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
 
         {match && tab === 'video' ? (
           <View style={styles.block}>
-            {match.video?.rightsOk && match.video.url ? (
+            {hasRealHighlights(match) ? (
               <Pressable
                 onPress={() => void Linking.openURL(match.video!.url)}
-                style={styles.videoBtn}
+                style={styles.highlightsBtn}
               >
-                <ProDayText variant="body" style={styles.videoBtnText}>
-                  {match.video.label || 'Ouvrir la diffusion'}
+                <Icon name="play" size={18} color={SUPPORTER_SPACE_MATCH.onAccent} />
+                <ProDayText variant="body" style={styles.highlightsText}>
+                  {match.video?.label || SUPPORTER_SPACE_COPY.watchHighlights}
                 </ProDayText>
               </Pressable>
             ) : (
               <ProDayText variant="body" style={styles.muted}>
-                Aucune vidéo avec droits de diffusion.
+                {SUPPORTER_SPACE_COPY.noVideoRights}
               </ProDayText>
             )}
           </View>
@@ -327,59 +347,12 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
         onRequestClose={() => setSelectedPlayer(null)}
       >
         <Pressable style={styles.sheetBackdrop} onPress={() => setSelectedPlayer(null)}>
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable onPress={(e) => e.stopPropagation()}>
             {selectedPlayer ? (
-              <>
-                <View style={styles.sheetHead}>
-                  {selectedPlayer.photoUrl ? (
-                    <Image source={{ uri: selectedPlayer.photoUrl }} style={styles.sheetPhoto} />
-                  ) : (
-                    <View style={[styles.sheetPhoto, styles.logoPh]} />
-                  )}
-                  <View style={{ flex: 1 }}>
-                    <ProDayText variant="title" style={styles.scoreboard}>
-                      {selectedPlayer.captain
-                        ? `(C) ${selectedPlayer.name}`
-                        : selectedPlayer.name}
-                    </ProDayText>
-                    {selectedPlayer.number != null ? (
-                      <ProDayText variant="caption" style={styles.muted}>
-                        N° {selectedPlayer.number}
-                        {selectedPlayer.role === 'bench' ? ' · Remplaçant' : ' · Titulaire'}
-                      </ProDayText>
-                    ) : null}
-                  </View>
-                  <Pressable onPress={() => setSelectedPlayer(null)} hitSlop={12}>
-                    <Icon name="close" size={22} color={SUPPORTER_SPACE.foreground} />
-                  </Pressable>
-                </View>
-                <View style={styles.sheetStats}>
-                  {selectedPlayer.rating != null ? (
-                    <SheetStat label="Note" value={String(selectedPlayer.rating)} />
-                  ) : null}
-                  {selectedPlayer.minutes != null ? (
-                    <SheetStat label="Minutes" value={`${selectedPlayer.minutes}'`} />
-                  ) : null}
-                  {selectedPlayer.goals != null ? (
-                    <SheetStat label="Buts" value={String(selectedPlayer.goals)} />
-                  ) : null}
-                  {selectedPlayer.shots != null ? (
-                    <SheetStat label="Tirs" value={String(selectedPlayer.shots)} />
-                  ) : null}
-                  {selectedPlayer.xg != null ? (
-                    <SheetStat label="xG" value={String(selectedPlayer.xg)} />
-                  ) : null}
-                  {selectedPlayer.rating == null &&
-                  selectedPlayer.minutes == null &&
-                  selectedPlayer.goals == null &&
-                  selectedPlayer.shots == null &&
-                  selectedPlayer.xg == null ? (
-                    <ProDayText variant="body" style={styles.muted}>
-                      Aucune statistique joueur publiée pour ce match.
-                    </ProDayText>
-                  ) : null}
-                </View>
-              </>
+              <MatchPlayerSheet
+                player={selectedPlayer}
+                onClose={() => setSelectedPlayer(null)}
+              />
             ) : null}
           </Pressable>
         </Pressable>
@@ -388,105 +361,117 @@ export const SupporterSpaceMatchCenterScreen: React.FC<Props> = ({
   );
 };
 
-const SheetStat: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <View style={styles.sheetStat}>
-    <ProDayText variant="caption" style={styles.muted}>
-      {label}
-    </ProDayText>
-    <ProDayText variant="title" style={styles.scoreboard}>
-      {value}
-    </ProDayText>
-  </View>
-);
-
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: SUPPORTER_SPACE.bg },
-  headerBand: {
-    backgroundColor: SUPPORTER_SPACE.accent,
+  root: { flex: 1, backgroundColor: SUPPORTER_SPACE_MATCH.bg },
+  hero: {
+    backgroundColor: SUPPORTER_SPACE_MATCH.elevated,
     paddingHorizontal: 14,
     paddingTop: 10,
-    paddingBottom: 22,
+    paddingBottom: 18,
+    gap: 16,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  back: { padding: 4 },
-  scoreCard: {
-    backgroundColor: SUPPORTER_SPACE.surface,
-    borderRadius: 20,
-    padding: 16,
-    gap: 12,
-  },
-  comp: { color: SUPPORTER_SPACE.muted, textAlign: 'center' },
-  scoreboardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 8,
   },
-  teamBlock: { width: 88, alignItems: 'center', gap: 6 },
-  teamLabel: { color: SUPPORTER_SPACE.foreground, textAlign: 'center', fontWeight: '600' },
-  scoreBig: { color: SUPPORTER_SPACE.foreground, fontSize: 28, fontWeight: '700' },
-  scoreboard: { color: SUPPORTER_SPACE.foreground, fontSize: 16, flexShrink: 1 },
-  statusLine: { color: SUPPORTER_SPACE.muted, textAlign: 'center' },
-  logoLg: { width: 44, height: 44, borderRadius: 22 },
-  logoPh: { backgroundColor: SUPPORTER_SPACE.band },
+  back: { padding: 4 },
+  compTitle: {
+    flex: 1,
+    color: SUPPORTER_SPACE_MATCH.foreground,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   debateBtn: {
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: SUPPORTER_SPACE_MATCH.accentSoft,
   },
-  debateText: { color: SUPPORTER_SPACE.onBlue, fontWeight: '600' },
-  tabs: { paddingHorizontal: 12, paddingVertical: 14, gap: 8 },
+  debateText: { color: SUPPORTER_SPACE_MATCH.foreground, fontWeight: '600' },
+  scoreboard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  teamBlock: { width: 96, alignItems: 'center', gap: 8 },
+  teamLabel: {
+    color: SUPPORTER_SPACE_MATCH.foreground,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  scoreMid: { alignItems: 'center', gap: 10, flexShrink: 0 },
+  scoreBig: {
+    color: SUPPORTER_SPACE_MATCH.foreground,
+    fontSize: 36,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+  timePill: {
+    backgroundColor: SUPPORTER_SPACE_MATCH.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  timePillText: {
+    color: SUPPORTER_SPACE_MATCH.foreground,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  logoLg: { width: 56, height: 56, borderRadius: 28 },
+  logoPh: { backgroundColor: SUPPORTER_SPACE_MATCH.surface },
+  highlightsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    backgroundColor: SUPPORTER_SPACE_MATCH.accent,
+  },
+  highlightsText: {
+    color: SUPPORTER_SPACE_MATCH.onAccent,
+    fontWeight: '700',
+  },
+  tabs: { paddingHorizontal: 12, paddingVertical: 12, gap: 8 },
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: SUPPORTER_SPACE.band,
+    backgroundColor: SUPPORTER_SPACE_MATCH.surface,
     marginRight: 8,
   },
-  tabActive: { backgroundColor: SUPPORTER_SPACE.accent },
-  tabLabel: { color: SUPPORTER_SPACE.muted, fontWeight: '600' },
-  tabLabelActive: { color: SUPPORTER_SPACE.onBlue },
+  tabActive: { backgroundColor: SUPPORTER_SPACE_MATCH.accent },
+  tabLabel: { color: SUPPORTER_SPACE_MATCH.muted, fontWeight: '600' },
+  tabLabelActive: { color: SUPPORTER_SPACE_MATCH.onAccent },
   body: { flex: 1 },
   bodyContent: { padding: 16, paddingBottom: 40 },
-  block: { gap: 10 },
-  muted: { color: SUPPORTER_SPACE.muted },
-  source: { color: SUPPORTER_SPACE.proday, marginTop: 8 },
-  eventLine: { color: SUPPORTER_SPACE.foreground },
-  timelineRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
-  minute: { color: SUPPORTER_SPACE.accent, width: 36, fontWeight: '700' },
-  videoBtn: {
-    padding: 14,
-    borderRadius: 999,
-    backgroundColor: SUPPORTER_SPACE.accent,
-    alignItems: 'center',
+  block: { gap: 16 },
+  muted: { color: SUPPORTER_SPACE_MATCH.muted },
+  mutedCenter: {
+    color: SUPPORTER_SPACE_MATCH.muted,
+    textAlign: 'center',
   },
-  videoBtnText: { color: SUPPORTER_SPACE.onBlue, fontWeight: '600' },
+  eventLine: { color: SUPPORTER_SPACE_MATCH.foreground },
+  eventsPreview: { gap: 8 },
+  timelineRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  minute: {
+    color: SUPPORTER_SPACE_MATCH.accent,
+    width: 36,
+    fontWeight: '700',
+  },
+  statsCard: {
+    backgroundColor: SUPPORTER_SPACE_MATCH.surface,
+    borderRadius: 20,
+    padding: 16,
+  },
   sheetBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15,23,42,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: SUPPORTER_SPACE.surface,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    padding: 18,
-    gap: 14,
-  },
-  sheetHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  sheetPhoto: { width: 56, height: 56, borderRadius: 28 },
-  sheetStats: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  sheetStat: {
-    minWidth: 72,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    backgroundColor: SUPPORTER_SPACE.band,
   },
 });
