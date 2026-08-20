@@ -3,10 +3,12 @@ import { externalScoresService, resetExternalScoresProviderCache } from '../serv
 describe('externalScoresService', () => {
   const previousFlag = process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
   const previousKey = process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY;
+  const previousFd = process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN;
 
   beforeEach(() => {
     process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK = '1';
     delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY;
+    delete process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN;
     resetExternalScoresProviderCache();
   });
 
@@ -15,6 +17,8 @@ describe('externalScoresService', () => {
     else process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK = previousFlag;
     if (previousKey == null) delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY;
     else process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY = previousKey;
+    if (previousFd == null) delete process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN;
+    else process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN = previousFd;
     resetExternalScoresProviderCache();
   });
 
@@ -69,17 +73,19 @@ describe('externalScoresService', () => {
     expect(state.healthy).toBe(true);
   });
 
-  it('n’utilise pas le mock sans flag explicite', async () => {
+  it('sans clé utilise la démo riche (jamais vide)', async () => {
     delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
     resetExternalScoresProviderCache();
     const fixtures = await externalScoresService.listFixtures();
+    const live = await externalScoresService.listLiveFixtures();
     const state = await externalScoresService.getProviderState();
-    expect(fixtures).toEqual([]);
-    expect(state.source).toBe('api_stub');
+    expect(fixtures.length).toBeGreaterThan(0);
+    expect(live.length).toBeGreaterThan(0);
+    expect(state.source).toBe('demo');
     expect(state.healthy).toBe(true);
   });
 
-  it('api_stub retourne des fixtures démo par équipe (PSG)', async () => {
+  it('démo retourne des fixtures par équipe (PSG)', async () => {
     delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
     resetExternalScoresProviderCache();
     const psg = await externalScoresService.listTeamFixtures(85, {
@@ -96,5 +102,14 @@ describe('externalScoresService', () => {
     resetExternalScoresProviderCache();
     const state = await externalScoresService.getProviderState();
     expect(state.source).toBe('api_football');
+  });
+
+  it('sélectionne football-data.org quand seul le token gratuit est présent', async () => {
+    delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_MOCK;
+    delete process.env.EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY;
+    process.env.EXPO_PUBLIC_FOOTBALL_DATA_TOKEN = 'free-token';
+    resetExternalScoresProviderCache();
+    const state = await externalScoresService.getProviderState();
+    expect(state.source).toBe('football_data');
   });
 });

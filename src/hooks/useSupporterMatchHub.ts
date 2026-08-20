@@ -35,7 +35,7 @@ export function useSupporterMatchHub(
     upcomingCount: 0,
     heroKickoffs: [],
     providerState: {
-      source: 'api_stub',
+      source: 'demo',
       last_sync_at: new Date(),
       healthy: false,
     },
@@ -50,7 +50,7 @@ export function useSupporterMatchHub(
     upcomingCount: 0,
     heroKickoffs: [],
     providerState: {
-      source: 'api_stub',
+      source: 'demo',
       last_sync_at: new Date(),
       healthy: false,
     },

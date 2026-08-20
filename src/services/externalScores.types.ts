@@ -58,7 +58,13 @@ export interface ExternalFixtureStatisticsResult {
   statistics: import('./footballData/types').FootballMatchStatistics | null;
 }
 
-export type ExternalScoresSource = 'mock' | 'api_football' | 'api_stub';
+export type ExternalScoresSource =
+  | 'mock'
+  | 'api_football'
+  | 'football_data'
+  | 'demo'
+  /** @deprecated alias historique — résolu comme `demo` */
+  | 'api_stub';
 
 export interface ExternalScoresProviderState {
   source: ExternalScoresSource;

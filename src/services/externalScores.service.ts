@@ -2,6 +2,10 @@ import {
   createApiFootballProvider,
   hasExternalScoresApiKey,
 } from './externalScoresApiFootball.provider';
+import {
+  createFootballDataProvider,
+  hasFootballDataToken,
+} from './externalScoresFootballData.provider';
 import type {
   ExternalCompetitionId,
   ExternalFixture,
@@ -18,7 +22,10 @@ import {
   resolvePopularClubApiIdByName,
   searchCuratedPopularClubs,
 } from '../content/supporterPopularClubs';
-import { listDemoTeamFixtures } from '../content/supporterDemoFixtures';
+import {
+  buildSupporterDemoFixtures,
+  listDemoTeamFixtures,
+} from '../content/supporterDemoFixtures';
 
 export type {
   ExternalCompetitionId,
@@ -403,21 +410,49 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
 };
 
 const apiStubProvider: ExternalScoresProvider = {
-  source: 'api_stub',
-  async listFixtures(): Promise<ExternalFixture[]> {
-    return [];
+  source: 'demo',
+  async listFixtures(competition?: ExternalCompetitionId): Promise<ExternalFixture[]> {
+    const rows = buildSupporterDemoFixtures();
+    const filtered = competition
+      ? rows.filter((fixture) => fixture.competition === competition)
+      : rows;
+    return filtered.map(cloneFixture).sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
   },
   async listLiveFixtures(): Promise<ExternalFixture[]> {
-    return [];
+    return buildSupporterDemoFixtures()
+      .filter((f) => f.status === 'live')
+      .map(cloneFixture)
+      .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
   },
-  async listUpcomingFixtures(): Promise<ExternalFixture[]> {
-    return [];
+  async listUpcomingFixtures(options?: ListUpcomingFixturesOptions): Promise<ExternalFixture[]> {
+    const days = options?.days ?? 14;
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() + days);
+    const leagueSet =
+      options?.leagueIds != null ? new Set(options.leagueIds) : null;
+
+    return buildSupporterDemoFixtures(now)
+      .filter((fixture) => {
+        if (fixture.status !== 'scheduled') return false;
+        if (fixture.starts_at.getTime() < now.getTime()) return false;
+        if (fixture.starts_at > cutoff) return false;
+        if (leagueSet && fixture.league_id != null && !leagueSet.has(fixture.league_id)) {
+          return false;
+        }
+        return true;
+      })
+      .map(cloneFixture)
+      .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
   },
   async listTeamFixtures(teamId: number, options?: ListTeamFixturesOptions): Promise<ExternalFixture[]> {
     return listDemoTeamFixtures(teamId, options);
   },
   async listRecentFinishedFixtures(): Promise<ExternalFixture[]> {
-    return [];
+    return buildSupporterDemoFixtures()
+      .filter((f) => f.status === 'finished')
+      .map(cloneFixture)
+      .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime());
   },
   async getFixtureLineups() {
     return { lineups: [] };
@@ -433,11 +468,11 @@ const apiStubProvider: ExternalScoresProvider = {
   },
   async getState(): Promise<ExternalScoresProviderState> {
     return {
-      source: 'api_stub',
+      source: 'demo',
       last_sync_at: new Date(),
       healthy: true,
       message:
-        'Scores démo — ajoutez EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY pour données live réelles',
+        'Scores démo — EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY (API-Football) ou EXPO_PUBLIC_FOOTBALL_DATA_TOKEN (gratuit)',
     };
   },
 };
@@ -448,7 +483,14 @@ function shouldUseMockProvider(): boolean {
 
 let cachedProvider: ExternalScoresProvider | null = null;
 
-function resolveExternalScoresProvider(): ExternalScoresProvider {
+/**
+ * Ordre :
+ * 1. mock forcé (EXPO_PUBLIC_EXTERNAL_SCORES_MOCK=1)
+ * 2. API-Football si clé payante / freemium api-sports
+ * 3. football-data.org si token gratuit
+ * 4. démo riche (jamais de vide Accueil)
+ */
+export function resolveExternalScoresProvider(): ExternalScoresProvider {
   if (cachedProvider) return cachedProvider;
 
   if (shouldUseMockProvider()) {
@@ -458,6 +500,11 @@ function resolveExternalScoresProvider(): ExternalScoresProvider {
 
   if (hasExternalScoresApiKey()) {
     cachedProvider = createApiFootballProvider();
+    return cachedProvider;
+  }
+
+  if (hasFootballDataToken()) {
+    cachedProvider = createFootballDataProvider();
     return cachedProvider;
   }
 
@@ -478,15 +525,19 @@ async function withProviderFallback<T>(
   try {
     return await fn(provider);
   } catch (error) {
-    if (shouldUseMockProvider()) {
+    if (shouldUseMockProvider() || provider.source === 'demo') {
       return fallback();
     }
     // eslint-disable-next-line no-console
-    console.warn('[externalScores] provider error:', error);
-    if (Array.isArray(await Promise.resolve([] as unknown as T))) {
+    console.warn('[externalScores] provider error, fallback démo:', error);
+    try {
+      return await fallback();
+    } catch {
+      if (Array.isArray(await Promise.resolve([] as unknown as T))) {
+        return [] as T;
+      }
       return [] as T;
     }
-    return [] as T;
   }
 }
 
@@ -497,21 +548,24 @@ export const externalScoresService = {
         const fixtures = await provider.listFixtures(competition);
         return fixtures.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
       },
-      () => mockExternalScoresProvider.listFixtures(competition),
+      () =>
+        shouldUseMockProvider()
+          ? mockExternalScoresProvider.listFixtures(competition)
+          : apiStubProvider.listFixtures(competition),
     );
   },
 
   async listLiveFixtures(): Promise<ExternalFixture[]> {
     return withProviderFallback(
       (provider) => provider.listLiveFixtures(),
-      () => mockExternalScoresProvider.listLiveFixtures(),
+      () => apiStubProvider.listLiveFixtures(),
     );
   },
 
   async listUpcomingFixtures(options?: ListUpcomingFixturesOptions): Promise<ExternalFixture[]> {
     return withProviderFallback(
       (provider) => provider.listUpcomingFixtures(options),
-      () => mockExternalScoresProvider.listUpcomingFixtures(options),
+      () => apiStubProvider.listUpcomingFixtures(options),
     );
   },
 
@@ -524,9 +578,9 @@ export const externalScoresService = {
         if (provider.listTeamFixtures) {
           return provider.listTeamFixtures(teamId, options);
         }
-        return mockExternalScoresProvider.listTeamFixtures!(teamId, options);
+        return apiStubProvider.listTeamFixtures!(teamId, options);
       },
-      () => mockExternalScoresProvider.listTeamFixtures!(teamId, options),
+      () => apiStubProvider.listTeamFixtures!(teamId, options),
     );
   },
 

@@ -201,7 +201,7 @@ export async function fetchSupporterMatchHub(
       externalScoresService.listRecentFinishedFixtures().catch(() => []),
       teamEventsService.listUpcoming(60).catch(() => [] as TeamEvent[]),
       externalScoresService.getProviderState().catch(() => ({
-        source: 'api_stub' as const,
+        source: 'demo' as const,
         last_sync_at: new Date(),
         healthy: false,
       })),
@@ -281,12 +281,17 @@ export async function fetchSupporterMatchHub(
 
   const filteredTournaments = filterTournaments(tournaments, filters, followContext);
 
+  const heroKickoffs =
+    sections.upcoming.length > 0
+      ? sections.upcoming.slice(0, SUPPORTER_HERO_KICKOFF_COUNT)
+      : sections.world.slice(0, SUPPORTER_HERO_KICKOFF_COUNT);
+
   return {
     sections,
     tournaments: filteredTournaments,
     liveCount: sections.live.length,
     upcomingCount: sections.upcoming.length,
-    heroKickoffs: sections.upcoming.slice(0, SUPPORTER_HERO_KICKOFF_COUNT),
+    heroKickoffs,
     providerState,
   };
 }

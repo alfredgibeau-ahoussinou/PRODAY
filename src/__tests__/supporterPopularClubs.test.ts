@@ -52,7 +52,7 @@ describe('externalScoresService.searchTeams (curated fallback)', () => {
     resetExternalScoresProviderCache();
   });
 
-  it('retourne PSG en mode api_stub sans clé', async () => {
+  it('retourne PSG en mode démo sans clé', async () => {
     const hits = await externalScoresService.searchTeams('PSG');
     expect(hits.length).toBeGreaterThan(0);
     expect(hits.some((h) => h.name.includes('Paris'))).toBe(true);

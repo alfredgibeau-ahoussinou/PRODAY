@@ -554,7 +554,7 @@ export const UI_EN: MessageCatalog = {
   'supporter.empty.proday': 'No upcoming ProDay matches or tournaments for these filters.',
   'supporter.empty.world': 'No world fixtures in the next 14 days for these filters.',
   'supporter.api.stub': 'World scores not configured.',
-  'supporter.api.stubHint': 'Set EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY or EXPO_PUBLIC_EXTERNAL_SCORES_MOCK=1 in dev.',
+  'supporter.api.stubHint': 'Set EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY, free EXPO_PUBLIC_FOOTBALL_DATA_TOKEN, or EXPO_PUBLIC_EXTERNAL_SCORES_MOCK=1.',
   'supporter.api.stubShort': 'World API inactive',
   'supporter.api.lastSync': 'Last sync · {{time}}',
   'supporter.profile.title': 'My account',

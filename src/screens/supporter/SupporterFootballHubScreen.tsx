@@ -127,9 +127,13 @@ export const SupporterFootballHubScreen: React.FC = () => {
     const fromFollows = (hub.sections.follows ?? []).slice(0, 3);
     if (fromFollows.length >= 3) return fromFollows;
     const ids = new Set(fromFollows.map((m) => m.id));
-    const extra = (hub.sections.upcoming ?? []).filter((m) => !ids.has(m.id));
-    return [...fromFollows, ...extra].slice(0, 3);
-  }, [hub.sections.follows, hub.sections.upcoming]);
+    const fromUpcoming = (hub.sections.upcoming ?? []).filter((m) => !ids.has(m.id));
+    const merged = [...fromFollows, ...fromUpcoming];
+    if (merged.length >= 3) return merged.slice(0, 3);
+    merged.forEach((m) => ids.add(m.id));
+    const fromWorld = (hub.sections.world ?? []).filter((m) => !ids.has(m.id));
+    return [...merged, ...fromWorld].slice(0, 3);
+  }, [hub.sections.follows, hub.sections.upcoming, hub.sections.world]);
 
   const helpContent = useMemo(() => getPoleHelpContent('supporter', 'supporter'), []);
   const helpCount = useMemo(() => getPoleHelpQuestionCount(helpContent), [helpContent]);
@@ -139,7 +143,8 @@ export const SupporterFootballHubScreen: React.FC = () => {
   }, []);
   const firstName = profile?.display_name?.split(' ')[0]?.trim() || 'Supporter';
   const liveItems = hub.sections.live.slice(0, 4);
-  const upcomingHero = hub.heroKickoffs[0] ?? hub.sections.upcoming[0];
+  const upcomingHero =
+    hub.heroKickoffs[0] ?? hub.sections.upcoming[0] ?? hub.sections.world[0];
   const prodayWeekend = hub.sections.proday.filter((m) => m.status === 'upcoming').length;
 
   const followedClubCount = useMemo(
@@ -248,18 +253,29 @@ export const SupporterFootballHubScreen: React.FC = () => {
           <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginVertical: spacing.lg }} />
         ) : null}
 
-        {liveItems.length > 0 ? (
-          <SupporterHubSection
-            title="Matchs en direct"
-            subtitle={`${hub.liveCount} match${hub.liveCount > 1 ? 's' : ''}`}
-            action={
-              <Pressable onPress={() => setShowLive(true)}>
-                <ProDayText variant="caption" style={styles.link}>
-                  Tout voir
-                </ProDayText>
-              </Pressable>
-            }
-          >
+        <SupporterHubSection
+          title="Matchs en direct"
+          subtitle={
+            liveItems.length > 0
+              ? `${hub.liveCount} match${hub.liveCount > 1 ? 's' : ''}`
+              : undefined
+          }
+          action={
+            <Pressable
+              onPress={() =>
+                openSupporterLive({
+                  showOverlay: () => setShowLive(true),
+                  openMatchsLive: () => nav.openMatchs({ supporterChapter: 'live' }),
+                })
+              }
+            >
+              <ProDayText variant="caption" style={styles.link}>
+                Tout voir
+              </ProDayText>
+            </Pressable>
+          }
+        >
+          {liveItems.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.liveStrip}>
               {liveItems.map((item) => (
                 <View key={item.id} style={styles.liveCardWrap}>
@@ -267,14 +283,64 @@ export const SupporterFootballHubScreen: React.FC = () => {
                 </View>
               ))}
             </ScrollView>
-          </SupporterHubSection>
-        ) : null}
+          ) : (
+            <View style={styles.emptyBlock}>
+              <ProDayText variant="body" style={styles.emptyTitle}>
+                Aucun match en direct — reviens bientôt
+              </ProDayText>
+              <View style={styles.emptyActions}>
+                <Pressable
+                  onPress={() =>
+                    openSupporterLive({
+                      showOverlay: () => setShowLive(true),
+                      openMatchsLive: () => nav.openMatchs({ supporterChapter: 'live' }),
+                    })
+                  }
+                  style={styles.emptyCta}
+                >
+                  <ProDayText variant="caption" style={styles.emptyCtaText}>
+                    Voir Live
+                  </ProDayText>
+                </Pressable>
+                <Pressable
+                  onPress={() => nav.openMatchs({ supporterChapter: 'upcoming' })}
+                  style={styles.emptyCta}
+                >
+                  <ProDayText variant="caption" style={styles.emptyCtaText}>
+                    Matchs
+                  </ProDayText>
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </SupporterHubSection>
 
-        {upcomingHero ? (
-          <SupporterHubSection title="À ne pas manquer">
+        <SupporterHubSection title="À ne pas manquer">
+          {upcomingHero ? (
             <SupporterMatchDuJourCard item={upcomingHero} onPress={() => setSelected(upcomingHero)} />
-          </SupporterHubSection>
-        ) : null}
+          ) : (
+            <View style={styles.emptyBlock}>
+              <ProDayText variant="body" style={styles.emptyTitle}>
+                Prochains coups d’envoi à suivre
+              </ProDayText>
+              <View style={styles.emptyActions}>
+                <Pressable onPress={() => setShowSuivis(true)} style={styles.emptyCta}>
+                  <ProDayText variant="caption" style={styles.emptyCtaText}>
+                    Suivre un club
+                  </ProDayText>
+                </Pressable>
+                <Pressable
+                  onPress={() => nav.openMatchs({ supporterChapter: 'upcoming' })}
+                  style={styles.emptyCta}
+                >
+                  <ProDayText variant="caption" style={styles.emptyCtaText}>
+                    Explorer Matchs
+                  </ProDayText>
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </SupporterHubSection>
 
         <SupporterHubSection title="Proche de toi">
           <SupporterProDayBridgeCard
@@ -283,13 +349,42 @@ export const SupporterFootballHubScreen: React.FC = () => {
           />
         </SupporterHubSection>
 
-        {pourToiItems.length > 0 ? (
-          <SupporterHubSection title="Pour toi" subtitle="Tes clubs, historique et compétitions">
-            {pourToiItems.map((item) => (
+        <SupporterHubSection
+          title="Pour toi"
+          subtitle={pourToiItems.length > 0 ? 'Tes clubs, historique et compétitions' : undefined}
+        >
+          {pourToiItems.length > 0 ? (
+            pourToiItems.map((item) => (
               <SupporterMatchCard key={item.id} item={item} compact onPress={() => setSelected(item)} />
-            ))}
-          </SupporterHubSection>
-        ) : null}
+            ))
+          ) : (
+            <View style={styles.emptyBlock}>
+              <ProDayText variant="body" style={styles.emptyTitle}>
+                Suis un club pour personnaliser ton fil
+              </ProDayText>
+              <View style={styles.emptyActions}>
+                <Pressable onPress={() => setShowSuivis(true)} style={styles.emptyCta}>
+                  <ProDayText variant="caption" style={styles.emptyCtaText}>
+                    Clubs suivis
+                  </ProDayText>
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    openSupporterLive({
+                      showOverlay: () => setShowLive(true),
+                      openMatchsLive: () => nav.openMatchs({ supporterChapter: 'live' }),
+                    })
+                  }
+                  style={styles.emptyCta}
+                >
+                  <ProDayText variant="caption" style={styles.emptyCtaText}>
+                    Plus Live
+                  </ProDayText>
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </SupporterHubSection>
 
         {videos.length > 0 ? (
           <SupporterHubSection
@@ -383,6 +478,26 @@ const styles = StyleSheet.create({
   liveStrip: { paddingLeft: spacing.lg, gap: spacing.md, paddingBottom: spacing.sm },
   liveCardWrap: { width: 300 },
   link: { color: SUPPORTER_SITE.accent },
+  emptyBlock: {
+    marginHorizontal: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: SUPPORTER_SITE.elevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+    gap: spacing.md,
+  },
+  emptyTitle: { color: SUPPORTER_SITE.muted, fontSize: 13 },
+  emptyActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  emptyCta: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: SUPPORTER_SITE.deep,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+  },
+  emptyCtaText: { color: SUPPORTER_SITE.accent, fontSize: 11 },
   videoStrip: { paddingHorizontal: spacing.lg, gap: spacing.sm },
   videoTile: {
     width: 140,
