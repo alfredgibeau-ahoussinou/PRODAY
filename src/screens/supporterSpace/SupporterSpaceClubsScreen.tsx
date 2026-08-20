@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -17,6 +17,7 @@ import { followsService } from '../../services/follows.service';
 import type { Follow } from '../../models/Follow';
 import { SpaceScreen, SpaceSection } from '../../features/supporterSpace/components';
 import { SUPPORTER_SPACE, SUPPORTER_SPACE_COPY } from '../../features/supporterSpace/theme/supporterSpaceTheme';
+import { clearClubSearchHits } from '../../utils/clearClubSearchHits';
 import { SupporterSpaceClubDetailScreen } from './SupporterSpaceClubDetailScreen';
 import { SupporterSpaceMatchCenterScreen } from './SupporterSpaceMatchCenterScreen';
 
@@ -26,7 +27,11 @@ export const SupporterSpaceClubsScreen: React.FC = () => {
   const { profile } = useAuth();
   const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { tournaments } = useTournaments();
-  const facade = createSupporterFootballFacade(events ?? EMPTY, tournaments ?? EMPTY);
+  // New facade each call — must be memoized or search effect deps thrash forever.
+  const facade = useMemo(
+    () => createSupporterFootballFacade(events ?? EMPTY, tournaments ?? EMPTY),
+    [events, tournaments],
+  );
 
   const [follows, setFollows] = useState<Follow[]>([]);
   const [query, setQuery] = useState('');
@@ -56,7 +61,7 @@ export const SupporterSpaceClubsScreen: React.FC = () => {
   useEffect(() => {
     const q = query.trim();
     if (q.length < 2) {
-      setHits([]);
+      setHits(clearClubSearchHits);
       return undefined;
     }
     const t = setTimeout(() => {
@@ -64,7 +69,7 @@ export const SupporterSpaceClubsScreen: React.FC = () => {
       void facade
         .getTeams(q)
         .then(setHits)
-        .catch(() => setHits([]))
+        .catch(() => setHits(clearClubSearchHits))
         .finally(() => setSearching(false));
     }, 350);
     return () => clearTimeout(t);
