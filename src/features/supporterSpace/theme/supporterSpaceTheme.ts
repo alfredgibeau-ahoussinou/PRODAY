@@ -31,25 +31,30 @@ export const SUPPORTER_SPACE = {
 
 export const SUPPORTER_SPACE_COPY = {
   heroTitle: 'Ton football, en direct.',
-  heroSubtitle: 'Matchs ProDay et ligues — données réelles uniquement.',
+  heroSubtitle:
+    'Matchs ProDay et ligues via APIs (Sportmonks / football-data) — jamais inventés par l’IA.',
   welcomeBack: 'Bon retour',
-  emptyLive: 'Aucun match en direct pour le moment.',
-  emptyUpcoming: 'Aucun match à venir.',
+  emptyLive: 'Aucun match en direct pour le moment (données API).',
+  emptyUpcoming:
+    'Aucun match à venir sur cette fenêtre — jour sans calendrier API, pas un suivi cassé.',
   emptyFinished: 'Aucun résultat récent.',
   emptyProday: 'Aucun match ProDay pour le moment.',
-  emptyLeagues: 'Aucun match de ligue pour le moment.',
+  emptyLeagues: 'Aucun match de ligue renvoyé par les APIs pour le moment.',
   emptyLeaguesDate:
-    'Aucun match ligue à cette date — change de jour ou regarde « Cette semaine » sur l’Accueil.',
+    'Aucun match ligue à cette date (calendrier API) — change de jour ou regarde « Cette semaine » sur l’Accueil. Ce n’est pas un bug de suivi.',
   emptyClubs: 'Suis des clubs pour personnaliser ton espace.',
   emptySearch: 'Aucun résultat. Essaie un autre club ou une compétition.',
   emptyCategory: 'Cette catégorie n’est pas exposée par l’API pour le moment.',
   configureSportmonks:
-    'Configure Sportmonks et/ou EXPO_PUBLIC_FOOTBALL_DATA_TOKEN (Ligue 1 gratuite via football-data.org).',
+    'Configure Sportmonks et/ou EXPO_PUBLIC_FOOTBALL_DATA_TOKEN (Ligue 1 + Big-5 gratuits via football-data.org).',
   demoBanner: 'Mode démo forcé (EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1).',
   apiBanner: 'Scores ligues indisponibles. Les matchs ProDay restent visibles.',
   /** Shown when Sportmonks Free lacks majors and football-data token is missing. */
   planLimitedBanner:
     'Plan Sportmonks limité : ajoute EXPO_PUBLIC_FOOTBALL_DATA_TOKEN pour Ligue 1 / top 5 (API gratuite), ou upgrade Sportmonks.',
+  /** Soft reminder under Accueil banners when APIs are live but lists can still be empty. */
+  dataSourceHint:
+    'Calendriers et scores = APIs réelles uniquement. Un jour vide signifie qu’il n’y a pas de match publié — pas d’invention IA.',
   searchPlaceholder: 'Clubs, matchs, compétitions…',
   notifStub: 'Notifications — bientôt',
   debateCta: 'Débattre',
@@ -57,7 +62,7 @@ export const SUPPORTER_SPACE_COPY = {
   sectionLeagues: 'Matchs Ligues',
   sectionFollowedClubs: 'Mes clubs',
   emptyFollowedClubs:
-    'Aucun match pour tes clubs suivis sur cette période — élargis la date ou vérifie le suivi.',
+    'Aucun match API pour tes clubs suivis sur cette période — jour de repos ou hors fenêtre. Le suivi reste actif ; élargis la date si besoin.',
   matchThisWeek: 'Cette semaine',
   liveBadge: 'Live',
   sourceProday: 'ProDay',

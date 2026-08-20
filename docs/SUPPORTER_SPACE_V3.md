@@ -14,6 +14,16 @@
  * football-data.org Free expose notamment `FL1`, `PL`, `PD`, `SA`, `BL1`, `CL`
  * (12 compétitions, ~10 req/min, scores parfois différés — données **réelles**, pas démo).
  *
+ * ### Big-5 avec `EXPO_PUBLIC_FOOTBALL_DATA_TOKEN`
+ * Oui : PL, LaLiga (`PD`), Serie A (`SA`), Bundesliga (`BL1`), Ligue 1 (`FL1`) + C1 (`CL`)
+ * sont déjà tirés de football-data quand le token free est présent (Sportmonks Free ne les
+ * couvre pas). Clubs suivis : `GET /teams/{id}/matches`, avec repli fenêtre Big-5 si l’endpoint
+ * équipe est vide (quota ~10 req/min).
+ *
+ * ### Interdit — calendrier / scores IA
+ * Un LLM qui « distribue » ou invente des matchs = données fictives. **Refusé** produit :
+ * empty state honnête + CTA config API seulement. Pas de second provider inventé.
+ *
  * ## Endpoints Sportmonks
  * | Méthode façade | Endpoint Sportmonks |
  * |---|---|

@@ -38,6 +38,8 @@ describe('Supporter Space shell navigation', () => {
 
   it('définit le hero Accueil Supporter Space', () => {
     expect(SUPPORTER_SPACE_COPY.heroTitle).toMatch(/Ton football/i);
+    expect(SUPPORTER_SPACE_COPY.heroSubtitle).toMatch(/APIs/i);
+    expect(SUPPORTER_SPACE_COPY.dataSourceHint).toMatch(/APIs réelles/i);
     expect(SUPPORTER_SITE.accent).toBe('#3C00F0');
     expect(SUPPORTER_SITE.live).toBe('#22C55E');
   });

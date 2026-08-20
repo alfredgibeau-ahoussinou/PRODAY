@@ -140,7 +140,11 @@ export class FootballDataFootballProvider implements SupporterFootballProvider {
       seen.add(m.id);
       out.push(m);
     }
-    return out;
+    if (out.length) return out;
+    // Real fallback only: Big-5 window when /teams/{id}/matches is empty (429 / gap), never invent fixtures.
+    const want = new Set(nums.map((n) => `fd-team-${n}`));
+    const windowed = await this.fetchMatchesBetween(from, to);
+    return windowed.filter((m) => want.has(m.homeTeam.id) || want.has(m.awayTeam.id));
   }
 
   /** GET /v4/teams/{id}/matches — used when user follows an FD club (e.g. PSG = 524). */

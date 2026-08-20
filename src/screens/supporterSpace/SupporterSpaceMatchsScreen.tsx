@@ -263,6 +263,12 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
         </ProDayText>
       ) : null}
 
+      {feed.health?.mode === 'live' && showLeagues ? (
+        <ProDayText variant="caption" style={styles.hint}>
+          {SUPPORTER_SPACE_COPY.dataSourceHint}
+        </ProDayText>
+      ) : null}
+
       <View style={[styles.dual, sideBySide && styles.dualWide]}>
         {showProday ? (
           <View style={[styles.column, sideBySide && styles.columnWide]}>

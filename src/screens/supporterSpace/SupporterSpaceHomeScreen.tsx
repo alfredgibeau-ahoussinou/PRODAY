@@ -180,6 +180,12 @@ export const SupporterSpaceHomeScreen: React.FC = () => {
         </View>
       ) : null}
 
+      {feed.health?.mode === 'live' ? (
+        <ProDayText variant="caption" style={styles.dataHint}>
+          {SUPPORTER_SPACE_COPY.dataSourceHint}
+        </ProDayText>
+      ) : null}
+
       {feed.loading && !feed.live.length && !feed.proday.length && !feed.leagues.length ? (
         <ActivityIndicator color={SUPPORTER_SPACE.accent} style={{ marginVertical: 24 }} />
       ) : null}
@@ -292,6 +298,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   bannerMutedText: { color: SUPPORTER_SPACE.muted },
+  dataHint: { color: SUPPORTER_SPACE.muted, marginBottom: 12, lineHeight: 18 },
   empty: { color: SUPPORTER_SPACE.muted, marginBottom: 4 },
   dualRails: { gap: 4 },
   rail: {},
