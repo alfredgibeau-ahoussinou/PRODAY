@@ -21,14 +21,37 @@ export interface ExternalFixture {
   competition_label: string;
   /** Identifiant ligue API-Football. */
   league_id?: number;
+  /** Identifiant fixture API-Football (pour lineups/events). */
+  api_fixture_id?: number;
   home_team: string;
   away_team: string;
+  home_team_id?: number;
+  away_team_id?: number;
   starts_at: Date;
   status: ExternalFixtureStatus;
   score_home?: number;
   score_away?: number;
   minute?: number;
   venue?: string;
+  /** Canal / URL si l’API les fournit — jamais inventé. */
+  broadcast_listed?: boolean;
+  broadcast_label?: string;
+  broadcast_url?: string;
+}
+
+export interface ExternalTeamHit {
+  id: string;
+  apiTeamId?: number;
+  name: string;
+  country?: string;
+}
+
+export interface ExternalFixtureLineupsResult {
+  lineups: import('../utils/supporterMatchDetail').ExternalFixtureLineup[];
+}
+
+export interface ExternalFixtureEventsResult {
+  events: import('../models/TeamEvent').LiveMatchAction[];
 }
 
 export type ExternalScoresSource = 'mock' | 'api_football' | 'api_stub';
@@ -50,5 +73,9 @@ export interface ExternalScoresProvider {
   listFixtures(competition?: ExternalCompetitionId): Promise<ExternalFixture[]>;
   listLiveFixtures(): Promise<ExternalFixture[]>;
   listUpcomingFixtures(options?: ListUpcomingFixturesOptions): Promise<ExternalFixture[]>;
+  listRecentFinishedFixtures?(): Promise<ExternalFixture[]>;
+  getFixtureLineups?(fixtureId: string): Promise<ExternalFixtureLineupsResult>;
+  getFixtureEvents?(fixtureId: string): Promise<ExternalFixtureEventsResult>;
+  searchTeams?(query: string): Promise<ExternalTeamHit[]>;
   getState(): Promise<ExternalScoresProviderState>;
 }

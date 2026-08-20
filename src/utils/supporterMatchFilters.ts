@@ -12,6 +12,12 @@ import type {
 } from '../services/supporterPreferences.service';
 import { inferMatchStatus, resolveLiveState } from './matchLive';
 import { formatCalendarDate } from './seasonCalendar';
+import { extractProdayOfficialWatchUrl } from './supporterBroadcast';
+import {
+  buildWorldFollowIndex,
+  matchItemTouchesFollows,
+  worldFollowTargetForTeam,
+} from './supporterWorldFollows';
 
 /** Heure de coup d’envoi tabulaire (21:00). */
 export function formatKickoffClock(date: Date): string {
@@ -47,6 +53,14 @@ export interface SupporterMatchViewItem {
   competitionSlug?: ExternalCompetitionId;
   competitionLabel?: string;
   followTarget?: { type: 'club' | 'tournament'; id: string; label: string };
+  homeFollowTarget?: { type: 'club'; id: string; label: string };
+  awayFollowTarget?: { type: 'club'; id: string; label: string };
+  homeTeamId?: number;
+  awayTeamId?: number;
+  worldFixtureId?: string;
+  broadcastListed?: boolean;
+  broadcastLabel?: string;
+  watchUrl?: string;
   meta?: string;
   timeLabel?: string;
 }
@@ -114,6 +128,16 @@ export function teamEventToMatchItem(event: TeamEvent): SupporterMatchViewItem {
         : status === 'live' && live.minute != null
           ? `${live.minute}'`
           : undefined,
+    watchUrl: extractProdayOfficialWatchUrl({
+      public_watch_url: event.public_watch_url,
+      description: event.description,
+    }),
+    broadcastListed: Boolean(
+      extractProdayOfficialWatchUrl({
+        public_watch_url: event.public_watch_url,
+        description: event.description,
+      }),
+    ),
   };
 }
 
@@ -124,6 +148,15 @@ export function externalFixtureToMatchItem(fixture: ExternalFixture): SupporterM
       : fixture.status === 'finished'
         ? 'finished'
         : 'upcoming';
+
+  const homeFollow = worldFollowTargetForTeam({
+    apiTeamId: fixture.home_team_id,
+    name: fixture.home_team,
+  });
+  const awayFollow = worldFollowTargetForTeam({
+    apiTeamId: fixture.away_team_id,
+    name: fixture.away_team,
+  });
 
   return {
     id: `world-fixture-${fixture.id}`,
@@ -139,6 +172,14 @@ export function externalFixtureToMatchItem(fixture: ExternalFixture): SupporterM
     clubId: undefined,
     competitionSlug: fixture.competition,
     competitionLabel: fixture.competition_label,
+    homeFollowTarget: homeFollow,
+    awayFollowTarget: awayFollow,
+    homeTeamId: fixture.home_team_id,
+    awayTeamId: fixture.away_team_id,
+    worldFixtureId: fixture.id,
+    broadcastListed: fixture.broadcast_listed,
+    broadcastLabel: fixture.broadcast_label,
+    watchUrl: fixture.broadcast_url,
     meta: [fixture.competition_label, fixture.venue].filter(Boolean).join(' · ') || undefined,
     timeLabel:
       status === 'live' && fixture.minute != null
@@ -179,12 +220,12 @@ function matchesSource(source: 'proday' | 'world', filter: SupporterSourceFilter
 function matchesScope(
   item: SupporterMatchViewItem,
   filter: SupporterScopeFilter,
-  ctx: SupporterFollowContext
+  ctx: SupporterFollowContext,
+  follows: Follow[],
 ): boolean {
   if (filter === 'all') return true;
-  if (item.clubId && ctx.clubIds.has(item.clubId)) return true;
-  if (item.tournamentId && ctx.tournamentIds.has(item.tournamentId)) return true;
-  return false;
+  const worldIndex = buildWorldFollowIndex(follows);
+  return matchItemTouchesFollows(item, ctx, worldIndex);
 }
 
 function matchesCompetition(
@@ -199,13 +240,14 @@ function matchesCompetition(
 export function filterMatchItems(
   items: SupporterMatchViewItem[],
   filters: SupporterMatchFilters,
-  ctx: SupporterFollowContext
+  ctx: SupporterFollowContext,
+  follows: Follow[] = [],
 ): SupporterMatchViewItem[] {
   return items.filter(
     (item) =>
       matchesGender(item.genderScope, filters.gender) &&
       matchesSource(item.source, filters.source) &&
-      matchesScope(item, filters.scope, ctx) &&
+      matchesScope(item, filters.scope, ctx, follows) &&
       matchesCompetition(item, filters.competition ?? 'all')
   );
 }

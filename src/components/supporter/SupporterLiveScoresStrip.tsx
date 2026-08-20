@@ -12,13 +12,17 @@ import { useAuth } from '../../context/AuthContext';
 import { DEFAULT_SUPPORTER_MATCH_FILTERS } from '../../services/supporterPreferences.service';
 import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
 import { spacing } from '../../theme/designTokens';
+import { hasClubOrWorldTeamFollows } from '../../utils/supporterWorldFollows';
+import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 
 export type SupporterLiveScoresStripProps = {
   onViewAll?: () => void;
+  onOpenMatch?: (item: SupporterMatchViewItem) => void;
 };
 
 export const SupporterLiveScoresStrip: React.FC<SupporterLiveScoresStripProps> = ({
   onViewAll,
+  onOpenMatch,
 }) => {
   const { t } = useTranslation();
   const nav = useTabNavigationActions();
@@ -36,8 +40,9 @@ export const SupporterLiveScoresStrip: React.FC<SupporterLiveScoresStripProps> =
   });
 
   const handleViewAll = onViewAll ?? (() => nav.openMatchs({ homeTab: 'season' }));
-  const liveItems = hub.sections.live.slice(0, 3);
-  const upcomingItems = hub.sections.upcoming.slice(0, 6);
+  const liveItems = hub.sections.live.slice(0, 8);
+  const upcomingItems = hub.sections.upcoming.slice(0, 4);
+  const hasFollows = hasClubOrWorldTeamFollows(follows);
 
   return (
     <View style={styles.wrap}>
@@ -54,7 +59,12 @@ export const SupporterLiveScoresStrip: React.FC<SupporterLiveScoresStripProps> =
 
       {liveItems.length > 0 ? (
         liveItems.map((item) => (
-          <SupporterMatchCard key={item.id} item={item} compact />
+          <SupporterMatchCard
+            key={item.id}
+            item={item}
+            compact
+            onPress={onOpenMatch ? () => onOpenMatch(item) : undefined}
+          />
         ))
       ) : (
         <ProDayText variant="caption" style={styles.empty}>
@@ -74,12 +84,17 @@ export const SupporterLiveScoresStrip: React.FC<SupporterLiveScoresStripProps> =
       </View>
 
       {upcomingItems.length > 0 ? (
-        upcomingItems.map((item) => (
-          <SupporterMatchCard key={item.id} item={item} compact />
+        upcomingItems.map((item: SupporterMatchViewItem) => (
+          <SupporterMatchCard
+            key={item.id}
+            item={item}
+            compact
+            onPress={onOpenMatch ? () => onOpenMatch(item) : undefined}
+          />
         ))
       ) : (
         <ProDayText variant="caption" style={styles.empty}>
-          {t('supporter.empty.upcoming')}
+          {hasFollows ? t('supporter.empty.upcomingFollowed') : t('supporter.empty.upcomingNoFollows')}
         </ProDayText>
       )}
     </View>

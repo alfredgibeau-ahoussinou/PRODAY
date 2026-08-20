@@ -210,6 +210,8 @@ export interface TeamEvent {
   last_reminder_at?: Date;
   auto_reminder_sent_at?: Date;
   lineup?: EventLineup;
+  /** Lien public officiel (Daily / visio) — jamais un stream pirate. */
+  public_watch_url?: string;
   /** Score et statut en direct */
   live_state?: MatchLiveState;
   live_actions?: LiveMatchAction[];

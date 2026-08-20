@@ -15,6 +15,7 @@ export type SupporterMatchCardProps = {
   onMoment?: () => void;
   compact?: boolean;
   hero?: boolean;
+  onPress?: () => void;
 };
 
 function statusLabelKey(status: SupporterMatchViewItem['status']): string {
@@ -48,6 +49,7 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
   onMoment,
   compact = false,
   hero = false,
+  onPress,
 }) => {
   const { t } = useTranslation();
   const isLive = item.status === 'live';
@@ -62,7 +64,7 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
     .join(' · ');
 
   return (
-    <View style={[styles.card, compact && styles.cardCompact, hero && styles.cardHero]}>
+    <Pressable onPress={onPress} disabled={!onPress} style={[styles.card, compact && styles.cardCompact, hero && styles.cardHero]}>
       <View style={styles.lockup}>
         <View style={styles.timeCol}>
           {isLive ? (
@@ -113,6 +115,13 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
               {venue}
             </ProDayText>
           ) : null}
+          {item.broadcastListed || item.watchUrl ? (
+            <ProDayText variant="caption" style={styles.broadcast}>
+              {item.watchUrl
+                ? t('supporter.broadcast.watchFree')
+                : t('supporter.broadcast.chip')}
+            </ProDayText>
+          ) : null}
         </View>
       </View>
 
@@ -143,7 +152,7 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
           ) : null}
         </View>
       ) : null}
-    </View>
+    </Pressable>
   );
 };
 
@@ -242,6 +251,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: SUPPORTER_SITE.muted,
     fontSize: 11,
+  },
+  broadcast: {
+    marginTop: 4,
+    color: SUPPORTER_SITE.bright,
+    letterSpacing: 1.2,
+    fontSize: 9,
+    textTransform: 'uppercase',
   },
   actions: {
     flexDirection: 'row',

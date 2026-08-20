@@ -29,7 +29,7 @@ export function useSupporterMatchHub(
 ): UseSupporterMatchHubResult {
   const { calendarEvents, tournaments, follows, filters, pollLive = false } = options;
   const [data, setData] = useState<SupporterMatchHubResult>({
-    sections: { upcoming: [], live: [], proday: [], world: [], follows: [] },
+    sections: { upcoming: [], live: [], recent: [], proday: [], world: [], follows: [], broadcasts: [] },
     tournaments: [],
     liveCount: 0,
     upcomingCount: 0,

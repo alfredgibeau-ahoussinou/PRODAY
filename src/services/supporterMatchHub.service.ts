@@ -9,15 +9,25 @@ import {
   externalFixtureToMatchItem,
   filterMatchItems,
   filterTournaments,
-  formatKickoffClock,
-  inferGenderFromCategories,
   teamEventToMatchItem,
   type SupporterMatchViewItem,
 } from '../utils/supporterMatchFilters';
+import { isListedBroadcastItem } from '../utils/supporterBroadcast';
+import {
+  buildWorldFollowIndex,
+  hasClubOrWorldTeamFollows,
+  matchItemTouchesFollows,
+} from '../utils/supporterWorldFollows';
 import { isProdayEventLiveNow } from '../utils/supporterLiveMatches';
 import type { SupporterMatchFilters } from './supporterPreferences.service';
 
-export type SupporterMatchHubSection = 'upcoming' | 'live' | 'proday' | 'world' | 'follows';
+export type SupporterMatchHubSection =
+  | 'upcoming'
+  | 'live'
+  | 'proday'
+  | 'world'
+  | 'follows'
+  | 'broadcasts';
 
 export const DEFAULT_SUPPORTER_MATCHS_CHAPTER: SupporterMatchHubSection = 'upcoming';
 
@@ -29,9 +39,11 @@ export const SUPPORTER_HERO_KICKOFF_COUNT = 3;
 export interface SupporterMatchHubSections {
   upcoming: SupporterMatchViewItem[];
   live: SupporterMatchViewItem[];
+  recent: SupporterMatchViewItem[];
   proday: SupporterMatchViewItem[];
   world: SupporterMatchViewItem[];
   follows: SupporterMatchViewItem[];
+  broadcasts: SupporterMatchViewItem[];
 }
 
 export interface SupporterMatchHubResult {
@@ -79,27 +91,6 @@ function buildProdayUpcomingItems(events: TeamEvent[]): SupporterMatchViewItem[]
     .filter((event) => event.starts_at.getTime() >= now && !isProdayEventLiveNow(event))
     .map(teamEventToMatchItem)
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
-}
-
-function tournamentToMatchItem(tournament: Tournament): SupporterMatchViewItem {
-  return {
-    id: `tournament-${tournament.id}`,
-    source: 'proday',
-    status: 'upcoming',
-    genderScope: inferGenderFromCategories(tournament.categories),
-    homeLabel: tournament.title,
-    awayLabel: tournament.city,
-    startsAt: tournament.starts_at,
-    tournamentId: tournament.id,
-    followTarget: {
-      type: 'tournament',
-      id: tournament.id,
-      label: tournament.title,
-    },
-    competitionLabel: 'ProDay',
-    meta: tournament.categories.join(' · ') || undefined,
-    timeLabel: formatKickoffClock(tournament.starts_at),
-  };
 }
 
 function buildFollowedMatchItems(
@@ -164,11 +155,12 @@ export async function fetchSupporterMatchHub(
   const { calendarEvents, tournaments, follows, filters } = params;
   const followContext = buildFollowContext(follows);
 
-  const [liveWorld, upcomingWorld, upcomingProday, providerState] = await Promise.all([
+  const [liveWorld, upcomingWorld, recentWorld, upcomingProday, providerState] = await Promise.all([
     externalScoresService.listLiveFixtures().catch(() => []),
     externalScoresService
       .listUpcomingFixtures({ days: SUPPORTER_UPCOMING_WORLD_DAYS })
       .catch(() => []),
+    externalScoresService.listRecentFinishedFixtures().catch(() => []),
     teamEventsService.listUpcoming(60).catch(() => [] as TeamEvent[]),
     externalScoresService.getProviderState(),
   ]);
@@ -184,23 +176,46 @@ export async function fetchSupporterMatchHub(
     .filter((item) => item.status === 'live');
 
   const liveRaw: SupporterMatchViewItem[] = [...worldLive, ...prodayLive];
+  const recentRaw = recentWorld
+    .filter((fixture) => fixture.status === 'finished')
+    .map(externalFixtureToMatchItem);
   const prodayRaw = buildProdayUpcomingItems(mergedEvents);
   const worldRaw = upcomingWorld.map(externalFixtureToMatchItem);
   const followsRaw = buildFollowedMatchItems(mergedEvents, followContext);
-  const tournamentItems = tournaments
-    .filter((tournament) => tournament.starts_at.getTime() >= Date.now())
-    .map(tournamentToMatchItem);
-
-  const upcomingRaw = dedupeMatchItems([...prodayRaw, ...worldRaw, ...tournamentItems]).sort(
-    (a, b) => a.startsAt.getTime() - b.startsAt.getTime(),
+  const worldIndex = buildWorldFollowIndex(follows);
+  const followedWorldUpcoming = worldRaw.filter((item) =>
+    matchItemTouchesFollows(item, followContext, worldIndex),
   );
+  const followedProdayUpcoming = prodayRaw.filter((item) =>
+    matchItemTouchesFollows(item, followContext, worldIndex),
+  );
+  const upcomingFollowed = hasClubOrWorldTeamFollows(follows)
+    ? dedupeMatchItems([...followedProdayUpcoming, ...followedWorldUpcoming]).sort(
+        (a, b) => a.startsAt.getTime() - b.startsAt.getTime(),
+      )
+    : [];
+
+  const broadcastsRaw = dedupeMatchItems([
+    ...liveRaw,
+    ...recentRaw,
+    ...prodayRaw,
+    ...worldRaw,
+    ...followsRaw,
+  ]).filter(isListedBroadcastItem);
 
   const sections: SupporterMatchHubSections = {
-    upcoming: filterMatchItems(upcomingRaw, filters, followContext),
-    live: filterMatchItems(liveRaw, filters, followContext),
-    proday: filterMatchItems(prodayRaw, filters, followContext),
-    world: filterMatchItems(worldRaw, filters, followContext),
-    follows: filterMatchItems(followsRaw, filters, followContext),
+    upcoming: filterMatchItems(upcomingFollowed, filters, followContext, follows),
+    live: filterMatchItems(liveRaw, filters, followContext, follows),
+    recent: filterMatchItems(recentRaw, filters, followContext, follows),
+    proday: filterMatchItems(prodayRaw, filters, followContext, follows),
+    world: filterMatchItems(worldRaw, filters, followContext, follows),
+    follows: filterMatchItems(
+      dedupeMatchItems([...followsRaw, ...followedWorldUpcoming]),
+      filters,
+      followContext,
+      follows,
+    ),
+    broadcasts: filterMatchItems(broadcastsRaw, filters, followContext, follows),
   };
 
   const filteredTournaments = filterTournaments(tournaments, filters, followContext);

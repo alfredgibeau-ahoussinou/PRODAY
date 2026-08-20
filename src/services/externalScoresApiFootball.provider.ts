@@ -4,8 +4,16 @@ import type {
   ExternalFixtureStatus,
   ExternalScoresProvider,
   ExternalScoresProviderState,
+  ExternalTeamHit,
   ListUpcomingFixturesOptions,
 } from './externalScores.types';
+import { inferBroadcastFromApiPayload } from '../utils/supporterBroadcast';
+import {
+  mapApiFootballEvent,
+  mapApiFootballLineup,
+  type ApiFootballEventRow,
+  type ApiFootballLineupRow,
+} from '../utils/supporterMatchDetail';
 
 const DEFAULT_BASE_URL = 'https://v3.football.api-sports.io';
 const LEAGUE_CACHE_TTL_MS = 60_000;
@@ -42,10 +50,12 @@ interface ApiFootballFixtureRow {
   };
   league: { id: number; name: string };
   teams: {
-    home: { name: string };
-    away: { name: string };
+    home: { id?: number; name: string };
+    away: { id?: number; name: string };
   };
   goals: { home: number | null; away: number | null };
+  broadcasts?: Array<{ name?: string | null; channel?: string | null; url?: string | null }>;
+  tv?: Array<{ name?: string | null; url?: string | null }>;
 }
 
 interface CacheEntry {
@@ -104,19 +114,26 @@ function formatApiDate(date: Date): string {
 export function mapApiFootballFixture(row: ApiFootballFixtureRow): ExternalFixture {
   const competition = resolveCompetition(row.league.id);
   const status = mapStatus(row.fixture.status.short);
+  const broadcast = inferBroadcastFromApiPayload(row);
   return {
     id: `api_${row.fixture.id}`,
     competition,
     competition_label: row.league.name,
     league_id: row.league.id,
+    api_fixture_id: row.fixture.id,
     home_team: row.teams.home.name,
     away_team: row.teams.away.name,
+    home_team_id: row.teams.home.id,
+    away_team_id: row.teams.away.id,
     starts_at: new Date(row.fixture.date),
     status,
     score_home: row.goals.home ?? undefined,
     score_away: row.goals.away ?? undefined,
     minute: status === 'live' ? row.fixture.status.elapsed ?? undefined : undefined,
     venue: row.fixture.venue?.city ?? row.fixture.venue?.name ?? undefined,
+    broadcast_listed: broadcast.listed || undefined,
+    broadcast_label: broadcast.label,
+    broadcast_url: broadcast.officialUrl,
   };
 }
 
@@ -221,6 +238,39 @@ let lastSyncAt: Date | null = null;
 let lastHealthy = false;
 let lastMessage: string | undefined;
 
+const LINEUPS_CACHE_TTL_MS = 120_000;
+const EVENTS_CACHE_TTL_MS = 30_000;
+const TEAMS_CACHE_TTL_MS = 5 * 60_000;
+const RECENT_CACHE_TTL_MS = 120_000;
+
+const jsonCache = new Map<string, { expiresAt: number; value: unknown }>();
+
+function readJsonCache<T>(key: string): T | null {
+  const cached = jsonCache.get(key);
+  if (!cached || cached.expiresAt <= Date.now()) return null;
+  return cached.value as T;
+}
+
+function writeJsonCache<T>(key: string, value: T, ttlMs: number): void {
+  jsonCache.set(key, { expiresAt: Date.now() + ttlMs, value });
+}
+
+function parseNumericFixtureId(fixtureId: string): number | null {
+  const raw = fixtureId.startsWith('api_') ? fixtureId.slice(4) : fixtureId;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function fetchJson<T>(url: string, apiKey: string): Promise<T> {
+  const response = await fetch(url, {
+    headers: { 'x-apisports-key': apiKey },
+  });
+  if (!response.ok) {
+    throw new Error(`API scores monde indisponible (${response.status}).`);
+  }
+  return (await response.json()) as T;
+}
+
 export function createApiFootballProvider(): ExternalScoresProvider {
   return {
     source: 'api_football',
@@ -298,6 +348,99 @@ export function createApiFootballProvider(): ExternalScoresProvider {
         throw error;
       }
     },
+    async listRecentFinishedFixtures(): Promise<ExternalFixture[]> {
+      const apiKey = readApiKey();
+      if (!apiKey) return [];
+      const cacheKey = 'recent:finished';
+      const cached = readCached(cacheKey);
+      if (cached) return cached.filter((fixture) => fixture.status === 'finished');
+      try {
+        const url = `${readBaseUrl()}/fixtures?last=24&status=FT`;
+        const fixtures = await fetchApiRows(url, apiKey, cacheKey, RECENT_CACHE_TTL_MS);
+        return fixtures.filter((fixture) => fixture.status === 'finished');
+      } catch {
+        return [];
+      }
+    },
+    async getFixtureLineups(fixtureId: string) {
+      const apiKey = readApiKey();
+      const numericId = parseNumericFixtureId(fixtureId);
+      if (!apiKey || numericId == null) return { lineups: [] };
+      const cacheKey = `lineups:${numericId}`;
+      const cached = readJsonCache<{ lineups: NonNullable<ReturnType<typeof mapApiFootballLineup>>[] }>(
+        cacheKey,
+      );
+      if (cached) return { lineups: cached.lineups };
+      try {
+        const payload = await fetchJson<{ response?: ApiFootballLineupRow[] }>(
+          `${readBaseUrl()}/fixtures/lineups?fixture=${numericId}`,
+          apiKey,
+        );
+        const lineups = (payload.response ?? [])
+          .map(mapApiFootballLineup)
+          .filter((row): row is NonNullable<typeof row> => Boolean(row));
+        writeJsonCache(cacheKey, { lineups }, LINEUPS_CACHE_TTL_MS);
+        return { lineups };
+      } catch {
+        return { lineups: [] };
+      }
+    },
+    async getFixtureEvents(fixtureId: string) {
+      const apiKey = readApiKey();
+      const numericId = parseNumericFixtureId(fixtureId);
+      if (!apiKey || numericId == null) return { events: [] };
+      const cacheKey = `events:${numericId}`;
+      const cached = readJsonCache<{ events: NonNullable<ReturnType<typeof mapApiFootballEvent>>[] }>(
+        cacheKey,
+      );
+      if (cached) return { events: cached.events };
+      try {
+        const payload = await fetchJson<{ response?: ApiFootballEventRow[] }>(
+          `${readBaseUrl()}/fixtures/events?fixture=${numericId}`,
+          apiKey,
+        );
+        const events = (payload.response ?? [])
+          .map((row, index) => mapApiFootballEvent(row, index))
+          .filter((row): row is NonNullable<typeof row> => Boolean(row));
+        writeJsonCache(cacheKey, { events }, EVENTS_CACHE_TTL_MS);
+        return { events };
+      } catch {
+        return { events: [] };
+      }
+    },
+    async searchTeams(query: string): Promise<ExternalTeamHit[]> {
+      const apiKey = readApiKey();
+      const q = query.trim();
+      if (!apiKey || q.length < 2) return [];
+      const cacheKey = `teams:${q.toLowerCase()}`;
+      const cached = readJsonCache<ExternalTeamHit[]>(cacheKey);
+      if (cached) return cached;
+      try {
+        const payload = await fetchJson<{
+          response?: Array<{ team?: { id?: number; name?: string; country?: string } }>;
+        }>(`${readBaseUrl()}/teams?search=${encodeURIComponent(q)}`, apiKey);
+        const hits = (payload.response ?? []).flatMap((row): ExternalTeamHit[] => {
+          const name = row.team?.name?.trim();
+          if (!name) return [];
+          return [
+            {
+              id:
+                row.team?.id != null
+                  ? `wt:id:${row.team.id}`
+                  : `wt:name:${name.toLowerCase()}`,
+              apiTeamId: row.team?.id,
+              name,
+              country: row.team?.country,
+            },
+          ];
+        });
+        const sliced = hits.slice(0, 12);
+        writeJsonCache(cacheKey, sliced, TEAMS_CACHE_TTL_MS);
+        return sliced;
+      } catch {
+        return [];
+      }
+    },
     async getState(): Promise<ExternalScoresProviderState> {
       return {
         source: 'api_football',
@@ -312,6 +455,7 @@ export function createApiFootballProvider(): ExternalScoresProvider {
 /** Vide le cache (tests). */
 export function resetApiFootballCache(): void {
   cache.clear();
+  jsonCache.clear();
   lastSyncAt = null;
   lastHealthy = false;
   lastMessage = undefined;

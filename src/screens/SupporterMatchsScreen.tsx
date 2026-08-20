@@ -4,7 +4,9 @@ import { SupporterPageFrame } from '../components/supporter/SupporterPageFrame';
 import { getSupporterPageIdentity, SUPPORTER_SITE } from '../content/supporterPageIdentity';
 import { SupporterFilterBar } from '../components/supporter/SupporterFilterBar';
 import { SupporterMatchCard } from '../components/supporter/SupporterMatchCard';
+import { SupporterClubSearch } from '../components/supporter/SupporterClubSearch';
 import { ProDayText } from '../components/ui/ProDayText';
+import { PushScreenTransition } from '../components/motion';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LocaleContext';
 import { useSeasonCalendar } from '../hooks/useAppData';
@@ -27,12 +29,15 @@ import {
 import type { Follow } from '../models/Follow';
 import type { SupporterMatchViewItem } from '../utils/supporterMatchFilters';
 import { formatCalendarDate } from '../utils/seasonCalendar';
+import { hasClubOrWorldTeamFollows } from '../utils/supporterWorldFollows';
+import { SupporterMatchDetailScreen } from './supporter/SupporterMatchDetailScreen';
 
 type SupporterMatchsChapter = SupporterMatchHubSection;
 
 const CHAPTER_KEYS: { id: SupporterMatchsChapter; labelKey: string }[] = [
   { id: 'upcoming', labelKey: 'supporter.chapters.upcoming' },
   { id: 'live', labelKey: 'supporter.chapters.live' },
+  { id: 'broadcasts', labelKey: 'supporter.chapters.broadcasts' },
   { id: 'proday', labelKey: 'supporter.chapters.proday' },
   { id: 'world', labelKey: 'supporter.chapters.world' },
   { id: 'follows', labelKey: 'supporter.chapters.follows' },
@@ -46,6 +51,7 @@ export const SupporterMatchsScreen: React.FC = () => {
   const { tournaments } = useTournaments();
   const [chapter, setChapter] = useState<SupporterMatchsChapter>(DEFAULT_SUPPORTER_MATCHS_CHAPTER);
   const [follows, setFollows] = useState<Follow[]>([]);
+  const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
   const [filters, setFilters] = useState<SupporterMatchFilters>({
     gender: 'all',
     source: 'all',
@@ -122,6 +128,7 @@ export const SupporterMatchsScreen: React.FC = () => {
       }
       onDebate={() => nav.setActiveTab('messages')}
       onMoment={() => nav.setActiveTab('reels')}
+      onPress={() => setSelected(item)}
     />
   );
 
@@ -193,14 +200,35 @@ export const SupporterMatchsScreen: React.FC = () => {
           </View>
         ))
       ) : hub.heroKickoffs.length > 0 ? null : (
-        renderEmpty('supporter.empty.upcoming')
+        renderEmpty(
+          hasClubOrWorldTeamFollows(follows)
+            ? 'supporter.empty.upcomingFollowed'
+            : 'supporter.empty.upcomingNoFollows',
+        )
       );
   } else if (chapter === 'live') {
     content =
-      hub.sections.live.length > 0 ? (
-        hub.sections.live.map((item) => renderCard(item))
+      hub.sections.live.length > 0 || hub.sections.recent.length > 0 ? (
+        <>
+          {hub.sections.live.map((item) => renderCard(item))}
+          {hub.sections.recent.length > 0 ? (
+            <View style={styles.dateGroup}>
+              <ProDayText variant="caption" style={styles.dateTitle}>
+                {t('supporter.chapters.recent')}
+              </ProDayText>
+              {hub.sections.recent.map((item) => renderCard(item))}
+            </View>
+          ) : null}
+        </>
       ) : (
         renderEmpty('supporter.empty.live')
+      );
+  } else if (chapter === 'broadcasts') {
+    content =
+      hub.sections.broadcasts.length > 0 ? (
+        hub.sections.broadcasts.map((item) => renderCard(item))
+      ) : (
+        renderEmpty('supporter.empty.broadcasts')
       );
   } else if (chapter === 'proday') {
     const prodayItems = [
@@ -275,50 +303,71 @@ export const SupporterMatchsScreen: React.FC = () => {
   const chapterCount = (id: SupporterMatchsChapter) => {
     if (id === 'upcoming') return hub.upcomingCount;
     if (id === 'live') return hub.liveCount;
+    if (id === 'broadcasts') return hub.sections.broadcasts.length;
     if (id === 'proday') return hub.sections.proday.length + hub.tournaments.length;
     if (id === 'world') return hub.sections.world.length;
     return hub.sections.follows.length;
   };
 
   return (
-    <SupporterPageFrame identity={getSupporterPageIdentity('matchs')} badge="100 % gratuit">
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabs}
-      >
-        {CHAPTER_KEYS.map((entry) => {
-          const active = entry.id === chapter;
-          const count = chapterCount(entry.id);
-          return (
-            <Pressable key={entry.id} onPress={() => setChapter(entry.id)} style={styles.tab}>
-              <ProDayText variant="caption" style={[styles.tabLabel, active && styles.tabLabelOn]}>
-                {t(entry.labelKey)}
-                {count > 0 ? `  ${count}` : ''}
+    <>
+      <SupporterPageFrame identity={getSupporterPageIdentity('matchs')} badge="100 % gratuit">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabs}
+        >
+          {CHAPTER_KEYS.map((entry) => {
+            const active = entry.id === chapter;
+            const count = chapterCount(entry.id);
+            return (
+              <Pressable key={entry.id} onPress={() => setChapter(entry.id)} style={styles.tab}>
+                <ProDayText variant="caption" style={[styles.tabLabel, active && styles.tabLabelOn]}>
+                  {t(entry.labelKey)}
+                  {count > 0 ? `  ${count}` : ''}
+                </ProDayText>
+                <View style={[styles.tabRule, active && styles.tabRuleOn]} />
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+        <SupporterFilterBar
+          filters={filters}
+          onChange={handleFiltersChange}
+          showCompetition={chapter === 'world' || chapter === 'live' || chapter === 'upcoming'}
+        />
+        {providerBanner}
+        <ScrollView contentContainerStyle={styles.content}>
+          {chapter === 'upcoming' || chapter === 'follows' ? (
+            <SupporterClubSearch
+              followedIds={new Set(
+                follows.filter((f) => f.target_type === 'club').map((f) => f.target_id),
+              )}
+              onToggle={(id, label) => void toggleFollow('club', id, label)}
+            />
+          ) : null}
+          {hub.heroKickoffs.length > 0 && chapter === 'upcoming' ? (
+            <View style={styles.heroBlock}>
+              <ProDayText variant="caption" style={styles.heroKicker}>
+                {t('supporter.matchs.heroKickoffs')}
               </ProDayText>
-              <View style={[styles.tabRule, active && styles.tabRuleOn]} />
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-      <SupporterFilterBar
-        filters={filters}
-        onChange={handleFiltersChange}
-        showCompetition={chapter === 'world' || chapter === 'live' || chapter === 'upcoming'}
-      />
-      {providerBanner}
-      <ScrollView contentContainerStyle={styles.content}>
-        {hub.heroKickoffs.length > 0 && chapter === 'upcoming' ? (
-          <View style={styles.heroBlock}>
-            <ProDayText variant="caption" style={styles.heroKicker}>
-              {t('supporter.matchs.heroKickoffs')}
-            </ProDayText>
-            {hub.heroKickoffs.map((item) => renderCard(item, true))}
-          </View>
+              {hub.heroKickoffs.map((item) => renderCard(item, true))}
+            </View>
+          ) : null}
+          {content}
+        </ScrollView>
+      </SupporterPageFrame>
+      <PushScreenTransition active={Boolean(selected)}>
+        {selected ? (
+          <SupporterMatchDetailScreen
+            item={selected}
+            onBack={() => setSelected(null)}
+            isFollowedClub={(id) => followedKeys.has(`club:${id}`)}
+            onToggleClub={(id, label) => void toggleFollow('club', id, label)}
+          />
         ) : null}
-        {content}
-      </ScrollView>
-    </SupporterPageFrame>
+      </PushScreenTransition>
+    </>
   );
 };
 

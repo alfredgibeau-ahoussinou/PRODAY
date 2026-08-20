@@ -434,6 +434,11 @@ export function teamEventFromFirestore(
       ? toDate(data.auto_reminder_sent_at)
       : undefined,
     lineup: data.lineup as EventLineup | undefined,
+    public_watch_url: (() => {
+      const raw =
+        data.public_watch_url ?? data.stream_url ?? data.visio_url ?? data.watch_url;
+      return typeof raw === 'string' && raw.startsWith('https://') ? raw : undefined;
+    })(),
     live_state: mapMatchLiveState(data.live_state),
     live_actions: mapLiveActions(data.live_actions),
     player_match_stats: mapPlayerMatchStats(data.player_match_stats),

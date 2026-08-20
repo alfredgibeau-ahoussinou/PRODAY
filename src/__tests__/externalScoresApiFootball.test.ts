@@ -62,4 +62,21 @@ describe('externalScoresApiFootball provider', () => {
     expect(row.competition).toBe('other');
     expect(row.competition_label).toBe('Ligue locale');
   });
+
+  it('mappe une diffusion TNT si l’API la fournit', () => {
+    const row = mapApiFootballFixture({
+      fixture: {
+        id: 11,
+        date: '2026-07-01T19:00:00.000Z',
+        status: { short: 'NS' },
+      },
+      league: { id: 1, name: 'World Cup' },
+      teams: { home: { id: 1, name: 'A' }, away: { id: 2, name: 'B' } },
+      goals: { home: null, away: null },
+      broadcasts: [{ name: 'TF1' }],
+    });
+    expect(row.broadcast_listed).toBe(true);
+    expect(row.broadcast_label).toBe('TF1');
+    expect(row.home_team_id).toBe(1);
+  });
 });

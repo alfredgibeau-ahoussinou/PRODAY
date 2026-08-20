@@ -7,8 +7,11 @@ import type {
   ExternalFixture,
   ExternalScoresProvider,
   ExternalScoresProviderState,
+  ExternalTeamHit,
   ListUpcomingFixturesOptions,
 } from './externalScores.types';
+import type { LiveMatchAction } from '../models/TeamEvent';
+import type { ExternalFixtureLineup } from '../utils/supporterMatchDetail';
 
 export type {
   ExternalCompetitionId,
@@ -17,6 +20,7 @@ export type {
   ExternalScoresProvider,
   ExternalScoresProviderState,
   ExternalScoresSource,
+  ExternalTeamHit,
   ListUpcomingFixturesOptions,
 } from './externalScores.types';
 
@@ -100,6 +104,8 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     score_home: 3,
     score_away: 0,
     venue: 'Décines',
+    broadcast_listed: true,
+    broadcast_label: 'France 2',
   },
   {
     id: 'd1f_mhsc_hac',
@@ -191,6 +197,19 @@ const MOCK_FIXTURES: ExternalFixture[] = [
   },
 ];
 
+function uniqueMockTeams(): ExternalTeamHit[] {
+  const seen = new Map<string, ExternalTeamHit>();
+  for (const fixture of MOCK_FIXTURES) {
+    for (const name of [fixture.home_team, fixture.away_team]) {
+      const key = name.toLowerCase();
+      if (!seen.has(key)) {
+        seen.set(key, { id: `wt:name:${key}`, name });
+      }
+    }
+  }
+  return Array.from(seen.values());
+}
+
 function cloneFixture(fixture: ExternalFixture): ExternalFixture {
   return {
     ...fixture,
@@ -235,6 +254,22 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
       .map(cloneFixture)
       .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
   },
+  async listRecentFinishedFixtures(): Promise<ExternalFixture[]> {
+    return MOCK_FIXTURES.filter((f) => f.status === 'finished')
+      .map(cloneFixture)
+      .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime());
+  },
+  async getFixtureLineups() {
+    return { lineups: [] as ExternalFixtureLineup[] };
+  },
+  async getFixtureEvents() {
+    return { events: [] as LiveMatchAction[] };
+  },
+  async searchTeams(query: string): Promise<ExternalTeamHit[]> {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return uniqueMockTeams().filter((team) => team.name.toLowerCase().includes(q));
+  },
   async getState(): Promise<ExternalScoresProviderState> {
     return {
       source: 'mock',
@@ -254,6 +289,18 @@ const apiStubProvider: ExternalScoresProvider = {
     return [];
   },
   async listUpcomingFixtures(): Promise<ExternalFixture[]> {
+    return [];
+  },
+  async listRecentFinishedFixtures(): Promise<ExternalFixture[]> {
+    return [];
+  },
+  async getFixtureLineups() {
+    return { lineups: [] };
+  },
+  async getFixtureEvents() {
+    return { events: [] };
+  },
+  async searchTeams(): Promise<ExternalTeamHit[]> {
     return [];
   },
   async getState(): Promise<ExternalScoresProviderState> {
@@ -341,5 +388,33 @@ export const externalScoresService = {
 
   async getProviderState(): Promise<ExternalScoresProviderState> {
     return resolveExternalScoresProvider().getState();
+  },
+
+  async listRecentFinishedFixtures(): Promise<ExternalFixture[]> {
+    return withProviderFallback(
+      async (provider) => provider.listRecentFinishedFixtures?.() ?? [],
+      () => mockExternalScoresProvider.listRecentFinishedFixtures?.() ?? Promise.resolve([]),
+    );
+  },
+
+  async getFixtureLineups(fixtureId: string) {
+    return withProviderFallback(
+      async (provider) => provider.getFixtureLineups?.(fixtureId) ?? { lineups: [] },
+      async () => ({ lineups: [] as ExternalFixtureLineup[] }),
+    );
+  },
+
+  async getFixtureEvents(fixtureId: string) {
+    return withProviderFallback(
+      async (provider) => provider.getFixtureEvents?.(fixtureId) ?? { events: [] },
+      async () => ({ events: [] as LiveMatchAction[] }),
+    );
+  },
+
+  async searchTeams(query: string): Promise<ExternalTeamHit[]> {
+    return withProviderFallback(
+      async (provider) => provider.searchTeams?.(query) ?? [],
+      () => mockExternalScoresProvider.searchTeams?.(query) ?? Promise.resolve([]),
+    );
   },
 };

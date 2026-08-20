@@ -76,9 +76,8 @@ describe('supporterMatchHub', () => {
     expect(result.sections.live.some((item) => item.source === 'world')).toBe(true);
     expect(result.sections.proday.some((item) => item.source === 'proday')).toBe(true);
     expect(result.sections.world.length).toBeGreaterThan(0);
-    expect(result.sections.upcoming.length).toBeGreaterThan(0);
-    expect(result.heroKickoffs.length).toBeGreaterThan(0);
-    expect(result.heroKickoffs.length).toBeLessThanOrEqual(3);
+    expect(result.sections.upcoming.length).toBe(0);
+    expect(result.heroKickoffs.length).toBe(0);
     expect(DEFAULT_SUPPORTER_MATCHS_CHAPTER).toBe('upcoming');
     expect(result.providerState.source).toBe('mock');
   });
@@ -119,6 +118,36 @@ describe('supporterMatchHub', () => {
 
     expect(result.sections.follows).toHaveLength(1);
     expect(result.sections.follows[0].clubId).toBe('club-x');
+    expect(result.sections.upcoming.some((item) => item.clubId === 'club-x')).toBe(true);
+    expect(result.sections.upcoming.some((item) => item.clubId === 'club-y')).toBe(false);
+  });
+
+  it('filtre À venir monde via un club suivi (nom)', async () => {
+    (teamEventsService.listUpcoming as jest.Mock).mockResolvedValue([]);
+    const follows: Follow[] = [
+      {
+        id: 'f-psg',
+        follower_uid: 'u1',
+        target_type: 'club',
+        target_id: 'wt:name:paris sg',
+        target_label: 'Paris SG',
+        created_at: new Date(),
+      },
+    ];
+    const result = await fetchSupporterMatchHub({
+      calendarEvents: [],
+      tournaments: [],
+      follows,
+      filters: ALL_FILTERS,
+    });
+    expect(result.sections.upcoming.length).toBeGreaterThan(0);
+    expect(
+      result.sections.upcoming.every(
+        (item) =>
+          item.homeLabel.toLowerCase().includes('paris') ||
+          item.awayLabel.toLowerCase().includes('paris'),
+      ),
+    ).toBe(true);
   });
 
   it('respecte le filtre compétition monde', async () => {
