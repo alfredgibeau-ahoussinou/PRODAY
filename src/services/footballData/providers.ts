@@ -23,6 +23,26 @@ import type {
 const STATS_CACHE_TTL_MS = 5 * 60_000;
 const statsCache = new Map<string, { expiresAt: number; data: FootballMatchStatistics | null }>();
 
+/**
+ * Normalise un id fixture vers la clé provider (`api_123` / `fd_456`)
+ * ou l’id Match Center (`world-fixture-api_123`).
+ */
+export function normalizeWorldFixtureKey(fixtureId: string): string {
+  const trimmed = fixtureId.trim();
+  if (trimmed.startsWith('api_') || trimmed.startsWith('fd_')) return trimmed;
+  const ref = parseWorldFixtureRef(trimmed);
+  if (ref) return ref.fixtureKey;
+  if (/^\d+$/.test(trimmed)) return `api_${trimmed}`;
+  return trimmed;
+}
+
+export function toWorldMatchCenterId(fixtureId: string): string {
+  const key = normalizeWorldFixtureKey(fixtureId);
+  if (key.startsWith('world-fixture-') || key.startsWith('proday-event-')) return key;
+  if (key.startsWith('api_') || key.startsWith('fd_')) return `world-fixture-${key}`;
+  return key;
+}
+
 async function fetchApiStatistics(fixtureKey: string): Promise<FootballMatchStatistics | null> {
   const cached = statsCache.get(fixtureKey);
   if (cached && cached.expiresAt > Date.now()) return cached.data;
@@ -127,7 +147,7 @@ export class ExternalFootballDataProvider implements FootballDataProvider {
   }
 
   async getFixtureStatistics(fixtureId: string): Promise<FootballMatchStatistics | null> {
-    return fetchApiStatistics(fixtureId);
+    return fetchApiStatistics(normalizeWorldFixtureKey(fixtureId));
   }
 
   async listCompetitionsByCountry(countryCode?: string): Promise<FootballCompetitionEntry[]> {
@@ -238,7 +258,7 @@ export class MergedFootballProvider implements FootballDataProvider {
   }
 
   async getFixture(fixtureId: string): Promise<ExternalFixture | null> {
-    return externalScoresService.getFixtureById(fixtureId);
+    return externalScoresService.getFixtureById(normalizeWorldFixtureKey(fixtureId));
   }
 
   async searchTeams(query: string): Promise<FootballTeamHit[]> {
@@ -273,17 +293,27 @@ export class MergedFootballProvider implements FootballDataProvider {
   }
 
   async getLineups(fixtureId: string) {
-    const detail = await this.getMatchDetail(`world:${fixtureId}`);
-    return detail?.lineups ?? [];
+    const prodayId = parseProdayEventId(fixtureId) ?? parseProdayEventId(`proday-event-${fixtureId}`);
+    if (prodayId) {
+      const detail = await this.proday.getMatchDetail(`proday-event-${prodayId}`);
+      return detail?.lineups ?? [];
+    }
+    const res = await externalScoresService.getFixtureLineups(normalizeWorldFixtureKey(fixtureId));
+    return res.lineups;
   }
 
   async getEvents(fixtureId: string) {
-    const detail = await this.getMatchDetail(`world:${fixtureId}`);
-    return detail?.events ?? [];
+    const prodayId = parseProdayEventId(fixtureId) ?? parseProdayEventId(`proday-event-${fixtureId}`);
+    if (prodayId) {
+      const detail = await this.proday.getMatchDetail(`proday-event-${prodayId}`);
+      return detail?.events ?? [];
+    }
+    const res = await externalScoresService.getFixtureEvents(normalizeWorldFixtureKey(fixtureId));
+    return res.events;
   }
 
   async getStatistics(fixtureId: string) {
-    return this.getFixtureStatistics(fixtureId);
+    return this.getFixtureStatistics(normalizeWorldFixtureKey(fixtureId));
   }
 
   async getPlayers() {

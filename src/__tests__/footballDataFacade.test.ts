@@ -2,9 +2,16 @@ jest.mock('../services/teamEvents.service', () => ({
   teamEventsService: { getById: jest.fn() },
 }));
 
-import { ExternalFootballDataProvider } from '../services/footballData/providers';
-import { listCompetitionsForCountry } from '../content/supporterCompetitionsCatalog';
+import {
+  ExternalFootballDataProvider,
+  MergedFootballProvider,
+  ProDayFootballDataProvider,
+  normalizeWorldFixtureKey,
+  toWorldMatchCenterId,
+} from '../services/footballData/providers';
+import { footballDataFacade, resolveMatchCenterTabs } from '../services/footballData';
 import { resetExternalScoresProviderCache } from '../services/externalScores.service';
+import { listCompetitionsForCountry } from '../content/supporterCompetitionsCatalog';
 
 describe('footballDataFacade / ExternalFootballDataProvider', () => {
   beforeEach(() => {
@@ -32,5 +39,46 @@ describe('footballDataFacade / ExternalFootballDataProvider', () => {
   it('listCompetitionsByCountry filtre le catalog', () => {
     const fr = listCompetitionsForCountry('FR');
     expect(fr.every((c) => c.countryCode === 'FR')).toBe(true);
+  });
+
+  it('normalise les ids fixture pour getLineups / getFixture', () => {
+    expect(normalizeWorldFixtureKey('world-fixture-api_123')).toBe('api_123');
+    expect(normalizeWorldFixtureKey('api_123')).toBe('api_123');
+    expect(normalizeWorldFixtureKey('123')).toBe('api_123');
+    expect(toWorldMatchCenterId('api_99')).toBe('world-fixture-api_99');
+  });
+
+  it('expose getLineups / getEvents / getStatistics / getFixture sur la facade', async () => {
+    const merged = new MergedFootballProvider(
+      new ProDayFootballDataProvider([], []),
+      new ExternalFootballDataProvider(),
+    );
+    await expect(merged.getLineups('api_1')).resolves.toEqual(expect.any(Array));
+    await expect(merged.getEvents('world-fixture-api_1')).resolves.toEqual(expect.any(Array));
+    await expect(merged.getStatistics('1')).resolves.toBeNull();
+    await expect(footballDataFacade.getFixture('api_1')).resolves.toBeDefined();
+  });
+
+  it('resolveMatchCenterTabs garde Compositions même sans XI', () => {
+    const tabs = resolveMatchCenterTabs(
+      {
+        item: {
+          id: 'world-fixture-api_1',
+          source: 'world',
+          status: 'live',
+          genderScope: 'unspecified',
+          homeLabel: 'A',
+          awayLabel: 'B',
+          startsAt: new Date(),
+        },
+        source: 'world',
+        lineups: [],
+        events: [],
+        statistics: null,
+        prodayEvent: null,
+      },
+      false,
+    );
+    expect(tabs).toEqual(expect.arrayContaining(['resume', 'stats', 'compositions', 'events']));
   });
 });

@@ -1,6 +1,7 @@
 import {
   mapApiFootballEvent,
   mapApiFootballLineup,
+  compareApiFootballGrid,
   parseProdayEventId,
   parseWorldFixtureApiId,
   parseWorldFixtureRef,
@@ -27,6 +28,21 @@ describe('supporterMatchDetail mappers', () => {
     expect(mapped?.formation).toBe('4-4-2');
     expect(mapped?.lineup.slots.filter((s) => s.role === 'starter')).toHaveLength(2);
     expect(mapped?.lineup.slots.some((s) => s.display_name === 'Barcola')).toBe(true);
+  });
+
+  it('ordonne le XI selon la grille API-Football', () => {
+    const mapped = mapApiFootballLineup({
+      team: { name: 'PSG' },
+      formation: '4-3-3',
+      startXI: [
+        { player: { id: 10, name: 'Attaquant', pos: 'F', grid: '4:2' } },
+        { player: { id: 1, name: 'Gardien', pos: 'G', grid: '1:1' } },
+        { player: { id: 5, name: 'Défenseur', pos: 'D', grid: '2:1' } },
+      ],
+    });
+    const starters = mapped?.lineup.slots.filter((s) => s.role === 'starter') ?? [];
+    expect(starters.map((s) => s.display_name)).toEqual(['Gardien', 'Défenseur', 'Attaquant']);
+    expect(compareApiFootballGrid('1:1', '2:1')).toBeLessThan(0);
   });
 
   it('renvoie null si la composition n’est pas publiée', () => {
@@ -68,7 +84,7 @@ describe('supporterMatchDetail mappers', () => {
       id: 'x',
       source: 'world',
       status: 'live',
-      genderScope: 'men',
+      genderScope: 'unspecified',
       homeLabel: 'A',
       awayLabel: 'B',
       scoreHome: 2,

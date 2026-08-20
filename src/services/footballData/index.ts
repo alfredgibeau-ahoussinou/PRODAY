@@ -21,4 +21,6 @@ export {
   MergedFootballProvider,
   ProDayFootballDataProvider,
   resetFootballStatsCache,
+  normalizeWorldFixtureKey,
+  toWorldMatchCenterId,
 } from './providers';

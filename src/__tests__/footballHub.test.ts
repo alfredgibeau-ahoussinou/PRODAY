@@ -39,4 +39,13 @@ describe('MergedFootballProvider', () => {
     const fixtures = await merged.getFixtures?.({ days: 7 });
     expect(Array.isArray(fixtures)).toBe(true);
   });
+
+  it('getLineups ne invente pas de XI (tableau vide si mock sans lineups API)', async () => {
+    const merged = new MergedFootballProvider(
+      new ProDayFootballDataProvider([], []),
+      new ExternalFootballDataProvider(),
+    );
+    const lineups = await merged.getLineups('world-fixture-api_999999');
+    expect(lineups).toEqual([]);
+  });
 });

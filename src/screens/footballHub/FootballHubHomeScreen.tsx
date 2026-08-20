@@ -88,7 +88,11 @@ export const FootballHubHomeScreen: React.FC = () => {
   }, [hub, loadFollows, loadExtras]);
 
   const live = hub.sections.live;
-  const upcoming = hub.sections.upcoming.slice(0, 12);
+  /** Suivis en priorité ; sinon calendrier monde pour ne pas laisser l’Accueil vide. */
+  const upcoming =
+    hub.sections.upcoming.length > 0
+      ? hub.sections.upcoming.slice(0, 12)
+      : hub.sections.world.slice(0, 12);
   const proday = hub.sections.proday.slice(0, 8);
   const clubFollows = follows.filter((f) => f.target_type === 'club');
   const apiUnhealthy = hub.providerState && hub.providerState.healthy === false;

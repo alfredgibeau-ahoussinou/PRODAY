@@ -35,10 +35,11 @@ describe('resolveMatchCenterTabs', () => {
     prodayEvent: null,
   };
 
-  it('propose résumé + stats monde (message honnête si vide)', () => {
+  it('propose résumé + stats + compositions monde (message honnête si XI vide)', () => {
     const tabs = resolveMatchCenterTabs(baseDetail, false);
     expect(tabs).toContain('resume');
     expect(tabs).toContain('stats');
+    expect(tabs).toContain('compositions');
     expect(tabs).not.toContain('video');
     expect(tabs).not.toContain('analyse');
   });
@@ -54,7 +55,7 @@ describe('resolveMatchCenterTabs', () => {
     expect(tabs).toContain('stats');
   });
 
-  it('affiche événements et compositions quand présents', () => {
+  it('affiche événements quand présents et compositions toujours', () => {
     const tabs = resolveMatchCenterTabs(
       {
         ...baseDetail,
@@ -68,13 +69,7 @@ describe('resolveMatchCenterTabs', () => {
             created_at: new Date(),
           },
         ],
-        lineups: [
-          {
-            teamName: 'A',
-            formation: '4-4-2',
-            lineup: { formation: '4-4-2', slots: [] },
-          },
-        ],
+        lineups: [],
       },
       false,
     );

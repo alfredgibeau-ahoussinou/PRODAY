@@ -22,6 +22,9 @@ import { syntheticEventFromLineup } from '../../utils/supporterMatchDetail';
 import { FOOTBALL_HUB, FOOTBALL_HUB_COPY } from '../../features/footballHub/theme/footballHubTheme';
 import { spacing } from '../../theme/designTokens';
 
+/** Poll score / events pendant un match live (cache API-Football ~30s). */
+const LIVE_POLL_MS = 40_000;
+
 const TAB_LABELS: Partial<Record<MatchCenterTabId, string>> = {
   resume: 'Résumé',
   stats: 'Statistiques',
@@ -47,8 +50,8 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
   const [liveItem, setLiveItem] = useState(item);
   const [iaOpen, setIaOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     try {
       const data = await fetchMatchCenterData(item.id, { seedItem: item });
       if (data) {
@@ -59,15 +62,21 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
         );
       }
     } catch {
-      setCenter(null);
+      if (!opts?.silent) setCenter(null);
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, [item]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (liveItem.status !== 'live') return undefined;
+    const timer = setInterval(() => void load({ silent: true }), LIVE_POLL_MS);
+    return () => clearInterval(timer);
+  }, [liveItem.status, load]);
 
   const lineupRows = center?.lineups ?? [];
 
@@ -134,7 +143,7 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.tabs}
           >
-            {(center?.availableTabs ?? ['resume']).map((id) => (
+            {(center?.availableTabs ?? ['resume', 'compositions']).map((id) => (
               <Pressable
                 key={id}
                 onPress={() => setTab(id)}
@@ -211,7 +220,7 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
                 ))
               ) : (
                 <ProDayText variant="body" style={styles.muted}>
-                  Compositions non disponibles.
+                  Composition non disponible
                 </ProDayText>
               )
             ) : null}

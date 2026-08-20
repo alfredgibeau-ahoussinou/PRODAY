@@ -6,6 +6,8 @@ export interface ApiFootballLineupPlayer {
   name?: string | null;
   number?: number | null;
   pos?: string | null;
+  /** Grille API-Football « row:col » (ex. 1:1 = gardien). */
+  grid?: string | null;
 }
 
 export interface ApiFootballLineupRow {
@@ -30,11 +32,27 @@ export interface ExternalFixtureLineup {
   lineup: EventLineup;
 }
 
+/** Ordre terrain : ligne puis colonne (gardien → attaque). */
+export function compareApiFootballGrid(a?: string | null, b?: string | null): number {
+  const parse = (grid?: string | null) => {
+    const m = (grid ?? '').match(/^(\d+)\s*:\s*(\d+)$/);
+    if (!m) return { row: 99, col: 99 };
+    return { row: Number(m[1]), col: Number(m[2]) };
+  };
+  const left = parse(a);
+  const right = parse(b);
+  if (left.row !== right.row) return left.row - right.row;
+  return left.col - right.col;
+}
+
 export function mapApiFootballLineup(row: ApiFootballLineupRow): ExternalFixtureLineup | null {
   const teamName = row.team?.name?.trim();
   if (!teamName) return null;
   const formation = (row.formation ?? '').trim() || '4-4-2';
-  const starters = (row.startXI ?? [])
+  const orderedStart = [...(row.startXI ?? [])].sort((x, y) =>
+    compareApiFootballGrid(x.player?.grid, y.player?.grid),
+  );
+  const starters = orderedStart
     .map((entry, index) => mapLineupPlayer(entry.player, 'starter', index))
     .filter((slot): slot is EventLineup['slots'][number] => Boolean(slot));
   const subs = (row.substitutes ?? [])

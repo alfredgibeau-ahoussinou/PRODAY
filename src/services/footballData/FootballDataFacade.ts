@@ -46,7 +46,8 @@ function createMerged(
 export function resolveMatchCenterTabs(detail: FootballMatchDetail, hasVideo: boolean): MatchCenterTabId[] {
   const tabs: MatchCenterTabId[] = ['resume'];
   if (detail.statistics || detail.source === 'world') tabs.push('stats');
-  if (detail.lineups.length > 0) tabs.push('compositions');
+  /** Toujours proposé — empty state honnête si l’API n’a pas publié le XI. */
+  tabs.push('compositions');
   if (detail.events.length > 0 || detail.item.status === 'live') tabs.push('events');
   if (hasVideo) tabs.push('video');
   if (detail.source === 'proday') tabs.push('analyse');
@@ -84,6 +85,22 @@ export const footballDataFacade = {
 
   async getFixtures(opts?: { live?: boolean; days?: number; leagueIds?: number[] }) {
     return createMerged().getFixtures(opts);
+  },
+
+  async getFixture(fixtureId: string): Promise<ExternalFixture | null> {
+    return createMerged().getFixture(fixtureId);
+  },
+
+  async getLineups(fixtureId: string) {
+    return createMerged().getLineups(fixtureId);
+  },
+
+  async getEvents(fixtureId: string) {
+    return createMerged().getEvents(fixtureId);
+  },
+
+  async getStatistics(fixtureId: string): Promise<FootballMatchStatistics | null> {
+    return createMerged().getStatistics(fixtureId);
   },
 
   async searchTeams(query: string): Promise<FootballTeamHit[]> {
