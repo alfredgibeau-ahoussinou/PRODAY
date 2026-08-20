@@ -24,6 +24,8 @@ export type MatchsDeepLink = {
   eventId?: string;
   homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'tournois' | 'competitions';
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
+  /** Chapitre supporter Matchs (live, proday, …). */
+  supporterChapter?: 'upcoming' | 'live' | 'proday' | 'world' | 'follows' | 'broadcasts';
   /** Ouvre directement Matchs à organiser / proposer / chercher. */
   view?: 'organize' | 'propose' | 'search';
 };

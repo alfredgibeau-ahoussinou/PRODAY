@@ -541,6 +541,8 @@ export const UI_EN: MessageCatalog = {
   'supporter.match.action.moment': 'Moment',
   'supporter.date.today': 'Today',
   'supporter.date.tomorrow': 'Tomorrow',
+  'supporter.date.thisWeek': 'This week',
+  'supporter.date.thisWeekend': 'This weekend',
   'supporter.matchs.heroKickoffs': 'Next kick-offs',
   'supporter.followType.tournament': 'Followed tournament',
   'supporter.followType.player': 'Followed player',

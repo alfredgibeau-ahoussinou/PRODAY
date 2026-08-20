@@ -66,9 +66,9 @@ function page(
 export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIdentity> = {
   tribune: page({
     id: 'tribune',
-    eyebrow: 'Ta tribune',
-    title: 'Ta tribune',
-    support: 'En direct, tes clubs, le monde entier. 100 % gratuit.',
+    eyebrow: 'Centre du football',
+    title: 'Accueil',
+    support: 'Live, tes clubs, ProDay et le monde — tout le football en un lieu.',
     icon: 'home',
     motif: 'none',
   }),
@@ -82,10 +82,10 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
   }),
   suivis: page({
     id: 'suivis',
-    eyebrow: 'Tes clubs',
-    title: 'Suivis',
-    support: 'Joueurs, clubs et tournois — illimité et gratuit.',
-    icon: 'heart',
+    eyebrow: 'Explorer',
+    title: 'Explorer',
+    support: 'Clubs, ligues, matchs et vidéos — recherche globale.',
+    icon: 'search',
     motif: 'none',
   }),
   debats: page({
@@ -98,9 +98,9 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
   }),
   moments: page({
     id: 'moments',
-    eyebrow: 'Highlights',
-    title: 'Moments',
-    support: 'Reels et clips de la communauté.',
+    eyebrow: 'Vidéos',
+    title: 'Vidéos',
+    support: 'Replays ProDay, highlights et clips communauté (droits vérifiés).',
     icon: 'videocam',
     motif: 'none',
   }),

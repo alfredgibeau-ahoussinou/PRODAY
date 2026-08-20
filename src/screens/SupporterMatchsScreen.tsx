@@ -12,6 +12,8 @@ import { useTranslation } from '../context/LocaleContext';
 import { useSeasonCalendar } from '../hooks/useAppData';
 import { useTournaments } from '../hooks/useTournaments';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
+import { useTabNavigation } from '../context/TabNavigationContext';
+import { SUPPORTER_COUNTRY_CHIPS } from '../content/supporterCompetitionsCatalog';
 import { useSupporterMatchHub } from '../hooks/useSupporterMatchHub';
 import { spacing } from '../theme/designTokens';
 import { followsService } from '../services/follows.service';
@@ -43,21 +45,59 @@ const CHAPTER_KEYS: { id: SupporterMatchsChapter; labelKey: string }[] = [
   { id: 'follows', labelKey: 'supporter.chapters.follows' },
 ];
 
+type DateWindow = 'today' | 'tomorrow' | 'week' | 'weekend';
+
+const DATE_WINDOWS: { id: DateWindow; labelKey: string }[] = [
+  { id: 'today', labelKey: 'supporter.date.today' },
+  { id: 'tomorrow', labelKey: 'supporter.date.tomorrow' },
+  { id: 'week', labelKey: 'supporter.date.thisWeek' },
+  { id: 'weekend', labelKey: 'supporter.date.thisWeekend' },
+];
+
 export const SupporterMatchsScreen: React.FC = () => {
   const { profile } = useAuth();
   const { t, locale } = useTranslation();
   const nav = useTabNavigationActions();
+  const { pendingMatchsLink, clearPendingMatchs } = useTabNavigation();
   const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
   const { tournaments } = useTournaments();
   const [chapter, setChapter] = useState<SupporterMatchsChapter>(DEFAULT_SUPPORTER_MATCHS_CHAPTER);
   const [follows, setFollows] = useState<Follow[]>([]);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
+  const [dateWindow, setDateWindow] = useState<DateWindow>('today');
+  const [countryCode, setCountryCode] = useState<string | undefined>(undefined);
   const [filters, setFilters] = useState<SupporterMatchFilters>({
     gender: 'all',
     source: 'all',
     scope: 'all',
     competition: 'all',
   });
+
+  useEffect(() => {
+    if (!pendingMatchsLink?.supporterChapter) return;
+    setChapter(pendingMatchsLink.supporterChapter);
+    clearPendingMatchs();
+  }, [pendingMatchsLink, clearPendingMatchs]);
+
+  const matchesDateWindow = useCallback(
+    (startsAt?: Date) => {
+      if (!startsAt || chapter !== 'upcoming') return true;
+      const now = new Date();
+      const start = new Date(startsAt);
+      const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const itemDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const diffDays = Math.round((itemDay.getTime() - dayStart.getTime()) / 86_400_000);
+      if (dateWindow === 'today') return diffDays === 0;
+      if (dateWindow === 'tomorrow') return diffDays === 1;
+      if (dateWindow === 'week') return diffDays >= 0 && diffDays <= 6;
+      if (dateWindow === 'weekend') {
+        const dow = itemDay.getDay();
+        return diffDays >= 0 && diffDays <= 6 && (dow === 0 || dow === 6 || dow === 5);
+      }
+      return true;
+    },
+    [chapter, dateWindow],
+  );
 
   const loadFollows = useCallback(async () => {
     if (!profile?.uid) return;
@@ -180,7 +220,9 @@ export const SupporterMatchsScreen: React.FC = () => {
     content = <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginTop: spacing.lg }} />;
   } else if (chapter === 'upcoming') {
     const heroIds = new Set(hub.heroKickoffs.map((item) => item.id));
-    const rest = hub.sections.upcoming.filter((item) => !heroIds.has(item.id));
+    const rest = hub.sections.upcoming
+      .filter((item) => !heroIds.has(item.id))
+      .filter((item) => matchesDateWindow(item.startsAt));
     const groups = groupUpcomingByDateThenCompetition(rest);
     content =
       groups.length > 0 ? (
@@ -315,6 +357,48 @@ export const SupporterMatchsScreen: React.FC = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.dateWindows}
+        >
+          {DATE_WINDOWS.map((entry) => {
+            const active = entry.id === dateWindow;
+            return (
+              <Pressable
+                key={entry.id}
+                onPress={() => setDateWindow(entry.id)}
+                style={[styles.dateChip, active && styles.dateChipOn]}
+              >
+                <ProDayText variant="caption" style={[styles.dateChipLabel, active && styles.dateChipLabelOn]}>
+                  {t(entry.labelKey)}
+                </ProDayText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+        {(chapter === 'world' || chapter === 'upcoming') ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dateWindows}
+          >
+            {SUPPORTER_COUNTRY_CHIPS.map((c) => {
+              const active = countryCode === c.code;
+              return (
+                <Pressable
+                  key={c.code}
+                  onPress={() => setCountryCode(active ? undefined : c.code)}
+                  style={[styles.dateChip, active && styles.dateChipOn]}
+                >
+                  <ProDayText variant="caption" style={[styles.dateChipLabel, active && styles.dateChipLabelOn]}>
+                    {c.label}
+                  </ProDayText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : null}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabs}
         >
           {CHAPTER_KEYS.map((entry) => {
@@ -378,6 +462,33 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
     gap: spacing.lg,
     alignItems: 'flex-end',
+  },
+  dateWindows: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+    paddingBottom: spacing.sm,
+  },
+  dateChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+    backgroundColor: SUPPORTER_SITE.elevated,
+  },
+  dateChipOn: {
+    borderColor: SUPPORTER_SITE.accent,
+    backgroundColor: SUPPORTER_SITE.soft,
+  },
+  dateChipLabel: {
+    color: SUPPORTER_SITE.muted,
+    fontSize: 11,
+    letterSpacing: 0.3,
+  },
+  dateChipLabelOn: {
+    color: SUPPORTER_SITE.foreground,
+    fontWeight: '700',
   },
   tab: {
     paddingTop: spacing.xs,

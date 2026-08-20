@@ -54,6 +54,10 @@ export interface ExternalFixtureEventsResult {
   events: import('../models/TeamEvent').LiveMatchAction[];
 }
 
+export interface ExternalFixtureStatisticsResult {
+  statistics: import('./footballData/types').FootballMatchStatistics | null;
+}
+
 export type ExternalScoresSource = 'mock' | 'api_football' | 'api_stub';
 
 export interface ExternalScoresProviderState {
@@ -85,6 +89,7 @@ export interface ExternalScoresProvider {
   listRecentFinishedFixtures?(): Promise<ExternalFixture[]>;
   getFixtureLineups?(fixtureId: string): Promise<ExternalFixtureLineupsResult>;
   getFixtureEvents?(fixtureId: string): Promise<ExternalFixtureEventsResult>;
+  getFixtureStatistics?(fixtureId: string): Promise<ExternalFixtureStatisticsResult>;
   searchTeams?(query: string): Promise<ExternalTeamHit[]>;
   getState(): Promise<ExternalScoresProviderState>;
 }

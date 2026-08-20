@@ -299,12 +299,12 @@ export function getTabShortLabel(
     if (tab === 'feed') return 'Perf.';
   }
   if (line === 'supporter') {
-    if (tab === 'home') return 'Tribune';
+    if (tab === 'home') return 'Accueil';
     if (tab === 'matchs') return 'Matchs';
-    if (tab === 'feed') return 'Suivis';
+    if (tab === 'feed') return 'Explorer';
     if (tab === 'messages') return 'Fil';
-    if (tab === 'reels') return 'Moments';
-    if (tab === 'profil') return 'Compte';
+    if (tab === 'reels') return 'Vidéos';
+    if (tab === 'profil') return 'Profil';
     if (tab === 'shop') return 'Shop';
   }
   if (isProFamilyLine(line) && role === 'club') {
@@ -514,8 +514,8 @@ export function getDashboardMetaForLine(
   if (line === 'supporter') {
     return {
       ...meta,
-      eyebrow: role === 'supporter' ? 'TRIBUNE SUPPORTER' : meta.eyebrow,
-      title: role === 'supporter' ? 'Votre tribune numérique' : meta.title,
+      eyebrow: role === 'supporter' ? 'CENTRE DU FOOTBALL' : meta.eyebrow,
+      title: role === 'supporter' ? 'Votre centre du football' : meta.title,
     };
   }
   if (isProFamilyLine(line)) {

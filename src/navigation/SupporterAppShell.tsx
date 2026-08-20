@@ -9,7 +9,11 @@ import {
 } from './resolveMainTabScreen';
 import { TabNavigationProvider } from '../context/TabNavigationContext';
 import { SupporterShellProvider } from '../context/SupporterShellContext';
-import { BottomTabBar } from '../components/navigation/BottomTabBar';
+import { SupporterMediaTabBar } from '../components/navigation/SupporterMediaTabBar';
+import {
+  SUPPORTER_OVERFLOW_TABS,
+  SUPPORTER_SHELL_TABS,
+} from './shells/productShellTabs';
 import { AnimatedTabContent } from '../components/motion';
 import { ProdayNotificationBridge } from '../components/ProdayNotificationBridge';
 import { ProdayBrainBridge } from '../components/ProdayBrainBridge';
@@ -159,11 +163,18 @@ export const SupporterAppShell: React.FC = () => {
                 <Screen />
               </AnimatedTabContent>
             </View>
-            <BottomTabBar
+            <SupporterMediaTabBar
               activeTab={activeTab}
               onTabPress={handleTabPress}
+              onLivePress={() => {
+                setPendingMatchsLink({ supporterChapter: 'live' });
+                handleTabPress('matchs');
+              }}
               unreadCount={unreadCount}
-              visibleTabs={screenTabs}
+              visibleTabs={screenTabs.filter((t) => SUPPORTER_SHELL_TABS.includes(t))}
+              overflowTabs={SUPPORTER_OVERFLOW_TABS.filter((t) =>
+                screenTabs.includes(t) || SUPPORTER_OVERFLOW_TABS.includes(t),
+              )}
             />
           </SafeAreaView>
         </SupporterShellProvider>

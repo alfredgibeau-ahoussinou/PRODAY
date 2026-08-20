@@ -15,16 +15,16 @@ import {
 } from '../content/supporterPageIdentity';
 
 describe('supporter shell navigation', () => {
-  it('expose 5 onglets tribune primaires', () => {
+  it('expose 5 onglets media center + overflow fil', () => {
     expect(getVisibleMainTabs('supporter', 'supporter')).toEqual(SUPPORTER_SHELL_TABS);
     expect(SUPPORTER_SHELL_TABS).toEqual([
       'home',
       'matchs',
       'feed',
-      'messages',
+      'reels',
       'profil',
     ]);
-    expect(SUPPORTER_OVERFLOW_TABS).toEqual(['reels', 'shop']);
+    expect(SUPPORTER_OVERFLOW_TABS).toEqual(['messages', 'shop']);
   });
 });
 
@@ -42,15 +42,13 @@ describe('supporter nav config', () => {
 });
 
 describe('supporterPageIdentity', () => {
-  it('aligne l’accent sur le site /supporter (violet fan tribune)', () => {
+  it('aligne l’accent sur le centre du football V2', () => {
     expect(SUPPORTER_SITE.accent).toBe('#3C00F0');
     expect(SUPPORTER_SITE.live).toBe('#34D399');
-    expect(SUPPORTER_SITE.deep).toBe('#180078');
-    expect(getSupporterPageIdentity('tribune').title).toMatch(/tribune/i);
-    expect(getSupporterPageIdentity('tribune').eyebrow).toBe('Ta tribune');
+    expect(getSupporterPageIdentity('tribune').title).toMatch(/accueil/i);
+    expect(getSupporterPageIdentity('tribune').eyebrow).toBe('Centre du football');
     expect(supporterPageFromTab('feed')).toBe('suivis');
-    expect(supporterPageFromTab('messages')).toBe('debats');
-    expect(getSupporterPageIdentity('debats').title).toBe('Fil');
-    expect(findSupporterNavItem('debats')?.label).toBe('Fil');
+    expect(supporterPageFromTab('reels')).toBe('moments');
+    expect(getSupporterPageIdentity('moments').title).toBe('Vidéos');
   });
 });

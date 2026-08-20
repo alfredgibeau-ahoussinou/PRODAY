@@ -54,11 +54,11 @@ export const SUPPORTER_SHELL_TABS: MainTabId[] = [
   'home',
   'matchs',
   'feed',
-  'messages',
+  'reels',
   'profil',
 ];
 
-export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = ['reels', 'shop'];
+export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = ['messages', 'shop'];
 
 export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
   'home',

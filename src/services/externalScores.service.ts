@@ -380,6 +380,9 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
   async getFixtureEvents() {
     return { events: [] as LiveMatchAction[] };
   },
+  async getFixtureStatistics() {
+    return { statistics: null };
+  },
   async searchTeams(query: string): Promise<ExternalTeamHit[]> {
     const curated = searchCuratedPopularClubs(query, 12);
     const q = query.trim().toLowerCase();
@@ -421,6 +424,9 @@ const apiStubProvider: ExternalScoresProvider = {
   },
   async getFixtureEvents() {
     return { events: [] };
+  },
+  async getFixtureStatistics() {
+    return { statistics: null };
   },
   async searchTeams(query: string): Promise<ExternalTeamHit[]> {
     return searchCuratedPopularClubs(query, 12);
@@ -546,6 +552,16 @@ export const externalScoresService = {
     return withProviderFallback(
       async (provider) => provider.getFixtureEvents?.(fixtureId) ?? { events: [] },
       async () => ({ events: [] as LiveMatchAction[] }),
+    );
+  },
+
+  async getFixtureStatistics(fixtureId: string) {
+    return withProviderFallback(
+      async (provider) => {
+        const res = await provider.getFixtureStatistics?.(fixtureId);
+        return res?.statistics ?? null;
+      },
+      async () => null,
     );
   },
 

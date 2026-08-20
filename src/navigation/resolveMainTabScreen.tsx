@@ -18,7 +18,6 @@ import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { RetiredRoleScreen } from '../screens/RetiredRoleScreen';
 import { SupporterMatchsScreen } from '../screens/SupporterMatchsScreen';
-import { SupporterSuivisScreen } from '../screens/SupporterSuivisScreen';
 import { SupporterProfileTabScreen } from '../screens/SupporterProfileTabScreen';
 import { ClubPortalScreen } from '../screens/club/ClubPortalScreen';
 import { CoachPortalScreen } from '../screens/coach/CoachPortalScreen';
@@ -26,7 +25,9 @@ import { ClubRecruitmentScreen } from '../screens/club/ClubRecruitmentScreen';
 import { ClubCalendarScreen } from '../screens/club/ClubCalendarScreen';
 import { ClubCommunicationScreen } from '../screens/club/ClubCommunicationScreen';
 import { ClubVitrineScreen } from '../screens/club/ClubVitrineScreen';
-import { SupporterHomeScreen } from '../screens/supporter/SupporterHomeScreen';
+import { SupporterFootballHubScreen } from '../screens/supporter/SupporterFootballHubScreen';
+import { SupporterExplorerScreen } from '../screens/supporter/SupporterExplorerScreen';
+import { SupporterVideosScreen } from '../screens/supporter/SupporterVideosScreen';
 import { SupporterTribuneFeedScreen } from '../screens/supporter/SupporterTribuneFeedScreen';
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerSquadScreen } from '../screens/proPlayer/ProPlayerSquadScreen';
@@ -53,9 +54,10 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
 };
 
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: SupporterHomeScreen,
+  home: SupporterFootballHubScreen,
   matchs: SupporterMatchsScreen,
-  feed: SupporterSuivisScreen,
+  feed: SupporterExplorerScreen,
+  reels: SupporterVideosScreen,
   messages: SupporterTribuneFeedScreen,
   profil: SupporterProfileTabScreen,
 };

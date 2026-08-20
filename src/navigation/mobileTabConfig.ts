@@ -58,8 +58,8 @@ type FlatRailRule = {
 const FLAT_RAIL_RULES: FlatRailRule[] = [
   {
     match: (line, role) => line === 'supporter' && role === 'supporter',
-    primary: ['home', 'matchs', 'feed', 'messages', 'profil'],
-    overflow: ['reels', 'shop'],
+    primary: ['home', 'matchs', 'feed', 'reels', 'profil'],
+    overflow: ['messages', 'shop'],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'player',

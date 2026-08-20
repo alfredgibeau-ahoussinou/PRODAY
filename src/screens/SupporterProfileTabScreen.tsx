@@ -19,6 +19,7 @@ import {
 } from '../services/supporterPreferences.service';
 import { spacing, radius } from '../theme/designTokens';
 import { EditProfileScreen } from './EditProfileScreen';
+import { SupporterSuivisScreen } from './SupporterSuivisScreen';
 
 export const SupporterProfileTabScreen: React.FC = () => {
   const { signOut, refreshProfile } = useAuth();
@@ -31,6 +32,8 @@ export const SupporterProfileTabScreen: React.FC = () => {
   const [tournamentCount, setTournamentCount] = useState(0);
   const [notifPrefs, setNotifPrefs] = useState<SupporterNotificationPreferences | null>(null);
   const [showEdit, setShowEdit] = useState(false);
+  const [showSuivis, setShowSuivis] = useState(false);
+  const matchFollowCount = clubCount + tournamentCount;
 
   const loadFollows = useCallback(async () => {
     if (!profile?.uid) return;
@@ -121,6 +124,23 @@ export const SupporterProfileTabScreen: React.FC = () => {
     );
   }
 
+  if (showSuivis) {
+    return (
+      <View style={{ flex: 1 }}>
+        <PressableSpring
+          style={[styles.backLink, { borderColor: colors.border }]}
+          onPress={() => setShowSuivis(false)}
+          haptic
+        >
+          <ProDayText variant="caption" accent>
+            ← Profil
+          </ProDayText>
+        </PressableSpring>
+        <SupporterSuivisScreen />
+      </View>
+    );
+  }
+
   return (
     <>
       <SupporterPageFrame identity={getSupporterPageIdentity('compte')} badge="100 % gratuit">
@@ -153,16 +173,36 @@ export const SupporterProfileTabScreen: React.FC = () => {
 
           <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
             <ProDayText variant="eyebrow" muted>
+              Mon histoire football
+            </ProDayText>
+            <ProDayText variant="body">
+              {matchFollowCount} match{matchFollowCount !== 1 ? 's' : ''} et clubs suivis · {clubCount} club{clubCount !== 1 ? 's' : ''}
+            </ProDayText>
+            <ProDayText variant="caption" muted>
+              Historique de visionnage — bientôt synchronisé
+            </ProDayText>
+          </ProDaySurface>
+
+          <ProDaySurface variant="module" style={[styles.card, { borderColor: colors.border }]}>
+            <ProDayText variant="eyebrow" muted>
               {t('supporter.profile.follows')}
             </ProDayText>
             <ProDayText variant="body">{summary}</ProDayText>
             <PressableSpring
               style={[styles.linkBtn, { borderColor: colors.border }]}
-              onPress={() => nav.setActiveTab('feed')}
+              onPress={() => setShowSuivis(true)}
               haptic
             >
-              <Icon name="star-four-points" size={16} color={colors.accent} />
-              <ProDayText variant="caption">{t('supporter.profile.manageFollows')}</ProDayText>
+              <Icon name="heart" size={16} color={colors.accent} />
+              <ProDayText variant="caption">Mes clubs et suivis</ProDayText>
+            </PressableSpring>
+            <PressableSpring
+              style={[styles.linkBtn, { borderColor: colors.border, marginTop: spacing.sm }]}
+              onPress={() => nav.setActiveTab('messages')}
+              haptic
+            >
+              <Icon name="chat" size={16} color={colors.accent} />
+              <ProDayText variant="caption">Fil communauté</ProDayText>
             </PressableSpring>
           </ProDaySurface>
 
@@ -203,11 +243,11 @@ export const SupporterProfileTabScreen: React.FC = () => {
 
           <PressableSpring
             style={[styles.menuRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            onPress={() => nav.setActiveTab('shop')}
+            onPress={() => nav.setActiveTab('reels')}
             haptic
           >
-            <Icon name="bag" size={18} color={colors.accent} />
-            <ProDayText variant="body">{t('supporter.profile.shop')}</ProDayText>
+            <Icon name="videocam" size={18} color={colors.accent} />
+            <ProDayText variant="body">Vidéos</ProDayText>
           </PressableSpring>
 
           <TouchableOpacity
@@ -243,6 +283,15 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
     gap: spacing.md,
+  },
+  backLink: {
+    margin: spacing.lg,
+    marginBottom: 0,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    alignSelf: 'flex-start',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.md,
   },
   guest: {
     padding: spacing.lg,

@@ -290,6 +290,7 @@ let lastMessage: string | undefined;
 
 const LINEUPS_CACHE_TTL_MS = 120_000;
 const EVENTS_CACHE_TTL_MS = 30_000;
+const STATS_CACHE_TTL_MS = 5 * 60_000;
 const TEAMS_CACHE_TTL_MS = 5 * 60_000;
 const RECENT_CACHE_TTL_MS = 120_000;
 
@@ -489,6 +490,41 @@ export function createApiFootballProvider(): ExternalScoresProvider {
         return { events };
       } catch {
         return { events: [] };
+      }
+    },
+    async getFixtureStatistics(fixtureId: string) {
+      const apiKey = readApiKey();
+      const numericId = parseNumericFixtureId(fixtureId);
+      if (!apiKey || numericId == null) return { statistics: null };
+      const cacheKey = `stats:${numericId}`;
+      const cached = readJsonCache<{ statistics: Record<string, Record<string, string | number>> | null }>(
+        cacheKey,
+      );
+      if (cached) return { statistics: cached.statistics as import('./footballData/types').FootballMatchStatistics | null };
+      try {
+        const payload = await fetchJson<{
+          response?: Array<{
+            team?: { name?: string };
+            statistics?: Array<{ type?: string; value?: string | number | null }>;
+          }>;
+        }>(`${readBaseUrl()}/fixtures/statistics?fixture=${numericId}`, apiKey);
+        const rows = payload.response ?? [];
+        if (rows.length < 2) {
+          writeJsonCache(cacheKey, { statistics: null }, STATS_CACHE_TTL_MS);
+          return { statistics: null };
+        }
+        const mapRow = (row: (typeof rows)[0]) => {
+          const stats: Record<string, string | number> = {};
+          for (const entry of row.statistics ?? []) {
+            if (entry.type && entry.value != null) stats[entry.type] = entry.value;
+          }
+          return stats;
+        };
+        const statistics = { home: mapRow(rows[0]), away: mapRow(rows[1]) };
+        writeJsonCache(cacheKey, { statistics }, STATS_CACHE_TTL_MS);
+        return { statistics };
+      } catch {
+        return { statistics: null };
       }
     },
     async searchTeams(query: string): Promise<ExternalTeamHit[]> {

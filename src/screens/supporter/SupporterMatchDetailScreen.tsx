@@ -13,23 +13,33 @@ import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
 import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
 import { useTranslation } from '../../context/LocaleContext';
-import { LIVE_ACTION_LABELS, type LiveMatchAction, type TeamEvent } from '../../models/TeamEvent';
-import { teamEventsService } from '../../services/teamEvents.service';
-import { externalScoresService } from '../../services/externalScores.service';
+import { LIVE_ACTION_LABELS, type LiveMatchAction } from '../../models/TeamEvent';
 import { spacing } from '../../theme/designTokens';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import {
   liveStateFromMatchItem,
-  parseProdayEventId,
-  parseWorldFixtureApiId,
   syntheticEventFromLineup,
   type ExternalFixtureLineup,
 } from '../../utils/supporterMatchDetail';
-import { extractProdayOfficialWatchUrl } from '../../utils/supporterBroadcast';
-
-type DetailTab = 'score' | 'lineup' | 'actions';
+import {
+  fetchMatchCenterData,
+  type MatchCenterData,
+  type MatchCenterTabId,
+} from '../../services/footballData';
+import { SupporterMatchCommunityPanel } from '../../features/supporter/components/SupporterMatchCommunityPanel';
+import { useSupporterAgent } from '../../agents/supporterAgent/useSupporterAgent';
+import { canPlaySupporterVideo } from '../../models/SupporterVideo';
 
 const POLL_MS = 40_000;
+
+const TAB_LABELS: Record<MatchCenterTabId, string> = {
+  resume: 'Résumé',
+  live: 'Live',
+  stats: 'Stats',
+  video: 'Vidéo',
+  analyse: 'Analyse',
+  moments: 'Moments',
+};
 
 export type SupporterMatchDetailScreenProps = {
   item: SupporterMatchViewItem;
@@ -45,95 +55,205 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
   onToggleClub,
 }) => {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<DetailTab>('score');
-  const [lineups, setLineups] = useState<ExternalFixtureLineup[]>([]);
-  const [actions, setActions] = useState<LiveMatchAction[]>(() => []);
-  const [prodayEvent, setProdayEvent] = useState<TeamEvent | null>(null);
+  const agent = useSupporterAgent();
+  const [center, setCenter] = useState<MatchCenterData | null>(null);
+  const [tab, setTab] = useState<MatchCenterTabId>('resume');
   const [loading, setLoading] = useState(true);
   const [liveItem, setLiveItem] = useState(item);
 
   const load = useCallback(async () => {
-    const prodayId = parseProdayEventId(item.id);
-    const apiId = parseWorldFixtureApiId(item.id);
-    if (prodayId) {
-      const event = await teamEventsService.getById(prodayId);
-      setProdayEvent(event);
-      setActions(event?.live_actions ?? []);
-      setLoading(false);
-      return;
+    setLoading(true);
+    const data = await fetchMatchCenterData(item.id);
+    if (data) {
+      setCenter(data);
+      setLiveItem(data.item);
+      setTab(data.availableTabs[0] ?? 'resume');
     }
-    if (apiId != null) {
-      const fixtureKey = `api_${apiId}`;
-      const [lineupRes, eventRes] = await Promise.all([
-        externalScoresService.getFixtureLineups(fixtureKey),
-        externalScoresService.getFixtureEvents(fixtureKey),
-      ]);
-      setLineups(lineupRes.lineups);
-      setActions(eventRes.events);
-      setLoading(false);
-      return;
-    }
-    setLineups([]);
-    setActions([]);
     setLoading(false);
   }, [item.id]);
 
   useEffect(() => {
-    setLiveItem(item);
-    setLoading(true);
     void load();
-  }, [item, load]);
+  }, [load]);
 
   useEffect(() => {
     if (item.status !== 'live') return undefined;
-    const timer = setInterval(() => {
-      void load();
-    }, POLL_MS);
+    const timer = setInterval(() => void load(), POLL_MS);
     return () => clearInterval(timer);
   }, [item.status, load]);
 
   const liveState = liveStateFromMatchItem({
     ...liveItem,
-    scoreHome: prodayEvent?.live_state?.home_score ?? liveItem.scoreHome,
-    scoreAway: prodayEvent?.live_state?.away_score ?? liveItem.scoreAway,
-    minute: prodayEvent?.live_state?.minute ?? liveItem.minute,
+    scoreHome: center?.prodayEvent?.live_state?.home_score ?? liveItem.scoreHome,
+    scoreAway: center?.prodayEvent?.live_state?.away_score ?? liveItem.scoreAway,
+    minute: center?.prodayEvent?.live_state?.minute ?? liveItem.minute,
     status:
-      prodayEvent?.live_state?.status === 'live' || prodayEvent?.live_state?.status === 'halftime'
+      center?.prodayEvent?.live_state?.status === 'live' ||
+      center?.prodayEvent?.live_state?.status === 'halftime'
         ? 'live'
         : liveItem.status,
   });
 
-  const officialWatch =
-    liveItem.watchUrl ??
-    (prodayEvent
-      ? extractProdayOfficialWatchUrl({
-          public_watch_url: prodayEvent.public_watch_url,
-          description: prodayEvent.description,
-        })
-      : undefined);
+  const officialWatch = liveItem.watchUrl;
+  const lineups: ExternalFixtureLineup[] = center?.lineups ?? [];
+  const actions: LiveMatchAction[] = center?.events ?? [];
+  const statistics = center?.statistics;
 
   const lineupEvents = useMemo(() => {
-    if (prodayEvent?.lineup) {
+    if (center?.prodayEvent?.lineup) {
       return [
         {
-          teamName: prodayEvent.club_name ?? liveItem.homeLabel,
-          lineup: prodayEvent.lineup,
+          teamName: center.prodayEvent.club_name ?? liveItem.homeLabel,
+          lineup: center.prodayEvent.lineup,
         },
       ];
     }
     return lineups;
-  }, [prodayEvent, lineups, liveItem.homeLabel]);
+  }, [center?.prodayEvent, lineups, liveItem.homeLabel]);
 
   const timeline = useMemo(
     () => [...actions].sort((a, b) => a.minute - b.minute),
     [actions],
   );
 
-  const tabs: { id: DetailTab; label: string }[] = [
-    { id: 'score', label: t('supporter.detail.tab.score') },
-    { id: 'lineup', label: t('supporter.detail.tab.lineup') },
-    { id: 'actions', label: t('supporter.detail.tab.actions') },
-  ];
+  const tabs = center?.availableTabs ?? ['resume'];
+
+  const renderStats = () => {
+    if (!statistics) {
+      return (
+        <ProDayText variant="body" style={styles.muted}>
+          Statistique non disponible
+        </ProDayText>
+      );
+    }
+    const keys = Object.keys(statistics.home);
+    return keys.map((key) => (
+      <View key={key} style={styles.statRow}>
+        <ProDayText variant="caption" style={styles.statVal}>
+          {String(statistics.home[key] ?? '—')}
+        </ProDayText>
+        <ProDayText variant="caption" style={styles.statKey}>
+          {key}
+        </ProDayText>
+        <ProDayText variant="caption" style={styles.statVal}>
+          {String(statistics.away[key] ?? '—')}
+        </ProDayText>
+      </View>
+    ));
+  };
+
+  const renderTabBody = () => {
+    if (loading) {
+      return <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginTop: spacing.lg }} />;
+    }
+    switch (tab) {
+      case 'resume':
+        return (
+          <>
+            <ProDayText variant="caption" style={styles.muted}>
+              {liveItem.meta ?? t('supporter.detail.scoreHint')}
+            </ProDayText>
+            {timeline.slice(0, 5).map((action) => (
+              <View key={action.id} style={styles.actionRow}>
+                <ProDayText variant="caption" style={styles.minute}>
+                  {action.minute}'
+                </ProDayText>
+                <ProDayText variant="caption" style={styles.muted}>
+                  {LIVE_ACTION_LABELS[action.type]} — {action.player_name}
+                </ProDayText>
+              </View>
+            ))}
+          </>
+        );
+      case 'live':
+        return (
+          <>
+            {timeline.length === 0 ? (
+              <ProDayText variant="body" style={styles.muted}>
+                {t('supporter.detail.actionsEmpty')}
+              </ProDayText>
+            ) : (
+              timeline.map((action) => (
+                <View key={action.id} style={styles.actionRow}>
+                  <ProDayText variant="caption" style={styles.minute}>
+                    {action.minute}'
+                  </ProDayText>
+                  <View style={styles.actionCopy}>
+                    <ProDayText variant="section" style={styles.actionTitle}>
+                      {LIVE_ACTION_LABELS[action.type]}
+                    </ProDayText>
+                    <ProDayText variant="caption" style={styles.muted}>
+                      {action.player_name}
+                    </ProDayText>
+                  </View>
+                </View>
+              ))
+            )}
+            <SupporterMatchCommunityPanel
+              homeScore={liveItem.scoreHome}
+              awayScore={liveItem.scoreAway}
+            />
+          </>
+        );
+      case 'stats':
+        return renderStats();
+      case 'video':
+        return officialWatch && canPlaySupporterVideo({ id: 'x', kind: 'proday_full', rights: 'AVAILABLE', title: '', watchUrl: officialWatch }) ? (
+          <PressableSpring onPress={() => void Linking.openURL(officialWatch)} scaleTo={0.98}>
+            <ProDayText variant="section" style={styles.link}>
+              {t('supporter.broadcast.open')}
+            </ProDayText>
+          </PressableSpring>
+        ) : (
+          <ProDayText variant="body" style={styles.muted}>
+            Vidéo non disponible pour ce match.
+          </ProDayText>
+        );
+      case 'analyse':
+        return (
+          <>
+            <PressableSpring
+              style={styles.agentBtn}
+              onPress={() => center && void agent.ask('Résume le match', center)}
+              scaleTo={0.98}
+            >
+              <ProDayText variant="caption" style={styles.agentBtnText}>
+                Résumer avec l'IA
+              </ProDayText>
+            </PressableSpring>
+            {agent.lastReply ? (
+              <View style={styles.agentBox}>
+                <ProDayText variant="body" style={styles.muted}>
+                  {agent.lastReply.text}
+                </ProDayText>
+                <ProDayText variant="caption" style={styles.disclaimer}>
+                  {agent.lastReply.disclaimer}
+                </ProDayText>
+              </View>
+            ) : null}
+          </>
+        );
+      case 'moments':
+        return timeline.length === 0 ? (
+          <ProDayText variant="body" style={styles.muted}>
+            Aucun moment enregistré.
+          </ProDayText>
+        ) : (
+          timeline.map((action) => (
+            <Pressable key={action.id} style={styles.actionRow}>
+              <ProDayText variant="caption" style={styles.minute}>
+                {action.minute}'
+              </ProDayText>
+              <ProDayText variant="section" style={styles.actionTitle}>
+                {LIVE_ACTION_LABELS[action.type]}
+              </ProDayText>
+            </Pressable>
+          ))
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <View style={styles.root}>
@@ -149,25 +269,16 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
 
       <MatchLiveScoreboard state={liveState} />
 
-      {liveItem.broadcastListed || officialWatch ? (
+      {officialWatch ? (
         <View style={styles.broadcastRow}>
           <ProDayText variant="caption" style={styles.broadcastChip}>
-            {officialWatch
-              ? t('supporter.broadcast.watchFree')
-              : t('supporter.broadcast.listed', {
-                  channel: liveItem.broadcastLabel ?? '—',
-                })}
+            {t('supporter.broadcast.watchFree')}
           </ProDayText>
-          {officialWatch ? (
-            <PressableSpring
-              onPress={() => void Linking.openURL(officialWatch)}
-              scaleTo={0.98}
-            >
-              <ProDayText variant="caption" style={styles.broadcastLink}>
-                {t('supporter.broadcast.open')}
-              </ProDayText>
-            </PressableSpring>
-          ) : null}
+          <PressableSpring onPress={() => void Linking.openURL(officialWatch)} scaleTo={0.98}>
+            <ProDayText variant="caption" style={styles.broadcastLink}>
+              {t('supporter.broadcast.open')}
+            </ProDayText>
+          </PressableSpring>
         </View>
       ) : null}
 
@@ -192,72 +303,36 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
         </View>
       ) : null}
 
-      <View style={styles.tabs}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
         {tabs.map((entry) => (
-          <Pressable key={entry.id} onPress={() => setTab(entry.id)} style={styles.tab}>
+          <Pressable key={entry} onPress={() => setTab(entry)} style={styles.tab}>
             <ProDayText
               variant="caption"
-              style={[styles.tabLabel, tab === entry.id && styles.tabLabelOn]}
+              style={[styles.tabLabel, tab === entry && styles.tabLabelOn]}
             >
-              {entry.label}
+              {TAB_LABELS[entry]}
             </ProDayText>
-            <View style={[styles.tabRule, tab === entry.id && styles.tabRuleOn]} />
+            <View style={[styles.tabRule, tab === entry && styles.tabRuleOn]} />
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        {loading ? (
-          <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginTop: spacing.lg }} />
-        ) : tab === 'score' ? (
-          <ProDayText variant="caption" style={styles.muted}>
-            {t('supporter.detail.scoreHint')}
-          </ProDayText>
-        ) : tab === 'lineup' ? (
-          lineupEvents.length === 0 ? (
-            <ProDayText variant="body" style={styles.muted}>
-              {t('supporter.detail.lineupEmpty')}
-            </ProDayText>
-          ) : (
-            lineupEvents.map((row) => (
-              <View key={row.teamName} style={styles.lineupBlock}>
-                <ProDayText variant="caption" style={styles.comp}>
-                  {row.teamName}
-                </ProDayText>
-                <MatchHubLineupTab
-                  event={syntheticEventFromLineup(
-                    liveItem,
-                    row.teamName,
-                    row.lineup,
-                    timeline,
-                  )}
-                  canEdit={false}
-                  onEditLineup={() => undefined}
-                />
-              </View>
-            ))
-          )
-        ) : timeline.length === 0 ? (
-          <ProDayText variant="body" style={styles.muted}>
-            {t('supporter.detail.actionsEmpty')}
-          </ProDayText>
-        ) : (
-          timeline.map((action) => (
-            <View key={action.id} style={styles.actionRow}>
-              <ProDayText variant="caption" style={styles.minute}>
-                {action.minute}'
+        {tab === 'lineup' as MatchCenterTabId ? null : renderTabBody()}
+        {tab === 'resume' && lineupEvents.length > 0 ? (
+          lineupEvents.map((row) => (
+            <View key={row.teamName} style={styles.lineupBlock}>
+              <ProDayText variant="caption" style={styles.comp}>
+                {row.teamName}
               </ProDayText>
-              <View style={styles.actionCopy}>
-                <ProDayText variant="section" style={styles.actionTitle}>
-                  {LIVE_ACTION_LABELS[action.type]}
-                </ProDayText>
-                <ProDayText variant="caption" style={styles.muted}>
-                  {action.player_name}
-                </ProDayText>
-              </View>
+              <MatchHubLineupTab
+                event={syntheticEventFromLineup(liveItem, row.teamName, row.lineup, timeline)}
+                canEdit={false}
+                onEditLineup={() => undefined}
+              />
             </View>
           ))
-        )}
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -299,11 +374,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textTransform: 'uppercase',
   },
-  followRow: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    gap: 6,
-  },
+  followRow: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, gap: 6 },
   followText: { color: SUPPORTER_SITE.muted, fontSize: 12 },
   tabs: {
     flexDirection: 'row',
@@ -323,6 +394,7 @@ const styles = StyleSheet.create({
   tabRuleOn: { backgroundColor: SUPPORTER_SITE.accent },
   body: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
   muted: { color: SUPPORTER_SITE.muted, lineHeight: 20 },
+  link: { color: SUPPORTER_SITE.accent },
   lineupBlock: { gap: spacing.sm, marginBottom: spacing.lg },
   actionRow: {
     flexDirection: 'row',
@@ -334,4 +406,24 @@ const styles = StyleSheet.create({
   minute: { color: SUPPORTER_SITE.accent, width: 36, fontVariant: ['tabular-nums'] },
   actionCopy: { flex: 1, gap: 2 },
   actionTitle: { color: SUPPORTER_SITE.foreground, fontSize: 14 },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: spacing.sm,
+  },
+  statKey: { flex: 1, color: SUPPORTER_SITE.muted, textAlign: 'center', fontSize: 10 },
+  statVal: { width: 40, color: SUPPORTER_SITE.foreground, textAlign: 'center', fontVariant: ['tabular-nums'] },
+  agentBtn: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 999,
+    backgroundColor: SUPPORTER_SITE.soft,
+    borderWidth: 1,
+    borderColor: SUPPORTER_SITE.border,
+  },
+  agentBtnText: { color: SUPPORTER_SITE.accent, letterSpacing: 0.8 },
+  agentBox: { gap: spacing.sm, marginTop: spacing.md },
+  disclaimer: { color: SUPPORTER_SITE.muted, fontSize: 10, fontStyle: 'italic' },
 });
