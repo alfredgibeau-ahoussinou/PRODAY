@@ -46,6 +46,8 @@ const TAB_LABELS: Record<MatchCenterTabId, string> = {
   resume: 'Résumé',
   live: 'Live',
   stats: 'Stats',
+  compositions: 'Compositions',
+  events: 'Événements',
   video: 'Vidéo',
   analyse: 'Analyse',
   moments: 'Moments',

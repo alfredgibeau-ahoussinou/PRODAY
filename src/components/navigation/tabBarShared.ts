@@ -34,13 +34,14 @@ const AMATEUR_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
 };
 
 const SUPPORTER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
+  home: 'home',
   matchs: 'football',
-  feed: 'search',
-  messages: 'chat',
-  reels: 'videocam',
-  shop: 'bag',
+  feed: 'star-four-points',
+  plus: 'heart',
   profil: 'person',
-  plus: 'hamburger',
+  reels: 'videocam',
+  messages: 'chat',
+  shop: 'bag',
 };
 
 const PRO_PLAYER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {

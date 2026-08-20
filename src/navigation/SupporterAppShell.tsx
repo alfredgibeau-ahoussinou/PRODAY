@@ -3,17 +3,11 @@ import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type MainTabId } from './MainTabs';
-import {
-  resolveMainTabScreen,
-  shouldInjectShopTab,
-} from './resolveMainTabScreen';
+import { resolveMainTabScreen } from './resolveMainTabScreen';
 import { TabNavigationProvider } from '../context/TabNavigationContext';
 import { SupporterShellProvider } from '../context/SupporterShellContext';
 import { BottomTabBar } from '../components/navigation/BottomTabBar';
-import {
-  SUPPORTER_PLUS_DESTINATION_TABS,
-  SUPPORTER_SHELL_TABS,
-} from './shells/productShellTabs';
+import { SUPPORTER_SHELL_TABS } from './shells/productShellTabs';
 import { AnimatedTabContent } from '../components/motion';
 import { ProdayNotificationBridge } from '../components/ProdayNotificationBridge';
 import { ProdayBrainBridge } from '../components/ProdayBrainBridge';
@@ -33,6 +27,7 @@ import {
 } from '../utils/navigationDeepLink';
 import { stampMatchsDeepLink } from '../utils/supporterMatchsDeepLink';
 
+/** Shell Football Hub — dock Accueil · Matchs · ProDay · Favoris · Profil. */
 export const SupporterAppShell: React.FC = () => {
   const profile = useSessionProfile();
   const { productLine, colors: themeColors } = useProductLine();
@@ -53,14 +48,11 @@ export const SupporterAppShell: React.FC = () => {
 
   const screenTabs = useMemo((): MainTabId[] => {
     const merged = [...visibleTabs];
-    for (const tab of SUPPORTER_PLUS_DESTINATION_TABS) {
+    for (const tab of ['reels', 'messages', 'shop'] as MainTabId[]) {
       if (!merged.includes(tab)) merged.push(tab);
     }
-    if (shouldInjectShopTab(profile?.role, productLine) && !merged.includes('shop')) {
-      merged.push('shop');
-    }
     return merged;
-  }, [visibleTabs, profile?.role, productLine]);
+  }, [visibleTabs]);
 
   useEffect(() => {
     if (!screenTabs.includes(activeTab)) {
@@ -94,17 +86,17 @@ export const SupporterAppShell: React.FC = () => {
   const openChat = useCallback(
     (threadId: string) => {
       setPendingChatThreadId(threadId);
-      handleTabPress('messages', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
+      handleTabPress('messages');
     },
-    [handleTabPress, activeTab],
+    [handleTabPress],
   );
 
   const openMatchs = useCallback(
     (link?: MatchsDeepLink) => {
       setPendingMatchsLink(stampMatchsDeepLink(link ?? { supporterChapter: 'upcoming' }));
-      handleTabPress('matchs', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
+      handleTabPress('matchs');
     },
-    [handleTabPress, activeTab],
+    [handleTabPress],
   );
 
   const navigate = useCallback(
@@ -143,7 +135,7 @@ export const SupporterAppShell: React.FC = () => {
         openMatchs,
         clearPendingMatchs: () => setPendingMatchsLink(null),
         pendingMercatoView: null,
-        openMercato: () => handleTabPress('feed', activeTab === 'plus' ? { returnTo: 'plus' } : undefined),
+        openMercato: () => handleTabPress('feed'),
         clearPendingMercato: () => undefined,
         pendingProfileView,
         openProfile: (view) => {
@@ -162,44 +154,43 @@ export const SupporterAppShell: React.FC = () => {
         pendingDashboardView,
         openDashboard: (view) => {
           if (view === 'feed') {
-            handleTabPress('feed', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
+            handleTabPress('feed');
             return;
           }
           setPendingDashboardView(view);
           handleTabPress('home');
         },
         clearPendingDashboard: () => setPendingDashboardView(null),
-        openShop: () =>
-          handleTabPress('shop', activeTab === 'plus' ? { returnTo: 'plus' } : undefined),
+        openShop: () => handleTabPress('shop'),
         pendingCarpoolLink: null as CarpoolDeepLink | null,
         openCarpool: () => undefined,
         clearPendingCarpool: () => undefined,
       }}
     >
       <SupporterShellProvider value={shellValue}>
-          <SafeAreaView
-            style={[styles.root, { backgroundColor: themeColors.background }]}
-            edges={['top', 'left', 'right']}
-          >
-            <StatusBar style="light" />
-            <ProdayNotificationBridge />
-            <ProdayBrainBridge />
-            <View style={[styles.screen, { backgroundColor: themeColors.background }]}>
-              <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
-                <Screen />
-              </AnimatedTabContent>
-            </View>
-            <BottomTabBar
-              activeTab={dockTabs.has(activeTab) ? activeTab : 'plus'}
-              onTabPress={handleTabPress}
-              unreadCount={unreadCount}
-              visibleTabs={[...SUPPORTER_SHELL_TABS]}
-            />
-            <View style={styles.helpLayer} pointerEvents="box-none">
-              <PoleHelpChatbot />
-            </View>
-          </SafeAreaView>
-        </SupporterShellProvider>
+        <SafeAreaView
+          style={[styles.root, { backgroundColor: themeColors.background }]}
+          edges={['top', 'left', 'right']}
+        >
+          <StatusBar style="light" />
+          <ProdayNotificationBridge />
+          <ProdayBrainBridge />
+          <View style={[styles.screen, { backgroundColor: themeColors.background }]}>
+            <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
+              <Screen />
+            </AnimatedTabContent>
+          </View>
+          <BottomTabBar
+            activeTab={dockTabs.has(activeTab) ? activeTab : 'home'}
+            onTabPress={handleTabPress}
+            unreadCount={unreadCount}
+            visibleTabs={[...SUPPORTER_SHELL_TABS]}
+          />
+          <View style={styles.helpLayer} pointerEvents="box-none">
+            <PoleHelpChatbot />
+          </View>
+        </SafeAreaView>
+      </SupporterShellProvider>
     </TabNavigationProvider>
   );
 };

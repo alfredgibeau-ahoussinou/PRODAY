@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SupporterPageFrame } from '../../components/supporter/SupporterPageFrame';
-import { SupporterPlusBackBar } from '../../components/supporter/SupporterPlusBackBar';
+import { FootballHubBackBar } from '../../components/footballHub/FootballHubBackBar';
 import { getSupporterPageIdentity, SUPPORTER_SITE } from '../../content/supporterPageIdentity';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring, PushScreenTransition } from '../../components/motion';
@@ -80,7 +80,7 @@ export const SupporterExplorerScreen: React.FC = () => {
 
   return (
     <SupporterPageFrame identity={getSupporterPageIdentity('suivis')}>
-      <SupporterPlusBackBar />
+      <FootballHubBackBar />
       <View style={styles.searchBox}>
         <TextInput
           value={query}

@@ -18,6 +18,7 @@ export {
 
 export {
   ExternalFootballDataProvider,
+  MergedFootballProvider,
   ProDayFootballDataProvider,
   resetFootballStatsCache,
 } from './providers';

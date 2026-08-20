@@ -10,7 +10,6 @@ import { DiscoverScreen } from './DiscoverScreen';
 import { RetiredRoleScreen } from './RetiredRoleScreen';
 import { isRetiredUserRole } from '../utils/retiredRoles';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
-import { SupporterHomeDashboard } from '../features/home/roles/SupporterHomeDashboard';
 import { AmateurPlayerHomeDashboard } from '../features/home/roles/AmateurPlayerHomeDashboard';
 import { resolveRoleHomeDashboard } from '../features/home/roles/resolveRoleHomeDashboard';
 import { getUserProductLine } from '../utils/productLineAccess';
@@ -122,16 +121,6 @@ export const HomeScreen: React.FC = () => {
     if (!profile) return null;
     if (isRetiredUserRole(profile.role)) {
       return <RetiredRoleScreen />;
-    }
-    if (profile.role === 'supporter') {
-      return (
-        <SupporterHomeDashboard
-          profile={profile}
-          unreadMessages={unreadMessages}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
-        />
-      );
     }
     if (isAmateurPlayer) {
       return (

@@ -37,7 +37,6 @@ import {
   PRO_ORGANIZER_SHELL_TABS,
   PRO_PLAYER_SHELL_TABS,
   PRO_PLAYER_OVERFLOW_TABS,
-  SUPPORTER_PLUS_DESTINATION_TABS,
   SUPPORTER_SHELL_TABS,
 } from '../navigation/shells/productShellTabs';
 
@@ -213,7 +212,7 @@ export function getVisibleMainTabs(
       tabs = [...AMATEUR_COACH_SHELL_TABS, ...AMATEUR_COACH_OVERFLOW_TABS];
     }
   } else if (effectiveLine === 'supporter') {
-    tabs = [...SUPPORTER_SHELL_TABS, ...SUPPORTER_PLUS_DESTINATION_TABS];
+    tabs = [...SUPPORTER_SHELL_TABS];
   } else if (effectiveLine === 'sponsor' || r === 'sponsor') {
     tabs = [...SPONSOR_MAIN_TABS];
   } else if (isProFamilyLine(effectiveLine)) {
@@ -302,11 +301,11 @@ export function getTabShortLabel(
   if (line === 'supporter') {
     if (tab === 'home') return 'Accueil';
     if (tab === 'matchs') return 'Matchs';
-    if (tab === 'feed') return 'Explorer';
-    if (tab === 'messages') return 'Fil';
-    if (tab === 'reels') return 'Vidéos';
+    if (tab === 'feed') return 'ProDay';
+    if (tab === 'plus') return 'Favoris';
     if (tab === 'profil') return 'Profil';
-    if (tab === 'plus') return 'Plus';
+    if (tab === 'reels') return 'Vidéos';
+    if (tab === 'messages') return 'Fil';
     if (tab === 'shop') return 'Shop';
   }
   if (isProFamilyLine(line) && role === 'club') {
@@ -516,8 +515,8 @@ export function getDashboardMetaForLine(
   if (line === 'supporter') {
     return {
       ...meta,
-      eyebrow: role === 'supporter' ? 'CENTRE DU FOOTBALL' : meta.eyebrow,
-      title: role === 'supporter' ? 'Votre centre du football' : meta.title,
+      eyebrow: role === 'supporter' ? 'FOOTBALL HUB' : meta.eyebrow,
+      title: role === 'supporter' ? 'PRODAY Football Hub' : meta.title,
     };
   }
   if (isProFamilyLine(line)) {

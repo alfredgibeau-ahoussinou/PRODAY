@@ -17,16 +17,17 @@ import { MessagesScreen } from '../screens/MessagesScreen';
 import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { RetiredRoleScreen } from '../screens/RetiredRoleScreen';
-import { SupporterMatchsScreen } from '../screens/SupporterMatchsScreen';
-import { SupporterProfileTabScreen } from '../screens/SupporterProfileTabScreen';
 import { ClubPortalScreen } from '../screens/club/ClubPortalScreen';
 import { CoachPortalScreen } from '../screens/coach/CoachPortalScreen';
 import { ClubRecruitmentScreen } from '../screens/club/ClubRecruitmentScreen';
 import { ClubCalendarScreen } from '../screens/club/ClubCalendarScreen';
 import { ClubCommunicationScreen } from '../screens/club/ClubCommunicationScreen';
 import { ClubVitrineScreen } from '../screens/club/ClubVitrineScreen';
-import { SupporterFootballHubScreen } from '../screens/supporter/SupporterFootballHubScreen';
-import { SupporterExplorerScreen } from '../screens/supporter/SupporterExplorerScreen';
+import { FootballHubHomeScreen } from '../screens/footballHub/FootballHubHomeScreen';
+import { FootballHubMatchsScreen } from '../screens/footballHub/FootballHubMatchsScreen';
+import { FootballHubProDayScreen } from '../screens/footballHub/FootballHubProDayScreen';
+import { FootballHubFavoritesScreen } from '../screens/footballHub/FootballHubFavoritesScreen';
+import { FootballHubProfileScreen } from '../screens/footballHub/FootballHubProfileScreen';
 import { SupporterVideosScreen } from '../screens/supporter/SupporterVideosScreen';
 import { SupporterTribuneFeedScreen } from '../screens/supporter/SupporterTribuneFeedScreen';
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
@@ -36,7 +37,6 @@ import { PlayerFootballHubScreen } from '../screens/joueur/PlayerFootballHubScre
 import { PlayerProgressionScreen } from '../screens/joueur/PlayerProgressionScreen';
 import { PlayerSaisonScreen } from '../screens/joueur/PlayerSaisonScreen';
 import { JoueurPlusHubScreen } from '../screens/joueur/JoueurPlusHubScreen';
-import { SupporterPlusHubScreen } from '../screens/supporter/SupporterPlusHubScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -55,13 +55,14 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
 };
 
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: SupporterFootballHubScreen,
-  matchs: SupporterMatchsScreen,
-  feed: SupporterExplorerScreen,
+  home: FootballHubHomeScreen,
+  matchs: FootballHubMatchsScreen,
+  feed: FootballHubProDayScreen,
+  plus: FootballHubFavoritesScreen,
+  profil: FootballHubProfileScreen,
+  /** Secondaires hors dock — accessibles via deep links Accueil. */
   reels: SupporterVideosScreen,
   messages: SupporterTribuneFeedScreen,
-  profil: SupporterProfileTabScreen,
-  plus: SupporterPlusHubScreen,
   shop: ShopScreen,
 };
 

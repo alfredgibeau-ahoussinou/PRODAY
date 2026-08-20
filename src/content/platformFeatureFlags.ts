@@ -51,11 +51,12 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   },
   supporter: {
     key: 'supporter',
-    label: 'Tribune supporter',
-    adminHint: 'Espace Supporter. OFF = coque bloquée pour les fans',
-    disabledTitle: 'Tribune temporairement fermée',
+    label: 'Football Hub',
+    adminHint:
+      'Football Hub (ex-Supporter). OFF = coque bloquée. Sync scores externes = Phase 2 admin.',
+    disabledTitle: 'Football Hub temporairement fermé',
     disabledMessage:
-      'L’espace Supporter est temporairement désactivé. Réessayez bientôt.',
+      'Le Football Hub est temporairement désactivé. Réessayez bientôt.',
   },
   shop: {
     key: 'shop',

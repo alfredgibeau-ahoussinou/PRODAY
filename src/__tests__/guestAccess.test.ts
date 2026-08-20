@@ -11,8 +11,7 @@ describe('guestAccess', () => {
       'home',
       'matchs',
       'feed',
-      'reels',
-      'shop',
+      'plus',
       'profil',
     ]);
     expect(getGuestVisibleTabs('sante')).toEqual(['home', 'reels', 'profil']);

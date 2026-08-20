@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SupporterPageFrame } from '../../components/supporter/SupporterPageFrame';
-import { SupporterPlusBackBar } from '../../components/supporter/SupporterPlusBackBar';
+import { FootballHubBackBar } from '../../components/footballHub/FootballHubBackBar';
 import { getSupporterPageIdentity, SUPPORTER_SITE } from '../../content/supporterPageIdentity';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
@@ -51,7 +51,7 @@ export const SupporterVideosScreen: React.FC = () => {
 
   return (
     <SupporterPageFrame identity={getSupporterPageIdentity('moments')}>
-      <SupporterPlusBackBar />
+      <FootballHubBackBar />
       {loading ? (
         <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginTop: spacing.xl }} />
       ) : videos.length === 0 ? (

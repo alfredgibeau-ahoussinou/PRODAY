@@ -2,8 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { SupporterPageFrame } from '../../components/supporter/SupporterPageFrame';
 import { getSupporterPageIdentity, SUPPORTER_SITE } from '../../content/supporterPageIdentity';
-import { SupporterHeroLiveCard } from '../../features/supporter/components/SupporterHeroLiveCard';
-import { SupporterMatchCard } from '../../components/supporter/SupporterMatchCard';
+import { HubLiveScoreCard, HubMatchRow } from '../../features/footballHub/components';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { useAuth } from '../../context/AuthContext';
@@ -15,7 +14,7 @@ import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import type { Follow } from '../../models/Follow';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
-import { SupporterMatchDetailScreen } from './SupporterMatchDetailScreen';
+import { FootballHubMatchCenterScreen } from '../footballHub/FootballHubMatchCenterScreen';
 
 type Props = {
   onBack?: () => void;
@@ -52,7 +51,7 @@ export const SupporterLiveNowScreen: React.FC<Props> = ({ onBack }) => {
   if (selected) {
     return (
       <PushScreenTransition active>
-        <SupporterMatchDetailScreen item={selected} onBack={() => setSelected(null)} />
+        <FootballHubMatchCenterScreen item={selected} onBack={() => setSelected(null)} />
       </PushScreenTransition>
     );
   }
@@ -90,13 +89,13 @@ export const SupporterLiveNowScreen: React.FC<Props> = ({ onBack }) => {
           ) : (
             live.map((item) =>
               live.length === 1 ? (
-                <SupporterHeroLiveCard
+                <HubLiveScoreCard
                   key={item.id}
                   item={item}
                   onPress={() => openMatch(item)}
                 />
               ) : (
-                <SupporterMatchCard
+                <HubMatchRow
                   key={item.id}
                   item={item}
                   onPress={() => openMatch(item)}
@@ -110,10 +109,9 @@ export const SupporterLiveNowScreen: React.FC<Props> = ({ onBack }) => {
                 Terminés récemment
               </ProDayText>
               {recent.map((item) => (
-                <SupporterMatchCard
+                <HubMatchRow
                   key={item.id}
                   item={item}
-                  compact
                   onPress={() => openMatch(item)}
                 />
               ))}

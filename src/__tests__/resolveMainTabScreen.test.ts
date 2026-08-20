@@ -11,8 +11,20 @@ jest.mock('../screens/club/ClubCommunicationScreen', () => ({
   ClubCommunicationScreen: 'ClubCommunicationScreen',
 }));
 jest.mock('../screens/club/ClubVitrineScreen', () => ({ ClubVitrineScreen: 'ClubVitrineScreen' }));
-jest.mock('../screens/supporter/SupporterFootballHubScreen', () => ({
-  SupporterFootballHubScreen: 'SupporterFootballHubScreen',
+jest.mock('../screens/footballHub/FootballHubHomeScreen', () => ({
+  FootballHubHomeScreen: 'FootballHubHomeScreen',
+}));
+jest.mock('../screens/footballHub/FootballHubMatchsScreen', () => ({
+  FootballHubMatchsScreen: 'FootballHubMatchsScreen',
+}));
+jest.mock('../screens/footballHub/FootballHubProDayScreen', () => ({
+  FootballHubProDayScreen: 'FootballHubProDayScreen',
+}));
+jest.mock('../screens/footballHub/FootballHubFavoritesScreen', () => ({
+  FootballHubFavoritesScreen: 'FootballHubFavoritesScreen',
+}));
+jest.mock('../screens/footballHub/FootballHubProfileScreen', () => ({
+  FootballHubProfileScreen: 'FootballHubProfileScreen',
 }));
 jest.mock('../screens/supporter/SupporterExplorerScreen', () => ({
   SupporterExplorerScreen: 'SupporterExplorerScreen',
@@ -20,20 +32,8 @@ jest.mock('../screens/supporter/SupporterExplorerScreen', () => ({
 jest.mock('../screens/supporter/SupporterVideosScreen', () => ({
   SupporterVideosScreen: 'SupporterVideosScreen',
 }));
-jest.mock('../screens/SupporterMatchsScreen', () => ({
-  SupporterMatchsScreen: 'SupporterMatchsScreen',
-}));
-jest.mock('../screens/SupporterSuivisScreen', () => ({
-  SupporterSuivisScreen: 'SupporterSuivisScreen',
-}));
 jest.mock('../screens/supporter/SupporterTribuneFeedScreen', () => ({
   SupporterTribuneFeedScreen: 'SupporterTribuneFeedScreen',
-}));
-jest.mock('../screens/SupporterProfileTabScreen', () => ({
-  SupporterProfileTabScreen: 'SupporterProfileTabScreen',
-}));
-jest.mock('../screens/supporter/SupporterPlusHubScreen', () => ({
-  SupporterPlusHubScreen: 'SupporterPlusHubScreen',
 }));
 jest.mock('../screens/LazyReelsScreen', () => ({ LazyReelsScreen: 'LazyReelsScreen' }));
 jest.mock('../screens/ProfilTabScreen', () => ({ ProfilTabScreen: 'ProfilTabScreen' }));
@@ -101,14 +101,14 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('matchs', 'coach', 'pro')).toBe('MatchsScreen');
   });
 
-  it('mappe le shell supporter Accueil · Matchs · Profil · Plus', () => {
-    expect(resolveMainTabScreen('home', 'supporter', 'supporter')).toBe('SupporterFootballHubScreen');
-    expect(resolveMainTabScreen('matchs', 'supporter', 'supporter')).toBe('SupporterMatchsScreen');
-    expect(resolveMainTabScreen('plus', 'supporter', 'supporter')).toBe('SupporterPlusHubScreen');
-    expect(resolveMainTabScreen('feed', 'supporter', 'supporter')).toBe('SupporterExplorerScreen');
+  it('mappe le shell Football Hub Accueil · Matchs · ProDay · Favoris · Profil', () => {
+    expect(resolveMainTabScreen('home', 'supporter', 'supporter')).toBe('FootballHubHomeScreen');
+    expect(resolveMainTabScreen('matchs', 'supporter', 'supporter')).toBe('FootballHubMatchsScreen');
+    expect(resolveMainTabScreen('feed', 'supporter', 'supporter')).toBe('FootballHubProDayScreen');
+    expect(resolveMainTabScreen('plus', 'supporter', 'supporter')).toBe('FootballHubFavoritesScreen');
+    expect(resolveMainTabScreen('profil', 'supporter', 'supporter')).toBe('FootballHubProfileScreen');
     expect(resolveMainTabScreen('reels', 'supporter', 'supporter')).toBe('SupporterVideosScreen');
     expect(resolveMainTabScreen('messages', 'supporter', 'supporter')).toBe('SupporterTribuneFeedScreen');
-    expect(resolveMainTabScreen('profil', 'supporter', 'supporter')).toBe('SupporterProfileTabScreen');
     expect(resolveMainTabScreen('shop', 'supporter', 'supporter')).toBe('ShopScreen');
   });
 

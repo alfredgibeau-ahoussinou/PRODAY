@@ -42,6 +42,17 @@ export interface FootballDataProvider {
   readonly name: string;
   listLiveFixtures(): Promise<ExternalFixture[]>;
   listUpcomingFixtures(days?: number, leagueIds?: number[]): Promise<ExternalFixture[]>;
+  /** Alias Phase 1 — getFixtures = live + upcoming. */
+  getFixtures?(opts?: { live?: boolean; days?: number; leagueIds?: number[] }): Promise<ExternalFixture[]>;
+  getFixture?(fixtureId: string): Promise<ExternalFixture | null>;
+  getTeams?(query: string): Promise<FootballTeamHit[]>;
+  getTeam?(teamId: string): Promise<FootballTeamHit | null>;
+  getCompetitions?(countryCode?: string): Promise<FootballCompetitionEntry[]>;
+  getStandings?(leagueId: number): Promise<unknown | null>;
+  getLineups?(fixtureId: string): Promise<ExternalFixtureLineup[]>;
+  getEvents?(fixtureId: string): Promise<LiveMatchAction[]>;
+  getStatistics?(fixtureId: string): Promise<FootballMatchStatistics | null>;
+  getPlayers?(teamId: string): Promise<unknown[]>;
   searchTeams(query: string): Promise<FootballTeamHit[]>;
   getMatchDetail(
     matchId: string,

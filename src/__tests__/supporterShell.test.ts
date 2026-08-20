@@ -1,20 +1,13 @@
 import { getVisibleMainTabs, getTabShortLabel } from '../content/poleExperience';
 import {
   SUPPORTER_OVERFLOW_TABS,
-  SUPPORTER_PLUS_DESTINATION_TABS,
   SUPPORTER_SHELL_TABS,
 } from '../navigation/shells/productShellTabs';
-import {
-  SUPPORTER_NAV_FOLDERS,
-  findSupporterNavItem,
-  supporterNavFromTab,
-} from '../features/supporter/navigation/supporterNavConfig';
 import {
   SUPPORTER_SITE,
   getSupporterPageIdentity,
   supporterPageFromTab,
 } from '../content/supporterPageIdentity';
-import { buildSupporterPlusMenuItems } from '../content/supporterPlusMenu';
 import {
   openSupporterLive,
   stampMatchsDeepLink,
@@ -22,40 +15,30 @@ import {
 } from '../utils/supporterMatchsDeepLink';
 import { openClubHelpChatbot, registerClubHelpOpener } from '../features/club/shell/clubHelpOpen';
 import { resolveCityCoords } from '../utils/supporterCityGeo';
+import { FOOTBALL_HUB_COPY } from '../features/footballHub/theme/footballHubTheme';
 
-describe('supporter shell navigation', () => {
-  it('expose le dock Accueil · Matchs · Profil · Plus', () => {
-    expect(SUPPORTER_SHELL_TABS).toEqual(['home', 'matchs', 'profil', 'plus']);
-    expect(SUPPORTER_OVERFLOW_TABS).toEqual([]);
-    expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
-      ...SUPPORTER_SHELL_TABS,
-      ...SUPPORTER_PLUS_DESTINATION_TABS,
-    ]);
+describe('Football Hub shell navigation', () => {
+  it('expose le dock Accueil · Matchs · ProDay · Favoris · Profil', () => {
+    expect(SUPPORTER_SHELL_TABS).toEqual(['home', 'matchs', 'feed', 'plus', 'profil']);
+    expect(SUPPORTER_OVERFLOW_TABS).toEqual(['reels', 'messages', 'shop']);
     expect(getVisibleMainTabs('supporter', 'supporter')).toEqual([
       'home',
       'matchs',
-      'profil',
-      'plus',
       'feed',
-      'reels',
-      'messages',
-      'shop',
+      'plus',
+      'profil',
     ]);
-    expect(getTabShortLabel('plus', 'supporter', 'supporter')).toBe('Plus');
+    expect(getTabShortLabel('home', 'supporter', 'supporter')).toBe('Accueil');
+    expect(getTabShortLabel('matchs', 'supporter', 'supporter')).toBe('Matchs');
+    expect(getTabShortLabel('feed', 'supporter', 'supporter')).toBe('ProDay');
+    expect(getTabShortLabel('plus', 'supporter', 'supporter')).toBe('Favoris');
+    expect(getTabShortLabel('profil', 'supporter', 'supporter')).toBe('Profil');
   });
 
-  it('liste les destinations Plus attendues', () => {
-    const ids = buildSupporterPlusMenuItems().map((item) => item.id);
-    expect(ids).toEqual([
-      'live',
-      'explorer',
-      'videos',
-      'fil',
-      'carte',
-      'suivis',
-      'ia',
-      'shop',
-    ]);
+  it('définit le hero Accueil Football Hub', () => {
+    expect(FOOTBALL_HUB_COPY.heroTitle).toMatch(/Tout le football/i);
+    expect(SUPPORTER_SITE.accent).toBe('#3C00F0');
+    expect(SUPPORTER_SITE.live).toBe('#22C55E');
   });
 
   it('applique le chapitre Live même si Matchs est déjà ouvert', () => {
@@ -98,28 +81,11 @@ describe('supporter city geo', () => {
   });
 });
 
-describe('supporter nav config', () => {
-  it('mappe dossiers Live · Communauté · Compte', () => {
-    expect(SUPPORTER_NAV_FOLDERS.map((f) => f.id)).toEqual([
-      'live',
-      'communaute',
-      'compte',
-    ]);
-    expect(supporterNavFromTab('home')).toBe('tribune');
-    expect(supporterNavFromTab('messages')).toBe('debats');
-    expect(findSupporterNavItem('moments')?.tab).toBe('reels');
-  });
-});
-
-describe('supporterPageIdentity', () => {
-  it('aligne l’accent sur le centre du football V2', () => {
-    expect(SUPPORTER_SITE.accent).toBe('#3C00F0');
-    expect(SUPPORTER_SITE.live).toBe('#34D399');
+describe('supporterPageIdentity Football Hub', () => {
+  it('aligne l’identité Accueil sur le Football Hub', () => {
+    expect(getSupporterPageIdentity('tribune').eyebrow).toBe('Football Hub');
     expect(getSupporterPageIdentity('tribune').title).toMatch(/accueil/i);
-    expect(getSupporterPageIdentity('tribune').eyebrow).toBe('Centre du football');
     expect(supporterPageFromTab('feed')).toBe('suivis');
-    expect(supporterPageFromTab('reels')).toBe('moments');
-    expect(supporterPageFromTab('plus')).toBe('tribune');
-    expect(getSupporterPageIdentity('moments').title).toBe('Vidéos');
+    expect(supporterPageFromTab('plus')).toBe('suivis');
   });
 });

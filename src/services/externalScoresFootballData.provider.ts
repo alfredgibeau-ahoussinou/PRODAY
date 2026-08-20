@@ -427,14 +427,31 @@ async function fetchMatches(
       lastMessage = 'Quota football-data.org — cache.';
       return cloneFixtures(stale.fixtures);
     }
+    lastHealthy = false;
+    lastMessage = 'Quota football-data.org dépassé.';
     throw new Error('Quota football-data.org dépassé.');
   }
 
+  const rawBody = await response.text();
   if (!response.ok) {
-    throw new Error(`football-data.org indisponible (${response.status}).`);
+    const hint = rawBody.trim().slice(0, 120) || `HTTP ${response.status}`;
+    lastHealthy = false;
+    lastMessage =
+      response.status === 403
+        ? 'Compte football-data.org indisponible (token désactivé ou invalide).'
+        : `football-data.org indisponible (${response.status}).`;
+    throw new Error(`${lastMessage} ${hint}`.trim());
   }
 
-  const payload = (await response.json()) as { matches?: FdMatchRow[] };
+  let payload: { matches?: FdMatchRow[] };
+  try {
+    payload = JSON.parse(rawBody) as { matches?: FdMatchRow[] };
+  } catch {
+    lastHealthy = false;
+    lastMessage = 'Réponse football-data.org invalide.';
+    throw new Error(lastMessage);
+  }
+
   const fixtures = (payload.matches ?? []).map(mapFootballDataMatch);
   writeCache(cacheKey, fixtures, cacheTtlMs);
   lastSyncAt = new Date();
@@ -507,8 +524,10 @@ export function createFootballDataProvider(): ExternalScoresProvider {
         return fixtures
           .filter((f) => f.status === 'live')
           .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
-      } catch {
-        return readCached('fd:live')?.filter((f) => f.status === 'live') ?? [];
+      } catch (error) {
+        const stale = readCached('fd:live')?.filter((f) => f.status === 'live');
+        if (stale && stale.length > 0) return stale;
+        throw error;
       }
     },
 
@@ -530,25 +549,38 @@ export function createFootballDataProvider(): ExternalScoresProvider {
           .filter((c): c is string => Boolean(c));
       }
 
+      let anySuccess = false;
+      let lastError: string | undefined;
       const batches = await Promise.all(
         codes.map(async (code) => {
           try {
-            return await fetchMatches(
+            const rows = await fetchMatches(
               `/competitions/${code}/matches?dateFrom=${fromStr}&dateTo=${toStr}&status=SCHEDULED`,
               `fd:up:${code}:${fromStr}:${toStr}`,
               UPCOMING_CACHE_TTL_MS,
             );
-          } catch {
+            anySuccess = true;
+            return rows;
+          } catch (error) {
+            lastError = error instanceof Error ? error.message : 'Impossible de charger les scores';
             return readCached(`fd:up:${code}:${fromStr}:${toStr}`) ?? [];
           }
         }),
       );
 
       const now = Date.now();
-      return batches
+      const fixtures = batches
         .flat()
         .filter((f) => f.status === 'scheduled' && f.starts_at.getTime() >= now)
         .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+
+      if (fixtures.length === 0 && !anySuccess) {
+        lastHealthy = false;
+        lastMessage = lastError ?? 'Impossible de charger les scores';
+        throw new Error(lastMessage);
+      }
+
+      return fixtures;
     },
 
     async listTeamFixtures(teamId: number, options?: ListTeamFixturesOptions): Promise<ExternalFixture[]> {
@@ -660,14 +692,17 @@ export function createFootballDataProvider(): ExternalScoresProvider {
     },
 
     async getState(): Promise<ExternalScoresProviderState> {
+      const hasToken = Boolean(readToken());
       return {
         source: 'football_data',
         last_sync_at: lastSyncAt ?? new Date(),
-        healthy: lastHealthy || Boolean(readToken()),
+        healthy: hasToken ? lastHealthy : false,
         message:
           lastMessage ??
-          (readToken()
-            ? 'football-data.org (gratuit)'
+          (hasToken
+            ? lastHealthy
+              ? 'football-data.org (gratuit)'
+              : 'Impossible de charger les scores'
             : 'Ajoutez EXPO_PUBLIC_FOOTBALL_DATA_TOKEN (compte free)'),
       };
     },

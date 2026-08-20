@@ -212,6 +212,107 @@ export class ProDayFootballDataProvider implements FootballDataProvider {
   }
 }
 
+/**
+ * Fusion ProDay (priorité détail) → external (API-Football / football-data).
+ * Les écrans Football Hub passent uniquement par cette couche / la facade.
+ */
+export class MergedFootballProvider implements FootballDataProvider {
+  readonly name = 'merged';
+
+  constructor(
+    private readonly proday: ProDayFootballDataProvider,
+    private readonly external: ExternalFootballDataProvider = new ExternalFootballDataProvider(),
+  ) {}
+
+  async listLiveFixtures(): Promise<ExternalFixture[]> {
+    return this.external.listLiveFixtures();
+  }
+
+  async listUpcomingFixtures(days = 14, leagueIds?: number[]): Promise<ExternalFixture[]> {
+    return this.external.listUpcomingFixtures(days, leagueIds);
+  }
+
+  async getFixtures(opts?: { live?: boolean; days?: number; leagueIds?: number[] }) {
+    if (opts?.live) return this.listLiveFixtures();
+    return this.listUpcomingFixtures(opts?.days ?? 14, opts?.leagueIds);
+  }
+
+  async getFixture(fixtureId: string): Promise<ExternalFixture | null> {
+    return externalScoresService.getFixtureById(fixtureId);
+  }
+
+  async searchTeams(query: string): Promise<FootballTeamHit[]> {
+    const [world, proday] = await Promise.all([
+      this.external.searchTeams(query),
+      this.proday.searchTeams(query),
+    ]);
+    const seen = new Set<string>();
+    return [...proday, ...world].filter((h) => {
+      const key = h.name.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  async getTeams(query: string) {
+    return this.searchTeams(query);
+  }
+
+  async getTeam(teamId: string): Promise<FootballTeamHit | null> {
+    const hits = await this.searchTeams(teamId);
+    return hits.find((h) => h.id === teamId || h.name.toLowerCase() === teamId.toLowerCase()) ?? null;
+  }
+
+  async getCompetitions(countryCode?: string) {
+    return this.listCompetitionsByCountry(countryCode);
+  }
+
+  async getStandings() {
+    return null;
+  }
+
+  async getLineups(fixtureId: string) {
+    const detail = await this.getMatchDetail(`world:${fixtureId}`);
+    return detail?.lineups ?? [];
+  }
+
+  async getEvents(fixtureId: string) {
+    const detail = await this.getMatchDetail(`world:${fixtureId}`);
+    return detail?.events ?? [];
+  }
+
+  async getStatistics(fixtureId: string) {
+    return this.getFixtureStatistics(fixtureId);
+  }
+
+  async getPlayers() {
+    return [];
+  }
+
+  async getMatchDetail(
+    matchId: string,
+    seedItem?: SupporterMatchViewItem | null,
+  ): Promise<FootballMatchDetail | null> {
+    return (
+      (await this.proday.getMatchDetail(matchId)) ??
+      (await this.external.getMatchDetail(matchId, seedItem))
+    );
+  }
+
+  async getFixtureStatistics(fixtureId: string) {
+    return this.external.getFixtureStatistics(fixtureId);
+  }
+
+  async listCompetitionsByCountry(countryCode?: string) {
+    return this.external.listCompetitionsByCountry(countryCode);
+  }
+
+  async getProviderState() {
+    return this.external.getProviderState();
+  }
+}
+
 /** Réinitialise le cache stats (tests). */
 export function resetFootballStatsCache(): void {
   statsCache.clear();

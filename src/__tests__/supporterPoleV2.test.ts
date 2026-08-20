@@ -35,12 +35,12 @@ describe('resolveMatchCenterTabs', () => {
     prodayEvent: null,
   };
 
-  it('masque stats et video sans données', () => {
+  it('propose résumé + stats monde (message honnête si vide)', () => {
     const tabs = resolveMatchCenterTabs(baseDetail, false);
-    expect(tabs).not.toContain('stats');
-    expect(tabs).not.toContain('video');
     expect(tabs).toContain('resume');
-    expect(tabs).toContain('analyse');
+    expect(tabs).toContain('stats');
+    expect(tabs).not.toContain('video');
+    expect(tabs).not.toContain('analyse');
   });
 
   it('affiche stats quand disponibles', () => {
@@ -54,7 +54,7 @@ describe('resolveMatchCenterTabs', () => {
     expect(tabs).toContain('stats');
   });
 
-  it('affiche live et moments avec événements', () => {
+  it('affiche événements et compositions quand présents', () => {
     const tabs = resolveMatchCenterTabs(
       {
         ...baseDetail,
@@ -68,11 +68,26 @@ describe('resolveMatchCenterTabs', () => {
             created_at: new Date(),
           },
         ],
+        lineups: [
+          {
+            teamName: 'A',
+            formation: '4-4-2',
+            lineup: { formation: '4-4-2', slots: [] },
+          },
+        ],
       },
       false,
     );
-    expect(tabs).toContain('live');
-    expect(tabs).toContain('moments');
+    expect(tabs).toContain('events');
+    expect(tabs).toContain('compositions');
+  });
+
+  it('ajoute analyse pour matchs ProDay', () => {
+    const tabs = resolveMatchCenterTabs(
+      { ...baseDetail, source: 'proday', item: { ...baseDetail.item, source: 'proday' } },
+      false,
+    );
+    expect(tabs).toContain('analyse');
   });
 });
 

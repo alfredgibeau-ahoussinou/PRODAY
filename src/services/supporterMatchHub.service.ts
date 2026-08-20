@@ -192,19 +192,18 @@ export async function fetchSupporterMatchHub(
   const followedTeamIds = collectFollowedWorldTeamIds(follows, MAX_FOLLOWED_TEAM_FETCH);
   const hasFollows = hasClubOrWorldTeamFollows(follows);
 
-  const [liveWorld, upcomingWorld, recentWorld, upcomingProday, providerState, teamUpcoming, teamLive] =
+  const [liveWorldResult, upcomingWorldResult, recentWorld, upcomingProday, teamUpcoming, teamLive] =
     await Promise.all([
-      externalScoresService.listLiveFixtures().catch(() => []),
+      externalScoresService
+        .listLiveFixtures()
+        .then((fixtures) => ({ fixtures, failed: false as const }))
+        .catch(() => ({ fixtures: [] as ExternalFixture[], failed: true as const })),
       externalScoresService
         .listUpcomingFixtures({ days: SUPPORTER_UPCOMING_WORLD_DAYS })
-        .catch(() => []),
-      externalScoresService.listRecentFinishedFixtures().catch(() => []),
+        .then((fixtures) => ({ fixtures, failed: false as const }))
+        .catch(() => ({ fixtures: [] as ExternalFixture[], failed: true as const })),
+      externalScoresService.listRecentFinishedFixtures().catch(() => [] as ExternalFixture[]),
       teamEventsService.listUpcoming(60).catch(() => [] as TeamEvent[]),
-      externalScoresService.getProviderState().catch(() => ({
-        source: 'demo' as const,
-        last_sync_at: new Date(),
-        healthy: false,
-      })),
       hasFollows
         ? fetchFixturesForFollowedTeams(followedTeamIds, 'scheduled')
         : Promise.resolve([] as ExternalFixture[]),
@@ -212,6 +211,32 @@ export async function fetchSupporterMatchHub(
         ? fetchFixturesForFollowedTeams(followedTeamIds, 'live')
         : Promise.resolve([] as ExternalFixture[]),
     ]);
+
+  const liveWorld = liveWorldResult.fixtures;
+  const upcomingWorld = upcomingWorldResult.fixtures;
+
+  /** getState après les listes pour refléter healthy / message réels. */
+  let providerState = await externalScoresService.getProviderState().catch(() => ({
+    source: 'demo' as const,
+    last_sync_at: new Date(),
+    healthy: false,
+    message: 'Impossible de charger les scores',
+  }));
+
+  const worldEmpty = upcomingWorld.length === 0;
+  const scoresFailed =
+    liveWorldResult.failed ||
+    upcomingWorldResult.failed ||
+    (worldEmpty && (providerState.source === 'merged' || providerState.source === 'api_football' || providerState.source === 'football_data'));
+
+  if (scoresFailed && worldEmpty) {
+    providerState = {
+      ...providerState,
+      healthy: false,
+      message: providerState.message ?? 'Impossible de charger les scores',
+      last_sync_at: providerState.last_sync_at ?? new Date(),
+    };
+  }
 
   const mergedEvents = dedupeEvents([...upcomingProday, ...calendarEvents]);
   const worldIndex = buildWorldFollowIndex(follows);
@@ -281,10 +306,8 @@ export async function fetchSupporterMatchHub(
 
   const filteredTournaments = filterTournaments(tournaments, filters, followContext);
 
-  const heroKickoffs =
-    sections.upcoming.length > 0
-      ? sections.upcoming.slice(0, SUPPORTER_HERO_KICKOFF_COUNT)
-      : sections.world.slice(0, SUPPORTER_HERO_KICKOFF_COUNT);
+  /** Accueil « À ne pas manquer » = coups d’envoi monde (même sans clubs suivis). */
+  const heroKickoffs = sections.world.slice(0, SUPPORTER_HERO_KICKOFF_COUNT);
 
   return {
     sections,

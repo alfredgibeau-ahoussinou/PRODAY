@@ -53,15 +53,16 @@ export const AMATEUR_CLUB_OVERFLOW_TABS: MainTabId[] = [
 export const SUPPORTER_SHELL_TABS: MainTabId[] = [
   'home',
   'matchs',
-  'profil',
+  'feed',
   'plus',
+  'profil',
 ];
 
-/** Plus remplace la feuille overflow — destinations toujours montables. */
-export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = [];
+/** Secondaires hors dock (deep links / legacy). */
+export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = ['reels', 'messages', 'shop'];
 
+/** @deprecated Plus hub retiré — destinations secondaires hors dock. */
 export const SUPPORTER_PLUS_DESTINATION_TABS: MainTabId[] = [
-  'feed',
   'reels',
   'messages',
   'shop',

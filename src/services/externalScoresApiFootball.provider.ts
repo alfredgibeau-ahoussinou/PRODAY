@@ -115,6 +115,26 @@ function formatApiDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+/**
+ * Saison API-Football (année de début, août → juillet).
+ * Ex. 20 août 2026 → 2026 ; 15 mars 2026 → 2025.
+ */
+export function resolveApiFootballSeason(now: Date = new Date()): number {
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth(); // 0-based
+  return month >= 7 ? year : year - 1;
+}
+
+/** Ligues majeures Accueil / calendrier — limite le fan-out (quota free). */
+export const HUB_LEAGUE_IDS: number[] = [
+  LEAGUE_IDS.ligue1!,
+  LEAGUE_IDS.pl!,
+  LEAGUE_IDS.laliga!,
+  LEAGUE_IDS.seriea!,
+  LEAGUE_IDS.bundesliga!,
+  LEAGUE_IDS.ucl!,
+].filter((id): id is number => id != null);
+
 export function mapApiFootballFixture(row: ApiFootballFixtureRow): ExternalFixture {
   const competition = resolveCompetition(row.league.id);
   const status = mapStatus(row.fixture.status.short);
@@ -190,10 +210,26 @@ async function fetchLeagueFixtures(
   const leagueId = LEAGUE_IDS[competition];
   if (leagueId == null) return [];
 
-  const cacheKey = `league:${competition}`;
-  const season = new Date().getFullYear();
-  const url = `${readBaseUrl()}/fixtures?league=${leagueId}&season=${season}&timezone=Europe/Paris`;
-  return fetchApiRows(url, apiKey, cacheKey, LEAGUE_CACHE_TTL_MS);
+  const seasons = [
+    resolveApiFootballSeason(),
+    resolveApiFootballSeason() - 1,
+    resolveApiFootballSeason() - 2,
+  ];
+  let lastError: unknown;
+  for (const season of seasons) {
+    const cacheKey = `league:${competition}:${season}`;
+    const url = `${readBaseUrl()}/fixtures?league=${leagueId}&season=${season}&timezone=Europe/Paris`;
+    try {
+      return await fetchApiRows(url, apiKey, cacheKey, LEAGUE_CACHE_TTL_MS);
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : '';
+      if (/season|plan|Free plans/i.test(message)) continue;
+      throw error;
+    }
+  }
+  if (lastError) throw lastError;
+  return [];
 }
 
 async function fetchLiveAll(apiKey: string): Promise<ExternalFixture[]> {
@@ -207,35 +243,57 @@ async function fetchUpcomingByLeagues(
   options?: ListUpcomingFixturesOptions,
 ): Promise<ExternalFixture[]> {
   const days = options?.days ?? 14;
-  const leagueIds =
-    options?.leagueIds ??
-    (Object.values(LEAGUE_IDS).filter((id): id is number => id != null) as number[]);
+  const leagueIds = options?.leagueIds ?? HUB_LEAGUE_IDS;
 
   const from = new Date();
   const to = new Date(from);
   to.setDate(from.getDate() + days);
   const fromStr = formatApiDate(from);
   const toStr = formatApiDate(to);
-  const season = from.getFullYear();
+  const seasonCandidates = [
+    resolveApiFootballSeason(from),
+    resolveApiFootballSeason(from) - 1,
+    resolveApiFootballSeason(from) - 2,
+  ];
+
+  let anySuccess = false;
+  let lastError: string | undefined;
 
   const batches = await Promise.all(
     leagueIds.map(async (leagueId) => {
-      const cacheKey = `upcoming:${leagueId}:${fromStr}:${toStr}`;
-      const url = `${readBaseUrl()}/fixtures?league=${leagueId}&season=${season}&from=${fromStr}&to=${toStr}&timezone=Europe/Paris`;
-      try {
-        return await fetchApiRows(url, apiKey, cacheKey, UPCOMING_CACHE_TTL_MS);
-      } catch {
+      for (const season of seasonCandidates) {
+        const cacheKey = `upcoming:${leagueId}:${season}:${fromStr}:${toStr}`;
         const stale = readCached(cacheKey);
-        return stale ?? [];
+        if (stale) {
+          anySuccess = true;
+          return stale;
+        }
+        const url = `${readBaseUrl()}/fixtures?league=${leagueId}&season=${season}&from=${fromStr}&to=${toStr}&timezone=Europe/Paris`;
+        try {
+          const rows = await fetchApiRows(url, apiKey, cacheKey, UPCOMING_CACHE_TTL_MS);
+          anySuccess = true;
+          return rows;
+        } catch (error) {
+          lastError = error instanceof Error ? error.message : 'Erreur API scores monde.';
+          if (/season|plan|Free plans/i.test(lastError)) continue;
+          /* quota / réseau : tenter saison suivante ou cache */
+        }
       }
+      return [] as ExternalFixture[];
     }),
   );
 
   const now = Date.now();
-  return batches
+  const fixtures = batches
     .flat()
     .filter((fixture) => fixture.status === 'scheduled' && fixture.starts_at.getTime() >= now)
     .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+
+  if (fixtures.length === 0 && !anySuccess) {
+    throw new Error(lastError ?? 'Impossible de charger les scores');
+  }
+
+  return fixtures;
 }
 
 async function fetchTeamFixtures(
