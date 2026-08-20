@@ -12,7 +12,7 @@ import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { getJoueurGameTabLabel } from '../../content/joueurGameMenu';
 import { formatTabBadge } from './tabBarShared';
-import { joueurGamePress, playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
+import { joueurGamePress } from '../../features/joueur/joueurSfx';
 import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 
@@ -66,7 +66,6 @@ export function JoueurGameTabBar({
       joueurGamePress();
       return;
     }
-    playJoueurSfxFireAndForget('whoosh');
     onTabPress(tab);
   };
 

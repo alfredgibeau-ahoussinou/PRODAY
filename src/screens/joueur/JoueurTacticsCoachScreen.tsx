@@ -45,7 +45,7 @@ export function JoueurTacticsCoachScreen({ onBack }: Props) {
   }
 
   return (
-    <JoueurArcadeShell identity={identity} liveLabel="COACH IA" bootSound={false}>
+    <JoueurArcadeShell identity={identity} liveLabel="COACH IA">
       <View style={[styles.head, { paddingTop: Math.max(insets.top, 12) }]}>
         <PressableSpring
           onPress={() => {

@@ -47,7 +47,6 @@ import { useTranslation } from '../../context/LocaleContext';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
-import { playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
 import type { Competition, CompetitionFixture, CompetitionSeason } from '../../models/Competition';
 
 interface MatchHomeScreenProps {
@@ -576,10 +575,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
       <MatchPager
         pages={visiblePages}
         activeChapter={chapter}
-        onChapterChange={(id) => {
-          if (isJoueur) playJoueurSfxFireAndForget('whoosh');
-          setChapter(id);
-        }}
+        onChapterChange={setChapter}
         amicauxBadge={openMatchesCount}
         convocationsBadge={pendingConvocations.length}
         centreBadge={liveMatchCount > 0 ? 'Direct' : undefined}

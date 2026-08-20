@@ -413,7 +413,7 @@ export function SmartTacticsPlayerHome({
   }
 
   return (
-    <JoueurArcadeShell identity={identity} liveLabel="TACTIQUE" bootSound={false}>
+    <JoueurArcadeShell identity={identity} liveLabel="TACTIQUE">
       {scroll}
     </JoueurArcadeShell>
   );

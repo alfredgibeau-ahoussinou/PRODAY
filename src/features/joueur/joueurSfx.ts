@@ -34,7 +34,7 @@ const VOLUME: Partial<Record<JoueurSfxId, number>> = {
 };
 
 let ready = false;
-let muted = false;
+let muted = true;
 const players = new Map<JoueurSfxId, AudioPlayer>();
 let ambientPlayer: AudioPlayer | null = null;
 
@@ -121,18 +121,15 @@ export function isJoueurSfxMuted(): boolean {
   return muted;
 }
 
-/** Tap UI + haptic. */
+/** Tap UI + haptic (SFX désactivés par défaut — voir muted / prefs). */
 export function joueurGamePress(): void {
-  playJoueurSfxFireAndForget('tap');
   prodayHaptics.press();
 }
 
 export function joueurGameConfirm(): void {
-  playJoueurSfxFireAndForget('whoosh');
   prodayHaptics.confirm();
 }
 
-export function joueurGameReward(kind: 'star' | 'xp' | 'mission' | 'levelup' = 'xp'): void {
-  playJoueurSfxFireAndForget(kind);
+export function joueurGameReward(_kind: 'star' | 'xp' | 'mission' | 'levelup' = 'xp'): void {
   prodayHaptics.confirm();
 }

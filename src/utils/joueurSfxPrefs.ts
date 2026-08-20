@@ -9,7 +9,7 @@ const MUTE_KEY = 'proday_joueur_sfx_muted_v1';
 export async function hydrateJoueurSfxMute(): Promise<boolean> {
   try {
     const raw = await AsyncStorage.getItem(MUTE_KEY);
-    const muted = raw === '1';
+    const muted = raw === null ? true : raw === '1';
     setMutedMemory(muted);
     return muted;
   } catch {

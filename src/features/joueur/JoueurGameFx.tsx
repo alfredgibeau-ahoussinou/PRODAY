@@ -117,7 +117,6 @@ type ShellProps = {
   identity: JoueurPageIdentity;
   liveLabel?: string;
   children: React.ReactNode;
-  bootSound?: boolean;
 };
 
 /**
@@ -128,7 +127,6 @@ export function JoueurArcadeShell({
   identity,
   liveLabel,
   children,
-  bootSound = true,
 }: ShellProps) {
   const theme = useJoueurTheme();
   const pulse = useSharedValue(0.55);
@@ -167,15 +165,7 @@ export function JoueurArcadeShell({
         false,
       );
     }
-    if (bootSound && !isJoueurSfxMuted()) {
-      playJoueurSfxFireAndForget('enter');
-      // Ambient seulement adulte / ado (pas youth — trop bruyant pour petit jeu)
-      if (!isArcade) void startJoueurAmbient();
-    }
-    return () => {
-      if (bootSound) stopJoueurAmbient();
-    };
-  }, [bootSound, pulse, isArcade, isTeen]);
+  }, [pulse, isArcade, isTeen]);
 
   const liveDot = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
