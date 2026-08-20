@@ -26,7 +26,7 @@ export const ParentChildProfileScreen: React.FC = () => {
   const [saving, setSaving] = useState(false);
   if (!selected) {
     return (
-      <ParentPageFrame identity={PARENT_PAGES.profil}>
+      <ParentPageFrame identity={PARENT_PAGES.enfant}>
         <View style={styles.center}>
           <ProDayText variant="body" muted>
             Sélectionnez un enfant depuis l’accueil.
@@ -56,7 +56,7 @@ export const ParentChildProfileScreen: React.FC = () => {
   };
 
   return (
-    <ParentPageFrame identity={PARENT_PAGES.profil}>
+    <ParentPageFrame identity={PARENT_PAGES.enfant}>
       <ScrollView contentContainerStyle={styles.content}>
         {children.length > 1 ? (
           <View style={styles.chips}>

@@ -21,6 +21,8 @@ export type LegacyProductLineId = 'standard';
 
 export const PRODUCT_LINE_STORAGE_KEY = 'proday_product_line';
 export const WOMAN_SPACE_ACTIVE_KEY = 'proday_woman_space_active';
+/** Parent connecté en visite temporaire sur le scaffold Supporter. */
+export const PARENT_GUEST_SUPPORTER_KEY = 'proday_parent_guest_supporter';
 
 export const PRODAY_HOMME_BRAND = {
   name: 'Pro Day Man',

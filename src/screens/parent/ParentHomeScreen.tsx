@@ -162,28 +162,28 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
             <ParentQuickGrid
               items={[
                 {
+                  id: 'guide',
+                  label: 'Guide IA',
+                  icon: 'star-four-points',
+                  onPress: () => onOpenTab('guide'),
+                },
+                {
+                  id: 'enfant',
+                  label: 'Enfant',
+                  icon: 'person',
+                  onPress: () => onOpenTab('enfant'),
+                },
+                {
                   id: 'agenda',
-                  label: 'Agenda & retards',
+                  label: 'Agenda',
                   icon: 'calendar',
                   onPress: () => onOpenTab('agenda'),
                 },
                 {
-                  id: 'messages',
-                  label: 'Messages',
-                  icon: 'chat',
-                  onPress: () => onOpenTab('messages'),
-                },
-                {
-                  id: 'trajet',
-                  label: 'Trajet live',
-                  icon: 'car',
-                  onPress: () => onOpenTab('trajet'),
-                },
-                {
-                  id: 'controls',
-                  label: 'Contrôles',
-                  icon: 'settings',
-                  onPress: () => onOpenTab('reglages'),
+                  id: 'plus',
+                  label: 'Menu',
+                  icon: 'menu',
+                  onPress: () => onOpenTab('plus'),
                 },
               ]}
             />
@@ -345,9 +345,9 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
                     icon="settings"
                   />
                   <ParentActionButton
-                    label="Profil"
+                    label="Enfant"
                     tone="ghost"
-                    onPress={() => onOpenTab('profil')}
+                    onPress={() => onOpenTab('enfant')}
                     icon="person"
                   />
                 </View>

@@ -12,6 +12,7 @@ import {
   isProProductLine,
   normalizeStoredProductLine,
   PRODUCT_LINE_STORAGE_KEY,
+  PARENT_GUEST_SUPPORTER_KEY,
   PRODAY_PARENT_BRAND,
   PRODAY_SPONSOR_BRAND,
   WOMAN_SPACE_ACTIVE_KEY,
@@ -64,6 +65,10 @@ interface ProductLineContextValue {
   enterParentSpace: () => Promise<void>;
   enterSponsorSpace: () => Promise<void>;
   exitWomanSpace: () => Promise<void>;
+  /** Parent en visite sur le scaffold Supporter (sans changer le rôle Firestore). */
+  parentGuestSupporter: boolean;
+  openParentSupporterGuest: () => Promise<void>;
+  returnParentFromSupporterGuest: () => Promise<void>;
   /** Rôle présélectionné après choix carousel pro_player / pro_club / pro_staff. */
   proSignupPresetRole: UserRole | null;
   setProSignupPresetRole: (role: UserRole | null) => Promise<void>;
@@ -81,16 +86,18 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   const [productLine, setLineState] = useState<ProductLineId>('amateur');
   const [womanSpaceActive, setWomanSpaceActive] = useState(false);
   const [proSignupPresetRole, setProSignupPresetRoleState] = useState<UserRole | null>(null);
+  const [parentGuestSupporter, setParentGuestSupporter] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [storedLine, spaceFlag, presetRole] = await Promise.all([
+        const [storedLine, spaceFlag, presetRole, guestSupporter] = await Promise.all([
           AsyncStorage.getItem(PRODUCT_LINE_STORAGE_KEY),
           AsyncStorage.getItem(WOMAN_SPACE_ACTIVE_KEY),
           AsyncStorage.getItem(PRO_SIGNUP_PRESET_ROLE_KEY),
+          AsyncStorage.getItem(PARENT_GUEST_SUPPORTER_KEY),
         ]);
         let line = normalizeStoredProductLine(storedLine) ?? 'amateur';
         // Compat installs — ancien flag woman : bascule vers amateur jusqu’au profil connecté.
@@ -103,6 +110,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
           setWomanSpaceActive(false);
           setLineState(resolved);
           setProSignupPresetRoleState((presetRole as UserRole | null) ?? null);
+          setParentGuestSupporter(guestSupporter === '1');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -208,11 +216,31 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const enterParentSpace = useCallback(async () => {
     setWomanSpaceActive(false);
+    setParentGuestSupporter(false);
     setLineState('parent');
     setProSignupPresetRoleState('parent');
     await AsyncStorage.setItem(PRO_SIGNUP_PRESET_ROLE_KEY, 'parent');
+    await AsyncStorage.removeItem(PARENT_GUEST_SUPPORTER_KEY);
     await persistLine('parent');
   }, [persistLine]);
+
+  const openParentSupporterGuest = useCallback(async () => {
+    if (profile && profile.role !== 'parent') {
+      console.warn('openParentSupporterGuest réservé au rôle parent');
+      return;
+    }
+    setWomanSpaceActive(false);
+    setParentGuestSupporter(true);
+    setLineState('supporter');
+    await AsyncStorage.setItem(PARENT_GUEST_SUPPORTER_KEY, '1');
+    // Thème / chrome supporter sans écraser product_line profil (sync skip ci-dessous).
+  }, [profile]);
+
+  const returnParentFromSupporterGuest = useCallback(async () => {
+    setParentGuestSupporter(false);
+    await AsyncStorage.removeItem(PARENT_GUEST_SUPPORTER_KEY);
+    await enterParentSpace();
+  }, [enterParentSpace]);
 
   const exitWomanSpace = useCallback(async () => {
     await enterAmateurSpace();
@@ -248,11 +276,20 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (!profile || loading) return;
+    if (profile.role !== 'parent' && parentGuestSupporter) {
+      setParentGuestSupporter(false);
+      void AsyncStorage.removeItem(PARENT_GUEST_SUPPORTER_KEY);
+      return;
+    }
+    if (profile.role === 'parent' && parentGuestSupporter) {
+      if (productLine !== 'supporter') setLineState('supporter');
+      return;
+    }
     const userLine = getUserProductLine(profile);
     if (userLine !== productLine) {
       void setProductLine(userLine);
     }
-  }, [profile, loading, productLine, setProductLine]);
+  }, [profile, loading, productLine, setProductLine, parentGuestSupporter]);
 
   const isWoman = playerSegment === 'female' || productLine === 'woman';
   const isHomme = playerSegment === 'male' || productLine === 'homme';
@@ -260,7 +297,7 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
   const isAmateur = productLine === 'amateur';
   const isSupporter = productLine === 'supporter';
   const isSante = productLine === 'sante';
-  const isParent = productLine === 'parent';
+  const isParent = productLine === 'parent' || (profile?.role === 'parent' && !parentGuestSupporter);
   const guestSponsorAuth =
     !profile && (productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole));
   const guestParentAuth =
@@ -310,6 +347,9 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       enterParentSpace,
       enterSponsorSpace,
       exitWomanSpace,
+      parentGuestSupporter,
+      openParentSupporterGuest,
+      returnParentFromSupporterGuest,
       proSignupPresetRole,
       setProSignupPresetRole,
       loading,
@@ -341,6 +381,9 @@ export const ProductLineProvider: React.FC<{ children: React.ReactNode }> = ({
       enterParentSpace,
       enterSponsorSpace,
       exitWomanSpace,
+      parentGuestSupporter,
+      openParentSupporterGuest,
+      returnParentFromSupporterGuest,
       proSignupPresetRole,
       setProSignupPresetRole,
       loading,

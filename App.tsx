@@ -196,6 +196,8 @@ function AppShell() {
     loading: productLineLoading,
     setProductLine,
     setProSignupPresetRole,
+    parentGuestSupporter,
+    returnParentFromSupporterGuest,
   } = useProductLine();
   const sessionProfile = useSessionProfile();
   const {
@@ -279,6 +281,7 @@ function AppShell() {
   useEffect(() => {
     if (productLineLoading || authLoading || !profile) return;
     if (isPlatformAdminEmail(profile.email)) return;
+    if (profile.role === 'parent' && parentGuestSupporter) return;
     const userLine = getUserProductLine(profile);
     if (userLine !== productLine) {
       void setProductLine(userLine);
@@ -287,7 +290,15 @@ function AppShell() {
     if (!profileMatchesActiveLine(profile, productLine)) {
       void signOut();
     }
-  }, [productLine, productLineLoading, authLoading, profile, setProductLine, signOut]);
+  }, [
+    productLine,
+    productLineLoading,
+    authLoading,
+    profile,
+    setProductLine,
+    signOut,
+    parentGuestSupporter,
+  ]);
 
   useEffect(() => {
     if (authLoading || !profile || !pendingCarpoolLink) return;
@@ -381,6 +392,21 @@ function AppShell() {
     (sessionProfile ?? profile) &&
     parentPortalService.isParentRole((sessionProfile ?? profile)!.role)
   ) {
+    if (parentGuestSupporter && isEnabled('supporter')) {
+      return (
+        <SubscriptionProvider profile={sessionProfile ?? profile}>
+          <SupporterAppShell />
+        </SubscriptionProvider>
+      );
+    }
+    if (parentGuestSupporter && !isEnabled('supporter')) {
+      void returnParentFromSupporterGuest();
+      return (
+        <SubscriptionProvider profile={sessionProfile ?? profile}>
+          <ParentAppShell />
+        </SubscriptionProvider>
+      );
+    }
     return (
       <SubscriptionProvider profile={sessionProfile ?? profile}>
         <ParentAppShell />

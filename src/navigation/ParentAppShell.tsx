@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { ProDayText } from '../components/ui/ProDayText';
-import { Icon, type IconName } from '../components/ui/Icon';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { spacing, radius } from '../theme/designTokens';
 import {
@@ -17,25 +16,28 @@ import { ParentMessagesScreen } from '../screens/parent/ParentMessagesScreen';
 import { ParentAgendaScreen } from '../screens/parent/ParentAgendaScreen';
 import { ParentCarpoolScreen } from '../screens/parent/ParentCarpoolScreen';
 import { ParentSettingsScreen } from '../screens/parent/ParentSettingsScreen';
+import { ParentGuideScreen } from '../screens/parent/ParentGuideScreen';
+import { ParentMenuScreen } from '../screens/parent/ParentMenuScreen';
 import { SubscriptionShell } from '../components/subscription/SubscriptionShell';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import {
   ParentShellContext,
   type ParentTabId,
 } from './parentShellContext';
+import {
+  PARENT_PRIMARY_TABS,
+  canonicalizeParentNav,
+} from '../features/parent/navigation/parentNavConfig';
+import { ParentTabBar } from '../features/parent/shell/ParentTabBar';
+import { ParentShellNavProvider } from '../features/parent/shell/ParentShellNavContext';
 
 export type { ParentTabId } from './parentShellContext';
 export { useParentShell } from './parentShellContext';
 
-const TABS: { id: ParentTabId; label: string; icon: IconName }[] = [
-  { id: 'home', label: 'Accueil', icon: 'home' },
-  { id: 'profil', label: 'Profil', icon: 'person' },
-  { id: 'messages', label: 'Messages', icon: 'chat' },
-  { id: 'agenda', label: 'Agenda', icon: 'calendar' },
-  { id: 'trajet', label: 'Trajet', icon: 'car' },
-  { id: 'reglages', label: 'Réglages', icon: 'settings' },
-];
-
+/**
+ * Shell Pôle Parent — 5 onglets (Accueil, Enfant, Guide IA, Menu, Profil).
+ * Style volontairement simple, aligné sur le dock Coach.
+ */
 export const ParentAppShell: React.FC = () => {
   const profile = useSessionProfile();
   if (!profile) return null;
@@ -49,10 +51,14 @@ export const ParentAppShell: React.FC = () => {
 const ParentAppShellInner: React.FC = () => {
   const { profile, signOut } = useAuth();
   const { colors: c, rootStyle } = useThemedScreen();
-  const [activeTab, setActiveTab] = useState<ParentTabId>('home');
+  const [activeTab, setActiveTabRaw] = useState<ParentTabId>('home');
   const [children, setChildren] = useState<ParentChildBundle[]>([]);
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const setActiveTab = useCallback((tab: ParentTabId) => {
+    setActiveTabRaw(canonicalizeParentNav(tab));
+  }, []);
 
   const reload = useCallback(async () => {
     if (!profile) {
@@ -65,7 +71,7 @@ const ParentAppShellInner: React.FC = () => {
       const list = await parentPortalService.listLinkedChildren(profile);
       setChildren(list);
       setSelectedUid((prev) => {
-        if (prev && list.some((c) => c.uid === prev)) return prev;
+        if (prev && list.some((child) => child.uid === prev)) return prev;
         return list[0]?.uid ?? null;
       });
     } finally {
@@ -78,7 +84,7 @@ const ParentAppShellInner: React.FC = () => {
   }, [reload]);
 
   const selected = useMemo(
-    () => children.find((c) => c.uid === selectedUid) ?? children[0] ?? null,
+    () => children.find((child) => child.uid === selectedUid) ?? children[0] ?? null,
     [children, selectedUid],
   );
 
@@ -89,8 +95,10 @@ const ParentAppShellInner: React.FC = () => {
       setSelectedUid: (uid: string) => setSelectedUid(uid),
       reload,
       loading,
+      activeTab,
+      setActiveTab,
     }),
-    [children, selected, reload, loading],
+    [children, selected, reload, loading, activeTab, setActiveTab],
   );
 
   let screen: React.ReactNode = null;
@@ -105,8 +113,14 @@ const ParentAppShellInner: React.FC = () => {
       case 'home':
         screen = <ParentHomeScreen onOpenTab={setActiveTab} />;
         break;
-      case 'profil':
+      case 'enfant':
         screen = <ParentChildProfileScreen />;
+        break;
+      case 'guide':
+        screen = <ParentGuideScreen />;
+        break;
+      case 'plus':
+        screen = <ParentMenuScreen />;
         break;
       case 'messages':
         screen = <ParentMessagesScreen />;
@@ -120,65 +134,45 @@ const ParentAppShellInner: React.FC = () => {
       case 'reglages':
         screen = <ParentSettingsScreen onSignOut={signOut} />;
         break;
+      default:
+        screen = <ParentHomeScreen onOpenTab={setActiveTab} />;
     }
   }
 
   return (
     <ParentShellContext.Provider value={ctxValue}>
-      <SafeAreaView
-        style={[styles.root, rootStyle, { backgroundColor: c.background }]}
-        edges={['top', 'left', 'right']}
-      >
-        <StatusBar style="light" />
-        <View style={styles.header}>
-          <View>
-            <ProDayText variant="caption" muted>
-              Pôle Parent
-            </ProDayText>
-            <ProDayText variant="section">Pro Day Parent</ProDayText>
-          </View>
-          {selected ? (
-            <Pressable
-              onPress={() => setActiveTab('profil')}
-              style={[styles.childPill, { borderColor: c.brand, backgroundColor: c.brandSoft }]}
-            >
-              <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
-                {selected.display_name}
-              </ProDayText>
-            </Pressable>
-          ) : null}
-        </View>
-        <View style={styles.content}>{screen}</View>
+      <ParentShellNavProvider requestNav={setActiveTab}>
         <SafeAreaView
-          edges={['bottom']}
-          style={[styles.tabBar, { borderTopColor: c.border, backgroundColor: c.surface }]}
+          style={[styles.root, rootStyle, { backgroundColor: c.background }]}
+          edges={['top', 'left', 'right']}
         >
-          {TABS.map((tab) => {
-            const active = activeTab === tab.id;
-            return (
+          <StatusBar style="light" />
+          <View style={styles.header}>
+            <View>
+              <ProDayText variant="caption" muted>
+                Parent
+              </ProDayText>
+              <ProDayText variant="section">Pro Day</ProDayText>
+            </View>
+            {selected ? (
               <Pressable
-                key={tab.id}
-                onPress={() => setActiveTab(tab.id)}
-                style={styles.tabItem}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
+                onPress={() => setActiveTab('enfant')}
+                style={[styles.childPill, { borderColor: c.brand, backgroundColor: c.brandSoft }]}
               >
-                <Icon name={tab.icon} size={20} color={active ? c.brand : c.textMuted} />
-                <ProDayText
-                  variant="caption"
-                  style={{
-                    color: active ? c.brand : c.textMuted,
-                    fontWeight: active ? '700' : '500',
-                    fontSize: 10,
-                  }}
-                >
-                  {tab.label}
+                <ProDayText variant="caption" accent style={{ fontWeight: '700' }}>
+                  {selected.display_name}
                 </ProDayText>
               </Pressable>
-            );
-          })}
+            ) : null}
+          </View>
+          <View style={styles.content}>{screen}</View>
+          <ParentTabBar
+            items={PARENT_PRIMARY_TABS}
+            activeId={activeTab}
+            onSelect={setActiveTab}
+          />
         </SafeAreaView>
-      </SafeAreaView>
+      </ParentShellNavProvider>
     </ParentShellContext.Provider>
   );
 };
@@ -201,16 +195,4 @@ const styles = StyleSheet.create({
   },
   content: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  tabBar: {
-    flexDirection: 'row',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: spacing.xs,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.md,
-  },
 });
