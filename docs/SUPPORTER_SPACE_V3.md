@@ -20,9 +20,16 @@
  * couvre pas). Clubs suivis : `GET /teams/{id}/matches`, avec repli fenêtre Big-5 si l’endpoint
  * équipe est vide (quota ~10 req/min).
  *
- * ### Interdit — calendrier / scores IA
- * Un LLM qui « distribue » ou invente des matchs = données fictives. **Refusé** produit :
- * empty state honnête + CTA config API seulement. Pas de second provider inventé.
+ * ### Interdit — calendrier / scores IA (invention **et** agent web côté app)
+ * 1. Un LLM qui « distribue » ou invente des matchs depuis sa mémoire = données fictives.
+ *    **Refusé** produit : empty state honnête + CTA config API seulement.
+ * 2. Un agent qui « cherche sur le web depuis l’app » puis met à jour les matchs =
+ *    scraper/agent mobile (coût, latence, flakiness, ToS/légal, non vérifiable).
+ *    **Refusé** côté client Expo. Les calendriers réels viennent déjà des APIs
+ *    (Sportmonks / football-data) qui agrègent des sources officielles.
+ * 3. Futur éventuel (hors scope actuel) : Cloud Function / Netlify function
+ *    allowlist (Ligue1.com, FIFA, BBC Sport…) → parse structuré → validation
+ *    schéma / humain → `UnifiedMatch`. Pas de SDK agent dans le binaire mobile.
  *
  * ## Endpoints Sportmonks
  * | Méthode façade | Endpoint Sportmonks |
@@ -81,4 +88,6 @@
  * - Panneau admin football
  * - Sidebar desktop
  * - Pipeline Veo
+ * - (optionnel) fetch serveur allowlist pages/RSS → map `UnifiedMatch`
+ *   — uniquement si football-data / Sportmonks ne couvrent plus un besoin
  */

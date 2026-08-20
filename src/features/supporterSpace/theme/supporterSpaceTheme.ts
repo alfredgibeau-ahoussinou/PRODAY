@@ -32,7 +32,7 @@ export const SUPPORTER_SPACE = {
 export const SUPPORTER_SPACE_COPY = {
   heroTitle: 'Ton football, en direct.',
   heroSubtitle:
-    'Matchs ProDay et ligues via APIs (Sportmonks / football-data) — jamais inventés par l’IA.',
+    'Sources : APIs officielles agrégées (Sportmonks / football-data) — pas de génération IA ni de recherche web depuis l’app.',
   welcomeBack: 'Bon retour',
   emptyLive: 'Aucun match en direct pour le moment (données API).',
   emptyUpcoming:
@@ -54,7 +54,7 @@ export const SUPPORTER_SPACE_COPY = {
     'Plan Sportmonks limité : ajoute EXPO_PUBLIC_FOOTBALL_DATA_TOKEN pour Ligue 1 / top 5 (API gratuite), ou upgrade Sportmonks.',
   /** Soft reminder under Accueil banners when APIs are live but lists can still be empty. */
   dataSourceHint:
-    'Calendriers et scores = APIs réelles uniquement. Un jour vide signifie qu’il n’y a pas de match publié — pas d’invention IA.',
+    'Calendriers et scores = APIs réelles (agrégats officiels). Jour vide = rien de publié. Pas d’invention IA ; une recherche web agent resterait côté serveur allowlist (futur).',
   searchPlaceholder: 'Clubs, matchs, compétitions…',
   notifStub: 'Notifications — bientôt',
   debateCta: 'Débattre',
