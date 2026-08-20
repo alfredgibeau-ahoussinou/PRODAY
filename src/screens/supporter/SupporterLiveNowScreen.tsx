@@ -10,6 +10,7 @@ import { useSeasonCalendar } from '../../hooks/useAppData';
 import { useTournaments } from '../../hooks/useTournaments';
 import { useSupporterMatchHub } from '../../hooks/useSupporterMatchHub';
 import { followsService } from '../../services/follows.service';
+import { DEFAULT_SUPPORTER_MATCH_FILTERS } from '../../services/supporterPreferences.service';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import type { Follow } from '../../models/Follow';
@@ -19,6 +20,9 @@ import { FootballHubMatchCenterScreen } from '../footballHub/FootballHubMatchCen
 type Props = {
   onBack?: () => void;
 };
+
+const EMPTY_EVENTS: never[] = [];
+const EMPTY_TOURNAMENTS: never[] = [];
 
 /** Scores live — toujours le chapitre direct, indépendant du dock Matchs. */
 export const SupporterLiveNowScreen: React.FC<Props> = ({ onBack }) => {
@@ -34,10 +38,10 @@ export const SupporterLiveNowScreen: React.FC<Props> = ({ onBack }) => {
   }, [profile?.uid]);
 
   const hub = useSupporterMatchHub({
-    calendarEvents: events,
-    tournaments,
+    calendarEvents: events ?? EMPTY_EVENTS,
+    tournaments: tournaments ?? EMPTY_TOURNAMENTS,
     follows,
-    filters: { gender: 'all', source: 'all', scope: 'all', competition: 'all' },
+    filters: DEFAULT_SUPPORTER_MATCH_FILTERS,
     pollLive: true,
   });
 

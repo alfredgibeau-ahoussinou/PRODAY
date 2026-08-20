@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import {
   HubClubChip,
@@ -19,11 +19,15 @@ import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { followsService } from '../../services/follows.service';
 import { supporterVideoService } from '../../services/supporterVideo.service';
 import { footballDataFacade } from '../../services/footballData';
+import { DEFAULT_SUPPORTER_MATCH_FILTERS } from '../../services/supporterPreferences.service';
 import type { Follow } from '../../models/Follow';
 import type { SupporterVideo } from '../../models/SupporterVideo';
 import type { FootballCompetitionEntry } from '../../services/footballData/types';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { FootballHubMatchCenterScreen } from './FootballHubMatchCenterScreen';
+
+const EMPTY_EVENTS: never[] = [];
+const EMPTY_TOURNAMENTS: never[] = [];
 
 /** Accueil PRODAY Football Hub. */
 export const FootballHubHomeScreen: React.FC = () => {
@@ -37,6 +41,9 @@ export const FootballHubHomeScreen: React.FC = () => {
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showDiscover, setShowDiscover] = useState(false);
+
+  const calendarEvents = events ?? EMPTY_EVENTS;
+  const tournamentList = tournaments ?? EMPTY_TOURNAMENTS;
 
   const loadFollows = useCallback(async () => {
     if (!profile?.uid) {
@@ -52,17 +59,17 @@ export const FootballHubHomeScreen: React.FC = () => {
   }, [profile?.uid]);
 
   const hub = useSupporterMatchHub({
-    calendarEvents: events ?? [],
-    tournaments: tournaments ?? [],
+    calendarEvents,
+    tournaments: tournamentList,
     follows,
-    filters: { gender: 'all', source: 'all', scope: 'all', competition: 'all' },
+    filters: DEFAULT_SUPPORTER_MATCH_FILTERS,
     pollLive: true,
   });
 
   const loadExtras = useCallback(async () => {
     try {
       const [vids, catalog] = await Promise.all([
-        supporterVideoService.listAvailable({ prodayEvents: events ?? [], max: 8 }),
+        supporterVideoService.listAvailable({ prodayEvents: calendarEvents, max: 8 }),
         footballDataFacade.listCompetitionsByCountry('FR'),
       ]);
       setVideos(Array.isArray(vids) ? vids : []);
@@ -71,7 +78,7 @@ export const FootballHubHomeScreen: React.FC = () => {
       setVideos([]);
       setComps([]);
     }
-  }, [events]);
+  }, [calendarEvents]);
 
   useEffect(() => {
     void loadFollows();
@@ -83,19 +90,19 @@ export const FootballHubHomeScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([hub.refresh(), loadFollows(), loadExtras()]);
+    await Promise.all([hub.refresh({ silent: true }), loadFollows(), loadExtras()]);
     setRefreshing(false);
-  }, [hub, loadFollows, loadExtras]);
+  }, [hub.refresh, loadFollows, loadExtras]);
 
-  const live = hub.sections.live;
-  /** Suivis en priorité ; sinon calendrier monde pour ne pas laisser l’Accueil vide. */
-  const upcoming =
-    hub.sections.upcoming.length > 0
-      ? hub.sections.upcoming.slice(0, 12)
-      : hub.sections.world.slice(0, 12);
-  const proday = hub.sections.proday.slice(0, 8);
-  const clubFollows = follows.filter((f) => f.target_type === 'club');
+  const live = hub.sections.live ?? [];
+  const upcoming = (hub.sections.upcoming ?? []).slice(0, 12);
+  const proday = (hub.sections.proday ?? []).slice(0, 8);
+  const clubFollows = useMemo(
+    () => follows.filter((f) => f.target_type === 'club'),
+    [follows],
+  );
   const apiUnhealthy = hub.providerState && hub.providerState.healthy === false;
+  const showInitialSpinner = hub.loading && live.length === 0 && upcoming.length === 0;
 
   if (selected) {
     return (
@@ -130,10 +137,18 @@ export const FootballHubHomeScreen: React.FC = () => {
           <ProDayText variant="caption" style={styles.bannerText}>
             {hub.providerState.message ?? FOOTBALL_HUB_COPY.apiBanner}
           </ProDayText>
+          <Pressable
+            style={styles.retryBtn}
+            onPress={() => void hub.refresh({ silent: false })}
+          >
+            <ProDayText variant="caption" style={styles.retryLabel}>
+              Réessayer
+            </ProDayText>
+          </Pressable>
         </View>
       ) : null}
 
-      {hub.loading && live.length === 0 && upcoming.length === 0 ? (
+      {showInitialSpinner ? (
         <ActivityIndicator color={FOOTBALL_HUB.bright} />
       ) : null}
 
@@ -206,7 +221,10 @@ export const FootballHubHomeScreen: React.FC = () => {
         ))}
       </HubSection>
 
-      <HubSection title="Compétitions">
+      <HubSection
+        title="Compétitions"
+        emptyLabel={comps.length === 0 ? FOOTBALL_HUB_COPY.emptySearch : undefined}
+      >
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {comps.map((c) => (
             <HubCompetitionCard
@@ -258,8 +276,19 @@ const styles = StyleSheet.create({
     padding: 12,
     borderWidth: 1,
     borderColor: 'rgba(248, 113, 113, 0.35)',
+    gap: 10,
   },
   bannerText: { color: FOOTBALL_HUB.danger },
+  retryBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: FOOTBALL_HUB.soft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
+  retryLabel: { color: FOOTBALL_HUB.bright, fontWeight: '700' },
   videoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

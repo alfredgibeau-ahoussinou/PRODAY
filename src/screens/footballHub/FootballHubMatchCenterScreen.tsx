@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -22,8 +22,8 @@ import { syntheticEventFromLineup } from '../../utils/supporterMatchDetail';
 import { FOOTBALL_HUB, FOOTBALL_HUB_COPY } from '../../features/footballHub/theme/footballHubTheme';
 import { spacing } from '../../theme/designTokens';
 
-/** Poll score / events pendant un match live (cache API-Football ~30s). */
-const LIVE_POLL_MS = 40_000;
+/** Poll score / events pendant un match live — silencieux, max ~45s. */
+const LIVE_POLL_MS = 45_000;
 
 const TAB_LABELS: Partial<Record<MatchCenterTabId, string>> = {
   resume: 'Résumé',
@@ -47,30 +47,42 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
   const [center, setCenter] = useState<MatchCenterData | null>(null);
   const [tab, setTab] = useState<MatchCenterTabId>('resume');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [liveItem, setLiveItem] = useState(item);
   const [iaOpen, setIaOpen] = useState(false);
+  const itemRef = useRef(item);
+  itemRef.current = item;
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
     try {
-      const data = await fetchMatchCenterData(item.id, { seedItem: item });
+      const seed = itemRef.current;
+      const data = await fetchMatchCenterData(seed.id, { seedItem: seed });
       if (data) {
         setCenter(data);
         setLiveItem(data.item);
+        setError(false);
         setTab((current) =>
           data.availableTabs.includes(current) ? current : data.availableTabs[0] ?? 'resume',
         );
+      } else if (!opts?.silent) {
+        setCenter(null);
+        setError(true);
       }
     } catch {
-      if (!opts?.silent) setCenter(null);
+      if (!opts?.silent) {
+        setCenter(null);
+        setError(true);
+      }
     } finally {
       if (!opts?.silent) setLoading(false);
     }
-  }, [item]);
+  }, []);
 
   useEffect(() => {
+    setLiveItem(item);
     void load();
-  }, [load]);
+  }, [item.id, load]);
 
   useEffect(() => {
     if (liveItem.status !== 'live') return undefined;
@@ -136,6 +148,17 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
 
       {loading ? (
         <ActivityIndicator color={FOOTBALL_HUB.bright} style={{ marginTop: 40 }} />
+      ) : error && !center ? (
+        <View style={styles.banner}>
+          <ProDayText variant="body" style={styles.bannerText}>
+            Impossible de charger le détail du match.
+          </ProDayText>
+          <Pressable style={styles.retryBtn} onPress={() => void load({ silent: false })}>
+            <ProDayText variant="caption" style={styles.retryLabel}>
+              Réessayer
+            </ProDayText>
+          </Pressable>
+        </View>
       ) : (
         <>
           <ScrollView
@@ -219,9 +242,11 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
                   />
                 ))
               ) : (
-                <ProDayText variant="body" style={styles.muted}>
-                  Composition non disponible
-                </ProDayText>
+                <View style={styles.emptyCard}>
+                  <ProDayText variant="body" style={styles.muted}>
+                    Composition non disponible pour ce match.
+                  </ProDayText>
+                </View>
               )
             ) : null}
 
@@ -353,6 +378,33 @@ const styles = StyleSheet.create({
   body: { padding: 16, paddingBottom: 120, gap: spacing.md },
   block: { gap: 10 },
   muted: { color: FOOTBALL_HUB.muted },
+  emptyCard: {
+    backgroundColor: FOOTBALL_HUB.surface,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
+  banner: {
+    margin: 16,
+    backgroundColor: 'rgba(248, 113, 113, 0.12)',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(248, 113, 113, 0.35)',
+    gap: 10,
+  },
+  bannerText: { color: FOOTBALL_HUB.danger },
+  retryBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: FOOTBALL_HUB.soft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
+  retryLabel: { color: FOOTBALL_HUB.bright, fontWeight: '700' },
   event: { color: FOOTBALL_HUB.foreground, marginBottom: 6 },
   statRow: {
     flexDirection: 'row',

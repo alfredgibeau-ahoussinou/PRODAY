@@ -9,10 +9,20 @@ import { useTournaments } from '../../hooks/useTournaments';
 import { useSupporterMatchHub } from '../../hooks/useSupporterMatchHub';
 import { followsService } from '../../services/follows.service';
 import { supporterVideoService } from '../../services/supporterVideo.service';
+import type { SupporterMatchFilters } from '../../services/supporterPreferences.service';
 import type { Follow } from '../../models/Follow';
 import type { SupporterVideo } from '../../models/SupporterVideo';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { FootballHubMatchCenterScreen } from './FootballHubMatchCenterScreen';
+
+const EMPTY_EVENTS: never[] = [];
+const EMPTY_TOURNAMENTS: never[] = [];
+const PRODAY_FILTERS: SupporterMatchFilters = {
+  gender: 'all',
+  source: 'proday',
+  scope: 'all',
+  competition: 'all',
+};
 
 export const FootballHubProDayScreen: React.FC = () => {
   const { profile } = useAuth();
@@ -33,16 +43,16 @@ export const FootballHubProDayScreen: React.FC = () => {
 
   useEffect(() => {
     void supporterVideoService
-      .listAvailable({ prodayEvents: events ?? [], max: 10 })
+      .listAvailable({ prodayEvents: events ?? EMPTY_EVENTS, max: 10 })
       .then((list) => setVideos(Array.isArray(list) ? list : []))
       .catch(() => setVideos([]));
   }, [events]);
 
   const hub = useSupporterMatchHub({
-    calendarEvents: events ?? [],
-    tournaments: tournaments ?? [],
+    calendarEvents: events ?? EMPTY_EVENTS,
+    tournaments: tournaments ?? EMPTY_TOURNAMENTS,
     follows,
-    filters: { gender: 'all', source: 'proday', scope: 'all', competition: 'all' },
+    filters: PRODAY_FILTERS,
     pollLive: true,
   });
 
@@ -62,7 +72,7 @@ export const FootballHubProDayScreen: React.FC = () => {
           refreshing={refreshing}
           onRefresh={async () => {
             setRefreshing(true);
-            await hub.refresh();
+            await hub.refresh({ silent: true });
             setRefreshing(false);
           }}
           tintColor={FOOTBALL_HUB.bright}

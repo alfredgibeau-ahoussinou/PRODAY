@@ -17,6 +17,7 @@ import type {
 } from './externalScores.types';
 import type { LiveMatchAction } from '../models/TeamEvent';
 import type { ExternalFixtureLineup } from '../utils/supporterMatchDetail';
+import { mapApiFootballLineup } from '../utils/supporterMatchDetail';
 import {
   mergeTeamSearchHits,
   resolvePopularClubApiIdByName,
@@ -381,8 +382,41 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
       .map(cloneFixture)
       .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime());
   },
-  async getFixtureLineups() {
-    return { lineups: [] as ExternalFixtureLineup[] };
+  async getFixtureLineups(fixtureId: string) {
+    const key = fixtureId.startsWith('world-fixture-')
+      ? fixtureId.slice('world-fixture-'.length)
+      : fixtureId;
+    const fixture =
+      MOCK_FIXTURES.find((f) => f.id === key) ??
+      MOCK_FIXTURES.find((f) => f.status === 'live');
+    if (!fixture) return { lineups: [] as ExternalFixtureLineup[] };
+
+    const buildSide = (teamName: string, prefix: string) =>
+      mapApiFootballLineup({
+        team: { name: teamName },
+        formation: '4-3-3',
+        startXI: [
+          { player: { id: 1, name: `${prefix} Gardien`, pos: 'G', grid: '1:1' } },
+          { player: { id: 2, name: `${prefix} DG`, pos: 'D', grid: '2:1' } },
+          { player: { id: 3, name: `${prefix} DC`, pos: 'D', grid: '2:2' } },
+          { player: { id: 4, name: `${prefix} DC`, pos: 'D', grid: '2:3' } },
+          { player: { id: 5, name: `${prefix} DD`, pos: 'D', grid: '2:4' } },
+          { player: { id: 6, name: `${prefix} MC`, pos: 'M', grid: '3:1' } },
+          { player: { id: 7, name: `${prefix} MC`, pos: 'M', grid: '3:2' } },
+          { player: { id: 8, name: `${prefix} MC`, pos: 'M', grid: '3:3' } },
+          { player: { id: 9, name: `${prefix} AG`, pos: 'F', grid: '4:1' } },
+          { player: { id: 10, name: `${prefix} BU`, pos: 'F', grid: '4:2' } },
+          { player: { id: 11, name: `${prefix} AD`, pos: 'F', grid: '4:3' } },
+        ],
+        substitutes: [{ player: { id: 12, name: `${prefix} Remplaçant`, pos: 'M' } }],
+      });
+
+    const lineups = [
+      buildSide(fixture.home_team, 'H'),
+      buildSide(fixture.away_team, 'A'),
+    ].filter((row): row is ExternalFixtureLineup => Boolean(row));
+
+    return { lineups };
   },
   async getFixtureEvents() {
     return { events: [] as LiveMatchAction[] };

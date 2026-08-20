@@ -34,13 +34,17 @@ export const HubSection: React.FC<Props> = ({
       ) : null}
     </View>
     {loading ? (
-      <ProDayText variant="caption" style={styles.muted}>
-        Chargement…
-      </ProDayText>
+      <View style={styles.emptyCard}>
+        <ProDayText variant="caption" style={styles.muted}>
+          Chargement…
+        </ProDayText>
+      </View>
     ) : emptyLabel ? (
-      <ProDayText variant="body" style={styles.muted}>
-        {emptyLabel}
-      </ProDayText>
+      <View style={styles.emptyCard}>
+        <ProDayText variant="body" style={styles.muted}>
+          {emptyLabel}
+        </ProDayText>
+      </View>
     ) : (
       children
     )}
@@ -62,4 +66,11 @@ const styles = StyleSheet.create({
   },
   action: { color: FOOTBALL_HUB.bright },
   muted: { color: FOOTBALL_HUB.muted },
+  emptyCard: {
+    backgroundColor: FOOTBALL_HUB.surface,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
 });

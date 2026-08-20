@@ -274,6 +274,12 @@ export async function fetchSupporterMatchHub(
       )
     : [];
 
+  /** Sans clubs suivis : calendrier monde pour ne jamais laisser « Prochains matchs » vide. */
+  const upcomingBase =
+    upcomingFollowed.length > 0
+      ? upcomingFollowed
+      : [...worldRaw].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+
   const broadcastsRaw = dedupeMatchItems([
     ...liveRaw,
     ...recentRaw,
@@ -290,7 +296,7 @@ export async function fetchSupporterMatchHub(
   };
 
   const sections: SupporterMatchHubSections = {
-    upcoming: filterMatchItems(upcomingFollowed, filters, followContext, follows),
+    upcoming: filterMatchItems(upcomingBase, filters, followContext, follows),
     live: filterMatchItems(liveRaw, liveFilters, followContext, follows),
     recent: filterMatchItems(recentRaw, filters, followContext, follows),
     proday: filterMatchItems(prodayRaw, filters, followContext, follows),

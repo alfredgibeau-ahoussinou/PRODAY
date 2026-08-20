@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { HubMatchRow, HubScreen, HubSearchBar, HubSection } from '../../features/footballHub/components';
 import { FOOTBALL_HUB, FOOTBALL_HUB_COPY } from '../../features/footballHub/theme/footballHubTheme';
@@ -8,10 +8,10 @@ import { useSeasonCalendar } from '../../hooks/useAppData';
 import { useTournaments } from '../../hooks/useTournaments';
 import { useSupporterMatchHub } from '../../hooks/useSupporterMatchHub';
 import { followsService } from '../../services/follows.service';
+import { DEFAULT_SUPPORTER_MATCH_FILTERS } from '../../services/supporterPreferences.service';
 import type { Follow } from '../../models/Follow';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { FootballHubMatchCenterScreen } from './FootballHubMatchCenterScreen';
-import { useEffect } from 'react';
 
 type Chapter = 'live' | 'today' | 'upcoming' | 'world';
 
@@ -21,6 +21,9 @@ const CHAPTERS: { id: Chapter; label: string }[] = [
   { id: 'upcoming', label: 'À venir' },
   { id: 'world', label: 'Monde' },
 ];
+
+const EMPTY_EVENTS: never[] = [];
+const EMPTY_TOURNAMENTS: never[] = [];
 
 function isSameDay(a: Date, b: Date) {
   return (
@@ -48,26 +51,27 @@ export const FootballHubMatchsScreen: React.FC = () => {
   }, [profile?.uid]);
 
   const hub = useSupporterMatchHub({
-    calendarEvents: events ?? [],
-    tournaments: tournaments ?? [],
+    calendarEvents: events ?? EMPTY_EVENTS,
+    tournaments: tournaments ?? EMPTY_TOURNAMENTS,
     follows,
-    filters: { gender: 'all', source: 'all', scope: 'all', competition: 'all' },
+    filters: DEFAULT_SUPPORTER_MATCH_FILTERS,
     pollLive: chapter === 'live',
   });
 
   const items = useMemo(() => {
     const now = new Date();
+    const live = hub.sections.live ?? [];
+    const upcoming = hub.sections.upcoming ?? [];
+    const world = hub.sections.world ?? [];
     switch (chapter) {
       case 'live':
-        return hub.sections.live;
+        return live;
       case 'today':
-        return [...hub.sections.live, ...hub.sections.upcoming, ...hub.sections.world].filter(
-          (i) => isSameDay(i.startsAt, now),
-        );
+        return [...live, ...upcoming, ...world].filter((i) => isSameDay(i.startsAt, now));
       case 'upcoming':
-        return hub.sections.upcoming;
+        return upcoming.length > 0 ? upcoming : world;
       case 'world':
-        return hub.sections.world;
+        return world;
       default:
         return [];
     }
@@ -86,7 +90,7 @@ export const FootballHubMatchsScreen: React.FC = () => {
           refreshing={refreshing}
           onRefresh={async () => {
             setRefreshing(true);
-            await hub.refresh();
+            await hub.refresh({ silent: true });
             setRefreshing(false);
           }}
           tintColor={FOOTBALL_HUB.bright}
@@ -119,6 +123,19 @@ export const FootballHubMatchsScreen: React.FC = () => {
         </ProDayText>
       </Pressable>
       {showSearch ? <HubSearchBar /> : null}
+
+      {hub.providerState?.healthy === false ? (
+        <View style={styles.banner}>
+          <ProDayText variant="caption" style={styles.bannerText}>
+            {hub.providerState.message ?? FOOTBALL_HUB_COPY.apiBanner}
+          </ProDayText>
+          <Pressable style={styles.retryBtn} onPress={() => void hub.refresh({ silent: false })}>
+            <ProDayText variant="caption" style={styles.retryLabel}>
+              Réessayer
+            </ProDayText>
+          </Pressable>
+        </View>
+      ) : null}
 
       <HubSection
         title={CHAPTERS.find((c) => c.id === chapter)?.label ?? 'Matchs'}
@@ -155,4 +172,23 @@ const styles = StyleSheet.create({
   chipLabelActive: { color: FOOTBALL_HUB.foreground, fontWeight: '700' },
   searchToggle: { alignSelf: 'flex-start' },
   searchToggleLabel: { color: FOOTBALL_HUB.bright },
+  banner: {
+    backgroundColor: 'rgba(248, 113, 113, 0.12)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(248, 113, 113, 0.35)',
+    gap: 10,
+  },
+  bannerText: { color: FOOTBALL_HUB.danger },
+  retryBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: FOOTBALL_HUB.soft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
+  retryLabel: { color: FOOTBALL_HUB.bright, fontWeight: '700' },
 });

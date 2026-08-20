@@ -2,6 +2,7 @@ import { externalScoresService } from '../externalScores.service';
 import type { ExternalFixture } from '../externalScores.types';
 import type { ExternalFixtureLineup } from '../../utils/supporterMatchDetail';
 import {
+  extractWorldFixtureKey,
   parseProdayEventId,
   parseWorldFixtureRef,
 } from '../../utils/supporterMatchDetail';
@@ -29,18 +30,15 @@ const statsCache = new Map<string, { expiresAt: number; data: FootballMatchStati
  */
 export function normalizeWorldFixtureKey(fixtureId: string): string {
   const trimmed = fixtureId.trim();
-  if (trimmed.startsWith('api_') || trimmed.startsWith('fd_')) return trimmed;
   const ref = parseWorldFixtureRef(trimmed);
   if (ref) return ref.fixtureKey;
-  if (/^\d+$/.test(trimmed)) return `api_${trimmed}`;
-  return trimmed;
+  return extractWorldFixtureKey(trimmed);
 }
 
 export function toWorldMatchCenterId(fixtureId: string): string {
   const key = normalizeWorldFixtureKey(fixtureId);
   if (key.startsWith('world-fixture-') || key.startsWith('proday-event-')) return key;
-  if (key.startsWith('api_') || key.startsWith('fd_')) return `world-fixture-${key}`;
-  return key;
+  return `world-fixture-${key}`;
 }
 
 async function fetchApiStatistics(fixtureKey: string): Promise<FootballMatchStatistics | null> {
@@ -104,10 +102,9 @@ export class ExternalFootballDataProvider implements FootballDataProvider {
     matchId: string,
     seedItem?: SupporterMatchViewItem | null,
   ): Promise<FootballMatchDetail | null> {
-    const ref = parseWorldFixtureRef(matchId);
-    if (!ref) return null;
-
-    const fixtureKey = ref.fixtureKey;
+    const fixtureKey = normalizeWorldFixtureKey(matchId);
+    const ref = parseWorldFixtureRef(matchId) ?? parseWorldFixtureRef(fixtureKey);
+    const numericId = ref?.numericId;
 
     const [byId, lineupRes, eventRes, statistics] = await Promise.all([
       externalScoresService.getFixtureById(fixtureKey),
@@ -123,10 +120,14 @@ export class ExternalFootballDataProvider implements FootballDataProvider {
         this.listUpcomingFixtures(30).catch(() => [] as ExternalFixture[]),
         externalScoresService.listRecentFinishedFixtures().catch(() => [] as ExternalFixture[]),
       ]);
+      const matchFixture = (f: ExternalFixture) =>
+        f.id === fixtureKey ||
+        (numericId != null && f.api_fixture_id === numericId) ||
+        (seedItem?.worldFixtureId != null && f.id === seedItem.worldFixtureId);
       fixture =
-        live.find((f) => f.id === fixtureKey || f.api_fixture_id === ref.numericId) ??
-        upcoming.find((f) => f.id === fixtureKey || f.api_fixture_id === ref.numericId) ??
-        recent.find((f) => f.id === fixtureKey || f.api_fixture_id === ref.numericId) ??
+        live.find(matchFixture) ??
+        upcoming.find(matchFixture) ??
+        recent.find(matchFixture) ??
         null;
     }
 
@@ -293,7 +294,7 @@ export class MergedFootballProvider implements FootballDataProvider {
   }
 
   async getLineups(fixtureId: string) {
-    const prodayId = parseProdayEventId(fixtureId) ?? parseProdayEventId(`proday-event-${fixtureId}`);
+    const prodayId = parseProdayEventId(fixtureId);
     if (prodayId) {
       const detail = await this.proday.getMatchDetail(`proday-event-${prodayId}`);
       return detail?.lineups ?? [];
@@ -303,7 +304,7 @@ export class MergedFootballProvider implements FootballDataProvider {
   }
 
   async getEvents(fixtureId: string) {
-    const prodayId = parseProdayEventId(fixtureId) ?? parseProdayEventId(`proday-event-${fixtureId}`);
+    const prodayId = parseProdayEventId(fixtureId);
     if (prodayId) {
       const detail = await this.proday.getMatchDetail(`proday-event-${prodayId}`);
       return detail?.events ?? [];

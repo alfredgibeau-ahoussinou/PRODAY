@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Follow } from '../models/Follow';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { Tournament } from '../models/Tournament';
@@ -27,7 +27,8 @@ export interface UseSupporterMatchHubOptions {
 
 export interface UseSupporterMatchHubResult extends SupporterMatchHubResult {
   loading: boolean;
-  refresh: () => Promise<void>;
+  /** Premier chargement ou pull-to-refresh explicite (silent=false). */
+  refresh: (opts?: { silent?: boolean }) => Promise<void>;
 }
 
 const EMPTY_HUB: SupporterMatchHubResult = {
@@ -43,6 +44,22 @@ const EMPTY_HUB: SupporterMatchHubResult = {
     message: 'Impossible de charger les scores',
   },
 };
+
+function calendarSignature(events: TeamEvent[]): string {
+  return events.map((e) => `${e.id}:${e.updated_at?.getTime?.() ?? e.starts_at?.getTime?.() ?? 0}`).join('|');
+}
+
+function tournamentsSignature(rows: Tournament[]): string {
+  return rows.map((t) => t.id).join('|');
+}
+
+function followsSignature(rows: Follow[]): string {
+  return rows.map((f) => f.id).join('|');
+}
+
+function filtersSignature(filters: SupporterMatchFilters): string {
+  return `${filters.gender}|${filters.source}|${filters.scope}|${filters.competition}`;
+}
 
 export function useSupporterMatchHub(
   options: UseSupporterMatchHubOptions,
@@ -60,6 +77,7 @@ export function useSupporterMatchHub(
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
   const requestIdRef = useRef(0);
+  const hasLoadedRef = useRef(false);
   const calendarRef = useRef(calendarEvents);
   const tournamentsRef = useRef(tournaments);
   const followsRef = useRef(follows);
@@ -69,9 +87,22 @@ export function useSupporterMatchHub(
   followsRef.current = follows;
   filtersRef.current = filters;
 
-  const refresh = useCallback(async () => {
+  const inputKey = useMemo(
+    () =>
+      [
+        calendarSignature(calendarEvents ?? []),
+        tournamentsSignature(tournaments ?? []),
+        followsSignature(follows ?? []),
+        filtersSignature(filters),
+      ].join('#'),
+    [calendarEvents, tournaments, follows, filters],
+  );
+
+  const refresh = useCallback(async (opts?: { silent?: boolean }) => {
+    /** silent par défaut après le 1er load ; PTR / Retry peuvent forcer `silent: false`. */
+    const silent = opts?.silent ?? hasLoadedRef.current;
     const requestId = ++requestIdRef.current;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const result = await fetchSupporterMatchHub({
         calendarEvents: calendarRef.current ?? [],
@@ -81,10 +112,12 @@ export function useSupporterMatchHub(
       });
       if (mountedRef.current && requestId === requestIdRef.current) {
         setData(result);
+        hasLoadedRef.current = true;
       }
     } catch {
       if (mountedRef.current && requestId === requestIdRef.current) {
         setData(EMPTY_HUB);
+        hasLoadedRef.current = true;
       }
     } finally {
       if (mountedRef.current && requestId === requestIdRef.current) {
@@ -93,7 +126,7 @@ export function useSupporterMatchHub(
     }
   }, []);
 
-  /** Poll live uniquement — évite de brûler le quota API sur upcoming/world. */
+  /** Poll live uniquement — ne touche jamais `loading`. */
   const refreshLiveOnly = useCallback(async () => {
     try {
       const liveWorld = await externalScoresService.listLiveFixtures().catch(() => []);
@@ -124,8 +157,8 @@ export function useSupporterMatchHub(
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [calendarEvents, tournaments, follows, filters, refresh]);
+    void refresh({ silent: hasLoadedRef.current });
+  }, [inputKey, refresh]);
 
   useEffect(() => {
     if (!pollLive) return undefined;

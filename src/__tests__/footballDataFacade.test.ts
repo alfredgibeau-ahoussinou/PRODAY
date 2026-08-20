@@ -45,6 +45,7 @@ describe('footballDataFacade / ExternalFootballDataProvider', () => {
     expect(normalizeWorldFixtureKey('world-fixture-api_123')).toBe('api_123');
     expect(normalizeWorldFixtureKey('api_123')).toBe('api_123');
     expect(normalizeWorldFixtureKey('123')).toBe('api_123');
+    expect(normalizeWorldFixtureKey('world-fixture-ligue1_psg_om')).toBe('ligue1_psg_om');
     expect(toWorldMatchCenterId('api_99')).toBe('world-fixture-api_99');
   });
 

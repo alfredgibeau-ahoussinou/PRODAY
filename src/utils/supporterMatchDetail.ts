@@ -151,21 +151,45 @@ export type WorldFixtureRef =
   | { provider: 'api_football'; numericId: number; fixtureKey: string }
   | { provider: 'football_data'; numericId: number; fixtureKey: string };
 
-/** Parse `world-fixture-api_123` ou `world-fixture-fd_456`. */
+/**
+ * Parse les ids Match Center / provider :
+ * `world-fixture-api_123`, `api_123`, `123`, `world-fixture-fd_456`, `fd_456`.
+ */
 export function parseWorldFixtureRef(itemId: string): WorldFixtureRef | null {
-  const api = itemId.match(/^world-fixture-api_(\d+)$/);
+  const trimmed = itemId.trim();
+  const bare = trimmed.startsWith('world-fixture-')
+    ? trimmed.slice('world-fixture-'.length)
+    : trimmed;
+
+  if (/^\d+$/.test(bare)) {
+    const numericId = Number(bare);
+    if (!Number.isFinite(numericId)) return null;
+    return { provider: 'api_football', numericId, fixtureKey: `api_${numericId}` };
+  }
+
+  const api = bare.match(/^api_(\d+)$/);
   if (api) {
     const numericId = Number(api[1]);
     if (!Number.isFinite(numericId)) return null;
     return { provider: 'api_football', numericId, fixtureKey: `api_${numericId}` };
   }
-  const fd = itemId.match(/^world-fixture-fd_(\d+)$/);
+
+  const fd = bare.match(/^fd_(\d+)$/);
   if (fd) {
     const numericId = Number(fd[1]);
     if (!Number.isFinite(numericId)) return null;
     return { provider: 'football_data', numericId, fixtureKey: `fd_${numericId}` };
   }
   return null;
+}
+
+/** Clé provider depuis n’importe quel id Match Center (`world-fixture-…` / `api_…` / slug mock). */
+export function extractWorldFixtureKey(itemId: string): string {
+  const trimmed = itemId.trim();
+  const ref = parseWorldFixtureRef(trimmed);
+  if (ref) return ref.fixtureKey;
+  if (trimmed.startsWith('world-fixture-')) return trimmed.slice('world-fixture-'.length);
+  return trimmed;
 }
 
 /** @deprecated Prefer `parseWorldFixtureRef` — ne gère que les ids API-Football. */

@@ -8,9 +8,19 @@ import { useSeasonCalendar } from '../../hooks/useAppData';
 import { useTournaments } from '../../hooks/useTournaments';
 import { useSupporterMatchHub } from '../../hooks/useSupporterMatchHub';
 import { followsService } from '../../services/follows.service';
+import type { SupporterMatchFilters } from '../../services/supporterPreferences.service';
 import type { Follow } from '../../models/Follow';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { FootballHubMatchCenterScreen } from './FootballHubMatchCenterScreen';
+
+const EMPTY_EVENTS: never[] = [];
+const EMPTY_TOURNAMENTS: never[] = [];
+const FAVORITES_FILTERS: SupporterMatchFilters = {
+  gender: 'all',
+  source: 'all',
+  scope: 'follows',
+  competition: 'all',
+};
 
 export const FootballHubFavoritesScreen: React.FC = () => {
   const { profile } = useAuth();
@@ -38,10 +48,10 @@ export const FootballHubFavoritesScreen: React.FC = () => {
   }, [loadFollows]);
 
   const hub = useSupporterMatchHub({
-    calendarEvents: events ?? [],
-    tournaments: tournaments ?? [],
+    calendarEvents: events ?? EMPTY_EVENTS,
+    tournaments: tournaments ?? EMPTY_TOURNAMENTS,
     follows,
-    filters: { gender: 'all', source: 'all', scope: 'follows', competition: 'all' },
+    filters: FAVORITES_FILTERS,
     pollLive: true,
   });
 
@@ -62,7 +72,7 @@ export const FootballHubFavoritesScreen: React.FC = () => {
           refreshing={refreshing}
           onRefresh={async () => {
             setRefreshing(true);
-            await Promise.all([loadFollows(), hub.refresh()]);
+            await Promise.all([loadFollows(), hub.refresh({ silent: true })]);
             setRefreshing(false);
           }}
           tintColor={FOOTBALL_HUB.bright}

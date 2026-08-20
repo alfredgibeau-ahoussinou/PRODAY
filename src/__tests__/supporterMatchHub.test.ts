@@ -76,7 +76,8 @@ describe('supporterMatchHub', () => {
     expect(result.sections.live.some((item) => item.source === 'world')).toBe(true);
     expect(result.sections.proday.some((item) => item.source === 'proday')).toBe(true);
     expect(result.sections.world.length).toBeGreaterThan(0);
-    expect(result.sections.upcoming.length).toBe(0);
+    expect(result.sections.upcoming.length).toBeGreaterThan(0);
+    expect(result.sections.upcoming.every((item) => item.source === 'world')).toBe(true);
     expect(result.heroKickoffs.length).toBeGreaterThan(0);
     expect(result.heroKickoffs.every((item) => item.source === 'world')).toBe(true);
     expect(DEFAULT_SUPPORTER_MATCHS_CHAPTER).toBe('upcoming');

@@ -365,11 +365,14 @@ function writeJsonCache<T>(key: string, value: T, ttlMs: number): void {
 }
 
 function parseNumericFixtureId(fixtureId: string): number | null {
-  const raw = fixtureId.startsWith('api_')
-    ? fixtureId.slice(4)
-    : fixtureId.startsWith('fd_')
+  const bare = fixtureId.startsWith('world-fixture-')
+    ? fixtureId.slice('world-fixture-'.length)
+    : fixtureId;
+  const raw = bare.startsWith('api_')
+    ? bare.slice(4)
+    : bare.startsWith('fd_')
       ? null
-      : fixtureId;
+      : bare;
   if (raw == null) return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;

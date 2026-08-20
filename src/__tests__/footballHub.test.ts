@@ -40,12 +40,21 @@ describe('MergedFootballProvider', () => {
     expect(Array.isArray(fixtures)).toBe(true);
   });
 
-  it('getLineups ne invente pas de XI (tableau vide si mock sans lineups API)', async () => {
+  it('getLineups mappe un XI mock quand startXI est fourni', async () => {
     const merged = new MergedFootballProvider(
       new ProDayFootballDataProvider([], []),
       new ExternalFootballDataProvider(),
     );
-    const lineups = await merged.getLineups('world-fixture-api_999999');
-    expect(lineups).toEqual([]);
+    const lineups = await merged.getLineups('world-fixture-ligue1_psg_om');
+    expect(lineups.length).toBe(2);
+    expect(lineups[0].lineup.slots.filter((s) => s.role === 'starter')).toHaveLength(11);
+  });
+
+  it('getMatchDetail avec slug mock retourne des compositions', async () => {
+    const provider = new ExternalFootballDataProvider();
+    const detail = await provider.getMatchDetail('world-fixture-ligue1_psg_om');
+    expect(detail).not.toBeNull();
+    expect(detail!.lineups.length).toBeGreaterThan(0);
+    expect(detail!.lineups[0].lineup.slots.some((s) => s.role === 'starter')).toBe(true);
   });
 });

@@ -71,6 +71,16 @@ describe('supporterMatchDetail mappers', () => {
       numericId: 123,
       fixtureKey: 'api_123',
     });
+    expect(parseWorldFixtureRef('api_123')).toEqual({
+      provider: 'api_football',
+      numericId: 123,
+      fixtureKey: 'api_123',
+    });
+    expect(parseWorldFixtureRef('123')).toEqual({
+      provider: 'api_football',
+      numericId: 123,
+      fixtureKey: 'api_123',
+    });
     expect(parseWorldFixtureRef('world-fixture-fd_456')).toEqual({
       provider: 'football_data',
       numericId: 456,
