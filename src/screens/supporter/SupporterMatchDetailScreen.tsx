@@ -264,8 +264,8 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
           </View>
         ))}
         {finished ? (
-          <PressableSpring style={styles.agentBtn} onPress={() => void generateSummary()} scaleTo={0.98}>
-            <ProDayText variant="caption" style={styles.agentBtnText}>
+          <PressableSpring style={styles.iaCta} onPress={() => void generateSummary()} scaleTo={0.98}>
+            <ProDayText variant="caption" style={styles.iaCtaText}>
               {summaryLoading ? 'Génération…' : 'Générer le résumé IA'}
             </ProDayText>
           </PressableSpring>
@@ -419,16 +419,16 @@ export const SupporterMatchDetailScreen: React.FC<SupporterMatchDetailScreenProp
         return (
           <>
             <PressableSpring
-              style={styles.agentBtn}
+              style={styles.iaCta}
               onPress={() => center && void agent.ask('Résume le match', center, summary)}
               scaleTo={0.98}
             >
-              <ProDayText variant="caption" style={styles.agentBtnText}>
+              <ProDayText variant="caption" style={styles.iaCtaText}>
                 Résumer avec l'IA
               </ProDayText>
             </PressableSpring>
             {agent.lastReply ? (
-              <View style={styles.agentBox}>
+              <View style={styles.iaBox}>
                 <ProDayText variant="body" style={styles.muted}>
                   {agent.lastReply.text}
                 </ProDayText>
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
   },
   statKey: { flex: 1, color: SUPPORTER_SITE.muted, textAlign: 'center', fontSize: 10 },
   statVal: { width: 40, color: SUPPORTER_SITE.foreground, textAlign: 'center', fontVariant: ['tabular-nums'] },
-  agentBtn: {
+  iaCta: {
     alignSelf: 'flex-start',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SUPPORTER_SITE.border,
   },
-  agentBtnText: { color: SUPPORTER_SITE.accent, letterSpacing: 0.8 },
-  agentBox: { gap: spacing.sm, marginTop: spacing.md },
+  iaCtaText: { color: SUPPORTER_SITE.accent, letterSpacing: 0.8 },
+  iaBox: { gap: spacing.sm, marginTop: spacing.md },
   disclaimer: { color: SUPPORTER_SITE.muted, fontSize: 10, fontStyle: 'italic' },
 });

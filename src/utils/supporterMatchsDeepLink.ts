@@ -10,3 +10,17 @@ export function supporterChapterFromPendingLink(
 ): NonNullable<MatchsDeepLink['supporterChapter']> | null {
   return link?.supporterChapter ?? null;
 }
+
+export type SupporterLiveOpeners = {
+  showOverlay?: () => void;
+  openMatchsLive?: () => void;
+};
+
+/** Chip LIVE : overlay Accueil si présent, sinon onglet Matchs (chapitre live). */
+export function openSupporterLive(openers: SupporterLiveOpeners): void {
+  if (openers.showOverlay) {
+    openers.showOverlay();
+    return;
+  }
+  openers.openMatchsLive?.();
+}

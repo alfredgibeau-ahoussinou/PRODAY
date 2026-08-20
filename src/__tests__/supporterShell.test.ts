@@ -16,6 +16,7 @@ import {
 } from '../content/supporterPageIdentity';
 import { buildSupporterPlusMenuItems } from '../content/supporterPlusMenu';
 import {
+  openSupporterLive,
   stampMatchsDeepLink,
   supporterChapterFromPendingLink,
 } from '../utils/supporterMatchsDeepLink';
@@ -60,6 +61,16 @@ describe('supporter shell navigation', () => {
     const second = stampMatchsDeepLink(first);
     expect(supporterChapterFromPendingLink(first)).toBe('live');
     expect(second.applyNonce).toBeGreaterThan(first.applyNonce ?? 0);
+  });
+
+  it('ouvre le Live via overlay Accueil ou via Matchs', () => {
+    const overlay = jest.fn();
+    const matchs = jest.fn();
+    openSupporterLive({ showOverlay: overlay, openMatchsLive: matchs });
+    expect(overlay).toHaveBeenCalledTimes(1);
+    expect(matchs).not.toHaveBeenCalled();
+    openSupporterLive({ openMatchsLive: matchs });
+    expect(matchs).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -38,6 +38,7 @@ import type { SupporterVideo } from '../../models/SupporterVideo';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { openClubHelpChatbot } from '../../features/club/shell/clubHelpOpen';
+import { openSupporterLive } from '../../utils/supporterMatchsDeepLink';
 
 /** Accueil — Centre du football (hub V2). */
 export const SupporterFootballHubScreen: React.FC = () => {
@@ -202,13 +203,14 @@ export const SupporterFootballHubScreen: React.FC = () => {
             </ProDayText>
           </Pressable>
           <Pressable
-            onPress={() => nav.openMatchs({ supporterChapter: 'live' })}
+            onPress={() =>
+              openSupporterLive({
+                showOverlay: () => setShowLive(true),
+                openMatchsLive: () => nav.openMatchs({ supporterChapter: 'live' }),
+              })
+            }
             style={[styles.chip, styles.chipLive]}
           >
-            <ProDayText variant="caption" style={styles.chipLiveText}>
-              {hub.liveCount > 0 ? `${hub.liveCount} en direct` : 'LIVE'}
-            </ProDayText>
-          </Pressable>
             <ProDayText variant="caption" style={styles.chipLiveText}>
               {hub.liveCount > 0 ? `${hub.liveCount} en direct` : 'LIVE'}
             </ProDayText>
@@ -312,12 +314,12 @@ export const SupporterFootballHubScreen: React.FC = () => {
         </SupporterHubSection>
 
         <PressableSpring
-          style={styles.agentFab}
+          style={styles.iaCta}
           onPress={() => openClubHelpChatbot()}
           scaleTo={0.97}
         >
           <Icon name="star-four-points" size={18} color={SUPPORTER_SITE.foreground} />
-          <ProDayText variant="caption" style={styles.agentFabText}>
+          <ProDayText variant="caption" style={styles.iaCtaText}>
             IA Supporter
           </ProDayText>
         </PressableSpring>
@@ -363,7 +365,7 @@ const styles = StyleSheet.create({
   },
   videoTitle: { color: SUPPORTER_SITE.foreground, fontSize: 11 },
   searchWrap: { paddingHorizontal: spacing.lg },
-  agentFab: {
+  iaCta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
@@ -376,5 +378,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SUPPORTER_SITE.border,
   },
-  agentFabText: { color: SUPPORTER_SITE.foreground, letterSpacing: 0.5 },
+  iaCtaText: { color: SUPPORTER_SITE.foreground, letterSpacing: 0.5 },
 });
