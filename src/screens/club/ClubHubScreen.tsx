@@ -14,26 +14,6 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
-import { spacing } from '../../theme/designTokens';
-import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
-import { PressableSpring } from '../../components/motion';
-
-import React, { useCallback, useMemo } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, View } from 'react-native';
-import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { ClubOffersComparePanel } from '../../components/club/ClubOffersComparePanel';
-import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
-import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
-import { useClubLogoUpload } from '../../features/club/hooks/useClubLogoUpload';
-import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
-import {
-  ClubActionRow,
-  ClubChapterScroll,
-  ClubLoading,
-  ClubSectionCard,
-  ClubText,
-} from '../../features/club/ui/clubUi';
-import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubBrandColorsPanel } from '../../features/club/ui/ClubBrandColorsPanel';
 import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
