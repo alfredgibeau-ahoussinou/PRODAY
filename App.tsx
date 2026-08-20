@@ -42,7 +42,6 @@ import { LaunchIntroProvider } from './src/context/LaunchIntroContext';
 import { JoueurSessionProvider } from './src/context/JoueurSessionContext';
 import { PlayerThemeProvider } from './src/context/PlayerThemeContext';
 import { JoueurProgressProvider } from './src/context/JoueurProgressContext';
-import { JoueurLevelUpOverlay } from './src/features/joueur/JoueurLevelUpOverlay';
 import { JoueurShellExtras } from './src/features/joueur/JoueurShellExtras';
 import {
   JoueurGateGuard,
@@ -634,7 +633,6 @@ function AppShell() {
             />
           )}
         </SafeAreaView>
-        <JoueurLevelUpOverlay />
         <JoueurShellExtras />
       </TabNavigationProvider>
     </AppSpaceProvider>

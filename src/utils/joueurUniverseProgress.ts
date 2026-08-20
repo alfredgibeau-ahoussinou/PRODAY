@@ -146,17 +146,36 @@ export async function completeJoueurChallenge(
   uid: string,
   challengeId: string,
   starsGain = 1,
-): Promise<JoueurUniverseProgress> {
+): Promise<JoueurAwardResult & { alreadyDone: boolean }> {
   let cur = await readJoueurUniverseProgress(uid);
   cur = withStreak(withFreshDaily(cur));
-  if (cur.completedChallengeIds.includes(challengeId)) return cur;
+  const prevLevel = joueurLevelFromXp(cur.xp).level;
+  if (cur.completedChallengeIds.includes(challengeId)) {
+    return {
+      progress: cur,
+      leveledUp: false,
+      previousLevel: prevLevel,
+      nextLevel: prevLevel,
+      xpGained: 0,
+      alreadyDone: true,
+    };
+  }
   const xpGain = Math.max(0, starsGain) * 10;
-  return writeJoueurUniverseProgress(uid, {
+  const progress = await writeJoueurUniverseProgress(uid, {
     ...cur,
     stars: cur.stars + Math.max(0, starsGain),
     xp: cur.xp + xpGain,
     completedChallengeIds: [...cur.completedChallengeIds, challengeId],
   });
+  const nextLevel = joueurLevelFromXp(progress.xp).level;
+  return {
+    progress,
+    leveledUp: nextLevel > prevLevel,
+    previousLevel: prevLevel,
+    nextLevel,
+    xpGained: xpGain,
+    alreadyDone: false,
+  };
 }
 
 export async function claimJoueurDailyQuest(

@@ -32,12 +32,12 @@ describe('joueurUniverseProgress', () => {
 
   it('awards stars once per challenge and XP', async () => {
     const a = await completeJoueurChallenge(uid, '1', 1);
-    expect(a.stars).toBe(1);
-    expect(a.xp).toBe(10);
+    expect(a.progress.stars).toBe(1);
+    expect(a.progress.xp).toBe(10);
     const b = await completeJoueurChallenge(uid, '1', 1);
-    expect(b.stars).toBe(1);
+    expect(b.progress.stars).toBe(1);
     const c = await completeJoueurChallenge(uid, '2', 1);
-    expect(c.stars).toBe(2);
+    expect(c.progress.stars).toBe(2);
   });
 
   it('advances week beat with XP', async () => {
