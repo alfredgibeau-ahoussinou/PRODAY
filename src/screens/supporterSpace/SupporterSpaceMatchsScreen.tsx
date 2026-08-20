@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -24,6 +24,8 @@ import {
   SUPPORTER_SPACE,
   SUPPORTER_SPACE_COPY,
 } from '../../features/supporterSpace/theme/supporterSpaceTheme';
+import type { Follow } from '../../models/Follow';
+import { followsService } from '../../services/follows.service';
 import type { GenderScope, UnifiedMatch } from '../../services/supporterFootball';
 import { addDays, ymd } from '../../services/supporterFootball/mappers';
 import { SupporterSpaceMatchCenterScreen } from './SupporterSpaceMatchCenterScreen';
@@ -90,18 +92,72 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
   const { profile } = useAuth();
   const { events } = useSeasonCalendar(profile?.uid, profile?.profile?.club_id);
   const { tournaments } = useTournaments();
+  const [follows, setFollows] = useState<Follow[]>([]);
+  const [clubScope, setClubScope] = useState<'all' | 'followed'>('all');
+  const [dayLeagues, setDayLeagues] = useState<UnifiedMatch[]>([]);
+  const [dayLoading, setDayLoading] = useState(false);
+
+  const loadFollows = useCallback(async () => {
+    if (!profile?.uid) {
+      setFollows([]);
+      return;
+    }
+    try {
+      const list = await followsService.listByFollower(profile.uid);
+      setFollows((list ?? []).filter((f) => f.target_type === 'club'));
+    } catch {
+      setFollows([]);
+    }
+  }, [profile?.uid]);
+
+  useEffect(() => {
+    void loadFollows();
+  }, [loadFollows]);
+
   const feed = useSupporterFootballFeed({
     calendarEvents: events ?? EMPTY,
     tournaments: tournaments ?? EMPTY,
-    follows: [],
+    follows,
     pollLive: true,
   });
+
   const [status, setStatus] = useState('all');
   const [gender, setGender] = useState('all');
   const [selectedDateKey, setSelectedDateKey] = useState(() => ymd(new Date()));
   const [sourceSide, setSourceSide] = useState<SupporterSourceSide>('all');
   const [selected, setSelected] = useState<UnifiedMatch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch ligues for the selected calendar day (avoids empty when pool window misses the day).
+  useEffect(() => {
+    let cancelled = false;
+    setDayLoading(true);
+    void feed.facade
+      .getLeagueMatches({ from: selectedDateKey, to: selectedDateKey })
+      .then((list) => {
+        if (!cancelled) setDayLeagues(list.filter((m) => m.source === 'external'));
+      })
+      .catch(() => {
+        if (!cancelled) setDayLeagues([]);
+      })
+      .finally(() => {
+        if (!cancelled) setDayLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [feed.facade, selectedDateKey]);
+
+  const clubScopeChips = useMemo(
+    () => [
+      { id: 'all', label: 'Tous clubs' },
+      {
+        id: 'followed',
+        label: follows.length ? `Mes clubs (${follows.length})` : 'Mes clubs',
+      },
+    ],
+    [follows.length],
+  );
 
   const prodayPool = useMemo(
     () => dedupe([...feed.liveProday, ...feed.proday, ...feed.upcomingProday]),
@@ -115,8 +171,17 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
         ...feed.upcomingLeagues,
         ...feed.finishedLeagues,
         ...feed.leagues,
+        ...dayLeagues,
+        ...feed.favorites,
       ]).filter((m) => m.source === 'external'),
-    [feed.liveLeagues, feed.upcomingLeagues, feed.finishedLeagues, feed.leagues],
+    [
+      feed.liveLeagues,
+      feed.upcomingLeagues,
+      feed.finishedLeagues,
+      feed.leagues,
+      feed.favorites,
+      dayLeagues,
+    ],
   );
 
   const prodayFiltered = useMemo(
@@ -124,19 +189,22 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
     [prodayPool, status, gender, selectedDateKey],
   );
 
-  const leaguesFiltered = useMemo(
-    () => applyFilters(leaguesPool, status, gender, selectedDateKey),
-    [leaguesPool, status, gender, selectedDateKey],
-  );
+  const leaguesFiltered = useMemo(() => {
+    const base =
+      clubScope === 'followed'
+        ? applyFilters(feed.favorites, status, gender, selectedDateKey)
+        : applyFilters(leaguesPool, status, gender, selectedDateKey);
+    return base;
+  }, [clubScope, feed.favorites, leaguesPool, status, gender, selectedDateKey]);
 
   const showProday = sourceSide === 'all' || sourceSide === 'proday';
   const showLeagues = sourceSide === 'all' || sourceSide === 'leagues';
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await feed.refresh({ silent: true });
+    await Promise.all([feed.refresh({ silent: true }), loadFollows()]);
     setRefreshing(false);
-  }, [feed]);
+  }, [feed, loadFollows]);
 
   if (selected) {
     return (
@@ -170,9 +238,15 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
       <DateStrip selectedKey={selectedDateKey} onSelect={setSelectedDateKey} />
       <View style={styles.gap} />
       <FilterChips chips={GENDER_CHIPS} selectedId={gender} onSelect={setGender} />
+      <View style={styles.gap} />
+      <FilterChips
+        chips={clubScopeChips}
+        selectedId={clubScope}
+        onSelect={(id) => setClubScope(id === 'followed' ? 'followed' : 'all')}
+      />
 
-      {feed.loading ? (
-        <ActivityIndicator color={SUPPORTER_SPACE.accent} style={{ marginTop: 24 }} />
+      {feed.loading || dayLoading ? (
+        <ActivityIndicator color={SUPPORTER_SPACE.accent} style={{ marginTop: 16 }} />
       ) : null}
 
       {feed.health?.mode === 'empty' && showLeagues ? (
@@ -208,18 +282,28 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
 
         {showLeagues ? (
           <View style={[styles.column, sideBySide && styles.columnWide]}>
-            <SpaceSection title={SUPPORTER_SPACE_COPY.sectionLeagues}>
+            <SpaceSection
+              title={
+                clubScope === 'followed'
+                  ? SUPPORTER_SPACE_COPY.sectionFollowedClubs
+                  : SUPPORTER_SPACE_COPY.sectionLeagues
+              }
+            >
               {leaguesFiltered.length ? (
                 leaguesFiltered.map((m) => (
                   <MatchCard key={m.id} match={m} onPress={() => setSelected(m)} />
                 ))
               ) : (
                 <ProDayText variant="body" style={styles.empty}>
-                  {status === 'live'
-                    ? SUPPORTER_SPACE_COPY.emptyLive
-                    : leaguesPool.length
-                      ? SUPPORTER_SPACE_COPY.emptyLeaguesDate
-                      : feed.health?.message || SUPPORTER_SPACE_COPY.emptyLeagues}
+                  {clubScope === 'followed'
+                    ? follows.length
+                      ? SUPPORTER_SPACE_COPY.emptyFollowedClubs
+                      : SUPPORTER_SPACE_COPY.emptyClubs
+                    : status === 'live'
+                      ? SUPPORTER_SPACE_COPY.emptyLive
+                      : leaguesPool.length || dayLeagues.length
+                        ? SUPPORTER_SPACE_COPY.emptyLeaguesDate
+                        : feed.health?.message || SUPPORTER_SPACE_COPY.emptyLeagues}
                 </ProDayText>
               )}
             </SpaceSection>

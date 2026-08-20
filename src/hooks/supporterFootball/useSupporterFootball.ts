@@ -45,12 +45,23 @@ export function useSupporterFootballFeed(opts: {
     [opts.calendarEvents, opts.tournaments],
   );
 
+  const followsKey = useMemo(
+    () =>
+      opts.follows
+        .filter((f) => f.target_type === 'club')
+        .map((f) => `${f.target_id}:${f.target_label ?? ''}`)
+        .sort()
+        .join('|'),
+    [opts.follows],
+  );
+
   const [health, setHealth] = useState<ProviderHealth | null>(null);
   const [live, setLive] = useState<UnifiedMatch[]>([]);
   const [upcoming, setUpcoming] = useState<UnifiedMatch[]>([]);
   const [finished, setFinished] = useState<UnifiedMatch[]>([]);
   const [proday, setProday] = useState<UnifiedMatch[]>([]);
   const [leagues, setLeagues] = useState<UnifiedMatch[]>([]);
+  const [followedPool, setFollowedPool] = useState<UnifiedMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
@@ -60,23 +71,34 @@ export function useSupporterFootballFeed(opts: {
       if (!refreshOpts?.silent) setLoading(true);
       setError(null);
       try {
-        const [h, l, u, f, p, leagueUp, leagueLive, leagueFin] = await Promise.all([
-          facade.getHealth(),
-          facade.getLive(),
-          facade.getUpcoming(10),
-          facade.getFinished(5),
-          facade.getProDayMatches(),
-          facade.getLeagueUpcoming(10),
-          facade.getLeagueLive(),
-          facade.getLeagueFinished(5),
-        ]);
+        const clubFollows = opts.follows.filter((f) => f.target_type === 'club');
+        const [h, l, u, f, p, leagueUp, leagueLive, leagueFin, followed] =
+          await Promise.all([
+            facade.getHealth(),
+            facade.getLive(),
+            facade.getUpcoming(14),
+            facade.getFinished(7),
+            facade.getProDayMatches(),
+            facade.getLeagueUpcoming(14),
+            facade.getLeagueLive(),
+            facade.getLeagueFinished(7),
+            clubFollows.length
+              ? facade.getFollowedClubMatches(clubFollows)
+              : Promise.resolve([] as UnifiedMatch[]),
+          ]);
         if (!mounted.current) return;
         setHealth(h);
         setLive(l);
         setUpcoming(u);
         setFinished(f);
         setProday(p);
-        const leaguePool = dedupe([...leagueLive, ...leagueUp, ...leagueFin]).filter(
+        setFollowedPool(followed);
+        const leaguePool = dedupe([
+          ...leagueLive,
+          ...leagueUp,
+          ...leagueFin,
+          ...followed,
+        ]).filter(
           (m) => m.source === 'external' || (h.mode === 'demo' && m.source === 'demo'),
         );
         setLeagues(leaguePool);
@@ -87,7 +109,9 @@ export function useSupporterFootballFeed(opts: {
         if (mounted.current && !refreshOpts?.silent) setLoading(false);
       }
     },
-    [facade],
+    // followsKey captures club follow identity without thrashing on array identity
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [facade, followsKey],
   );
 
   useEffect(() => {
@@ -128,8 +152,12 @@ export function useSupporterFootballFeed(opts: {
   );
 
   const favorites = useMemo(
-    () => filterMatchesForFollows([...live, ...upcoming], opts.follows),
-    [live, upcoming, opts.follows],
+    () =>
+      filterMatchesForFollows(
+        dedupe([...live, ...upcoming, ...finished, ...followedPool, ...leagues]),
+        opts.follows,
+      ),
+    [live, upcoming, finished, followedPool, leagues, opts.follows],
   );
 
   return {

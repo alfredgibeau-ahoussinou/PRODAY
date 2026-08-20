@@ -110,11 +110,15 @@ export function mapFdStatus(status: string, minute?: number | null): UnifiedMatc
 }
 
 function mapFdTeam(team: FdTeam, side: 'home' | 'away'): UnifiedTeamRef {
-  const name = team.shortName?.trim() || team.name?.trim() || (side === 'home' ? 'Domicile' : 'Extérieur');
+  // Keep official name for follow matching (PSG vs Paris Saint-Germain FC);
+  // UI prefers shortName when present.
+  const official = team.name?.trim();
+  const short = team.shortName?.trim() || team.tla?.trim();
+  const name = official || short || (side === 'home' ? 'Domicile' : 'Extérieur');
   return {
     id: team.id != null ? `fd-team-${team.id}` : `fd-team-${side}-${name}`,
     name,
-    shortName: team.tla || team.shortName || undefined,
+    shortName: short || undefined,
     logoUrl: team.crest || undefined,
     externalId: team.id,
   };
@@ -176,6 +180,15 @@ export function mapFdMatchToUnified(match: FdMatch): UnifiedMatch {
 export function parseFootballDataMatchId(matchId: string): number | null {
   const m = /^external-fd-(\d+)$/.exec(matchId.trim());
   if (m) return Number(m[1]);
+  return null;
+}
+
+/** Parse `fd-team-524` (or bare numeric) → football-data.org team id. */
+export function parseFootballDataTeamId(teamId: string): number | null {
+  const trimmed = teamId.trim();
+  const m = /^fd-team-(\d+)$/i.exec(trimmed);
+  if (m) return Number(m[1]);
+  if (/^\d+$/.test(trimmed)) return Number(trimmed);
   return null;
 }
 

@@ -46,7 +46,14 @@ export {
   FOOTBALL_DATA_PRIMARY_CODES,
   FOOTBALL_DATA_COVERED_SPORTMONKS_IDS,
   mergeExternalMatchesPreferRicher,
+  parseFootballDataTeamId,
+  normalizeMatchTeamName,
 } from './footballDataMappers';
+export {
+  resolveFootballDataTeamId,
+  matchTouchesFollow,
+  teamTouchesFollowTarget,
+} from './teamFollowMatch';
 export {
   FIXTURE_DETAIL_INCLUDES,
   FIXTURE_LIST_INCLUDES,

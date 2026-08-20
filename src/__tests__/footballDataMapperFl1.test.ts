@@ -25,8 +25,11 @@ describe('football-data.org → UnifiedMatch (FL1)', () => {
     expect(match.status).toBe('scheduled');
     expect(match.competition.name).toBe('Ligue 1');
     expect(match.competition.id).toBe('fd-comp-FL1');
-    expect(match.homeTeam.name).toBe('Marseille');
-    expect(match.awayTeam.name).toBe('PSG');
+    expect(match.homeTeam.name).toBe('Olympique de Marseille');
+    expect(match.homeTeam.shortName).toBe('Marseille');
+    expect(match.awayTeam.name).toBe('Paris Saint-Germain FC');
+    expect(match.awayTeam.shortName).toBe('PSG');
+    expect(match.awayTeam.id).toBe('fd-team-524');
     expect(match.score.home).toBeNull();
     expect(match.score.away).toBeNull();
     expect(match.venue).toBe('Orange Vélodrome');

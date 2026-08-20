@@ -147,6 +147,10 @@ export class CompositeExternalFootballProvider implements SupporterFootballProvi
   }
 
   async getFixtures(query?: FixtureQuery): Promise<UnifiedMatch[]> {
+    // Team-scoped fetches are football-data `/teams/{id}/matches` only (SM has no free equivalent here).
+    if (query?.teamIds?.length) {
+      return this.footballData.getFixtures(query).catch(() => [] as UnifiedMatch[]);
+    }
     return this.mergeLists(
       () => this.sportmonks.getFixtures(query),
       () => this.footballData.getFixtures(query),
@@ -215,10 +219,11 @@ export class CompositeExternalFootballProvider implements SupporterFootballProvi
       this.sportmonks.getTeams(query).catch(() => [] as UnifiedTeamRef[]),
       this.footballData.getTeams(query).catch(() => [] as UnifiedTeamRef[]),
     ]);
+    // Prefer football-data ids first so follows resolve to /teams/{id}/matches (PSG=524).
     const seen = new Set<string>();
     const out: UnifiedTeamRef[] = [];
-    for (const t of [...sm, ...fd]) {
-      const key = t.name.toLowerCase();
+    for (const t of [...fd, ...sm]) {
+      const key = t.name.toLowerCase().replace(/[^a-z0-9]/g, '');
       if (seen.has(key)) continue;
       seen.add(key);
       out.push(t);

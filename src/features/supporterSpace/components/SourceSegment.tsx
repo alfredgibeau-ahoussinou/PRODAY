@@ -17,6 +17,7 @@ const OPTIONS: Array<{ id: SupporterSourceSide; label: string }> = [
   { id: 'leagues', label: SUPPORTER_SPACE_COPY.sourceLeagues },
 ];
 
+/** Compact source segment — same height language as FilterChips. */
 export const SourceSegment: React.FC<Props> = ({ value, onChange, showAll = false }) => {
   const chips = showAll
     ? [{ id: 'all' as const, label: 'Tous' }, ...OPTIONS]
@@ -31,9 +32,12 @@ export const SourceSegment: React.FC<Props> = ({ value, onChange, showAll = fals
             key={chip.id}
             onPress={() => onChange(chip.id)}
             style={[styles.pill, active && styles.pillActive]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
           >
             <ProDayText
               variant="caption"
+              numberOfLines={1}
               style={[styles.label, active && styles.labelActive]}
             >
               {chip.label}
@@ -50,18 +54,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: SUPPORTER_SPACE.band,
     borderRadius: 999,
-    padding: 4,
-    gap: 4,
+    padding: 3,
+    gap: 3,
+    alignItems: 'center',
+    alignSelf: 'stretch',
   },
   pill: {
     flex: 1,
-    paddingVertical: 10,
+    height: 34,
     borderRadius: 999,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   pillActive: {
     backgroundColor: SUPPORTER_SPACE.accent,
   },
-  label: { color: SUPPORTER_SPACE.muted, fontWeight: '600' },
+  label: {
+    color: SUPPORTER_SPACE.muted,
+    fontWeight: '600',
+    fontSize: 13,
+    lineHeight: 16,
+  },
   labelActive: { color: SUPPORTER_SPACE.onBlue },
 });

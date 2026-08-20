@@ -6,6 +6,11 @@ import { DemoFootballProvider } from './DemoFootballProvider';
 import { ProDayFootballProvider } from './ProDayFootballProvider';
 import type { SupporterFootballProvider } from './provider';
 import { isSupporterFootballDemoForced } from './sportmonksClient';
+import {
+  filterMatchesForFollows,
+  resolveFootballDataTeamId,
+} from './teamFollowMatch';
+import { addDays, ymd } from './mappers';
 import type {
   FixtureQuery,
   ProviderHealth,
@@ -225,7 +230,9 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
   /** League / Sportmonks-only slice (never ProDay, never demo unless forced). */
   async getLeagueMatches(query?: FixtureQuery): Promise<UnifiedMatch[]> {
     const list = await this.external.getFixtures(query).catch(() => [] as UnifiedMatch[]);
-    return this.sanitize(list).filter((m) => m.source === 'external' || (this.demoForced && m.source === 'demo'));
+    return this.sanitize(list).filter(
+      (m) => m.source === 'external' || (this.demoForced && m.source === 'demo'),
+    );
   }
 
   async getLeagueLive(): Promise<UnifiedMatch[]> {
@@ -242,6 +249,41 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
     const list = await this.external.getFinished(days).catch(() => [] as UnifiedMatch[]);
     return this.sanitize(list);
   }
+
+  /**
+   * Matches involving followed clubs — fetches FD `/teams/{id}/matches` when possible,
+   * then falls back to name/alias filtering on the general pool.
+   */
+  async getFollowedClubMatches(follows: Follow[]): Promise<UnifiedMatch[]> {
+    const clubFollows = follows.filter((f) => f.target_type === 'club');
+    if (!clubFollows.length) return [];
+
+    const from = ymd(addDays(new Date(), -21));
+    const to = ymd(addDays(new Date(), 45));
+    const teamIds = [
+      ...new Set(
+        clubFollows
+          .map((f) => resolveFootballDataTeamId(f))
+          .filter((n): n is number => n != null)
+          .map((n) => `fd-team-${n}`),
+      ),
+    ];
+
+    if (teamIds.length) {
+      const teamFixtures = await this.external
+        .getFixtures({ from, to, teamIds })
+        .catch(() => [] as UnifiedMatch[]);
+      const hit = filterMatchesForFollows(this.sanitize(teamFixtures), clubFollows);
+      if (hit.length) return hit.sort(sortByDateAsc);
+    }
+
+    const [upcoming, finished] = await Promise.all([
+      this.external.getUpcoming(45).catch(() => [] as UnifiedMatch[]),
+      this.external.getFinished(21).catch(() => [] as UnifiedMatch[]),
+    ]);
+    const pool = this.sanitize(dedupeById([...upcoming, ...finished]));
+    return filterMatchesForFollows(pool, clubFollows).sort(sortByDateAsc);
+  }
 }
 
 export function resolveMatchCenterTabs(match: UnifiedMatch): MatchCenterTabId[] {
@@ -257,28 +299,7 @@ export function createSupporterFootballFacade(
   return new MergedSupporterFootballFacade(calendarEvents, tournaments);
 }
 
-/** Filter helpers for Clubs / favorites carousels. */
-export function filterMatchesForFollows(matches: UnifiedMatch[], follows: Follow[]): UnifiedMatch[] {
-  if (!follows.length) return [];
-  const clubIds = new Set(
-    follows.filter((f) => f.target_type === 'club').map((f) => f.target_id),
-  );
-  const labels = new Set(
-    follows.map((f) => (f.target_label || '').toLowerCase()).filter(Boolean),
-  );
-  return matches.filter((m) => {
-    if (m.source === 'demo') return false;
-    if (clubIds.has(m.homeTeam.id) || clubIds.has(m.awayTeam.id)) return true;
-    const home = m.homeTeam.name.toLowerCase();
-    const away = m.awayTeam.name.toLowerCase();
-    for (const label of labels) {
-      if (home.includes(label) || away.includes(label) || label.includes(home) || label.includes(away)) {
-        return true;
-      }
-    }
-    return false;
-  });
-}
+export { filterMatchesForFollows } from './teamFollowMatch';
 
 export const supporterFootballFacade = {
   create: createSupporterFootballFacade,

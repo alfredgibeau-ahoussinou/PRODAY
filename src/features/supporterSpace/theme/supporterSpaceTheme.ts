@@ -55,6 +55,9 @@ export const SUPPORTER_SPACE_COPY = {
   debateCta: 'Débattre',
   sectionProday: 'Matchs ProDay',
   sectionLeagues: 'Matchs Ligues',
+  sectionFollowedClubs: 'Mes clubs',
+  emptyFollowedClubs:
+    'Aucun match pour tes clubs suivis sur cette période — élargis la date ou vérifie le suivi.',
   matchThisWeek: 'Cette semaine',
   liveBadge: 'Live',
   sourceProday: 'ProDay',

@@ -12,6 +12,7 @@ import {
   FOOTBALL_DATA_PRIMARY_CODES,
   mapFdMatchToUnified,
   parseFootballDataMatchId,
+  parseFootballDataTeamId,
   type FdMatch,
 } from './footballDataMappers';
 import { addDays, ymd } from './mappers';
@@ -28,6 +29,9 @@ import type {
   UnifiedStatistics,
   UnifiedTeamRef,
 } from './types';
+import { SUPPORTER_POPULAR_CLUBS } from '../../content/supporterPopularClubs';
+import { FOOTBALL_DATA_TEAM_IDS } from '../externalScoresFootballData.provider';
+import { normalizeTeamKey } from '../../utils/supporterWorldFollows';
 
 type MatchesResponse = { matches?: FdMatch[] };
 type MatchResponse = FdMatch;
@@ -37,6 +41,35 @@ type CompetitionsResponse = {
 
 function competitionsParam(codes: readonly string[] = FOOTBALL_DATA_PRIMARY_CODES): string {
   return codes.join(',');
+}
+
+/** Offline FD team hits from popular clubs (PSG → fd-team-524) — no API call. */
+function curatedFootballDataTeams(query: string): UnifiedTeamRef[] {
+  const q = query.trim().toLowerCase();
+  const out: UnifiedTeamRef[] = [];
+  for (const club of SUPPORTER_POPULAR_CLUBS) {
+    if (club.apiTeamId == null) continue;
+    const fdId = FOOTBALL_DATA_TEAM_IDS[club.apiTeamId];
+    if (fdId == null) continue;
+    if (q) {
+      const nq = normalizeTeamKey(q);
+      const keys = [club.name, ...(club.aliases ?? [])].map(normalizeTeamKey);
+      if (
+        !keys.some((k) => k.includes(nq) || nq.includes(k)) &&
+        !club.name.toLowerCase().includes(q)
+      ) {
+        continue;
+      }
+    }
+    out.push({
+      id: `fd-team-${fdId}`,
+      name: club.name,
+      shortName: club.aliases?.[0],
+      country: club.country,
+      externalId: fdId,
+    });
+  }
+  return out;
 }
 
 export class FootballDataFootballProvider implements SupporterFootballProvider {
@@ -64,9 +97,17 @@ export class FootballDataFootballProvider implements SupporterFootballProvider {
   async getFixtures(query: FixtureQuery = {}): Promise<UnifiedMatch[]> {
     if (!isFootballDataTokenConfigured()) return [];
     if (query.liveOnly) return this.getLive();
+
     const from = query.from ?? ymd(new Date());
     const to = query.to ?? ymd(addDays(new Date(), 7));
-    const list = await this.fetchMatchesBetween(from, to);
+
+    let list: UnifiedMatch[];
+    if (query.teamIds?.length) {
+      list = await this.fetchMatchesForTeams(query.teamIds, from, to);
+    } else {
+      list = await this.fetchMatchesBetween(from, to);
+    }
+
     if (query.genderScope && query.genderScope !== 'unknown') {
       return list.filter((m) => m.genderScope === query.genderScope);
     }
@@ -74,6 +115,50 @@ export class FootballDataFootballProvider implements SupporterFootballProvider {
       return list.filter((m) => m.status === query.status);
     }
     return list;
+  }
+
+  private async fetchMatchesForTeams(
+    teamIds: string[],
+    from: string,
+    to: string,
+  ): Promise<UnifiedMatch[]> {
+    const nums = [
+      ...new Set(
+        teamIds
+          .map((id) => parseFootballDataTeamId(id))
+          .filter((n): n is number => n != null),
+      ),
+    ];
+    if (!nums.length) return [];
+    const batches = await Promise.all(
+      nums.map((id) => this.fetchTeamMatches(id, from, to)),
+    );
+    const seen = new Set<string>();
+    const out: UnifiedMatch[] = [];
+    for (const m of batches.flat()) {
+      if (seen.has(m.id)) continue;
+      seen.add(m.id);
+      out.push(m);
+    }
+    return out;
+  }
+
+  /** GET /v4/teams/{id}/matches — used when user follows an FD club (e.g. PSG = 524). */
+  private async fetchTeamMatches(
+    teamId: number,
+    from: string,
+    to: string,
+  ): Promise<UnifiedMatch[]> {
+    try {
+      const res = await footballDataFetch<MatchesResponse>({
+        path: `/teams/${teamId}/matches`,
+        query: { dateFrom: from, dateTo: to },
+        ttlMs: 90_000,
+      });
+      return (res.matches ?? []).map(mapFdMatchToUnified);
+    } catch {
+      return [];
+    }
   }
 
   private async fetchMatchesBetween(from: string, to: string): Promise<UnifiedMatch[]> {
@@ -171,14 +256,18 @@ export class FootballDataFootballProvider implements SupporterFootballProvider {
 
   async getTeams(query: string): Promise<UnifiedTeamRef[]> {
     const q = query.trim().toLowerCase();
-    if (!q || !isFootballDataTokenConfigured()) return [];
+    if (!q) return [];
+    const curated = curatedFootballDataTeams(q);
+    if (!isFootballDataTokenConfigured()) return curated;
     const from = ymd(new Date());
-    const to = ymd(addDays(new Date(), 14));
+    const to = ymd(addDays(new Date(), 21));
     const matches = await this.fetchMatchesBetween(from, to);
     const byId = new Map<string, UnifiedTeamRef>();
+    for (const t of curated) byId.set(t.id, t);
     for (const m of matches) {
       for (const t of [m.homeTeam, m.awayTeam]) {
-        if (t.name.toLowerCase().includes(q) && !byId.has(t.id)) byId.set(t.id, t);
+        const hay = `${t.name} ${t.shortName ?? ''}`.toLowerCase();
+        if (hay.includes(q) && !byId.has(t.id)) byId.set(t.id, t);
       }
     }
     return [...byId.values()].slice(0, 20);
@@ -186,8 +275,43 @@ export class FootballDataFootballProvider implements SupporterFootballProvider {
 
   async getTeam(teamId: string): Promise<UnifiedTeamRef | null> {
     if (!teamId.startsWith('fd-team-')) return null;
-    const teams = await this.getTeams('');
-    return teams.find((t) => t.id === teamId) ?? null;
+    const num = parseFootballDataTeamId(teamId);
+    if (num == null) return null;
+    if (isFootballDataTokenConfigured()) {
+      try {
+        type TeamResponse = {
+          id?: number;
+          name?: string;
+          shortName?: string;
+          tla?: string;
+          crest?: string;
+          area?: { name?: string };
+        };
+        const res = await footballDataFetch<TeamResponse>({
+          path: `/teams/${num}`,
+          ttlMs: 6 * 60 * 60_000,
+        });
+        if (res.id != null || res.name) {
+          return {
+            id: `fd-team-${res.id ?? num}`,
+            name: res.name?.trim() || res.shortName?.trim() || 'Équipe',
+            shortName: res.shortName || res.tla || undefined,
+            logoUrl: res.crest,
+            country: res.area?.name,
+            externalId: res.id ?? num,
+          };
+        }
+      } catch {
+        /* fall through */
+      }
+    }
+    return (
+      curatedFootballDataTeams('').find((t) => t.id === teamId) ?? {
+        id: teamId,
+        name: `Équipe ${num}`,
+        externalId: num,
+      }
+    );
   }
 
   async getCompetitions(_country?: string): Promise<UnifiedCompetitionRef[]> {

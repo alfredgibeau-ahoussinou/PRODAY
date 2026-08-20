@@ -79,7 +79,7 @@ const TeamSide: React.FC<{
       <View style={[styles.logo, styles.logoPh]} />
     )}
     <ProDayText variant="body" style={styles.teamName} numberOfLines={1}>
-      {team.name}
+      {team.shortName || team.name}
     </ProDayText>
     {score != null ? (
       <ProDayText variant="title" style={styles.score}>

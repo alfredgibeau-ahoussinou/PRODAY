@@ -10,6 +10,8 @@ import type {
   UnifiedStandingRow,
   UnifiedTeamRef,
 } from '../../services/supporterFootball';
+import { filterMatchesForFollows } from '../../services/supporterFootball';
+import type { Follow } from '../../models/Follow';
 
 type Props = {
   team: UnifiedTeamRef;
@@ -38,19 +40,26 @@ export const SupporterSpaceClubDetailScreen: React.FC<Props> = ({
     (async () => {
       setLoading(true);
       try {
-        const [upcoming, finished] = await Promise.all([
-          facade.getUpcoming(21),
-          facade.getFinished(14),
-        ]);
+        const syntheticFollow: Follow = {
+          id: `local-${team.id}`,
+          follower_uid: 'local',
+          target_type: 'club',
+          target_id: team.id,
+          target_label: team.name,
+          created_at: new Date(),
+        };
+        const followed = await facade.getFollowedClubMatches([syntheticFollow]);
         if (cancelled) return;
-        const touch = (m: UnifiedMatch) =>
-          m.homeTeam.id === team.id ||
-          m.awayTeam.id === team.id ||
-          m.homeTeam.name === team.name ||
-          m.awayTeam.name === team.name;
-        setNext(upcoming.filter(touch).slice(0, 5));
-        setLast(finished.filter(touch).slice(0, 5));
-        setStandings([]); // stub — need season id from API when available
+        const matched = filterMatchesForFollows(followed, [syntheticFollow]);
+        const upcoming = matched
+          .filter((m) => m.status === 'scheduled' || m.status === 'live' || m.status === 'halftime')
+          .sort((a, b) => a.date.getTime() - b.date.getTime());
+        const finished = matched
+          .filter((m) => m.status === 'finished')
+          .sort((a, b) => b.date.getTime() - a.date.getTime());
+        setNext(upcoming.slice(0, 8));
+        setLast(finished.slice(0, 8));
+        setStandings([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -67,7 +76,7 @@ export const SupporterSpaceClubDetailScreen: React.FC<Props> = ({
           <Icon name="arrow-back" size={22} color={SUPPORTER_SPACE.foreground} />
         </Pressable>
         <ProDayText variant="title" style={styles.title} numberOfLines={1}>
-          {team.name}
+          {team.shortName || team.name}
         </ProDayText>
         <Pressable onPress={onToggleFollow} style={styles.follow}>
           <ProDayText variant="caption" style={styles.followText}>
