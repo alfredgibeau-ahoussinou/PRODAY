@@ -38,6 +38,7 @@ export {
 export {
   FIXTURE_DETAIL_INCLUDES,
   FIXTURE_LIST_INCLUDES,
+  LIVE_INPLAY_INCLUDES,
 } from './SportmonksFootballProvider';
 export {
   isSportmonksTokenConfigured,

@@ -36,6 +36,31 @@ export type SmLeague = {
   image_path?: string | null;
   country_id?: number;
   type?: string | null;
+  country?: { id?: number; name?: string | null };
+};
+
+export type SmPeriod = {
+  id?: number;
+  fixture_id?: number;
+  type_id?: number;
+  started?: number | null;
+  ended?: number | null;
+  counts_from?: number | null;
+  ticking?: boolean | null;
+  sort_order?: number | null;
+  description?: string | null;
+  time_added?: number | null;
+  period_length?: number | null;
+  minutes?: number | null;
+  seconds?: number | null;
+  has_timer?: boolean | null;
+};
+
+export type SmRound = {
+  id?: number;
+  name?: string | null;
+  finished?: boolean | null;
+  is_current?: boolean | null;
 };
 
 export type SmEvent = {
@@ -131,6 +156,8 @@ export type SmFixture = {
   scores?: SmScore[];
   state?: SmState;
   league?: SmLeague;
+  periods?: SmPeriod[];
+  round?: SmRound | null;
   events?: SmEvent[];
   lineups?: SmLineup[];
   formations?: SmFormation[];
@@ -168,7 +195,11 @@ export function inferGenderScope(label: string | undefined | null): GenderScope 
   return 'unknown';
 }
 
-export function mapSmStatus(state?: SmState | null, stateId?: number): UnifiedMatchStatus {
+export function mapSmStatus(
+  state?: SmState | null,
+  stateId?: number,
+  periods?: SmPeriod[] | null,
+): UnifiedMatchStatus {
   const code = (state?.short_name || state?.state || state?.name || '').toLowerCase();
   if (['inplay', 'live', '1st', '2nd', 'et', 'pen_live'].some((k) => code.includes(k))) return 'live';
   if (code.includes('ht') || code.includes('half')) return 'halftime';
@@ -180,7 +211,38 @@ export function mapSmStatus(state?: SmState | null, stateId?: number): UnifiedMa
   if (stateId === 2 || stateId === 3 || stateId === 4 || stateId === 22) return 'live';
   if (stateId === 5) return 'finished';
   if (stateId === 1) return 'scheduled';
+
+  const fromPeriods = mapStatusFromPeriods(periods);
+  if (fromPeriods) return fromPeriods;
   return 'unknown';
+}
+
+/** Dérive live / mi-temps depuis `periods` (include inplay sans `state`). */
+export function mapStatusFromPeriods(periods?: SmPeriod[] | null): UnifiedMatchStatus | null {
+  if (!periods?.length) return null;
+  const ticking = periods.find((p) => p.ticking === true);
+  if (ticking) {
+    const desc = (ticking.description || '').toLowerCase();
+    if (desc.includes('break') || desc.includes('half-time') || desc.includes('halftime')) {
+      return 'halftime';
+    }
+    return 'live';
+  }
+  const open = periods.find((p) => p.ended == null && p.started != null);
+  if (open) return 'live';
+  return null;
+}
+
+/** Minute + libellé période depuis le period ticking (ou le plus récent). */
+export function pickActivePeriod(periods?: SmPeriod[] | null): SmPeriod | null {
+  if (!periods?.length) return null;
+  const ticking = periods.find((p) => p.ticking === true);
+  if (ticking) return ticking;
+  const open = [...periods]
+    .filter((p) => p.ended == null && p.started != null)
+    .sort((a, b) => (b.sort_order ?? 0) - (a.sort_order ?? 0));
+  if (open[0]) return open[0];
+  return [...periods].sort((a, b) => (b.sort_order ?? 0) - (a.sort_order ?? 0))[0] ?? null;
 }
 
 /**
@@ -255,13 +317,23 @@ export function mapSmParticipants(participants: SmParticipant[] | undefined): {
 }
 
 function mapScore(fixture: SmFixture): UnifiedScore {
+  const active = pickActivePeriod(fixture.periods);
+  const minute =
+    typeof active?.minutes === 'number' && Number.isFinite(active.minutes)
+      ? active.minutes
+      : null;
+  const periodLabel =
+    active?.description ||
+    fixture.state?.name ||
+    fixture.state?.short_name ||
+    null;
   return {
     home: pickCurrentScore(fixture.scores, 'home'),
     away: pickCurrentScore(fixture.scores, 'away'),
     halfTimeHome: pickScoreForDescription(fixture.scores, 'home', '1st_half'),
     halfTimeAway: pickScoreForDescription(fixture.scores, 'away', '1st_half'),
-    minute: null,
-    period: fixture.state?.name || fixture.state?.short_name || null,
+    minute,
+    period: periodLabel,
   };
 }
 
@@ -511,6 +583,7 @@ export function mapSmFixtureToUnified(fixture: SmFixture): UnifiedMatch {
   const competition: UnifiedCompetitionRef = {
     id: fixture.league ? `sm-league-${fixture.league.id}` : `sm-league-${fixture.league_id ?? 'unknown'}`,
     name: fixture.league?.name || 'Compétition',
+    country: fixture.league?.country?.name || undefined,
     logoUrl: fixture.league?.image_path || undefined,
     externalId: fixture.league?.id ?? fixture.league_id,
     seasonId: fixture.season_id,
@@ -536,6 +609,7 @@ export function mapSmFixtureToUnified(fixture: SmFixture): UnifiedMatch {
     away.externalId,
     readXgFixture(fixture),
   );
+  const roundName = fixture.round?.name?.trim() || null;
 
   return {
     id: `external-sm-${fixture.id}`,
@@ -544,7 +618,7 @@ export function mapSmFixtureToUnified(fixture: SmFixture): UnifiedMatch {
     awayTeam: away,
     competition,
     date: Number.isNaN(date.getTime()) ? new Date() : date,
-    status: mapSmStatus(fixture.state, fixture.state_id),
+    status: mapSmStatus(fixture.state, fixture.state_id, fixture.periods),
     score: mapScore(fixture),
     genderScope: competition.genderScope,
     lineup: lineups,
@@ -553,6 +627,7 @@ export function mapSmFixtureToUnified(fixture: SmFixture): UnifiedMatch {
     video: null,
     externalFixtureId: fixture.id,
     venue: fixture.venue?.name ?? null,
+    round: roundName,
   };
 }
 

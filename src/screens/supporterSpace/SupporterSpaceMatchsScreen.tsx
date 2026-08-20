@@ -110,8 +110,11 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
   }, [feed.live, feed.upcoming, feed.finished, feed.proday]);
 
   const filtered = useMemo(() => {
-    let list = pool.filter((m) => inDateBucket(m, dateBucket));
-    if (status === 'live') list = list.filter((m) => m.status === 'live' || m.status === 'halftime');
+    // Onglet Live : toutes les fixtures inplay, sans filtre date (évite de masquer le live).
+    let list =
+      status === 'live'
+        ? pool.filter((m) => m.status === 'live' || m.status === 'halftime')
+        : pool.filter((m) => inDateBucket(m, dateBucket));
     if (status === 'upcoming') list = list.filter((m) => m.status === 'scheduled');
     if (status === 'finished') list = list.filter((m) => m.status === 'finished');
     if (status === 'proday') list = list.filter((m) => m.source === 'proday');
@@ -127,8 +130,10 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
   const genderEmptyHonest =
     gender !== 'all' &&
     filtered.length === 0 &&
-    pool.some((m) => inDateBucket(m, dateBucket));
+    pool.some((m) => status === 'live' || inDateBucket(m, dateBucket));
 
+  const liveEmptyHonest =
+    !feed.loading && status === 'live' && filtered.length === 0 && !genderEmptyHonest;
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await feed.refresh({ silent: true });
@@ -175,7 +180,13 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
         </ProDayText>
       ) : null}
 
-      {!feed.loading && groups.length === 0 ? (
+      {liveEmptyHonest ? (
+        <ProDayText variant="body" style={styles.empty}>
+          {SUPPORTER_SPACE_COPY.emptyLive}
+        </ProDayText>
+      ) : null}
+
+      {!feed.loading && groups.length === 0 && !liveEmptyHonest ? (
         <ProDayText variant="body" style={styles.empty}>
           Aucun match pour ces filtres.
         </ProDayText>

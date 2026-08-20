@@ -131,6 +131,8 @@ export interface UnifiedMatch {
   /** Sportmonks fixture id */
   externalFixtureId?: number;
   venue?: string | null;
+  /** Libellé journée / round Sportmonks (ex. "12") — null si absent. */
+  round?: string | null;
 }
 
 export interface UnifiedStandingRow {

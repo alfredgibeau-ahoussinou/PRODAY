@@ -28,9 +28,16 @@ import type {
   UnifiedTeamRef,
 } from './types';
 
-/** Includes légers pour listes / livescores (payload réduit). */
+/** Includes légers pour listes fixtures-by-date (upcoming / finished). */
 export const FIXTURE_LIST_INCLUDES =
   'participants;scores;state;league;events;lineups;formations;statistics;venue';
+
+/**
+ * Includes pour `GET /livescores/inplay` — minute via periods, scores CURRENT,
+ * ligue+pays, round. Pas de lineups/stats (payload live allégé).
+ */
+export const LIVE_INPLAY_INCLUDES =
+  'participants;scores;periods;events;league.country;round';
 
 /**
  * Includes riches pour le Match Center / getMatch.
@@ -77,10 +84,17 @@ export class SportmonksFootballProvider implements SupporterFootballProvider {
   async getLive(): Promise<UnifiedMatch[]> {
     const res = await sportmonksFetch<SportmonksListResponse<SmFixture>>({
       path: '/livescores/inplay',
-      query: { include: FIXTURE_LIST_INCLUDES },
+      query: { include: LIVE_INPLAY_INCLUDES },
       ttlMs: sportmonksLiveTtl(),
     });
-    return (res.data ?? []).map(mapSmFixtureToUnified);
+    // Endpoint inplay = matchs en cours uniquement ; pas de fallback démo.
+    return (res.data ?? []).map((fixture) => {
+      const match = mapSmFixtureToUnified(fixture);
+      if (match.status === 'unknown' || match.status === 'scheduled') {
+        return { ...match, status: 'live' as const };
+      }
+      return match;
+    });
   }
 
   async getUpcoming(days = 7): Promise<UnifiedMatch[]> {
