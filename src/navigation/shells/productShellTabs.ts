@@ -50,23 +50,20 @@ export const AMATEUR_CLUB_OVERFLOW_TABS: MainTabId[] = [
   'shop',
 ];
 
+/** Accueil · Matchs · Compétitions · Mes clubs · Vidéos · Profil. */
 export const SUPPORTER_SHELL_TABS: MainTabId[] = [
   'home',
   'matchs',
   'feed',
   'plus',
+  'reels',
   'profil',
 ];
 
-/** Secondaires hors dock (deep links / legacy). */
-export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = ['reels', 'messages', 'shop'];
+export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = [];
 
-/** @deprecated Plus hub retiré — destinations secondaires hors dock. */
-export const SUPPORTER_PLUS_DESTINATION_TABS: MainTabId[] = [
-  'reels',
-  'messages',
-  'shop',
-];
+/** @deprecated Ancien hub Plus — plus utilisé. */
+export const SUPPORTER_PLUS_DESTINATION_TABS: MainTabId[] = [];
 
 export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
   'home',

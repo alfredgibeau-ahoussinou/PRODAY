@@ -7,7 +7,6 @@ import {
   View,
 } from 'react-native';
 import { AdminFocCard } from '../../../components/admin/foc';
-import { AdminSupporterVideoRightsPanel } from '../../../components/admin/AdminSupporterVideoRightsPanel';
 import { ADMIN_VIDEO_VEO_DEMO } from '../../../content/adminVideoVeoExplainer';
 import { adminService } from '../../../services/admin.service';
 import type { ClubCamera } from '../../../models/ClubCameras';
@@ -79,7 +78,6 @@ export function AdminFocVideoScreen() {
                 </Text>
               </AdminFocCard>
             </View>
-            <AdminSupporterVideoRightsPanel />
           </View>
         }
         ListEmptyComponent={

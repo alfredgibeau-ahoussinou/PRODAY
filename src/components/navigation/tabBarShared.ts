@@ -36,14 +36,10 @@ const AMATEUR_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
 const SUPPORTER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
   home: 'home',
   matchs: 'football',
-  /** ProDay ≠ cœur — sparkles / star. */
-  feed: 'star-four-points',
-  /** Clubs = shield (Favoris → Clubs V3). */
+  feed: 'trophy',
   plus: 'shield',
-  profil: 'person',
   reels: 'videocam',
-  messages: 'chat',
-  shop: 'bag',
+  profil: 'person',
 };
 
 const PRO_PLAYER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {

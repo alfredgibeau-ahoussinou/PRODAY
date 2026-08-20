@@ -5,7 +5,7 @@ import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
-import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
+import { SUPPORTER_SITE } from '../../theme/prodaySupporterTheme';
 
 interface FeedQuestionHeroProps {
   question: string;

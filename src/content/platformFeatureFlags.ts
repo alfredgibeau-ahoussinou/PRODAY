@@ -51,12 +51,12 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   },
   supporter: {
     key: 'supporter',
-    label: 'Football Hub',
+    label: 'Pôle Supporter',
     adminHint:
-      'Football Hub (ex-Supporter). OFF = coque bloquée. Sync scores externes = Phase 2 admin.',
-    disabledTitle: 'Football Hub temporairement fermé',
+      'Pôle Supporter (rebuild). OFF = coque bloquée. Données football = à reconnecter plus tard.',
+    disabledTitle: 'Pôle Supporter temporairement fermé',
     disabledMessage:
-      'Le Football Hub est temporairement désactivé. Réessayez bientôt.',
+      'Le pôle Supporter est temporairement désactivé. Réessayez bientôt.',
   },
   shop: {
     key: 'shop',

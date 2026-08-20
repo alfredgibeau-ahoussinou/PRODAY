@@ -23,13 +23,12 @@ import { ClubRecruitmentScreen } from '../screens/club/ClubRecruitmentScreen';
 import { ClubCalendarScreen } from '../screens/club/ClubCalendarScreen';
 import { ClubCommunicationScreen } from '../screens/club/ClubCommunicationScreen';
 import { ClubVitrineScreen } from '../screens/club/ClubVitrineScreen';
-import { SupporterSpaceHomeScreen } from '../screens/supporterSpace/SupporterSpaceHomeScreen';
-import { SupporterSpaceMatchsScreen } from '../screens/supporterSpace/SupporterSpaceMatchsScreen';
-import { SupporterSpaceProDayScreen } from '../screens/supporterSpace/SupporterSpaceProDayScreen';
-import { SupporterSpaceClubsScreen } from '../screens/supporterSpace/SupporterSpaceClubsScreen';
-import { SupporterSpaceProfileScreen } from '../screens/supporterSpace/SupporterSpaceProfileScreen';
-import { SupporterSpaceDebateFeedScreen } from '../screens/supporterSpace/SupporterSpaceDebateFeedScreen';
+import { SupporterHomeScreen } from '../screens/supporter/SupporterHomeScreen';
+import { SupporterMatchsScreen } from '../screens/supporter/SupporterMatchsScreen';
+import { SupporterCompetitionsScreen } from '../screens/supporter/SupporterCompetitionsScreen';
+import { SupporterClubsScreen } from '../screens/supporter/SupporterClubsScreen';
 import { SupporterVideosScreen } from '../screens/supporter/SupporterVideosScreen';
+import { SupporterProfileScreen } from '../screens/supporter/SupporterProfileScreen';
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerSquadScreen } from '../screens/proPlayer/ProPlayerSquadScreen';
 import { SmartTacticsPortalScreen } from '../screens/smartTactics/SmartTacticsPortalScreen';
@@ -54,16 +53,14 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   plus: JoueurPlusHubScreen,
 };
 
+/** Dock : Accueil · Matchs · Compétitions · Mes clubs · Vidéos · Profil. */
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: SupporterSpaceHomeScreen,
-  matchs: SupporterSpaceMatchsScreen,
-  feed: SupporterSpaceProDayScreen,
-  plus: SupporterSpaceClubsScreen,
-  profil: SupporterSpaceProfileScreen,
-  /** Secondaires hors dock — tribune / vidéos. */
+  home: SupporterHomeScreen,
+  matchs: SupporterMatchsScreen,
+  feed: SupporterCompetitionsScreen,
+  plus: SupporterClubsScreen,
   reels: SupporterVideosScreen,
-  messages: SupporterSpaceDebateFeedScreen,
-  shop: ShopScreen,
+  profil: SupporterProfileScreen,
 };
 
 const PRO_CLUB_SCREENS: Partial<Record<MainTabId, ComponentType>> = {

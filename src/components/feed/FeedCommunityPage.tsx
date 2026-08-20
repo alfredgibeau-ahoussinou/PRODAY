@@ -25,7 +25,7 @@ import { FeedPublishModal } from './FeedPublishModal';
 import { PlatformFeedSection } from './PlatformFeedSection';
 import { WeeklyQuestionComposeForm } from '../weeklyQuestion/WeeklyQuestionComposeForm';
 import { WeeklyQuestionReactionBar } from '../weeklyQuestion/WeeklyQuestionReactionBar';
-import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
+import { SUPPORTER_SITE } from '../../theme/prodaySupporterTheme';
 
 interface FeedCommunityPageProps {
   profile: User;

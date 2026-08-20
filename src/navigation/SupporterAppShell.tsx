@@ -7,14 +7,11 @@ import { resolveMainTabScreen } from './resolveMainTabScreen';
 import { TabNavigationProvider } from '../context/TabNavigationContext';
 import { SupporterShellProvider } from '../context/SupporterShellContext';
 import { BottomTabBar } from '../components/navigation/BottomTabBar';
-import { SUPPORTER_SHELL_TABS } from './shells/productShellTabs';
 import { AnimatedTabContent } from '../components/motion';
 import { ProdayNotificationBridge } from '../components/ProdayNotificationBridge';
 import { ProdayBrainBridge } from '../components/ProdayBrainBridge';
 import { PoleHelpChatbot } from '../components/help/PoleHelpChatbot';
 import { useSessionProfile } from '../hooks/useSessionProfile';
-import { useUnreadMessageCount } from '../hooks/useUnreadMessages';
-import { getVisibleMainTabs } from '../content/poleExperience';
 import { useProductLine } from '../context/ProductLineContext';
 import { prodayHaptics } from '../utils/prodayHaptics';
 import {
@@ -25,9 +22,12 @@ import {
   type ProfileDeepLink,
   type SetActiveTabOptions,
 } from '../utils/navigationDeepLink';
-import { stampMatchsDeepLink } from '../utils/supporterMatchsDeepLink';
+import {
+  SUPPORTER_DOCK_TABS,
+  type SupporterDockTabId,
+} from '../features/supporter/navigation/supporterTabs';
 
-/** Shell Supporter Space V3 — dock Accueil · Matchs · ProDay · Clubs · Profil. */
+/** Shell supporter minimal — dock Accueil · Matchs · Compétitions · Mes clubs · Vidéos · Profil. */
 export const SupporterAppShell: React.FC = () => {
   const profile = useSessionProfile();
   const { productLine, colors: themeColors } = useProductLine();
@@ -37,32 +37,15 @@ export const SupporterAppShell: React.FC = () => {
   const [pendingMatchsLink, setPendingMatchsLink] = useState<MatchsDeepLink | null>(null);
   const [pendingProfileView, setPendingProfileView] = useState<ProfileDeepLink | null>(null);
   const [pendingDashboardView, setPendingDashboardView] = useState<DashboardDeepLink | null>(null);
-  const { count: unreadCount, refresh: refreshUnread } = useUnreadMessageCount();
 
-  const dockTabs = useMemo(() => new Set<MainTabId>(SUPPORTER_SHELL_TABS), []);
-
-  const visibleTabs = useMemo(
-    () => getVisibleMainTabs(productLine, profile?.role, profile),
-    [productLine, profile],
-  );
-
-  const screenTabs = useMemo((): MainTabId[] => {
-    const merged = [...visibleTabs];
-    for (const tab of ['reels', 'messages', 'shop'] as MainTabId[]) {
-      if (!merged.includes(tab)) merged.push(tab);
-    }
-    return merged;
-  }, [visibleTabs]);
+  const dockTabs = useMemo(() => new Set<MainTabId>(SUPPORTER_DOCK_TABS), []);
+  const screenTabs = useMemo((): MainTabId[] => [...SUPPORTER_DOCK_TABS], []);
 
   useEffect(() => {
     if (!screenTabs.includes(activeTab)) {
       setActiveTab(screenTabs[0] ?? 'home');
     }
   }, [screenTabs, activeTab]);
-
-  useEffect(() => {
-    if (activeTab === 'messages') refreshUnread();
-  }, [activeTab, refreshUnread]);
 
   const handleTabPress = useCallback(
     (tab: MainTabId, options?: SetActiveTabOptions) => {
@@ -86,14 +69,14 @@ export const SupporterAppShell: React.FC = () => {
   const openChat = useCallback(
     (threadId: string) => {
       setPendingChatThreadId(threadId);
-      handleTabPress('messages');
+      handleTabPress('profil');
     },
     [handleTabPress],
   );
 
   const openMatchs = useCallback(
     (link?: MatchsDeepLink) => {
-      setPendingMatchsLink(stampMatchsDeepLink(link ?? { supporterChapter: 'upcoming' }));
+      setPendingMatchsLink(link ?? null);
       handleTabPress('matchs');
     },
     [handleTabPress],
@@ -107,7 +90,10 @@ export const SupporterAppShell: React.FC = () => {
   );
 
   const shellValue = useMemo(
-    () => ({ navigate, activeTab }),
+    () => ({
+      navigate,
+      activeTab: activeTab as SupporterDockTabId,
+    }),
     [navigate, activeTab],
   );
 
@@ -126,10 +112,7 @@ export const SupporterAppShell: React.FC = () => {
         openChat,
         clearPendingChat: () => setPendingChatThreadId(null),
         pendingTeamEventId: null,
-        openTeamEvent: (eventId) => {
-          setPendingMatchsLink(stampMatchsDeepLink({ eventId, homeTab: 'season' }));
-          handleTabPress('matchs');
-        },
+        openTeamEvent: () => handleTabPress('matchs'),
         clearPendingTeamEvent: () => undefined,
         pendingMatchsLink,
         openMatchs,
@@ -153,15 +136,11 @@ export const SupporterAppShell: React.FC = () => {
         clearSignupPreset: () => undefined,
         pendingDashboardView,
         openDashboard: (view) => {
-          if (view === 'feed') {
-            handleTabPress('feed');
-            return;
-          }
-          setPendingDashboardView(view);
+          if (view) setPendingDashboardView(view);
           handleTabPress('home');
         },
         clearPendingDashboard: () => setPendingDashboardView(null),
-        openShop: () => handleTabPress('shop'),
+        openShop: () => undefined,
         pendingCarpoolLink: null as CarpoolDeepLink | null,
         openCarpool: () => undefined,
         clearPendingCarpool: () => undefined,
@@ -183,8 +162,7 @@ export const SupporterAppShell: React.FC = () => {
           <BottomTabBar
             activeTab={dockTabs.has(activeTab) ? activeTab : 'home'}
             onTabPress={handleTabPress}
-            unreadCount={unreadCount}
-            visibleTabs={[...SUPPORTER_SHELL_TABS]}
+            visibleTabs={[...SUPPORTER_DOCK_TABS]}
           />
           <View style={styles.helpLayer} pointerEvents="box-none">
             <PoleHelpChatbot />

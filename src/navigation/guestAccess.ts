@@ -1,12 +1,13 @@
 import type { ProductLineId } from '../models/ProductLine';
 import type { MainTabId } from './mainTabConfig';
 
-/** Onglets invité — Football Hub (aperçu gratuit). */
+/** Onglets invité — pôle supporter (aperçu scaffold). */
 const GUEST_VISIBLE_TABS_SUPPORTER: MainTabId[] = [
   'home',
   'matchs',
   'feed',
   'plus',
+  'reels',
   'profil',
 ];
 

@@ -7,7 +7,7 @@
 | Élément | Rôle |
 |---------|------|
 | Fichiers racine | `MainTabs`, résolveurs d'écrans, deep links |
-| `shells/` | Shells dédiés : `V3TabShell`, sponsor, admin, supporter |
+| `shells/` | Shells dédiés : joueur, coach, club, sponsor, admin, supporter (scaffold) |
 
 ## Shells
 

@@ -301,12 +301,10 @@ export function getTabShortLabel(
   if (line === 'supporter') {
     if (tab === 'home') return 'Accueil';
     if (tab === 'matchs') return 'Matchs';
-    if (tab === 'feed') return 'ProDay';
+    if (tab === 'feed') return 'Compét.';
     if (tab === 'plus') return 'Clubs';
-    if (tab === 'profil') return 'Profil';
     if (tab === 'reels') return 'Vidéos';
-    if (tab === 'messages') return 'Tribune';
-    if (tab === 'shop') return 'Shop';
+    if (tab === 'profil') return 'Profil';
   }
   if (isProFamilyLine(line) && role === 'club') {
     if (tab === 'home') return 'Accueil';
@@ -515,7 +513,7 @@ export function getDashboardMetaForLine(
   if (line === 'supporter') {
     return {
       ...meta,
-      eyebrow: role === 'supporter' ? 'SUPPORTER SPACE' : meta.eyebrow,
+      eyebrow: role === 'supporter' ? 'PÔLE SUPPORTER' : meta.eyebrow,
       title: role === 'supporter' ? 'PRODAY Supporter' : meta.title,
     };
   }

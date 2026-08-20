@@ -45,3 +45,14 @@ export const supporterGradients = {
   card: ['#1A1A1A', '#0A0A0A'] as const,
   cta: ['#3C00F0', '#7C5CFF'] as const,
 };
+
+/** Tokens chrome supporter (fil communauté / accents partagés). */
+export const SUPPORTER_SITE = {
+  accent: supporterColorOverrides.accent,
+  soft: supporterColorOverrides.accentSoft,
+  glow: 'rgba(60, 0, 240, 0.22)',
+  border: supporterColorOverrides.border,
+  foreground: supporterColorOverrides.text,
+  muted: supporterColorOverrides.textMuted,
+  live: '#22C55E',
+} as const;

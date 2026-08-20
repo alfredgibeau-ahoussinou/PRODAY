@@ -364,55 +364,37 @@ const AMATEUR_HELP: PoleHelpContent = {
 const SUPPORTER_HELP: PoleHelpContent = {
   poleKey: 'supporter',
   title: 'Aide Supporter',
-  bubbleTeaser: 'Une question sur la Tribune ?',
+  bubbleTeaser: 'Une question sur le pôle Supporter ?',
   welcome:
-    'Bienvenue sur la Tribune ! Je t’aide à retrouver matchs, suivis et Moments.',
+    'Le pôle Supporter est en reconstruction. Navigation minimale : Accueil, Matchs, Compétitions, Mes clubs, Vidéos, Profil.',
   entries: [
     ...withCategory('navigation', [
-      { id: 'navigation', question: 'Comment naviguer dans l’espace supporter ?', answer: 'Tribune pour l’accueil, Suivis pour le fil, Matchs pour le live, Moments pour les réels, Compte pour tes réglages.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Retour Tribune' },
-      { id: 'onglets-tribune', question: 'À quoi servent les onglets de la Tribune ?', answer: 'Chaque onglet couvre un usage : actus (Tribune), fil social (Suivis), scores (Matchs), vidéos (Moments) et réglages (Compte).', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Explorer la Tribune' },
-      { id: 'raccourcis', question: 'Où trouver mes raccourcis favoris ?', answer: 'La Tribune affiche tes clubs favoris et prochains matchs en haut. Tu peux aussi les retrouver dans Suivis.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir la Tribune' },
+      {
+        id: 'navigation',
+        question: 'Comment naviguer dans l’espace supporter ?',
+        answer:
+          'Dock actuel : Accueil · Matchs · Compétitions · Mes clubs · Vidéos · Profil. Les contenus détaillés arriveront au prochain rebuild.',
+        navigate: { kind: 'tab', tab: 'home' },
+        navigateLabel: 'Retour Accueil',
+      },
     ]),
     ...withCategory('profil', [
-      { id: 'profil', question: 'Comment modifier mon compte supporter ?', answer: 'Onglet Compte : identité, clubs favoris, notifications et paramètres de ton espace supporter.', navigate: { kind: 'profile' }, navigateLabel: 'Ouvrir mon compte' },
-      { id: 'pseudo-avatar', question: 'Comment changer mon pseudo ou avatar ?', answer: 'Compte > Modifier le profil : mets à jour ton pseudo, ta photo et ta bio visible par la communauté.', navigate: { kind: 'profile' }, navigateLabel: 'Modifier mon profil' },
-      { id: 'confidentialite-compte', question: 'Comment gérer la confidentialité de mon compte ?', answer: 'Compte > Paramètres : choisis qui peut te contacter et quelles infos sont visibles sur ton profil public.', navigate: { kind: 'profile' }, navigateLabel: 'Réglages confidentialité' },
+      {
+        id: 'profil',
+        question: 'Où est mon profil ?',
+        answer: 'Onglet Profil du dock supporter (espace en préparation).',
+        navigate: { kind: 'profile' },
+        navigateLabel: 'Ouvrir mon profil',
+      },
     ]),
     ...withCategory('matchs', [
-      { id: 'live', question: 'Où voir les matchs en direct ?', answer: 'L’onglet Matchs liste les rencontres du jour, les scores live et les liens vers les hubs match quand ils sont disponibles.', navigate: { kind: 'matchs', homeTab: 'matches' }, navigateLabel: 'Voir les matchs' },
-      { id: 'hub-match', question: 'Comment ouvrir le hub d’un match ?', answer: 'Depuis Matchs ou la Tribune, appuie sur une rencontre pour accéder au score live, aux compositions et aux stats.', navigate: { kind: 'matchs', homeTab: 'matches' }, navigateLabel: 'Parcourir les matchs' },
-      { id: 'calendrier-favoris', question: 'Où voir le calendrier de mes favoris ?', answer: 'La Tribune et l’onglet Matchs regroupent les prochaines rencontres de tes clubs et joueurs suivis.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Calendrier favoris' },
-      { id: 'resultats-passes', question: 'Comment consulter les résultats passés ?', answer: 'Matchs > Historique ou filtre par date pour retrouver les scores et temps forts des rencontres terminées.', navigate: { kind: 'matchs', homeTab: 'matches' }, navigateLabel: 'Résultats passés' },
-    ]),
-    ...withCategory('mercato', [
-      { id: 'transferts', question: 'Où suivre les rumeurs de transfert ?', answer: 'Le fil Suivis et la Tribune affichent les actus Mercato des clubs et joueurs que tu suis.', navigate: { kind: 'tab', tab: 'feed' }, navigateLabel: 'Fil Mercato' },
-      { id: 'offres-club', question: 'Comment voir les recrutements de mon club favori ?', answer: 'Depuis la fiche club ou le Mercato, consulte les annonces et mouvements liés aux équipes que tu suis.', navigate: { kind: 'mercato', view: 'home' }, navigateLabel: 'Ouvrir le Mercato' },
-      { id: 'alertes-mercato', question: 'Comment activer les alertes Mercato ?', answer: 'Compte > Paramètres > Notifications : active les alertes transferts pour tes favoris.', navigate: { kind: 'profile' }, navigateLabel: 'Activer les alertes' },
-    ]),
-    ...withCategory('messages', [
-      { id: 'messages', question: 'Où envoyer un message à un créateur ?', answer: 'Depuis le profil d’un joueur ou créateur suivi, ou via l’onglet Messages pour retrouver tes conversations.', navigate: { kind: 'tab', tab: 'messages' }, navigateLabel: 'Ouvrir Messages' },
-      { id: 'notifications', question: 'Comment activer les alertes match ?', answer: 'Dans Compte > Paramètres, active les notifications pour les scores live, les buts de tes favoris et les nouveaux Moments.', navigate: { kind: 'profile' }, navigateLabel: 'Régler les notifications' },
-      { id: 'silencieux', question: 'Comment couper les notifications temporairement ?', answer: 'Compte > Paramètres > Notifications : désactive les alertes match ou Moments selon tes préférences.', navigate: { kind: 'profile' }, navigateLabel: 'Gérer les alertes' },
-    ]),
-    ...withCategory('club', [
-      { id: 'tribune', question: 'Où est ma tribune ?', answer: 'L’accueil Tribune regroupe tes clubs favoris, les prochains matchs à suivre et les temps forts de ta communauté.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir la Tribune' },
-      { id: 'favoris', question: 'Comment ajouter un club favori ?', answer: 'Depuis la fiche d’un club ou le hub match, appuie sur le cœur pour le suivre. Tes favoris apparaissent sur la Tribune et dans Suivis.', navigate: { kind: 'tab', tab: 'home' }, navigateLabel: 'Ouvrir la Tribune' },
-      { id: 'retirer-favori', question: 'Comment retirer un club de mes favoris ?', answer: 'Ouvre la fiche du club et appuie à nouveau sur le cœur, ou gère ta liste depuis Compte > Clubs favoris.', navigate: { kind: 'profile' }, navigateLabel: 'Gérer mes favoris' },
-    ]),
-    ...withCategory('stats', [
-      { id: 'stats', question: 'Où voir les stats d’un match ?', answer: 'Ouvre un match depuis l’onglet Matchs ou la Tribune : tu y trouves score, compositions et stats clés quand elles sont disponibles.', navigate: { kind: 'matchs', homeTab: 'matches' }, navigateLabel: 'Parcourir les matchs' },
-      { id: 'stats-joueur', question: 'Comment voir les stats d’un joueur suivi ?', answer: 'Depuis son profil ou le hub match, consulte buts, passes décisives et performances récentes.', navigate: { kind: 'tab', tab: 'feed' }, navigateLabel: 'Voir mes suivis' },
-      { id: 'classements', question: 'Où consulter les classements ?', answer: 'Matchs ou hub compétition : accède aux classements, forme récente et statistiques de la ligue suivie.', navigate: { kind: 'matchs', homeTab: 'season' }, navigateLabel: 'Voir les classements' },
-    ]),
-    ...withCategory('paiement', [
-      { id: 'shop', question: 'Où acheter des produits supporter ?', answer: 'La boutique ProDay propose maillots, goodies et offres partenaires liées aux clubs que tu suis.', navigate: { kind: 'shop' }, navigateLabel: 'Ouvrir la boutique' },
-      { id: 'paiement', question: 'Comment gérer mes achats ?', answer: 'Historique et moyens de paiement sont dans Compte > Paramètres ou directement depuis la boutique après un achat.', navigate: { kind: 'profile' }, navigateLabel: 'Voir mon compte' },
-    ]),
-    ...withCategory('pole', [
-      { id: 'suivis', question: 'Comment gérer mes suivis ?', answer: 'L’onglet Suivis (fil) centralise les actus des joueurs, clubs et créateurs que tu suis. Tu peux aussi les retrouver depuis ton profil.', navigate: { kind: 'tab', tab: 'feed' }, navigateLabel: 'Voir mes suivis' },
-      { id: 'reels', question: 'Où regarder les Moments / réels ?', answer: 'Moments regroupe les réels foot, highlights et contenus courts de la communauté supporter.', navigate: { kind: 'tab', tab: 'reels' }, navigateLabel: 'Ouvrir Moments' },
-      { id: 'partage', question: 'Comment partager un Moment ?', answer: 'Sur un réel ou highlight, utilise le bouton partager pour l’envoyer à tes contacts ou sur tes réseaux sociaux.', navigate: { kind: 'tab', tab: 'reels' }, navigateLabel: 'Ouvrir Moments' },
-      { id: 'suivre-joueur', question: 'Comment suivre un joueur ou créateur ?', answer: 'Depuis son profil, appuie sur Suivre. Ses actus, Moments et matchs apparaissent dans ton fil Suivis.', navigate: { kind: 'tab', tab: 'feed' }, navigateLabel: 'Mon fil Suivis' },
+      {
+        id: 'live',
+        question: 'Où voir les matchs ?',
+        answer: 'Onglet Matchs — écran placeholder pour le rebuild à venir.',
+        navigate: { kind: 'matchs', homeTab: 'matches' },
+        navigateLabel: 'Voir les matchs',
+      },
     ]),
   ],
 };

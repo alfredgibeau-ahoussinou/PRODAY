@@ -11,32 +11,23 @@ jest.mock('../screens/club/ClubCommunicationScreen', () => ({
   ClubCommunicationScreen: 'ClubCommunicationScreen',
 }));
 jest.mock('../screens/club/ClubVitrineScreen', () => ({ ClubVitrineScreen: 'ClubVitrineScreen' }));
-jest.mock('../screens/supporterSpace/SupporterSpaceHomeScreen', () => ({
-  SupporterSpaceHomeScreen: 'SupporterSpaceHomeScreen',
+jest.mock('../screens/supporter/SupporterHomeScreen', () => ({
+  SupporterHomeScreen: 'SupporterHomeScreen',
 }));
-jest.mock('../screens/supporterSpace/SupporterSpaceMatchsScreen', () => ({
-  SupporterSpaceMatchsScreen: 'SupporterSpaceMatchsScreen',
+jest.mock('../screens/supporter/SupporterMatchsScreen', () => ({
+  SupporterMatchsScreen: 'SupporterMatchsScreen',
 }));
-jest.mock('../screens/supporterSpace/SupporterSpaceProDayScreen', () => ({
-  SupporterSpaceProDayScreen: 'SupporterSpaceProDayScreen',
+jest.mock('../screens/supporter/SupporterCompetitionsScreen', () => ({
+  SupporterCompetitionsScreen: 'SupporterCompetitionsScreen',
 }));
-jest.mock('../screens/supporterSpace/SupporterSpaceClubsScreen', () => ({
-  SupporterSpaceClubsScreen: 'SupporterSpaceClubsScreen',
-}));
-jest.mock('../screens/supporterSpace/SupporterSpaceProfileScreen', () => ({
-  SupporterSpaceProfileScreen: 'SupporterSpaceProfileScreen',
-}));
-jest.mock('../screens/supporterSpace/SupporterSpaceDebateFeedScreen', () => ({
-  SupporterSpaceDebateFeedScreen: 'SupporterSpaceDebateFeedScreen',
-}));
-jest.mock('../screens/supporter/SupporterExplorerScreen', () => ({
-  SupporterExplorerScreen: 'SupporterExplorerScreen',
+jest.mock('../screens/supporter/SupporterClubsScreen', () => ({
+  SupporterClubsScreen: 'SupporterClubsScreen',
 }));
 jest.mock('../screens/supporter/SupporterVideosScreen', () => ({
   SupporterVideosScreen: 'SupporterVideosScreen',
 }));
-jest.mock('../screens/supporter/SupporterTribuneFeedScreen', () => ({
-  SupporterTribuneFeedScreen: 'SupporterTribuneFeedScreen',
+jest.mock('../screens/supporter/SupporterProfileScreen', () => ({
+  SupporterProfileScreen: 'SupporterProfileScreen',
 }));
 jest.mock('../screens/LazyReelsScreen', () => ({ LazyReelsScreen: 'LazyReelsScreen' }));
 jest.mock('../screens/ProfilTabScreen', () => ({ ProfilTabScreen: 'ProfilTabScreen' }));
@@ -104,17 +95,15 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('matchs', 'coach', 'pro')).toBe('MatchsScreen');
   });
 
-  it('mappe le shell Supporter Space Accueil · Matchs · ProDay · Clubs · Profil', () => {
-    expect(resolveMainTabScreen('home', 'supporter', 'supporter')).toBe('SupporterSpaceHomeScreen');
-    expect(resolveMainTabScreen('matchs', 'supporter', 'supporter')).toBe('SupporterSpaceMatchsScreen');
-    expect(resolveMainTabScreen('feed', 'supporter', 'supporter')).toBe('SupporterSpaceProDayScreen');
-    expect(resolveMainTabScreen('plus', 'supporter', 'supporter')).toBe('SupporterSpaceClubsScreen');
-    expect(resolveMainTabScreen('profil', 'supporter', 'supporter')).toBe('SupporterSpaceProfileScreen');
-    expect(resolveMainTabScreen('reels', 'supporter', 'supporter')).toBe('SupporterVideosScreen');
-    expect(resolveMainTabScreen('messages', 'supporter', 'supporter')).toBe(
-      'SupporterSpaceDebateFeedScreen',
+  it('mappe le shell supporter Accueil · Matchs · Compétitions · Clubs · Vidéos · Profil', () => {
+    expect(resolveMainTabScreen('home', 'supporter', 'supporter')).toBe('SupporterHomeScreen');
+    expect(resolveMainTabScreen('matchs', 'supporter', 'supporter')).toBe('SupporterMatchsScreen');
+    expect(resolveMainTabScreen('feed', 'supporter', 'supporter')).toBe(
+      'SupporterCompetitionsScreen',
     );
-    expect(resolveMainTabScreen('shop', 'supporter', 'supporter')).toBe('ShopScreen');
+    expect(resolveMainTabScreen('plus', 'supporter', 'supporter')).toBe('SupporterClubsScreen');
+    expect(resolveMainTabScreen('reels', 'supporter', 'supporter')).toBe('SupporterVideosScreen');
+    expect(resolveMainTabScreen('profil', 'supporter', 'supporter')).toBe('SupporterProfileScreen');
   });
 
   it('mappe le portail coach sur home', () => {
