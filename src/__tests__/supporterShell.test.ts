@@ -42,10 +42,12 @@ describe('supporter nav config', () => {
 });
 
 describe('supporterPageIdentity', () => {
-  it('aligne l’accent sur le site /supporter', () => {
-    expect(SUPPORTER_SITE.accent).toBe('#C9B896');
-    expect(SUPPORTER_SITE.deep).toBe('#0A0A08');
+  it('aligne l’accent sur le site /supporter (violet fan tribune)', () => {
+    expect(SUPPORTER_SITE.accent).toBe('#3C00F0');
+    expect(SUPPORTER_SITE.live).toBe('#34D399');
+    expect(SUPPORTER_SITE.deep).toBe('#180078');
     expect(getSupporterPageIdentity('tribune').title).toMatch(/tribune/i);
+    expect(getSupporterPageIdentity('tribune').eyebrow).toBe('Ta tribune');
     expect(supporterPageFromTab('feed')).toBe('suivis');
     expect(supporterPageFromTab('messages')).toBe('debats');
     expect(getSupporterPageIdentity('debats').title).toBe('Fil');

@@ -2,24 +2,24 @@ import type { IconName } from '../components/ui/iconNames';
 import type { MainTabId } from '../navigation/mainTabConfig';
 
 /**
- * Tokens Pôle Supporter — tribune cinéma (broadcast editorial).
- * Accent unique champagne / ivoire. Surfaces encre, filets discrets.
+ * Tokens Pôle Supporter — tribune fan (énergie stade, violet ProDay).
+ * LIVE en vert menthe distinct ; surfaces sombres avec lavis violet.
  */
 export const SUPPORTER_SITE = {
-  accent: '#C9B896',
-  deep: '#0A0A08',
-  soft: 'rgba(201, 184, 150, 0.10)',
-  glow: 'rgba(201, 184, 150, 0.12)',
-  bright: '#E8DCC4',
-  bg: '#050505',
-  band: '#070706',
-  surface: '#0C0C0B',
-  elevated: '#121211',
-  border: 'rgba(232, 220, 196, 0.12)',
-  foreground: '#F4F1EA',
-  muted: 'rgba(244, 241, 234, 0.52)',
-  live: '#C9B896',
-  free: '#E8DCC4',
+  accent: '#3C00F0',
+  deep: '#180078',
+  soft: 'rgba(60, 0, 240, 0.12)',
+  glow: 'rgba(60, 0, 240, 0.14)',
+  bright: '#7C5CFF',
+  bg: '#000000',
+  band: '#0c0c0c',
+  surface: '#0c0c0c',
+  elevated: '#141414',
+  border: 'rgba(124, 92, 255, 0.18)',
+  foreground: '#FAFAFA',
+  muted: 'rgba(250, 250, 250, 0.55)',
+  live: '#34D399',
+  free: '#7C5CFF',
 } as const;
 
 export type SupporterPageId =
@@ -66,9 +66,9 @@ function page(
 export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIdentity> = {
   tribune: page({
     id: 'tribune',
-    eyebrow: 'Tribune ProDay',
-    title: 'La tribune.',
-    support: 'À venir, en direct, clubs ProDay et le monde. Gratuit.',
+    eyebrow: 'Ta tribune',
+    title: 'Ta tribune',
+    support: 'En direct, tes clubs, le monde entier. 100 % gratuit.',
     icon: 'home',
     motif: 'none',
   }),
@@ -76,23 +76,23 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
     id: 'matchs',
     eyebrow: 'Calendrier',
     title: 'Matchs',
-    support: 'Les prochaines affiches, le live, ProDay et le monde.',
+    support: 'Live, à venir, ProDay et le monde — filtre comme tu veux.',
     icon: 'football',
     motif: 'none',
   }),
   suivis: page({
     id: 'suivis',
-    eyebrow: 'Ta sélection',
+    eyebrow: 'Tes clubs',
     title: 'Suivis',
-    support: 'Suis des joueurs, clubs et tournois — illimité et gratuit.',
+    support: 'Joueurs, clubs et tournois — illimité et gratuit.',
     icon: 'heart',
     motif: 'none',
   }),
   debats: page({
     id: 'debats',
-    eyebrow: 'Communauté',
+    eyebrow: 'La tribune',
     title: 'Fil',
-    support: 'Question hebdo, réponses de la tribune et actus.',
+    support: 'Question hebdo, réponses des fans et actus.',
     icon: 'chat',
     motif: 'none',
   }),

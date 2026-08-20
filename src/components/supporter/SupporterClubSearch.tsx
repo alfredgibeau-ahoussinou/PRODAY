@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { useTranslation } from '../../context/LocaleContext';
 import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
+import { getFeaturedPopularClubs } from '../../content/supporterPopularClubs';
 import { spacing } from '../../theme/designTokens';
 import { clubsService } from '../../services/clubs.service';
 import { externalScoresService } from '../../services/externalScores.service';
@@ -21,6 +22,8 @@ export type SupporterClubSearchProps = {
   onToggle: (id: string, label: string) => void;
   compact?: boolean;
 };
+
+const FEATURED_CLUBS = getFeaturedPopularClubs();
 
 export const SupporterClubSearch: React.FC<SupporterClubSearchProps> = ({
   followedIds,
@@ -84,6 +87,7 @@ export const SupporterClubSearch: React.FC<SupporterClubSearchProps> = ({
 
   const placeholder = t('supporter.search.clubPlaceholder');
   const showResults = query.trim().length >= 2;
+  const showPopular = query.trim().length < 2;
 
   const empty = useMemo(
     () => showResults && !loading && hits.length === 0,
@@ -101,6 +105,48 @@ export const SupporterClubSearch: React.FC<SupporterClubSearchProps> = ({
         autoCapitalize="none"
         style={styles.input}
       />
+
+      {showPopular ? (
+        <View style={styles.popularBlock}>
+          <ProDayText variant="caption" style={styles.popularLabel}>
+            {t('supporter.search.popularTitle')}
+          </ProDayText>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.popularRow}
+          >
+            {FEATURED_CLUBS.map((club) => {
+              const target = worldFollowTargetForTeam({
+                apiTeamId: club.apiTeamId,
+                name: club.name,
+              });
+              const followed = followedIds.has(target.id);
+              const chipLabel =
+                club.name === 'Paris Saint-Germain'
+                  ? 'PSG'
+                  : club.name === 'Olympique de Marseille'
+                    ? 'OM'
+                    : club.name === 'FC Barcelone'
+                      ? 'Barça'
+                      : club.name.replace(/^FC |^AS |^Olympique de |^Olympique /, '');
+              return (
+                <PressableSpring
+                  key={target.id}
+                  onPress={() => onToggle(target.id, club.name)}
+                  scaleTo={0.96}
+                  style={[styles.chip, followed && styles.chipOn]}
+                >
+                  <ProDayText variant="caption" style={[styles.chipText, followed && styles.chipTextOn]}>
+                    {chipLabel}
+                  </ProDayText>
+                </PressableSpring>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : null}
+
       {loading ? <ActivityIndicator color={SUPPORTER_SITE.accent} style={styles.spinner} /> : null}
       {empty ? (
         <ProDayText variant="caption" style={styles.empty}>
@@ -147,6 +193,33 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: 16,
   },
+  popularBlock: { gap: spacing.xs, marginTop: spacing.xs },
+  popularLabel: {
+    color: SUPPORTER_SITE.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 1.4,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  popularRow: { gap: spacing.xs, paddingVertical: 2 },
+  chip: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: SUPPORTER_SITE.surface,
+  },
+  chipOn: {
+    borderColor: SUPPORTER_SITE.accent,
+    backgroundColor: SUPPORTER_SITE.soft,
+  },
+  chipText: {
+    color: SUPPORTER_SITE.foreground,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  chipTextOn: { color: SUPPORTER_SITE.accent },
   spinner: { marginVertical: spacing.sm },
   empty: { color: SUPPORTER_SITE.muted, paddingVertical: spacing.sm },
   row: {
@@ -158,7 +231,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   rowCopy: { flex: 1, minWidth: 0, gap: 2 },
-  name: { color: SUPPORTER_SITE.foreground, fontWeight: '600', fontSize: 14 },
+  name: { color: SUPPORTER_SITE.foreground, fontWeight: '700', fontSize: 14 },
   meta: { color: SUPPORTER_SITE.muted, fontSize: 11 },
   action: {
     color: SUPPORTER_SITE.accent,

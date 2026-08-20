@@ -69,7 +69,7 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
         <View style={styles.timeCol}>
           {isLive ? (
             <View style={styles.livePill}>
-              <LivePulse color={SUPPORTER_SITE.accent} />
+              <LivePulse color={SUPPORTER_SITE.live} />
               <ProDayText variant="caption" style={styles.livePillText}>
                 {t(statusLabelKey(item.status))}
               </ProDayText>
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   livePillText: {
-    color: SUPPORTER_SITE.accent,
+    color: SUPPORTER_SITE.live,
     fontWeight: '700',
     letterSpacing: 1.4,
     fontSize: 10,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   teamName: {
     color: SUPPORTER_SITE.foreground,
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 16,
     letterSpacing: -0.2,
   },

@@ -12,6 +12,10 @@ import type {
 } from './externalScores.types';
 import type { LiveMatchAction } from '../models/TeamEvent';
 import type { ExternalFixtureLineup } from '../utils/supporterMatchDetail';
+import {
+  mergeTeamSearchHits,
+  searchCuratedPopularClubs,
+} from '../content/supporterPopularClubs';
 
 export type {
   ExternalCompetitionId,
@@ -266,9 +270,13 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
     return { events: [] as LiveMatchAction[] };
   },
   async searchTeams(query: string): Promise<ExternalTeamHit[]> {
+    const curated = searchCuratedPopularClubs(query, 12);
     const q = query.trim().toLowerCase();
-    if (q.length < 2) return [];
-    return uniqueMockTeams().filter((team) => team.name.toLowerCase().includes(q));
+    if (q.length < 2) return curated;
+    const mockExtras = uniqueMockTeams().filter((team) =>
+      team.name.toLowerCase().includes(q),
+    );
+    return mergeTeamSearchHits(curated, mockExtras, 12);
   },
   async getState(): Promise<ExternalScoresProviderState> {
     return {
@@ -300,8 +308,8 @@ const apiStubProvider: ExternalScoresProvider = {
   async getFixtureEvents() {
     return { events: [] };
   },
-  async searchTeams(): Promise<ExternalTeamHit[]> {
-    return [];
+  async searchTeams(query: string): Promise<ExternalTeamHit[]> {
+    return searchCuratedPopularClubs(query, 12);
   },
   async getState(): Promise<ExternalScoresProviderState> {
     return {
@@ -412,9 +420,11 @@ export const externalScoresService = {
   },
 
   async searchTeams(query: string): Promise<ExternalTeamHit[]> {
-    return withProviderFallback(
+    const curated = searchCuratedPopularClubs(query, 12);
+    const remote = await withProviderFallback(
       async (provider) => provider.searchTeams?.(query) ?? [],
       () => mockExternalScoresProvider.searchTeams?.(query) ?? Promise.resolve([]),
     );
+    return mergeTeamSearchHits(curated, remote, 12);
   },
 };
