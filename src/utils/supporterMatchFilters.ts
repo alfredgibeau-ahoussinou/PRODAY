@@ -13,6 +13,13 @@ import type {
 import { inferMatchStatus, resolveLiveState } from './matchLive';
 import { formatCalendarDate } from './seasonCalendar';
 
+/** Heure de coup d’envoi tabulaire (21:00). */
+export function formatKickoffClock(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
 export type SupporterGenderScope = 'men' | 'women' | 'mixed' | 'unspecified';
 
 export type SupporterMatchStatus = 'live' | 'finished' | 'upcoming';
@@ -103,7 +110,7 @@ export function teamEventToMatchItem(event: TeamEvent): SupporterMatchViewItem {
     meta: [event.city, event.club_name].filter(Boolean).join(' · ') || undefined,
     timeLabel:
       status === 'upcoming'
-        ? formatCalendarDate(event.starts_at)
+        ? formatKickoffClock(event.starts_at)
         : status === 'live' && live.minute != null
           ? `${live.minute}'`
           : undefined,
@@ -136,9 +143,11 @@ export function externalFixtureToMatchItem(fixture: ExternalFixture): SupporterM
     timeLabel:
       status === 'live' && fixture.minute != null
         ? `${fixture.minute}'`
-        : status === 'upcoming' || status === 'finished'
-          ? formatCalendarDate(fixture.starts_at)
-          : undefined,
+        : status === 'upcoming'
+          ? formatKickoffClock(fixture.starts_at)
+          : status === 'finished'
+            ? formatCalendarDate(fixture.starts_at)
+            : undefined,
   };
 }
 

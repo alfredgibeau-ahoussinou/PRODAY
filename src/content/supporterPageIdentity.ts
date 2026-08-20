@@ -2,24 +2,24 @@ import type { IconName } from '../components/ui/iconNames';
 import type { MainTabId } from '../navigation/mainTabConfig';
 
 /**
- * Tokens Pôle Supporter — alignés site `/supporter` (#3C00F0 / #180078).
- * Tribune 100 % gratuite : scores, suivis, débats, moments, shop.
+ * Tokens Pôle Supporter — tribune cinéma (broadcast editorial).
+ * Accent unique champagne / ivoire. Surfaces encre, filets discrets.
  */
 export const SUPPORTER_SITE = {
-  accent: '#3C00F0',
-  deep: '#180078',
-  soft: 'rgba(60, 0, 240, 0.14)',
-  glow: 'rgba(60, 0, 240, 0.35)',
-  bright: '#7C5CFF',
-  bg: '#000000',
-  band: '#0a0618',
-  surface: '#0c0c0c',
-  elevated: '#141414',
-  border: 'rgba(255,255,255,0.12)',
-  foreground: '#f5f5f0',
-  muted: 'rgba(245,245,240,0.55)',
-  live: '#34D399',
-  free: '#A78BFA',
+  accent: '#C9B896',
+  deep: '#0A0A08',
+  soft: 'rgba(201, 184, 150, 0.10)',
+  glow: 'rgba(201, 184, 150, 0.12)',
+  bright: '#E8DCC4',
+  bg: '#050505',
+  band: '#070706',
+  surface: '#0C0C0B',
+  elevated: '#121211',
+  border: 'rgba(232, 220, 196, 0.12)',
+  foreground: '#F4F1EA',
+  muted: 'rgba(244, 241, 234, 0.52)',
+  live: '#C9B896',
+  free: '#E8DCC4',
 } as const;
 
 export type SupporterPageId =
@@ -67,18 +67,18 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
   tribune: page({
     id: 'tribune',
     eyebrow: 'Tribune ProDay',
-    title: 'Le score. En direct.',
-    support: 'Sans payer un centime. Clubs ProDay et foot du monde.',
+    title: 'La tribune.',
+    support: 'À venir, en direct, clubs ProDay et le monde. Gratuit.',
     icon: 'home',
-    motif: 'rays',
+    motif: 'none',
   }),
   matchs: page({
     id: 'matchs',
-    eyebrow: 'Jour J',
+    eyebrow: 'Calendrier',
     title: 'Matchs',
-    support: 'En direct, PRODAY, monde entier et clubs suivis.',
+    support: 'Les prochaines affiches, le live, ProDay et le monde.',
     icon: 'football',
-    motif: 'grid',
+    motif: 'none',
   }),
   suivis: page({
     id: 'suivis',
@@ -86,7 +86,7 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
     title: 'Suivis',
     support: 'Suis des joueurs, clubs et tournois — illimité et gratuit.',
     icon: 'heart',
-    motif: 'dots',
+    motif: 'none',
   }),
   debats: page({
     id: 'debats',
@@ -94,7 +94,7 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
     title: 'Fil',
     support: 'Question hebdo, réponses de la tribune et actus.',
     icon: 'chat',
-    motif: 'stripes',
+    motif: 'none',
   }),
   moments: page({
     id: 'moments',
@@ -102,8 +102,7 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
     title: 'Moments',
     support: 'Reels et clips de la communauté.',
     icon: 'videocam',
-    motif: 'rays',
-    wash: [SUPPORTER_SITE.deep, SUPPORTER_SITE.bg],
+    motif: 'none',
   }),
   shop: page({
     id: 'shop',
@@ -111,7 +110,7 @@ export const SUPPORTER_PAGE_IDENTITIES: Record<SupporterPageId, SupporterPageIde
     title: 'Shop',
     support: 'Équipement et goodies ProDay.',
     icon: 'bag',
-    motif: 'dots',
+    motif: 'none',
   }),
   compte: page({
     id: 'compte',

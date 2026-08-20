@@ -43,9 +43,9 @@ describe('supporter nav config', () => {
 
 describe('supporterPageIdentity', () => {
   it('aligne l’accent sur le site /supporter', () => {
-    expect(SUPPORTER_SITE.accent).toBe('#3C00F0');
-    expect(SUPPORTER_SITE.deep).toBe('#180078');
-    expect(getSupporterPageIdentity('tribune').title).toMatch(/score/i);
+    expect(SUPPORTER_SITE.accent).toBe('#C9B896');
+    expect(SUPPORTER_SITE.deep).toBe('#0A0A08');
+    expect(getSupporterPageIdentity('tribune').title).toMatch(/tribune/i);
     expect(supporterPageFromTab('feed')).toBe('suivis');
     expect(supporterPageFromTab('messages')).toBe('debats');
     expect(getSupporterPageIdentity('debats').title).toBe('Fil');

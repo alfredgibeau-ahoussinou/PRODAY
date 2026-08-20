@@ -185,7 +185,7 @@ async function fetchUpcomingByLeagues(
   apiKey: string,
   options?: ListUpcomingFixturesOptions,
 ): Promise<ExternalFixture[]> {
-  const days = options?.days ?? 7;
+  const days = options?.days ?? 14;
   const leagueIds =
     options?.leagueIds ??
     (Object.values(LEAGUE_IDS).filter((id): id is number => id != null) as number[]);

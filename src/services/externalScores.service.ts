@@ -123,6 +123,72 @@ const MOCK_FIXTURES: ExternalFixture[] = [
     status: 'scheduled',
     venue: 'Munich',
   },
+  {
+    id: 'ligue1_psg_ol',
+    competition: 'ligue1',
+    competition_label: 'Ligue 1',
+    league_id: 61,
+    home_team: 'Paris SG',
+    away_team: 'Lyon',
+    starts_at: new Date('2026-07-04T19:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Paris',
+  },
+  {
+    id: 'seriea_juv_mil',
+    competition: 'seriea',
+    competition_label: 'Serie A',
+    league_id: 135,
+    home_team: 'Juventus',
+    away_team: 'Milan',
+    starts_at: new Date('2026-07-08T18:45:00.000Z'),
+    status: 'scheduled',
+    venue: 'Turin',
+  },
+  {
+    id: 'bundesliga_bay_dor',
+    competition: 'bundesliga',
+    competition_label: 'Bundesliga',
+    league_id: 78,
+    home_team: 'Bayern',
+    away_team: 'Dortmund',
+    starts_at: new Date('2026-07-09T18:30:00.000Z'),
+    status: 'scheduled',
+    venue: 'Munich',
+  },
+  {
+    id: 'ligue1_monaco_nice',
+    competition: 'ligue1',
+    competition_label: 'Ligue 1',
+    league_id: 61,
+    home_team: 'Monaco',
+    away_team: 'Nice',
+    starts_at: new Date('2026-07-11T19:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Monaco',
+  },
+  {
+    id: 'uel_roma_lev',
+    competition: 'uel',
+    competition_label: 'UEFA Europa League',
+    league_id: 3,
+    home_team: 'Roma',
+    away_team: 'Leverkusen',
+    starts_at: new Date('2026-07-13T19:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Rome',
+  },
+  {
+    id: 'ligue2_tfc_rcs',
+    competition: 'ligue2',
+    competition_label: 'Ligue 2',
+    league_id: 62,
+    home_team: 'Toulouse',
+    away_team: 'Strasbourg',
+    starts_at: new Date('2026-07-14T18:00:00.000Z'),
+    status: 'scheduled',
+    venue: 'Toulouse',
+  },
 ];
 
 function cloneFixture(fixture: ExternalFixture): ExternalFixture {
@@ -152,7 +218,7 @@ const mockExternalScoresProvider: ExternalScoresProvider = {
       .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
   },
   async listUpcomingFixtures(options?: ListUpcomingFixturesOptions): Promise<ExternalFixture[]> {
-    const days = options?.days ?? 7;
+    const days = options?.days ?? 14;
     const cutoff = new Date(MOCK_NOW);
     cutoff.setDate(cutoff.getDate() + days);
     const leagueSet =

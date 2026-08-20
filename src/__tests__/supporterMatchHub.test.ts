@@ -1,7 +1,7 @@
 import type { Follow } from '../models/Follow';
 import type { TeamEvent } from '../models/TeamEvent';
 import type { Tournament } from '../models/Tournament';
-import { fetchSupporterMatchHub } from '../services/supporterMatchHub.service';
+import { fetchSupporterMatchHub, groupUpcomingByDateThenCompetition, DEFAULT_SUPPORTER_MATCHS_CHAPTER } from '../services/supporterMatchHub.service';
 import { externalScoresService, resetExternalScoresProviderCache } from '../services/externalScores.service';
 import { teamEventsService } from '../services/teamEvents.service';
 import type { SupporterMatchFilters } from '../services/supporterPreferences.service';
@@ -76,6 +76,10 @@ describe('supporterMatchHub', () => {
     expect(result.sections.live.some((item) => item.source === 'world')).toBe(true);
     expect(result.sections.proday.some((item) => item.source === 'proday')).toBe(true);
     expect(result.sections.world.length).toBeGreaterThan(0);
+    expect(result.sections.upcoming.length).toBeGreaterThan(0);
+    expect(result.heroKickoffs.length).toBeGreaterThan(0);
+    expect(result.heroKickoffs.length).toBeLessThanOrEqual(3);
+    expect(DEFAULT_SUPPORTER_MATCHS_CHAPTER).toBe('upcoming');
     expect(result.providerState.source).toBe('mock');
   });
 
@@ -132,5 +136,57 @@ describe('supporterMatchHub', () => {
 
     const worldCompetitions = result.sections.world.map((item) => item.competitionSlug);
     expect(worldCompetitions.every((slug) => slug === 'pl' || slug == null)).toBe(true);
+  });
+
+  it('regroupe À venir par date puis compétition', () => {
+    const now = new Date(2026, 6, 1, 12, 0, 0);
+    const items = [
+      {
+        id: 'a',
+        source: 'world' as const,
+        status: 'upcoming' as const,
+        genderScope: 'men' as const,
+        homeLabel: 'A',
+        awayLabel: 'B',
+        startsAt: new Date(2026, 6, 1, 19, 0, 0),
+        competitionLabel: 'Ligue 1',
+      },
+      {
+        id: 'b',
+        source: 'world' as const,
+        status: 'upcoming' as const,
+        genderScope: 'men' as const,
+        homeLabel: 'C',
+        awayLabel: 'D',
+        startsAt: new Date(2026, 6, 1, 21, 0, 0),
+        competitionLabel: 'Premier League',
+      },
+      {
+        id: 'c',
+        source: 'proday' as const,
+        status: 'upcoming' as const,
+        genderScope: 'unspecified' as const,
+        homeLabel: 'Club',
+        awayLabel: 'Adversaire',
+        startsAt: new Date(2026, 6, 2, 18, 0, 0),
+        competitionLabel: 'ProDay',
+      },
+      {
+        id: 'd',
+        source: 'world' as const,
+        status: 'upcoming' as const,
+        genderScope: 'men' as const,
+        homeLabel: 'E',
+        awayLabel: 'F',
+        startsAt: new Date(2026, 6, 4, 16, 0, 0),
+        competitionLabel: 'Ligue 1',
+      },
+    ];
+
+    const groups = groupUpcomingByDateThenCompetition(items, now);
+    expect(groups.map((g) => g.kind)).toEqual(['today', 'tomorrow', 'later']);
+    expect(groups[0].competitions).toHaveLength(2);
+    expect(groups[1].competitions[0].competition).toBe('ProDay');
+    expect(groups[2].competitions[0].items).toHaveLength(1);
   });
 });

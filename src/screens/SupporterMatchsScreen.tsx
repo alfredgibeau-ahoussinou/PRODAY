@@ -1,34 +1,37 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SupporterPageFrame } from '../components/supporter/SupporterPageFrame';
 import { getSupporterPageIdentity, SUPPORTER_SITE } from '../content/supporterPageIdentity';
 import { SupporterFilterBar } from '../components/supporter/SupporterFilterBar';
 import { SupporterMatchCard } from '../components/supporter/SupporterMatchCard';
-import { PressableSpring } from '../components/motion';
 import { ProDayText } from '../components/ui/ProDayText';
-import { ProDaySurface } from '../components/ui/ProDaySurface';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LocaleContext';
 import { useSeasonCalendar } from '../hooks/useAppData';
 import { useTournaments } from '../hooks/useTournaments';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useSupporterMatchHub } from '../hooks/useSupporterMatchHub';
-import { spacing, radius } from '../theme/designTokens';
-import { useAppTheme } from '../context/ProductLineContext';
+import { spacing } from '../theme/designTokens';
 import { followsService } from '../services/follows.service';
 import {
   loadSupporterMatchFilters,
   saveSupporterMatchFilters,
   type SupporterMatchFilters,
 } from '../services/supporterPreferences.service';
-import { groupWorldItemsByCompetition } from '../services/supporterMatchHub.service';
+import {
+  DEFAULT_SUPPORTER_MATCHS_CHAPTER,
+  groupUpcomingByDateThenCompetition,
+  groupWorldItemsByCompetition,
+  type SupporterMatchHubSection,
+} from '../services/supporterMatchHub.service';
 import type { Follow } from '../models/Follow';
 import type { SupporterMatchViewItem } from '../utils/supporterMatchFilters';
 import { formatCalendarDate } from '../utils/seasonCalendar';
 
-type SupporterMatchsChapter = 'live' | 'proday' | 'world' | 'follows';
+type SupporterMatchsChapter = SupporterMatchHubSection;
 
 const CHAPTER_KEYS: { id: SupporterMatchsChapter; labelKey: string }[] = [
+  { id: 'upcoming', labelKey: 'supporter.chapters.upcoming' },
   { id: 'live', labelKey: 'supporter.chapters.live' },
   { id: 'proday', labelKey: 'supporter.chapters.proday' },
   { id: 'world', labelKey: 'supporter.chapters.world' },
@@ -37,12 +40,11 @@ const CHAPTER_KEYS: { id: SupporterMatchsChapter; labelKey: string }[] = [
 
 export const SupporterMatchsScreen: React.FC = () => {
   const { profile } = useAuth();
-  const { colors } = useAppTheme();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const nav = useTabNavigationActions();
   const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
   const { tournaments } = useTournaments();
-  const [chapter, setChapter] = useState<SupporterMatchsChapter>('live');
+  const [chapter, setChapter] = useState<SupporterMatchsChapter>(DEFAULT_SUPPORTER_MATCHS_CHAPTER);
   const [follows, setFollows] = useState<Follow[]>([]);
   const [filters, setFilters] = useState<SupporterMatchFilters>({
     gender: 'all',
@@ -98,10 +100,11 @@ export const SupporterMatchsScreen: React.FC = () => {
     [profile?.uid, loadFollows],
   );
 
-  const renderCard = (item: SupporterMatchViewItem) => (
+  const renderCard = (item: SupporterMatchViewItem, hero = false) => (
     <SupporterMatchCard
       key={item.id}
       item={item}
+      hero={hero}
       isFollowed={
         item.followTarget
           ? followedKeys.has(`${item.followTarget.type}:${item.followTarget.id}`)
@@ -123,29 +126,41 @@ export const SupporterMatchsScreen: React.FC = () => {
   );
 
   const renderEmpty = (messageKey: string) => (
-    <ProDaySurface variant="module" style={[styles.empty, { borderColor: colors.border }]}>
-      <ProDayText variant="body">{t(messageKey)}</ProDayText>
-    </ProDaySurface>
+    <View style={styles.empty}>
+      <ProDayText variant="body" style={styles.emptyText}>
+        {t(messageKey)}
+      </ProDayText>
+    </View>
   );
 
+  const dateHeading = (kind: 'today' | 'tomorrow' | 'later', date: Date) => {
+    if (kind === 'today') return t('supporter.date.today');
+    if (kind === 'tomorrow') return t('supporter.date.tomorrow');
+    return new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }).format(date);
+  };
+
   const providerBanner = !hub.providerState.healthy ? (
-    <ProDaySurface variant="module" style={[styles.providerBanner, { borderColor: colors.border }]}>
-      <ProDayText variant="caption" style={{ color: SUPPORTER_SITE.free }}>
+    <View style={styles.providerBanner}>
+      <ProDayText variant="caption" style={styles.providerTitle}>
         {hub.providerState.message ?? t('supporter.api.stub')}
       </ProDayText>
-      <ProDayText variant="caption" muted>
+      <ProDayText variant="caption" style={styles.emptyText}>
         {t('supporter.api.stubHint')}
       </ProDayText>
       {hub.providerState.last_sync_at ? (
-        <ProDayText variant="caption" muted>
+        <ProDayText variant="caption" style={styles.emptyText}>
           {t('supporter.api.lastSync', {
             time: formatCalendarDate(hub.providerState.last_sync_at),
           })}
         </ProDayText>
       ) : null}
-    </ProDaySurface>
+    </View>
   ) : hub.providerState.last_sync_at ? (
-    <ProDayText variant="caption" muted style={styles.syncLine}>
+    <ProDayText variant="caption" style={styles.syncLine}>
       {t('supporter.api.lastSync', {
         time: formatCalendarDate(hub.providerState.last_sync_at),
       })}
@@ -154,35 +169,61 @@ export const SupporterMatchsScreen: React.FC = () => {
 
   let content: React.ReactNode = null;
 
-  if (hub.loading && hub.sections.live.length === 0) {
+  if (hub.loading && hub.sections.upcoming.length === 0 && hub.sections.live.length === 0) {
     content = <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginTop: spacing.lg }} />;
+  } else if (chapter === 'upcoming') {
+    const heroIds = new Set(hub.heroKickoffs.map((item) => item.id));
+    const rest = hub.sections.upcoming.filter((item) => !heroIds.has(item.id));
+    const groups = groupUpcomingByDateThenCompetition(rest);
+    content =
+      groups.length > 0 ? (
+        groups.map((group) => (
+          <View key={group.dateKey} style={styles.dateGroup}>
+            <ProDayText variant="caption" style={styles.dateTitle}>
+              {dateHeading(group.kind, group.date)}
+            </ProDayText>
+            {group.competitions.map((competition) => (
+              <View key={`${group.dateKey}-${competition.competition}`}>
+                <ProDayText variant="caption" style={styles.compTitle}>
+                  {competition.competition}
+                </ProDayText>
+                {competition.items.map((item) => renderCard(item))}
+              </View>
+            ))}
+          </View>
+        ))
+      ) : hub.heroKickoffs.length > 0 ? null : (
+        renderEmpty('supporter.empty.upcoming')
+      );
   } else if (chapter === 'live') {
     content =
       hub.sections.live.length > 0 ? (
-        hub.sections.live.map(renderCard)
+        hub.sections.live.map((item) => renderCard(item))
       ) : (
         renderEmpty('supporter.empty.live')
       );
   } else if (chapter === 'proday') {
     const prodayItems = [
       ...hub.sections.proday,
-      ...hub.tournaments.map((tournament) => ({
-        id: `tournament-${tournament.id}`,
-        source: 'proday' as const,
-        status: 'upcoming' as const,
-        genderScope: 'unspecified' as const,
-        homeLabel: tournament.title,
-        awayLabel: tournament.city,
-        startsAt: tournament.starts_at,
-        tournamentId: tournament.id,
-        followTarget: {
-          type: 'tournament' as const,
-          id: tournament.id,
-          label: tournament.title,
-        },
-        meta: tournament.categories.join(' · ') || undefined,
-        timeLabel: formatCalendarDate(tournament.starts_at),
-      })),
+      ...hub.tournaments
+        .filter((tournament) => !hub.sections.upcoming.some((item) => item.id === `tournament-${tournament.id}`))
+        .map((tournament) => ({
+          id: `tournament-${tournament.id}`,
+          source: 'proday' as const,
+          status: 'upcoming' as const,
+          genderScope: 'unspecified' as const,
+          homeLabel: tournament.title,
+          awayLabel: tournament.city,
+          startsAt: tournament.starts_at,
+          tournamentId: tournament.id,
+          followTarget: {
+            type: 'tournament' as const,
+            id: tournament.id,
+            label: tournament.title,
+          },
+          meta: tournament.categories.join(' · ') || undefined,
+          timeLabel: formatCalendarDate(tournament.starts_at),
+        })),
     ];
     content =
       prodayItems.length > 0 ? (
@@ -195,11 +236,11 @@ export const SupporterMatchsScreen: React.FC = () => {
     content =
       groups.length > 0 ? (
         groups.map((group) => (
-          <View key={group.competition} style={styles.worldGroup}>
-            <ProDayText variant="caption" style={styles.worldGroupTitle}>
+          <View key={group.competition} style={styles.dateGroup}>
+            <ProDayText variant="caption" style={styles.compTitle}>
               {group.competition}
             </ProDayText>
-            {group.items.map(renderCard)}
+            {group.items.map((item) => renderCard(item))}
           </View>
         ))
       ) : (
@@ -216,118 +257,158 @@ export const SupporterMatchsScreen: React.FC = () => {
       <>
         {followedOnly.length > 0
           ? followedOnly.map((follow) => (
-              <ProDaySurface
-                key={follow.id}
-                variant="module"
-                style={[styles.followRow, { borderColor: colors.border }]}
-              >
-                <ProDayText variant="section">{follow.target_label ?? follow.target_id}</ProDayText>
-                <ProDayText variant="caption" muted>
+              <View key={follow.id} style={styles.followRow}>
+                <ProDayText variant="section" style={styles.followTitle}>
+                  {follow.target_label ?? follow.target_id}
+                </ProDayText>
+                <ProDayText variant="caption" style={styles.emptyText}>
                   {t(`supporter.followType.${follow.target_type}`)}
                 </ProDayText>
-              </ProDaySurface>
+              </View>
             ))
           : renderEmpty('supporter.empty.follows')}
-        {hub.sections.follows.map(renderCard)}
+        {hub.sections.follows.map((item) => renderCard(item))}
       </>
     );
   }
 
+  const chapterCount = (id: SupporterMatchsChapter) => {
+    if (id === 'upcoming') return hub.upcomingCount;
+    if (id === 'live') return hub.liveCount;
+    if (id === 'proday') return hub.sections.proday.length + hub.tournaments.length;
+    if (id === 'world') return hub.sections.world.length;
+    return hub.sections.follows.length;
+  };
+
   return (
     <SupporterPageFrame identity={getSupporterPageIdentity('matchs')} badge="100 % gratuit">
-      <View style={styles.chips}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabs}
+      >
         {CHAPTER_KEYS.map((entry) => {
           const active = entry.id === chapter;
-          const count =
-            entry.id === 'live'
-              ? hub.liveCount
-              : entry.id === 'proday'
-                ? hub.sections.proday.length + hub.tournaments.length
-                : entry.id === 'world'
-                  ? hub.sections.world.length
-                  : hub.sections.follows.length;
+          const count = chapterCount(entry.id);
           return (
-            <PressableSpring
-              key={entry.id}
-              onPress={() => setChapter(entry.id)}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor: active ? colors.accent : colors.surface,
-                  borderColor: active ? colors.accent : colors.border,
-                },
-              ]}
-            >
-              <ProDayText variant="caption" style={{ color: active ? '#fff' : colors.textSecondary }}>
+            <Pressable key={entry.id} onPress={() => setChapter(entry.id)} style={styles.tab}>
+              <ProDayText variant="caption" style={[styles.tabLabel, active && styles.tabLabelOn]}>
                 {t(entry.labelKey)}
-                {count > 0 ? ` · ${count}` : ''}
+                {count > 0 ? `  ${count}` : ''}
               </ProDayText>
-            </PressableSpring>
+              <View style={[styles.tabRule, active && styles.tabRuleOn]} />
+            </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
       <SupporterFilterBar
         filters={filters}
         onChange={handleFiltersChange}
-        showCompetition={chapter === 'world' || chapter === 'live'}
+        showCompetition={chapter === 'world' || chapter === 'live' || chapter === 'upcoming'}
       />
       {providerBanner}
-      <ScrollView contentContainerStyle={styles.content}>{content}</ScrollView>
+      <ScrollView contentContainerStyle={styles.content}>
+        {hub.heroKickoffs.length > 0 && chapter === 'upcoming' ? (
+          <View style={styles.heroBlock}>
+            <ProDayText variant="caption" style={styles.heroKicker}>
+              {t('supporter.matchs.heroKickoffs')}
+            </ProDayText>
+            {hub.heroKickoffs.map((item) => renderCard(item, true))}
+          </View>
+        ) : null}
+        {content}
+      </ScrollView>
     </SupporterPageFrame>
   );
 };
 
 const styles = StyleSheet.create({
-  chips: {
+  tabs: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
+    gap: spacing.lg,
+    alignItems: 'flex-end',
   },
-  chip: {
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+  tab: {
+    paddingTop: spacing.xs,
+    gap: 8,
+  },
+  tabLabel: {
+    color: SUPPORTER_SITE.muted,
+    letterSpacing: 1.2,
+    fontSize: 11,
+    textTransform: 'uppercase',
+  },
+  tabLabelOn: {
+    color: SUPPORTER_SITE.foreground,
+  },
+  tabRule: {
+    height: 1,
+    backgroundColor: 'transparent',
+  },
+  tabRuleOn: {
+    backgroundColor: SUPPORTER_SITE.accent,
   },
   content: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
-    gap: spacing.sm,
   },
   empty: {
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    paddingVertical: spacing.xl,
+  },
+  emptyText: {
+    color: SUPPORTER_SITE.muted,
+    lineHeight: 20,
   },
   followRow: {
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SUPPORTER_SITE.border,
     gap: 4,
+  },
+  followTitle: {
+    color: SUPPORTER_SITE.foreground,
   },
   providerBanner: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.sm,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    paddingVertical: spacing.sm,
     gap: 4,
+  },
+  providerTitle: {
+    color: SUPPORTER_SITE.accent,
   },
   syncLine: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xs,
+    color: SUPPORTER_SITE.muted,
   },
-  worldGroup: {
-    gap: spacing.sm,
+  dateGroup: {
+    marginTop: spacing.lg,
+  },
+  dateTitle: {
+    color: SUPPORTER_SITE.foreground,
+    letterSpacing: 1.8,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    marginBottom: spacing.sm,
+  },
+  compTitle: {
+    color: SUPPORTER_SITE.accent,
+    letterSpacing: 1.6,
+    fontSize: 9,
+    textTransform: 'uppercase',
+    marginTop: spacing.sm,
+  },
+  heroBlock: {
     marginBottom: spacing.md,
   },
-  worldGroupTitle: {
-    color: SUPPORTER_SITE.bright,
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    fontWeight: '800',
+  heroKicker: {
+    color: SUPPORTER_SITE.accent,
+    letterSpacing: 2,
     fontSize: 10,
+    textTransform: 'uppercase',
+    marginTop: spacing.sm,
   },
 });

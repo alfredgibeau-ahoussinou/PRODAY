@@ -1,10 +1,8 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { PressableSpring } from '../motion';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import { SupporterMatchCard } from './SupporterMatchCard';
 import { useTranslation } from '../../context/LocaleContext';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useSupporterMatchHub } from '../../hooks/useSupporterMatchHub';
 import { useSeasonCalendar } from '../../hooks/useAppData';
@@ -13,7 +11,7 @@ import { useFollows } from '../../hooks/useFollows';
 import { useAuth } from '../../context/AuthContext';
 import { DEFAULT_SUPPORTER_MATCH_FILTERS } from '../../services/supporterPreferences.service';
 import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 
 export type SupporterLiveScoresStripProps = {
   onViewAll?: () => void;
@@ -22,7 +20,6 @@ export type SupporterLiveScoresStripProps = {
 export const SupporterLiveScoresStrip: React.FC<SupporterLiveScoresStripProps> = ({
   onViewAll,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
   const nav = useTabNavigationActions();
   const { profile } = useAuth();
@@ -39,69 +36,51 @@ export const SupporterLiveScoresStrip: React.FC<SupporterLiveScoresStripProps> =
   });
 
   const handleViewAll = onViewAll ?? (() => nav.openMatchs({ homeTab: 'season' }));
-  const liveItems = hub.sections.live.slice(0, 5);
-
-  if (hub.loading && liveItems.length === 0) {
-    return (
-      <View style={[styles.placeholder, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-        <ProDayText variant="caption" muted>
-          {t('supporter.home.liveLoading')}
-        </ProDayText>
-      </View>
-    );
-  }
+  const liveItems = hub.sections.live.slice(0, 3);
+  const upcomingItems = hub.sections.upcoming.slice(0, 6);
 
   return (
     <View style={styles.wrap}>
       <View style={styles.head}>
-        <View style={styles.liveCountPill}>
-          <View style={styles.liveDot} />
-          <ProDayText variant="caption" style={styles.liveCountText}>
-            {hub.liveCount > 0
-              ? t('supporter.home.liveCount', { n: String(hub.liveCount) })
-              : t('supporter.home.liveEmptyShort')}
-          </ProDayText>
-        </View>
-        {!hub.providerState.healthy ? (
-          <ProDayText variant="caption" muted numberOfLines={1} style={styles.stubHint}>
-            {t('supporter.api.stubShort')}
-          </ProDayText>
-        ) : null}
+        <ProDayText variant="caption" style={styles.kicker}>
+          {t('supporter.home.liveTitle')}
+        </ProDayText>
+        <ProDayText variant="caption" style={styles.count}>
+          {hub.liveCount > 0
+            ? t('supporter.home.liveCount', { n: String(hub.liveCount) })
+            : t('supporter.home.liveEmptyShort')}
+        </ProDayText>
       </View>
 
-      {liveItems.length === 0 ? (
-        <View style={[styles.placeholder, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-          <ProDayText variant="body">{t('supporter.home.liveEmpty')}</ProDayText>
-          <PressableSpring onPress={handleViewAll} style={styles.link}>
-            <ProDayText variant="caption" accent>
-              {t('supporter.home.liveCta')}
-            </ProDayText>
-          </PressableSpring>
-        </View>
+      {liveItems.length > 0 ? (
+        liveItems.map((item) => (
+          <SupporterMatchCard key={item.id} item={item} compact />
+        ))
       ) : (
-        <>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scroll}
-          >
-            {liveItems.map((item) => (
-              <View key={item.id} style={styles.cardWrap}>
-                <SupporterMatchCard
-                  item={item}
-                  compact
-                  onDebate={() => nav.setActiveTab('messages')}
-                  onMoment={() => nav.setActiveTab('reels')}
-                />
-              </View>
-            ))}
-          </ScrollView>
-          <PressableSpring onPress={handleViewAll} style={styles.link} haptic>
-            <ProDayText variant="caption" accent>
-              {t('supporter.home.liveCta')}
-            </ProDayText>
-          </PressableSpring>
-        </>
+        <ProDayText variant="caption" style={styles.empty}>
+          {hub.loading ? t('supporter.home.liveLoading') : t('supporter.home.liveEmpty')}
+        </ProDayText>
+      )}
+
+      <View style={[styles.head, styles.upcomingHead]}>
+        <ProDayText variant="caption" style={styles.kicker}>
+          {t('supporter.home.upcomingTitle')}
+        </ProDayText>
+        <Pressable onPress={handleViewAll} hitSlop={8}>
+          <ProDayText variant="caption" style={styles.link}>
+            {t('supporter.home.upcomingCta')}
+          </ProDayText>
+        </Pressable>
+      </View>
+
+      {upcomingItems.length > 0 ? (
+        upcomingItems.map((item) => (
+          <SupporterMatchCard key={item.id} item={item} compact />
+        ))
+      ) : (
+        <ProDayText variant="caption" style={styles.empty}>
+          {t('supporter.empty.upcoming')}
+        </ProDayText>
       )}
     </View>
   );
@@ -109,56 +88,39 @@ export const SupporterLiveScoresStrip: React.FC<SupporterLiveScoresStripProps> =
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: spacing.sm,
+    gap: 2,
     marginBottom: spacing.md,
   },
   head: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.sm,
+    paddingBottom: spacing.xs,
   },
-  liveCountPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: SUPPORTER_SITE.live,
-    backgroundColor: 'rgba(52, 211, 153, 0.08)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
+  upcomingHead: {
+    marginTop: spacing.lg,
   },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: SUPPORTER_SITE.live,
+  kicker: {
+    color: SUPPORTER_SITE.accent,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    fontSize: 10,
+    fontWeight: '600',
   },
-  liveCountText: {
-    color: SUPPORTER_SITE.live,
-    fontWeight: '800',
+  count: {
+    color: SUPPORTER_SITE.muted,
     fontSize: 11,
+    letterSpacing: 0.4,
   },
-  stubHint: {
-    flex: 1,
-    textAlign: 'right',
-  },
-  scroll: {
-    gap: spacing.sm,
-    paddingRight: spacing.lg,
-  },
-  cardWrap: {
-    width: 300,
-  },
-  placeholder: {
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.xs,
+  empty: {
+    color: SUPPORTER_SITE.muted,
+    lineHeight: 18,
+    paddingVertical: spacing.sm,
   },
   link: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
+    color: SUPPORTER_SITE.accent,
+    letterSpacing: 1.2,
+    fontSize: 11,
+    textTransform: 'uppercase',
   },
 });

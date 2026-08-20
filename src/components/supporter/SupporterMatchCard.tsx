@@ -1,12 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
-import { PressableSpring } from '../motion';
-import { ProDaySurface } from '../ui/ProDaySurface';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
-import { radius, spacing } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
+import { formatKickoffClock } from '../../utils/supporterMatchFilters';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 
 export type SupporterMatchCardProps = {
@@ -16,6 +14,7 @@ export type SupporterMatchCardProps = {
   onDebate?: () => void;
   onMoment?: () => void;
   compact?: boolean;
+  hero?: boolean;
 };
 
 function statusLabelKey(status: SupporterMatchViewItem['status']): string {
@@ -24,32 +23,21 @@ function statusLabelKey(status: SupporterMatchViewItem['status']): string {
   return 'supporter.match.status.upcoming';
 }
 
-function genderLabelKey(scope: SupporterMatchViewItem['genderScope']): string | null {
-  if (scope === 'men') return 'supporter.match.gender.men';
-  if (scope === 'women') return 'supporter.match.gender.women';
-  if (scope === 'mixed') return 'supporter.match.gender.mixed';
-  return null;
-}
-
 function LivePulse({ color }: { color: string }) {
   const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.35, duration: 700, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 1100, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 1100, useNativeDriver: true }),
       ]),
     );
     loop.start();
     return () => loop.stop();
   }, [opacity]);
 
-  return (
-    <Animated.View
-      style={[styles.liveDot, { backgroundColor: color, opacity }]}
-    />
-  );
+  return <Animated.View style={[styles.liveDot, { backgroundColor: color, opacity }]} />;
 }
 
 export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
@@ -59,255 +47,211 @@ export const SupporterMatchCard: React.FC<SupporterMatchCardProps> = ({
   onDebate,
   onMoment,
   compact = false,
+  hero = false,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
-  const genderKey = genderLabelKey(item.genderScope);
   const isLive = item.status === 'live';
   const showScore = item.status !== 'upcoming' && item.scoreHome != null && item.scoreAway != null;
-  const sourceIsProday = item.source === 'proday';
+  const clock = isLive
+    ? item.timeLabel ?? (item.minute != null ? `${item.minute}'` : 'LIVE')
+    : formatKickoffClock(item.startsAt);
+  const competition = item.competitionLabel ?? (item.source === 'proday' ? 'ProDay' : undefined);
+  const venue = item.meta
+    ?.split(' · ')
+    .filter((part) => part && part !== competition)
+    .join(' · ');
 
   return (
-    <ProDaySurface
-      variant="module"
-      style={[
-        styles.card,
-        compact && styles.cardCompact,
-        {
-          borderColor: isLive ? SUPPORTER_SITE.live : colors.border,
-          backgroundColor: isLive ? 'rgba(52, 211, 153, 0.04)' : undefined,
-        },
-      ]}
-    >
-      <View style={styles.badges}>
-        {isLive ? (
-          <View style={[styles.badge, styles.liveBadge, { borderColor: SUPPORTER_SITE.live }]}>
-            <LivePulse color={SUPPORTER_SITE.live} />
-            <ProDayText variant="caption" style={{ color: SUPPORTER_SITE.live, fontWeight: '800' }}>
-              {t(statusLabelKey(item.status))}
+    <View style={[styles.card, compact && styles.cardCompact, hero && styles.cardHero]}>
+      <View style={styles.lockup}>
+        <View style={styles.timeCol}>
+          {isLive ? (
+            <View style={styles.livePill}>
+              <LivePulse color={SUPPORTER_SITE.accent} />
+              <ProDayText variant="caption" style={styles.livePillText}>
+                {t(statusLabelKey(item.status))}
+              </ProDayText>
+            </View>
+          ) : (
+            <ProDayText variant="title" style={[styles.clock, hero && styles.clockHero]}>
+              {clock}
             </ProDayText>
-          </View>
-        ) : (
-          <Badge label={t(statusLabelKey(item.status))} colors={colors} />
-        )}
-        <Badge
-          label={
-            sourceIsProday
+          )}
+          <ProDayText variant="caption" style={styles.sourceBadge}>
+            {item.source === 'proday'
               ? t('supporter.match.source.proday')
-              : t('supporter.match.source.world')
-          }
-          colors={colors}
-          proday={sourceIsProday}
-        />
-        {genderKey ? <Badge label={t(genderKey)} colors={colors} muted /> : null}
-      </View>
-
-      <View style={styles.teamsRow}>
-        <ProDayText variant="section" style={styles.teamName} numberOfLines={2}>
-          {item.homeLabel}
-        </ProDayText>
-        {showScore ? (
-          <ProDayText
-            variant={isLive ? 'hero' : 'title'}
-            style={[styles.score, { color: isLive ? SUPPORTER_SITE.live : colors.accent }]}
-          >
-            {item.scoreHome} - {item.scoreAway}
-          </ProDayText>
-        ) : (
-          <ProDayText variant="caption" muted>
-            {item.timeLabel ?? '…'}
-          </ProDayText>
-        )}
-        <ProDayText variant="section" style={[styles.teamName, styles.teamAway]} numberOfLines={2}>
-          {item.awayLabel}
-        </ProDayText>
-      </View>
-
-      {isLive && item.minute != null ? (
-        <View style={styles.minuteRow}>
-          <LivePulse color={SUPPORTER_SITE.live} />
-          <ProDayText variant="caption" style={{ color: SUPPORTER_SITE.live, fontWeight: '700' }}>
-            {t('supporter.match.minute', { n: String(item.minute) })}
+              : t('supporter.match.source.world')}
           </ProDayText>
         </View>
-      ) : item.timeLabel && !isLive ? (
-        <ProDayText variant="caption" muted>
-          {item.timeLabel}
-        </ProDayText>
-      ) : null}
 
-      {item.meta ? (
-        <ProDayText variant="caption" muted numberOfLines={1}>
-          {item.meta}
-        </ProDayText>
-      ) : null}
+        <View style={styles.teams}>
+          {competition ? (
+            <ProDayText variant="caption" style={styles.competition} numberOfLines={1}>
+              {competition}
+            </ProDayText>
+          ) : null}
+          <ProDayText
+            variant={hero ? 'title' : 'section'}
+            style={[styles.teamName, hero && styles.teamNameHero]}
+            numberOfLines={1}
+          >
+            {item.homeLabel}
+          </ProDayText>
+          <ProDayText
+            variant={hero ? 'title' : 'section'}
+            style={[styles.teamName, styles.teamAway, hero && styles.teamNameHero]}
+            numberOfLines={1}
+          >
+            {item.awayLabel}
+          </ProDayText>
+          {showScore ? (
+            <ProDayText variant="title" style={styles.score}>
+              {item.scoreHome} – {item.scoreAway}
+            </ProDayText>
+          ) : venue ? (
+            <ProDayText variant="caption" style={styles.venue} numberOfLines={1}>
+              {venue}
+            </ProDayText>
+          ) : null}
+        </View>
+      </View>
 
-      {!compact && item.scorers && item.scorers.length > 0 ? (
-        <ProDayText variant="caption" muted numberOfLines={2}>
-          {t('supporter.match.scorers')}: {item.scorers.join(' · ')}
-        </ProDayText>
-      ) : null}
-
-      {!compact ? (
+      {!compact && !hero ? (
         <View style={styles.actions}>
           {item.followTarget && onToggleFollow ? (
-            <ActionChip
-              label={
-                isFollowed
+            <Pressable onPress={onToggleFollow} hitSlop={8}>
+              <ProDayText variant="caption" style={styles.actionText}>
+                {isFollowed
                   ? t('supporter.match.action.following')
-                  : t('supporter.match.action.follow')
-              }
-              active={isFollowed}
-              onPress={onToggleFollow}
-              colors={colors}
-            />
+                  : t('supporter.match.action.follow')}
+              </ProDayText>
+            </Pressable>
           ) : null}
-          <ActionChip label={t('supporter.match.action.debate')} onPress={onDebate} colors={colors} />
-          <ActionChip label={t('supporter.match.action.moment')} onPress={onMoment} colors={colors} />
+          {onDebate ? (
+            <Pressable onPress={onDebate} hitSlop={8}>
+              <ProDayText variant="caption" style={styles.actionText}>
+                {t('supporter.match.action.debate')}
+              </ProDayText>
+            </Pressable>
+          ) : null}
+          {onMoment ? (
+            <Pressable onPress={onMoment} hitSlop={8}>
+              <ProDayText variant="caption" style={styles.actionText}>
+                {t('supporter.match.action.moment')}
+              </ProDayText>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
-    </ProDaySurface>
+    </View>
   );
 };
 
-function Badge({
-  label,
-  accent,
-  proday,
-  muted,
-  colors,
-}: {
-  label: string;
-  accent?: boolean;
-  proday?: boolean;
-  muted?: boolean;
-  colors: ReturnType<typeof useAppTheme>['colors'];
-}) {
-  const bg = proday
-    ? SUPPORTER_SITE.soft
-    : muted
-      ? 'rgba(255,255,255,0.03)'
-      : accent
-        ? colors.accentSoft
-        : 'rgba(255,255,255,0.04)';
-  const border = proday
-    ? SUPPORTER_SITE.accent
-    : muted
-      ? colors.border
-      : accent
-        ? colors.accent
-        : colors.border;
-  const text = proday
-    ? SUPPORTER_SITE.bright
-    : muted
-      ? colors.textSecondary
-      : accent
-        ? colors.accent
-        : colors.textSecondary;
-
-  return (
-    <View style={[styles.badge, { backgroundColor: bg, borderColor: border }]}>
-      <ProDayText variant="caption" style={{ color: text, fontWeight: proday ? '800' : '600' }}>
-        {label}
-      </ProDayText>
-    </View>
-  );
-}
-
-function ActionChip({
-  label,
-  onPress,
-  active,
-  colors,
-}: {
-  label: string;
-  onPress?: () => void;
-  active?: boolean;
-  colors: ReturnType<typeof useAppTheme>['colors'];
-}) {
-  return (
-    <PressableSpring
-      onPress={onPress}
-      style={[
-        styles.action,
-        {
-          backgroundColor: active ? colors.accentSoft : colors.surfaceMuted,
-          borderColor: active ? colors.accent : colors.border,
-        },
-      ]}
-    >
-      <ProDayText variant="caption" style={{ color: active ? colors.accent : colors.textSecondary }}>
-        {label}
-      </ProDayText>
-    </PressableSpring>
-  );
-}
-
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SUPPORTER_SITE.border,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
   },
   cardCompact: {
-    padding: spacing.sm,
+    paddingVertical: spacing.sm,
   },
-  badges: {
+  cardHero: {
+    paddingVertical: spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  lockup: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
+    alignItems: 'flex-start',
+    gap: spacing.md,
   },
-  badge: {
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+  timeCol: {
+    width: 64,
+    gap: 6,
+    paddingTop: 2,
   },
-  liveBadge: {
+  clock: {
+    color: SUPPORTER_SITE.foreground,
+    fontVariant: ['tabular-nums'],
+    fontWeight: '600',
+    fontSize: 18,
+    letterSpacing: 0.4,
+  },
+  clockHero: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  livePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(52, 211, 153, 0.1)',
+    gap: 5,
+    alignSelf: 'flex-start',
+  },
+  livePillText: {
+    color: SUPPORTER_SITE.accent,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    fontSize: 10,
   },
   liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
-  teamsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+  sourceBadge: {
+    color: SUPPORTER_SITE.muted,
+    letterSpacing: 1.2,
+    fontSize: 9,
+    textTransform: 'uppercase',
+  },
+  teams: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0,
+  },
+  competition: {
+    color: SUPPORTER_SITE.accent,
+    letterSpacing: 1.6,
+    fontSize: 9,
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
   teamName: {
-    flex: 1,
+    color: SUPPORTER_SITE.foreground,
+    fontWeight: '600',
+    fontSize: 16,
+    letterSpacing: -0.2,
+  },
+  teamNameHero: {
+    fontSize: 20,
+    fontWeight: '700',
   },
   teamAway: {
-    textAlign: 'right',
+    color: 'rgba(244, 241, 234, 0.78)',
   },
   score: {
-    fontWeight: '900',
+    marginTop: 4,
+    color: SUPPORTER_SITE.foreground,
+    fontVariant: ['tabular-nums'],
+    fontWeight: '700',
     letterSpacing: 1,
-    minWidth: 72,
-    textAlign: 'center',
+    fontSize: 18,
   },
-  minuteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  venue: {
+    marginTop: 4,
+    color: SUPPORTER_SITE.muted,
+    fontSize: 11,
   },
   actions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
+    gap: spacing.md,
+    paddingLeft: 64 + spacing.md,
   },
-  action: {
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+  actionText: {
+    color: SUPPORTER_SITE.muted,
+    letterSpacing: 0.8,
+    fontSize: 11,
+    textTransform: 'uppercase',
   },
 });

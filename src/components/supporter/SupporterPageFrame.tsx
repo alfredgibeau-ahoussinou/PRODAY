@@ -40,28 +40,18 @@ export function SupporterPageFrame({
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-        <LinearGradient
-          colors={['transparent', SUPPORTER_SITE.glow, 'transparent']}
-          start={{ x: 0.85, y: 0.05 }}
-          end={{ x: 0.15, y: 0.55 }}
-          style={styles.glow}
-          pointerEvents="none"
-        />
-        <View style={styles.accentBar} pointerEvents="none" />
 
         {showHero ? (
           <View style={styles.hero}>
             <View style={styles.heroTop}>
-              <Icon name={identity.icon} size={14} color={SUPPORTER_SITE.accent} />
+              <Icon name={identity.icon} size={13} color={SUPPORTER_SITE.accent} />
               <ProDayText variant="caption" style={styles.eyebrow}>
                 {identity.eyebrow}
               </ProDayText>
               {badge ? (
-                <View style={styles.badge}>
-                  <ProDayText variant="caption" style={styles.badgeText}>
-                    {badge}
-                  </ProDayText>
-                </View>
+                <ProDayText variant="caption" style={styles.badgeText}>
+                  {badge}
+                </ProDayText>
               ) : null}
             </View>
             <ProDayText variant="title" style={styles.title}>
@@ -80,64 +70,40 @@ export function SupporterPageFrame({
   );
 }
 
-function createStyles(identity: SupporterPageIdentity) {
+function createStyles(_identity: SupporterPageIdentity) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0, backgroundColor: SUPPORTER_SITE.bg },
-    glow: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      top: '8%',
-      height: 160,
-      opacity: 0.5,
-    },
-    accentBar: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 2,
-      backgroundColor: identity.accent,
-      opacity: 0.85,
-    },
     hero: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
-      gap: 6,
+      gap: 8,
     },
     heroTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     eyebrow: {
       color: SUPPORTER_SITE.accent,
       textTransform: 'uppercase',
-      letterSpacing: 2.2,
+      letterSpacing: 2.4,
       fontSize: 10,
-      fontWeight: '800',
+      fontWeight: '600',
       flex: 1,
     },
-    badge: {
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: SUPPORTER_SITE.free,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      backgroundColor: 'rgba(167, 139, 250, 0.12)',
-    },
     badgeText: {
-      color: SUPPORTER_SITE.free,
+      color: SUPPORTER_SITE.muted,
       fontSize: 9,
-      fontWeight: '800',
-      letterSpacing: 1,
+      fontWeight: '600',
+      letterSpacing: 1.2,
       textTransform: 'uppercase',
     },
     title: {
       color: SUPPORTER_SITE.foreground,
-      fontWeight: '800',
-      letterSpacing: -0.6,
-      fontSize: 26,
+      fontWeight: '700',
+      letterSpacing: -0.8,
+      fontSize: 28,
     },
-    support: { color: SUPPORTER_SITE.muted, lineHeight: 18 },
+    support: { color: SUPPORTER_SITE.muted, lineHeight: 20, fontSize: 13 },
     heroRule: {
-      marginTop: 8,
+      marginTop: 10,
       height: StyleSheet.hairlineWidth,
       backgroundColor: SUPPORTER_SITE.border,
     },

@@ -29,9 +29,11 @@ export function useSupporterMatchHub(
 ): UseSupporterMatchHubResult {
   const { calendarEvents, tournaments, follows, filters, pollLive = false } = options;
   const [data, setData] = useState<SupporterMatchHubResult>({
-    sections: { live: [], proday: [], world: [], follows: [] },
+    sections: { upcoming: [], live: [], proday: [], world: [], follows: [] },
     tournaments: [],
     liveCount: 0,
+    upcomingCount: 0,
+    heroKickoffs: [],
     providerState: {
       source: 'api_stub',
       last_sync_at: new Date(),

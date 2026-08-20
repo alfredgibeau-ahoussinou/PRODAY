@@ -41,10 +41,12 @@ describe('externalScoresService', () => {
     expect(live.some((fixture) => fixture.competition === 'pl')).toBe(true);
   });
 
-  it('expose listUpcomingFixtures mock sur 7 jours', async () => {
-    const upcoming = await externalScoresService.listUpcomingFixtures({ days: 7 });
-    expect(upcoming.length).toBeGreaterThan(0);
-    expect(upcoming.every((fixture) => fixture.status === 'scheduled')).toBe(true);
+  it('expose listUpcomingFixtures mock sur 14 jours', async () => {
+    const week = await externalScoresService.listUpcomingFixtures({ days: 7 });
+    const fortnight = await externalScoresService.listUpcomingFixtures({ days: 14 });
+    expect(week.length).toBeGreaterThan(0);
+    expect(fortnight.length).toBeGreaterThan(week.length);
+    expect(fortnight.every((fixture) => fixture.status === 'scheduled')).toBe(true);
   });
 
   it('expose un état provider mock par défaut', async () => {

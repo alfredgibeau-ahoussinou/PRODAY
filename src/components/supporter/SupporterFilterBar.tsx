@@ -1,10 +1,9 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { PressableSpring } from '../motion';
+import React, { useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { radius, spacing } from '../../theme/designTokens';
+import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
+import { spacing } from '../../theme/designTokens';
 import type {
   SupporterCompetitionFilter,
   SupporterGenderFilter,
@@ -50,84 +49,176 @@ export type SupporterFilterBarProps = {
   showCompetition?: boolean;
 };
 
+function activeFilterCount(
+  filters: SupporterMatchFilters,
+  showCompetition: boolean,
+): number {
+  let count = 0;
+  if (filters.gender !== 'all') count += 1;
+  if (filters.source !== 'all') count += 1;
+  if (filters.scope !== 'all') count += 1;
+  if (showCompetition && filters.competition !== 'all') count += 1;
+  return count;
+}
+
 export const SupporterFilterBar: React.FC<SupporterFilterBarProps> = ({
   filters,
   onChange,
   showCompetition = true,
 }) => {
-  const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const active = useMemo(
+    () => activeFilterCount(filters, showCompetition),
+    [filters, showCompetition],
+  );
 
   const renderRow = <K extends keyof SupporterMatchFilters>(
     labelKey: string,
     field: K,
-    options: FilterRow<SupporterMatchFilters[K]>[]
+    options: FilterRow<SupporterMatchFilters[K]>[],
   ) => (
-    <View style={styles.row}>
-      <ProDayText variant="caption" muted style={styles.rowLabel}>
+    <View style={styles.sheetRow}>
+      <ProDayText variant="caption" style={styles.sheetLabel}>
         {t(labelKey)}
       </ProDayText>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+      <View style={styles.optionWrap}>
         {options.map((option) => {
-          const active = filters[field] === option.key;
+          const selected = filters[field] === option.key;
           return (
-            <PressableSpring
+            <Pressable
               key={String(option.key)}
               onPress={() => onChange({ ...filters, [field]: option.key })}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor: active ? colors.accent : colors.surface,
-                  borderColor: active ? colors.accent : colors.border,
-                },
-              ]}
+              style={styles.option}
             >
-              <ProDayText variant="caption" style={{ color: active ? '#fff' : colors.textSecondary }}>
+              <ProDayText
+                variant="caption"
+                style={[styles.optionText, selected && styles.optionTextOn]}
+              >
                 {t(option.labelKey)}
               </ProDayText>
-            </PressableSpring>
+              {selected ? <View style={styles.optionRule} /> : null}
+            </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
     </View>
   );
 
   return (
-    <View style={[styles.container, { borderColor: colors.border, backgroundColor: colors.surfaceMuted }]}>
-      {renderRow('supporter.filters.gender', 'gender', GENDER_OPTIONS)}
-      {renderRow('supporter.filters.source', 'source', SOURCE_OPTIONS)}
-      {renderRow('supporter.filters.scope', 'scope', SCOPE_OPTIONS)}
-      {showCompetition
-        ? renderRow('supporter.filters.competition', 'competition', COMPETITION_OPTIONS)
-        : null}
+    <View style={styles.bar}>
+      <Pressable onPress={() => setOpen(true)} style={styles.trigger} hitSlop={8}>
+        <ProDayText variant="caption" style={styles.triggerText}>
+          {t('supporter.filters.open')}
+          {active > 0 ? ` · ${active}` : ''}
+        </ProDayText>
+      </Pressable>
+
+      <Modal
+        visible={open}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setOpen(false)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+          <Pressable style={styles.sheet} onPress={(event) => event.stopPropagation()}>
+            <View style={styles.sheetHead}>
+              <ProDayText variant="caption" style={styles.sheetTitle}>
+                {t('supporter.filters.open')}
+              </ProDayText>
+              <Pressable onPress={() => setOpen(false)} hitSlop={8}>
+                <ProDayText variant="caption" style={styles.triggerText}>
+                  {t('common.close')}
+                </ProDayText>
+              </Pressable>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {renderRow('supporter.filters.gender', 'gender', GENDER_OPTIONS)}
+              {renderRow('supporter.filters.source', 'source', SOURCE_OPTIONS)}
+              {renderRow('supporter.filters.scope', 'scope', SCOPE_OPTIONS)}
+              {showCompetition
+                ? renderRow('supporter.filters.competition', 'competition', COMPETITION_OPTIONS)
+                : null}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.sm,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.sm,
-    gap: spacing.xs,
+  bar: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    alignItems: 'flex-end',
   },
-  row: {
+  trigger: {
+    paddingVertical: 6,
+  },
+  triggerText: {
+    color: SUPPORTER_SITE.accent,
+    letterSpacing: 1.4,
+    fontSize: 11,
+    textTransform: 'uppercase',
+  },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: SUPPORTER_SITE.elevated,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: SUPPORTER_SITE.border,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
+    maxHeight: '72%',
+    gap: spacing.md,
+  },
+  sheetHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  sheetTitle: {
+    color: SUPPORTER_SITE.foreground,
+    letterSpacing: 1.8,
+    fontSize: 11,
+    textTransform: 'uppercase',
+  },
+  sheetRow: {
+    gap: 8,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SUPPORTER_SITE.border,
+  },
+  sheetLabel: {
+    color: SUPPORTER_SITE.muted,
+    letterSpacing: 1.4,
+    fontSize: 10,
+    textTransform: 'uppercase',
+  },
+  optionWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  option: {
+    paddingVertical: 4,
     gap: 4,
   },
-  rowLabel: {
-    paddingHorizontal: spacing.xs,
+  optionText: {
+    color: SUPPORTER_SITE.muted,
+    fontSize: 13,
   },
-  chips: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.xs,
+  optionTextOn: {
+    color: SUPPORTER_SITE.foreground,
   },
-  chip: {
-    borderWidth: 1,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+  optionRule: {
+    height: 1,
+    backgroundColor: SUPPORTER_SITE.accent,
   },
 });

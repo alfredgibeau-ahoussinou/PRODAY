@@ -112,14 +112,6 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const { user: selectedPlayer } = useUserProfile(selectedPlayerId);
 
-  const upcomingMatches = useMemo(
-    () =>
-      data.calendarItems
-        .filter((item) => item.starts_at.getTime() > Date.now())
-        .slice(0, 3),
-    [data.calendarItems],
-  );
-
   const upcomingTournaments = useMemo(
     () =>
       tournaments
@@ -181,7 +173,7 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
 
           <View style={styles.liveHead}>
             <ProDayText variant="caption" style={styles.kicker}>
-              Jour J · Live
+              {t('supporter.home.tribuneHead')}
             </ProDayText>
             {unreadMessages > 0 ? (
               <ProDayText variant="caption" style={styles.unread}>
@@ -190,30 +182,6 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
             ) : null}
           </View>
           <SupporterLiveScoresStrip onViewAll={() => nav.openMatchs({ homeTab: 'season' })} />
-
-          <ProDayText variant="caption" style={styles.kicker}>
-            {t('supporter.home.matchChapters')}
-          </ProDayText>
-          <View style={styles.chapterRow}>
-            {(
-              [
-                { key: 'live', label: t('supporter.home.chapterLive') },
-                { key: 'proday', label: t('supporter.home.chapterProday') },
-                { key: 'world', label: t('supporter.home.chapterWorld') },
-                { key: 'follows', label: t('supporter.home.chapterFollows') },
-              ] as const
-            ).map((entry) => (
-              <PressableSpring
-                key={entry.key}
-                onPress={() => nav.openMatchs({ homeTab: 'season' })}
-                style={styles.chapterChip}
-              >
-                <ProDayText variant="caption" style={styles.chapterChipText}>
-                  {entry.label}
-                </ProDayText>
-              </PressableSpring>
-            ))}
-          </View>
 
           <ProDayText variant="caption" style={styles.kicker}>
             Zones tribune
@@ -225,12 +193,12 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
                   onPress={() => openZone(z.id)}
                   scaleTo={0.97}
                   haptic
-                  style={[styles.zone, z.accent && styles.zoneAccent]}
+                  style={styles.zone}
                 >
                   <Icon
                     name={z.icon}
                     size={18}
-                    color={z.accent ? SUPPORTER_SITE.accent : SUPPORTER_SITE.foreground}
+                    color={SUPPORTER_SITE.foreground}
                   />
                   <ProDayText variant="section" style={styles.zoneTitle}>
                     {z.title}
@@ -243,26 +211,7 @@ export const SupporterHomeDashboard: React.FC<SupporterHomeProps> = ({
             ))}
           </View>
 
-          <Section title="Prochains matchs" action="Tous" onAction={() => nav.openMatchs()}>
-            {upcomingMatches.length === 0 ? (
-              <Empty copy="Aucun match à venir. Suis un club pour remplir ta tribune." />
-            ) : (
-              upcomingMatches.map((item) => (
-                <Row
-                  key={item.id}
-                  title={item.title}
-                  meta={formatCalendarDate(item.starts_at)}
-                  onPress={() => nav.openMatchs({ homeTab: 'season' })}
-                />
-              ))
-            )}
-          </Section>
-
-          <Section
-            title="Tournois"
-            action="Voir"
-            onAction={() => nav.openMatchs({ homeTab: 'tournois' })}
-          >
+          <Section title={t('supporter.home.tournamentsTitle')} action="Voir" onAction={() => nav.openMatchs({ homeTab: 'tournois' })}>
             {upcomingTournaments.length === 0 ? (
               <Empty copy="Pas de tournoi annoncé pour l’instant." />
             ) : (
@@ -453,30 +402,11 @@ const styles = StyleSheet.create({
   kicker: {
     color: SUPPORTER_SITE.accent,
     textTransform: 'uppercase',
-    letterSpacing: 2,
+    letterSpacing: 2.2,
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '600',
   },
-  unread: { color: SUPPORTER_SITE.live, fontWeight: '700', fontSize: 11 },
-  chapterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: spacing.xs,
-  },
-  chapterChip: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: SUPPORTER_SITE.border,
-    backgroundColor: 'rgba(60, 0, 240, 0.08)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  chapterChipText: {
-    color: SUPPORTER_SITE.bright,
-    fontWeight: '700',
-    fontSize: 11,
-  },
+  unread: { color: SUPPORTER_SITE.muted, fontWeight: '600', fontSize: 11 },
   zoneGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   zone: {
     width: '31%',
@@ -484,15 +414,11 @@ const styles = StyleSheet.create({
     minWidth: 100,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: SUPPORTER_SITE.border,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: SUPPORTER_SITE.surface,
     padding: spacing.sm,
     gap: 4,
   },
-  zoneAccent: {
-    borderColor: SUPPORTER_SITE.accent,
-    backgroundColor: SUPPORTER_SITE.soft,
-  },
-  zoneTitle: { color: SUPPORTER_SITE.foreground, fontWeight: '800', fontSize: 13 },
+  zoneTitle: { color: SUPPORTER_SITE.foreground, fontWeight: '700', fontSize: 13 },
   zoneBody: { color: SUPPORTER_SITE.muted, fontSize: 11, lineHeight: 15 },
   section: { gap: 6 },
   sectionHead: {
@@ -500,7 +426,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  action: { color: SUPPORTER_SITE.bright, fontWeight: '700' },
+  action: { color: SUPPORTER_SITE.accent, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', fontSize: 10 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -517,21 +443,21 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: SUPPORTER_SITE.border,
-    borderLeftWidth: 2,
+    borderLeftWidth: StyleSheet.hairlineWidth,
     borderLeftColor: SUPPORTER_SITE.accent,
     padding: spacing.md,
   },
   favCopy: { flex: 1, gap: 2 },
   freeStamp: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(167, 139, 250, 0.35)',
+    borderColor: SUPPORTER_SITE.border,
     padding: spacing.sm,
     alignItems: 'center',
     marginTop: spacing.sm,
   },
   freeStampText: {
-    color: SUPPORTER_SITE.free,
-    fontWeight: '700',
+    color: SUPPORTER_SITE.muted,
+    fontWeight: '600',
     fontSize: 11,
     textAlign: 'center',
   },
