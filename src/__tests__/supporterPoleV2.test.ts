@@ -35,11 +35,12 @@ describe('resolveMatchCenterTabs', () => {
     prodayEvent: null,
   };
 
-  it('propose résumé + stats + compositions monde (message honnête si XI vide)', () => {
+  it('propose résumé + stats + compositions + événements monde (message honnête si XI vide)', () => {
     const tabs = resolveMatchCenterTabs(baseDetail, false);
     expect(tabs).toContain('resume');
     expect(tabs).toContain('stats');
     expect(tabs).toContain('compositions');
+    expect(tabs).toContain('events');
     expect(tabs).not.toContain('video');
     expect(tabs).not.toContain('analyse');
   });

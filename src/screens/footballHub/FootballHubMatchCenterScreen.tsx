@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -21,6 +21,7 @@ import { formatKickoffClock } from '../../utils/supporterMatchFilters';
 import { syntheticEventFromLineup } from '../../utils/supporterMatchDetail';
 import { FOOTBALL_HUB, FOOTBALL_HUB_COPY } from '../../features/footballHub/theme/footballHubTheme';
 import { spacing } from '../../theme/designTokens';
+import { FootballHubMatchDebateScreen } from './FootballHubMatchDebateScreen';
 
 /** Poll score / events pendant un match live — silencieux, max ~45s. */
 const LIVE_POLL_MS = 45_000;
@@ -33,6 +34,35 @@ const TAB_LABELS: Partial<Record<MatchCenterTabId, string>> = {
   video: 'Vidéo',
   analyse: 'Analyse',
 };
+
+function formatMatchDate(date: Date): string {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+  try {
+    return date.toLocaleDateString('fr-FR', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+  } catch {
+    return '';
+  }
+}
+
+function statusCaption(item: SupporterMatchViewItem): string {
+  if (item.status === 'live') {
+    return item.minute != null ? `LIVE ${item.minute}'` : 'LIVE';
+  }
+  if (item.status === 'finished') return 'Terminé';
+  return 'À venir';
+}
+
+function scoreboardCenter(item: SupporterMatchViewItem): string {
+  if (item.scoreHome != null && item.scoreAway != null) {
+    return `${item.scoreHome} – ${item.scoreAway}`;
+  }
+  if (item.status === 'live') return '–';
+  return formatKickoffClock(item.startsAt);
+}
 
 export type FootballHubMatchCenterScreenProps = {
   item: SupporterMatchViewItem;
@@ -50,6 +80,7 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
   const [error, setError] = useState(false);
   const [liveItem, setLiveItem] = useState(item);
   const [iaOpen, setIaOpen] = useState(false);
+  const [showDebate, setShowDebate] = useState(false);
   const itemRef = useRef(item);
   itemRef.current = item;
 
@@ -91,11 +122,9 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
   }, [liveItem.status, load]);
 
   const lineupRows = center?.lineups ?? [];
-
-  const scoreLabel =
-    liveItem.scoreHome != null && liveItem.scoreAway != null
-      ? `${liveItem.scoreHome} – ${liveItem.scoreAway}`
-      : formatKickoffClock(liveItem.startsAt);
+  const events = center?.events ?? [];
+  const tabs = center?.availableTabs ?? ['resume', 'stats', 'compositions', 'events'];
+  const dateLabel = useMemo(() => formatMatchDate(liveItem.startsAt), [liveItem.startsAt]);
 
   const askIa = async () => {
     if (!center) return;
@@ -103,47 +132,78 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
     await agent.ask('résume ce match', center);
   };
 
+  if (showDebate) {
+    return (
+      <FootballHubMatchDebateScreen
+        matchId={liveItem.id}
+        matchLabel={`${liveItem.homeLabel} vs ${liveItem.awayLabel}`}
+        onBack={() => setShowDebate(false)}
+      />
+    );
+  }
+
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
+      <View style={styles.topBar}>
         <Pressable onPress={onBack} hitSlop={12}>
           <ProDayText variant="body" style={styles.back}>
             ← Retour
           </ProDayText>
         </Pressable>
-        {liveItem.source === 'proday' ? (
-          <View style={styles.prodayBadge}>
-            <ProDayText variant="caption" style={styles.prodayBadgeText}>
-              PRODAY MATCH
+        <View style={styles.topActions}>
+          {liveItem.source === 'proday' ? (
+            <View style={styles.prodayBadge}>
+              <ProDayText variant="caption" style={styles.prodayBadgeText}>
+                PRODAY MATCH
+              </ProDayText>
+            </View>
+          ) : null}
+          <Pressable style={styles.debateBtn} onPress={() => setShowDebate(true)}>
+            <ProDayText variant="caption" style={styles.debateBtnText}>
+              Débattre
             </ProDayText>
-          </View>
-        ) : null}
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.scoreboard}>
-        <ProDayText variant="body" style={styles.team} numberOfLines={1}>
-          {liveItem.homeLabel}
-        </ProDayText>
+        <View style={styles.teamCol}>
+          <ProDayText variant="section" style={styles.team} numberOfLines={2}>
+            {liveItem.homeLabel}
+          </ProDayText>
+        </View>
         <View style={styles.scoreMid}>
           <ProDayText variant="hero" style={styles.score}>
-            {scoreLabel}
+            {scoreboardCenter(liveItem)}
           </ProDayText>
           <ProDayText variant="caption" style={styles.status}>
-            {liveItem.status === 'live'
-              ? `LIVE${liveItem.minute != null ? ` ${liveItem.minute}'` : ''}`
-              : liveItem.status === 'finished'
-                ? 'Terminé'
-                : formatKickoffClock(liveItem.startsAt)}
+            {statusCaption(liveItem)}
           </ProDayText>
-          {liveItem.competitionLabel ? (
-            <ProDayText variant="caption" style={styles.comp} numberOfLines={1}>
-              {liveItem.competitionLabel}
-            </ProDayText>
-          ) : null}
         </View>
-        <ProDayText variant="body" style={styles.team} numberOfLines={1}>
-          {liveItem.awayLabel}
-        </ProDayText>
+        <View style={styles.teamCol}>
+          <ProDayText variant="section" style={styles.team} numberOfLines={2}>
+            {liveItem.awayLabel}
+          </ProDayText>
+        </View>
+      </View>
+
+      <View style={styles.metaRow}>
+        {liveItem.competitionLabel ? (
+          <ProDayText variant="caption" style={styles.metaText} numberOfLines={1}>
+            {liveItem.competitionLabel}
+          </ProDayText>
+        ) : null}
+        {dateLabel ? (
+          <ProDayText variant="caption" style={styles.metaText}>
+            {dateLabel}
+            {liveItem.status === 'upcoming' ? ` · ${formatKickoffClock(liveItem.startsAt)}` : ''}
+          </ProDayText>
+        ) : null}
+        {liveItem.meta ? (
+          <ProDayText variant="caption" style={styles.metaMuted} numberOfLines={1}>
+            {liveItem.meta}
+          </ProDayText>
+        ) : null}
       </View>
 
       {loading ? (
@@ -164,9 +224,10 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.tabsScroll}
             contentContainerStyle={styles.tabs}
           >
-            {(center?.availableTabs ?? ['resume', 'compositions']).map((id) => (
+            {tabs.map((id) => (
               <Pressable
                 key={id}
                 onPress={() => setTab(id)}
@@ -182,23 +243,58 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
             ))}
           </ScrollView>
 
-          <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.bodyScroll}
+            contentContainerStyle={styles.body}
+            showsVerticalScrollIndicator={false}
+          >
             {tab === 'resume' ? (
               <View style={styles.block}>
-                <ProDayText variant="body" style={styles.muted}>
-                  {liveItem.homeLabel} vs {liveItem.awayLabel}
-                  {liveItem.competitionLabel ? ` · ${liveItem.competitionLabel}` : ''}
-                </ProDayText>
-                {liveItem.meta ? (
+                <View style={styles.card}>
+                  <ProDayText variant="body" style={styles.cardTitle}>
+                    {liveItem.homeLabel} vs {liveItem.awayLabel}
+                  </ProDayText>
+                  {liveItem.competitionLabel ? (
+                    <ProDayText variant="caption" style={styles.muted}>
+                      {liveItem.competitionLabel}
+                    </ProDayText>
+                  ) : null}
+                  {liveItem.meta ? (
+                    <ProDayText variant="caption" style={styles.muted}>
+                      {liveItem.meta}
+                    </ProDayText>
+                  ) : null}
                   <ProDayText variant="caption" style={styles.muted}>
-                    {liveItem.meta}
+                    {statusCaption(liveItem)}
+                    {dateLabel ? ` · ${dateLabel}` : ''}
+                    {liveItem.status === 'upcoming'
+                      ? ` · ${formatKickoffClock(liveItem.startsAt)}`
+                      : ''}
                   </ProDayText>
-                ) : null}
-                {!center ? (
-                  <ProDayText variant="body" style={styles.muted}>
-                    Détail indisponible pour ce match.
-                  </ProDayText>
-                ) : null}
+                </View>
+
+                <ProDayText variant="section" style={styles.sectionTitle}>
+                  Moments clés
+                </ProDayText>
+                {events.length === 0 ? (
+                  <View style={styles.emptyCard}>
+                    <ProDayText variant="body" style={styles.muted}>
+                      Pas encore d’événements
+                    </ProDayText>
+                  </View>
+                ) : (
+                  events.map((ev, idx) => (
+                    <View key={`${ev.type}-${idx}`} style={styles.eventRow}>
+                      <ProDayText variant="caption" style={styles.eventMin}>
+                        {ev.minute != null ? `${ev.minute}'` : '—'}
+                      </ProDayText>
+                      <ProDayText variant="body" style={styles.eventText}>
+                        {LIVE_ACTION_LABELS[ev.type] ?? ev.type}
+                        {ev.player_name ? ` · ${ev.player_name}` : ''}
+                      </ProDayText>
+                    </View>
+                  ))
+                )}
               </View>
             ) : null}
 
@@ -219,9 +315,11 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
                     </View>
                   ))
                 ) : (
-                  <ProDayText variant="body" style={styles.muted}>
-                    Statistiques non disponibles pour ce match.
-                  </ProDayText>
+                  <View style={styles.emptyCard}>
+                    <ProDayText variant="body" style={styles.muted}>
+                      Statistiques non disponibles pour ce match.
+                    </ProDayText>
+                  </View>
                 )}
               </View>
             ) : null}
@@ -252,12 +350,14 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
 
             {tab === 'events' ? (
               <View style={styles.block}>
-                {(center?.events ?? []).length === 0 ? (
-                  <ProDayText variant="body" style={styles.muted}>
-                    Aucun événement enregistré.
-                  </ProDayText>
+                {events.length === 0 ? (
+                  <View style={styles.emptyCard}>
+                    <ProDayText variant="body" style={styles.muted}>
+                      Pas encore d’événements
+                    </ProDayText>
+                  </View>
                 ) : (
-                  (center?.events ?? []).map((ev, idx) => (
+                  events.map((ev, idx) => (
                     <ProDayText key={`${ev.type}-${idx}`} variant="body" style={styles.event}>
                       {LIVE_ACTION_LABELS[ev.type] ?? ev.type}
                       {ev.player_name ? ` · ${ev.player_name}` : ''}
@@ -281,9 +381,11 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
                     </ProDayText>
                   </Pressable>
                 ) : (
-                  <ProDayText variant="body" style={styles.muted}>
-                    Aucune vidéo disponible.
-                  </ProDayText>
+                  <View style={styles.emptyCard}>
+                    <ProDayText variant="body" style={styles.muted}>
+                      Aucune vidéo disponible.
+                    </ProDayText>
+                  </View>
                 )}
               </View>
             ) : null}
@@ -331,7 +433,7 @@ export const FootballHubMatchCenterScreen: React.FC<FootballHubMatchCenterScreen
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: FOOTBALL_HUB.bg },
-  header: {
+  topBar: {
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
@@ -340,6 +442,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   back: { color: FOOTBALL_HUB.bright },
+  topActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   prodayBadge: {
     backgroundColor: FOOTBALL_HUB.soft,
     paddingHorizontal: 10,
@@ -347,36 +450,80 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   prodayBadgeText: { color: FOOTBALL_HUB.bright, fontWeight: '700', letterSpacing: 1 },
+  debateBtn: {
+    backgroundColor: FOOTBALL_HUB.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  debateBtnText: { color: '#fff', fontWeight: '700' },
   scoreboard: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 8,
+    paddingVertical: 18,
+    gap: 10,
     backgroundColor: FOOTBALL_HUB.elevated,
     borderBottomWidth: 1,
     borderBottomColor: FOOTBALL_HUB.border,
   },
-  team: { flex: 1, color: FOOTBALL_HUB.foreground, textAlign: 'center', fontWeight: '600' },
-  scoreMid: { alignItems: 'center', minWidth: 100 },
-  score: { color: FOOTBALL_HUB.score, fontSize: 28 },
+  teamCol: { flex: 1 },
+  team: {
+    color: FOOTBALL_HUB.foreground,
+    textAlign: 'center',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  scoreMid: { alignItems: 'center', minWidth: 108, paddingHorizontal: 4 },
+  score: { color: FOOTBALL_HUB.score, fontSize: 32, lineHeight: 38, fontWeight: '800' },
   status: { color: FOOTBALL_HUB.live, marginTop: 4, fontWeight: '700' },
-  comp: { color: FOOTBALL_HUB.muted, marginTop: 2, maxWidth: 140 },
-  tabs: { paddingHorizontal: 12, paddingVertical: 10, gap: 8 },
+  metaRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 2,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: FOOTBALL_HUB.border,
+  },
+  metaText: { color: FOOTBALL_HUB.foreground, textAlign: 'center' },
+  metaMuted: { color: FOOTBALL_HUB.muted, textAlign: 'center' },
+  tabsScroll: { flexGrow: 0 },
+  tabs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 8,
+  },
   tab: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
     backgroundColor: FOOTBALL_HUB.surface,
-    marginRight: 8,
     borderWidth: 1,
     borderColor: FOOTBALL_HUB.border,
   },
   tabActive: { backgroundColor: FOOTBALL_HUB.soft, borderColor: FOOTBALL_HUB.accent },
   tabLabel: { color: FOOTBALL_HUB.muted },
   tabLabelActive: { color: FOOTBALL_HUB.foreground, fontWeight: '700' },
+  bodyScroll: { flex: 1 },
   body: { padding: 16, paddingBottom: 120, gap: spacing.md },
-  block: { gap: 10 },
+  block: { gap: 12 },
+  card: {
+    backgroundColor: FOOTBALL_HUB.surface,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+    gap: 6,
+  },
+  cardTitle: { color: FOOTBALL_HUB.foreground, fontWeight: '700' },
+  sectionTitle: {
+    color: FOOTBALL_HUB.foreground,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    fontSize: 12,
+    marginTop: 4,
+  },
   muted: { color: FOOTBALL_HUB.muted },
   emptyCard: {
     backgroundColor: FOOTBALL_HUB.surface,
@@ -406,6 +553,18 @@ const styles = StyleSheet.create({
   },
   retryLabel: { color: FOOTBALL_HUB.bright, fontWeight: '700' },
   event: { color: FOOTBALL_HUB.foreground, marginBottom: 6 },
+  eventRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: FOOTBALL_HUB.elevated,
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
+  eventMin: { color: FOOTBALL_HUB.bright, fontWeight: '700', minWidth: 36 },
+  eventText: { color: FOOTBALL_HUB.foreground, flex: 1 },
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',

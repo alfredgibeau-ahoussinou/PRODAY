@@ -305,7 +305,7 @@ export function getTabShortLabel(
     if (tab === 'plus') return 'Favoris';
     if (tab === 'profil') return 'Profil';
     if (tab === 'reels') return 'Vidéos';
-    if (tab === 'messages') return 'Fil';
+    if (tab === 'messages') return 'Tribune';
     if (tab === 'shop') return 'Shop';
   }
   if (isProFamilyLine(line) && role === 'club') {

@@ -6,11 +6,11 @@ import {
   HubLiveScoreCard,
   HubMatchRow,
   HubScreen,
-  HubSearchBar,
   HubSection,
 } from '../../features/footballHub/components';
 import { FOOTBALL_HUB, FOOTBALL_HUB_COPY } from '../../features/footballHub/theme/footballHubTheme';
 import { ProDayText } from '../../components/ui/ProDayText';
+import { Icon } from '../../components/ui/Icon';
 import { useAuth } from '../../context/AuthContext';
 import { useSeasonCalendar } from '../../hooks/useAppData';
 import { useTournaments } from '../../hooks/useTournaments';
@@ -20,14 +20,19 @@ import { followsService } from '../../services/follows.service';
 import { supporterVideoService } from '../../services/supporterVideo.service';
 import { footballDataFacade } from '../../services/footballData';
 import { DEFAULT_SUPPORTER_MATCH_FILTERS } from '../../services/supporterPreferences.service';
+import { findCompetitionById } from '../../content/supporterCompetitionsCatalog';
 import type { Follow } from '../../models/Follow';
 import type { SupporterVideo } from '../../models/SupporterVideo';
 import type { FootballCompetitionEntry } from '../../services/footballData/types';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { FootballHubMatchCenterScreen } from './FootballHubMatchCenterScreen';
+import { FootballHubSearchScreen } from './FootballHubSearchScreen';
+import { FootballHubCompetitionScreen } from './FootballHubCompetitionScreen';
+import { FootballHubDebateFeedScreen } from './FootballHubDebateFeedScreen';
 
 const EMPTY_EVENTS: never[] = [];
 const EMPTY_TOURNAMENTS: never[] = [];
+const WORLD_CUP = findCompetitionById('world_cup')!;
 
 /** Accueil PRODAY Football Hub. */
 export const FootballHubHomeScreen: React.FC = () => {
@@ -40,7 +45,9 @@ export const FootballHubHomeScreen: React.FC = () => {
   const [comps, setComps] = useState<FootballCompetitionEntry[]>([]);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [showDiscover, setShowDiscover] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showWorldCup, setShowWorldCup] = useState(false);
+  const [showTribune, setShowTribune] = useState(false);
 
   const calendarEvents = events ?? EMPTY_EVENTS;
   const tournamentList = tournaments ?? EMPTY_TOURNAMENTS;
@@ -110,6 +117,23 @@ export const FootballHubHomeScreen: React.FC = () => {
     );
   }
 
+  if (showSearch) {
+    return <FootballHubSearchScreen onBack={() => setShowSearch(false)} />;
+  }
+
+  if (showWorldCup && WORLD_CUP) {
+    return (
+      <FootballHubCompetitionScreen
+        competition={WORLD_CUP}
+        onBack={() => setShowWorldCup(false)}
+      />
+    );
+  }
+
+  if (showTribune) {
+    return <FootballHubDebateFeedScreen onBack={() => setShowTribune(false)} />;
+  }
+
   return (
     <HubScreen
       refreshControl={
@@ -121,9 +145,25 @@ export const FootballHubHomeScreen: React.FC = () => {
       }
     >
       <View style={styles.hero}>
-        <ProDayText variant="caption" style={styles.eyebrow}>
-          PRODAY FOOTBALL HUB
-        </ProDayText>
+        <View style={styles.heroTop}>
+          <ProDayText variant="caption" style={styles.eyebrow}>
+            PRODAY FOOTBALL HUB
+          </ProDayText>
+          <View style={styles.heroActions}>
+            <Pressable style={styles.heroBtn} onPress={() => setShowSearch(true)}>
+              <Icon name="search" size={16} color={FOOTBALL_HUB.bright} />
+              <ProDayText variant="caption" style={styles.heroBtnLabel}>
+                {FOOTBALL_HUB_COPY.searchCta}
+              </ProDayText>
+            </Pressable>
+            <Pressable style={styles.heroBtn} onPress={() => setShowTribune(true)}>
+              <Icon name="chat" size={16} color={FOOTBALL_HUB.bright} />
+              <ProDayText variant="caption" style={styles.heroBtnLabel}>
+                {FOOTBALL_HUB_COPY.tribuneCta}
+              </ProDayText>
+            </Pressable>
+          </View>
+        </View>
         <ProDayText variant="hero" style={styles.heroTitle}>
           {FOOTBALL_HUB_COPY.heroTitle}
         </ProDayText>
@@ -177,6 +217,26 @@ export const FootballHubHomeScreen: React.FC = () => {
         ))}
       </HubSection>
 
+      <HubSection title="Compétitions phares">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {WORLD_CUP ? (
+            <HubCompetitionCard
+              label={WORLD_CUP.label}
+              country={WORLD_CUP.country}
+              onPress={() => setShowWorldCup(true)}
+            />
+          ) : null}
+          {comps.map((c) => (
+            <HubCompetitionCard
+              key={c.id}
+              label={c.label}
+              country={c.country}
+              onPress={() => nav.setActiveTab?.('matchs')}
+            />
+          ))}
+        </ScrollView>
+      </HubSection>
+
       <HubSection
         title="Mes clubs"
         actionLabel="Favoris"
@@ -221,37 +281,12 @@ export const FootballHubHomeScreen: React.FC = () => {
         ))}
       </HubSection>
 
-      <HubSection
-        title="Compétitions"
-        emptyLabel={comps.length === 0 ? FOOTBALL_HUB_COPY.emptySearch : undefined}
-      >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {comps.map((c) => (
-            <HubCompetitionCard
-              key={c.id}
-              label={c.label}
-              country={c.country}
-              onPress={() => nav.setActiveTab?.('matchs')}
-            />
-          ))}
-        </ScrollView>
-      </HubSection>
-
       <HubSection title="Découvrir">
-        <Pressable
-          style={styles.discoverBtn}
-          onPress={() => setShowDiscover((v) => !v)}
-        >
+        <Pressable style={styles.discoverBtn} onPress={() => setShowSearch(true)}>
           <ProDayText variant="body" style={styles.discoverLabel}>
-            {showDiscover ? 'Masquer la recherche' : 'Chercher clubs & compétitions'}
+            Chercher clubs & compétitions
           </ProDayText>
         </Pressable>
-        {showDiscover ? (
-          <HubSearchBar
-            onSelectClub={() => nav.setActiveTab?.('plus')}
-            onSelectCompetition={() => nav.setActiveTab?.('matchs')}
-          />
-        ) : null}
       </HubSection>
     </HubScreen>
   );
@@ -259,6 +294,25 @@ export const FootballHubHomeScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   hero: { gap: 8, paddingTop: 4 },
+  heroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  heroActions: { flexDirection: 'row', gap: 8 },
+  heroBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: FOOTBALL_HUB.soft,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
+  heroBtnLabel: { color: FOOTBALL_HUB.bright, fontWeight: '700' },
   eyebrow: {
     color: FOOTBALL_HUB.bright,
     letterSpacing: 1.2,

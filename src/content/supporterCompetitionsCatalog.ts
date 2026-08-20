@@ -14,6 +14,8 @@ export const SUPPORTER_COMPETITIONS_CATALOG: FootballCompetitionEntry[] = [
   { id: 'eredivisie', label: 'Eredivisie', country: 'Netherlands', countryCode: 'NL', leagueId: 88 },
   { id: 'ucl', label: 'Ligue des Champions', country: 'Europe', countryCode: 'EU', leagueId: 2 },
   { id: 'uel', label: 'Ligue Europa', country: 'Europe', countryCode: 'EU', leagueId: 3 },
+  /** API-Football league id 1 — Coupe du monde. */
+  { id: 'world_cup', label: 'Coupe du monde', country: 'Monde', countryCode: 'WW', leagueId: 1 },
   // Amériques
   { id: 'brasileirao', label: 'Brasileirão', country: 'Brazil', countryCode: 'BR', leagueId: 71 },
   { id: 'mls', label: 'MLS', country: 'USA', countryCode: 'US', leagueId: 253 },

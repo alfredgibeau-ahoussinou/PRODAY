@@ -48,7 +48,8 @@ export function resolveMatchCenterTabs(detail: FootballMatchDetail, hasVideo: bo
   if (detail.statistics || detail.source === 'world') tabs.push('stats');
   /** Toujours proposé — empty state honnête si l’API n’a pas publié le XI. */
   tabs.push('compositions');
-  if (detail.events.length > 0 || detail.item.status === 'live') tabs.push('events');
+  /** Toujours proposé — « Pas encore d’événements » si vide. */
+  tabs.push('events');
   if (hasVideo) tabs.push('video');
   if (detail.source === 'proday') tabs.push('analyse');
   return tabs;

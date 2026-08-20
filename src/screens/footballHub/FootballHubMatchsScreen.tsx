@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { HubMatchRow, HubScreen, HubSearchBar, HubSection } from '../../features/footballHub/components';
+import { HubMatchRow, HubScreen, HubSection } from '../../features/footballHub/components';
 import { FOOTBALL_HUB, FOOTBALL_HUB_COPY } from '../../features/footballHub/theme/footballHubTheme';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,7 @@ import { DEFAULT_SUPPORTER_MATCH_FILTERS } from '../../services/supporterPrefere
 import type { Follow } from '../../models/Follow';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { FootballHubMatchCenterScreen } from './FootballHubMatchCenterScreen';
+import { FootballHubSearchScreen } from './FootballHubSearchScreen';
 
 type Chapter = 'live' | 'today' | 'upcoming' | 'world';
 
@@ -83,6 +84,10 @@ export const FootballHubMatchsScreen: React.FC = () => {
     );
   }
 
+  if (showSearch) {
+    return <FootballHubSearchScreen onBack={() => setShowSearch(false)} />;
+  }
+
   return (
     <HubScreen
       refreshControl={
@@ -97,9 +102,16 @@ export const FootballHubMatchsScreen: React.FC = () => {
         />
       }
     >
-      <ProDayText variant="hero" style={styles.title}>
-        Matchs
-      </ProDayText>
+      <View style={styles.titleRow}>
+        <ProDayText variant="hero" style={styles.title}>
+          Matchs
+        </ProDayText>
+        <Pressable onPress={() => setShowSearch(true)} style={styles.searchBtn}>
+          <ProDayText variant="caption" style={styles.searchBtnLabel}>
+            {FOOTBALL_HUB_COPY.searchCta}
+          </ProDayText>
+        </Pressable>
+      </View>
       <View style={styles.chips}>
         {CHAPTERS.map((c) => (
           <Pressable
@@ -116,13 +128,6 @@ export const FootballHubMatchsScreen: React.FC = () => {
           </Pressable>
         ))}
       </View>
-
-      <Pressable onPress={() => setShowSearch((v) => !v)} style={styles.searchToggle}>
-        <ProDayText variant="caption" style={styles.searchToggleLabel}>
-          {showSearch ? 'Masquer la recherche' : 'Rechercher'}
-        </ProDayText>
-      </Pressable>
-      {showSearch ? <HubSearchBar /> : null}
 
       {hub.providerState?.healthy === false ? (
         <View style={styles.banner}>
@@ -157,7 +162,22 @@ export const FootballHubMatchsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  title: { color: FOOTBALL_HUB.foreground, fontSize: 28 },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  title: { color: FOOTBALL_HUB.foreground, fontSize: 28, flex: 1 },
+  searchBtn: {
+    backgroundColor: FOOTBALL_HUB.soft,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
+  searchBtnLabel: { color: FOOTBALL_HUB.bright, fontWeight: '700' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 12,
@@ -170,8 +190,6 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: FOOTBALL_HUB.soft, borderColor: FOOTBALL_HUB.accent },
   chipLabel: { color: FOOTBALL_HUB.muted },
   chipLabelActive: { color: FOOTBALL_HUB.foreground, fontWeight: '700' },
-  searchToggle: { alignSelf: 'flex-start' },
-  searchToggleLabel: { color: FOOTBALL_HUB.bright },
   banner: {
     backgroundColor: 'rgba(248, 113, 113, 0.12)',
     borderRadius: 12,

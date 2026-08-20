@@ -33,4 +33,8 @@ export const FOOTBALL_HUB_COPY = {
   emptySearch: 'Aucun résultat. Essaie un autre club ou une compétition.',
   apiBanner: 'Scores externes indisponibles. Les matchs ProDay restent visibles.',
   iaDisclaimer: 'ProDay IA résume uniquement les données disponibles — aucune invention.',
+  searchCta: 'Chercher',
+  tribuneCta: 'Tribune',
+  worldCupLabel: 'Coupe du monde',
+  worldCupEmpty: 'Pas de match Coupe du monde pour le moment (hors saison ou API).',
 } as const;

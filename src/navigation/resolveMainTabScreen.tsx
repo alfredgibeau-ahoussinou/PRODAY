@@ -28,8 +28,8 @@ import { FootballHubMatchsScreen } from '../screens/footballHub/FootballHubMatch
 import { FootballHubProDayScreen } from '../screens/footballHub/FootballHubProDayScreen';
 import { FootballHubFavoritesScreen } from '../screens/footballHub/FootballHubFavoritesScreen';
 import { FootballHubProfileScreen } from '../screens/footballHub/FootballHubProfileScreen';
+import { FootballHubDebateFeedScreen } from '../screens/footballHub/FootballHubDebateFeedScreen';
 import { SupporterVideosScreen } from '../screens/supporter/SupporterVideosScreen';
-import { SupporterTribuneFeedScreen } from '../screens/supporter/SupporterTribuneFeedScreen';
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerSquadScreen } from '../screens/proPlayer/ProPlayerSquadScreen';
 import { SmartTacticsPortalScreen } from '../screens/smartTactics/SmartTacticsPortalScreen';
@@ -60,9 +60,9 @@ const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   feed: FootballHubProDayScreen,
   plus: FootballHubFavoritesScreen,
   profil: FootballHubProfileScreen,
-  /** Secondaires hors dock — accessibles via deep links Accueil. */
+  /** Secondaires hors dock — accessibles via Accueil / Match Center. */
   reels: SupporterVideosScreen,
-  messages: SupporterTribuneFeedScreen,
+  messages: FootballHubDebateFeedScreen,
   shop: ShopScreen,
 };
 

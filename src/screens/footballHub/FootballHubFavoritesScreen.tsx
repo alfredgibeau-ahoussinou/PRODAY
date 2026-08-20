@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { HubClubChip, HubMatchRow, HubScreen, HubSection } from '../../features/footballHub/components';
 import { FOOTBALL_HUB, FOOTBALL_HUB_COPY } from '../../features/footballHub/theme/footballHubTheme';
 import { ProDayText } from '../../components/ui/ProDayText';
@@ -12,6 +12,8 @@ import type { SupporterMatchFilters } from '../../services/supporterPreferences.
 import type { Follow } from '../../models/Follow';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { FootballHubMatchCenterScreen } from './FootballHubMatchCenterScreen';
+import { FootballHubSearchScreen } from './FootballHubSearchScreen';
+import { FootballHubDebateFeedScreen } from './FootballHubDebateFeedScreen';
 
 const EMPTY_EVENTS: never[] = [];
 const EMPTY_TOURNAMENTS: never[] = [];
@@ -29,6 +31,8 @@ export const FootballHubFavoritesScreen: React.FC = () => {
   const [follows, setFollows] = useState<Follow[]>([]);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showTribune, setShowTribune] = useState(false);
 
   const loadFollows = useCallback(async () => {
     if (!profile?.uid) {
@@ -65,6 +69,14 @@ export const FootballHubFavoritesScreen: React.FC = () => {
     );
   }
 
+  if (showSearch) {
+    return <FootballHubSearchScreen onBack={() => setShowSearch(false)} />;
+  }
+
+  if (showTribune) {
+    return <FootballHubDebateFeedScreen onBack={() => setShowTribune(false)} />;
+  }
+
   return (
     <HubScreen
       refreshControl={
@@ -79,9 +91,23 @@ export const FootballHubFavoritesScreen: React.FC = () => {
         />
       }
     >
-      <ProDayText variant="hero" style={styles.title}>
-        Favoris
-      </ProDayText>
+      <View style={styles.titleRow}>
+        <ProDayText variant="hero" style={styles.title}>
+          Favoris
+        </ProDayText>
+        <View style={styles.actions}>
+          <Pressable style={styles.linkBtn} onPress={() => setShowSearch(true)}>
+            <ProDayText variant="caption" style={styles.linkLabel}>
+              {FOOTBALL_HUB_COPY.searchCta}
+            </ProDayText>
+          </Pressable>
+          <Pressable style={styles.linkBtn} onPress={() => setShowTribune(true)}>
+            <ProDayText variant="caption" style={styles.linkLabel}>
+              {FOOTBALL_HUB_COPY.tribuneCta}
+            </ProDayText>
+          </Pressable>
+        </View>
+      </View>
       <ProDayText variant="body" style={styles.sub}>
         Clubs, compétitions et fil personnalisé.
       </ProDayText>
@@ -96,7 +122,7 @@ export const FootballHubFavoritesScreen: React.FC = () => {
               key={f.id}
               label={f.target_label || f.target_id}
               active
-              onPress={() => undefined}
+              onPress={() => setShowSearch(true)}
             />
           ))}
         </View>
@@ -131,7 +157,23 @@ export const FootballHubFavoritesScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  title: { color: FOOTBALL_HUB.foreground, fontSize: 28 },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  title: { color: FOOTBALL_HUB.foreground, fontSize: 28, flex: 1 },
+  actions: { flexDirection: 'row', gap: 8 },
+  linkBtn: {
+    backgroundColor: FOOTBALL_HUB.soft,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: FOOTBALL_HUB.border,
+  },
+  linkLabel: { color: FOOTBALL_HUB.bright, fontWeight: '700' },
   sub: { color: FOOTBALL_HUB.muted },
   row: { flexDirection: 'row', flexWrap: 'wrap' },
 });

@@ -26,6 +26,9 @@ jest.mock('../screens/footballHub/FootballHubFavoritesScreen', () => ({
 jest.mock('../screens/footballHub/FootballHubProfileScreen', () => ({
   FootballHubProfileScreen: 'FootballHubProfileScreen',
 }));
+jest.mock('../screens/footballHub/FootballHubDebateFeedScreen', () => ({
+  FootballHubDebateFeedScreen: 'FootballHubDebateFeedScreen',
+}));
 jest.mock('../screens/supporter/SupporterExplorerScreen', () => ({
   SupporterExplorerScreen: 'SupporterExplorerScreen',
 }));
@@ -108,7 +111,9 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('plus', 'supporter', 'supporter')).toBe('FootballHubFavoritesScreen');
     expect(resolveMainTabScreen('profil', 'supporter', 'supporter')).toBe('FootballHubProfileScreen');
     expect(resolveMainTabScreen('reels', 'supporter', 'supporter')).toBe('SupporterVideosScreen');
-    expect(resolveMainTabScreen('messages', 'supporter', 'supporter')).toBe('SupporterTribuneFeedScreen');
+    expect(resolveMainTabScreen('messages', 'supporter', 'supporter')).toBe(
+      'FootballHubDebateFeedScreen',
+    );
     expect(resolveMainTabScreen('shop', 'supporter', 'supporter')).toBe('ShopScreen');
   });
 
