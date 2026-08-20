@@ -12,6 +12,7 @@ import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { useTranslation } from '../context/LocaleContext';
 import { useAppTheme } from '../context/ProductLineContext';
 import { followsService } from '../services/follows.service';
+import { supporterWatchHistoryService } from '../services/supporterWatchHistory.service';
 import {
   loadSupporterNotificationPrefs,
   saveSupporterNotificationPrefs,
@@ -33,7 +34,7 @@ export const SupporterProfileTabScreen: React.FC = () => {
   const [notifPrefs, setNotifPrefs] = useState<SupporterNotificationPreferences | null>(null);
   const [showEdit, setShowEdit] = useState(false);
   const [showSuivis, setShowSuivis] = useState(false);
-  const matchFollowCount = clubCount + tournamentCount;
+  const [watchStats, setWatchStats] = useState({ watched: 0, saved: 0, followed: 0 });
 
   const loadFollows = useCallback(async () => {
     if (!profile?.uid) return;
@@ -49,10 +50,23 @@ export const SupporterProfileTabScreen: React.FC = () => {
     setNotifPrefs(prefs);
   }, [profile?.uid]);
 
+  const loadWatchStats = useCallback(async () => {
+    if (!profile?.uid) return;
+    const stats = await supporterWatchHistoryService.getStats(
+      profile.uid,
+      clubCount + tournamentCount,
+    );
+    setWatchStats(stats);
+  }, [profile?.uid, clubCount, tournamentCount]);
+
   useEffect(() => {
     void loadFollows();
     void loadNotifPrefs();
   }, [loadFollows, loadNotifPrefs]);
+
+  useEffect(() => {
+    void loadWatchStats();
+  }, [loadWatchStats]);
 
   const updateNotifPref = useCallback(
     async (key: keyof SupporterNotificationPreferences, value: boolean) => {
@@ -176,10 +190,10 @@ export const SupporterProfileTabScreen: React.FC = () => {
               Mon histoire football
             </ProDayText>
             <ProDayText variant="body">
-              {matchFollowCount} match{matchFollowCount !== 1 ? 's' : ''} et clubs suivis · {clubCount} club{clubCount !== 1 ? 's' : ''}
+              {watchStats.watched} regardé{watchStats.watched !== 1 ? 's' : ''} · {watchStats.followed} suivi{watchStats.followed !== 1 ? 's' : ''} · {watchStats.saved} enregistré{watchStats.saved !== 1 ? 's' : ''}
             </ProDayText>
             <ProDayText variant="caption" muted>
-              Historique de visionnage — bientôt synchronisé
+              Mes matchs — historique synchronisé
             </ProDayText>
           </ProDaySurface>
 
@@ -224,6 +238,11 @@ export const SupporterProfileTabScreen: React.FC = () => {
               'matchReminders',
               'supporter.profile.notif.reminders',
               'supporter.profile.notif.remindersHint'
+            )}
+            {renderNotifRow(
+              'summaryAlerts',
+              'supporter.profile.notif.summary',
+              'supporter.profile.notif.summaryHint'
             )}
             {renderNotifRow(
               'communityDigest',

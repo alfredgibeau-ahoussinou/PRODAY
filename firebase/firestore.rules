@@ -1697,5 +1697,50 @@ service cloud.firestore {
       allow update, delete: if isAdmin()
         || (isSignedIn() && resource.data.author_uid == request.auth.uid);
     }
+
+    // --- Pôle Supporter V2 (Phase 2) ---
+    // supporter_watch_history/{uid}/entries/{matchId}
+    // supporter_saved_matches/{uid}/entries/{matchId}
+    // supporter_match_polls/{matchId}
+    // supporter_match_predictions/{matchId}/entries/{uid}
+    // supporter_match_reactions/{matchId}/entries/{uid}
+    // supporter_match_summaries/{matchId}
+    // supporter_video_rights/{videoId}
+
+    match /supporter_watch_history/{uid}/entries/{matchId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /supporter_saved_matches/{uid}/entries/{matchId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /supporter_match_polls/{matchId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    match /supporter_match_predictions/{matchId}/entries/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+
+    match /supporter_match_reactions/{matchId}/entries/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+
+    match /supporter_match_summaries/{matchId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /supporter_video_rights/{videoId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
   }
 }

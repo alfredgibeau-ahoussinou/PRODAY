@@ -22,6 +22,7 @@ export interface SupporterNotificationPreferences {
   kickoffAlerts: boolean;
   matchReminders: boolean;
   communityDigest: boolean;
+  summaryAlerts: boolean;
 }
 
 export const DEFAULT_SUPPORTER_MATCH_FILTERS: SupporterMatchFilters = {
@@ -36,6 +37,7 @@ export const DEFAULT_SUPPORTER_NOTIF_PREFS: SupporterNotificationPreferences = {
   kickoffAlerts: true,
   matchReminders: true,
   communityDigest: false,
+  summaryAlerts: true,
 };
 
 export async function loadSupporterMatchFilters(

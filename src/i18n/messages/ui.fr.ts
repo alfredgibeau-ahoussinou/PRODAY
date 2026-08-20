@@ -667,6 +667,8 @@ export const UI_FR: MessageCatalog = {
   'supporter.profile.notif.kickoffHint': 'Rappel 15 min avant le coup d\'envoi.',
   'supporter.profile.notif.reminders': 'Rappels matchs du jour',
   'supporter.profile.notif.remindersHint': 'Résumé des matchs PRODAY et monde.',
+  'supporter.profile.notif.summary': 'Résumé IA disponible',
+  'supporter.profile.notif.summaryHint': 'Alerte quand le résumé post-match est prêt.',
   'supporter.profile.notif.digest': 'Digest communauté',
   'supporter.profile.notif.digestHint': 'Actu fil et question hebdo.',
   'supporter.profile.logoutTitle': 'Se déconnecter ?',

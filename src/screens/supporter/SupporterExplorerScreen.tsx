@@ -16,6 +16,8 @@ import { useSupporterGlobalSearch } from '../../hooks/useSupporterGlobalSearch';
 import { spacing, radius } from '../../theme/designTokens';
 import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { SupporterMatchDetailScreen } from './SupporterMatchDetailScreen';
+import { SupporterFootballMapScreen } from './SupporterFootballMapScreen';
+import { SUPPORTER_COUNTRY_CHIPS } from '../../content/supporterCompetitionsCatalog';
 
 /** Explorer — recherche globale clubs / matchs / compétitions / vidéos. */
 export const SupporterExplorerScreen: React.FC = () => {
@@ -23,6 +25,7 @@ export const SupporterExplorerScreen: React.FC = () => {
   const { events } = useSeasonCalendar(profile?.uid, profile?.profile.club_id);
   const { query, setQuery, search, loading, results } = useSupporterGlobalSearch(events);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
+  const [showMap, setShowMap] = useState(false);
 
   const onChangeText = useCallback(
     (text: string) => {
@@ -31,6 +34,14 @@ export const SupporterExplorerScreen: React.FC = () => {
     },
     [search, setQuery],
   );
+
+  if (showMap) {
+    return (
+      <PushScreenTransition active={showMap}>
+        <SupporterFootballMapScreen onBack={() => setShowMap(false)} />
+      </PushScreenTransition>
+    );
+  }
 
   if (selected) {
     return (
@@ -61,6 +72,32 @@ export const SupporterExplorerScreen: React.FC = () => {
         <ActivityIndicator color={SUPPORTER_SITE.accent} style={{ marginTop: spacing.lg }} />
       ) : (
         <ScrollView contentContainerStyle={styles.results} showsVerticalScrollIndicator={false}>
+          <PressableSpring style={styles.mapLink} onPress={() => setShowMap(true)} scaleTo={0.98}>
+            <ProDayText variant="section" style={styles.mapLinkTitle}>
+              Proche de toi
+            </ProDayText>
+            <ProDayText variant="caption" style={styles.rowSub}>
+              Matchs ProDay cette semaine sur la carte
+            </ProDayText>
+          </PressableSpring>
+
+          {query.length < 2 ? (
+            <View style={styles.countryRow}>
+              {SUPPORTER_COUNTRY_CHIPS.map((c) => (
+                <PressableSpring
+                  key={c.code}
+                  style={styles.countryChip}
+                  onPress={() => onChangeText(c.label)}
+                  scaleTo={0.97}
+                >
+                  <ProDayText variant="caption" style={styles.countryChipText}>
+                    {c.label}
+                  </ProDayText>
+                </PressableSpring>
+              ))}
+            </View>
+          ) : null}
+
           {results.length === 0 && query.length >= 2 ? (
             <ProDayText variant="body" style={styles.empty}>
               Aucun résultat pour « {query} »
@@ -132,4 +169,22 @@ const styles = StyleSheet.create({
   },
   rowTitle: { color: SUPPORTER_SITE.foreground, fontSize: 15 },
   rowSub: { color: SUPPORTER_SITE.muted, fontSize: 12 },
+  mapLink: {
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SUPPORTER_SITE.border,
+    gap: 4,
+    marginBottom: spacing.sm,
+  },
+  mapLinkTitle: { color: SUPPORTER_SITE.foreground, fontSize: 15 },
+  countryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  countryChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: SUPPORTER_SITE.border,
+    backgroundColor: SUPPORTER_SITE.elevated,
+  },
+  countryChipText: { color: SUPPORTER_SITE.muted, fontSize: 11 },
 });

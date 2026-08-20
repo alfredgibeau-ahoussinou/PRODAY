@@ -575,6 +575,8 @@ export const UI_EN: MessageCatalog = {
   'supporter.profile.notif.kickoffHint': 'Reminder 15 min before kick-off.',
   'supporter.profile.notif.reminders': 'Today\'s match reminders',
   'supporter.profile.notif.remindersHint': 'Summary of PRODAY and world fixtures.',
+  'supporter.profile.notif.summary': 'AI summary available',
+  'supporter.profile.notif.summaryHint': 'Alert when post-match AI summary is ready.',
   'supporter.profile.notif.digest': 'Community digest',
   'supporter.profile.notif.digestHint': 'Feed news and weekly question.',
   'supporter.profile.logoutTitle': 'Sign out?',

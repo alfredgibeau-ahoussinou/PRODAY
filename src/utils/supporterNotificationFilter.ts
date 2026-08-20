@@ -8,7 +8,8 @@ export type SupporterNotifKind =
   | 'followed_player'
   | 'followed_club'
   | 'community_digest'
-  | 'debate';
+  | 'debate'
+  | 'summary_available';
 
 export function notifKindToPreferenceKey(
   kind: SupporterNotifKind
@@ -21,6 +22,7 @@ export function notifKindToPreferenceKey(
     case 'kickoff_favorite':
       return 'kickoffAlerts';
     case 'match_reminder':
+    case 'summary_available':
       return 'matchReminders';
     case 'community_digest':
     case 'debate':

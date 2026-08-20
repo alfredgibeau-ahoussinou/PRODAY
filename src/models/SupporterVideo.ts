@@ -11,6 +11,15 @@ export type SupporterVideoKind =
   | 'external_legal'
   | 'community_clip';
 
+export interface SupporterReplayChapter {
+  id: string;
+  label: string;
+  minute: number;
+  /** Offset ms dans la vidéo — heuristique minute → ms (voir supporterReplayChapters). */
+  offsetMs: number;
+  type: string;
+}
+
 export interface SupporterVideo {
   id: string;
   kind: SupporterVideoKind;
@@ -23,6 +32,7 @@ export interface SupporterVideo {
   competitionLabel?: string;
   publishedAt?: Date;
   durationSec?: number;
+  chapters?: SupporterReplayChapter[];
 }
 
 /** Player autorisé uniquement si droits explicites AVAILABLE + URL légale. */

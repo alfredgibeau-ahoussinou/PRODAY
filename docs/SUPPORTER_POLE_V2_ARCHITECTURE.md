@@ -94,3 +94,77 @@ Tabs masqués si pas de données. Stats via `fixtures/statistics` (cache 5 min) 
 - `supporterVideo.service.test.ts` — gate droits
 - `supporterMatchCenter.test.ts` — tabs vides masqués
 - `supporterFootballHub.test.ts` — section live
+
+---
+
+## Phase 2 (cette session)
+
+### Replay timeline + seek
+
+- `SupporterReplayPlayer` — expo-video, vitesses 0.5x–2x, chapitres depuis événements match
+- Heuristique offset : `minute * 60s` + 15 min pause si minute > 45 (`supporterReplayChapters.ts`)
+- Onglets Vidéo / Moments du Match Center si `rights === AVAILABLE`
+
+### Watch history
+
+- Firestore `supporter_watch_history/{uid}/entries/{matchId}` + cache AsyncStorage
+- Service `supporterWatchHistory.service.ts` — enregistrement debounced à l'ouverture match center / lecture vidéo
+- Profil « Mon histoire football » : regardés / suivis / enregistrés
+
+### Community Firestore
+
+| Collection | Usage |
+|---|---|
+| `supporter_match_polls/{matchId}` | MOTM + compteurs réactions/prédictions |
+| `supporter_match_predictions/{matchId}/entries/{uid}` | Score avant coup d'envoi |
+| `supporter_match_reactions/{matchId}/entries/{uid}` | Emoji live |
+
+`SupporterMatchCommunityPanel` — lecture/écriture optimiste, pas de pari argent.
+
+### Carte « Proche de toi »
+
+- `SupporterFootballMapScreen` — expo-location + `ProDayLiveMap` / liste distance
+- Villes ProDay via `supporterCityGeo.ts` (catalogue FR + hash stable)
+- Accès Hub section Proche de toi + Explorer
+
+### Notifications smart (client)
+
+- `supporterNotificationPlanner.ts` — rappel 1h, BUT (poll live), résumé disponible
+- Max 3 planifiées / jour / équipe
+- Prefs étendues : `summaryAlerts`
+- Filtre : `supporterNotificationFilter.ts`
+
+### IA post-match
+
+- Cloud Function **`generateSupporterMatchSummary`** (europe-west1, Mistral)
+- Cache `supporter_match_summaries/{matchId}`
+- Client `supporterMatchSummary.service.ts` — onglet Résumé + bouton Générer
+- Agent supporter réutilise le cache si présent
+
+### Admin droits vidéo
+
+- `AdminSupporterVideoRightsPanel` dans Admin FOC Vidéo
+- Firestore `supporter_video_rights/{videoId}`
+- `supporterVideo.service` lit overrides admin
+
+### Couverture mondiale
+
+- Catalog étendu : Amériques, Afrique, Asie (`supporterCompetitionsCatalog.ts`)
+- Explorer : chips pays + recherche
+
+### Dépréciations
+
+- `SupporterHomeScreen` → réexport `SupporterFootballHubScreen`
+- `SupporterSuivisScreen` inchangé (Profil → Mes clubs)
+
+### Tests Phase 2
+
+- `supporterPoleV2Phase2.test.ts` — chapitres replay, community parse, notification planner
+
+### Phase 3 (reste)
+
+- Push serveur supporter (FCM) aligné `supporterPush.ts`
+- Agrégation réactions temps réel (listeners)
+- Géocodage précis clubs (lat/lng Firestore)
+- Enrichissement agent IA cloud (streaming)
+- Index Firestore composites si volume community

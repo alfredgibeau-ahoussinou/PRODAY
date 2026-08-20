@@ -11,6 +11,9 @@ jest.mock('../services/supporterMatchHub.service', () => ({
 jest.mock('../services/communityReels.service', () => ({
   communityReelsService: { listApproved: jest.fn(async () => []) },
 }));
+jest.mock('../services/supporterVideoRights.service', () => ({
+  supporterVideoRightsService: { getOverride: jest.fn(async () => null) },
+}));
 
 import { supporterVideoService } from '../services/supporterVideo.service';
 

@@ -29,6 +29,9 @@ import type { SupporterMatchViewItem } from '../../utils/supporterMatchFilters';
 import { spacing, radius } from '../../theme/designTokens';
 import { PushScreenTransition } from '../../components/motion';
 import { SupporterMatchDetailScreen } from './SupporterMatchDetailScreen';
+import { SupporterFootballMapScreen } from './SupporterFootballMapScreen';
+import { loadSupporterNotificationPrefs } from '../../services/supporterPreferences.service';
+import { supporterNotificationPlanner } from '../../services/supporterNotificationPlanner';
 import type { SupporterVideo } from '../../models/SupporterVideo';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
@@ -42,6 +45,7 @@ export const SupporterFootballHubScreen: React.FC = () => {
   const { tournaments } = useTournaments();
   const [follows, setFollows] = useState<Follow[]>([]);
   const [selected, setSelected] = useState<SupporterMatchViewItem | null>(null);
+  const [showMap, setShowMap] = useState(false);
   const [videos, setVideos] = useState<SupporterVideo[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const agent = useSupporterAgent();
@@ -85,6 +89,29 @@ export const SupporterFootballHubScreen: React.FC = () => {
     void loadVideos();
   }, [loadVideos]);
 
+  useEffect(() => {
+    if (!profile?.uid) return;
+    void (async () => {
+      const prefs = await loadSupporterNotificationPrefs(profile.uid);
+      const followed = new Set(follows.map((f) => f.target_id));
+      const upcoming = [
+        ...hub.sections.upcoming,
+        ...hub.sections.follows,
+        ...hub.heroKickoffs,
+      ];
+      const reminders = supporterNotificationPlanner.buildKickoffReminders(upcoming, followed);
+      await supporterNotificationPlanner.scheduleNotifications(prefs, reminders);
+    })();
+  }, [profile?.uid, follows, hub.sections.upcoming, hub.sections.follows, hub.heroKickoffs]);
+
+  const pourToiItems = useMemo(() => {
+    const fromFollows = hub.sections.follows.slice(0, 3);
+    if (fromFollows.length >= 3) return fromFollows;
+    const ids = new Set(fromFollows.map((m) => m.id));
+    const extra = hub.sections.upcoming.filter((m) => !ids.has(m.id));
+    return [...fromFollows, ...extra].slice(0, 3);
+  }, [hub.sections.follows, hub.sections.upcoming]);
+
   const firstName = profile?.display_name?.split(' ')[0]?.trim() || 'Supporter';
   const liveItems = hub.sections.live.slice(0, 4);
   const upcomingHero = hub.heroKickoffs[0] ?? hub.sections.upcoming[0];
@@ -103,6 +130,14 @@ export const SupporterFootballHubScreen: React.FC = () => {
       setRefreshing(false);
     }
   }, [hub, loadFollows, loadVideos]);
+
+  if (showMap) {
+    return (
+      <PushScreenTransition active={showMap}>
+        <SupporterFootballMapScreen onBack={() => setShowMap(false)} />
+      </PushScreenTransition>
+    );
+  }
 
   if (selected) {
     return (
@@ -172,16 +207,16 @@ export const SupporterFootballHubScreen: React.FC = () => {
           </SupporterHubSection>
         ) : null}
 
-        <SupporterHubSection title="ProDay">
+        <SupporterHubSection title="Proche de toi">
           <SupporterProDayBridgeCard
             count={prodayWeekend}
-            onPress={() => nav.openMatchs({ supporterChapter: 'proday' })}
+            onPress={() => setShowMap(true)}
           />
         </SupporterHubSection>
 
-        {hub.sections.follows.length > 0 ? (
-          <SupporterHubSection title="Pour toi" subtitle="Tes clubs et compétitions">
-            {hub.sections.follows.slice(0, 3).map((item) => (
+        {pourToiItems.length > 0 ? (
+          <SupporterHubSection title="Pour toi" subtitle="Tes clubs, historique et compétitions">
+            {pourToiItems.map((item) => (
               <SupporterMatchCard key={item.id} item={item} compact onPress={() => setSelected(item)} />
             ))}
           </SupporterHubSection>

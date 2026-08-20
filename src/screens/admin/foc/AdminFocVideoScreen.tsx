@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import { AdminFocCard } from '../../../components/admin/foc';
+import { AdminSupporterVideoRightsPanel } from '../../../components/admin/AdminSupporterVideoRightsPanel';
 import { ADMIN_VIDEO_VEO_DEMO } from '../../../content/adminVideoVeoExplainer';
 import { adminService } from '../../../services/admin.service';
 import type { ClubCamera } from '../../../models/ClubCameras';
@@ -66,16 +67,19 @@ export function AdminFocVideoScreen() {
           />
         }
         ListHeaderComponent={
-          <View style={styles.explainCard}>
-            <AdminFocCard>
-              <Text style={styles.explainEyebrow}>{ADMIN_VIDEO_VEO_DEMO.eyebrow}</Text>
-              <Text style={styles.explainTitle}>{ADMIN_VIDEO_VEO_DEMO.title}</Text>
-              <Text style={styles.explainBody}>{ADMIN_VIDEO_VEO_DEMO.lead}</Text>
-              <Text style={styles.explainPitch}>{ADMIN_VIDEO_VEO_DEMO.pitch}</Text>
-              <Text style={styles.explainHint}>
-                Connexion caméra : via Club → Centre Vidéo. Pas de bouton Connect ici (OAuth fabricant non branché).
-              </Text>
-            </AdminFocCard>
+          <View>
+            <View style={styles.explainCard}>
+              <AdminFocCard>
+                <Text style={styles.explainEyebrow}>{ADMIN_VIDEO_VEO_DEMO.eyebrow}</Text>
+                <Text style={styles.explainTitle}>{ADMIN_VIDEO_VEO_DEMO.title}</Text>
+                <Text style={styles.explainBody}>{ADMIN_VIDEO_VEO_DEMO.lead}</Text>
+                <Text style={styles.explainPitch}>{ADMIN_VIDEO_VEO_DEMO.pitch}</Text>
+                <Text style={styles.explainHint}>
+                  Connexion caméra : via Club → Centre Vidéo. Pas de bouton Connect ici (OAuth fabricant non branché).
+                </Text>
+              </AdminFocCard>
+            </View>
+            <AdminSupporterVideoRightsPanel />
           </View>
         }
         ListEmptyComponent={

@@ -9,6 +9,7 @@ const DEFAULT_PREFS = {
   kickoffAlerts: true,
   matchReminders: true,
   communityDigest: false,
+  summaryAlerts: true,
 };
 
 describe('supporterNotificationFilter', () => {
