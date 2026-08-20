@@ -110,7 +110,7 @@ export function ClubCommunicationScreen() {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: tokens.bg },
+    root: { flex: 1, backgroundColor: 'transparent' },
     inboxBar: {
       paddingHorizontal: clubSpace.lg,
       paddingTop: clubSpace.sm,

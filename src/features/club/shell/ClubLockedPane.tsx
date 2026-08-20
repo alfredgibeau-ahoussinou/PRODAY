@@ -58,6 +58,6 @@ export function ClubLockedPane({ item }: Props) {
 
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: tokens.bg },
+    root: { flex: 1, backgroundColor: 'transparent' },
   });
 }

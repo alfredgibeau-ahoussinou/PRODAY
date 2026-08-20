@@ -210,7 +210,7 @@ export function ClubTrainingsScreen() {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: tokens.bg },
+    root: { flex: 1, backgroundColor: 'transparent' },
     playerBlock: {
       gap: 4,
       paddingVertical: clubSpace.sm,

@@ -37,7 +37,8 @@ export function ClubBrandHeader({
   return (
     <View style={[styles.wrap, style]}>
       <LinearGradient
-        colors={[tokens.headerWash, tokens.bg]}
+        colors={[tokens.headerWash, tokens.pitchSoft, tokens.surface]}
+        locations={[0, 0.55, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.wash}
@@ -98,13 +99,20 @@ const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     wrap: {
       paddingTop: clubSpace.sm,
-      paddingBottom: clubSpace.sm,
+      paddingBottom: clubSpace.md,
       gap: clubSpace.sm,
       overflow: 'hidden',
+      borderRadius: clubRadius.xl,
+      paddingHorizontal: clubSpace.md,
+      marginHorizontal: -clubSpace.sm,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.soft,
     },
     wash: {
       ...StyleSheet.absoluteFillObject,
-      height: 128,
+      height: 160,
     },
     row: {
       flexDirection: 'row',
@@ -117,7 +125,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
       borderRadius: clubRadius.lg,
       overflow: 'hidden',
       borderWidth: 2,
-      backgroundColor: tokens.surface,
+      backgroundColor: tokens.elevated,
       ...clubShadow.accent(tokens),
     },
     logo: { width: '100%', height: '100%' },
@@ -125,9 +133,9 @@ const createStyles = (tokens: ClubThemeTokens) =>
     textCol: { flex: 1, minWidth: 0, gap: 4 },
     accentBar: {
       height: 3,
-      width: 52,
+      width: 64,
       borderRadius: 2,
-      opacity: 0.95,
+      opacity: 1,
     },
   });
 

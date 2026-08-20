@@ -53,15 +53,6 @@ function darkenHex(hex: string, amount: number): string {
     .toUpperCase()}`;
 }
 
-function lightenHex(hex: string, amount: number): string {
-  const rgb = parseHex(hex);
-  if (!rgb) return hex;
-  return `#${[rgb.r, rgb.g, rgb.b]
-    .map((v) => Math.round(v + (255 - v) * amount).toString(16).padStart(2, '0'))
-    .join('')
-    .toUpperCase()}`;
-}
-
 /** Accent dérivé de l’URI logo (stable tant que l’URL ne change pas). */
 export function accentFromLogoUri(logoUri: string): string {
   const index = hashKey(logoUri.trim()) % COACH_TEAM_ACCENT_PALETTE.length;
@@ -287,7 +278,7 @@ export async function resolveClubDynamicBrand(
   };
 }
 
-/** Construit les tokens UI Club à partir d’une marque dynamique. */
+/** Construit les tokens UI Club à partir d’une marque dynamique (canvas sombre). */
 export function buildClubThemeTokens(
   brand?: Pick<ClubDynamicBrand, 'primary' | 'secondary' | 'onAccent'> | null,
 ): ClubThemeTokens {
@@ -301,11 +292,12 @@ export function buildClubThemeTokens(
   return {
     ...CLUB_TOKENS,
     accent,
-    accentSoft: withAlpha(accent, 0.12),
-    accentDeep: darkenHex(accent, 0.42),
+    accentSoft: withAlpha(accent, 0.22),
+    accentDeep: darkenHex(accent, 0.38),
     secondary,
     onAccent,
-    glow: withAlpha(accent, 0.28),
-    headerWash: lightenHex(blendHex(CLUB_TOKENS.bg, accent, 0.16), 0.06),
+    glow: withAlpha(accent, 0.42),
+    // Lavage sombre teinté (pas d’éclaircissement type UI admin claire).
+    headerWash: blendHex(CLUB_TOKENS.bg, accent, 0.28),
   };
 }

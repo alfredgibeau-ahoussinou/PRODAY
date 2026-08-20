@@ -165,7 +165,7 @@ export function ClubAiAssistant() {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: tokens.bg },
+    root: { flex: 1, backgroundColor: 'transparent' },
     bubble: {
       padding: spacing.md,
       borderRadius: 14,

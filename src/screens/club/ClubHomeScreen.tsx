@@ -275,7 +275,7 @@ export function ClubHomeScreen() {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: tokens.bg },
+    root: { flex: 1, backgroundColor: 'transparent' },
     dynamic: { marginTop: -4, marginBottom: 4, lineHeight: 21 },
     list: { gap: clubSpace.xs },
     smartGrid: {

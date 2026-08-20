@@ -74,9 +74,9 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
     root: {
-      backgroundColor: tokens.surface,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: tokens.border,
+      backgroundColor: tokens.elevated,
+      borderTopWidth: 1,
+      borderTopColor: tokens.borderStrong,
       paddingTop: 4,
       flexShrink: 0,
       zIndex: 20,

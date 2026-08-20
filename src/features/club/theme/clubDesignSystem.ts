@@ -1,6 +1,6 @@
 /**
- * Club Design System — identité visuelle premium du Pôle Club.
- * Surfaces claires, accents ProDay Club, codes sportifs. Pas de thème Coach.
+ * Club Design System — identité visuelle premium sombre du Pôle Club.
+ * Night pitch / charcoal, accents club, codes sportifs. Pas de thème Coach.
  *
  * Utiliser via `clubUi` / shell ; éviter les styles one-off sur les écrans.
  */
@@ -53,46 +53,46 @@ export const clubRadius = {
   pill: 999,
 } as const;
 
-/** Ombres premium (profondeur subtile). */
+/** Ombres premium (profondeur sur fond sombre). */
 export const clubShadow = {
   none: {} as ViewStyle,
   soft: {
-    shadowColor: '#0A1628',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 2,
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 3,
   } satisfies ViewStyle,
   card: {
-    shadowColor: '#0A1628',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.55,
+    shadowRadius: 22,
+    elevation: 6,
   } satisfies ViewStyle,
   lift: {
-    shadowColor: '#0A1628',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.62,
     shadowRadius: 28,
-    elevation: 6,
+    elevation: 8,
   } satisfies ViewStyle,
   accent: (tokens: ClubThemeTokens): ViewStyle => ({
     shadowColor: tokens.accent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 14,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    elevation: 6,
   }),
 };
 
-/** Codes couleur événements calendrier / sport. */
+/** Codes couleur événements calendrier / sport (soft adaptés dark). */
 export const clubEventTone = {
-  match: { key: 'match', label: 'MATCH', color: '#006CFC', soft: 'rgba(0,108,252,0.12)' },
-  training: { key: 'training', label: 'ENTRAÎNEMENT', color: '#0F7A45', soft: 'rgba(15,122,69,0.12)' },
-  tournament: { key: 'tournament', label: 'TOURNOI', color: '#7C3AED', soft: 'rgba(124,58,237,0.12)' },
-  meeting: { key: 'meeting', label: 'RÉUNION', color: '#B86E00', soft: 'rgba(184,110,0,0.12)' },
-  event: { key: 'event', label: 'ÉVÉNEMENT', color: '#0E7490', soft: 'rgba(14,116,144,0.12)' },
+  match: { key: 'match', label: 'MATCH', color: '#5BA3FF', soft: 'rgba(91,163,255,0.22)' },
+  training: { key: 'training', label: 'ENTRAÎNEMENT', color: '#34D399', soft: 'rgba(52,211,153,0.20)' },
+  tournament: { key: 'tournament', label: 'TOURNOI', color: '#A78BFA', soft: 'rgba(167,139,250,0.22)' },
+  meeting: { key: 'meeting', label: 'RÉUNION', color: '#FBBF24', soft: 'rgba(251,191,36,0.18)' },
+  event: { key: 'event', label: 'ÉVÉNEMENT', color: '#22D3EE', soft: 'rgba(34,211,238,0.18)' },
 } as const;
 
 export type ClubEventKind = keyof typeof clubEventTone;
@@ -140,7 +140,7 @@ export function clubSurfacePremium(tokens: ClubThemeTokens): ViewStyle {
     backgroundColor: tokens.surface,
     borderRadius: clubRadius.xl,
     borderWidth: 1,
-    borderColor: tokens.border,
+    borderColor: tokens.borderStrong,
     overflow: 'hidden' as const,
     ...clubShadow.lift,
   };

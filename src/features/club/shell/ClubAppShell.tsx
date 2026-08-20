@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ClubSidebar } from './ClubSidebar';
 import { ClubTabBar } from './ClubTabBar';
 import { ClubShellNavProvider } from './ClubShellNavContext';
@@ -199,8 +200,24 @@ function ClubAppShellInner({
       selectedPlayerUid={selectedPlayerUid}
       setSelectedPlayerUid={setSelectedPlayerUid}
     >
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <View style={[styles.root, !wide && styles.rootColumn]}>
+        <LinearGradient
+          colors={[tokens.headerWash, tokens.bg, tokens.bg]}
+          locations={[0, 0.28, 1]}
+          start={{ x: 0.15, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <LinearGradient
+          colors={['transparent', tokens.pitchSoft, 'transparent']}
+          locations={[0.35, 0.72, 1]}
+          start={{ x: 0.5, y: 0.2 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         {wide ? <ClubSidebar {...sidebarProps} /> : null}
 
         <View style={styles.pane}>
@@ -292,7 +309,7 @@ function createStyles(tokens: ClubThemeTokens) {
       flex: 1,
       minWidth: 0,
       minHeight: 0,
-      backgroundColor: tokens.bg,
+      backgroundColor: 'transparent',
     },
   });
 }

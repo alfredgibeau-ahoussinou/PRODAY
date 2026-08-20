@@ -1,6 +1,6 @@
 /**
- * Identité visuelle Pôle Club — premium, sportive, moderne.
- * Clair, football, ProDay. Pas un dashboard admin ni le thème Coach.
+ * Identité visuelle Pôle Club — premium sombre, sportive, moderne.
+ * Charcoal / night pitch. Pas un dashboard admin blanc ni le thème Coach.
  */
 
 export type ClubThemeTokens = {
@@ -38,34 +38,34 @@ export type ClubThemeTokens = {
   isLight: boolean;
 };
 
-/** Tokens Club — surfaces premium claires, accent bleu ProDay Club (fallback). */
+/** Tokens Club — fond sombre premium night pitch, accent bleu ProDay Club. */
 export const CLUB_TOKENS: ClubThemeTokens = {
-  bg: '#F2F5FA',
-  surface: '#FFFFFF',
-  elevated: '#F7F9FC',
-  raised: '#FFFFFF',
-  border: 'rgba(10, 22, 40, 0.08)',
-  borderStrong: 'rgba(10, 22, 40, 0.14)',
-  foreground: '#0A1628',
-  muted: 'rgba(10, 22, 40, 0.58)',
-  faint: 'rgba(10, 22, 40, 0.38)',
+  bg: '#070B14',
+  surface: '#101826',
+  elevated: '#172033',
+  raised: '#1C283C',
+  border: 'rgba(232, 240, 255, 0.10)',
+  borderStrong: 'rgba(232, 240, 255, 0.18)',
+  foreground: '#EEF3FB',
+  muted: 'rgba(238, 243, 251, 0.62)',
+  faint: 'rgba(238, 243, 251, 0.40)',
   accent: '#006CFC',
-  accentSoft: 'rgba(0, 108, 252, 0.12)',
-  accentDeep: '#002478',
-  secondary: '#002478',
+  accentSoft: 'rgba(0, 108, 252, 0.24)',
+  accentDeep: '#0039A6',
+  secondary: '#5BA3FF',
   onAccent: '#FFFFFF',
-  glow: 'rgba(0, 108, 252, 0.28)',
-  headerWash: '#E8F0FC',
-  success: '#0F7A45',
-  successSoft: 'rgba(15, 122, 69, 0.12)',
-  warning: '#B86E00',
-  warningSoft: 'rgba(184, 110, 0, 0.12)',
-  danger: '#C62828',
-  dangerSoft: 'rgba(198, 40, 40, 0.12)',
-  pitch: '#14532D',
-  pitchSoft: 'rgba(20, 83, 45, 0.10)',
-  scrim: 'rgba(6, 12, 24, 0.48)',
-  isLight: true,
+  glow: 'rgba(0, 108, 252, 0.45)',
+  headerWash: '#0C1730',
+  success: '#34D399',
+  successSoft: 'rgba(52, 211, 153, 0.16)',
+  warning: '#FBBF24',
+  warningSoft: 'rgba(251, 191, 36, 0.16)',
+  danger: '#F87171',
+  dangerSoft: 'rgba(248, 113, 113, 0.16)',
+  pitch: '#1F7A45',
+  pitchSoft: 'rgba(31, 122, 69, 0.22)',
+  scrim: 'rgba(2, 6, 14, 0.72)',
+  isLight: false,
 };
 
 /** Compat site / legacy dark chrome (upsell, vitrine publique). */

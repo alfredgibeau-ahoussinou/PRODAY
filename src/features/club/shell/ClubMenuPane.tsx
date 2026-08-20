@@ -83,7 +83,7 @@ export function ClubMenuPane({ items = [] }: Props) {
 
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: tokens.bg },
+    root: { flex: 1, backgroundColor: 'transparent' },
     group: { gap: clubSpace.sm },
     groupTitle: { marginLeft: 4 },
     card: {
@@ -91,9 +91,11 @@ function createStyles(tokens: ClubThemeTokens) {
       borderRadius: clubRadius.xl,
       padding: clubSpace.sm,
       borderWidth: 1,
-      borderColor: tokens.border,
+      borderColor: tokens.borderStrong,
+      borderLeftWidth: 3,
+      borderLeftColor: tokens.accent,
       gap: 2,
-      ...clubShadow.soft,
+      ...clubShadow.card,
     },
     row: {
       flexDirection: 'row',

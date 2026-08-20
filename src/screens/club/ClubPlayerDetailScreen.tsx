@@ -191,7 +191,7 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: tokens.bg },
+    root: { flex: 1, backgroundColor: 'transparent' },
     back: {
       flexDirection: 'row',
       alignItems: 'center',

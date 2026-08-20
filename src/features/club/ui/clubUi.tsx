@@ -102,7 +102,7 @@ export function ClubChapterScroll({
   const { tokens } = useClubTheme();
   return (
     <Animated.ScrollView
-      style={{ flex: 1, backgroundColor: tokens.bg }}
+      style={{ flex: 1, backgroundColor: 'transparent' }}
       contentContainerStyle={{
         paddingHorizontal: clubSpace.lg,
         paddingBottom: clubSpace.xxxl,
@@ -251,7 +251,7 @@ export function ClubActionRow({
 export function ClubLoading() {
   const { tokens } = useClubTheme();
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.bg }}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
       <ActivityIndicator color={tokens.accent} size="large" />
     </View>
   );
@@ -735,11 +735,13 @@ const cardStyles = (tokens: ClubThemeTokens) =>
       borderRadius: clubRadius.xl,
       padding: clubSpace.lg,
       borderWidth: 1,
-      borderColor: tokens.border,
+      borderColor: tokens.borderStrong,
+      borderLeftWidth: 3,
+      borderLeftColor: tokens.accent,
       gap: clubSpace.sm,
-      ...clubShadow.soft,
+      ...clubShadow.card,
     },
-    title: { marginBottom: 2 },
+    title: { marginBottom: 2, color: tokens.accent },
   });
 
 const rowStyles = (tokens: ClubThemeTokens) =>

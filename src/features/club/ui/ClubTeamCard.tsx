@@ -31,7 +31,7 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
     <AnimatedEntrance kind="fadeUp" index={index} delayStep={40}>
       <PressableSpring onPress={onPress} scaleTo={0.97} haptic style={styles.press}>
         <LinearGradient
-          colors={[tokens.surface, tokens.headerWash]}
+          colors={[tokens.elevated, tokens.headerWash]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.card}
@@ -73,7 +73,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
       padding: clubSpace.md,
       borderRadius: clubRadius.xl,
       borderWidth: 1,
-      borderColor: tokens.border,
+      borderColor: tokens.borderStrong,
       overflow: 'hidden',
       minHeight: 84,
       ...clubShadow.card,

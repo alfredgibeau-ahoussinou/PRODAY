@@ -45,9 +45,13 @@ describe('clubDynamicTheme', () => {
     expect(colors!.secondary).toMatch(/^#[0-9A-F]{6}$/i);
   });
 
-  it('buildClubThemeTokens retombe sur le bleu Club par défaut', () => {
+  it('buildClubThemeTokens retombe sur le bleu Club par défaut (canvas sombre)', () => {
     const tokens = buildClubThemeTokens(null);
     expect(tokens.accent).toBe('#006CFC');
     expect(tokens.onAccent).toBeTruthy();
+    expect(tokens.isLight).toBe(false);
+    expect(tokens.bg.toLowerCase()).not.toBe('#ffffff');
+    expect(tokens.bg.toLowerCase()).not.toBe('#fff');
+    expect(tokens.surface.toLowerCase()).not.toBe('#ffffff');
   });
 });
