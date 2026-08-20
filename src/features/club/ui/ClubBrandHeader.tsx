@@ -29,10 +29,13 @@ export function ClubBrandHeader({
   subtitle,
   right,
   showLogo = true,
+  crestLabel,
   style,
-}: Props) {
-  const { tokens, logoUrl } = useClubTheme();
+}: Props & { /** Initiale crest si pas de logo (défaut : titre). */ crestLabel?: string }) {
+  const { tokens, logoUrl, club } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const initialSource = (crestLabel ?? club?.name ?? subtitle ?? title).trim();
+  const initial = (initialSource.charAt(0) || '?').toUpperCase();
 
   return (
     <View style={[styles.wrap, style]}>
@@ -52,7 +55,7 @@ export function ClubBrandHeader({
             ) : (
               <View style={[styles.logo, styles.logoPh, { backgroundColor: tokens.accentSoft }]}>
                 <ClubText variant="h3" style={{ color: tokens.accent }}>
-                  {title.charAt(0).toUpperCase()}
+                  {initial}
                 </ClubText>
               </View>
             )}
