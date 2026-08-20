@@ -1,7 +1,7 @@
 import { COACH_TEAM_ACCENT_PALETTE } from './coachTeamTheme';
 import { normalizeCoachHexColor } from './coachColorPicker';
 
-export type ClubBrandColorSource = 'stored' | 'hash';
+export type ClubBrandColorSource = 'stored' | 'logo' | 'hash';
 
 export type ClubBrandColors = {
   primary: string;

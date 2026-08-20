@@ -9,11 +9,11 @@ import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
   ClubStatusPill,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { formatTeamRowLabel } from '../../utils/clubStructureView';
 import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
@@ -42,7 +42,7 @@ export function ClubHomeScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title={`${greet}`}
           subtitle={name}
           right={<ClubStatusPill label={ws.statusLabel} tone={ws.statusTone} />}

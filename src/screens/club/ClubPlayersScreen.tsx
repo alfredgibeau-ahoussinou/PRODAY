@@ -8,17 +8,19 @@ import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { ClubRosterPlayerCard } from '../../features/club/ui/ClubRosterPlayerCard';
 import { ClubPlayerDetailScreen } from './ClubPlayerDetailScreen';
+import { PressableSpring } from '../../components/motion';
 import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
 type FilterId = 'all' | 'pending' | 'active';
 
-/** Liste joueurs + recherche / filtres → fiche club. */
+/** Liste joueurs + recherche / filtres → fiches style pôle Joueur. */
 export function ClubPlayersScreen() {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -39,6 +41,7 @@ export function ClubPlayersScreen() {
 
   if (ws.loading) return <ClubLoading />;
 
+  const membershipByUid = new Map(ws.memberships.map((m) => [m.player_uid, m]));
   const pendingUids = new Set(
     ws.memberships.filter((m) => m.status === 'pending').map((m) => m.player_uid),
   );
@@ -48,12 +51,10 @@ export function ClubPlayersScreen() {
 
   let list = ws.players.length > 0 ? ws.players : ws.members.filter((m) => m.role === 'player');
   if (list.length === 0) {
-    // fallback : membres liés via memberships
     const byUid = new Map(ws.members.map((m) => [m.uid, m]));
     list = ws.memberships
       .map((m) => byUid.get(m.player_uid))
       .filter(Boolean) as typeof list;
-    // dedupe
     const map = new Map(list.map((u) => [u.uid, u]));
     list = Array.from(map.values());
   }
@@ -69,10 +70,16 @@ export function ClubPlayersScreen() {
     );
   });
 
+  const filters: { id: FilterId; label: string }[] = [
+    { id: 'all', label: 'Tous' },
+    { id: 'active', label: 'Actifs' },
+    { id: 'pending', label: 'En attente' },
+  ];
+
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader title="Joueurs" subtitle={`${filtered.length} profil(s)`} />
+        <ClubBrandHeader title="Joueurs" subtitle={`${filtered.length} profil(s)`} />
 
         <TextInput
           value={query}
@@ -83,26 +90,31 @@ export function ClubPlayersScreen() {
         />
 
         <View style={styles.filters}>
-          {(
-            [
-              ['all', 'Tous'],
-              ['active', 'Actifs'],
-              ['pending', 'En attente'],
-            ] as const
-          ).map(([id, label]) => (
-            <ClubActionRow
-              key={id}
-              label={label}
-              trailing={
-                filter === id ? (
-                  <ClubText variant="caption" style={{ color: tokens.accent }}>
-                    ●
-                  </ClubText>
-                ) : undefined
-              }
-              onPress={() => setFilter(id)}
-            />
-          ))}
+          {filters.map((f) => {
+            const on = filter === f.id;
+            return (
+              <PressableSpring
+                key={f.id}
+                onPress={() => setFilter(f.id)}
+                scaleTo={0.96}
+                haptic
+                style={[
+                  styles.chip,
+                  on && { backgroundColor: tokens.accent, borderColor: tokens.accent },
+                ]}
+              >
+                <ClubText
+                  variant="caption"
+                  style={{
+                    fontWeight: '700',
+                    color: on ? tokens.onAccent : tokens.muted,
+                  }}
+                >
+                  {f.label}
+                </ClubText>
+              </PressableSpring>
+            );
+          })}
         </View>
 
         {filtered.length === 0 ? (
@@ -114,21 +126,23 @@ export function ClubPlayersScreen() {
             icon="people"
           />
         ) : (
-          <ClubSectionCard>
-            {filtered.map((p) => (
-              <ClubActionRow
-                key={p.uid}
-                icon="person"
-                label={p.display_name || 'Joueur'}
-                hint={
-                  pendingUids.has(p.uid)
-                    ? 'Adhésion en attente'
-                    : p.profile?.category || p.email || undefined
-                }
-                onPress={() => shellNav?.setSelectedPlayerUid?.(p.uid)}
-              />
-            ))}
-          </ClubSectionCard>
+          <View style={styles.list}>
+            {filtered.map((p, index) => {
+              const membership = membershipByUid.get(p.uid);
+              const team = ws.teams.find((t) => t.id === membership?.team_id);
+              return (
+                <ClubRosterPlayerCard
+                  key={p.uid}
+                  player={p}
+                  membership={membership}
+                  teamName={team?.name}
+                  clubName={ws.club?.name}
+                  index={index}
+                  onPress={() => shellNav?.setSelectedPlayerUid?.(p.uid)}
+                />
+              );
+            })}
+          </View>
         )}
       </ClubChapterScroll>
     </View>
@@ -148,5 +162,14 @@ const createStyles = (tokens: ClubThemeTokens) =>
       color: tokens.foreground,
       fontSize: 16,
     },
-    filters: { gap: 0 },
+    filters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+    chip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      backgroundColor: tokens.surface,
+    },
+    list: { gap: spacing.sm },
   });

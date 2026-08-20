@@ -74,8 +74,8 @@ export function ClubCreateFab({ onPress }: { onPress: () => void }) {
       accessibilityRole="button"
       accessibilityLabel="Créer"
     >
-      <Icon name="add" size={22} color="#fff" />
-      <ClubText variant="caption" style={styles.fabLabel}>
+      <Icon name="add" size={22} color={tokens.onAccent} />
+      <ClubText variant="caption" style={[styles.fabLabel, { color: tokens.onAccent }]}>
         CRÉER
       </ClubText>
     </PressableSpring>

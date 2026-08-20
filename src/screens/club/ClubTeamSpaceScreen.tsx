@@ -10,10 +10,11 @@ import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { ClubRosterPlayerCard } from '../../features/club/ui/ClubRosterPlayerCard';
 import { formatTeamRowLabel } from '../../utils/clubStructureView';
 import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
 import { spacing } from '../../theme/designTokens';
@@ -24,7 +25,7 @@ type Props = {
   onBack: () => void;
 };
 
-/** Espace équipe — prochain match/séance + sections. */
+/** Espace équipe — chrome teinté, effectif en cartes joueur, sections. */
 export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -40,9 +41,13 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
   const nextTraining = teamEvents.find(
     (e) => isCoachTrainingEvent(e) && e.starts_at >= new Date(),
   );
-  const rosterCount = ws.memberships.filter(
+  const rosterMemberships = ws.memberships.filter(
     (m) => m.status === 'active' && m.team_id === teamId,
-  ).length;
+  );
+  const byUid = new Map(ws.members.map((m) => [m.uid, m]));
+  const roster = rosterMemberships
+    .map((m) => byUid.get(m.player_uid))
+    .filter(Boolean) as typeof ws.members;
 
   return (
     <View style={styles.root}>
@@ -54,9 +59,13 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
           </ClubText>
         </PressableSpring>
 
-        <ClubScreenHeader
+        <ClubBrandHeader
           title={row ? formatTeamRowLabel(row) : team?.name ?? 'Équipe'}
-          subtitle={row?.coachNames.length ? `Coach : ${row.coachNames.join(', ')}` : 'Sans coach affecté'}
+          subtitle={
+            row?.coachNames.length
+              ? `Coach : ${row.coachNames.join(', ')}`
+              : 'Sans coach affecté'
+          }
         />
 
         <ClubSectionCard title="Prochainement">
@@ -82,11 +91,45 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
           ) : null}
         </ClubSectionCard>
 
+        <ClubSectionCard title={`Effectif · ${roster.length}`}>
+          {roster.length === 0 ? (
+            <ClubText variant="body" muted>
+              Aucun joueur actif dans cette équipe.
+            </ClubText>
+          ) : (
+            <View style={styles.roster}>
+              {roster.slice(0, 8).map((p, index) => {
+                const membership = rosterMemberships.find((m) => m.player_uid === p.uid);
+                return (
+                  <ClubRosterPlayerCard
+                    key={p.uid}
+                    player={p}
+                    membership={membership}
+                    teamName={team?.name}
+                    clubName={ws.club?.name}
+                    index={index}
+                    onPress={() => {
+                      shellNav?.setSelectedPlayerUid?.(p.uid);
+                      shellNav?.requestNav('players');
+                    }}
+                  />
+                );
+              })}
+              {roster.length > 8 ? (
+                <ClubActionRow
+                  label={`Voir les ${roster.length} joueurs`}
+                  onPress={() => shellNav?.requestNav('players')}
+                />
+              ) : null}
+            </View>
+          )}
+        </ClubSectionCard>
+
         <ClubSectionCard title="Sections">
           <ClubActionRow
             icon="people"
-            label="Effectif"
-            hint={`${rosterCount} joueur(s)`}
+            label="Tous les joueurs"
+            hint={`${roster.length} joueur(s)`}
             onPress={() => shellNav?.requestNav('players')}
           />
           <ClubActionRow
@@ -139,4 +182,5 @@ const createStyles = (tokens: ClubThemeTokens) =>
       alignSelf: 'flex-start',
       paddingVertical: spacing.xs,
     },
+    roster: { gap: spacing.sm },
   });

@@ -67,14 +67,28 @@ type Props = {
  * Shell Pôle Club v1 — mobile dock 5 + FAB CRÉER · desktop sidebar.
  */
 export function ClubAppShell({ activeTab, onTabChange }: Props) {
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   return (
-    <ClubThemeProvider>
-      <ClubAppShellInner activeTab={activeTab} onTabChange={onTabChange} />
+    <ClubThemeProvider activeTeamId={selectedTeamId}>
+      <ClubAppShellInner
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        selectedTeamId={selectedTeamId}
+        setSelectedTeamId={setSelectedTeamId}
+      />
     </ClubThemeProvider>
   );
 }
 
-function ClubAppShellInner({ activeTab, onTabChange }: Props) {
+function ClubAppShellInner({
+  activeTab,
+  onTabChange,
+  selectedTeamId,
+  setSelectedTeamId,
+}: Props & {
+  selectedTeamId: string | null;
+  setSelectedTeamId: (id: string | null) => void;
+}) {
   const { tokens } = useClubTheme();
   const profile = useSessionProfile();
   const { signOut } = useAuth();
@@ -100,7 +114,6 @@ function ClubAppShellInner({ activeTab, onTabChange }: Props) {
   );
   const [createOpen, setCreateOpen] = useState(false);
   const [createFormAction, setCreateFormAction] = useState<ClubCreateActionId | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [selectedPlayerUid, setSelectedPlayerUid] = useState<string | null>(null);
 
   useEffect(() => {

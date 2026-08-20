@@ -135,7 +135,7 @@ export function ClubEmptyState({
       </ClubText>
       {actionLabel && onAction ? (
         <PressableSpring onPress={onAction} scaleTo={0.97} haptic style={styles.cta}>
-          <ClubText variant="caption" style={{ color: '#fff', fontWeight: '700' }}>
+          <ClubText variant="caption" style={{ color: tokens.onAccent, fontWeight: '700' }}>
             {actionLabel}
           </ClubText>
         </PressableSpring>

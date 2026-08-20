@@ -21,6 +21,11 @@ export type PlayerShieldCardCompactProps = {
   photoUrl?: string | null;
   clubName?: string | null;
   stats?: PlayerShieldCardStats;
+  /** Accent optionnel (ex. thème club) — sinon PlayerThemeContext. */
+  accent?: string;
+  accentSoft?: string;
+  /** Meta libre sous le club (licence, statut…) — pas de score inventé. */
+  metaLabel?: string | null;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 };
@@ -89,13 +94,21 @@ export function PlayerShieldCardCompact({
   photoUrl,
   clubName,
   stats,
+  accent,
+  accentSoft,
+  metaLabel,
   onPress,
   style,
 }: PlayerShieldCardCompactProps) {
   const playerTheme = usePlayerThemeColors();
+  const accentColor = accent ?? playerTheme.accent;
+  const softColor = accentSoft ?? playerTheme.accentSoft;
   const pos = positionShort(position ?? undefined);
   const matches =
-    stats?.matches != null && stats.matches >= 0 ? String(stats.matches) : '—';
+    stats?.matches != null && stats.matches >= 0 ? String(stats.matches) : null;
+  const meta =
+    metaLabel?.trim() ||
+    (matches != null ? `${matches} match${matches !== '1' ? 's' : ''}` : null);
 
   const card = useMemo(
     () => (
@@ -107,7 +120,7 @@ export function PlayerShieldCardCompact({
           style={compactStyles.face}
         >
           <View
-            style={[compactStyles.hexTop, { backgroundColor: playerTheme.accentSoft }]}
+            style={[compactStyles.hexTop, { backgroundColor: softColor }]}
             pointerEvents="none"
           />
           <View style={compactStyles.photoWrap}>
@@ -120,7 +133,7 @@ export function PlayerShieldCardCompact({
                 </ProDayText>
               </View>
             )}
-            <View style={[compactStyles.posBadge, { backgroundColor: playerTheme.accent }]}>
+            <View style={[compactStyles.posBadge, { backgroundColor: accentColor }]}>
               <ProDayText variant="caption" style={compactStyles.posText}>
                 {pos}
               </ProDayText>
@@ -134,16 +147,28 @@ export function PlayerShieldCardCompact({
             <ProDayText variant="caption" style={compactStyles.club} numberOfLines={1}>
               {clubName?.trim() || 'Sans club'}
             </ProDayText>
-            <ProDayText variant="caption" style={compactStyles.meta}>
-              {matches} match{matches !== '1' ? 's' : ''}
-            </ProDayText>
+            {meta ? (
+              <ProDayText variant="caption" style={compactStyles.meta}>
+                {meta}
+              </ProDayText>
+            ) : null}
           </View>
 
           <CompactRating rating={stats?.rating} />
         </LinearGradient>
       </View>
     ),
-    [style, photoUrl, displayName, pos, clubName, matches, stats?.rating, playerTheme.accent, playerTheme.accentSoft],
+    [
+      style,
+      photoUrl,
+      displayName,
+      pos,
+      clubName,
+      meta,
+      stats?.rating,
+      accentColor,
+      softColor,
+    ],
   );
 
   if (onPress) {

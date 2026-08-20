@@ -8,13 +8,13 @@ import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { ClubTeamCard } from '../../features/club/ui/ClubTeamCard';
 import { PressableSpring } from '../../components/motion';
 import { teamsService } from '../../services/teams.service';
-import { formatTeamRowLabel } from '../../utils/clubStructureView';
 import { ClubTeamSpaceScreen } from './ClubTeamSpaceScreen';
 import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
@@ -22,7 +22,7 @@ import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 /** Mes Équipes — cartes catégories → espace équipe. */
 export function ClubTeamsScreen() {
   const shellNav = useClubShellNav();
-  const { tokens } = useClubTheme();
+  const { tokens, logoUrl } = useClubTheme();
   const ws = useClubWorkspace();
   const [teamName, setTeamName] = useState('');
   const [creating, setCreating] = useState(false);
@@ -71,7 +71,7 @@ export function ClubTeamsScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title="Équipes"
           subtitle={`${ws.teamRows.length} catégorie(s)`}
         />
@@ -86,20 +86,14 @@ export function ClubTeamsScreen() {
           />
         ) : (
           <View style={styles.grid}>
-            {ws.teamRows.map((row) => (
-              <ClubSectionCard key={row.teamId}>
-                <ClubActionRow
-                  icon="football"
-                  label={formatTeamRowLabel(row)}
-                  hint={[
-                    `${row.licensedCount} licencié(s)`,
-                    row.coachNames.length
-                      ? `Coach : ${row.coachNames.join(', ')}`
-                      : 'Sans coach',
-                  ].join(' · ')}
-                  onPress={() => shellNav?.setSelectedTeamId?.(row.teamId)}
-                />
-              </ClubSectionCard>
+            {ws.teamRows.map((row, index) => (
+              <ClubTeamCard
+                key={row.teamId}
+                row={row}
+                index={index}
+                logoUrl={logoUrl}
+                onPress={() => shellNav?.setSelectedTeamId?.(row.teamId)}
+              />
             ))}
           </View>
         )}
@@ -146,7 +140,10 @@ export function ClubTeamsScreen() {
                   borderRadius: 12,
                 }}
               >
-                <ClubText variant="caption" style={{ color: '#fff', fontWeight: '800' }}>
+                <ClubText
+                  variant="caption"
+                  style={{ color: tokens.onAccent, fontWeight: '800' }}
+                >
                   {creating ? '…' : 'Enregistrer'}
                 </ClubText>
               </PressableSpring>

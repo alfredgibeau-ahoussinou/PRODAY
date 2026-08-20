@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Image, StyleSheet, View } from 'react-native';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { ClubOffersComparePanel } from '../../components/club/ClubOffersComparePanel';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
@@ -9,31 +9,121 @@ import {
   ClubActionRow,
   ClubChapterScroll,
   ClubLoading,
-  ClubScreenHeader,
   ClubSectionCard,
   ClubText,
 } from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
-/** Hub Club — identité, pack, réglages. */
+/** Hub Club — identité, couleurs/logo, staff, pack, contacts. */
 export function ClubHubScreen() {
   const shellNav = useClubShellNav();
-  const { tokens } = useClubTheme();
+  const { tokens, logoUrl, brand } = useClubTheme();
   const ws = useClubWorkspace();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   if (ws.loading) return <ClubLoading />;
 
+  const location =
+    [ws.club?.city, ws.club?.department].filter(Boolean).join(' · ') || 'Identité & réglages';
+  const brandSource =
+    brand?.source === 'stored'
+      ? 'Couleurs enregistrées'
+      : brand?.source === 'logo'
+        ? 'Issues du logo'
+        : 'Palette ProDay';
+
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title={ws.club?.name ?? 'Club'}
-          subtitle={
-            [ws.club?.city, ws.club?.department].filter(Boolean).join(' · ') ||
-            'Identité & réglages'
-          }
+          subtitle={location}
         />
+
+        <ClubSectionCard title="Identité">
+          <View style={styles.identityRow}>
+            <View style={[styles.logoBig, { borderColor: tokens.accentSoft }]}>
+              {logoUrl ? (
+                <Image source={{ uri: logoUrl }} style={styles.logoImg} resizeMode="cover" />
+              ) : (
+                <View style={[styles.logoImg, { backgroundColor: tokens.accentSoft }]} />
+              )}
+            </View>
+            <View style={{ flex: 1, gap: 4 }}>
+              <ClubText variant="section">{ws.club?.name ?? '—'}</ClubText>
+              <ClubText variant="caption" muted>
+                {ws.club?.verified ? 'Club vérifié' : 'Vérification en cours / non vérifié'}
+              </ClubText>
+              <ClubText variant="caption" muted>
+                {location}
+              </ClubText>
+            </View>
+          </View>
+        </ClubSectionCard>
+
+        <ClubSectionCard title="Couleurs & logo">
+          <View style={styles.swatches}>
+            <View style={styles.swatchCol}>
+              <View style={[styles.swatch, { backgroundColor: tokens.accent }]} />
+              <ClubText variant="caption" muted>
+                Principale
+              </ClubText>
+            </View>
+            <View style={styles.swatchCol}>
+              <View style={[styles.swatch, { backgroundColor: tokens.secondary }]} />
+              <ClubText variant="caption" muted>
+                Secondaire
+              </ClubText>
+            </View>
+          </View>
+          <ClubText variant="caption" muted>
+            Source : {brandSource}
+            {logoUrl ? ' · Logo affiché dans le chrome' : ' · Ajoutez un logo pour adapter le thème'}
+          </ClubText>
+        </ClubSectionCard>
+
+        <ClubSectionCard title="Staff & structure">
+          <ClubActionRow
+            icon="school"
+            label={`${ws.coaches.length} coach(s)`}
+            hint={
+              ws.teamsWithoutCoach > 0
+                ? `${ws.teamsWithoutCoach} équipe(s) sans coach`
+                : 'Toutes les équipes ont un coach'
+            }
+            onPress={() => shellNav?.requestNav('coaches')}
+          />
+          <ClubActionRow
+            icon="football"
+            label={`${ws.teams.length} équipe(s)`}
+            hint={`${ws.players.length} joueur(s) · ${ws.pendingMemberships} adhésion(s) en attente`}
+            onPress={() => shellNav?.requestNav('teams')}
+          />
+          <ClubActionRow
+            icon="people"
+            label="Effectif joueurs"
+            onPress={() => shellNav?.requestNav('players')}
+          />
+        </ClubSectionCard>
+
+        <ClubSectionCard title="Contacts club">
+          <ClubText variant="body" muted>
+            Ville : {ws.club?.city || '—'}
+          </ClubText>
+          <ClubText variant="body" muted>
+            Département : {ws.club?.department || '—'}
+          </ClubText>
+          <ClubText variant="caption" muted>
+            Les contacts individuels des coachs sont dans l’annuaire Coachs.
+          </ClubText>
+          <ClubActionRow
+            icon="chat"
+            label="Communication club"
+            onPress={() => shellNav?.requestNav('communication')}
+          />
+        </ClubSectionCard>
 
         <ClubSectionCard title="Pack Club">
           <ClubText variant="body" style={{ fontWeight: '700' }}>
@@ -99,7 +189,7 @@ export function ClubPackScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubScreenHeader
+        <ClubBrandHeader
           title="Pack Club"
           subtitle="SUR DEVIS · À partir de 3 € par adhérent"
         />
@@ -125,4 +215,23 @@ export function ClubPackScreen() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
+    identityRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+    logoBig: {
+      width: 64,
+      height: 64,
+      borderRadius: 18,
+      overflow: 'hidden',
+      borderWidth: 2,
+      backgroundColor: tokens.elevated,
+    },
+    logoImg: { width: '100%', height: '100%' },
+    swatches: { flexDirection: 'row', gap: spacing.lg },
+    swatchCol: { alignItems: 'center', gap: 6 },
+    swatch: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
   });

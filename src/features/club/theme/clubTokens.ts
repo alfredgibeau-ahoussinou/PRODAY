@@ -13,6 +13,13 @@ export type ClubThemeTokens = {
   accent: string;
   accentSoft: string;
   accentDeep: string;
+  /** Couleur secondaire (logo / club). */
+  secondary: string;
+  /** Texte / icônes sur fond accent. */
+  onAccent: string;
+  glow: string;
+  /** Lavage header teinté. */
+  headerWash: string;
   success: string;
   warning: string;
   danger: string;
@@ -20,7 +27,7 @@ export type ClubThemeTokens = {
   isLight: boolean;
 };
 
-/** Tokens Club — surface claire, accent bleu ProDay Club. */
+/** Tokens Club — surface claire, accent bleu ProDay Club (fallback). */
 export const CLUB_TOKENS: ClubThemeTokens = {
   bg: '#F4F6F9',
   surface: '#FFFFFF',
@@ -31,6 +38,10 @@ export const CLUB_TOKENS: ClubThemeTokens = {
   accent: '#006CFC',
   accentSoft: 'rgba(0, 108, 252, 0.12)',
   accentDeep: '#002478',
+  secondary: '#002478',
+  onAccent: '#FFFFFF',
+  glow: 'rgba(0, 108, 252, 0.28)',
+  headerWash: '#EEF3FB',
   success: '#0F7A45',
   warning: '#B86E00',
   danger: '#C62828',
