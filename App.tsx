@@ -239,23 +239,21 @@ function AppShell() {
 
   const isGuest = !authLoading && !profile;
 
-  const visibleTabs = useMemo(
-    () =>
-      filterTabs(
-        isGuest
-          ? getGuestVisibleTabs(productLine)
-          : getVisibleMainTabs(productLine, sessionProfile?.role, sessionProfile),
-      ),
-    [isGuest, productLine, sessionProfile, filterTabs],
-  );
+  const visibleTabs = useMemo(() => {
+    const tabs = isGuest
+      ? getGuestVisibleTabs(productLine)
+      : getVisibleMainTabs(productLine, sessionProfile?.role, sessionProfile);
+    if (sessionProfile?.role === 'player') return tabs;
+    return filterTabs(tabs);
+  }, [isGuest, productLine, sessionProfile, filterTabs]);
 
   const screenTabs = useMemo((): MainTabId[] => {
-    if (!shouldInjectShopTab(sessionProfile?.role, productLine) || !isEnabled('shop')) {
+    if (!shouldInjectShopTab(sessionProfile?.role, productLine)) {
       return visibleTabs;
     }
     if (visibleTabs.includes('shop')) return visibleTabs;
     return [...visibleTabs, 'shop'];
-  }, [visibleTabs, sessionProfile?.role, productLine, isEnabled]);
+  }, [visibleTabs, sessionProfile?.role, productLine]);
 
   const primaryDockTabs = useMemo(() => {
     const rail = getMobileRailLayout(productLine, sessionProfile?.role, screenTabs);
@@ -453,6 +451,8 @@ function AppShell() {
   const disabledFlag = flagForTab(activeTab);
   const tabFeatureBlocked = disabledFlag != null && !isEnabled(disabledFlag);
   const blockedFlag = disabledFlag;
+  const showFeatureDisabledPanel =
+    tabFeatureBlocked && blockedFlag != null && sessionProfile?.role !== 'player';
   const isSponsor = isSponsorRole(sessionProfile?.role);
   const isClubShell = sessionProfile?.role === 'club';
   const isCoachShell = sessionProfile?.role === 'coach';
@@ -615,7 +615,7 @@ function AppShell() {
                 <CoachAppShell activeTab={activeTab} onTabChange={handleTabPress} />
               ) : (
                 <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
-                  {tabFeatureBlocked && blockedFlag ? (
+                  {showFeatureDisabledPanel ? (
                     <FeatureDisabledPanel flag={blockedFlag} />
                   ) : (
                     <Screen />

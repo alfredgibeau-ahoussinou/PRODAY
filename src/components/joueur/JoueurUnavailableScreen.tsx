@@ -14,13 +14,15 @@ type Props = {
   title: string;
   message: string;
   icon?: IconName;
+  kicker?: string;
 };
 
-/** Placeholder beta — module pas encore ouvert aux joueurs. */
+/** Écran module désactivé — copy admin via feature flags. */
 export function JoueurUnavailableScreen({
   title,
   message,
   icon = 'lock',
+  kicker = 'ProDay',
 }: Props) {
   const theme = useJoueurTheme();
   const tabBack = useJoueurSecondaryTabBack();
@@ -35,7 +37,7 @@ export function JoueurUnavailableScreen({
   };
 
   return (
-    <JoueurScreenChrome variant="page" kicker="Beta ProDay" title={title} hideHero>
+    <JoueurScreenChrome variant="page" kicker={kicker} title={title} hideHero>
       <View style={styles.body}>
         <View
           style={[

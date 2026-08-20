@@ -2,6 +2,12 @@ import type { MainTabId } from '../navigation/mainTabConfig';
 import type { IconName } from '../components/ui/iconNames';
 import type { DashboardDeepLink } from '../utils/navigationDeepLink';
 import type { JoueurAgeGroup } from '../utils/joueurExperienceTheme';
+import type { PlatformFeatureFlags } from '../models/PlatformConfig';
+import {
+  featureFlagForTab,
+  isPlatformFeatureEnabled,
+  type PlatformFeatureFlagKey,
+} from './platformFeatureFlags';
 import { getJoueurGameTabLabel } from './joueurGameMenu';
 
 export type JoueurPlusMenuAction =
@@ -21,25 +27,24 @@ export type JoueurPlusMenuItem = {
   unavailable?: boolean;
 };
 
-export const JOUEUR_UNAVAILABLE_FEATURES: Record<string, { title: string; message: string }> = {
-  reels: {
-    title: 'Clips',
-    message: 'Les clips ne sont pas encore disponibles dans cette version beta.',
-  },
-  shop: {
-    title: 'Boutique',
-    message: "La boutique n'est pas encore disponible dans cette version beta.",
-  },
+/** Feature flags admin liés aux tuiles hub Plus (id menu → flag). */
+export const PLUS_MENU_FEATURE_FLAG: Partial<Record<string, PlatformFeatureFlagKey>> = {
+  reels: 'community_reels',
+  shop: 'shop',
+  recrutement: 'mercato',
 };
 
-export function getJoueurUnavailableFeature(
-  itemId: string,
-): { title: string; message: string } | null {
-  return JOUEUR_UNAVAILABLE_FEATURES[itemId] ?? null;
+export function plusMenuFeatureFlag(itemId: string): PlatformFeatureFlagKey | null {
+  return PLUS_MENU_FEATURE_FLAG[itemId] ?? null;
 }
 
-export function isJoueurUnavailableTab(tab: MainTabId): boolean {
-  return tab === 'reels' || tab === 'shop';
+export function isJoueurUnavailableTab(
+  tab: MainTabId,
+  flags: PlatformFeatureFlags,
+): boolean {
+  const key = featureFlagForTab(tab);
+  if (!key) return false;
+  return !isPlatformFeatureEnabled(flags, key);
 }
 
 type BuildPlusMenuOptions = {
@@ -47,6 +52,7 @@ type BuildPlusMenuOptions = {
   visibleTabs: MainTabId[];
   unreadCount?: number;
   isMinor?: boolean;
+  isFeatureEnabled?: (key: PlatformFeatureFlagKey) => boolean;
 };
 
 /** Items hub Plus — filtrés selon onglets visibles du pôle. */
@@ -55,8 +61,14 @@ export function buildJoueurPlusMenuItems({
   visibleTabs,
   unreadCount = 0,
   isMinor = false,
+  isFeatureEnabled,
 }: BuildPlusMenuOptions): JoueurPlusMenuItem[] {
   const has = (tab: MainTabId) => visibleTabs.includes(tab);
+  const unavailable = (itemId: string) => {
+    const flagKey = PLUS_MENU_FEATURE_FLAG[itemId];
+    if (!flagKey || !isFeatureEnabled) return false;
+    return !isFeatureEnabled(flagKey);
+  };
 
   const items: JoueurPlusMenuItem[] = [
     {
@@ -75,6 +87,7 @@ export function buildJoueurPlusMenuItems({
       icon: 'people',
       action: { kind: 'tab', tab: 'recrutement' },
       visible: has('recrutement'),
+      unavailable: unavailable('recrutement'),
     },
     {
       id: 'train',
@@ -91,7 +104,7 @@ export function buildJoueurPlusMenuItems({
       icon: 'videocam',
       action: { kind: 'tab', tab: 'reels' },
       visible: has('reels'),
-      unavailable: true,
+      unavailable: unavailable('reels'),
     },
     {
       id: 'covoiturage',
@@ -108,7 +121,7 @@ export function buildJoueurPlusMenuItems({
       icon: 'bag',
       action: { kind: 'shop' },
       visible: has('shop'),
-      unavailable: true,
+      unavailable: unavailable('shop'),
     },
     {
       id: 'famille',

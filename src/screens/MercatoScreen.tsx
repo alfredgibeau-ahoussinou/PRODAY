@@ -47,6 +47,7 @@ import {
 } from '../content/mercatoExperience';
 import { usePlatformFeatureFlags } from '../hooks/usePlatformFeatureFlags';
 import { FeatureDisabledPanel } from '../components/platform/FeatureDisabledPanel';
+import { JoueurUnavailableScreen } from '../components/joueur/JoueurUnavailableScreen';
 import { favoritesService } from '../services/favorites.service';
 import { usersService } from '../services/users.service';
 
@@ -104,8 +105,9 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
   const { openProfile } = useTabNavigationActions();
   const { requireAuth } = useRequireAuth();
   const { t } = useTranslation();
-  const { isEnabled } = usePlatformFeatureFlags();
+  const { isEnabled, disabledCopy, loading: flagsLoading } = usePlatformFeatureFlags();
   const stagesEnabled = isEnabled('stages');
+  const mercatoEnabled = isEnabled('mercato');
   const { stats, loading: loadingStats, posts, loadingLists, refreshLists } =
     useMercatoHome();
 
@@ -523,6 +525,17 @@ export const MercatoScreen: React.FC<MercatoScreenProps> = ({ postScope }) => {
           onHire={handleContact}
         />
       );
+  }
+
+  if (profile?.role === 'player' && !flagsLoading && !mercatoEnabled) {
+    const copy = disabledCopy('mercato');
+    return (
+      <JoueurUnavailableScreen
+        title={copy.title}
+        message={copy.message}
+        icon="people"
+      />
+    );
   }
 
   return (

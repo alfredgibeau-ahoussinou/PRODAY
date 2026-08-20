@@ -11,9 +11,10 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { getVisibleMainTabs } from '../../content/poleExperience';
 import {
   buildJoueurPlusMenuItems,
-  getJoueurUnavailableFeature,
+  plusMenuFeatureFlag,
   type JoueurPlusMenuItem,
 } from '../../content/joueurPlusMenu';
+import { usePlatformFeatureFlags } from '../../hooks/usePlatformFeatureFlags';
 import { isMinorUser } from '../../utils/minor';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 import { formatTabBadge } from '../../components/navigation/tabBarShared';
@@ -30,6 +31,7 @@ export function JoueurPlusHubScreen() {
   const { productLine } = useAppTheme();
   const { count: unreadCount } = useUnreadMessageCount();
   const playerTheme = usePlayerThemeColors();
+  const { isEnabled, disabledCopy } = usePlatformFeatureFlags();
 
   const visibleTabs = useMemo(
     () => getVisibleMainTabs(productLine, profile?.role, profile ?? undefined),
@@ -43,14 +45,18 @@ export function JoueurPlusHubScreen() {
         visibleTabs,
         unreadCount,
         isMinor: profile ? isMinorUser(profile) : false,
+        isFeatureEnabled: isEnabled,
       }),
-    [session?.ageGroup, visibleTabs, profile, unreadCount],
+    [session?.ageGroup, visibleTabs, profile, unreadCount, isEnabled],
   );
 
   const runItem = (item: JoueurPlusMenuItem) => {
     if (item.unavailable) {
-      const info = getJoueurUnavailableFeature(item.id);
-      if (info) Alert.alert(info.title, info.message);
+      const flagKey = plusMenuFeatureFlag(item.id);
+      if (flagKey) {
+        const copy = disabledCopy(flagKey);
+        Alert.alert(copy.title, copy.message);
+      }
       return;
     }
     const { action } = item;

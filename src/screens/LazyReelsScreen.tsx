@@ -1,11 +1,9 @@
 import React, { Suspense, lazy } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { JOUEUR_SITE } from '../content/joueurPageIdentity';
-import {
-  JOUEUR_UNAVAILABLE_FEATURES,
-} from '../content/joueurPlusMenu';
 import { usePlayerThemeColors } from '../context/PlayerThemeContext';
 import { useSessionProfile } from '../hooks/useSessionProfile';
+import { usePlatformFeatureFlags } from '../hooks/usePlatformFeatureFlags';
 import { JoueurUnavailableScreen } from '../components/joueur/JoueurUnavailableScreen';
 
 const ReelsScreen = lazy(() =>
@@ -24,8 +22,10 @@ function ReelsLoadingFallback() {
 /** Charge les reels (expo-video / expo-audio) uniquement à l’ouverture de l’onglet. */
 export const LazyReelsScreen: React.FC = () => {
   const profile = useSessionProfile();
-  if (profile?.role === 'player') {
-    const copy = JOUEUR_UNAVAILABLE_FEATURES.reels;
+  const { isEnabled, disabledCopy, loading } = usePlatformFeatureFlags();
+
+  if (profile?.role === 'player' && !loading && !isEnabled('community_reels')) {
+    const copy = disabledCopy('community_reels');
     return (
       <JoueurUnavailableScreen
         title={copy.title}
