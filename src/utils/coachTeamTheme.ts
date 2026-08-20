@@ -114,11 +114,15 @@ export function resolveCoachEffectiveAccent(input: {
   accentOverride?: string;
   teamId?: string;
   teamName?: string;
+  /** Couleur primaire du club licencié — prioritaire en mode auto. */
+  clubAccent?: string | null;
 }): string {
   if (input.accentMode === 'manual' && input.accentOverride) {
     const hex = normalizeCoachHexColor(input.accentOverride);
     if (hex) return hex;
   }
+  const club = input.clubAccent ? normalizeCoachHexColor(input.clubAccent) : null;
+  if (club) return club;
   return resolveCoachTeamAccent(input.teamId, input.teamName);
 }
 
@@ -146,6 +150,7 @@ export function buildCoachThemeTokens(input: {
   teamName?: string;
   accentMode?: CoachAccentMode;
   accentOverride?: string;
+  clubAccent?: string | null;
 }): CoachThemeTokens {
   const accent = resolveCoachEffectiveAccent(input);
   const surfaces = shellSurfaces(input.variant);

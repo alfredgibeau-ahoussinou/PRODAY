@@ -18,15 +18,36 @@ import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { PressableSpring } from '../../components/motion';
 
+import React, { useCallback, useMemo } from 'react';
+import { ActivityIndicator, Alert, Image, StyleSheet, View } from 'react-native';
+import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
+import { ClubOffersComparePanel } from '../../components/club/ClubOffersComparePanel';
+import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
+import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useClubLogoUpload } from '../../features/club/hooks/useClubLogoUpload';
+import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
+import {
+  ClubActionRow,
+  ClubChapterScroll,
+  ClubLoading,
+  ClubSectionCard,
+  ClubText,
+} from '../../features/club/ui/clubUi';
+import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { ClubBrandColorsPanel } from '../../features/club/ui/ClubBrandColorsPanel';
+import { spacing } from '../../theme/designTokens';
+import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { PressableSpring } from '../../components/motion';
+
 /** Hub Club — identité, couleurs/logo, staff, pack, contacts. */
 export function ClubHubScreen() {
   const shellNav = useClubShellNav();
   const { tokens, logoUrl, brand } = useClubTheme();
   const ws = useClubWorkspace();
-  const onLogoUploaded = useCallback(() => {
+  const onBrandUpdated = useCallback(() => {
     void ws.refresh();
   }, [ws.refresh]);
-  const logo = useClubLogoUpload(onLogoUploaded);
+  const logo = useClubLogoUpload(onBrandUpdated);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   if (ws.loading) return <ClubLoading />;
@@ -82,24 +103,11 @@ export function ClubHubScreen() {
         </ClubSectionCard>
 
         <ClubSectionCard title="Couleurs & logo">
-          <View style={styles.swatches}>
-            <View style={styles.swatchCol}>
-              <View style={[styles.swatch, { backgroundColor: tokens.accent }]} />
-              <ClubText variant="caption" muted>
-                Principale
-              </ClubText>
-            </View>
-            <View style={styles.swatchCol}>
-              <View style={[styles.swatch, { backgroundColor: tokens.secondary }]} />
-              <ClubText variant="caption" muted>
-                Secondaire
-              </ClubText>
-            </View>
-          </View>
           <ClubText variant="caption" muted>
-            Source : {brandSource}
-            {logoUrl ? ' · Logo affiché dans le chrome' : ' · Ajoutez un logo pour adapter le thème'}
+            Source actuelle : {brandSource}
+            {logoUrl ? ' · Logo affiché dans le chrome' : ''}
           </ClubText>
+          <ClubBrandColorsPanel onSaved={onBrandUpdated} />
           <ClubActionRow
             icon="image"
             label={logo.actionLabel}
@@ -259,13 +267,4 @@ const createStyles = (tokens: ClubThemeTokens) =>
     },
     logoImg: { width: '100%', height: '100%' },
     logoBusy: { alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.elevated },
-    swatches: { flexDirection: 'row', gap: spacing.lg },
-    swatchCol: { alignItems: 'center', gap: 6 },
-    swatch: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: tokens.border,
-    },
   });

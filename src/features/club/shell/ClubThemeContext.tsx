@@ -25,6 +25,8 @@ type ClubThemeContextValue = {
   ready: boolean;
   /** Applique tout de suite une nouvelle URL logo (après upload). */
   applyLogoUrl: (url: string) => void;
+  /** Applique tout de suite primary/secondary (après enregistrement couleurs). */
+  applyBrandColors: (primary: string, secondary: string) => void;
   /** Recharge le document club + palette. */
   refreshClub: () => Promise<void>;
 };
@@ -122,6 +124,24 @@ export function ClubThemeProvider({ children, activeTeamId = null }: ProviderPro
     [activeTeamId],
   );
 
+  const applyBrandColors = useCallback(
+    (primary: string, secondary: string) => {
+      setClub((prev) => {
+        const next = prev
+          ? { ...prev, primary_color: primary, secondary_color: secondary }
+          : prev;
+        if (next) {
+          void resolveClubDynamicBrand({
+            club: next,
+            teamId: activeTeamId,
+          }).then(setBrand);
+        }
+        return next;
+      });
+    },
+    [activeTeamId],
+  );
+
   const refreshClub = useCallback(async () => {
     await loadClub({ silent: true });
   }, [loadClub]);
@@ -138,9 +158,20 @@ export function ClubThemeProvider({ children, activeTeamId = null }: ProviderPro
       activeTeamId: activeTeamId ?? null,
       ready,
       applyLogoUrl,
+      applyBrandColors,
       refreshClub,
     }),
-    [tokens, brand, club, logoUrl, activeTeamId, ready, applyLogoUrl, refreshClub],
+    [
+      tokens,
+      brand,
+      club,
+      logoUrl,
+      activeTeamId,
+      ready,
+      applyLogoUrl,
+      applyBrandColors,
+      refreshClub,
+    ],
   );
 
   return (
@@ -161,6 +192,7 @@ export function useClubTheme(): ClubThemeContextValue {
       activeTeamId: null,
       ready: true,
       applyLogoUrl: () => undefined,
+      applyBrandColors: () => undefined,
       refreshClub: NOOP_ASYNC,
     };
   }

@@ -90,6 +90,31 @@ describe('coachTeamTheme', () => {
     expect(tokens.accent).not.toBe(autoAccent);
   });
 
+  it('clubAccent remplace le hash équipe en mode auto', () => {
+    const teamId = 'team-u17-a';
+    const autoAccent = resolveCoachTeamAccent(teamId);
+    const club = '#E53935';
+    const tokens = buildCoachThemeTokens({
+      variant: 'solid',
+      teamId,
+      accentMode: 'auto',
+      clubAccent: club,
+    });
+    expect(tokens.accent).toBe(club);
+    expect(tokens.accent).not.toBe(autoAccent);
+  });
+
+  it('manual override reste prioritaire sur clubAccent', () => {
+    const tokens = buildCoachThemeTokens({
+      variant: 'solid',
+      teamId: 'team-1',
+      accentMode: 'manual',
+      accentOverride: '#FF6B35',
+      clubAccent: '#E53935',
+    });
+    expect(tokens.accent).toBe('#FF6B35');
+  });
+
   it('manual override accepte un hex arbitraire hors palette', () => {
     const teamId = 'team-u17-a';
     const custom = '#E91E63';

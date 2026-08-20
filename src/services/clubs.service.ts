@@ -16,6 +16,7 @@ import type { Club } from '../models/Club';
 import type { GeoPoint, User } from '../models/User';
 import { canManageClubEntity } from '../utils/roleCapabilities';
 import { validateClubInput } from '../utils/clubValidation';
+import { normalizeCoachHexColor } from '../utils/coachColorPicker';
 import { storageService, type UploadFileInput } from './storage.service';
 
 function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
@@ -146,5 +147,36 @@ export const clubsService = {
     const url = await storageService.uploadProfileImage(actorUid, file, 'avatars');
     await updateDoc(doc(database, 'clubs', clubId), { logo_url: url });
     return url;
+  },
+
+  /**
+   * Met à jour primary_color / secondary_color du club.
+   * Réservé au propriétaire (règles Firestore clubs) — hérité par joueurs/coachs licenciés.
+   */
+  async updateBrandColors(
+    clubId: string,
+    actorUid: string,
+    colors: { primary: string; secondary: string },
+  ): Promise<{ primary: string; secondary: string }> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const primary = normalizeCoachHexColor(colors.primary);
+    const secondary = normalizeCoachHexColor(colors.secondary);
+    if (!primary || !secondary) {
+      throw new Error('Couleurs invalides — utilisez un hex #RRGGBB.');
+    }
+
+    const club = await this.getById(clubId);
+    if (!club) throw new Error('Club introuvable.');
+    if (club.owner_uid !== actorUid) {
+      throw new Error('Seul le propriétaire du club peut changer les couleurs.');
+    }
+
+    await updateDoc(doc(database, 'clubs', clubId), {
+      primary_color: primary,
+      secondary_color: secondary,
+    });
+    return { primary, secondary };
   },
 };

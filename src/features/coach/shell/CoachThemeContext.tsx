@@ -21,6 +21,7 @@ import {
   type CoachThemeTokens,
 } from '../../../utils/coachTeamTheme';
 import { normalizeCoachHexColor } from '../../../utils/coachColorPicker';
+import { resolveClubBrandColors } from '../../../utils/clubBrandColors';
 
 const VARIANT_STORAGE_PREFIX = '@proday/coach_shell_variant';
 const ACCENT_STORAGE_PREFIX = '@proday/coach_shell_accent';
@@ -95,6 +96,7 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
   const [teamId, setTeamId] = useState<string | undefined>();
   const [teamName, setTeamName] = useState('');
   const [clubFallbackName, setClubFallbackName] = useState('');
+  const [clubAccent, setClubAccent] = useState<string | null>(null);
 
   useEffect(() => {
     if (!uid) {
@@ -139,6 +141,7 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
       setTeamId(undefined);
       setTeamName('');
       setClubFallbackName('');
+      setClubAccent(null);
       return;
     }
     let cancelled = false;
@@ -151,6 +154,9 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
         if (cancelled) return;
         const fallbackName = club?.name || '';
         setClubFallbackName(fallbackName);
+        const brand = resolveClubBrandColors(club);
+        // Couleurs enregistrées du club → accent auto pour tous les coachs licenciés.
+        setClubAccent(brand?.source === 'stored' ? brand.primary : null);
         const assigned = listCoachTeams(teams, uid);
         const fallbackTeam = pickCoachTeam(teams, uid);
         const options: CoachTeamOption[] =
@@ -184,6 +190,7 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
           setTeamId(undefined);
           setTeamName('');
           setClubFallbackName('');
+          setClubAccent(null);
         }
       });
     return () => {
@@ -250,8 +257,11 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
   }, [uid]);
 
   const teamAccent = useMemo(
-    () => resolveCoachTeamAccent(teamId, teamName || undefined),
-    [teamId, teamName],
+    () =>
+      clubAccent
+        ? clubAccent
+        : resolveCoachTeamAccent(teamId, teamName || undefined),
+    [clubAccent, teamId, teamName],
   );
 
   const tokens = useMemo(
@@ -262,8 +272,9 @@ export function CoachThemeProvider({ children }: { children: React.ReactNode }) 
         teamName: teamName || undefined,
         accentMode,
         accentOverride: accentOverride || undefined,
+        clubAccent,
       }),
-    [variant, teamId, teamName, accentMode, accentOverride],
+    [variant, teamId, teamName, accentMode, accentOverride, clubAccent],
   );
 
   const value = useMemo(

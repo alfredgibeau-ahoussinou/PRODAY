@@ -120,6 +120,42 @@ export const FOOTBALL_TEAM_COLOR_PRESETS: FootballTeamColorPreset[] = [
     surface: '#0C1420',
     aliases: ['man city', 'manchester city', 'city', 'mcfc', 'sky blues'],
   },
+  {
+    id: 'inter',
+    labelFr: 'Style Inter Milan',
+    accent: '#010E80',
+    accentSecondary: '#000000',
+    background: '#050810',
+    surface: '#0C1020',
+    aliases: ['inter', 'inter milan', 'nerazzurri', 'internazionale'],
+  },
+  {
+    id: 'ajax',
+    labelFr: 'Style Ajax',
+    accent: '#D2122E',
+    accentSecondary: '#FFFFFF',
+    background: '#0A0608',
+    surface: '#180C10',
+    aliases: ['ajax', 'ajax amsterdam', 'godenzonen'],
+  },
+  {
+    id: 'ol',
+    labelFr: 'Style OL',
+    accent: '#003399',
+    accentSecondary: '#D71F26',
+    background: '#050810',
+    surface: '#0C1424',
+    aliases: ['ol', 'lyon', 'olympique lyonnais', 'olympique lyon'],
+  },
+  {
+    id: 'asse',
+    labelFr: 'Style Saint-Étienne',
+    accent: '#1B8F3A',
+    accentSecondary: '#FFFFFF',
+    background: '#060A06',
+    surface: '#0E180E',
+    aliases: ['asse', 'saint etienne', 'saint-etienne', 'verts'],
+  },
 ];
 
 function normalizeAlias(text: string): string {
