@@ -99,7 +99,8 @@ export const SupporterAppShell: React.FC = () => {
 
   if (!profile) return null;
 
-  const Screen = resolveMainTabScreen(activeTab, profile.role, productLine);
+  // Toujours le scaffold supporter (y compris parent guest : role reste « parent »).
+  const Screen = resolveMainTabScreen(activeTab, 'supporter', productLine);
 
   return (
     <TabNavigationProvider

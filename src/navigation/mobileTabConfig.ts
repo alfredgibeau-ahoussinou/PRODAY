@@ -57,7 +57,8 @@ type FlatRailRule = {
 /** Menus bas plats — un ordre distinct par boule / shell. */
 const FLAT_RAIL_RULES: FlatRailRule[] = [
   {
-    match: (line, role) => line === 'supporter' && role === 'supporter',
+    // Parent guest : role reste « parent », line = supporter.
+    match: (line) => line === 'supporter',
     primary: ['home', 'matchs', 'feed', 'plus', 'reels', 'profil'],
     overflow: [],
   },

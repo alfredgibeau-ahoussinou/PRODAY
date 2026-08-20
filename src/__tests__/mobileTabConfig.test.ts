@@ -20,13 +20,19 @@ describe('mobileTabConfig', () => {
     expect(rail.center).toBeNull();
   });
 
-  it('affiche une rangée plate pour Supporter Space (Accueil · Matchs · ProDay · Clubs · Profil)', () => {
+  it('affiche une rangée plate scaffold supporter (Accueil · Matchs · Compétitions · Clubs · Vidéos · Profil)', () => {
     const rail = getMobileRailLayout('supporter', 'supporter');
-    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'plus', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'plus', 'reels', 'profil']);
     expect(rail.center).toBeNull();
     expect(rail.overflow).toEqual([]);
     expect(rail.left).toEqual([]);
     expect(rail.right).toEqual([]);
+  });
+
+  it('utilise le même dock flat pour parent guest (line supporter, role parent)', () => {
+    const rail = getMobileRailLayout('supporter', 'parent');
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'plus', 'reels', 'profil']);
+    expect(rail.overflow).toEqual([]);
   });
 
   it('affiche le menu amateur joueur en dock 5 onglets', () => {

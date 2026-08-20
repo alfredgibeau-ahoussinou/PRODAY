@@ -3,6 +3,7 @@ import { SUPPORTER_SHELL_TABS } from '../navigation/shells/productShellTabs';
 import { SUPPORTER_DOCK_TABS } from '../features/supporter/navigation/supporterTabs';
 import { stubFootballDataProvider } from '../features/supporter/football';
 import { resolveTabIcon } from '../components/navigation/tabBarShared';
+import { getMobileRailLayout } from '../navigation/mobileTabConfig';
 
 describe('Supporter scaffold navigation', () => {
   it('expose le dock Accueil · Matchs · Compétitions · Mes clubs · Vidéos · Profil', () => {
@@ -22,6 +23,11 @@ describe('Supporter scaffold navigation', () => {
     expect(getTabShortLabel('plus', 'supporter', 'supporter')).toBe('Clubs');
     expect(getTabShortLabel('reels', 'supporter', 'supporter')).toBe('Vidéos');
     expect(getTabShortLabel('profil', 'supporter', 'supporter')).toBe('Profil');
+  });
+
+  it('dock flat identique pour rôle supporter et parent guest (line supporter)', () => {
+    expect(getMobileRailLayout('supporter', 'supporter').flat).toEqual(SUPPORTER_DOCK_TABS);
+    expect(getMobileRailLayout('supporter', 'parent').flat).toEqual(SUPPORTER_DOCK_TABS);
   });
 
   it('icônes dock scaffold', () => {

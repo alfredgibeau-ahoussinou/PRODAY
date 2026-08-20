@@ -109,7 +109,8 @@ export function resolveMainTabScreen(
   if (isRetiredUserRole(role) || line === 'sante') {
     return RetiredRoleScreen;
   }
-  if (role === 'supporter') {
+  // Rôle supporter OU product line supporter (ex. parent en visite invitée).
+  if (role === 'supporter' || line === 'supporter') {
     return SUPPORTER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   if (line === 'amateur' && role === 'club') {

@@ -106,6 +106,21 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('profil', 'supporter', 'supporter')).toBe('SupporterProfileScreen');
   });
 
+  it('mappe le scaffold supporter pour parent guest (role parent + line supporter)', () => {
+    expect(resolveMainTabScreen('home', 'parent', 'supporter')).toBe('SupporterHomeScreen');
+    expect(resolveMainTabScreen('matchs', 'parent', 'supporter')).toBe('SupporterMatchsScreen');
+    expect(resolveMainTabScreen('feed', 'parent', 'supporter')).toBe(
+      'SupporterCompetitionsScreen',
+    );
+    expect(resolveMainTabScreen('plus', 'parent', 'supporter')).toBe('SupporterClubsScreen');
+    expect(resolveMainTabScreen('reels', 'parent', 'supporter')).toBe('SupporterVideosScreen');
+    expect(resolveMainTabScreen('profil', 'parent', 'supporter')).toBe('SupporterProfileScreen');
+    // Ne doit pas retomber sur l’ancien shell générique (Home / Feed / Reels).
+    expect(resolveMainTabScreen('home', 'parent', 'supporter')).not.toBe('HomeScreen');
+    expect(resolveMainTabScreen('feed', 'parent', 'supporter')).not.toBe('FeedTabScreen');
+    expect(resolveMainTabScreen('reels', 'parent', 'supporter')).not.toBe('LazyReelsScreen');
+  });
+
   it('mappe le portail coach sur home', () => {
     expect(resolveMainTabScreen('home', 'coach', 'pro')).toBe('CoachPortalScreen');
     expect(resolveMainTabScreen('home', 'coach', 'amateur')).toBe('CoachPortalScreen');
