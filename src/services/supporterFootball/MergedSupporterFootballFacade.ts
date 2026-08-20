@@ -98,6 +98,8 @@ export class MergedSupporterFootballFacade implements SupporterFootballProvider 
       ready: true,
       mode: ext.mode === 'live' ? 'live' : 'empty',
       message: ext.message,
+      availableLeagueIds: ext.availableLeagueIds,
+      missingPreferredLeagueIds: ext.missingPreferredLeagueIds,
     };
   }
 

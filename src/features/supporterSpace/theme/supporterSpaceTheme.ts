@@ -38,12 +38,17 @@ export const SUPPORTER_SPACE_COPY = {
   emptyFinished: 'Aucun résultat récent.',
   emptyProday: 'Aucun match ProDay pour le moment.',
   emptyLeagues: 'Aucun match de ligue pour le moment.',
+  emptyLeaguesDate:
+    'Aucun match ligue à cette date — change de jour ou regarde « Cette semaine » sur l’Accueil.',
   emptyClubs: 'Suis des clubs pour personnaliser ton espace.',
   emptySearch: 'Aucun résultat. Essaie un autre club ou une compétition.',
   emptyCategory: 'Cette catégorie n’est pas exposée par l’API pour le moment.',
   configureSportmonks: 'Configurer Sportmonks pour les scores ligues.',
   demoBanner: 'Mode démo forcé (EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1).',
   apiBanner: 'Scores ligues indisponibles. Les matchs ProDay restent visibles.',
+  /** Shown when token works but preferred majors (Ligue 1…) are outside the plan. */
+  planLimitedBanner:
+    'Plan Sportmonks limité : pas de Ligue 1 / top 5. Upgrade sur my.sportmonks.com pour les débloquer.',
   searchPlaceholder: 'Clubs, matchs, compétitions…',
   notifStub: 'Notifications — bientôt',
   debateCta: 'Débattre',

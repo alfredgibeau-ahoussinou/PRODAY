@@ -47,3 +47,12 @@ export {
   isSupporterFootballDemoForced,
   clearSportmonksCache,
 } from './sportmonksClient';
+export {
+  DEFAULT_PREFERRED_LEAGUE_IDS,
+  SPORTMONKS_FREE_PLAN_LEAGUE_IDS,
+  parsePreferredLeagueIds,
+  missingPreferredLeagues,
+  accessiblePreferredLeagues,
+  looksLikeFreePlanCoverage,
+  buildLeagueCoverageMessage,
+} from './sportmonksLeagues';

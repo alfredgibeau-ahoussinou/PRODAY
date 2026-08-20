@@ -168,4 +168,8 @@ export interface ProviderHealth {
   ready: boolean;
   mode: 'live' | 'demo' | 'empty';
   message?: string;
+  /** Sportmonks league IDs included in the current subscription (when known). */
+  availableLeagueIds?: number[];
+  /** Preferred majors (Ligue 1, …) missing from the plan. */
+  missingPreferredLeagueIds?: number[];
 }

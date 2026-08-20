@@ -181,6 +181,14 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
         </ProDayText>
       ) : null}
 
+      {feed.health?.mode === 'live' &&
+      showLeagues &&
+      feed.health.missingPreferredLeagueIds?.length ? (
+        <ProDayText variant="body" style={styles.hint}>
+          {feed.health.message || SUPPORTER_SPACE_COPY.planLimitedBanner}
+        </ProDayText>
+      ) : null}
+
       <View style={[styles.dual, sideBySide && styles.dualWide]}>
         {showProday ? (
           <View style={[styles.column, sideBySide && styles.columnWide]}>
@@ -209,7 +217,9 @@ export const SupporterSpaceMatchsScreen: React.FC = () => {
                 <ProDayText variant="body" style={styles.empty}>
                   {status === 'live'
                     ? SUPPORTER_SPACE_COPY.emptyLive
-                    : SUPPORTER_SPACE_COPY.emptyLeagues}
+                    : leaguesPool.length
+                      ? SUPPORTER_SPACE_COPY.emptyLeaguesDate
+                      : feed.health?.message || SUPPORTER_SPACE_COPY.emptyLeagues}
                 </ProDayText>
               )}
             </SpaceSection>

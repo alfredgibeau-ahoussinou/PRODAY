@@ -172,6 +172,14 @@ export const SupporterSpaceHomeScreen: React.FC = () => {
         </View>
       ) : null}
 
+      {feed.health?.mode === 'live' && feed.health.missingPreferredLeagueIds?.length ? (
+        <View style={styles.bannerMuted}>
+          <ProDayText variant="caption" style={styles.bannerMutedText}>
+            {feed.health.message || SUPPORTER_SPACE_COPY.planLimitedBanner}
+          </ProDayText>
+        </View>
+      ) : null}
+
       {feed.loading && !feed.live.length && !feed.proday.length && !feed.leagues.length ? (
         <ActivityIndicator color={SUPPORTER_SPACE.accent} style={{ marginVertical: 24 }} />
       ) : null}
@@ -223,7 +231,7 @@ export const SupporterSpaceHomeScreen: React.FC = () => {
               <ProDayText variant="body" style={styles.empty}>
                 {feed.health?.mode === 'empty'
                   ? SUPPORTER_SPACE_COPY.configureSportmonks
-                  : SUPPORTER_SPACE_COPY.emptyLeagues}
+                  : feed.health?.message || SUPPORTER_SPACE_COPY.emptyLeagues}
               </ProDayText>
             )}
           </SpaceSection>

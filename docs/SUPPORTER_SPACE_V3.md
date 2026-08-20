@@ -30,8 +30,17 @@
  * 2. **Préféré (serveur)** : `SPORTMONKS_API_TOKEN` ou `FOOTBALL_API_KEY` dans `functions/.env.<projectId>`
  *    puis déployer `supporterFootballProxy`
  * 3. **Dev local (client)** : `EXPO_PUBLIC_SPORTMONKS_API_TOKEN` dans `.env` (jamais committer)
- * 4. **Démo** : sans token, ou `EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1` → matches `source: 'demo'`
- *    (jamais mélangés silencieusement avec du live Sportmonks)
+ * 4. **Démo** : uniquement si `EXPO_PUBLIC_SUPPORTER_FOOTBALL_DEMO=1` → matches `source: 'demo'`
+ *    (jamais mélangés silencieusement avec du live Sportmonks ; sans token → Ligues vides + ProDay)
+ * 5. **Ligues préférées** (optionnel) : `EXPO_PUBLIC_SPORTMONKS_PREFERRED_LEAGUES=301,8,564,…`
+ *    (défaut : Ligue 1, PL, Liga, Serie A, Bundesliga, C1, C3). Fetch `filters=fixtureLeagues:{id}`
+ *    seulement pour les IDs **inclus dans l’abonnement**.
+ *
+ * ### Couverture Free Plan (août 2025+)
+ * Le Free Plan Sportmonks ne couvre **que** Superliga (DK, `271`) et Premiership (Écosse, `501`).
+ * **Ligue 1 (`301`) n’est pas accessible** tant qu’un plan payant n’ajoute pas cette ligue
+ * (Starter 5 ligues / Growth 30 / Pro 120 / Enterprise). L’app affiche les matchs du plan
+ * (ex. Premiership) et un bandeau honnête si Ligue 1 / top ligues manquent — jamais de faux L1.
  *
  * Anciennes clés `EXPO_PUBLIC_EXTERNAL_SCORES_API_KEY` / `EXPO_PUBLIC_FOOTBALL_DATA_TOKEN`
  * restent pour d’autres modules legacy — **non utilisées** par Supporter Space V3.

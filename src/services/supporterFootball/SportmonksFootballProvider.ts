@@ -15,6 +15,11 @@ import {
   ymd,
   type SmFixture,
 } from './mappers';
+import {
+  accessiblePreferredLeagues,
+  buildLeagueCoverageMessage,
+  missingPreferredLeagues,
+} from './sportmonksLeagues';
 import type {
   FixtureQuery,
   ProviderHealth,
@@ -47,6 +52,17 @@ export const LIVE_INPLAY_INCLUDES =
 export const FIXTURE_DETAIL_INCLUDES =
   'participants;scores;state;league;venue;events;lineups.player;lineups.details;lineups.xGLineup;formations;statistics.type;xGFixture';
 
+function dedupeMatches(matches: UnifiedMatch[]): UnifiedMatch[] {
+  const seen = new Set<string>();
+  const out: UnifiedMatch[] = [];
+  for (const m of matches) {
+    if (seen.has(m.id)) continue;
+    seen.add(m.id);
+    out.push(m);
+  }
+  return out;
+}
+
 export class SportmonksFootballProvider implements SupporterFootballProvider {
   readonly name = 'sportmonks';
 
@@ -59,25 +75,89 @@ export class SportmonksFootballProvider implements SupporterFootballProvider {
         message: 'Token Sportmonks absent — configure EXPO_PUBLIC_SPORTMONKS_API_TOKEN ou le proxy Cloud Function.',
       };
     }
-    return { name: this.name, ready: true, mode: 'live' };
+    try {
+      const competitions = await this.getCompetitions();
+      const availableLeagueIds = competitions
+        .map((c) => c.externalId)
+        .filter((id): id is number => typeof id === 'number' && id > 0);
+      const missing = missingPreferredLeagues(availableLeagueIds);
+      const message = buildLeagueCoverageMessage({
+        availableNames: competitions.map((c) => c.name).filter(Boolean),
+        missingPreferred: missing,
+      });
+      return {
+        name: this.name,
+        ready: true,
+        mode: 'live',
+        message,
+        availableLeagueIds,
+        missingPreferredLeagueIds: missing.length ? missing : undefined,
+      };
+    } catch {
+      return { name: this.name, ready: true, mode: 'live' };
+    }
   }
 
   async getFixtures(query: FixtureQuery = {}): Promise<UnifiedMatch[]> {
     if (query.liveOnly) return this.getLive();
     const from = query.from ?? ymd(new Date());
     const to = query.to ?? ymd(addDays(new Date(), 7));
-    const res = await sportmonksFetch<SportmonksListResponse<SmFixture>>({
+    const list = await this.fetchFixturesBetween(from, to);
+    if (query.genderScope && query.genderScope !== 'unknown') {
+      return list.filter((m) => m.genderScope === query.genderScope);
+    }
+    if (query.status && query.status !== 'all') {
+      return list.filter((m) => m.status === query.status);
+    }
+    return list;
+  }
+
+  /**
+   * `fixtures/between` for all plan leagues, then merge preferred majors
+   * (`filters=fixtureLeagues:{id}`) when they are in the subscription —
+   * so Ligue 1 etc. are not lost behind pagination on larger plans.
+   */
+  private async fetchFixturesBetween(from: string, to: string): Promise<UnifiedMatch[]> {
+    const baseRes = await sportmonksFetch<SportmonksListResponse<SmFixture>>({
       path: `/fixtures/between/${from}/${to}`,
       query: { include: FIXTURE_LIST_INCLUDES, per_page: 50 },
       ttlMs: 60_000,
     });
-    let list = (res.data ?? []).map(mapSmFixtureToUnified);
-    if (query.genderScope && query.genderScope !== 'unknown') {
-      list = list.filter((m) => m.genderScope === query.genderScope);
+    let list = (baseRes.data ?? []).map(mapSmFixtureToUnified);
+
+    let preferredIds: number[] = [];
+    try {
+      const competitions = await this.getCompetitions();
+      const available = competitions
+        .map((c) => c.externalId)
+        .filter((id): id is number => typeof id === 'number' && id > 0);
+      preferredIds = accessiblePreferredLeagues(available);
+    } catch {
+      preferredIds = [];
     }
-    if (query.status && query.status !== 'all') {
-      list = list.filter((m) => m.status === query.status);
+
+    if (preferredIds.length) {
+      const extras = await Promise.all(
+        preferredIds.map(async (leagueId) => {
+          try {
+            const res = await sportmonksFetch<SportmonksListResponse<SmFixture>>({
+              path: `/fixtures/between/${from}/${to}`,
+              query: {
+                include: FIXTURE_LIST_INCLUDES,
+                per_page: 50,
+                filters: `fixtureLeagues:${leagueId}`,
+              },
+              ttlMs: 60_000,
+            });
+            return (res.data ?? []).map(mapSmFixtureToUnified);
+          } catch {
+            return [] as UnifiedMatch[];
+          }
+        }),
+      );
+      list = dedupeMatches([...list, ...extras.flat()]);
     }
+
     return list;
   }
 
