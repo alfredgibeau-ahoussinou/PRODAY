@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AccShell } from "@/components/admin/cc/AccShell";
 import {
+  AccBanner,
   AccButton,
   AccInput,
   AccMetric,
@@ -34,6 +35,13 @@ export function AccPricingCalculator({
   const [customRate, setCustomRate] = useState("");
   const [selected, setSelected] = useState<ClubQuoteOptionId[]>(["video_byo"]);
   const [clubName, setClubName] = useState("");
+  const [clubId, setClubId] = useState("");
+  const [billingEmail, setBillingEmail] = useState("");
+  const [invoiceBusy, setInvoiceBusy] = useState(false);
+  const [invoiceMsg, setInvoiceMsg] = useState<{
+    tone: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const quote = useMemo(() => {
     const custom = customRate.trim() ? Number(customRate.replace(",", ".")) : null;
@@ -62,6 +70,70 @@ export function AccPricingCalculator({
       `Annuel (−20 %) : ${formatEur(quote.annualNet)} (économie ${formatEur(quote.annualSavings)})`,
     ];
     void navigator.clipboard.writeText(lines.join("\n"));
+  }
+
+  async function sendStripeInvoiceFromQuote() {
+    setInvoiceBusy(true);
+    setInvoiceMsg(null);
+    const amountEur = quote.netMonthly;
+    if (!clubId.trim() || !billingEmail.trim() || !(amountEur > 0)) {
+      setInvoiceMsg({
+        tone: "error",
+        text: "Club ID, email facturation et montant devis > 0 requis",
+      });
+      setInvoiceBusy(false);
+      return;
+    }
+    const offerId = selected.includes("video_veo_pack")
+      ? "club_video_pro"
+      : "club_premium";
+    try {
+      await fetch("/api/admin/billing/price", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clubId: clubId.trim(),
+          offerId,
+          amountEur,
+          label: `Devis ${clubName || clubId} — ${offerId}`,
+          notes: `Calculateur : ${quote.members} adh · net mensuel`,
+        }),
+      });
+      const res = await fetch("/api/admin/billing/invoice", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clubId: clubId.trim(),
+          offerId,
+          customerEmail: billingEmail.trim(),
+          clubName: clubName.trim() || undefined,
+          amountEur,
+          label: `ProDay Club — ${clubName || clubId}`,
+          sendInvoice: true,
+          description: `Mensuel net calculateur (${quote.members} adhérents)`,
+        }),
+      });
+      const data = (await res.json()) as { error?: string; invoice?: { hosted_invoice_url?: string } };
+      if (!res.ok || data.error) {
+        setInvoiceMsg({
+          tone: "error",
+          text: data.error ?? "Envoi Invoice impossible",
+        });
+        return;
+      }
+      setInvoiceMsg({
+        tone: "success",
+        text: data.invoice?.hosted_invoice_url
+          ? `Invoice envoyée — ${data.invoice.hosted_invoice_url}`
+          : "Invoice Stripe envoyée au club",
+      });
+    } catch {
+      setInvoiceMsg({ tone: "error", text: "Réseau indisponible" });
+    } finally {
+      setInvoiceBusy(false);
+    }
   }
 
   return (
@@ -93,9 +165,29 @@ export function AccPricingCalculator({
               </label>
               <label className="block">
                 <span className="mb-1 block font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
-                  Adhérents
+                  Club ID (facturation)
                 </span>
                 <AccInput
+                  value={clubId}
+                  onChange={(e) => setClubId(e.target.value)}
+                  placeholder="uid / club_id"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
+                  Email facturation Stripe
+                </span>
+                <AccInput
+                  type="email"
+                  value={billingEmail}
+                  onChange={(e) => setBillingEmail(e.target.value)}
+                  placeholder="tresorier@club.fr"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
+                  Adhérents
+                </span>                <AccInput
                   type="number"
                   min={0}
                   value={members}
@@ -206,6 +298,29 @@ export function AccPricingCalculator({
                 </span>
               </li>
             </ul>
+            <div className="mt-3 space-y-2 border-t border-[var(--acc-line)] pt-3">
+              <AccButton
+                className="w-full"
+                disabled={invoiceBusy}
+                onClick={() => void sendStripeInvoiceFromQuote()}
+              >
+                {invoiceBusy
+                  ? "Envoi Stripe…"
+                  : "Enregistrer prix + envoyer Invoice"}
+              </AccButton>
+              <p className="text-[10px] text-white/35">
+                Stripe Invoice réelle (mensuel net). Détail aussi sur{" "}
+                <a href="/admin/finances" className="text-[var(--acc-steel)] hover:underline">
+                  Finances
+                </a>
+                .
+              </p>
+              {invoiceMsg ? (
+                <AccBanner tone={invoiceMsg.tone === "success" ? "success" : "error"}>
+                  {invoiceMsg.text}
+                </AccBanner>
+              ) : null}
+            </div>
           </AccPanel>
         </div>
       </div>

@@ -36,6 +36,8 @@ import {
 import { createWebsiteAdminStatsHandler } from './websiteAdminStats';
 import {
   createAdminClubBillingCallable,
+  createAdminCreateClubStripeInvoiceCallable,
+  createAdminSetClubCommercialAmountCallable,
   createWebsiteClubBillingAdminHandler,
 } from './clubBillingAdmin';
 import { createSubmitSponsorQuoteRequestHandler } from './sponsorQuoteRequest';
@@ -1010,7 +1012,7 @@ export const websiteAdminStats = functions
 
 /**
  * Facturation club (prix custom + Stripe Invoice) — secret site `X-Admin-Secret`.
- * Proxy Netlify : `/api/admin/billing/*`. Callable mobile : `adminClubBilling`.
+ * Proxy Netlify : `/api/admin/billing/*`. Callable multi-action : `adminClubBilling`.
  */
 export const websiteClubBillingAdmin = functions
   .region('europe-west1')
@@ -1022,6 +1024,17 @@ export const adminClubBilling = functions
   .region('europe-west1')
   .runWith({ timeoutSeconds: 60, memory: '512MB' })
   .https.onCall(createAdminClubBillingCallable(db));
+
+/** App : fixe montant commercial club (`commercial_*` sur clubs/{id}). */
+export const adminSetClubCommercialAmount = functions
+  .region('europe-west1')
+  .https.onCall(createAdminSetClubCommercialAmountCallable(db));
+
+/** App : crée + envoie Stripe Invoice club. */
+export const adminCreateClubStripeInvoice = functions
+  .region('europe-west1')
+  .runWith({ timeoutSeconds: 60, memory: '512MB' })
+  .https.onCall(createAdminCreateClubStripeInvoiceCallable(db));
 
 /** Approuve une inscription bêta et envoie l'email de bienvenue — admin uniquement. */
 export const adminApproveBetaAccess = functions

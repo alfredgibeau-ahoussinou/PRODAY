@@ -39,6 +39,7 @@ https://REGION-PROJECT.cloudfunctions.net/stripeWebhook
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
 - `invoice.payment_failed` (recommandé)
+- `invoice.paid`, `invoice.finalized`, `invoice.voided`, `invoice.sent` (factures club admin — voir `docs/CLUB_STRIPE_INVOICES.md`)
 
 Copier le signing secret dans `STRIPE_WEBHOOK_SECRET`.
 

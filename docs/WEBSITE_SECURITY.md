@@ -47,6 +47,8 @@ Ne jamais préfixer par `NEXT_PUBLIC_` :
 - `BETA_WAITLIST_FUNCTION_URL`, `BETA_VALIDATE_FUNCTION_URL`
 - `BETA_ADMIN_PIN` / `ADMIN_MINICODE`, `BETA_ADMIN_SESSION_SECRET`
 - `BETA_WAITLIST_ADMIN_FUNCTION_URL`, `BETA_WEBSITE_ADMIN_SECRET`
+- `CLUB_BILLING_ADMIN_FUNCTION_URL` (optionnel — défaut CF `websiteClubBillingAdmin`)
+- `PRODAY_MOBILE_API_SECRET` (app → `/api/admin/billing/*`)
 
 Variables publiques autorisées : `NEXT_PUBLIC_SITE_URL`, liens APK/TestFlight optionnels.
 

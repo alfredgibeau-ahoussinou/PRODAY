@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AccShell } from "@/components/admin/cc/AccShell";
+import { AccClubInvoiceCenter } from "@/components/admin/cc/AccClubInvoiceCenter";
 import {
   AccBanner,
   AccEmpty,
@@ -46,7 +47,7 @@ export function AccFinancesDashboard({
   return (
     <AccShell
       title="Finances"
-      subtitle="Revenus et abonnements issus de websiteAdminStats — pas de factures inventées."
+      subtitle="Abonnements plateforme + facturation club Stripe (Invoices)."
       badges={badges}
       healthScore={healthScore}
       healthLabel={healthLabel}
@@ -93,11 +94,11 @@ export function AccFinancesDashboard({
           </Link>
         </AccPanel>
 
-        <AccPanel title="Facturation & paiements">
-          <AccEmpty
-            title="Invoice / Payment Center"
-            description="Branches Stripe/RevenueCat déjà utilisées côté app. L’admin web n’invente pas de factures : brancher l’endpoint liste quand disponible."
-          />
+        <AccPanel
+          title="Facturation club (Stripe Invoice)"
+          description="Prix custom + envoi réel — pas de faux paiements."
+        >
+          <AccClubInvoiceCenter />
         </AccPanel>
       </div>
 

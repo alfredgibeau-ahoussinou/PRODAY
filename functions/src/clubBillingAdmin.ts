@@ -8,11 +8,6 @@ import { timingSafeEqual } from 'crypto';
 import Stripe from 'stripe';
 import { configStr } from './runtimeConfig';
 import { writeWebsiteAdminAudit } from './websiteAdminAudit';
-import {
-  createClubStripeInvoiceCore,
-  LIVE_PACK_LABELS,
-  setClubCommercialAmountCore,
-} from './clubStripeInvoice';
 
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
@@ -29,6 +24,12 @@ const INVOICES_COL = 'club_stripe_invoices';
 const CUSTOMERS_COL = 'club_billing_customers';
 
 /** Offres connues — alignées app (`clubLivePacks`) + aliases site. */
+export const LIVE_PACK_LABELS: Record<string, string> = {
+  club_premium: 'Tout inclus',
+  club_video_pro: 'ProDay Pro + Veo',
+  club_live_duo: 'Forfait 2 lives',
+};
+
 export const CLUB_BILLING_OFFER_PRESETS: Record<
   string,
   { label: string; defaultAmountCents?: number; livesCount?: number; canonical?: string }
@@ -216,6 +217,308 @@ function mapInvoice(
   };
 }
 
+function normalizeAmountEur(raw: unknown): number {
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(n) || n < 0.01 || n > 500_000) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Montant invalide (0,01 € – 500 000 €).',
+    );
+  }
+  return Math.round(n * 100) / 100;
+}
+
+async function ensureStripeCustomerForUid(
+  db: admin.firestore.Firestore,
+  stripe: Stripe,
+  uid: string,
+  email?: string | null,
+  name?: string | null,
+): Promise<string> {
+  const userRef = db.doc(`users/${uid}`);
+  const snap = await userRef.get();
+  const existing = String(snap.data()?.stripe_customer_id ?? '').trim();
+  if (existing) return existing;
+
+  const customer = await stripe.customers.create({
+    email: email || undefined,
+    name: name || undefined,
+    metadata: { firebase_uid: uid, source: 'club_invoice' },
+  });
+  await userRef.set(
+    {
+      stripe_customer_id: customer.id,
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+  return customer.id;
+}
+
+/** Core partagé — HTTP site + callables app. */
+export async function setClubCommercialAmountCore(
+  db: admin.firestore.Firestore,
+  input: {
+    clubId: string;
+    amountEur: unknown;
+    offerId?: string;
+    note?: string | null;
+    actorUid: string;
+  },
+): Promise<{
+  success: true;
+  clubId: string;
+  amountEur: number;
+  offerId: string;
+}> {
+  const clubId = String(input.clubId ?? '').trim();
+  if (!clubId) {
+    throw new functions.https.HttpsError('invalid-argument', 'clubId requis');
+  }
+  const amountEur = normalizeAmountEur(input.amountEur);
+  const offerId = normalizeOfferId(String(input.offerId ?? 'club_premium'));
+  const resolvedOffer = Object.prototype.hasOwnProperty.call(LIVE_PACK_LABELS, offerId)
+    ? offerId
+    : 'club_premium';
+  const note = String(input.note ?? '').trim().slice(0, 500) || null;
+
+  const clubRef = db.doc(`clubs/${clubId}`);
+  const clubSnap = await clubRef.get();
+  if (!clubSnap.exists) {
+    throw new functions.https.HttpsError('not-found', 'Club introuvable');
+  }
+
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  await clubRef.update({
+    commercial_offer_id: resolvedOffer,
+    commercial_amount_eur: amountEur,
+    commercial_amount_note: note,
+    commercial_amount_updated_at: now,
+    commercial_amount_updated_by: input.actorUid,
+    updated_at: now,
+  });
+
+  await writeWebsiteAdminAudit(db, {
+    action: 'other',
+    target_type: 'club',
+    target_id: clubId,
+    summary: `Montant club ${amountEur} € · ${LIVE_PACK_LABELS[resolvedOffer] ?? resolvedOffer}`,
+    meta: { action: 'club_commercial_amount_set', offer_id: resolvedOffer },
+  });
+
+  return { success: true, clubId, amountEur, offerId: resolvedOffer };
+}
+
+export async function createClubStripeInvoiceCore(
+  db: admin.firestore.Firestore,
+  input: {
+    clubId: string;
+    amountEur?: unknown;
+    offerId?: string;
+    description?: string;
+    email?: string;
+    daysUntilDue?: number;
+    send?: boolean;
+    actorUid: string;
+  },
+): Promise<{
+  success: true;
+  invoiceId: string;
+  status: string;
+  amountEur: number;
+  hostedInvoiceUrl: string | null;
+  invoicePdf: string | null;
+  sent: boolean;
+}> {
+  const clubId = String(input.clubId ?? '').trim();
+  if (!clubId) {
+    throw new functions.https.HttpsError('invalid-argument', 'clubId requis');
+  }
+
+  const stripe = getStripe();
+  if (!stripe) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Stripe non configuré. Définissez STRIPE_SECRET_KEY.',
+    );
+  }
+
+  const clubRef = db.doc(`clubs/${clubId}`);
+  const clubSnap = await clubRef.get();
+  if (!clubSnap.exists) {
+    throw new functions.https.HttpsError('not-found', 'Club introuvable');
+  }
+  const club = clubSnap.data()!;
+
+  const amountOverride =
+    input.amountEur != null && input.amountEur !== ''
+      ? normalizeAmountEur(input.amountEur)
+      : null;
+  const amountEur =
+    amountOverride ??
+    (typeof club.commercial_amount_eur === 'number'
+      ? normalizeAmountEur(club.commercial_amount_eur)
+      : null);
+  if (amountEur == null) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Définissez d’abord le montant commercial du club.',
+    );
+  }
+
+  const offerId = normalizeOfferId(
+    String(input.offerId ?? club.commercial_offer_id ?? 'club_premium'),
+  );
+  const resolvedOffer = Object.prototype.hasOwnProperty.call(LIVE_PACK_LABELS, offerId)
+    ? offerId
+    : 'club_premium';
+  const packLabel = LIVE_PACK_LABELS[resolvedOffer] ?? 'Forfait club ProDay';
+  const clubName = String(club.name ?? 'Club');
+  const ownerUid = String(club.owner_uid ?? '').trim();
+  if (!ownerUid) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Club sans owner_uid — impossible de lier un client Stripe.',
+    );
+  }
+
+  const ownerSnap = await db.doc(`users/${ownerUid}`).get();
+  const owner = ownerSnap.data() ?? {};
+  const email = String(input.email ?? owner.email ?? club.billing_email ?? '')
+    .trim()
+    .toLowerCase();
+  if (!email || !email.includes('@')) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Email destinataire manquant (owner ou billing_email).',
+    );
+  }
+
+  const daysUntilDue = Math.min(
+    90,
+    Math.max(1, Number(input.daysUntilDue ?? 30) || 30),
+  );
+  const send = input.send !== false;
+  const description =
+    String(input.description ?? '').trim() ||
+    `ProDay — ${packLabel} · ${clubName}`;
+
+  const customerId = await ensureStripeCustomerForUid(
+    db,
+    stripe,
+    ownerUid,
+    email,
+    String(owner.display_name ?? clubName),
+  );
+
+  await clubRef.set(
+    {
+      stripe_customer_id: customerId,
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  const amountCents = Math.round(amountEur * 100);
+
+  await stripe.invoiceItems.create({
+    customer: customerId,
+    amount: amountCents,
+    currency: 'eur',
+    description,
+    metadata: {
+      type: 'club_billing',
+      club_id: clubId,
+      offer_id: resolvedOffer,
+      firebase_admin_uid: input.actorUid,
+    },
+  });
+
+  let invoice = await stripe.invoices.create({
+    customer: customerId,
+    collection_method: 'send_invoice',
+    days_until_due: daysUntilDue,
+    auto_advance: true,
+    metadata: {
+      type: 'club_billing',
+      club_id: clubId,
+      offer_id: resolvedOffer,
+      firebase_admin_uid: input.actorUid,
+      source: 'admin_club_invoice',
+    },
+    custom_fields: [{ name: 'Club', value: clubName.slice(0, 30) }],
+  });
+
+  if (invoice.status === 'draft') {
+    invoice = await stripe.invoices.finalizeInvoice(invoice.id);
+  }
+
+  if (send && invoice.status === 'open') {
+    invoice = await stripe.invoices.sendInvoice(invoice.id);
+  }
+
+  const hostedUrl =
+    typeof invoice.hosted_invoice_url === 'string' ? invoice.hosted_invoice_url : null;
+  const pdfUrl = typeof invoice.invoice_pdf === 'string' ? invoice.invoice_pdf : null;
+  const status = String(invoice.status ?? 'open');
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  await clubRef.update({
+    commercial_amount_eur: amountEur,
+    commercial_offer_id: resolvedOffer,
+    stripe_customer_id: customerId,
+    stripe_invoice_id: invoice.id,
+    stripe_invoice_status: status,
+    stripe_invoice_hosted_url: hostedUrl,
+    stripe_invoice_pdf: pdfUrl,
+    stripe_invoice_amount_eur: amountEur,
+    stripe_invoice_sent_at: send ? now : null,
+    stripe_invoice_updated_at: now,
+    updated_at: now,
+  });
+
+  await db.collection(INVOICES_COL).add({
+    club_id: clubId,
+    offer_id: resolvedOffer,
+    label: packLabel,
+    amount_cents: amountCents,
+    amount_due_cents: amountCents,
+    currency: 'eur',
+    status,
+    stripe_invoice_id: invoice.id,
+    stripe_customer_id: customerId,
+    customer_email: email,
+    hosted_invoice_url: hostedUrl,
+    invoice_pdf: pdfUrl,
+    lives_count: resolvedOffer === 'club_live_duo' ? 2 : null,
+    sent: send,
+    created_at: now,
+    updated_at: now,
+    paid_at: null,
+  });
+
+  await writeWebsiteAdminAudit(db, {
+    action: 'other',
+    target_type: 'club',
+    target_id: clubId,
+    summary: `Facture Stripe ${invoice.id} · ${amountEur} € · ${status}${send ? ' · envoyée' : ''}`,
+    meta: {
+      action: 'club_stripe_invoice_sent',
+      stripe_invoice_id: invoice.id,
+    },
+  });
+
+  return {
+    success: true,
+    invoiceId: invoice.id,
+    status,
+    amountEur,
+    hostedInvoiceUrl: hostedUrl,
+    invoicePdf: pdfUrl,
+    sent: send,
+  };
+}
+
 async function ensureClubStripeCustomer(
   db: admin.firestore.Firestore,
   stripe: Stripe,
@@ -320,7 +623,7 @@ async function upsertPrice(
   const clubRef = db.doc(`clubs/${clubId}`);
   const clubSnap = await clubRef.get();
   if (clubSnap.exists) {
-    const result = await setClubCommercialAmountCore({
+    const result = await setClubCommercialAmountCore(db, {
       clubId,
       amountEur,
       offerId,
@@ -441,10 +744,52 @@ async function createAndSendInvoice(
   if (!clubId) {
     throw new functions.https.HttpsError('invalid-argument', 'clubId requis');
   }
+
+  const clubSnap = await db.doc(`clubs/${clubId}`).get();
+  if (clubSnap.exists) {
+    let amountEur: number | undefined;
+    if (typeof body.amountCents === 'number' && Number.isFinite(body.amountCents)) {
+      amountEur = Math.round(body.amountCents) / 100;
+    } else if (typeof body.amountEur === 'number' && Number.isFinite(body.amountEur)) {
+      amountEur = body.amountEur;
+    }
+    const result = await createClubStripeInvoiceCore(db, {
+      clubId,
+      amountEur,
+      offerId,
+      description: body.description,
+      email: customerEmail || undefined,
+      daysUntilDue: body.daysUntilDue,
+      send: body.sendInvoice !== false,
+      actorUid: 'website-admin',
+    });
+    return {
+      ok: true,
+      invoice: {
+        id: result.invoiceId,
+        club_id: clubId,
+        offer_id: offerId,
+        label: LIVE_PACK_LABELS[offerId] ?? offerId,
+        amount_due_cents: Math.round(result.amountEur * 100),
+        currency: 'eur',
+        status: result.status,
+        stripe_invoice_id: result.invoiceId,
+        stripe_customer_id: '',
+        customer_email: customerEmail,
+        hosted_invoice_url: result.hostedInvoiceUrl,
+        invoice_pdf: result.invoicePdf,
+        lives_count: offerId === 'club_live_duo' ? 2 : null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        paid_at: null,
+      },
+    };
+  }
+
   if (!customerEmail || !customerEmail.includes('@')) {
     throw new functions.https.HttpsError(
       'invalid-argument',
-      'customerEmail valide requis',
+      'customerEmail valide requis (ou club Firestore avec owner)',
     );
   }
 
@@ -533,6 +878,7 @@ async function createAndSendInvoice(
       type: 'club_billing',
       club_id: clubId,
       offer_id: offerId,
+      source: 'website_club_billing',
       ...(livesCount != null ? { lives_count: String(livesCount) } : {}),
     },
     custom_fields: livesCount != null
@@ -694,26 +1040,59 @@ export async function syncClubInvoiceFromStripeEvent(
   db: admin.firestore.Firestore,
   invoice: Stripe.Invoice,
 ): Promise<void> {
-  if (invoice.metadata?.type !== 'club_billing') return;
+  const clubId = String(invoice.metadata?.club_id ?? '').trim();
+  const isClubBilling =
+    invoice.metadata?.type === 'club_billing' ||
+    invoice.metadata?.source === 'admin_club_invoice' ||
+    Boolean(clubId && invoice.metadata?.source === 'website_club_billing');
+  if (!isClubBilling && !clubId) return;
+
   const stripeId = invoice.id;
+  const status = String(invoice.status ?? 'unknown');
+  const hosted = invoice.hosted_invoice_url ?? null;
+  const pdf = invoice.invoice_pdf ?? null;
+  const amountDue = invoice.amount_due ?? 0;
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
   const snap = await db
     .collection(INVOICES_COL)
     .where('stripe_invoice_id', '==', stripeId)
     .limit(1)
     .get();
-  if (snap.empty) return;
-  const ref = snap.docs[0].ref;
-  const patch: Record<string, unknown> = {
-    status: String(invoice.status ?? 'unknown'),
-    amount_due_cents: invoice.amount_due ?? 0,
-    hosted_invoice_url: invoice.hosted_invoice_url ?? null,
-    invoice_pdf: invoice.invoice_pdf ?? null,
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
-  };
-  if (invoice.status === 'paid') {
-    patch.paid_at = admin.firestore.FieldValue.serverTimestamp();
+  if (!snap.empty) {
+    const ref = snap.docs[0].ref;
+    const patch: Record<string, unknown> = {
+      status,
+      amount_due_cents: amountDue,
+      hosted_invoice_url: hosted,
+      invoice_pdf: pdf,
+      updated_at: now,
+    };
+    if (invoice.status === 'paid') {
+      patch.paid_at = now;
+    }
+    await ref.set(patch, { merge: true });
   }
-  await ref.set(patch, { merge: true });
+
+  const resolvedClubId =
+    clubId ||
+    (!snap.empty ? String(snap.docs[0].data()?.club_id ?? '').trim() : '');
+  if (resolvedClubId) {
+    const clubRef = db.doc(`clubs/${resolvedClubId}`);
+    const clubSnap = await clubRef.get();
+    if (clubSnap.exists) {
+      const clubPatch: Record<string, unknown> = {
+        stripe_invoice_id: stripeId,
+        stripe_invoice_status: status,
+        stripe_invoice_hosted_url: hosted,
+        stripe_invoice_pdf: pdf,
+        stripe_invoice_amount_eur: amountDue / 100,
+        stripe_invoice_updated_at: now,
+        updated_at: now,
+      };
+      await clubRef.set(clubPatch, { merge: true });
+    }
+  }
 }
 
 export function createWebsiteClubBillingAdminHandler(db: admin.firestore.Firestore) {
@@ -766,5 +1145,68 @@ export function createAdminClubBillingCallable(db: admin.firestore.Firestore) {
       throw new functions.https.HttpsError('permission-denied', 'Admin only');
     }
     return handleClubBillingAction(db, data ?? {});
+  };
+}
+
+/** Callables nommés — contrat app `clubCommercialBilling.service.ts`. */
+export function createAdminSetClubCommercialAmountCallable(
+  db: admin.firestore.Firestore,
+) {
+  return async (
+    data: {
+      clubId?: string;
+      amountEur?: number;
+      offerId?: string;
+      note?: string;
+    },
+    context: functions.https.CallableContext,
+  ) => {
+    if (!context.auth?.uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Connexion requise');
+    }
+    if (!context.auth.token?.admin) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin only');
+    }
+    return setClubCommercialAmountCore(db, {
+      clubId: String(data?.clubId ?? ''),
+      amountEur: data?.amountEur,
+      offerId: data?.offerId,
+      note: data?.note,
+      actorUid: context.auth.uid,
+    });
+  };
+}
+
+export function createAdminCreateClubStripeInvoiceCallable(
+  db: admin.firestore.Firestore,
+) {
+  return async (
+    data: {
+      clubId?: string;
+      amountEur?: number;
+      offerId?: string;
+      description?: string;
+      email?: string;
+      daysUntilDue?: number;
+      send?: boolean;
+    },
+    context: functions.https.CallableContext,
+  ) => {
+    if (!context.auth?.uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Connexion requise');
+    }
+    if (!context.auth.token?.admin) {
+      throw new functions.https.HttpsError('permission-denied', 'Admin only');
+    }
+    return createClubStripeInvoiceCore(db, {
+      clubId: String(data?.clubId ?? ''),
+      amountEur: data?.amountEur,
+      offerId: data?.offerId,
+      description: data?.description,
+      email: data?.email,
+      daysUntilDue: data?.daysUntilDue,
+      send: data?.send,
+      actorUid: context.auth.uid,
+    });
   };
 }

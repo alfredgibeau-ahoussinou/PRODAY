@@ -215,22 +215,43 @@ Fil d’actualités club (remplace partiellement WhatsApp).
 
 **Client :** `tournamentService.listMatches`, `createMatch`, `updateScore`
 
-## `adminClubBilling` (HTTPS callable, europe-west1)
+## `adminSetClubCommercialAmount` (HTTPS callable, europe-west1)
 
 **Auth :** token admin (`customClaims.admin`)
 
-Même logique que `websiteClubBillingAdmin` (secret site). Actions :
+```json
+{
+  "clubId": "string",
+  "amountEur": 149.0,
+  "offerId": "club_premium | club_video_pro | club_live_duo",
+  "note": "string (optionnel)"
+}
+```
 
-| action | Effet |
-|--------|--------|
-| `upsert_price` | Prix custom `club_billing_prices` (amountEur / offerId) |
-| `get_price` / `list_prices` | Lecture prix club |
-| `create_invoice` | Stripe Invoice (finalize + send) → `club_stripe_invoices` |
-| `list_invoices` / `get_invoice` / `refresh_invoice` | Statut / liens facture |
+**Effet :** écrit `commercial_*` sur `clubs/{clubId}`.
 
-**Offres :** `club_premium`, `club_video_pro`, `veo_lives_2` (2 lives), `video_veo_pack`, …
+## `adminCreateClubStripeInvoice` (HTTPS callable, europe-west1)
 
-**Client app :** `src/services/clubCommercialBilling.service.ts`
+**Auth :** token admin
+
+```json
+{
+  "clubId": "string",
+  "amountEur": 149.0,
+  "offerId": "club_live_duo (optionnel)",
+  "email": "optionnel",
+  "daysUntilDue": 30,
+  "send": true
+}
+```
+
+**Effet :** Stripe Invoice (`send_invoice`) → `stripe_invoice_*` sur le club + historique `club_stripe_invoices`. Secret Stripe côté Functions uniquement.
+
+**Client :** `src/services/clubCommercialBilling.service.ts`
+
+## `websiteClubBillingAdmin` / `adminClubBilling` (HTTP + callable)
+
+Proxy site `/api/admin/billing/*` et callable multi-action (`upsert_price`, `create_invoice`, …). Même core — voir `docs/CLUB_STRIPE_INVOICES.md`. Alias `veo_lives_2` → `club_live_duo`.
 
 ## Services client (TypeScript)
 
