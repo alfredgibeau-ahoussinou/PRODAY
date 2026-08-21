@@ -1,9 +1,9 @@
 /**
- * Composition visuelle Accueil Club — densité Coach + quelques accents premium (pas de grille KPI).
- * Bindings / handlers restent dans ClubHomeScreen.
+ * Composition visuelle Accueil Club — densité Coach + accents premium (pas de grille KPI).
+ * Bindings / handlers restent dans ClubHomeScreen. Pas de CTA copilote ici (FAB / Menu).
  */
 import React, { useMemo } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
@@ -261,29 +261,45 @@ export type ClubHomeTodayChip = {
   onPress: () => void;
 };
 
-/** Peeks « Aujourd’hui » — 1–2 chips, masqué si aucun événement du jour. */
-export function ClubHomeTodayPeek({ chips }: { chips: ClubHomeTodayChip[] }) {
+/** Liste « Aujourd’hui » — pleine quand il y a des RDV, masquée sinon. */
+export function ClubHomeTodayPeek({
+  chips,
+  onSeeAll,
+}: {
+  chips: ClubHomeTodayChip[];
+  onSeeAll?: () => void;
+}) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => todayPeekStyles(tokens), [tokens]);
-  const visible = chips.slice(0, 2);
+  const visible = chips.slice(0, 6);
   if (visible.length === 0) return null;
 
   return (
     <AnimatedEntrance kind="fadeUp" index={3} delayStep={36}>
       <View style={styles.block}>
-        <ClubText variant="label" muted>
-          Aujourd’hui
-        </ClubText>
-        <View style={styles.row}>
+        <View style={styles.head}>
+          <ClubText variant="label" muted>
+            Aujourd’hui
+          </ClubText>
+          {onSeeAll ? (
+            <PressableSpring onPress={onSeeAll} scaleTo={0.97} haptic style={styles.seeAll}>
+              <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+                Calendrier
+              </ClubText>
+              <Icon name="chevron-forward" size={12} color={tokens.accent} />
+            </PressableSpring>
+          ) : null}
+        </View>
+        <View style={styles.list}>
           {visible.map((chip) => {
             const tone = chip.kind === 'match' ? clubEventTone.match : clubEventTone.training;
             return (
               <PressableSpring
                 key={chip.id}
                 onPress={chip.onPress}
-                scaleTo={0.97}
+                scaleTo={0.98}
                 haptic
-                style={[styles.chip, { borderColor: tokens.border }]}
+                style={[styles.rowItem, { borderColor: tokens.border }]}
               >
                 <View style={[styles.chipDot, { backgroundColor: tone.color }]} />
                 <View style={styles.chipCol}>
@@ -291,13 +307,291 @@ export function ClubHomeTodayPeek({ chips }: { chips: ClubHomeTodayChip[] }) {
                     {tone.label}
                     {chip.time ? ` · ${chip.time}` : ''}
                   </ClubText>
-                  <ClubText variant="caption" numberOfLines={1} style={{ fontWeight: '600' }}>
+                  <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '600' }}>
                     {chip.label}
                   </ClubText>
                 </View>
+                <Icon name="chevron-forward" size={14} color={tokens.faint} />
               </PressableSpring>
             );
           })}
+        </View>
+      </View>
+    </AnimatedEntrance>
+  );
+}
+
+export type ClubHomeTeamCard = {
+  id: string;
+  name: string;
+  meta: string;
+  coachesLabel: string;
+  hasCoach: boolean;
+  onPress: () => void;
+};
+
+/** Rail compact Mes équipes — 2 à 4 cartes, pas de grille KPI. */
+export function ClubHomeTeamsRail({
+  teams,
+  onSeeAll,
+}: {
+  teams: ClubHomeTeamCard[];
+  onSeeAll: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => teamsRailStyles(tokens), [tokens]);
+  const visible = teams.slice(0, 4);
+  if (visible.length === 0) return null;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={4} delayStep={36}>
+      <View style={styles.block}>
+        <View style={styles.head}>
+          <ClubText variant="label" muted>
+            Mes équipes
+          </ClubText>
+          <PressableSpring onPress={onSeeAll} scaleTo={0.97} haptic style={styles.seeAll}>
+            <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              Toutes
+            </ClubText>
+            <Icon name="chevron-forward" size={12} color={tokens.accent} />
+          </PressableSpring>
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.rail}
+          nestedScrollEnabled
+        >
+          {visible.map((team) => (
+            <PressableSpring
+              key={team.id}
+              onPress={team.onPress}
+              scaleTo={0.97}
+              haptic
+              style={styles.card}
+            >
+              <View
+                style={[
+                  styles.accentBar,
+                  { backgroundColor: team.hasCoach ? tokens.accent : tokens.warning },
+                ]}
+              />
+              <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>
+                {team.name}
+              </ClubText>
+              <ClubText variant="caption" muted numberOfLines={1}>
+                {team.meta}
+              </ClubText>
+              <ClubText
+                variant="caption"
+                numberOfLines={1}
+                style={{
+                  color: team.hasCoach ? tokens.muted : tokens.warning,
+                  fontWeight: '600',
+                }}
+              >
+                {team.coachesLabel}
+              </ClubText>
+            </PressableSpring>
+          ))}
+        </ScrollView>
+      </View>
+    </AnimatedEntrance>
+  );
+}
+
+export type ClubHomeWeekItem = {
+  id: string;
+  kind: 'match' | 'training';
+  dayLabel: string;
+  time?: string;
+  label: string;
+  onPress: () => void;
+};
+
+/** Aperçu semaine à venir — 3–4 lignes max. */
+export function ClubHomeWeekPeek({
+  items,
+  onSeeAll,
+}: {
+  items: ClubHomeWeekItem[];
+  onSeeAll: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => weekPeekStyles(tokens), [tokens]);
+  const visible = items.slice(0, 4);
+  if (visible.length === 0) return null;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={5} delayStep={36}>
+      <View style={styles.block}>
+        <View style={styles.head}>
+          <ClubText variant="label" muted>
+            Semaine à venir
+          </ClubText>
+          <PressableSpring onPress={onSeeAll} scaleTo={0.97} haptic style={styles.seeAll}>
+            <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              Voir
+            </ClubText>
+            <Icon name="chevron-forward" size={12} color={tokens.accent} />
+          </PressableSpring>
+        </View>
+        <View style={styles.list}>
+          {visible.map((item) => {
+            const tone = item.kind === 'match' ? clubEventTone.match : clubEventTone.training;
+            return (
+              <PressableSpring
+                key={item.id}
+                onPress={item.onPress}
+                scaleTo={0.98}
+                haptic
+                style={styles.row}
+              >
+                <View style={styles.dayCol}>
+                  <ClubText variant="caption" style={{ fontWeight: '800', color: tokens.foreground }}>
+                    {item.dayLabel}
+                  </ClubText>
+                  {item.time ? (
+                    <ClubText variant="caption" muted>
+                      {item.time}
+                    </ClubText>
+                  ) : null}
+                </View>
+                <View style={[styles.dot, { backgroundColor: tone.color }]} />
+                <View style={styles.col}>
+                  <ClubText variant="caption" style={{ color: tone.color, fontWeight: '700' }}>
+                    {tone.label}
+                  </ClubText>
+                  <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '600' }}>
+                    {item.label}
+                  </ClubText>
+                </View>
+                <Icon name="chevron-forward" size={14} color={tokens.faint} />
+              </PressableSpring>
+            );
+          })}
+        </View>
+      </View>
+    </AnimatedEntrance>
+  );
+}
+
+/** Alerte présence — RSVP en attente sur les prochains événements. */
+export function ClubHomePresenceAlert({
+  pendingCount,
+  eventLabel,
+  onPress,
+}: {
+  pendingCount: number;
+  eventLabel?: string;
+  onPress: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => presenceStyles(tokens), [tokens]);
+  if (pendingCount <= 0) return null;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={3} delayStep={36}>
+      <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.row}>
+        <View style={[styles.icon, { backgroundColor: tokens.warningSoft }]}>
+          <Icon name="people" size={16} color={tokens.warning} />
+        </View>
+        <View style={styles.col}>
+          <ClubText variant="body" style={{ fontWeight: '700' }}>
+            {pendingCount} réponse{pendingCount > 1 ? 's' : ''} de présence en attente
+          </ClubText>
+          <ClubText variant="caption" muted numberOfLines={1}>
+            {eventLabel?.trim() || 'Convocations à relancer'}
+          </ClubText>
+        </View>
+        <Icon name="chevron-forward" size={15} color={tokens.faint} />
+      </PressableSpring>
+    </AnimatedEntrance>
+  );
+}
+
+/** Peek communication / notifications — faits workspace, pas de feed bruyant. */
+export function ClubHomeCommPeek({
+  pendingMemberships,
+  onNotifications,
+  onCommunication,
+  onPlayers,
+}: {
+  pendingMemberships: number;
+  onNotifications: () => void;
+  onCommunication: () => void;
+  onPlayers: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => commPeekStyles(tokens), [tokens]);
+
+  const membershipLine =
+    pendingMemberships > 0
+      ? `${pendingMemberships} adhésion${pendingMemberships > 1 ? 's' : ''} à valider`
+      : 'Aucune adhésion en attente';
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={7} delayStep={36}>
+      <View style={styles.block}>
+        <ClubText variant="label" muted>
+          Communication
+        </ClubText>
+        <View style={styles.list}>
+          <PressableSpring onPress={onPlayers} scaleTo={0.98} haptic style={styles.row}>
+            <View
+              style={[
+                styles.icon,
+                {
+                  backgroundColor:
+                    pendingMemberships > 0 ? tokens.warningSoft : tokens.accentSoft,
+                },
+              ]}
+            >
+              <Icon
+                name="checkmark-circle"
+                size={16}
+                color={pendingMemberships > 0 ? tokens.warning : tokens.accent}
+              />
+            </View>
+            <View style={styles.col}>
+              <ClubText variant="body" style={{ fontWeight: '700' }}>
+                Adhésions
+              </ClubText>
+              <ClubText variant="caption" muted numberOfLines={1}>
+                {membershipLine}
+              </ClubText>
+            </View>
+            <Icon name="chevron-forward" size={15} color={tokens.faint} />
+          </PressableSpring>
+          <PressableSpring onPress={onNotifications} scaleTo={0.98} haptic style={styles.row}>
+            <View style={[styles.icon, { backgroundColor: tokens.accentSoft }]}>
+              <Icon name="notifications" size={16} color={tokens.accent} />
+            </View>
+            <View style={styles.col}>
+              <ClubText variant="body" style={{ fontWeight: '700' }}>
+                Notifications
+              </ClubText>
+              <ClubText variant="caption" muted numberOfLines={1}>
+                Alertes club et rappels
+              </ClubText>
+            </View>
+            <Icon name="chevron-forward" size={15} color={tokens.faint} />
+          </PressableSpring>
+          <PressableSpring onPress={onCommunication} scaleTo={0.98} haptic style={styles.row}>
+            <View style={[styles.icon, { backgroundColor: tokens.accentSoft }]}>
+              <Icon name="chat" size={16} color={tokens.accent} />
+            </View>
+            <View style={styles.col}>
+              <ClubText variant="body" style={{ fontWeight: '700' }}>
+                Messages club
+              </ClubText>
+              <ClubText variant="caption" muted numberOfLines={1}>
+                Annonces et échanges
+              </ClubText>
+            </View>
+            <Icon name="chevron-forward" size={15} color={tokens.faint} />
+          </PressableSpring>
         </View>
       </View>
     </AnimatedEntrance>
@@ -324,7 +618,7 @@ export function ClubHomeTodoSection({
   const styles = useMemo(() => todoStyles(tokens), [tokens]);
 
   return (
-    <AnimatedEntrance kind="fadeUp" index={4} delayStep={36}>
+    <AnimatedEntrance kind="fadeUp" index={6} delayStep={36}>
       <View style={styles.block}>
         <View style={styles.head}>
           <ClubText variant="label" muted>
@@ -393,7 +687,7 @@ export function ClubHomeShortcutLinks({
   if (visible.length === 0) return null;
 
   return (
-    <AnimatedEntrance kind="fadeUp" index={5} delayStep={36}>
+    <AnimatedEntrance kind="fadeUp" index={8} delayStep={36}>
       <View style={styles.row}>
         {visible.map((link, i) => (
           <React.Fragment key={link.id}>
@@ -411,41 +705,6 @@ export function ClubHomeShortcutLinks({
           </React.Fragment>
         ))}
       </View>
-    </AnimatedEntrance>
-  );
-}
-
-/**
- * CTA copilote léger — une ligne, pas de hero briefing qui double le statut.
- * Le FAB shell reste l’entrée immersive ; ici un rappel discret sur Accueil.
- */
-export function ClubHomeCopilotCta({ onOpenCopilot }: { onOpenCopilot: () => void }) {
-  const { tokens } = useClubTheme();
-  const styles = useMemo(() => copilotCtaStyles(tokens), [tokens]);
-
-  return (
-    <AnimatedEntrance kind="fadeUp" index={6} delayStep={36}>
-      <PressableSpring
-        onPress={onOpenCopilot}
-        scaleTo={0.98}
-        haptic
-        style={styles.row}
-        accessibilityRole="button"
-        accessibilityLabel="Ouvrir le copilote Club"
-      >
-        <View style={[styles.icon, { backgroundColor: tokens.accentSoft }]}>
-          <Icon name="chat" size={16} color={tokens.accent} />
-        </View>
-        <View style={styles.col}>
-          <ClubText variant="body" style={{ fontWeight: '700' }}>
-            Demander au copilote
-          </ClubText>
-          <ClubText variant="caption" muted numberOfLines={1}>
-            Dialogue · confirmation avant action
-          </ClubText>
-        </View>
-        <Icon name="chevron-forward" size={15} color={tokens.faint} />
-      </PressableSpring>
     </AnimatedEntrance>
   );
 }
@@ -615,18 +874,29 @@ const nextEventStyles = (tokens: ClubThemeTokens) =>
 const todayPeekStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     block: { gap: clubSpace.sm },
-    row: { flexDirection: 'row', gap: clubSpace.sm },
-    chip: {
-      flex: 1,
+    head: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+    },
+    seeAll: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      paddingVertical: 2,
+      paddingHorizontal: 2,
+    },
+    list: { gap: clubSpace.xs },
+    rowItem: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.sm,
-      paddingVertical: clubSpace.sm,
+      paddingVertical: clubSpace.md,
       paddingHorizontal: clubSpace.md,
       borderRadius: clubRadius.md,
       backgroundColor: tokens.elevated,
       borderWidth: 1,
-      minWidth: 0,
     },
     chipDot: {
       width: 7,
@@ -635,6 +905,138 @@ const todayPeekStyles = (tokens: ClubThemeTokens) =>
       flexShrink: 0,
     },
     chipCol: { flex: 1, minWidth: 0, gap: 1 },
+  });
+
+const teamsRailStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    block: { gap: clubSpace.sm },
+    head: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+    },
+    seeAll: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      paddingVertical: 2,
+      paddingHorizontal: 2,
+    },
+    rail: {
+      gap: clubSpace.sm,
+      paddingRight: clubSpace.lg,
+    },
+    card: {
+      width: 148,
+      gap: 4,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      overflow: 'hidden',
+      ...clubShadow.soft,
+    },
+    accentBar: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 3,
+    },
+  });
+
+const weekPeekStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    block: { gap: clubSpace.sm },
+    head: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+    },
+    seeAll: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      paddingVertical: 2,
+      paddingHorizontal: 2,
+    },
+    list: { gap: clubSpace.xs },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.sm,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.md,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    dayCol: {
+      width: 44,
+      gap: 1,
+      flexShrink: 0,
+    },
+    dot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      flexShrink: 0,
+    },
+    col: { flex: 1, minWidth: 0, gap: 1 },
+  });
+
+const presenceStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.soft,
+    },
+    icon: {
+      width: 36,
+      height: 36,
+      borderRadius: clubRadius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    col: { flex: 1, minWidth: 0, gap: 2 },
+  });
+
+const commPeekStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    block: { gap: clubSpace.sm },
+    list: { gap: clubSpace.xs },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.sm,
+      borderRadius: clubRadius.md,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    icon: {
+      width: 32,
+      height: 32,
+      borderRadius: clubRadius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    col: { flex: 1, minWidth: 0, gap: 2 },
   });
 
 const todoStyles = (tokens: ClubThemeTokens) =>
@@ -712,28 +1114,4 @@ const shortcutStyles = (_tokens: ClubThemeTokens) =>
       paddingHorizontal: clubSpace.sm,
     },
     dot: { fontWeight: '700' },
-  });
-
-const copilotCtaStyles = (tokens: ClubThemeTokens) =>
-  StyleSheet.create({
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: clubSpace.sm,
-      paddingVertical: clubSpace.md,
-      paddingHorizontal: clubSpace.md,
-      borderRadius: clubRadius.lg,
-      backgroundColor: tokens.surface,
-      borderWidth: 1,
-      borderColor: tokens.border,
-      ...clubShadow.soft,
-    },
-    icon: {
-      width: 36,
-      height: 36,
-      borderRadius: clubRadius.sm,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    col: { flex: 1, minWidth: 0, gap: 2 },
   });
