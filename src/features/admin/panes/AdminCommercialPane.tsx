@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -42,12 +42,21 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
   const [optionsNote, setOptionsNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const [createForm, setCreateForm] = useState({
     club_name: '',
     owner_name: '',
     email: '',
     members: '100',
   });
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(() => {
+      void data.refresh();
+    }, 60000);
+    return () => clearInterval(id);
+  }, [autoRefresh, data.refresh]);
 
   const rows = useMemo(() => {
     return data.clubQuoteRequests.filter((q) => {
@@ -282,8 +291,30 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
       <View style={styles.header}>
         <AdminText variant="h1">Commercial</AdminText>
         <AdminText variant="caption" color={t.muted}>
-          CRM devis clubs · {sponsorPending} devis sponsors en attente
+          CRM devis clubs · {sponsorPending} devis sponsors · refresh{' '}
+          {autoRefresh ? '60s' : 'manuel'}
         </AdminText>
+        <View style={styles.toolbar}>
+          <AdminButton
+            label={data.refreshing ? '…' : 'Rafraîchir'}
+            variant="ghost"
+            onPress={() => void data.refresh()}
+          />
+          <AdminButton
+            label={autoRefresh ? 'Auto ON' : 'Auto OFF'}
+            variant={autoRefresh ? 'soft' : 'ghost'}
+            onPress={() => setAutoRefresh((v) => !v)}
+          />
+          {data.lastRefreshedAt ? (
+            <AdminBadge
+              label={data.lastRefreshedAt.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+              tone="info"
+            />
+          ) : null}
+        </View>
         <AdminButton
           label="Créer un devis"
           variant="soft"
@@ -414,6 +445,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: ADMIN_TOKENS.hairline,
   },
+  toolbar: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
   form: { padding: adminSpace.lg, gap: adminSpace.md },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {

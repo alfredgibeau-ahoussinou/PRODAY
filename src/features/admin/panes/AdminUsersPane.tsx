@@ -22,11 +22,14 @@ import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminSpace } from '../theme/adminDesignSystem';
 import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
 import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
-import type { User, UserRole, VerificationStatus } from '../../../models/User';
+import { useAdminSelection } from '../utils/useAdminSelection';
+import { shareCsv, toCsv } from '../utils/adminCsv';
+import { canAdminUi } from '../utils/adminRbac';
+import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
-import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { adminAuditService } from '../../../services/adminAudit.service';
+import type { User, UserRole, VerificationStatus } from '../../../models/User';
 
 const ROLE_FILTERS: { id: 'all' | UserRole; label: string }[] = [
   { id: 'all', label: 'Tous' },
@@ -59,6 +62,9 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
   const [onlyPending, setOnlyPending] = useState(false);
   const [selected, setSelected] = useState<User | null>(null);
   const [busy, setBusy] = useState(false);
+  const selection = useAdminSelection<string>();
+  const canBulk = canAdminUi(profile?.email, 'bulk');
+  const canExport = canAdminUi(profile?.email, 'export');
 
   useEffect(() => {
     if (!focusId) return;
@@ -77,11 +83,64 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
           u.display_name.toLowerCase().includes(query) ||
           u.email.toLowerCase().includes(query) ||
           (u.city?.toLowerCase().includes(query) ?? false) ||
-          u.uid.toLowerCase().includes(query)
+          u.uid.toLowerCase().includes(query) ||
+          (u.admin_tags ?? []).some((tag) => tag.toLowerCase().includes(query))
         );
       })
       .slice(0, 250);
   }, [data.users, q, role, onlyPending]);
+
+  const exportCsv = () => {
+    void shareCsv(
+      'proday-users.csv',
+      toCsv(
+        ['uid', 'name', 'email', 'role', 'active', 'tier', 'city', 'tags'],
+        filtered.map((u) => [
+          u.uid,
+          u.display_name,
+          u.email,
+          u.role,
+          u.is_active !== false,
+          u.subscription_tier ?? 'free',
+          u.city ?? '',
+          (u.admin_tags ?? []).join('|'),
+        ]),
+      ),
+    );
+  };
+
+  const bulkDeactivate = (active: boolean) => {
+    if (!selection.count) return;
+    confirmAdminAction(
+      active
+        ? `Réactiver ${selection.count} comptes ?`
+        : `Désactiver ${selection.count} comptes ?`,
+      'Action groupée Firestore + audit.',
+      async () => {
+        setBusy(true);
+        try {
+          for (const uid of selection.ids) {
+            await adminService.updateUser(uid, { is_active: active });
+          }
+          await adminAuditService.log({
+            action: 'user_updated',
+            actor_uid: firebaseUser?.uid ?? 'admin',
+            actor_email: profile?.email ?? undefined,
+            target_type: 'user_bulk',
+            target_id: selection.ids.slice(0, 8).join(','),
+            summary: `Bulk is_active=${active} n=${selection.count}`,
+          });
+          selection.clear();
+          await data.refresh();
+        } catch (e) {
+          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+        } finally {
+          setBusy(false);
+        }
+      },
+      !active,
+    );
+  };
 
   if (data.loading) return <AdminLoading />;
 
@@ -90,14 +149,17 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
       <View style={styles.header}>
         <AdminText variant="h1">Utilisateurs</AdminText>
         <AdminText variant="caption" color={t.muted}>
-          {data.users.length} comptes · édition réelle Firestore
+          {data.users.length} comptes · édition · bulk · CSV
         </AdminText>
         <TextInput
           value={q}
           onChangeText={setQ}
-          placeholder="Nom, e-mail, ville, uid…"
+          placeholder="Nom, e-mail, ville, uid, tag…"
           placeholderTextColor={t.faint}
-          style={[styles.input, { color: t.foreground, borderColor: t.border, backgroundColor: t.surface }]}
+          style={[
+            styles.input,
+            { color: t.foreground, borderColor: t.border, backgroundColor: t.surface },
+          ]}
         />
         <View style={styles.chips}>
           {ROLE_FILTERS.map((f) => (
@@ -114,6 +176,31 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
             onPress={() => setOnlyPending((v) => !v)}
           />
         </View>
+        <View style={styles.bulkBar}>
+          {canBulk ? (
+            <>
+              <AdminButton
+                label="Tout sel."
+                variant="ghost"
+                onPress={() => selection.selectAll(filtered.map((u) => u.uid))}
+              />
+              <AdminButton label="Vider" variant="ghost" onPress={selection.clear} />
+              <AdminButton
+                label={`Off (${selection.count})`}
+                variant="danger"
+                disabled={!selection.count || busy}
+                onPress={() => bulkDeactivate(false)}
+              />
+              <AdminButton
+                label={`On (${selection.count})`}
+                variant="soft"
+                disabled={!selection.count || busy}
+                onPress={() => bulkDeactivate(true)}
+              />
+            </>
+          ) : null}
+          {canExport ? <AdminButton label="CSV" variant="ghost" onPress={exportCsv} /> : null}
+        </View>
       </View>
 
       <FlatList
@@ -126,9 +213,26 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
         renderItem={({ item }) => {
           const needs = userNeedsAdminVerificationReview(item);
           return (
-            <Pressable onPress={() => setSelected(item)}>
-              <AdminCard>
+            <Pressable
+              onPress={() => setSelected(item)}
+              onLongPress={() => selection.toggle(item.uid)}
+            >
+              <AdminCard
+                style={
+                  selection.isSelected(item.uid)
+                    ? { borderColor: ADMIN_TOKENS.accent }
+                    : undefined
+                }
+              >
                 <View style={styles.row}>
+                  {canBulk ? (
+                    <Pressable onPress={() => selection.toggle(item.uid)} hitSlop={8}>
+                      <AdminBadge
+                        label={selection.isSelected(item.uid) ? '✓' : '○'}
+                        tone={selection.isSelected(item.uid) ? 'accent' : 'info'}
+                      />
+                    </Pressable>
+                  ) : null}
                   <View style={{ flex: 1, gap: 2 }}>
                     <AdminText variant="h3">{item.display_name}</AdminText>
                     <AdminText variant="caption" color={t.muted}>
@@ -231,12 +335,14 @@ function UserEditor({
   const [name, setName] = useState(user.display_name);
   const [city, setCity] = useState(user.city ?? '');
   const [note, setNote] = useState(user.admin_note ?? '');
+  const [tags, setTags] = useState((user.admin_tags ?? []).join(', '));
   const [role, setRole] = useState<UserRole>(user.role);
 
   useEffect(() => {
     setName(user.display_name);
     setCity(user.city ?? '');
     setNote(user.admin_note ?? '');
+    setTags((user.admin_tags ?? []).join(', '));
     setRole(user.role);
   }, [user]);
 
@@ -252,6 +358,12 @@ function UserEditor({
     }
   };
 
+  const parseTags = () =>
+    tags
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
   const saveProfile = () =>
     confirmAdminAction('Enregistrer le profil ?', 'Modification Firestore + audit.', () =>
       run(async () => {
@@ -259,6 +371,7 @@ function UserEditor({
           display_name: name.trim() || user.display_name,
           city: city.trim(),
           admin_note: note,
+          admin_tags: parseTags(),
           role,
         });
         await adminAuditService.log({
@@ -365,6 +478,7 @@ function UserEditor({
           <Field label="Nom affiché" value={name} onChange={setName} />
           <Field label="Ville" value={city} onChange={setCity} />
           <Field label="Note admin" value={note} onChange={setNote} multiline />
+          <Field label="Tags (virgules)" value={tags} onChange={setTags} />
           <AdminText variant="label" color={t.faint}>
             Rôle
           </AdminText>
@@ -485,6 +599,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  bulkBar: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     paddingHorizontal: 10,
     paddingVertical: 6,

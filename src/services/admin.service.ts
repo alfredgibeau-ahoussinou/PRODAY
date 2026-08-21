@@ -260,6 +260,8 @@ export type AdminUserUpdatePatch = {
   strong_foot?: 'left' | 'right' | 'both' | null;
   /** Note interne admin. */
   admin_note?: string | null;
+  /** Tags admin. */
+  admin_tags?: string[] | null;
 };
 
 export const adminService = {
@@ -383,6 +385,9 @@ export const adminService = {
     }
     if (patch.admin_note !== undefined) {
       update.admin_note = patch.admin_note?.trim() || null;
+    }
+    if (patch.admin_tags !== undefined) {
+      update.admin_tags = patch.admin_tags ?? [];
     }
 
     if (patch.product_line !== undefined || patch.role !== undefined) {
@@ -641,6 +646,9 @@ export const adminService = {
         suspended: Boolean(data.suspended),
         archived: Boolean(data.archived),
         admin_note: data.admin_note ? String(data.admin_note) : undefined,
+        admin_tags: Array.isArray(data.admin_tags)
+          ? (data.admin_tags as unknown[]).map(String)
+          : undefined,
         categories: (data.categories as string[]) ?? [],
         sponsor_ids: (data.sponsor_ids as string[]) ?? [],
         owner_uid: String(data.owner_uid ?? ''),
@@ -689,6 +697,7 @@ export const adminService = {
       suspended?: boolean;
       archived?: boolean;
       admin_note?: string | null;
+      admin_tags?: string[] | null;
     },
     actorUid?: string,
   ): Promise<void> {
@@ -702,6 +711,7 @@ export const adminService = {
     if (patch.suspended !== undefined) update.suspended = patch.suspended;
     if (patch.archived !== undefined) update.archived = patch.archived;
     if (patch.admin_note !== undefined) update.admin_note = patch.admin_note?.trim() || null;
+    if (patch.admin_tags !== undefined) update.admin_tags = patch.admin_tags ?? [];
     await updateDoc(doc(database, 'clubs', clubId), update);
     await adminAuditService.log({
       action: 'other',

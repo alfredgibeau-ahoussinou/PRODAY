@@ -18,6 +18,8 @@ export interface Club {
   archived?: boolean;
   /** Note interne admin (CRM). */
   admin_note?: string;
+  /** Tags admin libres (ex. risque, vip, onboarding). */
+  admin_tags?: string[];
   categories: string[];
   sponsor_ids: string[];
   owner_uid: string;

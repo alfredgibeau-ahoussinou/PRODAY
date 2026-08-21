@@ -169,6 +169,9 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       : undefined,
     is_active: data.is_active !== false && data.isActive !== false,
     admin_note: data.admin_note ? String(data.admin_note) : undefined,
+    admin_tags: Array.isArray(data.admin_tags)
+      ? (data.admin_tags as unknown[]).map(String)
+      : undefined,
     fcm_token: data.fcm_token as string | undefined,
     notification_radius_km: data.notification_radius_km as number | undefined,
     notification_preferences: data.notification_preferences as User['notification_preferences'],

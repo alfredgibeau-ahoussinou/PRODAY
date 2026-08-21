@@ -24,17 +24,25 @@ import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
 import type { Club } from '../../../models/Club';
 import { confirmAdminAction } from '../utils/confirmAdminAction';
+import { useAdminSelection } from '../utils/useAdminSelection';
+import { shareCsv, toCsv } from '../utils/adminCsv';
+import { canAdminUi } from '../utils/adminRbac';
+import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
+import { adminAuditService } from '../../../services/adminAudit.service';
 
 type Filter = 'all' | 'verified' | 'unverified' | 'suspended' | 'new';
 
 export function AdminClubsPane({ focusId }: { focusId?: string }) {
   const data = useAdminData();
-  const { firebaseUser } = useAuth();
+  const { firebaseUser, profile } = useAuth();
   const t = ADMIN_TOKENS;
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [selected, setSelected] = useState<Club | null>(null);
   const [busy, setBusy] = useState(false);
+  const selection = useAdminSelection<string>();
+  const canBulk = canAdminUi(profile?.email, 'bulk');
+  const canExport = canAdminUi(profile?.email, 'export');
 
   useEffect(() => {
     if (!focusId) return;
@@ -54,10 +62,61 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
       return (
         c.name.toLowerCase().includes(query) ||
         (c.city?.toLowerCase().includes(query) ?? false) ||
-        c.owner_uid.toLowerCase().includes(query)
+        c.owner_uid.toLowerCase().includes(query) ||
+        (c.admin_tags ?? []).some((tag) => tag.toLowerCase().includes(query))
       );
     });
   }, [data.clubs, q, filter]);
+
+  const exportCsv = () => {
+    void shareCsv(
+      'proday-clubs.csv',
+      toCsv(
+        ['id', 'name', 'city', 'verified', 'suspended', 'archived', 'owner_uid', 'tags'],
+        filtered.map((c) => [
+          c.id,
+          c.name,
+          c.city,
+          c.verified,
+          !!c.suspended,
+          !!c.archived,
+          c.owner_uid,
+          (c.admin_tags ?? []).join('|'),
+        ]),
+      ),
+    );
+  };
+
+  const bulkSuspend = (suspended: boolean) => {
+    if (!selection.count) return;
+    confirmAdminAction(
+      suspended ? `Suspendre ${selection.count} clubs ?` : `Réactiver ${selection.count} clubs ?`,
+      'Action groupée auditée.',
+      async () => {
+        setBusy(true);
+        try {
+          for (const id of selection.ids) {
+            await adminService.updateClub(id, { suspended }, firebaseUser?.uid);
+          }
+          await adminAuditService.log({
+            action: 'other',
+            actor_uid: firebaseUser?.uid ?? 'admin',
+            actor_email: profile?.email ?? undefined,
+            target_type: 'club_bulk',
+            target_id: selection.ids.slice(0, 8).join(','),
+            summary: `Bulk suspended=${suspended} n=${selection.count}`,
+          });
+          selection.clear();
+          await data.refresh();
+        } catch (e) {
+          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+        } finally {
+          setBusy(false);
+        }
+      },
+      suspended,
+    );
+  };
 
   if (data.loading) return <AdminLoading />;
 
@@ -66,14 +125,17 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
       <View style={styles.header}>
         <AdminText variant="h1">Clubs</AdminText>
         <AdminText variant="caption" color={t.muted}>
-          {data.clubs.length} clubs · valider / suspendre / notes / archiver
+          {data.clubs.length} clubs · dossier · bulk · CSV
         </AdminText>
         <TextInput
           value={q}
           onChangeText={setQ}
-          placeholder="Nom, ville, owner…"
+          placeholder="Nom, ville, owner, tag…"
           placeholderTextColor={t.faint}
-          style={[styles.input, { color: t.foreground, borderColor: t.border, backgroundColor: t.surface }]}
+          style={[
+            styles.input,
+            { color: t.foreground, borderColor: t.border, backgroundColor: t.surface },
+          ]}
         />
         <View style={styles.chips}>
           {(
@@ -102,6 +164,31 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
             </Pressable>
           ))}
         </View>
+        <View style={styles.bulkBar}>
+          {canBulk ? (
+            <>
+              <AdminButton
+                label="Tout sel."
+                variant="ghost"
+                onPress={() => selection.selectAll(filtered.map((c) => c.id))}
+              />
+              <AdminButton label="Vider" variant="ghost" onPress={selection.clear} />
+              <AdminButton
+                label={`Suspendre (${selection.count})`}
+                variant="danger"
+                disabled={!selection.count || busy}
+                onPress={() => bulkSuspend(true)}
+              />
+              <AdminButton
+                label={`Réactiver (${selection.count})`}
+                variant="soft"
+                disabled={!selection.count || busy}
+                onPress={() => bulkSuspend(false)}
+              />
+            </>
+          ) : null}
+          {canExport ? <AdminButton label="CSV" variant="ghost" onPress={exportCsv} /> : null}
+        </View>
       </View>
 
       <FlatList
@@ -110,23 +197,36 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
         contentContainerStyle={{ padding: adminSpace.lg, gap: 8 }}
         ListEmptyComponent={<AdminEmptyState title="Aucun club" />}
         renderItem={({ item }) => (
-          <Pressable onPress={() => setSelected(item)}>
-            <AdminCard>
+          <Pressable onPress={() => setSelected(item)} onLongPress={() => selection.toggle(item.id)}>
+            <AdminCard
+              style={
+                selection.isSelected(item.id) ? { borderColor: ADMIN_TOKENS.accent } : undefined
+              }
+            >
               <View style={styles.row}>
+                {canBulk ? (
+                  <Pressable onPress={() => selection.toggle(item.id)} hitSlop={8}>
+                    <AdminBadge
+                      label={selection.isSelected(item.id) ? '✓' : '○'}
+                      tone={selection.isSelected(item.id) ? 'accent' : 'info'}
+                    />
+                  </Pressable>
+                ) : null}
                 <View style={{ flex: 1, gap: 2 }}>
                   <AdminText variant="h3">{item.name}</AdminText>
                   <AdminText variant="caption" color={t.muted}>
                     {[item.city, item.department].filter(Boolean).join(' · ') || '—'}
                   </AdminText>
-                  <AdminText variant="caption" color={t.faint}>
-                    Owner {item.owner_uid.slice(0, 10)}…
-                  </AdminText>
+                  {(item.admin_tags ?? []).length ? (
+                    <AdminText variant="caption" color={t.faint}>
+                      {(item.admin_tags ?? []).join(', ')}
+                    </AdminText>
+                  ) : null}
                 </View>
                 <View style={{ gap: 4, alignItems: 'flex-end' }}>
                   {item.suspended ? <AdminBadge label="Suspendu" tone="danger" /> : null}
-                  {item.archived ? <AdminBadge label="Archivé" tone="info" /> : null}
                   <AdminBadge
-                    label={item.verified ? 'Validé' : 'En attente'}
+                    label={item.verified ? 'Validé' : 'Attente'}
                     tone={item.verified ? 'success' : 'warn'}
                   />
                 </View>
@@ -146,11 +246,8 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
             onClose={() => setSelected(null)}
             onRefresh={async () => {
               await data.refresh();
-              const next = data.clubs.find((c) => c.id === selected.id);
-              // refresh is async; re-read after
               const list = await adminService.listAllClubs(200);
-              const fresh = list.find((c) => c.id === selected.id) ?? next ?? selected;
-              setSelected(fresh);
+              setSelected(list.find((c) => c.id === selected.id) ?? selected);
             }}
           />
         ) : null}
@@ -175,17 +272,47 @@ function ClubEditor({
   onRefresh: () => Promise<void>;
 }) {
   const t = ADMIN_TOKENS;
+  const data = useAdminData();
   const [name, setName] = useState(club.name);
   const [city, setCity] = useState(club.city);
   const [department, setDepartment] = useState(club.department ?? '');
   const [note, setNote] = useState(club.admin_note ?? '');
+  const [tags, setTags] = useState((club.admin_tags ?? []).join(', '));
 
   useEffect(() => {
     setName(club.name);
     setCity(club.city);
     setDepartment(club.department ?? '');
     setNote(club.admin_note ?? '');
+    setTags((club.admin_tags ?? []).join(', '));
   }, [club]);
+
+  const relatedUsers = useMemo(
+    () =>
+      data.users.filter(
+        (u) => u.uid === club.owner_uid || u.profile?.club_id === club.id,
+      ),
+    [data.users, club.id, club.owner_uid],
+  );
+  const coaches = relatedUsers.filter((u) => u.role === 'coach');
+  const players = relatedUsers.filter((u) => u.role === 'player');
+  const clubTeams = useMemo(
+    () => data.teams.filter((tm) => tm.club_id === club.id),
+    [data.teams, club.id],
+  );
+  const clubQuotes = useMemo(
+    () =>
+      data.clubQuoteRequests.filter(
+        (q) =>
+          q.requester_uid === club.owner_uid ||
+          q.club_name.toLowerCase() === club.name.toLowerCase(),
+      ),
+    [data.clubQuoteRequests, club.owner_uid, club.name],
+  );
+  const clubPayments = useMemo(
+    () => data.payments.filter((p) => p.club_id === club.id),
+    [data.payments, club.id],
+  );
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -199,8 +326,14 @@ function ClubEditor({
     }
   };
 
+  const parseTags = () =>
+    tags
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
   const save = () =>
-    confirmAdminAction('Enregistrer le club ?', 'Identité + note admin.', () =>
+    confirmAdminAction('Enregistrer le club ?', 'Identité + note + tags.', () =>
       run(() =>
         adminService.updateClub(
           club.id,
@@ -209,39 +342,12 @@ function ClubEditor({
             city,
             department: department || null,
             admin_note: note,
+            admin_tags: parseTags(),
           },
           actorUid,
         ),
       ),
     );
-
-  const setVerified = (verified: boolean) =>
-    confirmAdminAction(
-      verified ? 'Valider le club ?' : 'Retirer la validation ?',
-      'Action auditée.',
-      () => run(() => adminService.updateClub(club.id, { verified }, actorUid)),
-      !verified,
-    );
-
-  const setSuspended = (suspended: boolean) =>
-    confirmAdminAction(
-      suspended ? 'Suspendre le club ?' : 'Lever la suspension ?',
-      suspended
-        ? 'Le club reste en base, marqué suspended=true.'
-        : 'Le club redevient opérationnel.',
-      () => run(() => adminService.updateClub(club.id, { suspended }, actorUid)),
-      suspended,
-    );
-
-  const setArchived = (archived: boolean) =>
-    confirmAdminAction(
-      archived ? 'Archiver le club ?' : 'Désarchiver ?',
-      'Archivage soft — pas de suppression définitive.',
-      () => run(() => adminService.updateClub(club.id, { archived }, actorUid)),
-      archived,
-    );
-
-  const owner = club.owner_uid;
 
   return (
     <View style={[styles.editorRoot, { backgroundColor: t.bg }]}>
@@ -249,7 +355,7 @@ function ClubEditor({
         <AdminButton label="Fermer" variant="ghost" onPress={onClose} />
         <AdminText variant="h1">{club.name}</AdminText>
         <AdminText variant="caption" color={t.muted}>
-          Owner {owner}
+          Dossier complet · owner {club.owner_uid.slice(0, 12)}…
         </AdminText>
       </View>
       <ScrollView contentContainerStyle={styles.editorBody}>
@@ -259,59 +365,124 @@ function ClubEditor({
           <Field label="Ville" value={city} onChange={setCity} />
           <Field label="Département" value={department} onChange={setDepartment} />
           <Field label="Note admin" value={note} onChange={setNote} multiline />
+          <Field label="Tags (virgules)" value={tags} onChange={setTags} />
           <AdminButton label={busy ? '…' : 'Enregistrer'} disabled={busy} onPress={save} />
         </AdminCard>
 
         <AdminCard>
           <AdminText variant="h2">Statuts</AdminText>
           <View style={styles.badges}>
-            <AdminBadge label={club.verified ? 'Validé' : 'Non validé'} tone={club.verified ? 'success' : 'warn'} />
-            <AdminBadge label={club.suspended ? 'Suspendu' : 'Actif'} tone={club.suspended ? 'danger' : 'success'} />
-            <AdminBadge label={club.archived ? 'Archivé' : 'Courant'} tone={club.archived ? 'info' : 'accent'} />
+            <AdminBadge
+              label={club.verified ? 'Validé' : 'Non validé'}
+              tone={club.verified ? 'success' : 'warn'}
+            />
+            <AdminBadge
+              label={club.suspended ? 'Suspendu' : 'Actif'}
+              tone={club.suspended ? 'danger' : 'success'}
+            />
+            <AdminBadge
+              label={club.archived ? 'Archivé' : 'Courant'}
+              tone={club.archived ? 'info' : 'accent'}
+            />
           </View>
           <View style={styles.actions}>
-            <AdminButton label="Valider" disabled={busy || club.verified} onPress={() => setVerified(true)} />
             <AdminButton
-              label="Retirer validation"
-              variant="ghost"
-              disabled={busy || !club.verified}
-              onPress={() => setVerified(false)}
+              label="Valider"
+              disabled={busy || club.verified}
+              onPress={() =>
+                confirmAdminAction('Valider ?', 'Action auditée.', () =>
+                  run(() => adminService.updateClub(club.id, { verified: true }, actorUid)),
+                )
+              }
             />
             <AdminButton
               label="Suspendre"
               variant="danger"
               disabled={busy || !!club.suspended}
-              onPress={() => setSuspended(true)}
+              onPress={() =>
+                confirmAdminAction(
+                  'Suspendre ?',
+                  'suspended=true',
+                  () =>
+                    run(() => adminService.updateClub(club.id, { suspended: true }, actorUid)),
+                  true,
+                )
+              }
             />
             <AdminButton
               label="Lever suspension"
               variant="soft"
               disabled={busy || !club.suspended}
-              onPress={() => setSuspended(false)}
+              onPress={() =>
+                confirmAdminAction('Réactiver ?', '', () =>
+                  run(() => adminService.updateClub(club.id, { suspended: false }, actorUid)),
+                )
+              }
             />
             <AdminButton
               label="Archiver"
               variant="ghost"
               disabled={busy || !!club.archived}
-              onPress={() => setArchived(true)}
-            />
-            <AdminButton
-              label="Désarchiver"
-              variant="ghost"
-              disabled={busy || !club.archived}
-              onPress={() => setArchived(false)}
+              onPress={() =>
+                confirmAdminAction(
+                  'Archiver ?',
+                  'Soft archive',
+                  () =>
+                    run(() => adminService.updateClub(club.id, { archived: true }, actorUid)),
+                  true,
+                )
+              }
             />
           </View>
         </AdminCard>
 
         <AdminCard>
-          <AdminText variant="h2">Contacts</AdminText>
-          <AdminText variant="body" color={t.muted}>
-            Owner UID : {owner}
+          <AdminText variant="h2">Équipes ({clubTeams.length})</AdminText>
+          {clubTeams.length === 0 ? (
+            <AdminText variant="caption" color={t.muted}>
+              Aucune équipe liée.
+            </AdminText>
+          ) : (
+            clubTeams.slice(0, 20).map((tm) => (
+              <AdminText key={tm.id} variant="body" color={t.muted}>
+                {tm.name}
+                {tm.category ? ` · ${tm.category}` : ''}
+              </AdminText>
+            ))
+          )}
+        </AdminCard>
+
+        <AdminCard>
+          <AdminText variant="h2">
+            Effectif · {coaches.length} coachs · {players.length} joueurs
           </AdminText>
-          <AdminText variant="caption" color={t.faint}>
-            Les contacts président/coach dérivent des users liés (voir Utilisateurs / rôle club).
-          </AdminText>
+          {[...coaches, ...players].slice(0, 24).map((u) => (
+            <AdminText key={u.uid} variant="caption" color={t.muted}>
+              {getRoleLabel(u.role)} · {u.display_name} · {u.email}
+            </AdminText>
+          ))}
+        </AdminCard>
+
+        <AdminCard>
+          <AdminText variant="h2">Devis liés ({clubQuotes.length})</AdminText>
+          {clubQuotes.slice(0, 10).map((q) => (
+            <View key={q.id} style={styles.miniRow}>
+              <AdminText variant="caption" color={t.muted} style={{ flex: 1 }}>
+                {q.status}
+                {q.quoted_total_eur != null ? ` · ${q.quoted_total_eur} €` : ''}
+              </AdminText>
+              <AdminBadge label={q.offer_hint ?? 'quote'} tone="info" />
+            </View>
+          ))}
+        </AdminCard>
+
+        <AdminCard>
+          <AdminText variant="h2">Paiements équipe ({clubPayments.length})</AdminText>
+          {clubPayments.slice(0, 10).map((p) => (
+            <AdminText key={p.id} variant="caption" color={t.muted}>
+              {p.label} · {p.amount_eur} € · {p.status}
+            </AdminText>
+          ))}
         </AdminCard>
       </ScrollView>
     </View>
@@ -376,10 +547,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
   },
-  row: { flexDirection: 'row', gap: 12 },
+  bulkBar: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  row: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   editorRoot: { flex: 1, paddingTop: 48 },
   editorHeader: { paddingHorizontal: adminSpace.lg, gap: 6 },
   editorBody: { padding: adminSpace.lg, gap: adminSpace.md, paddingBottom: 48 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  miniRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
 });

@@ -23,6 +23,7 @@ import type { StageOffer } from '../../../models/Stage';
 import type { ClubCamera } from '../../../models/ClubCameras';
 import {
   adminService,
+  type AdminTeam,
   type AdminTournament,
   type PlatformStats,
   type PlatformDailySnapshot,
@@ -74,6 +75,7 @@ interface AdminDataContextValue {
   subscriptionUpgradeRequests: SubscriptionUpgradeRequest[];
   stageOffers: StageOffer[];
   tournaments: AdminTournament[];
+  teams: AdminTeam[];
   cameras: ClubCamera[];
   userDocCounts: Record<string, number>;
   refresh: () => Promise<void>;
@@ -116,6 +118,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
   >([]);
   const [stageOffers, setStageOffers] = useState<StageOffer[]>([]);
   const [tournaments, setTournaments] = useState<AdminTournament[]>([]);
+  const [teams, setTeams] = useState<AdminTeam[]>([]);
   const [cameras, setCameras] = useState<ClubCamera[]>([]);
   const [userDocCounts, setUserDocCounts] = useState<Record<string, number>>({});
 
@@ -144,6 +147,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       subUpgradeReqs,
       memberships,
       cams,
+      teamRows,
     ] = await Promise.all([
       adminService.getPlatformStats(),
       adminService.listAllUsers(),
@@ -168,6 +172,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       subscriptionUpgradeRequestService.listPendingForAdmin(50),
       adminService.listPendingMemberships(100),
       adminService.listAllClubCameras(120),
+      adminService.listAllTeams(200),
     ]);
     setStats(s);
     setDailySnapshots(snapshots);
@@ -191,6 +196,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
     setSubscriptionUpgradeRequests(subUpgradeReqs);
     setStageOffers(stages);
     setTournaments(tourneys);
+    setTeams(teamRows);
     setCameras(cams);
     setLastRefreshedAt(new Date());
 
@@ -297,6 +303,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       subscriptionUpgradeRequests,
       stageOffers,
       tournaments,
+      teams,
       cameras,
       userDocCounts,
       refresh,
@@ -331,6 +338,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       subscriptionUpgradeRequests,
       stageOffers,
       tournaments,
+      teams,
       cameras,
       userDocCounts,
       refresh,

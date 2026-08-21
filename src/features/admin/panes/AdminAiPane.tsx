@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useAdminData } from '../data/AdminDataContext';
 import {
   AdminBadge,
+  AdminButton,
   AdminCard,
   AdminLoading,
   AdminText,
@@ -10,6 +11,10 @@ import {
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminSpace } from '../theme/adminDesignSystem';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
+import { confirmAdminAction } from '../utils/confirmAdminAction';
+import { adminService } from '../../../services/admin.service';
+import { useAuth } from '../../../context/AuthContext';
+import { canAdminUi } from '../utils/adminRbac';
 
 type Props = { onNavigate: (section: AdminNavSectionId) => void };
 
@@ -21,16 +26,33 @@ const AGENTS = [
   { id: 'security', label: 'Security AI', desc: 'Audit & anomalies' },
 ] as const;
 
+type PreparedAction = {
+  id: string;
+  title: string;
+  detail: string;
+  section?: AdminNavSectionId;
+  run?: () => Promise<void>;
+  destructive?: boolean;
+};
+
 export function AdminAiPane({ onNavigate }: Props) {
   const data = useAdminData();
+  const { firebaseUser, profile } = useAuth();
   const t = ADMIN_TOKENS;
   const [q, setQ] = useState('');
   const [agent, setAgent] = useState<(typeof AGENTS)[number]['id']>('admin');
   const [answer, setAnswer] = useState<string | null>(null);
+  const [prepared, setPrepared] = useState<PreparedAction[]>([]);
+  const canEditUsers = canAdminUi(profile?.email, 'edit_users');
 
   const insights = useMemo(() => {
     const pendingQuotes = data.clubQuoteRequests.filter((x) => x.status === 'pending').length;
-    const lines: { problem: string; impact: string; action: string; section: AdminNavSectionId }[] = [];
+    const lines: {
+      problem: string;
+      impact: string;
+      action: string;
+      section: AdminNavSectionId;
+    }[] = [];
     if (pendingQuotes > 0) {
       lines.push({
         problem: `${pendingQuotes} devis clubs en attente`,
@@ -55,6 +77,14 @@ export function AdminAiPane({ onNavigate }: Props) {
         section: 'finances',
       });
     }
+    if (data.clubs.filter((c) => c.suspended).length > 0) {
+      lines.push({
+        problem: `${data.clubs.filter((c) => c.suspended).length} clubs suspendus`,
+        impact: 'Revue support / commercial',
+        action: 'Ouvrir Clubs',
+        section: 'clubs',
+      });
+    }
     if (lines.length === 0) {
       lines.push({
         problem: 'Aucune anomalie majeure détectée',
@@ -66,10 +96,71 @@ export function AdminAiPane({ onNavigate }: Props) {
     return lines;
   }, [data]);
 
+  const buildPrepared = (query: string): PreparedAction[] => {
+    const actions: PreparedAction[] = [];
+    const pendingQuotes = data.clubQuoteRequests.filter((x) => x.status === 'pending');
+    const pendingUsers = data.users.filter((u) => u.verification_status === 'PENDING').slice(0, 3);
+    const unpaid = data.payments.filter((p) => p.status === 'pending').slice(0, 3);
+
+    if (!query || query.includes('devis') || query.includes('quote') || agent === 'sales') {
+      if (pendingQuotes[0]) {
+        actions.push({
+          id: 'open-quote',
+          title: 'Ouvrir le premier devis pending',
+          detail: pendingQuotes[0].club_name,
+          section: 'commercial',
+        });
+      }
+    }
+    if (!query || query.includes('verif') || query.includes('user') || agent === 'support') {
+      for (const u of pendingUsers) {
+        actions.push({
+          id: `verify-${u.uid}`,
+          title: `Préparer validation ${u.display_name}`,
+          detail: u.email,
+          section: 'utilisateurs',
+          run: canEditUsers
+            ? async () => {
+                await adminService.updateUser(u.uid, {
+                  verification_status: 'VERIFIED',
+                  is_verified: true,
+                });
+                await data.refresh();
+              }
+            : undefined,
+        });
+      }
+    }
+    if (!query || query.includes('paiement') || query.includes('finance') || agent === 'finance') {
+      for (const p of unpaid) {
+        actions.push({
+          id: `pay-${p.id}`,
+          title: `Voir paiement ${p.label}`,
+          detail: `${p.amount_eur} € · ${p.status}`,
+          section: 'finances',
+        });
+      }
+    }
+    actions.push({
+      id: 'refresh',
+      title: 'Rafraîchir les données admin',
+      detail: 'Recharge Firestore (users, clubs, devis…)',
+      run: async () => {
+        await data.refresh();
+      },
+    });
+    return actions.slice(0, 8);
+  };
+
   const runQuery = () => {
     const query = q.trim().toLowerCase();
-    if (!query) return;
     const pendingQuotes = data.clubQuoteRequests.filter((x) => x.status === 'pending');
+    setPrepared(buildPrepared(query));
+
+    if (!query) {
+      setAnswer('Actions préparées ci-dessous — confirmez avant exécution.');
+      return;
+    }
     if (query.includes('devis') || query.includes('quote')) {
       setAnswer(
         `${pendingQuotes.length} devis clubs pending. Ex. : ${
@@ -79,17 +170,46 @@ export function AdminAiPane({ onNavigate }: Props) {
       return;
     }
     if (query.includes('ca') || query.includes('mrr') || query.includes('revenu')) {
-      const paid = data.users.filter((u) => u.subscription_tier && u.subscription_tier !== 'free').length;
-      setAnswer(`Estimation MRR ~ ${(paid * 3.99).toFixed(0)} € (${paid} abonnés payants). Agent ${agent}.`);
+      const paid = data.users.filter(
+        (u) => u.subscription_tier && u.subscription_tier !== 'free',
+      ).length;
+      setAnswer(
+        `Estimation MRR ~ ${(paid * 3.99).toFixed(0)} € (${paid} abonnés payants). Agent ${agent}.`,
+      );
       return;
     }
     if (query.includes('club')) {
-      setAnswer(`${data.clubs.length} clubs · ${data.clubs.filter((c) => !c.verified).length} non validés.`);
+      setAnswer(
+        `${data.clubs.length} clubs · ${data.clubs.filter((c) => !c.verified).length} non validés · ${
+          data.clubs.filter((c) => c.suspended).length
+        } suspendus.`,
+      );
       return;
     }
     setAnswer(
-      `Contexte chargé : ${data.users.length} users, ${data.clubs.length} clubs, ${data.workQueue.length} actions. Précisez devis, clubs, MRR ou santé.`,
+      `Contexte : ${data.users.length} users, ${data.clubs.length} clubs, ${data.workQueue.length} actions. Actions préparées prêtes.`,
     );
+  };
+
+  const executePrepared = (a: PreparedAction) => {
+    if (a.run) {
+      confirmAdminAction(
+        a.title,
+        a.detail,
+        async () => {
+          try {
+            await a.run!();
+            Alert.alert('OK', 'Action exécutée.');
+            setPrepared((prev) => prev.filter((x) => x.id !== a.id));
+          } catch (e) {
+            Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          }
+        },
+        a.destructive,
+      );
+      return;
+    }
+    if (a.section) onNavigate(a.section);
   };
 
   if (data.loading) return <AdminLoading />;
@@ -98,7 +218,7 @@ export function AdminAiPane({ onNavigate }: Props) {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
       <AdminText variant="h1">ProDay Admin AI</AdminText>
       <AdminText variant="caption" color={t.muted}>
-        Assistant contextuel + multi-agents (routage local sur données live)
+        Insights live · actions préparées + confirmation (pas de provider LLM externe)
       </AdminText>
 
       <View style={styles.agents}>
@@ -146,19 +266,58 @@ export function AdminAiPane({ onNavigate }: Props) {
           placeholder="Ex. Quels devis sont en attente ?"
           placeholderTextColor={t.faint}
           onSubmitEditing={runQuery}
-          style={[styles.input, { color: t.foreground, borderColor: t.border, backgroundColor: t.surfaceRaised }]}
+          style={[
+            styles.input,
+            {
+              color: t.foreground,
+              borderColor: t.border,
+              backgroundColor: t.surfaceRaised,
+            },
+          ]}
         />
-        <Pressable onPress={runQuery} style={[styles.ask, { backgroundColor: t.accent }]}>
-          <AdminText variant="caption" color="#fff">
-            Analyser
-          </AdminText>
-        </Pressable>
+        <View style={styles.row}>
+          <AdminButton label="Analyser + préparer" onPress={runQuery} />
+          <AdminButton
+            label="Préparer actions"
+            variant="soft"
+            onPress={() => {
+              setPrepared(buildPrepared(''));
+              setAnswer('Actions préparées — confirmez chacune.');
+            }}
+          />
+        </View>
         {answer ? (
           <AdminText variant="body" color={t.muted}>
             {answer}
           </AdminText>
         ) : null}
       </AdminCard>
+
+      {prepared.length > 0 ? (
+        <AdminCard>
+          <AdminText variant="h2">Actions préparées</AdminText>
+          {prepared.map((a) => (
+            <View key={a.id} style={[styles.prepared, { borderColor: t.hairline }]}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <AdminText variant="h3">{a.title}</AdminText>
+                <AdminText variant="caption" color={t.muted}>
+                  {a.detail}
+                </AdminText>
+              </View>
+              <AdminButton
+                label={a.run ? 'Exécuter' : 'Ouvrir'}
+                variant={a.run ? 'primary' : 'soft'}
+                onPress={() => executePrepared(a)}
+              />
+            </View>
+          ))}
+          {!firebaseUser ? (
+            <AdminText variant="caption" color={t.faint}>
+              Session requise pour muter.
+            </AdminText>
+          ) : null}
+        </AdminCard>
+      ) : null}
     </ScrollView>
   );
 }
@@ -185,11 +344,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
   },
-  ask: {
-    alignSelf: 'flex-start',
-    marginTop: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  prepared: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });

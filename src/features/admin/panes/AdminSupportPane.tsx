@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useAdminData } from '../data/AdminDataContext';
 import {
@@ -23,28 +23,51 @@ import type { AdminWorkItem } from '../../../utils/adminInsights';
 
 type Props = { onNavigate: (section: AdminNavSectionId, focusId?: string) => void };
 
+const KIND_FILTERS = [
+  'all',
+  'reel',
+  'report',
+  'verification',
+  'club_quote',
+  'quote',
+  'subscription_request',
+  'payment',
+  'membership',
+  'application',
+] as const;
+
 export function AdminSupportPane({ onNavigate }: Props) {
   const data = useAdminData();
   const t = ADMIN_TOKENS;
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [kind, setKind] = useState<(typeof KIND_FILTERS)[number]>('all');
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const tickets = useMemo(
-    () =>
-      data.workQueue.filter((w) =>
-        [
-          'reel',
-          'report',
-          'application',
-          'verification',
-          'membership',
-          'club_quote',
-          'quote',
-          'subscription_request',
-          'payment',
-        ].includes(w.kind),
-      ),
-    [data.workQueue],
-  );
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(() => {
+      void data.refresh();
+    }, 45000);
+    return () => clearInterval(id);
+  }, [autoRefresh, data.refresh]);
+
+  const tickets = useMemo(() => {
+    const base = data.workQueue.filter((w) =>
+      [
+        'reel',
+        'report',
+        'application',
+        'verification',
+        'membership',
+        'club_quote',
+        'quote',
+        'subscription_request',
+        'payment',
+      ].includes(w.kind),
+    );
+    if (kind === 'all') return base;
+    return base.filter((w) => w.kind === kind);
+  }, [data.workQueue, kind]);
 
   if (data.loading) return <AdminLoading />;
 
@@ -76,13 +99,59 @@ export function AdminSupportPane({ onNavigate }: Props) {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
       <AdminText variant="h1">Support</AdminText>
       <AdminText variant="caption" color={t.muted}>
-        File actionnable — approve / reject branchés sur les services réels
+        File enrichie (kinds) · refresh {autoRefresh ? '45s' : 'manuel'} · pas de modèle ticket dédié
       </AdminText>
+
+      <View style={styles.toolbar}>
+        <AdminButton
+          label={data.refreshing ? '…' : 'Rafraîchir'}
+          variant="soft"
+          onPress={() => void data.refresh()}
+        />
+        <AdminButton
+          label={autoRefresh ? 'Auto ON' : 'Auto OFF'}
+          variant={autoRefresh ? 'primary' : 'ghost'}
+          onPress={() => setAutoRefresh((v) => !v)}
+        />
+        {data.lastRefreshedAt ? (
+          <AdminBadge
+            label={`Maj ${data.lastRefreshedAt.toLocaleTimeString('fr-FR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}`}
+            tone="info"
+          />
+        ) : null}
+      </View>
+
+      <View style={styles.chips}>
+        {KIND_FILTERS.map((k) => (
+          <Pressable
+            key={k}
+            onPress={() => setKind(k)}
+            style={[
+              styles.chip,
+              {
+                backgroundColor: kind === k ? t.accentSoft : t.surfaceRaised,
+                borderColor: kind === k ? t.accent : t.border,
+              },
+            ]}
+          >
+            <AdminText variant="caption" color={kind === k ? t.accentHot : t.muted}>
+              {k}
+            </AdminText>
+          </Pressable>
+        ))}
+      </View>
+
       <AdminCard>
+        <AdminText variant="caption" color={t.muted}>
+          {tickets.length} tickets dérivés de la file décisions (Firestore live)
+        </AdminText>
         {tickets.length === 0 ? (
-          <AdminEmptyState title="Inbox calme" body="Aucun ticket dérivé." />
+          <AdminEmptyState title="Inbox calme" body="Aucun ticket pour ce filtre." />
         ) : (
-          tickets.slice(0, 50).map((item) => (
+          tickets.slice(0, 60).map((item) => (
             <View key={item.id} style={[styles.row, { borderColor: t.hairline }]}>
               <Pressable
                 style={{ flex: 1, gap: 2 }}
@@ -121,13 +190,21 @@ export function AdminSupportPane({ onNavigate }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: adminSpace.lg, gap: adminSpace.lg, paddingBottom: 48 },
+  content: { padding: adminSpace.lg, gap: adminSpace.md, paddingBottom: 48 },
+  toolbar: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
-  actions: { gap: 6, alignItems: 'flex-end', maxWidth: 120 },
+  actions: { gap: 6, alignItems: 'flex-end' },
 });
