@@ -28,6 +28,8 @@ export type AdminAuditAction =
   | 'subscription_revoked'
   | 'subscription_changed'
   | 'subscription_extended'
+  | 'club_quote_quoted'
+  | 'club_quote_status'
   | 'other';
 
 export interface AdminAuditEntry {

@@ -1,75 +1,35 @@
 import { resolveAdminWorkItemNavigation, resolveAdminSearchHitNavigation } from '../utils/adminWorkNavigation';
 import type { AdminWorkItem } from '../utils/adminInsights';
 
-function navItem(kind: AdminWorkItem['kind']): AdminWorkItem {
+function navItem(
+  kind: AdminWorkItem['kind'],
+  targetSection: AdminWorkItem['targetSection'],
+  entityId?: string,
+): AdminWorkItem {
   return {
     id: `${kind}-1`,
     kind,
     priority: 'medium',
     title: 'Test',
     subtitle: 'Sub',
-    targetTab: 'users',
+    targetSection,
+    entityId,
   };
 }
 
 describe('adminWorkNavigation', () => {
-  it('envoie verification vers users / decisions', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('verification'))).toEqual({
-      section: 'users',
-      screenTab: 'decisions',
+  it('conserve la section cible de la file', () => {
+    expect(resolveAdminWorkItemNavigation(navItem('verification', 'utilisateurs', 'u1'))).toEqual({
+      section: 'utilisateurs',
+      focusId: 'u1',
     });
-  });
-
-  it('envoie reel vers contenus et report vers signalements contenu', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('reel'))).toEqual({
-      section: 'contenus',
-      screenTab: 'fil',
+    expect(resolveAdminWorkItemNavigation(navItem('club_quote', 'commercial', 'q1'))).toEqual({
+      section: 'commercial',
+      focusId: 'q1',
     });
-    expect(resolveAdminWorkItemNavigation(navItem('report'))).toEqual({
-      section: 'contenus',
-      screenTab: 'signalements',
-    });
-  });
-
-  it('envoie payment vers business / paiements', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('payment'))).toEqual({
-      section: 'business',
-      screenTab: 'paiements',
-    });
-  });
-
-  it('envoie application vers clubs / candidatures', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('application'))).toEqual({
-      section: 'clubs',
-      screenTab: 'apps',
-    });
-  });
-
-  it('envoie quote vers business / sponsors', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('quote'))).toEqual({
-      section: 'business',
-      screenTab: 'sponsors',
-    });
-  });
-
-  it('envoie post vers clubs / posts', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('post'))).toEqual({
-      section: 'clubs',
-      screenTab: 'posts',
-    });
-  });
-
-  it('envoie membership vers clubs / validation', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('membership'))).toEqual({
-      section: 'clubs',
-      screenTab: 'validation',
-    });
-  });
-
-  it('envoie subscription_request vers business / abonnements', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('subscription_request'))).toEqual({
-      section: 'business',
-      screenTab: 'abonnements',
+    expect(resolveAdminWorkItemNavigation(navItem('payment', 'finances'))).toEqual({
+      section: 'finances',
+      focusId: undefined,
     });
   });
 
@@ -80,9 +40,9 @@ describe('adminWorkNavigation', () => {
         kind: 'club',
         title: 'AS Test',
         subtitle: 'Paris',
-        targetTab: 'clubs',
+        targetSection: 'clubs',
         entityId: 'c-1',
       }),
-    ).toEqual({ section: 'clubs', screenTab: 'all', focusId: 'c-1' });
+    ).toEqual({ section: 'clubs', focusId: 'c-1', query: undefined });
   });
 });

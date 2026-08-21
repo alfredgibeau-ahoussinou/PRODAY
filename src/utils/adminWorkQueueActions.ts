@@ -45,7 +45,11 @@ export function canAdminWorkInlineAction(
 
 /** Kinds qui nécessitent l'écran dédié (ex. composer un devis). */
 export function adminWorkItemNeedsOpenToTreat(item: AdminWorkItem): boolean {
-  return item.kind === 'quote' || (item.kind === 'post' && !canAdminWorkInlineAction(item, 'approve'));
+  return (
+    item.kind === 'quote' ||
+    item.kind === 'club_quote' ||
+    (item.kind === 'post' && !canAdminWorkInlineAction(item, 'approve'))
+  );
 }
 
 function parseWorkItemId(item: AdminWorkItem, prefix: string): string {

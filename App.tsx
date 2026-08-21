@@ -102,7 +102,7 @@ import { AnimatedTabContent, PoleShellTransition } from './src/components/motion
 import { colors, spacing } from './src/theme/designTokens';
 import { EmailVerificationScreen } from './src/screens/EmailVerificationScreen';
 import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
-import { AdminAppShell } from './src/navigation/AdminAppShell';
+import { AdminAppShell, AdminPreviewBanner } from './src/features/admin';
 import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { SupporterAppShell } from './src/navigation/SupporterAppShell';
 import { ParentAppShell } from './src/navigation/ParentAppShell';
@@ -118,7 +118,6 @@ import {
   PresidentShellBridgeProvider,
 } from './src/features/president';
 import { COACH_SITE } from './src/content/coachPageIdentity';
-import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { PoleHelpChatbot } from './src/components/help/PoleHelpChatbot';
 import { ProDayAiChat } from './src/components/ai/ProDayAiChat';
 import { isJoueurPoleProductLine } from './src/utils/joueurPoleAccess';
