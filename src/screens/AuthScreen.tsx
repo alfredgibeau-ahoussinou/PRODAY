@@ -2,14 +2,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   View,
   Text,
-  StyleSheet,
   ActivityIndicator,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   type TextInput,
 } from 'react-native';
-import Animated, { Easing, FadeIn } from 'react-native-reanimated';
 import { authService } from '../services/auth.service';
 import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
 import { AuthPrimaryButton } from '../components/auth/AuthPrimaryButton';
@@ -22,13 +20,12 @@ import { useAuthStyles } from '../components/auth/authStyles';
 import { useAuthLayout } from '../components/auth/useAuthLayout';
 import { AuthTextField } from '../components/auth/AuthTextField';
 import { AuthSocialButtons } from '../components/auth/AuthSocialButtons';
-import { AnimatedEntrance, PressableSpring, PushScreenTransition, StaggerReveal } from '../components/motion';
+import { AnimatedEntrance, AnimatedRouteContent, PressableSpring, PushScreenTransition, StaggerReveal } from '../components/motion';
 import { ProDayErrorBanner, type ProDayBannerVariant } from '../components/ui/ProDayErrorBanner';
 import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
 import { AuthFormCard } from '../components/auth/AuthFormCard';
-import { ProDayGradient } from '../components/ui/ProDayGradient';
+import { PitchSheetChrome } from '../components/auth/PitchSheetChrome';
 import { prodayHaptics } from '../utils/prodayHaptics';
-import { motion } from '../theme/motion';
 import { SignupFlow } from './signup/SignupFlow';
 import { ForgotPasswordScreen } from './ForgotPasswordScreen';
 import { LegalDocumentScreen } from './LegalDocumentScreen';
@@ -242,91 +239,87 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         style={[authStyles.root, { position: 'relative' }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-      <View style={authStyles.ambient} pointerEvents="none">
-        <ProDayGradient kind="ambient" style={StyleSheet.absoluteFill} />
-      </View>
-
       <ScrollView
         contentContainerStyle={[
           authStyles.scroll,
-          { paddingTop: headerTopPad, paddingBottom: tabInset() },
+          { paddingBottom: tabInset() },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <AnimatedEntrance index={0}>
-          <View style={authStyles.toolbar}>
-            <PressableSpring
-              style={authStyles.backBtn}
-              onPress={handleBack}
-              hitSlop={8}
-              scaleTo={0.92}
-              haptic
-              accessibilityLabel={t('auth.backHome')}
-            >
-              <Icon name="arrow-back" size={20} color={colors.ink} />
-            </PressableSpring>
-            <View style={authStyles.toolbarEnd}>
-              <LanguageSettingControl variant="chip" />
+        <View style={[authStyles.heroBand, { paddingTop: headerTopPad }]}>
+          <AnimatedEntrance index={0}>
+            <View style={authStyles.toolbar}>
               <PressableSpring
-                style={[
-                  authStyles.universeChip,
-                  isSponsorAuth && {
-                    backgroundColor: 'rgba(212, 175, 55, 0.14)',
-                    borderColor: 'rgba(212, 175, 55, 0.45)',
-                  },
-                  isParentAuth && {
-                    backgroundColor: 'rgba(20, 184, 166, 0.14)',
-                    borderColor: 'rgba(20, 184, 166, 0.45)',
-                  },
-                ]}
-                onPress={openSpacePicker}
-                scaleTo={0.96}
+                style={authStyles.backBtn}
+                onPress={handleBack}
+                hitSlop={8}
+                scaleTo={0.92}
                 haptic
-                accessibilityLabel={t('auth.changeUniverse')}
+                accessibilityLabel={t('auth.backHome')}
               >
-                <Icon
-                  name="star-four-points"
-                  size={14}
-                  color={
-                    isSponsorAuth ? '#D4AF37' : isParentAuth ? '#14B8A6' : colors.accent
-                  }
-                />
-                <Text
-                  style={[
-                    authStyles.universeChipText,
-                    isSponsorAuth && { color: '#F5D76E' },
-                    isParentAuth && { color: '#5EEAD4' },
-                  ]}
-                >
-                  {activeBrand.name}
-                </Text>
-                <Icon
-                  name="chevron-down"
-                  size={14}
-                  color={
-                    isSponsorAuth
-                      ? '#D4AF37'
-                      : isParentAuth
-                        ? '#14B8A6'
-                        : colors.textMuted
-                  }
-                />
+                <Icon name="arrow-back" size={20} color="#FFFFFF" />
               </PressableSpring>
+              <View style={authStyles.toolbarEnd}>
+                <LanguageSettingControl variant="chip" />
+                <PressableSpring
+                  style={[
+                    authStyles.universeChip,
+                    isSponsorAuth && {
+                      backgroundColor: 'rgba(212, 175, 55, 0.18)',
+                      borderColor: 'rgba(212, 175, 55, 0.45)',
+                    },
+                    isParentAuth && {
+                      backgroundColor: 'rgba(20, 184, 166, 0.18)',
+                      borderColor: 'rgba(20, 184, 166, 0.45)',
+                    },
+                  ]}
+                  onPress={openSpacePicker}
+                  scaleTo={0.96}
+                  haptic
+                  accessibilityLabel={t('auth.changeUniverse')}
+                >
+                  <Icon
+                    name="star-four-points"
+                    size={14}
+                    color={
+                      isSponsorAuth ? '#D4AF37' : isParentAuth ? '#14B8A6' : colors.accent
+                    }
+                  />
+                  <Text
+                    style={[
+                      authStyles.universeChipText,
+                      isSponsorAuth && { color: '#F5D76E' },
+                      isParentAuth && { color: '#5EEAD4' },
+                    ]}
+                  >
+                    {activeBrand.name}
+                  </Text>
+                  <Icon
+                    name="chevron-down"
+                    size={14}
+                    color={
+                      isSponsorAuth
+                        ? '#D4AF37'
+                        : isParentAuth
+                          ? '#14B8A6'
+                          : 'rgba(255,255,255,0.7)'
+                    }
+                  />
+                </PressableSpring>
+              </View>
             </View>
-          </View>
-        </AnimatedEntrance>
+          </AnimatedEntrance>
 
-        <AnimatedEntrance index={1} kind="fadeUp">
-          <View style={authStyles.brandRow}>
-            <AuthBrandHeader
-              width={logoWidth}
-              tone={isSponsorAuth || isParentAuth ? 'dark' : 'light'}
-            />
-          </View>
-        </AnimatedEntrance>
+          <AnimatedEntrance index={1} kind="fadeUp">
+            <View style={authStyles.brandRow}>
+              <AuthBrandHeader
+                width={logoWidth}
+                tone="dark"
+              />
+            </View>
+          </AnimatedEntrance>
 
-        <View style={[authStyles.body, compact && authStyles.bodyCompact]}>
           <AnimatedEntrance index={2} kind="fadeUp">
             <View style={authStyles.hero}>
               <Text style={authStyles.eyebrow}>{activeBrand.tagline}</Text>
@@ -336,6 +329,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               <Text style={authStyles.sub}>{screenCopy.sub}</Text>
             </View>
           </AnimatedEntrance>
+        </View>
+
+        <View style={[authStyles.sheet, compact && authStyles.bodyCompact]}>
+          <PitchSheetChrome />
 
           <AuthTabRail
             active={tab}
@@ -344,6 +341,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               clearErrors();
             }}
             compact={compact}
+            variant="underline"
           />
 
           {banner ? (
@@ -354,9 +352,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             />
           ) : null}
 
-          <Animated.View
-            key={tab}
-            entering={FadeIn.duration(motion.duration.fast).easing(Easing.out(Easing.cubic))}
+          <AnimatedRouteContent
+            routeKey={tab}
+            routeOrder={['login', 'signup']}
+            context="tab"
+            fill={false}
           >
             {tab === 'login' ? (
               <>
@@ -371,13 +371,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   </StaggerReveal>
                 ) : null}
 
-                <AuthFormCard>
+                <AuthFormCard variant="flat">
                   <StaggerReveal index={quickLogin.canQuickLogin ? 1 : 0}>
                     <AuthTextField
                       label={t('auth.email')}
                       icon="mail"
                       placeholder="vous@exemple.com"
                       value={email}
+                      tone="sheet"
                       onChangeText={(t) => {
                         setEmail(t);
                         if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: '' }));
@@ -398,6 +399,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       icon="lock"
                       placeholder="••••••••"
                       value={password}
+                      tone="sheet"
                       onChangeText={(t) => {
                         setPassword(t);
                         if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: '' }));
@@ -484,7 +486,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 </StaggerReveal>
               </View>
             )}
-          </Animated.View>
+          </AnimatedRouteContent>
 
           <AnimatedEntrance index={3} kind="fade">
             <Text style={authStyles.legal}>

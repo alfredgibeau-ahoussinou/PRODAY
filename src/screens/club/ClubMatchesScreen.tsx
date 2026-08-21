@@ -16,11 +16,13 @@ import {
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubMatchInvitePanel } from '../../components/club/ClubMatchInvitePanel';
 import { ClubFriendlyMatchesPanel } from '../../components/club/ClubFriendlyMatchesPanel';
+import { AnimatedRouteContent } from '../../components/motion';
 import { isCoachMatchEvent } from '../../models/TeamEvent';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 
 type Tab = 'list' | 'invites';
+const MATCH_TAB_ORDER: Tab[] = ['list', 'invites'];
 
 /** Matchs — présentation score-forward (pas de score inventé) + convocations. */
 export function ClubMatchesScreen() {
@@ -51,7 +53,12 @@ export function ClubMatchesScreen() {
           onChange={setTab}
         />
 
-        {tab === 'invites' ? (
+        <AnimatedRouteContent
+          routeKey={tab}
+          routeOrder={MATCH_TAB_ORDER}
+          context="tab"
+          fill={false}
+        >        {tab === 'invites' ? (
           <>
             <ClubSectionCard title="Inter-clubs">
               {ws.clubId ? (
@@ -116,6 +123,7 @@ export function ClubMatchesScreen() {
             ))}
           </View>
         )}
+        </AnimatedRouteContent>
       </ClubChapterScroll>
     </View>
   );

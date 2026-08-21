@@ -17,8 +17,10 @@ import {
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { AnimatedRouteContent } from '../../components/motion';
 
 type Tab = 'internal' | 'external' | 'ai';
+const RECRUIT_TAB_ORDER: Tab[] = ['internal', 'external', 'ai'];
 
 /** Recrutement — bassin interne + Suivi des recrutements (externe) + suggestions IA stub. */
 export function ClubRecruitmentScreen() {
@@ -48,7 +50,12 @@ export function ClubRecruitmentScreen() {
           onChange={setTab}
         />
 
-        {tab === 'internal' ? (
+        <AnimatedRouteContent
+          routeKey={tab}
+          routeOrder={RECRUIT_TAB_ORDER}
+          context="tab"
+          fill={false}
+        >        {tab === 'internal' ? (
           <ClubSectionCard title="Vivier club">
             {ws.clubId && profile ? (
               <ClubRosterBoardPanel
@@ -88,6 +95,7 @@ export function ClubRecruitmentScreen() {
             />
           </ClubSectionCard>
         ) : null}
+        </AnimatedRouteContent>
       </ClubChapterScroll>
     </View>
   );

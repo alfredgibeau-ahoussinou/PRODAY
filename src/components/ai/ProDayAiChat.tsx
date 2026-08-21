@@ -2,16 +2,14 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PressableSpring } from '../motion';
+import { PressableSpring, AnimatedModalShell } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
@@ -86,12 +84,15 @@ export const ProDayAiChat: React.FC = () => {
   }
 
   return (
-    <Modal visible animationType="slide" transparent onRequestClose={() => setOpen(false)}>
-      <View style={styles.overlay}>
-        <Pressable style={styles.scrim} onPress={() => setOpen(false)} />
+    <AnimatedModalShell
+      visible={open}
+      onClose={() => setOpen(false)}
+      variant="tall"
+      handleOnly
+    >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={[styles.sheet, { paddingBottom: insets.bottom + 8 }]}
+          style={[styles.sheetInner, { paddingBottom: insets.bottom + 8 }]}
         >
           <View style={styles.header}>
             <View>
@@ -181,8 +182,7 @@ export const ProDayAiChat: React.FC = () => {
             </PressableSpring>
           </View>
         </KeyboardAvoidingView>
-      </View>
-    </Modal>
+    </AnimatedModalShell>
   );
 };
 
@@ -201,15 +201,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       ...shadows.fab,
       zIndex: 45,
     },
-    overlay: { flex: 1, justifyContent: 'flex-end' },
-    scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
-    sheet: {
-      height: '80%',
-      backgroundColor: colors.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      overflow: 'hidden',
-    },
+    sheetInner: { flex: 1 },
     header: {
       flexDirection: 'row',
       alignItems: 'center',

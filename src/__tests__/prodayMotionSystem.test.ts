@@ -15,7 +15,7 @@ describe('ProDayMotionSystem', () => {
     expect(prodayMotion.duration.fast).toBeLessThan(prodayMotion.duration.normal);
     expect(prodayMotion.duration.exit).toBeLessThanOrEqual(prodayMotion.duration.enter);
     expect(prodayMotion.duration.video).toBeLessThanOrEqual(prodayMotion.duration.fast);
-    expect(prodayMotion.paneShift).toBeGreaterThan(0);
+    expect(prodayMotion.paneShift).toBeGreaterThanOrEqual(48);
     expect(prodayMotion.spring.snappy.damping).toBeGreaterThan(0);
   });
 

@@ -10,9 +10,9 @@ import { motion, useReducedMotion } from '../../motion';
 
 export type PoleShellId = 'parent' | 'supporter' | 'club' | 'president';
 
-const ENTER_MS = motion.duration.slow; // 320
+const ENTER_MS = motion.duration.slow; // 300
 const EXIT_MS = motion.duration.normal; // 220
-const SHIFT = 20;
+const SHIFT = 40;
 const SCALE_OUT = 0.99;
 const SCALE_IN = 0.985;
 

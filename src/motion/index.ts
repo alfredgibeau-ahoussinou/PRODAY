@@ -20,6 +20,7 @@ export { useShellNavDirection } from './hooks/useShellNavDirection';
 
 export { PaneTransition } from './primitives/PaneTransition';
 export { DetailTransition } from './primitives/DetailTransition';
+export { RouteSwitch } from './primitives/RouteSwitch';
 export { ModalSheet } from './primitives/ModalSheet';
 export type { ModalSheetProps } from './primitives/ModalSheet';
 export { BottomSheet } from './primitives/BottomSheet';

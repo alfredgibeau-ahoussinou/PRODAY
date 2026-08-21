@@ -33,13 +33,13 @@ export const prodayMotion = {
     in: Easing.in(Easing.cubic),
     inOut: Easing.inOut(Easing.cubic),
   },
-  /** Slide horizontal panes / onglets (px). */
-  paneShift: 28,
+  /** Slide horizontal panes / onglets (px) — assez large pour être perçu. */
+  paneShift: 52,
   /** Push détail (profondeur). */
-  detailShift: 36,
-  detailScaleFrom: 0.985,
+  detailShift: 44,
+  detailScaleFrom: 0.97,
   /** Alias historique theme/motion. */
-  screenShift: 36,
+  screenShift: 52,
   /** Overlay sheets / modales. */
   backdrop: 'rgba(0,0,0,0.55)',
   modalBackdrop: 'rgba(0,0,0,0.52)',

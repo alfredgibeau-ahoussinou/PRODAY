@@ -10,7 +10,7 @@ import {
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { ProDaySurface } from '../../components/ui/ProDaySurface';
-import { PressableSpring } from '../../components/motion';
+import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { Icon, type IconName } from '../../components/ui/Icon';
 import { useThemedScreen } from '../../hooks/useThemedScreen';
 import { useAuth } from '../../context/AuthContext';
@@ -323,6 +323,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
 
   if (view === 'ai') {
     return (
+      <PushScreenTransition active>
       <View style={[styles.root, screenRootStyle]}>
         <ScreenHeader
           title={aiResult ? 'Programme IA' : 'Entraînement IA'}
@@ -535,11 +536,13 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
           )}
         </ScrollView>
       </View>
+      </PushScreenTransition>
     );
   }
 
   if (view === 'exercise' && selected) {
     return (
+      <PushScreenTransition active>
       <View style={[styles.root, screenRootStyle]}>
         <ScreenHeader title={selected.title} onBack={() => setView(modeFilter === 'family' ? 'family' : 'home')} />
         <ScrollView contentContainerStyle={styles.pad}>
@@ -587,11 +590,13 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
           ) : null}
         </ScrollView>
       </View>
+      </PushScreenTransition>
     );
   }
 
   if (view === 'home' || view === 'family') {
     return (
+      <PushScreenTransition active>
       <View style={[styles.root, screenRootStyle]}>
         <ScreenHeader
           title={view === 'family' ? 'Avec ma famille' : 'À la maison'}
@@ -633,11 +638,13 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
           ) : null}
         </ScrollView>
       </View>
+      </PushScreenTransition>
     );
   }
 
   if (view === 'coach' || view === 'book' || bookingCoach) {
     return (
+      <PushScreenTransition active>
       <View style={[styles.root, screenRootStyle]}>
         <ScreenHeader
           title={bookingCoach ? 'Réserver' : 'Coach humain'}
@@ -735,6 +742,7 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
           )}
         </ScrollView>
       </View>
+      </PushScreenTransition>
     );
   }
 

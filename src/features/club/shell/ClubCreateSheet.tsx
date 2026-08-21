@@ -1,9 +1,16 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { PressableSpring } from '../../../components/motion';
+import { prodayMotion, useReducedMotion } from '../../../motion';
 import { Icon } from '../../../components/ui/Icon';
 import {
   CLUB_CREATE_ACTIONS,
@@ -25,20 +32,63 @@ type Props = {
   onSelect: (action: ClubCreateActionId, nav?: ClubNavItemId) => void;
 };
 
-/** Sheet + CRÉER — match, entraînement, joueur, club… (logique inchangée). */
+/** Sheet + CRÉER — bas→haut ProDayMotion + blur (logique inchangée). */
 export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
+  const reduced = useReducedMotion();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const backdrop = useSharedValue(visible ? 1 : 0);
+  const sheetY = useSharedValue(visible ? 0 : 72);
+
+  useEffect(() => {
+    if (visible) {
+      if (reduced) {
+        backdrop.value = 1;
+        sheetY.value = 0;
+        return;
+      }
+      backdrop.value = withTiming(1, {
+        duration: prodayMotion.duration.modal,
+        easing: prodayMotion.easing.out,
+      });
+      sheetY.value = withSpring(0, prodayMotion.spring.sheet);
+      return;
+    }
+    if (reduced) {
+      backdrop.value = 0;
+      sheetY.value = 72;
+      return;
+    }
+    backdrop.value = withTiming(0, { duration: prodayMotion.duration.fast });
+    sheetY.value = withTiming(80, {
+      duration: prodayMotion.duration.exit,
+      easing: prodayMotion.easing.in,
+    });
+  }, [visible, reduced, backdrop, sheetY]);
+
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdrop.value }));
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetY.value }],
+    opacity: 0.55 + backdrop.value * 0.45,
+  }));
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="none" transparent onRequestClose={onClose}>
       <View style={styles.root}>
         <Pressable style={styles.scrim} onPress={onClose}>
-          <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: tokens.scrim }]} />
+          <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
+            <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: tokens.scrim }]} />
+          </Animated.View>
         </Pressable>
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, clubSpace.lg) }]}>
+        <Animated.View
+          style={[
+            styles.sheet,
+            { paddingBottom: Math.max(insets.bottom, clubSpace.lg) },
+            sheetStyle,
+          ]}
+        >
           <View style={styles.handle} />
           <ClubText variant="h3">Créer</ClubText>
           <ClubText variant="caption" muted style={{ marginBottom: clubSpace.sm }}>
@@ -64,7 +114,7 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
               <Icon name="chevron-forward" size={16} color={tokens.faint} />
             </PressableSpring>
           ))}
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

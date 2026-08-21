@@ -18,6 +18,11 @@ type Props = {
   children: React.ReactNode;
   /** Défaut `nav` (rapide). `tab` = micro. */
   context?: Extract<MotionContext, 'nav' | 'tab' | 'live'>;
+  /**
+   * `true` (défaut) = remplit le parent (shells).
+   * `false` = hauteur contenu (segments dans ScrollView).
+   */
+  fill?: boolean;
 };
 
 /**
@@ -29,6 +34,7 @@ export function PaneTransition({
   direction,
   children,
   context = 'nav',
+  fill = true,
 }: Props) {
   const reduced = useReducedMotion();
   const { setPaneBusy } = useProDayMotion();
@@ -125,8 +131,10 @@ export function PaneTransition({
   }));
 
   return (
-    <View style={styles.host}>
-      <Animated.View style={[styles.fill, style]}>{displayed}</Animated.View>
+    <View style={fill ? styles.host : styles.hostAuto}>
+      <Animated.View style={[fill ? styles.fill : styles.fillAuto, style]}>
+        {displayed}
+      </Animated.View>
     </View>
   );
 }
@@ -134,4 +142,6 @@ export function PaneTransition({
 const styles = StyleSheet.create({
   host: { flex: 1, overflow: 'hidden' },
   fill: { flex: 1 },
+  hostAuto: { overflow: 'hidden', alignSelf: 'stretch' },
+  fillAuto: { alignSelf: 'stretch' },
 });

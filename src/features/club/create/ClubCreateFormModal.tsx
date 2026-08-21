@@ -2,15 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PressableSpring } from '../../../components/motion';
+import { PressableSpring, AnimatedModalShell } from '../../../components/motion';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { teamEventsService } from '../../../services/teamEvents.service';
 import { friendlyMatchesService } from '../../../services/friendlyMatches.service';
@@ -258,12 +256,15 @@ export function ClubCreateFormModal({ visible, action, onClose, onCreated }: Pro
     action === 'match' || action === 'training' || action === 'event' || action === 'invite_club';
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.root}>
-        <Pressable style={styles.scrim} onPress={onClose} />
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-          <View style={styles.handle} />
-          <ClubText variant="section">{ACTION_TITLES[action]}</ClubText>
+    <AnimatedModalShell
+      visible={visible}
+      onClose={onClose}
+      variant="tall"
+      handleOnly
+      sheetBackgroundColor={tokens.raised}
+    >
+      <View style={[styles.sheetBody, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+        <ClubText variant="section">{ACTION_TITLES[action]}</ClubText>
           <ClubText variant="caption" muted style={{ marginBottom: spacing.sm }}>
             Enregistrement réel dans le club
           </ClubText>
@@ -452,9 +453,8 @@ export function ClubCreateFormModal({ visible, action, onClose, onCreated }: Pro
               </PressableSpring>
             ) : null}
           </View>
-        </View>
       </View>
-    </Modal>
+    </AnimatedModalShell>
   );
 }
 
@@ -492,24 +492,10 @@ function Field({
 
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
-    root: { flex: 1, justifyContent: 'flex-end' },
-    scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,22,40,0.45)' },
-    sheet: {
-      backgroundColor: tokens.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+    sheetBody: {
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
       gap: spacing.sm,
-      maxHeight: '92%',
-    },
-    handle: {
-      alignSelf: 'center',
-      width: 40,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: tokens.border,
-      marginBottom: spacing.xs,
+      flex: 1,
     },
     input: {
       borderWidth: StyleSheet.hairlineWidth,

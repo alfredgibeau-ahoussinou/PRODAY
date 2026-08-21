@@ -18,6 +18,7 @@ export { InteractiveListItem } from './InteractiveListItem';
 export { PressableSpring } from './PressableSpring';
 export { SkeletonBlock, SkeletonList } from './SkeletonBlock';
 export { LivePulseDot } from './LivePulseDot';
+export { RouteSwitch } from '../../motion/primitives/RouteSwitch';
 
 /** Facade — préférer `src/motion` pour le système complet. */
 export {
