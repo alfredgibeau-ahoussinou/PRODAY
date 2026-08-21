@@ -60,19 +60,13 @@ export const PoleHelpChatbot: React.FC = () => {
 
   if (!visible && !open) return null;
 
-  const clubWidgetContent = {
-    ...content,
-    title: 'Copilote Club',
-    bubbleTeaser: 'Pose une question — dialogue Mistral',
-  };
-
   return (
     <>
-      {visible && !open ? (
+      {/* Club : FAB premium dans ClubAppShell (plus de chip ballon football-outline). */}
+      {visible && !open && !clubMode ? (
         <PoleHelpWidget
           expanded={showBubble}
-          teaser={clubMode ? clubWidgetContent.bubbleTeaser : content.bubbleTeaser}
-          title={clubMode ? clubWidgetContent.title : undefined}
+          teaser={content.bubbleTeaser}
           usesBriefcaseIcon={usesBriefcaseIcon}
           colors={helpColors}
           onOpen={openChat}

@@ -13,6 +13,7 @@ import { ClubShellNavProvider } from './ClubShellNavContext';
 import { ClubThemeProvider, useClubTheme } from './ClubThemeContext';
 import { ClubMenuPane } from './ClubMenuPane';
 import { ClubCreateFab, ClubCreateSheet } from './ClubCreateSheet';
+import { ClubCopilotFab } from './ClubCopilotFab';
 import { ClubCreateFormModal } from '../create/ClubCreateFormModal';
 import { ClubLockedPane } from './ClubLockedPane';
 import { openClubHelpChatbot, registerClubCopilotOpener } from './clubHelpOpen';
@@ -239,7 +240,12 @@ function ClubAppShellInner({
             onOpenCopilot={onOpenHelp}
           />
           {content}
-          {showFab ? <ClubCreateFab onPress={() => setCreateOpen(true)} /> : null}
+          {showFab ? (
+            <>
+              <ClubCopilotFab onPress={onOpenHelp} />
+              <ClubCreateFab onPress={() => setCreateOpen(true)} />
+            </>
+          ) : null}
         </View>
 
         {!wide ? (
