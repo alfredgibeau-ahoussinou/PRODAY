@@ -361,6 +361,15 @@ export function ClubHomeScreen() {
 
         <ClubHomeShortcutLinks
           links={[
+            ...(shellNav?.openPresident
+              ? [
+                  {
+                    id: 'president',
+                    label: 'Pôle Président',
+                    onPress: () => shellNav.openPresident?.(),
+                  },
+                ]
+              : []),
             { id: 'teams', label: 'Équipes', onPress: () => shellNav?.requestNav('teams') },
             { id: 'matches', label: 'Matchs', onPress: () => shellNav?.requestNav('matches') },
           ]}

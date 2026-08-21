@@ -58,6 +58,27 @@ function JoueurTabBarSlot(props: {
   if (blocked) return null;
   return <BottomTabBar {...props} />;
 }
+
+/** Bascule Club ↔ Président avec transition légère. */
+function ClubPresidentShellSwitch({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: MainTabId;
+  onTabChange: (tab: MainTabId) => void;
+}) {
+  const bridge = usePresidentShellBridge();
+  const president = Boolean(bridge?.isPresidentShell);
+  return (
+    <PoleShellTransition shellKey={president ? 'president' : 'club'}>
+      {president ? (
+        <PresidentAppShell />
+      ) : (
+        <ClubAppShell activeTab={activeTab} onTabChange={onTabChange} />
+      )}
+    </PoleShellTransition>
+  );
+}
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { BottomTabBar } from './src/components/navigation/BottomTabBar';
 import { WomanSpaceDefaults } from './src/components/appSpace/WomanSpaceDefaults';
@@ -72,6 +93,11 @@ import { ParentAppShell } from './src/navigation/ParentAppShell';
 import { parentPortalService } from './src/services/parentPortal.service';
 import { ClubAppShell } from './src/features/club/shell/ClubAppShell';
 import { CoachAppShell } from './src/features/coach/shell/CoachAppShell';
+import {
+  PresidentAppShell,
+  PresidentShellBridgeProvider,
+  usePresidentShellBridge,
+} from './src/features/president';
 import { COACH_SITE } from './src/content/coachPageIdentity';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
 import { PoleHelpChatbot } from './src/components/help/PoleHelpChatbot';
@@ -479,7 +505,9 @@ function AppShell() {
     ? SPONSOR_THEME.background
     : isCoachShell
       ? COACH_SITE.bg
-      : themeColors.background;
+      : isClubShell
+        ? themeColors.background
+        : themeColors.background;
 
   if (!localeReady) {
     return (
@@ -627,7 +655,12 @@ function AppShell() {
           <View style={styles.screen}>
             <JoueurGateGuard>
               {isClubShell ? (
-                <ClubAppShell activeTab={activeTab} onTabChange={handleTabPress} />
+                <PresidentShellBridgeProvider>
+                  <ClubPresidentShellSwitch
+                    activeTab={activeTab}
+                    onTabChange={handleTabPress}
+                  />
+                </PresidentShellBridgeProvider>
               ) : isCoachShell ? (
                 <CoachAppShell activeTab={activeTab} onTabChange={handleTabPress} />
               ) : (

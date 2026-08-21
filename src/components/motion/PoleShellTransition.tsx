@@ -9,7 +9,7 @@ import Animated, {
 import { motion } from '../../theme/motion';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 
-export type PoleShellId = 'parent' | 'supporter';
+export type PoleShellId = 'parent' | 'supporter' | 'club' | 'president';
 
 const ENTER_MS = motion.duration.slow; // 320
 const EXIT_MS = motion.duration.normal; // 220
@@ -17,13 +17,17 @@ const SHIFT = 20;
 const SCALE_OUT = 0.99;
 const SCALE_IN = 0.985;
 
-/** Parent → Supporter = 1 (depuis la droite) ; retour = -1. */
+/** Parent → Supporter = 1 ; Club → Président = 1 ; retours = -1. */
 export function poleShellTransitionDirection(
   from: PoleShellId,
   to: PoleShellId,
 ): 1 | -1 {
   if (from === to) return 1;
-  return to === 'supporter' ? 1 : -1;
+  if (from === 'parent' && to === 'supporter') return 1;
+  if (from === 'supporter' && to === 'parent') return -1;
+  if (from === 'club' && to === 'president') return 1;
+  if (from === 'president' && to === 'club') return -1;
+  return to === 'supporter' || to === 'president' ? 1 : -1;
 }
 
 interface PoleShellTransitionProps {

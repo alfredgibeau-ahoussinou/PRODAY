@@ -167,6 +167,13 @@ export function ClubHubScreen() {
         </ClubSectionCard>
 
         <ClubSectionCard title="Outils club">
+          {shellNav?.openPresident ? (
+            <ClubActionRow
+              icon="briefcase"
+              label="Ouvrir le Pôle Président"
+              onPress={() => shellNav.openPresident?.()}
+            />
+          ) : null}
           <ClubActionRow
             icon="document"
             label="Licences & documents"

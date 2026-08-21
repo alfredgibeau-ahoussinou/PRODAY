@@ -59,6 +59,8 @@ import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { clubChrome } from '../theme/clubDesignSystem';
 import { ClubPageChrome } from '../ui/ClubPageChrome';
+import { usePresidentShellBridge } from '../../president/bridge/PresidentShellBridge';
+import { canAccessPresidentPole } from '../../president/navigation/canAccessPresidentPole';
 
 type Props = {
   activeTab: MainTabId;
@@ -99,6 +101,7 @@ function ClubAppShellInner({
   const { width } = useWindowDimensions();
   const wide = width >= clubChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const presidentBridge = usePresidentShellBridge();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [navId, setNavId] = useState<ClubNavItemId>(() =>
     canonicalizeClubNav(clubNavFromTab(activeTab)),
@@ -110,6 +113,12 @@ function ClubAppShellInner({
 
   const offerId = resolveClubOfferId(profile);
   const formulaLabel = offerId ? CLUB_OFFERS[offerId].label : 'Sans formule';
+
+  const canOpenPresident = canAccessPresidentPole({
+    role: profile?.role,
+    uid: profile?.uid,
+    clubId: profile?.profile?.club_id,
+  });
 
   const access = useMemo(
     () => ({ offerId, isFeatureEnabled: isEnabled }),
@@ -129,6 +138,16 @@ function ClubAppShellInner({
     return () => registerClubCopilotOpener(null);
   }, []);
 
+  useEffect(() => {
+    if (!presidentBridge?.pendingClubNav) return;
+    const pending = presidentBridge.consumePendingClubNav();
+    if (!pending) return;
+    const next = canonicalizeClubNav(pending);
+    setNavId(next);
+    const nextTab = tabFromClubNav(next);
+    if (nextTab !== activeTab) onTabChange(nextTab);
+  }, [presidentBridge, presidentBridge?.pendingClubNav, activeTab, onTabChange]);
+
   const clubName = profile?.display_name ?? 'Club';
   const resolved = findInClubNavCatalog(catalog, navId);
   const pageTitle = resolved?.label ?? 'Club';
@@ -144,6 +163,17 @@ function ClubAppShellInner({
 
   const onOpenHelp = () => {
     if (!openClubHelpChatbot()) setCopilotOpen(true);
+  };
+
+  const onOpenPresident = () => {
+    if (!canOpenPresident) {
+      Alert.alert(
+        'Pôle Président',
+        'Réservé aux dirigeants du club rattachés à cette structure.',
+      );
+      return;
+    }
+    presidentBridge?.openPresident();
   };
 
   const onSignOut = () => {
@@ -203,6 +233,7 @@ function ClubAppShellInner({
       requestNav={onSelect}
       openCreate={openCreate}
       openHelp={onOpenHelp}
+      openPresident={canOpenPresident ? onOpenPresident : undefined}
       signOut={onSignOut}
       selectedTeamId={selectedTeamId}
       setSelectedTeamId={setSelectedTeamId}

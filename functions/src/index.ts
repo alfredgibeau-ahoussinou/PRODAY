@@ -52,6 +52,7 @@ import {
 import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivitySync';
 import { analyzeActivityHighlight } from './analyzeActivityHighlight';
 import { clubAssistantChat } from './clubAssistantChat';
+import { presidentAssistantChat } from './presidentAssistantChat';
 import { playerTacticsChat } from './playerTacticsChat';
 import { playerCoachAiChat } from './playerCoachAiChat';
 import { sendAuthPasswordResetEmail, sendAuthVerificationEmail } from './authCustomEmails';
@@ -88,6 +89,7 @@ export { getVisioJoinUrl };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { clubAssistantChat };
+export { presidentAssistantChat };
 export { playerTacticsChat };
 export { playerCoachAiChat };
 export { smartTacticsMatchPrep } from './smartTacticsMatchPrep';

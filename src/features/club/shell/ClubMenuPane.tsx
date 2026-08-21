@@ -29,6 +29,32 @@ export function ClubMenuPane({ items = [] }: Props) {
     <View style={styles.root}>
       <ClubChapterScroll>
         <ClubBrandHeader title="Menu" subtitle="Tous les outils du club" />
+        {shellNav?.openPresident ? (
+          <PressableSpring
+            onPress={() => shellNav.openPresident?.()}
+            scaleTo={0.98}
+            haptic
+            style={[
+              styles.row,
+              {
+                borderColor: tokens.accent,
+                backgroundColor: tokens.accentSoft,
+                marginBottom: clubSpace.md,
+              },
+            ]}
+          >
+            <Icon name="briefcase" size={20} color={tokens.accent} />
+            <View style={{ flex: 1 }}>
+              <ClubText variant="body" style={{ fontWeight: '700' }}>
+                Ouvrir le Pôle Président
+              </ClubText>
+              <ClubText variant="caption" muted>
+                Direction · stratégie · cockpit exécutif
+              </ClubText>
+            </View>
+            <Icon name="chevron-forward" size={16} color={tokens.muted} />
+          </PressableSpring>
+        ) : null}
         {items.length === 0 ? (
           <ClubEmptyState title="Aucun outil" body="Aucun outil disponible pour le moment." />
         ) : (
