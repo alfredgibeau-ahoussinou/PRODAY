@@ -517,10 +517,10 @@ const PRO_PLAYER_HELP: PoleHelpContent = {
 
 const PRO_CLUB_HELP: PoleHelpContent = {
   poleKey: 'pro_club',
-  title: 'Aide Pôle Club',
-  bubbleTeaser: 'Besoin d’aide sur votre club ?',
+  title: 'Copilote Club',
+  bubbleTeaser: 'Pose une question — dialogue Mistral',
   welcome:
-    'Bonjour ! Menu dossiers à gauche (Accueil, Organisation, Sport, Communication, Ressources). L’Assistant IA et ce chatbot vous guident selon votre formule.',
+    'Salut — je suis le copilote Club. Pose ta question sur les équipes, adhésions, matchs ou la formule. Les actions sensibles demanderont toujours ton OK.',
   entries: [
     ...withCategory('navigation', [
       {

@@ -2,6 +2,8 @@ type OpenListener = () => void;
 
 let openListener: OpenListener | null = null;
 let fallbackListener: OpenListener | null = null;
+/** Priorité shell Club — vrai Copilote immersif (écrase le FAQ PoleHelp). */
+let clubCopilotListener: OpenListener | null = null;
 
 /** Enregistre l’ouvreur du chatbot d’aide (monté par PoleHelpChatbot). */
 export function registerClubHelpOpener(listener: OpenListener | null): void {
@@ -13,8 +15,17 @@ export function registerClubHelpFallback(listener: OpenListener | null): void {
   fallbackListener = listener;
 }
 
-/** Ouvre le chatbot d’aide. Retourne false si aucun panneau n’est enregistré. */
+/** Enregistre le sheet Copilote du ClubAppShell (prioritaire sur le FAQ). */
+export function registerClubCopilotOpener(listener: OpenListener | null): void {
+  clubCopilotListener = listener;
+}
+
+/** Ouvre le Copilote Club (ou le fallback aide). Retourne false si aucun panneau. */
 export function openClubHelpChatbot(): boolean {
+  if (clubCopilotListener) {
+    clubCopilotListener();
+    return true;
+  }
   if (openListener) {
     openListener();
     return true;

@@ -8,6 +8,14 @@ import { PoleHelpPanel } from './PoleHelpPanel';
 import { PoleHelpWidget } from './PoleHelpWidget';
 import { registerClubHelpOpener } from '../../features/club/shell/clubHelpOpen';
 import { registerCoachHelpOpener } from '../../features/coach/shell/coachHelpOpen';
+import { ClubCopilotSheet } from '../../features/club/ai/ClubCopilotSheet';
+
+function isClubPoleHelp(
+  productLine: string,
+  role: string | null | undefined,
+): boolean {
+  return productLine === 'pro_club' || role === 'club';
+}
 
 export const PoleHelpChatbot: React.FC = () => {
   const { colors, productLine } = useAppTheme();
@@ -29,6 +37,7 @@ export const PoleHelpChatbot: React.FC = () => {
   const { visible, content, usesBriefcaseIcon, showBubble, dismissBubble } =
     usePoleHelpChatbot(productLine);
   const [open, setOpen] = useState(false);
+  const clubMode = isClubPoleHelp(productLine, profile?.role);
 
   const questionCount = useMemo(() => getPoleHelpQuestionCount(content), [content]);
 
@@ -51,12 +60,19 @@ export const PoleHelpChatbot: React.FC = () => {
 
   if (!visible && !open) return null;
 
+  const clubWidgetContent = {
+    ...content,
+    title: 'Copilote Club',
+    bubbleTeaser: 'Pose une question — dialogue Mistral',
+  };
+
   return (
     <>
       {visible && !open ? (
         <PoleHelpWidget
           expanded={showBubble}
-          teaser={content.bubbleTeaser}
+          teaser={clubMode ? clubWidgetContent.bubbleTeaser : content.bubbleTeaser}
+          title={clubMode ? clubWidgetContent.title : undefined}
           usesBriefcaseIcon={usesBriefcaseIcon}
           colors={helpColors}
           onOpen={openChat}
@@ -64,13 +80,17 @@ export const PoleHelpChatbot: React.FC = () => {
         />
       ) : null}
 
-      <PoleHelpPanel
-        visible={open}
-        content={content}
-        questionCount={questionCount}
-        usesBriefcaseIcon={usesBriefcaseIcon}
-        onClose={closeChat}
-      />
+      {clubMode ? (
+        <ClubCopilotSheet visible={open} onClose={closeChat} />
+      ) : (
+        <PoleHelpPanel
+          visible={open}
+          content={content}
+          questionCount={questionCount}
+          usesBriefcaseIcon={usesBriefcaseIcon}
+          onClose={closeChat}
+        />
+      )}
     </>
   );
 };

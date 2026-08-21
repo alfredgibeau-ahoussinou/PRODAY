@@ -15,7 +15,7 @@ export type ClubThemeAiResult =
   | { ok: false; message: string };
 
 export const CLUB_THEME_AI_FALLBACK_MESSAGE =
-  'Je n’ai pas compris. Essaie : style Barça, couleurs PSG, mix bleu et or, tout en rouge.';
+  'Décris un style, un club ou un mélange — le copilote Mistral propose une palette, confirmation avant application.';
 
 export const CLUB_THEME_AI_EXAMPLE_CHIPS = [
   'Style Barça',
@@ -23,6 +23,45 @@ export const CLUB_THEME_AI_EXAMPLE_CHIPS = [
   'Couleurs PSG',
   'Mix bleu et or',
 ] as const;
+
+export const CLUB_THEME_AI_REMOTE_PROMPT = (phrase: string) =>
+  [
+    `Propose une palette couleurs club (principale + secondaire) pour : « ${phrase.trim()} ».`,
+    'Réponds en français avec exactement deux codes hex (#RRGGBB).',
+    'Format obligatoire : PRINCIPALE #xxxxxx · SECONDAIRE #xxxxxx — courte justification.',
+    'Ne propose aucune autre action que la palette.',
+  ].join(' ');
+
+/**
+ * Extrait une palette depuis une réponse copilote (deux hex #RRGGBB).
+ */
+export function parseClubColorsFromAssistantReply(reply: string): ClubThemeAiResult | null {
+  const matches = reply.match(/#?[0-9A-Fa-f]{6}/g) ?? [];
+  const hexes: string[] = [];
+  for (const raw of matches) {
+    const hex = normalizeCoachHexColor(raw);
+    if (hex && !hexes.includes(hex)) hexes.push(hex);
+    if (hexes.length >= 2) break;
+  }
+  if (hexes.length < 2) return null;
+  const primary = hexes[0];
+  const secondary = hexes[1];
+  const justification = reply
+    .replace(/PRINCIPALE\s*#?[0-9A-Fa-f]{6}/gi, '')
+    .replace(/SECONDAIRE\s*#?[0-9A-Fa-f]{6}/gi, '')
+    .replace(/[·•|—–-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160);
+  return {
+    ok: true,
+    colors: { primary, secondary },
+    label:
+      justification.length > 8
+        ? `Copilote : ${justification}`
+        : `Copilote : ${describeColors(primary, secondary)}.`,
+  };
+}
 
 const COLOR_NAMES: Record<string, string> = {
   bleu: '#1E88E5',
@@ -235,8 +274,8 @@ function parseTeamIntent(n: string, raw: string): ClubThemeAiResult | null {
 }
 
 /**
- * Parse une demande couleur FR/EN → palette club (même architecture que le pôle Joueur).
- * Analyse locale des presets clubs mondiaux + mixes / teintes — pas de LLM distant.
+ * Parse une demande couleur FR/EN → palette club (presets / mixes locaux).
+ * Pour le texte libre non reconnu, le panneau Hub appelle le copilote Mistral.
  */
 export function parseClubThemeAiIntent(text: string): ClubThemeAiResult {
   const raw = text.trim();

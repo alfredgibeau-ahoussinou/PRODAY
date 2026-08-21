@@ -188,11 +188,16 @@ export function ClubSidebar({
             </ClubText>
           ) : null}
         </Pressable>
-        <Pressable onPress={onOpenHelp} style={styles.footerBtn} accessibilityRole="button">
-          <Icon name="help" size={16} color={tokens.muted} />
+        <Pressable
+          onPress={onOpenHelp}
+          style={styles.footerBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Ouvrir le copilote Club"
+        >
+          <Icon name="star-four-points" size={16} color={tokens.accent} />
           {!collapsed ? (
-            <ClubText variant="caption" muted>
-              Aide
+            <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              Copilote
             </ClubText>
           ) : null}
         </Pressable>

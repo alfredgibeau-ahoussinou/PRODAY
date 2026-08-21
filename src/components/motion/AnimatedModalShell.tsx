@@ -13,7 +13,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
-type AnimatedModalShellVariant = 'full' | 'compact';
+type AnimatedModalShellVariant = 'full' | 'compact' | 'tall';
 
 interface AnimatedModalShellProps {
   visible: boolean;
@@ -21,7 +21,7 @@ interface AnimatedModalShellProps {
   children: React.ReactNode;
   closeLabel?: string;
   presentationStyle?: ModalProps['presentationStyle'];
-  /** `full` = sheet plein écran ; `compact` = bottom sheet ~58 % max. */
+  /** `full` = sheet plein écran ; `tall` ≈ 92 % ; `compact` ≈ 58 %. */
   variant?: AnimatedModalShellVariant;
   /** Poignée centrée seule, sans bouton « Fermer » (header custom dans le contenu). */
   handleOnly?: boolean;
@@ -32,6 +32,7 @@ interface AnimatedModalShellProps {
 }
 
 const COMPACT_SHEET_MAX_HEIGHT = '58%';
+const TALL_SHEET_MAX_HEIGHT = '92%';
 
 /**
  * Modal avec backdrop animé + sheet qui monte depuis le bas.
@@ -72,11 +73,13 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
 
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value }],
-    opacity: variant === 'compact' ? backdrop.value : 0.4 + backdrop.value * 0.6,
+    opacity: variant === 'compact' || variant === 'tall' ? backdrop.value : 0.4 + backdrop.value * 0.6,
   }));
 
   const isCompact = variant === 'compact';
-  const sheetPaddingTop = isCompact ? spacing.sm : Math.max(insets.top, spacing.md);
+  const isTall = variant === 'tall';
+  const isBottomSheet = isCompact || isTall;
+  const sheetPaddingTop = isBottomSheet ? spacing.sm : Math.max(insets.top, spacing.md);
 
   return (
     <Modal
@@ -94,8 +97,8 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
         <Animated.View
           style={[
             styles.sheet,
-            isCompact ? styles.sheetCompact : styles.sheetFull,
-            isCompact && styles.sheetCompactRadius,
+            isCompact ? styles.sheetCompact : isTall ? styles.sheetTall : styles.sheetFull,
+            isBottomSheet && styles.sheetCompactRadius,
             sheetStyle,
             {
               paddingTop: sheetPaddingTop,
@@ -142,6 +145,11 @@ function createStyles(c: AppColors) {
     sheetCompact: {
       height: COMPACT_SHEET_MAX_HEIGHT,
       maxHeight: COMPACT_SHEET_MAX_HEIGHT,
+      flexGrow: 0,
+    },
+    sheetTall: {
+      height: TALL_SHEET_MAX_HEIGHT,
+      maxHeight: TALL_SHEET_MAX_HEIGHT,
       flexGrow: 0,
     },
     sheetCompactRadius: {

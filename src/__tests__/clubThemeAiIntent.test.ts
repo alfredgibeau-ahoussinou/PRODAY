@@ -1,5 +1,6 @@
 import {
   CLUB_THEME_AI_FALLBACK_MESSAGE,
+  parseClubColorsFromAssistantReply,
   parseClubThemeAiIntent,
   suggestClubColorsFromName,
 } from '../utils/clubThemeAiIntent';
@@ -44,6 +45,24 @@ describe('parseClubThemeAiIntent', () => {
     const r = parseClubThemeAiIntent('xyz');
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.message).toBe(CLUB_THEME_AI_FALLBACK_MESSAGE);
+  });
+});
+
+describe('parseClubColorsFromAssistantReply', () => {
+  it('extrait deux hex depuis une réponse copilote', () => {
+    const r = parseClubColorsFromAssistantReply(
+      'PRINCIPALE #0A1628 · SECONDAIRE #C4A35A — ambiance nuit élégante.',
+    );
+    expect(r?.ok).toBe(true);
+    if (r?.ok) {
+      expect(r.colors.primary).toBe('#0A1628');
+      expect(r.colors.secondary).toBe('#C4A35A');
+      expect(r.label).toMatch(/Copilote/i);
+    }
+  });
+
+  it('retourne null sans assez de hex', () => {
+    expect(parseClubColorsFromAssistantReply('Pas de palette ici')).toBeNull();
   });
 });
 

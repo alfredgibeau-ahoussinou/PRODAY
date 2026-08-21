@@ -43,7 +43,7 @@ const WELCOME =
  * Copilote Club — dialogue Mistral (clubAssistantChat) + confirmations locales
  * pour les actions sensibles (jamais d’auto-mouvement de joueurs).
  */
-export function ClubAiAssistant() {
+export function ClubAiAssistant({ embedded = false }: { embedded?: boolean } = {}) {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
@@ -172,10 +172,12 @@ export function ClubAiAssistant() {
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
         >
-          <ClubBrandHeader
-            title="Copilote Club"
-            subtitle="Dialogue réel · confirmation avant action"
-          />
+          {!embedded ? (
+            <ClubBrandHeader
+              title="Copilote Club"
+              subtitle="Dialogue réel · confirmation avant action"
+            />
+          ) : null}
 
           <View style={styles.thread}>
             {messages.map((m) => (

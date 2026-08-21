@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { PLAYER_THEME_SWATCHES } from '../../../utils/resolvePlayerThemeColors';
@@ -7,12 +7,17 @@ import { normalizeCoachHexColor } from '../../../utils/coachColorPicker';
 import {
   CLUB_THEME_AI_EXAMPLE_CHIPS,
   CLUB_THEME_AI_FALLBACK_MESSAGE,
+  CLUB_THEME_AI_REMOTE_PROMPT,
+  parseClubColorsFromAssistantReply,
   parseClubThemeAiIntent,
   suggestClubColorsFromName,
 } from '../../../utils/clubThemeAiIntent';
+import { sendClubAssistantMessage } from '../../../services/clubAssistant.service';
+import { stripDashTypography } from '../../../utils/stripDashTypography';
 import { spacing } from '../../../theme/designTokens';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import { useClubBrandColors } from '../hooks/useClubBrandColors';
+import { openClubHelpChatbot } from '../shell/clubHelpOpen';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { ClubText } from './clubUi';
 
@@ -21,8 +26,8 @@ type Props = {
 };
 
 /**
- * Sélecteur couleurs club — miroir du panneau thème Joueur (swatches + IA clubs mondiaux).
- * Owner seulement pour éditer ; confirmation avant application IA.
+ * Sélecteur couleurs club — swatches + analyse copilote Mistral (confirmation avant apply).
+ * Owner seulement pour éditer.
  */
 export function ClubBrandColorsPanel({ onSaved }: Props) {
   const { tokens, brand, club } = useClubTheme();
@@ -35,6 +40,7 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
   const [hexSecondary, setHexSecondary] = useState(brand?.secondary ?? tokens.secondary);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiReply, setAiReply] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const [savedHint, setSavedHint] = useState(false);
 
   useEffect(() => {
@@ -108,10 +114,39 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
     [persist, selectPrimary, selectSecondary],
   );
 
+  const runRemoteAi = useCallback(
+    async (phrase: string) => {
+      setAiLoading(true);
+      setAiReply('Analyse Mistral en cours…');
+      try {
+        const res = await sendClubAssistantMessage([
+          { role: 'user', content: CLUB_THEME_AI_REMOTE_PROMPT(phrase) },
+        ]);
+        const reply = stripDashTypography(res.reply);
+        const parsed = parseClubColorsFromAssistantReply(reply);
+        if (!parsed?.ok) {
+          setAiReply(
+            reply.slice(0, 220) ||
+              'Le copilote n’a pas renvoyé de palette exploitable. Reformule ou ouvre le Copilote.',
+          );
+          return;
+        }
+        setAiReply(parsed.label);
+        confirmAiColors(parsed.colors.primary, parsed.colors.secondary, parsed.label);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Analyse indisponible.';
+        setAiReply(`Copilote indisponible (${msg}). Ouvre le Copilote ou choisis un raccourci.`);
+      } finally {
+        setAiLoading(false);
+      }
+    },
+    [confirmAiColors],
+  );
+
   const runAi = useCallback(
     (phrase: string) => {
       const trimmed = phrase.trim();
-      if (!trimmed) return;
+      if (!trimmed || aiLoading) return;
       if (!brandColors.canEdit) {
         Alert.alert(
           'Couleurs du club',
@@ -120,14 +155,14 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
         return;
       }
       setAiReply(null);
-      const result = parseClubThemeAiIntent(trimmed);
-      if (!result.ok) {
-        setAiReply(result.message);
+      const local = parseClubThemeAiIntent(trimmed);
+      if (local.ok) {
+        confirmAiColors(local.colors.primary, local.colors.secondary, local.label);
         return;
       }
-      confirmAiColors(result.colors.primary, result.colors.secondary, result.label);
+      void runRemoteAi(trimmed);
     },
-    [brandColors.canEdit, confirmAiColors],
+    [aiLoading, brandColors.canEdit, confirmAiColors, runRemoteAi],
   );
 
   const saveManual = useCallback(() => {
@@ -161,19 +196,19 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
 
       <View style={styles.aiBlock}>
         <ClubText variant="caption" style={styles.blockLabel}>
-          Analyse IA des clubs
+          Copilote couleurs
         </ClubText>
         <ClubText variant="caption" muted>
-          Décris un club du monde, un mélange ou une teinte — même moteur que le pôle Joueur.
-          Confirmation avant d’écraser les couleurs enregistrées.
+          Décris un style, un club ou un mélange — analyse Mistral réelle. Confirmation avant
+          d’écraser les couleurs enregistrées.
         </ClubText>
         <TextInput
           value={aiPrompt}
           onChangeText={setAiPrompt}
-          placeholder="Ex. style Barça, couleurs OM…"
+          placeholder="Ex. ambiance nuit parisienne, vert forêt et or…"
           placeholderTextColor={tokens.muted}
           style={styles.aiInput}
-          editable={brandColors.canEdit}
+          editable={brandColors.canEdit && !aiLoading}
           multiline
           maxLength={200}
         />
@@ -185,7 +220,7 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
                 setAiPrompt(chip);
                 runAi(chip);
               }}
-              disabled={!brandColors.canEdit}
+              disabled={!brandColors.canEdit || aiLoading}
               scaleTo={0.97}
               style={styles.chip}
             >
@@ -197,7 +232,7 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
         </View>
         <PressableSpring
           onPress={() => runAi(aiPrompt)}
-          disabled={!brandColors.canEdit || brandColors.saving || !aiPrompt.trim()}
+          disabled={!brandColors.canEdit || brandColors.saving || aiLoading || !aiPrompt.trim()}
           scaleTo={0.98}
           haptic
           style={[
@@ -205,12 +240,32 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
             {
               backgroundColor: tokens.accent,
               opacity:
-                !brandColors.canEdit || brandColors.saving || !aiPrompt.trim() ? 0.45 : 1,
+                !brandColors.canEdit || brandColors.saving || aiLoading || !aiPrompt.trim()
+                  ? 0.45
+                  : 1,
             },
           ]}
         >
-          <ClubText variant="caption" style={{ color: tokens.onAccent, fontWeight: '800' }}>
-            Analyser
+          {aiLoading ? (
+            <ActivityIndicator color={tokens.onAccent} />
+          ) : (
+            <ClubText variant="caption" style={{ color: tokens.onAccent, fontWeight: '800' }}>
+              Analyser avec le copilote
+            </ClubText>
+          )}
+        </PressableSpring>
+        <PressableSpring
+          onPress={() => {
+            if (!openClubHelpChatbot()) {
+              Alert.alert('Copilote', 'Ouvre Copilote depuis le menu Club pour discuter librement.');
+            }
+          }}
+          scaleTo={0.98}
+          style={styles.secondaryLink}
+        >
+          <Icon name="star-four-points" size={14} color={tokens.accent} />
+          <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+            Ouvrir le Copilote Club
           </ClubText>
         </PressableSpring>
         {aiReply ? (
@@ -422,6 +477,15 @@ const createStyles = (tokens: ClubThemeTokens) =>
       borderRadius: 999,
       paddingVertical: 12,
       alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 44,
+    },
+    secondaryLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 6,
     },
     hexRow: {
       flexDirection: 'row',

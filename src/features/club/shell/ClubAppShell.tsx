@@ -15,7 +15,8 @@ import { ClubMenuPane } from './ClubMenuPane';
 import { ClubCreateFab, ClubCreateSheet } from './ClubCreateSheet';
 import { ClubCreateFormModal } from '../create/ClubCreateFormModal';
 import { ClubLockedPane } from './ClubLockedPane';
-import { openClubHelpChatbot } from './clubHelpOpen';
+import { openClubHelpChatbot, registerClubCopilotOpener } from './clubHelpOpen';
+import { ClubCopilotSheet } from '../ai/ClubCopilotSheet';
 import {
   canonicalizeClubNav,
   clubNavFromTab,
@@ -98,6 +99,13 @@ function ClubAppShellInner({
   const wide = width >= clubChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [navId, setNavId] = useState<ClubNavItemId>(() =>
+    canonicalizeClubNav(clubNavFromTab(activeTab)),
+  );
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createFormAction, setCreateFormAction] = useState<ClubCreateActionId | null>(null);
+  const [selectedPlayerUid, setSelectedPlayerUid] = useState<string | null>(null);
+  const [copilotOpen, setCopilotOpen] = useState(false);
 
   const offerId = resolveClubOfferId(profile);
   const formulaLabel = offerId ? CLUB_OFFERS[offerId].label : 'Sans formule';
@@ -111,16 +119,14 @@ function ClubAppShellInner({
   const primaryItems = useMemo(() => resolveClubPrimaryNav(access), [access]);
   const toolItems = useMemo(() => resolveClubMenuItems(access), [access]);
 
-  const [navId, setNavId] = useState<ClubNavItemId>(() =>
-    canonicalizeClubNav(clubNavFromTab(activeTab)),
-  );
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createFormAction, setCreateFormAction] = useState<ClubCreateActionId | null>(null);
-  const [selectedPlayerUid, setSelectedPlayerUid] = useState<string | null>(null);
-
   useEffect(() => {
     setNavId((prev) => resolveClubNavOnTabSync(prev, activeTab));
   }, [activeTab]);
+
+  useEffect(() => {
+    registerClubCopilotOpener(() => setCopilotOpen(true));
+    return () => registerClubCopilotOpener(null);
+  }, []);
 
   const clubName = profile?.display_name ?? 'Club';
   const resolved = findInClubNavCatalog(catalog, navId);
@@ -135,7 +141,9 @@ function ClubAppShellInner({
     if (nextTab !== activeTab) onTabChange(nextTab);
   };
 
-  const onOpenHelp = () => openClubHelpChatbot();
+  const onOpenHelp = () => {
+    if (!openClubHelpChatbot()) setCopilotOpen(true);
+  };
 
   const onSignOut = () => {
     Alert.alert('Se déconnecter', 'Voulez-vous quitter votre session club ?', [
@@ -248,6 +256,7 @@ function ClubAppShellInner({
         action={createFormAction}
         onClose={() => setCreateFormAction(null)}
       />
+      <ClubCopilotSheet visible={copilotOpen} onClose={() => setCopilotOpen(false)} />
     </ClubShellNavProvider>
   );
 }
