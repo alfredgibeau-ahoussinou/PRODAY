@@ -31,6 +31,7 @@ import { shareCsv, toCsv } from '../utils/adminCsv';
 import { canAdminUi } from '../utils/adminRbac';
 import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
 import { adminAuditService } from '../../../services/adminAudit.service';
+import { AdminClubCommercialBillingCard } from '../ui/AdminClubCommercialBillingCard';
 
 type Filter = 'all' | 'verified' | 'unverified' | 'suspended' | 'new';
 
@@ -278,6 +279,7 @@ function ClubEditor({
 }) {
   const t = ADMIN_TOKENS;
   const data = useAdminData();
+  const { profile } = useAuth();
   const [name, setName] = useState(club.name);
   const [city, setCity] = useState(club.city);
   const [department, setDepartment] = useState(club.department ?? '');
@@ -317,6 +319,9 @@ function ClubEditor({
   const clubPayments = useMemo(
     () => data.payments.filter((p) => p.club_id === club.id),
     [data.payments, club.id],
+  );
+  const suggestedQuote = clubQuotes.find(
+    (q) => q.quoted_total_eur != null && (q.status === 'quoted' || q.status === 'accepted'),
   );
 
   const run = async (fn: () => Promise<void>) => {
@@ -372,6 +377,23 @@ function ClubEditor({
           <Field label="Tags (virgules)" value={tags} onChange={setTags} />
           <AdminButton label={busy ? '…' : 'Enregistrer'} disabled={busy} onPress={save} />
         </AdminCard>
+
+        <AdminClubCommercialBillingCard
+          club={club}
+          busy={busy}
+          setBusy={setBusy}
+          actorUid={actorUid}
+          actorEmail={profile?.email ?? undefined}
+          onRefresh={onRefresh}
+          suggestedAmountEur={suggestedQuote?.quoted_total_eur}
+          suggestedOfferId={
+            suggestedQuote?.offer_hint === 'club_video_pro'
+              ? 'club_video_pro'
+              : suggestedQuote
+                ? 'club_premium'
+                : null
+          }
+        />
 
         <AdminCard>
           <AdminText variant="h2">Statuts</AdminText>

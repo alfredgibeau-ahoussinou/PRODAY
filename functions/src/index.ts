@@ -34,6 +34,10 @@ import {
   createWebsiteTrafficStatsAdminHandler,
 } from './trafficStats';
 import { createWebsiteAdminStatsHandler } from './websiteAdminStats';
+import {
+  createAdminClubBillingCallable,
+  createWebsiteClubBillingAdminHandler,
+} from './clubBillingAdmin';
 import { createSubmitSponsorQuoteRequestHandler } from './sponsorQuoteRequest';
 import {
   createAdminSendSponsorQuoteHandler,
@@ -1003,6 +1007,21 @@ export const websiteAdminStats = functions
   .region('europe-west1')
   .runWith({ timeoutSeconds: 60, memory: '512MB' })
   .https.onRequest(createWebsiteAdminStatsHandler(db));
+
+/**
+ * Facturation club (prix custom + Stripe Invoice) — secret site `X-Admin-Secret`.
+ * Proxy Netlify : `/api/admin/billing/*`. Callable mobile : `adminClubBilling`.
+ */
+export const websiteClubBillingAdmin = functions
+  .region('europe-west1')
+  .runWith({ timeoutSeconds: 60, memory: '512MB' })
+  .https.onRequest(createWebsiteClubBillingAdminHandler(db));
+
+/** Même logique billing club — callable Firebase (claim admin). */
+export const adminClubBilling = functions
+  .region('europe-west1')
+  .runWith({ timeoutSeconds: 60, memory: '512MB' })
+  .https.onCall(createAdminClubBillingCallable(db));
 
 /** Approuve une inscription bêta et envoie l'email de bienvenue — admin uniquement. */
 export const adminApproveBetaAccess = functions

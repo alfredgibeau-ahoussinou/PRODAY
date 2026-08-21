@@ -215,6 +215,23 @@ Fil d’actualités club (remplace partiellement WhatsApp).
 
 **Client :** `tournamentService.listMatches`, `createMatch`, `updateScore`
 
+## `adminClubBilling` (HTTPS callable, europe-west1)
+
+**Auth :** token admin (`customClaims.admin`)
+
+Même logique que `websiteClubBillingAdmin` (secret site). Actions :
+
+| action | Effet |
+|--------|--------|
+| `upsert_price` | Prix custom `club_billing_prices` (amountEur / offerId) |
+| `get_price` / `list_prices` | Lecture prix club |
+| `create_invoice` | Stripe Invoice (finalize + send) → `club_stripe_invoices` |
+| `list_invoices` / `get_invoice` / `refresh_invoice` | Statut / liens facture |
+
+**Offres :** `club_premium`, `club_video_pro`, `veo_lives_2` (2 lives), `video_veo_pack`, …
+
+**Client app :** `src/services/clubCommercialBilling.service.ts`
+
 ## Services client (TypeScript)
 
 | Service | Fichier |
@@ -224,3 +241,4 @@ Fil d’actualités club (remplace partiellement WhatsApp).
 | Tournois & live score | `src/services/tournament.service.ts` |
 | Événements & convocations | `src/services/teamEvents.service.ts` |
 | Push & géofencing | `src/services/notification.service.ts` |
+| Facturation club Stripe | `src/services/clubCommercialBilling.service.ts` |

@@ -17,6 +17,11 @@ import { subscriptionUpgradeRequestService } from '../../../services/subscriptio
 import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { useAuth } from '../../../context/AuthContext';
 import { adminAuditService } from '../../../services/adminAudit.service';
+import {
+  formatClubInvoiceStatus,
+  getClubLivePack,
+  isClubLivePackId,
+} from '../../../content/clubLivePacks';
 
 export function AdminFinancePane() {
   const data = useAdminData();
@@ -43,8 +48,14 @@ export function AdminFinancePane() {
       mrrEstimate,
       arrEstimate: mrrEstimate * 12,
       upgradeReqs: data.subscriptionUpgradeRequests,
+      clubInvoices: data.clubs.filter(
+        (c) =>
+          c.commercial_amount_eur != null ||
+          c.stripe_invoice_id != null ||
+          c.stripe_invoice_status != null,
+      ),
     };
-  }, [data.payments, data.users, data.subscriptionUpgradeRequests]);
+  }, [data.payments, data.users, data.subscriptionUpgradeRequests, data.clubs]);
 
   const run = async (id: string, fn: () => Promise<void>) => {
     setBusyId(id);
@@ -168,6 +179,43 @@ export function AdminFinancePane() {
                   }
                 />
               </View>
+            </View>
+          ))
+        )}
+      </AdminCard>
+
+      <AdminCard>
+        <AdminText variant="h2">Factures clubs (live / Veo)</AdminText>
+        <AdminText variant="caption" color={t.muted}>
+          Montants admin + statut Stripe Invoice (Tout inclus, Pro + Veo, 2 lives).
+        </AdminText>
+        {finance.clubInvoices.length === 0 ? (
+          <AdminText variant="body" color={t.muted}>
+            Aucun club tarifé / facturé. Fixez un montant dans Clubs ou Commercial.
+          </AdminText>
+        ) : (
+          finance.clubInvoices.slice(0, 30).map((c) => (
+            <View key={c.id} style={[styles.row, { borderColor: t.hairline }]}>
+              <View style={{ flex: 1 }}>
+                <AdminText variant="h3">{c.name}</AdminText>
+                <AdminText variant="caption" color={t.muted}>
+                  {c.commercial_amount_eur != null ? `${c.commercial_amount_eur} €` : '—'}
+                  {c.commercial_offer_id && isClubLivePackId(c.commercial_offer_id)
+                    ? ` · ${getClubLivePack(c.commercial_offer_id).shortLabel}`
+                    : ''}
+                  {c.stripe_invoice_id ? ` · ${c.stripe_invoice_id}` : ''}
+                </AdminText>
+              </View>
+              <AdminBadge
+                label={formatClubInvoiceStatus(c.stripe_invoice_status)}
+                tone={
+                  c.stripe_invoice_status === 'paid'
+                    ? 'success'
+                    : c.stripe_invoice_status === 'open'
+                      ? 'warn'
+                      : 'info'
+                }
+              />
             </View>
           ))
         )}

@@ -32,6 +32,8 @@ import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
 import { adminAuditService } from '../../../services/adminAudit.service';
 import type { User, UserRole, VerificationStatus } from '../../../models/User';
+import { AdminClubCommercialBillingCard } from '../ui/AdminClubCommercialBillingCard';
+import { clubLivePackFromOfferHint } from '../../../content/clubLivePacks';
 
 const ROLE_FILTERS: { id: 'all' | UserRole; label: string }[] = [
   { id: 'all', label: 'Tous' },
@@ -334,6 +336,7 @@ function UserEditor({
   actorEmail?: string;
 }) {
   const t = ADMIN_TOKENS;
+  const data = useAdminData();
   const [name, setName] = useState(user.display_name);
   const [city, setCity] = useState(user.city ?? '');
   const [note, setNote] = useState(user.admin_note ?? '');
@@ -347,6 +350,26 @@ function UserEditor({
     setTags((user.admin_tags ?? []).join(', '));
     setRole(user.role);
   }, [user]);
+
+  const linkedClub = useMemo(() => {
+    const byOwner = data.clubs.find((c) => c.owner_uid === user.uid);
+    if (byOwner) return byOwner;
+    const clubId = user.profile?.club_id;
+    if (clubId) return data.clubs.find((c) => c.id === clubId) ?? null;
+    return null;
+  }, [data.clubs, user.uid, user.profile?.club_id]);
+
+  const linkedQuote = useMemo(() => {
+    if (!linkedClub) return null;
+    return (
+      data.clubQuoteRequests.find(
+        (q) =>
+          (q.requester_uid === user.uid ||
+            q.club_name.toLowerCase() === linkedClub.name.toLowerCase()) &&
+          q.quoted_total_eur != null,
+      ) ?? null
+    );
+  }, [data.clubQuoteRequests, linkedClub, user.uid]);
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -541,6 +564,31 @@ function UserEditor({
             />
           </View>
         </AdminCard>
+
+        {linkedClub ? (
+          <AdminClubCommercialBillingCard
+            club={linkedClub}
+            busy={busy}
+            setBusy={setBusy}
+            actorUid={actorUid}
+            actorEmail={actorEmail}
+            onRefresh={onRefresh}
+            suggestedAmountEur={linkedQuote?.quoted_total_eur}
+            suggestedOfferId={
+              linkedQuote
+                ? clubLivePackFromOfferHint(linkedQuote.offer_hint)
+                : null
+            }
+          />
+        ) : user.role === 'club' ? (
+          <AdminCard>
+            <AdminText variant="h2">Facturation live / Veo</AdminText>
+            <AdminText variant="caption" color={t.muted}>
+              Aucun document clubs lié à ce compte. Ouvrez le pôle Clubs pour créer / rattacher
+              le club, puis fixer le montant et envoyer la facture Stripe.
+            </AdminText>
+          </AdminCard>
+        ) : null}
       </ScrollView>
     </View>
   );

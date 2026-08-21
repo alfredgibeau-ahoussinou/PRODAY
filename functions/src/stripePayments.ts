@@ -10,6 +10,7 @@ import {
   handleStripeSubscriptionLifecycle,
 } from './subscriptionPayments';
 import { handleCoachSessionCheckoutCompleted } from './coachSessionPayments';
+import { syncClubInvoiceFromStripeEvent } from './clubBillingAdmin';
 
 const db = admin.firestore();
 
@@ -182,6 +183,18 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
   ) {
     const subscription = event.data.object as Stripe.Subscription;
     await handleStripeSubscriptionLifecycle(subscription);
+  }
+
+  if (
+    event.type === 'invoice.paid' ||
+    event.type === 'invoice.finalized' ||
+    event.type === 'invoice.voided' ||
+    event.type === 'invoice.marked_uncollectible' ||
+    event.type === 'invoice.payment_failed' ||
+    event.type === 'invoice.sent'
+  ) {
+    const invoice = event.data.object as Stripe.Invoice;
+    await syncClubInvoiceFromStripeEvent(db, invoice);
   }
 
   res.json({ received: true });

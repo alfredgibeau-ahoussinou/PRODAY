@@ -633,6 +633,9 @@ export const adminService = {
         v && typeof v === 'object' && 'toDate' in v
           ? (v as { toDate: () => Date }).toDate()
           : undefined;
+      const offerId = data.commercial_offer_id
+        ? String(data.commercial_offer_id)
+        : undefined;
       return {
         id: d.id,
         name: String(data.name ?? ''),
@@ -652,6 +655,52 @@ export const adminService = {
         categories: (data.categories as string[]) ?? [],
         sponsor_ids: (data.sponsor_ids as string[]) ?? [],
         owner_uid: String(data.owner_uid ?? ''),
+        commercial_offer_id:
+          offerId === 'club_premium' ||
+          offerId === 'club_video_pro' ||
+          offerId === 'veo_lives_2' ||
+          offerId === 'video_veo_pack' ||
+          offerId === 'club_live_duo'
+            ? offerId === 'club_live_duo'
+              ? 'veo_lives_2'
+              : (offerId as
+                  | 'club_premium'
+                  | 'club_video_pro'
+                  | 'veo_lives_2'
+                  | 'video_veo_pack')
+            : undefined,
+        commercial_amount_eur:
+          typeof data.commercial_amount_eur === 'number'
+            ? data.commercial_amount_eur
+            : undefined,
+        commercial_amount_note: data.commercial_amount_note
+          ? String(data.commercial_amount_note)
+          : undefined,
+        commercial_amount_updated_at: toDate(data.commercial_amount_updated_at),
+        commercial_amount_updated_by: data.commercial_amount_updated_by
+          ? String(data.commercial_amount_updated_by)
+          : undefined,
+        billing_email: data.billing_email ? String(data.billing_email) : undefined,
+        stripe_customer_id: data.stripe_customer_id
+          ? String(data.stripe_customer_id)
+          : undefined,
+        stripe_invoice_id: data.stripe_invoice_id
+          ? String(data.stripe_invoice_id)
+          : undefined,
+        stripe_invoice_status: data.stripe_invoice_status
+          ? String(data.stripe_invoice_status)
+          : undefined,
+        stripe_invoice_hosted_url: data.stripe_invoice_hosted_url
+          ? String(data.stripe_invoice_hosted_url)
+          : undefined,
+        stripe_invoice_pdf: data.stripe_invoice_pdf
+          ? String(data.stripe_invoice_pdf)
+          : undefined,
+        stripe_invoice_amount_eur:
+          typeof data.stripe_invoice_amount_eur === 'number'
+            ? data.stripe_invoice_amount_eur
+            : undefined,
+        stripe_invoice_sent_at: toDate(data.stripe_invoice_sent_at),
         created_at: toDate(data.created_at) ?? new Date(),
         updated_at: toDate(data.updated_at),
       };

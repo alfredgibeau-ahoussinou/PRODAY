@@ -3,6 +3,7 @@ import {
   Alert,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -28,6 +29,10 @@ import {
 } from '../../../services/clubQuote.service';
 import { useAuth } from '../../../context/AuthContext';
 import { DEFAULT_PRICE_PER_MEMBER_EUR } from '../utils/adminPricing';
+import { clubLivePackFromOfferHint } from '../../../content/clubLivePacks';
+import { clubCommercialBillingService } from '../../../services/clubCommercialBilling.service';
+import { AdminClubCommercialBillingCard } from '../ui/AdminClubCommercialBillingCard';
+import type { Club } from '../../../models/Club';
 
 type Filter = ClubQuoteStatus | 'all';
 
@@ -196,6 +201,50 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
   }
 
   if (selected) {
+    const matchedClub: Club | undefined = data.clubs.find(
+      (c) =>
+        (selected.requester_uid && c.owner_uid === selected.requester_uid) ||
+        c.name.toLowerCase() === selected.club_name.toLowerCase(),
+    );
+
+    const pushAmountToClub = () => {
+      if (!matchedClub || !firebaseUser?.uid) return;
+      const amount = selected.quoted_total_eur ?? totalPreview;
+      Alert.alert(
+        'Appliquer le montant au club ?',
+        `${amount} € sur « ${matchedClub.name} » (forfait ${
+          selected.offer_hint === 'club_video_pro' ? 'Pro + Veo' : 'Tout inclus'
+        }).`,
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Confirmer',
+            onPress: () => {
+              void (async () => {
+                setBusy(true);
+                try {
+                  await clubCommercialBillingService.setAmount({
+                    clubId: matchedClub.id,
+                    amountEur: amount,
+                    offerId: clubLivePackFromOfferHint(selected.offer_hint),
+                    note: optionsNote || undefined,
+                    adminUid: firebaseUser.uid,
+                    adminEmail: profile?.email ?? firebaseUser.email ?? undefined,
+                  });
+                  await data.refresh();
+                  Alert.alert('OK', `Montant ${amount} € enregistré sur le club.`);
+                } catch (e) {
+                  Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+                } finally {
+                  setBusy(false);
+                }
+              })();
+            },
+          },
+        ],
+      );
+    };
+
     return (
       <View style={styles.root}>
         <AdminSheetHeader
@@ -205,7 +254,7 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
           closeLabel="Retour"
           right={<AdminBadge label={selected.status} tone="accent" />}
         />
-        <View style={styles.form}>
+        <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
           <AdminCard>
             <AdminText variant="h2">Calculateur</AdminText>
             <AdminText variant="caption" color={t.muted}>
@@ -224,6 +273,19 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
               onPress={applyQuote}
               disabled={busy}
             />
+            {matchedClub ? (
+              <AdminButton
+                label="Appliquer montant au club"
+                variant="soft"
+                disabled={busy}
+                onPress={pushAmountToClub}
+              />
+            ) : (
+              <AdminText variant="caption" color={t.faint}>
+                Aucun club Firestore trouvé pour ce devis — créez / rattachez le club puis facturez
+                depuis Clubs.
+              </AdminText>
+            )}
             <View style={styles.statusActions}>
               {(
                 [
@@ -283,7 +345,21 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
                 .join('\n') || 'Pas de détail complémentaire.'}
             </AdminText>
           </AdminCard>
-        </View>
+          {matchedClub ? (
+            <AdminClubCommercialBillingCard
+              club={matchedClub}
+              busy={busy}
+              setBusy={setBusy}
+              actorUid={firebaseUser?.uid ?? 'admin'}
+              actorEmail={profile?.email ?? firebaseUser?.email ?? undefined}
+              onRefresh={async () => {
+                await data.refresh();
+              }}
+              suggestedAmountEur={selected.quoted_total_eur ?? totalPreview}
+              suggestedOfferId={clubLivePackFromOfferHint(selected.offer_hint)}
+            />
+          ) : null}
+        </ScrollView>
       </View>
     );
   }

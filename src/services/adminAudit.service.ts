@@ -30,6 +30,8 @@ export type AdminAuditAction =
   | 'subscription_extended'
   | 'club_quote_quoted'
   | 'club_quote_status'
+  | 'club_commercial_amount_set'
+  | 'club_stripe_invoice_sent'
   | 'other';
 
 export interface AdminAuditEntry {

@@ -1,4 +1,5 @@
 import type { GeoPoint } from './User';
+import type { ClubLivePackId } from '../content/clubLivePacks';
 
 export interface Club {
   id: string;
@@ -23,6 +24,22 @@ export interface Club {
   categories: string[];
   sponsor_ids: string[];
   owner_uid: string;
+  /** Forfait commercial live / Veo / all-inclusive (devis). */
+  commercial_offer_id?: ClubLivePackId;
+  /** Montant HT/TTC convenu (admin) — source pour facture Stripe. */
+  commercial_amount_eur?: number;
+  commercial_amount_note?: string;
+  commercial_amount_updated_at?: Date;
+  commercial_amount_updated_by?: string;
+  /** E-mail facturation (sinon owner). */
+  billing_email?: string;
+  stripe_customer_id?: string;
+  stripe_invoice_id?: string;
+  stripe_invoice_status?: string;
+  stripe_invoice_hosted_url?: string;
+  stripe_invoice_pdf?: string;
+  stripe_invoice_amount_eur?: number;
+  stripe_invoice_sent_at?: Date;
   created_at: Date;
   updated_at?: Date;
 }
