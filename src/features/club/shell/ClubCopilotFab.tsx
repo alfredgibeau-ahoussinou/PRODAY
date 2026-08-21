@@ -1,55 +1,67 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { ClubText } from '../ui/clubUi';
 import { useClubTheme } from './ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   onPress: () => void;
 };
 
+/** Hauteur approx. du FAB CRÉER + marge verticale claire entre les deux bulles. */
+const CREATE_FAB_BOTTOM = 72;
+const CREATE_FAB_HEIGHT = 48;
+const STACK_GAP = 18;
+
 /**
- * FAB Copilote Club — remplace l’ancien chip ballon FAQ (36px football-outline).
- * Entrée premium sombre : pill gradient + libellé, au-dessus de CRÉER.
+ * FAB Copilote Club — bulle flottante (mini pop-up), inset du bord et du dock,
+ * empilée au-dessus de CRÉER avec un écart net.
  */
 export function ClubCopilotFab({ onPress }: Props) {
+  const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+
+  const right = Math.max(insets.right, 0) + clubSpace.xl;
+  const bottom = CREATE_FAB_BOTTOM + CREATE_FAB_HEIGHT + STACK_GAP;
 
   return (
     <PressableSpring
       onPress={onPress}
       scaleTo={0.94}
       haptic
-      style={styles.wrap}
+      style={[styles.wrap, { right, bottom }]}
       accessibilityRole="button"
       accessibilityLabel="Ouvrir le copilote Club"
       accessibilityHint="Dialogue IA — confirmation avant chaque action"
       testID="club-copilot-fab"
     >
-      <LinearGradient
-        colors={[tokens.accent, tokens.accentDeep]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.face}
-      >
-        <View style={styles.sheen} pointerEvents="none" />
-        <View style={styles.iconDisk}>
-          <Icon name="chat" size={20} color={tokens.accent} />
-        </View>
-        <View style={styles.copy}>
-          <ClubText variant="caption" style={styles.title}>
-            Copilote
-          </ClubText>
-          <ClubText variant="caption" style={styles.sub} numberOfLines={1}>
-            Demander
-          </ClubText>
-        </View>
-      </LinearGradient>
+      <View style={styles.bubble} pointerEvents="box-none">
+        <LinearGradient
+          colors={[tokens.accent, tokens.accentDeep]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.face}
+        >
+          <View style={styles.sheen} pointerEvents="none" />
+          <View style={styles.iconDisk}>
+            <Icon name="chat" size={20} color={tokens.accent} />
+          </View>
+          <View style={styles.copy}>
+            <ClubText variant="caption" style={styles.title}>
+              Copilote
+            </ClubText>
+            <ClubText variant="caption" style={styles.sub} numberOfLines={1}>
+              Demander
+            </ClubText>
+          </View>
+        </LinearGradient>
+      </View>
     </PressableSpring>
   );
 }
@@ -58,38 +70,52 @@ function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
     wrap: {
       position: 'absolute',
-      right: clubSpace.lg,
-      bottom: 132,
       zIndex: 31,
+      // Ombre douce type carte flottante (pas un FAB collé au bord).
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.42,
+      shadowRadius: 22,
+      elevation: 10,
+      ...Platform.select({
+        android: { backgroundColor: 'transparent' },
+        default: {},
+      }),
+    },
+    bubble: {
       borderRadius: clubRadius.pill,
-      ...clubShadow.accent(tokens),
+      // Halo léger derrière la pill → effet mini pop-up.
+      padding: 3,
+      backgroundColor: 'rgba(8, 12, 20, 0.35)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)',
     },
     face: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      minHeight: 54,
-      paddingLeft: 8,
-      paddingRight: 18,
-      paddingVertical: 8,
+      minHeight: 52,
+      paddingLeft: 7,
+      paddingRight: 16,
+      paddingVertical: 7,
       borderRadius: clubRadius.pill,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.22)',
+      borderColor: 'rgba(255,255,255,0.2)',
       overflow: 'hidden',
     },
     sheen: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(255,255,255,0.06)',
+      backgroundColor: 'rgba(255,255,255,0.07)',
     },
     iconDisk: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.onAccent,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.35)',
+      borderColor: 'rgba(255,255,255,0.32)',
     },
     copy: {
       gap: 1,

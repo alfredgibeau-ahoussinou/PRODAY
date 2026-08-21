@@ -67,14 +67,16 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
 
 /** FAB mobile « + CRÉER ». */
 export function ClubCreateFab({ onPress }: { onPress: () => void }) {
+  const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const right = Math.max(insets.right, 0) + clubSpace.xl;
   return (
     <PressableSpring
       onPress={onPress}
       scaleTo={0.94}
       haptic
-      style={styles.fab}
+      style={[styles.fab, { right }]}
       accessibilityRole="button"
       accessibilityLabel="Créer"
     >
@@ -127,7 +129,6 @@ function createStyles(tokens: ClubThemeTokens) {
     },
     fab: {
       position: 'absolute',
-      right: clubSpace.lg,
       bottom: 72,
       flexDirection: 'row',
       alignItems: 'center',
