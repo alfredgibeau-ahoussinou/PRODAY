@@ -13,9 +13,10 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import {
+  ClubHomeAiHero,
   ClubHomeIdentityHeader,
   ClubHomeKpiStrip,
-  ClubHomePriorityHero,
+  ClubHomeNextEventRow,
   ClubHomeTodayTimeline,
   ClubHomeTodoSection,
   type ClubHomePriority,
@@ -194,7 +195,13 @@ export function ClubHomeScreen() {
           crestUploading={logo.uploading}
         />
 
-        <ClubHomePriorityHero priority={priority} onPress={onHeroPress} />
+        <ClubHomeAiHero
+          headline={ws.briefingHeadline}
+          summary={ws.briefingSummary}
+          onOpenCopilot={() => shellNav?.requestNav('assistant')}
+        />
+
+        <ClubHomeNextEventRow priority={priority} onPress={onHeroPress} />
 
         <ClubHomeKpiStrip
           players={ws.players.length}
@@ -270,6 +277,12 @@ export function ClubHomeScreen() {
             />
             <ClubActionRow
               icon="chat"
+              label="Copilote Club"
+              hint="Dialogue IA · confirmation obligatoire"
+              onPress={() => shellNav?.requestNav('assistant')}
+            />
+            <ClubActionRow
+              icon="mail"
               label="Communication"
               onPress={() => shellNav?.requestNav('communication')}
             />

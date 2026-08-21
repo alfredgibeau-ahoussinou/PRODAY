@@ -185,9 +185,9 @@ export const CLUB_PAGE_IDENTITIES: Partial<Record<ClubNavItemId, ClubPageIdentit
   assistant: page({
     id: 'assistant',
     eyebrow: 'IA',
-    title: 'Assistant IA',
-    support: 'Recommandations · confirmation',
-    icon: 'star-four-points',
+    title: 'Copilote Club',
+    support: 'Dialogue réel · confirmation',
+    icon: 'chat',
     layout: 'signal',
     motif: 'dots',
   }),

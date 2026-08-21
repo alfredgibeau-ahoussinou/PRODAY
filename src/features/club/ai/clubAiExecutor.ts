@@ -25,7 +25,8 @@ export type ClubAiPlan = {
 };
 
 /**
- * Planificateur local (stub LLM) — jamais d’auto-mouvement de joueurs.
+ * Planificateur local pour actions sensibles — le dialogue distant (Mistral)
+ * reste dans ClubAiAssistant ; ici on ne déclenche jamais d’auto-écriture.
  */
 export function planClubAiReply(text: string, ws: ClubWorkspace): ClubAiPlan {
   const lower = text.trim().toLowerCase();

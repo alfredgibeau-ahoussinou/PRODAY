@@ -125,8 +125,65 @@ export type ClubHomePriority =
   | { kind: 'training'; event: TeamEvent }
   | { kind: 'calm' };
 
-/** Bandeau priorité — langage scoreboard / coup d’envoi, pas carte KPI. */
-export function ClubHomePriorityHero({
+/**
+ * Surface copilote Accueil — remplace l’ancien bandeau scoreboard / LED
+ * (horloge « coup d’envoi » type afficheur) par une vraie entrée IA.
+ */
+export function ClubHomeAiHero({
+  headline,
+  summary,
+  onOpenCopilot,
+}: {
+  headline: string;
+  summary: string;
+  onOpenCopilot: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => aiHeroStyles(tokens), [tokens]);
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={0} delayStep={40}>
+      <PressableSpring onPress={onOpenCopilot} scaleTo={0.985} haptic style={styles.shell}>
+        <LinearGradient
+          colors={[tokens.accentSoft, tokens.surface, tokens.elevated]}
+          locations={[0, 0.45, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.face}
+        >
+          <View style={[styles.rail, { backgroundColor: tokens.accent }]} />
+          <View style={styles.topMeta}>
+            <View style={[styles.badge, { backgroundColor: tokens.accentSoft }]}>
+              <Icon name="chat" size={12} color={tokens.accent} />
+              <ClubText variant="label" style={{ color: tokens.accent, fontSize: 9 }}>
+                Copilote
+              </ClubText>
+            </View>
+            <ClubText variant="caption" muted numberOfLines={1} style={{ flex: 1 }}>
+              Dialogue réel · confirmation avant action
+            </ClubText>
+          </View>
+          <ClubText variant="h2" numberOfLines={2} style={styles.heroTitle}>
+            {headline || 'Copilote Club'}
+          </ClubText>
+          <ClubText variant="body" muted numberOfLines={3}>
+            {summary ||
+              'Pose une question sur les équipes, adhésions ou matchs — je guide, je ne décide pas.'}
+          </ClubText>
+          <View style={styles.ctaBtn}>
+            <Icon name="chat" size={16} color={tokens.onAccent} />
+            <ClubText variant="caption" style={{ color: tokens.onAccent, fontWeight: '800' }}>
+              Ouvrir le copilote
+            </ClubText>
+          </View>
+        </LinearGradient>
+      </PressableSpring>
+    </AnimatedEntrance>
+  );
+}
+
+/** Prochain événement — ligne compacte (plus d’afficheur LED / horloge scoreboard). */
+export function ClubHomeNextEventRow({
   priority,
   onPress,
 }: {
@@ -134,38 +191,25 @@ export function ClubHomePriorityHero({
   onPress: () => void;
 }) {
   const { tokens } = useClubTheme();
-  const styles = useMemo(() => heroStyles(tokens), [tokens]);
+  const styles = useMemo(() => nextEventStyles(tokens), [tokens]);
 
   if (priority.kind === 'calm') {
     return (
-      <AnimatedEntrance kind="fadeUp" index={0} delayStep={40}>
-        <PressableSpring onPress={onPress} scaleTo={0.985} haptic style={styles.shell}>
-          <LinearGradient
-            colors={[tokens.pitchSoft, tokens.surface, tokens.elevated]}
-            locations={[0, 0.55, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.face}
-          >
-            <View style={[styles.rail, { backgroundColor: tokens.pitch }]} />
-            <View style={styles.calmBody}>
-              <ClubText variant="label" style={{ color: tokens.pitch }}>
-                Journée calme
-              </ClubText>
-              <ClubText variant="h2" style={styles.heroTitle}>
-                Terrain libre
-              </ClubText>
-              <ClubText variant="body" muted>
-                Aucun match ni séance imminente — le club respire.
-              </ClubText>
-              <View style={styles.ctaRow}>
-                <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
-                  Voir le calendrier
-                </ClubText>
-                <Icon name="chevron-forward" size={14} color={tokens.accent} />
-              </View>
-            </View>
-          </LinearGradient>
+      <AnimatedEntrance kind="fadeUp" index={1} delayStep={40}>
+        <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.row}>
+          <View style={[styles.dot, { backgroundColor: tokens.pitch }]} />
+          <View style={styles.col}>
+            <ClubText variant="label" muted>
+              Agenda
+            </ClubText>
+            <ClubText variant="body" style={{ fontWeight: '600' }}>
+              Terrain libre
+            </ClubText>
+            <ClubText variant="caption" muted>
+              Aucun match ni séance imminente
+            </ClubText>
+          </View>
+          <Icon name="chevron-forward" size={15} color={tokens.faint} />
         </PressableSpring>
       </AnimatedEntrance>
     );
@@ -176,59 +220,26 @@ export function ClubHomePriorityHero({
   const event = priority.event;
   const starts = event.starts_at ? new Date(event.starts_at) : null;
   const kickLabel = starts ? formatKickoff(starts) : 'Horaire à confirmer';
-  const clock = starts ? formatClock(starts) : '—:—';
+  const clock = starts ? formatClock(starts) : null;
   const title = event.title?.trim() || (isMatch ? 'Prochain match' : 'Prochaine séance');
-  const place = event.location_label?.trim() || null;
 
   return (
-    <AnimatedEntrance kind="fadeUp" index={0} delayStep={40}>
-      <PressableSpring onPress={onPress} scaleTo={0.985} haptic style={styles.shell}>
-        <LinearGradient
-          colors={[tone.soft, tokens.surface, tokens.elevated]}
-          locations={[0, 0.5, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.face}
-        >
-          <View style={[styles.rail, { backgroundColor: tone.color }]} />
-          <View style={styles.topMeta}>
-            <View style={[styles.badge, { backgroundColor: tone.soft }]}>
-              <ClubText variant="label" style={{ color: tone.color, fontSize: 9 }}>
-                {tone.label}
-              </ClubText>
-            </View>
-            <ClubText variant="caption" muted numberOfLines={1} style={{ flex: 1 }}>
-              {kickLabel}
-            </ClubText>
-          </View>
-          <View style={styles.scoreboard}>
-            <View style={styles.scoreLeft}>
-              <ClubText variant="h2" numberOfLines={2} style={styles.heroTitle}>
-                {title}
-              </ClubText>
-              {place ? (
-                <View style={styles.placeRow}>
-                  <Icon name="location" size={13} color={tokens.faint} />
-                  <ClubText variant="caption" muted numberOfLines={1}>
-                    {place}
-                  </ClubText>
-                </View>
-              ) : null}
-            </View>
-            <View style={styles.kickBox}>
-              <ClubText variant="label" muted style={{ letterSpacing: 0.8 }}>
-                Coup d’envoi
-              </ClubText>
-              <ClubText style={styles.kickClock}>{clock}</ClubText>
-            </View>
-          </View>
-          <View style={styles.ctaRow}>
-            <ClubText variant="caption" style={{ color: tone.color, fontWeight: '700' }}>
-              {isMatch ? 'Ouvrir les matchs' : 'Ouvrir les entraînements'}
-            </ClubText>
-            <Icon name="chevron-forward" size={14} color={tone.color} />
-          </View>
-        </LinearGradient>
+    <AnimatedEntrance kind="fadeUp" index={1} delayStep={40}>
+      <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.row}>
+        <View style={[styles.dot, { backgroundColor: tone.color }]} />
+        <View style={styles.col}>
+          <ClubText variant="label" style={{ color: tone.color }}>
+            {tone.label}
+            {clock ? ` · ${clock}` : ''}
+          </ClubText>
+          <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>
+            {title}
+          </ClubText>
+          <ClubText variant="caption" muted numberOfLines={1}>
+            {kickLabel}
+          </ClubText>
+        </View>
+        <Icon name="chevron-forward" size={15} color={tokens.faint} />
       </PressableSpring>
     </AnimatedEntrance>
   );
@@ -281,11 +292,11 @@ export function ClubHomeKpiStrip({
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Copilote',
       value: actions,
-      hint: actions > 0 ? 'À traiter' : 'À jour',
+      hint: actions > 0 ? 'Priorités' : 'Discuter',
       onPress: onActions,
-      accent: actions > 0 ? tokens.warning : tokens.success,
+      accent: actions > 0 ? tokens.warning : tokens.accent,
     },
   ];
 
@@ -555,7 +566,7 @@ const identityStyles = (tokens: ClubThemeTokens) =>
     },
   });
 
-const heroStyles = (tokens: ClubThemeTokens) =>
+const aiHeroStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     shell: {
       borderRadius: clubRadius.xl,
@@ -568,8 +579,8 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.lg,
       paddingLeft: clubSpace.lg + 6,
-      gap: clubSpace.md,
-      minHeight: 132,
+      gap: clubSpace.sm,
+      minHeight: 148,
     },
     rail: {
       position: 'absolute',
@@ -578,49 +589,54 @@ const heroStyles = (tokens: ClubThemeTokens) =>
       bottom: 0,
       width: 4,
     },
-    calmBody: { gap: clubSpace.xs },
     topMeta: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.sm,
     },
     badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
       paddingHorizontal: 8,
       paddingVertical: 4,
       borderRadius: clubRadius.xs,
     },
-    scoreboard: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      gap: clubSpace.md,
-    },
-    scoreLeft: { flex: 1, minWidth: 0, gap: 6 },
     heroTitle: { letterSpacing: -0.4 },
-    placeRow: {
+    ctaBtn: {
+      alignSelf: 'flex-start',
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: 8,
+      marginTop: clubSpace.xs,
+      paddingHorizontal: clubSpace.md,
+      paddingVertical: 10,
+      borderRadius: clubRadius.md,
+      backgroundColor: tokens.accent,
     },
-    kickBox: {
-      alignItems: 'flex-end',
-      gap: 2,
-      paddingLeft: clubSpace.sm,
-      borderLeftWidth: StyleSheet.hairlineWidth,
-      borderLeftColor: tokens.borderStrong,
-      minWidth: 88,
-    },
-    kickClock: {
-      ...clubType.score,
-      color: tokens.foreground,
-      fontSize: 32,
-      lineHeight: 36,
-    },
-    ctaRow: {
+  });
+
+const nextEventStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      marginTop: 2,
+      gap: clubSpace.md,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.lg,
+      borderRadius: clubRadius.xl,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.soft,
     },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      flexShrink: 0,
+    },
+    col: { flex: 1, minWidth: 0, gap: 2 },
   });
 
 const kpiStyles = (tokens: ClubThemeTokens) =>

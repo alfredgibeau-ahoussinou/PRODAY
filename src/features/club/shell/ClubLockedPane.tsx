@@ -39,8 +39,8 @@ export function ClubLockedPane({ item }: Props) {
             onPress={() => shellNav?.requestNav('pack')}
           />
           <ClubActionRow
-            icon="star-four-points"
-            label="Assistant IA"
+            icon="chat"
+            label="Copilote Club"
             onPress={() => shellNav?.requestNav('assistant')}
           />
         </ClubSectionCard>

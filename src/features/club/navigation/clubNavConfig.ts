@@ -244,10 +244,10 @@ const plusItem: ClubNavItem = {
 
 const assistantItem: ClubNavItem = {
   id: 'assistant',
-  label: 'Assistant IA',
-  shortLabel: 'IA',
-  hint: 'Recommandations (jamais auto)',
-  icon: 'star-four-points',
+  label: 'Copilote Club',
+  shortLabel: 'Copilote',
+  hint: 'Dialogue IA · confirmation obligatoire',
+  icon: 'chat',
   aiBadge: true,
 };
 
