@@ -11,6 +11,7 @@ import { LivePulseDot, PressableSpring, StaggerReveal } from '../../../component
 import { usePresidentTheme } from '../shell/PresidentThemeContext';
 import { PresidentText } from './presidentUi';
 import {
+  presidentLayout,
   presidentMotion,
   presidentRadius,
   presidentShadow,
@@ -63,9 +64,11 @@ function AxisBar({
 function OverallRing({
   overall,
   tokens,
+  flush,
 }: {
   overall: number;
   tokens: PresidentThemeTokens;
+  flush?: boolean;
 }) {
   const progress = useSharedValue(0);
   useEffect(() => {
@@ -83,7 +86,16 @@ function OverallRing({
     overall >= 75 ? 'Structure saine' : overall >= 50 ? 'Attention requise' : 'Priorité direction';
 
   return (
-    <View style={[styles.overall, { borderColor: tokens.borderLuxury, backgroundColor: tokens.surface }]}>
+    <View
+      style={[
+        styles.overall,
+        {
+          borderColor: flush ? tokens.border : tokens.borderLuxury,
+          backgroundColor: flush ? tokens.surfaceMuted : tokens.surface,
+          padding: flush ? presidentSpace.lg : presidentLayout.heroPad,
+        },
+      ]}
+    >
       <LinearGradient
         colors={[tokens.champagneGlow, 'transparent', 'rgba(0,0,0,0.25)']}
         start={{ x: 0, y: 0 }}
@@ -97,7 +109,7 @@ function OverallRing({
             Santé du club
           </PresidentText>
         </View>
-        <PresidentText variant="caption" muted>
+        <PresidentText variant="caption" muted numberOfLines={1}>
           {statusLabel}
         </PresidentText>
       </View>
@@ -124,27 +136,34 @@ function OverallRing({
 export function PresidentHealthBoard({ health, onAxisPress, immersive = false }: Props) {
   const { tokens } = usePresidentTheme();
   const stylesLocal = useMemo(() => createStyles(tokens, immersive), [tokens, immersive]);
+  const axisCount = health.axes.length;
 
   return (
     <View style={stylesLocal.wrap}>
       <StaggerReveal index={0} delayStep={presidentMotion.stagger}>
-        <OverallRing overall={health.overall} tokens={tokens} />
+        <OverallRing overall={health.overall} tokens={tokens} flush={immersive} />
       </StaggerReveal>
       <View style={stylesLocal.axes}>
         {health.axes.map((axis, i) => {
           const color = toneColor(tokens, axis.tone);
+          const lastOdd =
+            immersive && axisCount % 2 === 1 && i === axisCount - 1;
           return (
             <StaggerReveal key={axis.id} index={i + 1} delayStep={presidentMotion.stagger}>
               <PressableSpring
                 onPress={() => onAxisPress(axis)}
                 scaleTo={0.97}
                 haptic
-                style={stylesLocal.axis}
+                style={[stylesLocal.axis, lastOdd && stylesLocal.axisFull]}
               >
                 <View style={stylesLocal.axisTop}>
                   <View style={stylesLocal.axisLabelRow}>
                     <View style={[stylesLocal.toneDot, { backgroundColor: color }]} />
-                    <PresidentText variant="caption" style={{ fontWeight: '700' }}>
+                    <PresidentText
+                      variant="caption"
+                      style={{ fontWeight: '700', flexShrink: 1 }}
+                      numberOfLines={1}
+                    >
                       {axis.label}
                     </PresidentText>
                   </View>
@@ -170,7 +189,6 @@ export function PresidentHealthBoard({ health, onAxisPress, immersive = false }:
 
 const styles = StyleSheet.create({
   overall: {
-    padding: presidentSpace.xl,
     borderRadius: presidentRadius.xl,
     borderWidth: 1,
     gap: 6,
@@ -181,8 +199,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: presidentSpace.sm,
   },
-  liveRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  liveRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   scoreRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 4, marginTop: 4 },
   barTrack: {
     height: 8,
@@ -201,9 +220,9 @@ const styles = StyleSheet.create({
 
 function createStyles(tokens: PresidentThemeTokens, immersive: boolean) {
   return StyleSheet.create({
-    wrap: { gap: presidentSpace.md },
+    wrap: { gap: presidentLayout.gridGap },
     axes: {
-      gap: presidentSpace.sm,
+      gap: presidentLayout.gridGap,
       flexDirection: immersive ? 'row' : 'column',
       flexWrap: immersive ? 'wrap' : 'nowrap',
     },
@@ -216,19 +235,25 @@ function createStyles(tokens: PresidentThemeTokens, immersive: boolean) {
       gap: 8,
       ...(immersive
         ? {
-            flexBasis: '47%' as DimensionValue,
-            flexGrow: 1,
+            // 2 colonnes égales : (100% - gap) / 2 via flexBasis + maxWidth
+            width: '48%' as DimensionValue,
             maxWidth: '48%' as DimensionValue,
-            minWidth: 148,
+            flexGrow: 0,
+            flexShrink: 0,
           }
         : {}),
+    },
+    axisFull: {
+      width: '100%' as DimensionValue,
+      maxWidth: '100%' as DimensionValue,
     },
     axisTop: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      gap: presidentSpace.sm,
     },
-    axisLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    axisLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 },
     toneDot: {
       width: 7,
       height: 7,

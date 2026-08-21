@@ -122,6 +122,7 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
       {
         id: 'finance',
         label: 'Finances',
+        shortLabel: 'Finances',
         icon: 'stats-chart',
         hint: 'Budget & cotisations',
         clubDeepLink: 'finances',
@@ -142,9 +143,10 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
       },
       {
         id: 'staff',
-        label: 'Coachs',
+        label: 'Staff',
+        shortLabel: 'Staff',
         icon: 'school',
-        hint: 'Staff sportif',
+        hint: 'Encadrement & équipes sans coach',
         clubDeepLink: 'coaches',
       },
       {

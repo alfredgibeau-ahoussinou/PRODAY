@@ -17,6 +17,7 @@ import type { PresidentNavItemId } from '../navigation/presidentNavConfig';
 import type { PresidentNavResolvedFolder } from '../navigation/resolvePresidentNavAccess';
 import {
   presidentChrome,
+  presidentLayout,
   presidentMotion,
   presidentRadius,
   presidentShadow,
@@ -192,7 +193,7 @@ function createStyles(tokens: PresidentThemeTokens, collapsed: boolean) {
       backgroundColor: tokens.sidebarBg,
       borderRightWidth: 1,
       borderRightColor: tokens.border,
-      paddingHorizontal: collapsed ? presidentSpace.sm : presidentSpace.md,
+      paddingHorizontal: collapsed ? presidentSpace.sm : presidentLayout.pageGutter - 4,
       paddingBottom: presidentSpace.lg,
       overflow: 'hidden',
       ...presidentShadow.soft,

@@ -10,6 +10,7 @@ import type { PresidentNavResolvedItem } from '../navigation/resolvePresidentNav
 import type { PresidentNavItemId } from '../navigation/presidentNavConfig';
 import { PRESIDENT_MENU_DEST_IDS } from '../navigation/presidentNavConfig';
 import {
+  presidentChrome,
   presidentRadius,
   presidentSpace,
 } from '../theme/presidentDesignSystem';
@@ -36,7 +37,7 @@ export function PresidentTabBar({ activeId, items, onSelect }: Props) {
         colors={['transparent', 'rgba(212,184,128,0.06)']}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.rail}>
+      <View style={[styles.rail, { minHeight: presidentChrome.dockRailHeight }]}>
         {items.map((item) => {
           const isActive =
             item.id === 'menu'
@@ -55,7 +56,7 @@ export function PresidentTabBar({ activeId, items, onSelect }: Props) {
               {isActive ? <View style={styles.activeGlow} /> : null}
               <Icon
                 name={item.icon}
-                size={22}
+                size={presidentChrome.tabBarIcon}
                 color={isActive ? tokens.accent : tokens.muted}
               />
               <PresidentText
@@ -95,8 +96,10 @@ function createStyles(tokens: PresidentThemeTokens) {
     item: {
       flex: 1,
       alignItems: 'center',
+      justifyContent: 'center',
       gap: 3,
       paddingVertical: 6,
+      paddingHorizontal: 2,
       borderRadius: presidentRadius.md,
       overflow: 'hidden',
     },
@@ -106,6 +109,8 @@ function createStyles(tokens: PresidentThemeTokens) {
     activeGlow: {
       position: 'absolute',
       top: 0,
+      left: '50%',
+      marginLeft: -14,
       width: 28,
       height: 2,
       borderRadius: 1,

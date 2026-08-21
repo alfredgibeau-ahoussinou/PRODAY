@@ -13,7 +13,7 @@ import {
   PresidentSectionCard,
   PresidentText,
 } from '../../features/president/ui/presidentUi';
-import { presidentSpace } from '../../features/president/theme/presidentDesignSystem';
+import { presidentLayout, presidentSpace } from '../../features/president/theme/presidentDesignSystem';
 import type { IconName } from '../../components/ui/iconNames';
 import type { PresidentThemeTokens } from '../../features/president/theme/presidentTokens';
 
@@ -59,7 +59,7 @@ export function PresidentSectionScreen({
   return (
     <View style={styles.root}>
       <PresidentChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <View style={{ gap: 6, paddingTop: presidentSpace.sm }}>
+        <View style={styles.header}>
           <PresidentBrandMark compact />
           <PresidentText variant="label" champagne>
             {eyebrow}
@@ -111,5 +111,12 @@ export function PresidentSectionScreen({
 function createStyles(tokens: PresidentThemeTokens) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
+    header: {
+      gap: 6,
+      paddingBottom: presidentSpace.xs,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.hairline,
+      marginBottom: -presidentLayout.sectionGap / 4,
+    },
   });
 }

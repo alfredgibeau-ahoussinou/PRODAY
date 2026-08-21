@@ -173,7 +173,32 @@ export const presidentChrome = {
   tabletBreakpoint: 700,
   headerHeight: 62,
   tabBarIcon: 22,
+  /** Hauteur utile du dock mobile (hors safe-area). */
+  dockRailHeight: 56,
   brandMark: 'PRODAY EXECUTIVE',
+} as const;
+
+/**
+ * Cadre page — gutters / paddings / gaps alignés sur tout le pôle.
+ * Évite les écarts ad hoc entre Cockpit, sections et Menu.
+ */
+export const presidentLayout = {
+  /** Marge horizontale des scrolls / panes. */
+  pageGutter: presidentSpace.lg,
+  /** Padding interne des cartes section. */
+  cardPad: presidentSpace.lg,
+  /** Padding interne des surfaces héro / décision. */
+  heroPad: presidentSpace.xl,
+  /** Espacement vertical entre blocs de page. */
+  sectionGap: presidentSpace.xl,
+  /** Espacement interne dans une composition (héro deck, axes). */
+  stackGap: presidentSpace.lg,
+  /** Espacement grille 2 colonnes. */
+  gridGap: presidentSpace.md,
+  /** Clearance bas pour ne pas masquer le contenu sous le dock. */
+  dockClearance: presidentSpace.hero + presidentChrome.dockRailHeight,
+  /** Padding top contenu sous la status bar (mobile, hors sidebar). */
+  contentTop: presidentSpace.md,
 } as const;
 
 export function presidentSurfaceCard(tokens: PresidentThemeTokens): ViewStyle {

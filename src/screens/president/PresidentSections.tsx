@@ -159,15 +159,15 @@ export function PresidentStaffScreen() {
   const ws = useClubWorkspace();
   return (
     <PresidentSectionScreen
-      eyebrow="Coachs"
-      title="Staff sportif"
-      subtitle="Affectations et suivi — gestion dans Club."
+      eyebrow="Staff"
+      title="Encadrement sportif"
+      subtitle="Vue directionnelle — affectations détaillées dans le Pôle Club."
       liveLines={[
-        `Coachs recensés : ${ws.coaches.length}`,
+        `Encadrants recensés : ${ws.coaches.length}`,
         `Équipes sans coach : ${ws.teamsWithoutCoach}`,
         ...ws.coaches.slice(0, 6).map((c) => c.display_name),
       ]}
-      links={[{ label: 'Coachs Club', icon: 'school', clubNav: 'coaches' }]}
+      links={[{ label: 'Ouvrir Staff Club', icon: 'school', clubNav: 'coaches' }]}
     />
   );
 }

@@ -86,6 +86,18 @@ describe('president nav resolve', () => {
     expect(resolvePresidentCommandItems().some((i) => i.id === 'cockpit')).toBe(true);
   });
 
+  it('différencie le dock Président du dock Coach (pas de chrome séance/matchs)', () => {
+    const primary = resolvePresidentPrimaryNav();
+    const labels = primary.map((i) => i.shortLabel ?? i.label);
+    expect(labels).toEqual(
+      expect.arrayContaining(['Cockpit', 'Club', 'Finances', 'Menu', 'IA']),
+    );
+    expect(labels).not.toContain('Séances');
+    expect(labels).not.toContain('Matchs');
+    expect(labels).not.toContain('Joueurs');
+    expect(findPresidentNavItem('staff')?.label).toBe('Staff');
+  });
+
   it('mappe les axes santé vers des sections', () => {
     expect(PRESIDENT_HEALTH_AXIS_NAV.sport).toBe('sport');
     expect(PRESIDENT_HEALTH_AXIS_NAV.finance).toBe('finance');

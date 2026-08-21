@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TextInput,
   View,
+  useWindowDimensions,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
@@ -19,6 +20,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring, AnimatedEntrance, LivePulseDot } from '../../../components/motion';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { Icon } from '../../../components/ui/Icon';
@@ -27,6 +29,7 @@ import { usePresidentTheme } from '../shell/PresidentThemeContext';
 import type { PresidentThemeTokens } from '../theme/presidentTokens';
 import {
   presidentChrome,
+  presidentLayout,
   presidentMotion,
   presidentRadius,
   presidentShadow,
@@ -161,13 +164,23 @@ export function PresidentChapterScroll({
   onRefresh?: () => void;
 }) {
   const { tokens } = usePresidentTheme();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const wide = width >= presidentChrome.wideBreakpoint;
+  const topPad = wide
+    ? presidentLayout.contentTop
+    : insets.top + presidentLayout.contentTop;
+  const bottomPad = wide
+    ? presidentLayout.dockClearance - presidentChrome.dockRailHeight
+    : Math.max(insets.bottom, 10) + presidentLayout.dockClearance;
+
   return (
     <ScrollView
       contentContainerStyle={{
-        paddingHorizontal: presidentSpace.lg,
-        paddingTop: presidentSpace.md,
-        paddingBottom: presidentSpace.hero,
-        gap: presidentSpace.xl,
+        paddingHorizontal: presidentLayout.pageGutter,
+        paddingTop: topPad,
+        paddingBottom: bottomPad,
+        gap: presidentLayout.sectionGap,
       }}
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -530,7 +543,7 @@ function sectionStyles(tokens: PresidentThemeTokens, flush?: boolean) {
       borderRadius: presidentRadius.xl,
       borderWidth: flush ? 0 : 1,
       borderColor: tokens.border,
-      padding: flush ? 0 : presidentSpace.lg,
+      padding: flush ? 0 : presidentLayout.cardPad,
       gap: presidentSpace.md,
       ...(flush ? {} : presidentShadow.soft),
     },
@@ -578,7 +591,7 @@ function heroStyles(tokens: PresidentThemeTokens) {
       borderWidth: 1,
       borderColor: tokens.borderLuxury,
       backgroundColor: tokens.surfaceRaised,
-      padding: presidentSpace.xl,
+      padding: presidentLayout.heroPad,
       paddingBottom: presidentSpace.xxl,
       gap: 8,
       overflow: 'hidden',

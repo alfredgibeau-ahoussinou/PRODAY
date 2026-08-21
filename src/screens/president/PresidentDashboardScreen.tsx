@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring, AnimatedEntrance } from '../../components/motion';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
@@ -20,6 +20,8 @@ import {
 } from '../../features/president/ui/presidentUi';
 import { PRESIDENT_HEALTH_AXIS_NAV } from '../../features/president/navigation/presidentNavConfig';
 import {
+  presidentChrome,
+  presidentLayout,
   presidentRadius,
   presidentShadow,
   presidentSpace,
@@ -33,7 +35,9 @@ export function PresidentDashboardScreen() {
   const health = usePresidentHealth(ws);
   const shellNav = usePresidentShellNav();
   const { tokens } = usePresidentTheme();
-  const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const { width } = useWindowDimensions();
+  const tablet = width >= presidentChrome.tabletBreakpoint;
+  const styles = useMemo(() => createStyles(tokens, tablet), [tokens, tablet]);
   const [search, setSearch] = useState('');
 
   if (ws.loading) return <PresidentLoading label="Ouverture du cockpit exécutif…" />;
@@ -66,7 +70,7 @@ export function PresidentDashboardScreen() {
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.heroDeckHeader}>
-            <View style={{ gap: 4, flex: 1 }}>
+            <View style={styles.heroDeckCopy}>
               <PresidentText variant="label" champagne>
                 Tableau de bord
               </PresidentText>
@@ -216,7 +220,10 @@ function KpiPill({
   return (
     <View
       style={{
-        minWidth: 72,
+        minWidth: 76,
+        flexGrow: 1,
+        flexBasis: 76,
+        maxWidth: 120,
         paddingHorizontal: presidentSpace.md,
         paddingVertical: presidentSpace.sm,
         borderRadius: presidentRadius.md,
@@ -232,14 +239,14 @@ function KpiPill({
       >
         {value}
       </PresidentText>
-      <PresidentText variant="caption" muted>
+      <PresidentText variant="caption" muted numberOfLines={1}>
         {label}
       </PresidentText>
     </View>
   );
 }
 
-function createStyles(tokens: PresidentThemeTokens) {
+function createStyles(tokens: PresidentThemeTokens, tablet: boolean) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
     heroDeck: {
@@ -247,18 +254,29 @@ function createStyles(tokens: PresidentThemeTokens) {
       borderWidth: 1,
       borderColor: tokens.borderStrong,
       backgroundColor: tokens.surface,
-      padding: presidentSpace.lg,
-      gap: presidentSpace.lg,
+      padding: presidentLayout.heroPad,
+      gap: presidentLayout.stackGap,
       overflow: 'hidden',
       ...presidentShadow.card,
     },
     heroDeckHeader: {
+      flexDirection: tablet ? 'row' : 'column',
+      alignItems: tablet ? 'flex-start' : 'stretch',
+      justifyContent: 'space-between',
       gap: presidentSpace.md,
+    },
+    heroDeckCopy: {
+      gap: 4,
+      flex: tablet ? 1 : undefined,
+      minWidth: 0,
+      paddingRight: tablet ? presidentSpace.md : 0,
     },
     kpiCluster: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: presidentSpace.sm,
+      alignSelf: tablet ? 'flex-start' : 'stretch',
+      maxWidth: tablet ? 280 : undefined,
     },
     briefStrip: {
       padding: presidentSpace.md,
@@ -273,8 +291,8 @@ function createStyles(tokens: PresidentThemeTokens) {
       borderWidth: 1,
       borderColor: tokens.borderLuxury,
       backgroundColor: tokens.surfaceRaised,
-      padding: presidentSpace.xl,
-      gap: presidentSpace.lg,
+      padding: presidentLayout.heroPad,
+      gap: presidentLayout.stackGap,
       overflow: 'hidden',
       ...presidentShadow.deep,
     },
