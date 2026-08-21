@@ -12,6 +12,7 @@ import {
   PresidentInsightsScreen,
   PresidentMembersScreen,
   PresidentOverviewScreen,
+  PresidentRecruitmentScreen,
   PresidentReportsScreen,
   PresidentSeasonScreen,
   PresidentSettingsScreen,
@@ -19,6 +20,7 @@ import {
   PresidentSportScreen,
   PresidentStaffScreen,
   PresidentTeamsScreen,
+  PresidentVideoScreen,
 } from '../../../screens/president/PresidentSections';
 import { PresidentMenuPane } from './PresidentMenuPane';
 import type { PresidentNavItemId } from '../navigation/presidentNavConfig';
@@ -51,6 +53,10 @@ export function renderPresidentPane(
       return <PresidentCommunicationScreen />;
     case 'events':
       return <PresidentEventsScreen />;
+    case 'recruitment':
+      return <PresidentRecruitmentScreen />;
+    case 'video':
+      return <PresidentVideoScreen />;
     case 'documents':
       return <PresidentDocumentsScreen />;
     case 'reports':

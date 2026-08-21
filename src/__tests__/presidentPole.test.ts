@@ -6,6 +6,7 @@ import {
   findPresidentNavItem,
   PRESIDENT_HEALTH_AXIS_NAV,
   PRESIDENT_MENU_DEST_IDS,
+  PRESIDENT_NAV_CATALOG,
   PRESIDENT_NAV_FOLDERS,
   PRESIDENT_PRIMARY_NAV_IDS,
 } from '../features/president/navigation/presidentNavConfig';
@@ -96,6 +97,12 @@ describe('president nav resolve', () => {
     expect(labels).not.toContain('Matchs');
     expect(labels).not.toContain('Joueurs');
     expect(findPresidentNavItem('staff')?.label).toBe('Staff');
+    expect(findPresidentNavItem('recruitment')?.label).toBe('Recrutement');
+    expect(findPresidentNavItem('video')?.label).toBe('Vidéo');
+    expect(PRESIDENT_MENU_DEST_IDS).toEqual(
+      expect.arrayContaining(['recruitment', 'video', 'teams', 'communication']),
+    );
+    expect(PRESIDENT_NAV_CATALOG.every((i) => !('clubDeepLink' in i))).toBe(true);
   });
 
   it('mappe les axes santé vers des sections', () => {

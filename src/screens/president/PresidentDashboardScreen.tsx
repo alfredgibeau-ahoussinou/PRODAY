@@ -173,27 +173,27 @@ export function PresidentDashboardScreen() {
         >
           <PresidentActionRow
             label="Équipes"
-            hint="Espace équipes Club"
+            hint="Structure sportive"
             icon="football"
-            onPress={() => shellNav?.openClubDeepLink('teams')}
+            onPress={() => shellNav?.requestNav('teams')}
           />
           <PresidentActionRow
-            label="Match Center"
-            hint="Matchs & invitations"
+            label="Sportif"
+            hint="Matchs & entraînements"
             icon="trophy"
-            onPress={() => shellNav?.openClubDeepLink('matches')}
+            onPress={() => shellNav?.requestNav('sport')}
           />
           <PresidentActionRow
             label="Recrutement"
-            hint="Bourse & mercato"
+            hint="Vivier & suivi"
             icon="briefcase"
-            onPress={() => shellNav?.openClubDeepLink('recruitment')}
+            onPress={() => shellNav?.requestNav('recruitment')}
           />
           <PresidentActionRow
-            label="Centre Vidéo"
-            hint="Captations club"
+            label="Vidéo"
+            hint="Captation club"
             icon="videocam"
-            onPress={() => shellNav?.openClubDeepLink('video')}
+            onPress={() => shellNav?.requestNav('video')}
           />
           <PresidentActionRow
             label="Adhérents en attente"

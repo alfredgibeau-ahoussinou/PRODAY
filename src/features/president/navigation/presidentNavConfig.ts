@@ -1,9 +1,9 @@
 import type { IconName } from '../../../components/ui/iconNames';
-import type { ClubNavItemId } from '../../club/navigation/clubNavConfig';
 
 /**
  * Navigation Pôle Président — cockpit directionnel.
  * Desktop : sidebar catégories · Mobile : dock + Menu.
+ * Pas de redirection primaire vers le Pôle Club : chaque entrée a son écran Président.
  */
 
 export type PresidentNavFolderId =
@@ -25,6 +25,8 @@ export type PresidentNavItemId =
   | 'sponsors'
   | 'communication'
   | 'events'
+  | 'recruitment'
+  | 'video'
   | 'documents'
   | 'reports'
   | 'insights'
@@ -42,8 +44,6 @@ export type PresidentNavItem = {
   shortLabel?: string;
   icon: IconName;
   hint?: string;
-  /** Deep-link vers un écran Club pour piloter (pas de CRUD ici). */
-  clubDeepLink?: ClubNavItemId;
 };
 
 export type PresidentNavFolder = {
@@ -69,6 +69,8 @@ export const PRESIDENT_MENU_DEST_IDS: PresidentNavItemId[] = [
   'sponsors',
   'communication',
   'events',
+  'recruitment',
+  'video',
   'documents',
   'reports',
   'insights',
@@ -97,7 +99,6 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
         shortLabel: 'Club',
         icon: 'football',
         hint: 'Vue d’ensemble',
-        clubDeepLink: 'club',
       },
       {
         id: 'alerts',
@@ -117,7 +118,6 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
         label: 'Sportif',
         icon: 'trophy',
         hint: 'Matchs & saisons',
-        clubDeepLink: 'matches',
       },
       {
         id: 'finance',
@@ -125,21 +125,18 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
         shortLabel: 'Finances',
         icon: 'stats-chart',
         hint: 'Budget & cotisations',
-        clubDeepLink: 'finances',
       },
       {
         id: 'members',
         label: 'Adhérents',
         icon: 'people',
         hint: 'Licenciés & validations',
-        clubDeepLink: 'players',
       },
       {
         id: 'teams',
         label: 'Équipes',
         icon: 'football',
         hint: 'Structure sportive',
-        clubDeepLink: 'teams',
       },
       {
         id: 'staff',
@@ -147,28 +144,36 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
         shortLabel: 'Staff',
         icon: 'school',
         hint: 'Encadrement & équipes sans coach',
-        clubDeepLink: 'coaches',
       },
       {
         id: 'sponsors',
         label: 'Sponsors',
         icon: 'briefcase',
         hint: 'Partenaires',
-        clubDeepLink: 'sponsoring',
       },
       {
         id: 'communication',
         label: 'Communication',
         icon: 'chat',
         hint: 'Annonces & messages',
-        clubDeepLink: 'communication',
       },
       {
         id: 'events',
         label: 'Événements',
         icon: 'calendar',
         hint: 'Agenda club',
-        clubDeepLink: 'events',
+      },
+      {
+        id: 'recruitment',
+        label: 'Recrutement',
+        icon: 'briefcase',
+        hint: 'Vivier & suivi',
+      },
+      {
+        id: 'video',
+        label: 'Vidéo',
+        icon: 'videocam',
+        hint: 'Captation club',
       },
     ],
   },
@@ -193,7 +198,6 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
         label: 'Saison',
         icon: 'calendar',
         hint: 'Calendrier stratégique',
-        clubDeepLink: 'calendar',
       },
       {
         id: 'goals',
@@ -212,7 +216,6 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
         label: 'Analyses',
         icon: 'stats-chart',
         hint: 'Indicateurs',
-        clubDeepLink: 'stats',
       },
       {
         id: 'reports',
@@ -245,7 +248,6 @@ export const PRESIDENT_NAV_FOLDERS: PresidentNavFolder[] = [
         shortLabel: 'Réglages',
         icon: 'settings',
         hint: 'Pôle & retour Club',
-        clubDeepLink: 'permissions',
       },
     ],
   },

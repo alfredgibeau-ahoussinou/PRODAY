@@ -21,6 +21,7 @@ export type PresidentSectionLink = {
   label: string;
   hint?: string;
   icon?: IconName;
+  /** Lien secondaire vers le Club pour édition lourde uniquement. */
   clubNav?: ClubNavItemId;
   onPress?: () => void;
 };
@@ -32,12 +33,14 @@ type Props = {
   liveLines?: string[];
   emptyTitle?: string;
   emptyBody?: string;
+  /** Liens secondaires « Ouvrir dans le Club » — jamais la navigation primaire. */
   links?: PresidentSectionLink[];
   children?: React.ReactNode;
 };
 
 /**
- * Coquille section premium — counts live + deep links Club.
+ * Coquille section premium — lecture directionnelle + listes actionnables.
+ * Les deep-links Club restent optionnels et secondaires.
  */
 export function PresidentSectionScreen({
   eyebrow,
@@ -71,7 +74,7 @@ export function PresidentSectionScreen({
         </View>
 
         {liveLines && liveLines.length > 0 ? (
-          <PresidentSectionCard eyebrow="Données live" title="Lecture workspace">
+          <PresidentSectionCard eyebrow="Synthèse" title="Lecture workspace">
             {liveLines.map((line, i) => (
               <PresidentText key={i} variant="body" muted>
                 {line}
@@ -82,19 +85,24 @@ export function PresidentSectionScreen({
 
         {children}
 
-        {emptyTitle && emptyBody && (!liveLines || liveLines.length === 0) ? (
+        {emptyTitle && emptyBody && (!liveLines || liveLines.length === 0) && !children ? (
           <PresidentEmptyState title={emptyTitle} body={emptyBody} />
         ) : null}
 
         {links.length > 0 ? (
-          <PresidentSectionCard eyebrow="Pilotage" title="Ouvrir dans le Pôle Club">
+          <PresidentSectionCard
+            eyebrow="Optionnel"
+            title="Ouvrir dans le Club"
+          >
+            <PresidentText variant="caption" muted style={{ marginBottom: presidentSpace.sm }}>
+              Édition avancée ou CRUD opérationnel — la direction reste ici.
+            </PresidentText>
             {links.map((link) => (
               <PresidentActionRow
                 key={link.label}
                 label={link.label}
                 hint={link.hint}
                 icon={link.icon}
-                accent
                 onPress={() => {
                   if (link.onPress) link.onPress();
                   else if (link.clubNav) shellNav?.openClubDeepLink(link.clubNav);
