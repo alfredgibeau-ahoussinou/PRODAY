@@ -9,7 +9,9 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProDayText } from '../../../components/ui/ProDayText';
+import { Icon } from '../../../components/ui/Icon';
 import { ADMIN_TOKENS, type AdminThemeTokens } from '../theme/adminTokens';
 import {
   adminChrome,
@@ -133,6 +135,70 @@ export function AdminButton({
         {label}
       </AdminText>
     </Pressable>
+  );
+}
+
+/**
+ * Header de panneau détail (modal / sheet) — Fermer large, safe area, pas collé au bord.
+ */
+export function AdminSheetHeader({
+  title,
+  subtitle,
+  onClose,
+  closeLabel = 'Fermer',
+  right,
+}: {
+  title: string;
+  subtitle?: string;
+  onClose: () => void;
+  closeLabel?: string;
+  right?: React.ReactNode;
+}) {
+  const t = ADMIN_TOKENS;
+  const insets = useSafeAreaInsets();
+  return (
+    <View
+      style={[
+        styles.sheetHeader,
+        {
+          paddingTop: Math.max(insets.top, 12) + adminSpace.sm,
+          borderBottomColor: t.hairline,
+        },
+      ]}
+    >
+      <Pressable
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel={closeLabel}
+        hitSlop={8}
+        style={({ pressed }) => [
+          styles.sheetClose,
+          {
+            backgroundColor: t.accentSoft,
+            borderColor: t.borderStrong,
+            opacity: pressed ? 0.88 : 1,
+          },
+        ]}
+      >
+        <Icon name="close" size={20} color={t.champagneBright} />
+        <AdminText variant="h3" champagne style={{ fontWeight: '800' }}>
+          {closeLabel}
+        </AdminText>
+      </Pressable>
+      <View style={styles.sheetTitleRow}>
+        <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
+          <AdminText variant="h1" numberOfLines={2}>
+            {title}
+          </AdminText>
+          {subtitle ? (
+            <AdminText variant="caption" muted numberOfLines={2}>
+              {subtitle}
+            </AdminText>
+          ) : null}
+        </View>
+        {right}
+      </View>
+    </View>
   );
 }
 
@@ -325,6 +391,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sheetHeader: {
+    paddingHorizontal: adminLayout.headerPadX,
+    paddingBottom: adminSpace.lg,
+    gap: adminSpace.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  sheetClose: {
+    minHeight: 52,
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingHorizontal: adminSpace.xl,
+    paddingVertical: 14,
+    borderRadius: adminRadius.pill,
+    borderWidth: 1,
+  },
+  sheetTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: adminSpace.md,
   },
   badge: {
     paddingHorizontal: 9,

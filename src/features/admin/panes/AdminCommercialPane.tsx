@@ -15,6 +15,7 @@ import {
   AdminEmptyState,
   AdminLoading,
   AdminPaneHeader,
+  AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
@@ -128,10 +129,11 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
   if (creating) {
     return (
       <View style={styles.root}>
-        <View style={styles.header}>
-          <AdminButton label="Retour" variant="ghost" onPress={() => setCreating(false)} />
-          <AdminText variant="h1">Nouveau devis</AdminText>
-        </View>
+        <AdminSheetHeader
+          title="Nouveau devis"
+          onClose={() => setCreating(false)}
+          closeLabel="Retour"
+        />
         <View style={styles.form}>
           <AdminCard>
             <Field
@@ -196,14 +198,13 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
   if (selected) {
     return (
       <View style={styles.root}>
-        <View style={styles.header}>
-          <AdminButton label="Retour" variant="ghost" onPress={() => setSelected(null)} />
-          <AdminText variant="h1">{selected.club_name}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            {selected.owner_name} · {selected.email}
-          </AdminText>
-          <AdminBadge label={selected.status} tone="accent" />
-        </View>
+        <AdminSheetHeader
+          title={selected.club_name}
+          subtitle={`${selected.owner_name} · ${selected.email}`}
+          onClose={() => setSelected(null)}
+          closeLabel="Retour"
+          right={<AdminBadge label={selected.status} tone="accent" />}
+        />
         <View style={styles.form}>
           <AdminCard>
             <AdminText variant="h2">Calculateur</AdminText>

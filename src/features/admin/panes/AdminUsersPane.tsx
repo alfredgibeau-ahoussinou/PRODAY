@@ -17,6 +17,7 @@ import {
   AdminEmptyState,
   AdminLoading,
   AdminPaneHeader,
+  AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
@@ -464,15 +465,12 @@ function UserEditor({
 
   return (
     <View style={[styles.editorRoot, { backgroundColor: t.bg }]}>
-      <View style={styles.editorHeader}>
-        <AdminButton label="Fermer" variant="ghost" onPress={onClose} />
-        <AdminText variant="h1" numberOfLines={1}>
-          {user.display_name}
-        </AdminText>
-        <AdminText variant="caption" color={t.muted}>
-          {user.email} · {user.uid.slice(0, 10)}…
-        </AdminText>
-      </View>
+      <AdminSheetHeader
+        title={user.display_name}
+        subtitle={`${user.email} · ${user.uid.slice(0, 10)}…`}
+        onClose={onClose}
+        closeLabel="Fermer"
+      />
       <ScrollView contentContainerStyle={styles.editorBody}>
         <AdminCard>
           <AdminText variant="h2">Identité</AdminText>
@@ -608,8 +606,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   row: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  editorRoot: { flex: 1, paddingTop: 48 },
-  editorHeader: { paddingHorizontal: adminSpace.lg, gap: 6, paddingBottom: 8 },
+  editorRoot: { flex: 1 },
   editorBody: { padding: adminSpace.lg, gap: adminSpace.md, paddingBottom: 48 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
 });
