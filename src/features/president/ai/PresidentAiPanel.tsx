@@ -145,7 +145,6 @@ export function PresidentAiPanel({ workspace, insights = [] }: Props) {
         ListEmptyComponent={
           <PresidentText variant="body" muted style={{ paddingVertical: presidentSpace.lg }}>
             Posez une question de direction. L’IA s’appuie sur le contexte réel de votre club.
-            Clé serveur : MISTRAL_API_KEY (CF presidentAssistantChat).
           </PresidentText>
         }
       />
