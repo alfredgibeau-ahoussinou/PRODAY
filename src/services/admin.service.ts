@@ -258,6 +258,8 @@ export type AdminUserUpdatePatch = {
   /** UIDs enfants liés (compte parent). */
   parent_of?: string[] | null;
   strong_foot?: 'left' | 'right' | 'both' | null;
+  /** Note interne admin. */
+  admin_note?: string | null;
 };
 
 export const adminService = {
@@ -379,6 +381,9 @@ export const adminService = {
     if (patch.parent_of !== undefined) {
       update.parent_of = patch.parent_of ?? [];
     }
+    if (patch.admin_note !== undefined) {
+      update.admin_note = patch.admin_note?.trim() || null;
+    }
 
     if (patch.product_line !== undefined || patch.role !== undefined) {
       let role = patch.role;
@@ -403,6 +408,13 @@ export const adminService = {
     }
 
     await updateDoc(doc(database, 'users', uid), update);
+    await adminAuditService.log({
+      action: 'user_updated',
+      actor_uid: 'admin',
+      target_type: 'user',
+      target_id: uid,
+      summary: `Mise à jour utilisateur (${Object.keys(patch).join(', ')})`,
+    });
   },
 
   /**
@@ -612,6 +624,10 @@ export const adminService = {
     return snap.docs.map((d) => {
       const data = d.data() as Record<string, unknown>;
       const loc = data.location as { latitude?: number; longitude?: number } | undefined;
+      const toDate = (v: unknown) =>
+        v && typeof v === 'object' && 'toDate' in v
+          ? (v as { toDate: () => Date }).toDate()
+          : undefined;
       return {
         id: d.id,
         name: String(data.name ?? ''),
@@ -619,11 +635,17 @@ export const adminService = {
         department: data.department as string | undefined,
         location: { latitude: loc?.latitude ?? 0, longitude: loc?.longitude ?? 0 },
         logo_url: data.logo_url as string | undefined,
+        primary_color: data.primary_color as string | undefined,
+        secondary_color: data.secondary_color as string | undefined,
         verified: Boolean(data.verified),
+        suspended: Boolean(data.suspended),
+        archived: Boolean(data.archived),
+        admin_note: data.admin_note ? String(data.admin_note) : undefined,
         categories: (data.categories as string[]) ?? [],
         sponsor_ids: (data.sponsor_ids as string[]) ?? [],
         owner_uid: String(data.owner_uid ?? ''),
-        created_at: new Date(),
+        created_at: toDate(data.created_at) ?? new Date(),
+        updated_at: toDate(data.updated_at),
       };
     });
   },
@@ -632,6 +654,13 @@ export const adminService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await deleteDoc(doc(database, 'clubs', clubId));
+    await adminAuditService.log({
+      action: 'club_deleted',
+      actor_uid: 'admin',
+      target_type: 'club',
+      target_id: clubId,
+      summary: 'Suppression club',
+    });
   },
 
   async updateClubVerified(clubId: string, verified: boolean): Promise<void> {
@@ -640,6 +669,46 @@ export const adminService = {
     await updateDoc(doc(database, 'clubs', clubId), {
       verified,
       updated_at: serverTimestamp(),
+    });
+    await adminAuditService.log({
+      action: 'club_verified',
+      actor_uid: 'admin',
+      target_type: 'club',
+      target_id: clubId,
+      summary: verified ? 'Club validé' : 'Validation club retirée',
+    });
+  },
+
+  async updateClub(
+    clubId: string,
+    patch: {
+      name?: string;
+      city?: string;
+      department?: string | null;
+      verified?: boolean;
+      suspended?: boolean;
+      archived?: boolean;
+      admin_note?: string | null;
+    },
+    actorUid?: string,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const update: Record<string, unknown> = { updated_at: serverTimestamp() };
+    if (patch.name !== undefined) update.name = patch.name.trim();
+    if (patch.city !== undefined) update.city = patch.city.trim();
+    if (patch.department !== undefined) update.department = patch.department?.trim() || null;
+    if (patch.verified !== undefined) update.verified = patch.verified;
+    if (patch.suspended !== undefined) update.suspended = patch.suspended;
+    if (patch.archived !== undefined) update.archived = patch.archived;
+    if (patch.admin_note !== undefined) update.admin_note = patch.admin_note?.trim() || null;
+    await updateDoc(doc(database, 'clubs', clubId), update);
+    await adminAuditService.log({
+      action: 'other',
+      actor_uid: actorUid || 'admin',
+      target_type: 'club',
+      target_id: clubId,
+      summary: `Mise à jour club (${Object.keys(patch).join(', ')})`,
     });
   },
 

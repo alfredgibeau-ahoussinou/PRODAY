@@ -13,4 +13,6 @@ export {
   DEFAULT_PRICE_PER_MEMBER_EUR,
   STANDARD_PRICE_PER_MEMBER_EUR,
   PROMO_PRICE_PER_MEMBER_EUR,
+  DEFAULT_CLUB_PRICING,
+  normalizeClubPricing,
 } from './utils/adminPricing';

@@ -33,6 +33,12 @@ export interface PlatformConfig {
     proday_percent: number;
     min_amount_eur: number;
   };
+  /** Tarification devis club (€ / adhérent) — source unique admin. */
+  club_pricing?: {
+    min_per_member_eur: number;
+    standard_per_member_eur: number;
+    promo_per_member_eur: number;
+  };
   updated_at?: Date;
   updated_by_uid?: string;
 }
@@ -50,5 +56,10 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     sante_visio: false,
     club_video: false,
     coach_video: false,
+  },
+  club_pricing: {
+    min_per_member_eur: 3,
+    standard_per_member_eur: 3.5,
+    promo_per_member_eur: 2.8,
   },
 };

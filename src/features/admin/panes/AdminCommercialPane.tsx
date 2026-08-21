@@ -41,6 +41,13 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
   const [optionsEur, setOptionsEur] = useState('0');
   const [optionsNote, setOptionsNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    club_name: '',
+    owner_name: '',
+    email: '',
+    members: '100',
+  });
 
   const rows = useMemo(() => {
     return data.clubQuoteRequests.filter((q) => {
@@ -108,6 +115,74 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
 
   if (data.loading) return <AdminLoading />;
 
+  if (creating) {
+    return (
+      <View style={styles.root}>
+        <View style={styles.header}>
+          <AdminButton label="Retour" variant="ghost" onPress={() => setCreating(false)} />
+          <AdminText variant="h1">Nouveau devis</AdminText>
+        </View>
+        <View style={styles.form}>
+          <AdminCard>
+            <Field
+              label="Club"
+              value={createForm.club_name}
+              onChange={(v) => setCreateForm((f) => ({ ...f, club_name: v }))}
+              t={t}
+            />
+            <Field
+              label="Responsable"
+              value={createForm.owner_name}
+              onChange={(v) => setCreateForm((f) => ({ ...f, owner_name: v }))}
+              t={t}
+            />
+            <Field
+              label="Email"
+              value={createForm.email}
+              onChange={(v) => setCreateForm((f) => ({ ...f, email: v }))}
+              t={t}
+            />
+            <Field
+              label="Adhérents (indicatif)"
+              value={createForm.members}
+              onChange={(v) => setCreateForm((f) => ({ ...f, members: v }))}
+              t={t}
+            />
+            <AdminButton
+              label={busy ? '…' : 'Créer la demande'}
+              disabled={busy}
+              onPress={() => {
+                void (async () => {
+                  setBusy(true);
+                  try {
+                    const id = await clubQuoteService.submit({
+                      club_name: createForm.club_name,
+                      owner_name: createForm.owner_name,
+                      email: createForm.email,
+                      members: createForm.members,
+                      requester_uid: firebaseUser?.uid,
+                    });
+                    await data.refresh();
+                    setCreating(false);
+                    const created = (await clubQuoteService.listForAdmin('all', 20)).find(
+                      (q) => q.id === id,
+                    );
+                    if (created) openQuote(created);
+                    Alert.alert('Créé', 'Demande de devis enregistrée.');
+                  } catch (e) {
+                    Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+                  } finally {
+                    setBusy(false);
+                  }
+                })();
+              }}
+            />
+          </AdminCard>
+        </View>
+      </View>
+    );
+  }
+
   if (selected) {
     return (
       <View style={styles.root}>
@@ -138,6 +213,56 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
               onPress={applyQuote}
               disabled={busy}
             />
+            <View style={styles.statusActions}>
+              {(
+                [
+                  ['accepted', 'Marquer accepté'],
+                  ['refused', 'Refuser'],
+                  ['negotiating', 'Négociation'],
+                  ['pending', 'Remettre en attente'],
+                  ['archived', 'Archiver'],
+                ] as const
+              ).map(([status, label]) => (
+                <AdminButton
+                  key={status}
+                  label={label}
+                  variant={status === 'refused' ? 'danger' : 'ghost'}
+                  disabled={busy || selected.status === status}
+                  onPress={() => {
+                    if (!firebaseUser?.uid) return;
+                    Alert.alert('Changer le statut ?', `→ ${status}`, [
+                      { text: 'Annuler', style: 'cancel' },
+                      {
+                        text: 'Confirmer',
+                        onPress: () => {
+                          void (async () => {
+                            setBusy(true);
+                            try {
+                              await clubQuoteService.setStatus(
+                                selected.id,
+                                status,
+                                firebaseUser.uid,
+                                undefined,
+                                profile?.email ?? firebaseUser.email ?? undefined,
+                              );
+                              await data.refresh();
+                              setSelected(null);
+                            } catch (e) {
+                              Alert.alert(
+                                'Erreur',
+                                e instanceof Error ? e.message : 'Échec',
+                              );
+                            } finally {
+                              setBusy(false);
+                            }
+                          })();
+                        },
+                      },
+                    ]);
+                  }}
+                />
+              ))}
+            </View>
           </AdminCard>
           <AdminCard>
             <AdminText variant="h3">Demande</AdminText>
@@ -159,6 +284,19 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
         <AdminText variant="caption" color={t.muted}>
           CRM devis clubs · {sponsorPending} devis sponsors en attente
         </AdminText>
+        <AdminButton
+          label="Créer un devis"
+          variant="soft"
+          onPress={() => {
+            setCreating(true);
+            setCreateForm({
+              club_name: '',
+              owner_name: '',
+              email: '',
+              members: '100',
+            });
+          }}
+        />
         <View style={styles.chips}>
           {(
             [
@@ -285,6 +423,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   row: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  statusActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   input: {
     borderWidth: 1,
     borderRadius: 12,
