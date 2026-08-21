@@ -9,9 +9,14 @@ import { ClubChapterScroll, ClubLoading } from '../../features/club/ui/clubUi';
 import {
   ClubHomeCopilotCta,
   ClubHomeIdentityHeader,
+  ClubHomeInsightLine,
+  ClubHomeMiniStats,
   ClubHomeNextEventRow,
+  ClubHomeShortcutLinks,
+  ClubHomeTodayPeek,
   ClubHomeTodoSection,
   type ClubHomePriority,
+  type ClubHomeTodayChip,
 } from '../../features/club/ui/ClubHomeAccueil';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import {
@@ -60,7 +65,25 @@ function resolvePriority(ws: ReturnType<typeof useClubWorkspace>): ClubHomePrior
   return { kind: 'calm' };
 }
 
-/** Accueil Club — densité type Coach : identité, une priorité, à faire court, CTA léger. */
+/** Insight atmosphère — un fait workspace, sans doubler la grille de chiffres. */
+function resolveInsight(ws: ReturnType<typeof useClubWorkspace>): string {
+  if (ws.pendingMemberships > 0) {
+    return `${ws.pendingMemberships} adhésion${ws.pendingMemberships > 1 ? 's' : ''} en attente de validation`;
+  }
+  if (ws.teamsWithoutCoach > 0) {
+    return `${ws.teamsWithoutCoach} équipe${ws.teamsWithoutCoach > 1 ? 's' : ''} sans coach affecté`;
+  }
+  if (ws.teams.length === 0) {
+    return 'Aucune équipe — crée la première pour démarrer le club';
+  }
+  const todayCount = ws.todayMatches.length + ws.todayTrainings.length;
+  if (todayCount > 0) {
+    return `${todayCount} rendez-vous sur le terrain aujourd’hui`;
+  }
+  return `${ws.teams.length} équipe${ws.teams.length > 1 ? 's' : ''} · structure opérationnelle`;
+}
+
+/** Accueil Club — densité Coach + accents premium compacts. */
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
   const shellNav = useClubShellNav();
@@ -77,6 +100,7 @@ export function ClubHomeScreen() {
   const name = ws.club?.name ?? profile?.display_name ?? 'Club';
   const greet = greetingForHour(new Date().getHours());
   const priority = resolvePriority(ws);
+  const insight = resolveInsight(ws);
 
   const todoItems = [
     ...(!logoUrl && logo.canEdit
@@ -125,6 +149,33 @@ export function ClubHomeScreen() {
       : []),
   ].slice(0, MAX_TODO_ITEMS);
 
+  const todayChips: ClubHomeTodayChip[] = [
+    ...ws.todayMatches.map((e) => ({
+      id: `m-${e.id}`,
+      kind: 'match' as const,
+      label: e.title?.trim() || 'Match',
+      time: e.starts_at
+        ? new Date(e.starts_at).toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : undefined,
+      onPress: () => shellNav?.requestNav('matches'),
+    })),
+    ...ws.todayTrainings.map((e) => ({
+      id: `t-${e.id}`,
+      kind: 'training' as const,
+      label: e.title?.trim() || 'Entraînement',
+      time: e.starts_at
+        ? new Date(e.starts_at).toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : undefined,
+      onPress: () => shellNav?.requestNav('trainings'),
+    })),
+  ].slice(0, 2);
+
   const onPriorityPress = () => {
     if (priority.kind === 'match') {
       shellNav?.requestNav('matches');
@@ -149,11 +200,31 @@ export function ClubHomeScreen() {
           crestUploading={logo.uploading}
         />
 
+        <ClubHomeMiniStats
+          players={ws.players.length}
+          coaches={ws.coaches.length}
+          teams={ws.teams.length}
+          onPlayers={() => shellNav?.requestNav('players')}
+          onCoaches={() => shellNav?.requestNav('coaches')}
+          onTeams={() => shellNav?.requestNav('teams')}
+        />
+
+        <ClubHomeInsightLine text={insight} />
+
         <ClubHomeNextEventRow priority={priority} onPress={onPriorityPress} />
+
+        <ClubHomeTodayPeek chips={todayChips} />
 
         <ClubHomeTodoSection
           items={todoItems}
           emptySummary="Rien d’urgent — le club est à jour."
+        />
+
+        <ClubHomeShortcutLinks
+          links={[
+            { id: 'teams', label: 'Équipes', onPress: () => shellNav?.requestNav('teams') },
+            { id: 'matches', label: 'Matchs', onPress: () => shellNav?.requestNav('matches') },
+          ]}
         />
 
         <ClubHomeCopilotCta onOpenCopilot={() => shellNav?.openHelp?.()} />

@@ -1,5 +1,5 @@
 /**
- * Composition visuelle Accueil Club — densité Coach (identité + priorité + à faire + CTA léger).
+ * Composition visuelle Accueil Club — densité Coach + quelques accents premium (pas de grille KPI).
  * Bindings / handlers restent dans ClubHomeScreen.
  */
 import React, { useMemo } from 'react';
@@ -120,6 +120,71 @@ export function ClubHomeIdentityHeader({
   );
 }
 
+/** Bandeau mini-stats une ligne — effectif + coachs (+ équipes), pas de grille 2×2. */
+export function ClubHomeMiniStats({
+  players,
+  coaches,
+  teams,
+  onPlayers,
+  onCoaches,
+  onTeams,
+}: {
+  players: number;
+  coaches: number;
+  teams: number;
+  onPlayers: () => void;
+  onCoaches: () => void;
+  onTeams: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => miniStatsStyles(tokens), [tokens]);
+
+  const cells = [
+    { key: 'players', label: 'Effectif', value: players, onPress: onPlayers },
+    { key: 'coaches', label: 'Coachs', value: coaches, onPress: onCoaches },
+    { key: 'teams', label: 'Équipes', value: teams, onPress: onTeams },
+  ] as const;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
+      <View style={styles.strip}>
+        {cells.map((cell, i) => (
+          <React.Fragment key={cell.key}>
+            {i > 0 ? <View style={[styles.sep, { backgroundColor: tokens.border }]} /> : null}
+            <PressableSpring onPress={cell.onPress} scaleTo={0.97} haptic style={styles.cell}>
+              <ClubText variant="label" muted style={styles.label}>
+                {cell.label}
+              </ClubText>
+              <ClubText variant="body" style={styles.value}>
+                {cell.value}
+              </ClubText>
+            </PressableSpring>
+          </React.Fragment>
+        ))}
+      </View>
+    </AnimatedEntrance>
+  );
+}
+
+/** Insight discret issu du workspace — une ligne, pas un hero briefing. */
+export function ClubHomeInsightLine({ text }: { text: string }) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => insightStyles(tokens), [tokens]);
+  const line = text.trim();
+  if (!line) return null;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={1} delayStep={36}>
+      <View style={styles.row}>
+        <View style={[styles.mark, { backgroundColor: tokens.accent }]} />
+        <ClubText variant="caption" muted numberOfLines={2} style={styles.text}>
+          {line}
+        </ClubText>
+      </View>
+    </AnimatedEntrance>
+  );
+}
+
 export type ClubHomePriority =
   | { kind: 'match'; event: TeamEvent }
   | { kind: 'training'; event: TeamEvent }
@@ -138,12 +203,12 @@ export function ClubHomeNextEventRow({
 
   if (priority.kind === 'calm') {
     return (
-      <AnimatedEntrance kind="fadeUp" index={0} delayStep={40}>
+      <AnimatedEntrance kind="fadeUp" index={2} delayStep={36}>
         <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.row}>
           <View style={[styles.dot, { backgroundColor: tokens.pitch }]} />
           <View style={styles.col}>
             <ClubText variant="label" muted>
-              Aujourd’hui
+              Prochaine priorité
             </ClubText>
             <ClubText variant="body" style={{ fontWeight: '700' }}>
               Terrain libre
@@ -167,7 +232,7 @@ export function ClubHomeNextEventRow({
   const title = event.title?.trim() || (isMatch ? 'Prochain match' : 'Prochaine séance');
 
   return (
-    <AnimatedEntrance kind="fadeUp" index={0} delayStep={40}>
+    <AnimatedEntrance kind="fadeUp" index={2} delayStep={36}>
       <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.row}>
         <View style={[styles.dot, { backgroundColor: tone.color }]} />
         <View style={styles.col}>
@@ -184,6 +249,57 @@ export function ClubHomeNextEventRow({
         </View>
         <Icon name="chevron-forward" size={15} color={tokens.faint} />
       </PressableSpring>
+    </AnimatedEntrance>
+  );
+}
+
+export type ClubHomeTodayChip = {
+  id: string;
+  kind: 'match' | 'training';
+  label: string;
+  time?: string;
+  onPress: () => void;
+};
+
+/** Peeks « Aujourd’hui » — 1–2 chips, masqué si aucun événement du jour. */
+export function ClubHomeTodayPeek({ chips }: { chips: ClubHomeTodayChip[] }) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => todayPeekStyles(tokens), [tokens]);
+  const visible = chips.slice(0, 2);
+  if (visible.length === 0) return null;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={3} delayStep={36}>
+      <View style={styles.block}>
+        <ClubText variant="label" muted>
+          Aujourd’hui
+        </ClubText>
+        <View style={styles.row}>
+          {visible.map((chip) => {
+            const tone = chip.kind === 'match' ? clubEventTone.match : clubEventTone.training;
+            return (
+              <PressableSpring
+                key={chip.id}
+                onPress={chip.onPress}
+                scaleTo={0.97}
+                haptic
+                style={[styles.chip, { borderColor: tokens.border }]}
+              >
+                <View style={[styles.chipDot, { backgroundColor: tone.color }]} />
+                <View style={styles.chipCol}>
+                  <ClubText variant="caption" style={{ color: tone.color, fontWeight: '700' }}>
+                    {tone.label}
+                    {chip.time ? ` · ${chip.time}` : ''}
+                  </ClubText>
+                  <ClubText variant="caption" numberOfLines={1} style={{ fontWeight: '600' }}>
+                    {chip.label}
+                  </ClubText>
+                </View>
+              </PressableSpring>
+            );
+          })}
+        </View>
+      </View>
     </AnimatedEntrance>
   );
 }
@@ -208,7 +324,7 @@ export function ClubHomeTodoSection({
   const styles = useMemo(() => todoStyles(tokens), [tokens]);
 
   return (
-    <AnimatedEntrance kind="fadeUp" index={1} delayStep={40}>
+    <AnimatedEntrance kind="fadeUp" index={4} delayStep={36}>
       <View style={styles.block}>
         <View style={styles.head}>
           <ClubText variant="label" muted>
@@ -265,6 +381,40 @@ export function ClubHomeTodoSection({
   );
 }
 
+/** Raccourcis texte (max 2) — pas de grosses cartes. */
+export function ClubHomeShortcutLinks({
+  links,
+}: {
+  links: { id: string; label: string; onPress: () => void }[];
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => shortcutStyles(tokens), [tokens]);
+  const visible = links.slice(0, 2);
+  if (visible.length === 0) return null;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={5} delayStep={36}>
+      <View style={styles.row}>
+        {visible.map((link, i) => (
+          <React.Fragment key={link.id}>
+            {i > 0 ? (
+              <ClubText variant="caption" muted style={styles.dot}>
+                ·
+              </ClubText>
+            ) : null}
+            <PressableSpring onPress={link.onPress} scaleTo={0.97} haptic style={styles.link}>
+              <ClubText variant="body" style={{ color: tokens.accent, fontWeight: '700' }}>
+                {link.label}
+              </ClubText>
+              <Icon name="chevron-forward" size={13} color={tokens.accent} />
+            </PressableSpring>
+          </React.Fragment>
+        ))}
+      </View>
+    </AnimatedEntrance>
+  );
+}
+
 /**
  * CTA copilote léger — une ligne, pas de hero briefing qui double le statut.
  * Le FAB shell reste l’entrée immersive ; ici un rappel discret sur Accueil.
@@ -274,7 +424,7 @@ export function ClubHomeCopilotCta({ onOpenCopilot }: { onOpenCopilot: () => voi
   const styles = useMemo(() => copilotCtaStyles(tokens), [tokens]);
 
   return (
-    <AnimatedEntrance kind="fadeUp" index={2} delayStep={40}>
+    <AnimatedEntrance kind="fadeUp" index={6} delayStep={36}>
       <PressableSpring
         onPress={onOpenCopilot}
         scaleTo={0.98}
@@ -304,7 +454,7 @@ const identityStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     wrap: {
       paddingTop: clubSpace.sm,
-      paddingBottom: clubSpace.md,
+      paddingBottom: clubSpace.sm,
       overflow: 'visible',
     },
     wash: {
@@ -378,6 +528,67 @@ const identityStyles = (tokens: ClubThemeTokens) =>
     },
   });
 
+const miniStatsStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    strip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: clubSpace.sm,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    cell: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 2,
+    },
+    label: {
+      fontSize: 9,
+      lineHeight: 11,
+      letterSpacing: 0.9,
+    },
+    value: {
+      fontWeight: '800',
+      fontSize: 16,
+      lineHeight: 20,
+      letterSpacing: -0.3,
+      color: tokens.foreground,
+    },
+    sep: {
+      width: StyleSheet.hairlineWidth,
+      alignSelf: 'stretch',
+      marginVertical: 4,
+    },
+  });
+
+const insightStyles = (_tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: clubSpace.sm,
+      paddingHorizontal: 2,
+      paddingVertical: 2,
+    },
+    mark: {
+      width: 3,
+      height: 14,
+      borderRadius: 2,
+      marginTop: 1,
+      flexShrink: 0,
+    },
+    text: {
+      flex: 1,
+      lineHeight: 17,
+    },
+  });
+
 const nextEventStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     row: {
@@ -401,9 +612,34 @@ const nextEventStyles = (tokens: ClubThemeTokens) =>
     col: { flex: 1, minWidth: 0, gap: 2 },
   });
 
+const todayPeekStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    block: { gap: clubSpace.sm },
+    row: { flexDirection: 'row', gap: clubSpace.sm },
+    chip: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.sm,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      minWidth: 0,
+    },
+    chipDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      flexShrink: 0,
+    },
+    chipCol: { flex: 1, minWidth: 0, gap: 1 },
+  });
+
 const todoStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    block: { gap: clubSpace.sm, marginTop: clubSpace.xs },
+    block: { gap: clubSpace.sm },
     head: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -459,13 +695,31 @@ const todoStyles = (tokens: ClubThemeTokens) =>
     col: { flex: 1, minWidth: 0, gap: 2 },
   });
 
+const shortcutStyles = (_tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.xs,
+    },
+    link: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      paddingVertical: clubSpace.xs,
+      paddingHorizontal: clubSpace.sm,
+    },
+    dot: { fontWeight: '700' },
+  });
+
 const copilotCtaStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.sm,
-      marginTop: clubSpace.sm,
       paddingVertical: clubSpace.md,
       paddingHorizontal: clubSpace.md,
       borderRadius: clubRadius.lg,
