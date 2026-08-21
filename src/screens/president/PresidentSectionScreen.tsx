@@ -95,7 +95,7 @@ export function PresidentSectionScreen({
             title="Ouvrir dans le Club"
           >
             <PresidentText variant="caption" muted style={{ marginBottom: presidentSpace.sm }}>
-              Édition avancée ou CRUD opérationnel — la direction reste ici.
+              Édition avancée ou CRUD opérationnel · la direction reste ici.
             </PresidentText>
             {links.map((link) => (
               <PresidentActionRow

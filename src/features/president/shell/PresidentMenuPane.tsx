@@ -47,7 +47,7 @@ export function PresidentMenuPane({ items, onSelect, onExitClub }: Props) {
         </PresidentText>
         <PresidentText variant="h1">Pôle Président</PresidentText>
         <PresidentText variant="body" muted>
-          Direction, prestige, stratégie — distinct du Club quotidien et du Pôle Coach.
+          Direction, prestige, stratégie · distinct du Club quotidien et du Pôle Coach.
         </PresidentText>
       </View>
 

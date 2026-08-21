@@ -61,9 +61,9 @@ export function PresidentOverviewScreen() {
     <PresidentSectionScreen
       eyebrow="Mon club"
       title={ws.club?.name ?? 'Vue club'}
-      subtitle="Identité, structure et statut — lecture directionnelle."
+      subtitle="Identité, structure et statut · lecture directionnelle."
       liveLines={[
-        `Ville : ${[ws.club?.city, ws.club?.department].filter(Boolean).join(' · ') || '—'}`,
+        `Ville : ${[ws.club?.city, ws.club?.department].filter(Boolean).join(' · ') || '…'}`,
         `Vérifié : ${ws.club?.verified ? 'oui' : 'non'}`,
         `Statut opérationnel : ${ws.statusLabel}`,
         `${ws.teams.length} équipes · ${ws.players.length} licenciés · ${ws.coaches.length} coachs`,
@@ -120,7 +120,7 @@ export function PresidentSportScreen() {
     <PresidentSectionScreen
       eyebrow="Sportif"
       title="Pilotage sportif"
-      subtitle="Matchs, entraînements et rythme de la semaine — vue direction."
+      subtitle="Matchs, entraînements et rythme de la semaine · vue direction."
       liveLines={[
         `Matchs aujourd’hui : ${ws.todayMatches.length}`,
         `Entraînements aujourd’hui : ${ws.todayTrainings.length}`,
@@ -205,6 +205,16 @@ function formatEntryDate(d: Date): string {
   });
 }
 
+/** Saisie date sans tiret (AAAA MM JJ) ; parse aussi ISO / slash. */
+function todayFinanceDateInput(): string {
+  return new Date().toISOString().slice(0, 10).replace(/-/g, ' ');
+}
+
+function parseFinanceDateInput(raw: string): Date {
+  const normalized = raw.trim().replace(/[./\s]+/g, '-');
+  return new Date(`${normalized}T12:00:00`);
+}
+
 const FINANCE_TYPE_OPTIONS: { id: ClubFinanceEntryType; label: string }[] = [
   { id: 'cotisation', label: 'Cotisation' },
   { id: 'depense', label: 'Dépense' },
@@ -232,7 +242,7 @@ export function PresidentFinanceScreen() {
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Licence');
-  const [dateStr, setDateStr] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dateStr, setDateStr] = useState(() => todayFinanceDateInput());
 
   const loading = goalsLoading || ledgerLoading;
 
@@ -241,7 +251,7 @@ export function PresidentFinanceScreen() {
     setLabel('');
     setAmount('');
     setCategory('Licence');
-    setDateStr(new Date().toISOString().slice(0, 10));
+    setDateStr(todayFinanceDateInput());
   }, []);
 
   const submit = useCallback(async () => {
@@ -258,9 +268,9 @@ export function PresidentFinanceScreen() {
       Alert.alert('Libellé', 'Indiquez un libellé.');
       return;
     }
-    const entryDate = new Date(`${dateStr}T12:00:00`);
+    const entryDate = parseFinanceDateInput(dateStr);
     if (Number.isNaN(entryDate.getTime())) {
-      Alert.alert('Date', 'Date invalide (AAAA-MM-JJ).');
+      Alert.alert('Date', 'Date invalide (AAAA MM JJ).');
       return;
     }
     setSaving(true);
@@ -343,7 +353,7 @@ export function PresidentFinanceScreen() {
         />
         {entries.length === 0 && !ledgerLoading ? (
           <PresidentText variant="body" muted>
-            Aucune écriture pour l’instant — le même ledger que le pôle Club.
+            Aucune écriture pour l’instant · le même ledger que le pôle Club.
           </PresidentText>
         ) : (
           entries.slice(0, 12).map((e) => {
@@ -352,7 +362,7 @@ export function PresidentFinanceScreen() {
               <PresidentActionRow
                 key={e.id}
                 label={e.label}
-                hint={`${CLUB_FINANCE_TYPE_LABELS[e.type]} · ${formatEntryDate(e.entry_date)} · ${expense ? '−' : '+'}${formatEur(e.amount_eur)}`}
+                hint={`${CLUB_FINANCE_TYPE_LABELS[e.type]} · ${formatEntryDate(e.entry_date)} · ${expense ? 'sortie ' : 'entrée '}${formatEur(e.amount_eur)}`}
                 icon="stats-chart"
                 onPress={() =>
                   Alert.alert('Retirer du ledger ?', e.label, [
@@ -377,7 +387,7 @@ export function PresidentFinanceScreen() {
         )}
         {entries.length > 12 ? (
           <PresidentText variant="caption" muted>
-            +{entries.length - 12} autres — ouvrir Finances Club pour la liste complète.
+            +{entries.length - 12} autres · ouvrir Finances Club pour la liste complète.
           </PresidentText>
         ) : null}
       </PresidentSectionCard>
@@ -465,7 +475,7 @@ export function PresidentFinanceScreen() {
               value={dateStr}
               onChangeText={setDateStr}
               autoCapitalize="none"
-              placeholder="Date AAAA-MM-JJ"
+              placeholder="Date AAAA MM JJ"
               placeholderTextColor={tokens.muted}
               style={styles.input}
             />
@@ -639,7 +649,7 @@ export function PresidentTeamsScreen() {
     <PresidentSectionScreen
       eyebrow="Équipes"
       title="Structure sportive"
-      subtitle="Catégories, effectifs et encadrement — lecture exécutive."
+      subtitle="Catégories, effectifs et encadrement · lecture exécutive."
       liveLines={[
         `${ws.teams.length} équipe${ws.teams.length > 1 ? 's' : ''}`,
         `Sans coach : ${ws.teamsWithoutCoach}`,
@@ -657,7 +667,7 @@ export function PresidentTeamsScreen() {
             <PresidentActionRow
               key={r.teamId}
               label={r.name}
-              hint={`${r.category ? `${r.category} · ` : ''}${r.licensedCount} licenciés · coach ${r.coachNames[0] ?? '—'}`}
+              hint={`${r.category ? `${r.category} · ` : ''}${r.licensedCount} licenciés · coach ${r.coachNames[0] ?? '…'}`}
               icon="football"
             />
           ))
@@ -723,7 +733,7 @@ export function PresidentSponsorsScreen() {
     <PresidentSectionScreen
       eyebrow="Sponsors"
       title="Partenaires & développement"
-      subtitle="Objectifs de financement partagés — lecture directionnelle."
+      subtitle="Objectifs de financement partagés · lecture directionnelle."
       liveLines={
         loading
           ? ['Chargement…']
@@ -762,7 +772,7 @@ export function PresidentCommunicationScreen() {
     <PresidentSectionScreen
       eyebrow="Communication"
       title="Annonces & messages"
-      subtitle="Priorités de diffusion pour la direction — le détail d’envoi reste opérationnel."
+      subtitle="Priorités de diffusion pour la direction · le détail d’envoi reste opérationnel."
       liveLines={[
         `Événements à communiquer : ${ws.events.length}`,
         `Alertes / todos : ${ws.todoCount}`,
@@ -844,7 +854,7 @@ export function PresidentRecruitmentScreen() {
     <PresidentSectionScreen
       eyebrow="Recrutement"
       title="Vivier & suivi"
-      subtitle="Lecture directionnelle du bassin interne — le kanban détaillé reste en Club."
+      subtitle="Lecture directionnelle du bassin interne · le kanban détaillé reste en Club."
       liveLines={[
         `Licenciés (vivier) : ${ws.players.length}`,
         `Coachs : ${ws.coaches.length}`,
@@ -899,9 +909,9 @@ export function PresidentVideoScreen() {
     <PresidentSectionScreen
       eyebrow="Vidéo"
       title="Captation club"
-      subtitle="Vue direction sur les options de captation — aucun fournisseur imposé."
+      subtitle="Vue direction sur les options de captation · aucun fournisseur imposé."
       liveLines={[
-        `Club : ${ws.club?.name ?? '—'}`,
+        `Club : ${ws.club?.name ?? '…'}`,
         `Fournisseurs référencés : ${CLUB_VIDEO_PROVIDERS.length}`,
         `Connectés : ${CLUB_VIDEO_PROVIDERS.filter((p) => p.connected).length}`,
       ]}
@@ -940,7 +950,7 @@ export function PresidentReportsScreen() {
     <PresidentSectionScreen
       eyebrow="Rapports"
       title="Synthèses de direction"
-      subtitle="Brouillons via l’assistant — confirmation humaine obligatoire."
+      subtitle="Brouillons via l’assistant · confirmation humaine obligatoire."
       emptyTitle="Pas d’export automatique"
       emptyBody="Demandez une trame de rapport à l’IA, puis validez avant diffusion."
       links={[]}
@@ -967,7 +977,7 @@ export function PresidentInsightsScreen() {
       eyebrow="Analyses"
       title="Indicateurs de direction"
       subtitle={`Santé globale ${health.overall}%.`}
-      liveLines={health.axes.map((a) => `${a.label} : ${a.score}% — ${a.summary}`)}
+      liveLines={health.axes.map((a) => `${a.label} : ${a.score}% · ${a.summary}`)}
       links={[{ label: 'Stats Club', icon: 'stats-chart', clubNav: 'stats' }]}
     >
       <PresidentSectionCard title="Approfondir">
@@ -1037,7 +1047,7 @@ export function PresidentBoardScreen() {
     <PresidentSectionScreen
       eyebrow="Comité"
       title="Bureau dirigeant"
-      subtitle="Composition du comité — structure prête."
+      subtitle="Composition du comité · structure prête."
       emptyTitle="Comité non renseigné"
       emptyBody="Ajoutez bientôt président, trésorier, secrétaire. Aucune donnée dupliquée : rattachement au club."
       links={[{ label: 'Hub Club', icon: 'people', clubNav: 'club' }]}

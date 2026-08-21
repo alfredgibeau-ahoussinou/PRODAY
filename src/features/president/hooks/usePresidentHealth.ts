@@ -108,17 +108,17 @@ export function buildPresidentHealth(ws: ClubWorkspace): PresidentHealth {
   const insights: string[] = [];
   if (pending > 0) {
     insights.push(
-      `${pending} adhésion${pending > 1 ? 's' : ''} en attente de validation — impact administratif.`,
+      `${pending} adhésion${pending > 1 ? 's' : ''} en attente de validation · impact administratif.`,
     );
   }
   if (noCoach > 0) {
     insights.push(
-      `${noCoach} équipe${noCoach > 1 ? 's' : ''} sans coach assigné — risque sportif et humain.`,
+      `${noCoach} équipe${noCoach > 1 ? 's' : ''} sans coach assigné · risque sportif et humain.`,
     );
   }
   if (matchesToday > 0) {
     insights.push(
-      `${matchesToday} match${matchesToday > 1 ? 's' : ''} aujourd’hui — suivre résultats et communication.`,
+      `${matchesToday} match${matchesToday > 1 ? 's' : ''} aujourd’hui · suivre résultats et communication.`,
     );
   }
   if (insights.length === 0) {

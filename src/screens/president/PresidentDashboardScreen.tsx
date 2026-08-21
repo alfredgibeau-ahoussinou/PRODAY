@@ -50,7 +50,7 @@ export function PresidentDashboardScreen() {
         <PresidentHeroBanner
           greeting={`Bonjour ${firstName}`}
           clubName={ws.club?.name ?? 'Votre club'}
-          subtitle="Cockpit exécutif — l’état de votre club, en un regard."
+          subtitle="Cockpit exécutif · l’état de votre club, en un regard."
           overall={health.overall}
         />
 
