@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { StyleSheet, View, type DimensionValue } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -31,6 +31,14 @@ function toneColor(tokens: PresidentThemeTokens, tone: PresidentHealthAxis['tone
   if (tone === 'ok') return tokens.success;
   if (tone === 'warn') return tokens.warn;
   return tokens.danger;
+}
+
+function chunkAxes<T>(items: T[], size: number): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    rows.push(items.slice(i, i + size));
+  }
+  return rows;
 }
 
 function AxisBar({
@@ -105,11 +113,11 @@ function OverallRing({
       <View style={styles.overallTop}>
         <View style={styles.liveRow}>
           <LivePulseDot active color={tokens.champagne} size={7} />
-          <PresidentText variant="label" champagne>
+          <PresidentText variant="label" champagne numberOfLines={1}>
             Santé du club
           </PresidentText>
         </View>
-        <PresidentText variant="caption" muted numberOfLines={1}>
+        <PresidentText variant="caption" muted numberOfLines={1} style={styles.statusLabel}>
           {statusLabel}
         </PresidentText>
       </View>
@@ -126,7 +134,7 @@ function OverallRing({
           style={[styles.barFill, { backgroundColor: tokens.accent }, fillStyle]}
         />
       </View>
-      <PresidentText variant="caption" muted style={{ marginTop: 4 }}>
+      <PresidentText variant="caption" muted style={{ marginTop: 4 }} numberOfLines={1}>
         Indice composite · cinq axes de direction
       </PresidentText>
     </View>
@@ -136,7 +144,8 @@ function OverallRing({
 export function PresidentHealthBoard({ health, onAxisPress, immersive = false }: Props) {
   const { tokens } = usePresidentTheme();
   const stylesLocal = useMemo(() => createStyles(tokens, immersive), [tokens, immersive]);
-  const axisCount = health.axes.length;
+  const columns = immersive ? 2 : 1;
+  const rows = useMemo(() => chunkAxes(health.axes, columns), [health.axes, columns]);
 
   return (
     <View style={stylesLocal.wrap}>
@@ -144,44 +153,54 @@ export function PresidentHealthBoard({ health, onAxisPress, immersive = false }:
         <OverallRing overall={health.overall} tokens={tokens} flush={immersive} />
       </StaggerReveal>
       <View style={stylesLocal.axes}>
-        {health.axes.map((axis, i) => {
-          const color = toneColor(tokens, axis.tone);
-          const lastOdd =
-            immersive && axisCount % 2 === 1 && i === axisCount - 1;
-          return (
-            <StaggerReveal key={axis.id} index={i + 1} delayStep={presidentMotion.stagger}>
-              <PressableSpring
-                onPress={() => onAxisPress(axis)}
-                scaleTo={0.97}
-                haptic
-                style={[stylesLocal.axis, lastOdd && stylesLocal.axisFull]}
-              >
-                <View style={stylesLocal.axisTop}>
-                  <View style={stylesLocal.axisLabelRow}>
-                    <View style={[stylesLocal.toneDot, { backgroundColor: color }]} />
-                    <PresidentText
-                      variant="caption"
-                      style={{ fontWeight: '700', flexShrink: 1 }}
-                      numberOfLines={1}
-                    >
-                      {axis.label}
-                    </PresidentText>
-                  </View>
-                  <PresidentText
-                    variant="statSm"
-                    style={{ color, fontSize: immersive ? 20 : 18, lineHeight: 24 }}
+        {rows.map((row, rowIndex) => (
+          <View key={`axis-row-${rowIndex}`} style={stylesLocal.axisRow}>
+            {row.map((axis, colIndex) => {
+              const flatIndex = rowIndex * columns + colIndex;
+              const color = toneColor(tokens, axis.tone);
+              return (
+                <StaggerReveal
+                  key={axis.id}
+                  index={flatIndex + 1}
+                  delayStep={presidentMotion.stagger}
+                  style={stylesLocal.axisCell}
+                >
+                  <PressableSpring
+                    onPress={() => onAxisPress(axis)}
+                    scaleTo={0.97}
+                    haptic
+                    style={stylesLocal.axis}
                   >
-                    {axis.score}
-                  </PresidentText>
-                </View>
-                <AxisBar score={axis.score} color={color} tokens={tokens} />
-                <PresidentText variant="caption" muted numberOfLines={2}>
-                  {axis.summary}
-                </PresidentText>
-              </PressableSpring>
-            </StaggerReveal>
-          );
-        })}
+                    <View style={stylesLocal.axisTop}>
+                      <View style={stylesLocal.axisLabelRow}>
+                        <View style={[stylesLocal.toneDot, { backgroundColor: color }]} />
+                        <PresidentText
+                          variant="caption"
+                          style={{ fontWeight: '700', flexShrink: 1 }}
+                          numberOfLines={1}
+                        >
+                          {axis.label}
+                        </PresidentText>
+                      </View>
+                      <PresidentText
+                        variant="statSm"
+                        style={{ color, fontSize: immersive ? 20 : 18, lineHeight: 24 }}
+                      >
+                        {axis.score}
+                      </PresidentText>
+                    </View>
+                    <AxisBar score={axis.score} color={color} tokens={tokens} />
+                    <PresidentText variant="caption" muted numberOfLines={2}>
+                      {axis.summary}
+                    </PresidentText>
+                  </PressableSpring>
+                </StaggerReveal>
+              );
+            })}
+            {/* Placeholder : dernier axe impair reste demi-largeur, pas étiré. */}
+            {immersive && row.length === 1 ? <View style={stylesLocal.axisCell} /> : null}
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -201,7 +220,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: presidentSpace.sm,
   },
-  liveRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+  liveRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1, minWidth: 0 },
+  statusLabel: { flexShrink: 1, textAlign: 'right' },
   scoreRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 4, marginTop: 4 },
   barTrack: {
     height: 8,
@@ -223,29 +243,25 @@ function createStyles(tokens: PresidentThemeTokens, immersive: boolean) {
     wrap: { gap: presidentLayout.gridGap },
     axes: {
       gap: presidentLayout.gridGap,
+    },
+    axisRow: {
       flexDirection: immersive ? 'row' : 'column',
-      flexWrap: immersive ? 'wrap' : 'nowrap',
+      gap: presidentLayout.gridGap,
+      alignItems: 'stretch',
+    },
+    axisCell: {
+      flex: immersive ? 1 : undefined,
+      minWidth: 0,
     },
     axis: {
+      flex: immersive ? 1 : undefined,
       padding: presidentSpace.md,
       borderRadius: presidentRadius.md,
       borderWidth: 1,
       borderColor: tokens.border,
       backgroundColor: tokens.surfaceGlass,
       gap: 8,
-      ...(immersive
-        ? {
-            // 2 colonnes égales : (100% - gap) / 2 via flexBasis + maxWidth
-            width: '48%' as DimensionValue,
-            maxWidth: '48%' as DimensionValue,
-            flexGrow: 0,
-            flexShrink: 0,
-          }
-        : {}),
-    },
-    axisFull: {
-      width: '100%' as DimensionValue,
-      maxWidth: '100%' as DimensionValue,
+      minHeight: immersive ? 108 : undefined,
     },
     axisTop: {
       flexDirection: 'row',

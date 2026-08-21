@@ -381,11 +381,13 @@ export function PresidentHeroBanner({
             </PresidentText>
           </View>
         </View>
-        <PresidentText variant="display">{greeting}</PresidentText>
+        <PresidentText variant="display" numberOfLines={2}>
+          {greeting}
+        </PresidentText>
         <PresidentText variant="displaySm" champagne numberOfLines={1}>
           {clubName}
         </PresidentText>
-        <PresidentText variant="body" muted style={{ marginTop: 2, maxWidth: 420 }}>
+        <PresidentText variant="body" muted numberOfLines={2} style={{ marginTop: 2, maxWidth: 420 }}>
           {subtitle}
         </PresidentText>
         {typeof overall === 'number' ? (

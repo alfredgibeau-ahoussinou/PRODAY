@@ -71,11 +71,13 @@ export function PresidentDashboardScreen() {
           />
           <View style={styles.heroDeckHeader}>
             <View style={styles.heroDeckCopy}>
-              <PresidentText variant="label" champagne>
+              <PresidentText variant="label" champagne numberOfLines={1}>
                 Tableau de bord
               </PresidentText>
-              <PresidentText variant="h2">Santé & direction</PresidentText>
-              <PresidentText variant="caption" muted>
+              <PresidentText variant="h2" numberOfLines={1}>
+                Santé & direction
+              </PresidentText>
+              <PresidentText variant="caption" muted numberOfLines={2}>
                 Touchez un axe pour ouvrir la section correspondante.
               </PresidentText>
             </View>
@@ -115,8 +117,10 @@ export function PresidentDashboardScreen() {
           <View style={styles.decision}>
             <View style={styles.decisionHead}>
               <PresidentBrandMark compact />
-              <PresidentText variant="h2">Centre de décision</PresidentText>
-              <PresidentText variant="caption" muted>
+              <PresidentText variant="h2" numberOfLines={1}>
+                Centre de décision
+              </PresidentText>
+              <PresidentText variant="caption" muted numberOfLines={2}>
                 Priorités heuristiques pour la direction.
               </PresidentText>
             </View>
@@ -131,7 +135,7 @@ export function PresidentDashboardScreen() {
                       {i + 1}
                     </PresidentText>
                   </View>
-                  <PresidentText variant="body" style={{ flex: 1 }}>
+                  <PresidentText variant="body" style={{ flex: 1, minWidth: 0 }}>
                     {line}
                   </PresidentText>
                 </View>
@@ -220,10 +224,8 @@ function KpiPill({
   return (
     <View
       style={{
-        minWidth: 76,
-        flexGrow: 1,
-        flexBasis: 76,
-        maxWidth: 120,
+        flex: 1,
+        minWidth: 0,
         paddingHorizontal: presidentSpace.md,
         paddingVertical: presidentSpace.sm,
         borderRadius: presidentRadius.md,
@@ -236,6 +238,7 @@ function KpiPill({
       <PresidentText
         variant="statSm"
         style={{ color: accent ? tokens.champagneBright : tokens.foreground }}
+        numberOfLines={1}
       >
         {value}
       </PresidentText>
@@ -263,7 +266,7 @@ function createStyles(tokens: PresidentThemeTokens, tablet: boolean) {
       flexDirection: tablet ? 'row' : 'column',
       alignItems: tablet ? 'flex-start' : 'stretch',
       justifyContent: 'space-between',
-      gap: presidentSpace.md,
+      gap: presidentLayout.stackGap,
     },
     heroDeckCopy: {
       gap: 4,
@@ -273,13 +276,14 @@ function createStyles(tokens: PresidentThemeTokens, tablet: boolean) {
     },
     kpiCluster: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: presidentSpace.sm,
-      alignSelf: tablet ? 'flex-start' : 'stretch',
+      flexWrap: 'nowrap',
+      gap: presidentLayout.gridGap,
+      alignSelf: 'stretch',
+      width: tablet ? 280 : '100%',
       maxWidth: tablet ? 280 : undefined,
     },
     briefStrip: {
-      padding: presidentSpace.md,
+      padding: presidentLayout.cardPad,
       borderRadius: presidentRadius.md,
       borderWidth: 1,
       borderColor: tokens.hairline,
@@ -296,12 +300,12 @@ function createStyles(tokens: PresidentThemeTokens, tablet: boolean) {
       overflow: 'hidden',
       ...presidentShadow.deep,
     },
-    decisionHead: { gap: 6 },
+    decisionHead: { gap: 6, minWidth: 0 },
     insightList: { gap: presidentSpace.sm },
     insightRow: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: presidentSpace.md,
+      gap: presidentLayout.gridGap,
       paddingVertical: presidentSpace.sm,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: tokens.hairline,
@@ -314,11 +318,12 @@ function createStyles(tokens: PresidentThemeTokens, tablet: boolean) {
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: 2,
+      flexShrink: 0,
     },
     aiCta: {
       marginTop: presidentSpace.sm,
       paddingVertical: presidentSpace.md + 2,
-      paddingHorizontal: presidentSpace.lg,
+      paddingHorizontal: presidentLayout.cardPad,
       borderRadius: presidentRadius.lg,
       overflow: 'hidden',
       gap: 2,
