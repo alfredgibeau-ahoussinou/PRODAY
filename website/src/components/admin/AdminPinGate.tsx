@@ -2,7 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AdminBanner, AdminButton, AdminInput } from "@/components/admin/adminUi";
+import { AccBanner, AccButton, AccInput } from "@/components/admin/cc/AccUi";
+import { ACC_HOME } from "@/lib/adminCc/nav";
 
 export function AdminPinGate() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export function AdminPinGate() {
         setError(data.error ?? "Connexion impossible");
         return;
       }
-      router.replace(data.redirect ?? "/admin/dashboard");
+      router.replace(data.redirect ?? ACC_HOME);
       router.refresh();
     } catch {
       setError("Erreur réseau. Réessayez.");
@@ -38,33 +39,33 @@ export function AdminPinGate() {
   }
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-[#0a0a0c] px-4 py-12 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[max(3rem,env(safe-area-inset-top))]">
-      <div className="w-full max-w-sm border border-white/10 bg-[#111114] p-4">
-        <div className="mb-4 flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center bg-[var(--proday-accent)] text-[10px] font-bold text-white">
-            PD
+    <main className="acc-shell flex min-h-[100dvh] items-center justify-center bg-[var(--acc-bg,#06080f)] px-4 py-12 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[max(3rem,env(safe-area-inset-top))]">
+      <div className="w-full max-w-sm border border-[var(--acc-line,rgba(148,163,184,0.14))] bg-[var(--acc-surface,#0c1018)] p-5">
+        <div className="mb-5 flex items-center gap-2.5">
+          <span className="acc-mark flex h-9 w-9 items-center justify-center text-[10px] font-bold text-white">
+            CC
           </span>
           <div>
             <p className="text-sm font-semibold text-white">ProDay</p>
-            <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
-              Admin fondateurs
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/35">
+              Admin Control Center
             </p>
           </div>
         </div>
 
-        <h1 className="font-display text-lg font-medium tracking-[-0.02em] text-white">
-          Connexion
+        <h1 className="font-display text-xl font-medium tracking-[-0.03em] text-white">
+          Accès fondateurs
         </h1>
-        <p className="mt-1 text-xs leading-relaxed text-white/45">
-          Minicode partagé : accès console site (bêta, trafic, plateforme).
+        <p className="mt-1.5 text-xs leading-relaxed text-white/45">
+          Minicode partagé — console desktop complète (ops, commercial, finances, plateforme).
         </p>
 
-        <form onSubmit={onSubmit} className="mt-4 space-y-3">
+        <form onSubmit={onSubmit} className="mt-5 space-y-3">
           <label className="block">
             <span className="mb-1 block font-mono text-[9px] uppercase tracking-[0.14em] text-white/35">
               Minicode
             </span>
-            <AdminInput
+            <AccInput
               type="password"
               name="pin"
               autoComplete="current-password"
@@ -77,11 +78,11 @@ export function AdminPinGate() {
             />
           </label>
 
-          {error ? <AdminBanner tone="error">{error}</AdminBanner> : null}
+          {error ? <AccBanner tone="error">{error}</AccBanner> : null}
 
-          <AdminButton type="submit" variant="primary" className="w-full min-h-11" disabled={loading}>
-            {loading ? "Connexion…" : "Entrer"}
-          </AdminButton>
+          <AccButton type="submit" disabled={loading} className="w-full">
+            {loading ? "Connexion…" : "Entrer dans le Control Center"}
+          </AccButton>
         </form>
       </div>
     </main>

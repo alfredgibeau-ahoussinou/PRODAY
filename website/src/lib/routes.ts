@@ -56,38 +56,51 @@ export const ROUTES = {
   betaWaitlist: "/beta/inscription",
   /** Statut post-inscription (en attente / approuvé / refusé). */
   betaStatut: "/beta/statut",
-  /** Espace admin fondateurs (protégé par minicode). */
+  /** Espace admin fondateurs — Control Center. */
   admin: "/admin",
   adminLogin: "/admin/login",
-  adminBeta: "/admin/beta",
-  /** Tableau de suivi des visites site / app. */
-  adminVisites: "/admin/visites",
-  /** Dashboard admin principal. */
-  adminDashboard: "/admin/dashboard",
-  /** Gestion des utilisateurs. */
+  adminHome: "/admin/home",
+  /** @deprecated → /admin/ops/beta */
+  adminBeta: "/admin/ops/beta",
+  /** @deprecated → /admin/ops/visites */
+  adminVisites: "/admin/ops/visites",
+  /** @deprecated → /admin/home */
+  adminDashboard: "/admin/home",
   adminUsers: "/admin/users",
-  /** Gestion du contenu (FAQ, témoignages). */
+  adminClubs: "/admin/clubs",
+  adminCommercial: "/admin/commercial",
+  adminPricing: "/admin/commercial/pricing",
+  adminDevis: "/admin/commercial/devis",
+  adminFinances: "/admin/finances",
+  adminPlatform: "/admin/platform",
+  adminHealth: "/admin/platform/health",
+  adminAi: "/admin/ai",
+  adminProduct: "/admin/product",
+  adminFlags: "/admin/product/flags",
+  adminSecurity: "/admin/security",
+  adminSystem: "/admin/system",
+  /** @deprecated → /admin/content */
   adminContent: "/admin/content",
-  /** Analytics détaillés. */
-  adminAnalytics: "/admin/analytics",
-  /** Gestion des pôles et fonctionnalités. */
-  adminPoles: "/admin/poles",
-  /** Gestion des emails et notifications. */
-  adminEmails: "/admin/emails",
-  /** Logs et audit trail. */
-  adminLogs: "/admin/logs",
-  /** Retours beta-testeurs. */
-  adminFeedback: "/admin/feedback",
-  /** Abonnements Pro (RevenueCat / stores). */
-  adminSubscriptions: "/admin/subscriptions",
-  /** Rôles et permissions. */
-  adminRoles: "/admin/roles",
-  /** Modération et signalements. */
-  adminReports: "/admin/reports",
-  /** Parrainage. */
-  adminReferrals: "/admin/referrals",
-  /** Paramètres admin. */
-  adminSettings: "/admin/settings",
+  /** @deprecated → /admin/ops/analytics */
+  adminAnalytics: "/admin/ops/analytics",
+  /** @deprecated → /admin/product */
+  adminPoles: "/admin/product",
+  /** @deprecated → /admin/communication */
+  adminEmails: "/admin/communication",
+  /** @deprecated → /admin/security/audit */
+  adminLogs: "/admin/security/audit",
+  /** @deprecated → /admin/ops/feedback */
+  adminFeedback: "/admin/ops/feedback",
+  /** @deprecated → /admin/finances/subscriptions */
+  adminSubscriptions: "/admin/finances/subscriptions",
+  /** @deprecated → /admin/security */
+  adminRoles: "/admin/security",
+  /** @deprecated → /admin/security/reports */
+  adminReports: "/admin/security/reports",
+  /** @deprecated → /admin/ops/referrals */
+  adminReferrals: "/admin/ops/referrals",
+  /** @deprecated → /admin/system */
+  adminSettings: "/admin/system",
   about: "/a-propos",
   vision: "/vision",
   pricing: "/tarifs",

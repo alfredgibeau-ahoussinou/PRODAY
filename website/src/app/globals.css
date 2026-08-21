@@ -391,6 +391,30 @@ a, button, [role="button"], summary, label[for] {
   --sponsor-surface: #070605;
 }
 
+/* ── Admin Control Center (identité dédiée, pas SaaS violet) ── */
+.acc-shell,
+.admin-shell.acc-shell {
+  --acc-bg: #06080f;
+  --acc-surface: #0c1018;
+  --acc-surface-2: #10151f;
+  --acc-line: rgba(148, 163, 184, 0.14);
+  --acc-mute: rgba(148, 163, 184, 0.45);
+  --acc-accent-soft: rgba(0, 84, 240, 0.18);
+  --acc-steel: #9db7ff;
+  background-color: var(--acc-bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(0, 84, 240, 0.09), transparent 55%),
+    linear-gradient(180deg, #06080f 0%, #080b14 100%);
+}
+
+.acc-mark {
+  background: linear-gradient(145deg, #001f6b 0%, #0054f0 55%, #4c8bff 100%);
+}
+
+.acc-panel {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
 body.admin-nav-lock {
   overflow: hidden;
   touch-action: none;

@@ -1,36 +1,46 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import {
   ADMIN_LOGIN_PATH,
   getAdminSessionFromCookies,
 } from "@/lib/adminSession";
-import { AdminUsers } from "@/components/admin/AdminUsers";
-import { fetchAdminPlatformStats } from "@/lib/adminPlatformApi";
+import { AccUsersPanel } from "@/components/admin/cc/AccUsersPanel";
+import { loadAccOverview } from "@/lib/adminCc/loadOverview";
 
 export const metadata: Metadata = {
-  title: "Gestion Utilisateurs : ProDay",
+  title: "Utilisateurs · ProDay Admin",
   robots: { index: false, follow: false },
 };
 
-export default async function AdminUsersPage() {
+export default async function AccUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string }>;
+}) {
   const ok = await getAdminSessionFromCookies();
-  if (!ok) {
-    redirect(ADMIN_LOGIN_PATH);
-  }
-
-  const result = await fetchAdminPlatformStats();
+  if (!ok) redirect(ADMIN_LOGIN_PATH);
+  const sp = await searchParams;
+  const ov = await loadAccOverview();
+  const users = ov.platform.data.users;
 
   return (
-    <AdminUsers
-      users={result.data.users.items}
-      totals={{
-        total: result.data.users.total,
-        active: result.data.users.active,
-        inactive: result.data.users.inactive,
-      }}
-      byRole={result.data.users.by_role}
-      truncated={result.data.truncated}
-      error={result.ok ? null : (result.error ?? "Chargement impossible")}
-    />
+    <Suspense fallback={<div className="p-6 text-sm text-white/40">Chargement…</div>}>
+      <AccUsersPanel
+        users={users.items}
+        totals={{
+          total: users.total,
+          active: users.active,
+          inactive: users.inactive,
+        }}
+        byRole={users.by_role}
+        truncated={ov.platform.data.truncated}
+        error={ov.platform.ok ? null : (ov.platform.error ?? "Chargement impossible")}
+        badges={ov.badges}
+        healthScore={ov.health.score}
+        healthLabel={ov.health.label}
+        initialRole={sp.role || "all"}
+      />
+    </Suspense>
   );
 }
