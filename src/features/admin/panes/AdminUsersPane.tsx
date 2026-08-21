@@ -16,10 +16,11 @@ import {
   AdminCard,
   AdminEmptyState,
   AdminLoading,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
 import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
 import { useAdminSelection } from '../utils/useAdminSelection';
@@ -147,10 +148,10 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <AdminText variant="h1">Utilisateurs</AdminText>
-        <AdminText variant="caption" color={t.muted}>
-          {data.users.length} comptes · édition · bulk · CSV
-        </AdminText>
+        <AdminPaneHeader
+          title="Utilisateurs"
+          subtitle={`${data.users.length} comptes · édition · bulk · CSV`}
+        />
         <TextInput
           value={q}
           onChangeText={setQ}
@@ -158,7 +159,7 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
           placeholderTextColor={t.faint}
           style={[
             styles.input,
-            { color: t.foreground, borderColor: t.border, backgroundColor: t.surface },
+            { color: t.foreground, borderColor: t.border, backgroundColor: t.surfaceGlass },
           ]}
         />
         <View style={styles.chips}>
@@ -307,7 +308,7 @@ function Chip({
         },
       ]}
     >
-      <AdminText variant="caption" color={active ? t.accentHot : t.muted}>
+      <AdminText variant="caption" color={active ? t.champagneBright : t.muted}>
         {label}
       </AdminText>
     </Pressable>

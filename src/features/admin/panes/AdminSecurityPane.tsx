@@ -5,10 +5,11 @@ import {
   AdminCard,
   AdminEmptyState,
   AdminLoading,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { adminAuditService, type AdminAuditEntry } from '../../../services/adminAudit.service';
 import { useAdminData } from '../data/AdminDataContext';
 
@@ -29,10 +30,7 @@ export function AdminSecurityPane() {
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
-      <AdminText variant="h1">Sécurité & audit</AdminText>
-      <AdminText variant="caption" color={t.muted}>
-        Journal des actions critiques · claim Firebase admin requis
-      </AdminText>
+      <AdminPaneHeader title="Sécurité & audit" subtitle="Journal & anomalies" />
       <AdminCard>
         <AdminText variant="h2">Signalements ouverts</AdminText>
         <AdminBadge label={String(data.reelReports.length)} tone={data.reelReports.length ? 'warn' : 'success'} />

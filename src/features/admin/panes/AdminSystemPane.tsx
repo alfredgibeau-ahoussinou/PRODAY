@@ -5,10 +5,11 @@ import {
   AdminButton,
   AdminCard,
   AdminLoading,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { adminService } from '../../../services/admin.service';
 import type { PlatformConfig } from '../../../models/PlatformConfig';
 import { useAuth } from '../../../context/AuthContext';
@@ -85,10 +86,10 @@ export function AdminSystemPane({ onPreviewUserApp }: { onPreviewUserApp: () => 
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
-      <AdminText variant="h1">Système</AdminText>
-      <AdminText variant="caption" color={t.muted}>
-        Config globale · RBAC UI · impersonation · site fondateurs
-      </AdminText>
+      <AdminPaneHeader
+        title="Système"
+        subtitle="Config globale · RBAC UI · impersonation · site fondateurs"
+      />
 
       <AdminCard>
         <AdminText variant="h2">Session</AdminText>
@@ -173,7 +174,11 @@ export function AdminSystemPane({ onPreviewUserApp }: { onPreviewUserApp: () => 
 }
 
 const styles = StyleSheet.create({
-  content: { padding: adminSpace.lg, gap: adminSpace.lg, paddingBottom: 48 },
+  content: {
+    padding: adminLayout.pageGutter,
+    gap: adminLayout.sectionGap,
+    paddingBottom: adminLayout.dockClearance,
+  },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   switchRow: {
     flexDirection: 'row',
@@ -184,10 +189,10 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: adminRadius.md,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 14,
+    fontSize: 15,
     minHeight: 72,
     marginBottom: 8,
   },

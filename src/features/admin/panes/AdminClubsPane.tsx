@@ -16,10 +16,11 @@ import {
   AdminCard,
   AdminEmptyState,
   AdminLoading,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
 import type { Club } from '../../../models/Club';
@@ -123,10 +124,10 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <AdminText variant="h1">Clubs</AdminText>
-        <AdminText variant="caption" color={t.muted}>
-          {data.clubs.length} clubs · dossier · bulk · CSV
-        </AdminText>
+        <AdminPaneHeader
+          title="Clubs"
+          subtitle={`${data.clubs.length} clubs · dossier · bulk · CSV`}
+        />
         <TextInput
           value={q}
           onChangeText={setQ}
@@ -134,7 +135,7 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
           placeholderTextColor={t.faint}
           style={[
             styles.input,
-            { color: t.foreground, borderColor: t.border, backgroundColor: t.surface },
+            { color: t.foreground, borderColor: t.border, backgroundColor: t.surfaceGlass },
           ]}
         />
         <View style={styles.chips}>
@@ -154,11 +155,14 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
                 styles.chip,
                 {
                   backgroundColor: filter === id ? t.accentSoft : t.surfaceRaised,
-                  borderColor: filter === id ? t.accent : t.border,
+                  borderColor: filter === id ? t.borderStrong : t.border,
                 },
               ]}
             >
-              <AdminText variant="caption" color={filter === id ? t.accentHot : t.muted}>
+              <AdminText
+                variant="caption"
+                color={filter === id ? t.champagneBright : t.muted}
+              >
                 {label}
               </AdminText>
             </Pressable>

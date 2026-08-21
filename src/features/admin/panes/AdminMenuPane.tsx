@@ -5,9 +5,9 @@ import {
   ADMIN_NAV_ITEMS,
   type AdminNavSectionId,
 } from '../navigation/adminNavConfig';
-import { AdminText } from '../ui/adminUi';
+import { AdminPaneHeader, AdminText } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { Icon } from '../../../components/ui/Icon';
 
 type Props = { onNavigate: (section: AdminNavSectionId) => void };
@@ -18,21 +18,18 @@ export function AdminMenuPane({ onNavigate }: Props) {
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
-      <AdminText variant="h1">Menu</AdminText>
-      <AdminText variant="caption" color={t.muted}>
-        Domaines supplémentaires
-      </AdminText>
+      <AdminPaneHeader title="Menu" subtitle="Domaines supplémentaires" />
       {items.map((item) => (
         <Pressable
           key={item.id}
           onPress={() => onNavigate(item.id)}
           style={[styles.row, { borderColor: t.border, backgroundColor: t.surface }]}
         >
-          <Icon name={item.icon} size={18} color={t.accentHot} />
+          <Icon name={item.icon} size={18} color={t.accent} />
           <View style={{ flex: 1 }}>
             <AdminText variant="h3">{item.label}</AdminText>
             {item.hint ? (
-              <AdminText variant="caption" color={t.muted}>
+              <AdminText variant="caption" muted>
                 {item.hint}
               </AdminText>
             ) : null}
@@ -44,13 +41,18 @@ export function AdminMenuPane({ onNavigate }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: adminSpace.lg, gap: adminSpace.sm, paddingBottom: 48 },
+  content: {
+    padding: adminLayout.pageGutter,
+    gap: adminLayout.stackGap,
+    paddingBottom: adminLayout.dockClearance,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 14,
-    borderRadius: 14,
+    padding: adminSpace.lg,
+    borderRadius: adminRadius.lg,
     borderWidth: 1,
+    minHeight: adminLayout.listRowMinHeight,
   },
 });

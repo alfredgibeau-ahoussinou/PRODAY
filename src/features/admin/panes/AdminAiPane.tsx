@@ -6,10 +6,11 @@ import {
   AdminButton,
   AdminCard,
   AdminLoading,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
 import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { adminService } from '../../../services/admin.service';
@@ -216,10 +217,10 @@ export function AdminAiPane({ onNavigate }: Props) {
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
-      <AdminText variant="h1">ProDay Admin AI</AdminText>
-      <AdminText variant="caption" color={t.muted}>
-        Insights live · actions préparées + confirmation (pas de provider LLM externe)
-      </AdminText>
+      <AdminPaneHeader
+        title="ProDay Admin AI"
+        subtitle="Insights live · actions préparées + confirmation"
+      />
 
       <View style={styles.agents}>
         {AGENTS.map((a) => (
@@ -229,12 +230,15 @@ export function AdminAiPane({ onNavigate }: Props) {
             style={[
               styles.agent,
               {
-                borderColor: agent === a.id ? t.accent : t.border,
+                borderColor: agent === a.id ? t.borderStrong : t.border,
                 backgroundColor: agent === a.id ? t.accentSoft : t.surface,
               },
             ]}
           >
-            <AdminText variant="caption" color={agent === a.id ? t.accentHot : t.muted}>
+            <AdminText
+              variant="caption"
+              color={agent === a.id ? t.champagneBright : t.muted}
+            >
               {a.label}
             </AdminText>
           </Pressable>
@@ -323,25 +327,29 @@ export function AdminAiPane({ onNavigate }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: adminSpace.lg, gap: adminSpace.lg, paddingBottom: 48 },
+  content: {
+    padding: adminLayout.pageGutter,
+    gap: adminLayout.sectionGap,
+    paddingBottom: adminLayout.dockClearance,
+  },
   agents: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   agent: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: adminRadius.md,
     borderWidth: 1,
   },
   insight: {
     gap: 6,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: adminRadius.md,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
+    paddingVertical: 11,
+    fontSize: 15,
     marginTop: 8,
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
@@ -349,7 +357,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    minHeight: adminLayout.listRowMinHeight,
   },
 });

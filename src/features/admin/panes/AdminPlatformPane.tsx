@@ -6,10 +6,11 @@ import {
   AdminCard,
   AdminLoading,
   AdminMetric,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 
 export function AdminPlatformPane() {
   const data = useAdminData();
@@ -32,10 +33,7 @@ export function AdminPlatformPane() {
         />
       }
     >
-      <AdminText variant="h1">Plateforme</AdminText>
-      <AdminText variant="caption" color={t.muted}>
-        Santé système, activité, trafic
-      </AdminText>
+      <AdminPaneHeader title="Plateforme" subtitle="Santé système, activité, trafic" />
 
       <AdminCard>
         <View style={styles.health}>
@@ -75,7 +73,7 @@ export function AdminPlatformPane() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: adminSpace.lg, gap: adminSpace.lg, paddingBottom: 48 },
+  content: { padding: adminLayout.pageGutter, gap: adminLayout.sectionGap, paddingBottom: adminLayout.dockClearance },
   health: { flexDirection: 'row', gap: adminSpace.lg, alignItems: 'center' },
   metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: adminSpace.sm },
 });

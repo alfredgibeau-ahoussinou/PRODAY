@@ -11,13 +11,18 @@ import { useAdminData } from '../data/AdminDataContext';
 import { useAuth } from '../../../context/AuthContext';
 import {
   AdminBadge,
+  AdminBrandMark,
   AdminCard,
   AdminLoading,
   AdminMetric,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import {
+  adminLayout,
+  adminRadius,
+  adminSpace,
+} from '../theme/adminDesignSystem';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
 import { countWorkByKind } from '../../../utils/adminInsights';
 import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
@@ -32,15 +37,18 @@ export function AdminDashboardPane({ onNavigate }: Props) {
   const t = ADMIN_TOKENS;
   const byKind = useMemo(() => countWorkByKind(data.workQueue), [data.workQueue]);
 
-  if (data.loading) return <AdminLoading label="Chargement du centre de commande…" />;
+  if (data.loading) return <AdminLoading label="Préparation du centre de commande…" />;
 
-  const paidUsers = data.users.filter((u) => u.subscription_tier && u.subscription_tier !== 'free').length;
+  const paidUsers = data.users.filter(
+    (u) => u.subscription_tier && u.subscription_tier !== 'free',
+  ).length;
   const pendingQuotes = data.clubQuoteRequests.filter((q) => q.status === 'pending').length;
 
   return (
     <ScrollView
       style={styles.root}
       contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={data.refreshing}
@@ -49,73 +57,110 @@ export function AdminDashboardPane({ onNavigate }: Props) {
         />
       }
     >
-      <LinearGradient
-        colors={['rgba(59,130,246,0.18)', 'transparent']}
-        style={styles.heroGlow}
-        pointerEvents="none"
-      />
-
       <View style={styles.hero}>
-        <AdminText variant="label" color={t.accentHot}>
+        <LinearGradient
+          colors={[
+            'rgba(212,184,128,0.28)',
+            'rgba(14,21,36,0.55)',
+            'rgba(5,7,14,0.92)',
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.heroTop}>
+          <AdminBrandMark />
+          <AdminBadge label="Directif" tone="accent" />
+        </View>
+        <AdminText variant="label" champagne>
           ProDay · maintenant
         </AdminText>
-        <AdminText variant="display">
+        <AdminText variant="display" numberOfLines={2}>
           Bonjour{profile?.display_name ? `, ${profile.display_name.split(' ')[0]}` : ''}
         </AdminText>
-        <AdminText variant="body" color={t.muted}>
-          Centre de contrôle de toute la plateforme. Surveillez, décidez, agissez.
+        <AdminText variant="body" muted style={{ maxWidth: 440 }}>
+          Centre de contrôle exécutif. Surveillez, décidez, agissez.
         </AdminText>
       </View>
 
-      <Pressable onPress={() => onNavigate('plateforme')} style={styles.healthHit}>
-        <AdminCard style={styles.healthCard}>
+      <Pressable onPress={() => onNavigate('plateforme')}>
+        <AdminCard hero>
           <View style={styles.healthRow}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <AdminText variant="label" color={t.faint}>
+            <View style={{ flex: 1, gap: 6 }}>
+              <AdminText variant="label" muted>
                 ProDay Health
               </AdminText>
-              <AdminText variant="stat" color={
-                data.health.score >= 75 ? t.healthGood : data.health.score >= 55 ? t.healthMid : t.healthBad
-              }>
+              <AdminText
+                variant="stat"
+                color={
+                  data.health.score >= 75
+                    ? t.healthGood
+                    : data.health.score >= 55
+                      ? t.healthMid
+                      : t.healthBad
+                }
+              >
                 {data.health.score}%
               </AdminText>
-              <AdminText variant="caption" color={t.muted}>
-                {data.health.label} · appuyer pour diagnostic
+              <AdminText variant="caption" muted>
+                {data.health.label} · diagnostic plateforme
               </AdminText>
             </View>
             <AdminBadge
               label={`${data.workQueue.length} actions`}
-              tone={data.workQueue.length > 8 ? 'danger' : data.workQueue.length > 0 ? 'warn' : 'success'}
+              tone={
+                data.workQueue.length > 8
+                  ? 'danger'
+                  : data.workQueue.length > 0
+                    ? 'warn'
+                    : 'success'
+              }
             />
           </View>
         </AdminCard>
       </Pressable>
 
       <View style={styles.metrics}>
-        <AdminMetric label="Utilisateurs" value={data.stats?.users ?? 0} hint={`${paidUsers} payants`} />
-        <AdminMetric label="Clubs" value={data.stats?.clubs ?? 0} hint={`${data.clubs.filter((c) => c.verified).length} vérifiés`} />
+        <AdminMetric
+          label="Utilisateurs"
+          value={data.stats?.users ?? 0}
+          hint={`${paidUsers} payants`}
+        />
+        <AdminMetric
+          label="Clubs"
+          value={data.stats?.clubs ?? 0}
+          hint={`${data.clubs.filter((c) => c.verified).length} vérifiés`}
+        />
         <AdminMetric label="Coachs" value={data.stats?.coaches ?? 0} />
         <AdminMetric label="Joueurs" value={data.stats?.players ?? 0} />
       </View>
 
       <AdminCard>
         <AdminText variant="h2">Action required</AdminText>
-        <AdminText variant="caption" color={t.muted}>
-          Éléments actionnables — branchement données réelles
+        <AdminText variant="caption" muted>
+          File actionnable — données live
         </AdminText>
         <View style={styles.actionGrid}>
           {[
-            { label: 'Devis clubs', n: byKind.club_quote || pendingQuotes, section: 'commercial' as const },
+            {
+              label: 'Devis clubs',
+              n: byKind.club_quote || pendingQuotes,
+              section: 'commercial' as const,
+            },
             { label: 'Vérifications', n: byKind.verification, section: 'utilisateurs' as const },
             { label: 'Paiements', n: byKind.payment, section: 'finances' as const },
             { label: 'Adhésions', n: byKind.membership, section: 'clubs' as const },
-            { label: 'Demandes abo', n: byKind.subscription_request, section: 'finances' as const },
+            {
+              label: 'Demandes abo',
+              n: byKind.subscription_request,
+              section: 'finances' as const,
+            },
             { label: 'Signalements', n: byKind.report, section: 'securite' as const },
           ].map((row) => (
             <Pressable
               key={row.label}
               onPress={() => onNavigate(row.section)}
-              style={[styles.actionRow, { borderColor: t.border }]}
+              style={[styles.actionRow, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
             >
               <AdminText variant="h3">{row.label}</AdminText>
               <AdminBadge label={String(row.n)} tone={row.n > 0 ? 'warn' : 'success'} />
@@ -127,7 +172,7 @@ export function AdminDashboardPane({ onNavigate }: Props) {
       <AdminCard>
         <AdminText variant="h2">File prioritaire</AdminText>
         {data.workQueue.length === 0 ? (
-          <AdminText variant="body" color={t.muted}>
+          <AdminText variant="body" muted>
             Aucune action critique. La plateforme est calme.
           </AdminText>
         ) : (
@@ -139,7 +184,7 @@ export function AdminDashboardPane({ onNavigate }: Props) {
             >
               <View style={{ flex: 1, gap: 2 }}>
                 <AdminText variant="h3">{item.title}</AdminText>
-                <AdminText variant="caption" color={t.muted} numberOfLines={1}>
+                <AdminText variant="caption" muted numberOfLines={1}>
                   {item.subtitle}
                 </AdminText>
               </View>
@@ -162,9 +207,19 @@ export function AdminDashboardPane({ onNavigate }: Props) {
         <AdminText variant="h2">Répartition des rôles</AdminText>
         <View style={styles.roleWrap}>
           {data.roleBreakdown.slice(0, 6).map((r) => (
-            <View key={r.role} style={[styles.roleChip, { backgroundColor: t.surfaceRaised }]}>
-              <AdminText variant="caption">{getRoleLabel(r.role)}</AdminText>
-              <AdminText variant="h3">{r.count}</AdminText>
+            <View
+              key={r.role}
+              style={[
+                styles.roleChip,
+                { backgroundColor: t.surfaceRaised, borderColor: t.border },
+              ]}
+            >
+              <AdminText variant="caption" muted>
+                {getRoleLabel(r.role)}
+              </AdminText>
+              <AdminText variant="h3" champagne>
+                {r.count}
+              </AdminText>
             </View>
           ))}
         </View>
@@ -175,36 +230,54 @@ export function AdminDashboardPane({ onNavigate }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { padding: adminSpace.lg, gap: adminSpace.lg, paddingBottom: 48 },
-  heroGlow: { position: 'absolute', top: 0, left: 0, right: 0, height: 180 },
-  hero: { gap: 6, marginBottom: 4 },
-  healthHit: { borderRadius: 16 },
-  healthCard: { paddingVertical: adminSpace.xl },
+  content: {
+    padding: adminLayout.pageGutter,
+    gap: adminLayout.sectionGap,
+    paddingBottom: adminLayout.dockClearance,
+  },
+  hero: {
+    borderRadius: adminRadius.hero,
+    overflow: 'hidden',
+    padding: adminLayout.heroPad,
+    gap: adminSpace.sm,
+    borderWidth: 1,
+    borderColor: ADMIN_TOKENS.borderLuxury,
+    minHeight: 168,
+  },
+  heroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
   healthRow: { flexDirection: 'row', alignItems: 'center', gap: adminSpace.md },
-  metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: adminSpace.sm },
+  metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: adminLayout.gridGap },
   actionGrid: { gap: adminSpace.sm, marginTop: adminSpace.sm },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: adminRadius.md,
+    minHeight: adminLayout.listRowMinHeight,
   },
   queueItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    minHeight: adminLayout.listRowMinHeight,
   },
-  roleWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  roleWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   roleChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    minWidth: 88,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: adminRadius.sm,
+    minWidth: 92,
     gap: 2,
+    borderWidth: 1,
   },
 });

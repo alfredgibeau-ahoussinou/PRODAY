@@ -14,10 +14,11 @@ import {
   AdminCard,
   AdminEmptyState,
   AdminLoading,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import {
   clubQuoteService,
   computeClubQuoteTotal,
@@ -214,7 +215,7 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
             <Field label="Remise %" value={discount} onChange={setDiscount} t={t} />
             <Field label="Options €" value={optionsEur} onChange={setOptionsEur} t={t} />
             <Field label="Note options" value={optionsNote} onChange={setOptionsNote} t={t} multiline />
-            <AdminText variant="statSm" color={t.accentHot}>
+            <AdminText variant="statSm" champagne>
               Total {totalPreview} €
             </AdminText>
             <AdminButton
@@ -289,11 +290,10 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <AdminText variant="h1">Commercial</AdminText>
-        <AdminText variant="caption" color={t.muted}>
-          CRM devis clubs · {sponsorPending} devis sponsors · refresh{' '}
-          {autoRefresh ? '60s' : 'manuel'}
-        </AdminText>
+        <AdminPaneHeader
+          title="Commercial"
+          subtitle={`CRM devis · ${sponsorPending} sponsors · refresh ${autoRefresh ? '60s' : 'manuel'}`}
+        />
         <View style={styles.toolbar}>
           <AdminButton
             label={data.refreshing ? '…' : 'Rafraîchir'}
@@ -348,7 +348,7 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
                 },
               ]}
             >
-              <AdminText variant="caption" color={filter === id ? t.accentHot : t.muted}>
+              <AdminText variant="caption" color={filter === id ? t.champagneBright : t.muted}>
                 {label}
               </AdminText>
             </Pressable>

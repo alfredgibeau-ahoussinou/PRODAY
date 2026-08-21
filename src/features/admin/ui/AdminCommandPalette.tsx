@@ -7,9 +7,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { AdminText } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminRadius, adminShadow, adminSpace } from '../theme/adminDesignSystem';
 import {
   resolveAdminCommandItems,
   type AdminNavSectionId,
@@ -17,6 +16,7 @@ import {
 import { globalAdminSearch } from '../../../utils/adminInsights';
 import { useAdminData } from '../data/AdminDataContext';
 import { Icon } from '../../../components/ui/Icon';
+import { AdminBrandMark, AdminText } from '../ui/adminUi';
 
 type Props = {
   open: boolean;
@@ -58,7 +58,10 @@ export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
       <Pressable style={styles.scrim} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.searchRow}>
-            <Icon name="search" size={18} color={t.muted} />
+            <AdminBrandMark compact />
+          </View>
+          <View style={styles.searchRow}>
+            <Icon name="search" size={18} color={t.accent} />
             <TextInput
               autoFocus
               value={q}
@@ -132,10 +135,11 @@ const styles = StyleSheet.create({
   sheet: {
     maxHeight: '70%',
     backgroundColor: ADMIN_TOKENS.surfaceRaised,
-    borderRadius: 16,
+    borderRadius: adminRadius.xl,
     borderWidth: 1,
-    borderColor: ADMIN_TOKENS.borderStrong,
+    borderColor: ADMIN_TOKENS.borderLuxury,
     overflow: 'hidden',
+    ...adminShadow.deep,
   },
   searchRow: {
     flexDirection: 'row',
@@ -143,14 +147,15 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: adminSpace.lg,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: ADMIN_TOKENS.border,
-  },
-  input: { flex: 1, fontSize: 16, paddingVertical: 4 },
-  row: {
-    paddingHorizontal: adminSpace.lg,
-    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: ADMIN_TOKENS.hairline,
+  },
+  input: { flex: 1, fontSize: 15, paddingVertical: 4 },
+  row: {
+    paddingHorizontal: adminSpace.lg,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: ADMIN_TOKENS.hairline,
+    minHeight: 52,
   },
 });

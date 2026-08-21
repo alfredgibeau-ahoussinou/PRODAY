@@ -27,15 +27,15 @@ export const AdminGateScreen: React.FC = () => {
   return (
     <View style={styles.root} testID="admin-gate">
       <LinearGradient
-        colors={['rgba(59,130,246,0.22)', 'transparent']}
+        colors={['rgba(212,184,128,0.22)', 'transparent']}
         style={StyleSheet.absoluteFillObject}
         pointerEvents="none"
       />
       <AdminBrandMark />
-      <AdminText variant="display">
+      <AdminText variant="display" style={{ textAlign: 'center' }}>
         {needsSetup ? 'Configuration requise' : 'Accès refusé'}
       </AdminText>
-      <AdminText variant="body" color={t.muted} style={{ maxWidth: 420, textAlign: 'center' }}>
+      <AdminText variant="body" muted style={{ maxWidth: 420, textAlign: 'center' }}>
         {needsSetup
           ? `Votre compte (${PLATFORM_ADMIN_EMAIL}) est reconnu, mais le jeton Firebase n’a pas encore le droit administrateur. Exécutez npm run admin:setup, puis reconnectez-vous.`
           : `Connectez-vous avec le compte administrateur (${PLATFORM_ADMIN_EMAIL}).`}

@@ -5,10 +5,11 @@ import {
   AdminButton,
   AdminCard,
   AdminLoading,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { CLUB_OFFERS } from '../../../content/clubOffers';
 import {
   DEFAULT_CLUB_PRICING,
@@ -120,10 +121,7 @@ export function AdminProductPane() {
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
-      <AdminText variant="h1">Produit</AdminText>
-      <AdminText variant="caption" color={t.muted}>
-        Feature flags + tarification — source platform_config
-      </AdminText>
+      <AdminPaneHeader title="Produit" subtitle="Feature flags & tarifs clubs" />
 
       <AdminCard>
         <AdminText variant="h2">Tarification adhérent (€)</AdminText>

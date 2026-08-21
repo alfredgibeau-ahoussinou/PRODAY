@@ -7,10 +7,11 @@ import {
   AdminCard,
   AdminLoading,
   AdminMetric,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { adminService } from '../../../services/admin.service';
 import { subscriptionUpgradeRequestService } from '../../../services/subscriptionUpgradeRequest.service';
 import { confirmAdminAction } from '../utils/confirmAdminAction';
@@ -71,10 +72,7 @@ export function AdminFinancePane() {
         />
       }
     >
-      <AdminText variant="h1">Finances</AdminText>
-      <AdminText variant="caption" color={t.muted}>
-        Actions réelles : paiements, demandes d’abo, abonnés
-      </AdminText>
+      <AdminPaneHeader title="Finances" subtitle="MRR, paiements, demandes d’abonnement" />
 
       <View style={styles.metrics}>
         <AdminMetric

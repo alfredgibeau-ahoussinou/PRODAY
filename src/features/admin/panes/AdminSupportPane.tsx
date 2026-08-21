@@ -7,10 +7,11 @@ import {
   AdminCard,
   AdminEmptyState,
   AdminLoading,
+  AdminPaneHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminSpace } from '../theme/adminDesignSystem';
+import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
 import {
   adminWorkItemNeedsOpenToTreat,
@@ -97,32 +98,34 @@ export function AdminSupportPane({ onNavigate }: Props) {
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
-      <AdminText variant="h1">Support</AdminText>
-      <AdminText variant="caption" color={t.muted}>
-        File enrichie (kinds) · refresh {autoRefresh ? '45s' : 'manuel'} · pas de modèle ticket dédié
-      </AdminText>
+      <AdminPaneHeader
+        title="Support"
+        subtitle={`File enrichie · refresh ${autoRefresh ? '45s' : 'manuel'}`}
+        right={
+          <View style={styles.toolbar}>
+            <AdminButton
+              label={data.refreshing ? '…' : 'Rafraîchir'}
+              variant="soft"
+              onPress={() => void data.refresh()}
+            />
+            <AdminButton
+              label={autoRefresh ? 'Auto ON' : 'Auto OFF'}
+              variant={autoRefresh ? 'primary' : 'ghost'}
+              onPress={() => setAutoRefresh((v) => !v)}
+            />
+          </View>
+        }
+      />
 
-      <View style={styles.toolbar}>
-        <AdminButton
-          label={data.refreshing ? '…' : 'Rafraîchir'}
-          variant="soft"
-          onPress={() => void data.refresh()}
+      {data.lastRefreshedAt ? (
+        <AdminBadge
+          label={`Maj ${data.lastRefreshedAt.toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}`}
+          tone="info"
         />
-        <AdminButton
-          label={autoRefresh ? 'Auto ON' : 'Auto OFF'}
-          variant={autoRefresh ? 'primary' : 'ghost'}
-          onPress={() => setAutoRefresh((v) => !v)}
-        />
-        {data.lastRefreshedAt ? (
-          <AdminBadge
-            label={`Maj ${data.lastRefreshedAt.toLocaleTimeString('fr-FR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`}
-            tone="info"
-          />
-        ) : null}
-      </View>
+      ) : null}
 
       <View style={styles.chips}>
         {KIND_FILTERS.map((k) => (
@@ -133,11 +136,11 @@ export function AdminSupportPane({ onNavigate }: Props) {
               styles.chip,
               {
                 backgroundColor: kind === k ? t.accentSoft : t.surfaceRaised,
-                borderColor: kind === k ? t.accent : t.border,
+                borderColor: kind === k ? t.borderStrong : t.border,
               },
             ]}
           >
-            <AdminText variant="caption" color={kind === k ? t.accentHot : t.muted}>
+            <AdminText variant="caption" color={kind === k ? t.champagneBright : t.muted}>
               {k}
             </AdminText>
           </Pressable>
@@ -190,21 +193,26 @@ export function AdminSupportPane({ onNavigate }: Props) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: adminSpace.lg, gap: adminSpace.md, paddingBottom: 48 },
+  content: {
+    padding: adminLayout.pageGutter,
+    gap: adminLayout.stackGap,
+    paddingBottom: adminLayout.dockClearance,
+  },
   toolbar: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: adminRadius.pill,
     borderWidth: 1,
   },
   row: {
     flexDirection: 'row',
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
     alignItems: 'flex-start',
+    minHeight: adminLayout.listRowMinHeight,
   },
   actions: { gap: 6, alignItems: 'flex-end' },
 });

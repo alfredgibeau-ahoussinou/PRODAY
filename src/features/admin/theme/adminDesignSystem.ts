@@ -1,5 +1,6 @@
 /**
  * Design system — ProDay Admin Control Center.
+ * Densités / typo / chrome calés sur le Pôle Président (série executive).
  */
 
 import type { TextStyle, ViewStyle } from 'react-native';
@@ -9,51 +10,58 @@ import { ADMIN_TOKENS, type AdminThemeTokens } from './adminTokens';
 export const adminType = {
   display: {
     fontFamily: fontFamily.displayBold,
-    fontSize: 34,
+    fontSize: 36,
     fontWeight: '800' as const,
-    letterSpacing: -1.2,
-    lineHeight: 40,
+    letterSpacing: -1.4,
+    lineHeight: 42,
+  },
+  displaySm: {
+    fontFamily: fontFamily.displayBold,
+    fontSize: 28,
+    fontWeight: '800' as const,
+    letterSpacing: -1,
+    lineHeight: 34,
   },
   h1: {
     fontFamily: fontFamily.extrabold,
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800' as const,
-    letterSpacing: -0.5,
-    lineHeight: 28,
+    letterSpacing: -0.6,
+    lineHeight: 30,
   },
   h2: {
     fontFamily: fontFamily.bold,
-    fontSize: 17,
+    fontSize: 19,
     fontWeight: '700' as const,
-    letterSpacing: -0.25,
-    lineHeight: 23,
+    letterSpacing: -0.35,
+    lineHeight: 25,
   },
   h3: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700' as const,
-    letterSpacing: -0.1,
-    lineHeight: 19,
+    letterSpacing: -0.15,
+    lineHeight: 21,
   },
   body: {
     fontFamily: fontFamily.regular,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '400' as const,
     letterSpacing: 0.05,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   caption: {
     fontFamily: fontFamily.semibold,
     fontSize: 12,
     fontWeight: '600' as const,
-    letterSpacing: 0.1,
+    letterSpacing: 0.12,
     lineHeight: 16,
   },
   label: {
     fontFamily: fontFamily.bold,
     fontSize: 10,
     fontWeight: '700' as const,
-    letterSpacing: 1.6,
+    letterSpacing: 1.8,
     lineHeight: 13,
     textTransform: 'uppercase' as const,
   },
@@ -61,71 +69,133 @@ export const adminType = {
     fontFamily: fontFamily.displayBold,
     fontSize: 11,
     fontWeight: '800' as const,
-    letterSpacing: 2,
+    letterSpacing: 2.2,
     lineHeight: 14,
     textTransform: 'uppercase' as const,
   },
   stat: {
     fontFamily: fontFamily.displayBold,
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: '800' as const,
-    letterSpacing: -1.4,
-    lineHeight: 40,
+    letterSpacing: -1.6,
+    lineHeight: 46,
   },
   statSm: {
     fontFamily: fontFamily.displayBold,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800' as const,
-    letterSpacing: -0.5,
-    lineHeight: 24,
+    letterSpacing: -0.6,
+    lineHeight: 26,
   },
   nav: {
     fontFamily: fontFamily.semibold,
     fontSize: 13,
     fontWeight: '600' as const,
-    letterSpacing: 0.05,
+    letterSpacing: 0.08,
     lineHeight: 18,
   },
   mono: {
     fontFamily: 'Menlo',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500' as const,
-    letterSpacing: 0,
-    lineHeight: 16,
+    letterSpacing: 0.2,
+    lineHeight: 15,
   },
 } satisfies Record<string, TextStyle>;
 
 export type AdminTypeVariant = keyof typeof adminType;
 
 export const adminSpace = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
   xl: 24,
   xxl: 32,
+  xxxl: 48,
+  hero: 56,
 } as const;
 
 export const adminRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 22,
+  xs: 6,
+  sm: 10,
+  md: 14,
+  lg: 18,
+  xl: 24,
+  xxl: 28,
+  hero: 32,
   pill: 999,
 } as const;
 
+export const adminShadow = {
+  soft: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 20,
+    elevation: 5,
+  } satisfies ViewStyle,
+  card: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.55,
+    shadowRadius: 36,
+    elevation: 10,
+  } satisfies ViewStyle,
+  deep: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 22 },
+    shadowOpacity: 0.62,
+    shadowRadius: 48,
+    elevation: 14,
+  } satisfies ViewStyle,
+  glow: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
+    shadowColor: tokens.accent,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.32,
+    shadowRadius: 28,
+    elevation: 8,
+  }),
+  champagne: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
+    shadowColor: tokens.champagne,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 4,
+  }),
+};
+
 export const adminChrome = {
-  wideBreakpoint: 900,
+  wideBreakpoint: 920,
   tabletBreakpoint: 700,
-  sidebarExpanded: 248,
-  sidebarCollapsed: 72,
-  topBarHeight: 56,
+  sidebarExpanded: 276,
+  sidebarCollapsed: 76,
+  topBarHeight: 62,
+  dockRailHeight: 56,
   contentMax: 1280,
+  brandMark: 'PRODAY CONTROL',
+} as const;
+
+export const adminLayout = {
+  pageGutter: adminSpace.lg,
+  cardPad: adminSpace.lg,
+  heroPad: adminSpace.xl,
+  sectionGap: adminSpace.xl,
+  stackGap: adminSpace.lg,
+  gridGap: adminSpace.md,
+  dockClearance: adminSpace.hero + adminChrome.dockRailHeight,
+  contentTop: adminSpace.md,
+  headerPadX: adminSpace.lg,
+  listRowMinHeight: 52,
+  hitTarget: 44,
 } as const;
 
 export const adminMotion = {
-  enter: 220,
-  exit: 160,
+  press: 100,
+  enter: 380,
+  settle: 560,
+  stagger: 48,
 } as const;
 
 export function adminPanelStyle(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
@@ -134,5 +204,28 @@ export function adminPanelStyle(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewSt
     borderColor: tokens.border,
     borderWidth: 1,
     borderRadius: adminRadius.lg,
+    ...adminShadow.card,
+  };
+}
+
+export function adminSurfaceHero(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
+  return {
+    backgroundColor: tokens.surfaceRaised,
+    borderRadius: adminRadius.hero,
+    borderWidth: 1,
+    borderColor: tokens.borderLuxury,
+    overflow: 'hidden',
+    ...adminShadow.deep,
+    ...adminShadow.champagne(tokens),
+  };
+}
+
+export function adminSurfaceCard(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
+  return {
+    backgroundColor: tokens.surface,
+    borderRadius: adminRadius.lg,
+    borderWidth: 1,
+    borderColor: tokens.border,
+    ...adminShadow.card,
   };
 }

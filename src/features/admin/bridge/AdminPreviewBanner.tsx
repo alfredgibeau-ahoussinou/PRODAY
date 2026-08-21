@@ -23,15 +23,17 @@ export const AdminPreviewBanner: React.FC<AdminPreviewBannerProps> = ({
       activeOpacity={0.9}
     >
       <View style={styles.iconMark}>
-        <Icon name="shield" size={14} color="#FFFFFF" />
+        <Icon name="shield" size={14} color={ADMIN_TOKENS.accentText} />
       </View>
       <View style={styles.body}>
-        <AdminText variant="caption">Mode prévisualisation · app utilisateur</AdminText>
-        <AdminText variant="caption" color={t.muted}>
+        <AdminText variant="caption" champagne>
+          Mode prévisualisation · app utilisateur
+        </AdminText>
+        <AdminText variant="caption" muted>
           Appuyez pour revenir au Control Center
         </AdminText>
       </View>
-      <Icon name="chevron-forward" size={16} color={t.muted} />
+      <Icon name="chevron-forward" size={16} color={t.champagne} />
     </TouchableOpacity>
   );
 };
@@ -42,15 +44,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: adminSpace.sm,
     backgroundColor: ADMIN_TOKENS.surface,
-    paddingHorizontal: adminSpace.md,
+    paddingHorizontal: adminSpace.lg,
     paddingBottom: adminSpace.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: ADMIN_TOKENS.border,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: ADMIN_TOKENS.borderLuxury,
   },
   iconMark: {
     width: 28,
     height: 28,
-    borderRadius: 8,
+    borderRadius: 10,
     backgroundColor: ADMIN_TOKENS.accent,
     alignItems: 'center',
     justifyContent: 'center',

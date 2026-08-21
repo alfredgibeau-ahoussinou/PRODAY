@@ -23,7 +23,7 @@ import {
   type AdminNavSectionId,
 } from '../navigation/adminNavConfig';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminChrome } from '../theme/adminDesignSystem';
+import { adminChrome, adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { Icon } from '../../../components/ui/Icon';
 
 interface AdminAppShellProps {
@@ -101,11 +101,11 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
                     onPress={() => navigate(id)}
                     style={styles.dockItem}
                   >
-                    <Icon name={icon} size={20} color={active ? t.accentHot : t.muted} />
+                    <Icon name={icon} size={22} color={active ? t.accent : t.muted} />
                     <AdminText
                       variant="label"
-                      color={active ? t.accentHot : t.faint}
-                      style={{ letterSpacing: 0.4 }}
+                      color={active ? t.champagne : t.faint}
+                      style={{ letterSpacing: 0.6, fontSize: 9 }}
                     >
                       {id === 'menu' ? 'Menu' : item?.shortLabel ?? id}
                     </AdminText>
@@ -186,18 +186,37 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: adminSpace.lg,
     backgroundColor: ADMIN_TOKENS.bg,
   },
   dock: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: ADMIN_TOKENS.border,
-    backgroundColor: ADMIN_TOKENS.sidebarBg,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: ADMIN_TOKENS.hairline,
+    backgroundColor: ADMIN_TOKENS.dockBg,
+    paddingTop: adminSpace.sm,
+    paddingBottom: adminSpace.sm,
+    paddingHorizontal: adminSpace.xs,
+    minHeight: adminChrome.dockRailHeight,
   },
-  dockItem: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 4 },
+  dockItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    minHeight: adminLayout.hitTarget,
+    justifyContent: 'center',
+  },
   mobileMenu: { flex: 1, flexDirection: 'row', backgroundColor: ADMIN_TOKENS.bg },
-  closeMenu: { position: 'absolute', top: 56, right: 16, padding: 8 },
+  closeMenu: {
+    position: 'absolute',
+    top: 56,
+    right: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: adminRadius.pill,
+    backgroundColor: ADMIN_TOKENS.surfaceRaised,
+    borderWidth: 1,
+    borderColor: ADMIN_TOKENS.border,
+  },
 });

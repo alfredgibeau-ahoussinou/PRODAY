@@ -11,7 +11,12 @@ import {
   type AdminNavSectionId,
 } from '../navigation/adminNavConfig';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminChrome, adminSpace } from '../theme/adminDesignSystem';
+import {
+  adminChrome,
+  adminRadius,
+  adminShadow,
+  adminSpace,
+} from '../theme/adminDesignSystem';
 
 type Props = {
   activeId: AdminNavSectionId;
@@ -36,9 +41,11 @@ export function AdminSidebar({
   const styles = useMemo(() => createStyles(collapsed), [collapsed]);
 
   return (
-    <View style={[styles.root, { width, paddingTop: insets.top + 8 }]}>
+    <View style={[styles.root, { width, paddingTop: insets.top + 10 }]}>
       <LinearGradient
-        colors={['rgba(59,130,246,0.12)', 'transparent']}
+        colors={['rgba(212,184,128,0.08)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0.35 }}
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.brand}>
@@ -48,9 +55,9 @@ export function AdminSidebar({
           resizeMode="contain"
         />
         {!collapsed ? (
-          <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flex: 1, gap: 4 }}>
             <AdminBrandMark compact />
-            <AdminText variant="caption" color={t.muted} numberOfLines={1}>
+            <AdminText variant="h3" numberOfLines={1}>
               Control Center
             </AdminText>
           </View>
@@ -59,28 +66,36 @@ export function AdminSidebar({
 
       {!collapsed ? (
         <Pressable onPress={onOpenCommand} style={styles.cmd}>
-          <Icon name="search" size={14} color={t.muted} />
-          <AdminText variant="caption" color={t.muted} style={{ flex: 1 }}>
-            Rechercher…
+          <Icon name="search" size={14} color={t.accent} />
+          <AdminText variant="caption" muted style={{ flex: 1 }}>
+            Commande…
           </AdminText>
-          <AdminText variant="mono" color={t.faint}>
+          <AdminText variant="caption" champagne>
             ⌘K
           </AdminText>
         </Pressable>
       ) : (
         <Pressable onPress={onOpenCommand} style={styles.cmdIcon}>
-          <Icon name="search" size={18} color={t.muted} />
+          <Icon name="search" size={18} color={t.accent} />
         </Pressable>
       )}
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 24, gap: 12 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24, gap: 14 }}
+      >
         {ADMIN_NAV_GROUPS.map((group) => {
           const items = ADMIN_NAV_ITEMS.filter((n) => n.group === group.id);
           if (!items.length) return null;
           return (
             <View key={group.id} style={{ gap: 4 }}>
               {!collapsed ? (
-                <AdminText variant="label" color={t.faint} style={{ paddingHorizontal: 10 }}>
+                <AdminText
+                  variant="label"
+                  muted
+                  style={{ paddingHorizontal: 12, marginBottom: 2 }}
+                >
                   {group.label}
                 </AdminText>
               ) : null}
@@ -92,10 +107,14 @@ export function AdminSidebar({
                     onPress={() => onSelect(item.id)}
                     style={[
                       styles.item,
-                      active && { backgroundColor: t.accentSoft, borderColor: t.accent },
+                      active && {
+                        backgroundColor: t.accentSoft,
+                        borderColor: t.borderStrong,
+                        ...adminShadow.champagne(t),
+                      },
                     ]}
                   >
-                    <Icon name={item.icon} size={18} color={active ? t.accentHot : t.muted} />
+                    <Icon name={item.icon} size={18} color={active ? t.accent : t.muted} />
                     {!collapsed ? (
                       <AdminText
                         variant="nav"
@@ -107,7 +126,11 @@ export function AdminSidebar({
                     ) : null}
                     {!collapsed && item.id === 'accueil' && actionCount > 0 ? (
                       <View style={styles.badge}>
-                        <AdminText variant="label" color="#fff" style={{ letterSpacing: 0 }}>
+                        <AdminText
+                          variant="label"
+                          color={t.accentText}
+                          style={{ letterSpacing: 0, fontSize: 9 }}
+                        >
                           {actionCount}
                         </AdminText>
                       </View>
@@ -124,7 +147,7 @@ export function AdminSidebar({
         <Pressable onPress={onToggleCollapse} style={styles.collapse}>
           <Icon name={collapsed ? 'chevron-forward' : 'chevron-down'} size={16} color={t.muted} />
           {!collapsed ? (
-            <AdminText variant="caption" color={t.muted}>
+            <AdminText variant="caption" muted>
               Réduire
             </AdminText>
           ) : null}
@@ -141,64 +164,68 @@ function createStyles(collapsed?: boolean) {
       backgroundColor: t.sidebarBg,
       borderRightWidth: 1,
       borderRightColor: t.border,
-      paddingHorizontal: collapsed ? 8 : 12,
-      gap: adminSpace.sm,
+      paddingHorizontal: collapsed ? 10 : 14,
+      gap: adminSpace.md,
     },
     brand: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
+      gap: 12,
       paddingHorizontal: 4,
-      minHeight: 48,
+      minHeight: 52,
     },
-    logo: { width: 36, height: 36 },
-    logoSm: { width: 28, height: 28 },
+    logo: { width: 38, height: 38 },
+    logoSm: { width: 30, height: 30 },
     cmd: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 10,
-      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 11,
+      borderRadius: adminRadius.md,
       borderWidth: 1,
       borderColor: t.border,
-      backgroundColor: t.surfaceMuted,
+      backgroundColor: t.surfaceGlass,
     },
     cmdIcon: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 10,
-      borderRadius: 12,
+      paddingVertical: 12,
+      borderRadius: adminRadius.md,
       borderWidth: 1,
       borderColor: t.border,
+      backgroundColor: t.surfaceGlass,
     },
     item: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-      paddingVertical: 10,
-      paddingHorizontal: collapsed ? 10 : 10,
-      borderRadius: 12,
+      gap: 11,
+      paddingVertical: 11,
+      paddingHorizontal: collapsed ? 12 : 12,
+      minHeight: 44,
+      borderRadius: adminRadius.md,
       borderWidth: 1,
       borderColor: 'transparent',
       justifyContent: collapsed ? 'center' : 'flex-start',
     },
     badge: {
-      minWidth: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: t.danger,
+      minWidth: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: t.accent,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 5,
+      paddingHorizontal: 6,
     },
     collapse: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      paddingVertical: 12,
-      paddingBottom: 16,
+      paddingVertical: 14,
+      paddingBottom: 18,
       justifyContent: collapsed ? 'center' : 'flex-start',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: t.hairline,
     },
   });
 }
