@@ -126,6 +126,23 @@
       ]
     },
     {
+      "collectionGroup": "club_finance_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "club_id", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "entry_date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "club_finance_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "club_id", "order": "ASCENDING" },
+        { "fieldPath": "entry_date", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "sponsor_contributions",
       "queryScope": "COLLECTION",
       "fields": [

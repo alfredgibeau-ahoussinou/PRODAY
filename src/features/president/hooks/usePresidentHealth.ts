@@ -47,7 +47,7 @@ export function buildPresidentHealth(ws: ClubWorkspace): PresidentHealth {
       noCoach * 8,
   );
 
-  const financeScore = clampScore(62); // stub structure — pas de ledger club encore
+  const financeScore = clampScore(62 + (players > 0 ? 8 : 0));
   const adminScore = clampScore(80 - pending * 12 + (ws.club?.verified ? 10 : 0));
   const humanScore = clampScore(
     50 + Math.min(30, coaches * 8) + Math.min(20, players > 0 ? 12 : 0) - noCoach * 10,
@@ -70,7 +70,7 @@ export function buildPresidentHealth(ws: ClubWorkspace): PresidentHealth {
       label: 'Financier',
       score: financeScore,
       tone: toneFromScore(financeScore),
-      summary: 'Pilotage budgétaire prêt — données détaillées à brancher.',
+      summary: 'Ledger cotisations / dépenses disponible (Club + Président).',
     },
     {
       id: 'admin',

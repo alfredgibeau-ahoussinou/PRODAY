@@ -1,6 +1,15 @@
-import React, { useMemo } from 'react';
-import { View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
+import { useClubFinance } from '../../features/club/hooks/useClubFinance';
 import { CLUB_VIDEO_PROVIDERS } from '../../features/club/video/ClubVideoProvider';
 import { usePresidentFunding } from '../../features/president/hooks/usePresidentFunding';
 import { usePresidentHealth } from '../../features/president/hooks/usePresidentHealth';
@@ -9,14 +18,28 @@ import { usePresidentShellNav } from '../../features/president/shell/PresidentSh
 import { usePresidentTheme } from '../../features/president/shell/PresidentThemeContext';
 import {
   PresidentActionRow,
+  PresidentBrandMark,
   PresidentEmptyState,
   PresidentLoading,
   PresidentSectionCard,
   PresidentText,
 } from '../../features/president/ui/presidentUi';
 import { PresidentSectionScreen } from './PresidentSectionScreen';
-import { presidentSpace } from '../../features/president/theme/presidentDesignSystem';
+import {
+  presidentRadius,
+  presidentShadow,
+  presidentSpace,
+} from '../../features/president/theme/presidentDesignSystem';
 import { isCoachMatchEvent } from '../../models/TeamEvent';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import {
+  CLUB_FINANCE_CATEGORY_SUGGESTIONS,
+  CLUB_FINANCE_TYPE_LABELS,
+  isClubFinanceExpenseType,
+  type ClubFinanceEntryType,
+} from '../../models/ClubFinanceEntry';
+import { PressableSpring } from '../../components/motion';
+import type { PresidentThemeTokens } from '../../features/president/theme/presidentTokens';
 
 function formatEventWhen(startsAt?: Date | string | null): string {
   if (!startsAt) return 'Date à confirmer';
@@ -170,37 +193,197 @@ export function PresidentSportScreen() {
   );
 }
 
+function formatEur(n: number): string {
+  return `${n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`;
+}
+
+function formatEntryDate(d: Date): string {
+  return d.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+const FINANCE_TYPE_OPTIONS: { id: ClubFinanceEntryType; label: string }[] = [
+  { id: 'cotisation', label: 'Cotisation' },
+  { id: 'depense', label: 'Dépense' },
+  { id: 'recette', label: 'Recette' },
+  { id: 'autre', label: 'Autre' },
+];
+
 export function PresidentFinanceScreen() {
   const ws = useClubWorkspace();
-  const { goals, loading } = usePresidentFunding(ws.clubId);
+  const profile = useSessionProfile();
+  const { tokens } = usePresidentTheme();
+  const styles = useMemo(() => financeStyles(tokens), [tokens]);
+  const { goals, loading: goalsLoading } = usePresidentFunding(ws.clubId);
+  const {
+    entries,
+    totals,
+    loading: ledgerLoading,
+    create,
+    softDelete,
+  } = useClubFinance(ws.clubId);
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [type, setType] = useState<ClubFinanceEntryType>('cotisation');
+  const [label, setLabel] = useState('');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('Licence');
+  const [dateStr, setDateStr] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const loading = goalsLoading || ledgerLoading;
+
+  const resetForm = useCallback(() => {
+    setType('cotisation');
+    setLabel('');
+    setAmount('');
+    setCategory('Licence');
+    setDateStr(new Date().toISOString().slice(0, 10));
+  }, []);
+
+  const submit = useCallback(async () => {
+    if (!ws.clubId || !profile?.uid) {
+      Alert.alert('Club requis', 'Compte dirigeant rattaché à un club requis.');
+      return;
+    }
+    const amountEur = Number(String(amount).replace(',', '.'));
+    if (!Number.isFinite(amountEur) || amountEur <= 0) {
+      Alert.alert('Montant', 'Saisissez un montant positif.');
+      return;
+    }
+    if (!label.trim()) {
+      Alert.alert('Libellé', 'Indiquez un libellé.');
+      return;
+    }
+    const entryDate = new Date(`${dateStr}T12:00:00`);
+    if (Number.isNaN(entryDate.getTime())) {
+      Alert.alert('Date', 'Date invalide (AAAA-MM-JJ).');
+      return;
+    }
+    setSaving(true);
+    try {
+      await create({
+        club_id: ws.clubId,
+        type,
+        amount_eur: amountEur,
+        label: label.trim(),
+        category: category.trim() || 'Divers',
+        entry_date: entryDate,
+        created_by_uid: profile.uid,
+        created_by_name: profile.display_name,
+      });
+      setFormOpen(false);
+      resetForm();
+      Alert.alert('Enregistré', `${CLUB_FINANCE_TYPE_LABELS[type]} ajoutée.`);
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Enregistrement impossible.');
+    } finally {
+      setSaving(false);
+    }
+  }, [amount, category, create, dateStr, label, profile, resetForm, type, ws.clubId]);
+
   return (
     <PresidentSectionScreen
       eyebrow="Finances"
       title="Direction financière"
-      subtitle="Lecture budgétaire et objectifs de financement partagés."
+      subtitle="Ledger club partagé (cotisations / dépenses) et objectifs de financement sponsors."
       liveLines={
         loading
-          ? ['Chargement des objectifs de financement…']
-          : goals.length > 0
-            ? goals.slice(0, 5).map(
-                (g) =>
-                  `${g.title} : ${g.raised_amount_eur ?? 0} / ${g.target_amount_eur ?? 0} €`,
-              )
-            : undefined
-      }
-      emptyTitle={goals.length === 0 && !loading ? 'Pas encore de ledger club' : undefined}
-      emptyBody={
-        goals.length === 0 && !loading
-          ? 'Les cotisations détaillées arriveront ici. Les objectifs de financement s’affichent dès qu’ils existent.'
-          : undefined
+          ? ['Chargement du ledger et des objectifs…']
+          : [
+              `Recettes ${formatEur(totals.recettes_eur)} · Dépenses ${formatEur(totals.depenses_eur)} · Solde ${formatEur(totals.solde_eur)}`,
+              `${totals.count} écriture${totals.count > 1 ? 's' : ''} active${totals.count > 1 ? 's' : ''}`,
+              goals.length > 0
+                ? `${goals.length} objectif${goals.length > 1 ? 's' : ''} de financement`
+                : 'Aucun objectif de financement sponsor',
+            ]
       }
       links={[
         { label: 'Finances Club', icon: 'stats-chart', clubNav: 'finances' },
         { label: 'Sponsoring Club', icon: 'gift', clubNav: 'sponsoring' },
       ]}
     >
+      <PresidentSectionCard eyebrow="Ledger" title="Cotisations & dépenses">
+        <View style={styles.kpiRow}>
+          <View style={styles.kpi}>
+            <PresidentText variant="caption" muted>
+              Recettes
+            </PresidentText>
+            <PresidentText variant="h3" champagne>
+              {formatEur(totals.recettes_eur)}
+            </PresidentText>
+          </View>
+          <View style={styles.kpi}>
+            <PresidentText variant="caption" muted>
+              Dépenses
+            </PresidentText>
+            <PresidentText variant="h3">{formatEur(totals.depenses_eur)}</PresidentText>
+          </View>
+          <View style={styles.kpi}>
+            <PresidentText variant="caption" muted>
+              Solde
+            </PresidentText>
+            <PresidentText variant="h3" champagne>
+              {formatEur(totals.solde_eur)}
+            </PresidentText>
+          </View>
+        </View>
+        <PresidentActionRow
+          label="Ajouter une écriture"
+          hint="Cotisation, dépense ou recette"
+          icon="add"
+          accent
+          onPress={() => {
+            resetForm();
+            setFormOpen(true);
+          }}
+        />
+        {entries.length === 0 && !ledgerLoading ? (
+          <PresidentText variant="body" muted>
+            Aucune écriture pour l’instant — le même ledger que le pôle Club.
+          </PresidentText>
+        ) : (
+          entries.slice(0, 12).map((e) => {
+            const expense = isClubFinanceExpenseType(e.type);
+            return (
+              <PresidentActionRow
+                key={e.id}
+                label={e.label}
+                hint={`${CLUB_FINANCE_TYPE_LABELS[e.type]} · ${formatEntryDate(e.entry_date)} · ${expense ? '−' : '+'}${formatEur(e.amount_eur)}`}
+                icon="stats-chart"
+                onPress={() =>
+                  Alert.alert('Retirer du ledger ?', e.label, [
+                    { text: 'Annuler', style: 'cancel' },
+                    {
+                      text: 'Supprimer',
+                      style: 'destructive',
+                      onPress: () => {
+                        void softDelete(e.id).catch((err) =>
+                          Alert.alert(
+                            'Erreur',
+                            err instanceof Error ? err.message : 'Suppression impossible.',
+                          ),
+                        );
+                      },
+                    },
+                  ])
+                }
+              />
+            );
+          })
+        )}
+        {entries.length > 12 ? (
+          <PresidentText variant="caption" muted>
+            +{entries.length - 12} autres — ouvrir Finances Club pour la liste complète.
+          </PresidentText>
+        ) : null}
+      </PresidentSectionCard>
+
       {goals.length > 0 ? (
-        <PresidentSectionCard eyebrow="Objectifs" title="Financement club">
+        <PresidentSectionCard eyebrow="Objectifs" title="Financement club (sponsors)">
           {goals.map((g) => (
             <PresidentActionRow
               key={g.id}
@@ -211,8 +394,183 @@ export function PresidentFinanceScreen() {
           ))}
         </PresidentSectionCard>
       ) : null}
+
+      <Modal visible={formOpen} transparent animationType="fade" onRequestClose={() => setFormOpen(false)}>
+        <Pressable style={styles.modalScrim} onPress={() => !saving && setFormOpen(false)}>
+          <Pressable style={styles.modalSheet} onPress={(e) => e.stopPropagation?.()}>
+            <PresidentBrandMark compact />
+            <PresidentText variant="h2">Nouvelle écriture</PresidentText>
+            <View style={styles.typeRow}>
+              {FINANCE_TYPE_OPTIONS.map((opt) => {
+                const on = opt.id === type;
+                return (
+                  <PressableSpring
+                    key={opt.id}
+                    onPress={() => setType(opt.id)}
+                    scaleTo={0.97}
+                    style={[styles.typeChip, on && styles.typeChipOn]}
+                  >
+                    <PresidentText
+                      variant="caption"
+                      style={{
+                        color: on ? tokens.accentText : tokens.muted,
+                        fontWeight: '700',
+                      }}
+                    >
+                      {opt.label}
+                    </PresidentText>
+                  </PressableSpring>
+                );
+              })}
+            </View>
+            <TextInput
+              value={label}
+              onChangeText={setLabel}
+              placeholder="Libellé"
+              placeholderTextColor={tokens.muted}
+              style={styles.input}
+            />
+            <TextInput
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="decimal-pad"
+              placeholder="Montant (€)"
+              placeholderTextColor={tokens.muted}
+              style={styles.input}
+            />
+            <TextInput
+              value={category}
+              onChangeText={setCategory}
+              placeholder="Catégorie"
+              placeholderTextColor={tokens.muted}
+              style={styles.input}
+            />
+            <View style={styles.chips}>
+              {CLUB_FINANCE_CATEGORY_SUGGESTIONS.slice(0, 6).map((c) => (
+                <Pressable
+                  key={c}
+                  onPress={() => setCategory(c)}
+                  style={[styles.miniChip, category === c && styles.typeChipOn]}
+                >
+                  <PresidentText
+                    variant="caption"
+                    style={{ color: category === c ? tokens.accentText : tokens.muted }}
+                  >
+                    {c}
+                  </PresidentText>
+                </Pressable>
+              ))}
+            </View>
+            <TextInput
+              value={dateStr}
+              onChangeText={setDateStr}
+              autoCapitalize="none"
+              placeholder="Date AAAA-MM-JJ"
+              placeholderTextColor={tokens.muted}
+              style={styles.input}
+            />
+            <View style={styles.modalActions}>
+              <PressableSpring
+                onPress={() => setFormOpen(false)}
+                disabled={saving}
+                style={styles.modalBtnGhost}
+              >
+                <PresidentText variant="body">Annuler</PresidentText>
+              </PressableSpring>
+              <PressableSpring
+                onPress={() => void submit()}
+                disabled={saving}
+                haptic
+                style={styles.modalBtn}
+              >
+                <PresidentText variant="body" style={{ color: tokens.accentText, fontWeight: '800' }}>
+                  {saving ? '…' : 'Enregistrer'}
+                </PresidentText>
+              </PressableSpring>
+            </View>
+            {saving ? <ActivityIndicator color={tokens.accent} /> : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </PresidentSectionScreen>
   );
+}
+
+function financeStyles(tokens: PresidentThemeTokens) {
+  return StyleSheet.create({
+    kpiRow: { flexDirection: 'row', gap: presidentSpace.sm, marginBottom: presidentSpace.sm },
+    kpi: {
+      flex: 1,
+      gap: 4,
+      padding: presidentSpace.sm,
+      borderRadius: presidentRadius.md,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.surfaceRaised,
+    },
+    modalScrim: {
+      flex: 1,
+      backgroundColor: tokens.overlay,
+      justifyContent: 'center',
+      padding: presidentSpace.xl,
+    },
+    modalSheet: {
+      backgroundColor: tokens.surfaceRaised,
+      borderRadius: presidentRadius.xl,
+      borderWidth: 1,
+      borderColor: tokens.borderLuxury,
+      padding: presidentSpace.xl,
+      gap: presidentSpace.sm,
+      ...presidentShadow.deep,
+    },
+    typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    typeChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: presidentRadius.md,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    typeChipOn: {
+      backgroundColor: tokens.accent,
+      borderColor: tokens.accent,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: tokens.border,
+      borderRadius: presidentRadius.md,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      color: tokens.foreground,
+      backgroundColor: tokens.surface,
+      fontSize: 15,
+    },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    miniChip: {
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius: presidentRadius.sm,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    modalActions: { flexDirection: 'row', gap: presidentSpace.sm, marginTop: 8 },
+    modalBtnGhost: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: presidentRadius.md,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      alignItems: 'center',
+    },
+    modalBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: presidentRadius.md,
+      backgroundColor: tokens.accent,
+      alignItems: 'center',
+      ...presidentShadow.glow(tokens),
+    },
+  });
 }
 
 export function PresidentMembersScreen() {

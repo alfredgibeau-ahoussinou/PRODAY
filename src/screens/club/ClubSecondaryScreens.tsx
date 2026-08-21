@@ -14,6 +14,7 @@ import {
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubEquipmentMarketPanel } from '../../components/club/ClubEquipmentMarketPanel';
 import { ClubEventOrganization } from '../../components/club/ClubEventOrganization';
+import { ClubFinanceLedgerPanel } from '../../components/club/ClubFinanceLedgerPanel';
 import {
   staffNotificationsService,
   type StaffNotification,
@@ -142,14 +143,8 @@ export function ClubLicensesScreen() {
 }
 
 export function ClubFinancesScreen() {
-  return (
-    <ClubStubShell
-      title="Finances"
-      subtitle="Vue simple"
-      body="Cotisations, devis Pack Club et encaissements — interface légère, pas une compta complète."
-      icon="bag"
-    />
-  );
+  const ws = useClubWorkspace();
+  return <ClubFinanceLedgerPanel clubId={ws.clubId} />;
 }
 
 export function ClubSponsoringScreen() {

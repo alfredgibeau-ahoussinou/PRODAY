@@ -1603,6 +1603,31 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.author_uid == request.auth.uid);
     }
 
+    /**
+     * Ledger cotisations / dépenses / recettes club.
+     * Staff rattaché au club (role club|coach|organizer|agent + profile.club_id) — même ACL branding.
+     */
+    match /club_finance_entries/{id} {
+      allow read: if isAdmin()
+        || (isSignedIn() && isClubStaffForClub(resource.data.club_id));
+      allow create: if isAdmin()
+        || (isSignedIn()
+            && isClubStaffForClub(request.resource.data.club_id)
+            && request.resource.data.created_by_uid == request.auth.uid
+            && request.resource.data.club_id is string
+            && request.resource.data.type in ['cotisation', 'depense', 'recette', 'autre']
+            && request.resource.data.amount_eur is number
+            && request.resource.data.amount_eur > 0
+            && request.resource.data.label is string
+            && request.resource.data.status == 'active');
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && isClubStaffForClub(resource.data.club_id)
+            && request.resource.data.club_id == resource.data.club_id
+            && request.resource.data.created_by_uid == resource.data.created_by_uid);
+      allow delete: if isAdmin();
+    }
+
     /** Causeries match */
     match /match_talk_briefs/{id} {
       allow read: if isSignedIn()
