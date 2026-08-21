@@ -263,9 +263,9 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
           scaleTo={0.98}
           style={styles.secondaryLink}
         >
-          <Icon name="star-four-points" size={14} color={tokens.accent} />
+          <Icon name="chat" size={14} color={tokens.accent} />
           <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
-            Ouvrir le Copilote Club
+            Demander au copilote
           </ClubText>
         </PressableSpring>
         {aiReply ? (

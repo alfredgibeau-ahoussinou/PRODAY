@@ -194,9 +194,9 @@ export function ClubSidebar({
           accessibilityRole="button"
           accessibilityLabel="Ouvrir le copilote Club"
         >
-          <Icon name="star-four-points" size={16} color={tokens.accent} />
+          <Icon name="chat" size={16} color={tokens.muted} />
           {!collapsed ? (
-            <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+            <ClubText variant="caption" muted>
               Copilote
             </ClubText>
           ) : null}

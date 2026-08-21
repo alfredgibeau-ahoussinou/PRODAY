@@ -36,9 +36,9 @@ export function ClubCopilotSheet({ visible, onClose }: Props) {
         <View style={[styles.header, { borderBottomColor: tokens.border }]}>
           <View style={styles.headerCopy}>
             <View style={[styles.badge, { backgroundColor: tokens.accentSoft }]}>
-              <Ionicons name="sparkles-outline" size={12} color={tokens.accent} />
+              <Ionicons name="chatbubble-ellipses-outline" size={12} color={tokens.accent} />
               <ClubText variant="label" style={{ color: tokens.accent, fontSize: 9 }}>
-                Copilote
+                Assistant
               </ClubText>
             </View>
             <ClubText variant="section" style={styles.title}>

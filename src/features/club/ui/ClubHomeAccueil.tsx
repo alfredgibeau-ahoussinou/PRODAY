@@ -126,8 +126,8 @@ export type ClubHomePriority =
   | { kind: 'calm' };
 
 /**
- * Surface copilote Accueil — remplace l’ancien bandeau scoreboard / LED
- * (horloge « coup d’envoi » type afficheur) par une vraie entrée IA.
+ * Entrée primaire Copilote Accueil — CTA premium sombre, pas un clone Aide / sparkles.
+ * Ouvre le sheet immersif (même panneau que le header).
  */
 export function ClubHomeAiHero({
   headline,
@@ -143,41 +143,53 @@ export function ClubHomeAiHero({
 
   return (
     <AnimatedEntrance kind="fadeUp" index={0} delayStep={40}>
-      <PressableSpring onPress={onOpenCopilot} scaleTo={0.985} haptic style={styles.shell}>
+      <View style={styles.shell}>
         <LinearGradient
-          colors={[tokens.accentSoft, tokens.surface, tokens.elevated]}
-          locations={[0, 0.45, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={[tokens.elevated, tokens.surface, tokens.bg]}
+          locations={[0, 0.55, 1]}
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.95, y: 1 }}
           style={styles.face}
         >
-          <View style={[styles.rail, { backgroundColor: tokens.accent }]} />
-          <View style={styles.topMeta}>
-            <View style={[styles.badge, { backgroundColor: tokens.accentSoft }]}>
-              <Icon name="chat" size={12} color={tokens.accent} />
-              <ClubText variant="label" style={{ color: tokens.accent, fontSize: 9 }}>
-                Copilote
+          <View style={[styles.glow, { backgroundColor: tokens.glow }]} pointerEvents="none" />
+          <View style={styles.copy}>
+            <ClubText variant="label" muted style={styles.kicker}>
+              Assistant du club
+            </ClubText>
+            <ClubText variant="h2" numberOfLines={2} style={styles.heroTitle}>
+              {headline || 'Besoin d’un coup de main ?'}
+            </ClubText>
+            <ClubText variant="body" muted numberOfLines={2} style={styles.summary}>
+              {summary ||
+                'Équipes, adhésions, matchs — le copilote répond, tu valides chaque action.'}
+            </ClubText>
+          </View>
+          <PressableSpring
+            onPress={onOpenCopilot}
+            scaleTo={0.97}
+            haptic
+            style={styles.ctaBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Ouvrir le copilote Club"
+          >
+            <View style={[styles.ctaIcon, { backgroundColor: tokens.onAccent }]}>
+              <Icon name="chat" size={15} color={tokens.accent} />
+            </View>
+            <View style={styles.ctaCopy}>
+              <ClubText variant="caption" style={{ color: tokens.onAccent, fontWeight: '800' }}>
+                Demander au copilote
+              </ClubText>
+              <ClubText
+                variant="caption"
+                style={{ color: 'rgba(255,255,255,0.72)', fontSize: 10, fontWeight: '600' }}
+              >
+                Dialogue · confirmation avant action
               </ClubText>
             </View>
-            <ClubText variant="caption" muted numberOfLines={1} style={{ flex: 1 }}>
-              Dialogue réel · confirmation avant action
-            </ClubText>
-          </View>
-          <ClubText variant="h2" numberOfLines={2} style={styles.heroTitle}>
-            {headline || 'Copilote Club'}
-          </ClubText>
-          <ClubText variant="body" muted numberOfLines={3}>
-            {summary ||
-              'Pose une question sur les équipes, adhésions ou matchs — je guide, je ne décide pas.'}
-          </ClubText>
-          <View style={styles.ctaBtn}>
-            <Icon name="chat" size={16} color={tokens.onAccent} />
-            <ClubText variant="caption" style={{ color: tokens.onAccent, fontWeight: '800' }}>
-              Ouvrir le copilote
-            </ClubText>
-          </View>
+            <Icon name="chevron-forward" size={16} color={tokens.onAccent} />
+          </PressableSpring>
         </LinearGradient>
-      </PressableSpring>
+      </View>
     </AnimatedEntrance>
   );
 }
@@ -292,11 +304,11 @@ export function ClubHomeKpiStrip({
     },
     {
       key: 'actions',
-      label: 'Copilote',
+      label: 'À faire',
       value: actions,
-      hint: actions > 0 ? 'Priorités' : 'Discuter',
+      hint: actions > 0 ? 'Priorités' : 'Rien d’urgent',
       onPress: onActions,
-      accent: actions > 0 ? tokens.warning : tokens.accent,
+      accent: actions > 0 ? tokens.warning : undefined,
     },
   ];
 
@@ -578,42 +590,50 @@ const aiHeroStyles = (tokens: ClubThemeTokens) =>
     face: {
       paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.lg,
-      paddingLeft: clubSpace.lg + 6,
-      gap: clubSpace.sm,
-      minHeight: 148,
+      gap: clubSpace.md,
+      minHeight: 152,
+      overflow: 'hidden',
     },
-    rail: {
+    glow: {
       position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 4,
+      top: -40,
+      right: -24,
+      width: 140,
+      height: 140,
+      borderRadius: 70,
+      opacity: 0.22,
     },
-    topMeta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: clubSpace.sm,
+    copy: { gap: 6, zIndex: 1 },
+    kicker: {
+      letterSpacing: 1.4,
+      fontSize: 10,
+      lineHeight: 12,
+      textTransform: 'uppercase',
     },
-    badge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: clubRadius.xs,
-    },
-    heroTitle: { letterSpacing: -0.4 },
+    heroTitle: { letterSpacing: -0.45, fontSize: 22, lineHeight: 26 },
+    summary: { lineHeight: 20 },
     ctaBtn: {
-      alignSelf: 'flex-start',
+      alignSelf: 'stretch',
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      marginTop: clubSpace.xs,
+      gap: 12,
+      marginTop: 2,
       paddingHorizontal: clubSpace.md,
-      paddingVertical: 10,
+      paddingVertical: 12,
       borderRadius: clubRadius.md,
       backgroundColor: tokens.accent,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(255,255,255,0.18)',
+      ...clubShadow.soft,
     },
+    ctaIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ctaCopy: { flex: 1, minWidth: 0, gap: 1 },
   });
 
 const nextEventStyles = (tokens: ClubThemeTokens) =>

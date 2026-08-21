@@ -40,8 +40,8 @@ export function ClubLockedPane({ item }: Props) {
           />
           <ClubActionRow
             icon="chat"
-            label="Copilote Club"
-            onPress={() => shellNav?.requestNav('assistant')}
+            label="Demander au copilote"
+            onPress={() => shellNav?.openHelp?.()}
           />
         </ClubSectionCard>
         <ClubEmptyState

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../../components/ui/Icon';
+import { PressableSpring } from '../../../components/motion';
 import { ClubAvatar, ClubText } from './clubUi';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
@@ -15,10 +16,12 @@ type Props = {
   onNotifications?: () => void;
   onSearch?: () => void;
   onProfile?: () => void;
+  /** Ouvre le sheet Copilote Club (accès rapide header). */
+  onOpenCopilot?: () => void;
 };
 
 /**
- * Header léger premium — titre page | notifications, recherche, profil.
+ * Header léger premium — titre page | copilote chip, notifications, recherche, profil.
  * Chrome uniquement : callbacks branchés sur la nav existante.
  */
 export function ClubPageChrome({
@@ -28,6 +31,7 @@ export function ClubPageChrome({
   onNotifications,
   onSearch,
   onProfile,
+  onOpenCopilot,
 }: Props) {
   const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
@@ -41,6 +45,21 @@ export function ClubPageChrome({
         {title}
       </ClubText>
       <View style={styles.actions}>
+        {onOpenCopilot ? (
+          <PressableSpring
+            onPress={onOpenCopilot}
+            scaleTo={0.96}
+            haptic
+            style={styles.copilotChip}
+            accessibilityRole="button"
+            accessibilityLabel="Demander au copilote"
+          >
+            <Icon name="chat" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.copilotLabel}>
+              Copilote
+            </ClubText>
+          </PressableSpring>
+        ) : null}
         <Pressable
           onPress={onSearch}
           style={styles.iconBtn}
@@ -94,6 +113,23 @@ const createStyles = (tokens: ClubThemeTokens) =>
       letterSpacing: -0.3,
     },
     actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    copilotChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      height: 36,
+      paddingHorizontal: 12,
+      borderRadius: clubRadius.sm,
+      backgroundColor: tokens.accentSoft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.accent,
+    },
+    copilotLabel: {
+      color: tokens.accent,
+      fontWeight: '800',
+      fontSize: 12,
+      letterSpacing: 0.2,
+    },
     iconBtn: {
       width: 36,
       height: 36,

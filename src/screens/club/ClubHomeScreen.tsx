@@ -198,7 +198,7 @@ export function ClubHomeScreen() {
         <ClubHomeAiHero
           headline={ws.briefingHeadline}
           summary={ws.briefingSummary}
-          onOpenCopilot={() => shellNav?.requestNav('assistant')}
+          onOpenCopilot={() => shellNav?.openHelp?.()}
         />
 
         <ClubHomeNextEventRow priority={priority} onPress={onHeroPress} />
@@ -219,7 +219,17 @@ export function ClubHomeScreen() {
           }
           onPlayers={() => shellNav?.requestNav('players')}
           onCoaches={() => shellNav?.requestNav('coaches')}
-          onActions={() => shellNav?.requestNav('assistant')}
+          onActions={() => {
+            if (ws.pendingMemberships > 0) {
+              shellNav?.requestNav('players');
+              return;
+            }
+            if (ws.teamsWithoutCoach > 0) {
+              shellNav?.requestNav('coaches');
+              return;
+            }
+            shellNav?.requestNav('today');
+          }}
         />
 
         <ClubHomeTodoSection
@@ -277,9 +287,9 @@ export function ClubHomeScreen() {
             />
             <ClubActionRow
               icon="chat"
-              label="Copilote Club"
-              hint="Dialogue IA · confirmation obligatoire"
-              onPress={() => shellNav?.requestNav('assistant')}
+              label="Demander au copilote"
+              hint="Dialogue IA · confirmation avant action"
+              onPress={() => shellNav?.openHelp?.()}
             />
             <ClubActionRow
               icon="mail"

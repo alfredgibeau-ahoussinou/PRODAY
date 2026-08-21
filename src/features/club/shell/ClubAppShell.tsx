@@ -236,6 +236,7 @@ function ClubAppShellInner({
             onNotifications={() => onSelect('notifications')}
             onSearch={() => onSelect('plus')}
             onProfile={() => onSelect('club')}
+            onOpenCopilot={onOpenHelp}
           />
           {content}
           {showFab ? <ClubCreateFab onPress={() => setCreateOpen(true)} /> : null}
