@@ -3,6 +3,7 @@ import {
   adminMotion,
   adminNavDirection,
 } from '../features/admin/motion/adminMotion';
+import { adminLayout, adminSpace } from '../features/admin/theme/adminDesignSystem';
 
 describe('Admin motion system', () => {
   it('expose des tokens durée / spring cohérents', () => {
@@ -18,5 +19,16 @@ describe('Admin motion system', () => {
     expect(adminNavDirection('ia', 'systeme')).toBe(1);
     expect(adminNavDirection('systeme', 'menu')).toBe(-1);
     expect(ADMIN_MOTION_SECTION_ORDER).toContain('commercial');
+  });
+});
+
+describe('Admin mobile safe area layout', () => {
+  it('garde un air confortable sous la status bar / îlot', () => {
+    expect(adminLayout.contentTop).toBeGreaterThanOrEqual(adminSpace.xl);
+    expect(adminLayout.statusBarMin).toBeGreaterThanOrEqual(44);
+    const simulatedInset = 0;
+    const pad =
+      Math.max(simulatedInset, adminLayout.statusBarMin) + adminLayout.contentTop;
+    expect(pad).toBeGreaterThanOrEqual(54 + adminSpace.xl);
   });
 });
