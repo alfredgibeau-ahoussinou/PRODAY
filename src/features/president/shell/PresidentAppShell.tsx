@@ -137,8 +137,15 @@ function PresidentAppShellInner() {
       <View style={styles.root}>
         <StatusBar style="light" />
         <LinearGradient
-          colors={['#0C1220', tokens.bg, '#05080F']}
+          colors={['#0E1524', tokens.bg, '#03050A']}
           style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          colors={['rgba(212,184,128,0.07)', 'transparent', 'transparent']}
+          start={{ x: 0.15, y: 0 }}
+          end={{ x: 0.85, y: 0.55 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
         />
         <View style={styles.row}>
           {wide ? (

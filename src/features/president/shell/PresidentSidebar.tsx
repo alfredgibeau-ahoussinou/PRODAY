@@ -1,15 +1,23 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../../components/ui/Icon';
 import { PressableSpring } from '../../../components/motion';
 import { BRANDING_LOGOS } from '../../../content/brandingAssets';
-import { PresidentText } from '../ui/presidentUi';
+import { PresidentBrandMark, PresidentText } from '../ui/presidentUi';
 import { usePresidentTheme } from './PresidentThemeContext';
 import type { PresidentNavItemId } from '../navigation/presidentNavConfig';
 import type { PresidentNavResolvedFolder } from '../navigation/resolvePresidentNavAccess';
 import {
   presidentChrome,
+  presidentMotion,
   presidentRadius,
   presidentShadow,
   presidentSpace,
@@ -43,13 +51,33 @@ export function PresidentSidebar({
 }: Props) {
   const insets = useSafeAreaInsets();
   const { tokens } = usePresidentTheme();
+  const targetW = collapsed ? presidentChrome.sidebarCollapsed : width;
+  const animW = useSharedValue(targetW);
+
+  useEffect(() => {
+    animW.value = withTiming(targetW, {
+      duration: presidentMotion.enter,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [targetW, animW]);
+
+  const rootAnim = useAnimatedStyle(() => ({
+    width: animW.value,
+  }));
+
   const styles = useMemo(
-    () => createStyles(collapsed ? presidentChrome.sidebarCollapsed : width, tokens, collapsed),
-    [width, tokens, collapsed],
+    () => createStyles(tokens, collapsed),
+    [tokens, collapsed],
   );
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
+    <Animated.View style={[styles.root, rootAnim, { paddingTop: insets.top + 10 }]}>
+      <LinearGradient
+        colors={['rgba(212,184,128,0.08)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0.35 }}
+        style={StyleSheet.absoluteFill}
+      />
       <View style={styles.brand}>
         <Image
           source={BRANDING_LOGOS.official}
@@ -58,10 +86,8 @@ export function PresidentSidebar({
           accessibilityLabel="ProDay"
         />
         {!collapsed ? (
-          <View style={{ flex: 1, gap: 2 }}>
-            <PresidentText variant="label" champagne>
-              Président
-            </PresidentText>
+          <View style={{ flex: 1, gap: 4 }}>
+            <PresidentBrandMark compact />
             <PresidentText variant="h3" numberOfLines={1}>
               {clubName}
             </PresidentText>
@@ -73,7 +99,7 @@ export function PresidentSidebar({
         <PressableSpring onPress={onOpenCommand} scaleTo={0.98} haptic style={styles.cmd}>
           <Icon name="search" size={14} color={tokens.accent} />
           <PresidentText variant="caption" muted style={{ flex: 1 }}>
-            Rechercher…
+            Commande…
           </PresidentText>
           <PresidentText variant="caption" champagne>
             ⌘K
@@ -119,6 +145,9 @@ export function PresidentSidebar({
                       {item.label}
                     </PresidentText>
                   ) : null}
+                  {active && !collapsed ? (
+                    <View style={styles.activePip} />
+                  ) : null}
                 </PressableSpring>
               );
             })}
@@ -153,19 +182,19 @@ export function PresidentSidebar({
           ) : null}
         </PressableSpring>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
-function createStyles(width: number, tokens: PresidentThemeTokens, collapsed: boolean) {
+function createStyles(tokens: PresidentThemeTokens, collapsed: boolean) {
   return StyleSheet.create({
     root: {
-      width,
       backgroundColor: tokens.sidebarBg,
       borderRightWidth: 1,
       borderRightColor: tokens.border,
       paddingHorizontal: collapsed ? presidentSpace.sm : presidentSpace.md,
       paddingBottom: presidentSpace.lg,
+      overflow: 'hidden',
       ...presidentShadow.soft,
     },
     brand: {
@@ -174,19 +203,20 @@ function createStyles(width: number, tokens: PresidentThemeTokens, collapsed: bo
       gap: presidentSpace.sm,
       marginBottom: presidentSpace.md,
       paddingHorizontal: 4,
+      minHeight: 48,
     },
-    logo: { width: 36, height: 36 },
-    logoSm: { width: 28, height: 28, alignSelf: 'center' },
+    logo: { width: 38, height: 38 },
+    logoSm: { width: 30, height: 30, alignSelf: 'center' },
     cmd: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
       paddingHorizontal: presidentSpace.md,
-      paddingVertical: 10,
+      paddingVertical: 11,
       borderRadius: presidentRadius.md,
       borderWidth: 1,
       borderColor: tokens.border,
-      backgroundColor: tokens.surface,
+      backgroundColor: tokens.surfaceGlass,
       marginBottom: presidentSpace.md,
     },
     nav: { gap: presidentSpace.lg, paddingBottom: presidentSpace.xl },
@@ -206,7 +236,18 @@ function createStyles(width: number, tokens: PresidentThemeTokens, collapsed: bo
       borderWidth: 1,
       borderColor: tokens.borderStrong,
     },
-    footer: { gap: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tokens.hairline, paddingTop: 10 },
+    activePip: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: tokens.accent,
+    },
+    footer: {
+      gap: 6,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.hairline,
+      paddingTop: 12,
+    },
     footerBtn: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -221,6 +262,8 @@ function createStyles(width: number, tokens: PresidentThemeTokens, collapsed: bo
       padding: 10,
       borderRadius: presidentRadius.sm,
       marginBottom: 6,
+      borderWidth: 1,
+      borderColor: tokens.hairline,
     },
   });
 }

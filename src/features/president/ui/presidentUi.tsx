@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   RefreshControl,
@@ -13,13 +12,22 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+import { PressableSpring, AnimatedEntrance, LivePulseDot } from '../../../components/motion';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { Icon } from '../../../components/ui/Icon';
 import type { IconName } from '../../../components/ui/iconNames';
 import { usePresidentTheme } from '../shell/PresidentThemeContext';
 import type { PresidentThemeTokens } from '../theme/presidentTokens';
 import {
+  presidentChrome,
+  presidentMotion,
   presidentRadius,
   presidentShadow,
   presidentSpace,
@@ -59,11 +67,86 @@ export function PresidentText({
   );
 }
 
-export function PresidentLoading() {
+export function PresidentBrandMark({ compact }: { compact?: boolean }) {
   const { tokens } = usePresidentTheme();
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <ActivityIndicator color={tokens.accent} size="large" />
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <View
+        style={{
+          width: compact ? 6 : 8,
+          height: compact ? 6 : 8,
+          borderRadius: 4,
+          backgroundColor: tokens.accent,
+          ...presidentShadow.champagne(tokens),
+        }}
+      />
+      <PresidentText
+        variant="brand"
+        champagne
+        style={{ fontSize: compact ? 9 : 10, letterSpacing: compact ? 1.6 : 2.2 }}
+      >
+        {presidentChrome.brandMark}
+      </PresidentText>
+    </View>
+  );
+}
+
+export function PresidentLoading({ label = 'Préparation du cockpit…' }: { label?: string }) {
+  const { tokens } = usePresidentTheme();
+  const pulse = useSharedValue(0.35);
+
+  React.useEffect(() => {
+    pulse.value = withRepeat(
+      withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
+      -1,
+      true,
+    );
+  }, [pulse]);
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: 0.25 + pulse.value * 0.55,
+    transform: [{ scale: 0.92 + pulse.value * 0.08 }],
+  }));
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: presidentSpace.lg,
+        backgroundColor: tokens.bg,
+        padding: presidentSpace.xl,
+      }}
+    >
+      <Animated.View
+        style={[
+          {
+            width: 72,
+            height: 72,
+            borderRadius: 36,
+            borderWidth: 1,
+            borderColor: tokens.borderLuxury,
+            backgroundColor: tokens.accentSoft,
+            alignItems: 'center',
+            justifyContent: 'center',
+          },
+          glowStyle,
+        ]}
+      >
+        <View
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: tokens.accent,
+          }}
+        />
+      </Animated.View>
+      <PresidentBrandMark />
+      <PresidentText variant="body" muted style={{ textAlign: 'center' }}>
+        {label}
+      </PresidentText>
     </View>
   );
 }
@@ -82,8 +165,9 @@ export function PresidentChapterScroll({
     <ScrollView
       contentContainerStyle={{
         paddingHorizontal: presidentSpace.lg,
-        paddingBottom: presidentSpace.xxxl,
-        gap: presidentSpace.lg,
+        paddingTop: presidentSpace.md,
+        paddingBottom: presidentSpace.hero,
+        gap: presidentSpace.xl,
       }}
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -106,16 +190,20 @@ export function PresidentSectionCard({
   eyebrow,
   children,
   style,
+  index = 0,
+  flush,
 }: {
   title?: string;
   eyebrow?: string;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  index?: number;
+  flush?: boolean;
 }) {
   const { tokens } = usePresidentTheme();
-  const styles = useMemo(() => sectionStyles(tokens), [tokens]);
+  const styles = useMemo(() => sectionStyles(tokens, flush), [tokens, flush]);
   return (
-    <AnimatedEntrance>
+    <AnimatedEntrance kind="fadeUp" index={index} delayStep={presidentMotion.stagger}>
       <View style={[styles.card, style]}>
         {eyebrow ? (
           <PresidentText variant="label" champagne style={styles.eyebrow}>
@@ -190,41 +278,52 @@ export function PresidentEmptyState({
 }) {
   const { tokens } = usePresidentTheme();
   return (
-    <View
-      style={{
-        padding: presidentSpace.xl,
-        borderRadius: presidentRadius.lg,
-        borderWidth: 1,
-        borderColor: tokens.border,
-        borderStyle: 'dashed',
-        gap: presidentSpace.sm,
-        backgroundColor: tokens.surfaceMuted,
-      }}
-    >
-      <PresidentText variant="h3">{title}</PresidentText>
-      <PresidentText variant="body" muted>
-        {body}
-      </PresidentText>
-      {actionLabel && onAction ? (
-        <PressableSpring
-          onPress={onAction}
-          scaleTo={0.97}
-          haptic
-          style={{
-            marginTop: presidentSpace.sm,
-            alignSelf: 'flex-start',
-            paddingHorizontal: presidentSpace.lg,
-            paddingVertical: presidentSpace.sm,
-            borderRadius: presidentRadius.pill,
-            backgroundColor: tokens.accent,
-          }}
-        >
-          <PresidentText variant="caption" style={{ color: tokens.accentText, fontWeight: '800' }}>
-            {actionLabel}
-          </PresidentText>
-        </PressableSpring>
-      ) : null}
-    </View>
+    <AnimatedEntrance kind="fadeUp">
+      <View
+        style={{
+          padding: presidentSpace.xl,
+          borderRadius: presidentRadius.xl,
+          borderWidth: 1,
+          borderColor: tokens.border,
+          gap: presidentSpace.md,
+          backgroundColor: tokens.surfaceMuted,
+          overflow: 'hidden',
+          ...presidentShadow.soft,
+        }}
+      >
+        <LinearGradient
+          colors={[tokens.champagneSoft, 'transparent']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <PresidentBrandMark compact />
+        <PresidentText variant="h2">{title}</PresidentText>
+        <PresidentText variant="body" muted>
+          {body}
+        </PresidentText>
+        {actionLabel && onAction ? (
+          <PressableSpring
+            onPress={onAction}
+            scaleTo={0.97}
+            haptic
+            style={{
+              marginTop: presidentSpace.sm,
+              alignSelf: 'flex-start',
+              paddingHorizontal: presidentSpace.lg,
+              paddingVertical: presidentSpace.sm + 2,
+              borderRadius: presidentRadius.pill,
+              backgroundColor: tokens.accent,
+              ...presidentShadow.glow(tokens),
+            }}
+          >
+            <PresidentText variant="caption" style={{ color: tokens.accentText, fontWeight: '800' }}>
+              {actionLabel}
+            </PresidentText>
+          </PressableSpring>
+        ) : null}
+      </View>
+    </AnimatedEntrance>
   );
 }
 
@@ -232,32 +331,62 @@ export function PresidentHeroBanner({
   greeting,
   clubName,
   subtitle,
+  overall,
 }: {
   greeting: string;
   clubName: string;
   subtitle: string;
+  overall?: number;
 }) {
   const { tokens } = usePresidentTheme();
   const styles = useMemo(() => heroStyles(tokens), [tokens]);
   return (
-    <View style={styles.wrap}>
-      <LinearGradient
-        colors={['rgba(201,166,107,0.18)', 'rgba(18,26,43,0.2)', 'transparent']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <PresidentText variant="label" champagne>
-        Pôle Président
-      </PresidentText>
-      <PresidentText variant="display">{greeting}</PresidentText>
-      <PresidentText variant="h3" champagne numberOfLines={1}>
-        {clubName}
-      </PresidentText>
-      <PresidentText variant="body" muted style={{ marginTop: 4 }}>
-        {subtitle}
-      </PresidentText>
-    </View>
+    <AnimatedEntrance kind="fadeUp" index={0}>
+      <View style={styles.wrap}>
+        <LinearGradient
+          colors={[
+            'rgba(212,184,128,0.28)',
+            'rgba(14,21,36,0.55)',
+            'rgba(5,7,14,0.9)',
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.85, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(232,213,168,0.06)']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.topRow}>
+          <PresidentBrandMark />
+          <View style={styles.liveChip}>
+            <LivePulseDot active color={tokens.champagne} size={6} />
+            <PresidentText variant="caption" champagne style={{ fontSize: 10, fontWeight: '700' }}>
+              Directif
+            </PresidentText>
+          </View>
+        </View>
+        <PresidentText variant="display">{greeting}</PresidentText>
+        <PresidentText variant="displaySm" champagne numberOfLines={1}>
+          {clubName}
+        </PresidentText>
+        <PresidentText variant="body" muted style={{ marginTop: 2, maxWidth: 420 }}>
+          {subtitle}
+        </PresidentText>
+        {typeof overall === 'number' ? (
+          <View style={styles.heroStat}>
+            <PresidentText variant="label" muted>
+              Indice santé
+            </PresidentText>
+            <PresidentText variant="statSm" style={{ color: tokens.champagneBright }}>
+              {overall}%
+            </PresidentText>
+          </View>
+        ) : null}
+      </View>
+    </AnimatedEntrance>
   );
 }
 
@@ -284,7 +413,7 @@ export function PresidentSearchField({
         borderRadius: presidentRadius.md,
         borderWidth: 1,
         borderColor: tokens.border,
-        backgroundColor: tokens.surfaceRaised,
+        backgroundColor: tokens.surfaceGlass,
       }}
     >
       <Icon name="search" size={16} color={tokens.muted} />
@@ -301,6 +430,9 @@ export function PresidentSearchField({
           paddingVertical: 6,
         }}
       />
+      <PresidentText variant="caption" champagne style={{ letterSpacing: 0.8 }}>
+        ⌘K
+      </PresidentText>
     </View>
   );
 }
@@ -338,12 +470,13 @@ export function PresidentConfirmModal({
             backgroundColor: tokens.surfaceRaised,
             borderRadius: presidentRadius.xl,
             borderWidth: 1,
-            borderColor: tokens.borderStrong,
+            borderColor: tokens.borderLuxury,
             padding: presidentSpace.xl,
             gap: presidentSpace.md,
-            ...presidentShadow.card,
+            ...presidentShadow.deep,
           }}
         >
+          <PresidentBrandMark compact />
           <PresidentText variant="h2">{title}</PresidentText>
           <PresidentText variant="body" muted>
             {body}
@@ -373,6 +506,7 @@ export function PresidentConfirmModal({
                 borderRadius: presidentRadius.md,
                 backgroundColor: tokens.accent,
                 alignItems: 'center',
+                ...presidentShadow.glow(tokens),
               }}
             >
               <PresidentText
@@ -389,16 +523,16 @@ export function PresidentConfirmModal({
   );
 }
 
-function sectionStyles(tokens: PresidentThemeTokens) {
+function sectionStyles(tokens: PresidentThemeTokens, flush?: boolean) {
   return StyleSheet.create({
     card: {
-      backgroundColor: tokens.surface,
-      borderRadius: presidentRadius.lg,
-      borderWidth: 1,
+      backgroundColor: flush ? 'transparent' : tokens.surface,
+      borderRadius: presidentRadius.xl,
+      borderWidth: flush ? 0 : 1,
       borderColor: tokens.border,
-      padding: presidentSpace.lg,
+      padding: flush ? 0 : presidentSpace.lg,
       gap: presidentSpace.md,
-      ...presidentShadow.soft,
+      ...(flush ? {} : presidentShadow.soft),
     },
     eyebrow: { marginBottom: -4 },
     title: { marginBottom: 2 },
@@ -419,16 +553,20 @@ function rowStyles(tokens: PresidentThemeTokens) {
       borderBottomWidth: 0,
       backgroundColor: tokens.champagneSoft,
       borderRadius: presidentRadius.md,
+      borderWidth: 1,
+      borderColor: tokens.border,
       paddingHorizontal: presidentSpace.md,
       marginBottom: 4,
     },
     iconWrap: {
-      width: 36,
-      height: 36,
+      width: 38,
+      height: 38,
       borderRadius: presidentRadius.sm,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.surfaceMuted,
+      borderWidth: 1,
+      borderColor: tokens.border,
     },
   });
 }
@@ -436,14 +574,44 @@ function rowStyles(tokens: PresidentThemeTokens) {
 function heroStyles(tokens: PresidentThemeTokens) {
   return StyleSheet.create({
     wrap: {
-      borderRadius: presidentRadius.xl,
+      borderRadius: presidentRadius.hero,
       borderWidth: 1,
-      borderColor: tokens.borderStrong,
+      borderColor: tokens.borderLuxury,
       backgroundColor: tokens.surfaceRaised,
       padding: presidentSpace.xl,
-      gap: 6,
+      paddingBottom: presidentSpace.xxl,
+      gap: 8,
       overflow: 'hidden',
-      ...presidentShadow.card,
+      minHeight: 200,
+      ...presidentShadow.deep,
+    },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 6,
+    },
+    liveChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: presidentRadius.pill,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.surfaceGlass,
+    },
+    heroStat: {
+      marginTop: presidentSpace.md,
+      alignSelf: 'flex-start',
+      paddingHorizontal: presidentSpace.md,
+      paddingVertical: presidentSpace.sm,
+      borderRadius: presidentRadius.md,
+      borderWidth: 1,
+      borderColor: tokens.borderStrong,
+      backgroundColor: tokens.ink,
+      gap: 2,
     },
   });
 }

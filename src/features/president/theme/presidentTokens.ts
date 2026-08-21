@@ -1,6 +1,6 @@
 /**
  * Tokens Pôle Président — ProDay Executive.
- * Navy graphite + champagne discret. Pas de clone Club dark, pas de violet SaaS.
+ * Graphite profond + champagne or. Pas de vert néon Club, pas de violet SaaS.
  */
 
 export type PresidentThemeTokens = {
@@ -9,8 +9,10 @@ export type PresidentThemeTokens = {
   surface: string;
   surfaceRaised: string;
   surfaceMuted: string;
+  surfaceGlass: string;
   border: string;
   borderStrong: string;
+  borderLuxury: string;
   foreground: string;
   muted: string;
   faint: string;
@@ -18,7 +20,9 @@ export type PresidentThemeTokens = {
   accentSoft: string;
   accentText: string;
   champagne: string;
+  champagneBright: string;
   champagneSoft: string;
+  champagneGlow: string;
   success: string;
   successSoft: string;
   warn: string;
@@ -31,34 +35,40 @@ export type PresidentThemeTokens = {
   dockBg: string;
   overlay: string;
   hairline: string;
+  ink: string;
 };
 
 export const PRESIDENT_TOKENS: PresidentThemeTokens = {
-  bg: '#070B14',
-  bgElevated: '#0C1220',
-  surface: '#121A2B',
-  surfaceRaised: '#182235',
-  surfaceMuted: '#0F1624',
-  border: 'rgba(201, 166, 107, 0.16)',
-  borderStrong: 'rgba(201, 166, 107, 0.32)',
-  foreground: '#F5F1E8',
-  muted: '#8E97AB',
-  faint: '#5C6578',
-  accent: '#C9A66B',
-  accentSoft: 'rgba(201, 166, 107, 0.14)',
-  accentText: '#0B1220',
+  bg: '#05070E',
+  bgElevated: '#0A0F1A',
+  surface: '#0E1524',
+  surfaceRaised: '#141E32',
+  surfaceMuted: '#0B111C',
+  surfaceGlass: 'rgba(20, 30, 50, 0.72)',
+  border: 'rgba(212, 184, 128, 0.14)',
+  borderStrong: 'rgba(212, 184, 128, 0.34)',
+  borderLuxury: 'rgba(232, 213, 168, 0.42)',
+  foreground: '#F7F3EB',
+  muted: '#9AA3B8',
+  faint: '#5A6478',
+  accent: '#D4B880',
+  accentSoft: 'rgba(212, 184, 128, 0.12)',
+  accentText: '#0A0F1A',
   champagne: '#E8D5A8',
-  champagneSoft: 'rgba(232, 213, 168, 0.12)',
-  success: '#3FAE8A',
-  successSoft: 'rgba(63, 174, 138, 0.16)',
-  warn: '#D4A017',
-  warnSoft: 'rgba(212, 160, 23, 0.16)',
-  danger: '#C45C5C',
-  dangerSoft: 'rgba(196, 92, 92, 0.16)',
-  info: '#6B8FBF',
-  infoSoft: 'rgba(107, 143, 191, 0.16)',
-  sidebarBg: '#090E18',
-  dockBg: 'rgba(9, 14, 24, 0.94)',
-  overlay: 'rgba(4, 8, 16, 0.72)',
-  hairline: 'rgba(245, 241, 232, 0.06)',
+  champagneBright: '#F2E6C8',
+  champagneSoft: 'rgba(232, 213, 168, 0.1)',
+  champagneGlow: 'rgba(212, 184, 128, 0.22)',
+  success: '#4AB894',
+  successSoft: 'rgba(74, 184, 148, 0.14)',
+  warn: '#D9A84A',
+  warnSoft: 'rgba(217, 168, 74, 0.14)',
+  danger: '#C86A6A',
+  dangerSoft: 'rgba(200, 106, 106, 0.14)',
+  info: '#7A96BE',
+  infoSoft: 'rgba(122, 150, 190, 0.14)',
+  sidebarBg: '#070B14',
+  dockBg: 'rgba(5, 7, 14, 0.96)',
+  overlay: 'rgba(2, 4, 10, 0.78)',
+  hairline: 'rgba(247, 243, 235, 0.055)',
+  ink: '#03050A',
 };

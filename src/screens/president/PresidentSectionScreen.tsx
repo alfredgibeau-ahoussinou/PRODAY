@@ -6,6 +6,7 @@ import { usePresidentShellNav } from '../../features/president/shell/PresidentSh
 import { usePresidentTheme } from '../../features/president/shell/PresidentThemeContext';
 import {
   PresidentActionRow,
+  PresidentBrandMark,
   PresidentChapterScroll,
   PresidentEmptyState,
   PresidentLoading,
@@ -58,7 +59,8 @@ export function PresidentSectionScreen({
   return (
     <View style={styles.root}>
       <PresidentChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <View style={{ gap: 4, paddingTop: presidentSpace.sm }}>
+        <View style={{ gap: 6, paddingTop: presidentSpace.sm }}>
+          <PresidentBrandMark compact />
           <PresidentText variant="label" champagne>
             {eyebrow}
           </PresidentText>

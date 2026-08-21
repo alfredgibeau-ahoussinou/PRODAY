@@ -1,31 +1,98 @@
 /**
- * Design system Pôle Président — typographie executive, surfaces, chrome.
+ * Design system Pôle Président — typographie Display executive, surfaces, chrome.
  */
 
 import type { TextStyle, ViewStyle } from 'react-native';
+import { fontFamily } from '../../../theme/typography';
 import { PRESIDENT_TOKENS, type PresidentThemeTokens } from './presidentTokens';
 
 export const presidentType = {
   display: {
-    fontSize: 34,
+    fontFamily: fontFamily.displayBold,
+    fontSize: 36,
     fontWeight: '800' as const,
-    letterSpacing: -1.1,
-    lineHeight: 40,
+    letterSpacing: -1.4,
+    lineHeight: 42,
   },
-  h1: { fontSize: 26, fontWeight: '800' as const, letterSpacing: -0.7, lineHeight: 32 },
-  h2: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.4, lineHeight: 26 },
-  h3: { fontSize: 16, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 22 },
-  body: { fontSize: 15, fontWeight: '500' as const, letterSpacing: 0.1, lineHeight: 22 },
-  caption: { fontSize: 12, fontWeight: '500' as const, letterSpacing: 0.15, lineHeight: 16 },
-  label: {
-    fontSize: 10,
+  displaySm: {
+    fontFamily: fontFamily.displayBold,
+    fontSize: 28,
     fontWeight: '800' as const,
-    letterSpacing: 1.4,
+    letterSpacing: -1,
+    lineHeight: 34,
+  },
+  h1: {
+    fontFamily: fontFamily.extrabold,
+    fontSize: 24,
+    fontWeight: '800' as const,
+    letterSpacing: -0.6,
+    lineHeight: 30,
+  },
+  h2: {
+    fontFamily: fontFamily.bold,
+    fontSize: 19,
+    fontWeight: '700' as const,
+    letterSpacing: -0.35,
+    lineHeight: 25,
+  },
+  h3: {
+    fontFamily: fontFamily.bold,
+    fontSize: 15,
+    fontWeight: '700' as const,
+    letterSpacing: -0.15,
+    lineHeight: 21,
+  },
+  body: {
+    fontFamily: fontFamily.regular,
+    fontSize: 15,
+    fontWeight: '400' as const,
+    letterSpacing: 0.05,
+    lineHeight: 22,
+  },
+  caption: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+    fontWeight: '600' as const,
+    letterSpacing: 0.12,
+    lineHeight: 16,
+  },
+  label: {
+    fontFamily: fontFamily.bold,
+    fontSize: 10,
+    fontWeight: '700' as const,
+    letterSpacing: 1.8,
     lineHeight: 13,
     textTransform: 'uppercase' as const,
   },
-  stat: { fontSize: 30, fontWeight: '800' as const, letterSpacing: -1, lineHeight: 34 },
-  nav: { fontSize: 13, fontWeight: '600' as const, letterSpacing: 0.1, lineHeight: 18 },
+  brand: {
+    fontFamily: fontFamily.displayBold,
+    fontSize: 11,
+    fontWeight: '800' as const,
+    letterSpacing: 2.2,
+    lineHeight: 14,
+    textTransform: 'uppercase' as const,
+  },
+  stat: {
+    fontFamily: fontFamily.displayBold,
+    fontSize: 42,
+    fontWeight: '800' as const,
+    letterSpacing: -1.6,
+    lineHeight: 46,
+  },
+  statSm: {
+    fontFamily: fontFamily.displayBold,
+    fontSize: 22,
+    fontWeight: '800' as const,
+    letterSpacing: -0.6,
+    lineHeight: 26,
+  },
+  nav: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 13,
+    fontWeight: '600' as const,
+    letterSpacing: 0.08,
+    lineHeight: 18,
+  },
 } satisfies Record<string, TextStyle>;
 
 export type PresidentTypeVariant = keyof typeof presidentType;
@@ -38,7 +105,8 @@ export const presidentSpace = {
   lg: 16,
   xl: 24,
   xxl: 32,
-  xxxl: 44,
+  xxxl: 48,
+  hero: 56,
 } as const;
 
 export const presidentRadius = {
@@ -47,47 +115,65 @@ export const presidentRadius = {
   md: 14,
   lg: 18,
   xl: 24,
-  xxl: 32,
+  xxl: 28,
+  hero: 32,
   pill: 999,
 } as const;
 
 export const presidentShadow = {
   soft: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 20,
+    elevation: 5,
   } satisfies ViewStyle,
   card: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.5,
-    shadowRadius: 28,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.55,
+    shadowRadius: 36,
+    elevation: 10,
+  } satisfies ViewStyle,
+  deep: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 22 },
+    shadowOpacity: 0.62,
+    shadowRadius: 48,
+    elevation: 14,
   } satisfies ViewStyle,
   glow: (tokens: PresidentThemeTokens = PRESIDENT_TOKENS): ViewStyle => ({
     shadowColor: tokens.accent,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.28,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.32,
+    shadowRadius: 28,
+    elevation: 8,
+  }),
+  champagne: (tokens: PresidentThemeTokens = PRESIDENT_TOKENS): ViewStyle => ({
+    shadowColor: tokens.champagne,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 4,
   }),
 };
 
 export const presidentMotion = {
-  press: 110,
-  enter: 320,
-  settle: 480,
+  press: 100,
+  enter: 380,
+  settle: 560,
+  stagger: 48,
+  bar: 720,
 } as const;
 
 export const presidentChrome = {
-  sidebarExpanded: 268,
-  sidebarCollapsed: 78,
+  sidebarExpanded: 276,
+  sidebarCollapsed: 76,
   wideBreakpoint: 920,
   tabletBreakpoint: 700,
-  headerHeight: 58,
+  headerHeight: 62,
   tabBarIcon: 22,
+  brandMark: 'PRODAY EXECUTIVE',
 } as const;
 
 export function presidentSurfaceCard(tokens: PresidentThemeTokens): ViewStyle {
@@ -97,6 +183,18 @@ export function presidentSurfaceCard(tokens: PresidentThemeTokens): ViewStyle {
     borderWidth: 1,
     borderColor: tokens.border,
     ...presidentShadow.card,
+  };
+}
+
+export function presidentSurfaceHero(tokens: PresidentThemeTokens): ViewStyle {
+  return {
+    backgroundColor: tokens.surfaceRaised,
+    borderRadius: presidentRadius.hero,
+    borderWidth: 1,
+    borderColor: tokens.borderLuxury,
+    overflow: 'hidden',
+    ...presidentShadow.deep,
+    ...presidentShadow.champagne(tokens),
   };
 }
 

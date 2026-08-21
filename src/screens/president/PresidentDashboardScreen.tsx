@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { PressableSpring, AnimatedEntrance } from '../../components/motion';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { usePresidentHealth } from '../../features/president/hooks/usePresidentHealth';
@@ -8,6 +10,7 @@ import { usePresidentTheme } from '../../features/president/shell/PresidentTheme
 import { PresidentHealthBoard } from '../../features/president/ui/PresidentHealthBoard';
 import {
   PresidentActionRow,
+  PresidentBrandMark,
   PresidentChapterScroll,
   PresidentHeroBanner,
   PresidentLoading,
@@ -15,13 +18,15 @@ import {
   PresidentSectionCard,
   PresidentText,
 } from '../../features/president/ui/presidentUi';
+import { PRESIDENT_HEALTH_AXIS_NAV } from '../../features/president/navigation/presidentNavConfig';
 import {
-  PRESIDENT_HEALTH_AXIS_NAV,
-} from '../../features/president/navigation/presidentNavConfig';
-import { presidentSpace } from '../../features/president/theme/presidentDesignSystem';
+  presidentRadius,
+  presidentShadow,
+  presidentSpace,
+} from '../../features/president/theme/presidentDesignSystem';
 import type { PresidentThemeTokens } from '../../features/president/theme/presidentTokens';
 
-/** Cockpit Accueil — état du club, indicateurs, centre de décision, actions rapides. */
+/** Cockpit Accueil — composition héro santé + centre de décision (pas une liste de cartes). */
 export function PresidentDashboardScreen() {
   const profile = useSessionProfile();
   const ws = useClubWorkspace();
@@ -31,7 +36,7 @@ export function PresidentDashboardScreen() {
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const [search, setSearch] = useState('');
 
-  if (ws.loading) return <PresidentLoading />;
+  if (ws.loading) return <PresidentLoading label="Ouverture du cockpit exécutif…" />;
 
   const firstName = profile?.display_name?.split(/\s+/)[0] || 'Président';
 
@@ -41,56 +46,123 @@ export function PresidentDashboardScreen() {
         <PresidentHeroBanner
           greeting={`Bonjour ${firstName}`}
           clubName={ws.club?.name ?? 'Votre club'}
-          subtitle="Voici l’état de votre club"
+          subtitle="Cockpit exécutif — l’état de votre club, en un regard."
+          overall={health.overall}
         />
 
         <PresidentSearchField
           value={search}
           onChangeText={setSearch}
-          placeholder="Rechercher une section… (⌘K)"
+          placeholder="Commande directionnelle…"
           onFocus={() => shellNav?.openCommandPalette?.()}
         />
 
-        <PresidentSectionCard eyebrow="Vue d’ensemble" title="Lecture éditoriale">
-          <PresidentText variant="body">
-            {ws.briefingHeadline || 'Structure opérationnelle'}
-          </PresidentText>
-          <PresidentText variant="body" muted>
-            {ws.briefingSummary ||
-              `${ws.teams.length} équipes · ${ws.players.length} licenciés · ${ws.coaches.length} coachs.`}
-          </PresidentText>
-          <View style={styles.statRow}>
-            <StatChip label="Équipes" value={String(ws.teams.length)} />
-            <StatChip label="Licenciés" value={String(ws.players.length)} />
-            <StatChip label="À faire" value={String(ws.todoCount)} />
+        {/* Composition héro : santé immersive */}
+        <View style={styles.heroDeck}>
+          <LinearGradient
+            colors={[tokens.champagneSoft, 'transparent']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0.6 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.heroDeckHeader}>
+            <View style={{ gap: 4, flex: 1 }}>
+              <PresidentText variant="label" champagne>
+                Tableau de bord
+              </PresidentText>
+              <PresidentText variant="h2">Santé & direction</PresidentText>
+              <PresidentText variant="caption" muted>
+                Touchez un axe pour ouvrir la section correspondante.
+              </PresidentText>
+            </View>
+            <View style={styles.kpiCluster}>
+              <KpiPill label="Équipes" value={String(ws.teams.length)} />
+              <KpiPill label="Licenciés" value={String(ws.players.length)} />
+              <KpiPill label="À faire" value={String(ws.todoCount)} accent={ws.todoCount > 0} />
+            </View>
           </View>
-        </PresidentSectionCard>
 
-        <PresidentSectionCard eyebrow="Indicateurs" title="Cinq axes de direction">
           <PresidentHealthBoard
             health={health}
+            immersive
             onAxisPress={(axis) => {
               shellNav?.requestNav(PRESIDENT_HEALTH_AXIS_NAV[axis.id]);
             }}
           />
-        </PresidentSectionCard>
 
-        <PresidentSectionCard eyebrow="Centre de décision" title="Priorités IA (heuristiques)">
-          {health.insights.map((line, i) => (
-            <PresidentText key={i} variant="body" muted>
-              {i + 1}. {line}
-            </PresidentText>
-          ))}
-          <PresidentActionRow
-            label="Ouvrir l’assistant exécutif"
-            hint="Dialogue Mistral + confirmation d’actions"
-            icon="star-four-points"
-            accent
-            onPress={() => shellNav?.requestNav('ai')}
-          />
-        </PresidentSectionCard>
+          {(ws.briefingHeadline || ws.briefingSummary) && (
+            <View style={styles.briefStrip}>
+              <PresidentText variant="label" champagne>
+                Lecture éditoriale
+              </PresidentText>
+              <PresidentText variant="body" style={{ fontWeight: '600' }}>
+                {ws.briefingHeadline || 'Structure opérationnelle'}
+              </PresidentText>
+              <PresidentText variant="caption" muted>
+                {ws.briefingSummary ||
+                  `${ws.teams.length} équipes · ${ws.players.length} licenciés · ${ws.coaches.length} coachs.`}
+              </PresidentText>
+            </View>
+          )}
+        </View>
 
-        <PresidentSectionCard eyebrow="Actions rapides" title="Piloter sans quitter la direction">
+        {/* Centre de décision — une composition, pas une carte isolée */}
+        <AnimatedEntrance kind="fadeUp" index={2}>
+          <View style={styles.decision}>
+            <View style={styles.decisionHead}>
+              <PresidentBrandMark compact />
+              <PresidentText variant="h2">Centre de décision</PresidentText>
+              <PresidentText variant="caption" muted>
+                Priorités heuristiques pour la direction.
+              </PresidentText>
+            </View>
+            <View style={styles.insightList}>
+              {health.insights.map((line, i) => (
+                <View key={i} style={styles.insightRow}>
+                  <View style={styles.insightIndex}>
+                    <PresidentText
+                      variant="caption"
+                      style={{ color: tokens.accentText, fontWeight: '800' }}
+                    >
+                      {i + 1}
+                    </PresidentText>
+                  </View>
+                  <PresidentText variant="body" style={{ flex: 1 }}>
+                    {line}
+                  </PresidentText>
+                </View>
+              ))}
+            </View>
+            <PressableSpring
+              onPress={() => shellNav?.requestNav('ai')}
+              scaleTo={0.98}
+              haptic
+              style={styles.aiCta}
+            >
+              <LinearGradient
+                colors={[tokens.accent, '#B8955A']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <PresidentText
+                variant="body"
+                style={{ color: tokens.accentText, fontWeight: '800' }}
+              >
+                Ouvrir l’assistant exécutif
+              </PresidentText>
+              <PresidentText variant="caption" style={{ color: tokens.accentText, opacity: 0.75 }}>
+                Dialogue Mistral · confirmation d’actions
+              </PresidentText>
+            </PressableSpring>
+          </View>
+        </AnimatedEntrance>
+
+        <PresidentSectionCard
+          eyebrow="Raccourcis"
+          title="Piloter sans quitter la direction"
+          index={3}
+        >
           <PresidentActionRow
             label="Équipes"
             hint="Espace équipes Club"
@@ -131,21 +203,33 @@ export function PresidentDashboardScreen() {
   );
 }
 
-function StatChip({ label, value }: { label: string; value: string }) {
+function KpiPill({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
   const { tokens } = usePresidentTheme();
   return (
     <View
       style={{
-        flex: 1,
-        padding: presidentSpace.md,
-        borderRadius: 12,
-        backgroundColor: tokens.surfaceMuted,
+        minWidth: 72,
+        paddingHorizontal: presidentSpace.md,
+        paddingVertical: presidentSpace.sm,
+        borderRadius: presidentRadius.md,
+        backgroundColor: accent ? tokens.accentSoft : tokens.ink,
         borderWidth: 1,
-        borderColor: tokens.border,
+        borderColor: accent ? tokens.borderStrong : tokens.border,
         gap: 2,
       }}
     >
-      <PresidentText variant="stat" style={{ fontSize: 22, lineHeight: 26 }}>
+      <PresidentText
+        variant="statSm"
+        style={{ color: accent ? tokens.champagneBright : tokens.foreground }}
+      >
         {value}
       </PresidentText>
       <PresidentText variant="caption" muted>
@@ -158,10 +242,69 @@ function StatChip({ label, value }: { label: string; value: string }) {
 function createStyles(tokens: PresidentThemeTokens) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
-    statRow: {
+    heroDeck: {
+      borderRadius: presidentRadius.hero,
+      borderWidth: 1,
+      borderColor: tokens.borderStrong,
+      backgroundColor: tokens.surface,
+      padding: presidentSpace.lg,
+      gap: presidentSpace.lg,
+      overflow: 'hidden',
+      ...presidentShadow.card,
+    },
+    heroDeckHeader: {
+      gap: presidentSpace.md,
+    },
+    kpiCluster: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: presidentSpace.sm,
+    },
+    briefStrip: {
+      padding: presidentSpace.md,
+      borderRadius: presidentRadius.md,
+      borderWidth: 1,
+      borderColor: tokens.hairline,
+      backgroundColor: tokens.surfaceMuted,
+      gap: 4,
+    },
+    decision: {
+      borderRadius: presidentRadius.hero,
+      borderWidth: 1,
+      borderColor: tokens.borderLuxury,
+      backgroundColor: tokens.surfaceRaised,
+      padding: presidentSpace.xl,
+      gap: presidentSpace.lg,
+      overflow: 'hidden',
+      ...presidentShadow.deep,
+    },
+    decisionHead: { gap: 6 },
+    insightList: { gap: presidentSpace.sm },
+    insightRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: presidentSpace.md,
+      paddingVertical: presidentSpace.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.hairline,
+    },
+    insightIndex: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: tokens.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 2,
+    },
+    aiCta: {
       marginTop: presidentSpace.sm,
+      paddingVertical: presidentSpace.md + 2,
+      paddingHorizontal: presidentSpace.lg,
+      borderRadius: presidentRadius.lg,
+      overflow: 'hidden',
+      gap: 2,
+      ...presidentShadow.glow(tokens),
     },
   });
 }
