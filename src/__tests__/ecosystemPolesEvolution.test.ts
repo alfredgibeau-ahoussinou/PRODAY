@@ -230,10 +230,11 @@ describe('ecosystem — joueur vérifié & club features', () => {
 });
 
 describe('ecosystem — carousel poles', () => {
-  it('expose les 6 pôles cibles (Parent + Coach remplace Staff / Événements)', () => {
+  it('expose les 7 pôles vitrine + Santé (Parent + Président + Coach)', () => {
     expect(CAROUSEL_POLE_ORDER).toEqual([
       'joueur',
       'pro_club',
+      'president',
       'coach',
       'parent',
       'supporter',
@@ -247,11 +248,15 @@ describe('ecosystem — carousel poles', () => {
     expect(carouselPoleToProductLine('joueur')).toBe('amateur');
     expect(carouselPoleToProductLine('coach')).toBe('pro_staff');
     expect(carouselPoleToProductLine('parent')).toBe('parent');
+    expect(carouselPoleToProductLine('president')).toBe('pro_club');
     expect(carouselPoleSignupPresetRole('coach')).toBe('coach');
     expect(carouselPoleSignupPresetRole('parent')).toBe('parent');
+    expect(carouselPoleSignupPresetRole('president')).toBe('club');
     expect(carouselPoleSignupPresetRole('evenements')).toBe('club');
     expect(productLineToCarouselPole('pro_player')).toBe('joueur');
     expect(productLineToCarouselPole('parent')).toBe('parent');
     expect(productLineToCarouselPole('pro_staff', 'organizer')).toBe('coach');
+    expect(productLineToCarouselPole('pro_club', 'club')).toBe('pro_club');
+    expect(productLineToCarouselPole('pro_club', 'club', 'president')).toBe('president');
   });
 });

@@ -10,6 +10,7 @@ import Animated, {
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UniverseChoicePager } from './UniverseChoicePager';
 import { shouldSkipPoleTransition } from './launchIntroFlow';
+import type { ClubShellMode } from '../../../models/ClubShellMode';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
 import { productLineToCarouselPole } from '../../../models/CarouselPole';
@@ -25,6 +26,7 @@ interface BrandRevealIntroProps {
   onDismiss?: () => void;
   initialLine?: ProductLineId;
   initialRole?: UserRole | null;
+  initialClubShellMode?: ClubShellMode | null;
   introTour?: boolean;
   skipReveal?: boolean;
   /** Entrée/sortie gérées par un parent (ex. PushScreenTransition). */
@@ -38,6 +40,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   onDismiss,
   initialLine,
   initialRole,
+  initialClubShellMode,
   introTour = false,
   skipReveal = false,
   skipLocalTransition = false,
@@ -93,13 +96,21 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 
   const handleChoose = useCallback(
     (line: IntroSpaceChoice) => {
-      if (shouldSkipPoleTransition(line, initialLine, initialRole, skipReveal)) {
+      if (
+        shouldSkipPoleTransition(
+          line,
+          initialLine,
+          initialRole,
+          skipReveal,
+          initialClubShellMode,
+        )
+      ) {
         beginLeave(null, true);
         return;
       }
       beginLeave(line, false);
     },
-    [beginLeave, initialLine, initialRole, skipReveal],
+    [beginLeave, initialClubShellMode, initialLine, initialRole, skipReveal],
   );
 
   const handleDismiss = useCallback(() => {
@@ -111,7 +122,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   }));
 
   const initialCarouselPole = initialLine
-    ? productLineToCarouselPole(initialLine, initialRole)
+    ? productLineToCarouselPole(initialLine, initialRole, initialClubShellMode)
     : undefined;
 
   return (

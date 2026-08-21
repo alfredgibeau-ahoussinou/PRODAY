@@ -10,10 +10,11 @@ describe('migration carousel Pôle Joueur (écosystème)', () => {
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('woman');
   });
 
-  it('expose Joueur · Club · Coach · Parent · Supporter · Sponsor', () => {
+  it('expose Joueur · Club · Président · Coach · Parent · Supporter · Sponsor', () => {
     expect(UNIVERSE_CHOICE_ORDER).toEqual([
       'joueur',
       'pro_club',
+      'president',
       'coach',
       'parent',
       'supporter',
@@ -36,10 +37,16 @@ describe('migration carousel Pôle Joueur (écosystème)', () => {
     expect(carouselPoleSignupPresetRole('parent')).toBe('parent');
   });
 
+  it('mappe le pôle président vers product_line Club (lien conservé)', () => {
+    expect(carouselPoleToProductLine('president')).toBe('pro_club');
+    expect(carouselPoleSignupPresetRole('president')).toBe('club');
+  });
+
   it('mappe les pôles carousel vers product_line stocké', () => {
     expect(carouselPoleToProductLine('joueur')).toBe('amateur');
     expect(carouselPoleToProductLine('pro_player')).toBe('amateur');
     expect(carouselPoleToProductLine('pro_club')).toBe('pro_club');
+    expect(carouselPoleToProductLine('president')).toBe('pro_club');
     expect(carouselPoleToProductLine('coach')).toBe('pro_staff');
     expect(carouselPoleToProductLine('pro_staff')).toBe('pro_staff');
     expect(carouselPoleToProductLine('evenements')).toBe('pro_club');

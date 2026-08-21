@@ -38,7 +38,7 @@ export const AdminPlatformBrief: React.FC<AdminPlatformBriefProps> = ({ compact 
         </View>
         <View style={styles.headText}>
           <Text style={styles.eyebrow}>Plateforme</Text>
-          <Text style={styles.title}>7 pôles · production</Text>
+          <Text style={styles.title}>{poles.length} pôles · production</Text>
         </View>
       </View>
 

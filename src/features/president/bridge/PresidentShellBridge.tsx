@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
 import type { ClubNavItemId } from '../../club/navigation/clubNavConfig';
+import { useProductLine } from '../../../context/ProductLineContext';
 
 type PresidentShellBridgeValue = {
   isPresidentShell: boolean;
@@ -13,19 +14,26 @@ const PresidentShellBridgeContext = createContext<PresidentShellBridgeValue | nu
 
 /**
  * Bridge Club ↔ Président — bascule de shell sans dupliquer les données.
+ * Le mode shell est piloté par `clubShellMode` (carousel / préférences),
+ * pour que Président soit un pôle sélectionnable lié au Club.
  */
 export function PresidentShellBridgeProvider({ children }: { children: React.ReactNode }) {
-  const [isPresidentShell, setIsPresidentShell] = useState(false);
+  const { clubShellMode, setClubShellMode } = useProductLine();
   const [pendingClubNav, setPendingClubNav] = useState<ClubNavItemId | null>(null);
 
-  const openPresident = useCallback(() => {
-    setIsPresidentShell(true);
-  }, []);
+  const isPresidentShell = clubShellMode === 'president';
 
-  const closePresident = useCallback((opts?: { clubNav?: ClubNavItemId }) => {
-    if (opts?.clubNav) setPendingClubNav(opts.clubNav);
-    setIsPresidentShell(false);
-  }, []);
+  const openPresident = useCallback(() => {
+    void setClubShellMode('president');
+  }, [setClubShellMode]);
+
+  const closePresident = useCallback(
+    (opts?: { clubNav?: ClubNavItemId }) => {
+      if (opts?.clubNav) setPendingClubNav(opts.clubNav);
+      void setClubShellMode('club');
+    },
+    [setClubShellMode],
+  );
 
   const consumePendingClubNav = useCallback(() => {
     const next = pendingClubNav;

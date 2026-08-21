@@ -3,6 +3,7 @@ import {
   normalizeCarouselPole,
   productLineToCarouselPole,
 } from '../../../models/CarouselPole';
+import type { ClubShellMode } from '../../../models/ClubShellMode';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
 
@@ -19,8 +20,13 @@ export function shouldSkipPoleTransition(
   currentLine: ProductLineId | undefined,
   currentRole: UserRole | null | undefined,
   isManualReopen: boolean,
+  currentClubShellMode?: ClubShellMode | null,
 ): boolean {
   if (!isManualReopen || currentLine == null) return false;
-  const currentPole = productLineToCarouselPole(currentLine, currentRole);
+  const currentPole = productLineToCarouselPole(
+    currentLine,
+    currentRole,
+    currentClubShellMode,
+  );
   return normalizeCarouselPole(chosenPole) === normalizeCarouselPole(currentPole);
 }

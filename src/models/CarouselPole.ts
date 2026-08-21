@@ -1,16 +1,19 @@
+import type { ClubShellMode } from './ClubShellMode';
 import type { ProductLineId } from './ProductLine';
 import type { UserRole } from './User';
 import { resolveProProductSegmentFromRole, type ProProductSegment } from './ProductLine';
 
 /**
  * Pôles carousel pré-connexion — architecture cible.
- * Vitrine : Joueur · Club · Coach · Parent · Supporter · Sponsor.
+ * Vitrine : Joueur · Club · Président · Coach · Parent · Supporter · Sponsor.
  * Santé / Agent / Recruteur / Organisateur = rôles intégrés (pas des pôles).
+ * Président partage le product_line Club (`pro_club`) + mode shell dédié.
  */
 export type CarouselPoleId =
   | 'joueur'
   | 'supporter'
   | 'pro_club'
+  | 'president'
   | 'coach'
   | 'parent'
   | 'sponsor'
@@ -24,10 +27,11 @@ export type CarouselPoleId =
   /** @deprecated → joueur */
   | 'pro_player';
 
-/** Carousel marketing / choix univers — 6 pôles principaux. */
+/** Carousel marketing / choix univers — 7 pôles principaux. */
 export const CAROUSEL_SHOWCASE_POLE_ORDER: CarouselPoleId[] = [
   'joueur',
   'pro_club',
+  'president',
   'coach',
   'parent',
   'supporter',
@@ -55,7 +59,11 @@ export const PRO_SIGNUP_PRESET_ROLE_KEY = 'proday_pro_signup_preset_role';
 
 export function isCarouselProPole(pole: CarouselPoleId): boolean {
   const normalized = normalizeCarouselPole(pole);
-  return normalized === 'pro_club' || normalized === 'coach';
+  return (
+    normalized === 'pro_club' ||
+    normalized === 'president' ||
+    normalized === 'coach'
+  );
 }
 
 export function normalizeCarouselPole(pole: CarouselPoleId): CarouselPoleId {
@@ -68,7 +76,8 @@ export function normalizeCarouselPole(pole: CarouselPoleId): CarouselPoleId {
 export function carouselPoleToProductLine(pole: CarouselPoleId): ProductLineId {
   const normalized = normalizeCarouselPole(pole);
   if (normalized === 'joueur') return 'amateur';
-  if (normalized === 'pro_club') return 'pro_club';
+  // Président = même ligne produit Club (données / ACL) + mode shell distinct.
+  if (normalized === 'pro_club' || normalized === 'president') return 'pro_club';
   if (normalized === 'coach') return 'pro_staff';
   if (normalized === 'sponsor') return 'sponsor';
   if (normalized === 'parent') return 'parent';
@@ -78,7 +87,7 @@ export function carouselPoleToProductLine(pole: CarouselPoleId): ProductLineId {
 export function carouselPoleToProSegment(pole: CarouselPoleId): ProProductSegment | null {
   const normalized = normalizeCarouselPole(pole);
   if (normalized === 'joueur') return 'pro_player';
-  if (normalized === 'pro_club') return 'pro_club';
+  if (normalized === 'pro_club' || normalized === 'president') return 'pro_club';
   if (normalized === 'coach') return 'pro_staff';
   return null;
 }
@@ -89,6 +98,7 @@ export function carouselPoleSignupPresetRole(pole: CarouselPoleId): UserRole | n
     case 'joueur':
       return 'player';
     case 'pro_club':
+    case 'president':
       return 'club';
     case 'coach':
       return 'coach';
@@ -101,24 +111,29 @@ export function carouselPoleSignupPresetRole(pole: CarouselPoleId): UserRole | n
   }
 }
 
-/** Mappe la ligne stockée + rôle vers le pôle carousel (réouverture manuelle). */
+/** Mappe la ligne stockée + rôle (+ mode shell Club) vers le pôle carousel. */
 export function productLineToCarouselPole(
   line: ProductLineId,
   role?: UserRole | null,
+  clubShellMode?: ClubShellMode | null,
 ): CarouselPoleId {
   if (line === 'sponsor') return 'sponsor';
   if (line === 'parent') return 'parent';
   if (line === 'pro_player' || line === 'amateur' || line === 'homme' || line === 'woman') {
     return 'joueur';
   }
-  if (line === 'pro_club') return 'pro_club';
+  if (line === 'pro_club') {
+    return clubShellMode === 'president' ? 'president' : 'pro_club';
+  }
   if (line === 'pro_staff') {
     // Agent / recruteur / organisateur restent des rôles sous le pôle Coach (écosystème).
     return 'coach';
   }
   if (line === 'pro') {
     const segment = resolveProProductSegmentFromRole(role);
-    if (segment === 'pro_club') return 'pro_club';
+    if (segment === 'pro_club') {
+      return clubShellMode === 'president' ? 'president' : 'pro_club';
+    }
     if (segment === 'pro_staff') return 'coach';
     return 'joueur';
   }

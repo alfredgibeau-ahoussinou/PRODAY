@@ -92,6 +92,14 @@ const proClubGradients = {
   ambient: ['rgba(0, 108, 252, 0.35)', '#020814', '#000000'] as const,
 };
 
+const presidentGradients = {
+  hero: ['#03050A', '#0A0F1A'] as const,
+  heroDark: ['#03050A', '#05070E'] as const,
+  card: ['#0E1524', '#05070E'] as const,
+  cta: ['#92700C', '#D4B880'] as const,
+  ambient: ['rgba(212, 184, 128, 0.22)', '#05070E', '#03050A'] as const,
+};
+
 const proStaffGradients = {
   hero: ['#000000', '#312E81'] as const,
   heroDark: ['#000000', '#1e1b4b'] as const,
@@ -131,6 +139,7 @@ export function gradientsForCarouselPole(pole: CarouselPoleId): {
   ambient: GradientStops;
 } {
   if (pole === 'pro_club') return proClubGradients;
+  if (pole === 'president') return presidentGradients;
   if (pole === 'pro_staff') return proStaffGradients;
   if (pole === 'sponsor') return sponsorGradients;
   if (pole === 'parent') return parentGradients;

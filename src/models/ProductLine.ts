@@ -102,6 +102,18 @@ export const PRODAY_PRO_CLUB_BRAND = {
   entryCta: 'Espace Club',
 } as const;
 
+/** Branding carousel / chrome — même product_line `pro_club`, shell Président. */
+export const PRODAY_PRESIDENT_BRAND = {
+  name: 'Pro Day Président',
+  logoLine1: 'Pro Day',
+  logoLine2Lead: '',
+  logoLine2Accent: 'Président',
+  tagline: 'DIRECTION • STRATÉGIE • PRESTIGE',
+  shortTagline:
+    'Cockpit exécutif du club. Pilotage, finances et décisions — lié au Pôle Club',
+  entryCta: 'Espace Président',
+} as const;
+
 export const PRODAY_PRO_STAFF_BRAND = {
   name: 'Pro Day Coach',
   logoLine1: 'Pro Day',

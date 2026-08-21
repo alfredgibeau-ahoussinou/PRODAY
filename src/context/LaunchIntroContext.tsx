@@ -16,6 +16,7 @@ import {
   carouselPoleSignupPresetRole,
   carouselPoleToProductLine,
 } from '../models/CarouselPole';
+import { clubShellModeFromCarouselPole } from '../models/ClubShellMode';
 import { useAppLaunchIntro } from '../hooks/useAppLaunchIntro';
 import { useProductLine } from './ProductLineContext';
 import { useAuthOptional } from './AuthContext';
@@ -47,7 +48,8 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   const { visible: firstLaunchVisible, playKey, markIntroComplete } = useAppLaunchIntro();
   const auth = useAuthOptional();
   const profile = auth?.profile ?? null;
-  const { productLine, setProductLine, setProSignupPresetRole } = useProductLine();
+  const { productLine, setProductLine, setProSignupPresetRole, clubShellMode, setClubShellMode } =
+    useProductLine();
   const [manualOpen, setManualOpen] = useState(false);
   const [pickerSession, setPickerSession] = useState(0);
   const [videoIntroDone, setVideoIntroDone] = useState(false);
@@ -98,10 +100,12 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
     async (pole: IntroSpaceChoice) => {
       const preset = carouselPoleSignupPresetRole(pole);
       await setProSignupPresetRole(preset);
+      const shellMode = clubShellModeFromCarouselPole(pole);
+      if (shellMode) await setClubShellMode(shellMode);
       const line = carouselPoleToProductLine(pole);
       await setProductLine(line);
     },
-    [setProductLine, setProSignupPresetRole],
+    [setProductLine, setProSignupPresetRole, setClubShellMode],
   );
 
   const onIntroExitComplete = useCallback(() => {
@@ -136,6 +140,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
               onDismiss={closeSpacePicker}
               initialLine={productLine}
               initialRole={profile?.role}
+              initialClubShellMode={clubShellMode}
               skipReveal
               skipLocalTransition
             />

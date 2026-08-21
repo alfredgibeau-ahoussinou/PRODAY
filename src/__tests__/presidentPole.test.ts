@@ -20,6 +20,15 @@ import {
 import { buildPresidentHealth } from '../features/president/hooks/usePresidentHealth';
 import type { ClubWorkspace } from '../features/club/hooks/useClubWorkspace';
 import { poleShellTransitionDirection } from '../components/motion/PoleShellTransition';
+import {
+  carouselPoleSignupPresetRole,
+  carouselPoleToProductLine,
+  productLineToCarouselPole,
+} from '../models/CarouselPole';
+import {
+  clubShellModeFromCarouselPole,
+  normalizeClubShellMode,
+} from '../models/ClubShellMode';
 
 describe('canAccessPresidentPole', () => {
   it('autorise un compte club rattaché', () => {
@@ -141,5 +150,21 @@ describe('poleShellTransition Club ↔ Président', () => {
 
   it('Président → Club recule', () => {
     expect(poleShellTransitionDirection('president', 'club')).toBe(-1);
+  });
+});
+
+describe('Président sélectionnable au carousel (lien Club)', () => {
+  it('mappe le pôle Président sur product_line Club + preset club', () => {
+    expect(carouselPoleToProductLine('president')).toBe('pro_club');
+    expect(carouselPoleSignupPresetRole('president')).toBe('club');
+    expect(clubShellModeFromCarouselPole('president')).toBe('president');
+    expect(clubShellModeFromCarouselPole('pro_club')).toBe('club');
+    expect(normalizeClubShellMode('president')).toBe('president');
+    expect(normalizeClubShellMode(null)).toBe('club');
+  });
+
+  it('distingue Club et Président dans le mapping inverse', () => {
+    expect(productLineToCarouselPole('pro_club', 'club')).toBe('pro_club');
+    expect(productLineToCarouselPole('pro_club', 'club', 'president')).toBe('president');
   });
 });
