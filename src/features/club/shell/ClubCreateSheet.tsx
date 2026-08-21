@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
@@ -13,6 +14,10 @@ import { ClubText } from '../ui/clubUi';
 import { useClubTheme } from './ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+
+/** Aligné avec ClubCopilotFab — dock + pastille 40. */
+const FAB_BOTTOM = 72;
+const EDGE_INSET = clubSpace.md; // 12
 
 type Props = {
   visible: boolean;
@@ -65,27 +70,70 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
   );
 }
 
-/** FAB mobile « + CRÉER ». */
+/**
+ * FAB CRÉER — pastille icon-only collée au bord droit (même traitement que Copilote),
+ * sous le Copilote, ouvre la sheet de création.
+ */
 export function ClubCreateFab({ onPress }: { onPress: () => void }) {
   const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
-  const styles = useMemo(() => createStyles(tokens), [tokens]);
-  const right = Math.max(insets.right, 0) + clubSpace.xl;
+  const styles = useMemo(() => createFabStyles(), []);
+  const right = Math.max(insets.right, 0) + EDGE_INSET;
+
   return (
     <PressableSpring
       onPress={onPress}
-      scaleTo={0.94}
+      scaleTo={0.92}
       haptic
-      style={[styles.fab, { right }]}
+      style={[styles.wrap, { right, bottom: FAB_BOTTOM }]}
       accessibilityRole="button"
       accessibilityLabel="Créer"
+      testID="club-create-fab"
+      hitSlop={8}
     >
-      <Icon name="add" size={22} color={tokens.onAccent} />
-      <ClubText variant="caption" style={[styles.fabLabel, { color: tokens.onAccent }]}>
-        CRÉER
-      </ClubText>
+      <View style={styles.bubble} pointerEvents="box-none">
+        <LinearGradient
+          colors={[tokens.accent, tokens.accentDeep]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.face}
+        >
+          <Icon name="add" size={20} color={tokens.onAccent} />
+        </LinearGradient>
+      </View>
     </PressableSpring>
   );
+}
+
+function createFabStyles() {
+  return StyleSheet.create({
+    wrap: {
+      position: 'absolute',
+      zIndex: 30,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.28,
+      shadowRadius: 8,
+      elevation: 4,
+      ...Platform.select({
+        android: { backgroundColor: 'transparent' },
+        default: {},
+      }),
+    },
+    bubble: {
+      borderRadius: clubRadius.pill,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(255,255,255,0.14)',
+    },
+    face: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    },
+  });
 }
 
 function createStyles(tokens: ClubThemeTokens) {
@@ -127,21 +175,5 @@ function createStyles(tokens: ClubThemeTokens) {
       justifyContent: 'center',
       backgroundColor: tokens.accentSoft,
     },
-    fab: {
-      position: 'absolute',
-      bottom: 72,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      backgroundColor: tokens.accentDeep,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderRadius: clubRadius.lg,
-      zIndex: 30,
-      borderWidth: 1,
-      borderColor: tokens.borderStrong,
-      ...clubShadow.soft,
-    },
-    fabLabel: { fontWeight: '800', letterSpacing: 0.6, fontSize: 11 },
   });
 }
