@@ -78,8 +78,14 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
   );
 
   const dockPadBottom = Math.max(insets.bottom, 10);
-  /** Mobile : pas de top bar — le contenu commence sous la status bar. */
-  const contentTopPad = wide ? 0 : insets.top + adminLayout.contentTop;
+  /**
+   * Mobile : dock seul (pas de top bar nav).
+   * paddingTop = max(insets.top, floor îlot) + air confortable — héro Accueil
+   * et panes ne montent pas sous heure / batterie / Dynamic Island.
+   */
+  const contentTopPad = wide
+    ? 0
+    : Math.max(insets.top, adminLayout.statusBarMin) + adminLayout.contentTop;
 
   return (
     <View style={styles.root}>

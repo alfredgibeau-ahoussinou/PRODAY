@@ -186,7 +186,13 @@ export const adminLayout = {
   stackGap: adminSpace.lg,
   gridGap: adminSpace.md,
   dockClearance: adminSpace.hero + adminChrome.dockRailHeight,
-  contentTop: adminSpace.md,
+  /**
+   * Air sous la status bar / Dynamic Island (mobile, dock seul).
+   * Pas juste 1–12 px : zone cliquable Rechercher / actions hors système.
+   */
+  contentTop: adminSpace.xl,
+  /** Plancher insets.top (évite le flash à 0 au mount / îlot). */
+  statusBarMin: 54,
   headerPadX: adminSpace.lg,
   listRowMinHeight: 52,
   hitTarget: 44,
