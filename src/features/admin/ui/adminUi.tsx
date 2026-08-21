@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   StyleSheet,
   View,
@@ -24,6 +23,7 @@ import {
   adminType,
   type AdminTypeVariant,
 } from '../theme/adminDesignSystem';
+import { AdminPaneSkeleton, AdminPressable, AdminSkeletonBlock, AdminAnimatedNumber } from '../motion';
 
 type TextProps = {
   children: React.ReactNode;
@@ -116,17 +116,18 @@ export function AdminButton({
           ? t.champagneBright
           : t.foreground;
   return (
-    <Pressable
+    <AdminPressable
       testID={testID}
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}
-      style={({ pressed }) => [
+      scaleTo={0.97}
+      style={[
         styles.btn,
         {
           backgroundColor: bg,
           borderColor: variant === 'ghost' ? t.borderStrong : 'transparent',
-          opacity: disabled ? 0.45 : pressed ? 0.9 : 1,
+          opacity: disabled ? 0.45 : 1,
           ...(variant === 'primary' ? adminShadow.glow(t) : null),
         },
       ]}
@@ -134,7 +135,7 @@ export function AdminButton({
       <AdminText variant="caption" color={color} style={{ fontWeight: '800' }}>
         {label}
       </AdminText>
-    </Pressable>
+    </AdminPressable>
   );
 }
 
@@ -251,9 +252,13 @@ export function AdminMetric({
       <AdminText variant="label" muted>
         {label}
       </AdminText>
-      <AdminText variant="statSm" color={color}>
-        {value}
-      </AdminText>
+      {typeof value === 'number' ? (
+        <AdminAnimatedNumber value={value} variant="statSm" color={color} />
+      ) : (
+        <AdminText variant="statSm" color={color}>
+          {value}
+        </AdminText>
+      )}
       {hint ? (
         <AdminText variant="caption" muted numberOfLines={1}>
           {hint}
@@ -342,44 +347,20 @@ export function AdminEmptyState({
 export function AdminLoading({ label = 'Chargement du centre…' }: { label?: string }) {
   const t = ADMIN_TOKENS;
   return (
-    <View style={[styles.loading, { backgroundColor: t.bg }]}>
-      <View
-        style={{
-          width: 64,
-          height: 64,
-          borderRadius: 32,
-          borderWidth: 1,
-          borderColor: t.borderLuxury,
-          backgroundColor: t.accentSoft,
-          alignItems: 'center',
-          justifyContent: 'center',
-          ...adminShadow.champagne(t),
-        }}
-      >
-        <ActivityIndicator color={t.accent} />
+    <View style={[styles.loading, { backgroundColor: t.bg }]} accessibilityLabel={label}>
+      <View style={styles.loadingHead}>
+        <AdminBrandMark />
+        <AdminText variant="caption" muted>
+          {label}
+        </AdminText>
       </View>
-      <AdminBrandMark />
-      <AdminText variant="body" muted>
-        {label}
-      </AdminText>
+      <AdminPaneSkeleton rows={5} />
     </View>
   );
 }
 
 export function AdminSkeleton({ height = 72 }: { height?: number }) {
-  const t = ADMIN_TOKENS;
-  return (
-    <View
-      style={{
-        height,
-        borderRadius: adminRadius.md,
-        backgroundColor: t.surfaceRaised,
-        opacity: 0.5,
-        borderWidth: 1,
-        borderColor: t.hairline,
-      }}
-    />
-  );
+  return <AdminSkeletonBlock height={height} />;
 }
 
 const styles = StyleSheet.create({
@@ -462,10 +443,12 @@ const styles = StyleSheet.create({
   },
   loading: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: adminSpace.lg,
-    padding: adminSpace.xl,
+    paddingTop: adminSpace.md,
+  },
+  loadingHead: {
+    paddingHorizontal: adminSpace.lg,
+    gap: adminSpace.sm,
+    marginBottom: adminSpace.sm,
   },
 });
 

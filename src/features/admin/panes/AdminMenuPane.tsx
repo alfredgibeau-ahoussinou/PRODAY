@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   ADMIN_MENU_DEST_IDS,
   ADMIN_NAV_ITEMS,
@@ -9,6 +9,7 @@ import { AdminButton, AdminPaneHeader, AdminText } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { Icon } from '../../../components/ui/Icon';
+import { AdminListRow, AdminPressable } from '../motion';
 
 type Props = {
   onNavigate: (section: AdminNavSectionId) => void;
@@ -31,7 +32,7 @@ export function AdminMenuPane({ onNavigate, onOpenCommand }: Props) {
         }
       />
       {onOpenCommand ? (
-        <Pressable
+        <AdminPressable
           onPress={onOpenCommand}
           style={[styles.cmd, { borderColor: t.border, backgroundColor: t.surfaceGlass }]}
         >
@@ -42,11 +43,12 @@ export function AdminMenuPane({ onNavigate, onOpenCommand }: Props) {
           <AdminText variant="caption" champagne>
             ⌘K
           </AdminText>
-        </Pressable>
+        </AdminPressable>
       ) : null}
-      {items.map((item) => (
-        <Pressable
+      {items.map((item, index) => (
+        <AdminListRow
           key={item.id}
+          index={index}
           onPress={() => onNavigate(item.id)}
           style={[styles.row, { borderColor: t.border, backgroundColor: t.surface }]}
         >
@@ -60,7 +62,7 @@ export function AdminMenuPane({ onNavigate, onOpenCommand }: Props) {
             ) : null}
           </View>
           <Icon name="chevron-forward" size={16} color={t.faint} />
-        </Pressable>
+        </AdminListRow>
       ))}
     </ScrollView>
   );

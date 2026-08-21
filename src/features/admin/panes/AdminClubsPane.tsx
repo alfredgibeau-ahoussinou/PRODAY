@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,6 +21,7 @@ import {
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
+import { AdminListRow, AdminModalSheet } from '../motion';
 import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
 import type { Club } from '../../../models/Club';
@@ -202,8 +202,12 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: adminSpace.lg, gap: 8 }}
         ListEmptyComponent={<AdminEmptyState title="Aucun club" />}
-        renderItem={({ item }) => (
-          <Pressable onPress={() => setSelected(item)} onLongPress={() => selection.toggle(item.id)}>
+        renderItem={({ item, index }) => (
+          <AdminListRow
+            index={index}
+            onPress={() => setSelected(item)}
+            onLongPress={() => selection.toggle(item.id)}
+          >
             <AdminCard
               style={
                 selection.isSelected(item.id) ? { borderColor: ADMIN_TOKENS.accent } : undefined
@@ -238,11 +242,11 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
                 </View>
               </View>
             </AdminCard>
-          </Pressable>
+          </AdminListRow>
         )}
       />
 
-      <Modal visible={!!selected} animationType="slide" onRequestClose={() => setSelected(null)}>
+      <AdminModalSheet visible={!!selected} onClose={() => setSelected(null)} variant="full">
         {selected ? (
           <ClubEditor
             club={selected}
@@ -257,7 +261,7 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
             }}
           />
         ) : null}
-      </Modal>
+      </AdminModalSheet>
     </View>
   );
 }

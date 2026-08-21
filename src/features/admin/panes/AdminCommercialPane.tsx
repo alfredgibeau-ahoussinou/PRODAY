@@ -21,6 +21,7 @@ import {
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
+import { AdminDetailTransition, AdminListRow, useAdminMotion } from '../motion';
 import {
   clubQuoteService,
   computeClubQuoteTotal,
@@ -39,6 +40,7 @@ type Filter = ClubQuoteStatus | 'all';
 export function AdminCommercialPane({ focusId }: { focusId?: string }) {
   const data = useAdminData();
   const { firebaseUser, profile } = useAuth();
+  const { showToast } = useAdminMotion();
   const t = ADMIN_TOKENS;
   const [filter, setFilter] = useState<Filter>('pending');
   const [selected, setSelected] = useState<ClubQuoteRequest | null>(null);
@@ -116,6 +118,7 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
                 });
                 await data.refresh();
                 setSelected(null);
+                showToast({ title: `Devis envoyé · ${totalPreview} €`, tone: 'success' });
                 Alert.alert('Devis envoyé', `Total ${totalPreview} € enregistré.`);
               } catch (e) {
                 Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
@@ -133,70 +136,73 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
 
   if (creating) {
     return (
-      <View style={styles.root}>
-        <AdminSheetHeader
-          title="Nouveau devis"
-          onClose={() => setCreating(false)}
-          closeLabel="Retour"
-        />
-        <View style={styles.form}>
-          <AdminCard>
-            <Field
-              label="Club"
-              value={createForm.club_name}
-              onChange={(v) => setCreateForm((f) => ({ ...f, club_name: v }))}
-              t={t}
-            />
-            <Field
-              label="Responsable"
-              value={createForm.owner_name}
-              onChange={(v) => setCreateForm((f) => ({ ...f, owner_name: v }))}
-              t={t}
-            />
-            <Field
-              label="Email"
-              value={createForm.email}
-              onChange={(v) => setCreateForm((f) => ({ ...f, email: v }))}
-              t={t}
-            />
-            <Field
-              label="Adhérents (indicatif)"
-              value={createForm.members}
-              onChange={(v) => setCreateForm((f) => ({ ...f, members: v }))}
-              t={t}
-            />
-            <AdminButton
-              label={busy ? '…' : 'Créer la demande'}
-              disabled={busy}
-              onPress={() => {
-                void (async () => {
-                  setBusy(true);
-                  try {
-                    const id = await clubQuoteService.submit({
-                      club_name: createForm.club_name,
-                      owner_name: createForm.owner_name,
-                      email: createForm.email,
-                      members: createForm.members,
-                      requester_uid: firebaseUser?.uid,
-                    });
-                    await data.refresh();
-                    setCreating(false);
-                    const created = (await clubQuoteService.listForAdmin('all', 20)).find(
-                      (q) => q.id === id,
-                    );
-                    if (created) openQuote(created);
-                    Alert.alert('Créé', 'Demande de devis enregistrée.');
-                  } catch (e) {
-                    Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
-                  } finally {
-                    setBusy(false);
-                  }
-                })();
-              }}
-            />
-          </AdminCard>
+      <AdminDetailTransition active>
+        <View style={styles.root}>
+          <AdminSheetHeader
+            title="Nouveau devis"
+            onClose={() => setCreating(false)}
+            closeLabel="Retour"
+          />
+          <View style={styles.form}>
+            <AdminCard>
+              <Field
+                label="Club"
+                value={createForm.club_name}
+                onChange={(v) => setCreateForm((f) => ({ ...f, club_name: v }))}
+                t={t}
+              />
+              <Field
+                label="Responsable"
+                value={createForm.owner_name}
+                onChange={(v) => setCreateForm((f) => ({ ...f, owner_name: v }))}
+                t={t}
+              />
+              <Field
+                label="Email"
+                value={createForm.email}
+                onChange={(v) => setCreateForm((f) => ({ ...f, email: v }))}
+                t={t}
+              />
+              <Field
+                label="Adhérents (indicatif)"
+                value={createForm.members}
+                onChange={(v) => setCreateForm((f) => ({ ...f, members: v }))}
+                t={t}
+              />
+              <AdminButton
+                label={busy ? '…' : 'Créer la demande'}
+                disabled={busy}
+                onPress={() => {
+                  void (async () => {
+                    setBusy(true);
+                    try {
+                      const id = await clubQuoteService.submit({
+                        club_name: createForm.club_name,
+                        owner_name: createForm.owner_name,
+                        email: createForm.email,
+                        members: createForm.members,
+                        requester_uid: firebaseUser?.uid,
+                      });
+                      await data.refresh();
+                      setCreating(false);
+                      const created = (await clubQuoteService.listForAdmin('all', 20)).find(
+                        (q) => q.id === id,
+                      );
+                      if (created) openQuote(created);
+                      showToast({ title: 'Demande de devis créée', tone: 'success' });
+                      Alert.alert('Créé', 'Demande de devis enregistrée.');
+                    } catch (e) {
+                      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+                    } finally {
+                      setBusy(false);
+                    }
+                  })();
+                }}
+              />
+            </AdminCard>
+          </View>
         </View>
-      </View>
+      </AdminDetailTransition>
     );
   }
 
@@ -232,6 +238,7 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
                     adminEmail: profile?.email ?? firebaseUser.email ?? undefined,
                   });
                   await data.refresh();
+                  showToast({ title: `Montant ${amount} € appliqué`, tone: 'success' });
                   Alert.alert('OK', `Montant ${amount} € enregistré sur le club.`);
                 } catch (e) {
                   Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
@@ -246,15 +253,16 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
     };
 
     return (
-      <View style={styles.root}>
-        <AdminSheetHeader
-          title={selected.club_name}
-          subtitle={`${selected.owner_name} · ${selected.email}`}
-          onClose={() => setSelected(null)}
-          closeLabel="Retour"
-          right={<AdminBadge label={selected.status} tone="accent" />}
-        />
-        <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+      <AdminDetailTransition active>
+        <View style={styles.root}>
+          <AdminSheetHeader
+            title={selected.club_name}
+            subtitle={`${selected.owner_name} · ${selected.email}`}
+            onClose={() => setSelected(null)}
+            closeLabel="Retour"
+            right={<AdminBadge label={selected.status} tone="accent" />}
+          />
+          <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
           <AdminCard>
             <AdminText variant="h2">Calculateur</AdminText>
             <AdminText variant="caption" color={t.muted}>
@@ -360,7 +368,8 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
             />
           ) : null}
         </ScrollView>
-      </View>
+        </View>
+      </AdminDetailTransition>
     );
   }
 
@@ -442,8 +451,8 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
             body="Les devis clubs arrivent ici dès qu’un club en fait la demande."
           />
         }
-        renderItem={({ item }) => (
-          <Pressable onPress={() => openQuote(item)}>
+        renderItem={({ item, index }) => (
+          <AdminListRow index={index} onPress={() => openQuote(item)}>
             <AdminCard>
               <View style={styles.row}>
                 <View style={{ flex: 1, gap: 2 }}>
@@ -470,7 +479,7 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
                 />
               </View>
             </AdminCard>
-          </Pressable>
+          </AdminListRow>
         )}
       />
     </View>

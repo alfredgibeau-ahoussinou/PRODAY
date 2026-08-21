@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,6 +21,7 @@ import {
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
+import { AdminListRow, AdminModalSheet } from '../motion';
 import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
 import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
 import { useAdminSelection } from '../utils/useAdminSelection';
@@ -214,10 +214,11 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
         ListEmptyComponent={
           <AdminEmptyState title="Aucun utilisateur" body="Ajustez les filtres." />
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const needs = userNeedsAdminVerificationReview(item);
           return (
-            <Pressable
+            <AdminListRow
+              index={index}
               onPress={() => setSelected(item)}
               onLongPress={() => selection.toggle(item.uid)}
             >
@@ -264,12 +265,12 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
                   </View>
                 </View>
               </AdminCard>
-            </Pressable>
+            </AdminListRow>
           );
         }}
       />
 
-      <Modal visible={!!selected} animationType="slide" onRequestClose={() => setSelected(null)}>
+      <AdminModalSheet visible={!!selected} onClose={() => setSelected(null)} variant="full">
         {selected ? (
           <UserEditor
             user={selected}
@@ -285,7 +286,7 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
             actorEmail={profile?.email ?? firebaseUser?.email ?? undefined}
           />
         ) : null}
-      </Modal>
+      </AdminModalSheet>
     </View>
   );
 }

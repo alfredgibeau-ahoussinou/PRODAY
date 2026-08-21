@@ -1,7 +1,5 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Pressable,
   StyleSheet,
   View,
   useWindowDimensions,
@@ -25,7 +23,14 @@ import {
 } from '../navigation/adminNavConfig';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminChrome, adminLayout, adminSpace } from '../theme/adminDesignSystem';
-import { Icon } from '../../../components/ui/Icon';
+import {
+  AdminDockTab,
+  AdminMotionProvider,
+  AdminPaneSkeleton,
+  AdminPaneTransition,
+  useAdminMotion,
+  type AdminNavDirection,
+} from '../motion';
 
 interface AdminAppShellProps {
   onPreviewUserApp: () => void;
@@ -37,16 +42,26 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
   const { width } = useWindowDimensions();
   const wide = width >= adminChrome.wideBreakpoint;
   const t = ADMIN_TOKENS;
+  const { recordNav, navDirection } = useAdminMotion();
 
   const [section, setSection] = useState<AdminNavSectionId>('accueil');
   const [focusId, setFocusId] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [direction, setDirection] = useState<AdminNavDirection>(1);
+  const sectionRef = useRef(section);
+  sectionRef.current = section;
 
-  const navigate = useCallback((next: AdminNavSectionId, nextFocus?: string) => {
-    setSection(next === 'menu' && wide ? 'accueil' : next);
-    setFocusId(nextFocus);
-  }, [wide]);
+  const navigate = useCallback(
+    (next: AdminNavSectionId, nextFocus?: string) => {
+      const target = next === 'menu' && wide ? 'accueil' : next;
+      const dir = recordNav(sectionRef.current, target);
+      setDirection(dir);
+      setSection(target);
+      setFocusId(nextFocus);
+    },
+    [wide, recordNav],
+  );
 
   const openCommand = useCallback(() => setCommandOpen(true), []);
 
@@ -94,7 +109,14 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
               />
             ) : null}
 
-            <View style={[styles.content, { paddingTop: contentTopPad }]}>{pane}</View>
+            <View style={[styles.content, { paddingTop: contentTopPad }]}>
+              <AdminPaneTransition
+                sectionKey={section}
+                direction={direction || navDirection}
+              >
+                {pane}
+              </AdminPaneTransition>
+            </View>
 
             {!wide ? (
               <View style={[styles.dock, { paddingBottom: dockPadBottom }]}>
@@ -112,31 +134,13 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
                         : section === id;
                     const icon = id === 'menu' ? 'hamburger' : item?.icon ?? 'home';
                     return (
-                      <Pressable
+                      <AdminDockTab
                         key={id}
+                        label={id === 'menu' ? 'Menu' : item?.shortLabel ?? id}
+                        icon={icon}
+                        active={active}
                         onPress={() => navigate(id)}
-                        style={[styles.dockItem, active && styles.dockItemActive]}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: active }}
-                      >
-                        <Icon
-                          name={icon}
-                          size={adminChrome.tabBarIcon}
-                          color={active ? t.accent : t.muted}
-                        />
-                        <AdminText
-                          variant="caption"
-                          color={active ? t.champagneBright : t.muted}
-                          style={{
-                            fontWeight: active ? '800' : '500',
-                            fontSize: 10,
-                            letterSpacing: active ? 0.4 : 0,
-                          }}
-                          numberOfLines={1}
-                        >
-                          {id === 'menu' ? 'Menu' : item?.shortLabel ?? id}
-                        </AdminText>
-                      </Pressable>
+                      />
                     );
                   })}
                 </View>
@@ -163,8 +167,8 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
     return (
       <SafeAreaView style={styles.loader} edges={['top', 'left', 'right', 'bottom']}>
         <StatusBar style="light" />
-        <ActivityIndicator size="large" color={t.accent} />
-        <AdminText variant="caption" color={t.muted}>
+        <AdminPaneSkeleton rows={4} />
+        <AdminText variant="caption" color={t.muted} style={styles.loaderHint}>
           Chargement du Control Center…
         </AdminText>
       </SafeAreaView>
@@ -182,7 +186,9 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
 
   return (
     <AdminDataProvider>
-      <AdminShellInner onPreviewUserApp={onPreviewUserApp} />
+      <AdminMotionProvider>
+        <AdminShellInner onPreviewUserApp={onPreviewUserApp} />
+      </AdminMotionProvider>
     </AdminDataProvider>
   );
 };
@@ -195,10 +201,11 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   loader: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: adminSpace.lg,
     backgroundColor: ADMIN_TOKENS.bg,
+  },
+  loaderHint: {
+    textAlign: 'center',
+    paddingBottom: adminSpace.xl,
   },
   dock: {
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -211,17 +218,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     minHeight: adminChrome.dockRailHeight,
     alignItems: 'center',
-  },
-  dockItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    minHeight: adminLayout.hitTarget,
-    justifyContent: 'center',
-    borderRadius: 12,
-  },
-  dockItemActive: {
-    backgroundColor: ADMIN_TOKENS.accentSoft,
   },
 });
