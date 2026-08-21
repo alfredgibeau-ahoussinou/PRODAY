@@ -6,6 +6,10 @@ import {
   View,
 } from 'react-native';
 import { PushScreenTransition } from '../../../components/motion';
+import {
+  PaneTransition,
+  useShellNavDirection,
+} from '../../../motion';
 import { StatusBar } from 'expo-status-bar';
 import { CoachSidebar } from './CoachSidebar';
 import { CoachTabBar } from './CoachTabBar';
@@ -15,6 +19,8 @@ import { openCoachHelpChatbot } from './coachHelpOpen';
 import {
   canonicalizeCoachNav,
   coachNavFromTab,
+  COACH_PRIMARY_NAV_IDS,
+  COACH_SECONDARY_NAV_IDS,
   resolveCoachNavOnTabSync,
   tabFromCoachNav,
   type CoachNavItemId,
@@ -61,6 +67,11 @@ import type { User } from '../../../models/User';
 import { useCoachShellNav } from './CoachShellNavContext';
 import { CoachThemeProvider, useCoachTheme } from './CoachThemeContext';
 
+const COACH_MOTION_ORDER: CoachNavItemId[] = [
+  ...COACH_PRIMARY_NAV_IDS,
+  ...COACH_SECONDARY_NAV_IDS,
+];
+
 const SIDEBAR_WIDTH = 248;
 const WIDE_BREAKPOINT = 900;
 
@@ -104,6 +115,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   const { width } = useWindowDimensions();
   const wide = width >= WIDE_BREAKPOINT;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const { direction, noteNav } = useShellNavDirection(COACH_MOTION_ORDER);
 
   const [members, setMembers] = useState<User[]>([]);
   const clubId = profile?.profile.club_id;
@@ -160,8 +172,12 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   }, [activeTab, onTabChange]);
 
   useEffect(() => {
-    setNavId((prev) => resolveCoachNavOnTabSync(prev, activeTab));
-  }, [activeTab]);
+    setNavId((prev) => {
+      const next = resolveCoachNavOnTabSync(prev, activeTab);
+      if (next !== prev) noteNav(next);
+      return next;
+    });
+  }, [activeTab, noteNav]);
 
   useEffect(() => {
     if (!shouldKeepCoachEventHubOverlay(activeTab, navId)) {
@@ -184,6 +200,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     if (coachNav) {
       setEventHubOverlay(null);
       const next = canonicalizeCoachNav(coachNav);
+      noteNav(next);
       setNavId(next);
       const nextTab = tabFromCoachNav(next);
       if (nextTab !== activeTab) {
@@ -193,19 +210,21 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
       return;
     }
     clearPendingMatchs();
-  }, [pendingMatchsLink, clearPendingMatchs, syncMatchCenterNav, activeTab, onTabChange]);
+  }, [pendingMatchsLink, clearPendingMatchs, syncMatchCenterNav, activeTab, onTabChange, noteNav]);
 
   useEffect(() => {
     if (pendingDashboardView === 'smart_tactics') {
+      noteNav('smart_tactics');
       setNavId('smart_tactics');
       onTabChange(tabFromCoachNav('smart_tactics'));
       clearPendingDashboard();
     } else if (pendingDashboardView === 'gestion') {
+      noteNav('gestion');
       setNavId('gestion');
       onTabChange(tabFromCoachNav('gestion'));
       clearPendingDashboard();
     }
-  }, [pendingDashboardView, clearPendingDashboard, onTabChange]);
+  }, [pendingDashboardView, clearPendingDashboard, onTabChange, noteNav]);
 
   const coachName = profile?.display_name ?? 'Coach';
   const resolved = findInCoachNavCatalog(catalog, navId);
@@ -213,6 +232,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   const onSelect = (id: CoachNavItemId) => {
     setEventHubOverlay(null);
     const next = canonicalizeCoachNav(id);
+    noteNav(next);
     setNavId(next);
     const nextTab = tabFromCoachNav(next);
     if (nextTab !== activeTab) {
@@ -264,7 +284,9 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
         {wide ? <CoachSidebar {...sidebarProps} /> : null}
 
         <View style={styles.pane}>
-          {content}
+          <PaneTransition sectionKey={navId} direction={direction}>
+            {content}
+          </PaneTransition>
           <PushScreenTransition
             active={Boolean(eventHubOverlay)}
             backgroundColor={tokens.bg}

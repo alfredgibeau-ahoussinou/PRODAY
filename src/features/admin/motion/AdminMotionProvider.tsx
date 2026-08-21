@@ -1,37 +1,34 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
-import { adminNavDirection, type AdminNavDirection } from './adminMotion';
+import {
+  ProDayMotionProvider,
+  useProDayMotion,
+  type NavDirection,
+} from '../../../motion';
+import { ADMIN_MOTION_SECTION_ORDER } from './adminMotion';
 import { AdminToastHost, type AdminToastPayload } from './AdminToast';
 
 type AdminMotionContextValue = {
-  navDirection: AdminNavDirection;
-  /** True si une transition pane est en cours — skip empilement. */
+  navDirection: NavDirection;
   isPaneBusy: boolean;
   setPaneBusy: (v: boolean) => void;
-  recordNav: (from: AdminNavSectionId, to: AdminNavSectionId) => AdminNavDirection;
+  recordNav: (from: AdminNavSectionId, to: AdminNavSectionId) => NavDirection;
   showToast: (payload: Omit<AdminToastPayload, 'id'>) => void;
 };
 
-const AdminMotionContext = createContext<AdminMotionContextValue | null>(null);
-
-export function AdminMotionProvider({ children }: { children: React.ReactNode }) {
-  const [navDirection, setNavDirection] = useState<AdminNavDirection>(1);
-  const [isPaneBusy, setPaneBusy] = useState(false);
+/**
+ * Couche Admin au-dessus de ProDayMotionProvider (toast chrome admin).
+ */
+function AdminMotionBridge({ children }: { children: React.ReactNode }) {
+  const global = useProDayMotion();
   const [toast, setToast] = useState<AdminToastPayload | null>(null);
   const toastSeq = useRef(0);
 
-  const recordNav = useCallback((from: AdminNavSectionId, to: AdminNavSectionId) => {
-    const dir = adminNavDirection(from, to);
-    setNavDirection(dir);
-    return dir;
-  }, []);
+  const recordNav = useCallback(
+    (from: AdminNavSectionId, to: AdminNavSectionId) =>
+      global.recordNav(from, to, ADMIN_MOTION_SECTION_ORDER),
+    [global],
+  );
 
   const showToast = useCallback((payload: Omit<AdminToastPayload, 'id'>) => {
     toastSeq.current += 1;
@@ -40,27 +37,37 @@ export function AdminMotionProvider({ children }: { children: React.ReactNode })
 
   const dismissToast = useCallback(() => setToast(null), []);
 
-  const value = useMemo(
+  const value = useMemo<AdminMotionContextValue>(
     () => ({
-      navDirection,
-      isPaneBusy,
-      setPaneBusy,
+      navDirection: global.navDirection,
+      isPaneBusy: global.isPaneBusy,
+      setPaneBusy: global.setPaneBusy,
       recordNav,
       showToast,
     }),
-    [navDirection, isPaneBusy, recordNav, showToast],
+    [global.navDirection, global.isPaneBusy, global.setPaneBusy, recordNav, showToast],
   );
 
   return (
-    <AdminMotionContext.Provider value={value}>
+    <AdminMotionLocalContext.Provider value={value}>
       {children}
       <AdminToastHost toast={toast} onDismiss={dismissToast} />
-    </AdminMotionContext.Provider>
+    </AdminMotionLocalContext.Provider>
+  );
+}
+
+const AdminMotionLocalContext = React.createContext<AdminMotionContextValue | null>(null);
+
+export function AdminMotionProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <ProDayMotionProvider>
+      <AdminMotionBridge>{children}</AdminMotionBridge>
+    </ProDayMotionProvider>
   );
 }
 
 export function useAdminMotion(): AdminMotionContextValue {
-  const ctx = useContext(AdminMotionContext);
+  const ctx = React.useContext(AdminMotionLocalContext);
   if (!ctx) {
     return {
       navDirection: 1,

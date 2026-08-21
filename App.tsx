@@ -99,6 +99,7 @@ import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { BottomTabBar } from './src/components/navigation/BottomTabBar';
 import { WomanSpaceDefaults } from './src/components/appSpace/WomanSpaceDefaults';
 import { AnimatedTabContent, PoleShellTransition } from './src/components/motion';
+import { ProDayMotionProvider } from './src/motion';
 import { colors, spacing } from './src/theme/designTokens';
 import { EmailVerificationScreen } from './src/screens/EmailVerificationScreen';
 import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
@@ -220,7 +221,9 @@ export default function App() {
               <ProductLineProvider>
                 <AuthGreetingProvider>
                   <LaunchIntroProvider>
-                    <AppShell />
+                    <ProDayMotionProvider>
+                      <AppShell />
+                    </ProDayMotionProvider>
                   </LaunchIntroProvider>
                 </AuthGreetingProvider>
               </ProductLineProvider>

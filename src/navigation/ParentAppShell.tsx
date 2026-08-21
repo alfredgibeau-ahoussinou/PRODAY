@@ -26,10 +26,17 @@ import {
 } from './parentShellContext';
 import {
   PARENT_PRIMARY_TABS,
+  PARENT_MENU_TOOLS,
   canonicalizeParentNav,
 } from '../features/parent/navigation/parentNavConfig';
 import { ParentTabBar } from '../features/parent/shell/ParentTabBar';
 import { ParentShellNavProvider } from '../features/parent/shell/ParentShellNavContext';
+import { PaneTransition, useShellNavDirection } from '../motion';
+
+const PARENT_MOTION_ORDER = [
+  ...PARENT_PRIMARY_TABS.map((t) => t.id),
+  ...PARENT_MENU_TOOLS.map((t) => t.id),
+] as const;
 
 export type { ParentTabId } from './parentShellContext';
 export { useParentShell } from './parentShellContext';
@@ -51,14 +58,17 @@ export const ParentAppShell: React.FC = () => {
 const ParentAppShellInner: React.FC = () => {
   const { profile, signOut } = useAuth();
   const { colors: c, rootStyle } = useThemedScreen();
+  const { direction, noteNav } = useShellNavDirection(PARENT_MOTION_ORDER);
   const [activeTab, setActiveTabRaw] = useState<ParentTabId>('home');
   const [children, setChildren] = useState<ParentChildBundle[]>([]);
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const setActiveTab = useCallback((tab: ParentTabId) => {
-    setActiveTabRaw(canonicalizeParentNav(tab));
-  }, []);
+    const next = canonicalizeParentNav(tab);
+    noteNav(next);
+    setActiveTabRaw(next);
+  }, [noteNav]);
 
   const reload = useCallback(async () => {
     if (!profile) {
@@ -165,7 +175,11 @@ const ParentAppShellInner: React.FC = () => {
               </Pressable>
             ) : null}
           </View>
-          <View style={styles.content}>{screen}</View>
+          <View style={styles.content}>
+            <PaneTransition sectionKey={activeTab} direction={direction} context="tab">
+              {screen}
+            </PaneTransition>
+          </View>
           <ParentTabBar
             items={PARENT_PRIMARY_TABS}
             activeId={activeTab}

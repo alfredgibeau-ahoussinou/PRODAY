@@ -18,3 +18,19 @@ export { InteractiveListItem } from './InteractiveListItem';
 export { PressableSpring } from './PressableSpring';
 export { SkeletonBlock, SkeletonList } from './SkeletonBlock';
 export { LivePulseDot } from './LivePulseDot';
+
+/** Facade — préférer `src/motion` pour le système complet. */
+export {
+  prodayMotion,
+  motion,
+  PaneTransition,
+  DetailTransition,
+  ModalSheet,
+  BottomSheet,
+  PressableScale,
+  ListRow,
+  ProDayMotionProvider,
+  useProDayMotion,
+  useReducedMotion,
+  getMotionPreset,
+} from '../../motion';

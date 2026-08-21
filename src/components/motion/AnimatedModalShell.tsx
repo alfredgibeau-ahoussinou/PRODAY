@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { motion } from '../../theme/motion';
+import { motion, useReducedMotion } from '../../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
@@ -49,6 +49,7 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
   sheetBackgroundColor,
 }) => {
   const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
   const { colors: appColors } = useAppTheme();
   const c = themeColors ?? appColors;
   const { t } = useTranslation();
@@ -59,13 +60,23 @@ export const AnimatedModalShell: React.FC<AnimatedModalShellProps> = ({
 
   useEffect(() => {
     if (visible) {
+      if (reduced) {
+        backdrop.value = 1;
+        sheetY.value = 0;
+        return;
+      }
       backdrop.value = withTiming(1, { duration: motion.duration.modal });
       sheetY.value = withSpring(0, motion.spring.sheet);
     } else {
+      if (reduced) {
+        backdrop.value = 0;
+        sheetY.value = 80;
+        return;
+      }
       backdrop.value = withTiming(0, { duration: motion.duration.fast });
       sheetY.value = withSpring(80, motion.spring.snappy);
     }
-  }, [visible, backdrop, sheetY]);
+  }, [visible, reduced, backdrop, sheetY]);
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: backdrop.value,

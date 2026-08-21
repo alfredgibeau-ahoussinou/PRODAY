@@ -6,8 +6,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { motion } from '../../theme/motion';
-import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { motion, useReducedMotion } from '../../motion';
 
 export type PoleShellId = 'parent' | 'supporter' | 'club' | 'president';
 

@@ -5,7 +5,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { motion } from '../../theme/motion';
+import { prodayMotion, useReducedMotion } from '../../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -27,22 +27,25 @@ export const PressableSpring: React.FC<PressableSpringProps> = ({
   onPress,
   ...rest
 }) => {
+  const reduced = useReducedMotion();
   const scale = useSharedValue(1);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    opacity: 0.9 + scale.value * 0.1,
+    opacity: reduced ? 1 : 0.9 + scale.value * 0.1,
   }));
 
   return (
     <AnimatedPressable
       style={[style, animStyle]}
       onPressIn={(e) => {
-        scale.value = withSpring(scaleTo, motion.spring.snappy);
+        if (!reduced && !rest.disabled) {
+          scale.value = withSpring(scaleTo, prodayMotion.spring.snappy);
+        }
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        scale.value = withSpring(1, motion.spring.snappy);
+        if (!reduced) scale.value = withSpring(1, prodayMotion.spring.snappy);
         onPressOut?.(e);
       }}
       onPress={(e) => {

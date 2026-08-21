@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   SlideInLeft,
   SlideInRight,
   SlideOutLeft,
   SlideOutRight,
 } from 'react-native-reanimated';
-import { motion } from '../../theme/motion';
+import { getMotionPreset, useReducedMotion } from '../../motion';
 
 interface AnimatedRouteContentProps {
   /** Clé de route active (ex. onglet ou segment). */
@@ -17,13 +17,15 @@ interface AnimatedRouteContentProps {
 }
 
 /**
- * Transition directionnelle entre routes (slide + spring), générique hors MainTabs.
+ * Transition directionnelle entre routes (preset `nav`).
  */
 export const AnimatedRouteContent: React.FC<AnimatedRouteContentProps> = ({
   routeKey,
   routeOrder,
   children,
 }) => {
+  const reduced = useReducedMotion();
+  const preset = getMotionPreset('nav');
   const hasMounted = useRef(false);
   const prevIndex = useRef(routeOrder.indexOf(routeKey));
   const currentIndex = routeOrder.indexOf(routeKey);
@@ -34,24 +36,32 @@ export const AnimatedRouteContent: React.FC<AnimatedRouteContentProps> = ({
     hasMounted.current = true;
   }, [currentIndex]);
 
+  if (reduced) {
+    return (
+      <View key={routeKey} style={styles.fill}>
+        {children}
+      </View>
+    );
+  }
+
   const entering = hasMounted.current
     ? direction > 0
       ? SlideInRight.springify()
-          .damping(18)
-          .stiffness(165)
-          .mass(0.85)
-          .duration(motion.duration.normal)
+          .damping(preset.spring.damping)
+          .stiffness(preset.spring.stiffness)
+          .mass(preset.spring.mass)
+          .duration(preset.enterMs)
       : SlideInLeft.springify()
-          .damping(18)
-          .stiffness(165)
-          .mass(0.85)
-          .duration(motion.duration.normal)
+          .damping(preset.spring.damping)
+          .stiffness(preset.spring.stiffness)
+          .mass(preset.spring.mass)
+          .duration(preset.enterMs)
     : undefined;
 
   const exiting =
     direction > 0
-      ? SlideOutLeft.duration(motion.duration.fast).easing(motion.easing.in)
-      : SlideOutRight.duration(motion.duration.fast).easing(motion.easing.in);
+      ? SlideOutLeft.duration(preset.exitMs)
+      : SlideOutRight.duration(preset.exitMs);
 
   return (
     <Animated.View

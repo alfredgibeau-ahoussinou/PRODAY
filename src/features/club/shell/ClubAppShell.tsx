@@ -22,11 +22,14 @@ import {
   canonicalizeClubNav,
   clubNavFromTab,
   CLUB_CREATE_ACTIONS,
+  CLUB_MENU_DEST_IDS,
+  CLUB_PRIMARY_NAV_IDS,
   resolveClubNavOnTabSync,
   tabFromClubNav,
   type ClubCreateActionId,
   type ClubNavItemId,
 } from '../navigation/clubNavConfig';
+import { PaneTransition, useShellNavDirection } from '../../../motion';
 import {
   findInClubNavCatalog,
   resolveClubMenuItems,
@@ -66,6 +69,11 @@ import {
   PRESIDENT_POLE_DENIED_TITLE,
 } from '../../president/navigation/canAccessPresidentPole';
 import { useClubWorkspace } from '../hooks/useClubWorkspace';
+
+const CLUB_MOTION_ORDER: ClubNavItemId[] = [
+  ...CLUB_PRIMARY_NAV_IDS,
+  ...CLUB_MENU_DEST_IDS,
+];
 
 type Props = {
   activeTab: MainTabId;
@@ -108,6 +116,7 @@ function ClubAppShellInner({
   const wide = width >= clubChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const presidentBridge = usePresidentShellBridge();
+  const { direction, noteNav } = useShellNavDirection(CLUB_MOTION_ORDER);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [navId, setNavId] = useState<ClubNavItemId>(() =>
     canonicalizeClubNav(clubNavFromTab(activeTab)),
@@ -137,8 +146,12 @@ function ClubAppShellInner({
   const toolItems = useMemo(() => resolveClubMenuItems(access), [access]);
 
   useEffect(() => {
-    setNavId((prev) => resolveClubNavOnTabSync(prev, activeTab));
-  }, [activeTab]);
+    setNavId((prev) => {
+      const next = resolveClubNavOnTabSync(prev, activeTab);
+      if (next !== prev) noteNav(next);
+      return next;
+    });
+  }, [activeTab, noteNav]);
 
   useEffect(() => {
     registerClubCopilotOpener(() => setCopilotOpen(true));
@@ -150,10 +163,11 @@ function ClubAppShellInner({
     const pending = presidentBridge.consumePendingClubNav();
     if (!pending) return;
     const next = canonicalizeClubNav(pending);
+    noteNav(next);
     setNavId(next);
     const nextTab = tabFromClubNav(next);
     if (nextTab !== activeTab) onTabChange(nextTab);
-  }, [presidentBridge, presidentBridge?.pendingClubNav, activeTab, onTabChange]);
+  }, [presidentBridge, presidentBridge?.pendingClubNav, activeTab, onTabChange, noteNav]);
 
   const clubName = profile?.display_name ?? 'Club';
   const resolved = findInClubNavCatalog(catalog, navId);
@@ -161,6 +175,7 @@ function ClubAppShellInner({
 
   const onSelect = (id: ClubNavItemId) => {
     const next = canonicalizeClubNav(id);
+    noteNav(next);
     setNavId(next);
     if (next !== 'teams') setSelectedTeamId(null);
     if (next !== 'players') setSelectedPlayerUid(null);
@@ -275,7 +290,9 @@ function ClubAppShellInner({
             onProfile={() => onSelect('club')}
             onOpenCopilot={onOpenHelp}
           />
-          {content}
+          <PaneTransition sectionKey={navId} direction={direction}>
+            {content}
+          </PaneTransition>
           {showFab ? (
             <>
               <ClubCopilotFab onPress={onOpenHelp} />

@@ -4,15 +4,18 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
-import { useReducedMotion } from '../../../hooks/useReducedMotion';
+import {
+  DockPillIndicator,
+  TabUnderline,
+  useReducedMotion,
+  prodayMotion,
+} from '../../../motion';
 import { Icon } from '../../../components/ui/Icon';
 import type { IconName } from '../../../components/ui/iconNames';
 import { AdminText } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminChrome, adminLayout } from '../theme/adminDesignSystem';
-import { adminMotion } from './adminMotion';
 
 type Props = {
   label: string;
@@ -23,26 +26,12 @@ type Props = {
 };
 
 /**
- * Item dock admin — indicateur pill animé + micro scale au press.
+ * Item dock admin — indicateur pill animé (ProDayMotionSystem) + micro scale.
  */
 export function AdminDockTab({ label, icon, active, onPress, style }: Props) {
   const t = ADMIN_TOKENS;
   const reduced = useReducedMotion();
-  const indicator = useSharedValue(active ? 1 : 0);
   const press = useSharedValue(1);
-
-  useEffect(() => {
-    if (reduced) {
-      indicator.value = active ? 1 : 0;
-      return;
-    }
-    indicator.value = withSpring(active ? 1 : 0, adminMotion.spring.dock);
-  }, [active, reduced, indicator]);
-
-  const pillStyle = useAnimatedStyle(() => ({
-    opacity: indicator.value,
-    transform: [{ scaleX: 0.72 + indicator.value * 0.28 }, { scaleY: indicator.value }],
-  }));
 
   const wrapStyle = useAnimatedStyle(() => ({
     transform: [{ scale: press.value }],
@@ -53,19 +42,16 @@ export function AdminDockTab({ label, icon, active, onPress, style }: Props) {
       <Pressable
         onPress={onPress}
         onPressIn={() => {
-          if (!reduced) press.value = withSpring(0.94, adminMotion.spring.snappy);
+          if (!reduced) press.value = withSpring(0.94, prodayMotion.spring.snappy);
         }}
         onPressOut={() => {
-          if (!reduced) press.value = withSpring(1, adminMotion.spring.snappy);
+          if (!reduced) press.value = withSpring(1, prodayMotion.spring.snappy);
         }}
         style={styles.hit}
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
       >
-        <Animated.View
-          style={[styles.pill, { backgroundColor: t.accentSoft }, pillStyle]}
-          pointerEvents="none"
-        />
+        <DockPillIndicator active={active} color={t.accentSoft} />
         <Icon
           name={icon}
           size={adminChrome.tabBarIcon}
@@ -98,37 +84,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 12,
   },
-  pill: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 12,
-  },
 });
 
 /** Indicateur sous-ligne animé (sidebar / filtres). */
 export function AdminTabUnderline({ active }: { active: boolean }) {
-  const t = ADMIN_TOKENS;
-  const reduced = useReducedMotion();
-  const w = useSharedValue(active ? 1 : 0);
-
-  useEffect(() => {
-    if (reduced) {
-      w.value = active ? 1 : 0;
-      return;
-    }
-    w.value = withTiming(active ? 1 : 0, {
-      duration: adminMotion.duration.fast,
-      easing: adminMotion.easing.out,
-    });
-  }, [active, reduced, w]);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: w.value,
-    transform: [{ scaleX: 0.4 + w.value * 0.6 }],
-  }));
-
-  return (
-    <Animated.View
-      style={[{ height: 2, borderRadius: 1, backgroundColor: t.accent, width: '70%' }, style]}
-    />
-  );
+  return <TabUnderline active={active} color={ADMIN_TOKENS.accent} />;
 }

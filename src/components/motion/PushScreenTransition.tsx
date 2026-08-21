@@ -6,7 +6,7 @@ import Animated, {
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
-import { motion } from '../../theme/motion';
+import { getMotionPreset, useReducedMotion } from '../../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 
 const { width: W } = Dimensions.get('window');
@@ -19,7 +19,7 @@ interface PushScreenTransitionProps {
 }
 
 /**
- * Navigation type “stack” : l’écran enfant glisse depuis la droite.
+ * Navigation type “stack” / détail — glisse depuis la droite (preset detail).
  */
 export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   active,
@@ -27,21 +27,32 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   backgroundColor,
 }) => {
   const { colors } = useAppTheme();
+  const reduced = useReducedMotion();
+  const preset = getMotionPreset('detail');
   const [mounted, setMounted] = useState(active);
   const x = useSharedValue(active ? 0 : W);
 
   useEffect(() => {
     if (active) {
       setMounted(true);
-      x.value = withSpring(0, motion.spring.smooth);
+      if (reduced) {
+        x.value = 0;
+        return;
+      }
+      x.value = withSpring(0, preset.spring);
     } else if (mounted) {
-      x.value = withSpring(W, motion.spring.snappy, (finished) => {
+      if (reduced) {
+        x.value = W;
+        setMounted(false);
+        return;
+      }
+      x.value = withSpring(W, getMotionPreset('nav').spring, (finished) => {
         if (finished) {
           runOnJS(setMounted)(false);
         }
       });
     }
-  }, [active, mounted, x]);
+  }, [active, mounted, x, reduced, preset.spring]);
 
   const style = useAnimatedStyle(() => ({
     transform: [{ translateX: x.value }],

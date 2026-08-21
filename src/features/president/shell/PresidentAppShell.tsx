@@ -10,8 +10,12 @@ import {
   PRESIDENT_POLE_DENIED_BODY,
   PRESIDENT_POLE_DENIED_TITLE,
 } from '../navigation/canAccessPresidentPole';
-import { type PresidentNavItemId } from '../navigation/presidentNavConfig';
-
+import {
+  type PresidentNavItemId,
+  PRESIDENT_PRIMARY_NAV_IDS,
+  PRESIDENT_MENU_DEST_IDS,
+} from '../navigation/presidentNavConfig';
+import { PaneTransition, useShellNavDirection } from '../../../motion';
 import {
   resolvePresidentCommandItems,
   resolvePresidentMenuItems,
@@ -34,6 +38,11 @@ import {
 import type { PresidentThemeTokens } from '../theme/presidentTokens';
 import type { ClubNavItemId } from '../../club/navigation/clubNavConfig';
 
+const PRESIDENT_MOTION_ORDER: PresidentNavItemId[] = [
+  ...PRESIDENT_PRIMARY_NAV_IDS,
+  ...PRESIDENT_MENU_DEST_IDS,
+];
+
 /**
  * Shell Pôle Président — sidebar desktop + dock mobile.
  */
@@ -54,6 +63,7 @@ function PresidentAppShellInner() {
   const { width } = useWindowDimensions();
   const wide = width >= presidentChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const { direction, noteNav } = useShellNavDirection(PRESIDENT_MOTION_ORDER);
 
   const [navId, setNavId] = useState<PresidentNavItemId>('cockpit');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -86,8 +96,9 @@ function PresidentAppShellInner() {
   );
 
   const requestNav = useCallback((id: PresidentNavItemId) => {
+    noteNav(id);
     setNavId(id);
-  }, []);
+  }, [noteNav]);
 
   useEffect(() => {
     if (!allowed && !ws.loading) {
@@ -163,7 +174,11 @@ function PresidentAppShellInner() {
               onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
             />
           ) : null}
-          <View style={styles.content}>{pane}</View>
+          <View style={styles.content}>
+            <PaneTransition sectionKey={navId} direction={direction}>
+              {pane}
+            </PaneTransition>
+          </View>
         </View>
         {!wide ? (
           <PresidentTabBar
