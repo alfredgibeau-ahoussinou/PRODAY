@@ -105,6 +105,7 @@ export function ClubChapterScroll({
       style={{ flex: 1, backgroundColor: 'transparent' }}
       contentContainerStyle={{
         paddingHorizontal: clubSpace.lg,
+        paddingTop: clubSpace.md,
         paddingBottom: clubSpace.xxxl,
         gap: clubSpace.md,
       }}

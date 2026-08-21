@@ -623,7 +623,7 @@ function AppShell() {
           {profile ? <ProdayBrainBridge /> : null}
           {profile ? <ProdayCalendarSyncBridge /> : null}
           {profile && !joueurPoleActive ? <PoleHelpChatbot /> : null}
-          {profile && !joueurPoleActive ? <ProDayAiChat /> : null}
+          {profile && !joueurPoleActive && !isClubShell ? <ProDayAiChat /> : null}
           <View style={styles.screen}>
             <JoueurGateGuard>
               {isClubShell ? (

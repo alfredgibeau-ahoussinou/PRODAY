@@ -100,24 +100,21 @@ export function ClubHomeIdentityHeader({
           </View>
           {onPressCrest && !crestUploading ? (
             <View style={[styles.crestBadge, { backgroundColor: tokens.accent }]}>
-              <Icon name="camera" size={11} color={tokens.onAccent} />
+              <Icon name="camera" size={10} color={tokens.onAccent} />
             </View>
           ) : null}
         </PressableSpring>
         <View style={styles.textCol}>
-          <ClubText variant="caption" muted style={styles.greet}>
+          <ClubText variant="label" muted style={styles.greet}>
             {greeting}
           </ClubText>
           <ClubText variant="h1" numberOfLines={2} style={styles.clubName}>
             {clubName}
           </ClubText>
-          {onPressCrest ? (
-            <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
-              {logoUrl ? 'Changer le logo' : 'Ajouter le logo'}
-            </ClubText>
-          ) : null}
         </View>
-        <ClubStatusPill label={statusLabel} tone={statusTone} />
+        <View style={styles.statusCol}>
+          <ClubStatusPill label={statusLabel} tone={statusTone} />
+        </View>
       </View>
     </View>
   );
@@ -483,26 +480,28 @@ export function ClubHomeTodayTimeline({ items }: { items: TimelineItem[] }) {
 const identityStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     wrap: {
-      paddingTop: clubSpace.xs,
-      paddingBottom: clubSpace.sm,
-      overflow: 'hidden',
+      paddingTop: clubSpace.sm,
+      paddingBottom: clubSpace.md,
+      overflow: 'visible',
     },
     wash: {
       ...StyleSheet.absoluteFillObject,
-      height: 88,
-      opacity: 0.9,
+      height: 96,
+      opacity: 0.85,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.md,
+      minHeight: 56,
     },
     crest: {
-      width: 64,
-      height: 64,
+      width: 56,
+      height: 56,
       borderRadius: clubRadius.lg,
       borderWidth: 2,
       backgroundColor: tokens.elevated,
+      flexShrink: 0,
       ...clubShadow.soft,
     },
     crestInner: {
@@ -514,11 +513,11 @@ const identityStyles = (tokens: ClubThemeTokens) =>
     crestPh: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     crestBadge: {
       position: 'absolute',
-      right: -4,
-      bottom: -4,
-      width: 22,
-      height: 22,
-      borderRadius: 11,
+      right: -2,
+      bottom: -2,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
@@ -526,14 +525,34 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       zIndex: 2,
     },
     crestLetter: {
-      ...clubType.h1,
+      ...clubType.h2,
       color: tokens.onAccent,
-      fontSize: 28,
-      lineHeight: 32,
+      fontSize: 24,
+      lineHeight: 28,
     },
-    textCol: { flex: 1, minWidth: 0, gap: 2 },
-    greet: { letterSpacing: 0.2 },
-    clubName: { letterSpacing: -0.5 },
+    textCol: {
+      flex: 1,
+      minWidth: 0,
+      gap: 3,
+      paddingRight: clubSpace.xs,
+      justifyContent: 'center',
+    },
+    greet: {
+      letterSpacing: 1.2,
+      fontSize: 10,
+      lineHeight: 12,
+    },
+    clubName: {
+      letterSpacing: -0.55,
+      fontSize: 24,
+      lineHeight: 28,
+    },
+    statusCol: {
+      flexShrink: 0,
+      alignSelf: 'flex-start',
+      paddingTop: 2,
+      maxWidth: 108,
+    },
   });
 
 const heroStyles = (tokens: ClubThemeTokens) =>

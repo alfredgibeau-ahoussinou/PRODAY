@@ -269,12 +269,6 @@ export function ClubHomeScreen() {
               onPress={() => shellNav?.openCreate?.()}
             />
             <ClubActionRow
-              icon="star-four-points"
-              label="Assistant IA"
-              hint="Recommandations uniquement — confirmation avant action sensible"
-              onPress={() => shellNav?.requestNav('assistant')}
-            />
-            <ClubActionRow
               icon="chat"
               label="Communication"
               onPress={() => shellNav?.requestNav('communication')}
