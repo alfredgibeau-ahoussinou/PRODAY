@@ -41,12 +41,25 @@ export function isFunctionsUnavailable(error: unknown): boolean {
   );
 }
 
+/** Message Firebase brut quand la callable n’existe pas / n’est pas déployée. */
+function isBareFunctionsNotFoundMessage(msg: string): boolean {
+  const n = msg.trim().toLowerCase();
+  return (
+    n === 'not-found' ||
+    n === 'not_found' ||
+    n === 'functions/not-found' ||
+    n === 'not found'
+  );
+}
+
 export function getCallableErrorMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const msg = String((error as { message: string }).message);
-    if (msg && msg !== 'internal') return humanizeAuthErrorText(msg);
-  }
   const code = getErrorCode(error);
+  const rawMsg =
+    error && typeof error === 'object' && 'message' in error
+      ? String((error as { message: string }).message).trim()
+      : '';
+
+  // Codes d’abord : le SDK renvoie souvent message === "not-found".
   if (code === 'functions/permission-denied') {
     return 'Droits admin requis. Déconnectez-vous, reconnectez-vous après npm run admin:setup.';
   }
@@ -57,17 +70,22 @@ export function getCallableErrorMessage(error: unknown): string {
     return 'Trop de tentatives. Attendez 15 à 60 minutes avant un nouvel envoi.';
   }
   if (code === 'functions/failed-precondition') {
-    return humanizeAuthErrorText(
-      error && typeof error === 'object' && 'message' in error
-        ? String((error as { message: string }).message)
-        : AUTH_EMAIL_CONFIG_MESSAGE
-    );
+    return humanizeAuthErrorText(rawMsg || AUTH_EMAIL_CONFIG_MESSAGE);
   }
   if (code === 'functions/not-found') {
-    return 'Cloud Function introuvable (région ou déploiement). Actions bêta admin : europe-west1.';
+    if (rawMsg && !isBareFunctionsNotFoundMessage(rawMsg)) {
+      return humanizeAuthErrorText(rawMsg);
+    }
+    return 'Cloud Function introuvable (région europe-west1 ou non déployée). Déployez avec firebase deploy --only functions.';
   }
   if (isFunctionsUnavailable(error)) {
     return 'Cloud Functions indisponibles (plan Blaze + firebase deploy --only functions).';
+  }
+  if (rawMsg && rawMsg !== 'internal') {
+    if (isBareFunctionsNotFoundMessage(rawMsg)) {
+      return 'Cloud Function introuvable (région europe-west1 ou non déployée). Déployez avec firebase deploy --only functions.';
+    }
+    return humanizeAuthErrorText(rawMsg);
   }
   return 'Action impossible. Réessayez.';
 }
@@ -86,6 +104,9 @@ export async function callFunction<TData, TResult>(
     const res = await fn(data);
     return res.data;
   } catch (e) {
-    throw new Error(getCallableErrorMessage(e));
+    const err = new Error(getCallableErrorMessage(e)) as Error & { code?: string };
+    const code = getErrorCode(e);
+    if (code) err.code = code;
+    throw err;
   }
 }

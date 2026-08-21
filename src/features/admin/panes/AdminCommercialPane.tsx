@@ -229,7 +229,7 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
               void (async () => {
                 setBusy(true);
                 try {
-                  await clubCommercialBillingService.setAmount({
+                  const result = await clubCommercialBillingService.setAmount({
                     clubId: matchedClub.id,
                     amountEur: amount,
                     offerId: clubLivePackFromOfferHint(selected.offer_hint),
@@ -238,8 +238,16 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
                     adminEmail: profile?.email ?? firebaseUser.email ?? undefined,
                   });
                   await data.refresh();
-                  showToast({ title: `Montant ${amount} € appliqué`, tone: 'success' });
-                  Alert.alert('OK', `Montant ${amount} € enregistré sur le club.`);
+                  if (result.source === 'firestore_only') {
+                    showToast({ title: `Montant ${amount} € (club seul)`, tone: 'success' });
+                    Alert.alert(
+                      'Montant enregistré (club)',
+                      `${amount} € sur le club. adminClubBilling non déployée — facture Stripe indisponible jusqu’au déploiement.`,
+                    );
+                  } else {
+                    showToast({ title: `Montant ${amount} € appliqué`, tone: 'success' });
+                    Alert.alert('OK', `Montant ${amount} € enregistré sur le club.`);
+                  }
                 } catch (e) {
                   Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
                 } finally {

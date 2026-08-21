@@ -128,7 +128,7 @@ export function AdminClubCommercialBillingCard({
       async () => {
         setBusy(true);
         try {
-          await clubCommercialBillingService.setAmount({
+          const result = await clubCommercialBillingService.setAmount({
             clubId: club.id,
             amountEur: parsed,
             offerId,
@@ -138,9 +138,22 @@ export function AdminClubCommercialBillingCard({
           });
           await onRefresh();
           await hydrate();
-          Alert.alert('Montant enregistré', `${parsed} € · ${getClubLivePack(offerId).shortLabel}`);
+          if (result.source === 'firestore_only') {
+            Alert.alert(
+              'Montant enregistré (club)',
+              `${parsed} € · ${getClubLivePack(offerId).shortLabel}\n\nEnregistré sur le club uniquement : la Cloud Function adminClubBilling n’est pas déployée. L’envoi de facture Stripe restera bloqué jusqu’à :\nfirebase deploy --only functions:adminClubBilling`,
+            );
+          } else {
+            Alert.alert(
+              'Montant enregistré',
+              `${parsed} € · ${getClubLivePack(offerId).shortLabel}`,
+            );
+          }
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          Alert.alert(
+            'Erreur',
+            e instanceof Error ? e.message : 'Impossible d’enregistrer le montant.',
+          );
         } finally {
           setBusy(false);
         }
@@ -186,7 +199,12 @@ export function AdminClubCommercialBillingCard({
             }`,
           );
         } catch (e) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+          Alert.alert(
+            'Facture Stripe',
+            e instanceof Error
+              ? e.message
+              : 'Impossible d’envoyer la facture. Vérifiez l’e-mail club et le déploiement de adminClubBilling.',
+          );
         } finally {
           setBusy(false);
         }
