@@ -31,42 +31,53 @@ import {
 } from '../models/ClubShellMode';
 
 describe('canAccessPresidentPole', () => {
-  it('autorise un compte club rattaché', () => {
-    expect(
-      canAccessPresidentPole({
-        role: 'club',
-        uid: 'u1',
-        clubId: 'c1',
-      }),
-    ).toBe(true);
-  });
-
-  it('autorise le owner même en mode strict', () => {
+  it('autorise uniquement le owner (compte président)', () => {
     expect(
       canAccessPresidentPole({
         role: 'club',
         uid: 'owner1',
         clubId: 'c1',
         clubOwnerUid: 'owner1',
-        requireOwner: true,
       }),
     ).toBe(true);
   });
 
+  it('refuse le staff club (même rôle club, non owner)', () => {
+    expect(
+      canAccessPresidentPole({
+        role: 'club',
+        uid: 'staff1',
+        clubId: 'c1',
+        clubOwnerUid: 'owner1',
+      }),
+    ).toBe(false);
+  });
+
+  it('refuse sans owner_uid connu (fail closed)', () => {
+    expect(
+      canAccessPresidentPole({
+        role: 'club',
+        uid: 'u1',
+        clubId: 'c1',
+      }),
+    ).toBe(false);
+  });
+
   it('refuse hors rôle club ou sans club', () => {
     expect(
-      canAccessPresidentPole({ role: 'coach', uid: 'u1', clubId: 'c1' }),
-    ).toBe(false);
-    expect(
-      canAccessPresidentPole({ role: 'club', uid: 'u1', clubId: null }),
+      canAccessPresidentPole({
+        role: 'coach',
+        uid: 'u1',
+        clubId: 'c1',
+        clubOwnerUid: 'u1',
+      }),
     ).toBe(false);
     expect(
       canAccessPresidentPole({
         role: 'club',
-        uid: 'u2',
-        clubId: 'c1',
-        clubOwnerUid: 'owner1',
-        requireOwner: true,
+        uid: 'u1',
+        clubId: null,
+        clubOwnerUid: 'u1',
       }),
     ).toBe(false);
   });

@@ -5,24 +5,24 @@ export type PresidentAccessInput = {
   uid: string | null | undefined;
   /** Club rattaché au profil (profile.club_id). */
   clubId: string | null | undefined;
-  /** owner_uid du document club — président de facto. */
+  /** owner_uid du document club — compte président. */
   clubOwnerUid?: string | null | undefined;
-  /**
-   * Variante large : tout compte rôle `club` rattaché (dirigeant).
-   * Variante stricte : owner uniquement (`requireOwner: true`).
-   */
-  requireOwner?: boolean;
 };
+
+export const PRESIDENT_POLE_DENIED_TITLE = 'Accès refusé';
+
+export const PRESIDENT_POLE_DENIED_BODY =
+  'Le Pôle Président est réservé au compte président de ce club.';
 
 /**
  * Gate Pôle Président.
- * v1 large : tout compte `role === 'club'` rattaché à un club
- * (même ACL que branding / copilote Club). Owner toujours autorisé.
+ * Uniquement le compte président = rôle `club` + `uid === club.owner_uid`.
+ * Staff club (même rôle `club`, non owner) et autres rôles : refusés.
+ * Sans `clubOwnerUid` connu : refus (fail closed) — attendre le chargement côté UI.
  */
 export function canAccessPresidentPole(input: PresidentAccessInput): boolean {
-  const { role, uid, clubId, clubOwnerUid, requireOwner = false } = input;
+  const { role, uid, clubId, clubOwnerUid } = input;
   if (!uid || !clubId || role !== 'club') return false;
-  if (clubOwnerUid && clubOwnerUid === uid) return true;
-  if (requireOwner) return false;
-  return true;
+  if (!clubOwnerUid) return false;
+  return clubOwnerUid === uid;
 }

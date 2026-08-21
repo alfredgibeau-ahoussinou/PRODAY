@@ -60,7 +60,12 @@ import type { ClubThemeTokens } from '../theme/clubTokens';
 import { clubChrome } from '../theme/clubDesignSystem';
 import { ClubPageChrome } from '../ui/ClubPageChrome';
 import { usePresidentShellBridge } from '../../president/bridge/PresidentShellBridge';
-import { canAccessPresidentPole } from '../../president/navigation/canAccessPresidentPole';
+import {
+  canAccessPresidentPole,
+  PRESIDENT_POLE_DENIED_BODY,
+  PRESIDENT_POLE_DENIED_TITLE,
+} from '../../president/navigation/canAccessPresidentPole';
+import { useClubWorkspace } from '../hooks/useClubWorkspace';
 
 type Props = {
   activeTab: MainTabId;
@@ -98,6 +103,7 @@ function ClubAppShellInner({
   const profile = useSessionProfile();
   const { signOut } = useAuth();
   const { isEnabled } = usePlatformFeatureFlags();
+  const ws = useClubWorkspace();
   const { width } = useWindowDimensions();
   const wide = width >= clubChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
@@ -117,7 +123,8 @@ function ClubAppShellInner({
   const canOpenPresident = canAccessPresidentPole({
     role: profile?.role,
     uid: profile?.uid,
-    clubId: profile?.profile?.club_id,
+    clubId: ws.clubId ?? profile?.profile?.club_id,
+    clubOwnerUid: ws.club?.owner_uid,
   });
 
   const access = useMemo(
@@ -166,11 +173,9 @@ function ClubAppShellInner({
   };
 
   const onOpenPresident = () => {
+    if (ws.loading) return;
     if (!canOpenPresident) {
-      Alert.alert(
-        'Pôle Président',
-        'Réservé aux dirigeants du club rattachés à cette structure.',
-      );
+      Alert.alert(PRESIDENT_POLE_DENIED_TITLE, PRESIDENT_POLE_DENIED_BODY);
       return;
     }
     presidentBridge?.openPresident();
@@ -233,7 +238,7 @@ function ClubAppShellInner({
       requestNav={onSelect}
       openCreate={openCreate}
       openHelp={onOpenHelp}
-      openPresident={canOpenPresident ? onOpenPresident : undefined}
+      openPresident={profile?.role === 'club' ? onOpenPresident : undefined}
       signOut={onSignOut}
       selectedTeamId={selectedTeamId}
       setSelectedTeamId={setSelectedTeamId}

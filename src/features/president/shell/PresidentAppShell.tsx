@@ -5,7 +5,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../../context/AuthContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../club/hooks/useClubWorkspace';
-import { canAccessPresidentPole } from '../navigation/canAccessPresidentPole';
+import {
+  canAccessPresidentPole,
+  PRESIDENT_POLE_DENIED_BODY,
+  PRESIDENT_POLE_DENIED_TITLE,
+} from '../navigation/canAccessPresidentPole';
 import { type PresidentNavItemId } from '../navigation/presidentNavConfig';
 
 import {
@@ -87,11 +91,9 @@ function PresidentAppShellInner() {
 
   useEffect(() => {
     if (!allowed && !ws.loading) {
-      Alert.alert(
-        'Pôle Président',
-        'Accès réservé aux comptes Club dirigeants rattachés.',
-        [{ text: 'Retour Club', onPress: () => exitToClub() }],
-      );
+      Alert.alert(PRESIDENT_POLE_DENIED_TITLE, PRESIDENT_POLE_DENIED_BODY, [
+        { text: 'Retour Club', onPress: () => exitToClub() },
+      ]);
     }
   }, [allowed, ws.loading, exitToClub]);
 
@@ -106,9 +108,9 @@ function PresidentAppShellInner() {
   if (!allowed) {
     return (
       <View style={[styles.root, styles.denied]}>
-        <PresidentText variant="h2">Accès refusé</PresidentText>
+        <PresidentText variant="h2">{PRESIDENT_POLE_DENIED_TITLE}</PresidentText>
         <PresidentText variant="body" muted style={{ textAlign: 'center' }}>
-          Le Pôle Président est réservé aux dirigeants du club.
+          {PRESIDENT_POLE_DENIED_BODY}
         </PresidentText>
         <PressableSpring
           onPress={() => exitToClub()}

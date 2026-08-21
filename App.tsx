@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Linking } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -67,8 +67,24 @@ function ClubPresidentShellSwitch({
   activeTab: MainTabId;
   onTabChange: (tab: MainTabId) => void;
 }) {
-  const bridge = usePresidentShellBridge();
-  const president = Boolean(bridge?.isPresidentShell);
+  const profile = useSessionProfile();
+  const ws = useClubWorkspace();
+  const { clubShellMode, setClubShellMode } = useProductLine();
+  const wantPresident = clubShellMode === 'president';
+  const allowed = canAccessPresidentPole({
+    role: profile?.role,
+    uid: profile?.uid,
+    clubId: ws.clubId ?? profile?.profile?.club_id,
+    clubOwnerUid: ws.club?.owner_uid,
+  });
+
+  useEffect(() => {
+    if (!wantPresident || ws.loading || allowed) return;
+    Alert.alert(PRESIDENT_POLE_DENIED_TITLE, PRESIDENT_POLE_DENIED_BODY);
+    void setClubShellMode('club');
+  }, [wantPresident, ws.loading, allowed, setClubShellMode]);
+
+  const president = wantPresident && (ws.loading || allowed);
   return (
     <PoleShellTransition shellKey={president ? 'president' : 'club'}>
       {president ? (
@@ -92,11 +108,14 @@ import { SupporterAppShell } from './src/navigation/SupporterAppShell';
 import { ParentAppShell } from './src/navigation/ParentAppShell';
 import { parentPortalService } from './src/services/parentPortal.service';
 import { ClubAppShell } from './src/features/club/shell/ClubAppShell';
+import { useClubWorkspace } from './src/features/club/hooks/useClubWorkspace';
 import { CoachAppShell } from './src/features/coach/shell/CoachAppShell';
 import {
+  canAccessPresidentPole,
+  PRESIDENT_POLE_DENIED_BODY,
+  PRESIDENT_POLE_DENIED_TITLE,
   PresidentAppShell,
   PresidentShellBridgeProvider,
-  usePresidentShellBridge,
 } from './src/features/president';
 import { COACH_SITE } from './src/content/coachPageIdentity';
 import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';

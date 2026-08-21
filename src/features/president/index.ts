@@ -1,4 +1,8 @@
-export { canAccessPresidentPole } from './navigation/canAccessPresidentPole';
+export {
+  canAccessPresidentPole,
+  PRESIDENT_POLE_DENIED_TITLE,
+  PRESIDENT_POLE_DENIED_BODY,
+} from './navigation/canAccessPresidentPole';
 export type { PresidentAccessInput } from './navigation/canAccessPresidentPole';
 export {
   PRESIDENT_NAV_FOLDERS,
