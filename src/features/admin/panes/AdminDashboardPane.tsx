@@ -12,6 +12,7 @@ import { useAuth } from '../../../context/AuthContext';
 import {
   AdminBadge,
   AdminBrandMark,
+  AdminButton,
   AdminCard,
   AdminLoading,
   AdminMetric,
@@ -29,9 +30,10 @@ import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
 
 type Props = {
   onNavigate: (section: AdminNavSectionId, focusId?: string) => void;
+  onOpenCommand?: () => void;
 };
 
-export function AdminDashboardPane({ onNavigate }: Props) {
+export function AdminDashboardPane({ onNavigate, onOpenCommand }: Props) {
   const { profile } = useAuth();
   const data = useAdminData();
   const t = ADMIN_TOKENS;
@@ -70,7 +72,12 @@ export function AdminDashboardPane({ onNavigate }: Props) {
         />
         <View style={styles.heroTop}>
           <AdminBrandMark />
-          <AdminBadge label="Directif" tone="accent" />
+          <View style={styles.heroActions}>
+            {onOpenCommand ? (
+              <AdminButton label="Rechercher" variant="soft" onPress={onOpenCommand} />
+            ) : null}
+            <AdminBadge label="Directif" tone="accent" />
+          </View>
         </View>
         <AdminText variant="label" champagne>
           ProDay · maintenant
@@ -249,7 +256,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 4,
+    gap: 8,
   },
+  heroActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   healthRow: { flexDirection: 'row', alignItems: 'center', gap: adminSpace.md },
   metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: adminLayout.gridGap },
   actionGrid: { gap: adminSpace.sm, marginTop: adminSpace.sm },

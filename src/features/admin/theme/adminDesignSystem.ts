@@ -173,6 +173,7 @@ export const adminChrome = {
   sidebarCollapsed: 76,
   topBarHeight: 62,
   dockRailHeight: 56,
+  tabBarIcon: 22,
   contentMax: 1280,
   brandMark: 'PRODAY CONTROL',
 } as const;

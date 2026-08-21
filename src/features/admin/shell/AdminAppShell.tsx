@@ -1,14 +1,14 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   StyleSheet,
   View,
   useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdminDataProvider, useAdminData } from '../data/AdminDataContext';
 import { AdminGateScreen } from '../screens/AdminGateScreen';
 import { AdminSidebar } from './AdminSidebar';
@@ -18,12 +18,13 @@ import { AdminCommandPalette } from '../ui/AdminCommandPalette';
 import { AdminText } from '../ui/adminUi';
 import { useIsAdmin } from '../../../hooks/useIsAdmin';
 import {
+  ADMIN_MENU_DEST_IDS,
   ADMIN_PRIMARY_NAV_IDS,
   findAdminNavItem,
   type AdminNavSectionId,
 } from '../navigation/adminNavConfig';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminChrome, adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
+import { adminChrome, adminLayout, adminSpace } from '../theme/adminDesignSystem';
 import { Icon } from '../../../components/ui/Icon';
 
 interface AdminAppShellProps {
@@ -32,6 +33,7 @@ interface AdminAppShellProps {
 
 function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
   const data = useAdminData();
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const wide = width >= adminChrome.wideBreakpoint;
   const t = ADMIN_TOKENS;
@@ -39,14 +41,14 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
   const [section, setSection] = useState<AdminNavSectionId>('accueil');
   const [focusId, setFocusId] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileMenu, setMobileMenu] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
 
   const navigate = useCallback((next: AdminNavSectionId, nextFocus?: string) => {
     setSection(next === 'menu' && wide ? 'accueil' : next);
     setFocusId(nextFocus);
-    setMobileMenu(false);
   }, [wide]);
+
+  const openCommand = useCallback(() => setCommandOpen(true), []);
 
   const pane = useMemo(
     () =>
@@ -55,93 +57,101 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
         focusId,
         onNavigate: navigate,
         onPreviewUserApp,
+        onOpenCommand: openCommand,
       }),
-    [section, focusId, navigate, onPreviewUserApp],
+    [section, focusId, navigate, onPreviewUserApp, openCommand],
   );
 
+  const dockPadBottom = Math.max(insets.bottom, 10);
+  /** Mobile : pas de top bar — le contenu commence sous la status bar. */
+  const contentTopPad = wide ? 0 : insets.top + adminLayout.contentTop;
+
   return (
-    <SafeAreaView style={styles.root} edges={['left', 'right', 'bottom']}>
+    <View style={styles.root}>
       <StatusBar style="light" />
-      <View style={styles.row}>
-        {wide ? (
-          <AdminSidebar
-            activeId={section}
-            onSelect={(id) => navigate(id)}
-            onOpenCommand={() => setCommandOpen(true)}
-            collapsed={sidebarCollapsed}
-            onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
-            actionCount={data.workQueue.length}
-          />
-        ) : null}
-
-        <View style={styles.main}>
-          <AdminTopBar
-            section={section}
-            healthScore={data.health.score}
-            actionCount={data.workQueue.length}
-            wide={wide}
-            onOpenMenu={wide ? undefined : () => setMobileMenu(true)}
-            onOpenCommand={() => setCommandOpen(true)}
-            onOpenHealth={() => navigate('plateforme')}
-          />
-          <View style={styles.content}>{pane}</View>
-
-          {!wide ? (
-            <View style={styles.dock}>
-              {ADMIN_PRIMARY_NAV_IDS.map((id) => {
-                const item = findAdminNavItem(id === 'menu' ? 'accueil' : id);
-                const active = section === id || (id === 'menu' && section === 'menu');
-                const icon =
-                  id === 'menu'
-                    ? 'hamburger'
-                    : item?.icon ?? 'home';
-                return (
-                  <Pressable
-                    key={id}
-                    onPress={() => navigate(id)}
-                    style={styles.dockItem}
-                  >
-                    <Icon name={icon} size={22} color={active ? t.accent : t.muted} />
-                    <AdminText
-                      variant="label"
-                      color={active ? t.champagne : t.faint}
-                      style={{ letterSpacing: 0.6, fontSize: 9 }}
-                    >
-                      {id === 'menu' ? 'Menu' : item?.shortLabel ?? id}
-                    </AdminText>
-                  </Pressable>
-                );
-              })}
-            </View>
+      <SafeAreaView style={styles.safe} edges={['left', 'right']}>
+        <View style={styles.row}>
+          {wide ? (
+            <AdminSidebar
+              activeId={section}
+              onSelect={(id) => navigate(id)}
+              onOpenCommand={openCommand}
+              collapsed={sidebarCollapsed}
+              onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+              actionCount={data.workQueue.length}
+            />
           ) : null}
-        </View>
-      </View>
 
-      <Modal visible={mobileMenu} animationType="slide" onRequestClose={() => setMobileMenu(false)}>
-        <SafeAreaView style={styles.mobileMenu} edges={['top', 'left', 'right', 'bottom']}>
-          <AdminSidebar
-            activeId={section}
-            onSelect={(id) => navigate(id)}
-            onOpenCommand={() => {
-              setMobileMenu(false);
-              setCommandOpen(true);
-            }}
-            actionCount={data.workQueue.length}
-          />
-          <Pressable onPress={() => setMobileMenu(false)} style={styles.closeMenu}>
-            <AdminText variant="caption" color={t.muted}>
-              Fermer
-            </AdminText>
-          </Pressable>
-        </SafeAreaView>
-      </Modal>
+          <View style={styles.main}>
+            {wide ? (
+              <AdminTopBar
+                section={section}
+                healthScore={data.health.score}
+                actionCount={data.workQueue.length}
+                topInset={insets.top}
+                onOpenCommand={openCommand}
+                onOpenHealth={() => navigate('plateforme')}
+              />
+            ) : null}
+
+            <View style={[styles.content, { paddingTop: contentTopPad }]}>{pane}</View>
+
+            {!wide ? (
+              <View style={[styles.dock, { paddingBottom: dockPadBottom }]}>
+                <LinearGradient
+                  colors={['transparent', 'rgba(212,184,128,0.06)']}
+                  style={StyleSheet.absoluteFill}
+                  pointerEvents="none"
+                />
+                <View style={styles.dockRail}>
+                  {ADMIN_PRIMARY_NAV_IDS.map((id) => {
+                    const item = findAdminNavItem(id === 'menu' ? 'accueil' : id);
+                    const active =
+                      id === 'menu'
+                        ? section === 'menu' || ADMIN_MENU_DEST_IDS.includes(section)
+                        : section === id;
+                    const icon = id === 'menu' ? 'hamburger' : item?.icon ?? 'home';
+                    return (
+                      <Pressable
+                        key={id}
+                        onPress={() => navigate(id)}
+                        style={[styles.dockItem, active && styles.dockItemActive]}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                      >
+                        <Icon
+                          name={icon}
+                          size={adminChrome.tabBarIcon}
+                          color={active ? t.accent : t.muted}
+                        />
+                        <AdminText
+                          variant="caption"
+                          color={active ? t.champagneBright : t.muted}
+                          style={{
+                            fontWeight: active ? '800' : '500',
+                            fontSize: 10,
+                            letterSpacing: active ? 0.4 : 0,
+                          }}
+                          numberOfLines={1}
+                        >
+                          {id === 'menu' ? 'Menu' : item?.shortLabel ?? id}
+                        </AdminText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </SafeAreaView>
 
       <AdminCommandPalette
         open={commandOpen}
         onClose={() => setCommandOpen(false)}
         onNavigate={navigate}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -179,6 +189,7 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ADMIN_TOKENS.bg },
+  safe: { flex: 1 },
   row: { flex: 1, flexDirection: 'row' },
   main: { flex: 1, backgroundColor: ADMIN_TOKENS.bg },
   content: { flex: 1 },
@@ -190,14 +201,16 @@ const styles = StyleSheet.create({
     backgroundColor: ADMIN_TOKENS.bg,
   },
   dock: {
-    flexDirection: 'row',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: ADMIN_TOKENS.hairline,
     backgroundColor: ADMIN_TOKENS.dockBg,
     paddingTop: adminSpace.sm,
-    paddingBottom: adminSpace.sm,
     paddingHorizontal: adminSpace.xs,
+  },
+  dockRail: {
+    flexDirection: 'row',
     minHeight: adminChrome.dockRailHeight,
+    alignItems: 'center',
   },
   dockItem: {
     flex: 1,
@@ -206,17 +219,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     minHeight: adminLayout.hitTarget,
     justifyContent: 'center',
+    borderRadius: 12,
   },
-  mobileMenu: { flex: 1, flexDirection: 'row', backgroundColor: ADMIN_TOKENS.bg },
-  closeMenu: {
-    position: 'absolute',
-    top: 56,
-    right: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: adminRadius.pill,
-    backgroundColor: ADMIN_TOKENS.surfaceRaised,
-    borderWidth: 1,
-    borderColor: ADMIN_TOKENS.border,
+  dockItemActive: {
+    backgroundColor: ADMIN_TOKENS.accentSoft,
   },
 });

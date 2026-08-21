@@ -18,6 +18,7 @@ type Props = {
   focusId?: string;
   onNavigate: (section: AdminNavSectionId, focusId?: string) => void;
   onPreviewUserApp: () => void;
+  onOpenCommand?: () => void;
 };
 
 export function renderAdminPane({
@@ -25,10 +26,13 @@ export function renderAdminPane({
   focusId,
   onNavigate,
   onPreviewUserApp,
+  onOpenCommand,
 }: Props) {
   switch (section) {
     case 'accueil':
-      return <AdminDashboardPane onNavigate={onNavigate} />;
+      return (
+        <AdminDashboardPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
+      );
     case 'plateforme':
       return <AdminPlatformPane />;
     case 'utilisateurs':
@@ -50,8 +54,12 @@ export function renderAdminPane({
     case 'systeme':
       return <AdminSystemPane onPreviewUserApp={onPreviewUserApp} />;
     case 'menu':
-      return <AdminMenuPane onNavigate={onNavigate} />;
+      return (
+        <AdminMenuPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
+      );
     default:
-      return <AdminDashboardPane onNavigate={onNavigate} />;
+      return (
+        <AdminDashboardPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
+      );
   }
 }

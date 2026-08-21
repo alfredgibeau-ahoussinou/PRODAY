@@ -227,18 +227,20 @@ export function AdminPaneHeader({
   const t = ADMIN_TOKENS;
   return (
     <View style={styles.paneHeader}>
-      <View style={{ flex: 1, gap: 4 }}>
-        <AdminBrandMark compact />
-        <AdminText variant="h1" numberOfLines={1}>
-          {title}
-        </AdminText>
-        {subtitle ? (
-          <AdminText variant="caption" muted numberOfLines={2}>
-            {subtitle}
+      <View style={styles.paneHeaderRow}>
+        <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
+          <AdminBrandMark compact />
+          <AdminText variant="h1" numberOfLines={1}>
+            {title}
           </AdminText>
-        ) : null}
+          {subtitle ? (
+            <AdminText variant="caption" muted numberOfLines={2}>
+              {subtitle}
+            </AdminText>
+          ) : null}
+        </View>
+        {right}
       </View>
-      {right}
       <View style={[styles.paneHairline, { backgroundColor: t.hairline }]} />
     </View>
   );
@@ -347,6 +349,11 @@ const styles = StyleSheet.create({
     paddingBottom: adminSpace.md,
     gap: adminSpace.sm,
     position: 'relative',
+  },
+  paneHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: adminSpace.md,
   },
   paneHairline: {
     position: 'absolute',
