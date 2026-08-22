@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Switch, View } from 'react-native';
+import { PressableSpring } from '../../components/motion';
+import { Icon } from '../../components/ui/Icon';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
@@ -13,6 +16,10 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import {
+  ClubNotifDeliveryNote,
+  ClubNotifListCard,
+} from '../../features/club/ui/ClubNotifChrome';
 import { ClubEquipmentMarketPanel } from '../../components/club/ClubEquipmentMarketPanel';
 import { ClubEventOrganization } from '../../components/club/ClubEventOrganization';
 import { ClubFinanceLedgerPanel } from '../../components/club/ClubFinanceLedgerPanel';
@@ -29,6 +36,11 @@ import type { ClubNavItemId } from '../../features/club/navigation/clubNavConfig
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import type { IconName } from '../../components/ui/iconNames';
 import { clubSpace } from '../../features/club/theme/clubDesignSystem';
+import {
+  STAFF_NOTIF_DELIVERY_HINT,
+  staffNotificationRoute,
+  staffNotifsSubtitle,
+} from '../../utils/staffNotificationRouting';
 
 function ClubStubShell({
   title,
@@ -185,10 +197,12 @@ export function ClubEquipmentScreen() {
 export function ClubNotificationsScreen() {
   const profile = useSessionProfile();
   const shellNav = useClubShellNav();
+  const tabNav = useTabNavigation();
   const ws = useClubWorkspace();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [items, setItems] = useState<StaffNotification[]>([]);
 
   const load = useCallback(async () => {
@@ -213,16 +227,38 @@ export function ClubNotificationsScreen() {
     void load();
   }, [load]);
 
-  const markRead = async (n: StaffNotification) => {
+  const openNotif = async (n: StaffNotification) => {
     try {
       if (!n.read_at) await staffNotificationsService.markRead(n.id);
-      await load();
     } catch {
       // best-effort
+    }
+    const route = staffNotificationRoute(n);
+    if (route.kind === 'event') {
+      tabNav.openMatchs({
+        eventId: route.eventId,
+        hubChapter: route.hubChapter,
+      });
+    } else if (route.kind === 'clubNav') {
+      shellNav?.requestNav(route.nav);
+    }
+    void load();
+  };
+
+  const markAll = async () => {
+    const unreadIds = items.filter((n) => !n.read_at).map((n) => n.id);
+    if (unreadIds.length === 0) return;
+    setBusy(true);
+    try {
+      await staffNotificationsService.markManyRead(unreadIds);
+      await load();
+    } finally {
+      setBusy(false);
     }
   };
 
   const unread = items.filter((n) => !n.read_at).length;
+  const subtitle = staffNotifsSubtitle(unread, items.length);
 
   if (loading && items.length === 0) {
     return (
@@ -234,45 +270,75 @@ export function ClubNotificationsScreen() {
 
   return (
     <View style={styles.root}>
-      <ClubChapterScroll refreshing={loading} onRefresh={() => void load()}>
-        <ClubBrandHeader
-          title="Notifications"
-          subtitle={
-            unread > 0
-              ? `${unread} non lue${unread > 1 ? 's' : ''} · centre d’alertes`
-              : 'Centre d’alertes club'
-          }
-        />
+      <ClubChapterScroll refreshing={loading || busy} onRefresh={() => void load()}>
+        <ClubBrandHeader title="Notifications" subtitle={subtitle} />
+
+        <View style={styles.shortcutRow}>
+          <PressableSpring
+            onPress={() => shellNav?.requestNav('communication')}
+            scaleTo={0.97}
+            haptic
+            style={styles.shortcut}
+          >
+            <Icon name="chat" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Messages
+            </ClubText>
+          </PressableSpring>
+          <PressableSpring
+            onPress={() => shellNav?.requestNav('players')}
+            scaleTo={0.97}
+            haptic
+            style={styles.shortcut}
+          >
+            <Icon name="people" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Joueurs
+            </ClubText>
+          </PressableSpring>
+          <PressableSpring
+            onPress={() => void markAll()}
+            disabled={unread === 0 || busy}
+            scaleTo={0.97}
+            haptic
+            style={[styles.shortcut, unread === 0 ? styles.shortcutDisabled : null]}
+          >
+            <Icon name="checkmark-circle" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Tout lire
+            </ClubText>
+          </PressableSpring>
+        </View>
+
+        <ClubNotifDeliveryNote text={STAFF_NOTIF_DELIVERY_HINT} />
+
         {items.length === 0 ? (
           <ClubEmptyState
             title="Aucune alerte pour l’instant"
-            body="Adhésions, invitations inter-clubs, absences et retards apparaîtront ici."
+            body="Adhésions, invitations inter-clubs, absences et retards apparaîtront ici. Les rappels match restent locaux sur cet appareil."
             actionLabel="Ouvrir Communication"
             onAction={() => shellNav?.requestNav('communication')}
             icon="notifications"
           />
         ) : (
-          <>
-            <ClubSectionCard
-              title={unread > 0 ? `${unread} non lue${unread > 1 ? 's' : ''}` : 'Toutes lues'}
-            >
-              {items.map((n) => (
-                <ClubActionRow
-                  key={n.id}
-                  icon="notifications"
-                  label={n.title || 'Alerte'}
-                  hint={`${n.body}${n.read_at ? '' : ' · Non lue'} · ${n.created_at.toLocaleString('fr-FR')}`}
-                  onPress={() => void markRead(n)}
-                />
-              ))}
-            </ClubSectionCard>
-            <ClubActionRow
-              icon="chat"
-              label="Messagerie club"
-              hint="Fils staff & effectif"
-              onPress={() => shellNav?.requestNav('communication')}
-            />
-          </>
+          <View style={styles.list}>
+            <View style={styles.listHead}>
+              <ClubText variant="label" muted style={styles.listLabel}>
+                Inbox
+              </ClubText>
+              <ClubText variant="caption" muted>
+                {items.length}
+              </ClubText>
+            </View>
+            {items.map((n, index) => (
+              <ClubNotifListCard
+                key={n.id}
+                item={n}
+                index={index}
+                onPress={() => void openNotif(n)}
+              />
+            ))}
+          </View>
         )}
       </ClubChapterScroll>
     </View>
@@ -374,5 +440,39 @@ const createStyles = (tokens: ClubThemeTokens) =>
       justifyContent: 'space-between',
       gap: 12,
       paddingVertical: 8,
+    },
+    shortcutRow: {
+      flexDirection: 'row',
+      gap: clubSpace.sm,
+      marginBottom: clubSpace.sm,
+    },
+    shortcut: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      borderRadius: 14,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.borderStrong,
+    },
+    shortcutDisabled: { opacity: 0.45 },
+    shortcutLabel: {
+      color: tokens.foreground,
+      fontWeight: '800',
+    },
+    list: { gap: clubSpace.sm, marginTop: clubSpace.md },
+    listHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 2,
+    },
+    listLabel: {
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      fontSize: 11,
     },
   });

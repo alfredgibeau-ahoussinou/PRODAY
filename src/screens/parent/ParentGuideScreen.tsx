@@ -29,7 +29,7 @@ const FILTERS: { id: ParentGuideAudience | 'all'; label: string }[] = [
   { id: 'actions', label: 'Actions' },
 ];
 
-/** Surface Guide IA — suggestions locales étiquetées, hooks notif stub. */
+/** Surface Guide IA — suggestions locales ; rappels push non activés. */
 export const ParentGuideScreen: React.FC = () => {
   const { colors: c } = useThemedScreen();
   const { selected, children } = useParentShell();
