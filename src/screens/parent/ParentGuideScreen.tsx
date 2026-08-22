@@ -21,6 +21,7 @@ import { parentPortalService } from '../../services/parentPortal.service';
 import { getScreenTimeDayKey } from '../../utils/parentalScreenTime';
 import { useThemedScreen } from '../../hooks/useThemedScreen';
 import { spacing, radius } from '../../theme/designTokens';
+import { aiComingSoonBody } from '../../utils/aiUxHonesty';
 
 const FILTERS: { id: ParentGuideAudience | 'all'; label: string }[] = [
   { id: 'all', label: 'Tout' },
@@ -102,7 +103,7 @@ export const ParentGuideScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <ProDayText variant="caption" muted>
           Suggestions du guide — locales, pas un diagnostic médical ni des scores inventés.
-          Les rappels push ne sont pas encore activés.
+          {` ${aiComingSoonBody('Les rappels push')}`}
         </ProDayText>
 
         <View style={styles.filters}>

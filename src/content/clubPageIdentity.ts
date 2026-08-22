@@ -213,7 +213,7 @@ export const CLUB_PAGE_IDENTITIES: Partial<Record<ClubNavItemId, ClubPageIdentit
     id: 'events',
     eyebrow: 'Sport',
     title: 'Événements',
-    support: 'Tournois & poules IA',
+    support: 'Tournois & poules',
     icon: 'flag',
     layout: 'arena',
     motif: 'rays',

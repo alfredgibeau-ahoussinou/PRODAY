@@ -256,7 +256,7 @@ const eventsItem: ClubNavItem = {
   id: 'events',
   label: 'Événements',
   shortLabel: 'Events',
-  hint: 'Tournois & poules IA',
+  hint: 'Tournois & poules',
   icon: 'flag',
   requiresAnyFeature: ['competitions'],
 };

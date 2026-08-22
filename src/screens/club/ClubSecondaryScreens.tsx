@@ -41,6 +41,7 @@ import {
   staffNotificationRoute,
   staffNotifsSubtitle,
 } from '../../utils/staffNotificationRouting';
+import { clubTournamentPoolsHonesty } from '../../utils/aiUxHonesty';
 
 function ClubStubShell({
   title,
@@ -74,13 +75,14 @@ export function ClubEventsScreen() {
   const clubId = ws.clubId;
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const poolsHonesty = clubTournamentPoolsHonesty();
 
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
         <ClubBrandHeader
           title="Événements"
-          subtitle="Tournois · poules IA (suggestion)"
+          subtitle="Tournois · organisation · poules"
         />
         {clubId && profile ? (
           <ClubSectionCard title="Organisation">
@@ -97,17 +99,18 @@ export function ClubEventsScreen() {
             icon="flag"
           />
         )}
-        <ClubSectionCard title="Poules IA (stub)">
+        <ClubSectionCard title={poolsHonesty.title}>
           <ClubText variant="body" muted>
-            Génération de poules proposée — jamais appliquée sans validation humaine.
+            {poolsHonesty.body}
           </ClubText>
           <ClubActionRow
-            icon="star-four-points"
-            label="Proposer des poules"
+            icon="flag"
+            label={poolsHonesty.cta}
+            hint={poolsHonesty.hint}
             onPress={() =>
               Alert.alert(
-                'Poules IA',
-                'Suggestion prête à être revue. Aucune grille ne sera publiée automatiquement.',
+                poolsHonesty.title,
+                'Dans Organisation, créez un tournoi club puis utilisez « Générer poules & calendrier ». Aucune grille n’est inventée hors de ce flux.',
               )
             }
           />
@@ -136,7 +139,8 @@ export function ClubAutomationsScreen() {
             <Switch value={presence} onValueChange={setPresence} />
           </View>
           <ClubText variant="caption" muted>
-            Les automatisations n’affectent jamais les effectifs sans confirmation.
+            Aperçu local des règles — la sync club arrive bientôt. Aucun effet sur les effectifs
+            sans confirmation.
           </ClubText>
         </ClubSectionCard>
       </ClubChapterScroll>
@@ -165,7 +169,7 @@ export function ClubSponsoringScreen() {
     <ClubStubShell
       title="Sponsoring"
       subtitle="Partenaires"
-      body="Micro-sponsoring et mises en avant partenaires — coquille prête pour la suite."
+      body="Le micro-sponsoring et les mises en avant partenaires arrivent bientôt. Aucune campagne fictive n’est affichée ici."
       icon="gift"
     />
   );

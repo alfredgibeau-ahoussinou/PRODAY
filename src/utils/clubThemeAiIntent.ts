@@ -15,7 +15,7 @@ export type ClubThemeAiResult =
   | { ok: false; message: string };
 
 export const CLUB_THEME_AI_FALLBACK_MESSAGE =
-  'Décris un style, un club ou un mélange — le copilote Mistral propose une palette, confirmation avant application.';
+  'Décris un style, un club ou un mélange — le copilote propose une palette, confirmation avant application.';
 
 export const CLUB_THEME_AI_EXAMPLE_CHIPS = [
   'Style Barça',

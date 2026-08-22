@@ -518,7 +518,7 @@ const PRO_PLAYER_HELP: PoleHelpContent = {
 const PRO_CLUB_HELP: PoleHelpContent = {
   poleKey: 'pro_club',
   title: 'Copilote Club',
-  bubbleTeaser: 'Pose une question — dialogue Mistral',
+  bubbleTeaser: 'Pose une question — dialogue Copilote',
   welcome:
     'Salut — je suis le copilote Club. Pose ta question sur les équipes, adhésions, matchs ou la formule. Les actions sensibles demanderont toujours ton OK.',
   entries: [

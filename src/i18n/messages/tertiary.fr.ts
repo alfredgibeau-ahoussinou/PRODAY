@@ -979,7 +979,7 @@ export const TERTIARY_FR: MessageCatalog = {
   'smartTactics.board.syncBody': 'À l’enregistrement, la composition est aussi poussée sur ce match.',
   'smartTactics.board.syncMatch': 'match',
   'smartTactics.board.aiTitle': 'Proposition tactique IA',
-  'smartTactics.board.aiTitleMistral': 'XI IA (Mistral)',
+  'smartTactics.board.aiTitleMistral': 'XI IA (cloud)',
   'smartTactics.board.aiTitleLocal': 'XI IA (moteur local)',
   'smartTactics.board.aiBody':
     'Analyse la forme de tout l’effectif, puis compose automatiquement le XI sur le terrain 3D (postes + forme + readiness).',

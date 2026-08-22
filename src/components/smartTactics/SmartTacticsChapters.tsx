@@ -626,7 +626,7 @@ export const SmartBoardChapter: React.FC<SmartTacticsChapterProps> = ({
         />
         {aiPrep ? (
           <SmartTacticsAccentText variant="caption" style={{ fontWeight: '700' }}>
-            {aiPrep.source === 'mistral' ? 'Mistral' : 'Local'} · {aiPrep.formation_recommendation} ·{' '}
+            {aiPrep.source === 'mistral' ? 'Cloud' : 'Local'} · {aiPrep.formation_recommendation} ·{' '}
             {compactBoardStarters(starters).length} titulaires
             {aiPrep.briefing_fr ? ` — ${aiPrep.briefing_fr}` : ''}
           </SmartTacticsAccentText>
@@ -785,7 +785,7 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
       });
       setPrep(remote);
       Alert.alert(
-        remote.source === 'mistral' ? 'Préparation Mistral' : 'Préparation locale',
+        remote.source === 'mistral' ? 'Préparation cloud' : 'Préparation locale',
         remote.briefing_fr ||
           remote.tactical_suggestions[0] ||
           `Formation ${remote.formation_recommendation}`,
@@ -850,7 +850,7 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
 
       <View style={styles.prepActions}>
         <SmartTacticsPrimaryCta
-          label={busy ? 'Analyse…' : 'Lancer l’IA Mistral'}
+          label={busy ? 'Analyse…' : 'Lancer l’analyse IA'}
           onPress={() => void runAi()}
           disabled={busy}
           icon={<Icon name="star-four-points" size={16} color={theme.ctaText} />}

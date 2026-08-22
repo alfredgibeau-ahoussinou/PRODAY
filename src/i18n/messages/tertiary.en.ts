@@ -954,7 +954,7 @@ export const TERTIARY_EN: MessageCatalog = {
   'smartTactics.board.syncBody': 'On save, the lineup is also pushed to this match.',
   'smartTactics.board.syncMatch': 'match',
   'smartTactics.board.aiTitle': 'AI tactical proposal',
-  'smartTactics.board.aiTitleMistral': 'AI XI (Mistral)',
+  'smartTactics.board.aiTitleMistral': 'AI XI (cloud)',
   'smartTactics.board.aiTitleLocal': 'AI XI (local engine)',
   'smartTactics.board.aiBody':
     'Analyzes every player’s form, then auto-builds the XI on the 3D pitch (positions + form + readiness).',

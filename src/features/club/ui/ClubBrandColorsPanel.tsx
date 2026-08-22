@@ -117,7 +117,7 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
   const runRemoteAi = useCallback(
     async (phrase: string) => {
       setAiLoading(true);
-      setAiReply('Analyse Mistral en cours…');
+      setAiReply('Analyse copilote en cours…');
       try {
         const res = await sendClubAssistantMessage([
           { role: 'user', content: CLUB_THEME_AI_REMOTE_PROMPT(phrase) },
@@ -199,7 +199,7 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
           Copilote couleurs
         </ClubText>
         <ClubText variant="caption" muted>
-          Décris un style, un club ou un mélange — analyse Mistral réelle. Confirmation avant
+          Décris un style, un club ou un mélange — analyse copilote réelle. Confirmation avant
           d’écraser les couleurs enregistrées.
         </ClubText>
         <TextInput

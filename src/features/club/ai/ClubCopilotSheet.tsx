@@ -45,7 +45,7 @@ export function ClubCopilotSheet({ visible, onClose }: Props) {
               Copilote Club
             </ClubText>
             <ClubText variant="caption" muted>
-              Dialogue Mistral · confirmation avant action
+              Dialogue Copilote · confirmation avant action
             </ClubText>
           </View>
           <PressableSpring
