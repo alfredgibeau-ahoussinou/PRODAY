@@ -46,7 +46,7 @@ function hasRequiredFeature(
 
 function lockReasonFor(item: ClubNavItem, offerId: ClubOfferId | null): string {
   if (isVideoNavItem(item)) {
-    return 'Vidéo : activez le module vidéo club, ou passez en formule adaptée (Veo, XbotGo ou smartphone).';
+    return 'Vidéo : activez le module club ou une formule adaptée. Enregistrez une fiche caméra / importez — pas d’OAuth fabricant magique.';
   }
   if (!offerId) {
     return 'Abonnez votre club pour débloquer ce module.';

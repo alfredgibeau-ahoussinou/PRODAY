@@ -34,6 +34,11 @@ import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { spacing } from '../../theme/designTokens';
+import {
+  coachVideoAiHonestAlert,
+  coachVideoEmptyLibraryBody,
+  coachVideoLiveUnavailableBody,
+} from '../../utils/coachVideoHonesty';
 
 type Props = {
   profile: User;
@@ -177,7 +182,9 @@ export function CoachMesVideosScreen({ profile }: Props) {
                 ) : (
                   <CoachEmptyState
                     title="Pas encore de vidéos"
-                    body="Demande au club de connecter une caméra ou d’importer un match dans le Centre Vidéo."
+                    body={coachVideoEmptyLibraryBody()}
+                    cta="Voir Profil / offre"
+                    onPress={() => shellNav?.requestNav('profil')}
                   />
                 )}
               </CoachSectionCard>
@@ -201,8 +208,8 @@ export function CoachMesVideosScreen({ profile }: Props) {
                       Alert.alert(
                         'Lecture',
                         selected.storage_url
-                          ? 'Ouverture du flux (connecteur fabricant).'
-                          : 'La vidéo sera lisible dès la synchronisation terminée.',
+                          ? 'Lien stockage disponible — ouverture via le player club quand le flux est prêt.'
+                          : 'Pas encore de fichier synchronisé. Le club importe ou capture dans Centre Vidéo.',
                       )
                     }
                     secondary="Clips"
@@ -210,8 +217,8 @@ export function CoachMesVideosScreen({ profile }: Props) {
                       Alert.alert(
                         'Clips',
                         selected.clips.length
-                          ? `${selected.clips.length} clip(s) prêts.`
-                          : 'Aucun clip encore. Lance l’analyse IA après le match.',
+                          ? `${selected.clips.length} clip(s) liés à ce match.`
+                          : coachVideoAiHonestAlert('Clips'),
                       )
                     }
                   />
@@ -249,10 +256,13 @@ export function CoachMesVideosScreen({ profile }: Props) {
                 </View>
               ))}
               <CoachActionRow
-                primary={preflightOk ? 'Caméra prête' : 'Lancer le test caméra'}
+                primary={preflightOk ? 'Checklist notée' : 'Noter la checklist'}
                 onPrimary={() => {
                   setPreflightOk(true);
-                  Alert.alert('Test caméra', 'Batterie · connexion · stockage · sync OK (simulation).');
+                  Alert.alert(
+                    'Préparation',
+                    'Checklist coach enregistrée localement. Le test matériel réel se fait sur la caméra / le club — pas une simulation ProDay.',
+                  );
                 }}
                 secondary="Live Center"
                 onSecondary={() => setPane('live')}
@@ -264,14 +274,22 @@ export function CoachMesVideosScreen({ profile }: Props) {
             <CoachSectionCard
               kicker="Pendant le match"
               title="Live Center"
-              body="Statut captation + tags rapides pour l’analyse."
+              body={coachVideoLiveUnavailableBody()}
             >
-              <View style={styles.liveStats}>
-                <LiveStat label="Caméra" value="En ligne" />
-                <LiveStat label="Captation" value="45:12" />
-                <LiveStat label="Batterie" value="78%" />
-                <LiveStat label="Stockage" value="OK" />
-              </View>
+              {selected && selected.status === 'recording' ? (
+                <View style={styles.liveStats}>
+                  <LiveStat label="Match" value={selected.title} />
+                  <LiveStat
+                    label="Statut"
+                    value={MATCH_VIDEO_STATUS_LABELS[selected.status]}
+                  />
+                </View>
+              ) : (
+                <CoachEmptyState
+                  title="Pas de captation live"
+                  body="Quand le club démarre une captation, le statut apparaît ici. Les tags rapides restent disponibles pour notes coach."
+                />
+              )}
               <View style={styles.eventGrid}>
                 {VIDEO_LIVE_EVENTS.map((e) => (
                   <PressableSpring
@@ -279,7 +297,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                     onPress={() =>
                       Alert.alert(
                         e.label,
-                        `Événement « ${e.label} » horodaté pour l’analyse vidéo.`,
+                        `Note « ${e.label} » — à croiser avec la vidéo club une fois synchronisée. Pas d’horodatage automatique sans flux.`,
                       )
                     }
                     scaleTo={0.96}
@@ -301,10 +319,10 @@ export function CoachMesVideosScreen({ profile }: Props) {
                 onPrimary={() =>
                   Alert.alert(
                     'Note',
-                    'Exemple : « Notre bloc défensif est trop bas. »',
+                    'Les notes restent locales / match — elles ne génèrent pas de clip tant que la vidéo n’est pas analysée.',
                   )
                 }
-                secondary="Fin de match"
+                secondary="Analyse"
                 onSecondary={() => setPane('ai')}
               />
             </CoachSectionCard>
@@ -340,10 +358,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
                   <PressableSpring
                     key={p}
                     onPress={() =>
-                      Alert.alert(
-                        'Playlist IA',
-                        `Recherche : « ${p} »\nLes séquences seront listées dès que le match est analysé.`,
-                      )
+                      Alert.alert('Analyse IA', coachVideoAiHonestAlert(`« ${p} »`))
                     }
                     scaleTo={0.98}
                     style={styles.promptRow}
@@ -372,11 +387,11 @@ export function CoachMesVideosScreen({ profile }: Props) {
                   </View>
                 ))}
                 <CoachActionRow
-                  primary="Générer la vidéo de causerie"
+                  primary="Préparer la causerie"
                   onPrimary={() =>
                     Alert.alert(
                       'Causerie',
-                      'Vidéo courte vestiaire prête à partager avec l’équipe.',
+                      coachVideoAiHonestAlert('Vidéo de causerie'),
                     )
                   }
                   secondary="Tactique IA"

@@ -17,7 +17,7 @@ export const CLUB_VIDEO_PROVIDERS: ClubVideoProvider[] = [
   {
     id: 'veo',
     label: 'Veo',
-    description: 'Caméra automatique terrain — branchez votre compte si vous en avez un.',
+    description: 'Caméra automatique — fiche club / import. OAuth fabricant hors app tant que non livré.',
     connected: false,
   },
   {

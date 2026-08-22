@@ -136,7 +136,7 @@ describe('resolveCoachNavAccess', () => {
     const more = resolveCoachMoreItems({ canSmartTactics: true, canVideo: false });
     const video = more.find((i) => i.id === 'mes_videos');
     expect(video?.locked).toBe(true);
-    expect(video?.lockReason).toMatch(/Vidéo Coach/i);
+    expect(video?.lockReason).toMatch(/formule vidéo|module/i);
   });
 
   it('résout 5 dossiers primaires', () => {

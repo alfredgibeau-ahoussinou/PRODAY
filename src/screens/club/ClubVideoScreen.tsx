@@ -43,8 +43,8 @@ export function ClubVideoScreen() {
                 Alert.alert(
                   p.label,
                   p.connected
-                    ? 'Compte connecté.'
-                    : 'Connexion optionnelle — vous pouvez aussi importer des fichiers plus tard.',
+                    ? 'Intégration native active pour ce fournisseur.'
+                    : 'Pas d’OAuth dans l’app pour l’instant. Enregistrez une fiche caméra ou importez des fichiers ci-dessous — pack / devis via Offre club si besoin.',
                 )
               }
             />
