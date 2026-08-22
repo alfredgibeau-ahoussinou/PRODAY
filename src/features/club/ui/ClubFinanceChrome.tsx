@@ -1,0 +1,222 @@
+/**
+ * Composition visuelle Finances Club — hero solde + lignes ledger.
+ */
+import React, { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { PressableSpring, AnimatedEntrance } from '../../../components/motion';
+import { Icon } from '../../../components/ui/Icon';
+import { useClubTheme } from '../shell/ClubThemeContext';
+import type { ClubThemeTokens } from '../theme/clubTokens';
+import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { ClubText } from './clubUi';
+import type { ClubFinanceLedgerRowModel } from './clubFinanceModel';
+import { formatClubFinanceEur } from './clubFinanceModel';
+import type { ClubFinanceTotals } from '../../../models/ClubFinanceEntry';
+
+/** Hero solde du jour — pas de grille KPI SaaS. */
+export function ClubFinanceSoldeHero({
+  totals,
+  onAdd,
+}: {
+  totals: ClubFinanceTotals;
+  onAdd?: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => heroStyles(tokens), [tokens]);
+  const positive = totals.solde_eur >= 0;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
+      <View style={styles.card}>
+        <LinearGradient
+          colors={[tokens.pitchSoft, tokens.surface]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <View style={[styles.rail, { backgroundColor: positive ? tokens.pitch : tokens.danger }]} />
+        <ClubText variant="label" style={{ color: positive ? tokens.pitch : tokens.danger }}>
+          Solde club
+        </ClubText>
+        <ClubText
+          style={[
+            styles.solde,
+            { color: positive ? tokens.foreground : tokens.danger },
+          ]}
+        >
+          {formatClubFinanceEur(totals.solde_eur)}
+        </ClubText>
+        <View style={styles.flowRow}>
+          <View style={styles.flowCell}>
+            <ClubText variant="caption" muted>
+              Recettes
+            </ClubText>
+            <ClubText variant="body" style={{ color: tokens.success, fontWeight: '800' }}>
+              {formatClubFinanceEur(totals.recettes_eur)}
+            </ClubText>
+          </View>
+          <View style={[styles.flowSep, { backgroundColor: tokens.border }]} />
+          <View style={styles.flowCell}>
+            <ClubText variant="caption" muted>
+              Dépenses
+            </ClubText>
+            <ClubText variant="body" style={{ color: tokens.danger, fontWeight: '800' }}>
+              {formatClubFinanceEur(totals.depenses_eur)}
+            </ClubText>
+          </View>
+        </View>
+        {onAdd ? (
+          <PressableSpring onPress={onAdd} scaleTo={0.97} haptic style={styles.cta}>
+            <ClubText variant="caption" style={styles.ctaLabel}>
+              Nouvelle écriture
+            </ClubText>
+            <Icon name="add" size={14} color={tokens.onAccent} />
+          </PressableSpring>
+        ) : null}
+      </View>
+    </AnimatedEntrance>
+  );
+}
+
+/** Ligne ledger — montant aligné, type lisible. */
+export function ClubFinanceLedgerRow({
+  model,
+  index,
+  onPress,
+}: {
+  model: ClubFinanceLedgerRowModel;
+  index: number;
+  onPress: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => rowStyles(tokens), [tokens]);
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={index + 1} delayStep={24}>
+      <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.row}>
+        <View
+          style={[
+            styles.icon,
+            {
+              backgroundColor: model.isExpense ? tokens.dangerSoft : tokens.successSoft,
+            },
+          ]}
+        >
+          <Icon
+            name={model.isExpense ? 'bag' : 'checkmark-circle'}
+            size={16}
+            color={model.isExpense ? tokens.danger : tokens.success}
+          />
+        </View>
+        <View style={styles.col}>
+          <ClubText variant="body" numberOfLines={2} style={{ fontWeight: '700' }}>
+            {model.label}
+          </ClubText>
+          <ClubText variant="caption" muted numberOfLines={2}>
+            {model.meta}
+          </ClubText>
+        </View>
+        <ClubText
+          variant="body"
+          style={{
+            fontWeight: '800',
+            color: model.isExpense ? tokens.danger : tokens.success,
+            letterSpacing: -0.2,
+          }}
+        >
+          {model.amountLabel}
+        </ClubText>
+      </PressableSpring>
+    </AnimatedEntrance>
+  );
+}
+
+const heroStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    card: {
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.xl,
+      paddingHorizontal: clubSpace.lg,
+      paddingLeft: clubSpace.lg + 6,
+      borderRadius: clubRadius.xxl,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.borderStrong,
+      overflow: 'hidden',
+      ...clubShadow.lift,
+    },
+    rail: {
+      position: 'absolute',
+      left: 0,
+      top: 16,
+      bottom: 16,
+      width: 4,
+      borderTopRightRadius: 2,
+      borderBottomRightRadius: 2,
+    },
+    solde: {
+      fontSize: 36,
+      lineHeight: 40,
+      fontWeight: '800',
+      letterSpacing: -1,
+    },
+    flowRow: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      marginTop: clubSpace.xs,
+      paddingVertical: clubSpace.sm,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    flowCell: { flex: 1, gap: 2 },
+    flowSep: {
+      width: StyleSheet.hairlineWidth,
+      marginHorizontal: clubSpace.md,
+      alignSelf: 'stretch',
+    },
+    cta: {
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: clubSpace.sm,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: clubRadius.pill,
+      backgroundColor: tokens.accent,
+    },
+    ctaLabel: {
+      color: tokens.onAccent,
+      fontWeight: '800',
+      fontSize: 12,
+    },
+  });
+
+const rowStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.soft,
+    },
+    icon: {
+      width: 36,
+      height: 36,
+      borderRadius: clubRadius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    col: { flex: 1, minWidth: 0, gap: 2 },
+  });

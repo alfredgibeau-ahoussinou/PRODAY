@@ -10,6 +10,7 @@ import {
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubFinance } from '../../features/club/hooks/useClubFinance';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import {
   ClubActionRow,
   ClubButton,
@@ -17,34 +18,26 @@ import {
   ClubEmptyState,
   ClubLoading,
   ClubModalSurface,
-  ClubSectionCard,
   ClubSegmentedControl,
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { ClubFinanceLedgerRow, ClubFinanceSoldeHero } from '../../features/club/ui/ClubFinanceChrome';
+import {
+  buildClubFinanceLedgerRow,
+  formatClubFinanceEur,
+  resolveClubFinanceSubtitle,
+} from '../../features/club/ui/clubFinanceModel';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubRadius, clubShadow, clubSpace } from '../../features/club/theme/clubDesignSystem';
 import {
   CLUB_FINANCE_CATEGORY_SUGGESTIONS,
   CLUB_FINANCE_TYPE_LABELS,
-  isClubFinanceExpenseType,
   type ClubFinanceEntry,
   type ClubFinanceEntryType,
 } from '../../models/ClubFinanceEntry';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
-
-function formatEur(n: number): string {
-  return `${n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} €`;
-}
-
-function formatEntryDate(d: Date): string {
-  return d.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 const TYPE_OPTIONS: { id: ClubFinanceEntryType; label: string }[] = [
   { id: 'cotisation', label: 'Cotisation' },
@@ -58,10 +51,11 @@ type Props = {
 };
 
 /**
- * Ledger club — listes, totaux, ajout cotisation / dépense / recette.
+ * Ledger club — solde hero, écritures lisibles, ajout cotisation / dépense / recette.
  */
 export function ClubFinanceLedgerPanel({ clubId }: Props) {
   const profile = useSessionProfile();
+  const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { entries, totals, loading, refreshing, refresh, create, softDelete } =
@@ -74,6 +68,9 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Licence');
   const [dateStr, setDateStr] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const ledgerRows = useMemo(() => entries.map(buildClubFinanceLedgerRow), [entries]);
+  const subtitle = useMemo(() => resolveClubFinanceSubtitle(totals), [totals]);
 
   const resetForm = useCallback(() => {
     setType('cotisation');
@@ -147,7 +144,7 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
     (entry: ClubFinanceEntry) => {
       Alert.alert(
         'Supprimer cette écriture ?',
-        `${entry.label} · ${formatEur(entry.amount_eur)}`,
+        `${entry.label} · ${formatClubFinanceEur(entry.amount_eur)}`,
         [
           { text: 'Annuler', style: 'cancel' },
           {
@@ -171,8 +168,10 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
         <ClubChapterScroll>
           <ClubBrandHeader title="Finances" subtitle="Cotisations & dépenses" />
           <ClubEmptyState
-            title="Club requis"
-            body="Liez un club pour suivre cotisations, recettes et dépenses."
+            title="Liez un club"
+            body="Le ledger cotisations, recettes et dépenses s’active dès qu’un club est rattaché."
+            actionLabel="Ouvrir le club"
+            onAction={() => shellNav?.requestNav('club')}
             icon="bag"
           />
         </ClubChapterScroll>
@@ -191,89 +190,111 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={refreshing} onRefresh={() => void refresh()}>
-        <ClubBrandHeader
-          title="Finances"
-          subtitle="Cotisations · dépenses · recettes"
-        />
+        <ClubBrandHeader title="Finances" subtitle={subtitle} />
 
-        <View style={styles.kpiRow}>
-          <View style={[styles.kpi, styles.kpiIn]}>
-            <ClubText variant="caption" muted>
-              Recettes
+        <ClubFinanceSoldeHero totals={totals} onAdd={() => openForm()} />
+
+        <View style={styles.quickAdd}>
+          <PressableSpring
+            onPress={() => openForm('cotisation')}
+            scaleTo={0.97}
+            haptic
+            style={styles.quickChip}
+          >
+            <Icon name="people" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.quickLabel}>
+              Cotisation
             </ClubText>
-            <ClubText variant="h3" style={{ color: tokens.success }}>
-              {formatEur(totals.recettes_eur)}
+          </PressableSpring>
+          <PressableSpring
+            onPress={() => openForm('depense')}
+            scaleTo={0.97}
+            haptic
+            style={styles.quickChip}
+          >
+            <Icon name="bag" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.quickLabel}>
+              Dépense
             </ClubText>
-          </View>
-          <View style={[styles.kpi, styles.kpiOut]}>
-            <ClubText variant="caption" muted>
-              Dépenses
+          </PressableSpring>
+          <PressableSpring
+            onPress={() => openForm('recette')}
+            scaleTo={0.97}
+            haptic
+            style={styles.quickChip}
+          >
+            <Icon name="stats-chart" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.quickLabel}>
+              Recette
             </ClubText>
-            <ClubText variant="h3" style={{ color: tokens.danger }}>
-              {formatEur(totals.depenses_eur)}
-            </ClubText>
-          </View>
-          <View style={[styles.kpi, styles.kpiSolde]}>
-            <ClubText variant="caption" muted>
-              Solde
-            </ClubText>
-            <ClubText
-              variant="h3"
-              style={{ color: totals.solde_eur >= 0 ? tokens.accent : tokens.danger }}
-            >
-              {formatEur(totals.solde_eur)}
-            </ClubText>
-          </View>
+          </PressableSpring>
         </View>
 
-        <ClubSectionCard title="Ajouter">
-          <View style={styles.addRow}>
-            <ClubButton
-              label="Cotisation"
-              icon="people"
-              onPress={() => openForm('cotisation')}
-            />
-            <ClubButton
-              label="Dépense"
-              variant="secondary"
-              icon="bag"
-              onPress={() => openForm('depense')}
-            />
-            <ClubButton
-              label="Recette"
-              variant="ghost"
-              icon="stats-chart"
-              onPress={() => openForm('recette')}
-            />
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <ClubText variant="label" muted style={styles.sectionLabel}>
+              Ledger
+            </ClubText>
+            <ClubText variant="caption" muted>
+              {totals.count}
+            </ClubText>
           </View>
-        </ClubSectionCard>
 
-        <ClubSectionCard title={`Écritures (${totals.count})`}>
           {entries.length === 0 ? (
             <ClubEmptyState
-              title="Aucune écriture"
-              body="Ajoutez une cotisation, une dépense ou une recette pour démarrer le ledger."
+              title="Aucune écriture pour l’instant"
+              body="Ajoutez une cotisation, une dépense ou une recette pour démarrer le suivi club."
+              actionLabel="Ajouter une cotisation"
+              onAction={() => openForm('cotisation')}
               icon="bag"
             />
           ) : (
-            entries.map((e) => {
-              const expense = isClubFinanceExpenseType(e.type);
-              return (
-                <ClubActionRow
-                  key={e.id}
-                  icon={expense ? 'close' : 'checkmark-circle'}
-                  label={e.label}
-                  hint={`${CLUB_FINANCE_TYPE_LABELS[e.type]} · ${e.category} · ${formatEntryDate(e.entry_date)} · ${expense ? '−' : '+'}${formatEur(e.amount_eur)}`}
-                  onPress={() => confirmDelete(e)}
-                />
-              );
-            })
+            <View style={styles.list}>
+              {ledgerRows.map((row, index) => {
+                const entry = entries.find((e) => e.id === row.id);
+                return (
+                  <ClubFinanceLedgerRow
+                    key={row.id}
+                    model={row}
+                    index={index}
+                    onPress={() => entry && confirmDelete(entry)}
+                  />
+                );
+              })}
+            </View>
           )}
-        </ClubSectionCard>
+        </View>
 
-        <ClubText variant="caption" muted>
-          Touchez une écriture pour la retirer du ledger. Les objectifs de financement sponsors
-          restent dans Sponsoring.
+        <View style={styles.section}>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
+            Autres accès
+          </ClubText>
+          <View style={styles.list}>
+            {shellNav?.openPresident ? (
+              <ClubActionRow
+                icon="shield"
+                label="Pôle Président"
+                hint="Pilotage & finances dirigeants"
+                onPress={() => shellNav.openPresident?.()}
+              />
+            ) : null}
+            <ClubActionRow
+              icon="gift"
+              label="Sponsoring"
+              hint="Objectifs de financement partenaires"
+              onPress={() => shellNav?.requestNav('sponsoring')}
+            />
+            <ClubActionRow
+              icon="settings"
+              label="Offre & devis"
+              hint="Pack club et demande de devis"
+              onPress={() => shellNav?.requestNav('pack')}
+            />
+          </View>
+        </View>
+
+        <ClubText variant="caption" muted style={styles.footer}>
+          Touchez une écriture pour la retirer. Les objectifs sponsors restent dans Sponsoring.
         </ClubText>
       </ClubChapterScroll>
 
@@ -376,26 +397,42 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
-    kpiRow: {
+    quickAdd: {
       flexDirection: 'row',
       gap: clubSpace.sm,
     },
-    kpi: {
+    quickChip: {
       flex: 1,
-      padding: clubSpace.md,
-      borderRadius: clubRadius.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      borderRadius: clubRadius.md,
+      backgroundColor: tokens.surface,
       borderWidth: 1,
       borderColor: tokens.border,
-      gap: 4,
-      ...clubShadow.soft,
     },
-    kpiIn: { backgroundColor: tokens.headerWash },
-    kpiOut: { backgroundColor: tokens.surface },
-    kpiSolde: { backgroundColor: tokens.elevated },
-    addRow: {
+    quickLabel: {
+      color: tokens.foreground,
+      fontWeight: '700',
+    },
+    section: { gap: clubSpace.sm },
+    sectionHead: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       gap: clubSpace.sm,
+    },
+    sectionLabel: {
+      letterSpacing: 1.05,
+      opacity: 0.92,
+    },
+    list: { gap: clubSpace.sm },
+    footer: {
+      textAlign: 'center',
+      paddingVertical: clubSpace.sm,
+      paddingBottom: clubSpace.xxxl,
     },
     fab: {
       position: 'absolute',
