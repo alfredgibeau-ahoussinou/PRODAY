@@ -120,7 +120,7 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
                 sectionKey={section}
                 direction={direction || navDirection}
               >
-                {pane}
+                {React.isValidElement(pane) ? pane : null}
               </AdminPaneTransition>
             </View>
 

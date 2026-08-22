@@ -18,6 +18,7 @@ export { navDirectionFromOrder } from './navDirection';
 export { ProDayMotionProvider, useProDayMotion } from './ProDayMotionProvider';
 export { useShellNavDirection } from './hooks/useShellNavDirection';
 
+export { sanitizeHostChildren } from './sanitizeHostChildren';
 export { PaneTransition } from './primitives/PaneTransition';
 export { DetailTransition } from './primitives/DetailTransition';
 export { RouteSwitch } from './primitives/RouteSwitch';

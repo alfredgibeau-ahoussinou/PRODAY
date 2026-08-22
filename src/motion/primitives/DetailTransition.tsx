@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionPreset } from '../presets';
+import { sanitizeHostChildren } from '../sanitizeHostChildren';
 import { prodayMotion } from '../tokens';
 import type { MotionContext } from '../types';
 
@@ -59,7 +60,11 @@ export function DetailTransition({
     };
   });
 
-  return <Animated.View style={[styles.fill, style]}>{children}</Animated.View>;
+  return (
+    <Animated.View style={[styles.fill, style]}>
+      {sanitizeHostChildren(children)}
+    </Animated.View>
+  );
 }
 
 const styles = StyleSheet.create({

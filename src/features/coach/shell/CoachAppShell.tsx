@@ -285,7 +285,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
 
         <View style={styles.pane}>
           <PaneTransition sectionKey={navId} direction={direction}>
-            {content}
+            {React.isValidElement(content) ? content : null}
           </PaneTransition>
           <PushScreenTransition
             active={Boolean(eventHubOverlay)}

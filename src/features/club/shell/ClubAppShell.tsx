@@ -291,7 +291,7 @@ function ClubAppShellInner({
             onOpenCopilot={onOpenHelp}
           />
           <PaneTransition sectionKey={navId} direction={direction}>
-            {content}
+            {React.isValidElement(content) ? content : null}
           </PaneTransition>
           {showFab ? (
             <>

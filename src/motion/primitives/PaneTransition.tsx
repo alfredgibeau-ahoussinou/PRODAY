@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionPreset } from '../presets';
+import { sanitizeHostChildren } from '../sanitizeHostChildren';
 import { prodayMotion } from '../tokens';
 import type { MotionContext, NavDirection } from '../types';
 import { useProDayMotion } from '../ProDayMotionProvider';
@@ -15,6 +16,7 @@ import { useProDayMotion } from '../ProDayMotionProvider';
 type Props = {
   sectionKey: string;
   direction: NavDirection;
+  /** Préférer un élément React (écran / pane). Strings nues sont sanitizées. */
   children: React.ReactNode;
   /** Défaut `nav` (rapide). `tab` = micro. */
   context?: Extract<MotionContext, 'nav' | 'tab' | 'live'>;
@@ -39,11 +41,12 @@ export function PaneTransition({
   const reduced = useReducedMotion();
   const { setPaneBusy } = useProDayMotion();
   const preset = getMotionPreset(context);
-  const [displayed, setDisplayed] = useState(children);
+  const safeChildren = sanitizeHostChildren(children);
+  const [displayed, setDisplayed] = useState(safeChildren);
   const currentKey = useRef(sectionKey);
-  const pending = useRef(children);
+  const pending = useRef(safeChildren);
   const busy = useRef(false);
-  pending.current = children;
+  pending.current = safeChildren;
 
   const opacity = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -133,7 +136,7 @@ export function PaneTransition({
   return (
     <View style={fill ? styles.host : styles.hostAuto}>
       <Animated.View style={[fill ? styles.fill : styles.fillAuto, style]}>
-        {displayed}
+        {sanitizeHostChildren(displayed)}
       </Animated.View>
     </View>
   );

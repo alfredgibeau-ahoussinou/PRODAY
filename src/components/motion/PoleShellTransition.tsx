@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { motion, useReducedMotion } from '../../motion';
+import { sanitizeHostChildren } from '../../motion/sanitizeHostChildren';
 
 export type PoleShellId = 'parent' | 'supporter' | 'club' | 'president';
 
@@ -43,11 +44,12 @@ export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
   children,
 }) => {
   const reduced = useReducedMotion();
-  const [displayed, setDisplayed] = useState(children);
+  const safeChildren = sanitizeHostChildren(children);
+  const [displayed, setDisplayed] = useState(safeChildren);
   const currentKey = useRef(shellKey);
-  const pendingChildren = useRef(children);
+  const pendingChildren = useRef(safeChildren);
   const busy = useRef(false);
-  pendingChildren.current = children;
+  pendingChildren.current = safeChildren;
 
   const opacity = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -128,7 +130,9 @@ export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
 
   return (
     <View style={styles.host}>
-      <Animated.View style={[styles.shell, style]}>{displayed}</Animated.View>
+      <Animated.View style={[styles.shell, style]}>
+        {sanitizeHostChildren(displayed)}
+      </Animated.View>
     </View>
   );
 };

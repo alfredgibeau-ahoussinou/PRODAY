@@ -177,7 +177,7 @@ const ParentAppShellInner: React.FC = () => {
           </View>
           <View style={styles.content}>
             <PaneTransition sectionKey={activeTab} direction={direction} context="tab">
-              {screen}
+              {React.isValidElement(screen) ? screen : null}
             </PaneTransition>
           </View>
           <ParentTabBar
