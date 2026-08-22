@@ -28,6 +28,16 @@ export default function HomePage() {
             <p className="mt-3 text-sm font-semibold text-white/90">
               Club : à partir de 3 € / adhérent — sur devis selon la taille.
             </p>
+            <p className="mt-2 text-sm leading-relaxed text-white/65">
+              Sans engagement.{" "}
+              <Link
+                href={ROUTES.sponsor}
+                className="font-semibold text-white/90 underline-offset-2 hover:underline"
+              >
+                Sponsoring possible
+              </Link>{" "}
+              pour les marques et commerces locaux.
+            </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -47,6 +57,12 @@ export default function HomePage() {
               className="inline-flex items-center rounded-full border border-white/40 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
             >
               Je suis coach
+            </Link>
+            <Link
+              href={ROUTES.sponsor}
+              className="inline-flex items-center rounded-full border border-white/40 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
+            >
+              Je suis sponsor
             </Link>
           </div>
         </div>

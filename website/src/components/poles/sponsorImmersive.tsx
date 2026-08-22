@@ -371,7 +371,8 @@ export function SponsorWarmCta() {
           sur le terrain.
         </h2>
         <p className="mx-auto mt-5 max-w-md text-base text-white/55">
-          Devis en ligne. L’équipe partenaires ProDay vous répond sous 48 h.
+          Sponsoring possible dès maintenant. Sans engagement. Devis en ligne —
+          réponse sous 48 h.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link

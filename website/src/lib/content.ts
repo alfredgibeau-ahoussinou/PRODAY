@@ -1896,6 +1896,11 @@ export const FAQ_ITEMS = [
   },
   {
     category: "tarifs",
+    q: "Y a-t-il un engagement ?",
+    a: "Non. Les abonnements ProDay sont sans engagement : tu peux résilier à tout moment selon les règles de l’App Store ou Google Play. Le sponsoring est possible via le pôle Sponsor (formules Découverte, Territorial, National Pro).",
+  },
+  {
+    category: "tarifs",
     q: "Comment fonctionne le tarif mensuel vs annuel ?",
     a: `Le mensuel est le tarif de base. L'annuel facture 12 mois avec ${ANNUAL_DISCOUNT_PERCENT} % de remise. Exemple Pass Joueur : ${faqPricing("player_plus")}.`,
   },

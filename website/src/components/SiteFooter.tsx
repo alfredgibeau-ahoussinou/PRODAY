@@ -39,7 +39,7 @@ export function SiteFooter() {
             </p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-white/45">
               Un système pour connecter joueurs, clubs, staff, événements et
-              sponsors.
+              sponsors. Sans engagement. Sponsoring possible pour les marques.
             </p>
           </div>
           <Link

@@ -15,7 +15,7 @@ import { SPONSOR_HERO } from "@/lib/sponsorContent";
 export const metadata: Metadata = {
   title: "Pôle Sponsor · Visibilité mesurée",
   description:
-    "Découverte, Territorial, National Pro. Offres géolocalisées, ROI et contact clubs sur ProDay.",
+    "Sponsoring possible sur ProDay. Découverte, Territorial, National Pro. Sans engagement. Offres géolocalisées, ROI et contact clubs.",
 };
 
 export default function SponsorPolePage() {
@@ -27,7 +27,7 @@ export default function SponsorPolePage() {
       <ImmersivePoleHero
         brand="Pro Day Sponsor"
         headline={SPONSOR_HERO.title}
-        support="Clubs et joueurs actifs. Offres locales, dashboard ROI, messagerie directe : sans campagne hors-sol."
+        support="Sponsoring possible dès la formule Découverte (gratuite). Sans engagement. Offres locales, dashboard ROI, messagerie directe."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.sponsorDevis}

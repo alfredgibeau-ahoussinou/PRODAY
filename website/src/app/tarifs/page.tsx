@@ -8,7 +8,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Tarifs ProDay",
   description:
-    "Tarifs sans engagement. Mensuel ou annuel −20 %. Parrainage possible. Joueur, Club, Coach, Parent, Supporter, Sponsor.",
+    "Tarifs sans engagement. Sponsoring possible. Mensuel ou annuel −20 %. Parrainage possible. Joueur, Club, Coach, Parent, Supporter, Sponsor.",
 };
 
 export default function PricingPage() {
@@ -19,7 +19,7 @@ export default function PricingPage() {
       <ImmersivePoleHero
         brand="Pro Day Tarifs"
         headline="Un pôle. Un prix."
-        support="Sans engagement. Mensuel ou annuel (−20 %). Tu ouvres l’espace dont tu as besoin — et le parrainage est possible."
+        support="Sans engagement. Sponsoring possible. Mensuel ou annuel (−20 %). Tu ouvres l’espace dont tu as besoin — et le parrainage reste disponible."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
@@ -32,11 +32,11 @@ export default function PricingPage() {
 
       <TerminalCta
         title="La bêta est ouverte."
-        description="Sans engagement. Parrainage possible. Les abonnements store suivent le même modèle."
+        description="Sans engagement. Sponsoring possible pour les marques. Les abonnements store suivent le même modèle."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta"
-        secondaryHref={ROUTES.faq}
-        secondaryLabel="FAQ tarifs"
+        secondaryHref={ROUTES.sponsor}
+        secondaryLabel="Espace sponsor"
       />
     </TerminalPage>
   );

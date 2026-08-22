@@ -128,6 +128,15 @@ export function ScrollVideoStage() {
                 Je suis coach
               </Link>
             </div>
+            <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.18em] text-white/45 sm:mt-4 sm:text-[10px]">
+              Sans engagement ·{" "}
+              <Link
+                href={ROUTES.sponsor}
+                className="pointer-events-auto text-white/70 underline-offset-2 transition hover:text-white hover:underline"
+              >
+                Sponsoring possible
+              </Link>
+            </p>
           </div>
         </motion.div>
 

@@ -30,8 +30,9 @@ export function PricingOverview() {
         Tous les tarifs ProDay
       </h2>
       <p className="mt-3 max-w-2xl text-white/55">
-        Compte gratuit pour chaque rôle. upgrade Pro au tarif mensuel de base, ou annuel
-        avec 20 % de remise. Partenaires : trois formules (dont gratuite et devis).
+        Compte gratuit pour chaque rôle. Sans engagement. Upgrade Pro au tarif mensuel
+        de base, ou annuel avec 20 % de remise. Sponsoring possible : trois formules
+        (dont gratuite et devis).
       </p>
 
       <div className="card-premium mt-10 overflow-x-auto rounded-2xl">
