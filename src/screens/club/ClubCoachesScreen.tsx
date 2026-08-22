@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Alert, Linking, StyleSheet, View } from 'react-native';
-import { AnimatedEntrance, PressableSpring } from '../../components/motion';
+import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
@@ -15,14 +15,22 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { ClubCoachListCard, ClubCoachesGapHero } from '../../features/club/ui/ClubCoachesChrome';
+import {
+  buildClubCoachListItems,
+  listTeamsWithoutCoach,
+  preferCoachForAssignment,
+  resolveClubCoachesSubtitle,
+} from '../../features/club/ui/clubCoachesModel';
 import { teamsService } from '../../services/teams.service';
 import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
+import { formatMatchClock, formatMatchDay } from '../../features/club/ui/clubMatchesModel';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../../features/club/theme/clubDesignSystem';
+import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { User } from '../../models/User';
 import type { Team } from '../../models/Team';
 
-/** Annuaire coachs + fiche détail complète. */
+/** Annuaire coachs + fiche détail / affectation équipes. */
 export function ClubCoachesScreen() {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -30,6 +38,20 @@ export function ClubCoachesScreen() {
   const [busy, setBusy] = useState(false);
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+
+  const coachItems = useMemo(
+    () => buildClubCoachListItems(ws.coaches, ws.teams),
+    [ws.coaches, ws.teams],
+  );
+  const teamsWithoutCoach = useMemo(() => listTeamsWithoutCoach(ws.teams), [ws.teams]);
+  const subtitle = useMemo(
+    () =>
+      resolveClubCoachesSubtitle({
+        coachCount: ws.coaches.length,
+        withoutCoach: teamsWithoutCoach.length,
+      }),
+    [ws.coaches.length, teamsWithoutCoach.length],
+  );
 
   if (ws.loading) return <ClubLoading />;
 
@@ -44,91 +66,147 @@ export function ClubCoachesScreen() {
         onBack={() => setSelectedUid(null)}
         busy={busy}
         setBusy={setBusy}
+        preferUnassignedOnly={false}
       />
     );
   }
 
-  const teamsByCoach = (uid: string) =>
-    ws.teams.filter((t) => t.coach_uids?.includes(uid));
+  const openAssignFlow = () => {
+    const pick = preferCoachForAssignment(ws.coaches, ws.teams);
+    if (pick) {
+      setSelectedUid(pick.uid);
+      return;
+    }
+    shellNav?.openCreate?.('coach');
+  };
 
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing || busy} onRefresh={() => void ws.refresh()}>
-        <ClubBrandHeader
-          title="Coachs"
-          subtitle={`${ws.coaches.length} coach(s) · ${ws.teamsWithoutCoach} équipe(s) sans affectation`}
-        />
+        <ClubBrandHeader title="Coachs" subtitle={subtitle} />
+
+        <View style={styles.shortcutRow}>
+          <PressableSpring
+            onPress={() => shellNav?.requestNav('teams')}
+            scaleTo={0.97}
+            haptic
+            style={styles.shortcut}
+          >
+            <Icon name="football" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Équipes
+            </ClubText>
+          </PressableSpring>
+          <PressableSpring
+            onPress={() => shellNav?.openCreate?.('coach')}
+            scaleTo={0.97}
+            haptic
+            style={styles.shortcut}
+          >
+            <Icon name="mail" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Inviter
+            </ClubText>
+          </PressableSpring>
+          <PressableSpring
+            onPress={() => shellNav?.openCreate?.('coach')}
+            scaleTo={0.97}
+            haptic
+            style={styles.shortcut}
+          >
+            <Icon name="add" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Créer
+            </ClubText>
+          </PressableSpring>
+        </View>
+
+        {teamsWithoutCoach.length > 0 ? (
+          <ClubCoachesGapHero
+            count={teamsWithoutCoach.length}
+            teamNames={teamsWithoutCoach.map((t) => t.name)}
+            onAssign={openAssignFlow}
+            onSeeTeams={() => shellNav?.requestNav('teams')}
+          />
+        ) : null}
 
         {ws.coaches.length === 0 ? (
           <ClubEmptyState
-            title="Aucun coach"
-            body="Invitez un coach ou affectez un membre staff à une équipe."
+            title="Aucun coach pour l’instant"
+            body="Invitez un coach ou créez un profil staff pour l’affecter à une catégorie."
             actionLabel="Ajouter un coach"
             onAction={() => shellNav?.openCreate?.('coach')}
             icon="school"
           />
         ) : (
-          <View style={styles.list}>
-            {ws.coaches.map((c, index) => {
-              const teams = teamsByCoach(c.uid);
-              return (
-                <AnimatedEntrance key={c.uid} kind="fadeUp" index={index} delayStep={40}>
-                  <PressableSpring
-                    onPress={() => setSelectedUid(c.uid)}
-                    scaleTo={0.97}
-                    haptic
-                    style={styles.coachCard}
-                  >
-                    <View style={[styles.avatar, { backgroundColor: tokens.accentSoft }]}>
-                      <Icon name="school" size={20} color={tokens.accent} />
-                    </View>
-                    <View style={styles.coachCopy}>
-                      <ClubText variant="section" numberOfLines={1}>
-                        {c.display_name || 'Coach'}
-                      </ClubText>
-                      <ClubText variant="caption" muted numberOfLines={2}>
-                        {teams.length
-                          ? teams.map((t) => t.name).join(' · ')
-                          : 'Non affecté'}
-                      </ClubText>
-                      {c.profile?.diploma ? (
-                        <ClubText variant="caption" muted>
-                          {c.profile.diploma}
-                        </ClubText>
-                      ) : null}
-                    </View>
-                    <ClubStatusPill
-                      label={teams.length ? `${teams.length} éq.` : 'Libre'}
-                      tone={teams.length ? 'ok' : 'warn'}
-                    />
-                  </PressableSpring>
-                </AnimatedEntrance>
-              );
-            })}
+          <View style={styles.section}>
+            <View style={styles.sectionHead}>
+              <ClubText variant="label" muted style={styles.sectionLabel}>
+                Annuaire
+              </ClubText>
+              <ClubText variant="caption" muted>
+                {coachItems.length}
+              </ClubText>
+            </View>
+            <View style={styles.list}>
+              {coachItems.map((item, index) => (
+                <ClubCoachListCard
+                  key={item.coach.uid}
+                  item={item}
+                  index={index}
+                  onPress={() => setSelectedUid(item.coach.uid)}
+                />
+              ))}
+            </View>
           </View>
         )}
 
-        {ws.teamsWithoutCoach > 0 ? (
-          <ClubSectionCard title="À affecter">
-            {ws.teams
-              .filter((t) => !(t.coach_uids?.length > 0))
-              .map((t) => (
-                <ClubActionRow
+        {teamsWithoutCoach.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHead}>
+              <ClubText variant="label" muted style={styles.sectionLabel}>
+                À affecter
+              </ClubText>
+              <ClubText variant="caption" muted>
+                {teamsWithoutCoach.length}
+              </ClubText>
+            </View>
+            <View style={styles.list}>
+              {teamsWithoutCoach.map((t) => (
+                <PressableSpring
                   key={t.id}
-                  icon="warning"
-                  label={t.name}
-                  hint="Sans coach — ouvrir un coach pour affecter"
-                  onPress={() => {
-                    if (ws.coaches[0]) setSelectedUid(ws.coaches[0].uid);
-                    else shellNav?.openCreate?.('coach');
-                  }}
-                />
+                  onPress={openAssignFlow}
+                  scaleTo={0.98}
+                  haptic
+                  style={styles.gapRow}
+                >
+                  <View style={[styles.gapIcon, { backgroundColor: tokens.warningSoft }]}>
+                    <Icon name="warning" size={16} color={tokens.warning} />
+                  </View>
+                  <View style={styles.gapCopy}>
+                    <ClubText variant="body" style={{ fontWeight: '700' }} numberOfLines={1}>
+                      {t.name}
+                    </ClubText>
+                    <ClubText variant="caption" muted numberOfLines={1}>
+                      Sans coach — ouvrir un coach pour affecter
+                    </ClubText>
+                  </View>
+                  <Icon name="chevron-forward" size={14} color={tokens.faint} />
+                </PressableSpring>
               ))}
-          </ClubSectionCard>
+            </View>
+          </View>
         ) : null}
 
-        <ClubText variant="caption" muted>
-          Rôles : Admin · Dirigeant · DS · Coach · Assistant — voir Permissions.
+        <ClubActionRow
+          icon="shield"
+          label="Permissions"
+          hint="Visibilité documents par rôle"
+          onPress={() => shellNav?.requestNav('permissions')}
+        />
+
+        <ClubText variant="caption" muted style={styles.footer}>
+          Rôles : Admin · Dirigeant · DS · Coach · Assistant.
         </ClubText>
       </ClubChapterScroll>
     </View>
@@ -145,6 +223,7 @@ function ClubCoachDetail({
   onBack: () => void;
   busy: boolean;
   setBusy: (v: boolean) => void;
+  preferUnassignedOnly?: boolean;
 }) {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -152,7 +231,13 @@ function ClubCoachDetail({
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   const assigned = ws.teams.filter((t) => t.coach_uids?.includes(coach.uid));
+  const withoutAnyCoach = listTeamsWithoutCoach(ws.teams);
   const unassigned = ws.teams.filter((t) => !t.coach_uids?.includes(coach.uid));
+  /** Priorise les équipes sans aucun coach en tête de liste d’affectation. */
+  const assignTargets = [
+    ...withoutAnyCoach.filter((t) => unassigned.some((u) => u.id === t.id)),
+    ...unassigned.filter((t) => !withoutAnyCoach.some((w) => w.id === t.id)),
+  ];
 
   const coachEvents = ws.events.filter((e) => {
     if (assigned.length === 0) return false;
@@ -217,6 +302,8 @@ function ClubCoachDetail({
     );
   };
 
+  const whenLabel = (d: Date) => `${formatMatchDay(d)} · ${formatMatchClock(d)}`;
+
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing || busy} onRefresh={() => void ws.refresh()}>
@@ -274,17 +361,20 @@ function ClubCoachDetail({
           )}
         </ClubSectionCard>
 
-        {unassigned.length > 0 ? (
+        {assignTargets.length > 0 ? (
           <ClubSectionCard title="Affecter à">
-            {unassigned.map((t) => (
-              <ClubActionRow
-                key={t.id}
-                icon="add"
-                label={t.name}
-                hint="Toucher pour affecter"
-                onPress={() => assignCoach(t)}
-              />
-            ))}
+            {assignTargets.map((t) => {
+              const needsCoach = withoutAnyCoach.some((w) => w.id === t.id);
+              return (
+                <ClubActionRow
+                  key={t.id}
+                  icon="add"
+                  label={t.name}
+                  hint={needsCoach ? 'Sans coach — prioritaire' : 'Toucher pour affecter'}
+                  onPress={() => assignCoach(t)}
+                />
+              );
+            })}
           </ClubSectionCard>
         ) : null}
 
@@ -300,16 +390,16 @@ function ClubCoachDetail({
                   key={e.id}
                   icon="trophy"
                   label={e.title || 'Match'}
-                  hint={e.starts_at.toLocaleString('fr-FR')}
+                  hint={whenLabel(e.starts_at)}
                   onPress={() => shellNav?.requestNav('matches')}
                 />
               ))}
               {upcomingTrainings.map((e) => (
                 <ClubActionRow
                   key={e.id}
-                  icon="time"
+                  icon="football"
                   label={e.title || 'Entraînement'}
-                  hint={e.starts_at.toLocaleString('fr-FR')}
+                  hint={whenLabel(e.starts_at)}
                   onPress={() => shellNav?.requestNav('trainings')}
                 />
               ))}
@@ -343,6 +433,11 @@ function ClubCoachDetail({
             label="Ouvrir la communication"
             onPress={() => shellNav?.requestNav('communication')}
           />
+          <ClubActionRow
+            icon="football"
+            label="Voir les équipes"
+            onPress={() => shellNav?.requestNav('teams')}
+          />
         </ClubSectionCard>
       </ClubChapterScroll>
     </View>
@@ -352,26 +447,61 @@ function ClubCoachDetail({
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
-    list: { gap: clubSpace.sm },
-    coachCard: {
+    shortcutRow: {
+      flexDirection: 'row',
+      gap: clubSpace.sm,
+    },
+    shortcut: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: clubSpace.md,
-      padding: clubSpace.md,
-      borderRadius: clubRadius.xl,
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      borderRadius: clubRadius.md,
       backgroundColor: tokens.surface,
       borderWidth: 1,
       borderColor: tokens.border,
-      ...clubShadow.card,
     },
-    avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: clubRadius.md,
+    shortcutLabel: {
+      color: tokens.foreground,
+      fontWeight: '700',
+    },
+    section: { gap: clubSpace.sm },
+    sectionHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+    },
+    sectionLabel: {
+      letterSpacing: 1.05,
+      opacity: 0.92,
+    },
+    list: { gap: clubSpace.sm },
+    gapRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    gapIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: clubRadius.sm,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    coachCopy: { flex: 1, minWidth: 0, gap: 2 },
+    gapCopy: { flex: 1, minWidth: 0, gap: 2 },
+    footer: {
+      textAlign: 'center',
+      paddingVertical: clubSpace.sm,
+    },
     back: {
       flexDirection: 'row',
       alignItems: 'center',
