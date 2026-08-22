@@ -61,7 +61,7 @@ export function adminRolesForProductLine(line: ProductLineId): UserRole[] {
 const ROLE_HINTS: Partial<Record<UserRole, string>> = {
   player: 'CV, Mercato, saison',
   coach: 'Staff technique / entraînement',
-  club: 'Structure & recrutement',
+  club: 'Structure & recrutement (staff) — Président = owner du club',
   organizer: 'Événements & tournois',
   sponsor: 'Marque & campagnes',
   supporter: 'Fan & communauté',

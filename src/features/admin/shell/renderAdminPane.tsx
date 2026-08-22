@@ -18,6 +18,7 @@ type Props = {
   focusId?: string;
   onNavigate: (section: AdminNavSectionId, focusId?: string) => void;
   onPreviewUserApp: () => void;
+  onPreviewPresidentPole?: () => void;
   onOpenCommand?: () => void;
 };
 
@@ -26,6 +27,7 @@ export function renderAdminPane({
   focusId,
   onNavigate,
   onPreviewUserApp,
+  onPreviewPresidentPole,
   onOpenCommand,
 }: Props) {
   switch (section) {
@@ -36,7 +38,12 @@ export function renderAdminPane({
     case 'plateforme':
       return <AdminPlatformPane />;
     case 'utilisateurs':
-      return <AdminUsersPane focusId={focusId} />;
+      return (
+        <AdminUsersPane
+          focusId={focusId}
+          onPreviewPresidentPole={onPreviewPresidentPole}
+        />
+      );
     case 'clubs':
       return <AdminClubsPane focusId={focusId} />;
     case 'commercial':

@@ -63,20 +63,25 @@ function JoueurTabBarSlot(props: {
 function ClubPresidentShellSwitch({
   activeTab,
   onTabChange,
+  adminPreviewBypass = false,
 }: {
   activeTab: MainTabId;
   onTabChange: (tab: MainTabId) => void;
+  /** Aperçu admin du pôle Président — n’assouplit pas l’ACL adhérents. */
+  adminPreviewBypass?: boolean;
 }) {
   const profile = useSessionProfile();
   const ws = useClubWorkspace();
   const { clubShellMode, setClubShellMode } = useProductLine();
-  const wantPresident = clubShellMode === 'president';
-  const allowed = canAccessPresidentPole({
-    role: profile?.role,
-    uid: profile?.uid,
-    clubId: ws.clubId ?? profile?.profile?.club_id,
-    clubOwnerUid: ws.club?.owner_uid,
-  });
+  const wantPresident = clubShellMode === 'president' || adminPreviewBypass;
+  const allowed =
+    adminPreviewBypass ||
+    canAccessPresidentPole({
+      role: profile?.role,
+      uid: profile?.uid,
+      clubId: ws.clubId ?? profile?.profile?.club_id,
+      clubOwnerUid: ws.club?.owner_uid,
+    });
 
   useEffect(() => {
     if (!wantPresident || ws.loading || allowed) return;
@@ -243,6 +248,7 @@ function AppShell() {
     loading: productLineLoading,
     setProductLine,
     setProSignupPresetRole,
+    setClubShellMode,
     parentGuestSupporter,
     returnParentFromSupporterGuest,
   } = useProductLine();
@@ -261,6 +267,7 @@ function AppShell() {
   const { config: platformConfig, loading: platformConfigLoading } = usePlatformConfig();
   const { filterTabs, isEnabled, flagForTab, disabledCopy } = usePlatformFeatureFlags();
   const [previewUserMode, setPreviewUserMode] = useState(false);
+  const [adminPresidentPreview, setAdminPresidentPreview] = useState(false);
   const [activeTab, setActiveTab] = useState<MainTabId>('home');
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
   const [pendingTeamEventId, setPendingTeamEventId] = useState<string | null>(null);
@@ -423,7 +430,19 @@ function AppShell() {
   }
 
   if (!authLoading && profile && shouldUseAdminShell && !previewUserMode) {
-    return <AdminAppShell onPreviewUserApp={() => setPreviewUserMode(true)} />;
+    return (
+      <AdminAppShell
+        onPreviewUserApp={() => {
+          setAdminPresidentPreview(false);
+          setPreviewUserMode(true);
+        }}
+        onPreviewPresidentPole={() => {
+          void setClubShellMode('president');
+          setAdminPresidentPreview(true);
+          setPreviewUserMode(true);
+        }}
+      />
+    );
   }
 
   if (!authLoading && (sessionProfile ?? profile) && isSponsorRole((sessionProfile ?? profile)!.role)) {
@@ -518,8 +537,9 @@ function AppShell() {
   const showFeatureDisabledPanel =
     tabFeatureBlocked && blockedFlag != null && sessionProfile?.role !== 'player';
   const isSponsor = isSponsorRole(sessionProfile?.role);
-  const isClubShell = sessionProfile?.role === 'club';
-  const isCoachShell = sessionProfile?.role === 'coach';
+  const forcePresidentPreview = previewUserMode && adminPresidentPreview;
+  const isClubShell = sessionProfile?.role === 'club' || forcePresidentPreview;
+  const isCoachShell = sessionProfile?.role === 'coach' && !forcePresidentPreview;
   const usesRoleShell = isClubShell || isCoachShell;
   const joueurPoleActive = isJoueurPoleProductLine(productLine);
   const shellBackground = isSponsor
@@ -666,7 +686,13 @@ function AppShell() {
         >
           <StatusBar style="light" />
           {previewUserMode ? (
-            <AdminPreviewBanner onExitPreview={() => setPreviewUserMode(false)} />
+            <AdminPreviewBanner
+              onExitPreview={() => {
+                setPreviewUserMode(false);
+                setAdminPresidentPreview(false);
+                void setClubShellMode('club');
+              }}
+            />
           ) : null}
           {profile ? <ProdayNotificationBridge /> : null}
           {profile ? <ProdayBrainBridge /> : null}
@@ -680,6 +706,7 @@ function AppShell() {
                   <ClubPresidentShellSwitch
                     activeTab={activeTab}
                     onTabChange={handleTabPress}
+                    adminPreviewBypass={forcePresidentPreview}
                   />
                 </PresidentShellBridgeProvider>
               ) : isCoachShell ? (

@@ -22,53 +22,59 @@ import {
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
 import { AdminListRow, AdminModalSheet } from '../motion';
-import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
 import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
+import {
+  ADMIN_EDITABLE_ROLE_OPTIONS,
+  adminRoleOptionFromUser,
+  adminRoleOptionLabel,
+  adminUserMatchesRoleFilter,
+  findClubForAdminUser,
+  isAdminPresidentUser,
+  persistedUserRoleFromAdminOption,
+  type AdminRoleOption,
+} from '../../../utils/adminPresidentRole';
 import { useAdminSelection } from '../utils/useAdminSelection';
 import { shareCsv, toCsv } from '../utils/adminCsv';
 import { canAdminUi } from '../utils/adminRbac';
 import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
+import { useProductLine } from '../../../context/ProductLineContext';
 import { adminAuditService } from '../../../services/adminAudit.service';
-import type { User, UserRole, VerificationStatus } from '../../../models/User';
+import type { User, VerificationStatus } from '../../../models/User';
 import { AdminClubCommercialBillingCard } from '../ui/AdminClubCommercialBillingCard';
 import { clubLivePackFromOfferHint } from '../../../content/clubLivePacks';
 
-const ROLE_FILTERS: { id: 'all' | UserRole; label: string }[] = [
+const ROLE_FILTERS: { id: 'all' | AdminRoleOption; label: string }[] = [
   { id: 'all', label: 'Tous' },
   { id: 'player', label: 'Joueurs' },
   { id: 'coach', label: 'Coachs' },
   { id: 'parent', label: 'Parents' },
   { id: 'club', label: 'Clubs' },
+  { id: 'president', label: 'Présidents' },
   { id: 'supporter', label: 'Supporters' },
   { id: 'sponsor', label: 'Sponsors' },
 ];
 
-const EDITABLE_ROLES: UserRole[] = [
-  'player',
-  'coach',
-  'parent',
-  'club',
-  'supporter',
-  'sponsor',
-  'agent',
-  'recruiter',
-  'organizer',
-];
-
-export function AdminUsersPane({ focusId }: { focusId?: string }) {
+export function AdminUsersPane({
+  focusId,
+  onPreviewPresidentPole,
+}: {
+  focusId?: string;
+  onPreviewPresidentPole?: () => void;
+}) {
   const data = useAdminData();
   const { firebaseUser, profile } = useAuth();
   const t = ADMIN_TOKENS;
   const [q, setQ] = useState('');
-  const [role, setRole] = useState<'all' | UserRole>('all');
+  const [role, setRole] = useState<'all' | AdminRoleOption>('all');
   const [onlyPending, setOnlyPending] = useState(false);
   const [selected, setSelected] = useState<User | null>(null);
   const [busy, setBusy] = useState(false);
   const selection = useAdminSelection<string>();
   const canBulk = canAdminUi(profile?.email, 'bulk');
   const canExport = canAdminUi(profile?.email, 'export');
+  const canImpersonate = canAdminUi(profile?.email, 'impersonate');
 
   useEffect(() => {
     if (!focusId) return;
@@ -80,7 +86,7 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
     const query = q.trim().toLowerCase();
     return data.users
       .filter((u) => {
-        if (role !== 'all' && u.role !== role) return false;
+        if (!adminUserMatchesRoleFilter(u, data.clubs, role)) return false;
         if (onlyPending && !userNeedsAdminVerificationReview(u)) return false;
         if (!query) return true;
         return (
@@ -92,7 +98,7 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
         );
       })
       .slice(0, 250);
-  }, [data.users, q, role, onlyPending]);
+  }, [data.users, data.clubs, q, role, onlyPending]);
 
   const exportCsv = () => {
     void shareCsv(
@@ -241,7 +247,8 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
                   <View style={{ flex: 1, gap: 2 }}>
                     <AdminText variant="h3">{item.display_name}</AdminText>
                     <AdminText variant="caption" color={t.muted}>
-                      {getRoleLabel(item.role)} · {item.email}
+                      {adminRoleOptionLabel(adminRoleOptionFromUser(item, data.clubs))} ·{' '}
+                      {item.email}
                     </AdminText>
                     <AdminText variant="caption" color={t.faint}>
                       {item.is_active === false ? 'Désactivé' : 'Actif'}
@@ -284,6 +291,9 @@ export function AdminUsersPane({ focusId }: { focusId?: string }) {
             setBusy={setBusy}
             actorUid={firebaseUser?.uid ?? 'admin'}
             actorEmail={profile?.email ?? firebaseUser?.email ?? undefined}
+            onPreviewPresidentPole={
+              canImpersonate ? onPreviewPresidentPole : undefined
+            }
           />
         ) : null}
       </AdminModalSheet>
@@ -327,6 +337,7 @@ function UserEditor({
   setBusy,
   actorUid,
   actorEmail,
+  onPreviewPresidentPole,
 }: {
   user: User;
   busy: boolean;
@@ -335,30 +346,32 @@ function UserEditor({
   setBusy: (v: boolean) => void;
   actorUid: string;
   actorEmail?: string;
+  onPreviewPresidentPole?: () => void;
 }) {
   const t = ADMIN_TOKENS;
   const data = useAdminData();
+  const { setClubShellMode } = useProductLine();
   const [name, setName] = useState(user.display_name);
   const [city, setCity] = useState(user.city ?? '');
   const [note, setNote] = useState(user.admin_note ?? '');
   const [tags, setTags] = useState((user.admin_tags ?? []).join(', '));
-  const [role, setRole] = useState<UserRole>(user.role);
+  const [roleOption, setRoleOption] = useState<AdminRoleOption>(() =>
+    adminRoleOptionFromUser(user, data.clubs),
+  );
 
   useEffect(() => {
     setName(user.display_name);
     setCity(user.city ?? '');
     setNote(user.admin_note ?? '');
     setTags((user.admin_tags ?? []).join(', '));
-    setRole(user.role);
-  }, [user]);
+    setRoleOption(adminRoleOptionFromUser(user, data.clubs));
+  }, [user, data.clubs]);
 
-  const linkedClub = useMemo(() => {
-    const byOwner = data.clubs.find((c) => c.owner_uid === user.uid);
-    if (byOwner) return byOwner;
-    const clubId = user.profile?.club_id;
-    if (clubId) return data.clubs.find((c) => c.id === clubId) ?? null;
-    return null;
-  }, [data.clubs, user.uid, user.profile?.club_id]);
+  const linkedClub = useMemo(
+    () => findClubForAdminUser(user, data.clubs),
+    [data.clubs, user],
+  );
+  const isPresident = isAdminPresidentUser(user, data.clubs);
 
   const linkedQuote = useMemo(() => {
     if (!linkedClub) return null;
@@ -390,7 +403,19 @@ function UserEditor({
       .map((s) => s.trim())
       .filter(Boolean);
 
-  const saveProfile = () =>
+  const saveProfile = () => {
+    if (roleOption === 'president' && !linkedClub) {
+      Alert.alert(
+        'Club requis',
+        'Rattachez ce compte à un club (pôle Clubs) avant de le désigner Président (owner).',
+      );
+      return;
+    }
+    const persistedRole = persistedUserRoleFromAdminOption(roleOption);
+    const summary =
+      roleOption === 'president'
+        ? `Profil / rôle → Président (club + owner ${linkedClub!.id})`
+        : `Profil / rôle → ${persistedRole}`;
     confirmAdminAction('Enregistrer le profil ?', 'Modification Firestore + audit.', () =>
       run(async () => {
         await adminService.updateUser(user.uid, {
@@ -398,18 +423,37 @@ function UserEditor({
           city: city.trim(),
           admin_note: note,
           admin_tags: parseTags(),
-          role,
+          role: persistedRole,
+          ...(roleOption === 'president'
+            ? { product_line: 'pro_club', club_id: linkedClub!.id }
+            : {}),
         });
+        if (roleOption === 'president' && linkedClub) {
+          await adminService.setClubOwner(linkedClub.id, user.uid, actorUid);
+        }
         await adminAuditService.log({
           action: 'user_updated',
           actor_uid: actorUid,
           actor_email: actorEmail,
           target_type: 'user',
           target_id: user.uid,
-          summary: `Profil / rôle → ${role}`,
+          summary,
         });
       }),
     );
+  };
+
+  const openPresidentPole = () => {
+    if (!onPreviewPresidentPole) return;
+    confirmAdminAction(
+      'Ouvrir le pôle Président ?',
+      'Aperçu admin du shell Président (ACL owner inchangée pour les adhérents).',
+      () => {
+        void setClubShellMode('president');
+        onPreviewPresidentPole();
+      },
+    );
+  };
 
   const setActive = (active: boolean) =>
     confirmAdminAction(
@@ -505,13 +549,43 @@ function UserEditor({
           <AdminText variant="label" color={t.faint}>
             Rôle
           </AdminText>
+          <AdminText variant="caption" color={t.muted}>
+            Président = rôle Club + owner du club lié (ACL pôle Président).
+          </AdminText>
           <View style={styles.chips}>
-            {EDITABLE_ROLES.map((r) => (
-              <Chip key={r} label={getRoleLabel(r)} active={role === r} onPress={() => setRole(r)} />
+            {ADMIN_EDITABLE_ROLE_OPTIONS.map((r) => (
+              <Chip
+                key={r}
+                label={adminRoleOptionLabel(r)}
+                active={roleOption === r}
+                onPress={() => setRoleOption(r)}
+              />
             ))}
           </View>
           <AdminButton label={busy ? '…' : 'Enregistrer'} onPress={saveProfile} disabled={busy} />
         </AdminCard>
+
+        {(roleOption === 'president' || isPresident || user.role === 'club') &&
+        onPreviewPresidentPole ? (
+          <AdminCard>
+            <AdminText variant="h2">Pôle Président</AdminText>
+            <AdminText variant="body" color={t.muted}>
+              {isPresident
+                ? `Owner de ${linkedClub?.name ?? 'club'} — accès réel au pôle pour cet adhérent.`
+                : roleOption === 'president'
+                  ? 'Enregistrez d’abord pour désigner le président (owner), puis ouvrez l’aperçu.'
+                  : 'Staff Club (non owner) : pas d’accès Président tant qu’il n’est pas owner.'}
+            </AdminText>
+            <View style={styles.actions}>
+              <AdminButton
+                label="Ouvrir pôle Président"
+                variant="soft"
+                disabled={busy || (!isPresident && roleOption !== 'president')}
+                onPress={openPresidentPole}
+              />
+            </View>
+          </AdminCard>
+        ) : null}
 
         <AdminCard>
           <AdminText variant="h2">Statut compte</AdminText>
@@ -581,7 +655,7 @@ function UserEditor({
                 : null
             }
           />
-        ) : user.role === 'club' ? (
+        ) : user.role === 'club' || roleOption === 'president' ? (
           <AdminCard>
             <AdminText variant="h2">Facturation live / Veo</AdminText>
             <AdminText variant="caption" color={t.muted}>

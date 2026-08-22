@@ -262,6 +262,8 @@ export type AdminUserUpdatePatch = {
   admin_note?: string | null;
   /** Tags admin. */
   admin_tags?: string[] | null;
+  /** Rattachement club (profile.club_id) — ex. désignation président. */
+  club_id?: string | null;
 };
 
 export const adminService = {
@@ -388,6 +390,9 @@ export const adminService = {
     }
     if (patch.admin_tags !== undefined) {
       update.admin_tags = patch.admin_tags ?? [];
+    }
+    if (patch.club_id !== undefined) {
+      update['profile.club_id'] = patch.club_id?.trim() || null;
     }
 
     if (patch.product_line !== undefined || patch.role !== undefined) {
@@ -747,6 +752,7 @@ export const adminService = {
       archived?: boolean;
       admin_note?: string | null;
       admin_tags?: string[] | null;
+      owner_uid?: string;
     },
     actorUid?: string,
   ): Promise<void> {
@@ -761,6 +767,7 @@ export const adminService = {
     if (patch.archived !== undefined) update.archived = patch.archived;
     if (patch.admin_note !== undefined) update.admin_note = patch.admin_note?.trim() || null;
     if (patch.admin_tags !== undefined) update.admin_tags = patch.admin_tags ?? [];
+    if (patch.owner_uid !== undefined) update.owner_uid = patch.owner_uid.trim();
     await updateDoc(doc(database, 'clubs', clubId), update);
     await adminAuditService.log({
       action: 'other',
@@ -768,6 +775,29 @@ export const adminService = {
       target_type: 'club',
       target_id: clubId,
       summary: `Mise à jour club (${Object.keys(patch).join(', ')})`,
+    });
+  },
+
+  /**
+   * Désigne le compte président (owner_uid) d’un club.
+   * ACL Pôle Président : role club + uid === owner_uid.
+   */
+  async setClubOwner(
+    clubId: string,
+    ownerUid: string,
+    actorUid?: string,
+  ): Promise<void> {
+    const uid = ownerUid.trim();
+    if (!clubId.trim() || !uid) {
+      throw new Error('Club et propriétaire requis');
+    }
+    await this.updateClub(clubId, { owner_uid: uid }, actorUid);
+    await adminAuditService.log({
+      action: 'other',
+      actor_uid: actorUid || 'admin',
+      target_type: 'club',
+      target_id: clubId,
+      summary: `Président (owner) → ${uid}`,
     });
   },
 

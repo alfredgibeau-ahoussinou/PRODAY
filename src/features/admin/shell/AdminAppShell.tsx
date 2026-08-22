@@ -34,9 +34,13 @@ import {
 
 interface AdminAppShellProps {
   onPreviewUserApp: () => void;
+  onPreviewPresidentPole?: () => void;
 }
 
-function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
+function AdminShellInner({
+  onPreviewUserApp,
+  onPreviewPresidentPole,
+}: AdminAppShellProps) {
   const data = useAdminData();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -72,9 +76,10 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
         focusId,
         onNavigate: navigate,
         onPreviewUserApp,
+        onPreviewPresidentPole,
         onOpenCommand: openCommand,
       }),
-    [section, focusId, navigate, onPreviewUserApp, openCommand],
+    [section, focusId, navigate, onPreviewUserApp, onPreviewPresidentPole, openCommand],
   );
 
   const dockPadBottom = Math.max(insets.bottom, 10);
@@ -165,7 +170,10 @@ function AdminShellInner({ onPreviewUserApp }: AdminAppShellProps) {
   );
 }
 
-export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }) => {
+export const AdminAppShell: React.FC<AdminAppShellProps> = ({
+  onPreviewUserApp,
+  onPreviewPresidentPole,
+}) => {
   const { isAdmin, claimLoading } = useIsAdmin();
   const t = ADMIN_TOKENS;
 
@@ -193,7 +201,10 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({ onPreviewUserApp }
   return (
     <AdminDataProvider>
       <AdminMotionProvider>
-        <AdminShellInner onPreviewUserApp={onPreviewUserApp} />
+        <AdminShellInner
+          onPreviewUserApp={onPreviewUserApp}
+          onPreviewPresidentPole={onPreviewPresidentPole}
+        />
       </AdminMotionProvider>
     </AdminDataProvider>
   );
