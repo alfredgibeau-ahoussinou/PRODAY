@@ -20,13 +20,11 @@ import {
 } from '../theme/clubDesignSystem';
 import { ClubStatusPill, ClubText } from './clubUi';
 
-function formatKickoff(d: Date): string {
-  return d.toLocaleString('fr-FR', {
+function formatKickoffDay(d: Date): string {
+  return d.toLocaleDateString('fr-FR', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
   });
 }
 
@@ -119,7 +117,7 @@ export function ClubHomeIdentityHeader({
           {clubName}
         </ClubText>
         {meta ? (
-          <ClubText variant="caption" muted numberOfLines={1} style={styles.meta}>
+          <ClubText variant="caption" muted numberOfLines={2} style={styles.meta}>
             {meta}
           </ClubText>
         ) : null}
@@ -198,13 +196,25 @@ export type ClubHomePriority =
   | { kind: 'training'; event: TeamEvent }
   | { kind: 'calm' };
 
-/** Prochain événement — une seule priorité (match / séance / jour calme). */
+/** Prochain événement — une seule priorité « jour J » (match / séance / calme). */
 export function ClubHomeNextEventRow({
   priority,
-  onPress,
+  teamLabel,
+  locationLabel,
+  onOpen,
+  onConvocations,
+  onPlan,
 }: {
   priority: ClubHomePriority;
-  onPress: () => void;
+  /** Équipe liée à l’événement (écran existant). */
+  teamLabel?: string;
+  locationLabel?: string;
+  /** CTA principal → Matchs / Entraînements / Calendrier. */
+  onOpen: () => void;
+  /** CTA Convocations si RSVP en attente. */
+  onConvocations?: () => void;
+  /** Terrain libre → ouvrir Créer (honnête). */
+  onPlan?: () => void;
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => nextEventStyles(tokens), [tokens]);
@@ -212,7 +222,7 @@ export function ClubHomeNextEventRow({
   if (priority.kind === 'calm') {
     return (
       <AnimatedEntrance kind="fadeUp" index={2} delayStep={36}>
-        <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.card}>
+        <View style={styles.card}>
           <LinearGradient
             colors={[tokens.pitchSoft, tokens.surface]}
             start={{ x: 0, y: 0 }}
@@ -224,18 +234,36 @@ export function ClubHomeNextEventRow({
             <Icon name="football" size={22} color={tokens.pitch} />
           </View>
           <View style={styles.col}>
-            <ClubText variant="label" muted>
-              Prochaine priorité
+            <ClubText variant="label" style={{ color: tokens.pitch }}>
+              Priorité du jour
             </ClubText>
             <ClubText variant="h2" style={styles.title}>
               Terrain libre
             </ClubText>
-            <ClubText variant="caption" muted>
-              Aucun match ni séance imminente — planifiez via Créer
+            <ClubText variant="caption" muted numberOfLines={2}>
+              Aucun match ni séance imminente — planifiez quand vous êtes prêt.
             </ClubText>
+            <View style={styles.ctaRow}>
+              <PressableSpring onPress={onOpen} scaleTo={0.97} haptic style={styles.ctaPrimary}>
+                <ClubText variant="caption" style={styles.ctaPrimaryLabel}>
+                  Calendrier
+                </ClubText>
+              </PressableSpring>
+              {onPlan ? (
+                <PressableSpring
+                  onPress={onPlan}
+                  scaleTo={0.97}
+                  haptic
+                  style={[styles.ctaGhost, { borderColor: tokens.borderStrong }]}
+                >
+                  <ClubText variant="caption" style={{ color: tokens.foreground, fontWeight: '700' }}>
+                    Créer
+                  </ClubText>
+                </PressableSpring>
+              ) : null}
+            </View>
           </View>
-          <Icon name="chevron-forward" size={16} color={tokens.faint} />
-        </PressableSpring>
+        </View>
       </AnimatedEntrance>
     );
   }
@@ -244,20 +272,17 @@ export function ClubHomeNextEventRow({
   const tone = isMatch ? clubEventTone.match : clubEventTone.training;
   const event = priority.event;
   const starts = event.starts_at ? new Date(event.starts_at) : null;
-  const kickLabel = starts ? formatKickoff(starts) : 'Horaire à confirmer';
   const clock = starts ? formatClock(starts) : null;
+  const dayLabel = starts ? formatKickoffDay(starts) : null;
   const title = event.title?.trim() || (isMatch ? 'Prochain match' : 'Prochaine séance');
   const washFrom = isMatch ? 'rgba(91,163,255,0.22)' : tokens.pitchSoft;
   const washTo = tokens.surface;
+  const metaBits = [teamLabel?.trim(), dayLabel, locationLabel?.trim()].filter(Boolean);
+  const openLabel = isMatch ? 'Ouvrir' : 'Détail';
 
   return (
     <AnimatedEntrance kind="fadeUp" index={2} delayStep={36}>
-      <PressableSpring
-        onPress={onPress}
-        scaleTo={0.98}
-        haptic
-        style={[styles.card, { borderColor: tone.color + '55' }]}
-      >
+      <View style={[styles.card, { borderColor: tone.color + '55' }]}>
         <LinearGradient
           colors={[washFrom, washTo]}
           start={{ x: 0, y: 0 }}
@@ -270,19 +295,53 @@ export function ClubHomeNextEventRow({
           <Icon name={isMatch ? 'trophy' : 'football'} size={22} color={tone.color} />
         </View>
         <View style={styles.col}>
-          <ClubText variant="label" style={{ color: tone.color }}>
-            {tone.label}
-            {clock ? ` · ${clock}` : ''}
-          </ClubText>
+          <View style={styles.typeRow}>
+            <View style={[styles.typePill, { backgroundColor: tone.soft, borderColor: tone.color }]}>
+              <ClubText variant="label" style={{ color: tone.color, fontSize: 10, letterSpacing: 0.8 }}>
+                {tone.label}
+              </ClubText>
+            </View>
+            {clock ? (
+              <ClubText variant="h2" style={[styles.clock, { color: tokens.foreground }]}>
+                {clock}
+              </ClubText>
+            ) : (
+              <ClubText variant="caption" muted>
+                Horaire à confirmer
+              </ClubText>
+            )}
+          </View>
           <ClubText variant="h2" numberOfLines={2} style={styles.title}>
             {title}
           </ClubText>
-          <ClubText variant="caption" muted numberOfLines={1}>
-            {kickLabel}
-          </ClubText>
+          {metaBits.length > 0 ? (
+            <ClubText variant="caption" muted numberOfLines={2} style={styles.eventMeta}>
+              {metaBits.join(' · ')}
+            </ClubText>
+          ) : null}
+          <View style={styles.ctaRow}>
+            <PressableSpring onPress={onOpen} scaleTo={0.97} haptic style={styles.ctaPrimary}>
+              <ClubText variant="caption" style={styles.ctaPrimaryLabel}>
+                {openLabel}
+              </ClubText>
+              <Icon name="chevron-forward" size={12} color={tokens.onAccent} />
+            </PressableSpring>
+            {onConvocations ? (
+              <PressableSpring
+                onPress={onConvocations}
+                scaleTo={0.97}
+                haptic
+                style={[styles.ctaGhost, { borderColor: tokens.warning + '66' }]}
+              >
+                <Icon name="people" size={13} color={tokens.warning} />
+                <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '800' }}>
+                  Convocations
+                </ClubText>
+              </PressableSpring>
+            ) : null}
+          </View>
         </View>
-        <Icon name="chevron-forward" size={16} color={tokens.faint} />
-      </PressableSpring>
+      </View>
     </AnimatedEntrance>
   );
 }
@@ -312,7 +371,7 @@ export function ClubHomeTodayPeek({
     <AnimatedEntrance kind="fadeUp" index={3} delayStep={36}>
       <View style={styles.block}>
         <View style={styles.head}>
-          <ClubText variant="label" muted>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
             Aujourd’hui
           </ClubText>
           {onSeeAll ? (
@@ -358,30 +417,34 @@ export function ClubHomeTodayPeek({
 export type ClubHomeTeamCard = {
   id: string;
   name: string;
-  meta: string;
+  /** Ligne 1 — catégorie · genre (lisible, pas de troncature agressive). */
+  metaPrimary: string;
+  /** Ligne 2 — licenciés. */
+  metaSecondary: string;
   coachesLabel: string;
   hasCoach: boolean;
   onPress: () => void;
 };
 
-/** Rail compact Mes équipes — 2 à 4 cartes, pas de grille KPI. */
+/** Rail compact Mes équipes — cartes → espace équipe ; empty premium. */
 export function ClubHomeTeamsRail({
   teams,
   onSeeAll,
+  onCreateTeam,
 }: {
   teams: ClubHomeTeamCard[];
   onSeeAll: () => void;
+  onCreateTeam?: () => void;
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => teamsRailStyles(tokens), [tokens]);
   const visible = teams.slice(0, 4);
-  if (visible.length === 0) return null;
 
   return (
     <AnimatedEntrance kind="fadeUp" index={4} delayStep={36}>
       <View style={styles.block}>
         <View style={styles.head}>
-          <ClubText variant="label" muted>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
             Mes équipes
           </ClubText>
           <PressableSpring onPress={onSeeAll} scaleTo={0.97} haptic style={styles.seeAll}>
@@ -391,45 +454,80 @@ export function ClubHomeTeamsRail({
             <Icon name="chevron-forward" size={12} color={tokens.accent} />
           </PressableSpring>
         </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.rail}
-          nestedScrollEnabled
-        >
-          {visible.map((team) => (
-            <PressableSpring
-              key={team.id}
-              onPress={team.onPress}
-              scaleTo={0.97}
-              haptic
-              style={styles.card}
-            >
-              <View
-                style={[
-                  styles.accentBar,
-                  { backgroundColor: team.hasCoach ? tokens.accent : tokens.warning },
-                ]}
-              />
-              <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>
-                {team.name}
-              </ClubText>
-              <ClubText variant="caption" muted numberOfLines={1}>
-                {team.meta}
-              </ClubText>
-              <ClubText
-                variant="caption"
-                numberOfLines={1}
-                style={{
-                  color: team.hasCoach ? tokens.muted : tokens.warning,
-                  fontWeight: '600',
-                }}
+
+        {visible.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <View style={[styles.emptyIcon, { backgroundColor: tokens.pitchSoft }]}>
+              <Icon name="football" size={20} color={tokens.pitch} />
+            </View>
+            <ClubText variant="body" style={{ fontWeight: '700' }}>
+              Aucune équipe pour l’instant
+            </ClubText>
+            <ClubText variant="caption" muted numberOfLines={2} style={styles.emptyBody}>
+              Créez votre première catégorie (U7 → Seniors) pour structurer le club.
+            </ClubText>
+            {onCreateTeam ? (
+              <PressableSpring onPress={onCreateTeam} scaleTo={0.97} haptic style={styles.emptyCta}>
+                <ClubText variant="caption" style={styles.ctaPrimaryLabel}>
+                  Créer une équipe
+                </ClubText>
+              </PressableSpring>
+            ) : null}
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.rail}
+            nestedScrollEnabled
+          >
+            {visible.map((team) => (
+              <PressableSpring
+                key={team.id}
+                onPress={team.onPress}
+                scaleTo={0.97}
+                haptic
+                style={styles.card}
+                accessibilityRole="button"
+                accessibilityLabel={`${team.name}${team.hasCoach ? '' : ', sans coach'}`}
               >
-                {team.coachesLabel}
-              </ClubText>
-            </PressableSpring>
-          ))}
-        </ScrollView>
+                <View
+                  style={[
+                    styles.accentBar,
+                    { backgroundColor: team.hasCoach ? tokens.accent : tokens.warning },
+                  ]}
+                />
+                <ClubText variant="body" numberOfLines={2} style={styles.teamName}>
+                  {team.name}
+                </ClubText>
+                {team.metaPrimary ? (
+                  <ClubText variant="caption" muted numberOfLines={2} style={styles.teamMeta}>
+                    {team.metaPrimary}
+                  </ClubText>
+                ) : null}
+                {team.metaSecondary ? (
+                  <ClubText variant="caption" muted numberOfLines={1}>
+                    {team.metaSecondary}
+                  </ClubText>
+                ) : null}
+                {team.hasCoach ? (
+                  <ClubText variant="caption" numberOfLines={2} style={styles.coachLine}>
+                    {team.coachesLabel}
+                  </ClubText>
+                ) : (
+                  <View style={[styles.noCoachPill, { backgroundColor: tokens.warningSoft }]}>
+                    <ClubText
+                      variant="caption"
+                      style={{ color: tokens.warning, fontWeight: '800', fontSize: 11 }}
+                    >
+                      Sans coach
+                    </ClubText>
+                  </View>
+                )}
+              </PressableSpring>
+            ))}
+          </ScrollView>
+        )}
       </View>
     </AnimatedEntrance>
   );
@@ -461,7 +559,7 @@ export function ClubHomeWeekPeek({
     <AnimatedEntrance kind="fadeUp" index={5} delayStep={36}>
       <View style={styles.block}>
         <View style={styles.head}>
-          <ClubText variant="label" muted>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
             Semaine à venir
           </ClubText>
           <PressableSpring onPress={onSeeAll} scaleTo={0.97} haptic style={styles.seeAll}>
@@ -511,7 +609,7 @@ export function ClubHomeWeekPeek({
   );
 }
 
-/** Alerte présence — RSVP en attente sur les prochains événements. */
+/** Alerte présence — RSVP en attente (conservée pour réemploi ; Accueil privilégie le CTA priorité). */
 export function ClubHomePresenceAlert({
   pendingCount,
   eventLabel,
@@ -568,7 +666,7 @@ export function ClubHomeCommPeek({
   return (
     <AnimatedEntrance kind="fadeUp" index={7} delayStep={36}>
       <View style={styles.block}>
-        <ClubText variant="label" muted>
+        <ClubText variant="label" muted style={styles.sectionLabel}>
           Communication
         </ClubText>
         <View style={styles.list}>
@@ -640,23 +738,46 @@ type TodoItem = {
   onPress: () => void;
 };
 
-/** Liste « À faire » — uniquement s’il y a des priorités (pas de bandeau vide). */
+/** Liste « À faire » — actions seulement ; sinon bandeau succès discret. */
 export function ClubHomeTodoSection({
   items,
+  showSuccessWhenEmpty = true,
 }: {
   items: TodoItem[];
-  /** @deprecated Conservé pour compat ; l’état vide est masqué. */
+  /** État succès premium quand rien à traiter. */
+  showSuccessWhenEmpty?: boolean;
+  /** @deprecated Conservé pour compat. */
   emptySummary?: string;
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => todoStyles(tokens), [tokens]);
-  if (items.length === 0) return null;
+
+  if (items.length === 0) {
+    if (!showSuccessWhenEmpty) return null;
+    return (
+      <AnimatedEntrance kind="fadeUp" index={6} delayStep={36}>
+        <View style={styles.successRow}>
+          <View style={[styles.successIcon, { backgroundColor: tokens.successSoft }]}>
+            <Icon name="checkmark-circle" size={16} color={tokens.success} />
+          </View>
+          <View style={styles.col}>
+            <ClubText variant="body" style={{ fontWeight: '700' }}>
+              Tout est à jour
+            </ClubText>
+            <ClubText variant="caption" muted numberOfLines={1}>
+              Aucune action urgente pour le club
+            </ClubText>
+          </View>
+        </View>
+      </AnimatedEntrance>
+    );
+  }
 
   return (
     <AnimatedEntrance kind="fadeUp" index={6} delayStep={36}>
       <View style={styles.block}>
         <View style={styles.head}>
-          <ClubText variant="label" muted>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
             À faire
           </ClubText>
           <View style={[styles.countChip, { backgroundColor: tokens.warningSoft }]}>
@@ -686,7 +807,7 @@ export function ClubHomeTodoSection({
                 <ClubText variant="body" style={{ fontWeight: '700' }}>
                   {item.label}
                 </ClubText>
-                <ClubText variant="caption" muted numberOfLines={1}>
+                <ClubText variant="caption" muted numberOfLines={2}>
                   {item.hint}
                 </ClubText>
               </View>
@@ -732,6 +853,11 @@ export function ClubHomeShortcutLinks({
     </AnimatedEntrance>
   );
 }
+
+const sectionLabelBase = {
+  letterSpacing: 1.05,
+  opacity: 0.92,
+};
 
 const identityStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
@@ -792,12 +918,13 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       lineHeight: 48,
     },
     greet: {
-      letterSpacing: 0.2,
-      fontSize: 13,
-      lineHeight: 16,
-      fontWeight: '600',
-      textTransform: 'none',
+      letterSpacing: 0.35,
+      fontSize: 12,
+      lineHeight: 15,
+      fontWeight: '700',
+      textTransform: 'uppercase',
       textAlign: 'center',
+      opacity: 0.85,
     },
     clubName: {
       letterSpacing: -0.55,
@@ -811,6 +938,8 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       textAlign: 'center',
       marginTop: 2,
       opacity: 0.9,
+      lineHeight: 17,
+      paddingHorizontal: clubSpace.sm,
     },
     statusCol: {
       position: 'absolute',
@@ -886,12 +1015,12 @@ const nextEventStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     card: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       gap: clubSpace.md,
       paddingVertical: clubSpace.xl,
       paddingHorizontal: clubSpace.lg,
       paddingLeft: clubSpace.lg + 4,
-      minHeight: 108,
+      minHeight: 128,
       borderRadius: clubRadius.xxl,
       backgroundColor: tokens.surface,
       borderWidth: 1,
@@ -916,18 +1045,73 @@ const nextEventStyles = (tokens: ClubThemeTokens) =>
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
       flexShrink: 0,
+      marginTop: 2,
     },
-    col: { flex: 1, minWidth: 0, gap: 4 },
+    col: { flex: 1, minWidth: 0, gap: 6 },
+    typeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+    },
+    typePill: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: clubRadius.pill,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    clock: {
+      fontWeight: '800',
+      letterSpacing: -0.5,
+      fontSize: 22,
+      lineHeight: 26,
+    },
     title: {
       fontWeight: '800',
       letterSpacing: -0.4,
       color: tokens.foreground,
+    },
+    eventMeta: {
+      lineHeight: 17,
+    },
+    ctaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      marginTop: clubSpace.xs,
+    },
+    ctaPrimary: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: clubRadius.pill,
+      backgroundColor: tokens.accent,
+    },
+    ctaPrimaryLabel: {
+      color: tokens.onAccent,
+      fontWeight: '800',
+      fontSize: 12,
+      letterSpacing: 0.2,
+    },
+    ctaGhost: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 7,
+      paddingHorizontal: 12,
+      borderRadius: clubRadius.pill,
+      borderWidth: 1,
+      backgroundColor: tokens.elevated,
     },
   });
 
 const todayPeekStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     block: { gap: clubSpace.sm },
+    sectionLabel: sectionLabelBase,
     head: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -964,6 +1148,7 @@ const todayPeekStyles = (tokens: ClubThemeTokens) =>
 const teamsRailStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     block: { gap: clubSpace.sm },
+    sectionLabel: sectionLabelBase,
     head: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -982,10 +1167,12 @@ const teamsRailStyles = (tokens: ClubThemeTokens) =>
       paddingRight: clubSpace.lg,
     },
     card: {
-      width: 168,
-      gap: 6,
+      width: 188,
+      minHeight: 132,
+      gap: 5,
       paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.md,
+      paddingLeft: clubSpace.md + 4,
       borderRadius: clubRadius.xl,
       backgroundColor: tokens.surface,
       borderWidth: 1,
@@ -1000,11 +1187,67 @@ const teamsRailStyles = (tokens: ClubThemeTokens) =>
       bottom: 0,
       width: 3,
     },
+    teamName: {
+      fontWeight: '800',
+      letterSpacing: -0.2,
+      lineHeight: 20,
+    },
+    teamMeta: {
+      lineHeight: 16,
+    },
+    coachLine: {
+      color: tokens.muted,
+      fontWeight: '600',
+      marginTop: 2,
+      lineHeight: 16,
+    },
+    noCoachPill: {
+      alignSelf: 'flex-start',
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: clubRadius.pill,
+    },
+    emptyCard: {
+      gap: clubSpace.sm,
+      alignItems: 'flex-start',
+      paddingVertical: clubSpace.xl,
+      paddingHorizontal: clubSpace.lg,
+      borderRadius: clubRadius.xl,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.soft,
+    },
+    emptyIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: clubRadius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyBody: {
+      lineHeight: 17,
+      marginBottom: 2,
+    },
+    emptyCta: {
+      marginTop: clubSpace.xs,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: clubRadius.pill,
+      backgroundColor: tokens.accent,
+    },
+    ctaPrimaryLabel: {
+      color: tokens.onAccent,
+      fontWeight: '800',
+      fontSize: 12,
+    },
   });
 
 const weekPeekStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     block: { gap: clubSpace.sm },
+    sectionLabel: sectionLabelBase,
     head: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -1071,6 +1314,7 @@ const presenceStyles = (tokens: ClubThemeTokens) =>
 const commPeekStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     block: { gap: clubSpace.sm },
+    sectionLabel: sectionLabelBase,
     list: { gap: clubSpace.xs },
     row: {
       flexDirection: 'row',
@@ -1096,6 +1340,7 @@ const commPeekStyles = (tokens: ClubThemeTokens) =>
 const todoStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     block: { gap: clubSpace.sm },
+    sectionLabel: sectionLabelBase,
     head: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -1120,6 +1365,24 @@ const todoStyles = (tokens: ClubThemeTokens) =>
       backgroundColor: tokens.surface,
       borderWidth: 1,
       borderColor: tokens.border,
+    },
+    successRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    successIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: clubRadius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     rank: {
       width: 22,
