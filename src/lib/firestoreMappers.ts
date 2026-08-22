@@ -393,8 +393,17 @@ export function teamEventFromFirestore(
 ): TeamEvent {
   const rsvpsRaw = (data.rsvps as Record<string, string>) ?? {};
   const rsvps: Record<string, RsvpStatus> = {};
+  const validRsvp = new Set<string>([
+    'pending',
+    'yes',
+    'no',
+    'maybe',
+    'late_under_10',
+    'late_over_10',
+    'late_unknown',
+  ]);
   for (const [uid, status] of Object.entries(rsvpsRaw)) {
-    if (['pending', 'yes', 'no', 'maybe'].includes(status)) {
+    if (validRsvp.has(status)) {
       rsvps[uid] = status as RsvpStatus;
     }
   }

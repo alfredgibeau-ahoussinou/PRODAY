@@ -6,6 +6,7 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
+import { sanitizeHostChildren } from '../../motion/sanitizeHostChildren';
 
 export type EntranceKind = 'fadeUp' | 'fadeDown' | 'fade' | 'zoom';
 
@@ -43,6 +44,6 @@ export const AnimatedEntrance: React.FC<AnimatedEntranceProps> = ({
   style,
 }) => (
   <Animated.View style={style} entering={buildEntering(kind, index * delayStep)}>
-    {children}
+    {sanitizeHostChildren(children)}
   </Animated.View>
 );

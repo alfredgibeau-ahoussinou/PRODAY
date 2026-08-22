@@ -122,27 +122,16 @@ export function ClubEventsScreen() {
 
 export function ClubAutomationsScreen() {
   const { tokens } = useClubTheme();
-  const [reminders, setReminders] = useState(true);
-  const [presence, setPresence] = useState(false);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubBrandHeader title="Automatisations" subtitle="Rappels & règles simples" />
-        <ClubSectionCard>
-          <View style={styles.switchRow}>
-            <ClubText variant="body">Rappel J-1 match / séance</ClubText>
-            <Switch value={reminders} onValueChange={setReminders} />
-          </View>
-          <View style={styles.switchRow}>
-            <ClubText variant="body">Relance présences ouvertes</ClubText>
-            <Switch value={presence} onValueChange={setPresence} />
-          </View>
-          <ClubText variant="caption" muted>
-            Aperçu local des règles — la sync club arrive bientôt. Aucun effet sur les effectifs
-            sans confirmation.
-          </ClubText>
-        </ClubSectionCard>
+        <ClubBrandHeader title="Automatisations" subtitle="Rappels & règles" />
+        <ClubEmptyState
+          title="Automatisations club"
+          body="Les règles club (rappel J-1, relance présences) seront configurables ici. Aujourd’hui les rappels push passent déjà par les Cloud Functions déployées — aucun interrupteur fictif n’est affiché."
+          icon="notifications"
+        />
       </ClubChapterScroll>
     </View>
   );
@@ -153,7 +142,7 @@ export function ClubLicensesScreen() {
     <ClubStubShell
       title="Licences"
       subtitle="Documents & pièces"
-      body="Centralisez licences et documents. Accès filtré par rôle — pas de dossier médical."
+      body="Le coffre licences club n’est pas encore branché. Aucun document n’est inventé ici — utilisez le profil / documents joueur pour les pièces individuelles."
       icon="document"
     />
   );

@@ -14,14 +14,24 @@ import { Icon } from '../../ui/Icon';
 import type { MatchHubChapterId } from '../../../content/matchHubChapters';
 import { spacing } from '../../../theme/designTokens';
 import { useCoachTheme } from '../../../features/coach/shell/CoachThemeContext';
+import { OpponentMatchDaySheet } from '../../matchs/OpponentMatchDaySheet';
+import { MatchTalkPanel } from '../MatchTalkPanel';
 
 type Props = {
   event: TeamEvent;
+  profile: User;
+  members?: User[];
   onOpenChapter: (chapter: MatchHubChapterId) => void;
   onOpenCarpool?: () => void;
 };
 
-export function CoachMatchSummaryTab({ event, onOpenChapter, onOpenCarpool }: Props) {
+export function CoachMatchSummaryTab({
+  event,
+  profile,
+  members = [],
+  onOpenChapter,
+  onOpenCarpool,
+}: Props) {
   const { tokens } = useCoachTheme();
   const live = resolveLiveState(event);
   const yesCount = countRsvpYes(event);
@@ -51,6 +61,10 @@ export function CoachMatchSummaryTab({ event, onOpenChapter, onOpenCarpool }: Pr
           </CoachText>
         ) : null}
       </CoachSectionCard>
+
+      <OpponentMatchDaySheet event={event} />
+
+      <MatchTalkPanel event={event} profile={profile} members={members} />
 
       <CoachSectionCard
         kicker="Convocation"

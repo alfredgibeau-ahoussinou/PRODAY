@@ -48,15 +48,34 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   const skin = useMatchSkinTokens();
   const accent = skin.joueurSkin || skin.coachSkin ? skin.accent : colors.accent;
   const styles = useMemo(() => createStyles(accent, skin), [accent, skin]);
-  const { width: pageWidth } = useWindowDimensions();
+  const { width: pageWidth, height: windowHeight } = useWindowDimensions();
   const [pagerHeight, setPagerHeight] = useState(0);
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
   const suppressChapterSyncRef = useRef(false);
+  const suppressClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pagesRef = useRef(pages);
   pagesRef.current = pages;
   const activeChapterRef = useRef(activeChapter);
   activeChapterRef.current = activeChapter;
+
+  const effectivePagerHeight =
+    pagerHeight > 0 ? pagerHeight : Math.max(Math.round(windowHeight * 0.45), 280);
+
+  const clearSuppressSoon = useCallback((ms = 420) => {
+    if (suppressClearTimerRef.current) clearTimeout(suppressClearTimerRef.current);
+    suppressClearTimerRef.current = setTimeout(() => {
+      suppressChapterSyncRef.current = false;
+      suppressClearTimerRef.current = null;
+    }, ms);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (suppressClearTimerRef.current) clearTimeout(suppressClearTimerRef.current);
+    },
+    [],
+  );
 
   const onPagerLayout = useCallback((e: LayoutChangeEvent) => {
     const h = Math.round(e.nativeEvent.layout.height);
@@ -76,9 +95,13 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         onChapterChange(chapterId);
       }
       scrollRef.current?.scrollTo({ x, animated });
-      if (!animated) suppressChapterSyncRef.current = false;
+      if (!animated) {
+        suppressChapterSyncRef.current = false;
+      } else {
+        clearSuppressSoon();
+      }
     },
-    [onChapterChange, pageWidth, scrollX]
+    [clearSuppressSoon, onChapterChange, pageWidth, scrollX]
   );
 
   const goToChapter = useCallback(
@@ -115,7 +138,13 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
 
   const onPagerScrollEndDrag = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (suppressChapterSyncRef.current) return;
+      if (suppressChapterSyncRef.current) {
+        const vx = e.nativeEvent.velocity?.x ?? 0;
+        if (Math.abs(vx) < 0.05) {
+          suppressChapterSyncRef.current = false;
+        }
+        return;
+      }
       const vx = e.nativeEvent.velocity?.x ?? 0;
       if (Math.abs(vx) < 0.05) {
         syncChapterFromOffset(e.nativeEvent.contentOffset.x);
@@ -138,7 +167,8 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
     suppressChapterSyncRef.current = true;
     scrollX.value = index * pageWidth;
     scrollRef.current?.scrollTo({ x: index * pageWidth, animated: true });
-  }, [activeChapter, pageWidth, scrollX]);
+    clearSuppressSoon();
+  }, [activeChapter, clearSuppressSoon, pageWidth, scrollX]);
 
   return (
     <View style={styles.root}>
@@ -164,9 +194,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         decelerationRate="fast"
         style={styles.pager}
         onLayout={onPagerLayout}
-        contentContainerStyle={
-          pagerHeight > 0 ? { height: pagerHeight } : undefined
-        }
+        contentContainerStyle={{ height: effectivePagerHeight }}
         nestedScrollEnabled
         directionalLockEnabled
         keyboardShouldPersistTaps="handled"
@@ -177,7 +205,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
             index={index}
             scrollX={scrollX}
             pageWidth={pageWidth}
-            pageHeight={pagerHeight}
+            pageHeight={effectivePagerHeight}
           >
             {page.render()}
           </PagerPage>

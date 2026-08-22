@@ -20,6 +20,13 @@ const existingUrlTypes = baseIos.infoPlist?.CFBundleURLTypes ?? [];
 const easProjectId =
   process.env.EAS_PROJECT_ID ?? process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? '';
 
+/** Store / TestFlight → production APNs ; dev / preview device → development. */
+const easProfile = (process.env.EAS_BUILD_PROFILE ?? '').toLowerCase();
+const apsEnvironment =
+  easProfile === 'production' || easProfile === 'testflight'
+    ? 'production'
+    : 'development';
+
 // Embed public RC keys in `extra` so runtime can read them via expo-constants
 // even if Metro inlining of process.env is stale (restart Metro with `-c`
 // after changing `.env`).
@@ -44,6 +51,10 @@ module.exports = () => ({
     ios: {
       ...baseIos,
       usesAppleSignIn: true,
+      entitlements: {
+        ...(baseIos.entitlements ?? {}),
+        'aps-environment': apsEnvironment,
+      },
       infoPlist: {
         ...(baseIos.infoPlist ?? {}),
         CFBundleURLTypes: [

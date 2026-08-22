@@ -11,6 +11,7 @@ import {
   onCoachSessionBookingUpdated,
 } from './coachSessionPayments';
 import { onStaffNotificationCreated } from './staffPush';
+import { onPushOutboxCreated } from './pushOutbox';
 import {
   createSubscriptionCheckoutSession,
   createBillingPortalSession,
@@ -84,6 +85,7 @@ export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession 
 export { createTournamentCheckoutSession };
 export { createCoachSessionCheckoutSession, onCoachSessionBookingUpdated };
 export { onStaffNotificationCreated };
+export { onPushOutboxCreated };
 export { createSubscriptionCheckoutSession, createBillingPortalSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { onMinorUserCreatedProvisionParent, provisionParentAccount };

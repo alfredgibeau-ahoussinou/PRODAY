@@ -1210,6 +1210,15 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    /** File d’attente push (Expo/FCM) — écriture client, lecture/update CF admin. */
+    match /push_outbox/{outboxId} {
+      allow create: if isSignedIn()
+        && request.resource.data.recipient_uid is string
+        && request.resource.data.title is string
+        && request.resource.data.body is string;
+      allow read, update, delete: if isAdmin();
+    }
+
     /** Rendez-vous pôle santé — praticien ↔ joueur (+ parent si consentement médical) */
     match /medical_appointments/{appointmentId} {
       allow read: if isAdmin()

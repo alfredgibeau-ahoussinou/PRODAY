@@ -6,6 +6,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
+import { sanitizeHostChildren } from '../../motion/sanitizeHostChildren';
 
 interface CrossfadeSwitchProps {
   /** Clé qui déclenche la transition (ex. user id ou mode guest/logged) */
@@ -26,7 +27,7 @@ export const CrossfadeSwitch: React.FC<CrossfadeSwitchProps> = ({ switchKey, chi
 
   return (
     <Animated.View key={switchKey} style={[styles.fill, style]}>
-      {children}
+      {sanitizeHostChildren(children)}
     </Animated.View>
   );
 };

@@ -32,6 +32,7 @@ import {
   resolveCoachNavFolders,
 } from '../navigation/resolveCoachNavAccess';
 import { CoachPageFrame } from '../../../components/coach/CoachPageFrame';
+import { CoachEmptyState } from '../../../components/coach/coachPortalUi';
 import {
   COACH_LOCKED_IDENTITY,
   getCoachPageIdentity,
@@ -353,9 +354,23 @@ function renderCoachPane(
     case 'smart_tactics':
       return <SmartTacticsPortalScreen />;
     case 'mes_videos':
-      return profile ? <CoachMesVideosScreen profile={profile} /> : null;
+      return profile ? (
+        <CoachMesVideosScreen profile={profile} />
+      ) : (
+        <CoachEmptyState
+          title="Mes vidéos"
+          body="Connectez-vous pour ouvrir vos captations match."
+        />
+      );
     case 'gestion':
-      return profile ? <CoachGestionPane profile={profile} /> : null;
+      return profile ? (
+        <CoachGestionPane profile={profile} />
+      ) : (
+        <CoachEmptyState
+          title="Gestion"
+          body="Connectez-vous pour accéder à la gestion d’équipe."
+        />
+      );
     case 'match_center':
     case 'matchs':
       return (

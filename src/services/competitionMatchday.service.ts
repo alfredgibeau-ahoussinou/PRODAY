@@ -42,9 +42,11 @@ export async function onFixtureValidatedMatchdayPipeline(
   if (!fixture || fixture.status !== 'validated') return;
 
   let sheetStats: Record<string, PlayerMatchSheetStat> | undefined;
+  let organizerUid: string | undefined;
   if (fixture.team_event_id) {
     const event = await teamEventsService.getById(fixture.team_event_id);
     sheetStats = event?.player_match_stats;
+    organizerUid = event?.organizer_uid?.trim() || undefined;
 
     // MotM votes override auto PotM when available
     const standings = await motmVotesService.standings(fixture.team_event_id);
@@ -82,11 +84,17 @@ export async function onFixtureValidatedMatchdayPipeline(
     );
   }
 
-  // Lightweight local push log for organizers / follow pattern
-  void notificationService.sendPush('broadcast', undefined, {
-    title: 'Résultat validé',
-    body: `${fixture.home_name} ${fixture.home_score}-${fixture.away_score} ${fixture.away_name}`,
-  });
+  if (organizerUid && fixture.team_event_id) {
+    void notificationService.sendPush(organizerUid, undefined, {
+      title: 'Résultat validé',
+      body: `${fixture.home_name} ${fixture.home_score}-${fixture.away_score} ${fixture.away_name}`,
+      data: {
+        type: 'competition_result',
+        fixtureId: fixture.id,
+        eventId: fixture.team_event_id,
+      },
+    });
+  }
 
   try {
     const { competitionExclusivesService } = await import('./competitionExclusives.service');

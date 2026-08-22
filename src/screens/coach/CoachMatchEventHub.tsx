@@ -147,6 +147,7 @@ export function CoachMatchEventHub({
         return (
           <CoachMatchSummaryTab
             event={event}
+            profile={profile}
             onOpenChapter={setChapter}
             onOpenCarpool={onOpenCarpool}
           />

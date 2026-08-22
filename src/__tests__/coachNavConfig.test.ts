@@ -40,6 +40,7 @@ describe('coachNavConfig', () => {
 
   it('canonise les alias legacy et surligne Menu pour les outils secondaires', () => {
     expect(canonicalizeCoachNav('pitch')).toBe('today');
+    expect(canonicalizeCoachNav('accueil')).toBe('today');
     expect(canonicalizeCoachNav('effectif')).toBe('equipe');
     expect(canonicalizeCoachNav('planning')).toBe('entrainements');
     expect(canonicalizeCoachNav('matchs')).toBe('match_center');

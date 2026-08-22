@@ -338,7 +338,7 @@ export const COACH_HOME_TOOLS: {
 
 /** Deep links d’anciennes pages → onglet parent. */
 export function canonicalizeCoachNav(id: CoachNavItemId): CoachNavItemId {
-  if (id === 'pitch') return 'today';
+  if (id === 'pitch' || id === 'accueil') return 'today';
   if (id === 'effectif') return 'equipe';
   if (id === 'planning') return 'entrainements';
   if (id === 'matchs') return 'match_center';

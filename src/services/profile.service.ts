@@ -346,9 +346,9 @@ export const profileService = {
   async updateFcmToken(uid: string, token: string): Promise<void> {
     const database = getDb();
     if (!database) return;
+    // Ne pas forcer sponsor_geo_opt_in — l’opt-in géo reste un choix explicite.
     await updateDoc(doc(database, 'users', uid), {
       fcm_token: token,
-      'notification_preferences.sponsor_geo_opt_in': true,
       updated_at: serverTimestamp(),
     });
   },
