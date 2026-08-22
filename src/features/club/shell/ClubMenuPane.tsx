@@ -6,16 +6,19 @@ import { useClubShellNav } from './ClubShellNavContext';
 import { useClubTheme } from './ClubThemeContext';
 import { CLUB_TOOL_GROUPS } from '../navigation/clubNavConfig';
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
-import { PressableSpring } from '../../../components/motion';
+import { AnimatedEntrance, PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   items?: ClubNavResolvedItem[];
 };
 
-/** Hub Outils — catalogue d’outils par jobs (Fréquents + sections repliables). */
+/**
+ * Hub Outils — vestiaire digital : header compact, listes aérées, jobs clairs.
+ * Pas de cards empilées / rails glow (aligné Accueil + dock émeraude).
+ */
 export function ClubMenuPane({ items = [] }: Props) {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -40,127 +43,144 @@ export function ClubMenuPane({ items = [] }: Props) {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubBrandHeader title="Outils" subtitle="Catalogue d’outils du club" />
+        <ClubBrandHeader title="Outils" subtitle="Pilotage & métiers du club" />
+
         {shellNav?.openPresident ? (
-          <PressableSpring
-            onPress={() => shellNav.openPresident?.()}
-            scaleTo={0.98}
-            haptic
-            style={[
-              styles.row,
-              {
-                borderColor: tokens.accent,
-                backgroundColor: tokens.accentSoft,
-                marginBottom: clubSpace.md,
-              },
-            ]}
-          >
-            <Icon name="briefcase" size={20} color={tokens.accent} />
-            <View style={{ flex: 1 }}>
-              <ClubText variant="body" style={{ fontWeight: '700' }}>
-                Ouvrir le Pôle Président
-              </ClubText>
-              <ClubText variant="caption" muted>
-                Direction · stratégie · cockpit exécutif
-              </ClubText>
-            </View>
-            <Icon name="chevron-forward" size={16} color={tokens.muted} />
-          </PressableSpring>
+          <AnimatedEntrance kind="fadeUp" index={0} delayStep={32}>
+            <PressableSpring
+              onPress={() => shellNav.openPresident?.()}
+              scaleTo={0.98}
+              haptic
+              style={styles.presidentRow}
+              accessibilityRole="button"
+              accessibilityLabel="Ouvrir le Pôle Président"
+            >
+              <View style={[styles.presidentMark, { backgroundColor: tokens.pitch }]} />
+              <View style={styles.col}>
+                <ClubText variant="body" style={styles.presidentTitle}>
+                  Pôle Président
+                </ClubText>
+                <ClubText variant="caption" muted numberOfLines={1}>
+                  Direction · stratégie · cockpit
+                </ClubText>
+              </View>
+              <Icon name="chevron-forward" size={15} color={tokens.pitch} />
+            </PressableSpring>
+          </AnimatedEntrance>
         ) : null}
+
         {items.length === 0 ? (
           <ClubEmptyState title="Aucun outil" body="Aucun outil disponible pour le moment." />
         ) : (
-          CLUB_TOOL_GROUPS.map((group) => {
+          CLUB_TOOL_GROUPS.map((group, groupIndex) => {
             const rows = group.ids
               .map((id) => resolvedById.get(id))
               .filter(Boolean) as ClubNavResolvedItem[];
             if (rows.length === 0) return null;
+            const isFrequent = group.collapsible === false;
             const isCollapsible = group.collapsible !== false;
             const isOpen = expanded[group.title] ?? true;
+            const entranceIndex = groupIndex + 1;
+
             return (
-              <View key={group.title} style={styles.group}>
-                {isCollapsible ? (
-                  <PressableSpring
-                    onPress={() =>
-                      setExpanded((prev) => ({
-                        ...prev,
-                        [group.title]: !prev[group.title],
-                      }))
-                    }
-                    scaleTo={0.98}
-                    haptic
-                    style={styles.groupHead}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded: isOpen }}
-                    accessibilityLabel={`${group.title}, ${isOpen ? 'replier' : 'déplier'}`}
-                  >
-                    <ClubText variant="label" muted style={styles.groupTitle}>
-                      {group.title}
-                    </ClubText>
-                    <Icon
-                      name={isOpen ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color={tokens.faint}
-                    />
-                  </PressableSpring>
-                ) : (
-                  <ClubText variant="label" muted style={styles.groupTitle}>
-                    {group.title}
-                  </ClubText>
-                )}
-                {isOpen ? (
-                  <View
-                    style={[
-                      styles.card,
-                      group.collapsible === false && {
-                        borderLeftColor: tokens.pitch,
-                      },
-                    ]}
-                  >
-                    {rows.map((item) => (
-                      <PressableSpring
-                        key={item.id}
-                        onPress={() => shellNav?.requestNav(item.id)}
-                        scaleTo={0.98}
-                        haptic
-                        style={styles.row}
-                      >
+              <AnimatedEntrance
+                key={group.title}
+                kind="fadeUp"
+                index={entranceIndex}
+                delayStep={32}
+              >
+                <View style={styles.group}>
+                  {isCollapsible ? (
+                    <PressableSpring
+                      onPress={() =>
+                        setExpanded((prev) => ({
+                          ...prev,
+                          [group.title]: !prev[group.title],
+                        }))
+                      }
+                      scaleTo={0.98}
+                      haptic
+                      style={styles.groupHead}
+                      accessibilityRole="button"
+                      accessibilityState={{ expanded: isOpen }}
+                      accessibilityLabel={`${group.title}, ${isOpen ? 'replier' : 'déplier'}`}
+                    >
+                      <View style={styles.groupHeadLeft}>
                         <View
                           style={[
-                            styles.icon,
-                            group.collapsible === false && {
-                              backgroundColor: tokens.pitchSoft,
-                            },
+                            styles.sectionDot,
+                            { backgroundColor: isFrequent ? tokens.pitch : tokens.faint },
                           ]}
-                        >
-                          <Icon
-                            name={item.icon}
-                            size={18}
-                            color={
-                              group.collapsible === false ? tokens.pitch : tokens.accent
-                            }
-                          />
-                        </View>
-                        <View style={styles.col}>
-                          <ClubText variant="body" style={{ fontWeight: '600' }}>
-                            {item.label}
-                          </ClubText>
-                          {item.hint ? (
-                            <ClubText variant="caption" muted numberOfLines={1}>
-                              {item.hint}
-                            </ClubText>
-                          ) : null}
-                        </View>
-                        {item.locked ? (
-                          <Icon name="lock" size={14} color={tokens.muted} />
-                        ) : (
-                          <Icon name="chevron-forward" size={16} color={tokens.faint} />
-                        )}
-                      </PressableSpring>
-                    ))}
-                  </View>
-                ) : null}
-              </View>
+                        />
+                        <ClubText variant="label" muted style={styles.groupTitle}>
+                          {group.title}
+                        </ClubText>
+                      </View>
+                      <Icon
+                        name={isOpen ? 'chevron-up' : 'chevron-down'}
+                        size={15}
+                        color={tokens.faint}
+                      />
+                    </PressableSpring>
+                  ) : (
+                    <View style={styles.groupHeadStatic}>
+                      <View
+                        style={[styles.sectionDot, { backgroundColor: tokens.pitch }]}
+                      />
+                      <ClubText variant="label" muted style={styles.groupTitle}>
+                        {group.title}
+                      </ClubText>
+                    </View>
+                  )}
+
+                  {isOpen ? (
+                    <View style={styles.list}>
+                      {rows.map((item, rowIndex) => {
+                        const ink = isFrequent ? tokens.pitch : tokens.accent;
+                        const iconBg = isFrequent ? tokens.pitchSoft : tokens.elevated;
+                        const showDivider = rowIndex < rows.length - 1;
+                        return (
+                          <View key={item.id}>
+                            <PressableSpring
+                              onPress={() => shellNav?.requestNav(item.id)}
+                              scaleTo={0.98}
+                              haptic
+                              style={styles.row}
+                              accessibilityRole="button"
+                              accessibilityLabel={item.label}
+                              accessibilityHint={item.hint}
+                            >
+                              <View style={[styles.icon, { backgroundColor: iconBg }]}>
+                                <Icon name={item.icon} size={17} color={ink} />
+                              </View>
+                              <View style={styles.col}>
+                                <ClubText variant="body" style={styles.rowTitle}>
+                                  {item.label}
+                                </ClubText>
+                                {item.hint ? (
+                                  <ClubText variant="caption" muted numberOfLines={1}>
+                                    {item.hint}
+                                  </ClubText>
+                                ) : null}
+                              </View>
+                              {item.locked ? (
+                                <Icon name="lock" size={14} color={tokens.muted} />
+                              ) : (
+                                <Icon name="chevron-forward" size={14} color={tokens.faint} />
+                              )}
+                            </PressableSpring>
+                            {showDivider ? (
+                              <View
+                                style={[styles.divider, { backgroundColor: tokens.border }]}
+                              />
+                            ) : null}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : null}
+                </View>
+              </AnimatedEntrance>
             );
           })
         )}
@@ -172,42 +192,98 @@ export function ClubMenuPane({ items = [] }: Props) {
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
-    group: { gap: clubSpace.sm },
+    presidentRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.md,
+      paddingVertical: clubSpace.lg,
+      paddingHorizontal: clubSpace.sm,
+      paddingLeft: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      overflow: 'hidden',
+    },
+    presidentMark: {
+      position: 'absolute',
+      left: 0,
+      top: 14,
+      bottom: 14,
+      width: 3,
+      borderTopRightRadius: 2,
+      borderBottomRightRadius: 2,
+    },
+    presidentTitle: {
+      fontWeight: '700',
+      letterSpacing: -0.2,
+      color: tokens.foreground,
+    },
+    group: {
+      gap: clubSpace.sm,
+      paddingTop: clubSpace.xs,
+    },
     groupHead: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingVertical: 2,
+      paddingVertical: 4,
       paddingHorizontal: 2,
     },
-    groupTitle: { marginLeft: 4 },
-    card: {
+    groupHeadStatic: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 2,
+    },
+    groupHeadLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flex: 1,
+      minWidth: 0,
+    },
+    sectionDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      flexShrink: 0,
+    },
+    groupTitle: {
+      letterSpacing: 1.05,
+    },
+    list: {
+      borderRadius: clubRadius.lg,
       backgroundColor: tokens.surface,
-      borderRadius: clubRadius.xl,
-      padding: clubSpace.sm,
-      borderWidth: 1,
-      borderColor: tokens.borderStrong,
-      borderLeftWidth: 3,
-      borderLeftColor: tokens.accent,
-      gap: 2,
-      ...clubShadow.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      overflow: 'hidden',
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: clubSpace.sm,
-      paddingVertical: 10,
-      paddingHorizontal: clubSpace.sm,
-      borderRadius: clubRadius.md,
+      gap: clubSpace.md,
+      paddingVertical: 13,
+      paddingHorizontal: clubSpace.md,
     },
     icon: {
-      width: 38,
-      height: 38,
-      borderRadius: clubRadius.sm,
+      width: 34,
+      height: 34,
+      borderRadius: clubRadius.pill,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: tokens.accentSoft,
+      flexShrink: 0,
     },
     col: { flex: 1, minWidth: 0, gap: 2 },
+    rowTitle: {
+      fontWeight: '600',
+      letterSpacing: -0.15,
+      color: tokens.foreground,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      marginLeft: clubSpace.md + 34 + clubSpace.md,
+    },
   });
 }

@@ -204,7 +204,7 @@ export const CLUB_PAGE_IDENTITIES: Partial<Record<ClubNavItemId, ClubPageIdentit
     id: 'plus',
     eyebrow: 'Outils',
     title: 'Outils',
-    support: 'Catalogue du club',
+    support: 'Pilotage & métiers du club',
     icon: 'tune',
     layout: 'market',
     motif: 'none',

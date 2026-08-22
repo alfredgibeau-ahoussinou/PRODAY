@@ -238,7 +238,7 @@ const plusItem: ClubNavItem = {
   id: 'plus',
   label: 'Outils',
   shortLabel: 'Outils',
-  hint: 'Catalogue d’outils du club',
+  hint: 'Pilotage & métiers du club',
   icon: 'tune',
   tab: 'home',
 };
