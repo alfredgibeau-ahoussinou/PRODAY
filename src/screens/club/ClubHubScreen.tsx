@@ -33,7 +33,7 @@ export function ClubHubScreen() {
   if (ws.loading) return <ClubLoading />;
 
   const location =
-    [ws.club?.city, ws.club?.department].filter(Boolean).join(' · ') || 'Identité & réglages';
+    [ws.club?.city, ws.club?.department].filter(Boolean).join(' · ') || 'Identité & réglages du club';
   const brandSource =
     brand?.source === 'stored'
       ? 'Couleurs enregistrées'

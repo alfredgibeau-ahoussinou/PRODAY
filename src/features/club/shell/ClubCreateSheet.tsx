@@ -92,7 +92,7 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
           <View style={styles.handle} />
           <ClubText variant="h3">Créer</ClubText>
           <ClubText variant="caption" muted style={{ marginBottom: clubSpace.sm }}>
-            Choisissez ce que vous voulez ajouter
+            Actions rapides — match, séance, joueur…
           </ClubText>
           {CLUB_CREATE_ACTIONS.map((action) => (
             <PressableSpring
@@ -137,7 +137,7 @@ export function ClubCreateFab({ onPress }: { onPress: () => void }) {
       haptic
       style={[styles.wrap, { right, bottom: FAB_BOTTOM }]}
       accessibilityRole="button"
-      accessibilityLabel="Créer"
+      accessibilityLabel="Créer — actions"
       testID="club-create-fab"
       hitSlop={8}
     >

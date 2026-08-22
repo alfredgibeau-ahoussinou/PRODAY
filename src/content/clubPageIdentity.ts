@@ -2,12 +2,21 @@ import type { IconName } from '../components/ui/iconNames';
 import type { ClubNavItemId } from '../features/club/navigation/clubNavConfig';
 import { CLUB_TOKENS, CLUB_SITE_LEGACY } from '../features/club/theme/clubTokens';
 
-/** Tokens brand Club (clair) + legacy dark pour upsell site. */
+/** Chrome partagé app Club — navy/émeraude (plus de look cinéma). */
 export const CLUB_SITE = {
   ...CLUB_SITE_LEGACY,
   accent: CLUB_TOKENS.accent,
   deep: CLUB_TOKENS.accentDeep,
   soft: CLUB_TOKENS.accentSoft,
+  glow: CLUB_TOKENS.pitchSoft,
+  bg: CLUB_TOKENS.bg,
+  band: CLUB_TOKENS.headerWash,
+  surface: CLUB_TOKENS.surface,
+  elevated: CLUB_TOKENS.elevated,
+  border: CLUB_TOKENS.border,
+  foreground: CLUB_TOKENS.foreground,
+  muted: CLUB_TOKENS.muted,
+  pitch: CLUB_TOKENS.pitch,
 } as const;
 
 export type ClubPageLayout =

@@ -29,7 +29,7 @@ export function ClubVideoScreen() {
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
         <ClubBrandHeader
           title="Vidéo"
-          subtitle="Choisissez votre captation — aucun vendeur imposé"
+          subtitle="Outil vidéo — captation au choix, aucun vendeur imposé"
         />
 
         <ClubSectionCard title="Fournisseurs">

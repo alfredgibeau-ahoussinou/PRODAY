@@ -42,7 +42,7 @@ export function ClubMatchesScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubBrandHeader title="Matchs" subtitle="Convocations & invitations inter-clubs" />
+        <ClubBrandHeader title="Matchs" subtitle="Compétition — convocations & invitations" />
 
         <ClubSegmentedControl
           options={[

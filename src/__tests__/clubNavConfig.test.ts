@@ -170,13 +170,16 @@ describe('resolveClubNavAccess', () => {
     expect(primary.map((i) => i.id)).toEqual(['today', 'teams', 'matches', 'plus', 'club']);
   });
 
-  it('groupe les outils Menu (Effectifs / Sport / Ops / Club)', () => {
+  it('groupe les outils Menu par jobs (Fréquents / Aujourd’hui / Effectifs / Compétition / Admin)', () => {
     expect(CLUB_TOOL_GROUPS.map((g) => g.title)).toEqual([
+      'Fréquents',
+      'Aujourd’hui',
       'Effectifs',
-      'Sport',
-      'Opérations',
-      'Club',
+      'Compétition',
+      'Admin',
     ]);
+    const allIds = CLUB_TOOL_GROUPS.flatMap((g) => g.ids);
+    expect(new Set(allIds).size).toBe(allIds.length);
     const menu = resolveClubMenuItems({
       offerId: 'club_premium',
       isFeatureEnabled: allOn,

@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
@@ -11,21 +10,23 @@ type Props = {
   onPress: () => void;
 };
 
-/** Hauteur approx. du FAB CRÉER (pastille 40) + marge verticale claire entre les deux. */
+/** Hauteur approx. FAB CRÉER (56) + marge — Copilote reste au-dessus, secondaire. */
 const CREATE_FAB_BOTTOM = 78;
 const CREATE_FAB_HEIGHT = 56;
 const STACK_GAP = 14;
-/** Inset droit serré (hors safe area) — collé au bord, discret. */
 const EDGE_INSET = clubSpace.md; // 12
 
 /**
- * FAB Copilote Club — pastille icon-only collée au bord droit,
- * au-dessus de CRÉER, poids visuel minimal sur Accueil.
+ * FAB Copilote — secondaire (ghost émeraude), sous le poids du FAB Créer bleu 56.
+ * Masqué sur Accueil par le shell.
  */
 export function ClubCopilotFab({ onPress }: Props) {
   const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(
+    () => createStyles(tokens.pitch, tokens.pitchSoft),
+    [tokens.pitch, tokens.pitchSoft],
+  );
 
   const right = Math.max(insets.right, 0) + EDGE_INSET;
   const bottom = CREATE_FAB_BOTTOM + CREATE_FAB_HEIGHT + STACK_GAP;
@@ -42,47 +43,38 @@ export function ClubCopilotFab({ onPress }: Props) {
       testID="club-copilot-fab"
       hitSlop={8}
     >
-      <View style={styles.bubble} pointerEvents="box-none">
-        <LinearGradient
-          colors={[tokens.accent, tokens.accentDeep]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.face}
-        >
-          <Icon name="chat" size={18} color={tokens.onAccent} />
-        </LinearGradient>
+      <View style={styles.face}>
+        <Icon name="chat" size={17} color={tokens.pitch} />
       </View>
     </PressableSpring>
   );
 }
 
-function createStyles() {
+function createStyles(pitch: string, pitchSoft: string) {
   return StyleSheet.create({
     wrap: {
       position: 'absolute',
       zIndex: 31,
       shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.28,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.18,
+      shadowRadius: 5,
+      elevation: 3,
       ...Platform.select({
         android: { backgroundColor: 'transparent' },
         default: {},
       }),
     },
-    bubble: {
-      borderRadius: clubRadius.pill,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(255,255,255,0.14)',
-    },
     face: {
       width: 40,
       height: 40,
-      borderRadius: 20,
+      borderRadius: clubRadius.pill,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
+      backgroundColor: pitchSoft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: pitch,
     },
   });
 }

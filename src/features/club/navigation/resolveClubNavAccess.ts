@@ -120,7 +120,10 @@ export function resolveClubPrimaryNav(input: ClubNavAccessInput): ClubNavResolve
 export function resolveClubMenuItems(input: ClubNavAccessInput): ClubNavResolvedItem[] {
   const ids = CLUB_TOOL_GROUPS.flatMap((g) => g.ids);
   const out: ClubNavResolvedItem[] = [];
+  const seen = new Set<string>();
   for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
     const base = findClubNavItem(id);
     if (!base) continue;
     const resolved = resolveItem(base, input);

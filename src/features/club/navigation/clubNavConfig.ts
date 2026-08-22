@@ -122,7 +122,7 @@ const todayItem: ClubNavItem = {
   id: 'today',
   label: 'Accueil',
   shortLabel: 'Accueil',
-  hint: 'Centre de contrôle',
+  hint: 'Situation du club',
   icon: 'home',
   tab: 'home',
 };
@@ -237,7 +237,7 @@ const plusItem: ClubNavItem = {
   id: 'plus',
   label: 'Menu',
   shortLabel: 'Menu',
-  hint: 'Tous les outils',
+  hint: 'Catalogue d’outils',
   icon: 'hamburger',
   tab: 'home',
 };
@@ -398,34 +398,54 @@ export const CLUB_NAV_ITEMS: ClubNavItem[] = [
   plusItem,
 ];
 
-/** Groupes Menu mobile. */
-export const CLUB_TOOL_GROUPS: { title: string; ids: ClubNavItemId[] }[] = [
+/** Groupes Menu mobile — jobs + fréquents en tête (aucune destination retirée). */
+export type ClubToolGroup = {
+  title: string;
+  ids: ClubNavItemId[];
+  /** Si false, section toujours ouverte (Fréquents). */
+  collapsible?: boolean;
+  /** Déplié par défaut (ignoré si collapsible === false). */
+  defaultExpanded?: boolean;
+};
+
+export const CLUB_TOOL_GROUPS: ClubToolGroup[] = [
+  {
+    title: 'Fréquents',
+    ids: ['calendar', 'players', 'communication', 'finances', 'assistant'],
+    collapsible: false,
+  },
+  {
+    title: 'Aujourd’hui',
+    ids: ['trainings', 'notifications'],
+    collapsible: true,
+    defaultExpanded: true,
+  },
   {
     title: 'Effectifs',
-    ids: ['players', 'coaches', 'teams'],
+    ids: ['coaches', 'teams'],
+    collapsible: true,
+    defaultExpanded: true,
   },
   {
-    title: 'Sport',
-    ids: ['calendar', 'trainings', 'matches', 'events'],
+    title: 'Compétition',
+    ids: ['matches', 'events', 'stats', 'video', 'recruitment'],
+    collapsible: true,
+    defaultExpanded: false,
   },
   {
-    title: 'Opérations',
-    ids: ['communication', 'recruitment', 'video', 'stats', 'assistant'],
-  },
-  {
-    title: 'Club',
+    title: 'Admin',
     ids: [
       'pack',
       'licenses',
-      'finances',
       'sponsoring',
       'equipment',
       'automations',
       'permissions',
-      'notifications',
       'carpool',
       'shop',
     ],
+    collapsible: true,
+    defaultExpanded: false,
   },
 ];
 

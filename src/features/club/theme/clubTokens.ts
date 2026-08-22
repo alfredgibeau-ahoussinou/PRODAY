@@ -68,20 +68,20 @@ export const CLUB_TOKENS: ClubThemeTokens = {
   isLight: false,
 };
 
-/** Compat site / legacy dark chrome (upsell, vitrine publique). */
+/** Chrome site/legacy — aligné navy/émeraude app (plus de noir cinéma). */
 export const CLUB_SITE_LEGACY = {
   accent: '#006CFC',
-  deep: '#002478',
-  soft: 'rgba(0, 108, 252, 0.14)',
-  glow: 'rgba(0, 108, 252, 0.35)',
-  bg: '#000000',
-  band: '#020814',
-  surface: '#0c0c0c',
-  elevated: '#141414',
-  border: 'rgba(255,255,255,0.12)',
-  foreground: '#f5f5f0',
-  muted: 'rgba(245,245,240,0.55)',
+  deep: '#0047B8',
+  soft: 'rgba(0, 108, 252, 0.22)',
+  glow: 'rgba(5, 150, 105, 0.35)',
+  bg: '#0B121F',
+  band: '#0A2A22',
+  surface: '#121A28',
+  elevated: '#182233',
+  border: 'rgba(186, 204, 230, 0.12)',
+  foreground: '#F4F7FC',
+  muted: 'rgba(186, 204, 230, 0.72)',
   pitchDeep: '#064E3B',
-  pitch: '#047857',
-  pitchLight: '#059669',
+  pitch: '#059669',
+  pitchLight: '#10B981',
 } as const;
