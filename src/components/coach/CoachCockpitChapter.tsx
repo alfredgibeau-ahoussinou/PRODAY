@@ -17,15 +17,20 @@ import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { CreateTeamEventScreen } from '../../screens/CreateTeamEventScreen';
 import { CoachScreenHeader } from './CoachScreenHeader';
 import {
-  COACH_CALENDAR_TIPS,
   coachCalendarEventSummary,
   coachEventPlaceLabel,
   formatCoachCalendarDateStack,
-  listCoachCalendarUpcoming,
+  listCoachCalendarRest,
+  resolveCoachDayPriority,
 } from '../../utils/coachCalendarHome';
 import { findLatestPostMatchAnalysis } from '../../utils/coachPostMatchAnalysis';
 import { CoachSectionCard } from './coachPortalUi';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
+import {
+  CoachCockpitShortcutRow,
+  CoachDayCalmEmpty,
+  CoachDayPriorityHero,
+} from './CoachCockpitChrome';
 
 const PEOPLE_GOLD = '#F5C518';
 
@@ -46,9 +51,14 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   const canConvoc = userCanManageConvocations(profile, { clubCoversCoach });
   const hasClub = Boolean(profile.profile.club_id);
   const [creating, setCreating] = useState(false);
-  const [discoverOn, setDiscoverOn] = useState(true);
 
-  const upcoming = useMemo(() => listCoachCalendarUpcoming(events), [events]);
+  const priority = useMemo(() => resolveCoachDayPriority(events), [events]);
+  const heroEventId =
+    priority.kind === 'calm' ? null : priority.event.id;
+  const restUpcoming = useMemo(
+    () => listCoachCalendarRest(events, heroEventId),
+    [events, heroEventId],
+  );
 
   const lastPostMatch = useMemo(
     () => findLatestPostMatchAnalysis(events, members),
@@ -88,6 +98,10 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
     tabNav.openMatchs({ eventId, hubChapter: 'effectif' });
   };
 
+  const openEvent = (eventId: string, hubChapter?: 'live' | 'composition' | 'effectif') => {
+    tabNav.openMatchs({ eventId, hubChapter });
+  };
+
   if (creating) {
     return (
       <CreateTeamEventScreen
@@ -101,8 +115,6 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
       />
     );
   }
-
-  const firstTip = COACH_CALENDAR_TIPS[0];
 
   return (
     <View style={styles.root}>
@@ -129,19 +141,57 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
       />
 
       <CoachChapterScroll>
-        {discoverOn && firstTip ? (
-          <Pressable
-            onPress={() => setDiscoverOn(false)}
-            style={({ pressed }) => [styles.discoverBanner, pressed && styles.discoverPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t('coach.calendar.dismiss')}
-          >
-            <CoachText variant="caption" style={styles.discoverText} numberOfLines={1}>
-              {firstTip.title}
-            </CoachText>
-            <Icon name="close" size={14} color={tokens.muted} />
-          </Pressable>
-        ) : null}
+        <CoachCockpitShortcutRow
+          items={[
+            {
+              id: 'matchs',
+              label: 'Matchs',
+              icon: 'trophy',
+              onPress: () => openNav('match_center'),
+            },
+            {
+              id: 'trainings',
+              label: 'Séances',
+              icon: 'football',
+              onPress: () => openNav('entrainements'),
+            },
+            {
+              id: 'effectif',
+              label: 'Effectif',
+              icon: 'people',
+              onPress: () => openNav('equipe'),
+            },
+            {
+              id: 'planning',
+              label: 'Planning',
+              icon: 'calendar',
+              onPress: () => openNav('planning'),
+            },
+          ]}
+        />
+
+        {priority.kind === 'calm' ? (
+          <CoachDayCalmEmpty
+            onCreate={openCreate}
+            onPlanning={() => openNav('planning')}
+          />
+        ) : (
+          <CoachDayPriorityHero
+            priority={priority}
+            onOpenHub={() => openEvent(priority.event.id)}
+            onPointage={() => openPointage(priority.event.id)}
+            onComposition={
+              priority.kind === 'match' || priority.kind === 'live'
+                ? () => openEvent(priority.event.id, 'composition')
+                : undefined
+            }
+            onLive={
+              priority.kind === 'live'
+                ? () => openEvent(priority.event.id, 'live')
+                : undefined
+            }
+          />
+        )}
 
         {lastPostMatch ? (
           <CoachSectionCard
@@ -154,50 +204,43 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             }
           >
             <Pressable
-              onPress={() => openNav('coach_ia')}
+              onPress={() => {
+                if (lastPostMatch.eventId) {
+                  openEvent(lastPostMatch.eventId, 'composition');
+                  return;
+                }
+                openNav('match_center');
+              }}
               style={({ pressed }) => [styles.postMatchLink, pressed && { opacity: 0.65 }]}
             >
               <CoachText variant="caption" accent>
-                Voir l’analyse complète →
+                Voir le hub match →
               </CoachText>
             </Pressable>
           </CoachSectionCard>
         ) : null}
 
-        <CoachText variant="section" style={styles.sectionTitle}>
-          {t('coach.calendar.upcoming')}
-        </CoachText>
-
-        {upcoming.length === 0 ? (
-          <View style={styles.emptyBlock}>
-            <CoachText variant="body" muted style={styles.emptyText}>
-              {t('coach.calendar.empty')}
+        {restUpcoming.length > 0 ? (
+          <>
+            <CoachText variant="section" style={styles.sectionTitle}>
+              {t('coach.calendar.upcoming')}
             </CoachText>
-            <Pressable
-              onPress={openCreate}
-              style={({ pressed }) => [styles.emptyCta, pressed && { opacity: 0.85 }]}
-            >
-              <CoachText variant="section" style={styles.emptyCtaText}>
-                {t('coach.calendar.create')}
-              </CoachText>
-            </Pressable>
-          </View>
-        ) : (
-          upcoming.map((event) => (
-            <CalendarEventCard
-              key={event.id}
-              event={event}
-              styles={styles}
-              live={isInMatchWindow(event)}
-              liveLabel={t('coach.calendar.live')}
-              convokedLabel={t('coach.calendar.convoked')}
-              confirmedLabel={t('coach.calendar.confirmed')}
-              pointageLabel={t('coach.calendar.pointage')}
-              onOpen={() => tabNav.openMatchs({ eventId: event.id })}
-              onPointage={() => openPointage(event.id)}
-            />
-          ))
-        )}
+            {restUpcoming.map((event) => (
+              <CalendarEventCard
+                key={event.id}
+                event={event}
+                styles={styles}
+                live={isInMatchWindow(event)}
+                liveLabel={t('coach.calendar.live')}
+                convokedLabel={t('coach.calendar.convoked')}
+                confirmedLabel={t('coach.calendar.confirmed')}
+                pointageLabel={t('coach.calendar.pointage')}
+                onOpen={() => openEvent(event.id)}
+                onPointage={() => openPointage(event.id)}
+              />
+            ))}
+          </>
+        ) : null}
       </CoachChapterScroll>
     </View>
   );
@@ -299,35 +342,12 @@ function CalendarEventCard({
 const createStyles = (tokens: CoachThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
-    discoverBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 10,
-      borderRadius: radius.md,
-      backgroundColor: tokens.surface,
-      marginBottom: spacing.sm,
-    },
-    discoverPressed: { opacity: 0.7 },
-    discoverText: { flex: 1, color: tokens.foreground, fontWeight: '500' },
     sectionTitle: {
       color: tokens.foreground,
       fontWeight: '800',
       fontSize: 22,
       marginTop: spacing.sm,
     },
-    emptyBlock: { gap: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.md },
-    emptyText: { fontSize: 16 },
-    emptyCta: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: 52,
-      borderRadius: radius.pill,
-      backgroundColor: tokens.elevated,
-      paddingHorizontal: spacing.xl,
-    },
-    emptyCtaText: { color: tokens.foreground, fontWeight: '700' },
     card: {
       flexDirection: 'row',
       alignItems: 'stretch',

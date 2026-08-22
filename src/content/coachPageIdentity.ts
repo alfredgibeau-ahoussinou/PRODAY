@@ -68,7 +68,7 @@ export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = 
     id: 'today',
     eyebrow: 'Briefing',
     title: 'Accueil',
-    support: 'Calendrier du jour, séances et matchs.',
+    support: 'Jour J — match ou séance, pointage et hubs.',
     icon: 'home',
     motif: 'none',
   }),

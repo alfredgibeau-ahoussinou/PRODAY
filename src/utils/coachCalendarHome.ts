@@ -1,5 +1,9 @@
 import type { TeamEvent } from '../models/TeamEvent';
-import { countRsvpYes } from '../models/TeamEvent';
+import {
+  countRsvpYes,
+  isCoachMatchEvent,
+  isCoachTrainingEvent,
+} from '../models/TeamEvent';
 import { isInMatchWindow } from './matchLive';
 
 export type CoachCalendarEventSummary = {
@@ -77,6 +81,76 @@ export function listCoachCalendarUpcoming(
   return [...events]
     .filter((event) => isInMatchWindow(event) || event.starts_at.getTime() >= now)
     .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())
+    .slice(0, limit);
+}
+
+export type CoachDayPriority =
+  | { kind: 'live'; event: TeamEvent }
+  | { kind: 'match'; event: TeamEvent }
+  | { kind: 'training'; event: TeamEvent }
+  | { kind: 'calm' };
+
+/** Priorité Accueil coach — live > prochain match/séance (chrono, match si égal). */
+export function resolveCoachDayPriority(
+  events: TeamEvent[],
+  now = Date.now(),
+): CoachDayPriority {
+  const live = events.find((e) => isInMatchWindow(e));
+  if (live) return { kind: 'live', event: live };
+
+  const cutoff = now - 30 * 60 * 1000;
+  const upcoming = events
+    .filter((e) => e.starts_at.getTime() >= cutoff)
+    .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+
+  const nextMatch = upcoming.find(isCoachMatchEvent);
+  const nextTraining = upcoming.find(isCoachTrainingEvent);
+
+  if (nextMatch && nextTraining) {
+    const mt = nextMatch.starts_at.getTime();
+    const tt = nextTraining.starts_at.getTime();
+    if (mt === tt) return { kind: 'match', event: nextMatch };
+    return mt < tt
+      ? { kind: 'match', event: nextMatch }
+      : { kind: 'training', event: nextTraining };
+  }
+  if (nextMatch) return { kind: 'match', event: nextMatch };
+  if (nextTraining) return { kind: 'training', event: nextTraining };
+
+  const fallback = listCoachCalendarUpcoming(events, now, 1)[0];
+  if (fallback) {
+    return isCoachMatchEvent(fallback)
+      ? { kind: 'match', event: fallback }
+      : { kind: 'training', event: fallback };
+  }
+  return { kind: 'calm' };
+}
+
+export function coachDayPriorityKicker(kind: CoachDayPriority['kind']): string {
+  if (kind === 'live') return 'En direct';
+  if (kind === 'match') return 'Jour J · Match';
+  if (kind === 'training') return 'Jour J · Séance';
+  return 'Calme';
+}
+
+export function coachDayPrioritySubtitle(priority: CoachDayPriority): string {
+  if (priority.kind === 'calm') {
+    return 'Aucun match ni entraînement à venir — créez une convocation.';
+  }
+  const summary = coachCalendarEventSummary(priority.event);
+  const place = coachEventPlaceLabel(priority.event);
+  return `${summary.confirmed}/${summary.invited} confirmés · ${place}`;
+}
+
+/** Liste à venir sans dupliquer l’événement déjà en hero. */
+export function listCoachCalendarRest(
+  events: TeamEvent[],
+  heroEventId: string | null,
+  now = Date.now(),
+  limit = 8,
+): TeamEvent[] {
+  return listCoachCalendarUpcoming(events, now, limit + 1)
+    .filter((e) => e.id !== heroEventId)
     .slice(0, limit);
 }
 
