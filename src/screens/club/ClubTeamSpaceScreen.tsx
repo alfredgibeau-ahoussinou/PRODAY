@@ -16,17 +16,22 @@ import {
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubRosterPlayerCard } from '../../features/club/ui/ClubRosterPlayerCard';
-import { formatTeamRowLabel } from '../../utils/clubStructureView';
+import { buildClubTeamCardMeta } from '../../features/club/ui/clubTeamsModel';
+import { formatMatchClock, formatMatchDay } from '../../features/club/ui/clubMatchesModel';
 import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
-import { spacing } from '../../theme/designTokens';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
 
 type Props = {
   teamId: string;
   onBack: () => void;
 };
 
-/** Espace équipe — chrome teinté, effectif en cartes joueur, sections. */
+function eventWhenLabel(startsAt: Date): string {
+  return `${formatMatchDay(startsAt)} · ${formatMatchClock(startsAt)}`;
+}
+
+/** Espace équipe — chrome teinté, effectif, prochaines séances, sections existantes. */
 export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -37,10 +42,17 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
 
   const row = ws.teamRows.find((t) => t.teamId === teamId);
   const team = ws.teams.find((t) => t.id === teamId);
+  const meta = row ? buildClubTeamCardMeta(row) : null;
   const teamEvents = ws.events.filter((e) => e.team_id === teamId);
-  const nextMatch = teamEvents.find((e) => isCoachMatchEvent(e) && e.starts_at >= new Date());
+  const now = new Date();
+  const nextMatch = teamEvents.find(
+    (e) => isCoachMatchEvent(e) && e.starts_at && e.starts_at >= new Date(now.getTime() - 30 * 60 * 1000),
+  );
   const nextTraining = teamEvents.find(
-    (e) => isCoachTrainingEvent(e) && e.starts_at >= new Date(),
+    (e) =>
+      isCoachTrainingEvent(e) &&
+      e.starts_at &&
+      e.starts_at >= new Date(now.getTime() - 30 * 60 * 1000),
   );
   const rosterMemberships = ws.memberships.filter(
     (m) => m.status === 'active' && m.team_id === teamId,
@@ -49,6 +61,12 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
   const roster = rosterMemberships
     .map((m) => byUid.get(m.player_uid))
     .filter(Boolean) as typeof ws.members;
+
+  const headerSubtitle = meta
+    ? [meta.metaPrimary || meta.metaSecondary, meta.hasCoach ? meta.coachesLabel : null]
+        .filter(Boolean)
+        .join(' · ')
+    : 'Équipe';
 
   return (
     <View style={styles.root}>
@@ -61,13 +79,31 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
         </PressableSpring>
 
         <ClubBrandHeader
-          title={row ? formatTeamRowLabel(row) : team?.name ?? 'Équipe'}
-          subtitle={
-            row?.coachNames.length
-              ? `Coach : ${row.coachNames.join(', ')}`
-              : 'Sans coach affecté'
-          }
+          title={meta?.title ?? team?.name ?? 'Équipe'}
+          subtitle={headerSubtitle || undefined}
         />
+
+        {meta && !meta.hasCoach ? (
+          <PressableSpring
+            onPress={() => shellNav?.requestNav('coaches')}
+            scaleTo={0.98}
+            haptic
+            style={styles.noCoachBanner}
+          >
+            <View style={[styles.noCoachPill, { backgroundColor: tokens.warningSoft }]}>
+              <ClubText
+                variant="caption"
+                style={{ color: tokens.warning, fontWeight: '800', fontSize: 11 }}
+              >
+                Sans coach
+              </ClubText>
+            </View>
+            <ClubText variant="caption" muted style={{ flex: 1 }}>
+              Affecter un coach pour cette catégorie
+            </ClubText>
+            <Icon name="chevron-forward" size={14} color={tokens.faint} />
+          </PressableSpring>
+        ) : null}
 
         <View style={styles.actionRow}>
           <View style={styles.actionFlex}>
@@ -95,7 +131,7 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
             <ClubActionRow
               icon="trophy"
               label={nextMatch.title || 'Match'}
-              hint={nextMatch.starts_at.toLocaleString('fr-FR')}
+              hint={eventWhenLabel(nextMatch.starts_at)}
               onPress={() => shellNav?.requestNav('matches')}
             />
           ) : (
@@ -105,12 +141,16 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
           )}
           {nextTraining ? (
             <ClubActionRow
-              icon="time"
+              icon="football"
               label={nextTraining.title || 'Entraînement'}
-              hint={nextTraining.starts_at.toLocaleString('fr-FR')}
+              hint={eventWhenLabel(nextTraining.starts_at)}
               onPress={() => shellNav?.requestNav('trainings')}
             />
-          ) : null}
+          ) : (
+            <ClubText variant="caption" muted>
+              Aucune séance à venir.
+            </ClubText>
+          )}
         </ClubSectionCard>
 
         <View style={styles.chapter}>
@@ -118,9 +158,13 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
             {`Joueurs (${roster.length})`}
           </ClubText>
           {roster.length === 0 ? (
-            <ClubText variant="body" muted>
-              Aucun joueur actif dans cette équipe.
-            </ClubText>
+            <ClubEmptyState
+              title="Effectif vide"
+              body="Invitez des joueurs ou rattachez des licenciés à cette catégorie."
+              actionLabel="Voir les joueurs"
+              onAction={() => shellNav?.requestNav('players')}
+              icon="people"
+            />
           ) : (
             <View style={styles.roster}>
               {roster.slice(0, 8).map((p, index) => {
@@ -154,8 +198,14 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
           <ClubActionRow
             icon="people"
             label="Tous les joueurs"
-            hint={`${roster.length} joueur(s)`}
+            hint={`${roster.length} joueur${roster.length > 1 ? 's' : ''}`}
             onPress={() => shellNav?.requestNav('players')}
+          />
+          <ClubActionRow
+            icon="school"
+            label="Coachs"
+            hint={meta?.hasCoach ? meta.coachesLabel : 'Affecter un coach'}
+            onPress={() => shellNav?.requestNav('coaches')}
           />
           <ClubActionRow
             icon="calendar"
@@ -207,9 +257,25 @@ const createStyles = (tokens: ClubThemeTokens) =>
       alignItems: 'center',
       gap: 6,
       alignSelf: 'flex-start',
-      paddingVertical: spacing.xs,
+      paddingVertical: clubSpace.xs,
     },
-    chapter: { gap: spacing.sm },
+    noCoachBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    noCoachPill: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: clubRadius.pill,
+    },
+    chapter: { gap: clubSpace.sm },
     rosterTitle: { fontWeight: '800', letterSpacing: -0.2 },
-    roster: { gap: spacing.sm },
+    roster: { gap: clubSpace.sm },
   });
