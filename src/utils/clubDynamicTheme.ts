@@ -297,7 +297,7 @@ export function buildClubThemeTokens(
     secondary,
     onAccent,
     glow: withAlpha(accent, 0.42),
-    // Lavage sombre teinté (pas d’éclaircissement type UI admin claire).
-    headerWash: blendHex(CLUB_TOKENS.bg, accent, 0.28),
+    // Header chrome : émeraude→navy (réf.), pas le primary marque.
+    headerWash: blendHex(CLUB_TOKENS.bg, CLUB_TOKENS.pitch, 0.38),
   };
 }

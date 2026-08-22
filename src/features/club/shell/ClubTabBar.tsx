@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
@@ -11,7 +11,7 @@ import {
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
 import { useClubTheme } from './ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   items: ClubNavResolvedItem[];
@@ -46,7 +46,6 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
               accessibilityState={{ selected: on }}
               accessibilityLabel={item.label}
             >
-              {on ? <View style={styles.indicator} pointerEvents="none" /> : null}
               <View style={[styles.iconWrap, on && styles.iconWrapOn]}>
                 <Icon
                   name={item.icon}
@@ -74,17 +73,12 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
     root: {
-      backgroundColor: tokens.elevated,
-      borderTopWidth: 1,
-      borderTopColor: tokens.borderStrong,
-      paddingTop: 4,
+      backgroundColor: tokens.bg,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+      paddingTop: 6,
       flexShrink: 0,
       zIndex: 20,
-      shadowColor: clubShadow.soft.shadowColor,
-      shadowOffset: clubShadow.soft.shadowOffset,
-      shadowOpacity: clubShadow.soft.shadowOpacity,
-      shadowRadius: clubShadow.soft.shadowRadius,
-      elevation: Platform.OS === 'android' ? 12 : clubShadow.soft.elevation ?? 2,
     },
     row: {
       flexDirection: 'row',
@@ -102,23 +96,15 @@ function createStyles(tokens: ClubThemeTokens) {
       paddingTop: 8,
       position: 'relative',
     },
-    indicator: {
-      position: 'absolute',
-      top: 0,
-      width: 28,
-      height: 3,
-      borderRadius: 2,
-      backgroundColor: tokens.accent,
-    },
     iconWrap: {
       position: 'relative',
-      width: 36,
+      width: 40,
       height: 28,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: clubRadius.xs,
+      borderRadius: clubRadius.pill,
     },
-    iconWrapOn: { backgroundColor: tokens.accentSoft },
+    iconWrapOn: { backgroundColor: 'transparent' },
     aiDot: {
       position: 'absolute',
       top: 0,

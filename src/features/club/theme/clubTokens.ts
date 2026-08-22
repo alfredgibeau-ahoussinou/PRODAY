@@ -1,6 +1,6 @@
 /**
  * Identité visuelle Pôle Club — premium sombre, sportive, moderne.
- * Charcoal / night pitch. Pas un dashboard admin blanc ni le thème Coach.
+ * Navy / charcoal + émeraude + bleu vif (réf. sport management). Pas SaaS violet.
  */
 
 export type ClubThemeTokens = {
@@ -38,33 +38,33 @@ export type ClubThemeTokens = {
   isLight: boolean;
 };
 
-/** Tokens Club — fond sombre premium night pitch, accent bleu ProDay Club. */
+/** Tokens Club — night navy, émeraude status, bleu FAB. */
 export const CLUB_TOKENS: ClubThemeTokens = {
-  bg: '#070B14',
-  surface: '#101826',
-  elevated: '#172033',
-  raised: '#1C283C',
-  border: 'rgba(232, 240, 255, 0.10)',
-  borderStrong: 'rgba(232, 240, 255, 0.18)',
-  foreground: '#EEF3FB',
-  muted: 'rgba(238, 243, 251, 0.62)',
-  faint: 'rgba(238, 243, 251, 0.40)',
+  bg: '#0B121F',
+  surface: '#121A28',
+  elevated: '#182233',
+  raised: '#1E2A3C',
+  border: 'rgba(186, 204, 230, 0.12)',
+  borderStrong: 'rgba(186, 204, 230, 0.22)',
+  foreground: '#F4F7FC',
+  muted: 'rgba(186, 204, 230, 0.72)',
+  faint: 'rgba(186, 204, 230, 0.48)',
   accent: '#006CFC',
-  accentSoft: 'rgba(0, 108, 252, 0.24)',
-  accentDeep: '#0039A6',
+  accentSoft: 'rgba(0, 108, 252, 0.22)',
+  accentDeep: '#0047B8',
   secondary: '#5BA3FF',
   onAccent: '#FFFFFF',
-  glow: 'rgba(0, 108, 252, 0.45)',
-  headerWash: '#0C1730',
-  success: '#34D399',
-  successSoft: 'rgba(52, 211, 153, 0.16)',
+  glow: 'rgba(0, 108, 252, 0.50)',
+  headerWash: '#0A2A22',
+  success: '#10B981',
+  successSoft: 'rgba(16, 185, 129, 0.18)',
   warning: '#FBBF24',
   warningSoft: 'rgba(251, 191, 36, 0.16)',
   danger: '#F87171',
   dangerSoft: 'rgba(248, 113, 113, 0.16)',
-  pitch: '#1F7A45',
-  pitchSoft: 'rgba(31, 122, 69, 0.22)',
-  scrim: 'rgba(2, 6, 14, 0.72)',
+  pitch: '#059669',
+  pitchSoft: 'rgba(5, 150, 105, 0.28)',
+  scrim: 'rgba(4, 8, 16, 0.78)',
   isLight: false,
 };
 
@@ -81,7 +81,7 @@ export const CLUB_SITE_LEGACY = {
   border: 'rgba(255,255,255,0.12)',
   foreground: '#f5f5f0',
   muted: 'rgba(245,245,240,0.55)',
-  pitchDeep: '#0a3d1a',
-  pitch: '#14532d',
-  pitchLight: '#166534',
+  pitchDeep: '#064E3B',
+  pitch: '#047857',
+  pitchLight: '#059669',
 } as const;

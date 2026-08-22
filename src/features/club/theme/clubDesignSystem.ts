@@ -44,11 +44,11 @@ export const clubSpace = {
 
 /** Rayons. */
 export const clubRadius = {
-  xs: 8,
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 22,
+  xs: 10,
+  sm: 12,
+  md: 16,
+  lg: 20,
+  xl: 24,
   xxl: 28,
   pill: 999,
 } as const;

@@ -12,8 +12,8 @@ type Props = {
 };
 
 /** Hauteur approx. du FAB CRÉER (pastille 40) + marge verticale claire entre les deux. */
-const CREATE_FAB_BOTTOM = 72;
-const CREATE_FAB_HEIGHT = 40;
+const CREATE_FAB_BOTTOM = 78;
+const CREATE_FAB_HEIGHT = 56;
 const STACK_GAP = 14;
 /** Inset droit serré (hors safe area) — collé au bord, discret. */
 const EDGE_INSET = clubSpace.md; // 12

@@ -12,7 +12,7 @@ describe('clubPageIdentity', () => {
       expect(CLUB_PAGE_IDENTITIES[id]!.accent).toBe(CLUB_SITE.accent);
     }
     expect(CLUB_SITE.accent).toBe('#006CFC');
-    expect(CLUB_SITE.deep).toBe('#002478');
+    expect(CLUB_SITE.deep).toBe('#0047B8');
   });
 
   it('différencie les pages par layout', () => {

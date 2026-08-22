@@ -22,8 +22,8 @@ import { useClubTheme } from './ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 
-/** Aligné avec ClubCopilotFab — dock + pastille 40. */
-const FAB_BOTTOM = 72;
+/** Aligné avec ClubCopilotFab — dock + FAB 56. */
+const FAB_BOTTOM = 78;
 const EDGE_INSET = clubSpace.md; // 12
 
 type Props = {
@@ -148,7 +148,7 @@ export function ClubCreateFab({ onPress }: { onPress: () => void }) {
           end={{ x: 1, y: 1 }}
           style={styles.face}
         >
-          <Icon name="add" size={20} color={tokens.onAccent} />
+          <Icon name="add" size={28} color={tokens.onAccent} />
         </LinearGradient>
       </View>
     </PressableSpring>
@@ -160,11 +160,11 @@ function createFabStyles() {
     wrap: {
       position: 'absolute',
       zIndex: 30,
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.28,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowColor: '#006CFC',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.45,
+      shadowRadius: 16,
+      elevation: 8,
       ...Platform.select({
         android: { backgroundColor: 'transparent' },
         default: {},
@@ -176,9 +176,9 @@ function createFabStyles() {
       borderColor: 'rgba(255,255,255,0.14)',
     },
     face: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',

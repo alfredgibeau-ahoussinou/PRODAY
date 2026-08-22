@@ -264,16 +264,16 @@ function ClubAppShellInner({
       <View style={[styles.root, !wide && styles.rootColumn]}>
         <LinearGradient
           colors={[tokens.headerWash, tokens.bg, tokens.bg]}
-          locations={[0, 0.28, 1]}
-          start={{ x: 0.15, y: 0 }}
-          end={{ x: 0.85, y: 1 }}
+          locations={[0, 0.32, 1]}
+          start={{ x: 0.2, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
         <LinearGradient
           colors={['transparent', tokens.pitchSoft, 'transparent']}
-          locations={[0.35, 0.72, 1]}
-          start={{ x: 0.5, y: 0.2 }}
+          locations={[0.4, 0.78, 1]}
+          start={{ x: 0.5, y: 0.15 }}
           end={{ x: 0.5, y: 1 }}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"

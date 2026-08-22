@@ -71,10 +71,11 @@ export function ClubHomeIdentityHeader({
   return (
     <View style={styles.wrap}>
       <LinearGradient
-        colors={[tokens.headerWash, 'transparent']}
+        colors={[tokens.pitch, '#06241C', tokens.bg]}
+        locations={[0, 0.42, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
-        style={styles.wash}
+        style={styles.heroWash}
         pointerEvents="none"
       />
       <View style={styles.row}>
@@ -83,7 +84,7 @@ export function ClubHomeIdentityHeader({
           disabled={!onPressCrest || crestUploading}
           scaleTo={0.97}
           haptic={Boolean(onPressCrest)}
-          style={[styles.crest, { borderColor: tokens.accentSoft }]}
+          style={[styles.crest, { borderColor: tokens.successSoft }]}
           accessibilityRole={onPressCrest ? 'button' : undefined}
           accessibilityLabel={logoUrl ? 'Changer le logo du club' : 'Ajouter le logo du club'}
         >
@@ -712,25 +713,30 @@ export function ClubHomeShortcutLinks({
 const identityStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     wrap: {
-      paddingTop: clubSpace.sm,
-      paddingBottom: clubSpace.sm,
-      overflow: 'visible',
+      paddingTop: clubSpace.lg,
+      paddingBottom: clubSpace.lg,
+      paddingHorizontal: clubSpace.md,
+      marginHorizontal: -clubSpace.xs,
+      overflow: 'hidden',
+      borderRadius: clubRadius.xl,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.bg,
+      ...clubShadow.soft,
     },
-    wash: {
+    heroWash: {
       ...StyleSheet.absoluteFillObject,
-      height: 96,
-      opacity: 0.85,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.md,
-      minHeight: 56,
+      minHeight: 64,
     },
     crest: {
       width: 56,
       height: 56,
-      borderRadius: clubRadius.lg,
+      borderRadius: clubRadius.pill,
       borderWidth: 2,
       backgroundColor: tokens.elevated,
       flexShrink: 0,
@@ -738,7 +744,7 @@ const identityStyles = (tokens: ClubThemeTokens) =>
     },
     crestInner: {
       ...StyleSheet.absoluteFillObject,
-      borderRadius: clubRadius.lg - 2,
+      borderRadius: clubRadius.pill,
       overflow: 'hidden',
     },
     crestImg: { width: '100%', height: '100%' },
@@ -770,14 +776,17 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       justifyContent: 'center',
     },
     greet: {
-      letterSpacing: 1.2,
-      fontSize: 10,
-      lineHeight: 12,
+      letterSpacing: 0.2,
+      fontSize: 13,
+      lineHeight: 16,
+      fontWeight: '600',
+      textTransform: 'none',
     },
     clubName: {
       letterSpacing: -0.55,
-      fontSize: 24,
-      lineHeight: 28,
+      fontSize: 26,
+      lineHeight: 30,
+      fontWeight: '800',
     },
     statusCol: {
       flexShrink: 0,
@@ -928,11 +937,11 @@ const teamsRailStyles = (tokens: ClubThemeTokens) =>
       paddingRight: clubSpace.lg,
     },
     card: {
-      width: 148,
-      gap: 4,
-      paddingVertical: clubSpace.md,
+      width: 168,
+      gap: 6,
+      paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.md,
-      borderRadius: clubRadius.lg,
+      borderRadius: clubRadius.xl,
       backgroundColor: tokens.surface,
       borderWidth: 1,
       borderColor: tokens.border,

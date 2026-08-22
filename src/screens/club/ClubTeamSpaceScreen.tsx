@@ -7,6 +7,7 @@ import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import {
   ClubActionRow,
+  ClubButton,
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
@@ -68,6 +69,27 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
           }
         />
 
+        <View style={styles.actionRow}>
+          <View style={styles.actionFlex}>
+            <ClubButton
+              label="Inviter des membres"
+              icon="people"
+              variant="outline"
+              layout="tile"
+              onPress={() => shellNav?.openCreate?.('invite_member')}
+            />
+          </View>
+          <View style={styles.actionFlex}>
+            <ClubButton
+              label="Chat d'équipe"
+              icon="chat"
+              variant="outline"
+              layout="tile"
+              onPress={() => shellNav?.requestNav('communication')}
+            />
+          </View>
+        </View>
+
         <ClubSectionCard title="Prochainement">
           {nextMatch ? (
             <ClubActionRow
@@ -92,8 +114,8 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
         </ClubSectionCard>
 
         <View style={styles.chapter}>
-          <ClubText variant="label" muted>
-            {`Effectif · ${roster.length}`}
+          <ClubText variant="h3" style={styles.rosterTitle}>
+            {`Joueurs (${roster.length})`}
           </ClubText>
           {roster.length === 0 ? (
             <ClubText variant="body" muted>
@@ -178,6 +200,8 @@ export function ClubTeamSpaceScreen({ teamId, onBack }: Props) {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
+    actionRow: { flexDirection: 'row', gap: 10 },
+    actionFlex: { flex: 1 },
     back: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -186,5 +210,6 @@ const createStyles = (tokens: ClubThemeTokens) =>
       paddingVertical: spacing.xs,
     },
     chapter: { gap: spacing.sm },
+    rosterTitle: { fontWeight: '800', letterSpacing: -0.2 },
     roster: { gap: spacing.sm },
   });

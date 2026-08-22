@@ -10,7 +10,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { ClubText } from './clubUi';
 import { useClubTheme } from '../shell/ClubThemeContext';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { motion } from '../../../theme/motion';
 
@@ -23,7 +23,9 @@ type Props = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** En-tête Club premium — logo + lavage accent. */
+/**
+ * En-tête équipe / club — gradient émeraude→navy + pill status (réf. sport management).
+ */
 export function ClubBrandHeader({
   title,
   subtitle,
@@ -40,8 +42,8 @@ export function ClubBrandHeader({
   return (
     <View style={[styles.wrap, style]}>
       <LinearGradient
-        colors={[tokens.headerWash, tokens.pitchSoft, tokens.surface]}
-        locations={[0, 0.55, 1]}
+        colors={[tokens.pitch, '#06241C', tokens.bg]}
+        locations={[0, 0.45, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.wash}
@@ -49,12 +51,12 @@ export function ClubBrandHeader({
       />
       <View style={styles.row}>
         {showLogo ? (
-          <View style={[styles.logoWrap, { borderColor: tokens.accentSoft }]}>
+          <View style={[styles.logoWrap, { borderColor: tokens.successSoft }]}>
             {logoUrl ? (
               <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="cover" />
             ) : (
-              <View style={[styles.logo, styles.logoPh, { backgroundColor: tokens.accentSoft }]}>
-                <ClubText variant="h3" style={{ color: tokens.accent }}>
+              <View style={[styles.logo, styles.logoPh, { backgroundColor: tokens.pitchSoft }]}>
+                <ClubText variant="h3" style={{ color: tokens.success }}>
                   {initial}
                 </ClubText>
               </View>
@@ -62,16 +64,20 @@ export function ClubBrandHeader({
           </View>
         ) : null}
         <View style={styles.textCol}>
-          <ClubText variant="h1">{title}</ClubText>
+          <View style={styles.titlePill}>
+            <View style={[styles.statusDot, { backgroundColor: tokens.success }]} />
+            <ClubText variant="h3" numberOfLines={1} style={styles.pillTitle}>
+              {title}
+            </ClubText>
+          </View>
           {subtitle ? (
-            <ClubText variant="caption" muted>
+            <ClubText variant="caption" muted numberOfLines={2} style={styles.sub}>
               {subtitle}
             </ClubText>
           ) : null}
         </View>
         {right}
       </View>
-      <View style={[styles.accentBar, { backgroundColor: tokens.accent }]} />
     </View>
   );
 }
@@ -101,46 +107,63 @@ export function useClubHeaderParallax() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     wrap: {
-      paddingTop: clubSpace.md,
-      paddingBottom: clubSpace.md,
+      paddingTop: clubSpace.xl,
+      paddingBottom: clubSpace.xl,
       gap: clubSpace.sm,
       overflow: 'hidden',
       borderRadius: clubRadius.xl,
-      paddingHorizontal: clubSpace.md,
+      paddingHorizontal: clubSpace.lg,
       marginHorizontal: -clubSpace.xs,
-      backgroundColor: tokens.surface,
-      borderWidth: 1,
-      borderColor: tokens.border,
-      ...clubShadow.soft,
+      backgroundColor: tokens.bg,
     },
     wash: {
       ...StyleSheet.absoluteFillObject,
-      height: 140,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.md,
-      minHeight: 52,
+      minHeight: 56,
     },
     logoWrap: {
       width: 52,
       height: 52,
-      borderRadius: clubRadius.lg,
+      borderRadius: clubRadius.pill,
       overflow: 'hidden',
       borderWidth: 2,
       backgroundColor: tokens.elevated,
       flexShrink: 0,
-      ...clubShadow.accent(tokens),
     },
     logo: { width: '100%', height: '100%' },
     logoPh: { alignItems: 'center', justifyContent: 'center' },
-    textCol: { flex: 1, minWidth: 0, gap: 3, justifyContent: 'center' },
-    accentBar: {
-      height: 3,
-      width: 56,
-      borderRadius: 2,
-      opacity: 1,
+    textCol: { flex: 1, minWidth: 0, gap: 8, justifyContent: 'center' },
+    titlePill: {
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      maxWidth: '100%',
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: clubRadius.pill,
+      backgroundColor: 'rgba(4, 20, 16, 0.55)',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(16, 185, 129, 0.45)',
+    },
+    statusDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      flexShrink: 0,
+    },
+    pillTitle: {
+      color: tokens.foreground,
+      fontWeight: '800',
+      flexShrink: 1,
+    },
+    sub: {
+      paddingLeft: 4,
+      color: tokens.muted,
     },
   });
 

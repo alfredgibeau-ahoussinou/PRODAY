@@ -244,7 +244,7 @@ export function ClubActionRow({
           </ClubText>
         ) : null}
       </View>
-      {trailing ?? (onPress ? <Icon name="chevron-forward" size={16} color={tokens.faint} /> : null)}
+      {trailing ?? (onPress ? <Icon name="chevron-forward" size={16} color={tokens.accent} /> : null)}
     </PressableSpring>
   );
 }
@@ -290,14 +290,20 @@ export function ClubStatusPill({
     <View
       style={{
         alignSelf: 'flex-start',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
         borderRadius: clubRadius.pill,
         backgroundColor: bg,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: `${color}33`,
+        borderColor: `${color}44`,
       }}
     >
+      {tone === 'ok' || tone === 'accent' ? (
+        <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+      ) : null}
       <ClubText variant="caption" style={{ color, fontWeight: '700' }}>
         {label}
       </ClubText>
@@ -340,7 +346,7 @@ export function ClubAvatar({
       style={{
         width: size,
         height: size,
-        borderRadius: size * 0.32,
+        borderRadius: size / 2,
         backgroundColor: tokens.accentSoft,
         alignItems: 'center',
         justifyContent: 'center',
@@ -366,19 +372,35 @@ export function ClubButton({
   variant = 'primary',
   icon,
   disabled,
+  layout = 'row',
 }: {
   label: string;
   onPress?: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
   icon?: IconName;
   disabled?: boolean;
+  /** `tile` = icône au-dessus du label (actions équipe outline). */
+  layout?: 'row' | 'tile';
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => buttonStyles(tokens), [tokens]);
   const style =
-    variant === 'primary' ? styles.primary : variant === 'secondary' ? styles.secondary : styles.ghost;
+    variant === 'primary'
+      ? styles.primary
+      : variant === 'secondary'
+        ? styles.secondary
+        : variant === 'outline'
+          ? layout === 'tile'
+            ? styles.outlineTile
+            : styles.outline
+          : styles.ghost;
   const color =
-    variant === 'primary' ? tokens.onAccent : variant === 'secondary' ? tokens.accent : tokens.foreground;
+    variant === 'primary'
+      ? tokens.onAccent
+      : variant === 'secondary'
+        ? tokens.accent
+        : tokens.foreground;
+  const iconSize = layout === 'tile' ? 22 : 16;
   return (
     <PressableSpring
       onPress={onPress}
@@ -387,8 +409,15 @@ export function ClubButton({
       haptic={!disabled}
       style={[style, disabled && { opacity: 0.5 }]}
     >
-      {icon ? <Icon name={icon} size={16} color={color} /> : null}
-      <ClubText variant="caption" style={{ color, fontWeight: '700' }}>
+      {icon ? <Icon name={icon} size={iconSize} color={color} /> : null}
+      <ClubText
+        variant="caption"
+        style={{
+          color,
+          fontWeight: '700',
+          textAlign: layout === 'tile' ? 'center' : 'left',
+        }}
+      >
         {label}
       </ClubText>
     </PressableSpring>
@@ -449,8 +478,8 @@ export function ClubSegmentedControl<T extends string>({
             <ClubText
               variant="caption"
               style={{
-                fontWeight: on ? '700' : '600',
-                color: on ? tokens.onAccent : tokens.muted,
+                fontWeight: on ? '800' : '600',
+                color: on ? tokens.foreground : tokens.muted,
               }}
             >
               {opt.label}
@@ -797,6 +826,32 @@ const buttonStyles = (tokens: ClubThemeTokens) =>
       paddingVertical: 10,
       borderRadius: clubRadius.md,
     },
+    outline: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      paddingHorizontal: clubSpace.lg,
+      paddingVertical: 14,
+      borderRadius: clubRadius.lg,
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: tokens.borderStrong,
+      minHeight: 52,
+    },
+    outlineTile: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      paddingHorizontal: clubSpace.md,
+      paddingVertical: clubSpace.lg,
+      borderRadius: clubRadius.xl,
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: tokens.borderStrong,
+      minHeight: 96,
+    },
   });
 
 const searchStyles = (tokens: ClubThemeTokens) =>
@@ -826,23 +881,27 @@ const segmentStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     track: {
       flexDirection: 'row',
-      padding: 4,
-      borderRadius: clubRadius.lg,
-      backgroundColor: tokens.elevated,
-      borderWidth: 1,
-      borderColor: tokens.border,
-      gap: 4,
+      padding: 0,
+      borderRadius: 0,
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+      gap: 0,
     },
     item: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 10,
-      borderRadius: clubRadius.md,
+      paddingVertical: 12,
+      borderRadius: 0,
+      borderBottomWidth: 2,
+      borderBottomColor: 'transparent',
+      marginBottom: -StyleSheet.hairlineWidth,
     },
     itemOn: {
-      backgroundColor: tokens.accent,
-      ...clubShadow.accent(tokens),
+      backgroundColor: 'transparent',
+      borderBottomColor: tokens.foreground,
     },
   });
 
