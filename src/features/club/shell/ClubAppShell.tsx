@@ -295,7 +295,8 @@ function ClubAppShellInner({
           </PaneTransition>
           {showFab ? (
             <>
-              <ClubCopilotFab onPress={onOpenHelp} />
+              {/* Accueil (`today`) : un seul FAB (créer) — copilote via Menu / chrome. */}
+              {navId !== 'today' ? <ClubCopilotFab onPress={onOpenHelp} /> : null}
               <ClubCreateFab onPress={() => setCreateOpen(true)} />
             </>
           ) : null}

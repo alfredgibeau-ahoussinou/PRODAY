@@ -1,5 +1,5 @@
 /**
- * Composition visuelle Accueil Club — densité Coach + accents premium (pas de grille KPI).
+ * Composition visuelle Accueil Club — crest hero, priorité unique, équipes.
  * Bindings / handlers restent dans ClubHomeScreen. Pas de CTA copilote ici (FAB / Menu).
  */
 import React, { useMemo } from 'react';
@@ -34,12 +34,13 @@ function formatClock(d: Date): string {
   return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
-/** En-tête identité club — crest réel, nom fort, salutation secondaire. */
+/** En-tête identité club — crest hero-level, nom sous le logo, méta discrète. */
 export function ClubHomeIdentityHeader({
   greeting,
   clubName,
   statusLabel,
   statusTone,
+  metaLine,
   onPressCrest,
   crestUploading,
 }: {
@@ -47,6 +48,8 @@ export function ClubHomeIdentityHeader({
   clubName: string;
   statusLabel: string;
   statusTone: 'ok' | 'warn' | 'alert';
+  /** Ligne discrète sous le nom (ex. effectif · coachs · équipes). */
+  metaLine?: string;
   /** Tap crest → ajouter / changer le logo. */
   onPressCrest?: () => void;
   crestUploading?: boolean;
@@ -54,6 +57,7 @@ export function ClubHomeIdentityHeader({
   const { tokens, logoUrl } = useClubTheme();
   const styles = useMemo(() => identityStyles(tokens), [tokens]);
   const crestLetter = (clubName.trim().charAt(0) || 'C').toUpperCase();
+  const meta = metaLine?.trim();
 
   const crestInner = logoUrl ? (
     <Image source={{ uri: logoUrl }} style={styles.crestImg} resizeMode="cover" />
@@ -78,7 +82,10 @@ export function ClubHomeIdentityHeader({
         style={styles.heroWash}
         pointerEvents="none"
       />
-      <View style={styles.row}>
+      <View style={styles.statusCol}>
+        <ClubStatusPill label={statusLabel} tone={statusTone} />
+      </View>
+      <View style={styles.heroCol}>
         <PressableSpring
           onPress={onPressCrest}
           disabled={!onPressCrest || crestUploading}
@@ -101,21 +108,21 @@ export function ClubHomeIdentityHeader({
           </View>
           {onPressCrest && !crestUploading ? (
             <View style={[styles.crestBadge, { backgroundColor: tokens.accent }]}>
-              <Icon name="camera" size={10} color={tokens.onAccent} />
+              <Icon name="camera" size={14} color={tokens.onAccent} />
             </View>
           ) : null}
         </PressableSpring>
-        <View style={styles.textCol}>
-          <ClubText variant="label" muted style={styles.greet}>
-            {greeting}
+        <ClubText variant="label" muted style={styles.greet}>
+          {greeting}
+        </ClubText>
+        <ClubText variant="h1" numberOfLines={2} style={styles.clubName}>
+          {clubName}
+        </ClubText>
+        {meta ? (
+          <ClubText variant="caption" muted numberOfLines={1} style={styles.meta}>
+            {meta}
           </ClubText>
-          <ClubText variant="h1" numberOfLines={2} style={styles.clubName}>
-            {clubName}
-          </ClubText>
-        </View>
-        <View style={styles.statusCol}>
-          <ClubStatusPill label={statusLabel} tone={statusTone} />
-        </View>
+        ) : null}
       </View>
     </View>
   );
@@ -607,16 +614,17 @@ type TodoItem = {
   onPress: () => void;
 };
 
-/** Liste « À faire » courte — max quelques priorités, pas de grille KPI. */
+/** Liste « À faire » — uniquement s’il y a des priorités (pas de bandeau vide). */
 export function ClubHomeTodoSection({
   items,
-  emptySummary,
 }: {
   items: TodoItem[];
-  emptySummary: string;
+  /** @deprecated Conservé pour compat ; l’état vide est masqué. */
+  emptySummary?: string;
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => todoStyles(tokens), [tokens]);
+  if (items.length === 0) return null;
 
   return (
     <AnimatedEntrance kind="fadeUp" index={6} delayStep={36}>
@@ -625,52 +633,41 @@ export function ClubHomeTodoSection({
           <ClubText variant="label" muted>
             À faire
           </ClubText>
-          {items.length > 0 ? (
-            <View style={[styles.countChip, { backgroundColor: tokens.warningSoft }]}>
-              <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '800' }}>
-                {items.length}
-              </ClubText>
-            </View>
-          ) : null}
-        </View>
-        {items.length === 0 ? (
-          <View style={styles.empty}>
-            <Icon name="checkmark-circle" size={18} color={tokens.success} />
-            <ClubText variant="body" muted style={{ flex: 1 }}>
-              {emptySummary}
+          <View style={[styles.countChip, { backgroundColor: tokens.warningSoft }]}>
+            <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '800' }}>
+              {items.length}
             </ClubText>
           </View>
-        ) : (
-          <View style={styles.list}>
-            {items.map((item, index) => (
-              <PressableSpring
-                key={item.id}
-                onPress={item.onPress}
-                scaleTo={0.98}
-                haptic
-                style={styles.row}
-              >
-                <View style={styles.rank}>
-                  <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '800' }}>
-                    {index + 1}
-                  </ClubText>
-                </View>
-                <View style={styles.icon}>
-                  <Icon name={item.icon} size={16} color={tokens.accent} />
-                </View>
-                <View style={styles.col}>
-                  <ClubText variant="body" style={{ fontWeight: '700' }}>
-                    {item.label}
-                  </ClubText>
-                  <ClubText variant="caption" muted numberOfLines={1}>
-                    {item.hint}
-                  </ClubText>
-                </View>
-                <Icon name="chevron-forward" size={15} color={tokens.faint} />
-              </PressableSpring>
-            ))}
-          </View>
-        )}
+        </View>
+        <View style={styles.list}>
+          {items.map((item, index) => (
+            <PressableSpring
+              key={item.id}
+              onPress={item.onPress}
+              scaleTo={0.98}
+              haptic
+              style={styles.row}
+            >
+              <View style={styles.rank}>
+                <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '800' }}>
+                  {index + 1}
+                </ClubText>
+              </View>
+              <View style={styles.icon}>
+                <Icon name={item.icon} size={16} color={tokens.accent} />
+              </View>
+              <View style={styles.col}>
+                <ClubText variant="body" style={{ fontWeight: '700' }}>
+                  {item.label}
+                </ClubText>
+                <ClubText variant="caption" muted numberOfLines={1}>
+                  {item.hint}
+                </ClubText>
+              </View>
+              <Icon name="chevron-forward" size={15} color={tokens.faint} />
+            </PressableSpring>
+          ))}
+        </View>
       </View>
     </AnimatedEntrance>
   );
@@ -713,9 +710,9 @@ export function ClubHomeShortcutLinks({
 const identityStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     wrap: {
-      paddingTop: clubSpace.lg,
-      paddingBottom: clubSpace.lg,
-      paddingHorizontal: clubSpace.md,
+      paddingTop: clubSpace.xl,
+      paddingBottom: clubSpace.xl,
+      paddingHorizontal: clubSpace.lg,
       marginHorizontal: -clubSpace.xs,
       overflow: 'hidden',
       borderRadius: clubRadius.xl,
@@ -727,20 +724,20 @@ const identityStyles = (tokens: ClubThemeTokens) =>
     heroWash: {
       ...StyleSheet.absoluteFillObject,
     },
-    row: {
-      flexDirection: 'row',
+    heroCol: {
       alignItems: 'center',
-      gap: clubSpace.md,
-      minHeight: 64,
+      gap: clubSpace.sm,
+      paddingTop: clubSpace.sm,
     },
     crest: {
-      width: 56,
-      height: 56,
+      width: 112,
+      height: 112,
       borderRadius: clubRadius.pill,
-      borderWidth: 2,
+      borderWidth: 3,
       backgroundColor: tokens.elevated,
       flexShrink: 0,
-      ...clubShadow.soft,
+      marginBottom: clubSpace.xs,
+      ...clubShadow.lift,
     },
     crestInner: {
       ...StyleSheet.absoluteFillObject,
@@ -751,11 +748,11 @@ const identityStyles = (tokens: ClubThemeTokens) =>
     crestPh: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     crestBadge: {
       position: 'absolute',
-      right: -2,
-      bottom: -2,
-      width: 20,
-      height: 20,
-      borderRadius: 10,
+      right: 2,
+      bottom: 2,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
@@ -763,17 +760,10 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       zIndex: 2,
     },
     crestLetter: {
-      ...clubType.h2,
+      ...clubType.display,
       color: tokens.onAccent,
-      fontSize: 24,
-      lineHeight: 28,
-    },
-    textCol: {
-      flex: 1,
-      minWidth: 0,
-      gap: 3,
-      paddingRight: clubSpace.xs,
-      justifyContent: 'center',
+      fontSize: 44,
+      lineHeight: 48,
     },
     greet: {
       letterSpacing: 0.2,
@@ -781,18 +771,27 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       lineHeight: 16,
       fontWeight: '600',
       textTransform: 'none',
+      textAlign: 'center',
     },
     clubName: {
       letterSpacing: -0.55,
-      fontSize: 26,
-      lineHeight: 30,
+      fontSize: 28,
+      lineHeight: 32,
       fontWeight: '800',
+      textAlign: 'center',
+      paddingHorizontal: clubSpace.md,
+    },
+    meta: {
+      textAlign: 'center',
+      marginTop: 2,
+      opacity: 0.9,
     },
     statusCol: {
-      flexShrink: 0,
-      alignSelf: 'flex-start',
-      paddingTop: 2,
-      maxWidth: 108,
+      position: 'absolute',
+      top: clubSpace.md,
+      right: clubSpace.md,
+      zIndex: 2,
+      maxWidth: 120,
     },
   });
 
@@ -1063,17 +1062,6 @@ const todoStyles = (tokens: ClubThemeTokens) =>
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 7,
-    },
-    empty: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: clubSpace.sm,
-      paddingVertical: clubSpace.md,
-      paddingHorizontal: clubSpace.md,
-      borderRadius: clubRadius.md,
-      backgroundColor: tokens.successSoft,
-      borderWidth: 1,
-      borderColor: tokens.border,
     },
     list: { gap: clubSpace.xs },
     row: {

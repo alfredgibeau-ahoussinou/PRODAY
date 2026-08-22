@@ -7,21 +7,13 @@ import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { ClubChapterScroll, ClubLoading } from '../../features/club/ui/clubUi';
 import {
-  ClubHomeCommPeek,
   ClubHomeIdentityHeader,
-  ClubHomeInsightLine,
-  ClubHomeMiniStats,
   ClubHomeNextEventRow,
   ClubHomePresenceAlert,
-  ClubHomeShortcutLinks,
   ClubHomeTeamsRail,
-  ClubHomeTodayPeek,
   ClubHomeTodoSection,
-  ClubHomeWeekPeek,
   type ClubHomePriority,
   type ClubHomeTeamCard,
-  type ClubHomeTodayChip,
-  type ClubHomeWeekItem,
 } from '../../features/club/ui/ClubHomeAccueil';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import {
@@ -32,8 +24,6 @@ import {
 } from '../../models/TeamEvent';
 
 const MAX_TODO_ITEMS = 3;
-const MAX_TODAY_ITEMS = 6;
-const MAX_WEEK_ITEMS = 4;
 const MAX_TEAM_CARDS = 4;
 
 function greetingForHour(h: number): string {
@@ -52,24 +42,12 @@ function upcomingEvents(
     .sort((a, b) => new Date(a.starts_at!).getTime() - new Date(b.starts_at!).getTime());
 }
 
-function startOfTomorrow(): Date {
+function endOfNextWeek(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 1);
-  return d;
-}
-
-function endOfNextWeek(): Date {
-  const d = startOfTomorrow();
-  d.setDate(d.getDate() + 7);
+  d.setDate(d.getDate() + 8);
   d.setHours(23, 59, 59, 999);
   return d;
-}
-
-function formatDayShort(d: Date): string {
-  return d
-    .toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })
-    .replace('.', '');
 }
 
 function resolvePriority(ws: ReturnType<typeof useClubWorkspace>): ClubHomePriority {
@@ -92,24 +70,6 @@ function resolvePriority(ws: ReturnType<typeof useClubWorkspace>): ClubHomePrior
   if (nextMatch) return { kind: 'match', event: nextMatch };
   if (nextTraining) return { kind: 'training', event: nextTraining };
   return { kind: 'calm' };
-}
-
-/** Insight atmosphère — un fait workspace, sans doubler la grille de chiffres. */
-function resolveInsight(ws: ReturnType<typeof useClubWorkspace>): string {
-  if (ws.pendingMemberships > 0) {
-    return `${ws.pendingMemberships} adhésion${ws.pendingMemberships > 1 ? 's' : ''} en attente de validation`;
-  }
-  if (ws.teamsWithoutCoach > 0) {
-    return `${ws.teamsWithoutCoach} équipe${ws.teamsWithoutCoach > 1 ? 's' : ''} sans coach affecté`;
-  }
-  if (ws.teams.length === 0) {
-    return 'Aucune équipe — crée la première pour démarrer le club';
-  }
-  const todayCount = ws.todayMatches.length + ws.todayTrainings.length;
-  if (todayCount > 0) {
-    return `${todayCount} rendez-vous sur le terrain aujourd’hui`;
-  }
-  return `${ws.teams.length} équipe${ws.teams.length > 1 ? 's' : ''} · structure opérationnelle`;
 }
 
 function resolvePresenceAlert(events: TeamEvent[]): {
@@ -153,7 +113,18 @@ function resolvePresenceAlert(events: TeamEvent[]): {
   };
 }
 
-/** Accueil Club — densité Coach + accents premium compacts (sans copilote). */
+function formatMetaLine(players: number, coaches: number, teams: number): string {
+  return [
+    `${players} joueur${players > 1 ? 's' : ''}`,
+    `${coaches} coach${coaches > 1 ? 's' : ''}`,
+    `${teams} équipe${teams > 1 ? 's' : ''}`,
+  ].join(' · ');
+}
+
+/**
+ * Accueil Club — composition courte :
+ * crest hero · prochain événement · équipes · priorités actionnables.
+ */
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
   const shellNav = useClubShellNav();
@@ -170,7 +141,6 @@ export function ClubHomeScreen() {
   const name = ws.club?.name ?? profile?.display_name ?? 'Club';
   const greet = greetingForHour(new Date().getHours());
   const priority = resolvePriority(ws);
-  const insight = resolveInsight(ws);
   const presence = resolvePresenceAlert(ws.events);
 
   const todoItems = [
@@ -220,58 +190,6 @@ export function ClubHomeScreen() {
       : []),
   ].slice(0, MAX_TODO_ITEMS);
 
-  const todayChips: ClubHomeTodayChip[] = [
-    ...ws.todayMatches.map((e) => ({
-      id: `m-${e.id}`,
-      kind: 'match' as const,
-      label: e.title?.trim() || 'Match',
-      time: e.starts_at
-        ? new Date(e.starts_at).toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-        : undefined,
-      onPress: () => shellNav?.requestNav('matches'),
-    })),
-    ...ws.todayTrainings.map((e) => ({
-      id: `t-${e.id}`,
-      kind: 'training' as const,
-      label: e.title?.trim() || 'Entraînement',
-      time: e.starts_at
-        ? new Date(e.starts_at).toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-        : undefined,
-      onPress: () => shellNav?.requestNav('trainings'),
-    })),
-  ]
-    .sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))
-    .slice(0, MAX_TODAY_ITEMS);
-
-  const from = startOfTomorrow().getTime();
-  const to = endOfNextWeek().getTime();
-  const weekItems: ClubHomeWeekItem[] = ws.events
-    .filter((e) => {
-      if (!e.starts_at) return false;
-      const t = new Date(e.starts_at).getTime();
-      return t >= from && t <= to && (isCoachMatchEvent(e) || isCoachTrainingEvent(e));
-    })
-    .sort((a, b) => new Date(a.starts_at!).getTime() - new Date(b.starts_at!).getTime())
-    .slice(0, MAX_WEEK_ITEMS)
-    .map((e) => {
-      const starts = new Date(e.starts_at!);
-      const isMatch = isCoachMatchEvent(e);
-      return {
-        id: e.id,
-        kind: isMatch ? ('match' as const) : ('training' as const),
-        dayLabel: formatDayShort(starts),
-        time: starts.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-        label: e.title?.trim() || (isMatch ? 'Match' : 'Entraînement'),
-        onPress: () => shellNav?.requestNav(isMatch ? 'matches' : 'trainings'),
-      };
-    });
-
   const teamCards: ClubHomeTeamCard[] = ws.teamRows.slice(0, MAX_TEAM_CARDS).map((row) => {
     const hasCoach = row.coachNames.length > 0;
     const metaParts = [
@@ -309,27 +227,12 @@ export function ClubHomeScreen() {
           clubName={name}
           statusLabel={ws.statusLabel}
           statusTone={ws.statusTone}
+          metaLine={formatMetaLine(ws.players.length, ws.coaches.length, ws.teams.length)}
           onPressCrest={logo.canEdit ? () => void logo.pickAndUpload() : undefined}
           crestUploading={logo.uploading}
         />
 
-        <ClubHomeMiniStats
-          players={ws.players.length}
-          coaches={ws.coaches.length}
-          teams={ws.teams.length}
-          onPlayers={() => shellNav?.requestNav('players')}
-          onCoaches={() => shellNav?.requestNav('coaches')}
-          onTeams={() => shellNav?.requestNav('teams')}
-        />
-
-        <ClubHomeInsightLine text={insight} />
-
         <ClubHomeNextEventRow priority={priority} onPress={onPriorityPress} />
-
-        <ClubHomeTodayPeek
-          chips={todayChips}
-          onSeeAll={() => shellNav?.requestNav('calendar')}
-        />
 
         <ClubHomePresenceAlert
           pendingCount={presence.pendingCount}
@@ -342,38 +245,7 @@ export function ClubHomeScreen() {
           onSeeAll={() => shellNav?.requestNav('teams')}
         />
 
-        <ClubHomeWeekPeek
-          items={weekItems}
-          onSeeAll={() => shellNav?.requestNav('calendar')}
-        />
-
-        <ClubHomeTodoSection
-          items={todoItems}
-          emptySummary="Rien d’urgent — le club est à jour."
-        />
-
-        <ClubHomeCommPeek
-          pendingMemberships={ws.pendingMemberships}
-          onNotifications={() => shellNav?.requestNav('notifications')}
-          onCommunication={() => shellNav?.requestNav('communication')}
-          onPlayers={() => shellNav?.requestNav('players')}
-        />
-
-        <ClubHomeShortcutLinks
-          links={[
-            ...(shellNav?.openPresident
-              ? [
-                  {
-                    id: 'president',
-                    label: 'Pôle Président',
-                    onPress: () => shellNav.openPresident?.(),
-                  },
-                ]
-              : []),
-            { id: 'teams', label: 'Équipes', onPress: () => shellNav?.requestNav('teams') },
-            { id: 'matches', label: 'Matchs', onPress: () => shellNav?.requestNav('matches') },
-          ]}
-        />
+        <ClubHomeTodoSection items={todoItems} />
       </ClubChapterScroll>
     </View>
   );
