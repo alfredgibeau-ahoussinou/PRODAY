@@ -23,17 +23,55 @@ import { SponsorTierStatusBanner } from '../../../components/sponsor/SponsorTier
 import { SponsorQuotaBanner } from '../../../components/sponsor/SponsorQuotaBanner';
 import { SPONSOR_BRANDING_LOGOS } from '../../../content/brandingAssets';
 import { SHOWCASE_IMAGES } from '../../../content/showcaseAssets';
+import {
+  buildSponsorNextActions,
+  resolveSponsorHubSubtitle,
+  type SponsorNextAction,
+} from '../../../utils/sponsorHubModel';
+import { PressableSpring } from '../../../components/motion';
 
 export const SponsorOverviewPage: React.FC = () => {
   const { t } = useTranslation();
   const profile = useSessionProfile();
   const { navigate, openChat, requestCreateOffer } = useSponsorShell();
-  const { loading, dashboard, companyName } = useSponsorData();
+  const { loading, dashboard, companyName, unreadMessages } = useSponsorData();
   const { colors: c } = useSponsorStyles();
   const { activeOffers, myOffers, analytics, activity, prospects, stats } = dashboard;
   const [detailOffer, setDetailOffer] = useState<SponsorOffer | null>(null);
   const styles = useMemo(() => createStyles(), []);
   const approved = profile?.sponsor_approved === true;
+
+  const hubSubtitle = useMemo(
+    () =>
+      resolveSponsorHubSubtitle({
+        approved,
+        activeOffers: stats.activeOffers,
+        prospectCount: prospects.length,
+        unreadMessages,
+        clubsSupported: stats.clubsSupported,
+      }),
+    [approved, stats.activeOffers, stats.clubsSupported, prospects.length, unreadMessages],
+  );
+
+  const nextActions = useMemo(
+    () =>
+      buildSponsorNextActions({
+        approved,
+        activeOffers: stats.activeOffers,
+        prospectCount: prospects.length,
+        unreadMessages,
+        clubsSupported: stats.clubsSupported,
+      }),
+    [approved, stats.activeOffers, stats.clubsSupported, prospects.length, unreadMessages],
+  );
+
+  const runNextAction = (action: SponsorNextAction) => {
+    if (action.createOffer) {
+      requestCreateOffer();
+      return;
+    }
+    navigate(sponsorTabRoute(action.tab, action.segment));
+  };
 
   const handleContactProspect = (prospect: SponsorProspect) => {
     if (!profile) return;
@@ -90,7 +128,7 @@ export const SponsorOverviewPage: React.FC = () => {
                 Bonjour, {companyName}
               </Text>
               <Text style={styles.sub} numberOfLines={2}>
-                {t('sponsor.dashboard.subtitle')}
+                {hubSubtitle}
               </Text>
             </View>
           </View>
@@ -157,6 +195,47 @@ export const SponsorOverviewPage: React.FC = () => {
 
       {analytics ? <SponsorAnalyticsPanel analytics={analytics} /> : null}
 
+      {nextActions.length > 0 ? (
+        <>
+          <Text style={styles.sectionLabel}>À faire ensuite</Text>
+          <View style={styles.nextCol}>
+            {nextActions.map((action) => (
+              <PressableSpring
+                key={action.id}
+                onPress={() => runNextAction(action)}
+                scaleTo={0.98}
+                haptic
+                style={[styles.nextCard, action.primary && styles.nextCardPrimary]}
+              >
+                <View
+                  style={[
+                    styles.nextIcon,
+                    {
+                      backgroundColor: action.primary
+                        ? SPONSOR_THEME.primarySoft
+                        : sponsorChrome.shellElevated,
+                    },
+                  ]}
+                >
+                  <Icon
+                    name={action.icon}
+                    size={18}
+                    color={action.primary ? SPONSOR_THEME.primary : sponsorChrome.gold}
+                  />
+                </View>
+                <View style={styles.nextCopy}>
+                  <Text style={styles.nextTitle}>{action.title}</Text>
+                  <Text style={styles.nextHint} numberOfLines={2}>
+                    {action.hint}
+                  </Text>
+                </View>
+                <Icon name="chevron-forward" size={16} color={sponsorChrome.textMuted} />
+              </PressableSpring>
+            ))}
+          </View>
+        </>
+      ) : null}
+
       <Text style={styles.sectionLabel}>Actions rapides</Text>
       <View style={styles.quickCol}>
         <SponsorQuickLink
@@ -175,7 +254,11 @@ export const SponsorOverviewPage: React.FC = () => {
         />
         <SponsorQuickLink
           label={t('sponsor.network')}
-          description="Messages et clubs à contacter"
+          description={
+            unreadMessages > 0
+              ? `${unreadMessages} message${unreadMessages > 1 ? 's' : ''} non lu${unreadMessages > 1 ? 's' : ''} · clubs à contacter`
+              : 'Messages et clubs à contacter'
+          }
           icon="chat"
           onPress={() => navigate(sponsorTabRoute('reseau', 'messages'))}
           colors={c}
@@ -189,7 +272,10 @@ export const SponsorOverviewPage: React.FC = () => {
         />
       </View>
 
-      <SponsorActivityFeed items={activity} />
+      <SponsorActivityFeed
+        items={activity}
+        onEmptyPress={() => navigate(sponsorTabRoute('offres'))}
+      />
 
       <Text style={styles.sectionLabel}>Mes offres</Text>
       {myOffers.length === 0 ? (
@@ -214,36 +300,51 @@ export const SponsorOverviewPage: React.FC = () => {
         ))
       )}
 
-      {prospects.length > 0 ? (
-        <>
-          <Text style={[styles.sectionLabel, styles.sectionGap]}>Clubs à contacter</Text>
-          {prospects.slice(0, 3).map((p) => (
-            <View key={p.id} style={styles.prospectCard}>
-              <TouchableOpacity
-                style={styles.prospectMain}
-                onPress={() => navigate(sponsorTabRoute('reseau', 'prospects'))}
-              >
-                <View style={styles.prospectScore}>
-                  <Text style={styles.prospectScoreText}>{p.match_score}</Text>
-                </View>
-                <View style={styles.prospectBody}>
-                  <Text style={styles.prospectName}>{p.name}</Text>
-                  <Text style={styles.prospectMeta}>
-                    {p.city} · {p.category}
-                  </Text>
-                  <Text style={styles.prospectReason}>{p.reason}</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.prospectContactBtn}
-                onPress={() => handleContactProspect(p)}
-              >
-                <Text style={styles.prospectContactText}>Contacter</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </>
-      ) : null}
+      <Text style={[styles.sectionLabel, styles.sectionGap]}>Clubs à contacter</Text>
+      {prospects.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Icon name="people" size={24} color={SPONSOR_THEME.primary} />
+          <Text style={styles.emptyTitle}>Aucun club à contacter</Text>
+          <Text style={styles.emptySub}>
+            Publiez une offre active pour faire remonter des prospects de votre zone.
+          </Text>
+          <TouchableOpacity style={styles.cta} onPress={requestCreateOffer}>
+            <Text style={styles.ctaText}>Créer une offre</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.ctaOutline}
+            onPress={() => navigate(sponsorTabRoute('reseau', 'prospects'))}
+          >
+            <Text style={styles.ctaOutlineText}>Ouvrir le réseau</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        prospects.slice(0, 3).map((p) => (
+          <View key={p.id} style={styles.prospectCard}>
+            <TouchableOpacity
+              style={styles.prospectMain}
+              onPress={() => navigate(sponsorTabRoute('reseau', 'prospects'))}
+            >
+              <View style={styles.prospectScore}>
+                <Text style={styles.prospectScoreText}>{p.match_score}</Text>
+              </View>
+              <View style={styles.prospectBody}>
+                <Text style={styles.prospectName}>{p.name}</Text>
+                <Text style={styles.prospectMeta}>
+                  {p.city} · {p.category}
+                </Text>
+                <Text style={styles.prospectReason}>{p.reason}</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.prospectContactBtn}
+              onPress={() => handleContactProspect(p)}
+            >
+              <Text style={styles.prospectContactText}>Contacter</Text>
+            </TouchableOpacity>
+          </View>
+        ))
+      )}
     </SponsorPageScaffold>
   );
 };
@@ -340,6 +441,31 @@ function createStyles() {
     },
     sectionGap: { marginTop: spacing.md },
     quickCol: { gap: spacing.sm },
+    nextCol: { gap: spacing.sm, marginBottom: spacing.sm },
+    nextCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      backgroundColor: sponsorChrome.shellElevated,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: sponsorChrome.shellBorder,
+      padding: spacing.md,
+    },
+    nextCardPrimary: {
+      borderColor: sponsorChrome.gold,
+      backgroundColor: 'rgba(212, 175, 55, 0.08)',
+    },
+    nextIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    nextCopy: { flex: 1, minWidth: 0, gap: 2 },
+    nextTitle: { fontSize: 14, fontWeight: '800', color: sponsorChrome.text },
+    nextHint: { fontSize: 12, color: sponsorChrome.textMuted, lineHeight: 16 },
     emptyCard: {
       alignItems: 'center',
       padding: spacing.xl,

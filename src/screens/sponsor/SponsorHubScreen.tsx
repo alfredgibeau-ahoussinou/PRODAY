@@ -92,7 +92,7 @@ export const SponsorHubScreen: React.FC<SponsorHubScreenProps> = ({
           <View style={styles.sponsorBanner}>
             <Text style={styles.sponsorBannerTitle}>Votre espace sponsor ProDay</Text>
             <Text style={styles.sponsorBannerSub}>
-              Les formules ci-dessous sont les mêmes que sur le site ProDay.
+              Formules, offres et réseau club — le même parcours que sur votre tableau de bord.
             </Text>
           </View>
         ) : null}
