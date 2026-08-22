@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -20,7 +21,11 @@ import {
   PlayerProgressBar,
   JoueurCard,
 } from '../../components/joueur';
-import { ProDayText } from '../../components/ui/ProDayText';
+import {
+  PlayerHubShortcutRow,
+  PlayerMatchDayEmpty,
+  PlayerMatchDayHero,
+} from '../../components/joueur/PlayerMatchDayChrome';
 import { PushScreenTransition } from '../../components/motion';
 import { TrainHubScreen } from '../training/TrainHubScreen';
 import { JoueurTacticsCoachScreen } from './JoueurTacticsCoachScreen';
@@ -34,10 +39,15 @@ import { getJoueurDailyQuests } from '../../features/joueur/constants';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
 import { PlayerShieldCard } from '../../components/joueur/PlayerShieldCard';
 import { userToProDayCard } from '../../utils/prodayFutCard';
+import { teamEventsService } from '../../services/teamEvents.service';
+import {
+  playerCanShowRsvp,
+  type PlayerRsvpChoice,
+} from '../../utils/amateurPlayerHome';
 
 type HubOverlay = 'train' | 'train_ai' | 'train_coach' | 'tactics_coach' | null;
 
-/** Accueil Football Hub — données réelles, pas de stats inventées. */
+/** Accueil Football Hub — match day, RSVP réel, pas de stats inventées. */
 export function PlayerFootballHubScreen() {
   const profile = useSessionProfile();
   const session = useJoueurSession();
@@ -46,6 +56,7 @@ export function PlayerFootballHubScreen() {
   const hub = usePlayerHubData(profile);
   const [refreshing, setRefreshing] = useState(false);
   const [overlay, setOverlay] = useState<HubOverlay>(null);
+  const [rsvpBusy, setRsvpBusy] = useState(false);
 
   useEffect(() => {
     if (!pendingDashboardView || !profile) return;
@@ -115,6 +126,26 @@ export function PlayerFootballHubScreen() {
     }
   }, [hub]);
 
+  const onRsvp = useCallback(
+    async (choice: PlayerRsvpChoice) => {
+      if (!profile || hub.dayPriority.kind === 'calm') return;
+      const event = hub.dayPriority.event;
+      setRsvpBusy(true);
+      try {
+        await teamEventsService.updateRsvp(event.id, profile.uid, choice);
+        await hub.refresh();
+      } catch (e) {
+        Alert.alert(
+          'Présence',
+          e instanceof Error ? e.message : 'Impossible d’enregistrer la réponse.',
+        );
+      } finally {
+        setRsvpBusy(false);
+      }
+    },
+    [profile, hub],
+  );
+
   if (!profile) {
     return (
       <View style={styles.loader}>
@@ -127,12 +158,12 @@ export function PlayerFootballHubScreen() {
   const nextDefiProgress = dailyDone.has('daily-login') || hub.streakDays > 0 ? 1 : 0;
   const nextDefiMax = 1;
 
-  const convocationSubtitle =
-    hub.pendingConvocations.length > 0
-      ? `${hub.pendingConvocations.length} convocation(s) en attente`
-      : undefined;
-
   const shieldWidth = resolvePlayerShieldWidth();
+  const priority = hub.dayPriority;
+  const heroEvent = priority.kind === 'calm' ? null : priority.event;
+  const showRsvp = heroEvent ? playerCanShowRsvp(heroEvent, profile.uid) : false;
+  const secondaryTraining =
+    hub.nextTraining && hub.nextTraining.id !== heroEvent?.id ? hub.nextTraining : null;
 
   return (
     <>
@@ -165,29 +196,77 @@ export function PlayerFootballHubScreen() {
             </View>
           ) : null}
 
-          <JoueurSectionHeader title="Prochain événement" />
+          <PlayerHubShortcutRow
+            accent={accent}
+            items={[
+              {
+                id: 'matchs',
+                label: 'Matchs',
+                icon: 'trophy',
+                onPress: () => nav.setActiveTab('matchs'),
+              },
+              {
+                id: 'train',
+                label: 'Train',
+                icon: 'football',
+                onPress: () => nav.openDashboard('train'),
+              },
+              {
+                id: 'messages',
+                label: 'Messages',
+                icon: 'chat',
+                onPress: () => nav.setActiveTab('messages'),
+              },
+              {
+                id: 'equipe',
+                label: 'Équipe',
+                icon: 'people',
+                onPress: () => nav.setActiveTab('recrutement'),
+              },
+            ]}
+          />
+
+          <JoueurSectionHeader
+            title="Match day"
+            subtitle={
+              hub.pendingConvocations.length > 0
+                ? `${hub.pendingConvocations.length} à confirmer`
+                : undefined
+            }
+          />
           {hub.loading ? (
             <ActivityIndicator color={accent} style={styles.inlineLoader} />
-          ) : hub.nextEvent ? (
-            <PlayerMatchCard
-              event={hub.nextEvent}
+          ) : priority.kind === 'calm' ? (
+            <PlayerMatchDayEmpty
               accent={accent}
-              subtitle={convocationSubtitle}
-              onPress={() => nav.openTeamEvent(hub.nextEvent!.id)}
+              onOpenMatchs={() => nav.setActiveTab('matchs')}
+              onOpenTrain={() => nav.openDashboard('train')}
             />
           ) : (
-            <ProDayText variant="body" style={styles.empty}>
-              Aucun match ou entraînement planifié. Consulte l’onglet Matchs ou ton équipe.
-            </ProDayText>
+            <PlayerMatchDayHero
+              priority={priority}
+              playerUid={profile.uid}
+              accent={accent}
+              busy={rsvpBusy}
+              showRsvp={showRsvp}
+              onOpen={() => {
+                if (priority.kind === 'live') {
+                  nav.openTeamEvent(priority.event.id);
+                  return;
+                }
+                nav.openTeamEvent(priority.event.id);
+              }}
+              onChooseRsvp={(choice) => void onRsvp(choice)}
+            />
           )}
 
-          {hub.nextTraining && hub.nextTraining.id !== hub.nextEvent?.id ? (
+          {secondaryTraining ? (
             <>
               <JoueurSectionHeader title="Prochain entraînement" />
               <PlayerMatchCard
-                event={hub.nextTraining}
+                event={secondaryTraining}
                 accent={accentAlt}
-                onPress={() => nav.openTeamEvent(hub.nextTraining!.id)}
+                onPress={() => nav.openTeamEvent(secondaryTraining.id)}
               />
             </>
           ) : null}
@@ -227,12 +306,26 @@ export function PlayerFootballHubScreen() {
             />
           </View>
 
-          <JoueurSectionHeader title="Raccourcis" />
+          <JoueurSectionHeader title="Plus" />
           <View style={styles.actions}>
-            <JoueurCard variant="list" title="Matchs" subtitle="Calendrier & convocations" onPress={() => nav.setActiveTab('matchs')} />
-            <JoueurCard variant="list" title="Messages" subtitle="Chat équipe" onPress={() => nav.setActiveTab('messages')} />
-            <JoueurCard variant="list" title="Entraînement IA" subtitle="Programme personnalisé" onPress={() => nav.openDashboard('train_ai')} />
-            <JoueurCard variant="list" title="Équipe" subtitle="Club & groupe" onPress={() => nav.setActiveTab('recrutement')} />
+            <JoueurCard
+              variant="list"
+              title="Calendrier matchs"
+              subtitle="Convocations & résultats"
+              onPress={() => nav.setActiveTab('matchs')}
+            />
+            <JoueurCard
+              variant="list"
+              title="S’entraîner"
+              subtitle="Hub entraînement"
+              onPress={() => nav.openDashboard('train')}
+            />
+            <JoueurCard
+              variant="list"
+              title="Messages"
+              subtitle="Chat équipe"
+              onPress={() => nav.setActiveTab('messages')}
+            />
           </View>
         </ScrollView>
       </JoueurScreenChrome>
@@ -261,9 +354,7 @@ const styles = StyleSheet.create({
   pad: { padding: spacing.lg, gap: spacing.md },
   shieldWrap: { alignItems: 'center', marginBottom: spacing.sm, gap: spacing.sm, width: '100%' },
   profileBar: { opacity: 0.85 },
-  muted: { color: PLAYER_DARK.textMuted },
   inlineLoader: { marginVertical: spacing.md },
-  empty: { color: PLAYER_DARK.textMuted, paddingVertical: spacing.sm },
   statRow: { flexDirection: 'row', gap: spacing.sm },
   actions: { gap: spacing.xs },
 });

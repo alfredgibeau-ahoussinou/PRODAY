@@ -4,6 +4,9 @@ import {
   getNextTeamEvent,
   getUpcomingTeamEvents,
   isAmateurPlayerWithoutClub,
+  needsPlayerRsvpResponse,
+  playerCanShowRsvp,
+  resolvePlayerDayPriority,
 } from '../utils/amateurPlayerHome';
 import type { User } from '../models/User';
 import type { Membership } from '../models/Membership';
@@ -95,6 +98,26 @@ describe('amateurPlayerHome helpers', () => {
     });
     expect(countRemainingCarpoolSeats(ev)).toBe(2);
     expect(countRemainingCarpoolSeats(event({ id: 'e2', starts_at: new Date() }))).toBeNull();
+  });
+
+  it('priorise match day et RSVP joueur', () => {
+    const now = Date.now();
+    const training = event({
+      id: 'tr',
+      starts_at: new Date(now + 3600_000),
+      event_type: 'training',
+    });
+    const match = event({
+      id: 'm',
+      starts_at: new Date(now + 7200_000),
+      event_type: 'competition',
+    });
+    expect(resolvePlayerDayPriority([match, training], now).kind).toBe('training');
+    expect(resolvePlayerDayPriority([match], now)).toEqual({ kind: 'match', event: match });
+    expect(resolvePlayerDayPriority([], now).kind).toBe('calm');
+    expect(needsPlayerRsvpResponse('pending')).toBe(true);
+    expect(playerCanShowRsvp(training, 'p1')).toBe(true);
+    expect(getNextMatchEvent([training, match], now)?.id).toBe('m');
   });
 });
 

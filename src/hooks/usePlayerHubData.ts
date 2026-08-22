@@ -6,15 +6,16 @@ import type { WellnessCheckin } from '../services/wellnessCheckins.service';
 import { useDashboardData } from './useDashboardData';
 import { playerActivityService } from '../services/playerActivity.service';
 import { wellnessCheckinsService } from '../services/wellnessCheckins.service';
-import {
-  getNextMatchEvent,
-  getNextTeamEvent,
-  getUpcomingTeamEvents,
-} from '../utils/amateurPlayerHome';
-import { isCoachTrainingEvent } from '../models/TeamEvent';
 import { userRsvp } from '../models/TeamEvent';
 import { useJoueurProgress } from '../context/JoueurProgressContext';
 import { getProfileCompletion } from '../utils/profileCompletion';
+import {
+  getNextMatchEvent,
+  getNextTrainingEvent,
+  getNextTeamEvent,
+  resolvePlayerDayPriority,
+  type PlayerDayPriority,
+} from '../utils/amateurPlayerHome';
 
 export type PlayerHubData = {
   firstName: string;
@@ -22,6 +23,7 @@ export type PlayerHubData = {
   nextMatch: TeamEvent | null;
   nextTraining: TeamEvent | null;
   nextEvent: TeamEvent | null;
+  dayPriority: PlayerDayPriority;
   pendingConvocations: TeamEvent[];
   wellnessScore: number | null;
   wellnessCheckin: WellnessCheckin | null;
@@ -78,10 +80,8 @@ export function usePlayerHubData(profile: User | null): PlayerHubData {
 
   const nextEvent = useMemo(() => getNextTeamEvent(events), [events]);
   const nextMatch = useMemo(() => getNextMatchEvent(events), [events]);
-  const nextTraining = useMemo(
-    () => getUpcomingTeamEvents(events).find((e) => isCoachTrainingEvent(e)) ?? null,
-    [events],
-  );
+  const nextTraining = useMemo(() => getNextTrainingEvent(events), [events]);
+  const dayPriority = useMemo(() => resolvePlayerDayPriority(events), [events]);
 
   const pendingConvocations = useMemo(() => {
     if (dashboard.pendingConvocations.length) return dashboard.pendingConvocations;
@@ -103,6 +103,7 @@ export function usePlayerHubData(profile: User | null): PlayerHubData {
     nextMatch,
     nextTraining,
     nextEvent,
+    dayPriority,
     pendingConvocations,
     wellnessScore,
     wellnessCheckin,
