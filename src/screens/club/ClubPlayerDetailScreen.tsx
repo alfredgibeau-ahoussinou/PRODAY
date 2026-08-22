@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, Linking, StyleSheet, View } from 'react-native';
-import { PressableSpring } from '../../components/motion';
+import { PressableSpring, AnimatedEntrance } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
-import { AnimatedEntrance } from '../../components/motion';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
 import {
   ClubActionRow,
   ClubChapterScroll,
@@ -14,6 +15,7 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubPlayerHero } from '../../features/club/ui/ClubPlayerHero';
+import { membershipsService } from '../../services/memberships.service';
 import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
@@ -27,9 +29,12 @@ type Props = {
  * Pas de dossier médical. Pas de score inventé. Pas de carte pôle Joueur.
  */
 export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
+  const shellNav = useClubShellNav();
+  const profile = useSessionProfile();
   const { tokens, logoUrl } = useClubTheme();
   const ws = useClubWorkspace();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const [busy, setBusy] = useState(false);
 
   if (ws.loading) return <ClubLoading />;
 
@@ -71,6 +76,43 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
         ? 'warn'
         : 'neutral';
 
+  const approve = async () => {
+    if (!profile?.uid || !membership) return;
+    setBusy(true);
+    try {
+      await membershipsService.approve(membership.id, profile.uid);
+      await ws.refresh();
+    } catch (e) {
+      Alert.alert('Adhésion', e instanceof Error ? e.message : 'Validation impossible.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const reject = () => {
+    if (!profile?.uid || !membership) return;
+    Alert.alert('Refuser cette adhésion ?', 'Le joueur restera hors effectif actif.', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Refuser',
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            setBusy(true);
+            try {
+              await membershipsService.reject(membership.id, profile.uid);
+              await ws.refresh();
+            } catch (e) {
+              Alert.alert('Adhésion', e instanceof Error ? e.message : 'Refus impossible.');
+            } finally {
+              setBusy(false);
+            }
+          })();
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
@@ -103,6 +145,26 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
             }
           />
         </AnimatedEntrance>
+
+        {membership?.status === 'pending' ? (
+          <ClubSectionCard title="Adhésion">
+            <ClubText variant="body" muted>
+              Demande en attente de validation staff.
+            </ClubText>
+            <ClubActionRow
+              icon="checkmark-circle"
+              label="Valider l’adhésion"
+              hint="Active le joueur dans l’effectif"
+              onPress={() => !busy && void approve()}
+            />
+            <ClubActionRow
+              icon="close"
+              label="Refuser"
+              hint="Hors effectif actif"
+              onPress={() => !busy && reject()}
+            />
+          </ClubSectionCard>
+        ) : null}
 
         <ClubSectionCard title="Identité club">
           <ClubText variant="body" muted>
@@ -146,32 +208,25 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
           ) : null}
         </ClubSectionCard>
 
-        <ClubSectionCard title="Notes staff">
-          <ClubText variant="body" muted>
-            Notes internes (visibles selon votre rôle). Aucune donnée sensible n’est affichée sans
-            permission.
-          </ClubText>
+        <ClubSectionCard title="Raccourcis">
           <ClubActionRow
-            icon="document"
-            label="Ajouter une note"
-            onPress={() =>
-              Alert.alert('Notes', 'La saisie des notes staff arrive dans le prochain passage.')
-            }
+            icon="football"
+            label="Équipes"
+            hint={team?.name ? `Catégorie : ${team.name}` : 'Affectation catégories'}
+            onPress={() => shellNav?.requestNav('teams')}
+          />
+          <ClubActionRow
+            icon="mail"
+            label="Inviter un membre"
+            onPress={() => shellNav?.openCreate?.('invite_member')}
           />
         </ClubSectionCard>
 
         <ClubSectionCard title="Documents">
-          <ClubActionRow
-            icon="document"
-            label="Licences & pièces"
-            hint="Accès réservé Admin / Dirigeant"
-            onPress={() =>
-              Alert.alert(
-                'Documents',
-                'Les documents sensibles sont filtrés selon votre rôle (Admin, Dirigeant, DS, Coach).',
-              )
-            }
-          />
+          <ClubText variant="caption" muted>
+            Licences & pièces : accès réservé Admin / Dirigeant selon le rôle compte — pas de
+            dossier médical ici.
+          </ClubText>
         </ClubSectionCard>
       </ClubChapterScroll>
     </View>

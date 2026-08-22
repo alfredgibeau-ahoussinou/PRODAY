@@ -1,32 +1,141 @@
-import React, { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
 import {
   ClubChapterScroll,
   ClubEmptyState,
   ClubLoading,
   ClubSearchField,
   ClubSegmentedControl,
+  ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { ClubRosterPlayerCard } from '../../features/club/ui/ClubRosterPlayerCard';
+import {
+  ClubPlayersPendingHero,
+  ClubPlayersPendingRow,
+} from '../../features/club/ui/ClubPlayersChrome';
+import {
+  filterClubPlayersList,
+  listPendingMembershipPlayers,
+  resolveClubPlayersBaseList,
+  resolveClubPlayersSubtitle,
+  type ClubPlayersFilterId,
+} from '../../features/club/ui/clubPlayersModel';
 import { ClubPlayerDetailScreen } from './ClubPlayerDetailScreen';
-import { clubSpace } from '../../features/club/theme/clubDesignSystem';
+import { membershipsService } from '../../services/memberships.service';
+import { PressableSpring } from '../../components/motion';
+import { Icon } from '../../components/ui/Icon';
+import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
-type FilterId = 'all' | 'pending' | 'active';
-
-/** Liste joueurs + recherche / filtres → fiches identité Club (maillot / crest). */
+/** Liste joueurs + adhésions actionnables → fiches identité Club. */
 export function ClubPlayersScreen() {
   const shellNav = useClubShellNav();
+  const profile = useSessionProfile();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<FilterId>('all');
+  const [filter, setFilter] = useState<ClubPlayersFilterId>('all');
+  const [busyMembershipId, setBusyMembershipId] = useState<string | null>(null);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const selected = shellNav?.selectedPlayerUid ?? null;
+
+  const basePlayers = useMemo(
+    () =>
+      resolveClubPlayersBaseList({
+        players: ws.players,
+        members: ws.members,
+        memberships: ws.memberships,
+      }),
+    [ws.players, ws.members, ws.memberships],
+  );
+
+  const playersByUid = useMemo(() => {
+    const map = new Map(basePlayers.map((p) => [p.uid, p]));
+    ws.members.forEach((m) => map.set(m.uid, m));
+    return map;
+  }, [basePlayers, ws.members]);
+
+  const pendingItems = useMemo(
+    () =>
+      listPendingMembershipPlayers({
+        memberships: ws.memberships,
+        playersByUid,
+      }),
+    [ws.memberships, playersByUid],
+  );
+
+  const filtered = useMemo(
+    () =>
+      filterClubPlayersList({
+        players: basePlayers,
+        memberships: ws.memberships,
+        teams: ws.teams,
+        query,
+        filter,
+      }),
+    [basePlayers, ws.memberships, ws.teams, query, filter],
+  );
+
+  const activeCount = ws.memberships.filter((m) => m.status === 'active').length;
+  const subtitle = resolveClubPlayersSubtitle({
+    visibleCount: filtered.length,
+    pendingCount: pendingItems.length,
+    activeCount,
+  });
+
+  const approve = useCallback(
+    async (membershipId: string) => {
+      if (!profile?.uid) {
+        Alert.alert('Connexion requise', 'Reconnectez-vous pour valider une adhésion.');
+        return;
+      }
+      setBusyMembershipId(membershipId);
+      try {
+        await membershipsService.approve(membershipId, profile.uid);
+        await ws.refresh();
+      } catch (e) {
+        Alert.alert('Adhésion', e instanceof Error ? e.message : 'Validation impossible.');
+      } finally {
+        setBusyMembershipId(null);
+      }
+    },
+    [profile?.uid, ws],
+  );
+
+  const reject = useCallback(
+    async (membershipId: string) => {
+      if (!profile?.uid) {
+        Alert.alert('Connexion requise', 'Reconnectez-vous pour refuser une adhésion.');
+        return;
+      }
+      Alert.alert('Refuser cette adhésion ?', 'Le joueur restera hors effectif actif.', [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Refuser',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              setBusyMembershipId(membershipId);
+              try {
+                await membershipsService.reject(membershipId, profile.uid);
+                await ws.refresh();
+              } catch (e) {
+                Alert.alert('Adhésion', e instanceof Error ? e.message : 'Refus impossible.');
+              } finally {
+                setBusyMembershipId(null);
+              }
+            })();
+          },
+        },
+      ]);
+    },
+    [profile?.uid, ws],
+  );
 
   if (selected) {
     return (
@@ -39,45 +148,69 @@ export function ClubPlayersScreen() {
 
   if (ws.loading) return <ClubLoading />;
 
-  const membershipByUid = new Map(ws.memberships.map((m) => [m.player_uid, m]));
-  const pendingUids = new Set(
-    ws.memberships.filter((m) => m.status === 'pending').map((m) => m.player_uid),
-  );
-  const activeUids = new Set(
-    ws.memberships.filter((m) => m.status === 'active').map((m) => m.player_uid),
-  );
-
-  let list = ws.players.length > 0 ? ws.players : ws.members.filter((m) => m.role === 'player');
-  if (list.length === 0) {
-    const byUid = new Map(ws.members.map((m) => [m.uid, m]));
-    list = ws.memberships
-      .map((m) => byUid.get(m.player_uid))
-      .filter(Boolean) as typeof list;
-    const map = new Map(list.map((u) => [u.uid, u]));
-    list = Array.from(map.values());
-  }
-
-  const q = query.trim().toLowerCase();
-  const filtered = list.filter((p) => {
-    if (filter === 'pending' && !pendingUids.has(p.uid)) return false;
-    if (filter === 'active' && !activeUids.has(p.uid)) return false;
-    if (!q) return true;
-    return (
-      p.display_name?.toLowerCase().includes(q) ||
-      p.email?.toLowerCase().includes(q)
-    );
-  });
-
-  const filters: { id: FilterId; label: string }[] = [
+  const filters: { id: ClubPlayersFilterId; label: string }[] = [
     { id: 'all', label: 'Tous' },
     { id: 'active', label: 'Actifs' },
     { id: 'pending', label: 'En attente' },
   ];
 
+  const showPendingBlock = pendingItems.length > 0 && (filter === 'all' || filter === 'pending');
+  const rosterItems =
+    filter === 'pending'
+      ? []
+      : showPendingBlock
+        ? filtered.filter((item) => item.membership?.status !== 'pending')
+        : filtered;
+
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubBrandHeader title="Joueurs" subtitle={`${filtered.length} profil(s)`} />
+        <ClubBrandHeader title="Joueurs" subtitle={subtitle} />
+
+        <View style={styles.shortcutRow}>
+          <PressableSpring
+            onPress={() => shellNav?.requestNav('teams')}
+            scaleTo={0.97}
+            haptic
+            style={styles.shortcut}
+          >
+            <Icon name="football" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Équipes
+            </ClubText>
+          </PressableSpring>
+          <PressableSpring
+            onPress={() => shellNav?.openCreate?.('invite_member')}
+            scaleTo={0.97}
+            haptic
+            style={styles.shortcut}
+          >
+            <Icon name="mail" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Inviter
+            </ClubText>
+          </PressableSpring>
+          <PressableSpring
+            onPress={() => shellNav?.openCreate?.('player')}
+            scaleTo={0.97}
+            haptic
+            style={styles.shortcut}
+          >
+            <Icon name="add" size={14} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.shortcutLabel}>
+              Créer
+            </ClubText>
+          </PressableSpring>
+        </View>
+
+        {pendingItems.length > 0 && filter !== 'pending' ? (
+          <ClubPlayersPendingHero
+            count={pendingItems.length}
+            previewNames={pendingItems.map((p) => p.name)}
+            onFilterPending={() => setFilter('pending')}
+            onReview={() => setFilter('pending')}
+          />
+        ) : null}
 
         <ClubSearchField
           value={query}
@@ -87,31 +220,66 @@ export function ClubPlayersScreen() {
 
         <ClubSegmentedControl options={filters} value={filter} onChange={setFilter} />
 
-        {filtered.length === 0 ? (
+        {showPendingBlock ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHead}>
+              <ClubText variant="label" muted style={styles.sectionLabel}>
+                Adhésions à traiter
+              </ClubText>
+              <ClubText variant="caption" muted>
+                {pendingItems.length}
+              </ClubText>
+            </View>
+            <View style={styles.list}>
+              {pendingItems.map((item) => {
+                const team = ws.teams.find((t) => t.id === item.membership.team_id);
+                return (
+                  <ClubPlayersPendingRow
+                    key={item.membership.id}
+                    name={item.name}
+                    teamHint={team?.name}
+                    busy={busyMembershipId === item.membership.id}
+                    onOpen={() => shellNav?.setSelectedPlayerUid?.(item.membership.player_uid)}
+                    onApprove={() => void approve(item.membership.id)}
+                    onReject={() => void reject(item.membership.id)}
+                  />
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+
+        {rosterItems.length === 0 && !showPendingBlock ? (
           <ClubEmptyState
-            title="Aucun joueur"
+            title="Aucun joueur pour l’instant"
             body="Invitez des licenciés ou validez les demandes d’adhésion. Pas de dossier médical ici."
             actionLabel="Inviter un membre"
             onAction={() => shellNav?.openCreate?.('invite_member')}
             icon="people"
           />
-        ) : (
-          <View style={styles.list}>
-            {filtered.map((p, index) => {
-              const membership = membershipByUid.get(p.uid);
-              const team = ws.teams.find((t) => t.id === membership?.team_id);
-              return (
+        ) : rosterItems.length === 0 ? null : (
+          <View style={styles.section}>
+            <View style={styles.sectionHead}>
+              <ClubText variant="label" muted style={styles.sectionLabel}>
+                Effectif
+              </ClubText>
+              <ClubText variant="caption" muted>
+                {rosterItems.length}
+              </ClubText>
+            </View>
+            <View style={styles.list}>
+              {rosterItems.map((item, index) => (
                 <ClubRosterPlayerCard
-                  key={p.uid}
-                  player={p}
-                  membership={membership}
-                  teamName={team?.name}
+                  key={item.player.uid}
+                  player={item.player}
+                  membership={item.membership}
+                  teamName={item.teamName}
                   clubName={ws.club?.name}
                   index={index}
-                  onPress={() => shellNav?.setSelectedPlayerUid?.(p.uid)}
+                  onPress={() => shellNav?.setSelectedPlayerUid?.(item.player.uid)}
                 />
-              );
-            })}
+              ))}
+            </View>
           </View>
         )}
       </ClubChapterScroll>
@@ -122,5 +290,36 @@ export function ClubPlayersScreen() {
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
+    shortcutRow: {
+      flexDirection: 'row',
+      gap: clubSpace.sm,
+    },
+    shortcut: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      borderRadius: clubRadius.md,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    shortcutLabel: {
+      color: tokens.foreground,
+      fontWeight: '700',
+    },
+    section: { gap: clubSpace.sm },
+    sectionHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: clubSpace.sm,
+    },
+    sectionLabel: {
+      letterSpacing: 1.05,
+      opacity: 0.92,
+    },
     list: { gap: clubSpace.sm },
   });
