@@ -24,6 +24,12 @@ import {
 } from '../../components/parent/parentPortalUi';
 import { PARENT_PAGES } from '../../content/parentPageIdentity';
 import { PressableSpring } from '../../components/motion';
+import {
+  countUnreadThreads,
+  formatThreadPreview,
+  sortThreadsForInbox,
+} from '../../utils/messagesInboxModel';
+import { Icon } from '../../components/ui/Icon';
 
 export const ParentMessagesScreen: React.FC = () => {
   const { colors: c } = useThemedScreen();
@@ -110,6 +116,8 @@ export const ParentMessagesScreen: React.FC = () => {
     () => threads.filter((thread) => thread.request_status === 'pending'),
     [threads],
   );
+  const sortedThreads = useMemo(() => sortThreadsForInbox(threads), [threads]);
+  const unreadCount = useMemo(() => countUnreadThreads(threads), [threads]);
 
   if (!selected) {
     return (
@@ -265,30 +273,69 @@ export const ParentMessagesScreen: React.FC = () => {
           )}
         </ParentSectionCard>
 
-        <ParentSectionCard title={`Conversations de ${selected.display_name}`}>
+        <ParentSectionCard
+          title={`Conversations de ${selected.display_name}`}
+          subtitle={
+            unreadCount > 0
+              ? `${unreadCount} non lue${unreadCount > 1 ? 's' : ''} · lecture seule`
+              : 'Lecture seule · contacts à valider ci-dessus'
+          }
+        >
           {loading && !refreshing ? (
             <ActivityIndicator color={c.brand} />
-          ) : threads.length === 0 ? (
-            <ProDayText variant="body" muted>
-              Aucune conversation pour le moment.
-            </ProDayText>
+          ) : sortedThreads.length === 0 ? (
+            <View style={styles.emptyBlock}>
+              <ProDayText variant="section">Aucune conversation</ProDayText>
+              <ProDayText variant="body" muted>
+                Les échanges de {selected.display_name} apparaîtront ici dès qu’un fil démarre.
+              </ProDayText>
+            </View>
           ) : (
-            threads.map((thread) => {
+            sortedThreads.map((thread) => {
               const otherUid = thread.other_user_id;
               const otherName = thread.participant_name || 'Contact';
               const pending = thread.request_status === 'pending';
+              const unread = Boolean(thread.unread);
               return (
                 <View key={thread.id} style={styles.threadBlock}>
-                  <PressableSpring onPress={() => void openThread(thread.id)} haptic>
-                    <ProDayText variant="section">{otherName}</ProDayText>
-                    <ProDayText variant="caption" muted numberOfLines={2}>
-                      {thread.last_message ?? '—'}
-                    </ProDayText>
-                    {pending ? (
-                      <ProDayText variant="caption" accent>
-                        Demande en attente
-                      </ProDayText>
-                    ) : null}
+                  <PressableSpring
+                    onPress={() => void openThread(thread.id)}
+                    haptic
+                    scaleTo={0.98}
+                    style={[
+                      styles.threadCard,
+                      {
+                        backgroundColor: c.surface,
+                        borderColor: unread ? c.brand : c.border,
+                      },
+                    ]}
+                  >
+                    {unread ? <View style={[styles.threadStripe, { backgroundColor: c.brand }]} /> : null}
+                    <View style={styles.threadInner}>
+                      <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+                        <View style={styles.threadHead}>
+                          <ProDayText variant="section" numberOfLines={1} style={{ flex: 1 }}>
+                            {otherName}
+                          </ProDayText>
+                          {unread ? (
+                            <View style={[styles.unreadPill, { backgroundColor: c.brandSoft }]}>
+                              <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
+                                Non lu
+                              </ProDayText>
+                            </View>
+                          ) : null}
+                        </View>
+                        <ProDayText variant="caption" muted numberOfLines={2}>
+                          {formatThreadPreview(thread.last_message)}
+                        </ProDayText>
+                        {pending ? (
+                          <ProDayText variant="caption" accent>
+                            Demande en attente
+                          </ProDayText>
+                        ) : null}
+                      </View>
+                      <Icon name="chevron-forward" size={16} color={c.textMuted} />
+                    </View>
                   </PressableSpring>
                   <View style={styles.row}>
                     <ParentActionButton
@@ -326,5 +373,28 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   pendingBlock: { gap: spacing.xs, paddingVertical: spacing.xs },
   threadBlock: { gap: spacing.sm, paddingVertical: spacing.xs },
+  threadCard: {
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  threadStripe: { height: 3, width: '100%' },
+  threadInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+  },
+  threadHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  unreadPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+  },
+  emptyBlock: { gap: spacing.xs, paddingVertical: spacing.xs },
   back: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
 });

@@ -59,6 +59,7 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
   onSearchChange,
   threadFilter,
   onThreadFilterChange,
+  unreadCount,
   mustVerify,
   onOpenThread,
   onAcceptRequest,
@@ -77,6 +78,31 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
   const coachTokens = useCoachTokens();
   const joueurTheme = useJoueurTheme();
   const refreshTint = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
+  const emptyUnreadFilter = threadFilter === 'unread' && threads.length > 0;
+
+  const renderFilterEmpty = () => {
+    const title = emptyUnreadFilter
+      ? t('messages.inbox.empty.unread.title')
+      : t('messages.inbox.noResults.title');
+    const body = emptyUnreadFilter
+      ? t('messages.inbox.empty.unread.subtitle')
+      : t('messages.inbox.noResults.subtitle');
+    const cta = t('messages.inbox.noResults.reset');
+    if (coach) {
+      return <CoachEmptyState title={title} body={body} cta={cta} onPress={onResetFilters} />;
+    }
+    if (joueur) {
+      return <JoueurEmptyState title={title} body={body} cta={cta} onPress={onResetFilters} />;
+    }
+    return (
+      <ListEmptyPanel
+        icon={emptyUnreadFilter ? 'checkmark-circle' : 'search'}
+        title={title}
+        subtitle={body}
+        primaryCta={{ label: cta, onPress: onResetFilters }}
+      />
+    );
+  };
 
   return (
     <ScrollView
@@ -92,6 +118,7 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
         threadFilter={threadFilter}
         onThreadFilterChange={onThreadFilterChange}
         resultCount={filteredThreads.length}
+        unreadCount={unreadCount}
         loading={loading}
         variant={variant}
       />
@@ -153,28 +180,7 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
           />
         )
       ) : filteredThreads.length === 0 ? (
-        coach ? (
-          <CoachEmptyState
-            title={t('messages.inbox.noResults.title')}
-            body={t('messages.inbox.noResults.subtitle')}
-            cta={t('messages.inbox.noResults.reset')}
-            onPress={onResetFilters}
-          />
-        ) : joueur ? (
-          <JoueurEmptyState
-            title={t('messages.inbox.noResults.title')}
-            body={t('messages.inbox.noResults.subtitle')}
-            cta={t('messages.inbox.noResults.reset')}
-            onPress={onResetFilters}
-          />
-        ) : (
-          <ListEmptyPanel
-            icon="search"
-            title={t('messages.inbox.noResults.title')}
-            subtitle={t('messages.inbox.noResults.subtitle')}
-            primaryCta={{ label: t('messages.inbox.noResults.reset'), onPress: onResetFilters }}
-          />
-        )
+        renderFilterEmpty()
       ) : (
         <View style={styles.list}>
           {filteredThreads.map((thread, index) => (

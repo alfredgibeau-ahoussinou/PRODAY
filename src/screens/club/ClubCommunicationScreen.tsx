@@ -20,6 +20,7 @@ import {
   type ClubCommTileId,
 } from '../../features/club/ui/clubCommunicationModel';
 import { staffNotificationsService } from '../../services/staffNotifications.service';
+import { messagesService } from '../../services/messages.service';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 
@@ -35,21 +36,28 @@ export function ClubCommunicationScreen() {
   const { tokens } = useClubTheme();
   const [channel, setChannel] = useState<Channel>('hub');
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
   const loadUnread = useCallback(async () => {
     if (!profile?.uid) {
       setUnreadNotifications(0);
+      setUnreadMessages(0);
       return;
     }
     try {
-      const list = await staffNotificationsService.listForUser(profile.uid, 40);
+      const [list, threads] = await Promise.all([
+        staffNotificationsService.listForUser(profile.uid, 40),
+        messagesService.listThreads(profile.uid, 40),
+      ]);
       const filtered = ws.clubId
         ? list.filter((n) => !n.club_id || n.club_id === ws.clubId)
         : list;
       setUnreadNotifications(filtered.filter((n) => !n.read_at).length);
+      setUnreadMessages(threads.filter((t) => t.unread).length);
     } catch {
       setUnreadNotifications(0);
+      setUnreadMessages(0);
     }
   }, [profile?.uid, ws.clubId]);
 
@@ -62,8 +70,9 @@ export function ClubCommunicationScreen() {
       buildClubCommHubTiles({
         pendingMemberships: ws.pendingMemberships,
         unreadNotifications,
+        unreadMessages,
       }),
-    [ws.pendingMemberships, unreadNotifications],
+    [ws.pendingMemberships, unreadNotifications, unreadMessages],
   );
 
   const subtitle = useMemo(
@@ -71,8 +80,9 @@ export function ClubCommunicationScreen() {
       resolveClubCommSubtitle({
         pendingMemberships: ws.pendingMemberships,
         unreadNotifications,
+        unreadMessages,
       }),
-    [ws.pendingMemberships, unreadNotifications],
+    [ws.pendingMemberships, unreadNotifications, unreadMessages],
   );
 
   const onTile = (id: ClubCommTileId) => {
@@ -153,9 +163,11 @@ export function ClubCommunicationScreen() {
 
         <ClubCommInboxHero
           subtitle={
-            unreadNotifications > 0
-              ? `${unreadNotifications} alerte${unreadNotifications > 1 ? 's' : ''} · fils staff & effectif`
-              : 'Fils staff, effectif et parents — messagerie ProDay'
+            unreadMessages > 0
+              ? `${unreadMessages} conversation${unreadMessages > 1 ? 's' : ''} non lue${unreadMessages > 1 ? 's' : ''} · ouvrir la messagerie`
+              : unreadNotifications > 0
+                ? `${unreadNotifications} alerte${unreadNotifications > 1 ? 's' : ''} · fils staff & effectif`
+                : 'Fils staff, effectif et parents — messagerie ProDay'
           }
           onOpenInbox={() => setChannel('inbox')}
           onOpenNotifications={() => shellNav?.requestNav('notifications')}

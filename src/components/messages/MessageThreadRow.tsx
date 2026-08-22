@@ -10,6 +10,8 @@ import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
+import { useTranslation } from '../../context/LocaleContext';
+import { formatThreadPreview } from '../../utils/messagesInboxModel';
 
 function formatThreadTime(date: Date): string {
   const now = new Date();
@@ -38,6 +40,7 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
   variant,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const coach = variant === 'coach';
   const joueur = variant === 'joueur';
   const coachTokens = useCoachTokens();
@@ -49,6 +52,8 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
   const isTeamGroup = thread.thread_kind === 'team_group';
   const initial = thread.participant_name.charAt(0).toUpperCase();
   const unread = Boolean(thread.unread);
+  const preview = formatThreadPreview(thread.last_message);
+  const unreadLabel = t('messages.inbox.unreadBadge');
 
   if (coach) {
     return (
@@ -78,11 +83,16 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
               style={[styles.coachPreview, unread && styles.previewUnread]}
               numberOfLines={1}
             >
-              {thread.last_message || 'Nouvelle conversation'}
+              {preview}
             </Text>
             {kineLabel ? (
               <View style={styles.coachTag}>
                 <Text style={styles.coachTagText}>{kineLabel}</Text>
+              </View>
+            ) : null}
+            {unread ? (
+              <View style={styles.coachUnreadPill}>
+                <Text style={styles.coachUnreadPillText}>{unreadLabel}</Text>
               </View>
             ) : null}
           </View>
@@ -132,11 +142,16 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
               style={[styles.joueurPreview, unread && styles.previewUnread]}
               numberOfLines={2}
             >
-              {thread.last_message || 'Nouvelle conversation'}
+              {preview}
             </Text>
             {kineLabel ? (
               <View style={[styles.joueurTag, { backgroundColor: joueurTheme.surface }]}>
                 <Text style={[styles.joueurTagText, { color: accent }]}>{kineLabel}</Text>
+              </View>
+            ) : null}
+            {unread ? (
+              <View style={[styles.joueurUnreadPill, { backgroundColor: joueurTheme.surface }]}>
+                <Text style={[styles.joueurUnreadPillText, { color: accent }]}>{unreadLabel}</Text>
               </View>
             ) : null}
           </View>
@@ -219,12 +234,17 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
             ]}
             numberOfLines={2}
           >
-            {thread.last_message || 'Nouvelle conversation'}
+            {preview}
           </Text>
 
           {kineLabel ? (
             <View style={[styles.tag, { backgroundColor: colors.accentSoft }]}>
               <Text style={[styles.tagText, { color: colors.accent }]}>{kineLabel}</Text>
+            </View>
+          ) : null}
+          {unread ? (
+            <View style={[styles.unreadPill, { backgroundColor: colors.accentSoft }]}>
+              <Text style={[styles.unreadPillText, { color: colors.accent }]}>{unreadLabel}</Text>
             </View>
           ) : null}
         </View>
@@ -324,6 +344,20 @@ function createStyles(
       letterSpacing: 0.3,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
+    unreadPill: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+    },
+    unreadPillText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.2,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
     trail: {
       alignItems: 'center',
       justifyContent: 'center',
@@ -396,6 +430,21 @@ function createStyles(
       color: coachTokens.accent,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
+    coachUnreadPill: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+      backgroundColor: coachTokens.accent,
+    },
+    coachUnreadPillText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      color: '#fff',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
     coachDot: {
       width: 10,
       height: 10,
@@ -457,6 +506,20 @@ function createStyles(
       fontFamily: fontFamily.extrabold,
       fontSize: 10,
       fontWeight: '800',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurUnreadPill: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+    },
+    joueurUnreadPillText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.2,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });

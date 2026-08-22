@@ -62,26 +62,32 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
 
   const joueurTitles = useMemo(() => {
     if (!joueurLive || !joueurSession) return null;
+    const unreadHint =
+      props.unreadCount > 0
+        ? `${props.unreadCount} non lu${props.unreadCount > 1 ? 's' : ''}`
+        : null;
     if (joueurSession.ageGroup === 'youth') {
       return {
         caption: 'Messages',
         title: 'Discute',
-        subtitle: 'Club, coach, potes — en sécurité.',
+        subtitle: unreadHint ? `${unreadHint} · Club, coach, potes.` : 'Club, coach, potes — en sécurité.',
       };
     }
     if (joueurSession.ageGroup === 'teen') {
       return {
         caption: 'Inbox',
         title: 'Messages',
-        subtitle: 'Réseau, club, staff.',
+        subtitle: unreadHint ? `${unreadHint} · Réseau, club, staff.` : 'Réseau, club, staff.',
       };
     }
     return {
       caption: 'Messages',
       title: 'Messagerie',
-      subtitle: 'Club, réseau, opportunités.',
+      subtitle: unreadHint
+        ? `${unreadHint} · Club, réseau, opportunités.`
+        : 'Club, réseau, opportunités.',
     };
-  }, [joueurLive, joueurSession]);
+  }, [joueurLive, joueurSession, props.unreadCount]);
 
   const subtitle = useMemo(() => {
     if (joueurTitles) return joueurTitles.subtitle;

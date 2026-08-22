@@ -20,11 +20,15 @@ export type ClubCommTile = {
 export function buildClubCommHubTiles(input: {
   pendingMemberships: number;
   unreadNotifications: number;
+  unreadMessages?: number;
 }): ClubCommTile[] {
+  const unreadMessages = input.unreadMessages ?? 0;
   const inboxHint =
-    input.unreadNotifications > 0
-      ? `${input.unreadNotifications} alerte${input.unreadNotifications > 1 ? 's' : ''} · ouvrir la messagerie`
-      : 'Fils staff, effectif et parents';
+    unreadMessages > 0
+      ? `${unreadMessages} conversation${unreadMessages > 1 ? 's' : ''} non lue${unreadMessages > 1 ? 's' : ''}`
+      : input.unreadNotifications > 0
+        ? `${input.unreadNotifications} alerte${input.unreadNotifications > 1 ? 's' : ''} · ouvrir la messagerie`
+        : 'Fils staff, effectif et parents';
 
   const membershipHint =
     input.pendingMemberships > 0
@@ -78,7 +82,15 @@ export function buildClubCommHubTiles(input: {
 export function resolveClubCommSubtitle(input: {
   pendingMemberships: number;
   unreadNotifications: number;
+  unreadMessages?: number;
 }): string {
+  const unreadMessages = input.unreadMessages ?? 0;
+  if (unreadMessages > 0 && input.pendingMemberships > 0) {
+    return `${unreadMessages} msg non lu${unreadMessages > 1 ? 's' : ''} · ${input.pendingMemberships} adhésion${input.pendingMemberships > 1 ? 's' : ''}`;
+  }
+  if (unreadMessages > 0) {
+    return `${unreadMessages} conversation${unreadMessages > 1 ? 's' : ''} non lue${unreadMessages > 1 ? 's' : ''}`;
+  }
   if (input.unreadNotifications > 0 && input.pendingMemberships > 0) {
     return `${input.unreadNotifications} alerte${input.unreadNotifications > 1 ? 's' : ''} · ${input.pendingMemberships} adhésion${input.pendingMemberships > 1 ? 's' : ''}`;
   }

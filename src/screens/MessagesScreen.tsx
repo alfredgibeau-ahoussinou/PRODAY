@@ -32,6 +32,7 @@ import {
   type NetworkSheetAction,
 } from '../components/messages/MessagesNetworkSheet';
 import { PushScreenTransition } from '../components/motion';
+import { sortThreadsForInbox } from '../utils/messagesInboxModel';
 
 export const MessagesScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -128,7 +129,7 @@ export const MessagesScreen: React.FC = () => {
 
   const filteredThreads = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return threads.filter((t) => {
+    const filtered = threads.filter((t) => {
       if (threadFilter === 'unread' && !t.unread) return false;
       if (threadFilter === 'care' && !t.thread_kind?.startsWith('physio')) return false;
       if (threadFilter === 'requests') {
@@ -145,6 +146,7 @@ export const MessagesScreen: React.FC = () => {
         (t.last_message?.toLowerCase().includes(q) ?? false)
       );
     });
+    return sortThreadsForInbox(filtered);
   }, [threads, search, threadFilter]);
 
   const resolveRequest = useCallback(

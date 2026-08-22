@@ -22,6 +22,16 @@ describe('clubCommunicationModel', () => {
     expect(tiles[5].hint).toContain('adhésion');
   });
 
+  it('priorise les messages non lus sur la tuile messagerie', () => {
+    const tiles = buildClubCommHubTiles({
+      pendingMemberships: 0,
+      unreadNotifications: 5,
+      unreadMessages: 2,
+    });
+    expect(tiles[0].hint).toContain('2 conversation');
+    expect(tiles[0].hint).toContain('non lue');
+  });
+
   it('résume le sous-titre header sans jargon', () => {
     expect(
       resolveClubCommSubtitle({ pendingMemberships: 0, unreadNotifications: 0 }),
@@ -29,5 +39,8 @@ describe('clubCommunicationModel', () => {
     expect(
       resolveClubCommSubtitle({ pendingMemberships: 1, unreadNotifications: 2 }),
     ).toContain('2 alertes');
+    expect(
+      resolveClubCommSubtitle({ pendingMemberships: 0, unreadNotifications: 0, unreadMessages: 3 }),
+    ).toContain('3 conversation');
   });
 });

@@ -23,6 +23,7 @@ export interface MessagesInboxHeaderProps {
   threadFilter: MessagesThreadFilter;
   onThreadFilterChange: (value: MessagesThreadFilter) => void;
   resultCount: number;
+  unreadCount?: number;
   loading: boolean;
   variant?: 'default' | 'coach' | 'joueur';
 }
@@ -33,6 +34,7 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   threadFilter,
   onThreadFilterChange,
   resultCount,
+  unreadCount = 0,
   loading,
   variant,
 }) => {
@@ -58,8 +60,11 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
 
   const threadCountLabel = useMemo(() => {
     if (loading) return t('common.loading');
+    if (unreadCount > 0) {
+      return t('messages.inbox.threadCountWithUnread', { n: resultCount, u: unreadCount });
+    }
     return t('messages.inbox.threadCount', { n: resultCount });
-  }, [loading, resultCount, t]);
+  }, [loading, resultCount, unreadCount, t]);
 
   return (
     <View style={styles.block}>
