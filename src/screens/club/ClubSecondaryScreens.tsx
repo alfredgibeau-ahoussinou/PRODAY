@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Switch, View } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import {
   ClubActionRow,
@@ -183,6 +184,7 @@ export function ClubEquipmentScreen() {
 
 export function ClubNotificationsScreen() {
   const profile = useSessionProfile();
+  const shellNav = useClubShellNav();
   const ws = useClubWorkspace();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
@@ -220,6 +222,8 @@ export function ClubNotificationsScreen() {
     }
   };
 
+  const unread = items.filter((n) => !n.read_at).length;
+
   if (loading && items.length === 0) {
     return (
       <View style={styles.root}>
@@ -231,25 +235,44 @@ export function ClubNotificationsScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={loading} onRefresh={() => void load()}>
-        <ClubBrandHeader title="Notifications" subtitle="Centre d’alertes club" />
+        <ClubBrandHeader
+          title="Notifications"
+          subtitle={
+            unread > 0
+              ? `${unread} non lue${unread > 1 ? 's' : ''} · centre d’alertes`
+              : 'Centre d’alertes club'
+          }
+        />
         {items.length === 0 ? (
           <ClubEmptyState
-            title="Aucune alerte"
+            title="Aucune alerte pour l’instant"
             body="Adhésions, invitations inter-clubs, absences et retards apparaîtront ici."
+            actionLabel="Ouvrir Communication"
+            onAction={() => shellNav?.requestNav('communication')}
             icon="notifications"
           />
         ) : (
-          <ClubSectionCard title={`${items.length} alerte(s)`}>
-            {items.map((n) => (
-              <ClubActionRow
-                key={n.id}
-                icon="notifications"
-                label={n.title || 'Alerte'}
-                hint={`${n.body}${n.read_at ? '' : ' · Non lue'} · ${n.created_at.toLocaleString('fr-FR')}`}
-                onPress={() => void markRead(n)}
-              />
-            ))}
-          </ClubSectionCard>
+          <>
+            <ClubSectionCard
+              title={unread > 0 ? `${unread} non lue${unread > 1 ? 's' : ''}` : 'Toutes lues'}
+            >
+              {items.map((n) => (
+                <ClubActionRow
+                  key={n.id}
+                  icon="notifications"
+                  label={n.title || 'Alerte'}
+                  hint={`${n.body}${n.read_at ? '' : ' · Non lue'} · ${n.created_at.toLocaleString('fr-FR')}`}
+                  onPress={() => void markRead(n)}
+                />
+              ))}
+            </ClubSectionCard>
+            <ClubActionRow
+              icon="chat"
+              label="Messagerie club"
+              hint="Fils staff & effectif"
+              onPress={() => shellNav?.requestNav('communication')}
+            />
+          </>
         )}
       </ClubChapterScroll>
     </View>
