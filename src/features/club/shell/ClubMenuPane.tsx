@@ -15,7 +15,7 @@ type Props = {
   items?: ClubNavResolvedItem[];
 };
 
-/** Hub Menu — catalogue d’outils par jobs (Fréquents + sections repliables). */
+/** Hub Outils — catalogue d’outils par jobs (Fréquents + sections repliables). */
 export function ClubMenuPane({ items = [] }: Props) {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
@@ -40,7 +40,7 @@ export function ClubMenuPane({ items = [] }: Props) {
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubBrandHeader title="Menu" subtitle="Catalogue d’outils du club" />
+        <ClubBrandHeader title="Outils" subtitle="Catalogue d’outils du club" />
         {shellNav?.openPresident ? (
           <PressableSpring
             onPress={() => shellNav.openPresident?.()}

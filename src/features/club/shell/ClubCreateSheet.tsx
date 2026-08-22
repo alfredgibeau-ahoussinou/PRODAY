@@ -20,10 +20,10 @@ import {
 import { ClubText } from '../ui/clubUi';
 import { useClubTheme } from './ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
+import { clubChrome, clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 
 /** Aligné avec ClubCopilotFab — dock + FAB 56. */
-const FAB_BOTTOM = 78;
+const FAB_BOTTOM = clubChrome.createFabBottom;
 const EDGE_INSET = clubSpace.md; // 12
 
 type Props = {

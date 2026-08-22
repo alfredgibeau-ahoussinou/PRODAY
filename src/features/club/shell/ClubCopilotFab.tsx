@@ -4,14 +4,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import { useClubTheme } from './ClubThemeContext';
-import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
+import { clubChrome, clubRadius, clubSpace } from '../theme/clubDesignSystem';
 
 type Props = {
   onPress: () => void;
 };
 
 /** Hauteur approx. FAB CRÉER (56) + marge — Copilote reste au-dessus, secondaire. */
-const CREATE_FAB_BOTTOM = 78;
+const CREATE_FAB_BOTTOM = clubChrome.createFabBottom;
 const CREATE_FAB_HEIGHT = 56;
 const STACK_GAP = 14;
 const EDGE_INSET = clubSpace.md; // 12

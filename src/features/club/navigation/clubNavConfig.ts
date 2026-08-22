@@ -6,6 +6,7 @@ import type { MainTabId } from '../../../navigation/mainTabConfig';
 /**
  * Navigation Pôle Club v1 — gestion amateur simple.
  * Mobile : 5 onglets + FAB « + CRÉER » · Desktop : sidebar complète.
+ * Dock : Accueil · Équipes · Matchs · Outils · Club (labels ≥11, actif émeraude).
  */
 
 export type ClubNavFolderId =
@@ -61,7 +62,7 @@ export type ClubNavFolder = {
   items: ClubNavItem[];
 };
 
-/** Onglets barre mobile (5 max) — le reste via Menu / sidebar. */
+/** Onglets barre mobile (5 max) — le reste via Outils / sidebar. */
 export const CLUB_PRIMARY_NAV_IDS: ClubNavItemId[] = [
   'today',
   'teams',
@@ -70,7 +71,7 @@ export const CLUB_PRIMARY_NAV_IDS: ClubNavItemId[] = [
   'club',
 ];
 
-/** Destinations secondaires — surlignent l’onglet Menu. */
+/** Destinations secondaires — surlignent l’onglet Outils. */
 export const CLUB_MENU_DEST_IDS: ClubNavItemId[] = [
   'players',
   'coaches',
@@ -235,10 +236,10 @@ const clubItem: ClubNavItem = {
 
 const plusItem: ClubNavItem = {
   id: 'plus',
-  label: 'Menu',
-  shortLabel: 'Menu',
-  hint: 'Catalogue d’outils',
-  icon: 'hamburger',
+  label: 'Outils',
+  shortLabel: 'Outils',
+  hint: 'Catalogue d’outils du club',
+  icon: 'tune',
   tab: 'home',
 };
 

@@ -113,6 +113,13 @@ export const clubChrome = {
   tabletBreakpoint: 680,
   headerHeight: 56,
   tabBarIcon: 22,
+  /** Hauteur rail dock (hors safe area) — labels ≥11 + pill. */
+  dockRailHeight: 56,
+  /**
+   * Offset FAB Créer depuis le bas du pane (au-dessus du dock).
+   * Laisse de l’air entre le dock et la pastille bleue 56.
+   */
+  createFabBottom: 78,
 } as const;
 
 /** Recettes de surface (cartes, chrome). */

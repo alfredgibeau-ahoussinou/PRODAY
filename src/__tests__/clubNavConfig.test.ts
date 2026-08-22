@@ -51,7 +51,7 @@ describe('clubNavConfig', () => {
     expect(tabFromClubNav('matches')).toBe('matchs');
   });
 
-  it('surligne Menu pour les destinations secondaires', () => {
+  it('surligne Outils pour les destinations secondaires', () => {
     expect(primaryTabForClubNav('players')).toBe('plus');
     expect(primaryTabForClubNav('trainings')).toBe('plus');
     expect(primaryTabForClubNav('assistant')).toBe('plus');
@@ -61,6 +61,16 @@ describe('clubNavConfig', () => {
     expect(CLUB_MENU_DEST_IDS).toContain('notifications');
     expect(CLUB_MENU_DEST_IDS).toContain('permissions');
     expect(canonicalizeClubNav('players')).toBe('players');
+    expect(findClubNavItem('plus')?.shortLabel).toBe('Outils');
+    expect(findClubNavItem('plus')?.icon).toBe('tune');
+  });
+
+  it('expose les labels dock Accueil · Équipes · Matchs · Outils · Club', () => {
+    const labels = CLUB_PRIMARY_NAV_IDS.map((id) => {
+      const item = findClubNavItem(id)!;
+      return item.shortLabel ?? item.label;
+    });
+    expect(labels).toEqual(['Accueil', 'Équipes', 'Matchs', 'Outils', 'Club']);
   });
 
   it('conserve plus / outils lors de la sync tab', () => {
