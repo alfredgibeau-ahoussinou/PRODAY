@@ -43,13 +43,13 @@ export function buildPresidentFinanceSnapshot(input: {
     return {
       ...input,
       label,
-      hint: 'Aucun mouvement encore — ouvrez Finances pour démarrer le suivi.',
+      hint: 'Aucun mouvement — enregistrez cotisations et dépenses (manuel, pas de SEPA auto).',
     };
   }
   return {
     ...input,
     label,
-    hint: `${formatPresidentEur(input.recettesEur)} en recettes · ${formatPresidentEur(input.depensesEur)} en dépenses`,
+    hint: `${formatPresidentEur(input.recettesEur)} en recettes · ${formatPresidentEur(input.depensesEur)} en dépenses · ledger cotisations`,
   };
 }
 

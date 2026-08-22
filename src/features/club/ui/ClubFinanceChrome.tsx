@@ -13,6 +13,7 @@ import { ClubText } from './clubUi';
 import type { ClubFinanceLedgerRowModel } from './clubFinanceModel';
 import { formatClubFinanceEur } from './clubFinanceModel';
 import type { ClubFinanceTotals } from '../../../models/ClubFinanceEntry';
+import type { ClubCotisationSummary, CotisationCoverageRow } from './clubFinanceModel';
 
 /** Hero solde du jour — pas de grille KPI SaaS. */
 export function ClubFinanceSoldeHero({
@@ -117,6 +118,13 @@ export function ClubFinanceLedgerRow({
           <ClubText variant="caption" muted numberOfLines={2}>
             {model.meta}
           </ClubText>
+          {model.statusLabel ? (
+            <View style={[styles.statusPill, { backgroundColor: tokens.successSoft }]}>
+              <ClubText variant="caption" style={{ color: tokens.success, fontWeight: '800' }}>
+                {model.statusLabel}
+              </ClubText>
+            </View>
+          ) : null}
         </View>
         <ClubText
           variant="body"
@@ -132,6 +140,137 @@ export function ClubFinanceLedgerRow({
     </AnimatedEntrance>
   );
 }
+
+/** Bandeau cotisations + couverture adhérents (payé / non enregistré). */
+export function ClubFinanceCotisationPanel({
+  summary,
+  paid,
+  unrecorded,
+  onAddCotisation,
+  onOpenPlayers,
+}: {
+  summary: ClubCotisationSummary;
+  paid: CotisationCoverageRow[];
+  unrecorded: CotisationCoverageRow[];
+  onAddCotisation: () => void;
+  onOpenPlayers?: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => cotisStyles(tokens), [tokens]);
+
+  return (
+    <View style={styles.wrap}>
+      <View style={styles.head}>
+        <ClubText variant="label" muted style={styles.headLabel}>
+          Cotisations
+        </ClubText>
+        <ClubText variant="caption" muted>
+          {summary.label}
+        </ClubText>
+      </View>
+
+      {paid.length === 0 && unrecorded.length === 0 ? (
+        <ClubText variant="body" muted style={styles.empty}>
+          Enregistrez une cotisation avec le nom de l’adhérent pour suivre qui a payé.
+        </ClubText>
+      ) : null}
+
+      {paid.slice(0, 5).map((row) => (
+        <View key={row.key} style={styles.row}>
+          <View style={[styles.dot, { backgroundColor: tokens.success }]} />
+          <View style={styles.rowCopy}>
+            <ClubText variant="body" style={{ fontWeight: '700' }} numberOfLines={1}>
+              {row.name}
+            </ClubText>
+            <ClubText variant="caption" muted numberOfLines={1}>
+              {row.hint}
+            </ClubText>
+          </View>
+          <ClubText variant="caption" style={{ color: tokens.success, fontWeight: '800' }}>
+            {row.statusLabel}
+          </ClubText>
+        </View>
+      ))}
+
+      {unrecorded.slice(0, 5).map((row) => (
+        <View key={row.key} style={styles.row}>
+          <View style={[styles.dot, { backgroundColor: tokens.warning }]} />
+          <View style={styles.rowCopy}>
+            <ClubText variant="body" style={{ fontWeight: '700' }} numberOfLines={1}>
+              {row.name}
+            </ClubText>
+            <ClubText variant="caption" muted numberOfLines={1}>
+              {row.hint}
+            </ClubText>
+          </View>
+          <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '800' }}>
+            {row.statusLabel}
+          </ClubText>
+        </View>
+      ))}
+
+      {unrecorded.length > 5 ? (
+        <ClubText variant="caption" muted>
+          +{unrecorded.length - 5} adhérent{unrecorded.length - 5 > 1 ? 's' : ''} sans écriture
+        </ClubText>
+      ) : null}
+
+      <View style={styles.actions}>
+        <PressableSpring onPress={onAddCotisation} scaleTo={0.97} haptic style={styles.cta}>
+          <ClubText variant="caption" style={styles.ctaLabel}>
+            Enregistrer une cotisation
+          </ClubText>
+        </PressableSpring>
+        {onOpenPlayers ? (
+          <PressableSpring onPress={onOpenPlayers} scaleTo={0.97} haptic style={styles.ghost}>
+            <ClubText variant="caption" style={{ color: tokens.foreground, fontWeight: '700' }}>
+              Voir les joueurs
+            </ClubText>
+          </PressableSpring>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+const cotisStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    wrap: {
+      gap: clubSpace.sm,
+      padding: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.soft,
+    },
+    head: { gap: 2 },
+    headLabel: { letterSpacing: 1.05 },
+    empty: { lineHeight: 20 },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+      paddingVertical: 4,
+    },
+    dot: { width: 8, height: 8, borderRadius: 4 },
+    rowCopy: { flex: 1, minWidth: 0, gap: 1 },
+    actions: { flexDirection: 'row', flexWrap: 'wrap', gap: clubSpace.sm, marginTop: 4 },
+    cta: {
+      backgroundColor: tokens.accent,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: clubRadius.pill,
+    },
+    ctaLabel: { color: tokens.onAccent, fontWeight: '800' },
+    ghost: {
+      borderWidth: 1,
+      borderColor: tokens.borderStrong,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: clubRadius.pill,
+    },
+  });
 
 const heroStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
@@ -219,4 +358,11 @@ const rowStyles = (tokens: ClubThemeTokens) =>
       justifyContent: 'center',
     },
     col: { flex: 1, minWidth: 0, gap: 2 },
+    statusPill: {
+      alignSelf: 'flex-start',
+      marginTop: 2,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: clubRadius.pill,
+    },
   });

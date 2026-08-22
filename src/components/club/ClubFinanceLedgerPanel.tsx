@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubFinance } from '../../features/club/hooks/useClubFinance';
+import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import {
@@ -22,11 +23,21 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
-import { ClubFinanceLedgerRow, ClubFinanceSoldeHero } from '../../features/club/ui/ClubFinanceChrome';
+import {
+  ClubFinanceCotisationPanel,
+  ClubFinanceLedgerRow,
+  ClubFinanceSoldeHero,
+} from '../../features/club/ui/ClubFinanceChrome';
 import {
   buildClubFinanceLedgerRow,
+  buildCotisationCoverage,
+  clubFinanceHonestyNote,
+  defaultCotisationLabel,
+  filterClubFinanceEntries,
   formatClubFinanceEur,
+  matchMemberFromName,
   resolveClubFinanceSubtitle,
+  type ClubFinanceLedgerFilter,
 } from '../../features/club/ui/clubFinanceModel';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubRadius, clubShadow, clubSpace } from '../../features/club/theme/clubDesignSystem';
@@ -46,16 +57,24 @@ const TYPE_OPTIONS: { id: ClubFinanceEntryType; label: string }[] = [
   { id: 'autre', label: 'Autre' },
 ];
 
+const FILTER_OPTIONS: { id: ClubFinanceLedgerFilter; label: string }[] = [
+  { id: 'all', label: 'Tout' },
+  { id: 'cotisation', label: 'Cotisations' },
+  { id: 'depense', label: 'Dépenses' },
+  { id: 'recette', label: 'Recettes' },
+];
+
 type Props = {
   clubId: string | null;
 };
 
 /**
- * Ledger club — solde hero, écritures lisibles, ajout cotisation / dépense / recette.
+ * Ledger club — solde, couverture cotisations, écritures, ajout honnête (pas de SEPA auto).
  */
 export function ClubFinanceLedgerPanel({ clubId }: Props) {
   const profile = useSessionProfile();
   const shellNav = useClubShellNav();
+  const ws = useClubWorkspace();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { entries, totals, loading, refreshing, refresh, create, softDelete } =
@@ -67,16 +86,45 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
   const [label, setLabel] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Licence');
+  const [memberName, setMemberName] = useState('');
   const [dateStr, setDateStr] = useState(() => new Date().toISOString().slice(0, 10));
+  const [ledgerFilter, setLedgerFilter] = useState<ClubFinanceLedgerFilter>('all');
 
-  const ledgerRows = useMemo(() => entries.map(buildClubFinanceLedgerRow), [entries]);
-  const subtitle = useMemo(() => resolveClubFinanceSubtitle(totals), [totals]);
+  const players = useMemo(
+    () =>
+      (ws.players ?? []).map((p) => ({
+        uid: p.uid,
+        display_name: p.display_name,
+      })),
+    [ws.players],
+  );
+
+  const coverage = useMemo(
+    () => buildCotisationCoverage({ playerMembers: players, entries }),
+    [players, entries],
+  );
+
+  const filteredEntries = useMemo(
+    () => filterClubFinanceEntries(entries, ledgerFilter),
+    [entries, ledgerFilter],
+  );
+  const ledgerRows = useMemo(
+    () => filteredEntries.map(buildClubFinanceLedgerRow),
+    [filteredEntries],
+  );
+  const subtitle = useMemo(() => {
+    if (coverage.summary.count > 0) {
+      return `${coverage.summary.label} · solde ${formatClubFinanceEur(totals.solde_eur)}`;
+    }
+    return resolveClubFinanceSubtitle(totals);
+  }, [coverage.summary, totals]);
 
   const resetForm = useCallback(() => {
     setType('cotisation');
     setLabel('');
     setAmount('');
     setCategory('Licence');
+    setMemberName('');
     setDateStr(new Date().toISOString().slice(0, 10));
   }, []);
 
@@ -84,6 +132,17 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
     (preset?: ClubFinanceEntryType) => {
       resetForm();
       if (preset) setType(preset);
+      setFormOpen(true);
+    },
+    [resetForm],
+  );
+
+  const openCotisationForMember = useCallback(
+    (name: string) => {
+      resetForm();
+      setType('cotisation');
+      setMemberName(name);
+      setLabel(defaultCotisationLabel(name));
       setFormOpen(true);
     },
     [resetForm],
@@ -99,7 +158,10 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
       Alert.alert('Montant', 'Saisissez un montant positif.');
       return;
     }
-    if (!label.trim()) {
+    const resolvedLabel =
+      label.trim() ||
+      (type === 'cotisation' ? defaultCotisationLabel(memberName) : '');
+    if (!resolvedLabel) {
       Alert.alert('Libellé', 'Indiquez un libellé (ex. Cotisation U15 — Martin).');
       return;
     }
@@ -108,17 +170,23 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
       Alert.alert('Date', 'Date invalide (AAAA-MM-JJ).');
       return;
     }
+    const matched =
+      type === 'cotisation' && memberName.trim()
+        ? matchMemberFromName(memberName, players)
+        : null;
     setSaving(true);
     try {
       await create({
         club_id: clubId,
         type,
         amount_eur: amountEur,
-        label: label.trim(),
+        label: resolvedLabel,
         category: category.trim() || 'Divers',
         entry_date: entryDate,
         created_by_uid: profile.uid,
         created_by_name: profile.display_name,
+        member_uid: matched?.uid ?? null,
+        member_name: memberName.trim() || matched?.display_name || null,
       });
       setFormOpen(false);
       resetForm();
@@ -135,6 +203,8 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
     create,
     dateStr,
     label,
+    memberName,
+    players,
     profile,
     resetForm,
     type,
@@ -194,6 +264,14 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
 
         <ClubFinanceSoldeHero totals={totals} onAdd={() => openForm()} />
 
+        <ClubFinanceCotisationPanel
+          summary={coverage.summary}
+          paid={coverage.paid}
+          unrecorded={coverage.unrecorded}
+          onAddCotisation={() => openForm('cotisation')}
+          onOpenPlayers={() => shellNav?.requestNav('players')}
+        />
+
         <View style={styles.quickAdd}>
           <PressableSpring
             onPress={() => openForm('cotisation')}
@@ -230,20 +308,34 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
           </PressableSpring>
         </View>
 
+        <ClubSegmentedControl
+          options={FILTER_OPTIONS}
+          value={ledgerFilter}
+          onChange={setLedgerFilter}
+        />
+
         <View style={styles.section}>
           <View style={styles.sectionHead}>
             <ClubText variant="label" muted style={styles.sectionLabel}>
               Ledger
             </ClubText>
             <ClubText variant="caption" muted>
-              {totals.count}
+              {filteredEntries.length}
             </ClubText>
           </View>
 
-          {entries.length === 0 ? (
+          {filteredEntries.length === 0 ? (
             <ClubEmptyState
-              title="Aucune écriture pour l’instant"
-              body="Ajoutez une cotisation, une dépense ou une recette pour démarrer le suivi club."
+              title={
+                ledgerFilter === 'cotisation'
+                  ? 'Aucune cotisation enregistrée'
+                  : 'Aucune écriture pour l’instant'
+              }
+              body={
+                ledgerFilter === 'cotisation'
+                  ? 'Ajoutez une cotisation avec le nom de l’adhérent pour marquer un paiement reçu.'
+                  : 'Ajoutez une cotisation, une dépense ou une recette pour démarrer le suivi club.'
+              }
               actionLabel="Ajouter une cotisation"
               onAction={() => openForm('cotisation')}
               icon="bag"
@@ -251,7 +343,7 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
           ) : (
             <View style={styles.list}>
               {ledgerRows.map((row, index) => {
-                const entry = entries.find((e) => e.id === row.id);
+                const entry = filteredEntries.find((e) => e.id === row.id);
                 return (
                   <ClubFinanceLedgerRow
                     key={row.id}
@@ -264,6 +356,28 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
             </View>
           )}
         </View>
+
+        {coverage.unrecorded.length > 0 && ledgerFilter !== 'depense' ? (
+          <View style={styles.section}>
+            <ClubText variant="label" muted style={styles.sectionLabel}>
+              Adhérents sans écriture
+            </ClubText>
+            <ClubText variant="caption" muted>
+              Pas d’impayé inventé — simplement aucune cotisation au ledger.
+            </ClubText>
+            <View style={styles.list}>
+              {coverage.unrecorded.slice(0, 6).map((row) => (
+                <ClubActionRow
+                  key={row.key}
+                  icon="person"
+                  label={row.name}
+                  hint={row.hint}
+                  onPress={() => openCotisationForMember(row.name)}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <ClubText variant="label" muted style={styles.sectionLabel}>
@@ -278,6 +392,12 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
                 onPress={() => shellNav.openPresident?.()}
               />
             ) : null}
+            <ClubActionRow
+              icon="people"
+              label="Joueurs"
+              hint="Effectif adhérents"
+              onPress={() => shellNav?.requestNav('players')}
+            />
             <ClubActionRow
               icon="gift"
               label="Sponsoring"
@@ -294,7 +414,7 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
         </View>
 
         <ClubText variant="caption" muted style={styles.footer}>
-          Touchez une écriture pour la retirer. Les objectifs sponsors restent dans Sponsoring.
+          {clubFinanceHonestyNote()} Touchez une écriture pour la retirer.
         </ClubText>
       </ClubChapterScroll>
 
@@ -314,6 +434,28 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
         title="Nouvelle écriture"
       >
         <ClubSegmentedControl options={TYPE_OPTIONS} value={type} onChange={setType} />
+        {type === 'cotisation' ? (
+          <>
+            <ClubText variant="caption" muted style={styles.fieldLabel}>
+              Adhérent (nom)
+            </ClubText>
+            <TextInput
+              value={memberName}
+              onChangeText={(v) => {
+                setMemberName(v);
+                if (!label.trim() || label.startsWith('Cotisation')) {
+                  setLabel(defaultCotisationLabel(v));
+                }
+              }}
+              placeholder="Ex. Dupont"
+              placeholderTextColor={tokens.muted}
+              style={styles.input}
+            />
+            <ClubText variant="caption" muted>
+              Rattache l’encaissement à un joueur du club si le nom correspond.
+            </ClubText>
+          </>
+        ) : null}
         <ClubText variant="caption" muted style={styles.fieldLabel}>
           Libellé
         </ClubText>
@@ -375,6 +517,11 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
           placeholderTextColor={tokens.muted}
           style={styles.input}
         />
+        {type === 'cotisation' ? (
+          <ClubText variant="caption" muted style={{ marginTop: clubSpace.sm }}>
+            {clubFinanceHonestyNote()}
+          </ClubText>
+        ) : null}
         <View style={styles.formActions}>
           <ClubButton
             label="Annuler"
@@ -433,6 +580,7 @@ const createStyles = (tokens: ClubThemeTokens) =>
       textAlign: 'center',
       paddingVertical: clubSpace.sm,
       paddingBottom: clubSpace.xxxl,
+      lineHeight: 18,
     },
     fab: {
       position: 'absolute',

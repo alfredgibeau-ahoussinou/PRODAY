@@ -38,6 +38,10 @@ import {
   isClubFinanceExpenseType,
   type ClubFinanceEntryType,
 } from '../../models/ClubFinanceEntry';
+import {
+  clubFinanceHonestyNote,
+  summarizeClubCotisations,
+} from '../../features/club/ui/clubFinanceModel';
 import { PressableSpring } from '../../components/motion';
 import type { PresidentThemeTokens } from '../../features/president/theme/presidentTokens';
 
@@ -225,6 +229,7 @@ const FINANCE_TYPE_OPTIONS: { id: ClubFinanceEntryType; label: string }[] = [
 export function PresidentFinanceScreen() {
   const ws = useClubWorkspace();
   const profile = useSessionProfile();
+  const shellNav = usePresidentShellNav();
   const { tokens } = usePresidentTheme();
   const styles = useMemo(() => financeStyles(tokens), [tokens]);
   const { goals, loading: goalsLoading } = usePresidentFunding(ws.clubId);
@@ -245,6 +250,7 @@ export function PresidentFinanceScreen() {
   const [dateStr, setDateStr] = useState(() => todayFinanceDateInput());
 
   const loading = goalsLoading || ledgerLoading;
+  const cotisationSummary = useMemo(() => summarizeClubCotisations(entries), [entries]);
 
   const resetForm = useCallback(() => {
     setType('cotisation');
@@ -299,13 +305,13 @@ export function PresidentFinanceScreen() {
     <PresidentSectionScreen
       eyebrow="Finances"
       title="Direction financière"
-      subtitle="Ledger club partagé (cotisations / dépenses) et objectifs de financement sponsors."
+      subtitle="Ledger club partagé — cotisations enregistrées manuellement, sans prélèvement SEPA auto."
       liveLines={
         loading
           ? ['Chargement du ledger et des objectifs…']
           : [
               `Recettes ${formatEur(totals.recettes_eur)} · Dépenses ${formatEur(totals.depenses_eur)} · Solde ${formatEur(totals.solde_eur)}`,
-              `${totals.count} écriture${totals.count > 1 ? 's' : ''} active${totals.count > 1 ? 's' : ''}`,
+              cotisationSummary.label,
               goals.length > 0
                 ? `${goals.length} objectif${goals.length > 1 ? 's' : ''} de financement`
                 : 'Aucun objectif de financement sponsor',
@@ -313,9 +319,38 @@ export function PresidentFinanceScreen() {
       }
       links={[
         { label: 'Finances Club', icon: 'stats-chart', clubNav: 'finances' },
+        { label: 'Joueurs Club', icon: 'people', clubNav: 'players' },
         { label: 'Sponsoring Club', icon: 'gift', clubNav: 'sponsoring' },
       ]}
     >
+      <PresidentSectionCard eyebrow="Cotisations" title="Qui a payé (enregistré)">
+        <PresidentText variant="body" muted>
+          {cotisationSummary.count > 0
+            ? cotisationSummary.label
+            : 'Aucune cotisation au ledger. Ouvrez Finances Club pour encaisser un adhérent.'}
+        </PresidentText>
+        <PresidentText variant="caption" muted>
+          {clubFinanceHonestyNote()}
+        </PresidentText>
+        <PresidentActionRow
+          label="Enregistrer une cotisation"
+          hint="Même ledger que Finances Club"
+          icon="people"
+          accent
+          onPress={() => {
+            resetForm();
+            setType('cotisation');
+            setFormOpen(true);
+          }}
+        />
+        <PresidentActionRow
+          label="Ouvrir Finances Club"
+          hint="Couverture adhérents · filtres cotisations"
+          icon="stats-chart"
+          onPress={() => shellNav?.openClubDeepLink('finances')}
+        />
+      </PresidentSectionCard>
+
       <PresidentSectionCard eyebrow="Ledger" title="Cotisations & dépenses">
         <View style={styles.kpiRow}>
           <View style={styles.kpi}>
