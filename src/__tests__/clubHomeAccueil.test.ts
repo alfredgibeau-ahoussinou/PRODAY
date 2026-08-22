@@ -67,11 +67,10 @@ describe('clubHomeAccueilModel', () => {
       event: {
         id: 'm1',
         event_type: 'competition',
-        title: 'Championnat',
+        title: 'Championnat vs AS Rivale',
         team_id: 't1',
-        opponent_name: 'AS Rivale',
         location_label: 'Stade municipal',
-      } as TeamEvent,
+      } as unknown as TeamEvent,
     };
     expect(resolvePriorityTeamLabel(priority, rows)).toBe('U15 Garçons');
     expect(resolvePriorityLocationLabel(priority)).toBe('Stade municipal');

@@ -123,8 +123,14 @@ export function resolvePriorityLocationLabel(priority: ClubHomePriority): string
   if (priority.kind === 'calm') return undefined;
   const loc = priority.event.location_label?.trim();
   if (loc) return loc;
-  const opponent = priority.event.opponent_name?.trim();
-  if (opponent && priority.kind === 'match') return `vs ${opponent}`;
+  if (priority.kind === 'match') {
+    const fromLive = priority.event.live_state?.opponent_name?.trim();
+    if (fromLive && fromLive !== 'Adversaire') return `vs ${fromLive}`;
+    const title = priority.event.title?.trim() ?? '';
+    const parts = title.split(/\s+vs\.?\s+|\s+[–—-]\s+/i);
+    const away = parts[1]?.trim();
+    if (away) return `vs ${away}`;
+  }
   return undefined;
 }
 
