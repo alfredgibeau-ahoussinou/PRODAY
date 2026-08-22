@@ -218,6 +218,23 @@ export const parentPortalService = {
     return teamEventsService.listForUser(childUid);
   },
 
+  /**
+   * RSVP présence pour l’enfant (parent lié).
+   * Règles Firestore : role parent + enfant dans parent_of + convoqué.
+   */
+  async updateChildRsvp(
+    childUid: string,
+    eventId: string,
+    status: 'yes' | 'no' | 'maybe',
+    opts?: { childName?: string },
+  ): Promise<void> {
+    if (!childUid || !eventId) throw new Error('Enfant ou événement manquant.');
+    const who = opts?.childName?.trim()
+      ? `Réponse présence par le parent de ${opts.childName.trim()}`
+      : 'Réponse présence par le parent';
+    await teamEventsService.updateRsvpWithReason(eventId, childUid, status, who);
+  },
+
   async listActiveCarpoolTripsForChild(childUid: string): Promise<CarpoolLiveTripDoc[]> {
     if (!isFirebaseConfigured() || !childUid) return [];
     const database = getDb();

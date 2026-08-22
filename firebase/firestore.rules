@@ -348,6 +348,14 @@ service cloud.firestore {
       return resource.data.invitee_uids.hasAny([request.auth.uid]);
     }
 
+    /** Parent lié (parent_of) dont un enfant est convoqué — RSVP / notes uniquement. */
+    function isParentOfEventInvitee() {
+      return isSignedIn()
+        && userDoc(request.auth.uid).data.role == 'parent'
+        && parentOfUids().size() > 0
+        && resource.data.invitee_uids.hasAny(parentOfUids());
+    }
+
     function isCarpoolCoordinationUpdate() {
       return isSignedIn()
         && isEventInvitee()
@@ -654,7 +662,7 @@ service cloud.firestore {
             && (
               resource.data.organizer_uid == request.auth.uid
               || (
-                isEventInvitee()
+                (isEventInvitee() || isParentOfEventInvitee())
                 && request.resource.data.diff(resource.data).affectedKeys()
                   .hasOnly(['rsvps', 'rsvp_notes', 'invitee_uids', 'updated_at'])
                 && !request.resource.data.diff(resource.data).affectedKeys()

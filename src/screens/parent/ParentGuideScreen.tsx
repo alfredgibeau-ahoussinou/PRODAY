@@ -14,7 +14,6 @@ import {
   audienceLabel,
   buildParentGuideTips,
   scheduleParentGuideReminders,
-  tipsToGuideNotifications,
   type ParentGuideAudience,
   type ParentGuideTip,
 } from '../../services/parentAiGuide.service';
@@ -89,8 +88,6 @@ export const ParentGuideScreen: React.FC = () => {
     [selected, hasNextEvent, pendingContacts, screenTimeNearLimit, children.length],
   );
 
-  const notifications = useMemo(() => tipsToGuideNotifications(tips), [tips]);
-
   useEffect(() => {
     void scheduleParentGuideReminders(tips);
   }, [tips]);
@@ -104,7 +101,8 @@ export const ParentGuideScreen: React.FC = () => {
     <ParentPageFrame identity={PARENT_PAGES.guide} showHero>
       <ScrollView contentContainerStyle={styles.content}>
         <ProDayText variant="caption" muted>
-          Suggestions du guide — pas un diagnostic médical ni des scores inventés.
+          Suggestions du guide — locales, pas un diagnostic médical ni des scores inventés.
+          Les rappels push ne sont pas encore activés.
         </ProDayText>
 
         <View style={styles.filters}>
@@ -134,22 +132,6 @@ export const ParentGuideScreen: React.FC = () => {
             );
           })}
         </View>
-
-        <ParentSectionCard
-          title="Notifications guide"
-          subtitle={`${notifications.length} suggestion${notifications.length > 1 ? 's' : ''} · push stub`}
-        >
-          {notifications.slice(0, 3).map((n) => (
-            <View key={n.id} style={styles.notifRow}>
-              <ProDayText variant="caption" accent style={{ fontWeight: '700' }}>
-                {n.title}
-              </ProDayText>
-              <ProDayText variant="caption" muted numberOfLines={2}>
-                {n.body}
-              </ProDayText>
-            </View>
-          ))}
-        </ParentSectionCard>
 
         {visible.map((tip) => (
           <TipCard
@@ -186,5 +168,4 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  notifRow: { gap: 2, paddingVertical: spacing.xs },
 });

@@ -22,7 +22,7 @@ export const PARENT_PAGES: Record<ParentTabId, ParentPageIdentity> = {
     id: 'home',
     eyebrow: 'Parent',
     title: 'Accueil',
-    support: 'Supervision claire — alertes, séance, contrôles.',
+    support: 'Présence samedi · alertes · contrôles.',
     icon: 'home',
   },
   enfant: {
@@ -57,7 +57,7 @@ export const PARENT_PAGES: Record<ParentTabId, ParentPageIdentity> = {
     id: 'agenda',
     eyebrow: 'Planning',
     title: 'Agenda',
-    support: 'Prévenir le coach si l’enfant ou vous êtes en retard.',
+    support: 'Je viens / absent en un tap · retard si besoin.',
     icon: 'calendar',
   },
   trajet: {

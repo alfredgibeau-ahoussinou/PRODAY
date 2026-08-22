@@ -31,8 +31,15 @@ import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
 import { LateReportControl } from '../../components/team/LateReportControl';
 import type { TeamEvent } from '../../models/TeamEvent';
-import { EVENT_TYPE_LABELS } from '../../models/TeamEvent';
 import { getScreenTimeDayKey } from '../../utils/parentalScreenTime';
+import {
+  ParentRsvpEmptyCard,
+  ParentRsvpEventHero,
+} from '../../features/parent/ui/ParentRsvpChrome';
+import {
+  pickNextChildEvent,
+  type ParentRsvpChoice,
+} from '../../features/parent/ui/parentRsvpModel';
 
 interface Props {
   onOpenTab: (tab: ParentTabId) => void;
@@ -48,6 +55,7 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
   const [nextEvent, setNextEvent] = useState<TeamEvent | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [bonusBusy, setBonusBusy] = useState(false);
+  const [rsvpBusy, setRsvpBusy] = useState(false);
 
   useEffect(() => {
     if (!email) return;
@@ -62,10 +70,7 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
       return;
     }
     const events = await parentPortalService.listChildEvents(selected.uid);
-    const upcoming = events
-      .filter((e) => e.starts_at.getTime() >= Date.now() - 2 * 60 * 60 * 1000)
-      .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
-    setNextEvent(upcoming[0] ?? null);
+    setNextEvent(pickNextChildEvent(events));
   }, [selected]);
 
   useEffect(() => {
@@ -104,6 +109,27 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
       setBonusBusy(false);
     }
   }, [selected, email, reload]);
+
+  const onRsvp = useCallback(
+    async (choice: ParentRsvpChoice) => {
+      if (!selected || !nextEvent) return;
+      setRsvpBusy(true);
+      try {
+        await parentPortalService.updateChildRsvp(selected.uid, nextEvent.id, choice, {
+          childName: selected.display_name,
+        });
+        await refreshEvent();
+      } catch (e) {
+        Alert.alert(
+          'Présence',
+          e instanceof Error ? e.message : 'Impossible d’enregistrer la réponse.',
+        );
+      } finally {
+        setRsvpBusy(false);
+      }
+    },
+    [selected, nextEvent, refreshEvent],
+  );
 
   const usageLabel = useMemo(() => {
     if (!selected) return null;
@@ -162,10 +188,10 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
             <ParentQuickGrid
               items={[
                 {
-                  id: 'guide',
-                  label: 'Guide IA',
-                  icon: 'star-four-points',
-                  onPress: () => onOpenTab('guide'),
+                  id: 'agenda',
+                  label: 'Agenda',
+                  icon: 'calendar',
+                  onPress: () => onOpenTab('agenda'),
                 },
                 {
                   id: 'enfant',
@@ -174,10 +200,10 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
                   onPress: () => onOpenTab('enfant'),
                 },
                 {
-                  id: 'agenda',
-                  label: 'Agenda',
-                  icon: 'calendar',
-                  onPress: () => onOpenTab('agenda'),
+                  id: 'guide',
+                  label: 'Guide',
+                  icon: 'star-four-points',
+                  onPress: () => onOpenTab('guide'),
                 },
                 {
                   id: 'plus',
@@ -223,6 +249,34 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
               </ParentSectionCard>
             ) : null}
 
+            {selected ? (
+              nextEvent ? (
+                <ParentRsvpEventHero
+                  event={nextEvent}
+                  childName={selected.display_name}
+                  childUid={selected.uid}
+                  busy={rsvpBusy}
+                  onChoose={(choice) => void onRsvp(choice)}
+                  footer={
+                    <LateReportControl
+                      eventId={nextEvent.id}
+                      playerUid={selected.uid}
+                      playerName={selected.display_name}
+                      currentRsvp={nextEvent.rsvps?.[selected.uid]}
+                      reportedByParent
+                      enablePickupLate
+                      onReported={() => void refreshEvent()}
+                    />
+                  }
+                />
+              ) : (
+                <ParentRsvpEmptyCard
+                  childName={selected.display_name}
+                  onOpenAgenda={() => onOpenTab('agenda')}
+                />
+              )
+            ) : null}
+
             {selected && email ? (
               <ParentUnlockCard child={selected} guardianEmail={email} onDone={reload} />
             ) : null}
@@ -244,14 +298,14 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
 
             {unreadNotifs.length > 0 ? (
               <ParentSectionCard
-                title="Notifications"
-                subtitle={`${unreadNotifs.length} non lue${unreadNotifs.length > 1 ? 's' : ''}`}
+                title="Invitations"
+                subtitle={`${unreadNotifs.length} non lue${unreadNotifs.length > 1 ? 's' : ''} · agenda`}
               >
                 {unreadNotifs.slice(0, 4).map((n) => (
                   <View key={n.id} style={styles.notifRow}>
                     <ProDayText variant="body">{n.event_title}</ProDayText>
                     <ProDayText variant="caption" muted>
-                      Invitation ·{' '}
+                      Convocation ·{' '}
                       {n.event_starts_at
                         ? n.event_starts_at.toLocaleString('fr-FR', {
                             weekday: 'short',
@@ -271,40 +325,11 @@ export const ParentHomeScreen: React.FC<Props> = ({ onOpenTab }) => {
                     onPress={() => void markNotifs()}
                   />
                   <ParentActionButton
-                    label="Voir l’agenda"
+                    label="Confirmer présence"
                     onPress={() => onOpenTab('agenda')}
                     icon="calendar"
                   />
                 </View>
-              </ParentSectionCard>
-            ) : null}
-
-            {selected && nextEvent ? (
-              <ParentSectionCard
-                title="Prochaine séance"
-                subtitle="Prévenir le coach en un tap"
-              >
-                <ProDayText variant="section">{nextEvent.title}</ProDayText>
-                <ProDayText variant="caption" muted>
-                  {EVENT_TYPE_LABELS[nextEvent.event_type] ?? nextEvent.event_type}
-                  {' · '}
-                  {nextEvent.starts_at.toLocaleString('fr-FR', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </ProDayText>
-                <LateReportControl
-                  eventId={nextEvent.id}
-                  playerUid={selected.uid}
-                  playerName={selected.display_name}
-                  currentRsvp={nextEvent.rsvps?.[selected.uid]}
-                  reportedByParent
-                  enablePickupLate
-                  onReported={() => void refreshEvent()}
-                />
               </ParentSectionCard>
             ) : null}
 

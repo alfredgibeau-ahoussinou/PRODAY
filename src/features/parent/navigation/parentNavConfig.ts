@@ -40,7 +40,7 @@ export const PARENT_MENU_TOOLS: ParentToolItem[] = [
   {
     id: 'agenda',
     label: 'Agenda',
-    hint: 'Séances et signalement de retard',
+    hint: 'Présence Je viens / Absent · retards',
     icon: 'calendar',
   },
   {

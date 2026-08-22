@@ -68,7 +68,7 @@ export function buildParentGuideTips(ctx: ParentGuideContext = {}): ParentGuideT
       id: 'child-next-event',
       audience: 'child',
       title: 'Prochaine séance',
-      body: `Vous pouvez prévenir le coach si ${name} (ou vous) sera en retard, depuis l’Agenda.`,
+      body: `Vous pouvez confirmer la présence de ${name} (Je viens / Absent) depuis l’Accueil ou l’Agenda, et prévenir le coach en cas de retard.`,
       ctaLabel: 'Ouvrir l’agenda',
       ctaTab: 'agenda',
       labeledAs: 'guide_suggestion',
