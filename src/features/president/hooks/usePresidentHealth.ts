@@ -70,7 +70,7 @@ export function buildPresidentHealth(ws: ClubWorkspace): PresidentHealth {
       label: 'Financier',
       score: financeScore,
       tone: toneFromScore(financeScore),
-      summary: 'Ledger cotisations / dépenses disponible (Club + Président).',
+      summary: 'Cotisations et dépenses — ouvrez Finances pour le détail.',
     },
     {
       id: 'admin',
@@ -108,23 +108,23 @@ export function buildPresidentHealth(ws: ClubWorkspace): PresidentHealth {
   const insights: string[] = [];
   if (pending > 0) {
     insights.push(
-      `${pending} adhésion${pending > 1 ? 's' : ''} en attente de validation · impact administratif.`,
+      `${pending} adhésion${pending > 1 ? 's' : ''} en attente — validez depuis Adhérents.`,
     );
   }
   if (noCoach > 0) {
     insights.push(
-      `${noCoach} équipe${noCoach > 1 ? 's' : ''} sans coach assigné · risque sportif et humain.`,
+      `${noCoach} équipe${noCoach > 1 ? 's' : ''} sans coach — affectez le staff.`,
     );
   }
   if (matchesToday > 0) {
     insights.push(
-      `${matchesToday} match${matchesToday > 1 ? 's' : ''} aujourd’hui · suivre résultats et communication.`,
+      `${matchesToday} match${matchesToday > 1 ? 's' : ''} aujourd’hui — suivez le sportif.`,
     );
   }
   if (insights.length === 0) {
     insights.push(
       ws.briefingSummary ||
-        'Votre structure est stable. Surveillez sponsors et objectifs de saison.',
+        'Structure stable. Surveillez partenaires et objectifs de saison.',
     );
   }
 

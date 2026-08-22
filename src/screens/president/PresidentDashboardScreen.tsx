@@ -1,13 +1,24 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { PressableSpring, AnimatedEntrance } from '../../components/motion';
+import { AnimatedEntrance, PressableSpring } from '../../components/motion';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
+import { useClubFinance } from '../../features/club/hooks/useClubFinance';
 import { usePresidentHealth } from '../../features/president/hooks/usePresidentHealth';
 import { usePresidentShellNav } from '../../features/president/shell/PresidentShellNavContext';
 import { usePresidentTheme } from '../../features/president/shell/PresidentThemeContext';
 import { PresidentHealthBoard } from '../../features/president/ui/PresidentHealthBoard';
+import {
+  PresidentClubBridgeCard,
+  PresidentCockpitShortcutRow,
+  PresidentFinanceSnapshotCard,
+  PresidentPriorityCard,
+} from '../../features/president/ui/PresidentCockpitChrome';
+import {
+  buildPresidentCockpitPriorities,
+  buildPresidentFinanceSnapshot,
+} from '../../features/president/ui/presidentCockpitModel';
 import {
   PresidentActionRow,
   PresidentBrandMark,
@@ -28,11 +39,12 @@ import {
 } from '../../features/president/theme/presidentDesignSystem';
 import type { PresidentThemeTokens } from '../../features/president/theme/presidentTokens';
 
-/** Cockpit Accueil — composition héro santé + centre de décision (pas une liste de cartes). */
+/** Cockpit Accueil — santé, priorités actionnables, finance, pont Club. */
 export function PresidentDashboardScreen() {
   const profile = useSessionProfile();
   const ws = useClubWorkspace();
   const health = usePresidentHealth(ws);
+  const finance = useClubFinance(ws.clubId);
   const shellNav = usePresidentShellNav();
   const { tokens } = usePresidentTheme();
   const { width } = useWindowDimensions();
@@ -40,28 +52,100 @@ export function PresidentDashboardScreen() {
   const styles = useMemo(() => createStyles(tokens, tablet), [tokens, tablet]);
   const [search, setSearch] = useState('');
 
-  if (ws.loading) return <PresidentLoading label="Ouverture du cockpit exécutif…" />;
+  const financeSnapshot = useMemo(
+    () =>
+      buildPresidentFinanceSnapshot({
+        soldeEur: finance.totals.solde_eur,
+        recettesEur: finance.totals.recettes_eur,
+        depensesEur: finance.totals.depenses_eur,
+        entryCount: finance.totals.count,
+      }),
+    [finance.totals],
+  );
+
+  const priorities = useMemo(
+    () =>
+      buildPresidentCockpitPriorities({
+        health,
+        pendingMemberships: ws.pendingMemberships,
+        teamsWithoutCoach: ws.teamsWithoutCoach,
+        matchesToday: ws.todayMatches.length,
+        financeEntryCount: finance.totals.count,
+      }),
+    [
+      health,
+      ws.pendingMemberships,
+      ws.teamsWithoutCoach,
+      ws.todayMatches.length,
+      finance.totals.count,
+    ],
+  );
+
+  if (ws.loading) {
+    return <PresidentLoading label="Ouverture du cockpit…" />;
+  }
 
   const firstName = profile?.display_name?.split(/\s+/)[0] || 'Président';
+  const clubName = ws.club?.name ?? 'Votre club';
 
   return (
     <View style={styles.root}>
-      <PresidentChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
+      <PresidentChapterScroll
+        refreshing={ws.refreshing || finance.refreshing}
+        onRefresh={() => {
+          void ws.refresh();
+          void finance.refresh();
+        }}
+      >
         <PresidentHeroBanner
           greeting={`Bonjour ${firstName}`}
-          clubName={ws.club?.name ?? 'Votre club'}
-          subtitle="Cockpit exécutif · l’état de votre club, en un regard."
+          clubName={clubName}
+          subtitle="État du club, priorités et finances — en un regard."
           overall={health.overall}
         />
 
         <PresidentSearchField
           value={search}
           onChangeText={setSearch}
-          placeholder="Commande directionnelle…"
+          placeholder="Rechercher une section…"
           onFocus={() => shellNav?.openCommandPalette?.()}
         />
 
-        {/* Composition héro : santé immersive */}
+        <PresidentCockpitShortcutRow
+          items={[
+            {
+              id: 'finance',
+              label: 'Finances',
+              icon: 'bag',
+              onPress: () => shellNav?.requestNav('finance'),
+            },
+            {
+              id: 'members',
+              label: 'Adhérents',
+              icon: 'people',
+              onPress: () => shellNav?.requestNav('members'),
+            },
+            {
+              id: 'club',
+              label: 'Club',
+              icon: 'football',
+              onPress: () => shellNav?.openClubDeepLink('today'),
+            },
+            {
+              id: 'ai',
+              label: 'Conseils',
+              icon: 'star-four-points',
+              onPress: () => shellNav?.requestNav('ai'),
+            },
+          ]}
+        />
+
+        <PresidentFinanceSnapshotCard
+          snapshot={financeSnapshot}
+          loading={finance.loading && finance.totals.count === 0}
+          onOpenFinance={() => shellNav?.requestNav('finance')}
+        />
+
         <View style={styles.heroDeck}>
           <LinearGradient
             colors={[tokens.champagneSoft, 'transparent']}
@@ -75,10 +159,10 @@ export function PresidentDashboardScreen() {
                 Tableau de bord
               </PresidentText>
               <PresidentText variant="h2" numberOfLines={1}>
-                Santé & direction
+                Santé du club
               </PresidentText>
               <PresidentText variant="caption" muted numberOfLines={2}>
-                Touchez un axe pour ouvrir la section correspondante.
+                Touchez un axe pour ouvrir la section.
               </PresidentText>
             </View>
             <View style={styles.kpiCluster}>
@@ -99,7 +183,7 @@ export function PresidentDashboardScreen() {
           {(ws.briefingHeadline || ws.briefingSummary) && (
             <View style={styles.briefStrip}>
               <PresidentText variant="label" champagne>
-                Lecture éditoriale
+                En bref
               </PresidentText>
               <PresidentText variant="body" style={{ fontWeight: '600' }}>
                 {ws.briefingHeadline || 'Structure opérationnelle'}
@@ -112,59 +196,35 @@ export function PresidentDashboardScreen() {
           )}
         </View>
 
-        {/* Centre de décision — une composition, pas une carte isolée */}
         <AnimatedEntrance kind="fadeUp" index={2}>
           <View style={styles.decision}>
             <View style={styles.decisionHead}>
               <PresidentBrandMark compact />
               <PresidentText variant="h2" numberOfLines={1}>
-                Centre de décision
+                Priorités du jour
               </PresidentText>
               <PresidentText variant="caption" muted numberOfLines={2}>
-                Priorités heuristiques pour la direction.
+                Actions concretes pour la direction.
               </PresidentText>
             </View>
-            <View style={styles.insightList}>
-              {health.insights.map((line, i) => (
-                <View key={i} style={styles.insightRow}>
-                  <View style={styles.insightIndex}>
-                    <PresidentText
-                      variant="caption"
-                      style={{ color: tokens.accentText, fontWeight: '800' }}
-                    >
-                      {i + 1}
-                    </PresidentText>
-                  </View>
-                  <PresidentText variant="body" style={{ flex: 1, minWidth: 0 }}>
-                    {line}
-                  </PresidentText>
-                </View>
+            <View style={styles.priorityList}>
+              {priorities.map((priority, i) => (
+                <PresidentPriorityCard
+                  key={priority.id}
+                  priority={priority}
+                  index={i}
+                  onPress={() => shellNav?.requestNav(priority.nav)}
+                />
               ))}
             </View>
-            <PressableSpring
-              onPress={() => shellNav?.requestNav('ai')}
-              scaleTo={0.98}
-              haptic
-              style={styles.aiCta}
-            >
-              <LinearGradient
-                colors={[tokens.accent, '#B8955A']}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <PresidentText
-                variant="body"
-                style={{ color: tokens.accentText, fontWeight: '800' }}
-              >
-                Ouvrir l’assistant exécutif
-              </PresidentText>
-              <PresidentText variant="caption" style={{ color: tokens.accentText, opacity: 0.75 }}>
-                Dialogue Mistral · confirmation d’actions
-              </PresidentText>
-            </PressableSpring>
+            <PressableAiCta onPress={() => shellNav?.requestNav('ai')} />
           </View>
         </AnimatedEntrance>
+
+        <PresidentClubBridgeCard
+          clubName={clubName}
+          onOpenClub={() => shellNav?.openClubDeepLink('today')}
+        />
 
         <PresidentSectionCard
           eyebrow="Raccourcis"
@@ -205,10 +265,48 @@ export function PresidentDashboardScreen() {
             icon="people"
             onPress={() => shellNav?.requestNav('members')}
           />
+          <PresidentActionRow
+            label="Finances"
+            hint={financeSnapshot.hint}
+            icon="bag"
+            onPress={() => shellNav?.requestNav('finance')}
+          />
         </PresidentSectionCard>
       </PresidentChapterScroll>
     </View>
   );
+}
+
+function PressableAiCta({ onPress }: { onPress: () => void }) {
+  const { tokens } = usePresidentTheme();
+  return (
+    <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={aiCtaStyle(tokens)}>
+      <LinearGradient
+        colors={[tokens.accent, '#B8955A']}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <PresidentText variant="body" style={{ color: tokens.accentText, fontWeight: '800' }}>
+        Conseils direction
+      </PresidentText>
+      <PresidentText variant="caption" style={{ color: tokens.accentText, opacity: 0.8 }}>
+        Suggestions locales — vous confirmez chaque action
+      </PresidentText>
+    </PressableSpring>
+  );
+}
+
+function aiCtaStyle(tokens: PresidentThemeTokens) {
+  return {
+    marginTop: presidentSpace.sm,
+    paddingVertical: presidentSpace.md + 2,
+    paddingHorizontal: presidentLayout.cardPad,
+    borderRadius: presidentRadius.lg,
+    overflow: 'hidden' as const,
+    gap: 2,
+    ...presidentShadow.glow(tokens),
+  };
 }
 
 function KpiPill({
@@ -301,33 +399,6 @@ function createStyles(tokens: PresidentThemeTokens, tablet: boolean) {
       ...presidentShadow.deep,
     },
     decisionHead: { gap: 6, minWidth: 0 },
-    insightList: { gap: presidentSpace.sm },
-    insightRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: presidentLayout.gridGap,
-      paddingVertical: presidentSpace.sm,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: tokens.hairline,
-    },
-    insightIndex: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: tokens.accent,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 2,
-      flexShrink: 0,
-    },
-    aiCta: {
-      marginTop: presidentSpace.sm,
-      paddingVertical: presidentSpace.md + 2,
-      paddingHorizontal: presidentLayout.cardPad,
-      borderRadius: presidentRadius.lg,
-      overflow: 'hidden',
-      gap: 2,
-      ...presidentShadow.glow(tokens),
-    },
+    priorityList: { gap: presidentSpace.sm },
   });
 }

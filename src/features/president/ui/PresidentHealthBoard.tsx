@@ -135,7 +135,7 @@ function OverallRing({
         />
       </View>
       <PresidentText variant="caption" muted style={{ marginTop: 4 }} numberOfLines={1}>
-        Indice composite · cinq axes de direction
+        Cinq axes · touchez pour ouvrir la section
       </PresidentText>
     </View>
   );
