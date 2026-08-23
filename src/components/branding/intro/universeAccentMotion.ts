@@ -7,7 +7,7 @@ export type UniverseAccentRanges = {
   outputRange: string[];
 };
 
-/** Plages Reanimated pour interpolation accent fluide au swipe. */
+/** Plages Reanimated pour interpolation accent — JS-only (pas de worklet). */
 export function universeAccentRanges(lines: CarouselPoleId[]): UniverseAccentRanges {
   return {
     inputRange: lines.map((_, index) => index),
@@ -15,21 +15,21 @@ export function universeAccentRanges(lines: CarouselPoleId[]): UniverseAccentRan
   };
 }
 
-/** Fallback joueur — literal worklet-safe (PRODAY_POLE_ACCENTS.player). */
-const ACCENT_FALLBACK = '#1E3AFF';
-
-/** Couleur accent interpolée — ranges pré-calculées côté JS. */
+/**
+ * Couleur accent interpolée — primitives uniquement (tests / JS thread).
+ * Pas de default param, pas d'objet ranges, pas de lookup UNIVERSE_ACCENT.
+ * Ne pas appeler depuis un worklet UI-thread si possible : préférer liveIndex React.
+ */
 export function accentColorAtPage(
   page: number,
-  ranges: UniverseAccentRanges,
-  fallback: string = ACCENT_FALLBACK,
+  inputRange: number[],
+  outputRange: string[],
+  fallback: string,
 ): string {
-  'worklet';
-  if (ranges.inputRange.length === 0) return fallback;
-  if (ranges.inputRange.length === 1) return ranges.outputRange[0];
-  const clamped = Math.max(
-    ranges.inputRange[0],
-    Math.min(ranges.inputRange[ranges.inputRange.length - 1], page),
-  );
-  return interpolateColor(clamped, ranges.inputRange, ranges.outputRange);
+  if (inputRange.length === 0) return fallback;
+  if (inputRange.length === 1) return outputRange[0] ?? fallback;
+  const lo = inputRange[0];
+  const hi = inputRange[inputRange.length - 1];
+  const clamped = Math.max(lo, Math.min(hi, page));
+  return interpolateColor(clamped, inputRange, outputRange);
 }

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -13,7 +13,6 @@ import { Icon } from '../../ui/Icon';
 import { ProDayLogo } from '../ProDayLogo';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
-import { accentColorAtPage, universeAccentRanges } from './universeAccentMotion';
 import { universeEnterCtaLabel } from './universePoleBrand';
 
 interface UniversePageChromeProps {
@@ -41,8 +40,10 @@ const AnimatedDot: React.FC<{
   disabled?: boolean;
   onPress: () => void;
 }> = ({ index, activeIndex, line, itemWidth, scrollX, linesCount, disabled, onPress }) => {
+  // Primitives capturées avant le worklet (pas de Record lookup UI-thread).
   const accent = UNIVERSE_ACCENT[line];
   const label = UNIVERSE_SHORT[line];
+  const inactive = 'rgba(255,255,255,0.28)';
 
   const dotStyle = useAnimatedStyle(() => {
     if (itemWidth <= 0 || linesCount <= 1) {
@@ -55,9 +56,9 @@ const AnimatedDot: React.FC<{
     return {
       width,
       opacity,
-      backgroundColor: dist < 0.35 ? accent : 'rgba(255,255,255,0.28)',
+      backgroundColor: dist < 0.35 ? accent : inactive,
     };
-  });
+  }, [accent, inactive, index, itemWidth, linesCount]);
 
   return (
     <Pressable
@@ -72,44 +73,8 @@ const AnimatedDot: React.FC<{
   );
 };
 
-const CtaLabelLayer: React.FC<{
-  line: CarouselPoleId;
-  index: number;
-  itemWidth: number;
-  scrollX: SharedValue<number>;
-}> = ({ line, index, itemWidth, scrollX }) => {
-  const label = universeEnterCtaLabel(line);
-  const isLight = line === 'president';
-
-  const layerStyle = useAnimatedStyle(() => {
-    if (itemWidth <= 0) {
-      return { opacity: index === 0 ? 1 : 0 };
-    }
-    const page = scrollX.value / itemWidth;
-    const dist = Math.abs(page - index);
-    const opacity = interpolate(dist, [0, 0.32, 0.62], [1, 0.35, 0], Extrapolation.CLAMP);
-    return { opacity };
-  });
-
-  return (
-    <Animated.View
-      style={[styles.ctaLabelLayer, layerStyle]}
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-    >
-      <Text
-        style={[styles.ctaText, isLight && styles.ctaTextDark]}
-        numberOfLines={1}
-      >
-        {label}
-      </Text>
-    </Animated.View>
-  );
-};
-
 /**
- * Header brand horizontal + CTA accent interpolé au swipe.
+ * Header brand horizontal + CTA accent via état React (liveIndex) — zéro interpolateColor worklet.
  */
 export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   lines,
@@ -128,24 +93,10 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   const insets = useSafeAreaInsets();
   const activeLine = lines[activeIndex] ?? lines[0];
   const isLightCta = activeLine === 'president';
-  const accentRanges = useMemo(() => universeAccentRanges(lines), [lines]);
-  const accentInputRange = accentRanges.inputRange;
-  const accentOutputRange = accentRanges.outputRange;
   const activeAccent = UNIVERSE_ACCENT[activeLine];
+  const ctaLabel = universeEnterCtaLabel(activeLine);
   const headerLogoWidth = cinematic ? 168 : 142;
-
-  const ctaBgStyle = useAnimatedStyle(() => {
-    if (itemWidth <= 0 || lines.length <= 1) {
-      return { backgroundColor: activeAccent };
-    }
-    const page = scrollX.value / itemWidth;
-    return {
-      backgroundColor: accentColorAtPage(page, {
-        inputRange: accentInputRange,
-        outputRange: accentOutputRange,
-      }),
-    };
-  }, [accentInputRange, accentOutputRange, activeAccent, itemWidth, lines.length]);
+  const linesCount = lines.length;
 
   return (
     <View style={styles.root} pointerEvents="box-none">
@@ -213,7 +164,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
               line={line}
               itemWidth={itemWidth}
               scrollX={scrollX}
-              linesCount={lines.length}
+              linesCount={linesCount}
               disabled={interactionLocked}
               onPress={() => onJumpToIndex(index)}
             />
@@ -227,30 +178,25 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           disabled={interactionLocked}
           style={styles.ctaWrap}
         >
-          <Animated.View
+          <View
             style={[
               styles.cta,
-              ctaBgStyle,
+              { backgroundColor: activeAccent },
               isLightCta && styles.ctaOnLightAccent,
             ]}
           >
-            <View style={styles.ctaLabelStack}>
-              {lines.map((line, index) => (
-                <CtaLabelLayer
-                  key={line}
-                  line={line}
-                  index={index}
-                  itemWidth={itemWidth}
-                  scrollX={scrollX}
-                />
-              ))}
-            </View>
+            <Text
+              style={[styles.ctaText, isLightCta && styles.ctaTextDark]}
+              numberOfLines={1}
+            >
+              {ctaLabel}
+            </Text>
             <Icon
               name="chevron-forward"
               size={18}
               color={isLightCta ? '#0A0A0A' : '#FFFFFF'}
             />
-          </Animated.View>
+          </View>
         </PressableSpring>
 
         <Text style={styles.hint}>Glissez ou touchez un point · le swipe n'est pas obligatoire</Text>
@@ -349,19 +295,8 @@ const styles = StyleSheet.create({
     shadowColor: '#FBBF24',
     shadowOpacity: 0.28,
   },
-  ctaLabelStack: {
-    flex: 1,
-    minHeight: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ctaLabelLayer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xs,
-  },
   ctaText: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',

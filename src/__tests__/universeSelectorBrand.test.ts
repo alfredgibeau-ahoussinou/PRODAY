@@ -20,8 +20,12 @@ describe('sélecteur univers — accent motion', () => {
     const ranges = universeAccentRanges([...lines]);
     expect(ranges.inputRange).toEqual([0, 1, 2]);
     expect(ranges.outputRange[0]).toBe(PRODAY_POLE_ACCENTS.player);
-    expect(accentColorAtPage(0, ranges)).toContain('30');
-    expect(accentColorAtPage(2, ranges)).toContain('34');
+    expect(
+      accentColorAtPage(0, ranges.inputRange, ranges.outputRange, '#1E3AFF'),
+    ).toContain('30');
+    expect(
+      accentColorAtPage(2, ranges.inputRange, ranges.outputRange, '#1E3AFF'),
+    ).toContain('34');
   });
 });
 

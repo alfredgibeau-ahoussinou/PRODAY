@@ -44,6 +44,7 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
 }) => {
   const identity = getCarouselPoleIdentity(line);
   const accent = UNIVERSE_ACCENT[line];
+  const accentBorder = accent + '66';
   const variant = brandVariantForCarouselPole(line);
   const iconName = universePoleIcon(line);
   const logoWidth = cinematic
@@ -77,10 +78,10 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
     );
     const translateY = interpolate(offset, [-1, 0, 1], [18, 0, 18], Extrapolation.CLAMP);
     const translateX = interpolate(offset, [-1, 0, 1], [22, 0, -22], Extrapolation.CLAMP);
-    const rotateZ = `${interpolate(offset, [-1, 0, 1], [-2, 0, 2], Extrapolation.CLAMP)}deg`;
+    const rotateDeg = interpolate(offset, [-1, 0, 1], [-2, 0, 2], Extrapolation.CLAMP);
     return {
       opacity,
-      transform: [{ translateX }, { translateY }, { scale }, { rotate: rotateZ }],
+      transform: [{ translateX }, { translateY }, { scale }, { rotate: rotateDeg + 'deg' }],
     };
   }, [index, itemWidth, reducedMotion]);
 
@@ -122,7 +123,7 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
           />
         </View>
 
-        <Animated.View style={[styles.iconBadge, { borderColor: `${accent}66` }, badgeStyle]}>
+        <Animated.View style={[styles.iconBadge, { borderColor: accentBorder }, badgeStyle]}>
           <Icon name={iconName} size={cinematic ? 26 : 22} color={accent} />
         </Animated.View>
 

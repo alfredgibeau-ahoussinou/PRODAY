@@ -26,7 +26,7 @@ import { UniversePageChrome } from './UniversePageChrome';
 import { useUniverseIntroTour } from './useUniverseIntroTour';
 import { UNIVERSE_CHOICE_ORDER } from './universeChoiceShared';
 import { filterAccessibleUniversePoles } from './filterAccessibleUniversePoles';
-import { accentColorAtPage, universeAccentRanges } from './universeAccentMotion';
+import { UNIVERSE_ACCENT } from './universeIntroAccents';
 import {
   shouldSnapOnDragEnd,
   snapIndexFromOffset,
@@ -106,18 +106,21 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     setLiveIndex(index);
   }, []);
 
+  // Nombre primitif capturé — jamais `lines` / `lines.length` dans le worklet.
+  const maxIndex = Math.max(0, lines.length - 1);
+
   useAnimatedReaction(
     () => {
       if (itemWidth <= 0) return 0;
       const page = scrollX.value / itemWidth;
-      return Math.max(0, Math.min(lines.length - 1, Math.round(page)));
+      return Math.max(0, Math.min(maxIndex, Math.round(page)));
     },
     (index, prev) => {
       if (index !== prev) {
         runOnJS(syncLiveIndex)(index);
       }
     },
-    [itemWidth, lines.length, syncLiveIndex],
+    [itemWidth, maxIndex, syncLiveIndex],
   );
 
   const onScroll = useAnimatedScrollHandler({
@@ -130,6 +133,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     (index: number, animated: boolean, haptic: boolean) => {
       if (itemWidth <= 0 || lines.length === 0) return;
       const clamped = Math.max(0, Math.min(lines.length - 1, index));
+      const targetX = clamped * itemWidth;
       programmaticScroll.current = true;
       if (haptic) prodayHaptics.tabSwitch();
       lastSnapIndexRef.current = clamped;
@@ -137,7 +141,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       setLiveIndex(clamped);
       runOnUI(() => {
         'worklet';
-        scrollTo(listRef, clamped * itemWidth, 0, animated);
+        scrollTo(listRef, targetX, 0, animated);
       })();
     },
     [itemWidth, lines, listRef],
@@ -297,11 +301,12 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     ],
   );
 
-  const accentRanges = useMemo(() => universeAccentRanges(lines), [lines]);
-  const accentInputRange = accentRanges.inputRange;
-  const accentOutputRange = accentRanges.outputRange;
-  const ambientFallback = UNIVERSE_AMBIENT_FALLBACK;
   const linesLen = lines.length;
+  // Couleur ambient via React state (liveIndex) — pas d'interpolateColor worklet.
+  const ambientAccent =
+    linesLen > 0
+      ? UNIVERSE_ACCENT[lines[Math.max(0, Math.min(maxIndex, liveIndex))] ?? lines[0]]
+      : UNIVERSE_AMBIENT_FALLBACK;
 
   const ambientStyle = useAnimatedStyle(() => {
     if (itemWidth <= 0 || linesLen === 0) return { opacity: 0.12 };
@@ -315,19 +320,6 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     );
     return { opacity };
   }, [itemWidth, linesLen]);
-
-  const ambientColorStyle = useAnimatedStyle(() => {
-    if (itemWidth <= 0 || linesLen === 0) {
-      return { backgroundColor: ambientFallback };
-    }
-    const page = scrollX.value / itemWidth;
-    return {
-      backgroundColor: accentColorAtPage(page, {
-        inputRange: accentInputRange,
-        outputRange: accentOutputRange,
-      }),
-    };
-  }, [accentInputRange, accentOutputRange, ambientFallback, itemWidth, linesLen]);
 
   const styles = useMemo(() => createStyles(cinematic), [cinematic]);
 
@@ -346,7 +338,11 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       <View style={[styles.ambientBase, { backgroundColor: UNIVERSE_AMBIENT_BASE }]} />
       <Animated.View
         pointerEvents="none"
-        style={[styles.ambientAccent, ambientColorStyle, ambientStyle]}
+        style={[
+          styles.ambientAccent,
+          { backgroundColor: ambientAccent },
+          ambientStyle,
+        ]}
       />
 
       <Animated.FlatList
