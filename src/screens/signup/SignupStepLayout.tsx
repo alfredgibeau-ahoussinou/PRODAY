@@ -1,25 +1,17 @@
 import React, { useMemo } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
-import { Icon, type IconName } from '../../components/ui/Icon';
+import { Icon } from '../../components/ui/Icon';
 import { AnimatedEntrance, PressableSpring } from '../../components/motion';
-import { SignupPhaseRail } from '../../components/signup/SignupPhaseRail';
-import { SignupProgressRing } from '../../components/signup/SignupProgressRing';
-import { SignupStepHero } from '../../components/signup/SignupStepHero';
-import { useAuthStyles } from '../../components/auth/authStyles';
+import { ProDayText } from '../../components/ui/ProDayText';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
-import { useSignupFlowTheme } from './SignupFlowContext';
-import { brandForAuthContext } from '../../utils/authBrandContext';
-import { AUTH_SHEET } from '../../components/auth/authSheetPalette';
-import { spacing, radius } from '../../theme/designTokens';
-import type { AppColors } from '../../theme/universeTheme';
+import { AuthProgress, AUTH_XP } from '../../features/auth/experience';
 
 interface SignupStepLayoutProps {
   stepIndex: number;
@@ -30,52 +22,30 @@ interface SignupStepLayoutProps {
   title: string;
   subtitle?: string;
   contentKey?: string;
-  heroIcon?: IconName;
+  heroIcon?: string;
   onBack?: () => void;
   onClose?: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
 
-const ProgressSegment: React.FC<{
-  done: boolean;
-  active: boolean;
-  accent: string;
-  track: string;
-}> = ({ done, active, accent, track }) => (
-  <View
-    style={[
-      { flex: 1, height: active ? 3 : 2, borderRadius: radius.pill, backgroundColor: track },
-      (active || done) && { backgroundColor: accent },
-    ]}
-  />
-);
-
+/**
+ * Layout inscription — même DA que Auth Experience (noir, progress dots).
+ */
 export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   stepIndex,
   stepTotal,
-  stepName,
-  phases,
-  phaseIndex = 0,
   title,
   subtitle,
-  heroIcon,
   onBack,
   onClose,
   children,
   footer,
 }) => {
-  const { compact, headerTopPad, contentMaxWidth, tabBarScrollInset: tabInset } =
-    useAuthLayout();
+  const { headerTopPad, contentMaxWidth, tabBarScrollInset: tabInset } = useAuthLayout();
   const scrollBottomPad = tabInset({ stickyFooter: Boolean(footer) });
   const footerBottomPad = tabInset();
-  const { productLine, colors, isSponsorSignup, experienceRole } = useSignupFlowTheme();
-  const authStyles = useAuthStyles();
-  const brandName = brandForAuthContext(
-    productLine,
-    isSponsorSignup || experienceRole === 'sponsor' ? 'sponsor' : null,
-  ).name;
-  const styles = useMemo(() => createStyles(colors, contentMaxWidth), [colors, contentMaxWidth]);
+  const styles = useMemo(() => createStyles(contentMaxWidth), [contentMaxWidth]);
 
   return (
     <KeyboardAvoidingView
@@ -84,217 +54,104 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
     >
       <View style={[styles.header, { paddingTop: headerTopPad }]}>
         <View style={styles.headerRow}>
-          {onBack ? (
+          {onBack || onClose ? (
             <PressableSpring
-              onPress={onBack}
-              style={authStyles.backBtnLight}
+              onPress={onBack ?? onClose}
+              style={styles.iconBtn}
               hitSlop={8}
               scaleTo={0.97}
               haptic
-              accessibilityLabel="Retour"
+              accessibilityLabel={onBack ? 'Retour' : 'Fermer'}
             >
-              <Icon name="arrow-back" size={20} color={colors.ink} />
+              <Icon name={onBack ? 'arrow-back' : 'close'} size={20} color={AUTH_XP.white} />
             </PressableSpring>
           ) : (
             <View style={styles.headerSideSpacer} />
           )}
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerEyebrow}>
-              {brandName}
-            </Text>
-            <Text style={styles.headerTitle} numberOfLines={1}>
-              {stepName ?? `Étape ${stepIndex + 1}`}
-            </Text>
-          </View>
-          <View style={styles.headerRight}>
-            <SignupProgressRing stepIndex={stepIndex} stepTotal={stepTotal} accentColor={colors.accent} />
-            {onClose ? (
-              <PressableSpring
-                onPress={onClose}
-                style={authStyles.backBtnLight}
-                hitSlop={8}
-                scaleTo={0.97}
-                haptic
-                accessibilityLabel="Fermer"
-              >
-                <Icon name="close" size={20} color={colors.ink} />
-              </PressableSpring>
-            ) : (
-              <View style={styles.headerSideSpacer} />
-            )}
-          </View>
+          <AuthProgress stepIndex={stepIndex} stepTotal={Math.min(stepTotal, 8)} />
+          <View style={styles.headerSideSpacer} />
         </View>
       </View>
 
-      {phases && phases.length > 1 ? (
-        <SignupPhaseRail phases={phases} phaseIndex={phaseIndex} compact={compact} accentColor={colors.accent} />
-      ) : (
-        <View style={styles.progressRow}>
-          {Array.from({ length: stepTotal }).map((_, i) => (
-            <ProgressSegment
-              key={i}
-              done={i < stepIndex}
-              active={i === stepIndex}
-              accent={colors.accent}
-              track={colors.surfaceMuted}
-            />
-          ))}
-        </View>
-      )}
-
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPad }]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: scrollBottomPad }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        nestedScrollEnabled
       >
-        <View style={styles.contentColumn}>
-          <AnimatedEntrance index={0}>
-            <View style={styles.intro}>
-              <View style={styles.titleRow}>
-                {heroIcon ? (
-                  <SignupStepHero icon={heroIcon} accentColor={colors.accentSoft} iconColor={colors.accent} />
-                ) : null}
-                <View style={styles.titleBlock}>
-                <Text
-                  style={[
-                    authStyles.title,
-                    compact && authStyles.titleCompact,
-                    { color: AUTH_SHEET.text, textAlign: 'left' },
-                  ]}
-                >
-                  {title}
-                </Text>
-                  {subtitle ? (
-                    <Text style={[authStyles.sub, styles.subtitle, { color: AUTH_SHEET.textSecondary }]}>
-                      {subtitle}
-                    </Text>
-                  ) : null}
-                </View>
-              </View>
-            </View>
-          </AnimatedEntrance>
-
-          <AnimatedEntrance index={1} kind="fadeUp">
-            <View style={styles.body}>{children}</View>
-          </AnimatedEntrance>
-        </View>
+        <AnimatedEntrance kind="fadeUp">
+          <ProDayText variant="title" style={styles.title}>
+            {title}
+          </ProDayText>
+          {subtitle ? (
+            <ProDayText variant="body" style={styles.subtitle}>
+              {subtitle}
+            </ProDayText>
+          ) : null}
+        </AnimatedEntrance>
+        <View style={styles.body}>{children}</View>
       </ScrollView>
 
       {footer ? (
-        <View style={[styles.footer, { paddingBottom: footerBottomPad }]}>
-          <View style={styles.footerInner}>{footer}</View>
-        </View>
+        <View style={[styles.footer, { paddingBottom: footerBottomPad }]}>{footer}</View>
       ) : null}
     </KeyboardAvoidingView>
   );
 };
 
-const createStyles = (colors: AppColors, contentMaxWidth: number) =>
-  StyleSheet.create({
+function createStyles(contentMaxWidth: number) {
+  return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: AUTH_SHEET.background,
+      backgroundColor: AUTH_XP.black,
     },
     header: {
-      backgroundColor: AUTH_SHEET.background,
+      paddingHorizontal: 16,
+      paddingBottom: 8,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: AUTH_SHEET.border,
-      paddingHorizontal: spacing.md,
-      paddingBottom: spacing.md,
-      zIndex: 2,
+      borderBottomColor: AUTH_XP.border,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.xs,
+      justifyContent: 'space-between',
     },
-    headerSideSpacer: {
-      width: 88,
+    headerSideSpacer: { width: 40 },
+    iconBtn: {
+      width: 40,
       height: 40,
-    },
-    headerCenter: {
-      flex: 1,
       alignItems: 'center',
-      paddingHorizontal: spacing.xs,
+      justifyContent: 'center',
+      borderRadius: 2,
+      borderWidth: 1,
+      borderColor: AUTH_XP.border,
     },
-    headerEyebrow: {
-      fontSize: 9,
-      fontWeight: '700',
-      letterSpacing: 2,
-      textTransform: 'uppercase',
-      color: AUTH_SHEET.textMuted,
-      ...Platform.select({ android: { includeFontPadding: false } }),
-    },
-    headerTitle: {
-      fontSize: 15,
-      fontWeight: '800',
-      color: AUTH_SHEET.text,
-      marginTop: 2,
-      textAlign: 'center',
-    },
-    headerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs,
-    },
-    progressRow: {
-      flexDirection: 'row',
-      gap: 4,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm + 2,
-      backgroundColor: AUTH_SHEET.background,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: AUTH_SHEET.border,
-    },
-    scroll: { flex: 1 },
-    scrollContent: {
-      flexGrow: 1,
-      alignItems: 'center',
+    scroll: {
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      maxWidth: contentMaxWidth + 40,
       width: '100%',
-    },
-    contentColumn: {
-      width: '100%',
-      maxWidth: contentMaxWidth,
       alignSelf: 'center',
     },
-    intro: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.lg,
-      alignItems: 'flex-start',
-      width: '100%',
-    },
-    titleRow: {
-      flexDirection: 'column',
-      alignItems: 'flex-start',
-      width: '100%',
-    },
-    titleBlock: {
-      width: '100%',
-      alignItems: 'flex-start',
+    title: {
+      color: AUTH_XP.white,
+      fontSize: 26,
+      letterSpacing: -0.3,
+      marginBottom: 8,
     },
     subtitle: {
-      alignSelf: 'stretch',
-      marginBottom: spacing.sm,
-      textAlign: 'left',
+      color: AUTH_XP.textMuted,
+      lineHeight: 22,
+      marginBottom: 20,
     },
     body: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.lg,
-      width: '100%',
-      alignItems: 'stretch',
+      gap: 12,
     },
     footer: {
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.md,
+      paddingHorizontal: 20,
+      paddingTop: 12,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: AUTH_SHEET.border,
-      backgroundColor: AUTH_SHEET.background,
-    },
-    footerInner: {
-      width: '100%',
-      maxWidth: contentMaxWidth,
+      borderTopColor: AUTH_XP.border,
+      backgroundColor: AUTH_XP.black,
     },
   });
+}

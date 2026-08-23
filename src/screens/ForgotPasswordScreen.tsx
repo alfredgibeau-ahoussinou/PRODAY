@@ -1,29 +1,27 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { authService } from '../services/auth.service';
-import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
-import { AuthPrimaryButton } from '../components/auth/AuthPrimaryButton';
-import { useAuthStyles } from '../components/auth/authStyles';
-import { useAuthLayout } from '../components/auth/useAuthLayout';
-import { AuthTextField } from '../components/auth/AuthTextField';
-import { AnimatedEntrance, PressableSpring, StaggerReveal } from '../components/motion';
-import { ProDayErrorBanner } from '../components/ui/ProDayErrorBanner';
-import { AuthFormCard } from '../components/auth/AuthFormCard';
-import { ProDayGradient } from '../components/ui/ProDayGradient';
 import { Icon } from '../components/ui/Icon';
+import { PressableSpring } from '../components/motion';
+import { ProDayText } from '../components/ui/ProDayText';
 import { prodayHaptics } from '../utils/prodayHaptics';
-import { spacing, radius } from '../theme/designTokens';
-import { useAppTheme } from '../context/ProductLineContext';
-import type { AppColors } from '../theme/universeTheme';
+import {
+  AuthExperienceShell,
+  AuthInput,
+  AuthButton,
+  AuthError,
+  AuthLink,
+  AUTH_XP,
+} from '../features/auth/experience';
+import { useTranslation } from '../context/LocaleContext';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RESEND_COOLDOWN_MS = 45_000;
 
 interface ForgotPasswordScreenProps {
   initialEmail?: string;
@@ -34,38 +32,55 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   initialEmail = '',
   onBack,
 }) => {
-  const { compact, logoWidth, headerTopPad, scrollBottom } = useAuthLayout();
-  const { colors: c } = useAppTheme();
-  const authStyles = useAuthStyles();
-  const local = useMemo(() => createLocalStyles(c), [c]);
+  const { t } = useTranslation();
   const [email, setEmail] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | undefined>();
   const [sent, setSent] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
 
   const validateEmail = () => {
     const value = email.trim();
     if (!value) {
-      setFieldError('Email requis');
+      setFieldError(t('auth.emailRequired') || 'Email requis');
       return false;
     }
     if (!EMAIL_RE.test(value)) {
-      setFieldError('Format email invalide');
+      setFieldError(t('auth.emailInvalid') || 'Format email invalide');
       return false;
     }
     setFieldError(undefined);
     return true;
   };
 
+  const startCooldown = () => {
+    const until = Date.now() + RESEND_COOLDOWN_MS;
+    setCooldownUntil(until);
+    setCooldownLeft(Math.ceil(RESEND_COOLDOWN_MS / 1000));
+    if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+    cooldownTimer.current = setInterval(() => {
+      const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+      setCooldownLeft(left);
+      if (left <= 0 && cooldownTimer.current) {
+        clearInterval(cooldownTimer.current);
+        cooldownTimer.current = null;
+      }
+    }, 500);
+  };
+
   const handleSubmit = async () => {
     if (!validateEmail()) return;
+    if (Date.now() < cooldownUntil) return;
     setLoading(true);
     setError(null);
     try {
       await authService.sendPasswordReset(email);
       prodayHaptics.confirm();
       setSent(true);
+      startCooldown();
     } catch (e) {
       prodayHaptics.error();
       setError(authService.getAuthErrorMessage(e));
@@ -74,151 +89,120 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
     }
   };
 
+  const toolbar = useMemo(
+    () => (
+      <PressableSpring
+        style={styles.iconBtn}
+        onPress={onBack}
+        hitSlop={8}
+        scaleTo={0.92}
+        haptic
+        accessibilityLabel={t('auth.backHome')}
+      >
+        <Icon name="arrow-back" size={20} color={AUTH_XP.white} />
+      </PressableSpring>
+    ),
+    [onBack, t],
+  );
+
   return (
     <KeyboardAvoidingView
-      style={authStyles.root}
+      style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={authStyles.ambient} pointerEvents="none">
-        <ProDayGradient kind="ambient" style={StyleSheet.absoluteFill} />
-      </View>
-      <ScrollView
-        contentContainerStyle={[
-          authStyles.scroll,
-          { paddingTop: headerTopPad, paddingBottom: scrollBottom },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={authStyles.toolbar}>
-          <PressableSpring
-            style={authStyles.backBtn}
-            onPress={onBack}
-            hitSlop={8}
-            scaleTo={0.92}
-            haptic
-            accessibilityLabel="Retour"
-          >
-            <Icon name="arrow-back" size={20} color={c.ink} />
-          </PressableSpring>
-          <View style={{ width: 42 }} />
-        </View>
-
-        <View style={authStyles.brandRow}>
-          <AuthBrandHeader width={logoWidth} tone="light" />
-        </View>
-
-        <View style={[authStyles.body, compact && authStyles.bodyCompact]}>
-          {sent ? (
-            <AnimatedEntrance>
-              <View style={local.successBlock}>
-                <View style={local.successIcon}>
-                  <Icon name="mail" size={28} color={c.ink} />
-                </View>
-                <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
-                  Email envoyé
-                </Text>
-                <Text style={authStyles.sub}>
-                  Si un compte ProDay existe avec cette adresse, vous recevrez un e-mail de
-                  réinitialisation à{' '}
-                  <Text style={local.emailHighlight}>{email.trim()}</Text>.
-                  {'\n\n'}
-                  Consultez votre boîte mail et le dossier spam, puis suivez le lien ProDay pour
-                  choisir un nouveau mot de passe.
-                </Text>
-                <AuthPrimaryButton label="Retour à la connexion" onPress={onBack} />
-                <PressableSpring
-                  style={authStyles.linkBtn}
-                  onPress={() => {
-                    setSent(false);
-                    setError(null);
-                  }}
-                  scaleTo={0.98}
-                >
-                  <Text style={[authStyles.linkText, local.linkUnderline]}>Renvoyer un email</Text>
-                </PressableSpring>
-              </View>
-            </AnimatedEntrance>
-          ) : (
-            <>
-              <AnimatedEntrance index={0}>
-                <View style={authStyles.hero}>
-                  <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
-                    Mot de passe oublié
-                  </Text>
-                  <Text style={authStyles.sub}>
-                    Saisissez l’adresse email de votre compte ProDay. Nous vous enverrons un lien
-                    pour réinitialiser votre mot de passe.
-                  </Text>
-                </View>
-              </AnimatedEntrance>
-
-              {error ? (
-                <ProDayErrorBanner message={error} onDismiss={() => setError(null)} />
-              ) : null}
-
-              <AuthFormCard>
-                  <StaggerReveal index={0}>
-                    <AuthTextField
-                      label="Email"
-                      icon="mail"
-                      placeholder="vous@exemple.com"
-                      value={email}
-                      onChangeText={(t) => {
-                        setEmail(t);
-                        if (fieldError) setFieldError(undefined);
-                      }}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      autoFocus={!initialEmail}
-                      returnKeyType="go"
-                      onSubmitEditing={() => void handleSubmit()}
-                      error={fieldError}
-                    />
-                  </StaggerReveal>
-
-                  <StaggerReveal index={1}>
-                    <AuthPrimaryButton
-                      label="Envoyer le lien"
-                      onPress={() => void handleSubmit()}
-                      loading={loading}
-                    />
-                  </StaggerReveal>
-              </AuthFormCard>
-
-              <PressableSpring style={authStyles.linkBtn} onPress={onBack} scaleTo={0.98}>
-                <Text style={[authStyles.linkText, local.linkUnderline]}>Retour à la connexion</Text>
-              </PressableSpring>
-            </>
-          )}
-        </View>
-      </ScrollView>
+      <AuthExperienceShell toolbar={toolbar} brandCopy={false}>
+        {sent ? (
+          <View>
+            <ProDayText variant="title" style={styles.title}>
+              {t('auth.forgot.sentTitle')}
+            </ProDayText>
+            <ProDayText variant="body" style={styles.sub}>
+              {t('auth.forgot.sentBody', { email: email.trim() })}
+            </ProDayText>
+            <AuthButton label={t('auth.forgot.backLogin')} onPress={onBack} />
+            <AuthLink
+              label={
+                cooldownLeft > 0
+                  ? t('auth.forgot.resendCooldown', { seconds: cooldownLeft })
+                  : t('auth.forgot.resend')
+              }
+              onPress={() => {
+                if (cooldownLeft > 0) return;
+                setSent(false);
+                setError(null);
+              }}
+              align="center"
+              muted={cooldownLeft > 0}
+            />
+          </View>
+        ) : (
+          <View>
+            <ProDayText variant="title" style={styles.title}>
+              {t('auth.forgot.title')}
+            </ProDayText>
+            <ProDayText variant="body" style={styles.sub}>
+              {t('auth.forgot.sub')}
+            </ProDayText>
+            {error ? <AuthError message={error} onDismiss={() => setError(null)} /> : null}
+            <AuthInput
+              label={t('auth.email')}
+              icon="mail"
+              placeholder="vous@exemple.com"
+              value={email}
+              onChangeText={(v) => {
+                setEmail(v);
+                if (fieldError) setFieldError(undefined);
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              textContentType="emailAddress"
+              returnKeyType="send"
+              onSubmitEditing={() => void handleSubmit()}
+              error={fieldError}
+            />
+            <AuthButton
+              label={t('auth.forgot.cta')}
+              onPress={() => void handleSubmit()}
+              loading={loading}
+              disabled={cooldownLeft > 0}
+            />
+            <AuthLink
+              label={t('auth.forgot.backLogin')}
+              onPress={onBack}
+              align="center"
+              muted
+            />
+          </View>
+        )}
+      </AuthExperienceShell>
     </KeyboardAvoidingView>
   );
 };
 
-function createLocalStyles(c: AppColors) {
-  return StyleSheet.create({
-    successBlock: { alignItems: 'stretch' },
-    successIcon: {
-      alignSelf: 'center',
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: c.accentSoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.md,
-      borderWidth: 1,
-      borderColor: c.border,
-    },
-    emailHighlight: {
-      fontWeight: '800',
-      color: c.text,
-    },
-    linkUnderline: {
-      textDecorationLine: 'underline',
-    },
-  });
-}
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: AUTH_XP.black,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: AUTH_XP.border,
+  },
+  title: {
+    color: AUTH_XP.white,
+    fontSize: 28,
+    letterSpacing: -0.4,
+    marginBottom: 8,
+  },
+  sub: {
+    color: AUTH_XP.textMuted,
+    marginBottom: 22,
+    lineHeight: 22,
+  },
+});

@@ -21,61 +21,61 @@ describe('signupFlowConfig', () => {
     expect(needsParentalStep(false, 'men')).toBe(false);
   });
 
-  it('parcours joueur : micro-étapes puis accès', () => {
+  it('parcours joueur : compte d’abord, univers ensuite', () => {
     const steps = buildSignupSteps('player', {
       role: 'player',
       parentalRequired: false,
     });
     expect(steps).toEqual([
-      'welcome',
+      'account',
+      'security',
       'space',
       'sport',
       'location',
       'stats',
-      'account',
-      'security',
       'launch',
     ]);
+    expect(steps.indexOf('account')).toBe(0);
+    expect(steps.indexOf('security')).toBe(1);
   });
 
-  it('parcours joueur mineur : étape family', () => {
+  it('parcours joueur mineur : étape family avant launch', () => {
     const steps = buildSignupSteps('player', {
       role: 'player',
       parentalRequired: true,
     });
     expect(steps).toContain('family');
-    expect(steps.indexOf('family')).toBeLessThan(steps.indexOf('account'));
+    expect(steps.indexOf('family')).toBeGreaterThan(steps.indexOf('security'));
+    expect(steps.indexOf('family')).toBeLessThan(steps.indexOf('launch'));
   });
 
-  it('parcours coach : étape coach_pro dédiée', () => {
+  it('parcours coach : compte puis profil pro', () => {
     expect(
       buildSignupSteps('staff', { role: 'coach', parentalRequired: false })
-    ).toEqual(['welcome', 'coach_pro', 'account', 'security', 'launch']);
+    ).toEqual(['account', 'security', 'coach_pro', 'launch']);
   });
 
-  it('parcours médical : spécialité puis cabinet', () => {
+  it('parcours médical : compte puis spécialité / cabinet', () => {
     expect(
       buildSignupSteps('staff', { role: 'physio', parentalRequired: false })
     ).toEqual([
-      'welcome',
-      'medical_specialty',
-      'medical_practice',
       'account',
       'security',
+      'medical_specialty',
+      'medical_practice',
       'launch',
     ]);
   });
 
-  it('parcours partenaire : 5 étapes métier puis identité', () => {
+  it('parcours partenaire : compte puis étapes métier', () => {
     expect(
       buildSignupSteps('sponsor', { role: 'sponsor', parentalRequired: false })
     ).toEqual([
-      'welcome',
+      'account',
+      'security',
       'sponsor_company',
       'sponsor_campaign',
       'sponsor_targeting',
-      'account',
-      'security',
       'launch',
     ]);
   });

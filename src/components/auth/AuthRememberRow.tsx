@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
-import { spacing, radius } from '../../theme/designTokens';
-import { useAppTheme } from '../../context/ProductLineContext';
-import type { AppColors } from '../../theme/universeTheme';
+import { ProDayText } from '../ui/ProDayText';
+import { AUTH_XP } from '../../features/auth/experience/tokens';
 
 interface AuthRememberRowProps {
   rememberMe: boolean;
@@ -19,61 +18,30 @@ const ToggleChip: React.FC<{
   on: boolean;
   label: string;
   hint?: string;
-  colors: AppColors;
   onPress: () => void;
-}> = ({ on, label, hint, colors, onPress }) => (
+}> = ({ on, label, hint, onPress }) => (
   <PressableSpring
-    style={[
-      chipStyles.chip,
-      {
-        backgroundColor: on ? colors.accentSoft : colors.surface,
-        borderColor: on ? colors.accentMuted : colors.border,
-      },
-    ]}
+    style={[styles.chip, on && styles.chipOn]}
     onPress={onPress}
     scaleTo={0.97}
   >
-    <View
-      style={[
-        chipStyles.dot,
-        { borderColor: on ? colors.accent : colors.border, backgroundColor: on ? colors.accent : 'transparent' },
-      ]}
-    >
-      {on ? <Icon name="checkmark-circle" size={12} color={colors.brandInverse} /> : null}
+    <View style={[styles.dot, on && styles.dotOn]}>
+      {on ? <Icon name="checkmark-circle" size={12} color={AUTH_XP.black} /> : null}
     </View>
-    <View style={chipStyles.copy}>
-      <Text style={[chipStyles.label, { color: colors.text }]}>{label}</Text>
-      {hint ? <Text style={[chipStyles.hint, { color: colors.textMuted }]}>{hint}</Text> : null}
+    <View style={styles.copy}>
+      <ProDayText variant="caption" style={styles.label}>
+        {label}
+      </ProDayText>
+      {hint ? (
+        <ProDayText variant="caption" style={styles.hint}>
+          {hint}
+        </ProDayText>
+      ) : null}
     </View>
   </PressableSpring>
 );
 
-const chipStyles = StyleSheet.create({
-  chip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    minWidth: 0,
-  },
-  dot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  copy: { flex: 1, minWidth: 0 },
-  label: { fontSize: 12, fontWeight: '800' },
-  hint: { fontSize: 10, marginTop: 1, lineHeight: 13, fontWeight: '500' },
-});
-
-/** Options connexion rapide — chips côte à côte. */
+/** Options connexion rapide — dark experience. */
 export const AuthRememberRow: React.FC<AuthRememberRowProps> = ({
   rememberMe,
   onRememberMeChange,
@@ -81,46 +49,78 @@ export const AuthRememberRow: React.FC<AuthRememberRowProps> = ({
   onBiometricChange,
   biometricLabel = 'Biométrie',
   biometricAvailable = false,
-}) => {
-  const { colors } = useAppTheme();
-  const local = useMemo(() => createStyles(colors), [colors]);
-
-  return (
-    <View style={local.wrap}>
-      <View style={local.row}>
+}) => (
+  <View style={styles.wrap}>
+    <View style={styles.row}>
+      <ToggleChip
+        on={rememberMe}
+        label="Mémoriser"
+        onPress={() => onRememberMeChange(!rememberMe)}
+      />
+      {biometricAvailable && onBiometricChange ? (
         <ToggleChip
-          on={rememberMe}
-          label="Mémoriser"
-          colors={colors}
-          onPress={() => onRememberMeChange(!rememberMe)}
+          on={biometricEnabled}
+          label={biometricLabel}
+          hint="Sécurisé"
+          onPress={() => {
+            const next = !biometricEnabled;
+            if (next && !rememberMe) onRememberMeChange(true);
+            onBiometricChange(next);
+          }}
         />
-        {biometricAvailable && onBiometricChange ? (
-          <ToggleChip
-            on={biometricEnabled}
-            label={biometricLabel}
-            hint="Sécurisé"
-            colors={colors}
-            onPress={() => {
-              const next = !biometricEnabled;
-              if (next && !rememberMe) onRememberMeChange(true);
-              onBiometricChange(next);
-            }}
-          />
-        ) : null}
-      </View>
+      ) : null}
     </View>
-  );
-};
+  </View>
+);
 
-function createStyles(_c: AppColors) {
-  return StyleSheet.create({
-    wrap: {
-      marginTop: spacing.xs,
-      marginBottom: spacing.xs,
-    },
-    row: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  wrap: {
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  chip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: AUTH_XP.border,
+    backgroundColor: AUTH_XP.inputBg,
+    minWidth: 0,
+  },
+  chipOn: {
+    borderColor: AUTH_XP.borderFocus,
+    backgroundColor: 'rgba(197,160,89,0.12)',
+  },
+  dot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: AUTH_XP.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dotOn: {
+    borderColor: AUTH_XP.gold,
+    backgroundColor: AUTH_XP.gold,
+  },
+  copy: { flex: 1, minWidth: 0 },
+  label: {
+    color: AUTH_XP.white,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  hint: {
+    color: AUTH_XP.textMuted,
+    fontSize: 10,
+    marginTop: 1,
+  },
+});

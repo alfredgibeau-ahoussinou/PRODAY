@@ -1,7 +1,7 @@
 import type { ProductLineId } from '../models/ProductLine';
 import type { ProDayModuleId } from '../content/prodayModules';
 import type { TranslateFn } from './types';
-import type { AuthTabId } from '../components/auth/AuthTabRail';
+import type { AuthTabId } from '../components/auth/authTypes';
 import type { DiscoverJourneyStep, DiscoverJourneyStepId } from '../content/discoverGuestJourney';
 import type { DiscoverQuickId } from '../components/discover/DiscoverQuickAccess';
 import { brandForProductLine } from '../models/ProductLine';

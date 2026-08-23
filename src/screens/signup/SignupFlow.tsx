@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { Easing, FadeIn } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
@@ -39,6 +39,7 @@ import { getSanteLaunchCopy } from './signupSanteConfig';
 import { useTranslation } from '../../context/LocaleContext';
 import type { UserRole } from '../../models/User';
 import { needsOnboardingDocumentUpload } from '../../utils/onboardingGate';
+import { AUTH_XP } from '../../features/auth/experience';
 
 interface SignupFlowProps {
   onClose: () => void;
@@ -60,10 +61,15 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   onComplete,
   form,
 }) => {
-  const { colors, isProPlayerSignup, isProSignup, isAmateurSignup, isSupporterSignup, isSanteSignup } =
+  const { isProPlayerSignup, isProSignup, isAmateurSignup, isSupporterSignup, isSanteSignup } =
     useSignupFlowTheme();
   const { t } = useTranslation();
   const { profile, refreshProfile } = useAuth();
+
+  useEffect(() => {
+    form.registerCreateBeforeLaunch(() => form.createAccount(refreshProfile));
+    return () => form.registerCreateBeforeLaunch(null);
+  }, [form, refreshProfile]);
 
   const layout = {
     stepIndex: form.pageIndex,
@@ -78,7 +84,12 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
 
   const submitSecurity = async () => {
     if (!form.validateAccount()) return;
-    await form.createAccount(refreshProfile);
+    const next = form.steps[form.pageIndex + 1];
+    if (next === 'launch') {
+      await form.createAccount(refreshProfile);
+      return;
+    }
+    form.goNext();
   };
 
   let content: React.ReactNode;
@@ -142,7 +153,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
       );
       break;
     case 'account':
-      content = <SignupAccountStep form={form} {...layout} onBack={backUnlessLocked} />;
+      content = <SignupAccountStep form={form} {...layout} onBack={backUnlessLocked ?? onClose} />;
       break;
     case 'security':
       content = (
@@ -224,7 +235,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={[styles.root, { backgroundColor: AUTH_XP.black }]}>
       <Animated.View key={form.currentPage} entering={pageEntering} style={styles.page}>
         {content}
       </Animated.View>

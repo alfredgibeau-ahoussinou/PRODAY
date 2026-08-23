@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
-  Alert,
 } from 'react-native';
 import { PressableSpring } from '../motion';
 import * as WebBrowser from 'expo-web-browser';
@@ -17,9 +16,7 @@ import * as Crypto from 'expo-crypto';
 import { Ionicons } from '@expo/vector-icons';
 import {
   getGoogleAuthRequestConfig,
-  getGoogleAuthSetupHint,
   getGoogleIosRedirectUri,
-  getGoogleSignInBlockReason,
   type GoogleAuthRequestConfig,
 } from '../../config/oauth';
 import {
@@ -28,13 +25,10 @@ import {
   AuthLinkPasswordRequiredError,
 } from '../../services/auth.service';
 import { AuthOAuthLinkModal } from './AuthOAuthLinkModal';
-import { spacing, radius } from '../../theme/designTokens';
-import { useAppTheme } from '../../context/ProductLineContext';
-import type { AppColors } from '../../theme/universeTheme';
+import { AUTH_XP } from '../../features/auth/experience/tokens';
 
 WebBrowser.maybeCompleteAuthSession();
 
-/** Récupère l’id_token (échange code OAuth si nécessaire sur iOS/Android). */
 async function resolveGoogleIdToken(
   result: AuthSessionResult,
   googleRequest: AuthRequest | null
@@ -65,7 +59,6 @@ type SocialProvider = 'google' | 'apple';
 
 interface AuthSocialButtonsProps {
   disabled?: boolean;
-  /** Par défaut : Google + Apple (iOS). */
   providers?: SocialProvider[];
   onSuccess: () => void | Promise<void>;
   onNeedsProfile: (prefill: { email: string; displayName?: string }) => void;
@@ -83,7 +76,6 @@ interface GoogleSignInButtonProps {
   onLinkPasswordRequired: (error: AuthLinkPasswordRequiredError) => void;
 }
 
-/** Sous-composant : le hook Google ne s’exécute que si la config plateforme est valide. */
 const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   config,
   disabled,
@@ -94,8 +86,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   onError,
   onLinkPasswordRequired,
 }) => {
-  const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createSocialStyles(c), [c]);
+  const styles = useMemo(() => createSocialStyles(), []);
   const redirectUri = useMemo(
     () => (config.iosClientId ? getGoogleIosRedirectUri(config.iosClientId) : undefined),
     [config.iosClientId]
@@ -185,7 +176,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
       accessibilityLabel="Se connecter avec Google"
     >
       {busy ? (
-        <ActivityIndicator color={c.text} />
+        <ActivityIndicator color={AUTH_XP.white} />
       ) : (
         <>
           <Ionicons name="logo-google" size={20} color="#4285F4" />
@@ -196,6 +187,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
   );
 };
 
+/** OAuth réels uniquement — aucun bouton factice si Google non configuré. */
 export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   disabled,
   providers = ['google', 'apple'],
@@ -203,20 +195,11 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   onNeedsProfile,
   onError,
 }) => {
-  const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createSocialStyles(c), [c]);
+  const styles = useMemo(() => createSocialStyles(), []);
   const [busy, setBusy] = useState<'google' | 'apple' | null>(null);
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [linkRequest, setLinkRequest] = useState<AuthLinkPasswordRequiredError | null>(null);
-  const googleBlockReason = getGoogleSignInBlockReason();
-  const googleConfig = googleBlockReason ? null : getGoogleAuthRequestConfig();
-
-  const showGoogleSetupAlert = () => {
-    Alert.alert(
-      googleBlockReason ? 'Google. Expo Go' : 'Google non configuré',
-      googleBlockReason ?? getGoogleAuthSetupHint()
-    );
-  };
+  const googleConfig = getGoogleAuthRequestConfig();
 
   useEffect(() => {
     if (Platform.OS === 'ios') {
@@ -248,13 +231,7 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   );
 
   const signInWithApple = async () => {
-    if (Platform.OS !== 'ios' || !appleAvailable) {
-      Alert.alert(
-        'Apple Sign In',
-        'Disponible sur l’application iOS avec un compte Apple configuré.'
-      );
-      return;
-    }
+    if (Platform.OS !== 'ios' || !appleAvailable) return;
     setBusy('apple');
     try {
       const rawNonce = Crypto.randomUUID();
@@ -288,100 +265,93 @@ export const AuthSocialButtons: React.FC<AuthSocialButtonsProps> = ({
   const isDisabled = disabled || busy !== null;
   const showGoogle = providers.includes('google');
   const showApple = providers.includes('apple');
+  const hasAny =
+    (showGoogle && Boolean(googleConfig)) ||
+    (showApple && Platform.OS === 'ios' && appleAvailable);
+
+  if (!hasAny && !linkRequest) return null;
 
   return (
     <>
-    <View style={styles.wrap}>
-      {showGoogle && googleConfig ? (
-        <GoogleSignInButton
-          config={googleConfig}
-          disabled={disabled}
-          busy={busy === 'google'}
-          onBusyChange={(v) => setBusy(v ? 'google' : null)}
-          onSuccess={onSuccess}
-          onNeedsProfile={onNeedsProfile}
-          onError={onError}
-          onLinkPasswordRequired={setLinkRequest}
-        />
-      ) : showGoogle ? (
-        <PressableSpring
-          style={[styles.btn, styles.btnGoogle, isDisabled && styles.btnDisabled]}
-          onPress={showGoogleSetupAlert}
-          disabled={isDisabled}
-          scaleTo={0.97}
-          accessibilityRole="button"
-          accessibilityLabel="Se connecter avec Google. Configuration requise"
-        >
-          <Ionicons name="logo-google" size={20} color="#4285F4" />
-          <Text style={styles.btnText}>Se connecter avec Google</Text>
-        </PressableSpring>
-      ) : null}
+      <View style={styles.wrap}>
+        {showGoogle && googleConfig ? (
+          <GoogleSignInButton
+            config={googleConfig}
+            disabled={disabled}
+            busy={busy === 'google'}
+            onBusyChange={(v) => setBusy(v ? 'google' : null)}
+            onSuccess={onSuccess}
+            onNeedsProfile={onNeedsProfile}
+            onError={onError}
+            onLinkPasswordRequired={setLinkRequest}
+          />
+        ) : null}
 
-      {showApple && Platform.OS === 'ios' && appleAvailable ? (
-        <PressableSpring
-          style={[styles.btn, styles.btnApple, isDisabled && styles.btnDisabled]}
-          onPress={signInWithApple}
-          disabled={isDisabled}
-          scaleTo={0.97}
-          haptic
-          accessibilityRole="button"
-          accessibilityLabel="Se connecter avec Apple"
-        >
-          {busy === 'apple' ? (
-            <ActivityIndicator color={c.brandInverse} />
-          ) : (
-            <>
-              <Ionicons name="logo-apple" size={22} color={c.brandInverse} />
-              <Text style={[styles.btnText, styles.btnAppleText]}>
-                Se connecter avec Apple
-              </Text>
-            </>
-          )}
-        </PressableSpring>
-      ) : null}
-    </View>
-    <AuthOAuthLinkModal
-      request={linkRequest}
-      onClose={() => setLinkRequest(null)}
-      onSuccess={async () => {
-        setLinkRequest(null);
-        await onSuccess();
-      }}
-      onError={onError}
-    />
+        {showApple && Platform.OS === 'ios' && appleAvailable ? (
+          <PressableSpring
+            style={[styles.btn, styles.btnApple, isDisabled && styles.btnDisabled]}
+            onPress={signInWithApple}
+            disabled={isDisabled}
+            scaleTo={0.97}
+            haptic
+            accessibilityRole="button"
+            accessibilityLabel="Se connecter avec Apple"
+          >
+            {busy === 'apple' ? (
+              <ActivityIndicator color={AUTH_XP.black} />
+            ) : (
+              <>
+                <Ionicons name="logo-apple" size={22} color={AUTH_XP.black} />
+                <Text style={[styles.btnText, styles.btnAppleText]}>
+                  Se connecter avec Apple
+                </Text>
+              </>
+            )}
+          </PressableSpring>
+        ) : null}
+      </View>
+      <AuthOAuthLinkModal
+        request={linkRequest}
+        onClose={() => setLinkRequest(null)}
+        onSuccess={async () => {
+          setLinkRequest(null);
+          await onSuccess();
+        }}
+        onError={onError}
+      />
     </>
   );
 };
 
-function createSocialStyles(c: AppColors) {
+function createSocialStyles() {
   return StyleSheet.create({
-    wrap: { gap: spacing.sm },
+    wrap: { gap: 10 },
     btn: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.sm,
-      borderRadius: radius.lg,
-      paddingVertical: spacing.md,
-      minHeight: 50,
-      borderWidth: 1.5,
-      borderColor: c.borderStrong,
+      gap: 10,
+      borderRadius: 2,
+      paddingVertical: 14,
+      minHeight: 52,
+      borderWidth: 1,
+      borderColor: AUTH_XP.border,
     },
     btnGoogle: {
-      backgroundColor: c.surfaceMuted,
+      backgroundColor: AUTH_XP.surfaceRaised,
     },
     btnApple: {
-      backgroundColor: '#FAFAFA',
-      borderColor: '#FAFAFA',
+      backgroundColor: AUTH_XP.white,
+      borderColor: AUTH_XP.white,
     },
     btnDisabled: { opacity: 0.6 },
     btnText: {
       fontSize: 15,
       fontWeight: '700',
-      color: c.text,
+      color: AUTH_XP.white,
     },
     btnAppleText: {
-      color: '#000000',
+      color: AUTH_XP.black,
     },
   });
 }
