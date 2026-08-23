@@ -51,8 +51,10 @@ describe('sélecteur univers — brand + ACL', () => {
     expect(UNIVERSE_ACCENT.sponsor).toBe(PRODAY_POLE_ACCENTS.sponsor);
   });
 
-  it('expose CTA « Entrer dans l’univers X » et icônes rôle', () => {
-    expect(universeEnterCtaLabel('joueur')).toBe('Entrer dans l’univers Joueur');
+  it('expose CTA « Entrer dans X » et icônes rôle', () => {
+    expect(universeEnterCtaLabel('joueur')).toBe('Entrer dans Joueur');
+    expect(universeEnterCtaLabel('coach')).toBe('Entrer dans Coach');
+    expect(universeEnterCtaLabel('pro_club')).toBe('Entrer dans Club');
     expect(universePoleDisplayName('president')).toBe('Président');
     expect(universePoleDisplayName('evenements')).toBe('Événements');
     expect(universePoleIcon('joueur')).toBe('person');

@@ -1,24 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
-  Extrapolation,
-  interpolate,
   useAnimatedStyle,
-  type SharedValue,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { spacing, radius } from '../../../theme/designTokens';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
+import { useReducedMotion } from '../../../motion';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
-import { universeEnterCtaLabel, universePoleDisplayName } from './universePoleBrand';
+import {
+  universeEnterCtaLabel,
+  universePoleDisplayName,
+  universePoleTagline,
+} from './universePoleBrand';
 
 interface UniversePageChromeProps {
   lines: CarouselPoleId[];
   activeIndex: number;
-  scrollX: SharedValue<number>;
-  itemWidth: number;
   touring: boolean;
   interactionLocked?: boolean;
   showDismiss?: boolean;
@@ -27,56 +29,19 @@ interface UniversePageChromeProps {
   onSkip: () => void;
   onChoose: (line: CarouselPoleId) => void;
   onJumpToIndex: (index: number) => void;
+  /** Masque le pager mobile (dots) — tablette utilise la liste. */
+  hidePagerDots?: boolean;
+  /** Contenu latéral tablette (liste compacte). */
+  sideRail?: React.ReactNode;
 }
 
-const AnimatedDot: React.FC<{
-  index: number;
-  activeIndex: number;
-  line: CarouselPoleId;
-  itemWidth: number;
-  scrollX: SharedValue<number>;
-  linesCount: number;
-  disabled?: boolean;
-  onPress: () => void;
-}> = ({ index, activeIndex, line, itemWidth, scrollX, linesCount, disabled, onPress }) => {
-  const accent = UNIVERSE_ACCENT[line];
-  const label = UNIVERSE_SHORT[line];
-  const inactive = 'rgba(255,255,255,0.28)';
+const COPY_FADE_MS = 280;
+const DOT_INACTIVE = 'rgba(255,255,255,0.28)';
 
-  const dotStyle = useAnimatedStyle(() => {
-    if (itemWidth <= 0 || linesCount <= 1) {
-      return { width: 18, opacity: 1, backgroundColor: accent };
-    }
-    const page = scrollX.value / itemWidth;
-    const dist = Math.abs(page - index);
-    const width = interpolate(dist, [0, 0.35, 1], [18, 10, 6], Extrapolation.CLAMP);
-    const opacity = interpolate(dist, [0, 0.5, 1], [1, 0.72, 0.38], Extrapolation.CLAMP);
-    return {
-      width,
-      opacity,
-      backgroundColor: dist < 0.35 ? accent : inactive,
-    };
-  }, [accent, inactive, index, itemWidth, linesCount]);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      hitSlop={8}
-      accessibilityLabel={label}
-      accessibilityState={{ selected: index === activeIndex }}
-    >
-      <Animated.View style={[styles.dot, dotStyle]} />
-    </Pressable>
-  );
-};
-
-/** Header épuré + CTA accent via état React (liveIndex) — zéro interpolateColor worklet. */
+/** Header + copie + CTA — accent unique = univers actif (React, pas worklet Record). */
 export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   lines,
   activeIndex,
-  scrollX,
-  itemWidth,
   touring,
   interactionLocked = false,
   showDismiss = false,
@@ -85,15 +50,79 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   onSkip,
   onChoose,
   onJumpToIndex,
+  hidePagerDots = false,
+  sideRail,
 }) => {
   const insets = useSafeAreaInsets();
+  const reducedMotion = useReducedMotion();
   const activeLine = lines[activeIndex] ?? lines[0];
-  const isLightCta = activeLine === 'president';
   const activeAccent = UNIVERSE_ACCENT[activeLine];
+  const isLightCta = activeAccent.toUpperCase() === '#FFFFFF';
   const ctaLabel = universeEnterCtaLabel(activeLine);
+  const poleName = universePoleDisplayName(activeLine);
+  const tagline = universePoleTagline(activeLine);
   const linesCount = lines.length;
-
   const showHeaderAction = touring || (showDismiss && onDismiss);
+
+  const copyOpacity = useSharedValue(1);
+  const copyScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      copyOpacity.value = 1;
+      copyScale.value = 1;
+      return;
+    }
+    copyOpacity.value = 0.35;
+    copyScale.value = 0.97;
+    copyOpacity.value = withTiming(1, { duration: COPY_FADE_MS });
+    copyScale.value = withTiming(1, { duration: COPY_FADE_MS });
+  }, [activeIndex, copyOpacity, copyScale, reducedMotion]);
+
+  const copyStyle = useAnimatedStyle(() => ({
+    opacity: copyOpacity.value,
+    transform: [{ scale: copyScale.value }],
+  }));
+
+  const cta = (
+    <PressableSpring
+      onPress={() => onChoose(activeLine)}
+      scaleTo={0.98}
+      haptic
+      disabled={interactionLocked}
+      style={styles.ctaWrap}
+      accessibilityRole="button"
+      accessibilityLabel={ctaLabel}
+    >
+      <View
+        style={[
+          styles.cta,
+          { backgroundColor: activeAccent },
+          isLightCta && styles.ctaOnLightAccent,
+        ]}
+      >
+        <Text style={[styles.ctaText, isLightCta && styles.ctaTextDark]} numberOfLines={1}>
+          {ctaLabel}
+        </Text>
+        <Icon name="chevron-forward" size={18} color={isLightCta ? '#0A0A0A' : '#FFFFFF'} />
+      </View>
+    </PressableSpring>
+  );
+
+  const copyBlock = (
+    <Animated.View style={[styles.copyBlock, copyStyle]} accessibilityLiveRegion="polite">
+      <Text
+        style={[styles.poleName, { color: activeAccent }]}
+        numberOfLines={1}
+        accessibilityRole="header"
+      >
+        {poleName}
+      </Text>
+      <Text style={styles.tagline} numberOfLines={1}>
+        {tagline}
+      </Text>
+    </Animated.View>
+  );
 
   return (
     <View style={styles.root} pointerEvents="box-none">
@@ -108,11 +137,8 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
       >
         <View style={styles.headerRow}>
           <View style={styles.headerCopy}>
-            <Text style={[styles.title, cinematic && styles.titleWide]} numberOfLines={2}>
-              Choisissez votre univers
-            </Text>
-            <Text style={styles.subtitle} numberOfLines={2}>
-              Une plateforme. Plusieurs façons de vivre le football.
+            <Text style={[styles.title, cinematic && styles.titleWide]} numberOfLines={1}>
+              Changer d’univers
             </Text>
           </View>
           {showHeaderAction ? (
@@ -132,66 +158,71 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         </View>
       </View>
 
-      <View
-        style={[
-          styles.bottom,
-          {
-            paddingBottom: insets.bottom + spacing.md,
-            paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
-          },
-        ]}
-        pointerEvents="box-none"
-      >
-        <Text style={[styles.poleIndicator, { color: activeAccent }]}>
-          {universePoleDisplayName(activeLine)} · {activeIndex + 1} / {linesCount}
-        </Text>
-
-        <View style={styles.dots}>
-          {lines.map((line, index) => (
-            <AnimatedDot
-              key={line}
-              index={index}
-              activeIndex={activeIndex}
-              line={line}
-              itemWidth={itemWidth}
-              scrollX={scrollX}
-              linesCount={linesCount}
-              disabled={interactionLocked}
-              onPress={() => onJumpToIndex(index)}
-            />
-          ))}
-        </View>
-
-        <PressableSpring
-          onPress={() => onChoose(activeLine)}
-          scaleTo={0.98}
-          haptic
-          disabled={interactionLocked}
-          style={styles.ctaWrap}
+      {cinematic && sideRail ? (
+        <View
+          style={[
+            styles.cinematicBody,
+            {
+              paddingHorizontal: spacing.xl * 1.5,
+              paddingBottom: insets.bottom + spacing.md,
+            },
+          ]}
+          pointerEvents="box-none"
         >
-          <View
-            style={[
-              styles.cta,
-              { backgroundColor: activeAccent },
-              isLightCta && styles.ctaOnLightAccent,
-            ]}
-          >
-            <Text
-              style={[styles.ctaText, isLightCta && styles.ctaTextDark]}
-              numberOfLines={1}
-            >
-              {ctaLabel}
-            </Text>
-            <Icon
-              name="chevron-forward"
-              size={18}
-              color={isLightCta ? '#0A0A0A' : '#FFFFFF'}
-            />
+          <View style={styles.railCol}>{sideRail}</View>
+          <View style={styles.previewCol} pointerEvents="box-none">
+            {copyBlock}
+            <View style={styles.ctaSlot}>{cta}</View>
           </View>
-        </PressableSpring>
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.bottom,
+            {
+              paddingBottom: insets.bottom + spacing.md,
+              paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
+            },
+          ]}
+          pointerEvents="box-none"
+        >
+          {copyBlock}
 
-        <Text style={styles.hint}>Glissez ou touchez un point</Text>
-      </View>
+          {!hidePagerDots && linesCount > 1 ? (
+            <View style={styles.dots} accessibilityRole="tablist">
+              {lines.map((line, index) => {
+                const selected = index === activeIndex;
+                return (
+                  <Pressable
+                    key={line}
+                    onPress={() => onJumpToIndex(index)}
+                    disabled={interactionLocked}
+                    hitSlop={8}
+                    accessibilityRole="tab"
+                    accessibilityLabel={UNIVERSE_SHORT[line]}
+                    accessibilityState={{ selected }}
+                  >
+                    <View
+                      style={[
+                        styles.dot,
+                        selected
+                          ? { width: 18, backgroundColor: activeAccent }
+                          : { width: 6, backgroundColor: DOT_INACTIVE },
+                      ]}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+
+          {cta}
+
+          {linesCount > 1 ? (
+            <Text style={styles.hint}>Glissez ou touchez pour changer</Text>
+          ) : null}
+        </View>
+      )}
     </View>
   );
 };
@@ -213,14 +244,6 @@ const styles = StyleSheet.create({
   },
   headerCopy: {
     flex: 1,
-    gap: spacing.xs,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 20,
-    color: 'rgba(255,255,255,0.45)',
-    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   skip: {
     fontSize: 14,
@@ -232,7 +255,6 @@ const styles = StyleSheet.create({
     width: 48,
   },
   title: {
-    flex: 1,
     fontSize: 20,
     fontWeight: '700',
     letterSpacing: -0.4,
@@ -248,11 +270,43 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     alignItems: 'stretch',
   },
-  poleIndicator: {
-    fontSize: 13,
+  cinematicBody: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: spacing.xl,
+    paddingTop: spacing.md,
+  },
+  railCol: {
+    width: 220,
+    maxWidth: '34%',
+    justifyContent: 'center',
+  },
+  previewCol: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    gap: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  copyBlock: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  poleName: {
+    fontSize: 28,
     fontWeight: '700',
-    letterSpacing: 0.2,
+    letterSpacing: -0.5,
     textAlign: 'center',
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  tagline: {
+    fontSize: 14,
+    fontWeight: '500',
+    letterSpacing: 0.1,
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    maxWidth: 280,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   dots: {
@@ -264,6 +318,9 @@ const styles = StyleSheet.create({
   dot: {
     height: 6,
     borderRadius: 3,
+  },
+  ctaSlot: {
+    alignItems: 'stretch',
   },
   ctaWrap: {
     borderRadius: radius.pill,
@@ -287,8 +344,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   ctaOnLightAccent: {
-    shadowColor: '#FBBF24',
-    shadowOpacity: 0.22,
+    shadowColor: '#FFFFFF',
+    shadowOpacity: 0.18,
   },
   ctaText: {
     flex: 1,

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, StyleSheet, useWindowDimensions, Pressable } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions, Pressable, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   runOnJS,
@@ -18,12 +18,15 @@ import {
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
 import { useReducedMotion } from '../../../motion';
+import { spacing } from '../../../theme/designTokens';
 import { prodayHaptics } from '../../../utils/prodayHaptics';
 import { UniverseChoicePage } from './UniverseChoicePage';
 import { UniversePageChrome } from './UniversePageChrome';
 import { useUniverseIntroTour } from './useUniverseIntroTour';
 import { UNIVERSE_CHOICE_ORDER } from './universeChoiceShared';
 import { filterAccessibleUniversePoles } from './filterAccessibleUniversePoles';
+import { UNIVERSE_ACCENT } from './universeIntroAccents';
+import { universePoleDisplayName } from './universePoleBrand';
 import {
   shouldSnapOnDragEnd,
   snapIndexFromOffset,
@@ -47,8 +50,8 @@ interface UniverseChoicePagerProps {
 }
 
 function resolveItemWidth(screenWidth: number, cinematic: boolean): number {
-  if (cinematic) return Math.min(screenWidth * 0.44, 420);
-  return Math.min(screenWidth * 0.74, screenWidth - 56);
+  if (cinematic) return Math.min(screenWidth * 0.42, 400);
+  return Math.min(screenWidth * 0.78, screenWidth - 48);
 }
 
 export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
@@ -68,16 +71,15 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   const cinematic = width >= TABLET_BREAKPOINT;
   const itemWidth = resolveItemWidth(width, cinematic);
   const sidePad = Math.max(0, (width - itemWidth) / 2);
-  const linesCount = useMemo(() => {
-    const filtered = filterAccessibleUniversePoles({
-      role: accessRole,
-      email: accessEmail,
-      isAdmin: accessIsAdmin,
-    });
-    return filtered;
-  }, [accessEmail, accessIsAdmin, accessRole]);
-
-  const lines = linesCount;
+  const lines = useMemo(
+    () =>
+      filterAccessibleUniversePoles({
+        role: accessRole,
+        email: accessEmail,
+        isAdmin: accessIsAdmin,
+      }),
+    [accessEmail, accessIsAdmin, accessRole],
+  );
 
   const scrollX = useSharedValue(0);
   const listRef = useAnimatedRef<Animated.FlatList<CarouselPoleId>>();
@@ -87,7 +89,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   const activeLineRef = useRef<CarouselPoleId>(lines[0] ?? UNIVERSE_CHOICE_ORDER[0]);
   const introTourOnMountRef = useRef(introTour);
   const initialScrollDoneRef = useRef(false);
-  const [listReady, setListReady] = useState(false);
+  const [listReady, setListReady] = useState(cinematic);
   const [layoutHeight, setLayoutHeight] = useState(0);
   const [liveIndex, setLiveIndex] = useState(0);
   const [interactionUnlocked, setInteractionUnlocked] = useState(!introTour);
@@ -104,19 +106,21 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 
   // Nombre primitif capturé — jamais `lines` / `lines.length` dans le worklet.
   const maxIndex = Math.max(0, lines.length - 1);
+  const activeAccent = UNIVERSE_ACCENT[lines[liveIndex] ?? lines[0]];
 
   useAnimatedReaction(
     () => {
-      if (itemWidth <= 0) return 0;
+      if (cinematic || itemWidth <= 0) return 0;
       const page = scrollX.value / itemWidth;
       return Math.max(0, Math.min(maxIndex, Math.round(page)));
     },
     (index, prev) => {
+      if (cinematic) return;
       if (index !== prev) {
         runOnJS(syncLiveIndex)(index);
       }
     },
-    [itemWidth, maxIndex, syncLiveIndex],
+    [cinematic, itemWidth, maxIndex, syncLiveIndex],
   );
 
   const onScroll = useAnimatedScrollHandler({
@@ -127,20 +131,26 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 
   const scrollToPage = useCallback(
     (index: number, animated: boolean, haptic: boolean) => {
-      if (itemWidth <= 0 || lines.length === 0) return;
+      if (lines.length === 0) return;
       const clamped = Math.max(0, Math.min(lines.length - 1, index));
-      const targetX = clamped * itemWidth;
-      programmaticScroll.current = true;
-      if (haptic) prodayHaptics.tabSwitch();
       lastSnapIndexRef.current = clamped;
       activeLineRef.current = lines[clamped];
       setLiveIndex(clamped);
+
+      if (cinematic) {
+        if (haptic) prodayHaptics.tabSwitch();
+        return;
+      }
+      if (itemWidth <= 0) return;
+      const targetX = clamped * itemWidth;
+      programmaticScroll.current = true;
+      if (haptic) prodayHaptics.tabSwitch();
       runOnUI(() => {
         'worklet';
         scrollTo(listRef, targetX, 0, animated);
       })();
     },
-    [itemWidth, lines, listRef],
+    [cinematic, itemWidth, lines, listRef],
   );
 
   const endTour = useCallback(() => {
@@ -162,13 +172,22 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   useEffect(() => {
     const poleRaw =
       initialCarouselPole ?? (initialLine ? productLineToCarouselPole(initialLine) : null);
-    if (!poleRaw || !listReady || itemWidth <= 0 || initialScrollDoneRef.current) return;
+    if (!poleRaw || initialScrollDoneRef.current) return;
+    if (!cinematic && (!listReady || itemWidth <= 0)) return;
     const pole = normalizeCarouselPole(poleRaw);
     const index = lines.indexOf(pole);
     if (index < 0) return;
     initialScrollDoneRef.current = true;
     scrollToPage(index, false, false);
-  }, [initialCarouselPole, initialLine, itemWidth, lines, listReady, scrollToPage]);
+  }, [
+    cinematic,
+    initialCarouselPole,
+    initialLine,
+    itemWidth,
+    lines,
+    listReady,
+    scrollToPage,
+  ]);
 
   const linesKey = lines.join('|');
   useEffect(() => {
@@ -176,7 +195,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   }, [linesKey]);
 
   const { endTour: cancelIntroTour } = useUniverseIntroTour({
-    enabled: introTourOnMountRef.current && lines.length > 1,
+    enabled: introTourOnMountRef.current && lines.length > 1 && !cinematic,
     listReady,
     pageWidth: itemWidth,
     listRef,
@@ -184,6 +203,26 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     onActiveLine,
     onTourEnd: endTour,
   });
+
+  // Tour tablette : avance l’index sans FlatList.
+  useEffect(() => {
+    if (!introTourOnMountRef.current || !cinematic || lines.length <= 1) return undefined;
+    let cancelled = false;
+    const run = async () => {
+      await new Promise((r) => setTimeout(r, 500));
+      for (let i = 0; i < lines.length; i += 1) {
+        if (cancelled) return;
+        if (i > 0) prodayHaptics.tabSwitch();
+        onActiveLine(lines[i]);
+        await new Promise((r) => setTimeout(r, i === 0 ? 1200 : 1900));
+      }
+      if (!cancelled) endTour();
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [cinematic, endTour, lines, onActiveLine]);
 
   const dismissTour = useCallback(() => {
     cancelIntroTour();
@@ -271,7 +310,8 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         onPress={() => handleTapNeighbor(index)}
         disabled={interactionLocked}
         accessibilityRole="button"
-        accessibilityLabel={`Univers ${item}`}
+        accessibilityLabel={`Univers ${universePoleDisplayName(item)}`}
+        accessibilityState={{ selected: index === liveIndex }}
       >
         <UniverseChoicePage
           line={item}
@@ -280,17 +320,18 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
           pageHeight={layoutHeight}
           itemWidth={itemWidth}
           scrollX={scrollX}
-          cinematic={cinematic}
+          cinematic={false}
           reducedMotion={reducedMotion}
+          focused={index === liveIndex}
         />
       </Pressable>
     ),
     [
-      cinematic,
       handleTapNeighbor,
       interactionLocked,
       itemWidth,
       layoutHeight,
+      liveIndex,
       reducedMotion,
       scrollX,
       width,
@@ -298,6 +339,42 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   );
 
   const styles = useMemo(() => createStyles(), []);
+
+  const sideRail = cinematic ? (
+    <View style={styles.rail} accessibilityRole="list">
+      {lines.map((line, index) => {
+        const selected = index === liveIndex;
+        const label = universePoleDisplayName(line);
+        return (
+          <Pressable
+            key={line}
+            onPress={() => handleTapNeighbor(index)}
+            disabled={interactionLocked}
+            style={[styles.railItem, selected && styles.railItemSelected]}
+            accessibilityRole="button"
+            accessibilityLabel={`Univers ${label}`}
+            accessibilityState={{ selected }}
+          >
+            <View
+              style={[
+                styles.railMark,
+                { backgroundColor: selected ? activeAccent : 'rgba(255,255,255,0.2)' },
+              ]}
+            />
+            <Text
+              style={[
+                styles.railLabel,
+                selected && { color: activeAccent, fontWeight: '700' },
+              ]}
+              numberOfLines={1}
+            >
+              {label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  ) : null;
 
   if (lines.length === 0) {
     return <View style={styles.root} />;
@@ -312,57 +389,81 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       }}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.55)', 'transparent']}
+        colors={['rgba(0,0,0,0.65)', 'transparent']}
         style={styles.vignetteTop}
         pointerEvents="none"
       />
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.55)']}
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
         style={styles.vignetteBottom}
         pointerEvents="none"
       />
 
-      <Animated.FlatList
-        ref={listRef}
-        data={lines}
-        keyExtractor={(item) => item}
-        renderItem={renderItem}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        bounces={lines.length > 1}
-        decelerationRate="fast"
-        snapToOffsets={snapOffsets}
-        disableIntervalMomentum
-        scrollEnabled={!interactionLocked && lines.length > 1}
-        contentContainerStyle={{
-          paddingHorizontal: sidePad,
-          ...(layoutHeight > 0 ? { minHeight: layoutHeight } : null),
-        }}
-        onLayout={() => setListReady(true)}
-        onScrollBeginDrag={() => {
-          dragSnapHandledRef.current = false;
-          if (interactionLocked) return;
-          if (touring) dismissTour();
-        }}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={(e) => handleMomentumScrollEnd(e.nativeEvent.contentOffset.x)}
-        onScrollEndDrag={(e) =>
-          handleScrollEndDrag(e.nativeEvent.contentOffset.x, e.nativeEvent.velocity?.x)
-        }
-        getItemLayout={(_, index) => ({
-          length: itemWidth,
-          offset: itemWidth * index,
-          index,
-        })}
-        style={styles.list}
+      {/* Halo ambient — accent unique de l’univers actif (JS, pas worklet). */}
+      <View
+        pointerEvents="none"
+        style={[
+          styles.ambientGlow,
+          { backgroundColor: activeAccent, opacity: reducedMotion ? 0.06 : 0.1 },
+        ]}
       />
+
+      {cinematic ? (
+        <View style={styles.cinematicStage} pointerEvents="none">
+          <UniverseChoicePage
+            line={lines[liveIndex] ?? lines[0]}
+            index={liveIndex}
+            pageWidth={width}
+            pageHeight={layoutHeight}
+            itemWidth={Math.min(width * 0.5, 480)}
+            scrollX={scrollX}
+            cinematic
+            reducedMotion={reducedMotion}
+            staticFocus
+            focused
+          />
+        </View>
+      ) : (
+        <Animated.FlatList
+          ref={listRef}
+          data={lines}
+          keyExtractor={(item) => item}
+          renderItem={renderItem}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          bounces={lines.length > 1}
+          decelerationRate="fast"
+          snapToOffsets={snapOffsets}
+          disableIntervalMomentum
+          scrollEnabled={!interactionLocked && lines.length > 1}
+          contentContainerStyle={{
+            paddingHorizontal: sidePad,
+            ...(layoutHeight > 0 ? { minHeight: layoutHeight } : null),
+          }}
+          onLayout={() => setListReady(true)}
+          onScrollBeginDrag={() => {
+            dragSnapHandledRef.current = false;
+            if (interactionLocked) return;
+            if (touring) dismissTour();
+          }}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={(e) => handleMomentumScrollEnd(e.nativeEvent.contentOffset.x)}
+          onScrollEndDrag={(e) =>
+            handleScrollEndDrag(e.nativeEvent.contentOffset.x, e.nativeEvent.velocity?.x)
+          }
+          getItemLayout={(_, index) => ({
+            length: itemWidth,
+            offset: itemWidth * index,
+            index,
+          })}
+          style={styles.list}
+        />
+      )}
 
       <UniversePageChrome
         lines={lines}
         activeIndex={liveIndex}
-        scrollX={scrollX}
-        itemWidth={itemWidth}
         touring={touring}
         interactionLocked={interactionLocked}
         showDismiss={showDismiss}
@@ -371,6 +472,8 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         onSkip={dismissTour}
         onChoose={handleChoose}
         onJumpToIndex={(index) => scrollToPage(index, true, true)}
+        hidePagerDots={cinematic}
+        sideRail={sideRail}
       />
     </View>
   );
@@ -385,19 +488,64 @@ function createStyles() {
     list: {
       flex: 1,
     },
+    cinematicStage: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingLeft: '28%',
+      paddingBottom: '12%',
+    },
+    ambientGlow: {
+      position: 'absolute',
+      width: '70%',
+      height: '42%',
+      borderRadius: 999,
+      top: '22%',
+      alignSelf: 'center',
+      left: '15%',
+    },
     vignetteTop: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
-      height: '22%',
+      height: '20%',
+      zIndex: 1,
     },
     vignetteBottom: {
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
-      height: '28%',
+      height: '32%',
+      zIndex: 1,
+    },
+    rail: {
+      gap: spacing.xs,
+    },
+    railItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.sm,
+      borderRadius: 10,
+    },
+    railItemSelected: {
+      backgroundColor: 'rgba(255,255,255,0.04)',
+    },
+    railMark: {
+      width: 3,
+      height: 18,
+      borderRadius: 2,
+    },
+    railLabel: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '500',
+      letterSpacing: -0.2,
+      color: 'rgba(255,255,255,0.48)',
+      ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });
 }

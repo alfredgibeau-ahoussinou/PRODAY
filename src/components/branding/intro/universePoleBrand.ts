@@ -84,7 +84,7 @@ export function universePoleTagline(pole: CarouselPoleId): string {
   return UNIVERSE_POLE_TAGLINE[pole];
 }
 
-/** CTA « Entrer dans l’univers X ». */
+/** CTA « Entrer dans Coach / Club / … ». */
 export function universeEnterCtaLabel(pole: CarouselPoleId): string {
-  return `Entrer dans l’univers ${universePoleDisplayName(pole)}`;
+  return `Entrer dans ${universePoleDisplayName(pole)}`;
 }

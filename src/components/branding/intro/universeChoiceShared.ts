@@ -19,18 +19,3 @@ export const LEGACY_UNIVERSE_CHOICE_ORDER = [
   'pro',
   'sante',
 ] as const;
-
-export const UNIVERSE_FEATURE_CHIPS: Record<CarouselPoleId, string[]> = {
-  joueur: ['Profil', 'Stats', 'Covoiturage'],
-  amateur: ['Profil', 'Stats', 'Covoiturage'],
-  supporter: ['Matchs live', 'Reels', 'Fil'],
-  pro_player: ['Profil', 'Stats', 'Covoiturage'],
-  pro_club: ['Équipes', 'Compétitions', 'Covoiturage'],
-  president: ['Cockpit', 'Finances', 'Direction'],
-  coach: ['Tactique IA', 'Effectif', 'IA'],
-  pro_staff: ['Tactique IA', 'Effectif', 'IA'],
-  parent: ['Supervision', 'Messages', 'Retards'],
-  evenements: ['Tournois', 'Détections', 'Stages'],
-  sponsor: ['Campagnes', 'ROI', 'Clubs'],
-  sante: ['Annuaire', 'Agenda', 'Visio'],
-};
