@@ -14,11 +14,16 @@ import type { ClubShellMode } from '../../../models/ClubShellMode';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
 import { productLineToCarouselPole } from '../../../models/CarouselPole';
+import { useReducedMotion } from '../../../hooks/useReducedMotion';
+import { useAuthOptional } from '../../../context/AuthContext';
+import { UNIVERSE_ACCENT } from './universeIntroAccents';
+import { PRODAY_MASTER } from '../../../theme/prodayBrand';
 
 export type IntroSpaceChoice = CarouselPoleId;
 
-const FADE_IN_MS = 220;
-const FADE_OUT_MS = 280;
+const FADE_IN_MS = 280;
+const FADE_OUT_MS = 360;
+const FADE_OUT_REDUCED_MS = 120;
 
 interface BrandRevealIntroProps {
   onChooseSpace: (space: IntroSpaceChoice) => void | Promise<void>;
@@ -33,7 +38,7 @@ interface BrandRevealIntroProps {
   skipLocalTransition?: boolean;
 }
 
-/** Carousel minimal plein écran par pôle. */
+/** Sélecteur d’univers immersif — 1 symbole + accents pôle. */
 export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   onChooseSpace,
   onExitComplete,
@@ -45,19 +50,30 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   skipReveal = false,
   skipLocalTransition = false,
 }) => {
+  const reduced = useReducedMotion();
+  const auth = useAuthOptional();
+  const profile = auth?.profile ?? null;
+  const accessRole = initialRole ?? profile?.role ?? null;
+  const accessEmail = profile?.email ?? null;
+  const accessIsAdmin = Boolean(auth?.isAdmin);
+
   const [leavingLine, setLeavingLine] = useState<IntroSpaceChoice | null>(null);
   const [interactive, setInteractive] = useState(!skipReveal || skipLocalTransition);
   const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : 1);
+  const scale = useSharedValue(1);
+  const veilOpacity = useSharedValue(0);
+  const [veilAccent, setVeilAccent] = useState<string>(PRODAY_MASTER.blue);
 
   useEffect(() => {
     if (!skipReveal || skipLocalTransition) return;
+    const dur = reduced ? 80 : FADE_IN_MS;
     opacity.value = withTiming(1, {
-      duration: FADE_IN_MS,
+      duration: dur,
       easing: Easing.out(Easing.cubic),
     });
-    const timer = setTimeout(() => setInteractive(true), FADE_IN_MS);
+    const timer = setTimeout(() => setInteractive(true), dur);
     return () => clearTimeout(timer);
-  }, [opacity, skipLocalTransition, skipReveal]);
+  }, [opacity, reduced, skipLocalTransition, skipReveal]);
 
   const finishLeave = useCallback(
     (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
@@ -74,24 +90,62 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   const beginLeave = useCallback(
     (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
       if (!interactive || leavingLine) return;
-      if (line) setLeavingLine(line);
+      if (line) {
+        setLeavingLine(line);
+        setVeilAccent(UNIVERSE_ACCENT[line]);
+      }
       setInteractive(false);
 
+      // Parent (PushScreenTransition) gère l’exit — flash accent court pour continuité.
       if (skipLocalTransition) {
+        if (line && !dismissOnly && !reduced) {
+          veilOpacity.value = withTiming(0.4, { duration: 160, easing: Easing.out(Easing.cubic) });
+          opacity.value = withTiming(
+            0.15,
+            { duration: 220, easing: Easing.in(Easing.cubic) },
+            (finished) => {
+              'worklet';
+              if (finished) runOnJS(finishLeave)(line, dismissOnly);
+            },
+          );
+          return;
+        }
         finishLeave(line, dismissOnly);
         return;
       }
 
+      const outMs = reduced ? FADE_OUT_REDUCED_MS : FADE_OUT_MS;
+      if (line && !dismissOnly) {
+        veilOpacity.value = withTiming(reduced ? 0.2 : 0.5, {
+          duration: Math.min(outMs, 200),
+          easing: Easing.out(Easing.cubic),
+        });
+      }
       opacity.value = withTiming(
         0,
-        { duration: FADE_OUT_MS, easing: Easing.in(Easing.cubic) },
+        { duration: outMs, easing: Easing.in(Easing.cubic) },
         (finished) => {
           'worklet';
           if (finished) runOnJS(finishLeave)(line, dismissOnly);
         },
       );
+      if (!reduced) {
+        scale.value = withTiming(0.97, {
+          duration: outMs,
+          easing: Easing.in(Easing.cubic),
+        });
+      }
     },
-    [finishLeave, interactive, leavingLine, opacity, skipLocalTransition],
+    [
+      finishLeave,
+      interactive,
+      leavingLine,
+      opacity,
+      reduced,
+      scale,
+      skipLocalTransition,
+      veilOpacity,
+    ],
   );
 
   const handleChoose = useCallback(
@@ -119,6 +173,11 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
+    transform: [{ scale: scale.value }],
+  }));
+
+  const veilStyle = useAnimatedStyle(() => ({
+    opacity: veilOpacity.value,
   }));
 
   const initialCarouselPole = initialLine
@@ -127,6 +186,10 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 
   return (
     <View style={styles.root} accessibilityViewIsModal>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.veil, { backgroundColor: veilAccent }, veilStyle]}
+      />
       <Animated.View
         style={[styles.content, contentStyle]}
         pointerEvents={interactive ? 'auto' : 'none'}
@@ -137,6 +200,9 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
           interactionLocked={!interactive || !!leavingLine}
           initialLine={initialLine}
           initialCarouselPole={initialCarouselPole}
+          accessRole={accessRole}
+          accessEmail={accessEmail}
+          accessIsAdmin={accessIsAdmin}
           showDismiss={skipReveal && interactive}
           onDismiss={handleDismiss}
         />
@@ -150,9 +216,13 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1000,
     elevation: 1000,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: PRODAY_MASTER.black,
   },
   content: {
     ...StyleSheet.absoluteFillObject,
+  },
+  veil: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 2,
   },
 });

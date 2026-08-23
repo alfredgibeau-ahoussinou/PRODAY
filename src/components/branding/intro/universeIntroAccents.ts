@@ -1,6 +1,6 @@
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { santeColorOverrides } from '../../../theme/prodaySanteTheme';
-import { PRODAY_POLE_ACCENTS } from '../../../theme/prodayBrand';
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../../../theme/prodayBrand';
 
 /** Accents officiels pôle (intro univers) — planche brand. */
 export const UNIVERSE_ACCENT: Record<CarouselPoleId, string> = {
@@ -18,18 +18,19 @@ export const UNIVERSE_ACCENT: Record<CarouselPoleId, string> = {
   sante: santeColorOverrides.accent,
 };
 
+/** Soft pour glows / surfaces — dérivé des accents brand. */
 export const UNIVERSE_ACCENT_SOFT: Record<CarouselPoleId, string> = {
-  joueur: '#DBEAFE',
-  amateur: '#DBEAFE',
-  supporter: '#EDE9FE',
-  pro_player: '#DBEAFE',
-  pro_club: '#E0F2FE',
-  president: '#F2E6C8',
-  coach: '#E0E7FF',
-  pro_staff: '#E0E7FF',
-  parent: '#CCFBF1',
-  evenements: '#CFFAFE',
-  sponsor: '#FEF3C7',
+  joueur: poleAccentSoft('player', 0.22),
+  amateur: poleAccentSoft('player', 0.22),
+  supporter: poleAccentSoft('supporter', 0.22),
+  pro_player: poleAccentSoft('player', 0.22),
+  pro_club: poleAccentSoft('club', 0.22),
+  president: poleAccentSoft('president', 0.22),
+  coach: poleAccentSoft('coach', 0.22),
+  pro_staff: poleAccentSoft('coach', 0.22),
+  parent: poleAccentSoft('parent', 0.22),
+  evenements: poleAccentSoft('events', 0.22),
+  sponsor: poleAccentSoft('sponsor', 0.22),
   sante: santeColorOverrides.accentSoft,
 };
 

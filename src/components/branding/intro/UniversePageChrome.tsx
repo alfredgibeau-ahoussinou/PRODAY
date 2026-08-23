@@ -1,149 +1,134 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-  type SharedValue,
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, radius } from '../../../theme/designTokens';
-import { ProDayGradient } from '../../ui/ProDayGradient';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
+import { ProDaySymbol } from '../ProDaySymbol';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
-import { getCarouselPoleIdentity } from '../../../content/carouselPoleExperience';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
-import { UNIVERSE_FEATURE_CHIPS } from './universeChoiceShared';
+import { universeEnterCtaLabel } from './universePoleBrand';
 
 interface UniversePageChromeProps {
   lines: CarouselPoleId[];
   activeIndex: number;
-  scrollX: SharedValue<number>;
-  pageWidth: number;
   touring: boolean;
   interactionLocked?: boolean;
   showDismiss?: boolean;
+  cinematic?: boolean;
   onDismiss?: () => void;
   onSkip: () => void;
   onChoose: (line: CarouselPoleId) => void;
   onJumpToIndex: (index: number) => void;
 }
 
-const StorySegment: React.FC<{
+const Dot: React.FC<{
   index: number;
-  scrollX: SharedValue<number>;
-  pageWidth: number;
-  line: CarouselPoleId;
-}> = ({ index, scrollX, pageWidth, line }) => {
-  const accent = UNIVERSE_ACCENT[line];
+  active: boolean;
+  accent: string;
+  onPress: () => void;
+  disabled?: boolean;
+  label: string;
+}> = ({ active, accent, onPress, disabled, label }) => (
+  <Pressable
+    onPress={onPress}
+    disabled={disabled}
+    hitSlop={8}
+    accessibilityLabel={label}
+    accessibilityState={{ selected: active }}
+    style={[
+      styles.dot,
+      active
+        ? { backgroundColor: accent, width: 18 }
+        : { backgroundColor: 'rgba(255,255,255,0.28)' },
+    ]}
+  />
+);
 
-  const fillStyle = useAnimatedStyle(() => {
-    if (pageWidth <= 0) return { width: '0%' };
-    const page = scrollX.value / pageWidth;
-    let ratio = 0;
-    if (page >= index + 1) ratio = 1;
-    else if (page > index) ratio = page - index;
-    return { width: `${ratio * 100}%` };
-  });
-
-  return (
-    <View style={[styles.segmentTrack, { backgroundColor: `${accent}40` }]}>
-      <Animated.View style={[styles.segmentFill, { backgroundColor: accent }, fillStyle]} />
-    </View>
-  );
-};
-
-/** Barres de progression, compteur et CTA contextualisé. */
+/**
+ * Header brand + CTA contextualisé.
+ * Symbole master inchangé ; accent pôle sur le CTA uniquement.
+ */
 export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   lines,
   activeIndex,
-  scrollX,
-  pageWidth,
   touring,
   interactionLocked = false,
   showDismiss = false,
+  cinematic = false,
   onDismiss,
   onSkip,
   onChoose,
   onJumpToIndex,
 }) => {
   const insets = useSafeAreaInsets();
-  const activeLine = lines[activeIndex];
-  const identity = getCarouselPoleIdentity(activeLine);
+  const activeLine = lines[activeIndex] ?? lines[0];
+  const accent = UNIVERSE_ACCENT[activeLine];
+  const ctaLabel = universeEnterCtaLabel(activeLine);
+  const isLightCta = activeLine === 'president';
 
   return (
     <View style={styles.root} pointerEvents="box-none">
-      <View style={[styles.top, { paddingTop: insets.top + spacing.sm }]}>
-        <View style={styles.segments}>
-          {lines.map((line, index) => (
-            <Pressable
-              key={line}
-              style={styles.segmentHit}
-              disabled={interactionLocked}
-              onPress={() => onJumpToIndex(index)}
-              accessibilityLabel={UNIVERSE_SHORT[line]}
-              accessibilityState={{ selected: index === activeIndex }}
-            >
-              <StorySegment
-                line={line}
-                index={index}
-                scrollX={scrollX}
-                pageWidth={pageWidth}
-              />
-            </Pressable>
-          ))}
+      <View
+        style={[
+          styles.top,
+          {
+            paddingTop: insets.top + (cinematic ? spacing.lg : spacing.md),
+            paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
+          },
+        ]}
+      >
+        <View style={styles.headerRow}>
+          <ProDaySymbol size={cinematic ? 36 : 28} variant="master" tone="white" showAccentBar={false} />
+          <View style={styles.headerActions}>
+            {touring ? (
+              <Pressable onPress={onSkip} hitSlop={12} accessibilityLabel="Passer la présentation">
+                <Text style={styles.skip}>Passer</Text>
+              </Pressable>
+            ) : showDismiss && onDismiss ? (
+              <Pressable
+                onPress={onDismiss}
+                disabled={interactionLocked}
+                hitSlop={12}
+                accessibilityLabel="Fermer le sélecteur de pôle"
+              >
+                <Text style={styles.skip}>Fermer</Text>
+              </Pressable>
+            ) : (
+              <View style={styles.skipSpacer} />
+            )}
+          </View>
         </View>
-        {touring ? (
-          <Pressable onPress={onSkip} hitSlop={12} accessibilityLabel="Passer la présentation">
-            <Text style={styles.skip}>Passer</Text>
-          </Pressable>
-        ) : showDismiss && onDismiss ? (
-          <Pressable
-            onPress={onDismiss}
-            disabled={interactionLocked}
-            hitSlop={12}
-            accessibilityLabel="Fermer le sélecteur de pôle"
-          >
-            <Text style={styles.skip}>Fermer</Text>
-          </Pressable>
-        ) : (
-          <View style={styles.skipSpacer} />
-        )}
+
+        <Text style={[styles.title, cinematic && styles.titleWide]}>
+          Choisissez votre univers
+        </Text>
+        <Text style={[styles.subtitle, cinematic && styles.subtitleWide]}>
+          Une plateforme. Plusieurs façons de vivre le football.
+        </Text>
       </View>
 
-      <View style={[styles.bottom, { paddingBottom: insets.bottom + spacing.md }]} pointerEvents="box-none">
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.5)']}
-          style={styles.bottomFade}
-          pointerEvents="none"
-        />
-
-        <Text style={styles.counter}>
-          {String(activeIndex + 1).padStart(2, '0')} / {String(lines.length).padStart(2, '0')}
-          <Text style={styles.counterSep}> · </Text>
-          {UNIVERSE_SHORT[activeLine]}
-        </Text>
-
-        <View style={styles.chips}>
-          {UNIVERSE_FEATURE_CHIPS[activeLine].map((chip) => (
-            <View
-              key={chip}
-              style={[
-                styles.chip,
-                activeLine === 'sponsor' && styles.chipSponsor,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  activeLine === 'sponsor' && styles.chipTextSponsor,
-                ]}
-              >
-                {chip}
-              </Text>
-            </View>
+      <View
+        style={[
+          styles.bottom,
+          {
+            paddingBottom: insets.bottom + spacing.md,
+            paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
+          },
+        ]}
+        pointerEvents="box-none"
+      >
+        <View style={styles.dots}>
+          {lines.map((line, index) => (
+            <Dot
+              key={line}
+              index={index}
+              active={index === activeIndex}
+              accent={UNIVERSE_ACCENT[line]}
+              label={UNIVERSE_SHORT[line]}
+              disabled={interactionLocked}
+              onPress={() => onJumpToIndex(index)}
+            />
           ))}
         </View>
 
@@ -154,24 +139,28 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           disabled={interactionLocked}
           style={styles.ctaWrap}
         >
-          {activeLine === 'sponsor' ? (
-            <View style={[styles.cta, styles.ctaSponsor]}>
-              <Text style={styles.ctaText} numberOfLines={1}>
-                Continuer · {identity.productName}
-              </Text>
-              <Icon name="chevron-forward" size={18} color="#0A0A0A" />
-            </View>
-          ) : (
-            <ProDayGradient kind="cta" style={styles.cta}>
-              <Text style={styles.ctaText} numberOfLines={1}>
-                Continuer · {identity.productName}
-              </Text>
-              <Icon name="chevron-forward" size={18} color="#0A0A0A" />
-            </ProDayGradient>
-          )}
+          <View
+            style={[
+              styles.cta,
+              { backgroundColor: accent },
+              isLightCta && styles.ctaOnLightAccent,
+            ]}
+          >
+            <Text
+              style={[styles.ctaText, isLightCta && styles.ctaTextDark]}
+              numberOfLines={1}
+            >
+              {ctaLabel}
+            </Text>
+            <Icon
+              name="chevron-forward"
+              size={18}
+              color={isLightCta ? '#0A0A0A' : '#FFFFFF'}
+            />
+          </View>
         </PressableSpring>
 
-        <Text style={styles.hint}>Glissez pour parcourir les pôles</Text>
+        <Text style={styles.hint}>Glissez ou touchez un point · le swipe n’est pas obligatoire</Text>
       </View>
     </View>
   );
@@ -183,27 +172,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   top: {
+    gap: spacing.sm,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
   },
-  segments: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 4,
-  },
-  segmentHit: {
-    flex: 1,
-  },
-  segmentTrack: {
-    height: 3,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-  },
-  segmentFill: {
-    height: '100%',
-    borderRadius: radius.pill,
+  headerActions: {
+    minHeight: 28,
+    justifyContent: 'center',
   },
   skip: {
     fontSize: 14,
@@ -213,59 +192,52 @@ const styles = StyleSheet.create({
   skipSpacer: {
     width: 48,
   },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.6,
+    color: '#FFFFFF',
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  titleWide: {
+    fontSize: 34,
+    letterSpacing: -0.8,
+    maxWidth: 520,
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.55)',
+    maxWidth: 320,
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  subtitleWide: {
+    fontSize: 16,
+    lineHeight: 24,
+    maxWidth: 440,
+  },
   bottom: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
+    gap: spacing.md,
     alignItems: 'stretch',
   },
-  bottomFade: {
-    ...StyleSheet.absoluteFillObject,
-    top: -40,
-  },
-  counter: {
-    textAlign: 'center',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.55)',
-    ...Platform.select({ android: { includeFontPadding: false } }),
-  },
-  counterSep: {
-    color: 'rgba(255,255,255,0.28)',
-  },
-  chips: {
+  dots: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 6,
-    marginBottom: 2,
+    alignItems: 'center',
+    gap: 7,
   },
-  chip: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.18)',
-  },
-  chipSponsor: {
-    backgroundColor: 'rgba(212, 175, 55, 0.16)',
-    borderColor: 'rgba(212, 175, 55, 0.45)',
-  },
-  chipText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.82)',
-    letterSpacing: 0.2,
-    ...Platform.select({ android: { includeFontPadding: false } }),
-  },
-  chipTextSponsor: {
-    color: '#F5D76E',
+  dot: {
+    height: 6,
+    width: 6,
+    borderRadius: 3,
   },
   ctaWrap: {
     borderRadius: radius.pill,
     overflow: 'hidden',
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 420,
   },
   cta: {
     minHeight: 54,
@@ -275,30 +247,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
-    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
+    shadowOpacity: 0.28,
     shadowRadius: 16,
     elevation: 8,
   },
-  ctaSponsor: {
-    backgroundColor: '#EF4444',
-    shadowColor: '#EF4444',
-    shadowOpacity: 0.35,
+  ctaOnLightAccent: {
+    shadowColor: '#FBBF24',
+    shadowOpacity: 0.28,
   },
   ctaText: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0A0A0A',
+    color: '#FFFFFF',
     flexShrink: 1,
     ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  ctaTextDark: {
+    color: '#0A0A0A',
   },
   hint: {
     fontSize: 11,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.45)',
+    color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
-    marginTop: 2,
   },
 });

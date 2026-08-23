@@ -25,7 +25,7 @@ interface UseUniverseIntroTourOptions {
   onTourEnd: () => void;
 }
 
-/** Tour Men → Women → Pro — transition native page par page. */
+/** Tour auto des univers au premier lancement — page par page. */
 export function useUniverseIntroTour({
   enabled,
   listReady,
