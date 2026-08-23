@@ -25,13 +25,12 @@ interface UniverseChoicePageProps {
   scrollX: SharedValue<number>;
   /** Largeur de la slide (peek) — ≠ largeur écran. */
   itemWidth: number;
-  /** Composition tablette / desktop : plus d’air. */
+  /** Composition tablette / desktop : plus d'air. */
   cinematic?: boolean;
 }
 
 /**
- * Slide univers — symbole master + barre accent + wordmark pôle.
- * Stage immersif (pas de carte SaaS).
+ * Slide univers — lockup horizontal symbole + PRODAY, accent pôle fluide.
  */
 export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   line,
@@ -45,8 +44,8 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   const variant = brandVariantForCarouselPole(line);
   const iconName = universePoleIcon(line);
   const logoWidth = cinematic
-    ? Math.min(itemWidth * 0.55, 220)
-    : Math.min(itemWidth * 0.62, 188);
+    ? Math.min(itemWidth * 0.88, 320)
+    : Math.min(itemWidth * 0.92, 268);
   const styles = useMemo(
     () => createStyles(itemWidth, cinematic),
     [itemWidth, cinematic],
@@ -54,27 +53,43 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
 
   const stageStyle = useAnimatedStyle(() => {
     if (itemWidth <= 0) {
-      return { opacity: 0, transform: [{ scale: 0.92 }, { translateY: 12 }] };
+      return { opacity: 0, transform: [{ scale: 0.9 }, { translateY: 16 }] };
     }
     const page = scrollX.value / itemWidth;
     const offset = page - index;
-    const scale = interpolate(offset, [-1, 0, 1], [0.86, 1, 0.86], Extrapolation.CLAMP);
+    const abs = Math.abs(offset);
+    const scale = interpolate(offset, [-1, 0, 1], [0.82, 1, 0.82], Extrapolation.CLAMP);
     const opacity = interpolate(
-      offset,
-      [-1, -0.55, 0, 0.55, 1],
-      [0.35, 0.55, 1, 0.55, 0.35],
+      abs,
+      [0, 0.35, 0.75, 1],
+      [1, 0.88, 0.52, 0.38],
       Extrapolation.CLAMP,
     );
-    const translateY = interpolate(offset, [-1, 0, 1], [18, 0, 18], Extrapolation.CLAMP);
-    return { opacity, transform: [{ scale }, { translateY }] };
+    const translateY = interpolate(offset, [-1, 0, 1], [22, 0, 22], Extrapolation.CLAMP);
+    const translateX = interpolate(offset, [-1, 0, 1], [28, 0, -28], Extrapolation.CLAMP);
+    const rotateZ = `${interpolate(offset, [-1, 0, 1], [-2.5, 0, 2.5], Extrapolation.CLAMP)}deg`;
+    return {
+      opacity,
+      transform: [{ translateX }, { translateY }, { scale }, { rotate: rotateZ }],
+    };
   });
 
   const glowStyle = useAnimatedStyle(() => {
     if (itemWidth <= 0) return { opacity: 0 };
     const page = scrollX.value / itemWidth;
     const offset = page - index;
-    const opacity = interpolate(offset, [-1, 0, 1], [0.06, 0.34, 0.06], Extrapolation.CLAMP);
-    const scale = interpolate(offset, [-1, 0, 1], [0.85, 1.08, 0.85], Extrapolation.CLAMP);
+    const abs = Math.abs(offset);
+    const opacity = interpolate(abs, [0, 0.5, 1], [0.42, 0.16, 0.04], Extrapolation.CLAMP);
+    const scale = interpolate(abs, [0, 1], [1.12, 0.82], Extrapolation.CLAMP);
+    return { opacity, transform: [{ scale }] };
+  });
+
+  const badgeStyle = useAnimatedStyle(() => {
+    if (itemWidth <= 0) return { opacity: 0.6, transform: [{ scale: 0.94 }] };
+    const page = scrollX.value / itemWidth;
+    const offset = page - index;
+    const opacity = interpolate(Math.abs(offset), [0, 0.45, 1], [1, 0.72, 0.45], Extrapolation.CLAMP);
+    const scale = interpolate(Math.abs(offset), [0, 1], [1, 0.88], Extrapolation.CLAMP);
     return { opacity, transform: [{ scale }] };
   });
 
@@ -91,14 +106,14 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
             width={logoWidth}
             variant={variant}
             onDark
-            layout="stacked"
+            layout="horizontal"
             showPoleLabel
           />
         </View>
 
-        <View style={[styles.iconBadge, { borderColor: `${accent}55` }]}>
+        <Animated.View style={[styles.iconBadge, { borderColor: `${accent}66` }, badgeStyle]}>
           <Icon name={iconName} size={cinematic ? 26 : 22} color={accent} />
-        </View>
+        </Animated.View>
 
         <Text style={styles.mission} numberOfLines={cinematic ? 3 : 2}>
           {identity.mission}
@@ -119,20 +134,20 @@ function createStyles(itemWidth: number, cinematic: boolean) {
     stage: {
       width: '100%',
       alignItems: 'center',
-      paddingHorizontal: cinematic ? spacing.xl : spacing.lg,
+      paddingHorizontal: cinematic ? spacing.xl : spacing.md,
       gap: cinematic ? spacing.lg : spacing.md,
     },
     glow: {
       position: 'absolute',
-      width: itemWidth * (cinematic ? 0.72 : 0.88),
-      height: itemWidth * (cinematic ? 0.72 : 0.88),
+      width: itemWidth * (cinematic ? 0.78 : 0.94),
+      height: itemWidth * (cinematic ? 0.78 : 0.94),
       borderRadius: itemWidth,
-      top: cinematic ? '6%' : '2%',
+      top: cinematic ? '4%' : '0%',
     },
     logoWrap: {
       width: '100%',
       alignItems: 'center',
-      marginBottom: spacing.xs,
+      paddingHorizontal: spacing.xs,
     },
     iconBadge: {
       width: cinematic ? 52 : 44,
@@ -141,7 +156,7 @@ function createStyles(itemWidth: number, cinematic: boolean) {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      backgroundColor: 'rgba(255,255,255,0.04)',
+      backgroundColor: 'rgba(255,255,255,0.05)',
     },
     mission: {
       maxWidth: cinematic ? 360 : 280,

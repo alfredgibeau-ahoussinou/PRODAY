@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
-  Easing,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
@@ -14,16 +14,17 @@ import type { ClubShellMode } from '../../../models/ClubShellMode';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
 import { productLineToCarouselPole } from '../../../models/CarouselPole';
-import { useReducedMotion } from '../../../hooks/useReducedMotion';
+import { prodayMotion, useReducedMotion } from '../../../motion';
 import { useAuthOptional } from '../../../context/AuthContext';
 import { UNIVERSE_ACCENT } from './universeIntroAccents';
 import { PRODAY_MASTER } from '../../../theme/prodayBrand';
 
 export type IntroSpaceChoice = CarouselPoleId;
 
-const FADE_IN_MS = 280;
-const FADE_OUT_MS = 360;
-const FADE_OUT_REDUCED_MS = 120;
+const ENTER_MS = 320;
+const EXIT_MS = 420;
+const EXIT_REDUCED_MS = 140;
+const ENTER_REDUCED_MS = 100;
 
 interface BrandRevealIntroProps {
   onChooseSpace: (space: IntroSpaceChoice) => void | Promise<void>;
@@ -38,7 +39,7 @@ interface BrandRevealIntroProps {
   skipLocalTransition?: boolean;
 }
 
-/** Sélecteur d’univers immersif — 1 symbole + accents pôle. */
+/** Sélecteur d'univers immersif — lockup horizontal + transitions fluides. */
 export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   onChooseSpace,
   onExitComplete,
@@ -60,20 +61,23 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   const [leavingLine, setLeavingLine] = useState<IntroSpaceChoice | null>(null);
   const [interactive, setInteractive] = useState(!skipReveal || skipLocalTransition);
   const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : 1);
-  const scale = useSharedValue(1);
+  const scale = useSharedValue(skipReveal && !skipLocalTransition ? 0.985 : 1);
   const veilOpacity = useSharedValue(0);
   const [veilAccent, setVeilAccent] = useState<string>(PRODAY_MASTER.blue);
 
   useEffect(() => {
     if (!skipReveal || skipLocalTransition) return;
-    const dur = reduced ? 80 : FADE_IN_MS;
+    const dur = reduced ? ENTER_REDUCED_MS : ENTER_MS;
     opacity.value = withTiming(1, {
       duration: dur,
-      easing: Easing.out(Easing.cubic),
+      easing: prodayMotion.easing.out,
     });
+    if (!reduced) {
+      scale.value = withSpring(1, prodayMotion.spring.smooth);
+    }
     const timer = setTimeout(() => setInteractive(true), dur);
     return () => clearTimeout(timer);
-  }, [opacity, reduced, skipLocalTransition, skipReveal]);
+  }, [opacity, reduced, scale, skipLocalTransition, skipReveal]);
 
   const finishLeave = useCallback(
     (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
@@ -96,43 +100,50 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
       }
       setInteractive(false);
 
-      // Parent (PushScreenTransition) gère l’exit — flash accent court pour continuité.
       if (skipLocalTransition) {
+        const outMs = reduced ? EXIT_REDUCED_MS : Math.min(EXIT_MS, 380);
         if (line && !dismissOnly && !reduced) {
-          veilOpacity.value = withTiming(0.4, { duration: 160, easing: Easing.out(Easing.cubic) });
+          veilOpacity.value = withTiming(0.48, {
+            duration: Math.round(outMs * 0.45),
+            easing: prodayMotion.easing.out,
+          });
           opacity.value = withTiming(
-            0.15,
-            { duration: 220, easing: Easing.in(Easing.cubic) },
+            0.12,
+            { duration: outMs, easing: prodayMotion.easing.in },
             (finished) => {
               'worklet';
               if (finished) runOnJS(finishLeave)(line, dismissOnly);
             },
           );
+          scale.value = withTiming(0.96, {
+            duration: outMs,
+            easing: prodayMotion.easing.in,
+          });
           return;
         }
         finishLeave(line, dismissOnly);
         return;
       }
 
-      const outMs = reduced ? FADE_OUT_REDUCED_MS : FADE_OUT_MS;
+      const outMs = reduced ? EXIT_REDUCED_MS : EXIT_MS;
       if (line && !dismissOnly) {
-        veilOpacity.value = withTiming(reduced ? 0.2 : 0.5, {
-          duration: Math.min(outMs, 200),
-          easing: Easing.out(Easing.cubic),
+        veilOpacity.value = withTiming(reduced ? 0.22 : 0.52, {
+          duration: Math.min(outMs, 260),
+          easing: prodayMotion.easing.out,
         });
       }
       opacity.value = withTiming(
         0,
-        { duration: outMs, easing: Easing.in(Easing.cubic) },
+        { duration: outMs, easing: prodayMotion.easing.in },
         (finished) => {
           'worklet';
           if (finished) runOnJS(finishLeave)(line, dismissOnly);
         },
       );
       if (!reduced) {
-        scale.value = withTiming(0.97, {
+        scale.value = withTiming(0.965, {
           duration: outMs,
-          easing: Easing.in(Easing.cubic),
+          easing: prodayMotion.easing.in,
         });
       }
     },

@@ -13,7 +13,7 @@ import { ProDayWordmark } from './ProDayWordmark';
 export { brandVariantForProductLine };
 export type { ProDayBrandVariant };
 
-export type ProDayLogoLayout = 'stacked' | 'symbol' | 'wordmark';
+export type ProDayLogoLayout = 'stacked' | 'horizontal' | 'symbol' | 'wordmark';
 
 type ProDayLogoProps = {
   width?: number;
@@ -62,6 +62,30 @@ export function ProDayLogo({
     );
   }
 
+  if (layout === 'horizontal') {
+    const symbolSize = width * (variant === 'master' ? 0.34 : 0.32);
+    const wordWidth = width - symbolSize - width * 0.06;
+    return (
+      <View style={[styles.horizontal, { width, opacity }]}>
+        <ProDaySymbol
+          size={symbolSize}
+          variant={variant}
+          tone={onDark ? 'white' : 'black'}
+          showAccentBar={variant !== 'master'}
+        />
+        <View style={styles.horizontalWord}>
+          <ProDayWordmark
+            width={wordWidth}
+            variant={variant}
+            onDark={onDark}
+            align="left"
+            poleLabel={showPoleLabel ? PRODAY_POLE_LABELS[variant] || null : null}
+          />
+        </View>
+      </View>
+    );
+  }
+
   // Master stacked : PNG officiel symbole+wordmark (géométrie fidèle)
   if (variant === 'master') {
     const height = width / PRODAY_LOGO_MASTER_ASPECT;
@@ -103,4 +127,13 @@ export function ProDayLogo({
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center' },
   wordSlot: { marginTop: 10, alignItems: 'center' },
+  horizontal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  horizontalWord: {
+    flex: 1,
+    justifyContent: 'center',
+  },
 });

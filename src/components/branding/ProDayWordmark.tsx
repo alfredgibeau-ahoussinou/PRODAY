@@ -10,6 +10,7 @@ type ProDayWordmarkProps = {
   onDark?: boolean;
   /** Sous-libellé pôle (JOUEUR, COACH…). */
   poleLabel?: string | null;
+  align?: 'center' | 'left';
 };
 
 /**
@@ -20,6 +21,7 @@ export function ProDayWordmark({
   variant = 'master',
   onDark = true,
   poleLabel,
+  align = 'center',
 }: ProDayWordmarkProps) {
   const fontSize = Math.max(12, width * 0.18);
   const color =
@@ -34,6 +36,7 @@ export function ProDayWordmark({
       <Text
         style={[
           styles.word,
+          align === 'left' && styles.wordLeft,
           {
             fontSize,
             color,
@@ -49,6 +52,7 @@ export function ProDayWordmark({
         <Text
           style={[
             styles.pole,
+            align === 'left' && styles.poleLeft,
             {
               fontSize: Math.max(8, fontSize * 0.42),
               color: onDark ? 'rgba(255,255,255,0.72)' : PRODAY_MASTER.grayMuted,
@@ -71,10 +75,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textTransform: 'uppercase',
   },
+  wordLeft: {
+    textAlign: 'left',
+  },
   pole: {
     fontFamily: fontFamily.semibold,
     textAlign: 'center',
     textTransform: 'uppercase',
     marginTop: 4,
+  },
+  poleLeft: {
+    textAlign: 'left',
   },
 });

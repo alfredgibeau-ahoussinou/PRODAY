@@ -1,17 +1,26 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { spacing, radius } from '../../../theme/designTokens';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
-import { ProDaySymbol } from '../ProDaySymbol';
+import { ProDayLogo } from '../ProDayLogo';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
+import { accentColorAtPage, universeAccentRanges } from './universeAccentMotion';
 import { universeEnterCtaLabel } from './universePoleBrand';
 
 interface UniversePageChromeProps {
   lines: CarouselPoleId[];
   activeIndex: number;
+  scrollX: SharedValue<number>;
+  itemWidth: number;
   touring: boolean;
   interactionLocked?: boolean;
   showDismiss?: boolean;
@@ -22,36 +31,54 @@ interface UniversePageChromeProps {
   onJumpToIndex: (index: number) => void;
 }
 
-const Dot: React.FC<{
+const AnimatedDot: React.FC<{
   index: number;
-  active: boolean;
-  accent: string;
-  onPress: () => void;
+  line: CarouselPoleId;
+  itemWidth: number;
+  scrollX: SharedValue<number>;
+  linesCount: number;
   disabled?: boolean;
-  label: string;
-}> = ({ active, accent, onPress, disabled, label }) => (
-  <Pressable
-    onPress={onPress}
-    disabled={disabled}
-    hitSlop={8}
-    accessibilityLabel={label}
-    accessibilityState={{ selected: active }}
-    style={[
-      styles.dot,
-      active
-        ? { backgroundColor: accent, width: 18 }
-        : { backgroundColor: 'rgba(255,255,255,0.28)' },
-    ]}
-  />
-);
+  onPress: () => void;
+}> = ({ index, line, itemWidth, scrollX, linesCount, disabled, onPress }) => {
+  const accent = UNIVERSE_ACCENT[line];
+  const label = UNIVERSE_SHORT[line];
+
+  const dotStyle = useAnimatedStyle(() => {
+    if (itemWidth <= 0 || linesCount <= 1) {
+      return { width: 18, opacity: 1, backgroundColor: accent };
+    }
+    const page = scrollX.value / itemWidth;
+    const dist = Math.abs(page - index);
+    const width = interpolate(dist, [0, 0.35, 1], [18, 10, 6], Extrapolation.CLAMP);
+    const opacity = interpolate(dist, [0, 0.5, 1], [1, 0.72, 0.38], Extrapolation.CLAMP);
+    return {
+      width,
+      opacity,
+      backgroundColor: dist < 0.35 ? accent : 'rgba(255,255,255,0.28)',
+    };
+  });
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      hitSlop={8}
+      accessibilityLabel={label}
+      accessibilityState={{ selected: index === 0 }}
+    >
+      <Animated.View style={[styles.dot, dotStyle]} />
+    </Pressable>
+  );
+};
 
 /**
- * Header brand + CTA contextualisé.
- * Symbole master inchangé ; accent pôle sur le CTA uniquement.
+ * Header brand horizontal + CTA accent interpolé au swipe.
  */
 export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   lines,
   activeIndex,
+  scrollX,
+  itemWidth,
   touring,
   interactionLocked = false,
   showDismiss = false,
@@ -63,9 +90,18 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const activeLine = lines[activeIndex] ?? lines[0];
-  const accent = UNIVERSE_ACCENT[activeLine];
   const ctaLabel = universeEnterCtaLabel(activeLine);
   const isLightCta = activeLine === 'president';
+  const accentRanges = useMemo(() => universeAccentRanges(lines), [lines]);
+  const headerLogoWidth = cinematic ? 168 : 142;
+
+  const ctaBgStyle = useAnimatedStyle(() => {
+    if (itemWidth <= 0 || lines.length <= 1) {
+      return { backgroundColor: UNIVERSE_ACCENT[activeLine] };
+    }
+    const page = scrollX.value / itemWidth;
+    return { backgroundColor: accentColorAtPage(page, accentRanges) };
+  }, [accentRanges, activeLine, itemWidth, lines.length]);
 
   return (
     <View style={styles.root} pointerEvents="box-none">
@@ -79,7 +115,13 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         ]}
       >
         <View style={styles.headerRow}>
-          <ProDaySymbol size={cinematic ? 36 : 28} variant="master" tone="white" showAccentBar={false} />
+          <ProDayLogo
+            width={headerLogoWidth}
+            variant="master"
+            onDark
+            layout="horizontal"
+            showPoleLabel={false}
+          />
           <View style={styles.headerActions}>
             {touring ? (
               <Pressable onPress={onSkip} hitSlop={12} accessibilityLabel="Passer la présentation">
@@ -120,12 +162,13 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
       >
         <View style={styles.dots}>
           {lines.map((line, index) => (
-            <Dot
+            <AnimatedDot
               key={line}
               index={index}
-              active={index === activeIndex}
-              accent={UNIVERSE_ACCENT[line]}
-              label={UNIVERSE_SHORT[line]}
+              line={line}
+              itemWidth={itemWidth}
+              scrollX={scrollX}
+              linesCount={lines.length}
               disabled={interactionLocked}
               onPress={() => onJumpToIndex(index)}
             />
@@ -139,10 +182,10 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           disabled={interactionLocked}
           style={styles.ctaWrap}
         >
-          <View
+          <Animated.View
             style={[
               styles.cta,
-              { backgroundColor: accent },
+              ctaBgStyle,
               isLightCta && styles.ctaOnLightAccent,
             ]}
           >
@@ -157,10 +200,10 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
               size={18}
               color={isLightCta ? '#0A0A0A' : '#FFFFFF'}
             />
-          </View>
+          </Animated.View>
         </PressableSpring>
 
-        <Text style={styles.hint}>Glissez ou touchez un point · le swipe n’est pas obligatoire</Text>
+        <Text style={styles.hint}>Glissez ou touchez un point · le swipe n'est pas obligatoire</Text>
       </View>
     </View>
   );
@@ -229,7 +272,6 @@ const styles = StyleSheet.create({
   },
   dot: {
     height: 6,
-    width: 6,
     borderRadius: 3,
   },
   ctaWrap: {

@@ -1,5 +1,9 @@
 import { filterAccessibleUniversePoles } from '../components/branding/intro/filterAccessibleUniversePoles';
 import {
+  accentColorAtPage,
+  universeAccentRanges,
+} from '../components/branding/intro/universeAccentMotion';
+import {
   brandVariantForCarouselPole,
   universeEnterCtaLabel,
   universePoleDisplayName,
@@ -9,6 +13,17 @@ import { UNIVERSE_ACCENT } from '../components/branding/intro/universeIntroAccen
 import { UNIVERSE_CHOICE_ORDER } from '../components/branding/intro/universeChoiceShared';
 import { PRODAY_POLE_ACCENTS } from '../theme/prodayBrand';
 import { gradientsForCarouselPole } from '../theme/universeGradients';
+
+describe('sélecteur univers — accent motion', () => {
+  it('interpole les couleurs entre pôles adjacents', () => {
+    const lines = ['joueur', 'pro_club', 'coach'] as const;
+    const ranges = universeAccentRanges([...lines]);
+    expect(ranges.inputRange).toEqual([0, 1, 2]);
+    expect(ranges.outputRange[0]).toBe(PRODAY_POLE_ACCENTS.player);
+    expect(accentColorAtPage(0, ranges)).toContain('30');
+    expect(accentColorAtPage(2, ranges)).toContain('34');
+  });
+});
 
 describe('sélecteur univers — brand + ACL', () => {
   it('mappe chaque pôle vitrine vers variante + accent planche', () => {

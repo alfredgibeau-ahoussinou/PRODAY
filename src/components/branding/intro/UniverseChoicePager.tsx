@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, useWindowDimensions, Pressable } from 'react-native';
 import Animated, {
+  Extrapolation,
+  interpolate,
   runOnUI,
   scrollTo,
   useAnimatedRef,
@@ -21,7 +23,7 @@ import { UniversePageChrome } from './UniversePageChrome';
 import { useUniverseIntroTour } from './useUniverseIntroTour';
 import { UNIVERSE_CHOICE_ORDER } from './universeChoiceShared';
 import { filterAccessibleUniversePoles } from './filterAccessibleUniversePoles';
-import { UNIVERSE_ACCENT } from './universeIntroAccents';
+import { accentColorAtPage, universeAccentRanges } from './universeAccentMotion';
 import { PRODAY_MASTER } from '../../../theme/prodayBrand';
 
 const TABLET_BREAKPOINT = 768;
@@ -41,8 +43,8 @@ interface UniverseChoicePagerProps {
 }
 
 function resolveItemWidth(screenWidth: number, cinematic: boolean): number {
-  if (cinematic) return Math.min(screenWidth * 0.42, 440);
-  return Math.min(screenWidth * 0.78, screenWidth - 48);
+  if (cinematic) return Math.min(screenWidth * 0.44, 420);
+  return Math.min(screenWidth * 0.74, screenWidth - 56);
 }
 
 export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
@@ -136,7 +138,6 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     scrollToPage(index, false, false);
   }, [initialCarouselPole, initialLine, itemWidth, lines, listReady, scrollToPage]);
 
-  // Reset initial scroll when the accessible set changes (ex. auth).
   const linesKey = lines.join('|');
   useEffect(() => {
     initialScrollDoneRef.current = false;
@@ -237,16 +238,28 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     ],
   );
 
-  const activeAccent = UNIVERSE_ACCENT[lines[currentIndex] ?? lines[0]];
+  const accentRanges = useMemo(() => universeAccentRanges(lines), [lines]);
 
   const ambientStyle = useAnimatedStyle(() => {
-    if (itemWidth <= 0) return { opacity: 0.14 };
+    if (itemWidth <= 0 || lines.length === 0) return { opacity: 0.12 };
     const page = scrollX.value / itemWidth;
-    const i = Math.max(0, Math.min(Math.max(lines.length - 1, 0), Math.round(page)));
-    const dist = Math.abs(page - i);
-    const opacity = 0.1 + (1 - Math.min(1, dist)) * 0.18;
+    const distToSnap = Math.abs(page - Math.round(page));
+    const opacity = interpolate(
+      distToSnap,
+      [0, 0.45, 1],
+      [0.28, 0.18, 0.1],
+      Extrapolation.CLAMP,
+    );
     return { opacity };
   });
+
+  const ambientColorStyle = useAnimatedStyle(() => {
+    if (itemWidth <= 0 || lines.length === 0) {
+      return { backgroundColor: PRODAY_MASTER.blue };
+    }
+    const page = scrollX.value / itemWidth;
+    return { backgroundColor: accentColorAtPage(page, accentRanges) };
+  }, [accentRanges, itemWidth, lines.length]);
 
   const styles = useMemo(() => createStyles(cinematic), [cinematic]);
 
@@ -265,7 +278,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       <View style={[styles.ambientBase, { backgroundColor: PRODAY_MASTER.black }]} />
       <Animated.View
         pointerEvents="none"
-        style={[styles.ambientAccent, { backgroundColor: activeAccent }, ambientStyle]}
+        style={[styles.ambientAccent, ambientColorStyle, ambientStyle]}
       />
 
       <Animated.FlatList
@@ -275,7 +288,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         renderItem={renderItem}
         horizontal
         showsHorizontalScrollIndicator={false}
-        bounces={false}
+        bounces={lines.length > 1}
         decelerationRate="fast"
         snapToInterval={itemWidth}
         snapToAlignment="start"
@@ -305,6 +318,8 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       <UniversePageChrome
         lines={lines}
         activeIndex={currentIndex}
+        scrollX={scrollX}
+        itemWidth={itemWidth}
         touring={touring}
         interactionLocked={interactionLocked}
         showDismiss={showDismiss}
@@ -329,9 +344,9 @@ function createStyles(cinematic: boolean) {
     },
     ambientAccent: {
       position: 'absolute',
-      top: cinematic ? '18%' : '22%',
+      top: cinematic ? '16%' : '20%',
       alignSelf: 'center',
-      width: cinematic ? '55%' : '90%',
+      width: cinematic ? '52%' : '88%',
       aspectRatio: 1,
       borderRadius: 9999,
     },
