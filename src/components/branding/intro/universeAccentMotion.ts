@@ -15,11 +15,14 @@ export function universeAccentRanges(lines: CarouselPoleId[]): UniverseAccentRan
   };
 }
 
+/** Fallback joueur — literal worklet-safe (PRODAY_POLE_ACCENTS.player). */
+const ACCENT_FALLBACK = '#1E3AFF';
+
 /** Couleur accent interpolée — ranges pré-calculées côté JS. */
 export function accentColorAtPage(
   page: number,
   ranges: UniverseAccentRanges,
-  fallback = UNIVERSE_ACCENT.joueur,
+  fallback: string = ACCENT_FALLBACK,
 ): string {
   'worklet';
   if (ranges.inputRange.length === 0) return fallback;

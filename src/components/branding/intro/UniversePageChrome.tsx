@@ -93,15 +93,16 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   const ctaLabel = universeEnterCtaLabel(activeLine);
   const isLightCta = activeLine === 'president';
   const accentRanges = useMemo(() => universeAccentRanges(lines), [lines]);
+  const activeAccent = UNIVERSE_ACCENT[activeLine];
   const headerLogoWidth = cinematic ? 168 : 142;
 
   const ctaBgStyle = useAnimatedStyle(() => {
     if (itemWidth <= 0 || lines.length <= 1) {
-      return { backgroundColor: UNIVERSE_ACCENT[activeLine] };
+      return { backgroundColor: activeAccent };
     }
     const page = scrollX.value / itemWidth;
     return { backgroundColor: accentColorAtPage(page, accentRanges) };
-  }, [accentRanges, activeLine, itemWidth, lines.length]);
+  }, [accentRanges, activeAccent, activeLine, itemWidth, lines.length]);
 
   return (
     <View style={styles.root} pointerEvents="box-none">
