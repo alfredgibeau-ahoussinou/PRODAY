@@ -50,12 +50,13 @@ export function ScrollVideoStage() {
 
   const hintOpacity = useTransform(progress, [0, 0.12, 0.22], [1, 0.7, 0]);
   const brandOpacity = useTransform(progress, [0, 0.15, 0.28], [1, 1, 0]);
+  // Copy visible dès le 1er paint (évite hero noir « cassé » avant le premier scroll).
   const copyOpacity = useTransform(
     progress,
-    reduced ? [0, 0.01] : [0.05, 0.18, 0.55, 0.72],
-    reduced ? [1, 1] : [0, 1, 1, 0],
+    reduced ? [0, 0.01] : [0, 0.12, 0.55, 0.72],
+    reduced ? [1, 1] : [1, 1, 1, 0],
   );
-  const copyY = useTransform(progress, [0.05, 0.2], [16, 0]);
+  const copyY = useTransform(progress, [0, 0.12], [0, 0]);
 
   return (
     <section
