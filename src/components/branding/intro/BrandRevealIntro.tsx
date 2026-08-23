@@ -39,7 +39,7 @@ interface BrandRevealIntroProps {
   skipLocalTransition?: boolean;
 }
 
-/** Sélecteur d'univers immersif — lockup horizontal + transitions fluides. */
+/** Sélecteur d'univers minimal — symbole pôle + transitions fluides. */
 export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   onChooseSpace,
   onExitComplete,

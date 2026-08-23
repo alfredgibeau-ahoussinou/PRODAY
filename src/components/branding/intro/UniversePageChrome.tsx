@@ -10,7 +10,6 @@ import Animated, {
 import { spacing, radius } from '../../../theme/designTokens';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
-import { ProDayLogo } from '../ProDayLogo';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
 import { universeEnterCtaLabel } from './universePoleBrand';
@@ -40,7 +39,6 @@ const AnimatedDot: React.FC<{
   disabled?: boolean;
   onPress: () => void;
 }> = ({ index, activeIndex, line, itemWidth, scrollX, linesCount, disabled, onPress }) => {
-  // Primitives capturées avant le worklet (pas de Record lookup UI-thread).
   const accent = UNIVERSE_ACCENT[line];
   const label = UNIVERSE_SHORT[line];
   const inactive = 'rgba(255,255,255,0.28)';
@@ -73,9 +71,7 @@ const AnimatedDot: React.FC<{
   );
 };
 
-/**
- * Header brand horizontal + CTA accent via état React (liveIndex) — zéro interpolateColor worklet.
- */
+/** Header épuré + CTA accent via état React (liveIndex) — zéro interpolateColor worklet. */
 export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   lines,
   activeIndex,
@@ -95,8 +91,9 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   const isLightCta = activeLine === 'president';
   const activeAccent = UNIVERSE_ACCENT[activeLine];
   const ctaLabel = universeEnterCtaLabel(activeLine);
-  const headerLogoWidth = cinematic ? 168 : 142;
   const linesCount = lines.length;
+
+  const showHeaderAction = touring || (showDismiss && onDismiss);
 
   return (
     <View style={styles.root} pointerEvents="box-none">
@@ -110,39 +107,24 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         ]}
       >
         <View style={styles.headerRow}>
-          <ProDayLogo
-            width={headerLogoWidth}
-            variant="master"
-            onDark
-            layout="horizontal"
-            showPoleLabel={false}
-          />
-          <View style={styles.headerActions}>
-            {touring ? (
-              <Pressable onPress={onSkip} hitSlop={12} accessibilityLabel="Passer la présentation">
-                <Text style={styles.skip}>Passer</Text>
-              </Pressable>
-            ) : showDismiss && onDismiss ? (
-              <Pressable
-                onPress={onDismiss}
-                disabled={interactionLocked}
-                hitSlop={12}
-                accessibilityLabel="Fermer le sélecteur de pôle"
-              >
-                <Text style={styles.skip}>Fermer</Text>
-              </Pressable>
-            ) : (
-              <View style={styles.skipSpacer} />
-            )}
-          </View>
+          <Text style={[styles.title, cinematic && styles.titleWide]} numberOfLines={2}>
+            Choisissez votre univers
+          </Text>
+          {showHeaderAction ? (
+            <Pressable
+              onPress={touring ? onSkip : onDismiss}
+              disabled={!touring && interactionLocked}
+              hitSlop={12}
+              accessibilityLabel={
+                touring ? 'Passer la présentation' : 'Fermer le sélecteur de pôle'
+              }
+            >
+              <Text style={styles.skip}>{touring ? 'Passer' : 'Fermer'}</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.skipSpacer} />
+          )}
         </View>
-
-        <Text style={[styles.title, cinematic && styles.titleWide]}>
-          Choisissez votre univers
-        </Text>
-        <Text style={[styles.subtitle, cinematic && styles.subtitleWide]}>
-          Une plateforme. Plusieurs façons de vivre le football.
-        </Text>
       </View>
 
       <View
@@ -199,7 +181,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           </View>
         </PressableSpring>
 
-        <Text style={styles.hint}>Glissez ou touchez un point · le swipe n'est pas obligatoire</Text>
+        <Text style={styles.hint}>Glissez ou touchez un point</Text>
       </View>
     </View>
   );
@@ -211,50 +193,35 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   top: {
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  headerActions: {
-    minHeight: 28,
-    justifyContent: 'center',
+    gap: spacing.md,
   },
   skip: {
     fontSize: 14,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.88)',
+    color: 'rgba(255,255,255,0.72)',
+    paddingTop: 2,
   },
   skipSpacer: {
     width: 48,
   },
   title: {
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.6,
-    color: '#FFFFFF',
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    color: 'rgba(255,255,255,0.88)',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   titleWide: {
-    fontSize: 34,
-    letterSpacing: -0.8,
+    fontSize: 24,
+    letterSpacing: -0.5,
     maxWidth: 520,
-  },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.55)',
-    maxWidth: 320,
-    ...Platform.select({ android: { includeFontPadding: false } }),
-  },
-  subtitleWide: {
-    fontSize: 16,
-    lineHeight: 24,
-    maxWidth: 440,
   },
   bottom: {
     gap: spacing.md,
@@ -286,14 +253,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.28,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 6,
   },
   ctaOnLightAccent: {
     shadowColor: '#FBBF24',
-    shadowOpacity: 0.28,
+    shadowOpacity: 0.22,
   },
   ctaText: {
     flex: 1,
@@ -309,7 +276,7 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 11,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.32)',
     textAlign: 'center',
   },
 });

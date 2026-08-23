@@ -1,15 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, useWindowDimensions, Pressable } from 'react-native';
 import Animated, {
-  Extrapolation,
-  interpolate,
   runOnJS,
   runOnUI,
   scrollTo,
   useAnimatedReaction,
   useAnimatedRef,
   useAnimatedScrollHandler,
-  useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
@@ -26,12 +23,10 @@ import { UniversePageChrome } from './UniversePageChrome';
 import { useUniverseIntroTour } from './useUniverseIntroTour';
 import { UNIVERSE_CHOICE_ORDER } from './universeChoiceShared';
 import { filterAccessibleUniversePoles } from './filterAccessibleUniversePoles';
-import { UNIVERSE_ACCENT } from './universeIntroAccents';
 import {
   shouldSnapOnDragEnd,
   snapIndexFromOffset,
   UNIVERSE_AMBIENT_BASE,
-  UNIVERSE_AMBIENT_FALLBACK,
 } from './universePagerSnap';
 
 const TABLET_BREAKPOINT = 768;
@@ -301,27 +296,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     ],
   );
 
-  const linesLen = lines.length;
-  // Couleur ambient via React state (liveIndex) — pas d'interpolateColor worklet.
-  const ambientAccent =
-    linesLen > 0
-      ? UNIVERSE_ACCENT[lines[Math.max(0, Math.min(maxIndex, liveIndex))] ?? lines[0]]
-      : UNIVERSE_AMBIENT_FALLBACK;
-
-  const ambientStyle = useAnimatedStyle(() => {
-    if (itemWidth <= 0 || linesLen === 0) return { opacity: 0.12 };
-    const page = scrollX.value / itemWidth;
-    const distToSnap = Math.abs(page - Math.round(page));
-    const opacity = interpolate(
-      distToSnap,
-      [0, 0.45, 1],
-      [0.28, 0.18, 0.1],
-      Extrapolation.CLAMP,
-    );
-    return { opacity };
-  }, [itemWidth, linesLen]);
-
-  const styles = useMemo(() => createStyles(cinematic), [cinematic]);
+  const styles = useMemo(() => createStyles(), []);
 
   if (lines.length === 0) {
     return <View style={styles.root} />;
@@ -335,16 +310,6 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         if (h > 0 && h !== layoutHeight) setLayoutHeight(h);
       }}
     >
-      <View style={[styles.ambientBase, { backgroundColor: UNIVERSE_AMBIENT_BASE }]} />
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.ambientAccent,
-          { backgroundColor: ambientAccent },
-          ambientStyle,
-        ]}
-      />
-
       <Animated.FlatList
         ref={listRef}
         data={lines}
@@ -399,22 +364,11 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   );
 };
 
-function createStyles(cinematic: boolean) {
+function createStyles() {
   return StyleSheet.create({
     root: {
       flex: 1,
       backgroundColor: UNIVERSE_AMBIENT_BASE,
-    },
-    ambientBase: {
-      ...StyleSheet.absoluteFillObject,
-    },
-    ambientAccent: {
-      position: 'absolute',
-      top: cinematic ? '16%' : '20%',
-      alignSelf: 'center',
-      width: cinematic ? '52%' : '88%',
-      aspectRatio: 1,
-      borderRadius: 9999,
     },
     list: {
       flex: 1,
