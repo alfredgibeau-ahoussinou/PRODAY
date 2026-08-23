@@ -209,7 +209,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
         >
           <Link
             href={ROUTES.home}
-            className="flex shrink-0 items-center gap-2 rounded-full py-1 pl-2 pr-2.5"
+            className="flex shrink-0 items-center rounded-full py-1 pl-2 pr-2"
             aria-label="ProDay, accueil"
           >
             {/* Symbole blanc transparent (pas de pastille opaque) — nav pill sombre */}
@@ -221,9 +221,6 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
               className="h-5 w-auto object-contain min-[390px]:h-[22px]"
               priority
             />
-            <span className="hidden font-display text-[14px] font-semibold tracking-tight text-white sm:inline">
-              ProDay
-            </span>
           </Link>
 
           <div className="mx-auto hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex">
