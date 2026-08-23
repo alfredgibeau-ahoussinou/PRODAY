@@ -9,6 +9,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, radius } from '../../../theme/designTokens';
+import { ProDayGradient } from '../../ui/ProDayGradient';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
@@ -151,12 +152,23 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           scaleTo={0.98}
           haptic
           disabled={interactionLocked}
-          style={[styles.cta, activeLine === 'sponsor' && styles.ctaSponsor]}
+          style={styles.ctaWrap}
         >
-          <Text style={styles.ctaText} numberOfLines={1}>
-            Continuer · {identity.productName}
-          </Text>
-          <Icon name="chevron-forward" size={18} color="#0A0A0A" />
+          {activeLine === 'sponsor' ? (
+            <View style={[styles.cta, styles.ctaSponsor]}>
+              <Text style={styles.ctaText} numberOfLines={1}>
+                Continuer · {identity.productName}
+              </Text>
+              <Icon name="chevron-forward" size={18} color="#0A0A0A" />
+            </View>
+          ) : (
+            <ProDayGradient kind="cta" style={styles.cta}>
+              <Text style={styles.ctaText} numberOfLines={1}>
+                Continuer · {identity.productName}
+              </Text>
+              <Icon name="chevron-forward" size={18} color="#0A0A0A" />
+            </ProDayGradient>
+          )}
         </PressableSpring>
 
         <Text style={styles.hint}>Glissez pour parcourir les pôles</Text>
@@ -251,15 +263,19 @@ const styles = StyleSheet.create({
   chipTextSponsor: {
     color: '#F5D76E',
   },
+  ctaWrap: {
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+  },
   cta: {
     minHeight: 54,
     borderRadius: radius.pill,
-    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
@@ -267,8 +283,8 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   ctaSponsor: {
-    backgroundColor: '#D4AF37',
-    shadowColor: '#D4AF37',
+    backgroundColor: '#EF4444',
+    shadowColor: '#EF4444',
     shadowOpacity: 0.35,
   },
   ctaText: {

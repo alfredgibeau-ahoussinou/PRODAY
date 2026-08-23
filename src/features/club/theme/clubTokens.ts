@@ -1,7 +1,9 @@
 /**
- * Identité visuelle Pôle Club — premium sombre, sportive, moderne.
- * Navy / charcoal + émeraude + bleu vif (réf. sport management). Pas SaaS violet.
+ * Identité visuelle Pôle Club — surfaces dark premium + accent violet officiel.
+ * Accent pôle = #7C3AED (pas émeraude) ; fonds restent navy/charcoal.
  */
+
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../../../theme/prodayBrand';
 
 export type ClubThemeTokens = {
   bg: string;
@@ -38,7 +40,9 @@ export type ClubThemeTokens = {
   isLight: boolean;
 };
 
-/** Tokens Club — night navy, émeraude status, bleu FAB. */
+const CLUB = PRODAY_POLE_ACCENTS.club;
+
+/** Tokens Club — night navy, accent violet pôle. */
 export const CLUB_TOKENS: ClubThemeTokens = {
   bg: '#0B121F',
   surface: '#121A28',
@@ -49,39 +53,39 @@ export const CLUB_TOKENS: ClubThemeTokens = {
   foreground: '#F4F7FC',
   muted: 'rgba(186, 204, 230, 0.72)',
   faint: 'rgba(186, 204, 230, 0.48)',
-  accent: '#006CFC',
-  accentSoft: 'rgba(0, 108, 252, 0.22)',
-  accentDeep: '#0047B8',
-  secondary: '#5BA3FF',
+  accent: CLUB,
+  accentSoft: poleAccentSoft('club', 0.22),
+  accentDeep: '#5B21B6',
+  secondary: '#A78BFA',
   onAccent: '#FFFFFF',
-  glow: 'rgba(0, 108, 252, 0.50)',
-  headerWash: '#0A2A22',
+  glow: poleAccentSoft('club', 0.5),
+  headerWash: '#1A1030',
   success: '#10B981',
   successSoft: 'rgba(16, 185, 129, 0.18)',
   warning: '#FBBF24',
   warningSoft: 'rgba(251, 191, 36, 0.16)',
   danger: '#F87171',
   dangerSoft: 'rgba(248, 113, 113, 0.16)',
-  pitch: '#059669',
-  pitchSoft: 'rgba(5, 150, 105, 0.28)',
+  pitch: '#5B21B6',
+  pitchSoft: poleAccentSoft('club', 0.28),
   scrim: 'rgba(4, 8, 16, 0.78)',
   isLight: false,
 };
 
-/** Chrome site/legacy — aligné navy/émeraude app (plus de noir cinéma). */
+/** Chrome site/legacy — aligné navy + violet pôle. */
 export const CLUB_SITE_LEGACY = {
-  accent: '#006CFC',
-  deep: '#0047B8',
-  soft: 'rgba(0, 108, 252, 0.22)',
-  glow: 'rgba(5, 150, 105, 0.35)',
+  accent: CLUB,
+  deep: '#5B21B6',
+  soft: poleAccentSoft('club', 0.22),
+  glow: poleAccentSoft('club', 0.35),
   bg: '#0B121F',
-  band: '#0A2A22',
+  band: '#1A1030',
   surface: '#121A28',
   elevated: '#182233',
   border: 'rgba(186, 204, 230, 0.12)',
   foreground: '#F4F7FC',
   muted: 'rgba(186, 204, 230, 0.72)',
-  pitchDeep: '#064E3B',
-  pitch: '#059669',
-  pitchLight: '#10B981',
+  pitchDeep: '#4C1D95',
+  pitch: CLUB,
+  pitchLight: '#A78BFA',
 } as const;

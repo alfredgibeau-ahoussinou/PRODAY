@@ -6,7 +6,7 @@ import {
 
 describe('parseCoachColorPhrase', () => {
   it('accepte un hex avec #', () => {
-    expect(parseCoachColorPhrase('#006CFC')).toEqual({ hex: '#006CFC', label: '#006CFC' });
+    expect(parseCoachColorPhrase('#0054F0')).toEqual({ hex: '#0054F0', label: '#0054F0' });
   });
 
   it('accepte un hex sans #', () => {
@@ -22,8 +22,8 @@ describe('parseCoachColorPhrase', () => {
   });
 
   it('reconnaît les alias ProDay', () => {
-    expect(parseCoachColorPhrase('proday')).toEqual({ hex: '#006CFC', label: 'Bleu ProDay' });
-    expect(parseCoachColorPhrase('bleu proday')).toEqual({ hex: '#006CFC', label: 'Bleu ProDay' });
+    expect(parseCoachColorPhrase('proday')).toEqual({ hex: '#0054F0', label: 'Bleu ProDay' });
+    expect(parseCoachColorPhrase('bleu proday')).toEqual({ hex: '#0054F0', label: 'Bleu ProDay' });
   });
 
   it('retourne null pour une entrée invalide', () => {
@@ -51,7 +51,7 @@ describe('COACH_COLOR_FAMILIES', () => {
 
   it('inclut le bleu ProDay dans la famille proday', () => {
     const proday = COACH_COLOR_FAMILIES.find((f) => f.id === 'proday');
-    expect(proday?.colors).toContain('#006CFC');
+    expect(proday?.colors).toContain('#0054F0');
   });
 
   it('n’a pas de doublons hex dans chaque famille', () => {

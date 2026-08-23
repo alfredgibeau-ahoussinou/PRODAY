@@ -5,64 +5,64 @@ import { proColorOverrides } from './proThemeColors';
 import type { PlayerSegment } from '../utils/playerSegment';
 import type { AppColors } from './universeTheme';
 
-/** Pro joueur masculin — bleu sur FLASH. */
+/** Pro joueur masculin — bleu pôle Joueur. */
 export const proPlayerMaleOverrides = {
-  accent: '#60A5FA',
-  accentLight: '#93C5FD',
-  accentSoft: 'rgba(96, 165, 250, 0.14)',
-  accentMuted: 'rgba(96, 165, 250, 0.32)',
-  brand: '#60A5FA',
-  brandLight: '#93C5FD',
-  brandSoft: 'rgba(96, 165, 250, 0.1)',
+  accent: '#1E3AFF',
+  accentLight: '#5B73FF',
+  accentSoft: 'rgba(30, 58, 255, 0.14)',
+  accentMuted: 'rgba(30, 58, 255, 0.32)',
+  brand: '#1E3AFF',
+  brandLight: '#5B73FF',
+  brandSoft: 'rgba(30, 58, 255, 0.1)',
   ink: '#FAFAFA',
   inkSecondary: '#D4D4D4',
   border: 'rgba(255, 255, 255, 0.1)',
-  borderStrong: 'rgba(96, 165, 250, 0.55)',
+  borderStrong: 'rgba(30, 58, 255, 0.55)',
   background: '#000000',
   backgroundAlt: '#0A0A0A',
   gradientStart: '#000000',
-  gradientEnd: '#2563EB',
+  gradientEnd: '#1529CC',
 } as const;
 
-/** Pro joueuse — violet sur FLASH. */
+/** Pro joueuse — même pôle Joueur, nuance un peu plus claire. */
 export const proPlayerFemaleOverrides = {
-  accent: '#A78BFA',
-  accentLight: '#C4B5FD',
-  accentSoft: 'rgba(167, 139, 250, 0.14)',
-  accentMuted: 'rgba(167, 139, 250, 0.32)',
-  brand: '#A78BFA',
-  brandLight: '#C4B5FD',
-  brandSoft: 'rgba(167, 139, 250, 0.1)',
+  accent: '#5B73FF',
+  accentLight: '#93A4FF',
+  accentSoft: 'rgba(91, 115, 255, 0.14)',
+  accentMuted: 'rgba(91, 115, 255, 0.32)',
+  brand: '#5B73FF',
+  brandLight: '#93A4FF',
+  brandSoft: 'rgba(91, 115, 255, 0.1)',
   ink: '#FAFAFA',
   inkSecondary: '#D4D4D4',
   border: 'rgba(255, 255, 255, 0.1)',
-  borderStrong: 'rgba(167, 139, 250, 0.55)',
+  borderStrong: 'rgba(91, 115, 255, 0.55)',
   background: '#000000',
   backgroundAlt: '#0A0A0A',
   gradientStart: '#000000',
-  gradientEnd: '#7C3AED',
+  gradientEnd: '#1E3AFF',
 } as const;
 
 /** Amateur masculin — orange terrain (palette logo Amateur). */
 export const amateurMaleOverrides = amateurColorOverrides;
 
-/** Amateur féminin — corail sur FLASH. */
+/** Amateur féminin — pôle Joueur, nuance claire. */
 export const amateurFemaleOverrides = {
   ...amateurColorOverrides,
-  accent: '#F472B6',
-  accentLight: '#F9A8D4',
-  accentSoft: 'rgba(244, 114, 182, 0.14)',
-  accentMuted: 'rgba(244, 114, 182, 0.32)',
-  brand: '#F472B6',
-  brandLight: '#F9A8D4',
-  brandSoft: 'rgba(244, 114, 182, 0.1)',
-  borderStrong: 'rgba(244, 114, 182, 0.55)',
-  borderMedium: 'rgba(244, 114, 182, 0.28)',
-  tone1: '#BE185D',
-  tone2: '#DB2777',
-  tone3: '#F472B6',
-  tone4: '#F9A8D4',
-  gradientEnd: '#DB2777',
+  accent: '#5B73FF',
+  accentLight: '#93A4FF',
+  accentSoft: 'rgba(91, 115, 255, 0.14)',
+  accentMuted: 'rgba(91, 115, 255, 0.32)',
+  brand: '#5B73FF',
+  brandLight: '#93A4FF',
+  brandSoft: 'rgba(91, 115, 255, 0.1)',
+  borderStrong: 'rgba(91, 115, 255, 0.55)',
+  borderMedium: 'rgba(91, 115, 255, 0.28)',
+  tone1: '#1529CC',
+  tone2: '#1E3AFF',
+  tone3: '#5B73FF',
+  tone4: '#93A4FF',
+  gradientEnd: '#1E3AFF',
 } as const;
 
 /** Amateur mineur — ambre sur FLASH. */

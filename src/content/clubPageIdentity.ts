@@ -2,7 +2,7 @@ import type { IconName } from '../components/ui/iconNames';
 import type { ClubNavItemId } from '../features/club/navigation/clubNavConfig';
 import { CLUB_TOKENS, CLUB_SITE_LEGACY } from '../features/club/theme/clubTokens';
 
-/** Chrome partagé app Club — navy/émeraude (plus de look cinéma). */
+/** Chrome partagé app Club — navy premium + accent violet pôle. */
 export const CLUB_SITE = {
   ...CLUB_SITE_LEGACY,
   accent: CLUB_TOKENS.accent,

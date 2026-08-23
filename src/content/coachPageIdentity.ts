@@ -3,13 +3,14 @@ import {
   canonicalizeCoachNav,
   type CoachNavItemId,
 } from '../features/coach/navigation/coachNavConfig';
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../theme/prodayBrand';
 
-/** Tokens Pôle Coach — nuit type SportEasy, accent PRODAY. */
+/** Tokens Pôle Coach — nuit premium, accent vert officiel. */
 export const COACH_SITE = {
-  accent: '#006CFC',
-  deep: '#002478',
-  soft: 'rgba(0, 108, 252, 0.22)',
-  glow: 'rgba(0, 108, 252, 0.28)',
+  accent: PRODAY_POLE_ACCENTS.coach,
+  deep: '#15803D',
+  soft: poleAccentSoft('coach', 0.22),
+  glow: poleAccentSoft('coach', 0.28),
   bg: '#000000',
   band: '#000000',
   surface: '#1C1C1E',

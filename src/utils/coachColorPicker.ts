@@ -120,7 +120,7 @@ const COACH_COLOR_FAMILIES_RAW: { id: CoachColorFamilyId; colors: string[] }[] =
   {
     id: 'cool',
     colors: [
-      '#006CFC',
+      '#0054F0',
       '#1E88E5',
       '#2196F3',
       '#42A5F5',
@@ -236,7 +236,7 @@ const COACH_COLOR_FAMILIES_RAW: { id: CoachColorFamilyId; colors: string[] }[] =
   {
     id: 'proday',
     colors: [
-      '#006CFC',
+      '#0054F0',
       '#0056CC',
       '#007AFF',
       '#32ADE6',
@@ -284,8 +284,8 @@ const COACH_NAMED_COLORS: Record<string, { hex: string; label: string }> = {
   gris: { hex: '#757575', label: 'Gris' },
   bordeaux: { hex: '#880E4F', label: 'Bordeaux' },
   turquoise: { hex: '#26A69A', label: 'Turquoise' },
-  proday: { hex: '#006CFC', label: 'Bleu ProDay' },
-  'bleu proday': { hex: '#006CFC', label: 'Bleu ProDay' },
+  proday: { hex: '#0054F0', label: 'Bleu ProDay' },
+  'bleu proday': { hex: '#0054F0', label: 'Bleu ProDay' },
 };
 
 const NAMED_COLOR_KEYS = Object.keys(COACH_NAMED_COLORS).sort((a, b) => b.length - a.length);

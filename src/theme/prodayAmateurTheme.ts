@@ -1,12 +1,16 @@
-/** Palette Amateur — orange sur fond FLASH noir. */
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from './prodayBrand';
+
+const A = PRODAY_POLE_ACCENTS.player;
+
+/** Palette Joueur — bleu officiel #1E3AFF sur fond premium. */
 export const amateurColorOverrides = {
-  accent: '#F97316',
-  accentLight: '#FB923C',
-  accentSoft: 'rgba(249, 115, 22, 0.14)',
-  accentMuted: 'rgba(249, 115, 22, 0.32)',
-  brand: '#F97316',
-  brandLight: '#FB923C',
-  brandSoft: 'rgba(249, 115, 22, 0.1)',
+  accent: A,
+  accentLight: '#5B73FF',
+  accentSoft: poleAccentSoft('player', 0.14),
+  accentMuted: poleAccentSoft('player', 0.32),
+  brand: A,
+  brandLight: '#5B73FF',
+  brandSoft: poleAccentSoft('player', 0.1),
   brandInverse: '#FFFFFF',
   ink: '#FAFAFA',
   inkSecondary: '#D4D4D4',
@@ -19,29 +23,29 @@ export const amateurColorOverrides = {
   surfaceInverse: '#FAFAFA',
   heroMuted: 'rgba(255, 255, 255, 0.72)',
   border: 'rgba(255, 255, 255, 0.1)',
-  borderStrong: 'rgba(249, 115, 22, 0.55)',
-  borderMedium: 'rgba(249, 115, 22, 0.28)',
+  borderStrong: poleAccentSoft('player', 0.55),
+  borderMedium: poleAccentSoft('player', 0.28),
   text: '#FAFAFA',
   textSecondary: '#D4D4D4',
   textMuted: '#A3A3A3',
-  tone1: '#EA580C',
-  tone2: '#F97316',
-  tone3: '#FB923C',
-  tone4: '#FDBA74',
+  tone1: '#1529CC',
+  tone2: A,
+  tone3: '#5B73FF',
+  tone4: '#93A4FF',
   navy: '#0A0A0A',
   navySoft: '#171717',
-  blueBright: '#FB923C',
-  bluePrimary: '#F97316',
-  blueCyan: '#FB923C',
+  blueBright: '#5B73FF',
+  bluePrimary: A,
+  blueCyan: '#5B73FF',
   gradientStart: '#000000',
-  gradientEnd: '#EA580C',
+  gradientEnd: '#1529CC',
   success: '#16A34A',
   successBg: 'rgba(22, 163, 74, 0.15)',
 } as const;
 
 export const amateurGradients = {
-  hero: ['#000000', '#431407'] as const,
-  heroDark: ['#000000', '#1c0a02'] as const,
+  hero: ['#000000', '#0A1638'] as const,
+  heroDark: ['#000000', '#050A18'] as const,
   card: ['#1A1A1A', '#0A0A0A'] as const,
-  cta: ['#EA580C', '#F97316'] as const,
+  cta: ['#1529CC', A] as const,
 };

@@ -18,33 +18,33 @@ const PRO_SEGMENT_COLORS: Record<
   BrandWordmarkColors
 > = {
   pro: {
-    brand: '#1E3A8A',
-    accent: '#2563EB',
-    taglineLight: '#3B82F6',
+    brand: '#FFFFFF',
+    accent: '#22C55E',
+    taglineLight: '#4ADE80',
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
   pro_player: {
-    brand: '#1E3A8A',
-    accent: '#3B82F6',
-    taglineLight: '#60A5FA',
+    brand: '#FFFFFF',
+    accent: '#1E3AFF',
+    taglineLight: '#5B73FF',
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
   pro_club: {
-    brand: '#1E3A8A',
-    accent: '#1D4ED8',
-    taglineLight: '#2563EB',
+    brand: '#FFFFFF',
+    accent: '#7C3AED',
+    taglineLight: '#A78BFA',
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
   president: {
-    brand: '#F7F3EB',
-    accent: '#D4B880',
-    taglineLight: '#E8D5A8',
+    brand: '#FFFFFF',
+    accent: '#FBBF24',
+    taglineLight: '#FCD34D',
     taglineDark: 'rgba(247, 243, 235, 0.92)',
   },
   pro_staff: {
-    brand: '#172554',
-    accent: '#2563EB',
-    taglineLight: '#3B82F6',
+    brand: '#FFFFFF',
+    accent: '#22C55E',
+    taglineLight: '#4ADE80',
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
 };

@@ -283,7 +283,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     name="star-four-points"
                     size={14}
                     color={
-                      isSponsorAuth ? '#D4AF37' : isParentAuth ? '#14B8A6' : colors.accent
+                      isSponsorAuth ? '#EF4444' : isParentAuth ? '#F97316' : colors.accent
                     }
                   />
                   <Text
@@ -300,9 +300,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     size={14}
                     color={
                       isSponsorAuth
-                        ? '#D4AF37'
+                        ? '#EF4444'
                         : isParentAuth
-                          ? '#14B8A6'
+                          ? '#F97316'
                           : 'rgba(255,255,255,0.7)'
                     }
                   />

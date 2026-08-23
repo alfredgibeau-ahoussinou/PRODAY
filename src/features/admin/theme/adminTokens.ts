@@ -1,8 +1,9 @@
 /**
  * Tokens — ProDay Admin Control Center.
- * Graphite profond + champagne or (même série premium que le Pôle Président).
- * Pas de bleu SaaS / violet générique.
+ * Surfaces graphite premium · accent pôle Admin #A3A3A3.
  */
+
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../../../theme/prodayBrand';
 
 export type AdminThemeTokens = {
   bg: string;
@@ -45,6 +46,8 @@ export type AdminThemeTokens = {
   healthBad: string;
 };
 
+const ADMIN = PRODAY_POLE_ACCENTS.admin;
+
 export const ADMIN_TOKENS: AdminThemeTokens = {
   bg: '#05070E',
   bgElevated: '#0A0F1A',
@@ -52,20 +55,20 @@ export const ADMIN_TOKENS: AdminThemeTokens = {
   surfaceRaised: '#141E32',
   surfaceMuted: '#0B111C',
   surfaceGlass: 'rgba(20, 30, 50, 0.72)',
-  border: 'rgba(212, 184, 128, 0.14)',
-  borderStrong: 'rgba(212, 184, 128, 0.34)',
-  borderLuxury: 'rgba(232, 213, 168, 0.42)',
+  border: 'rgba(163, 163, 163, 0.16)',
+  borderStrong: 'rgba(163, 163, 163, 0.34)',
+  borderLuxury: 'rgba(212, 212, 212, 0.28)',
   foreground: '#F7F3EB',
   muted: '#9AA3B8',
   faint: '#5A6478',
-  accent: '#D4B880',
-  accentHot: '#F2E6C8',
-  accentSoft: 'rgba(212, 184, 128, 0.12)',
+  accent: ADMIN,
+  accentHot: '#D4D4D4',
+  accentSoft: poleAccentSoft('admin', 0.14),
   accentText: '#0A0F1A',
-  champagne: '#E8D5A8',
-  champagneBright: '#F2E6C8',
-  champagneSoft: 'rgba(232, 213, 168, 0.1)',
-  champagneGlow: 'rgba(212, 184, 128, 0.22)',
+  champagne: '#D4D4D4',
+  champagneBright: '#E5E5E5',
+  champagneSoft: poleAccentSoft('admin', 0.1),
+  champagneGlow: poleAccentSoft('admin', 0.22),
   success: '#4AB894',
   successSoft: 'rgba(74, 184, 148, 0.14)',
   warn: '#D9A84A',
@@ -78,7 +81,7 @@ export const ADMIN_TOKENS: AdminThemeTokens = {
   headerBg: 'rgba(5, 7, 14, 0.92)',
   dockBg: 'rgba(5, 7, 14, 0.96)',
   overlay: 'rgba(2, 4, 10, 0.78)',
-  hairline: 'rgba(247, 243, 235, 0.055)',
+  hairline: 'rgba(163, 163, 163, 0.12)',
   ink: '#03050A',
   healthGood: '#4AB894',
   healthMid: '#D9A84A',

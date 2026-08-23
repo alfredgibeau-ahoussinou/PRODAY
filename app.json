@@ -5,12 +5,16 @@
     "version": "1.0.7",
     "scheme": "proday",
     "orientation": "portrait",
-    "icon": "./assets/branding/logo-proday-official.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/branding/proday-app-icon.png",
+    "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/branding/logo-proday-official.png",
+      "image": "./assets/branding/proday-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F1F5F9"
+      "backgroundColor": "#000000"
+    },
+    "notification": {
+      "icon": "./assets/branding/proday-notification-icon.png",
+      "color": "#0054F0"
     },
     "ios": {
       "supportsTablet": true,
@@ -32,8 +36,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/branding/logo-proday-official.png",
-        "backgroundColor": "#F1F5F9"
+        "foregroundImage": "./assets/branding/proday-adaptive-foreground.png",
+        "backgroundColor": "#000000"
       },
       "package": "com.proday.app",
       "versionCode": 8,
@@ -41,7 +45,7 @@
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/branding/logo-proday-official.png"
+      "favicon": "./assets/branding/proday-app-icon.png"
     },
     "plugins": [
       "expo-apple-authentication",
@@ -63,6 +67,8 @@
       [
         "expo-notifications",
         {
+          "icon": "./assets/branding/proday-notification-icon.png",
+          "color": "#0054F0",
           "enableBackgroundRemoteNotifications": true
         }
       ],

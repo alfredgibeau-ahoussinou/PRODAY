@@ -1,27 +1,19 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { BRAND, typography, spacing } from '../theme/designTokens';
 import {
-  BRANDING_LOGOS,
-  PRODAY_OFFICIAL_LOGO_ASPECT,
-  MAN_BRANDING_LOGOS,
-  AMATEUR_BRANDING_LOGOS,
-  SUPPORTER_BRANDING_LOGOS,
-  PRO_BRANDING_LOGOS,
-  WOMAN_BRANDING_LOGOS,
-  SPONSOR_BRANDING_LOGOS,
-} from '../content/brandingAssets';
+  PRODAY_LOGO_MASTER_ASPECT,
+  PRODAY_SYMBOL_ASPECT,
+} from '../theme/prodayBrand';
+import { PRODAY_OFFICIAL_LOGO_ASPECT } from '../content/brandingAssets';
 import { brandForProductLine } from '../models/ProductLine';
 import type { ProductLineId } from '../models/ProductLine';
 import { useAppTheme } from '../context/ProductLineContext';
 import type { AppColors } from '../theme/universeTheme';
-import { ManLogo, manLogoAspect } from './ManLogo';
-import { AmateurLogo, amateurLogoAspect } from './AmateurLogo';
-import { SupporterLogo, supporterLogoAspect } from './SupporterLogo';
-import { ProLogo, proLogoAspect } from './ProLogo';
-import { ParentLogo, parentLogoAspect } from './ParentLogo';
-import { WomanLogo, womanLogoAspect } from './WomanLogo';
-import { SponsorLogo, sponsorLogoAspect } from './SponsorLogo';
+import {
+  ProDayLogo,
+  brandVariantForProductLine,
+} from './branding/ProDayLogo';
 
 /** Fond derrière le logo — choisit automatiquement transparent ou non */
 export type LogoBackground = 'light' | 'dark' | 'photo';
@@ -47,21 +39,9 @@ interface LogoProps {
   woman?: boolean;
   /** Force un univers (cartes intro, previews). */
   productLine?: ProductLineId;
-  /** Force le branding Sponsor or (#D4AF37). */
+  /** Force le branding Sponsor. */
   sponsor?: boolean;
 }
-
-const LOGO_ASPECT: Record<LogoVariant, number> = {
-  official: 1024 / 961,
-  light: 1024 / 961,
-  dark: 1024 / 961,
-  transparent: 1024 / 961,
-  transparentDark: 1024 / 961,
-  authDark: 1024 / 961,
-  mark: 1.813,
-};
-
-const MARK_ASPECT = 1.813;
 
 export function logoVariantForBackground(bg: LogoBackground, watermark = false): LogoVariant {
   if (watermark) return 'mark';
@@ -87,19 +67,9 @@ function resolveProductLine(
   return themeLine;
 }
 
-function markForLine(line: ProductLineId, sponsor = false): ImageSourcePropType {
-  if (sponsor) return SPONSOR_BRANDING_LOGOS.mark;
-  if (line === 'woman') return WOMAN_BRANDING_LOGOS.mark;
-  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
-    return PRO_BRANDING_LOGOS.mark;
-  }
-  if (line === 'sante') return PRO_BRANDING_LOGOS.mark;
-  if (line === 'amateur') return AMATEUR_BRANDING_LOGOS.mark;
-  if (line === 'supporter') return SUPPORTER_BRANDING_LOGOS.mark;
-  if (line === 'homme') return MAN_BRANDING_LOGOS.mark;
-  return BRANDING_LOGOS.mark;
-}
-
+/**
+ * Logo ProDay — Master Brand unique ; accent pôle via variante.
+ */
 export const Logo: React.FC<LogoProps> = ({
   background = 'light',
   variant,
@@ -116,149 +86,43 @@ export const Logo: React.FC<LogoProps> = ({
   const line = resolveProductLine(productLineProp, womanProp, themeLine);
   const resolved = variant ?? logoVariantForBackground(background, watermark);
   const brand = brandForProductLine(line);
-  /** Or sponsor : prop explicite, ou chrome auth invité Sponsor (jamais un user Pro connecté). */
   const useSponsorBrand = sponsorProp === true || (sponsorProp !== false && isSponsorAuthChrome);
-
-  if (useSponsorBrand) {
-    if (resolved === 'mark' || watermark) {
-      const markW = width * (watermark ? 1 : 0.55);
-      const markH = markW / MARK_ASPECT;
-      return (
-        <Image
-          source={SPONSOR_BRANDING_LOGOS.mark}
-          style={{
-            width: markW,
-            height: markH,
-            opacity: opacity ?? (watermark ? 0.14 : 1),
-          }}
-          resizeMode="contain"
-          accessibilityLabel="Pro Day Sponsor"
-        />
-      );
-    }
-    return (
-      <SponsorLogo
-        width={width}
-        background={background}
-        opacity={opacity}
-        watermark={false}
-      />
-    );
-  }
+  const onDark = background === 'dark' || background === 'photo';
+  const brandVariant = brandVariantForProductLine(line, { sponsor: useSponsorBrand });
 
   if (resolved === 'mark' || watermark) {
-    const markW = width * (watermark ? 1 : 0.55);
-    const markH = markW / MARK_ASPECT;
     return (
-      <Image
-        source={markForLine(line)}
-        style={{
-          width: markW,
-          height: markH,
-          opacity: opacity ?? (watermark ? 0.14 : 1),
-        }}
-        resizeMode="contain"
-        accessibilityLabel={brand.name}
+      <ProDayLogo
+        layout="symbol"
+        width={width * (watermark ? 1 : 0.55)}
+        variant={brandVariant}
+        onDark={onDark || watermark}
+        opacity={opacity ?? (watermark ? 0.14 : 1)}
+        showPoleLabel={false}
       />
     );
   }
-
-  if (line === 'woman') {
-    return (
-      <WomanLogo
-        width={width}
-        background={background}
-        opacity={opacity}
-        watermark={false}
-      />
-    );
-  }
-
-  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
-    return (
-      <ProLogo
-        width={width}
-        background={background}
-        opacity={opacity}
-        watermark={false}
-        productLine={line === 'pro' ? 'pro_staff' : line}
-      />
-    );
-  }
-
-  if (line === 'homme') {
-    return (
-      <ManLogo
-        width={width}
-        background={background}
-        opacity={opacity}
-        watermark={false}
-      />
-    );
-  }
-
-  if (line === 'amateur') {
-    return (
-      <AmateurLogo
-        width={width}
-        background={background}
-        opacity={opacity}
-        watermark={false}
-      />
-    );
-  }
-
-  if (line === 'supporter') {
-    return (
-      <SupporterLogo
-        width={width}
-        background={background}
-        opacity={opacity}
-        watermark={false}
-      />
-    );
-  }
-
-  if (line === 'parent') {
-    return (
-      <ParentLogo
-        width={width}
-        background={background}
-        opacity={opacity}
-        watermark={false}
-      />
-    );
-  }
-
-  const source: ImageSourcePropType = BRANDING_LOGOS[resolved];
-  const height = width / LOGO_ASPECT[resolved];
-  const imageOpacity = opacity ?? (watermark ? 0.14 : 1);
-  const onLightBg = true;
 
   return (
     <View style={[styles.wrap, watermark && styles.watermarkWrap]}>
-      <Image
-        source={source}
-        style={{ width, height, opacity: imageOpacity }}
-        resizeMode="contain"
-        accessibilityLabel={BRAND.name}
-        accessible
+      <ProDayLogo
+        width={width}
+        variant={brandVariant}
+        onDark={onDark}
+        layout="stacked"
+        showPoleLabel={brandVariant !== 'master'}
+        opacity={opacity ?? 1}
       />
       {showTagline && !watermark && (
-        <Text
-          style={[
-            styles.tagline,
-            onLightBg ? styles.taglineOnLight : styles.taglineOnDark,
-          ]}
-        >
-          {BRAND.tagline}
+        <Text style={[styles.tagline, onDark ? styles.taglineOnDark : styles.taglineOnLight]}>
+          {brand.tagline || BRAND.tagline}
         </Text>
       )}
     </View>
   );
 };
 
-/** Ratio largeur/hauteur pour réserver l'espace (logos composés Man / Woman / Pro). */
+/** Ratio largeur/hauteur pour réserver l'espace. */
 export function logoDisplayAspect(
   width: number,
   opts: {
@@ -269,21 +133,12 @@ export function logoDisplayAspect(
     sponsor?: boolean;
   } = {}
 ): number {
-  if (opts.sponsor) return sponsorLogoAspect(width);
+  if (opts.variant === 'mark' || opts.watermark) return PRODAY_SYMBOL_ASPECT;
   const line = resolveProductLine(opts.productLine, opts.woman, 'amateur');
-  if (opts.variant === 'mark' || opts.watermark) return MARK_ASPECT;
-  if (line === 'woman') return womanLogoAspect(width);
-  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
-    return proLogoAspect(width);
-  }
-  if (line === 'sante') return proLogoAspect(width);
-  if (line === 'parent') return parentLogoAspect(width);
-  if (line === 'homme') return manLogoAspect(width);
-  if (line === 'amateur') return amateurLogoAspect(width);
-  if (line === 'supporter') return supporterLogoAspect(width);
-  if (opts.sponsor) return sponsorLogoAspect(width);
-  const v = opts.variant ?? 'official';
-  return LOGO_ASPECT[v] ?? PRODAY_OFFICIAL_LOGO_ASPECT;
+  const v = brandVariantForProductLine(line, { sponsor: opts.sponsor });
+  if (v === 'master') return PRODAY_LOGO_MASTER_ASPECT;
+  // symbole + wordmark approx
+  return width / (width / PRODAY_SYMBOL_ASPECT + width * 0.28);
 }
 
 function createStyles(c: AppColors) {
@@ -303,3 +158,6 @@ function createStyles(c: AppColors) {
 }
 
 export default Logo;
+
+// re-export for callers that imported aspect from old constant
+export { PRODAY_OFFICIAL_LOGO_ASPECT };

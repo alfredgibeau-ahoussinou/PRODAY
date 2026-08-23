@@ -14,6 +14,10 @@ import {
   Syne_700Bold,
   Syne_800ExtraBold,
 } from '@expo-google-fonts/syne';
+import {
+  Sora_600SemiBold,
+  Sora_700Bold,
+} from '@expo-google-fonts/sora';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { type MainTabId } from './src/navigation/MainTabs';
 import {
@@ -172,6 +176,8 @@ export default function App() {
     Inter_900Black,
     Syne_700Bold,
     Syne_800ExtraBold,
+    Sora_600SemiBold,
+    Sora_700Bold,
   });
 
   const onLayoutRoot = useCallback(() => {

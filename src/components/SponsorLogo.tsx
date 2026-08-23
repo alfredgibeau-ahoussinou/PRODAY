@@ -5,10 +5,10 @@ import type { LogoBackground } from './Logo';
 import { BrandWordmarkLogo } from './branding/BrandWordmarkLogo';
 
 const SPONSOR_COLORS = {
-  brand: '#92700C',
-  accent: '#D4AF37',
-  taglineLight: '#B8860B',
-  taglineDark: 'rgba(255, 230, 160, 0.92)',
+  brand: '#FFFFFF',
+  accent: '#EF4444',
+  taglineLight: '#F87171',
+  taglineDark: 'rgba(255, 230, 230, 0.92)',
 } as const;
 
 interface SponsorLogoProps {

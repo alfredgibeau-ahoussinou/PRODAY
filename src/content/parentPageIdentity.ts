@@ -10,11 +10,11 @@ export type ParentPageIdentity = {
 };
 
 export const PARENT_SITE = {
-  bg: '#0A0F0E',
-  accent: '#14B8A6',
-  accentSoft: 'rgba(20, 184, 166, 0.14)',
-  ink: '#F0FDFA',
-  muted: 'rgba(204, 251, 241, 0.65)',
+  bg: '#0A0A0A',
+  accent: '#F97316',
+  accentSoft: 'rgba(249, 115, 22, 0.14)',
+  ink: '#FAFAFA',
+  muted: 'rgba(253, 186, 116, 0.65)',
 } as const;
 
 export const PARENT_PAGES: Record<ParentTabId, ParentPageIdentity> = {

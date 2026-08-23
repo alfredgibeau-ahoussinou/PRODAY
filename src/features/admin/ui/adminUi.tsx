@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { Icon } from '../../../components/ui/Icon';
+import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
 import { ADMIN_TOKENS, type AdminThemeTokens } from '../theme/adminTokens';
 import {
   adminChrome,
@@ -62,20 +63,15 @@ export function AdminText({
 export function AdminBrandMark({ compact }: { compact?: boolean }) {
   const t = ADMIN_TOKENS;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-      <View
-        style={{
-          width: compact ? 6 : 8,
-          height: compact ? 6 : 8,
-          borderRadius: 4,
-          backgroundColor: t.accent,
-          ...adminShadow.champagne(t),
-        }}
-      />
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: compact ? 8 : 10 }}>
+      <ProDaySymbol size={compact ? 22 : 28} variant="admin" tone="white" showAccentBar />
       <AdminText
         variant="brand"
-        champagne
-        style={{ fontSize: compact ? 9 : 10, letterSpacing: compact ? 1.6 : 2.2 }}
+        style={{
+          fontSize: compact ? 9 : 10,
+          letterSpacing: compact ? 1.6 : 2.2,
+          color: t.accentHot,
+        }}
       >
         {compact ? 'CONTROL' : adminChrome.brandMark}
       </AdminText>

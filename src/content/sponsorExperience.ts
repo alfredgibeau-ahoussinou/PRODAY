@@ -3,14 +3,15 @@ import type { MainTabId } from '../navigation/mainTabConfig';
 import type { UserRole } from '../models/User';
 import { colors as baseColors } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../theme/prodayBrand';
 
 /**
- * Espace sponsor — sombre corporate or/noir (aligné site proday75.fr/sponsor).
+ * Espace sponsor — sombre premium, accent rouge officiel #EF4444.
  */
 export const SPONSOR_THEME = {
-  primary: '#D4AF37',
-  primaryHover: '#F5D76E',
-  primaryDark: '#92700C',
+  primary: PRODAY_POLE_ACCENTS.sponsor,
+  primaryHover: '#F87171',
+  primaryDark: '#B91C1C',
   primaryDeeper: '#070605',
   heroBg: '#070605',
   heroBgEnd: '#030303',
@@ -18,20 +19,20 @@ export const SPONSOR_THEME = {
   surface: '#0c0a06',
   surfaceMuted: '#14110a',
   surfaceElevated: '#1a1508',
-  border: 'rgba(212, 175, 55, 0.22)',
-  borderSubtle: 'rgba(212, 175, 55, 0.1)',
-  primarySoft: 'rgba(212, 175, 55, 0.12)',
+  border: poleAccentSoft('sponsor', 0.22),
+  borderSubtle: poleAccentSoft('sponsor', 0.1),
+  primarySoft: poleAccentSoft('sponsor', 0.12),
   primaryBg: '#070605',
-  primaryBorder: 'rgba(212, 175, 55, 0.28)',
+  primaryBorder: poleAccentSoft('sponsor', 0.28),
   text: '#FAFAF9',
   textSecondary: '#D6D3D1',
   textMuted: '#A8A29E',
-  gold: '#D4AF37',
-  goldLight: '#F5D76E',
-  goldMuted: '#B8941F',
+  gold: PRODAY_POLE_ACCENTS.sponsor,
+  goldLight: '#F87171',
+  goldMuted: '#B91C1C',
   goldInk: '#1C1917',
-  goldSurface: 'rgba(212, 175, 55, 0.12)',
-  onPrimary: '#1C1917',
+  goldSurface: poleAccentSoft('sponsor', 0.12),
+  onPrimary: '#FFFFFF',
   heroText: '#FAFAF9',
   heroSubtext: 'rgba(250, 250, 249, 0.65)',
   ink: '#E7E5E4',

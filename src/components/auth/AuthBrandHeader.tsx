@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Logo } from '../Logo';
+import { ProDayLogo, brandVariantForProductLine } from '../branding/ProDayLogo';
 import { spacing } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { brandForAuthContext, isSponsorAuthPreset } from '../../utils/authBrandContext';
@@ -11,39 +11,59 @@ interface AuthBrandHeaderProps {
   /** Clair (#F7F7F7 / blanc) ou bandeau sombre (pitch legacy) */
   tone?: 'light' | 'dark';
   /**
-   * Tagline en texte natif — désactivé par défaut (intégrée au PNG hero sur fond sombre).
+   * Tagline en texte natif — désactivé par défaut.
    */
   showTagline?: boolean;
+  /**
+   * Force master (avant choix pôle). Sinon dérive du contexte auth.
+   */
+  forceMaster?: boolean;
 }
 
 /**
- * Logo ProDay — variante selon l'univers actif (Man / Woman / Pro / Sponsor).
+ * Logo ProDay auth — master avant choix pôle ; accent pôle après.
  */
 export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
   width = 220,
   tone = 'dark',
   showTagline = false,
+  forceMaster = false,
 }) => {
   const { productLine, colors: c, proSignupPresetRole } = useAppTheme();
   const styles = useMemo(() => createStyles(c), [c]);
   const isLight = tone === 'light';
-  const background = isLight ? 'light' : 'dark';
   const isSponsor = isSponsorAuthPreset(proSignupPresetRole);
   const brand = brandForAuthContext(productLine, proSignupPresetRole);
 
-  const logo = (
-    <Logo
-      background={background}
-      width={width}
-      showTagline={false}
-      productLine={productLine}
-      sponsor={isSponsor}
-    />
-  );
+  const hasPoleChoice =
+    forceMaster
+      ? false
+      : Boolean(
+          isSponsor ||
+            proSignupPresetRole ||
+            (productLine &&
+              productLine !== 'amateur' &&
+              productLine !== 'homme'),
+        );
+
+  const variant = hasPoleChoice
+    ? brandVariantForProductLine(productLine, {
+        sponsor: isSponsor,
+        role: proSignupPresetRole,
+      })
+    : 'master';
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.logoSlot}>{logo}</View>
+      <View style={styles.logoSlot}>
+        <ProDayLogo
+          width={width}
+          variant={variant}
+          onDark={!isLight}
+          layout="stacked"
+          showPoleLabel={variant !== 'master'}
+        />
+      </View>
       {showTagline ? (
         <Text
           style={[styles.tagline, !isLight && styles.taglineDark]}

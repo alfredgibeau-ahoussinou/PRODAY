@@ -1,20 +1,20 @@
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { santeColorOverrides } from '../../../theme/prodaySanteTheme';
+import { PRODAY_POLE_ACCENTS } from '../../../theme/prodayBrand';
 
-/** Accents lisibles sur fond FLASH sombre (intro univers). */
+/** Accents officiels pôle (intro univers) — planche brand. */
 export const UNIVERSE_ACCENT: Record<CarouselPoleId, string> = {
-  joueur: '#1D4ED8',
-  amateur: '#1D4ED8',
-  supporter: '#7C3AED',
-  pro_player: '#1D4ED8',
-  pro_club: '#0369A1',
-  president: '#D4B880',
-  coach: '#4338CA',
-  pro_staff: '#4338CA',
-  parent: '#0F766E',
-  evenements: '#0891B2',
-  sponsor: '#D4AF37',
-  /** Teal clair — pas MEDICAL #0F766E (illisible sur noir). */
+  joueur: PRODAY_POLE_ACCENTS.player,
+  amateur: PRODAY_POLE_ACCENTS.player,
+  supporter: PRODAY_POLE_ACCENTS.supporter,
+  pro_player: PRODAY_POLE_ACCENTS.player,
+  pro_club: PRODAY_POLE_ACCENTS.club,
+  president: PRODAY_POLE_ACCENTS.president,
+  coach: PRODAY_POLE_ACCENTS.coach,
+  pro_staff: PRODAY_POLE_ACCENTS.coach,
+  parent: PRODAY_POLE_ACCENTS.parent,
+  evenements: PRODAY_POLE_ACCENTS.events,
+  sponsor: PRODAY_POLE_ACCENTS.sponsor,
   sante: santeColorOverrides.accent,
 };
 

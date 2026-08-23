@@ -1,81 +1,23 @@
-# Logos ProDay
+# Logos ProDay — identité officielle
+
+**1 Master Brand** : symbole géométrique unique (extrait de la planche) + wordmark PRODAY (Sora).
+
+Les accents pôle (barre / wordmark) ne redessinent jamais le symbole.
 
 | Fichier | Usage |
 |---------|--------|
-| `logo-light.png` | Legacy — fond blanc |
-| `logo-dark.png` | Legacy — fond sombre |
-| `logo-transparent-hero.png` | **Transparent** — hero photo, headers sombres |
-| `logo-transparent-dark.png` | **Transparent** — cartes blanches, headers clairs |
-| `logo-auth-dark.png` | Legacy — variante traitée (préférer `logo-transparent-hero` sur bandeau noir) |
-| `logo-mark-transparent.png` | Picto P seul — filigrane sur photos |
+| `proday-symbol-white.png` | Symbole seul blanc (UI dark) |
+| `proday-symbol-black.png` | Symbole seul noir (UI light) |
+| `proday-symbol-mark.png` | Symbole carré transparent |
+| `proday-logo-master-white.png` | Symbole + wordmark blanc |
+| `proday-logo-master-black.png` | Symbole + wordmark noir |
+| `proday-app-icon.png` | Icône app (symbole sur noir) |
+| `proday-adaptive-foreground.png` | Adaptive Android |
+| `proday-splash.png` | Splash noir + logo master |
+| `proday-notification-icon.png` | Notification Android |
+| `logo-proday-official.png` | Compat Expo / emails (logo master paddé) |
+| `logo-mark-transparent.png` | Filigrane = symbole master |
 
-Génération : **ISNet** pour `logo-dark` · clé blanc pour `logo-light` (le coureur blanc n’est pas confondu avec le fond).
-`logo-auth-dark` : trous intérieurs (coureur) remplis en blanc + détourage.
-Commande : `node scripts/generate-transparent-logos.mjs`
+Composants app : `ProDaySymbol` · `ProDayWordmark` · `ProDayLogo` (`src/components/branding/`).
 
-## Pro Day for Women (rose)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-woman-picto.png` | Picto P rose (haute résolution) |
-| `logo-woman-mark-transparent.png` | Filigrane (= picto) |
-
-Le libellé **Pro Day for Women** + tagline sont rendus en natif par `src/components/WomanLogo.tsx` (texte net).
-
-Génération picto : `npm run branding:logos:woman` (nécessite `logo-mark-transparent.png`).
-
-## Pro Day Man (anthracite)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-man-picto.png` | Picto P anthracite |
-| `logo-man-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Man** + tagline via `src/components/ManLogo.tsx`.
-
-## Pro Day Pro (bleu vif)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-pro-picto.png` | Picto P bleu pro |
-| `logo-pro-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Pro** + tagline via `src/components/ProLogo.tsx`.
-
-## Pro Day Santé (teal)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-sante-picto.png` | Picto P teal santé |
-| `logo-sante-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Santé** + tagline via `src/components/SanteLogo.tsx`.
-
-## Pro Day Amateur (orange)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-amateur-picto.png` | Picto P orange amateur |
-| `logo-amateur-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Amateur** + tagline via `src/components/AmateurLogo.tsx`.
-
-## Pro Day Supporter (violet)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-supporter-picto.png` | Picto P violet supporter |
-| `logo-supporter-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Supporter** + tagline via `src/components/SupporterLogo.tsx`.
-
-## Pro Day Sponsor (or #D4AF37)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-sponsor-picto.png` | Picto P or sponsor |
-| `logo-sponsor-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Sponsor** + tagline via `src/components/SponsorLogo.tsx`.
-
-Génération pictos Man + Pro + Santé + Amateur + Supporter + Sponsor : `npm run branding:logos:universes` (nécessite `logo-mark-transparent.png`).
+Tokens : `src/theme/prodayBrand.ts`.
