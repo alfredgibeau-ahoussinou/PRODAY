@@ -120,7 +120,7 @@ export const ProLogo: React.FC<ProLogoProps> = ({
 
 export function proLogoAspect(width: number): number {
   const pictoW = width * 0.76;
-  const pictoH = pictoW / PICTO_ASPECT;
+  const pictoH = pictoW / PRODAY_SYMBOL_ASPECT;
   const line1 = width * 0.1;
   const line2 = width * 0.115;
   const height = pictoH + line1 + line2 + width * 0.06;

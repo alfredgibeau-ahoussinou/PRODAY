@@ -58,9 +58,10 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
             <PressableSpring
               onPress={onBack ?? onClose}
               style={styles.iconBtn}
-              hitSlop={8}
+              hitSlop={12}
               scaleTo={0.97}
               haptic
+              accessibilityRole="button"
               accessibilityLabel={onBack ? 'Retour' : 'Fermer'}
             >
               <Icon name={onBack ? 'arrow-back' : 'close'} size={20} color={AUTH_XP.white} />

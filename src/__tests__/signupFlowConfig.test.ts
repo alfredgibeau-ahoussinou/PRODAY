@@ -4,6 +4,7 @@ import {
   needsParentalStep,
   validateAgeForAppSpace,
   getCurrentPhase,
+  resolveSignupBackKind,
 } from '../screens/signup/signupFlowConfig';
 
 describe('signupFlowConfig', () => {
@@ -95,5 +96,11 @@ describe('signupFlowConfig', () => {
     expect(validateAgeForAppSpace(14, 'under_u13')).toMatch(/incompatible/i);
     expect(validateAgeForAppSpace(15, 'boys')).toBeUndefined();
     expect(validateAgeForAppSpace(12, 'boys')).toMatch(/13 et 19/i);
+  });
+
+  it('retour signup : étape 0 → login, suivantes → previous', () => {
+    expect(resolveSignupBackKind({ accountCreated: false, pageIndex: 0 })).toBe('close');
+    expect(resolveSignupBackKind({ accountCreated: false, pageIndex: 1 })).toBe('previous');
+    expect(resolveSignupBackKind({ accountCreated: true, pageIndex: 0 })).toBe('none');
   });
 });

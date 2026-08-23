@@ -40,6 +40,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import type { UserRole } from '../../models/User';
 import { needsOnboardingDocumentUpload } from '../../utils/onboardingGate';
 import { AUTH_XP } from '../../features/auth/experience';
+import { resolveSignupBackKind } from './signupFlowConfig';
 
 interface SignupFlowProps {
   onClose: () => void;
@@ -79,7 +80,12 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
     phaseIndex: form.phaseIndex,
   };
 
-  const backUnlessLocked = form.accountCreated ? undefined : form.goBack;
+  const backKind = resolveSignupBackKind({
+    accountCreated: form.accountCreated,
+    pageIndex: form.pageIndex,
+  });
+  const onBack =
+    backKind === 'none' ? undefined : backKind === 'close' ? onClose : form.goBack;
   const pageEntering = FadeIn.duration(motion.duration.normal).easing(Easing.out(Easing.cubic));
 
   const submitSecurity = async () => {
@@ -153,14 +159,14 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
       );
       break;
     case 'account':
-      content = <SignupAccountStep form={form} {...layout} onBack={backUnlessLocked ?? onClose} />;
+      content = <SignupAccountStep form={form} {...layout} onBack={onBack} />;
       break;
     case 'security':
       content = (
         <SignupSecurityStep
           form={form}
           {...layout}
-          onBack={backUnlessLocked}
+          onBack={onBack}
           onSubmit={() => void submitSecurity()}
         />
       );

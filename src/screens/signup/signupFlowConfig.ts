@@ -180,6 +180,19 @@ export function getCurrentPhase(page: SignupPageId): SignupPhaseId {
   return 'vous';
 }
 
+/**
+ * Action du bouton Retour signup.
+ * Étape 0 → fermer vers login ; étapes suivantes → précédent ; compte créé → aucun.
+ */
+export function resolveSignupBackKind(opts: {
+  accountCreated: boolean;
+  pageIndex: number;
+}): 'close' | 'previous' | 'none' {
+  if (opts.accountCreated) return 'none';
+  if (opts.pageIndex <= 0) return 'close';
+  return 'previous';
+}
+
 const PRO_PROFILE_PAGES: SignupPageId[] = [
   'staff',
   'coach_pro',
