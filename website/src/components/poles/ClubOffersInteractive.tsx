@@ -157,7 +157,7 @@ function CompareCell({ value }: { value: Cell }) {
   if (value === true) {
     return (
       <span
-        className="inline-flex items-center justify-center text-[var(--pole-accent,#006CFC)]"
+        className="inline-flex items-center justify-center text-[var(--pole-accent,#7C3AED)]"
         aria-label="Inclus"
       >
         <Check size={18} strokeWidth={2.5} />
@@ -179,7 +179,7 @@ function CompareCell({ value }: { value: Cell }) {
 function MobileFeatureValue({ value }: { value: Cell }) {
   if (value === true) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[var(--pole-accent-bright,#4C8BFF)]">
+      <span className="inline-flex items-center gap-1.5 text-[var(--pole-accent-bright,#5B75FF)]">
         <Check size={15} strokeWidth={2.5} />
         <span className="text-xs font-medium">Inclus</span>
       </span>
@@ -231,7 +231,7 @@ export function ClubOffersInteractive() {
   return (
     <section className="relative border-t border-white/10 bg-[#050505] px-4 py-14 sm:px-6 sm:py-20 lg:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           Comparatif
         </p>
         <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.65rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
@@ -261,7 +261,7 @@ export function ClubOffersInteractive() {
                   className={`shrink-0 rounded-full border px-3.5 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition ${
                     on
                       ? col.highlight
-                        ? "border-[var(--pole-accent,#006CFC)] bg-[var(--pole-accent,#006CFC)] text-white"
+                        ? "border-[var(--pole-accent,#7C3AED)] bg-[var(--pole-accent,#7C3AED)] text-white"
                         : "border-white bg-white text-black"
                       : "border-white/20 text-white/55"
                   }`}
@@ -275,7 +275,7 @@ export function ClubOffersInteractive() {
           <article
             className={`mt-4 border p-4 ${
               activeCol.highlight
-                ? "border-[var(--pole-accent,#006CFC)]/45 bg-[var(--pole-accent,#006CFC)]/[0.08]"
+                ? "border-[var(--pole-accent,#7C3AED)]/45 bg-[var(--pole-accent,#7C3AED)]/[0.08]"
                 : "border-white/10 bg-[#0a0a0c]"
             }`}
           >
@@ -301,7 +301,7 @@ export function ClubOffersInteractive() {
                 <p
                   className={`font-display text-xl font-medium tabular-nums tracking-[-0.03em] ${
                     activeCol.highlight
-                      ? "text-[var(--pole-accent-bright,#4C8BFF)]"
+                      ? "text-[var(--pole-accent-bright,#5B75FF)]"
                       : "text-white"
                   }`}
                 >
@@ -321,7 +321,7 @@ export function ClubOffersInteractive() {
             <div className="mt-5 space-y-5">
               {planGroups.map((group) => (
                 <div key={group.name}>
-                  <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--pole-accent,#006CFC)]">
+                  <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--pole-accent,#7C3AED)]">
                     {group.name}
                   </p>
                   <ul className="mt-2 divide-y divide-white/8 border-t border-white/10">
@@ -348,7 +348,7 @@ export function ClubOffersInteractive() {
                   ? ROUTES.clubDevis
                   : ROUTES.betaWaitlist
               }
-              className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--pole-accent,#006CFC)] px-5 text-sm font-semibold text-white"
+              className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--pole-accent,#7C3AED)] px-5 text-sm font-semibold text-white"
             >
               {activeCol.price === "Sur devis" ? "Demander un devis" : "Commencer"}
               <ArrowRight size={16} />
@@ -373,7 +373,7 @@ export function ClubOffersInteractive() {
                     scope="col"
                     className={`px-3 py-5 text-center sm:px-4 ${
                       col.highlight
-                        ? "bg-[var(--pole-accent,#006CFC)]/15 ring-1 ring-inset ring-[var(--pole-accent,#006CFC)]/40"
+                        ? "bg-[var(--pole-accent,#7C3AED)]/15 ring-1 ring-inset ring-[var(--pole-accent,#7C3AED)]/40"
                         : ""
                     }`}
                   >
@@ -401,7 +401,7 @@ export function ClubOffersInteractive() {
                     <span
                       className={`mt-2 block font-display text-lg font-medium tabular-nums tracking-[-0.03em] sm:text-xl ${
                         col.highlight
-                          ? "text-[var(--pole-accent,#4C8BFF)]"
+                          ? "text-[var(--pole-accent,#5B75FF)]"
                           : "text-white"
                       }`}
                     >
@@ -428,7 +428,7 @@ export function ClubOffersInteractive() {
                     <tr className="border-t border-white/10 bg-white/[0.03]">
                       <td
                         colSpan={5}
-                        className="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#006CFC)] sm:px-5"
+                        className="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#7C3AED)] sm:px-5"
                       >
                         {row.group}
                       </td>
@@ -446,7 +446,7 @@ export function ClubOffersInteractive() {
                         key={`${row.feature}-${i}`}
                         className={`px-3 py-3.5 text-center sm:px-4 ${
                           i === 2 && CLUB_OFFER_COLS[2]?.highlight
-                            ? "bg-[var(--pole-accent,#006CFC)]/[0.06]"
+                            ? "bg-[var(--pole-accent,#7C3AED)]/[0.06]"
                             : ""
                         }`}
                       >
@@ -467,7 +467,7 @@ export function ClubOffersInteractive() {
           </p>
           <Link
             href={ROUTES.clubDevis}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--pole-accent,#006CFC)] px-5 text-sm font-semibold text-white transition hover:brightness-110 sm:min-h-0"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--pole-accent,#7C3AED)] px-5 text-sm font-semibold text-white transition hover:brightness-110 sm:min-h-0"
           >
             Demander un devis
             <ArrowRight size={16} />

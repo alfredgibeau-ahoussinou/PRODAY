@@ -88,7 +88,7 @@ export function ImmersivePoleHero({
         >
           <Link
             href={primaryHref}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--pole-accent,#006CFC)] px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--pole-accent,#7C3AED)] px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
           >
             {primaryLabel}
             <ArrowRight size={16} />
@@ -169,7 +169,7 @@ export function ClubPitchMap() {
   return (
     <section className="relative overflow-hidden border-t border-white/10 bg-black px-4 py-14 sm:px-6 sm:py-20 lg:py-28">
       <div className="mx-auto max-w-7xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           Cockpit club
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.65rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
@@ -190,7 +190,7 @@ export function ClubPitchMap() {
                 onClick={() => setActive(z.id)}
                 className={`shrink-0 rounded-full border px-3.5 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition ${
                   on
-                    ? "border-[var(--pole-accent,#006CFC)] bg-[var(--pole-accent,#006CFC)] text-white"
+                    ? "border-[var(--pole-accent,#7C3AED)] bg-[var(--pole-accent,#7C3AED)] text-white"
                     : "border-white/20 text-white/55"
                 }`}
               >
@@ -252,7 +252,7 @@ export function ClubPitchMap() {
                     }
                     className={`flex size-[clamp(2.35rem,3.8vw+0.6rem,3.35rem)] items-center justify-center rounded-full border text-[clamp(0.65rem,1.1vw,0.8rem)] font-bold tabular-nums ${
                       on
-                        ? "border-white bg-[var(--pole-accent,#006CFC)] text-white shadow-[0_0_28px_var(--pole-accent-glow)]"
+                        ? "border-white bg-[var(--pole-accent,#7C3AED)] text-white shadow-[0_0_28px_var(--pole-accent-glow)]"
                         : "border-white/40 bg-black/50 text-white/80 backdrop-blur-sm"
                     }`}
                   >
@@ -327,7 +327,7 @@ export function CoachTacticsBoard() {
   return (
     <section className="relative overflow-hidden border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#3B5BFF)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#22C55E)]">
           Tactique IA
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
@@ -365,7 +365,7 @@ export function CoachTacticsBoard() {
                     className={`flex h-10 w-10 items-center justify-center rounded-full text-[10px] font-bold ${
                       on
                         ? "bg-white text-[#0a3d1a] shadow-[0_0_24px_rgba(255,255,255,0.45)]"
-                        : "border border-white/50 bg-[var(--pole-accent,#3B5BFF)]/90 text-white"
+                        : "border border-white/50 bg-[var(--pole-accent,#22C55E)]/90 text-white"
                     }`}
                     whileHover={reduce ? undefined : { scale: 1.08 }}
                     whileTap={reduce ? undefined : { scale: 0.96 }}
@@ -412,7 +412,7 @@ export function CoachTacticsBoard() {
                 <div className="mt-1 flex items-baseline gap-1">
                   <AnimatedMetric
                     value="78"
-                    className="font-display text-4xl font-medium text-[var(--pole-accent,#3B5BFF)]"
+                    className="font-display text-4xl font-medium text-[var(--pole-accent,#22C55E)]"
                   />
                   <span className="text-sm text-white/45">%</span>
                 </div>
@@ -437,7 +437,7 @@ export function CoachCapabilityStrip({ items }: { items: Capability[] }) {
   return (
     <section className="border-t border-white/10 bg-[#050505] px-4 py-20 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#3B5BFF)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#22C55E)]">
           Profil coach
         </p>
         <h2 className="mt-3 font-display text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[-0.03em] text-white">

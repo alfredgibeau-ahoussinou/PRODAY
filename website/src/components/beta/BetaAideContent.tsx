@@ -50,7 +50,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
           </p>
           <Link
             href={ROUTES.betaInstaller}
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#4C8BFF]"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#5B75FF]"
           >
             Guide d&apos;installation →
           </Link>
@@ -62,7 +62,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
           </p>
           <Link
             href={ROUTES.betaProgramme}
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#4C8BFF]"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#5B75FF]"
           >
             Voir le programme →
           </Link>

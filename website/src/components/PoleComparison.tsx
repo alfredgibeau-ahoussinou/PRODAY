@@ -8,7 +8,7 @@ const poles = [
   {
     id: "joueur",
     name: "Joueur",
-    color: "#4C8BFF",
+    color: "#1E3AFF",
     features: {
       profile: true,
       stats: true,
@@ -30,7 +30,7 @@ const poles = [
   {
     id: "pro",
     name: "Pro",
-    color: "#006CFC",
+    color: "#7C3AED",
     features: {
       profile: true,
       stats: true,
@@ -52,7 +52,7 @@ const poles = [
   {
     id: "partenaires",
     name: "Partenaires",
-    color: "#D4AF37",
+    color: "#EF4444",
     features: {
       profile: true,
       stats: false,
@@ -74,7 +74,7 @@ const poles = [
   {
     id: "supporter",
     name: "Supporter",
-    color: "#3C00F0",
+    color: "#06B6D4",
     features: {
       profile: true,
       stats: false,

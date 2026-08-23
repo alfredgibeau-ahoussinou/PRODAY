@@ -246,7 +246,7 @@ type Props = {
 /** Full-bleed WebGL stage for Joueur world (gate + universes). */
 export function JoueurWorldCanvas({
   kind,
-  accent = "#0054F0",
+  accent = "#1E3AFF",
   position,
   className,
   intensity = "medium",

@@ -69,8 +69,8 @@ export function StaggerItem({
 export function LivePulse({ className }: { className?: string }) {
   return (
     <span className={clsx("relative inline-flex h-2.5 w-2.5", className)} aria-hidden>
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#0054F0] opacity-60" />
-      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#0054F0]" />
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#1E3AFF] opacity-60" />
+      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#1E3AFF]" />
     </span>
   );
 }
@@ -92,7 +92,7 @@ export function AliveProgress({
       )}
     >
       <motion.div
-        className="h-full rounded-full bg-[#0054F0]"
+        className="h-full rounded-full bg-[#1E3AFF]"
         initial={{ width: 0 }}
         whileInView={{ width: `${clamped}%` }}
         viewport={{ once: true, margin: "-20px" }}

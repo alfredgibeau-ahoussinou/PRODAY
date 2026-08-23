@@ -30,14 +30,14 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           className="page-terminal relative min-h-screen bg-black text-white"
           style={
             {
-              ["--proday-accent" as string]: "#0054F0",
-              ["--proday-accent-bright" as string]: "#4C8BFF",
-              ["--proday-accent-deep" as string]: "#001F6B",
-              ["--proday-accent-dim" as string]: "#1A68FF",
-              ["--proday-accent-glow" as string]: "rgba(0, 84, 240, 0.42)",
-              ["--proday-accent-muted" as string]: "rgba(0, 84, 240, 0.16)",
+              ["--proday-accent" as string]: "#1E3AFF",
+              ["--proday-accent-bright" as string]: "#5B75FF",
+              ["--proday-accent-deep" as string]: "#0A1A8A",
+              ["--proday-accent-dim" as string]: "#3B56FF",
+              ["--proday-accent-glow" as string]: "rgba(30, 58, 255, 0.42)",
+              ["--proday-accent-muted" as string]: "rgba(30, 58, 255, 0.16)",
               ["--proday-accent-gradient" as string]:
-                "linear-gradient(135deg, #001F6B 0%, #0054F0 48%, #4C8BFF 100%)",
+                "linear-gradient(135deg, #0A1A8A 0%, #1E3AFF 48%, #5B75FF 100%)",
             } as React.CSSProperties
           }
         >
@@ -56,14 +56,14 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           className="page-joueur-world relative min-h-screen overflow-x-clip bg-[#020617] text-white"
           style={
             {
-              ["--proday-accent" as string]: "#0054F0",
-              ["--proday-accent-bright" as string]: "#4C8BFF",
-              ["--proday-accent-deep" as string]: "#001F6B",
-              ["--proday-accent-dim" as string]: "#1A68FF",
-              ["--proday-accent-glow" as string]: "rgba(0, 84, 240, 0.5)",
-              ["--proday-accent-muted" as string]: "rgba(0, 84, 240, 0.2)",
+              ["--proday-accent" as string]: "#1E3AFF",
+              ["--proday-accent-bright" as string]: "#5B75FF",
+              ["--proday-accent-deep" as string]: "#0A1A8A",
+              ["--proday-accent-dim" as string]: "#3B56FF",
+              ["--proday-accent-glow" as string]: "rgba(30, 58, 255, 0.5)",
+              ["--proday-accent-muted" as string]: "rgba(30, 58, 255, 0.2)",
               ["--proday-accent-gradient" as string]:
-                "linear-gradient(135deg, #001F6B 0%, #0054F0 48%, #4C8BFF 100%)",
+                "linear-gradient(135deg, #0A1A8A 0%, #1E3AFF 48%, #5B75FF 100%)",
             } as React.CSSProperties
           }
         >
@@ -95,14 +95,14 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         className="page-terminal relative min-h-screen text-[#f5f5f0]"
         style={
           {
-            ["--proday-accent" as string]: "#0054F0",
-            ["--proday-accent-bright" as string]: "#4C8BFF",
-            ["--proday-accent-deep" as string]: "#001F6B",
-            ["--proday-accent-dim" as string]: "#1A68FF",
-            ["--proday-accent-glow" as string]: "rgba(0, 84, 240, 0.42)",
-            ["--proday-accent-muted" as string]: "rgba(0, 84, 240, 0.16)",
+            ["--proday-accent" as string]: "#1E3AFF",
+            ["--proday-accent-bright" as string]: "#5B75FF",
+            ["--proday-accent-deep" as string]: "#0A1A8A",
+            ["--proday-accent-dim" as string]: "#3B56FF",
+            ["--proday-accent-glow" as string]: "rgba(30, 58, 255, 0.42)",
+            ["--proday-accent-muted" as string]: "rgba(30, 58, 255, 0.16)",
             ["--proday-accent-gradient" as string]:
-              "linear-gradient(135deg, #001F6B 0%, #0054F0 48%, #4C8BFF 100%)",
+              "linear-gradient(135deg, #0A1A8A 0%, #1E3AFF 48%, #5B75FF 100%)",
           } as React.CSSProperties
         }
       >

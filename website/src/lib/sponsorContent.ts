@@ -6,9 +6,9 @@ export const SPONSOR_BRAND = {
   tagline: "Visibilité · ROI · Terrain",
   mission:
     "Publiez des offres auprès de clubs, joueurs et organisateurs actifs. Suivez impressions, clics et leads. Sans intermédiaire opaque.",
-  accent: "#D4AF37",
-  accentDark: "#92700C",
-  logo: "/branding/logo-sponsor-picto.png",
+  accent: "#EF4444",
+  accentDark: "#7F1D1D",
+  logo: "/branding/logo-proday-mark-sponsor.png",
 } as const;
 
 export const SPONSOR_HERO = {

@@ -43,7 +43,7 @@ export function ClubMatchInviteSection() {
       />
 
       <div className="relative mx-auto max-w-7xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           Matchs entre clubs
         </p>
         <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.75rem,4.2vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -65,7 +65,7 @@ export function ClubMatchInviteSection() {
               transition={{ delay: i * 0.07, duration: 0.4 }}
               className="border border-white/10 bg-white/[0.03] p-5"
             >
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#006CFC)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#7C3AED)]">
                 {step.n}
               </p>
               <h3 className="mt-3 font-display text-lg font-medium tracking-[-0.02em] text-white">
@@ -85,7 +85,7 @@ export function ClubMatchInviteSection() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={ROUTES.betaWaitlist}
-            className="inline-flex items-center justify-center bg-[var(--pole-accent,#006CFC)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex items-center justify-center bg-[var(--pole-accent,#7C3AED)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Tester dans la bêta
           </Link>

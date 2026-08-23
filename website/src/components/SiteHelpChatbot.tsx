@@ -204,7 +204,7 @@ export function SiteHelpChatbot() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="bg-accent-gradient pointer-events-auto inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[0_12px_32px_-10px_rgba(0,84,240,0.45)] transition hover:brightness-110"
+        className="bg-accent-gradient pointer-events-auto inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[0_12px_32px_-10px_rgba(30, 58, 255,0.45)] transition hover:brightness-110"
         aria-expanded={open}
         aria-label={open ? "Fermer l'aide" : "Ouvrir l'aide ProDay"}
       >

@@ -571,7 +571,7 @@ export function resolveJoueurExperienceTheme(
             sceneTint: "rgba(14, 165, 233, 0.1)",
           }
         : {
-            glow: "rgba(0, 84, 240, 0.32)",
+            glow: "rgba(30, 58, 255, 0.32)",
             wash: "rgba(15, 23, 42, 0.35)",
             sceneTint: "rgba(148, 163, 184, 0.06)",
           };

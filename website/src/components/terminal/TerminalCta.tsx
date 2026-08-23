@@ -28,12 +28,12 @@ export function TerminalCta({
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           background:
-            "radial-gradient(ellipse 70% 80% at 70% 50%, var(--pole-accent-glow, rgba(0, 84, 240, 0.35)), transparent 60%)",
+            "radial-gradient(ellipse 70% 80% at 70% 50%, var(--pole-accent-glow, rgba(30, 58, 255, 0.35)), transparent 60%)",
         }}
         aria-hidden
       />
       <div className="relative mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#4C8BFF)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#5B75FF)]">
           Suite
         </p>
         <div className="mt-6 grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
@@ -57,7 +57,7 @@ export function TerminalCta({
             {secondaryHref && secondaryLabel ? (
               <Link
                 href={secondaryHref}
-                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white/70 transition hover:border-white/45 hover:text-[var(--pole-accent,#4C8BFF)]"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white/70 transition hover:border-white/45 hover:text-[var(--pole-accent,#5B75FF)]"
               >
                 {secondaryLabel}
               </Link>

@@ -102,12 +102,12 @@ export const SPOTLIGHT_FEATURES = [
 export type ProductLineWeb = "homme" | "woman" | "amateur" | "supporter" | "pro" | "sante";
 
 export const UNIVERSE_LOGOS: Record<ProductLineWeb, string> = {
-  homme: "/branding/logo-man-picto.png",
-  woman: "/branding/logo-woman-picto.png",
-  amateur: "/branding/logo-amateur-picto.png",
-  supporter: "/branding/logo-supporter-picto.png",
-  pro: "/branding/logo-pro-picto.png",
-  sante: "/branding/logo-sante-picto.png",
+  homme: "/branding/logo-proday-mark-joueur.png",
+  woman: "/branding/logo-proday-mark-joueur.png",
+  amateur: "/branding/logo-proday-mark-joueur.png",
+  supporter: "/branding/logo-proday-mark-supporter.png",
+  pro: "/branding/logo-proday-mark-club.png",
+  sante: "/branding/logo-proday-mark-parent.png",
 };
 
 export const HOMME_BRAND = {
@@ -118,8 +118,8 @@ export const HOMME_BRAND = {
   tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
   mission:
     "Le foot masculin amateur. Mercato M, matchs, Arène, Visibilité, CV joueur, covoiturage, santé et Boutique. Réservé aux joueurs.",
-  accent: "#0054F0",
-  accentDark: "#001854",
+  accent: "#1E3AFF",
+  accentDark: "#0A1A8A",
 } as const;
 
 export const AMATEUR_BRAND = {
@@ -130,8 +130,8 @@ export const AMATEUR_BRAND = {
   tagline: "Progresser · Jouer · Partager",
   mission:
     "Espace Joueur : carte sportive réelle, entraînement, Mercato, CV et saison. Sans badge de prestige artificiel.",
-  accent: "#0054F0",
-  accentDark: "#001854",
+  accent: "#1E3AFF",
+  accentDark: "#0A1A8A",
 } as const;
 
 export const JOUEUR_BRAND = AMATEUR_BRAND;
@@ -144,8 +144,8 @@ export const SUPPORTER_BRAND = {
   tagline: "Tribune libre · Zéro paywall",
   mission:
     "Scores live, clubs favoris, débats et moments. Une tribune 100 % gratuite. Pas de Mercato. Pas d'abonnement store.",
-  accent: "#3C00F0",
-  accentDark: "#180078",
+  accent: "#06B6D4",
+  accentDark: "#164E63",
 } as const;
 
 export const PRO_BRAND = {
@@ -156,8 +156,8 @@ export const PRO_BRAND = {
   tagline: "CLUB • COACH • PERFORMANCE",
   mission:
     "Club au centre, Coach en pôle dédié. Agent, recruteur et organisateur restent des rôles intégrés.",
-  accent: "#006CFC",
-  accentDark: "#002478",
+  accent: "#7C3AED",
+  accentDark: "#3B0764",
 } as const;
 
 export const PRO_JOUEUR_BRAND = {
@@ -168,8 +168,8 @@ export const PRO_JOUEUR_BRAND = {
   tagline: "Amateur → Pro · Badges",
   mission:
     "Même profil du district au contrat pro. Pass Premium 3,99 € : entraînements IA, heatmaps et passeport recruteur.",
-  accent: "#0054F0",
-  accentDark: "#001854",
+  accent: "#1E3AFF",
+  accentDark: "#0A1A8A",
 } as const;
 
 export const EVENEMENTS_BRAND = {
@@ -180,8 +180,8 @@ export const EVENEMENTS_BRAND = {
   tagline: "Tournois · Détections · Stages",
   mission:
     "Rôle intégré au Club : tournois Arène, détections et stages. Plus un pôle indépendant.",
-  accent: "#0891B2",
-  accentDark: "#0e4a5c",
+  accent: "#1E3AFF",
+  accentDark: "#0A1A8A",
 } as const;
 
 export const EVENEMENTS_AUDIENCES = [
@@ -200,8 +200,8 @@ export const PRO_CLUB_BRAND = {
   tagline: "Cœur de ProDay",
   mission:
     "Équipes, licenciés, coachs, président, invitations de match, événements, tournois, covoiturage et permissions. Sur devis selon la taille du club.",
-  accent: "#006CFC",
-  accentDark: "#002478",
+  accent: "#7C3AED",
+  accentDark: "#3B0764",
 } as const;
 
 export const PRO_STAFF_BRAND = {
@@ -212,8 +212,8 @@ export const PRO_STAFF_BRAND = {
   tagline: "Tactique IA · IA · Effectif",
   mission:
     "Profil coach rattaché au club : parcours, diplômes, Tactique IA, assistant IA, analyse vidéo et préparation match.",
-  accent: "#3B5BFF",
-  accentDark: "#001848",
+  accent: "#22C55E",
+  accentDark: "#14532D",
 } as const;
 
 /** Message waitlist / page beta */
@@ -546,8 +546,8 @@ export const SANTE_BRAND = {
   tagline: "Kiné · Mental · Nutrition",
   mission:
     "Rôle médical intégré : praticiens vérifiés près des clubs, agenda et téléconsultation. Plus un pôle indépendant.",
-  accent: "#00CCB4",
-  accentDark: "#006C60",
+  accent: "#F97316",
+  accentDark: "#7C2D12",
 } as const;
 
 export const WOMAN_BRAND = {

@@ -93,10 +93,10 @@ function MaleEmblem({ active }: { active: boolean }) {
             >
               <boxGeometry args={[0.07, 0.26, 0.07]} />
               <meshStandardMaterial
-                color={i % 2 === 0 ? "#0054F0" : "#64748b"}
+                color={i % 2 === 0 ? "#1E3AFF" : "#64748b"}
                 metalness={0.4}
                 roughness={0.35}
-                emissive="#0054F0"
+                emissive="#1E3AFF"
                 emissiveIntensity={active ? 0.2 : 0.06}
               />
             </mesh>
@@ -122,7 +122,7 @@ export function GenderEmblemCanvas({
   active = false,
   className,
 }: Props) {
-  const accent = gender === "female" ? "#7DD3C7" : "#4C8BFF";
+  const accent = gender === "female" ? "#7DD3C7" : "#5B75FF";
   return (
     <div className={`relative h-full w-full min-h-0 ${className ?? ""}`}>
       <Canvas

@@ -90,7 +90,7 @@ export function FeaturesImmersive() {
   const pole = SHOWCASE_POLES.find((p) => p.id === activePole) ?? SHOWCASE_POLES[0]!;
   const caps = POLE_CAPABILITIES[pole.id] ?? POLE_CAPABILITIES.joueur!;
   const mod = CROSS_MODULES.find((m) => m.id === activeModule) ?? CROSS_MODULES[0]!;
-  const accent = POLE_BRAND_HEX[pole.id] ?? "#006CFC";
+  const accent = POLE_BRAND_HEX[pole.id] ?? "#7C3AED";
 
   return (
     <div
@@ -119,7 +119,7 @@ export function FeaturesImmersive() {
         className="scroll-mt-24 border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28"
       >
         <div className="mx-auto max-w-6xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
             Cinq portes
           </p>
           <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">

@@ -82,7 +82,7 @@ export function JoueurWeekStory({
   return (
     <section className="border-t border-white/10 bg-[#07070a] px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#1E3AFF)]">
           {kicker}
         </p>
         <h2 className="mt-3 max-w-lg font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -105,7 +105,7 @@ export function JoueurWeekStory({
                 onClick={() => setActive(b.id)}
                 className={`flex min-w-[4.5rem] flex-col items-center rounded-2xl px-3 py-4 transition ${
                   on
-                    ? "bg-[var(--pole-accent,#0054F0)] text-white"
+                    ? "bg-[var(--pole-accent,#1E3AFF)] text-white"
                     : "border border-white/12 text-white/55 hover:border-white/25"
                 }`}
               >
@@ -127,7 +127,7 @@ export function JoueurWeekStory({
             animate={{ opacity: 1, x: 0 }}
             exit={reduce ? undefined : { opacity: 0, x: -8 }}
             transition={{ duration: 0.3, ease }}
-            className="mt-10 max-w-xl border-l-2 border-[var(--pole-accent,#0054F0)] pl-6"
+            className="mt-10 max-w-xl border-l-2 border-[var(--pole-accent,#1E3AFF)] pl-6"
           >
             <p className="font-display text-2xl font-medium tracking-[-0.02em] text-white">
               {beat.title}
@@ -180,7 +180,7 @@ export function JoueurFreeVsPass({
   return (
     <section className="border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#1E3AFF)]">
           {kicker}
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -215,7 +215,7 @@ export function JoueurFreeVsPass({
             onClick={() => setTier("pass")}
             className={`rounded-full px-6 py-2.5 text-sm font-semibold transition ${
               tier === "pass"
-                ? "bg-[var(--pole-accent,#0054F0)] text-white"
+                ? "bg-[var(--pole-accent,#1E3AFF)] text-white"
                 : "text-white/60 hover:text-white"
             }`}
           >
@@ -244,8 +244,8 @@ export function JoueurFreeVsPass({
                     background:
                       tier === "free"
                         ? "rgba(255,255,255,0.08)"
-                        : "rgba(0,84,240,0.25)",
-                    color: tier === "free" ? "#fff" : "#4C8BFF",
+                        : "rgba(30, 58, 255,0.25)",
+                    color: tier === "free" ? "#fff" : "#5B75FF",
                   }}
                 >
                   {i + 1}
@@ -258,7 +258,7 @@ export function JoueurFreeVsPass({
 
         <Link
           href={`${ROUTES.pricing}#joueur`}
-          className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-[var(--pole-accent,#0054F0)]"
+          className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-[var(--pole-accent,#1E3AFF)]"
         >
           Voir le détail du Pass
           <ArrowRight size={14} />
@@ -287,11 +287,11 @@ export function JoueurWarmCta({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 50% 80%, var(--joueur-glow, rgba(0,84,240,0.28)), transparent 60%)",
+            "radial-gradient(ellipse 70% 60% at 50% 80%, var(--joueur-glow, rgba(30, 58, 255,0.28)), transparent 60%)",
         }}
       />
       <div className="relative mx-auto max-w-3xl text-center">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#1E3AFF)]">
           {kicker}
         </p>
         <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.2rem)] font-medium leading-[1.05] tracking-[-0.035em] text-white">
@@ -306,7 +306,7 @@ export function JoueurWarmCta({
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link
             href={ROUTES.betaWaitlist}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#0054F0)] px-7 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#1E3AFF)] px-7 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Je m’inscris
             <ArrowRight size={16} />

@@ -24,7 +24,7 @@ function Ring({ progress, active }: { progress: number; active: boolean }) {
         cy="24"
         r={r}
         fill="none"
-        stroke={active ? "#0054F0" : "#0054F0"}
+        stroke={active ? "#1E3AFF" : "#1E3AFF"}
         strokeWidth="5"
         strokeLinecap="round"
         strokeDasharray={c}
@@ -52,7 +52,7 @@ export function AliveBadgeRow() {
               onClick={() => setActive(b.id)}
               className={clsx(
                 "relative flex min-w-[88px] flex-col items-center gap-1 rounded-2xl px-2 py-3 transition",
-                on ? "bg-[#f3f2ec] ring-2 ring-[#0054F0]/40" : "hover:bg-[#f3f2ec]/70",
+                on ? "bg-[#f3f2ec] ring-2 ring-[#1E3AFF]/40" : "hover:bg-[#f3f2ec]/70",
               )}
             >
               <div className="relative">

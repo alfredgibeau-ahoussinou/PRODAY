@@ -52,13 +52,13 @@ export function JoueurHomeTrainingSection({
         className="pointer-events-none absolute inset-0 opacity-45"
         style={{
           background:
-            "radial-gradient(ellipse 55% 40% at 15% 20%, var(--joueur-wash, rgba(0,84,240,0.3)), transparent 55%), radial-gradient(ellipse 40% 35% at 90% 80%, rgba(76,139,255,0.12), transparent 50%)",
+            "radial-gradient(ellipse 55% 40% at 15% 20%, var(--joueur-wash, rgba(30, 58, 255,0.3)), transparent 55%), radial-gradient(ellipse 40% 35% at 90% 80%, rgba(76,139,255,0.12), transparent 50%)",
         }}
       />
       <div className="relative mx-auto max-w-7xl">
         <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#1E3AFF)]">
               {kicker}
             </p>
             <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.75rem,4.2vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -113,7 +113,7 @@ export function JoueurHomeTrainingSection({
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={ROUTES.betaWaitlist}
-            className="inline-flex bg-[var(--pole-accent,#0054F0)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex bg-[var(--pole-accent,#1E3AFF)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Tester dans la bêta
           </Link>

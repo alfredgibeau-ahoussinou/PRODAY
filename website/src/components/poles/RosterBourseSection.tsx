@@ -195,12 +195,12 @@ export function RosterBourseSection({ audience }: { audience: Audience }) {
           background:
             audience === "coach"
               ? "radial-gradient(ellipse 55% 40% at 15% 0%, rgba(59,91,255,0.32), transparent 55%), radial-gradient(ellipse 40% 35% at 90% 70%, rgba(34,211,238,0.1), transparent 50%)"
-              : "radial-gradient(ellipse 55% 40% at 80% 0%, rgba(0,84,240,0.32), transparent 55%), radial-gradient(ellipse 40% 35% at 10% 80%, rgba(251,191,36,0.1), transparent 50%)",
+              : "radial-gradient(ellipse 55% 40% at 80% 0%, rgba(30, 58, 255,0.32), transparent 55%), radial-gradient(ellipse 40% 35% at 10% 80%, rgba(251,191,36,0.1), transparent 50%)",
         }}
       />
 
       <div className="relative mx-auto max-w-7xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           {copy.kicker}
         </p>
         <h2 className="mt-3 max-w-3xl font-display text-[clamp(1.75rem,4.2vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -220,7 +220,7 @@ export function RosterBourseSection({ audience }: { audience: Audience }) {
               transition={{ delay: i * 0.05, duration: 0.35 }}
               className="border border-white/10 bg-white/[0.03] p-4 sm:p-5"
             >
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#006CFC)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#7C3AED)]">
                 {step.n}
               </p>
               <h3 className="mt-2 font-display text-base font-medium text-white sm:text-lg">
@@ -247,7 +247,7 @@ export function RosterBourseSection({ audience }: { audience: Audience }) {
                 onClick={() => setScope(tab.id)}
                 className={`rounded-full px-3.5 py-2 text-xs font-semibold transition sm:text-sm ${
                   scope === tab.id
-                    ? "bg-[var(--pole-accent,#006CFC)] text-white"
+                    ? "bg-[var(--pole-accent,#7C3AED)] text-white"
                     : "text-white/55 hover:bg-white/5 hover:text-white"
                 }`}
               >
@@ -274,7 +274,7 @@ export function RosterBourseSection({ audience }: { audience: Audience }) {
                         }}
                         className={`w-full border px-3.5 py-3 text-left transition ${
                           on
-                            ? "border-[var(--pole-accent,#006CFC)]/50 bg-[var(--pole-accent,#006CFC)]/15"
+                            ? "border-[var(--pole-accent,#7C3AED)]/50 bg-[var(--pole-accent,#7C3AED)]/15"
                             : "border-white/10 bg-white/[0.02] hover:border-white/25"
                         }`}
                       >
@@ -332,7 +332,7 @@ export function RosterBourseSection({ audience }: { audience: Audience }) {
                         >
                           <div>
                             <p className="font-medium text-white">{m.name}</p>
-                            <p className="mt-0.5 text-sm text-[var(--pole-accent-bright,#4C8BFF)]">
+                            <p className="mt-0.5 text-sm text-[var(--pole-accent-bright,#5B75FF)]">
                               Depuis {m.from}
                             </p>
                             <p className="mt-1 text-xs text-white/45">{m.note}</p>
@@ -431,7 +431,7 @@ export function RosterBourseSection({ audience }: { audience: Audience }) {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={copy.primaryHref}
-            className="inline-flex items-center justify-center bg-[var(--pole-accent,#006CFC)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex items-center justify-center bg-[var(--pole-accent,#7C3AED)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
           >
             {copy.primaryLabel}
           </Link>

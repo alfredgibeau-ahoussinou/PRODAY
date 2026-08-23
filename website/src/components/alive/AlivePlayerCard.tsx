@@ -88,17 +88,17 @@ function PlayerCard({ player }: { player: AlivePlayer }) {
               {player.badges.map((b) => (
                 <span
                   key={b}
-                  className="rounded-lg bg-[#0054F0]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#052424]"
+                  className="rounded-lg bg-[#1E3AFF]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#052424]"
                 >
                   {b}
                 </span>
               ))}
             </div>
-            <p className="mt-3 text-[11px] font-semibold text-[#4C8BFF]">Tape pour les stats →</p>
+            <p className="mt-3 text-[11px] font-semibold text-[#5B75FF]">Tape pour les stats →</p>
           </div>
         </div>
 
-        <div className="absolute inset-0 overflow-hidden rounded-3xl border border-[#0054F0]/25 bg-[#052424] p-5 text-white [backface-visibility:hidden] [transform:rotateY(180deg)]">
+        <div className="absolute inset-0 overflow-hidden rounded-3xl border border-[#1E3AFF]/25 bg-[#052424] p-5 text-white [backface-visibility:hidden] [transform:rotateY(180deg)]">
           <p className="font-display text-lg font-extrabold">{player.name}</p>
           <p className="text-sm text-white/55">Stats saison</p>
           <div className="mt-5 grid grid-cols-3 gap-2">

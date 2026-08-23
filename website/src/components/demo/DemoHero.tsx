@@ -70,7 +70,7 @@ export function DemoHero({ pole }: DemoHeroProps) {
         >
           <a
             href="#demo-app"
-            className="inline-flex items-center gap-2 rounded-full bg-[#006CFC] px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-full bg-[#7C3AED] px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Essayer
             <ArrowDown size={16} />

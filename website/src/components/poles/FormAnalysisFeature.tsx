@@ -283,7 +283,7 @@ export function FormAnalysisFeature({
       />
 
       <div className="relative mx-auto max-w-7xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           {copy.kicker}
         </p>
         <motion.h2
@@ -309,7 +309,7 @@ export function FormAnalysisFeature({
               transition={{ delay: i * 0.06, duration: 0.35 }}
               className="border border-white/10 bg-white/[0.03] p-4 sm:p-5"
             >
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#006CFC)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#7C3AED)]">
                 {step.n}
               </p>
               <h3 className="mt-2 font-display text-base font-medium text-white sm:text-lg">
@@ -341,7 +341,7 @@ export function FormAnalysisFeature({
                   onClick={() => setView(tab.id)}
                   className={`px-3.5 py-2 text-xs font-semibold transition sm:text-sm ${
                     view === tab.id
-                      ? "bg-[var(--pole-accent,#006CFC)] text-white"
+                      ? "bg-[var(--pole-accent,#7C3AED)] text-white"
                       : "text-white/55 hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -370,7 +370,7 @@ export function FormAnalysisFeature({
                         }}
                         className={`w-full border px-3.5 py-3 text-left transition ${
                           on
-                            ? "border-[var(--pole-accent,#006CFC)]/50 bg-[var(--pole-accent,#006CFC)]/15"
+                            ? "border-[var(--pole-accent,#7C3AED)]/50 bg-[var(--pole-accent,#7C3AED)]/15"
                             : "border-white/10 bg-white/[0.02] hover:border-white/25"
                         }`}
                       >
@@ -548,7 +548,7 @@ export function FormAnalysisFeature({
                           Aucune alerte sur cet effectif pour le prochain match.
                         </p>
                       ) : (
-                        <p className="mt-5 text-sm text-[var(--pole-accent-bright,#4C8BFF)]">
+                        <p className="mt-5 text-sm text-[var(--pole-accent-bright,#5B75FF)]">
                           Adapter les entraînements selon la charge →
                         </p>
                       )}
@@ -584,7 +584,7 @@ export function FormAnalysisFeature({
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={copy.primaryHref}
-            className="inline-flex bg-[var(--pole-accent,#006CFC)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex bg-[var(--pole-accent,#7C3AED)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
           >
             {copy.primaryLabel}
           </Link>

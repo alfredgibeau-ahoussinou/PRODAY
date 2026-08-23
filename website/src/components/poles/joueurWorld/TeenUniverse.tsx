@@ -82,7 +82,7 @@ export function TeenUniverse({ theme }: { theme: JoueurExperienceTheme }) {
                     <motion.div
                       className="h-full rounded-full"
                       style={{
-                        background: `linear-gradient(90deg, #0054F0, ${accent})`,
+                        background: `linear-gradient(90deg, #1E3AFF, ${accent})`,
                       }}
                       initial={reduce ? false : { width: 0 }}
                       animate={{ width: `${(s.value / s.max) * 100}%` }}

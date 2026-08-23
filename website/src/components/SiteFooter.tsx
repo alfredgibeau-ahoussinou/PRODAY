@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BRAND } from "@/lib/content";
-import { PRODAY_LOGO_OFFICIAL } from "@/lib/brandingAssets";
+import { PRODAY_MARK } from "@/lib/brandingAssets";
 import { pricingHrefForPath } from "@/lib/poles";
 import { POLE_FOOTER_LINKS, ROUTES } from "@/lib/routes";
 
@@ -29,7 +29,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 pb-10 pt-16 sm:px-6 sm:pb-12 sm:pt-20">
         <div className="flex flex-col gap-10 border-b border-white/10 pb-14 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#4C8BFF]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#5B75FF]">
               ProDay
             </p>
             <p className="mt-4 font-display text-[clamp(1.75rem,4vw,2.75rem)] font-medium leading-[1.08] tracking-[-0.035em] text-white">
@@ -53,12 +53,12 @@ export function SiteFooter() {
         <div className="grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1fr]">
           <div>
             <Link href={ROUTES.home} className="inline-flex items-center gap-3">
-              <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/5 p-1.5">
+              <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-black p-2">
                 <Image
-                  src={PRODAY_LOGO_OFFICIAL}
+                  src={PRODAY_MARK}
                   alt=""
                   width={40}
-                  height={40}
+                  height={28}
                   className="h-full w-full object-contain"
                 />
               </span>
@@ -80,7 +80,7 @@ export function SiteFooter() {
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    className="text-sm text-white/60 transition hover:text-[#4C8BFF]"
+                    className="text-sm text-white/60 transition hover:text-[#5B75FF]"
                   >
                     {l.label.replace(/^Pôle\s+/i, "")}
                   </Link>
@@ -98,7 +98,7 @@ export function SiteFooter() {
                 <li key={l.href}>
                   <Link
                     href={l.href === ROUTES.pricing ? pricingHref : l.href}
-                    className="text-sm text-white/60 transition hover:text-[#4C8BFF]"
+                    className="text-sm text-white/60 transition hover:text-[#5B75FF]"
                   >
                     {l.label}
                   </Link>

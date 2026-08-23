@@ -123,7 +123,7 @@ const COMPARE: { feature: string; group?: string; starter: Cell; territorial: Ce
 function CellView({ value }: { value: Cell }) {
   if (value === true) {
     return (
-      <span className="inline-flex text-[var(--pole-accent,#D4AF37)]" aria-label="Inclus">
+      <span className="inline-flex text-[var(--pole-accent,#EF4444)]" aria-label="Inclus">
         <Check size={18} strokeWidth={2.5} />
       </span>
     );
@@ -143,7 +143,7 @@ export function SponsorTiersCompare() {
   return (
     <section className="border-t border-white/10 bg-[#080706] px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#D4AF37)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#EF4444)]">
           Formules
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -167,7 +167,7 @@ export function SponsorTiersCompare() {
                 onClick={() => setFocus(t.id)}
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                   on
-                    ? "bg-[var(--pole-accent,#D4AF37)] text-black"
+                    ? "bg-[var(--pole-accent,#EF4444)] text-black"
                     : "border border-white/15 text-white/70 hover:border-white/30"
                 }`}
               >
@@ -199,7 +199,7 @@ export function SponsorTiersCompare() {
             </div>
             <Link
               href={ROUTES.sponsorDevis}
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#D4AF37)] px-5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#EF4444)] px-5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
             >
               Demander un devis
               <ArrowRight size={14} />
@@ -219,7 +219,7 @@ export function SponsorTiersCompare() {
                     key={t.id}
                     className={`px-3 py-4 text-center text-sm font-semibold sm:px-4 ${
                       t.highlight
-                        ? "bg-[var(--pole-accent,#D4AF37)]/12 text-[var(--pole-accent,#D4AF37)]"
+                        ? "bg-[var(--pole-accent,#EF4444)]/12 text-[var(--pole-accent,#EF4444)]"
                         : "text-white/80"
                     }`}
                   >
@@ -238,7 +238,7 @@ export function SponsorTiersCompare() {
                     <tr className="border-t border-white/10 bg-white/[0.03]">
                       <td
                         colSpan={4}
-                        className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent,#D4AF37)] sm:px-5"
+                        className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent,#EF4444)] sm:px-5"
                       >
                         {row.group}
                       </td>
@@ -259,7 +259,7 @@ export function SponsorTiersCompare() {
                     </td>
                     <td
                       className={`px-3 py-3 text-center sm:px-4 ${
-                        TIERS[2]?.highlight ? "bg-[var(--pole-accent,#D4AF37)]/[0.05]" : ""
+                        TIERS[2]?.highlight ? "bg-[var(--pole-accent,#EF4444)]/[0.05]" : ""
                       }`}
                     >
                       <CellView value={row.national} />
@@ -304,7 +304,7 @@ export function SponsorCapabilityPlay() {
   return (
     <section className="border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#D4AF37)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#EF4444)]">
           Sur le terrain
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -323,7 +323,7 @@ export function SponsorCapabilityPlay() {
                 onClick={() => setActive(c.id)}
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                   on
-                    ? "bg-[var(--pole-accent,#D4AF37)] text-black"
+                    ? "bg-[var(--pole-accent,#EF4444)] text-black"
                     : "border border-white/15 text-white/65 hover:border-white/30"
                 }`}
               >
@@ -340,7 +340,7 @@ export function SponsorCapabilityPlay() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? undefined : { opacity: 0 }}
             transition={{ duration: 0.3, ease }}
-            className="mt-10 max-w-xl border-l-2 border-[var(--pole-accent,#D4AF37)] pl-6"
+            className="mt-10 max-w-xl border-l-2 border-[var(--pole-accent,#EF4444)] pl-6"
           >
             <h3 className="font-display text-2xl font-medium text-white">{cap.title}</h3>
             <p className="mt-3 text-base leading-relaxed text-white/60">{cap.body}</p>
@@ -362,7 +362,7 @@ export function SponsorWarmCta() {
         }}
       />
       <div className="relative mx-auto max-w-3xl text-center">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#D4AF37)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#EF4444)]">
           Partenaires
         </p>
         <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.2rem)] font-medium leading-[1.05] tracking-[-0.035em] text-white">
@@ -377,7 +377,7 @@ export function SponsorWarmCta() {
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link
             href={ROUTES.sponsorDevis}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#D4AF37)] px-7 py-3.5 text-sm font-semibold text-black transition hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#EF4444)] px-7 py-3.5 text-sm font-semibold text-black transition hover:brightness-110"
           >
             Demander un devis
             <ArrowRight size={16} />

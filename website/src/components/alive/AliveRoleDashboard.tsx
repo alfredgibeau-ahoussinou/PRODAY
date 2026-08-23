@@ -103,19 +103,19 @@ export function AliveRoleDashboard() {
                   type="button"
                   whileHover={{ y: -3, scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  className="rounded-2xl border border-[#052424]/8 bg-[#f3f2ec] p-4 text-left transition hover:border-[#0054F0]/40 hover:bg-white"
+                  className="rounded-2xl border border-[#052424]/8 bg-[#f3f2ec] p-4 text-left transition hover:border-[#1E3AFF]/40 hover:bg-white"
                 >
                   <p className="text-[11px] font-bold uppercase tracking-wide text-[rgba(5,36,36,0.62)]">
                     {t.title}
                   </p>
                   <p className="mt-1 font-display text-xl font-extrabold text-[#052424]">{t.value}</p>
-                  <p className="mt-1 text-xs text-[#4C8BFF]">{t.hint}</p>
+                  <p className="mt-1 text-xs text-[#5B75FF]">{t.hint}</p>
                 </motion.button>
               ))}
             </div>
             <Link
               href={current.href}
-              className="mt-5 inline-flex text-sm font-bold text-[#4C8BFF] hover:underline"
+              className="mt-5 inline-flex text-sm font-bold text-[#5B75FF] hover:underline"
             >
               Voir le pôle {current.label} →
             </Link>

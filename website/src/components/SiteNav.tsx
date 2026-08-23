@@ -14,7 +14,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { PRODAY_LOGO_OFFICIAL } from "@/lib/brandingAssets";
+import { PRODAY_MARK } from "@/lib/brandingAssets";
 import { isNavActive } from "@/lib/siteArchitecture";
 import { POLE_BRAND_HEX, SHOWCASE_POLES, pricingHrefForPath } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
@@ -212,13 +212,13 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
             className="flex shrink-0 items-center gap-2 rounded-full py-1 pl-1 pr-2"
             aria-label="ProDay, accueil"
           >
-            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/12 bg-black/45 min-[390px]:h-9 min-[390px]:w-9">
+            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/12 bg-black min-[390px]:h-9 min-[390px]:w-9">
               <Image
-                src={PRODAY_LOGO_OFFICIAL}
+                src={PRODAY_MARK}
                 alt=""
-                width={20}
-                height={20}
-                className="h-5 w-5 rounded-sm object-cover min-[390px]:h-[22px] min-[390px]:w-[22px]"
+                width={22}
+                height={16}
+                className="h-[18px] w-auto object-contain min-[390px]:h-5"
                 priority
               />
             </span>

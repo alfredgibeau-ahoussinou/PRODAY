@@ -39,7 +39,7 @@ export function AdultUniverse({ theme }: { theme: JoueurExperienceTheme }) {
       isWoman ? [48, 61, 74, 52, 69, 83, 58] : [42, 58, 71, 49, 66, 80, 55],
     [isWoman],
   );
-  const accent = isWoman ? "#7DD3C7" : "#4C8BFF";
+  const accent = isWoman ? "#7DD3C7" : "#5B75FF";
 
   return (
     <div className="relative bg-[#070b14] text-slate-100">
@@ -86,7 +86,7 @@ export function AdultUniverse({ theme }: { theme: JoueurExperienceTheme }) {
             </div>
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-black/40 p-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent,#4C8BFF)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent,#5B75FF)]">
                 Analyse de forme · Ma forme
               </p>
               <p className="mt-2 font-display text-3xl text-white">82%</p>
@@ -102,7 +102,7 @@ export function AdultUniverse({ theme }: { theme: JoueurExperienceTheme }) {
                     key={i}
                     className="flex-1 rounded-sm"
                     style={{
-                      background: `linear-gradient(to top, #001F6B, ${accent})`,
+                      background: `linear-gradient(to top, #0A1A8A, ${accent})`,
                     }}
                     initial={reduce ? false : { height: 0 }}
                     animate={{ height: `${h}%` }}
@@ -134,7 +134,7 @@ export function AdultUniverse({ theme }: { theme: JoueurExperienceTheme }) {
             <div className="mt-6 flex flex-col gap-2 sm:flex-row">
               <Link
                 href={ROUTES.betaWaitlist}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#0054F0] px-5 text-sm font-semibold text-white"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#1E3AFF] px-5 text-sm font-semibold text-white"
               >
                 {theme.copy.primaryCta}
                 <ArrowRight size={16} />

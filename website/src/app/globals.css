@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --font-space: "Space Grotesk", system-ui, sans-serif;
+  --font-space: "Sora", "Space Grotesk", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --proday-ink: #052424;
   --proday-ink-muted: rgba(5, 36, 36, 0.62);
@@ -11,23 +11,32 @@
   --proday-overlay: #1a1a1a;
   --proday-border: rgba(255, 255, 255, 0.12);
   --proday-border-strong: rgba(255, 255, 255, 0.22);
-  --proday-accent: #0054f0;
-  --proday-accent-bright: #4c8bff;
-  --proday-accent-deep: #001f6b;
-  --proday-accent-dim: #1a68ff;
-  --proday-accent-glow: rgba(0, 84, 240, 0.42);
-  --proday-accent-muted: rgba(0, 84, 240, 0.16);
+  /* Master Brand officiel */
+  --proday-accent: #1e3aff;
+  --proday-accent-bright: #5b75ff;
+  --proday-accent-deep: #0a1a8a;
+  --proday-accent-dim: #3b56ff;
+  --proday-accent-glow: rgba(30, 58, 255, 0.42);
+  --proday-accent-muted: rgba(30, 58, 255, 0.16);
   --proday-accent-gradient: linear-gradient(
     135deg,
-    #001f6b 0%,
-    #0054f0 48%,
-    #4c8bff 100%
+    #0a1a8a 0%,
+    #1e3aff 48%,
+    #5b75ff 100%
   );
-  --proday-warm: #4c8bff;
-  --proday-warm-glow: rgba(76, 139, 255, 0.3);
-  --proday-field: #0054f0;
-  --proday-success: #4c8bff;
-  --proday-warning: #ff7a1a;
+  --proday-warm: #5b75ff;
+  --proday-warm-glow: rgba(91, 117, 255, 0.3);
+  --proday-field: #1e3aff;
+  --proday-success: #22c55e;
+  --proday-warning: #f97316;
+  --proday-pole-joueur: #1e3aff;
+  --proday-pole-coach: #22c55e;
+  --proday-pole-club: #7c3aed;
+  --proday-pole-president: #fbbf24;
+  --proday-pole-parent: #f97316;
+  --proday-pole-supporter: #06b6d4;
+  --proday-pole-sponsor: #ef4444;
+  --proday-pole-admin: #a3a3a3;
   --background: #000000;
   --foreground: #f5f5f0;
   --ease-out-premium: cubic-bezier(0.22, 1, 0.36, 1);
@@ -93,7 +102,7 @@ body {
 }
 
 ::selection {
-  background: #0054f0;
+  background: #1E3AFF;
   color: #fff;
 }
 
@@ -217,7 +226,7 @@ body {
   transition: border-color 0.25s ease, transform 0.25s var(--ease-spring);
 }
 .card-premium:hover {
-  border-color: rgba(0, 84, 240, 0.45);
+  border-color: rgba(30, 58, 255, 0.45);
   transform: translateY(-2px);
 }
 
@@ -228,7 +237,7 @@ body {
   transition: border-color 0.25s ease, transform 0.25s var(--ease-spring);
 }
 .card-flash:hover {
-  border-color: rgba(0, 84, 240, 0.4);
+  border-color: rgba(30, 58, 255, 0.4);
   transform: translateY(-2px);
 }
 
@@ -242,7 +251,7 @@ body {
   background-image: var(--proday-accent-gradient);
   background-color: var(--proday-accent);
   color: #fff;
-  box-shadow: 0 -12px 36px -16px rgba(0, 84, 240, 0.45);
+  box-shadow: 0 -12px 36px -16px rgba(30, 58, 255, 0.45);
 }
 
 .page-dark {
@@ -294,7 +303,7 @@ body {
 
 a:focus-visible,
 button:focus-visible {
-  outline: 2px solid #4c8bff;
+  outline: 2px solid #5B75FF;
   outline-offset: 2px;
 }
 
@@ -373,7 +382,7 @@ a, button, [role="button"], summary, label[for] {
   position: absolute;
   inset: -8px;
   border-radius: 9999px;
-  border: 2px solid #4c8bff;
+  border: 2px solid #5B75FF;
   animation: pulse-ring 2s ease-out infinite;
 }
 @keyframes pulse-ring {
@@ -399,16 +408,17 @@ a, button, [role="button"], summary, label[for] {
   --acc-surface-2: #10151f;
   --acc-line: rgba(148, 163, 184, 0.14);
   --acc-mute: rgba(148, 163, 184, 0.45);
-  --acc-accent-soft: rgba(0, 84, 240, 0.18);
+  --acc-accent-soft: rgba(30, 58, 255, 0.18);
   --acc-steel: #9db7ff;
   background-color: var(--acc-bg);
   background-image:
-    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(0, 84, 240, 0.09), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(30, 58, 255, 0.09), transparent 55%),
     linear-gradient(180deg, #06080f 0%, #080b14 100%);
 }
 
 .acc-mark {
-  background: linear-gradient(145deg, #001f6b 0%, #0054f0 55%, #4c8bff 100%);
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .acc-panel {

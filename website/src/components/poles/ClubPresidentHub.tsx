@@ -65,12 +65,12 @@ export function ClubPresidentHub() {
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           background:
-            "radial-gradient(ellipse 70% 50% at 20% 0%, rgba(0,84,240,0.35), transparent 55%), radial-gradient(ellipse 50% 40% at 90% 80%, rgba(76,139,255,0.12), transparent 50%)",
+            "radial-gradient(ellipse 70% 50% at 20% 0%, rgba(30, 58, 255,0.35), transparent 55%), radial-gradient(ellipse 50% 40% at 90% 80%, rgba(76,139,255,0.12), transparent 50%)",
         }}
       />
 
       <div className="relative mx-auto max-w-7xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           Pôle Club · Président & dirigeants
         </p>
         <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.75rem,4.2vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -97,7 +97,7 @@ export function ClubPresidentHub() {
                     ? "text-emerald-400"
                     : s.tone === "warn"
                       ? "text-amber-400"
-                      : "text-[var(--pole-accent-bright,#4C8BFF)]"
+                      : "text-[var(--pole-accent-bright,#5B75FF)]"
                 }`}
               >
                 ● {s.label}
@@ -120,7 +120,7 @@ export function ClubPresidentHub() {
               {HUB_BLOCKS.map((b) => (
                 <li
                   key={b.title}
-                  className="border-l-2 border-[var(--pole-accent,#006CFC)] pl-4"
+                  className="border-l-2 border-[var(--pole-accent,#7C3AED)] pl-4"
                 >
                   <p className="text-sm font-semibold text-white">{b.title}</p>
                   <p className="mt-1 text-sm leading-relaxed text-white/50">{b.body}</p>
@@ -129,7 +129,7 @@ export function ClubPresidentHub() {
             </ul>
           </div>
 
-          <div className="flex flex-col justify-end gap-6 border border-white/10 bg-gradient-to-br from-[#001F6B]/80 to-black p-6 sm:p-8">
+          <div className="flex flex-col justify-end gap-6 border border-white/10 bg-gradient-to-br from-[#0A1A8A]/80 to-black p-6 sm:p-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/45">
               Qui est sur le Pôle Club ?
             </p>
@@ -143,7 +143,7 @@ export function ClubPresidentHub() {
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
                 href={ROUTES.betaWaitlist}
-                className="inline-flex items-center justify-center bg-[var(--pole-accent,#006CFC)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+                className="inline-flex items-center justify-center bg-[var(--pole-accent,#7C3AED)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
               >
                 Rejoindre la bêta Club
               </Link>

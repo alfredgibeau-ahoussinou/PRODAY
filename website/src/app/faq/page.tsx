@@ -37,7 +37,7 @@ export default function FaqPage() {
         className="scroll-mt-24 border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28"
       >
         <div className="mx-auto max-w-3xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#4C8BFF]">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#5B75FF]">
             Réponses
           </p>
           <h2 className="mt-3 font-display text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[-0.03em] text-white">

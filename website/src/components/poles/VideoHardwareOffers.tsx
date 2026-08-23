@@ -26,7 +26,7 @@ export function VideoHardwareOffers() {
       className="scroll-mt-24 relative border-t border-white/10 bg-black px-4 py-14 sm:px-6 sm:py-20 lg:py-28"
     >
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           Module vidéo
         </p>
         <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
@@ -90,7 +90,7 @@ export function VideoHardwareOffers() {
                 return (
                   <li
                     key={mode}
-                    className="border-l-2 border-[var(--pole-accent,#006CFC)]/50 pl-4"
+                    className="border-l-2 border-[var(--pole-accent,#7C3AED)]/50 pl-4"
                   >
                     <p className="text-sm font-semibold text-white">{info.title}</p>
                     <p className="mt-1 text-sm text-white/55">{info.body}</p>
@@ -113,7 +113,7 @@ export function VideoHardwareOffers() {
                   >
                     <Check
                       size={15}
-                      className="mt-0.5 shrink-0 text-[var(--pole-accent,#006CFC)]"
+                      className="mt-0.5 shrink-0 text-[var(--pole-accent,#7C3AED)]"
                     />
                     <span>{item}</span>
                   </li>
@@ -146,7 +146,7 @@ export function VideoHardwareOffers() {
           </p>
           <Link
             href={ROUTES.betaWaitlist}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--pole-accent,#4C8BFF)] transition hover:opacity-80"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--pole-accent,#5B75FF)] transition hover:opacity-80"
           >
             Parler offres Club / vidéo
             <ArrowRight size={16} />

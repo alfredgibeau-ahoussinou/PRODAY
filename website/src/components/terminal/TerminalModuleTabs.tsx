@@ -44,7 +44,7 @@ export function TerminalModuleTabs({
       {image ? <CinematicBleed src={image} opacity={0.22} vignette /> : null}
 
       <div className="relative mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#4C8BFF)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#5B75FF)]">
           {kicker}
         </p>
         <h2 className="mt-4 max-w-3xl font-display text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.08] tracking-[-0.035em] text-white">
@@ -73,7 +73,7 @@ export function TerminalModuleTabs({
                 className={`rounded-full px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.16em] transition ${
                   pressed
                     ? "bg-accent-gradient text-white"
-                    : "border border-white/15 text-white/55 hover:border-white/35 hover:text-[var(--pole-accent,#4C8BFF)]"
+                    : "border border-white/15 text-white/55 hover:border-white/35 hover:text-[var(--pole-accent,#5B75FF)]"
                 }`}
               >
                 {tab.label}
@@ -92,7 +92,7 @@ export function TerminalModuleTabs({
             transition={{ duration: 0.25 }}
             className="mt-10 max-w-2xl"
           >
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#4C8BFF)]/70">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#5B75FF)]/70">
               {current.label}
             </p>
             <h3 className="mt-4 font-display text-2xl font-medium tracking-[-0.02em] text-white sm:text-3xl">

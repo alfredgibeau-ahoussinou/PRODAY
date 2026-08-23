@@ -30,7 +30,7 @@ export function SupporterLiveBoard() {
         }}
       />
       <div className="relative mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#3C00F0)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#06B6D4)]">
           Jour J
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -52,7 +52,7 @@ export function SupporterLiveBoard() {
                 onClick={() => setActive(m.id)}
                 className={`rounded-2xl border px-4 py-5 text-left transition ${
                   on
-                    ? "border-[var(--pole-accent,#3C00F0)] bg-[var(--pole-accent,#3C00F0)]/20"
+                    ? "border-[var(--pole-accent,#06B6D4)] bg-[var(--pole-accent,#06B6D4)]/20"
                     : "border-white/12 bg-white/[0.03] hover:border-white/25"
                 }`}
               >
@@ -129,7 +129,7 @@ export function SupporterTribuneZones() {
   return (
     <section className="border-t border-white/10 bg-[#07060f] px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#3C00F0)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#06B6D4)]">
           Dans la tribune
         </p>
         <h2 className="mt-3 max-w-lg font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -148,7 +148,7 @@ export function SupporterTribuneZones() {
                 onClick={() => setActive(z.id)}
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                   on
-                    ? "bg-[var(--pole-accent,#3C00F0)] text-white"
+                    ? "bg-[var(--pole-accent,#06B6D4)] text-white"
                     : "border border-white/15 text-white/65 hover:border-white/30"
                 }`}
               >
@@ -181,7 +181,7 @@ export function SupporterFreeStamp() {
     <section className="border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-24">
       <div className="mx-auto flex max-w-6xl flex-col items-start gap-8 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#3C00F0)]">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#06B6D4)]">
             Promesse
           </p>
           <h2 className="mt-3 font-display text-[clamp(2rem,5vw,3.2rem)] font-medium tracking-[-0.035em] text-white">
@@ -192,7 +192,7 @@ export function SupporterFreeStamp() {
           </p>
         </div>
         <div
-          className="flex h-36 w-36 rotate-[-8deg] items-center justify-center rounded-full border-4 border-[var(--pole-accent,#3C00F0)] font-display text-2xl font-bold uppercase tracking-tight text-[var(--pole-accent,#3C00F0)] sm:h-44 sm:w-44 sm:text-3xl"
+          className="flex h-36 w-36 rotate-[-8deg] items-center justify-center rounded-full border-4 border-[var(--pole-accent,#06B6D4)] font-display text-2xl font-bold uppercase tracking-tight text-[var(--pole-accent,#06B6D4)] sm:h-44 sm:w-44 sm:text-3xl"
           aria-hidden
         >
           Free
@@ -215,7 +215,7 @@ export function SupporterWarmCta() {
         }}
       />
       <div className="relative mx-auto max-w-3xl text-center">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#3C00F0)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#06B6D4)]">
           Entre dans la tribune
         </p>
         <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.2rem)] font-medium leading-[1.05] tracking-[-0.035em] text-white">
@@ -226,7 +226,7 @@ export function SupporterWarmCta() {
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link
             href={`${ROUTES.betaWaitlist}?role=supporter`}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#3C00F0)] px-7 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#06B6D4)] px-7 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Je suis supporter
             <ArrowRight size={16} />

@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AccBanner, AccButton, AccInput } from "@/components/admin/cc/AccUi";
 import { ACC_HOME } from "@/lib/adminCc/nav";
+import { PRODAY_MARK } from "@/lib/brandingAssets";
 
 export function AdminPinGate() {
   const router = useRouter();
@@ -42,8 +44,8 @@ export function AdminPinGate() {
     <main className="acc-shell flex min-h-[100dvh] items-center justify-center bg-[var(--acc-bg,#06080f)] px-4 py-12 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[max(3rem,env(safe-area-inset-top))]">
       <div className="w-full max-w-sm border border-[var(--acc-line,rgba(148,163,184,0.14))] bg-[var(--acc-surface,#0c1018)] p-5">
         <div className="mb-5 flex items-center gap-2.5">
-          <span className="acc-mark flex h-9 w-9 items-center justify-center text-[10px] font-bold text-white">
-            CC
+          <span className="acc-mark flex h-9 w-9 items-center justify-center overflow-hidden rounded-md p-1.5">
+            <Image src={PRODAY_MARK} alt="" width={28} height={20} className="h-full w-full object-contain" priority />
           </span>
           <div>
             <p className="text-sm font-semibold text-white">ProDay</p>

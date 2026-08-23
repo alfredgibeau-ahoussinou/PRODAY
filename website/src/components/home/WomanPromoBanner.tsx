@@ -21,7 +21,7 @@ export function WomanPromoBanner() {
           <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
               <Image
-                src="/branding/logo-woman-picto.png"
+                src="/branding/logo-proday-mark-joueur.png"
                 alt={WOMAN_BRAND.name}
                 width={64}
                 height={64}

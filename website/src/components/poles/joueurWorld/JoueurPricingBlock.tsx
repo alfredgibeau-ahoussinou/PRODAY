@@ -15,7 +15,7 @@ type Props = {
  * Toujours visible dans les univers immersifs.
  */
 export function JoueurPricingBlock({
-  accent = "#4C8BFF",
+  accent = "#5B75FF",
   compact = false,
 }: Props) {
   const reduce = useReducedMotion();

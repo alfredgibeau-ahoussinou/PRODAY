@@ -15,7 +15,7 @@ export function ClubModulesSection() {
       className="relative overflow-hidden border-t border-white/10 bg-black px-4 py-16 sm:px-6 sm:py-24"
     >
       <div className="relative mx-auto max-w-7xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           Piloter le club
         </p>
         <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.75rem,4.2vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -36,7 +36,7 @@ export function ClubModulesSection() {
               transition={{ delay: i * 0.04, duration: 0.35 }}
               className="border-b border-white/10 p-5 sm:border-r sm:odd:[&:nth-last-child(-n+2)]:border-b-0 lg:[&:nth-child(3n)]:border-r-0"
             >
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent,#006CFC)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent,#7C3AED)]">
                 {m.subtitle}
               </p>
               <h3 className="mt-3 font-display text-lg font-medium tracking-[-0.02em] text-white">

@@ -76,7 +76,7 @@ export function PageHeader({
           <Breadcrumb />
           <Link
             href={backHref}
-            className="mb-8 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45 transition hover:text-[var(--pole-accent,#4C8BFF)]"
+            className="mb-8 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45 transition hover:text-[var(--pole-accent,#5B75FF)]"
           >
             <ArrowLeft size={12} />
             {backLabel}
@@ -98,7 +98,7 @@ export function PageHeader({
                 />
               </div>
             ) : null}
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--pole-accent,#4C8BFF)]">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--pole-accent,#5B75FF)]">
               {kicker}
             </p>
           </motion.div>

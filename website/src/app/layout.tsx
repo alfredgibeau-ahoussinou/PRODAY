@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
@@ -43,8 +43,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/branding/logo-proday-official.png",
-        width: 1200,
-        height: 630,
+        width: 636,
+        height: 375,
         alt: "ProDay",
       },
     ],
@@ -84,7 +84,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
