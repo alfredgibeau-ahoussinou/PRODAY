@@ -30,7 +30,7 @@ export default function ClubDevisPage() {
   return (
     <main className="min-h-screen bg-[#050505] px-4 py-16 text-white sm:px-6">
       <div className="mx-auto max-w-xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#5B75FF]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#F5D04A]">
           Offre Club
         </p>
         <h1 className="mt-3 font-display text-3xl font-medium tracking-[-0.03em]">
@@ -50,7 +50,7 @@ export default function ClubDevisPage() {
             </p>
             <Link
               href={ROUTES.proClub}
-              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#5B75FF]"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#F5D04A]"
             >
               Retour au pôle Club
               <ArrowRight size={14} />
@@ -69,14 +69,14 @@ export default function ClubDevisPage() {
                     name={f.id}
                     required={f.required}
                     rows={4}
-                    className="mt-1.5 w-full rounded-xl border border-white/15 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B75FF]"
+                    className="mt-1.5 w-full rounded-xl border border-white/15 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-[#F5D04A]"
                   />
                 ) : (
                   <input
                     name={f.id}
                     required={f.required}
                     type={f.id === "email" ? "email" : "text"}
-                    className="mt-1.5 w-full rounded-xl border border-white/15 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-[#5B75FF]"
+                    className="mt-1.5 w-full rounded-xl border border-white/15 bg-black px-3 py-2.5 text-sm text-white outline-none focus:border-[#F5D04A]"
                   />
                 )}
               </label>

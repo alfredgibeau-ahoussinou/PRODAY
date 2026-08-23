@@ -84,7 +84,7 @@ export function ScrollVideoStage() {
 
         <motion.p
           style={{ opacity: brandOpacity }}
-          className="absolute left-5 top-28 z-20 font-mono text-[10px] uppercase tracking-[0.28em] text-[#5B75FF] sm:left-8 lg:left-12"
+          className="absolute left-5 top-28 z-20 font-mono text-[10px] uppercase tracking-[0.28em] text-[#F5D04A] sm:left-8 lg:left-12"
         >
           ProDay
         </motion.p>
@@ -107,7 +107,7 @@ export function ScrollVideoStage() {
             <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-5">
               <Link
                 href={ROUTES.proClub}
-                className="inline-flex flex-col items-start rounded-full bg-[#1E3AFF] px-5 py-2.5 text-white transition hover:bg-[#3B56FF]"
+                className="inline-flex flex-col items-start rounded-full bg-[#E8B923] px-5 py-2.5 text-white transition hover:bg-[#B8941F]"
               >
                 <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">
                   Créer mon club

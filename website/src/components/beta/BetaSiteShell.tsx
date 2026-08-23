@@ -6,7 +6,7 @@ import type { BetaAccessSession } from "@/lib/betaAccess";
 
 export function SectionKicker({ children }: { children: ReactNode }) {
   return (
-    <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,var(--proday-accent-bright,#5B75FF))]">
+    <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,var(--proday-accent-bright,#F5D04A))]">
       {children}
     </p>
   );
@@ -17,7 +17,7 @@ export function BetaSessionBar({ session }: { session: BetaAccessSession }) {
     <div className="border-b border-white/10 bg-black/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-2 px-4 py-3 text-center sm:justify-between sm:px-6 sm:text-left">
         <p className="text-sm text-white/65">
-          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--proday-accent-bright,#5B75FF)]">
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--proday-accent-bright,#F5D04A)]">
             Bêta ProDay
           </span>
           <span className="mx-2 text-white/25">·</span>

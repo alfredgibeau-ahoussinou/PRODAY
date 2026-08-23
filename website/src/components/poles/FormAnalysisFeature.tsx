@@ -548,7 +548,7 @@ export function FormAnalysisFeature({
                           Aucune alerte sur cet effectif pour le prochain match.
                         </p>
                       ) : (
-                        <p className="mt-5 text-sm text-[var(--pole-accent-bright,#5B75FF)]">
+                        <p className="mt-5 text-sm text-[var(--pole-accent-bright,#F5D04A)]">
                           Adapter les entraînements selon la charge →
                         </p>
                       )}

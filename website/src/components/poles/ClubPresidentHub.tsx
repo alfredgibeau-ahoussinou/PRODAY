@@ -97,7 +97,7 @@ export function ClubPresidentHub() {
                     ? "text-emerald-400"
                     : s.tone === "warn"
                       ? "text-amber-400"
-                      : "text-[var(--pole-accent-bright,#5B75FF)]"
+                      : "text-[var(--pole-accent-bright,#F5D04A)]"
                 }`}
               >
                 ● {s.label}
@@ -129,7 +129,7 @@ export function ClubPresidentHub() {
             </ul>
           </div>
 
-          <div className="flex flex-col justify-end gap-6 border border-white/10 bg-gradient-to-br from-[#0A1A8A]/80 to-black p-6 sm:p-8">
+          <div className="flex flex-col justify-end gap-6 border border-white/10 bg-gradient-to-br from-[#B8941F]/80 to-black p-6 sm:p-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/45">
               Qui est sur le Pôle Club ?
             </p>

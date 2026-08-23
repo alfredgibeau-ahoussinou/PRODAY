@@ -190,7 +190,7 @@ export function JoueurWhoAreYouGate() {
                   <div className="joueur-3d-stage mb-5 h-[160px] w-full rounded-2xl border border-white/10 bg-black/40 sm:h-[200px]">
                     <JoueurWorldCanvas
                       kind="gate"
-                      accent={gender === "women" ? "#7DD3C7" : "#5B75FF"}
+                      accent={gender === "women" ? "#7DD3C7" : "#F5D04A"}
                       intensity="medium"
                       className="h-full w-full"
                     />
@@ -231,7 +231,7 @@ export function JoueurWhoAreYouGate() {
                     type="button"
                     disabled={!band || launching}
                     onClick={enter}
-                    className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#1E3AFF] to-cyan-400 px-6 text-sm font-semibold text-white disabled:opacity-35 sm:mt-8 sm:w-auto sm:min-h-14 sm:px-8"
+                    className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FFFFFF] to-cyan-400 px-6 text-sm font-semibold text-white disabled:opacity-35 sm:mt-8 sm:w-auto sm:min-h-14 sm:px-8"
                   >
                     {launching ? "Ouverture…" : "Entrer dans mon univers"}
                     <ArrowRight size={16} />

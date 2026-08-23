@@ -179,7 +179,7 @@ function CompareCell({ value }: { value: Cell }) {
 function MobileFeatureValue({ value }: { value: Cell }) {
   if (value === true) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[var(--pole-accent-bright,#5B75FF)]">
+      <span className="inline-flex items-center gap-1.5 text-[var(--pole-accent-bright,#F5D04A)]">
         <Check size={15} strokeWidth={2.5} />
         <span className="text-xs font-medium">Inclus</span>
       </span>
@@ -301,7 +301,7 @@ export function ClubOffersInteractive() {
                 <p
                   className={`font-display text-xl font-medium tabular-nums tracking-[-0.03em] ${
                     activeCol.highlight
-                      ? "text-[var(--pole-accent-bright,#5B75FF)]"
+                      ? "text-[var(--pole-accent-bright,#F5D04A)]"
                       : "text-white"
                   }`}
                 >
@@ -401,7 +401,7 @@ export function ClubOffersInteractive() {
                     <span
                       className={`mt-2 block font-display text-lg font-medium tabular-nums tracking-[-0.03em] sm:text-xl ${
                         col.highlight
-                          ? "text-[var(--pole-accent,#5B75FF)]"
+                          ? "text-[var(--pole-accent,#F5D04A)]"
                           : "text-white"
                       }`}
                     >

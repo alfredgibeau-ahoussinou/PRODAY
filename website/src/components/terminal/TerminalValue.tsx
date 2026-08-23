@@ -34,7 +34,7 @@ export function TerminalValue({
       aria-label="Our Value"
     >
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#5B75FF)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#F5D04A)]">
           {kicker}
         </p>
         <h2 className="mt-4 max-w-4xl font-display text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.08] tracking-[-0.035em] text-white">
@@ -49,7 +49,7 @@ export function TerminalValue({
         <div className="mt-14 grid gap-10 border-t border-white/10 pt-12 lg:grid-cols-3 lg:gap-8">
           {pillars.map((p) => (
             <div key={p.title} className="group">
-              <p className="font-display text-4xl font-medium tracking-[-0.03em] text-[var(--pole-accent,#5B75FF)] sm:text-5xl">
+              <p className="font-display text-4xl font-medium tracking-[-0.03em] text-[var(--pole-accent,#F5D04A)] sm:text-5xl">
                 <AnimatedMetric value={p.metric} />
               </p>
               {p.metricLabel ? (

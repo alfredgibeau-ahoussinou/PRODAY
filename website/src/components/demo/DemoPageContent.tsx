@@ -49,7 +49,7 @@ export function DemoPageContent({ pole }: DemoPageContentProps) {
   return (
     <section id="demo-app" className="scroll-mt-24 bg-black pb-20 sm:pb-28">
       <div className="mx-auto max-w-6xl px-4 pt-10 sm:px-6 sm:pt-14">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#5B75FF]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#F5D04A]">
           Démo interactive
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">

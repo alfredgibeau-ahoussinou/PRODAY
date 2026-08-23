@@ -8,7 +8,7 @@ const poles = [
   {
     id: "joueur",
     name: "Joueur",
-    color: "#1E3AFF",
+    color: "#E8B923",
     features: {
       profile: true,
       stats: true,

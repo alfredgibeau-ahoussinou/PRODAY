@@ -44,7 +44,7 @@ function roleTextOnAccent(role: BetaRoleId): string {
 }
 
 const fieldClass =
-  "min-h-12 w-full rounded-full border border-white/15 bg-transparent px-5 py-3 text-sm text-white caret-[#5B75FF] placeholder:text-white/35 outline-none transition focus:border-[#5B75FF]/55 disabled:opacity-60";
+  "min-h-12 w-full rounded-full border border-white/15 bg-transparent px-5 py-3 text-sm text-white caret-[#F5D04A] placeholder:text-white/35 outline-none transition focus:border-[#F5D04A]/55 disabled:opacity-60";
 
 /** Champs densifiés pour la page inscription dédiée. */
 const fieldClassDense =
@@ -135,7 +135,7 @@ export function WaitlistForm({
       <section id="inscription" className="scroll-mt-28 py-16 sm:py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <div className="mb-8 text-center">
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#5B75FF]">
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5D04A]">
               Bêta
             </p>
             <h2 className="font-display mt-3 text-3xl font-medium tracking-[-0.03em] text-white sm:text-4xl">
@@ -201,7 +201,7 @@ export function WaitlistForm({
       <div className={fullPage ? "" : "mx-auto max-w-3xl px-4 sm:px-6"}>
         {!fullPage ? (
           <div className="mb-10">
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#5B75FF]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#F5D04A]">
               Bêta
             </p>
             <h2 className="mt-4 font-display text-[clamp(1.75rem,4vw,2.75rem)] font-medium tracking-[-0.035em] text-white">
@@ -431,7 +431,7 @@ function SuccessCard({
       </p>
       <Link
         href={ROUTES.betaStatut}
-        className="mt-5 inline-flex text-sm font-medium text-[#5B75FF] underline-offset-4 hover:underline"
+        className="mt-5 inline-flex text-sm font-medium text-[#F5D04A] underline-offset-4 hover:underline"
       >
         Voir mon statut
       </Link>

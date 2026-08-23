@@ -23,15 +23,17 @@ const MASTER_OFFICIAL = resolve(masterDir, "logo-proday-official.png");
 const MASTER_SYMBOL_BLACK = resolve(masterDir, "proday-symbol-black.png");
 const MASTER_LOCKUP_BLACK = resolve(masterDir, "proday-logo-master-black.png");
 
+/** Accents pôle — planche brand (alignés app prodayBrand). */
 const POLE_HEX = {
-  joueur: "#1E3AFF",
-  coach: "#22C55E",
-  club: "#7C3AED",
-  president: "#FBBF24",
-  parent: "#F97316",
-  supporter: "#06B6D4",
+  joueur: "#FFFFFF",
+  coach: "#E8B923",
+  club: "#2563EB",
+  president: "#E8B923",
+  parent: "#84CC16",
+  supporter: "#8B5CF6",
   sponsor: "#EF4444",
   admin: "#A3A3A3",
+  evenements: "#F97316",
 };
 
 async function recolor(buf, hex) {
@@ -151,7 +153,7 @@ async function main() {
   const lockupBlack = existsSync(MASTER_LOCKUP_BLACK)
     ? await sharp(MASTER_LOCKUP_BLACK).png().toBuffer()
     : await recolor(lockupWhite, "#000000");
-  const markBlue = await recolor(markWhite, "#1E3AFF");
+  const markGold = await recolor(markWhite, "#E8B923");
 
   // Masters publics (chemins stables)
   copyFileSync(MASTER_SYMBOL, resolve(outDir, "proday-symbol-white.png"));
@@ -196,15 +198,19 @@ async function main() {
     console.log("✓", name, "(copy master)");
   }
 
-  await writePng("logo-proday-mark-blue.png", markBlue);
+  await writePng("logo-proday-mark-gold.png", markGold);
+  // Alias legacy (anciens chemins bleu master)
+  await writePng("logo-proday-mark-blue.png", markGold);
 
   await sharp(lockupWhite).webp({ quality: 92 }).toFile(resolve(outDir, "logo-proday-official.webp"));
   console.log("✓ logo-proday-official.webp");
 
   for (const [name, hex] of Object.entries(POLE_HEX)) {
+    if (name === "evenements") continue;
     const tinted = await recolor(markWhite, hex);
     await writePng(`logo-proday-mark-${name}.png`, tinted);
   }
+  await writePng("logo-proday-mark-evenements.png", await recolor(markWhite, POLE_HEX.evenements));
 
   const pictoAliases = {
     "logo-man-picto.png": "joueur",

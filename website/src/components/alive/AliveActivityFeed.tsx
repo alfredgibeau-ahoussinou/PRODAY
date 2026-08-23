@@ -84,7 +84,7 @@ export function AliveActivityFeed() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-[#052424]">{item.title}</p>
-                  <span className="rounded-md bg-[#1E3AFF]/12 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#052424]">
+                  <span className="rounded-md bg-[#E8B923]/12 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#052424]">
                     {item.tag}
                   </span>
                 </div>

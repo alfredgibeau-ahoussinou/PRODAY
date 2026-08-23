@@ -332,7 +332,7 @@ export function RosterBourseSection({ audience }: { audience: Audience }) {
                         >
                           <div>
                             <p className="font-medium text-white">{m.name}</p>
-                            <p className="mt-0.5 text-sm text-[var(--pole-accent-bright,#5B75FF)]">
+                            <p className="mt-0.5 text-sm text-[var(--pole-accent-bright,#F5D04A)]">
                               Depuis {m.from}
                             </p>
                             <p className="mt-1 text-xs text-white/45">{m.note}</p>

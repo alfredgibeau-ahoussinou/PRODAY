@@ -132,7 +132,7 @@ export function AccShell({
       <div className="border-b border-[var(--acc-line)] px-3 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <Link href={ACC_HOME} className="flex min-h-11 items-center gap-2.5 px-1" onClick={() => setMobileOpen(false)}>
           <span className="acc-mark flex h-8 w-8 items-center justify-center overflow-hidden rounded-md p-1.5">
-            <Image src={PRODAY_MARK} alt="" width={24} height={17} className="h-full w-full object-contain" priority />
+            <Image src={PRODAY_MARK} alt="" width={24} height={24} className="h-full w-full object-contain" priority />
           </span>
           <div className="min-w-0">
             <p className="truncate text-[13px] font-semibold tracking-tight text-white">ProDay</p>

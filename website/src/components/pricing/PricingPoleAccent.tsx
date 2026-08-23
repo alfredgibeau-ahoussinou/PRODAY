@@ -66,7 +66,7 @@ export function PricingPoleAccent({ poleId, className = "" }: PricingPoleAccentP
           className="h-full w-full"
           style={{
             background:
-              "radial-gradient(circle at 50% 45%, var(--pole-accent, #1E3AFF)22, transparent 62%)",
+              "radial-gradient(circle at 50% 45%, var(--pole-accent, #E8B923)22, transparent 62%)",
           }}
         />
       )}

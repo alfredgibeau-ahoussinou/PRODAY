@@ -146,7 +146,7 @@ export function VideoHardwareOffers() {
           </p>
           <Link
             href={ROUTES.betaWaitlist}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--pole-accent,#5B75FF)] transition hover:opacity-80"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--pole-accent,#F5D04A)] transition hover:opacity-80"
           >
             Parler offres Club / vidéo
             <ArrowRight size={16} />

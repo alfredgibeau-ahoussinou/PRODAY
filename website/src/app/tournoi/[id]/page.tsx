@@ -22,7 +22,7 @@ export default async function PublicTournamentPage({
  <main
  style={{
  minHeight: "100vh",
- background: "linear-gradient(180deg, #0A1A8A 0%, #1E3AFF 45%, #f5f8ff 45%)",
+ background: "linear-gradient(180deg, #B8941F 0%, #E8B923 45%, #f5f8ff 45%)",
  color: "#0a1628",
  fontFamily: "system-ui, sans-serif",
  }}
@@ -76,7 +76,7 @@ export default async function PublicTournamentPage({
  décalage silencieux.
  </p>
 
- <Link href="/" style={{ color: "#1E3AFF", fontWeight: 700 }}>
+ <Link href="/" style={{ color: "#E8B923", fontWeight: 700 }}>
  Découvrir ProDay
  </Link>
  </section>

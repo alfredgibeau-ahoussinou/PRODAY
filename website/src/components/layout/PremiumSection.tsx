@@ -38,7 +38,7 @@ export function PremiumSection({
           className={`mb-10 max-w-2xl ${centered ? "section-header-centered mx-auto text-center" : ""}`}
         >
           {kicker ? (
-            <Kicker className="font-mono text-[#5B75FF]" centered={centered}>
+            <Kicker className="font-mono text-[#F5D04A]" centered={centered}>
               {kicker}
             </Kicker>
           ) : null}

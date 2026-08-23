@@ -40,7 +40,7 @@ export default function CartesPage() {
         className="border-t border-white/10 bg-[#050505] px-4 py-20 sm:px-6 sm:py-28"
       >
         <div className="mx-auto max-w-3xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#5B75FF]">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#F5D04A]">
             Carte Joueur ProDay
           </p>
           <h2 className="mt-4 font-display text-[clamp(1.6rem,3.5vw,2.4rem)] font-medium tracking-[-0.03em] text-white">

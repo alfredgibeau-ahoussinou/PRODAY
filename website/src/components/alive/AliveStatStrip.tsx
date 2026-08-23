@@ -29,7 +29,7 @@ export function AliveStatStrip() {
 
   return (
     <div className="rounded-[1.75rem] border border-[#052424]/10 bg-white p-4 shadow-[0_18px_40px_-28px_rgba(15,31,23,0.28)] sm:p-5">
-      <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#5B75FF]">
+      <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#F5D04A]">
         <LivePulse />
         En direct · communauté
       </div>

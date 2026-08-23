@@ -158,10 +158,10 @@ export const CARD_ROLE_META: Record<
   ProDayCardRole,
   { label: string; accent: string; deep: string; poleHref: string }
 > = {
-  player: { label: "Joueur", accent: "#1E3AFF", deep: "#0A1A8A", poleHref: "/joueur" },
-  coach: { label: "Coach", accent: "#E11D48", deep: "#4C0519", poleHref: "/coach" },
-  club: { label: "Club", accent: "#16A34A", deep: "#052E16", poleHref: "/pro-club" },
-  supporter: { label: "Supporter", accent: "#EA580C", deep: "#431407", poleHref: "/supporter" },
+  player: { label: "Joueur", accent: "#FFFFFF", deep: "#CCCCCC", poleHref: "/joueur" },
+  coach: { label: "Coach", accent: "#E8B923", deep: "#92700C", poleHref: "/coach" },
+  club: { label: "Club", accent: "#2563EB", deep: "#1E40AF", poleHref: "/pro-club" },
+  supporter: { label: "Supporter", accent: "#8B5CF6", deep: "#5B21B6", poleHref: "/supporter" },
   sponsor: { label: "Sponsor", accent: "#EF4444", deep: "#7F1D1D", poleHref: "/sponsor" },
 };
 

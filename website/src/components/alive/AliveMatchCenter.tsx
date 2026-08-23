@@ -112,7 +112,7 @@ export function AliveMatchCenter() {
                     key={`${e.min}-${e.text}`}
                     className="flex items-start gap-3 rounded-xl bg-[#f3f2ec] px-3 py-2.5"
                   >
-                    <span className="shrink-0 rounded-lg bg-white px-2 py-0.5 text-xs font-bold text-[#5B75FF]">
+                    <span className="shrink-0 rounded-lg bg-white px-2 py-0.5 text-xs font-bold text-[#F5D04A]">
                       {e.min}
                     </span>
                     <span className="text-sm text-[#052424]">{e.text}</span>
@@ -143,11 +143,11 @@ export function AliveMatchCenter() {
                     </div>
                     <div className="flex h-2 overflow-hidden rounded-full bg-[#f3f2ec]">
                       <div
-                        className="h-full bg-[#1E3AFF]"
+                        className="h-full bg-[#E8B923]"
                         style={{ width: `${(s.home / (s.home + s.away)) * 100}%` }}
                       />
                       <div
-                        className="h-full bg-[#1E3AFF]"
+                        className="h-full bg-[#E8B923]"
                         style={{ width: `${(s.away / (s.home + s.away)) * 100}%` }}
                       />
                     </div>

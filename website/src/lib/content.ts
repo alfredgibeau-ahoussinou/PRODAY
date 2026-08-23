@@ -115,11 +115,11 @@ export const HOMME_BRAND = {
   shortName: "Man",
   fullName: "Pro Day Man",
   logo: UNIVERSE_LOGOS.homme,
-  tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
+  tagline: "CONNECTER. PROGRESSER. RÉVÉLER.",
   mission:
     "Le foot masculin amateur. Mercato M, matchs, Arène, Visibilité, CV joueur, covoiturage, santé et Boutique. Réservé aux joueurs.",
-  accent: "#1E3AFF",
-  accentDark: "#0A1A8A",
+  accent: "#FFFFFF",
+  accentDark: "#CCCCCC",
 } as const;
 
 export const AMATEUR_BRAND = {
@@ -127,11 +127,11 @@ export const AMATEUR_BRAND = {
   shortName: "Joueur",
   fullName: "Pro Day Joueur",
   logo: UNIVERSE_LOGOS.amateur,
-  tagline: "Progresser · Jouer · Partager",
+  tagline: "CONNECTER. PROGRESSER. RÉVÉLER.",
   mission:
     "Espace Joueur : carte sportive réelle, entraînement, Mercato, CV et saison. Sans badge de prestige artificiel.",
-  accent: "#1E3AFF",
-  accentDark: "#0A1A8A",
+  accent: "#FFFFFF",
+  accentDark: "#CCCCCC",
 } as const;
 
 export const JOUEUR_BRAND = AMATEUR_BRAND;
@@ -144,8 +144,8 @@ export const SUPPORTER_BRAND = {
   tagline: "Tribune libre · Zéro paywall",
   mission:
     "Scores live, clubs favoris, débats et moments. Une tribune 100 % gratuite. Pas de Mercato. Pas d'abonnement store.",
-  accent: "#06B6D4",
-  accentDark: "#164E63",
+  accent: "#8B5CF6",
+  accentDark: "#5B21B6",
 } as const;
 
 export const PRO_BRAND = {
@@ -156,8 +156,8 @@ export const PRO_BRAND = {
   tagline: "CLUB • COACH • PERFORMANCE",
   mission:
     "Club au centre, Coach en pôle dédié. Agent, recruteur et organisateur restent des rôles intégrés.",
-  accent: "#7C3AED",
-  accentDark: "#3B0764",
+  accent: "#2563EB",
+  accentDark: "#1E40AF",
 } as const;
 
 export const PRO_JOUEUR_BRAND = {
@@ -165,11 +165,11 @@ export const PRO_JOUEUR_BRAND = {
   shortName: "Joueur",
   fullName: "Pro Day Joueur",
   logo: UNIVERSE_LOGOS.homme,
-  tagline: "Amateur → Pro · Badges",
+  tagline: "CONNECTER. PROGRESSER. RÉVÉLER.",
   mission:
     "Même profil du district au contrat pro. Pass Premium 3,99 € : entraînements IA, heatmaps et passeport recruteur.",
-  accent: "#1E3AFF",
-  accentDark: "#0A1A8A",
+  accent: "#FFFFFF",
+  accentDark: "#CCCCCC",
 } as const;
 
 export const EVENEMENTS_BRAND = {
@@ -180,8 +180,8 @@ export const EVENEMENTS_BRAND = {
   tagline: "Tournois · Détections · Stages",
   mission:
     "Rôle intégré au Club : tournois Arène, détections et stages. Plus un pôle indépendant.",
-  accent: "#1E3AFF",
-  accentDark: "#0A1A8A",
+  accent: "#F97316",
+  accentDark: "#C2410C",
 } as const;
 
 export const EVENEMENTS_AUDIENCES = [
@@ -200,8 +200,8 @@ export const PRO_CLUB_BRAND = {
   tagline: "Cœur de ProDay",
   mission:
     "Équipes, licenciés, coachs, président, invitations de match, événements, tournois, covoiturage et permissions. Sur devis selon la taille du club.",
-  accent: "#7C3AED",
-  accentDark: "#3B0764",
+  accent: "#2563EB",
+  accentDark: "#1E40AF",
 } as const;
 
 export const PRO_STAFF_BRAND = {
@@ -209,11 +209,11 @@ export const PRO_STAFF_BRAND = {
   shortName: "Coach",
   fullName: "Pro Day Coach",
   logo: UNIVERSE_LOGOS.pro,
-  tagline: "Tactique IA · IA · Effectif",
+  tagline: "Transmettre. Guider.",
   mission:
     "Profil coach rattaché au club : parcours, diplômes, Tactique IA, assistant IA, analyse vidéo et préparation match.",
-  accent: "#22C55E",
-  accentDark: "#14532D",
+  accent: "#E8B923",
+  accentDark: "#B8941F",
 } as const;
 
 /** Message waitlist / page beta */

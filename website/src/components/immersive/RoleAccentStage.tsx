@@ -69,7 +69,7 @@ export function RoleAccentStage({
       aria-label="Accent 3D"
       style={
         {
-          "--pole-accent": "var(--pole-accent, #5B75FF)",
+          "--pole-accent": "var(--pole-accent, #F5D04A)",
         } as React.CSSProperties
       }
     >
@@ -77,7 +77,7 @@ export function RoleAccentStage({
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 70% 60% at 50% 42%, color-mix(in srgb, var(--pole-accent, #5B75FF) 18%, transparent), transparent 70%), radial-gradient(ellipse 40% 40% at 80% 20%, var(--joueur-scene-tint, transparent), transparent 55%)",
+            "radial-gradient(ellipse 70% 60% at 50% 42%, color-mix(in srgb, var(--pole-accent, #F5D04A) 18%, transparent), transparent 70%), radial-gradient(ellipse 40% 40% at 80% 20%, var(--joueur-scene-tint, transparent), transparent 55%)",
         }}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black to-transparent" />
@@ -99,13 +99,13 @@ export function RoleAccentStage({
               className="absolute inset-0"
               style={{
                 background:
-                  "radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--pole-accent, #5B75FF) 14%, transparent), transparent 58%)",
+                  "radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--pole-accent, #F5D04A) 14%, transparent), transparent 58%)",
               }}
             />
           )}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-1 pb-8 sm:pb-10">
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#5B75FF)]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#F5D04A)]">
               {kicker}
             </p>
             <h2 className="mt-3 max-w-lg font-display text-[clamp(1.45rem,3.4vw,2.15rem)] font-medium leading-[1.1] tracking-[-0.03em] text-white">
@@ -125,7 +125,7 @@ export function RoleAccentStage({
                   </span>
                 ))}
                 {positionMotif ? (
-                  <span className="border border-[var(--pole-accent,#5B75FF)]/35 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/75">
+                  <span className="border border-[var(--pole-accent,#F5D04A)]/35 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-white/75">
                     {positionMotif}
                   </span>
                 ) : null}

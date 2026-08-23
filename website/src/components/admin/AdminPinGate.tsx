@@ -45,7 +45,7 @@ export function AdminPinGate() {
       <div className="w-full max-w-sm border border-[var(--acc-line,rgba(148,163,184,0.14))] bg-[var(--acc-surface,#0c1018)] p-5">
         <div className="mb-5 flex items-center gap-2.5">
           <span className="acc-mark flex h-9 w-9 items-center justify-center overflow-hidden rounded-md p-1.5">
-            <Image src={PRODAY_MARK} alt="" width={28} height={20} className="h-full w-full object-contain" priority />
+            <Image src={PRODAY_MARK} alt="" width={28} height={28} className="h-full w-full object-contain" priority />
           </span>
           <div>
             <p className="text-sm font-semibold text-white">ProDay</p>
