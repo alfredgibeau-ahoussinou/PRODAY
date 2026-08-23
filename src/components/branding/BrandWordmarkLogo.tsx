@@ -81,7 +81,6 @@ export const BrandWordmarkLogo: React.FC<BrandWordmarkLogoProps> = ({
         size={layout.symbolSize}
         variant={variant}
         tone={onDark ? 'white' : 'black'}
-        showAccentBar={false}
         opacity={opacity * 0.14}
       />
     );
@@ -102,7 +101,6 @@ export const BrandWordmarkLogo: React.FC<BrandWordmarkLogoProps> = ({
         size={layout.symbolSize}
         variant={variant}
         tone={onDark ? 'white' : 'black'}
-        showAccentBar={variant !== 'master'}
       />
 
       <View style={[styles.wordBlock, { marginTop: width * 0.024 }, centered && styles.wordBlockCentered]}>

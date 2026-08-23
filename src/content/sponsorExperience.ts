@@ -6,7 +6,7 @@ import type { AppColors } from '../theme/universeTheme';
 import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../theme/prodayBrand';
 
 /**
- * Espace sponsor — sombre premium, accent rouge officiel #EF4444.
+ * Espace sponsor — sombre premium, accent violet recruteur #92278F.
  */
 export const SPONSOR_THEME = {
   primary: PRODAY_POLE_ACCENTS.sponsor,

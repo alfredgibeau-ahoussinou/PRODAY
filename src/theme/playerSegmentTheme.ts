@@ -5,23 +5,25 @@ import { proColorOverrides } from './proThemeColors';
 import type { PlayerSegment } from '../utils/playerSegment';
 import type { AppColors } from './universeTheme';
 
-/** Pro joueur masculin — bleu pôle Joueur. */
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from './prodayBrand';
+
+/** Pro joueur masculin — blanc pôle Joueur. */
 export const proPlayerMaleOverrides = {
-  accent: '#1E3AFF',
-  accentLight: '#5B73FF',
-  accentSoft: 'rgba(30, 58, 255, 0.14)',
-  accentMuted: 'rgba(30, 58, 255, 0.32)',
-  brand: '#1E3AFF',
-  brandLight: '#5B73FF',
-  brandSoft: 'rgba(30, 58, 255, 0.1)',
+  accent: PRODAY_POLE_ACCENTS.player,
+  accentLight: '#F5F5F5',
+  accentSoft: poleAccentSoft('player', 0.14),
+  accentMuted: poleAccentSoft('player', 0.32),
+  brand: PRODAY_POLE_ACCENTS.player,
+  brandLight: '#F5F5F5',
+  brandSoft: poleAccentSoft('player', 0.1),
   ink: '#FAFAFA',
   inkSecondary: '#D4D4D4',
   border: 'rgba(255, 255, 255, 0.1)',
-  borderStrong: 'rgba(30, 58, 255, 0.55)',
+  borderStrong: poleAccentSoft('player', 0.55),
   background: '#000000',
   backgroundAlt: '#0A0A0A',
   gradientStart: '#000000',
-  gradientEnd: '#1529CC',
+  gradientEnd: '#E5E5E5',
 } as const;
 
 /** Pro joueuse — même pôle Joueur, nuance un peu plus claire. */

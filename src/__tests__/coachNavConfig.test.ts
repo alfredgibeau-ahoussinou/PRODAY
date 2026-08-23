@@ -164,7 +164,7 @@ describe('COACH_SITE night', () => {
     expect(COACH_SITE.bg).toBe('#000000');
     expect(COACH_SITE.surface).toBe('#1C1C1E');
     expect(COACH_SITE.foreground).toBe('#FFFFFF');
-    expect(COACH_SITE.accent).toBe('#22C55E');
+    expect(COACH_SITE.accent).toBe('#C5A059');
   });
 });
 

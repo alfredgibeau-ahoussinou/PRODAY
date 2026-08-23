@@ -1,38 +1,45 @@
 /**
  * ProDay — design system identité officielle
- * Noir / blanc / gris premium · bleu master · accents de pôle
+ * Noir / blanc / gris premium · or master · accents de pôle
  */
 
-import { PRODAY_MASTER, poleAccentSoft } from './prodayBrand';
+import { PRODAY_MASTER, PRODAY_TAGLINE, poleAccentSoft } from './prodayBrand';
 
 export const BRAND = {
   name: 'ProDay',
-  tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
+  tagline: PRODAY_TAGLINE,
 } as const;
 
 /** RGB fond (#000000) — overlays photos */
 export const BRAND_RGB = '0, 0, 0' as const;
 
-/** Bleu master historique — accent marque mère */
-export const MASTER_BLUE = PRODAY_MASTER.blue;
-export const MASTER_BLUE_BRIGHT = PRODAY_MASTER.blueBright;
-export const MASTER_BLUE_DEEP = PRODAY_MASTER.blueDeep;
+/** Or master — accent marque mère / CTA */
+export const MASTER_GOLD = PRODAY_MASTER.gold;
+export const MASTER_GOLD_BRIGHT = PRODAY_MASTER.goldBright;
+export const MASTER_GOLD_DEEP = PRODAY_MASTER.goldDeep;
 
-/** @deprecated Alias — préférer MASTER_BLUE */
-export const FLASH_CYAN = MASTER_BLUE;
-/** @deprecated Alias — préférer MASTER_BLUE_DEEP */
-export const FLASH_CYAN_DIM = MASTER_BLUE_DEEP;
+/** @deprecated Alias legacy — préférer MASTER_GOLD */
+export const MASTER_BLUE = MASTER_GOLD;
+/** @deprecated Alias legacy */
+export const MASTER_BLUE_BRIGHT = MASTER_GOLD_BRIGHT;
+/** @deprecated Alias legacy */
+export const MASTER_BLUE_DEEP = MASTER_GOLD_DEEP;
+
+/** @deprecated Alias — préférer MASTER_GOLD */
+export const FLASH_CYAN = MASTER_GOLD;
+/** @deprecated Alias — préférer MASTER_GOLD_DEEP */
+export const FLASH_CYAN_DIM = MASTER_GOLD_DEEP;
 
 export const colors = {
   /** Accent marque mère */
-  accent: MASTER_BLUE,
-  accentLight: MASTER_BLUE_BRIGHT,
+  accent: MASTER_GOLD,
+  accentLight: MASTER_GOLD_BRIGHT,
   accentSoft: poleAccentSoft('master', 0.12),
   accentMuted: poleAccentSoft('master', 0.28),
 
   /** Texte & marque */
-  brand: MASTER_BLUE,
-  brandLight: MASTER_BLUE_BRIGHT,
+  brand: MASTER_GOLD,
+  brandLight: MASTER_GOLD_BRIGHT,
   brandSoft: poleAccentSoft('master', 0.1),
   brandInverse: '#FFFFFF',
 

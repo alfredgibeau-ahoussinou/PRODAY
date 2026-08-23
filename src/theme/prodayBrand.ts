@@ -1,13 +1,15 @@
 /**
- * Identité officielle PRODAY — 1 Master Brand + accents pôle.
+ * Identité officielle PRODAY — planche brand (P + ballon, or master).
  * Source de vérité couleurs marque (ne pas dupliquer les hex ailleurs).
  */
 
+export const PRODAY_TAGLINE = 'CONNECTER. PROGRESSER. RÉVÉLER.';
+
 export const PRODAY_MASTER = {
-  /** Bleu historique marque mère */
-  blue: '#0054F0',
-  blueBright: '#4C8BFF',
-  blueDeep: '#001F6B',
+  /** Or / champagne — CTA master (pas bleu). */
+  gold: '#C5A059',
+  goldBright: '#E8D5A3',
+  goldDeep: '#9A7B2F',
   black: '#000000',
   white: '#FFFFFF',
   gray: '#A3A3A3',
@@ -18,18 +20,18 @@ export const PRODAY_MASTER = {
 
 /** Accents officiels par pôle (planche brand). */
 export const PRODAY_POLE_ACCENTS = {
-  master: PRODAY_MASTER.blue,
-  player: '#1E3AFF',
-  joueur: '#1E3AFF',
-  coach: '#22C55E',
-  club: '#7C3AED',
-  president: '#FBBF24',
-  parent: '#F97316',
+  master: PRODAY_MASTER.gold,
+  player: '#FFFFFF',
+  joueur: '#FFFFFF',
+  coach: '#C5A059',
+  club: '#00ADEF',
+  president: '#C5A059',
+  parent: '#8CC63F',
   supporter: '#06B6D4',
-  sponsor: '#EF4444',
+  sponsor: '#92278F',
   admin: '#A3A3A3',
-  events: '#6366F1',
-  evenements: '#6366F1',
+  events: '#F7941D',
+  evenements: '#F7941D',
 } as const;
 
 export type ProDayBrandVariant = keyof typeof PRODAY_POLE_ACCENTS;
@@ -85,7 +87,10 @@ export function brandVariantForProductLine(
 }
 
 /** Ratio symbole extrait (white PNG). */
-export const PRODAY_SYMBOL_ASPECT = 369 / 259;
+export const PRODAY_SYMBOL_ASPECT = 92 / 60;
 
-/** Ratio logo master symbole + wordmark. */
-export const PRODAY_LOGO_MASTER_ASPECT = 637 / 375;
+/** Ratio logo master symbole + wordmark + tagline. */
+export const PRODAY_LOGO_MASTER_ASPECT = 225 / 265;
+
+/** Ratio lockup horizontal symbole + wordmark. */
+export const PRODAY_LOGO_HORIZONTAL_ASPECT = 395 / 125;

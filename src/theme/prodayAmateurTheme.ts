@@ -2,7 +2,7 @@ import { PRODAY_POLE_ACCENTS, poleAccentSoft } from './prodayBrand';
 
 const A = PRODAY_POLE_ACCENTS.player;
 
-/** Palette Joueur — bleu officiel #1E3AFF sur fond premium. */
+/** Palette Joueur — blanc officiel #FFFFFF sur fond premium. */
 export const amateurColorOverrides = {
   accent: A,
   accentLight: '#5B73FF',

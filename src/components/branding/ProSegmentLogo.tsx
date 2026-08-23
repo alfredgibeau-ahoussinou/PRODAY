@@ -8,6 +8,7 @@ import {
   PRODAY_PRO_STAFF_BRAND,
 } from '../../models/ProductLine';
 import { PRO_BRANDING_LOGOS } from '../../content/brandingAssets';
+import { PRODAY_POLE_ACCENTS } from '../../theme/prodayBrand';
 import type { LogoBackground } from '../Logo';
 import { BrandWordmarkLogo, type BrandWordmarkColors } from './BrandWordmarkLogo';
 
@@ -19,32 +20,32 @@ const PRO_SEGMENT_COLORS: Record<
 > = {
   pro: {
     brand: '#FFFFFF',
-    accent: '#22C55E',
-    taglineLight: '#4ADE80',
+    accent: PRODAY_POLE_ACCENTS.coach,
+    taglineLight: PRODAY_POLE_ACCENTS.coach,
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
   pro_player: {
     brand: '#FFFFFF',
-    accent: '#1E3AFF',
-    taglineLight: '#5B73FF',
+    accent: PRODAY_POLE_ACCENTS.player,
+    taglineLight: '#F5F5F5',
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
   pro_club: {
     brand: '#FFFFFF',
-    accent: '#7C3AED',
-    taglineLight: '#A78BFA',
+    accent: PRODAY_POLE_ACCENTS.club,
+    taglineLight: '#67D4FF',
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
   president: {
     brand: '#FFFFFF',
-    accent: '#FBBF24',
-    taglineLight: '#FCD34D',
+    accent: PRODAY_POLE_ACCENTS.president,
+    taglineLight: '#E8D5A3',
     taglineDark: 'rgba(247, 243, 235, 0.92)',
   },
   pro_staff: {
     brand: '#FFFFFF',
-    accent: '#22C55E',
-    taglineLight: '#4ADE80',
+    accent: PRODAY_POLE_ACCENTS.coach,
+    taglineLight: '#E8D5A3',
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
 };

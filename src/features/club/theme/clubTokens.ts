@@ -1,6 +1,5 @@
 /**
- * Identité visuelle Pôle Club — surfaces dark premium + accent violet officiel.
- * Accent pôle = #7C3AED (pas émeraude) ; fonds restent navy/charcoal.
+ * Identité visuelle Pôle Club — surfaces dark premium + accent bleu vif officiel.
  */
 
 import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../../../theme/prodayBrand';
@@ -55,7 +54,7 @@ export const CLUB_TOKENS: ClubThemeTokens = {
   faint: 'rgba(186, 204, 230, 0.48)',
   accent: CLUB,
   accentSoft: poleAccentSoft('club', 0.22),
-  accentDeep: '#5B21B6',
+  accentDeep: '#007AA8',
   secondary: '#A78BFA',
   onAccent: '#FFFFFF',
   glow: poleAccentSoft('club', 0.5),

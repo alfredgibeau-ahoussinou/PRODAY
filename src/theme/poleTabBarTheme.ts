@@ -1,3 +1,4 @@
+import { PRODAY_POLE_ACCENTS } from './prodayBrand';
 import type { ProductLineId } from '../models/ProductLine';
 import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
@@ -249,7 +250,7 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     flatLayout: true,
     cleanStyle: true,
     overflowKicker: 'Club',
-    accent: '#7C3AED',
+    accent: PRODAY_POLE_ACCENTS.club,
     activeIcon: '#FAFAFA',
   }),
   pro_staff: makeChrome(PRO_PALETTE, {
@@ -257,17 +258,17 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     flatLayout: true,
     cleanStyle: true,
     overflowKicker: 'Staff',
-    accent: '#22C55E',
+    accent: PRODAY_POLE_ACCENTS.coach,
     activeIcon: '#FAFAFA',
   }),
   sponsor: makeChrome(
     {
-      accent: '#EF4444',
-      brand: '#B91C1C',
+      accent: PRODAY_POLE_ACCENTS.sponsor,
+      brand: '#6B1F68',
       ink: '#FAFAF9',
-      accentSoft: 'rgba(239, 68, 68, 0.12)',
-      border: 'rgba(239, 68, 68, 0.22)',
-      borderStrong: 'rgba(239, 68, 68, 0.4)',
+      accentSoft: 'rgba(146, 39, 143, 0.12)',
+      border: 'rgba(146, 39, 143, 0.22)',
+      borderStrong: 'rgba(146, 39, 143, 0.4)',
       surface: '#0c0a06',
       background: '#070605',
       textMuted: '#A8A29E',

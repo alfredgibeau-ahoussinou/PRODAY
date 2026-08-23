@@ -14,7 +14,7 @@
     },
     "notification": {
       "icon": "./assets/branding/proday-notification-icon.png",
-      "color": "#0054F0"
+      "color": "#C5A059"
     },
     "ios": {
       "supportsTablet": true,
@@ -68,7 +68,7 @@
         "expo-notifications",
         {
           "icon": "./assets/branding/proday-notification-icon.png",
-          "color": "#0054F0",
+          "color": "#C5A059",
           "enableBackgroundRemoteNotifications": true
         }
       ],

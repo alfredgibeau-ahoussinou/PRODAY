@@ -2,14 +2,14 @@ import { PRODAY_POLE_ACCENTS, poleAccentSoft } from './prodayBrand';
 
 const A = PRODAY_POLE_ACCENTS.coach;
 
-/** Palette Coach / Pro staff — vert officiel #22C55E. */
+/** Palette Coach / Pro staff — or officiel #C5A059. */
 export const proColorOverrides = {
   accent: A,
-  accentLight: '#4ADE80',
+  accentLight: '#E8D5A3',
   accentSoft: poleAccentSoft('coach', 0.14),
   accentMuted: poleAccentSoft('coach', 0.32),
   brand: A,
-  brandLight: '#4ADE80',
+  brandLight: '#E8D5A3',
   brandSoft: poleAccentSoft('coach', 0.1),
   brandInverse: '#FFFFFF',
   ink: '#FAFAFA',
@@ -28,24 +28,24 @@ export const proColorOverrides = {
   text: '#FAFAFA',
   textSecondary: '#D4D4D4',
   textMuted: '#A3A3A3',
-  tone1: '#15803D',
+  tone1: '#9A7B2F',
   tone2: A,
-  tone3: '#4ADE80',
-  tone4: '#86EFAC',
+  tone3: '#E8D5A3',
+  tone4: '#F5E6C8',
   navy: '#0A0A0A',
   navySoft: '#171717',
-  blueBright: '#4ADE80',
+  blueBright: '#E8D5A3',
   bluePrimary: A,
-  blueCyan: '#4ADE80',
+  blueCyan: '#E8D5A3',
   gradientStart: '#000000',
-  gradientEnd: '#15803D',
+  gradientEnd: '#9A7B2F',
   success: '#059669',
   successBg: 'rgba(5, 150, 105, 0.15)',
 } as const;
 
 export const proGradients = {
-  hero: ['#000000', '#052e16'] as const,
+  hero: ['#000000', '#1A1408'] as const,
   heroDark: ['#000000', '#0A0A0A'] as const,
   card: ['#1A1A1A', '#0A0A0A'] as const,
-  cta: ['#15803D', A] as const,
+  cta: ['#9A7B2F', A] as const,
 };

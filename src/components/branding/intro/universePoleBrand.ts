@@ -14,8 +14,9 @@ export function brandVariantForCarouselPole(pole: CarouselPoleId): ProDayBrandVa
     case 'pro_staff':
       return 'coach';
     case 'pro_club':
-    case 'evenements':
       return 'club';
+    case 'evenements':
+      return 'events';
     case 'president':
       return 'president';
     case 'parent':

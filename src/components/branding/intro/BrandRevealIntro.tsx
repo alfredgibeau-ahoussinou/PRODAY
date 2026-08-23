@@ -63,7 +63,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : 1);
   const scale = useSharedValue(skipReveal && !skipLocalTransition ? 0.985 : 1);
   const veilOpacity = useSharedValue(0);
-  const [veilAccent, setVeilAccent] = useState<string>(PRODAY_MASTER.blue);
+  const [veilAccent, setVeilAccent] = useState<string>(PRODAY_MASTER.gold);
 
   useEffect(() => {
     if (!skipReveal || skipLocalTransition) return;

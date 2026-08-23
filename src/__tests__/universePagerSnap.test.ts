@@ -27,7 +27,7 @@ describe('universePagerSnap', () => {
   });
 
   it('expose des literals worklet-safe alignés brand', () => {
-    expect(UNIVERSE_AMBIENT_FALLBACK).toBe(PRODAY_MASTER.blue);
+    expect(UNIVERSE_AMBIENT_FALLBACK).toBe(PRODAY_MASTER.gold);
     expect(UNIVERSE_AMBIENT_BASE).toBe(PRODAY_MASTER.black);
   });
 });

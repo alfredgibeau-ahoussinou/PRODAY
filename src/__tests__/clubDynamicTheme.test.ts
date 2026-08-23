@@ -47,7 +47,7 @@ describe('clubDynamicTheme', () => {
 
   it('buildClubThemeTokens retombe sur le bleu Club par défaut (canvas sombre)', () => {
     const tokens = buildClubThemeTokens(null);
-    expect(tokens.accent).toBe('#7C3AED');
+    expect(tokens.accent).toBe('#00ADEF');
     expect(tokens.onAccent).toBeTruthy();
     expect(tokens.isLight).toBe(false);
     expect(tokens.bg.toLowerCase()).not.toBe('#ffffff');

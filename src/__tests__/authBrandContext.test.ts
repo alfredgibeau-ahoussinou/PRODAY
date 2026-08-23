@@ -37,13 +37,13 @@ describe('authBrandContext', () => {
     expect(reconcileProSignupPreset('pro_staff', 'player')).toBe('coach');
   });
 
-  it('couleurs rouge pour sponsor', () => {
+  it('couleurs violet recruteur pour sponsor', () => {
     const c = colorsForAuthContext('pro_staff', 'sponsor');
-    expect(c.accent.toLowerCase()).toBe('#ef4444');
+    expect(c.accent.toLowerCase()).toBe('#92278f');
   });
 
-  it('couleurs orange pour parent', () => {
+  it('couleurs lime pour parent', () => {
     const c = colorsForAuthContext('parent', 'parent');
-    expect(c.accent.toLowerCase()).toBe('#f97316');
+    expect(c.accent.toLowerCase()).toBe('#8cc63f');
   });
 });

@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import {
+  PRODAY_LOGO_HORIZONTAL_ASPECT,
   PRODAY_LOGO_MASTER_ASPECT,
   PRODAY_POLE_LABELS,
+  PRODAY_TAGLINE,
   brandVariantForProductLine,
   type ProDayBrandVariant,
 } from '../../theme/prodayBrand';
@@ -10,7 +12,7 @@ import { PRODAY_BRAND_ASSETS } from '../../content/brandingAssets';
 import { ProDaySymbol } from './ProDaySymbol';
 import { ProDayWordmark } from './ProDayWordmark';
 
-export { brandVariantForProductLine };
+export { brandVariantForProductLine, PRODAY_TAGLINE };
 export type { ProDayBrandVariant };
 
 export type ProDayLogoLayout = 'stacked' | 'horizontal' | 'symbol' | 'wordmark';
@@ -18,16 +20,18 @@ export type ProDayLogoLayout = 'stacked' | 'horizontal' | 'symbol' | 'wordmark';
 type ProDayLogoProps = {
   width?: number;
   variant?: ProDayBrandVariant;
-  /** Fond sombre → symbole/wordmark blancs. */
+  /** Fond sombre → symbole/wordmark blancs (master). */
   onDark?: boolean;
   layout?: ProDayLogoLayout;
   /** Affiche le libellé pôle sous PRODAY. */
   showPoleLabel?: boolean;
+  /** Tagline officielle sous le wordmark. */
+  showTagline?: boolean;
   opacity?: number;
 };
 
 /**
- * Logo officiel : symbole identique + wordmark ; accent pôle uniquement.
+ * Logo officiel : symbole teinté pôle + wordmark ; lockup PNG master.
  */
 export function ProDayLogo({
   width = 180,
@@ -35,6 +39,7 @@ export function ProDayLogo({
   onDark = true,
   layout = 'stacked',
   showPoleLabel = variant !== 'master',
+  showTagline = false,
   opacity = 1,
 }: ProDayLogoProps) {
   if (layout === 'symbol') {
@@ -43,7 +48,6 @@ export function ProDayLogo({
         size={width}
         variant={variant}
         tone={onDark ? 'white' : 'black'}
-        showAccentBar={variant !== 'master'}
         opacity={opacity}
       />
     );
@@ -57,23 +61,34 @@ export function ProDayLogo({
           variant={variant}
           onDark={onDark}
           poleLabel={showPoleLabel ? PRODAY_POLE_LABELS[variant] || null : null}
+          showTagline={showTagline}
         />
       </View>
     );
   }
 
   if (layout === 'horizontal') {
-    const symbolSize = width * (variant === 'master' ? 0.34 : 0.32);
+    if (variant === 'master' && !showPoleLabel) {
+      const height = width / PRODAY_LOGO_HORIZONTAL_ASPECT;
+      const source = onDark
+        ? PRODAY_BRAND_ASSETS.lockupHorizontalWhite
+        : PRODAY_BRAND_ASSETS.lockupHorizontalBlack;
+      return (
+        <Image
+          source={source}
+          style={{ width, height, opacity }}
+          resizeMode="contain"
+          accessibilityLabel="ProDay"
+        />
+      );
+    }
+
+    const symbolSize = width * 0.34;
     const wordWidth = width - symbolSize - width * 0.06;
     const poleLabelText = showPoleLabel ? PRODAY_POLE_LABELS[variant] || null : null;
     return (
       <View style={[styles.horizontal, { width, opacity }]}>
-        <ProDaySymbol
-          size={symbolSize}
-          variant={variant}
-          tone={onDark ? 'white' : 'black'}
-          showAccentBar={variant !== 'master'}
-        />
+        <ProDaySymbol size={symbolSize} variant={variant} tone={onDark ? 'white' : 'black'} />
         <View style={styles.horizontalWord}>
           <ProDayWordmark
             width={wordWidth}
@@ -82,13 +97,13 @@ export function ProDayLogo({
             align="left"
             poleLabel={poleLabelText}
             poleLabelInline={Boolean(poleLabelText)}
+            showTagline={showTagline}
           />
         </View>
       </View>
     );
   }
 
-  // Master stacked : PNG officiel symbole+wordmark (géométrie fidèle)
   if (variant === 'master') {
     const height = width / PRODAY_LOGO_MASTER_ASPECT;
     const source = onDark
@@ -104,22 +119,17 @@ export function ProDayLogo({
     );
   }
 
-  // Pôle : symbole + barre accent + wordmark coloré
   const symbolSize = width * 0.72;
   return (
     <View style={[styles.wrap, { width, opacity }]}>
-      <ProDaySymbol
-        size={symbolSize}
-        variant={variant}
-        tone={onDark ? 'white' : 'black'}
-        showAccentBar
-      />
+      <ProDaySymbol size={symbolSize} variant={variant} tone={onDark ? 'white' : 'black'} />
       <View style={styles.wordSlot}>
         <ProDayWordmark
           width={width}
           variant={variant}
           onDark={onDark}
           poleLabel={showPoleLabel ? PRODAY_POLE_LABELS[variant] || null : null}
+          showTagline={showTagline}
         />
       </View>
     </View>

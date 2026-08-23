@@ -16,5 +16,5 @@ export function snapIndexFromOffset(
 }
 
 /** Literals worklet-safe — évite PRODAY_MASTER dans les worklets Reanimated. */
-export const UNIVERSE_AMBIENT_FALLBACK = '#0054F0';
+export const UNIVERSE_AMBIENT_FALLBACK = '#C5A059';
 export const UNIVERSE_AMBIENT_BASE = '#000000';

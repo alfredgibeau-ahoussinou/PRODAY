@@ -21,11 +21,11 @@ describe('sélecteur univers — accent motion', () => {
     expect(ranges.inputRange).toEqual([0, 1, 2]);
     expect(ranges.outputRange[0]).toBe(PRODAY_POLE_ACCENTS.player);
     expect(
-      accentColorAtPage(0, ranges.inputRange, ranges.outputRange, '#1E3AFF'),
-    ).toContain('30');
+      accentColorAtPage(0, ranges.inputRange, ranges.outputRange, '#FFFFFF'),
+    ).toContain('255');
     expect(
-      accentColorAtPage(2, ranges.inputRange, ranges.outputRange, '#1E3AFF'),
-    ).toContain('34');
+      accentColorAtPage(2, ranges.inputRange, ranges.outputRange, '#FFFFFF'),
+    ).toContain('160');
   });
 });
 
@@ -34,6 +34,7 @@ describe('sélecteur univers — brand + ACL', () => {
     expect(brandVariantForCarouselPole('joueur')).toBe('player');
     expect(brandVariantForCarouselPole('coach')).toBe('coach');
     expect(brandVariantForCarouselPole('pro_club')).toBe('club');
+    expect(brandVariantForCarouselPole('evenements')).toBe('events');
     expect(brandVariantForCarouselPole('president')).toBe('president');
     expect(brandVariantForCarouselPole('parent')).toBe('parent');
     expect(brandVariantForCarouselPole('supporter')).toBe('supporter');
@@ -42,6 +43,7 @@ describe('sélecteur univers — brand + ACL', () => {
     expect(UNIVERSE_ACCENT.joueur).toBe(PRODAY_POLE_ACCENTS.player);
     expect(UNIVERSE_ACCENT.coach).toBe(PRODAY_POLE_ACCENTS.coach);
     expect(UNIVERSE_ACCENT.pro_club).toBe(PRODAY_POLE_ACCENTS.club);
+    expect(UNIVERSE_ACCENT.evenements).toBe(PRODAY_POLE_ACCENTS.events);
     expect(UNIVERSE_ACCENT.president).toBe(PRODAY_POLE_ACCENTS.president);
     expect(UNIVERSE_ACCENT.parent).toBe(PRODAY_POLE_ACCENTS.parent);
     expect(UNIVERSE_ACCENT.supporter).toBe(PRODAY_POLE_ACCENTS.supporter);
@@ -51,6 +53,7 @@ describe('sélecteur univers — brand + ACL', () => {
   it('expose CTA « Entrer dans l’univers X » et icônes rôle', () => {
     expect(universeEnterCtaLabel('joueur')).toBe('Entrer dans l’univers Joueur');
     expect(universePoleDisplayName('president')).toBe('Président');
+    expect(universePoleDisplayName('evenements')).toBe('Événements');
     expect(universePoleIcon('joueur')).toBe('person');
     expect(universePoleIcon('coach')).toBe('school');
     expect(universePoleIcon('pro_club')).toBe('shield');
@@ -78,10 +81,11 @@ describe('sélecteur univers — brand + ACL', () => {
   });
 
   it('gradients carousel alignés accents brand (continuité shell)', () => {
-    expect(gradientsForCarouselPole('joueur').cta[0]).toBe('#1E3AFF');
-    expect(gradientsForCarouselPole('coach').cta[1]).toBe('#22C55E');
-    expect(gradientsForCarouselPole('pro_club').cta[1]).toBe('#7C3AED');
-    expect(gradientsForCarouselPole('president').cta[1]).toBe('#FBBF24');
-    expect(gradientsForCarouselPole('sponsor').cta[1]).toBe('#EF4444');
+    expect(gradientsForCarouselPole('joueur').cta[1]).toBe('#FFFFFF');
+    expect(gradientsForCarouselPole('coach').cta[1]).toBe('#C5A059');
+    expect(gradientsForCarouselPole('pro_club').cta[1]).toBe('#00ADEF');
+    expect(gradientsForCarouselPole('evenements').cta[1]).toBe('#F7941D');
+    expect(gradientsForCarouselPole('president').cta[1]).toBe('#C5A059');
+    expect(gradientsForCarouselPole('sponsor').cta[1]).toBe('#92278F');
   });
 });

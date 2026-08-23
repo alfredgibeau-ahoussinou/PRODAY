@@ -1,19 +1,26 @@
 import {
+  PRODAY_MASTER,
   PRODAY_POLE_ACCENTS,
+  PRODAY_TAGLINE,
   brandVariantForProductLine,
   poleAccent,
 } from '../theme/prodayBrand';
 
 describe('prodayBrand', () => {
   it('expose les accents officiels planche', () => {
-    expect(PRODAY_POLE_ACCENTS.player).toBe('#1E3AFF');
-    expect(PRODAY_POLE_ACCENTS.coach).toBe('#22C55E');
-    expect(PRODAY_POLE_ACCENTS.club).toBe('#7C3AED');
-    expect(PRODAY_POLE_ACCENTS.parent).toBe('#F97316');
+    expect(PRODAY_POLE_ACCENTS.player).toBe('#FFFFFF');
+    expect(PRODAY_POLE_ACCENTS.coach).toBe('#C5A059');
+    expect(PRODAY_POLE_ACCENTS.club).toBe('#00ADEF');
+    expect(PRODAY_POLE_ACCENTS.parent).toBe('#8CC63F');
     expect(PRODAY_POLE_ACCENTS.supporter).toBe('#06B6D4');
-    expect(PRODAY_POLE_ACCENTS.sponsor).toBe('#EF4444');
+    expect(PRODAY_POLE_ACCENTS.sponsor).toBe('#92278F');
     expect(PRODAY_POLE_ACCENTS.admin).toBe('#A3A3A3');
-    expect(PRODAY_POLE_ACCENTS.master).toBe('#0054F0');
+    expect(PRODAY_POLE_ACCENTS.master).toBe('#C5A059');
+    expect(PRODAY_POLE_ACCENTS.events).toBe('#F7941D');
+  });
+
+  it('expose tagline officielle', () => {
+    expect(PRODAY_TAGLINE).toBe('CONNECTER. PROGRESSER. RÉVÉLER.');
   });
 
   it('mappe les lignes produit vers la variante', () => {
@@ -24,8 +31,8 @@ describe('prodayBrand', () => {
     expect(brandVariantForProductLine(null)).toBe('master');
   });
 
-  it('poleAccent retombe sur master', () => {
-    expect(poleAccent('master')).toBe('#0054F0');
-    expect(poleAccent('club')).toBe('#7C3AED');
+  it('poleAccent retombe sur master or', () => {
+    expect(poleAccent('master')).toBe(PRODAY_MASTER.gold);
+    expect(poleAccent('club')).toBe('#00ADEF');
   });
 });

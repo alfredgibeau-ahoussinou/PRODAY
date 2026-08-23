@@ -86,51 +86,59 @@ export function ctaGradient(line: ProductLineId): GradientStops {
 
 /** Continuité couleurs planche brand → shells. */
 const proClubGradients = {
-  hero: ['#000000', '#1A0B2E'] as const,
-  heroDark: ['#000000', '#2E1065'] as const,
+  hero: ['#000000', '#001A24'] as const,
+  heroDark: ['#000000', '#002838'] as const,
   card: ['#0c0c0c', '#000000'] as const,
-  cta: ['#5B21B6', '#7C3AED'] as const,
-  ambient: ['rgba(124, 58, 237, 0.28)', '#1A0B2E', '#000000'] as const,
+  cta: ['#0088CC', '#00ADEF'] as const,
+  ambient: ['rgba(0, 173, 239, 0.28)', '#001A24', '#000000'] as const,
 };
 
 const presidentGradients = {
   hero: ['#03050A', '#1A1408'] as const,
   heroDark: ['#03050A', '#05070E'] as const,
   card: ['#0E1524', '#05070E'] as const,
-  cta: ['#D97706', '#FBBF24'] as const,
-  ambient: ['rgba(251, 191, 36, 0.22)', '#05070E', '#03050A'] as const,
+  cta: ['#9A7B2F', '#C5A059'] as const,
+  ambient: ['rgba(197, 160, 89, 0.22)', '#05070E', '#03050A'] as const,
 };
 
 const proStaffGradients = {
-  hero: ['#000000', '#052e16'] as const,
-  heroDark: ['#000000', '#022c22'] as const,
+  hero: ['#000000', '#1A1408'] as const,
+  heroDark: ['#000000', '#0A0A0A'] as const,
   card: ['#1A1A1A', '#0A0A0A'] as const,
-  cta: ['#15803D', '#22C55E'] as const,
-  ambient: ['rgba(34, 197, 94, 0.18)', '#0A0A0A', '#000000'] as const,
+  cta: ['#9A7B2F', '#C5A059'] as const,
+  ambient: ['rgba(197, 160, 89, 0.18)', '#0A0A0A', '#000000'] as const,
 };
 
 const sponsorGradients = {
-  hero: ['#070605', '#1a0808'] as const,
+  hero: ['#070605', '#1a0818'] as const,
   heroDark: ['#030303', '#070605'] as const,
   card: ['#14110a', '#0c0a06'] as const,
-  cta: ['#B91C1C', '#EF4444'] as const,
-  ambient: ['rgba(239, 68, 68, 0.2)', '#070605', '#030303'] as const,
+  cta: ['#6B1F68', '#92278F'] as const,
+  ambient: ['rgba(146, 39, 143, 0.2)', '#070605', '#030303'] as const,
 };
 
 const parentGradients = {
-  hero: ['#0c0704', '#7C2D12'] as const,
-  heroDark: ['#030303', '#431407'] as const,
+  hero: ['#0c0704', '#1A2408'] as const,
+  heroDark: ['#030303', '#141A06'] as const,
   card: ['#1c120c', '#0c0704'] as const,
-  cta: ['#EA580C', '#F97316'] as const,
-  ambient: ['rgba(249, 115, 22, 0.2)', '#0c0704', '#000000'] as const,
+  cta: ['#6B9A2E', '#8CC63F'] as const,
+  ambient: ['rgba(140, 198, 63, 0.2)', '#0c0704', '#000000'] as const,
 };
 
 const joueurGradients = {
-  hero: ['#000000', '#0A1A5C'] as const,
-  heroDark: ['#000000', '#050D2E'] as const,
+  hero: ['#000000', '#0A0A0A'] as const,
+  heroDark: ['#000000', '#050505'] as const,
   card: ['#0c0c0c', '#000000'] as const,
-  cta: ['#1E3AFF', '#4C6FFF'] as const,
-  ambient: ['rgba(30, 58, 255, 0.28)', '#050D2E', '#000000'] as const,
+  cta: ['#E5E5E5', '#FFFFFF'] as const,
+  ambient: ['rgba(255, 255, 255, 0.12)', '#050505', '#000000'] as const,
+};
+
+const eventsGradients = {
+  hero: ['#0c0704', '#2A1808'] as const,
+  heroDark: ['#030303', '#1A1006'] as const,
+  card: ['#1c120c', '#0c0704'] as const,
+  cta: ['#D97B12', '#F7941D'] as const,
+  ambient: ['rgba(247, 148, 29, 0.2)', '#0c0704', '#000000'] as const,
 };
 
 const supporterBrandGradients = {
@@ -155,7 +163,8 @@ export function gradientsForCarouselPole(pole: CarouselPoleId): {
   cta: GradientStops;
   ambient: GradientStops;
 } {
-  if (pole === 'pro_club' || pole === 'evenements') return proClubGradients;
+  if (pole === 'pro_club') return proClubGradients;
+  if (pole === 'evenements') return eventsGradients;
   if (pole === 'president') return presidentGradients;
   if (pole === 'pro_staff' || pole === 'coach') return proStaffGradients;
   if (pole === 'sponsor') return sponsorGradients;

@@ -44,7 +44,7 @@ export const UNIVERSE_SHORT: Record<CarouselPoleId, string> = {
   coach: 'Coach',
   pro_staff: 'Coach',
   parent: 'Parent',
-  evenements: 'Club',
+  evenements: 'Événements',
   sponsor: 'Sponsor',
   sante: 'Santé',
 };

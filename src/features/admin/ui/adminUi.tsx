@@ -64,7 +64,7 @@ export function AdminBrandMark({ compact }: { compact?: boolean }) {
   const t = ADMIN_TOKENS;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: compact ? 8 : 10 }}>
-      <ProDaySymbol size={compact ? 22 : 28} variant="admin" tone="white" showAccentBar />
+      <ProDaySymbol size={compact ? 22 : 28} variant="admin" tone="white" />
       <AdminText
         variant="brand"
         style={{

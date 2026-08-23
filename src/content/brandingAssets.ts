@@ -1,6 +1,5 @@
 /**
- * Assets logo ProDay — identité officielle (symbole unique + déclinaisons).
- * Les anciens pictos pôle pointent vers le même symbole (1 Master Brand).
+ * Assets logo ProDay — identité officielle (P + ballon, planche brand).
  */
 export const PRODAY_OFFICIAL_LOGO = require('../../assets/branding/logo-proday-official.png');
 
@@ -13,9 +12,50 @@ export const PRODAY_BRAND_ASSETS = {
   symbolMark: require('../../assets/branding/proday-symbol-mark.png'),
   logoMasterWhite: require('../../assets/branding/proday-logo-master-white.png'),
   logoMasterBlack: require('../../assets/branding/proday-logo-master-black.png'),
+  lockupHorizontalWhite: require('../../assets/branding/proday-lockup-horizontal-white.png'),
+  lockupHorizontalBlack: require('../../assets/branding/proday-lockup-horizontal-black.png'),
   appIcon: require('../../assets/branding/proday-app-icon.png'),
   splash: require('../../assets/branding/proday-splash.png'),
   notification: require('../../assets/branding/proday-notification-icon.png'),
+  polePlayer: require('../../assets/branding/proday-symbol-pole-player.png'),
+  poleCoach: require('../../assets/branding/proday-symbol-pole-coach.png'),
+  poleClub: require('../../assets/branding/proday-symbol-pole-club.png'),
+  poleParent: require('../../assets/branding/proday-symbol-pole-parent.png'),
+  poleSponsor: require('../../assets/branding/proday-symbol-pole-sponsor.png'),
+  poleEvents: require('../../assets/branding/proday-symbol-pole-events.png'),
+  polePresident: require('../../assets/branding/proday-symbol-pole-president.png'),
+  poleSupporter: require('../../assets/branding/proday-symbol-pole-supporter.png'),
+  poleAdmin: require('../../assets/branding/proday-symbol-pole-admin.png'),
+} as const;
+
+/** Symbole teinté par variante brand (master = blanc/noir selon tone). */
+export function poleSymbolAsset(
+  variant: keyof typeof PRODAY_POLE_SYMBOL_MAP,
+  tone: 'white' | 'black' = 'white',
+): number {
+  if (variant === 'master') {
+    return tone === 'black'
+      ? PRODAY_BRAND_ASSETS.symbolBlack
+      : PRODAY_BRAND_ASSETS.symbolWhite;
+  }
+  const asset = PRODAY_POLE_SYMBOL_MAP[variant];
+  if (asset) return asset;
+  return tone === 'black' ? PRODAY_BRAND_ASSETS.symbolBlack : PRODAY_BRAND_ASSETS.symbolWhite;
+}
+
+const PRODAY_POLE_SYMBOL_MAP = {
+  master: PRODAY_BRAND_ASSETS.symbolWhite,
+  player: PRODAY_BRAND_ASSETS.polePlayer,
+  joueur: PRODAY_BRAND_ASSETS.polePlayer,
+  coach: PRODAY_BRAND_ASSETS.poleCoach,
+  club: PRODAY_BRAND_ASSETS.poleClub,
+  president: PRODAY_BRAND_ASSETS.polePresident,
+  parent: PRODAY_BRAND_ASSETS.poleParent,
+  supporter: PRODAY_BRAND_ASSETS.poleSupporter,
+  sponsor: PRODAY_BRAND_ASSETS.poleSponsor,
+  admin: PRODAY_BRAND_ASSETS.poleAdmin,
+  events: PRODAY_BRAND_ASSETS.poleEvents,
+  evenements: PRODAY_BRAND_ASSETS.poleEvents,
 } as const;
 
 /** Logo principal ProDay — marque générique. */
@@ -31,11 +71,8 @@ export const BRANDING_LOGOS = {
 
 /** Symbole unique (compat anciens imports picto pôle). */
 const MASTER_SYMBOL = PRODAY_BRAND_ASSETS.symbolWhite;
-const MASTER_MARK = require('../../assets/branding/logo-mark-transparent.png');
+const MASTER_MARK = PRODAY_BRAND_ASSETS.symbolMark;
 
-/**
- * Pro Day for Women — même symbole master (accent via tokens / ProDayLogo).
- */
 export const WOMAN_BRANDING_LOGOS = {
   picto: MASTER_SYMBOL,
   mark: MASTER_MARK,

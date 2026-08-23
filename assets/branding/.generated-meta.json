@@ -1,0 +1,18 @@
+{
+  "board": "/Users/gibeau--ahoussinou/.cursor/projects/Users-gibeau-ahoussinou-PRODAY/assets/image-49511d70-2301-424a-a062-b9e650cf49eb.png",
+  "aspect": {
+    "symbol": 1.5333333333333334
+  },
+  "poleHex": {
+    "player": "#FFFFFF",
+    "coach": "#C5A059",
+    "club": "#00ADEF",
+    "parent": "#8CC63F",
+    "sponsor": "#92278F",
+    "events": "#F7941D",
+    "president": "#C5A059",
+    "supporter": "#06B6D4",
+    "admin": "#A3A3A3"
+  },
+  "generatedAt": "2026-08-23T09:27:11.217Z"
+}

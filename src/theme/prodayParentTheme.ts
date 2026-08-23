@@ -2,7 +2,7 @@ import { PRODAY_POLE_ACCENTS, poleAccentSoft } from './prodayBrand';
 
 const A = PRODAY_POLE_ACCENTS.parent;
 
-/** Palette Parent — orange officiel #F97316. */
+/** Palette Parent — vert lime officiel #8CC63F. */
 export const parentColorOverrides = {
   accent: A,
   accentLight: '#FB923C',
