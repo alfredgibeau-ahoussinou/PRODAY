@@ -33,13 +33,14 @@ interface UniversePageChromeProps {
 
 const AnimatedDot: React.FC<{
   index: number;
+  activeIndex: number;
   line: CarouselPoleId;
   itemWidth: number;
   scrollX: SharedValue<number>;
   linesCount: number;
   disabled?: boolean;
   onPress: () => void;
-}> = ({ index, line, itemWidth, scrollX, linesCount, disabled, onPress }) => {
+}> = ({ index, activeIndex, line, itemWidth, scrollX, linesCount, disabled, onPress }) => {
   const accent = UNIVERSE_ACCENT[line];
   const label = UNIVERSE_SHORT[line];
 
@@ -64,10 +65,46 @@ const AnimatedDot: React.FC<{
       disabled={disabled}
       hitSlop={8}
       accessibilityLabel={label}
-      accessibilityState={{ selected: index === 0 }}
+      accessibilityState={{ selected: index === activeIndex }}
     >
       <Animated.View style={[styles.dot, dotStyle]} />
     </Pressable>
+  );
+};
+
+const CtaLabelLayer: React.FC<{
+  line: CarouselPoleId;
+  index: number;
+  itemWidth: number;
+  scrollX: SharedValue<number>;
+}> = ({ line, index, itemWidth, scrollX }) => {
+  const label = universeEnterCtaLabel(line);
+  const isLight = line === 'president';
+
+  const layerStyle = useAnimatedStyle(() => {
+    if (itemWidth <= 0) {
+      return { opacity: index === 0 ? 1 : 0 };
+    }
+    const page = scrollX.value / itemWidth;
+    const dist = Math.abs(page - index);
+    const opacity = interpolate(dist, [0, 0.32, 0.62], [1, 0.35, 0], Extrapolation.CLAMP);
+    return { opacity };
+  });
+
+  return (
+    <Animated.View
+      style={[styles.ctaLabelLayer, layerStyle]}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      <Text
+        style={[styles.ctaText, isLight && styles.ctaTextDark]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+    </Animated.View>
   );
 };
 
@@ -90,9 +127,10 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const activeLine = lines[activeIndex] ?? lines[0];
-  const ctaLabel = universeEnterCtaLabel(activeLine);
   const isLightCta = activeLine === 'president';
   const accentRanges = useMemo(() => universeAccentRanges(lines), [lines]);
+  const accentInputRange = accentRanges.inputRange;
+  const accentOutputRange = accentRanges.outputRange;
   const activeAccent = UNIVERSE_ACCENT[activeLine];
   const headerLogoWidth = cinematic ? 168 : 142;
 
@@ -101,8 +139,13 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
       return { backgroundColor: activeAccent };
     }
     const page = scrollX.value / itemWidth;
-    return { backgroundColor: accentColorAtPage(page, accentRanges) };
-  }, [accentRanges, activeAccent, activeLine, itemWidth, lines.length]);
+    return {
+      backgroundColor: accentColorAtPage(page, {
+        inputRange: accentInputRange,
+        outputRange: accentOutputRange,
+      }),
+    };
+  }, [accentInputRange, accentOutputRange, activeAccent, itemWidth, lines.length]);
 
   return (
     <View style={styles.root} pointerEvents="box-none">
@@ -166,6 +209,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
             <AnimatedDot
               key={line}
               index={index}
+              activeIndex={activeIndex}
               line={line}
               itemWidth={itemWidth}
               scrollX={scrollX}
@@ -190,12 +234,17 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
               isLightCta && styles.ctaOnLightAccent,
             ]}
           >
-            <Text
-              style={[styles.ctaText, isLightCta && styles.ctaTextDark]}
-              numberOfLines={1}
-            >
-              {ctaLabel}
-            </Text>
+            <View style={styles.ctaLabelStack}>
+              {lines.map((line, index) => (
+                <CtaLabelLayer
+                  key={line}
+                  line={line}
+                  index={index}
+                  itemWidth={itemWidth}
+                  scrollX={scrollX}
+                />
+              ))}
+            </View>
             <Icon
               name="chevron-forward"
               size={18}
@@ -300,11 +349,23 @@ const styles = StyleSheet.create({
     shadowColor: '#FBBF24',
     shadowOpacity: 0.28,
   },
+  ctaLabelStack: {
+    flex: 1,
+    minHeight: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ctaLabelLayer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xs,
+  },
   ctaText: {
     fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',
-    flexShrink: 1,
+    textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   ctaTextDark: {

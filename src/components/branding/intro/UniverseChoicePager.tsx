@@ -3,8 +3,10 @@ import { View, StyleSheet, useWindowDimensions, Pressable } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
+  runOnJS,
   runOnUI,
   scrollTo,
+  useAnimatedReaction,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -17,6 +19,7 @@ import {
 } from '../../../models/CarouselPole';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
+import { useReducedMotion } from '../../../motion';
 import { prodayHaptics } from '../../../utils/prodayHaptics';
 import { UniverseChoicePage } from './UniverseChoicePage';
 import { UniversePageChrome } from './UniversePageChrome';
@@ -24,7 +27,12 @@ import { useUniverseIntroTour } from './useUniverseIntroTour';
 import { UNIVERSE_CHOICE_ORDER } from './universeChoiceShared';
 import { filterAccessibleUniversePoles } from './filterAccessibleUniversePoles';
 import { accentColorAtPage, universeAccentRanges } from './universeAccentMotion';
-import { PRODAY_MASTER } from '../../../theme/prodayBrand';
+import {
+  shouldSnapOnDragEnd,
+  snapIndexFromOffset,
+  UNIVERSE_AMBIENT_BASE,
+  UNIVERSE_AMBIENT_FALLBACK,
+} from './universePagerSnap';
 
 const TABLET_BREAKPOINT = 768;
 
@@ -59,37 +67,57 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   showDismiss = false,
   onDismiss,
 }) => {
+  const reducedMotion = useReducedMotion();
   const { width } = useWindowDimensions();
   const cinematic = width >= TABLET_BREAKPOINT;
   const itemWidth = resolveItemWidth(width, cinematic);
   const sidePad = Math.max(0, (width - itemWidth) / 2);
+  const linesCount = useMemo(() => {
+    const filtered = filterAccessibleUniversePoles({
+      role: accessRole,
+      email: accessEmail,
+      isAdmin: accessIsAdmin,
+    });
+    return filtered;
+  }, [accessEmail, accessIsAdmin, accessRole]);
 
-  const lines = useMemo(
-    () =>
-      filterAccessibleUniversePoles({
-        role: accessRole,
-        email: accessEmail,
-        isAdmin: accessIsAdmin,
-      }),
-    [accessEmail, accessIsAdmin, accessRole],
-  );
+  const lines = linesCount;
 
   const scrollX = useSharedValue(0);
   const listRef = useAnimatedRef<Animated.FlatList<CarouselPoleId>>();
   const programmaticScroll = useRef(false);
+  const dragSnapHandledRef = useRef(false);
+  const lastSnapIndexRef = useRef(0);
   const activeLineRef = useRef<CarouselPoleId>(lines[0] ?? UNIVERSE_CHOICE_ORDER[0]);
   const introTourOnMountRef = useRef(introTour);
   const initialScrollDoneRef = useRef(false);
   const [listReady, setListReady] = useState(false);
   const [layoutHeight, setLayoutHeight] = useState(0);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [liveIndex, setLiveIndex] = useState(0);
   const [interactionUnlocked, setInteractionUnlocked] = useState(!introTour);
   const touring = introTour && !interactionUnlocked;
 
-  const indexFromOffset = useCallback(
-    (offsetX: number) =>
-      Math.max(0, Math.min(lines.length - 1, Math.round(offsetX / itemWidth))),
-    [itemWidth, lines.length],
+  const snapOffsets = useMemo(
+    () => lines.map((_, index) => index * itemWidth),
+    [itemWidth, lines],
+  );
+
+  const syncLiveIndex = useCallback((index: number) => {
+    setLiveIndex(index);
+  }, []);
+
+  useAnimatedReaction(
+    () => {
+      if (itemWidth <= 0) return 0;
+      const page = scrollX.value / itemWidth;
+      return Math.max(0, Math.min(lines.length - 1, Math.round(page)));
+    },
+    (index, prev) => {
+      if (index !== prev) {
+        runOnJS(syncLiveIndex)(index);
+      }
+    },
+    [itemWidth, lines.length, syncLiveIndex],
   );
 
   const onScroll = useAnimatedScrollHandler({
@@ -104,8 +132,9 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       const clamped = Math.max(0, Math.min(lines.length - 1, index));
       programmaticScroll.current = true;
       if (haptic) prodayHaptics.tabSwitch();
-      setCurrentIndex(clamped);
+      lastSnapIndexRef.current = clamped;
       activeLineRef.current = lines[clamped];
+      setLiveIndex(clamped);
       runOnUI(() => {
         'worklet';
         scrollTo(listRef, clamped * itemWidth, 0, animated);
@@ -122,7 +151,10 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     (line: CarouselPoleId) => {
       activeLineRef.current = line;
       const index = lines.indexOf(line);
-      if (index >= 0) setCurrentIndex(index);
+      if (index >= 0) {
+        lastSnapIndexRef.current = index;
+        setLiveIndex(index);
+      }
     },
     [lines],
   );
@@ -160,21 +192,46 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 
   const onSnap = useCallback(
     (offsetX: number) => {
-      const index = indexFromOffset(offsetX);
+      const index = snapIndexFromOffset(offsetX, itemWidth, lines.length);
       if (programmaticScroll.current) {
         programmaticScroll.current = false;
         activeLineRef.current = lines[index];
-        setCurrentIndex(index);
+        lastSnapIndexRef.current = index;
+        setLiveIndex(index);
         return;
       }
-      if (index !== currentIndex) {
+      if (index !== lastSnapIndexRef.current) {
         prodayHaptics.tabSwitch();
-        activeLineRef.current = lines[index];
-        setCurrentIndex(index);
+        lastSnapIndexRef.current = index;
       }
+      activeLineRef.current = lines[index];
+      setLiveIndex(index);
       if (touring) dismissTour();
     },
-    [currentIndex, dismissTour, indexFromOffset, lines, touring],
+    [dismissTour, itemWidth, lines, touring],
+  );
+
+  const handleScrollEndDrag = useCallback(
+    (offsetX: number, velocityX: number | undefined) => {
+      if (shouldSnapOnDragEnd(velocityX)) {
+        dragSnapHandledRef.current = true;
+        onSnap(offsetX);
+        return;
+      }
+      dragSnapHandledRef.current = false;
+    },
+    [onSnap],
+  );
+
+  const handleMomentumScrollEnd = useCallback(
+    (offsetX: number) => {
+      if (dragSnapHandledRef.current) {
+        dragSnapHandledRef.current = false;
+        return;
+      }
+      onSnap(offsetX);
+    },
+    [onSnap],
   );
 
   const handleChoose = useCallback(
@@ -190,18 +247,18 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     (index: number) => {
       if (interactionLocked) return;
       if (touring) dismissTour();
-      if (index === currentIndex) {
+      if (index === liveIndex) {
         handleChoose(lines[index]);
         return;
       }
       scrollToPage(index, true, true);
     },
     [
-      currentIndex,
       dismissTour,
       handleChoose,
       interactionLocked,
       lines,
+      liveIndex,
       scrollToPage,
       touring,
     ],
@@ -224,6 +281,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
           itemWidth={itemWidth}
           scrollX={scrollX}
           cinematic={cinematic}
+          reducedMotion={reducedMotion}
         />
       </Pressable>
     ),
@@ -233,15 +291,20 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       interactionLocked,
       itemWidth,
       layoutHeight,
+      reducedMotion,
       scrollX,
       width,
     ],
   );
 
   const accentRanges = useMemo(() => universeAccentRanges(lines), [lines]);
+  const accentInputRange = accentRanges.inputRange;
+  const accentOutputRange = accentRanges.outputRange;
+  const ambientFallback = UNIVERSE_AMBIENT_FALLBACK;
+  const linesLen = lines.length;
 
   const ambientStyle = useAnimatedStyle(() => {
-    if (itemWidth <= 0 || lines.length === 0) return { opacity: 0.12 };
+    if (itemWidth <= 0 || linesLen === 0) return { opacity: 0.12 };
     const page = scrollX.value / itemWidth;
     const distToSnap = Math.abs(page - Math.round(page));
     const opacity = interpolate(
@@ -251,15 +314,20 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       Extrapolation.CLAMP,
     );
     return { opacity };
-  });
+  }, [itemWidth, linesLen]);
 
   const ambientColorStyle = useAnimatedStyle(() => {
-    if (itemWidth <= 0 || lines.length === 0) {
-      return { backgroundColor: PRODAY_MASTER.blue };
+    if (itemWidth <= 0 || linesLen === 0) {
+      return { backgroundColor: ambientFallback };
     }
     const page = scrollX.value / itemWidth;
-    return { backgroundColor: accentColorAtPage(page, accentRanges) };
-  }, [accentRanges, itemWidth, lines.length]);
+    return {
+      backgroundColor: accentColorAtPage(page, {
+        inputRange: accentInputRange,
+        outputRange: accentOutputRange,
+      }),
+    };
+  }, [accentInputRange, accentOutputRange, ambientFallback, itemWidth, linesLen]);
 
   const styles = useMemo(() => createStyles(cinematic), [cinematic]);
 
@@ -275,7 +343,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         if (h > 0 && h !== layoutHeight) setLayoutHeight(h);
       }}
     >
-      <View style={[styles.ambientBase, { backgroundColor: PRODAY_MASTER.black }]} />
+      <View style={[styles.ambientBase, { backgroundColor: UNIVERSE_AMBIENT_BASE }]} />
       <Animated.View
         pointerEvents="none"
         style={[styles.ambientAccent, ambientColorStyle, ambientStyle]}
@@ -290,8 +358,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         showsHorizontalScrollIndicator={false}
         bounces={lines.length > 1}
         decelerationRate="fast"
-        snapToInterval={itemWidth}
-        snapToAlignment="start"
+        snapToOffsets={snapOffsets}
         disableIntervalMomentum
         scrollEnabled={!interactionLocked && lines.length > 1}
         contentContainerStyle={{
@@ -300,13 +367,16 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         }}
         onLayout={() => setListReady(true)}
         onScrollBeginDrag={() => {
+          dragSnapHandledRef.current = false;
           if (interactionLocked) return;
           if (touring) dismissTour();
         }}
         onScroll={onScroll}
         scrollEventThrottle={16}
-        onMomentumScrollEnd={(e) => onSnap(e.nativeEvent.contentOffset.x)}
-        onScrollEndDrag={(e) => onSnap(e.nativeEvent.contentOffset.x)}
+        onMomentumScrollEnd={(e) => handleMomentumScrollEnd(e.nativeEvent.contentOffset.x)}
+        onScrollEndDrag={(e) =>
+          handleScrollEndDrag(e.nativeEvent.contentOffset.x, e.nativeEvent.velocity?.x)
+        }
         getItemLayout={(_, index) => ({
           length: itemWidth,
           offset: itemWidth * index,
@@ -317,7 +387,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 
       <UniversePageChrome
         lines={lines}
-        activeIndex={currentIndex}
+        activeIndex={liveIndex}
         scrollX={scrollX}
         itemWidth={itemWidth}
         touring={touring}
@@ -337,7 +407,7 @@ function createStyles(cinematic: boolean) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: PRODAY_MASTER.black,
+      backgroundColor: UNIVERSE_AMBIENT_BASE,
     },
     ambientBase: {
       ...StyleSheet.absoluteFillObject,

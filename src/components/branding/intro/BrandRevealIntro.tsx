@@ -102,26 +102,48 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 
       if (skipLocalTransition) {
         const outMs = reduced ? EXIT_REDUCED_MS : Math.min(EXIT_MS, 380);
-        if (line && !dismissOnly && !reduced) {
-          veilOpacity.value = withTiming(0.48, {
-            duration: Math.round(outMs * 0.45),
-            easing: prodayMotion.easing.out,
-          });
+        if (dismissOnly) {
           opacity.value = withTiming(
-            0.12,
-            { duration: outMs, easing: prodayMotion.easing.in },
+            0,
+            { duration: Math.round(outMs * 0.75), easing: prodayMotion.easing.in },
             (finished) => {
               'worklet';
               if (finished) runOnJS(finishLeave)(line, dismissOnly);
             },
           );
-          scale.value = withTiming(0.96, {
+          if (!reduced) {
+            scale.value = withTiming(0.98, {
+              duration: Math.round(outMs * 0.75),
+              easing: prodayMotion.easing.in,
+            });
+          }
+          return;
+        }
+        if (line && !reduced) {
+          veilOpacity.value = withTiming(0.52, {
+            duration: Math.round(outMs * 0.4),
+            easing: prodayMotion.easing.out,
+          });
+        } else if (line) {
+          veilOpacity.value = withTiming(0.24, {
+            duration: EXIT_REDUCED_MS,
+            easing: prodayMotion.easing.out,
+          });
+        }
+        opacity.value = withTiming(
+          reduced ? 0 : 0.1,
+          { duration: outMs, easing: prodayMotion.easing.in },
+          (finished) => {
+            'worklet';
+            if (finished) runOnJS(finishLeave)(line, dismissOnly);
+          },
+        );
+        if (!reduced) {
+          scale.value = withTiming(0.965, {
             duration: outMs,
             easing: prodayMotion.easing.in,
           });
-          return;
         }
-        finishLeave(line, dismissOnly);
         return;
       }
 
