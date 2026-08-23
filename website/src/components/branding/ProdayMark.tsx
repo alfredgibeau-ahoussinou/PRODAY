@@ -8,6 +8,7 @@ import {
   PRODAY_MARK_ON_LIGHT,
   type ProdayMarkPole,
 } from "@/lib/brandingAssets";
+import { isExperimentalBrand } from "@/lib/experimentalBrand";
 
 type MarkProps = {
   size?: number;
@@ -60,7 +61,7 @@ type LockupProps = {
   priority?: boolean;
 };
 
-/** Lockup horizontal symbole + PRODAY (nav / headers). */
+/** Lockup horizontal symbole + PRODAY (experimental — nav / headers). */
 export function ProdayLockup({
   width,
   className = "",
@@ -93,5 +94,33 @@ export function ProdayLockup({
         PRODAY
       </span>
     </span>
+  );
+}
+
+type NavLogoProps = {
+  className?: string;
+  priority?: boolean;
+};
+
+/** Logo nav : symbole seul (prod) ou lockup CSS (experimental). */
+export function ProdayNavLogo({ className = "", priority = false }: NavLogoProps) {
+  if (isExperimentalBrand()) {
+    return (
+      <ProdayLockup
+        priority={priority}
+        className={`h-[22px] text-[22px] min-[390px]:h-[24px] min-[390px]:text-[24px] ${className}`.trim()}
+      />
+    );
+  }
+
+  return (
+    <Image
+      src={PRODAY_MARK}
+      alt=""
+      width={28}
+      height={20}
+      className={`h-5 w-auto object-contain min-[390px]:h-[22px] ${className}`.trim()}
+      priority={priority}
+    />
   );
 }

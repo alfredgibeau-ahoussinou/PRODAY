@@ -11,33 +11,33 @@
   --proday-overlay: #1a1a1a;
   --proday-border: rgba(255, 255, 255, 0.12);
   --proday-border-strong: rgba(255, 255, 255, 0.22);
-  /* Master Brand officiel — noir / blanc / or */
-  --proday-accent: #e8b923;
-  --proday-accent-bright: #f5d04a;
-  --proday-accent-deep: #b8941f;
-  --proday-accent-dim: #b8941f;
-  --proday-accent-glow: rgba(232, 185, 35, 0.42);
-  --proday-accent-muted: rgba(232, 185, 35, 0.16);
+  /* Master Brand officiel — production (bleu) ; experimental override via SiteShell */
+  --proday-accent: #1e3aff;
+  --proday-accent-bright: #5b75ff;
+  --proday-accent-deep: #0a1a8a;
+  --proday-accent-dim: #3b56ff;
+  --proday-accent-glow: rgba(30, 58, 255, 0.42);
+  --proday-accent-muted: rgba(30, 58, 255, 0.16);
   --proday-accent-gradient: linear-gradient(
     135deg,
-    #b8941f 0%,
-    #e8b923 48%,
-    #f5d04a 100%
+    #0a1a8a 0%,
+    #1e3aff 48%,
+    #5b75ff 100%
   );
-  --proday-warm: #f5d04a;
-  --proday-warm-glow: rgba(245, 208, 74, 0.3);
-  --proday-field: #e8b923;
-  --proday-success: #84cc16;
+  --proday-warm: #5b75ff;
+  --proday-warm-glow: rgba(91, 117, 255, 0.3);
+  --proday-field: #1e3aff;
+  --proday-success: #22c55e;
   --proday-warning: #f97316;
-  --proday-pole-joueur: #ffffff;
-  --proday-pole-coach: #e8b923;
-  --proday-pole-club: #2563eb;
-  --proday-pole-president: #e8b923;
-  --proday-pole-parent: #84cc16;
-  --proday-pole-supporter: #8b5cf6;
+  --proday-pole-joueur: #1e3aff;
+  --proday-pole-coach: #22c55e;
+  --proday-pole-club: #7c3aed;
+  --proday-pole-president: #fbbf24;
+  --proday-pole-parent: #f97316;
+  --proday-pole-supporter: #06b6d4;
   --proday-pole-sponsor: #ef4444;
   --proday-pole-admin: #a3a3a3;
-  --proday-pole-evenements: #f97316;
+  --proday-pole-evenements: #1e3aff;
   --background: #000000;
   --foreground: #f5f5f0;
   --ease-out-premium: cubic-bezier(0.22, 1, 0.36, 1);
@@ -103,8 +103,8 @@ body {
 }
 
 ::selection {
-  background: #e8b923;
-  color: #000;
+  background: #1e3aff;
+  color: #fff;
 }
 
 .text-accent { color: var(--proday-accent-bright); }
@@ -113,7 +113,7 @@ body {
 .bg-accent-gradient {
   background-image: var(--proday-accent-gradient);
   background-color: var(--proday-accent);
-  color: #000;
+  color: #fff;
 }
 
 .bg-accent-gradient:hover {

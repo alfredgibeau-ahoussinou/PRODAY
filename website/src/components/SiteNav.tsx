@@ -13,7 +13,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { ProdayLockup } from "@/components/branding/ProdayMark";
+import { ProdayNavLogo } from "@/components/branding/ProdayMark";
+import { isExperimentalBrand } from "@/lib/experimentalBrand";
 import { isNavActive } from "@/lib/siteArchitecture";
 import { POLE_BRAND_HEX, SHOWCASE_POLES, pricingHrefForPath } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
@@ -38,7 +39,7 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={`rounded-full px-3.5 py-2 text-[13px] font-medium tracking-[-0.01em] transition-colors ${
         active
-          ? "text-white underline decoration-[var(--proday-accent,#E8B923)] decoration-2 underline-offset-[6px]"
+          ? "text-white underline decoration-[var(--proday-accent,#1E3AFF)] decoration-2 underline-offset-[6px]"
           : "text-white/55 hover:text-white"
       }`}
     >
@@ -213,7 +214,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
             className="flex shrink-0 items-center rounded-full py-1 pl-1.5 pr-2"
             aria-label="ProDay, accueil"
           >
-            <ProdayLockup priority className="h-[22px] text-[22px] min-[390px]:h-[24px] min-[390px]:text-[24px]" />
+            <ProdayNavLogo priority />
           </Link>
 
           <div className="mx-auto hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex">
@@ -236,7 +237,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
           <div className="ml-auto flex items-center gap-1.5">
             <Link
               href={ROUTES.betaWaitlist}
-              className="bg-accent-gradient hidden items-center rounded-full px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-black transition hover:brightness-110 md:inline-flex"
+              className={`bg-accent-gradient hidden items-center rounded-full px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition hover:brightness-110 md:inline-flex ${isExperimentalBrand() ? "text-black" : "text-white"}`}
             >
               Tester
             </Link>
@@ -328,7 +329,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
                 <Link
                   href={ROUTES.betaWaitlist}
                   onClick={close}
-                  className="bg-accent-gradient flex min-h-12 items-center justify-center rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] text-black"
+                  className={`bg-accent-gradient flex min-h-12 items-center justify-center rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] ${isExperimentalBrand() ? "text-black" : "text-white"}`}
                 >
                   Tester
                 </Link>

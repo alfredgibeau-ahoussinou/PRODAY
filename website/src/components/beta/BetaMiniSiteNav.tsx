@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Download, HelpCircle } from "lucide-react";
-import { ProdayLockup } from "@/components/branding/ProdayMark";
+import { ProdayNavLogo } from "@/components/branding/ProdayMark";
 import { ROUTES } from "@/lib/routes";
 import { clsx } from "clsx";
 
@@ -27,7 +27,7 @@ export function BetaMiniSiteNav() {
         className="mb-5 inline-flex rounded-full py-1 pl-0.5 pr-2 transition hover:opacity-90 lg:mb-6"
         aria-label="ProDay, accueil"
       >
-        <ProdayLockup className="h-[22px] text-[22px]" />
+        <ProdayNavLogo />
       </Link>
       <div className="flex flex-wrap gap-2 lg:flex-col lg:gap-1.5">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {

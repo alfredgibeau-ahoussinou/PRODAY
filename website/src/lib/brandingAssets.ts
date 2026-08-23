@@ -1,53 +1,63 @@
 /**
- * Assets identité officielle ProDay (website/public/branding).
- * Source master HD : logo-proday-symbol-master.png → ingest-symbol-master.mjs.
- * Symbole seul = favicon / pictos pôle ; lockup nav = symbole + typo CSS.
+ * Assets identité ProDay (website/public/branding).
+ * Production (défaut) : symboles pré-rebrand (bleu master).
+ * Experimental (NEXT_PUBLIC_EXPERIMENTAL_BRAND=1) : rebrand or/noir + symbole HD.
  */
 
-/** Master source (blanc sur fond noir) — ingestion uniquement. */
-export const PRODAY_SYMBOL_MASTER = "/branding/logo-proday-symbol-master.png";
+import { brandAssetRoot, isExperimentalBrand } from "./experimentalBrand";
+
+const B = brandAssetRoot();
+
+/** Master source HD (experimental uniquement) — ingestion via ingest-symbol-master.mjs. */
+export const PRODAY_SYMBOL_MASTER = isExperimentalBrand()
+  ? `${B}/logo-proday-symbol-master.png`
+  : undefined;
 
 /** Lockup officiel paddé (symbole + PRODAY) — OG / emails. */
-export const PRODAY_LOGO_OFFICIAL = "/branding/logo-proday-official.png";
+export const PRODAY_LOGO_OFFICIAL = `${B}/logo-proday-official.png`;
 
-/** @deprecated Lockup PNG — préférer ProdayLockup (symbole + typo). */
-export const PRODAY_LOGO_ON_DARK = "/branding/logo-proday-lockup-white.png";
+/** Lockup blanc transparent (dark UI). */
+export const PRODAY_LOGO_ON_DARK = `${B}/logo-proday-lockup-white.png`;
 
-/** @deprecated Lockup PNG — préférer ProdayLockup (symbole + typo). */
-export const PRODAY_LOGO_ON_LIGHT = "/branding/logo-proday-lockup-black.png";
+/** Lockup noir transparent (light UI / documents). */
+export const PRODAY_LOGO_ON_LIGHT = `${B}/logo-proday-lockup-black.png`;
 
-/** Symbole seul — blanc transparent (favicon source / pictos). */
-export const PRODAY_MARK = "/branding/logo-proday-mark.png";
+/** Symbole seul — blanc transparent (favicon source / nav). */
+export const PRODAY_MARK = `${B}/logo-proday-mark.png`;
 
 /** Symbole seul — noir transparent. */
-export const PRODAY_MARK_ON_LIGHT = "/branding/logo-proday-mark-black.png";
+export const PRODAY_MARK_ON_LIGHT = `${B}/logo-proday-mark-black.png`;
 
-/** Symbole Master or. */
-export const PRODAY_MARK_GOLD = "/branding/logo-proday-mark-gold.png";
+/** Symbole Master or (experimental). */
+export const PRODAY_MARK_GOLD = isExperimentalBrand()
+  ? `${B}/logo-proday-mark-gold.png`
+  : `${B}/logo-proday-mark-blue.png`;
 
-/** @deprecated Alias or master (ex-bleu). */
-export const PRODAY_MARK_BLUE = "/branding/logo-proday-mark-blue.png";
+/** Symbole Master bleu ProDay (production). */
+export const PRODAY_MARK_BLUE = `${B}/logo-proday-mark-blue.png`;
 
-/** Ratio lockup officiel paddé (649×172, symbole + PRODAY). */
-export const PRODAY_OFFICIAL_LOGO_ASPECT = 649 / 172;
+/** Ratio lockup officiel paddé. */
+export const PRODAY_OFFICIAL_LOGO_ASPECT = isExperimentalBrand() ? 649 / 172 : 637 / 375;
 
-/** Ratio lockup nav horizontal composé (symbole + typo PRODAY). */
+/** Ratio lockup nav horizontal composé (experimental — symbole + typo CSS). */
 export const PRODAY_LOCKUP_ASPECT = 3.77;
 
-/** Ratio symbole master HD (675×552). */
-export const PRODAY_MARK_ASPECT = 675 / 552;
+/** Ratio symbole (prod ≈369×259 ; experimental HD ≈675×552). */
+export const PRODAY_MARK_ASPECT = isExperimentalBrand() ? 675 / 552 : 369 / 259;
 
-/** Pictos pôle = même symbole teinté (accents planche). */
+/** Pictos pôle = même symbole teinté. */
 export const PRODAY_MARK_BY_POLE = {
-  joueur: "/branding/logo-proday-mark-joueur.png",
-  coach: "/branding/logo-proday-mark-coach.png",
-  club: "/branding/logo-proday-mark-club.png",
-  president: "/branding/logo-proday-mark-president.png",
-  parent: "/branding/logo-proday-mark-parent.png",
-  supporter: "/branding/logo-proday-mark-supporter.png",
-  sponsor: "/branding/logo-proday-mark-sponsor.png",
-  admin: "/branding/logo-proday-mark-admin.png",
-  evenements: "/branding/logo-proday-mark-evenements.png",
+  joueur: `${B}/logo-proday-mark-joueur.png`,
+  coach: `${B}/logo-proday-mark-coach.png`,
+  club: `${B}/logo-proday-mark-club.png`,
+  president: `${B}/logo-proday-mark-president.png`,
+  parent: `${B}/logo-proday-mark-parent.png`,
+  supporter: `${B}/logo-proday-mark-supporter.png`,
+  sponsor: `${B}/logo-proday-mark-sponsor.png`,
+  admin: `${B}/logo-proday-mark-admin.png`,
+  evenements: isExperimentalBrand()
+    ? `${B}/logo-proday-mark-evenements.png`
+    : `${B}/logo-proday-mark-joueur.png`,
 } as const;
 
 export type ProdayMarkPole = keyof typeof PRODAY_MARK_BY_POLE;
