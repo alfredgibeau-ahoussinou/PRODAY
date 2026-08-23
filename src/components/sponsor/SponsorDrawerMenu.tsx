@@ -6,12 +6,11 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
-import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
+import { ProDaySymbol } from '../branding/ProDaySymbol';
 import {
   SPONSOR_NAV_ITEMS,
   SPONSOR_NAV_SECTIONS,
@@ -65,12 +64,7 @@ export const SponsorDrawerMenu: React.FC<SponsorDrawerMenuProps> = ({
         >
           <View style={styles.panelHeader}>
             <View style={styles.logoMark}>
-              <Image
-                source={SPONSOR_BRANDING_LOGOS.picto}
-                style={styles.logoImage}
-                resizeMode="contain"
-                accessibilityLabel="Pro Day Sponsor"
-              />
+              <ProDaySymbol size={40} variant="sponsor" tone="white" />
             </View>
             <View style={styles.panelBrand}>
               <Text style={styles.panelTitle}>Pro Day Sponsor</Text>

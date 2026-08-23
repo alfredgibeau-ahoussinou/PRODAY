@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../../components/ui/Icon';
+import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
 import { ClubText } from '../ui/clubUi';
 import { primaryTabForClubNav, type ClubNavItemId } from '../navigation/clubNavConfig';
 import type { ClubNavResolvedFolder } from '../navigation/resolveClubNavAccess';
@@ -13,7 +14,6 @@ import {
   clubShadow,
   clubSpace,
 } from '../theme/clubDesignSystem';
-import { BRANDING_LOGOS } from '../../../content/brandingAssets';
 import { PressableSpring } from '../../../components/motion';
 
 type Props = {
@@ -64,12 +64,7 @@ export function ClubSidebar({
     >
       <View style={styles.brand}>
         <View style={styles.brandRow}>
-          <Image
-            source={BRANDING_LOGOS.official}
-            style={collapsed ? styles.logoCollapsed : styles.logo}
-            resizeMode="contain"
-            accessibilityLabel="ProDay"
-          />
+          <ProDaySymbol size={collapsed ? 28 : 36} variant="club" tone="white" />
           {!collapsed ? (
             <View style={styles.brandCopy}>
               <ClubText variant="label" muted style={styles.kicker}>

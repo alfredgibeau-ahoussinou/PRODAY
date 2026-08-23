@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Icon } from '../ui/Icon';
+import { ProDaySymbol } from '../branding/ProDaySymbol';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
-import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
 import { spacing, radius } from '../../theme/designTokens';
 
 interface SponsorScreenHeaderProps {
@@ -21,11 +21,7 @@ export const SponsorScreenHeader: React.FC<SponsorScreenHeaderProps> = ({
     <View style={styles.body}>
       <View style={styles.badge}>
         <View style={styles.badgeLogo}>
-          <Image
-            source={SPONSOR_BRANDING_LOGOS.picto}
-            style={styles.badgeLogoImage}
-            resizeMode="contain"
-          />
+          <ProDaySymbol size={24} variant="sponsor" tone="black" />
         </View>
         <Text style={styles.badgeText}>{label}</Text>
       </View>

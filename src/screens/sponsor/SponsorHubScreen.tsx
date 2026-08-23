@@ -5,9 +5,9 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { Icon } from '../../components/ui/Icon';
+import { ProDaySymbol } from '../../components/branding/ProDaySymbol';
 import { SponsorScreenHeader } from '../../components/sponsor/SponsorScreenHeader';
 import { SponsorPricingScreen } from '../../components/sponsor/SponsorPricingScreen';
 import {
@@ -15,7 +15,6 @@ import {
   SPONSOR_VALUE_PILLARS,
 } from '../../content/sponsorPricing';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
-import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
 import { SPONSOR_NAV_INSET } from '../../navigation/sponsorTabConfig';
 import { spacing, radius } from '../../theme/designTokens';
@@ -64,12 +63,7 @@ export const SponsorHubScreen: React.FC<SponsorHubScreenProps> = ({
 
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
-            <Image
-              source={SPONSOR_BRANDING_LOGOS.picto}
-              style={styles.heroLogo}
-              resizeMode="contain"
-              accessibilityLabel="Pro Day Sponsor"
-            />
+            <ProDaySymbol size={72} variant="sponsor" tone="white" />
           </View>
           <Text style={styles.heroTitle}>Le foot local a besoin de sponsors engagés</Text>
           <Text style={styles.heroBody}>

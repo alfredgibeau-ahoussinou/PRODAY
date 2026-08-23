@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Icon } from '../../../components/ui/Icon';
-import { BRANDING_LOGOS } from '../../../content/brandingAssets';
+import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
 import { AdminBrandMark, AdminText } from '../ui/adminUi';
 import {
   ADMIN_NAV_GROUPS,
@@ -49,11 +49,7 @@ export function AdminSidebar({
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.brand}>
-        <Image
-          source={BRANDING_LOGOS.official}
-          style={collapsed ? styles.logoSm : styles.logo}
-          resizeMode="contain"
-        />
+        <ProDaySymbol size={collapsed ? 28 : 36} variant="admin" tone="white" />
         {!collapsed ? (
           <View style={{ flex: 1, gap: 4 }}>
             <AdminBrandMark compact />

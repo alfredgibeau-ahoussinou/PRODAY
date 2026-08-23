@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
+import { ProDaySymbol } from '../branding/ProDaySymbol';
 import { useSponsorData } from '../../context/SponsorDataContext';
-import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
 import { sponsorChrome } from './sponsorStyles';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -51,12 +51,7 @@ export const SponsorTopBar: React.FC<SponsorTopBarProps> = ({ title, subtitle, o
         )}
       </View>
       <View style={styles.mark}>
-        <Image
-          source={SPONSOR_BRANDING_LOGOS.picto}
-          style={styles.markImage}
-          resizeMode="contain"
-          accessibilityLabel="Pro Day Sponsor"
-        />
+        <ProDaySymbol size={36} variant="sponsor" tone="white" />
       </View>
     </View>
   );

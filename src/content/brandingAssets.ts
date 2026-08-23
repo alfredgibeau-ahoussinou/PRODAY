@@ -1,5 +1,6 @@
 /**
- * Assets logo ProDay — identité officielle (P + ballon, planche brand).
+ * Assets logo ProDay — symbole HD (P + ballon + traits vitesse), teinté par pôle.
+ * Source : assets/branding/proday-symbol-master-source.png → scripts/generate-app-brand.mjs
  */
 export const PRODAY_OFFICIAL_LOGO = require('../../assets/branding/logo-proday-official.png');
 
@@ -69,51 +70,48 @@ export const BRANDING_LOGOS = {
   mark: require('../../assets/branding/logo-mark-transparent.png'),
 } as const;
 
-/** Symbole unique (compat anciens imports picto pôle). */
-const MASTER_SYMBOL = PRODAY_BRAND_ASSETS.symbolWhite;
-const MASTER_MARK = PRODAY_BRAND_ASSETS.symbolMark;
-
+/** Symbole teinté par ligne (compat anciens imports picto pôle). */
 export const WOMAN_BRANDING_LOGOS = {
-  picto: MASTER_SYMBOL,
-  mark: MASTER_MARK,
-  light: MASTER_SYMBOL,
-  dark: MASTER_SYMBOL,
-  transparent: MASTER_SYMBOL,
-  transparentDark: MASTER_SYMBOL,
-  authDark: MASTER_SYMBOL,
+  picto: PRODAY_BRAND_ASSETS.polePlayer,
+  mark: PRODAY_BRAND_ASSETS.symbolMark,
+  light: PRODAY_BRAND_ASSETS.polePlayer,
+  dark: PRODAY_BRAND_ASSETS.polePlayer,
+  transparent: PRODAY_BRAND_ASSETS.polePlayer,
+  transparentDark: PRODAY_BRAND_ASSETS.polePlayer,
+  authDark: PRODAY_BRAND_ASSETS.polePlayer,
 } as const;
 
 export const MAN_BRANDING_LOGOS = {
-  picto: MASTER_SYMBOL,
-  mark: MASTER_MARK,
+  picto: PRODAY_BRAND_ASSETS.polePlayer,
+  mark: PRODAY_BRAND_ASSETS.symbolMark,
 } as const;
 
 /** @deprecated Utiliser MAN_BRANDING_LOGOS */
 export const HOMME_BRANDING_LOGOS = MAN_BRANDING_LOGOS;
 
 export const PRO_BRANDING_LOGOS = {
-  picto: MASTER_SYMBOL,
-  mark: MASTER_MARK,
+  picto: PRODAY_BRAND_ASSETS.poleClub,
+  mark: PRODAY_BRAND_ASSETS.symbolMark,
 } as const;
 
 export const SANTE_BRANDING_LOGOS = {
-  picto: MASTER_SYMBOL,
-  mark: MASTER_MARK,
+  picto: PRODAY_BRAND_ASSETS.poleParent,
+  mark: PRODAY_BRAND_ASSETS.symbolMark,
 } as const;
 
 export const AMATEUR_BRANDING_LOGOS = {
-  picto: MASTER_SYMBOL,
-  mark: MASTER_MARK,
+  picto: PRODAY_BRAND_ASSETS.polePlayer,
+  mark: PRODAY_BRAND_ASSETS.symbolMark,
 } as const;
 
 export const SUPPORTER_BRANDING_LOGOS = {
-  picto: MASTER_SYMBOL,
-  mark: MASTER_MARK,
+  picto: PRODAY_BRAND_ASSETS.poleSupporter,
+  mark: PRODAY_BRAND_ASSETS.symbolMark,
 } as const;
 
 export const SPONSOR_BRANDING_LOGOS = {
-  picto: MASTER_SYMBOL,
-  mark: MASTER_MARK,
+  picto: PRODAY_BRAND_ASSETS.poleSponsor,
+  mark: PRODAY_BRAND_ASSETS.symbolMark,
 } as const;
 
 export type BrandingLogoKey = keyof typeof BRANDING_LOGOS;

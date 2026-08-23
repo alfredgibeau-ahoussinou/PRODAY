@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
 import { useTranslation } from '../../../context/LocaleContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useSponsorData } from '../../../context/SponsorDataContext';
@@ -21,7 +22,6 @@ import { openSponsorProspectChat } from '../../../utils/openSponsorProspectChat'
 import { SponsorPageScaffold } from '../../../components/sponsor/SponsorPageScaffold';
 import { SponsorTierStatusBanner } from '../../../components/sponsor/SponsorTierStatusBanner';
 import { SponsorQuotaBanner } from '../../../components/sponsor/SponsorQuotaBanner';
-import { SPONSOR_BRANDING_LOGOS } from '../../../content/brandingAssets';
 import { SHOWCASE_IMAGES } from '../../../content/showcaseAssets';
 import {
   buildSponsorNextActions,
@@ -108,12 +108,7 @@ export const SponsorOverviewPage: React.FC = () => {
         <View style={styles.heroInner}>
           <View style={styles.heroRow}>
             <View style={styles.heroLogo}>
-              <Image
-                source={SPONSOR_BRANDING_LOGOS.picto}
-                style={styles.heroLogoImage}
-                resizeMode="contain"
-                accessibilityLabel="Pro Day Sponsor"
-              />
+              <ProDaySymbol size={56} variant="sponsor" tone="white" />
             </View>
             <View style={styles.heroCopy}>
               <Text style={styles.eyebrow} numberOfLines={1}>

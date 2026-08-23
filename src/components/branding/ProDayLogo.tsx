@@ -1,14 +1,12 @@
 import React from 'react';
-import { View, Image, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   PRODAY_LOGO_HORIZONTAL_ASPECT,
-  PRODAY_LOGO_MASTER_ASPECT,
   PRODAY_POLE_LABELS,
   PRODAY_TAGLINE,
   brandVariantForProductLine,
   type ProDayBrandVariant,
 } from '../../theme/prodayBrand';
-import { PRODAY_BRAND_ASSETS } from '../../content/brandingAssets';
 import { ProDaySymbol } from './ProDaySymbol';
 import { ProDayWordmark } from './ProDayWordmark';
 
@@ -31,7 +29,7 @@ type ProDayLogoProps = {
 };
 
 /**
- * Logo officiel : symbole teinté pôle + wordmark ; lockup PNG master.
+ * Logo officiel : symbole teinté pôle + wordmark (composé natif — symbole HD).
  */
 export function ProDayLogo({
   width = 180,
@@ -68,21 +66,6 @@ export function ProDayLogo({
   }
 
   if (layout === 'horizontal') {
-    if (variant === 'master' && !showPoleLabel) {
-      const height = width / PRODAY_LOGO_HORIZONTAL_ASPECT;
-      const source = onDark
-        ? PRODAY_BRAND_ASSETS.lockupHorizontalWhite
-        : PRODAY_BRAND_ASSETS.lockupHorizontalBlack;
-      return (
-        <Image
-          source={source}
-          style={{ width, height, opacity }}
-          resizeMode="contain"
-          accessibilityLabel="ProDay"
-        />
-      );
-    }
-
     const symbolSize = width * 0.34;
     const wordWidth = width - symbolSize - width * 0.06;
     const poleLabelText = showPoleLabel ? PRODAY_POLE_LABELS[variant] || null : null;
@@ -104,21 +87,6 @@ export function ProDayLogo({
     );
   }
 
-  if (variant === 'master') {
-    const height = width / PRODAY_LOGO_MASTER_ASPECT;
-    const source = onDark
-      ? PRODAY_BRAND_ASSETS.logoMasterWhite
-      : PRODAY_BRAND_ASSETS.logoMasterBlack;
-    return (
-      <Image
-        source={source}
-        style={{ width, height, opacity }}
-        resizeMode="contain"
-        accessibilityLabel="ProDay"
-      />
-    );
-  }
-
   const symbolSize = width * 0.72;
   return (
     <View style={[styles.wrap, { width, opacity }]}>
@@ -135,6 +103,9 @@ export function ProDayLogo({
     </View>
   );
 }
+
+/** Ratio largeur/hauteur lockup horizontal (réserve d'espace). */
+export { PRODAY_LOGO_HORIZONTAL_ASPECT };
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center' },

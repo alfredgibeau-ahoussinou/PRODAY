@@ -1,14 +1,13 @@
 import React, { useMemo } from 'react';
-import { View, Text, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import {
   brandForProductLine,
   PRODAY_PRO_BRAND,
   type ProductLineId,
 } from '../models/ProductLine';
-import { PRO_BRANDING_LOGOS } from '../content/brandingAssets';
+import { PRODAY_SYMBOL_ASPECT, brandVariantForProductLine } from '../theme/prodayBrand';
+import { ProDaySymbol } from './branding/ProDaySymbol';
 import type { LogoBackground } from './Logo';
-
-const PICTO_ASPECT = 1.78;
 
 const PRO_COLORS = {
   pro: '#1E3A8A',
@@ -36,12 +35,13 @@ export const ProLogo: React.FC<ProLogoProps> = ({
   watermark = false,
   productLine = 'pro_staff',
 }) => {
+  const brandVariant = brandVariantForProductLine(productLine);
   const onDark = background === 'dark' || background === 'photo';
   const brand = brandForProductLine(productLine);
 
   const layout = useMemo(() => {
     const pictoW = width * (watermark ? 1 : 0.76);
-    const pictoH = pictoW / PICTO_ASPECT;
+    const pictoH = pictoW / PRODAY_SYMBOL_ASPECT;
     const line1 = width * 0.1;
     const line2 = width * 0.115;
     const tagSize = width * 0.065;
@@ -52,11 +52,11 @@ export const ProLogo: React.FC<ProLogoProps> = ({
 
   if (watermark) {
     return (
-      <Image
-        source={PRO_BRANDING_LOGOS.picto}
-        style={{ width: layout.pictoW, height: layout.pictoH, opacity: opacity * 0.14 }}
-        resizeMode="contain"
-        accessibilityLabel={brand.name}
+      <ProDaySymbol
+        size={layout.pictoW}
+        variant={brandVariant}
+        tone={onDark ? 'white' : 'black'}
+        opacity={opacity * 0.14}
       />
     );
   }
@@ -72,12 +72,10 @@ export const ProLogo: React.FC<ProLogoProps> = ({
 
   return (
     <View style={[styles.wrap, { width, opacity }]}>
-      <Image
-        source={PRO_BRANDING_LOGOS.picto}
-        style={{ width: layout.pictoW, height: layout.pictoH }}
-        resizeMode="contain"
-        accessibilityRole="image"
-        accessibilityLabel={brand.name}
+      <ProDaySymbol
+        size={layout.pictoW}
+        variant={brandVariant}
+        tone={onDark ? 'white' : 'black'}
       />
 
       <View style={[styles.wordBlock, { marginTop: width * 0.028 }]}>

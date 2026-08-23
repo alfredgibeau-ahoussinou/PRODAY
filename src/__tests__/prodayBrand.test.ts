@@ -1,12 +1,17 @@
 import {
   PRODAY_MASTER,
   PRODAY_POLE_ACCENTS,
+  PRODAY_SYMBOL_ASPECT,
   PRODAY_TAGLINE,
   brandVariantForProductLine,
   poleAccent,
 } from '../theme/prodayBrand';
+import { poleSymbolAsset, PRODAY_BRAND_ASSETS } from '../content/brandingAssets';
 
 describe('prodayBrand', () => {
+  it('expose le ratio symbole HD', () => {
+    expect(PRODAY_SYMBOL_ASPECT).toBeCloseTo(675 / 552, 4);
+  });
   it('expose les accents officiels planche', () => {
     expect(PRODAY_POLE_ACCENTS.player).toBe('#FFFFFF');
     expect(PRODAY_POLE_ACCENTS.coach).toBe('#C5A059');
@@ -34,5 +39,13 @@ describe('prodayBrand', () => {
   it('poleAccent retombe sur master or', () => {
     expect(poleAccent('master')).toBe(PRODAY_MASTER.gold);
     expect(poleAccent('club')).toBe('#00ADEF');
+  });
+
+  it('poleSymbolAsset retourne le symbole teinté par pôle', () => {
+    expect(poleSymbolAsset('player')).toBe(PRODAY_BRAND_ASSETS.polePlayer);
+    expect(poleSymbolAsset('coach')).toBe(PRODAY_BRAND_ASSETS.poleCoach);
+    expect(poleSymbolAsset('club')).toBe(PRODAY_BRAND_ASSETS.poleClub);
+    expect(poleSymbolAsset('master', 'white')).toBe(PRODAY_BRAND_ASSETS.symbolWhite);
+    expect(poleSymbolAsset('master', 'black')).toBe(PRODAY_BRAND_ASSETS.symbolBlack);
   });
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../../components/ui/Icon';
 import { PressableSpring } from '../../../components/motion';
-import { BRANDING_LOGOS } from '../../../content/brandingAssets';
+import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
 import { PresidentBrandMark, PresidentText } from '../ui/presidentUi';
 import { usePresidentTheme } from './PresidentThemeContext';
 import type { PresidentNavItemId } from '../navigation/presidentNavConfig';
@@ -80,12 +80,7 @@ export function PresidentSidebar({
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.brand}>
-        <Image
-          source={BRANDING_LOGOS.official}
-          style={collapsed ? styles.logoSm : styles.logo}
-          resizeMode="contain"
-          accessibilityLabel="ProDay"
-        />
+        <ProDaySymbol size={collapsed ? 28 : 36} variant="president" tone="white" />
         {!collapsed ? (
           <View style={{ flex: 1, gap: 4 }}>
             <PresidentBrandMark compact />

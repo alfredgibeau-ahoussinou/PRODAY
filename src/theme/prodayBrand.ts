@@ -86,11 +86,11 @@ export function brandVariantForProductLine(
   return 'master';
 }
 
-/** Ratio symbole extrait (white PNG). */
-export const PRODAY_SYMBOL_ASPECT = 92 / 60;
+/** Ratio symbole HD (white PNG — assets/branding/.generated-meta.json). */
+export const PRODAY_SYMBOL_ASPECT = 675 / 552;
 
-/** Ratio logo master symbole + wordmark + tagline. */
-export const PRODAY_LOGO_MASTER_ASPECT = 225 / 265;
+/** Ratio lockup empilé symbole (72 %) + wordmark natif. */
+export const PRODAY_LOGO_MASTER_ASPECT = 1 / (0.72 / PRODAY_SYMBOL_ASPECT + 0.32);
 
-/** Ratio lockup horizontal symbole + wordmark. */
-export const PRODAY_LOGO_HORIZONTAL_ASPECT = 395 / 125;
+/** Ratio lockup horizontal symbole (34 %) + PRODAY · POLE. */
+export const PRODAY_LOGO_HORIZONTAL_ASPECT = 1 / (0.34 / PRODAY_SYMBOL_ASPECT);
