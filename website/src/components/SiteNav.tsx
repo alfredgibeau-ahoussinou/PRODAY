@@ -213,7 +213,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
             className="flex shrink-0 items-center rounded-full py-1 pl-1.5 pr-2"
             aria-label="ProDay, accueil"
           >
-            <ProdayLockup width={108} priority className="h-[22px] w-auto min-[390px]:h-[24px]" />
+            <ProdayLockup priority className="h-[22px] text-[22px] min-[390px]:h-[24px] min-[390px]:text-[24px]" />
           </Link>
 
           <div className="mx-auto hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex">

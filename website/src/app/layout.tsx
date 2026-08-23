@@ -43,8 +43,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/branding/logo-proday-official.png",
-        width: 290,
-        height: 152,
+        width: 649,
+        height: 172,
         alt: "ProDay",
       },
     ],

@@ -1,16 +1,19 @@
 /**
  * Assets identité officielle ProDay (website/public/branding).
- * Source : planche brand → assets/branding/ → generate-official-brand.
- * Symbole seul = favicon / pictos pôle ; lockup = nav / OG.
+ * Source master HD : logo-proday-symbol-master.png → ingest-symbol-master.mjs.
+ * Symbole seul = favicon / pictos pôle ; lockup nav = symbole + typo CSS.
  */
 
-/** Lockup officiel paddé (symbole + PRODAY + tagline) — OG / emails. */
+/** Master source (blanc sur fond noir) — ingestion uniquement. */
+export const PRODAY_SYMBOL_MASTER = "/branding/logo-proday-symbol-master.png";
+
+/** Lockup officiel paddé (symbole + PRODAY) — OG / emails. */
 export const PRODAY_LOGO_OFFICIAL = "/branding/logo-proday-official.png";
 
-/** Lockup horizontal blanc (symbole + PRODAY, nav dark). */
+/** @deprecated Lockup PNG — préférer ProdayLockup (symbole + typo). */
 export const PRODAY_LOGO_ON_DARK = "/branding/logo-proday-lockup-white.png";
 
-/** Lockup horizontal noir (light UI / documents). */
+/** @deprecated Lockup PNG — préférer ProdayLockup (symbole + typo). */
 export const PRODAY_LOGO_ON_LIGHT = "/branding/logo-proday-lockup-black.png";
 
 /** Symbole seul — blanc transparent (favicon source / pictos). */
@@ -25,14 +28,14 @@ export const PRODAY_MARK_GOLD = "/branding/logo-proday-mark-gold.png";
 /** @deprecated Alias or master (ex-bleu). */
 export const PRODAY_MARK_BLUE = "/branding/logo-proday-mark-blue.png";
 
-/** Ratio lockup officiel paddé (≈ 290×152). */
-export const PRODAY_OFFICIAL_LOGO_ASPECT = 290 / 152;
+/** Ratio lockup officiel paddé (649×172, symbole + PRODAY). */
+export const PRODAY_OFFICIAL_LOGO_ASPECT = 649 / 172;
 
-/** Ratio lockup nav horizontal (≈ 191×54). */
-export const PRODAY_LOCKUP_ASPECT = 191 / 54;
+/** Ratio lockup nav horizontal composé (symbole + typo PRODAY). */
+export const PRODAY_LOCKUP_ASPECT = 3.77;
 
-/** Ratio symbole master (≈ 92×92, carré). */
-export const PRODAY_MARK_ASPECT = 1;
+/** Ratio symbole master HD (675×552). */
+export const PRODAY_MARK_ASPECT = 675 / 552;
 
 /** Pictos pôle = même symbole teinté (accents planche). */
 export const PRODAY_MARK_BY_POLE = {

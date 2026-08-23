@@ -52,7 +52,7 @@ export function SiteFooter() {
         <div className="grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.1fr_1fr_1fr]">
           <div>
             <Link href={ROUTES.home} className="inline-flex items-center">
-              <ProdayLockup width={128} className="h-8 w-auto" />
+              <ProdayLockup className="h-8 text-[32px]" />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/40">
               {BRAND.tagline}
