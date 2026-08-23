@@ -1,21 +1,27 @@
 /**
- * Génère les assets identité officielle ProDay (symbole + lockup + favicons + pôles)
- * depuis le master brand (symbole P + wordmark PRODAY).
+ * Synchronise l’identité officielle ProDay sur le site depuis assets/branding/
+ * (symbole + lockup masters — pas la planche entière).
  *
- * Usage: node scripts/generate-official-brand.mjs [chemin-master.png]
+ * Usage: node scripts/generate-official-brand.mjs
  */
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import sharp from "sharp";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
+const repoRoot = resolve(root, "..");
+const masterDir = resolve(repoRoot, "assets/branding");
 const outDir = resolve(root, "public/branding");
 const iconsDir = resolve(root, "public/icons");
+const texturesDir = resolve(root, "public/textures");
 
-const DEFAULT_MASTER =
-  "/Users/gibeau--ahoussinou/.cursor/projects/Users-gibeau-ahoussinou-PRODAY/assets/image-d7399531-61dd-4a6b-8360-cb24accce56c.png";
+const MASTER_SYMBOL = resolve(masterDir, "proday-symbol-white.png");
+const MASTER_LOCKUP = resolve(masterDir, "proday-logo-master-white.png");
+const MASTER_OFFICIAL = resolve(masterDir, "logo-proday-official.png");
+const MASTER_SYMBOL_BLACK = resolve(masterDir, "proday-symbol-black.png");
+const MASTER_LOCKUP_BLACK = resolve(masterDir, "proday-logo-master-black.png");
 
 const POLE_HEX = {
   joueur: "#1E3AFF",
@@ -27,33 +33,6 @@ const POLE_HEX = {
   sponsor: "#EF4444",
   admin: "#A3A3A3",
 };
-
-function clampCrop(c, w, h) {
-  const left = Math.max(0, Math.floor(c.left));
-  const top = Math.max(0, Math.floor(c.top));
-  const width = Math.min(Math.floor(c.width), w - left);
-  const height = Math.min(Math.floor(c.height), h - top);
-  if (width < 1 || height < 1) throw new Error(`Bad crop ${JSON.stringify({ left, top, width, height })}`);
-  return { left, top, width, height };
-}
-
-async function whiteOnTransparent(srcPath) {
-  const { data, info } = await sharp(srcPath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const { width: w, height: h, channels: ch } = info;
-  const out = Buffer.alloc(w * h * 4);
-  for (let i = 0; i < w * h; i++) {
-    const r = data[i * ch];
-    const g = data[i * ch + 1];
-    const b = data[i * ch + 2];
-    const lum = (r + g + b) / 3;
-    const a = Math.max(0, Math.min(255, Math.round((lum - 40) * 1.35)));
-    out[i * 4] = 255;
-    out[i * 4 + 1] = 255;
-    out[i * 4 + 2] = 255;
-    out[i * 4 + 3] = a;
-  }
-  return { raw: out, width: w, height: h };
-}
 
 async function recolor(buf, hex) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -117,78 +96,116 @@ async function makeAppIcon(markWhite, size, radiusRatio = 0.22) {
     .toBuffer();
 }
 
+/** Badge circulaire 3D (ex-ancien logo coureur). */
+async function makeSoccerLogoBadge(markWhite) {
+  const size = 1024;
+  const disc = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <defs>
+        <radialGradient id="g" cx="38%" cy="32%" r="68%">
+          <stop offset="0%" stop-color="#f4f4f5"/>
+          <stop offset="55%" stop-color="#e4e4e7"/>
+          <stop offset="100%" stop-color="#a1a1aa"/>
+        </radialGradient>
+      </defs>
+      <circle cx="512" cy="512" r="500" fill="url(#g)"/>
+      <circle cx="512" cy="512" r="468" fill="#0a0a0a"/>
+    </svg>`,
+  );
+  const mark = await sharp(markWhite)
+    .resize({ width: 520, height: 520, fit: "inside" })
+    .toBuffer();
+  const mm = await sharp(mark).metadata();
+  const left = Math.round((size - mm.width) / 2);
+  const top = Math.round((size - mm.height) / 2);
+  return sharp(disc)
+    .composite([{ input: mark, left, top }])
+    .png()
+    .toBuffer();
+}
+
+async function writePng(name, buf) {
+  const path = resolve(outDir, name);
+  await sharp(buf).png({ compressionLevel: 9 }).toFile(path);
+  const m = await sharp(buf).metadata();
+  console.log("✓", name, `${m.width}×${m.height}`);
+}
+
 async function main() {
-  const master = process.argv[2] || DEFAULT_MASTER;
-  if (!existsSync(master)) {
-    console.error("Master manquant:", master);
-    process.exit(1);
+  for (const p of [MASTER_SYMBOL, MASTER_LOCKUP]) {
+    if (!existsSync(p)) {
+      console.error("Master manquant:", p);
+      process.exit(1);
+    }
   }
 
   mkdirSync(outDir, { recursive: true });
   mkdirSync(iconsDir, { recursive: true });
+  mkdirSync(texturesDir, { recursive: true });
 
-  const { raw, width: w, height: h } = await whiteOnTransparent(master);
-
-  // Bbox mesurée sur le master officiel (symbole + wordmark)
-  const pad = 16;
-  const fullCrop = clampCrop(
-    { left: 195 - pad, top: 143 - pad, width: 830 - 195 + pad * 2, height: 516 - 143 + pad * 2 },
-    w,
-    h,
-  );
-  const markCrop = clampCrop(
-    { left: 195 - pad, top: 143 - pad, width: 830 - 195 + pad * 2, height: 401 - 143 + pad },
-    w,
-    h,
-  );
-
-  // sharp: ne pas chaîner .trim() après .extract() sur raw (bug extract_area)
-  const lockupRaw = await sharp(raw, { raw: { width: w, height: h, channels: 4 } })
-    .extract(fullCrop)
-    .png()
-    .toBuffer();
-  const lockupWhite = await sharp(lockupRaw).trim({ threshold: 8 }).png().toBuffer();
-
-  const markRaw = await sharp(raw, { raw: { width: w, height: h, channels: 4 } })
-    .extract(markCrop)
-    .png()
-    .toBuffer();
-  const markWhite = await sharp(markRaw).trim({ threshold: 8 }).png().toBuffer();
-
-  const markBlack = await recolor(markWhite, "#000000");
-  const lockupBlack = await recolor(lockupWhite, "#000000");
+  const markWhite = await sharp(MASTER_SYMBOL).png().toBuffer();
+  const lockupWhite = await sharp(MASTER_LOCKUP).png().toBuffer();
+  const markBlack = existsSync(MASTER_SYMBOL_BLACK)
+    ? await sharp(MASTER_SYMBOL_BLACK).png().toBuffer()
+    : await recolor(markWhite, "#000000");
+  const lockupBlack = existsSync(MASTER_LOCKUP_BLACK)
+    ? await sharp(MASTER_LOCKUP_BLACK).png().toBuffer()
+    : await recolor(lockupWhite, "#000000");
   const markBlue = await recolor(markWhite, "#1E3AFF");
 
-  const assets = [
-    ["logo-proday-official.png", lockupWhite],
-    ["logo-proday-lockup-white.png", lockupWhite],
-    ["logo-proday-lockup-black.png", lockupBlack],
-    ["logo-proday-mark.png", markWhite],
-    ["logo-proday-mark-black.png", markBlack],
-    ["logo-proday-mark-blue.png", markBlue],
-    ["logo-mark-white.png", markWhite],
-    ["logo-dark.png", lockupWhite],
-    ["logo-light.png", lockupBlack],
-    ["logo-transparent-hero.png", lockupWhite],
-    ["logo-white.png", lockupWhite],
-  ];
+  // Masters publics (chemins stables)
+  copyFileSync(MASTER_SYMBOL, resolve(outDir, "proday-symbol-white.png"));
+  copyFileSync(MASTER_LOCKUP, resolve(outDir, "proday-logo-master-white.png"));
+  if (existsSync(MASTER_SYMBOL_BLACK)) {
+    copyFileSync(MASTER_SYMBOL_BLACK, resolve(outDir, "proday-symbol-black.png"));
+  }
+  if (existsSync(MASTER_LOCKUP_BLACK)) {
+    copyFileSync(MASTER_LOCKUP_BLACK, resolve(outDir, "proday-logo-master-black.png"));
+  }
+  console.log("✓ masters copiés depuis assets/branding");
 
-  for (const [name, buf] of assets) {
-    await sharp(buf).png({ compressionLevel: 9 }).toFile(resolve(outDir, name));
-    const m = await sharp(buf).metadata();
-    console.log("✓", name, `${m.width}×${m.height}`);
+  // Lockup officiel paddé (OG / emails) — sinon lockup transparent
+  if (existsSync(MASTER_OFFICIAL)) {
+    copyFileSync(MASTER_OFFICIAL, resolve(outDir, "logo-proday-official.png"));
+    console.log("✓ logo-proday-official.png (master paddé)");
+  } else {
+    await writePng("logo-proday-official.png", lockupWhite);
   }
 
+  // Aliases binaires identiques aux masters (pas de ré-encodage)
+  const copies = [
+    ["logo-proday-lockup-white.png", MASTER_LOCKUP],
+    ["logo-proday-lockup-black.png", MASTER_LOCKUP_BLACK],
+    ["logo-proday-mark.png", MASTER_SYMBOL],
+    ["logo-proday-mark-black.png", MASTER_SYMBOL_BLACK],
+    ["logo-mark-white.png", MASTER_SYMBOL],
+    ["logo-dark.png", MASTER_LOCKUP],
+    ["logo-light.png", MASTER_LOCKUP_BLACK],
+    ["logo-transparent-hero.png", MASTER_LOCKUP],
+    ["logo-white.png", MASTER_LOCKUP],
+    // Anciens logos woman → lockup officiel (plus de pictogramme coureuse)
+    ["logo-woman-light.png", MASTER_LOCKUP_BLACK],
+    ["logo-woman-white.png", MASTER_LOCKUP],
+  ];
+  for (const [name, src] of copies) {
+    if (!existsSync(src)) {
+      console.warn("skip copy (manquant):", name, src);
+      continue;
+    }
+    copyFileSync(src, resolve(outDir, name));
+    console.log("✓", name, "(copy master)");
+  }
+
+  await writePng("logo-proday-mark-blue.png", markBlue);
+
   await sharp(lockupWhite).webp({ quality: 92 }).toFile(resolve(outDir, "logo-proday-official.webp"));
+  console.log("✓ logo-proday-official.webp");
 
   for (const [name, hex] of Object.entries(POLE_HEX)) {
     const tinted = await recolor(markWhite, hex);
-    const file = `logo-proday-mark-${name}.png`;
-    await sharp(tinted).png({ compressionLevel: 9 }).toFile(resolve(outDir, file));
-    console.log("✓", file, hex);
+    await writePng(`logo-proday-mark-${name}.png`, tinted);
   }
 
-  // Alias pictos legacy → symbole pôle (évite les anciens logos coureur)
   const pictoAliases = {
     "logo-man-picto.png": "joueur",
     "logo-homme-picto.png": "joueur",
@@ -201,8 +218,7 @@ async function main() {
   };
   for (const [file, pole] of Object.entries(pictoAliases)) {
     const tinted = await recolor(markWhite, POLE_HEX[pole]);
-    await sharp(tinted).png({ compressionLevel: 9 }).toFile(resolve(outDir, file));
-    console.log("✓ alias", file, "→", pole);
+    await writePng(file, tinted);
   }
 
   for (const size of [96, 128, 192, 256, 384, 512]) {
@@ -220,8 +236,13 @@ async function main() {
   ]);
   writeFileSync(resolve(root, "src/app/favicon.ico"), ico);
   writeFileSync(resolve(root, "public/favicon.ico"), ico);
+  console.log("✓ favicon + PWA icons");
 
-  console.log("OK — identité officielle ProDay (symbole + lockup + favicons)");
+  const badge = await makeSoccerLogoBadge(markWhite);
+  await sharp(badge).toFile(resolve(texturesDir, "soccer_logo_badge.png"));
+  console.log("✓ textures/soccer_logo_badge.png (symbole officiel)");
+
+  console.log("OK — identité officielle ProDay synchronisée (symbole + lockup)");
 }
 
 main().catch((err) => {

@@ -1,18 +1,19 @@
 /**
  * Assets identité officielle ProDay (website/public/branding).
+ * Source de vérité : assets/branding/ (symbole + lockup, pas la planche).
  * Symbole seul = favicon / nav compacte ; lockup = headers / OG.
  */
 
-/** Lockup officiel (symbole + PRODAY) — blanc, fond transparent (UI sombre). */
+/** Lockup officiel paddé (symbole + PRODAY) — OG / emails. */
 export const PRODAY_LOGO_OFFICIAL = "/branding/logo-proday-official.png";
 
-/** Lockup blanc (dark UI). */
+/** Lockup blanc transparent (dark UI). */
 export const PRODAY_LOGO_ON_DARK = "/branding/logo-proday-lockup-white.png";
 
-/** Lockup noir (light UI / documents). */
+/** Lockup noir transparent (light UI / documents). */
 export const PRODAY_LOGO_ON_LIGHT = "/branding/logo-proday-lockup-black.png";
 
-/** Symbole seul — blanc transparent (favicon source / nav). */
+/** Symbole seul — blanc transparent (favicon source / nav). Alias master. */
 export const PRODAY_MARK = "/branding/logo-proday-mark.png";
 
 /** Symbole seul — noir transparent. */
@@ -21,10 +22,10 @@ export const PRODAY_MARK_ON_LIGHT = "/branding/logo-proday-mark-black.png";
 /** Symbole Master bleu ProDay. */
 export const PRODAY_MARK_BLUE = "/branding/logo-proday-mark-blue.png";
 
-/** Ratio lockup officiel (≈ 636×375). */
-export const PRODAY_OFFICIAL_LOGO_ASPECT = 636 / 375;
+/** Ratio lockup master (≈ 637×375). */
+export const PRODAY_OFFICIAL_LOGO_ASPECT = 637 / 375;
 
-/** Ratio symbole seul (≈ 369×259). */
+/** Ratio symbole master (≈ 369×259). */
 export const PRODAY_MARK_ASPECT = 369 / 259;
 
 /** Pictos pôle = même symbole teinté (accents officiels). */

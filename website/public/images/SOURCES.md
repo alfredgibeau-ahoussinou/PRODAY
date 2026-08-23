@@ -64,6 +64,6 @@ Hero vidéo par pôle : `src/lib/roleVisuals.ts` (`heroVideo`) + `PageHeader` / 
 | Fichier | Source | Licence |
 |---------|--------|---------|
 | `../textures/grass_*.jpg` | [ambientCG Grass004](https://ambientcg.com/view?id=Grass004) | CC0 |
-| `../textures/soccer_logo_badge.png` | ProDay brand mark (`/branding/logo-proday-official.png`) on circular sticker | Brand |
+| `../textures/soccer_logo_badge.png` | Symbole officiel ProDay (`logo-proday-mark.png`) sur pastille circulaire | Brand |
 
 Homepage immersive : scène 3D unifiée (ballon géométrique + pelouse PBR + floodlights). Pas de vidéo stock sous le ballon.
