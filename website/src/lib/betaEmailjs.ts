@@ -45,7 +45,7 @@ export function buildBetaEmailJsTemplateParams(
     site_url: site,
     beta_url: buildBetaAccessUrl(site, params.accessToken),
     installer_url: buildBetaInstallerUrl(site, params.accessToken),
-    subject: "Vous êtes beta-testeur ProDay",
+    subject: "Vous êtes beta testeur ProDay",
   };
 }
 
@@ -78,7 +78,7 @@ export function describeBetaEmailJsFailure(error: unknown): {
     return {
       log: raw,
       hint:
-        "Clés EmailJS invalides ou API non-navigateur désactivée (Account → Security).",
+        "Clés EmailJS invalides ou API non navigateur désactivée (Account → Security).",
     };
   }
 

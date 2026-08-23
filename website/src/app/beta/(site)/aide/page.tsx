@@ -4,7 +4,7 @@ import { getBetaSession } from "@/lib/getBetaSession";
 
 export const metadata: Metadata = {
   title: "Aide bêta",
-  description: "FAQ beta-testeur, contact support et envoi de retours ProDay.",
+  description: "FAQ beta testeur, contact support et envoi de retours ProDay.",
   robots: { index: false, follow: false },
 };
 

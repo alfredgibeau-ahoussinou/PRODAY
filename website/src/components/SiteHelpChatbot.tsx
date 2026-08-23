@@ -59,7 +59,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
   {
     id: "beta",
     question: "Comment rejoindre la bêta ?",
-    answer: "Inscrivez-vous sur la liste d'attente. Validation par l'équipe, puis accès à l'espace bêta par email.",
+    answer: "Inscrivez vous sur la liste d'attente. Validation par l'équipe, puis accès à l'espace bêta par email.",
     href: ROUTES.betaWaitlist,
     hrefLabel: "Liste d'attente",
   },

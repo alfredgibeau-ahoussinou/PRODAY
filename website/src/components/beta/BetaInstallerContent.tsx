@@ -170,7 +170,7 @@ function PlatformQuickPick({
             <ExternalLink size={12} />
           </a>
         ) : (
-          <p className="mt-4 text-sm text-white/45">Voir les étapes ci-dessous.</p>
+          <p className="mt-4 text-sm text-white/45">Voir les étapes ci dessous.</p>
         )}
         <a
           href="#android"
@@ -207,7 +207,7 @@ function PlatformQuickPick({
           </a>
         ) : (
           <p className="mt-4 text-sm text-white/45">
-            Lien envoyé par email à l&apos;ouverture. Étapes ci-dessous.
+            Lien envoyé par email à l&apos;ouverture. Étapes ci dessous.
           </p>
         )}
         <a
@@ -246,7 +246,7 @@ export function BetaInstallerContent() {
         Les builds mobiles sont distribués en dehors des stores publics pendant la bêta. Sur Android,
         téléchargez l&apos;APK directement depuis cette page. Sur iOS,{" "}
         {testflightAvailable
-          ? "ouvrez le lien TestFlight ci-dessous sur votre iPhone (bouton ou URL complète)."
+          ? "ouvrez le lien TestFlight ci dessous sur votre iPhone (bouton ou URL complète)."
           : `la bêta TestFlight a été décalée au ${IOS_BETA_LAUNCH_LABEL} (améliorations nécessaires). Lien envoyé par email à tous les inscrits.`}{" "}
         Une fois connecté, testez votre pôle (Joueur, Club, Coach, Supporter ou Sponsor) et les modules
         transverses.
@@ -266,7 +266,7 @@ export function BetaInstallerContent() {
           <p className="text-sm font-semibold text-white">APK Android bientôt disponible</p>
           <p className="mt-1 text-sm text-white/45">
             Le lien de téléchargement n&apos;est pas encore publié sur cette page. Dès qu&apos;il
-            l&apos;est, le bouton apparaîtra ici. En attendant, consultez les étapes ci-dessous ou
+            l&apos;est, le bouton apparaîtra ici. En attendant, consultez les étapes ci dessous ou
             l&apos;onglet Aide.
           </p>
         </div>
@@ -286,7 +286,7 @@ export function BetaInstallerContent() {
               "Sur votre téléphone Android, ouvrez Réglages → Sécurité (ou Applications) et activez « Installer des applications inconnues » pour votre navigateur ou gestionnaire de fichiers.",
               "Depuis votre téléphone Android, ouvrez cette page Installer dans votre espace bêta et appuyez sur « Télécharger l'APK Android ». Attendez la fin du téléchargement (fichier .apk).",
               "Ouvrez le fichier téléchargé depuis la barre de notifications ou l'application Fichiers, puis appuyez sur « Installer ».",
-              "Une fois installée, ouvrez ProDay, connectez-vous avec le même email que votre inscription bêta et acceptez les permissions demandées (notifications, stockage si nécessaire).",
+              "Une fois installée, ouvrez ProDay, connectez vous avec le même email que votre inscription bêta et acceptez les permissions demandées (notifications, stockage si nécessaire).",
               "Choisissez votre pôle (Joueur, Club, Coach, Supporter ou Sponsor) et explorez les écrans proposés — signalez bugs et idées depuis l'onglet Aide.",
             ]}
           />
@@ -320,7 +320,7 @@ export function BetaInstallerContent() {
                 items={[
                   "Vérifiez que le téléchargement est complet (pas interrompu).",
                   "Réessayez depuis Chrome ou Firefox avec les sources inconnues activées pour ce navigateur.",
-                  "Assurez-vous d'avoir au moins 200 Mo d'espace libre.",
+                  "Assurez vous d'avoir au moins 200 Mo d'espace libre.",
                 ]}
               />
               <TroubleshootBlock
@@ -335,7 +335,7 @@ export function BetaInstallerContent() {
                 title="Mise à jour de l'APK"
                 items={[
                   "Téléchargez la nouvelle version depuis cet onglet Installer.",
-                  "Installez par-dessus l'ancienne version. Vos données de connexion sont conservées.",
+                  "Installez par dessus l'ancienne version. Vos données de connexion sont conservées.",
                 ]}
               />
             </div>
@@ -347,20 +347,20 @@ export function BetaInstallerContent() {
           platform="ios"
           icon={<Apple size={22} className="text-white" />}
           title="iOS. TestFlight"
-          subtitle="Distribution Apple officielle pour beta-testeurs"
+          subtitle="Distribution Apple officielle pour beta testeurs"
           available={testflightAvailable}
         >
           <StepList
             steps={[
               testflightAvailable
-                ? "Sur votre iPhone, ouvrez le bouton « Ouvrir TestFlight » ci-dessous (ou le lien complet), ou utilisez l'email d'invitation Apple reçu sur l'adresse de votre inscription bêta."
+                ? "Sur votre iPhone, ouvrez le bouton « Ouvrir TestFlight » ci dessous (ou le lien complet), ou utilisez l'email d'invitation Apple reçu sur l'adresse de votre inscription bêta."
                 : "Recevez l'email d'invitation Apple « ProDay vous invite à tester… » sur l'adresse utilisée lors de l'inscription bêta.",
               "Sur votre iPhone ou iPad, installez l'application TestFlight depuis l'App Store (gratuit, éditeur Apple) si ce n'est pas déjà fait.",
               testflightAvailable
                 ? "Ouvrez le lien sur l'appareil iOS (Safari ou Messages) — pas dans « Redeem » / « Utiliser un code » de TestFlight. Acceptez l'invitation ProDay."
                 : "Ouvrez l'email d'invitation sur votre appareil iOS et appuyez sur « View in TestFlight » ou « Commencer les tests ».",
               "Dans TestFlight, acceptez les conditions, puis appuyez sur « Installer » pour ProDay. L'icône apparaît sur votre écran d'accueil.",
-              "Lancez ProDay, connectez-vous avec votre email bêta, choisissez votre pôle (dont Supporter) et testez. Les mises à jour bêta arrivent automatiquement via TestFlight.",
+              "Lancez ProDay, connectez vous avec votre email bêta, choisissez votre pôle (dont Supporter) et testez. Les mises à jour bêta arrivent automatiquement via TestFlight.",
             ]}
           />
 

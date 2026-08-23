@@ -316,7 +316,7 @@ export async function refreshClubStripeInvoice(opts: {
 export const CLUB_BILLING_OFFER_OPTIONS = [
   { id: "club_live_duo", label: "Forfait 2 lives (Veo)" },
   { id: "club_premium", label: "Tout inclus" },
-  { id: "club_video_pro", label: "Pro + Veo all-inclusive" },
+  { id: "club_video_pro", label: "Pro + Veo all inclusive" },
   { id: "video_veo_pack", label: "Pack Pro + Veo (mensuel indicatif)" },
   { id: "veo_lives_custom", label: "Lives Veo (custom)" },
 ] as const;

@@ -13,7 +13,7 @@ const STEPS = [
   {
     n: "02",
     title: "Répondre",
-    body: "Le club invité accepte, refuse ou propose une autre date. Contre-proposition en un geste.",
+    body: "Le club invité accepte, refuse ou propose une autre date. contre proposition en un geste.",
   },
   {
     n: "03",
@@ -78,7 +78,7 @@ export function ClubMatchInviteSection() {
 
         <p className="mt-8 max-w-2xl text-sm leading-relaxed text-white/45">
           Espace « Matchs à organiser » : invitations reçues et envoyées,
-          contre-propositions, matchs confirmés et en attente. Exemple : trouver
+          contre propositions, matchs confirmés et en attente. Exemple : trouver
           une équipe U15 disponible pour un amical à moins de 30 km.
         </p>
 

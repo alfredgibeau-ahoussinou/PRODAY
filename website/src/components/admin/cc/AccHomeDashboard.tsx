@@ -54,7 +54,7 @@ export function AccHomeDashboard({
 
   return (
     <AccShell
-      title="Que se passe-t-il sur ProDay ?"
+      title="Que se passe t il sur ProDay ?"
       subtitle="Vision ops temps réel : santé, actions, monétisation et signaux plateforme."
       badges={badges}
       healthScore={healthScore}

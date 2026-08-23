@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Conditions générales d'utilisation",
   description:
-    "CGU ProDay. Règles d'utilisation de l'app mobile foot amateur et semi-pro.",
+    "CGU ProDay. Règles d'utilisation de l'app mobile foot amateur et semi pro.",
 };
 
 export default function TermsPage() {

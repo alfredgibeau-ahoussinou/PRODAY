@@ -5,7 +5,7 @@ import {
   IOS_BETA_LAUNCH_LABEL_SHORT,
 } from "@/lib/betaIosLaunch";
 
-export const BETA_MEMBER_ROLE = "Beta-testeur";
+export const BETA_MEMBER_ROLE = "Beta testeur";
 
 /** Rôles waitlist = les 5 pôles vitrine (pas les rôles réseau intégrés). */
 export type BetaRoleId =
@@ -154,7 +154,7 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
       <p style="margin:0 0 10px;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#5B75FF;">Accès approuvé</p>
       <h1 style="margin:0 0 18px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">Bienvenue dans la bêta ProDay</h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Félicitations — votre demande a été approuvée. Profil : <strong style="color:#ffffff;">${params.roleLabel}</strong>.</p>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Vous êtes officiellement beta-testeur — parmi les premiers à façonner ProDay sur le terrain.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Vous êtes officiellement beta testeur — parmi les premiers à façonner ProDay sur le terrain.</p>
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 20px;background:#111114;border:1px solid rgba(255,255,255,0.12);">
         <tr>
           <td style="width:3px;background:#1E3AFF;font-size:0;line-height:0;">&nbsp;</td>

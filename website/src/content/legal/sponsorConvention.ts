@@ -57,7 +57,7 @@ export const SPONSOR_CONVENTION_SECTIONS: LegalSectionContent[] = [
     id: 'resiliation',
     title: 'Résiliation',
     paragraphs: [
-      "Chaque partie peut résilier l'accord avec un préavis de 30 jours par e-mail, sauf manquement grave. Les contenus du Partenaire seront retirés de la plateforme dans un délai raisonnable.",
+      "Chaque partie peut résilier l'accord avec un préavis de 30 jours par email, sauf manquement grave. Les contenus du Partenaire seront retirés de la plateforme dans un délai raisonnable.",
     ],
   },
   {

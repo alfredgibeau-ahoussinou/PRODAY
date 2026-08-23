@@ -270,7 +270,7 @@ export const DEMO_PLAYER_CARD: ProDayPlayerCardData = {
   goals: 6,
   assists: 9,
   minutesPlayed: 1420,
-  lastMatchLabel: "Victoire 2-1 · Sam.",
+  lastMatchLabel: "Victoire 2 1 · Sam.",
   maxSpeedKmh: 32.4,
   progressLabel: "+4 OVR cette saison",
   skillBadges: [
@@ -317,7 +317,7 @@ export const DEMO_COACH_CARD: ProDayCoachCardData = {
   category: "U19",
   diplomas: ["BEF", "CFF3"],
   certifications: ["UEFA C", "Futsal"],
-  preferredFormation: "4-3-3",
+  preferredFormation: "4 3 3",
   philosophy: "Transitions rapides · pressing haut",
   matches: 42,
   wins: 24,
@@ -435,7 +435,7 @@ export const DEMO_SPONSOR_CARD: ProDaySponsorCardData = {
   editionLabel: "Partenaire Vérifié",
   company: "Nord Equip",
   sector: "Équipement sportif",
-  location: "Lille · Hauts-de-France",
+  location: "Lille · Hauts de France",
   partnerClubs: ["FC ProDay", "US Nord", "Olympique Amiens"],
   sponsoredEvents: 7,
   skillBadges: ["Vérifié", "Partenaire Elite", "Événements"],
@@ -448,7 +448,7 @@ export const DEMO_SPONSOR_CARD_GOLD: ProDaySponsorCardData = {
   skinId: "gold",
   editionLabel: "Platinum Partner",
   sponsoredEvents: 12,
-  skillBadges: ["Vérifié", "Platinum", "Multi-clubs"],
+  skillBadges: ["Vérifié", "Platinum", "Multi clubs"],
 };
 
 /** Collection démo : 2 éditions par rôle pour sentir la collection. */

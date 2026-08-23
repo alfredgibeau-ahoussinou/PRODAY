@@ -28,7 +28,7 @@ export function LiveStatsDemo() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-neutral-400">MATCH EN DIRECT</p>
-            <p className="text-2xl font-bold">FC ProDay 2-1 Rivaux</p>
+            <p className="text-2xl font-bold">FC ProDay 2 1 Rivaux</p>
           </div>
           <motion.span
             key={minute}

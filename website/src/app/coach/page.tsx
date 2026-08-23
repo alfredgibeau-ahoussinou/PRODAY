@@ -37,7 +37,7 @@ const COACH_CAPS = [
   },
   {
     title: "Invitations de match",
-    body: "Proposez un amical pour votre équipe : club adverse, date, lieu. Contre-propositions et calendriers synchronisés.",
+    body: "Proposez un amical pour votre équipe : club adverse, date, lieu. contre propositions et calendriers synchronisés.",
   },
   {
     title: "Coaching à l’heure",
@@ -48,7 +48,7 @@ const COACH_CAPS = [
     body: "Préparation, analyse adversaire, rapports IA et débriefs automatiques.",
   },
   {
-    title: "Vidéo multi-caméras",
+    title: "Vidéo multi caméras",
     body: "Smartphone, tablette, Veo, Trace, Pixellot, Spiideo : jamais obligatoires.",
   },
   {

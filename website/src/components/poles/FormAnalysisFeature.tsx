@@ -81,7 +81,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Présences régulières — forme stable pour le week-end.",
+      insight: "Présences régulières — forme stable pour le weekend.",
     },
     {
       name: "Amine K.",
@@ -176,7 +176,7 @@ const COPY: Record<
     kicker: "Fonctionnalité centrale · Inclus dans l’offre Club",
     title: "L’état de forme de tout le club, équipe par équipe.",
     support:
-      "Dirigeants et DS voient la disponibilité réelle avant le week-end. Les coachs agissent sur la charge et la récupération déclarée — jamais un diagnostic médical.",
+      "Dirigeants et DS voient la disponibilité réelle avant le weekend. Les coachs agissent sur la charge et la récupération déclarée — jamais un diagnostic médical.",
     boardKicker: "Tableau effectif · Vue Club",
     primaryHref: ROUTES.betaWaitlist,
     primaryLabel: "Activer pour mon club",
@@ -222,7 +222,7 @@ const FLOW = [
   {
     n: "01",
     title: "Signaux",
-    body: "Présences, minutes, check-ins, fatigue et récupération déclarées.",
+    body: "Présences, minutes, check ins, fatigue et récupération déclarées.",
   },
   {
     n: "02",

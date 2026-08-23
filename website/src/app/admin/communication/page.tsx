@@ -42,7 +42,7 @@ export default async function AccCommunicationPage() {
         <div className="mt-4">
           <AccEmpty
             title="Centre campagnes"
-            description="Builder multi-segments au backlog — réutilise la config EmailJS existante."
+            description="Builder multi segments au backlog — réutilise la config EmailJS existante."
           />
         </div>
       </AccPanel>

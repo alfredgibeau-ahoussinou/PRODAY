@@ -35,7 +35,7 @@ export function SiteFooter() {
             <p className="mt-4 font-display text-[clamp(1.75rem,4vw,2.75rem)] font-medium leading-[1.08] tracking-[-0.035em] text-white">
               L&apos;OS du foot.
               <br />
-              Amateur &amp; semi-pro.
+              Amateur &amp; semi pro.
             </p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-white/45">
               Un système pour connecter joueurs, clubs, staff, événements et

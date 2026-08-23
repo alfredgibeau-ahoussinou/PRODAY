@@ -8,7 +8,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Boutique ProDay",
   description:
-    "Trépieds, t-shirts et maillots officiels ProDay. Man, Woman et Pro.",
+    "Trépieds, t shirts et maillots officiels ProDay. Man, Woman et Pro.",
 };
 
 export default function ShopPage() {
@@ -18,7 +18,7 @@ export default function ShopPage() {
         pathname={ROUTES.shop}
         kicker="SHOP"
         title="Équipement & textile officiel"
-        description="Trépieds pour filmer vos matchs, t-shirts et maillots. Logo ProDay brodé, par univers."
+        description="Trépieds pour filmer vos matchs, t shirts et maillots. Logo ProDay brodé, par univers."
         image="/images/football-training-01.jpg"
         dark
       />

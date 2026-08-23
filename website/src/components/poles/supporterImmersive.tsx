@@ -111,7 +111,7 @@ const TRIBUNE_ZONES = [
     id: "debats",
     label: "Débats",
     title: "La voix des tribunes",
-    body: "Réactions, question hebdo, fil après-match. Gratuit. Toujours.",
+    body: "Réactions, question hebdo, fil après match. Gratuit. Toujours.",
   },
   {
     id: "moments",
@@ -149,7 +149,7 @@ export function SupporterTribuneZones() {
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                   on
                     ? "bg-[var(--pole-accent,#06B6D4)] text-white"
-                    : "border border-white/15 text-white/65 hover:border-white/30"
+                    : "border border white/15 text white/65 hover:border white/30"
                 }`}
               >
                 {z.label}
@@ -221,7 +221,7 @@ export function SupporterWarmCta() {
         <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.2rem)] font-medium leading-[1.05] tracking-[-0.035em] text-white">
           Compte gratuit.
           <br />
-          Live le week-end.
+          Live le weekend.
         </h2>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link

@@ -79,7 +79,7 @@ function ChipSelect({
               active
                 ? "bg-amber-400/20 text-amber-200 ring-1 ring-amber-400/50"
                 : disabled
-                  ? "cursor-not-allowed bg-white/5 text-white/25"
+                  ? "cursor not allowed bg white/5 text white/25"
                   : "bg-white/5 text-white/65 ring-1 ring-white/10 hover:bg-white/10 hover:text-white"
             }`}
           >
@@ -217,7 +217,7 @@ export function SponsorSignupWizard() {
       case "national":
         return "National Pro";
       default:
-        return "Sur-mesure";
+        return "Sur mesure";
     }
   }, [packageTier]);
 

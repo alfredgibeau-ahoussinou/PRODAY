@@ -9,7 +9,7 @@ import { ROUTES } from "@/lib/routes";
 const PATHS = [
   {
     title: "À la maison",
-    body: "Exercices selon âge, poste et matériel. Seul, jardin ou city-stade.",
+    body: "Exercices selon âge, poste et matériel. Seul, jardin ou city stade.",
   },
   {
     title: "Avec ma famille",
@@ -75,7 +75,7 @@ export function JoueurHomeTrainingSection({
                 alt=""
                 fill
                 className="object-cover opacity-80"
-                sizes="(max-width: 1024px) 100vw, 40vw"
+                sizes="(max width: 1024px) 100vw, 40vw"
               />
               <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#020617]/80" />
               <span className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-[0.2em] text-white/70">

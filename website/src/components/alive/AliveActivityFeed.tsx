@@ -30,7 +30,7 @@ const FEED = [
     id: "4",
     emoji: "🔥",
     title: "Annonce Mercato",
-    body: "Club cherche milieu offensif · Île-de-France",
+    body: "Club cherche milieu offensif · Île de France",
     tag: "Mercato",
   },
   {

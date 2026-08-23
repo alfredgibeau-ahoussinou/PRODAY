@@ -50,7 +50,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
       description={`Vous êtes inscrit en tant que ${session.roleLabel}. Ce hub regroupe tout ce dont vous avez besoin : programme, installation et support.`}
     >
       <div className="border border-white/10 bg-transparent p-8">
-        <SectionKicker>Votre espace beta-testeur</SectionKicker>
+        <SectionKicker>Votre espace beta testeur</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           Merci de faire partie des premiers à tester ProDay. Explorez les cinq pôles, téléchargez
           l&apos;APK Android depuis l&apos;onglet Installer et envoyez vos retours. Chaque message
@@ -105,7 +105,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                   done
                     ? "bg-accent-gradient text-white"
-                    : "border border-white/15 bg-white/5 text-white/50"
+                    : "border border white/15 bg white/5 text white/50"
                 }`}
               >
                 {step}

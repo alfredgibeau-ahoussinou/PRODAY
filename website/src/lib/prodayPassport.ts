@@ -268,7 +268,7 @@ export function buildPassportExtras(card: ProDayPlayerCardData): PassportExtras 
     lastMatches: [
       card.lastMatchLabel,
       "Nul 1-1 · Mer.",
-      "Victoire 3-0 · Dim.",
+      "Victoire 3 0 · Dim.",
     ],
     heatmapHint: card.heatmapHint,
     physicalState: card.formPct >= 80 ? "Disponible · charge optimale" : "Surveillance charge",

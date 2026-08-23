@@ -160,7 +160,7 @@ export const POLE_FOOTER_LINKS = [
   { href: ROUTES.coach, label: "Espace Coach", subtitle: "Entraînements · Tactique IA · invitations" },
   { href: ROUTES.parent, label: "Pôle Parent", subtitle: "Supervision · messages · agenda · gratuit" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
-  { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & micro-sponsoring local" },
+  { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & micro sponsoring local" },
 ] as const;
 
 export const EXPLORE_CARDS = [
@@ -313,7 +313,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.shop,
     title: "Boutique ProDay",
-    description: "Trépieds, t-shirts et maillots officiels. Man, Woman et Pro.",
+    description: "Trépieds, t shirts et maillots officiels. Man, Woman et Pro.",
     image: "/images/football-training-01.jpg",
     tag: "Boutique",
   },

@@ -27,7 +27,7 @@ export const BETA_APP_VERSION = process.env.NEXT_PUBLIC_BETA_APP_VERSION?.trim()
 
 export const BETA_FEATURES = [
   "Mercato : annonces, candidatures et suivi des réponses",
-  "Invitations de match entre clubs : proposer, accepter, contre-proposer",
+  "Invitations de match entre clubs : proposer, accepter, contre proposer",
   "Entraînement à domicile + coaching humain à l’heure",
   "Matchs et tournois : convocations, RSVP et calendrier",
   "Visibilité : score et dynamique de profil",
@@ -62,7 +62,7 @@ const BETA_TIMELINE_BASE = [
     step: 4,
     title: "Lancement public",
     description:
-      "Les beta-testeurs gardent l'accès prioritaire. On vous prévient de la date de sortie grand public.",
+      "Les beta testeurs gardent l'accès prioritaire. On vous prévient de la date de sortie grand public.",
     done: false,
   },
 ] as const;
@@ -94,15 +94,15 @@ export const BETA_FAQ = [
   {
     question: "Comment télécharger l'application ?",
     answer:
-      "Android : connectez-vous à l'espace bêta et téléchargez l'APK depuis Installer. iOS : bêta TestFlight décalée au 15 août 2026 à 18 h (améliorations nécessaires au bon développement) : vous recevrez le lien par email à l'ouverture.",
+      "Android : connectez vous à l'espace bêta et téléchargez l'APK depuis Installer. iOS : bêta TestFlight décalée au 15 août 2026 à 18 h (améliorations nécessaires au bon développement) : vous recevrez le lien par email à l'ouverture.",
   },
   {
-    question: "Puis-je tester sur iPhone et Android ?",
+    question: "Puis je tester sur iPhone et Android ?",
     answer:
       "Oui, si vous avez les deux appareils. Installez la version adaptée à chaque plateforme. Les comptes ProDay sont les mêmes.",
   },
   {
-    question: "L'app bêta est-elle stable ?",
+    question: "L'app bêta est elle stable ?",
     answer:
       "C'est une version en cours de développement : certaines fonctionnalités peuvent changer, des bugs peuvent survenir. Vos retours nous aident à corriger avant le lancement public.",
   },
@@ -112,12 +112,12 @@ export const BETA_FAQ = [
       "Utilisez le bouton « Envoyer un retour » sur la page Aide, ou répondez directement à l'email de bienvenue bêta. Indiquez votre profil, la version testée et une capture d'écran si possible.",
   },
   {
-    question: "Mes données bêta seront-elles conservées ?",
+    question: "Mes données bêta seront elles conservées ?",
     answer:
       "Les comptes créés pendant la bêta restent actifs après le lancement. On peut réinitialiser certaines données de test. Vous serez prévenus à l'avance.",
   },
   {
-    question: "Puis-je partager mon lien d'accès ?",
+    question: "Puis je partager mon lien d'accès ?",
     answer:
       "Non. Le lien email et le cookie de session sont personnels. Partagez plutôt la page publique d'inscription : proday75.fr/beta/inscription.",
   },

@@ -45,7 +45,7 @@ export const CLUB_QUOTE_OPTIONS: ClubQuoteOption[] = [
   },
   {
     id: "multi_site",
-    label: "Multi-sites",
+    label: "Multi sites",
     kind: "fixed_monthly",
     amountEur: 39,
     description: "Structures secondaires / antennes.",

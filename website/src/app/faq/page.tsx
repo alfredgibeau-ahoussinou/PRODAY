@@ -75,7 +75,7 @@ export default function FaqPage() {
 
       <TerminalCta
         title="Une autre question ?"
-        description="Écris-nous via la liste d’attente."
+        description="Écris nous via la liste d’attente."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Nous contacter"
         secondaryHref={ROUTES.demo}

@@ -128,4 +128,4 @@ export const VIDEO_OFFERS: Record<VideoOfferId, VideoOfferDefinition> = {
 export const VIDEO_OFFER_ORDER: VideoOfferId[] = ["proday_pro_camera"];
 
 export const VIDEO_MODULE_PRINCIPLE =
-  "Vous avez une caméra ? Connectez-la à ProDay. Veo, XbotGo, Spiideo, Pixellot, Trace, smartphone — jamais limité à une marque. Matériel jamais obligatoire.";
+  "Vous avez une caméra ? Connectez la à ProDay. Veo, XbotGo, Spiideo, Pixellot, Trace, smartphone — jamais limité à une marque. Matériel jamais obligatoire.";

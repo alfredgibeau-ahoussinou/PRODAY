@@ -73,7 +73,7 @@ export function AccDevisCenter({
       <AccPanel title="Inbox">
         <AccEmpty
           title="Aucune file devis branchée"
-          description="Utilisez le calculateur pour préparer un devis, puis archivez-le hors-bande jusqu’à l’API inbox."
+          description="Utilisez le calculateur pour préparer un devis, puis archivez-le hors bande jusqu’à l’API inbox."
         />
       </AccPanel>
     </AccShell>

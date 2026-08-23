@@ -49,7 +49,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <SectionKicker>Qu&apos;est-ce que la bêta ProDay ?</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           ProDay réunit Mercato, matchs, compétitions, Visibilité et CV joueur dans une seule app. Pour le
-          foot amateur et semi-pro. En tant que beta-testeur, vous accédez aux builds iOS (TestFlight)
+          foot amateur et semi pro. En tant que beta testeur, vous accédez aux builds iOS (TestFlight)
           et Android (APK) avant le public. Testez les cinq pôles et aidez-nous à prioriser avant
           l&apos;ouverture.
         </p>
@@ -80,9 +80,9 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           La bêta se déroule en plusieurs étapes. Vous êtes actuellement à l&apos;étape {currentStep}
           {currentStep === 2 && BETA_APK_AVAILABLE
-            ? ". L'APK Android est prêt : téléchargez-le depuis l'onglet Installer."
+            ? ". L'APK Android est prêt : téléchargez le depuis l'onglet Installer."
             : currentStep === 2
-              ? ". Rendez-vous sur l'onglet Installer pour l'APK Android dès qu'il est publié."
+              ? ". Rendez vous sur l'onglet Installer pour l'APK Android dès qu'il est publié."
               : `. Les builds mobiles arrivent par vagues selon votre profil (${session.roleLabel}).`}
         </p>
         <ol className="mt-6 space-y-5">
@@ -92,7 +92,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                   done
                     ? "bg-accent-gradient text-white"
-                    : "border border-white/15 bg-white/5 text-white/50"
+                    : "border border white/15 bg white/5 text white/50"
                 }`}
               >
                 {step}

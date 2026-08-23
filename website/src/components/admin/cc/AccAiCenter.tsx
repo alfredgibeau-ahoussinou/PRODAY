@@ -52,7 +52,7 @@ export function AccAiCenter({
   return (
     <AccShell
       title="ProDay Admin AI"
-      subtitle="Assistant contextualisé — multi-agents prévus. Pas de faux LLM : réponses basées sur le résumé ops branché."
+      subtitle="Assistant contextualisé — multi agents prévus. Pas de faux LLM : réponses basées sur le résumé ops branché."
       badges={badges}
       healthScore={healthScore}
       healthLabel={healthLabel}

@@ -168,7 +168,7 @@ export function SponsorTiersCompare() {
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                   on
                     ? "bg-[var(--pole-accent,#EF4444)] text-black"
-                    : "border border-white/15 text-white/70 hover:border-white/30"
+                    : "border border white/15 text white/70 hover:border white/30"
                 }`}
               >
                 {t.name}
@@ -280,7 +280,7 @@ const CAPS = [
     id: "geo",
     label: "Geo",
     title: "Près du terrain",
-    body: "Ciblez une ville, un département ou le national. Vos offres touchent clubs et joueurs actifs : pas une audience hors-sol.",
+    body: "Ciblez une ville, un département ou le national. Vos offres touchent clubs et joueurs actifs : pas une audience hors sol.",
   },
   {
     id: "roi",
@@ -324,7 +324,7 @@ export function SponsorCapabilityPlay() {
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                   on
                     ? "bg-[var(--pole-accent,#EF4444)] text-black"
-                    : "border border-white/15 text-white/65 hover:border-white/30"
+                    : "border border white/15 text white/65 hover:border white/30"
                 }`}
               >
                 {c.label}

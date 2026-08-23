@@ -60,7 +60,7 @@ export function EcosystemMap() {
               active === n.id
                 ? "center" in n && n.center
                   ? "bg-white text-neutral-950 ring-4 ring-white/20"
-                  : "scale-110 bg-white text-neutral-950"
+                  : "scale 110 bg white text neutral 950"
                 : "bg-white/10 text-white hover:scale-105 hover:bg-white/20"
             }`}
             style={{ left: `${n.x}%`, top: `${n.y}%` }}
@@ -94,7 +94,7 @@ const DESCRIPTIONS: Record<string, string> = {
   coach: "Vérification diplôme, effectif, convocations et Stats en direct équipe.",
   agent: "Mandats joueurs, repérage et contacts clubs sur Mercato Pro.",
   recruiter: "Scouting, annonces Mercato Pro et suivi candidatures.",
-  club: "Annonces actives, multi-équipes, exports candidatures.",
+  club: "Annonces actives, multi équipes, exports candidatures.",
   organizer: "Tournois Arène. Inscriptions et palmarès publiés.",
   health: "Kinés, coach mental, nutrition. Annuaire vérifié et messagerie sécurisée.",
   arena: "Compétitions locales intégrées au calendrier saison.",

@@ -89,7 +89,7 @@ const CLUB_COMPARE_ROWS: CompareRow[] = [
     cells: [false, true, true, true],
   },
   {
-    feature: "Administration multi-équipes",
+    feature: "Administration multi équipes",
     cells: ["Basique", true, true, true],
   },
   {

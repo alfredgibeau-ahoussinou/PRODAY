@@ -246,7 +246,7 @@ const WEEK_YOUTH: JoueurWeekBeat[] = [
     day: "Lun",
     chip: "Défi",
     title: "Ton prochain défi",
-    body: "Un petit exercice pied faible. Amuse-toi et progresse.",
+    body: "Un petit exercice pied faible. Amuse toi et progresse.",
   },
   {
     id: "mar",
@@ -273,7 +273,7 @@ const WEEK_YOUTH: JoueurWeekBeat[] = [
     id: "ven",
     day: "Ven",
     chip: "Prépa",
-    title: "Avant le week-end",
+    title: "Avant le weekend",
     body: "Léger échauffement, chaussures prêtes, et go.",
   },
   {
@@ -319,7 +319,7 @@ const WEEK_TEEN: JoueurWeekBeat[] = [
     day: "Jeu",
     chip: "Stats",
     title: "Ton niveau cette semaine",
-    body: "Minutes, buts, passes. Défie-toi sur un indicateur clair.",
+    body: "Minutes, buts, passes. Défie toi sur un indicateur clair.",
   },
   {
     id: "ven",
@@ -418,11 +418,11 @@ function copyFor(
       primaryCta: "Créer mon compte",
       secondaryCta: "Voir l’entraînement",
       sceneKicker: "Ton terrain",
-      sceneTitle: isF ? "Ton mini-stade de joueuse" : "Ton mini-stade de joueur",
+      sceneTitle: isF ? "Ton mini stade de joueuse" : "Ton mini stade de joueur",
       sceneBody:
         "Ballon, terrain, défis et petites victoires. Ludique, jamais bébé — tu es déjà sur le terrain.",
       trainingKicker: "Je veux m’entraîner",
-      trainingTitle: "Amuse-toi et progresse",
+      trainingTitle: "Amuse toi et progresse",
       trainingBody: isF
         ? "Chez toi, avec ta famille, ou avec une coach. Des exercices clairs, adaptés à ton âge."
         : "Chez toi, avec ta famille, ou avec un coach. Des exercices clairs, adaptés à ton âge.",
@@ -472,7 +472,7 @@ function copyFor(
       weekTitle: "Je construis mon parcours.",
       weekSubtitle: "Stats, objectifs, performances — motivant et social.",
       stageKicker: "Sur le terrain",
-      stageTitle: "Défie-toi.",
+      stageTitle: "Défie toi.",
       freePassKicker: "Clair et net",
       freePassTitle: "Gratuit pour jouer.",
       freePassSubtitle: "Pass 3,99 € optionnel : heatmaps, vidéo, objectifs avancés.",
@@ -509,7 +509,7 @@ function copyFor(
     trainingKicker: "Entraînement",
     trainingTitle: "Développe ton potentiel",
     trainingBody:
-      "Programmes à domicile, séances famille, coaching humain à l’heure. Data-driven, jamais gadget.",
+      "Programmes à domicile, séances famille, coaching humain à l’heure. Data driven, jamais gadget.",
     weekKicker: "Cycle type",
     weekTitle: "Performance & préparation.",
     weekSubtitle: "Stats avancées, analyse, historique — précis et sportif.",

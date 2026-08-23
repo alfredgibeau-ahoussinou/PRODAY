@@ -29,7 +29,7 @@ const HUB_BLOCKS = [
   },
   {
     title: "Invitations de match",
-    body: "Proposez un adversaire (nom, ville, distance, catégorie), acceptez ou contre-proposez. Match confirmé → calendriers + convocations.",
+    body: "Proposez un adversaire (nom, ville, distance, catégorie), acceptez ou contre proposez. Match confirmé → calendriers + convocations.",
   },
   {
     title: "Bourse de recrutement",
@@ -45,7 +45,7 @@ const HUB_BLOCKS = [
   },
   {
     title: "Écosystème local",
-    body: "Place de marché équipements entre membres, micro-sponsoring commerces, cagnottes avec règles du club.",
+    body: "Place de marché équipements entre membres, micro sponsoring commerces, cagnottes avec règles du club.",
   },
 ];
 

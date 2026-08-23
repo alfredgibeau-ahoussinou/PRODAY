@@ -101,7 +101,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     reels: {
       title: "Moments",
       subtitle: "Réels et highlights community.",
-      focus: [{ title: "But du week-end", body: "Clip vertical. Démo." }],
+      focus: [{ title: "But du weekend", body: "Clip vertical. Démo." }],
     },
     profil: {
       title: "Compte",
@@ -126,7 +126,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
     feed: {
       title: "Demandes",
       subtitle: "Sollicitations de sportifs et clubs.",
-      focus: [{ title: "Bilan post-match", body: "Demande reçue. Démo." }],
+      focus: [{ title: "Bilan post match", body: "Demande reçue. Démo." }],
     },
     reels: {
       title: "Vidéos",
@@ -184,7 +184,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       title: "Cockpit coach",
       subtitle: "Tactique IA, effectif et matchs.",
       focus: [
-        { title: "Tactique IA", body: "Composition 4-3-3 · consignes banc." },
+        { title: "Tactique IA", body: "Composition 4 3 3 · consignes banc." },
         { title: "Analyse de forme", body: "3 joueurs à surveiller." },
       ],
     },
@@ -214,7 +214,7 @@ const BY_POLE: Record<DemoPoleId, Partial<Record<MainTabId, DemoScreenMock>>> = 
       title: "Campagnes",
       subtitle: "Visibilité mesurée auprès des clubs actifs.",
       focus: [
-        { title: "Tier Territorial", body: "3 clubs · 2 matchs ce week-end." },
+        { title: "Tier Territorial", body: "3 clubs · 2 matchs ce weekend." },
         { title: "KPI impressions", body: "12,4 k · démo illustrative." },
       ],
     },

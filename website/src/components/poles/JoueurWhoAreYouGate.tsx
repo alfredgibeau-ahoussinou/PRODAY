@@ -134,7 +134,7 @@ export function JoueurWhoAreYouGate() {
                 Pro Day Joueur
               </p>
               <h1 className="mt-2 max-w-[12ch] font-display text-[clamp(2.3rem,9vw,4.8rem)] font-medium leading-[0.92] tracking-[-0.045em]">
-                Qui es-tu&nbsp;?
+                Qui es tu&nbsp;?
               </h1>
               <p className="mt-3 max-w-md text-sm text-white/60 sm:text-base">
                 {phase === "gender"

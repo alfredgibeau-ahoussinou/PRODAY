@@ -27,14 +27,14 @@ const PACKAGE_OPTIONS: { id: SponsorPackageTier; label: string; hint: string }[]
   { id: "starter", label: "Découverte", hint: "0 € · tester la visibilité locale" },
   { id: "territorial", label: "Territorial", hint: "49 €/mois · département" },
   { id: "national", label: "National Pro", hint: "99 €/mois · France entière" },
-  { id: "custom", label: "Sur-mesure", hint: "Devis personnalisé" },
+  { id: "custom", label: "Sur mesure", hint: "Devis personnalisé" },
 ];
 
 export const PACKAGE_LABELS: Record<SponsorPackageTier, string> = {
   starter: "Découverte (0 €)",
   territorial: "Territorial (49 €/mois)",
   national: "National Pro (99 €/mois)",
-  custom: "Sur-mesure",
+  custom: "Sur mesure",
 };
 
 export function DevisIntroPage() {

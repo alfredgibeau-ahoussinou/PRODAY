@@ -231,7 +231,7 @@ export function WaitlistForm({
                 id="beta-role-label"
                 className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/40 sm:text-[10px] sm:tracking-[0.2em]"
               >
-                Qui es-tu ?
+                Qui es tu ?
               </p>
               <div className={fullPage ? "mt-2.5" : "mt-4"}>
                 <RolePills

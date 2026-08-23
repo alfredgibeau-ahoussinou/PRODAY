@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.fr",
   ),
   title: {
-    default: "ProDay · L'OS du foot amateur & semi-pro",
+    default: "ProDay · L'OS du foot amateur & semi pro",
     template: "%s · ProDay",
   },
   description:
