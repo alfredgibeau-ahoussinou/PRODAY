@@ -1,5 +1,6 @@
-# Dossiers hors app mobile Android
+# Dossiers hors app mobile (EAS prebuild régénère le natif)
 ios
+android
 website
 functions
 docs
@@ -15,10 +16,14 @@ dist
 
 # Artefacts & caches
 .expo
+.firebase-emulators
+.firebase
 android/app/build
+android/app/.cxx
 android/build
 android/.gradle
 android/local.properties
+**/.cxx
 functions/lib
 node_modules
 **/node_modules

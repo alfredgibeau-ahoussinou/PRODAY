@@ -31,6 +31,7 @@ import {
   shouldSnapOnDragEnd,
   snapIndexFromOffset,
   UNIVERSE_AMBIENT_BASE,
+  UNIVERSE_AMBIENT_FALLBACK,
 } from './universePagerSnap';
 
 const TABLET_BREAKPOINT = 768;
@@ -106,7 +107,9 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 
   // Nombre primitif capturé — jamais `lines` / `lines.length` dans le worklet.
   const maxIndex = Math.max(0, lines.length - 1);
-  const activeAccent = UNIVERSE_ACCENT[lines[liveIndex] ?? lines[0]];
+  const liveLine = lines[liveIndex] ?? lines[0];
+  const activeAccent =
+    (liveLine ? UNIVERSE_ACCENT[liveLine] : undefined) ?? UNIVERSE_AMBIENT_FALLBACK;
 
   useAnimatedReaction(
     () => {

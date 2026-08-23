@@ -12,6 +12,7 @@ import { Icon } from '../../ui/Icon';
 import { useReducedMotion } from '../../../motion';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
+import { UNIVERSE_AMBIENT_FALLBACK } from './universePagerSnap';
 import {
   universeEnterCtaLabel,
   universePoleDisplayName,
@@ -56,11 +57,12 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const activeLine = lines[activeIndex] ?? lines[0];
-  const activeAccent = UNIVERSE_ACCENT[activeLine];
+  const activeAccent =
+    (activeLine ? UNIVERSE_ACCENT[activeLine] : undefined) ?? UNIVERSE_AMBIENT_FALLBACK;
   const isLightCta = activeAccent.toUpperCase() === '#FFFFFF';
-  const ctaLabel = universeEnterCtaLabel(activeLine);
-  const poleName = universePoleDisplayName(activeLine);
-  const tagline = universePoleTagline(activeLine);
+  const ctaLabel = activeLine ? universeEnterCtaLabel(activeLine) : '';
+  const poleName = activeLine ? universePoleDisplayName(activeLine) : '';
+  const tagline = activeLine ? universePoleTagline(activeLine) : '';
   const linesCount = lines.length;
   const showHeaderAction = touring || (showDismiss && onDismiss);
 
@@ -83,6 +85,10 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
     opacity: copyOpacity.value,
     transform: [{ scale: copyScale.value }],
   }));
+
+  if (!activeLine) {
+    return null;
+  }
 
   const cta = (
     <PressableSpring

@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 export interface WearableHealthMetrics {
   /** null = pas de donnée lue (≠ zéro pas réel). */
@@ -39,5 +40,8 @@ export function getWearablePlatformLabel(): WearablePlatformLabel {
 }
 
 export function isWearableHealthSupported(): boolean {
+  if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+    return false;
+  }
   return Platform.OS === 'ios' || Platform.OS === 'android';
 }

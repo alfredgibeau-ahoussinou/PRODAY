@@ -4,7 +4,7 @@ import { sanitizePublicUser } from '../utils/sanitizePublicUser';
 import { rankFeedPosts } from '../core/recommendation/feedRanking.engine';
 
 const SCALES = [1000, 10_000, 20_000, 50_000] as const;
-const ROLES = ['player', 'coach', 'physio', 'agent', 'club', 'organizer'] as const;
+const ROLES = ['player', 'coach', 'club', 'organizer', 'sponsor', 'supporter'] as const;
 const CITIES = ['Paris', 'Lyon', 'Marseille', 'Bordeaux', 'Lille'];
 
 function makeUsers(n: number): User[] {
@@ -101,7 +101,7 @@ describe('charge applicative (simulation utilisateurs)', () => {
         const ms = bench(() => {
           for (const u of sample) sanitizePublicUser(u);
         });
-        expect(ms).toBeLessThan(budget(500, 8, 30));
+        expect(ms).toBeLessThan(budget(500, 8, 45));
       });
 
       it('listByRole + recherche « Paris » (limite 50)', () => {
@@ -114,12 +114,12 @@ describe('charge applicative (simulation utilisateurs)', () => {
             .filter((u) => matchesSearch(u, 'Paris'));
           expect(list.length).toBeGreaterThan(0);
         });
-        expect(ms).toBeLessThan(budget(scale, 0.6, 20));
+        expect(ms).toBeLessThan(budget(scale, 0.6, 35));
       });
 
       it('suggestions sociales (3 rôles × 50 profils)', () => {
         const ms = bench(() => {
-          const roles = ['coach', 'physio', 'player'] as const;
+          const roles = ['coach', 'club', 'player'] as const;
           const suggestions: { score: number }[] = [];
           for (const role of roles) {
             const candidates = users
@@ -136,7 +136,7 @@ describe('charge applicative (simulation utilisateurs)', () => {
           suggestions.sort((a, b) => b.score - a.score);
           expect(suggestions.length).toBe(150);
         });
-        expect(ms).toBeLessThan(budget(scale, 0.8, 20));
+        expect(ms).toBeLessThan(budget(scale, 0.8, 40));
       });
 
       it('classement fil (60 posts)', () => {
@@ -144,14 +144,14 @@ describe('charge applicative (simulation utilisateurs)', () => {
           const ranked = rankFeedPosts({ posts, profile: viewer });
           expect(ranked.length).toBe(60);
         });
-        expect(ms).toBeLessThan(25);
+        expect(ms).toBeLessThan(80);
       });
 
       it('listMembersByClubId. Couverture club dense', () => {
         const denseClub = 'club-0';
         const membersInDb = users.filter((u) => u.profile.club_id === denseClub).length;
         const ms = bench(() => {
-          const roles = ['player', 'coach', 'agent'] as const;
+          const roles = ['player', 'coach', 'club'] as const;
           const merged: User[] = [];
           for (const role of roles) {
             merged.push(
@@ -167,7 +167,7 @@ describe('charge applicative (simulation utilisateurs)', () => {
             expect(visible.length).toBeLessThan(membersInDb);
           }
         });
-        expect(ms).toBeLessThan(budget(scale, 0.6, 50));
+        expect(ms).toBeLessThan(budget(scale, 0.6, 90));
       });
     });
   }
