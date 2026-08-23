@@ -11,6 +11,8 @@ type ProDayWordmarkProps = {
   /** Sous-libellé pôle (JOUEUR, COACH…). */
   poleLabel?: string | null;
   align?: 'center' | 'left';
+  /** Horizontal lockup : libellé pôle sur la même ligne que PRODAY. */
+  poleLabelInline?: boolean;
 };
 
 /**
@@ -22,6 +24,7 @@ export function ProDayWordmark({
   onDark = true,
   poleLabel,
   align = 'center',
+  poleLabelInline = false,
 }: ProDayWordmarkProps) {
   const fontSize = Math.max(12, width * 0.18);
   const color =
@@ -30,6 +33,42 @@ export function ProDayWordmark({
         ? PRODAY_MASTER.white
         : PRODAY_MASTER.black
       : poleAccent(variant);
+
+  const poleStyle = {
+    fontSize: Math.max(8, fontSize * 0.42),
+    color: onDark ? 'rgba(255,255,255,0.72)' : PRODAY_MASTER.grayMuted,
+    letterSpacing: fontSize * 0.22,
+  };
+
+  if (poleLabelInline && poleLabel) {
+    return (
+      <Text
+        style={[
+          styles.inlineRow,
+          align === 'left' && styles.inlineRowLeft,
+          { maxWidth: width },
+        ]}
+        numberOfLines={1}
+        allowFontScaling={false}
+        accessibilityRole="text"
+      >
+        <Text
+          style={[
+            styles.word,
+            align === 'left' && styles.wordLeft,
+            {
+              fontSize,
+              color,
+              letterSpacing: fontSize * 0.28,
+            },
+          ]}
+        >
+          PRODAY
+        </Text>
+        <Text style={[styles.poleInline, poleStyle]}>{` · ${poleLabel}`}</Text>
+      </Text>
+    );
+  }
 
   return (
     <>
@@ -45,6 +84,7 @@ export function ProDayWordmark({
         ]}
         allowFontScaling={false}
         accessibilityRole="text"
+        numberOfLines={1}
       >
         PRODAY
       </Text>
@@ -53,13 +93,10 @@ export function ProDayWordmark({
           style={[
             styles.pole,
             align === 'left' && styles.poleLeft,
-            {
-              fontSize: Math.max(8, fontSize * 0.42),
-              color: onDark ? 'rgba(255,255,255,0.72)' : PRODAY_MASTER.grayMuted,
-              letterSpacing: fontSize * 0.22,
-            },
+            poleStyle,
           ]}
           allowFontScaling={false}
+          numberOfLines={1}
         >
           {poleLabel}
         </Text>
@@ -86,5 +123,20 @@ const styles = StyleSheet.create({
   },
   poleLeft: {
     textAlign: 'left',
+  },
+  inlineRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    flexWrap: 'nowrap',
+    textAlign: 'center',
+    alignSelf: 'center',
+  },
+  inlineRowLeft: {
+    textAlign: 'left',
+    alignSelf: 'flex-start',
+  },
+  poleInline: {
+    fontFamily: fontFamily.semibold,
+    textTransform: 'uppercase',
   },
 });

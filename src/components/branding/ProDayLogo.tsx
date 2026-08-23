@@ -65,6 +65,7 @@ export function ProDayLogo({
   if (layout === 'horizontal') {
     const symbolSize = width * (variant === 'master' ? 0.34 : 0.32);
     const wordWidth = width - symbolSize - width * 0.06;
+    const poleLabelText = showPoleLabel ? PRODAY_POLE_LABELS[variant] || null : null;
     return (
       <View style={[styles.horizontal, { width, opacity }]}>
         <ProDaySymbol
@@ -79,7 +80,8 @@ export function ProDayLogo({
             variant={variant}
             onDark={onDark}
             align="left"
-            poleLabel={showPoleLabel ? PRODAY_POLE_LABELS[variant] || null : null}
+            poleLabel={poleLabelText}
+            poleLabelInline={Boolean(poleLabelText)}
           />
         </View>
       </View>
@@ -134,6 +136,7 @@ const styles = StyleSheet.create({
   },
   horizontalWord: {
     flex: 1,
+    minWidth: 0,
     justifyContent: 'center',
   },
 });

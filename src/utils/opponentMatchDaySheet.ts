@@ -56,7 +56,7 @@ export function buildOpponentMatchDaySheet(input: {
 
   return {
     opponentName,
-    homeLabel: live.home_label,
+    homeLabel: live.home_label ?? 'Domicile',
     metaLine: metaBits.join(' · '),
     analysis,
     h2h,

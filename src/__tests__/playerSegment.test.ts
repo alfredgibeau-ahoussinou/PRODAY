@@ -46,7 +46,7 @@ describe('playerSegment', () => {
     } as User;
     expect(resolvePlayerSegment(user, 'pro_player')).toBe('male');
     const colors = getThemedColorsForLine('pro_player', 'male');
-    expect(colors.accent).toBe('#60A5FA');
+    expect(colors.accent).toBe('#1E3AFF');
     const chrome = getPoleTabBarChrome('pro_player', 'player', 'female');
     expect(chrome.overflowKicker).toBe('Plus');
     expect(chrome.cleanStyle).toBe(true);

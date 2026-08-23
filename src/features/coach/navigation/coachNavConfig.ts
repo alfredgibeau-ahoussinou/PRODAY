@@ -40,6 +40,11 @@ export type CoachNavItemId =
   | 'plus'
   | 'pitch';
 
+/** Alias legacy (deep links) — résolus par canonicalizeCoachNav. */
+export type CoachNavLegacyId = 'accueil';
+
+export type CoachNavResolvableId = CoachNavItemId | CoachNavLegacyId;
+
 export type CoachNavItem = {
   id: CoachNavItemId;
   label: string;
@@ -337,7 +342,7 @@ export const COACH_HOME_TOOLS: {
 );
 
 /** Deep links d’anciennes pages → onglet parent. */
-export function canonicalizeCoachNav(id: CoachNavItemId): CoachNavItemId {
+export function canonicalizeCoachNav(id: CoachNavResolvableId): CoachNavItemId {
   if (id === 'pitch' || id === 'accueil') return 'today';
   if (id === 'effectif') return 'equipe';
   if (id === 'planning') return 'entrainements';

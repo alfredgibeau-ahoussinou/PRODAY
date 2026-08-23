@@ -30,14 +30,14 @@ describe('clubHomeAccueilModel', () => {
       title: 'U15 vs Rival',
       starts_at: soon,
       team_id: 't1',
-    } as TeamEvent;
+    } as unknown as TeamEvent;
     const training = {
       id: 'tr1',
       event_type: 'training',
       title: 'Séance technique',
       starts_at: later,
       team_id: 't2',
-    } as TeamEvent;
+    } as unknown as TeamEvent;
 
     const priority = resolveClubHomePriority({
       todayMatches: [match],

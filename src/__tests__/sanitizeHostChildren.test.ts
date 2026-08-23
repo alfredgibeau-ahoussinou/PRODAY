@@ -15,13 +15,15 @@ describe('sanitizeHostChildren', () => {
   it('enveloppe string / number non vides dans Text', () => {
     const fromString = sanitizeHostChildren('Club');
     expect(React.isValidElement(fromString)).toBe(true);
-    expect((fromString as React.ReactElement).type).toBe(Text);
-    expect((fromString as React.ReactElement).props.children).toBe('Club');
+    const stringEl = fromString as React.ReactElement<{ children: string }>;
+    expect(stringEl.type).toBe(Text);
+    expect(stringEl.props.children).toBe('Club');
 
     const fromNumber = sanitizeHostChildren(42);
     expect(React.isValidElement(fromNumber)).toBe(true);
-    expect((fromNumber as React.ReactElement).type).toBe(Text);
-    expect((fromNumber as React.ReactElement).props.children).toBe('42');
+    const numberEl = fromNumber as React.ReactElement<{ children: string }>;
+    expect(numberEl.type).toBe(Text);
+    expect(numberEl.props.children).toBe('42');
   });
 
   it('conserve les éléments React et nettoie les tableaux mixtes', () => {
@@ -30,7 +32,7 @@ describe('sanitizeHostChildren', () => {
 
     const mixed = sanitizeHostChildren(['  ', el, false, 'label', null]);
     expect(Array.isArray(mixed)).toBe(true);
-    const arr = mixed as React.ReactElement[];
+    const arr = mixed as React.ReactElement<{ children: string }>[];
     expect(arr).toHaveLength(2);
     expect(arr[0].type).toBe(Text);
     expect(arr[0].props.children).toBe('ok');

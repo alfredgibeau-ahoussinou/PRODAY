@@ -10,8 +10,6 @@ import {
 
 function user(partial: Partial<User> & Pick<User, 'uid' | 'role'>): User {
   return {
-    uid: partial.uid,
-    role: partial.role,
     email: partial.email ?? 'u@test.com',
     display_name: partial.display_name ?? 'Test',
     created_at: new Date(),
@@ -23,10 +21,8 @@ function user(partial: Partial<User> & Pick<User, 'uid' | 'role'>): User {
 
 function club(partial: Pick<Club, 'id' | 'owner_uid'> & Partial<Club>): Club {
   return {
-    id: partial.id,
     name: partial.name ?? 'FC Test',
     city: partial.city ?? 'Paris',
-    owner_uid: partial.owner_uid,
     verified: true,
     created_at: new Date(),
     updated_at: new Date(),
