@@ -8,6 +8,7 @@ import {
   universeEnterCtaLabel,
   universePoleDisplayName,
   universePoleIcon,
+  universePoleTagline,
 } from '../components/branding/intro/universePoleBrand';
 import { UNIVERSE_ACCENT } from '../components/branding/intro/universeIntroAccents';
 import { UNIVERSE_CHOICE_ORDER } from '../components/branding/intro/universeChoiceShared';
@@ -61,6 +62,18 @@ describe('sélecteur univers — brand + ACL', () => {
     expect(universePoleIcon('parent')).toBe('people');
     expect(universePoleIcon('supporter')).toBe('flag');
     expect(universePoleIcon('sponsor')).toBe('handshake');
+  });
+
+  it('expose micro-taglines courtes par pôle (≤ ~60 car.)', () => {
+    expect(universePoleTagline('joueur')).toBe('Performance · Développement');
+    expect(universePoleTagline('coach')).toBe('Transmettre · Guider');
+    expect(universePoleTagline('pro_club')).toBe('Structurer · Grandir ensemble');
+    expect(universePoleTagline('parent')).toBe('Accompagner · Soutenir');
+    expect(universePoleTagline('supporter')).toBe('Vivre · Encourager');
+    expect(universePoleTagline('sponsor')).toBe('Visibilité · Impact local');
+    expect(universePoleTagline('president')).toBe('Piloter · Décider');
+    expect(universePoleTagline('joueur').length).toBeLessThanOrEqual(60);
+    expect(universePoleTagline('pro_club').length).toBeLessThanOrEqual(60);
   });
 
   it('pré-auth / admin : vitrine complète', () => {

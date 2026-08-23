@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, useWindowDimensions, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   runOnJS,
   runOnUI,
@@ -310,6 +311,17 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         if (h > 0 && h !== layoutHeight) setLayoutHeight(h);
       }}
     >
+      <LinearGradient
+        colors={['rgba(0,0,0,0.55)', 'transparent']}
+        style={styles.vignetteTop}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.55)']}
+        style={styles.vignetteBottom}
+        pointerEvents="none"
+      />
+
       <Animated.FlatList
         ref={listRef}
         data={lines}
@@ -372,6 +384,20 @@ function createStyles() {
     },
     list: {
       flex: 1,
+    },
+    vignetteTop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '22%',
+    },
+    vignetteBottom: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: '28%',
     },
   });
 }

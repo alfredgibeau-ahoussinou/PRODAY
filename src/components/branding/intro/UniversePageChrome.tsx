@@ -12,7 +12,7 @@ import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
-import { universeEnterCtaLabel } from './universePoleBrand';
+import { universeEnterCtaLabel, universePoleDisplayName } from './universePoleBrand';
 
 interface UniversePageChromeProps {
   lines: CarouselPoleId[];
@@ -107,9 +107,14 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         ]}
       >
         <View style={styles.headerRow}>
-          <Text style={[styles.title, cinematic && styles.titleWide]} numberOfLines={2}>
-            Choisissez votre univers
-          </Text>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.title, cinematic && styles.titleWide]} numberOfLines={2}>
+              Choisissez votre univers
+            </Text>
+            <Text style={styles.subtitle} numberOfLines={2}>
+              Une plateforme. Plusieurs façons de vivre le football.
+            </Text>
+          </View>
           {showHeaderAction ? (
             <Pressable
               onPress={touring ? onSkip : onDismiss}
@@ -137,6 +142,10 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         ]}
         pointerEvents="box-none"
       >
+        <Text style={[styles.poleIndicator, { color: activeAccent }]}>
+          {universePoleDisplayName(activeLine)} · {activeIndex + 1} / {linesCount}
+        </Text>
+
         <View style={styles.dots}>
           {lines.map((line, index) => (
             <AnimatedDot
@@ -191,6 +200,7 @@ const styles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',
+    zIndex: 2,
   },
   top: {
     gap: spacing.xs,
@@ -200,6 +210,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: spacing.md,
+  },
+  headerCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.45)',
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   skip: {
     fontSize: 14,
@@ -226,6 +247,13 @@ const styles = StyleSheet.create({
   bottom: {
     gap: spacing.md,
     alignItems: 'stretch',
+  },
+  poleIndicator: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   dots: {
     flexDirection: 'row',

@@ -13,6 +13,7 @@ import { UNIVERSE_ACCENT } from './universeIntroAccents';
 import {
   brandVariantForCarouselPole,
   universePoleDisplayName,
+  universePoleTagline,
 } from './universePoleBrand';
 
 interface UniverseChoicePageProps {
@@ -30,7 +31,7 @@ interface UniverseChoicePageProps {
 }
 
 /**
- * Slide univers minimaliste — symbole pôle + nom, transitions scale/opacity subtiles.
+ * Slide univers — symbole + nom + micro-tagline, halo discret, carte légère.
  */
 export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   line,
@@ -43,10 +44,12 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   const accent = UNIVERSE_ACCENT[line];
   const variant = brandVariantForCarouselPole(line);
   const poleName = universePoleDisplayName(line);
+  const tagline = universePoleTagline(line);
   const symbolSize = cinematic ? 160 : 132;
+  const haloSize = symbolSize + (cinematic ? 72 : 56);
   const styles = useMemo(
-    () => createStyles(itemWidth, cinematic),
-    [itemWidth, cinematic],
+    () => createStyles(itemWidth, cinematic, accent),
+    [itemWidth, cinematic, accent],
   );
 
   const stageStyle = useAnimatedStyle(() => {
@@ -68,17 +71,41 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
     return { opacity, transform: [{ scale }] };
   }, [index, itemWidth, reducedMotion]);
 
+  const haloStyle = useAnimatedStyle(() => {
+    if (itemWidth <= 0) {
+      return { opacity: 0.12 };
+    }
+    const page = scrollX.value / itemWidth;
+    const abs = Math.abs(page - index);
+    const opacity = interpolate(abs, [0, 0.45, 1], [0.18, 0.14, 0.1], Extrapolation.CLAMP);
+    return { opacity };
+  }, [index, itemWidth]);
+
   return (
     <View style={styles.page}>
       <Animated.View style={[styles.stage, stageStyle]}>
-        <ProDaySymbol size={symbolSize} variant={variant} tone="white" />
-        <Text style={[styles.poleName, { color: accent }]}>{poleName}</Text>
+        <View style={styles.card}>
+          <View style={styles.symbolWrap}>
+            <Animated.View
+              style={[
+                styles.halo,
+                { width: haloSize, height: haloSize, borderRadius: haloSize / 2, backgroundColor: accent },
+                haloStyle,
+              ]}
+            />
+            <ProDaySymbol size={symbolSize} variant={variant} tone="white" />
+          </View>
+          <Text style={[styles.poleName, { color: accent }]}>{poleName}</Text>
+          <Text style={styles.tagline} numberOfLines={2}>
+            {tagline}
+          </Text>
+        </View>
       </Animated.View>
     </View>
   );
 };
 
-function createStyles(itemWidth: number, cinematic: boolean) {
+function createStyles(itemWidth: number, cinematic: boolean, accent: string) {
   return StyleSheet.create({
     page: {
       width: itemWidth,
@@ -90,13 +117,41 @@ function createStyles(itemWidth: number, cinematic: boolean) {
       width: '100%',
       alignItems: 'center',
       paddingHorizontal: cinematic ? spacing.xl : spacing.md,
-      gap: cinematic ? spacing.lg : spacing.md,
+    },
+    card: {
+      width: '100%',
+      maxWidth: cinematic ? 380 : 320,
+      alignItems: 'center',
+      paddingVertical: cinematic ? spacing.xl + spacing.sm : spacing.xl,
+      paddingHorizontal: cinematic ? spacing.lg : spacing.md,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: accent + '22',
+      backgroundColor: 'rgba(255,255,255,0.03)',
+      gap: cinematic ? spacing.md : spacing.sm + 2,
+    },
+    symbolWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    halo: {
+      position: 'absolute',
     },
     poleName: {
       fontSize: cinematic ? 28 : 24,
       fontWeight: '700',
       letterSpacing: -0.4,
       textAlign: 'center',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    tagline: {
+      fontSize: cinematic ? 15 : 14,
+      fontWeight: '500',
+      letterSpacing: 0.1,
+      lineHeight: cinematic ? 21 : 19,
+      color: 'rgba(255,255,255,0.55)',
+      textAlign: 'center',
+      maxWidth: 260,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });

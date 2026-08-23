@@ -64,6 +64,26 @@ export function universePoleDisplayName(pole: CarouselPoleId): string {
   return UNIVERSE_SHORT[pole];
 }
 
+/** Micro-tagline planche — une ligne courte sous le nom du pôle (≤ ~60 car.). */
+const UNIVERSE_POLE_TAGLINE: Record<CarouselPoleId, string> = {
+  joueur: 'Performance · Développement',
+  amateur: 'Performance · Développement',
+  pro_player: 'Performance · Développement',
+  coach: 'Transmettre · Guider',
+  pro_staff: 'Transmettre · Guider',
+  pro_club: 'Structurer · Grandir ensemble',
+  evenements: 'Structurer · Grandir ensemble',
+  president: 'Piloter · Décider',
+  parent: 'Accompagner · Soutenir',
+  supporter: 'Vivre · Encourager',
+  sponsor: 'Visibilité · Impact local',
+  sante: 'Prévention · Suivi médical',
+};
+
+export function universePoleTagline(pole: CarouselPoleId): string {
+  return UNIVERSE_POLE_TAGLINE[pole];
+}
+
 /** CTA « Entrer dans l’univers X ». */
 export function universeEnterCtaLabel(pole: CarouselPoleId): string {
   return `Entrer dans l’univers ${universePoleDisplayName(pole)}`;
