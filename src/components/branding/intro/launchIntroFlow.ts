@@ -22,39 +22,61 @@ export const UNIVERSE_CONFIRM_LEAVE = {
 } as const;
 
 /**
- * Première peinture brand — logo → Bienvenue → hold → sortie vers le sélecteur d’univers.
- * Fond charcoal constant (pas de cut noir).
+ * Reveal session / cold-start : logo composé → message → hold → sortie.
+ * Fond charcoal constant (pas de cut noir, pas de PNG carré).
+ * ~2s total — connect (Bienvenue) et disconnect (Au revoir).
  */
-export const BRAND_WELCOME_REVEAL = {
+export const BRAND_SESSION_REVEAL = {
   /** Fade + scale soft du lockup. */
   logoInMs: 560,
   logoScaleFrom: 0.94,
   /** Décalage avant l’entrée du message (après début logo). */
-  welcomeDelayMs: 320,
-  welcomeInMs: 440,
-  welcomeRisePx: 16,
+  messageDelayMs: 320,
+  messageInMs: 440,
+  messageRisePx: 16,
   /** Pause premium avant la sortie. */
   holdMs: 720,
   holdReducedMs: 180,
-  /** Sortie croisée vers le pager (opacity, jamais holdOpacity=0 brutal). */
+  /** Sortie croisée (opacity, jamais cut brutal à 0). */
   exitMs: 420,
   exitReducedMs: 110,
   /** Floor d’opacity pendant la sortie (anti écran noir). */
   exitFloor: 0.08,
 } as const;
 
-/** Durée totale estimée jusqu’à `onComplete` (hors reduced motion). */
-export function brandWelcomeTotalMs(reduced = false): number {
+/** Alias historique — même choreography que la session reveal. */
+export const BRAND_WELCOME_REVEAL = {
+  logoInMs: BRAND_SESSION_REVEAL.logoInMs,
+  logoScaleFrom: BRAND_SESSION_REVEAL.logoScaleFrom,
+  welcomeDelayMs: BRAND_SESSION_REVEAL.messageDelayMs,
+  welcomeInMs: BRAND_SESSION_REVEAL.messageInMs,
+  welcomeRisePx: BRAND_SESSION_REVEAL.messageRisePx,
+  holdMs: BRAND_SESSION_REVEAL.holdMs,
+  holdReducedMs: BRAND_SESSION_REVEAL.holdReducedMs,
+  exitMs: BRAND_SESSION_REVEAL.exitMs,
+  exitReducedMs: BRAND_SESSION_REVEAL.exitReducedMs,
+  exitFloor: BRAND_SESSION_REVEAL.exitFloor,
+} as const;
+
+export type BrandSessionTone = 'welcome' | 'goodbye';
+
+export const BRAND_SESSION_COPY: Record<BrandSessionTone, string> = {
+  welcome: 'Bienvenue',
+  goodbye: 'Au revoir',
+};
+
+/** Durée totale estimée jusqu’à `onComplete`. */
+export function brandSessionTotalMs(reduced = false): number {
   if (reduced) {
-    return BRAND_WELCOME_REVEAL.holdReducedMs + BRAND_WELCOME_REVEAL.exitReducedMs;
+    return BRAND_SESSION_REVEAL.holdReducedMs + BRAND_SESSION_REVEAL.exitReducedMs;
   }
-  const {
-    welcomeDelayMs,
-    welcomeInMs,
-    holdMs,
-    exitMs,
-  } = BRAND_WELCOME_REVEAL;
-  return welcomeDelayMs + welcomeInMs + holdMs + exitMs;
+  const { messageDelayMs, messageInMs, holdMs, exitMs } = BRAND_SESSION_REVEAL;
+  return messageDelayMs + messageInMs + holdMs + exitMs;
+}
+
+/** @deprecated Prefer brandSessionTotalMs — même durée. */
+export function brandWelcomeTotalMs(reduced = false): number {
+  return brandSessionTotalMs(reduced);
 }
 
 /** Action à la fin de la transition selon le mode d'ouverture du sélecteur. */

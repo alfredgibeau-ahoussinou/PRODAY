@@ -174,10 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const signOut = useCallback(async () => {
-    const name = profile?.display_name;
-    if (name) {
-      await playAuthGreeting('goodbye', name);
-    }
+    await playAuthGreeting('goodbye', profile?.display_name ?? '');
     try {
       const { revenueCatService } = await import('../services/revenueCat.service');
       await revenueCatService.logOut();

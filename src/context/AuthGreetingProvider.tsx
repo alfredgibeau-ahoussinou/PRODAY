@@ -1,21 +1,19 @@
-import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   completeAuthGreeting,
   registerAuthGreetingListener,
   type AuthGreetingPayload,
 } from '../services/authGreeting.controller';
-
-/** Lazy : expo-video chargé uniquement quand un greeting est joué. */
-const AuthGreetingOverlay = lazy(() =>
-  import('../components/auth/AuthGreetingOverlay').then((module) => ({
-    default: module.AuthGreetingOverlay,
-  })),
-);
+import { AuthGreetingOverlay } from '../components/auth/AuthGreetingOverlay';
 
 interface AuthGreetingProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * Hoste le reveal session (Bienvenue / Au revoir) déclenché via playAuthGreeting.
+ * Plus de lazy vidéo — overlay brand léger.
+ */
 export const AuthGreetingProvider: React.FC<AuthGreetingProviderProps> = ({ children }) => {
   const [greeting, setGreeting] = useState<AuthGreetingPayload | null>(null);
 
@@ -33,11 +31,7 @@ export const AuthGreetingProvider: React.FC<AuthGreetingProviderProps> = ({ chil
   return (
     <>
       {children}
-      {greeting ? (
-        <Suspense fallback={null}>
-          <AuthGreetingOverlay greeting={greeting} onDone={handleDone} />
-        </Suspense>
-      ) : null}
+      {greeting ? <AuthGreetingOverlay greeting={greeting} onDone={handleDone} /> : null}
     </>
   );
 };

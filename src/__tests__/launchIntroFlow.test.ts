@@ -1,5 +1,8 @@
 import {
+  brandSessionTotalMs,
   brandWelcomeTotalMs,
+  BRAND_SESSION_COPY,
+  BRAND_SESSION_REVEAL,
   BRAND_WELCOME_REVEAL,
   resolveIntroExitAction,
   shouldSkipPoleTransition,
@@ -43,31 +46,36 @@ describe('launchIntroFlow', () => {
     expect(UNIVERSE_CONFIRM_LEAVE.pushExitMs + 120).toBeLessThan(500);
   });
 
-  it('orchestre Bienvenue en phases fluides sans cut noir', () => {
-    expect(BRAND_WELCOME_REVEAL.logoInMs).toBeGreaterThanOrEqual(400);
-    expect(BRAND_WELCOME_REVEAL.logoInMs).toBeLessThanOrEqual(700);
-    expect(BRAND_WELCOME_REVEAL.welcomeDelayMs).toBeLessThan(BRAND_WELCOME_REVEAL.logoInMs);
-    expect(BRAND_WELCOME_REVEAL.welcomeInMs).toBeGreaterThanOrEqual(300);
-    expect(BRAND_WELCOME_REVEAL.holdMs).toBeGreaterThanOrEqual(500);
-    expect(BRAND_WELCOME_REVEAL.exitMs).toBeGreaterThanOrEqual(300);
-    expect(BRAND_WELCOME_REVEAL.exitMs).toBeLessThanOrEqual(520);
-    expect(BRAND_WELCOME_REVEAL.exitFloor).toBeGreaterThan(0);
-    expect(BRAND_WELCOME_REVEAL.exitFloor).toBeLessThan(0.2);
-    expect(BRAND_WELCOME_REVEAL.logoScaleFrom).toBeLessThan(1);
-    expect(BRAND_WELCOME_REVEAL.welcomeRisePx).toBeGreaterThan(0);
+  it('orchestre Bienvenue / Au revoir en phases fluides sans cut noir', () => {
+    expect(BRAND_SESSION_COPY.welcome).toBe('Bienvenue');
+    expect(BRAND_SESSION_COPY.goodbye).toBe('Au revoir');
+    expect(BRAND_SESSION_REVEAL.logoInMs).toBeGreaterThanOrEqual(400);
+    expect(BRAND_SESSION_REVEAL.logoInMs).toBeLessThanOrEqual(700);
+    expect(BRAND_SESSION_REVEAL.messageDelayMs).toBeLessThan(BRAND_SESSION_REVEAL.logoInMs);
+    expect(BRAND_SESSION_REVEAL.messageInMs).toBeGreaterThanOrEqual(300);
+    expect(BRAND_SESSION_REVEAL.holdMs).toBeGreaterThanOrEqual(500);
+    expect(BRAND_SESSION_REVEAL.exitMs).toBeGreaterThanOrEqual(300);
+    expect(BRAND_SESSION_REVEAL.exitMs).toBeLessThanOrEqual(520);
+    expect(BRAND_SESSION_REVEAL.exitFloor).toBeGreaterThan(0);
+    expect(BRAND_SESSION_REVEAL.exitFloor).toBeLessThan(0.2);
+    expect(BRAND_SESSION_REVEAL.logoScaleFrom).toBeLessThan(1);
+    expect(BRAND_SESSION_REVEAL.messageRisePx).toBeGreaterThan(0);
 
-    const full = brandWelcomeTotalMs(false);
-    const reduced = brandWelcomeTotalMs(true);
+    const full = brandSessionTotalMs(false);
+    const reduced = brandSessionTotalMs(true);
     expect(full).toBe(
-      BRAND_WELCOME_REVEAL.welcomeDelayMs +
-        BRAND_WELCOME_REVEAL.welcomeInMs +
-        BRAND_WELCOME_REVEAL.holdMs +
-        BRAND_WELCOME_REVEAL.exitMs,
+      BRAND_SESSION_REVEAL.messageDelayMs +
+        BRAND_SESSION_REVEAL.messageInMs +
+        BRAND_SESSION_REVEAL.holdMs +
+        BRAND_SESSION_REVEAL.exitMs,
     );
     expect(reduced).toBeLessThan(full);
     expect(reduced).toBe(
-      BRAND_WELCOME_REVEAL.holdReducedMs + BRAND_WELCOME_REVEAL.exitReducedMs,
+      BRAND_SESSION_REVEAL.holdReducedMs + BRAND_SESSION_REVEAL.exitReducedMs,
     );
-    expect(full).toBeLessThan(3200);
+    expect(full).toBeGreaterThanOrEqual(1500);
+    expect(full).toBeLessThanOrEqual(2500);
+    expect(brandWelcomeTotalMs(false)).toBe(full);
+    expect(BRAND_WELCOME_REVEAL.welcomeDelayMs).toBe(BRAND_SESSION_REVEAL.messageDelayMs);
   });
 });
