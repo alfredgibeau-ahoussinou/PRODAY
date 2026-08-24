@@ -27,8 +27,8 @@ type BrandSessionRevealProps = {
 };
 
 /**
- * Transition session : lockup composé (pas de PNG carré) + Bienvenue | Au revoir.
- * Même qualité que le cold-start BrandWelcomeReveal.
+ * Transition session : symbole seul (P + ballon) + Bienvenue | Au revoir.
+ * Pas de wordmark PRODAY ni de tagline — le message est le seul texte sous le logo.
  */
 export const BrandSessionReveal: React.FC<BrandSessionRevealProps> = ({
   tone,
@@ -155,7 +155,8 @@ export const BrandSessionReveal: React.FC<BrandSessionRevealProps> = ({
     transform: [{ translateY: messageY.value }],
   }));
 
-  const lockupWidth = Math.min(220, Math.max(168, width * 0.52));
+  /** Taille symbole ≈ ex-symbole du lockup stacked (72 % de ~168–220). */
+  const symbolSize = Math.min(160, Math.max(120, width * 0.37));
 
   return (
     <Animated.View
@@ -166,12 +167,10 @@ export const BrandSessionReveal: React.FC<BrandSessionRevealProps> = ({
       <View style={styles.stage}>
         <Animated.View style={[styles.logoBlock, logoStyle]}>
           <ProDayLogo
-            width={lockupWidth}
+            width={symbolSize}
             variant="master"
             onDark
-            layout="stacked"
-            showPoleLabel={false}
-            showTagline={false}
+            layout="symbol"
           />
         </Animated.View>
         <Animated.View style={messageStyle}>

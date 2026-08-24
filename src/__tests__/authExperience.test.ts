@@ -32,7 +32,7 @@ describe('ProDay Auth Experience', () => {
     expect(MOTION_PRESETS.form.spring).toEqual(prodayMotion.spring.smooth);
   });
 
-  it('orchestre connect/disconnect via BrandSessionReveal (~1.5–2.5s)', () => {
+  it('orchestre connect/disconnect via BrandSessionReveal (~1.5–2.5s), symbole seul + Bienvenue|Au revoir', () => {
     expect(BRAND_SESSION_COPY.welcome).toBe('Bienvenue');
     expect(BRAND_SESSION_COPY.goodbye).toBe('Au revoir');
 

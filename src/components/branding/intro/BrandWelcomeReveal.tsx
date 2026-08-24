@@ -6,7 +6,7 @@ type BrandWelcomeRevealProps = {
 };
 
 /**
- * Première peinture cold-start : lockup + Bienvenue (délègue à BrandSessionReveal).
+ * Première peinture cold-start : symbole + Bienvenue (délègue à BrandSessionReveal).
  */
 export const BrandWelcomeReveal: React.FC<BrandWelcomeRevealProps> = ({ onComplete }) => (
   <BrandSessionReveal tone="welcome" onComplete={onComplete} fillScreen={false} />
