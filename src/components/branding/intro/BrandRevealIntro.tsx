@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UniverseChoicePager } from './UniverseChoicePager';
-import { shouldSkipPoleTransition } from './launchIntroFlow';
+import { shouldSkipPoleTransition, UNIVERSE_CONFIRM_LEAVE } from './launchIntroFlow';
 import type { ClubShellMode } from '../../../models/ClubShellMode';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
@@ -21,10 +21,10 @@ import { PRODAY_MASTER } from '../../../theme/prodayBrand';
 
 export type IntroSpaceChoice = CarouselPoleId;
 
-const ENTER_MS = 320;
-const EXIT_MS = 420;
-const EXIT_REDUCED_MS = 140;
+const ENTER_MS = 280;
 const ENTER_REDUCED_MS = 100;
+const { exitMs: EXIT_MS, exitReducedMs: EXIT_REDUCED_MS, veilMs: EXIT_VEIL_MS } =
+  UNIVERSE_CONFIRM_LEAVE;
 
 interface BrandRevealIntroProps {
   onChooseSpace: (space: IntroSpaceChoice) => void | Promise<void>;
@@ -59,6 +59,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   const accessIsAdmin = Boolean(auth?.isAdmin);
 
   const [leavingLine, setLeavingLine] = useState<IntroSpaceChoice | null>(null);
+  const [leaving, setLeaving] = useState(false);
   const [interactive, setInteractive] = useState(!skipReveal || skipLocalTransition);
   const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : 1);
   const scale = useSharedValue(skipReveal && !skipLocalTransition ? 0.985 : 1);
@@ -93,64 +94,30 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 
   const beginLeave = useCallback(
     (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
-      if (!interactive || leavingLine) return;
+      if (!interactive || leaving) return;
       if (line) {
         setLeavingLine(line);
         setVeilAccent(UNIVERSE_ACCENT[line]);
       }
+      setLeaving(true);
       setInteractive(false);
 
+      // Parent PushScreenTransition owns exit — no local opacity/scale redo.
       if (skipLocalTransition) {
-        const outMs = reduced ? EXIT_REDUCED_MS : Math.min(EXIT_MS, 380);
-        if (dismissOnly) {
-          opacity.value = withTiming(
-            0,
-            { duration: Math.round(outMs * 0.75), easing: prodayMotion.easing.in },
-            (finished) => {
-              'worklet';
-              if (finished) runOnJS(finishLeave)(line, dismissOnly);
-            },
-          );
-          if (!reduced) {
-            scale.value = withTiming(0.98, {
-              duration: Math.round(outMs * 0.75),
-              easing: prodayMotion.easing.in,
-            });
-          }
-          return;
-        }
-        if (line && !reduced) {
-          veilOpacity.value = withTiming(0.52, {
-            duration: Math.round(outMs * 0.4),
-            easing: prodayMotion.easing.out,
-          });
-        } else if (line) {
-          veilOpacity.value = withTiming(0.24, {
-            duration: EXIT_REDUCED_MS,
+        if (line && !dismissOnly && !reduced) {
+          veilOpacity.value = withTiming(0.22, {
+            duration: Math.min(EXIT_VEIL_MS, 80),
             easing: prodayMotion.easing.out,
           });
         }
-        opacity.value = withTiming(
-          reduced ? 0 : 0.1,
-          { duration: outMs, easing: prodayMotion.easing.in },
-          (finished) => {
-            'worklet';
-            if (finished) runOnJS(finishLeave)(line, dismissOnly);
-          },
-        );
-        if (!reduced) {
-          scale.value = withTiming(0.965, {
-            duration: outMs,
-            easing: prodayMotion.easing.in,
-          });
-        }
+        finishLeave(line, dismissOnly);
         return;
       }
 
       const outMs = reduced ? EXIT_REDUCED_MS : EXIT_MS;
       if (line && !dismissOnly) {
-        veilOpacity.value = withTiming(reduced ? 0.22 : 0.52, {
-          duration: Math.min(outMs, 260),
+        veilOpacity.value = withTiming(reduced ? 0.16 : 0.36, {
+          duration: Math.min(outMs, EXIT_VEIL_MS),
           easing: prodayMotion.easing.out,
         });
       }
@@ -163,7 +130,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
         },
       );
       if (!reduced) {
-        scale.value = withTiming(0.965, {
+        scale.value = withTiming(0.975, {
           duration: outMs,
           easing: prodayMotion.easing.in,
         });
@@ -172,7 +139,7 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
     [
       finishLeave,
       interactive,
-      leavingLine,
+      leaving,
       opacity,
       reduced,
       scale,
@@ -230,7 +197,8 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
         <UniverseChoicePager
           onChoose={handleChoose}
           introTour={introTour}
-          interactionLocked={!interactive || !!leavingLine}
+          interactionLocked={!interactive || leaving}
+          confirmingPole={leavingLine}
           initialLine={initialLine}
           initialCarouselPole={initialCarouselPole}
           accessRole={accessRole}

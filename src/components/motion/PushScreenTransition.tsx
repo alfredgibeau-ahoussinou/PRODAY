@@ -17,6 +17,13 @@ interface PushScreenTransitionProps {
   children: React.ReactNode;
   /** Fond plein écran (ex. #000 coach) — défaut thème produit. */
   backgroundColor?: string;
+  /**
+   * Sortie courte en timing (pas de spring) — évite le double « redo »
+   * quand un enfant a déjà une leave locale (ex. sélecteur d’univers).
+   */
+  directExit?: boolean;
+  /** Durée exit en mode directExit (ms). */
+  directExitMs?: number;
 }
 
 /**
@@ -26,6 +33,8 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   active,
   children,
   backgroundColor,
+  directExit = false,
+  directExitMs = 220,
 }) => {
   const { colors } = useAppTheme();
   const reduced = useReducedMotion();
@@ -54,6 +63,23 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
         setMounted(false);
         return;
       }
+      if (directExit) {
+        const outMs = Math.max(120, Math.min(directExitMs, 280));
+        opacity.value = withTiming(0, {
+          duration: outMs,
+          easing: prodayMotion.easing.in,
+        });
+        x.value = withTiming(
+          W,
+          { duration: outMs, easing: prodayMotion.easing.in },
+          (finished) => {
+            if (finished) {
+              runOnJS(setMounted)(false);
+            }
+          },
+        );
+        return;
+      }
       opacity.value = withTiming(0, {
         duration: preset.exitMs,
         easing: prodayMotion.easing.in,
@@ -64,7 +90,18 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
         }
       });
     }
-  }, [active, mounted, x, opacity, reduced, preset.spring, preset.enterMs, preset.exitMs]);
+  }, [
+    active,
+    directExit,
+    directExitMs,
+    mounted,
+    x,
+    opacity,
+    reduced,
+    preset.spring,
+    preset.enterMs,
+    preset.exitMs,
+  ]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,

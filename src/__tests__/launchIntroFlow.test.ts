@@ -1,6 +1,7 @@
 import {
   resolveIntroExitAction,
   shouldSkipPoleTransition,
+  UNIVERSE_CONFIRM_LEAVE,
 } from '../components/branding/intro/launchIntroFlow';
 
 describe('launchIntroFlow', () => {
@@ -25,5 +26,13 @@ describe('launchIntroFlow', () => {
     expect(shouldSkipPoleTransition('supporter', 'amateur', 'player', true)).toBe(false);
     expect(shouldSkipPoleTransition('joueur', 'amateur', 'player', false)).toBe(false);
     expect(shouldSkipPoleTransition('joueur', undefined, undefined, true)).toBe(false);
+  });
+
+  it('garde une leave confirmation courte et directe', () => {
+    expect(UNIVERSE_CONFIRM_LEAVE.exitMs).toBeGreaterThanOrEqual(200);
+    expect(UNIVERSE_CONFIRM_LEAVE.exitMs).toBeLessThanOrEqual(350);
+    expect(UNIVERSE_CONFIRM_LEAVE.exitReducedMs).toBeLessThan(UNIVERSE_CONFIRM_LEAVE.exitMs);
+    expect(UNIVERSE_CONFIRM_LEAVE.veilMs).toBeLessThanOrEqual(UNIVERSE_CONFIRM_LEAVE.exitMs);
+    expect(UNIVERSE_CONFIRM_LEAVE.pushExitMs).toBeLessThanOrEqual(280);
   });
 });

@@ -25,6 +25,8 @@ interface UniversePageChromeProps {
   activeIndex: number;
   touring: boolean;
   interactionLocked?: boolean;
+  /** Confirmation en cours — verrouille le CTA en état pressé. */
+  confirming?: boolean;
   showDismiss?: boolean;
   cinematic?: boolean;
   onDismiss?: () => void;
@@ -45,6 +47,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   activeIndex,
   touring,
   interactionLocked = false,
+  confirming = false,
   showDismiss = false,
   cinematic = false,
   onDismiss,
@@ -68,6 +71,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
 
   const copyOpacity = useSharedValue(1);
   const copyScale = useSharedValue(1);
+  const ctaConfirm = useSharedValue(0);
 
   useEffect(() => {
     if (reducedMotion) {
@@ -84,9 +88,25 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
     copyScale.value = withSpring(1, prodayMotion.spring.smooth);
   }, [activeIndex, copyOpacity, copyScale, reducedMotion]);
 
+  useEffect(() => {
+    if (reducedMotion) {
+      ctaConfirm.value = confirming ? 1 : 0;
+      return;
+    }
+    ctaConfirm.value = withTiming(confirming ? 1 : 0, {
+      duration: 100,
+      easing: prodayMotion.easing.out,
+    });
+  }, [confirming, ctaConfirm, reducedMotion]);
+
   const copyStyle = useAnimatedStyle(() => ({
     opacity: copyOpacity.value,
     transform: [{ scale: copyScale.value }],
+  }));
+
+  const ctaConfirmStyle = useAnimatedStyle(() => ({
+    opacity: 1 - ctaConfirm.value * 0.12,
+    transform: [{ scale: 1 - ctaConfirm.value * 0.035 }],
   }));
 
   if (!activeLine) {
@@ -94,28 +114,31 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   }
 
   const cta = (
-    <PressableSpring
-      onPress={() => onChoose(activeLine)}
-      scaleTo={0.98}
-      haptic
-      disabled={interactionLocked}
-      style={styles.ctaWrap}
-      accessibilityRole="button"
-      accessibilityLabel={ctaLabel}
-    >
-      <View
-        style={[
-          styles.cta,
-          { backgroundColor: activeAccent },
-          isLightCta && styles.ctaOnLightAccent,
-        ]}
+    <Animated.View style={ctaConfirmStyle}>
+      <PressableSpring
+        onPress={() => onChoose(activeLine)}
+        scaleTo={0.97}
+        haptic
+        disabled={interactionLocked || confirming}
+        style={styles.ctaWrap}
+        accessibilityRole="button"
+        accessibilityLabel={ctaLabel}
+        accessibilityState={{ busy: confirming }}
       >
-        <Text style={[styles.ctaText, isLightCta && styles.ctaTextDark]} numberOfLines={1}>
-          {ctaLabel}
-        </Text>
-        <Icon name="chevron-forward" size={18} color={isLightCta ? '#0A0A0A' : '#FFFFFF'} />
-      </View>
-    </PressableSpring>
+        <View
+          style={[
+            styles.cta,
+            { backgroundColor: activeAccent },
+            isLightCta && styles.ctaOnLightAccent,
+          ]}
+        >
+          <Text style={[styles.ctaText, isLightCta && styles.ctaTextDark]} numberOfLines={1}>
+            {ctaLabel}
+          </Text>
+          <Icon name="chevron-forward" size={18} color={isLightCta ? '#0A0A0A' : '#FFFFFF'} />
+        </View>
+      </PressableSpring>
+    </Animated.View>
   );
 
   const copyBlock = (

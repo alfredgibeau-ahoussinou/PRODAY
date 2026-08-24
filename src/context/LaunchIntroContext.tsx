@@ -22,6 +22,7 @@ import { useProductLine } from './ProductLineContext';
 import { useAuthOptional } from './AuthContext';
 import { PushScreenTransition } from '../components/motion';
 import { StyleSheet, View } from 'react-native';
+import { UNIVERSE_CONFIRM_LEAVE } from '../components/branding/intro/launchIntroFlow';
 
 /** Une seule lecture de la vidéo d’intro par installation (évite crash natif répété). */
 export const LAUNCH_VIDEO_SEEN_KEY = 'proday_launch_video_seen_v1';
@@ -131,20 +132,23 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
             introTour
           />
         ) : null}
-        <PushScreenTransition active={manualOpen}>
-          {manualOpen ? (
-            <FirstLaunchIntro
-              key={`manual-${pickerSession}`}
-              onChooseSpace={onChooseSpace}
-              onExitComplete={onIntroExitComplete}
-              onDismiss={closeSpacePicker}
-              initialLine={productLine}
-              initialRole={profile?.role}
-              initialClubShellMode={clubShellMode}
-              skipReveal
-              skipLocalTransition
-            />
-          ) : null}
+        <PushScreenTransition
+          active={manualOpen}
+          directExit
+          directExitMs={UNIVERSE_CONFIRM_LEAVE.pushExitMs}
+        >
+          {/* Toujours passé en children : Push garde le contenu pendant l’exit direct. */}
+          <FirstLaunchIntro
+            key={`manual-${pickerSession}`}
+            onChooseSpace={onChooseSpace}
+            onExitComplete={onIntroExitComplete}
+            onDismiss={closeSpacePicker}
+            initialLine={productLine}
+            initialRole={profile?.role}
+            initialClubShellMode={clubShellMode}
+            skipReveal
+            skipLocalTransition
+          />
         </PushScreenTransition>
         {showLaunchVideo ? (
           <LaunchVideoErrorBoundary onError={finishVideoIntro}>

@@ -44,6 +44,8 @@ interface UniverseChoicePagerProps {
   onChoose: (pole: CarouselPoleId) => void;
   introTour?: boolean;
   interactionLocked?: boolean;
+  /** Pôle en cours de confirmation — feedback immédiat CTA / slide. */
+  confirmingPole?: CarouselPoleId | null;
   initialLine?: ProductLineId;
   initialCarouselPole?: CarouselPoleId;
   /** Rôle session — filtre ACL des univers. */
@@ -63,6 +65,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   onChoose,
   introTour = false,
   interactionLocked = false,
+  confirmingPole = null,
   initialLine,
   initialCarouselPole,
   accessRole = null,
@@ -336,11 +339,13 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         scrollX={scrollX}
         reducedMotion={reducedMotion}
         selected={index === liveIndexRef.current}
+        confirming={confirmingPole != null && item === confirmingPole}
         interactionLocked={interactionLocked}
         onPress={handleTapNeighbor}
       />
     ),
     [
+      confirmingPole,
       handleTapNeighbor,
       interactionLocked,
       itemWidth,
@@ -486,6 +491,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         activeIndex={liveIndex}
         touring={touring}
         interactionLocked={interactionLocked}
+        confirming={confirmingPole != null}
         showDismiss={showDismiss}
         cinematic={cinematic}
         onDismiss={onDismiss}

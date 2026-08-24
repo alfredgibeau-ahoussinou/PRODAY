@@ -1,7 +1,13 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { Pressable } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
+import Animated, {
+  type SharedValue,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
+import { prodayMotion } from '../../../motion';
 import { UniverseChoicePage } from './UniverseChoicePage';
 import { universePoleDisplayName } from './universePoleBrand';
 
@@ -14,12 +20,13 @@ type UniverseChoiceSlideProps = {
   scrollX: SharedValue<number>;
   reducedMotion: boolean;
   selected: boolean;
+  confirming?: boolean;
   interactionLocked: boolean;
   onPress: (index: number) => void;
 };
 
 /**
- * Slide mémoïsée — ne re-render que si `selected` (ou layout) change,
+ * Slide mémoïsée — ne re-render que si `selected` / `confirming` (ou layout) change,
  * pas à chaque tick de liveIndex pour les voisins.
  */
 export const UniverseChoiceSlide = memo(function UniverseChoiceSlide({
@@ -31,9 +38,28 @@ export const UniverseChoiceSlide = memo(function UniverseChoiceSlide({
   scrollX,
   reducedMotion,
   selected,
+  confirming = false,
   interactionLocked,
   onPress,
 }: UniverseChoiceSlideProps) {
+  const confirmProgress = useSharedValue(0);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      confirmProgress.value = confirming ? 1 : 0;
+      return;
+    }
+    confirmProgress.value = withTiming(confirming ? 1 : 0, {
+      duration: 120,
+      easing: prodayMotion.easing.out,
+    });
+  }, [confirmProgress, confirming, reducedMotion]);
+
+  const confirmStyle = useAnimatedStyle(() => ({
+    opacity: 1 - confirmProgress.value * 0.08,
+    transform: [{ scale: 1 - confirmProgress.value * 0.025 }],
+  }));
+
   return (
     <Pressable
       style={{ width: itemWidth, height: layoutHeight || undefined }}
@@ -43,17 +69,19 @@ export const UniverseChoiceSlide = memo(function UniverseChoiceSlide({
       accessibilityLabel={`Univers ${universePoleDisplayName(item)}`}
       accessibilityState={{ selected }}
     >
-      <UniverseChoicePage
-        line={item}
-        index={index}
-        pageWidth={pageWidth}
-        pageHeight={layoutHeight}
-        itemWidth={itemWidth}
-        scrollX={scrollX}
-        cinematic={false}
-        reducedMotion={reducedMotion}
-        focused={selected}
-      />
+      <Animated.View style={[{ flex: 1 }, confirmStyle]}>
+        <UniverseChoicePage
+          line={item}
+          index={index}
+          pageWidth={pageWidth}
+          pageHeight={layoutHeight}
+          itemWidth={itemWidth}
+          scrollX={scrollX}
+          cinematic={false}
+          reducedMotion={reducedMotion}
+          focused={selected}
+        />
+      </Animated.View>
     </Pressable>
   );
 });
