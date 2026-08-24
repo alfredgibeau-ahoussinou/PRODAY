@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
-  Easing,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
 import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
+import { prodayMotion, useReducedMotion } from '../../../motion';
 import { AUTH_XP } from './tokens';
 
 type AuthPostLoginRevealProps = {
@@ -16,37 +17,52 @@ type AuthPostLoginRevealProps = {
 };
 
 /**
- * Micro-transition post-login 300–600ms : logo → fade → destination.
- * Pas de fake loader 3s.
+ * Micro-transition post-login ~480ms : logo → fade → destination.
+ * Springs prodayMotion ; reduced motion = cut court sans flash.
  */
 export const AuthPostLoginReveal: React.FC<AuthPostLoginRevealProps> = ({
   active,
   onDone,
 }) => {
+  const reduced = useReducedMotion();
   const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.92);
+  const scale = useSharedValue(0.94);
 
   useEffect(() => {
     if (!active) return;
+
+    if (reduced) {
+      opacity.value = 1;
+      scale.value = 1;
+      const t = setTimeout(() => {
+        opacity.value = 0;
+        onDone();
+      }, AUTH_XP.motionFast);
+      return () => clearTimeout(t);
+    }
+
     opacity.value = withTiming(1, {
       duration: AUTH_XP.motionNormal,
-      easing: Easing.out(Easing.cubic),
+      easing: prodayMotion.easing.out,
     });
-    scale.value = withTiming(1, {
-      duration: AUTH_XP.motionReveal,
-      easing: Easing.out(Easing.cubic),
-    });
+    scale.value = withSpring(1, prodayMotion.spring.smooth);
+
     const t = setTimeout(() => {
       opacity.value = withTiming(
         0,
-        { duration: AUTH_XP.motionFast, easing: Easing.in(Easing.cubic) },
+        { duration: AUTH_XP.motionFast, easing: prodayMotion.easing.in },
         (finished) => {
           if (finished) runOnJS(onDone)();
         },
       );
+      scale.value = withTiming(1.02, {
+        duration: AUTH_XP.motionFast,
+        easing: prodayMotion.easing.in,
+      });
     }, AUTH_XP.motionReveal);
+
     return () => clearTimeout(t);
-  }, [active, onDone, opacity, scale]);
+  }, [active, onDone, opacity, reduced, scale]);
 
   const anim = useAnimatedStyle(() => ({
     opacity: opacity.value,

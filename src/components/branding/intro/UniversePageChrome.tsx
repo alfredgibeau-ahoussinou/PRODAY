@@ -4,12 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { spacing, radius } from '../../../theme/designTokens';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
-import { useReducedMotion } from '../../../motion';
+import { prodayMotion, useReducedMotion } from '../../../motion';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
 import { UNIVERSE_AMBIENT_FALLBACK } from './universePagerSnap';
@@ -36,7 +37,6 @@ interface UniversePageChromeProps {
   sideRail?: React.ReactNode;
 }
 
-const COPY_FADE_MS = 280;
 const DOT_INACTIVE = 'rgba(255,255,255,0.28)';
 
 /** Header + copie + CTA — accent unique = univers actif (React, pas worklet Record). */
@@ -75,10 +75,13 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
       copyScale.value = 1;
       return;
     }
-    copyOpacity.value = 0.35;
-    copyScale.value = 0.97;
-    copyOpacity.value = withTiming(1, { duration: COPY_FADE_MS });
-    copyScale.value = withTiming(1, { duration: COPY_FADE_MS });
+    copyOpacity.value = 0.42;
+    copyScale.value = 0.985;
+    copyOpacity.value = withTiming(1, {
+      duration: prodayMotion.duration.slow,
+      easing: prodayMotion.easing.out,
+    });
+    copyScale.value = withSpring(1, prodayMotion.spring.smooth);
   }, [activeIndex, copyOpacity, copyScale, reducedMotion]);
 
   const copyStyle = useAnimatedStyle(() => ({

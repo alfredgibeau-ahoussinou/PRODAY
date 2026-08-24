@@ -8,7 +8,9 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedRef,
   useAnimatedScrollHandler,
+  useAnimatedStyle,
   useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import {
@@ -17,10 +19,11 @@ import {
 } from '../../../models/CarouselPole';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
-import { useReducedMotion } from '../../../motion';
+import { prodayMotion, useReducedMotion } from '../../../motion';
 import { spacing } from '../../../theme/designTokens';
 import { prodayHaptics } from '../../../utils/prodayHaptics';
 import { UniverseChoicePage } from './UniverseChoicePage';
+import { UniverseChoiceSlide } from './UniverseChoiceSlide';
 import { UniversePageChrome } from './UniversePageChrome';
 import { useUniverseIntroTour } from './useUniverseIntroTour';
 import { UNIVERSE_CHOICE_ORDER } from './universeChoiceShared';
@@ -32,6 +35,7 @@ import {
   snapIndexFromOffset,
   UNIVERSE_AMBIENT_BASE,
   UNIVERSE_AMBIENT_FALLBACK,
+  UNIVERSE_DECELERATION_RATE,
 } from './universePagerSnap';
 
 const TABLET_BREAKPOINT = 768;
@@ -83,10 +87,12 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   );
 
   const scrollX = useSharedValue(0);
+  const ambientOpacity = useSharedValue(0.1);
   const listRef = useAnimatedRef<Animated.FlatList<CarouselPoleId>>();
   const programmaticScroll = useRef(false);
   const dragSnapHandledRef = useRef(false);
   const lastSnapIndexRef = useRef(0);
+  const liveIndexRef = useRef(0);
   const activeLineRef = useRef<CarouselPoleId>(lines[0] ?? UNIVERSE_CHOICE_ORDER[0]);
   const introTourOnMountRef = useRef(introTour);
   const initialScrollDoneRef = useRef(false);
@@ -102,6 +108,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   );
 
   const syncLiveIndex = useCallback((index: number) => {
+    liveIndexRef.current = index;
     setLiveIndex(index);
   }, []);
 
@@ -110,6 +117,22 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   const liveLine = lines[liveIndex] ?? lines[0];
   const activeAccent =
     (liveLine ? UNIVERSE_ACCENT[liveLine] : undefined) ?? UNIVERSE_AMBIENT_FALLBACK;
+
+  useEffect(() => {
+    if (reducedMotion) {
+      ambientOpacity.value = 0.06;
+      return;
+    }
+    ambientOpacity.value = 0.06;
+    ambientOpacity.value = withTiming(0.1, {
+      duration: prodayMotion.duration.slow,
+      easing: prodayMotion.easing.out,
+    });
+  }, [activeAccent, ambientOpacity, reducedMotion]);
+
+  const ambientStyle = useAnimatedStyle(() => ({
+    opacity: ambientOpacity.value,
+  }));
 
   useAnimatedReaction(
     () => {
@@ -137,6 +160,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       if (lines.length === 0) return;
       const clamped = Math.max(0, Math.min(lines.length - 1, index));
       lastSnapIndexRef.current = clamped;
+      liveIndexRef.current = clamped;
       activeLineRef.current = lines[clamped];
       setLiveIndex(clamped);
 
@@ -166,6 +190,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       const index = lines.indexOf(line);
       if (index >= 0) {
         lastSnapIndexRef.current = index;
+        liveIndexRef.current = index;
         setLiveIndex(index);
       }
     },
@@ -239,6 +264,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         programmaticScroll.current = false;
         activeLineRef.current = lines[index];
         lastSnapIndexRef.current = index;
+        liveIndexRef.current = index;
         setLiveIndex(index);
         return;
       }
@@ -247,6 +273,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         lastSnapIndexRef.current = index;
       }
       activeLineRef.current = lines[index];
+      liveIndexRef.current = index;
       setLiveIndex(index);
       if (touring) dismissTour();
     },
@@ -289,52 +316,35 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
     (index: number) => {
       if (interactionLocked) return;
       if (touring) dismissTour();
-      if (index === liveIndex) {
+      if (index === liveIndexRef.current) {
         handleChoose(lines[index]);
         return;
       }
       scrollToPage(index, true, true);
     },
-    [
-      dismissTour,
-      handleChoose,
-      interactionLocked,
-      lines,
-      liveIndex,
-      scrollToPage,
-      touring,
-    ],
+    [dismissTour, handleChoose, interactionLocked, lines, scrollToPage, touring],
   );
 
   const renderItem = useCallback(
     ({ item, index }: { item: CarouselPoleId; index: number }) => (
-      <Pressable
-        style={{ width: itemWidth, height: layoutHeight || undefined }}
-        onPress={() => handleTapNeighbor(index)}
-        disabled={interactionLocked}
-        accessibilityRole="button"
-        accessibilityLabel={`Univers ${universePoleDisplayName(item)}`}
-        accessibilityState={{ selected: index === liveIndex }}
-      >
-        <UniverseChoicePage
-          line={item}
-          index={index}
-          pageWidth={width}
-          pageHeight={layoutHeight}
-          itemWidth={itemWidth}
-          scrollX={scrollX}
-          cinematic={false}
-          reducedMotion={reducedMotion}
-          focused={index === liveIndex}
-        />
-      </Pressable>
+      <UniverseChoiceSlide
+        item={item}
+        index={index}
+        itemWidth={itemWidth}
+        layoutHeight={layoutHeight}
+        pageWidth={width}
+        scrollX={scrollX}
+        reducedMotion={reducedMotion}
+        selected={index === liveIndexRef.current}
+        interactionLocked={interactionLocked}
+        onPress={handleTapNeighbor}
+      />
     ),
     [
       handleTapNeighbor,
       interactionLocked,
       itemWidth,
       layoutHeight,
-      liveIndex,
       reducedMotion,
       scrollX,
       width,
@@ -403,11 +413,12 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
       />
 
       {/* Halo ambient — accent unique de l’univers actif (JS, pas worklet). */}
-      <View
+      <Animated.View
         pointerEvents="none"
         style={[
           styles.ambientGlow,
-          { backgroundColor: activeAccent, opacity: reducedMotion ? 0.06 : 0.1 },
+          { backgroundColor: activeAccent },
+          ambientStyle,
         ]}
       />
 
@@ -432,11 +443,13 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
           data={lines}
           keyExtractor={(item) => item}
           renderItem={renderItem}
+          extraData={liveIndex}
           horizontal
           showsHorizontalScrollIndicator={false}
           bounces={lines.length > 1}
-          decelerationRate="fast"
+          decelerationRate={UNIVERSE_DECELERATION_RATE}
           snapToOffsets={snapOffsets}
+          snapToAlignment="center"
           disableIntervalMomentum
           scrollEnabled={!interactionLocked && lines.length > 1}
           contentContainerStyle={{
@@ -460,6 +473,10 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
             offset: itemWidth * index,
             index,
           })}
+          removeClippedSubviews={false}
+          windowSize={5}
+          initialNumToRender={Math.min(lines.length, 4)}
+          maxToRenderPerBatch={3}
           style={styles.list}
         />
       )}

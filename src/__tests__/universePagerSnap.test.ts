@@ -3,6 +3,7 @@ import {
   snapIndexFromOffset,
   UNIVERSE_AMBIENT_BASE,
   UNIVERSE_AMBIENT_FALLBACK,
+  UNIVERSE_DECELERATION_RATE,
   UNIVERSE_SNAP_VELOCITY_THRESHOLD,
 } from '../components/branding/intro/universePagerSnap';
 import { PRODAY_MASTER } from '../theme/prodayBrand';
@@ -24,6 +25,12 @@ describe('universePagerSnap', () => {
     expect(shouldSnapOnDragEnd(UNIVERSE_SNAP_VELOCITY_THRESHOLD)).toBe(false);
     expect(shouldSnapOnDragEnd(0.5)).toBe(false);
     expect(shouldSnapOnDragEnd(undefined)).toBe(true);
+  });
+
+  it('expose un snap doux (décélération entre fast et normal)', () => {
+    expect(UNIVERSE_DECELERATION_RATE).toBeGreaterThan(0.99);
+    expect(UNIVERSE_DECELERATION_RATE).toBeLessThan(0.998);
+    expect(UNIVERSE_SNAP_VELOCITY_THRESHOLD).toBeGreaterThanOrEqual(0.1);
   });
 
   it('expose des literals worklet-safe alignés brand', () => {

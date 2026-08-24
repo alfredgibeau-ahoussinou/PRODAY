@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthHero } from './AuthHero';
+import { AuthEnter } from './AuthMotion';
 import { AUTH_XP } from './tokens';
 
 type AuthExperienceShellProps = {
@@ -47,17 +48,17 @@ export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
   );
 
   const brand = (
-    <View style={styles.brandPanel}>
+    <AuthEnter fill style={styles.brandPanel}>
       <AuthHero compact={!isWide} showCopy={brandCopy && (isWide || !compact)} />
-    </View>
+    </AuthEnter>
   );
 
   const formInner = (
-    <View style={[styles.formInner, contentStyle]}>
+    <AuthEnter delayMs={80} style={[styles.formInner, contentStyle]}>
       {toolbar ? <View style={styles.toolbar}>{toolbar}</View> : null}
       {children}
       {footer ? <View style={styles.footer}>{footer}</View> : null}
-    </View>
+    </AuthEnter>
   );
 
   const form = scroll ? (

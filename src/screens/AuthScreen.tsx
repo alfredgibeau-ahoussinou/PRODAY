@@ -35,6 +35,7 @@ import {
   AuthButton,
   AuthError,
   AuthLink,
+  AuthModeSwitch,
   AuthPostLoginReveal,
   AUTH_XP,
 } from '../features/auth/experience';
@@ -261,144 +262,146 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   return (
     <>
       <AuthExperienceShell toolbar={toolbar} footer={legalFooter}>
-        {mode === 'login' ? (
-          <View>
-            <ProDayText variant="title" style={styles.title}>
-              {t('auth.welcomeBack')}.
-            </ProDayText>
-            <ProDayText variant="body" style={styles.sub}>
-              {t('auth.experience.loginSub')}
-            </ProDayText>
+        <AuthModeSwitch modeKey={mode}>
+          {mode === 'login' ? (
+            <View>
+              <ProDayText variant="title" style={styles.title}>
+                {t('auth.welcomeBack')}.
+              </ProDayText>
+              <ProDayText variant="body" style={styles.sub}>
+                {t('auth.experience.loginSub')}
+              </ProDayText>
 
-            {banner ? (
-              <AuthError message={banner} onDismiss={() => setBanner(null)} />
-            ) : null}
+              {banner ? (
+                <AuthError message={banner} onDismiss={() => setBanner(null)} />
+              ) : null}
 
-            {quickLogin.canQuickLogin && quickLogin.savedEmail ? (
-              <View style={styles.biometricWrap}>
-                <AuthBiometricButton
-                  email={quickLogin.savedEmail}
-                  biometricLabel={quickLogin.biometricLabel}
-                  onPress={() => void handleBiometricLogin()}
-                  loading={biometricLoading || loading}
+              {quickLogin.canQuickLogin && quickLogin.savedEmail ? (
+                <View style={styles.biometricWrap}>
+                  <AuthBiometricButton
+                    email={quickLogin.savedEmail}
+                    biometricLabel={quickLogin.biometricLabel}
+                    onPress={() => void handleBiometricLogin()}
+                    loading={biometricLoading || loading}
+                  />
+                </View>
+              ) : null}
+
+              <AuthInput
+                label={t('auth.email')}
+                icon="mail"
+                placeholder="vous@exemple.com"
+                value={email}
+                onChangeText={(v) => {
+                  setEmail(v);
+                  if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: '' }));
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                textContentType="emailAddress"
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                error={fieldErrors.email}
+              />
+              <AuthInput
+                ref={passwordRef}
+                label={t('auth.password')}
+                icon="lock"
+                placeholder="••••••••"
+                value={password}
+                onChangeText={(v) => {
+                  setPassword(v);
+                  if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: '' }));
+                }}
+                secureToggle
+                autoComplete="password"
+                textContentType="password"
+                returnKeyType="go"
+                onSubmitEditing={() => void handleLogin()}
+                error={fieldErrors.password}
+              />
+
+              <AuthRememberRow
+                rememberMe={quickLogin.rememberMe}
+                onRememberMeChange={quickLogin.setRememberMe}
+                biometricEnabled={quickLogin.biometricEnabled}
+                onBiometricChange={quickLogin.setBiometricEnabled}
+                biometricLabel={quickLogin.biometricLabel}
+                biometricAvailable={quickLogin.biometricAvailable}
+              />
+
+              <AuthLink
+                label={t('auth.forgotPassword')}
+                onPress={() => {
+                  clearErrors();
+                  setShowForgotPassword(true);
+                }}
+                align="right"
+                muted
+              />
+
+              <AuthButton
+                label={t('auth.loginCta')}
+                onPress={() => void handleLogin()}
+                loading={loading}
+              />
+
+              {showOAuth ? (
+                <>
+                  <View style={styles.dividerRow}>
+                    <View style={styles.dividerLine} />
+                    <ProDayText variant="caption" style={styles.dividerText}>
+                      {t('auth.or')}
+                    </ProDayText>
+                    <View style={styles.dividerLine} />
+                  </View>
+                  <AuthSocialButtons
+                    disabled={loading}
+                    onSuccess={() => void goHomeAfterAuth()}
+                    onNeedsProfile={(prefill) => {
+                      if (!registrationOpen) {
+                        setBanner(disabledCopy('registration_open').message);
+                        return;
+                      }
+                      setSignupPrefill(prefill);
+                      openSignup();
+                    }}
+                    onError={(msg) => setBanner(msg)}
+                  />
+                </>
+              ) : null}
+
+              <View style={styles.switchRow}>
+                <AuthLink
+                  leading={t('auth.newOnProday')}
+                  label={t('auth.createAccount')}
+                  onPress={openSignup}
+                  align="center"
                 />
               </View>
-            ) : null}
-
-            <AuthInput
-              label={t('auth.email')}
-              icon="mail"
-              placeholder="vous@exemple.com"
-              value={email}
-              onChangeText={(v) => {
-                setEmail(v);
-                if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: '' }));
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              textContentType="emailAddress"
-              returnKeyType="next"
-              blurOnSubmit={false}
-              onSubmitEditing={() => passwordRef.current?.focus()}
-              error={fieldErrors.email}
-            />
-            <AuthInput
-              ref={passwordRef}
-              label={t('auth.password')}
-              icon="lock"
-              placeholder="••••••••"
-              value={password}
-              onChangeText={(v) => {
-                setPassword(v);
-                if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: '' }));
-              }}
-              secureToggle
-              autoComplete="password"
-              textContentType="password"
-              returnKeyType="go"
-              onSubmitEditing={() => void handleLogin()}
-              error={fieldErrors.password}
-            />
-
-            <AuthRememberRow
-              rememberMe={quickLogin.rememberMe}
-              onRememberMeChange={quickLogin.setRememberMe}
-              biometricEnabled={quickLogin.biometricEnabled}
-              onBiometricChange={quickLogin.setBiometricEnabled}
-              biometricLabel={quickLogin.biometricLabel}
-              biometricAvailable={quickLogin.biometricAvailable}
-            />
-
-            <AuthLink
-              label={t('auth.forgotPassword')}
-              onPress={() => {
-                clearErrors();
-                setShowForgotPassword(true);
-              }}
-              align="right"
-              muted
-            />
-
-            <AuthButton
-              label={t('auth.loginCta')}
-              onPress={() => void handleLogin()}
-              loading={loading}
-            />
-
-            {showOAuth ? (
-              <>
-                <View style={styles.dividerRow}>
-                  <View style={styles.dividerLine} />
-                  <ProDayText variant="caption" style={styles.dividerText}>
-                    {t('auth.or')}
-                  </ProDayText>
-                  <View style={styles.dividerLine} />
-                </View>
-                <AuthSocialButtons
-                  disabled={loading}
-                  onSuccess={() => void goHomeAfterAuth()}
-                  onNeedsProfile={(prefill) => {
-                    if (!registrationOpen) {
-                      setBanner(disabledCopy('registration_open').message);
-                      return;
-                    }
-                    setSignupPrefill(prefill);
-                    openSignup();
-                  }}
-                  onError={(msg) => setBanner(msg)}
-                />
-              </>
-            ) : null}
-
-            <View style={styles.switchRow}>
+            </View>
+          ) : !registrationOpen ? (
+            <FeatureDisabledPanel flag="registration_open" />
+          ) : (
+            <View>
+              <ProDayText variant="title" style={styles.title}>
+                {t('auth.experience.signupTitle')}
+              </ProDayText>
+              <ProDayText variant="body" style={styles.sub}>
+                {t('auth.experience.signupSub')}
+              </ProDayText>
+              <AuthButton label={t('auth.signupCta', { brand: 'ProDay' })} onPress={openSignup} />
               <AuthLink
-                leading={t('auth.newOnProday')}
-                label={t('auth.createAccount')}
-                onPress={openSignup}
+                leading={t('auth.alreadyMember')}
+                label={t('auth.login')}
+                onPress={() => setMode('login')}
                 align="center"
               />
             </View>
-          </View>
-        ) : !registrationOpen ? (
-          <FeatureDisabledPanel flag="registration_open" />
-        ) : (
-          <View>
-            <ProDayText variant="title" style={styles.title}>
-              {t('auth.experience.signupTitle')}
-            </ProDayText>
-            <ProDayText variant="body" style={styles.sub}>
-              {t('auth.experience.signupSub')}
-            </ProDayText>
-            <AuthButton label={t('auth.signupCta', { brand: 'ProDay' })} onPress={openSignup} />
-            <AuthLink
-              leading={t('auth.alreadyMember')}
-              label={t('auth.login')}
-              onPress={() => setMode('login')}
-              align="center"
-            />
-          </View>
-        )}
+          )}
+        </AuthModeSwitch>
       </AuthExperienceShell>
 
       <AuthPostLoginReveal

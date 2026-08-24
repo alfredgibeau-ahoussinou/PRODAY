@@ -1,5 +1,15 @@
-/** Seuil vélocité (px/ms) — en dessous, le snap se fait au relâchement du drag. */
-export const UNIVERSE_SNAP_VELOCITY_THRESHOLD = 0.08;
+/**
+ * Seuil vélocité (px/ms) — en dessous, snap au relâchement du drag.
+ * Un peu plus haut que 0.08 pour laisser le momentum + snapToOffsets
+ * porter le geste (sens plus doux).
+ */
+export const UNIVERSE_SNAP_VELOCITY_THRESHOLD = 0.12;
+
+/**
+ * Entre `fast` (0.99) et `normal` (0.998) — glide plus long avant le snap.
+ * iOS lit un nombre ; Android utilise une décélération plus courte.
+ */
+export const UNIVERSE_DECELERATION_RATE = 0.994;
 
 export function shouldSnapOnDragEnd(velocityX: number | undefined | null): boolean {
   return Math.abs(velocityX ?? 0) < UNIVERSE_SNAP_VELOCITY_THRESHOLD;

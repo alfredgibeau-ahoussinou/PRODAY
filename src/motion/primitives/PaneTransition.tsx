@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -29,7 +30,7 @@ type Props = {
 
 /**
  * Transition entre panes / onglets — slide léger + opacity.
- * Chrome (dock / sidebar) stable ; skip si navigation rapide.
+ * Chrome (dock / sidebar) stable ; interruptible si navigation rapide.
  */
 export function PaneTransition({
   sectionKey,
@@ -46,17 +47,19 @@ export function PaneTransition({
   const currentKey = useRef(sectionKey);
   const pending = useRef(safeChildren);
   const busy = useRef(false);
+  const gen = useRef(0);
   pending.current = safeChildren;
 
   const opacity = useSharedValue(1);
   const translateX = useSharedValue(0);
 
   const finishEnter = useCallback(
-    (nextKey: string, dir: NavDirection) => {
+    (nextKey: string, dir: NavDirection, token: number) => {
+      if (token !== gen.current) return;
       currentKey.current = nextKey;
       setDisplayed(pending.current);
       opacity.value = 0;
-      translateX.value = dir * preset.shift;
+      translateX.value = dir * preset.shift * 0.85;
       opacity.value = withTiming(1, {
         duration: preset.enterMs,
         easing: prodayMotion.easing.out,
@@ -68,6 +71,7 @@ export function PaneTransition({
           easing: prodayMotion.easing.out,
         },
         () => {
+          if (token !== gen.current) return;
           busy.current = false;
           runOnJS(setPaneBusy)(false);
         },
@@ -82,9 +86,11 @@ export function PaneTransition({
       return;
     }
 
-    if (reduced || busy.current) {
+    if (reduced) {
       currentKey.current = sectionKey;
       setDisplayed(pending.current);
+      cancelAnimation(opacity);
+      cancelAnimation(translateX);
       opacity.value = 1;
       translateX.value = 0;
       busy.current = false;
@@ -92,28 +98,34 @@ export function PaneTransition({
       return;
     }
 
+    // Interruptible : annule la transition en cours plutôt qu’un jump sec.
     const nextKey = sectionKey;
     const dir = direction;
+    const token = ++gen.current;
     busy.current = true;
     setPaneBusy(true);
+    cancelAnimation(opacity);
+    cancelAnimation(translateX);
 
     opacity.value = withTiming(0, {
       duration: preset.exitMs,
       easing: prodayMotion.easing.in,
     });
     translateX.value = withTiming(
-      -dir * (preset.shift * 0.55),
+      -dir * (preset.shift * 0.45),
       {
         duration: preset.exitMs,
         easing: prodayMotion.easing.in,
       },
       (finished) => {
-        if (finished) {
-          runOnJS(finishEnter)(nextKey, dir);
-        } else {
-          busy.current = false;
-          runOnJS(setPaneBusy)(false);
+        if (!finished || token !== gen.current) {
+          if (token === gen.current) {
+            busy.current = false;
+            runOnJS(setPaneBusy)(false);
+          }
+          return;
         }
+        runOnJS(finishEnter)(nextKey, dir, token);
       },
     );
   }, [
