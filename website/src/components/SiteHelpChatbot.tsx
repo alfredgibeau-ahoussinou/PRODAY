@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { pricingHrefForPath } from "@/lib/poles";
-import { COACH_APP_HREF, PARENT_APP_HREF, ROUTES } from "@/lib/routes";
+import { COACH_APP_HREF, PARENT_APP_HREF, ROUTES, SPONSOR_APP_HREF } from "@/lib/routes";
 
 type HelpEntry = {
   id: string;
@@ -28,8 +28,8 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sponsors",
     question: "Où sont les sponsors ?",
     answer:
-      "Pas d'onglet Sponsors dans la barre de l'app : ouvrez l'Accueil puis le module Sponsors. Sur le site, c'est la page Sponsor (/sponsor).",
-    href: ROUTES.sponsor,
+      "Pas d'onglet Sponsors dans la barre de l'app : ouvrez l'Accueil puis le module Sponsors. Sur le site, c'est la vitrine app Sponsor (/sponsor#app).",
+    href: SPONSOR_APP_HREF,
     hrefLabel: "Pôle Sponsor",
   },
   {
@@ -123,6 +123,16 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       answer: "Tribune, Matchs, Suivis, Débats, Moments (vidéos), Shop et Compte. 100 % gratuit.",
       href: ROUTES.supporter,
       hrefLabel: "Pôle Supporter",
+    });
+  }
+  if (pathname.startsWith("/sponsor") || pathname.startsWith("/partenaires")) {
+    poleHint.push({
+      id: "pole-sponsor",
+      question: "Que regroupe le Pôle Sponsor ?",
+      answer:
+        "Accueil ROI, offres, financement, formules, messages, prospects, contacts et profil marque. Visibilité mesurée, sans intermédiaire.",
+      href: SPONSOR_APP_HREF,
+      hrefLabel: "Pôle Sponsor",
     });
   }
 

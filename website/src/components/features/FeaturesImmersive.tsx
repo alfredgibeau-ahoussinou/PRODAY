@@ -16,6 +16,7 @@ import {
   PARENT_APP_HREF,
   PRESIDENT_HUB_HREF,
   ROUTES,
+  SPONSOR_APP_HREF,
 } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -132,7 +133,9 @@ const FEATURE_POLES: FeaturePoleTab[] = SHOWCASE_POLES.flatMap((pole) => {
           ? COACH_APP_HREF
           : pole.id === "parent"
             ? PARENT_APP_HREF
-            : pole.href,
+            : pole.id === "sponsor"
+              ? SPONSOR_APP_HREF
+              : pole.href,
   };
   return pole.id === "pro_club" ? [tab, PRESIDENT_FEATURE_TAB] : [tab];
 });

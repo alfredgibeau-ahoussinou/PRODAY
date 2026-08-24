@@ -1,5 +1,5 @@
 import type { PoleId } from "./poles";
-import { COACH_APP_HREF, PARENT_APP_HREF, ROUTES } from "./routes";
+import { COACH_APP_HREF, PARENT_APP_HREF, ROUTES, SPONSOR_APP_HREF } from "./routes";
 
 export type PageCategory = "home" | "pole" | "platform";
 
@@ -33,7 +33,7 @@ const ECOSYSTEM_SIBLINGS = [
   { href: COACH_APP_HREF, label: "Coach" },
   { href: PARENT_APP_HREF, label: "Parent" },
   { href: ROUTES.supporter, label: "Supporter" },
-  { href: ROUTES.sponsor, label: "Sponsor" },
+  { href: SPONSOR_APP_HREF, label: "Sponsor" },
 ] as const;
 
 export const SITE_PAGES: Record<string, PageMeta> = {

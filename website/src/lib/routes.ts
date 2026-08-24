@@ -143,6 +143,9 @@ export const COACH_APP_HREF = `${ROUTES.coach}#app`;
 /** Vitrine app Parent : section ancrée sur /parent#app. */
 export const PARENT_APP_HREF = `${ROUTES.parent}#app`;
 
+/** Vitrine app Sponsor : section ancrée sur /sponsor#app. */
+export const SPONSOR_APP_HREF = `${ROUTES.sponsor}#app`;
+
 /** Nav vitrine : 6 pôles + Président (rattaché au Club). Santé = rôle intégré. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
@@ -151,7 +154,7 @@ export const POLE_NAV_ITEMS = [
   { href: COACH_APP_HREF, label: "Coach" },
   { href: PARENT_APP_HREF, label: "Parent" },
   { href: ROUTES.supporter, label: "Supporter" },
-  { href: ROUTES.sponsor, label: "Sponsor" },
+  { href: SPONSOR_APP_HREF, label: "Sponsor" },
 ] as const;
 
 export const UTILITY_NAV_ITEMS = [
@@ -174,7 +177,7 @@ export const POLE_FOOTER_LINKS = [
   { href: COACH_APP_HREF, label: "Espace Coach", subtitle: "App · Accueil, effectif, IA · Tactique" },
   { href: PARENT_APP_HREF, label: "Pôle Parent", subtitle: "App · Accueil, Guide, Menu, Profil · gratuit" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
-  { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & micro sponsoring local" },
+  { href: SPONSOR_APP_HREF, label: "Pôle Sponsor", subtitle: "App · Accueil, offres, ROI · marques" },
 ] as const;
 
 export const EXPLORE_CARDS = [
@@ -263,9 +266,9 @@ export const EXPLORE_CARDS = [
     tag: "Roadmap",
   },
   {
-    href: routeWithHash(ROUTES.sponsor, "formules"),
+    href: SPONSOR_APP_HREF,
     title: "Pôle Sponsor",
-    description: "Découverte 0 €, Territorial 49 € ou National Pro 99 €/mois.",
+    description: "App Sponsor : dashboard, offres, prospects et ROI. Formules dès Découverte.",
     image: "/images/football-mercato-01.jpg",
     tag: "Sponsor",
     accent: true,

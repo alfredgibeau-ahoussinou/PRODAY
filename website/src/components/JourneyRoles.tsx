@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { useState } from "react";
 import { Reveal } from "./Reveal";
 import { JOURNEYS } from "@/lib/content";
 import { POLE_STYLES } from "@/lib/poles";
 import type { PoleId } from "@/lib/poles";
+import { SPONSOR_APP_HREF } from "@/lib/routes";
 
 type JourneyRolesProps = { fullPage?: boolean };
 
@@ -92,9 +94,14 @@ export function JourneyRoles({ fullPage }: JourneyRolesProps) {
         {poleJourneys.length === 0 ? (
           <div className={`mt-12 card-premium rounded-2xl p-8 ${styles.card}`}>
             <p className="text-white/70">
-              Les étapes partenaires (sponsors et marques) sont détaillées sur la page{" "}
-              <span className="font-semibold text-amber-300">Espace Partenaires</span> : visibilité
-              clubs, offres locales et campagnes nationales.
+              Les étapes partenaires (sponsors et marques) sont détaillées sur la{" "}
+              <Link
+                href={SPONSOR_APP_HREF}
+                className="font-semibold text-amber-300 underline-offset-2 hover:underline"
+              >
+                vitrine app Sponsor
+              </Link>{" "}
+              : visibilité clubs, offres locales et campagnes nationales.
             </p>
           </div>
         ) : (

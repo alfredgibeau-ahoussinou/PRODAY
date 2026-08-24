@@ -7,7 +7,13 @@ import {
   type WebSubscriptionPlanBase,
 } from "./content";
 import { POLE_ACCENT_HEX } from "./brandColors";
-import { COACH_APP_HREF, PARENT_APP_HREF, PRESIDENT_HUB_HREF, ROUTES } from "./routes";
+import {
+  COACH_APP_HREF,
+  PARENT_APP_HREF,
+  PRESIDENT_HUB_HREF,
+  ROUTES,
+  SPONSOR_APP_HREF,
+} from "./routes";
 
 /**
  * Pôles marketing site : architecture cible.
@@ -242,11 +248,17 @@ export function poleNavAccentHex(href: string): string {
   if (href === PRESIDENT_HUB_HREF || href.endsWith("#president")) {
     return POLE_ACCENT_HEX.president;
   }
-  if (href === COACH_APP_HREF || href === PARENT_APP_HREF || href.endsWith("#app")) {
+  if (
+    href === COACH_APP_HREF ||
+    href === PARENT_APP_HREF ||
+    href === SPONSOR_APP_HREF ||
+    href.endsWith("#app")
+  ) {
     const path = href.split("#")[0] ?? href;
     if (path === ROUTES.coach) return "#2563EB";
     if (path === ROUTES.joueur) return POLE_ACCENT_HEX.joueur;
     if (path === ROUTES.parent) return POLE_ACCENT_HEX.parent;
+    if (path === ROUTES.sponsor) return "#C026D3";
   }
   const path = href.split("#")[0] ?? href;
   const pole = SHOWCASE_POLES.find((p) => p.href === path);

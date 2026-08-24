@@ -10,6 +10,7 @@ import {
   PARENT_APP_HREF,
   PRESIDENT_HUB_HREF,
   ROUTES,
+  SPONSOR_APP_HREF,
 } from "@/lib/routes";
 
 const ROLE_CHOICES = [
@@ -19,6 +20,7 @@ const ROLE_CHOICES = [
   { label: "Président", emoji: "🏛️", href: PRESIDENT_HUB_HREF },
   { label: "Supporter", emoji: "📣", href: ROUTES.supporter },
   { label: "Parent", emoji: "👨‍👧", href: PARENT_APP_HREF },
+  { label: "Sponsor", emoji: "🏷️", href: SPONSOR_APP_HREF },
   { label: "Organisateur", emoji: "🏆", href: ROUTES.proClub },
 ] as const;
 

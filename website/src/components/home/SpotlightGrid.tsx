@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { SPOTLIGHT_FEATURES } from "@/lib/content";
-import { PARENT_APP_HREF, ROUTES, routeWithHash } from "@/lib/routes";
+import { PARENT_APP_HREF, ROUTES, SPONSOR_APP_HREF, routeWithHash } from "@/lib/routes";
 import { Section } from "@/components/ui/Section";
 
 const LINKS: Record<string, string> = {
   reels: ROUTES.demo,
   feed: ROUTES.demo,
-  partners: routeWithHash(ROUTES.sponsor, "formules"),
+  partners: SPONSOR_APP_HREF,
   family: PARENT_APP_HREF,
   tournaments: routeWithHash(ROUTES.features, "modules"),
   auth: ROUTES.demo,

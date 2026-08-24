@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { RoleAccentStage } from "@/components/immersive/RoleAccentStage";
 import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
+import { SponsorAppHub } from "@/components/poles/SponsorAppHub";
 import {
   SponsorCapabilityPlay,
   SponsorTiersCompare,
@@ -32,9 +33,11 @@ export default function SponsorPolePage() {
         poster={visuals.hero}
         primaryHref={ROUTES.sponsorDevis}
         primaryLabel="Demander un devis"
-        secondaryHref={`${ROUTES.pricing}#sponsor`}
-        secondaryLabel="Voir les formules"
+        secondaryHref="#app"
+        secondaryLabel="Voir l’app Sponsor"
       />
+
+      <SponsorAppHub />
 
       <SponsorCapabilityPlay />
 
