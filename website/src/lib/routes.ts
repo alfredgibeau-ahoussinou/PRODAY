@@ -134,6 +134,9 @@ export type RouteKey = keyof typeof ROUTES;
 /** Hub Président : section du Pôle Club (lien menu, pas une page séparée). */
 export const PRESIDENT_HUB_HREF = `${ROUTES.proClub}#president`;
 
+/** Vitrine app Joueur : section sous la porte « Qui es-tu ? ». */
+export const JOUEUR_APP_HREF = `${ROUTES.joueur}#app`;
+
 /** Nav vitrine : 6 pôles + Président (rattaché au Club). Santé = rôle intégré. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
@@ -159,7 +162,7 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const POLE_FOOTER_LINKS = [
-  { href: ROUTES.joueur, label: "Espace Joueur", subtitle: "Carte, entraînement, Mercato · Pass optionnel 3,99 €" },
+  { href: JOUEUR_APP_HREF, label: "Espace Joueur", subtitle: "App · Accueil, matchs, saison · Pass 3,99 €" },
   { href: ROUTES.proClub, label: "Espace Club", subtitle: "À partir de 3 € / adhérent · Sur devis" },
   { href: PRESIDENT_HUB_HREF, label: "Pôle Président", subtitle: "Cockpit dirigeants · lié au Club" },
   { href: ROUTES.coach, label: "Espace Coach", subtitle: "Entraînements · Tactique IA · invitations" },

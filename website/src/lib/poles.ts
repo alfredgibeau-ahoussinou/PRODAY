@@ -52,9 +52,9 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     kicker: "ESPACE JOUEUR",
     navLabel: "Joueur",
     title: "Progresser chaque jour",
-    subtitle: "Ma forme · Stats · Entraînement",
+    subtitle: "Accueil · Matchs · Saison",
     description:
-      "Analyse de forme personnelle, carte joueur, stats, convocations et covoiturage. Pass optionnel 3,99 € : programmes, vidéo et contenu avancé.",
+      "Analyse de forme, Centre Match, stats de saison, profil et menu Plus. Pass optionnel 3,99 € : programmes, vidéo et contenu avancé.",
     href: ROUTES.joueur,
     pricingHash: "joueur",
     logo: "/branding/logo-proday-mark-joueur.png",
@@ -244,7 +244,9 @@ export function poleNavAccentHex(href: string): string {
   }
   const path = href.split("#")[0] ?? href;
   const pole = SHOWCASE_POLES.find((p) => p.href === path);
-  return pole ? POLE_BRAND_HEX[pole.id] : POLE_ACCENT_HEX.president;
+  if (!pole) return POLE_ACCENT_HEX.president;
+  if (pole.id === "joueur") return POLE_ACCENT_HEX.joueur;
+  return POLE_BRAND_HEX[pole.id];
 }
 
 const JOUEUR_STYLES = {

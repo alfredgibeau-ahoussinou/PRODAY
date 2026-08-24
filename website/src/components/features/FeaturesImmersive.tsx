@@ -10,7 +10,7 @@ import { TerminalCta } from "@/components/terminal";
 import { MODULES } from "@/lib/content";
 import { SHOWCASE_POLES, poleNavAccentHex, poleSectionHref } from "@/lib/poles";
 import { getRoleVisuals } from "@/lib/roleVisuals";
-import { PRESIDENT_HUB_HREF, ROUTES } from "@/lib/routes";
+import { JOUEUR_APP_HREF, PRESIDENT_HUB_HREF, ROUTES } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -21,10 +21,10 @@ const POLE_CAPABILITIES: Record<
   joueur: {
     title: "Ce que fait le joueur",
     items: [
-      "Analyse de forme personnelle (Ma forme)",
-      "Carte joueur, stats, convocations, covoiturage",
-      "Mercato & candidatures",
-      "Pass 3,99 € optionnel : programmes, vidéo, contenu avancé",
+      "Accueil & parcours : forme, objectifs, carte joueur",
+      "Centre Match : calendrier, lieu, préparation",
+      "Saison, stats et profil — Pass 3,99 € optionnel",
+      "Convocations, covoiturage, Mercato",
     ],
   },
   pro_club: {
@@ -119,7 +119,7 @@ const FEATURE_POLES: FeaturePoleTab[] = SHOWCASE_POLES.flatMap((pole) => {
     title: pole.title,
     subtitle: pole.subtitle,
     description: pole.description,
-    href: pole.href,
+    href: pole.id === "joueur" ? JOUEUR_APP_HREF : pole.href,
   };
   return pole.id === "pro_club" ? [tab, PRESIDENT_FEATURE_TAB] : [tab];
 });

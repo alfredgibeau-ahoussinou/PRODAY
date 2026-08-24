@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PRESIDENT_HUB_HREF, ROUTES } from "@/lib/routes";
+import { JOUEUR_APP_HREF, PRESIDENT_HUB_HREF, ROUTES } from "@/lib/routes";
 
 const ROLE_CHOICES = [
-  { label: "Joueur", emoji: "⚽", href: ROUTES.joueur },
+  { label: "Joueur", emoji: "⚽", href: JOUEUR_APP_HREF },
   { label: "Coach", emoji: "📋", href: ROUTES.proStaff },
   { label: "Club", emoji: "🏟️", href: ROUTES.proClub },
   { label: "Président", emoji: "🏛️", href: PRESIDENT_HUB_HREF },
