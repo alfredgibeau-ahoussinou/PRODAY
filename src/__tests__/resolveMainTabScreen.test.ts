@@ -121,6 +121,15 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('reels', 'parent', 'supporter')).not.toBe('LazyReelsScreen');
   });
 
+  it('laisse les invités anonymes sur Discover/Auth (jamais scaffold supporter ni retired)', () => {
+    expect(resolveMainTabScreen('home', null, 'supporter')).toBe('HomeScreen');
+    expect(resolveMainTabScreen('profil', null, 'supporter')).toBe('ProfilTabScreen');
+    expect(resolveMainTabScreen('home', undefined, 'supporter')).toBe('HomeScreen');
+    expect(resolveMainTabScreen('home', null, 'sante')).toBe('HomeScreen');
+    expect(resolveMainTabScreen('profil', null, 'sante')).toBe('ProfilTabScreen');
+    expect(resolveMainTabScreen('home', null, 'amateur')).toBe('HomeScreen');
+  });
+
   it('mappe le portail coach sur home', () => {
     expect(resolveMainTabScreen('home', 'coach', 'pro')).toBe('CoachPortalScreen');
     expect(resolveMainTabScreen('home', 'coach', 'amateur')).toBe('CoachPortalScreen');

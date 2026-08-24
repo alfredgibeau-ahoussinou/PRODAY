@@ -177,7 +177,8 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
             <Pressable
               onPress={touring ? onSkip : onDismiss}
               disabled={!touring && interactionLocked}
-              hitSlop={12}
+              hitSlop={20}
+              accessibilityRole="button"
               accessibilityLabel={
                 touring ? 'Passer la présentation' : 'Fermer le sélecteur de pôle'
               }

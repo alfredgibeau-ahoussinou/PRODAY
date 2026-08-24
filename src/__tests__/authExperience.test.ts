@@ -26,4 +26,8 @@ describe('ProDay Auth Experience', () => {
     expect(AUTH_XP.motionReveal).toBeLessThanOrEqual(600);
     expect(MOTION_PRESETS.form.spring).toEqual(prodayMotion.spring.smooth);
   });
+
+  it('garde un reveal post-login plus court que 1s (évite voile noir long)', () => {
+    expect(AUTH_XP.motionReveal + AUTH_XP.motionFast).toBeLessThan(1000);
+  });
 });

@@ -106,11 +106,16 @@ export function resolveMainTabScreen(
   role?: UserRole | null,
   line?: ProductLineId | null,
 ): ComponentType {
+  // Invité anonyme : toujours Home/Discover + Auth (ProfilTab) — jamais scaffold
+  // supporter / retired, sinon « espace à venir » / écran noir sans retour.
+  if (role == null) {
+    return DEFAULT_SCREENS[tab];
+  }
   if (isRetiredUserRole(role) || line === 'sante') {
     return RetiredRoleScreen;
   }
-  // Rôle supporter OU product line supporter (ex. parent en visite invitée).
-  if (role === 'supporter' || line === 'supporter') {
+  // Scaffold supporter : rôle supporter OU parent en visite invitée (line supporter).
+  if (role === 'supporter' || (role === 'parent' && line === 'supporter')) {
     return SUPPORTER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   if (line === 'amateur' && role === 'club') {

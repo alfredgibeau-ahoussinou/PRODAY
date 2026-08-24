@@ -35,4 +35,9 @@ describe('launchIntroFlow', () => {
     expect(UNIVERSE_CONFIRM_LEAVE.veilMs).toBeLessThanOrEqual(UNIVERSE_CONFIRM_LEAVE.exitMs);
     expect(UNIVERSE_CONFIRM_LEAVE.pushExitMs).toBeLessThanOrEqual(280);
   });
+
+  it('borne pushExit pour un démontage rapide (pas de voile noir collé)', () => {
+    expect(UNIVERSE_CONFIRM_LEAVE.pushExitMs).toBeGreaterThanOrEqual(120);
+    expect(UNIVERSE_CONFIRM_LEAVE.pushExitMs + 120).toBeLessThan(500);
+  });
 });

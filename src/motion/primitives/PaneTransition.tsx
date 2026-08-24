@@ -118,12 +118,12 @@ export function PaneTransition({
         easing: prodayMotion.easing.in,
       },
       (finished) => {
-        if (!finished || token !== gen.current) {
-          if (token === gen.current) {
-            busy.current = false;
-            runOnJS(setPaneBusy)(false);
-          }
-          return;
+        // Toujours récupérer si ce token est encore le courant — sinon opacity
+        // reste à 0 (écran noir + dock encore utilisable) quand finished=false.
+        if (token !== gen.current) return;
+        if (!finished) {
+          cancelAnimation(opacity);
+          cancelAnimation(translateX);
         }
         runOnJS(finishEnter)(nextKey, dir, token);
       },

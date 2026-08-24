@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -28,6 +29,8 @@ interface PushScreenTransitionProps {
 
 /**
  * Navigation type “stack” / détail — glisse depuis la droite + fade (preset detail).
+ * Garantit le démontage après exit (timeout de secours) pour ne jamais laisser
+ * un voile noir bloquer les touches / le contenu des onglets.
  */
 export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   active,
@@ -42,10 +45,14 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   const [mounted, setMounted] = useState(active);
   const x = useSharedValue(active ? 0 : W);
   const opacity = useSharedValue(active ? 1 : 0);
+  const exitGen = useRef(0);
 
   useEffect(() => {
     if (active) {
+      exitGen.current += 1;
       setMounted(true);
+      cancelAnimation(x);
+      cancelAnimation(opacity);
       if (reduced) {
         x.value = 0;
         opacity.value = 1;
@@ -56,40 +63,57 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
         duration: preset.enterMs,
         easing: prodayMotion.easing.out,
       });
-    } else if (mounted) {
-      if (reduced) {
-        x.value = W;
-        opacity.value = 0;
-        setMounted(false);
-        return;
-      }
-      if (directExit) {
-        const outMs = Math.max(120, Math.min(directExitMs, 280));
-        opacity.value = withTiming(0, {
-          duration: outMs,
-          easing: prodayMotion.easing.in,
-        });
-        x.value = withTiming(
-          W,
-          { duration: outMs, easing: prodayMotion.easing.in },
-          (finished) => {
-            if (finished) {
-              runOnJS(setMounted)(false);
-            }
-          },
-        );
-        return;
-      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    const token = ++exitGen.current;
+    const forceUnmount = () => {
+      if (token !== exitGen.current) return;
+      cancelAnimation(x);
+      cancelAnimation(opacity);
+      opacity.value = 0;
+      x.value = W;
+      setMounted(false);
+    };
+
+    if (reduced) {
+      forceUnmount();
+      return;
+    }
+
+    const outMs = directExit
+      ? Math.max(120, Math.min(directExitMs, 280))
+      : Math.max(preset.exitMs, 180);
+
+    if (directExit) {
+      opacity.value = withTiming(0, {
+        duration: outMs,
+        easing: prodayMotion.easing.in,
+      });
+      x.value = withTiming(
+        W,
+        { duration: outMs, easing: prodayMotion.easing.in },
+        (finished) => {
+          if (token !== exitGen.current) return;
+          if (finished) runOnJS(forceUnmount)();
+        },
+      );
+    } else {
       opacity.value = withTiming(0, {
         duration: preset.exitMs,
         easing: prodayMotion.easing.in,
       });
       x.value = withSpring(W, getMotionPreset('nav').spring, (finished) => {
-        if (finished) {
-          runOnJS(setMounted)(false);
-        }
+        if (token !== exitGen.current) return;
+        if (finished) runOnJS(forceUnmount)();
       });
     }
+
+    // Secours : si le callback Reanimated ne fire pas, on démonte quand même.
+    const safety = setTimeout(forceUnmount, outMs + 120);
+    return () => clearTimeout(safety);
   }, [
     active,
     directExit,

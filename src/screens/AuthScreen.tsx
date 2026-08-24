@@ -224,10 +224,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       <PressableSpring
         style={styles.iconBtn}
         onPress={handleBack}
-        hitSlop={8}
+        hitSlop={16}
         scaleTo={0.92}
         haptic
         accessibilityLabel={t('auth.backHome')}
+        accessibilityRole="button"
       >
         <Icon name="arrow-back" size={20} color={AUTH_XP.white} />
       </PressableSpring>

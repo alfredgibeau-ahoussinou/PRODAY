@@ -20,6 +20,7 @@ type AuthEnterProps = {
 
 /**
  * Entrée légère logo / panneau (opacity + scale) — respect reduced motion.
+ * Secours : force visible après délai max (évite écran noir si Reanimated rate).
  */
 export const AuthEnter: React.FC<AuthEnterProps> = ({
   children,
@@ -33,12 +34,17 @@ export const AuthEnter: React.FC<AuthEnterProps> = ({
   const translateY = useSharedValue(reduced ? 0 : 10);
 
   useEffect(() => {
-    if (reduced) {
+    const forceVisible = () => {
       opacity.value = 1;
       scale.value = 1;
       translateY.value = 0;
+    };
+
+    if (reduced) {
+      forceVisible();
       return;
     }
+
     const start = () => {
       opacity.value = withTiming(1, {
         duration: AUTH_XP.motionNormal,
@@ -50,12 +56,17 @@ export const AuthEnter: React.FC<AuthEnterProps> = ({
         easing: prodayMotion.easing.out,
       });
     };
+
+    const safety = setTimeout(forceVisible, delayMs + AUTH_XP.motionNormal + 200);
     if (delayMs <= 0) {
       start();
-      return;
+      return () => clearTimeout(safety);
     }
     const t = setTimeout(start, delayMs);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(safety);
+    };
   }, [delayMs, opacity, reduced, scale, translateY]);
 
   const anim = useAnimatedStyle(() => ({
@@ -116,7 +127,14 @@ export const AuthModeSwitch: React.FC<AuthModeSwitchProps> = ({ modeKey, childre
         easing: prodayMotion.easing.out,
       });
     }, AUTH_XP.motionFast);
-    return () => clearTimeout(t);
+    const safety = setTimeout(() => {
+      opacity.value = 1;
+      translateY.value = 0;
+    }, AUTH_XP.motionFast + AUTH_XP.motionNormal + 200);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(safety);
+    };
   }, [children, modeKey, opacity, reduced, translateY]);
 
   const anim = useAnimatedStyle(() => ({

@@ -19,6 +19,7 @@ type AuthPostLoginRevealProps = {
 /**
  * Micro-transition post-login ~480ms : logo → fade → destination.
  * Springs prodayMotion ; reduced motion = cut court sans flash.
+ * Secours timeout : ne jamais laisser le voile noir bloquer l’UI.
  */
 export const AuthPostLoginReveal: React.FC<AuthPostLoginRevealProps> = ({
   active,
@@ -27,17 +28,26 @@ export const AuthPostLoginReveal: React.FC<AuthPostLoginRevealProps> = ({
   const reduced = useReducedMotion();
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.94);
+  const doneRef = React.useRef(false);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active) {
+      doneRef.current = false;
+      return;
+    }
+
+    doneRef.current = false;
+    const finish = () => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      opacity.value = 0;
+      onDone();
+    };
 
     if (reduced) {
       opacity.value = 1;
       scale.value = 1;
-      const t = setTimeout(() => {
-        opacity.value = 0;
-        onDone();
-      }, AUTH_XP.motionFast);
+      const t = setTimeout(finish, AUTH_XP.motionFast);
       return () => clearTimeout(t);
     }
 
@@ -52,7 +62,7 @@ export const AuthPostLoginReveal: React.FC<AuthPostLoginRevealProps> = ({
         0,
         { duration: AUTH_XP.motionFast, easing: prodayMotion.easing.in },
         (finished) => {
-          if (finished) runOnJS(onDone)();
+          if (finished) runOnJS(finish)();
         },
       );
       scale.value = withTiming(1.02, {
@@ -61,7 +71,11 @@ export const AuthPostLoginReveal: React.FC<AuthPostLoginRevealProps> = ({
       });
     }, AUTH_XP.motionReveal);
 
-    return () => clearTimeout(t);
+    const safety = setTimeout(finish, AUTH_XP.motionReveal + AUTH_XP.motionFast + 250);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(safety);
+    };
   }, [active, onDone, opacity, reduced, scale]);
 
   const anim = useAnimatedStyle(() => ({

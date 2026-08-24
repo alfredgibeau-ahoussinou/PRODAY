@@ -16,7 +16,7 @@ import { AUTH_XP } from './tokens';
 
 type AuthExperienceShellProps = {
   children: React.ReactNode;
-  /** Toolbar (back, language) overlaid on brand or form. */
+  /** Toolbar (back, language) — toujours au-dessus du contenu / des anims. */
   toolbar?: React.ReactNode;
   /** Hide brand copy on very tight layouts. */
   brandCopy?: boolean;
@@ -29,6 +29,8 @@ type AuthExperienceShellProps = {
 /**
  * Composition asymétrique : brand panel (~58%) + form panel.
  * Mobile : hero court + formulaire immédiat (pas 2 écrans de scroll).
+ * Toolbar flottante (zIndex) pour garantir un moyen de quitter même si
+ * AuthEnter / overlays restent à opacity 0.
  */
 export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
   children,
@@ -55,7 +57,7 @@ export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
 
   const formInner = (
     <AuthEnter delayMs={80} style={[styles.formInner, contentStyle]}>
-      {toolbar ? <View style={styles.toolbar}>{toolbar}</View> : null}
+      {toolbar ? <View style={styles.toolbarSpacer} /> : null}
       {children}
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </AuthEnter>
@@ -91,6 +93,14 @@ export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
           <View style={styles.formPanelMobile}>{form}</View>
         </View>
       )}
+      {toolbar ? (
+        <View
+          style={[styles.toolbarOverlay, isWide && styles.toolbarOverlayWide]}
+          pointerEvents="box-none"
+        >
+          {toolbar}
+        </View>
+      ) : null}
     </KeyboardAvoidingView>
   );
 };
@@ -145,8 +155,25 @@ function createStyles(
       width: '100%',
       alignSelf: 'center',
     },
-    toolbar: {
-      marginBottom: 16,
+    toolbarSpacer: {
+      height: 48,
+      marginBottom: 8,
+    },
+    toolbarOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 40,
+      elevation: 40,
+      paddingTop: Math.max(topInset, 8) + (isWide ? 8 : 4),
+      paddingHorizontal: compact ? 12 : 16,
+    },
+    toolbarOverlayWide: {
+      left: undefined,
+      width: '42%',
+      alignSelf: 'flex-end',
+      right: 0,
     },
     footer: {
       marginTop: 'auto',
