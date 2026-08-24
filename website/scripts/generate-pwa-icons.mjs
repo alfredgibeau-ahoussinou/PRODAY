@@ -1,7 +1,9 @@
 /**
- * Génère favicon + icônes PWA à partir du symbole officiel ProDay.
+ * Génère favicon + icônes PWA à partir du lockup officiel ProDay (P + PRODAY + tagline).
  * Usage : node scripts/generate-pwa-icons.mjs
- * Préférer : node scripts/generate-official-brand.mjs (régénère aussi le mark).
+ *
+ * Source : assets/branding/proday-lockup-official-source.png (ou proday-app-icon.png).
+ * Fallback symbole seul si lockup absent.
  */
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { dirname, resolve } from "path";
@@ -10,14 +12,14 @@ import sharp from "sharp";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
-const markPath = resolve(root, "public/branding/logo-proday-mark.png");
+const repoRoot = resolve(root, "..");
 const iconsDir = resolve(root, "public/icons");
 
-if (!existsSync(markPath)) {
-  console.error("Manquant:", markPath);
-  console.error("Lancez d’abord: node scripts/generate-official-brand.mjs");
-  process.exit(1);
-}
+const LOCKUP_SOURCE = resolve(repoRoot, "assets/branding/proday-lockup-official-source.png");
+const LOCKUP_APP_ICON = resolve(repoRoot, "assets/branding/proday-app-icon.png");
+const MARK_FALLBACK = resolve(root, "public/branding/logo-proday-mark.png");
+
+const lockupPath = [LOCKUP_SOURCE, LOCKUP_APP_ICON].find((p) => existsSync(p)) ?? null;
 
 mkdirSync(iconsDir, { recursive: true });
 
@@ -47,7 +49,17 @@ function pngBuffersToIco(pngBuffers) {
   return Buffer.concat([header, ...entries, ...pngBuffers]);
 }
 
-async function makeAppIcon(markWhite, size, radiusRatio = 0.22) {
+/** Icône carrée depuis le lockup officiel (store / favicon). */
+async function makeIconFromLockup(size) {
+  return sharp(lockupPath)
+    .resize(size, size, { fit: "cover", position: "centre" })
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+}
+
+/** Fallback : symbole seul sur fond noir arrondi. */
+async function makeAppIconFromMark(markWhite, size, radiusRatio = 0.22) {
   const padR = Math.round(size * 0.18);
   const maxSide = size - padR * 2;
   const mark = await sharp(markWhite)
@@ -66,27 +78,45 @@ async function makeAppIcon(markWhite, size, radiusRatio = 0.22) {
     .toBuffer();
 }
 
-const markWhite = await sharp(markPath).png().toBuffer();
+async function makeIcon(size, markWhite) {
+  if (lockupPath) return makeIconFromLockup(size);
+  if (!markWhite) {
+    console.error("Manquant:", MARK_FALLBACK);
+    console.error("Lancez d’abord: node scripts/generate-official-brand.mjs");
+    process.exit(1);
+  }
+  return makeAppIconFromMark(markWhite, size);
+}
+
+const markWhite = existsSync(MARK_FALLBACK)
+  ? await sharp(MARK_FALLBACK).png().toBuffer()
+  : null;
+
+if (lockupPath) {
+  console.log("Source lockup:", lockupPath.replace(repoRoot + "/", ""));
+} else {
+  console.warn("Lockup absent — fallback symbole seul");
+}
 
 for (const size of [96, 128, 192, 256, 384, 512]) {
-  await sharp(await makeAppIcon(markWhite, size)).toFile(
+  await sharp(await makeIcon(size, markWhite)).toFile(
     resolve(iconsDir, `icon-${size}.png`),
   );
 }
-await sharp(await makeAppIcon(markWhite, 512)).toFile(
+await sharp(await makeIcon(512, markWhite)).toFile(
   resolve(iconsDir, "icon-512-maskable.png"),
 );
-await sharp(await makeAppIcon(markWhite, 192)).toFile(resolve(root, "src/app/icon.png"));
-await sharp(await makeAppIcon(markWhite, 180, 0.2)).toFile(
+await sharp(await makeIcon(192, markWhite)).toFile(resolve(root, "src/app/icon.png"));
+await sharp(await makeIcon(180, markWhite)).toFile(
   resolve(root, "src/app/apple-icon.png"),
 );
 
 const ico = pngBuffersToIco([
-  await makeAppIcon(markWhite, 16, 0.25),
-  await makeAppIcon(markWhite, 32, 0.22),
-  await makeAppIcon(markWhite, 48, 0.22),
+  await makeIcon(16, markWhite),
+  await makeIcon(32, markWhite),
+  await makeIcon(48, markWhite),
 ]);
 writeFileSync(resolve(root, "src/app/favicon.ico"), ico);
 writeFileSync(resolve(root, "public/favicon.ico"), ico);
 
-console.log("OK — symbole ProDay (favicon + PWA)");
+console.log("OK — lockup officiel ProDay (favicon + PWA)");

@@ -22,6 +22,9 @@ const MASTER_LOCKUP = resolve(masterDir, "proday-logo-master-white.png");
 const MASTER_OFFICIAL = resolve(masterDir, "logo-proday-official.png");
 const MASTER_SYMBOL_BLACK = resolve(masterDir, "proday-symbol-black.png");
 const MASTER_LOCKUP_BLACK = resolve(masterDir, "proday-logo-master-black.png");
+const MASTER_LOCKUP_ICON = [resolve(masterDir, "proday-lockup-official-source.png"), resolve(masterDir, "proday-app-icon.png")].find(
+  (p) => existsSync(p),
+);
 
 /** Accents pôle — planche brand (alignés app prodayBrand). */
 const POLE_HEX = {
@@ -79,7 +82,18 @@ function pngBuffersToIco(pngBuffers) {
   return Buffer.concat([header, ...entries, ...pngBuffers]);
 }
 
+/** Icône carrée depuis le lockup officiel (favicon / PWA). */
+async function makeIconFromLockup(size) {
+  return sharp(MASTER_LOCKUP_ICON)
+    .resize(size, size, { fit: "cover", position: "centre" })
+    .ensureAlpha()
+    .png()
+    .toBuffer();
+}
+
+/** Fallback : symbole seul sur fond noir arrondi. */
 async function makeAppIcon(markWhite, size, radiusRatio = 0.22) {
+  if (MASTER_LOCKUP_ICON) return makeIconFromLockup(size);
   const padR = Math.round(size * 0.18);
   const maxSide = size - padR * 2;
   const mark = await sharp(markWhite)
