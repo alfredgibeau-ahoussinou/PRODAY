@@ -4,7 +4,7 @@ import { PresidentAppHub } from "@/components/poles/PresidentAppHub";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
 import { getRoleVisuals } from "@/lib/roleVisuals";
-import { ROUTES } from "@/lib/routes";
+import { CLUB_APP_HREF, ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Pôle Président · Cockpit dirigeants",
@@ -37,7 +37,7 @@ export default function PresidentPolePage() {
         description="Cockpit dirigeants, alertes et priorités — dans la même app que le club et les coachs."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Liste d’attente"
-        secondaryHref={ROUTES.proClub}
+        secondaryHref={CLUB_APP_HREF}
         secondaryLabel="Découvrir le Pôle Club"
       />
     </TerminalPage>

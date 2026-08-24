@@ -1,5 +1,6 @@
 import type { PoleId } from "./poles";
 import {
+  CLUB_APP_HREF,
   COACH_APP_HREF,
   PARENT_APP_HREF,
   PRESIDENT_HUB_HREF,
@@ -36,7 +37,7 @@ export type PageMeta = {
 
 const ECOSYSTEM_SIBLINGS = [
   { href: ROUTES.joueur, label: "Joueur" },
-  { href: ROUTES.proClub, label: "Club" },
+  { href: CLUB_APP_HREF, label: "Club" },
   { href: PRESIDENT_HUB_HREF, label: "Président" },
   { href: COACH_APP_HREF, label: "Coach" },
   { href: PARENT_APP_HREF, label: "Parent" },
@@ -118,7 +119,7 @@ export const SITE_PAGES: Record<string, PageMeta> = {
     poleId: "pro_club",
     category: "pole",
     accent: "pro_club",
-    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.proClub),
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== CLUB_APP_HREF),
   },
   [ROUTES.president]: {
     path: ROUTES.president,

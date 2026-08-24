@@ -2202,14 +2202,14 @@ export const QUIZ_RESULTS: Record<
     title: "Profil Club",
     description: "Cœur de ProDay : équipes, compétitions, convocations et covoiturage.",
     thought: "Un club, c'est une famille, une vision, un projet. Construire quelque chose de durable demande de la rigueur et de l'organisation. Ton ambition mérite les meilleurs outils pour grandir.",
-    href: "/pro-club",
+    href: "/pro-club#app",
     cta: "Voir le Pôle Club",
   },
   organizer: {
     title: "Profil Organisateur",
     description: "Rôle intégré au Club : tournois, détections et stages.",
     thought: "Créer des moments inoubliables, rassembler la communauté autour d'une passion commune. C'est ça, la magie de l'organisation. ProDay simplifie la logistique pour que tu puisses te concentrer sur l'essentiel.",
-    href: "/pro-club",
+    href: "/pro-club#app",
     cta: "Voir le Pôle Club",
   },
   woman: {

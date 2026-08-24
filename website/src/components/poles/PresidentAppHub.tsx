@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import type { CSSProperties } from "react";
 import { ExecutiveAppPhone } from "@/components/poles/ExecutiveAppPhone";
-import { COACH_APP_HREF, ROUTES } from "@/lib/routes";
+import { COACH_APP_HREF, CLUB_APP_HREF, ROUTES } from "@/lib/routes";
 
 const PRESIDENT_SIGNALS = [
   {
@@ -150,7 +150,7 @@ export function PresidentAppHub() {
                 Rejoindre la bêta
               </Link>
               <Link
-                href={ROUTES.proClub}
+                href={CLUB_APP_HREF}
                 className="inline-flex items-center justify-center border border-white/25 px-5 py-3 text-sm font-semibold text-white/80 transition hover:border-white/50"
               >
                 Voir le Pôle Club

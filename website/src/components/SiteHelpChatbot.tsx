@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { pricingHrefForPath } from "@/lib/poles";
-import { COACH_APP_HREF, PARENT_APP_HREF, PRESIDENT_HUB_HREF, ROUTES, SPONSOR_APP_HREF } from "@/lib/routes";
+import { COACH_APP_HREF, CLUB_APP_HREF, PARENT_APP_HREF, PRESIDENT_HUB_HREF, ROUTES, SPONSOR_APP_HREF } from "@/lib/routes";
 
 type HelpEntry = {
   id: string;
@@ -102,7 +102,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       question: "Comment proposer un match à un autre club ?",
       answer:
         "Dans l’app : Matchs → + Proposer un match. Recherchez le club (ville, distance, catégorie), envoyez l’invitation. Le destinataire accepte, refuse ou propose une autre date. Confirmé = calendriers + convocations.",
-      href: ROUTES.proClub,
+      href: CLUB_APP_HREF,
       hrefLabel: "Pôle Club",
     });
   }

@@ -4,6 +4,7 @@ import {
   ClubPitchMap,
   ImmersivePoleHero,
 } from "@/components/poles/immersivePoleExperience";
+import { ClubAppHub } from "@/components/poles/ClubAppHub";
 import { ClubMatchInviteSection } from "@/components/poles/ClubMatchInviteSection";
 import { ClubModulesSection } from "@/components/poles/ClubModulesSection";
 import { PresidentHashRedirect } from "@/components/poles/PresidentHashRedirect";
@@ -37,9 +38,11 @@ export default function ProClubPage() {
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Structurer mon club"
-        secondaryHref="#analyse-de-forme"
-        secondaryLabel="Analyse de forme"
+        secondaryHref="#app"
+        secondaryLabel="Voir l’app Club"
       />
+
+      <ClubAppHub />
 
       <FormAnalysisFeature audience="club" />
 

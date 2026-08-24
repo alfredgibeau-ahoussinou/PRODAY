@@ -148,10 +148,13 @@ export const PARENT_APP_HREF = `${ROUTES.parent}#app`;
 /** Vitrine app Sponsor : section ancrée sur /sponsor#app. */
 export const SPONSOR_APP_HREF = `${ROUTES.sponsor}#app`;
 
+/** Vitrine app Club : section ancrée sur /pro-club#app. */
+export const CLUB_APP_HREF = `${ROUTES.proClub}#app`;
+
 /** Nav vitrine : 6 pôles + Président. Santé = rôle intégré. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
-  { href: ROUTES.proClub, label: "Club" },
+  { href: CLUB_APP_HREF, label: "Club" },
   { href: PRESIDENT_HUB_HREF, label: "Président" },
   { href: COACH_APP_HREF, label: "Coach" },
   { href: PARENT_APP_HREF, label: "Parent" },
@@ -174,7 +177,7 @@ export const NAV_ITEMS = [
 
 export const POLE_FOOTER_LINKS = [
   { href: JOUEUR_APP_HREF, label: "Espace Joueur", subtitle: "App · Accueil, matchs, saison · Pass 3,99 €" },
-  { href: ROUTES.proClub, label: "Espace Club", subtitle: "À partir de 3 € / adhérent · Sur devis" },
+  { href: CLUB_APP_HREF, label: "Espace Club", subtitle: "App · Accueil, équipes, matchs · Sur devis" },
   { href: PRESIDENT_HUB_HREF, label: "Pôle Président", subtitle: "Cockpit dirigeants · décisions" },
   { href: COACH_APP_HREF, label: "Espace Coach", subtitle: "App · Accueil, effectif, IA · Tactique" },
   { href: PARENT_APP_HREF, label: "Pôle Parent", subtitle: "App · Accueil, Guide, Menu, Profil · gratuit" },
@@ -291,9 +294,9 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.proClub, "modules"),
+    href: CLUB_APP_HREF,
     title: "Pôle Club",
-    description: "Structures, équipes, recrutement kanban et vitrine.",
+    description: "App Club : accueil, équipes, matchs, outils et identité. Sur devis.",
     image: "/images/football-club-01.jpg",
     tag: "Club",
     accent: true,

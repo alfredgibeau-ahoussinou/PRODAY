@@ -11,6 +11,7 @@ import { MODULES } from "@/lib/content";
 import { SHOWCASE_POLES, poleNavAccentHex, poleSectionHref } from "@/lib/poles";
 import { getRoleVisuals } from "@/lib/roleVisuals";
 import {
+  CLUB_APP_HREF,
   COACH_APP_HREF,
   JOUEUR_APP_HREF,
   PARENT_APP_HREF,
@@ -135,7 +136,9 @@ const FEATURE_POLES: FeaturePoleTab[] = SHOWCASE_POLES.flatMap((pole) => {
             ? PARENT_APP_HREF
             : pole.id === "sponsor"
               ? SPONSOR_APP_HREF
-              : pole.href,
+              : pole.id === "pro_club"
+                ? CLUB_APP_HREF
+                : pole.href,
   };
   return pole.id === "pro_club" ? [tab, PRESIDENT_FEATURE_TAB] : [tab];
 });

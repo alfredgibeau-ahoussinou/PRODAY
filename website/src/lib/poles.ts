@@ -8,6 +8,7 @@ import {
 } from "./content";
 import { POLE_ACCENT_HEX } from "./brandColors";
 import {
+  CLUB_APP_HREF,
   COACH_APP_HREF,
   PARENT_APP_HREF,
   PRESIDENT_HUB_HREF,
@@ -254,11 +255,13 @@ export function poleNavAccentHex(href: string): string {
     return POLE_ACCENT_HEX.president;
   }
   if (
+    href === CLUB_APP_HREF ||
     href === COACH_APP_HREF ||
     href === PARENT_APP_HREF ||
     href === SPONSOR_APP_HREF ||
     href.endsWith("#app")
   ) {
+    if (path === ROUTES.proClub) return "#2563EB";
     if (path === ROUTES.coach) return "#2563EB";
     if (path === ROUTES.joueur) return POLE_ACCENT_HEX.joueur;
     if (path === ROUTES.parent) return POLE_ACCENT_HEX.parent;
