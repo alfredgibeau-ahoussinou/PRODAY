@@ -390,6 +390,12 @@ function AppShell() {
     setActiveTab('matchs');
   }, [authLoading, profile, pendingMatchsLink, screenTabs, activeTab]);
 
+  const dismissAuthOverlay = useCallback(() => {
+    setPendingAuthIntent(null);
+    setPendingSignupProductLine(null);
+    setPendingSignupRole(null);
+  }, []);
+
   if (!authLoading && profile && needsEmailVerification) {
     return (
       <EmailVerificationScreen
@@ -516,12 +522,6 @@ function AppShell() {
       </SubscriptionProvider>
     );
   }
-
-  const dismissAuthOverlay = useCallback(() => {
-    setPendingAuthIntent(null);
-    setPendingSignupProductLine(null);
-    setPendingSignupRole(null);
-  }, []);
 
   const handleTabPress = (tab: MainTabId, options?: SetActiveTabOptions) => {
     if (tab !== activeTab) prodayHaptics.tabSwitch();
