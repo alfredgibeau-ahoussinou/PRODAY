@@ -18,8 +18,8 @@ describe('ProDay Auth Experience', () => {
     expect(steps.includes('welcome')).toBe(false);
   });
 
-  it('aligne les timings auth sur la fenêtre fluidité (200–480ms)', () => {
-    expect(AUTH_XP.motionFast).toBeGreaterThanOrEqual(200);
+  it('aligne les timings auth sur la fenêtre fluidité (140–480ms)', () => {
+    expect(AUTH_XP.motionFast).toBeGreaterThanOrEqual(140);
     expect(AUTH_XP.motionFast).toBeLessThanOrEqual(prodayMotion.duration.slow);
     expect(AUTH_XP.motionNormal).toBeGreaterThanOrEqual(AUTH_XP.motionFast);
     expect(AUTH_XP.motionReveal).toBeGreaterThanOrEqual(400);

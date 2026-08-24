@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { Easing, FadeIn } from 'react-native-reanimated';
-import { motion } from '../../theme/motion';
+import { motion, useReducedMotion } from '../../motion';
 import { useSignupForm } from './useSignupForm';
 import { SignupWelcomeStep } from './SignupWelcomeStep';
 import { SignupSpaceStep } from './SignupSpaceStep';
@@ -66,6 +66,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
     useSignupFlowTheme();
   const { t } = useTranslation();
   const { profile, refreshProfile } = useAuth();
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     form.registerCreateBeforeLaunch(() => form.createAccount(refreshProfile));
@@ -86,7 +87,9 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   });
   const onBack =
     backKind === 'none' ? undefined : backKind === 'close' ? onClose : form.goBack;
-  const pageEntering = FadeIn.duration(motion.duration.normal).easing(Easing.out(Easing.cubic));
+  const pageEntering = reduced
+    ? undefined
+    : FadeIn.duration(motion.duration.fast).easing(Easing.out(Easing.cubic));
 
   const submitSecurity = async () => {
     if (!form.validateAccount()) return;

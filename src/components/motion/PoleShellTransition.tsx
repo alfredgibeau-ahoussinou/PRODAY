@@ -1,21 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { motion, useReducedMotion } from '../../motion';
+import { motion, prodayMotion, useReducedMotion } from '../../motion';
 import { sanitizeHostChildren } from '../../motion/sanitizeHostChildren';
 
 export type PoleShellId = 'parent' | 'supporter' | 'club' | 'president';
 
-const ENTER_MS = motion.duration.slow; // 300
-const EXIT_MS = motion.duration.normal; // 220
-const SHIFT = 40;
-const SCALE_OUT = 0.99;
-const SCALE_IN = 0.985;
+const ENTER_MS = motion.duration.tab;
+const SHIFT = 28;
 
 /** Parent → Supporter = 1 ; Club → Président = 1 ; retours = -1. */
 export function poleShellTransitionDirection(
@@ -36,8 +34,8 @@ interface PoleShellTransitionProps {
 }
 
 /**
- * Transition légère au swap Parent ↔ Supporter (crossfade + slide/scale discrets).
- * Conserve l’ancien shell le temps du fade-out pour un vrai croisement.
+ * Transition légère Parent ↔ Supporter / Club ↔ Président.
+ * Une phase (slide + opacity), plancher holdOpacity, timeout de secours.
  */
 export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
   shellKey,
@@ -49,83 +47,75 @@ export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
   const currentKey = useRef(shellKey);
   const pendingChildren = useRef(safeChildren);
   const busy = useRef(false);
+  const gen = useRef(0);
   pendingChildren.current = safeChildren;
 
   const opacity = useSharedValue(1);
   const translateX = useSharedValue(0);
-  const scale = useSharedValue(1);
 
-  const finishEnter = useCallback(
-    (nextKey: PoleShellId, dir: 1 | -1) => {
-      currentKey.current = nextKey;
-      setDisplayed(pendingChildren.current);
-      opacity.value = 0;
-      translateX.value = dir * SHIFT;
-      scale.value = SCALE_IN;
-      opacity.value = withTiming(1, { duration: ENTER_MS, easing: motion.easing.out });
-      translateX.value = withTiming(0, {
-        duration: ENTER_MS,
-        easing: motion.easing.out,
-      });
-      scale.value = withTiming(
-        1,
-        { duration: ENTER_MS, easing: motion.easing.out },
-        () => {
-          busy.current = false;
-        },
-      );
-    },
-    [opacity, translateX, scale],
-  );
+  const clearBusy = useCallback((token: number) => {
+    if (token !== gen.current) return;
+    busy.current = false;
+  }, []);
 
   useEffect(() => {
-    if (shellKey === currentKey.current) return;
-
-    if (reduced) {
-      currentKey.current = shellKey;
+    if (shellKey === currentKey.current) {
       setDisplayed(pendingChildren.current);
-      opacity.value = 1;
-      translateX.value = 0;
-      scale.value = 1;
-      busy.current = false;
-      return;
-    }
-
-    if (busy.current) {
-      currentKey.current = shellKey;
-      setDisplayed(pendingChildren.current);
-      opacity.value = 1;
-      translateX.value = 0;
-      scale.value = 1;
-      busy.current = false;
       return;
     }
 
     const dir = poleShellTransitionDirection(currentKey.current, shellKey);
-    const nextKey = shellKey;
-    busy.current = true;
+    currentKey.current = shellKey;
+    setDisplayed(pendingChildren.current);
 
-    opacity.value = withTiming(0, { duration: EXIT_MS, easing: motion.easing.in });
-    translateX.value = withTiming(-dir * (SHIFT * 0.55), {
-      duration: EXIT_MS,
-      easing: motion.easing.in,
+    if (reduced) {
+      cancelAnimation(opacity);
+      cancelAnimation(translateX);
+      opacity.value = 1;
+      translateX.value = 0;
+      busy.current = false;
+      return;
+    }
+
+    const token = ++gen.current;
+    busy.current = true;
+    cancelAnimation(opacity);
+    cancelAnimation(translateX);
+    opacity.value = prodayMotion.holdOpacity;
+    translateX.value = dir * SHIFT;
+    opacity.value = withTiming(1, {
+      duration: ENTER_MS,
+      easing: motion.easing.out,
     });
-    scale.value = withTiming(
-      SCALE_OUT,
-      { duration: EXIT_MS, easing: motion.easing.in },
+    translateX.value = withTiming(
+      0,
+      { duration: ENTER_MS, easing: motion.easing.out },
       (finished) => {
-        if (finished) {
-          runOnJS(finishEnter)(nextKey, dir);
-        } else {
-          busy.current = false;
+        if (token !== gen.current) return;
+        if (!finished) {
+          cancelAnimation(opacity);
+          cancelAnimation(translateX);
+          opacity.value = 1;
+          translateX.value = 0;
         }
+        runOnJS(clearBusy)(token);
       },
     );
-  }, [shellKey, reduced, opacity, translateX, scale, finishEnter]);
+
+    const safety = setTimeout(() => {
+      if (token !== gen.current) return;
+      cancelAnimation(opacity);
+      cancelAnimation(translateX);
+      opacity.value = 1;
+      translateX.value = 0;
+      busy.current = false;
+    }, ENTER_MS + 200);
+    return () => clearTimeout(safety);
+  }, [shellKey, reduced, opacity, translateX, clearBusy]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateX: translateX.value }, { scale: scale.value }],
+    transform: [{ translateX: translateX.value }],
   }));
 
   return (

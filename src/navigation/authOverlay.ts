@@ -3,6 +3,17 @@ import type { MainTabId } from './mainTabConfig';
 export type GuestAuthIntent = 'login' | 'signup';
 
 /**
+ * Fade-in overlay auth — Discover reste monté.
+ * Plancher > 0 ; Retour = unmount immédiat (pas de leave opaque).
+ */
+export const AUTH_OVERLAY_ENTER = {
+  fromOpacity: 0.42,
+  ms: 160,
+  reducedMs: 100,
+  safetyMs: 180,
+} as const;
+
+/**
  * Login / signup invité = overlay modal.
  * L’onglet d’origine (Discover) reste monté — pas de swap PaneTransition.
  */

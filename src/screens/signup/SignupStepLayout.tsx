@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Icon } from '../../components/ui/Icon';
-import { AnimatedEntrance, PressableSpring } from '../../components/motion';
+import { PressableSpring } from '../../components/motion';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
@@ -79,16 +79,14 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <AnimatedEntrance kind="fadeUp">
-          <ProDayText variant="title" style={styles.title}>
-            {title}
+        <ProDayText variant="title" style={styles.title}>
+          {title}
+        </ProDayText>
+        {subtitle ? (
+          <ProDayText variant="body" style={styles.subtitle}>
+            {subtitle}
           </ProDayText>
-          {subtitle ? (
-            <ProDayText variant="body" style={styles.subtitle}>
-              {subtitle}
-            </ProDayText>
-          ) : null}
-        </AnimatedEntrance>
+        ) : null}
         <View style={styles.body}>{children}</View>
       </ScrollView>
 

@@ -61,6 +61,8 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   const [leavingLine, setLeavingLine] = useState<IntroSpaceChoice | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [interactive, setInteractive] = useState(!skipReveal || skipLocalTransition);
+  const leaveDone = React.useRef(false);
+  const leaveSafetyRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : 1);
   const scale = useSharedValue(skipReveal && !skipLocalTransition ? 0.985 : 1);
   const veilOpacity = useSharedValue(0);
@@ -82,6 +84,8 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 
   const finishLeave = useCallback(
     (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
+      if (leaveDone.current) return;
+      leaveDone.current = true;
       if (dismissOnly) {
         onDismiss?.();
         return;
@@ -135,6 +139,9 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
           easing: prodayMotion.easing.in,
         });
       }
+      // Secours : si finished=false, terminer quand même (sans rallonger l’anim).
+      if (leaveSafetyRef.current) clearTimeout(leaveSafetyRef.current);
+      leaveSafetyRef.current = setTimeout(() => finishLeave(line, dismissOnly), outMs + 80);
     },
     [
       finishLeave,
@@ -146,6 +153,13 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
       skipLocalTransition,
       veilOpacity,
     ],
+  );
+
+  useEffect(
+    () => () => {
+      if (leaveSafetyRef.current) clearTimeout(leaveSafetyRef.current);
+    },
+    [],
   );
 
   const handleChoose = useCallback(

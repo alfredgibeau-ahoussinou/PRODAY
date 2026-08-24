@@ -10,14 +10,15 @@ import Animated, {
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { getMotionPreset } from '../presets';
 import { sanitizeHostChildren } from '../sanitizeHostChildren';
+import { PANE_ENTER_SAFETY_MS, PANE_EXIT_SAFETY_MS } from '../safety';
 import { prodayMotion } from '../tokens';
 import type { MotionContext, NavDirection } from '../types';
 import { useProDayMotion } from '../ProDayMotionProvider';
 
-/** Si le callback Reanimated ne fire pas : swap de pane quand même. */
-export const PANE_EXIT_SAFETY_MS = 80;
-/** Force opacity 1 après l’enter — évite un home coincé à 0. */
-export const PANE_ENTER_SAFETY_MS = 200;
+/** @deprecated import depuis `src/motion/safety` — re-export pour tests existants. */
+export { PANE_EXIT_SAFETY_MS, PANE_ENTER_SAFETY_MS } from '../safety';
+/** Jamais animer vers 0 (écran noir si l’anim est coupée). */
+export const PANE_HOLD_OPACITY = prodayMotion.holdOpacity;
 
 type Props = {
   sectionKey: string;
@@ -34,8 +35,8 @@ type Props = {
 };
 
 /**
- * Transition entre panes / onglets — slide léger + opacity.
- * Chrome (dock / sidebar) stable ; interruptible si navigation rapide.
+ * Transition entre panes / onglets — une seule phase (slide + opacity).
+ * Pas d’exit à 0 : swap immédiat depuis le plancher. Interruptible.
  */
 export function PaneTransition({
   sectionKey,
@@ -53,55 +54,37 @@ export function PaneTransition({
   const pending = useRef(safeChildren);
   const busy = useRef(false);
   const gen = useRef(0);
-  const appliedEnter = useRef(0);
+  const settled = useRef(0);
   const enterSafetyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdSafetyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   pending.current = safeChildren;
 
   const opacity = useSharedValue(1);
   const translateX = useSharedValue(0);
 
-  const finishEnter = useCallback(
-    (nextKey: string, dir: NavDirection, token: number) => {
+  const forceVisible = useCallback(() => {
+    cancelAnimation(opacity);
+    cancelAnimation(translateX);
+    opacity.value = 1;
+    translateX.value = 0;
+  }, [opacity, translateX]);
+
+  const settle = useCallback(
+    (token: number, visible: boolean) => {
       if (token !== gen.current) return;
-      if (appliedEnter.current === token) return;
-      appliedEnter.current = token;
-      currentKey.current = nextKey;
-      setDisplayed(pending.current);
-      opacity.value = 0;
-      translateX.value = dir * preset.shift * 0.85;
-      opacity.value = withTiming(1, {
-        duration: preset.enterMs,
-        easing: prodayMotion.easing.out,
-      });
-      translateX.value = withTiming(
-        0,
-        {
-          duration: preset.enterMs,
-          easing: prodayMotion.easing.out,
-        },
-        () => {
-          if (token !== gen.current) return;
-          busy.current = false;
-          runOnJS(setPaneBusy)(false);
-        },
-      );
-      if (enterSafetyRef.current) clearTimeout(enterSafetyRef.current);
-      enterSafetyRef.current = setTimeout(() => {
-        if (token !== gen.current) return;
-        cancelAnimation(opacity);
-        cancelAnimation(translateX);
-        opacity.value = 1;
-        translateX.value = 0;
-        busy.current = false;
-        setPaneBusy(false);
-      }, preset.enterMs + PANE_ENTER_SAFETY_MS);
+      if (settled.current === token && !visible) return;
+      settled.current = token;
+      if (visible) forceVisible();
+      busy.current = false;
+      setPaneBusy(false);
     },
-    [opacity, translateX, setPaneBusy, preset.enterMs, preset.shift],
+    [forceVisible, setPaneBusy],
   );
 
   useEffect(
     () => () => {
       if (enterSafetyRef.current) clearTimeout(enterSafetyRef.current);
+      if (holdSafetyRef.current) clearTimeout(holdSafetyRef.current);
     },
     [],
   );
@@ -112,20 +95,16 @@ export function PaneTransition({
       return;
     }
 
+    currentKey.current = sectionKey;
+    setDisplayed(pending.current);
+
     if (reduced) {
-      currentKey.current = sectionKey;
-      setDisplayed(pending.current);
-      cancelAnimation(opacity);
-      cancelAnimation(translateX);
-      opacity.value = 1;
-      translateX.value = 0;
+      forceVisible();
       busy.current = false;
       setPaneBusy(false);
       return;
     }
 
-    // Interruptible : annule la transition en cours plutôt qu’un jump sec.
-    const nextKey = sectionKey;
     const dir = direction;
     const token = ++gen.current;
     busy.current = true;
@@ -133,42 +112,53 @@ export function PaneTransition({
     cancelAnimation(opacity);
     cancelAnimation(translateX);
 
-    opacity.value = withTiming(0, {
-      duration: preset.exitMs,
-      easing: prodayMotion.easing.in,
+    opacity.value = PANE_HOLD_OPACITY;
+    translateX.value = dir * preset.shift;
+    opacity.value = withTiming(1, {
+      duration: preset.enterMs,
+      easing: prodayMotion.easing.out,
     });
     translateX.value = withTiming(
-      -dir * (preset.shift * 0.45),
+      0,
       {
-        duration: preset.exitMs,
-        easing: prodayMotion.easing.in,
+        duration: preset.enterMs,
+        easing: prodayMotion.easing.out,
       },
       (finished) => {
-        // Toujours récupérer si ce token est encore le courant — sinon opacity
-        // reste à 0 (écran noir + dock encore utilisable) quand finished=false.
         if (token !== gen.current) return;
         if (!finished) {
           cancelAnimation(opacity);
           cancelAnimation(translateX);
+          opacity.value = 1;
+          translateX.value = 0;
         }
-        runOnJS(finishEnter)(nextKey, dir, token);
+        runOnJS(settle)(token, !finished);
       },
     );
 
-    const swapSafety = setTimeout(() => {
+    if (holdSafetyRef.current) clearTimeout(holdSafetyRef.current);
+    holdSafetyRef.current = setTimeout(() => {
       if (token !== gen.current) return;
-      finishEnter(nextKey, dir, token);
-    }, preset.exitMs + PANE_EXIT_SAFETY_MS);
-    return () => clearTimeout(swapSafety);
+      if (opacity.value < PANE_HOLD_OPACITY) {
+        opacity.value = PANE_HOLD_OPACITY;
+      }
+    }, PANE_EXIT_SAFETY_MS);
+
+    if (enterSafetyRef.current) clearTimeout(enterSafetyRef.current);
+    enterSafetyRef.current = setTimeout(() => {
+      if (token !== gen.current) return;
+      settle(token, true);
+    }, preset.enterMs + PANE_ENTER_SAFETY_MS);
   }, [
     sectionKey,
     direction,
     reduced,
     opacity,
     translateX,
-    finishEnter,
+    settle,
+    forceVisible,
     setPaneBusy,
-    preset.exitMs,
+    preset.enterMs,
     preset.shift,
   ]);
 

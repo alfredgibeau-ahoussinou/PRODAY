@@ -63,9 +63,9 @@ export const MOTION_PRESETS: Record<MotionContext, MotionPreset> = {
   tab: {
     context: 'tab',
     enterMs: prodayMotion.duration.tab,
-    exitMs: prodayMotion.duration.fast,
+    exitMs: 80,
     spring: prodayMotion.spring.dock,
-    shift: 36,
+    shift: 22,
     scaleFrom: 1,
     interruptible: true,
   },

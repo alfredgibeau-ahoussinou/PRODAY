@@ -4,14 +4,16 @@ import Animated, {
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
 import { getMotionPreset, prodayMotion, useReducedMotion } from '../../motion';
+import { PUSH_ENTER_SAFETY_MS, PUSH_EXIT_SAFETY_MS } from '../../motion/safety';
 import { useAppTheme } from '../../context/ProductLineContext';
 
 const { width: W } = Dimensions.get('window');
+
+export { PUSH_ENTER_SAFETY_MS, PUSH_EXIT_SAFETY_MS } from '../../motion/safety';
 
 interface PushScreenTransitionProps {
   active: boolean;
@@ -29,8 +31,8 @@ interface PushScreenTransitionProps {
 
 /**
  * Navigation type “stack” / détail — glisse depuis la droite + fade (preset detail).
- * Garantit le démontage après exit (timeout de secours) pour ne jamais laisser
- * un voile noir bloquer les touches / le contenu des onglets.
+ * Timing only (pas de spring) — plus court, plus direct.
+ * Démontage garanti après exit (timeout de secours).
  */
 export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   active,
@@ -49,7 +51,7 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
 
   useEffect(() => {
     if (active) {
-      exitGen.current += 1;
+      const token = ++exitGen.current;
       setMounted(true);
       cancelAnimation(x);
       cancelAnimation(opacity);
@@ -58,12 +60,37 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
         opacity.value = 1;
         return;
       }
-      x.value = withSpring(0, preset.spring);
-      opacity.value = withTiming(1, {
+      if (opacity.value < prodayMotion.holdOpacity) {
+        opacity.value = prodayMotion.holdOpacity;
+      }
+      x.value = withTiming(0, {
         duration: preset.enterMs,
         easing: prodayMotion.easing.out,
       });
-      return;
+      opacity.value = withTiming(
+        1,
+        {
+          duration: preset.enterMs,
+          easing: prodayMotion.easing.out,
+        },
+        (finished) => {
+          if (token !== exitGen.current) return;
+          if (!finished) {
+            cancelAnimation(x);
+            cancelAnimation(opacity);
+            x.value = 0;
+            opacity.value = 1;
+          }
+        },
+      );
+      const enterSafety = setTimeout(() => {
+        if (token !== exitGen.current) return;
+        cancelAnimation(x);
+        cancelAnimation(opacity);
+        x.value = 0;
+        opacity.value = 1;
+      }, preset.enterMs + PUSH_ENTER_SAFETY_MS);
+      return () => clearTimeout(enterSafety);
     }
 
     if (!mounted) return;
@@ -87,32 +114,22 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
       ? Math.max(120, Math.min(directExitMs, 280))
       : Math.max(preset.exitMs, 180);
 
-    if (directExit) {
-      opacity.value = withTiming(0, {
-        duration: outMs,
-        easing: prodayMotion.easing.in,
-      });
-      x.value = withTiming(
-        W,
-        { duration: outMs, easing: prodayMotion.easing.in },
-        (finished) => {
-          if (token !== exitGen.current) return;
-          if (finished) runOnJS(forceUnmount)();
-        },
-      );
-    } else {
-      opacity.value = withTiming(0, {
-        duration: preset.exitMs,
-        easing: prodayMotion.easing.in,
-      });
-      x.value = withSpring(W, getMotionPreset('nav').spring, (finished) => {
+    cancelAnimation(x);
+    cancelAnimation(opacity);
+    opacity.value = withTiming(0, {
+      duration: outMs,
+      easing: prodayMotion.easing.in,
+    });
+    x.value = withTiming(
+      W,
+      { duration: outMs, easing: prodayMotion.easing.in },
+      (finished) => {
         if (token !== exitGen.current) return;
         if (finished) runOnJS(forceUnmount)();
-      });
-    }
+      },
+    );
 
-    // Secours : si le callback Reanimated ne fire pas, on démonte quand même.
-    const safety = setTimeout(forceUnmount, outMs + 120);
+    const safety = setTimeout(forceUnmount, outMs + PUSH_EXIT_SAFETY_MS);
     return () => clearTimeout(safety);
   }, [
     active,
@@ -122,7 +139,6 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
     x,
     opacity,
     reduced,
-    preset.spring,
     preset.enterMs,
     preset.exitMs,
   ]);

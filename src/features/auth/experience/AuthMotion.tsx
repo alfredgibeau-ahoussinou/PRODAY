@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -29,12 +30,15 @@ export const AuthEnter: React.FC<AuthEnterProps> = ({
   fill = false,
 }) => {
   const reduced = useReducedMotion();
-  const opacity = useSharedValue(reduced ? 1 : 0);
-  const scale = useSharedValue(reduced ? 1 : 0.97);
-  const translateY = useSharedValue(reduced ? 0 : 10);
+  const opacity = useSharedValue(reduced ? 1 : prodayMotion.holdOpacity);
+  const scale = useSharedValue(reduced ? 1 : 0.98);
+  const translateY = useSharedValue(reduced ? 0 : 8);
 
   useEffect(() => {
     const forceVisible = () => {
+      cancelAnimation(opacity);
+      cancelAnimation(scale);
+      cancelAnimation(translateY);
       opacity.value = 1;
       scale.value = 1;
       translateY.value = 0;
@@ -46,10 +50,23 @@ export const AuthEnter: React.FC<AuthEnterProps> = ({
     }
 
     const start = () => {
-      opacity.value = withTiming(1, {
-        duration: AUTH_XP.motionNormal,
-        easing: prodayMotion.easing.out,
-      });
+      opacity.value = withTiming(
+        1,
+        {
+          duration: AUTH_XP.motionNormal,
+          easing: prodayMotion.easing.out,
+        },
+        (finished) => {
+          if (!finished) {
+            cancelAnimation(opacity);
+            cancelAnimation(scale);
+            cancelAnimation(translateY);
+            opacity.value = 1;
+            scale.value = 1;
+            translateY.value = 0;
+          }
+        },
+      );
       scale.value = withSpring(1, prodayMotion.spring.smooth);
       translateY.value = withTiming(0, {
         duration: AUTH_XP.motionNormal,
@@ -85,13 +102,14 @@ type AuthModeSwitchProps = {
 };
 
 /**
- * Crossfade login ↔ teaser signup — évite le flash de swap brut.
+ * Crossfade login ↔ teaser signup — une phase, jamais opacity 0.
  */
 export const AuthModeSwitch: React.FC<AuthModeSwitchProps> = ({ modeKey, children }) => {
   const reduced = useReducedMotion();
   const opacity = useSharedValue(1);
   const translateY = useSharedValue(0);
   const keyRef = React.useRef(modeKey);
+  const gen = React.useRef(0);
   const [displayed, setDisplayed] = React.useState(children);
 
   useEffect(() => {
@@ -100,41 +118,47 @@ export const AuthModeSwitch: React.FC<AuthModeSwitchProps> = ({ modeKey, childre
       return;
     }
     keyRef.current = modeKey;
+    setDisplayed(children);
+
     if (reduced) {
-      setDisplayed(children);
+      cancelAnimation(opacity);
+      cancelAnimation(translateY);
       opacity.value = 1;
       translateY.value = 0;
       return;
     }
-    opacity.value = withTiming(0, {
-      duration: AUTH_XP.motionFast,
-      easing: prodayMotion.easing.in,
+
+    const token = ++gen.current;
+    cancelAnimation(opacity);
+    cancelAnimation(translateY);
+    opacity.value = prodayMotion.holdOpacity;
+    translateY.value = 6;
+    opacity.value = withTiming(
+      1,
+      { duration: AUTH_XP.motionNormal, easing: prodayMotion.easing.out },
+      (finished) => {
+        if (token !== gen.current) return;
+        if (!finished) {
+          cancelAnimation(opacity);
+          cancelAnimation(translateY);
+          opacity.value = 1;
+          translateY.value = 0;
+        }
+      },
+    );
+    translateY.value = withTiming(0, {
+      duration: AUTH_XP.motionNormal,
+      easing: prodayMotion.easing.out,
     });
-    translateY.value = withTiming(6, {
-      duration: AUTH_XP.motionFast,
-      easing: prodayMotion.easing.in,
-    });
-    const t = setTimeout(() => {
-      setDisplayed(children);
-      opacity.value = 0;
-      translateY.value = 8;
-      opacity.value = withTiming(1, {
-        duration: AUTH_XP.motionNormal,
-        easing: prodayMotion.easing.out,
-      });
-      translateY.value = withTiming(0, {
-        duration: AUTH_XP.motionNormal,
-        easing: prodayMotion.easing.out,
-      });
-    }, AUTH_XP.motionFast);
+
     const safety = setTimeout(() => {
+      if (token !== gen.current) return;
+      cancelAnimation(opacity);
+      cancelAnimation(translateY);
       opacity.value = 1;
       translateY.value = 0;
-    }, AUTH_XP.motionFast + AUTH_XP.motionNormal + 200);
-    return () => {
-      clearTimeout(t);
-      clearTimeout(safety);
-    };
+    }, AUTH_XP.motionNormal + 200);
+    return () => clearTimeout(safety);
   }, [children, modeKey, opacity, reduced, translateY]);
 
   const anim = useAnimatedStyle(() => ({

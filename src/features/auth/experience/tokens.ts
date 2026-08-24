@@ -31,8 +31,8 @@ export const AUTH_XP = {
   taglineDisplay: 'Connecter. Progresser. Révéler.',
   brandShare: 0.58,
   formShare: 0.42,
-  motionFast: 220,
-  motionNormal: 300,
+  motionFast: 160,
+  motionNormal: 220,
   motionReveal: 480,
 } as const;
 

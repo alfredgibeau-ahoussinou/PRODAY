@@ -1,9 +1,14 @@
 import {
+  AUTH_OVERLAY_ENTER,
   guestProfilTabOpensAuthOverlay,
   isGuestAuthOverlayVisible,
   resolveAuthBackAction,
 } from '../navigation/authOverlay';
-import { PANE_ENTER_SAFETY_MS, PANE_EXIT_SAFETY_MS } from '../motion/primitives/PaneTransition';
+import {
+  PANE_ENTER_SAFETY_MS,
+  PANE_EXIT_SAFETY_MS,
+  PANE_HOLD_OPACITY,
+} from '../motion/primitives/PaneTransition';
 
 describe('auth overlay dismiss', () => {
   it('montre l’auth invité en overlay dès qu’un intent est posé', () => {
@@ -36,5 +41,14 @@ describe('auth overlay dismiss', () => {
     expect(PANE_EXIT_SAFETY_MS).toBeGreaterThanOrEqual(60);
     expect(PANE_ENTER_SAFETY_MS).toBeGreaterThanOrEqual(120);
     expect(PANE_EXIT_SAFETY_MS + PANE_ENTER_SAFETY_MS).toBeLessThan(500);
+    expect(PANE_HOLD_OPACITY).toBeGreaterThan(0);
+  });
+
+  it('fade-in overlay : plancher > 0, court, avec secours', () => {
+    expect(AUTH_OVERLAY_ENTER.fromOpacity).toBeGreaterThan(0);
+    expect(AUTH_OVERLAY_ENTER.fromOpacity).toBeLessThan(1);
+    expect(AUTH_OVERLAY_ENTER.ms).toBeGreaterThanOrEqual(120);
+    expect(AUTH_OVERLAY_ENTER.ms).toBeLessThanOrEqual(220);
+    expect(AUTH_OVERLAY_ENTER.ms + AUTH_OVERLAY_ENTER.safetyMs).toBeLessThan(400);
   });
 });

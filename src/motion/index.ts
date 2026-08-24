@@ -1,12 +1,13 @@
-/**
- * ProDayMotionSystem — langage de motion unique pour toute l’app.
- *
- * Tokens + presets + primitives + hooks.
- * Les pôles (Admin, Coach, Club…) consomment ce module ; pas de silo anim indépendant.
- */
-
 export { prodayMotion, motion } from './tokens';
 export type { ProDayMotionTokens } from './tokens';
+
+export {
+  PANE_EXIT_SAFETY_MS,
+  PANE_ENTER_SAFETY_MS,
+  PUSH_EXIT_SAFETY_MS,
+  PUSH_ENTER_SAFETY_MS,
+  CROSSFADE_SAFETY_MS,
+} from './safety';
 
 export { MOTION_PRESETS, getMotionPreset } from './presets';
 export type { MotionPreset } from './presets';
