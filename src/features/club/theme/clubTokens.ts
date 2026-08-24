@@ -1,9 +1,15 @@
 /**
- * Identité visuelle Pôle Club — fond noir pur.
- * Accents émeraude uniquement sur CTA / chips / logo (pas sur le background).
+ * Identité visuelle Pôle Club — fond #000 + overlay émeraude très léger.
+ * Accents produit (émeraude) sur dock/CTA secondaires ; contrôles « mode »
+ * métier suivent la couleur d’équipe via `buildClubThemeTokens`.
  */
 
 import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../../../theme/prodayBrand';
+
+/** Overlay shell — émeraude produit, pas la couleur d’équipe. */
+export const CLUB_BG_WASH_HEX = '#10B981';
+export const CLUB_BG_WASH_TOP = 'rgba(16, 185, 129, 0.06)';
+export const CLUB_BG_WASH_MID = 'rgba(16, 185, 129, 0.03)';
 
 export type ClubThemeTokens = {
   bg: string;
@@ -28,6 +34,9 @@ export type ClubThemeTokens = {
   glow: string;
   /** Lavage header — noir (pas de teinte). */
   headerWash: string;
+  /** Overlay émeraude très léger (haut du shell). */
+  bgWash: string;
+  bgWashMid: string;
   success: string;
   successSoft: string;
   warning: string;
@@ -42,7 +51,7 @@ export type ClubThemeTokens = {
 
 const CLUB = PRODAY_POLE_ACCENTS.club;
 
-/** Tokens Club — root noir pur, charcoal neutre, accent vert sur UI. */
+/** Tokens Club — root noir, charcoal neutre, wash émeraude 6 % / 3 %. */
 export const CLUB_TOKENS: ClubThemeTokens = {
   bg: '#000000',
   surface: '#0A0A0A',
@@ -60,6 +69,8 @@ export const CLUB_TOKENS: ClubThemeTokens = {
   onAccent: '#FFFFFF',
   glow: poleAccentSoft('club', 0.5),
   headerWash: '#000000',
+  bgWash: CLUB_BG_WASH_TOP,
+  bgWashMid: CLUB_BG_WASH_MID,
   success: '#10B981',
   successSoft: 'rgba(16, 185, 129, 0.18)',
   warning: '#FBBF24',

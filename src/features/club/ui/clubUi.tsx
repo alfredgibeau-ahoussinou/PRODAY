@@ -473,13 +473,13 @@ export function ClubSegmentedControl<T extends string>({
             onPress={() => onChange(opt.id)}
             scaleTo={0.97}
             haptic
-            style={[styles.item, on && styles.itemOn]}
+            style={[styles.item, on && [styles.itemOn, { backgroundColor: tokens.accent }]]}
           >
             <ClubText
               variant="caption"
               style={{
                 fontWeight: on ? '800' : '600',
-                color: on ? tokens.foreground : tokens.muted,
+                color: on ? tokens.onAccent : tokens.muted,
               }}
             >
               {opt.label}
@@ -881,27 +881,25 @@ const segmentStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     track: {
       flexDirection: 'row',
-      padding: 0,
-      borderRadius: 0,
-      backgroundColor: 'transparent',
-      borderWidth: 0,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: tokens.border,
-      gap: 0,
+      padding: 4,
+      borderRadius: clubRadius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+      gap: 4,
     },
     item: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 12,
-      borderRadius: 0,
-      borderBottomWidth: 2,
+      paddingVertical: 10,
+      borderRadius: clubRadius.sm,
+      borderBottomWidth: 0,
       borderBottomColor: 'transparent',
-      marginBottom: -StyleSheet.hairlineWidth,
     },
     itemOn: {
-      backgroundColor: 'transparent',
-      borderBottomColor: tokens.foreground,
+      backgroundColor: tokens.accent,
+      borderBottomColor: 'transparent',
     },
   });
 

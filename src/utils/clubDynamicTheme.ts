@@ -43,6 +43,28 @@ function withAlpha(hex: string, alpha: number): string {
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 }
 
+function hexRelativeLuminance(hex: string): number {
+  const rgb = parseHex(hex);
+  if (!rgb) return 1;
+  const lin = (v: number) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
+}
+
+/**
+ * Couleur des contrôles « mode » (segments, pills, dock actif) :
+ * primary équipe, secondary si trop sombre sur noir, sinon accent Club.
+ */
+export function resolveClubControlColor(primary: string, secondary?: string | null): string {
+  const p = normalizeCoachHexColor(primary) ?? CLUB_TOKENS.accent;
+  if (hexRelativeLuminance(p) >= 0.06) return p;
+  const s = secondary ? normalizeCoachHexColor(secondary) : null;
+  if (s && hexRelativeLuminance(s) >= 0.08) return s;
+  return CLUB_TOKENS.accent;
+}
+
 function darkenHex(hex: string, amount: number): string {
   const rgb = parseHex(hex);
   if (!rgb) return hex;
@@ -282,11 +304,14 @@ export async function resolveClubDynamicBrand(
 export function buildClubThemeTokens(
   brand?: Pick<ClubDynamicBrand, 'primary' | 'secondary' | 'onAccent'> | null,
 ): ClubThemeTokens {
-  const accent = brand?.primary ? normalizeCoachHexColor(brand.primary) ?? CLUB_TOKENS.accent : CLUB_TOKENS.accent;
+  const rawPrimary = brand?.primary
+    ? normalizeCoachHexColor(brand.primary) ?? CLUB_TOKENS.accent
+    : CLUB_TOKENS.accent;
   const secondary =
     brand?.secondary
-      ? normalizeCoachHexColor(brand.secondary) ?? deriveClubSecondaryColor(accent)
-      : deriveClubSecondaryColor(accent, 'club');
+      ? normalizeCoachHexColor(brand.secondary) ?? deriveClubSecondaryColor(rawPrimary)
+      : deriveClubSecondaryColor(rawPrimary, 'club');
+  const accent = resolveClubControlColor(rawPrimary, secondary);
   const onAccent = brand?.onAccent ?? resolveCoachOnAccent(accent);
 
   return {
@@ -297,7 +322,9 @@ export function buildClubThemeTokens(
     secondary,
     onAccent,
     glow: withAlpha(accent, 0.42),
-    // Fond root toujours noir — l’accent marque ne teinte pas le canvas.
+    // Fond root toujours noir — wash émeraude figé (pas la couleur d’équipe).
     headerWash: CLUB_TOKENS.bg,
+    bgWash: CLUB_TOKENS.bgWash,
+    bgWashMid: CLUB_TOKENS.bgWashMid,
   };
 }

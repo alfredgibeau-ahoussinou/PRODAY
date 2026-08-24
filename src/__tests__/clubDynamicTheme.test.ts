@@ -6,8 +6,10 @@ import {
   accentFromLogoUri,
   buildClubThemeTokens,
   extractColorsFromLogoUri,
+  resolveClubControlColor,
 } from '../utils/clubDynamicTheme';
 import { resolveClubBrandColors } from '../utils/clubBrandColors';
+import { CLUB_BG_WASH_MID, CLUB_BG_WASH_TOP } from '../features/club/theme/clubTokens';
 
 describe('clubDynamicTheme', () => {
   it('préfère les couleurs stockées du club', () => {
@@ -54,5 +56,27 @@ describe('clubDynamicTheme', () => {
     expect(tokens.headerWash.toLowerCase()).toBe('#000000');
     expect(tokens.surface.toLowerCase()).toBe('#0a0a0a');
     expect(tokens.surface.toLowerCase()).not.toBe('#ffffff');
+    expect(tokens.bgWash).toBe(CLUB_BG_WASH_TOP);
+    expect(tokens.bgWashMid).toBe(CLUB_BG_WASH_MID);
+    expect(tokens.pitch).toBe('#059669');
+  });
+
+  it('buildClubThemeTokens applique la primary équipe sans teinter le canvas', () => {
+    const tokens = buildClubThemeTokens({
+      primary: '#E53935',
+      secondary: '#FFFFFF',
+      onAccent: '#FFFFFF',
+    });
+    expect(tokens.accent).toBe('#E53935');
+    expect(tokens.bg.toLowerCase()).toBe('#000000');
+    expect(tokens.headerWash.toLowerCase()).toBe('#000000');
+    expect(tokens.bgWash).toBe('rgba(16, 185, 129, 0.06)');
+    expect(tokens.pitch).toBe('#059669');
+  });
+
+  it('resolveClubControlColor prend la secondary si la primary est trop sombre', () => {
+    expect(resolveClubControlColor('#E53935', '#FFFFFF')).toBe('#E53935');
+    expect(resolveClubControlColor('#050505', '#E53935')).toBe('#E53935');
+    expect(resolveClubControlColor('#050505', '#0A0A0A')).toBe('#10B981');
   });
 });

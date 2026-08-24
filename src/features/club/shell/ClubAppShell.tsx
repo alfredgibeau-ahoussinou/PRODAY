@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ClubSidebar } from './ClubSidebar';
 import { ClubTabBar } from './ClubTabBar';
 import { ClubShellNavProvider } from './ClubShellNavContext';
@@ -261,6 +262,14 @@ function ClubAppShellInner({
     >
       <StatusBar style="light" />
       <View style={[styles.root, !wide && styles.rootColumn]}>
+        <LinearGradient
+          colors={[tokens.bgWash, tokens.bgWashMid, 'transparent']}
+          locations={[0, 0.2, 0.52]}
+          start={{ x: 0.12, y: 0 }}
+          end={{ x: 0.88, y: 0.72 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         {wide ? <ClubSidebar {...sidebarProps} /> : null}
 
         <View style={styles.pane}>

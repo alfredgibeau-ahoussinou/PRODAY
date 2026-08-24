@@ -23,7 +23,7 @@ type Props = {
 };
 
 /**
- * En-tête équipe / club — fond noir + pill status (accent émeraude sur UI).
+ * En-tête équipe / club — fond noir + pill status (couleur d’équipe).
  */
 export function ClubBrandHeader({
   title,
@@ -42,12 +42,12 @@ export function ClubBrandHeader({
     <View style={[styles.wrap, style]}>
       <View style={styles.row}>
         {showLogo ? (
-          <View style={[styles.logoWrap, { borderColor: tokens.successSoft }]}>
+          <View style={[styles.logoWrap, { borderColor: tokens.accentSoft }]}>
             {logoUrl ? (
               <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="cover" />
             ) : (
-              <View style={[styles.logo, styles.logoPh, { backgroundColor: tokens.pitchSoft }]}>
-                <ClubText variant="h3" style={{ color: tokens.success }}>
+              <View style={[styles.logo, styles.logoPh, { backgroundColor: tokens.accentSoft }]}>
+                <ClubText variant="h3" style={{ color: tokens.accent }}>
                   {initial}
                 </ClubText>
               </View>
@@ -56,7 +56,7 @@ export function ClubBrandHeader({
         ) : null}
         <View style={styles.textCol}>
           <View style={styles.titlePill}>
-            <View style={[styles.statusDot, { backgroundColor: tokens.success }]} />
+            <View style={[styles.statusDot, { backgroundColor: tokens.accent }]} />
             <ClubText variant="h3" numberOfLines={1} style={styles.pillTitle}>
               {title}
             </ClubText>
@@ -134,9 +134,9 @@ const createStyles = (tokens: ClubThemeTokens) =>
       paddingHorizontal: 14,
       paddingVertical: 8,
       borderRadius: clubRadius.pill,
-      backgroundColor: 'rgba(4, 20, 16, 0.55)',
+      backgroundColor: `${tokens.accent}14`,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(16, 185, 129, 0.45)',
+      borderColor: `${tokens.accent}73`,
     },
     statusDot: {
       width: 8,

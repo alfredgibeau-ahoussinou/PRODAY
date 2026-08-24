@@ -127,7 +127,7 @@ export function ClubCreateSheet({ visible, onClose, onSelect }: Props) {
 export function ClubCreateFab({ onPress }: { onPress: () => void }) {
   const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
-  const styles = useMemo(() => createFabStyles(), []);
+  const styles = useMemo(() => createFabStyles(tokens.accent), [tokens.accent]);
   const right = Math.max(insets.right, 0) + EDGE_INSET;
 
   return (
@@ -155,12 +155,12 @@ export function ClubCreateFab({ onPress }: { onPress: () => void }) {
   );
 }
 
-function createFabStyles() {
+function createFabStyles(accent: string) {
   return StyleSheet.create({
     wrap: {
       position: 'absolute',
       zIndex: 30,
-      shadowColor: '#006CFC',
+      shadowColor: accent,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.45,
       shadowRadius: 16,

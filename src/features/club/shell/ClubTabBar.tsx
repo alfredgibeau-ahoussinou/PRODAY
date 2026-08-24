@@ -26,7 +26,7 @@ const LABEL_SIZE = 11;
 
 /**
  * Dock mobile Pôle Club — Accueil · Équipes · Matchs · Outils · Club.
- * Fond noir pur ; actif = pill émeraude (accent UI).
+ * Actif = couleur d’équipe (`tokens.accent`) ; fallback émeraude Club.
  */
 export function ClubTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
@@ -45,7 +45,7 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
         {items.map((item) => {
           const on = item.id === highlight;
           const label = item.shortLabel ?? item.label;
-          const ink = on ? tokens.pitch : tokens.faint;
+          const ink = on ? tokens.accent : tokens.faint;
           return (
             <PressableSpring
               key={item.id}
@@ -61,10 +61,10 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
               testID={`club-tab-${item.id}`}
             >
               <View style={styles.topMark} pointerEvents="none">
-                <TabUnderline active={on} color={tokens.pitch} widthPercent="55%" />
+                <TabUnderline active={on} color={tokens.accent} widthPercent="55%" />
               </View>
               <View style={styles.iconSlot}>
-                <DockPillIndicator active={on} color={tokens.pitchSoft} />
+                <DockPillIndicator active={on} color={tokens.accentSoft} />
                 <Icon
                   name={item.icon}
                   size={on ? clubChrome.tabBarIcon + 2 : clubChrome.tabBarIcon}
@@ -72,7 +72,7 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
                   variant="outline"
                 />
                 {item.aiBadge ? (
-                  <View style={[styles.aiDot, { backgroundColor: tokens.pitch }]} />
+                  <View style={[styles.aiDot, { backgroundColor: tokens.accent }]} />
                 ) : null}
               </View>
               <ClubText

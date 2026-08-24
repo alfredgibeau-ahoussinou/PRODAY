@@ -340,7 +340,7 @@ export function ClubBrandColorsPanel({ onSaved }: Props) {
               <TextInput
                 value={hexPrimary}
                 onChangeText={setHexPrimary}
-                placeholder="#006CFC"
+                placeholder="#10B981"
                 placeholderTextColor={tokens.muted}
                 autoCapitalize="characters"
                 style={styles.hexInput}
