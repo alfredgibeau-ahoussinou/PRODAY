@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import { ExecutiveAppPhone } from "@/components/poles/ExecutiveAppPhone";
 import { ROUTES } from "@/lib/routes";
 
 const PRESIDENT_SIGNALS = [
@@ -70,44 +71,50 @@ export function ClubPresidentHub() {
       />
 
       <div className="relative mx-auto max-w-7xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
-          Pôle Club · Président & dirigeants
-        </p>
-        <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.75rem,4.2vw,3rem)] font-medium tracking-[-0.03em] text-white">
-          Le président ouvre ProDay et comprend le club en quelques secondes.
-        </h2>
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
-          Dirigeants, DS et secrétariat pilotent depuis le Pôle Club : pas depuis un pôle
-          séparé. Le coach prépare ; le président décide.
-        </p>
+        <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:gap-16">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
+              Pôle Club · Président & dirigeants
+            </p>
+            <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.75rem,4.2vw,3rem)] font-medium tracking-[-0.03em] text-white">
+              Le président ouvre ProDay et comprend le club en quelques secondes.
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
+              Dirigeants, DS et secrétariat pilotent depuis le Pôle Club : pas depuis un
+              pôle séparé. Le coach prépare ; le président décide.
+            </p>
 
-        <div className="mt-10 grid gap-3 sm:grid-cols-3">
-          {PRESIDENT_SIGNALS.map((s, i) => (
-            <motion.article
-              key={s.label}
-              initial={reduce ? false : { opacity: 0, y: 12 }}
-              whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ delay: i * 0.06, duration: 0.4 }}
-              className="border border-white/10 bg-white/[0.03] p-5"
-            >
-              <p
-                className={`font-mono text-[10px] uppercase tracking-[0.2em] ${
-                  s.tone === "ok"
-                    ? "text-emerald-400"
-                    : s.tone === "warn"
-                      ? "text-amber-400"
-                      : "text-[var(--pole-accent-bright,#F5D04A)]"
-                }`}
-              >
-                ● {s.label}
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-white/70">{s.body}</p>
-            </motion.article>
-          ))}
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              {PRESIDENT_SIGNALS.map((s, i) => (
+                <motion.article
+                  key={s.label}
+                  initial={reduce ? false : { opacity: 0, y: 12 }}
+                  whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ delay: i * 0.06, duration: 0.4 }}
+                  className="border border-white/10 bg-white/[0.03] p-5"
+                >
+                  <p
+                    className={`font-mono text-[10px] uppercase tracking-[0.2em] ${
+                      s.tone === "ok"
+                        ? "text-emerald-400"
+                        : s.tone === "warn"
+                          ? "text-amber-400"
+                          : "text-[var(--pole-accent-bright,#F5D04A)]"
+                    }`}
+                  >
+                    ● {s.label}
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-white/70">{s.body}</p>
+                </motion.article>
+              ))}
+            </div>
+          </div>
+
+          <ExecutiveAppPhone className="mx-auto w-full lg:sticky lg:top-28" />
         </div>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-2 lg:gap-14">
+        <div className="mt-14 grid gap-8 lg:grid-cols-2 lg:gap-14">
           <div>
             <h3 className="font-display text-xl font-medium tracking-[-0.02em] text-white sm:text-2xl">
               QG numérique du club amateur
