@@ -45,6 +45,7 @@
     "docs:open-brief": "open docs/design/ProDay_Brief.html",
     "intro:build": "node scripts/build-intro-video.mjs",
     "intro:build:website": "node scripts/build-website-intro-video.mjs",
+    "branding:app": "node scripts/generate-app-brand.mjs --lockup assets/branding/proday-lockup-official-source.png",
     "branding:logos": "node scripts/generate-transparent-logos.mjs",
     "branding:logos:woman": "node scripts/generate-woman-logos.mjs",
     "branding:logos:universes": "node scripts/generate-universe-logos.mjs",

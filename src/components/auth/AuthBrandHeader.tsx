@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { ProDayLogo, brandVariantForProductLine } from '../branding/ProDayLogo';
+import { ProDayOfficialLockup } from '../branding/ProDayOfficialLockup';
 import { spacing } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { brandForAuthContext, isSponsorAuthPreset } from '../../utils/authBrandContext';
@@ -56,15 +57,19 @@ export const AuthBrandHeader: React.FC<AuthBrandHeaderProps> = ({
   return (
     <View style={styles.wrap}>
       <View style={styles.logoSlot}>
-        <ProDayLogo
-          width={width}
-          variant={variant}
-          onDark={!isLight}
-          layout="stacked"
-          showPoleLabel={variant !== 'master'}
-        />
+        {variant === 'master' && !isLight ? (
+          <ProDayOfficialLockup width={Math.min(width, 220)} />
+        ) : (
+          <ProDayLogo
+            width={width}
+            variant={variant}
+            onDark={!isLight}
+            layout="stacked"
+            showPoleLabel={variant !== 'master'}
+          />
+        )}
       </View>
-      {showTagline ? (
+      {showTagline && variant !== 'master' ? (
         <Text
           style={[styles.tagline, !isLight && styles.taglineDark]}
           accessibilityRole="text"

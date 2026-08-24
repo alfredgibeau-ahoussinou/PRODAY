@@ -1,6 +1,7 @@
 /**
  * Assets logo ProDay — symbole HD (P + ballon + traits vitesse), teinté par pôle.
- * Source : assets/branding/proday-symbol-master-source.png → scripts/generate-app-brand.mjs
+ * Source lockup : assets/branding/proday-lockup-official-source.png
+ * Génération : node scripts/generate-app-brand.mjs --lockup [chemin]
  */
 export const PRODAY_OFFICIAL_LOGO = require('../../assets/branding/logo-proday-official.png');
 

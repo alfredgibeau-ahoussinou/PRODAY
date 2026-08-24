@@ -1,8 +1,15 @@
 {
   "symbolSource": "/Users/gibeau--ahoussinou/PRODAY/assets/branding/proday-symbol-master-source.png",
+  "lockupSource": "/Users/gibeau--ahoussinou/PRODAY/assets/branding/proday-lockup-official-source.png",
+  "markCrop": {
+    "left": 255,
+    "top": 184,
+    "width": 566,
+    "height": 540
+  },
   "board": null,
   "aspect": {
-    "symbol": 1.2228260869565217
+    "symbol": 1.0926640926640927
   },
   "poleHex": {
     "player": "#FFFFFF",
@@ -15,5 +22,10 @@
     "supporter": "#06B6D4",
     "admin": "#A3A3A3"
   },
-  "generatedAt": "2026-08-23T09:39:21.236Z"
+  "policy": {
+    "appIcon": "mark-only (P+ballon) on #000 — text illegible at home-screen sizes",
+    "splash": "full lockup on #000",
+    "adaptive": "mark centered with ~20% safe padding, transparent fg, bg #000"
+  },
+  "generatedAt": "2026-08-24T11:34:43.083Z"
 }

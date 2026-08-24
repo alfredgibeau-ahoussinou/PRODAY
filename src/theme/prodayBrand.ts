@@ -104,7 +104,7 @@ export function brandVariantForProductLine(
 }
 
 /** Ratio symbole HD (white PNG — assets/branding/.generated-meta.json). */
-export const PRODAY_SYMBOL_ASPECT = 675 / 552;
+export const PRODAY_SYMBOL_ASPECT = 566 / 518;
 
 /** Ratio lockup empilé symbole (72 %) + wordmark natif. */
 export const PRODAY_LOGO_MASTER_ASPECT = 1 / (0.72 / PRODAY_SYMBOL_ASPECT + 0.32);

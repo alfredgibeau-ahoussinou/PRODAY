@@ -11,7 +11,7 @@ import { poleSymbolAsset, PRODAY_BRAND_ASSETS } from '../content/brandingAssets'
 
 describe('prodayBrand', () => {
   it('expose le ratio symbole HD', () => {
-    expect(PRODAY_SYMBOL_ASPECT).toBeCloseTo(675 / 552, 4);
+    expect(PRODAY_SYMBOL_ASPECT).toBeCloseTo(566 / 518, 4);
   });
   it('expose les accents officiels planche', () => {
     expect(PRODAY_POLE_ACCENTS.player).toBe('#FFFFFF');
