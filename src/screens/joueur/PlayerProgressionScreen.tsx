@@ -83,6 +83,7 @@ export function PlayerProgressionScreen({ embedded = false }: { embedded?: boole
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + 24 }]}
+        decelerationRate="normal"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
         }

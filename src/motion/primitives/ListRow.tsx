@@ -26,7 +26,7 @@ export function ListRow({
   style,
 }: Props) {
   const reduced = useReducedMotion();
-  const delay = Math.min(index, maxStagger) * 28;
+  const delay = Math.min(index, maxStagger) * 16;
 
   const body =
     onPress || onLongPress ? (
@@ -50,10 +50,7 @@ export function ListRow({
     <Animated.View
       entering={FadeInDown.delay(delay)
         .duration(prodayMotion.duration.fast)
-        .easing(prodayMotion.easing.out)
-        .springify()
-        .damping(prodayMotion.spring.smooth.damping)
-        .stiffness(prodayMotion.spring.smooth.stiffness)}
+        .easing(prodayMotion.easing.out)}
       style={!onPress && !onLongPress ? style : undefined}
     >
       {body}

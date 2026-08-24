@@ -124,6 +124,7 @@ function AdminShellInner({
               <AdminPaneTransition
                 sectionKey={section}
                 direction={direction || navDirection}
+                context="tab"
               >
                 {React.isValidElement(pane) ? pane : null}
               </AdminPaneTransition>

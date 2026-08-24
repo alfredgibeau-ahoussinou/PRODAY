@@ -7,13 +7,14 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { motion, prodayMotion, useReducedMotion } from '../../motion';
+import { motion, prodayMotion, useReducedMotion, getMotionPreset } from '../../motion';
 import { sanitizeHostChildren } from '../../motion/sanitizeHostChildren';
 
 export type PoleShellId = 'parent' | 'supporter' | 'club' | 'president';
 
-const ENTER_MS = motion.duration.tab;
-const SHIFT = 28;
+const TAB_PRESET = getMotionPreset('tab');
+const ENTER_MS = TAB_PRESET.enterMs;
+const SHIFT = TAB_PRESET.shift;
 
 /** Parent → Supporter = 1 ; Club → Président = 1 ; retours = -1. */
 export function poleShellTransitionDirection(

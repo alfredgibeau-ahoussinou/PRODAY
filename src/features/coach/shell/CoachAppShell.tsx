@@ -285,7 +285,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
         {wide ? <CoachSidebar {...sidebarProps} /> : null}
 
         <View style={styles.pane}>
-          <PaneTransition sectionKey={navId} direction={direction}>
+          <PaneTransition sectionKey={navId} direction={direction} context="tab">
             {React.isValidElement(content) ? content : null}
           </PaneTransition>
           <PushScreenTransition

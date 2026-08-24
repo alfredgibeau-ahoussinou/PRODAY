@@ -33,7 +33,7 @@ export type PlayerHubShortcut = {
   onPress: () => void;
 };
 
-export function PlayerHubShortcutRow({
+export const PlayerHubShortcutRow = React.memo(function PlayerHubShortcutRow({
   items,
   accent,
 }: {
@@ -60,7 +60,8 @@ export function PlayerHubShortcutRow({
       ))}
     </View>
   );
-}
+});
+
 
 export function PlayerMatchDayHero({
   priority,

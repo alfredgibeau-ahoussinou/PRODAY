@@ -7,29 +7,29 @@ import type { MotionSpring } from './types';
  */
 export const prodayMotion = {
   duration: {
-    fast: 120,
-    normal: 200,
-    slow: 260,
-    enter: 220,
-    exit: 110,
-    modal: 240,
-    toast: 160,
-    number: 420,
+    fast: 110,
+    normal: 180,
+    slow: 240,
+    enter: 200,
+    exit: 100,
+    modal: 220,
+    toast: 140,
+    number: 400,
     /** Vidéo / reels — ultra court pour ne pas retarder le média. */
-    video: 120,
+    video: 110,
     /** Live / match — micro, jamais bloquant. */
-    live: 140,
-    /** Onglets dock — une phase, 180–280 ms. */
-    tab: 200,
+    live: 130,
+    /** Onglets dock — une phase, 180–220 ms. */
+    tab: 190,
     /** prefers-reduced-motion : cut ou micro-fade. */
-    reduced: 100,
+    reduced: 90,
   },
   spring: {
-    snappy: { damping: 24, stiffness: 280, mass: 0.6 } satisfies MotionSpring,
-    smooth: { damping: 28, stiffness: 200, mass: 0.75 } satisfies MotionSpring,
-    sheet: { damping: 26, stiffness: 220, mass: 0.8 } satisfies MotionSpring,
-    dock: { damping: 22, stiffness: 300, mass: 0.55 } satisfies MotionSpring,
-    bouncy: { damping: 18, stiffness: 160, mass: 0.8 } satisfies MotionSpring,
+    snappy: { damping: 24, stiffness: 300, mass: 0.55 } satisfies MotionSpring,
+    smooth: { damping: 28, stiffness: 220, mass: 0.7 } satisfies MotionSpring,
+    sheet: { damping: 26, stiffness: 240, mass: 0.75 } satisfies MotionSpring,
+    dock: { damping: 22, stiffness: 320, mass: 0.5 } satisfies MotionSpring,
+    bouncy: { damping: 18, stiffness: 170, mass: 0.75 } satisfies MotionSpring,
   },
   easing: {
     out: Easing.out(Easing.cubic),
@@ -40,14 +40,14 @@ export const prodayMotion = {
    * Plancher d’opacity pendant un swap.
    * Jamais 0 : un frame à 0 = écran noir si l’anim est coupée.
    */
-  holdOpacity: 0.28,
+  holdOpacity: 0.32,
   /** Slide horizontal panes / onglets (px) — micro, direct. */
-  paneShift: 40,
+  paneShift: 36,
   /** Push détail (profondeur). */
-  detailShift: 32,
-  detailScaleFrom: 0.98,
+  detailShift: 28,
+  detailScaleFrom: 0.985,
   /** Alias historique theme/motion. */
-  screenShift: 40,
+  screenShift: 36,
   /** Overlay sheets / modales. */
   backdrop: 'rgba(0,0,0,0.55)',
   modalBackdrop: 'rgba(0,0,0,0.52)',

@@ -39,7 +39,7 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   children,
   backgroundColor,
   directExit = false,
-  directExitMs = 220,
+  directExitMs = 160,
 }) => {
   const { colors } = useAppTheme();
   const reduced = useReducedMotion();
@@ -110,9 +110,10 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
       return;
     }
 
+    /** Timing only — exit court, interruptible (pas de plancher 180 ms). */
     const outMs = directExit
-      ? Math.max(120, Math.min(directExitMs, 280))
-      : Math.max(preset.exitMs, 180);
+      ? Math.max(100, Math.min(directExitMs, 220))
+      : preset.exitMs;
 
     cancelAnimation(x);
     cancelAnimation(opacity);
@@ -125,7 +126,7 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
       { duration: outMs, easing: prodayMotion.easing.in },
       (finished) => {
         if (token !== exitGen.current) return;
-        if (finished) runOnJS(forceUnmount)();
+        runOnJS(forceUnmount)();
       },
     );
 

@@ -290,7 +290,7 @@ function ClubAppShellInner({
             onProfile={() => onSelect('club')}
             onOpenCopilot={onOpenHelp}
           />
-          <PaneTransition sectionKey={navId} direction={direction}>
+          <PaneTransition sectionKey={navId} direction={direction} context="tab">
             {React.isValidElement(content) ? content : null}
           </PaneTransition>
           {showFab ? (

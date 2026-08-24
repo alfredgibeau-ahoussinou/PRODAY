@@ -81,6 +81,7 @@ export function JoueurPlusHubScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg }]}
         showsVerticalScrollIndicator={false}
+        decelerationRate="normal"
       >
         <ProDayText variant="caption" style={styles.lead}>
           Retrouve messages, équipe, entraînement, reels et boutique sans chercher dans l’accueil.

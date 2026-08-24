@@ -172,6 +172,8 @@ export function PlayerFootballHubScreen() {
           style={styles.scroll}
           contentContainerStyle={[styles.pad, screenScrollPad(spacing.xl + spacing.md)]}
           showsVerticalScrollIndicator={false}
+          decelerationRate="normal"
+          nestedScrollEnabled
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
           }

@@ -37,12 +37,12 @@ describe('ProDayMotionSystem', () => {
     expect(getMotionPreset('sheet').spring).toEqual(prodayMotion.spring.sheet);
   });
 
-  it('garde les onglets dans la fenêtre 180–280 ms (enter + exit)', () => {
+  it('garde les onglets dans la fenêtre 180–220 ms (enter + exit)', () => {
     const tab = getMotionPreset('tab');
     expect(tab.enterMs).toBeGreaterThanOrEqual(180);
-    expect(tab.enterMs).toBeLessThanOrEqual(280);
-    expect(tab.enterMs + tab.exitMs).toBeLessThanOrEqual(300);
-    expect(tab.shift).toBeLessThanOrEqual(28);
+    expect(tab.enterMs).toBeLessThanOrEqual(220);
+    expect(tab.enterMs + tab.exitMs).toBeLessThanOrEqual(280);
+    expect(tab.shift).toBeLessThanOrEqual(24);
   });
 
   it('calcule forward / back selon un ordre générique', () => {
@@ -79,7 +79,7 @@ describe('anti-écran-noir — filets motion', () => {
   it('CrossfadeSwitch : pas d’opacity 0 permanente', () => {
     expect(prodayMotion.holdOpacity).toBeGreaterThan(0);
     expect(prodayMotion.duration.tab).toBeGreaterThanOrEqual(180);
-    expect(prodayMotion.duration.tab).toBeLessThanOrEqual(280);
+    expect(prodayMotion.duration.tab).toBeLessThanOrEqual(220);
     expect(prodayMotion.duration.tab + CROSSFADE_SAFETY_MS).toBeLessThan(500);
   });
 

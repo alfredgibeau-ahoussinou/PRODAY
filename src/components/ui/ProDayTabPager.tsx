@@ -202,7 +202,7 @@ export function ProDayTabPager<T extends string>({
                   key={ch.id}
                   onPress={() => {
                     prodayHaptics.tabSwitch();
-                    goToChapter(ch.id, false);
+                    goToChapter(ch.id, true);
                   }}
                   scaleTo={0.96}
                   haptic
@@ -268,7 +268,7 @@ export function ProDayTabPager<T extends string>({
                 style={[styles.tab, { zIndex: 1 }]}
                 onPress={() => {
                   prodayHaptics.tabSwitch();
-                  goToChapter(ch.id, false);
+                  goToChapter(ch.id, true);
                 }}
                 scaleTo={0.96}
               >

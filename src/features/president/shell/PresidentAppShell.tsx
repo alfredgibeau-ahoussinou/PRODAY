@@ -175,7 +175,7 @@ function PresidentAppShellInner() {
             />
           ) : null}
           <View style={styles.content}>
-            <PaneTransition sectionKey={navId} direction={direction}>
+            <PaneTransition sectionKey={navId} direction={direction} context="tab">
               {React.isValidElement(pane) ? pane : null}
             </PaneTransition>
           </View>
