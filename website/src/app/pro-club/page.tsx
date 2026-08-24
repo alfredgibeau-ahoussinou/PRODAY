@@ -13,7 +13,7 @@ import { VideoHardwareOffers } from "@/components/poles/VideoHardwareOffers";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
 import { getRoleVisuals } from "@/lib/roleVisuals";
-import { ROUTES } from "@/lib/routes";
+import { COACH_APP_HREF, ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Pôle Club, Cœur de ProDay",
@@ -60,7 +60,7 @@ export default function ProClubPage() {
         description="À partir de 3 € / adhérent sur devis. Analyse de forme, matchs, recrutements et caméra en option."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta Club"
-        secondaryHref={ROUTES.coach}
+        secondaryHref={COACH_APP_HREF}
         secondaryLabel="Découvrir le Pôle Coach"
       />
     </TerminalPage>

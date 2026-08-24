@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { pricingHrefForPath } from "@/lib/poles";
-import { ROUTES } from "@/lib/routes";
+import { COACH_APP_HREF, ROUTES } from "@/lib/routes";
 
 type HelpEntry = {
   id: string;
@@ -94,7 +94,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       question: "Club ou Coach ?",
       answer:
         "Club : équipes, invitations de match entre clubs, compétitions, permissions, covoiturage. Coach : Tactique IA, IA, effectif, et proposition de match pour son équipe.",
-      href: ROUTES.coach,
+      href: COACH_APP_HREF,
       hrefLabel: "Pôle Coach",
     });
     poleHint.push({

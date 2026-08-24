@@ -137,12 +137,15 @@ export const PRESIDENT_HUB_HREF = `${ROUTES.proClub}#president`;
 /** Vitrine app Joueur : section sous la porte « Qui es-tu ? ». */
 export const JOUEUR_APP_HREF = `${ROUTES.joueur}#app`;
 
+/** Vitrine app Coach : section ancrée sur /coach#app. */
+export const COACH_APP_HREF = `${ROUTES.coach}#app`;
+
 /** Nav vitrine : 6 pôles + Président (rattaché au Club). Santé = rôle intégré. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
   { href: ROUTES.proClub, label: "Club" },
   { href: PRESIDENT_HUB_HREF, label: "Président" },
-  { href: ROUTES.coach, label: "Coach" },
+  { href: COACH_APP_HREF, label: "Coach" },
   { href: ROUTES.parent, label: "Parent" },
   { href: ROUTES.supporter, label: "Supporter" },
   { href: ROUTES.sponsor, label: "Sponsor" },
@@ -165,7 +168,7 @@ export const POLE_FOOTER_LINKS = [
   { href: JOUEUR_APP_HREF, label: "Espace Joueur", subtitle: "App · Accueil, matchs, saison · Pass 3,99 €" },
   { href: ROUTES.proClub, label: "Espace Club", subtitle: "À partir de 3 € / adhérent · Sur devis" },
   { href: PRESIDENT_HUB_HREF, label: "Pôle Président", subtitle: "Cockpit dirigeants · lié au Club" },
-  { href: ROUTES.coach, label: "Espace Coach", subtitle: "Entraînements · Tactique IA · invitations" },
+  { href: COACH_APP_HREF, label: "Espace Coach", subtitle: "App · Accueil, effectif, IA · Tactique" },
   { href: ROUTES.parent, label: "Pôle Parent", subtitle: "Supervision · messages · agenda · gratuit" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
   { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & micro sponsoring local" },
@@ -288,9 +291,9 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.coach, "modules"),
+    href: COACH_APP_HREF,
     title: "Pôle Coach",
-    description: "Tactique IA, IA, effectif et préparation match. Rattaché au club.",
+    description: "App Coach : calendrier, effectif, IA et préparation match. Rattaché au club.",
     image: "/showcase/classic-staff.jpg",
     tag: "Coach",
     accent: true,

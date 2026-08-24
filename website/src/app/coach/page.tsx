@@ -5,6 +5,7 @@ import {
   CoachTacticsBoard,
   ImmersivePoleHero,
 } from "@/components/poles/immersivePoleExperience";
+import { CoachAppHub } from "@/components/poles/CoachAppHub";
 import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { RosterBourseSection } from "@/components/poles/RosterBourseSection";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
@@ -15,7 +16,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Pôle Coach · Tactique IA et analyse de forme",
   description:
-    "Profil coach : analyse de forme de l’effectif, Tactique IA, bourse interne, IA et préparation match.",
+    "Profil coach : app Accueil, effectif, IA — analyse de forme, Tactique IA, bourse interne et préparation match.",
 };
 
 const COACH_CAPS = [
@@ -71,9 +72,11 @@ export default function CoachPolePage() {
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre le Pôle Coach"
-        secondaryHref="#analyse-de-forme"
-        secondaryLabel="Analyse de forme"
+        secondaryHref="#app"
+        secondaryLabel="Voir l’app Coach"
       />
+
+      <CoachAppHub />
 
       <FormAnalysisFeature audience="coach" />
 

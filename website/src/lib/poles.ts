@@ -7,7 +7,7 @@ import {
   type WebSubscriptionPlanBase,
 } from "./content";
 import { POLE_ACCENT_HEX } from "./brandColors";
-import { PRESIDENT_HUB_HREF, ROUTES } from "./routes";
+import { COACH_APP_HREF, PRESIDENT_HUB_HREF, ROUTES } from "./routes";
 
 /**
  * Pôles marketing site : architecture cible.
@@ -241,6 +241,12 @@ export const POLE_BRAND_HEX: Record<PoleId, string> = {
 export function poleNavAccentHex(href: string): string {
   if (href === PRESIDENT_HUB_HREF || href.endsWith("#president")) {
     return POLE_ACCENT_HEX.president;
+  }
+  if (href === COACH_APP_HREF || href.endsWith("#app")) {
+    const path = href.split("#")[0] ?? href;
+    if (path === ROUTES.coach || path === ROUTES.joueur) {
+      return path === ROUTES.coach ? "#2563EB" : POLE_ACCENT_HEX.joueur;
+    }
   }
   const path = href.split("#")[0] ?? href;
   const pole = SHOWCASE_POLES.find((p) => p.href === path);

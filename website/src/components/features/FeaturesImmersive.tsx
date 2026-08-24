@@ -10,7 +10,7 @@ import { TerminalCta } from "@/components/terminal";
 import { MODULES } from "@/lib/content";
 import { SHOWCASE_POLES, poleNavAccentHex, poleSectionHref } from "@/lib/poles";
 import { getRoleVisuals } from "@/lib/roleVisuals";
-import { JOUEUR_APP_HREF, PRESIDENT_HUB_HREF, ROUTES } from "@/lib/routes";
+import { COACH_APP_HREF, JOUEUR_APP_HREF, PRESIDENT_HUB_HREF, ROUTES } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -119,7 +119,12 @@ const FEATURE_POLES: FeaturePoleTab[] = SHOWCASE_POLES.flatMap((pole) => {
     title: pole.title,
     subtitle: pole.subtitle,
     description: pole.description,
-    href: pole.id === "joueur" ? JOUEUR_APP_HREF : pole.href,
+    href:
+      pole.id === "joueur"
+        ? JOUEUR_APP_HREF
+        : pole.id === "coach"
+          ? COACH_APP_HREF
+          : pole.href,
   };
   return pole.id === "pro_club" ? [tab, PRESIDENT_FEATURE_TAB] : [tab];
 });
