@@ -127,12 +127,14 @@ export const ROUTES = {
   shop: "/shop",
   sante: "/sante",
   parent: "/parent",
+  /** Pôle Président — cockpit dirigeants (page dédiée). */
+  president: "/president",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
 
-/** Hub Président : section du Pôle Club (lien menu, pas une page séparée). */
-export const PRESIDENT_HUB_HREF = `${ROUTES.proClub}#president`;
+/** Vitrine app Président : section ancrée sur /president#app. */
+export const PRESIDENT_HUB_HREF = `${ROUTES.president}#app`;
 
 /** Vitrine app Joueur : section sous la porte « Qui es-tu ? ». */
 export const JOUEUR_APP_HREF = `${ROUTES.joueur}#app`;
@@ -146,7 +148,7 @@ export const PARENT_APP_HREF = `${ROUTES.parent}#app`;
 /** Vitrine app Sponsor : section ancrée sur /sponsor#app. */
 export const SPONSOR_APP_HREF = `${ROUTES.sponsor}#app`;
 
-/** Nav vitrine : 6 pôles + Président (rattaché au Club). Santé = rôle intégré. */
+/** Nav vitrine : 6 pôles + Président. Santé = rôle intégré. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
   { href: ROUTES.proClub, label: "Club" },
@@ -173,7 +175,7 @@ export const NAV_ITEMS = [
 export const POLE_FOOTER_LINKS = [
   { href: JOUEUR_APP_HREF, label: "Espace Joueur", subtitle: "App · Accueil, matchs, saison · Pass 3,99 €" },
   { href: ROUTES.proClub, label: "Espace Club", subtitle: "À partir de 3 € / adhérent · Sur devis" },
-  { href: PRESIDENT_HUB_HREF, label: "Pôle Président", subtitle: "Cockpit dirigeants · lié au Club" },
+  { href: PRESIDENT_HUB_HREF, label: "Pôle Président", subtitle: "Cockpit dirigeants · décisions" },
   { href: COACH_APP_HREF, label: "Espace Coach", subtitle: "App · Accueil, effectif, IA · Tactique" },
   { href: PARENT_APP_HREF, label: "Pôle Parent", subtitle: "App · Accueil, Guide, Menu, Profil · gratuit" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
@@ -294,6 +296,14 @@ export const EXPLORE_CARDS = [
     description: "Structures, équipes, recrutement kanban et vitrine.",
     image: "/images/football-club-01.jpg",
     tag: "Club",
+    accent: true,
+  },
+  {
+    href: PRESIDENT_HUB_HREF,
+    title: "Pôle Président",
+    description: "App Président : cockpit, finances, assistant IA. Le club en un coup d’œil.",
+    image: "/images/football-stadium-night-01.jpg",
+    tag: "Président",
     accent: true,
   },
   {

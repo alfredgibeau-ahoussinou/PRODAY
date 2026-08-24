@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { pricingHrefForPath } from "@/lib/poles";
-import { COACH_APP_HREF, PARENT_APP_HREF, ROUTES, SPONSOR_APP_HREF } from "@/lib/routes";
+import { COACH_APP_HREF, PARENT_APP_HREF, PRESIDENT_HUB_HREF, ROUTES, SPONSOR_APP_HREF } from "@/lib/routes";
 
 type HelpEntry = {
   id: string;
@@ -104,6 +104,16 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
         "Dans l’app : Matchs → + Proposer un match. Recherchez le club (ville, distance, catégorie), envoyez l’invitation. Le destinataire accepte, refuse ou propose une autre date. Confirmé = calendriers + convocations.",
       href: ROUTES.proClub,
       hrefLabel: "Pôle Club",
+    });
+  }
+  if (pathname.startsWith("/president")) {
+    poleHint.push({
+      id: "pole-president",
+      question: "Que regroupe le Pôle Président ?",
+      answer:
+        "Cockpit dirigeants : alertes, décisions, finances, adhésions et assistant IA. Page dédiée, connectée au club.",
+      href: PRESIDENT_HUB_HREF,
+      hrefLabel: "Pôle Président",
     });
   }
   if (pathname.startsWith("/parent")) {

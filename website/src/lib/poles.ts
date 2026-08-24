@@ -71,9 +71,9 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     kicker: "ESPACE CLUB",
     navLabel: "Club",
     title: "Le cœur de ProDay",
-    subtitle: "Équipes · Forme · Président",
+    subtitle: "Équipes · Forme · Licenciés",
     description:
-      "Équipes, analyse de forme, licenciés, coachs, dirigeants, invitations, tournois et covoiturage. À partir de 3 € / adhérent (sur devis). Caméra en option.",
+      "Équipes, analyse de forme, licenciés, coachs, invitations, tournois et covoiturage. À partir de 3 € / adhérent (sur devis). Caméra en option.",
     href: ROUTES.proClub,
     pricingHash: "pro_club",
     logo: "/branding/logo-proday-mark-club.png",
@@ -243,9 +243,14 @@ export const POLE_BRAND_HEX: Record<PoleId, string> = {
   sponsor: "#EF4444",
 };
 
-/** Couleur pastille du menu Pôles (Président = accent officiel, rattaché au Club). */
+/** Couleur pastille du menu Pôles (Président = accent or dédié). */
 export function poleNavAccentHex(href: string): string {
-  if (href === PRESIDENT_HUB_HREF || href.endsWith("#president")) {
+  const path = href.split("#")[0] ?? href;
+  if (
+    href === PRESIDENT_HUB_HREF ||
+    path === ROUTES.president ||
+    href.endsWith("#president")
+  ) {
     return POLE_ACCENT_HEX.president;
   }
   if (
@@ -254,13 +259,12 @@ export function poleNavAccentHex(href: string): string {
     href === SPONSOR_APP_HREF ||
     href.endsWith("#app")
   ) {
-    const path = href.split("#")[0] ?? href;
     if (path === ROUTES.coach) return "#2563EB";
     if (path === ROUTES.joueur) return POLE_ACCENT_HEX.joueur;
     if (path === ROUTES.parent) return POLE_ACCENT_HEX.parent;
     if (path === ROUTES.sponsor) return "#C026D3";
+    if (path === ROUTES.president) return POLE_ACCENT_HEX.president;
   }
-  const path = href.split("#")[0] ?? href;
   const pole = SHOWCASE_POLES.find((p) => p.href === path);
   if (!pole) return POLE_ACCENT_HEX.president;
   if (pole.id === "joueur") return POLE_ACCENT_HEX.joueur;
@@ -424,6 +428,7 @@ const PATH_TO_PRICING_POLE: Record<string, PoleId> = {
   [ROUTES.homme]: "joueur",
   [ROUTES.woman]: "joueur",
   [ROUTES.pro]: "coach",
+  [ROUTES.president]: "pro_club",
 };
 
 /** Tarifs contextualisés depuis la page courante (nav, footer). */

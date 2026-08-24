@@ -38,7 +38,7 @@ const POLE_CAPABILITIES: Record<
     title: "Ce que fait le club",
     items: [
       "Analyse de forme incluse dans l’offre",
-      "Équipes, licenciés, espace président",
+      "Équipes, licenciés, permissions",
       "Invitations, tournois, covoiturage",
       "À partir de 3 € / adhérent (sur devis)",
     ],
@@ -46,10 +46,10 @@ const POLE_CAPABILITIES: Record<
   president: {
     title: "Ce que fait le président",
     items: [
-      "Cockpit club : équipes, alertes, décisions",
+      "Cockpit : équipes, alertes, décisions",
       "Finances, adhésions et sponsors",
       "Assistant IA pour prioriser",
-      "Même graphe que le Pôle Club — pas une app à part",
+      "Page dédiée — connectée au Pôle Club",
     ],
   },
   coach: {
@@ -114,7 +114,7 @@ const PRESIDENT_FEATURE_TAB: FeaturePoleTab = {
   title: "Le club en un coup d’œil",
   subtitle: "Cockpit · Finances · Assistant IA",
   description:
-    "Dirigeants, DS et bureau : cockpit, finances et assistant IA, liés au Pôle Club.",
+    "Dirigeants, DS et bureau : cockpit, finances et assistant IA — page dédiée Pôle Président.",
   href: PRESIDENT_HUB_HREF,
 };
 

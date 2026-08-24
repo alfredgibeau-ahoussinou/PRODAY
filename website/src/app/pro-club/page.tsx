@@ -6,7 +6,7 @@ import {
 } from "@/components/poles/immersivePoleExperience";
 import { ClubMatchInviteSection } from "@/components/poles/ClubMatchInviteSection";
 import { ClubModulesSection } from "@/components/poles/ClubModulesSection";
-import { ClubPresidentHub } from "@/components/poles/ClubPresidentHub";
+import { PresidentHashRedirect } from "@/components/poles/PresidentHashRedirect";
 import { RosterBourseSection } from "@/components/poles/RosterBourseSection";
 import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { VideoHardwareOffers } from "@/components/poles/VideoHardwareOffers";
@@ -27,6 +27,8 @@ export default function ProClubPage() {
 
   return (
     <TerminalPage accentStyle={accentStyle}>
+      <PresidentHashRedirect />
+
       <ImmersivePoleHero
         brand="Pro Day Club"
         headline="Le club au centre."
@@ -38,8 +40,6 @@ export default function ProClubPage() {
         secondaryHref="#analyse-de-forme"
         secondaryLabel="Analyse de forme"
       />
-
-      <ClubPresidentHub />
 
       <FormAnalysisFeature audience="club" />
 
