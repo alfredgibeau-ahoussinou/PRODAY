@@ -13,7 +13,7 @@ import type { RecruitmentPost } from '../../models/Player';
 import type { ProDayModuleId } from '../../content/prodayModules';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing } from '../../theme/designTokens';
+import type { DiscoverHomeChrome } from './discoverPoleHome';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
 
 export interface DiscoverInteractiveHomeProps {
@@ -58,7 +58,10 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   const { styles: discoverStyles } = useDiscoverStyles();
   const { t } = useTranslation();
   const metrics = useDiscoverMetrics();
-  const local = useMemo(() => createLocalStyles(), []);
+  const local = useMemo(
+    () => createLocalStyles(metrics.homeChrome),
+    [metrics.homeChrome],
+  );
   const showActivity = discoverShowsMercatoPreview(productLine) && (posts.length > 0 || loading);
   const showQuick = discoverQuickIdsForLine(productLine).length > 0;
 
@@ -101,7 +104,7 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
         <ScrollView
           showsVerticalScrollIndicator={false}
           bounces
-          contentContainerStyle={{ paddingBottom: spacing.xl * 2 }}
+          contentContainerStyle={{ paddingBottom: metrics.homeChrome.scrollBottom }}
         >
           <DiscoverGuestHero
             productLine={productLine}
@@ -135,11 +138,11 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
   );
 };
 
-function createLocalStyles() {
+function createLocalStyles(chrome: DiscoverHomeChrome) {
   return StyleSheet.create({
     section: {
-      marginBottom: spacing.xl,
-      gap: spacing.md,
+      marginBottom: chrome.sectionMarginBottom,
+      gap: chrome.sectionGap,
     },
   });
 }

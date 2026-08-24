@@ -15,6 +15,8 @@ import {
   poleOnAccent,
   PRODAY_POLE_LABELS,
 } from '../../theme/prodayBrand';
+import { type DiscoverHomeChrome } from './discoverPoleHome';
+import { useDiscoverMetrics } from './useDiscoverMetrics';
 
 interface DiscoverGuestHeroProps {
   productLine: ProductLineId;
@@ -33,16 +35,20 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
   universeLabel,
 }) => {
   const insets = useSafeAreaInsets();
+  const { homeChrome: chrome } = useDiscoverMetrics();
   const { t } = useTranslation();
   const copy = getLocalizedDiscoverCopy(productLine, t);
   const variant = brandVariantForProductLine(productLine);
   const accent = poleAccent(variant);
   const onAccent = poleOnAccent(variant);
   const poleName = PRODAY_POLE_LABELS[variant];
-  const styles = useMemo(() => createStyles(accent, onAccent), [accent, onAccent]);
+  const styles = useMemo(
+    () => createStyles(accent, onAccent, chrome),
+    [accent, onAccent, chrome],
+  );
 
   return (
-    <View style={[styles.shell, { paddingTop: insets.top + spacing.md }]}>
+    <View style={[styles.shell, { paddingTop: insets.top + chrome.topExtra }]}>
       {universeLabel && onUniversePress ? (
         <PressableSpring onPress={onUniversePress} scaleTo={0.98} style={styles.universeBtn}>
           <Text style={styles.universeText}>{universeLabel}</Text>
@@ -51,7 +57,7 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
       ) : null}
 
       <View style={styles.brandBlock}>
-        <ProDayLogo variant={variant} width={88} onDark layout="symbol" />
+        <ProDayLogo variant={variant} width={chrome.logoSize} onDark layout="symbol" />
         <Text style={styles.wordmark}>PRODAY</Text>
         {poleName ? <Text style={styles.poleName}>{poleName}</Text> : null}
       </View>
@@ -73,19 +79,19 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
   );
 };
 
-function createStyles(accent: string, onAccent: string) {
+function createStyles(accent: string, onAccent: string, chrome: DiscoverHomeChrome) {
   return StyleSheet.create({
     shell: {
       paddingHorizontal: spacing.lg,
-      marginBottom: spacing.xl,
-      gap: spacing.lg,
+      marginBottom: chrome.heroMarginBottom,
+      gap: chrome.shellGap,
       alignItems: 'center',
     },
     universeBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      paddingVertical: 4,
+      paddingVertical: 2,
       paddingHorizontal: 2,
     },
     universeText: {
@@ -97,13 +103,12 @@ function createStyles(accent: string, onAccent: string) {
     },
     brandBlock: {
       alignItems: 'center',
-      gap: 2,
+      gap: chrome.brandGap,
       width: '100%',
     },
     wordmark: {
-      marginTop: spacing.sm,
       fontFamily: fontFamily.brand,
-      fontSize: 18,
+      fontSize: chrome.wordmarkSize,
       letterSpacing: 3.2,
       color: '#FFFFFF',
       textTransform: 'uppercase',
@@ -111,28 +116,28 @@ function createStyles(accent: string, onAccent: string) {
     },
     poleName: {
       fontFamily: fontFamily.brandSemi,
-      fontSize: 13,
+      fontSize: chrome.poleNameSize,
       letterSpacing: 2.4,
       color: accent,
       textTransform: 'uppercase',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     copy: {
-      gap: spacing.sm,
+      gap: chrome.copyGap,
       alignItems: 'center',
       width: '100%',
     },
     hero: {
-      fontSize: 24,
+      fontSize: chrome.heroFontSize,
       fontWeight: '800',
       color: '#fff',
       letterSpacing: -0.5,
-      lineHeight: 30,
+      lineHeight: chrome.heroLineHeight,
       textAlign: 'center',
     },
     sub: {
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: chrome.subFontSize,
+      lineHeight: chrome.subLineHeight,
       fontWeight: '500',
       color: 'rgba(255,255,255,0.58)',
       textAlign: 'center',
@@ -140,17 +145,17 @@ function createStyles(accent: string, onAccent: string) {
     },
     ctaCol: {
       alignSelf: 'stretch',
-      gap: spacing.sm,
+      gap: chrome.ctaGap,
       alignItems: 'stretch',
     },
     signupBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: spacing.md,
+      paddingVertical: chrome.signupPadV,
       paddingHorizontal: spacing.lg,
       borderRadius: radius.pill,
-      minHeight: 50,
+      minHeight: chrome.ctaMinHeight,
       backgroundColor: accent,
     },
     signupText: {
@@ -162,8 +167,8 @@ function createStyles(accent: string, onAccent: string) {
     loginBtn: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: spacing.sm,
-      minHeight: 40,
+      paddingVertical: spacing.xs,
+      minHeight: chrome.loginMinHeight,
     },
     loginBtnText: {
       fontSize: 13,

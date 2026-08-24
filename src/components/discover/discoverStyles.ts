@@ -143,7 +143,7 @@ export function createDiscoverStyles(palette: ReturnType<typeof getDiscoverPalet
       letterSpacing: 1.2,
       textTransform: 'uppercase',
       color: palette.faint,
-      marginBottom: spacing.sm,
+      marginBottom: 0,
       textAlign: 'left',
       width: '100%',
     },

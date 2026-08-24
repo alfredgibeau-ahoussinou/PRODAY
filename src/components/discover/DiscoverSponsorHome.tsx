@@ -14,6 +14,8 @@ import type { ProductLineId } from '../../models/ProductLine';
 import type { ProDayModuleId } from '../../content/prodayModules';
 import { useTranslation } from '../../context/LocaleContext';
 import { getLocalizedDiscoverCopy } from '../../i18n/localizedContent';
+import type { DiscoverHomeChrome } from './discoverPoleHome';
+import { useDiscoverMetrics } from './useDiscoverMetrics';
 
 interface DiscoverSponsorHomeProps {
   productLine: ProductLineId;
@@ -38,7 +40,11 @@ export const DiscoverSponsorHome: React.FC<DiscoverSponsorHomeProps> = ({
 }) => {
   const { t } = useTranslation();
   const homeCopy = getLocalizedDiscoverCopy(productLine, t);
-  const local = useMemo(() => createLocalStyles(), []);
+  const metrics = useDiscoverMetrics();
+  const local = useMemo(
+    () => createLocalStyles(metrics.homeChrome),
+    [metrics.homeChrome],
+  );
   const accent = poleAccent('sponsor');
 
   return (
@@ -47,7 +53,7 @@ export const DiscoverSponsorHome: React.FC<DiscoverSponsorHomeProps> = ({
         <ScrollView
           showsVerticalScrollIndicator={false}
           bounces
-          contentContainerStyle={{ paddingBottom: spacing.xl * 2 }}
+          contentContainerStyle={{ paddingBottom: metrics.homeChrome.scrollBottom }}
         >
           <DiscoverGuestHero
             productLine={productLine}
@@ -87,18 +93,18 @@ export const DiscoverSponsorHome: React.FC<DiscoverSponsorHomeProps> = ({
   );
 };
 
-function createLocalStyles() {
+function createLocalStyles(chrome: DiscoverHomeChrome) {
   return StyleSheet.create({
     canvas: { flex: 1 },
     section: {
-      marginBottom: spacing.xl,
-      gap: spacing.md,
+      marginBottom: chrome.sectionMarginBottom,
+      gap: chrome.sectionGap,
     },
     pillars: {
-      gap: spacing.md,
+      gap: chrome.sectionGap,
     },
     pillar: {
-      height: 112,
+      height: 100,
       borderRadius: radius.xl,
       overflow: 'hidden',
       borderWidth: 1,

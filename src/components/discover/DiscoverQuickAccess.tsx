@@ -17,6 +17,7 @@ import {
   discoverQuickIdsForLine,
   type DiscoverQuickId,
 } from './discoverPoleHome';
+import { useDiscoverMetrics } from './useDiscoverMetrics';
 
 export type { DiscoverQuickId };
 
@@ -36,7 +37,11 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   const variant = brandVariantForProductLine(productLine);
   const accent = poleAccent(variant);
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(accent, variant), [accent, variant]);
+  const { homeChrome: chrome } = useDiscoverMetrics();
+  const styles = useMemo(
+    () => createStyles(accent, variant, chrome.quickTilePadV),
+    [accent, variant, chrome.quickTilePadV],
+  );
   const iconById: Partial<Record<DiscoverQuickId, IconName>> = {
     mercato: 'search',
     matchs: 'handshake',
@@ -71,7 +76,7 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
           style={styles.tile}
         >
           <View style={styles.iconWrap}>
-            <Icon name={item.icon} size={20} color={accent} variant="filled" />
+            <Icon name={item.icon} size={18} color={accent} variant="filled" />
           </View>
           <Text style={styles.label}>{item.label}</Text>
           <Text style={styles.sub}>{item.sub}</Text>
@@ -81,7 +86,11 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   );
 };
 
-function createStyles(accent: string, variant: ReturnType<typeof brandVariantForProductLine>) {
+function createStyles(
+  accent: string,
+  variant: ReturnType<typeof brandVariantForProductLine>,
+  tilePadV: number,
+) {
   const soft = poleAccentSoft(variant, 0.14);
   return StyleSheet.create({
     row: {
@@ -91,22 +100,22 @@ function createStyles(accent: string, variant: ReturnType<typeof brandVariantFor
     tile: {
       flex: 1,
       alignItems: 'center',
-      paddingVertical: spacing.md,
+      paddingVertical: tilePadV,
       paddingHorizontal: spacing.xs,
       borderRadius: radius.xl,
       backgroundColor: 'rgba(255,255,255,0.04)',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: 'rgba(255,255,255,0.08)',
-      gap: 5,
+      gap: 4,
     },
     iconWrap: {
-      width: 40,
-      height: 40,
+      width: 36,
+      height: 36,
       borderRadius: radius.lg,
       backgroundColor: soft,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 2,
+      marginBottom: 1,
     },
     label: {
       fontSize: 12,

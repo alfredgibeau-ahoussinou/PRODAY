@@ -3,6 +3,7 @@ import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
+import { discoverHomeChrome } from './discoverPoleHome';
 
 const TAB_BAR_H = 62;
 const CHAPTER_TABS_H = 48;
@@ -16,9 +17,10 @@ export function useDiscoverMetrics() {
 
   return useMemo(() => {
     const compact = height < 780 || width < 390;
+    const chrome = discoverHomeChrome(width, height);
     const pad = compact ? spacing.md : spacing.lg;
     const pageWidth = width;
-    const logoWidth = Math.min(compact ? 132 : 156, pageWidth - pad * 2);
+    const logoWidth = chrome.logoSize;
     const bottomInset = Math.max(TAB_BAR_CONTENT_INSET, insets.bottom + TAB_BAR_H);
 
     const headerTopPad = compact ? spacing.sm : spacing.md;
@@ -42,6 +44,7 @@ export function useDiscoverMetrics() {
       headerTopPad,
       pageWidth,
       logoWidth,
+      homeChrome: chrome,
       bottomInset,
       contentAreaH: pagerContentH,
       pagerContentH,
