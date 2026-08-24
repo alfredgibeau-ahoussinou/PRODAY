@@ -7,7 +7,8 @@ import {
   type ImageSourcePropType,
 } from 'react-native';
 import { ProDayText } from '../../../components/ui/ProDayText';
-import { ProDayOfficialLockup } from '../../../components/branding/ProDayOfficialLockup';
+import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
+import { ProDayWordmark } from '../../../components/branding/ProDayWordmark';
 import { AUTH_XP, AUTH_HERO_SOURCE } from './tokens';
 
 type AuthHeroProps = {
@@ -18,7 +19,8 @@ type AuthHeroProps = {
 };
 
 /**
- * Photo football cinématique N&B + lockup officiel PRODAY + accroche éditoriale.
+ * Photo football cinématique N&B + symbole blanc transparent + wordmark.
+ * Pas de lockup splash/icon (fond noir carré opaque).
  */
 export const AuthHero: React.FC<AuthHeroProps> = ({
   compact = false,
@@ -27,7 +29,7 @@ export const AuthHero: React.FC<AuthHeroProps> = ({
 }) => {
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(compact), [compact]);
-  const lockupWidth = compact ? Math.min(132, width * 0.36) : Math.min(200, width * 0.28);
+  const symbolSize = compact ? Math.min(56, width * 0.14) : Math.min(88, width * 0.12);
 
   return (
     <View style={styles.root} accessibilityRole="image" accessibilityLabel="ProDay">
@@ -35,12 +37,18 @@ export const AuthHero: React.FC<AuthHeroProps> = ({
       <View style={styles.scrim} />
       <View style={styles.content}>
         <View style={styles.logoBlock}>
-          <ProDayOfficialLockup width={lockupWidth} />
+          <ProDaySymbol size={symbolSize} variant="master" tone="white" />
+          <View style={styles.wordmark}>
+            <ProDayWordmark width={compact ? 120 : 168} onDark align="left" />
+          </View>
         </View>
         {showCopy ? (
           <View style={styles.copy}>
             <ProDayText variant="title" style={styles.headline}>
               {AUTH_XP.headline}
+            </ProDayText>
+            <ProDayText variant="eyebrow" style={styles.tagline}>
+              {AUTH_XP.taglineDisplay}
             </ProDayText>
           </View>
         ) : null}
@@ -53,7 +61,7 @@ function createStyles(compact: boolean) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      minHeight: compact ? 200 : 300,
+      minHeight: compact ? 168 : 280,
       backgroundColor: AUTH_XP.black,
       overflow: 'hidden',
     },
@@ -76,6 +84,10 @@ function createStyles(compact: boolean) {
     },
     logoBlock: {
       alignItems: 'flex-start',
+      gap: compact ? 10 : 16,
+    },
+    wordmark: {
+      marginTop: 2,
     },
     copy: {
       gap: compact ? 6 : 10,
@@ -86,6 +98,11 @@ function createStyles(compact: boolean) {
       fontSize: compact ? 22 : 34,
       lineHeight: compact ? 28 : 40,
       letterSpacing: -0.4,
+    },
+    tagline: {
+      color: AUTH_XP.goldBright,
+      letterSpacing: 1.6,
+      fontSize: compact ? 10 : 11,
     },
   });
 }
