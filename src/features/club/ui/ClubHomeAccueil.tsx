@@ -72,14 +72,6 @@ export function ClubHomeIdentityHeader({
 
   return (
     <View style={styles.wrap}>
-      <LinearGradient
-        colors={[tokens.pitch, '#06241C', tokens.bg]}
-        locations={[0, 0.42, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.heroWash}
-        pointerEvents="none"
-      />
       <View style={styles.statusCol}>
         <ClubStatusPill label={statusLabel} tone={statusTone} />
       </View>
@@ -872,9 +864,6 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       borderColor: tokens.border,
       backgroundColor: tokens.bg,
       ...clubShadow.soft,
-    },
-    heroWash: {
-      ...StyleSheet.absoluteFillObject,
     },
     heroCol: {
       alignItems: 'center',

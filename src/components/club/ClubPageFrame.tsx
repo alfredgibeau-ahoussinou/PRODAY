@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
-import { CLUB_SITE, type ClubPageIdentity } from '../../content/clubPageIdentity';
+import { type ClubPageIdentity } from '../../content/clubPageIdentity';
 import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
 import { spacing } from '../../theme/designTokens';
 
@@ -20,7 +19,7 @@ type Props = {
 };
 
 /**
- * Cadre page Club — wash émeraude→navy (chrome app), plus de look cinéma noir.
+ * Cadre page Club — fond noir pur (chrome app).
  * Conservé pour panels legacy / upsell ; le shell principal utilise ClubBrandHeader.
  */
 export function ClubPageFrame({ identity, showHero = true, children }: Props) {
@@ -29,21 +28,6 @@ export function ClubPageFrame({ identity, showHero = true, children }: Props) {
   return (
     <ClubPageIdentityContext.Provider value={identity}>
       <View style={styles.root}>
-        <LinearGradient
-          colors={[CLUB_TOKENS.pitch, CLUB_TOKENS.headerWash, CLUB_TOKENS.bg]}
-          locations={[0, 0.28, 1]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <LinearGradient
-          colors={['transparent', CLUB_TOKENS.pitchSoft, 'transparent']}
-          start={{ x: 0.5, y: 0.1 }}
-          end={{ x: 0.5, y: 0.5 }}
-          style={styles.glow}
-          pointerEvents="none"
-        />
         <View style={[styles.accentBar, { backgroundColor: CLUB_TOKENS.pitch }]} pointerEvents="none" />
 
         {identity.motif === 'grid' ? (
@@ -91,14 +75,6 @@ function createStyles(_identity: ClubPageIdentity) {
       minHeight: 0,
       overflow: 'hidden',
       backgroundColor: CLUB_TOKENS.bg,
-    },
-    glow: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      top: 0,
-      height: 160,
-      opacity: 0.55,
     },
     accentBar: {
       position: 'absolute',

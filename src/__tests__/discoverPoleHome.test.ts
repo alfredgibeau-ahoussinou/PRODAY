@@ -58,6 +58,12 @@ describe('discover pole home', () => {
     expect(gradientsForLine('sponsor').cta[1]).toBe(PRODAY_POLE_ACCENTS.sponsor);
   });
 
+  it('Club Discover / ambient = noir pur (pas de wash vert)', () => {
+    const g = gradientsForLine('pro_club');
+    expect(g.ambient.every((c) => c === '#000000')).toBe(true);
+    expect(g.hero.every((c) => c === '#000000')).toBe(true);
+  });
+
   it('expose le copy Parent dans brandExperience', () => {
     expect(getDiscoverHomeCopy('parent').heroTitle).toMatch(/Accompagner/i);
     expect(getDiscoverHomeCopy('parent').playersStatLabel).toBe('Familles');

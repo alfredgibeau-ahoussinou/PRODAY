@@ -92,11 +92,12 @@ export function ctaGradient(line: ProductLineId): GradientStops {
 
 /** Continuité couleurs planche brand → shells. */
 const proClubGradients = {
-  hero: ['#000000', '#001A24'] as const,
-  heroDark: ['#000000', '#002838'] as const,
-  card: ['#0c0c0c', '#000000'] as const,
-  cta: ['#0088CC', '#00ADEF'] as const,
-  ambient: ['rgba(0, 173, 239, 0.28)', '#001A24', '#000000'] as const,
+  hero: ['#000000', '#000000'] as const,
+  heroDark: ['#000000', '#0A0A0A'] as const,
+  card: ['#0A0A0A', '#000000'] as const,
+  cta: ['#047857', '#10B981'] as const,
+  /** Discover / canvas Club — noir pur, pas de wash vert. */
+  ambient: ['#000000', '#000000', '#000000'] as const,
 };
 
 const presidentGradients = {

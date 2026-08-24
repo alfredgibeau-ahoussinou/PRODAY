@@ -54,14 +54,6 @@ export function ClubHubIdentityHero({
 
   return (
     <View style={styles.wrap}>
-      <LinearGradient
-        colors={[tokens.pitch, '#06241C', tokens.bg]}
-        locations={[0, 0.42, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.heroWash}
-        pointerEvents="none"
-      />
       <View style={styles.statusCol}>
         <ClubStatusPill label={statusLabel} tone={statusTone} />
         {verified ? (
@@ -294,9 +286,6 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       marginBottom: clubSpace.md,
       paddingBottom: clubSpace.lg,
       overflow: 'hidden',
-    },
-    heroWash: {
-      ...StyleSheet.absoluteFillObject,
     },
     statusCol: {
       flexDirection: 'row',

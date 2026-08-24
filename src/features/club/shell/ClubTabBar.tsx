@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
@@ -27,7 +26,7 @@ const LABEL_SIZE = 11;
 
 /**
  * Dock mobile Pôle Club — Accueil · Équipes · Matchs · Outils · Club.
- * Actif = pill émeraude animée (ProDay) ; FAB Créer reste le bleu primaire à part.
+ * Fond noir pur ; actif = pill émeraude (accent UI).
  */
 export function ClubTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
@@ -42,12 +41,6 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
       accessibilityRole="tablist"
       testID="club-tab-bar"
     >
-      <LinearGradient
-        colors={['rgba(5, 150, 105, 0.10)', 'transparent']}
-        locations={[0, 1]}
-        style={styles.wash}
-        pointerEvents="none"
-      />
       <View style={styles.rail}>
         {items.map((item) => {
           const on = item.id === highlight;
@@ -100,7 +93,7 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
     root: {
-      backgroundColor: tokens.surface,
+      backgroundColor: tokens.bg,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: tokens.borderStrong,
       paddingTop: clubSpace.xs,
@@ -117,10 +110,6 @@ function createStyles(tokens: ClubThemeTokens) {
         android: { elevation: 14 },
         default: {},
       }),
-    },
-    wash: {
-      ...StyleSheet.absoluteFillObject,
-      height: 28,
     },
     rail: {
       flexDirection: 'row',

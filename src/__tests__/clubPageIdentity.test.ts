@@ -11,8 +11,10 @@ describe('clubPageIdentity', () => {
     for (const id of ids) {
       expect(CLUB_PAGE_IDENTITIES[id]!.accent).toBe(CLUB_SITE.accent);
     }
-    expect(CLUB_SITE.accent).toBe('#00ADEF');
-    expect(CLUB_SITE.deep).toBe('#007AA8');
+    expect(CLUB_SITE.accent).toBe('#10B981');
+    expect(CLUB_SITE.deep).toBe('#047857');
+    expect(CLUB_SITE.bg.toLowerCase()).toBe('#000000');
+    expect(CLUB_SITE.band.toLowerCase()).toBe('#000000');
   });
 
   it('différencie les pages par layout', () => {

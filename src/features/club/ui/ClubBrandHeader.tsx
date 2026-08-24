@@ -7,7 +7,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ClubText } from './clubUi';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
@@ -24,7 +23,7 @@ type Props = {
 };
 
 /**
- * En-tête équipe / club — gradient émeraude→navy + pill status (réf. sport management).
+ * En-tête équipe / club — fond noir + pill status (accent émeraude sur UI).
  */
 export function ClubBrandHeader({
   title,
@@ -41,14 +40,6 @@ export function ClubBrandHeader({
 
   return (
     <View style={[styles.wrap, style]}>
-      <LinearGradient
-        colors={[tokens.pitch, '#06241C', tokens.bg]}
-        locations={[0, 0.45, 1]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.wash}
-        pointerEvents="none"
-      />
       <View style={styles.row}>
         {showLogo ? (
           <View style={[styles.logoWrap, { borderColor: tokens.successSoft }]}>
@@ -115,9 +106,6 @@ const createStyles = (tokens: ClubThemeTokens) =>
       paddingHorizontal: clubSpace.lg,
       marginHorizontal: -clubSpace.xs,
       backgroundColor: tokens.bg,
-    },
-    wash: {
-      ...StyleSheet.absoluteFillObject,
     },
     row: {
       flexDirection: 'row',

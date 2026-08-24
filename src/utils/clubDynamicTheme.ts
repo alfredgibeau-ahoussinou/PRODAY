@@ -297,7 +297,7 @@ export function buildClubThemeTokens(
     secondary,
     onAccent,
     glow: withAlpha(accent, 0.42),
-    // Header chrome : émeraude→navy (réf.), pas le primary marque.
-    headerWash: blendHex(CLUB_TOKENS.bg, CLUB_TOKENS.pitch, 0.38),
+    // Fond root toujours noir — l’accent marque ne teinte pas le canvas.
+    headerWash: CLUB_TOKENS.bg,
   };
 }

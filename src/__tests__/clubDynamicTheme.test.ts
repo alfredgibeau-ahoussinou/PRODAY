@@ -45,13 +45,14 @@ describe('clubDynamicTheme', () => {
     expect(colors!.secondary).toMatch(/^#[0-9A-F]{6}$/i);
   });
 
-  it('buildClubThemeTokens retombe sur le bleu Club par défaut (canvas sombre)', () => {
+  it('buildClubThemeTokens retombe sur l’émeraude Club par défaut (canvas sombre)', () => {
     const tokens = buildClubThemeTokens(null);
-    expect(tokens.accent).toBe('#00ADEF');
+    expect(tokens.accent).toBe('#10B981');
     expect(tokens.onAccent).toBeTruthy();
     expect(tokens.isLight).toBe(false);
-    expect(tokens.bg.toLowerCase()).not.toBe('#ffffff');
-    expect(tokens.bg.toLowerCase()).not.toBe('#fff');
+    expect(tokens.bg.toLowerCase()).toBe('#000000');
+    expect(tokens.headerWash.toLowerCase()).toBe('#000000');
+    expect(tokens.surface.toLowerCase()).toBe('#0a0a0a');
     expect(tokens.surface.toLowerCase()).not.toBe('#ffffff');
   });
 });
