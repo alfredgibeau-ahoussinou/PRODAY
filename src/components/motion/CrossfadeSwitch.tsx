@@ -16,9 +16,15 @@ interface CrossfadeSwitchProps {
 
 /** Fondu entre deux états (ex. Discover → Dashboard après connexion). */
 export const CrossfadeSwitch: React.FC<CrossfadeSwitchProps> = ({ switchKey, children }) => {
-  const opacity = useSharedValue(0);
+  const opacity = useSharedValue(1);
+  const prevKey = React.useRef(switchKey);
 
   useEffect(() => {
+    if (prevKey.current === switchKey) {
+      opacity.value = 1;
+      return;
+    }
+    prevKey.current = switchKey;
     opacity.value = 0;
     opacity.value = withTiming(1, { duration: motion.duration.normal });
     const safety = setTimeout(() => {

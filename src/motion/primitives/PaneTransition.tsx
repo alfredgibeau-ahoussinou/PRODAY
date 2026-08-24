@@ -14,6 +14,11 @@ import { prodayMotion } from '../tokens';
 import type { MotionContext, NavDirection } from '../types';
 import { useProDayMotion } from '../ProDayMotionProvider';
 
+/** Si le callback Reanimated ne fire pas : swap de pane quand même. */
+export const PANE_EXIT_SAFETY_MS = 80;
+/** Force opacity 1 après l’enter — évite un home coincé à 0. */
+export const PANE_ENTER_SAFETY_MS = 200;
+
 type Props = {
   sectionKey: string;
   direction: NavDirection;
@@ -48,6 +53,8 @@ export function PaneTransition({
   const pending = useRef(safeChildren);
   const busy = useRef(false);
   const gen = useRef(0);
+  const appliedEnter = useRef(0);
+  const enterSafetyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   pending.current = safeChildren;
 
   const opacity = useSharedValue(1);
@@ -56,6 +63,8 @@ export function PaneTransition({
   const finishEnter = useCallback(
     (nextKey: string, dir: NavDirection, token: number) => {
       if (token !== gen.current) return;
+      if (appliedEnter.current === token) return;
+      appliedEnter.current = token;
       currentKey.current = nextKey;
       setDisplayed(pending.current);
       opacity.value = 0;
@@ -76,8 +85,25 @@ export function PaneTransition({
           runOnJS(setPaneBusy)(false);
         },
       );
+      if (enterSafetyRef.current) clearTimeout(enterSafetyRef.current);
+      enterSafetyRef.current = setTimeout(() => {
+        if (token !== gen.current) return;
+        cancelAnimation(opacity);
+        cancelAnimation(translateX);
+        opacity.value = 1;
+        translateX.value = 0;
+        busy.current = false;
+        setPaneBusy(false);
+      }, preset.enterMs + PANE_ENTER_SAFETY_MS);
     },
     [opacity, translateX, setPaneBusy, preset.enterMs, preset.shift],
+  );
+
+  useEffect(
+    () => () => {
+      if (enterSafetyRef.current) clearTimeout(enterSafetyRef.current);
+    },
+    [],
   );
 
   useEffect(() => {
@@ -128,6 +154,12 @@ export function PaneTransition({
         runOnJS(finishEnter)(nextKey, dir, token);
       },
     );
+
+    const swapSafety = setTimeout(() => {
+      if (token !== gen.current) return;
+      finishEnter(nextKey, dir, token);
+    }, preset.exitMs + PANE_EXIT_SAFETY_MS);
+    return () => clearTimeout(swapSafety);
   }, [
     sectionKey,
     direction,

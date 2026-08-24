@@ -196,6 +196,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   };
 
   const handleBack = () => {
+    // Overlay : onDismiss unmount immédiat. Fallback onglet : home.
     if (onDismiss) {
       onDismiss();
       return;

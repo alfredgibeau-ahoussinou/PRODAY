@@ -8,7 +8,7 @@ import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
 import { ProfileScreen } from './ProfileScreen';
 import { AuthScreen } from './AuthScreen';
 
-/** Onglet Profil — fiche connectée ou connexion directe pour les invités. */
+/** Onglet Profil — fiche connectée. Invité : fallback Auth (CTA Discover = overlay App). */
 export const ProfilTabScreen: React.FC = () => {
   const { profile, loading, configured, refreshProfile, signOut } = useAuth();
   const sessionProfile = useSessionProfile();

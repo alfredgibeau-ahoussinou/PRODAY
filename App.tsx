@@ -31,6 +31,11 @@ import {
   resolveGuestTab,
 } from './src/navigation/guestAccess';
 import {
+  guestProfilTabOpensAuthOverlay,
+  isGuestAuthOverlayVisible,
+} from './src/navigation/authOverlay';
+import { AuthOverlayHost } from './src/navigation/AuthOverlayHost';
+import {
   TabNavigationProvider,
   type AuthIntent,
   type SetActiveTabOptions,
@@ -333,6 +338,13 @@ function AppShell() {
   }, [isGuest, activeTab, productLine]);
 
   useEffect(() => {
+    if (!profile) return;
+    setPendingAuthIntent(null);
+    setPendingSignupProductLine(null);
+    setPendingSignupRole(null);
+  }, [profile]);
+
+  useEffect(() => {
     if (!screenTabs.includes(activeTab)) {
       setActiveTab(screenTabs[0] ?? 'home');
     }
@@ -505,8 +517,18 @@ function AppShell() {
     );
   }
 
+  const dismissAuthOverlay = useCallback(() => {
+    setPendingAuthIntent(null);
+    setPendingSignupProductLine(null);
+    setPendingSignupRole(null);
+  }, []);
+
   const handleTabPress = (tab: MainTabId, options?: SetActiveTabOptions) => {
     if (tab !== activeTab) prodayHaptics.tabSwitch();
+    if (guestProfilTabOpensAuthOverlay(tab, isGuest, activeTab)) {
+      setPendingAuthIntent((prev) => prev ?? 'login');
+      return;
+    }
     const nextReturn = resolveAutoReturnTab(
       activeTab,
       tab,
@@ -529,7 +551,6 @@ function AppShell() {
   const openChat = (threadId: string) => {
     if (isGuest) {
       setPendingAuthIntent('login');
-      handleTabPress('profil');
       return;
     }
     setPendingChatThreadId(threadId);
@@ -587,7 +608,6 @@ function AppShell() {
           openTeamEvent: (eventId) => {
             if (isGuest) {
               setPendingAuthIntent('login');
-              handleTabPress('profil');
               return;
             }
             setPendingTeamEventId(eventId);
@@ -599,7 +619,6 @@ function AppShell() {
           openMatchs: (link) => {
             if (isGuest) {
               setPendingAuthIntent('login');
-              handleTabPress('profil');
               return;
             }
             setPendingMatchsLink(link ?? { homeTab: 'season' });
@@ -610,7 +629,6 @@ function AppShell() {
           openMercato: (view) => {
             if (isGuest) {
               setPendingAuthIntent('login');
-              handleTabPress('profil');
               return;
             }
             setPendingMercatoView(view ?? 'home');
@@ -626,7 +644,6 @@ function AppShell() {
           pendingAuthIntent,
           openAuth: (intent) => {
             setPendingAuthIntent(intent);
-            handleTabPress('profil');
           },
           clearPendingAuthIntent: () => setPendingAuthIntent(null),
           pendingSignupProductLine,
@@ -638,7 +655,6 @@ function AppShell() {
               setPendingSignupProductLine('sponsor');
               setPendingSignupRole('sponsor');
               setPendingAuthIntent('signup');
-              handleTabPress('profil');
               void tier;
             })();
           },
@@ -649,7 +665,6 @@ function AppShell() {
               setPendingSignupProductLine('sponsor');
               setPendingSignupRole('sponsor');
               setPendingAuthIntent('signup');
-              handleTabPress('profil');
             })();
           },
           clearSignupPreset: () => {
@@ -676,7 +691,6 @@ function AppShell() {
           openCarpool: (link) => {
             if (isGuest) {
               setPendingAuthIntent('login');
-              handleTabPress('profil');
               return;
             }
             setPendingCarpoolLink(link ?? { chapter: 'reserver' });
@@ -736,6 +750,14 @@ function AppShell() {
               visibleTabs={screenTabs}
             />
           )}
+          {isGuestAuthOverlayVisible(isGuest, pendingAuthIntent) ? (
+            <AuthOverlayHost
+              intent={pendingAuthIntent}
+              signupProductLine={pendingSignupProductLine ?? undefined}
+              signupInitialRole={pendingSignupRole ?? undefined}
+              onDismiss={dismissAuthOverlay}
+            />
+          ) : null}
         </SafeAreaView>
         <JoueurShellExtras />
       </TabNavigationProvider>
