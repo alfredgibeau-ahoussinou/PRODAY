@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default function PresidentPolePage() {
+  // No Club hero video on /president — restore via /videos/pole-president.mp4 when ready.
   const visuals = getRoleVisuals("pro_club");
   const accentStyle = poleAccentCssVars("president");
 
@@ -22,7 +23,6 @@ export default function PresidentPolePage() {
         brand="Pro Day Président"
         headline="Le club en un coup d’œil."
         support="Cockpit, finances et assistant IA. Dirigeants, DS et bureau décident depuis ProDay."
-        video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta"
