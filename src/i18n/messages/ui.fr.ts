@@ -30,16 +30,17 @@ export const UI_FR: MessageCatalog = {
   'discover.quick.shop': 'Boutique',
   'discover.quick.shopSub': 'Officielle',
 
-  'universe.homme': 'Pro Day Man',
-  'universe.woman': 'ProDay Woman',
-  'universe.amateur': 'Pro Day Amateur',
-  'universe.supporter': 'Pro Day Supporter',
-  'universe.pro': 'Pro Day Pro',
-  'universe.pro_player': 'Pro Day Pro Joueur',
-  'universe.pro_club': 'Pro Day Pro Club',
-  'universe.pro_staff': 'Pro Day Coach',
-  'universe.sponsor': 'Pro Day Sponsor',
-  'universe.sante': 'Pro Day Santé',
+  'universe.homme': 'Joueur',
+  'universe.woman': 'Joueuse',
+  'universe.amateur': 'Joueur',
+  'universe.supporter': 'Supporter',
+  'universe.pro': 'Pro',
+  'universe.pro_player': 'Joueur',
+  'universe.pro_club': 'Club',
+  'universe.pro_staff': 'Coach',
+  'universe.sponsor': 'Sponsor',
+  'universe.sante': 'Santé',
+  'universe.parent': 'Parent',
 
   'discover.hero.homme': 'L\'application tout-en-un\ndu football.',
   'discover.mission.homme':
@@ -141,6 +142,16 @@ export const UI_FR: MessageCatalog = {
   'discover.secondaryMercato.sante': 'Annuaire santé',
   'discover.playersStat.sante': 'Praticiens',
 
+  'discover.hero.parent': 'Accompagner\nsans étouffer.',
+  'discover.mission.parent':
+    'Messages, agenda, retards coach et trajets — le suivi de votre enfant, sans bruit.',
+  'discover.trust.parent':
+    'Compte lié au profil mineur. Contrôles parentaux après validation.',
+  'discover.cta.parent': 'Créer mon compte Parent',
+  'discover.sectionExplore.parent': 'Espace Parent',
+  'discover.secondaryMercato.parent': 'Famille',
+  'discover.playersStat.parent': 'Familles',
+
   'journey.profile.title.homme': 'Profil',
   'journey.profile.body.homme': 'CV foot en ligne',
   'journey.mercato.title.homme': 'Mercato',
@@ -210,6 +221,13 @@ export const UI_FR: MessageCatalog = {
   'journey.mercato.body.sponsor': 'Visibilité & ROI',
   'journey.season.title.sponsor': 'Réseau clubs',
   'journey.season.body.sponsor': 'Prospects & messages',
+
+  'journey.profile.title.parent': 'Famille',
+  'journey.profile.body.parent': 'Lien avec votre enfant',
+  'journey.mercato.title.parent': 'Agenda',
+  'journey.mercato.body.parent': 'Matchs & retards',
+  'journey.season.title.parent': 'Trajets',
+  'journey.season.body.parent': 'Covoiturage & suivi',
 
   'modules.recrutement.title': 'Recrutement',
   'modules.recrutement.subtitle': 'Joueurs & clubs',

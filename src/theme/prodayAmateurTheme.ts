@@ -44,8 +44,8 @@ export const amateurColorOverrides = {
 } as const;
 
 export const amateurGradients = {
-  hero: ['#000000', '#0A1638'] as const,
-  heroDark: ['#000000', '#050A18'] as const,
+  hero: ['#000000', '#0A0A0A'] as const,
+  heroDark: ['#000000', '#050505'] as const,
   card: ['#1A1A1A', '#0A0A0A'] as const,
-  cta: ['#1529CC', A] as const,
+  cta: ['#E5E5E5', A] as const,
 };

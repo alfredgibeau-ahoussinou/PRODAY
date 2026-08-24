@@ -7,46 +7,58 @@ import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { getLocalizedQuickAccessItems } from '../../i18n/localizedContent';
-import type { AppColors } from '../../theme/universeTheme';
-import { isJoueurProductLine } from '../../utils/playerLevelBadge';
-import { JOUEUR_DISCOVER } from '../../theme/joueurDesignSystem';
-import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import type { ProductLineId } from '../../models/ProductLine';
+import {
+  brandVariantForProductLine,
+  poleAccent,
+  poleAccentSoft,
+} from '../../theme/prodayBrand';
+import {
+  discoverQuickIdsForLine,
+  type DiscoverQuickId,
+} from './discoverPoleHome';
 
-export type DiscoverQuickId = 'mercato' | 'matchs' | 'reels' | 'shop' | 'sponsors';
-
-const ITEM_IDS: DiscoverQuickId[] = ['mercato', 'matchs', 'reels', 'shop'];
+export type { DiscoverQuickId };
 
 interface DiscoverQuickAccessProps {
   onPress: (id: DiscoverQuickId) => void;
+  productLine?: ProductLineId;
   hideReels?: boolean;
 }
 
 export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   onPress,
+  productLine: lineProp,
   hideReels = false,
 }) => {
-  const { colors: c, productLine } = useAppTheme();
-  const joueurTheme = useJoueurTheme();
-  const joueurLine = isJoueurProductLine(productLine);
+  const { productLine: ctxLine } = useAppTheme();
+  const productLine = lineProp ?? ctxLine;
+  const variant = brandVariantForProductLine(productLine);
+  const accent = poleAccent(variant);
   const { t } = useTranslation();
-  const styles = useMemo(
-    () => createStyles(c, joueurLine, joueurTheme),
-    [c, joueurLine, joueurTheme],
-  );
+  const styles = useMemo(() => createStyles(accent, variant), [accent, variant]);
   const iconById: Partial<Record<DiscoverQuickId, IconName>> = {
     mercato: 'search',
     matchs: 'handshake',
     reels: 'football',
     shop: 'bag',
   };
+  const allowed = useMemo(() => {
+    const ids = discoverQuickIdsForLine(productLine);
+    return hideReels ? ids.filter((id) => id !== 'reels') : ids;
+  }, [hideReels, productLine]);
   const items = useMemo(() => {
     const localized = getLocalizedQuickAccessItems(t);
-    const list = localized.map((item) => ({
-      ...item,
-      icon: iconById[item.id] ?? 'search',
-    }));
-    return hideReels ? list.filter((item) => item.id !== 'reels') : list;
-  }, [hideReels, t]);
+    return localized
+      .filter((item) => allowed.includes(item.id))
+      .slice(0, 3)
+      .map((item) => ({
+        ...item,
+        icon: iconById[item.id] ?? 'search',
+      }));
+  }, [allowed, t]);
+
+  if (items.length === 0) return null;
 
   return (
     <View style={styles.row}>
@@ -59,12 +71,7 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
           style={styles.tile}
         >
           <View style={styles.iconWrap}>
-            <Icon
-              name={item.icon}
-              size={20}
-              color={joueurLine ? joueurTheme.accent : c.ink}
-              variant="filled"
-            />
+            <Icon name={item.icon} size={20} color={accent} variant="filled" />
           </View>
           <Text style={styles.label}>{item.label}</Text>
           <Text style={styles.sub}>{item.sub}</Text>
@@ -74,11 +81,8 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   );
 };
 
-function createStyles(
-  c: AppColors,
-  joueurLine: boolean,
-  joueurTheme: ReturnType<typeof useJoueurTheme>,
-) {
+function createStyles(accent: string, variant: ReturnType<typeof brandVariantForProductLine>) {
+  const soft = poleAccentSoft(variant, 0.14);
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -87,19 +91,19 @@ function createStyles(
     tile: {
       flex: 1,
       alignItems: 'center',
-      paddingVertical: spacing.md + 2,
+      paddingVertical: spacing.md,
       paddingHorizontal: spacing.xs,
       borderRadius: radius.xl,
-      backgroundColor: joueurLine ? JOUEUR_DISCOVER.tileBg : c.surface,
+      backgroundColor: 'rgba(255,255,255,0.04)',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: joueurLine ? JOUEUR_DISCOVER.tileBorder : c.border,
+      borderColor: 'rgba(255,255,255,0.08)',
       gap: 5,
     },
     iconWrap: {
-      width: 44,
-      height: 44,
+      width: 40,
+      height: 40,
       borderRadius: radius.lg,
-      backgroundColor: joueurLine ? JOUEUR_DISCOVER.chipBg : c.accentSoft,
+      backgroundColor: soft,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 2,
@@ -107,14 +111,14 @@ function createStyles(
     label: {
       fontSize: 12,
       fontWeight: '800',
-      color: joueurLine ? joueurTheme.ink : c.text,
+      color: '#FAFAFA',
       textAlign: 'center',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     sub: {
       fontSize: 9,
       fontWeight: '600',
-      color: joueurLine ? joueurTheme.inkMuted : c.textMuted,
+      color: 'rgba(255,255,255,0.45)',
       textAlign: 'center',
     },
   });

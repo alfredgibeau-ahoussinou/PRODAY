@@ -3,23 +3,17 @@ import { View, Text, StyleSheet, Platform, Image, ScrollView } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import { DiscoverGuestHero } from './DiscoverGuestHero';
 import { DiscoverSectionLabel } from './DiscoverSectionLabel';
-import { DiscoverGuestJourney } from './DiscoverGuestJourney';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
-import { useDiscoverStyles } from './discoverStyles';
-import type { ProductLineId } from '../../models/ProductLine';
-import { useTranslation } from '../../context/LocaleContext';
-import { getLocalizedDiscoverCopy } from '../../i18n/localizedContent';
-import { LanguageSettingControl } from '../settings/LanguageSettingControl';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { DISCOVER_UNIVERSE_CARDS_SPONSOR } from '../../content/discoverSponsorContent';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
-import type { AppColors } from '../../theme/universeTheme';
+import { poleAccent } from '../../theme/prodayBrand';
+import type { ProductLineId } from '../../models/ProductLine';
 import type { ProDayModuleId } from '../../content/prodayModules';
-
-const STICKY_CTA_HEIGHT = 56;
+import { useTranslation } from '../../context/LocaleContext';
+import { getLocalizedDiscoverCopy } from '../../i18n/localizedContent';
 
 interface DiscoverSponsorHomeProps {
   productLine: ProductLineId;
@@ -32,21 +26,20 @@ interface DiscoverSponsorHomeProps {
 }
 
 /**
- * Accueil invité Sponsor — campagnes / ROI / clubs (pas Mercato ni Reels).
+ * Accueil invité Sponsor — aperçu espace marque, un accent violet.
  */
 export const DiscoverSponsorHome: React.FC<DiscoverSponsorHomeProps> = ({
   productLine,
   onSignup,
   onLogin,
   onModulePress,
-  onStepPress,
   universeLabel,
   onUniversePress,
 }) => {
-  const { colors: c } = useDiscoverStyles();
   const { t } = useTranslation();
   const homeCopy = getLocalizedDiscoverCopy(productLine, t);
-  const local = useMemo(() => createLocalStyles(c), [c]);
+  const local = useMemo(() => createLocalStyles(), []);
+  const accent = poleAccent('sponsor');
 
   return (
     <ProDayScreenCanvas>
@@ -54,9 +47,7 @@ export const DiscoverSponsorHome: React.FC<DiscoverSponsorHomeProps> = ({
         <ScrollView
           showsVerticalScrollIndicator={false}
           bounces
-          contentContainerStyle={{
-            paddingBottom: STICKY_CTA_HEIGHT + spacing.xl * 2,
-          }}
+          contentContainerStyle={{ paddingBottom: spacing.xl * 2 }}
         >
           <DiscoverGuestHero
             productLine={productLine}
@@ -82,7 +73,7 @@ export const DiscoverSponsorHome: React.FC<DiscoverSponsorHomeProps> = ({
                     style={StyleSheet.absoluteFill}
                   />
                   <View style={local.pillarCopy}>
-                    <Icon name={card.icon} size={18} color={card.accent} />
+                    <Icon name={card.icon} size={18} color={accent} />
                     <Text style={local.pillarTitle}>{card.title}</Text>
                     <Text style={local.pillarSub}>{card.subtitle}</Text>
                   </View>
@@ -90,44 +81,13 @@ export const DiscoverSponsorHome: React.FC<DiscoverSponsorHomeProps> = ({
               ))}
             </View>
           </View>
-
-          <View style={[local.section, { paddingHorizontal: spacing.lg }]}>
-            <DiscoverSectionLabel>{t('preferences.language')}</DiscoverSectionLabel>
-            <LanguageSettingControl variant="card" />
-          </View>
-
-          <View style={[local.section, { paddingHorizontal: spacing.lg }]}>
-            <DiscoverSectionLabel>{t('discover.journey')}</DiscoverSectionLabel>
-            <DiscoverGuestJourney productLine={productLine} onStepPress={onStepPress} />
-          </View>
-
-          <View style={[local.trust, { marginHorizontal: spacing.lg }]}>
-            <Icon name="shield" size={18} color={SPONSOR_THEME.gold} variant="filled" />
-            <Text style={local.trustText}>{homeCopy.trustText}</Text>
-          </View>
         </ScrollView>
-
-        <View style={local.stickyDock}>
-          <LinearGradient
-            colors={['transparent', c.background]}
-            style={local.stickyFade}
-            pointerEvents="none"
-          />
-          <View style={[local.stickyBar, { backgroundColor: c.background, borderTopColor: c.border }]}>
-            <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={[local.stickyBtnWrap, shadows.soft]}>
-              <ProDayGradient kind="cta" style={local.stickyBtn}>
-                <Text style={local.stickyBtnText}>{homeCopy.ctaText}</Text>
-                <Icon name="chevron-forward" size={18} color={SPONSOR_THEME.goldInk} />
-              </ProDayGradient>
-            </PressableSpring>
-          </View>
-        </View>
       </View>
     </ProDayScreenCanvas>
   );
 };
 
-function createLocalStyles(c: AppColors) {
+function createLocalStyles() {
   return StyleSheet.create({
     canvas: { flex: 1 },
     section: {
@@ -138,12 +98,11 @@ function createLocalStyles(c: AppColors) {
       gap: spacing.md,
     },
     pillar: {
-      height: 128,
+      height: 112,
       borderRadius: radius.xl,
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: SPONSOR_THEME.border,
-      ...shadows.soft,
     },
     pillarImage: {
       ...StyleSheet.absoluteFillObject,
@@ -157,68 +116,16 @@ function createLocalStyles(c: AppColors) {
       gap: 2,
     },
     pillarTitle: {
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: '800',
       color: '#FAFAF9',
       letterSpacing: -0.3,
+      ...Platform.select({ android: { includeFontPadding: false } }),
     },
     pillarSub: {
       fontSize: 13,
       fontWeight: '500',
       color: 'rgba(250,250,249,0.72)',
-    },
-    trust: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.sm,
-      padding: spacing.md,
-      borderRadius: radius.xl,
-      backgroundColor: SPONSOR_THEME.goldSurface,
-      borderWidth: 1.5,
-      borderColor: SPONSOR_THEME.border,
-      marginBottom: spacing.xl,
-    },
-    trustText: {
-      flex: 1,
-      fontSize: 13,
-      lineHeight: 19,
-      fontWeight: '500',
-      color: c.textSecondary,
-    },
-    stickyDock: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
-    },
-    stickyFade: {
-      height: 28,
-    },
-    stickyBar: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.md,
-      borderTopWidth: StyleSheet.hairlineWidth,
-    },
-    stickyBtnWrap: {
-      borderRadius: radius.pill,
-      overflow: 'hidden',
-    },
-    stickyBtn: {
-      minHeight: STICKY_CTA_HEIGHT,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.lg,
-      borderRadius: radius.pill,
-    },
-    stickyBtnText: {
-      fontSize: 15,
-      fontWeight: '800',
-      color: SPONSOR_THEME.goldInk,
-      flexShrink: 1,
-      ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });
 }

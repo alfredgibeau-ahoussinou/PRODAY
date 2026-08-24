@@ -30,13 +30,17 @@ export const UI_EN: MessageCatalog = {
   'discover.quick.shop': 'Shop',
   'discover.quick.shopSub': 'Official',
 
-  'universe.homme': 'Men\'s universe',
-  'universe.woman': 'Women\'s universe',
-  'universe.amateur': 'Amateur universe',
-  'universe.supporter': 'Supporter universe',
-  'universe.pro': 'Pro universe',
-  'universe.sponsor': 'Pro Day Sponsor',
-  'universe.sante': 'Health universe',
+  'universe.homme': 'Player',
+  'universe.woman': 'Player',
+  'universe.amateur': 'Player',
+  'universe.supporter': 'Supporter',
+  'universe.pro': 'Pro',
+  'universe.pro_player': 'Player',
+  'universe.pro_club': 'Club',
+  'universe.pro_staff': 'Coach',
+  'universe.sponsor': 'Sponsor',
+  'universe.sante': 'Health',
+  'universe.parent': 'Parent',
 
   'discover.hero.homme': 'The all-in-one\nfootball app.',
   'discover.mission.homme':
@@ -108,6 +112,16 @@ export const UI_EN: MessageCatalog = {
   'discover.secondaryMercato.sante': 'Health directory',
   'discover.playersStat.sante': 'Practitioners',
 
+  'discover.hero.parent': 'Support\nwithout smothering.',
+  'discover.mission.parent':
+    'Messages, schedule, late alerts and rides — follow your child without the noise.',
+  'discover.trust.parent':
+    'Account linked to the minor profile. Parental controls after validation.',
+  'discover.cta.parent': 'Create my Parent account',
+  'discover.sectionExplore.parent': 'Parent space',
+  'discover.secondaryMercato.parent': 'Family',
+  'discover.playersStat.parent': 'Families',
+
   'journey.profile.title.homme': 'Profile',
   'journey.profile.body.homme': 'Online football CV',
   'journey.mercato.title.homme': 'Transfer',
@@ -135,6 +149,13 @@ export const UI_EN: MessageCatalog = {
   'journey.mercato.body.sante': 'Clubs & athletes',
   'journey.season.title.sante': 'Agenda',
   'journey.season.body.sante': 'Appointments',
+
+  'journey.profile.title.parent': 'Family',
+  'journey.profile.body.parent': 'Link with your child',
+  'journey.mercato.title.parent': 'Schedule',
+  'journey.mercato.body.parent': 'Matches & late alerts',
+  'journey.season.title.parent': 'Rides',
+  'journey.season.body.parent': 'Carpool & follow-up',
 
   'modules.recrutement.title': 'Recruitment',
   'modules.recrutement.subtitle': 'Players & clubs',

@@ -5,6 +5,7 @@ import {
   PRODAY_TAGLINE,
   brandVariantForProductLine,
   poleAccent,
+  poleOnAccent,
 } from '../theme/prodayBrand';
 import { poleSymbolAsset, PRODAY_BRAND_ASSETS } from '../content/brandingAssets';
 
@@ -34,6 +35,15 @@ describe('prodayBrand', () => {
     expect(brandVariantForProductLine('amateur')).toBe('player');
     expect(brandVariantForProductLine('sponsor')).toBe('sponsor');
     expect(brandVariantForProductLine(null)).toBe('master');
+  });
+
+  it('poleOnAccent pose une encre lisible sur l’accent pôle', () => {
+    expect(poleOnAccent('player')).toBe(PRODAY_MASTER.black);
+    expect(poleOnAccent('coach')).toBe(PRODAY_MASTER.black);
+    expect(poleOnAccent('parent')).toBe(PRODAY_MASTER.black);
+    expect(poleOnAccent('club')).toBe(PRODAY_MASTER.white);
+    expect(poleOnAccent('sponsor')).toBe(PRODAY_MASTER.white);
+    expect(poleOnAccent('supporter')).toBe(PRODAY_MASTER.white);
   });
 
   it('poleAccent retombe sur master or', () => {

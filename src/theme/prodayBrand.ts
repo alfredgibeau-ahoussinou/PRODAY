@@ -67,6 +67,23 @@ export function poleAccentMuted(variant: ProDayBrandVariant = 'master', alpha = 
   return poleAccentSoft(variant, alpha);
 }
 
+/** Encre sur fond accent pôle (CTA, chips). */
+export function poleOnAccent(variant: ProDayBrandVariant = 'master'): string {
+  switch (variant) {
+    case 'player':
+    case 'joueur':
+    case 'coach':
+    case 'parent':
+    case 'master':
+    case 'president':
+    case 'events':
+    case 'evenements':
+      return PRODAY_MASTER.black;
+    default:
+      return PRODAY_MASTER.white;
+  }
+}
+
 /** Mappe lignes produit / rôles app → variante brand. */
 export function brandVariantForProductLine(
   line?: string | null,

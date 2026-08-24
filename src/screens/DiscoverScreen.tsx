@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SponsorsScreen } from './SponsorsScreen';
 import { SponsorHubScreen } from './sponsor/SponsorHubScreen';
@@ -18,12 +18,7 @@ import { useTranslation } from '../context/LocaleContext';
 import { getLocalizedUniverseLabel } from '../i18n/localizedContent';
 import { formatCount } from '../services/stats.service';
 import { OnboardingPriorityScreen, type OnboardingPriorityChoice } from './OnboardingPriorityScreen';
-import { VideoDemoModal } from '../components/discover/VideoDemoModal';
 import { PoleHelpChatbot } from '../components/help/PoleHelpChatbot';
-import { Icon } from '../components/ui/Icon';
-import { PressableSpring } from '../components/motion';
-import { ProDayGradient } from '../components/ui/ProDayGradient';
-import { spacing, radius, shadows } from '../theme/designTokens';
 
 const ONBOARDING_PRIORITY_KEY = 'proday_onboarding_priority_seen_v1';
 
@@ -34,7 +29,6 @@ export const DiscoverScreen: React.FC = () => {
   const { stats, posts, loading } = useDiscoverLiveData();
   const [guestModule, setGuestModule] = useState<'partner-hub' | 'sponsors-offers' | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showVideoDemo, setShowVideoDemo] = useState(false);
   const { rootStyle, productLine } = useThemedScreen();
   const { t } = useTranslation();
 
@@ -84,17 +78,14 @@ export const DiscoverScreen: React.FC = () => {
     try {
       await AsyncStorage.setItem(ONBOARDING_PRIORITY_KEY, '1');
       setShowOnboarding(false);
-      
-      // Set the product line and role based on the choice
+
       await setProductLine(choice.targetProductLine);
       if (choice.targetRole) {
         await setProSignupPresetRole(choice.targetRole);
       }
-      
-      // Open signup with the preset values
+
       openAuth('signup');
     } catch {
-      // If storage fails, just close onboarding and continue
       setShowOnboarding(false);
     }
   };
@@ -163,25 +154,7 @@ export const DiscoverScreen: React.FC = () => {
         </>
       )}
 
-      <VideoDemoModal
-        visible={showVideoDemo}
-        onClose={() => setShowVideoDemo(false)}
-      />
-
       {!showOnboarding && <PoleHelpChatbot />}
-
-      {!showOnboarding && (
-        <PressableSpring
-          onPress={() => setShowVideoDemo(true)}
-          style={[styles.demoButton, shadows.soft]}
-          scaleTo={0.95}
-        >
-          <ProDayGradient kind="cta" style={styles.demoButtonInner}>
-            <Icon name="football" size={20} color="#FFFFFF" />
-            <Text style={styles.demoButtonText}>{t('videoDemo.button') || 'Voir la démo'}</Text>
-          </ProDayGradient>
-        </PressableSpring>
-      )}
     </View>
   );
 };
@@ -189,24 +162,4 @@ export const DiscoverScreen: React.FC = () => {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   configBanner: { paddingHorizontal: 16, paddingTop: 8 },
-  demoButton: {
-    position: 'absolute',
-    bottom: spacing.xl + 60,
-    right: spacing.lg,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-  },
-  demoButtonInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.pill,
-  },
-  demoButtonText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
 });

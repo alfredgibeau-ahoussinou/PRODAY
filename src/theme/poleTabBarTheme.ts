@@ -1,4 +1,4 @@
-import { PRODAY_POLE_ACCENTS } from './prodayBrand';
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from './prodayBrand';
 import type { ProductLineId } from '../models/ProductLine';
 import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
@@ -272,16 +272,16 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
       surface: '#0c0a06',
       background: '#070605',
       textMuted: '#A8A29E',
-      brandSoft: 'rgba(239, 68, 68, 0.1)',
+      brandSoft: poleAccentSoft('sponsor', 0.12),
       surfaceMuted: '#14110a',
-      accentLight: '#F87171',
+      accentLight: '#C45FC2',
     },
     {
       layout: 'dock',
       flatLayout: true,
       cleanStyle: true,
       overflowKicker: 'Sponsor',
-      accent: '#D4AF37',
+      accent: PRODAY_POLE_ACCENTS.sponsor,
       activeIcon: '#FAFAFA',
     },
   ),
@@ -290,7 +290,7 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     flatLayout: true,
     cleanStyle: true,
     overflowKicker: 'Parent',
-    accent: '#0F766E',
+    accent: PRODAY_POLE_ACCENTS.parent,
   }),
 };
 

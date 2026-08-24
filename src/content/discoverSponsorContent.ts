@@ -1,5 +1,8 @@
 import type { IconName } from '../components/ui/iconNames';
 import { SHOWCASE_IMAGES } from './showcaseAssets';
+import { PRODAY_POLE_ACCENTS } from '../theme/prodayBrand';
+
+const SPONSOR = PRODAY_POLE_ACCENTS.sponsor;
 
 export const DISCOVER_UNIVERSE_CARDS_SPONSOR = [
   {
@@ -8,7 +11,7 @@ export const DISCOVER_UNIVERSE_CARDS_SPONSOR = [
     subtitle: 'Offres & visibilité',
     image: SHOWCASE_IMAGES.expSponsors,
     icon: 'briefcase' as IconName,
-    accent: '#D4AF37',
+    accent: SPONSOR,
   },
   {
     id: 'gestion' as const,
@@ -16,7 +19,7 @@ export const DISCOVER_UNIVERSE_CARDS_SPONSOR = [
     subtitle: 'Prospects & messages',
     image: SHOWCASE_IMAGES.expSponsors,
     icon: 'people' as IconName,
-    accent: '#B8941F',
+    accent: SPONSOR,
   },
   {
     id: 'recrutement' as const,
@@ -24,6 +27,6 @@ export const DISCOVER_UNIVERSE_CARDS_SPONSOR = [
     subtitle: 'Impressions & leads',
     image: SHOWCASE_IMAGES.expSponsors,
     icon: 'star-four-points' as IconName,
-    accent: '#F5D76E',
+    accent: SPONSOR,
   },
 ];
