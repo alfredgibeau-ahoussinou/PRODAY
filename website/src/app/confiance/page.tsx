@@ -11,7 +11,7 @@ import {
 import { PageHeader } from "@/components/layout/PageHeader";
 import { RoleAccentStage } from "@/components/immersive/RoleAccentStage";
 import { getRoleVisuals } from "@/lib/roleVisuals";
-import { ROUTES } from "@/lib/routes";
+import { PARENT_APP_HREF, ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Confiance ProDay",
@@ -70,7 +70,7 @@ export default function TrustPage() {
             eyebrow: "Famille",
             title: "Espace Parent",
             body: "Contacts approuvés et limites de temps pour les comptes mineurs.",
-            href: ROUTES.parent,
+            href: PARENT_APP_HREF,
             linkLabel: "Espace Parent",
           },
           {
@@ -108,7 +108,7 @@ export default function TrustPage() {
         description="Liste d'attente ouverte."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="S'inscrire"
-        secondaryHref={ROUTES.parent}
+        secondaryHref={PARENT_APP_HREF}
         secondaryLabel="Espace Parent"
       />
     </TerminalPage>

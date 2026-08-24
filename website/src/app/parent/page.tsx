@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ParentAppHub } from "@/components/poles/ParentAppHub";
 import { TerminalProductPage } from "@/components/terminal";
 import { ROUTES } from "@/lib/routes";
 
@@ -101,9 +102,10 @@ export default function ParentPortalPage() {
         description: "Liste d'attente. Cadre confiance dès l'ouverture.",
         primaryHref: ROUTES.betaWaitlist,
         primaryLabel: "Liste d'attente",
-        secondaryHref: ROUTES.trust,
-        secondaryLabel: "Pôle Confiance",
+        secondaryHref: "#app",
+        secondaryLabel: "Voir l’app Parent",
       }}
+      afterHero={<ParentAppHub />}
     />
   );
 }

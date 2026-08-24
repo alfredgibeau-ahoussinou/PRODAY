@@ -2223,7 +2223,7 @@ export const QUIZ_RESULTS: Record<
     title: "Pro Day Parent",
     description: "Pôle Parent — supervision, contacts approuvés et limites de temps.",
     thought: "Voir son enfant s'épanouir sur le terrain, c'est une fierté immense. L'accompagner dans son parcours demande du temps, de l'écoute et les bons outils. ProDay facilite ce rôle de guide.",
-    href: "/parent",
+    href: "/parent#app",
     cta: "Ouvrir le Pôle Parent",
   },
   agent: {

@@ -140,13 +140,16 @@ export const JOUEUR_APP_HREF = `${ROUTES.joueur}#app`;
 /** Vitrine app Coach : section ancrée sur /coach#app. */
 export const COACH_APP_HREF = `${ROUTES.coach}#app`;
 
+/** Vitrine app Parent : section ancrée sur /parent#app. */
+export const PARENT_APP_HREF = `${ROUTES.parent}#app`;
+
 /** Nav vitrine : 6 pôles + Président (rattaché au Club). Santé = rôle intégré. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
   { href: ROUTES.proClub, label: "Club" },
   { href: PRESIDENT_HUB_HREF, label: "Président" },
   { href: COACH_APP_HREF, label: "Coach" },
-  { href: ROUTES.parent, label: "Parent" },
+  { href: PARENT_APP_HREF, label: "Parent" },
   { href: ROUTES.supporter, label: "Supporter" },
   { href: ROUTES.sponsor, label: "Sponsor" },
 ] as const;
@@ -169,7 +172,7 @@ export const POLE_FOOTER_LINKS = [
   { href: ROUTES.proClub, label: "Espace Club", subtitle: "À partir de 3 € / adhérent · Sur devis" },
   { href: PRESIDENT_HUB_HREF, label: "Pôle Président", subtitle: "Cockpit dirigeants · lié au Club" },
   { href: COACH_APP_HREF, label: "Espace Coach", subtitle: "App · Accueil, effectif, IA · Tactique" },
-  { href: ROUTES.parent, label: "Pôle Parent", subtitle: "Supervision · messages · agenda · gratuit" },
+  { href: PARENT_APP_HREF, label: "Pôle Parent", subtitle: "App · Accueil, Guide, Menu, Profil · gratuit" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
   { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & micro sponsoring local" },
 ] as const;
@@ -296,6 +299,14 @@ export const EXPLORE_CARDS = [
     description: "App Coach : calendrier, effectif, IA et préparation match. Rattaché au club.",
     image: "/showcase/classic-staff.jpg",
     tag: "Coach",
+    accent: true,
+  },
+  {
+    href: PARENT_APP_HREF,
+    title: "Pôle Parent",
+    description: "App Parent : accueil famille, Guide IA, menu et profil. Lié au compte de l’enfant.",
+    image: "/images/football-team-01.jpg",
+    tag: "Parent",
     accent: true,
   },
   {

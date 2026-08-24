@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { RoleAccentStage } from "@/components/immersive/RoleAccentStage";
 import { TerminalCta } from "./TerminalCta";
@@ -45,6 +46,8 @@ export type TerminalProductPageProps = {
     secondaryHref?: string;
     secondaryLabel?: string;
   };
+  /** Section intercalée après le hero (ex. vitrine app /parent#app). */
+  afterHero?: ReactNode;
 };
 
 /** Product page shell: cinematic media + optional lazy 3D accent. */
@@ -68,6 +71,7 @@ export function TerminalProductPage({
   modules,
   value,
   cta,
+  afterHero,
 }: TerminalProductPageProps) {
   const pack = visualId ? getRoleVisuals(visualId) : null;
   const heroImage = image ?? pack?.hero;
@@ -90,6 +94,7 @@ export function TerminalProductPage({
         logoAlt={logoAlt}
         accent={accent}
       />
+      {afterHero}
       {pack?.showAccent3d && visualId ? (
         <RoleAccentStage
           role={visualId}

@@ -9,7 +9,7 @@ import { PRODAY_MARK } from "@/lib/brandingAssets";
 import { isExperimentalBrand } from "@/lib/experimentalBrand";
 import { OFFICIAL_BRAND } from "@/lib/brandColors";
 import { pricingHrefForPath } from "@/lib/poles";
-import { POLE_FOOTER_LINKS, ROUTES } from "@/lib/routes";
+import { PARENT_APP_HREF, POLE_FOOTER_LINKS, ROUTES } from "@/lib/routes";
 
 const EXPLORE = [
   { href: ROUTES.demo, label: "Démo" },
@@ -18,7 +18,7 @@ const EXPLORE = [
   { href: ROUTES.pricing, label: "Tarifs" },
   { href: ROUTES.faq, label: "FAQ" },
   { href: ROUTES.betaWaitlist, label: "Liste d'attente" },
-  { href: ROUTES.parent, label: "Espace Parent" },
+  { href: PARENT_APP_HREF, label: "Espace Parent" },
   { href: ROUTES.trust, label: "Confiance" },
 ] as const;
 
