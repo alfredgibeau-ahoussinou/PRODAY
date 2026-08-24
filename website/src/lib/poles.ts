@@ -6,7 +6,8 @@ import {
   type WebSubscriptionPlan,
   type WebSubscriptionPlanBase,
 } from "./content";
-import { ROUTES } from "./routes";
+import { POLE_ACCENT_HEX } from "./brandColors";
+import { PRESIDENT_HUB_HREF, ROUTES } from "./routes";
 
 /**
  * Pôles marketing site : architecture cible.
@@ -235,6 +236,16 @@ export const POLE_BRAND_HEX: Record<PoleId, string> = {
   evenements: "#F97316",
   sponsor: "#EF4444",
 };
+
+/** Couleur pastille du menu Pôles (Président = accent officiel, rattaché au Club). */
+export function poleNavAccentHex(href: string): string {
+  if (href === PRESIDENT_HUB_HREF || href.endsWith("#president")) {
+    return POLE_ACCENT_HEX.president;
+  }
+  const path = href.split("#")[0] ?? href;
+  const pole = SHOWCASE_POLES.find((p) => p.href === path);
+  return pole ? POLE_BRAND_HEX[pole.id] : POLE_ACCENT_HEX.president;
+}
 
 const JOUEUR_STYLES = {
   nav: "text-white/70 hover:text-white",

@@ -16,7 +16,7 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { ProdayNavLogo } from "@/components/branding/ProdayMark";
 import { isExperimentalBrand } from "@/lib/experimentalBrand";
 import { isNavActive } from "@/lib/siteArchitecture";
-import { POLE_BRAND_HEX, SHOWCASE_POLES, pricingHrefForPath } from "@/lib/poles";
+import { poleNavAccentHex, pricingHrefForPath } from "@/lib/poles";
 import { POLE_NAV_ITEMS, ROUTES, UTILITY_NAV_ITEMS } from "@/lib/routes";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
@@ -118,13 +118,14 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
               role="menu"
             >
               <div className="grid gap-0.5 sm:grid-cols-2">
-                {SHOWCASE_POLES.map((pole) => {
-                  const color = POLE_BRAND_HEX[pole.id];
-                  const active = isNavActive(pole.href, pathname);
+                {POLE_NAV_ITEMS.map((item) => {
+                  const color = poleNavAccentHex(item.href);
+                  const active =
+                    !item.href.includes("#") && isNavActive(item.href, pathname);
                   return (
                     <Link
-                      key={pole.href}
-                      href={pole.href}
+                      key={item.href}
+                      href={item.href}
                       role="menuitem"
                       onClick={close}
                       className="flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 transition hover:border-white/10 hover:bg-white/[0.06]"
@@ -137,7 +138,7 @@ function PolesMegaMenu({ pathname }: { pathname: string }) {
                         className="text-[13px] font-medium"
                         style={{ color: active ? color : "rgba(255,255,255,0.9)" }}
                       >
-                        {pole.navLabel}
+                        {item.label}
                       </span>
                     </Link>
                   );
@@ -278,13 +279,14 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
                   Pôles
                 </p>
                 <div className="mt-2 grid gap-0.5">
-                  {SHOWCASE_POLES.map((pole) => {
-                    const color = POLE_BRAND_HEX[pole.id];
-                    const active = isNavActive(pole.href, pathname);
+                  {POLE_NAV_ITEMS.map((item) => {
+                    const color = poleNavAccentHex(item.href);
+                    const active =
+                      !item.href.includes("#") && isNavActive(item.href, pathname);
                     return (
                       <Link
-                        key={pole.href}
-                        href={pole.href}
+                        key={item.href}
+                        href={item.href}
                         onClick={close}
                         className="flex items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-[15px] font-medium transition hover:border-white/10 hover:bg-white/[0.06]"
                         style={{ color: active ? color : "rgba(255,255,255,0.9)" }}
@@ -293,7 +295,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
                           className="h-2 w-2 shrink-0 rounded-full"
                           style={{ background: color }}
                         />
-                        {pole.navLabel}
+                        {item.label}
                       </Link>
                     );
                   })}

@@ -8,9 +8,9 @@ import { useState, type CSSProperties } from "react";
 import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
 import { TerminalCta } from "@/components/terminal";
 import { MODULES } from "@/lib/content";
-import { POLE_BRAND_HEX, SHOWCASE_POLES, poleSectionHref } from "@/lib/poles";
+import { SHOWCASE_POLES, poleNavAccentHex, poleSectionHref } from "@/lib/poles";
 import { getRoleVisuals } from "@/lib/roleVisuals";
-import { ROUTES } from "@/lib/routes";
+import { PRESIDENT_HUB_HREF, ROUTES } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -34,6 +34,15 @@ const POLE_CAPABILITIES: Record<
       "Équipes, licenciés, espace président",
       "Invitations, tournois, covoiturage",
       "À partir de 3 € / adhérent (sur devis)",
+    ],
+  },
+  president: {
+    title: "Ce que fait le président",
+    items: [
+      "Cockpit club : équipes, alertes, décisions",
+      "Finances, adhésions et sponsors",
+      "Assistant IA pour prioriser",
+      "Même graphe que le Pôle Club — pas une app à part",
     ],
   },
   coach: {
@@ -81,16 +90,50 @@ const CROSS_MODULES = MODULES.filter((m) =>
   (FEATURE_MODULE_IDS as readonly string[]).includes(m.id),
 );
 
+type FeaturePoleTab = {
+  id: string;
+  kicker: string;
+  navLabel: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  href: string;
+};
+
+const PRESIDENT_FEATURE_TAB: FeaturePoleTab = {
+  id: "president",
+  kicker: "PÔLE PRÉSIDENT",
+  navLabel: "Président",
+  title: "Le club en un coup d’œil",
+  subtitle: "Cockpit · Finances · Assistant IA",
+  description:
+    "Dirigeants, DS et bureau : cockpit, finances et assistant IA, liés au Pôle Club.",
+  href: PRESIDENT_HUB_HREF,
+};
+
+const FEATURE_POLES: FeaturePoleTab[] = SHOWCASE_POLES.flatMap((pole) => {
+  const tab: FeaturePoleTab = {
+    id: pole.id,
+    kicker: pole.kicker,
+    navLabel: pole.navLabel,
+    title: pole.title,
+    subtitle: pole.subtitle,
+    description: pole.description,
+    href: pole.href,
+  };
+  return pole.id === "pro_club" ? [tab, PRESIDENT_FEATURE_TAB] : [tab];
+});
+
 export function FeaturesImmersive() {
   const visuals = getRoleVisuals("fonctionnalites");
-  const [activePole, setActivePole] = useState(SHOWCASE_POLES[0]!.id);
+  const [activePole, setActivePole] = useState(FEATURE_POLES[0]!.id);
   const [activeModule, setActiveModule] = useState(CROSS_MODULES[0]!.id);
   const reduce = useReducedMotion();
 
-  const pole = SHOWCASE_POLES.find((p) => p.id === activePole) ?? SHOWCASE_POLES[0]!;
+  const pole = FEATURE_POLES.find((p) => p.id === activePole) ?? FEATURE_POLES[0]!;
   const caps = POLE_CAPABILITIES[pole.id] ?? POLE_CAPABILITIES.joueur!;
   const mod = CROSS_MODULES.find((m) => m.id === activeModule) ?? CROSS_MODULES[0]!;
-  const accent = POLE_BRAND_HEX[pole.id] ?? "#7C3AED";
+  const accent = poleNavAccentHex(pole.href);
 
   return (
     <div
@@ -134,9 +177,9 @@ export function FeaturesImmersive() {
             role="tablist"
             aria-label="Pôles ProDay"
           >
-            {SHOWCASE_POLES.map((p) => {
+            {FEATURE_POLES.map((p) => {
               const on = p.id === activePole;
-              const hex = POLE_BRAND_HEX[p.id];
+              const hex = poleNavAccentHex(p.href);
               return (
                 <button
                   key={p.id}
@@ -190,7 +233,7 @@ export function FeaturesImmersive() {
                   ))}
                 </ul>
                 <Link
-                  href={poleSectionHref(pole)}
+                  href={pole.href.includes("#") ? pole.href : poleSectionHref(pole)}
                   className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:opacity-80"
                   style={{ color: accent }}
                 >
@@ -204,7 +247,7 @@ export function FeaturesImmersive() {
                   src={
                     pole.id === "joueur"
                       ? "/images/football-action-01.jpg"
-                      : pole.id === "pro_club"
+                      : pole.id === "pro_club" || pole.id === "president"
                         ? "/images/football-team-01.jpg"
                         : pole.id === "coach"
                           ? "/images/football-tactics-01.jpg"

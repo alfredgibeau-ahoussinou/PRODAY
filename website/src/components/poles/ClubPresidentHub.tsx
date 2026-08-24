@@ -59,7 +59,7 @@ export function ClubPresidentHub() {
   return (
     <section
       id="president"
-      className="relative overflow-hidden border-t border-white/10 bg-[#020814] px-4 py-16 sm:px-6 sm:py-24"
+      className="relative scroll-mt-28 overflow-hidden border-t border-white/10 bg-[#020814] px-4 py-16 sm:px-6 sm:py-24"
     >
       <div
         aria-hidden
