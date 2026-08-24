@@ -113,12 +113,14 @@ export function ProdayNavLogo({ className = "", priority = false }: NavLogoProps
     );
   }
 
+  const navH = 22;
+  const navW = Math.round(navH * PRODAY_MARK_ASPECT);
   return (
     <Image
       src={PRODAY_MARK}
-      alt=""
-      width={28}
-      height={20}
+      alt="ProDay"
+      width={navW}
+      height={navH}
       className={`h-5 w-auto object-contain min-[390px]:h-[22px] ${className}`.trim()}
       priority={priority}
     />
