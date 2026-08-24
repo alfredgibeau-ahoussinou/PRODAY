@@ -4,6 +4,44 @@ import { PRODAY_POLE_ACCENTS } from '../theme/prodayBrand';
 
 const SPONSOR = PRODAY_POLE_ACCENTS.sponsor;
 
+/**
+ * Lignes éditoriales guest Sponsor — foot × marque × ROI.
+ * Affichées sans images sur DiscoverSponsorHome.
+ */
+export const SPONSOR_SPACE_LINES: ReadonlyArray<{
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: IconName;
+  accent: string;
+}> = [
+  {
+    id: 'campaigns',
+    title: 'Campagnes',
+    subtitle: 'Visibilité locale auprès des clubs',
+    icon: 'briefcase',
+    accent: SPONSOR,
+  },
+  {
+    id: 'network',
+    title: 'Réseau',
+    subtitle: 'Prospects et échanges terrain',
+    icon: 'people',
+    accent: SPONSOR,
+  },
+  {
+    id: 'roi',
+    title: 'ROI',
+    subtitle: 'Impressions, clics, contacts',
+    icon: 'star-four-points',
+    accent: SPONSOR,
+  },
+];
+
+/**
+ * Cartes modules (compat homeExperience / getDiscoverUniverseCards).
+ * Images conservées pour les parcours qui en ont encore besoin — pas sur la home guest.
+ */
 export const DISCOVER_UNIVERSE_CARDS_SPONSOR = [
   {
     id: 'sponsors' as const,

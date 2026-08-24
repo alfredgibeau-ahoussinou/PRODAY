@@ -124,11 +124,11 @@ export const UI_FR: MessageCatalog = {
 
   'discover.hero.sponsor': 'Votre marque\nsur le terrain.',
   'discover.mission.sponsor':
-    'Campagnes géolocalisées, ROI mesurable et vitrine auprès des clubs. L’espace dédié aux marques partenaires.',
+    'Campagnes locales, clubs partenaires, ROI lisible. Vous êtes déjà dans l’espace Sponsor.',
   'discover.trust.sponsor':
     'Marques vérifiées. Validation ProDay avant activation des campagnes.',
-  'discover.cta.sponsor': 'Créer mon espace Pro Day Sponsor',
-  'discover.sectionExplore.sponsor': 'Pilier marque',
+  'discover.cta.sponsor': 'Créer mon espace Sponsor',
+  'discover.sectionExplore.sponsor': 'Dans l’espace',
   'discover.secondaryMercato.sponsor': 'Campagnes',
   'discover.playersStat.sponsor': 'Clubs',
 

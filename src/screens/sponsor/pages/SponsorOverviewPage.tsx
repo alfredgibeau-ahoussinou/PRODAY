@@ -1,41 +1,38 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
-import { useTranslation } from '../../../context/LocaleContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { useSponsorData } from '../../../context/SponsorDataContext';
 import { useSponsorShell, sponsorTabRoute } from '../../../context/SponsorShellContext';
-import { SponsorKpiStrip, SponsorQuickLink } from '../../../components/sponsor/SponsorKpiStrip';
+import { SponsorKpiStrip } from '../../../components/sponsor/SponsorKpiStrip';
 import { SponsorAnalyticsPanel } from '../../../components/sponsor/SponsorAnalyticsPanel';
 import { SponsorActivityFeed } from '../../../components/sponsor/SponsorActivityFeed';
 import { SponsorOfferCard } from '../../../components/sponsor/SponsorOfferCard';
 import { SponsorOfferDetailScreen } from '../SponsorOfferDetailScreen';
 import { Icon } from '../../../components/ui/Icon';
-import { useSponsorStyles, sponsorChrome } from '../../../components/sponsor/sponsorStyles';
+import { sponsorChrome } from '../../../components/sponsor/sponsorStyles';
 import { SPONSOR_THEME } from '../../../content/sponsorExperience';
 import { spacing, radius } from '../../../theme/designTokens';
 import type { SponsorOffer } from '../../../models/SponsorOffer';
 import type { SponsorProspect } from '../../../models/SponsorOffer';
-import { useState } from 'react';
 import { openSponsorProspectChat } from '../../../utils/openSponsorProspectChat';
 import { SponsorPageScaffold } from '../../../components/sponsor/SponsorPageScaffold';
 import { SponsorTierStatusBanner } from '../../../components/sponsor/SponsorTierStatusBanner';
 import { SponsorQuotaBanner } from '../../../components/sponsor/SponsorQuotaBanner';
-import { SHOWCASE_IMAGES } from '../../../content/showcaseAssets';
 import {
   buildSponsorNextActions,
   resolveSponsorHubSubtitle,
   type SponsorNextAction,
 } from '../../../utils/sponsorHubModel';
-import { PressableSpring } from '../../../components/motion';
+import { AnimatedEntrance, PressableSpring } from '../../../components/motion';
 
+/**
+ * Pilotage Sponsor — dashboard léger : statut, KPIs, une action prioritaire, offres.
+ */
 export const SponsorOverviewPage: React.FC = () => {
-  const { t } = useTranslation();
   const profile = useSessionProfile();
   const { navigate, openChat, requestCreateOffer } = useSponsorShell();
   const { loading, dashboard, companyName, unreadMessages } = useSponsorData();
-  const { colors: c } = useSponsorStyles();
   const { activeOffers, myOffers, analytics, activity, prospects, stats } = dashboard;
   const [detailOffer, setDetailOffer] = useState<SponsorOffer | null>(null);
   const styles = useMemo(() => createStyles(), []);
@@ -64,6 +61,9 @@ export const SponsorOverviewPage: React.FC = () => {
       }),
     [approved, stats.activeOffers, stats.clubsSupported, prospects.length, unreadMessages],
   );
+
+  const primaryAction = nextActions.find((a) => a.primary) ?? nextActions[0];
+  const secondaryActions = nextActions.filter((a) => a.id !== primaryAction?.id).slice(0, 2);
 
   const runNextAction = (action: SponsorNextAction) => {
     if (action.createOffer) {
@@ -94,198 +94,139 @@ export const SponsorOverviewPage: React.FC = () => {
 
   return (
     <SponsorPageScaffold loading={loading}>
-      <View style={styles.heroBleed}>
-        <Image
-          source={SHOWCASE_IMAGES.expSponsors}
-          style={StyleSheet.absoluteFillObject}
-          resizeMode="cover"
-          accessibilityIgnoresInvertColors
-        />
-        <LinearGradient
-          colors={['rgba(7,6,5,0.35)', 'rgba(7,6,5,0.92)']}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.heroInner}>
-          <View style={styles.heroRow}>
-            <View style={styles.heroLogo}>
-              <ProDaySymbol size={56} variant="sponsor" tone="white" />
-            </View>
-            <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow} numberOfLines={1}>
-                Pro Day Sponsor
-              </Text>
-              <Text
-                style={styles.greeting}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.75}
-              >
-                Bonjour, {companyName}
-              </Text>
-              <Text style={styles.sub} numberOfLines={2}>
-                {hubSubtitle}
-              </Text>
-            </View>
+      <AnimatedEntrance kind="fadeUp" index={0}>
+        <View style={styles.hero}>
+          <View style={styles.heroMark}>
+            <ProDaySymbol size={48} variant="sponsor" tone="white" />
           </View>
+          <Text style={styles.eyebrow}>ProDay Sponsor</Text>
+          <Text
+            style={styles.greeting}
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
+          >
+            {companyName}
+          </Text>
+          <Text style={styles.sub} numberOfLines={2}>
+            {hubSubtitle}
+          </Text>
         </View>
-      </View>
+      </AnimatedEntrance>
 
       {!approved ? (
-        <View style={styles.onboardingCard}>
-          <Text style={styles.onboardingTitle}>Votre espace marque est prêt</Text>
-          <Text style={styles.onboardingBody}>
-            Validation admin en cours (~48 h). En attendant, explorez les formules, préparez votre
-            première offre et consultez les prospects de votre zone.
-          </Text>
-          <View style={styles.onboardingActions}>
-            <TouchableOpacity
-              style={styles.cta}
-              onPress={() => navigate(sponsorTabRoute('tarifs'))}
-            >
-              <Text style={styles.ctaText}>Voir les formules</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.ctaOutline}
-              onPress={() => navigate(sponsorTabRoute('reseau', 'prospects'))}
-            >
-              <Text style={styles.ctaOutlineText}>Explorer les prospects</Text>
-            </TouchableOpacity>
+        <AnimatedEntrance kind="fadeUp" index={1}>
+          <View style={styles.onboardingCard}>
+            <Text style={styles.onboardingTitle}>Espace en validation</Text>
+            <Text style={styles.onboardingBody}>
+              Accord admin sous ~48 h. En attendant : formules, première offre, prospects de zone.
+            </Text>
+            {primaryAction ? (
+              <PressableSpring
+                style={styles.cta}
+                onPress={() => runNextAction(primaryAction)}
+                scaleTo={0.98}
+                haptic
+              >
+                <Text style={styles.ctaText}>{primaryAction.title}</Text>
+              </PressableSpring>
+            ) : null}
           </View>
-        </View>
+        </AnimatedEntrance>
       ) : null}
 
       <SponsorTierStatusBanner profile={profile} />
       <SponsorQuotaBanner profile={profile} activeOffers={stats.activeOffers} />
 
-      <SponsorKpiStrip
-        items={[
-          {
-            key: 'offers',
-            label: 'Offres actives',
-            value: stats.activeOffers,
-            icon: 'briefcase',
-          },
-          {
-            key: 'funded',
-            label: 'Financé (€)',
-            value: stats.totalFunded,
-            icon: 'bag',
-            alert: stats.totalFunded > 0,
-          },
-          {
-            key: 'clubs',
-            label: 'Clubs soutenus',
-            value: stats.clubsSupported,
-            icon: 'handshake',
-          },
-          {
-            key: 'leads',
-            label: 'Prospects',
-            value: prospects.length,
-            icon: 'people',
-            alert: prospects.length > 0,
-          },
-        ]}
-      />
+      <AnimatedEntrance kind="fadeUp" index={2}>
+        <SponsorKpiStrip
+          items={[
+            {
+              key: 'offers',
+              label: 'Offres',
+              value: stats.activeOffers,
+              icon: 'briefcase',
+            },
+            {
+              key: 'clubs',
+              label: 'Clubs',
+              value: stats.clubsSupported,
+              icon: 'handshake',
+            },
+            {
+              key: 'leads',
+              label: 'Prospects',
+              value: prospects.length,
+              icon: 'people',
+              alert: prospects.length > 0,
+            },
+          ]}
+        />
+      </AnimatedEntrance>
 
       {analytics ? <SponsorAnalyticsPanel analytics={analytics} /> : null}
 
-      {nextActions.length > 0 ? (
-        <>
-          <Text style={styles.sectionLabel}>À faire ensuite</Text>
-          <View style={styles.nextCol}>
-            {nextActions.map((action) => (
-              <PressableSpring
-                key={action.id}
-                onPress={() => runNextAction(action)}
-                scaleTo={0.98}
-                haptic
-                style={[styles.nextCard, action.primary && styles.nextCardPrimary]}
-              >
-                <View
-                  style={[
-                    styles.nextIcon,
-                    {
-                      backgroundColor: action.primary
-                        ? SPONSOR_THEME.primarySoft
-                        : sponsorChrome.shellElevated,
-                    },
-                  ]}
+      {approved && primaryAction ? (
+        <AnimatedEntrance kind="fadeUp" index={3}>
+          <Text style={styles.sectionLabel}>Priorité</Text>
+          <PressableSpring
+            onPress={() => runNextAction(primaryAction)}
+            scaleTo={0.98}
+            haptic
+            style={styles.primaryCard}
+          >
+            <View style={styles.primaryIcon}>
+              <Icon name={primaryAction.icon} size={20} color={SPONSOR_THEME.onPrimary} />
+            </View>
+            <View style={styles.nextCopy}>
+              <Text style={styles.primaryTitle}>{primaryAction.title}</Text>
+              <Text style={styles.nextHint} numberOfLines={2}>
+                {primaryAction.hint}
+              </Text>
+            </View>
+            <Icon name="chevron-forward" size={16} color={SPONSOR_THEME.onPrimary} />
+          </PressableSpring>
+          {secondaryActions.length > 0 ? (
+            <View style={styles.nextCol}>
+              {secondaryActions.map((action) => (
+                <PressableSpring
+                  key={action.id}
+                  onPress={() => runNextAction(action)}
+                  scaleTo={0.98}
+                  style={styles.nextCard}
                 >
-                  <Icon
-                    name={action.icon}
-                    size={18}
-                    color={action.primary ? SPONSOR_THEME.primary : sponsorChrome.gold}
-                  />
-                </View>
-                <View style={styles.nextCopy}>
-                  <Text style={styles.nextTitle}>{action.title}</Text>
-                  <Text style={styles.nextHint} numberOfLines={2}>
-                    {action.hint}
+                  <Icon name={action.icon} size={16} color={SPONSOR_THEME.primary} />
+                  <Text style={styles.nextTitle} numberOfLines={1}>
+                    {action.title}
                   </Text>
-                </View>
-                <Icon name="chevron-forward" size={16} color={sponsorChrome.textMuted} />
-              </PressableSpring>
-            ))}
-          </View>
-        </>
+                  <Icon name="chevron-forward" size={14} color={sponsorChrome.textMuted} />
+                </PressableSpring>
+              ))}
+            </View>
+          ) : null}
+        </AnimatedEntrance>
       ) : null}
-
-      <Text style={styles.sectionLabel}>Actions rapides</Text>
-      <View style={styles.quickCol}>
-        <SponsorQuickLink
-          label="Créer une offre"
-          description="Publier une campagne de visibilité ou financement"
-          icon="add"
-          onPress={requestCreateOffer}
-          colors={c}
-        />
-        <SponsorQuickLink
-          label="Financement clubs"
-          description="Voir les objectifs de collecte en cours"
-          icon="handshake"
-          onPress={() => navigate(sponsorTabRoute('clubs'))}
-          colors={c}
-        />
-        <SponsorQuickLink
-          label={t('sponsor.network')}
-          description={
-            unreadMessages > 0
-              ? `${unreadMessages} message${unreadMessages > 1 ? 's' : ''} non lu${unreadMessages > 1 ? 's' : ''} · clubs à contacter`
-              : 'Messages et clubs à contacter'
-          }
-          icon="chat"
-          onPress={() => navigate(sponsorTabRoute('reseau', 'messages'))}
-          colors={c}
-        />
-        <SponsorQuickLink
-          label="Formules & tarifs"
-          description="Comparer les packs sponsors ProDay"
-          icon="star"
-          onPress={() => navigate(sponsorTabRoute('tarifs'))}
-          colors={c}
-        />
-      </View>
 
       <SponsorActivityFeed
         items={activity}
+        limit={3}
         onEmptyPress={() => navigate(sponsorTabRoute('offres'))}
       />
 
       <Text style={styles.sectionLabel}>Mes offres</Text>
       {myOffers.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Icon name="briefcase" size={24} color={SPONSOR_THEME.primary} />
-          <Text style={styles.emptyTitle}>Publiez votre première offre</Text>
+          <Icon name="briefcase" size={22} color={SPONSOR_THEME.primary} />
+          <Text style={styles.emptyTitle}>Première campagne</Text>
           <Text style={styles.emptySub}>
-            Équipement, visibilité ou financement. Touchez les clubs de votre zone.
+            Visibilité, équipement ou financement — touchez les clubs de votre zone.
           </Text>
-          <TouchableOpacity style={styles.cta} onPress={requestCreateOffer}>
+          <PressableSpring style={styles.cta} onPress={requestCreateOffer} scaleTo={0.98} haptic>
             <Text style={styles.ctaText}>Créer une offre</Text>
-          </TouchableOpacity>
+          </PressableSpring>
         </View>
       ) : (
-        activeOffers.slice(0, 3).map((offer) => (
+        activeOffers.slice(0, 2).map((offer) => (
           <SponsorOfferCard
             key={offer.id}
             offer={offer}
@@ -295,219 +236,191 @@ export const SponsorOverviewPage: React.FC = () => {
         ))
       )}
 
-      <Text style={[styles.sectionLabel, styles.sectionGap]}>Clubs à contacter</Text>
-      {prospects.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Icon name="people" size={24} color={SPONSOR_THEME.primary} />
-          <Text style={styles.emptyTitle}>Aucun club à contacter</Text>
-          <Text style={styles.emptySub}>
-            Publiez une offre active pour faire remonter des prospects de votre zone.
-          </Text>
-          <TouchableOpacity style={styles.cta} onPress={requestCreateOffer}>
-            <Text style={styles.ctaText}>Créer une offre</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.ctaOutline}
-            onPress={() => navigate(sponsorTabRoute('reseau', 'prospects'))}
-          >
-            <Text style={styles.ctaOutlineText}>Ouvrir le réseau</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        prospects.slice(0, 3).map((p) => (
-          <View key={p.id} style={styles.prospectCard}>
-            <TouchableOpacity
-              style={styles.prospectMain}
-              onPress={() => navigate(sponsorTabRoute('reseau', 'prospects'))}
-            >
-              <View style={styles.prospectScore}>
-                <Text style={styles.prospectScoreText}>{p.match_score}</Text>
-              </View>
-              <View style={styles.prospectBody}>
-                <Text style={styles.prospectName}>{p.name}</Text>
-                <Text style={styles.prospectMeta}>
-                  {p.city} · {p.category}
-                </Text>
-                <Text style={styles.prospectReason}>{p.reason}</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.prospectContactBtn}
-              onPress={() => handleContactProspect(p)}
-            >
-              <Text style={styles.prospectContactText}>Contacter</Text>
-            </TouchableOpacity>
-          </View>
-        ))
-      )}
+      {prospects.length > 0 ? (
+        <>
+          <Text style={[styles.sectionLabel, styles.sectionGap]}>Clubs à contacter</Text>
+          {prospects.slice(0, 2).map((p) => (
+            <View key={p.id} style={styles.prospectCard}>
+              <PressableSpring
+                style={styles.prospectMain}
+                onPress={() => navigate(sponsorTabRoute('reseau', 'prospects'))}
+                scaleTo={0.98}
+              >
+                <View style={styles.prospectScore}>
+                  <Text style={styles.prospectScoreText}>{p.match_score}</Text>
+                </View>
+                <View style={styles.prospectBody}>
+                  <Text style={styles.prospectName}>{p.name}</Text>
+                  <Text style={styles.prospectMeta}>
+                    {p.city} · {p.category}
+                  </Text>
+                </View>
+              </PressableSpring>
+              <PressableSpring
+                style={styles.prospectContactBtn}
+                onPress={() => handleContactProspect(p)}
+                scaleTo={0.96}
+                haptic
+              >
+                <Text style={styles.prospectContactText}>Contacter</Text>
+              </PressableSpring>
+            </View>
+          ))}
+        </>
+      ) : null}
     </SponsorPageScaffold>
   );
 };
 
 function createStyles() {
   return StyleSheet.create({
-    heroBleed: {
-      marginHorizontal: -spacing.lg,
-      marginTop: -spacing.md,
-      marginBottom: spacing.lg,
-      minHeight: 220,
-      overflow: 'hidden',
-      borderBottomWidth: 1,
-      borderBottomColor: sponsorChrome.gold,
-    },
-    heroInner: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl,
-      paddingBottom: spacing.lg,
+    hero: {
+      alignItems: 'center',
       gap: spacing.xs,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: SPONSOR_THEME.borderSubtle,
+      marginBottom: spacing.sm,
     },
-    heroLogo: {
-      width: 52,
-      height: 52,
-      borderRadius: radius.md,
-      backgroundColor: 'rgba(7,6,5,0.72)',
+    heroMark: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: SPONSOR_THEME.primarySoft,
+      borderWidth: 1,
+      borderColor: SPONSOR_THEME.border,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: sponsorChrome.gold,
-      flexShrink: 0,
+      marginBottom: spacing.xs,
     },
-    heroLogoImage: { width: 36, height: 36 },
     eyebrow: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '700',
-      letterSpacing: 1.4,
+      letterSpacing: 1.8,
       textTransform: 'uppercase',
-      color: sponsorChrome.gold,
-      marginBottom: 2,
-      flexShrink: 1,
+      color: SPONSOR_THEME.primary,
+      ...Platform.select({ android: { includeFontPadding: false } }),
     },
     greeting: {
-      fontSize: 22,
-      lineHeight: 26,
+      fontSize: 24,
+      lineHeight: 28,
       fontWeight: '800',
-      color: '#FAFAF9',
-      letterSpacing: -0.4,
-      flexShrink: 1,
+      color: SPONSOR_THEME.text,
+      letterSpacing: -0.5,
+      textAlign: 'center',
     },
     sub: {
-      fontSize: 14,
-      color: 'rgba(250,250,249,0.72)',
-      lineHeight: 20,
-      marginTop: 2,
+      fontSize: 13,
+      color: SPONSOR_THEME.textMuted,
+      lineHeight: 18,
+      textAlign: 'center',
+      maxWidth: 320,
     },
-    heroRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
-      minWidth: 0,
-    },
-    heroCopy: { flex: 1, flexShrink: 1, minWidth: 0, justifyContent: 'center' },
     onboardingCard: {
-      backgroundColor: sponsorChrome.overlayStrong,
+      backgroundColor: SPONSOR_THEME.primarySoft,
       borderRadius: radius.lg,
       padding: spacing.lg,
       borderWidth: 1,
-      borderColor: sponsorChrome.gold,
+      borderColor: SPONSOR_THEME.border,
       gap: spacing.sm,
     },
     onboardingTitle: {
       fontSize: 16,
       fontWeight: '800',
-      color: sponsorChrome.text,
+      color: SPONSOR_THEME.text,
     },
     onboardingBody: {
       fontSize: 13,
-      color: sponsorChrome.textMuted,
+      color: SPONSOR_THEME.textSecondary,
       lineHeight: 19,
     },
-    onboardingActions: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-      marginTop: spacing.xs,
-    },
     sectionLabel: {
-      fontSize: 11,
-      fontWeight: '800',
-      color: sponsorChrome.textMuted,
+      fontSize: 10,
+      fontWeight: '700',
+      color: SPONSOR_THEME.sectionLabel,
       textTransform: 'uppercase',
-      letterSpacing: 0.6,
+      letterSpacing: 1.2,
     },
     sectionGap: { marginTop: spacing.md },
-    quickCol: { gap: spacing.sm },
-    nextCol: { gap: spacing.sm, marginBottom: spacing.sm },
-    nextCard: {
+    primaryCard: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-      backgroundColor: sponsorChrome.shellElevated,
+      backgroundColor: SPONSOR_THEME.primary,
       borderRadius: radius.lg,
-      borderWidth: 1,
-      borderColor: sponsorChrome.shellBorder,
       padding: spacing.md,
     },
-    nextCardPrimary: {
-      borderColor: sponsorChrome.gold,
-      backgroundColor: 'rgba(212, 175, 55, 0.08)',
-    },
-    nextIcon: {
+    primaryIcon: {
       width: 40,
       height: 40,
       borderRadius: radius.md,
+      backgroundColor: 'rgba(255,255,255,0.16)',
       alignItems: 'center',
       justifyContent: 'center',
     },
+    primaryTitle: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: SPONSOR_THEME.onPrimary,
+    },
+    nextCol: { gap: spacing.xs, marginTop: spacing.sm },
+    nextCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: SPONSOR_THEME.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: SPONSOR_THEME.borderSubtle,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+    },
     nextCopy: { flex: 1, minWidth: 0, gap: 2 },
-    nextTitle: { fontSize: 14, fontWeight: '800', color: sponsorChrome.text },
-    nextHint: { fontSize: 12, color: sponsorChrome.textMuted, lineHeight: 16 },
+    nextTitle: { flex: 1, fontSize: 13, fontWeight: '700', color: SPONSOR_THEME.text },
+    nextHint: { fontSize: 12, color: 'rgba(255,255,255,0.78)', lineHeight: 16 },
     emptyCard: {
       alignItems: 'center',
       padding: spacing.xl,
-      backgroundColor: sponsorChrome.shellElevated,
+      backgroundColor: SPONSOR_THEME.surface,
       borderRadius: radius.lg,
       borderWidth: 1,
-      borderColor: sponsorChrome.shellBorder,
+      borderColor: SPONSOR_THEME.borderSubtle,
+      gap: spacing.xs,
     },
     emptyTitle: {
       fontSize: 16,
       fontWeight: '800',
-      color: sponsorChrome.text,
-      marginTop: spacing.sm,
+      color: SPONSOR_THEME.text,
+      marginTop: spacing.xs,
     },
     emptySub: {
       fontSize: 13,
-      color: sponsorChrome.textMuted,
+      color: SPONSOR_THEME.textMuted,
       textAlign: 'center',
-      marginTop: spacing.xs,
       lineHeight: 18,
     },
     cta: {
-      marginTop: spacing.md,
-      backgroundColor: sponsorChrome.accent,
+      marginTop: spacing.sm,
+      backgroundColor: SPONSOR_THEME.primary,
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.md,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: radius.pill,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'stretch',
     },
-    ctaOutline: {
-      marginTop: spacing.md,
-      borderWidth: 1,
-      borderColor: sponsorChrome.gold,
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.md,
-    },
-    ctaText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
-    ctaOutlineText: { color: sponsorChrome.gold, fontWeight: '800', fontSize: 13 },
+    ctaText: { color: SPONSOR_THEME.onPrimary, fontWeight: '800', fontSize: 14 },
     prospectCard: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      backgroundColor: sponsorChrome.shellElevated,
+      backgroundColor: SPONSOR_THEME.surface,
       borderRadius: radius.md,
       padding: spacing.md,
       borderWidth: 1,
-      borderColor: sponsorChrome.shellBorder,
+      borderColor: SPONSOR_THEME.borderSubtle,
     },
     prospectMain: {
       flex: 1,
@@ -516,24 +429,23 @@ function createStyles() {
       gap: spacing.md,
     },
     prospectScore: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       backgroundColor: SPONSOR_THEME.primarySoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    prospectScoreText: { fontSize: 13, fontWeight: '900', color: SPONSOR_THEME.primary },
+    prospectScoreText: { fontSize: 12, fontWeight: '900', color: SPONSOR_THEME.primary },
     prospectBody: { flex: 1 },
-    prospectName: { fontSize: 14, fontWeight: '800', color: sponsorChrome.text },
-    prospectMeta: { fontSize: 11, color: sponsorChrome.textMuted, marginTop: 2 },
-    prospectReason: { fontSize: 11, color: SPONSOR_THEME.textSecondary, marginTop: 4 },
+    prospectName: { fontSize: 14, fontWeight: '800', color: SPONSOR_THEME.text },
+    prospectMeta: { fontSize: 11, color: SPONSOR_THEME.textMuted, marginTop: 2 },
     prospectContactBtn: {
       backgroundColor: SPONSOR_THEME.primary,
       paddingHorizontal: spacing.sm,
-      paddingVertical: 6,
-      borderRadius: radius.md,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
     },
-    prospectContactText: { fontSize: 10, fontWeight: '800', color: SPONSOR_THEME.onPrimary },
+    prospectContactText: { fontSize: 11, fontWeight: '800', color: SPONSOR_THEME.onPrimary },
   });
 }

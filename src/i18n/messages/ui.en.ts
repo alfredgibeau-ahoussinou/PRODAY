@@ -94,11 +94,11 @@ export const UI_EN: MessageCatalog = {
 
   'discover.hero.sponsor': 'Your brand\non the pitch.',
   'discover.mission.sponsor':
-    'Geo campaigns, measurable ROI and club showcase — the dedicated space for partner brands.',
+    'Local campaigns, partner clubs, clear ROI. You’re already in the Sponsor space.',
   'discover.trust.sponsor':
     'Verified brands — ProDay validation before campaigns go live.',
-  'discover.cta.sponsor': 'Create my Pro Day Sponsor space',
-  'discover.sectionExplore.sponsor': 'Brand pillars',
+  'discover.cta.sponsor': 'Create my Sponsor space',
+  'discover.sectionExplore.sponsor': 'Inside the space',
   'discover.secondaryMercato.sponsor': 'Campaigns',
   'discover.playersStat.sponsor': 'Clubs',
 

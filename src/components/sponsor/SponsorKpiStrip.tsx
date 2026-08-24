@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon, type IconName } from '../ui/Icon';
 import { sponsorChrome } from './sponsorStyles';
+import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -28,11 +29,8 @@ export const SponsorKpiStrip: React.FC<SponsorKpiStripProps> = ({ items }) => {
           key={item.key}
           style={[styles.card, item.alert && styles.cardAlert]}
         >
-          <View style={styles.iconWrap}>
-            <Icon name={item.icon} size={16} color={sponsorChrome.accent} />
-          </View>
           <Text style={styles.value}>{item.value}</Text>
-          <Text style={styles.label} numberOfLines={2}>
+          <Text style={styles.label} numberOfLines={1}>
             {item.label}
           </Text>
         </View>
@@ -54,14 +52,13 @@ export const SponsorQuickLink: React.FC<SponsorQuickLinkProps> = ({
   description,
   icon,
   onPress,
-  colors,
 }) => {
   const styles = useMemo(() => createLinkStyles(), []);
 
   return (
     <PressableSpring onPress={onPress} style={styles.card} scaleTo={0.98} haptic>
-      <View style={[styles.icon, { backgroundColor: colors.accentSoft }]}>
-        <Icon name={icon} size={18} color={colors.brand} />
+      <View style={styles.icon}>
+        <Icon name={icon} size={18} color={SPONSOR_THEME.primary} />
       </View>
       <View style={styles.copy}>
         <Text style={styles.label}>{label}</Text>
@@ -78,45 +75,36 @@ function createStyles() {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       gap: spacing.sm,
     },
     card: {
-      flexGrow: 1,
-      flexBasis: '47%',
-      backgroundColor: sponsorChrome.shellElevated,
-      borderRadius: radius.lg,
+      flex: 1,
+      backgroundColor: SPONSOR_THEME.surface,
+      borderRadius: radius.md,
       borderWidth: 1,
-      borderColor: sponsorChrome.shellBorder,
-      padding: spacing.md,
-      minWidth: 140,
+      borderColor: SPONSOR_THEME.borderSubtle,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+      minWidth: 0,
     },
     cardAlert: {
-      borderColor: 'rgba(245, 158, 11, 0.45)',
-      backgroundColor: 'rgba(245, 158, 11, 0.08)',
-    },
-    iconWrap: {
-      width: 28,
-      height: 28,
-      borderRadius: radius.sm,
-      backgroundColor: sponsorChrome.overlay,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.sm,
+      borderColor: SPONSOR_THEME.border,
+      backgroundColor: SPONSOR_THEME.primarySoft,
     },
     value: {
-      color: sponsorChrome.text,
+      color: SPONSOR_THEME.text,
       fontSize: 22,
       fontWeight: '900',
       letterSpacing: -0.5,
     },
     label: {
-      color: sponsorChrome.textMuted,
+      color: SPONSOR_THEME.textMuted,
       fontSize: 10,
       fontWeight: '700',
       textTransform: 'uppercase',
       marginTop: 4,
-      letterSpacing: 0.4,
+      letterSpacing: 0.6,
     },
   });
 }
@@ -127,21 +115,22 @@ function createLinkStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-      backgroundColor: sponsorChrome.shellElevated,
+      backgroundColor: SPONSOR_THEME.surface,
       borderRadius: radius.lg,
       borderWidth: 1,
-      borderColor: sponsorChrome.shellBorder,
+      borderColor: SPONSOR_THEME.borderSubtle,
       padding: spacing.md,
     },
     icon: {
       width: 40,
       height: 40,
-      borderRadius: radius.md,
+      borderRadius: 20,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: SPONSOR_THEME.primarySoft,
     },
     copy: { flex: 1, minWidth: 0 },
-    label: { color: sponsorChrome.text, fontSize: 15, fontWeight: '800' },
-    desc: { color: sponsorChrome.textMuted, fontSize: 12, marginTop: 2, lineHeight: 16 },
+    label: { color: SPONSOR_THEME.text, fontSize: 15, fontWeight: '800' },
+    desc: { color: SPONSOR_THEME.textMuted, fontSize: 12, marginTop: 2, lineHeight: 16 },
   });
 }

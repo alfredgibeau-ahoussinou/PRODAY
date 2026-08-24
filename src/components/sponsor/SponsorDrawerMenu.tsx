@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../motion';
@@ -19,7 +20,8 @@ import {
   type SponsorMainTabId,
   type SponsorRoute,
 } from '../../navigation/sponsorTabConfig';
-import { useSponsorStyles, sponsorChrome } from './sponsorStyles';
+import { sponsorChrome } from './sponsorStyles';
+import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 
 export type SponsorBadgeCounts = {
@@ -46,7 +48,6 @@ export const SponsorDrawerMenu: React.FC<SponsorDrawerMenuProps> = ({
   onNavigate,
 }) => {
   const insets = useSafeAreaInsets();
-  const { colors: c } = useSponsorStyles();
   const styles = useMemo(() => createStyles(), []);
 
   const handlePick = (route: SponsorRoute) => {
@@ -64,11 +65,11 @@ export const SponsorDrawerMenu: React.FC<SponsorDrawerMenuProps> = ({
         >
           <View style={styles.panelHeader}>
             <View style={styles.logoMark}>
-              <ProDaySymbol size={40} variant="sponsor" tone="white" />
+              <ProDaySymbol size={36} variant="sponsor" tone="white" />
             </View>
             <View style={styles.panelBrand}>
-              <Text style={styles.panelTitle}>Pro Day Sponsor</Text>
-              <Text style={styles.panelSub}>Espace marque & sponsoring</Text>
+              <Text style={styles.panelTitle}>ProDay Sponsor</Text>
+              <Text style={styles.panelSub}>Marque · clubs · ROI</Text>
             </View>
             <PressableSpring onPress={onClose} style={styles.closeBtn} scaleTo={0.92}>
               <Icon name="close" size={20} color={sponsorChrome.textMuted} />
@@ -99,7 +100,7 @@ export const SponsorDrawerMenu: React.FC<SponsorDrawerMenuProps> = ({
                           <Icon
                             name={item.icon}
                             size={18}
-                            color={active ? c.brandInverse : sponsorChrome.textMuted}
+                            color={active ? SPONSOR_THEME.onPrimary : SPONSOR_THEME.textMuted}
                           />
                         </View>
                         <View style={styles.itemCopy}>
@@ -114,8 +115,6 @@ export const SponsorDrawerMenu: React.FC<SponsorDrawerMenuProps> = ({
                           <View style={styles.badge}>
                             <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
                           </View>
-                        ) : active ? (
-                          <Icon name="chevron-forward" size={14} color={sponsorChrome.textMuted} />
                         ) : null}
                       </PressableSpring>
                     );
@@ -126,7 +125,7 @@ export const SponsorDrawerMenu: React.FC<SponsorDrawerMenuProps> = ({
           </ScrollView>
 
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
-            <Text style={styles.footerText}>Console sponsor · navigation latérale</Text>
+            <Text style={styles.footerText}>Espace Sponsor</Text>
           </View>
         </Pressable>
       </Pressable>
@@ -139,14 +138,14 @@ function createStyles() {
     backdrop: {
       flex: 1,
       flexDirection: 'row',
-      backgroundColor: 'rgba(0,0,0,0.55)',
+      backgroundColor: 'rgba(0,0,0,0.72)',
     },
     panel: {
       width: '86%',
       maxWidth: 340,
-      backgroundColor: sponsorChrome.shell,
-      borderRightWidth: 1,
-      borderRightColor: sponsorChrome.shellBorder,
+      backgroundColor: SPONSOR_THEME.background,
+      borderRightWidth: StyleSheet.hairlineWidth,
+      borderRightColor: SPONSOR_THEME.borderSubtle,
       flex: 1,
     },
     panelHeader: {
@@ -155,44 +154,43 @@ function createStyles() {
       gap: spacing.sm,
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: sponsorChrome.shellBorder,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: SPONSOR_THEME.borderSubtle,
     },
     logoMark: {
       width: 40,
       height: 40,
-      borderRadius: radius.md,
-      backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      backgroundColor: SPONSOR_THEME.primarySoft,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(212, 175, 55, 0.35)',
+      borderColor: SPONSOR_THEME.border,
       overflow: 'hidden',
-      padding: 3,
     },
-    logoImage: { width: '100%', height: '100%' },
     panelBrand: { flex: 1 },
-    panelTitle: { color: sponsorChrome.text, fontSize: 16, fontWeight: '800' },
-    panelSub: { color: sponsorChrome.textMuted, fontSize: 11, marginTop: 2 },
+    panelTitle: { color: SPONSOR_THEME.text, fontSize: 16, fontWeight: '800' },
+    panelSub: { color: SPONSOR_THEME.textMuted, fontSize: 11, marginTop: 2 },
     closeBtn: {
       width: 36,
       height: 36,
-      borderRadius: radius.md,
-      backgroundColor: sponsorChrome.overlay,
+      borderRadius: 18,
+      backgroundColor: SPONSOR_THEME.surface,
       alignItems: 'center',
       justifyContent: 'center',
     },
     scroll: { paddingVertical: spacing.sm, paddingBottom: spacing.xl },
     section: { marginBottom: spacing.md },
     sectionLabel: {
-      color: sponsorChrome.textMuted,
+      color: SPONSOR_THEME.sectionLabel,
       fontSize: 10,
       fontWeight: '700',
-      letterSpacing: 1.2,
+      letterSpacing: 1.4,
       textTransform: 'uppercase',
       paddingHorizontal: spacing.lg,
       marginBottom: spacing.xs,
       marginTop: spacing.xs,
+      ...Platform.select({ android: { includeFontPadding: false } }),
     },
     item: {
       flexDirection: 'row',
@@ -204,37 +202,37 @@ function createStyles() {
       borderRadius: radius.md,
     },
     itemActive: {
-      backgroundColor: sponsorChrome.overlayStrong,
+      backgroundColor: SPONSOR_THEME.primarySoft,
     },
     itemIcon: {
       width: 34,
       height: 34,
-      borderRadius: radius.sm,
-      backgroundColor: sponsorChrome.overlay,
+      borderRadius: 17,
+      backgroundColor: SPONSOR_THEME.surface,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    itemIconActive: { backgroundColor: sponsorChrome.accent },
+    itemIconActive: { backgroundColor: SPONSOR_THEME.primary },
     itemCopy: { flex: 1, minWidth: 0 },
-    itemLabel: { color: sponsorChrome.text, fontSize: 14, fontWeight: '700' },
-    itemLabelActive: { color: sponsorChrome.text },
-    itemDesc: { color: sponsorChrome.textMuted, fontSize: 11, marginTop: 1 },
+    itemLabel: { color: SPONSOR_THEME.text, fontSize: 14, fontWeight: '700' },
+    itemLabelActive: { color: SPONSOR_THEME.text },
+    itemDesc: { color: SPONSOR_THEME.textMuted, fontSize: 11, marginTop: 1 },
     badge: {
       minWidth: 20,
       height: 20,
       borderRadius: 10,
-      backgroundColor: '#EF4444',
+      backgroundColor: SPONSOR_THEME.primary,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 5,
     },
-    badgeText: { color: '#FFF', fontSize: 10, fontWeight: '800' },
+    badgeText: { color: SPONSOR_THEME.onPrimary, fontSize: 10, fontWeight: '800' },
     footer: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
-      borderTopWidth: 1,
-      borderTopColor: sponsorChrome.shellBorder,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: SPONSOR_THEME.borderSubtle,
     },
-    footerText: { color: sponsorChrome.textMuted, fontSize: 10, fontWeight: '600' },
+    footerText: { color: SPONSOR_THEME.textMuted, fontSize: 10, fontWeight: '600' },
   });
 }
