@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {
   MOTION_PRESETS,
   getMotionPreset,
@@ -87,5 +89,26 @@ describe('anti-écran-noir — filets motion', () => {
     expect(PUSH_ENTER_SAFETY_MS).toBeGreaterThanOrEqual(120);
     expect(PUSH_EXIT_SAFETY_MS).toBeGreaterThanOrEqual(100);
     expect(PUSH_ENTER_SAFETY_MS + PUSH_EXIT_SAFETY_MS).toBeLessThan(400);
+  });
+});
+
+describe('AnimatedTabContent — Accueil ↔ Matchs', () => {
+  const src = fs.readFileSync(
+    path.join(__dirname, '../components/motion/AnimatedTabContent.tsx'),
+    'utf8',
+  );
+
+  it('n’enveloppe pas le keep-alive dans RouteSwitch (évite double transition)', () => {
+    expect(src).not.toMatch(/from ['"].*RouteSwitch['"]/);
+    expect(src).not.toMatch(/<RouteSwitch/);
+    expect(src).toMatch(/TabKeepAliveLayer/);
+    expect(src).toMatch(/holdOpacity/);
+    expect(src).toMatch(/size > 2/);
+  });
+
+  it('home → matchs est forward dans l’ordre joueur type', () => {
+    const playerOrder = ['home', 'reels', 'matchs', 'messages'] as const;
+    expect(navDirectionFromOrder(playerOrder, 'home', 'matchs')).toBe(1);
+    expect(navDirectionFromOrder(playerOrder, 'matchs', 'home')).toBe(-1);
   });
 });
