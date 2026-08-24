@@ -5,7 +5,10 @@
  */
 export const PRODAY_OFFICIAL_LOGO = require('../../assets/branding/logo-proday-official.png');
 
-/** Ratio largeur / hauteur du logo officiel splash/icon pad. */
+/**
+ * Ratio largeur / hauteur du PNG splash/icon (canvas carré).
+ * Pour l’UI in-app, préférer `ProDayOfficialLockup` / `ProDayLogo` (composé, pas le PNG carré).
+ */
 export const PRODAY_OFFICIAL_LOGO_ASPECT = 1;
 
 export const PRODAY_BRAND_ASSETS = {

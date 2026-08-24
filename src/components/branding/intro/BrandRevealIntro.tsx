@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UniverseChoicePager } from './UniverseChoicePager';
+import { BrandWelcomeReveal } from './BrandWelcomeReveal';
 import { shouldSkipPoleTransition, UNIVERSE_CONFIRM_LEAVE } from './launchIntroFlow';
 import type { ClubShellMode } from '../../../models/ClubShellMode';
 import type { ProductLineId } from '../../../models/ProductLine';
@@ -39,7 +40,7 @@ interface BrandRevealIntroProps {
   skipLocalTransition?: boolean;
 }
 
-/** Sélecteur d'univers minimal — symbole pôle + transitions fluides. */
+/** Intro brand (Bienvenue) puis sélecteur d’univers — symbole pôle + transitions fluides. */
 export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   onChooseSpace,
   onExitComplete,
@@ -58,18 +59,36 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
   const accessEmail = profile?.email ?? null;
   const accessIsAdmin = Boolean(auth?.isAdmin);
 
+  const [welcomeDone, setWelcomeDone] = useState(skipReveal);
   const [leavingLine, setLeavingLine] = useState<IntroSpaceChoice | null>(null);
   const [leaving, setLeaving] = useState(false);
-  const [interactive, setInteractive] = useState(!skipReveal || skipLocalTransition);
+  const [interactive, setInteractive] = useState(
+    skipReveal ? Boolean(skipLocalTransition) : false,
+  );
   const leaveDone = React.useRef(false);
   const leaveSafetyRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : 1);
-  const scale = useSharedValue(skipReveal && !skipLocalTransition ? 0.985 : 1);
+  const opacity = useSharedValue(skipReveal && !skipLocalTransition ? 0 : welcomeDone ? 1 : 0);
+  const scale = useSharedValue(
+    skipReveal && !skipLocalTransition ? 0.985 : welcomeDone ? 1 : 0.985,
+  );
   const veilOpacity = useSharedValue(0);
   const [veilAccent, setVeilAccent] = useState<string>(PRODAY_MASTER.gold);
 
+  const showWelcome = !skipReveal && !welcomeDone;
+
+  const onWelcomeComplete = useCallback(() => {
+    setWelcomeDone(true);
+  }, []);
+
+  // Entrée picker : après Bienvenue, ou à l’ouverture manuelle (skipReveal).
   useEffect(() => {
-    if (!skipReveal || skipLocalTransition) return;
+    if (showWelcome) return;
+    if (skipReveal && skipLocalTransition) {
+      setInteractive(true);
+      opacity.value = 1;
+      scale.value = 1;
+      return;
+    }
     const dur = reduced ? ENTER_REDUCED_MS : ENTER_MS;
     opacity.value = withTiming(1, {
       duration: dur,
@@ -77,10 +96,12 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
     });
     if (!reduced) {
       scale.value = withSpring(1, prodayMotion.spring.smooth);
+    } else {
+      scale.value = 1;
     }
     const timer = setTimeout(() => setInteractive(true), dur);
     return () => clearTimeout(timer);
-  }, [opacity, reduced, scale, skipLocalTransition, skipReveal]);
+  }, [opacity, reduced, scale, showWelcome, skipLocalTransition, skipReveal]);
 
   const finishLeave = useCallback(
     (line: IntroSpaceChoice | null, dismissOnly: boolean) => {
@@ -200,28 +221,34 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 
   return (
     <View style={styles.root} accessibilityViewIsModal>
-      <Animated.View
-        pointerEvents="none"
-        style={[styles.veil, { backgroundColor: veilAccent }, veilStyle]}
-      />
-      <Animated.View
-        style={[styles.content, contentStyle]}
-        pointerEvents={interactive ? 'auto' : 'none'}
-      >
-        <UniverseChoicePager
-          onChoose={handleChoose}
-          introTour={introTour}
-          interactionLocked={!interactive || leaving}
-          confirmingPole={leavingLine}
-          initialLine={initialLine}
-          initialCarouselPole={initialCarouselPole}
-          accessRole={accessRole}
-          accessEmail={accessEmail}
-          accessIsAdmin={accessIsAdmin}
-          showDismiss={skipReveal && interactive}
-          onDismiss={handleDismiss}
-        />
-      </Animated.View>
+      {showWelcome ? (
+        <BrandWelcomeReveal onComplete={onWelcomeComplete} />
+      ) : (
+        <>
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.veil, { backgroundColor: veilAccent }, veilStyle]}
+          />
+          <Animated.View
+            style={[styles.content, contentStyle]}
+            pointerEvents={interactive ? 'auto' : 'none'}
+          >
+            <UniverseChoicePager
+              onChoose={handleChoose}
+              introTour={introTour}
+              interactionLocked={!interactive || leaving}
+              confirmingPole={leavingLine}
+              initialLine={initialLine}
+              initialCarouselPole={initialCarouselPole}
+              accessRole={accessRole}
+              accessEmail={accessEmail}
+              accessIsAdmin={accessIsAdmin}
+              showDismiss={skipReveal && interactive}
+              onDismiss={handleDismiss}
+            />
+          </Animated.View>
+        </>
+      )}
     </View>
   );
 };

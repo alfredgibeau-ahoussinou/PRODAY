@@ -21,6 +21,42 @@ export const UNIVERSE_CONFIRM_LEAVE = {
   pushExitMs: 220,
 } as const;
 
+/**
+ * Première peinture brand — logo → Bienvenue → hold → sortie vers le sélecteur d’univers.
+ * Fond charcoal constant (pas de cut noir).
+ */
+export const BRAND_WELCOME_REVEAL = {
+  /** Fade + scale soft du lockup. */
+  logoInMs: 560,
+  logoScaleFrom: 0.94,
+  /** Décalage avant l’entrée du message (après début logo). */
+  welcomeDelayMs: 320,
+  welcomeInMs: 440,
+  welcomeRisePx: 16,
+  /** Pause premium avant la sortie. */
+  holdMs: 720,
+  holdReducedMs: 180,
+  /** Sortie croisée vers le pager (opacity, jamais holdOpacity=0 brutal). */
+  exitMs: 420,
+  exitReducedMs: 110,
+  /** Floor d’opacity pendant la sortie (anti écran noir). */
+  exitFloor: 0.08,
+} as const;
+
+/** Durée totale estimée jusqu’à `onComplete` (hors reduced motion). */
+export function brandWelcomeTotalMs(reduced = false): number {
+  if (reduced) {
+    return BRAND_WELCOME_REVEAL.holdReducedMs + BRAND_WELCOME_REVEAL.exitReducedMs;
+  }
+  const {
+    welcomeDelayMs,
+    welcomeInMs,
+    holdMs,
+    exitMs,
+  } = BRAND_WELCOME_REVEAL;
+  return welcomeDelayMs + welcomeInMs + holdMs + exitMs;
+}
+
 /** Action à la fin de la transition selon le mode d'ouverture du sélecteur. */
 export function resolveIntroExitAction(isManualOpen: boolean): IntroExitAction {
   return isManualOpen ? 'close-manual' : 'mark-complete';
