@@ -65,12 +65,14 @@ const PRODAY_POLE_SYMBOL_MAP = {
 
 /** Logo principal ProDay — marque générique. */
 export const BRANDING_LOGOS = {
+  /** Lockup carré charcoal (emails / OG) — éviter en UI Image sur fond sombre. */
   official: PRODAY_OFFICIAL_LOGO,
-  light: PRODAY_BRAND_ASSETS.logoMasterBlack,
-  dark: PRODAY_BRAND_ASSETS.logoMasterWhite,
-  transparent: PRODAY_BRAND_ASSETS.logoMasterWhite,
-  transparentDark: PRODAY_BRAND_ASSETS.logoMasterBlack,
-  authDark: PRODAY_BRAND_ASSETS.logoMasterWhite,
+  /** Prefer ProDaySymbol / ProDayLogo — assets transparents. */
+  light: PRODAY_BRAND_ASSETS.symbolBlack,
+  dark: PRODAY_BRAND_ASSETS.symbolWhite,
+  transparent: PRODAY_BRAND_ASSETS.symbolWhite,
+  transparentDark: PRODAY_BRAND_ASSETS.symbolBlack,
+  authDark: PRODAY_BRAND_ASSETS.symbolWhite,
   mark: require('../../assets/branding/logo-mark-transparent.png'),
 } as const;
 

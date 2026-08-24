@@ -32,8 +32,8 @@ const CFG = {
   width: W,
   height: H,
   logo: join(ROOT, 'assets/branding/logo-proday-official.png'),
-  tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
-  endcardSubtitle: 'Bêta iOS · 11 août 2026',
+  tagline: 'CONNECTER. PROGRESSER. RÉVÉLER.',
+  endcardSubtitle: 'Bêta ProDay',
   fonts: {
     title: '/System/Library/Fonts/Supplemental/Arial Black.ttf',
     body: '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
@@ -41,7 +41,7 @@ const CFG = {
   captions: [
     { title: 'CONNECTER', subtitle: 'Ton équipe, tes matchs, ta communauté' },
     { title: 'PROGRESSER', subtitle: 'Pôle Joueur · Amateur → Pro' },
-    { title: 'RÉUSSIR', subtitle: '7 pôles · covoiturage · carrière' },
+    { title: 'RÉVÉLER', subtitle: '7 pôles · covoiturage · carrière' },
   ],
 };
 

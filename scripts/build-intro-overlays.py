@@ -109,7 +109,8 @@ def make_caption(cfg, out_path, title, subtitle):
     block_y = int(H * float(cfg.get("captionBlockYRatio", 0.62)))
     bar_w = 64
     bar_x = (W - bar_w) // 2
-    rounded_bar(img, bar_x, block_y, bar_w, 8, (46, 99, 255, 255))
+    # Accent or master (#C5A059)
+    rounded_bar(img, bar_x, block_y, bar_w, 8, (197, 160, 89, 255))
 
     title_y = block_y + 36
     title_x = (W - tw) // 2
@@ -134,11 +135,11 @@ def make_caption(cfg, out_path, title, subtitle):
 
 def make_endcard(cfg, out_path):
     W, H = cfg["width"], cfg["height"]
-    img = Image.new("RGBA", (W, H), (255, 255, 255, 255))
+    # Fond brand noir — lockup officiel (charcoal) se fond sans « carte blanche ».
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 255))
 
-    # Logo (fond blanc d'origine -> fusion parfaite sur carte blanche).
     logo = Image.open(cfg["logo"]).convert("RGBA")
-    lw = int(W * float(cfg.get("logoWidthRatio", 0.72)))
+    lw = int(W * float(cfg.get("logoWidthRatio", 0.68)))
     lh = int(lw * logo.height / logo.width)
     logo = logo.resize((lw, lh), Image.LANCZOS)
     lx = (W - lw) // 2
@@ -148,26 +149,25 @@ def make_endcard(cfg, out_path):
     draw = ImageDraw.Draw(img)
     logo_bottom = ly + lh
 
-    # Trait d'accent bleu.
+    # Accent or master (#C5A059).
     bar_w = 64
-    rounded_bar(img, (W - bar_w) // 2, logo_bottom + 26, bar_w, 6, (46, 99, 255, 255))
+    rounded_bar(img, (W - bar_w) // 2, logo_bottom + 26, bar_w, 6, (197, 160, 89, 255))
 
-    # Accroche.
     tag = cfg["tagline"]
-    tag_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardFontSize", 40)))
+    tag_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardFontSize", 34)))
     tw, th, toff = text_size(draw, tag, tag_font)
     tag_y = logo_bottom + 52 - toff
-    draw.text(((W - tw) // 2, tag_y), tag, font=tag_font, fill=(10, 26, 58, 255))
+    draw.text(((W - tw) // 2, tag_y), tag, font=tag_font, fill=(197, 160, 89, 255))
 
     subtitle = cfg.get("endcardSubtitle")
     if subtitle:
-        sub_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardSubtitleFontSize", 28)))
+        sub_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardSubtitleFontSize", 26)))
         sw, sh, soff = text_size(draw, subtitle, sub_font)
         draw.text(
             ((W - sw) // 2, tag_y + th + 18 - soff),
             subtitle,
             font=sub_font,
-            fill=(46, 99, 255, 255),
+            fill=(200, 200, 200, 255),
         )
 
     img.convert("RGB").save(out_path)

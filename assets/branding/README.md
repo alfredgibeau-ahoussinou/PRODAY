@@ -8,19 +8,23 @@ Génération :
 
 ```bash
 node scripts/generate-app-brand.mjs --lockup [chemin-lockup-officiel.png]
+# ou
+npm run branding:app
 ```
+
+Source de vérité : `proday-lockup-official-source.png` (PNG fourni « logo de l’app »).
 
 ## Icône store vs lockup
 
 | Usage | Asset | Contenu |
 |-------|--------|---------|
-| App Store / home screen / favicon | `proday-app-icon.png` | **Marque seule** (P + ballon) sur `#000` — le wordmark/tagline serait illisible en petit |
-| Adaptive Android foreground | `proday-adaptive-foreground.png` | Marque centrée, ~20 % safe padding, fond transparent ; bg `#000` |
+| App Store / home screen / favicon | `proday-app-icon.png` | **Lockup officiel** (P + PRODAY + tagline sur charcoal) |
+| Adaptive Android foreground | `proday-adaptive-foreground.png` | Marque seule, ~20 % safe padding, fond transparent ; bg `#000` |
 | Notification Android | `proday-notification-icon.png` | Marque blanche transparente |
-| Splash Expo / iOS | `proday-splash.png` | **Lockup complet** (P + PRODAY + tagline or) sur `#000` |
+| Splash Expo / iOS | `proday-splash.png` | Lockup centré sur `#000` |
 | Splash Android 12 (cercle) | `drawable-*/splashscreen_logo.png` | Marque seule (le cercle clipperait le texte) |
-| Auth / logo officiel | `logo-proday-official.png`, `proday-logo-master-white.png` | Lockup officiel carré |
-| UI in-app (petits formats) | `proday-symbol-*.png` | Marque extraite, teintée par pôle |
+| Auth / moments brand | `ProDayOfficialLockup` / `ProDayLogo` | Composé natif (symbole transparent + wordmark) — **pas** le PNG carré |
+| UI in-app (petits formats) | `proday-symbol-*.png` / `ProDaySymbol` | Marque extraite, teintée par pôle |
 
 | Fichier | Usage |
 |---------|--------|
@@ -29,16 +33,16 @@ node scripts/generate-app-brand.mjs --lockup [chemin-lockup-officiel.png]
 | `proday-symbol-white.png` | Symbole seul blanc (UI dark) |
 | `proday-symbol-black.png` | Symbole seul noir (UI light) |
 | `proday-symbol-mark.png` | Symbole carré transparent |
-| `proday-logo-master-white.png` | Lockup officiel |
-| `proday-logo-master-black.png` | Même lockup (badge sombre) |
+| `proday-logo-master-white.png` | Lockup officiel (badge) |
+| `proday-logo-master-black.png` | Même lockup |
 | `proday-lockup-horizontal-white.png` | Symbole (compat horizontal) |
 | `proday-lockup-horizontal-black.png` | Symbole noir |
 | `proday-symbol-pole-*.png` | Symboles teintés pôle |
-| `proday-app-icon.png` | Icône app |
+| `proday-app-icon.png` | Icône app = lockup officiel |
 | `proday-adaptive-foreground.png` | Adaptive Android |
 | `proday-splash.png` | Splash |
 | `proday-notification-icon.png` | Notification Android |
-| `logo-proday-official.png` | Compat Expo / emails |
+| `logo-proday-official.png` | Compat / emails |
 | `logo-mark-transparent.png` | Filigrane = symbole master |
 
 ## Accents pôle (planche)

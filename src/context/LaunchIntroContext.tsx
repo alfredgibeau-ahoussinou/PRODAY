@@ -24,8 +24,14 @@ import { PushScreenTransition } from '../components/motion';
 import { StyleSheet, View } from 'react-native';
 import { UNIVERSE_CONFIRM_LEAVE } from '../components/branding/intro/launchIntroFlow';
 
-/** Une seule lecture de la vidéo d’intro par installation (évite crash natif répété). */
-export const LAUNCH_VIDEO_SEEN_KEY = 'proday_launch_video_seen_v1';
+/**
+ * Une seule lecture de la vidéo d’intro par installation (évite crash natif répété).
+ * v2 : l’ancienne MP4 embarquait le logo legacy (P coureur bleu / RÉUSSIR) — désactivée.
+ */
+export const LAUNCH_VIDEO_SEEN_KEY = 'proday_launch_video_seen_v2';
+
+/** Vidéo pré-rendue désactivée tant qu’elle n’est pas régénérée avec le lockup officiel. */
+const ENABLE_LAUNCH_VIDEO_INTRO = false;
 
 /**
  * Import dynamique : `expo-video` n’est chargé que si la vidéo d’intro monte
@@ -63,7 +69,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const seen = await AsyncStorage.getItem(LAUNCH_VIDEO_SEEN_KEY);
         if (!cancelled) {
-          const playVideo = seen !== '1';
+          const playVideo = ENABLE_LAUNCH_VIDEO_INTRO && seen !== '1';
           setShouldPlayVideo(playVideo);
           setVideoReady(true);
           if (!playVideo) setVideoIntroDone(true);

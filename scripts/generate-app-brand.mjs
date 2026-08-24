@@ -7,8 +7,10 @@
  *   node scripts/generate-app-brand.mjs --board [chemin-planche.png]  (legacy lockups)
  *
  * Règle icône vs lockup :
- * - Store / adaptive / notification / symbole UI → marque P+ballon (lisible en petit)
- * - Splash / logo-proday-official / master lockup → lockup complet (P + PRODAY + tagline)
+ * - Store / home / favicon → lockup officiel fourni (P + PRODAY + tagline sur charcoal)
+ * - Adaptive Android / notification / symbole UI → marque P+ballon seule (safe zone / lisibilité)
+ * - Splash → même lockup centré sur #000
+ * - UI in-app → symbole transparent / ProDayLogo composé (jamais le PNG carré baked)
  */
 import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
@@ -195,8 +197,16 @@ async function padSymbol(symbolWhite, size = 1024, padRatio = 0.18, bgHex = '#00
   return sharp(bg).composite([{ input: resized, left, top }]).png().toBuffer();
 }
 
-/** Icône store : marque seule sur fond noir plein (pas de coins arrondis — iOS/Android masquent). */
-async function makeAppIcon(symbolWhite, size, bgHex = '#000000') {
+/** Icône store depuis le lockup officiel (carré 1024 — iOS/Android appliquent le masque). */
+async function makeAppIconFromLockup(lockupPng, size = 1024) {
+  return sharp(lockupPng)
+    .resize(size, size, { fit: 'cover', position: 'centre' })
+    .png()
+    .toBuffer();
+}
+
+/** Fallback icône : marque seule sur fond noir (si pas de lockup). */
+async function makeAppIconFromSymbol(symbolWhite, size, bgHex = '#000000') {
   return padSymbol(symbolWhite, size, 0.18, bgHex);
 }
 
@@ -403,13 +413,16 @@ async function main() {
     await write(`proday-symbol-pole-${pole}.png`, tinted);
   }
 
-  const appIcon = await makeAppIcon(symbolWhite, 1024, '#000000');
+  // Home / store : lockup officiel (ce que l’utilisateur a fourni comme « logo de l’app »).
+  // Adaptive + notif + splash Android 12 : marque seule (le cercle clipperait le texte).
+  const appIcon = lockupPng
+    ? await makeAppIconFromLockup(lockupPng, 1024)
+    : await makeAppIconFromSymbol(symbolWhite, 1024, '#000000');
   const adaptiveFg = await makeAdaptiveForeground(symbolWhite, 432);
   const notif = await makeNotificationIcon(symbolWhite, 96);
   const splash = lockupPng
     ? await makeSplashFromLockup(lockupPng)
     : await makeSplashFromSymbol(symbolWhite);
-  // Android 12 splash circle : marque seule paddée sur transparent
   const androidSplashMark = await makeAdaptiveForeground(symbolWhite, 1152);
 
   await write('proday-app-icon.png', appIcon);
@@ -417,17 +430,14 @@ async function main() {
   await write('proday-notification-icon.png', notif);
   await write('proday-splash.png', splash);
 
-  // Compat aliases
+  // Compat aliases — mark transparent pour UI ; lockup opaque seulement pour official/master.
   await write('logo-mark-transparent.png', symbolWhite);
-  for (const alias of [
-    'logo-auth-dark.png',
-    'logo-transparent-dark.png',
-    'logo-transparent-hero.png',
-    'logo-dark.png',
-    'logo-light.png',
-  ]) {
-    await write(alias, alias.includes('light') || alias.includes('transparent-dark') ? lockupBlack : lockupWhite);
-  }
+  await write('logo-transparent-dark.png', symbolBlack);
+  await write('logo-transparent-hero.png', symbolWhite);
+  await write('logo-auth-dark.png', symbolWhite);
+  // light/dark legacy noms : lockup officiel (badge) — UI doit préférer ProDaySymbol.
+  await write('logo-dark.png', lockupWhite);
+  await write('logo-light.png', lockupBlack);
 
   await writeNativeIcons(appIcon, adaptiveFg, androidSplashMark, splash);
 
@@ -443,9 +453,13 @@ async function main() {
         aspect,
         poleHex: POLE_HEX,
         policy: {
-          appIcon: 'mark-only (P+ballon) on #000 — text illegible at home-screen sizes',
-          splash: lockupPng ? 'full lockup on #000' : 'mark on #000',
+          appIcon: lockupPng
+            ? 'full official lockup (P + PRODAY + tagline) — source PNG as store/home icon'
+            : 'mark-only (P+ballon) on #000',
+          splash: lockupPng ? 'full lockup centered on #000' : 'mark on #000',
           adaptive: 'mark centered with ~20% safe padding, transparent fg, bg #000',
+          notification: 'mark white transparent',
+          inApp: 'ProDaySymbol / ProDayLogo composed — never baked charcoal square as Image',
         },
         generatedAt: new Date().toISOString(),
       },

@@ -23,9 +23,11 @@
     "admin": "#A3A3A3"
   },
   "policy": {
-    "appIcon": "mark-only (P+ballon) on #000 — text illegible at home-screen sizes",
-    "splash": "full lockup on #000",
-    "adaptive": "mark centered with ~20% safe padding, transparent fg, bg #000"
+    "appIcon": "full official lockup (P + PRODAY + tagline) — source PNG as store/home icon",
+    "splash": "full lockup centered on #000",
+    "adaptive": "mark centered with ~20% safe padding, transparent fg, bg #000",
+    "notification": "mark white transparent",
+    "inApp": "ProDaySymbol / ProDayLogo composed — never baked charcoal square as Image"
   },
-  "generatedAt": "2026-08-24T11:34:43.083Z"
+  "generatedAt": "2026-08-24T19:52:09.740Z"
 }
