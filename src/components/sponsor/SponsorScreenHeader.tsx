@@ -18,9 +18,7 @@ export const SponsorScreenHeader: React.FC<SponsorScreenHeaderProps> = ({
 }) => (
   <View style={styles.wrap}>
     <View style={styles.row}>
-      <View style={styles.mark}>
-        <ProDaySymbol size={28} variant="sponsor" tone="white" />
-      </View>
+      <ProDaySymbol size={28} variant="sponsor" tone="white" />
       <Text style={styles.badgeText}>{label}</Text>
     </View>
     <Text
@@ -52,17 +50,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.xs,
-  },
-  mark: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: SPONSOR_THEME.primarySoft,
-    borderWidth: 1,
-    borderColor: SPONSOR_THEME.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
   },
   badgeText: {
     fontSize: 10,

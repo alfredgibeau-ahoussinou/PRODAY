@@ -19,9 +19,7 @@ export const SponsorGuestGate: React.FC<SponsorGuestGateProps> = ({ message }) =
     <View style={styles.root}>
       <AnimatedEntrance kind="fadeUp" index={0}>
         <View style={styles.heroBlock}>
-          <View style={styles.mark}>
-            <ProDaySymbol size={56} variant="sponsor" tone="white" />
-          </View>
+          <ProDaySymbol size={56} variant="sponsor" tone="white" />
           <Text style={styles.eyebrow}>ProDay Sponsor</Text>
           <Text style={styles.title}>Espace marque</Text>
           <Text style={styles.message}>{message}</Text>
@@ -56,18 +54,7 @@ function createStyles() {
     },
     heroBlock: {
       alignItems: 'center',
-    },
-    mark: {
-      alignSelf: 'center',
-      width: 72,
-      height: 72,
-      borderRadius: 36,
-      backgroundColor: SPONSOR_THEME.primarySoft,
-      borderWidth: 1,
-      borderColor: SPONSOR_THEME.border,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.sm,
+      gap: spacing.sm,
     },
     eyebrow: {
       textAlign: 'center',

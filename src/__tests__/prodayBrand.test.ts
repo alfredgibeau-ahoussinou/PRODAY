@@ -16,7 +16,7 @@ describe('prodayBrand', () => {
   it('expose les accents officiels planche', () => {
     expect(PRODAY_POLE_ACCENTS.player).toBe('#FFFFFF');
     expect(PRODAY_POLE_ACCENTS.coach).toBe('#C5A059');
-    expect(PRODAY_POLE_ACCENTS.club).toBe('#00ADEF');
+    expect(PRODAY_POLE_ACCENTS.club).toBe('#10B981');
     expect(PRODAY_POLE_ACCENTS.parent).toBe('#8CC63F');
     expect(PRODAY_POLE_ACCENTS.supporter).toBe('#06B6D4');
     expect(PRODAY_POLE_ACCENTS.sponsor).toBe('#92278F');
@@ -48,13 +48,14 @@ describe('prodayBrand', () => {
 
   it('poleAccent retombe sur master or', () => {
     expect(poleAccent('master')).toBe(PRODAY_MASTER.gold);
-    expect(poleAccent('club')).toBe('#00ADEF');
+    expect(poleAccent('club')).toBe('#10B981');
   });
 
   it('poleSymbolAsset retourne le symbole teinté par pôle', () => {
     expect(poleSymbolAsset('player')).toBe(PRODAY_BRAND_ASSETS.polePlayer);
     expect(poleSymbolAsset('coach')).toBe(PRODAY_BRAND_ASSETS.poleCoach);
     expect(poleSymbolAsset('club')).toBe(PRODAY_BRAND_ASSETS.poleClub);
+    expect(poleSymbolAsset('sponsor')).toBe(PRODAY_BRAND_ASSETS.poleSponsor);
     expect(poleSymbolAsset('master', 'white')).toBe(PRODAY_BRAND_ASSETS.symbolWhite);
     expect(poleSymbolAsset('master', 'black')).toBe(PRODAY_BRAND_ASSETS.symbolBlack);
   });

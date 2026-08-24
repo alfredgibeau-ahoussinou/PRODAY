@@ -51,9 +51,7 @@ export const SponsorTopBar: React.FC<SponsorTopBarProps> = ({ title, subtitle, o
           </View>
         )}
       </View>
-      <View style={styles.mark}>
-        <ProDaySymbol size={32} variant="sponsor" tone="white" />
-      </View>
+      <ProDaySymbol size={34} variant="sponsor" tone="white" />
     </View>
   );
 };
@@ -102,16 +100,5 @@ function createStyles() {
     syncDotOk: { backgroundColor: SPONSOR_THEME.success },
     syncDotBusy: { backgroundColor: SPONSOR_THEME.primary },
     sync: { color: SPONSOR_THEME.textMuted, fontSize: 10, fontWeight: '600' },
-    mark: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: SPONSOR_THEME.primarySoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: SPONSOR_THEME.border,
-      overflow: 'hidden',
-    },
   });
 }

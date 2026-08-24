@@ -64,9 +64,7 @@ export const SponsorDrawerMenu: React.FC<SponsorDrawerMenuProps> = ({
           testID="sponsor-drawer"
         >
           <View style={styles.panelHeader}>
-            <View style={styles.logoMark}>
-              <ProDaySymbol size={36} variant="sponsor" tone="white" />
-            </View>
+            <ProDaySymbol size={36} variant="sponsor" tone="white" />
             <View style={styles.panelBrand}>
               <Text style={styles.panelTitle}>ProDay Sponsor</Text>
               <Text style={styles.panelSub}>Marque · clubs · ROI</Text>
@@ -156,17 +154,6 @@ function createStyles() {
       paddingBottom: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: SPONSOR_THEME.borderSubtle,
-    },
-    logoMark: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: SPONSOR_THEME.primarySoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: SPONSOR_THEME.border,
-      overflow: 'hidden',
     },
     panelBrand: { flex: 1 },
     panelTitle: { color: SPONSOR_THEME.text, fontSize: 16, fontWeight: '800' },

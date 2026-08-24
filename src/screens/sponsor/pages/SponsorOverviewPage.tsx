@@ -96,9 +96,7 @@ export const SponsorOverviewPage: React.FC = () => {
     <SponsorPageScaffold loading={loading}>
       <AnimatedEntrance kind="fadeUp" index={0}>
         <View style={styles.hero}>
-          <View style={styles.heroMark}>
-            <ProDaySymbol size={48} variant="sponsor" tone="white" />
-          </View>
+          <ProDaySymbol size={48} variant="sponsor" tone="white" />
           <Text style={styles.eyebrow}>ProDay Sponsor</Text>
           <Text
             style={styles.greeting}
@@ -282,17 +280,6 @@ function createStyles() {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: SPONSOR_THEME.borderSubtle,
       marginBottom: spacing.sm,
-    },
-    heroMark: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: SPONSOR_THEME.primarySoft,
-      borderWidth: 1,
-      borderColor: SPONSOR_THEME.border,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.xs,
     },
     eyebrow: {
       fontSize: 10,

@@ -7,7 +7,6 @@ import {
   PRODAY_PRO_PLAYER_BRAND,
   PRODAY_PRO_STAFF_BRAND,
 } from '../../models/ProductLine';
-import { PRO_BRANDING_LOGOS } from '../../content/brandingAssets';
 import { PRODAY_POLE_ACCENTS } from '../../theme/prodayBrand';
 import type { LogoBackground } from '../Logo';
 import { BrandWordmarkLogo, type BrandWordmarkColors } from './BrandWordmarkLogo';
@@ -33,7 +32,7 @@ const PRO_SEGMENT_COLORS: Record<
   pro_club: {
     brand: '#FFFFFF',
     accent: PRODAY_POLE_ACCENTS.club,
-    taglineLight: '#67D4FF',
+    taglineLight: '#6EE7B7',
     taglineDark: 'rgba(255, 255, 255, 0.92)',
   },
   president: {
@@ -97,7 +96,15 @@ export const ProSegmentLogo: React.FC<ProSegmentLogoProps> = ({
   return (
     <BrandWordmarkLogo
       brand={brand}
-      picto={PRO_BRANDING_LOGOS.picto}
+      variant={
+        key === 'pro_player'
+          ? 'player'
+          : key === 'president'
+            ? 'president'
+            : key === 'pro_club'
+              ? 'club'
+              : 'coach'
+      }
       colors={PRO_SEGMENT_COLORS[key]}
       width={width}
       background={background}

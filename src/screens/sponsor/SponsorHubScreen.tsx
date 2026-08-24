@@ -58,9 +58,7 @@ export const SponsorHubScreen: React.FC<SponsorHubScreenProps> = ({
         ) : (
           <AnimatedEntrance kind="fadeUp" index={0}>
             <View style={styles.shellIntro}>
-              <View style={styles.mark}>
-                <ProDaySymbol size={48} variant="sponsor" tone="white" />
-              </View>
+              <ProDaySymbol size={48} variant="sponsor" tone="white" />
               <Text style={styles.shellIntroTitle}>{SPONSOR_PRICING_INTRO.title}</Text>
               <Text style={styles.shellIntroSub}>{SPONSOR_PRICING_INTRO.subtitle}</Text>
             </View>
@@ -124,16 +122,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: SPONSOR_THEME.borderSubtle,
-  },
-  mark: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: SPONSOR_THEME.primarySoft,
-    borderWidth: 1,
-    borderColor: SPONSOR_THEME.border,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   shellIntroTitle: {
     fontSize: 22,

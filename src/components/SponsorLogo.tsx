@@ -1,6 +1,5 @@
 import React from 'react';
 import { PRODAY_SPONSOR_BRAND } from '../models/ProductLine';
-import { SPONSOR_BRANDING_LOGOS } from '../content/brandingAssets';
 import type { LogoBackground } from './Logo';
 import { BrandWordmarkLogo } from './branding/BrandWordmarkLogo';
 import { PRODAY_POLE_ACCENTS } from '../theme/prodayBrand';
@@ -20,7 +19,10 @@ interface SponsorLogoProps {
   centered?: boolean;
 }
 
-/** Logo Pro Day Sponsor — accent violet planche (#92278F). */
+/**
+ * Logo Pro Day Sponsor — symbole HD teinté (#92278F) + wordmark.
+ * Pas de lockup opaque / picto legacy.
+ */
 export const SponsorLogo: React.FC<SponsorLogoProps> = ({
   width = 200,
   background = 'light',
@@ -30,7 +32,7 @@ export const SponsorLogo: React.FC<SponsorLogoProps> = ({
 }) => (
   <BrandWordmarkLogo
     brand={PRODAY_SPONSOR_BRAND}
-    picto={SPONSOR_BRANDING_LOGOS.picto}
+    variant="sponsor"
     colors={SPONSOR_COLORS}
     width={width}
     background={background}
