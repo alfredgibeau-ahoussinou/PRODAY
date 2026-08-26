@@ -11,7 +11,7 @@ export const BRAND = {
   /** Phrase d’accueil : ce que fait l’app, en une ligne. */
   mission: "Pas un outil de plus. L'infrastructure de votre football.",
   heroSupport:
-    "Joueurs, coachs, clubs, parents, supporters et sponsors : les objets métier du football reliés dans un même écosystème — plus de WhatsApp, tableurs et docs éparpillés.",
+    "Joueurs, coachs, clubs, parents, supporters et sponsors : les objets métier du football reliés dans un même écosystème. Plus de WhatsApp, tableurs et docs éparpillés.",
 } as const;
 
 /** Pitch honnête : capacités réelles vs ambition long terme. Pas de métriques fictives. */
@@ -143,7 +143,7 @@ export const SUPPORTER_BRAND = {
   logo: UNIVERSE_LOGOS.supporter,
   tagline: "Matchs · Scores · Favoris · Expérience match",
   mission:
-    "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, statistiques, calendriers, favoris, actualités et expérience match. Tribune gratuite — porte d'entrée vers le même écosystème, pas un produit à part.",
+    "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, statistiques, calendriers, favoris, actualités et expérience match. Tribune gratuite · porte d'entrée vers le même écosystème, pas un produit à part.",
   accent: "#8B5CF6",
   accentDark: "#5B21B6",
 } as const;
@@ -889,7 +889,7 @@ export const PRO_CLUB_MODULES = [
     title: "Convocations & retards",
     subtitle: "Présences centralisées",
     description:
-      "RSVP, retard annoncé en 1–2 clics (joueur ou parent), feuille de présence visible par le coach — sans WhatsApp.",
+      "RSVP, retard annoncé en 1 à 2 clics (joueur ou parent), feuille de présence visible par le coach · sans WhatsApp.",
     image: "/showcase/classic-exp-messages.jpg",
   },
   {
@@ -1223,7 +1223,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     ],
     modulesTitle: "La tribune dans l'écosystème",
     modulesSubtitle:
-      "Scores, compositions, stats, calendriers, favoris et actualités — porte d'entrée vers le même graphe football.",
+      "Scores, compositions, stats, calendriers, favoris et actualités · porte d'entrée vers le même graphe football.",
     modules: SUPPORTER_MODULES as readonly UniverseModule[],
     journeyIds: ["supporter"] as const,
     audienceNote:
@@ -1385,7 +1385,7 @@ export const VISION_PILLARS = [
   },
   {
     title: "Portes d'entrée, un écosystème",
-    body: "Chaque univers est une entrée vers le même graphe football — pas huit produits indépendants. Vous entrez par votre rôle ; la donnée reste partagée.",
+    body: "Chaque univers est une entrée vers le même graphe football, pas huit produits indépendants. Vous entrez par votre rôle ; la donnée reste partagée.",
   },
   {
     title: "Pas Notion. Pas Discord.",
@@ -1498,7 +1498,7 @@ export const SPONSOR_PRICING_INTRO = {
   subtitle:
     "Sponsor et partenaire : même profil sur ProDay. Clubs, joueurs et organisateurs sur votre territoire. Visibilité mesurable. Sans intermédiaire.",
   footnote:
-    "Tarifs HT. Mensuel ou annuel (−20 %). Résiliation à tout moment sur les formules en ligne.",
+    "Tarifs HT. Mensuel ou annuel (moins 20 %). Résiliation à tout moment sur les formules en ligne.",
 } as const;
 
 export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
@@ -1862,7 +1862,7 @@ export const FAQ_ITEMS = [
   {
     category: "general",
     q: "Quels sont les pôles ?",
-    a: "Joueur, Club, Coach, Parent, Supporter et Sponsor sont des portes d'entrée vers le même écosystème football — pas des produits séparés. Agent, recruteur et organisateur restent des rôles intégrés.",
+    a: "Joueur, Club, Coach, Parent, Supporter et Sponsor sont des portes d'entrée vers le même écosystème football, pas des produits séparés. Agent, recruteur et organisateur restent des rôles intégrés.",
   },
   {
     category: "general",
@@ -1917,7 +1917,7 @@ export const FAQ_ITEMS = [
   {
     category: "tarifs",
     q: "Quels tarifs pour le Club ?",
-    a: `Club Amateur ${faqPricing("club_amateur")} : licenciés, convocations, calendrier, analyse de forme. Club Essentiel ${faqPricing("club_pro")} : compétitions, multi équipes (coachs en abo individuel). Tout inclus ${faqPricing("club_premium")} : Sur devis · À partir de 3 € / adhérent — Tactique IA + vidéo avec votre matériel. Option ProDay Pro + Veo (sur devis) pour le pack caméra clé en main.`,
+    a: `Club Amateur ${faqPricing("club_amateur")} : licenciés, convocations, calendrier, analyse de forme. Club Essentiel ${faqPricing("club_pro")} : compétitions, multi équipes (coachs en abo individuel). Tout inclus ${faqPricing("club_premium")} : Sur devis · À partir de 3 € / adhérent · Tactique IA + vidéo avec votre matériel. Option ProDay Pro + Veo (sur devis) pour le pack caméra clé en main.`,
   },
   {
     category: "tarifs",
@@ -2007,7 +2007,7 @@ export const FAQ_ITEMS = [
   {
     category: "supporter",
     q: "Quelles fonctionnalités pour le supporter ?",
-    a: "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, statistiques, calendriers, favoris, actualités et expérience match. Gratuit, sans paywall — porte d'entrée vers le même écosystème.",
+    a: "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, statistiques, calendriers, favoris, actualités et expérience match. Gratuit, sans paywall · porte d'entrée vers le même écosystème.",
   },
   {
     category: "sponsor",
@@ -2206,7 +2206,7 @@ export const QUIZ_RESULTS: Record<
   },
   parent: {
     title: "Pro Day Parent",
-    description: "Pôle Parent — supervision, contacts approuvés et limites de temps.",
+    description: "Pôle Parent · supervision, contacts approuvés et limites de temps.",
     thought: "Voir son enfant s'épanouir sur le terrain, c'est une fierté immense. L'accompagner dans son parcours demande du temps, de l'écoute et les bons outils. ProDay facilite ce rôle de guide.",
     href: "/parent#app",
     cta: "Ouvrir le Pôle Parent",

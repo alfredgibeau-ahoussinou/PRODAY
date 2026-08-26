@@ -27,7 +27,7 @@ const PRESIDENT_SIGNALS = [
 const APP_BEATS = [
   {
     title: "Cockpit",
-    body: "Le club en un coup d’œil : équipes, alertes et décisions à prendre — pas quinze menus.",
+    body: "Le club en un coup d’œil : équipes, alertes et décisions à prendre · pas quinze menus.",
   },
   {
     title: "Club · Finances",
@@ -76,7 +76,7 @@ export function PresidentAppHub() {
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
               Dirigeants, DS et secrétariat pilotent depuis le Pôle Président. Le coach
-              prépare ; le président décide. Or — le langage de l’app Executive.
+              prépare ; le président décide. Or · le langage de l’app Executive.
             </p>
 
             <div className="mt-10 grid gap-3 sm:grid-cols-3">

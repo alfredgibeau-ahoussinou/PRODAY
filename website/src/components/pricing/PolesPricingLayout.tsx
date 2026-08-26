@@ -101,7 +101,7 @@ export function PolesPricingLayout() {
                   : "Mensuel · sans engagement"}
               </p>
               <p className="mt-1 text-xs text-white/45">
-                Résiliation à tout moment. Sponsoring possible —{" "}
+                Résiliation à tout moment. Sponsoring possible ·{" "}
                 <Link
                   href={ROUTES.sponsor}
                   className="text-white/70 underline-offset-2 hover:text-white hover:underline"

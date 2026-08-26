@@ -111,7 +111,7 @@ const TRIBUNE_ZONES = [
     id: "matchs",
     label: "Matchs",
     title: "ProDay & externes",
-    body: "Scores, compositions, statistiques et calendriers — matchs de ton réseau et au-delà.",
+    body: "Scores, compositions, statistiques et calendriers · matchs de ton réseau et au-delà.",
   },
   {
     id: "experience",

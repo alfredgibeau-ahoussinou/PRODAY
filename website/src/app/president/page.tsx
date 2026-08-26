@@ -9,7 +9,7 @@ import { CLUB_APP_HREF, ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Pôle Président · Cockpit dirigeants",
   description:
-    "Le président ouvre ProDay et comprend le club en quelques secondes. Cockpit, finances, assistant IA — décisions claires.",
+    "Le président ouvre ProDay et comprend le club en quelques secondes. Cockpit, finances, assistant IA · décisions claires.",
 };
 
 export default function PresidentPolePage() {
@@ -34,7 +34,7 @@ export default function PresidentPolePage() {
 
       <TerminalCta
         title="Décider sans perdre le fil."
-        description="Cockpit dirigeants, alertes et priorités — dans la même app que le club et les coachs."
+        description="Cockpit dirigeants, alertes et priorités · dans la même app que le club et les coachs."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Liste d’attente"
         secondaryHref={CLUB_APP_HREF}

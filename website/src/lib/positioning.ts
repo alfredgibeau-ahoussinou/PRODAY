@@ -12,7 +12,7 @@ export const PRODUCT_POSITIONING = {
   fragmentation: {
     kicker: "CE QUE LA CENTRALISATION SUPPRIME",
     title: "Arrêtez de fragmenter votre saison.",
-    body: "WhatsApp pour une info, tableur pour une autre, docs ailleurs, stats ailleurs, calendrier ailleurs, com ailleurs. ProDay regroupe les objets métier du football — pour que chaque rôle travaille sur la même vérité.",
+    body: "WhatsApp pour une info, tableur pour une autre, docs ailleurs, stats ailleurs, calendrier ailleurs, com ailleurs. ProDay regroupe les objets métier du football, pour que chaque rôle travaille sur la même vérité.",
     items: [
       { label: "WhatsApp", problem: "Infos dispersées, RSVP introuvables" },
       { label: "Tableur", problem: "Effectifs et stats hors contexte" },
@@ -27,19 +27,19 @@ export const PRODUCT_POSITIONING = {
       {
         name: "Notion",
         role: "Organise de l'information",
-        note: "Pages, bases, docs — utiles, mais pas le métier foot.",
+        note: "Pages, bases, docs : utiles, mais pas le métier foot.",
         highlight: false,
       },
       {
         name: "Discord",
         role: "Communication communautaire",
-        note: "Salons et messages — pas de convocations, matchs ni stats liés.",
+        note: "Salons et messages : pas de convocations, matchs ni stats liés.",
         highlight: false,
       },
       {
         name: "ProDay",
         role: "Objets métier du football",
-        note: "Joueurs, staffs, clubs, équipes, matchs, entraînements, convocations, stats, perfs, documents, parents, présidents, supporters, sponsors — reliés dans un même écosystème.",
+        note: "Joueurs, staffs, clubs, équipes, matchs, entraînements, convocations, stats, perfs, documents, parents, présidents, supporters, sponsors : reliés dans un même écosystème.",
         highlight: true,
       },
     ],

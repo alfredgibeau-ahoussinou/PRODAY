@@ -100,7 +100,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Accompagner sans étouffer",
     subtitle: "Supervision · Messages · Agenda",
     description:
-      "Espace dédié aux parents : messages, agenda, retards coach, temps d’écran et trajets — lié au compte joueur de l’enfant.",
+      "Espace dédié aux parents : messages, agenda, retards coach, temps d’écran et trajets · lié au compte joueur de l’enfant.",
     href: ROUTES.parent,
     pricingHash: "parent",
     logo: "/branding/logo-proday-mark-parent.png",
@@ -113,7 +113,7 @@ export const CAROUSEL_POLES: PoleDefinition[] = [
     title: "Suivre clubs et joueurs",
     subtitle: "Matchs · Scores · Compositions · Stats",
     description:
-      "Suivez clubs et joueurs, matchs ProDay et externes, scores, compositions, statistiques, calendriers, favoris, actualités et expérience match — dans le même écosystème.",
+      "Suivez clubs et joueurs, matchs ProDay et externes, scores, compositions, statistiques, calendriers, favoris, actualités et expérience match · dans le même écosystème.",
     href: ROUTES.supporter,
     pricingHash: "supporter",
     logo: "/branding/logo-proday-mark-supporter.png",

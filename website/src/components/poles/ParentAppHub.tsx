@@ -10,7 +10,7 @@ const PARENT_SIGNALS = [
   {
     tone: "home" as const,
     label: "Famille",
-    body: "Accueil parent — lier un enfant, puis matchs, trajets et messages au même endroit.",
+    body: "Accueil parent · lier un enfant, puis matchs, trajets et messages au même endroit.",
   },
   {
     tone: "guide" as const,
@@ -20,7 +20,7 @@ const PARENT_SIGNALS = [
   {
     tone: "tools" as const,
     label: "Outils",
-    body: "Menu famille et profil — réglages, lier un enfant, déconnexion.",
+    body: "Menu famille et profil · réglages, lier un enfant, déconnexion.",
   },
 ];
 
@@ -39,7 +39,7 @@ const APP_BEATS = [
   },
   {
     title: "Profil",
-    body: "Réglages, lier un enfant, notifications et déconnexion — le cadre, pas cinq apps.",
+    body: "Réglages, lier un enfant, notifications et déconnexion · le cadre, pas cinq apps.",
   },
 ];
 
@@ -80,7 +80,7 @@ export function ParentAppHub() {
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
               Accueil, Guide, Menu, Profil : une composition, un téléphone. Orange et
-              lime — le langage de l’app Parent.
+              lime · le langage de l’app Parent.
             </p>
 
             <div className="mt-10 grid gap-3 sm:grid-cols-3">
@@ -143,7 +143,7 @@ export function ParentAppHub() {
               Parents · Tuteurs · Familles
             </p>
             <p className="text-sm leading-relaxed text-white/55">
-              Supervision, contacts approuvés et limites de temps — dans la même app que
+              Supervision, contacts approuvés et limites de temps · dans la même app que
               l’enfant. Joueurs et coachs ont leur pôle dédié.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">

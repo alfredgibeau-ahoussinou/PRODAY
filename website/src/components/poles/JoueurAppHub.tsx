@@ -27,7 +27,7 @@ const JOUEUR_SIGNALS = [
 const APP_BEATS = [
   {
     title: "Accueil · Parcours",
-    body: "Bonjour, carte profil, objectifs et anneaux de stats — ta journée foot en un coup d’œil.",
+    body: "Bonjour, carte profil, objectifs et anneaux de stats · ta journée foot en un coup d’œil.",
   },
   {
     title: "Centre Match",
@@ -80,7 +80,7 @@ export function JoueurAppHub() {
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
               Accueil, matchs, saison, profil : une composition, un téléphone. Accent bleu
-              et rouge — le langage du Pôle Joueur.
+              et rouge · le langage du Pôle Joueur.
             </p>
 
             <div className="mt-10 grid gap-3 sm:grid-cols-3">

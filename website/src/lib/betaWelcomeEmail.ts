@@ -129,14 +129,14 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
   const text = [
     "Bonjour,",
     "",
-    `Félicitations — votre accès bêta est approuvé (profil : ${params.roleLabel}).`,
+    `Félicitations · votre accès bêta est approuvé (profil : ${params.roleLabel}).`,
     "",
     "Vous faites partie des premiers à façonner ProDay sur le terrain.",
     "",
     "Prochaines étapes :",
     "• Ouvrez votre espace bêta (programme, guides, retours)",
     "• Android : téléchargez l’APK depuis l’onglet Installer",
-    `• iOS : ouverture TestFlight le ${IOS_BETA_LAUNCH_LABEL} — lien envoyé par email`,
+    `• iOS : ouverture TestFlight le ${IOS_BETA_LAUNCH_LABEL} · lien envoyé par email`,
     "",
     `Espace bêta : ${accessUrl}`,
     `Installer : ${installerUrl}`,
@@ -153,8 +153,8 @@ export function buildBetaWelcomeEmail(params: BetaWelcomeEmailParams): {
     bodyHtml: `
       <p style="margin:0 0 10px;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#F5D04A;">Accès approuvé</p>
       <h1 style="margin:0 0 18px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">Bienvenue dans la bêta ProDay</h1>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Félicitations — votre demande a été approuvée. Profil : <strong style="color:#ffffff;">${params.roleLabel}</strong>.</p>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Vous êtes officiellement beta testeur — parmi les premiers à façonner ProDay sur le terrain.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Félicitations · votre demande a été approuvée. Profil : <strong style="color:#ffffff;">${params.roleLabel}</strong>.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:#d4d4d8;">Vous êtes officiellement beta testeur · parmi les premiers à façonner ProDay sur le terrain.</p>
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 20px;background:#111114;border:1px solid rgba(255,255,255,0.12);">
         <tr>
           <td style="width:3px;background:#E8B923;font-size:0;line-height:0;">&nbsp;</td>

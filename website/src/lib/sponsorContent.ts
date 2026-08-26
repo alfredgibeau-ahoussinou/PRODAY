@@ -5,7 +5,7 @@ export const SPONSOR_BRAND = {
   shortName: "Sponsor",
   tagline: "Opportunités · Partenariats · Impact",
   mission:
-    "Trouver des opportunités de sponsoring, identifier clubs, équipes et profils pertinents, gérer les partenariats, suivre les activations et mesurer visibilité et impact — dans le même écosystème que clubs et joueurs.",
+    "Trouver des opportunités de sponsoring, identifier clubs, équipes et profils pertinents, gérer les partenariats, suivre les activations et mesurer visibilité et impact · dans le même écosystème que clubs et joueurs.",
   accent: "#EF4444",
   accentDark: "#7F1D1D",
   logo: "/branding/logo-proday-mark-sponsor.png",
@@ -15,7 +15,7 @@ export const SPONSOR_HERO = {
   kicker: "PÔLE SPONSOR",
   title: "Trouvez, activez, mesurez.",
   description:
-    "Opportunités de sponsoring, clubs et profils pertinents, partenariats, activations, visibilité et impact. Une porte d'entrée vers l'écosystème ProDay — pas un pôle « en plus ».",
+    "Opportunités de sponsoring, clubs et profils pertinents, partenariats, activations, visibilité et impact. Une porte d'entrée vers l'écosystème ProDay, pas un pôle « en plus ».",
   image: "/showcase/classic-exp-sponsors.jpg",
 } as const;
 
@@ -248,7 +248,7 @@ export type SponsorSignupPayload = {
 export const SPONSOR_FAQ = [
   {
     q: "Quelle différence avec les autres pôles ProDay ?",
-    a: "Sponsor n'est pas un produit séparé : c'est une porte d'entrée vers le même écosystème. Vous trouvez des opportunités, identifiez clubs/profils, gérez partenariats et activations, et mesurez l'impact — sur la même donnée que clubs et joueurs.",
+    a: "Sponsor n'est pas un produit séparé : c'est une porte d'entrée vers le même écosystème. Vous trouvez des opportunités, identifiez clubs/profils, gérez partenariats et activations, et mesurez l'impact · sur la même donnée que clubs et joueurs.",
   },
   {
     q: "Puis je tester avant de m'engager ?",

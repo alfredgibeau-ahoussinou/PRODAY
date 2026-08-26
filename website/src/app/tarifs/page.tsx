@@ -19,7 +19,7 @@ export default function PricingPage() {
       <ImmersivePoleHero
         brand="Pro Day Tarifs"
         headline="Un pôle. Un prix."
-        support="Sans engagement. Sponsoring possible. Mensuel ou annuel (−20 %). Tu ouvres l’espace dont tu as besoin — et le parrainage reste disponible."
+        support="Sans engagement. Sponsoring possible. Mensuel ou annuel (moins 20 %). Tu ouvres l’espace dont tu as besoin, et le parrainage reste disponible."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}

@@ -12,13 +12,13 @@ export const PLAYER_APP_SCREENS: PlayerAppScreen[] = [
     id: "accueil",
     src: "/images/app/player/player-accueil.jpg",
     label: "Accueil",
-    caption: "Parcours du jour — forme, objectifs et carte joueur.",
+    caption: "Parcours du jour · forme, objectifs et carte joueur.",
   },
   {
     id: "matchs",
     src: "/images/app/player/player-matchs.jpg",
     label: "Matchs",
-    caption: "Centre Match — calendrier, lieu et préparation.",
+    caption: "Centre Match · calendrier, lieu et préparation.",
   },
   {
     id: "saison",
@@ -36,6 +36,6 @@ export const PLAYER_APP_SCREENS: PlayerAppScreen[] = [
     id: "plus",
     src: "/images/app/player/player-menu.jpg",
     label: "Plus",
-    caption: "Tout ProDay — modules et raccourcis du pôle.",
+    caption: "Tout ProDay · modules et raccourcis du pôle.",
   },
 ];

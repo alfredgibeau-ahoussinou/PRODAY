@@ -16,7 +16,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Pôle Coach · Tactique IA et analyse de forme",
   description:
-    "Profil coach : app Accueil, effectif, IA — analyse de forme, Tactique IA, bourse interne et préparation match.",
+    "Profil coach : app Accueil, effectif, IA · analyse de forme, Tactique IA, bourse interne et préparation match.",
 };
 
 const COACH_CAPS = [

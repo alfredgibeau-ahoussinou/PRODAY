@@ -22,7 +22,7 @@ export function ClubModulesSection() {
           Tout le vivier. Toutes les équipes. Un seul endroit.
         </h2>
         <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/55 sm:text-base">
-          Équipes, licenciés, bourse interne, convocations, covoiturage et vitrine —
+          Équipes, licenciés, bourse interne, convocations, covoiturage et vitrine ·
           le cœur de ProDay pour le bureau et la direction sportive.
         </p>
 

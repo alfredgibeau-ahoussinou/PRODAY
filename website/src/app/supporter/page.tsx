@@ -15,7 +15,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Pôle Supporter · Suivre clubs & matchs",
   description:
-    "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, stats, calendriers, favoris et actualités. Tribune gratuite — même écosystème ProDay.",
+    "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, stats, calendriers, favoris et actualités. Tribune gratuite · même écosystème ProDay.",
 };
 
 export default function SupporterPage() {
@@ -27,7 +27,7 @@ export default function SupporterPage() {
       <ImmersivePoleHero
         brand="Pro Day Supporter"
         headline="Suivre. Vivre. Le match."
-        support="Clubs et joueurs, scores, compositions, statistiques, calendriers, favoris et actualités. Une porte d'entrée vers l'écosystème ProDay — pas un produit à part. Gratuit."
+        support="Clubs et joueurs, scores, compositions, statistiques, calendriers, favoris et actualités. Une porte d'entrée vers l'écosystème ProDay, pas un produit à part. Gratuit."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={`${ROUTES.betaWaitlist}?role=supporter`}

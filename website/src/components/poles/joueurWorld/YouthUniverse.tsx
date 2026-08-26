@@ -31,7 +31,7 @@ const INFO_BLOCKS = [
   },
   {
     title: "Assistant IA (Pass 3,99 €)",
-    body: "Programmes perso générés par l’IA — pas un coach humain.",
+    body: "Programmes perso générés par l’IA · pas un coach humain.",
   },
   {
     title: "Coach humain (~30 €/h)",
@@ -39,7 +39,7 @@ const INFO_BLOCKS = [
   },
   {
     title: "Parents",
-    body: "Ils voient seulement ce qui est autorisé — toi tu restes au centre.",
+    body: "Ils voient seulement ce qui est autorisé · toi tu restes au centre.",
   },
 ];
 

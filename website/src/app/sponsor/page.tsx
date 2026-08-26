@@ -28,7 +28,7 @@ export default function SponsorPolePage() {
       <ImmersivePoleHero
         brand="Pro Day Sponsor"
         headline={SPONSOR_HERO.title}
-        support="Opportunités, clubs et profils pertinents, partenariats, activations, visibilité et impact. Porte d'entrée vers le même écosystème — dès la formule Découverte."
+        support="Opportunités, clubs et profils pertinents, partenariats, activations, visibilité et impact. Porte d'entrée vers le même écosystème · dès la formule Découverte."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.sponsorDevis}

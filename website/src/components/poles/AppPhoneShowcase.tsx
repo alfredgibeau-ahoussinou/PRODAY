@@ -88,7 +88,7 @@ export function AppPhoneShowcase({
         <div
           className="relative rounded-[2.55rem] border-[5px] border-neutral-700 bg-neutral-950 p-[5px] shadow-[0_36px_72px_-28px_rgba(0,0,0,0.95)] sm:rounded-[2.75rem] sm:border-[6px] sm:p-1.5 sm:shadow-[0_44px_90px_-22px_rgba(0,0,0,0.95)]"
           role="img"
-          aria-label={`Capture ${productLabel} — ${active.label}`}
+          aria-label={`Capture ${productLabel} · ${active.label}`}
         >
           <span
             aria-hidden
@@ -119,7 +119,7 @@ export function AppPhoneShowcase({
               >
                 <Image
                   src={active.src}
-                  alt={`${productLabel} — ${active.label} : ${active.caption}`}
+                  alt={`${productLabel} · ${active.label} : ${active.caption}`}
                   fill
                   sizes="(max-width: 640px) 280px, 300px"
                   className="object-cover object-top"

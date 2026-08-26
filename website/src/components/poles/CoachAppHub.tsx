@@ -10,7 +10,7 @@ const COACH_SIGNALS = [
   {
     tone: "plan" as const,
     label: "Calendrier",
-    body: "Matchs, séances et planning — le jour J avec pointage et convocations.",
+    body: "Matchs, séances et planning · le jour J avec pointage et convocations.",
   },
   {
     tone: "squad" as const,
@@ -31,7 +31,7 @@ const APP_BEATS = [
   },
   {
     title: "Équipe · Effectif",
-    body: "Tableau tactique 4-2-3-1, banc et consignes — composition visuelle.",
+    body: "Tableau tactique 4-2-3-1, banc et consignes · composition visuelle.",
   },
   {
     title: "Joueurs",
@@ -39,7 +39,7 @@ const APP_BEATS = [
   },
   {
     title: "IA · Menu · Profil",
-    body: "Assistant, modules ProDay et identité coach — diplômes et parcours.",
+    body: "Assistant, modules ProDay et identité coach · diplômes et parcours.",
   },
 ];
 
@@ -80,7 +80,7 @@ export function CoachAppHub() {
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
               Accueil, équipe, joueurs, IA, menu, profil : une composition, un téléphone.
-              Accent bleu — le langage de l’app Coach.
+              Accent bleu · le langage de l’app Coach.
             </p>
 
             <div className="mt-10 grid gap-3 sm:grid-cols-3">

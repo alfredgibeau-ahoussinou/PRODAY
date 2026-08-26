@@ -123,7 +123,7 @@ export function JoueurPricingBlock({
 
         <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-4 sm:p-5">
           <p className="text-sm font-semibold text-white">
-            IA ou coach humain — ce n’est pas le même prix
+            IA ou coach humain · ce n’est pas le même prix
           </p>
           <p className="mt-2 text-sm leading-relaxed text-white/55">
             <strong className="text-white/80">Assistant IA</strong> = inclus dans

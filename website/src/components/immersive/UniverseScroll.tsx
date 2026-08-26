@@ -52,7 +52,7 @@ export function UniverseScroll() {
             </h2>
             <p className="mt-5 max-w-md text-base leading-relaxed text-[#052424]/55">
               Joueur, Club, Coach, Parent, Supporter, Sponsor : ce ne sont pas
-              des produits séparés. Chaque univers ouvre le même graphe — objets
+              des produits séparés. Chaque univers ouvre le même graphe · objets
               métier reliés, même donnée.
             </p>
           </motion.div>

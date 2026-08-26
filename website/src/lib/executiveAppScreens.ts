@@ -12,7 +12,7 @@ export const EXECUTIVE_APP_SCREENS: ExecutiveAppScreen[] = [
     id: "cockpit",
     src: "/images/app/executive/executive-cockpit.jpg",
     label: "Cockpit",
-    caption: "Le club en un coup d’œil — équipes, alertes, décisions.",
+    caption: "Le club en un coup d’œil · équipes, alertes, décisions.",
   },
   {
     id: "club",

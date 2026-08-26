@@ -17,7 +17,7 @@ export default function EcosystemPage() {
         pathname={ROUTES.ecosystem}
         kicker="ÉCOSYSTÈME"
         title="Tous les acteurs, une même donnée"
-        description="Des portes d'entrée — pas des produits séparés. Cliquez sur les nœuds : comment ProDay relie votre saison autour des objets métier du football."
+        description="Des portes d'entrée, pas des produits séparés. Cliquez sur les nœuds : comment ProDay relie votre saison autour des objets métier du football."
         image="/images/football-club-01.jpg"
         dark
       />

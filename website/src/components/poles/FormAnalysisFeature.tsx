@@ -39,7 +39,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Bonne dynamique — minutes stables, récupération déclarée solide.",
+      insight: "Bonne dynamique · minutes stables, récupération déclarée solide.",
     },
     {
       name: "Noah L.",
@@ -49,7 +49,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "élevée",
       recovery: "moyenne",
       availability: "À surveiller",
-      insight: "Charge haute sur 7 jours — alléger la densification avant le match.",
+      insight: "Charge haute sur 7 jours · alléger la densification avant le match.",
     },
     {
       name: "Ethan R.",
@@ -59,7 +59,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "très élevée",
       recovery: "faible",
       availability: "Repos conseillé",
-      insight: "Repos / adaptation de séance recommandée — ne pas forcer le volume.",
+      insight: "Repos / adaptation de séance recommandée · ne pas forcer le volume.",
     },
     {
       name: "Yanis M.",
@@ -69,7 +69,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "faible",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Disponible et frais — profil prioritaire pour le onze.",
+      insight: "Disponible et frais · profil prioritaire pour le onze.",
     },
   ],
   u18: [
@@ -81,7 +81,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Présences régulières — forme stable pour le weekend.",
+      insight: "Présences régulières · forme stable pour le weekend.",
     },
     {
       name: "Amine K.",
@@ -91,7 +91,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "élevée",
       recovery: "moyenne",
       availability: "À surveiller",
-      insight: "Double séance + match midweek — surveiller la récupération déclarée.",
+      insight: "Double séance + match midweek · surveiller la récupération déclarée.",
     },
     {
       name: "Hugo T.",
@@ -101,7 +101,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "moyenne",
       availability: "À surveiller",
-      insight: "Retour progressif — minutes à doser en première période.",
+      insight: "Retour progressif · minutes à doser en première période.",
     },
   ],
   u15: [
@@ -113,7 +113,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "faible",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Excellente fraîcheur — prêt pour un volume de jeu normal.",
+      insight: "Excellente fraîcheur · prêt pour un volume de jeu normal.",
     },
     {
       name: "Inès P.",
@@ -123,7 +123,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "élevée",
       recovery: "faible",
       availability: "Repos conseillé",
-      insight: "Fatigue déclarée élevée — privilégier récupération active.",
+      insight: "Fatigue déclarée élevée · privilégier récupération active.",
     },
     {
       name: "Sara M.",
@@ -133,7 +133,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Indicateurs cohérents — aucune alerte de charge.",
+      insight: "Indicateurs cohérents · aucune alerte de charge.",
     },
   ],
 };
@@ -176,7 +176,7 @@ const COPY: Record<
     kicker: "Fonctionnalité centrale · Inclus dans l’offre Club",
     title: "L’état de forme de tout le club, équipe par équipe.",
     support:
-      "Dirigeants et DS voient la disponibilité réelle avant le weekend. Les coachs agissent sur la charge et la récupération déclarée — jamais un diagnostic médical.",
+      "Dirigeants et DS voient la disponibilité réelle avant le weekend. Les coachs agissent sur la charge et la récupération déclarée · jamais un diagnostic médical.",
     boardKicker: "Tableau effectif · Vue Club",
     primaryHref: ROUTES.betaWaitlist,
     primaryLabel: "Activer pour mon club",
@@ -187,7 +187,7 @@ const COPY: Record<
     kicker: "Fonctionnalité centrale · Effectif",
     title: "Composez avec la forme réelle de votre banc.",
     support:
-      "Charge, récupération déclarée, disponibilité et alertes avant match. Adaptez la séance — pas un avis médical.",
+      "Charge, récupération déclarée, disponibilité et alertes avant match. Adaptez la séance · pas un avis médical.",
     boardKicker: "Tableau effectif · Vue Coach",
     primaryHref: ROUTES.betaWaitlist,
     primaryLabel: "Tester côté Coach",
@@ -209,7 +209,7 @@ const COPY: Record<
     kicker: "Fonctionnalité centrale ProDay",
     title: "Analyse de forme : du club au joueur.",
     support:
-      "Vision effectif pour le coach et le club. Suivi personnel pour chaque licencié. Indicateurs de charge — jamais un diagnostic.",
+      "Vision effectif pour le coach et le club. Suivi personnel pour chaque licencié. Indicateurs de charge · jamais un diagnostic.",
     boardKicker: "Tableau effectif · Démo",
     primaryHref: ROUTES.coach,
     primaryLabel: "Voir côté Coach",
@@ -450,7 +450,7 @@ export function FormAnalysisFeature({
                         Joueur · Forme · Charge · Récup. · Dispo.
                       </p>
                       <h3 className="mt-2 font-display text-xl text-white">
-                        État de forme —{" "}
+                        État de forme ·{" "}
                         {TEAMS.find((t) => t.id === teamId)?.label}
                       </h3>
                       <p className="mt-1 text-sm text-white/50">
@@ -577,7 +577,7 @@ export function FormAnalysisFeature({
         </div>
 
         <p className="mt-6 max-w-2xl text-xs leading-relaxed text-white/40 sm:text-sm">
-          Indicateurs de charge et récupération déclarée — jamais un diagnostic
+          Indicateurs de charge et récupération déclarée · jamais un diagnostic
           médical, ni un pourcentage de risque de blessure.
         </p>
 

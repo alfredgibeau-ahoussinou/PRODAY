@@ -154,7 +154,7 @@ const CLUB_ZONES: Zone[] = [
     id: "comms",
     label: "06",
     title: "Présences & comms",
-    body: "Convocations, retards annoncés, annonces structure — sans tableurs ni WhatsApp.",
+    body: "Convocations, retards annoncés, annonces structure · sans tableurs ni WhatsApp.",
     x: "82%",
     y: "58%",
   },
@@ -420,7 +420,7 @@ export function CoachTacticsBoard() {
             </div>
             <p className="text-sm text-white/50">
               Analyse de forme : sommeil, fatigue, stress, récupération déclarée,
-              minutes et présences — indicateurs, pas de diagnostic.
+              minutes et présences · indicateurs, pas de diagnostic.
             </p>
           </div>
         </div>

@@ -18,7 +18,7 @@ export const CLUB_APP_SCREENS: ClubAppScreen[] = [
     id: "equipes",
     src: "/images/app/club/club-equipes.jpg",
     label: "Équipes",
-    caption: "Catégories, licenciés et coachs — le roster en un coup d’œil.",
+    caption: "Catégories, licenciés et coachs · le roster en un coup d’œil.",
   },
   {
     id: "matchs",

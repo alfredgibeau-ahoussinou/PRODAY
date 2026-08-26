@@ -24,12 +24,12 @@ export default function HomePage() {
               L&apos;infrastructure de votre football.
             </h2>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
-              Une porte d&apos;entrée par rôle — Club, Coach, Joueur, Parent,
-              Supporter, Sponsor — vers le même écosystème. Plus de WhatsApp
+              Une porte d&apos;entrée par rôle · Club, Coach, Joueur, Parent,
+              Supporter, Sponsor · vers le même écosystème. Plus de WhatsApp
               pour une info et de tableur pour une autre.
             </p>
             <p className="mt-3 text-sm font-semibold text-white/90">
-              Club : à partir de 3 € / adhérent — sur devis selon la taille.
+              Club : à partir de 3 € / adhérent · sur devis selon la taille.
             </p>
             <p className="mt-2 text-sm leading-relaxed text-white/65">
               Sans engagement.{" "}

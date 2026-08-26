@@ -6,7 +6,7 @@ import { JoueurWhoAreYouGate } from "@/components/poles/JoueurWhoAreYouGate";
 export const metadata: Metadata = {
   title: "Pôle Joueur · Qui es tu ?",
   description:
-    "Monde Joueur ProDay 3D/4D — choisis ton profil, ouvre ton univers. Accueil, matchs, saison et profil dans l’app.",
+    "Monde Joueur ProDay 3D/4D · choisis ton profil, ouvre ton univers. Accueil, matchs, saison et profil dans l’app.",
 };
 
 /** Porte cinéma 3D — hors shell Terminal du site — + vitrine app. */

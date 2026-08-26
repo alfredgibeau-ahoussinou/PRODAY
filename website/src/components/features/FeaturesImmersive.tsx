@@ -31,7 +31,7 @@ const POLE_CAPABILITIES: Record<
     items: [
       "Accueil & parcours : forme, objectifs, carte joueur",
       "Centre Match : calendrier, lieu, préparation",
-      "Saison, stats et profil — Pass 3,99 € optionnel",
+      "Saison, stats et profil · Pass 3,99 € optionnel",
       "Convocations, covoiturage, Mercato",
     ],
   },
@@ -50,7 +50,7 @@ const POLE_CAPABILITIES: Record<
       "Cockpit : équipes, alertes, décisions",
       "Finances, adhésions et sponsors",
       "Assistant IA pour prioriser",
-      "Page dédiée — connectée au Pôle Club",
+      "Page dédiée · connectée au Pôle Club",
     ],
   },
   coach: {
@@ -68,7 +68,7 @@ const POLE_CAPABILITIES: Record<
       "Suivre clubs et joueurs (favoris)",
       "Matchs ProDay & externes, scores, compositions",
       "Statistiques, calendriers, actualités",
-      "Expérience match — tribune gratuite",
+      "Expérience match · tribune gratuite",
     ],
   },
   sponsor: {
@@ -115,7 +115,7 @@ const PRESIDENT_FEATURE_TAB: FeaturePoleTab = {
   title: "Le club en un coup d’œil",
   subtitle: "Cockpit · Finances · Assistant IA",
   description:
-    "Dirigeants, DS et bureau : cockpit, finances et assistant IA — page dédiée Pôle Président.",
+    "Dirigeants, DS et bureau : cockpit, finances et assistant IA · page dédiée Pôle Président.",
   href: PRESIDENT_HUB_HREF,
 };
 
@@ -166,7 +166,7 @@ export function FeaturesImmersive() {
       <ImmersivePoleHero
         brand="Pro Day"
         headline="L'infrastructure de votre football."
-        support="Des portes d'entrée — Joueur, Club, Coach, Parent, Supporter, Sponsor — vers le même écosystème. Pas huit produits. Pas un outil de plus."
+        support="Des portes d'entrée · Joueur, Club, Coach, Parent, Supporter, Sponsor · vers le même écosystème. Pas huit produits. Pas un outil de plus."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.demo}
@@ -369,7 +369,7 @@ export function FeaturesImmersive() {
             {[
               {
                 title: "Portes d'entrée",
-                body: "Chaque univers ouvre le même écosystème football — pas des produits séparés. Agent, recruteur et Santé restent des rôles intégrés.",
+                body: "Chaque univers ouvre le même écosystème football, pas des produits séparés. Agent, recruteur et Santé restent des rôles intégrés.",
               },
               {
                 title: "Ce que ça supprime",

@@ -50,7 +50,7 @@ const AGE_BANDS: {
   {
     id: "teen",
     age: 15,
-    label: "13–17",
+    label: "13 à 17",
     world: "Univers ado",
     vibe: "Niveau · vitesse · stats live",
     detail: "HUD de progression, missions, stats animées.",
@@ -138,7 +138,7 @@ export function JoueurWhoAreYouGate() {
               </h1>
               <p className="mt-3 max-w-md text-sm text-white/60 sm:text-base">
                 {phase === "gender"
-                  ? "Choisis joueuse ou joueur — chaque carte a sa propre scène 3D."
+                  ? "Choisis joueuse ou joueur · chaque carte a sa propre scène 3D."
                   : "Choisis ton âge pour ouvrir l’univers adapté. Les tarifs IA / coach suivent."}
               </p>
 

@@ -10,17 +10,17 @@ const SPONSOR_SIGNALS = [
   {
     tone: "kpi" as const,
     label: "Dashboard",
-    body: "Accueil sponsor — validation, offres, clubs touchés et conversion au même endroit.",
+    body: "Accueil sponsor · validation, offres, clubs touchés et conversion au même endroit.",
   },
   {
     tone: "pipeline" as const,
     label: "Pipeline",
-    body: "Offres, financement, prospects et messages — du pack à la conversation.",
+    body: "Offres, financement, prospects et messages · du pack à la conversation.",
   },
   {
     tone: "brand" as const,
     label: "Marque",
-    body: "Formules, contacts et profil — vitrine mesurée sans intermédiaire.",
+    body: "Formules, contacts et profil · vitrine mesurée sans intermédiaire.",
   },
 ];
 
@@ -39,7 +39,7 @@ const APP_BEATS = [
   },
   {
     title: "Prospects · Contacts · Marque",
-    body: "Clubs recommandés, réseau interlocuteurs et profil marque — le même parcours.",
+    body: "Clubs recommandés, réseau interlocuteurs et profil marque · le même parcours.",
   },
 ];
 
@@ -80,7 +80,7 @@ export function SponsorAppHub() {
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
               Accueil, offres, financement, formules, messages, prospects, contacts,
-              marque : une composition, un téléphone. Magenta — le langage de l’app
+              marque : une composition, un téléphone. Magenta · le langage de l’app
               Sponsor.
             </p>
 
@@ -144,7 +144,7 @@ export function SponsorAppHub() {
               Marques · Partenaires · Micro-sponsors
             </p>
             <p className="text-sm leading-relaxed text-white/55">
-              Offres géolocalisées, dashboard ROI et contact clubs — dans la même app
+              Offres géolocalisées, dashboard ROI et contact clubs · dans la même app
               que les structures. Clubs et joueurs ont leur pôle dédié.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">

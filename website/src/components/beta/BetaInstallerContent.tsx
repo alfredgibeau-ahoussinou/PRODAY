@@ -232,7 +232,7 @@ export function BetaInstallerContent() {
       pathname={ROUTES.betaInstaller}
       kicker="Installation"
       title="Installer ProDay sur votre téléphone"
-      description="Choisissez Android (APK) ou iOS (TestFlight), suivez les étapes, puis explorez les cinq pôles — dont Supporter."
+      description="Choisissez Android (APK) ou iOS (TestFlight), suivez les étapes, puis explorez les cinq pôles · dont Supporter."
     >
       <BetaIosLaunchBanner />
 
@@ -287,7 +287,7 @@ export function BetaInstallerContent() {
               "Depuis votre téléphone Android, ouvrez cette page Installer dans votre espace bêta et appuyez sur « Télécharger l'APK Android ». Attendez la fin du téléchargement (fichier .apk).",
               "Ouvrez le fichier téléchargé depuis la barre de notifications ou l'application Fichiers, puis appuyez sur « Installer ».",
               "Une fois installée, ouvrez ProDay, connectez vous avec le même email que votre inscription bêta et acceptez les permissions demandées (notifications, stockage si nécessaire).",
-              "Choisissez votre pôle (Joueur, Club, Coach, Supporter ou Sponsor) et explorez les écrans proposés — signalez bugs et idées depuis l'onglet Aide.",
+              "Choisissez votre pôle (Joueur, Club, Coach, Supporter ou Sponsor) et explorez les écrans proposés · signalez bugs et idées depuis l'onglet Aide.",
             ]}
           />
 
@@ -357,7 +357,7 @@ export function BetaInstallerContent() {
                 : "Recevez l'email d'invitation Apple « ProDay vous invite à tester… » sur l'adresse utilisée lors de l'inscription bêta.",
               "Sur votre iPhone ou iPad, installez l'application TestFlight depuis l'App Store (gratuit, éditeur Apple) si ce n'est pas déjà fait.",
               testflightAvailable
-                ? "Ouvrez le lien sur l'appareil iOS (Safari ou Messages) — pas dans « Redeem » / « Utiliser un code » de TestFlight. Acceptez l'invitation ProDay."
+                ? "Ouvrez le lien sur l'appareil iOS (Safari ou Messages) · pas dans « Redeem » / « Utiliser un code » de TestFlight. Acceptez l'invitation ProDay."
                 : "Ouvrez l'email d'invitation sur votre appareil iOS et appuyez sur « View in TestFlight » ou « Commencer les tests ».",
               "Dans TestFlight, acceptez les conditions, puis appuyez sur « Installer » pour ProDay. L'icône apparaît sur votre écran d'accueil.",
               "Lancez ProDay, connectez vous avec votre email bêta, choisissez votre pôle (dont Supporter) et testez. Les mises à jour bêta arrivent automatiquement via TestFlight.",
@@ -432,7 +432,7 @@ export function BetaInstallerContent() {
             <SectionKicker>Après l&apos;installation</SectionKicker>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65">
               ProDay regroupe cinq pôles dans la même app. Connectez-vous avec votre email bêta, puis
-              explorez celui qui correspond à votre profil — le pôle Supporter (matchs, tribune, live)
+              explorez celui qui correspond à votre profil · le pôle Supporter (matchs, tribune, live)
               comme les autres.
             </p>
             <ul className="mt-4 flex flex-wrap gap-2">

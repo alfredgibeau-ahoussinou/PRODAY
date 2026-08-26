@@ -42,7 +42,7 @@ export function PricingOverview() {
               <th className="px-4 py-3 font-semibold">Formule</th>
               <th className="px-4 py-3 font-semibold">Univers</th>
               <th className="px-4 py-3 font-semibold">Mensuel</th>
-              <th className="px-4 py-3 font-semibold">Annuel (−20 %)</th>
+              <th className="px-4 py-3 font-semibold">Annuel (moins 20 %)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/8">

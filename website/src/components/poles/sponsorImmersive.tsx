@@ -371,7 +371,7 @@ export function SponsorWarmCta() {
           sur le terrain.
         </h2>
         <p className="mx-auto mt-5 max-w-md text-base text-white/55">
-          Sponsoring possible dès maintenant. Sans engagement. Devis en ligne —
+          Sponsoring possible dès maintenant. Sans engagement. Devis en ligne ·
           réponse sous 48 h.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">

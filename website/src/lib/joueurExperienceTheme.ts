@@ -413,14 +413,14 @@ function copyFor(
       brand: `Pro Day ${roleLabel}`,
       heroHeadline: isF ? "Prête à progresser ?" : "Prêt à progresser ?",
       heroSupport: isF
-        ? "Ton prochain défi, ton prochain match, ton pied faible — ProDay t’accompagne comme une vraie footballeuse en devenir."
-        : "Ton prochain défi, ton prochain match, ton pied faible — ProDay t’accompagne comme un vrai footballeur en devenir.",
+        ? "Ton prochain défi, ton prochain match, ton pied faible · ProDay t’accompagne comme une vraie footballeuse en devenir."
+        : "Ton prochain défi, ton prochain match, ton pied faible · ProDay t’accompagne comme un vrai footballeur en devenir.",
       primaryCta: "Créer mon compte",
       secondaryCta: "Voir l’entraînement",
       sceneKicker: "Ton terrain",
       sceneTitle: isF ? "Ton mini stade de joueuse" : "Ton mini stade de joueur",
       sceneBody:
-        "Ballon, terrain, défis et petites victoires. Ludique, jamais bébé — tu es déjà sur le terrain.",
+        "Ballon, terrain, défis et petites victoires. Ludique, jamais bébé · tu es déjà sur le terrain.",
       trainingKicker: "Je veux m’entraîner",
       trainingTitle: "Amuse toi et progresse",
       trainingBody: isF
@@ -428,7 +428,7 @@ function copyFor(
         : "Chez toi, avec ta famille, ou avec un coach. Des exercices clairs, adaptés à ton âge.",
       weekKicker: "Une semaine type",
       weekTitle: "Juste ton foot.",
-      weekSubtitle: `Défis, matchs, covoit — simple et positif pour une ${playerWord}.`,
+      weekSubtitle: `Défis, matchs, covoit · simple et positif pour une ${playerWord}.`,
       stageKicker: "Sur le terrain",
       stageTitle: "Ton match commence ici.",
       freePassKicker: "Clair et net",
@@ -437,7 +437,7 @@ function copyFor(
         "Pass 3,99 €/mois = assistant IA. Coach humain ≈ 30 €/h à la séance.",
       ctaKicker: "On y va",
       ctaTitle: "Crée ton compte.\nRejoins ton équipe.",
-      ctaBody: "Gratuit pour démarrer. Tu es au centre — avec tes parents si besoin.",
+      ctaBody: "Gratuit pour démarrer. Tu es au centre · avec tes parents si besoin.",
       parentNote: isMinor
         ? "Espace parent : informations autorisées, sans exposer de données sensibles."
         : undefined,
@@ -463,14 +463,14 @@ function copyFor(
       secondaryCta: "Voir l’entraînement",
       sceneKicker: "Ta scène",
       sceneTitle: "Terrain + stats + vitesse",
-      sceneBody: `Comme ${examples} — moderne, dynamique, jamais enfantin.`,
+      sceneBody: `Comme ${examples} · moderne, dynamique, jamais enfantin.`,
       trainingKicker: "Je veux m’entraîner",
       trainingTitle: "Travaille tes points faibles",
       trainingBody:
         "À la maison, en famille ou avec un coach à l’heure. Des séances qui nourrissent ton parcours.",
       weekKicker: "Une semaine type",
       weekTitle: "Je construis mon parcours.",
-      weekSubtitle: "Stats, objectifs, performances — motivant et social.",
+      weekSubtitle: "Stats, objectifs, performances · motivant et social.",
       stageKicker: "Sur le terrain",
       stageTitle: "Défie toi.",
       freePassKicker: "Clair et net",
@@ -478,7 +478,7 @@ function copyFor(
       freePassSubtitle: "Pass 3,99 € optionnel : heatmaps, vidéo, objectifs avancés.",
       ctaKicker: "On y va",
       ctaTitle: "Crée ton compte.\nConstruis ta progression.",
-      ctaBody: `Espace ${playerWord} ProDay — cool, sportif, immersif.`,
+      ctaBody: `Espace ${playerWord} ProDay · cool, sportif, immersif.`,
       parentNote: isMinor
         ? "Les parents accèdent aux infos autorisées depuis leur espace dédié."
         : undefined,
@@ -498,21 +498,21 @@ function copyFor(
     brand: `Pro Day ${roleLabel}`,
     heroHeadline: "Optimise ta performance.",
     heroSupport: isF
-      ? "Analyse, objectifs, statistiques et préparation — un environnement de performance moderne pour joueuses, élégant et immersif."
-      : "Analyse, objectifs, statistiques et préparation — un environnement de performance football moderne, élégant et immersif.",
+      ? "Analyse, objectifs, statistiques et préparation · un environnement de performance moderne pour joueuses, élégant et immersif."
+      : "Analyse, objectifs, statistiques et préparation · un environnement de performance football moderne, élégant et immersif.",
     primaryCta: "Créer mon compte",
     secondaryCta: "Voir l’entraînement",
     sceneKicker: "Performance",
     sceneTitle: "Terrain, data, analyse",
     sceneBody:
-      "Visualisations, historique et progression. Sérieux sans être froid — toujours ProDay.",
+      "Visualisations, historique et progression. Sérieux sans être froid · toujours ProDay.",
     trainingKicker: "Entraînement",
     trainingTitle: "Développe ton potentiel",
     trainingBody:
       "Programmes à domicile, séances famille, coaching humain à l’heure. Data driven, jamais gadget.",
     weekKicker: "Cycle type",
     weekTitle: "Performance & préparation.",
-    weekSubtitle: "Stats avancées, analyse, historique — précis et sportif.",
+    weekSubtitle: "Stats avancées, analyse, historique · précis et sportif.",
     stageKicker: "Sur le terrain",
     stageTitle: "Analyse ta performance.",
     freePassKicker: "Offre",

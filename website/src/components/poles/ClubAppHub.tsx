@@ -10,24 +10,24 @@ const CLUB_SIGNALS = [
   {
     tone: "home" as const,
     label: "Priorité",
-    body: "Accueil club — priorité du jour, équipes et actions urgentes au même endroit.",
+    body: "Accueil club · priorité du jour, équipes et actions urgentes au même endroit.",
   },
   {
     tone: "ops" as const,
     label: "Terrain",
-    body: "Équipes, matchs et invitations — du roster au calendrier inter-clubs.",
+    body: "Équipes, matchs et invitations · du roster au calendrier inter-clubs.",
   },
   {
     tone: "hq" as const,
     label: "QG",
-    body: "Outils, identité, pack et lien Président — le cockpit structure.",
+    body: "Outils, identité, pack et lien Président · le cockpit structure.",
   },
 ];
 
 const APP_BEATS = [
   {
     title: "Accueil",
-    body: "Priorité du jour, effectifs et équipes — le club en une ouverture.",
+    body: "Priorité du jour, effectifs et équipes · le club en une ouverture.",
   },
   {
     title: "Équipes · Matchs",
@@ -39,7 +39,7 @@ const APP_BEATS = [
   },
   {
     title: "Club",
-    body: "Identité, pack, droits, finances et couleurs — la vitrine de la structure.",
+    body: "Identité, pack, droits, finances et couleurs · la vitrine de la structure.",
   },
 ];
 
@@ -80,7 +80,7 @@ export function ClubAppHub() {
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-base">
               Accueil, équipes, matchs, outils, identité : une composition, un téléphone.
-              Bleu et émeraude — le langage de l’app Club.
+              Bleu et émeraude · le langage de l’app Club.
             </p>
 
             <div className="mt-10 grid gap-3 sm:grid-cols-3">
@@ -142,7 +142,7 @@ export function ClubAppHub() {
               Clubs · Staff · Organisateurs
             </p>
             <p className="text-sm leading-relaxed text-white/55">
-              Équipes, matchs, pack et identité — dans la même app que les licenciés.
+              Équipes, matchs, pack et identité · dans la même app que les licenciés.
               Président et coachs ont leur pôle dédié.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
