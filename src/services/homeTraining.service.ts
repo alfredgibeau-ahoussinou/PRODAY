@@ -272,6 +272,41 @@ export const coachingSessionsService = {
     });
   },
 
+  /** Profil coach à l’heure (doc id = coach_uid). */
+  async getHourlyProfile(coachUid: string): Promise<CoachHourlyProfile | null> {
+    if (!isFirebaseConfigured()) return null;
+    const database = getDb();
+    if (!database) return null;
+    try {
+      const snap = await getDoc(doc(database, 'coach_hourly_profiles', coachUid));
+      if (!snap.exists()) return null;
+      const data = snap.data();
+      return {
+        coach_uid: String(data.coach_uid ?? snap.id),
+        display_name: String(data.display_name ?? ''),
+        photo_url: data.photo_url ? String(data.photo_url) : undefined,
+        bio: data.bio ? String(data.bio) : undefined,
+        specialties: Array.isArray(data.specialties) ? (data.specialties as string[]) : [],
+        age_categories: Array.isArray(data.age_categories)
+          ? (data.age_categories as string[])
+          : [],
+        positions_coached: Array.isArray(data.positions_coached)
+          ? (data.positions_coached as string[])
+          : [],
+        city: String(data.city ?? ''),
+        radius_km: data.radius_km != null ? Number(data.radius_km) : undefined,
+        hourly_rate_eur: Number(data.hourly_rate_eur ?? 30),
+        club_id: data.club_id ? String(data.club_id) : undefined,
+        club_name: data.club_name ? String(data.club_name) : undefined,
+        sessions_completed: Number(data.sessions_completed ?? 0),
+        rating_avg: data.rating_avg != null ? Number(data.rating_avg) : undefined,
+        available: Boolean(data.available),
+      };
+    } catch {
+      return null;
+    }
+  },
+
   /** Ouvre / met à jour le profil coach à l’heure (visible Train Hub joueur). */
   async upsertHourlyProfile(
     profile: Omit<CoachHourlyProfile, 'sessions_completed'> & {
@@ -303,6 +338,61 @@ export const coachingSessionsService = {
       },
       { merge: true },
     );
+  },
+
+  /**
+   * Coach propose un créneau à un joueur (statut accepted — le joueur peut payer
+   * via Stripe si branché, ou le coach marque « payé hors app »).
+   */
+  async proposeSession(input: {
+    coach: CoachHourlyProfile;
+    player_uid: string;
+    player_name: string;
+    starts_at: Date;
+    duration_min: CoachSessionDurationMin;
+    location_label?: string;
+    notes?: string;
+  }): Promise<string> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const config = await coachingCommissionService.getConfig();
+    const hours = input.duration_min / 60;
+    const price = Math.round(input.coach.hourly_rate_eur * hours * 100) / 100;
+    const split = splitCoachingPayment(price, config, Boolean(input.coach.club_id));
+
+    const ref = await addDoc(collection(database, 'coach_session_bookings'), {
+      coach_uid: input.coach.coach_uid,
+      coach_name: input.coach.display_name,
+      player_uid: input.player_uid,
+      player_name: input.player_name,
+      club_id: input.coach.club_id ?? null,
+      starts_at: Timestamp.fromDate(input.starts_at),
+      duration_min: input.duration_min,
+      price_eur: price,
+      split,
+      status: 'accepted',
+      location_label: input.location_label ?? null,
+      notes: input.notes ?? 'Proposé par le coach',
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+
+    const title = 'Créneau coaching proposé';
+    const body = `${input.coach.display_name} vous propose ${input.duration_min} min (~${price} €) le ${input.starts_at.toLocaleDateString('fr-FR')}.`;
+    try {
+      await staffNotificationsService.notifyRecipients({
+        recipient_uids: [input.player_uid],
+        type: 'generic',
+        title,
+        body,
+        club_id: input.coach.club_id,
+        player_uid: input.player_uid,
+      });
+    } catch {
+      // best-effort
+    }
+
+    return ref.id;
   },
 
   async submitReport(bookingId: string, report: Omit<CoachSessionReport, 'created_at'>): Promise<void> {

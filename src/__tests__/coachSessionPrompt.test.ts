@@ -56,4 +56,27 @@ describe('coachSessionPrompt', () => {
     expect(notes).toMatch(/Focus/);
     expect(notes.length).toBeGreaterThan(40);
   });
+
+  it('mappe possession / finition / CPA', () => {
+    expect(parseCoachSessionPrompt('crée une séance possession').theme).toBe('possession');
+    expect(parseCoachSessionPrompt('séance finition 60 min').theme).toBe('finition');
+    expect(parseCoachSessionPrompt('génère une séance coups de pied arrêtés').theme).toBe(
+      'coups_de_pied',
+    );
+  });
+
+  it('accepte une demande libre hors thèmes nommés → brouillon generic appliquable', () => {
+    const text = 'crée une séance sur le jeu entre les lignes et la 3e homme';
+    expect(isCoachCreateSessionIntent(text)).toBe(true);
+    const parsed = parseCoachSessionPrompt(text);
+    expect(parsed.theme).toBe('generic');
+    expect(parsed.focus).toMatch(/demande libre/i);
+    expect(parsed.title.length).toBeGreaterThan(8);
+
+    const plan = composedPlanFromPrompt(text);
+    expect(plan.blocks.length).toBeGreaterThanOrEqual(4);
+    expect(plan.totalMinutes).toBeGreaterThan(0);
+    expect(plan.reason).toMatch(/brouillon local/i);
+    expect(phasesFromComposedBlocks(plan).length).toBe(plan.blocks.length);
+  });
 });

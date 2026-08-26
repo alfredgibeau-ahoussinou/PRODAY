@@ -201,6 +201,14 @@ export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = 
     icon: 'car',
     motif: 'none',
   }),
+  coaching_perso: page({
+    id: 'coaching_perso',
+    eyebrow: 'Indépendant',
+    title: 'Coaching perso',
+    support: 'Créneaux à l’heure, tarif affiché, demandes et propositions joueurs.',
+    icon: 'time',
+    motif: 'none',
+  }),
   profil: page({
     id: 'profil',
     eyebrow: 'Compte',

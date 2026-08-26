@@ -44,6 +44,7 @@ import { SmartTacticsPortalScreen } from '../../../screens/smartTactics/SmartTac
 import { TeamManagementScreen } from '../../../screens/TeamManagementScreen';
 import { MessagesScreen } from '../../../screens/MessagesScreen';
 import { CoachMenuPane } from './CoachMenuPane';
+import { CoachHourlyPane } from './CoachHourlyPane';
 import { CarpoolScreen } from '../../../screens/CarpoolScreen';
 import { ProfilTabScreen } from '../../../screens/ProfilTabScreen';
 import { useAuth } from '../../../context/AuthContext';
@@ -367,6 +368,15 @@ function renderCoachPane(
         <CoachEmptyState
           title="Gestion"
           body="Connectez-vous pour accéder à la gestion d’équipe."
+        />
+      );
+    case 'coaching_perso':
+      return profile ? (
+        <CoachHourlyPane profile={profile} />
+      ) : (
+        <CoachEmptyState
+          title="Coaching perso"
+          body="Connectez-vous pour gérer vos créneaux à l’heure."
         />
       );
     case 'match_center':
