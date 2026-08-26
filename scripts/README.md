@@ -43,8 +43,10 @@ App cible : Expo **1.0.8** · tagline **CONNECTER. PROGRESSER. RÉVÉLER.**
 | `generate-woman-logos.mjs` | `branding:logos:woman` | Variantes Woman |
 | `generate-universe-logos.mjs` | `branding:logos:universes` | Pictos pôles |
 | `download-*-showcase-images.mjs` | *(manuel)* | Images showcase |
+| `generate-app-store-screenshots.mjs` | `marketing:app-store-ios` | Captures App Store iOS 6,5" (1284×2778) |
 
-Guide logos : [../assets/branding/README.md](../assets/branding/README.md).
+Guide logos : [../assets/branding/README.md](../assets/branding/README.md).  
+Captures store : [../assets/marketing/app-store/ios-6.5/README.md](../assets/marketing/app-store/ios-6.5/README.md).
 
 ## Natif & bêta APK
 

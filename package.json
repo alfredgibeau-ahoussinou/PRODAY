@@ -57,6 +57,8 @@
     "branding:logos": "node scripts/generate-transparent-logos.mjs",
     "branding:logos:woman": "node scripts/generate-woman-logos.mjs",
     "branding:logos:universes": "node scripts/generate-universe-logos.mjs",
+    "marketing:app-store-ios": "node scripts/generate-app-store-screenshots.mjs",
+    "marketing:app-store-ios:legacy": "node scripts/generate-app-store-screenshots.mjs --legacy",
     "docs:pactes": "node scripts/generate-pacte-pdf.mjs",
     "docs:legal": "node --experimental-strip-types scripts/generate-legal-pdf.mjs",
     "docs:guide-restant": "node scripts/generate-guide-restant-pdf.mjs",

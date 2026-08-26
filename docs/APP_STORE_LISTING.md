@@ -133,7 +133,52 @@ Annuel : −20 % (12 mois facturés d'un coup).
 
 - [ ] Description FR collée (section ci-dessus)
 - [ ] Sous-titre + mots-clés iOS
-- [ ] Captures d'écran : Accueil, Profil/carrière, Journal activités, Mercato, Arena (pas de mock « IA sur tout le match »)
+- [ ] Captures d'écran iPhone 6,5" — voir section **Captures d'écran App Store** ci-dessous
 - [ ] 16 SKU créés — [STORE_SETUP.md](./STORE_SETUP.md)
 - [ ] Test sandbox iOS + licence test Android sur `player_plus` et `sponsor_pro`
 - [ ] `npm test -- iapProducts` vert
+
+---
+
+## Captures d'écran App Store (iOS)
+
+### iPhone 6,5" — dimensions acceptées
+
+App Store Connect exige **exactement** l'une de ces tailles (portrait) :
+
+| Génération | Portrait | Paysage |
+|------------|----------|---------|
+| **14 / 13 / 12 Pro Max** (recommandé) | **1284 × 2778 px** | 2778 × 1284 px |
+| 11 Pro Max / XS Max | 1242 × 2688 px | 2688 × 1242 px |
+
+**Ne pas** uploader des captures redimensionnées à la main (Preview, export Figma sans preset) — regénérer via le script.
+
+### Fichiers prêts à l'emploi
+
+Dossier : [`assets/marketing/app-store/ios-6.5/`](../assets/marketing/app-store/ios-6.5/)
+
+10 PNG **1284 × 2778** (portrait), ordre d'upload :
+
+1. `01-hero-brand.png` — identité CONNECTER. PROGRESSER. RÉVÉLER.
+2. `02-joueur-profil-carriere.png`
+3. `03-joueur-mercato.png`
+4. `04-joueur-arena.png`
+5. `05-joueur-pulse-activites.png`
+6. `06-coach-profil-staff.png`
+7. `07-club-recrutement.png`
+8. `08-matchs-amicaux.png`
+9. `09-communaute-reels.png`
+10. `10-partenaires-sponsors.png`
+
+**3 captures prioritaires** si upload partiel : `01`, `02`, `03`.
+
+Jusqu'à **3 aperçus app** (vidéo) + **10 captures** par taille d'appareil.
+
+### Regénérer
+
+```bash
+npm run marketing:app-store-ios          # 1284 × 2778 (défaut)
+npm run marketing:app-store-ios:legacy   # 1242 × 2688
+```
+
+Contenu aligné checklist : Accueil/marque, Profil/carrière, Journal activités, Mercato, Arena — **pas** de mock « IA sur tout le match ».

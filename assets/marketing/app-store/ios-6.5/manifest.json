@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-08-26T22:28:56.960Z",
+  "dimensions": "1284×2778",
+  "portrait": true,
+  "device": "iPhone 6,5\" (App Store Connect)",
+  "files": [
+    {
+      "file": "01-hero-brand.png",
+      "width": 1284,
+      "height": 2778,
+      "recommended": 1
+    },
+    {
+      "file": "02-joueur-profil-carriere.png",
+      "width": 1284,
+      "height": 2778,
+      "recommended": 2
+    },
+    {
+      "file": "03-joueur-mercato.png",
+      "width": 1284,
+      "height": 2778,
+      "recommended": 3
+    },
+    {
+      "file": "04-joueur-arena.png",
+      "width": 1284,
+      "height": 2778
+    },
+    {
+      "file": "05-joueur-pulse-activites.png",
+      "width": 1284,
+      "height": 2778
+    },
+    {
+      "file": "06-coach-profil-staff.png",
+      "width": 1284,
+      "height": 2778
+    },
+    {
+      "file": "07-club-recrutement.png",
+      "width": 1284,
+      "height": 2778
+    },
+    {
+      "file": "08-matchs-amicaux.png",
+      "width": 1284,
+      "height": 2778
+    },
+    {
+      "file": "09-communaute-reels.png",
+      "width": 1284,
+      "height": 2778
+    },
+    {
+      "file": "10-partenaires-sponsors.png",
+      "width": 1284,
+      "height": 2778
+    }
+  ],
+  "recommendedFirst": [
+    "01-hero-brand.png",
+    "02-joueur-profil-carriere.png",
+    "03-joueur-mercato.png"
+  ]
+}
