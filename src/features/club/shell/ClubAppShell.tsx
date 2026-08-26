@@ -282,16 +282,18 @@ function ClubAppShellInner({
             onProfile={() => onSelect('club')}
             onOpenCopilot={onOpenHelp}
           />
-          <PaneTransition sectionKey={navId} direction={direction} context="tab">
-            {React.isValidElement(content) ? content : null}
-          </PaneTransition>
-          {showFab ? (
-            <>
-              {/* Accueil (`today`) : un seul FAB (créer) — copilote via Outils / chrome. */}
-              {navId !== 'today' ? <ClubCopilotFab onPress={onOpenHelp} /> : null}
-              <ClubCreateFab onPress={() => setCreateOpen(true)} />
-            </>
-          ) : null}
+          <View style={[styles.paneBody, wide ? styles.paneBodyWide : null]}>
+            <PaneTransition sectionKey={navId} direction={direction} context="tab">
+              {React.isValidElement(content) ? content : null}
+            </PaneTransition>
+            {showFab ? (
+              <>
+                {/* Accueil (`today`) : un seul FAB (créer) — copilote via Outils / chrome. */}
+                {navId !== 'today' ? <ClubCopilotFab onPress={onOpenHelp} /> : null}
+                <ClubCreateFab onPress={() => setCreateOpen(true)} />
+              </>
+            ) : null}
+          </View>
         </View>
 
         {!wide ? (
@@ -372,6 +374,16 @@ function createStyles(tokens: ClubThemeTokens) {
       minWidth: 0,
       minHeight: 0,
       backgroundColor: 'transparent',
+    },
+    paneBody: {
+      flex: 1,
+      minWidth: 0,
+      minHeight: 0,
+    },
+    paneBodyWide: {
+      width: '100%',
+      maxWidth: clubChrome.contentMaxWidth,
+      alignSelf: 'center',
     },
   });
 }

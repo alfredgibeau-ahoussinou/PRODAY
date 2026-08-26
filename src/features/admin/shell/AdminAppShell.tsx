@@ -120,7 +120,7 @@ function AdminShellInner({
               />
             ) : null}
 
-            <View style={[styles.content, { paddingTop: contentTopPad }]}>
+            <View style={[styles.content, { paddingTop: contentTopPad }, wide ? styles.contentWide : null]}>
               <AdminPaneTransition
                 sectionKey={section}
                 direction={direction || navDirection}
@@ -215,8 +215,13 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ADMIN_TOKENS.bg },
   safe: { flex: 1 },
   row: { flex: 1, flexDirection: 'row' },
-  main: { flex: 1, backgroundColor: ADMIN_TOKENS.bg },
-  content: { flex: 1 },
+  main: { flex: 1, backgroundColor: ADMIN_TOKENS.bg, minWidth: 0 },
+  content: { flex: 1, minWidth: 0 },
+  contentWide: {
+    width: '100%',
+    maxWidth: adminChrome.contentMax,
+    alignSelf: 'center',
+  },
   loader: {
     flex: 1,
     backgroundColor: ADMIN_TOKENS.bg,

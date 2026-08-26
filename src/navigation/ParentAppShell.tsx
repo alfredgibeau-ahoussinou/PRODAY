@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+  useWindowDimensions,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
@@ -30,7 +36,9 @@ import {
   canonicalizeParentNav,
 } from '../features/parent/navigation/parentNavConfig';
 import { ParentTabBar } from '../features/parent/shell/ParentTabBar';
+import { ParentSidebar } from '../features/parent/shell/ParentSidebar';
 import { ParentShellNavProvider } from '../features/parent/shell/ParentShellNavContext';
+import { parentChrome } from '../features/parent/theme/parentDesignSystem';
 import { PaneTransition, useShellNavDirection } from '../motion';
 
 const PARENT_MOTION_ORDER = [
@@ -42,8 +50,7 @@ export type { ParentTabId } from './parentShellContext';
 export { useParentShell } from './parentShellContext';
 
 /**
- * Shell Pôle Parent — 5 onglets (Accueil, Enfant, Guide IA, Menu, Profil).
- * Style volontairement simple, aligné sur le dock Coach.
+ * Shell Pôle Parent — dock mobile 5 onglets · sidebar + contenu borné dès 900px.
  */
 export const ParentAppShell: React.FC = () => {
   const profile = useSessionProfile();
@@ -58,6 +65,8 @@ export const ParentAppShell: React.FC = () => {
 const ParentAppShellInner: React.FC = () => {
   const { profile, signOut } = useAuth();
   const { colors: c, rootStyle } = useThemedScreen();
+  const { width } = useWindowDimensions();
+  const wide = width >= parentChrome.wideBreakpoint;
   const { direction, noteNav } = useShellNavDirection(PARENT_MOTION_ORDER);
   const [activeTab, setActiveTabRaw] = useState<ParentTabId>('home');
   const [children, setChildren] = useState<ParentChildBundle[]>([]);
@@ -153,38 +162,64 @@ const ParentAppShellInner: React.FC = () => {
     <ParentShellContext.Provider value={ctxValue}>
       <ParentShellNavProvider requestNav={setActiveTab}>
         <SafeAreaView
-          style={[styles.root, rootStyle, { backgroundColor: c.background }]}
+          style={[
+            styles.root,
+            rootStyle,
+            { backgroundColor: c.background },
+            wide ? styles.rootWide : null,
+          ]}
           edges={['top', 'left', 'right']}
         >
           <StatusBar style="light" />
-          <View style={styles.header}>
-            <View>
-              <ProDayText variant="caption" muted>
-                Parent
-              </ProDayText>
-              <ProDayText variant="section">Pro Day</ProDayText>
+          {wide ? (
+            <ParentSidebar
+              activeId={activeTab}
+              parentName={profile?.display_name ?? 'Parent'}
+              onSelect={setActiveTab}
+              onSignOut={() => void signOut()}
+            />
+          ) : null}
+          <View style={styles.main}>
+            {!wide ? (
+              <View style={styles.header}>
+                <View>
+                  <ProDayText variant="caption" muted>
+                    Parent
+                  </ProDayText>
+                  <ProDayText variant="section">Pro Day</ProDayText>
+                </View>
+                {selected ? (
+                  <Pressable
+                    onPress={() => setActiveTab('enfant')}
+                    style={[styles.childPill, { borderColor: c.brand, backgroundColor: c.brandSoft }]}
+                  >
+                    <ProDayText variant="caption" accent style={{ fontWeight: '700' }}>
+                      {selected.display_name}
+                    </ProDayText>
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
+            <View
+              style={[
+                styles.content,
+                wide
+                  ? { maxWidth: parentChrome.contentMaxWidth, width: '100%', alignSelf: 'center' }
+                  : null,
+              ]}
+            >
+              <PaneTransition sectionKey={activeTab} direction={direction} context="tab">
+                {React.isValidElement(screen) ? screen : null}
+              </PaneTransition>
             </View>
-            {selected ? (
-              <Pressable
-                onPress={() => setActiveTab('enfant')}
-                style={[styles.childPill, { borderColor: c.brand, backgroundColor: c.brandSoft }]}
-              >
-                <ProDayText variant="caption" accent style={{ fontWeight: '700' }}>
-                  {selected.display_name}
-                </ProDayText>
-              </Pressable>
+            {!wide ? (
+              <ParentTabBar
+                items={PARENT_PRIMARY_TABS}
+                activeId={activeTab}
+                onSelect={setActiveTab}
+              />
             ) : null}
           </View>
-          <View style={styles.content}>
-            <PaneTransition sectionKey={activeTab} direction={direction} context="tab">
-              {React.isValidElement(screen) ? screen : null}
-            </PaneTransition>
-          </View>
-          <ParentTabBar
-            items={PARENT_PRIMARY_TABS}
-            activeId={activeTab}
-            onSelect={setActiveTab}
-          />
         </SafeAreaView>
       </ParentShellNavProvider>
     </ParentShellContext.Provider>
@@ -193,6 +228,8 @@ const ParentAppShellInner: React.FC = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  rootWide: { flexDirection: 'row' },
+  main: { flex: 1, minWidth: 0 },
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,

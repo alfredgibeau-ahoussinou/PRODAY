@@ -175,6 +175,8 @@ export const presidentChrome = {
   tabBarIcon: 22,
   /** Hauteur utile du dock mobile (hors safe-area). */
   dockRailHeight: 56,
+  /** Largeur max contenu lisible hors sidebar. */
+  contentMaxWidth: 1180,
   brandMark: 'PRODAY EXECUTIVE',
 } as const;
 

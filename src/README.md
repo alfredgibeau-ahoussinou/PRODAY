@@ -37,11 +37,23 @@ Toute l'app mobile : joueurs, staff, sponsors, admin. Données **réelles** Fire
 
 ```bash
 npm install
-npm run web          # Expo Web
+npm run web          # Expo Web (navigateur — mode grand écran Mac recommandé)
 npm start            # Expo Go (QR)
 npm run ios          # Simulateur iOS
 npm run android      # Émulateur Android
 ```
+
+## Mac / grand écran — ce qui est supporté
+
+**Il n’existe pas d’app macOS native** (pas de cible `macos` dans EAS / `app.json`). Sur un Mac :
+
+| Mode | Commande / canal | Grand écran |
+|------|------------------|-------------|
+| **Expo Web** | `npm run web` puis fenêtre navigateur plein écran | Oui — sidebars / rail dès ~900px |
+| TestFlight iOS | build iOS | Non — UI téléphone / iPad portrait |
+| Simulateur iOS | `npm run ios:sim` | Non — viewport mobile |
+
+Breakpoints partagés : `src/theme/desktopShellChrome.ts` (Joueur / onglets génériques), plus `coachChrome` / `clubChrome` / `parentChrome` / `presidentChrome` / `adminChrome`.
 
 ## V3 vs legacy
 

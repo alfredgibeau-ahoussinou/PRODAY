@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  Linking,
+  Alert,
+  Platform,
+  useWindowDimensions,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -111,6 +119,10 @@ function ClubPresidentShellSwitch({
 }
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { BottomTabBar } from './src/components/navigation/BottomTabBar';
+import {
+  desktopShellChrome,
+  isDesktopWideLayout,
+} from './src/theme/desktopShellChrome';
 import { WomanSpaceDefaults } from './src/components/appSpace/WomanSpaceDefaults';
 import { AnimatedTabContent, PoleShellTransition } from './src/components/motion';
 import { ProDayMotionProvider } from './src/motion';
@@ -568,6 +580,10 @@ function AppShell() {
   const isClubShell = sessionProfile?.role === 'club' || forcePresidentPreview;
   const isCoachShell = sessionProfile?.role === 'coach' && !forcePresidentPreview;
   const usesRoleShell = isClubShell || isCoachShell;
+  const { width: windowWidth } = useWindowDimensions();
+  /** Expo web grand écran : rail latéral + colonne contenu (pas d’app macOS native). */
+  const desktopWideTabs =
+    Platform.OS === 'web' && isDesktopWideLayout(windowWidth) && !usesRoleShell;
   const joueurPoleActive = isJoueurPoleProductLine(productLine);
   const shellBackground = isSponsor
     ? SPONSOR_THEME.background
@@ -701,7 +717,11 @@ function AppShell() {
       >
         <SafeAreaView
           key={locale}
-          style={[styles.root, { backgroundColor: shellBackground }]}
+          style={[
+            styles.root,
+            { backgroundColor: shellBackground },
+            desktopWideTabs ? styles.rootDesktop : null,
+          ]}
           edges={previewUserMode ? [] : ['top', 'left', 'right']}
         >
           <StatusBar style="light" />
@@ -719,7 +739,25 @@ function AppShell() {
           {profile ? <ProdayCalendarSyncBridge /> : null}
           {profile && !joueurPoleActive ? <PoleHelpChatbot /> : null}
           {profile && !joueurPoleActive && !isClubShell ? <ProDayAiChat /> : null}
-          <View style={styles.screen}>
+          {desktopWideTabs ? (
+            <JoueurTabBarSlot
+              activeTab={activeTab}
+              onTabPress={handleTabPress}
+              unreadCount={unreadCount}
+              visibleTabs={screenTabs}
+            />
+          ) : null}
+          <View
+            style={[
+              styles.screen,
+              desktopWideTabs
+                ? [
+                    styles.screenDesktop,
+                    { maxWidth: desktopShellChrome.contentMaxWidth },
+                  ]
+                : null,
+            ]}
+          >
             <JoueurGateGuard>
               {isClubShell ? (
                 <PresidentShellBridgeProvider>
@@ -742,7 +780,7 @@ function AppShell() {
               )}
             </JoueurGateGuard>
           </View>
-          {usesRoleShell ? null : (
+          {usesRoleShell || desktopWideTabs ? null : (
             <JoueurTabBarSlot
               activeTab={activeTab}
               onTabPress={handleTabPress}
@@ -787,7 +825,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   root: { flex: 1, backgroundColor: colors.background },
+  rootDesktop: { flexDirection: 'row', alignItems: 'stretch' },
   screen: { flex: 1 },
+  screenDesktop: {
+    flex: 1,
+    width: '100%',
+    alignSelf: 'center',
+    minWidth: 0,
+  },
   adminLoader: {
     flex: 1,
     backgroundColor: colors.surfaceInverse,

@@ -174,7 +174,7 @@ function PresidentAppShellInner() {
               onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
             />
           ) : null}
-          <View style={styles.content}>
+          <View style={[styles.content, wide ? styles.contentWide : null]}>
             <PaneTransition sectionKey={navId} direction={direction} context="tab">
               {React.isValidElement(pane) ? pane : null}
             </PaneTransition>
@@ -202,7 +202,12 @@ function createStyles(tokens: PresidentThemeTokens) {
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: tokens.bg },
     row: { flex: 1, flexDirection: 'row' },
-    content: { flex: 1 },
+    content: { flex: 1, minWidth: 0 },
+    contentWide: {
+      width: '100%',
+      maxWidth: presidentChrome.contentMaxWidth,
+      alignSelf: 'center',
+    },
     denied: {
       alignItems: 'center',
       justifyContent: 'center',

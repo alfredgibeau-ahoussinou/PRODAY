@@ -111,6 +111,8 @@ export const clubChrome = {
   sidebarCollapsed: 76,
   wideBreakpoint: 900,
   tabletBreakpoint: 680,
+  /** Largeur max contenu lisible (dashboard / listes) hors sidebar. */
+  contentMaxWidth: 1180,
   headerHeight: 56,
   tabBarIcon: 22,
   /** Hauteur rail dock (hors safe area) — labels ≥11 + pill. */
@@ -121,6 +123,15 @@ export const clubChrome = {
    */
   createFabBottom: 78,
 } as const;
+
+export function clubContentWidth(windowWidth: number, sidebarVisible: boolean, sidebarCollapsed = false): number {
+  const side = sidebarVisible
+    ? sidebarCollapsed
+      ? clubChrome.sidebarCollapsed
+      : clubChrome.sidebarExpanded
+    : 0;
+  return Math.min(windowWidth - side, clubChrome.contentMaxWidth);
+}
 
 /** Recettes de surface (cartes, chrome). */
 export function clubSurfaceCard(tokens: ClubThemeTokens): ViewStyle {
