@@ -1,16 +1,17 @@
 # Composants UI (`src/components/`)
 
-> Composants React réutilisables, regroupés par **domaine produit**. Pas de logique Firebase directe — passer par `services/` ou `hooks/`.
+Composants React réutilisables par **domaine produit**. Pas d’accès Firebase direct — passer par `services/` ou `hooks/`.
 
 ## Domaines principaux
 
 | Dossier | Domaine |
 |---------|---------|
-| `ui/` | Primitives (boutons, cartes, inputs) |
+| `ui/` | Primitives (`ProDayText`, boutons, inputs) |
+| `branding/` | `ProDayLogo`, `ProDayOfficialLockup`, `ProDaySymbol` |
 | `motion/` | Animations (`PressableSpring`…) |
 | `navigation/` | Barres, onglets, headers |
 | `auth/` · `signup/` | Connexion, inscription |
-| `profile/` | Profil joueur / staff |
+| `profile/` | Profil joueur / staff / hubs |
 | `mercato/` | Recrutement, annonces |
 | `matchs/` | Matchs amicaux, stats live |
 | `feed/` · `reels/` | Fil social, reels |
@@ -28,11 +29,13 @@
 
 ## Conventions
 
-- Préférer `components/ui/` pour le générique ; dossier métier pour le spécifique
-- Thème univers : `src/theme/` + `context/`
+- Générique → `components/ui/` ; métier → dossier domaine
+- Icônes via `Icon` (pas d’emojis device — affichage `?`)
+- Thème : `src/theme/` + `context/`
 - Tests : colocaliser ou `src/__tests__/`
 
 ## Liens
 
-- [screens/README.md](../screens/README.md) — écrans qui composent ces blocs
-- [../theme/](../theme/) — tokens Homme / Woman / Pro
+- [../README.md](../README.md)
+- [screens/README.md](../screens/README.md)
+- [../../assets/branding/README.md](../../assets/branding/README.md)

@@ -1,6 +1,7 @@
 # Visuels ProDay (showcase UI)
 
-Images locales pour Discover, Arena, dashboard, etc. — sans Firebase Storage.
+Images locales pour Discover, Arena, dashboard — sans Firebase Storage.  
+App **1.0.8** · tagline **CONNECTER. PROGRESSER. RÉVÉLER.**
 
 ## Classique (`classic/`)
 
@@ -14,17 +15,28 @@ Images locales pour Discover, Arena, dashboard, etc. — sans Firebase Storage.
 | `classic-staff.jpg` | Staff / fondateurs |
 | `classic-exp-*.jpg` | Expériences interactives |
 
-Téléchargement (recadrage 16:9 / 4:3 / 21:9, `crop=faces` ou `entropy`) :  
-`node scripts/download-classic-showcase-images.mjs`  
-Référence : `src/content/showcaseAssets.ts`
+```bash
+node scripts/download-classic-showcase-images.mjs
+```
+
+Référence code : `src/content/showcaseAssets.ts`.
 
 ## Woman (`woman/`)
 
-Foot féminin uniquement (Unsplash + Pexels, sujets vérifiés) — `node scripts/download-woman-showcase-images.mjs`  
-Référence : `src/content/womanShowcaseAssets.ts`
+Foot féminin (sujets vérifiés) :
 
-Affichage : `ShowcaseImageBackground` (`resizeMode="cover"`) dans Discover et l’inscription.
+```bash
+node scripts/download-woman-showcase-images.mjs
+```
+
+Référence : `src/content/womanShowcaseAssets.ts`.  
+Affichage : `ShowcaseImageBackground` dans Discover / inscription.
 
 ## Anciens PNG
 
-Les fichiers `*.png` à la racine de `generated/` sont dépréciés ; vous pouvez les supprimer après validation des nouveaux visuels.
+Les `*.png` à la racine de `generated/` sont dépréciés.
+
+## Liens
+
+- Branding store : [../branding/README.md](../branding/README.md)
+- [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr)

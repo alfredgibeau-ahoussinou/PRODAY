@@ -1,13 +1,15 @@
 # Écrans (`src/screens/`)
 
-> Un fichier ≈ un écran navigation. Les écrans orchestrent composants + services ; peu de logique métier lourde (→ `core/` ou `services/`).
+Un fichier ≈ un écran navigation. Orchestration composants + services ; logique lourde → `core/` ou `services/`.
+
+App : ProDay **1.0.8** · **CONNECTER. PROGRESSER. RÉVÉLER.**
 
 ## Organisation
 
 | Sous-dossier | Rôle |
 |--------------|------|
-| *(racine)* | Écrans principaux : Mercato, Matchs, Santé, Feed, Messages, Profil, Auth… |
-| `admin/` | Console admin plateforme (modération, stats, bêta) |
+| *(racine)* | Mercato, Matchs, Santé, Feed, Messages, Profil, Auth… |
+| `admin/` | Console admin (modération, stats, bêta) |
 | `club/` | Hub club, annonces, structure |
 | `discover/` | Découverte joueurs / clubs |
 | `medical/` | Dossier médical |
@@ -20,11 +22,13 @@
 ## Conventions
 
 - Nommage : `*Screen.tsx`
-- Navigation déclarée dans `src/navigation/` (pas dans l'écran)
-- Textes longs → `src/content/` ; appels Firebase → `src/services/`
+- Navigation déclarée dans `src/navigation/`
+- Textes longs → `src/content/` ; Firebase → `src/services/`
+- Typo titres UI : Inter via `ProDayText` (Syne réservé à `brand`)
 
 ## Liens
 
-- [navigation/README.md](../navigation/README.md) — routing et onglets
-- [components/README.md](../components/README.md) — UI réutilisée
-- [../STRUCTURE.md](../STRUCTURE.md) — V3 vs legacy
+- [../README.md](../README.md)
+- [navigation/README.md](../navigation/README.md)
+- [components/README.md](../components/README.md)
+- [../STRUCTURE.md](../STRUCTURE.md)
