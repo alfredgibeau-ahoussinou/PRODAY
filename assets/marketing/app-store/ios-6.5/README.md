@@ -13,24 +13,25 @@ Tous les PNG de ce dossier font **1284 × 2778 px** (portrait).
 
 App Store Connect → **Médias de l’app** → **Captures d’écran** → **iPhone 6,5"**.
 
-## Fichiers (10 captures)
+## Fichiers (7 captures — 1 par pôle)
 
-| # | Fichier | Accroche | Écran réel (v1.0.8) |
-|---|---------|----------|----------------------|
-| 1 | `01-hero-brand.png` | Lockup officiel + tagline | Marque (pas de téléphone) |
-| 2 | `02-joueur-profil-carriere.png` | Profil & carrière | `player/player-profil.jpg` |
-| 3 | `03-joueur-mercato.png` | Mercato ciblé | `player/player-menu.jpg` (modules Équipe / Mercato) |
-| 4 | `04-joueur-arena.png` | Arena & tournois | `player/player-matchs.jpg` |
-| 5 | `05-joueur-pulse-activites.png` | Journal d’activités | `player/player-saison.jpg` |
-| 6 | `06-coach-profil-staff.png` | Espace Coach | `coach/coach-profil.jpg` |
-| 7 | `07-club-recrutement.png` | Espace Club | `club/club-equipes.jpg` |
-| 8 | `08-matchs-amicaux.png` | Matchs amicaux | `club/club-matchs.jpg` |
-| 9 | `09-communaute-reels.png` | Communauté & Reels | `player/player-accueil.jpg` |
-| 10 | `10-partenaires-sponsors.png` | Partenaires & sponsors | `sponsor/sponsor-accueil.jpg` |
+| # | Fichier | Pôle | Accroche | Écran réel (v1.0.8) |
+|---|---------|------|----------|----------------------|
+| 1 | `01-pole-joueur.png` | Joueur | Profil, stats et carrière en ligne | `player/player-profil.jpg` |
+| 2 | `02-pole-coach.png` | Coach | Pilotez votre staff et vos séances | `coach/coach-profil.jpg` |
+| 3 | `03-pole-club.png` | Club | Équipes, licenciés et recrutement | `club/club-equipes.jpg` |
+| 4 | `04-pole-president.png` | Président | Le club en un coup d’œil | `executive/executive-cockpit.jpg` |
+| 5 | `05-pole-parent.png` | Parent | Accompagnez sans étouffer | `parent/parent-accueil.jpg` |
+| 6 | `06-pole-supporter.png` | Supporter | Suivez matchs, scores et favoris | `player/player-matchs.jpg` * |
+| 7 | `07-pole-sponsor.png` | Sponsor | Visibilité clubs et marques | `sponsor/sponsor-accueil.jpg` |
 
-### Template (captures 02–10)
+\* **Supporter** : UI Centre Match en attendant une capture simulateur dédiée au pôle Supporter (scaffold en cours).
 
-- **En-tête** : symbole P + wordmark **PRODAY**, titre fort, sous-titre accent, ligne de contexte
+**Hors scope App Store public** : Admin (cockpit interne).
+
+### Template
+
+- **En-tête** : symbole P + wordmark **PRODAY**, nom du pôle, promesse courte
 - **Cadre iPhone** : capture simulateur réelle (pas de stock Unsplash)
 - **Pied** : tagline + proday75.fr
 
@@ -38,11 +39,11 @@ Les captures proviennent de `website/public/images/app/` — mêmes visuels que 
 
 ## 3 captures recommandées en premier
 
-1. **`01-hero-brand.png`** — identité ProDay
-2. **`02-joueur-profil-carriere.png`** — profil & carrière joueur
-3. **`03-joueur-mercato.png`** — Mercato / recrutement
+1. **`01-pole-joueur.png`** — porte d’entrée principale
+2. **`02-pole-coach.png`** — staff & séances
+3. **`03-pole-club.png`** — cœur écosystème club
 
-Ensuite : `06-coach-profil-staff.png`, `07-club-recrutement.png`, puis le reste.
+Ensuite : Président, Parent, Supporter, Sponsor.
 
 ## Regénérer
 
@@ -58,14 +59,14 @@ Script : [`scripts/generate-app-store-screenshots.mjs`](../../../../scripts/gene
 
 Sources :
 
-- **Branding** : `assets/branding/proday-symbol-white.png`, `proday-lockup-official-source.png`
+- **Branding** : `assets/branding/proday-symbol-white.png`
 - **UI app** : `website/public/images/app/` (réf. `website/src/lib/*AppScreens.ts`)
 
 ## Upload App Store Connect
 
 1. **App Store Connect** → votre app → **App iOS** → version en préparation
 2. **Médias de l’app** → **Captures d’écran pour iPhone** → **6,5"**
-3. Glisser-déposer les PNG **dans l’ordre** ci-dessus (01 → 10)
+3. Glisser-déposer les PNG **dans l’ordre** ci-dessus (01 → 07)
 4. Vérifier l’aperçu : aucun bandeau « dimensions incorrectes »
 
 > Ne pas redimensionner manuellement — regénérer via le script si besoin.

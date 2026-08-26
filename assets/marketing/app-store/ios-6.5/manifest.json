@@ -1,82 +1,91 @@
 {
-  "generatedAt": "2026-08-26T22:35:37.866Z",
+  "generatedAt": "2026-08-26T22:43:45.819Z",
   "appVersion": "1.0.8",
   "dimensions": "1284×2778",
   "portrait": true,
   "device": "iPhone 6,5\" (App Store Connect)",
-  "screenSources": "website/public/images/app/ (captures simulateur réelles)",
+  "strategy": "Une capture par pôle public (7) — pas de hero séparé, pas d’Admin",
+  "screenSources": "website/public/images/app/ (captures simulateur réelles v1.0.8)",
   "branding": [
-    "assets/branding/proday-symbol-white.png + wordmark PRODAY",
-    "assets/branding/proday-lockup-official-source.png (hero)"
+    "assets/branding/proday-symbol-white.png + wordmark PRODAY"
+  ],
+  "poles": [
+    "Joueur",
+    "Coach",
+    "Club",
+    "Président",
+    "Parent",
+    "Supporter",
+    "Sponsor"
   ],
   "files": [
     {
-      "file": "01-hero-brand.png",
+      "file": "01-pole-joueur.png",
+      "pole": "Joueur",
       "width": 1284,
       "height": 2778,
       "recommended": 1,
-      "source": "assets/branding/proday-lockup-official-source.png"
+      "source": "website/public/images/app/player/player-profil.jpg",
+      "note": null
     },
     {
-      "file": "02-joueur-profil-carriere.png",
+      "file": "02-pole-coach.png",
+      "pole": "Coach",
       "width": 1284,
       "height": 2778,
       "recommended": 2,
-      "source": "website/public/images/app/player/player-profil.jpg"
+      "source": "website/public/images/app/coach/coach-profil.jpg",
+      "note": null
     },
     {
-      "file": "03-joueur-mercato.png",
+      "file": "03-pole-club.png",
+      "pole": "Club",
       "width": 1284,
       "height": 2778,
       "recommended": 3,
-      "source": "website/public/images/app/player/player-menu.jpg"
+      "source": "website/public/images/app/club/club-equipes.jpg",
+      "note": null
     },
     {
-      "file": "04-joueur-arena.png",
+      "file": "04-pole-president.png",
+      "pole": "Président",
       "width": 1284,
       "height": 2778,
-      "source": "website/public/images/app/player/player-matchs.jpg"
+      "recommended": null,
+      "source": "website/public/images/app/executive/executive-cockpit.jpg",
+      "note": null
     },
     {
-      "file": "05-joueur-pulse-activites.png",
+      "file": "05-pole-parent.png",
+      "pole": "Parent",
       "width": 1284,
       "height": 2778,
-      "source": "website/public/images/app/player/player-saison.jpg"
+      "recommended": null,
+      "source": "website/public/images/app/parent/parent-accueil.jpg",
+      "note": null
     },
     {
-      "file": "06-coach-profil-staff.png",
+      "file": "06-pole-supporter.png",
+      "pole": "Supporter",
       "width": 1284,
       "height": 2778,
-      "source": "website/public/images/app/coach/coach-profil.jpg"
+      "recommended": null,
+      "source": "website/public/images/app/player/player-matchs.jpg",
+      "note": "Centre Match (UI partagée) — capture dédiée Supporter au prochain passage simulateur"
     },
     {
-      "file": "07-club-recrutement.png",
+      "file": "07-pole-sponsor.png",
+      "pole": "Sponsor",
       "width": 1284,
       "height": 2778,
-      "source": "website/public/images/app/club/club-equipes.jpg"
-    },
-    {
-      "file": "08-matchs-amicaux.png",
-      "width": 1284,
-      "height": 2778,
-      "source": "website/public/images/app/club/club-matchs.jpg"
-    },
-    {
-      "file": "09-communaute-reels.png",
-      "width": 1284,
-      "height": 2778,
-      "source": "website/public/images/app/player/player-accueil.jpg"
-    },
-    {
-      "file": "10-partenaires-sponsors.png",
-      "width": 1284,
-      "height": 2778,
-      "source": "website/public/images/app/sponsor/sponsor-accueil.jpg"
+      "recommended": null,
+      "source": "website/public/images/app/sponsor/sponsor-accueil.jpg",
+      "note": null
     }
   ],
   "recommendedFirst": [
-    "01-hero-brand.png",
-    "02-joueur-profil-carriere.png",
-    "03-joueur-mercato.png"
+    "01-pole-joueur.png",
+    "02-pole-coach.png",
+    "03-pole-club.png"
   ]
 }

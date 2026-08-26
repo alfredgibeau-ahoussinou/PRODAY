@@ -14,7 +14,7 @@
  *
  * Écrans : captures réelles simulateur v1.0.8 (website/public/images/app/).
  */
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import sharp from '../website/node_modules/sharp/lib/index.js';
@@ -31,12 +31,14 @@ const H = LEGACY ? 2688 : 2778;
 const LOCKUP = resolve(repoRoot, 'assets/branding/proday-lockup-official-source.png');
 const SYMBOL = resolve(repoRoot, 'assets/branding/proday-symbol-white.png');
 
-/** Accents alignés assets/branding/README.md */
+/** Accents alignés assets/branding/README.md (six portes + Président). */
 const ACCENT = {
-  master: '#C5A059',
   joueur: '#FFFFFF',
   coach: '#C5A059',
   club: '#10B981',
+  president: '#C5A059',
+  parent: '#8CC63F',
+  supporter: '#06B6D4',
   sponsor: '#D946EF',
 };
 
@@ -241,135 +243,118 @@ async function composePhoneShot({ headline, subheadline, body, accent, screenPat
     .toBuffer();
 }
 
-/** @type {Array<{file:string, hero?:boolean, headline:string, subheadline?:string, body?:string, accent:string, screen?:string, sourceLabel?:string, recommended?:number}>} */
+/**
+ * Une capture par pôle public (pas d’Admin, pas de hero séparé).
+ * @type {Array<{file:string, pole:string, headline:string, subheadline:string, accent:string, screen:string, sourceLabel:string, recommended?:number, note?:string}>}
+ */
 const SHOTS = [
   {
-    file: '01-hero-brand.png',
-    hero: true,
-    headline: 'PRODAY',
-    subheadline: 'CONNECTER. PROGRESSER. RÉVÉLER.',
-    body: 'L\'écosystème foot amateur & semi-pro',
-    accent: ACCENT.master,
-    sourceLabel: 'assets/branding/proday-lockup-official-source.png',
-    recommended: 1,
-  },
-  {
-    file: '02-joueur-profil-carriere.png',
-    headline: 'Profil & carrière',
-    subheadline: 'Score, stats, CV en ligne',
-    body: 'Pôle Joueur · Pro Day Man & Woman',
+    file: '01-pole-joueur.png',
+    pole: 'Joueur',
+    headline: 'Pôle Joueur',
+    subheadline: 'Profil, stats et carrière en ligne',
     accent: ACCENT.joueur,
     screen: resolve(appScreens, 'player/player-profil.jpg'),
     sourceLabel: 'website/public/images/app/player/player-profil.jpg',
-    recommended: 2,
+    recommended: 1,
   },
   {
-    file: '03-joueur-mercato.png',
-    headline: 'Mercato ciblé',
-    subheadline: 'Annonces par poste & niveau',
-    body: 'Candidatures · suivi recruteurs',
-    accent: ACCENT.joueur,
-    screen: resolve(appScreens, 'player/player-menu.jpg'),
-    sourceLabel: 'website/public/images/app/player/player-menu.jpg',
-    recommended: 3,
-  },
-  {
-    file: '04-joueur-arena.png',
-    headline: 'Arena & tournois',
-    subheadline: 'Inscriptions · palmarès local',
-    body: 'Organisez et participez',
-    accent: ACCENT.joueur,
-    screen: resolve(appScreens, 'player/player-matchs.jpg'),
-    sourceLabel: 'website/public/images/app/player/player-matchs.jpg',
-  },
-  {
-    file: '05-joueur-pulse-activites.png',
-    headline: 'Journal d\'activités',
-    subheadline: 'Séances · matchs · highlights',
-    body: 'Analyse IA sur vos séances',
-    accent: ACCENT.joueur,
-    screen: resolve(appScreens, 'player/player-saison.jpg'),
-    sourceLabel: 'website/public/images/app/player/player-saison.jpg',
-  },
-  {
-    file: '06-coach-profil-staff.png',
-    headline: 'Espace Coach',
-    subheadline: 'Staff · séances · coaching',
-    body: 'Vérification diplômes · messagerie',
+    file: '02-pole-coach.png',
+    pole: 'Coach',
+    headline: 'Pôle Coach',
+    subheadline: 'Pilotez votre staff et vos séances',
     accent: ACCENT.coach,
     screen: resolve(appScreens, 'coach/coach-profil.jpg'),
     sourceLabel: 'website/public/images/app/coach/coach-profil.jpg',
+    recommended: 2,
   },
   {
-    file: '07-club-recrutement.png',
-    headline: 'Espace Club',
-    subheadline: 'Recrutement · convocations',
-    body: 'Mercato club · matchs amicaux',
+    file: '03-pole-club.png',
+    pole: 'Club',
+    headline: 'Pôle Club',
+    subheadline: 'Équipes, licenciés et recrutement',
     accent: ACCENT.club,
     screen: resolve(appScreens, 'club/club-equipes.jpg'),
     sourceLabel: 'website/public/images/app/club/club-equipes.jpg',
+    recommended: 3,
   },
   {
-    file: '08-matchs-amicaux.png',
-    headline: 'Matchs amicaux',
-    subheadline: 'RSVP · Live Stats',
-    body: 'Organisation simplifiée',
-    accent: ACCENT.joueur,
-    screen: resolve(appScreens, 'club/club-matchs.jpg'),
-    sourceLabel: 'website/public/images/app/club/club-matchs.jpg',
+    file: '04-pole-president.png',
+    pole: 'Président',
+    headline: 'Pôle Président',
+    subheadline: 'Le club en un coup d’œil',
+    accent: ACCENT.president,
+    screen: resolve(appScreens, 'executive/executive-cockpit.jpg'),
+    sourceLabel: 'website/public/images/app/executive/executive-cockpit.jpg',
   },
   {
-    file: '09-communaute-reels.png',
-    headline: 'Communauté & Reels',
-    subheadline: 'Fil · highlights · visibilité',
-    body: 'Question de la semaine',
-    accent: ACCENT.joueur,
-    screen: resolve(appScreens, 'player/player-accueil.jpg'),
-    sourceLabel: 'website/public/images/app/player/player-accueil.jpg',
+    file: '05-pole-parent.png',
+    pole: 'Parent',
+    headline: 'Pôle Parent',
+    subheadline: 'Accompagnez sans étouffer',
+    accent: ACCENT.parent,
+    screen: resolve(appScreens, 'parent/parent-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/parent/parent-accueil.jpg',
   },
   {
-    file: '10-partenaires-sponsors.png',
-    headline: 'Partenaires & sponsors',
-    subheadline: 'Visibilité clubs & marques',
-    body: 'Espace National Pro',
+    file: '06-pole-supporter.png',
+    pole: 'Supporter',
+    headline: 'Pôle Supporter',
+    subheadline: 'Suivez matchs, scores et favoris',
+    accent: ACCENT.supporter,
+    screen: resolve(appScreens, 'player/player-matchs.jpg'),
+    sourceLabel: 'website/public/images/app/player/player-matchs.jpg',
+    note: 'Centre Match (UI partagée) — capture dédiée Supporter au prochain passage simulateur',
+  },
+  {
+    file: '07-pole-sponsor.png',
+    pole: 'Sponsor',
+    headline: 'Pôle Sponsor',
+    subheadline: 'Visibilité clubs et marques',
     accent: ACCENT.sponsor,
     screen: resolve(appScreens, 'sponsor/sponsor-accueil.jpg'),
     sourceLabel: 'website/public/images/app/sponsor/sponsor-accueil.jpg',
   },
 ];
 
+function removeStaleOutputs(expectedFiles) {
+  const keep = new Set(expectedFiles);
+  for (const name of readdirSync(outDir)) {
+    if (!name.endsWith('.png') || keep.has(name)) continue;
+    unlinkSync(resolve(outDir, name));
+    console.log(`✗ retiré ${name}`);
+  }
+}
+
 async function writeShot(shot) {
   const outPath = resolve(outDir, shot.file);
-  let buf;
-  if (shot.hero) {
-    buf = await composeHero(shot);
-  } else {
-    if (!existsSync(shot.screen)) {
-      throw new Error(`Asset manquant : ${shot.screen}`);
-    }
-    buf = await composePhoneShot({
-      headline: shot.headline,
-      subheadline: shot.subheadline,
-      body: shot.body,
-      accent: shot.accent,
-      screenPath: shot.screen,
-    });
+  if (!existsSync(shot.screen)) {
+    throw new Error(`Asset manquant : ${shot.screen}`);
   }
+  const buf = await composePhoneShot({
+    headline: shot.headline,
+    subheadline: shot.subheadline,
+    accent: shot.accent,
+    screenPath: shot.screen,
+  });
   await sharp(buf).png({ compressionLevel: 9 }).toFile(outPath);
   const meta = await sharp(buf).metadata();
-  console.log(`✓ ${shot.file}  ${meta.width}×${meta.height}`);
+  console.log(`✓ ${shot.file}  ${meta.width}×${meta.height}  (${shot.pole})`);
   return {
     file: shot.file,
+    pole: shot.pole,
     width: meta.width,
     height: meta.height,
-    recommended: shot.recommended,
-    source: shot.sourceLabel ?? null,
+    recommended: shot.recommended ?? null,
+    source: shot.sourceLabel,
+    note: shot.note ?? null,
   };
 }
 
 async function main() {
   mkdirSync(outDir, { recursive: true });
-  console.log(`→ Captures App Store iOS 6,5" (${W}×${H})…`);
+  removeStaleOutputs(SHOTS.map((s) => s.file));
+  console.log(`→ Captures App Store iOS 6,5" (${W}×${H}) — ${SHOTS.length} pôles…`);
   const results = [];
   for (const shot of SHOTS) {
     results.push(await writeShot(shot));
@@ -381,13 +366,15 @@ async function main() {
     dimensions: `${W}×${H}`,
     portrait: true,
     device: 'iPhone 6,5" (App Store Connect)',
-    screenSources: 'website/public/images/app/ (captures simulateur réelles)',
-    branding: [
-      'assets/branding/proday-symbol-white.png + wordmark PRODAY',
-      'assets/branding/proday-lockup-official-source.png (hero)',
-    ],
+    strategy: 'Une capture par pôle public (7) — pas de hero séparé, pas d’Admin',
+    screenSources: 'website/public/images/app/ (captures simulateur réelles v1.0.8)',
+    branding: ['assets/branding/proday-symbol-white.png + wordmark PRODAY'],
+    poles: results.map((r) => r.pole),
     files: results,
-    recommendedFirst: results.filter((r) => r.recommended).sort((a, b) => a.recommended - b.recommended).map((r) => r.file),
+    recommendedFirst: results
+      .filter((r) => r.recommended)
+      .sort((a, b) => a.recommended - b.recommended)
+      .map((r) => r.file),
   };
   writeFileSync(resolve(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(`\n✓ ${results.length} captures → ${outDir}`);

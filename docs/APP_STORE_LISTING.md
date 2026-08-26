@@ -157,22 +157,19 @@ App Store Connect exige **exactement** l'une de ces tailles (portrait) :
 
 Dossier : [`assets/marketing/app-store/ios-6.5/`](../assets/marketing/app-store/ios-6.5/)
 
-10 PNG **1284 × 2778** (portrait), ordre d'upload :
+7 PNG **1284 × 2778** (portrait), ordre d'upload — **une capture par pôle public** :
 
-1. `01-hero-brand.png` — identité CONNECTER. PROGRESSER. RÉVÉLER.
-2. `02-joueur-profil-carriere.png`
-3. `03-joueur-mercato.png`
-4. `04-joueur-arena.png`
-5. `05-joueur-pulse-activites.png`
-6. `06-coach-profil-staff.png`
-7. `07-club-recrutement.png`
-8. `08-matchs-amicaux.png`
-9. `09-communaute-reels.png`
-10. `10-partenaires-sponsors.png`
+1. `01-pole-joueur.png` — Profil, stats et carrière en ligne
+2. `02-pole-coach.png` — Pilotez votre staff et vos séances
+3. `03-pole-club.png` — Équipes, licenciés et recrutement
+4. `04-pole-president.png` — Le club en un coup d'œil
+5. `05-pole-parent.png` — Accompagnez sans étouffer
+6. `06-pole-supporter.png` — Suivez matchs, scores et favoris
+7. `07-pole-sponsor.png` — Visibilité clubs et marques
 
 **3 captures prioritaires** si upload partiel : `01`, `02`, `03`.
 
-Jusqu'à **3 aperçus app** (vidéo) + **10 captures** par taille d'appareil.
+Pas de capture Admin (cockpit interne). Jusqu'à **3 aperçus app** (vidéo) + **7 captures** par taille d'appareil.
 
 ### Regénérer
 
@@ -181,4 +178,4 @@ npm run marketing:app-store-ios          # 1284 × 2778 (défaut)
 npm run marketing:app-store-ios:legacy   # 1242 × 2688
 ```
 
-Contenu aligné checklist : Accueil/marque, Profil/carrière, Journal activités, Mercato, Arena — **pas** de mock « IA sur tout le match ».
+Contenu aligné checklist : **un pôle par capture** (Joueur, Coach, Club, Président, Parent, Supporter, Sponsor) — pas de doublons Mercato/Arena/Pulse, pas de mock « IA sur tout le match ».
