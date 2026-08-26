@@ -2,7 +2,7 @@
   "expo": {
     "name": "ProDay",
     "slug": "proday",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "scheme": "proday",
     "orientation": "portrait",
     "icon": "./assets/branding/proday-app-icon.png",
@@ -19,6 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.proday.app",
+      "buildNumber": "16",
       "associatedDomains": [
         "applinks:proday75.fr",
         "applinks:www.proday75.fr"
@@ -40,7 +41,7 @@
         "backgroundColor": "#000000"
       },
       "package": "com.proday.app",
-      "versionCode": 8,
+      "versionCode": 9,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

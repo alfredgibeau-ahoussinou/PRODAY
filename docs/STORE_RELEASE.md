@@ -2,6 +2,22 @@
 
 Guide pour construire et soumettre l’application mobile sur l’App Store et Google Play.
 
+**Version marketing (app.json) :** `1.0.8`.  
+**Numéros natifs (EAS `appVersionSource: remote`) :** prochain iOS TestFlight = **build 16** (auto-incrément depuis 15) ; Android = **versionCode 9**.  
+Les champs `ios.buildNumber` / `android.versionCode` dans `app.json` sont indicatifs (Constants) — EAS ignore leur valeur pour le binaire store.  
+**OTA :** non. `expo-updates` n’est pas dans l’app ; une mise à jour = nouveau build EAS (TestFlight / APK / stores).
+
+## Notes de version — 1.0.8 (août 2026)
+
+Correctifs et livraisons depuis 1.0.7 à inclure dans ce rebuild :
+
+- Déconnexion accessible sur mobile ; icônes de notification Coach / Club / Président
+- IA honnête (erreurs cloud visibles, plus de mock silencieux) ; création de séance coach (brouillon NLP) ; coaching perso
+- Shells adaptés au grand écran (Expo web / Mac)
+- Accents Club émeraude ; visio Daily native retirée du client Expo (liens Daily restent côté functions)
+
+Pas de soumission App Store production automatique : TestFlight + APK interne, puis revue store manuelle.
+
 ## Prérequis
 
 1. Compte [Expo](https://expo.dev) et projet lié : `npx eas init`

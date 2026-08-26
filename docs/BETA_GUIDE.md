@@ -103,12 +103,16 @@ Collection `beta_waitlist` — champs typiques :
 
 ### Activer Pro manuellement (bêta)
 
-Sans IAP actif, dans Firestore :
+Sans IAP actif, deux options :
 
-```
-users/{uid}.subscription_tier = "pro"
-users/{uid}.subscription_status = "active"
-```
+1. **Demande in-app** — écran Abonnement → « Demander l’accès Pro (bêta) » (hors `production`).
+   Admin FOC → Abonnements → onglet **Demandes bêta** → Approuver (essai 1 mois).
+2. **Firestore** — `users/{uid}` :
+   - `subscription_tier = "pro"`
+   - `subscription_status = "active"`
+   - optionnel : `subscription_plan_id`, `subscription_period_end` (future)
+3. **Admin FOC → Abonnements** — grant / essai / passage payant
+   (`adminService.grantProSubscription`).
 
 ---
 
@@ -237,8 +241,11 @@ cd website && npm run netlify:deploy # production Netlify
 
 ### App mobile
 
+Version **1.0.8** (iOS build 16 / Android versionCode 9). Rebuild EAS natif — pas d’OTA.
+
 ```bash
-eas build --profile preview --platform ios
+npm run eas:build:testflight
+npm run eas:submit:testflight
 npm run eas:build:preview -- --platform android
 ```
 

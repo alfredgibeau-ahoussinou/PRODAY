@@ -24,7 +24,8 @@ export const PRODAY_POLE_ACCENTS = {
   player: '#FFFFFF',
   joueur: '#FFFFFF',
   coach: '#C5A059',
-  club: '#00ADEF',
+  /** Émeraude football — distinct du lime Parent (#8CC63F). */
+  club: '#10B981',
   president: '#C5A059',
   parent: '#8CC63F',
   supporter: '#06B6D4',

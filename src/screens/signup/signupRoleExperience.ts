@@ -195,7 +195,7 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
       { id: 'acces', label: 'Compte' },
       { id: 'launch', label: 'Go' },
     ],
-    accent: { accent: '#7C2D12', accentSoft: '#FFEDD5', accentMuted: '#FDBA74' },
+    accent: { accent: '#10B981', accentSoft: '#D1FAE5', accentMuted: '#6EE7B7' },
     launchTitle: 'Club en ligne',
     launchBody: 'Publiez annonces et gérez vos équipes depuis votre QG ProDay.',
     launchFinishLabel: 'Ouvrir le QG club',

@@ -167,7 +167,7 @@ export const PRODAY_CARD_ROLE_META: Record<
 > = {
   player: { label: 'Joueur', accent: '#0054F0', deep: '#001854' },
   coach: { label: 'Coach', accent: '#3B5BFF', deep: '#001848' },
-  club: { label: 'Club', accent: '#006CFC', deep: '#002478' },
+  club: { label: 'Club', accent: '#10B981', deep: '#047857' },
   team: { label: 'Équipe', accent: '#0054F0', deep: '#001F6B' },
   supporter: { label: 'Supporter', accent: '#3C00F0', deep: '#180078' },
   sponsor: { label: 'Sponsor', accent: '#D4AF37', deep: '#070605' },

@@ -145,6 +145,27 @@ for (const [cmd, args, label] of testSuites) {
 
 console.log('\n🌐 Site production (optionnel)\n');
 
+/** Node fetch peut échouer derrière certains proxies ; curl est le secours. */
+function curlStatus(url, method = 'GET') {
+  const r = spawnSync(
+    'curl',
+    ['-sS', '-o', '/dev/null', '-w', '%{http_code}', '-X', method, '--max-time', '20', '-L', url],
+    { encoding: 'utf8' },
+  );
+  if (r.error || r.status !== 0) return null;
+  const code = Number.parseInt(String(r.stdout).trim(), 10);
+  return Number.isFinite(code) ? code : null;
+}
+
+async function httpStatus(url, method = 'GET') {
+  try {
+    const res = await fetch(url, { method, redirect: 'follow' });
+    return res.status;
+  } catch {
+    return curlStatus(url, method);
+  }
+}
+
 async function checkSite() {
   const paths = [
     '/confidentialite',
@@ -156,31 +177,26 @@ async function checkSite() {
     '/beta/aide',
   ];
   for (const path of paths) {
-    try {
-      const res = await fetch(`${siteUrl}${path}`, { method: 'GET', redirect: 'follow' });
-      if (res.ok) ok(`${siteUrl}${path} → ${res.status}`);
-      else fail(`${siteUrl}${path} → ${res.status}`);
-    } catch (err) {
-      warn(`${siteUrl}${path} — inaccessible (${err instanceof Error ? err.message : err})`);
-    }
+    const status = await httpStatus(`${siteUrl}${path}`);
+    if (status != null && status >= 200 && status < 400) ok(`${siteUrl}${path} → ${status}`);
+    else if (status != null) fail(`${siteUrl}${path} → ${status}`);
+    else warn(`${siteUrl}${path} — inaccessible (fetch failed)`);
   }
 
-  try {
-    const res = await fetch(`${siteUrl}/api/beta`, { method: "OPTIONS" });
-    if (res.status === 204 || res.status === 405) ok(`API bêta — endpoint présent (${siteUrl})`);
-    else warn(`API bêta — ${res.status} (attendu OPTIONS 204 ou 405)`);
-  } catch (err) {
-    warn(`API bêta — inaccessible (${err instanceof Error ? err.message : err})`);
-  }
+  const apiStatus = await httpStatus(`${siteUrl}/api/beta`, 'OPTIONS');
+  if (apiStatus === 204 || apiStatus === 405) ok(`API bêta — endpoint présent (${siteUrl})`);
+  else if (apiStatus != null) warn(`API bêta — ${apiStatus} (attendu OPTIONS 204 ou 405)`);
+  else warn(`API bêta — inaccessible (fetch failed)`);
 }
 
 await checkSite();
 
 console.log('\n📋 Étapes manuelles restantes\n');
 console.log('   cd website && npm run netlify:deploy');
-console.log('   eas build --profile preview --platform ios');
+console.log('   npm run eas:build:testflight');
+console.log('   npm run eas:submit:testflight');
 console.log('   npm run eas:build:preview -- --platform android');
-console.log('   docs/BETA_GUIDE.md\n');
+console.log('   docs/STORE_RELEASE.md + docs/BETA_GUIDE.md\n');
 
 if (failed > 0) {
   console.log(`❌ ${failed} contrôle(s) en échec, ${warned} avertissement(s).\n`);
