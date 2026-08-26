@@ -46,6 +46,12 @@ import {
   TRAINING_LEVEL_LABELS,
   phaseLabel,
 } from '../../models/TrainingSession';
+import {
+  composedPlanFromPrompt,
+  formatTrainingPhasesAsSessionNotes,
+  parseCoachSessionPrompt,
+  phasesFromComposedBlocks,
+} from '../../utils/coachSessionPrompt';
 
 export type CoachTrainingEventHubProps = {
   eventId: string;
@@ -78,6 +84,8 @@ export function CoachTrainingEventHub({
   const [aiPlayerCount, setAiPlayerCount] = useState('18');
   const [aiNotes, setAiNotes] = useState('');
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiSource, setAiSource] = useState<'mistral' | 'local' | null>(null);
+  const [aiApplying, setAiApplying] = useState(false);
   const [aiResult, setAiResult] = useState<TrainingPhase[] | null>(null);
 
   const load = useCallback(async () => {
@@ -127,24 +135,113 @@ export function CoachTrainingEventHub({
     return matched ?? event;
   }, [event, activeTeamId, teamUids]);
 
+  const adoptAiPhases = useCallback(
+    (phases: TrainingPhase[], source: 'mistral' | 'local', focusHint: string) => {
+      setAiResult(phases);
+      setAiSource(source);
+      setShowAiForm(false);
+      const total = phases.reduce((n, p) => n + (p.duration_min || 0), 0);
+      setFocus(focusHint);
+      setDuration(String(total || aiDuration));
+      setNotes(
+        formatTrainingPhasesAsSessionNotes(phases, {
+          focus: focusHint,
+          source,
+          objectiveLabel: TRAINING_OBJECTIVE_LABELS[aiObjective],
+        }),
+      );
+    },
+    [aiDuration, aiObjective],
+  );
+
+  const buildLocalDraft = useCallback(() => {
+    const promptText =
+      aiNotes.trim() ||
+      `${TRAINING_OBJECTIVE_LABELS[aiObjective]} ${aiDuration} min`;
+    const parsed = parseCoachSessionPrompt(promptText);
+    const plan = composedPlanFromPrompt(promptText, {
+      playerCount: parseInt(aiPlayerCount, 10) || undefined,
+    });
+    const phases = phasesFromComposedBlocks(plan);
+    adoptAiPhases(phases, 'local', parsed.focus);
+  }, [adoptAiPhases, aiNotes, aiObjective, aiDuration, aiPlayerCount]);
+
   const generateAiSession = async () => {
     if (!profile || !clubId) return;
     setAiGenerating(true);
+    const parsedNotes = aiNotes.trim() ? parseCoachSessionPrompt(aiNotes) : null;
+    const objective = parsedNotes?.theme !== 'generic' && parsedNotes
+      ? parsedNotes.objective
+      : aiObjective;
+    if (parsedNotes && parsedNotes.theme !== 'generic') {
+      setAiObjective(objective);
+    }
+    const durationMin = parsedNotes?.duration_min || aiDuration;
     try {
       const result = await aiTrainingService.generateCollective({
         club_id: clubId,
         team_id: activeTeamId,
-        objective: aiObjective,
-        duration_min: aiDuration,
+        objective,
+        duration_min: durationMin,
         level: aiLevel,
         player_count: parseInt(aiPlayerCount, 10) || 18,
-        coach_notes: aiNotes || undefined,
+        coach_notes: aiNotes.trim() || parsedNotes?.coachNotes || undefined,
       });
-      setAiResult(result.phases);
+      const focusHint =
+        parsedNotes && parsedNotes.theme !== 'generic'
+          ? parsedNotes.focus
+          : TRAINING_OBJECTIVE_LABELS[objective];
+      adoptAiPhases(result.phases, 'mistral', focusHint);
     } catch (e) {
-      Alert.alert(t('common.error'), e instanceof Error ? e.message : 'Génération impossible.');
+      const msg = e instanceof Error ? e.message : 'Génération impossible.';
+      Alert.alert(t('common.error'), msg, [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Brouillon local',
+          onPress: () => buildLocalDraft(),
+        },
+      ]);
     } finally {
       setAiGenerating(false);
+    }
+  };
+
+  const applyAiToSessionPlan = async () => {
+    if (!event || !profile || !aiResult?.length) return;
+    if (!canManage) {
+      Alert.alert('Séance IA', 'Réservé au coach qui gère les convocations.');
+      return;
+    }
+    setAiApplying(true);
+    try {
+      const focusHint =
+        focus.trim() ||
+        (aiNotes.trim() ? parseCoachSessionPrompt(aiNotes).focus : TRAINING_OBJECTIVE_LABELS[aiObjective]);
+      const planNotes =
+        notes.trim() ||
+        formatTrainingPhasesAsSessionNotes(aiResult, {
+          focus: focusHint,
+          source: aiSource ?? 'local',
+          objectiveLabel: TRAINING_OBJECTIVE_LABELS[aiObjective],
+        });
+      const total = aiResult.reduce((n, p) => n + (p.duration_min || 0), 0);
+      await teamEventsService.updateSessionPlan(
+        event.id,
+        {
+          focus: focusHint,
+          notes: planNotes,
+          duration_min: total || parseInt(duration, 10) || aiDuration,
+        },
+        { user: profile },
+      );
+      await load();
+      Alert.alert('Plan appliqué', t('coach.portal.planning.planSaved'));
+      setAiResult(null);
+      setAiSource(null);
+    } catch (e) {
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.error'));
+    } finally {
+      setAiApplying(false);
     }
   };
 
@@ -481,13 +578,13 @@ export function CoachTrainingEventHub({
                   placeholderTextColor={tokens.muted}
                 />
 
-                <CoachText variant="caption" muted style={styles.label}>Notes (optionnel)</CoachText>
+                <CoachText variant="caption" muted style={styles.label}>Notes (thème libre)</CoachText>
                 <TextInput
                   style={[styles.input, styles.multi, { borderColor: tokens.border, color: tokens.foreground, backgroundColor: tokens.surface }]}
                   value={aiNotes}
                   onChangeText={setAiNotes}
                   multiline
-                  placeholder="Précisions pour l'IA…"
+                  placeholder="Ex. crée une séance bloc bas, bas du corps…"
                   placeholderTextColor={tokens.muted}
                 />
 
@@ -511,6 +608,16 @@ export function CoachTrainingEventHub({
                   </View>
                 </PressableSpring>
 
+                <PressableSpring
+                  onPress={() => buildLocalDraft()}
+                  disabled={aiGenerating}
+                  scaleTo={0.96}
+                >
+                  <CoachText variant="caption" muted style={styles.link}>
+                    Brouillon local (sans cloud)
+                  </CoachText>
+                </PressableSpring>
+
                 <PressableSpring onPress={() => setShowAiForm(false)} scaleTo={0.96}>
                   <CoachText variant="caption" muted style={styles.link}>Annuler</CoachText>
                 </PressableSpring>
@@ -520,7 +627,9 @@ export function CoachTrainingEventHub({
             {aiResult ? (
               <View style={[styles.aiForm, { borderColor: tokens.accent, backgroundColor: tokens.surface }]}>
                 <CoachText variant="section" style={{ color: tokens.foreground }}>
-                  Séance générée par l'IA
+                  {aiSource === 'local'
+                    ? 'Brouillon local (pas de cloud)'
+                    : 'Séance générée par l’IA'}
                 </CoachText>
                 {aiResult.map((phase, i) => (
                   <View key={`${phase.name}-${i}`} style={{ marginTop: spacing.sm }}>
@@ -556,8 +665,28 @@ export function CoachTrainingEventHub({
                   </View>
                 ))}
                 <PressableSpring
+                  onPress={() => void applyAiToSessionPlan()}
+                  disabled={aiApplying}
+                  scaleTo={0.96}
+                  haptic
+                >
+                  <View style={[styles.aiCta, { backgroundColor: tokens.accent, marginTop: spacing.sm }]}>
+                    {aiApplying ? (
+                      <ActivityIndicator color={tokens.bg} />
+                    ) : (
+                      <>
+                        <Icon name="calendar" size={18} color={tokens.bg} />
+                        <CoachText variant="caption" style={{ color: tokens.bg, fontWeight: '700' }}>
+                          Appliquer au plan de séance
+                        </CoachText>
+                      </>
+                    )}
+                  </View>
+                </PressableSpring>
+                <PressableSpring
                   onPress={() => {
                     setAiResult(null);
+                    setAiSource(null);
                     setShowAiForm(false);
                   }}
                   scaleTo={0.96}
