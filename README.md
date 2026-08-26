@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="website/public/branding/logo-proday-official.png" alt="ProDay — CONNECTER. PROGRESSER. RÉVÉLER." width="360" />
+<img src="assets/branding/logo-proday-official.png" alt="ProDay — CONNECTER. PROGRESSER. RÉVÉLER." width="360" />
 
 <br /><br />
 
@@ -39,7 +39,7 @@ ProDay n’est **pas huit produits** ni une pile de features marketing. C’est 
 | **App** | **1.0.8** (bêta fermée — TestFlight / APK) |
 | **Code** | Dépôt **privé** [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) |
 | **Docs publiques** | [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) |
-| **Logo officiel** | `website/public/branding/logo-proday-official.png` · sources `assets/branding/` |
+| **Logo officiel** | `assets/branding/logo-proday-official.png` · CDN [proday75.fr/branding/…](https://proday75.fr/branding/logo-proday-official.png) |
 
 > Les chiffres du site (onglets, modules, tarifs) décrivent l’**architecture produit**, pas une audience en temps réel. **Pas de métriques inventées.** L’IA analyse les **highlights de séance**, pas chaque geste en match.
 
