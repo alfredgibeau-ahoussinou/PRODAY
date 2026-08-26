@@ -14,7 +14,7 @@ documentation, **sans autorisation écrite préalable**, est interdite.
 
 ## Marque
 
-« ProDay », le slogan « Connecter · Progresser · Réussir » et les éléments visuels de
+« ProDay », le slogan « CONNECTER. PROGRESSER. RÉVÉLER. » et les éléments visuels de
 l'identité ProDay ne peuvent être utilisés sans accord explicite.
 
 ## Contact

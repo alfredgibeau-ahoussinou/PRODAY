@@ -1,6 +1,8 @@
 # Documentation ProDay
 
-> Index de toute la documentation hors code. Pour la carte du dépôt : [STRUCTURE.md](./STRUCTURE.md).
+Index hors code. Carte du dépôt : [STRUCTURE.md](./STRUCTURE.md).
+
+**CONNECTER. PROGRESSER. RÉVÉLER.** — *L’infrastructure de votre football* · App **1.0.8** · [proday75.fr](https://proday75.fr)
 
 ## GitHub
 
@@ -10,71 +12,72 @@
 | Docs publiques | [alfredgibeau-ahoussinou/PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) | README / infos produit publiques |
 | Auth Git | [GITHUB_AUTH.md](./GITHUB_AUTH.md) | Push HTTPS / SSH / `gh` |
 
-Version app marketing courante : **1.0.8** (`app.json`) — voir [STORE_RELEASE.md](./STORE_RELEASE.md).
+Version app marketing : **1.0.8** (`app.json`) — [STORE_RELEASE.md](./STORE_RELEASE.md).  
+Logo : [`assets/branding/`](../assets/branding/README.md) · CDN : https://proday75.fr/branding/logo-proday-official.png
 
 ## Démarrage
 
 | Document | Public | Description |
 |----------|--------|-------------|
-| [../README.md](../README.md) | Tous | Point d'entrée du dépôt |
-| [STRUCTURE.md](./STRUCTURE.md) | Dev | Arborescence commentée du monorepo |
-| [ProDay_Brief_NonDev.md](./ProDay_Brief_NonDev.md) | Non-dev | Brief produit (source Markdown) |
-| [design/ProDay_Brief.html](./design/ProDay_Brief.html) | Non-dev | Brief exportable PDF via navigateur |
+| [../README.md](../README.md) | Tous | Point d’entrée monorepo |
+| [STRUCTURE.md](./STRUCTURE.md) | Dev | Arborescence commentée |
+| [ProDay_Brief_NonDev.md](./ProDay_Brief_NonDev.md) | Non-dev | Brief produit |
+| [design/ProDay_Brief.html](./design/ProDay_Brief.html) | Non-dev | Brief exportable PDF |
 
 ## Produit & vision
 
 | Document | Sujet |
 |----------|-------|
 | [PRODAY_VISION.md](./PRODAY_VISION.md) | Vision long terme |
-| [PRODAY_POLES_ARCHITECTURE.md](./PRODAY_POLES_ARCHITECTURE.md) | Architecture pôles (détail) |
-| [ECOSYSTEM_POLES_EVOLUTION.md](./ECOSYSTEM_POLES_EVOLUTION.md) | Fusion Joueur, Club/Staff, agent 19,99 €, events, privacy |
+| [PRODAY_POLES_ARCHITECTURE.md](./PRODAY_POLES_ARCHITECTURE.md) | Six portes / pôles |
+| [ECOSYSTEM_POLES_EVOLUTION.md](./ECOSYSTEM_POLES_EVOLUTION.md) | Évolution écosystème |
 | [PRODAY_V3_MODULES.md](./PRODAY_V3_MODULES.md) | Modules V3 |
 | [PRODAY_V3_PRODUCT_ANALYSIS.md](./PRODAY_V3_PRODUCT_ANALYSIS.md) | Analyse produit V3 |
-| [PRICING_STRATEGY.md](./PRICING_STRATEGY.md) | Stratégie tarifaire |
-| [CONVENTION_SPONSOR.md](./CONVENTION_SPONSOR.md) | Modèle convention partenaire |
+| [PRICING_STRATEGY.md](./PRICING_STRATEGY.md) | Grille tarifaire |
+| [CONVENTION_SPONSOR.md](./CONVENTION_SPONSOR.md) | Convention partenaire |
 
 ## Technique
 
 | Document | Sujet |
 |----------|-------|
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Diagrammes architecture |
-| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Schéma Firestore |
-| [API_CONTRACTS.md](./API_CONTRACTS.md) | Cloud Functions & services |
-| [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) | Configuration Firebase |
-| [FIRESTORE_DEPLOY.md](./FIRESTORE_DEPLOY.md) | Déploiement règles & index |
-| [FIREBASE_RECONNECT.md](./FIREBASE_RECONNECT.md) | Reconnexion projet Firebase |
-| [AI_SETUP.md](./AI_SETUP.md) | Mistral / analyse IA |
-| [ADMIN_SETUP.md](./ADMIN_SETUP.md) | Comptes admin plateforme |
-| [WEBSITE_SECURITY.md](./WEBSITE_SECURITY.md) | Sécurité site vitrine |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Diagrammes |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | Firestore |
+| [API_CONTRACTS.md](./API_CONTRACTS.md) | Cloud Functions |
+| [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) | Config Firebase |
+| [FIRESTORE_DEPLOY.md](./FIRESTORE_DEPLOY.md) | Règles & index |
+| [FIREBASE_RECONNECT.md](./FIREBASE_RECONNECT.md) | Reconnexion projet |
+| [AI_SETUP.md](./AI_SETUP.md) | Mistral / IA |
+| [ADMIN_SETUP.md](./ADMIN_SETUP.md) | Comptes admin |
+| [WEBSITE_SECURITY.md](./WEBSITE_SECURITY.md) | Sécurité site |
 
 ## Stores & release
 
 | Document | Sujet |
 |----------|-------|
-| [STORE_SETUP.md](./STORE_SETUP.md) | SKU IAP App Store / Play |
+| [STORE_SETUP.md](./STORE_SETUP.md) | SKU IAP |
 | [STORE_RELEASE.md](./STORE_RELEASE.md) | Process release |
 | [APP_STORE_LISTING.md](./APP_STORE_LISTING.md) | Fiches store |
 | [PRODAY_V3_DEPLOY.md](./PRODAY_V3_DEPLOY.md) | Déploiement V3 |
-| [PRODAY_V3_QA.md](./PRODAY_V3_QA.md) | Checklist QA V3 |
+| [PRODAY_V3_QA.md](./PRODAY_V3_QA.md) | QA V3 |
 
 ## Bêta & domaine
 
 | Document | Sujet |
 |----------|-------|
-| [BETA_GUIDE.md](./BETA_GUIDE.md) | Guide opérateur bêta |
-| [BETA_WAITLIST.md](./BETA_WAITLIST.md) | Liste d'attente + EmailJS |
-| [BETA_LAUNCH.md](./BETA_LAUNCH.md) | Lancement bêta |
-| [BETA_IOS_LAUNCH.md](./BETA_IOS_LAUNCH.md) | Campagne iOS — 15 août 2026 18 h + report + TestFlight + emails |
+| [BETA_GUIDE.md](./BETA_GUIDE.md) | Guide opérateur |
+| [BETA_WAITLIST.md](./BETA_WAITLIST.md) | Waitlist + EmailJS |
+| [BETA_LAUNCH.md](./BETA_LAUNCH.md) | Go/no-go |
+| [BETA_IOS_LAUNCH.md](./BETA_IOS_LAUNCH.md) | Campagne iOS TestFlight |
 | [DOMAIN_PRODAY75_FR.md](./DOMAIN_PRODAY75_FR.md) | Domaine proday75.fr |
 
 ## Design
 
 | Document / dossier | Sujet |
 |--------------------|-------|
-| [design/DESIGN_SYSTEM.md](./design/DESIGN_SYSTEM.md) | Couleurs, typo, composants |
-| [design/FIGMA_BRIEF.md](./design/FIGMA_BRIEF.md) | Reprise maquettes Figma |
-| [design/mockups/](./design/mockups/) | Maquettes HTML interactives |
-| [../assets/branding/](../assets/branding/) | Logos et planches UI |
+| [design/DESIGN_SYSTEM.md](./design/DESIGN_SYSTEM.md) | Couleurs, typo, UI |
+| [design/FIGMA_BRIEF.md](./design/FIGMA_BRIEF.md) | Maquettes Figma |
+| [design/mockups/](./design/mockups/) | Maquettes HTML |
+| [../assets/branding/](../assets/branding/) | Logos officiels |
 
 ## Juridique
 
@@ -82,16 +85,16 @@ Version app marketing courante : **1.0.8** (`app.json`) — voir [STORE_RELEASE.
 |----------|-------|
 | [legal/TERMS_OF_USE.md](./legal/TERMS_OF_USE.md) | CGU |
 | [legal/PRIVACY_POLICY.md](./legal/PRIVACY_POLICY.md) | Confidentialité |
-| [legal/pactes/](./legal/pactes/) | Pactes associés (`npm run docs:pactes`) |
+| [legal/pactes/](./legal/pactes/) | Pactes (`npm run docs:pactes`) |
 | [legal/pdf/](./legal/pdf/) | PDF générés |
 
-## Commandes doc utiles
+## Commandes utiles
 
 ```bash
 npm run docs:open-brief      # Brief HTML
-npm run docs:open-mockups    # Maquettes interactives
+npm run docs:open-mockups    # Maquettes
 npm run docs:guide-restant   # PDF guide associés
-npm run docs:pactes          # PDF pactes (4 exemplaires)
+npm run docs:pactes          # PDF pactes
 npm run docs:legal           # PDF CGU / confidentialité
 npm run docs:cv              # CV joueur exemple
 ```

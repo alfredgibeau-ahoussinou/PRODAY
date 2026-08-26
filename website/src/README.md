@@ -1,37 +1,33 @@
 # Code source site (`website/src/`)
 
-> Application Next.js (App Router). Routes dans `app/`, UI dans `components/`.
+Next.js **16** App Router — [proday75.fr](https://proday75.fr).  
+**CONNECTER. PROGRESSER. RÉVÉLER.** · six portes d’entrée · pas huit produits.
 
 ## Structure
 
 | Dossier | Rôle |
 |---------|------|
-| `app/` | Routes Next.js — une dossier = une URL |
-| `components/` | Blocs UI réutilisables (demo, pricing, nav…) |
-| `content/` | Textes marketing, copy par univers |
-| `lib/` | API bêta, thèmes univers, utilitaires |
-| `middleware.ts` | Middleware (sécurité, cookies bêta) |
+| `app/` | Routes — un dossier ≈ une URL |
+| `components/` | UI (home, portes, demo, pricing, beta, admin…) |
+| `content/` | Copy marketing / légal |
+| `lib/` | `content.ts`, `poles.ts`, API bêta, thèmes |
+| `middleware.ts` | Cookies bêta, garde-fous Edge |
 
-## Routes principales (`app/`)
+## Routes utiles
 
-| Route | Dossier |
-|-------|---------|
-| `/` | `app/page.tsx` |
-| `/homme` · `/woman` · `/pro` | Univers produit |
-| `/demo` | Démo interactive 6 pôles carousel (+ Sponsor) |
-| `/beta/*` | Inscription et hub bêta |
-| `/api/beta` | Endpoint liste d'attente |
+| Zone | Exemples |
+|------|----------|
+| Portes | `/joueur`, `/pro-club`, `/coach`, `/parent`, `/supporter`, `/sponsor` |
+| Produit | `/fonctionnalites`, `/ecosysteme`, `/demo`, `/tarifs`, `/roadmap` |
+| Bêta | `/beta/inscription`, `/beta/programme`, `/beta/installer` |
+| API | `app/api/beta/…` |
 
-Liste complète : [../README.md](../README.md).
-
-## Composants (`components/`)
-
-Regroupés par usage : `universe/`, `demo/`, `pricing/`, `beta/`, `layout/`, `ui/`…
-
-Thématisation Homme / Woman / Pro : `components/universe/universeTheme.ts`.
+Liste & déploiement : [../README.md](../README.md).
 
 ## Liens
 
-- [../README.md](../README.md) — déploiement Netlify
-- [../../docs/WEBSITE_SECURITY.md](../../docs/WEBSITE_SECURITY.md)
-- [../../docs/BETA_GUIDE.md](../../docs/BETA_GUIDE.md)
+- [../README.md](../README.md) — site & Netlify  
+- [../../README.md](../../README.md) — monorepo  
+- [../../docs/WEBSITE_SECURITY.md](../../docs/WEBSITE_SECURITY.md)  
+- [../../docs/BETA_GUIDE.md](../../docs/BETA_GUIDE.md)  
+- [../../assets/branding/README.md](../../assets/branding/README.md)

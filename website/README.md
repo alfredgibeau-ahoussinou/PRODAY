@@ -1,120 +1,136 @@
-# Site vitrine ProDay (Next.js)
+<div align="center">
 
-Site multi-pages interactif — infrastructure football, **21+ routes** publiques, portes d’entrée (Joueur, Club, Coach, Parent, Supporter, Sponsor) et formulaire bêta avec email de bienvenue.
+<img src="public/branding/logo-proday-official.png" alt="ProDay" width="280" />
 
-Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE.md](../docs/STRUCTURE.md)
+<br /><br />
 
-## Pages
+**CONNECTER. PROGRESSER. RÉVÉLER.**
 
-| Route | Contenu |
-|-------|---------|
-| `/` | Accueil — témoignages, quiz, FAQ, exploration |
-| `/homme` | Univers **Man** — modules, parcours, tarifs, Pulse |
-| `/woman` | Univers **Woman** — foot féminin |
-| `/pro` | Univers **Pro** — staff, recrutement vérifié |
-| `/fonctionnalites` | Modules produit par pôle (Joueur, Club, Coach, Supporter, Sponsor) |
-| `/demo` | Démo interactive **5 pôles** (`?p=joueur\|pro_club\|coach\|supporter\|sponsor`) |
-| `/pulse` | Simulateur Pulse (thème par univers) |
-| `/live-stats` | Saisie match en direct |
-| `/cv` | Aperçu CV PDF (`?u=` pour le thème) |
-| `/parcours` | Parcours par rôle |
-| `/quiz` | Quiz profil (3 questions) |
-| `/comparatif` | ProDay vs WhatsApp vs tableur |
-| `/ecosysteme` | Carte interactive des acteurs |
-| `/confiance` | Vérification diplômes |
-| `/roadmap` | Livré / en cours / à venir |
-| `/tarifs` | Plans par pôle + grille partenaires |
-| `/partenaires` | Espace Partenaires — Découverte, Territorial, National |
-| `/shop` | ProDay Shop |
-| `/faq` | Questions fréquentes |
-| `/beta/inscription` | Liste d'attente publique + email de bienvenue (`?role=sponsor` pour partenaires) |
-| `/beta` | Hub bêta privé (lien email avec `?token=`) |
-| `/beta/programme` | Programme bêta — six portes d’entrée (protégé) |
-| `/beta/installer` | Guides APK / TestFlight (protégé) |
-| `/beta/aide` | FAQ et support bêta (protégé) |
-| `/a-propos` | Vision produit |
+Site vitrine ProDay — [proday75.fr](https://proday75.fr)  
+*Pas un outil de plus — l’infrastructure de votre football.*
 
-### Démo interactive (`/demo`)
+</div>
 
-Hero plein écran + téléphone interactif (Joueur, Club, Coach, Supporter, Sponsor…).
+---
 
-- URL `?p=amateur|supporter|sante|pro_joueur|pro_club|pro_staff` (legacy `?u=` redirigé)
-- Onglets alignés sur les shells app ; contenu illustratif
-- Lien **« Voir la démo »** depuis chaque page univers
-- Contact partenaires : **proday.admin@gmail.com** — CTA `/beta/inscription?role=sponsor`
+## Quoi
+
+Next.js **16** (App Router) · React **19** · Tailwind **4** · hébergé sur **Netlify**.
+
+Le site présente l’identité officielle, les **six portes d’entrée** (Joueur, Club, Coach, Parent, Supporter, Sponsor), la bêta, les tarifs et les pages légales. Ce n’est **pas** l’app mobile (voir `../src/` et le README racine).
+
+| | |
+|--|--|
+| **Production** | https://proday75.fr |
+| **Logo public** | `/branding/logo-proday-official.png` |
+| **Copy produit** | `src/lib/content.ts` · `src/lib/poles.ts` |
+| **Code monorepo** | [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) (privé) |
+| **Docs publiques** | [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) |
+
+Détail du code : [src/README.md](src/README.md) · Sécurité : [docs/WEBSITE_SECURITY.md](../docs/WEBSITE_SECURITY.md)
+
+---
 
 ## Lancer en local
 
-```bash
-# Depuis la racine du monorepo
-npm run website:dev
+Depuis la **racine** du monorepo :
 
-# Ou depuis ce dossier
+```bash
+npm run website:dev    # → http://localhost:3000
+```
+
+Ou depuis `website/` :
+
+```bash
 npm install
+cp .env.example .env.local   # EmailJS / URL site si besoin
 npm run dev
 ```
 
-→ [http://localhost:3000](http://localhost:3000)
-
-Copier `website/.env.example` vers `website/.env.local` pour la bêta (EmailJS).
-
-## Build
+Build :
 
 ```bash
-npm run website:build   # racine
-# ou
-npm run build           # dans website/
+npm run website:build        # racine
+# ou : npm run build         # dans website/
 ```
 
-## Déploiement
+---
 
-**Branche Git :** `main` — **Root directory :** `website` — **Hébergeur :** [Netlify](https://www.netlify.com/)
+## Routes publiques (aperçu)
 
-Un push sur `main` déclenche le déploiement automatique via le hook Git Netlify (pas de workflow GitHub Actions).
+### Produit & marketing
 
-Configuration : `website/netlify.toml` (canonique) + `netlify.toml` à la racine (`base = "website"` pour le monorepo).
+| Route | Contenu |
+|-------|---------|
+| `/` | Accueil — identité, portes, CTA bêta |
+| `/joueur` · `/pro-club` · `/coach` · `/parent` · `/supporter` · `/sponsor` | Six portes |
+| `/homme` · `/woman` · `/amateur` · `/pro` | Univers / segments (redirections ou pages dédiées) |
+| `/fonctionnalites` | Modules par porte |
+| `/ecosysteme` | Carte des acteurs |
+| `/demo` | Démo interactive (portes carousel + Sponsor) |
+| `/tarifs` · `/partenaires` · `/shop` | Offres & partenaires |
+| `/roadmap` · `/vision` · `/a-propos` · `/faq` | Vision & confiance |
+| `/confiance` · `/comparatif` · `/parcours` · `/quiz` | Parcours & preuves |
+| `/pulse` · `/live-stats` · `/cv` · `/cartes` | Outils illustratifs |
 
-**Réglages obligatoires dans l’UI Netlify** (Site configuration → Build & deploy) :
+### Bêta
 
-| Champ | Valeur |
-|-------|--------|
+| Route | Accès | Rôle |
+|-------|-------|------|
+| `/beta/inscription` | Public | Waitlist (+ `?role=sponsor`) |
+| `/beta` | Cookie / token | Hub |
+| `/beta/programme` | Cookie bêta | Programme — six portes |
+| `/beta/installer` | Cookie bêta | APK / TestFlight |
+| `/beta/aide` | Cookie bêta | FAQ support |
+
+**Règle** — les CTA « Accès anticipé » pointent uniquement vers `/beta/inscription`.
+
+### Légal & admin
+
+| Route | Contenu |
+|-------|---------|
+| `/cgu` · `/confidentialite` | Légal |
+| `/admin/*` | Console admin (session PIN / cookie HMAC) |
+
+---
+
+## Déploiement Netlify
+
+- **Branche** : `main`
+- **Base directory** : `website`
+- Config : `website/netlify.toml` (+ `netlify.toml` racine avec `base = "website"`)
+
+| Champ UI Netlify | Valeur |
+|------------------|--------|
 | Base directory | `website` |
-| Build command | *(laisser vide — défini dans `netlify.toml`)* `npm run build` |
-| Publish directory | *(laisser vide ou effacer `dist`)* — le plugin OpenNext gère la sortie |
+| Build / Publish | Laisser vides — `@netlify/plugin-nextjs` |
 
-Ne pas publier `dist` ni `.next` manuellement : Next.js a besoin de la **fonction serveur** générée par `@netlify/plugin-nextjs`.
+Variables Production (ex.) : clés EmailJS, `NEXT_PUBLIC_SITE_URL=https://proday75.fr`, secrets admin — jamais commités.
 
-**Variables d’environnement** (Site configuration → Environment variables, contexte **Production**) : clés EmailJS + `NEXT_PUBLIC_SITE_URL=https://proday75.fr` (voir section Bêta ci-dessous).
-
-**Déploiement manuel (CLI)** depuis `website/` :
+Déploiement manuel :
 
 ```bash
-npm run build          # via netlify build
-netlify deploy --prod --no-build \
-  --dir .netlify/static \
-  --functions .netlify/functions-internal
+cd website
+npm run netlify:deploy
+# ou scripts/netlify-deploy.sh
 ```
 
-## Bêta — email de bienvenue (EmailJS)
+---
 
-Le formulaire `/beta/inscription` appelle `POST /api/beta` et envoie un **email de bienvenue** via [EmailJS](https://www.emailjs.com/). Le lien email ouvre `/beta/programme?token=…` (programme bêta directement).
+## Identité
 
-Variables d’environnement (Netlify / `.env.local`) :
+- Tagline : **CONNECTER. PROGRESSER. RÉVÉLER.**
+- Master : noir `#000` · blanc `#FFF` · or `#C5A059`
+- Branding généré : `npm run branding:official` (dans `website/`)
+- Sources monorepo : [`assets/branding/`](../assets/branding/README.md)
 
-```env
-EMAILJS_SERVICE_ID=service_xxx
-EMAILJS_TEMPLATE_ID=template_xxx
-EMAILJS_PUBLIC_KEY=xxx
-EMAILJS_PRIVATE_KEY=xxx
-NEXT_PUBLIC_SITE_URL=https://votre-domaine.com
-```
+Pas de tagline legacy « RÉUSSIR ». Pas de métriques d’audience inventées.
 
-Voir `docs/BETA_GUIDE.md` (guide opérateur complet) et `docs/BETA_WAITLIST.md` (dépannage EmailJS).
+---
 
-## Sécurité
+## Liens
 
-En-têtes HTTP (HSTS, CSP, X-Frame-Options…), protection CSRF sur `POST /api/beta`, rate limiting et cookies bêta `httpOnly` : voir [`docs/WEBSITE_SECURITY.md`](../docs/WEBSITE_SECURITY.md).
-
-## Thématisation par univers
-
-Couleurs, CTA et contenus démo/tarifs/CV sont centralisés dans `src/components/universe/universeTheme.ts` et `src/lib/content.ts` (`BRANDS_BY_LINE`, `UNIVERSE_PAGE_CONFIG`).
+- Monorepo : [../README.md](../README.md)
+- App mobile : [../src/README.md](../src/README.md)
+- Domaine : [../docs/DOMAIN_PRODAY75_FR.md](../docs/DOMAIN_PRODAY75_FR.md)
+- Bêta opérateur : [../docs/BETA_GUIDE.md](../docs/BETA_GUIDE.md)

@@ -1,52 +1,35 @@
-# Assets ProDay (app Expo)
+# Assets ProDay
 
-**CONNECTER. PROGRESSER. RÉVÉLER.**
-
-Assets consommés par l’app mobile (icônes store, splash, lockups, mockups, showcase). Version app courante : **1.0.8**.
+**CONNECTER. PROGRESSER. RÉVÉLER.** — identité officielle · App **1.0.8** · [proday75.fr](https://proday75.fr)
 
 ## branding/
 
-Identité officielle — symbole **P + ballon**, wordmark PRODAY, tagline.  
-Guide complet : [branding/README.md](./branding/README.md).
+Lockup P + ballon, wordmark, accents par porte.  
+Détail : [branding/README.md](./branding/README.md).
 
 | Fichier clé | Usage |
 |-------------|--------|
-| `proday-app-icon.png` | Icône App Store / home / favicon (`app.json`) |
+| `proday-app-icon.png` | Icône store / home (`app.json`) |
 | `proday-splash.png` | Splash Expo |
 | `proday-adaptive-foreground.png` | Adaptive Android |
-| `proday-notification-icon.png` | Notifications Android |
-| `logo-proday-official.png` | Lockup carré (docs, emails, présentation) |
-| `logo-light.png` / `logo-dark.png` | PDF / fond clair ou sombre |
-| `proday-symbol-*.png` | Symbole UI teinté par pôle |
+| `proday-notification-icon.png` | Notifications |
+| `logo-proday-official.png` | Docs, emails, README |
+| `proday-symbol-*.png` | Symbole UI par porte |
 
-Régénération depuis le lockup source :
+CDN public : https://proday75.fr/branding/logo-proday-official.png  
+Régénération : `npm run branding:app`
 
-```bash
-npm run branding:app
-```
+## mockups/ · marketing/ · generated/
 
-## mockups/
+Planches UI, stories sociales, exports générés — voir les README de chaque dossier.
 
-Planches UI de référence (présentation, PDF, Figma) — [mockups/README.md](./mockups/README.md).
+## Code
 
-## generated/
+- Composants : `src/components/branding/`
+- Tokens : `src/theme/prodayBrand.ts`
+- Mapping : `src/content/brandingAssets.ts`
 
-Visuels showcase Discover / Arena (classique + Woman) — [generated/README.md](./generated/README.md).
+## GitHub
 
-## marketing/
-
-Visuels promo hors store (stories sociales, etc.) — [marketing/social/README.md](./marketing/social/README.md).
-
-## Code app
-
-| | |
-|---|---|
-| Composants | `src/components/branding/` (`ProDayLogo`, `ProDayOfficialLockup`, `ProDaySymbol`) |
-| Tokens | `src/theme/prodayBrand.ts` |
-| Requires | `src/content/brandingAssets.ts` |
-
-## Liens
-
-- Code : [github.com/alfredgibeau-ahoussinou/PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY)
-- Docs publiques : [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
-- Site : [proday75.fr](https://proday75.fr)
+- Code (privé) : https://github.com/alfredgibeau-ahoussinou/PRODAY  
+- Docs publiques : https://github.com/alfredgibeau-ahoussinou/PRODAY-docs

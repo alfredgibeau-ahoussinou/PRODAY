@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="../branding/logo-proday-official.png" alt="ProDay" width="220" />
+<img src="logo-proday-official.png" alt="ProDay" width="220" />
 
 <br />
 
