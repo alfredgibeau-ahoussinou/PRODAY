@@ -1,6 +1,6 @@
 # Captures App Store — iPhone 6,5" (iOS)
 
-Identité : **CONNECTER. PROGRESSER. RÉVÉLER.** · [proday75.fr](https://proday75.fr)
+Identité : **PRODAY** · **CONNECTER. PROGRESSER. RÉVÉLER.** · [proday75.fr](https://proday75.fr)
 
 ## Dimensions
 
@@ -15,35 +15,34 @@ App Store Connect → **Médias de l’app** → **Captures d’écran** → **i
 
 ## Fichiers (10 captures)
 
-| # | Fichier | Contenu | Rôle |
-|---|---------|---------|------|
-| 1 | `01-hero-brand.png` | Lockup + tagline officielle | Marque |
-| 2 | `02-joueur-profil-carriere.png` | Profil, score carrière, stats | Joueur |
-| 3 | `03-joueur-mercato.png` | Annonces Mercato | Joueur |
-| 4 | `04-joueur-arena.png` | Arena & tournois | Joueur |
-| 5 | `05-joueur-pulse-activites.png` | Journal d’activités / Pulse | Joueur |
-| 6 | `06-coach-profil-staff.png` | Espace coach & staff | Coach |
-| 7 | `07-club-recrutement.png` | Recrutement & convocations | Club |
-| 8 | `08-matchs-amicaux.png` | Matchs amicaux & RSVP | Joueur |
-| 9 | `09-communaute-reels.png` | Fil & Reels | Joueur |
-| 10 | `10-partenaires-sponsors.png` | Sponsors & visibilité | Partenaires |
+| # | Fichier | Accroche | Écran réel (v1.0.8) |
+|---|---------|----------|----------------------|
+| 1 | `01-hero-brand.png` | Lockup officiel + tagline | Marque (pas de téléphone) |
+| 2 | `02-joueur-profil-carriere.png` | Profil & carrière | `player/player-profil.jpg` |
+| 3 | `03-joueur-mercato.png` | Mercato ciblé | `player/player-menu.jpg` (modules Équipe / Mercato) |
+| 4 | `04-joueur-arena.png` | Arena & tournois | `player/player-matchs.jpg` |
+| 5 | `05-joueur-pulse-activites.png` | Journal d’activités | `player/player-saison.jpg` |
+| 6 | `06-coach-profil-staff.png` | Espace Coach | `coach/coach-profil.jpg` |
+| 7 | `07-club-recrutement.png` | Espace Club | `club/club-equipes.jpg` |
+| 8 | `08-matchs-amicaux.png` | Matchs amicaux | `club/club-matchs.jpg` |
+| 9 | `09-communaute-reels.png` | Communauté & Reels | `player/player-accueil.jpg` |
+| 10 | `10-partenaires-sponsors.png` | Partenaires & sponsors | `sponsor/sponsor-accueil.jpg` |
+
+### Template (captures 02–10)
+
+- **En-tête** : symbole P + wordmark **PRODAY**, titre fort, sous-titre accent, ligne de contexte
+- **Cadre iPhone** : capture simulateur réelle (pas de stock Unsplash)
+- **Pied** : tagline + proday75.fr
+
+Les captures proviennent de `website/public/images/app/` — mêmes visuels que le site marketing (simulateur iOS, app **1.0.8**).
 
 ## 3 captures recommandées en premier
 
-Si App Store Connect n’en accepte que quelques-unes ou pour un premier upload :
-
-1. **`01-hero-brand.png`** — identité ProDay (obligatoire pour la cohérence store)
-2. **`02-joueur-profil-carriere.png`** — valeur cœur joueur (profil & carrière)
-3. **`03-joueur-mercato.png`** — différenciateur Mercato / recrutement
+1. **`01-hero-brand.png`** — identité ProDay
+2. **`02-joueur-profil-carriere.png`** — profil & carrière joueur
+3. **`03-joueur-mercato.png`** — Mercato / recrutement
 
 Ensuite : `06-coach-profil-staff.png`, `07-club-recrutement.png`, puis le reste.
-
-## Aperçus app (optionnel, max 3)
-
-Les aperçus vidéo ne sont **pas** générés ici. Pour un aperçu :
-
-- Enregistrer 15–30 s sur simulateur **iPhone 15 Pro Max** (6,7") ou appareil 6,5"
-- Ou réutiliser `assets/intro/proday-intro.mp4` (1080×1920) — recadrer si besoin
 
 ## Regénérer
 
@@ -57,7 +56,10 @@ npm run marketing:app-store-ios:legacy
 
 Script : [`scripts/generate-app-store-screenshots.mjs`](../../../../scripts/generate-app-store-screenshots.mjs)
 
-Sources visuelles : `assets/generated/classic/`, `assets/mockups/`, `assets/branding/`.
+Sources :
+
+- **Branding** : `assets/branding/proday-symbol-white.png`, `proday-lockup-official-source.png`
+- **UI app** : `website/public/images/app/` (réf. `website/src/lib/*AppScreens.ts`)
 
 ## Upload App Store Connect
 
@@ -66,4 +68,4 @@ Sources visuelles : `assets/generated/classic/`, `assets/mockups/`, `assets/bran
 3. Glisser-déposer les PNG **dans l’ordre** ci-dessus (01 → 10)
 4. Vérifier l’aperçu : aucun bandeau « dimensions incorrectes »
 
-> Ne pas redimensionner manuellement dans Preview/Figma — regénérer via le script si besoin.
+> Ne pas redimensionner manuellement — regénérer via le script si besoin.

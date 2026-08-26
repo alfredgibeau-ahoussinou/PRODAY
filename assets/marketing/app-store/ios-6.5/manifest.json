@@ -1,61 +1,77 @@
 {
-  "generatedAt": "2026-08-26T22:28:56.960Z",
+  "generatedAt": "2026-08-26T22:35:37.866Z",
+  "appVersion": "1.0.8",
   "dimensions": "1284×2778",
   "portrait": true,
   "device": "iPhone 6,5\" (App Store Connect)",
+  "screenSources": "website/public/images/app/ (captures simulateur réelles)",
+  "branding": [
+    "assets/branding/proday-symbol-white.png + wordmark PRODAY",
+    "assets/branding/proday-lockup-official-source.png (hero)"
+  ],
   "files": [
     {
       "file": "01-hero-brand.png",
       "width": 1284,
       "height": 2778,
-      "recommended": 1
+      "recommended": 1,
+      "source": "assets/branding/proday-lockup-official-source.png"
     },
     {
       "file": "02-joueur-profil-carriere.png",
       "width": 1284,
       "height": 2778,
-      "recommended": 2
+      "recommended": 2,
+      "source": "website/public/images/app/player/player-profil.jpg"
     },
     {
       "file": "03-joueur-mercato.png",
       "width": 1284,
       "height": 2778,
-      "recommended": 3
+      "recommended": 3,
+      "source": "website/public/images/app/player/player-menu.jpg"
     },
     {
       "file": "04-joueur-arena.png",
       "width": 1284,
-      "height": 2778
+      "height": 2778,
+      "source": "website/public/images/app/player/player-matchs.jpg"
     },
     {
       "file": "05-joueur-pulse-activites.png",
       "width": 1284,
-      "height": 2778
+      "height": 2778,
+      "source": "website/public/images/app/player/player-saison.jpg"
     },
     {
       "file": "06-coach-profil-staff.png",
       "width": 1284,
-      "height": 2778
+      "height": 2778,
+      "source": "website/public/images/app/coach/coach-profil.jpg"
     },
     {
       "file": "07-club-recrutement.png",
       "width": 1284,
-      "height": 2778
+      "height": 2778,
+      "source": "website/public/images/app/club/club-equipes.jpg"
     },
     {
       "file": "08-matchs-amicaux.png",
       "width": 1284,
-      "height": 2778
+      "height": 2778,
+      "source": "website/public/images/app/club/club-matchs.jpg"
     },
     {
       "file": "09-communaute-reels.png",
       "width": 1284,
-      "height": 2778
+      "height": 2778,
+      "source": "website/public/images/app/player/player-accueil.jpg"
     },
     {
       "file": "10-partenaires-sponsors.png",
       "width": 1284,
-      "height": 2778
+      "height": 2778,
+      "source": "website/public/images/app/sponsor/sponsor-accueil.jpg"
     }
   ],
   "recommendedFirst": [

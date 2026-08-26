@@ -11,6 +11,8 @@
  *   npm run marketing:app-store-ios
  *
  * Sortie : assets/marketing/app-store/ios-6.5/*.png
+ *
+ * Écrans : captures réelles simulateur v1.0.8 (website/public/images/app/).
  */
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
@@ -20,13 +22,14 @@ import sharp from '../website/node_modules/sharp/lib/index.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 const outDir = resolve(repoRoot, 'assets/marketing/app-store/ios-6.5');
+const appScreens = resolve(repoRoot, 'website/public/images/app');
 
 const LEGACY = process.argv.includes('--legacy');
 const W = LEGACY ? 1242 : 1284;
 const H = LEGACY ? 2688 : 2778;
 
-const LOGO = resolve(repoRoot, 'assets/branding/logo-proday-official.png');
 const LOCKUP = resolve(repoRoot, 'assets/branding/proday-lockup-official-source.png');
+const SYMBOL = resolve(repoRoot, 'assets/branding/proday-symbol-white.png');
 
 /** Accents alignés assets/branding/README.md */
 const ACCENT = {
@@ -34,6 +37,7 @@ const ACCENT = {
   joueur: '#FFFFFF',
   coach: '#C5A059',
   club: '#10B981',
+  sponsor: '#D946EF',
 };
 
 function esc(text) {
@@ -53,7 +57,7 @@ function phoneLayout() {
   const phoneW = scale(920);
   const phoneH = scale(1880);
   const left = Math.round((W - phoneW) / 2);
-  const top = scale(680);
+  const top = scale(720);
   const bezel = scale(14);
   const radius = scale(72);
   const screenRadius = scale(58);
@@ -67,8 +71,8 @@ function backgroundSvg(accent) {
   return Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
       <defs>
-        <radialGradient id="g" cx="50%" cy="18%" r="75%">
-          <stop offset="0%" stop-color="${glow}" stop-opacity="0.22"/>
+        <radialGradient id="g" cx="50%" cy="14%" r="72%">
+          <stop offset="0%" stop-color="${glow}" stop-opacity="0.24"/>
           <stop offset="55%" stop-color="#0A0A0A" stop-opacity="1"/>
           <stop offset="100%" stop-color="#000000" stop-opacity="1"/>
         </radialGradient>
@@ -80,15 +84,15 @@ function backgroundSvg(accent) {
 }
 
 function headlineSvg({ headline, subheadline, body, accent }) {
-  const yHead = scale(120);
-  const ySub = scale(210);
-  const yBody = scale(290);
-  const headSize = scale(72);
-  const subSize = scale(52);
-  const bodySize = scale(34);
+  const yHead = scale(228);
+  const ySub = scale(298);
+  const yBody = scale(362);
+  const headSize = scale(64);
+  const subSize = scale(44);
+  const bodySize = scale(30);
   const subColor = accent === '#FFFFFF' ? '#C5A059' : accent;
   return Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${scale(520)}">
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${scale(560)}">
       <style>
         .h { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 800; fill: #FFFFFF; }
         .s { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; }
@@ -101,27 +105,34 @@ function headlineSvg({ headline, subheadline, body, accent }) {
   );
 }
 
-function phoneFrameSvg(accent) {
-  const { phoneW, phoneH, radius, bezel, screenRadius } = phoneLayout();
-  const innerW = phoneW - bezel * 2;
-  const innerH = phoneH - bezel * 2;
+/** Corps du téléphone (sans remplissage opaque sur la zone écran). */
+function phoneBodySvg() {
+  const { phoneW, phoneH, radius } = phoneLayout();
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${phoneW}" height="${phoneH}">
+      <rect x="0" y="0" width="${phoneW}" height="${phoneH}" rx="${radius}" fill="#1A1A1A"/>
+    </svg>`,
+  );
+}
+
+/** Contour + Dynamic Island par-dessus l'écran. */
+function phoneOverlaySvg(accent) {
+  const { phoneW, phoneH, radius, bezel } = phoneLayout();
   const islandW = scale(180);
   const islandH = scale(36);
   const islandX = (phoneW - islandW) / 2;
   const islandY = bezel + scale(18);
   return Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${phoneW}" height="${phoneH}">
-      <rect x="0" y="0" width="${phoneW}" height="${phoneH}" rx="${radius}" fill="#1A1A1A"/>
-      <rect x="${bezel}" y="${bezel}" width="${innerW}" height="${innerH}" rx="${screenRadius}" fill="#050505"/>
+      <rect x="0" y="0" width="${phoneW}" height="${phoneH}" rx="${radius}" fill="none" stroke="${accent}" stroke-opacity="0.4" stroke-width="2"/>
       <rect x="${islandX}" y="${islandY}" width="${islandW}" height="${islandH}" rx="${islandH / 2}" fill="#000"/>
-      <rect x="0" y="0" width="${phoneW}" height="${phoneH}" rx="${radius}" fill="none" stroke="${accent}" stroke-opacity="0.35" stroke-width="2"/>
     </svg>`,
   );
 }
 
 function footerSvg() {
-  const tagY = H - scale(120);
-  const urlY = H - scale(70);
+  const tagY = scale(40);
+  const urlY = scale(90);
   const size = scale(28);
   return Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${scale(160)}">
@@ -129,10 +140,43 @@ function footerSvg() {
         .t { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 600; fill: rgba(255,255,255,0.55); letter-spacing: 0.08em; }
         .u { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 500; fill: #C5A059; }
       </style>
-      <text x="${W / 2}" y="${tagY - (H - scale(160))}" text-anchor="middle" class="t" font-size="${size}">CONNECTER. PROGRESSER. RÉVÉLER.</text>
-      <text x="${W / 2}" y="${urlY - (H - scale(160))}" text-anchor="middle" class="u" font-size="${scale(24)}">proday75.fr</text>
+      <text x="${W / 2}" y="${tagY}" text-anchor="middle" class="t" font-size="${size}">CONNECTER. PROGRESSER. RÉVÉLER.</text>
+      <text x="${W / 2}" y="${urlY}" text-anchor="middle" class="u" font-size="${scale(24)}">proday75.fr</text>
     </svg>`,
   );
+}
+
+function brandWordmarkSvg() {
+  const size = scale(40);
+  const y = scale(52);
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${scale(72)}">
+      <text x="${W / 2}" y="${y}" text-anchor="middle"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="800" font-size="${size}" fill="#FFFFFF" letter-spacing="0.22em">PRODAY</text>
+    </svg>`,
+  );
+}
+
+/** Symbole P + wordmark PRODAY (sans badge carré store). */
+async function brandingStripLayers() {
+  const symbolW = scale(112);
+  const symbol = await sharp(SYMBOL).resize({ width: symbolW, fit: 'inside' }).png().toBuffer();
+  const symbolMeta = await sharp(symbol).metadata();
+  const wordmark = brandWordmarkSvg();
+  const stripH = symbolMeta.height + scale(72);
+  const symbolTop = scale(28);
+  return {
+    layers: [
+      {
+        input: symbol,
+        left: Math.round((W - symbolMeta.width) / 2),
+        top: symbolTop,
+      },
+      { input: wordmark, top: symbolTop + symbolMeta.height - scale(8), left: 0 },
+    ],
+    stripH: symbolTop + stripH,
+  };
 }
 
 async function fitScreenImage(imagePath, screenW, screenH) {
@@ -146,14 +190,13 @@ async function composeHero({ headline, subheadline, body, accent }) {
   const layers = [{ input: backgroundSvg(accent), top: 0, left: 0 }];
   layers.push({ input: headlineSvg({ headline, subheadline, body, accent }), top: 0, left: 0 });
 
-  const lockupSrc = existsSync(LOCKUP) ? LOCKUP : LOGO;
-  const lockupW = scale(780);
-  const lockup = await sharp(lockupSrc).resize({ width: lockupW, fit: 'inside' }).png().toBuffer();
+  const lockupW = scale(820);
+  const lockup = await sharp(LOCKUP).resize({ width: lockupW, fit: 'inside' }).png().toBuffer();
   const meta = await sharp(lockup).metadata();
   layers.push({
     input: lockup,
     left: Math.round((W - meta.width) / 2),
-    top: Math.round(H * 0.38 - meta.height / 2),
+    top: Math.round(H * 0.4 - meta.height / 2),
   });
 
   layers.push({ input: footerSvg(), top: H - scale(160), left: 0 });
@@ -163,21 +206,12 @@ async function composeHero({ headline, subheadline, body, accent }) {
     .toBuffer();
 }
 
-async function composePhoneShot({ headline, subheadline, body, accent, screenPath, screenCrop }) {
+async function composePhoneShot({ headline, subheadline, body, accent, screenPath }) {
   const { left, top, bezel, screenW, screenH, screenRadius } = phoneLayout();
   const screenX = left + bezel;
   const screenY = top + bezel;
 
-  let screenBuf;
-  if (screenCrop) {
-    screenBuf = await sharp(screenPath)
-      .extract(screenCrop)
-      .resize(screenW, screenH, { fit: 'cover', position: 'top' })
-      .png()
-      .toBuffer();
-  } else {
-    screenBuf = await fitScreenImage(screenPath, screenW, screenH);
-  }
+  const screenBuf = await fitScreenImage(screenPath, screenW, screenH);
 
   const mask = Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${screenW}" height="${screenH}">
@@ -189,13 +223,15 @@ async function composePhoneShot({ headline, subheadline, body, accent, screenPat
     .png()
     .toBuffer();
 
-  const frame = await sharp(phoneFrameSvg(accent)).png().toBuffer();
+  const branding = await brandingStripLayers();
 
   const layers = [
     { input: backgroundSvg(accent), top: 0, left: 0 },
+    ...branding.layers.map((layer) => ({ ...layer })),
     { input: headlineSvg({ headline, subheadline, body, accent }), top: 0, left: 0 },
+    { input: await sharp(phoneBodySvg()).png().toBuffer(), top, left },
     { input: roundedScreen, top: screenY, left: screenX },
-    { input: frame, top, left },
+    { input: await sharp(phoneOverlaySvg(accent)).png().toBuffer(), top, left },
     { input: footerSvg(), top: H - scale(160), left: 0 },
   ];
 
@@ -205,10 +241,7 @@ async function composePhoneShot({ headline, subheadline, body, accent, screenPat
     .toBuffer();
 }
 
-const gen = resolve(repoRoot, 'assets/generated/classic');
-const mock = resolve(repoRoot, 'assets/mockups');
-
-/** @type {Array<{file:string, hero?:boolean, headline:string, subheadline?:string, body?:string, accent:string, screen?:string, crop?:{left:number,top:number,width:number,height:number}, recommended?:number}>} */
+/** @type {Array<{file:string, hero?:boolean, headline:string, subheadline?:string, body?:string, accent:string, screen?:string, sourceLabel?:string, recommended?:number}>} */
 const SHOTS = [
   {
     file: '01-hero-brand.png',
@@ -217,6 +250,7 @@ const SHOTS = [
     subheadline: 'CONNECTER. PROGRESSER. RÉVÉLER.',
     body: 'L\'écosystème foot amateur & semi-pro',
     accent: ACCENT.master,
+    sourceLabel: 'assets/branding/proday-lockup-official-source.png',
     recommended: 1,
   },
   {
@@ -225,7 +259,8 @@ const SHOTS = [
     subheadline: 'Score, stats, CV en ligne',
     body: 'Pôle Joueur · Pro Day Man & Woman',
     accent: ACCENT.joueur,
-    screen: resolve(gen, 'classic-profile.jpg'),
+    screen: resolve(appScreens, 'player/player-profil.jpg'),
+    sourceLabel: 'website/public/images/app/player/player-profil.jpg',
     recommended: 2,
   },
   {
@@ -234,7 +269,8 @@ const SHOTS = [
     subheadline: 'Annonces par poste & niveau',
     body: 'Candidatures · suivi recruteurs',
     accent: ACCENT.joueur,
-    screen: resolve(gen, 'classic-mercato.jpg'),
+    screen: resolve(appScreens, 'player/player-menu.jpg'),
+    sourceLabel: 'website/public/images/app/player/player-menu.jpg',
     recommended: 3,
   },
   {
@@ -243,7 +279,8 @@ const SHOTS = [
     subheadline: 'Inscriptions · palmarès local',
     body: 'Organisez et participez',
     accent: ACCENT.joueur,
-    screen: resolve(gen, 'classic-arena.jpg'),
+    screen: resolve(appScreens, 'player/player-matchs.jpg'),
+    sourceLabel: 'website/public/images/app/player/player-matchs.jpg',
   },
   {
     file: '05-joueur-pulse-activites.png',
@@ -251,7 +288,8 @@ const SHOTS = [
     subheadline: 'Séances · matchs · highlights',
     body: 'Analyse IA sur vos séances',
     accent: ACCENT.joueur,
-    screen: resolve(gen, 'classic-exp-pulse.jpg'),
+    screen: resolve(appScreens, 'player/player-saison.jpg'),
+    sourceLabel: 'website/public/images/app/player/player-saison.jpg',
   },
   {
     file: '06-coach-profil-staff.png',
@@ -259,7 +297,8 @@ const SHOTS = [
     subheadline: 'Staff · séances · coaching',
     body: 'Vérification diplômes · messagerie',
     accent: ACCENT.coach,
-    screen: resolve(gen, 'classic-staff.jpg'),
+    screen: resolve(appScreens, 'coach/coach-profil.jpg'),
+    sourceLabel: 'website/public/images/app/coach/coach-profil.jpg',
   },
   {
     file: '07-club-recrutement.png',
@@ -267,8 +306,8 @@ const SHOTS = [
     subheadline: 'Recrutement · convocations',
     body: 'Mercato club · matchs amicaux',
     accent: ACCENT.club,
-    screen: resolve(mock, 'maquette-proday-ecrans-principaux.png'),
-    crop: { left: 980, top: 0, width: 520, height: 1024 },
+    screen: resolve(appScreens, 'club/club-equipes.jpg'),
+    sourceLabel: 'website/public/images/app/club/club-equipes.jpg',
   },
   {
     file: '08-matchs-amicaux.png',
@@ -276,7 +315,8 @@ const SHOTS = [
     subheadline: 'RSVP · Live Stats',
     body: 'Organisation simplifiée',
     accent: ACCENT.joueur,
-    screen: resolve(gen, 'classic-match.jpg'),
+    screen: resolve(appScreens, 'club/club-matchs.jpg'),
+    sourceLabel: 'website/public/images/app/club/club-matchs.jpg',
   },
   {
     file: '09-communaute-reels.png',
@@ -284,15 +324,17 @@ const SHOTS = [
     subheadline: 'Fil · highlights · visibilité',
     body: 'Question de la semaine',
     accent: ACCENT.joueur,
-    screen: resolve(gen, 'classic-exp-discover.jpg'),
+    screen: resolve(appScreens, 'player/player-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/player/player-accueil.jpg',
   },
   {
     file: '10-partenaires-sponsors.png',
     headline: 'Partenaires & sponsors',
     subheadline: 'Visibilité clubs & marques',
     body: 'Espace National Pro',
-    accent: ACCENT.master,
-    screen: resolve(gen, 'classic-exp-sponsors.jpg'),
+    accent: ACCENT.sponsor,
+    screen: resolve(appScreens, 'sponsor/sponsor-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/sponsor/sponsor-accueil.jpg',
   },
 ];
 
@@ -311,13 +353,18 @@ async function writeShot(shot) {
       body: shot.body,
       accent: shot.accent,
       screenPath: shot.screen,
-      screenCrop: shot.crop,
     });
   }
   await sharp(buf).png({ compressionLevel: 9 }).toFile(outPath);
   const meta = await sharp(buf).metadata();
   console.log(`✓ ${shot.file}  ${meta.width}×${meta.height}`);
-  return { file: shot.file, width: meta.width, height: meta.height, recommended: shot.recommended };
+  return {
+    file: shot.file,
+    width: meta.width,
+    height: meta.height,
+    recommended: shot.recommended,
+    source: shot.sourceLabel ?? null,
+  };
 }
 
 async function main() {
@@ -330,9 +377,15 @@ async function main() {
 
   const manifest = {
     generatedAt: new Date().toISOString(),
+    appVersion: '1.0.8',
     dimensions: `${W}×${H}`,
     portrait: true,
     device: 'iPhone 6,5" (App Store Connect)',
+    screenSources: 'website/public/images/app/ (captures simulateur réelles)',
+    branding: [
+      'assets/branding/proday-symbol-white.png + wordmark PRODAY',
+      'assets/branding/proday-lockup-official-source.png (hero)',
+    ],
     files: results,
     recommendedFirst: results.filter((r) => r.recommended).sort((a, b) => a.recommended - b.recommended).map((r) => r.file),
   };
