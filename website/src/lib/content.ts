@@ -1498,7 +1498,7 @@ export const SPONSOR_PRICING_INTRO = {
   subtitle:
     "Sponsor et partenaire : même profil sur ProDay. Clubs, joueurs et organisateurs sur votre territoire. Visibilité mesurable. Sans intermédiaire.",
   footnote:
-    "Tarifs HT. Mensuel ou annuel (moins 20 %). Résiliation à tout moment sur les formules en ligne.",
+    "Tarifs HT. Mensuel ou annuel (moins 20 %). Sans engagement : résiliation à tout moment sur les formules en ligne. Parrainage possible.",
 } as const;
 
 export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
@@ -1902,7 +1902,7 @@ export const FAQ_ITEMS = [
   {
     category: "tarifs",
     q: "Y a t il un engagement ?",
-    a: "Non. Les abonnements ProDay sont sans engagement : tu peux résilier à tout moment selon les règles de l’App Store ou Google Play. Le sponsoring est possible via le pôle Sponsor (formules Découverte, Territorial, National Pro).",
+    a: "Non. Les abonnements ProDay sont sans engagement : tu peux résilier à tout moment selon les règles de l’App Store ou Google Play. Le sponsoring est possible via le pôle Sponsor (formules Découverte, Territorial, National Pro). Le parrainage est disponible sur chaque pôle : partage ton lien ou ton code.",
   },
   {
     category: "tarifs",

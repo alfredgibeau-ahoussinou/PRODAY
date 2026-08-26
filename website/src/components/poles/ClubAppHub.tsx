@@ -120,6 +120,7 @@ export function ClubAppHub() {
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-white/55">
               Captures réelles du Pôle Club. À partir de 3 € / adhérent sur devis.
+              Parrainage possible · partagez votre lien ou votre code.
             </p>
             <ul className="mt-6 space-y-5">
               {APP_BEATS.map((b) => (

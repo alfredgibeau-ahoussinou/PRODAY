@@ -120,7 +120,7 @@ export function ParentAppHub() {
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-white/55">
               Captures réelles du Pôle Parent. Espace gratuit, lié au compte joueur de
-              l’enfant.
+              l’enfant. Parrainage possible · partagez votre lien ou votre code.
             </p>
             <ul className="mt-6 space-y-5">
               {APP_BEATS.map((b) => (

@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
 import { PolesPricingLayout } from "@/components/pricing/PolesPricingLayout";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
+import {
+  NO_COMMITMENT_INTRO,
+  POLE_REFERRAL_LINE,
+} from "@/lib/commercialCopy";
 import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
@@ -19,20 +23,21 @@ export default function PricingPage() {
       <ImmersivePoleHero
         brand="Pro Day Tarifs"
         headline="Un pôle. Un prix."
-        support="Sans engagement. Sponsoring possible. Mensuel ou annuel (moins 20 %). Tu ouvres l’espace dont tu as besoin, et le parrainage reste disponible."
+        support={`${NO_COMMITMENT_INTRO} Mensuel ou annuel (moins 20 %). Sponsoring possible.`}
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Liste d’attente"
         secondaryHref="#joueur"
         secondaryLabel="Voir les pôles"
+        perk={POLE_REFERRAL_LINE}
       />
 
       <PolesPricingLayout />
 
       <TerminalCta
         title="La bêta est ouverte."
-        description="Sans engagement. Sponsoring possible pour les marques. Les abonnements store suivent le même modèle."
+        description={`${NO_COMMITMENT_INTRO} Sponsoring possible pour les marques. ${POLE_REFERRAL_LINE}`}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta"
         secondaryHref={ROUTES.sponsor}

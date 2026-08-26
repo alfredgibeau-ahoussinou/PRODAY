@@ -9,6 +9,7 @@ import {
 } from "@/components/poles/sponsorImmersive";
 import { TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
+import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
 import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 import { SPONSOR_HERO } from "@/lib/sponsorContent";
@@ -16,7 +17,7 @@ import { SPONSOR_HERO } from "@/lib/sponsorContent";
 export const metadata: Metadata = {
   title: "Pôle Sponsor · Opportunités & impact",
   description:
-    "Trouver des opportunités de sponsoring, identifier clubs et profils, gérer partenariats, suivre activations, mesurer visibilité et impact. Sans engagement.",
+    "Trouver des opportunités de sponsoring, identifier clubs et profils, gérer partenariats, suivre activations, mesurer visibilité et impact. Sans engagement · parrainage possible.",
 };
 
 export default function SponsorPolePage() {
@@ -35,6 +36,7 @@ export default function SponsorPolePage() {
         primaryLabel="Demander un devis"
         secondaryHref="#app"
         secondaryLabel="Voir l’app Sponsor"
+        perk={POLE_REFERRAL_LINE}
       />
 
       <SponsorAppHub />

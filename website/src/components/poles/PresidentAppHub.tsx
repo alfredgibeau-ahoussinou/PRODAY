@@ -116,7 +116,7 @@ export function PresidentAppHub() {
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-white/55">
               Captures réelles du Pôle Président. Cockpit, club, finances, menu et
-              assistant IA.
+              assistant IA. Parrainage possible · partagez votre lien ou votre code.
             </p>
             <ul className="mt-6 space-y-5">
               {APP_BEATS.map((b) => (

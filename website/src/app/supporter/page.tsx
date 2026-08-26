@@ -9,13 +9,14 @@ import {
 } from "@/components/poles/supporterImmersive";
 import { TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
+import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
 import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Pôle Supporter · Suivre clubs & matchs",
   description:
-    "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, stats, calendriers, favoris et actualités. Tribune gratuite · même écosystème ProDay.",
+    "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, stats, calendriers, favoris et actualités. Tribune gratuite · parrainage possible.",
 };
 
 export default function SupporterPage() {
@@ -34,6 +35,7 @@ export default function SupporterPage() {
         primaryLabel="Entrer dans la tribune"
         secondaryHref={`${ROUTES.demo}?p=supporter`}
         secondaryLabel="Voir la démo"
+        perk={POLE_REFERRAL_LINE}
       />
 
       <SupporterLiveBoard />

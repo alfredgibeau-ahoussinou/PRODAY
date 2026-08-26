@@ -6,7 +6,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Pro Day Parent",
   description:
-    "Pôle Parent ProDay : supervision, contacts approuvés et limites de temps pour les comptes mineurs.",
+    "Pôle Parent ProDay : supervision, contacts approuvés et limites de temps pour les comptes mineurs. Gratuit · parrainage possible.",
 };
 
 export default function ParentPortalPage() {
@@ -16,10 +16,10 @@ export default function ParentPortalPage() {
       visualId="parent"
       kicker="Pôle Parent"
       title="Pro Day Parent"
-      description="Supervision, contacts approuvés et limites de temps. Pour accompagner un mineur sans étouffer le jeu."
+      description="Supervision, contacts approuvés et limites de temps. Pour accompagner un mineur sans étouffer le jeu. Parrainage possible · partagez votre lien ou votre code."
       story={{
         title: "Voir sans envahir.",
-        body: "Le Pôle Parent donne un cadre clair : qui peut contacter, combien de temps, quelles alertes. Branché au compte joueur de l’enfant.",
+        body: "Le Pôle Parent donne un cadre clair : qui peut contacter, combien de temps, quelles alertes. Branché au compte joueur de l’enfant. Gratuit, sans engagement.",
       }}
       breakdownTitle="Décomposer le Pôle Parent"
       features={[
@@ -99,7 +99,8 @@ export default function ParentPortalPage() {
       }}
       cta={{
         title: "Rejoindre l'espace Parent",
-        description: "Liste d'attente. Cadre confiance dès l'ouverture.",
+        description:
+          "Liste d'attente. Cadre confiance dès l'ouverture. Parrainage possible · partagez votre lien ou votre code.",
         primaryHref: ROUTES.betaWaitlist,
         primaryLabel: "Liste d'attente",
         secondaryHref: "#app",

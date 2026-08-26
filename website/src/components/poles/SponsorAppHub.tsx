@@ -121,7 +121,7 @@ export function SponsorAppHub() {
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-white/55">
               Captures réelles du Pôle Sponsor. Formules dès Découverte (gratuite),
-              sans engagement.
+              sans engagement. Parrainage possible · partagez votre lien ou votre code.
             </p>
             <ul className="mt-6 space-y-5">
               {APP_BEATS.map((b) => (

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import type { CSSProperties } from "react";
 import { PlayerAppPhone } from "@/components/poles/PlayerAppPhone";
+import { PoleReferralNote } from "@/components/poles/PoleReferralNote";
 import { ROUTES } from "@/lib/routes";
 
 const JOUEUR_SIGNALS = [
@@ -50,6 +51,8 @@ export function JoueurAppHub() {
   const reduce = useReducedMotion();
 
   return (
+    <>
+    <PoleReferralNote />
     <section
       id="app"
       className="relative scroll-mt-28 overflow-hidden border-t border-white/10 bg-[#020814] px-4 py-16 sm:px-6 sm:py-24"
@@ -119,8 +122,8 @@ export function JoueurAppHub() {
               Cinq onglets. Une seule app.
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-white/55">
-              Captures réelles du Pôle Joueur. Pass optionnel 3,99 € pour programmes,
-              vidéo et contenu avancé.
+              Captures réelles du Pôle Joueur. Pass optionnel 3,99 € · sans
+              engagement · pour programmes, vidéo et contenu avancé.
             </p>
             <ul className="mt-6 space-y-5">
               {APP_BEATS.map((b) => (
@@ -170,5 +173,6 @@ export function JoueurAppHub() {
         </div>
       </div>
     </section>
+    </>
   );
 }

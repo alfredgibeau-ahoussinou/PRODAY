@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
 import { ArrowRight, Check, Minus } from "lucide-react";
 import { VeoCameraMark } from "@/components/poles/VeoCameraMark";
+import { NO_COMMITMENT_BADGE, NO_COMMITMENT_QUOTE_LINE } from "@/lib/commercialCopy";
 import { ROUTES } from "@/lib/routes";
 
 type OfferCol = {
@@ -239,7 +240,8 @@ export function ClubOffersInteractive() {
         </h2>
         <p className="mt-3 max-w-lg text-sm text-white/55">
           Amateur · Essentiel · Tout inclus · Pro + Veo. Analyse de forme incluse.
-          Sur devis = à partir de 3 € / adhérent. Caméra jamais obligatoire.
+          Sur devis = à partir de 3 € / adhérent. Caméra jamais obligatoire.{" "}
+          {NO_COMMITMENT_QUOTE_LINE}
         </p>
 
         {/* Mobile: plan picker + feature card */}
@@ -310,6 +312,9 @@ export function ClubOffersInteractive() {
                 {activeCol.unit ? (
                   <p className="text-[10px] text-white/40">{activeCol.unit}</p>
                 ) : null}
+                <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-white/40">
+                  {NO_COMMITMENT_BADGE}
+                </p>
                 {activeCol.priceHint ? (
                   <p className="mt-1 max-w-[9rem] text-[10px] leading-snug text-white/45">
                     {activeCol.priceHint}
@@ -411,6 +416,9 @@ export function ClubOffersInteractive() {
                           {col.unit}
                         </span>
                       ) : null}
+                    </span>
+                    <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.12em] text-white/40">
+                      {NO_COMMITMENT_BADGE}
                     </span>
                     {col.priceHint ? (
                       <span className="mt-1 block text-[10px] font-normal leading-snug text-white/45">

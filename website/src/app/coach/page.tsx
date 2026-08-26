@@ -10,13 +10,14 @@ import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { RosterBourseSection } from "@/components/poles/RosterBourseSection";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
+import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
 import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Pôle Coach · Tactique IA et analyse de forme",
   description:
-    "Profil coach : app Accueil, effectif, IA · analyse de forme, Tactique IA, bourse interne et préparation match.",
+    "Profil coach : app Accueil, effectif, IA · analyse de forme, Tactique IA, bourse interne et préparation match. Parrainage possible.",
 };
 
 const COACH_CAPS = [
@@ -74,6 +75,7 @@ export default function CoachPolePage() {
         primaryLabel="Rejoindre le Pôle Coach"
         secondaryHref="#app"
         secondaryLabel="Voir l’app Coach"
+        perk={POLE_REFERRAL_LINE}
       />
 
       <CoachAppHub />
@@ -94,7 +96,7 @@ export default function CoachPolePage() {
 
       <TerminalCta
         title="Le coach, moteur du club."
-        description="Effectif, analyse de forme et board tactique : dans la même app que vos licenciés."
+        description={`Effectif, analyse de forme et board tactique : dans la même app que vos licenciés. ${POLE_REFERRAL_LINE}`}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Commencer côté Coach"
         secondaryHref={`${ROUTES.proClub}#analyse-de-forme`}

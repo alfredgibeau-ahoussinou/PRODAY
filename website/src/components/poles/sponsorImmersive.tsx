@@ -5,6 +5,11 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { Fragment, useState } from "react";
 import { AnimatedMetric } from "@/components/immersive/AnimatedMetric";
+import {
+  NO_COMMITMENT_BADGE,
+  NO_COMMITMENT_QUOTE_LINE,
+  POLE_REFERRAL_LINE,
+} from "@/lib/commercialCopy";
 import { ROUTES } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -196,6 +201,9 @@ export function SponsorTiersCompare() {
                 />
                 <span className="text-sm text-white/40">€ / mois</span>
               </p>
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
+                {NO_COMMITMENT_BADGE}
+              </p>
             </div>
             <Link
               href={ROUTES.sponsorDevis}
@@ -226,6 +234,9 @@ export function SponsorTiersCompare() {
                     {t.name}
                     <span className="mt-1 block font-display text-base font-medium tabular-nums text-white">
                       {t.price === "0" ? "Gratuit" : `${t.price} €`}
+                    </span>
+                    <span className="mt-1 block font-mono text-[9px] font-normal uppercase tracking-[0.12em] text-white/40">
+                      {NO_COMMITMENT_BADGE}
                     </span>
                   </th>
                 ))}
@@ -371,8 +382,8 @@ export function SponsorWarmCta() {
           sur le terrain.
         </h2>
         <p className="mx-auto mt-5 max-w-md text-base text-white/55">
-          Sponsoring possible dès maintenant. Sans engagement. Devis en ligne ·
-          réponse sous 48 h.
+          Sponsoring possible dès maintenant. {NO_COMMITMENT_QUOTE_LINE}{" "}
+          {POLE_REFERRAL_LINE} Devis en ligne · réponse sous 48 h.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link

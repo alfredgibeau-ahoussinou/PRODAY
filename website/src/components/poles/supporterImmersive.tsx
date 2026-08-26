@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
 import { ROUTES } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -188,7 +189,8 @@ export function SupporterFreeStamp() {
             0 €. Pour de vrai.
           </h2>
           <p className="mt-3 max-w-md text-base text-white/55">
-            Pas d’abonnement store. Pas de paywall le jour J. La tribune reste ouverte.
+            Pas d’abonnement store. Pas de paywall le jour J. La tribune reste
+            ouverte. {POLE_REFERRAL_LINE}
           </p>
         </div>
         <div
@@ -223,6 +225,9 @@ export function SupporterWarmCta() {
           <br />
           Live le weekend.
         </h2>
+        <p className="mx-auto mt-4 max-w-md text-sm text-white/50">
+          {POLE_REFERRAL_LINE}
+        </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link
             href={`${ROUTES.betaWaitlist}?role=supporter`}

@@ -6,6 +6,14 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Check, ArrowRight } from "lucide-react";
 import { Fragment } from "react";
 import { getPoleBrandColors } from "@/lib/brandColors";
+import {
+  NO_COMMITMENT_BADGE,
+  NO_COMMITMENT_FREE_LINE,
+  NO_COMMITMENT_INTRO,
+  NO_COMMITMENT_OFFER_LINE,
+  NO_COMMITMENT_QUOTE_LINE,
+  POLE_REFERRAL_LINE,
+} from "@/lib/commercialCopy";
 import { SPONSOR_PRICING_TIERS } from "@/lib/content";
 import {
   SHOWCASE_POLES,
@@ -39,22 +47,19 @@ function leadPriceLabel(poleId: PoleId, yearly: boolean): { amount: string; unit
     return {
       amount: "0",
       unit: "€",
-      note:
-        poleId === "parent"
-          ? "Pôle Parent gratuit · lié au compte enfant"
-          : "Toujours gratuit · pas d’abonnement store",
+      note: NO_COMMITMENT_FREE_LINE,
     };
   }
   if (poleId === "sponsor") {
     const paid = SPONSOR_PRICING_TIERS.find((t) => t.monthlyEur > 0);
     const starter = SPONSOR_PRICING_TIERS[0];
-    if (!paid || !starter) return { amount: "0", unit: "€", note: "Sur devis" };
+    if (!paid || !starter) return { amount: "0", unit: "€", note: NO_COMMITMENT_QUOTE_LINE };
     return {
       amount: yearly
         ? formatPriceEur(yearlyPriceFromMonthly(paid.monthlyEur))
         : formatPriceEur(paid.monthlyEur),
       unit: yearly ? "€ / an" : "€ / mois",
-      note: `Dès ${starter.name} gratuit · 3 formules`,
+      note: `Dès ${starter.name} gratuit · 3 formules · ${NO_COMMITMENT_BADGE.toLowerCase()}`,
     };
   }
   const plans = plansForPole(poleId);
@@ -64,10 +69,10 @@ function leadPriceLabel(poleId: PoleId, yearly: boolean): { amount: string; unit
     amount: yearly ? formatPriceEur(plan.yearlyEur) : formatPriceEur(plan.monthlyEur),
     unit: yearly ? "€ / an" : "€ / mois",
     note: yearly
-      ? `soit ${formatPriceEur(monthlyEquivalentFromYearly(plan.yearlyEur))} €/mois`
+      ? `soit ${formatPriceEur(monthlyEquivalentFromYearly(plan.yearlyEur))} €/mois · ${NO_COMMITMENT_BADGE.toLowerCase()}`
       : plans.length > 1
-        ? `${plans.length} formules`
-        : `ou ${formatPriceEur(plan.yearlyEur)} €/an (−${ANNUAL_DISCOUNT_PERCENT} %)`,
+        ? `${plans.length} formules · ${NO_COMMITMENT_BADGE.toLowerCase()}`
+        : `ou ${formatPriceEur(plan.yearlyEur)} €/an (−${ANNUAL_DISCOUNT_PERCENT} %) · ${NO_COMMITMENT_BADGE.toLowerCase()}`,
   };
 }
 
@@ -97,18 +102,18 @@ export function PolesPricingLayout() {
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
                 {yearly
-                  ? `Annuel · −${ANNUAL_DISCOUNT_PERCENT} % · sans engagement`
-                  : "Mensuel · sans engagement"}
+                  ? `Annuel · −${ANNUAL_DISCOUNT_PERCENT} % · ${NO_COMMITMENT_BADGE.toLowerCase()}`
+                  : `Mensuel · ${NO_COMMITMENT_BADGE.toLowerCase()}`}
               </p>
-              <p className="mt-1 text-xs text-white/45">
-                Résiliation à tout moment. Sponsoring possible ·{" "}
+              <p className="mt-1 text-xs text-white/45 sm:text-sm">
+                {NO_COMMITMENT_INTRO} Sponsoring possible ·{" "}
                 <Link
                   href={ROUTES.sponsor}
                   className="text-white/70 underline-offset-2 hover:text-white hover:underline"
                 >
                   voir le pôle Sponsor
                 </Link>
-                . Parrainage via ton lien ou code.
+                . {POLE_REFERRAL_LINE}
               </p>
             </div>
             <div className="inline-flex rounded-full border border-white/15 p-1">
@@ -249,6 +254,13 @@ function PolePricingChapter({
               <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
                 {lead.note}
               </p>
+              <p className="mt-2 max-w-sm text-xs leading-relaxed text-white/45">
+                {pole.id === "sponsor" || pole.id === "pro_club"
+                  ? NO_COMMITMENT_QUOTE_LINE
+                  : pole.id === "supporter" || pole.id === "parent"
+                    ? POLE_REFERRAL_LINE
+                    : NO_COMMITMENT_OFFER_LINE}
+              </p>
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -381,6 +393,9 @@ function FreeVsPro({
           {proLabel}
         </button>
       </div>
+      <p className="mt-3 text-xs leading-relaxed text-white/45">
+        {tier === "free" ? NO_COMMITMENT_FREE_LINE : NO_COMMITMENT_OFFER_LINE}
+      </p>
       <AnimatePresence mode="wait">
         <motion.ul
           key={tier}
@@ -388,7 +403,7 @@ function FreeVsPro({
           animate={{ opacity: 1, y: 0 }}
           exit={reduce ? undefined : { opacity: 0 }}
           transition={{ duration: 0.25, ease }}
-          className="mt-6 divide-y divide-white/10 border-y border-white/10"
+          className="mt-4 divide-y divide-white/10 border-y border-white/10"
           role="tabpanel"
         >
           {items.map((item) => (
@@ -486,7 +501,8 @@ function ClubPlansCompare({
         Comparatif Club · 4 formules
       </p>
       <p className="mt-2 text-xs text-white/45">
-        Premium inclut la vidéo avec votre matériel. Pro + Veo = option clé en main.
+        Premium inclut la vidéo avec votre matériel. Pro + Veo = option clé en main.{" "}
+        {NO_COMMITMENT_QUOTE_LINE}
       </p>
       <div className="mt-5 overflow-x-auto rounded-sm border border-white/10">
         <table className="w-full min-w-[640px] border-collapse text-left">
@@ -500,6 +516,9 @@ function ClubPlansCompare({
                   </span>
                   <span className="mt-1 block font-display text-sm text-[var(--pole-accent)] sm:text-base">
                     {priceLabel(p)}
+                  </span>
+                  <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.12em] text-white/40">
+                    {NO_COMMITMENT_BADGE}
                   </span>
                 </th>
               ))}
@@ -572,7 +591,12 @@ function SponsorTierCards({ yearly }: { yearly: boolean }) {
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent)]">
                 {tier.name}
               </p>
-              <p className="font-display text-xl font-medium text-white">{price}</p>
+              <div className="text-right">
+                <p className="font-display text-xl font-medium text-white">{price}</p>
+                <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-white/40">
+                  {NO_COMMITMENT_BADGE}
+                </p>
+              </div>
             </div>
             <p className="mt-1 text-sm text-white/45">{tier.tagline}</p>
             <ul className="mt-3 space-y-1.5">

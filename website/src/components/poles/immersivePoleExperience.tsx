@@ -21,6 +21,8 @@ type ImmersiveHeroProps = {
   primaryLabel: string;
   secondaryHref?: string;
   secondaryLabel?: string;
+  /** Ligne de confiance sous les CTA (ex. parrainage). */
+  perk?: string;
 };
 
 /** First viewport: brand + one headline + one sentence + CTAs on full-bleed media. */
@@ -34,6 +36,7 @@ export function ImmersivePoleHero({
   primaryLabel,
   secondaryHref,
   secondaryLabel,
+  perk,
 }: ImmersiveHeroProps) {
   const reduce = useReducedMotion();
 
@@ -102,6 +105,16 @@ export function ImmersivePoleHero({
             </Link>
           ) : null}
         </motion.div>
+        {perk ? (
+          <motion.p
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.45, delay: 0.32, ease }}
+            className="mt-5 max-w-lg font-mono text-[10px] uppercase tracking-[0.16em] text-white/45 sm:mt-6"
+          >
+            {perk}
+          </motion.p>
+        ) : null}
       </div>
     </header>
   );
