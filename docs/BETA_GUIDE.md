@@ -241,7 +241,7 @@ cd website && npm run netlify:deploy # production Netlify
 
 ### App mobile
 
-Version **1.0.8** (iOS build 16 / Android versionCode 9). Rebuild EAS natif — pas d’OTA.
+Version **1.0.8** (iOS build 17 / Android versionCode 10). Rebuild EAS natif — pas d’OTA.
 
 ```bash
 npm run eas:build:testflight

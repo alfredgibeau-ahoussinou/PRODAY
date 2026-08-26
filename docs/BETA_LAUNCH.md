@@ -32,7 +32,7 @@ Déploiement site : `cd website && npm run netlify:deploy`
 
 ## 3. Build mobile (TestFlight + APK interne)
 
-Version app courante : **1.0.8** (iOS build EAS suivant **16**, Android `versionCode` **9**).
+Version app courante : **1.0.8** (iOS build EAS suivant **17**, Android `versionCode` **10**).
 Pas d’OTA (`expo-updates` non installé) — chaque MAJ = rebuild EAS natif.
 
 ```bash
@@ -44,7 +44,7 @@ npm run eas:submit:testflight
 # Android APK testeurs (distribution interne)
 # Prérequis : aligner le versionCode distant (≥ 9, car APK local 1.0.7 = 8)
 #   eas build:version:set -p android --profile preview
-#   → saisir 9
+#   → saisir 9 (autoIncrement → 10)
 npm run eas:build:preview -- --platform android
 ```
 

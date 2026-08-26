@@ -3,13 +3,17 @@
 Guide pour construire et soumettre l’application mobile sur l’App Store et Google Play.
 
 **Version marketing (app.json) :** `1.0.8`.  
-**Numéros natifs (EAS `appVersionSource: remote`) :** prochain iOS TestFlight = **build 16** (auto-incrément depuis 15) ; Android = **versionCode 9**.  
+**Numéros natifs (EAS `appVersionSource: remote`) :** prochain iOS TestFlight = **build 17** (auto-incrément depuis 16) ; Android = **versionCode 10**.  
 Les champs `ios.buildNumber` / `android.versionCode` dans `app.json` sont indicatifs (Constants) — EAS ignore leur valeur pour le binaire store.  
 **OTA :** non. `expo-updates` n’est pas dans l’app ; une mise à jour = nouveau build EAS (TestFlight / APK / stores).
 
-## Notes de version — 1.0.8 (août 2026)
+## Notes de version — 1.0.8 build 17 (août 2026)
 
-Correctifs et livraisons depuis 1.0.7 à inclure dans ce rebuild :
+Correctif urgent démarrage (build 16 crashait) :
+
+- Rules of Hooks : `useWindowDimensions()` dans `AppShell` avant les early returns auth/rôle (`4d495f21`)
+
+Correctifs et livraisons depuis 1.0.7 (déjà dans 16) :
 
 - Déconnexion accessible sur mobile ; icônes de notification Coach / Club / Président
 - IA honnête (erreurs cloud visibles, plus de mock silencieux) ; création de séance coach (brouillon NLP) ; coaching perso
