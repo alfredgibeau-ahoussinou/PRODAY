@@ -1,5 +1,20 @@
 # Pousser ProDay sur GitHub
 
+## Dépôts officiels
+
+| Dépôt | URL | Rôle |
+|-------|-----|------|
+| **PRODAY** (privé) | https://github.com/alfredgibeau-ahoussinou/PRODAY | Code monorepo (app Expo + site + functions) |
+| **PRODAY-docs** (public) | https://github.com/alfredgibeau-ahoussinou/PRODAY-docs | Documentation produit publique |
+
+Remote `origin` attendu :
+
+```text
+https://github.com/alfredgibeau-ahoussinou/PRODAY.git
+```
+
+Branche de travail courante : celle du checkout local (souvent `main` ou une `feat/*` / `fix/*`). Ne pas force-push sur `main`.
+
 Si vous voyez :
 
 ```text
@@ -43,3 +58,7 @@ Ajouter la clé sur GitHub → **SSH keys**, puis :
 git remote set-url origin git@github.com:alfredgibeau-ahoussinou/PRODAY.git
 git push -u origin HEAD
 ```
+
+## Doc publique (PRODAY-docs)
+
+Le README marketing et les infos produit destinées au public vivent aussi sur **PRODAY-docs**. Après une mise à jour notable de version app (`app.json` → ex. **1.0.8**) ou de branding, synchroniser ce dépôt public si besoin.

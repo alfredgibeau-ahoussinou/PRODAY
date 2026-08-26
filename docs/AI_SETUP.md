@@ -15,6 +15,8 @@ Texte rapide (tags) : `mistral-small-latest` (Small 4, mars 2026).
 
 Modèles : `functions/src/mistralModels.ts`.
 
+Dépôt code : [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · Doc publique : [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs).
+
 ## Clé API (obligatoire pour le cloud)
 
 Sans `MISTRAL_API_KEY`, les callables renvoient `failed-precondition` avec un message clair.

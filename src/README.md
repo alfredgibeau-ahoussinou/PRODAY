@@ -1,6 +1,9 @@
 # Application mobile ProDay (`src/`)
 
 > Code source React Native / Expo. Point d'entrée : `index.js` (racine) → navigation dans `src/navigation/`.
+>
+> **Version marketing :** `1.0.8` (`app.json`) · **Icônes / splash :** `assets/branding/proday-*.png`  
+> **Dépôt :** [github.com/alfredgibeau-ahoussinou/PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · **Docs publiques :** [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
 
 ## Rôle
 
@@ -18,7 +21,7 @@ Toute l'app mobile : joueurs, staff, sponsors, admin. Données **réelles** Fire
 | `navigation/` | Onglets, shells, routing | [navigation/README.md](./navigation/README.md) |
 | `hooks/` | Hooks React partagés | — |
 | `context/` | Providers (auth, thème, segment joueur) | — |
-| `theme/` | Tokens design Homme / Woman / Pro | — |
+| `theme/` | Tokens design Homme / Woman / Pro (`prodayBrand.ts`) | — |
 | `models/` | Types TypeScript domaine | — |
 | `content/` | Textes produit, chapitres, légal embarqué | — |
 | `utils/` | Helpers (géo, PDF, pricing…) | — |
@@ -32,6 +35,9 @@ Toute l'app mobile : joueurs, staff, sponsors, admin. Données **réelles** Fire
 - Carte monorepo : [../docs/STRUCTURE.md](../docs/STRUCTURE.md)
 - Architecture : [../docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
 - Schéma données : [../docs/DATABASE_SCHEMA.md](../docs/DATABASE_SCHEMA.md)
+- Release stores : [../docs/STORE_RELEASE.md](../docs/STORE_RELEASE.md)
+- Branding / logos : [../assets/branding/README.md](../assets/branding/README.md)
+- Push GitHub : [../docs/GITHUB_AUTH.md](../docs/GITHUB_AUTH.md)
 
 ## Lancer
 

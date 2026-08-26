@@ -7,6 +7,9 @@ Guide pour construire et soumettre l’application mobile sur l’App Store et G
 Les champs `ios.buildNumber` / `android.versionCode` dans `app.json` sont indicatifs (Constants) — EAS ignore leur valeur pour le binaire store.  
 **OTA :** non. `expo-updates` n’est pas dans l’app ; une mise à jour = nouveau build EAS (TestFlight / APK / stores).
 
+**GitHub :** [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) (code) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) (doc publique) · push : [GITHUB_AUTH.md](./GITHUB_AUTH.md).  
+**Branding store :** icône / splash / adaptive = `assets/branding/proday-app-icon.png`, `proday-splash.png`, `proday-adaptive-foreground.png` (identité P + ballon).
+
 ## Notes de version — 1.0.8 build 17 (août 2026)
 
 Correctif urgent démarrage (build 16 crashait) :

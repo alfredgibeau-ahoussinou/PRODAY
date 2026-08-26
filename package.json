@@ -1,9 +1,17 @@
 {
   "name": "proday",
-  "version": "0.1.0",
+  "version": "1.0.8",
   "private": true,
   "main": "index.js",
   "description": "ProDay — plateforme mobile recrutement, tournois, matchs amicaux et sponsoring",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alfredgibeau-ahoussinou/PRODAY.git"
+  },
+  "homepage": "https://proday75.fr",
+  "bugs": {
+    "url": "https://github.com/alfredgibeau-ahoussinou/PRODAY/issues"
+  },
   "scripts": {
     "start": "expo start",
     "start:ios": "expo start --localhost",

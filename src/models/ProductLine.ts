@@ -29,7 +29,7 @@ export const PRODAY_HOMME_BRAND = {
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
   logoLine2Accent: 'Man',
-  tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
+  tagline: 'CONNECTER. PROGRESSER. RÉVÉLER.',
   shortTagline: 'Le foot masculin amateur, par Pro Day',
   entryCta: 'For men',
 } as const;

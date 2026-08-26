@@ -63,3 +63,5 @@ Source de vérité : `proday-lockup-official-source.png` (PNG fourni « logo de 
 Composants app : `ProDaySymbol` · `ProDayWordmark` · `ProDayLogo` · `ProDayOfficialLockup` (`src/components/branding/`).
 
 Tokens : `src/theme/prodayBrand.ts`.
+
+GitHub : [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs).

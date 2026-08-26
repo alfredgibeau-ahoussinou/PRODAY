@@ -2,6 +2,16 @@
 
 > Index de toute la documentation hors code. Pour la carte du dépôt : [STRUCTURE.md](./STRUCTURE.md).
 
+## GitHub
+
+| Dépôt | URL | Contenu |
+|-------|-----|---------|
+| Code (privé) | [alfredgibeau-ahoussinou/PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) | Monorepo app Expo + site + Cloud Functions |
+| Docs publiques | [alfredgibeau-ahoussinou/PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) | README / infos produit publiques |
+| Auth Git | [GITHUB_AUTH.md](./GITHUB_AUTH.md) | Push HTTPS / SSH / `gh` |
+
+Version app marketing courante : **1.0.8** (`app.json`) — voir [STORE_RELEASE.md](./STORE_RELEASE.md).
+
 ## Démarrage
 
 | Document | Public | Description |

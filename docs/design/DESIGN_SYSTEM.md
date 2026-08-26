@@ -4,30 +4,32 @@
 
 ## Logo
 
+Identité officielle : **P + ballon + trait de frappe**, wordmark PRODAY, or `#C5A059`.  
+Source de vérité : `assets/branding/proday-lockup-official-source.png` — détail : [`assets/branding/README.md`](../../assets/branding/README.md).
+
 | Fichier | Usage |
 |---------|--------|
-| `assets/branding/logo-light.png` | Fond clair (splash, onboarding, PDF) |
-| `assets/branding/logo-dark.png` | Fond sombre (écran auth, marketing) |
-| `src/components/Logo.tsx` | Composant React Native |
+| `assets/branding/proday-app-icon.png` | Icône store / home / favicon Expo |
+| `assets/branding/proday-splash.png` | Splash Expo / iOS |
+| `assets/branding/logo-proday-official.png` | Lockup carré (docs, emails, présentation) |
+| `assets/branding/logo-light.png` / `logo-dark.png` | PDF, fond clair / sombre |
+| `src/components/branding/` | `ProDayLogo`, `ProDayOfficialLockup`, `ProDaySymbol` |
 
 **Éléments de marque :**
-- Lettre **P** en dégradé bleu cyan → navy + silhouette coureur
-- Wordmark **Pro** (navy) + **Day** (bleu vif), typo inclinée
-- Tagline : **CONNECTER • PROGRESSER • RÉUSSIR**
+- Symbole **P** blanc + ballon + traits de vitesse (plus de coureur bleu legacy)
+- Wordmark **PRODAY** tracking large
+- Tagline : **CONNECTER. PROGRESSER. RÉVÉLER.**
 
-## Palette (UI claire — mockups recrutement / matchs)
+## Palette master (app)
 
 | Token | Hex | Usage |
 |-------|-----|--------|
-| `brand` / `bluePrimary` | `#003399` | CTA, boutons pleins, onglet actif |
-| `blueBright` | `#2563EB` | Accents secondaires |
-| `navy` | `#0F172A` | Titres, « Pro » |
-| `background` | `#F1F5F9` | Fond écran |
-| `surface` | `#FFFFFF` | Cartes |
-| `success` | `#16A34A` | Vérifié, Disponible |
-| `warning` | `#EA580C` | En cours de validation |
+| Or / CTA master | `#C5A059` | CTA, accents master |
+| Noir | `#000000` | Fonds splash / adaptive |
+| Blanc | `#FFFFFF` | Symbole, wordmark |
+| Surface | `#141414` | Surfaces dark |
 
-Code : `src/theme/designTokens.ts`
+Code : `src/theme/prodayBrand.ts` (+ `designTokens.ts` pour l’UI).
 
 ## Navigation (maquettes)
 

@@ -70,4 +70,6 @@ Pour les **coachs** et **agents** :
 
 ## Contact
 
-Dépôt : **https://github.com/alfredgibeau-ahoussinou/PRODAY**
+- Dépôt code (privé) : **https://github.com/alfredgibeau-ahoussinou/PRODAY**
+- Documentation publique : **https://github.com/alfredgibeau-ahoussinou/PRODAY-docs**
+- Site : **https://proday75.fr**

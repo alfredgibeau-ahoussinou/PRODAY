@@ -90,7 +90,7 @@ function main() {
     width: W,
     height: H,
     logo: join(ROOT, 'assets/branding/logo-proday-official.png'),
-    tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
+    tagline: 'CONNECTER. PROGRESSER. RÉVÉLER.',
     endcardSubtitle: 'Bêta iOS · 11 août 2026 à 18 h',
     titleFontSize: 88,
     bodyFontSize: 36,

@@ -3,6 +3,8 @@
 Document de référence unique pour comprendre, exploiter et déployer le programme bêta fermé (site proday75.fr + app mobile).
 
 > Voir aussi : `docs/BETA_WAITLIST.md` (dépannage EmailJS détaillé), `docs/BETA_LAUNCH.md` (checklist go/no-go mobile) et `docs/BETA_IOS_LAUNCH.md` (campagne iOS — 15 août 2026 à 18 h, reportée).
+>
+> Code : [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · Docs publiques : [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) · App **1.0.8**.
 
 ---
 

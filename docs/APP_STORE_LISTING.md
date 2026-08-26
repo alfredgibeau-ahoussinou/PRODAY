@@ -38,7 +38,7 @@ ProDay : profil foot, Mercato, journal d'activités, score carrière et saison (
 ## Description complète (FR, ≤ 4000 caractères)
 
 ```
-ProDay — CONNECTER • PROGRESSER • RÉUSSIR
+ProDay — CONNECTER. PROGRESSER. RÉVÉLER.
 
 ProDay est l'écosystème mobile pour le foot amateur et semi-pro : une seule app pour votre profil, le recrutement, votre saison et votre communauté.
 

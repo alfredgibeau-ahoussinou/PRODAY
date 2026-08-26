@@ -39,12 +39,13 @@
 
 ### Branding & assets
 
-| Script | Commande npm |
-|--------|--------------|
-| `generate-transparent-logos.mjs` | `branding:logos` |
-| `generate-woman-logos.mjs` | `branding:logos:woman` |
-| `generate-universe-logos.mjs` | `branding:logos:universes` |
-| `download-*-showcase-images.mjs` | *(manuel)* |
+| Script | Commande npm | Rôle |
+|--------|--------------|------|
+| `generate-app-brand.mjs` | `branding:app` | Icône / splash / adaptive / lockup officiels |
+| `generate-transparent-logos.mjs` | `branding:logos` | Logos transparents |
+| `generate-woman-logos.mjs` | `branding:logos:woman` | Variantes Woman |
+| `generate-universe-logos.mjs` | `branding:logos:universes` | Pictos pôles |
+| `download-*-showcase-images.mjs` | *(manuel)* | Images showcase |
 
 ### i18n
 
@@ -66,5 +67,8 @@ Helpers partagés entre scripts (pas destinés à l'app).
 
 ## Liens
 
-- [../docs/README.md](../docs/README.md) — documentation générée
+- [../docs/README.md](../docs/README.md) — index documentation
+- [../docs/GITHUB_AUTH.md](../docs/GITHUB_AUTH.md) — push vers GitHub
+- [../assets/branding/README.md](../assets/branding/README.md) — logos officiels
 - [../package.json](../package.json) — liste complète des commandes npm
+- Code : https://github.com/alfredgibeau-ahoussinou/PRODAY · Docs : https://github.com/alfredgibeau-ahoussinou/PRODAY-docs
