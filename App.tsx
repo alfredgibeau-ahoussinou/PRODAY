@@ -408,6 +408,10 @@ function AppShell() {
     setPendingSignupRole(null);
   }, []);
 
+  // Must stay above every conditional return — auth/role gates skip the main shell
+  // and would otherwise drop this hook ("Rendered fewer hooks than expected").
+  const { width: windowWidth } = useWindowDimensions();
+
   if (!authLoading && profile && needsEmailVerification) {
     return (
       <EmailVerificationScreen
@@ -580,7 +584,6 @@ function AppShell() {
   const isClubShell = sessionProfile?.role === 'club' || forcePresidentPreview;
   const isCoachShell = sessionProfile?.role === 'coach' && !forcePresidentPreview;
   const usesRoleShell = isClubShell || isCoachShell;
-  const { width: windowWidth } = useWindowDimensions();
   /** Expo web grand écran : rail latéral + colonne contenu (pas d’app macOS native). */
   const desktopWideTabs =
     Platform.OS === 'web' && isDesktopWideLayout(windowWidth) && !usesRoleShell;
