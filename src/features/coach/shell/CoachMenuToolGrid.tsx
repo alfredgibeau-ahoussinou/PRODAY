@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { CoachText } from '../../../components/coach/coachPortalUi';
 import { Icon } from '../../../components/ui/Icon';
 import { PressableSpring } from '../../../components/motion';
@@ -10,6 +10,7 @@ import { useCoachShellNav } from './CoachShellNavContext';
 import { useCoachTheme, useCoachThemedStyles } from './CoachThemeContext';
 import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
 import { spacing } from '../../../theme/designTokens';
+import { coachChrome } from '../theme/coachDesignSystem';
 
 type Props = {
   groups: CoachToolGroup[];
@@ -82,11 +83,14 @@ function CoachMenuToolTile({ item, onPress }: TileProps) {
   );
 }
 
-/** Grille 2 colonnes — tuiles outils par section (Match, Club, Performance). */
+/** Grille outils — 2 col mobile, 3–4 col desktop. */
 export function CoachMenuToolGrid({ groups, resolvedById, onSelect }: Props) {
   const shellNav = useCoachShellNav();
   const { t } = useTranslation();
-  const styles = useCoachThemedStyles(createStyles);
+  const { tokens } = useCoachTheme();
+  const { width } = useWindowDimensions();
+  const cols = coachChrome.menuToolCols(width);
+  const styles = useMemo(() => createStyles(tokens, cols), [tokens, cols]);
 
   const handleSelect = (item: CoachNavResolvedItem) => {
     if (item.locked) return;
@@ -121,7 +125,9 @@ export function CoachMenuToolGrid({ groups, resolvedById, onSelect }: Props) {
   );
 }
 
-function createStyles(tokens: CoachThemeTokens) {
+function createStyles(_tokens: CoachThemeTokens, cols: 2 | 3 | 4) {
+  const gap = spacing.sm;
+  const cellPct = `${Math.floor(100 / cols) - 1}%` as `${number}%`;
   return StyleSheet.create({
     root: { gap: spacing.lg, paddingBottom: spacing.xl },
     section: { gap: spacing.sm },
@@ -134,12 +140,13 @@ function createStyles(tokens: CoachThemeTokens) {
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: spacing.sm,
+      gap,
     },
     cell: {
-      width: '48%',
+      width: cellPct,
       flexGrow: 1,
-      minWidth: '46%',
+      minWidth: cols >= 3 ? 140 : '46%',
+      maxWidth: cols >= 3 ? undefined : '48%',
     },
   });
 }
@@ -197,9 +204,7 @@ function createTileStyles(tokens: CoachThemeTokens) {
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: tokens.elevated,
-      borderWidth: 1,
-      borderColor: tokens.border,
+      backgroundColor: tokens.surface,
     },
   });
 }

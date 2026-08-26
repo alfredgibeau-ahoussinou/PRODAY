@@ -67,14 +67,12 @@ import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { User } from '../../../models/User';
 import { useCoachShellNav } from './CoachShellNavContext';
 import { CoachThemeProvider, useCoachTheme } from './CoachThemeContext';
+import { coachChrome } from '../theme/coachDesignSystem';
 
 const COACH_MOTION_ORDER: CoachNavItemId[] = [
   ...COACH_PRIMARY_NAV_IDS,
   ...COACH_SECONDARY_NAV_IDS,
 ];
-
-const SIDEBAR_WIDTH = 248;
-const WIDE_BREAKPOINT = 900;
 
 function CoachGestionPane({ profile }: { profile: User }) {
   const shellNav = useCoachShellNav();
@@ -114,7 +112,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     openCarpool,
   } = useTabNavigation();
   const { width } = useWindowDimensions();
-  const wide = width >= WIDE_BREAKPOINT;
+  const wide = width >= coachChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { direction, noteNav } = useShellNavDirection(COACH_MOTION_ORDER);
 
@@ -266,7 +264,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     onSelect,
     onOpenHelp,
     onSignOut,
-    width: SIDEBAR_WIDTH,
+    width: coachChrome.sidebarWidth,
   } as const;
 
   const content =

@@ -8,6 +8,7 @@ import { CLUB_TOOL_GROUPS } from '../navigation/clubNavConfig';
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
 import { AnimatedEntrance, PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
+import { ShellAccountSection } from '../../../components/shell/ShellAccountSection';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
 
@@ -184,6 +185,36 @@ export function ClubMenuPane({ items = [] }: Props) {
             );
           })
         )}
+
+        <ShellAccountSection
+          tone={{
+            foreground: tokens.foreground,
+            muted: tokens.muted,
+            faint: tokens.faint,
+            surface: tokens.surface,
+            border: tokens.border,
+            destructive: '#EF4444',
+            iconBg: tokens.elevated,
+          }}
+          links={[
+            {
+              key: 'club',
+              label: 'Profil club',
+              hint: 'Identité, pack, réglages',
+              icon: 'person',
+              onPress: () => shellNav?.requestNav('club'),
+            },
+            {
+              key: 'pack',
+              label: 'Paramètres',
+              hint: 'Pack et options',
+              icon: 'settings',
+              onPress: () => shellNav?.requestNav('pack'),
+            },
+          ]}
+          onSignOut={shellNav?.signOut}
+          safeBottom
+        />
       </ClubChapterScroll>
     </View>
   );

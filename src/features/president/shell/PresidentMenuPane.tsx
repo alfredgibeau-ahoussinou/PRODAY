@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PresidentActionRow, PresidentSectionCard, PresidentText } from '../ui/presidentUi';
 import { usePresidentTheme } from './PresidentThemeContext';
+import { usePresidentShellNav } from './PresidentShellNavContext';
 import type { PresidentNavResolvedItem } from '../navigation/resolvePresidentNavAccess';
 import type { PresidentNavItemId } from '../navigation/presidentNavConfig';
 import {
@@ -10,6 +11,7 @@ import {
   presidentLayout,
 } from '../theme/presidentDesignSystem';
 import type { PresidentThemeTokens } from '../theme/presidentTokens';
+import { ShellAccountSection } from '../../../components/shell/ShellAccountSection';
 
 type Props = {
   items: PresidentNavResolvedItem[];
@@ -19,6 +21,7 @@ type Props = {
 
 export function PresidentMenuPane({ items, onSelect, onExitClub }: Props) {
   const { tokens } = usePresidentTheme();
+  const shellNav = usePresidentShellNav();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const wide = width >= presidentChrome.wideBreakpoint;
@@ -72,6 +75,30 @@ export function PresidentMenuPane({ items, onSelect, onExitClub }: Props) {
           onPress={onExitClub}
         />
       </PresidentSectionCard>
+
+      <ShellAccountSection
+        tone={{
+          foreground: tokens.foreground,
+          muted: tokens.muted,
+          faint: tokens.muted,
+          surface: tokens.surface,
+          border: tokens.border,
+          destructive: '#EF4444',
+          iconBg: tokens.bgElevated,
+        }}
+        links={[
+          {
+            key: 'settings',
+            label: 'Paramètres',
+            hint: 'Préférences du pôle',
+            icon: 'settings',
+            onPress: () => onSelect('settings'),
+          },
+        ]}
+        onSignOut={shellNav?.signOut}
+        signOutLabel="Déconnexion"
+        safeBottom={!wide}
+      />
     </ScrollView>
   );
 }

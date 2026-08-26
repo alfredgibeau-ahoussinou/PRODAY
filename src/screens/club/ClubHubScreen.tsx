@@ -35,6 +35,7 @@ import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
+import { ShellAccountSection } from '../../components/shell/ShellAccountSection';
 
 /** Hub Club — identité, couleurs/logo, staff, pack, contacts, réglages. */
 export function ClubHubScreen() {
@@ -107,6 +108,19 @@ export function ClubHubScreen() {
             title="Aucun club rattaché"
             body="Rattachez un club à votre compte pour gérer crest, pack, permissions et structure."
             icon="football"
+          />
+          <ShellAccountSection
+            tone={{
+              foreground: tokens.foreground,
+              muted: tokens.muted,
+              faint: tokens.faint,
+              surface: tokens.surface,
+              border: tokens.border,
+              destructive: '#EF4444',
+              iconBg: tokens.elevated,
+            }}
+            onSignOut={shellNav?.signOut}
+            safeBottom
           />
         </ClubChapterScroll>
       </View>
@@ -285,6 +299,29 @@ export function ClubHubScreen() {
             />
           ))}
         </View>
+
+        <ShellAccountSection
+          tone={{
+            foreground: tokens.foreground,
+            muted: tokens.muted,
+            faint: tokens.faint,
+            surface: tokens.surface,
+            border: tokens.border,
+            destructive: '#EF4444',
+            iconBg: tokens.elevated,
+          }}
+          links={[
+            {
+              key: 'pack',
+              label: 'Paramètres',
+              hint: 'Pack et options club',
+              icon: 'settings',
+              onPress: () => shellNav?.requestNav('pack'),
+            },
+          ]}
+          onSignOut={shellNav?.signOut}
+          safeBottom
+        />
       </ClubChapterScroll>
     </View>
   );

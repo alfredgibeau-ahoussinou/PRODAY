@@ -3,7 +3,7 @@
  * Tokens CoachTheme (bleu PRODAY / équipe), pas navy Club.
  */
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring, AnimatedEntrance } from '../motion';
 import { Icon } from '../ui/Icon';
@@ -19,6 +19,7 @@ import {
   formatCoachCalendarDateStack,
   type CoachDayPriority,
 } from '../../utils/coachCalendarHome';
+import { coachChrome } from '../../features/coach/theme/coachDesignSystem';
 
 export type CoachCockpitShortcut = {
   id: string;
@@ -30,7 +31,9 @@ export type CoachCockpitShortcut = {
 /** Raccourcis vers hubs existants. */
 export function CoachCockpitShortcutRow({ items }: { items: CoachCockpitShortcut[] }) {
   const { tokens } = useCoachTheme();
-  const styles = useMemo(() => shortcutStyles(tokens), [tokens]);
+  const { width } = useWindowDimensions();
+  const cols = coachChrome.dashboardCols(width);
+  const styles = useMemo(() => shortcutStyles(tokens, cols), [tokens, cols]);
 
   return (
     <View style={styles.row}>
@@ -303,12 +306,15 @@ function heroStyles(tokens: CoachThemeTokens) {
   });
 }
 
-function shortcutStyles(tokens: CoachThemeTokens) {
+function shortcutStyles(tokens: CoachThemeTokens, cols: 1 | 2 | 3 | 4) {
+  const basis =
+    cols >= 4 ? '22%' : cols === 3 ? '30%' : cols === 2 ? '46%' : '100%';
   return StyleSheet.create({
     row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     chip: {
       flexGrow: 1,
-      flexBasis: '22%',
+      flexBasis: basis,
+      minWidth: cols === 1 ? undefined : 120,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',

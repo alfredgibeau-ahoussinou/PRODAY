@@ -280,7 +280,7 @@ async function write(name, buf) {
   return { path, width: m.width, height: m.height };
 }
 
-async function writeNativeIcons(appIconBuf, adaptiveFgBuf, splashLogoBuf, lockupSplashBuf) {
+async function writeNativeIcons(appIconBuf, adaptiveFgBuf, splashLogoBuf, lockupSplashBuf, notifBuf) {
   const iosIcon = resolve(repoRoot, 'ios/ProDay/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png');
   if (existsSync(dirname(iosIcon))) {
     await sharp(appIconBuf).png({ compressionLevel: 9 }).toFile(iosIcon);
@@ -327,6 +327,24 @@ async function writeNativeIcons(appIconBuf, adaptiveFgBuf, splashLogoBuf, lockup
       .toFile(resolve(dir, 'splashscreen_logo.png'));
   }
   console.log('✓ android splashscreen_logo (mark)');
+
+  // Android system / FCM notification icons (monochrome white → drawable-*).
+  const ANDROID_NOTIF = {
+    mdpi: 24,
+    hdpi: 36,
+    xhdpi: 48,
+    xxhdpi: 72,
+    xxxhdpi: 96,
+  };
+  for (const [density, size] of Object.entries(ANDROID_NOTIF)) {
+    const dir = resolve(repoRoot, `android/app/src/main/res/drawable-${density}`);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    await sharp(notifBuf)
+      .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png({ compressionLevel: 9 })
+      .toFile(resolve(dir, 'notification_icon.png'));
+  }
+  console.log('✓ android notification_icon (drawable-*)');
 }
 
 async function main() {
@@ -439,7 +457,7 @@ async function main() {
   await write('logo-dark.png', lockupWhite);
   await write('logo-light.png', lockupBlack);
 
-  await writeNativeIcons(appIcon, adaptiveFg, androidSplashMark, splash);
+  await writeNativeIcons(appIcon, adaptiveFg, androidSplashMark, splash, notif);
 
   const aspect = { symbol: symMeta.width / symMeta.height };
   writeFileSync(

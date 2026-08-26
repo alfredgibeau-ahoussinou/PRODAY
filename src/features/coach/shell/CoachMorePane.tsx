@@ -125,6 +125,11 @@ export function CoachMorePane({ items }: Props) {
               onPress={() => shellNav?.openHelp?.()}
             />
             <CoachSettingsRow
+              icon="person"
+              label="Profil"
+              onPress={() => shellNav?.requestNav('profil')}
+            />
+            <CoachSettingsRow
               icon="log-out"
               label="Se déconnecter"
               destructive
