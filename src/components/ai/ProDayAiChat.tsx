@@ -15,6 +15,7 @@ import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, shadows } from '../../theme/designTokens';
 import { askProdayAi, type ProdayAiMessage } from '../../services/prodayAi.service';
+import { prodayAiChatHonestyHint } from '../../utils/aiUxHonesty';
 
 type Msg = {
   id: string;
@@ -111,7 +112,7 @@ export const ProDayAiChat: React.FC = () => {
           </View>
 
           <ProDayText variant="caption" muted style={styles.hint}>
-            Réponses basées sur tes données réelles. Aucun chiffre inventé.
+            {prodayAiChatHonestyHint()}
           </ProDayText>
 
           <ScrollView

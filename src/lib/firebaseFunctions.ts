@@ -28,7 +28,11 @@ export function getFirebaseFunctions(): Functions | null {
   return functions;
 }
 
-/** Erreur callable : functions/not-found, unavailable, etc. */
+/**
+ * Infra / déploiement : CF absente, timeout, crash.
+ * Ne pas y mettre `failed-precondition` (souvent config serveur, ex. MISTRAL_API_KEY) —
+ * sinon l’UI masque le message actionnable derrière « indisponible ».
+ */
 export function isFunctionsUnavailable(error: unknown): boolean {
   const code = getErrorCode(error);
   return (
@@ -36,8 +40,7 @@ export function isFunctionsUnavailable(error: unknown): boolean {
     code === 'functions/unavailable' ||
     code === 'functions/deadline-exceeded' ||
     code === 'functions/internal' ||
-    code === 'functions/unknown' ||
-    code === 'functions/failed-precondition'
+    code === 'functions/unknown'
   );
 }
 
@@ -70,6 +73,12 @@ export function getCallableErrorMessage(error: unknown): string {
     return 'Trop de tentatives. Attendez 15 à 60 minutes avant un nouvel envoi.';
   }
   if (code === 'functions/failed-precondition') {
+    // IA / Mistral : garder le message serveur (clé manquante), pas le texte Auth e-mail.
+    if (
+      /mistral|ia\b|assistant|coach|copilote|clé|api.?key|non configur/i.test(rawMsg)
+    ) {
+      return rawMsg;
+    }
     return humanizeAuthErrorText(rawMsg || AUTH_EMAIL_CONFIG_MESSAGE);
   }
   if (code === 'functions/not-found') {

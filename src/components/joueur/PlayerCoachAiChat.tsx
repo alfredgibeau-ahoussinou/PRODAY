@@ -45,7 +45,7 @@ import { careerPreferencesService } from '../../services/careerPreferences.servi
 type Bubble = PlayerCoachAiMessage & { id: string };
 
 const WELCOME =
-  'Salut ! Je suis ton Coach IA ProDay. Je m’appuie sur ton profil, tes matchs et ta forme pour te guider. Pas de diagnostic médical : si une donnée manque, je te le dis.';
+  'Salut ! Je suis ton Coach IA ProDay (cloud). Je m’appuie sur ton profil, tes matchs et ta forme. Pas de diagnostic médical. Si le serveur IA n’est pas joignable, tu verras une erreur — aucun faux conseil.';
 
 export { PLAYER_COACH_STARTERS } from '../../content/playerCoachAiCopy';
 

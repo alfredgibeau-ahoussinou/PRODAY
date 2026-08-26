@@ -67,6 +67,7 @@ import {
   resolveClubCoversCoachFromMembers,
   userCanManageConvocations,
 } from '../../utils/clubFeatureAccess';
+import { coachHubHeuristicFootnote } from '../../utils/aiUxHonesty';
 
 type Props = CoachChapterCommonProps & {
   /** Afficher le panneau stats saison sous l’hub. */
@@ -322,6 +323,9 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             title={overview.headline}
             body={overview.synthesis}
           >
+            <CoachText variant="caption" muted style={{ marginBottom: spacing.sm }}>
+              {coachHubHeuristicFootnote()}
+            </CoachText>
             <View style={styles.metricsRow}>
               {overview.metrics.map((m, index, arr) => (
                 <View

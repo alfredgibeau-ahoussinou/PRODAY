@@ -24,6 +24,7 @@ import {
 import { teamEventsService } from '../../../services/teamEvents.service';
 import { isCoachTrainingEvent } from '../../../models/TeamEvent';
 import { stripDashTypography } from '../../../utils/stripDashTypography';
+import { formatClubAiCloudFailure } from '../../../utils/aiUxHonesty';
 import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 
@@ -37,7 +38,7 @@ const STARTERS = [
 ];
 
 const WELCOME =
-  'Salut — je suis le copilote Club. Pose ta question sur les équipes, adhésions, matchs ou la formule. Les actions sensibles demanderont toujours ton OK.';
+  'Salut — je suis le copilote Club (cloud). Pose ta question sur les équipes, adhésions, matchs ou la formule. Si le serveur IA est indisponible, tu verras une erreur claire — pas de fausse réponse. Les actions sensibles demanderont toujours ton OK.';
 
 /**
  * Copilote Club — dialogue Mistral (clubAssistantChat) + confirmations locales
@@ -137,19 +138,25 @@ export function ClubAiAssistant({ embedded = false }: { embedded?: boolean } = {
         },
       ]);
     } catch (e) {
-      const fallback = stripDashTypography(localPlan.reply);
-      const errHint =
-        e instanceof Error && e.message
-          ? ` (${e.message})`
-          : '';
+      // Ne jamais présenter le plan local comme une réponse cloud réussie.
+      const errMsg =
+        e instanceof Error && e.message.trim()
+          ? e.message.trim()
+          : 'Erreur réseau ou serveur.';
+      const localGuide =
+        localPlan.reply &&
+        !localPlan.reply.startsWith('Je recommande, je ne décide pas')
+          ? stripDashTypography(localPlan.reply)
+          : null;
       setMessages((prev) => [
         ...prev,
         {
           id: `a-${Date.now()}`,
           role: 'assistant',
-          text:
-            fallback ||
-            `Copilote indisponible pour le moment${errHint}. Réessaie dans un instant, ou utilise les actions proposées ci-dessous.`,
+          text: formatClubAiCloudFailure({
+            errorMessage: errMsg,
+            localGuide,
+          }),
         },
       ]);
     } finally {

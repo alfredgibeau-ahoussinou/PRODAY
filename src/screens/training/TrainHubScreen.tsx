@@ -248,11 +248,12 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
       });
       setAiResult(result.phases);
     } catch (e) {
-      const msg = isFunctionsUnavailable(e)
-        ? 'IA indisponible. Réessaie plus tard.'
-        : e instanceof Error
+      const msg =
+        e instanceof Error && e.message.trim()
           ? e.message
-          : 'Génération impossible.';
+          : isFunctionsUnavailable(e)
+            ? 'IA indisponible. Réessaie plus tard.'
+            : 'Génération impossible.';
       Alert.alert('Erreur', msg);
     } finally {
       setAiGenerating(false);

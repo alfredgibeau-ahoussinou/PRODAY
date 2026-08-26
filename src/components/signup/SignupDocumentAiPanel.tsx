@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { Icon } from '../ui/Icon';
 import type { AiVerificationResult } from '../../utils/aiVerification';
 import { isAiVerificationPassing } from '../../utils/aiVerification';
+import { softAiProviderLabel } from '../../utils/aiUxHonesty';
 import { spacing, radius } from '../../theme/designTokens';
 import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
 import type { AppColors } from '../../theme/universeTheme';
@@ -27,7 +28,7 @@ export const SignupDocumentAiPanel: React.FC<SignupDocumentAiPanelProps> = ({
           <ActivityIndicator color={c.brand} />
         </View>
         <View style={styles.copy}>
-          <Text style={styles.title}>Analyse IA Mistral en cours…</Text>
+          <Text style={styles.title}>{softAiProviderLabel('Analyse IA Mistral en cours…')}</Text>
           <Text style={styles.body}>
             Vérification instantanée par caméra. Le fichier n'est pas enregistré sur nos serveurs.
           </Text>

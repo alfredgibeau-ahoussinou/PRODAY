@@ -16,6 +16,7 @@ import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
 import { canAdminUi } from '../utils/adminRbac';
+import { adminAiLocalFootnote } from '../../../utils/aiUxHonesty';
 
 type Props = { onNavigate: (section: AdminNavSectionId) => void };
 
@@ -219,7 +220,7 @@ export function AdminAiPane({ onNavigate }: Props) {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
       <AdminPaneHeader
         title="ProDay Admin AI"
-        subtitle="Insights live · actions préparées + confirmation"
+        subtitle={adminAiLocalFootnote()}
       />
 
       <View style={styles.agents}>
