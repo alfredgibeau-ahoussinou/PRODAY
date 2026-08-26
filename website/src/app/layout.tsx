@@ -10,12 +10,23 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.fr",
   ),
   title: {
-    default: "ProDay · L'OS du foot amateur & semi pro",
+    default: "ProDay · L'infrastructure de votre football",
     template: "%s · ProDay",
   },
   description:
-    "Une app pour connecter joueurs, clubs, coachs et communauté. Matchs, mercato, covoit. Un seul système. Bêta ouverte.",
-  keywords: ["foot", "football", "app", "joueur", "coach", "club", "matchs", "mercato"],
+    "Pas un outil de plus. Joueurs, clubs, coachs, parents, supporters et sponsors autour de la même donnée football. Bêta ouverte.",
+  keywords: [
+    "foot",
+    "football",
+    "app",
+    "joueur",
+    "coach",
+    "club",
+    "sponsor",
+    "supporter",
+    "matchs",
+    "convocations",
+  ],
   authors: [{ name: "ProDay" }],
   creator: "ProDay",
   publisher: "ProDay",
@@ -39,9 +50,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "fr_FR",
     url: "https://proday75.fr",
-    title: "ProDay · L'OS du foot",
+    title: "ProDay · L'infrastructure de votre football",
     description:
-      "Joueurs, clubs, coachs, santé, sponsors. Un système connecté pour le terrain.",
+      "Objets métier du football reliés : joueurs, clubs, matchs, convocations, stats, sponsors. Pas Notion. Pas Discord.",
     siteName: "ProDay",
     images: [
       {
@@ -54,9 +65,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ProDay · L'OS du foot",
+    title: "ProDay · L'infrastructure de votre football",
     description:
-      "Joueurs, clubs, coachs, santé, sponsors. Un système connecté pour le terrain.",
+      "Objets métier du football reliés : joueurs, clubs, matchs, convocations, stats, sponsors. Pas Notion. Pas Discord.",
     images: ["/branding/logo-proday-official.png"],
   },
   robots: {

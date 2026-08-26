@@ -5,7 +5,7 @@ import { TerminalPage } from "@/components/terminal";
 export const metadata: Metadata = {
   title: "Fonctionnalités",
   description:
-    "ProDay en cinq pôles : Joueur, Club, Coach, Supporter, Sponsor. Tactique IA, Mercato, matchs, covoiturage, fil et reels.",
+    "ProDay : portes d'entrée Joueur, Club, Coach, Parent, Supporter, Sponsor vers le même écosystème. Objets métier du football — pas Notion, pas Discord.",
 };
 
 export default function FeaturesPage() {

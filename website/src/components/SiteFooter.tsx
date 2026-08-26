@@ -40,13 +40,14 @@ export function SiteFooter() {
               ProDay
             </p>
             <p className="mt-4 font-display text-[clamp(1.75rem,4vw,2.75rem)] font-medium leading-[1.08] tracking-[-0.035em] text-white">
-              L&apos;OS du foot.
+              Pas un outil de plus.
               <br />
-              Amateur &amp; semi pro.
+              L&apos;infrastructure.
             </p>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-white/45">
-              Un système pour connecter joueurs, clubs, staff, événements et
-              sponsors. Sans engagement. Sponsoring possible pour les marques.
+              Joueurs, clubs, staffs, parents, supporters et sponsors autour de
+              la même donnée football. Ce que la centralisation supprime :
+              WhatsApp, tableurs et docs éparpillés.
             </p>
           </div>
           <Link

@@ -11,8 +11,8 @@ export function UniversePromoGrid() {
   return (
     <Section
       kicker="PÔLES"
-      title="Cinq portes, une app"
-      description="Joueur, Club, Coach, Supporter ou Sponsor. Tu choisis ton entrée : le reste du réseau reste accessible."
+      title="Portes d'entrée, une app"
+      description="Joueur, Club, Coach, Parent, Supporter ou Sponsor. Une entrée par rôle — le même écosystème football, pas des produits séparés."
       className="bg-[#030303]"
     >
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

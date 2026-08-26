@@ -65,19 +65,19 @@ const POLE_CAPABILITIES: Record<
   supporter: {
     title: "Ce que fait le supporter",
     items: [
-      "Tribune 100 % gratuite",
-      "Scores live & clubs suivis",
-      "Débats et moments",
-      "Aucun paywall",
+      "Suivre clubs et joueurs (favoris)",
+      "Matchs ProDay & externes, scores, compositions",
+      "Statistiques, calendriers, actualités",
+      "Expérience match — tribune gratuite",
     ],
   },
   sponsor: {
     title: "Ce que fait le sponsor",
     items: [
-      "Campagnes locales & nationales",
-      "Contact clubs et joueurs actifs",
-      "KPIs lisibles",
-      "Vitrine partenaire vérifiée",
+      "Trouver des opportunités de sponsoring",
+      "Identifier clubs, équipes et profils",
+      "Gérer partenariats et activations",
+      "Mesurer visibilité et impact",
     ],
   },
 };
@@ -165,14 +165,14 @@ export function FeaturesImmersive() {
     >
       <ImmersivePoleHero
         brand="Pro Day"
-        headline="Ce que fait ProDay."
-        support="Cinq portes. Un seul système. Joueur, Club, Coach, Supporter, Sponsor : les modules suivent le métier."
+        headline="L'infrastructure de votre football."
+        support="Des portes d'entrée — Joueur, Club, Coach, Parent, Supporter, Sponsor — vers le même écosystème. Pas huit produits. Pas un outil de plus."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.demo}
         primaryLabel="Ouvrir la démo"
         secondaryHref="#poles"
-        secondaryLabel="Voir les pôles"
+        secondaryLabel="Voir les portes"
       />
 
       {/* Interactive poles */}
@@ -182,13 +182,14 @@ export function FeaturesImmersive() {
       >
         <div className="mx-auto max-w-6xl">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
-            Cinq portes
+            Portes d&apos;entrée
           </p>
           <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
-            Choisis ton entrée.
+            Choisis ton entrée. Même graphe.
           </h2>
           <p className="mt-3 max-w-lg text-sm text-white/55">
-            Santé, agent et recruteur ne sont plus des portes produit.
+            Ce ne sont pas des produits indépendants. Notion organise, Discord
+            discute : ProDay orchestre les objets métier du football.
           </p>
 
           <div
@@ -362,20 +363,20 @@ export function FeaturesImmersive() {
             Système
           </p>
           <h2 className="mt-3 font-display text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[-0.03em] text-white">
-            Une plateforme. Plusieurs métiers.
+            Pas un outil de plus. L&apos;infrastructure.
           </h2>
           <ul className="mt-12 divide-y divide-white/10 border-y border-white/10">
             {[
               {
-                title: "Pôles clairs",
-                body: "Cinq portes marketing. Agent, recruteur et Santé ne sont plus proposés.",
+                title: "Portes d'entrée",
+                body: "Chaque univers ouvre le même écosystème football — pas des produits séparés. Agent, recruteur et Santé restent des rôles intégrés.",
               },
               {
-                title: "Club au centre",
-                body: "Effectif, compétitions, covoiturage et permissions. Le club orchestre ; coachs et joueurs se branchent.",
+                title: "Ce que ça supprime",
+                body: "WhatsApp pour une info, tableur pour une autre, docs / stats / calendrier / com ailleurs. Une seule donnée métier.",
               },
               {
-                title: "Prix par pôle",
+                title: "Prix par porte",
                 body: "Pass Joueur optionnel 3,99 €. Club sur devis selon adhérents. Caméra en option. Coach Premium. Supporter gratuit.",
               },
             ].map((item) => (

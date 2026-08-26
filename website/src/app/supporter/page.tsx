@@ -13,9 +13,9 @@ import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Pôle Supporter · Tribune gratuite",
+  title: "Pôle Supporter · Suivre clubs & matchs",
   description:
-    "Scores live, suivis illimités, débats et moments. 100 % gratuit. Pas de paywall.",
+    "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, stats, calendriers, favoris et actualités. Tribune gratuite — même écosystème ProDay.",
 };
 
 export default function SupporterPage() {
@@ -26,8 +26,8 @@ export default function SupporterPage() {
     <TerminalPage accentStyle={accentStyle}>
       <ImmersivePoleHero
         brand="Pro Day Supporter"
-        headline="La tribune. Point."
-        support="Scores, suivis, débats. Zéro abonnement. Tu viens pour le match : pas pour un outil pro."
+        headline="Suivre. Vivre. Le match."
+        support="Clubs et joueurs, scores, compositions, statistiques, calendriers, favoris et actualités. Une porte d'entrée vers l'écosystème ProDay — pas un produit à part. Gratuit."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={`${ROUTES.betaWaitlist}?role=supporter`}

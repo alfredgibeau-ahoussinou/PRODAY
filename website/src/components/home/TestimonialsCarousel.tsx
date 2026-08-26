@@ -5,9 +5,12 @@ import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { useState } from "react";
 import { TESTIMONIALS } from "@/lib/content";
 
+/** Affiché seulement si des témoignages réels sont renseignés (jamais de quotes inventées). */
 export function TestimonialsCarousel() {
   const [i, setI] = useState(0);
-  const t = TESTIMONIALS[i];
+  if (TESTIMONIALS.length === 0) return null;
+
+  const t = TESTIMONIALS[i]!;
 
   return (
     <section className="border-y border-white/8 bg-[#030303] py-24">

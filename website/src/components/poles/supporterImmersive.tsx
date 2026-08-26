@@ -104,20 +104,20 @@ const TRIBUNE_ZONES = [
   {
     id: "suivis",
     label: "Suivis",
-    title: "Sans plafond",
-    body: "Clubs, joueurs, tournois. Autant que tu veux. Alertes si tu les actives.",
+    title: "Clubs & joueurs",
+    body: "Favoris sans plafond. Alertes match, compositions et actualités des profils que tu suis.",
   },
   {
-    id: "debats",
-    label: "Débats",
-    title: "La voix des tribunes",
-    body: "Réactions, question hebdo, fil après match. Gratuit. Toujours.",
+    id: "matchs",
+    label: "Matchs",
+    title: "ProDay & externes",
+    body: "Scores, compositions, statistiques et calendriers — matchs de ton réseau et au-delà.",
   },
   {
-    id: "moments",
-    label: "Moments",
-    title: "Réels & vibes",
-    body: "Vidéos courtes des clubs que tu suis. Et le shop si tu veux le maillot.",
+    id: "experience",
+    label: "Expérience",
+    title: "Vivre le jour J",
+    body: "Actualités, moments et ambiance tribune. Gratuit. Dans le même écosystème que clubs et joueurs.",
   },
 ];
 
@@ -133,9 +133,9 @@ export function SupporterTribuneZones() {
           Dans la tribune
         </p>
         <h2 className="mt-3 max-w-lg font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
-          Pas de Mercato.
+          Une porte. Même écosystème.
           <br />
-          <span className="text-white/40">Juste le match et les gens.</span>
+          <span className="text-white/40">Pas un produit à part.</span>
         </h2>
 
         <div className="mt-12 flex flex-wrap gap-2">

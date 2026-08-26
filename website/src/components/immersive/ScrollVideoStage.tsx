@@ -99,7 +99,7 @@ export function ScrollVideoStage() {
         >
           <div className="mx-auto w-full max-w-xl">
             <h1 className="whitespace-pre-line font-display text-[clamp(1.55rem,6.2vw,3.1rem)] font-medium leading-[1.12] tracking-[-0.04em] text-white">
-              {"Le football amateur,\nenfin réuni au même endroit."}
+              {"Pas un outil de plus.\nL'infrastructure de votre football."}
             </h1>
             <p className="mt-3 text-[13px] leading-relaxed text-white/65 sm:mt-4 sm:text-[15px]">
               {BRAND.heroSupport}

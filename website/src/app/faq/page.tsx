@@ -12,7 +12,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Questions fréquentes ProDay : cinq pôles (Joueur, Club, Coach, Supporter, Sponsor), tarifs et bêta.",
+    "FAQ ProDay : portes d'entrée (Joueur, Club, Coach, Parent, Supporter, Sponsor), Notion vs Discord, tarifs et bêta.",
 };
 
 export default function FaqPage() {
@@ -23,7 +23,7 @@ export default function FaqPage() {
       <ImmersivePoleHero
         brand="Pro Day FAQ"
         headline="Avant d’entrer."
-        support="Tarifs, pôles, Tactique IA, rôles intégrés. Les réponses les plus demandées : filtrées par thème."
+        support="Tarifs, portes d'entrée, différenciation Notion/Discord, Tactique IA. Les réponses les plus demandées : filtrées par thème."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref="#reponses"
