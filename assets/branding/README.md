@@ -42,7 +42,7 @@ Source de vérité : `proday-lockup-official-source.png` (PNG fourni « logo de 
 | `proday-adaptive-foreground.png` | Adaptive Android |
 | `proday-splash.png` | Splash |
 | `proday-notification-icon.png` | Notification Android |
-| `logo-proday-official.png` | Compat / emails |
+| `logo-proday-official.png` | Compat app / emails — **peut être le badge carré store** ; le site génère un lockup **horizontal** dans `website/public/branding/` via `npm run branding:official` |
 | `logo-mark-transparent.png` | Filigrane = symbole master |
 
 ## Accents pôle (planche)

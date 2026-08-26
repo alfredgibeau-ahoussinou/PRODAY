@@ -59,7 +59,7 @@ export function DemoHero({ pole }: DemoHeroProps) {
           transition={{ duration: 0.55, delay: 0.14, ease }}
           className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg"
         >
-          Cinq pôles. Navigation réelle. Zéro compte. Choisis Joueur, Club, Coach, Supporter ou
+          Portes d’entrée. Navigation réelle. Zéro compte. Choisis Joueur, Club, Coach, Supporter ou
           Sponsor : puis entre dans le téléphone.
         </motion.p>
         <motion.div

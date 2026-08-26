@@ -1,100 +1,62 @@
 # Design System ProDay
 
-> Basé sur les maquettes officielles (`assets/branding/`, `assets/mockups/`)
+> Source de vérité visuelle : `assets/branding/` (app) · `website/public/branding/` (site).  
+> Génération site : `cd website && npm run branding:official`.
 
-## Logo
-
-Identité officielle : **P + ballon + trait de frappe**, wordmark PRODAY, or `#C5A059`.  
-Source de vérité : `assets/branding/proday-lockup-official-source.png` — détail : [`assets/branding/README.md`](../../assets/branding/README.md).
+## Logo & identité
 
 | Fichier | Usage |
 |---------|--------|
-| `assets/branding/proday-app-icon.png` | Icône store / home / favicon Expo |
-| `assets/branding/proday-splash.png` | Splash Expo / iOS |
-| `assets/branding/logo-proday-official.png` | Lockup carré (docs, emails, présentation) |
-| `assets/branding/logo-light.png` / `logo-dark.png` | PDF, fond clair / sombre |
-| `src/components/branding/` | `ProDayLogo`, `ProDayOfficialLockup`, `ProDaySymbol` |
+| `assets/branding/proday-lockup-official-source.png` | Lockup master app (carré store / splash) |
+| `assets/branding/proday-symbol-white.png` / `…-black.png` | Symbole seul (UI) |
+| `assets/branding/proday-app-icon.png` | Icône App Store / home |
+| `website/public/branding/logo-proday-official.png` | Lockup **horizontal** OG / emails / README (637×172) |
+| `website/public/branding/logo-proday-mark-*.png` | Symboles teintés par porte |
+| `website/public/favicon.ico` + `icons/icon-*.png` | Favicon / PWA |
 
 **Éléments de marque :**
-- Symbole **P** blanc + ballon + traits de vitesse (plus de coureur bleu legacy)
-- Wordmark **PRODAY** tracking large
-- Tagline : **CONNECTER. PROGRESSER. RÉVÉLER.**
 
-## Palette master (app)
+- Symbole **P** incliné + ballon + trait de frappe
+- Wordmark **PRODAY** (tracking large)
+- Tagline : **CONNECTER. PROGRESSER. RÉVÉLER.**
+- Positionnement site : *L'infrastructure de votre football*
+
+**Ne pas** confondre le badge carré store (`logo-proday-official.png` dans `assets/` peut être le lockup carré) avec le lockup **horizontal** servi sur proday75.fr.
+
+## Palette master
 
 | Token | Hex | Usage |
 |-------|-----|--------|
-| Or / CTA master | `#C5A059` | CTA, accents master |
-| Noir | `#000000` | Fonds splash / adaptive |
-| Blanc | `#FFFFFF` | Symbole, wordmark |
-| Surface | `#141414` | Surfaces dark |
+| Noir | `#000000` | Fonds, splash |
+| Blanc | `#FFFFFF` | Texte / symbole sur dark |
+| Or / champagne | `#C5A059` | CTA master |
+| Joueur | `#FFFFFF` | Accent porte |
+| Coach / Président | `#C5A059` / `#E8B923` | Accent |
+| Club | `#00ADEF` / `#2563EB` | Accent |
+| Parent | `#8CC63F` / `#84CC16` | Accent |
+| Supporter | `#06B6D4` / `#8B5CF6` | Accent |
+| Sponsor | `#EF4444` | Accent |
+| Événements | `#F7941D` | Rôle intégré |
+| Admin | `#A3A3A3` | Console |
 
-Code : `src/theme/prodayBrand.ts` (+ `designTokens.ts` pour l’UI).
+Tokens app : `src/theme/prodayBrand.ts`. Couleurs site : `website/src/lib/brandColors.ts`.
 
-## Navigation (maquettes)
+## Portes d’entrée (vitrine)
 
-Barre basse **5 onglets** :
+Joueur · Club · Coach · Parent · Supporter · Sponsor — **six portes**, un écosystème.  
+Agent, recruteur, organisateur, santé = rôles intégrés (pas des produits séparés).
 
-1. **Accueil**
-2. **Recrutement** (joueurs, clubs, annonces)
-3. **Matchs amicaux**
-4. **Messages**
-5. **Profil**
+## Typographie (site)
 
-> Arena & Sponsors (roadmap Yoan) : accessibles depuis l’accueil ou une V2 — voir `src/navigation/MainTabs.tsx`.
-
-## Écrans de référence
-
-| Mockup | Fichier |
-|--------|---------|
-| Recrutement + Matchs amicaux | `assets/mockups/mockup-recrutement-matchs.png` |
-| Coachs, agents, vérification diplômes, contrôle parental | `assets/mockups/mockup-coach-verification.png` |
-
-### Module Recrutement
-- Accueil : recherche, cartes Joueurs / Clubs, annonces populaires, FAB « + Créer une annonce »
-- Liste joueurs : chips Poste / Niveau / Localisation → `PlayersListScreen.tsx`
-- Profil joueur : stats, galerie, **Contacter** / favoris → `PlayerProfileScreen.tsx`
-- Liste coachs/agents : toggle Coachs · Agents → `CoachesListScreen.tsx`
-- Profil coach/agent : onglets Profil / Expérience / Diplômes / Avis, **Contacter** / **Engager** → `CoachProfileScreen.tsx`
-
-### Module Matchs amicaux
-- Accueil : Proposer / Rechercher un match, matchs à venir (badges statut)
-- Formulaire proposition : club, date, lieu, niveau (Loisir / Compétition / Mixte)
-
-### Vérification diplômes
-- Timeline : Document reçu → Authenticité → Établissement → Résultat
-- Badge **Vérifié** vert sur profils coach/agent
-
-### Contrôle parental (V2)
-- Contacts approuvés / en attente, limite de temps, rapport d’activité
-
-## Composants UI
-
-| Composant | Fichier |
-|-----------|---------|
-| Logo | `src/components/Logo.tsx` |
-| Carte profil | `src/components/ProfileCard.tsx` |
-| Badge vérification | `src/components/VerificationBadge.tsx` |
-| Carte tournoi / match | `TournamentCard`, `MatchCard` |
-
-## Typographie
-
-- Police : **Inter** (ou SF Pro sur iOS)
-- Titres écran : 22–28 pt, bold
-- Corps : 15 pt
-- Chips filtres : 11–12 pt
-
-## Rayons & ombres
-
-- Cartes : `borderRadius: 12–16`, ombre légère (`designTokens.shadows.card`)
-- Bouton principal : plein bleu, radius 12, ombre FAB pour le « + »
+Polices runtime via `<link>` + variables CSS dans `website/src/app/layout.tsx` / `globals.css` — **pas** `next/font` Google Fonts (Turbopack).
 
 ## Documents HTML / PDF
 
-| Ressource | Chemin | Export PDF |
-|-----------|--------|------------|
-| Maquettes app | `docs/design/mockups/index.html` | Bouton « Exporter maquettes PDF » |
-| Brief produit | `docs/design/ProDay_Brief.html` | Bouton « Exporter en PDF » |
-| CV joueur | `src/utils/pdfGenerator.ts` + `npm run docs:cv` | Impression navigateur (A4) |
+| Ressource | Chemin |
+|-----------|--------|
+| Brief produit | `docs/design/ProDay_Brief.html` |
+| CV joueur | `npm run docs:cv` |
+| Logo emails | `https://proday75.fr/branding/logo-proday-official.png` |
 
-Le logo officiel (`logo-light.png`) est utilisé dans tous les exports HTML.
+Composants site : `ProdayMark`, `ProdayNavLogo`, `ProdayLockup` (`website/src/components/branding/`).  
+Composants app : `ProDaySymbol`, `ProDayWordmark`, `ProDayLogo`, `ProDayOfficialLockup`.

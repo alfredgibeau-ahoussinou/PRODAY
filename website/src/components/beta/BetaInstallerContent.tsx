@@ -232,7 +232,7 @@ export function BetaInstallerContent() {
       pathname={ROUTES.betaInstaller}
       kicker="Installation"
       title="Installer ProDay sur votre téléphone"
-      description="Choisissez Android (APK) ou iOS (TestFlight), suivez les étapes, puis explorez les cinq pôles · dont Supporter."
+      description="Choisissez Android (APK) ou iOS (TestFlight), suivez les étapes, puis explorez les six portes d’entrée · dont Parent et Supporter."
     >
       <BetaIosLaunchBanner />
 
@@ -431,7 +431,7 @@ export function BetaInstallerContent() {
           <div>
             <SectionKicker>Après l&apos;installation</SectionKicker>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65">
-              ProDay regroupe cinq pôles dans la même app. Connectez-vous avec votre email bêta, puis
+              ProDay regroupe six portes d’entrée dans la même app. Connectez-vous avec votre email bêta, puis
               explorez celui qui correspond à votre profil · le pôle Supporter (matchs, tribune, live)
               comme les autres.
             </p>

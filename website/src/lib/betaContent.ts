@@ -23,7 +23,7 @@ export const BETA_APK_AVAILABLE = Boolean(BETA_APK_URL);
 export const BETA_TESTFLIGHT_URL =
   process.env.NEXT_PUBLIC_BETA_TESTFLIGHT_URL?.trim() ?? "";
 
-export const BETA_APP_VERSION = process.env.NEXT_PUBLIC_BETA_APP_VERSION?.trim() || "1.0.0";
+export const BETA_APP_VERSION = process.env.NEXT_PUBLIC_BETA_APP_VERSION?.trim() || "1.0.8";
 
 export const BETA_FEATURES = [
   "Mercato : annonces, candidatures et suivi des réponses",

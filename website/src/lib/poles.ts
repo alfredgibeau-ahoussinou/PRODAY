@@ -52,7 +52,7 @@ export type PoleDefinition = {
   planIds: WebSubscriptionPlanBase["id"][];
 };
 
-/** Vitrine GTM : 5 pôles principaux. */
+/** Vitrine GTM : 5 portes carousel (+ Sponsor = 6 portes d’entrée). */
 export const CAROUSEL_POLES: PoleDefinition[] = [
   {
     id: "joueur",

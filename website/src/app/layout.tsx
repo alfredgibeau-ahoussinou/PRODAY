@@ -3,7 +3,7 @@ import { SiteShell } from "@/components/layout/SiteShell";
 import "./globals.css";
 
 /** Bump when favicon/PWA icons change (cache navigateurs agressif). */
-const ICON_VERSION = "20260825-lockup";
+const ICON_VERSION = "20260826-official";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -57,8 +57,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/branding/logo-proday-official.png",
-        width: 636,
-        height: 375,
+        width: 637,
+        height: 172,
         alt: "ProDay",
       },
     ],

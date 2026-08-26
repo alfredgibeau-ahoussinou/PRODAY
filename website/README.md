@@ -1,6 +1,6 @@
 # Site vitrine ProDay (Next.js)
 
-Site multi-pages interactif — **21 routes** publiques, démos par univers (**Man**, **Woman**, **Pro**) et formulaire bêta avec email de bienvenue.
+Site multi-pages interactif — infrastructure football, **21+ routes** publiques, portes d’entrée (Joueur, Club, Coach, Parent, Supporter, Sponsor) et formulaire bêta avec email de bienvenue.
 
 Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE.md](../docs/STRUCTURE.md)
 
@@ -29,14 +29,14 @@ Code source : [src/README.md](src/README.md) · Carte monorepo : [docs/STRUCTURE
 | `/faq` | Questions fréquentes |
 | `/beta/inscription` | Liste d'attente publique + email de bienvenue (`?role=sponsor` pour partenaires) |
 | `/beta` | Hub bêta privé (lien email avec `?token=`) |
-| `/beta/programme` | Programme bêta — cinq pôles (protégé) |
+| `/beta/programme` | Programme bêta — six portes d’entrée (protégé) |
 | `/beta/installer` | Guides APK / TestFlight (protégé) |
 | `/beta/aide` | FAQ et support bêta (protégé) |
 | `/a-propos` | Vision produit |
 
 ### Démo interactive (`/demo`)
 
-Hero plein écran + téléphone interactif centré sur les **cinq pôles** (Joueur, Club, Coach, Supporter, Sponsor).
+Hero plein écran + téléphone interactif (Joueur, Club, Coach, Supporter, Sponsor…).
 
 - URL `?p=amateur|supporter|sante|pro_joueur|pro_club|pro_staff` (legacy `?u=` redirigé)
 - Onglets alignés sur les shells app ; contenu illustratif

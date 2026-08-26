@@ -25,7 +25,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       pathname={ROUTES.betaProgramme}
       kicker="Programme bêta"
       title="Programme et périmètre de test"
-      description="Comprenez le déroulement de la bêta, le calendrier et les cinq pôles que vous pouvez explorer."
+      description="Comprenez le déroulement de la bêta, le calendrier et les six portes d’entrée que vous pouvez explorer."
     >
       <BetaIosLaunchBanner />
       {BETA_APK_AVAILABLE ? (
@@ -50,7 +50,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           ProDay réunit Mercato, matchs, compétitions, Visibilité et CV joueur dans une seule app. Pour le
           foot amateur et semi pro. En tant que beta testeur, vous accédez aux builds iOS (TestFlight)
-          et Android (APK) avant le public. Testez les cinq pôles et aidez-nous à prioriser avant
+          et Android (APK) avant le public. Testez les six portes d’entrée et aidez-nous à prioriser avant
           l&apos;ouverture.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -58,7 +58,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
             { icon: Sparkles, label: "Avant le public", detail: "App mobile avant le lancement public" },
             {
               icon: Smartphone,
-              label: "Cinq pôles",
+              label: "Six portes",
               detail: "Joueur, Club, Coach, Supporter, Sponsor",
             },
             { icon: Sparkles, label: "Retours utiles", detail: "Vos messages orientent la roadmap" },
@@ -107,7 +107,7 @@ export function BetaProgrammeContent({ session }: BetaProgrammeContentProps) {
       </div>
 
       <div className="mt-8 border border-white/10 bg-transparent p-8">
-        <SectionKicker>Les cinq pôles</SectionKicker>
+        <SectionKicker>Les six portes</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
           Chaque pôle a ses modules et son public. Votre profil ({session.roleLabel}) oriente nos
           priorités. Les rôles agent, recruteur et santé ne sont plus proposés.

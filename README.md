@@ -4,16 +4,17 @@
 
 <br /><br />
 
-**CONNECTER • PROGRESSER • RÉUSSIR**
+**CONNECTER. PROGRESSER. RÉVÉLER.**
 
 <br />
 
-*Profil, Mercato, journal d'activités et saison — une app mobile honnête sur ce qui est livré aujourd'hui.*
+*Pas un outil de plus — l'infrastructure de votre football. App mobile **1.0.8** + site [proday75.fr](https://proday75.fr).*
 
 <br />
 
 [![Site](https://img.shields.io/badge/Site-proday75.fr-22d3ee?style=flat-square)](https://proday75.fr)
 [![Bêta](https://img.shields.io/badge/Bêta-Inscription-0891b2?style=flat-square)](https://proday75.fr/beta/inscription)
+[![App](https://img.shields.io/badge/App-1.0.8-0ea5e9?style=flat-square)](https://proday75.fr/beta/inscription)
 
 <br />
 
@@ -30,7 +31,7 @@
 
 1. [ProDay en bref](#proday-en-bref)
 2. [Vision & mission](#vision--mission)
-3. [Les sept univers ProDay](#les-sept-univers-proday)
+3. [Six portes d'entrée](#six-portes-dentrée)
 4. [Parcours utilisateur](#parcours-utilisateur)
 5. [Fonctionnalités clés](#fonctionnalités-clés)
 6. [Sécurité & validation](#sécurité--validation)
@@ -49,92 +50,86 @@
 
 ## ProDay en bref
 
-ProDay relie **carrière, club et communauté** dans le foot amateur et semi-pro. Une seule application mobile couvre convocations, recrutement (Mercato), matchs, tournois Arena, visibilité joueur (Pulse), communauté (Fil & Reels) et espace partenaires — avec un site vitrine sur [proday75.fr](https://proday75.fr) qui décrit le produit avec la même honnêteté.
+**Pas un outil de plus.** ProDay est l’**infrastructure** du football amateur et semi-pro : objets métier (joueurs, clubs, matchs, convocations, stats, parents, sponsors) reliés dans **une** app mobile — pas Notion, pas Discord, pas six WhatsApp.
 
-> Les chiffres affichés sur le site (9+ onglets, 12 modules…) décrivent **l'architecture produit**, pas une audience en temps réel. L'analyse IA porte sur vos **highlights de séance** (vidéo ou poster + notes), pas sur chaque geste en match.
+Site vitrine : [proday75.fr](https://proday75.fr). Version app courante : **1.0.8**.
 
-**Pour qui ?** Joueurs et joueuses, coachs amateur, supporters, praticiens santé, joueurs pro, clubs, staff (agent · recruteur · coach · organisateur) et sponsors — chacun avec un **pôle** et une coque adaptés.
+> Les chiffres affichés sur le site (onglets, modules, tarifs…) décrivent **l’architecture produit**, pas une audience en temps réel. Pas de métriques inventées. L’analyse IA porte sur les **highlights de séance** (vidéo ou poster + notes), pas sur chaque geste en match.
 
-Pages détaillées : [Fonctionnalités](https://proday75.fr/fonctionnalites) · [Vision](https://proday75.fr/vision) · [Roadmap](https://proday75.fr/roadmap) · [Partenaires](https://proday75.fr/partenaires)
+**Pour qui ?** Six portes d’entrée vers le même écosystème — Joueur, Club, Coach, Parent, Supporter, Sponsor. Agent, recruteur, organisateur et santé restent des **rôles intégrés**, pas des produits séparés.
+
+Pages détaillées : [Fonctionnalités](https://proday75.fr/fonctionnalites) · [Écosystème](https://proday75.fr/ecosysteme) · [Roadmap](https://proday75.fr/roadmap) · [Partenaires](https://proday75.fr/partenaires)
 
 ---
 
 ## Vision & mission
 
-**Mission** — *Connecter • Progresser • Réussir* : donner à chaque acteur du foot amateur les outils du haut niveau, **sans surestimer l'IA**.
+**Mission** — *Connecter. Progresser. Révéler.* : orchestrer le football autour de la même donnée, **sans surestimer l’IA**.
 
-ProDay naît d'un constat simple : une équipe U17 jongle entre cinq groupes WhatsApp, un tableur Excel pour les convocations et des annonces Mercato éparpillées sur les réseaux. ProDay **unifie** ces flux dans une app mobile React Native / Expo, avec des données **réelles** depuis Firestore (pas de mock en production).
+Constat : une équipe U17 jongle entre WhatsApp, tableurs et annonces éparpillées. ProDay **centralise** convocations, effectifs, matchs et stats dans une app React Native / Expo, données **réelles** Firestore (pas de mock en production).
 
 | Pilier | Ce que ça signifie concrètement |
 |--------|----------------------------------|
-| **Plateforme unifiée** | Carrière, club, convocations, matchs et tournois — tout au même endroit |
-| **Confiance ProDay** | Diplômes staff validés avant messagerie complète ; contrôle parental pour les mineurs |
-| **CV vivant** | Chaque match nourrit le profil ; export PDF professionnel en un geste |
-| **IA honnête** | Analyse Mistral sur les séances enregistrées dans le journal — pas une promesse frame-by-frame sur tout le terrain |
-| **Demain** | Repérage talent mondial, paiements tournois, push géo agents — voir [roadmap](#état-actuel--roadmap) |
+| **Infrastructure foot** | Messages, convocations, perfs et calendrier sur la même vérité |
+| **Portes d’entrée** | Six coques (Joueur → Sponsor) — un seul graphe de données |
+| **Confiance ProDay** | Diplômes staff validés ; contrôle parental pour les mineurs |
+| **CV / Pulse** | Matchs et activité nourrissent le profil ; export PDF |
+| **IA honnête** | Analyse Mistral sur les highlights du journal — pas du frame-by-frame magique |
 
-**Aujourd'hui vs demain** — Le produit distingue clairement ce qui est livré de ce qui est ambition :
+**Aujourd’hui vs demain**
 
-- **Aujourd'hui** : profil & Pulse, score carrière, journal d'activités, analyse IA highlights, Mercato, matchs & Live Stats, Arena, Fil & Reels, sponsors, pôle santé, covoiturage, contrôle parental, admin.
-- **Demain** (non promis) : analyse vidéo frame-by-frame avancée, détection automatique des talents, notifications géo agents à grande échelle, paiements tournois intégrés, couverture IAP complète.
+- **Aujourd’hui** : profil & Pulse, journal, Mercato, matchs & Live Stats, Arena, Fil & Reels, sponsors, covoiturage, espace parent, admin & vérif. staff.
+- **Demain** (non promis) : analyse vidéo frame-by-frame, détection talent mondiale, notifications géo agents à grande échelle, paiements tournois intégrés, IAP store complet.
 
 ---
 
-## Les sept univers ProDay
+## Six portes d'entrée
 
-Comme sur [proday75.fr](https://proday75.fr), le produit s’organise autour de **pôles métier**. Le carousel marketing en affiche six ; le **pôle Sponsor** est aussi une coque app dédiée — [proday75.fr/sponsor](https://proday75.fr/sponsor). Voir [docs/ECOSYSTEM_POLES_EVOLUTION.md](docs/ECOSYSTEM_POLES_EVOLUTION.md).
+Comme sur [proday75.fr](https://proday75.fr) : **des portes d’entrée, pas des produits séparés**. Carousel + Sponsor = six espaces. Voir [docs/ECOSYSTEM_POLES_EVOLUTION.md](docs/ECOSYSTEM_POLES_EVOLUTION.md).
 
-### Tableau des pôles
+### Tableau des portes
 
-| Pôle | Public | Tagline | En détail |
+| Porte | Public | Tagline | En détail |
 |------|--------|---------|-----------|
-| **Joueur** | Joueurs (amateur → pro) | *AMATEUR • CENTRE • PRO* | Un seul espace. Badges Amateur (bleu), Centre / Aspirant (vert), Professionnel (jaune). Signature pro = badge uniquement. Genre H/F à l'inscription. |
-| **Supporter** | Fans & communauté | *SUIVRE • VIBRER • PARTAGER* | Tribune **100 % gratuite** — matchs live, suivis, débats, Reels. Sans Mercato ni abonnement store. |
-| **Santé** | Praticiens & staff médical | *SOIGNER • ACCOMPAGNER • PERFORMER* | 7 métiers — annuaire vérifié, RDV près des clubs. |
-| **Club** | Structures & équipes | *STRUCTURE • RECRUTEMENT • VITRINE* | Pipeline candidatures kanban, multi-équipes, vitrine. Calendrier & convocations → Staff. |
-| **Staff** | Agent · Recruteur · Coach | *MANDATS • SCOUTING • CONVOCATIONS* | Calendrier structure, convocations premium, Mercato. Agent : 19,99 € (20 premiers) puis 29,99 €. |
-| **Événements** | Organisateurs | *TOURNOIS • ACADÉMIES • DÉTECTIONS* | Création, inscriptions, listes, résultats, médias (paiements à brancher). |
-| **Sponsor** | Marques & partenaires | *VISIBILITÉ • ROI • TERRAIN* | Découverte (0 €), Territorial (49 €/mois), National Pro (99 €/mois). |
+| **Joueur** | Amateur → centre → pro | *PROGRESSER CHAQUE JOUR* | Accueil, matchs, saison, Pulse, Pass optionnel. Genre H/F à l’inscription. |
+| **Club** | Structures & équipes | *LE CŒUR DE PRODAY* | Équipes, licenciés, coachs, tournois, covoiturage. |
+| **Coach** | Staff terrain | *BANC DE TOUCHE DIGITAL* | Forme effectif, tactique IA, convocations, vidéo. |
+| **Parent** | Familles | *ACCOMPAGNER SANS ÉTOUFFER* | Messages, agenda, trajets, lié au compte enfant. |
+| **Supporter** | Fans & communauté | *SUIVRE • VIBRER* | Matchs, scores, compositions — tribune gratuite. |
+| **Sponsor** | Marques & partenaires | *VISIBILITÉ • IMPACT* | Opportunités, activations, ROI — [proday75.fr/sponsor](https://proday75.fr/sponsor). |
 
-### Écosystème des pôles
+### Écosystème des portes
 
 ```mermaid
 mindmap
   root((ProDay))
     Joueur
-      Badges Amateur Centre Pro
-      Mercato filtres
-      Joueur vérifié
-    Supporter
-      Live scores
-      Suivis illimités
-      100% gratuit
-    Santé
-      Annuaire vérifié
-      RDV en ligne
+      Pulse saison
+      Mercato
     Club
-      Pipeline kanban
-      Vitrine publique
-    Staff
-      Calendrier structure
-      Convocations premium
-      Agent 19.99 lancement
-    Événements
-      Tournois camps
-      Inscriptions
+      Équipes licenciés
+      Tournois
+    Coach
+      Tactique IA
+      Convocations
+    Parent
+      Agenda messages
+      Trajets
+    Supporter
+      Scores live
+      Tribune gratuite
     Sponsor
-      Découverte 0€
-      Territorial 49€
-      National Pro 99€
+      Activations
+      Impact
 ```
 
-> **Genre H/F** — Segment UI sur le Pôle Joueur, pas un pôle produit. `/homme`, `/woman`, `/amateur`, `/pro-joueur` → `/joueur`.
+> **Genre H/F** — Segment UI sur la porte Joueur, pas une porte produit. `/homme`, `/woman`, `/amateur`, `/pro-joueur` → `/joueur`.
 
 ---
 
 ## Parcours utilisateur
 
-Après inscription, l'utilisateur choisit son **pôle** puis accède aux **modules** visibles selon son rôle. L'app expose jusqu'à **9 onglets dynamiques** (Accueil, Candidater/Mercato, Matchs, Reels, Fil, Covoit., Santé, Messages, Profil) — certains masqués selon l'univers.
+Après inscription, l'utilisateur choisit sa **porte d’entrée** puis accède aux **modules** visibles selon son rôle. L'app expose jusqu'à **9 onglets dynamiques** selon la coque — certains masqués selon le profil.
 
 ```mermaid
 flowchart TD
@@ -562,7 +557,7 @@ Liste complète : `package.json` · [scripts/README.md](scripts/README.md)
 | [docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md) | Configuration projet Firebase |
 | [docs/BETA_LAUNCH.md](docs/BETA_LAUNCH.md) | Checklist go/no-go lancement bêta |
 | [docs/BETA_GUIDE.md](docs/BETA_GUIDE.md) | Guide opérateur bêta (URLs, parcours, env) |
-| [docs/PRODAY_POLES_ARCHITECTURE.md](docs/PRODAY_POLES_ARCHITECTURE.md) | Architecture des sept pôles produit |
+| [docs/PRODAY_POLES_ARCHITECTURE.md](docs/PRODAY_POLES_ARCHITECTURE.md) | Architecture des portes / pôles produit |
 | [docs/PRICING_STRATEGY.md](docs/PRICING_STRATEGY.md) | Grille tarifaire et IAP |
 | [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md) | Logo, couleurs, composants UI |
 | [src/README.md](src/README.md) | Guide navigation app mobile |
@@ -594,6 +589,6 @@ Inscrivez-vous sur [proday75.fr/beta/inscription](https://proday75.fr/beta/inscr
 
 ## Contact
 
-[proday75.fr](https://proday75.fr) · [proday.admin@gmail.com](mailto:proday.admin@gmail.com) · [proday.admin@gmail.com](mailto:proday.admin@gmail.com) · [Code source — dépôt **privé**](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [Documentation publique — PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+[proday75.fr](https://proday75.fr) · [proday.admin@gmail.com](mailto:proday.admin@gmail.com) · [Code source — dépôt **privé**](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [Documentation publique — PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
 
 **ProDay © 2026** — Tous droits réservés · Code propriétaire — reproduction interdite sans autorisation · [LICENSE](./LICENSE) · [SECURITY.md](./SECURITY.md)

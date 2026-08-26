@@ -7,7 +7,7 @@ import {
 
 export const BETA_MEMBER_ROLE = "Beta testeur";
 
-/** Rôles waitlist = les 5 pôles vitrine (pas les rôles réseau intégrés). */
+/** Rôles waitlist = portes d’entrée vitrine (pas les rôles réseau intégrés). */
 export type BetaRoleId =
   | "player"
   | "supporter"
@@ -91,7 +91,7 @@ function buildProdayEmailShell(opts: {
             <td style="padding:28px 32px 22px;border-bottom:1px solid rgba(255,255,255,0.12);">
               <img src="${mark}" width="48" height="34" alt="ProDay" style="display:block;margin:0 0 14px;border:0;" />
               <p style="margin:0;font-size:22px;line-height:1;font-weight:700;letter-spacing:0.18em;color:#ffffff;">PRODAY</p>
-              <p style="margin:10px 0 0;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:#71717a;">Connecter · Progresser · Réussir</p>
+              <p style="margin:10px 0 0;font-size:10px;line-height:14px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:#71717a;">Connecter. Progresser. Révéler.</p>
             </td>
           </tr>
           <tr>

@@ -29,7 +29,7 @@ export default async function DemoPage({
       <DemoPageContent pole={pole} />
       <TerminalCta
         title="Prêt pour la vraie app ?"
-        description="La bêta ouvre les cinq pôles. Liste d’attente ouverte."
+        description="La bêta ouvre les six portes d’entrée. Liste d’attente ouverte."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta"
         secondaryHref={ROUTES.features}

@@ -44,7 +44,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "demo",
     question: "Comment tester l'app ?",
     answer:
-      "La démo interactive reprend la navigation réelle des cinq pôles (Joueur, Club, Coach, Supporter, Sponsor). Téléphone et onglets, sans compte.",
+      "La démo interactive reprend la navigation réelle des portes d’entrée (Joueur, Club, Coach, Supporter, Sponsor…). Téléphone et onglets, sans compte.",
     href: ROUTES.demo,
     hrefLabel: "Ouvrir la démo",
   },

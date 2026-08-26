@@ -180,28 +180,87 @@ async function main() {
   }
   console.log("✓ masters copiés depuis assets/branding");
 
-  // Lockup officiel paddé (OG / emails) — sinon lockup transparent
-  if (existsSync(MASTER_OFFICIAL)) {
-    copyFileSync(MASTER_OFFICIAL, resolve(outDir, "logo-proday-official.png"));
-    console.log("✓ logo-proday-official.png (master paddé)");
-  } else {
-    await writePng("logo-proday-official.png", lockupWhite);
+  // Lockup officiel horizontal (OG / emails / README).
+  // assets/branding/logo-proday-official.png peut être le badge carré store — ne pas l’écraser ici.
+  async function makeOfficialLockupHorizontal(mark) {
+    const markH = 92;
+    const markBuf = await sharp(mark).resize({ height: markH, fit: "inside" }).toBuffer();
+    const mb = await sharp(markBuf).metadata();
+    const padX = 48;
+    const padY = 40;
+    const gap = 20;
+    const textW = 420;
+    const canvasW = padX + mb.width + gap + textW + padX;
+    const canvasH = padY + markH + padY;
+    const textY = padY + Math.round(markH * 0.62);
+    const svg = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}">
+        <rect width="100%" height="100%" fill="#000000"/>
+        <text x="${padX + mb.width + gap}" y="${textY}"
+          font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="72"
+          fill="#FFFFFF" letter-spacing="4">PRODAY</text>
+      </svg>`,
+    );
+    return sharp(svg)
+      .composite([{ input: markBuf, left: padX, top: padY + Math.round((markH - mb.height) / 2) }])
+      .png()
+      .toBuffer();
   }
 
-  // Aliases binaires identiques aux masters (pas de ré-encodage)
+  let officialMeta = existsSync(MASTER_OFFICIAL)
+    ? await sharp(MASTER_OFFICIAL).metadata()
+    : null;
+  const officialIsHorizontal =
+    officialMeta &&
+    officialMeta.width &&
+    officialMeta.height &&
+    officialMeta.width / officialMeta.height >= 1.8;
+
+  let officialBuf;
+  if (officialIsHorizontal) {
+    copyFileSync(MASTER_OFFICIAL, resolve(outDir, "logo-proday-official.png"));
+    officialBuf = await sharp(MASTER_OFFICIAL).png().toBuffer();
+    console.log("✓ logo-proday-official.png (master horizontal)");
+  } else {
+    officialBuf = await makeOfficialLockupHorizontal(markWhite);
+    await writePng("logo-proday-official.png", officialBuf);
+    console.log("✓ logo-proday-official.png (généré horizontal — master assets carré ignoré)");
+  }
+
+  // Lockups horizontaux (ne jamais copier le badge carré store ici).
+  await writePng("logo-proday-lockup-white.png", officialBuf);
+  {
+    const markH = 92;
+    const markBuf = await sharp(markBlack).resize({ height: markH, fit: "inside" }).toBuffer();
+    const mb = await sharp(markBuf).metadata();
+    const padX = 48;
+    const padY = 40;
+    const gap = 20;
+    const textW = 420;
+    const canvasW = padX + mb.width + gap + textW + padX;
+    const canvasH = padY + markH + padY;
+    const textY = padY + Math.round(markH * 0.62);
+    const svg = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasW}" height="${canvasH}">
+        <rect width="100%" height="100%" fill="#FFFFFF"/>
+        <text x="${padX + mb.width + gap}" y="${textY}"
+          font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="72"
+          fill="#000000" letter-spacing="4">PRODAY</text>
+      </svg>`,
+    );
+    const blackLockup = await sharp(svg)
+      .composite([{ input: markBuf, left: padX, top: padY + Math.round((markH - mb.height) / 2) }])
+      .png()
+      .toBuffer();
+    await writePng("logo-proday-lockup-black.png", blackLockup);
+    copyFileSync(resolve(outDir, "logo-proday-lockup-black.png"), resolve(outDir, "logo-light.png"));
+    copyFileSync(resolve(outDir, "logo-proday-lockup-black.png"), resolve(outDir, "logo-woman-light.png"));
+  }
+
   const copies = [
-    ["logo-proday-lockup-white.png", MASTER_LOCKUP],
-    ["logo-proday-lockup-black.png", MASTER_LOCKUP_BLACK],
     ["logo-proday-mark.png", MASTER_SYMBOL],
     ["logo-proday-mark-black.png", MASTER_SYMBOL_BLACK],
     ["logo-mark-white.png", MASTER_SYMBOL],
-    ["logo-dark.png", MASTER_LOCKUP],
-    ["logo-light.png", MASTER_LOCKUP_BLACK],
-    ["logo-transparent-hero.png", MASTER_LOCKUP],
-    ["logo-white.png", MASTER_LOCKUP],
-    // Anciens logos woman → lockup officiel (plus de pictogramme coureuse)
-    ["logo-woman-light.png", MASTER_LOCKUP_BLACK],
-    ["logo-woman-white.png", MASTER_LOCKUP],
   ];
   for (const [name, src] of copies) {
     if (!existsSync(src)) {
@@ -211,12 +270,16 @@ async function main() {
     copyFileSync(src, resolve(outDir, name));
     console.log("✓", name, "(copy master)");
   }
+  copyFileSync(resolve(outDir, "logo-proday-official.png"), resolve(outDir, "logo-dark.png"));
+  copyFileSync(resolve(outDir, "logo-proday-official.png"), resolve(outDir, "logo-transparent-hero.png"));
+  copyFileSync(resolve(outDir, "logo-proday-official.png"), resolve(outDir, "logo-white.png"));
+  copyFileSync(resolve(outDir, "logo-proday-official.png"), resolve(outDir, "logo-woman-white.png"));
+  console.log("✓ aliases light/dark/woman → lockups horizontaux");
 
   await writePng("logo-proday-mark-gold.png", markGold);
-  // Alias legacy (anciens chemins bleu master)
   await writePng("logo-proday-mark-blue.png", markGold);
 
-  await sharp(lockupWhite).webp({ quality: 92 }).toFile(resolve(outDir, "logo-proday-official.webp"));
+  await sharp(officialBuf).webp({ quality: 92 }).toFile(resolve(outDir, "logo-proday-official.webp"));
   console.log("✓ logo-proday-official.webp");
 
   for (const [name, hex] of Object.entries(POLE_HEX)) {

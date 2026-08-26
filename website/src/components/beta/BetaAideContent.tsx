@@ -58,7 +58,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
         <div className="border border-white/10 bg-transparent p-6">
           <SectionKicker>Programme</SectionKicker>
           <p className="mt-3 text-sm leading-relaxed text-white/55">
-            Calendrier, cinq pôles et modules à tester selon votre profil beta testeur.
+            Calendrier, six portes d’entrée et modules à tester selon votre profil beta testeur.
           </p>
           <Link
             href={ROUTES.betaProgramme}
