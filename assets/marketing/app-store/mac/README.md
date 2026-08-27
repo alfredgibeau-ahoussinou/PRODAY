@@ -8,7 +8,7 @@ Répond à l’exigence App Store Connect Mac : *« Faites glisser jusqu’à 3 
 
 **ProDay n’est pas une application Mac native.** L’app est Expo / React Native (iOS / Android) ; un usage desktop large / web peut exister, mais ces PNG sont des **compositions marketing** :
 
-- **01–07** : UI réelle (simulateur iOS v1.0.8) présentée **dans une fenêtre Mac stylisée** (barre de titre + feux de circulation)
+- **01–07** : fenêtre Mac large + **shell desktop** (sidebar type Coach/Club + colonnes UI simulateur) — **pas** d’iPhone centré / letterbox dans la fenêtre
 - **08–10** : texte objectif + branding uniquement — **aucune UI app**, aucun cadre fenêtre
 
 Ne pas présenter ces captures comme des screenshots d’une app Mac Catalyst / AppKit native.
@@ -31,7 +31,7 @@ Même ordre et même copy que les sets [`../ios-6.5/`](../ios-6.5/) et [`../ipad
 
 ### Pôles (01–07)
 
-Fenêtre Mac + capture UI (sources simulateur).
+Layout **desktop PC** : barre de titre Mac · sidebar (nav pôle) · toolbar · split-view master/détail (captures simulateur, status/dock mobile retirés) — **pas** d’iPhone letterboxé.
 
 | # | Fichier | Pôle | Accroche |
 |---|---------|------|----------|
@@ -45,7 +45,7 @@ Fenêtre Mac + capture UI (sources simulateur).
 
 ### Objectif / pourquoi ProDay (08–10)
 
-Texte + branding (symbole P · wordmark · lockup). **Pas de fenêtre Mac**, **pas de screenshot app**.
+Texte + branding (symbole P · wordmark · lockup). **Pas de fenêtre Mac**, **pas de screenshot app**. Composition landscape soignée.
 
 | # | Fichier | Thème | Accroche |
 |---|---------|-------|----------|
@@ -57,7 +57,7 @@ Texte + branding (symbole P · wordmark · lockup). **Pas de fenêtre Mac**, **p
 
 ### Template
 
-- **Pôles (01–07)** : symbole P + wordmark **PRODAY**, titre, promesse · fenêtre Mac + UI (contain / letterbox) · pied tagline + proday75.fr
+- **Pôles (01–07)** : symbole P + wordmark **PRODAY**, titre, promesse · fenêtre large + shell desktop (sidebar + UI) · pied tagline + proday75.fr
 - **Objectif (08–10)** : même en-tête / pied · copy multi-lignes · lockup brand · **aucune UI app**
 
 Sources UI : `website/public/images/app/` (simulateur iOS, app **1.0.8**).

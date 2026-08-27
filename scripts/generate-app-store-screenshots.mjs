@@ -20,7 +20,8 @@
  *
  * Écrans pôles : captures simulateur v1.0.8 (website/public/images/app/).
  * Objectif 08–10 : texte + branding uniquement (pas d’UI app).
- * Mac : compositions marketing (fenêtre Mac + UI mobile/web) — ProDay n’est pas une app Mac native.
+ * Mac : compositions desktop marketing (fenêtre large + sidebar + panneau) —
+ *   pas d’iPhone centré / letterbox. ProDay n’est pas une app Mac native.
  */
 import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
@@ -146,21 +147,22 @@ function tabletLayout() {
 }
 
 /**
- * Fenêtre Mac (barre de titre + feux de circulation).
+ * Fenêtre Mac large (barre de titre + feux de circulation).
  * Coords relatives à baseW=2880 (landscape 2880×1800).
- * Contenu : UI mobile/web dans une fenêtre desktop (marketing, pas app Mac native).
+ * Contenu : shell desktop (sidebar + panneau) — pas de téléphone centré.
  */
 function macLayout() {
-  const winW = scale(1680);
-  const titleBarH = scale(52);
-  const winH = scale(1180);
+  const winW = scale(2520);
+  const titleBarH = scale(48);
+  const winH = scale(1280);
   const left = Math.round((W - winW) / 2);
-  const top = scale(380);
-  const radius = scale(18);
-  const screenRadius = scale(10);
-  const contentPad = scale(6);
+  const top = scale(340);
+  const radius = scale(16);
+  const screenRadius = scale(8);
+  const contentPad = scale(0);
   const screenW = winW - contentPad * 2;
   const screenH = winH - titleBarH - contentPad;
+  const sidebarW = scale(268);
   return {
     winW,
     winH,
@@ -172,8 +174,62 @@ function macLayout() {
     contentPad,
     screenW,
     screenH,
+    sidebarW,
   };
 }
+
+/** Nav desktop marketing par pôle (alignée shells Coach/Club / docks). */
+const DESKTOP_SHELL = {
+  joueur: {
+    kicker: 'ProDay Joueur',
+    name: 'Mon espace',
+    formula: 'Carrière',
+    items: ['Accueil', 'Matchs', 'Saison', 'Profil', 'Plus'],
+    active: 'Profil',
+  },
+  coach: {
+    kicker: 'ProDay Coach',
+    name: 'Alfred',
+    formula: 'Staff',
+    items: ['Accueil', 'Équipe', 'IA', 'Menu', 'Profil'],
+    active: 'Profil',
+  },
+  club: {
+    kicker: 'ProDay Club',
+    name: 'Mon club',
+    formula: 'Pilotage',
+    items: ['Accueil', 'Équipes', 'Matchs', 'Outils', 'Club'],
+    active: 'Équipes',
+  },
+  president: {
+    kicker: 'ProDay Président',
+    name: 'Cockpit',
+    formula: 'Direction',
+    items: ['Cockpit', 'Mon club', 'Finances', 'Assistant', 'Paramètres'],
+    active: 'Cockpit',
+  },
+  parent: {
+    kicker: 'ProDay Parent',
+    name: 'Famille',
+    formula: 'Accompagnement',
+    items: ['Accueil', 'Enfant', 'Guide IA', 'Menu', 'Profil'],
+    active: 'Menu',
+  },
+  supporter: {
+    kicker: 'ProDay Supporter',
+    name: 'Tribune',
+    formula: 'Suivi',
+    items: ['Accueil', 'Matchs', 'Favoris', 'Scores', 'Profil'],
+    active: 'Accueil',
+  },
+  sponsor: {
+    kicker: 'ProDay Sponsor',
+    name: 'Marque',
+    formula: 'Visibilité',
+    items: ['Accueil', 'Prospects', 'Offres', 'Marque', 'Messages'],
+    active: 'Prospects',
+  },
+};
 
 function backgroundSvg(accent) {
   const glow = accent === '#FFFFFF' ? '#C5A059' : accent;
@@ -442,13 +498,174 @@ async function fitScreenImage(imagePath, screenW, screenH) {
     .toBuffer();
 }
 
-/** Contient l’UI portrait dans la zone landscape sans crop (letterbox). */
-async function fitScreenImageContain(imagePath, screenW, screenH) {
+/**
+ * Prépare une capture mobile pour panneau desktop :
+ * coupe status bar + dock bas, puis remplit exactement le panneau (cover top).
+ */
+async function prepareDesktopPaneImage(imagePath, paneW, paneH) {
+  const meta = await sharp(imagePath).metadata();
+  const srcW = meta.width ?? 471;
+  const srcH = meta.height ?? 1024;
+  // Status bar iOS + Dynamic Island / heure — coupe franche.
+  const topCrop = Math.round(srcH * 0.055);
+  const bottomCrop = Math.round(srcH * 0.12);
+  const cropH = Math.max(1, srcH - topCrop - bottomCrop);
   return sharp(imagePath)
-    .resize(screenW, screenH, {
-      fit: 'contain',
-      background: { r: 10, g: 10, b: 10, alpha: 1 },
+    .extract({ left: 0, top: topCrop, width: srcW, height: cropH })
+    .resize(paneW, paneH, { fit: 'cover', position: 'top' })
+    .png()
+    .toBuffer();
+}
+
+/**
+ * Variante « détail » : zoom sur le haut / milieu de l’écran (panneau desktop large).
+ */
+async function prepareDesktopDetailPane(imagePath, paneW, paneH) {
+  const meta = await sharp(imagePath).metadata();
+  const srcW = meta.width ?? 471;
+  const srcH = meta.height ?? 1024;
+  const top = Math.round(srcH * 0.1);
+  const height = Math.round(srcH * 0.38);
+  return sharp(imagePath)
+    .extract({ left: 0, top, width: srcW, height: Math.min(height, srcH - top) })
+    .resize(paneW, paneH, { fit: 'cover', position: 'centre' })
+    .png()
+    .toBuffer();
+}
+
+/** Sidebar desktop marketing (shell Coach/Club). */
+function desktopSidebarSvg({ width, height, accent, shell }) {
+  const padX = Math.round(width * 0.1);
+  const itemH = Math.round(height * 0.072);
+  const itemGap = Math.round(height * 0.012);
+  const startY = Math.round(height * 0.2);
+  const accentSoft = accent === '#FFFFFF' ? '#C5A059' : accent;
+  const items = shell.items
+    .map((label, i) => {
+      const y = startY + i * (itemH + itemGap);
+      const on = label === shell.active;
+      const bg = on ? accentSoft : 'transparent';
+      const fg = on ? '#0A0A0A' : 'rgba(255,255,255,0.78)';
+      const dot = on ? accentSoft : 'rgba(255,255,255,0.28)';
+      return `
+        <rect x="${padX}" y="${y}" width="${width - padX * 2}" height="${itemH}" rx="${Math.round(itemH / 3)}" fill="${bg}" fill-opacity="${on ? 1 : 0}"/>
+        <circle cx="${padX + Math.round(itemH * 0.42)}" cy="${y + itemH / 2}" r="${Math.round(itemH * 0.14)}" fill="${on ? '#0A0A0A' : dot}"/>
+        <text x="${padX + Math.round(itemH * 0.85)}" y="${y + itemH * 0.66}"
+          font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
+          font-weight="${on ? 700 : 560}" font-size="${Math.round(itemH * 0.38)}" fill="${fg}">${esc(label)}</text>
+      `;
     })
+    .join('');
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <rect width="${width}" height="${height}" fill="#0C0C0E"/>
+      <line x1="${width - 1}" y1="0" x2="${width - 1}" y2="${height}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <text x="${padX}" y="${Math.round(height * 0.055)}"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="600" font-size="${Math.round(height * 0.028)}" fill="${accentSoft}" letter-spacing="0.04em">${esc(shell.kicker)}</text>
+      <text x="${padX}" y="${Math.round(height * 0.1)}"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="800" font-size="${Math.round(height * 0.042)}" fill="#FFFFFF">${esc(shell.name)}</text>
+      <rect x="${padX}" y="${Math.round(height * 0.12)}" width="${Math.round(width * 0.55)}" height="${Math.round(height * 0.036)}" rx="${Math.round(height * 0.018)}" fill="${accentSoft}" fill-opacity="0.18"/>
+      <text x="${padX + Math.round(width * 0.04)}" y="${Math.round(height * 0.146)}"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="600" font-size="${Math.round(height * 0.022)}" fill="${accentSoft}">${esc(shell.formula)}</text>
+      ${items}
+      <text x="${padX}" y="${height - Math.round(height * 0.06)}"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="500" font-size="${Math.round(height * 0.024)}" fill="rgba(255,255,255,0.35)">Aide · Déconnexion</text>
+    </svg>`,
+  );
+}
+
+/** Fond panneau principal. */
+function desktopMainChromeSvg(width, height) {
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <rect width="${width}" height="${height}" fill="#0E0E12"/>
+    </svg>`,
+  );
+}
+
+/** Barre d’outils desktop au-dessus du panneau contenu. */
+function desktopToolbarSvg({ width, height, accent, title }) {
+  const accentSoft = accent === '#FFFFFF' ? '#C5A059' : accent;
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <rect width="${width}" height="${height}" fill="#121218"/>
+      <line x1="0" y1="${height - 1}" x2="${width}" y2="${height - 1}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="${scale(22)}" y="${Math.round(height * 0.62)}"
+        font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="700" font-size="${Math.round(height * 0.38)}" fill="#FFFFFF">${esc(title)}</text>
+      <rect x="${width - scale(120)}" y="${Math.round(height * 0.28)}" width="${scale(88)}" height="${Math.round(height * 0.44)}" rx="${Math.round(height * 0.22)}" fill="${accentSoft}" fill-opacity="0.2"/>
+      <circle cx="${width - scale(76)}" cy="${height / 2}" r="${Math.round(height * 0.12)}" fill="${accentSoft}"/>
+    </svg>`,
+  );
+}
+
+/**
+ * Compose le contenu fenêtre : sidebar + UN panneau principal (split-view flush).
+ * Pas de deux cadres téléphone séparés — une seule surface desktop.
+ */
+async function composeDesktopWindowContent({
+  screenPath,
+  screenSecondaryPath,
+  accent,
+  shell,
+  contentW,
+  contentH,
+  sidebarW,
+}) {
+  const mainW = contentW - sidebarW;
+  const toolbarH = scale(52);
+  const bodyH = contentH - toolbarH;
+  const hasSecondary = Boolean(screenSecondaryPath && existsSync(screenSecondaryPath));
+
+  // Split-view : master ~38% / détail ~62% — une seule surface, séparateur 1 px.
+  const divider = 1;
+  const primaryW = Math.round(mainW * 0.38);
+  const secondaryW = mainW - primaryW - divider;
+
+  const sidebar = await sharp(desktopSidebarSvg({ width: sidebarW, height: contentH, accent, shell }))
+    .png()
+    .toBuffer();
+  const chrome = await sharp(desktopMainChromeSvg(mainW, contentH)).png().toBuffer();
+  const toolbar = await sharp(
+    desktopToolbarSvg({
+      width: mainW,
+      height: toolbarH,
+      accent,
+      title: shell.active,
+    }),
+  )
+    .png()
+    .toBuffer();
+
+  const primaryRaw = await prepareDesktopPaneImage(screenPath, primaryW, bodyH);
+  const detailSrc = hasSecondary ? screenSecondaryPath : screenPath;
+  const secondaryRaw = hasSecondary
+    ? await prepareDesktopPaneImage(detailSrc, secondaryW, bodyH)
+    : await prepareDesktopDetailPane(detailSrc, secondaryW, bodyH);
+
+  const dividerSvg = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${divider}" height="${bodyH}">
+      <rect width="${divider}" height="${bodyH}" fill="rgba(255,255,255,0.1)"/>
+    </svg>`,
+  );
+
+  const layers = [
+    { input: sidebar, top: 0, left: 0 },
+    { input: chrome, top: 0, left: sidebarW },
+    { input: toolbar, top: 0, left: sidebarW },
+    { input: primaryRaw, top: toolbarH, left: sidebarW },
+    { input: await sharp(dividerSvg).png().toBuffer(), top: toolbarH, left: sidebarW + primaryW },
+    { input: secondaryRaw, top: toolbarH, left: sidebarW + primaryW + divider },
+  ];
+
+  return sharp({
+    create: { width: contentW, height: contentH, channels: 4, background: '#0A0A0C' },
+  })
+    .composite(layers)
     .png()
     .toBuffer();
 }
@@ -456,6 +673,7 @@ async function fitScreenImageContain(imagePath, screenW, screenH) {
 /**
  * Shot « objectif » : texte + branding (symbole / lockup).
  * Pas de cadre appareil, pas de screenshot app.
+ * Sur Mac : composition landscape plus aérée (copy + lockup côte à côte).
  */
 async function composeHero({ headline, subheadline, body, bodyLines, accent }) {
   const m = frameMetrics();
@@ -466,6 +684,10 @@ async function composeHero({ headline, subheadline, body, bodyLines, accent }) {
         ? [body]
         : [];
 
+  if (FRAME === 'mac') {
+    return composeHeroMacLandscape({ headline, subheadline, bodyLines: lines, accent });
+  }
+
   const branding = await brandingStripLayers();
   const copySvg = objectifCopySvg({
     headline,
@@ -474,14 +696,14 @@ async function composeHero({ headline, subheadline, body, bodyLines, accent }) {
     accent,
   });
   const copyMeta = await sharp(copySvg).metadata();
-  const copyTop = branding.stripH + scale(FRAME === 'mac' ? 24 : 36);
+  const copyTop = branding.stripH + scale(36);
 
   const lockup = await sharp(LOCKUP).resize({ width: m.lockupW, fit: 'inside' }).png().toBuffer();
   const lockMeta = await sharp(lockup).metadata();
   const footerH = m.footerH;
   const lockTop = Math.min(
-    H - footerH - lockMeta.height - scale(FRAME === 'mac' ? 32 : 48),
-    Math.max(copyTop + copyMeta.height + scale(FRAME === 'mac' ? 48 : 80), Math.round(H * (FRAME === 'mac' ? 0.48 : 0.52))),
+    H - footerH - lockMeta.height - scale(48),
+    Math.max(copyTop + copyMeta.height + scale(80), Math.round(H * 0.52)),
   );
 
   const layers = [
@@ -494,6 +716,62 @@ async function composeHero({ headline, subheadline, body, bodyLines, accent }) {
       top: lockTop,
     },
     { input: footerSvg(), top: H - footerH, left: 0 },
+  ];
+
+  return sharp({ create: { width: W, height: H, channels: 4, background: '#000' } })
+    .composite(layers)
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
+/** Hero Mac : branding haut, copy à gauche, lockup à droite — landscape soigné. */
+async function composeHeroMacLandscape({ headline, subheadline, bodyLines, accent }) {
+  const m = frameMetrics();
+  const branding = await brandingStripLayers();
+  const subColor = accent === '#FFFFFF' ? '#C5A059' : accent;
+  const colPad = scale(160);
+  const colW = Math.round((W - colPad * 2 - scale(80)) / 2);
+  const copyLeft = colPad;
+  const copyTop = branding.stripH + scale(80);
+
+  const bodyTexts = bodyLines
+    .map(
+      (line, i) =>
+        `<text x="0" y="${scale(200) + i * scale(56)}" class="b" font-size="${scale(36)}">${esc(line)}</text>`,
+    )
+    .join('\n');
+
+  const copySvg = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${colW}" height="${scale(520)}">
+      <style>
+        .h { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 800; fill: #FFFFFF; }
+        .s { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; }
+        .b { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 500; fill: rgba(255,255,255,0.78); }
+      </style>
+      <text x="0" y="${scale(48)}" class="h" font-size="${scale(52)}">${esc(headline)}</text>
+      ${subheadline ? `<text x="0" y="${scale(110)}" class="s" font-size="${scale(34)}" fill="${subColor}">${esc(subheadline)}</text>` : ''}
+      ${bodyTexts}
+    </svg>`,
+  );
+
+  const lockup = await sharp(LOCKUP).resize({ width: scale(920), fit: 'inside' }).png().toBuffer();
+  const lockMeta = await sharp(lockup).metadata();
+  const lockLeft = colPad + colW + scale(80) + Math.round((colW - lockMeta.width) / 2);
+  const lockTop = Math.round(H * 0.38 - lockMeta.height / 2);
+
+  const accentBar = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${scale(6)}" height="${scale(280)}">
+      <rect width="${scale(6)}" height="${scale(280)}" rx="3" fill="${subColor}"/>
+    </svg>`,
+  );
+
+  const layers = [
+    { input: backgroundSvg(accent), top: 0, left: 0 },
+    ...branding.layers,
+    { input: accentBar, top: copyTop + scale(20), left: copyLeft - scale(28) },
+    { input: copySvg, top: copyTop, left: copyLeft },
+    { input: lockup, top: lockTop, left: lockLeft },
+    { input: footerSvg(), top: H - m.footerH, left: 0 },
   ];
 
   return sharp({ create: { width: W, height: H, channels: 4, background: '#000' } })
@@ -575,23 +853,41 @@ async function composeTabletShot({ headline, subheadline, body, accent, screenPa
 }
 
 /**
- * Shot Mac : fenêtre desktop + UI (simulateur iOS / web) — composition marketing.
- * ProDay n’est pas une app Mac native ; la fenêtre illustre un usage desktop large.
+ * Shot Mac : fenêtre desktop large + shell (sidebar + colonnes UI).
+ * ProDay n’est pas une app Mac native ; composition marketing usage PC / web large.
  */
-async function composeMacShot({ headline, subheadline, body, accent, screenPath }) {
-  const { left, top, titleBarH, contentPad, screenW, screenH, screenRadius } = macLayout();
+async function composeMacShot({
+  headline,
+  subheadline,
+  body,
+  accent,
+  screenPath,
+  screenSecondaryPath,
+  shellKey,
+}) {
+  const { left, top, titleBarH, contentPad, screenW, screenH, screenRadius, sidebarW } =
+    macLayout();
   const screenX = left + contentPad;
   const screenY = top + titleBarH;
   const m = frameMetrics();
+  const shell = DESKTOP_SHELL[shellKey] ?? DESKTOP_SHELL.joueur;
 
-  const screenBuf = await fitScreenImageContain(screenPath, screenW, screenH);
+  const desktopContent = await composeDesktopWindowContent({
+    screenPath,
+    screenSecondaryPath,
+    accent,
+    shell,
+    contentW: screenW,
+    contentH: screenH,
+    sidebarW,
+  });
 
   const mask = Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${screenW}" height="${screenH}">
       <rect width="${screenW}" height="${screenH}" rx="${screenRadius}" fill="#fff"/>
     </svg>`,
   );
-  const roundedScreen = await sharp(screenBuf)
+  const roundedScreen = await sharp(desktopContent)
     .composite([{ input: mask, blend: 'dest-in' }])
     .png()
     .toBuffer();
@@ -623,54 +919,65 @@ const SHOTS = [
   {
     file: '01-pole-joueur.png',
     pole: 'Joueur',
+    shellKey: 'joueur',
     headline: 'Pôle Joueur',
     subheadline: 'Profil, stats et carrière en ligne',
     accent: ACCENT.joueur,
     screen: resolve(appScreens, 'player/player-profil.jpg'),
-    sourceLabel: 'website/public/images/app/player/player-profil.jpg',
+    screenSecondary: resolve(appScreens, 'player/player-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/player/player-profil.jpg + player-accueil.jpg',
     recommended: 1,
   },
   {
     file: '02-pole-coach.png',
     pole: 'Coach',
+    shellKey: 'coach',
     headline: 'Pôle Coach',
     subheadline: 'Pilotez votre staff et vos séances',
     accent: ACCENT.coach,
     screen: resolve(appScreens, 'coach/coach-profil.jpg'),
-    sourceLabel: 'website/public/images/app/coach/coach-profil.jpg',
+    screenSecondary: resolve(appScreens, 'coach/coach-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/coach/coach-profil.jpg + coach-accueil.jpg',
     recommended: 2,
   },
   {
     file: '03-pole-club.png',
     pole: 'Club',
+    shellKey: 'club',
     headline: 'Pôle Club',
     subheadline: 'Équipes, licenciés et recrutement',
     accent: ACCENT.club,
     screen: resolve(appScreens, 'club/club-equipes.jpg'),
-    sourceLabel: 'website/public/images/app/club/club-equipes.jpg',
+    screenSecondary: resolve(appScreens, 'club/club-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/club/club-equipes.jpg + club-accueil.jpg',
     recommended: 3,
   },
   {
     file: '04-pole-president.png',
     pole: 'Président',
+    shellKey: 'president',
     headline: 'Pôle Président',
     subheadline: 'Le club en un coup d’œil',
     accent: ACCENT.president,
     screen: resolve(appScreens, 'executive/executive-cockpit.jpg'),
-    sourceLabel: 'website/public/images/app/executive/executive-cockpit.jpg',
+    screenSecondary: resolve(appScreens, 'executive/executive-club.jpg'),
+    sourceLabel: 'website/public/images/app/executive/executive-cockpit.jpg + executive-club.jpg',
   },
   {
     file: '05-pole-parent.png',
     pole: 'Parent',
+    shellKey: 'parent',
     headline: 'Pôle Parent',
     subheadline: 'Accompagnez sans étouffer',
     accent: ACCENT.parent,
     screen: resolve(appScreens, 'parent/parent-menu.jpg'),
-    sourceLabel: 'website/public/images/app/parent/parent-menu.jpg',
+    screenSecondary: resolve(appScreens, 'parent/parent-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/parent/parent-menu.jpg + parent-accueil.jpg',
   },
   {
     file: '06-pole-supporter.png',
     pole: 'Supporter',
+    shellKey: 'supporter',
     headline: 'Pôle Supporter',
     subheadline: 'Suivez matchs, scores et favoris',
     accent: ACCENT.supporter,
@@ -680,11 +987,13 @@ const SHOTS = [
   {
     file: '07-pole-sponsor.png',
     pole: 'Sponsor',
+    shellKey: 'sponsor',
     headline: 'Pôle Sponsor',
     subheadline: 'Visibilité clubs et marques',
     accent: ACCENT.sponsor,
     screen: resolve(appScreens, 'sponsor/sponsor-prospects.jpg'),
-    sourceLabel: 'website/public/images/app/sponsor/sponsor-prospects.jpg',
+    screenSecondary: resolve(appScreens, 'sponsor/sponsor-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/sponsor/sponsor-prospects.jpg + sponsor-accueil.jpg',
   },
   // —— Objectif / pourquoi ProDay (texte + branding, sans UI app) ——
   {
@@ -776,6 +1085,8 @@ async function writeShot(shot) {
             body: shot.body,
             accent: shot.accent,
             screenPath: shot.screen,
+            screenSecondaryPath: shot.screenSecondary,
+            shellKey: shot.shellKey,
           })
         : FRAME === 'tablet'
           ? await composeTabletShot({
@@ -830,7 +1141,7 @@ async function main() {
   }
 
   const strategy = MAC
-    ? '7 pôles (fenêtre Mac + UI mobile/web) + 3 objectif texte/branding sans UI — pas d’Admin · marketing (pas app Mac native)'
+    ? '7 pôles (fenêtre Mac large · sidebar + colonnes UI desktop) + 3 objectif texte/branding sans UI — pas d’Admin · marketing (pas app Mac native)'
     : IPAD
       ? '7 pôles (tablette + UI) + 3 objectif texte/branding sans UI — pas d’Admin'
       : '7 pôles (téléphone + UI) + 3 objectif texte/branding sans UI — pas d’Admin';
@@ -845,7 +1156,7 @@ async function main() {
     device: PRESET.device,
     strategy,
     honesty: MAC
-      ? 'ProDay n’est pas une app Mac native (Expo / React Native). Les captures 01–07 sont des compositions marketing : UI simulateur iOS dans une fenêtre Mac stylisée (usage desktop large / web).'
+      ? 'ProDay n’est pas une app Mac native (Expo / React Native). Les captures 01–07 sont des compositions marketing desktop : fenêtre large + sidebar (shell Coach/Club) + colonnes UI issues du simulateur iOS — pas d’iPhone letterboxé.'
       : null,
     screenSources:
       'pôles: website/public/images/app/ (simulateur v1.0.8) · objectif: branding only',
