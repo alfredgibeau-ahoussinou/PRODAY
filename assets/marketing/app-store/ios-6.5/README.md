@@ -21,11 +21,11 @@ App Store Connect → **Médias de l’app** → **Captures d’écran** → **i
 | 2 | `02-pole-coach.png` | Coach | Pilotez votre staff et vos séances | `coach/coach-profil.jpg` |
 | 3 | `03-pole-club.png` | Club | Équipes, licenciés et recrutement | `club/club-equipes.jpg` |
 | 4 | `04-pole-president.png` | Président | Le club en un coup d’œil | `executive/executive-cockpit.jpg` |
-| 5 | `05-pole-parent.png` | Parent | Accompagnez sans étouffer | `parent/parent-accueil.jpg` |
-| 6 | `06-pole-supporter.png` | Supporter | Suivez matchs, scores et favoris | `player/player-matchs.jpg` * |
-| 7 | `07-pole-sponsor.png` | Sponsor | Visibilité clubs et marques | `sponsor/sponsor-accueil.jpg` |
+| 5 | `05-pole-parent.png` | Parent | Accompagnez sans étouffer | `parent/parent-menu.jpg` |
+| 6 | `06-pole-supporter.png` | Supporter | Suivez matchs, scores et favoris | `supporter/supporter-accueil.jpg` |
+| 7 | `07-pole-sponsor.png` | Sponsor | Visibilité clubs et marques | `sponsor/sponsor-prospects.jpg` |
 
-\* **Supporter** : UI Centre Match en attendant une capture simulateur dédiée au pôle Supporter (scaffold en cours).
+\* **Supporter** : capture simulateur du shell réel (dock cyan · Accueil · Matchs · Compét. · Clubs · Vidéos · Profil). Regénérer la source : `npm run marketing:capture-supporter`.
 
 **Hors scope App Store public** : Admin (cockpit interne).
 

@@ -293,8 +293,8 @@ const SHOTS = [
     headline: 'Pôle Parent',
     subheadline: 'Accompagnez sans étouffer',
     accent: ACCENT.parent,
-    screen: resolve(appScreens, 'parent/parent-accueil.jpg'),
-    sourceLabel: 'website/public/images/app/parent/parent-accueil.jpg',
+    screen: resolve(appScreens, 'parent/parent-menu.jpg'),
+    sourceLabel: 'website/public/images/app/parent/parent-menu.jpg',
   },
   {
     file: '06-pole-supporter.png',
@@ -302,9 +302,8 @@ const SHOTS = [
     headline: 'Pôle Supporter',
     subheadline: 'Suivez matchs, scores et favoris',
     accent: ACCENT.supporter,
-    screen: resolve(appScreens, 'player/player-matchs.jpg'),
-    sourceLabel: 'website/public/images/app/player/player-matchs.jpg',
-    note: 'Centre Match (UI partagée) — capture dédiée Supporter au prochain passage simulateur',
+    screen: resolve(appScreens, 'supporter/supporter-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/supporter/supporter-accueil.jpg',
   },
   {
     file: '07-pole-sponsor.png',
@@ -312,8 +311,8 @@ const SHOTS = [
     headline: 'Pôle Sponsor',
     subheadline: 'Visibilité clubs et marques',
     accent: ACCENT.sponsor,
-    screen: resolve(appScreens, 'sponsor/sponsor-accueil.jpg'),
-    sourceLabel: 'website/public/images/app/sponsor/sponsor-accueil.jpg',
+    screen: resolve(appScreens, 'sponsor/sponsor-prospects.jpg'),
+    sourceLabel: 'website/public/images/app/sponsor/sponsor-prospects.jpg',
   },
 ];
 

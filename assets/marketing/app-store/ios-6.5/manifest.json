@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T22:43:45.819Z",
+  "generatedAt": "2026-08-27T00:01:05.668Z",
   "appVersion": "1.0.8",
   "dimensions": "1284×2778",
   "portrait": true,
@@ -61,7 +61,7 @@
       "width": 1284,
       "height": 2778,
       "recommended": null,
-      "source": "website/public/images/app/parent/parent-accueil.jpg",
+      "source": "website/public/images/app/parent/parent-menu.jpg",
       "note": null
     },
     {
@@ -70,8 +70,8 @@
       "width": 1284,
       "height": 2778,
       "recommended": null,
-      "source": "website/public/images/app/player/player-matchs.jpg",
-      "note": "Centre Match (UI partagée) — capture dédiée Supporter au prochain passage simulateur"
+      "source": "website/public/images/app/supporter/supporter-accueil.jpg",
+      "note": null
     },
     {
       "file": "07-pole-sponsor.png",
@@ -79,7 +79,7 @@
       "width": 1284,
       "height": 2778,
       "recommended": null,
-      "source": "website/public/images/app/sponsor/sponsor-accueil.jpg",
+      "source": "website/public/images/app/sponsor/sponsor-prospects.jpg",
       "note": null
     }
   ],

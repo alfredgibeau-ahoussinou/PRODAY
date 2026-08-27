@@ -1,0 +1,79 @@
+# Connexion compte supporter démo.
+# Variables : MAESTRO_SUPPORTER_EMAIL, MAESTRO_SUPPORTER_PASSWORD
+# Défauts : supporter.demo@proday.app après npm run seed:demo-supporter
+appId: com.proday.app
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    text: Refuser
+    optional: true
+
+- tapOn:
+    text: Autoriser
+    optional: true
+
+- extendedWaitUntil:
+    visible: Matchs
+    timeout: 12000
+    optional: true
+
+- runFlow:
+    when:
+      notVisible: Matchs
+    commands:
+      - tapOn:
+          text: Passer
+          optional: true
+      - tapOn:
+          text: "Passer la présentation"
+          optional: true
+      - extendedWaitUntil:
+          visible: Supporter
+          timeout: 30000
+          optional: true
+      - tapOn:
+          text: Supporter
+          optional: true
+      - tapOn:
+          text: "Entrer dans Supporter"
+          optional: true
+      - tapOn:
+          text: "Passer cette étape"
+          optional: true
+      - tapOn:
+          text: "Déjà un compte ? Se connecter"
+          optional: true
+      - tapOn:
+          id: main-tab-profil
+          optional: true
+      - tapOn:
+          text: Profil
+          optional: true
+      - extendedWaitUntil:
+          visible: Se connecter
+          timeout: 20000
+      - tapOn: vous@exemple.com
+      - inputText: ${MAESTRO_SUPPORTER_EMAIL}
+      - tapOn: "••••••••"
+      - inputText: ${MAESTRO_SUPPORTER_PASSWORD}
+      - pressKey: Enter
+      - tapOn:
+          text: Se connecter
+          optional: true
+      - tapOn:
+          text: Refuser
+          optional: true
+      - tapOn:
+          text: Autoriser
+          optional: true
+      - tapOn:
+          text: Plus tard
+          optional: true
+      - tapOn:
+          text: Enregistrer
+          optional: true
+      - extendedWaitUntil:
+          visible: Matchs
+          timeout: 60000
