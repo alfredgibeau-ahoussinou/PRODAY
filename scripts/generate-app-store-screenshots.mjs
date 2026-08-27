@@ -189,8 +189,12 @@ async function fitScreenImage(imagePath, screenW, screenH) {
 }
 
 async function composeHero({ headline, subheadline, body, accent }) {
-  const layers = [{ input: backgroundSvg(accent), top: 0, left: 0 }];
-  layers.push({ input: headlineSvg({ headline, subheadline, body, accent }), top: 0, left: 0 });
+  const branding = await brandingStripLayers();
+  const layers = [
+    { input: backgroundSvg(accent), top: 0, left: 0 },
+    ...branding.layers.map((layer) => ({ ...layer })),
+    { input: headlineSvg({ headline, subheadline, body, accent }), top: 0, left: 0 },
+  ];
 
   const lockupW = scale(820);
   const lockup = await sharp(LOCKUP).resize({ width: lockupW, fit: 'inside' }).png().toBuffer();
@@ -198,7 +202,7 @@ async function composeHero({ headline, subheadline, body, accent }) {
   layers.push({
     input: lockup,
     left: Math.round((W - meta.width) / 2),
-    top: Math.round(H * 0.4 - meta.height / 2),
+    top: Math.round(H * 0.48 - meta.height / 2),
   });
 
   layers.push({ input: footerSvg(), top: H - scale(160), left: 0 });
@@ -244,8 +248,9 @@ async function composePhoneShot({ headline, subheadline, body, accent, screenPat
 }
 
 /**
- * Une capture par pôle public (pas d’Admin, pas de hero séparé).
- * @type {Array<{file:string, pole:string, headline:string, subheadline:string, accent:string, screen:string, sourceLabel:string, recommended?:number, note?:string}>}
+ * 7 pôles publics + 3 objectif (pourquoi ProDay) — pas d’Admin.
+ * kind: 'phone' (défaut) | 'hero' (lockup brand, sans téléphone).
+ * @type {Array<{file:string, pole:string, headline:string, subheadline:string, body?:string, accent:string, kind?:'phone'|'hero', screen?:string, sourceLabel:string, recommended?:number, note?:string}>}
  */
 const SHOTS = [
   {
@@ -314,6 +319,40 @@ const SHOTS = [
     screen: resolve(appScreens, 'sponsor/sponsor-prospects.jpg'),
     sourceLabel: 'website/public/images/app/sponsor/sponsor-prospects.jpg',
   },
+  // —— Objectif / pourquoi ProDay (après les pôles) ——
+  {
+    file: '08-objectif-infrastructure.png',
+    pole: 'Objectif',
+    kind: 'hero',
+    headline: 'Pas un outil de plus.',
+    subheadline: 'L’infrastructure de votre football.',
+    body: 'Pas huit produits · une infrastructure',
+    accent: ACCENT.coach,
+    sourceLabel: 'assets/branding/proday-lockup-official-source.png',
+    note: 'Hero brand · promesse infrastructure (positioning)',
+  },
+  {
+    file: '09-objectif-centralisation.png',
+    pole: 'Centralisation',
+    headline: 'Une seule app',
+    subheadline: 'Plus de WhatsApp · tableurs · docs',
+    body: 'Ce que la centralisation supprime',
+    accent: ACCENT.club,
+    screen: resolve(appScreens, 'club/club-outils.jpg'),
+    sourceLabel: 'website/public/images/app/club/club-outils.jpg',
+    note: 'Fragmentation → une app (footer site / positioning)',
+  },
+  {
+    file: '10-objectif-portes.png',
+    pole: 'Portes',
+    headline: 'Six portes d’entrée',
+    subheadline: 'Un seul écosystème',
+    body: 'Tous les rôles · une seule donnée',
+    accent: '#C5A059',
+    screen: resolve(appScreens, 'player/player-accueil.jpg'),
+    sourceLabel: 'website/public/images/app/player/player-accueil.jpg',
+    note: 'Portes d’entrée vers le même graphe football',
+  },
 ];
 
 function removeStaleOutputs(expectedFiles) {
@@ -327,33 +366,54 @@ function removeStaleOutputs(expectedFiles) {
 
 async function writeShot(shot) {
   const outPath = resolve(outDir, shot.file);
-  if (!existsSync(shot.screen)) {
+  const kind = shot.kind === 'hero' ? 'hero' : 'phone';
+  if (kind === 'phone' && !existsSync(shot.screen)) {
     throw new Error(`Asset manquant : ${shot.screen}`);
   }
-  const buf = await composePhoneShot({
-    headline: shot.headline,
-    subheadline: shot.subheadline,
-    accent: shot.accent,
-    screenPath: shot.screen,
-  });
+  if (kind === 'hero' && !existsSync(LOCKUP)) {
+    throw new Error(`Lockup manquant : ${LOCKUP}`);
+  }
+  const buf =
+    kind === 'hero'
+      ? await composeHero({
+          headline: shot.headline,
+          subheadline: shot.subheadline,
+          body: shot.body,
+          accent: shot.accent,
+        })
+      : await composePhoneShot({
+          headline: shot.headline,
+          subheadline: shot.subheadline,
+          body: shot.body,
+          accent: shot.accent,
+          screenPath: shot.screen,
+        });
   await sharp(buf).png({ compressionLevel: 9 }).toFile(outPath);
   const meta = await sharp(buf).metadata();
   console.log(`✓ ${shot.file}  ${meta.width}×${meta.height}  (${shot.pole})`);
   return {
     file: shot.file,
     pole: shot.pole,
+    kind,
     width: meta.width,
     height: meta.height,
     recommended: shot.recommended ?? null,
     source: shot.sourceLabel,
     note: shot.note ?? null,
+    headline: shot.headline,
+    subheadline: shot.subheadline,
+    body: shot.body ?? null,
   };
 }
 
 async function main() {
   mkdirSync(outDir, { recursive: true });
   removeStaleOutputs(SHOTS.map((s) => s.file));
-  console.log(`→ Captures App Store iOS 6,5" (${W}×${H}) — ${SHOTS.length} pôles…`);
+  const poleCount = SHOTS.filter((s) => !String(s.file).includes('objectif')).length;
+  const objectifCount = SHOTS.length - poleCount;
+  console.log(
+    `→ Captures App Store iOS 6,5" (${W}×${H}) — ${poleCount} pôles + ${objectifCount} objectif…`,
+  );
   const results = [];
   for (const shot of SHOTS) {
     results.push(await writeShot(shot));
@@ -365,9 +425,13 @@ async function main() {
     dimensions: `${W}×${H}`,
     portrait: true,
     device: 'iPhone 6,5" (App Store Connect)',
-    strategy: 'Une capture par pôle public (7) — pas de hero séparé, pas d’Admin',
+    strategy:
+      '7 pôles publics + 3 objectif (infrastructure · centralisation · portes) — pas d’Admin',
     screenSources: 'website/public/images/app/ (captures simulateur réelles v1.0.8)',
-    branding: ['assets/branding/proday-symbol-white.png + wordmark PRODAY'],
+    branding: [
+      'assets/branding/proday-symbol-white.png + wordmark PRODAY',
+      'assets/branding/proday-lockup-official-source.png (hero 08)',
+    ],
     poles: results.map((r) => r.pole),
     files: results,
     recommendedFirst: results
