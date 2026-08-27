@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 /**
- * Génère les captures App Store iOS iPhone 6,5" (portrait).
+ * Génère les captures App Store iOS (portrait).
  *
- * Dimensions par défaut : 1284 × 2778 px (14 Pro Max / 13 Pro Max / 12 Pro Max).
- * Option legacy : 1242 × 2688 px (--legacy).
+ * iPhone 6,5" (défaut) : 1284 × 2778 px — assets/marketing/app-store/ios-6.5/
+ * iPhone legacy         : 1242 × 2688 px — même dossier (--legacy)
+ * iPad 13"              : 2064 × 2752 px — assets/marketing/app-store/ipad-13/ (--ipad)
+ * iPad 12,9" legacy     : 2048 × 2732 px — même dossier (--ipad --legacy)
  *
  * Usage :
  *   node scripts/generate-app-store-screenshots.mjs
  *   node scripts/generate-app-store-screenshots.mjs --legacy
+ *   node scripts/generate-app-store-screenshots.mjs --ipad
  *   npm run marketing:app-store-ios
+ *   npm run marketing:app-store-ipad
  *
- * Sortie : assets/marketing/app-store/ios-6.5/*.png
- *
- * Écrans : captures réelles simulateur v1.0.8 (website/public/images/app/).
+ * Écrans pôles : captures simulateur v1.0.8 (website/public/images/app/).
+ * Objectif 08–10 : texte + branding uniquement (pas d’UI app).
  */
 import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
@@ -21,12 +24,35 @@ import sharp from '../website/node_modules/sharp/lib/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
-const outDir = resolve(repoRoot, 'assets/marketing/app-store/ios-6.5');
 const appScreens = resolve(repoRoot, 'website/public/images/app');
 
+const IPAD = process.argv.includes('--ipad');
 const LEGACY = process.argv.includes('--legacy');
-const W = LEGACY ? 1242 : 1284;
-const H = LEGACY ? 2688 : 2778;
+
+/** @type {{ id: string, device: string, outDir: string, W: number, H: number, baseW: number, frame: 'phone'|'tablet' }} */
+const PRESET = IPAD
+  ? {
+      id: LEGACY ? 'ipad-12.9' : 'ipad-13',
+      device: LEGACY
+        ? 'iPad 12,9" legacy (App Store Connect)'
+        : 'iPad 13" (App Store Connect)',
+      outDir: resolve(repoRoot, 'assets/marketing/app-store/ipad-13'),
+      W: LEGACY ? 2048 : 2064,
+      H: LEGACY ? 2732 : 2752,
+      baseW: 2064,
+      frame: 'tablet',
+    }
+  : {
+      id: LEGACY ? 'ios-6.5-legacy' : 'ios-6.5',
+      device: 'iPhone 6,5" (App Store Connect)',
+      outDir: resolve(repoRoot, 'assets/marketing/app-store/ios-6.5'),
+      W: LEGACY ? 1242 : 1284,
+      H: LEGACY ? 2688 : 2778,
+      baseW: 1284,
+      frame: 'phone',
+    };
+
+const { outDir, W, H, baseW, frame: FRAME } = PRESET;
 
 const LOCKUP = resolve(repoRoot, 'assets/branding/proday-lockup-official-source.png');
 const SYMBOL = resolve(repoRoot, 'assets/branding/proday-symbol-white.png');
@@ -51,10 +77,10 @@ function esc(text) {
 }
 
 function scale(n) {
-  return Math.round(n * (W / 1284));
+  return Math.round(n * (W / baseW));
 }
 
-/** iPhone frame proportions (bezel + dynamic island). */
+/** iPhone frame proportions (bezel + dynamic island). Coords relative to iPhone baseW=1284. */
 function phoneLayout() {
   const phoneW = scale(920);
   const phoneH = scale(1880);
@@ -66,6 +92,34 @@ function phoneLayout() {
   const screenW = phoneW - bezel * 2;
   const screenH = phoneH - bezel * 2 - scale(8);
   return { phoneW, phoneH, left, top, bezel, radius, screenRadius, screenW, screenH };
+}
+
+/**
+ * Cadre iPad Pro 13" (bezels fins, coins arrondis, caméra frontale discrète).
+ * Coords relatives à baseW=2064.
+ */
+function tabletLayout() {
+  // Cadre large type iPad Pro ; hauteur bornée pour laisser branding + pied.
+  const tabletW = scale(1580);
+  const tabletH = scale(1980);
+  const left = Math.round((W - tabletW) / 2);
+  const top = scale(560);
+  const bezel = scale(26);
+  const radius = scale(52);
+  const screenRadius = scale(34);
+  const screenW = tabletW - bezel * 2;
+  const screenH = tabletH - bezel * 2;
+  return {
+    tabletW,
+    tabletH,
+    left,
+    top,
+    bezel,
+    radius,
+    screenRadius,
+    screenW,
+    screenH,
+  };
 }
 
 function backgroundSvg(accent) {
@@ -86,15 +140,15 @@ function backgroundSvg(accent) {
 }
 
 function headlineSvg({ headline, subheadline, body, accent }) {
-  const yHead = scale(228);
-  const ySub = scale(298);
-  const yBody = scale(362);
-  const headSize = scale(64);
-  const subSize = scale(44);
-  const bodySize = scale(30);
+  const yHead = scale(FRAME === 'tablet' ? 200 : 228);
+  const ySub = scale(FRAME === 'tablet' ? 270 : 298);
+  const yBody = scale(FRAME === 'tablet' ? 330 : 362);
+  const headSize = scale(FRAME === 'tablet' ? 56 : 64);
+  const subSize = scale(FRAME === 'tablet' ? 38 : 44);
+  const bodySize = scale(FRAME === 'tablet' ? 28 : 30);
   const subColor = accent === '#FFFFFF' ? '#C5A059' : accent;
   return Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${scale(560)}">
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${scale(520)}">
       <style>
         .h { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 800; fill: #FFFFFF; }
         .s { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; }
@@ -107,13 +161,13 @@ function headlineSvg({ headline, subheadline, body, accent }) {
   );
 }
 
-/** Bloc texte objectif (multi-lignes) — remplace le téléphone / screenshot app. */
+/** Bloc texte objectif (multi-lignes) — remplace le cadre appareil / screenshot app. */
 function objectifCopySvg({ headline, subheadline, bodyLines = [], accent }) {
   const subColor = accent === '#FFFFFF' ? '#C5A059' : accent;
-  const headSize = scale(58);
-  const subSize = scale(40);
-  const bodySize = scale(34);
-  const lineH = scale(52);
+  const headSize = scale(FRAME === 'tablet' ? 52 : 58);
+  const subSize = scale(FRAME === 'tablet' ? 36 : 40);
+  const bodySize = scale(FRAME === 'tablet' ? 32 : 34);
+  const lineH = scale(FRAME === 'tablet' ? 48 : 52);
   const yHead = scale(40);
   const ySub = scale(110);
   const yBody0 = scale(200);
@@ -163,10 +217,35 @@ function phoneOverlaySvg(accent) {
   );
 }
 
+/** Corps tablette iPad. */
+function tabletBodySvg() {
+  const { tabletW, tabletH, radius } = tabletLayout();
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${tabletW}" height="${tabletH}">
+      <rect x="0" y="0" width="${tabletW}" height="${tabletH}" rx="${radius}" fill="#1A1A1A"/>
+    </svg>`,
+  );
+}
+
+/** Contour + caméra frontale discrète (pas de Dynamic Island). */
+function tabletOverlaySvg(accent) {
+  const { tabletW, tabletH, radius, bezel } = tabletLayout();
+  const camR = scale(8);
+  const camX = tabletW / 2;
+  const camY = bezel / 2;
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${tabletW}" height="${tabletH}">
+      <rect x="0" y="0" width="${tabletW}" height="${tabletH}" rx="${radius}" fill="none" stroke="${accent}" stroke-opacity="0.4" stroke-width="2.5"/>
+      <circle cx="${camX}" cy="${camY}" r="${camR}" fill="#0A0A0A"/>
+      <circle cx="${camX}" cy="${camY}" r="${Math.max(2, camR - 3)}" fill="#2A2A2A"/>
+    </svg>`,
+  );
+}
+
 function footerSvg() {
   const tagY = scale(40);
   const urlY = scale(90);
-  const size = scale(28);
+  const size = scale(FRAME === 'tablet' ? 26 : 28);
   return Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${scale(160)}">
       <style>
@@ -180,7 +259,7 @@ function footerSvg() {
 }
 
 function brandWordmarkSvg() {
-  const size = scale(40);
+  const size = scale(FRAME === 'tablet' ? 36 : 40);
   const y = scale(52);
   return Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${scale(72)}">
@@ -193,12 +272,12 @@ function brandWordmarkSvg() {
 
 /** Symbole P + wordmark PRODAY (sans badge carré store). */
 async function brandingStripLayers() {
-  const symbolW = scale(112);
+  const symbolW = scale(FRAME === 'tablet' ? 96 : 112);
   const symbol = await sharp(SYMBOL).resize({ width: symbolW, fit: 'inside' }).png().toBuffer();
   const symbolMeta = await sharp(symbol).metadata();
   const wordmark = brandWordmarkSvg();
   const stripH = symbolMeta.height + scale(72);
-  const symbolTop = scale(28);
+  const symbolTop = scale(24);
   return {
     layers: [
       {
@@ -221,7 +300,7 @@ async function fitScreenImage(imagePath, screenW, screenH) {
 
 /**
  * Shot « objectif » : texte + branding (symbole / lockup).
- * Pas de cadre téléphone, pas de screenshot app.
+ * Pas de cadre appareil, pas de screenshot app.
  */
 async function composeHero({ headline, subheadline, body, bodyLines, accent }) {
   const lines =
@@ -241,7 +320,7 @@ async function composeHero({ headline, subheadline, body, bodyLines, accent }) {
   const copyMeta = await sharp(copySvg).metadata();
   const copyTop = branding.stripH + scale(36);
 
-  const lockupW = scale(640);
+  const lockupW = scale(FRAME === 'tablet' ? 720 : 640);
   const lockup = await sharp(LOCKUP).resize({ width: lockupW, fit: 'inside' }).png().toBuffer();
   const lockMeta = await sharp(lockup).metadata();
   const footerH = scale(160);
@@ -303,9 +382,44 @@ async function composePhoneShot({ headline, subheadline, body, accent, screenPat
     .toBuffer();
 }
 
+async function composeTabletShot({ headline, subheadline, body, accent, screenPath }) {
+  const { left, top, bezel, screenW, screenH, screenRadius } = tabletLayout();
+  const screenX = left + bezel;
+  const screenY = top + bezel;
+
+  const screenBuf = await fitScreenImage(screenPath, screenW, screenH);
+
+  const mask = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${screenW}" height="${screenH}">
+      <rect width="${screenW}" height="${screenH}" rx="${screenRadius}" fill="#fff"/>
+    </svg>`,
+  );
+  const roundedScreen = await sharp(screenBuf)
+    .composite([{ input: mask, blend: 'dest-in' }])
+    .png()
+    .toBuffer();
+
+  const branding = await brandingStripLayers();
+
+  const layers = [
+    { input: backgroundSvg(accent), top: 0, left: 0 },
+    ...branding.layers.map((layer) => ({ ...layer })),
+    { input: headlineSvg({ headline, subheadline, body, accent }), top: 0, left: 0 },
+    { input: await sharp(tabletBodySvg()).png().toBuffer(), top, left },
+    { input: roundedScreen, top: screenY, left: screenX },
+    { input: await sharp(tabletOverlaySvg(accent)).png().toBuffer(), top, left },
+    { input: footerSvg(), top: H - scale(160), left: 0 },
+  ];
+
+  return sharp({ create: { width: W, height: H, channels: 4, background: '#000' } })
+    .composite(layers)
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
 /**
  * 7 pôles publics + 3 objectif (pourquoi ProDay) — pas d’Admin.
- * kind: 'phone' (pôles, UI app) | 'hero' (objectif : texte + lockup, sans téléphone).
+ * kind: 'phone' (pôles, UI app) | 'hero' (objectif : texte + lockup, sans appareil).
  * @type {Array<{file:string, pole:string, headline:string, subheadline:string, body?:string, bodyLines?:string[], accent:string, kind?:'phone'|'hero', screen?:string, sourceLabel:string, recommended?:number, note?:string}>}
  */
 const SHOTS = [
@@ -435,8 +549,8 @@ function removeStaleOutputs(expectedFiles) {
 
 async function writeShot(shot) {
   const outPath = resolve(outDir, shot.file);
-  const kind = shot.kind === 'hero' ? 'hero' : 'phone';
-  if (kind === 'phone' && !existsSync(shot.screen)) {
+  const kind = shot.kind === 'hero' ? 'hero' : FRAME === 'tablet' ? 'tablet' : 'phone';
+  if (kind !== 'hero' && !existsSync(shot.screen)) {
     throw new Error(`Asset manquant : ${shot.screen}`);
   }
   if (kind === 'hero' && !existsSync(LOCKUP)) {
@@ -451,13 +565,21 @@ async function writeShot(shot) {
           bodyLines: shot.bodyLines,
           accent: shot.accent,
         })
-      : await composePhoneShot({
-          headline: shot.headline,
-          subheadline: shot.subheadline,
-          body: shot.body,
-          accent: shot.accent,
-          screenPath: shot.screen,
-        });
+      : FRAME === 'tablet'
+        ? await composeTabletShot({
+            headline: shot.headline,
+            subheadline: shot.subheadline,
+            body: shot.body,
+            accent: shot.accent,
+            screenPath: shot.screen,
+          })
+        : await composePhoneShot({
+            headline: shot.headline,
+            subheadline: shot.subheadline,
+            body: shot.body,
+            accent: shot.accent,
+            screenPath: shot.screen,
+          });
   await sharp(buf).png({ compressionLevel: 9 }).toFile(outPath);
   const meta = await sharp(buf).metadata();
   console.log(`✓ ${shot.file}  ${meta.width}×${meta.height}  (${shot.pole})`);
@@ -486,22 +608,27 @@ async function main() {
   removeStaleOutputs(SHOTS.map((s) => s.file));
   const poleCount = SHOTS.filter((s) => !String(s.file).includes('objectif')).length;
   const objectifCount = SHOTS.length - poleCount;
+  const label = IPAD ? 'iPad 13"' : 'iOS 6,5"';
   console.log(
-    `→ Captures App Store iOS 6,5" (${W}×${H}) — ${poleCount} pôles + ${objectifCount} objectif…`,
+    `→ Captures App Store ${label} (${W}×${H}) — ${poleCount} pôles + ${objectifCount} objectif…`,
   );
   const results = [];
   for (const shot of SHOTS) {
     results.push(await writeShot(shot));
   }
 
+  const strategy = IPAD
+    ? '7 pôles (tablette + UI) + 3 objectif texte/branding sans UI — pas d’Admin'
+    : '7 pôles (téléphone + UI) + 3 objectif texte/branding sans UI — pas d’Admin';
+
   const manifest = {
     generatedAt: new Date().toISOString(),
     appVersion: '1.0.8',
+    preset: PRESET.id,
     dimensions: `${W}×${H}`,
     portrait: true,
-    device: 'iPhone 6,5" (App Store Connect)',
-    strategy:
-      '7 pôles (téléphone + UI) + 3 objectif texte/branding sans UI — pas d’Admin',
+    device: PRESET.device,
+    strategy,
     screenSources:
       'pôles: website/public/images/app/ (simulateur v1.0.8) · objectif: branding only',
     branding: [

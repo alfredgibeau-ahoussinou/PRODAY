@@ -133,7 +133,7 @@ Annuel : −20 % (12 mois facturés d'un coup).
 
 - [ ] Description FR collée (section ci-dessus)
 - [ ] Sous-titre + mots-clés iOS
-- [ ] Captures d'écran iPhone 6,5" — voir section **Captures d'écran App Store** ci-dessous
+- [ ] Captures d'écran iPhone 6,5" + iPad 13" — voir section **Captures d'écran App Store** ci-dessous
 - [ ] 16 SKU créés — [STORE_SETUP.md](./STORE_SETUP.md)
 - [ ] Test sandbox iOS + licence test Android sur `player_plus` et `sponsor_pro`
 - [ ] `npm test -- iapProducts` vert
@@ -153,11 +153,24 @@ App Store Connect exige **exactement** l'une de ces tailles (portrait) :
 
 **Ne pas** uploader des captures redimensionnées à la main (Preview, export Figma sans preset) — regénérer via le script.
 
-### Fichiers prêts à l'emploi
+Dossier : [`assets/marketing/app-store/ios-6.5/`](../assets/marketing/app-store/ios-6.5/) — voir README du dossier.
 
-Dossier : [`assets/marketing/app-store/ios-6.5/`](../assets/marketing/app-store/ios-6.5/)
+### iPad 13" — dimensions acceptées (obligatoire si l’app tourne sur iPad)
 
-7 PNG **1284 × 2778** (portrait), ordre d'upload — **une capture par pôle public** :
+Message ASC typique : *« Veuillez charger une capture d’écran adaptée aux iPad munis d’un écran de 13 pouces »*.
+
+| Classe | Portrait | Paysage |
+|--------|----------|---------|
+| **13" (requis)** — iPad Pro 13" / Air 13" | **2064 × 2752 px** | 2752 × 2064 px |
+| 12,9" legacy (optionnel) | 2048 × 2732 px | 2732 × 2048 px |
+
+Dossier : [`assets/marketing/app-store/ipad-13/`](../assets/marketing/app-store/ipad-13/) — **10 PNG 2064 × 2752** (7 pôles cadre tablette + 3 objectif texte).
+
+Upload : **Médias de l’app** → **Captures d’écran pour iPad** → **13 pouces**.
+
+### Contenu commun (iPhone + iPad)
+
+Ordre d’upload (01 → 10) :
 
 1. `01-pole-joueur.png` — Profil, stats et carrière en ligne
 2. `02-pole-coach.png` — Pilotez votre staff et vos séances
@@ -166,16 +179,19 @@ Dossier : [`assets/marketing/app-store/ios-6.5/`](../assets/marketing/app-store/
 5. `05-pole-parent.png` — Accompagnez sans étouffer
 6. `06-pole-supporter.png` — Suivez matchs, scores et favoris
 7. `07-pole-sponsor.png` — Visibilité clubs et marques
+8. `08-objectif-infrastructure.png` — texte / branding (sans UI)
+9. `09-objectif-centralisation.png` — texte / branding (sans UI)
+10. `10-objectif-portes.png` — texte / branding (sans UI)
 
 **3 captures prioritaires** si upload partiel : `01`, `02`, `03`.
 
-Pas de capture Admin (cockpit interne). Jusqu'à **3 aperçus app** (vidéo) + **7 captures** par taille d'appareil.
+Pas de capture Admin (cockpit interne).
 
 ### Regénérer
 
 ```bash
-npm run marketing:app-store-ios          # 1284 × 2778 (défaut)
-npm run marketing:app-store-ios:legacy   # 1242 × 2688
+npm run marketing:app-store-ios          # iPhone 1284 × 2778
+npm run marketing:app-store-ios:legacy   # iPhone 1242 × 2688
+npm run marketing:app-store-ipad         # iPad 13" 2064 × 2752
+npm run marketing:app-store-ipad:legacy  # iPad 12,9" 2048 × 2732
 ```
-
-Contenu aligné checklist : **un pôle par capture** (Joueur, Coach, Club, Président, Parent, Supporter, Sponsor) — pas de doublons Mercato/Arena/Pulse, pas de mock « IA sur tout le match ».
