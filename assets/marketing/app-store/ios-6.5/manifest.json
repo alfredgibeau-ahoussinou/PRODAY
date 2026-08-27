@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-08-27T10:02:02.521Z",
+  "generatedAt": "2026-08-27T10:10:32.537Z",
   "appVersion": "1.0.8",
   "dimensions": "1284×2778",
   "portrait": true,
   "device": "iPhone 6,5\" (App Store Connect)",
-  "strategy": "7 pôles publics + 3 objectif (infrastructure · centralisation · portes) — pas d’Admin",
-  "screenSources": "website/public/images/app/ (captures simulateur réelles v1.0.8)",
+  "strategy": "7 pôles (téléphone + UI) + 3 objectif texte/branding sans UI — pas d’Admin",
+  "screenSources": "pôles: website/public/images/app/ (simulateur v1.0.8) · objectif: branding only",
   "branding": [
     "assets/branding/proday-symbol-white.png + wordmark PRODAY",
-    "assets/branding/proday-lockup-official-source.png (hero 08)"
+    "assets/branding/proday-lockup-official-source.png (hero 08–10)"
   ],
   "poles": [
     "Joueur",
@@ -34,7 +34,8 @@
       "note": null,
       "headline": "Pôle Joueur",
       "subheadline": "Profil, stats et carrière en ligne",
-      "body": null
+      "body": null,
+      "bodyLines": null
     },
     {
       "file": "02-pole-coach.png",
@@ -47,7 +48,8 @@
       "note": null,
       "headline": "Pôle Coach",
       "subheadline": "Pilotez votre staff et vos séances",
-      "body": null
+      "body": null,
+      "bodyLines": null
     },
     {
       "file": "03-pole-club.png",
@@ -60,7 +62,8 @@
       "note": null,
       "headline": "Pôle Club",
       "subheadline": "Équipes, licenciés et recrutement",
-      "body": null
+      "body": null,
+      "bodyLines": null
     },
     {
       "file": "04-pole-president.png",
@@ -73,7 +76,8 @@
       "note": null,
       "headline": "Pôle Président",
       "subheadline": "Le club en un coup d’œil",
-      "body": null
+      "body": null,
+      "bodyLines": null
     },
     {
       "file": "05-pole-parent.png",
@@ -86,7 +90,8 @@
       "note": null,
       "headline": "Pôle Parent",
       "subheadline": "Accompagnez sans étouffer",
-      "body": null
+      "body": null,
+      "bodyLines": null
     },
     {
       "file": "06-pole-supporter.png",
@@ -99,7 +104,8 @@
       "note": null,
       "headline": "Pôle Supporter",
       "subheadline": "Suivez matchs, scores et favoris",
-      "body": null
+      "body": null,
+      "bodyLines": null
     },
     {
       "file": "07-pole-sponsor.png",
@@ -112,7 +118,8 @@
       "note": null,
       "headline": "Pôle Sponsor",
       "subheadline": "Visibilité clubs et marques",
-      "body": null
+      "body": null,
+      "bodyLines": null
     },
     {
       "file": "08-objectif-infrastructure.png",
@@ -122,36 +129,52 @@
       "height": 2778,
       "recommended": null,
       "source": "assets/branding/proday-lockup-official-source.png",
-      "note": "Hero brand · promesse infrastructure (positioning)",
+      "note": "Hero texte + lockup · promesse infrastructure (sans UI)",
       "headline": "Pas un outil de plus.",
       "subheadline": "L’infrastructure de votre football.",
-      "body": "Pas huit produits · une infrastructure"
+      "body": "Pas huit produits. Une infrastructure pour relier joueurs, clubs et staffs.",
+      "bodyLines": [
+        "Pas huit produits.",
+        "Une infrastructure pour relier",
+        "joueurs, clubs et staffs."
+      ]
     },
     {
       "file": "09-objectif-centralisation.png",
       "pole": "Centralisation",
-      "kind": "phone",
+      "kind": "hero",
       "width": 1284,
       "height": 2778,
       "recommended": null,
-      "source": "website/public/images/app/club/club-outils.jpg",
-      "note": "Fragmentation → une app (footer site / positioning)",
-      "headline": "Une seule app",
-      "subheadline": "Plus de WhatsApp · tableurs · docs",
-      "body": "Ce que la centralisation supprime"
+      "source": "assets/branding/proday-lockup-official-source.png",
+      "note": "Hero texte + lockup · centralisation (sans UI)",
+      "headline": "Tout au même endroit.",
+      "subheadline": "Ce que la centralisation change.",
+      "body": "Plus de WhatsApp. Plus de tableurs. Plus de docs éparpillés.",
+      "bodyLines": [
+        "Plus de WhatsApp.",
+        "Plus de tableurs.",
+        "Plus de docs éparpillés."
+      ]
     },
     {
       "file": "10-objectif-portes.png",
       "pole": "Portes",
-      "kind": "phone",
+      "kind": "hero",
       "width": 1284,
       "height": 2778,
       "recommended": null,
-      "source": "website/public/images/app/player/player-accueil.jpg",
-      "note": "Portes d’entrée vers le même graphe football",
-      "headline": "Six portes d’entrée",
-      "subheadline": "Un seul écosystème",
-      "body": "Tous les rôles · une seule donnée"
+      "source": "assets/branding/proday-lockup-official-source.png",
+      "note": "Hero texte + lockup · portes d’entrée (sans UI)",
+      "headline": "Six portes d’entrée.",
+      "subheadline": "Un seul écosystème.",
+      "body": "Joueur · Coach · Club Parent · Supporter · Sponsor Vous entrez par votre rôle. La donnée reste partagée.",
+      "bodyLines": [
+        "Joueur · Coach · Club",
+        "Parent · Supporter · Sponsor",
+        "Vous entrez par votre rôle.",
+        "La donnée reste partagée."
+      ]
     }
   ],
   "recommendedFirst": [

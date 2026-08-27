@@ -17,6 +17,8 @@ App Store Connect → **Médias de l’app** → **Captures d’écran** → **i
 
 ### Pôles (01–07)
 
+Cadre iPhone + capture simulateur réelle.
+
 | # | Fichier | Pôle | Accroche | Écran réel (v1.0.8) |
 |---|---------|------|----------|----------------------|
 | 1 | `01-pole-joueur.png` | Joueur | Profil, stats et carrière en ligne | `player/player-profil.jpg` |
@@ -31,23 +33,22 @@ App Store Connect → **Médias de l’app** → **Captures d’écran** → **i
 
 ### Objectif / pourquoi ProDay (08–10)
 
-Présentent **pourquoi ProDay existe** (infrastructure · centralisation · portes), pas des pôles supplémentaires.
+Texte + branding (symbole P · wordmark · lockup). **Pas de cadre téléphone**, **pas de screenshot app** — uniquement le but de ProDay.
 
-| # | Fichier | Thème | Accroche | Visuel |
-|---|---------|-------|----------|--------|
-| 8 | `08-objectif-infrastructure.png` | Promesse | Pas un outil de plus. · L’infrastructure de votre football. | Hero lockup brand |
-| 9 | `09-objectif-centralisation.png` | Centralisation | Une seule app · Plus de WhatsApp · tableurs · docs | `club/club-outils.jpg` |
-| 10 | `10-objectif-portes.png` | Portes | Six portes d’entrée · Un seul écosystème | `player/player-accueil.jpg` |
+| # | Fichier | Thème | Accroche |
+|---|---------|-------|----------|
+| 8 | `08-objectif-infrastructure.png` | Infrastructure | Pas un outil de plus. · L’infrastructure de votre football. |
+| 9 | `09-objectif-centralisation.png` | Centralisation | Tout au même endroit. · Ce que la centralisation change. |
+| 10 | `10-objectif-portes.png` | Portes | Six portes d’entrée. · Un seul écosystème. |
 
 **Hors scope App Store public** : Admin (cockpit interne).
 
 ### Template
 
-- **En-tête** : symbole P + wordmark **PRODAY**, titre, promesse courte
-- **Cadre iPhone** : capture simulateur réelle (pôles + 09–10) · **hero lockup** (08)
-- **Pied** : tagline + proday75.fr
+- **Pôles (01–07)** : symbole P + wordmark **PRODAY**, titre, promesse courte · cadre iPhone + UI · pied tagline + proday75.fr
+- **Objectif (08–10)** : même en-tête / pied · copy multi-lignes qui explique le but · lockup brand au centre · **aucune UI app**
 
-Les captures UI proviennent de `website/public/images/app/` — mêmes visuels que le site marketing (simulateur iOS, app **1.0.8**). Copy aligné sur `website/src/lib/positioning.ts` et le footer site.
+Les captures UI (pôles) proviennent de `website/public/images/app/` — mêmes visuels que le site marketing (simulateur iOS, app **1.0.8**). Copy aligné sur `website/src/lib/positioning.ts` et le footer site.
 
 ## 3 captures recommandées en premier
 
@@ -73,8 +74,8 @@ Script : [`scripts/generate-app-store-screenshots.mjs`](../../../../scripts/gene
 
 Sources :
 
-- **Branding** : `assets/branding/proday-symbol-white.png` · `proday-lockup-official-source.png` (08)
-- **UI app** : `website/public/images/app/` (réf. `website/src/lib/*AppScreens.ts`)
+- **Branding** : `assets/branding/proday-symbol-white.png` · `proday-lockup-official-source.png` (08–10)
+- **UI app** (pôles uniquement) : `website/public/images/app/` (réf. `website/src/lib/*AppScreens.ts`)
 
 ## Upload App Store Connect
 

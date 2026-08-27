@@ -107,6 +107,37 @@ function headlineSvg({ headline, subheadline, body, accent }) {
   );
 }
 
+/** Bloc texte objectif (multi-lignes) — remplace le téléphone / screenshot app. */
+function objectifCopySvg({ headline, subheadline, bodyLines = [], accent }) {
+  const subColor = accent === '#FFFFFF' ? '#C5A059' : accent;
+  const headSize = scale(58);
+  const subSize = scale(40);
+  const bodySize = scale(34);
+  const lineH = scale(52);
+  const yHead = scale(40);
+  const ySub = scale(110);
+  const yBody0 = scale(200);
+  const bodyTexts = bodyLines
+    .map(
+      (line, i) =>
+        `<text x="${W / 2}" y="${yBody0 + i * lineH}" text-anchor="middle" class="b" font-size="${bodySize}">${esc(line)}</text>`,
+    )
+    .join('\n');
+  const h = yBody0 + Math.max(bodyLines.length, 1) * lineH + scale(40);
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${h}">
+      <style>
+        .h { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 800; fill: #FFFFFF; }
+        .s { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; }
+        .b { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-weight: 500; fill: rgba(255,255,255,0.78); }
+      </style>
+      <text x="${W / 2}" y="${yHead}" text-anchor="middle" class="h" font-size="${headSize}">${esc(headline)}</text>
+      ${subheadline ? `<text x="${W / 2}" y="${ySub}" text-anchor="middle" class="s" font-size="${subSize}" fill="${subColor}">${esc(subheadline)}</text>` : ''}
+      ${bodyTexts}
+    </svg>`,
+  );
+}
+
 /** Corps du téléphone (sans remplissage opaque sur la zone écran). */
 function phoneBodySvg() {
   const { phoneW, phoneH, radius } = phoneLayout();
@@ -188,24 +219,49 @@ async function fitScreenImage(imagePath, screenW, screenH) {
     .toBuffer();
 }
 
-async function composeHero({ headline, subheadline, body, accent }) {
+/**
+ * Shot « objectif » : texte + branding (symbole / lockup).
+ * Pas de cadre téléphone, pas de screenshot app.
+ */
+async function composeHero({ headline, subheadline, body, bodyLines, accent }) {
+  const lines =
+    Array.isArray(bodyLines) && bodyLines.length > 0
+      ? bodyLines
+      : body
+        ? [body]
+        : [];
+
   const branding = await brandingStripLayers();
+  const copySvg = objectifCopySvg({
+    headline,
+    subheadline,
+    bodyLines: lines,
+    accent,
+  });
+  const copyMeta = await sharp(copySvg).metadata();
+  const copyTop = branding.stripH + scale(36);
+
+  const lockupW = scale(640);
+  const lockup = await sharp(LOCKUP).resize({ width: lockupW, fit: 'inside' }).png().toBuffer();
+  const lockMeta = await sharp(lockup).metadata();
+  const footerH = scale(160);
+  const lockTop = Math.min(
+    H - footerH - lockMeta.height - scale(48),
+    Math.max(copyTop + copyMeta.height + scale(80), Math.round(H * 0.52)),
+  );
+
   const layers = [
     { input: backgroundSvg(accent), top: 0, left: 0 },
-    ...branding.layers.map((layer) => ({ ...layer })),
-    { input: headlineSvg({ headline, subheadline, body, accent }), top: 0, left: 0 },
+    ...branding.layers,
+    { input: copySvg, top: copyTop, left: 0 },
+    {
+      input: lockup,
+      left: Math.round((W - lockMeta.width) / 2),
+      top: lockTop,
+    },
+    { input: footerSvg(), top: H - footerH, left: 0 },
   ];
 
-  const lockupW = scale(820);
-  const lockup = await sharp(LOCKUP).resize({ width: lockupW, fit: 'inside' }).png().toBuffer();
-  const meta = await sharp(lockup).metadata();
-  layers.push({
-    input: lockup,
-    left: Math.round((W - meta.width) / 2),
-    top: Math.round(H * 0.48 - meta.height / 2),
-  });
-
-  layers.push({ input: footerSvg(), top: H - scale(160), left: 0 });
   return sharp({ create: { width: W, height: H, channels: 4, background: '#000' } })
     .composite(layers)
     .png({ compressionLevel: 9 })
@@ -249,8 +305,8 @@ async function composePhoneShot({ headline, subheadline, body, accent, screenPat
 
 /**
  * 7 pôles publics + 3 objectif (pourquoi ProDay) — pas d’Admin.
- * kind: 'phone' (défaut) | 'hero' (lockup brand, sans téléphone).
- * @type {Array<{file:string, pole:string, headline:string, subheadline:string, body?:string, accent:string, kind?:'phone'|'hero', screen?:string, sourceLabel:string, recommended?:number, note?:string}>}
+ * kind: 'phone' (pôles, UI app) | 'hero' (objectif : texte + lockup, sans téléphone).
+ * @type {Array<{file:string, pole:string, headline:string, subheadline:string, body?:string, bodyLines?:string[], accent:string, kind?:'phone'|'hero', screen?:string, sourceLabel:string, recommended?:number, note?:string}>}
  */
 const SHOTS = [
   {
@@ -319,39 +375,52 @@ const SHOTS = [
     screen: resolve(appScreens, 'sponsor/sponsor-prospects.jpg'),
     sourceLabel: 'website/public/images/app/sponsor/sponsor-prospects.jpg',
   },
-  // —— Objectif / pourquoi ProDay (après les pôles) ——
+  // —— Objectif / pourquoi ProDay (texte + branding, sans UI app) ——
   {
     file: '08-objectif-infrastructure.png',
     pole: 'Objectif',
     kind: 'hero',
     headline: 'Pas un outil de plus.',
     subheadline: 'L’infrastructure de votre football.',
-    body: 'Pas huit produits · une infrastructure',
+    bodyLines: [
+      'Pas huit produits.',
+      'Une infrastructure pour relier',
+      'joueurs, clubs et staffs.',
+    ],
     accent: ACCENT.coach,
     sourceLabel: 'assets/branding/proday-lockup-official-source.png',
-    note: 'Hero brand · promesse infrastructure (positioning)',
+    note: 'Hero texte + lockup · promesse infrastructure (sans UI)',
   },
   {
     file: '09-objectif-centralisation.png',
     pole: 'Centralisation',
-    headline: 'Une seule app',
-    subheadline: 'Plus de WhatsApp · tableurs · docs',
-    body: 'Ce que la centralisation supprime',
+    kind: 'hero',
+    headline: 'Tout au même endroit.',
+    subheadline: 'Ce que la centralisation change.',
+    bodyLines: [
+      'Plus de WhatsApp.',
+      'Plus de tableurs.',
+      'Plus de docs éparpillés.',
+    ],
     accent: ACCENT.club,
-    screen: resolve(appScreens, 'club/club-outils.jpg'),
-    sourceLabel: 'website/public/images/app/club/club-outils.jpg',
-    note: 'Fragmentation → une app (footer site / positioning)',
+    sourceLabel: 'assets/branding/proday-lockup-official-source.png',
+    note: 'Hero texte + lockup · centralisation (sans UI)',
   },
   {
     file: '10-objectif-portes.png',
     pole: 'Portes',
-    headline: 'Six portes d’entrée',
-    subheadline: 'Un seul écosystème',
-    body: 'Tous les rôles · une seule donnée',
+    kind: 'hero',
+    headline: 'Six portes d’entrée.',
+    subheadline: 'Un seul écosystème.',
+    bodyLines: [
+      'Joueur · Coach · Club',
+      'Parent · Supporter · Sponsor',
+      'Vous entrez par votre rôle.',
+      'La donnée reste partagée.',
+    ],
     accent: '#C5A059',
-    screen: resolve(appScreens, 'player/player-accueil.jpg'),
-    sourceLabel: 'website/public/images/app/player/player-accueil.jpg',
-    note: 'Portes d’entrée vers le même graphe football',
+    sourceLabel: 'assets/branding/proday-lockup-official-source.png',
+    note: 'Hero texte + lockup · portes d’entrée (sans UI)',
   },
 ];
 
@@ -379,6 +448,7 @@ async function writeShot(shot) {
           headline: shot.headline,
           subheadline: shot.subheadline,
           body: shot.body,
+          bodyLines: shot.bodyLines,
           accent: shot.accent,
         })
       : await composePhoneShot({
@@ -391,6 +461,10 @@ async function writeShot(shot) {
   await sharp(buf).png({ compressionLevel: 9 }).toFile(outPath);
   const meta = await sharp(buf).metadata();
   console.log(`✓ ${shot.file}  ${meta.width}×${meta.height}  (${shot.pole})`);
+  const bodyJoined =
+    Array.isArray(shot.bodyLines) && shot.bodyLines.length > 0
+      ? shot.bodyLines.join(' ')
+      : (shot.body ?? null);
   return {
     file: shot.file,
     pole: shot.pole,
@@ -402,7 +476,8 @@ async function writeShot(shot) {
     note: shot.note ?? null,
     headline: shot.headline,
     subheadline: shot.subheadline,
-    body: shot.body ?? null,
+    body: bodyJoined,
+    bodyLines: shot.bodyLines ?? null,
   };
 }
 
@@ -426,11 +501,12 @@ async function main() {
     portrait: true,
     device: 'iPhone 6,5" (App Store Connect)',
     strategy:
-      '7 pôles publics + 3 objectif (infrastructure · centralisation · portes) — pas d’Admin',
-    screenSources: 'website/public/images/app/ (captures simulateur réelles v1.0.8)',
+      '7 pôles (téléphone + UI) + 3 objectif texte/branding sans UI — pas d’Admin',
+    screenSources:
+      'pôles: website/public/images/app/ (simulateur v1.0.8) · objectif: branding only',
     branding: [
       'assets/branding/proday-symbol-white.png + wordmark PRODAY',
-      'assets/branding/proday-lockup-official-source.png (hero 08)',
+      'assets/branding/proday-lockup-official-source.png (hero 08–10)',
     ],
     poles: results.map((r) => r.pole),
     files: results,
