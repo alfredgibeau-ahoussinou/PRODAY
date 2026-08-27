@@ -10,4 +10,8 @@ appId: com.proday.app
 - assertVisible: Accueil
 - assertVisible: Matchs
 
+- tapOn:
+    point: "95%,92%"
+    optional: true
+
 - takeScreenshot: supporter-accueil-raw
