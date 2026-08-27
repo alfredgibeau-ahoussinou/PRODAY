@@ -62,6 +62,8 @@
     "marketing:app-store-ios:legacy": "node scripts/generate-app-store-screenshots.mjs --legacy",
     "marketing:app-store-ipad": "node scripts/generate-app-store-screenshots.mjs --ipad",
     "marketing:app-store-ipad:legacy": "node scripts/generate-app-store-screenshots.mjs --ipad --legacy",
+    "marketing:app-store-mac": "node scripts/generate-app-store-screenshots.mjs --mac",
+    "marketing:app-store-mac:legacy": "node scripts/generate-app-store-screenshots.mjs --mac --legacy",
     "marketing:capture-supporter": "node scripts/capture-supporter-screenshot.mjs",
     "docs:pactes": "node scripts/generate-pacte-pdf.mjs",
     "docs:legal": "node --experimental-strip-types scripts/generate-legal-pdf.mjs",
