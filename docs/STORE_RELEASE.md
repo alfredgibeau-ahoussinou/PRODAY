@@ -109,7 +109,7 @@ L’application affiche aussi ces textes dans **Profil → Informations légales
 - [ ] Captures d’écran (6.7", 5.5", tablette si support)
 - [ ] Description courte / longue en français
 - [ ] Classification d’âge (sport — en général 4+ / PEGI 3 avec messagerie modérée)
-- [ ] Compte démo pour la revue Apple (email + mot de passe test)
+- [ ] Compte démo App Review renseigné dans ASC + notes collées — voir [APP_REVIEW.md](./APP_REVIEW.md) (`player.demo@proday.app` / `npm run seed:demo-review -- --force`)
 - [ ] Politique de confidentialité et CGU accessibles en ligne
 - [ ] `EXPO_PUBLIC_APP_ENV=production` et `EXPO_PUBLIC_V3_SHELL=1` (forcés dans les profils EAS)
 - [ ] Push : entitlements `aps-environment=production` sur le build store (EAS gère le profil)

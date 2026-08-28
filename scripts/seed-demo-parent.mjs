@@ -1,14 +1,18 @@
 /**
- * Crée un compte parent démo lié à Lucas Démo (player.demo@proday.app).
+ * Crée un compte parent démo lié à un enfant U17 dédié (sans toucher player.demo@).
  *
  *   npm run seed:demo-parent
  *   npm run seed:demo-parent -- --force
  *
- * Prérequis : npm run seed:demo-player (et idéalement seed:demo-club)
+ * Prérequis : idéalement npm run seed:demo-club (équipe U17 + coach)
  *
- * Connexion : lancer l’app → rôle Parent / Pro Day Famille
+ * Connexion : lancer l’app → pôle Parent / Famille
  *   Email : parent.demo@proday.app
  *   MDP   : même cascade que les autres démos (ProDayDemo2026!)
+ *
+ * Enfant supervisé (optionnel pour tester le shell joueur ado) :
+ *   Email : child.demo@proday.app
+ *   MDP   : même mot de passe
  */
 
 import { readFileSync, existsSync, readdirSync } from 'fs';
@@ -25,11 +29,12 @@ const force = process.argv.includes('--force');
 const CLUB_ID = 'proday_demo_club';
 const TEAM_U17_ID = 'proday_demo_team_u17';
 const COACH_UID = 'proday_demo_coach';
-const PLAYER_EMAIL = 'player.demo@proday.app';
-const PLAYER_AUTH_UID = 'proday_demo_player_login';
+/** Enfant U17 dédié — ne pas réutiliser player.demo (compte review Apple adulte). */
+const CHILD_EMAIL = 'child.demo@proday.app';
+const CHILD_AUTH_UID = 'proday_demo_child_u17';
+const CHILD_MEMBERSHIP_ID = 'proday_demo_mem_child_u17';
 const PARENT_EMAIL = 'parent.demo@proday.app';
 const PARENT_AUTH_UID = 'proday_demo_parent_login';
-const MEMBERSHIP_ID = 'proday_demo_mem_player_login';
 const DEMO_EVENT_ID = 'proday_demo_event_training_today';
 
 function loadEnv() {
@@ -122,42 +127,27 @@ async function ensureAuthUser({ uid, email, displayName, password }) {
   return created.uid;
 }
 
-async function resolvePlayerUid() {
-  try {
-    const byEmail = await auth.getUserByEmail(PLAYER_EMAIL);
-    return byEmail.uid;
-  } catch {
-    try {
-      await auth.getUser(PLAYER_AUTH_UID);
-      return PLAYER_AUTH_UID;
-    } catch {
-      return null;
-    }
-  }
-}
-
 async function main() {
   console.log(`\n👨‍👩‍👧 Seed parent démo — ${projectId}${force ? ' (--force)' : ''}\n`);
 
-  const playerUid = await resolvePlayerUid();
-  if (!playerUid) {
-    console.error(
-      `Joueur Lucas introuvable (${PLAYER_EMAIL}). Lance d’abord :\n  npm run seed:demo-player -- --force\n`,
+  const clubSnap = await db.doc(`clubs/${CLUB_ID}`).get();
+  if (!clubSnap.exists) {
+    console.warn(
+      `  ⚠ Club ${CLUB_ID} absent — lance d’abord : npm run seed:demo-club -- --force`,
     );
-    process.exit(1);
-  }
-
-  const playerRef = db.doc(`users/${playerUid}`);
-  const playerSnap = await playerRef.get();
-  if (!playerSnap.exists) {
-    console.error(`Profil Firestore users/${playerUid} absent. Relance seed:demo-player.`);
-    process.exit(1);
   }
 
   const parentUid = await ensureAuthUser({
     uid: PARENT_AUTH_UID,
     email: PARENT_EMAIL,
     displayName: 'Sophie Parent Démo',
+    password: PASSWORD,
+  });
+
+  const childUid = await ensureAuthUser({
+    uid: CHILD_AUTH_UID,
+    email: CHILD_EMAIL,
+    displayName: 'Léo U17 Démo',
     password: PASSWORD,
   });
 
@@ -201,18 +191,27 @@ async function main() {
     },
   };
 
-  // Lie Lucas au parent + passe en profil adolescent supervisé (portail parent).
-  await playerRef.set(
+  await db.doc(`users/${childUid}`).set(
     {
+      display_name: 'Léo U17 Démo',
+      email: CHILD_EMAIL,
+      role: 'player',
       app_space: 'boys',
       product_line: 'amateur',
+      is_verified: true,
+      verification_status: 'VERIFIED',
+      is_active: true,
+      is_demo: true,
+      email_verified: true,
+      onboarding_documents_submitted: true,
+      city: 'Lyon',
+      department: '69',
       parental_settings: parentalSettings,
       parental_runtime: {
         date: new Date().toISOString().slice(0, 10),
         minutes_used: 22,
       },
       profile: {
-        ...(playerSnap.data()?.profile ?? {}),
         club_id: CLUB_ID,
         club_name: 'FC ProDay Démo',
         position: 'Milieu',
@@ -224,23 +223,32 @@ async function main() {
         birth_date: '2010-08-15',
         age: 15,
         availability: 'available',
-        bio: 'Milieu U17 — compte démo ProDay (univers ado + supervision parent).',
+        bio: 'Milieu U17 — compte démo supervisé (App Review · pôle Parent).',
         cv_headline: 'Milieu U17 — vision et volume.',
       },
+      player_verification: {
+        identity: { status: 'verified' },
+        club_license: { status: 'verified' },
+      },
       updated_at: FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
     },
     { merge: true },
   );
-  console.log(`  ✓ users/${playerUid} lié (is_minor + parent_uid)`);
+  console.log(`  ✓ users/${childUid} (enfant U17 supervisé)`);
 
-  await db.doc(`memberships/${MEMBERSHIP_ID}`).set(
+  await db.doc(`memberships/${CHILD_MEMBERSHIP_ID}`).set(
     {
       club_id: CLUB_ID,
       team_id: TEAM_U17_ID,
-      player_uid: playerUid,
-      player_name: 'Lucas Démo',
+      player_uid: childUid,
+      player_name: 'Léo U17 Démo',
       status: 'active',
-      license_number: 'DEMO-PLAYER-8',
+      license_number: 'DEMO-CHILD-U17-8',
+      requested_at: FieldValue.serverTimestamp(),
+      validated_at: FieldValue.serverTimestamp(),
+      validated_by_uid: 'proday_demo_club_owner',
+      created_at: FieldValue.serverTimestamp(),
       updated_at: FieldValue.serverTimestamp(),
     },
     { merge: true },
@@ -257,9 +265,10 @@ async function main() {
     is_active: true,
     is_demo: true,
     email_verified: true,
+    onboarding_documents_submitted: true,
     city: 'Lyon',
     department: '69',
-    parent_of: [playerUid],
+    parent_of: [childUid],
     profile: {
       job_title: 'Parent',
     },
@@ -273,10 +282,11 @@ async function main() {
     if (existing.exists) {
       await parentRef.set(
         {
-          parent_of: FieldValue.arrayUnion(playerUid),
+          parent_of: FieldValue.arrayUnion(childUid),
           role: 'parent',
           product_line: 'parent',
           is_demo: true,
+          email_verified: true,
           updated_at: FieldValue.serverTimestamp(),
         },
         { merge: true },
@@ -291,7 +301,6 @@ async function main() {
     console.log(`  ✓ users/${parentUid} (--force)`);
   }
 
-  // Séance d’entraînement du jour pour tester les boutons retard.
   const starts = new Date();
   starts.setHours(18, 30, 0, 0);
   if (starts.getTime() < Date.now()) {
@@ -312,7 +321,7 @@ async function main() {
       organizer_uid: COACH_UID,
       status: 'scheduled',
       rsvps: {
-        [playerUid]: 'yes',
+        [childUid]: 'yes',
       },
       rsvp_notes: {},
       is_demo: true,
@@ -323,14 +332,15 @@ async function main() {
   );
   console.log(`  ✓ team_events/${DEMO_EVENT_ID}`);
 
-  console.log('\n✔ Parent démo prêt · lié à Lucas Démo');
+  console.log('\n✔ Parent démo prêt · enfant U17 dédié (player.demo inchangé)');
   console.log(`  Parent UID : ${parentUid}`);
-  console.log(`  Enfant UID : ${playerUid} (Lucas · U17 · supervisé)`);
+  console.log(`  Enfant UID : ${childUid} (Léo · U17 · supervisé)`);
   console.log('\nConnexion parent :');
   console.log(`  Email : ${PARENT_EMAIL}`);
   console.log(`  MDP   : ${PASSWORD}`);
   console.log('\n→ Au lancement, choisis le pôle Parent / Famille.');
-  console.log('  Agenda : boutons « Enfant en retard » et « Retard récupération ».\n');
+  console.log('  Agenda : boutons « Enfant en retard » et « Retard récupération ».');
+  console.log(`  Enfant (optionnel) : ${CHILD_EMAIL} / même MDP · pôle Joueur\n`);
 }
 
 main().catch((err) => {

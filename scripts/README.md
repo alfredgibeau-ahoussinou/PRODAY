@@ -12,8 +12,9 @@ App cible : Expo **1.0.8** · tagline **CONNECTER. PROGRESSER. RÉVÉLER.**
 |--------|--------------|------|
 | `seed-firestore.mjs` | `firebase:seed` | Données de démo Firestore |
 | `seed-demo-club.mjs` | `seed:demo-club` | Club démo (équipes + stade) |
-| `seed-demo-player.mjs` | `seed:demo-player` | Joueur démo Lucas |
-| `seed-demo-parent.mjs` | `seed:demo-parent` | Parent démo lié à Lucas |
+| `seed-demo-player.mjs` | `seed:demo-player` | Joueur démo Lucas (adulte · ASC) |
+| `seed-demo-parent.mjs` | `seed:demo-parent` | Parent + enfant U17 dédié |
+| `seed-demo-review.mjs` | `seed:demo-review` | Orchestrateur App Review (tous comptes) |
 | `firebase-health.mjs` | `firebase:health` · `firebase:deploy:check` | Santé projet |
 | `firestore-rules.test.mjs` | `firebase:rules:test` | Tests règles (émulateur) |
 | `cleanup-demo-data.mjs` | `cleanup:demo` | Nettoyage démo |

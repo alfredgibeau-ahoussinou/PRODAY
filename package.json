@@ -40,6 +40,7 @@
     "seed:demo-player": "node scripts/seed-demo-player.mjs",
     "seed:demo-parent": "node scripts/seed-demo-parent.mjs",
     "seed:demo-supporter": "node scripts/seed-demo-supporter.mjs",
+    "seed:demo-review": "node scripts/seed-demo-review.mjs",
     "firebase:deploy": "firebase deploy --only firestore:rules,firestore:indexes && npm run stats:refresh",
     "firebase:deploy:functions": "firebase deploy --only functions",
     "firebase:deploy:check": "node scripts/firebase-health.mjs",

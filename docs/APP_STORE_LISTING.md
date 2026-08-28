@@ -97,6 +97,18 @@ Site : https://proday75.fr
 | URL confidentialité | Politique hébergée (voir `docs/legal/`) |
 | URL support | Site + e-mail support |
 
+### Examen Apple — connexion requise (obligatoire)
+
+Apple refuse l’examen si aucun identifiant n’est fourni. Détail complet + texte **Notes pour l’examen** prêt à coller : **[APP_REVIEW.md](./APP_REVIEW.md)**.
+
+| Champ ASC | Valeur |
+|-----------|--------|
+| Connexion requise | **Oui** |
+| E-mail | `player.demo@proday.app` |
+| Mot de passe | `ProDayDemo2026!` |
+
+Rafraîchir les comptes Firebase : `npm run seed:demo-review -- --force`
+
 ## Notes Google Play
 
 | Champ | Valeur suggérée |
@@ -134,6 +146,7 @@ Annuel : −20 % (12 mois facturés d'un coup).
 - [ ] Description FR collée (section ci-dessus)
 - [ ] Sous-titre + mots-clés iOS
 - [ ] Captures d'écran iPhone 6,5" + iPad 13" — voir section **Captures d'écran App Store** ci-dessous
+- [ ] Identifiants + Notes App Review collés dans ASC — [APP_REVIEW.md](./APP_REVIEW.md)
 - [ ] 16 SKU créés — [STORE_SETUP.md](./STORE_SETUP.md)
 - [ ] Test sandbox iOS + licence test Android sur `player_plus` et `sponsor_pro`
 - [ ] `npm test -- iapProducts` vert

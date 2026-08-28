@@ -57,6 +57,7 @@ Logo : [`assets/branding/`](../assets/branding/README.md) · CDN : https://proda
 | [STORE_SETUP.md](./STORE_SETUP.md) | SKU IAP |
 | [STORE_RELEASE.md](./STORE_RELEASE.md) | Process release |
 | [APP_STORE_LISTING.md](./APP_STORE_LISTING.md) | Fiches store |
+| [APP_REVIEW.md](./APP_REVIEW.md) | Comptes démo + Notes examen Apple |
 | [PRODAY_V3_DEPLOY.md](./PRODAY_V3_DEPLOY.md) | Déploiement V3 |
 | [PRODAY_V3_QA.md](./PRODAY_V3_QA.md) | QA V3 |
 
