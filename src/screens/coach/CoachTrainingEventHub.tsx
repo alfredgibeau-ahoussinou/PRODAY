@@ -625,40 +625,74 @@ export function CoachTrainingEventHub({
             ) : null}
 
             {aiResult ? (
-              <View style={[styles.aiForm, { borderColor: tokens.accent, backgroundColor: tokens.surface }]}>
-                <CoachText variant="section" style={{ color: tokens.foreground }}>
-                  {aiSource === 'local'
-                    ? 'Brouillon local (pas de cloud)'
-                    : 'Séance générée par l’IA'}
-                </CoachText>
-                {aiResult.map((phase, i) => (
-                  <View key={`${phase.name}-${i}`} style={{ marginTop: spacing.sm }}>
-                    <CoachText variant="caption" accent style={{ fontWeight: '800' }}>
-                      {phase.label || phaseLabel(phase.name)} · {phase.duration_min} min
+              <View style={[styles.aiForm, { borderColor: 'rgba(255, 255, 255, 0.15)', backgroundColor: tokens.surface, borderRadius: radius.md, padding: spacing.md }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Icon name="star-four-points" size={16} color={tokens.accent} />
+                    <CoachText variant="section" style={{ color: tokens.foreground, fontWeight: '800' }}>
+                      {aiSource === 'local'
+                        ? 'Brouillon local'
+                        : 'Séance IA ProDay'}
                     </CoachText>
-                    {phase.exercises.map((ex, j) => (
-                      <View key={`ex-${i}-${j}`} style={{ marginTop: spacing.xs }}>
-                        <CoachText variant="caption" style={{ fontWeight: '700', color: tokens.foreground }}>
-                          {ex.name}
+                  </View>
+                  <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
+                    <CoachText variant="caption" style={{ color: tokens.accent, fontSize: 10, fontWeight: '700' }}>
+                      {aiSource === 'local' ? 'HORS LIGNE' : 'GEMINI FLASH'}
+                    </CoachText>
+                  </View>
+                </View>
+
+                {aiNotes.toLowerCase().includes('blood') || aiNotes.toLowerCase().includes('sang') || aiNotes.toLowerCase().includes('intensit') ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(239, 68, 68, 0.15)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, marginTop: 4, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                    <CoachText variant="caption" style={{ color: '#F87171', fontWeight: '800', fontSize: 11 }}>
+                      🔥 SESSION HAUTE INTENSITÉ / BLOOD BATH
+                    </CoachText>
+                  </View>
+                ) : null}
+
+                {aiResult.map((phase, i) => (
+                  <View key={`${phase.name}-${i}`} style={{ marginTop: spacing.sm, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.06)' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <CoachText variant="caption" accent style={{ fontWeight: '800', fontSize: 13 }}>
+                        {phase.label || phaseLabel(phase.name)}
+                      </CoachText>
+                      <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                        <CoachText variant="caption" style={{ color: tokens.foreground, fontWeight: '700', fontSize: 11 }}>
+                          {phase.duration_min} min
                         </CoachText>
-                        <CoachText variant="caption" muted>{ex.description}</CoachText>
+                      </View>
+                    </View>
+                    {phase.exercises.map((ex, j) => (
+                      <View key={`ex-${i}-${j}`} style={{ marginTop: spacing.xs, borderTopWidth: j > 0 ? 1 : 0, borderTopColor: 'rgba(255, 255, 255, 0.05)', paddingTop: j > 0 ? 8 : 2 }}>
+                        <CoachText variant="caption" style={{ fontWeight: '700', color: tokens.foreground, fontSize: 13 }}>
+                          • {ex.name}
+                        </CoachText>
+                        <CoachText variant="caption" muted style={{ lineHeight: 18, marginTop: 2 }}>{ex.description}</CoachText>
                         {ex.duration_min ? (
-                          <CoachText variant="caption" muted>
-                            {ex.duration_min} min
-                            {ex.reps ? ` · ${ex.reps} reps` : ''}
-                            {ex.sets ? ` × ${ex.sets} séries` : ''}
-                            {ex.rest_sec ? ` · ${ex.rest_sec}s repos` : ''}
-                          </CoachText>
-                        ) : null}
-                        {ex.equipment?.length ? (
-                          <CoachText variant="caption" muted>
-                            Matériel : {ex.equipment.join(', ')}
-                          </CoachText>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                            <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                              <CoachText variant="caption" muted style={{ fontSize: 10 }}>
+                                ⏱ {ex.duration_min} min
+                                {ex.reps ? ` · ${ex.reps} reps` : ''}
+                                {ex.sets ? ` × ${ex.sets} séries` : ''}
+                                {ex.rest_sec ? ` · ${ex.rest_sec}s repos` : ''}
+                              </CoachText>
+                            </View>
+                            {ex.equipment?.length ? (
+                              <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                <CoachText variant="caption" muted style={{ fontSize: 10 }}>
+                                  🎒 {ex.equipment.join(', ')}
+                                </CoachText>
+                              </View>
+                            ) : null}
+                          </View>
                         ) : null}
                         {ex.tips?.map((tip, k) => (
-                          <CoachText key={`tip-${i}-${j}-${k}`} variant="caption" muted>
-                            → {tip}
-                          </CoachText>
+                          <View key={`tip-${i}-${j}-${k}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, backgroundColor: 'rgba(245, 158, 11, 0.08)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                            <CoachText variant="caption" style={{ color: '#FBBF24', fontSize: 11, fontWeight: '600', flex: 1 }}>
+                              ⚡ {tip}
+                            </CoachText>
+                          </View>
                         ))}
                       </View>
                     ))}
@@ -670,13 +704,13 @@ export function CoachTrainingEventHub({
                   scaleTo={0.96}
                   haptic
                 >
-                  <View style={[styles.aiCta, { backgroundColor: tokens.accent, marginTop: spacing.sm }]}>
+                  <View style={[styles.aiCta, { backgroundColor: tokens.accent, marginTop: spacing.md, borderRadius: 10 }]}>
                     {aiApplying ? (
                       <ActivityIndicator color={tokens.bg} />
                     ) : (
                       <>
                         <Icon name="calendar" size={18} color={tokens.bg} />
-                        <CoachText variant="caption" style={{ color: tokens.bg, fontWeight: '700' }}>
+                        <CoachText variant="caption" style={{ color: tokens.bg, fontWeight: '800' }}>
                           Appliquer au plan de séance
                         </CoachText>
                       </>
@@ -692,8 +726,8 @@ export function CoachTrainingEventHub({
                   scaleTo={0.96}
                   haptic
                 >
-                  <CoachText variant="caption" accent style={styles.link}>
-                    Fermer
+                  <CoachText variant="caption" accent style={[styles.link, { textAlign: 'center', marginTop: 10 }]}>
+                    Fermer la vue
                   </CoachText>
                 </PressableSpring>
               </View>

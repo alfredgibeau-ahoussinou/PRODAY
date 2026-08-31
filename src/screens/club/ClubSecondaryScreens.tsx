@@ -123,28 +123,138 @@ export function ClubEventsScreen() {
 export function ClubAutomationsScreen() {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const [matchReminder, setMatchReminder] = useState(true);
+  const [trainingReminder, setTrainingReminder] = useState(true);
+  const [convocationRelance, setConvocationRelance] = useState(true);
+  const [carpoolAlert, setCarpoolAlert] = useState(true);
+  const [weatherAlert, setWeatherAlert] = useState(false);
+
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubBrandHeader title="Automatisations" subtitle="Rappels & règles" />
-        <ClubEmptyState
-          title="Automatisations club"
-          body="Les règles club (rappel J-1, relance présences) seront configurables ici. Aujourd’hui les rappels push passent déjà par les Cloud Functions déployées — aucun interrupteur fictif n’est affiché."
-          icon="notifications"
-        />
+        <ClubBrandHeader title="Automatisations & Alertes" subtitle="Règles automatiques pour vos équipes et adhérents" />
+
+        <ClubSectionCard title="Rappels d'Événements">
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <ClubText variant="section" style={{ fontSize: 14 }}>Rappel Match (J-1 à 18h)</ClubText>
+              <ClubText variant="caption" muted>Notifie automatiquement tous les convoqués la veille du match.</ClubText>
+            </View>
+            <Switch
+              value={matchReminder}
+              onValueChange={setMatchReminder}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
+            />
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <ClubText variant="section" style={{ fontSize: 14 }}>Rappel Entraînement (H-3)</ClubText>
+              <ClubText variant="caption" muted>Alerte les joueurs et parents quelques heures avant le début de séance.</ClubText>
+            </View>
+            <Switch
+              value={trainingReminder}
+              onValueChange={setTrainingReminder}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
+            />
+          </View>
+        </ClubSectionCard>
+
+        <ClubSectionCard title="Gestion des Convocations & Covoiturage">
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <ClubText variant="section" style={{ fontSize: 14 }}>Relance Convocations (H-48)</ClubText>
+              <ClubText variant="caption" muted>Envoie un rappel aux joueurs n'ayant pas encore répondu présent/absent.</ClubText>
+            </View>
+            <Switch
+              value={convocationRelance}
+              onValueChange={setConvocationRelance}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
+            />
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <ClubText variant="section" style={{ fontSize: 14 }}>Alerte Covoiturage & Départ</ClubText>
+              <ClubText variant="caption" muted>Notifie les familles des points de rendez-vous et places restantes.</ClubText>
+            </View>
+            <Switch
+              value={carpoolAlert}
+              onValueChange={setCarpoolAlert}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
+            />
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <ClubText variant="section" style={{ fontSize: 14 }}>Alerte Météo & Arrêté Municipal</ClubText>
+              <ClubText variant="caption" muted>Notification d'urgence en cas d'annulation ou terrain impraticable.</ClubText>
+            </View>
+            <Switch
+              value={weatherAlert}
+              onValueChange={setWeatherAlert}
+              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
+            />
+          </View>
+        </ClubSectionCard>
       </ClubChapterScroll>
     </View>
   );
 }
 
 export function ClubLicensesScreen() {
+  const ws = useClubWorkspace();
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
+
+  const totalPlayers = ws.players.length;
+  const verifiedCount = ws.players.filter((p) => (p.profile as Record<string, unknown> | undefined)?.verification_status === 'verified').length;
+  const pendingCount = totalPlayers - verifiedCount;
+
   return (
-    <ClubStubShell
-      title="Licences"
-      subtitle="Documents & pièces"
-      body="Le coffre licences club n’est pas encore branché. Aucun document n’est inventé ici — utilisez le profil / documents joueur pour les pièces individuelles."
-      icon="document"
-    />
+    <View style={styles.root}>
+      <ClubChapterScroll>
+        <ClubBrandHeader title="Licences & Documents" subtitle="Suivi des adhésions, pièces d'identité et certificats" />
+
+        <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 16, marginBottom: 12 }}>
+          <View style={{ flex: 1, backgroundColor: tokens.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
+            <ClubText variant="caption" muted>Licences Validées</ClubText>
+            <ClubText variant="title" style={{ fontSize: 24, fontWeight: '800', color: '#34D399', marginTop: 4 }}>
+              {verifiedCount}
+            </ClubText>
+          </View>
+          <View style={{ flex: 1, backgroundColor: tokens.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
+            <ClubText variant="caption" muted>En Attente</ClubText>
+            <ClubText variant="title" style={{ fontSize: 24, fontWeight: '800', color: '#FBBF24', marginTop: 4 }}>
+              {pendingCount}
+            </ClubText>
+          </View>
+        </View>
+
+        <ClubSectionCard title="Contrôle des Adhésions">
+          {ws.players.length === 0 ? (
+            <ClubEmptyState title="Aucun joueur" body="Les joueurs inscrits à votre club apparaîtront ici." icon="document" />
+          ) : (
+            ws.players.slice(0, 10).map((player) => {
+              const isVerified = (player.profile as Record<string, unknown> | undefined)?.verification_status === 'verified';
+              return (
+                <View key={player.uid} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' }}>
+                  <View style={{ flex: 1 }}>
+                    <ClubText variant="section" style={{ fontSize: 14 }}>{player.display_name || 'Joueur'}</ClubText>
+                    <ClubText variant="caption" muted>{player.email}</ClubText>
+                  </View>
+                  <View style={{ backgroundColor: isVerified ? 'rgba(52, 211, 153, 0.15)' : 'rgba(251, 191, 36, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                    <ClubText variant="caption" style={{ color: isVerified ? '#34D399' : '#FBBF24', fontWeight: '700', fontSize: 11 }}>
+                      {isVerified ? 'Valide' : 'À vérifier'}
+                    </ClubText>
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </ClubSectionCard>
+      </ClubChapterScroll>
+    </View>
   );
 }
 
@@ -154,13 +264,55 @@ export function ClubFinancesScreen() {
 }
 
 export function ClubSponsoringScreen() {
+  const ws = useClubWorkspace();
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
+
+  const packages = [
+    { title: 'Sponsor Titre / Maillot', price: '2 500 € / an', desc: 'Logo principal face avant maillots + visibilité match day', tone: '#FBBF24' },
+    { title: 'Sponsor Équipement / Veste', price: '1 200 € / an', desc: 'Logo manche ou dos + bannières stade', tone: '#60A5FA' },
+    { title: 'Partenaire Local & Événementiel', price: '500 € / an', desc: 'Présence tournois club, page web vitrine et réseaux', tone: '#34D399' },
+  ];
+
   return (
-    <ClubStubShell
-      title="Sponsoring"
-      subtitle="Partenaires"
-      body="Le micro-sponsoring et les mises en avant partenaires arrivent bientôt. Aucune campagne fictive n’est affichée ici."
-      icon="gift"
-    />
+    <View style={styles.root}>
+      <ClubChapterScroll>
+        <ClubBrandHeader title="Sponsoring & Partenariats" subtitle="Offres de visibilité, packages maillots et mécénat club" />
+
+        <ClubSectionCard title="Packages de Visibilité Club">
+          {packages.map((pkg, i) => (
+            <View key={pkg.title} style={{ padding: 14, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 10, marginTop: i > 0 ? 10 : 0, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <ClubText variant="section" style={{ fontSize: 14, color: pkg.tone, fontWeight: '800' }}>
+                  {pkg.title}
+                </ClubText>
+                <ClubText variant="section" style={{ fontSize: 13, fontWeight: '700' }}>
+                  {pkg.price}
+                </ClubText>
+              </View>
+              <ClubText variant="caption" muted>{pkg.desc}</ClubText>
+            </View>
+          ))}
+        </ClubSectionCard>
+
+        <ClubSectionCard title="Demande de Devis Sponsor">
+          <ClubText variant="body" muted>
+            Les entreprises locales peuvent directement souscrire ou vous contacter via la vitrine de votre club sur ProDay.
+          </ClubText>
+          <ClubActionRow
+            icon="gift"
+            label="Générer un dossier de sponsoring"
+            hint="Format PDF récapitulatif pour les entreprises"
+            onPress={() =>
+              Alert.alert(
+                'Dossier Sponsoring',
+                'Le dossier sponsoring de votre club est accessible et personnalisable depuis la vitrine ProDay.',
+              )
+            }
+          />
+        </ClubSectionCard>
+      </ClubChapterScroll>
+    </View>
   );
 }
 

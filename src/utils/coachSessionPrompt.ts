@@ -9,6 +9,7 @@ import type {
 import type { CoachComposedPlan, CoachComposedPlanBlock } from './coachTrainingRecommendation';
 
 export type CoachSessionTheme =
+  | 'bloodbath'
   | 'bloc_bas'
   | 'bloc_haut'
   | 'pressing'
@@ -62,7 +63,7 @@ export function isCoachCreateSessionIntent(text: string): boolean {
   if (/^seance\b/.test(n) && n.length >= 6) return true;
   if (/^entrainement\b/.test(n) && n.length >= 12) return true;
   if (
-    /\b(bloc bas|bloc haut|bas du corps|lower body|pressing|possession|finition|coups? de pied|CPA)\b/i.test(
+    /\b(blood\s*bath|bloodbath|bain\s*de\s*sang|bloc bas|bloc haut|bas du corps|lower body|pressing|possession|finition|coups? de pied|CPA)\b/i.test(
       n,
     )
   ) {
@@ -72,6 +73,9 @@ export function isCoachCreateSessionIntent(text: string): boolean {
 }
 
 function detectTheme(n: string): CoachSessionTheme {
+  if (/blood\s*bath|bloodbath|bain\s*de\s*sang|cardio\s*extreme|haute\s*intensite|commando|enfer/.test(n)) {
+    return 'bloodbath';
+  }
   if (/bloc\s*bas|ligne\s*basse|defense\s*basse|low\s*block/.test(n)) return 'bloc_bas';
   if (/bloc\s*haut|ligne\s*haute|high\s*block/.test(n)) return 'bloc_haut';
   if (/bas\s*du\s*corps|lower\s*body|jambes|ischio|quadriceps|mollets/.test(n)) {
@@ -114,6 +118,12 @@ function themeMeta(theme: CoachSessionTheme): {
   title: string;
 } {
   switch (theme) {
+    case 'bloodbath':
+      return {
+        objective: 'physique',
+        focus: 'Blood Bath — Haute intensité, pressing & dépassement physique',
+        title: 'Séance Blood Bath (Haute Intensité)',
+      };
     case 'bloc_bas':
       return {
         objective: 'tactique',
@@ -243,6 +253,41 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
   };
 
   switch (theme) {
+    case 'bloodbath': {
+      const [w, a, b, c, d] = scale([10, 25, 20, 25, 10]);
+      return [
+        {
+          label: '1. Activation Explosive',
+          minutes: w,
+          objective: 'Montées en régime, gainage dynamique, gammes athlétiques',
+          material: 'Échelle d’agilité, cônes',
+        },
+        {
+          label: '2. Intermittent & Navettes VO2 Max',
+          minutes: a,
+          objective: 'Sprints répétés 15s/15s, changements de direction à 100%, travail sous acide lactique',
+          material: 'Plots, chronomètre',
+        },
+        {
+          label: '3. Circuit Duels & Puissance',
+          minutes: b,
+          objective: '1v1 tout terrain, conservation dos au but sous fort impact, pressing immédiat',
+          material: 'Chasubles, ballons, mini-buts',
+        },
+        {
+          label: '4. Match Haute Intensité 5v5',
+          minutes: c,
+          objective: 'Rythme maximal sans temps mort, pressing tout terrain, infériorité numérique rotative',
+          material: 'Ballons, grands buts',
+        },
+        {
+          label: '5. Retour au Calme & Régénération',
+          minutes: d,
+          objective: 'Décharge lactique, respiration contrôlée, étirements des chaînes postérieures',
+          material: 'Tapis de sol',
+        },
+      ];
+    }
     case 'bloc_bas': {
       const [w, a, b, c, d] = scale([10, 18, 22, 20, 10]);
       return [

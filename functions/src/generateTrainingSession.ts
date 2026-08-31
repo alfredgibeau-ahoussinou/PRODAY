@@ -1,11 +1,6 @@
-/**
- * CF callable — génère une séance d'entraînement collectif via Mistral.
- * Appelée par le coach depuis CoachTrainingEventHub.
- */
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { configStr } from './runtimeConfig';
-import { MISTRAL_CHAT_MODEL, extractMistralChatText } from './mistralModels';
+import { generateAiChatCompletion } from './aiProvider';
 
 const db = admin.firestore();
 
@@ -17,10 +12,6 @@ interface GenerateRequest {
   level: string;
   player_count: number;
   coach_notes?: string;
-}
-
-function getMistralApiKey(): string | null {
-  return configStr('mistral', 'api_key', ['MISTRAL_API_KEY']) ?? null;
 }
 
 async function assertCoachOrStaff(uid: string, clubId: string): Promise<void> {
@@ -39,7 +30,7 @@ async function assertCoachOrStaff(uid: string, clubId: string): Promise<void> {
 
 const OBJECTIVE_LABELS: Record<string, string> = {
   technique: 'Technique individuelle et collective',
-  physique: 'Préparation physique',
+  physique: 'Préparation physique & intensité',
   tactique: 'Organisation tactique',
   recuperation: 'Récupération active',
 };
@@ -67,107 +58,134 @@ export const generateTrainingSession = onCall(
 
     await assertCoachOrStaff(request.auth.uid, clubId);
 
-    const apiKey = getMistralApiKey();
-    if (!apiKey) {
-      throw new HttpsError('failed-precondition', 'Mistral non configuré (MISTRAL_API_KEY).');
-    }
-
     const objective = OBJECTIVE_LABELS[data.objective] ?? data.objective ?? 'Technique';
     const level = LEVEL_LABELS[data.level] ?? data.level ?? 'Intermédiaire';
     const durationMin = Math.min(Math.max(Number(data.duration_min) || 90, 30), 120);
     const playerCount = Math.min(Math.max(Number(data.player_count) || 18, 4), 40);
+    const coachNotes = data.coach_notes ? String(data.coach_notes).slice(0, 500) : '';
 
-    const prompt = [
-      `Génère une séance d'entraînement collectif football.`,
-      `Objectif : ${objective}`,
-      `Durée totale : ${durationMin} minutes`,
-      `Niveau : ${level}`,
+    const isBloodBath = /blood\s*bath|bain\s*de\s*sang|cardio\s*extreme|haute\s*intensite|commando|enfer/i.test(coachNotes);
+
+    const systemPrompt = `Tu es un entraîneur de football professionnel d'élite (UEFA Pro).
+Tu conçois des séances d'entraînement modernes, intenses et extrêmement précises.
+Réponds UNIQUEMENT sous forme d'un objet JSON strict valide, sans balises de code Markdown ni texte autour.
+
+Schéma attendu :
+{
+  "phases": [
+    {
+      "name": "warmup",
+      "label": "1. Échauffement & Activation Dynamique",
+      "duration_min": 15,
+      "exercises": [
+        {
+          "name": "Nom de l'exercice",
+          "description": "Description détaillée de l'atelier, des consignes et du déroulement.",
+          "duration_min": 15,
+          "reps": 3,
+          "sets": 2,
+          "rest_sec": 45,
+          "equipment": ["ballons", "cônes", "chasubles"],
+          "tips": ["Point clé technique", "Exigence d'intensité"]
+        }
+      ]
+    },
+    {
+      "name": "exercises",
+      "label": "2. Ateliers & Corps de Séance",
+      "duration_min": 35,
+      "exercises": [
+        {
+          "name": "Nom de l'exercice",
+          "description": "Description précise avec espaces, distances et règles.",
+          "duration_min": 20,
+          "reps": 4,
+          "sets": 2,
+          "rest_sec": 60,
+          "equipment": ["mini-buts", "plots"],
+          "tips": ["Conseil tactique / d'intensité"]
+        }
+      ]
+    },
+    {
+      "name": "game",
+      "label": "3. Situation Réelle / Match à Thème",
+      "duration_min": 30,
+      "exercises": [
+        {
+          "name": "Match à contrainte / Opposition ciblée",
+          "description": "Règles du jeu, dimensions du terrain et objectifs.",
+          "duration_min": 30,
+          "reps": 2,
+          "sets": 1,
+          "rest_sec": 90,
+          "equipment": ["chasubles", "buts"],
+          "tips": ["Consigne de pressing et rythme"]
+        }
+      ]
+    },
+    {
+      "name": "cooldown",
+      "label": "4. Retour au Calme & Débriefing",
+      "duration_min": 10,
+      "exercises": [
+        {
+          "name": "Régénération & Débriefing",
+          "description": "Course lente, étirements activo-dynamiques et analyse des objectifs.",
+          "duration_min": 10,
+          "reps": null,
+          "sets": null,
+          "rest_sec": null,
+          "equipment": ["tapis"],
+          "tips": ["Hydratation immédiate", "Feedback collectif"]
+        }
+      ]
+    }
+  ]
+}`;
+
+    const userPrompt = [
+      `Génère une séance d'entraînement collective de football de niveau d'excellence.`,
+      `Objectif principal : ${objective}`,
+      `Durée totale requise : ${durationMin} minutes`,
+      `Niveau du groupe : ${level}`,
       `Nombre de joueurs : ${playerCount}`,
-      data.coach_notes ? `Notes du coach : ${String(data.coach_notes).slice(0, 400)}` : '',
-      '',
-      `Réponds en JSON strict avec ce schéma :`,
-      `{`,
-      `  "phases": [`,
-      `    {`,
-      `      "name": "warmup|exercises|game|cooldown",`,
-      `      "label": "Nom de la phase en français",`,
-      `      "duration_min": 15,`,
-      `      "exercises": [`,
-      `        {`,
-      `          "name": "Nom de l'exercice",`,
-      `          "description": "Description détaillée (2-3 phrases)",`,
-      `          "duration_min": 8,`,
-      `          "reps": null,`,
-      `          "sets": null,`,
-      `          "rest_sec": 60,`,
-      `          "equipment": ["ballon", "cônes"],`,
-      `          "tips": ["Conseil technique"]`,
-      `        }`,
-      `      ]`,
-      `    }`,
-      `  ]`,
-      `}`,
-      '',
-      `Règles :`,
-      `- EXACTEMENT 4 phases : warmup, exercises, game, cooldown`,
-      `- La somme des duration_min des phases doit être ~${durationMin} min`,
-      `- Chaque phase a 1 à 3 exercices concrets`,
-      `- Exercices adaptés au nombre de joueurs (${playerCount})`,
-      `- Descriptions précises : distances, répétitions, organisation du terrain`,
-      `- equipment : uniquement ballon, cônes, chasubles, mini-buts, plots, échelle, tapis`,
-      `- tips : 1-2 conseils par exercice`,
-      `- Langue : français uniquement`,
+      coachNotes ? `Consignes spéciales du coach : ${coachNotes}` : '',
+      isBloodBath
+        ? `🔥 SESSION BLOOD BATH / HAUTE INTENSITÉ : Cette séance doit être à intensité maximale (intermittent court-court, duels explosifs, transition éclair, pressing tout terrain sans temps mort). Les exercices doivent pousser les joueurs dans leurs retranchements physiques et mentaux tout en restant sécurisés et structurés.`
+        : '',
+      `Assure-toi que la somme des durées des 4 phases égale exactement ${durationMin} minutes.`,
+      `Langue : Français.`,
     ].filter(Boolean).join('\n');
 
-    const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: MISTRAL_CHAT_MODEL,
-        temperature: 0.4,
-        max_tokens: 2000,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content: 'Tu es un éducateur football diplômé. Réponds UNIQUEMENT en JSON valide, sans markdown. Langue: français.',
-          },
-          { role: 'user', content: prompt },
-        ],
-      }),
-    });
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      console.error('[generateTrainingSession] Mistral', res.status, body.slice(0, 400));
-      throw new HttpsError('internal', 'Le modèle IA a échoué. Réessayez.');
-    }
-
-    const json = (await res.json()) as {
-      choices?: { message?: { content?: unknown } }[];
-    };
-    const text = extractMistralChatText(json.choices?.[0]?.message?.content);
-    if (!text) throw new HttpsError('internal', 'Réponse IA vide.');
-
     try {
+      const response = await generateAiChatCompletion({
+        systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+        maxTokens: 2500,
+        temperature: 0.35,
+      });
+
+      const text = response.text;
+      if (!text) throw new HttpsError('internal', 'Réponse IA vide.');
+
       const cleaned = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
       const parsed = JSON.parse(cleaned) as { phases?: unknown[] };
       if (!Array.isArray(parsed.phases) || parsed.phases.length === 0) {
-        throw new Error('phases manquantes');
+        throw new Error('Format de phases invalide');
       }
+
       return {
-        source: 'mistral',
+        source: response.model,
         objective: data.objective,
         duration_min: durationMin,
         level: data.level,
         player_count: playerCount,
         phases: parsed.phases,
       };
-    } catch {
-      throw new HttpsError('internal', 'Réponse IA illisible.');
+    } catch (e) {
+      console.error('[generateTrainingSession] Error:', e);
+      throw new HttpsError('internal', 'La génération IA a échoué. Veuillez réessayer.');
     }
   },
 );
