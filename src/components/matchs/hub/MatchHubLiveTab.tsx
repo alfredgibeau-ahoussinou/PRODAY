@@ -201,7 +201,7 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
                   style={[styles.scoreBtn, { borderColor: colors.border }]}
                   onPress={() => void bumpScore('home', -1)}
                   disabled={saving}
-                  scaleTo={0.9}
+                  scaleTo={0.97}
                 >
                   <ProDayText variant="section">−</ProDayText>
                 </PressableSpring>
@@ -212,7 +212,7 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
                     void bumpScore('home', 1);
                   }}
                   disabled={saving}
-                  scaleTo={0.9}
+                  scaleTo={0.97}
                   haptic
                 >
                   <ProDayText variant="section">+</ProDayText>
@@ -228,7 +228,7 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
                   style={[styles.scoreBtn, { borderColor: colors.border }]}
                   onPress={() => void bumpScore('away', -1)}
                   disabled={saving}
-                  scaleTo={0.9}
+                  scaleTo={0.97}
                 >
                   <ProDayText variant="section">−</ProDayText>
                 </PressableSpring>
@@ -239,7 +239,7 @@ export const MatchHubLiveTab: React.FC<MatchHubLiveTabProps> = ({
                     void bumpScore('away', 1);
                   }}
                   disabled={saving}
-                  scaleTo={0.9}
+                  scaleTo={0.97}
                   haptic
                 >
                   <ProDayText variant="section">+</ProDayText>

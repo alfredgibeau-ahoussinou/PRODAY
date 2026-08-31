@@ -24,15 +24,15 @@ export function PremiumButton({
       href={href}
       className={clsx(
         "cta-lift inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.08em] transition-all",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0054F0]",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E8B923]",
         variant === "primary" &&
           "bg-accent-gradient text-white hover:brightness-110",
         variant === "ghost" &&
           "bg-white text-black hover:bg-[#f0f0ea]",
         variant === "outline" &&
-          "border border-white/30 text-white hover:border-[#0054F0] hover:text-[#4C8BFF]",
+          "border border-white/30 text-white hover:border-[#E8B923] hover:text-[#F5D04A]",
         variant === "sponsor" &&
-          "bg-[#D4AF37] text-[#0a0a0a] hover:bg-[#E0C04A]",
+          "bg-[#EF4444] text-[#0a0a0a] hover:bg-[#F87171]",
         className,
       )}
       onMouseDown={() => setIsPressed(true)}

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { SponsorActivityItem } from '../../models/SponsorOffer';
 import { Icon, type IconName } from '../ui/Icon';
+import { PressableSpring } from '../motion';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -16,14 +17,30 @@ const ACTIVITY_ICONS: Record<SponsorActivityItem['type'], IconName> = {
 interface SponsorActivityFeedProps {
   items: SponsorActivityItem[];
   limit?: number;
+  onEmptyPress?: () => void;
 }
 
 export const SponsorActivityFeed: React.FC<SponsorActivityFeedProps> = ({
   items,
   limit = 4,
+  onEmptyPress,
 }) => {
   const visible = items.slice(0, limit);
-  if (visible.length === 0) return null;
+  if (visible.length === 0) {
+    return (
+      <View style={styles.wrap}>
+        <Text style={styles.title}>Activité récente</Text>
+        <Text style={styles.emptyBody}>
+          Les vues d’offres, messages clubs et contributions apparaîtront ici.
+        </Text>
+        {onEmptyPress ? (
+          <PressableSpring onPress={onEmptyPress} scaleTo={0.97} haptic style={styles.emptyCta}>
+            <Text style={styles.emptyCtaText}>Voir mes offres</Text>
+          </PressableSpring>
+        ) : null}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrap}>
@@ -92,4 +109,19 @@ const styles = StyleSheet.create({
   rowTitle: { fontSize: 13, fontWeight: '800', color: SPONSOR_THEME.text },
   rowSub: { fontSize: 11, color: SPONSOR_THEME.textMuted, marginTop: 2, lineHeight: 15 },
   time: { fontSize: 10, fontWeight: '700', color: SPONSOR_THEME.textMuted },
+  emptyBody: {
+    fontSize: 13,
+    color: SPONSOR_THEME.textMuted,
+    lineHeight: 18,
+    marginTop: spacing.xs,
+  },
+  emptyCta: {
+    alignSelf: 'flex-start',
+    marginTop: spacing.sm,
+    backgroundColor: SPONSOR_THEME.primarySoft,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+  },
+  emptyCtaText: { fontSize: 12, fontWeight: '800', color: SPONSOR_THEME.primary },
 });

@@ -5,6 +5,11 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { Fragment, useState } from "react";
 import { AnimatedMetric } from "@/components/immersive/AnimatedMetric";
+import {
+  NO_COMMITMENT_BADGE,
+  NO_COMMITMENT_QUOTE_LINE,
+  POLE_REFERRAL_LINE,
+} from "@/lib/commercialCopy";
 import { ROUTES } from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -123,7 +128,7 @@ const COMPARE: { feature: string; group?: string; starter: Cell; territorial: Ce
 function CellView({ value }: { value: Cell }) {
   if (value === true) {
     return (
-      <span className="inline-flex text-[var(--pole-accent,#D4AF37)]" aria-label="Inclus">
+      <span className="inline-flex text-[var(--pole-accent,#EF4444)]" aria-label="Inclus">
         <Check size={18} strokeWidth={2.5} />
       </span>
     );
@@ -143,7 +148,7 @@ export function SponsorTiersCompare() {
   return (
     <section className="border-t border-white/10 bg-[#080706] px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#D4AF37)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#EF4444)]">
           Formules
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -167,8 +172,8 @@ export function SponsorTiersCompare() {
                 onClick={() => setFocus(t.id)}
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                   on
-                    ? "bg-[var(--pole-accent,#D4AF37)] text-black"
-                    : "border border-white/15 text-white/70 hover:border-white/30"
+                    ? "bg-[var(--pole-accent,#EF4444)] text-black"
+                    : "border border white/15 text white/70 hover:border white/30"
                 }`}
               >
                 {t.name}
@@ -196,10 +201,13 @@ export function SponsorTiersCompare() {
                 />
                 <span className="text-sm text-white/40">€ / mois</span>
               </p>
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
+                {NO_COMMITMENT_BADGE}
+              </p>
             </div>
             <Link
               href={ROUTES.sponsorDevis}
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#D4AF37)] px-5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#EF4444)] px-5 py-2.5 text-sm font-semibold text-black transition hover:brightness-110"
             >
               Demander un devis
               <ArrowRight size={14} />
@@ -219,13 +227,16 @@ export function SponsorTiersCompare() {
                     key={t.id}
                     className={`px-3 py-4 text-center text-sm font-semibold sm:px-4 ${
                       t.highlight
-                        ? "bg-[var(--pole-accent,#D4AF37)]/12 text-[var(--pole-accent,#D4AF37)]"
+                        ? "bg-[var(--pole-accent,#EF4444)]/12 text-[var(--pole-accent,#EF4444)]"
                         : "text-white/80"
                     }`}
                   >
                     {t.name}
                     <span className="mt-1 block font-display text-base font-medium tabular-nums text-white">
                       {t.price === "0" ? "Gratuit" : `${t.price} €`}
+                    </span>
+                    <span className="mt-1 block font-mono text-[9px] font-normal uppercase tracking-[0.12em] text-white/40">
+                      {NO_COMMITMENT_BADGE}
                     </span>
                   </th>
                 ))}
@@ -238,7 +249,7 @@ export function SponsorTiersCompare() {
                     <tr className="border-t border-white/10 bg-white/[0.03]">
                       <td
                         colSpan={4}
-                        className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent,#D4AF37)] sm:px-5"
+                        className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pole-accent,#EF4444)] sm:px-5"
                       >
                         {row.group}
                       </td>
@@ -259,7 +270,7 @@ export function SponsorTiersCompare() {
                     </td>
                     <td
                       className={`px-3 py-3 text-center sm:px-4 ${
-                        TIERS[2]?.highlight ? "bg-[var(--pole-accent,#D4AF37)]/[0.05]" : ""
+                        TIERS[2]?.highlight ? "bg-[var(--pole-accent,#EF4444)]/[0.05]" : ""
                       }`}
                     >
                       <CellView value={row.national} />
@@ -280,7 +291,7 @@ const CAPS = [
     id: "geo",
     label: "Geo",
     title: "Près du terrain",
-    body: "Ciblez une ville, un département ou le national. Vos offres touchent clubs et joueurs actifs : pas une audience hors-sol.",
+    body: "Ciblez une ville, un département ou le national. Vos offres touchent clubs et joueurs actifs : pas une audience hors sol.",
   },
   {
     id: "roi",
@@ -304,7 +315,7 @@ export function SponsorCapabilityPlay() {
   return (
     <section className="border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#D4AF37)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#EF4444)]">
           Sur le terrain
         </p>
         <h2 className="mt-3 max-w-xl font-display text-[clamp(1.9rem,4.5vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -323,8 +334,8 @@ export function SponsorCapabilityPlay() {
                 onClick={() => setActive(c.id)}
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                   on
-                    ? "bg-[var(--pole-accent,#D4AF37)] text-black"
-                    : "border border-white/15 text-white/65 hover:border-white/30"
+                    ? "bg-[var(--pole-accent,#EF4444)] text-black"
+                    : "border border white/15 text white/65 hover:border white/30"
                 }`}
               >
                 {c.label}
@@ -340,7 +351,7 @@ export function SponsorCapabilityPlay() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? undefined : { opacity: 0 }}
             transition={{ duration: 0.3, ease }}
-            className="mt-10 max-w-xl border-l-2 border-[var(--pole-accent,#D4AF37)] pl-6"
+            className="mt-10 max-w-xl border-l-2 border-[var(--pole-accent,#EF4444)] pl-6"
           >
             <h3 className="font-display text-2xl font-medium text-white">{cap.title}</h3>
             <p className="mt-3 text-base leading-relaxed text-white/60">{cap.body}</p>
@@ -362,7 +373,7 @@ export function SponsorWarmCta() {
         }}
       />
       <div className="relative mx-auto max-w-3xl text-center">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#D4AF37)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#EF4444)]">
           Partenaires
         </p>
         <h2 className="mt-4 font-display text-[clamp(2rem,5vw,3.2rem)] font-medium leading-[1.05] tracking-[-0.035em] text-white">
@@ -371,12 +382,13 @@ export function SponsorWarmCta() {
           sur le terrain.
         </h2>
         <p className="mx-auto mt-5 max-w-md text-base text-white/55">
-          Devis en ligne. L’équipe partenaires ProDay vous répond sous 48 h.
+          Sponsoring possible dès maintenant. {NO_COMMITMENT_QUOTE_LINE}{" "}
+          {POLE_REFERRAL_LINE} Devis en ligne · réponse sous 48 h.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link
             href={ROUTES.sponsorDevis}
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#D4AF37)] px-7 py-3.5 text-sm font-semibold text-black transition hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--pole-accent,#EF4444)] px-7 py-3.5 text-sm font-semibold text-black transition hover:brightness-110"
           >
             Demander un devis
             <ArrowRight size={16} />

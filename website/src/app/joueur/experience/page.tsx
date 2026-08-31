@@ -5,7 +5,7 @@ import { JoueurExperiencePageClient } from "@/components/poles/JoueurExperienceP
 export const metadata: Metadata = {
   title: "Pôle Joueur · Univers 3D",
   description:
-    "Univers Joueur immersif ProDay — jeune, ado ou adulte, animations 3D/4D adaptées.",
+    "Univers Joueur immersif ProDay · jeune, ado ou adulte, animations 3D/4D adaptées.",
 };
 
 /** Expérience immersive dédiée après « Qui es-tu ? ». */

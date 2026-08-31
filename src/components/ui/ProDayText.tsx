@@ -7,6 +7,8 @@ import {
   type TextStyle,
 } from 'react-native';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { fontFamily, textVariants, type TextVariant } from '../../theme/typography';
 
 type ProDayTextProps = TextProps & {
@@ -88,14 +90,17 @@ export const ProDayText: React.FC<ProDayTextProps> = ({
   ...rest
 }) => {
   const { colors } = useAppTheme();
+  const profile = useSessionProfile();
+  const joueurTheme = useJoueurTheme();
+  const isPlayer = profile?.role === 'player';
   const base = textVariants[variant];
 
   const themeColor = useMemo(() => {
-    if (accent) return colors.accent;
+    if (accent) return isPlayer ? joueurTheme.accent : colors.accent;
     if (inverse) return colors.brandInverse;
     if (muted) return colors.textMuted;
     return colors[COLOR_KEY[variant]];
-  }, [accent, colors, inverse, muted, variant]);
+  }, [accent, colors, inverse, isPlayer, joueurTheme.accent, muted, variant]);
 
   const resolved = useMemo((): StyleProp<TextStyle> => {
     const flat = StyleSheet.flatten([base, style]) as TextStyle;

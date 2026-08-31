@@ -1,5 +1,12 @@
 import type { PoleId } from "./poles";
-import { ROUTES } from "./routes";
+import {
+  CLUB_APP_HREF,
+  COACH_APP_HREF,
+  PARENT_APP_HREF,
+  PRESIDENT_HUB_HREF,
+  ROUTES,
+  SPONSOR_APP_HREF,
+} from "./routes";
 
 export type PageCategory = "home" | "pole" | "platform";
 
@@ -16,7 +23,8 @@ export type PageAccent =
   | "pro_staff"
   | "evenements"
   | "sante"
-  | "sponsor";
+  | "sponsor"
+  | "president";
 
 export type PageMeta = {
   path: string;
@@ -29,11 +37,12 @@ export type PageMeta = {
 
 const ECOSYSTEM_SIBLINGS = [
   { href: ROUTES.joueur, label: "Joueur" },
-  { href: ROUTES.proClub, label: "Club" },
-  { href: ROUTES.coach, label: "Coach" },
-  { href: ROUTES.parent, label: "Parent" },
+  { href: CLUB_APP_HREF, label: "Club" },
+  { href: PRESIDENT_HUB_HREF, label: "Président" },
+  { href: COACH_APP_HREF, label: "Coach" },
+  { href: PARENT_APP_HREF, label: "Parent" },
   { href: ROUTES.supporter, label: "Supporter" },
-  { href: ROUTES.sponsor, label: "Sponsor" },
+  { href: SPONSOR_APP_HREF, label: "Sponsor" },
 ] as const;
 
 export const SITE_PAGES: Record<string, PageMeta> = {
@@ -96,7 +105,7 @@ export const SITE_PAGES: Record<string, PageMeta> = {
     category: "pole",
     accent: "parent",
     poleHubPath: ROUTES.parent,
-    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.parent),
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== PARENT_APP_HREF),
   },
   [ROUTES.proJoueur]: {
     path: ROUTES.proJoueur,
@@ -110,14 +119,22 @@ export const SITE_PAGES: Record<string, PageMeta> = {
     poleId: "pro_club",
     category: "pole",
     accent: "pro_club",
-    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.proClub),
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== CLUB_APP_HREF),
+  },
+  [ROUTES.president]: {
+    path: ROUTES.president,
+    poleId: null,
+    category: "pole",
+    accent: "president",
+    poleHubPath: ROUTES.president,
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== PRESIDENT_HUB_HREF),
   },
   [ROUTES.coach]: {
     path: ROUTES.coach,
     poleId: "coach",
     category: "pole",
     accent: "coach",
-    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== ROUTES.coach),
+    siblingLinks: ECOSYSTEM_SIBLINGS.filter((l) => l.href !== COACH_APP_HREF),
   },
   [ROUTES.proStaff]: {
     path: ROUTES.proStaff,
@@ -297,6 +314,7 @@ export const POLE_HUB_LABELS: Record<string, string> = {
   [ROUTES.parent]: "Pôle Parent",
   [ROUTES.proJoueur]: "Pôle Joueur",
   [ROUTES.proClub]: "Pôle Club",
+  [ROUTES.president]: "Pôle Président",
   [ROUTES.coach]: "Pôle Coach",
   [ROUTES.proStaff]: "Pôle Coach",
   [ROUTES.evenements]: "Pôle Club",
@@ -354,6 +372,9 @@ export function poleHubForPath(pathname: string): string | null {
   if (meta.poleId === "evenements") return ROUTES.proClub;
   if (meta.poleId === "sponsor") return ROUTES.sponsor;
   if (meta.poleId === "parent") return ROUTES.parent;
+  if (meta.path === ROUTES.president || meta.accent === "president") {
+    return ROUTES.president;
+  }
   return null;
 }
 
@@ -385,6 +406,9 @@ export function isNavActive(href: string, pathname: string): boolean {
   }
   if (targetPath === ROUTES.proClub) {
     return path === ROUTES.proClub || path === ROUTES.evenements;
+  }
+  if (targetPath === ROUTES.president) {
+    return path === ROUTES.president;
   }
   if (targetPath === ROUTES.coach) {
     return (

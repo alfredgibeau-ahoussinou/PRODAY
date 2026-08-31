@@ -1,0 +1,186 @@
+{
+  "generatedAt": "2026-08-27T10:26:45.852Z",
+  "appVersion": "1.0.8",
+  "preset": "ipad-13",
+  "dimensions": "2064×2752",
+  "portrait": true,
+  "device": "iPad 13\" (App Store Connect)",
+  "strategy": "7 pôles (tablette + UI) + 3 objectif texte/branding sans UI — pas d’Admin",
+  "screenSources": "pôles: website/public/images/app/ (simulateur v1.0.8) · objectif: branding only",
+  "branding": [
+    "assets/branding/proday-symbol-white.png + wordmark PRODAY",
+    "assets/branding/proday-lockup-official-source.png (hero 08–10)"
+  ],
+  "poles": [
+    "Joueur",
+    "Coach",
+    "Club",
+    "Président",
+    "Parent",
+    "Supporter",
+    "Sponsor",
+    "Objectif",
+    "Centralisation",
+    "Portes"
+  ],
+  "files": [
+    {
+      "file": "01-pole-joueur.png",
+      "pole": "Joueur",
+      "kind": "tablet",
+      "width": 2064,
+      "height": 2752,
+      "recommended": 1,
+      "source": "website/public/images/app/player/player-profil.jpg",
+      "note": null,
+      "headline": "Pôle Joueur",
+      "subheadline": "Profil, stats et carrière en ligne",
+      "body": null,
+      "bodyLines": null
+    },
+    {
+      "file": "02-pole-coach.png",
+      "pole": "Coach",
+      "kind": "tablet",
+      "width": 2064,
+      "height": 2752,
+      "recommended": 2,
+      "source": "website/public/images/app/coach/coach-profil.jpg",
+      "note": null,
+      "headline": "Pôle Coach",
+      "subheadline": "Pilotez votre staff et vos séances",
+      "body": null,
+      "bodyLines": null
+    },
+    {
+      "file": "03-pole-club.png",
+      "pole": "Club",
+      "kind": "tablet",
+      "width": 2064,
+      "height": 2752,
+      "recommended": 3,
+      "source": "website/public/images/app/club/club-equipes.jpg",
+      "note": null,
+      "headline": "Pôle Club",
+      "subheadline": "Équipes, licenciés et recrutement",
+      "body": null,
+      "bodyLines": null
+    },
+    {
+      "file": "04-pole-president.png",
+      "pole": "Président",
+      "kind": "tablet",
+      "width": 2064,
+      "height": 2752,
+      "recommended": null,
+      "source": "website/public/images/app/executive/executive-cockpit.jpg",
+      "note": null,
+      "headline": "Pôle Président",
+      "subheadline": "Le club en un coup d’œil",
+      "body": null,
+      "bodyLines": null
+    },
+    {
+      "file": "05-pole-parent.png",
+      "pole": "Parent",
+      "kind": "tablet",
+      "width": 2064,
+      "height": 2752,
+      "recommended": null,
+      "source": "website/public/images/app/parent/parent-menu.jpg",
+      "note": null,
+      "headline": "Pôle Parent",
+      "subheadline": "Accompagnez sans étouffer",
+      "body": null,
+      "bodyLines": null
+    },
+    {
+      "file": "06-pole-supporter.png",
+      "pole": "Supporter",
+      "kind": "tablet",
+      "width": 2064,
+      "height": 2752,
+      "recommended": null,
+      "source": "website/public/images/app/supporter/supporter-accueil.jpg",
+      "note": null,
+      "headline": "Pôle Supporter",
+      "subheadline": "Suivez matchs, scores et favoris",
+      "body": null,
+      "bodyLines": null
+    },
+    {
+      "file": "07-pole-sponsor.png",
+      "pole": "Sponsor",
+      "kind": "tablet",
+      "width": 2064,
+      "height": 2752,
+      "recommended": null,
+      "source": "website/public/images/app/sponsor/sponsor-prospects.jpg",
+      "note": null,
+      "headline": "Pôle Sponsor",
+      "subheadline": "Visibilité clubs et marques",
+      "body": null,
+      "bodyLines": null
+    },
+    {
+      "file": "08-objectif-infrastructure.png",
+      "pole": "Objectif",
+      "kind": "hero",
+      "width": 2064,
+      "height": 2752,
+      "recommended": null,
+      "source": "assets/branding/proday-lockup-official-source.png",
+      "note": "Hero texte + lockup · promesse infrastructure (sans UI)",
+      "headline": "Pas un outil de plus.",
+      "subheadline": "L’infrastructure de votre football.",
+      "body": "Pas huit produits. Une infrastructure pour relier joueurs, clubs et staffs.",
+      "bodyLines": [
+        "Pas huit produits.",
+        "Une infrastructure pour relier",
+        "joueurs, clubs et staffs."
+      ]
+    },
+    {
+      "file": "09-objectif-centralisation.png",
+      "pole": "Centralisation",
+      "kind": "hero",
+      "width": 2064,
+      "height": 2752,
+      "recommended": null,
+      "source": "assets/branding/proday-lockup-official-source.png",
+      "note": "Hero texte + lockup · centralisation (sans UI)",
+      "headline": "Tout au même endroit.",
+      "subheadline": "Ce que la centralisation change.",
+      "body": "Plus de WhatsApp. Plus de tableurs. Plus de docs éparpillés.",
+      "bodyLines": [
+        "Plus de WhatsApp.",
+        "Plus de tableurs.",
+        "Plus de docs éparpillés."
+      ]
+    },
+    {
+      "file": "10-objectif-portes.png",
+      "pole": "Portes",
+      "kind": "hero",
+      "width": 2064,
+      "height": 2752,
+      "recommended": null,
+      "source": "assets/branding/proday-lockup-official-source.png",
+      "note": "Hero texte + lockup · portes d’entrée (sans UI)",
+      "headline": "Six portes d’entrée.",
+      "subheadline": "Un seul écosystème.",
+      "body": "Joueur · Coach · Club Parent · Supporter · Sponsor Vous entrez par votre rôle. La donnée reste partagée.",
+      "bodyLines": [
+        "Joueur · Coach · Club",
+        "Parent · Supporter · Sponsor",
+        "Vous entrez par votre rôle.",
+        "La donnée reste partagée."
+      ]
+    }
+  ],
+  "recommendedFirst": [
+    "01-pole-joueur.png",
+    "02-pole-coach.png",
+    "03-pole-club.png"
+  ]
+}

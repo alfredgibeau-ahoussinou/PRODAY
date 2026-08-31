@@ -168,7 +168,7 @@ export function ClubVideoCenterPanel({ clubId, profile, onRequestQuote }: Props)
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={['#0a1628', '#050505', CLUB_SITE.bg]}
+        colors={[CLUB_SITE.band, CLUB_SITE.surface, CLUB_SITE.bg]}
         style={styles.hero}
       >
         <View style={styles.heroTop}>

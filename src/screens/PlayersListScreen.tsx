@@ -35,6 +35,7 @@ import { filterPlayersAdvanced } from '../core/recruitment/advancedPlayerSearch.
 import { spacing, radius } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
 import { useAppTheme } from '../context/ProductLineContext';
+import { usePlayerThemeColors } from '../context/PlayerThemeContext';
 import { TabScreenShell } from '../components/app/TabScreenShell';
 import { ScreenBackButton } from '../components/ui/ScreenBackButton';
 import { trackV3Event } from '../core/analytics/v3Events';
@@ -85,6 +86,20 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   const { profile } = useAuth();
   const { isFollowingPlayer, togglePlayer } = useSupporterPlayerFollow(profile);
   const { colors: themeColors, isWoman } = useAppTheme();
+  const playerTheme = usePlayerThemeColors();
+  const isPlayerViewer = profile?.role === 'player';
+  const listColors = useMemo(
+    () =>
+      isPlayerViewer
+        ? {
+            ...themeColors,
+            brand: playerTheme.accent,
+            accent: playerTheme.accent,
+            accentSoft: playerTheme.accentSoft,
+          }
+        : themeColors,
+    [isPlayerViewer, themeColors, playerTheme.accent, playerTheme.accentSoft],
+  );
   const isStaff = isSubScreenShellEnabled(profile, 'staff');
   const directory = usePlayersDirectory({
     search: query,
@@ -178,15 +193,15 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
 
   const listHeader = (
     <View style={styles.headerBlock}>
-      <View style={[styles.infoCard, { backgroundColor: themeColors.surfaceMuted, borderColor: themeColors.border }]}>
-        <View style={[styles.infoIcon, { backgroundColor: themeColors.accentSoft }]}>
-          <Icon name="people" size={22} color={themeColors.brand} variant="filled" />
+      <View style={[styles.infoCard, { backgroundColor: listColors.surfaceMuted, borderColor: listColors.border }]}>
+        <View style={[styles.infoIcon, { backgroundColor: listColors.accentSoft }]}>
+          <Icon name="people" size={22} color={listColors.brand} variant="filled" />
         </View>
         <View style={styles.infoCopy}>
-          <Text style={[styles.infoTitle, { color: themeColors.text }]}>
+          <Text style={[styles.infoTitle, { color: listColors.text }]}>
             {soloProfile ? 'Votre profil joueur' : 'Profils inscrits sur ProDay'}
           </Text>
-          <Text style={[styles.infoSub, { color: themeColors.textMuted }]}>
+          <Text style={[styles.infoSub, { color: listColors.textMuted }]}>
             {soloProfile
               ? 'Seul votre compte est visible pour le moment. Les autres joueurs apparaîtront ici après inscription.'
               : 'Comptes réels uniquement. Les profils de démonstration sont exclus.'}
@@ -204,7 +219,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         <FilterChip
           label="Poste"
           active={filters.position !== 'Tous'}
-          colors={themeColors}
+          colors={listColors}
           onPress={() => cycleFilter(PLAYER_POSITIONS_FILTER, filters.position, (position) =>
             setFilters((f) => ({ ...f, position: position as PlayerListFilters['position'] }))
           )}
@@ -213,7 +228,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         <FilterChip
           label="Niveau"
           active={filters.level !== 'Tous'}
-          colors={themeColors}
+          colors={listColors}
           onPress={() => cycleFilter(PLAYER_LEVELS_FILTER, filters.level, (level) =>
             setFilters((f) => ({ ...f, level: level as PlayerListFilters['level'] }))
           )}
@@ -223,7 +238,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           <FilterChip
             label="Genre"
             active={filters.gender !== 'all'}
-            colors={themeColors}
+            colors={listColors}
             onPress={() =>
               setFilters((f) => ({
                 ...f,
@@ -239,7 +254,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           <FilterChip
             label="Badge"
             active={filters.playerBadge !== 'all'}
-            colors={themeColors}
+            colors={listColors}
             onPress={() =>
               setFilters((f) => ({
                 ...f,
@@ -256,7 +271,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
         <FilterChip
           label="Ville"
           active={Boolean(filters.city.trim())}
-          colors={themeColors}
+          colors={listColors}
           onPress={() => {
             const next = filters.city.trim() ? '' : (profile?.city ?? '');
             setFilters((f) => ({ ...f, city: next }));
@@ -267,7 +282,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           <FilterChip
             label="Rayon 50 km"
             active={nearMe}
-            colors={themeColors}
+            colors={listColors}
             onPress={() => setNearMe((v) => !v)}
             value={nearMe ? 'Autour de moi' : undefined}
           />
@@ -276,7 +291,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           <FilterChip
             label="Dispo"
             active={availability !== 'all'}
-            colors={themeColors}
+            colors={listColors}
             onPress={() =>
               setAvailability((prev) => {
                 const idx = AVAILABILITY_CYCLE.indexOf(prev);
@@ -292,7 +307,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           <FilterChip
             label="Vérifié"
             active={verifiedOnly}
-            colors={themeColors}
+            colors={listColors}
             onPress={() => setVerifiedOnly((v) => !v)}
             value={verifiedOnly ? 'Oui' : undefined}
           />
@@ -301,20 +316,20 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
           <FilterChip
             label="Opp. ≥55%"
             active={minOpportunity}
-            colors={themeColors}
+            colors={listColors}
             onPress={() => setMinOpportunity((v) => !v)}
             value={minOpportunity ? 'Oui' : undefined}
           />
         ) : null}
         {activeFilterCount > 0 || nearMe ? (
-          <TouchableOpacity onPress={resetFilters} style={[styles.resetChip, { borderColor: themeColors.border }]}>
-            <Text style={[styles.resetChipText, { color: themeColors.brand }]}>Réinitialiser</Text>
+          <TouchableOpacity onPress={resetFilters} style={[styles.resetChip, { borderColor: listColors.border }]}>
+            <Text style={[styles.resetChipText, { color: listColors.brand }]}>Réinitialiser</Text>
           </TouchableOpacity>
         ) : null}
       </ScrollView>
 
       {!loading && users.length > 0 ? (
-        <Text style={[styles.countLine, { color: themeColors.textMuted }]}>
+        <Text style={[styles.countLine, { color: listColors.textMuted }]}>
           {users.length} profil{users.length > 1 ? 's' : ''}
           {isStaff ? ' · Tri Opportunity Score' : ''}
         </Text>
@@ -323,7 +338,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
   );
 
   const listBody = loading ? (
-    <ActivityIndicator color={themeColors.brand} style={styles.loader} />
+    <ActivityIndicator color={listColors.brand} style={styles.loader} />
   ) : (
     <FlatList
       data={users}
@@ -332,7 +347,7 @@ export const PlayersListScreen: React.FC<PlayersListScreenProps> = ({
       ListHeaderComponent={listHeader}
       ListFooterComponent={
         loadingMore ? (
-          <ActivityIndicator color={themeColors.brand} style={styles.loader} />
+          <ActivityIndicator color={listColors.brand} style={styles.loader} />
         ) : null
       }
       onEndReached={() => {

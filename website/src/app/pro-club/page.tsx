@@ -4,21 +4,23 @@ import {
   ClubPitchMap,
   ImmersivePoleHero,
 } from "@/components/poles/immersivePoleExperience";
+import { ClubAppHub } from "@/components/poles/ClubAppHub";
 import { ClubMatchInviteSection } from "@/components/poles/ClubMatchInviteSection";
 import { ClubModulesSection } from "@/components/poles/ClubModulesSection";
-import { ClubPresidentHub } from "@/components/poles/ClubPresidentHub";
+import { PresidentHashRedirect } from "@/components/poles/PresidentHashRedirect";
 import { RosterBourseSection } from "@/components/poles/RosterBourseSection";
 import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { VideoHardwareOffers } from "@/components/poles/VideoHardwareOffers";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
+import { NO_COMMITMENT_QUOTE_LINE, POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
 import { getRoleVisuals } from "@/lib/roleVisuals";
-import { ROUTES } from "@/lib/routes";
+import { COACH_APP_HREF, ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Pôle Club, Cœur de ProDay",
   description:
-    "Équipes, analyse de forme, bourse interne, tournois et covoiturage. À partir de 3 € / adhérent sur devis.",
+    "Équipes, analyse de forme, bourse interne, tournois et covoiturage. À partir de 3 € / adhérent sur devis. Parrainage possible · sans engagement.",
 };
 
 export default function ProClubPage() {
@@ -27,6 +29,8 @@ export default function ProClubPage() {
 
   return (
     <TerminalPage accentStyle={accentStyle}>
+      <PresidentHashRedirect />
+
       <ImmersivePoleHero
         brand="Pro Day Club"
         headline="Le club au centre."
@@ -35,11 +39,12 @@ export default function ProClubPage() {
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Structurer mon club"
-        secondaryHref="#analyse-de-forme"
-        secondaryLabel="Analyse de forme"
+        secondaryHref="#app"
+        secondaryLabel="Voir l’app Club"
+        perk={POLE_REFERRAL_LINE}
       />
 
-      <ClubPresidentHub />
+      <ClubAppHub />
 
       <FormAnalysisFeature audience="club" />
 
@@ -57,10 +62,10 @@ export default function ProClubPage() {
 
       <TerminalCta
         title="Faites du club le cockpit."
-        description="À partir de 3 € / adhérent sur devis. Analyse de forme, matchs, recrutements et caméra en option."
+        description={`À partir de 3 € / adhérent sur devis. ${NO_COMMITMENT_QUOTE_LINE} ${POLE_REFERRAL_LINE}`}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta Club"
-        secondaryHref={ROUTES.coach}
+        secondaryHref={COACH_APP_HREF}
         secondaryLabel="Découvrir le Pôle Coach"
       />
     </TerminalPage>

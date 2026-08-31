@@ -1,18 +1,20 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
   useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
-import { getCarouselPoleIdentity } from '../../../content/carouselPoleExperience';
-import { ProductLineLogo } from '../ProductLineLogo';
-import { gradientsForCarouselPole } from '../../../theme/universeGradients';
+import { prodayMotion } from '../../../motion';
+import { ProDaySymbol } from '../ProDaySymbol';
 import { spacing } from '../../../theme/designTokens';
-import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
+import { UNIVERSE_ACCENT } from './universeIntroAccents';
+import { brandVariantForCarouselPole } from './universePoleBrand';
 
 interface UniverseChoicePageProps {
   line: CarouselPoleId;
@@ -20,180 +22,163 @@ interface UniverseChoicePageProps {
   pageWidth: number;
   pageHeight: number;
   scrollX: SharedValue<number>;
+  /** Largeur de la slide (peek) — ≠ largeur écran. */
+  itemWidth: number;
+  /** Composition tablette / desktop : plus d'air. */
+  cinematic?: boolean;
+  /** Réduit parallax pour accessibilité mouvement. */
+  reducedMotion?: boolean;
+  /**
+   * Mode stage fixe (tablette) — pas de scrollX, focus piloté par `focused`.
+   */
+  staticFocus?: boolean;
+  focused?: boolean;
 }
 
-function splitHeroLine(heroLine: string): [string, string] {
-  const parts = heroLine.split('\n');
-  return [parts[0] ?? heroLine, parts[1] ?? ''];
-}
-
-/** Plein écran — logo, accroche, mission courte. */
+/**
+ * Stage univers — symbole HD teinté pôle uniquement (pas de carte / bordure).
+ * Nom + tagline vivent dans le chrome pour une seule accent active.
+ */
 export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   line,
   index,
-  pageWidth,
+  itemWidth,
   scrollX,
+  cinematic = false,
+  reducedMotion = false,
+  staticFocus = false,
+  focused = true,
 }) => {
-  const identity = getCarouselPoleIdentity(line);
-  const stops = gradientsForCarouselPole(line);
   const accent = UNIVERSE_ACCENT[line];
-  const styles = useMemo(() => createStyles(pageWidth), [pageWidth]);
-  const [heroLead, heroAccent] = splitHeroLine(identity.heroLine);
+  const variant = brandVariantForCarouselPole(line);
+  const symbolSize = cinematic ? 200 : 148;
+  const haloSize = symbolSize + (cinematic ? 96 : 72);
+  const styles = useMemo(
+    () => createStyles(itemWidth, cinematic),
+    [itemWidth, cinematic],
+  );
 
-  const logoStyle = useAnimatedStyle(() => {
-    if (pageWidth <= 0) return { opacity: 0, transform: [{ translateY: 0 }, { scale: 1 }] };
-    const page = scrollX.value / pageWidth;
-    const offset = page - index;
-    const translateY = interpolate(offset, [-1, 0, 1], [24, 0, 24], Extrapolation.CLAMP);
-    const scale = interpolate(offset, [-1, 0, 1], [0.88, 1, 0.88], Extrapolation.CLAMP);
-    const opacity = interpolate(offset, [-1, -0.15, 0, 0.15, 1], [0, 0.7, 1, 0.7, 0], Extrapolation.CLAMP);
-    return { opacity, transform: [{ translateY }, { scale }] };
-  });
+  const staticOpacity = useSharedValue(focused ? 1 : reducedMotion ? 0.55 : 0.42);
+  const staticScale = useSharedValue(focused ? 1 : reducedMotion ? 0.97 : 0.9);
+  const staticHalo = useSharedValue(focused ? (reducedMotion ? 0.16 : 0.22) : 0.06);
 
-  const copyStyle = useAnimatedStyle(() => {
-    if (pageWidth <= 0) return { opacity: 0, transform: [{ translateY: 0 }] };
-    const page = scrollX.value / pageWidth;
-    const offset = page - index;
-    const translateY = interpolate(offset, [-1, 0, 1], [16, 0, 16], Extrapolation.CLAMP);
-    const opacity = interpolate(offset, [-1, -0.2, 0, 0.2, 1], [0, 0.5, 1, 0.5, 0], Extrapolation.CLAMP);
-    return { opacity, transform: [{ translateY }] };
-  });
+  useEffect(() => {
+    if (!staticFocus) return;
+    const nextOpacity = focused ? 1 : reducedMotion ? 0.55 : 0.42;
+    const nextScale = focused ? 1 : reducedMotion ? 0.97 : 0.9;
+    const nextHalo = focused ? (reducedMotion ? 0.16 : 0.22) : 0.06;
+    if (reducedMotion) {
+      staticOpacity.value = nextOpacity;
+      staticScale.value = nextScale;
+      staticHalo.value = nextHalo;
+      return;
+    }
+    staticOpacity.value = withTiming(nextOpacity, {
+      duration: prodayMotion.duration.slow,
+      easing: prodayMotion.easing.out,
+    });
+    staticScale.value = withSpring(nextScale, prodayMotion.spring.smooth);
+    staticHalo.value = withTiming(nextHalo, {
+      duration: prodayMotion.duration.normal,
+      easing: prodayMotion.easing.out,
+    });
+  }, [
+    focused,
+    line,
+    reducedMotion,
+    staticFocus,
+    staticHalo,
+    staticOpacity,
+    staticScale,
+  ]);
 
-  const glowStyle = useAnimatedStyle(() => {
-    if (pageWidth <= 0) return { opacity: 0, transform: [{ scale: 1 }] };
-    const page = scrollX.value / pageWidth;
+  const stageStyle = useAnimatedStyle(() => {
+    if (staticFocus) {
+      return {
+        opacity: staticOpacity.value,
+        transform: [{ scale: staticScale.value }],
+      };
+    }
+    if (itemWidth <= 0) {
+      return { opacity: 0, transform: [{ scale: 0.96 }] };
+    }
+    const page = scrollX.value / itemWidth;
     const offset = page - index;
-    const opacity = interpolate(offset, [-1, 0, 1], [0.08, 0.28, 0.08], Extrapolation.CLAMP);
-    const scale = interpolate(offset, [-1, 0, 1], [0.9, 1.05, 0.9], Extrapolation.CLAMP);
+    const abs = Math.abs(offset);
+
+    if (reducedMotion) {
+      const opacity = interpolate(abs, [0, 0.5, 1], [1, 0.78, 0.5], Extrapolation.CLAMP);
+      const scale = interpolate(abs, [0, 1], [1, 0.96], Extrapolation.CLAMP);
+      return { opacity, transform: [{ scale }] };
+    }
+
+    // Courbes plus douces — moins de chute d’opacity en mid-swipe.
+    const scale = interpolate(abs, [0, 0.65, 1], [1, 0.96, 0.9], Extrapolation.CLAMP);
+    const opacity = interpolate(abs, [0, 0.5, 1], [1, 0.68, 0.36], Extrapolation.CLAMP);
     return { opacity, transform: [{ scale }] };
-  });
+  }, [index, itemWidth, reducedMotion, staticFocus]);
+
+  const haloStyle = useAnimatedStyle(() => {
+    if (staticFocus) {
+      return { opacity: staticHalo.value };
+    }
+    if (itemWidth <= 0) {
+      return { opacity: 0.08 };
+    }
+    const page = scrollX.value / itemWidth;
+    const abs = Math.abs(page - index);
+    const opacity = interpolate(abs, [0, 0.5, 1], [0.22, 0.12, 0.05], Extrapolation.CLAMP);
+    return { opacity };
+  }, [index, itemWidth, staticFocus]);
 
   return (
-    <View style={styles.page}>
-      <LinearGradient
-        colors={[stops.heroDark[0], stops.hero[0], stops.hero[1] ?? stops.hero[0]]}
-        locations={[0, 0.45, 1]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0.15, y: 0 }}
-        end={{ x: 0.85, y: 1 }}
-      />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.45)']}
-        style={styles.vignette}
-        start={{ x: 0.5, y: 0.55 }}
-        end={{ x: 0.5, y: 1 }}
-      />
-
-      <View style={styles.stage}>
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.glow, { backgroundColor: accent }, glowStyle]}
-        />
-
-        <Animated.View style={[styles.logoWrap, logoStyle]}>
-          <ProductLineLogo
-            line={line}
-            width={Math.min(pageWidth * 0.48, 172)}
-            onDark
-            centered
+    <View
+      style={styles.page}
+      accessibilityElementsHidden={!focused && staticFocus}
+      importantForAccessibility={focused || !staticFocus ? 'yes' : 'no-hide-descendants'}
+    >
+      <Animated.View style={[styles.stage, stageStyle]}>
+        <View style={styles.symbolWrap}>
+          <Animated.View
+            style={[
+              styles.halo,
+              {
+                width: haloSize,
+                height: haloSize,
+                borderRadius: haloSize / 2,
+                backgroundColor: accent,
+              },
+              haloStyle,
+            ]}
           />
-        </Animated.View>
-
-        <Animated.View style={[styles.copy, copyStyle]}>
-          <Text style={styles.kicker}>{UNIVERSE_SHORT[line]}</Text>
-          <View style={styles.heroBlock}>
-            <Text style={styles.heroLead}>{heroLead}</Text>
-            {heroAccent ? (
-              <Text style={[styles.heroAccent, { color: accent }]}>{heroAccent}</Text>
-            ) : null}
-          </View>
-          <Text style={styles.name}>{identity.productName}</Text>
-          <Text style={styles.mission} numberOfLines={2}>
-            {identity.mission}
-          </Text>
-        </Animated.View>
-      </View>
+          <ProDaySymbol size={symbolSize} variant={variant} tone="white" />
+        </View>
+      </Animated.View>
     </View>
   );
 };
 
-function createStyles(pageWidth: number) {
+function createStyles(itemWidth: number, cinematic: boolean) {
   return StyleSheet.create({
     page: {
-      width: pageWidth,
+      width: itemWidth > 0 ? itemWidth : undefined,
       flex: 1,
-    },
-    vignette: {
-      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     stage: {
-      flex: 1,
+      width: '100%',
+      alignItems: 'center',
+      paddingHorizontal: cinematic ? spacing.xl : spacing.md,
+      // Remonte le symbole au-dessus du chrome bas (nom + CTA).
+      marginBottom: cinematic ? 0 : 96,
+    },
+    symbolWrap: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingBottom: spacing.xl * 6.5,
-      paddingTop: spacing.xl * 2,
     },
-    glow: {
+    halo: {
       position: 'absolute',
-      width: pageWidth * 0.75,
-      height: pageWidth * 0.75,
-      borderRadius: pageWidth,
-      top: '18%',
-    },
-    logoWrap: {
-      marginBottom: spacing.lg,
-      width: '100%',
-      alignItems: 'center',
-    },
-    copy: {
-      alignItems: 'center',
-      gap: spacing.sm,
-      width: '100%',
-      maxWidth: 320,
-    },
-    kicker: {
-      fontSize: 11,
-      fontWeight: '800',
-      letterSpacing: 2.4,
-      textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.55)',
-      ...Platform.select({ android: { includeFontPadding: false } }),
-    },
-    heroBlock: {
-      alignItems: 'center',
-      gap: 0,
-    },
-    heroLead: {
-      fontSize: 32,
-      fontWeight: '900',
-      color: '#FFFFFF',
-      letterSpacing: -0.8,
-      lineHeight: 36,
-      textAlign: 'center',
-    },
-    heroAccent: {
-      fontSize: 32,
-      fontWeight: '900',
-      letterSpacing: -0.8,
-      lineHeight: 36,
-      textAlign: 'center',
-    },
-    name: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: 'rgba(255,255,255,0.78)',
-      letterSpacing: 0.2,
-      textAlign: 'center',
-      marginTop: spacing.xs,
-    },
-    mission: {
-      fontSize: 14,
-      lineHeight: 20,
-      fontWeight: '500',
-      color: 'rgba(255,255,255,0.62)',
-      textAlign: 'center',
-      marginTop: spacing.xs,
     },
   });
 }

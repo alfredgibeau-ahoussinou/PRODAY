@@ -17,11 +17,15 @@ import {
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore';
-import type { User, UserRole, VerificationStatus, PlayerVerificationCheckId } from '../models/User';
-import {
-  computePlayerVerificationStatus,
-  defaultPlayerVerificationState,
+import type {
+  User,
+  UserRole,
+  VerificationStatus,
+  PlayerVerificationCheckId,
+  PlayerVerificationState,
 } from '../models/User';
+import { computePlayerVerificationStatus } from '../models/User';
+import { applyAdminPlayerVerificationDecision } from '../utils/adminUserVerification';
 import type { ProductLineId } from '../models/ProductLine';
 import { resolveAdminProductLine } from '../utils/adminProductLine';
 import type { TeamEvent } from '../models/TeamEvent';
@@ -39,6 +43,7 @@ import {
   fundingGoalFromFirestore,
   clubAnnouncementFromFirestore,
   applicationFromFirestore,
+  membershipFromFirestore,
 } from '../lib/firestoreMappers';
 import {
   callFunction,
@@ -51,6 +56,7 @@ import type { Application } from '../models/Player';
 import type { Club } from '../models/Club';
 import type { CommunityReel, CommunityReelStatus } from '../models/CommunityReel';
 import type { ReelReport } from '../models/ReelReport';
+import type { Membership } from '../models/Membership';
 import type { PlatformFeedPost, FeedAudience } from '../models/PlatformFeed';
 import type { PlatformConfig } from '../models/PlatformConfig';
 import type { StageOffer, StageApplication } from '../models/Stage';
@@ -252,6 +258,12 @@ export type AdminUserUpdatePatch = {
   /** UIDs enfants liés (compte parent). */
   parent_of?: string[] | null;
   strong_foot?: 'left' | 'right' | 'both' | null;
+  /** Note interne admin. */
+  admin_note?: string | null;
+  /** Tags admin. */
+  admin_tags?: string[] | null;
+  /** Rattachement club (profile.club_id) — ex. désignation président. */
+  club_id?: string | null;
 };
 
 export const adminService = {
@@ -373,6 +385,15 @@ export const adminService = {
     if (patch.parent_of !== undefined) {
       update.parent_of = patch.parent_of ?? [];
     }
+    if (patch.admin_note !== undefined) {
+      update.admin_note = patch.admin_note?.trim() || null;
+    }
+    if (patch.admin_tags !== undefined) {
+      update.admin_tags = patch.admin_tags ?? [];
+    }
+    if (patch.club_id !== undefined) {
+      update['profile.club_id'] = patch.club_id?.trim() || null;
+    }
 
     if (patch.product_line !== undefined || patch.role !== undefined) {
       let role = patch.role;
@@ -397,6 +418,13 @@ export const adminService = {
     }
 
     await updateDoc(doc(database, 'users', uid), update);
+    await adminAuditService.log({
+      action: 'user_updated',
+      actor_uid: 'admin',
+      target_type: 'user',
+      target_id: uid,
+      summary: `Mise à jour utilisateur (${Object.keys(patch).join(', ')})`,
+    });
   },
 
   /**
@@ -516,12 +544,16 @@ export const adminService = {
     );
   },
 
-  /** Mise à jour directe Firestore (règles admin) — fonctionne sans Cloud Functions déployées */
+  /** Mise à jour directe Firestore (règles admin) — source de vérité, sans claim `admin`. */
   async validateProfileDirect(
     uid: string,
     action: 'approve' | 'reject',
     rejectionReason?: string
-  ): Promise<void> {
+  ): Promise<{
+    verification_status: VerificationStatus;
+    is_verified: boolean;
+    player_verification?: PlayerVerificationState;
+  }> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
@@ -531,7 +563,6 @@ export const adminService = {
     const data = snap.data() as Record<string, unknown>;
     const role = data.role as UserRole;
     const verified = action === 'approve';
-    const checkStatus = verified ? 'verified' : 'rejected';
 
     const update: Record<string, unknown> = {
       is_verified: verified,
@@ -546,52 +577,43 @@ export const adminService = {
       update.product_line = 'sponsor';
     }
 
-    if (role === 'player' && data.player_verification) {
-      const pv = {
-        ...defaultPlayerVerificationState(false),
-        ...(data.player_verification as Record<string, unknown>),
-      } as ReturnType<typeof defaultPlayerVerificationState>;
-
-      (['identity', 'club_license', 'parental_consent'] as const).forEach((key) => {
-        const check = pv[key];
-        if (check?.status === 'pending') {
-          pv[key] = {
-            ...check,
-            status: checkStatus,
-            ...(verified ? {} : { rejection_reason: rejectionReason?.trim() || 'Refusé par l’administrateur' }),
-          };
-        }
-      });
-
-      update.player_verification = pv;
-      update.verification_status = verified
-        ? 'VERIFIED'
-        : computePlayerVerificationStatus(pv);
-      if (verified) {
-        update.onboarding_documents_submitted = true;
-      }
+    if (role === 'player') {
+      const pvPatch = applyAdminPlayerVerificationDecision(
+        data.player_verification as Parameters<typeof applyAdminPlayerVerificationDecision>[0],
+        action,
+        rejectionReason,
+      );
+      Object.assign(update, pvPatch);
     }
 
     await updateDoc(doc(database, 'users', uid), update);
+    return {
+      verification_status: (update.verification_status as VerificationStatus) ?? (verified ? 'VERIFIED' : 'REJECTED'),
+      is_verified: verified,
+      player_verification: update.player_verification as PlayerVerificationState | undefined,
+    };
   },
 
   /**
-   * Approuver / rejeter un compte — callable (push FCM) ou repli Firestore.
+   * Approuver / rejeter un compte — Firestore d’abord (source de vérité),
+   * puis callable pour FCM (permission-denied / unavailable ignorés).
    */
   async validateProfile(
     uid: string,
     action: 'approve' | 'reject',
     rejectionReason?: string
-  ): Promise<{ via: 'callable' | 'firestore' }> {
+  ): Promise<{
+    via: 'callable' | 'firestore';
+    verification_status: VerificationStatus;
+    is_verified: boolean;
+    player_verification?: PlayerVerificationState;
+  }> {
+    const written = await this.validateProfileDirect(uid, action, rejectionReason);
     try {
       await callFunction('validateProfile', { uid, action, rejectionReason });
-      return { via: 'callable' };
-    } catch (e) {
-      if (!isFunctionsUnavailable(e)) {
-        throw new Error(getCallableErrorMessage(e));
-      }
-      await this.validateProfileDirect(uid, action, rejectionReason);
-      return { via: 'firestore' };
+      return { via: 'callable', ...written };
+    } catch {
+      return { via: 'firestore', ...written };
     }
   },
 
@@ -612,6 +634,13 @@ export const adminService = {
     return snap.docs.map((d) => {
       const data = d.data() as Record<string, unknown>;
       const loc = data.location as { latitude?: number; longitude?: number } | undefined;
+      const toDate = (v: unknown) =>
+        v && typeof v === 'object' && 'toDate' in v
+          ? (v as { toDate: () => Date }).toDate()
+          : undefined;
+      const offerId = data.commercial_offer_id
+        ? String(data.commercial_offer_id)
+        : undefined;
       return {
         id: d.id,
         name: String(data.name ?? ''),
@@ -619,11 +648,66 @@ export const adminService = {
         department: data.department as string | undefined,
         location: { latitude: loc?.latitude ?? 0, longitude: loc?.longitude ?? 0 },
         logo_url: data.logo_url as string | undefined,
+        primary_color: data.primary_color as string | undefined,
+        secondary_color: data.secondary_color as string | undefined,
         verified: Boolean(data.verified),
+        suspended: Boolean(data.suspended),
+        archived: Boolean(data.archived),
+        admin_note: data.admin_note ? String(data.admin_note) : undefined,
+        admin_tags: Array.isArray(data.admin_tags)
+          ? (data.admin_tags as unknown[]).map(String)
+          : undefined,
         categories: (data.categories as string[]) ?? [],
         sponsor_ids: (data.sponsor_ids as string[]) ?? [],
         owner_uid: String(data.owner_uid ?? ''),
-        created_at: new Date(),
+        commercial_offer_id:
+          offerId === 'club_premium' ||
+          offerId === 'club_video_pro' ||
+          offerId === 'veo_lives_2' ||
+          offerId === 'video_veo_pack' ||
+          offerId === 'club_live_duo'
+            ? offerId === 'club_live_duo'
+              ? 'veo_lives_2'
+              : (offerId as
+                  | 'club_premium'
+                  | 'club_video_pro'
+                  | 'veo_lives_2'
+                  | 'video_veo_pack')
+            : undefined,
+        commercial_amount_eur:
+          typeof data.commercial_amount_eur === 'number'
+            ? data.commercial_amount_eur
+            : undefined,
+        commercial_amount_note: data.commercial_amount_note
+          ? String(data.commercial_amount_note)
+          : undefined,
+        commercial_amount_updated_at: toDate(data.commercial_amount_updated_at),
+        commercial_amount_updated_by: data.commercial_amount_updated_by
+          ? String(data.commercial_amount_updated_by)
+          : undefined,
+        billing_email: data.billing_email ? String(data.billing_email) : undefined,
+        stripe_customer_id: data.stripe_customer_id
+          ? String(data.stripe_customer_id)
+          : undefined,
+        stripe_invoice_id: data.stripe_invoice_id
+          ? String(data.stripe_invoice_id)
+          : undefined,
+        stripe_invoice_status: data.stripe_invoice_status
+          ? String(data.stripe_invoice_status)
+          : undefined,
+        stripe_invoice_hosted_url: data.stripe_invoice_hosted_url
+          ? String(data.stripe_invoice_hosted_url)
+          : undefined,
+        stripe_invoice_pdf: data.stripe_invoice_pdf
+          ? String(data.stripe_invoice_pdf)
+          : undefined,
+        stripe_invoice_amount_eur:
+          typeof data.stripe_invoice_amount_eur === 'number'
+            ? data.stripe_invoice_amount_eur
+            : undefined,
+        stripe_invoice_sent_at: toDate(data.stripe_invoice_sent_at),
+        created_at: toDate(data.created_at) ?? new Date(),
+        updated_at: toDate(data.updated_at),
       };
     });
   },
@@ -632,6 +716,13 @@ export const adminService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await deleteDoc(doc(database, 'clubs', clubId));
+    await adminAuditService.log({
+      action: 'club_deleted',
+      actor_uid: 'admin',
+      target_type: 'club',
+      target_id: clubId,
+      summary: 'Suppression club',
+    });
   },
 
   async updateClubVerified(clubId: string, verified: boolean): Promise<void> {
@@ -640,6 +731,73 @@ export const adminService = {
     await updateDoc(doc(database, 'clubs', clubId), {
       verified,
       updated_at: serverTimestamp(),
+    });
+    await adminAuditService.log({
+      action: 'club_verified',
+      actor_uid: 'admin',
+      target_type: 'club',
+      target_id: clubId,
+      summary: verified ? 'Club validé' : 'Validation club retirée',
+    });
+  },
+
+  async updateClub(
+    clubId: string,
+    patch: {
+      name?: string;
+      city?: string;
+      department?: string | null;
+      verified?: boolean;
+      suspended?: boolean;
+      archived?: boolean;
+      admin_note?: string | null;
+      admin_tags?: string[] | null;
+      owner_uid?: string;
+    },
+    actorUid?: string,
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const update: Record<string, unknown> = { updated_at: serverTimestamp() };
+    if (patch.name !== undefined) update.name = patch.name.trim();
+    if (patch.city !== undefined) update.city = patch.city.trim();
+    if (patch.department !== undefined) update.department = patch.department?.trim() || null;
+    if (patch.verified !== undefined) update.verified = patch.verified;
+    if (patch.suspended !== undefined) update.suspended = patch.suspended;
+    if (patch.archived !== undefined) update.archived = patch.archived;
+    if (patch.admin_note !== undefined) update.admin_note = patch.admin_note?.trim() || null;
+    if (patch.admin_tags !== undefined) update.admin_tags = patch.admin_tags ?? [];
+    if (patch.owner_uid !== undefined) update.owner_uid = patch.owner_uid.trim();
+    await updateDoc(doc(database, 'clubs', clubId), update);
+    await adminAuditService.log({
+      action: 'other',
+      actor_uid: actorUid || 'admin',
+      target_type: 'club',
+      target_id: clubId,
+      summary: `Mise à jour club (${Object.keys(patch).join(', ')})`,
+    });
+  },
+
+  /**
+   * Désigne le compte président (owner_uid) d’un club.
+   * ACL Pôle Président : role club + uid === owner_uid.
+   */
+  async setClubOwner(
+    clubId: string,
+    ownerUid: string,
+    actorUid?: string,
+  ): Promise<void> {
+    const uid = ownerUid.trim();
+    if (!clubId.trim() || !uid) {
+      throw new Error('Club et propriétaire requis');
+    }
+    await this.updateClub(clubId, { owner_uid: uid }, actorUid);
+    await adminAuditService.log({
+      action: 'other',
+      actor_uid: actorUid || 'admin',
+      target_type: 'club',
+      target_id: clubId,
+      summary: `Président (owner) → ${uid}`,
     });
   },
 
@@ -871,6 +1029,34 @@ export const adminService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
     await deleteDoc(doc(database, 'club_funding_goals', goalId));
+  },
+
+  async listPendingMemberships(max = 100): Promise<Membership[]> {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, 'memberships'),
+          where('status', '==', 'pending'),
+          limit(max),
+        ),
+      );
+      return snap.docs
+        .map((d) => membershipFromFirestore(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => b.requested_at.getTime() - a.requested_at.getTime());
+    } catch {
+      try {
+        const snap = await getDocs(query(collection(database, 'memberships'), limit(max)));
+        return snap.docs
+          .map((d) => membershipFromFirestore(d.id, d.data() as Record<string, unknown>))
+          .filter((m) => m.status === 'pending')
+          .sort((a, b) => b.requested_at.getTime() - a.requested_at.getTime());
+      } catch {
+        return [];
+      }
+    }
   },
 
   async listCommunityReels(max = 100, status?: CommunityReelStatus): Promise<CommunityReel[]> {
@@ -1641,6 +1827,15 @@ export const adminService = {
       })
       .sort((a, b) => (b.created_at?.getTime() ?? 0) - (a.created_at?.getTime() ?? 0))
       .slice(0, max);
+  },
+
+  async updateShopOrderStatus(orderId: string, status: ShopOrder['status']): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await updateDoc(doc(database, 'shop_orders', orderId), {
+      status,
+      updated_at: serverTimestamp(),
+    });
   },
 
   async listAllStageOffers(max = 80): Promise<StageOffer[]> {

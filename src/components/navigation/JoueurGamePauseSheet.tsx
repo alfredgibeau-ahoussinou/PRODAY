@@ -20,6 +20,7 @@ const ICONS: Partial<Record<MainTabId, IconName>> = {
   reels: 'videocam',
   recrutement: 'people',
   feed: 'star-four-points',
+  progression: 'stats-chart',
   famille: 'shield',
 };
 

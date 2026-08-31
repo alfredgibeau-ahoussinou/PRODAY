@@ -38,7 +38,13 @@ export type CoachNavItemId =
   | 'carpool'
   | 'profil'
   | 'plus'
-  | 'pitch';
+  | 'pitch'
+  | 'coaching_perso';
+
+/** Alias legacy (deep links) — résolus par canonicalizeCoachNav. */
+export type CoachNavLegacyId = 'accueil';
+
+export type CoachNavResolvableId = CoachNavItemId | CoachNavLegacyId;
 
 export type CoachNavItem = {
   id: CoachNavItemId;
@@ -90,6 +96,7 @@ export const COACH_SECONDARY_NAV_IDS: CoachNavItemId[] = [
   'carpool',
   'com_staff',
   'gestion',
+  'coaching_perso',
 ];
 
 /** Destinations secondaires — surlignent l’onglet Menu dans la barre. */
@@ -281,6 +288,12 @@ export const COACH_NAV_CATALOG: CoachNavItem[] = [
     icon: 'car',
     tab: 'covoiturage',
   },
+  {
+    id: 'coaching_perso',
+    label: 'Coaching perso',
+    hint: 'Créneaux à l’heure · tarif joueurs',
+    icon: 'time',
+  },
 ];
 
 /** 5 onglets primaires — sidebar + barre mobile. */
@@ -300,10 +313,14 @@ export type CoachToolGroup = {
   toolIds: CoachNavItemId[];
 };
 
-/** Groupes Outils — liste unique dans l’onglet Menu (max 8 lignes). */
+/** Groupes Outils — liste unique dans l’onglet Menu. */
 export const COACH_TOOL_GROUPS: CoachToolGroup[] = [
   { id: 'match', label: 'Match', toolIds: ['match_center', 'entrainements'] },
-  { id: 'club', label: 'Club', toolIds: ['gestion', 'com_staff', 'carpool'] },
+  {
+    id: 'club',
+    label: 'Club',
+    toolIds: ['gestion', 'com_staff', 'carpool', 'coaching_perso'],
+  },
   {
     id: 'performance',
     label: 'Performance',
@@ -330,15 +347,17 @@ export const COACH_HOME_TOOLS: {
               ? 'Vidéos'
               : id === 'smart_tactics'
                 ? 'Tactique'
-                : (item?.label ?? id),
+                : id === 'coaching_perso'
+                  ? 'Coaching perso'
+                  : (item?.label ?? id),
       icon: item?.icon ?? 'settings',
     };
   }),
 );
 
 /** Deep links d’anciennes pages → onglet parent. */
-export function canonicalizeCoachNav(id: CoachNavItemId): CoachNavItemId {
-  if (id === 'pitch') return 'today';
+export function canonicalizeCoachNav(id: CoachNavResolvableId): CoachNavItemId {
+  if (id === 'pitch' || id === 'accueil') return 'today';
   if (id === 'effectif') return 'equipe';
   if (id === 'planning') return 'entrainements';
   if (id === 'matchs') return 'match_center';

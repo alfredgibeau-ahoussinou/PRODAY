@@ -33,6 +33,9 @@ import { trackV3Event } from '../core/analytics/v3Events';
 import { recordV3UserAction } from '../utils/recordV3Action';
 import { useTranslation } from '../context/LocaleContext';
 import { useSubscriptionOptional } from '../context/SubscriptionContext';
+import { useJoueurSession } from '../context/JoueurSessionContext';
+import { useJoueurTheme } from '../hooks/useJoueurTheme';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import {
   subscriptionService,
   SubscriptionLimitError,
@@ -71,8 +74,15 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const [sendBlocked, setSendBlocked] = useState<string | null>(null);
   const listRef = useRef<FlatList>(null);
   const sponsorDark = isSponsorRole(currentUser?.role);
+  const joueurSession = useJoueurSession();
+  const joueurLive =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
+  const joueurTheme = useJoueurTheme();
   const { colors: themeColors } = useAppTheme();
-  const styles = useMemo(() => createStyles(themeColors), [themeColors]);
+  const styles = useMemo(
+    () => createStyles(themeColors, joueurLive, joueurTheme.accent),
+    [themeColors, joueurLive, joueurTheme.accent],
+  );
 
   const ui = useMemo(
     () =>
@@ -89,19 +99,32 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
             warning: themeColors.warning,
             warningBg: themeColors.warningBg,
           }
-        : {
-            bg: themeColors.background,
-            surface: themeColors.surface,
-            surfaceMuted: themeColors.surfaceMuted,
-            border: themeColors.border,
-            text: themeColors.text,
-            textMuted: themeColors.textMuted,
-            accent: themeColors.accent,
-            onAccent: '#FFFFFF',
-            warning: themeColors.warning,
-            warningBg: themeColors.warningBg,
-          },
-    [sponsorDark, themeColors]
+        : joueurLive
+          ? {
+              bg: joueurTheme.shellBg,
+              surface: PLAYER_DARK.surface,
+              surfaceMuted: PLAYER_DARK.bgElevated,
+              border: PLAYER_DARK.border,
+              text: joueurTheme.ink,
+              textMuted: joueurTheme.inkMuted,
+              accent: joueurTheme.accent,
+              onAccent: PLAYER_DARK.bg,
+              warning: themeColors.warning,
+              warningBg: 'rgba(251,191,36,0.12)',
+            }
+          : {
+              bg: themeColors.background,
+              surface: themeColors.surface,
+              surfaceMuted: themeColors.surfaceMuted,
+              border: themeColors.border,
+              text: themeColors.text,
+              textMuted: themeColors.textMuted,
+              accent: themeColors.accent,
+              onAccent: '#FFFFFF',
+              warning: themeColors.warning,
+              warningBg: themeColors.warningBg,
+            },
+    [sponsorDark, joueurLive, joueurTheme, themeColors]
   );
 
   const otherUid = messagesService.getOtherParticipantId(threadId, currentUid);
@@ -270,7 +293,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
       keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
     >
       <View style={[styles.header, { backgroundColor: ui.surface, borderBottomColor: ui.border }]}>
-        <PressableSpring style={[styles.backBtn, { borderColor: ui.border }]} onPress={onBack} scaleTo={0.92} haptic>
+        <PressableSpring style={[styles.backBtn, { borderColor: ui.border }]} onPress={onBack} scaleTo={0.98} haptic>
           <Icon name="arrow-back" size={20} color={ui.text} />
         </PressableSpring>
         <View style={styles.headerCenter}>
@@ -387,7 +410,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           <PressableSpring
             onPress={handleSend}
             disabled={!text.trim() || sending || Boolean(sendBlocked)}
-            scaleTo={0.9}
+            scaleTo={0.98}
             haptic
           >
             <View
@@ -409,10 +432,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     </KeyboardAvoidingView>
   );
 
-  return sponsorDark ? shell : <ProDayScreenCanvas flat>{shell}</ProDayScreenCanvas>;
+  return sponsorDark || joueurLive ? shell : <ProDayScreenCanvas flat>{shell}</ProDayScreenCanvas>;
 };
 
-function createStyles(_c: AppColors) {
+function createStyles(_c: AppColors, joueurLive = false, joueurAccent: string = PLAYER_DARK.accent) {
   return StyleSheet.create({
     root: { flex: 1 },
     header: {
@@ -422,6 +445,7 @@ function createStyles(_c: AppColors) {
       paddingVertical: spacing.sm,
       borderBottomWidth: StyleSheet.hairlineWidth,
       gap: spacing.sm,
+      ...(joueurLive ? { borderLeftWidth: 3, borderLeftColor: joueurAccent } : null),
     },
     backBtn: {
       width: 40,
@@ -472,7 +496,7 @@ function createStyles(_c: AppColors) {
       borderBottomRightRadius: 6,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm + 2,
-      ...shadows.soft,
+      ...(joueurLive ? {} : shadows.soft),
     },
     bubbleTheirs: {
       borderRadius: radius.lg,
@@ -480,7 +504,7 @@ function createStyles(_c: AppColors) {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm + 2,
       borderWidth: StyleSheet.hairlineWidth,
-      ...shadows.soft,
+      ...(joueurLive ? {} : shadows.soft),
     },
     bubbleText: { lineHeight: 22 },
     time: { marginTop: 4, fontSize: 11 },

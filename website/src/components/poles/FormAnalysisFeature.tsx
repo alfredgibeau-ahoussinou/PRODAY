@@ -39,7 +39,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Bonne dynamique — minutes stables, récupération déclarée solide.",
+      insight: "Bonne dynamique · minutes stables, récupération déclarée solide.",
     },
     {
       name: "Noah L.",
@@ -49,7 +49,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "élevée",
       recovery: "moyenne",
       availability: "À surveiller",
-      insight: "Charge haute sur 7 jours — alléger la densification avant le match.",
+      insight: "Charge haute sur 7 jours · alléger la densification avant le match.",
     },
     {
       name: "Ethan R.",
@@ -59,7 +59,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "très élevée",
       recovery: "faible",
       availability: "Repos conseillé",
-      insight: "Repos / adaptation de séance recommandée — ne pas forcer le volume.",
+      insight: "Repos / adaptation de séance recommandée · ne pas forcer le volume.",
     },
     {
       name: "Yanis M.",
@@ -69,7 +69,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "faible",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Disponible et frais — profil prioritaire pour le onze.",
+      insight: "Disponible et frais · profil prioritaire pour le onze.",
     },
   ],
   u18: [
@@ -81,7 +81,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Présences régulières — forme stable pour le week-end.",
+      insight: "Présences régulières · forme stable pour le weekend.",
     },
     {
       name: "Amine K.",
@@ -91,7 +91,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "élevée",
       recovery: "moyenne",
       availability: "À surveiller",
-      insight: "Double séance + match midweek — surveiller la récupération déclarée.",
+      insight: "Double séance + match midweek · surveiller la récupération déclarée.",
     },
     {
       name: "Hugo T.",
@@ -101,7 +101,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "moyenne",
       availability: "À surveiller",
-      insight: "Retour progressif — minutes à doser en première période.",
+      insight: "Retour progressif · minutes à doser en première période.",
     },
   ],
   u15: [
@@ -113,7 +113,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "faible",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Excellente fraîcheur — prêt pour un volume de jeu normal.",
+      insight: "Excellente fraîcheur · prêt pour un volume de jeu normal.",
     },
     {
       name: "Inès P.",
@@ -123,7 +123,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "élevée",
       recovery: "faible",
       availability: "Repos conseillé",
-      insight: "Fatigue déclarée élevée — privilégier récupération active.",
+      insight: "Fatigue déclarée élevée · privilégier récupération active.",
     },
     {
       name: "Sara M.",
@@ -133,7 +133,7 @@ const SQUAD: Record<TeamId, PlayerRow[]> = {
       charge: "modérée",
       recovery: "bonne",
       availability: "Disponible",
-      insight: "Indicateurs cohérents — aucune alerte de charge.",
+      insight: "Indicateurs cohérents · aucune alerte de charge.",
     },
   ],
 };
@@ -176,7 +176,7 @@ const COPY: Record<
     kicker: "Fonctionnalité centrale · Inclus dans l’offre Club",
     title: "L’état de forme de tout le club, équipe par équipe.",
     support:
-      "Dirigeants et DS voient la disponibilité réelle avant le week-end. Les coachs agissent sur la charge et la récupération déclarée — jamais un diagnostic médical.",
+      "Dirigeants et DS voient la disponibilité réelle avant le weekend. Les coachs agissent sur la charge et la récupération déclarée · jamais un diagnostic médical.",
     boardKicker: "Tableau effectif · Vue Club",
     primaryHref: ROUTES.betaWaitlist,
     primaryLabel: "Activer pour mon club",
@@ -187,7 +187,7 @@ const COPY: Record<
     kicker: "Fonctionnalité centrale · Effectif",
     title: "Composez avec la forme réelle de votre banc.",
     support:
-      "Charge, récupération déclarée, disponibilité et alertes avant match. Adaptez la séance — pas un avis médical.",
+      "Charge, récupération déclarée, disponibilité et alertes avant match. Adaptez la séance · pas un avis médical.",
     boardKicker: "Tableau effectif · Vue Coach",
     primaryHref: ROUTES.betaWaitlist,
     primaryLabel: "Tester côté Coach",
@@ -209,7 +209,7 @@ const COPY: Record<
     kicker: "Fonctionnalité centrale ProDay",
     title: "Analyse de forme : du club au joueur.",
     support:
-      "Vision effectif pour le coach et le club. Suivi personnel pour chaque licencié. Indicateurs de charge — jamais un diagnostic.",
+      "Vision effectif pour le coach et le club. Suivi personnel pour chaque licencié. Indicateurs de charge · jamais un diagnostic.",
     boardKicker: "Tableau effectif · Démo",
     primaryHref: ROUTES.coach,
     primaryLabel: "Voir côté Coach",
@@ -222,7 +222,7 @@ const FLOW = [
   {
     n: "01",
     title: "Signaux",
-    body: "Présences, minutes, check-ins, fatigue et récupération déclarées.",
+    body: "Présences, minutes, check ins, fatigue et récupération déclarées.",
   },
   {
     n: "02",
@@ -283,7 +283,7 @@ export function FormAnalysisFeature({
       />
 
       <div className="relative mx-auto max-w-7xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
           {copy.kicker}
         </p>
         <motion.h2
@@ -309,7 +309,7 @@ export function FormAnalysisFeature({
               transition={{ delay: i * 0.06, duration: 0.35 }}
               className="border border-white/10 bg-white/[0.03] p-4 sm:p-5"
             >
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#006CFC)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#7C3AED)]">
                 {step.n}
               </p>
               <h3 className="mt-2 font-display text-base font-medium text-white sm:text-lg">
@@ -341,7 +341,7 @@ export function FormAnalysisFeature({
                   onClick={() => setView(tab.id)}
                   className={`px-3.5 py-2 text-xs font-semibold transition sm:text-sm ${
                     view === tab.id
-                      ? "bg-[var(--pole-accent,#006CFC)] text-white"
+                      ? "bg-[var(--pole-accent,#7C3AED)] text-white"
                       : "text-white/55 hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -370,7 +370,7 @@ export function FormAnalysisFeature({
                         }}
                         className={`w-full border px-3.5 py-3 text-left transition ${
                           on
-                            ? "border-[var(--pole-accent,#006CFC)]/50 bg-[var(--pole-accent,#006CFC)]/15"
+                            ? "border-[var(--pole-accent,#7C3AED)]/50 bg-[var(--pole-accent,#7C3AED)]/15"
                             : "border-white/10 bg-white/[0.02] hover:border-white/25"
                         }`}
                       >
@@ -450,7 +450,7 @@ export function FormAnalysisFeature({
                         Joueur · Forme · Charge · Récup. · Dispo.
                       </p>
                       <h3 className="mt-2 font-display text-xl text-white">
-                        État de forme —{" "}
+                        État de forme ·{" "}
                         {TEAMS.find((t) => t.id === teamId)?.label}
                       </h3>
                       <p className="mt-1 text-sm text-white/50">
@@ -548,7 +548,7 @@ export function FormAnalysisFeature({
                           Aucune alerte sur cet effectif pour le prochain match.
                         </p>
                       ) : (
-                        <p className="mt-5 text-sm text-[var(--pole-accent-bright,#4C8BFF)]">
+                        <p className="mt-5 text-sm text-[var(--pole-accent-bright,#F5D04A)]">
                           Adapter les entraînements selon la charge →
                         </p>
                       )}
@@ -577,14 +577,14 @@ export function FormAnalysisFeature({
         </div>
 
         <p className="mt-6 max-w-2xl text-xs leading-relaxed text-white/40 sm:text-sm">
-          Indicateurs de charge et récupération déclarée — jamais un diagnostic
+          Indicateurs de charge et récupération déclarée · jamais un diagnostic
           médical, ni un pourcentage de risque de blessure.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={copy.primaryHref}
-            className="inline-flex bg-[var(--pole-accent,#006CFC)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex bg-[var(--pole-accent,#7C3AED)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
           >
             {copy.primaryLabel}
           </Link>

@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
   useWindowDimensions,
+  type LayoutChangeEvent,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from 'react-native';
@@ -15,6 +16,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { PagerPage } from '../motion/PagerPage';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing } from '../../theme/designTokens';
+import { useMatchSkinTokens } from './matchCenterUi';
 
 export interface MatchPage {
   id: MatchChapterId;
@@ -29,6 +31,7 @@ interface MatchPagerProps {
   convocationsBadge?: number;
   centreBadge?: number | string;
   gameMode?: boolean;
+  coachSkin?: boolean;
 }
 
 export const MatchPager: React.FC<MatchPagerProps> = ({
@@ -39,17 +42,46 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   convocationsBadge,
   centreBadge,
   gameMode = false,
+  coachSkin = false,
 }) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors.accent), [colors.accent]);
-  const { width: pageWidth } = useWindowDimensions();
+  const skin = useMatchSkinTokens();
+  const accent = skin.joueurSkin || skin.coachSkin ? skin.accent : colors.accent;
+  const styles = useMemo(() => createStyles(accent, skin), [accent, skin]);
+  const { width: pageWidth, height: windowHeight } = useWindowDimensions();
+  const [pagerHeight, setPagerHeight] = useState(0);
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollX = useSharedValue(0);
   const suppressChapterSyncRef = useRef(false);
+  const suppressClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pagesRef = useRef(pages);
   pagesRef.current = pages;
   const activeChapterRef = useRef(activeChapter);
   activeChapterRef.current = activeChapter;
+
+  const effectivePagerHeight =
+    pagerHeight > 0 ? pagerHeight : Math.max(Math.round(windowHeight * 0.45), 280);
+
+  const clearSuppressSoon = useCallback((ms = 420) => {
+    if (suppressClearTimerRef.current) clearTimeout(suppressClearTimerRef.current);
+    suppressClearTimerRef.current = setTimeout(() => {
+      suppressChapterSyncRef.current = false;
+      suppressClearTimerRef.current = null;
+    }, ms);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (suppressClearTimerRef.current) clearTimeout(suppressClearTimerRef.current);
+    },
+    [],
+  );
+
+  const onPagerLayout = useCallback((e: LayoutChangeEvent) => {
+    const h = Math.round(e.nativeEvent.layout.height);
+    if (h <= 0) return;
+    setPagerHeight((prev) => (prev !== h ? h : prev));
+  }, []);
 
   const goToIndex = useCallback(
     (index: number, animated = true) => {
@@ -63,9 +95,13 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         onChapterChange(chapterId);
       }
       scrollRef.current?.scrollTo({ x, animated });
-      if (!animated) suppressChapterSyncRef.current = false;
+      if (!animated) {
+        suppressChapterSyncRef.current = false;
+      } else {
+        clearSuppressSoon();
+      }
     },
-    [onChapterChange, pageWidth, scrollX]
+    [clearSuppressSoon, onChapterChange, pageWidth, scrollX]
   );
 
   const goToChapter = useCallback(
@@ -102,7 +138,13 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
 
   const onPagerScrollEndDrag = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (suppressChapterSyncRef.current) return;
+      if (suppressChapterSyncRef.current) {
+        const vx = e.nativeEvent.velocity?.x ?? 0;
+        if (Math.abs(vx) < 0.05) {
+          suppressChapterSyncRef.current = false;
+        }
+        return;
+      }
       const vx = e.nativeEvent.velocity?.x ?? 0;
       if (Math.abs(vx) < 0.05) {
         syncChapterFromOffset(e.nativeEvent.contentOffset.x);
@@ -125,7 +167,8 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
     suppressChapterSyncRef.current = true;
     scrollX.value = index * pageWidth;
     scrollRef.current?.scrollTo({ x: index * pageWidth, animated: true });
-  }, [activeChapter, pageWidth, scrollX]);
+    clearSuppressSoon();
+  }, [activeChapter, clearSuppressSoon, pageWidth, scrollX]);
 
   return (
     <View style={styles.root}>
@@ -136,6 +179,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         convocationsBadge={convocationsBadge}
         centreBadge={centreBadge}
         gameMode={gameMode}
+        coachSkin={coachSkin}
       />
 
       <Animated.ScrollView
@@ -149,12 +193,20 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
         scrollEventThrottle={16}
         decelerationRate="fast"
         style={styles.pager}
+        onLayout={onPagerLayout}
+        contentContainerStyle={{ height: effectivePagerHeight }}
         nestedScrollEnabled
         directionalLockEnabled
         keyboardShouldPersistTaps="handled"
       >
         {pages.map((page, index) => (
-          <PagerPage key={page.id} index={index} scrollX={scrollX} pageWidth={pageWidth}>
+          <PagerPage
+            key={page.id}
+            index={index}
+            scrollX={scrollX}
+            pageWidth={pageWidth}
+            pageHeight={effectivePagerHeight}
+          >
             {page.render()}
           </PagerPage>
         ))}
@@ -169,6 +221,8 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
               scrollX={scrollX}
               snap={pageWidth}
               onPress={() => goToIndex(i)}
+              activeColor={skin.joueurSkin ? skin.accent : undefined}
+              inactiveColor={skin.joueurSkin ? skin.border : undefined}
             />
           ))}
         </View>
@@ -180,7 +234,9 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   );
 };
 
-function createStyles(_accent: string) {
+function createStyles(accent: string, skin: ReturnType<typeof useMatchSkinTokens>) {
+  const border = skin.joueurSkin ? skin.border : MATCH_SITE.border;
+  const muted = skin.joueurSkin ? skin.muted : MATCH_SITE.muted;
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
     pager: { flex: 1, minHeight: 0 },
@@ -191,13 +247,13 @@ function createStyles(_accent: string) {
       marginHorizontal: spacing.lg,
       marginBottom: spacing.xs,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: MATCH_SITE.border,
+      borderTopColor: border,
     },
     dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
     hint: {
       fontSize: 10,
       fontWeight: '600',
-      color: MATCH_SITE.muted,
+      color: muted,
       letterSpacing: 0.4,
     },
   });

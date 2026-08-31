@@ -34,7 +34,7 @@ const LEFT_PRIORITY_BY_LINE: Record<ProductLineId, MainTabId[]> = {
   pro_club: ['home', 'recrutement', 'matchs', 'messages'],
   pro_staff: ['home', 'covoiturage', 'matchs', 'recrutement'],
   sponsor: ['home', 'matchs', 'messages', 'profil'],
-  supporter: ['home', 'matchs', 'feed', 'messages'],
+  supporter: ['home', 'matchs', 'feed', 'plus', 'reels', 'profil'],
   sante: ['home', 'matchs', 'feed', 'messages'],
   parent: ['home', 'messages', 'matchs', 'profil'],
 };
@@ -57,14 +57,15 @@ type FlatRailRule = {
 /** Menus bas plats — un ordre distinct par boule / shell. */
 const FLAT_RAIL_RULES: FlatRailRule[] = [
   {
-    match: (line, role) => line === 'supporter' && role === 'supporter',
-    primary: ['home', 'matchs', 'feed', 'messages', 'profil'],
-    overflow: ['reels', 'shop'],
+    // Parent guest : role reste « parent », line = supporter.
+    match: (line) => line === 'supporter',
+    primary: ['home', 'matchs', 'feed', 'plus', 'reels', 'profil'],
+    overflow: [],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'player',
-    primary: ['home', 'recrutement', 'matchs', 'feed', 'profil'],
-    overflow: ['reels', 'messages', 'covoiturage', 'shop', 'famille'],
+    primary: ['home', 'matchs', 'feed', 'profil', 'plus'],
+    overflow: ['progression', 'recrutement', 'reels', 'messages', 'covoiturage', 'shop', 'famille'],
   },
   {
     match: (line, role) => line === 'amateur' && role === 'coach',
@@ -87,8 +88,8 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
         line === 'homme' ||
         line === 'woman' ||
         isProProductLine(line)),
-    primary: ['home', 'recrutement', 'matchs', 'feed', 'profil'],
-    overflow: ['reels', 'messages', 'covoiturage', 'shop', 'famille'],
+    primary: ['home', 'matchs', 'feed', 'profil', 'plus'],
+    overflow: ['progression', 'recrutement', 'reels', 'messages', 'covoiturage', 'shop', 'famille'],
   },
   {
     match: (line, role) =>

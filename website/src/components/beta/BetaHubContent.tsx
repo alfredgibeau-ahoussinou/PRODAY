@@ -19,7 +19,7 @@ const HUB_CARDS = [
     href: ROUTES.betaProgramme,
     icon: BookOpen,
     title: "Programme",
-    description: "Calendrier, cinq pôles et modules à tester selon votre profil.",
+    description: "Calendrier, six portes d’entrée et modules à tester selon votre profil.",
   },
   {
     href: ROUTES.betaInstaller,
@@ -50,9 +50,9 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
       description={`Vous êtes inscrit en tant que ${session.roleLabel}. Ce hub regroupe tout ce dont vous avez besoin : programme, installation et support.`}
     >
       <div className="border border-white/10 bg-transparent p-8">
-        <SectionKicker>Votre espace beta-testeur</SectionKicker>
+        <SectionKicker>Votre espace beta testeur</SectionKicker>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/65">
-          Merci de faire partie des premiers à tester ProDay. Explorez les cinq pôles, téléchargez
+          Merci de faire partie des premiers à tester ProDay. Explorez les six portes d’entrée, téléchargez
           l&apos;APK Android depuis l&apos;onglet Installer et envoyez vos retours. Chaque message
           est lu par l&apos;équipe produit avant le lancement public.
         </p>
@@ -105,7 +105,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                   done
                     ? "bg-accent-gradient text-white"
-                    : "border border-white/15 bg-white/5 text-white/50"
+                    : "border border white/15 bg white/5 text white/50"
                 }`}
               >
                 {step}
@@ -123,7 +123,7 @@ export function BetaHubContent({ session }: BetaHubContentProps) {
         <div>
           <SectionKicker>En attendant l&apos;app</SectionKicker>
           <p className="mt-2 max-w-xl text-sm text-white/65">
-            Démo interactive, Mercato, Visibilité, feuille de route et les cinq pôles sur proday75.fr.
+            Démo interactive, Mercato, Visibilité, feuille de route et les six portes d’entrée sur proday75.fr.
           </p>
         </div>
         <div className="mt-6 flex flex-wrap gap-3 sm:mt-0">

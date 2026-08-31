@@ -96,7 +96,10 @@ function run(command, args, options = {}) {
   }
 }
 
-console.log("\n📱 ProDay — build APK bêta (v1.0.7 / versionCode 8)\n");
+const expoApp = JSON.parse(readFileSync(resolve(root, "app.json"), "utf8"));
+const appVersion = expoApp?.expo?.version ?? "?";
+const versionCode = expoApp?.expo?.android?.versionCode ?? "?";
+console.log(`\n📱 ProDay — build APK bêta (v${appVersion} / versionCode ${versionCode})\n`);
 if (javaHome) console.log(`JAVA_HOME=${javaHome}`);
 console.log(`ANDROID_HOME=${androidHome}\n`);
 

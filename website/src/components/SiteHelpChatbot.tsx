@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { pricingHrefForPath } from "@/lib/poles";
-import { ROUTES } from "@/lib/routes";
+import { COACH_APP_HREF, CLUB_APP_HREF, PARENT_APP_HREF, PRESIDENT_HUB_HREF, ROUTES, SPONSOR_APP_HREF } from "@/lib/routes";
 
 type HelpEntry = {
   id: string;
@@ -28,8 +28,8 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "sponsors",
     question: "Où sont les sponsors ?",
     answer:
-      "Pas d'onglet Sponsors dans la barre de l'app : ouvrez l'Accueil puis le module Sponsors. Sur le site, c'est la page Sponsor (/sponsor).",
-    href: ROUTES.sponsor,
+      "Pas d'onglet Sponsors dans la barre de l'app : ouvrez l'Accueil puis le module Sponsors. Sur le site, c'est la vitrine app Sponsor (/sponsor#app).",
+    href: SPONSOR_APP_HREF,
     hrefLabel: "Pôle Sponsor",
   },
   {
@@ -44,7 +44,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
     id: "demo",
     question: "Comment tester l'app ?",
     answer:
-      "La démo interactive reprend la navigation réelle des cinq pôles (Joueur, Club, Coach, Supporter, Sponsor). Téléphone et onglets, sans compte.",
+      "La démo interactive reprend la navigation réelle des portes d’entrée (Joueur, Club, Coach, Supporter, Sponsor…). Téléphone et onglets, sans compte.",
     href: ROUTES.demo,
     hrefLabel: "Ouvrir la démo",
   },
@@ -59,7 +59,7 @@ const COMMON_ENTRIES: HelpEntry[] = [
   {
     id: "beta",
     question: "Comment rejoindre la bêta ?",
-    answer: "Inscrivez-vous sur la liste d'attente. Validation par l'équipe, puis accès à l'espace bêta par email.",
+    answer: "Inscrivez vous sur la liste d'attente. Validation par l'équipe, puis accès à l'espace bêta par email.",
     href: ROUTES.betaWaitlist,
     hrefLabel: "Liste d'attente",
   },
@@ -94,7 +94,7 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       question: "Club ou Coach ?",
       answer:
         "Club : équipes, invitations de match entre clubs, compétitions, permissions, covoiturage. Coach : Tactique IA, IA, effectif, et proposition de match pour son équipe.",
-      href: ROUTES.coach,
+      href: COACH_APP_HREF,
       hrefLabel: "Pôle Coach",
     });
     poleHint.push({
@@ -102,8 +102,28 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       question: "Comment proposer un match à un autre club ?",
       answer:
         "Dans l’app : Matchs → + Proposer un match. Recherchez le club (ville, distance, catégorie), envoyez l’invitation. Le destinataire accepte, refuse ou propose une autre date. Confirmé = calendriers + convocations.",
-      href: ROUTES.proClub,
+      href: CLUB_APP_HREF,
       hrefLabel: "Pôle Club",
+    });
+  }
+  if (pathname.startsWith("/president")) {
+    poleHint.push({
+      id: "pole-president",
+      question: "Que regroupe le Pôle Président ?",
+      answer:
+        "Cockpit dirigeants : alertes, décisions, finances, adhésions et assistant IA. Page dédiée, connectée au club.",
+      href: PRESIDENT_HUB_HREF,
+      hrefLabel: "Pôle Président",
+    });
+  }
+  if (pathname.startsWith("/parent")) {
+    poleHint.push({
+      id: "pole-parent",
+      question: "Que regroupe le Pôle Parent ?",
+      answer:
+        "Accueil famille, Guide IA, menu d’outils et profil : lier un enfant, messages, agenda et cadre. Espace gratuit, lié au compte joueur.",
+      href: PARENT_APP_HREF,
+      hrefLabel: "Pôle Parent",
     });
   }
   if (pathname.startsWith("/supporter")) {
@@ -113,6 +133,16 @@ function entriesForPath(pathname: string, pricingHref: string): HelpEntry[] {
       answer: "Tribune, Matchs, Suivis, Débats, Moments (vidéos), Shop et Compte. 100 % gratuit.",
       href: ROUTES.supporter,
       hrefLabel: "Pôle Supporter",
+    });
+  }
+  if (pathname.startsWith("/sponsor") || pathname.startsWith("/partenaires")) {
+    poleHint.push({
+      id: "pole-sponsor",
+      question: "Que regroupe le Pôle Sponsor ?",
+      answer:
+        "Accueil ROI, offres, financement, formules, messages, prospects, contacts et profil marque. Visibilité mesurée, sans intermédiaire.",
+      href: SPONSOR_APP_HREF,
+      hrefLabel: "Pôle Sponsor",
     });
   }
 
@@ -204,7 +234,7 @@ export function SiteHelpChatbot() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="bg-accent-gradient pointer-events-auto inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[0_12px_32px_-10px_rgba(0,84,240,0.45)] transition hover:brightness-110"
+        className="bg-accent-gradient pointer-events-auto inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[0_12px_32px_-10px_rgba(30, 58, 255,0.45)] transition hover:brightness-110"
         aria-expanded={open}
         aria-label={open ? "Fermer l'aide" : "Ouvrir l'aide ProDay"}
       >

@@ -211,7 +211,7 @@ export function ProDayPassportCard({
                     {card.verified ? (
                       <span
                         className="rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-wide"
-                        style={{ background: "#0054F0", color: "#fff" }}
+                        style={{ background: "#E8B923", color: "#fff" }}
                       >
                         ✓ ProDay
                       </span>
@@ -565,7 +565,7 @@ export function PassportTierPicker({
       {ids.map((id) => {
         const label = id === "auto" ? "Auto" : PASSPORT_TIERS[id].label;
         const on = value === id;
-        const accent = id === "auto" ? "#4C8BFF" : PASSPORT_TIERS[id].accent;
+        const accent = id === "auto" ? "#F5D04A" : PASSPORT_TIERS[id].accent;
         return (
           <button
             key={id}

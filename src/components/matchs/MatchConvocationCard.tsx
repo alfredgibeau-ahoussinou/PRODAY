@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
@@ -10,7 +10,7 @@ import { resolveLiveState, isInMatchWindow } from '../../utils/matchLive';
 import { ProDayText } from '../ui/ProDayText';
 import { LateReportControl } from '../team/LateReportControl';
 import { useAppTheme } from '../../context/ProductLineContext';
-import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { useMatchSkinTokens } from './matchCenterUi';
 import { spacing } from '../../theme/designTokens';
 
 interface MatchConvocationCardProps {
@@ -39,6 +39,9 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
   reportedByParent,
 }) => {
   const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
+  const accent = skin.joueurSkin ? skin.accent : colors.accent;
+  const styles = useMemo(() => createCardStyles(skin), [skin]);
   const status = userRsvp(event, profileUid);
   const live = resolveLiveState(event);
   const showScore =
@@ -55,10 +58,10 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
 
   return (
     <PressableSpring style={styles.card} onPress={onOpen} scaleTo={0.98} haptic>
-      <View style={[styles.bar, { backgroundColor: pending ? MATCH_SITE.warn : colors.accent }]} />
+      <View style={[styles.bar, { backgroundColor: pending ? skin.warn : accent }]} />
       <View style={styles.body}>
         <View style={styles.top}>
-          <ProDayText variant="caption" style={[styles.kind, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.kind, { color: accent }]}>
             {EVENT_TYPE_LABELS[event.event_type]}
           </ProDayText>
           <ProDayText variant="caption" style={styles.muted}>
@@ -74,7 +77,7 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
         </ProDayText>
 
         {showScore ? (
-          <ProDayText variant="caption" style={[styles.score, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.score, { color: accent }]}>
             {live.home_label} {live.home_score} — {live.away_score} {live.opponent_name}
             {isInMatchWindow(event) && live.minute != null ? ` · ${live.minute}'` : ''}
           </ProDayText>
@@ -88,14 +91,14 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
         ) : null}
 
         {!pending ? (
-          <ProDayText variant="caption" style={[styles.rsvpStatus, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.rsvpStatus, { color: accent }]}>
             {RSVP_STATUS_LABELS[status]}
           </ProDayText>
         ) : null}
 
         {onOpenCarpool ? (
           <PressableSpring onPress={onOpenCarpool} scaleTo={0.98} haptic style={styles.linkBtn}>
-            <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
+            <ProDayText variant="caption" style={[styles.link, { color: accent }]}>
               Trajet / covoiturage →
             </ProDayText>
           </PressableSpring>
@@ -106,7 +109,7 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
             <PressableSpring
               disabled={rsvpBusy}
               scaleTo={0.96}
-              style={[styles.rsvpPrimary, { backgroundColor: colors.accent }]}
+              style={[styles.rsvpPrimary, { backgroundColor: accent }]}
               onPress={() => {
                 prodayHaptics.confirm();
                 onRsvp('yes');
@@ -122,7 +125,7 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
               scaleTo={0.97}
               onPress={() => onRsvp('maybe')}
             >
-              <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
+              <ProDayText variant="caption" style={[styles.link, { color: accent }]}>
                 Peut-être
               </ProDayText>
             </PressableSpring>
@@ -132,7 +135,7 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
               scaleTo={0.97}
               onPress={() => onRsvp('no')}
             >
-              <ProDayText variant="caption" style={[styles.link, { color: colors.accent }]}>
+              <ProDayText variant="caption" style={[styles.link, { color: accent }]}>
                 Non
               </ProDayText>
             </PressableSpring>
@@ -153,62 +156,66 @@ export const MatchConvocationCard: React.FC<MatchConvocationCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: MATCH_SITE.border,
-    backgroundColor: MATCH_SITE.surface,
-    marginBottom: 2,
-    overflow: 'hidden',
-  },
-  bar: { width: 3 },
-  body: {
-    flex: 1,
-    padding: spacing.md,
-    gap: 4,
-  },
-  top: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  kind: {
-    fontWeight: '800',
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-  },
-  title: {
-    fontWeight: '800',
-    color: MATCH_SITE.foreground,
-    letterSpacing: -0.3,
-  },
-  muted: { color: MATCH_SITE.muted },
-  score: { fontWeight: '800', marginTop: 2 },
-  rsvpStatus: { fontWeight: '800', marginTop: 2 },
-  linkBtn: { alignSelf: 'flex-start', marginTop: 4 },
-  link: { fontWeight: '800' },
-  rsvpRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  rsvpPrimary: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 40,
-    justifyContent: 'center',
-  },
-  rsvpPrimaryText: { color: '#fff', fontWeight: '800' },
-  rsvpGhost: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 40,
-    justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: MATCH_SITE.border,
-  },
-});
+const createCardStyles = (skin: ReturnType<typeof useMatchSkinTokens>) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: skin.border,
+      backgroundColor: skin.surface,
+      borderRadius: skin.cardRadius,
+      marginBottom: spacing.xs,
+      overflow: 'hidden',
+    },
+    bar: { width: 3 },
+    body: {
+      flex: 1,
+      padding: spacing.md,
+      gap: 4,
+    },
+    top: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    kind: {
+      fontWeight: '800',
+      fontSize: 10,
+      textTransform: 'uppercase',
+      letterSpacing: 1.2,
+    },
+    title: {
+      fontWeight: '800',
+      color: skin.foreground,
+      letterSpacing: -0.3,
+    },
+    muted: { color: skin.muted },
+    score: { fontWeight: '800', marginTop: 2 },
+    rsvpStatus: { fontWeight: '800', marginTop: 2 },
+    linkBtn: { alignSelf: 'flex-start', marginTop: 4 },
+    link: { fontWeight: '800' },
+    rsvpRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    rsvpPrimary: {
+      borderRadius: skin.cardRadius,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      minHeight: 40,
+      justifyContent: 'center',
+    },
+    rsvpPrimaryText: { color: '#fff', fontWeight: '800' },
+    rsvpGhost: {
+      borderRadius: skin.cardRadius,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      minHeight: 40,
+      justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: skin.border,
+    },
+  });

@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  TextInput,
   View,
 } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
@@ -54,6 +55,7 @@ import {
   resolveCoachCalendarContext,
   type CoachComposedPlan,
 } from '../../utils/coachTrainingRecommendation';
+import { composedPlanFromPrompt } from '../../utils/coachSessionPrompt';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { membershipsService } from '../../services/memberships.service';
 import type { Membership } from '../../models/Membership';
@@ -67,6 +69,7 @@ import {
   resolveClubCoversCoachFromMembers,
   userCanManageConvocations,
 } from '../../utils/clubFeatureAccess';
+import { coachHubHeuristicFootnote } from '../../utils/aiUxHonesty';
 
 type Props = CoachChapterCommonProps & {
   /** Afficher le panneau stats saison sous l’hub. */
@@ -118,6 +121,8 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const [actionsOpen, setActionsOpen] = useState(false);
   const [applyingPlan, setApplyingPlan] = useState(false);
   const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [sessionPrompt, setSessionPrompt] = useState('');
+  const [promptPlan, setPromptPlan] = useState<CoachComposedPlan | null>(null);
 
   const teamMembers = useMemo(
     () => filterMembersForTeam(members, memberships, activeTeamId),
@@ -207,6 +212,22 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     [events, teamMembers, wellnessByUid, evaluations, lineup, clubId, postMatchAnalyses],
   );
 
+  const activePlan = promptPlan ?? composedPlan;
+
+  const composeFromPrompt = useCallback(() => {
+    const text = sessionPrompt.trim();
+    if (!text) {
+      Alert.alert('Demande', 'Décrivez la séance (ex. « crée une séance bloc bas »).');
+      return;
+    }
+    const nextTraining = calendarContext.nextTraining;
+    const plan = composedPlanFromPrompt(text, {
+      targetEventId: nextTraining?.id,
+      playerCount: teamMembers.length || undefined,
+    });
+    setPromptPlan(plan);
+  }, [sessionPrompt, calendarContext.nextTraining, teamMembers.length]);
+
   const applyComposedPlan = useCallback(async () => {
     if (!canManage) {
       Alert.alert(
@@ -220,13 +241,13 @@ export const CoachAiHubChapter: React.FC<Props> = ({
       return;
     }
 
-    const isMatch = composedPlan.context === 'match';
-    const targetId = composedPlan.targetEventId;
+    const isMatch = activePlan.context === 'match';
+    const targetId = activePlan.targetEventId;
     const targetEvent =
       (targetId ? events.find((e) => e.id === targetId) : null) ??
       (isMatch ? calendarContext.nextMatch : calendarContext.nextTraining);
 
-    if (composedPlan.archetype === 'empty') {
+    if (activePlan.archetype === 'empty') {
       if (isMatch || !calendarContext.nextTraining) {
         openNav('today');
       } else {
@@ -241,9 +262,9 @@ export const CoachAiHubChapter: React.FC<Props> = ({
         await teamEventsService.updateSessionPlan(
           targetEvent.id,
           {
-            focus: composedPlan.focus,
-            notes: formatRecommendedSessionNotes(composedPlan),
-            duration_min: composedPlan.totalMinutes || undefined,
+            focus: activePlan.focus,
+            notes: formatRecommendedSessionNotes(activePlan),
+            duration_min: activePlan.totalMinutes || undefined,
           },
           { user: profile },
         );
@@ -253,6 +274,8 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             ? `Briefing ajouté à « ${targetEvent.title} ».`
             : `« ${targetEvent.title} » mis à jour avec le plan proposé.`,
         );
+        setPromptPlan(null);
+        setSessionPrompt('');
         openNav(isMatch ? 'today' : 'entrainements');
         return;
       }
@@ -269,8 +292,8 @@ export const CoachAiHubChapter: React.FC<Props> = ({
       const startsAt = defaultRecommendedSessionStart();
       const inviteeUids = teamUids.filter((uid) => uid !== profile.uid);
       const eventId = await teamEventsService.create({
-        title: composedPlan.title,
-        description: composedPlan.reason,
+        title: activePlan.title,
+        description: activePlan.reason,
         event_type: 'training',
         organizer_uid: profile.uid,
         organizer_name: profile.display_name,
@@ -284,16 +307,18 @@ export const CoachAiHubChapter: React.FC<Props> = ({
       await teamEventsService.updateSessionPlan(
         eventId,
         {
-          focus: composedPlan.focus,
-          notes: formatRecommendedSessionNotes(composedPlan),
-          duration_min: composedPlan.totalMinutes,
+          focus: activePlan.focus,
+          notes: formatRecommendedSessionNotes(activePlan),
+          duration_min: activePlan.totalMinutes,
         },
         { user: profile },
       );
       Alert.alert(
         'Entraînement créé',
-        `« ${composedPlan.title} » planifié. Retrouvez-le dans Entraînements.`,
+        `« ${activePlan.title} » planifié. Retrouvez-le dans Entraînements.`,
       );
+      setPromptPlan(null);
+      setSessionPrompt('');
       openNav('entrainements');
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
@@ -303,7 +328,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   }, [
     canManage,
     clubId,
-    composedPlan,
+    activePlan,
     calendarContext,
     events,
     teamMembers,
@@ -322,6 +347,9 @@ export const CoachAiHubChapter: React.FC<Props> = ({
             title={overview.headline}
             body={overview.synthesis}
           >
+            <CoachText variant="caption" muted style={{ marginBottom: spacing.sm }}>
+              {coachHubHeuristicFootnote()}
+            </CoachText>
             <View style={styles.metricsRow}>
               {overview.metrics.map((m, index, arr) => (
                 <View
@@ -430,9 +458,20 @@ export const CoachAiHubChapter: React.FC<Props> = ({
           </CoachSectionCard>
 
           <ComposedPlanCard
-            plan={composedPlan}
+            plan={activePlan}
             applying={applyingPlan}
             onApply={() => void applyComposedPlan()}
+            prompt={sessionPrompt}
+            onPromptChange={setSessionPrompt}
+            onComposeFromPrompt={composeFromPrompt}
+            onClearPromptPlan={
+              promptPlan
+                ? () => {
+                    setPromptPlan(null);
+                  }
+                : undefined
+            }
+            fromPrompt={Boolean(promptPlan)}
           />
 
           <Pressable style={styles.primaryBtn} onPress={() => setActionsOpen(true)}>
@@ -580,10 +619,20 @@ function ComposedPlanCard({
   plan,
   applying,
   onApply,
+  prompt,
+  onPromptChange,
+  onComposeFromPrompt,
+  onClearPromptPlan,
+  fromPrompt,
 }: {
   plan: CoachComposedPlan;
   applying: boolean;
   onApply: () => void;
+  prompt: string;
+  onPromptChange: (v: string) => void;
+  onComposeFromPrompt: () => void;
+  onClearPromptPlan?: () => void;
+  fromPrompt?: boolean;
 }) {
   const { tokens } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
@@ -594,7 +643,9 @@ function ComposedPlanCard({
       ? 'Données fiables'
       : plan.dataConfidence === 'low'
         ? 'Données partielles'
-        : 'Modèle générique';
+        : fromPrompt
+          ? 'Brouillon local depuis votre demande'
+          : 'Modèle générique';
 
   const ctaLabel = isEmpty
     ? plan.context === 'match'
@@ -612,6 +663,36 @@ function ComposedPlanCard({
       title={plan.title}
       body={plan.reason}
     >
+      <CoachText variant="caption" muted style={styles.label}>
+        Demande libre
+      </CoachText>
+      <TextInput
+        style={[
+          styles.promptInput,
+          { borderColor: tokens.border, color: tokens.foreground, backgroundColor: tokens.surface },
+        ]}
+        value={prompt}
+        onChangeText={onPromptChange}
+        placeholder="Ex. crée une séance bloc bas, bas du corps 75 min…"
+        placeholderTextColor={tokens.muted}
+        multiline
+      />
+      <View style={styles.promptActions}>
+        <Pressable style={[styles.secondaryBtn, styles.promptComposeBtn]} onPress={onComposeFromPrompt}>
+          <Icon name="star-four-points" size={14} color={tokens.accent} />
+          <CoachText variant="caption" accent>
+            Composer le brouillon
+          </CoachText>
+        </Pressable>
+        {onClearPromptPlan ? (
+          <Pressable onPress={onClearPromptPlan}>
+            <CoachText variant="caption" muted>
+              Revenir à la suggestion auto
+            </CoachText>
+          </Pressable>
+        ) : null}
+      </View>
+
       {!isEmpty ? (
         <>
           <View style={styles.sessionMeta}>
@@ -803,6 +884,31 @@ function createStyles(tokens: CoachThemeTokens) {
       marginTop: spacing.md,
       paddingVertical: spacing.sm,
     },
+    label: {
+      marginTop: spacing.xs,
+      marginBottom: 4,
+      fontWeight: '700',
+      letterSpacing: 0.2,
+      textTransform: 'uppercase',
+      fontSize: 10,
+    },
+    promptInput: {
+      minHeight: 64,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: 12,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
+      textAlignVertical: 'top',
+      fontSize: 14,
+    },
+    promptActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      marginBottom: spacing.xs,
+    },
+    promptComposeBtn: { marginTop: 0 },
     primaryBtn: {
       flexDirection: 'row',
       alignItems: 'center',

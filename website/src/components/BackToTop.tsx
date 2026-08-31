@@ -39,7 +39,7 @@ export function BackToTop() {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: isVisible ? 1 : 0, scale: isVisible ? 1 : 0.8 }}
       transition={{ duration: 0.3 }}
-      className={`bg-accent-gradient fixed bottom-6 right-6 z-40 rounded-full p-3 text-white shadow-lg transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#4C8BFF] focus:ring-offset-2 focus:ring-offset-black ${
+      className={`bg-accent-gradient fixed bottom-6 right-6 z-40 rounded-full p-3 text-white shadow-lg transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#F5D04A] focus:ring-offset-2 focus:ring-offset-black ${
         isVisible ? "pointer-events-auto" : "pointer-events-none"
       }`}
       aria-label="Retour en haut de la page"

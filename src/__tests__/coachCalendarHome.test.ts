@@ -4,7 +4,9 @@ import {
   coachCalendarInitials,
   coachEventPlaceLabel,
   formatCoachCalendarDateStack,
+  listCoachCalendarRest,
   listCoachCalendarUpcoming,
+  resolveCoachDayPriority,
 } from '../utils/coachCalendarHome';
 
 function event(partial: Partial<TeamEvent> & Pick<TeamEvent, 'id' | 'starts_at'>): TeamEvent {
@@ -79,5 +81,36 @@ describe('coachCalendarHome', () => {
     );
     expect(summary.invited).toBe(3);
     expect(summary.confirmed).toBe(2);
+  });
+
+  it('priorise live puis match/séance jour J', () => {
+    const now = new Date(2026, 7, 17, 12, 0, 0).getTime();
+    const live = event({
+      id: 'live',
+      event_type: 'friendly',
+      starts_at: new Date(now - 20 * 60_000),
+      ends_at: new Date(now + 80 * 60_000),
+      live_state: { status: 'live', home_score: 0, away_score: 0 },
+    });
+    expect(resolveCoachDayPriority([live], now).kind).toBe('live');
+
+    const match = event({
+      id: 'm1',
+      event_type: 'competition',
+      starts_at: new Date(now + 2 * 3600_000),
+    });
+    const training = event({
+      id: 't1',
+      event_type: 'training',
+      starts_at: new Date(now + 3600_000),
+    });
+    expect(resolveCoachDayPriority([match, training], now)).toEqual({
+      kind: 'training',
+      event: training,
+    });
+    expect(listCoachCalendarRest([match, training], training.id, now).map((e) => e.id)).toEqual([
+      'm1',
+    ]);
+    expect(resolveCoachDayPriority([], now).kind).toBe('calm');
   });
 });

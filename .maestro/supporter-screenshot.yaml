@@ -1,0 +1,17 @@
+# Capture simulateur — shell supporter (dock cyan).
+#   npm run seed:demo-supporter
+#   MAESTRO_SUPPORTER_EMAIL=supporter.demo@proday.app \
+#   MAESTRO_SUPPORTER_PASSWORD='ProDayDemo2026!' \
+#   maestro test .maestro/supporter-screenshot.yaml
+appId: com.proday.app
+---
+- runFlow: subflows/supporter-login.yaml
+
+- assertVisible: Accueil
+- assertVisible: Matchs
+
+- tapOn:
+    point: "95%,92%"
+    optional: true
+
+- takeScreenshot: supporter-accueil-raw

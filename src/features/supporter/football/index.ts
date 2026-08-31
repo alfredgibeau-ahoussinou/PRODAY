@@ -1,0 +1,15 @@
+export {
+  stubFootballDataProvider,
+  type FootballDataProvider,
+  type FootballFixtureId,
+  type FootballTeamId,
+  type FootballCompetitionId,
+  type FootballFixtureStub,
+  type FootballMatchStub,
+  type FootballLineupStub,
+  type FootballMatchEventStub,
+  type FootballMatchStatisticsStub,
+  type FootballStandingStub,
+  type FootballTeamStub,
+  type FootballCompetitionStub,
+} from './FootballDataProvider';

@@ -2,6 +2,7 @@ import React from 'react';
 import { type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
+import { sanitizeHostChildren } from '../../motion/sanitizeHostChildren';
 
 interface StaggerRevealProps {
   children: React.ReactNode;
@@ -23,6 +24,6 @@ export const StaggerReveal: React.FC<StaggerRevealProps> = ({
       .duration(motion.duration.fast)
       .easing(motion.easing.out)}
   >
-    {children}
+    {sanitizeHostChildren(children)}
   </Animated.View>
 );

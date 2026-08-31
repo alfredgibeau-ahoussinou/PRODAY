@@ -11,6 +11,7 @@ import {
   onCoachSessionBookingUpdated,
 } from './coachSessionPayments';
 import { onStaffNotificationCreated } from './staffPush';
+import { onPushOutboxCreated } from './pushOutbox';
 import {
   createSubscriptionCheckoutSession,
   createBillingPortalSession,
@@ -34,6 +35,12 @@ import {
   createWebsiteTrafficStatsAdminHandler,
 } from './trafficStats';
 import { createWebsiteAdminStatsHandler } from './websiteAdminStats';
+import {
+  createAdminClubBillingCallable,
+  createAdminCreateClubStripeInvoiceCallable,
+  createAdminSetClubCommercialAmountCallable,
+  createWebsiteClubBillingAdminHandler,
+} from './clubBillingAdmin';
 import { createSubmitSponsorQuoteRequestHandler } from './sponsorQuoteRequest';
 import {
   createAdminSendSponsorQuoteHandler,
@@ -52,7 +59,9 @@ import {
 import { onTeamEventUpdated, syncTeamEventActivities } from './teamEventActivitySync';
 import { analyzeActivityHighlight } from './analyzeActivityHighlight';
 import { clubAssistantChat } from './clubAssistantChat';
+import { presidentAssistantChat } from './presidentAssistantChat';
 import { playerTacticsChat } from './playerTacticsChat';
+import { playerCoachAiChat } from './playerCoachAiChat';
 import { sendAuthPasswordResetEmail, sendAuthVerificationEmail } from './authCustomEmails';
 import {
   onMinorUserCreatedProvisionParent,
@@ -65,6 +74,10 @@ import {
 import { getVisioJoinUrl } from './getVisioJoinUrl';
 import { incrementSubscriptionUsage } from './subscriptionUsage';
 import { sendSponsorClubMessage } from './sendSponsorClubMessage';
+import {
+  applyAdminPlayerVerificationDecision,
+  assertCanValidateProfile,
+} from './adminProfileValidation';
 
 export { onCompetitionFixtureValidated, syncExternalCompetitions } from './competitionEngine';
 export { getSensitiveDocumentUrl, onMedicalDocumentWrite } from './privacyDocuments';
@@ -72,6 +85,7 @@ export { createPaymentCheckoutSession, stripeWebhook, createShopCheckoutSession 
 export { createTournamentCheckoutSession };
 export { createCoachSessionCheckoutSession, onCoachSessionBookingUpdated };
 export { onStaffNotificationCreated };
+export { onPushOutboxCreated };
 export { createSubscriptionCheckoutSession, createBillingPortalSession };
 export { sendAuthVerificationEmail, sendAuthPasswordResetEmail };
 export { onMinorUserCreatedProvisionParent, provisionParentAccount };
@@ -83,9 +97,14 @@ export { getVisioJoinUrl };
 export { onTeamEventUpdated, syncTeamEventActivities };
 export { analyzeActivityHighlight };
 export { clubAssistantChat };
+export { presidentAssistantChat };
 export { playerTacticsChat };
+export { playerCoachAiChat };
 export { smartTacticsMatchPrep } from './smartTacticsMatchPrep';
+export { generateTrainingSession } from './generateTrainingSession';
+export { generateHomeTraining } from './generateHomeTraining';
 export { onSmartTacticsVideoJobCreated } from './smartTacticsVideoJobs';
+export { prodayAiChat } from './prodayAiChat';
 export { activateStoreSubscription };
 export { revenueCatWebhook };
 export { claimAgentLaunchSeat };
@@ -145,9 +164,7 @@ export const verifyOnboardingDocument = functions
 
 /** Callable admin — approuver ou rejeter un profil */
 export const validateProfile = functions.https.onCall(async (data, context) => {
-  if (!context.auth?.token?.admin) {
-    throw new functions.https.HttpsError('permission-denied', 'Admin only');
-  }
+  assertCanValidateProfile(context);
   const { uid, action, rejectionReason } = data as {
     uid: string;
     action: 'approve' | 'reject';
@@ -155,7 +172,8 @@ export const validateProfile = functions.https.onCall(async (data, context) => {
   };
   const verified = action === 'approve';
   const userSnap = await db.doc(`users/${uid}`).get();
-  const role = String(userSnap.data()?.role ?? '');
+  const userData = userSnap.data() ?? {};
+  const role = String(userData.role ?? '');
   const update: Record<string, unknown> = {
     is_verified: verified,
     verification_status: verified ? 'VERIFIED' : 'REJECTED',
@@ -170,6 +188,14 @@ export const validateProfile = functions.https.onCall(async (data, context) => {
   if (role === 'sponsor') {
     update.sponsor_approved = verified;
     update.product_line = 'sponsor';
+  }
+  if (role === 'player') {
+    const pvPatch = applyAdminPlayerVerificationDecision(
+      userData.player_verification,
+      action,
+      rejectionReason,
+    );
+    Object.assign(update, pvPatch);
   }
   await db.doc(`users/${uid}`).update(update);
 
@@ -985,6 +1011,32 @@ export const websiteAdminStats = functions
   .region('europe-west1')
   .runWith({ timeoutSeconds: 60, memory: '512MB' })
   .https.onRequest(createWebsiteAdminStatsHandler(db));
+
+/**
+ * Facturation club (prix custom + Stripe Invoice) — secret site `X-Admin-Secret`.
+ * Proxy Netlify : `/api/admin/billing/*`. Callable multi-action : `adminClubBilling`.
+ */
+export const websiteClubBillingAdmin = functions
+  .region('europe-west1')
+  .runWith({ timeoutSeconds: 60, memory: '512MB' })
+  .https.onRequest(createWebsiteClubBillingAdminHandler(db));
+
+/** Même logique billing club — callable Firebase (claim admin). */
+export const adminClubBilling = functions
+  .region('europe-west1')
+  .runWith({ timeoutSeconds: 60, memory: '512MB' })
+  .https.onCall(createAdminClubBillingCallable(db));
+
+/** App : fixe montant commercial club (`commercial_*` sur clubs/{id}). */
+export const adminSetClubCommercialAmount = functions
+  .region('europe-west1')
+  .https.onCall(createAdminSetClubCommercialAmountCallable(db));
+
+/** App : crée + envoie Stripe Invoice club. */
+export const adminCreateClubStripeInvoice = functions
+  .region('europe-west1')
+  .runWith({ timeoutSeconds: 60, memory: '512MB' })
+  .https.onCall(createAdminCreateClubStripeInvoiceCallable(db));
 
 /** Approuve une inscription bêta et envoie l'email de bienvenue — admin uniquement. */
 export const adminApproveBetaAccess = functions

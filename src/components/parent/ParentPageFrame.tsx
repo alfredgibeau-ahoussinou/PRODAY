@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon } from '../ui/Icon';
 import { PARENT_SITE, type ParentPageIdentity } from '../../content/parentPageIdentity';
 import { spacing } from '../../theme/designTokens';
+import { useThemedScreen } from '../../hooks/useThemedScreen';
 
 const Ctx = createContext<ParentPageIdentity | null>(null);
 
@@ -14,97 +13,56 @@ export function useParentPageIdentity(): ParentPageIdentity | null {
 
 type Props = {
   identity: ParentPageIdentity;
+  /** Héros compact — désactivé par défaut (style Coach). */
   showHero?: boolean;
   children: React.ReactNode;
 };
 
-export function ParentPageFrame({ identity, showHero = true, children }: Props) {
-  const styles = useMemo(() => createStyles(), []);
+/** Cadre page Parent — fond calme, peu de chrome. */
+export function ParentPageFrame({ identity, showHero = false, children }: Props) {
+  const { colors: c } = useThemedScreen();
+  const styles = useMemo(() => createStyles(c.background), [c.background]);
 
   return (
     <Ctx.Provider value={identity}>
       <View style={styles.root}>
-        <LinearGradient
-          colors={[...identity.wash]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        <LinearGradient
-          colors={['transparent', PARENT_SITE.glow, 'transparent']}
-          start={{ x: 0.5, y: 0.12 }}
-          end={{ x: 0.5, y: 0.5 }}
-          style={styles.glow}
-          pointerEvents="none"
-        />
-        <View style={styles.accentBar} pointerEvents="none" />
-
         {showHero ? (
           <View style={styles.hero}>
-            <View style={styles.heroTop}>
-              <Icon name={identity.icon} size={14} color={PARENT_SITE.accent} />
-              <ProDayText variant="caption" style={styles.eyebrow}>
-                {identity.eyebrow}
-              </ProDayText>
-            </View>
-            <ProDayText variant="title" style={styles.title}>
+            <ProDayText variant="caption" style={styles.eyebrow}>
+              {identity.eyebrow}
+            </ProDayText>
+            <ProDayText variant="section" style={styles.title}>
               {identity.title}
             </ProDayText>
             <ProDayText variant="caption" style={styles.support}>
               {identity.support}
             </ProDayText>
-            <View style={styles.heroRule} />
           </View>
         ) : null}
-
         <View style={styles.body}>{children}</View>
       </View>
     </Ctx.Provider>
   );
 }
 
-function createStyles() {
+function createStyles(bg: string) {
   return StyleSheet.create({
-    root: { flex: 1, minHeight: 0, backgroundColor: PARENT_SITE.bg },
-    glow: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      top: '16%',
-      height: 120,
-      opacity: 0.55,
-    },
-    accentBar: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 3,
-      backgroundColor: PARENT_SITE.accent,
-      opacity: 0.85,
-    },
+    root: { flex: 1, minHeight: 0, backgroundColor: bg || PARENT_SITE.bg },
     hero: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
-      gap: 6,
+      gap: 4,
     },
-    heroTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     eyebrow: {
       color: PARENT_SITE.accent,
-      fontWeight: '800',
-      letterSpacing: 1.2,
+      fontWeight: '700',
+      letterSpacing: 0.8,
       textTransform: 'uppercase',
       fontSize: 11,
     },
-    title: { color: PARENT_SITE.ink, fontWeight: '900', fontSize: 26 },
+    title: { color: PARENT_SITE.ink, fontWeight: '700', fontSize: 22 },
     support: { color: PARENT_SITE.muted, lineHeight: 18 },
-    heroRule: {
-      marginTop: spacing.xs,
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: 'rgba(45, 212, 191, 0.35)',
-    },
     body: { flex: 1, minHeight: 0 },
   });
 }

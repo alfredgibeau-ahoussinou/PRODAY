@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
   query,
   where,
   limit,
@@ -13,8 +14,11 @@ import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import type { Club } from '../models/Club';
 import type { GeoPoint, User } from '../models/User';
-import { canManageClubEntity } from '../utils/roleCapabilities';
+import { canEditClubBranding, canManageClubEntity } from '../utils/roleCapabilities';
 import { validateClubInput } from '../utils/clubValidation';
+import { normalizeCoachHexColor } from '../utils/coachColorPicker';
+import { storageService, type UploadFileInput } from './storage.service';
+import { usersService } from './users.service';
 
 function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
   const loc = data.location as { latitude?: number; longitude?: number } | undefined;
@@ -28,6 +32,8 @@ function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
       longitude: loc?.longitude ?? 0,
     },
     logo_url: data.logo_url as string | undefined,
+    primary_color: data.primary_color as string | undefined,
+    secondary_color: data.secondary_color as string | undefined,
     verified: Boolean(data.verified),
     categories: (data.categories as string[]) ?? [],
     sponsor_ids: (data.sponsor_ids as string[]) ?? [],
@@ -123,5 +129,69 @@ export const clubsService = {
       created_at: serverTimestamp(),
     });
     return ref.id;
+  },
+
+  /**
+   * Met à jour le logo club (Storage avatars/{uid} + champ logo_url).
+   * Tout compte rôle Club rattaché au clubId (pôle Club), pas seulement owner_uid.
+   */
+  async updateLogo(clubId: string, actorUid: string, file: UploadFileInput): Promise<string> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const club = await this.getById(clubId);
+    if (!club) throw new Error('Club introuvable.');
+
+    const actor = await usersService.getById(actorUid);
+    const allowed =
+      club.owner_uid === actorUid ||
+      canEditClubBranding(actor?.role, actor?.profile.club_id, clubId);
+    if (!allowed) {
+      throw new Error(
+        'Seuls les comptes Club rattachés à ce club peuvent changer le logo.',
+      );
+    }
+
+    const url = await storageService.uploadProfileImage(actorUid, file, 'avatars');
+    await updateDoc(doc(database, 'clubs', clubId), { logo_url: url });
+    return url;
+  },
+
+  /**
+   * Met à jour primary_color / secondary_color du club.
+   * Même ACL que le logo (staff pôle Club rattaché) — hérité par joueurs/coachs licenciés.
+   */
+  async updateBrandColors(
+    clubId: string,
+    actorUid: string,
+    colors: { primary: string; secondary: string },
+  ): Promise<{ primary: string; secondary: string }> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+
+    const primary = normalizeCoachHexColor(colors.primary);
+    const secondary = normalizeCoachHexColor(colors.secondary);
+    if (!primary || !secondary) {
+      throw new Error('Couleurs invalides — utilisez un hex #RRGGBB.');
+    }
+
+    const club = await this.getById(clubId);
+    if (!club) throw new Error('Club introuvable.');
+
+    const actor = await usersService.getById(actorUid);
+    const allowed =
+      club.owner_uid === actorUid ||
+      canEditClubBranding(actor?.role, actor?.profile.club_id, clubId);
+    if (!allowed) {
+      throw new Error(
+        'Seuls les comptes Club rattachés à ce club peuvent changer les couleurs.',
+      );
+    }
+
+    await updateDoc(doc(database, 'clubs', clubId), {
+      primary_color: primary,
+      secondary_color: secondary,
+    });
+    return { primary, secondary };
   },
 };

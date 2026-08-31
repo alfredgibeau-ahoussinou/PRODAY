@@ -59,7 +59,7 @@ export const platformConfigService = {
 
   async saveConfig(
     patch: Partial<
-      Pick<PlatformConfig, 'maintenance_mode' | 'maintenance_message'> & {
+      Pick<PlatformConfig, 'maintenance_mode' | 'maintenance_message' | 'club_pricing'> & {
         feature_flags: Partial<PlatformFeatureFlags>;
       }
     >,
@@ -73,6 +73,10 @@ export const platformConfigService = {
       ...current.feature_flags,
       ...(patch.feature_flags ?? {}),
     };
+    const nextPricing = {
+      ...(current.club_pricing ?? DEFAULT_PLATFORM_CONFIG.club_pricing!),
+      ...(patch.club_pricing ?? {}),
+    };
 
     await setDoc(
       doc(database, DOC_PATH),
@@ -80,6 +84,7 @@ export const platformConfigService = {
         maintenance_mode: patch.maintenance_mode ?? current.maintenance_mode,
         maintenance_message: patch.maintenance_message ?? current.maintenance_message,
         feature_flags: nextFlags,
+        club_pricing: nextPricing,
         updated_at: serverTimestamp(),
         updated_by_uid: actorUid,
       },

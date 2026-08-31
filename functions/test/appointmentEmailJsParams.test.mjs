@@ -21,7 +21,7 @@ test('buildAppointmentEmailJsParams — demande praticien', () => {
   assert.equal(params.counterparty_name, 'Jean Dupont');
   assert.equal(params.duration_min, '45');
   assert.match(params.body_detail, /Kinésithérapeute/);
-  assert.match(params.body_detail, /Rééducation genou/);
+  assert.equal(params.motif, 'Rééducation genou');
   assert.match(params.subject, /Nouvelle demande/);
 });
 

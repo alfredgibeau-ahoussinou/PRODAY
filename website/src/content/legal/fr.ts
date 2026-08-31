@@ -24,7 +24,7 @@ export type LegalSectionContent = {
 };
 
 export const PRIVACY_INTRO =
-  'ProDay (« nous », « l’application ») est une plateforme mobile et web dédiée au football amateur et semi-professionnel : recrutement (Mercato), matchs, tournois, messagerie, fil d’actualité, réels vidéo, espace santé, partenaires et gestion de club. La présente politique décrit les données traitées, les finalités et vos droits au sens du RGPD.';
+  'ProDay (« nous », « l’application ») est une plateforme mobile et web dédiée au football amateur et semi professionnel : recrutement (Mercato), matchs, tournois, messagerie, fil d’actualité, réels vidéo, espace santé, partenaires et gestion de club. La présente politique décrit les données traitées, les finalités et vos droits au sens du RGPD.';
 
 export const PRIVACY_SECTIONS: LegalSectionContent[] = [
   {
@@ -32,16 +32,16 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
     title: 'Données collectées',
     paragraphs: ['Nous traitons notamment les catégories suivantes :'],
     bullets: [
-      'Compte : adresse e-mail, nom affiché, rôle (joueur, coach, recruteur, agent, organisateur, kinésithérapeute, partenaire, parent/tuteur), ville, photo de profil, langue.',
+      'Compte : adresse email, nom affiché, rôle (joueur, coach, recruteur, agent, organisateur, kinésithérapeute, partenaire, parent/tuteur), ville, photo de profil, langue.',
       'Profil sportif : poste, catégorie d’âge, niveau, statistiques, CV joueur, badges, historique d’activité (matchs, candidatures, Visibilité).',
       'Vérification : pièces d’identité, licences, diplômes ou justificatifs selon le rôle : analyse automatisée possible pour accélérer la validation.',
       'Contenus : annonces Mercato, messages, publications fil d’actualité, réponses à la question de la semaine, photos et vidéos (réels).',
-      'Événements équipe : convocations, présences, compositions, stats live, covoiturage (lieux de rendez-vous).',
-      'Santé (pôle dédié) : informations que vous choisissez de partager avec un professionnel (rendez-vous, échanges) : pas de dossier médical hospitalier.',
+      'Événements équipe : convocations, présences, compositions, stats live, covoiturage (lieux de rendez vous).',
+      'Santé (pôle dédié) : informations que vous choisissez de partager avec un professionnel (rendez vous, échanges) : pas de dossier médical hospitalier.',
       'Technique : identifiant Firebase, jetons de notification push (FCM / Expo), logs techniques, type d’appareil, version de l’app.',
-      'Géolocalisation : uniquement si vous l’autorisez (covoiturage, suggestions locales, campagnes partenaires géo-ciblées).',
+      'Géolocalisation : uniquement si vous l’autorisez (covoiturage, suggestions locales, campagnes partenaires géo ciblées).',
       'Paiements : identifiants de transaction et abonnements via Apple App Store ou Google Play (nous ne stockons pas vos coordonnées bancaires complètes).',
-      'Site vitrine / bêta : e-mail et rôle déclaré lors de l’inscription à la liste d’attente (service d’envoi d’e-mails tiers).',
+      'Site vitrine / bêta : email et rôle déclaré lors de l’inscription à la liste d’attente (service d’envoi d’emails tiers).',
       'Mineurs : âge déclaré, paramètres de contrôle parental, contacts autorisés et lien avec le compte tuteur lorsque applicable.',
     ],
   },
@@ -55,7 +55,7 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
       'Vérification des profils, lutte contre la fraude et modération des contenus.',
       'Fonctionnement des modules Mercato, matchs, tournois, messages, fil, réels et Visibilité.',
       'Notifications (convocations, candidatures, messages, actualités).',
-      'Programme bêta : invitation, e-mails d’information et collecte de retours.',
+      'Programme bêta : invitation, emails d’information et collecte de retours.',
       'Facturation des abonnements et offres Pro via les stores.',
       'Amélioration du service, support utilisateur et sécurité de la plateforme.',
     ],
@@ -73,16 +73,16 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
   },
   {
     id: 'hebergement',
-    title: 'Hébergement et sous-traitants',
+    title: 'Hébergement et sous traitants',
     paragraphs: [
       'Les données sont hébergées principalement via Google Firebase (authentification, Firestore, stockage fichiers, fonctions cloud). Des traitements peuvent avoir lieu dans l’Union européenne ou, le cas échéant, hors UE avec des garanties contractuelles appropriées (clauses types, prestataires certifiés).',
       'Nous pouvons faire appel aux catégories de prestataires suivants :',
     ],
     bullets: [
       'Google / Firebase (infrastructure, auth, base de données, fichiers).',
-      'Apple et Google (achats in-app, distribution de l’application).',
+      'Apple et Google (achats in app, distribution de l’application).',
       'Stripe (paiements de cotisations ou prestations club le cas échéant).',
-      'Prestataires d’e-mailing (inscription bêta, messages transactionnels).',
+      'Prestataires d’emailing (inscription bêta, messages transactionnels).',
       'Prestataires d’analyse documentaire ou d’IA (vérification des justificatifs, sous contrôle humain).',
       'Netlify ou équivalent (hébergement du site vitrine).',
     ],
@@ -104,7 +104,7 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
     title: 'Vos droits',
     paragraphs: [
       'Vous disposez des droits d’accès, de rectification, d’effacement, de limitation, d’opposition et de portabilité sur vos données personnelles, dans les limites prévues par la loi.',
-      'Pour exercer vos droits : écrivez à proday.admin@gmail.com en précisant votre demande et l’e-mail du compte concerné. Nous répondrons dans un délai maximal d’un mois.',
+      'Pour exercer vos droits : écrivez à proday.admin@gmail.com en précisant votre demande et l’email du compte concerné. Nous répondrons dans un délai maximal d’un mois.',
       'Réclamation auprès de la CNIL : www.cnil.fr.',
     ],
   },
@@ -127,14 +127,14 @@ export const PRIVACY_SECTIONS: LegalSectionContent[] = [
     id: 'transferts',
     title: 'Transferts hors Union européenne',
     paragraphs: [
-      'Lorsque des données sont traitées hors de l’EEE par nos sous-traitants, nous veillons à ce que des garanties appropriées soient en place (décision d’adéquation, clauses contractuelles types ou mécanisme équivalent).',
+      'Lorsque des données sont traitées hors de l’EEE par nos sous traitants, nous veillons à ce que des garanties appropriées soient en place (décision d’adéquation, clauses contractuelles types ou mécanisme équivalent).',
     ],
   },
   {
     id: 'modifications',
     title: 'Modifications',
     paragraphs: [
-      'Nous pouvons mettre à jour cette politique. La date en tête de document sera révisée. En cas de changement substantiel, nous pourrons vous en informer dans l’application ou par e-mail. La poursuite de l’utilisation après notification vaut acceptation, sauf opposition de votre part lorsque la loi l’exige.',
+      'Nous pouvons mettre à jour cette politique. La date en tête de document sera révisée. En cas de changement substantiel, nous pourrons vous en informer dans l’application ou par email. La poursuite de l’utilisation après notification vaut acceptation, sauf opposition de votre part lorsque la loi l’exige.',
     ],
   },
 ];
@@ -147,8 +147,8 @@ export const TERMS_SECTIONS: LegalSectionContent[] = [
     id: 'objet',
     title: 'Objet et périmètre',
     paragraphs: [
-      'ProDay propose une plateforme numérique organisée autour de cinq pôles (Joueur, Club, Coach, Supporter, Sponsor) et de rôles intégrés (Santé, Agent, Recruteur, Organisateur), permettant notamment le recrutement, l’organisation de matchs et tournois, la messagerie, le fil d’actualité, les réels vidéo, le suivi de visibilité, le CV joueur et les espaces dédiés aux professionnels et sponsors.',
-      'Certaines fonctionnalités peuvent être proposées en avant-première dans le cadre d’une bêta fermée : elles peuvent évoluer, être limitées ou retirées sans préavis.',
+      'ProDay propose une plateforme numérique organisée autour de six portes d’entrée (Joueur, Club, Coach, Parent, Supporter, Sponsor) et de rôles intégrés (Santé, Agent, Recruteur, Organisateur), permettant notamment le recrutement, l’organisation de matchs et tournois, la messagerie, le fil d’actualité, les réels vidéo, le suivi de visibilité, le CV joueur et les espaces dédiés aux professionnels et sponsors.',
+      'Certaines fonctionnalités peuvent être proposées en avant première dans le cadre d’une bêta fermée : elles peuvent évoluer, être limitées ou retirées sans préavis.',
     ],
   },
   {
@@ -166,7 +166,7 @@ export const TERMS_SECTIONS: LegalSectionContent[] = [
       'Vous devez fournir des informations exactes, complètes et à jour.',
       'Vous êtes seul responsable de la confidentialité de vos identifiants et de l’activité réalisée depuis votre compte.',
       'Un seul compte personnel par individu, sauf comptes professionnels clairement identifiés (club, structure, partenaire).',
-      'ProDay peut suspendre, restreindre ou supprimer un compte en cas de fraude, usurpation, contenu illicite, non-respect des CGU ou risque pour la communauté.',
+      'ProDay peut suspendre, restreindre ou supprimer un compte en cas de fraude, usurpation, contenu illicite, non respect des CGU ou risque pour la communauté.',
     ],
   },
   {
@@ -225,7 +225,7 @@ export const TERMS_SECTIONS: LegalSectionContent[] = [
     title: 'Abonnements et paiements',
     paragraphs: [],
     bullets: [
-      'Certaines offres Pro sont disponibles par abonnement via l’App Store ou Google Play. Les conditions de facturation, renouvellement et résiliation sont celles de la plateforme concernée, complétées par nos fiches produit in-app.',
+      'Certaines offres Pro sont disponibles par abonnement via l’App Store ou Google Play. Les conditions de facturation, renouvellement et résiliation sont celles de la plateforme concernée, complétées par nos fiches produit in app.',
       'Les cotisations club ou paiements ponctuels peuvent transiter par un prestataire tiers (ex. Stripe) selon les paramètres du club organisateur.',
       'Les offres partenaires commerciales (Territorial, National, etc.) peuvent faire l’objet de conditions commerciales distinctes validées avec ProDay.',
       'Sauf disposition légale impérative, les sommes déjà réglées ne sont pas remboursables une fois la période d’abonnement commencée.',

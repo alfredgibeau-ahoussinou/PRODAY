@@ -18,6 +18,7 @@ import { Icon } from '../../ui/Icon';
 import { PressableSpring, StaggerReveal } from '../../motion';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { spacing, radius } from '../../../theme/designTokens';
+import { OpponentMatchDaySheet } from '../OpponentMatchDaySheet';
 
 const RSVP_OPTIONS: { status: RsvpStatus; label: string }[] = [
   { status: 'yes', label: 'Présent' },
@@ -87,7 +88,7 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
             <PressableSpring
               style={[styles.quickBtn, { borderColor: colors.border }]}
               onPress={() => handleQuickNav(item.action)}
-              scaleTo={0.94}
+              scaleTo={0.97}
               haptic
             >
               <Icon name={item.icon} size={18} color={colors.accent} />
@@ -123,6 +124,8 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
           </ProDayText>
         ) : null}
       </ProDaySurface>
+
+      {isStaff ? <OpponentMatchDaySheet event={event} /> : null}
 
       {event.lineup ? (
         <ProDaySurface variant="module" style={[styles.infoCard, { borderColor: colors.border }]}>
@@ -166,7 +169,7 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
                   <PressableSpring
                     onPress={() => onRsvp(opt.status)}
                     disabled={rsvpBusy}
-                    scaleTo={0.94}
+                    scaleTo={0.97}
                     haptic
                   >
                     <ProDayGradient

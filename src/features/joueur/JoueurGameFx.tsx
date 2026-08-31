@@ -21,6 +21,7 @@ import {
   isJoueurSfxMuted,
 } from './joueurSfx';
 import { persistJoueurSfxMuted } from '../../utils/joueurSfxPrefs';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 /** Floating +XP / +★ popup. */
 export function JoueurScorePop({
@@ -116,7 +117,6 @@ type ShellProps = {
   identity: JoueurPageIdentity;
   liveLabel?: string;
   children: React.ReactNode;
-  bootSound?: boolean;
 };
 
 /**
@@ -127,8 +127,8 @@ export function JoueurArcadeShell({
   identity,
   liveLabel,
   children,
-  bootSound = true,
 }: ShellProps) {
+  const theme = useJoueurTheme();
   const pulse = useSharedValue(0.55);
   const [muted, setMuted] = useState(isJoueurSfxMuted());
   const isArcade = identity.density === 'playful';
@@ -165,15 +165,7 @@ export function JoueurArcadeShell({
         false,
       );
     }
-    if (bootSound && !isJoueurSfxMuted()) {
-      playJoueurSfxFireAndForget('enter');
-      // Ambient seulement adulte / ado (pas youth — trop bruyant pour petit jeu)
-      if (!isArcade) void startJoueurAmbient();
-    }
-    return () => {
-      if (bootSound) stopJoueurAmbient();
-    };
-  }, [bootSound, pulse, isArcade, isTeen]);
+  }, [pulse, isArcade, isTeen]);
 
   const liveDot = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
@@ -198,7 +190,7 @@ export function JoueurArcadeShell({
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-      <JoueurMotifField motif={identity.motif} accent={identity.accent} light={isArcade} />
+      <JoueurMotifField motif={identity.motif} accent={theme.accent} light={isArcade} />
       <View
         style={[
           styles.glowBlob,
@@ -211,7 +203,7 @@ export function JoueurArcadeShell({
         pointerEvents="none"
       />
       <JoueurParticleField
-        accent={identity.accent}
+        accent={theme.accent}
         density={identity.density}
         light={isArcade}
       />
@@ -221,7 +213,7 @@ export function JoueurArcadeShell({
           style={[
             styles.livePill,
             {
-              borderColor: `${identity.accent}66`,
+              borderColor: `${theme.accent}66`,
               borderRadius: isArcade ? 18 : isPro ? 8 : 12,
               backgroundColor: pillBg,
               borderWidth: isArcade ? 2 : StyleSheet.hairlineWidth,
@@ -235,9 +227,9 @@ export function JoueurArcadeShell({
               styles.liveDot,
               {
                 backgroundColor: isArcade
-                  ? identity.accent
+                  ? theme.accent
                   : isTeen
-                    ? identity.accentBright
+                    ? theme.accentBright
                     : JOUEUR_SITE.live,
                 width: isArcade ? 8 : 6,
                 height: isArcade ? 8 : 6,
@@ -251,7 +243,7 @@ export function JoueurArcadeShell({
             style={[
               styles.liveText,
               {
-                color: isArcade ? identity.ink : identity.accentBright,
+                color: isArcade ? identity.ink : theme.accentBright,
                 fontSize: isArcade ? 11 : 9,
                 letterSpacing: isArcade ? 1.2 : 1.8,
               },
@@ -264,7 +256,7 @@ export function JoueurArcadeShell({
             style={[
               styles.modeChip,
               {
-                color: identity.accent,
+                color: theme.accent,
                 fontSize: isArcade ? 9 : 8,
               },
             ]}

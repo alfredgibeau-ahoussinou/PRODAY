@@ -28,6 +28,23 @@ export function isClubRole(role: UserRole): boolean {
   return role === 'club';
 }
 
+/**
+ * Branding club (logo / couleurs) : tout compte rôle Club rattaché au clubId
+ * (accès pôle Club), pas seulement le owner_uid.
+ */
+export function canEditClubBranding(
+  role: UserRole | null | undefined,
+  actorClubId: string | null | undefined,
+  targetClubId: string | null | undefined,
+): boolean {
+  return (
+    role === 'club' &&
+    Boolean(actorClubId) &&
+    Boolean(targetClubId) &&
+    actorClubId === targetClubId
+  );
+}
+
 /** Proposer / accepter un match amical entre clubs. */
 export function canProposeFriendlyMatch(role: UserRole): boolean {
   return role === 'club' || role === 'coach' || role === 'organizer';

@@ -1,11 +1,10 @@
 import React from 'react';
-import { AuthFormCard } from '../auth/AuthFormCard';
+import { AuthExperienceShell } from '../../features/auth/experience';
 
-interface SignupFormCardProps {
-  children: React.ReactNode;
-}
-
-/** Carte formulaire inscription — même surface que la connexion. */
-export const SignupFormCard: React.FC<SignupFormCardProps> = ({ children }) => (
-  <AuthFormCard>{children}</AuthFormCard>
+/** Carte formulaire signup — transparente dans la DA Experience (plus de card flottante). */
+export const SignupFormCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <>{children}</>
 );
+
+/** Réexport pour écrans qui s’appuyaient sur le shell. */
+export { AuthExperienceShell };

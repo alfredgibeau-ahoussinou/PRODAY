@@ -69,7 +69,7 @@ export function JoueurExperiencePageClient() {
           onClick={() => clearStoredJoueurProfile()}
           className="text-sm text-cyan-300/80 underline-offset-2 hover:underline"
         >
-          Qui es-tu ?
+          Qui es tu ?
         </Link>
       </div>
     );

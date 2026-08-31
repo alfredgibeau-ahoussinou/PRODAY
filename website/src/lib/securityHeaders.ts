@@ -1,5 +1,12 @@
 /** En-têtes de sécurité appliqués aux réponses Next.js (complète netlify.toml). */
 
+/**
+ * En local (`next dev` / http://localhost), `upgrade-insecure-requests` force le navigateur
+ * à charger CSS/JS en https://localhost → échec TLS → page HTML brut (fond blanc, liens bleus).
+ * HSTS est inutile (et trompeur) hors HTTPS de prod.
+ */
+const IS_PROD = process.env.NODE_ENV === "production";
+
 /** CSP stricte côté app (alignée netlify.toml). 'unsafe-inline'/'unsafe-eval' : contrainte Next. */
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -17,11 +24,16 @@ export const CONTENT_SECURITY_POLICY = [
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
-  "upgrade-insecure-requests",
+  ...(IS_PROD ? (["upgrade-insecure-requests"] as const) : []),
 ].join("; ");
 
 export const SECURITY_RESPONSE_HEADERS: Readonly<Record<string, string>> = {
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+  ...(IS_PROD
+    ? {
+        "Strict-Transport-Security":
+          "max-age=31536000; includeSubDomains; preload",
+      }
+    : {}),
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",

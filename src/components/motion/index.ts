@@ -8,8 +8,30 @@ export { PushScreenTransition } from './PushScreenTransition';
 export { AnimatedModalShell } from './AnimatedModalShell';
 export { AnimatedDialogShell } from './AnimatedDialogShell';
 export { CrossfadeSwitch } from './CrossfadeSwitch';
+export {
+  PoleShellTransition,
+  poleShellTransitionDirection,
+} from './PoleShellTransition';
+export type { PoleShellId } from './PoleShellTransition';
 export { StaggerReveal } from './StaggerReveal';
 export { InteractiveListItem } from './InteractiveListItem';
 export { PressableSpring } from './PressableSpring';
 export { SkeletonBlock, SkeletonList } from './SkeletonBlock';
 export { LivePulseDot } from './LivePulseDot';
+export { RouteSwitch } from '../../motion/primitives/RouteSwitch';
+
+/** Facade — préférer `src/motion` pour le système complet. */
+export {
+  prodayMotion,
+  motion,
+  PaneTransition,
+  DetailTransition,
+  ModalSheet,
+  BottomSheet,
+  PressableScale,
+  ListRow,
+  ProDayMotionProvider,
+  useProDayMotion,
+  useReducedMotion,
+  getMotionPreset,
+} from '../../motion';

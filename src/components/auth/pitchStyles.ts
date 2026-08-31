@@ -4,12 +4,14 @@ import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
 
+import { AUTH_SHEET } from './authSheetPalette';
+
 /** Bandeau noir + feuille blanche — chrome auth / PitchSheetChrome. */
-export function createPitchStyles(c: AppColors) {
+export function createPitchStyles(_c: AppColors) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: c.accent,
+      backgroundColor: AUTH_SHEET.heroBackground,
     },
     scrollContent: {
       flexGrow: 1,
@@ -17,13 +19,13 @@ export function createPitchStyles(c: AppColors) {
     hero: {
       alignItems: 'center',
       paddingHorizontal: spacing.xl,
-      paddingBottom: spacing.xxl + spacing.lg,
-      backgroundColor: c.accent,
+      paddingBottom: spacing.xxl + spacing.md,
+      backgroundColor: AUTH_SHEET.heroBackground,
     },
     sheet: {
-      marginTop: -spacing.xxl,
-      marginHorizontal: spacing.md,
-      backgroundColor: c.surface,
+      flex: 1,
+      marginTop: -spacing.xl,
+      backgroundColor: AUTH_SHEET.background,
       borderTopLeftRadius: radius.xxl,
       borderTopRightRadius: radius.xxl,
       paddingHorizontal: spacing.lg,
@@ -38,16 +40,17 @@ export function createPitchStyles(c: AppColors) {
     },
     sheetHandle: {
       alignSelf: 'center',
-      width: 36,
+      width: 40,
       height: 4,
       borderRadius: 2,
-      backgroundColor: c.border,
+      backgroundColor: '#CCCCCC',
+      marginTop: spacing.sm,
       marginBottom: spacing.lg,
     },
     sheetTitle: {
       fontSize: 24,
       fontWeight: '800',
-      color: c.text,
+      color: AUTH_SHEET.text,
       letterSpacing: -0.5,
       textAlign: 'center',
       marginBottom: spacing.xs,
@@ -55,7 +58,7 @@ export function createPitchStyles(c: AppColors) {
     sheetSub: {
       fontSize: 14,
       lineHeight: 21,
-      color: c.textSecondary,
+      color: AUTH_SHEET.textSecondary,
       textAlign: 'center',
       marginBottom: spacing.lg,
       paddingHorizontal: spacing.sm,

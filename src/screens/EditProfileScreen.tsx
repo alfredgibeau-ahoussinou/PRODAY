@@ -24,6 +24,10 @@ import { isSponsorRole, SPONSOR_THEME } from '../content/sponsorExperience';
 import { spacing, radius } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
+import { JoueurScreenChrome } from '../components/joueur/JoueurScreenChrome';
+import { useJoueurSession } from '../context/JoueurSessionContext';
+import { useJoueurTheme } from '../hooks/useJoueurTheme';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import { ProDayTabPager } from '../components/ui/ProDayTabPager';
 import { ProDaySurface } from '../components/ui/ProDaySurface';
 import { ProDayText } from '../components/ui/ProDayText';
@@ -117,6 +121,11 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   const isStaff =
     user.role === 'coach' || user.role === 'agent' || user.role === 'recruiter';
   const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
+  const joueurSession = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
+  const joueurLive =
+    isPlayer &&
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const styles = useMemo(() => createStyles(c), [c]);
   
 
@@ -138,17 +147,28 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
             accent: SPONSOR_THEME.primary,
             onAccent: SPONSOR_THEME.onPrimary,
           }
-        : {
-            surface: c.surface,
-            surfaceMuted: c.surfaceMuted,
-            border: c.border,
-            text: c.text,
-            textSecondary: c.textSecondary,
-            textMuted: c.textMuted,
-            accent: c.accent,
-            onAccent: c.brandInverse,
-          },
-    [isSponsor, c]
+        : joueurLive && joueurSession
+          ? {
+              surface: PLAYER_DARK.surface,
+              surfaceMuted: PLAYER_DARK.bgElevated,
+              border: PLAYER_DARK.border,
+              text: joueurSession.identity.ink,
+              textSecondary: joueurSession.identity.inkMuted,
+              textMuted: joueurSession.identity.inkMuted,
+              accent: joueurTheme.accent,
+              onAccent: PLAYER_DARK.bg,
+            }
+          : {
+              surface: c.surface,
+              surfaceMuted: c.surfaceMuted,
+              border: c.border,
+              text: c.text,
+              textSecondary: c.textSecondary,
+              textMuted: c.textMuted,
+              accent: c.accent,
+              onAccent: c.brandInverse,
+            },
+    [isSponsor, joueurLive, joueurSession, joueurTheme.accent, c]
   );
 
   const pagePad = styles.pagePad;
@@ -608,14 +628,8 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
     },
   ];
 
-  return (
-    <View
-      style={[
-        styles.root,
-        !isSponsor && rootStyle,
-        isSponsor && { backgroundColor: SPONSOR_THEME.background },
-      ]}
-    >
+  const inner = (
+    <>
       <ScreenHeader
         title={isSponsor ? 'Modifier la marque' : 'Modifier le profil'}
         onBack={onBack}
@@ -675,7 +689,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
         )}
       </View>
 
-      <View style={[styles.footer, { borderTopColor: ui.border, backgroundColor: isSponsor ? SPONSOR_THEME.surface : c.surface }]}>
+      <View style={[styles.footer, { borderTopColor: ui.border, backgroundColor: isSponsor ? SPONSOR_THEME.surface : joueurLive ? PLAYER_DARK.surface : c.surface }]}>
         <PressableSpring
           style={[
             styles.primary,
@@ -683,6 +697,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
               backgroundColor: ui.accent,
               borderColor: ui.accent,
             },
+            joueurLive && { backgroundColor: ui.accent, borderColor: ui.accent },
           ]}
           onPress={handleSave}
           disabled={saving}
@@ -690,10 +705,36 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
           {saving ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={[styles.primaryText, isSponsor && { color: ui.onAccent }]}>Enregistrer</Text>
+            <Text style={[styles.primaryText, (isSponsor || joueurLive) && { color: ui.onAccent }]}>Enregistrer</Text>
           )}
         </PressableSpring>
       </View>
+    </>
+  );
+
+  if (joueurLive && joueurSession) {
+    return (
+      <JoueurScreenChrome
+        identity={joueurSession.identity}
+        variant="minimal"
+        title="Modifier le profil"
+        subtitle="Médias, identité, sport, bio."
+        hideHero
+      >
+        {inner}
+      </JoueurScreenChrome>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.root,
+        !isSponsor && rootStyle,
+        isSponsor && { backgroundColor: SPONSOR_THEME.background },
+      ]}
+    >
+      {inner}
     </View>
   );
 };

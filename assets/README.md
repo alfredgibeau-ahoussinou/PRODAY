@@ -1,19 +1,35 @@
 # Assets ProDay
 
+**CONNECTER. PROGRESSER. RÉVÉLER.** — identité officielle · App **1.0.8** · [proday75.fr](https://proday75.fr)
+
 ## branding/
 
-| Fichier | Usage |
-|---------|--------|
-| `logo-light.png` | App claire, documents, stores |
-| `logo-dark.png` | Splash, landing, réseaux sociaux |
-| `mockup-recrutement-matchs.png` | Référence UI (source) |
-| `mockup-coach-verification.png` | Référence UI coach / validation |
+Lockup P + ballon, wordmark, accents par porte.  
+Détail : [branding/README.md](./branding/README.md).
 
-## mockups/
+| Fichier clé | Usage |
+|-------------|--------|
+| `proday-app-icon.png` | Icône store / home (`app.json`) |
+| `proday-splash.png` | Splash Expo |
+| `proday-adaptive-foreground.png` | Adaptive Android |
+| `proday-notification-icon.png` | Notifications |
+| `logo-proday-official.png` | Docs, emails, README |
+| `proday-symbol-*.png` | Symbole UI par porte |
 
-Copies des planches UI pour présentation (README, PDF, Figma).
+CDN public : https://proday75.fr/branding/logo-proday-official.png  
+Régénération : `npm run branding:app`
+
+## mockups/ · marketing/ · generated/
+
+Planches UI, stories sociales, exports générés — voir les README de chaque dossier.
 
 ## Code
 
-- Composant logo : `src/components/Logo.tsx`
-- Thème : `src/theme/designTokens.ts`
+- Composants : `src/components/branding/`
+- Tokens : `src/theme/prodayBrand.ts`
+- Mapping : `src/content/brandingAssets.ts`
+
+## GitHub
+
+- Code (privé) : https://github.com/alfredgibeau-ahoussinou/PRODAY  
+- Docs publiques : https://github.com/alfredgibeau-ahoussinou/PRODAY-docs

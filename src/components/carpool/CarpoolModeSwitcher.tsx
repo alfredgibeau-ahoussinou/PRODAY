@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -11,7 +11,11 @@ import { useTranslation } from '../../context/LocaleContext';
 import { motion } from '../../theme/motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { CarpoolHubMode } from '../../content/carpoolChapters';
-import { CARPOOL_SITE } from '../../content/carpoolSite';
+import {
+  type CarpoolUiPalette,
+  useCarpoolThemedStyles,
+  useCarpoolUi,
+} from './CarpoolUiContext';
 
 export type { CarpoolHubMode };
 
@@ -35,6 +39,8 @@ function ModeCard({
   badge,
   live,
   onPress,
+  styles,
+  palette,
 }: {
   active: boolean;
   icon: 'walk' | 'car' | 'time';
@@ -42,11 +48,12 @@ function ModeCard({
   badge?: number;
   live?: boolean;
   onPress: () => void;
+  styles: ReturnType<typeof createStyles>;
+  palette: CarpoolUiPalette;
 }) {
-  const styles = useMemo(() => createStyles(), []);
   const lift = useSharedValue(active ? 1 : 0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     lift.value = withSpring(active ? 1 : 0, motion.spring.bouncy);
   }, [active, lift]);
 
@@ -66,7 +73,7 @@ function ModeCard({
     >
       <Animated.View style={[styles.card, active && styles.cardOn, cardAnim]}>
         <View style={styles.topRow}>
-          {live ? <LivePulseDot active size={8} color={CARPOOL_SITE.live} /> : <View style={styles.pulseSpacer} />}
+          {live ? <LivePulseDot active size={8} color={palette.signal} /> : <View style={styles.pulseSpacer} />}
           {badge != null && badge > 0 ? (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{badge > 9 ? '9+' : String(badge)}</Text>
@@ -79,7 +86,7 @@ function ModeCard({
           <Icon
             name={icon}
             size={22}
-            color={active ? CARPOOL_SITE.asphalt : CARPOOL_SITE.signalDeep}
+            color={active ? palette.onSignal : palette.signalDeep}
             variant="filled"
           />
         </View>
@@ -105,7 +112,8 @@ export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
   badges,
 }) => {
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(), []);
+  const palette = useCarpoolUi();
+  const styles = useCarpoolThemedStyles(createStyles);
 
   return (
     <View style={styles.wrap}>
@@ -121,13 +129,15 @@ export const CarpoolModeSwitcher: React.FC<CarpoolModeSwitcherProps> = ({
             prodayHaptics.tabSwitch();
             onChange(item.id);
           }}
+          styles={styles}
+          palette={palette}
         />
       ))}
     </View>
   );
 };
 
-function createStyles() {
+function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     wrap: {
       flexDirection: 'row',
@@ -141,22 +151,15 @@ function createStyles() {
       paddingHorizontal: 6,
       gap: 8,
       alignItems: 'center',
-      backgroundColor: CARPOOL_SITE.surface,
+      backgroundColor: palette.surface,
       borderWidth: 1.5,
-      borderColor: CARPOOL_SITE.fog,
+      borderColor: palette.fog,
       borderRadius: 18,
       overflow: 'hidden',
-      shadowColor: '#0B1220',
-      shadowOpacity: 0.06,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 2,
     },
     cardOn: {
-      borderColor: CARPOOL_SITE.signal,
-      backgroundColor: '#FFFFFF',
-      shadowOpacity: 0.12,
-      shadowRadius: 16,
+      borderColor: palette.signal,
+      backgroundColor: palette.surfaceMuted,
     },
     topRow: {
       width: '100%',
@@ -173,10 +176,10 @@ function createStyles() {
       borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: CARPOOL_SITE.signalSoft,
+      backgroundColor: palette.signalSoft,
     },
     iconOrbOn: {
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
     },
     badge: {
       minWidth: 20,
@@ -185,26 +188,26 @@ function createStyles() {
       paddingHorizontal: 5,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: CARPOOL_SITE.asphalt,
+      backgroundColor: palette.ink,
     },
-    badgeText: { fontSize: 10, fontWeight: '900', color: '#fff' },
+    badgeText: { fontSize: 10, fontWeight: '900', color: palette.bg },
     label: {
       fontSize: 13,
       lineHeight: 16,
       fontWeight: '800',
-      color: CARPOOL_SITE.ink,
+      color: palette.ink,
       textAlign: 'center',
       width: '100%',
       paddingHorizontal: 2,
     },
-    labelOn: { color: CARPOOL_SITE.asphalt },
+    labelOn: { color: palette.signalDeep },
     activeBar: {
       position: 'absolute',
       left: 0,
       right: 0,
       bottom: 0,
       height: 4,
-      backgroundColor: CARPOOL_SITE.signal,
+      backgroundColor: palette.signal,
     },
   });
 }

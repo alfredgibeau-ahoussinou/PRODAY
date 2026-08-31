@@ -37,6 +37,7 @@ describe('clubRosterMatching', () => {
     team_label: 'U15 A',
     category: 'U15',
     position: 'defender',
+    urgency: 'medium',
     players_needed: 1,
     scope: 'internal',
     status: 'open',

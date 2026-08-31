@@ -37,18 +37,18 @@ const COACH_CLEAR_SURFACES = {
   muted: 'rgba(60, 60, 67, 0.6)',
 } as const;
 
-/** Accents premium lisibles sur fond sombre — index 0 = bleu PRODAY (fallback). */
+/** Accents premium lisibles sur fond sombre — index 0 = vert Coach officiel. */
 export const COACH_TEAM_ACCENT_PALETTE = [
-  '#006CFC',
-  '#FF6B35',
-  '#00C896',
-  '#FFD60A',
-  '#BF5AF2',
-  '#FF375F',
-  '#32ADE6',
-  '#30D158',
-  '#FF9F0A',
-  '#64D2FF',
+  '#22C55E',
+  '#1E3AFF',
+  '#7C3AED',
+  '#FBBF24',
+  '#F97316',
+  '#06B6D4',
+  '#EF4444',
+  '#0054F0',
+  '#A3A3A3',
+  '#6366F1',
 ] as const;
 
 const PRODAY_ACCENT = COACH_SITE.accent;
@@ -114,11 +114,15 @@ export function resolveCoachEffectiveAccent(input: {
   accentOverride?: string;
   teamId?: string;
   teamName?: string;
+  /** Couleur primaire du club licencié — prioritaire en mode auto. */
+  clubAccent?: string | null;
 }): string {
   if (input.accentMode === 'manual' && input.accentOverride) {
     const hex = normalizeCoachHexColor(input.accentOverride);
     if (hex) return hex;
   }
+  const club = input.clubAccent ? normalizeCoachHexColor(input.clubAccent) : null;
+  if (club) return club;
   return resolveCoachTeamAccent(input.teamId, input.teamName);
 }
 
@@ -146,6 +150,7 @@ export function buildCoachThemeTokens(input: {
   teamName?: string;
   accentMode?: CoachAccentMode;
   accentOverride?: string;
+  clubAccent?: string | null;
 }): CoachThemeTokens {
   const accent = resolveCoachEffectiveAccent(input);
   const surfaces = shellSurfaces(input.variant);

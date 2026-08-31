@@ -1,233 +1,179 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProductLineId } from '../../models/ProductLine';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { getLocalizedDiscoverCopy } from '../../i18n/localizedContent';
-import { gradientsForLine } from '../../theme/universeGradients';
-import { ProductLineLogo } from '../branding/ProductLineLogo';
-import { ProDayGradient } from '../ui/ProDayGradient';
+import { ProDayLogo } from '../branding/ProDayLogo';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
-import type { AppColors } from '../../theme/universeTheme';
+import { fontFamily } from '../../theme/typography';
+import {
+  brandVariantForProductLine,
+  poleAccent,
+  poleOnAccent,
+  PRODAY_POLE_LABELS,
+} from '../../theme/prodayBrand';
+import { type DiscoverHomeChrome } from './discoverPoleHome';
+import { useDiscoverMetrics } from './useDiscoverMetrics';
 
 interface DiscoverGuestHeroProps {
   productLine: ProductLineId;
-  statsLabel?: string;
-  loading?: boolean;
   onSignup: () => void;
   onLogin: () => void;
-  onStatsPress?: () => void;
   onUniversePress?: () => void;
   universeLabel?: string;
 }
 
+/** Home pôle invité — aperçu compte, un accent, un CTA. */
 export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
   productLine,
-  statsLabel,
-  loading,
   onSignup,
   onLogin,
-  onStatsPress,
   onUniversePress,
   universeLabel,
 }) => {
   const insets = useSafeAreaInsets();
-  const { colors: c } = useAppTheme();
+  const { homeChrome: chrome } = useDiscoverMetrics();
   const { t } = useTranslation();
   const copy = getLocalizedDiscoverCopy(productLine, t);
-  const stops = gradientsForLine(productLine);
-  const styles = useMemo(() => createStyles(c), [c]);
+  const variant = brandVariantForProductLine(productLine);
+  const accent = poleAccent(variant);
+  const onAccent = poleOnAccent(variant);
+  const poleName = PRODAY_POLE_LABELS[variant];
+  const styles = useMemo(
+    () => createStyles(accent, onAccent, chrome),
+    [accent, onAccent, chrome],
+  );
 
   return (
-    <View style={styles.shell}>
-      <LinearGradient
-        colors={[...stops.hero]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-      <View style={styles.scrim} />
+    <View style={[styles.shell, { paddingTop: insets.top + chrome.topExtra }]}>
+      {universeLabel && onUniversePress ? (
+        <PressableSpring onPress={onUniversePress} scaleTo={0.98} style={styles.universeBtn}>
+          <Text style={styles.universeText}>{universeLabel}</Text>
+          <Icon name="chevron-down" size={12} color="rgba(255,255,255,0.45)" />
+        </PressableSpring>
+      ) : null}
 
-      <View style={[styles.inner, { paddingTop: insets.top + spacing.sm }]}>
-        {universeLabel && onUniversePress ? (
-          <PressableSpring onPress={onUniversePress} scaleTo={0.98} style={styles.universeBtn}>
-            <Text style={styles.universeText}>{universeLabel}</Text>
-            <Icon name="chevron-down" size={14} color="rgba(255,255,255,0.8)" />
-          </PressableSpring>
-        ) : null}
+      <View style={styles.brandBlock}>
+        <ProDayLogo variant={variant} width={chrome.logoSize} onDark layout="symbol" />
+        <Text style={styles.wordmark}>PRODAY</Text>
+        {poleName ? <Text style={styles.poleName}>{poleName}</Text> : null}
+      </View>
 
-        <ProductLineLogo line={productLine} width={148} onDark />
+      <View style={styles.copy}>
+        <Text style={styles.hero}>{copy.heroTitle}</Text>
+        <Text style={styles.sub}>{copy.heroSub}</Text>
+      </View>
 
-        <View style={styles.copy}>
-          <Text style={styles.hero}>{copy.heroTitle}</Text>
-          <Text style={styles.sub}>{copy.heroSub}</Text>
-        </View>
-
-        {loading ? (
-          <ActivityIndicator color="#fff" style={styles.loader} />
-        ) : statsLabel ? (
-          <PressableSpring
-            onPress={onStatsPress}
-            disabled={!onStatsPress}
-            scaleTo={0.98}
-            style={styles.statsPill}
-          >
-            <View style={styles.liveDot} />
-            <Text style={styles.statsText} numberOfLines={2}>
-              {statsLabel}
-            </Text>
-            {onStatsPress ? (
-              <Icon name="chevron-forward" size={14} color="rgba(255,255,255,0.7)" />
-            ) : null}
-          </PressableSpring>
-        ) : null}
-
-        <View style={styles.ctaRow}>
-          <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={styles.signupWrap}>
-            <ProDayGradient kind="cta" style={styles.signupBtn}>
-              <Text
-                style={[
-                  styles.signupText,
-                  productLine === 'sponsor' && styles.signupTextSponsor,
-                ]}
-              >
-                {productLine === 'sponsor' ? copy.ctaText : t('discover.createAccount')}
-              </Text>
-              <Icon
-                name="chevron-forward"
-                size={16}
-                color={productLine === 'sponsor' ? '#1C1917' : '#FFFFFF'}
-              />
-            </ProDayGradient>
-          </PressableSpring>
-          <PressableSpring onPress={onLogin} scaleTo={0.98} style={styles.loginLink}>
-            <Text style={styles.loginLinkText}>{t('discover.hasAccount')}</Text>
-          </PressableSpring>
-        </View>
+      <View style={styles.ctaCol}>
+        <PressableSpring onPress={onSignup} scaleTo={0.98} haptic style={styles.signupBtn}>
+          <Text style={styles.signupText}>{t('discover.createAccount')}</Text>
+        </PressableSpring>
+        <PressableSpring onPress={onLogin} scaleTo={0.98} style={styles.loginBtn}>
+          <Text style={styles.loginBtnText}>{t('discover.hasAccount')}</Text>
+        </PressableSpring>
       </View>
     </View>
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles(accent: string, onAccent: string, chrome: DiscoverHomeChrome) {
   return StyleSheet.create({
     shell: {
-      borderBottomLeftRadius: radius.xl + 4,
-      borderBottomRightRadius: radius.xl + 4,
-      overflow: 'hidden',
-      marginBottom: spacing.lg,
-    },
-    scrim: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.2)',
-    },
-    inner: {
       paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.xl + spacing.sm,
-      gap: spacing.lg,
-      alignItems: 'flex-start',
+      marginBottom: chrome.heroMarginBottom,
+      gap: chrome.shellGap,
+      alignItems: 'center',
     },
     universeBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      alignSelf: 'center',
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.sm,
-      borderRadius: radius.pill,
-      backgroundColor: 'rgba(255,255,255,0.12)',
+      paddingVertical: 2,
+      paddingHorizontal: 2,
     },
     universeText: {
-      fontSize: 11,
-      fontWeight: '800',
-      color: 'rgba(255,255,255,0.9)',
-      letterSpacing: 0.6,
+      fontSize: 12,
+      fontWeight: '600',
+      color: 'rgba(255,255,255,0.48)',
+      letterSpacing: 0.2,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    brandBlock: {
+      alignItems: 'center',
+      gap: chrome.brandGap,
+      width: '100%',
+    },
+    wordmark: {
+      fontFamily: fontFamily.brand,
+      fontSize: chrome.wordmarkSize,
+      letterSpacing: 3.2,
+      color: '#FFFFFF',
+      textTransform: 'uppercase',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    poleName: {
+      fontFamily: fontFamily.brandSemi,
+      fontSize: chrome.poleNameSize,
+      letterSpacing: 2.4,
+      color: accent,
+      textTransform: 'uppercase',
+      ...Platform.select({ android: { includeFontPadding: false } }),
     },
     copy: {
-      gap: spacing.sm,
-      alignSelf: 'stretch',
+      gap: chrome.copyGap,
+      alignItems: 'center',
+      width: '100%',
     },
     hero: {
-      fontSize: 34,
-      fontWeight: '900',
+      fontSize: chrome.heroFontSize,
+      fontWeight: '800',
       color: '#fff',
-      letterSpacing: -1,
-      lineHeight: 38,
+      letterSpacing: -0.5,
+      lineHeight: chrome.heroLineHeight,
+      textAlign: 'center',
     },
     sub: {
-      fontSize: 14,
-      lineHeight: 21,
+      fontSize: chrome.subFontSize,
+      lineHeight: chrome.subLineHeight,
       fontWeight: '500',
-      color: 'rgba(255,255,255,0.82)',
+      color: 'rgba(255,255,255,0.58)',
+      textAlign: 'center',
+      maxWidth: 320,
     },
-    loader: {
-      alignSelf: 'flex-start',
-    },
-    statsPill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.lg,
-      backgroundColor: 'rgba(255,255,255,0.14)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.2)',
+    ctaCol: {
       alignSelf: 'stretch',
-    },
-    liveDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: c.accent,
-    },
-    statsText: {
-      flex: 1,
-      fontSize: 13,
-      fontWeight: '600',
-      color: '#fff',
-      lineHeight: 18,
-    },
-    ctaRow: {
-      alignSelf: 'stretch',
-      gap: spacing.sm,
+      gap: chrome.ctaGap,
       alignItems: 'stretch',
-    },
-    signupWrap: {
-      borderRadius: radius.pill,
-      overflow: 'hidden',
     },
     signupBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: spacing.xs,
-      paddingVertical: spacing.md,
+      paddingVertical: chrome.signupPadV,
       paddingHorizontal: spacing.lg,
       borderRadius: radius.pill,
+      minHeight: chrome.ctaMinHeight,
+      backgroundColor: accent,
     },
     signupText: {
       fontSize: 15,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: onAccent,
+      ...Platform.select({ android: { includeFontPadding: false } }),
     },
-    signupTextSponsor: {
-      color: '#1C1917',
+    loginBtn: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xs,
+      minHeight: chrome.loginMinHeight,
     },
-    loginLink: {
-      alignSelf: 'center',
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-    },
-    loginLinkText: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: 'rgba(255,255,255,0.92)',
-      textDecorationLine: 'underline',
+    loginBtnText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: 'rgba(255,255,255,0.55)',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });

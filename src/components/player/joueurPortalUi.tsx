@@ -17,6 +17,7 @@ import {
 } from '../../content/joueurPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { joueurGamePress, joueurGameConfirm } from '../../features/joueur/joueurSfx';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 const Ctx = createContext<JoueurPageIdentity | null>(null);
 
@@ -79,8 +80,8 @@ export function JoueurXpBar({
   max?: number;
   color?: string;
 }) {
-  const identity = useJoueurPageIdentity();
-  const accent = color ?? identity?.accent ?? '#2F7BFF';
+  const theme = useJoueurTheme();
+  const accent = color ?? theme.accent;
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
     <View style={xpStyles.wrap}>
@@ -96,7 +97,7 @@ export function JoueurXpBar({
       ) : null}
       <View style={xpStyles.track}>
         <LinearGradient
-          colors={[accent, identity?.accentBright ?? accent]}
+          colors={[accent, theme.accentBright]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={[xpStyles.fill, { width: `${pct}%` }]}
@@ -142,8 +143,8 @@ export function JoueurLevelBadge({
   level: string | number;
   label?: string;
 }) {
-  const identity = useJoueurPageIdentity();
-  const accent = identity?.accent ?? '#2F7BFF';
+  const theme = useJoueurTheme();
+  const accent = theme.accent;
   return (
     <View style={[badgeStyles.root, { borderColor: accent }]}>
       <JoueurHudCorners color={accent} size={8} thickness={1.5} />
@@ -183,6 +184,7 @@ const badgeStyles = StyleSheet.create({
 
 /** Chrome Pôle Joueur — wash âge + HUD genre. */
 export function JoueurPageFrame({ identity, showHero = true, children }: FrameProps) {
+  const theme = useJoueurTheme();
   const styles = useMemo(() => createFrameStyles(identity), [identity]);
   const pulse = useSharedValue(0.35);
 
@@ -220,14 +222,14 @@ export function JoueurPageFrame({ identity, showHero = true, children }: FramePr
             <View key={i} style={styles.scanLine} />
           ))}
         </View>
-        <View style={[styles.accentBar, { backgroundColor: identity.accent }]} pointerEvents="none" />
-        <View style={[styles.rightBar, { backgroundColor: identity.accentBright }]} pointerEvents="none" />
+        <View style={[styles.accentBar, { backgroundColor: theme.accent }]} pointerEvents="none" />
+        <View style={[styles.rightBar, { backgroundColor: theme.accentBright }]} pointerEvents="none" />
 
         {showHero ? (
           <View style={styles.hero}>
-            <View style={[styles.heroPlate, { borderColor: identity.accent }]}>
-              <JoueurHudCorners color={identity.accent} size={10} />
-              <ProDayText variant="caption" style={[styles.eyebrow, { color: identity.accent }]}>
+            <View style={[styles.heroPlate, { borderColor: theme.accent }]}>
+              <JoueurHudCorners color={theme.accent} size={10} />
+              <ProDayText variant="caption" style={[styles.eyebrow, { color: theme.accent }]}>
                 {identity.hudLabel} · {identity.eyebrow}
               </ProDayText>
               <ProDayText variant="title" style={styles.title}>
@@ -263,7 +265,8 @@ export function JoueurSectionCard({
   quest?: boolean;
 }) {
   const identity = useJoueurPageIdentity();
-  const accent = identity?.accent ?? JOUEUR_SITE.ok;
+  const theme = useJoueurTheme();
+  const accent = theme.accent;
   const radius = identity?.radius ?? 4;
   const density = identity?.density ?? 'pro';
   const styles = useMemo(
@@ -338,8 +341,9 @@ export function JoueurActionRow({
   onSecondary?: () => void;
 }) {
   const identity = useJoueurPageIdentity();
-  const accent = identity?.accent ?? '#2F7BFF';
-  const accentBright = identity?.accentBright ?? accent;
+  const theme = useJoueurTheme();
+  const accent = theme.accent;
+  const accentBright = theme.accentBright;
   const radius = identity?.radius ?? 4;
   const styles = useMemo(
     () => createActionStyles(accent, accentBright, radius),

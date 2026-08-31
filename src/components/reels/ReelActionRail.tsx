@@ -57,7 +57,7 @@ const RailAction: React.FC<RailActionProps> = ({
   return (
     <PressableSpring
       style={styles.action}
-      scaleTo={0.86}
+      scaleTo={0.98}
       haptic
       onPress={onPress}
       accessibilityRole="button"
@@ -148,7 +148,7 @@ export const ReelActionRail: React.FC<ReelActionRailProps> = ({
 
     <PressableSpring
       style={styles.mute}
-      scaleTo={0.86}
+      scaleTo={0.98}
       haptic
       onPress={onToggleMute}
       accessibilityRole="button"

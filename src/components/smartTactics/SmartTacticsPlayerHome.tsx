@@ -19,11 +19,17 @@ import type { TacticalSharePayload } from '../../models/TacticalShare';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { JoueurXpBar } from '../player/joueurPortalUi';
-import { JOUEUR_SITE, resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
+import { resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { JoueurArcadeShell } from '../../features/joueur/JoueurGameFx';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
-import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import {
+  PLAYER_FAB_CONTENT_INSET,
+  TAB_BAR_CONTENT_INSET,
+} from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 
 function pickNextMatch(events: SmartTacticsChapterProps['events']) {
@@ -42,6 +48,11 @@ function pickNextMatch(events: SmartTacticsChapterProps['events']) {
  * Smart Tactics joueur — hub premium (briefing / XI / match).
  * Pas de compose coach, pas de « tactics run » arcade.
  */
+type SmartTacticsPlayerHomeProps = SmartTacticsChapterProps & {
+  /** Dans un shell parent (Saison) — pas de JoueurArcadeShell ni header dupliqué. */
+  embedded?: boolean;
+};
+
 export function SmartTacticsPlayerHome({
   profile,
   events,
@@ -49,12 +60,17 @@ export function SmartTacticsPlayerHome({
   wellnessByUid,
   refreshing,
   onRefresh,
-}: SmartTacticsChapterProps) {
+  embedded = false,
+}: SmartTacticsPlayerHomeProps) {
   const session = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
   const identity =
     session?.identity ??
     resolveJoueurPageIdentity({ ageGroup: 'adult', gender: 'neutral' });
-  const accent = identity.accent;
+  const accent = joueurTheme.accent;
+  const accentAlt = joueurTheme.accentBright;
+  const accentSoft = playerColors.accentSoft;
   const nav = useTabNavigationActions();
 
   const [briefs, setBriefs] = useState<TacticalSharePayload[]>([]);
@@ -98,38 +114,41 @@ export function SmartTacticsPlayerHome({
 
   const inLineup = Boolean(next?.lineup?.slots.some((s) => s.uid === profile.uid));
 
-  return (
-    <JoueurArcadeShell identity={identity} liveLabel="TACTIQUE" bootSound={false}>
-      <ScrollView
-        style={styles.root}
-        contentContainerStyle={styles.pad}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={Boolean(refreshing)}
-            onRefresh={onRefresh}
-            tintColor={accent}
-          />
-        }
-      >
-        <ProDayText variant="caption" style={[styles.kicker, { color: accent }]}>
-          {identity.hudLabel}
-        </ProDayText>
-        <ProDayText variant="title" style={styles.title}>
-          Tactique
-        </ProDayText>
-        <ProDayText variant="caption" style={styles.support}>
-          Briefing coach · XI publié · Coach IA pour progresser tactiquement.
-        </ProDayText>
+  const scroll = (
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={[styles.pad, embedded ? styles.padEmbedded : styles.padStandalone]}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={Boolean(refreshing)}
+          onRefresh={onRefresh}
+          tintColor={accent}
+        />
+      }
+    >
+      {!embedded ? (
+        <>
+          <ProDayText variant="caption" style={[styles.kicker, { color: accent }]}>
+            {identity.hudLabel}
+          </ProDayText>
+          <ProDayText variant="title" style={styles.title}>
+            Tactique
+          </ProDayText>
+          <ProDayText variant="caption" style={styles.support}>
+            Briefing coach · XI publié · Coach IA pour progresser tactiquement.
+          </ProDayText>
+        </>
+      ) : null}
 
-        <PressableSpring
+      <PressableSpring
           onPress={() => {
             joueurGamePress();
             nav.openDashboard('tactics_coach');
           }}
           scaleTo={0.97}
           haptic
-          style={[styles.coachCta, { borderColor: accent, backgroundColor: identity.soft }]}
+          style={[styles.coachCta, { borderColor: accent, backgroundColor: accentSoft }]}
         >
           <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
             COACH IA
@@ -143,7 +162,7 @@ export function SmartTacticsPlayerHome({
         </PressableSpring>
 
         {/* Next match hero */}
-        <View style={[styles.hero, { borderColor: JOUEUR_SITE.border }]}>
+        <View style={[styles.hero, { borderColor: PLAYER_DARK.border }]}>
           <LinearGradient
             colors={['rgba(255,255,255,0.06)', 'transparent']}
             style={StyleSheet.absoluteFill}
@@ -180,15 +199,15 @@ export function SmartTacticsPlayerHome({
                     styles.statusPill,
                     {
                       backgroundColor: inLineup
-                        ? 'rgba(94,234,212,0.16)'
-                        : JOUEUR_SITE.goldSoft,
+                        ? accentSoft
+                        : 'rgba(255,255,255,0.06)',
                     },
                   ]}
                 >
                   <ProDayText
                     variant="caption"
                     style={{
-                      color: inLineup ? JOUEUR_SITE.ok : JOUEUR_SITE.gold,
+                      color: inLineup ? accentAlt : accent,
                       fontWeight: '800',
                     }}
                   >
@@ -202,7 +221,7 @@ export function SmartTacticsPlayerHome({
                   </ProDayText>
                 </View>
                 {mySlot?.position_label ? (
-                  <ProDayText variant="caption" style={{ color: JOUEUR_SITE.muted }}>
+                  <ProDayText variant="caption" style={{ color: PLAYER_DARK.textMuted }}>
                     {mySlot.position_label}
                   </ProDayText>
                 ) : null}
@@ -213,7 +232,7 @@ export function SmartTacticsPlayerHome({
 
         {/* My readiness */}
         {me ? (
-          <View style={[styles.panel, { borderColor: JOUEUR_SITE.border }]}>
+          <View style={[styles.panel, { borderColor: PLAYER_DARK.border }]}>
             <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
               TA FORME
             </ProDayText>
@@ -232,7 +251,7 @@ export function SmartTacticsPlayerHome({
                   label="Disponibilité"
                   value={me.readiness_pct}
                   max={100}
-                  color={JOUEUR_SITE.ok}
+                  color={accentAlt}
                 />
               </View>
               <View style={[styles.ovrBadge, { borderColor: accent }]}>
@@ -248,7 +267,7 @@ export function SmartTacticsPlayerHome({
         ) : null}
 
         {/* Briefings */}
-        <View style={[styles.panel, { borderColor: JOUEUR_SITE.border }]}>
+        <View style={[styles.panel, { borderColor: PLAYER_DARK.border }]}>
           <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
             BRIEFING COACH
           </ProDayText>
@@ -277,13 +296,13 @@ export function SmartTacticsPlayerHome({
         </View>
 
         {/* Published XI */}
-        <View style={[styles.panel, { borderColor: JOUEUR_SITE.border }]}>
+        <View style={[styles.panel, { borderColor: PLAYER_DARK.border }]}>
           <View style={styles.panelHead}>
             <ProDayText variant="caption" style={[styles.panelKicker, { color: accent }]}>
               COMPOSITION
             </ProDayText>
             {board ? (
-              <ProDayText variant="caption" style={{ color: JOUEUR_SITE.muted }}>
+              <ProDayText variant="caption" style={{ color: PLAYER_DARK.textMuted }}>
                 {board.formation}
               </ProDayText>
             ) : null}
@@ -330,20 +349,20 @@ export function SmartTacticsPlayerHome({
                         styles.chip,
                         {
                           borderColor: mine
-                            ? JOUEUR_SITE.gold
+                            ? accent
                             : on
                               ? accent
-                              : JOUEUR_SITE.border,
+                              : PLAYER_DARK.border,
                           backgroundColor: mine
-                            ? JOUEUR_SITE.goldSoft
-                            : JOUEUR_SITE.surface,
+                            ? accentSoft
+                            : PLAYER_DARK.surface,
                         },
                       ]}
                     >
                       <ProDayText
                         variant="caption"
                         style={{
-                          color: mine ? JOUEUR_SITE.gold : JOUEUR_SITE.foreground,
+                          color: mine ? accent : PLAYER_DARK.text,
                           fontWeight: '800',
                           fontSize: 11,
                         }}
@@ -379,14 +398,23 @@ export function SmartTacticsPlayerHome({
               nav.setActiveTab('recrutement');
             }}
             scaleTo={0.97}
-            style={[styles.ctaSecondary, { borderColor: JOUEUR_SITE.border }]}
+            style={[styles.ctaSecondary, { borderColor: PLAYER_DARK.border }]}
           >
             <ProDayText variant="caption" style={styles.ctaSecondaryText}>
               Squad
             </ProDayText>
           </PressableSpring>
         </View>
-      </ScrollView>
+    </ScrollView>
+  );
+
+  if (embedded) {
+    return scroll;
+  }
+
+  return (
+    <JoueurArcadeShell identity={identity} liveLabel="TACTIQUE">
+      {scroll}
     </JoueurArcadeShell>
   );
 }
@@ -402,16 +430,23 @@ export function SmartTacticsPlayerHomeLoading({ accent }: { accent: string }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   pad: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xl + 10,
+    paddingHorizontal: spacing.lg,
+    paddingLeft: spacing.lg + 4,
+    paddingRight: PLAYER_FAB_CONTENT_INSET,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
     gap: spacing.md,
+  },
+  padEmbedded: {
+    paddingTop: spacing.sm,
+  },
+  padStandalone: {
+    paddingTop: spacing.xl + 10,
   },
   loader: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: JOUEUR_SITE.bg,
+    backgroundColor: PLAYER_DARK.bg,
   },
   kicker: {
     fontSize: 10,
@@ -419,23 +454,25 @@ const styles = StyleSheet.create({
     letterSpacing: 2.6,
   },
   title: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '700',
     fontSize: 34,
-    letterSpacing: -1,
+    letterSpacing: -0.3,
     marginTop: -4,
+    flexShrink: 1,
   },
   support: {
-    color: JOUEUR_SITE.muted,
+    color: PLAYER_DARK.textMuted,
     lineHeight: 20,
     marginTop: -8,
+    flexShrink: 1,
   },
   hero: {
     borderWidth: 1,
     borderRadius: 20,
     padding: spacing.md,
     gap: 6,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: PLAYER_DARK.surface,
     overflow: 'hidden',
     minHeight: 132,
   },
@@ -445,12 +482,12 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   heroTitle: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '700',
     fontSize: 24,
     letterSpacing: -0.5,
   },
-  heroBody: { color: JOUEUR_SITE.muted, lineHeight: 18 },
+  heroBody: { color: PLAYER_DARK.textMuted, lineHeight: 20, flexShrink: 1 },
   statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -467,7 +504,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: spacing.md,
     gap: spacing.sm,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: PLAYER_DARK.surface,
   },
   panelHead: {
     flexDirection: 'row',
@@ -480,7 +517,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   meRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
-  meName: { color: JOUEUR_SITE.foreground, fontWeight: '700' },
+  meName: { color: PLAYER_DARK.text, fontWeight: '700' },
   ovrBadge: {
     width: 72,
     height: 72,
@@ -491,11 +528,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.25)',
   },
   ovrValue: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '800',
     fontSize: 26,
   },
-  empty: { color: JOUEUR_SITE.muted, lineHeight: 18 },
+  empty: { color: PLAYER_DARK.textMuted, lineHeight: 20, flexShrink: 1 },
   briefList: { gap: 10 },
   briefRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   briefDot: {
@@ -505,10 +542,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   briefTitle: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '700',
   },
-  briefBody: { color: JOUEUR_SITE.muted, lineHeight: 17 },
+  briefBody: { color: PLAYER_DARK.textMuted, lineHeight: 20, flexShrink: 1 },
   chipRow: { gap: 8, paddingTop: 4 },
   chip: {
     paddingHorizontal: 12,
@@ -532,7 +569,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ctaPrimaryText: {
-    color: '#070b14',
+    color: PLAYER_DARK.bg,
     fontWeight: '800',
     fontSize: 13,
   },
@@ -542,10 +579,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     borderWidth: 1,
-    backgroundColor: JOUEUR_SITE.surface,
+    backgroundColor: PLAYER_DARK.surface,
   },
   ctaSecondaryText: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '800',
     fontSize: 13,
   },

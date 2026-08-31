@@ -53,9 +53,9 @@ export function buildCoachColorGrid(): string[] {
   for (let hi = 0; hi < HUE_COUNT; hi += 1) {
     const h = Math.round((hi * 360) / HUE_COUNT) % 360;
     for (let si = 0; si < SAT_COUNT; si += 1) {
-      const s = SAT_COUNT === 1 ? 65 : 30 + (si * 70) / (SAT_COUNT - 1);
+      const s = 30 + (si * 70) / (SAT_COUNT - 1);
       for (let li = 0; li < LIGHT_COUNT; li += 1) {
-        const l = LIGHT_COUNT === 1 ? 45 : 25 + (li * 45) / (LIGHT_COUNT - 1);
+        const l = 25 + (li * 45) / (LIGHT_COUNT - 1);
         const hex = normalizeCoachHexColor(hslToHex(h, s, l));
         if (hex && !seen.has(hex)) {
           seen.add(hex);
@@ -120,7 +120,7 @@ const COACH_COLOR_FAMILIES_RAW: { id: CoachColorFamilyId; colors: string[] }[] =
   {
     id: 'cool',
     colors: [
-      '#006CFC',
+      '#0054F0',
       '#1E88E5',
       '#2196F3',
       '#42A5F5',
@@ -236,30 +236,30 @@ const COACH_COLOR_FAMILIES_RAW: { id: CoachColorFamilyId; colors: string[] }[] =
   {
     id: 'proday',
     colors: [
-      '#006CFC',
-      '#0056CC',
-      '#007AFF',
-      '#32ADE6',
-      '#64D2FF',
-      '#5AC8FA',
-      '#0A84FF',
-      '#1E88E5',
-      '#2196F3',
-      '#1565C0',
-      '#1976D2',
-      '#0288D1',
-      '#0091EA',
-      '#2962FF',
-      '#304FFE',
-      '#448AFF',
-      '#536DFE',
-      '#004BA0',
-      '#003D82',
-      '#0077ED',
-      '#3399FF',
-      '#66B2FF',
-      '#99CCFF',
-      '#BBDEFB',
+      '#C5A059',
+      '#9A7B2F',
+      '#E8D5A3',
+      '#D4AF37',
+      '#B8860B',
+      '#F5E6C8',
+      '#A67C00',
+      '#C9A227',
+      '#DAA520',
+      '#E6BE8A',
+      '#CFB53B',
+      '#8B7355',
+      '#6B5638',
+      '#F0E68C',
+      '#FFD700',
+      '#BDB76B',
+      '#D2B48C',
+      '#BC9A6A',
+      '#C2B280',
+      '#E5C07B',
+      '#F4E4BC',
+      '#9E8759',
+      '#7A6535',
+      '#5C4A1F',
     ],
   },
 ];
@@ -284,8 +284,9 @@ const COACH_NAMED_COLORS: Record<string, { hex: string; label: string }> = {
   gris: { hex: '#757575', label: 'Gris' },
   bordeaux: { hex: '#880E4F', label: 'Bordeaux' },
   turquoise: { hex: '#26A69A', label: 'Turquoise' },
-  proday: { hex: '#006CFC', label: 'Bleu ProDay' },
-  'bleu proday': { hex: '#006CFC', label: 'Bleu ProDay' },
+  proday: { hex: '#C5A059', label: 'Or ProDay' },
+  'or proday': { hex: '#C5A059', label: 'Or ProDay' },
+  'bleu proday': { hex: '#C5A059', label: 'Or ProDay' },
 };
 
 const NAMED_COLOR_KEYS = Object.keys(COACH_NAMED_COLORS).sort((a, b) => b.length - a.length);

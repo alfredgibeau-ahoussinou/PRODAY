@@ -17,11 +17,17 @@ export type DashboardDeepLink =
   | 'gestion'
   | 'smart_tactics'
   | 'train'
+  | 'train_ai'
+  | 'train_coach'
   | 'tactics_coach';
 export type MatchsDeepLink = {
   eventId?: string;
   homeTab?: 'season' | 'matches' | 'convocations' | 'centre' | 'stats' | 'tournois' | 'competitions';
   hubChapter?: 'apercu' | 'live' | 'composition' | 'stats' | 'effectif';
+  /** Chapitre supporter Matchs (live, proday, …). */
+  supporterChapter?: 'upcoming' | 'live' | 'proday' | 'world' | 'follows' | 'broadcasts';
+  /** Force la conso du deep link même si l’onglet Matchs est déjà actif. */
+  applyNonce?: number;
   /** Ouvre directement Matchs à organiser / proposer / chercher. */
   view?: 'organize' | 'propose' | 'search';
 };
@@ -31,8 +37,26 @@ export type CarpoolDeepLink = {
   eventId?: string;
 };
 
+export type SetActiveTabOptions = {
+  returnTo?: MainTabId;
+};
+
+/** Calcule returnTab : explicite > retour dock > conserver l’existant. */
+export function resolveAutoReturnTab(
+  fromTab: MainTabId,
+  toTab: MainTabId,
+  primaryDockTabs: ReadonlySet<MainTabId>,
+  explicitReturnTo?: MainTabId,
+): MainTabId | null | undefined {
+  if (explicitReturnTo !== undefined) return explicitReturnTo;
+  if (primaryDockTabs.has(toTab)) return null;
+  if (primaryDockTabs.has(fromTab) && !primaryDockTabs.has(toTab)) return fromTab;
+  return undefined;
+}
+
 export interface TabNavigationActions {
-  setActiveTab: (tab: MainTabId) => void;
+  setActiveTab: (tab: MainTabId, options?: SetActiveTabOptions) => void;
+  goBackTab: () => void;
   openTeamEvent: (eventId: string) => void;
   openMatchs: (opts?: MatchsDeepLink) => void;
   openMercato: (view?: MercatoDeepLink) => void;

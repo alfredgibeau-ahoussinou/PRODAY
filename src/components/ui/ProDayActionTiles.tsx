@@ -77,7 +77,7 @@ export const ProDayActionTiles: React.FC<ProDayActionTilesProps> = ({
             <StaggerReveal key={item.id} index={index} delayStep={60} style={cellStyle}>
               <PressableSpring
                 style={styles.tileFill}
-                scaleTo={0.94}
+                scaleTo={0.97}
                 haptic
                 onPress={() => onPress(item.id)}
               >

@@ -23,6 +23,8 @@ const DEMO_AUTH_UIDS = [
   'proday_demo_coach',
   'proday_demo_player_login',
   'proday_demo_parent_login',
+  'proday_demo_child_u17',
+  'proday_demo_supporter_login',
 ];
 const DEMO_AUTH_EMAILS = [
   'lucas.demo@proday.app',
@@ -32,6 +34,8 @@ const DEMO_AUTH_EMAILS = [
   'coach.demo@proday.app',
   'player.demo@proday.app',
   'parent.demo@proday.app',
+  'child.demo@proday.app',
+  'supporter.demo@proday.app',
 ];
 
 const SEED_DOC_PREFIXES = [
@@ -45,7 +49,10 @@ const SEED_DOC_PREFIXES = [
   { collection: 'club_funding_goals', ids: ['seed_goal_1'] },
   { collection: 'message_threads', ids: ['seed_thread_1'] },
   { collection: 'team_events', ids: ['proday_demo_event_training_today'] },
-  { collection: 'memberships', ids: ['proday_demo_mem_player_login'] },
+  {
+    collection: 'memberships',
+    ids: ['proday_demo_mem_player_login', 'proday_demo_mem_child_u17'],
+  },
 ];
 
 function loadEnv() {

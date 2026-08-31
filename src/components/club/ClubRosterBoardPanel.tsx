@@ -19,10 +19,12 @@ import { userToProDayCard } from '../../utils/prodayFutCard';
 import {
   INTERNAL_MOVE_STATUS_LABELS,
   ROSTER_POSITION_LABELS,
+  ROSTER_URGENCY_LABELS,
   type ClubRosterNeed,
   type InternalMoveProposal,
   type InternalMoveStatus,
   type RosterMatchCandidate,
+  type RosterNeedUrgency,
   type RosterPositionId,
 } from '../../models/ClubRosterBoard';
 import type { User } from '../../models/User';
@@ -113,6 +115,8 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
   const [formPosition, setFormPosition] = useState<RosterPositionId>('defender');
   const [formNotes, setFormNotes] = useState('');
   const [formCount, setFormCount] = useState('1');
+  const [formUrgency, setFormUrgency] = useState<RosterNeedUrgency>('medium');
+  const [formQualities, setFormQualities] = useState('');
   const [formScope, setFormScope] = useState<'internal' | 'external'>('internal');
   const [saving, setSaving] = useState(false);
   const [cardPlayer, setCardPlayer] = useState<User | null>(null);
@@ -179,6 +183,11 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
         category: formCategory,
         position: formPosition,
         profile_notes: formNotes.trim() || undefined,
+        qualities: formQualities
+          .split(',')
+          .map((q) => q.trim())
+          .filter(Boolean),
+        urgency: formUrgency,
         players_needed: Math.max(1, parseInt(formCount, 10) || 1),
         scope: formScope,
         created_by_uid: profile.uid,
@@ -397,9 +406,38 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
             ))}
           </View>
 
+          <ProDayText variant="caption" muted>
+            Urgence
+          </ProDayText>
+          <View style={styles.wrapChips}>
+            {(Object.keys(ROSTER_URGENCY_LABELS) as RosterNeedUrgency[]).map((u) => (
+              <PressableSpring
+                key={u}
+                style={[
+                  styles.chip,
+                  formUrgency === u && { backgroundColor: c.brand },
+                  { borderColor: c.border },
+                ]}
+                onPress={() => setFormUrgency(u)}
+                scaleTo={0.96}
+              >
+                <ProDayText variant="caption" inverse={formUrgency === u}>
+                  {ROSTER_URGENCY_LABELS[u]}
+                </ProDayText>
+              </PressableSpring>
+            ))}
+          </View>
+
           <TextInput
             style={[styles.input, { borderColor: c.border, color: c.text }]}
-            placeholder="Urgence / contexte (blessure, départ…)"
+            placeholder="Qualités recherchées (séparées par des virgules)"
+            placeholderTextColor={c.textMuted}
+            value={formQualities}
+            onChangeText={setFormQualities}
+          />
+          <TextInput
+            style={[styles.input, { borderColor: c.border, color: c.text }]}
+            placeholder="Contexte (blessure, départ…)"
             placeholderTextColor={c.textMuted}
             value={formNotes}
             onChangeText={setFormNotes}
@@ -488,7 +526,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
                 </View>
                 <ProDayText variant="caption">
                   {n.category} · {ROSTER_POSITION_LABELS[n.position]} · {n.players_needed} joueur
-                  {n.players_needed > 1 ? 's' : ''}
+                  {n.players_needed > 1 ? 's' : ''} · {ROSTER_URGENCY_LABELS[n.urgency]}
                 </ProDayText>
                 {n.profile_notes ? (
                   <ProDayText variant="caption" muted numberOfLines={2}>

@@ -25,7 +25,7 @@ import { FeedPublishModal } from './FeedPublishModal';
 import { PlatformFeedSection } from './PlatformFeedSection';
 import { WeeklyQuestionComposeForm } from '../weeklyQuestion/WeeklyQuestionComposeForm';
 import { WeeklyQuestionReactionBar } from '../weeklyQuestion/WeeklyQuestionReactionBar';
-import { SUPPORTER_SITE } from '../../content/supporterPageIdentity';
+import { SUPPORTER_SITE } from '../../theme/prodaySupporterTheme';
 
 interface FeedCommunityPageProps {
   profile: User;
@@ -118,7 +118,7 @@ export const FeedCommunityPage: React.FC<FeedCommunityPageProps> = ({
   const publishButton = canPublish ? (
     <PressableSpring
       onPress={() => setPublishOpen(true)}
-      scaleTo={0.95}
+      scaleTo={0.98}
       haptic
       style={[styles.publishBtn, { backgroundColor: tribune ? SUPPORTER_SITE.accent : c.brand }]}
     >

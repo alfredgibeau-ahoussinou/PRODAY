@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
-import { useAppTheme } from '../../context/ProductLineContext';
+import { useMatchSkinTokens } from './matchCenterUi';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
 import { spacing } from '../../theme/designTokens';
 
@@ -17,11 +17,11 @@ export const MatchChapterIntro: React.FC<MatchChapterIntroProps> = ({
   title,
   subtitle,
 }) => {
-  const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
 
   return (
     <View style={styles.wrap}>
-      <ProDayText variant="caption" style={[styles.kicker, { color: colors.accent }]}>
+      <ProDayText variant="caption" style={[styles.kicker, { color: skin.accent }]}>
         {kicker}
       </ProDayText>
       <ProDayText variant="section" style={styles.title}>

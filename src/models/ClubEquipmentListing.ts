@@ -5,6 +5,56 @@
 export type EquipmentListingKind = 'sell' | 'give' | 'wanted';
 export type EquipmentCondition = 'new' | 'very_good' | 'good' | 'used';
 
+export type EquipmentCategory =
+  | 'crampons'
+  | 'survetement'
+  | 'maillot'
+  | 'gants'
+  | 'protege_tibias'
+  | 'ballon'
+  | 'sac'
+  | 'autre';
+
+export const EQUIPMENT_CATEGORIES: { id: EquipmentCategory; label: string }[] = [
+  { id: 'crampons', label: 'Crampons' },
+  { id: 'survetement', label: 'Survêtement' },
+  { id: 'maillot', label: 'Maillot' },
+  { id: 'gants', label: 'Gants' },
+  { id: 'protege_tibias', label: 'Protège-tibias' },
+  { id: 'ballon', label: 'Ballon' },
+  { id: 'sac', label: 'Sac' },
+  { id: 'autre', label: 'Autre' },
+];
+
+export const EQUIPMENT_CONDITIONS: { id: EquipmentCondition; label: string }[] = [
+  { id: 'new', label: 'Neuf' },
+  { id: 'very_good', label: 'Très bon' },
+  { id: 'good', label: 'Bon' },
+  { id: 'used', label: 'Usé' },
+];
+
+export interface EquipmentListingFilter {
+  category?: EquipmentCategory;
+  condition?: EquipmentCondition;
+  kind?: EquipmentListingKind;
+  maxPriceCents?: number;
+  size?: string;
+}
+
+export function filterEquipmentListings(
+  listings: ClubEquipmentListing[],
+  filter: EquipmentListingFilter,
+): ClubEquipmentListing[] {
+  return listings.filter((l) => {
+    if (filter.category && l.category !== filter.category) return false;
+    if (filter.condition && l.condition !== filter.condition) return false;
+    if (filter.kind && l.kind !== filter.kind) return false;
+    if (filter.maxPriceCents != null && l.price_cents != null && l.price_cents > filter.maxPriceCents) return false;
+    if (filter.size && l.size && !l.size.toLowerCase().includes(filter.size.toLowerCase())) return false;
+    return true;
+  });
+}
+
 export interface ClubEquipmentListing {
   id: string;
   club_id: string;
@@ -27,7 +77,10 @@ export interface ClubEquipmentListing {
   club_validated_at?: Date | null;
   created_at: Date;
   updated_at: Date;
-  status: 'draft' | 'published' | 'sold' | 'removed' | 'reported';
+  status: 'draft' | 'published' | 'sold' | 'given' | 'removed' | 'reported';
+  /** UID de l'acheteur/receveur quand status = sold/given. */
+  buyer_uid?: string | null;
+  sold_at?: Date | null;
 }
 
 export interface MarketplaceContactPolicy {

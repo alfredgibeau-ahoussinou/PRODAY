@@ -215,6 +215,44 @@ Fil d’actualités club (remplace partiellement WhatsApp).
 
 **Client :** `tournamentService.listMatches`, `createMatch`, `updateScore`
 
+## `adminSetClubCommercialAmount` (HTTPS callable, europe-west1)
+
+**Auth :** token admin (`customClaims.admin`)
+
+```json
+{
+  "clubId": "string",
+  "amountEur": 149.0,
+  "offerId": "club_premium | club_video_pro | club_live_duo",
+  "note": "string (optionnel)"
+}
+```
+
+**Effet :** écrit `commercial_*` sur `clubs/{clubId}`.
+
+## `adminCreateClubStripeInvoice` (HTTPS callable, europe-west1)
+
+**Auth :** token admin
+
+```json
+{
+  "clubId": "string",
+  "amountEur": 149.0,
+  "offerId": "club_live_duo (optionnel)",
+  "email": "optionnel",
+  "daysUntilDue": 30,
+  "send": true
+}
+```
+
+**Effet :** Stripe Invoice (`send_invoice`) → `stripe_invoice_*` sur le club + historique `club_stripe_invoices`. Secret Stripe côté Functions uniquement.
+
+**Client :** `src/services/clubCommercialBilling.service.ts`
+
+## `websiteClubBillingAdmin` / `adminClubBilling` (HTTP + callable)
+
+Proxy site `/api/admin/billing/*` et callable multi-action (`upsert_price`, `create_invoice`, …). Même core — voir `docs/CLUB_STRIPE_INVOICES.md`. Alias `veo_lives_2` → `club_live_duo`.
+
 ## Services client (TypeScript)
 
 | Service | Fichier |
@@ -224,3 +262,4 @@ Fil d’actualités club (remplace partiellement WhatsApp).
 | Tournois & live score | `src/services/tournament.service.ts` |
 | Événements & convocations | `src/services/teamEvents.service.ts` |
 | Push & géofencing | `src/services/notification.service.ts` |
+| Facturation club Stripe | `src/services/clubCommercialBilling.service.ts` |

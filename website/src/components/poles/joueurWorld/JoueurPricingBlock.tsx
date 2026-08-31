@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import {
+  NO_COMMITMENT_BADGE,
+  NO_COMMITMENT_FREE_LINE,
+  NO_COMMITMENT_OFFER_LINE,
+  POLE_REFERRAL_LINE,
+} from "@/lib/commercialCopy";
 import { ROUTES } from "@/lib/routes";
 
 type Props = {
@@ -15,7 +21,7 @@ type Props = {
  * Toujours visible dans les univers immersifs.
  */
 export function JoueurPricingBlock({
-  accent = "#4C8BFF",
+  accent = "#F5D04A",
   compact = false,
 }: Props) {
   const reduce = useReducedMotion();
@@ -37,7 +43,8 @@ export function JoueurPricingBlock({
         </h2>
         <p className="mt-3 max-w-xl text-sm text-white/55 sm:text-base">
           Jouer sur ProDay est gratuit. Tu paies seulement si tu veux l’assistant
-          IA (Pass) ou un coaching humain à l’heure.
+          IA (Pass) ou un coaching humain à l’heure. {NO_COMMITMENT_OFFER_LINE}{" "}
+          {POLE_REFERRAL_LINE}
         </p>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
@@ -51,7 +58,7 @@ export function JoueurPricingBlock({
               Gratuit
             </p>
             <p className="mt-2 font-display text-3xl text-white">0 €</p>
-            <p className="mt-1 text-sm text-white/50">Pour démarrer</p>
+            <p className="mt-1 text-sm text-white/50">{NO_COMMITMENT_FREE_LINE}</p>
             <ul className="mt-5 space-y-2 text-sm text-white/70">
               <li>· Profil & réseau</li>
               <li>· Convocations & covoiturage</li>
@@ -77,6 +84,9 @@ export function JoueurPricingBlock({
             <p className="mt-2 font-display text-3xl text-white">
               3,99 €<span className="text-base text-white/50"> / mois</span>
             </p>
+            <p className="mt-1 text-sm font-medium text-white/75">
+              {NO_COMMITMENT_BADGE}
+            </p>
             <p className="mt-1 text-sm text-white/60">
               L’assistant IA prépare tes entraînements perso
             </p>
@@ -87,8 +97,8 @@ export function JoueurPricingBlock({
               <li>· Passeport recruteur & objectifs</li>
             </ul>
             <p className="mt-4 text-xs leading-relaxed text-white/45">
-              Pas un coach humain : un programme guidé par l’IA, adapté à ton âge,
-              ton poste et tes objectifs.
+              {NO_COMMITMENT_OFFER_LINE} Pas un coach humain : un programme guidé
+              par l’IA, adapté à ton âge, ton poste et tes objectifs.
             </p>
           </motion.article>
 
@@ -106,7 +116,7 @@ export function JoueurPricingBlock({
               ~30 €<span className="text-base text-white/50"> / heure</span>
             </p>
             <p className="mt-1 text-sm text-white/50">
-              Tarif du coach · payé à la séance
+              Tarif du coach · payé à la séance · {NO_COMMITMENT_BADGE.toLowerCase()}
             </p>
             <ul className="mt-5 space-y-2 text-sm text-white/70">
               <li>· Vrai coach, créneau réservé</li>
@@ -116,19 +126,20 @@ export function JoueurPricingBlock({
             </ul>
             <p className="mt-4 text-xs leading-relaxed text-white/45">
               Ce n’est pas l’IA : c’est un coaching personnalisé en présentiel (ou
-              séance réservée), au tarif affiché par le coach.
+              séance réservée), au tarif affiché par le coach. Aucun abonnement
+              obligatoire.
             </p>
           </motion.article>
         </div>
 
         <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-4 sm:p-5">
           <p className="text-sm font-semibold text-white">
-            IA ou coach humain — ce n’est pas le même prix
+            IA ou coach humain · ce n’est pas le même prix
           </p>
           <p className="mt-2 text-sm leading-relaxed text-white/55">
             <strong className="text-white/80">Assistant IA</strong> = inclus dans
             le Pass Joueur à <strong className="text-white/80">3,99 €/mois</strong>{" "}
-            (programmes, objectifs, stats avancées).{" "}
+            ({NO_COMMITMENT_BADGE.toLowerCase()}).{" "}
             <strong className="text-white/80">Coach humain</strong> = séance à
             l’heure, environ <strong className="text-white/80">30 €/h</strong>{" "}
             selon le coach, sans abonnement obligatoire.

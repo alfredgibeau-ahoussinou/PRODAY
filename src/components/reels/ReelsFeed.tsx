@@ -518,7 +518,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
             <View style={styles.topActions}>
               <PressableSpring
                 style={styles.control}
-                scaleTo={0.9}
+                scaleTo={0.98}
                 haptic
                 onPress={() => setCollectionOpen(true)}
                 accessibilityRole="button"
@@ -530,7 +530,7 @@ export const ReelsFeed: React.FC<ReelsFeedProps> = ({ productLine }) => {
                 <PressableSpring
                   testID="reels-upload-open"
                   style={styles.control}
-                  scaleTo={0.9}
+                  scaleTo={0.98}
                   haptic
                   onPress={() => setUploadOpen(true)}
                   accessibilityRole="button"

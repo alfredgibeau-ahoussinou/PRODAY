@@ -101,7 +101,7 @@ export function brandForDemoPole(pole: DemoPoleId): { name: string; logo: string
     case "coach":
       return { name: "Pro Day Coach", logo: PRO_STAFF_BRAND.logo };
     case "sponsor":
-      return { name: "Pro Day Sponsor", logo: "/branding/logo-sponsor-picto.png" };
+      return { name: "Pro Day Sponsor", logo: "/branding/logo-proday-mark-sponsor.png" };
     default:
       return { name: AMATEUR_BRAND.name, logo: AMATEUR_BRAND.logo };
   }

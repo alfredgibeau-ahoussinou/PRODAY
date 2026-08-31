@@ -3,14 +3,17 @@ import { ScrollView, StyleSheet, Platform, View } from 'react-native';
 import type { MatchChapterId } from '../../content/matchChapters';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
 import { useTranslation } from '../../context/LocaleContext';
-import { getMatchChapters } from '../../i18n/localizedChapters';
+import { getMatchChapters, getJoueurMatchChapters } from '../../i18n/localizedChapters';
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import type { ResolvedPlayerThemeColors } from '../../utils/resolvePlayerThemeColors';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 
 interface MatchChapterRailProps {
   active: MatchChapterId;
@@ -25,13 +28,10 @@ interface MatchChapterRailProps {
 }
 
 const GAME_STAGE_LABELS: Partial<Record<MatchChapterId, string>> = {
-  calendrier: 'FIXTURE',
-  centre: 'LIVE',
-  convocations: 'CALLOUT',
-  stats: 'STATS',
-  amicaux: 'FRIENDLY',
-  tournois: 'CUP',
-  competitions: 'LEAGUE',
+  calendrier: 'Calendrier',
+  convocations: 'Convocations',
+  centre: 'En direct',
+  amicaux: 'Amicaux',
 };
 
 /** Navigation Match Center — onglets terminal (hairline, pas de pills). */
@@ -46,11 +46,17 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
 }) => {
   const { colors } = useAppTheme();
   const coachTokens = useCoachTokens();
+  const playerTheme = usePlayerThemeColors();
   const { t } = useTranslation();
-  const chapters = useMemo(() => getMatchChapters(t), [t]);
+  const chapters = useMemo(
+    () => (gameMode ? getJoueurMatchChapters(t) : getMatchChapters(t)),
+    [gameMode, t],
+  );
+  const chipAccent = gameMode ? playerTheme.accent : colors.accent;
+  const joueurChipBg = playerTheme.surface ?? PLAYER_DARK.surface;
   const styles = useMemo(
-    () => createStyles(colors.accent, gameMode, coachSkin, coachTokens),
-    [colors.accent, gameMode, coachSkin, coachTokens],
+    () => createStyles(chipAccent, gameMode, coachSkin, coachTokens, playerTheme),
+    [chipAccent, gameMode, coachSkin, coachTokens, playerTheme],
   );
 
   return (
@@ -88,6 +94,9 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
             <ProDayText
               variant="caption"
               style={[styles.label, on ? styles.labelOn : styles.labelOff]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
             >
               {label}
             </ProDayText>
@@ -96,8 +105,7 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
                 style={[
                   styles.badge,
                   {
-                    backgroundColor:
-                      ch.id === 'centre' ? MATCH_SITE.live : on ? colors.accent : MATCH_SITE.elevated,
+                    backgroundColor: on ? chipAccent : gameMode ? joueurChipBg : MATCH_SITE.elevated,
                   },
                 ]}
               >
@@ -106,7 +114,7 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
                 </ProDayText>
               </View>
             ) : null}
-            {on && !coachSkin ? <View style={[styles.underline, { backgroundColor: colors.accent }]} /> : null}
+            {on && !coachSkin ? <View style={[styles.underline, { backgroundColor: chipAccent }]} /> : null}
           </PressableSpring>
         );
       })}
@@ -119,24 +127,30 @@ function createStyles(
   gameMode = false,
   coachSkin = false,
   coachTokens?: CoachThemeTokens,
+  playerTheme?: Pick<ResolvedPlayerThemeColors, 'accent' | 'accentSoft' | 'surface'>,
 ) {
   const coachSurface = coachTokens?.surface ?? '#1C1C1E';
   const coachElevated = coachTokens?.elevated ?? '#2C2C2E';
+  const joueurChipBg = playerTheme?.surface ?? PLAYER_DARK.surface;
+  const joueurChipBorder = '#2A2A38';
+  const joueurChipOnBg = playerTheme?.accentSoft ?? PLAYER_DARK.accentSoft;
+  const joueurChipOnBorder = playerTheme?.accent ?? PLAYER_DARK.accent;
+  const joueurAccent = playerTheme?.accent ?? PLAYER_DARK.accent;
 
   return StyleSheet.create({
     wrap: {
       flexGrow: 0,
       flexShrink: 0,
       maxHeight: gameMode || coachSkin ? 52 : 48,
-      borderBottomWidth: coachSkin ? 0 : StyleSheet.hairlineWidth,
+      borderBottomWidth: coachSkin || gameMode ? 0 : StyleSheet.hairlineWidth,
       borderBottomColor: MATCH_SITE.border,
       backgroundColor: 'transparent',
     },
     scroll: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.xs,
-      paddingBottom: 0,
-      gap: gameMode || coachSkin ? 6 : 2,
+      paddingBottom: gameMode ? spacing.xs : 0,
+      gap: gameMode || coachSkin ? 8 : 2,
       alignItems: 'center',
     },
     tab: {
@@ -144,30 +158,36 @@ function createStyles(
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      paddingVertical: 10,
-      paddingHorizontal: spacing.md,
+      paddingVertical: gameMode ? 8 : 10,
+      paddingHorizontal: gameMode ? spacing.lg : spacing.md,
       borderBottomWidth: gameMode || coachSkin ? 0 : 2,
       borderBottomColor: 'transparent',
       borderRadius: gameMode || coachSkin ? 18 : 0,
-      borderWidth: gameMode ? StyleSheet.hairlineWidth : 0,
-      borderColor: gameMode ? 'rgba(255,255,255,0.1)' : 'transparent',
-      backgroundColor: coachSkin ? coachSurface : 'transparent',
+      borderWidth: gameMode ? 1 : 0,
+      borderColor: gameMode ? joueurChipBorder : 'transparent',
+      backgroundColor: coachSkin ? coachSurface : gameMode ? joueurChipBg : 'transparent',
+      minHeight: gameMode ? 36 : undefined,
     },
     tabOn: {
       backgroundColor: gameMode
-        ? `${accent}28`
+        ? joueurChipOnBg
         : coachSkin
           ? coachElevated
           : MATCH_SITE.soft,
+      borderColor: gameMode ? joueurChipOnBorder : gameMode ? joueurChipBorder : 'transparent',
     },
     label: {
       fontWeight: '800',
-      fontSize: gameMode ? 10 : 12,
-      letterSpacing: gameMode ? 1.1 : 0.3,
+      fontSize: gameMode ? 11 : 12,
+      letterSpacing: gameMode ? 0.3 : 0.3,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
-    labelOn: { color: accent },
-    labelOff: { color: MATCH_SITE.muted },
+    labelOn: {
+      color: gameMode ? joueurAccent : accent,
+    },
+    labelOff: {
+      color: gameMode ? PLAYER_DARK.textMuted : MATCH_SITE.muted,
+    },
     badge: {
       minWidth: 18,
       height: 16,

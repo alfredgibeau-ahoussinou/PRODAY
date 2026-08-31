@@ -292,19 +292,19 @@ export function getTabShortLabel(
     if (tab === 'messages') return 'Messages';
     if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'recrutement') return 'Équipe';
+    if (tab === 'progression') return 'Progression';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
     if (tab === 'sante') return 'Santé';
     if (tab === 'feed') return 'Perf.';
   }
   if (line === 'supporter') {
-    if (tab === 'home') return 'Tribune';
+    if (tab === 'home') return 'Accueil';
     if (tab === 'matchs') return 'Matchs';
-    if (tab === 'feed') return 'Suivis';
-    if (tab === 'messages') return 'Fil';
-    if (tab === 'reels') return 'Moments';
-    if (tab === 'profil') return 'Compte';
-    if (tab === 'shop') return 'Shop';
+    if (tab === 'feed') return 'Compét.';
+    if (tab === 'plus') return 'Clubs';
+    if (tab === 'reels') return 'Vidéos';
+    if (tab === 'profil') return 'Profil';
   }
   if (isProFamilyLine(line) && role === 'club') {
     if (tab === 'home') return 'Accueil';
@@ -337,6 +337,7 @@ export function getTabShortLabel(
     if (tab === 'messages') return 'Messages';
     if (tab === 'covoiturage') return 'Covoiturage';
     if (tab === 'recrutement') return 'Opportunités';
+    if (tab === 'progression') return 'Progression';
     if (tab === 'shop') return 'Shop';
     if (tab === 'profil') return 'Moi';
   }
@@ -364,10 +365,12 @@ function labelsFallback(tab: MainTabId): string {
     shop: 'Shop',
     sante: 'Santé',
     feed: 'Fil',
+    progression: 'Progression',
     reels: 'Reels',
     famille: 'Famille',
     messages: 'Messages',
     profil: 'Profil',
+    plus: 'Plus',
   };
   return labels[tab];
 }
@@ -510,8 +513,8 @@ export function getDashboardMetaForLine(
   if (line === 'supporter') {
     return {
       ...meta,
-      eyebrow: role === 'supporter' ? 'TRIBUNE SUPPORTER' : meta.eyebrow,
-      title: role === 'supporter' ? 'Votre tribune numérique' : meta.title,
+      eyebrow: role === 'supporter' ? 'PÔLE SUPPORTER' : meta.eyebrow,
+      title: role === 'supporter' ? 'PRODAY Supporter' : meta.title,
     };
   }
   if (isProFamilyLine(line)) {

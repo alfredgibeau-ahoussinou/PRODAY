@@ -1,13 +1,8 @@
 import { createContext, useContext } from 'react';
 import type { ParentChildBundle } from '../services/parentPortal.service';
+import type { ParentTabId } from '../features/parent/navigation/parentNavConfig';
 
-export type ParentTabId =
-  | 'home'
-  | 'profil'
-  | 'messages'
-  | 'agenda'
-  | 'trajet'
-  | 'reglages';
+export type { ParentTabId } from '../features/parent/navigation/parentNavConfig';
 
 export interface ParentShellContextValue {
   children: ParentChildBundle[];
@@ -15,6 +10,8 @@ export interface ParentShellContextValue {
   setSelectedUid: (uid: string) => void;
   reload: () => Promise<void>;
   loading: boolean;
+  activeTab: ParentTabId;
+  setActiveTab: (tab: ParentTabId) => void;
 }
 
 export const ParentShellContext = createContext<ParentShellContextValue | null>(null);

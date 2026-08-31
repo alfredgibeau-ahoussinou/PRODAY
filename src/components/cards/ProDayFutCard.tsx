@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Image,
   Modal,
@@ -6,22 +6,12 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  type ViewStyle,
 } from 'react-native';
-import Animated, {
-  Easing,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { radius, spacing } from '../../theme/designTokens';
+import { FUT18_TIER_THEME } from '../../theme/fut18PremiumPalette';
 import {
   PRODAY_CARD_ACTION_LABELS,
   type ProDayCardActionId,
@@ -29,47 +19,11 @@ import {
   type ProDayCardTier,
 } from '../../models/ProDayCard';
 
-const TIER_FIFA: Record<
-  ProDayCardTier,
-  { frame: [string, string, string]; face: [string, string, string]; ink: string; plate: string }
-> = {
-  bronze: {
-    frame: ['#e8c4a0', '#a67c52', '#6b4423'],
-    face: ['#c4a574', '#8b6914', '#5c4030'],
-    ink: '#2a1810',
-    plate: 'rgba(42,24,16,0.55)',
-  },
-  silver: {
-    frame: ['#f2f4f8', '#b8c0cc', '#6e7888'],
-    face: ['#d5dde8', '#9aa8bc', '#6a778a'],
-    ink: '#1a1e28',
-    plate: 'rgba(26,30,40,0.5)',
-  },
-  gold: {
-    frame: ['#fff6c8', '#f0d060', '#a07810'],
-    face: ['#f5e6a0', '#e0c040', '#c9a018'],
-    ink: '#1c1405',
-    plate: 'rgba(28,20,5,0.5)',
-  },
-  elite: {
-    frame: ['#b8fff0', '#2dd4bf', '#0f766e'],
-    face: ['#134e4a', '#0f766e', '#042f2e'],
-    ink: '#ecfdf5',
-    plate: 'rgba(0,0,0,0.45)',
-  },
-  legend: {
-    frame: ['#f5d0fe', '#c026d3', '#4a044e'],
-    face: ['#3b0764', '#7e22ce', '#1e0533'],
-    ink: '#faf5ff',
-    plate: 'rgba(0,0,0,0.5)',
-  },
-};
-
 type Props = {
   card: ProDayCardData;
   width?: number;
   onAction?: (action: ProDayCardActionId) => void;
-  /** Tap principal (ex. poser sur le XI). Si défini, remplace le flip au tap — long-press = aperçu. */
+  /** Tap principal (ex. poser sur le XI). Long-press = aperçu + actions. */
   onSelect?: () => void;
 };
 
@@ -78,93 +32,57 @@ function clampStat(n: number) {
 }
 
 export const ProDayFutCard: React.FC<Props> = ({ card, width = 220, onAction, onSelect }) => {
-  const [flipped, setFlipped] = useState(false);
   const [preview, setPreview] = useState(false);
-  const progress = useSharedValue(0);
-  const idle = useSharedValue(0);
   const styles = useMemo(() => createStyles(width), [width]);
-  const theme = TIER_FIFA[card.tier];
+  const theme = FUT18_TIER_THEME[card.tier];
 
-  useEffect(() => {
-    idle.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-  }, [idle]);
-
-  const flip = () => {
-    const next = !flipped;
-    setFlipped(next);
-    progress.value = withSpring(next ? 1 : 0, { damping: 16, stiffness: 180 });
-  };
-
-  const shellStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 900 },
-      { rotateY: `${interpolate(idle.value, [0, 1], [-7, 7])}deg` },
-      { rotateX: `${interpolate(idle.value, [0, 1], [4, -3])}deg` },
-      { translateY: interpolate(idle.value, [0, 1], [0, -5]) },
-    ],
-  }));
-
-  const frontStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 1000 },
-      { rotateY: `${interpolate(progress.value, [0, 1], [0, 180])}deg` },
-    ],
-    backfaceVisibility: 'hidden',
-  }));
-
-  const backStyle = useAnimatedStyle(() => ({
-    transform: [
-      { perspective: 1000 },
-      { rotateY: `${interpolate(progress.value, [0, 1], [180, 360])}deg` },
-    ],
-    backfaceVisibility: 'hidden',
-  }));
+  const openPreview = () => setPreview(true);
 
   return (
     <>
       <PressableSpring
         onPress={() => {
           if (onSelect) onSelect();
-          else flip();
+          else openPreview();
         }}
-        onLongPress={() => setPreview(true)}
-        scaleTo={0.97}
+        onLongPress={openPreview}
+        scaleTo={0.98}
         haptic
       >
-        <Animated.View style={[styles.shell, { shadowColor: theme.frame[1] }, shellStyle]}>
-          <Animated.View style={[styles.face, frontStyle]}>
-            <FifaChrome theme={theme} tier={card.tier}>
-              <FrontFace card={card} styles={styles} theme={theme} />
-            </FifaChrome>
-          </Animated.View>
-          <Animated.View style={[styles.face, backStyle]}>
-            <FifaChrome theme={theme} tier={card.tier}>
-              <BackFace card={card} styles={styles} theme={theme} />
-            </FifaChrome>
-          </Animated.View>
-        </Animated.View>
+        <View style={[styles.shell, { shadowColor: theme.frame[1] }]}>
+          <FifaChrome theme={theme} tier={card.tier}>
+            <FrontFace card={card} styles={styles} theme={theme} />
+          </FifaChrome>
+        </View>
       </PressableSpring>
 
       <Modal visible={preview} transparent animationType="fade" onRequestClose={() => setPreview(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setPreview(false)}>
           <Pressable
-            style={[styles.modalSheet, { borderColor: `${theme.frame[1]}99` }]}
+            style={[styles.modalSheet, { borderColor: theme.rim }]}
             onPress={(e) => e.stopPropagation()}
           >
-            <LinearGradient colors={[theme.face[1], '#050508']} style={StyleSheet.absoluteFill} />
+            <LinearGradient colors={[theme.face[0], FUT18_TIER_THEME.gold.face[2]]} style={StyleSheet.absoluteFill} />
             <ProDayText variant="caption" style={{ color: theme.frame[0], letterSpacing: 2 }}>
               {card.role.toUpperCase()} · {card.tier.toUpperCase()}
             </ProDayText>
             <ProDayText variant="section" style={styles.modalTitle}>
               {card.displayName}
             </ProDayText>
+            {card.role === 'player' ? (
+              <StatGrid
+                stats={[
+                  { l: 'MAT', v: card.matches },
+                  { l: 'BUT', v: card.goals },
+                  { l: 'PAS', v: card.assists },
+                  { l: 'FRM', v: card.formPct },
+                  { l: 'POT', v: card.potential },
+                  { l: 'MIN', v: card.minutesPlayed },
+                ]}
+                ink={theme.ink}
+                compact={false}
+              />
+            ) : null}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actionsRow}>
               {card.actions.map((action) => (
                 <Pressable
@@ -199,13 +117,20 @@ function FifaChrome({
   tier,
 }: {
   children: React.ReactNode;
-  theme: (typeof TIER_FIFA)[ProDayCardTier];
+  theme: (typeof FUT18_TIER_THEME)[ProDayCardTier];
   tier: string;
 }) {
   return (
     <LinearGradient colors={theme.frame} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={chrome.frame}>
-      <LinearGradient colors={theme.face} start={{ x: 0.2, y: 0 }} end={{ x: 0.9, y: 1 }} style={chrome.face}>
-        <ProDayText variant="caption" style={[chrome.brand, { color: theme.ink }]}>
+      <LinearGradient colors={theme.face} start={{ x: 0.15, y: 0 }} end={{ x: 0.85, y: 1 }} style={chrome.face}>
+        <LinearGradient
+          colors={['rgba(255,255,255,0.14)', 'transparent']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.6, y: 0.5 }}
+          style={chrome.shine}
+          pointerEvents="none"
+        />
+        <ProDayText variant="caption" style={[chrome.brand, { color: theme.inkMuted }]}>
           ProDay · {tier}
         </ProDayText>
         {children}
@@ -221,7 +146,7 @@ function FrontFace({
 }: {
   card: ProDayCardData;
   styles: ReturnType<typeof createStyles>;
-  theme: (typeof TIER_FIFA)[ProDayCardTier];
+  theme: (typeof FUT18_TIER_THEME)[ProDayCardTier];
 }) {
   const ink = theme.ink;
 
@@ -232,8 +157,6 @@ function FrontFace({
       { l: 'SHO', v: clampStat(ovr - 6 + card.goals) },
       { l: 'PAS', v: clampStat(ovr - 4 + card.assists) },
       { l: 'DRI', v: clampStat(ovr - 1) },
-      { l: 'DEF', v: clampStat(ovr - 18) },
-      { l: 'PHY', v: clampStat(card.formPct * 0.95) },
     ];
     return (
       <View style={styles.col}>
@@ -245,17 +168,17 @@ function FrontFace({
             <ProDayText variant="caption" style={[styles.pos, { color: ink }]}>
               {card.primaryPosition}
             </ProDayText>
-            <ProDayText variant="caption" style={{ color: ink, fontSize: 8, opacity: 0.8 }}>
+            <ProDayText variant="caption" style={[styles.metaTiny, { color: theme.inkMuted }]}>
               {card.nationality.slice(0, 3).toUpperCase()}
             </ProDayText>
-            <ProDayText variant="caption" style={{ color: ink, fontSize: 8, opacity: 0.8 }}>
+            <ProDayText variant="caption" style={[styles.metaTiny, { color: theme.inkMuted }]} numberOfLines={1}>
               {card.clubName.slice(0, 8)}
             </ProDayText>
           </View>
           <Photo photoUrl={card.photoUrl} styles={styles} />
         </View>
         <NamePlate name={card.lastName} theme={theme} />
-        <StatGrid stats={stats} ink={ink} />
+        <StatGrid stats={stats} ink={ink} compact />
       </View>
     );
   }
@@ -307,46 +230,6 @@ function FrontFace({
   );
 }
 
-function BackFace({
-  card,
-  styles,
-  theme,
-}: {
-  card: ProDayCardData;
-  styles: ReturnType<typeof createStyles>;
-  theme: (typeof TIER_FIFA)[ProDayCardTier];
-}) {
-  return (
-    <View style={[styles.col, { paddingTop: spacing.sm }]}>
-      <ProDayText variant="section" style={[styles.backTitle, { color: theme.ink }]}>
-        {card.displayName}
-      </ProDayText>
-      {card.role === 'player' ? (
-        <>
-          <StatGrid
-            stats={[
-              { l: 'MAT', v: card.matches },
-              { l: 'BUT', v: card.goals },
-              { l: 'PAS', v: card.assists },
-              { l: 'FRM', v: card.formPct },
-              { l: 'POT', v: card.potential },
-              { l: 'MIN', v: card.minutesPlayed },
-            ]}
-            ink={theme.ink}
-          />
-          <ProDayText variant="caption" style={{ color: theme.ink, opacity: 0.75, marginTop: 8 }}>
-            {card.recruitmentStatus}
-          </ProDayText>
-        </>
-      ) : (
-        <ProDayText variant="caption" style={{ color: theme.ink, opacity: 0.8, marginTop: 8 }}>
-          {card.role} · {card.tier}
-        </ProDayText>
-      )}
-    </View>
-  );
-}
-
 function Photo({
   photoUrl,
   styles,
@@ -370,10 +253,10 @@ function NamePlate({
   theme,
 }: {
   name: string;
-  theme: (typeof TIER_FIFA)[ProDayCardTier];
+  theme: (typeof FUT18_TIER_THEME)[ProDayCardTier];
 }) {
   return (
-    <View style={[nameStyles.plate, { backgroundColor: theme.plate }]}>
+    <View style={[nameStyles.plate, { backgroundColor: theme.plate, borderColor: theme.rim }]}>
       <ProDayText variant="body" style={[nameStyles.text, { color: theme.ink }]} numberOfLines={1}>
         {name}
       </ProDayText>
@@ -381,15 +264,23 @@ function NamePlate({
   );
 }
 
-function StatGrid({ stats, ink }: { stats: Array<{ l: string; v: string | number }>; ink: string }) {
+function StatGrid({
+  stats,
+  ink,
+  compact,
+}: {
+  stats: Array<{ l: string; v: string | number }>;
+  ink: string;
+  compact?: boolean;
+}) {
   return (
-    <View style={statStyles.grid}>
+    <View style={[statStyles.grid, compact && statStyles.gridCompact]}>
       {stats.map((s) => (
         <View key={s.l} style={statStyles.row}>
-          <ProDayText variant="caption" style={{ color: ink, opacity: 0.7, fontSize: 9, fontWeight: '800' }}>
+          <ProDayText variant="caption" style={[statStyles.label, { color: ink }]}>
             {s.l}
           </ProDayText>
-          <ProDayText variant="caption" style={{ color: ink, fontSize: 12, fontWeight: '900' }}>
+          <ProDayText variant="caption" style={[statStyles.value, { color: ink }]}>
             {s.v}
           </ProDayText>
         </View>
@@ -399,8 +290,9 @@ function StatGrid({ stats, ink }: { stats: Array<{ l: string; v: string | number
 }
 
 const chrome = StyleSheet.create({
-  frame: { flex: 1, borderRadius: 14, padding: 4, overflow: 'hidden' },
-  face: { flex: 1, borderRadius: 11, padding: spacing.sm, paddingTop: spacing.md, overflow: 'hidden' },
+  frame: { flex: 1, borderRadius: 14, padding: 3, overflow: 'hidden' },
+  face: { flex: 1, borderRadius: 12, padding: spacing.sm, paddingTop: spacing.md, overflow: 'hidden' },
+  shine: { ...StyleSheet.absoluteFillObject, borderRadius: 12 },
   brand: {
     position: 'absolute',
     top: 4,
@@ -412,60 +304,60 @@ const chrome = StyleSheet.create({
     letterSpacing: 1.4,
     fontWeight: '900',
     textTransform: 'uppercase',
-    opacity: 0.7,
   },
 });
 
 const nameStyles = StyleSheet.create({
   plate: {
-    marginTop: 4,
-    paddingVertical: 4,
+    marginTop: 6,
+    paddingVertical: 5,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.2)',
   },
   text: {
     textAlign: 'center',
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     fontSize: 13,
   },
 });
 
 const statStyles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4, paddingHorizontal: 2 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 6, paddingHorizontal: 2 },
+  gridCompact: { marginTop: 4 },
   row: {
     width: '50%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
+  label: { opacity: 0.72, fontSize: 9, fontWeight: '800' },
+  value: { fontSize: 12, fontWeight: '900' },
 });
 
 function createStyles(width: number) {
-  const height = Math.round(width * 1.4);
+  const height = Math.round(width * 1.38);
   return StyleSheet.create({
     shell: {
       width,
       height,
       borderRadius: 14,
-      shadowOffset: { width: 0, height: 14 },
-      shadowOpacity: 0.5,
-      shadowRadius: 18,
-      elevation: 14,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.28,
+      shadowRadius: 14,
+      elevation: 10,
     },
-    face: { ...StyleSheet.absoluteFillObject } as ViewStyle,
     col: { flex: 1 },
     topRow: { flex: 1, flexDirection: 'row', gap: 4, minHeight: 0 },
-    ratingCol: { width: 56, alignItems: 'center', paddingTop: 4 },
-    ovr: { fontSize: 34, fontWeight: '900', lineHeight: 36 },
-    pos: { fontWeight: '900', fontSize: 12, letterSpacing: 1, marginTop: 2 },
+    ratingCol: { width: 52, alignItems: 'center', paddingTop: 6 },
+    ovr: { fontSize: 32, fontWeight: '900', lineHeight: 34 },
+    pos: { fontWeight: '900', fontSize: 11, letterSpacing: 1, marginTop: 2 },
+    metaTiny: { fontSize: 8, fontWeight: '700', marginTop: 2 },
     photoWrap: { flex: 1, borderRadius: radius.sm, overflow: 'hidden' },
     photo: { width: '100%', height: '100%' },
-    photoFallback: { backgroundColor: 'rgba(0,0,0,0.15)' },
-    backTitle: { fontWeight: '900', textTransform: 'uppercase', textAlign: 'center' },
+    photoFallback: { backgroundColor: 'rgba(0,0,0,0.2)' },
     modalBackdrop: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.72)',

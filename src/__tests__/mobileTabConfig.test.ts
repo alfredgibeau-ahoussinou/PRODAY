@@ -10,30 +10,36 @@ describe('mobileTabConfig', () => {
     expect(rail.right).toContain('profil');
   });
 
-  it('canonise joueur homme vers dock jeu (JOUER / GROUPE / MATCH / DÉFI / CARTE)', () => {
+  it('canonise joueur homme vers dock 5 onglets (ACCUEIL / MATCHS / SAISON / PROFIL / PLUS)', () => {
     const rail = getMobileRailLayout('homme', 'player');
-    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'feed', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil', 'plus']);
     expect(rail.overflow).toEqual(
-      expect.arrayContaining(['covoiturage', 'reels', 'messages', 'shop']),
+      expect.arrayContaining(['progression', 'recrutement', 'covoiturage', 'reels', 'messages', 'shop']),
     );
     expect(rail.overflow).not.toContain('sante');
     expect(rail.center).toBeNull();
   });
 
-  it('affiche une rangée plate pour Supporter (sans Reels central)', () => {
+  it('affiche une rangée plate scaffold supporter (Accueil · Matchs · Compétitions · Clubs · Vidéos · Profil)', () => {
     const rail = getMobileRailLayout('supporter', 'supporter');
-    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'messages', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'plus', 'reels', 'profil']);
     expect(rail.center).toBeNull();
     expect(rail.overflow).toEqual([]);
     expect(rail.left).toEqual([]);
     expect(rail.right).toEqual([]);
   });
 
-  it('affiche le menu amateur joueur en dock jeu', () => {
+  it('utilise le même dock flat pour parent guest (line supporter, role parent)', () => {
+    const rail = getMobileRailLayout('supporter', 'parent');
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'plus', 'reels', 'profil']);
+    expect(rail.overflow).toEqual([]);
+  });
+
+  it('affiche le menu amateur joueur en dock 5 onglets', () => {
     const rail = getMobileRailLayout('amateur', 'player');
-    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'feed', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil', 'plus']);
     expect(rail.overflow).toEqual(
-      expect.arrayContaining(['covoiturage', 'reels', 'messages', 'shop']),
+      expect.arrayContaining(['progression', 'recrutement', 'covoiturage', 'reels', 'messages', 'shop']),
     );
     expect(rail.overflow).not.toContain('sante');
     expect(rail.center).toBeNull();
@@ -53,9 +59,9 @@ describe('mobileTabConfig', () => {
     expect(rail.overflow).not.toContain('profil');
   });
 
-  it('affiche le menu santé praticien en rangée plate', () => {
+  it('réduit le menu santé / physio aux onglets de repli (rôle retiré)', () => {
     const rail = getMobileRailLayout('sante', 'physio');
-    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'messages', 'profil']);
+    expect(rail.flat).toEqual(['home', 'profil']);
     expect(rail.center).toBeNull();
     expect(rail.overflow).toEqual([]);
   });
@@ -87,11 +93,11 @@ describe('mobileTabConfig', () => {
     ]);
   });
 
-  it('affiche le menu pro joueur en dock jeu', () => {
+  it('affiche le menu pro joueur en dock 5 onglets', () => {
     const rail = getMobileRailLayout('pro', 'player');
-    expect(rail.flat).toEqual(['home', 'recrutement', 'matchs', 'feed', 'profil']);
+    expect(rail.flat).toEqual(['home', 'matchs', 'feed', 'profil', 'plus']);
     expect(rail.overflow).toEqual(
-      expect.arrayContaining(['covoiturage', 'reels', 'messages', 'shop']),
+      expect.arrayContaining(['progression', 'recrutement', 'covoiturage', 'reels', 'messages', 'shop']),
     );
     expect(rail.overflow).not.toContain('sante');
     expect(rail.center).toBeNull();
@@ -101,11 +107,11 @@ describe('mobileTabConfig', () => {
 describe('joueurGameMenu labels', () => {
   it('exposes arcade short labels', () => {
     expect(getJoueurGameTabLabel('home', 'youth')).toBe('JOUER');
-    expect(getJoueurGameTabLabel('recrutement', 'adult')).toBe('CLUB');
-    expect(getJoueurGameTabLabel('recrutement', 'teen')).toBe('GROUPE');
-    expect(getJoueurGameTabLabel('matchs', 'youth')).toBe('MATCH');
-    expect(getJoueurGameTabLabel('feed', 'teen')).toBe('TACTIQUE');
-    expect(getJoueurGameTabLabel('profil', 'teen')).toBe('CARTE');
-    expect(getJoueurGameTabLabel('profil', 'adult')).toBe('CARTE');
+    expect(getJoueurGameTabLabel('recrutement', 'adult')).toBe('ÉQUIPE');
+    expect(getJoueurGameTabLabel('matchs', 'adult')).toBe('MATCHS');
+    expect(getJoueurGameTabLabel('feed', 'adult')).toBe('SAISON');
+    expect(getJoueurGameTabLabel('progression', 'teen')).toBe('PROGRESS');
+    expect(getJoueurGameTabLabel('profil', 'adult')).toBe('PROFIL');
+    expect(getJoueurGameTabLabel('plus', 'adult')).toBe('PLUS');
   });
 });

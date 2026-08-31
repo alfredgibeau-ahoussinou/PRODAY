@@ -11,6 +11,7 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -26,6 +27,7 @@ export const VoiceReflectionRecorder: React.FC<VoiceReflectionRecorderProps> = (
   onUriChange,
 }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const state = useAudioRecorderState(recorder);
@@ -84,12 +86,12 @@ export const VoiceReflectionRecorder: React.FC<VoiceReflectionRecorderProps> = (
         style={[
           styles.btn,
           {
-            backgroundColor: state.isRecording ? colors.accentSoft : colors.surfaceMuted,
-            borderColor: state.isRecording ? colors.accent : colors.border,
+            backgroundColor: state.isRecording ? playerColors.accentSoft : colors.surfaceMuted,
+            borderColor: state.isRecording ? playerColors.accent : colors.border,
           },
         ]}
       >
-        <Icon name={state.isRecording ? 'close' : 'volume-high'} size={16} color={colors.accent} />
+        <Icon name={state.isRecording ? 'close' : 'volume-high'} size={16} color={playerColors.accent} />
         <ProDayText variant="caption" accent>
           {state.isRecording ? t('activity.log.voiceStop') : t('activity.log.voiceStart')}
         </ProDayText>

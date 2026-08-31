@@ -8,6 +8,10 @@ import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
+import { useTranslation } from '../../context/LocaleContext';
+import { formatThreadPreview } from '../../utils/messagesInboxModel';
 
 function formatThreadTime(date: Date): string {
   const now = new Date();
@@ -25,7 +29,7 @@ interface MessageThreadRowProps {
   kineLabel?: string;
   onPress: () => void;
   disabled?: boolean;
-  variant?: 'default' | 'coach';
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
@@ -36,12 +40,20 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
   variant,
 }) => {
   const { colors } = useAppTheme();
+  const { t } = useTranslation();
   const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
   const coachTokens = useCoachTokens();
-  const styles = useMemo(() => createStyles(colors, coach, coachTokens), [colors, coach, coachTokens]);
+  const joueurTheme = useJoueurTheme();
+  const styles = useMemo(
+    () => createStyles(colors, coach, joueur, coachTokens, joueurTheme),
+    [colors, coach, joueur, coachTokens, joueurTheme],
+  );
   const isTeamGroup = thread.thread_kind === 'team_group';
   const initial = thread.participant_name.charAt(0).toUpperCase();
   const unread = Boolean(thread.unread);
+  const preview = formatThreadPreview(thread.last_message);
+  const unreadLabel = t('messages.inbox.unreadBadge');
 
   if (coach) {
     return (
@@ -71,15 +83,82 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
               style={[styles.coachPreview, unread && styles.previewUnread]}
               numberOfLines={1}
             >
-              {thread.last_message || 'Nouvelle conversation'}
+              {preview}
             </Text>
             {kineLabel ? (
               <View style={styles.coachTag}>
                 <Text style={styles.coachTagText}>{kineLabel}</Text>
               </View>
             ) : null}
+            {unread ? (
+              <View style={styles.coachUnreadPill}>
+                <Text style={styles.coachUnreadPillText}>{unreadLabel}</Text>
+              </View>
+            ) : null}
           </View>
           {unread ? <View style={styles.coachDot} /> : null}
+        </View>
+      </PressableSpring>
+    );
+  }
+
+  if (joueur) {
+    const accent = joueurTheme.accent;
+    return (
+      <PressableSpring
+        onPress={onPress}
+        disabled={disabled}
+        haptic
+        scaleTo={0.98}
+        style={[styles.joueurCard, unread && { borderColor: accent }]}
+      >
+        {unread ? <View style={[styles.stripe, { backgroundColor: accent }]} /> : null}
+        <View style={styles.inner}>
+          <View
+            style={[
+              styles.joueurAvatar,
+              { backgroundColor: unread ? accent : JOUEUR_SURFACES.chip },
+            ]}
+          >
+            {isTeamGroup ? (
+              <Icon name="people" size={20} color={unread ? '#fff' : accent} variant="filled" />
+            ) : (
+              <Text style={[styles.joueurInitial, { color: unread ? '#fff' : accent }]}>
+                {initial}
+              </Text>
+            )}
+          </View>
+          <View style={styles.body}>
+            <View style={styles.head}>
+              <Text
+                style={[styles.joueurName, unread && styles.nameUnread]}
+                numberOfLines={1}
+              >
+                {thread.participant_name}
+              </Text>
+              <Text style={styles.joueurTime}>{formatThreadTime(thread.updated_at)}</Text>
+            </View>
+            <Text
+              style={[styles.joueurPreview, unread && styles.previewUnread]}
+              numberOfLines={2}
+            >
+              {preview}
+            </Text>
+            {kineLabel ? (
+              <View style={[styles.joueurTag, { backgroundColor: joueurTheme.surface }]}>
+                <Text style={[styles.joueurTagText, { color: accent }]}>{kineLabel}</Text>
+              </View>
+            ) : null}
+            {unread ? (
+              <View style={[styles.joueurUnreadPill, { backgroundColor: joueurTheme.surface }]}>
+                <Text style={[styles.joueurUnreadPillText, { color: accent }]}>{unreadLabel}</Text>
+              </View>
+            ) : null}
+          </View>
+          <View style={styles.trail}>
+            {unread ? <View style={[styles.dot, { backgroundColor: accent }]} /> : null}
+            <Icon name="chevron-forward" size={16} color={joueurTheme.inkMuted} />
+          </View>
         </View>
       </PressableSpring>
     );
@@ -155,12 +234,17 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
             ]}
             numberOfLines={2}
           >
-            {thread.last_message || 'Nouvelle conversation'}
+            {preview}
           </Text>
 
           {kineLabel ? (
             <View style={[styles.tag, { backgroundColor: colors.accentSoft }]}>
               <Text style={[styles.tagText, { color: colors.accent }]}>{kineLabel}</Text>
+            </View>
+          ) : null}
+          {unread ? (
+            <View style={[styles.unreadPill, { backgroundColor: colors.accentSoft }]}>
+              <Text style={[styles.unreadPillText, { color: colors.accent }]}>{unreadLabel}</Text>
             </View>
           ) : null}
         </View>
@@ -177,7 +261,9 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
 function createStyles(
   c: { accent: string },
   coach: boolean,
+  joueur: boolean,
   coachTokens: CoachThemeTokens,
+  joueurTheme: ReturnType<typeof useJoueurTheme>,
 ) {
   return StyleSheet.create({
     card: {
@@ -258,6 +344,20 @@ function createStyles(
       letterSpacing: 0.3,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
+    unreadPill: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+    },
+    unreadPillText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.2,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
     trail: {
       alignItems: 'center',
       justifyContent: 'center',
@@ -330,11 +430,97 @@ function createStyles(
       color: coachTokens.accent,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
+    coachUnreadPill: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+      backgroundColor: coachTokens.accent,
+    },
+    coachUnreadPillText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      color: '#fff',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
     coachDot: {
       width: 10,
       height: 10,
       borderRadius: 5,
       backgroundColor: coachTokens.accent,
+    },
+    joueurCard: {
+      borderRadius: joueurTheme.cardRadius,
+      backgroundColor: JOUEUR_SURFACES.card,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: joueurTheme.border,
+      overflow: 'hidden',
+      marginBottom: spacing.sm,
+    },
+    joueurAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: joueurTheme.cardRadius,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    joueurInitial: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 18,
+      fontWeight: '800',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurName: {
+      flex: 1,
+      fontFamily: fontFamily.extrabold,
+      fontSize: 16,
+      fontWeight: '800',
+      color: joueurTheme.ink,
+      letterSpacing: -0.2,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurTime: {
+      fontFamily: fontFamily.semibold,
+      fontSize: 11,
+      fontWeight: '600',
+      color: joueurTheme.inkMuted,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurPreview: {
+      fontFamily: fontFamily.regular,
+      fontSize: 13,
+      lineHeight: 18,
+      color: joueurTheme.inkMuted,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurTag: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+    },
+    joueurTagText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
+    joueurUnreadPill: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      marginTop: 2,
+    },
+    joueurUnreadPillText: {
+      fontFamily: fontFamily.extrabold,
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.2,
+      ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });
 }

@@ -25,6 +25,7 @@ export const MatchTalkPanel: React.FC<{
   const [objective, setObjective] = useState('');
   const [points, setPoints] = useState('');
   const [formation, setFormation] = useState('');
+  const [opponentNotes, setOpponentNotes] = useState('');
   const [playerNote, setPlayerNote] = useState('');
   const [playerUid, setPlayerUid] = useState(members[0]?.uid ?? '');
   const memberUids = members.map((m) => m.uid);
@@ -36,6 +37,7 @@ export const MatchTalkPanel: React.FC<{
         setObjective(existing.match_objective ?? '');
         setPoints(existing.key_points.join('\n'));
         setFormation(existing.formation ?? '');
+        setOpponentNotes(existing.opponent_notes ?? '');
       } else {
         setBrief(
           matchTalkService.createEmpty(event.id, profile.uid, event.club_id ?? profile.profile.club_id),
@@ -54,6 +56,7 @@ export const MatchTalkPanel: React.FC<{
         .map((l) => l.trim())
         .filter(Boolean),
       formation: formation.trim() || undefined,
+      opponent_notes: opponentNotes.trim() || undefined,
       clips: brief.clips.filter((c) => c.analysis_verified),
       updated_at: new Date(),
     };
@@ -138,6 +141,14 @@ export const MatchTalkPanel: React.FC<{
         onChangeText={setFormation}
         placeholderTextColor={colors.textMuted}
         style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+      />
+      <TextInput
+        placeholder="Notes adversaire (set-pieces, joueurs clés…)"
+        value={opponentNotes}
+        onChangeText={setOpponentNotes}
+        multiline
+        placeholderTextColor={colors.textMuted}
+        style={[styles.input, styles.multi, { borderColor: colors.border, color: colors.ink }]}
       />
       <PressableSpring onPress={() => void save()} scaleTo={0.96} haptic>
         <ProDayText variant="caption" accent style={styles.link}>

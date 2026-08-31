@@ -10,6 +10,7 @@ import { GlassCard } from '../aurora/GlassCard';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 
@@ -29,6 +30,7 @@ export const SkillEndorsementsCard: React.FC<SkillEndorsementsCardProps> = ({
   canEndorse,
 }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
   const [counts, setCounts] = useState<SkillEndorsementCounts | null>(null);
   const [mine, setMine] = useState<Partial<Record<SkillEndorsementKey, boolean>>>({});
@@ -96,8 +98,8 @@ export const SkillEndorsementsCard: React.FC<SkillEndorsementsCardProps> = ({
               style={[
                 styles.chip,
                 {
-                  borderColor: active ? colors.accent : colors.border,
-                  backgroundColor: active ? colors.accentSoft : colors.surfaceMuted,
+                  borderColor: active ? playerColors.accent : colors.border,
+                  backgroundColor: active ? playerColors.accentSoft : colors.surfaceMuted,
                   opacity: canEndorse ? 1 : 0.9,
                 },
               ]}

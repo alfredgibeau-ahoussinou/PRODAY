@@ -1,12 +1,16 @@
-/** Palette Parent — teal famille (distinct du Joueur orange). */
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from './prodayBrand';
+
+const A = PRODAY_POLE_ACCENTS.parent;
+
+/** Palette Parent — vert lime officiel #8CC63F. */
 export const parentColorOverrides = {
-  accent: '#14B8A6',
-  accentLight: '#5EEAD4',
-  accentSoft: 'rgba(20, 184, 166, 0.14)',
-  accentMuted: 'rgba(20, 184, 166, 0.32)',
-  brand: '#0F766E',
-  brandLight: '#2DD4BF',
-  brandSoft: 'rgba(15, 118, 110, 0.12)',
+  accent: A,
+  accentLight: '#B6E06A',
+  accentSoft: poleAccentSoft('parent', 0.14),
+  accentMuted: poleAccentSoft('parent', 0.32),
+  brand: A,
+  brandLight: '#B6E06A',
+  brandSoft: poleAccentSoft('parent', 0.12),
   brandInverse: '#FFFFFF',
   ink: '#FAFAFA',
   inkSecondary: '#D4D4D4',
@@ -19,29 +23,29 @@ export const parentColorOverrides = {
   surfaceInverse: '#FAFAFA',
   heroMuted: 'rgba(255, 255, 255, 0.72)',
   border: 'rgba(255, 255, 255, 0.1)',
-  borderStrong: 'rgba(20, 184, 166, 0.55)',
-  borderMedium: 'rgba(20, 184, 166, 0.28)',
+  borderStrong: poleAccentSoft('parent', 0.55),
+  borderMedium: poleAccentSoft('parent', 0.28),
   text: '#FAFAFA',
   textSecondary: '#D4D4D4',
   textMuted: '#A3A3A3',
-  tone1: '#042f2e',
-  tone2: '#0F766E',
-  tone3: '#14B8A6',
-  tone4: '#5EEAD4',
+  tone1: '#6B9A2E',
+  tone2: A,
+  tone3: '#B6E06A',
+  tone4: '#D4F08A',
   navy: '#0A0A0A',
   navySoft: '#171717',
-  blueBright: '#2DD4BF',
-  bluePrimary: '#14B8A6',
-  blueCyan: '#5EEAD4',
+  blueBright: '#B6E06A',
+  bluePrimary: A,
+  blueCyan: '#B6E06A',
   gradientStart: '#000000',
-  gradientEnd: '#0F766E',
+  gradientEnd: '#6B9A2E',
   success: '#059669',
   successBg: 'rgba(5, 150, 105, 0.15)',
 } as const;
 
 export const parentGradients = {
-  hero: ['#042f2e', '#0F766E'] as const,
-  heroDark: ['#022c22', '#134e4a'] as const,
-  card: ['#0f1f1e', '#042f2e'] as const,
-  cta: ['#0F766E', '#2DD4BF'] as const,
+  hero: ['#000000', '#141A06'] as const,
+  heroDark: ['#000000', '#0A0C04'] as const,
+  card: ['#1A1A1A', '#0A0A0A'] as const,
+  cta: ['#6B9A2E', A] as const,
 } as const;

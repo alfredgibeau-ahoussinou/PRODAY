@@ -1,14 +1,13 @@
 import React, { useMemo } from 'react';
-import { View, Text, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { PRODAY_SUPPORTER_BRAND } from '../models/ProductLine';
-import { SUPPORTER_BRANDING_LOGOS } from '../content/brandingAssets';
+import { PRODAY_SYMBOL_ASPECT } from '../theme/prodayBrand';
+import { ProDaySymbol } from './branding/ProDaySymbol';
 import type { LogoBackground } from './Logo';
-
-const PICTO_ASPECT = 1.78;
 
 export function supporterLogoAspect(width: number): number {
   const pictoW = width * 0.76;
-  const pictoH = pictoW / PICTO_ASPECT;
+  const pictoH = pictoW / PRODAY_SYMBOL_ASPECT;
   const line1 = width * 0.1;
   const line2 = width * 0.115;
   const tagSize = width * 0.076;
@@ -43,7 +42,7 @@ export const SupporterLogo: React.FC<SupporterLogoProps> = ({
 
   const layout = useMemo(() => {
     const pictoW = width * (watermark ? 1 : 0.76);
-    const pictoH = pictoW / PICTO_ASPECT;
+    const pictoH = pictoW / PRODAY_SYMBOL_ASPECT;
     const line1 = width * 0.1;
     const line2 = width * 0.115;
     const tagSize = width * 0.076;
@@ -53,15 +52,11 @@ export const SupporterLogo: React.FC<SupporterLogoProps> = ({
 
   if (watermark) {
     return (
-      <Image
-        source={SUPPORTER_BRANDING_LOGOS.picto}
-        style={{
-          width: layout.pictoW,
-          height: layout.pictoH,
-          opacity: opacity * 0.14,
-        }}
-        resizeMode="contain"
-        accessibilityLabel={PRODAY_SUPPORTER_BRAND.name}
+      <ProDaySymbol
+        size={layout.pictoW}
+        variant="supporter"
+        tone={onDark ? 'white' : 'black'}
+        opacity={opacity * 0.14}
       />
     );
   }
@@ -77,13 +72,7 @@ export const SupporterLogo: React.FC<SupporterLogoProps> = ({
 
   return (
     <View style={[styles.wrap, { width, opacity }, centered && styles.wrapCentered]}>
-      <Image
-        source={SUPPORTER_BRANDING_LOGOS.picto}
-        style={{ width: layout.pictoW, height: layout.pictoH }}
-        resizeMode="contain"
-        accessibilityRole="image"
-        accessibilityLabel={PRODAY_SUPPORTER_BRAND.name}
-      />
+      <ProDaySymbol size={layout.pictoW} variant="supporter" tone={onDark ? 'white' : 'black'} />
 
       <View style={[styles.wordBlock, { marginTop: width * 0.024 }, centered && styles.wordBlockCentered]}>
         <Text

@@ -66,9 +66,19 @@ function routeNotificationData(data: ProdayNotificationData, actions: RouterActi
       actions.openProfile();
       break;
     case 'coach_session_request':
+      actions.setActiveTab('home');
+      break;
     case 'player_late':
     case 'parent_pickup_late':
-      actions.setActiveTab('home');
+      if (data.eventId) {
+        actions.openMatchs({
+          eventId: data.eventId,
+          homeTab: matchsHomeTab(data.homeTab) ?? 'convocations',
+          hubChapter: 'effectif',
+        });
+      } else {
+        actions.openMatchs({ homeTab: 'convocations' });
+      }
       break;
     case 'friendly_invite':
     case 'friendly_counter':

@@ -1,34 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
   ActivityIndicator,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  StyleSheet,
   type TextInput,
 } from 'react-native';
-import Animated, { Easing, FadeIn } from 'react-native-reanimated';
 import { authService } from '../services/auth.service';
-import { AuthBrandHeader } from '../components/auth/AuthBrandHeader';
-import { AuthPrimaryButton } from '../components/auth/AuthPrimaryButton';
-import { AuthRememberRow } from '../components/auth/AuthRememberRow';
 import { AuthBiometricButton } from '../components/auth/AuthBiometricButton';
 import { useAuthQuickLogin } from '../hooks/useAuthQuickLogin';
 import { Icon } from '../components/ui/Icon';
-import { AuthTabRail, type AuthTabId } from '../components/auth/AuthTabRail';
-import { useAuthStyles } from '../components/auth/authStyles';
-import { useAuthLayout } from '../components/auth/useAuthLayout';
-import { AuthTextField } from '../components/auth/AuthTextField';
 import { AuthSocialButtons } from '../components/auth/AuthSocialButtons';
-import { AnimatedEntrance, PressableSpring, PushScreenTransition, StaggerReveal } from '../components/motion';
-import { ProDayErrorBanner, type ProDayBannerVariant } from '../components/ui/ProDayErrorBanner';
+import { AuthRememberRow } from '../components/auth/AuthRememberRow';
+import { PushScreenTransition, PressableSpring } from '../components/motion';
 import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
-import { AuthFormCard } from '../components/auth/AuthFormCard';
-import { ProDayGradient } from '../components/ui/ProDayGradient';
+import { ProDayText } from '../components/ui/ProDayText';
 import { prodayHaptics } from '../utils/prodayHaptics';
-import { motion } from '../theme/motion';
 import { SignupFlow } from './signup/SignupFlow';
 import { ForgotPasswordScreen } from './ForgotPasswordScreen';
 import { LegalDocumentScreen } from './LegalDocumentScreen';
@@ -39,60 +25,51 @@ import { useAppTheme } from '../context/ProductLineContext';
 import { useLaunchIntro } from '../context/LaunchIntroContext';
 import { LanguageSettingControl } from '../components/settings/LanguageSettingControl';
 import { useTranslation } from '../context/LocaleContext';
-import { getLocalizedAuthCopy } from '../i18n/localizedContent';
-import { getAuthSignupTeaser } from '../i18n/localizedAuth';
 import type { UserRole } from '../models/User';
 import type { ProductLineId } from '../models/ProductLine';
-import {
-  brandForAuthContext,
-  isSponsorAuthPreset,
-} from '../utils/authBrandContext';
 import { usePlatformFeatureFlags } from '../hooks/usePlatformFeatureFlags';
 import { FeatureDisabledPanel } from '../components/platform/FeatureDisabledPanel';
+import {
+  AuthExperienceShell,
+  AuthInput,
+  AuthButton,
+  AuthError,
+  AuthLink,
+  AuthModeSwitch,
+  AuthPostLoginReveal,
+  AUTH_XP,
+} from '../features/auth/experience';
+import { isGoogleAuthConfigured } from '../config/oauth';
+import { Platform } from 'react-native';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface AuthScreenProps {
-  /** Retour personnalisé (ex. invité → accueil). */
   onDismiss?: () => void;
   initialIntent?: AuthIntent;
   signupProductLine?: ProductLineId;
   signupInitialRole?: UserRole;
 }
 
+/**
+ * ProDay Auth Experience — login signature (pas de restyle de l’ancienne carte).
+ */
 export const AuthScreen: React.FC<AuthScreenProps> = ({
   onDismiss,
   initialIntent = 'login',
   signupProductLine,
   signupInitialRole,
 }) => {
-  const authStyles = useAuthStyles();
-  const { compact, logoWidth, headerTopPad, tabBarScrollInset: tabInset } = useAuthLayout();
   const { loading: authLoading, configured, refreshProfile } = useAuth();
   const { setActiveTab } = useTabNavigation();
-  const { productLine, colors, proSignupPresetRole, isParentAuthChrome } = useAppTheme();
-  const activeBrand = brandForAuthContext(productLine, proSignupPresetRole);
-  const isSponsorAuth =
-    productLine === 'sponsor' || isSponsorAuthPreset(proSignupPresetRole);
-  const isParentAuth =
-    productLine === 'parent' ||
-    isParentAuthChrome ||
-    proSignupPresetRole === 'parent';
+  const { productLine } = useAppTheme();
   const { openSpacePicker } = useLaunchIntro();
   const { t } = useTranslation();
   const { isEnabled, disabledCopy } = usePlatformFeatureFlags();
   const registrationOpen = isEnabled('registration_open');
-  const [tab, setTab] = useState<AuthTabId>(
-    initialIntent === 'signup' && registrationOpen ? 'signup' : 'login',
-  );
-  const screenCopy = getLocalizedAuthCopy(productLine, tab, t, {
-    brandName: activeBrand.name,
-    sponsor: isSponsorAuth,
-    parent: isParentAuth,
-  });
-  const signupTeaser = useMemo(
-    () => getAuthSignupTeaser(productLine, t, proSignupPresetRole),
-    [productLine, t, proSignupPresetRole],
+
+  const [mode, setMode] = useState<'login' | 'signupTeaser'>(
+    initialIntent === 'signup' && registrationOpen ? 'signupTeaser' : 'login',
   );
   const [signupOpen, setSignupOpen] = useState(
     initialIntent === 'signup' && registrationOpen,
@@ -100,10 +77,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [banner, setBanner] = useState<{
-    message: string;
-    variant: ProDayBannerVariant;
-  } | null>(null);
+  const [banner, setBanner] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [signupPrefill, setSignupPrefill] = useState<{
     email: string;
@@ -112,8 +86,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
   const [biometricLoading, setBiometricLoading] = useState(false);
+  const [postLoginReveal, setPostLoginReveal] = useState(false);
+  const pendingAfterReveal = useRef<(() => void) | null>(null);
   const passwordRef = useRef<TextInput>(null);
   const quickLogin = useAuthQuickLogin();
+  const showOAuth =
+    isGoogleAuthConfigured() || Platform.OS === 'ios';
 
   useEffect(() => {
     if (!quickLogin.hydrated || !quickLogin.savedEmail) return;
@@ -123,6 +101,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   useEffect(() => {
     if (registrationOpen) return;
     setSignupOpen(false);
+    setMode('login');
   }, [registrationOpen]);
 
   const clearErrors = () => {
@@ -130,14 +109,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     setFieldErrors({});
   };
 
-  const showError = (message: string, variant: ProDayBannerVariant = 'error') => {
-    setBanner({ message, variant });
-  };
-
   const openSignup = useCallback(() => {
     if (!registrationOpen) {
-      showError(disabledCopy('registration_open').message, 'warning');
-      setTab('signup');
+      setBanner(disabledCopy('registration_open').message);
+      setMode('signupTeaser');
       return;
     }
     clearErrors();
@@ -147,24 +122,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const closeSignup = useCallback(() => {
     setSignupOpen(false);
     setSignupPrefill(null);
-    setTab('login');
+    setMode('login');
     clearErrors();
   }, []);
 
-  const onSignupComplete = useCallback(async () => {
-    setSignupOpen(false);
+  const finishAuthNavigation = useCallback(async () => {
     await refreshProfile();
+    openSpacePicker();
     setActiveTab('home');
-  }, [refreshProfile, setActiveTab]);
+  }, [refreshProfile, openSpacePicker, setActiveTab]);
 
   const goHomeAfterAuth = useCallback(async () => {
-    await refreshProfile();
-    setActiveTab('home');
-  }, [refreshProfile, setActiveTab]);
+    pendingAfterReveal.current = () => {
+      void finishAuthNavigation();
+    };
+    setPostLoginReveal(true);
+  }, [finishAuthNavigation]);
+
+  const onSignupComplete = useCallback(async () => {
+    setSignupOpen(false);
+    pendingAfterReveal.current = () => {
+      void finishAuthNavigation();
+    };
+    setPostLoginReveal(true);
+  }, [finishAuthNavigation]);
 
   const validateEmail = (value: string) => {
-    if (!value.trim()) return 'Email requis';
-    if (!EMAIL_RE.test(value.trim())) return 'Format email invalide';
+    if (!value.trim()) return t('auth.emailRequired') || 'Email requis';
+    if (!EMAIL_RE.test(value.trim())) return t('auth.emailInvalid') || 'Format email invalide';
     return undefined;
   };
 
@@ -172,7 +157,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     const errs: Record<string, string> = {};
     const emailErr = validateEmail(email);
     if (emailErr) errs.email = emailErr;
-    if (!password) errs.password = 'Mot de passe requis';
+    if (!password) errs.password = t('auth.passwordRequired') || 'Mot de passe requis';
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -181,6 +166,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     const loginEmail = creds?.email ?? email;
     const loginPassword = creds?.password ?? password;
     if (!creds && !validateLoginFields()) return;
+    if (loading) return;
     setLoading(true);
     clearErrors();
     try {
@@ -190,7 +176,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       prodayHaptics.confirm();
     } catch (e) {
       prodayHaptics.error();
-      showError(authService.getAuthErrorMessage(e));
+      setBanner(authService.getAuthErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -210,6 +196,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   };
 
   const handleBack = () => {
+    // Overlay : onDismiss unmount immédiat. Fallback onglet : home.
     if (onDismiss) {
       onDismiss();
       return;
@@ -219,292 +206,219 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
   if (!configured) {
     return (
-      <View style={[authStyles.root, authStyles.centered]}>
-        <AuthBrandHeader width={140} tone="light" />
-        <View style={authStyles.configWrap}>
-          <ProDayConfigNotice blockingOnly />
-        </View>
+      <View style={styles.centered}>
+        <ProDayConfigNotice blockingOnly />
       </View>
     );
   }
 
   if (authLoading) {
     return (
-      <View style={[authStyles.root, authStyles.centered]}>
-        <ActivityIndicator size="large" color={colors.ink} />
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={AUTH_XP.gold} />
       </View>
     );
   }
 
+  const toolbar = (
+    <View style={styles.toolbar}>
+      <PressableSpring
+        style={styles.iconBtn}
+        onPress={handleBack}
+        hitSlop={16}
+        scaleTo={0.92}
+        haptic
+        accessibilityLabel={t('auth.backHome')}
+        accessibilityRole="button"
+      >
+        <Icon name="arrow-back" size={20} color={AUTH_XP.white} />
+      </PressableSpring>
+      <View style={styles.toolbarEnd}>
+        <LanguageSettingControl variant="chip" />
+      </View>
+    </View>
+  );
+
+  const legalFooter = (
+    <ProDayText variant="caption" style={styles.legal}>
+      {t('auth.legalPrefix')}{' '}
+      <ProDayText
+        variant="caption"
+        style={styles.legalLink}
+        onPress={() => setLegalDocument('terms')}
+      >
+        {t('auth.terms')}
+      </ProDayText>{' '}
+      {t('auth.and')}{' '}
+      <ProDayText
+        variant="caption"
+        style={styles.legalLink}
+        onPress={() => setLegalDocument('privacy')}
+      >
+        {t('auth.privacy')}
+      </ProDayText>
+      .
+    </ProDayText>
+  );
+
   return (
     <>
-      <KeyboardAvoidingView
-        style={[authStyles.root, { position: 'relative' }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-      <View style={authStyles.ambient} pointerEvents="none">
-        <ProDayGradient kind="ambient" style={StyleSheet.absoluteFill} />
-      </View>
+      <AuthExperienceShell toolbar={toolbar} footer={legalFooter}>
+        <AuthModeSwitch modeKey={mode}>
+          {mode === 'login' ? (
+            <View>
+              <ProDayText variant="title" style={styles.title}>
+                {t('auth.welcomeBack')}.
+              </ProDayText>
+              <ProDayText variant="body" style={styles.sub}>
+                {t('auth.experience.loginSub')}
+              </ProDayText>
 
-      <ScrollView
-        contentContainerStyle={[
-          authStyles.scroll,
-          { paddingTop: headerTopPad, paddingBottom: tabInset() },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <AnimatedEntrance index={0}>
-          <View style={authStyles.toolbar}>
-            <PressableSpring
-              style={authStyles.backBtn}
-              onPress={handleBack}
-              hitSlop={8}
-              scaleTo={0.92}
-              haptic
-              accessibilityLabel={t('auth.backHome')}
-            >
-              <Icon name="arrow-back" size={20} color={colors.ink} />
-            </PressableSpring>
-            <View style={authStyles.toolbarEnd}>
-              <LanguageSettingControl variant="chip" />
-              <PressableSpring
-                style={[
-                  authStyles.universeChip,
-                  isSponsorAuth && {
-                    backgroundColor: 'rgba(212, 175, 55, 0.14)',
-                    borderColor: 'rgba(212, 175, 55, 0.45)',
-                  },
-                  isParentAuth && {
-                    backgroundColor: 'rgba(20, 184, 166, 0.14)',
-                    borderColor: 'rgba(20, 184, 166, 0.45)',
-                  },
-                ]}
-                onPress={openSpacePicker}
-                scaleTo={0.96}
-                haptic
-                accessibilityLabel={t('auth.changeUniverse')}
-              >
-                <Icon
-                  name="star-four-points"
-                  size={14}
-                  color={
-                    isSponsorAuth ? '#D4AF37' : isParentAuth ? '#14B8A6' : colors.accent
-                  }
-                />
-                <Text
-                  style={[
-                    authStyles.universeChipText,
-                    isSponsorAuth && { color: '#F5D76E' },
-                    isParentAuth && { color: '#5EEAD4' },
-                  ]}
-                >
-                  {activeBrand.name}
-                </Text>
-                <Icon
-                  name="chevron-down"
-                  size={14}
-                  color={
-                    isSponsorAuth
-                      ? '#D4AF37'
-                      : isParentAuth
-                        ? '#14B8A6'
-                        : colors.textMuted
-                  }
-                />
-              </PressableSpring>
-            </View>
-          </View>
-        </AnimatedEntrance>
+              {banner ? (
+                <AuthError message={banner} onDismiss={() => setBanner(null)} />
+              ) : null}
 
-        <AnimatedEntrance index={1} kind="fadeUp">
-          <View style={authStyles.brandRow}>
-            <AuthBrandHeader
-              width={logoWidth}
-              tone={isSponsorAuth || isParentAuth ? 'dark' : 'light'}
-            />
-          </View>
-        </AnimatedEntrance>
-
-        <View style={[authStyles.body, compact && authStyles.bodyCompact]}>
-          <AnimatedEntrance index={2} kind="fadeUp">
-            <View style={authStyles.hero}>
-              <Text style={authStyles.eyebrow}>{activeBrand.tagline}</Text>
-              <Text style={[authStyles.title, compact && authStyles.titleCompact]}>
-                {screenCopy.title}
-              </Text>
-              <Text style={authStyles.sub}>{screenCopy.sub}</Text>
-            </View>
-          </AnimatedEntrance>
-
-          <AuthTabRail
-            active={tab}
-            onSelect={(id) => {
-              setTab(id);
-              clearErrors();
-            }}
-            compact={compact}
-          />
-
-          {banner ? (
-            <ProDayErrorBanner
-              message={banner.message}
-              variant={banner.variant}
-              onDismiss={() => setBanner(null)}
-            />
-          ) : null}
-
-          <Animated.View
-            key={tab}
-            entering={FadeIn.duration(motion.duration.fast).easing(Easing.out(Easing.cubic))}
-          >
-            {tab === 'login' ? (
-              <>
-                {quickLogin.canQuickLogin && quickLogin.savedEmail ? (
-                  <StaggerReveal index={0}>
-                    <AuthBiometricButton
-                      email={quickLogin.savedEmail}
-                      biometricLabel={quickLogin.biometricLabel}
-                      onPress={() => void handleBiometricLogin()}
-                      loading={biometricLoading || loading}
-                    />
-                  </StaggerReveal>
-                ) : null}
-
-                <AuthFormCard>
-                  <StaggerReveal index={quickLogin.canQuickLogin ? 1 : 0}>
-                    <AuthTextField
-                      label={t('auth.email')}
-                      icon="mail"
-                      placeholder="vous@exemple.com"
-                      value={email}
-                      onChangeText={(t) => {
-                        setEmail(t);
-                        if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: '' }));
-                      }}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      returnKeyType="next"
-                      blurOnSubmit={false}
-                      onSubmitEditing={() => passwordRef.current?.focus()}
-                      error={fieldErrors.email}
-                    />
-                  </StaggerReveal>
-                  <StaggerReveal index={quickLogin.canQuickLogin ? 2 : 1}>
-                    <AuthTextField
-                      ref={passwordRef}
-                      label={t('auth.password')}
-                      icon="lock"
-                      placeholder="••••••••"
-                      value={password}
-                      onChangeText={(t) => {
-                        setPassword(t);
-                        if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: '' }));
-                      }}
-                      secureToggle
-                      autoComplete="password"
-                      returnKeyType="go"
-                      onSubmitEditing={() => void handleLogin()}
-                      error={fieldErrors.password}
-                    />
-                  </StaggerReveal>
-
-                  <AuthRememberRow
-                    rememberMe={quickLogin.rememberMe}
-                    onRememberMeChange={quickLogin.setRememberMe}
-                    biometricEnabled={quickLogin.biometricEnabled}
-                    onBiometricChange={quickLogin.setBiometricEnabled}
+              {quickLogin.canQuickLogin && quickLogin.savedEmail ? (
+                <View style={styles.biometricWrap}>
+                  <AuthBiometricButton
+                    email={quickLogin.savedEmail}
                     biometricLabel={quickLogin.biometricLabel}
-                    biometricAvailable={quickLogin.biometricAvailable}
+                    onPress={() => void handleBiometricLogin()}
+                    loading={biometricLoading || loading}
                   />
+                </View>
+              ) : null}
 
-                  <View style={authStyles.forgotRow}>
-                    <PressableSpring
-                      onPress={() => {
-                        clearErrors();
-                        setShowForgotPassword(true);
-                      }}
-                      scaleTo={0.98}
-                    >
-                      <Text style={authStyles.forgotText}>Mot de passe oublié ?</Text>
-                    </PressableSpring>
+              <AuthInput
+                label={t('auth.email')}
+                icon="mail"
+                placeholder="vous@exemple.com"
+                value={email}
+                onChangeText={(v) => {
+                  setEmail(v);
+                  if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: '' }));
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                textContentType="emailAddress"
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                error={fieldErrors.email}
+              />
+              <AuthInput
+                ref={passwordRef}
+                label={t('auth.password')}
+                icon="lock"
+                placeholder="••••••••"
+                value={password}
+                onChangeText={(v) => {
+                  setPassword(v);
+                  if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: '' }));
+                }}
+                secureToggle
+                autoComplete="password"
+                textContentType="password"
+                returnKeyType="go"
+                onSubmitEditing={() => void handleLogin()}
+                error={fieldErrors.password}
+              />
+
+              <AuthRememberRow
+                rememberMe={quickLogin.rememberMe}
+                onRememberMeChange={quickLogin.setRememberMe}
+                biometricEnabled={quickLogin.biometricEnabled}
+                onBiometricChange={quickLogin.setBiometricEnabled}
+                biometricLabel={quickLogin.biometricLabel}
+                biometricAvailable={quickLogin.biometricAvailable}
+              />
+
+              <AuthLink
+                label={t('auth.forgotPassword')}
+                onPress={() => {
+                  clearErrors();
+                  setShowForgotPassword(true);
+                }}
+                align="right"
+                muted
+              />
+
+              <AuthButton
+                label={t('auth.loginCta')}
+                onPress={() => void handleLogin()}
+                loading={loading}
+              />
+
+              {showOAuth ? (
+                <>
+                  <View style={styles.dividerRow}>
+                    <View style={styles.dividerLine} />
+                    <ProDayText variant="caption" style={styles.dividerText}>
+                      {t('auth.or')}
+                    </ProDayText>
+                    <View style={styles.dividerLine} />
                   </View>
-
-                  <StaggerReveal index={quickLogin.canQuickLogin ? 3 : 2}>
-                    <AuthPrimaryButton
-                      label={t('auth.loginCta')}
-                      onPress={() => void handleLogin()}
-                      loading={loading}
-                    />
-                  </StaggerReveal>
-
-                  <View style={authStyles.dividerRow}>
-                    <View style={authStyles.dividerLine} />
-                    <Text style={authStyles.dividerText}>ou</Text>
-                    <View style={authStyles.dividerLine} />
-                  </View>
-
-                  <StaggerReveal index={quickLogin.canQuickLogin ? 4 : 3}>
-                    <AuthSocialButtons
-                      disabled={loading}
-                      onSuccess={goHomeAfterAuth}
-                      onNeedsProfile={(prefill) => {
-                        if (!registrationOpen) {
-                          showError(disabledCopy('registration_open').message, 'warning');
-                          return;
-                        }
-                        setSignupPrefill(prefill);
-                        openSignup();
-                      }}
-                      onError={(msg) => showError(msg)}
-                    />
-                  </StaggerReveal>
-                </AuthFormCard>
-              </>
-            ) : !registrationOpen ? (
-              <FeatureDisabledPanel flag="registration_open" />
-            ) : (
-              <View style={authStyles.signupTeaser}>
-                {signupTeaser.map((line, i) => (
-                  <StaggerReveal key={line} index={i}>
-                    <View style={authStyles.teaserRow}>
-                      <View style={authStyles.teaserNum}>
-                        <Text style={authStyles.teaserNumText}>{i + 1}</Text>
-                      </View>
-                      <Text style={authStyles.teaserText}>{line}</Text>
-                    </View>
-                  </StaggerReveal>
-                ))}
-                <StaggerReveal index={signupTeaser.length}>
-                  <AuthPrimaryButton
-                    label={t('auth.signupCta', { brand: activeBrand.name })}
-                    onPress={openSignup}
+                  <AuthSocialButtons
+                    disabled={loading}
+                    onSuccess={() => void goHomeAfterAuth()}
+                    onNeedsProfile={(prefill) => {
+                      if (!registrationOpen) {
+                        setBanner(disabledCopy('registration_open').message);
+                        return;
+                      }
+                      setSignupPrefill(prefill);
+                      openSignup();
+                    }}
+                    onError={(msg) => setBanner(msg)}
                   />
-                </StaggerReveal>
+                </>
+              ) : null}
+
+              <View style={styles.switchRow}>
+                <AuthLink
+                  leading={t('auth.newOnProday')}
+                  label={t('auth.createAccount')}
+                  onPress={openSignup}
+                  align="center"
+                />
               </View>
-            )}
-          </Animated.View>
+            </View>
+          ) : !registrationOpen ? (
+            <FeatureDisabledPanel flag="registration_open" />
+          ) : (
+            <View>
+              <ProDayText variant="title" style={styles.title}>
+                {t('auth.experience.signupTitle')}
+              </ProDayText>
+              <ProDayText variant="body" style={styles.sub}>
+                {t('auth.experience.signupSub')}
+              </ProDayText>
+              <AuthButton label={t('auth.signupCta', { brand: 'ProDay' })} onPress={openSignup} />
+              <AuthLink
+                leading={t('auth.alreadyMember')}
+                label={t('auth.login')}
+                onPress={() => setMode('login')}
+                align="center"
+              />
+            </View>
+          )}
+        </AuthModeSwitch>
+      </AuthExperienceShell>
 
-          <AnimatedEntrance index={3} kind="fade">
-            <Text style={authStyles.legal}>
-            {t('auth.legalPrefix')}{' '}
-            <Text style={authStyles.legalLink} onPress={() => setLegalDocument('terms')}>
-              {t('auth.terms')}
-            </Text>{' '}
-            {t('auth.and')}{' '}
-            <Text style={authStyles.legalLink} onPress={() => setLegalDocument('privacy')}>
-              {t('auth.privacy')}
-            </Text>
-            .
-            </Text>
-          </AnimatedEntrance>
-        </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
+      <AuthPostLoginReveal
+        active={postLoginReveal}
+        onDone={() => {
+          setPostLoginReveal(false);
+          const fn = pendingAfterReveal.current;
+          pendingAfterReveal.current = null;
+          fn?.();
+        }}
+      />
+
       <PushScreenTransition active={signupOpen}>
         {signupOpen ? (
-          <View style={authStyles.root}>
+          <View style={styles.overlayRoot}>
             <SignupFlow
               productLine={signupProductLine ?? productLine}
               initialRole={signupInitialRole}
@@ -536,3 +450,78 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   );
 };
 
+const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    backgroundColor: AUTH_XP.black,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  overlayRoot: {
+    flex: 1,
+    backgroundColor: AUTH_XP.black,
+  },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  toolbarEnd: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  iconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: AUTH_XP.radiusMd,
+    borderWidth: 1,
+    borderColor: AUTH_XP.border,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  title: {
+    color: AUTH_XP.white,
+    fontSize: 28,
+    letterSpacing: -0.4,
+    marginBottom: 8,
+  },
+  sub: {
+    color: AUTH_XP.textMuted,
+    marginBottom: 22,
+    lineHeight: 22,
+  },
+  biometricWrap: {
+    marginBottom: 12,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: 18,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: AUTH_XP.border,
+  },
+  dividerText: {
+    color: AUTH_XP.textDim,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    fontSize: 10,
+  },
+  switchRow: {
+    marginTop: 20,
+  },
+  legal: {
+    color: AUTH_XP.textDim,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  legalLink: {
+    color: AUTH_XP.goldBright,
+  },
+});

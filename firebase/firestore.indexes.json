@@ -126,6 +126,23 @@
       ]
     },
     {
+      "collectionGroup": "club_finance_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "club_id", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "entry_date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "club_finance_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "club_id", "order": "ASCENDING" },
+        { "fieldPath": "entry_date", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "sponsor_contributions",
       "queryScope": "COLLECTION",
       "fields": [
@@ -166,6 +183,30 @@
         { "fieldPath": "tier", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "approved_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "subscription_upgrade_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_uid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "subscription_upgrade_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_uid", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "subscription_upgrade_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
     },
     {
@@ -344,6 +385,14 @@
       "fields": [
         { "fieldPath": "club_id", "order": "ASCENDING" },
         { "fieldPath": "date_key", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "wellness_checkins",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
         { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
     },

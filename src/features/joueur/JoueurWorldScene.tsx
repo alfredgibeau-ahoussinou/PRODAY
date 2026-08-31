@@ -28,6 +28,7 @@ import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import type { JoueurSceneKind } from '../../utils/joueurExperienceTheme';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { JoueurHudCorners } from '../../components/player/joueurPortalUi';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 type Props = {
   identity: JoueurPageIdentity;
@@ -150,8 +151,9 @@ export function JoueurWorldScene({
     transform: [{ scale: 0.5 + ring.value * 1.6 }],
   }));
 
-  const accent = identity.accent;
-  const accentBright = identity.accentBright;
+  const joueurTheme = useJoueurTheme();
+  const accent = joueurTheme.accent;
+  const accentBright = joueurTheme.accentBright;
   const isFemale = identity.gender === 'female';
 
   const grassTop =

@@ -15,11 +15,13 @@ export const TAB_ICONS: Record<MainTabId, IconName> = {
   covoiturage: 'car',
   sante: 'heart',
   feed: 'star-four-points',
+  progression: 'stats-chart',
   reels: 'videocam',
   famille: 'shield',
   messages: 'chat',
   profil: 'person',
   shop: 'bag',
+  plus: 'hamburger',
 };
 
 const AMATEUR_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
@@ -32,11 +34,11 @@ const AMATEUR_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
 };
 
 const SUPPORTER_TAB_ICONS: Partial<Record<MainTabId, IconName>> = {
+  home: 'home',
   matchs: 'football',
-  feed: 'star-four-points',
-  messages: 'chat',
+  feed: 'trophy',
+  plus: 'shield',
   reels: 'videocam',
-  shop: 'bag',
   profil: 'person',
 };
 

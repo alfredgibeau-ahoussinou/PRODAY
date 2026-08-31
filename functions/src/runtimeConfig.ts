@@ -13,6 +13,7 @@ export type RuntimeConfig = {
   beta?: RuntimeConfigSection;
   cal?: RuntimeConfigSection;
   email?: RuntimeConfigSection;
+  gemini?: RuntimeConfigSection;
   mistral?: RuntimeConfigSection;
   stripe?: RuntimeConfigSection;
   revenuecat?: RuntimeConfigSection;
@@ -104,6 +105,9 @@ function buildConfigFromEnv(): RuntimeConfig {
       brevo_api_key: readEnv('EMAIL_BREVO_API_KEY'),
       from_email: readEnv('EMAIL_FROM_EMAIL'),
       from_name: readEnv('EMAIL_FROM_NAME'),
+    },
+    gemini: {
+      api_key: readEnv('GEMINI_API_KEY', 'GOOGLE_AI_API_KEY', 'GOOGLE_API_KEY'),
     },
     mistral: {
       api_key: readEnv('MISTRAL_API_KEY'),

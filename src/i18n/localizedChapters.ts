@@ -1,6 +1,12 @@
 import type { IconName } from '../components/ui/iconNames';
 import type { TranslateFn } from './types';
-import type { MatchChapterId, CalendarKindFilter, AmicauxStatusFilter } from '../content/matchChapters';
+import {
+  JOUEUR_MATCH_CHAPTER_IDS,
+  filterJoueurMatchChapters,
+  type MatchChapterId,
+  type CalendarKindFilter,
+  type AmicauxStatusFilter,
+} from '../content/matchChapters';
 import type { MessagesChapterId, MessagesThreadFilter } from '../content/messagesChapters';
 import type { CarpoolChapterId, CarpoolEventFilter, CarpoolScopeFilter } from '../content/carpoolChapters';
 import type { FeedChapterId, FeedTypeFilter } from '../content/feedChapters';
@@ -13,6 +19,10 @@ const tr = (t: TranslateFn, key: string, fallback: string) => {
 };
 
 export function getMatchChapters(t: TranslateFn) {
+  return buildMatchChapters(t);
+}
+
+function buildMatchChapters(t: TranslateFn) {
   return [
     {
       id: 'calendrier' as const,
@@ -64,6 +74,11 @@ export function getMatchChapters(t: TranslateFn) {
   }[];
 }
 
+/** Chapitres Match Center visibles pôle joueur (Calendrier · Convocs · En direct · Amicaux). */
+export function getJoueurMatchChapters(t: TranslateFn) {
+  return filterJoueurMatchChapters(buildMatchChapters(t));
+}
+
 export function getCalendarKindFilters(t: TranslateFn) {
   return [
     { id: 'all' as const, label: tr(t, 'matchs.filter.calendar.all', 'Tout') },
@@ -104,6 +119,9 @@ export function getMessagesThreadFilters(t: TranslateFn) {
 export function getCoachMessagesThreadFilters(t: TranslateFn) {
   return getMessagesThreadFilters(t).filter((f) => f.id !== 'care');
 }
+
+/** Filtres messagerie joueur — sans Kiné (Tous + Non lus). */
+export const getJoueurMessagesThreadFilters = getCoachMessagesThreadFilters;
 
 export function getCarpoolChapters(t: TranslateFn) {
   return [

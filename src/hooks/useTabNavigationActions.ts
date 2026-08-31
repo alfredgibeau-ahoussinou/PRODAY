@@ -9,34 +9,15 @@ export function useTabNavigationActions(): TabNavigationActions {
   return useMemo(
     () => ({
       setActiveTab: nav.setActiveTab,
+      goBackTab: nav.goBackTab,
       openTeamEvent: nav.openTeamEvent,
-      openMatchs: (opts) => {
-        nav.setActiveTab('matchs');
-        nav.openMatchs(opts);
-      },
-      openMercato: (view) => {
-        nav.setActiveTab('recrutement');
-        nav.openMercato(view);
-      },
-      openProfile: (view) => {
-        nav.setActiveTab('profil');
-        nav.openProfile(view);
-      },
-      openDashboard: (view) => {
-        if (view === 'feed') {
-          nav.setActiveTab('feed');
-          return;
-        }
-        nav.setActiveTab('home');
-        nav.openDashboard(view);
-      },
-      openShop: () => {
-        nav.openShop();
-      },
-      openCarpool: (opts) => {
-        nav.openCarpool(opts);
-      },
+      openMatchs: (opts) => nav.openMatchs(opts),
+      openMercato: (view) => nav.openMercato(view),
+      openProfile: (view) => nav.openProfile(view),
+      openDashboard: (view) => nav.openDashboard(view),
+      openShop: () => nav.openShop(),
+      openCarpool: (opts) => nav.openCarpool(opts),
     }),
-    [nav]
+    [nav],
   );
 }

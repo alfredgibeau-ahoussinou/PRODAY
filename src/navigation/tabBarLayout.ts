@@ -12,6 +12,9 @@ export const SIGNUP_STICKY_FOOTER_HEIGHT = 76;
 /** Espace réservé en bas pour le contenu scrollable / plein écran. */
 export const TAB_BAR_CONTENT_INSET = Platform.OS === 'web' ? 72 : 98;
 
+/** Marge droite scrollable — FAB Coach IA joueur (56px) + marge dock. */
+export const PLAYER_FAB_CONTENT_INSET = 72;
+
 export interface TabBarInsetOptions {
   guestMode?: boolean;
   stickyFooter?: boolean;

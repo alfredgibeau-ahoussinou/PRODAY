@@ -15,6 +15,7 @@ import { isFirebaseConfigured } from '../config/firebase';
 import type {
   ClubTrialSheet,
   CreateClubTrialSheetInput,
+  TrialSheetDecision,
   TrialSheetRatingKey,
 } from '../models/ClubTrialSheet';
 import { canViewTrialSheet } from '../models/ClubTrialSheet';
@@ -44,6 +45,7 @@ function mapSheet(id: string, data: Record<string, unknown>): ClubTrialSheet {
     ratings: (data.ratings as Partial<Record<TrialSheetRatingKey, number>>) ?? {},
     overall: typeof data.overall === 'number' ? data.overall : null,
     notes: data.notes ? String(data.notes) : undefined,
+    decision: (data.decision as TrialSheetDecision) ?? null,
     is_minor: data.is_minor === true,
     parental_consent_at: data.parental_consent_at ? toDate(data.parental_consent_at) : null,
     authorized_uids: Array.isArray(data.authorized_uids)
@@ -89,6 +91,7 @@ export const clubTrialSheetsService = {
       ...input,
       ratings: {},
       overall: null,
+      decision: null,
       authorized_uids: [...new Set([input.coach_uid, ...input.authorized_uids])],
       created_at: now,
       updated_at: now,
@@ -111,6 +114,7 @@ export const clubTrialSheetsService = {
       ratings: {},
       overall: null,
       notes: null,
+      decision: null,
       is_minor: input.is_minor,
       parental_consent_at: null,
       authorized_uids: local.authorized_uids,
@@ -127,6 +131,7 @@ export const clubTrialSheetsService = {
       ratings?: Partial<Record<TrialSheetRatingKey, number>>;
       overall?: number | null;
       notes?: string;
+      decision?: TrialSheetDecision | null;
     },
   ): Promise<void> {
     if (!isFirebaseConfigured()) return;
@@ -136,6 +141,7 @@ export const clubTrialSheetsService = {
       ...(patch.ratings ? { ratings: patch.ratings } : {}),
       overall: patch.overall ?? null,
       notes: patch.notes?.trim() || null,
+      ...(patch.decision !== undefined ? { decision: patch.decision } : {}),
       updated_at: serverTimestamp(),
     });
   },

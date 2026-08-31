@@ -3,39 +3,42 @@ import type { MainTabId } from '../navigation/mainTabConfig';
 import type { UserRole } from '../models/User';
 import { colors as baseColors } from '../theme/designTokens';
 import type { AppColors } from '../theme/universeTheme';
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../theme/prodayBrand';
 
 /**
- * Espace sponsor — sombre corporate or/noir (aligné site proday75.fr/sponsor).
+ * Espace Sponsor — noir premium, accent violet planche (#92278F).
+ * Source de vérité visuelle pour shell, discover et écrans métier.
  */
 export const SPONSOR_THEME = {
-  primary: '#D4AF37',
-  primaryHover: '#F5D76E',
-  primaryDark: '#92700C',
-  primaryDeeper: '#070605',
-  heroBg: '#070605',
-  heroBgEnd: '#030303',
-  background: '#070605',
-  surface: '#0c0a06',
-  surfaceMuted: '#14110a',
-  surfaceElevated: '#1a1508',
-  border: 'rgba(212, 175, 55, 0.22)',
-  borderSubtle: 'rgba(212, 175, 55, 0.1)',
-  primarySoft: 'rgba(212, 175, 55, 0.12)',
-  primaryBg: '#070605',
-  primaryBorder: 'rgba(212, 175, 55, 0.28)',
+  primary: PRODAY_POLE_ACCENTS.sponsor,
+  primaryHover: '#A83AA3',
+  primaryDark: '#6B1A68',
+  primaryDeeper: '#000000',
+  heroBg: '#000000',
+  heroBgEnd: '#000000',
+  background: '#000000',
+  surface: '#0A0A0A',
+  surfaceMuted: '#121212',
+  surfaceElevated: '#161616',
+  border: poleAccentSoft('sponsor', 0.28),
+  borderSubtle: 'rgba(255,255,255,0.08)',
+  primarySoft: poleAccentSoft('sponsor', 0.14),
+  primaryBg: '#000000',
+  primaryBorder: poleAccentSoft('sponsor', 0.36),
   text: '#FAFAF9',
-  textSecondary: '#D6D3D1',
-  textMuted: '#A8A29E',
-  gold: '#D4AF37',
-  goldLight: '#F5D76E',
-  goldMuted: '#B8941F',
-  goldInk: '#1C1917',
-  goldSurface: 'rgba(212, 175, 55, 0.12)',
-  onPrimary: '#1C1917',
+  textSecondary: 'rgba(250,250,249,0.72)',
+  textMuted: 'rgba(250,250,249,0.48)',
+  /** Alias accent (historique « gold » — toujours violet Sponsor). */
+  gold: PRODAY_POLE_ACCENTS.sponsor,
+  goldLight: '#C45FBF',
+  goldMuted: '#6B1A68',
+  goldInk: '#FFFFFF',
+  goldSurface: poleAccentSoft('sponsor', 0.14),
+  onPrimary: '#FFFFFF',
   heroText: '#FAFAF9',
-  heroSubtext: 'rgba(250, 250, 249, 0.65)',
+  heroSubtext: 'rgba(250, 250, 249, 0.58)',
   ink: '#E7E5E4',
-  sectionLabel: '#78716C',
+  sectionLabel: 'rgba(250,250,249,0.38)',
   success: '#34D399',
   successSurface: 'rgba(52, 211, 153, 0.12)',
 } as const;

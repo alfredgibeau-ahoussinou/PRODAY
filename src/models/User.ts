@@ -186,6 +186,10 @@ export interface User {
   updated_at: Date;
   last_active_at?: Date;
   is_active: boolean;
+  /** Note interne admin (console Control Center). */
+  admin_note?: string;
+  /** Tags admin libres. */
+  admin_tags?: string[];
   
   // Notifications
   fcm_token?: string;

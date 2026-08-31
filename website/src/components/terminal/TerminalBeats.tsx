@@ -19,7 +19,7 @@ export function TerminalBeats({ beats, className = "" }: TerminalBeatsProps) {
             key={`${num}-${beat.title}`}
             className="grid gap-4 py-8 sm:grid-cols-[5rem_1fr] sm:gap-10 sm:py-10"
           >
-            <span className="font-mono text-sm tabular-nums tracking-[0.12em] text-[var(--pole-accent,#4C8BFF)]/70">
+            <span className="font-mono text-sm tabular-nums tracking-[0.12em] text-[var(--pole-accent,#F5D04A)]/70">
               {num}
             </span>
             <div>

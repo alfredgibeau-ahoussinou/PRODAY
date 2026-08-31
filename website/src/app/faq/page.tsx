@@ -12,7 +12,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Questions fréquentes ProDay : cinq pôles (Joueur, Club, Coach, Supporter, Sponsor), tarifs et bêta.",
+    "FAQ ProDay : portes d'entrée (Joueur, Club, Coach, Parent, Supporter, Sponsor), Notion vs Discord, tarifs et bêta.",
 };
 
 export default function FaqPage() {
@@ -23,7 +23,7 @@ export default function FaqPage() {
       <ImmersivePoleHero
         brand="Pro Day FAQ"
         headline="Avant d’entrer."
-        support="Tarifs, pôles, Tactique IA, rôles intégrés. Les réponses les plus demandées : filtrées par thème."
+        support="Tarifs, portes d'entrée, différenciation Notion/Discord, Tactique IA. Les réponses les plus demandées : filtrées par thème."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref="#reponses"
@@ -37,7 +37,7 @@ export default function FaqPage() {
         className="scroll-mt-24 border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28"
       >
         <div className="mx-auto max-w-3xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#4C8BFF]">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#F5D04A]">
             Réponses
           </p>
           <h2 className="mt-3 font-display text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[-0.03em] text-white">
@@ -75,7 +75,7 @@ export default function FaqPage() {
 
       <TerminalCta
         title="Une autre question ?"
-        description="Écris-nous via la liste d’attente."
+        description="Écris nous via la liste d’attente."
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Nous contacter"
         secondaryHref={ROUTES.demo}

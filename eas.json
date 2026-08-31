@@ -13,6 +13,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "autoIncrement": true,
       "android": {
         "buildType": "apk",
         "credentialsSource": "local"
@@ -44,12 +45,21 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "REPLACE_WITH_APPLE_ID",
-        "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID"
+        "appleId": "alfred.ahoussinou@gmail.com",
+        "appleTeamId": "F452SUU638",
+        "ascAppId": "6801583755"
       },
       "android": {
         "serviceAccountKeyPath": "./secrets/google-play-service-account.json",
         "track": "internal"
+      }
+    },
+    "testflight": {
+      "extends": "production",
+      "ios": {
+        "appleId": "alfred.ahoussinou@gmail.com",
+        "appleTeamId": "F452SUU638",
+        "ascAppId": "6801583755"
       }
     }
   }

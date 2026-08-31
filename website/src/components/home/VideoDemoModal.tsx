@@ -52,7 +52,7 @@ export function VideoDemoModal({ isOpen, onClose }: VideoDemoModalProps) {
                   Vidéo de présentation
                 </h3>
                 <p className="mt-2 text-sm text-white/55">
-                  Connecter · Progresser · Réussir. Cinq pôles, covoiturage, terrain.
+                  Connecter. Progresser. Révéler. Six portes d’entrée, covoiturage, terrain.
                 </p>
 
                 <div className="mt-6 aspect-video overflow-hidden rounded-2xl bg-black">

@@ -399,6 +399,10 @@ export const sponsorsService = {
     city: string;
     offer_type?: SponsorOfferType;
     target_categories?: string[];
+    sponsor_target?: SponsorOffer['sponsor_target'];
+    duration_days?: number | null;
+    amount_cents?: number | null;
+    desired_visibility?: string;
   }): Promise<string> {
     if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
 
@@ -415,6 +419,10 @@ export const sponsorsService = {
       geo_target_city: city.toLowerCase(),
       offer_type: input.offer_type ?? 'equipment',
       target_categories: input.target_categories ?? [],
+      sponsor_target: input.sponsor_target ?? null,
+      duration_days: input.duration_days ?? null,
+      amount_cents: input.amount_cents ?? null,
+      desired_visibility: input.desired_visibility ?? null,
       logo_url: '',
       active: true,
       views_count: 0,

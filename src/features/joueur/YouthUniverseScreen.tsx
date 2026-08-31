@@ -34,6 +34,7 @@ import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { JoueurArcadeShell, JoueurScorePop } from './JoueurGameFx';
 import { joueurGamePress, joueurGameReward } from './joueurSfx';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 type Actions = {
   onOpenTrain: () => void;
@@ -166,9 +167,10 @@ export function YouthUniverseScreen({
   const xpPct = Math.max(0, Math.min(1, xpInto / Math.max(1, xpMax)));
   const stampsDone = challenges.filter((c) => done.has(c.id)).length;
 
+  const joueurTheme = useJoueurTheme();
   const ink = identity.ink;
   const muted = identity.inkMuted;
-  const accent = identity.accent;
+  const accent = joueurTheme.accent;
   const firstName =
     profile.display_name?.trim().split(/\s+/)[0] || (isGirl ? 'Championne' : 'Champion');
 
@@ -213,9 +215,11 @@ export function YouthUniverseScreen({
     else onOpenPass();
   };
 
-  const skyTop = isGirl ? '#FFF0F7' : '#FFF9E0';
-  const skyMid = isGirl ? '#FBCFE8' : '#FDE68A';
-  const ground = isGirl ? '#A7F3D0' : '#86EFAC';
+  const skyTop = isGirl ? '#2A0A1F' : '#2A1808';
+  const skyMid = isGirl ? '#6B1A52' : '#7C4A12';
+  const ground = isGirl ? '#DB2777' : '#D97706';
+  const pillBg = isGirl ? 'rgba(42,10,31,0.88)' : 'rgba(42,24,8,0.88)';
+  const speechBg = isGirl ? 'rgba(26,8,20,0.92)' : 'rgba(26,16,6,0.92)';
   const mascotIcon: IconName = isGirl ? 'star-four-points' : 'football';
   const worldTitle = isGirl ? 'Île magique' : 'Terrain secret';
 
@@ -254,15 +258,15 @@ export function YouthUniverseScreen({
             </View>
 
             <View style={styles.mapHud}>
-              <View style={[styles.candyPill, { backgroundColor: 'rgba(255,255,255,0.92)' }]}>
+              <View style={[styles.candyPill, { backgroundColor: pillBg, borderColor: `${accent}55`, borderWidth: 1 }]}>
                 <Icon name="star" size={16} color={accent} variant="filled" />
-                <ProDayText variant="section" style={{ color: ink, fontWeight: '800', fontSize: 18 }}>
+                <ProDayText variant="section" style={{ color: identity.ink, fontWeight: '800', fontSize: 18 }}>
                   {stars}
                 </ProDayText>
               </View>
-              <View style={[styles.candyPill, { backgroundColor: 'rgba(255,255,255,0.92)' }]}>
+              <View style={[styles.candyPill, { backgroundColor: pillBg, borderColor: `${accent}55`, borderWidth: 1 }]}>
                 <Icon name="time" size={15} color={accent} variant="filled" />
-                <ProDayText variant="caption" style={{ color: ink, fontWeight: '800' }}>
+                <ProDayText variant="caption" style={{ color: identity.ink, fontWeight: '800' }}>
                   {streak} j
                 </ProDayText>
               </View>
@@ -272,7 +276,7 @@ export function YouthUniverseScreen({
               <BounceOrb color={identity.soft} size={96}>
                 <Icon name={mascotIcon} size={44} color={accent} variant="filled" />
               </BounceOrb>
-              <View style={[styles.speech, { borderColor: accent }]}>
+              <View style={[styles.speech, { borderColor: accent, backgroundColor: speechBg }]}>
                 <ProDayText variant="caption" style={{ color: accent, fontWeight: '800' }}>
                   {isGirl ? 'Salut' : 'Hey'} {firstName} !
                 </ProDayText>
@@ -305,7 +309,7 @@ export function YouthUniverseScreen({
               joueurGamePress();
               onOpenTrain();
             }}
-            scaleTo={0.96}
+            scaleTo={0.98}
             haptic
             style={[styles.playBtn, { backgroundColor: accent }]}
           >
@@ -351,7 +355,7 @@ export function YouthUniverseScreen({
                   ) : null}
                   <PressableSpring
                     onPress={() => openNode(node.id)}
-                    scaleTo={0.92}
+                    scaleTo={0.98}
                     haptic
                     style={[
                       styles.pathOrb,
@@ -416,7 +420,7 @@ export function YouthUniverseScreen({
                       if (!isDone) void complete(c.id, c.xp);
                       else joueurGamePress();
                     }}
-                    scaleTo={0.94}
+                    scaleTo={0.98}
                     haptic
                     style={[
                       styles.stampCard,
@@ -491,7 +495,7 @@ export function YouthUniverseScreen({
                     else if (q.tabHint === 'home') onOpenTrain();
                     void onClaimDaily(q);
                   }}
-                  scaleTo={0.97}
+                  scaleTo={0.98}
                   style={[
                     styles.sticker,
                     {
@@ -535,7 +539,7 @@ export function YouthUniverseScreen({
                 joueurGamePress();
                 onOpenCoach();
               }}
-              scaleTo={0.96}
+              scaleTo={0.98}
               style={[styles.helpCard, { backgroundColor: accent }]}
             >
               <Icon name="chat" size={22} color="#fff" variant="filled" />
@@ -548,7 +552,7 @@ export function YouthUniverseScreen({
                 joueurGamePress();
                 onOpenPass();
               }}
-              scaleTo={0.96}
+              scaleTo={0.98}
               style={[
                 styles.helpCard,
                 { backgroundColor: identity.elevated, borderColor: accent, borderWidth: 2 },
@@ -564,7 +568,7 @@ export function YouthUniverseScreen({
                 joueurGamePress();
                 onOpenClub();
               }}
-              scaleTo={0.96}
+              scaleTo={0.98}
               style={[
                 styles.helpCard,
                 { backgroundColor: identity.elevated, borderColor: accent, borderWidth: 2 },
@@ -631,7 +635,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   speech: {
-    backgroundColor: 'rgba(255,255,255,0.92)',
     borderRadius: 22,
     borderWidth: 2.5,
     paddingHorizontal: 16,

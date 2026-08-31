@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Linking } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  Linking,
+  Alert,
+  Platform,
+  useWindowDimensions,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -14,20 +22,31 @@ import {
   Syne_700Bold,
   Syne_800ExtraBold,
 } from '@expo-google-fonts/syne';
+import {
+  Sora_600SemiBold,
+  Sora_700Bold,
+} from '@expo-google-fonts/sora';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { type MainTabId } from './src/navigation/MainTabs';
 import {
   resolveMainTabScreen,
   shouldInjectShopTab,
 } from './src/navigation/resolveMainTabScreen';
+import { getMobileRailLayout } from './src/navigation/mobileTabConfig';
 import {
   getGuestVisibleTabs,
   isGuestTabAllowed,
   resolveGuestTab,
 } from './src/navigation/guestAccess';
 import {
+  guestProfilTabOpensAuthOverlay,
+  isGuestAuthOverlayVisible,
+} from './src/navigation/authOverlay';
+import { AuthOverlayHost } from './src/navigation/AuthOverlayHost';
+import {
   TabNavigationProvider,
   type AuthIntent,
+  type SetActiveTabOptions,
 } from './src/context/TabNavigationContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { LocaleProvider } from './src/context/LocaleContext';
@@ -38,8 +57,9 @@ import { AppSpaceProvider } from './src/context/AppSpaceContext';
 import { ProductLineProvider, useProductLine } from './src/context/ProductLineContext';
 import { LaunchIntroProvider } from './src/context/LaunchIntroContext';
 import { JoueurSessionProvider } from './src/context/JoueurSessionContext';
+import { PlayerThemeProvider } from './src/context/PlayerThemeContext';
 import { JoueurProgressProvider } from './src/context/JoueurProgressContext';
-import { JoueurLevelUpOverlay } from './src/features/joueur/JoueurLevelUpOverlay';
+import { JoueurShellExtras } from './src/features/joueur/JoueurShellExtras';
 import {
   JoueurGateGuard,
   useJoueurGateBlocksTabs,
@@ -55,30 +75,88 @@ function JoueurTabBarSlot(props: {
   if (blocked) return null;
   return <BottomTabBar {...props} />;
 }
+
+/** Bascule Club ↔ Président avec transition légère. */
+function ClubPresidentShellSwitch({
+  activeTab,
+  onTabChange,
+  adminPreviewBypass = false,
+}: {
+  activeTab: MainTabId;
+  onTabChange: (tab: MainTabId) => void;
+  /** Aperçu admin du pôle Président — n’assouplit pas l’ACL adhérents. */
+  adminPreviewBypass?: boolean;
+}) {
+  const profile = useSessionProfile();
+  const ws = useClubWorkspace();
+  const { clubShellMode, setClubShellMode } = useProductLine();
+  const wantPresident = clubShellMode === 'president' || adminPreviewBypass;
+  const allowed =
+    adminPreviewBypass ||
+    canAccessPresidentPole({
+      role: profile?.role,
+      uid: profile?.uid,
+      clubId: ws.clubId ?? profile?.profile?.club_id,
+      clubOwnerUid: ws.club?.owner_uid,
+    });
+
+  useEffect(() => {
+    if (!wantPresident || ws.loading || allowed) return;
+    Alert.alert(PRESIDENT_POLE_DENIED_TITLE, PRESIDENT_POLE_DENIED_BODY);
+    void setClubShellMode('club');
+  }, [wantPresident, ws.loading, allowed, setClubShellMode]);
+
+  const president = wantPresident && (ws.loading || allowed);
+  return (
+    <PoleShellTransition shellKey={president ? 'president' : 'club'}>
+      {president ? (
+        <PresidentAppShell />
+      ) : (
+        <ClubAppShell activeTab={activeTab} onTabChange={onTabChange} />
+      )}
+    </PoleShellTransition>
+  );
+}
 import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { BottomTabBar } from './src/components/navigation/BottomTabBar';
+import {
+  desktopShellChrome,
+  isDesktopWideLayout,
+} from './src/theme/desktopShellChrome';
 import { WomanSpaceDefaults } from './src/components/appSpace/WomanSpaceDefaults';
-import { AnimatedTabContent } from './src/components/motion';
+import { AnimatedTabContent, PoleShellTransition } from './src/components/motion';
+import { ProDayMotionProvider } from './src/motion';
 import { colors, spacing } from './src/theme/designTokens';
 import { EmailVerificationScreen } from './src/screens/EmailVerificationScreen';
 import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
-import { AdminAppShell } from './src/navigation/AdminAppShell';
+import { AdminAppShell, AdminPreviewBanner } from './src/features/admin';
 import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { SupporterAppShell } from './src/navigation/SupporterAppShell';
 import { ParentAppShell } from './src/navigation/ParentAppShell';
 import { parentPortalService } from './src/services/parentPortal.service';
 import { ClubAppShell } from './src/features/club/shell/ClubAppShell';
+import { useClubWorkspace } from './src/features/club/hooks/useClubWorkspace';
 import { CoachAppShell } from './src/features/coach/shell/CoachAppShell';
-import { AdminPreviewBanner } from './src/components/admin/AdminPreviewBanner';
+import {
+  canAccessPresidentPole,
+  PRESIDENT_POLE_DENIED_BODY,
+  PRESIDENT_POLE_DENIED_TITLE,
+  PresidentAppShell,
+  PresidentShellBridgeProvider,
+} from './src/features/president';
+import { COACH_SITE } from './src/content/coachPageIdentity';
 import { PoleHelpChatbot } from './src/components/help/PoleHelpChatbot';
+import { ProDayAiChat } from './src/components/ai/ProDayAiChat';
+import { isJoueurPoleProductLine } from './src/utils/joueurPoleAccess';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
 import { isPlatformAdminEmail } from './src/config/admin';
-import type {
-  CarpoolDeepLink,
-  DashboardDeepLink,
-  MatchsDeepLink,
-  MercatoDeepLink,
-  ProfileDeepLink,
+import {
+  resolveAutoReturnTab,
+  type CarpoolDeepLink,
+  type DashboardDeepLink,
+  type MatchsDeepLink,
+  type MercatoDeepLink,
+  type ProfileDeepLink,
 } from './src/utils/navigationDeepLink';
 import { profileMatchesActiveLine, getUserProductLine } from './src/utils/productLineAccess';
 import { getVisibleMainTabs } from './src/content/poleExperience';
@@ -103,6 +181,7 @@ import type { UserRole } from './src/models/User';
 import type { ProductLineId } from './src/models/ProductLine';
 import { trafficService } from './src/services/traffic.service';
 import { referralService } from './src/services/referral.service';
+import { useAndroidBackHandler } from './src/hooks/useAndroidBackHandler';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -115,6 +194,8 @@ export default function App() {
     Inter_900Black,
     Syne_700Bold,
     Syne_800ExtraBold,
+    Sora_600SemiBold,
+    Sora_700Bold,
   });
 
   const onLayoutRoot = useCallback(() => {
@@ -169,7 +250,9 @@ export default function App() {
               <ProductLineProvider>
                 <AuthGreetingProvider>
                   <LaunchIntroProvider>
-                    <AppShell />
+                    <ProDayMotionProvider>
+                      <AppShell />
+                    </ProDayMotionProvider>
                   </LaunchIntroProvider>
                 </AuthGreetingProvider>
               </ProductLineProvider>
@@ -189,6 +272,9 @@ function AppShell() {
     loading: productLineLoading,
     setProductLine,
     setProSignupPresetRole,
+    setClubShellMode,
+    parentGuestSupporter,
+    returnParentFromSupporterGuest,
   } = useProductLine();
   const sessionProfile = useSessionProfile();
   const {
@@ -205,6 +291,7 @@ function AppShell() {
   const { config: platformConfig, loading: platformConfigLoading } = usePlatformConfig();
   const { filterTabs, isEnabled, flagForTab, disabledCopy } = usePlatformFeatureFlags();
   const [previewUserMode, setPreviewUserMode] = useState(false);
+  const [adminPresidentPreview, setAdminPresidentPreview] = useState(false);
   const [activeTab, setActiveTab] = useState<MainTabId>('home');
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
   const [pendingTeamEventId, setPendingTeamEventId] = useState<string | null>(null);
@@ -224,6 +311,7 @@ function AppShell() {
   const [pendingDashboardView, setPendingDashboardView] = useState<DashboardDeepLink | null>(
     null
   );
+  const [returnTab, setReturnTab] = useState<MainTabId | null>(null);
   const { count: unreadCount, refresh: refreshUnread } = useUnreadMessageCount();
   const screenTime = useParentalScreenTime(profile);
   useParentalActivityJournal(profile, activeTab);
@@ -231,23 +319,26 @@ function AppShell() {
 
   const isGuest = !authLoading && !profile;
 
-  const visibleTabs = useMemo(
-    () =>
-      filterTabs(
-        isGuest
-          ? getGuestVisibleTabs(productLine)
-          : getVisibleMainTabs(productLine, sessionProfile?.role, sessionProfile),
-      ),
-    [isGuest, productLine, sessionProfile, filterTabs],
-  );
+  const visibleTabs = useMemo(() => {
+    const tabs = isGuest
+      ? getGuestVisibleTabs(productLine)
+      : getVisibleMainTabs(productLine, sessionProfile?.role, sessionProfile);
+    if (sessionProfile?.role === 'player') return tabs;
+    return filterTabs(tabs);
+  }, [isGuest, productLine, sessionProfile, filterTabs]);
 
   const screenTabs = useMemo((): MainTabId[] => {
-    if (!shouldInjectShopTab(sessionProfile?.role, productLine) || !isEnabled('shop')) {
+    if (!shouldInjectShopTab(sessionProfile?.role, productLine)) {
       return visibleTabs;
     }
     if (visibleTabs.includes('shop')) return visibleTabs;
     return [...visibleTabs, 'shop'];
-  }, [visibleTabs, sessionProfile?.role, productLine, isEnabled]);
+  }, [visibleTabs, sessionProfile?.role, productLine]);
+
+  const primaryDockTabs = useMemo(() => {
+    const rail = getMobileRailLayout(productLine, sessionProfile?.role, screenTabs);
+    return new Set(rail.flat ?? []);
+  }, [productLine, sessionProfile?.role, screenTabs]);
 
   useEffect(() => {
     if (activeTab === 'messages') refreshUnread();
@@ -260,6 +351,13 @@ function AppShell() {
   }, [isGuest, activeTab, productLine]);
 
   useEffect(() => {
+    if (!profile) return;
+    setPendingAuthIntent(null);
+    setPendingSignupProductLine(null);
+    setPendingSignupRole(null);
+  }, [profile]);
+
+  useEffect(() => {
     if (!screenTabs.includes(activeTab)) {
       setActiveTab(screenTabs[0] ?? 'home');
     }
@@ -268,6 +366,7 @@ function AppShell() {
   useEffect(() => {
     if (productLineLoading || authLoading || !profile) return;
     if (isPlatformAdminEmail(profile.email)) return;
+    if (profile.role === 'parent' && parentGuestSupporter) return;
     const userLine = getUserProductLine(profile);
     if (userLine !== productLine) {
       void setProductLine(userLine);
@@ -276,7 +375,15 @@ function AppShell() {
     if (!profileMatchesActiveLine(profile, productLine)) {
       void signOut();
     }
-  }, [productLine, productLineLoading, authLoading, profile, setProductLine, signOut]);
+  }, [
+    productLine,
+    productLineLoading,
+    authLoading,
+    profile,
+    setProductLine,
+    signOut,
+    parentGuestSupporter,
+  ]);
 
   useEffect(() => {
     if (authLoading || !profile || !pendingCarpoolLink) return;
@@ -295,6 +402,75 @@ function AppShell() {
     if (!screenTabs.includes('matchs') || activeTab === 'matchs') return;
     setActiveTab('matchs');
   }, [authLoading, profile, pendingMatchsLink, screenTabs, activeTab]);
+
+  const dismissAuthOverlay = useCallback(() => {
+    setPendingAuthIntent(null);
+    setPendingSignupProductLine(null);
+    setPendingSignupRole(null);
+  }, []);
+
+  const handleTabPress = useCallback(
+    (tab: MainTabId, options?: SetActiveTabOptions) => {
+      if (tab !== activeTab) prodayHaptics.tabSwitch();
+      if (guestProfilTabOpensAuthOverlay(tab, isGuest, activeTab)) {
+        setPendingAuthIntent((prev) => prev ?? 'login');
+        return;
+      }
+      const nextReturn = resolveAutoReturnTab(
+        activeTab,
+        tab,
+        primaryDockTabs,
+        options?.returnTo,
+      );
+      if (nextReturn !== undefined) {
+        setReturnTab(nextReturn);
+      }
+      setActiveTab(isGuest ? resolveGuestTab(tab, productLine) : tab);
+    },
+    [activeTab, isGuest, primaryDockTabs, productLine],
+  );
+
+  const goBackTab = useCallback(() => {
+    if (!returnTab) return;
+    const target = returnTab;
+    setReturnTab(null);
+    setActiveTab(isGuest ? resolveGuestTab(target, productLine) : target);
+  }, [returnTab, isGuest, productLine]);
+
+  const hasPendingModals = Boolean(
+    pendingChatThreadId ||
+      pendingTeamEventId ||
+      pendingMatchsLink ||
+      pendingMercatoView ||
+      pendingProfileView ||
+      pendingDashboardView ||
+      pendingCarpoolLink,
+  );
+
+  const clearAllPendingModals = useCallback(() => {
+    setPendingChatThreadId(null);
+    setPendingTeamEventId(null);
+    setPendingMatchsLink(null);
+    setPendingMercatoView(null);
+    setPendingProfileView(null);
+    setPendingDashboardView(null);
+    setPendingCarpoolLink(null);
+  }, []);
+
+  useAndroidBackHandler({
+    activeTab,
+    returnTab,
+    pendingAuthIntent,
+    hasPendingModals,
+    onDismissAuth: dismissAuthOverlay,
+    onClearPendingModals: clearAllPendingModals,
+    onGoBackTab: goBackTab,
+    onGoHome: () => setActiveTab('home'),
+  });
+
+  // Must stay above every conditional return — auth/role gates skip the main shell
+  // and would otherwise drop this hook ("Rendered fewer hooks than expected").
+  const { width: windowWidth } = useWindowDimensions();
 
   if (!authLoading && profile && needsEmailVerification) {
     return (
@@ -354,7 +530,19 @@ function AppShell() {
   }
 
   if (!authLoading && profile && shouldUseAdminShell && !previewUserMode) {
-    return <AdminAppShell onPreviewUserApp={() => setPreviewUserMode(true)} />;
+    return (
+      <AdminAppShell
+        onPreviewUserApp={() => {
+          setAdminPresidentPreview(false);
+          setPreviewUserMode(true);
+        }}
+        onPreviewPresidentPole={() => {
+          void setClubShellMode('president');
+          setAdminPresidentPreview(true);
+          setPreviewUserMode(true);
+        }}
+      />
+    );
   }
 
   if (!authLoading && (sessionProfile ?? profile) && isSponsorRole((sessionProfile ?? profile)!.role)) {
@@ -370,9 +558,15 @@ function AppShell() {
     (sessionProfile ?? profile) &&
     parentPortalService.isParentRole((sessionProfile ?? profile)!.role)
   ) {
+    const showSupporterGuest = parentGuestSupporter && isEnabled('supporter');
+    if (parentGuestSupporter && !isEnabled('supporter')) {
+      void returnParentFromSupporterGuest();
+    }
     return (
       <SubscriptionProvider profile={sessionProfile ?? profile}>
-        <ParentAppShell />
+        <PoleShellTransition shellKey={showSupporterGuest ? 'supporter' : 'parent'}>
+          {showSupporterGuest ? <SupporterAppShell /> : <ParentAppShell />}
+        </PoleShellTransition>
       </SubscriptionProvider>
     );
   }
@@ -405,30 +599,37 @@ function AppShell() {
     );
   }
 
-  const handleTabPress = (tab: MainTabId) => {
-    if (tab !== activeTab) prodayHaptics.tabSwitch();
-    setActiveTab(isGuest ? resolveGuestTab(tab, productLine) : tab);
-  };
-
   const openChat = (threadId: string) => {
     if (isGuest) {
       setPendingAuthIntent('login');
-      handleTabPress('profil');
       return;
     }
     setPendingChatThreadId(threadId);
-    setActiveTab('messages');
+    handleTabPress('messages');
   };
 
   const Screen = resolveMainTabScreen(activeTab, sessionProfile?.role, productLine);
   const disabledFlag = flagForTab(activeTab);
   const tabFeatureBlocked = disabledFlag != null && !isEnabled(disabledFlag);
   const blockedFlag = disabledFlag;
+  const showFeatureDisabledPanel =
+    tabFeatureBlocked && blockedFlag != null && sessionProfile?.role !== 'player';
   const isSponsor = isSponsorRole(sessionProfile?.role);
-  const isClubShell = sessionProfile?.role === 'club';
-  const isCoachShell = sessionProfile?.role === 'coach';
+  const forcePresidentPreview = previewUserMode && adminPresidentPreview;
+  const isClubShell = sessionProfile?.role === 'club' || forcePresidentPreview;
+  const isCoachShell = sessionProfile?.role === 'coach' && !forcePresidentPreview;
   const usesRoleShell = isClubShell || isCoachShell;
-  const shellBackground = isSponsor ? SPONSOR_THEME.background : themeColors.background;
+  /** Expo web grand écran : rail latéral + colonne contenu (pas d’app macOS native). */
+  const desktopWideTabs =
+    Platform.OS === 'web' && isDesktopWideLayout(windowWidth) && !usesRoleShell;
+  const joueurPoleActive = isJoueurPoleProductLine(productLine);
+  const shellBackground = isSponsor
+    ? SPONSOR_THEME.background
+    : isCoachShell
+      ? COACH_SITE.bg
+      : isClubShell
+        ? themeColors.background
+        : themeColors.background;
 
   if (!localeReady) {
     return (
@@ -443,6 +644,7 @@ function AppShell() {
 
   const mainApp = (
     <JoueurSessionProvider profile={sessionProfile ?? profile}>
+    <PlayerThemeProvider>
     <JoueurProgressProvider profile={sessionProfile ?? profile}>
     <AppSpaceProvider>
       <WomanSpaceDefaults />
@@ -451,6 +653,8 @@ function AppShell() {
         value={{
           activeTab,
           setActiveTab: handleTabPress,
+          returnTab,
+          goBackTab,
           pendingChatThreadId,
           openChat,
           clearPendingChat: () => setPendingChatThreadId(null),
@@ -458,7 +662,6 @@ function AppShell() {
           openTeamEvent: (eventId) => {
             if (isGuest) {
               setPendingAuthIntent('login');
-              handleTabPress('profil');
               return;
             }
             setPendingTeamEventId(eventId);
@@ -470,22 +673,20 @@ function AppShell() {
           openMatchs: (link) => {
             if (isGuest) {
               setPendingAuthIntent('login');
-              handleTabPress('profil');
               return;
             }
             setPendingMatchsLink(link ?? { homeTab: 'season' });
-            handleTabPress('matchs');
+            handleTabPress('matchs', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
           },
           clearPendingMatchs: () => setPendingMatchsLink(null),
           pendingMercatoView,
           openMercato: (view) => {
             if (isGuest) {
               setPendingAuthIntent('login');
-              handleTabPress('profil');
               return;
             }
             setPendingMercatoView(view ?? 'home');
-            handleTabPress('recrutement');
+            handleTabPress('recrutement', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
           },
           clearPendingMercato: () => setPendingMercatoView(null),
           pendingProfileView,
@@ -497,7 +698,6 @@ function AppShell() {
           pendingAuthIntent,
           openAuth: (intent) => {
             setPendingAuthIntent(intent);
-            handleTabPress('profil');
           },
           clearPendingAuthIntent: () => setPendingAuthIntent(null),
           pendingSignupProductLine,
@@ -509,7 +709,6 @@ function AppShell() {
               setPendingSignupProductLine('sponsor');
               setPendingSignupRole('sponsor');
               setPendingAuthIntent('signup');
-              handleTabPress('profil');
               void tier;
             })();
           },
@@ -520,7 +719,6 @@ function AppShell() {
               setPendingSignupProductLine('sponsor');
               setPendingSignupRole('sponsor');
               setPendingAuthIntent('signup');
-              handleTabPress('profil');
             })();
           },
           clearSignupPreset: () => {
@@ -534,45 +732,84 @@ function AppShell() {
               return;
             }
             setPendingDashboardView(view);
-            handleTabPress('home');
+            const preserveOrigin = activeTab !== 'home';
+            handleTabPress(
+              'home',
+              preserveOrigin ? { returnTo: activeTab } : undefined,
+            );
           },
           clearPendingDashboard: () => setPendingDashboardView(null),
-          openShop: () => handleTabPress('shop'),
+          openShop: () =>
+            handleTabPress('shop', activeTab === 'plus' ? { returnTo: 'plus' } : undefined),
           pendingCarpoolLink,
           openCarpool: (link) => {
             if (isGuest) {
               setPendingAuthIntent('login');
-              handleTabPress('profil');
               return;
             }
             setPendingCarpoolLink(link ?? { chapter: 'reserver' });
-            handleTabPress('covoiturage');
+            handleTabPress('covoiturage', activeTab === 'plus' ? { returnTo: 'plus' } : undefined);
           },
           clearPendingCarpool: () => setPendingCarpoolLink(null),
         }}
       >
         <SafeAreaView
           key={locale}
-          style={[styles.root, { backgroundColor: shellBackground }]}
+          style={[
+            styles.root,
+            { backgroundColor: shellBackground },
+            desktopWideTabs ? styles.rootDesktop : null,
+          ]}
           edges={previewUserMode ? [] : ['top', 'left', 'right']}
         >
           <StatusBar style="light" />
           {previewUserMode ? (
-            <AdminPreviewBanner onExitPreview={() => setPreviewUserMode(false)} />
+            <AdminPreviewBanner
+              onExitPreview={() => {
+                setPreviewUserMode(false);
+                setAdminPresidentPreview(false);
+                void setClubShellMode('club');
+              }}
+            />
           ) : null}
           {profile ? <ProdayNotificationBridge /> : null}
           {profile ? <ProdayBrainBridge /> : null}
           {profile ? <ProdayCalendarSyncBridge /> : null}
-          {profile ? <PoleHelpChatbot /> : null}
-          <View style={styles.screen}>
+          {profile && !joueurPoleActive ? <PoleHelpChatbot /> : null}
+          {profile && !joueurPoleActive && !isClubShell ? <ProDayAiChat /> : null}
+          {desktopWideTabs ? (
+            <JoueurTabBarSlot
+              activeTab={activeTab}
+              onTabPress={handleTabPress}
+              unreadCount={unreadCount}
+              visibleTabs={screenTabs}
+            />
+          ) : null}
+          <View
+            style={[
+              styles.screen,
+              desktopWideTabs
+                ? [
+                    styles.screenDesktop,
+                    { maxWidth: desktopShellChrome.contentMaxWidth },
+                  ]
+                : null,
+            ]}
+          >
             <JoueurGateGuard>
               {isClubShell ? (
-                <ClubAppShell activeTab={activeTab} onTabChange={handleTabPress} />
+                <PresidentShellBridgeProvider>
+                  <ClubPresidentShellSwitch
+                    activeTab={activeTab}
+                    onTabChange={handleTabPress}
+                    adminPreviewBypass={forcePresidentPreview}
+                  />
+                </PresidentShellBridgeProvider>
               ) : isCoachShell ? (
                 <CoachAppShell activeTab={activeTab} onTabChange={handleTabPress} />
               ) : (
                 <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
-                  {tabFeatureBlocked && blockedFlag ? (
+                  {showFeatureDisabledPanel ? (
                     <FeatureDisabledPanel flag={blockedFlag} />
                   ) : (
                     <Screen />
@@ -581,7 +818,7 @@ function AppShell() {
               )}
             </JoueurGateGuard>
           </View>
-          {usesRoleShell ? null : (
+          {usesRoleShell || desktopWideTabs ? null : (
             <JoueurTabBarSlot
               activeTab={activeTab}
               onTabPress={handleTabPress}
@@ -589,11 +826,20 @@ function AppShell() {
               visibleTabs={screenTabs}
             />
           )}
+          {isGuestAuthOverlayVisible(isGuest, pendingAuthIntent) ? (
+            <AuthOverlayHost
+              intent={pendingAuthIntent}
+              signupProductLine={pendingSignupProductLine ?? undefined}
+              signupInitialRole={pendingSignupRole ?? undefined}
+              onDismiss={dismissAuthOverlay}
+            />
+          ) : null}
         </SafeAreaView>
+        <JoueurShellExtras />
       </TabNavigationProvider>
-      <JoueurLevelUpOverlay />
     </AppSpaceProvider>
     </JoueurProgressProvider>
+    </PlayerThemeProvider>
     </JoueurSessionProvider>
   );
 
@@ -617,7 +863,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   root: { flex: 1, backgroundColor: colors.background },
+  rootDesktop: { flexDirection: 'row', alignItems: 'stretch' },
   screen: { flex: 1 },
+  screenDesktop: {
+    flex: 1,
+    width: '100%',
+    alignSelf: 'center',
+    minWidth: 0,
+  },
   adminLoader: {
     flex: 1,
     backgroundColor: colors.surfaceInverse,

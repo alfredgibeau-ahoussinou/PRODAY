@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useMessagesData } from '../../hooks/useAppData';
 import { useTabNavigation } from '../../context/TabNavigationContext';
-import { useSponsorShellOptional } from '../../context/SponsorShellContext';
+import { useSponsorShellOptional, sponsorTabRoute } from '../../context/SponsorShellContext';
 import { useSponsorDashboard } from '../../hooks/useSponsorDashboard';
 import { ChatScreen } from '../ChatScreen';
 import { SponsorScreenHeader } from '../../components/sponsor/SponsorScreenHeader';
@@ -21,9 +21,16 @@ import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
 import { openSponsorProspectChat } from '../../utils/openSponsorProspectChat';
 import type { SponsorProspect } from '../../models/SponsorOffer';
-import { PushScreenTransition } from '../../components/motion';
+import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { SponsorQuotaBanner } from '../../components/sponsor/SponsorQuotaBanner';
 import { SponsorGuestGate } from '../../components/sponsor/SponsorGuestGate';
+import { Icon } from '../../components/ui/Icon';
+import {
+  countUnreadThreads,
+  formatThreadPreview,
+  sortThreadsForInbox,
+} from '../../utils/messagesInboxModel';
+import { sponsorNetworkEmptyCopy } from '../../utils/sponsorHubModel';
 
 interface SponsorNetworkScreenProps {
   shellMode?: boolean;
@@ -43,7 +50,7 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
   const clearPendingChat = sponsorShell?.clearPendingChat ?? tabNav.clearPendingChat;
   const bottomInset = shellMode ? SPONSOR_NAV_INSET : TAB_BAR_CONTENT_INSET;
   const { threads, loading, refresh } = useMessagesData(profile?.uid);
-  const { prospects, analytics, loading: sponsorLoading, stats } = useSponsorDashboard(
+  const { prospects, loading: sponsorLoading, stats } = useSponsorDashboard(
     profile?.uid,
     company
   );
@@ -54,6 +61,10 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
   const [segment, setSegment] = useState<'messages' | 'prospects'>(initialSegment);
 
   useEffect(() => {
+    setSegment(initialSegment);
+  }, [initialSegment]);
+
+  useEffect(() => {
     if (pendingChatThreadId) {
       setActiveThreadId(pendingChatThreadId);
       setChatDraft(pendingChatDraft ?? undefined);
@@ -61,6 +72,10 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
       clearPendingChat();
     }
   }, [pendingChatThreadId, pendingChatDraft, clearPendingChat]);
+
+  const sortedThreads = useMemo(() => sortThreadsForInbox(threads), [threads]);
+  const unreadCount = useMemo(() => countUnreadThreads(threads), [threads]);
+  const emptyCopy = sponsorNetworkEmptyCopy(segment);
 
   const handleContactProspect = (prospect: SponsorProspect) => {
     if (!profile) return;
@@ -92,6 +107,20 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
     }
     setPendingTemplate(text);
     setSegment('prospects');
+  };
+
+  const goOffers = () => {
+    sponsorShell?.navigate(sponsorTabRoute('offres'));
+  };
+
+  const goCreateOffer = () => {
+    if (!sponsorShell) return;
+    sponsorShell.requestCreateOffer();
+    sponsorShell.navigate(sponsorTabRoute('offres'));
+  };
+
+  const goClubs = () => {
+    sponsorShell?.navigate(sponsorTabRoute('clubs'));
   };
 
   let chatOverlay: React.ReactNode = null;
@@ -138,7 +167,11 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
         {!shellMode ? (
           <SponsorScreenHeader
             title="Réseau sponsors"
-            subtitle="Messages clubs, prospects locaux et modèles pour accélérer vos prises de contact."
+            subtitle={
+              unreadCount > 0
+                ? `${unreadCount} non lu${unreadCount > 1 ? 's' : ''} · messages clubs et prospects`
+                : 'Messages clubs, prospects locaux et modèles pour accélérer vos prises de contact.'
+            }
           />
         ) : null}
 
@@ -146,22 +179,20 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
           <SponsorQuotaBanner profile={profile} activeOffers={stats.activeOffers} />
         ) : null}
 
-        {analytics ? (
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{threads.length}</Text>
-              <Text style={styles.statLabel}>Conversations</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{analytics.leads}</Text>
-              <Text style={styles.statLabel}>Contacts</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{prospects.length}</Text>
-              <Text style={styles.statLabel}>Prospects</Text>
-            </View>
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{threads.length}</Text>
+            <Text style={styles.statLabel}>Conversations</Text>
           </View>
-        ) : null}
+          <View style={[styles.statBox, unreadCount > 0 && styles.statBoxAlert]}>
+            <Text style={styles.statValue}>{unreadCount}</Text>
+            <Text style={styles.statLabel}>Non lus</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{prospects.length}</Text>
+            <Text style={styles.statLabel}>Prospects</Text>
+          </View>
+        </View>
 
         <Text style={styles.sectionTitle}>Modèles rapides</Text>
         {pendingTemplate ? (
@@ -198,7 +229,8 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
             testID="sponsor-network-segment-messages"
           >
             <Text style={[styles.segmentText, segment === 'messages' && styles.segmentTextOn]}>
-              Messages ({threads.length})
+              Messages ({threads.length}
+              {unreadCount > 0 ? ` · ${unreadCount}` : ''})
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -218,7 +250,23 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
           <SponsorGuestGate message="Connectez-vous pour accéder aux messages et prospects clubs." />
         ) : segment === 'prospects' ? (
           prospects.length === 0 ? (
-            <Text style={styles.empty}>Aucun prospect pour le moment.</Text>
+            <View style={styles.emptyCard}>
+              <Icon name="people" size={28} color={SPONSOR_THEME.primary} />
+              <Text style={styles.emptyTitle}>{emptyCopy.title}</Text>
+              <Text style={styles.empty}>{emptyCopy.body}</Text>
+              <View style={styles.emptyActions}>
+                {sponsorShell ? (
+                  <PressableSpring style={styles.emptyPrimary} onPress={goOffers} scaleTo={0.97} haptic>
+                    <Text style={styles.emptyPrimaryText}>{emptyCopy.primaryCta}</Text>
+                  </PressableSpring>
+                ) : null}
+                {sponsorShell && emptyCopy.secondaryCta ? (
+                  <PressableSpring style={styles.emptyGhost} onPress={goClubs} scaleTo={0.97} haptic>
+                    <Text style={styles.emptyGhostText}>{emptyCopy.secondaryCta}</Text>
+                  </PressableSpring>
+                ) : null}
+              </View>
+            </View>
           ) : (
             prospects.map((p) => (
               <View key={p.id} style={styles.prospectCard}>
@@ -243,32 +291,74 @@ export const SponsorNetworkScreen: React.FC<SponsorNetworkScreenProps> = ({
           )
         ) : threads.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Aucun message</Text>
-            <Text style={styles.empty}>
-              Publiez une offre ou consultez les prospects pour démarrer une conversation.
-            </Text>
+            <Icon name="chat" size={28} color={SPONSOR_THEME.primary} />
+            <Text style={styles.emptyTitle}>{emptyCopy.title}</Text>
+            <Text style={styles.empty}>{emptyCopy.body}</Text>
+            <View style={styles.emptyActions}>
+              <PressableSpring
+                style={styles.emptyPrimary}
+                onPress={() => setSegment('prospects')}
+                scaleTo={0.97}
+                haptic
+              >
+                <Text style={styles.emptyPrimaryText}>{emptyCopy.primaryCta}</Text>
+              </PressableSpring>
+              {sponsorShell ? (
+                <PressableSpring style={styles.emptyGhost} onPress={goCreateOffer} scaleTo={0.97} haptic>
+                  <Text style={styles.emptyGhostText}>{emptyCopy.secondaryCta}</Text>
+                </PressableSpring>
+              ) : null}
+            </View>
           </View>
         ) : (
-          threads.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.thread}
-              onPress={() => setActiveThreadId(item.id)}
-            >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {item.participant_name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.threadBody}>
-                <Text style={styles.threadName}>{item.participant_name}</Text>
-                <Text style={styles.threadPreview} numberOfLines={1}>
-                  {item.last_message || 'Nouvelle conversation'}
-                </Text>
-              </View>
-              {item.unread ? <View style={styles.unreadDot} /> : null}
-            </TouchableOpacity>
-          ))
+          sortedThreads.map((item) => {
+            const unread = Boolean(item.unread);
+            return (
+              <PressableSpring
+                key={item.id}
+                style={[styles.thread, unread && styles.threadUnread]}
+                onPress={() => setActiveThreadId(item.id)}
+                scaleTo={0.98}
+                haptic
+              >
+                {unread ? <View style={styles.threadStripe} /> : null}
+                <View style={styles.threadInner}>
+                  <View style={[styles.avatar, unread && styles.avatarUnread]}>
+                    <Text
+                      style={[
+                        styles.avatarText,
+                        { color: unread ? SPONSOR_THEME.onPrimary : SPONSOR_THEME.primary },
+                      ]}
+                    >
+                      {item.participant_name.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.threadBody}>
+                    <View style={styles.threadHead}>
+                      <Text
+                        style={[styles.threadName, unread && styles.threadNameUnread]}
+                        numberOfLines={1}
+                      >
+                        {item.participant_name}
+                      </Text>
+                      {unread ? (
+                        <View style={styles.unreadPill}>
+                          <Text style={styles.unreadPillText}>Non lu</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <Text
+                      style={[styles.threadPreview, unread && styles.threadPreviewUnread]}
+                      numberOfLines={2}
+                    >
+                      {formatThreadPreview(item.last_message)}
+                    </Text>
+                  </View>
+                  <Icon name="chevron-forward" size={16} color={SPONSOR_THEME.textMuted} />
+                </View>
+              </PressableSpring>
+            );
+          })
         )}
       </ScrollView>
     </View>
@@ -292,6 +382,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: SPONSOR_THEME.borderSubtle,
+  },
+  statBoxAlert: {
+    borderColor: SPONSOR_THEME.gold,
+    backgroundColor: 'rgba(212, 175, 55, 0.1)',
   },
   statValue: { fontSize: 18, fontWeight: '900', color: SPONSOR_THEME.text },
   statLabel: { fontSize: 9, fontWeight: '700', color: SPONSOR_THEME.textMuted, marginTop: 4 },
@@ -345,14 +439,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: SPONSOR_THEME.borderSubtle,
     alignItems: 'center',
+    gap: spacing.sm,
   },
-  emptyTitle: { fontSize: 16, fontWeight: '900', color: SPONSOR_THEME.text, marginBottom: spacing.sm },
+  emptyTitle: { fontSize: 16, fontWeight: '900', color: SPONSOR_THEME.text },
   empty: {
     color: SPONSOR_THEME.textMuted,
     textAlign: 'center',
     fontSize: 14,
     lineHeight: 22,
   },
+  emptyActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'center',
+    marginTop: spacing.xs,
+  },
+  emptyPrimary: {
+    backgroundColor: SPONSOR_THEME.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  emptyPrimaryText: { fontSize: 13, fontWeight: '800', color: SPONSOR_THEME.onPrimary },
+  emptyGhost: {
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.gold,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  emptyGhostText: { fontSize: 13, fontWeight: '800', color: SPONSOR_THEME.gold },
   prospectCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -385,33 +502,57 @@ const styles = StyleSheet.create({
   },
   contactBtnText: { fontSize: 10, fontWeight: '800', color: SPONSOR_THEME.onPrimary },
   thread: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: SPONSOR_THEME.surface,
     borderRadius: radius.lg,
-    padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: SPONSOR_THEME.borderSubtle,
+    overflow: 'hidden',
+  },
+  threadUnread: {
+    borderColor: SPONSOR_THEME.gold,
+    borderWidth: 1.5,
+  },
+  threadStripe: {
+    height: 3,
+    width: '100%',
+    backgroundColor: SPONSOR_THEME.primary,
+  },
+  threadInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
   },
   avatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: SPONSOR_THEME.primary,
+    backgroundColor: SPONSOR_THEME.primarySoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
   },
-  avatarText: { fontSize: 18, fontWeight: '900', color: SPONSOR_THEME.onPrimary },
-  threadBody: { flex: 1 },
-  threadName: { fontSize: 15, fontWeight: '700', color: SPONSOR_THEME.text },
-  threadPreview: { fontSize: 13, color: SPONSOR_THEME.textSecondary, marginTop: 4 },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: SPONSOR_THEME.primary,
-    marginLeft: spacing.sm,
+  avatarUnread: { backgroundColor: SPONSOR_THEME.primary },
+  avatarText: { fontSize: 18, fontWeight: '900' },
+  threadBody: { flex: 1, minWidth: 0, gap: 4 },
+  threadHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  threadName: { flex: 1, fontSize: 15, fontWeight: '700', color: SPONSOR_THEME.text },
+  threadNameUnread: { fontWeight: '900' },
+  threadPreview: { fontSize: 13, color: SPONSOR_THEME.textSecondary },
+  threadPreviewUnread: { color: SPONSOR_THEME.text, fontWeight: '600' },
+  unreadPill: {
+    backgroundColor: SPONSOR_THEME.primarySoft,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+  },
+  unreadPillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: SPONSOR_THEME.primary,
   },
 });

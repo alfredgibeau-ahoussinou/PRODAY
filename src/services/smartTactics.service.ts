@@ -42,7 +42,8 @@ import {
 import type { TeamEvent } from '../models/TeamEvent';
 import type { User } from '../models/User';
 import type { AiMatchPreparation, MatchPhase, WellnessSignals } from '../models/SmartTactics';
-import { callFunction, isFunctionsUnavailable } from '../lib/firebaseFunctions';
+import { callFunction } from '../lib/firebaseFunctions';
+import { labelLocalMatchPrepBriefing } from '../utils/aiUxHonesty';
 import { teamEventsService } from './teamEvents.service';
 
 const PLANS_COL = 'smart_tactics_plans';
@@ -379,10 +380,13 @@ export const smartTacticsService = {
       if (__DEV__) {
         console.warn('[smartTactics] prepareMatchWithAi fallback', e);
       }
-      if (!isFunctionsUnavailable(e) && e instanceof Error && /Mistral|configur/i.test(e.message)) {
-        return { ...local, briefing_fr: `Mode local · ${e.message}` };
-      }
-      return local;
+      const reason = e instanceof Error ? e.message : undefined;
+      return {
+        ...local,
+        fallback: true,
+        source: 'local',
+        briefing_fr: labelLocalMatchPrepBriefing(local.briefing_fr, reason),
+      };
     }
   },
 

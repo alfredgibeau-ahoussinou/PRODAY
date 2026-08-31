@@ -3,6 +3,9 @@ module.exports = {
   preset: 'jest-expo',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testMatch: ['**/__tests__/**/*.test.ts'],
+  // Les tests "scaleLoad" mesurent des budgets CPU/temps sensibles au parallélisme.
+  // Forcer un seul worker rend ces tests stables et évite des flakiness en CI.
+  maxWorkers: 1,
   transform: {
     '^.+\\.[jt]sx?$': [
       'babel-jest',

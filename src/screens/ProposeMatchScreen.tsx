@@ -16,6 +16,10 @@ import { prodayHaptics } from '../utils/prodayHaptics';
 import { spacing, radius, shadows } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import type { AppColors } from '../theme/universeTheme';
+import { useJoueurSession } from '../context/JoueurSessionContext';
+import { JoueurScreenChrome } from '../components/joueur/JoueurScreenChrome';
+import { FUT18_PREMIUM } from '../theme/fut18PremiumPalette';
+import { JOUEUR_SURFACES } from '../theme/joueurDesignSystem';
 import { friendlyMatchesService } from '../services/friendlyMatches.service';
 import { clubsService } from '../services/clubs.service';
 import { teamsService } from '../services/teams.service';
@@ -59,8 +63,28 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
   const { profile } = useAuth();
   const { requireAuth } = useRequireAuth();
   const { openAuth } = useTabNavigation();
+  const joueurSession = useJoueurSession();
+  const joueurLive =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const { colors: c, rootStyle } = useThemedScreen();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const effectiveColors = useMemo((): AppColors => {
+    if (!joueurLive || !joueurSession) return c;
+    const id = joueurSession.identity;
+    return {
+      ...c,
+      background: id.shellBg,
+      surface: FUT18_PREMIUM.panelBg,
+      surfaceMuted: JOUEUR_SURFACES.listRow,
+      border: id.border,
+      text: id.ink,
+      textSecondary: id.inkMuted,
+      textMuted: id.inkMuted,
+      ink: id.ink,
+      brand: id.accent,
+      accent: id.accent,
+    };
+  }, [c, joueurLive, joueurSession]);
+  const styles = useMemo(() => createStyles(effectiveColors), [effectiveColors]);
 
   const [clubName, setClubName] = useState(profile?.display_name ?? '');
   const [category, setCategory] = useState('Seniors');
@@ -204,17 +228,17 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
     }
   };
 
-  return (
-    <View style={[styles.root, rootStyle]}>
+  const formBody = (
+    <>
       <ScreenHeader title="+ Proposer un match" onBack={onBack} />
       <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
         {!profile ? (
-          <View style={[styles.guestBanner, { borderColor: c.border, backgroundColor: c.surfaceMuted }]}>
-            <Text style={[styles.guestBannerText, { color: c.textSecondary }]}>
+          <View style={[styles.guestBanner, { borderColor: effectiveColors.border, backgroundColor: effectiveColors.surfaceMuted }]}>
+            <Text style={[styles.guestBannerText, { color: effectiveColors.textSecondary }]}>
               Connectez-vous pour proposer un match à un autre club.
             </Text>
-            <PressableSpring onPress={() => openAuth('login')} scaleTo={0.97} haptic>
-              <Text style={[styles.guestBannerLink, { color: c.brand }]}>Se connecter</Text>
+            <PressableSpring onPress={() => openAuth('login')} scaleTo={0.98} haptic>
+              <Text style={[styles.guestBannerLink, { color: effectiveColors.brand }]}>Se connecter</Text>
             </PressableSpring>
           </View>
         ) : null}
@@ -223,7 +247,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
           Invitation club ↔ club. Le destinataire pourra accepter, refuser ou proposer une autre date.
         </ProDayText>
 
-        <Field styles={styles} colors={c} label="Votre club" value={clubName} onChangeText={setClubName} />
+        <Field styles={styles} colors={effectiveColors} label="Votre club" value={clubName} onChangeText={setClubName} />
 
         <Text style={styles.label}>Équipe concernée</Text>
         {myTeams.length > 0 ? (
@@ -246,7 +270,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         ) : (
           <Field
             styles={styles}
-            colors={c}
+            colors={effectiveColors}
             label="Nom d’équipe"
             placeholder="Ex. Seniors A"
             value={teamLabel}
@@ -271,7 +295,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         <Text style={styles.label}>Trouver un club adverse</Text>
         <Field
           styles={styles}
-          colors={c}
+          colors={effectiveColors}
           label="Nom / ville"
           placeholder="Ex. U15 disponible près de chez vous"
           value={clubQuery}
@@ -280,7 +304,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         />
         <Field
           styles={styles}
-          colors={c}
+          colors={effectiveColors}
           label="Distance max (km)"
           placeholder="30"
           value={maxKm}
@@ -288,46 +312,46 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
           icon="location"
         />
         <PressableSpring
-          style={[styles.searchBtn, { borderColor: c.border }]}
+          style={[styles.searchBtn, { borderColor: effectiveColors.border }]}
           onPress={() => void searchClubs()}
-          scaleTo={0.97}
+          scaleTo={0.98}
         >
           {searching ? (
-            <ActivityIndicator color={c.brand} />
+            <ActivityIndicator color={effectiveColors.brand} />
           ) : (
-            <Text style={[styles.searchBtnText, { color: c.brand }]}>
+            <Text style={[styles.searchBtnText, { color: effectiveColors.brand }]}>
               Rechercher des clubs
             </Text>
           )}
         </PressableSpring>
         {selectedClub ? (
-          <View style={[styles.selected, { borderColor: c.brand, backgroundColor: c.surfaceMuted }]}>
+          <View style={[styles.selected, { borderColor: effectiveColors.brand, backgroundColor: effectiveColors.surfaceMuted }]}>
             <ProDayText variant="caption" accent>
               Invité : {selectedClub.name} ({selectedClub.city})
             </ProDayText>
             <PressableSpring onPress={() => setSelectedClub(null)} scaleTo={0.96}>
-              <Text style={{ color: c.textMuted, fontSize: 12 }}>Retirer</Text>
+              <Text style={{ color: effectiveColors.textMuted, fontSize: 12 }}>Retirer</Text>
             </PressableSpring>
           </View>
         ) : null}
         {clubHits.map((cl) => (
           <PressableSpring
             key={cl.id}
-            style={[styles.clubRow, { borderColor: c.border }]}
+            style={[styles.clubRow, { borderColor: effectiveColors.border }]}
             onPress={() => {
               setSelectedClub(cl);
               if (!city.trim() && cl.city) setCity(cl.city);
             }}
             scaleTo={0.98}
           >
-            <Text style={[styles.clubName, { color: c.ink }]}>{cl.name}</Text>
-            <Text style={{ color: c.textMuted, fontSize: 12 }}>{cl.city}</Text>
+            <Text style={[styles.clubName, { color: effectiveColors.ink }]}>{cl.name}</Text>
+            <Text style={{ color: effectiveColors.textMuted, fontSize: 12 }}>{cl.city}</Text>
           </PressableSpring>
         ))}
 
         <Field
           styles={styles}
-          colors={c}
+          colors={effectiveColors}
           label="Date souhaitée"
           placeholder="jj/mm/aaaa"
           value={dateStr}
@@ -336,7 +360,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         />
         <Field
           styles={styles}
-          colors={c}
+          colors={effectiveColors}
           label="Créneau horaire"
           placeholder="15:00"
           value={timeStr}
@@ -345,7 +369,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         />
         <Field
           styles={styles}
-          colors={c}
+          colors={effectiveColors}
           label="Lieu"
           placeholder="Stade, ville…"
           value={city}
@@ -408,7 +432,7 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         <TextInput
           style={styles.textArea}
           placeholder="Conditions, arbitre, vestiaires…"
-          placeholderTextColor={c.textMuted}
+          placeholderTextColor={effectiveColors.textMuted}
           multiline
           numberOfLines={4}
           value={message}
@@ -420,16 +444,28 @@ export const ProposeMatchScreen: React.FC<ProposeMatchScreenProps> = ({
         style={[styles.submit, shadows.fab, submitting && styles.submitDisabled]}
         onPress={() => void handleSubmit()}
         disabled={submitting}
-        scaleTo={0.97}
+        scaleTo={0.98}
         haptic
       >
         {submitting ? (
-          <ActivityIndicator color={c.brandInverse} />
+          <ActivityIndicator color={effectiveColors.brandInverse} />
         ) : (
           <Text style={styles.submitText}>Envoyer l’invitation</Text>
         )}
       </PressableSpring>
-    </View>
+    </>
+  );
+
+  if (joueurLive && joueurSession) {
+    return (
+      <JoueurScreenChrome identity={joueurSession.identity} variant="minimal" hideHero>
+        <View style={styles.root}>{formBody}</View>
+      </JoueurScreenChrome>
+    );
+  }
+
+  return (
+    <View style={[styles.root, rootStyle]}>{formBody}</View>
   );
 };
 

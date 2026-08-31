@@ -16,14 +16,22 @@ import {
   carouselPoleSignupPresetRole,
   carouselPoleToProductLine,
 } from '../models/CarouselPole';
+import { clubShellModeFromCarouselPole } from '../models/ClubShellMode';
 import { useAppLaunchIntro } from '../hooks/useAppLaunchIntro';
 import { useProductLine } from './ProductLineContext';
 import { useAuthOptional } from './AuthContext';
 import { PushScreenTransition } from '../components/motion';
 import { StyleSheet, View } from 'react-native';
+import { UNIVERSE_CONFIRM_LEAVE } from '../components/branding/intro/launchIntroFlow';
 
-/** Une seule lecture de la vidéo d’intro par installation (évite crash natif répété). */
-export const LAUNCH_VIDEO_SEEN_KEY = 'proday_launch_video_seen_v1';
+/**
+ * Une seule lecture de la vidéo d’intro par installation (évite crash natif répété).
+ * v2 : l’ancienne MP4 embarquait le logo legacy (P coureur bleu / RÉUSSIR) — désactivée.
+ */
+export const LAUNCH_VIDEO_SEEN_KEY = 'proday_launch_video_seen_v2';
+
+/** Vidéo d’intro activée pour présenter l'univers football & l'expérience ProDay. */
+const ENABLE_LAUNCH_VIDEO_INTRO = true;
 
 /**
  * Import dynamique : `expo-video` n’est chargé que si la vidéo d’intro monte
@@ -47,7 +55,8 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   const { visible: firstLaunchVisible, playKey, markIntroComplete } = useAppLaunchIntro();
   const auth = useAuthOptional();
   const profile = auth?.profile ?? null;
-  const { productLine, setProductLine, setProSignupPresetRole } = useProductLine();
+  const { productLine, setProductLine, setProSignupPresetRole, clubShellMode, setClubShellMode } =
+    useProductLine();
   const [manualOpen, setManualOpen] = useState(false);
   const [pickerSession, setPickerSession] = useState(0);
   const [videoIntroDone, setVideoIntroDone] = useState(false);
@@ -60,7 +69,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const seen = await AsyncStorage.getItem(LAUNCH_VIDEO_SEEN_KEY);
         if (!cancelled) {
-          const playVideo = seen !== '1';
+          const playVideo = ENABLE_LAUNCH_VIDEO_INTRO && seen !== '1';
           setShouldPlayVideo(playVideo);
           setVideoReady(true);
           if (!playVideo) setVideoIntroDone(true);
@@ -98,10 +107,12 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
     async (pole: IntroSpaceChoice) => {
       const preset = carouselPoleSignupPresetRole(pole);
       await setProSignupPresetRole(preset);
+      const shellMode = clubShellModeFromCarouselPole(pole);
+      if (shellMode) await setClubShellMode(shellMode);
       const line = carouselPoleToProductLine(pole);
       await setProductLine(line);
     },
-    [setProductLine, setProSignupPresetRole],
+    [setProductLine, setProSignupPresetRole, setClubShellMode],
   );
 
   const onIntroExitComplete = useCallback(() => {
@@ -127,19 +138,23 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
             introTour
           />
         ) : null}
-        <PushScreenTransition active={manualOpen}>
-          {manualOpen ? (
-            <FirstLaunchIntro
-              key={`manual-${pickerSession}`}
-              onChooseSpace={onChooseSpace}
-              onExitComplete={onIntroExitComplete}
-              onDismiss={closeSpacePicker}
-              initialLine={productLine}
-              initialRole={profile?.role}
-              skipReveal
-              skipLocalTransition
-            />
-          ) : null}
+        <PushScreenTransition
+          active={manualOpen}
+          directExit
+          directExitMs={UNIVERSE_CONFIRM_LEAVE.pushExitMs}
+        >
+          {/* Toujours passé en children : Push garde le contenu pendant l’exit direct. */}
+          <FirstLaunchIntro
+            key={`manual-${pickerSession}`}
+            onChooseSpace={onChooseSpace}
+            onExitComplete={onIntroExitComplete}
+            onDismiss={closeSpacePicker}
+            initialLine={productLine}
+            initialRole={profile?.role}
+            initialClubShellMode={clubShellMode}
+            skipReveal
+            skipLocalTransition
+          />
         </PushScreenTransition>
         {showLaunchVideo ? (
           <LaunchVideoErrorBoundary onError={finishVideoIntro}>

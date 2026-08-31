@@ -56,38 +56,51 @@ export const ROUTES = {
   betaWaitlist: "/beta/inscription",
   /** Statut post-inscription (en attente / approuvé / refusé). */
   betaStatut: "/beta/statut",
-  /** Espace admin fondateurs (protégé par minicode). */
+  /** Espace admin fondateurs — Control Center. */
   admin: "/admin",
   adminLogin: "/admin/login",
-  adminBeta: "/admin/beta",
-  /** Tableau de suivi des visites site / app. */
-  adminVisites: "/admin/visites",
-  /** Dashboard admin principal. */
-  adminDashboard: "/admin/dashboard",
-  /** Gestion des utilisateurs. */
+  adminHome: "/admin/home",
+  /** @deprecated → /admin/ops/beta */
+  adminBeta: "/admin/ops/beta",
+  /** @deprecated → /admin/ops/visites */
+  adminVisites: "/admin/ops/visites",
+  /** @deprecated → /admin/home */
+  adminDashboard: "/admin/home",
   adminUsers: "/admin/users",
-  /** Gestion du contenu (FAQ, témoignages). */
+  adminClubs: "/admin/clubs",
+  adminCommercial: "/admin/commercial",
+  adminPricing: "/admin/commercial/pricing",
+  adminDevis: "/admin/commercial/devis",
+  adminFinances: "/admin/finances",
+  adminPlatform: "/admin/platform",
+  adminHealth: "/admin/platform/health",
+  adminAi: "/admin/ai",
+  adminProduct: "/admin/product",
+  adminFlags: "/admin/product/flags",
+  adminSecurity: "/admin/security",
+  adminSystem: "/admin/system",
+  /** @deprecated → /admin/content */
   adminContent: "/admin/content",
-  /** Analytics détaillés. */
-  adminAnalytics: "/admin/analytics",
-  /** Gestion des pôles et fonctionnalités. */
-  adminPoles: "/admin/poles",
-  /** Gestion des emails et notifications. */
-  adminEmails: "/admin/emails",
-  /** Logs et audit trail. */
-  adminLogs: "/admin/logs",
-  /** Retours beta-testeurs. */
-  adminFeedback: "/admin/feedback",
-  /** Abonnements Pro (RevenueCat / stores). */
-  adminSubscriptions: "/admin/subscriptions",
-  /** Rôles et permissions. */
-  adminRoles: "/admin/roles",
-  /** Modération et signalements. */
-  adminReports: "/admin/reports",
-  /** Parrainage. */
-  adminReferrals: "/admin/referrals",
-  /** Paramètres admin. */
-  adminSettings: "/admin/settings",
+  /** @deprecated → /admin/ops/analytics */
+  adminAnalytics: "/admin/ops/analytics",
+  /** @deprecated → /admin/product */
+  adminPoles: "/admin/product",
+  /** @deprecated → /admin/communication */
+  adminEmails: "/admin/communication",
+  /** @deprecated → /admin/security/audit */
+  adminLogs: "/admin/security/audit",
+  /** @deprecated → /admin/ops/feedback */
+  adminFeedback: "/admin/ops/feedback",
+  /** @deprecated → /admin/finances/subscriptions */
+  adminSubscriptions: "/admin/finances/subscriptions",
+  /** @deprecated → /admin/security */
+  adminRoles: "/admin/security",
+  /** @deprecated → /admin/security/reports */
+  adminReports: "/admin/security/reports",
+  /** @deprecated → /admin/ops/referrals */
+  adminReferrals: "/admin/ops/referrals",
+  /** @deprecated → /admin/system */
+  adminSettings: "/admin/system",
   about: "/a-propos",
   vision: "/vision",
   pricing: "/tarifs",
@@ -114,18 +127,39 @@ export const ROUTES = {
   shop: "/shop",
   sante: "/sante",
   parent: "/parent",
+  /** Pôle Président — cockpit dirigeants (page dédiée). */
+  president: "/president",
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;
 
-/** Nav vitrine GTM : 6 pôles. Santé = rôle intégré. */
+/** Vitrine app Président : section ancrée sur /president#app. */
+export const PRESIDENT_HUB_HREF = `${ROUTES.president}#app`;
+
+/** Vitrine app Joueur : section sous la porte « Qui es-tu ? ». */
+export const JOUEUR_APP_HREF = `${ROUTES.joueur}#app`;
+
+/** Vitrine app Coach : section ancrée sur /coach#app. */
+export const COACH_APP_HREF = `${ROUTES.coach}#app`;
+
+/** Vitrine app Parent : section ancrée sur /parent#app. */
+export const PARENT_APP_HREF = `${ROUTES.parent}#app`;
+
+/** Vitrine app Sponsor : section ancrée sur /sponsor#app. */
+export const SPONSOR_APP_HREF = `${ROUTES.sponsor}#app`;
+
+/** Vitrine app Club : section ancrée sur /pro-club#app. */
+export const CLUB_APP_HREF = `${ROUTES.proClub}#app`;
+
+/** Nav vitrine : 6 pôles + Président. Santé = rôle intégré. */
 export const POLE_NAV_ITEMS = [
   { href: ROUTES.joueur, label: "Joueur" },
-  { href: ROUTES.proClub, label: "Club" },
-  { href: ROUTES.coach, label: "Coach" },
-  { href: ROUTES.parent, label: "Parent" },
+  { href: CLUB_APP_HREF, label: "Club" },
+  { href: PRESIDENT_HUB_HREF, label: "Président" },
+  { href: COACH_APP_HREF, label: "Coach" },
+  { href: PARENT_APP_HREF, label: "Parent" },
   { href: ROUTES.supporter, label: "Supporter" },
-  { href: ROUTES.sponsor, label: "Sponsor" },
+  { href: SPONSOR_APP_HREF, label: "Sponsor" },
 ] as const;
 
 export const UTILITY_NAV_ITEMS = [
@@ -142,12 +176,13 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const POLE_FOOTER_LINKS = [
-  { href: ROUTES.joueur, label: "Espace Joueur", subtitle: "Carte, entraînement, Mercato · Pass optionnel 3,99 €" },
-  { href: ROUTES.proClub, label: "Espace Club", subtitle: "À partir de 3 € / adhérent · Sur devis" },
-  { href: ROUTES.coach, label: "Espace Coach", subtitle: "Entraînements · Tactique IA · invitations" },
-  { href: ROUTES.parent, label: "Pôle Parent", subtitle: "Supervision · messages · agenda · gratuit" },
+  { href: JOUEUR_APP_HREF, label: "Espace Joueur", subtitle: "App · Accueil, matchs, saison · Pass 3,99 €" },
+  { href: CLUB_APP_HREF, label: "Espace Club", subtitle: "App · Accueil, équipes, matchs · Sur devis" },
+  { href: PRESIDENT_HUB_HREF, label: "Pôle Président", subtitle: "Cockpit dirigeants · décisions" },
+  { href: COACH_APP_HREF, label: "Espace Coach", subtitle: "App · Accueil, effectif, IA · Tactique" },
+  { href: PARENT_APP_HREF, label: "Pôle Parent", subtitle: "App · Accueil, Guide, Menu, Profil · gratuit" },
   { href: ROUTES.supporter, label: "Pôle Supporter", subtitle: "Fans & communauté" },
-  { href: ROUTES.sponsor, label: "Pôle Sponsor", subtitle: "Marques & micro-sponsoring local" },
+  { href: SPONSOR_APP_HREF, label: "Pôle Sponsor", subtitle: "App · Accueil, offres, ROI · marques" },
 ] as const;
 
 export const EXPLORE_CARDS = [
@@ -236,9 +271,9 @@ export const EXPLORE_CARDS = [
     tag: "Roadmap",
   },
   {
-    href: routeWithHash(ROUTES.sponsor, "formules"),
+    href: SPONSOR_APP_HREF,
     title: "Pôle Sponsor",
-    description: "Découverte 0 €, Territorial 49 € ou National Pro 99 €/mois.",
+    description: "App Sponsor : dashboard, offres, prospects et ROI. Formules dès Découverte.",
     image: "/images/football-mercato-01.jpg",
     tag: "Sponsor",
     accent: true,
@@ -259,19 +294,35 @@ export const EXPLORE_CARDS = [
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.proClub, "modules"),
+    href: CLUB_APP_HREF,
     title: "Pôle Club",
-    description: "Structures, équipes, recrutement kanban et vitrine.",
+    description: "App Club : accueil, équipes, matchs, outils et identité. Sur devis.",
     image: "/images/football-club-01.jpg",
     tag: "Club",
     accent: true,
   },
   {
-    href: routeWithHash(ROUTES.coach, "modules"),
+    href: PRESIDENT_HUB_HREF,
+    title: "Pôle Président",
+    description: "App Président : cockpit, finances, assistant IA. Le club en un coup d’œil.",
+    image: "/images/football-stadium-night-01.jpg",
+    tag: "Président",
+    accent: true,
+  },
+  {
+    href: COACH_APP_HREF,
     title: "Pôle Coach",
-    description: "Tactique IA, IA, effectif et préparation match. Rattaché au club.",
+    description: "App Coach : calendrier, effectif, IA et préparation match. Rattaché au club.",
     image: "/showcase/classic-staff.jpg",
     tag: "Coach",
+    accent: true,
+  },
+  {
+    href: PARENT_APP_HREF,
+    title: "Pôle Parent",
+    description: "App Parent : accueil famille, Guide IA, menu et profil. Lié au compte de l’enfant.",
+    image: "/images/football-team-01.jpg",
+    tag: "Parent",
     accent: true,
   },
   {
@@ -300,7 +351,7 @@ export const EXPLORE_CARDS = [
   {
     href: ROUTES.shop,
     title: "Boutique ProDay",
-    description: "Trépieds, t-shirts et maillots officiels. Man, Woman et Pro.",
+    description: "Trépieds, t shirts et maillots officiels. Man, Woman et Pro.",
     image: "/images/football-training-01.jpg",
     tag: "Boutique",
   },

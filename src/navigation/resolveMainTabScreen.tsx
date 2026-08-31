@@ -3,6 +3,7 @@ import type { MainTabId } from './mainTabConfig';
 import type { ProductLineId } from '../models/ProductLine';
 import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
+import { isJoueurPoleProductLine } from '../utils/joueurPoleAccess';
 import { isSponsorRole } from '../content/sponsorExperience';
 import { isRetiredUserRole } from '../utils/retiredRoles';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -16,9 +17,6 @@ import { MessagesScreen } from '../screens/MessagesScreen';
 import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { RetiredRoleScreen } from '../screens/RetiredRoleScreen';
-import { SupporterMatchsScreen } from '../screens/SupporterMatchsScreen';
-import { SupporterSuivisScreen } from '../screens/SupporterSuivisScreen';
-import { SupporterProfileTabScreen } from '../screens/SupporterProfileTabScreen';
 import { ClubPortalScreen } from '../screens/club/ClubPortalScreen';
 import { CoachPortalScreen } from '../screens/coach/CoachPortalScreen';
 import { ClubRecruitmentScreen } from '../screens/club/ClubRecruitmentScreen';
@@ -26,10 +24,18 @@ import { ClubCalendarScreen } from '../screens/club/ClubCalendarScreen';
 import { ClubCommunicationScreen } from '../screens/club/ClubCommunicationScreen';
 import { ClubVitrineScreen } from '../screens/club/ClubVitrineScreen';
 import { SupporterHomeScreen } from '../screens/supporter/SupporterHomeScreen';
-import { SupporterTribuneFeedScreen } from '../screens/supporter/SupporterTribuneFeedScreen';
+import { SupporterMatchsScreen } from '../screens/supporter/SupporterMatchsScreen';
+import { SupporterCompetitionsScreen } from '../screens/supporter/SupporterCompetitionsScreen';
+import { SupporterClubsScreen } from '../screens/supporter/SupporterClubsScreen';
+import { SupporterVideosScreen } from '../screens/supporter/SupporterVideosScreen';
+import { SupporterProfileScreen } from '../screens/supporter/SupporterProfileScreen';
 import { AmateurClubScreen } from '../screens/AmateurClubScreen';
 import { ProPlayerSquadScreen } from '../screens/proPlayer/ProPlayerSquadScreen';
 import { SmartTacticsPortalScreen } from '../screens/smartTactics/SmartTacticsPortalScreen';
+import { PlayerFootballHubScreen } from '../screens/joueur/PlayerFootballHubScreen';
+import { PlayerProgressionScreen } from '../screens/joueur/PlayerProgressionScreen';
+import { PlayerSaisonScreen } from '../screens/joueur/PlayerSaisonScreen';
+import { JoueurPlusHubScreen } from '../screens/joueur/JoueurPlusHubScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -38,19 +44,23 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   covoiturage: CarpoolScreen,
   sante: RetiredRoleScreen,
   feed: FeedTabScreen,
+  progression: RetiredRoleScreen,
   reels: LazyReelsScreen,
   famille: FamilleTabScreen,
   messages: MessagesScreen,
   profil: ProfilTabScreen,
   shop: ShopScreen,
+  plus: JoueurPlusHubScreen,
 };
 
+/** Dock : Accueil · Matchs · Compétitions · Mes clubs · Vidéos · Profil. */
 const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
   home: SupporterHomeScreen,
   matchs: SupporterMatchsScreen,
-  feed: SupporterSuivisScreen,
-  messages: SupporterTribuneFeedScreen,
-  profil: SupporterProfileTabScreen,
+  feed: SupporterCompetitionsScreen,
+  plus: SupporterClubsScreen,
+  reels: SupporterVideosScreen,
+  profil: SupporterProfileScreen,
 };
 
 const PRO_CLUB_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
@@ -76,13 +86,19 @@ const COACH_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 };
 
 const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  home: PlayerFootballHubScreen,
+  feed: PlayerSaisonScreen,
+  progression: PlayerProgressionScreen,
   recrutement: AmateurClubScreen,
-  feed: SmartTacticsPortalScreen,
+  plus: JoueurPlusHubScreen,
 };
 
 const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
+  home: PlayerFootballHubScreen,
+  feed: PlayerSaisonScreen,
+  progression: PlayerProgressionScreen,
   recrutement: ProPlayerSquadScreen,
-  feed: SmartTacticsPortalScreen,
+  plus: JoueurPlusHubScreen,
 };
 
 export function resolveMainTabScreen(
@@ -90,10 +106,16 @@ export function resolveMainTabScreen(
   role?: UserRole | null,
   line?: ProductLineId | null,
 ): ComponentType {
+  // Invité anonyme : toujours Home/Discover + Auth (ProfilTab) — jamais scaffold
+  // supporter / retired, sinon « espace à venir » / écran noir sans retour.
+  if (role == null) {
+    return DEFAULT_SCREENS[tab];
+  }
   if (isRetiredUserRole(role) || line === 'sante') {
     return RetiredRoleScreen;
   }
-  if (role === 'supporter') {
+  // Scaffold supporter : rôle supporter OU parent en visite invitée (line supporter).
+  if (role === 'supporter' || (role === 'parent' && line === 'supporter')) {
     return SUPPORTER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   if (line === 'amateur' && role === 'club') {
@@ -108,7 +130,12 @@ export function resolveMainTabScreen(
   if (role === 'coach') {
     return COACH_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
-  if (line === 'amateur' && role === 'player') {
+  if (
+    role === 'player' &&
+    line != null &&
+    isJoueurPoleProductLine(line) &&
+    line !== 'pro_player'
+  ) {
     return AMATEUR_PLAYER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   return DEFAULT_SCREENS[tab];

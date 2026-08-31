@@ -21,7 +21,7 @@ import type { User } from '../../models/User';
 import { TeamManagementScreen } from '../TeamManagementScreen';
 import { SmartTacticsPortalScreen } from '../smartTactics/SmartTacticsPortalScreen';
 import { useTabNavigation } from '../../context/TabNavigationContext';
-import { PushScreenTransition } from '../../components/motion';
+import { PushScreenTransition, AnimatedRouteContent } from '../../components/motion';
 import {
   resolveClubCoversCoachFromMembers,
   userCanAccessSmartTactics,
@@ -30,6 +30,15 @@ import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContex
 import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+
+const COACH_CHAPTER_ORDER: CoachPortalChapterId[] = [
+  'cockpit',
+  'planning',
+  'effectif',
+  'matchs',
+  'performance',
+  'communication',
+];
 
 export type CoachPortalScreenProps = {
   chapter?: CoachPortalChapterId;
@@ -208,16 +217,22 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
         </View>
       ) : (
         <View style={styles.body}>
-          {chapter === 'cockpit' ? <CoachCockpitChapter {...chapterProps} /> : null}
-          {chapter === 'planning' ? <CoachPlanningChapter {...chapterProps} /> : null}
-          {chapter === 'effectif' ? (
-            <CoachEffectifChapter {...chapterProps} focus={effectifFocus} />
-          ) : null}
-          {chapter === 'matchs' ? <CoachMatchsChapter {...chapterProps} /> : null}
-          {chapter === 'performance' ? <CoachPerformanceChapter {...chapterProps} /> : null}
-          {chapter === 'communication' ? (
-            <CoachCommunityChapter {...chapterProps} />
-          ) : null}
+          <AnimatedRouteContent
+            routeKey={chapter}
+            routeOrder={COACH_CHAPTER_ORDER}
+            context="tab"
+          >
+            {chapter === 'cockpit' ? <CoachCockpitChapter {...chapterProps} /> : null}
+            {chapter === 'planning' ? <CoachPlanningChapter {...chapterProps} /> : null}
+            {chapter === 'effectif' ? (
+              <CoachEffectifChapter {...chapterProps} focus={effectifFocus} />
+            ) : null}
+            {chapter === 'matchs' ? <CoachMatchsChapter {...chapterProps} /> : null}
+            {chapter === 'performance' ? <CoachPerformanceChapter {...chapterProps} /> : null}
+            {chapter === 'communication' ? (
+              <CoachCommunityChapter {...chapterProps} />
+            ) : null}
+          </AnimatedRouteContent>
         </View>
       )}
     </View>

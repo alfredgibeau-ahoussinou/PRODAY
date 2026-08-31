@@ -14,19 +14,19 @@ export { proColorOverrides, proGradients } from './proThemeColors';
 
 export type AppColors = { [K in keyof typeof baseColors]: string };
 
-/** Homme — FLASH noir + touche terrain (vert discret). */
+/** Homme — FLASH noir + accent joueur blanc officiel. */
 export const hommeColorOverrides = {
-  accent: '#4ADE80',
-  accentLight: '#86EFAC',
-  accentSoft: 'rgba(74, 222, 128, 0.14)',
-  accentMuted: 'rgba(74, 222, 128, 0.32)',
-  brand: '#4ADE80',
-  brandLight: '#86EFAC',
-  brandSoft: 'rgba(74, 222, 128, 0.1)',
-  borderStrong: 'rgba(74, 222, 128, 0.55)',
-  borderMedium: 'rgba(74, 222, 128, 0.28)',
-  tone4: '#4ADE80',
-  gradientEnd: '#15803D',
+  accent: '#FFFFFF',
+  accentLight: '#F5F5F5',
+  accentSoft: 'rgba(255, 255, 255, 0.14)',
+  accentMuted: 'rgba(255, 255, 255, 0.32)',
+  brand: '#FFFFFF',
+  brandLight: '#F5F5F5',
+  brandSoft: 'rgba(255, 255, 255, 0.1)',
+  borderStrong: 'rgba(255, 255, 255, 0.55)',
+  borderMedium: 'rgba(255, 255, 255, 0.28)',
+  tone4: '#FFFFFF',
+  gradientEnd: '#E5E5E5',
 } as const;
 
 export function getThemedColorsForLine(

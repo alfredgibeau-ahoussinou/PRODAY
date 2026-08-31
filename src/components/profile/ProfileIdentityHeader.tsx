@@ -79,7 +79,7 @@ export const ProfileIdentityHeader: React.FC<ProfileIdentityHeaderProps> = ({
 
   if (compact) {
     return (
-      <View style={[styles.compactShell, { paddingTop: Math.max(insets.top, spacing.xs) }]}>
+      <View style={[styles.compactShell, { paddingTop: spacing.xs }]}>
         <View style={styles.compactRow}>
           <ProfileAvatarButton
             displayName={profile.display_name}

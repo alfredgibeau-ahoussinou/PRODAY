@@ -26,11 +26,13 @@ import type { MessagesThreadFilter } from '../content/messagesChapters';
 import { MessagesHomeScreen } from '../components/messages/MessagesHomeScreen';
 import { useTranslation } from '../context/LocaleContext';
 import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
+import { useJoueurSession } from '../context/JoueurSessionContext';
 import {
   MessagesNetworkSheet,
   type NetworkSheetAction,
 } from '../components/messages/MessagesNetworkSheet';
 import { PushScreenTransition } from '../components/motion';
+import { sortThreadsForInbox } from '../utils/messagesInboxModel';
 
 export const MessagesScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -38,6 +40,11 @@ export const MessagesScreen: React.FC = () => {
   const { pendingChatThreadId, clearPendingChat, openAuth } = useTabNavigation();
   const nav = useTabNavigationActions();
   const coachShell = Boolean(useCoachShellNav());
+  const joueurSession = useJoueurSession();
+  const joueurLive = Boolean(
+    joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate,
+  );
+  const messagesVariant = coachShell ? 'coach' : joueurLive ? 'joueur' : 'default';
   const { threads, loading, refresh } = useMessagesData(profile?.uid);
   const { data: dashboardData } = useDashboardData(profile);
   const favorites = useFavorites(profile?.uid);
@@ -97,10 +104,10 @@ export const MessagesScreen: React.FC = () => {
   }, [loadSocialSuggestions]);
 
   useEffect(() => {
-    if (coachShell && threadFilter === 'care') {
+    if ((coachShell || (joueurLive && !coachShell)) && threadFilter === 'care') {
       setThreadFilter('all');
     }
-  }, [coachShell, threadFilter]);
+  }, [coachShell, joueurLive, threadFilter]);
 
   useEffect(() => {
     if (!profile?.uid) {
@@ -122,7 +129,7 @@ export const MessagesScreen: React.FC = () => {
 
   const filteredThreads = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return threads.filter((t) => {
+    const filtered = threads.filter((t) => {
       if (threadFilter === 'unread' && !t.unread) return false;
       if (threadFilter === 'care' && !t.thread_kind?.startsWith('physio')) return false;
       if (threadFilter === 'requests') {
@@ -139,6 +146,7 @@ export const MessagesScreen: React.FC = () => {
         (t.last_message?.toLowerCase().includes(q) ?? false)
       );
     });
+    return sortThreadsForInbox(filtered);
   }, [threads, search, threadFilter]);
 
   const resolveRequest = useCallback(
@@ -387,6 +395,7 @@ export const MessagesScreen: React.FC = () => {
         messageBlockedReason={messagePermission.message}
         onClose={closeNetworkSheet}
         onAction={(action) => void handleNetworkSheetAction(action)}
+        variant={messagesVariant}
       />
 
       <PushScreenTransition active={Boolean(networkProfileUser)}>{profileOverlay}</PushScreenTransition>

@@ -35,7 +35,7 @@ export function TerminalFeatureGrid({
       aria-label="Features Grid"
     >
       <div className="mx-auto max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#4C8BFF)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#F5D04A)]">
           {kicker}
         </p>
         <h2 className="mt-4 max-w-3xl font-display text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.08] tracking-[-0.035em] text-white">
@@ -54,10 +54,10 @@ export function TerminalFeatureGrid({
                 transition={{ duration: 0.45, delay: (i % 2) * 0.05 }}
                 className="group border-b border-white/10 px-0 py-10 transition-colors sm:px-8 sm:odd:border-r sm:odd:pl-0 sm:even:pr-0"
               >
-                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#4C8BFF)]/75">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pole-accent,#F5D04A)]/75">
                   {num} {f.eyebrow}
                 </p>
-                <h3 className="mt-5 font-display text-2xl font-medium tracking-[-0.02em] text-white transition-colors group-hover:text-[var(--pole-accent,#4C8BFF)] sm:text-[1.65rem]">
+                <h3 className="mt-5 font-display text-2xl font-medium tracking-[-0.02em] text-white transition-colors group-hover:text-[var(--pole-accent,#F5D04A)] sm:text-[1.65rem]">
                   {f.title}
                 </h3>
                 <p className="mt-4 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">
@@ -66,7 +66,7 @@ export function TerminalFeatureGrid({
                 {f.href ? (
                   <Link
                     href={f.href}
-                    className="mt-6 inline-block font-mono text-[10px] uppercase tracking-[0.2em] text-white/70 transition hover:text-[var(--pole-accent,#4C8BFF)]"
+                    className="mt-6 inline-block font-mono text-[10px] uppercase tracking-[0.2em] text-white/70 transition hover:text-[var(--pole-accent,#F5D04A)]"
                   >
                     {f.linkLabel ?? "En savoir plus"} →
                   </Link>

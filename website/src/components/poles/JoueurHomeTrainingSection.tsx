@@ -9,7 +9,7 @@ import { ROUTES } from "@/lib/routes";
 const PATHS = [
   {
     title: "À la maison",
-    body: "Exercices selon âge, poste et matériel. Seul, jardin ou city-stade.",
+    body: "Exercices selon âge, poste et matériel. Seul, jardin ou city stade.",
   },
   {
     title: "Avec ma famille",
@@ -52,13 +52,13 @@ export function JoueurHomeTrainingSection({
         className="pointer-events-none absolute inset-0 opacity-45"
         style={{
           background:
-            "radial-gradient(ellipse 55% 40% at 15% 20%, var(--joueur-wash, rgba(0,84,240,0.3)), transparent 55%), radial-gradient(ellipse 40% 35% at 90% 80%, rgba(76,139,255,0.12), transparent 50%)",
+            "radial-gradient(ellipse 55% 40% at 15% 20%, var(--joueur-wash, rgba(30, 58, 255,0.3)), transparent 55%), radial-gradient(ellipse 40% 35% at 90% 80%, rgba(76,139,255,0.12), transparent 50%)",
         }}
       />
       <div className="relative mx-auto max-w-7xl">
         <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#0054F0)]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#FFFFFF)]">
               {kicker}
             </p>
             <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.75rem,4.2vw,3rem)] font-medium tracking-[-0.03em] text-white">
@@ -75,7 +75,7 @@ export function JoueurHomeTrainingSection({
                 alt=""
                 fill
                 className="object-cover opacity-80"
-                sizes="(max-width: 1024px) 100vw, 40vw"
+                sizes="(max width: 1024px) 100vw, 40vw"
               />
               <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#020617]/80" />
               <span className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-[0.2em] text-white/70">
@@ -113,7 +113,7 @@ export function JoueurHomeTrainingSection({
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={ROUTES.betaWaitlist}
-            className="inline-flex bg-[var(--pole-accent,#0054F0)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex bg-[var(--pole-accent,#FFFFFF)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Tester dans la bêta
           </Link>

@@ -28,7 +28,7 @@ export function TerminalSection({
       <div className="mx-auto max-w-6xl">
         <div className="max-w-3xl">
           {kicker ? (
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#4C8BFF)]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#F5D04A)]">
               {kicker}
             </p>
           ) : null}

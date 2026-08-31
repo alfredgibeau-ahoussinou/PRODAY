@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
   type StyleProp,
   type ViewStyle,
@@ -24,6 +25,10 @@ import { CoachAccentColorPickerModal } from './CoachAccentColorPickerModal';
 import { MATCH_CHAPTER_PAD } from '../matchs/chapters/matchChapterLayout';
 import { tabBarScrollInset } from '../../navigation/tabBarLayout';
 import { radius, spacing } from '../../theme/designTokens';
+import {
+  coachChrome,
+  coachLayout,
+} from '../../features/coach/theme/coachDesignSystem';
 
 export { coachChipContainerStyle, coachChipTextProps } from '../../utils/coachChipUi';
 
@@ -73,10 +78,27 @@ export function CoachChapterRail({
 }
 
 export function CoachChapterScroll({ children }: { children: React.ReactNode }) {
+  const { width } = useWindowDimensions();
+  const wide = width >= coachChrome.wideBreakpoint;
+  const contentStyle = useMemo(
+    () => [
+      stylesPad.content,
+      wide
+        ? {
+            maxWidth: coachChrome.contentMaxWidth,
+            width: '100%' as const,
+            alignSelf: 'center' as const,
+            paddingHorizontal: coachLayout.pageGutter,
+          }
+        : null,
+    ],
+    [wide],
+  );
+
   return (
     <ScrollView
       style={stylesPad.scroll}
-      contentContainerStyle={stylesPad.content}
+      contentContainerStyle={contentStyle}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >

@@ -158,11 +158,11 @@ export const CARD_ROLE_META: Record<
   ProDayCardRole,
   { label: string; accent: string; deep: string; poleHref: string }
 > = {
-  player: { label: "Joueur", accent: "#0054F0", deep: "#001854", poleHref: "/joueur" },
-  coach: { label: "Coach", accent: "#E11D48", deep: "#4C0519", poleHref: "/coach" },
-  club: { label: "Club", accent: "#16A34A", deep: "#052E16", poleHref: "/pro-club" },
-  supporter: { label: "Supporter", accent: "#EA580C", deep: "#431407", poleHref: "/supporter" },
-  sponsor: { label: "Sponsor", accent: "#7C3AED", deep: "#2E1065", poleHref: "/sponsor" },
+  player: { label: "Joueur", accent: "#FFFFFF", deep: "#CCCCCC", poleHref: "/joueur" },
+  coach: { label: "Coach", accent: "#E8B923", deep: "#92700C", poleHref: "/coach" },
+  club: { label: "Club", accent: "#2563EB", deep: "#1E40AF", poleHref: "/pro-club" },
+  supporter: { label: "Supporter", accent: "#8B5CF6", deep: "#5B21B6", poleHref: "/supporter" },
+  sponsor: { label: "Sponsor", accent: "#EF4444", deep: "#7F1D1D", poleHref: "/sponsor" },
 };
 
 export const TIER_GLOW: Record<ProDayCardTier, string> = {
@@ -270,7 +270,7 @@ export const DEMO_PLAYER_CARD: ProDayPlayerCardData = {
   goals: 6,
   assists: 9,
   minutesPlayed: 1420,
-  lastMatchLabel: "Victoire 2-1 · Sam.",
+  lastMatchLabel: "Victoire 2 1 · Sam.",
   maxSpeedKmh: 32.4,
   progressLabel: "+4 OVR cette saison",
   skillBadges: [
@@ -317,7 +317,7 @@ export const DEMO_COACH_CARD: ProDayCoachCardData = {
   category: "U19",
   diplomas: ["BEF", "CFF3"],
   certifications: ["UEFA C", "Futsal"],
-  preferredFormation: "4-3-3",
+  preferredFormation: "4 3 3",
   philosophy: "Transitions rapides · pressing haut",
   matches: 42,
   wins: 24,
@@ -435,7 +435,7 @@ export const DEMO_SPONSOR_CARD: ProDaySponsorCardData = {
   editionLabel: "Partenaire Vérifié",
   company: "Nord Equip",
   sector: "Équipement sportif",
-  location: "Lille · Hauts-de-France",
+  location: "Lille · Hauts de France",
   partnerClubs: ["FC ProDay", "US Nord", "Olympique Amiens"],
   sponsoredEvents: 7,
   skillBadges: ["Vérifié", "Partenaire Elite", "Événements"],
@@ -448,7 +448,7 @@ export const DEMO_SPONSOR_CARD_GOLD: ProDaySponsorCardData = {
   skinId: "gold",
   editionLabel: "Platinum Partner",
   sponsoredEvents: 12,
-  skillBadges: ["Vérifié", "Platinum", "Multi-clubs"],
+  skillBadges: ["Vérifié", "Platinum", "Multi clubs"],
 };
 
 /** Collection démo : 2 éditions par rôle pour sentir la collection. */

@@ -9,6 +9,8 @@
     "lint": "eslint",
     "netlify:deploy": "bash scripts/netlify-deploy.sh",
     "branding:pwa-icons": "node scripts/generate-pwa-icons.mjs",
+    "branding:official": "node scripts/generate-official-brand.mjs",
+    "branding:ingest-symbol": "node scripts/ingest-symbol-master.mjs",
     "branding:white-logo": "node scripts/generate-white-logo.mjs"
   },
   "dependencies": {

@@ -1,66 +1,58 @@
 import type { IconName } from '../../../components/ui/iconNames';
 import type { ClubOfferFeatureId } from '../../../content/clubOffers';
-import type { ClubPortalChapterId } from '../../../content/clubPortalChapters';
 import type { PlatformFeatureFlagKey } from '../../../content/platformFeatureFlags';
 import type { MainTabId } from '../../../navigation/mainTabConfig';
 
 /**
- * Navigation Pôle Club — dossiers type Finder / Mail macOS,
- * adaptés à la formule (Amateur · Essentiel · Tout inclus · Pro + Veo).
+ * Navigation Pôle Club v1 — gestion amateur simple.
+ * Mobile : 5 onglets + FAB « + CRÉER » · Desktop : sidebar complète.
+ * Dock : Accueil · Équipes · Matchs · Outils · Club (labels ≥11, actif émeraude).
  */
 
 export type ClubNavFolderId =
   | 'accueil'
-  | 'organisation'
+  | 'effectifs'
   | 'sport'
-  | 'communication'
-  | 'ressources';
+  | 'ops'
+  | 'club';
 
 export type ClubNavItemId =
   | 'today'
-  | 'assistant'
-  | 'pitch'
-  | 'structure'
-  | 'vivier'
-  | 'pipeline'
+  | 'teams'
+  | 'players'
+  | 'coaches'
   | 'calendar'
-  | 'invites'
-  | 'events'
-  | 'messages'
-  | 'vitrine'
+  | 'matches'
+  | 'trainings'
+  | 'communication'
+  | 'recruitment'
   | 'video'
-  | 'offers'
+  | 'stats'
+  | 'club'
+  | 'plus'
+  | 'assistant'
+  | 'events'
+  | 'automations'
+  | 'licenses'
+  | 'finances'
+  | 'sponsoring'
   | 'equipment'
-  | 'sponsors'
+  | 'pack'
+  | 'notifications'
+  | 'permissions'
   | 'carpool'
   | 'shop';
-
-export type ClubCompetitionFocus = 'invites' | 'events' | 'all';
-export type ClubOutilsFocus = 'video' | 'offers' | 'equipment' | 'sponsors' | 'all';
 
 export type ClubNavItem = {
   id: ClubNavItemId;
   label: string;
   icon: IconName;
-  /** Sous-titre court (sidebar / mobile). */
   hint?: string;
-  chapter?: ClubPortalChapterId;
   tab?: MainTabId;
-  competitionFocus?: ClubCompetitionFocus;
-  outilsFocus?: ClubOutilsFocus;
-  /**
-   * Au moins une de ces features doit être dans la formule.
-   * Absent = accessible à tout compte club connecté.
-   */
+  shortLabel?: string;
   requiresAnyFeature?: ClubOfferFeatureId[];
-  /**
-   * soft = visible avec cadenas + upsell · hide = retiré du menu.
-   * Défaut soft si requiresAnyFeature.
-   */
   lockMode?: 'soft' | 'hide';
-  /** Flag plateforme (ex. shop, mercato). */
   platformFlag?: PlatformFeatureFlagKey;
-  /** Badge « IA » dans le menu. */
   aiBadge?: boolean;
 };
 
@@ -70,197 +62,420 @@ export type ClubNavFolder = {
   items: ClubNavItem[];
 };
 
+/** Onglets barre mobile (5 max) — le reste via Outils / sidebar. */
+export const CLUB_PRIMARY_NAV_IDS: ClubNavItemId[] = [
+  'today',
+  'teams',
+  'matches',
+  'plus',
+  'club',
+];
+
+/** Destinations secondaires — surlignent l’onglet Outils. */
+export const CLUB_MENU_DEST_IDS: ClubNavItemId[] = [
+  'players',
+  'coaches',
+  'calendar',
+  'trainings',
+  'communication',
+  'recruitment',
+  'video',
+  'stats',
+  'assistant',
+  'events',
+  'automations',
+  'licenses',
+  'finances',
+  'sponsoring',
+  'equipment',
+  'pack',
+  'notifications',
+  'permissions',
+  'carpool',
+  'shop',
+];
+
+export type ClubCreateActionId =
+  | 'match'
+  | 'training'
+  | 'player'
+  | 'coach'
+  | 'invite_member'
+  | 'event'
+  | 'invite_club';
+
+export const CLUB_CREATE_ACTIONS: {
+  id: ClubCreateActionId;
+  label: string;
+  icon: IconName;
+  nav?: ClubNavItemId;
+}[] = [
+  { id: 'match', label: 'Match', icon: 'trophy', nav: 'matches' },
+  { id: 'training', label: 'Entraînement', icon: 'football', nav: 'trainings' },
+  { id: 'player', label: 'Joueur', icon: 'person', nav: 'players' },
+  { id: 'coach', label: 'Coach', icon: 'school', nav: 'coaches' },
+  { id: 'invite_member', label: 'Inviter un membre', icon: 'mail', nav: 'players' },
+  { id: 'event', label: 'Événement', icon: 'calendar', nav: 'events' },
+  { id: 'invite_club', label: 'Invitation autre club', icon: 'handshake', nav: 'matches' },
+];
+
+const todayItem: ClubNavItem = {
+  id: 'today',
+  label: 'Accueil',
+  shortLabel: 'Accueil',
+  hint: 'Situation du club',
+  icon: 'home',
+  tab: 'home',
+};
+
+const teamsItem: ClubNavItem = {
+  id: 'teams',
+  label: 'Équipes',
+  shortLabel: 'Équipes',
+  hint: 'U7 → Seniors',
+  icon: 'football',
+  tab: 'home',
+  requiresAnyFeature: ['licensed_management'],
+};
+
+const playersItem: ClubNavItem = {
+  id: 'players',
+  label: 'Joueurs',
+  shortLabel: 'Joueurs',
+  hint: 'Effectif & fiches',
+  icon: 'people',
+  requiresAnyFeature: ['licensed_management'],
+};
+
+const coachesItem: ClubNavItem = {
+  id: 'coaches',
+  label: 'Coach',
+  shortLabel: 'Coach',
+  hint: 'Staff & affectations',
+  icon: 'school',
+  requiresAnyFeature: ['licensed_management'],
+};
+
+const calendarItem: ClubNavItem = {
+  id: 'calendar',
+  label: 'Calendrier',
+  shortLabel: 'Agenda',
+  hint: 'Jour · semaine · mois',
+  icon: 'calendar',
+  tab: 'matchs',
+  requiresAnyFeature: ['calendar'],
+};
+
+const matchesItem: ClubNavItem = {
+  id: 'matches',
+  label: 'Matchs',
+  shortLabel: 'Matchs',
+  hint: 'Convocs & invitations',
+  icon: 'trophy',
+  tab: 'matchs',
+  requiresAnyFeature: ['calendar'],
+};
+
+const trainingsItem: ClubNavItem = {
+  id: 'trainings',
+  label: 'Entraînements',
+  shortLabel: 'Séances',
+  hint: 'Présences',
+  icon: 'time',
+  requiresAnyFeature: ['calendar'],
+};
+
+const communicationItem: ClubNavItem = {
+  id: 'communication',
+  label: 'Communication',
+  shortLabel: 'Comm.',
+  hint: 'Équipes · coachs · parents',
+  icon: 'chat',
+  tab: 'messages',
+  requiresAnyFeature: ['communication'],
+};
+
+const recruitmentItem: ClubNavItem = {
+  id: 'recruitment',
+  label: 'Recrutement',
+  shortLabel: 'Recrut.',
+  hint: 'Bassin & suivi',
+  icon: 'briefcase',
+  tab: 'recrutement',
+  requiresAnyFeature: ['licensed_management'],
+  platformFlag: 'mercato',
+  lockMode: 'hide',
+};
+
+const videoItem: ClubNavItem = {
+  id: 'video',
+  label: 'Vidéo',
+  shortLabel: 'Vidéo',
+  hint: 'Veo · XbotGo · smartphone',
+  icon: 'videocam',
+  requiresAnyFeature: ['video_analysis', 'byo_video', 'hardware_kit'],
+};
+
+const statsItem: ClubNavItem = {
+  id: 'stats',
+  label: 'Statistiques',
+  shortLabel: 'Stats',
+  hint: 'Insights club',
+  icon: 'stats-chart',
+  requiresAnyFeature: ['licensed_management'],
+};
+
+const clubItem: ClubNavItem = {
+  id: 'club',
+  label: 'Club',
+  shortLabel: 'Club',
+  hint: 'Identité & réglages',
+  icon: 'business',
+  tab: 'profil',
+};
+
+const plusItem: ClubNavItem = {
+  id: 'plus',
+  label: 'Outils',
+  shortLabel: 'Outils',
+  hint: 'Pilotage & métiers du club',
+  icon: 'tune',
+  tab: 'home',
+};
+
+const assistantItem: ClubNavItem = {
+  id: 'assistant',
+  label: 'Copilote Club',
+  shortLabel: 'Copilote',
+  hint: 'Dialogue IA · confirmation obligatoire',
+  icon: 'chat',
+  aiBadge: true,
+};
+
+const eventsItem: ClubNavItem = {
+  id: 'events',
+  label: 'Événements',
+  shortLabel: 'Events',
+  hint: 'Tournois & poules',
+  icon: 'flag',
+  requiresAnyFeature: ['competitions'],
+};
+
+const automationsItem: ClubNavItem = {
+  id: 'automations',
+  label: 'Automatisations',
+  shortLabel: 'Auto',
+  hint: 'Rappels & règles',
+  icon: 'tune',
+};
+
+const licensesItem: ClubNavItem = {
+  id: 'licenses',
+  label: 'Licences',
+  shortLabel: 'Docs',
+  hint: 'Documents & licences',
+  icon: 'document',
+  requiresAnyFeature: ['licensed_management'],
+};
+
+const financesItem: ClubNavItem = {
+  id: 'finances',
+  label: 'Finances',
+  shortLabel: '€',
+  hint: 'Vue simple',
+  icon: 'bag',
+  requiresAnyFeature: ['full_admin'],
+};
+
+const sponsoringItem: ClubNavItem = {
+  id: 'sponsoring',
+  label: 'Sponsoring',
+  shortLabel: 'Sponsors',
+  hint: 'Partenaires',
+  icon: 'gift',
+  requiresAnyFeature: ['full_admin'],
+};
+
+const equipmentItem: ClubNavItem = {
+  id: 'equipment',
+  label: 'Bourse équipements',
+  shortLabel: 'Matériel',
+  hint: 'Échanges entre membres',
+  icon: 'shirt',
+  requiresAnyFeature: ['licensed_management'],
+};
+
+const packItem: ClubNavItem = {
+  id: 'pack',
+  label: 'Pack Club',
+  shortLabel: 'Pack',
+  hint: 'SUR DEVIS · dès 3 € / adhérent',
+  icon: 'star-outline',
+};
+
+const notificationsItem: ClubNavItem = {
+  id: 'notifications',
+  label: 'Notifications',
+  shortLabel: 'Notifs',
+  hint: 'Centre d’alertes',
+  icon: 'notifications',
+};
+
+const permissionsItem: ClubNavItem = {
+  id: 'permissions',
+  label: 'Permissions',
+  shortLabel: 'Rôles',
+  hint: 'Admin · Dirigeant · DS · Coach',
+  icon: 'shield',
+};
+
+const carpoolItem: ClubNavItem = {
+  id: 'carpool',
+  label: 'Covoiturage',
+  shortLabel: 'Covoit',
+  hint: 'Déplacements',
+  icon: 'car',
+  tab: 'covoiturage',
+  requiresAnyFeature: ['carpool'],
+};
+
+const shopItem: ClubNavItem = {
+  id: 'shop',
+  label: 'Boutique',
+  shortLabel: 'Shop',
+  hint: 'Shop ProDay',
+  icon: 'bag',
+  tab: 'shop',
+  platformFlag: 'shop',
+  lockMode: 'hide',
+};
+
 export const CLUB_NAV_FOLDERS: ClubNavFolder[] = [
   {
     id: 'accueil',
-    label: 'Accueil',
-    items: [
-      {
-        id: 'today',
-        label: 'Aujourd’hui',
-        hint: 'Briefing & priorités',
-        icon: 'home',
-        chapter: 'aujourdhui',
-      },
-      {
-        id: 'assistant',
-        label: 'Assistant IA',
-        hint: 'Chat live Mistral',
-        icon: 'star-four-points',
-        aiBadge: true,
-      },
-      {
-        id: 'pitch',
-        label: 'Terrain',
-        hint: 'Cockpit 6 commandes',
-        icon: 'football',
-      },
-    ],
+    label: 'Pilotage',
+    items: [todayItem, assistantItem, notificationsItem],
   },
   {
-    id: 'organisation',
-    label: 'Organisation',
-    items: [
-      {
-        id: 'structure',
-        label: 'Structure',
-        hint: 'Équipes & adhésions',
-        icon: 'people',
-        chapter: 'structure',
-        requiresAnyFeature: ['licensed_management'],
-      },
-      {
-        id: 'vivier',
-        label: 'Vivier / Bourse',
-        hint: 'Interne avant Mercato',
-        icon: 'football-outline',
-        chapter: 'vivier',
-        requiresAnyFeature: ['licensed_management'],
-      },
-      {
-        id: 'pipeline',
-        label: 'Pipeline recrutement',
-        hint: 'Observé → Intégré',
-        icon: 'briefcase',
-        tab: 'recrutement',
-        requiresAnyFeature: ['licensed_management'],
-        platformFlag: 'mercato',
-        lockMode: 'hide',
-      },
-    ],
+    id: 'effectifs',
+    label: 'Effectifs',
+    items: [teamsItem, playersItem, coachesItem],
   },
   {
     id: 'sport',
     label: 'Sport',
+    items: [calendarItem, matchesItem, trainingsItem, eventsItem],
+  },
+  {
+    id: 'ops',
+    label: 'Opérations',
     items: [
-      {
-        id: 'calendar',
-        label: 'Calendrier',
-        hint: 'Matchs & convocations',
-        icon: 'calendar',
-        tab: 'matchs',
-        requiresAnyFeature: ['calendar'],
-      },
-      {
-        id: 'invites',
-        label: 'Invitations',
-        hint: 'Matchs club ↔ club',
-        icon: 'handshake',
-        chapter: 'competition',
-        competitionFocus: 'invites',
-        requiresAnyFeature: ['calendar'],
-      },
-      {
-        id: 'events',
-        label: 'Tournois & Live',
-        hint: 'Poules, QR, live',
-        icon: 'trophy',
-        chapter: 'competition',
-        competitionFocus: 'events',
-        requiresAnyFeature: ['competitions'],
-      },
+      communicationItem,
+      recruitmentItem,
+      videoItem,
+      statsItem,
+      automationsItem,
     ],
   },
   {
-    id: 'communication',
-    label: 'Communication',
+    id: 'club',
+    label: 'Club',
     items: [
-      {
-        id: 'messages',
-        label: 'Messages',
-        hint: 'Staff & effectif',
-        icon: 'chat',
-        tab: 'messages',
-        requiresAnyFeature: ['communication'],
-      },
-      {
-        id: 'vitrine',
-        label: 'Vitrine',
-        hint: 'Image publique',
-        icon: 'image',
-        tab: 'profil',
-      },
-    ],
-  },
-  {
-    id: 'ressources',
-    label: 'Ressources',
-    items: [
-      {
-        id: 'offers',
-        label: 'Offres & formule',
-        hint: 'Amateur → Pro + Veo',
-        icon: 'star-outline',
-        chapter: 'outils',
-        outilsFocus: 'offers',
-      },
-      {
-        id: 'carpool',
-        label: 'Covoiturage',
-        hint: 'Matchs & déplacements',
-        icon: 'car',
-        tab: 'covoiturage',
-        requiresAnyFeature: ['carpool'],
-      },
-      {
-        id: 'equipment',
-        label: 'Équipements',
-        hint: 'Marketplace membres',
-        icon: 'shirt',
-        chapter: 'outils',
-        outilsFocus: 'equipment',
-        requiresAnyFeature: ['licensed_management'],
-      },
-      {
-        id: 'sponsors',
-        label: 'Sponsors',
-        hint: 'Micro-sponsoring',
-        icon: 'business',
-        chapter: 'outils',
-        outilsFocus: 'sponsors',
-        requiresAnyFeature: ['full_admin'],
-      },
-      {
-        id: 'video',
-        label: 'Centre Vidéo',
-        hint: 'Caméras · captation · IA',
-        icon: 'videocam',
-        chapter: 'outils',
-        outilsFocus: 'video',
-        requiresAnyFeature: ['video_analysis', 'byo_video', 'hardware_kit'],
-      },
-      {
-        id: 'shop',
-        label: 'Boutique',
-        hint: 'Shop ProDay',
-        icon: 'bag',
-        tab: 'shop',
-        platformFlag: 'shop',
-        lockMode: 'hide',
-      },
+      clubItem,
+      packItem,
+      licensesItem,
+      financesItem,
+      sponsoringItem,
+      equipmentItem,
+      permissionsItem,
+      carpoolItem,
+      shopItem,
     ],
   },
 ];
 
-export const CLUB_NAV_ITEMS: ClubNavItem[] = CLUB_NAV_FOLDERS.flatMap((f) => f.items);
+export const CLUB_NAV_ITEMS: ClubNavItem[] = [
+  ...CLUB_NAV_FOLDERS.flatMap((f) => f.items),
+  plusItem,
+];
+
+/** Groupes Menu mobile — jobs + fréquents en tête (aucune destination retirée). */
+export type ClubToolGroup = {
+  title: string;
+  ids: ClubNavItemId[];
+  /** Si false, section toujours ouverte (Fréquents). */
+  collapsible?: boolean;
+  /** Déplié par défaut (ignoré si collapsible === false). */
+  defaultExpanded?: boolean;
+};
+
+export const CLUB_TOOL_GROUPS: ClubToolGroup[] = [
+  {
+    title: 'Fréquents',
+    ids: ['calendar', 'players', 'communication', 'finances', 'assistant'],
+    collapsible: false,
+  },
+  {
+    title: 'Aujourd’hui',
+    ids: ['trainings', 'notifications'],
+    collapsible: true,
+    defaultExpanded: true,
+  },
+  {
+    title: 'Effectifs',
+    ids: ['coaches', 'teams'],
+    collapsible: true,
+    defaultExpanded: true,
+  },
+  {
+    title: 'Compétition',
+    ids: ['matches', 'events', 'stats', 'video', 'recruitment'],
+    collapsible: true,
+    defaultExpanded: false,
+  },
+  {
+    title: 'Admin',
+    ids: [
+      'pack',
+      'licenses',
+      'sponsoring',
+      'equipment',
+      'automations',
+      'permissions',
+      'carpool',
+      'shop',
+    ],
+    collapsible: true,
+    defaultExpanded: false,
+  },
+];
 
 export function findClubNavItem(id: ClubNavItemId): ClubNavItem | undefined {
   return CLUB_NAV_ITEMS.find((i) => i.id === id);
 }
 
-/** Mappe un onglet mobile legacy vers un item sidebar Club. */
+export function primaryTabForClubNav(id: ClubNavItemId): ClubNavItemId {
+  if ((CLUB_PRIMARY_NAV_IDS as string[]).includes(id)) return id;
+  if ((CLUB_MENU_DEST_IDS as string[]).includes(id)) return 'plus';
+  return 'today';
+}
+
+export function canonicalizeClubNav(id: ClubNavItemId): ClubNavItemId {
+  return id;
+}
+
 export function clubNavFromTab(tab: MainTabId): ClubNavItemId {
   switch (tab) {
     case 'home':
       return 'today';
     case 'recrutement':
-      return 'pipeline';
+      return 'recruitment';
     case 'matchs':
-      return 'calendar';
+      return 'matches';
     case 'messages':
-      return 'messages';
+      return 'communication';
     case 'profil':
-      return 'vitrine';
+      return 'club';
     case 'covoiturage':
       return 'carpool';
     case 'shop':
@@ -275,11 +490,22 @@ export function clubNavFromTab(tab: MainTabId): ClubNavItemId {
 export function tabFromClubNav(id: ClubNavItemId): MainTabId {
   const item = findClubNavItem(id);
   if (item?.tab) return item.tab;
-  if (id === 'calendar' || id === 'invites' || id === 'events') return 'matchs';
-  if (id === 'pipeline') return 'recrutement';
-  if (id === 'messages') return 'messages';
-  if (id === 'vitrine') return 'profil';
+  if (id === 'calendar' || id === 'matches' || id === 'trainings' || id === 'events') {
+    return 'matchs';
+  }
+  if (id === 'recruitment') return 'recrutement';
+  if (id === 'communication') return 'messages';
+  if (id === 'club' || id === 'pack') return 'profil';
   if (id === 'carpool') return 'covoiturage';
   if (id === 'shop') return 'shop';
   return 'home';
+}
+
+export function resolveClubNavOnTabSync(
+  prev: ClubNavItemId,
+  activeTab: MainTabId,
+): ClubNavItemId {
+  const mapped = clubNavFromTab(activeTab);
+  if (tabFromClubNav(prev) === activeTab) return prev;
+  return mapped;
 }

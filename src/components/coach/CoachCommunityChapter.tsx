@@ -289,9 +289,18 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
                 key={n.id}
                 onPress={() => {
                   void staffNotificationsService.markRead(n.id).then(() => void load());
-                  if (n.event_id) tabNav.openMatchs({ eventId: n.event_id });
+                  if (n.event_id) {
+                    tabNav.openMatchs({
+                      eventId: n.event_id,
+                      hubChapter: 'effectif',
+                    });
+                    return;
+                  }
+                  if (shellNav) shellNav.requestNav('com_staff');
+                  else tabNav.setActiveTab('home');
                 }}
                 scaleTo={0.98}
+                haptic
               >
                 <View style={styles.row}>
                   <View style={{ flex: 1 }}>
@@ -302,6 +311,7 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
                       {n.body}
                     </CoachText>
                   </View>
+                  <Icon name="chevron-forward" size={14} color={tokens.muted} />
                 </View>
               </PressableSpring>
             ))

@@ -29,6 +29,9 @@ export interface ProDayGeoMapCardProps {
   footer?: React.ReactNode;
   /** `network` = vue staff (réseau régional). */
   variant?: ProDayGeoMapVariant;
+  /** Accent personnalisé (ex. thème joueur). */
+  accent?: string;
+  accentSoft?: string;
 }
 
 /** Carte géolocalisée — carte plein cadre + contrôles flottants. */
@@ -44,8 +47,12 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
   locError,
   footer,
   variant = 'nearby',
+  accent: accentProp,
+  accentSoft: accentSoftProp,
 }) => {
   const { colors } = useAppTheme();
+  const accent = accentProp ?? colors.accent;
+  const accentSoft = accentSoftProp ?? colors.accentSoft;
   const styles = useMemo(() => createStyles(colors), [colors]);
   const visibleMarkers = useMemo(() => filterByRadius(markers, radiusKm), [markers, radiusKm]);
   const isNetwork = variant === 'network';
@@ -55,7 +62,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
     <>
       <View style={styles.topBadge}>
         <View style={[styles.badgePill, { backgroundColor: colors.surface }]}>
-          <Icon name={isNetwork ? 'people' : 'location'} size={14} color={colors.accent} />
+          <Icon name={isNetwork ? 'people' : 'location'} size={14} color={accent} />
           <ProDayText variant="caption" style={styles.badgeTitle}>
             {badgeLabel}
           </ProDayText>
@@ -72,7 +79,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
                 onPress={() => onRadiusChange(r)}
                 style={[
                   styles.radiusBtn,
-                  active && { backgroundColor: colors.accent },
+                  active && { backgroundColor: accent },
                 ]}
               >
                 <ProDayText
@@ -88,9 +95,9 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
 
         <PressableSpring
           onPress={onRefreshLocation}
-          scaleTo={0.94}
+          scaleTo={0.97}
           haptic
-          style={[styles.locateBtn, { backgroundColor: colors.accent }]}
+          style={[styles.locateBtn, { backgroundColor: accent }]}
         >
           {locating ? (
             <ActivityIndicator size="small" color={colors.surface} />
@@ -115,6 +122,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
         markers={visibleMarkers}
         height={GEO_MAP_HEIGHT}
         overlay={mapOverlay}
+        accent={accent}
         onMarkerPress={(id) => {
           const marker = visibleMarkers.find((m) => m.id === id);
           if (marker) onMarkerPress(marker);
@@ -139,24 +147,28 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
             <StatPill
               icon="people"
               label={`${density.usersNearby} profil${density.usersNearby > 1 ? 's' : ''}`}
-              colors={colors}
+              accent={accent}
+              accentSoft={accentSoft}
             />
           ) : null}
           <StatPill
             icon="football"
             label={`${density.matchesNearby} match${density.matchesNearby > 1 ? 's' : ''}`}
-            colors={colors}
+            accent={accent}
+            accentSoft={accentSoft}
           />
           <StatPill
             icon="calendar"
             label={`${density.eventsNearby} événement${density.eventsNearby > 1 ? 's' : ''}`}
-            colors={colors}
+            accent={accent}
+            accentSoft={accentSoft}
           />
           {isNetwork && density.fieldsNearby > 0 ? (
             <StatPill
               icon="location"
               label={`${density.fieldsNearby} terrain${density.fieldsNearby > 1 ? 's' : ''}`}
-              colors={colors}
+              accent={accent}
+              accentSoft={accentSoft}
             />
           ) : null}
           <ProDayText variant="caption" muted style={styles.radiusHint}>
@@ -208,7 +220,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
                         : 'football'
                   }
                   size={18}
-                  color={colors.accent}
+                  color={accent}
                 />
               </View>
               <View style={styles.nearbyCopy}>
@@ -234,11 +246,12 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
 const StatPill: React.FC<{
   icon: 'football' | 'calendar' | 'people' | 'location';
   label: string;
-  colors: ReturnType<typeof useAppTheme>['colors'];
-}> = ({ icon, label, colors }) => (
-  <View style={[statStyles.pill, { backgroundColor: colors.accentSoft }]}>
-    <Icon name={icon} size={12} color={colors.accent} />
-    <ProDayText variant="caption" accent style={statStyles.label}>
+  accent: string;
+  accentSoft: string;
+}> = ({ icon, label, accent, accentSoft }) => (
+  <View style={[statStyles.pill, { backgroundColor: accentSoft }]}>
+    <Icon name={icon} size={12} color={accent} />
+    <ProDayText variant="caption" style={[statStyles.label, { color: accent }]}>
       {label}
     </ProDayText>
   </View>

@@ -5,6 +5,9 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import type { GeoDensitySummary, GeoMarker, GeoRadiusKm } from '../../core/types/geo';
 import type { GeoPoint } from '../../models/User';
 import { spacing, radius } from '../../theme/designTokens';
@@ -43,6 +46,12 @@ export const MatchGeoMapPanel: React.FC<MatchGeoMapPanelProps> = ({
   embedded = false,
 }) => {
   const { colors } = useAppTheme();
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
+  const accent = isPlayer ? joueurTheme.accent : colors.accent;
+  const accentSoft = isPlayer ? playerColors.accentSoft : colors.accentSoft;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const footer = (
@@ -89,6 +98,8 @@ export const MatchGeoMapPanel: React.FC<MatchGeoMapPanelProps> = ({
         locating={locating}
         locError={locError}
         footer={footer}
+        accent={accent}
+        accentSoft={accentSoft}
       />
     </View>
   );

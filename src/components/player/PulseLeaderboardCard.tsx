@@ -6,6 +6,7 @@ import { GlassCard } from '../aurora/GlassCard';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { formatPulseRating } from '../../utils/prodayMatchRating';
 import { spacing, radius } from '../../theme/designTokens';
@@ -17,6 +18,7 @@ interface PulseLeaderboardCardProps {
 
 export const PulseLeaderboardCard: React.FC<PulseLeaderboardCardProps> = ({ city, level }) => {
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const { t } = useTranslation();
   const [tab, setTab] = useState<'board' | 'totw'>('board');
   const [rows, setRows] = useState<PlayerPulseEntry[]>([]);
@@ -52,8 +54,8 @@ export const PulseLeaderboardCard: React.FC<PulseLeaderboardCardProps> = ({ city
               style={[
                 styles.tab,
                 {
-                  backgroundColor: tab === id ? colors.accentSoft : colors.surfaceMuted,
-                  borderColor: tab === id ? colors.accent : colors.border,
+                  backgroundColor: tab === id ? playerColors.accentSoft : colors.surfaceMuted,
+                  borderColor: tab === id ? playerColors.accent : colors.border,
                 },
               ]}
             >

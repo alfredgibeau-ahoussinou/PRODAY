@@ -1,49 +1,50 @@
 import type { IconName } from '../components/ui/Icon';
-
-export type ParentPageId =
-  | 'home'
-  | 'profil'
-  | 'messages'
-  | 'agenda'
-  | 'trajet'
-  | 'reglages';
+import type { ParentTabId } from '../features/parent/navigation/parentNavConfig';
 
 export type ParentPageIdentity = {
-  id: ParentPageId;
+  id: ParentTabId;
   eyebrow: string;
   title: string;
   support: string;
   icon: IconName;
-  wash: readonly [string, string, string];
 };
 
 export const PARENT_SITE = {
-  bg: '#041f1e',
-  accent: '#14B8A6',
-  accentSoft: 'rgba(20, 184, 166, 0.16)',
-  glow: 'rgba(45, 212, 191, 0.22)',
-  ink: '#F0FDFA',
-  muted: 'rgba(204, 251, 241, 0.72)',
+  bg: '#0A0A0A',
+  accent: '#F97316',
+  accentSoft: 'rgba(249, 115, 22, 0.14)',
+  ink: '#FAFAFA',
+  muted: 'rgba(253, 186, 116, 0.65)',
 } as const;
 
-const WASH: readonly [string, string, string] = ['#042f2e', '#0a1f1e', '#041f1e'];
-
-export const PARENT_PAGES: Record<ParentPageId, ParentPageIdentity> = {
+export const PARENT_PAGES: Record<ParentTabId, ParentPageIdentity> = {
   home: {
     id: 'home',
-    eyebrow: 'Cockpit famille',
-    title: 'À faire maintenant',
-    support: 'Déblocages, retards, messages et contrôles — en un geste.',
+    eyebrow: 'Parent',
+    title: 'Accueil',
+    support: 'Présence samedi · alertes · contrôles.',
     icon: 'home',
-    wash: WASH,
   },
-  profil: {
-    id: 'profil',
-    eyebrow: 'Enfant lié',
+  enfant: {
+    id: 'enfant',
+    eyebrow: 'Enfant',
     title: 'Profil supervisé',
-    support: 'Identité sportive en lecture seule · contrôles parentaux actifs.',
+    support: 'Identité sportive en lecture seule · contrôles actifs.',
     icon: 'person',
-    wash: WASH,
+  },
+  guide: {
+    id: 'guide',
+    eyebrow: 'Guide IA',
+    title: 'Suggestions',
+    support: 'Pistes actionnables sur l’enfant, vous, et ce que vous pouvez faire.',
+    icon: 'star-four-points',
+  },
+  plus: {
+    id: 'plus',
+    eyebrow: 'Menu',
+    title: 'Outils famille',
+    support: 'Messages, agenda et trajet — sans surcharger le dock.',
+    icon: 'menu',
   },
   messages: {
     id: 'messages',
@@ -51,15 +52,13 @@ export const PARENT_PAGES: Record<ParentPageId, ParentPageIdentity> = {
     title: 'Contacts & fils',
     support: 'Approuver, bloquer, lire — vous restez le filtre.',
     icon: 'chat',
-    wash: WASH,
   },
   agenda: {
     id: 'agenda',
     eyebrow: 'Planning',
-    title: 'Agenda & retards',
-    support: 'Prévenir le coach si l’enfant ou vous êtes en retard.',
+    title: 'Agenda',
+    support: 'Je viens / absent en un tap · retard si besoin.',
     icon: 'calendar',
-    wash: WASH,
   },
   trajet: {
     id: 'trajet',
@@ -67,14 +66,12 @@ export const PARENT_PAGES: Record<ParentPageId, ParentPageIdentity> = {
     title: 'Trajet live',
     support: 'Suivre la position si le partage est activé.',
     icon: 'car',
-    wash: WASH,
   },
   reglages: {
     id: 'reglages',
-    eyebrow: 'Contrôles',
-    title: 'Réglages parentaux',
-    support: 'Temps d’écran, vie privée, urgences et liaisons.',
+    eyebrow: 'Profil',
+    title: 'Réglages',
+    support: 'Temps d’écran, vie privée, urgences et pôles.',
     icon: 'settings',
-    wash: WASH,
   },
 };

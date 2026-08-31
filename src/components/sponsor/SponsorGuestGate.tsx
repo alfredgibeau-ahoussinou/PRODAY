@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { PressableSpring } from '../motion';
-import { Icon } from '../ui/Icon';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { PressableSpring, AnimatedEntrance } from '../motion';
+import { ProDaySymbol } from '../branding/ProDaySymbol';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
@@ -10,28 +10,34 @@ type SponsorGuestGateProps = {
   message: string;
 };
 
-/** Accueil invité Sponsor — CTA connexion / inscription marque. */
+/** Porte invité Sponsor — 1 CTA + lien login, noir + violet. */
 export const SponsorGuestGate: React.FC<SponsorGuestGateProps> = ({ message }) => {
   const { openAuth, openSponsorSignup } = useTabNavigation();
   const styles = useMemo(() => createStyles(), []);
 
   return (
     <View style={styles.root}>
-      <Icon name="star-four-points" size={28} color={SPONSOR_THEME.gold} />
-      <Text style={styles.title}>Espace marque</Text>
-      <Text style={styles.message}>{message}</Text>
-      <PressableSpring
-        style={styles.primary}
-        onPress={() => openSponsorSignup()}
-        scaleTo={0.98}
-        haptic
-      >
-        <Text style={styles.primaryText}>Créer mon compte Sponsor</Text>
-        <Icon name="chevron-forward" size={16} color={SPONSOR_THEME.goldInk} />
-      </PressableSpring>
-      <PressableSpring style={styles.secondary} onPress={() => openAuth('login')} scaleTo={0.98}>
-        <Text style={styles.secondaryText}>J’ai déjà un compte</Text>
-      </PressableSpring>
+      <AnimatedEntrance kind="fadeUp" index={0}>
+        <View style={styles.heroBlock}>
+          <ProDaySymbol size={56} variant="sponsor" tone="white" />
+          <Text style={styles.eyebrow}>ProDay Sponsor</Text>
+          <Text style={styles.title}>Espace marque</Text>
+          <Text style={styles.message}>{message}</Text>
+        </View>
+      </AnimatedEntrance>
+      <AnimatedEntrance kind="fadeUp" index={1} style={styles.ctaCol}>
+        <PressableSpring
+          style={styles.primary}
+          onPress={() => openSponsorSignup()}
+          scaleTo={0.98}
+          haptic
+        >
+          <Text style={styles.primaryText}>Créer mon compte Sponsor</Text>
+        </PressableSpring>
+        <PressableSpring style={styles.secondary} onPress={() => openAuth('login')} scaleTo={0.98}>
+          <Text style={styles.secondaryText}>Déjà un compte ? Se connecter</Text>
+        </PressableSpring>
+      </AnimatedEntrance>
     </View>
   );
 };
@@ -43,12 +49,27 @@ function createStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: spacing.xl,
-      gap: spacing.md,
+      gap: spacing.lg,
       backgroundColor: SPONSOR_THEME.background,
     },
+    heroBlock: {
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    eyebrow: {
+      textAlign: 'center',
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1.8,
+      textTransform: 'uppercase',
+      color: SPONSOR_THEME.primary,
+      marginBottom: spacing.xs,
+      ...Platform.select({ android: { includeFontPadding: false } }),
+    },
     title: {
+      textAlign: 'center',
       fontSize: 22,
-      fontWeight: '900',
+      fontWeight: '800',
       color: SPONSOR_THEME.text,
       letterSpacing: -0.4,
     },
@@ -57,33 +78,36 @@ function createStyles() {
       color: SPONSOR_THEME.textMuted,
       fontSize: 14,
       lineHeight: 20,
-      marginBottom: spacing.sm,
+      marginTop: spacing.sm,
+      maxWidth: 300,
+    },
+    ctaCol: {
+      alignSelf: 'stretch',
+      gap: spacing.sm,
+      marginTop: spacing.md,
     },
     primary: {
-      minHeight: 52,
+      minHeight: 48,
       borderRadius: radius.pill,
-      backgroundColor: SPONSOR_THEME.gold,
+      backgroundColor: SPONSOR_THEME.primary,
       paddingHorizontal: spacing.lg,
-      flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.xs,
-      alignSelf: 'stretch',
       justifyContent: 'center',
+      alignSelf: 'stretch',
     },
     primaryText: {
       fontSize: 15,
       fontWeight: '800',
-      color: SPONSOR_THEME.goldInk,
+      color: SPONSOR_THEME.onPrimary,
     },
     secondary: {
       paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
+      alignItems: 'center',
     },
     secondaryText: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: SPONSOR_THEME.goldLight,
-      textDecorationLine: 'underline',
+      fontSize: 13,
+      fontWeight: '600',
+      color: SPONSOR_THEME.textMuted,
     },
   });
 }

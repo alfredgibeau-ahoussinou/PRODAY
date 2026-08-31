@@ -11,6 +11,8 @@ interface PagerPageProps {
   index: number;
   scrollX: SharedValue<number>;
   pageWidth: number;
+  /** Hauteur mesurée du viewport pager (obligatoire dans un ScrollView horizontal). */
+  pageHeight: number;
   children: React.ReactNode;
 }
 
@@ -19,6 +21,7 @@ export const PagerPage: React.FC<PagerPageProps> = ({
   index,
   scrollX,
   pageWidth,
+  pageHeight,
   children,
 }) => {
   const animStyle = useAnimatedStyle(() => {
@@ -27,19 +30,19 @@ export const PagerPage: React.FC<PagerPageProps> = ({
     const opacity = interpolate(
       scrollX.value,
       [center - w, center, center + w],
-      [0.55, 1, 0.55],
+      [0.75, 1, 0.75],
       Extrapolation.CLAMP
     );
     const scale = interpolate(
       scrollX.value,
       [center - w, center, center + w],
-      [0.96, 1, 0.96],
+      [0.98, 1, 0.98],
       Extrapolation.CLAMP
     );
     const translateY = interpolate(
       scrollX.value,
       [center - w, center, center + w],
-      [8, 0, 8],
+      [3, 0, 3],
       Extrapolation.CLAMP
     );
     return {
@@ -49,12 +52,22 @@ export const PagerPage: React.FC<PagerPageProps> = ({
   });
 
   return (
-    <Animated.View style={[styles.page, { width: pageWidth }, animStyle]}>
+    <Animated.View
+      style={[
+        styles.page,
+        {
+          width: pageWidth,
+          // flex:1 ne remplit pas la hauteur dans un ScrollView horizontal RN.
+          height: pageHeight > 0 ? pageHeight : undefined,
+        },
+        animStyle,
+      ]}
+    >
       {children}
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  page: { flex: 1, minHeight: 0 },
+  page: { minHeight: 0, overflow: 'hidden' },
 });

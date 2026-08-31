@@ -3,13 +3,14 @@ import {
   canonicalizeCoachNav,
   type CoachNavItemId,
 } from '../features/coach/navigation/coachNavConfig';
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../theme/prodayBrand';
 
-/** Tokens Pôle Coach — nuit type SportEasy, accent PRODAY. */
+/** Tokens Pôle Coach — nuit premium, accent vert officiel. */
 export const COACH_SITE = {
-  accent: '#006CFC',
-  deep: '#002478',
-  soft: 'rgba(0, 108, 252, 0.22)',
-  glow: 'rgba(0, 108, 252, 0.28)',
+  accent: PRODAY_POLE_ACCENTS.coach,
+  deep: '#15803D',
+  soft: poleAccentSoft('coach', 0.22),
+  glow: poleAccentSoft('coach', 0.28),
   bg: '#000000',
   band: '#000000',
   surface: '#1C1C1E',
@@ -68,7 +69,7 @@ export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = 
     id: 'today',
     eyebrow: 'Briefing',
     title: 'Accueil',
-    support: 'Calendrier du jour, séances et matchs.',
+    support: 'Jour J — match ou séance, pointage et hubs.',
     icon: 'home',
     motif: 'none',
   }),
@@ -198,6 +199,14 @@ export const COACH_PAGE_IDENTITIES: Record<CoachNavItemId, CoachPageIdentity> = 
     title: 'Covoiturage',
     support: 'Trajets match et entraînement.',
     icon: 'car',
+    motif: 'none',
+  }),
+  coaching_perso: page({
+    id: 'coaching_perso',
+    eyebrow: 'Indépendant',
+    title: 'Coaching perso',
+    support: 'Créneaux à l’heure, tarif affiché, demandes et propositions joueurs.',
+    icon: 'time',
     motif: 'none',
   }),
   profil: page({

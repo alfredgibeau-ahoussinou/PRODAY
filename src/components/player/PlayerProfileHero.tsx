@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { User } from '../../models/User';
 import { Icon, type IconName } from '../ui/Icon';
-import { ProDayGradient } from '../ui/ProDayGradient';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import {
   availabilityLabel,
   availabilityTone,
@@ -26,6 +29,7 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
   completionPercent,
   careerScore,
 }) => {
+  const joueurTheme = useJoueurTheme();
   const p = player.profile;
   const verified = player.is_verified === true;
   const availability = availabilityLabel(p.availability);
@@ -45,8 +49,18 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
   if (p.weight_kg) metaParts.push(`${p.weight_kg} kg`);
 
   return (
-    <View style={[styles.card, shadows.card, { borderColor: c.border, backgroundColor: c.surface }]}>
-      <ProDayGradient kind="hero" style={styles.hero}>
+    <View style={[styles.card, shadows.card, { borderColor: `${joueurTheme.accent}44`, backgroundColor: PLAYER_DARK.surface }]}>
+      <LinearGradient
+        colors={[joueurTheme.accent, PLAYER_DARK.surfaceRaised, PLAYER_DARK.bg]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.hero}
+      >
+        <LinearGradient
+          colors={['rgba(255,255,255,0.14)', 'transparent']}
+          style={styles.heroShine}
+          pointerEvents="none"
+        />
         {isOwnProfile ? (
           <View style={styles.ownPill}>
             <Text style={styles.ownPillText}>Mon profil</Text>
@@ -114,35 +128,35 @@ export const PlayerProfileHero: React.FC<PlayerProfileHeroProps> = ({
             </View>
           ) : null}
         </View>
-      </ProDayGradient>
+      </LinearGradient>
 
       {isOwnProfile && (completionPercent != null || careerScore != null) ? (
-        <View style={[styles.completionRow, { borderTopColor: c.border }]}>
+        <View style={[styles.completionRow, { borderTopColor: joueurTheme.border, backgroundColor: JOUEUR_SURFACES.listRow }]}>
           {completionPercent != null ? (
             <View style={styles.metricBlock}>
               <View style={styles.completionCopy}>
-                <Text style={[styles.completionTitle, { color: c.text }]}>Profil complété</Text>
-                <Text style={[styles.completionSub, { color: c.textMuted }]}>
+                <Text style={[styles.completionTitle, { color: joueurTheme.ink }]}>Profil complété</Text>
+                <Text style={[styles.completionSub, { color: joueurTheme.inkMuted }]}>
                   {completionPercent >= 80
                     ? 'Bonne visibilité Mercato'
                     : 'Complétez pour être repéré'}
                 </Text>
               </View>
-              <View style={[styles.completionRing, { borderColor: c.brand }]}>
-                <Text style={[styles.completionPct, { color: c.brand }]}>{completionPercent}%</Text>
+              <View style={[styles.completionRing, { borderColor: joueurTheme.accent }]}>
+                <Text style={[styles.completionPct, { color: joueurTheme.accent }]}>{completionPercent}%</Text>
               </View>
             </View>
           ) : null}
           {careerScore != null ? (
             <View style={styles.metricBlock}>
               <View style={styles.completionCopy}>
-                <Text style={[styles.completionTitle, { color: c.text }]}>Score carrière</Text>
-                <Text style={[styles.completionSub, { color: c.textMuted }]}>
+                <Text style={[styles.completionTitle, { color: joueurTheme.ink }]}>Score carrière</Text>
+                <Text style={[styles.completionSub, { color: joueurTheme.inkMuted }]}>
                   Stats · activité · profil
                 </Text>
               </View>
-              <View style={[styles.completionRing, { borderColor: c.brand }]}>
-                <Text style={[styles.completionPct, { color: c.brand }]}>{careerScore}</Text>
+              <View style={[styles.completionRing, { borderColor: joueurTheme.accent }]}>
+                <Text style={[styles.completionPct, { color: joueurTheme.accent }]}>{careerScore}</Text>
               </View>
             </View>
           ) : null}
@@ -182,6 +196,7 @@ export const PlayerIdentityDetails: React.FC<{
   /** Coordonnées déjà filtrées selon `contact_privacy` + relation viewer. */
   visibleContacts?: VisibleProfileContacts | null;
 }> = ({ player, colors: c, visibleContacts }) => {
+  const joueurTheme = useJoueurTheme();
   const p = player.profile;
   const rows: { icon: IconName; label: string; value: string }[] = [];
 
@@ -219,7 +234,7 @@ export const PlayerIdentityDetails: React.FC<{
   }
 
   return (
-    <View style={[infoStyles.card, { backgroundColor: c.surfaceMuted, borderColor: c.border }]}>
+    <View style={[infoStyles.card, { backgroundColor: JOUEUR_SURFACES.card, borderColor: joueurTheme.border }]}>
       {rows.map((row, index) => (
         <InfoRow
           key={row.label}
@@ -267,6 +282,10 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingTop: spacing.xl,
     gap: spacing.md,
+    overflow: 'hidden',
+  },
+  heroShine: {
+    ...StyleSheet.absoluteFillObject,
   },
   ownPill: {
     alignSelf: 'flex-start',

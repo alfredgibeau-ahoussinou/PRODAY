@@ -12,6 +12,9 @@ import { getShopProductImage } from '../../content/shopAssets';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useAppTheme } from '../../context/ProductLineContext';
 import type { AppColors } from '../../theme/universeTheme';
+import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { spacing, radius, shadows } from '../../theme/designTokens';
@@ -36,24 +39,40 @@ export const ShopProductCard: React.FC<ShopProductCardProps> = ({
   onQuickAdd,
 }) => {
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const joueurSession = useJoueurSession();
+  const playerColors = usePlayerThemeColors();
+  const joueurSkin = Boolean(
+    joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate,
+  );
+  const colors = joueurSkin
+    ? {
+        ...c,
+        surface: PLAYER_DARK.surface,
+        surfaceMuted: PLAYER_DARK.bgElevated,
+        border: PLAYER_DARK.border,
+        ink: PLAYER_DARK.text,
+        textMuted: PLAYER_DARK.textMuted,
+        accent: playerColors.accent,
+      }
+    : c;
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const image = getShopProductImage(product.id, productLine);
 
   return (
     <PressableSpring
-      style={[styles.card, shadows.soft, { backgroundColor: c.surface, borderColor: c.border }]}
+      style={[styles.card, shadows.soft, { backgroundColor: colors.surface, borderColor: colors.border }]}
       onPress={() => {
         prodayHaptics.press();
         onPress();
       }}
       scaleTo={0.97}
     >
-      <View style={[styles.imageWrap, { backgroundColor: c.surfaceMuted }]}>
+      <View style={[styles.imageWrap, { backgroundColor: colors.surfaceMuted }]}>
         {image ? (
           <Image source={image} style={styles.image} resizeMode="cover" accessibilityLabel={product.name} />
         ) : (
           <View style={styles.fallback}>
-            <Icon name={product.icon} size={36} color={c.ink} variant="filled" />
+            <Icon name={product.icon} size={36} color={colors.ink} variant="filled" />
           </View>
         )}
         <LinearGradient
@@ -67,11 +86,11 @@ export const ShopProductCard: React.FC<ShopProductCardProps> = ({
             </ProDayText>
           </View>
         ) : null}
-        <PressableSpring style={styles.wishBtn} onPress={onToggleWish} scaleTo={0.9} haptic>
+        <PressableSpring style={styles.wishBtn} onPress={onToggleWish} scaleTo={0.97} haptic>
           <Icon
             name="bookmark"
             size={17}
-            color={wished ? c.accent : '#fff'}
+            color={wished ? colors.accent : '#fff'}
             variant={wished ? 'filled' : undefined}
           />
         </PressableSpring>
@@ -85,7 +104,7 @@ export const ShopProductCard: React.FC<ShopProductCardProps> = ({
               prodayHaptics.cartAdd();
               onQuickAdd();
             }}
-            scaleTo={0.9}
+            scaleTo={0.97}
             haptic
           >
             <Icon name="add" size={18} color={c.ink} />

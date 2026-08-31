@@ -1,11 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, Image, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { PRODAY_WOMAN_BRAND } from '../models/ProductLine';
-import { WOMAN_BRANDING_LOGOS } from '../content/brandingAssets';
+import { PRODAY_SYMBOL_ASPECT } from '../theme/prodayBrand';
+import { ProDaySymbol } from './branding/ProDaySymbol';
 import type { LogoBackground } from './Logo';
-
-/** Ratio largeur/hauteur du picto P (mark rose). */
-const PICTO_ASPECT = 1.78;
 
 const WOMAN_COLORS = {
   pro: '#831843',
@@ -34,7 +32,7 @@ export const WomanLogo: React.FC<WomanLogoProps> = ({
 
   const layout = useMemo(() => {
     const pictoW = width * (watermark ? 1 : 0.76);
-    const pictoH = pictoW / PICTO_ASPECT;
+    const pictoH = pictoW / PRODAY_SYMBOL_ASPECT;
     const line1 = width * 0.1;
     const line2 = width * 0.115;
     const tagSize = width * 0.076;
@@ -45,11 +43,11 @@ export const WomanLogo: React.FC<WomanLogoProps> = ({
 
   if (watermark) {
     return (
-      <Image
-        source={WOMAN_BRANDING_LOGOS.picto}
-        style={{ width: layout.pictoW, height: layout.pictoH, opacity: opacity * 0.14 }}
-        resizeMode="contain"
-        accessibilityLabel={PRODAY_WOMAN_BRAND.name}
+      <ProDaySymbol
+        size={layout.pictoW}
+        variant="player"
+        tone={onDark ? 'white' : 'black'}
+        opacity={opacity * 0.14}
       />
     );
   }
@@ -65,13 +63,7 @@ export const WomanLogo: React.FC<WomanLogoProps> = ({
 
   return (
     <View style={[styles.wrap, { width, opacity }]}>
-      <Image
-        source={WOMAN_BRANDING_LOGOS.picto}
-        style={{ width: layout.pictoW, height: layout.pictoH }}
-        resizeMode="contain"
-        accessibilityRole="image"
-        accessibilityLabel={PRODAY_WOMAN_BRAND.name}
-      />
+      <ProDaySymbol size={layout.pictoW} variant="player" tone={onDark ? 'white' : 'black'} />
 
       <View style={[styles.wordBlock, { marginTop: width * 0.024 }]}>
         <Text
@@ -127,7 +119,7 @@ export const WomanLogo: React.FC<WomanLogoProps> = ({
 
 export function womanLogoAspect(width: number): number {
   const pictoW = width * 0.76;
-  const pictoH = pictoW / PICTO_ASPECT;
+  const pictoH = pictoW / PRODAY_SYMBOL_ASPECT;
   const line1 = width * 0.1;
   const line2 = width * 0.115;
   const tagSize = width * 0.076;

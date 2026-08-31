@@ -4,10 +4,9 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
-  Image,
 } from 'react-native';
 import { Icon } from '../../components/ui/Icon';
+import { ProDaySymbol } from '../../components/branding/ProDaySymbol';
 import { SponsorScreenHeader } from '../../components/sponsor/SponsorScreenHeader';
 import { SponsorPricingScreen } from '../../components/sponsor/SponsorPricingScreen';
 import {
@@ -15,12 +14,12 @@ import {
   SPONSOR_VALUE_PILLARS,
 } from '../../content/sponsorPricing';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
-import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
 import { TAB_BAR_CONTENT_INSET } from '../../components/navigation/BottomTabBar';
 import { SPONSOR_NAV_INSET } from '../../navigation/sponsorTabConfig';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { isSponsorRole } from '../../content/sponsorExperience';
 import { useAuth } from '../../context/AuthContext';
+import { AnimatedEntrance, PressableSpring } from '../../components/motion';
 
 interface SponsorHubScreenProps {
   onBack?: () => void;
@@ -28,6 +27,7 @@ interface SponsorHubScreenProps {
   shellMode?: boolean;
 }
 
+/** Formules & valeur Sponsor — éditorial, peu de CTA. */
 export const SponsorHubScreen: React.FC<SponsorHubScreenProps> = ({
   onBack,
   onBrowseOffers,
@@ -44,10 +44,10 @@ export const SponsorHubScreen: React.FC<SponsorHubScreenProps> = ({
         showsVerticalScrollIndicator={false}
       >
         {onBack && !shellMode ? (
-          <TouchableOpacity style={styles.backBtn} onPress={onBack} activeOpacity={0.85}>
+          <PressableSpring style={styles.backBtn} onPress={onBack} scaleTo={0.97}>
             <Icon name="arrow-back" size={20} color={SPONSOR_THEME.text} />
             <Text style={styles.backText}>Retour</Text>
-          </TouchableOpacity>
+          </PressableSpring>
         ) : null}
 
         {!shellMode ? (
@@ -56,55 +56,43 @@ export const SponsorHubScreen: React.FC<SponsorHubScreenProps> = ({
             subtitle={SPONSOR_PRICING_INTRO.subtitle}
           />
         ) : (
-          <View style={styles.shellIntro}>
-            <Text style={styles.shellIntroTitle}>{SPONSOR_PRICING_INTRO.title}</Text>
-            <Text style={styles.shellIntroSub}>{SPONSOR_PRICING_INTRO.subtitle}</Text>
-          </View>
+          <AnimatedEntrance kind="fadeUp" index={0}>
+            <View style={styles.shellIntro}>
+              <ProDaySymbol size={48} variant="sponsor" tone="white" />
+              <Text style={styles.shellIntroTitle}>{SPONSOR_PRICING_INTRO.title}</Text>
+              <Text style={styles.shellIntroSub}>{SPONSOR_PRICING_INTRO.subtitle}</Text>
+            </View>
+          </AnimatedEntrance>
         )}
 
-        <View style={styles.hero}>
-          <View style={styles.heroIcon}>
-            <Image
-              source={SPONSOR_BRANDING_LOGOS.picto}
-              style={styles.heroLogo}
-              resizeMode="contain"
-              accessibilityLabel="Pro Day Sponsor"
-            />
+        <AnimatedEntrance kind="fadeUp" index={1}>
+          <View style={styles.pillars}>
+            {SPONSOR_VALUE_PILLARS.map((pillar) => (
+              <View key={pillar.title} style={styles.pillarRow}>
+                <Icon name={pillar.icon} size={18} color={SPONSOR_THEME.primary} />
+                <View style={styles.pillarCopy}>
+                  <Text style={styles.pillarTitle}>{pillar.title}</Text>
+                  <Text style={styles.pillarBody}>{pillar.body}</Text>
+                </View>
+              </View>
+            ))}
           </View>
-          <Text style={styles.heroTitle}>Le foot local a besoin de sponsors engagés</Text>
-          <Text style={styles.heroBody}>
-            Équipementiers, enseignes locales, marques régionales. ProDay connecte votre offre aux
-            clubs qui recrutent, organisent et financent leur saison sur l’app.
-          </Text>
-        </View>
-
-        <View style={styles.pillars}>
-          {SPONSOR_VALUE_PILLARS.map((pillar) => (
-            <View key={pillar.title} style={styles.pillarCard}>
-              <Icon name={pillar.icon} size={20} color={SPONSOR_THEME.primary} />
-              <Text style={styles.pillarTitle}>{pillar.title}</Text>
-              <Text style={styles.pillarBody}>{pillar.body}</Text>
-            </View>
-          ))}
-        </View>
+        </AnimatedEntrance>
 
         {isSponsor ? (
-          <View style={styles.sponsorBanner}>
-            <Text style={styles.sponsorBannerTitle}>Votre espace sponsor ProDay</Text>
-            <Text style={styles.sponsorBannerSub}>
-              Les formules ci-dessous sont les mêmes que sur le site ProDay.
-            </Text>
-          </View>
+          <Text style={styles.note}>
+            Formules, offres et réseau club — le même parcours que votre tableau de bord.
+          </Text>
         ) : null}
 
-        <Text style={styles.sectionTitle}>Tarifs sponsors</Text>
+        <Text style={styles.sectionTitle}>Tarifs</Text>
         <SponsorPricingScreen embedded hideIntro onBack={onBack} />
 
         {onBrowseOffers ? (
-          <TouchableOpacity style={styles.browseBtn} onPress={onBrowseOffers} activeOpacity={0.88}>
-            <Icon name="business" size={18} color={SPONSOR_THEME.primary} />
-            <Text style={styles.browseText}>Voir les offres sponsors actives</Text>
-          </TouchableOpacity>
+          <PressableSpring style={styles.browseBtn} onPress={onBrowseOffers} scaleTo={0.98}>
+            <Text style={styles.browseText}>Voir mes offres</Text>
+            <Icon name="chevron-forward" size={16} color={SPONSOR_THEME.primary} />
+          </PressableSpring>
         ) : null}
       </ScrollView>
     </View>
@@ -127,72 +115,60 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   backText: { fontSize: 15, fontWeight: '700', color: SPONSOR_THEME.text },
-  shellIntro: { gap: spacing.xs, marginBottom: spacing.sm },
-  shellIntroTitle: { fontSize: 22, fontWeight: '800', color: SPONSOR_THEME.text },
-  shellIntroSub: { fontSize: 14, color: SPONSOR_THEME.textSecondary, lineHeight: 20 },
-  hero: {
-    backgroundColor: SPONSOR_THEME.surface,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: SPONSOR_THEME.borderSubtle,
-    gap: spacing.sm,
-  },
-  heroIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.lg,
-    backgroundColor: '#FFFFFF',
+  shellIntro: {
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.35)',
-    overflow: 'hidden',
-    padding: 4,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    paddingBottom: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SPONSOR_THEME.borderSubtle,
   },
-  heroLogo: { width: '100%', height: '100%' },
-  heroTitle: { fontSize: 20, fontWeight: '800', color: SPONSOR_THEME.text, lineHeight: 26 },
-  heroBody: { fontSize: 14, color: SPONSOR_THEME.textSecondary, lineHeight: 21 },
-  pillars: { gap: spacing.sm },
-  pillarCard: {
-    backgroundColor: SPONSOR_THEME.surface,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: SPONSOR_THEME.borderSubtle,
-    gap: 4,
+  shellIntroTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: SPONSOR_THEME.text,
+    textAlign: 'center',
+    letterSpacing: -0.3,
   },
-  pillarTitle: { fontSize: 14, fontWeight: '800', color: SPONSOR_THEME.text, marginTop: 4 },
+  shellIntroSub: {
+    fontSize: 14,
+    color: SPONSOR_THEME.textMuted,
+    lineHeight: 20,
+    textAlign: 'center',
+    maxWidth: 320,
+  },
+  pillars: { gap: 0 },
+  pillarRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SPONSOR_THEME.borderSubtle,
+  },
+  pillarCopy: { flex: 1, gap: 2 },
+  pillarTitle: { fontSize: 14, fontWeight: '800', color: SPONSOR_THEME.text },
   pillarBody: { fontSize: 12, color: SPONSOR_THEME.textMuted, lineHeight: 17 },
+  note: {
+    fontSize: 13,
+    color: SPONSOR_THEME.textSecondary,
+    lineHeight: 18,
+  },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     color: SPONSOR_THEME.sectionLabel,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     marginTop: spacing.sm,
   },
-  sponsorBanner: {
-    backgroundColor: SPONSOR_THEME.primarySoft,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: SPONSOR_THEME.primary,
-    gap: spacing.sm,
-  },
-  sponsorBannerTitle: { fontSize: 16, fontWeight: '800', color: SPONSOR_THEME.text },
-  sponsorBannerSub: { fontSize: 13, color: SPONSOR_THEME.textSecondary, lineHeight: 18 },
   browseBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
+    gap: spacing.xs,
+    marginTop: spacing.md,
     paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: SPONSOR_THEME.borderSubtle,
-    backgroundColor: SPONSOR_THEME.surface,
   },
-  browseText: { fontSize: 14, fontWeight: '700', color: SPONSOR_THEME.text },
+  browseText: { fontSize: 14, fontWeight: '700', color: SPONSOR_THEME.primary },
 });

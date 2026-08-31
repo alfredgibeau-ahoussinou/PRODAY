@@ -6,7 +6,9 @@ import { PressableSpring } from '../motion';
 import { clubTrialSheetsService } from '../../services/clubTrialSheets.service';
 import {
   TRIAL_SHEET_RATING_LABELS,
+  TRIAL_SHEET_DECISION_LABELS,
   type ClubTrialSheet,
+  type TrialSheetDecision,
   type TrialSheetRatingKey,
   trialSheetRequiresParentalConsent,
 } from '../../models/ClubTrialSheet';
@@ -203,6 +205,45 @@ export const ClubTrialSheetsPanel: React.FC<{ clubId: string; profile: User }> =
                       Note globale : {sheet.overall}/5
                     </ProDayText>
                   ) : null}
+                  <TextInput
+                    placeholder="Notes du coach"
+                    value={sheet.notes ?? ''}
+                    onChangeText={(text) => {
+                      void clubTrialSheetsService
+                        .updateRatings(sheet.id, { notes: text })
+                        .then(load);
+                    }}
+                    multiline
+                    placeholderTextColor={colors.textMuted}
+                    style={[styles.input, { borderColor: colors.border, color: colors.ink }]}
+                  />
+                  <ProDayText variant="caption" muted>
+                    Décision
+                  </ProDayText>
+                  <View style={styles.switchRow}>
+                    {(
+                      ['retained', 'not_retained', 'to_review'] as TrialSheetDecision[]
+                    ).map((d) => (
+                      <PressableSpring
+                        key={d}
+                        onPress={() => {
+                          void clubTrialSheetsService
+                            .updateRatings(sheet.id, { decision: d })
+                            .then(load);
+                        }}
+                        scaleTo={0.96}
+                      >
+                        <ProDayText
+                          variant="caption"
+                          accent={sheet.decision === d}
+                          muted={sheet.decision !== d}
+                          style={sheet.decision === d ? styles.link : undefined}
+                        >
+                          {TRIAL_SHEET_DECISION_LABELS[d]}
+                        </ProDayText>
+                      </PressableSpring>
+                    ))}
+                  </View>
                   {sheet.is_minor && trialSheetRequiresParentalConsent(sheet) ? (
                     <PressableSpring
                       onPress={() =>

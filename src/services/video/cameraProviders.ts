@@ -6,6 +6,7 @@
 import type { VideoCameraVendor } from '../../content/videoOffers';
 import { VIDEO_VENDORS } from '../../content/videoOffers';
 import type { MatchVideoClip, MatchVideoSource } from '../../models/ClubCameras';
+import { cameraConnectHonestMessage } from '../../utils/coachVideoHonesty';
 
 export interface CameraProviderCapabilities {
   connectApi: boolean;
@@ -102,21 +103,20 @@ function makeProvider(vendor: VideoCameraVendor): ClubCameraProvider {
         return {
           ok: true,
           external_device_id: externalDeviceId ?? `${vendor}-import`,
-          message: `${label} : connexion API à venir — importez vos vidéos dès maintenant.`,
+          message: cameraConnectHonestMessage(label, false),
         };
       }
       if (!caps.connectApi) {
         return {
           ok: true,
           external_device_id: `${vendor}-device`,
-          message: `${label} prêt pour capturer ou importer.`,
+          message: `${label} : captation / import téléphone — sans OAuth fabricant.`,
         };
       }
-      // Stub OAuth / API — ready for real credentials per vendor.
       return {
         ok: true,
         external_device_id: externalDeviceId ?? `${vendor}-${Date.now().toString(36)}`,
-        message: `${label} connectée (mode connecteur ProDay).`,
+        message: cameraConnectHonestMessage(label, true),
       };
     },
     async startRecording({ eventTitle }) {
@@ -143,25 +143,10 @@ function makeProvider(vendor: VideoCameraVendor): ClubCameraProvider {
       if (!caps.autoHighlights) {
         return { clips: [], message: 'Highlights non disponibles pour cette source.' };
       }
-      const clips: MatchVideoClip[] = [
-        {
-          id: `clip-${Date.now().toString(36)}-1`,
-          label: `Temps forts · ${title}`,
-          starts_at_sec: 0,
-          ends_at_sec: 45,
-          share_with: ['coaches', 'players'],
-        },
-        {
-          id: `clip-${Date.now().toString(36)}-2`,
-          label: 'Séquence but (indicatif)',
-          starts_at_sec: 120,
-          ends_at_sec: 145,
-          share_with: ['coaches', 'players', 'parents'],
-        },
-      ];
+      // Pas de clips inventés — le pipeline réel peuplera les highlights.
       return {
-        clips,
-        message: 'Moments forts générés (indicatif — enrichis quand l’API le permet).',
+        clips: [] as MatchVideoClip[],
+        message: `Highlights « ${title} » : en attente du pipeline club / fabricant. Aucun clip fictif généré.`,
       };
     },
   };

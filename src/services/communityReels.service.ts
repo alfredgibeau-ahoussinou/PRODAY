@@ -80,7 +80,7 @@ export const communityReelsService = {
       poster_url: input.poster_url ?? null,
       caption: input.caption.trim(),
       theme: input.theme,
-      status: 'approved',
+      status: 'pending',
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });
@@ -90,7 +90,7 @@ export const communityReelsService = {
       actor_email: actorEmail,
       target_type: 'community_reel',
       target_id: ref.id,
-      summary: `Nouveau reel publié par ${authorName || 'utilisateur ProDay'}`,
+      summary: `Nouveau reel en attente de validation · ${authorName || 'utilisateur ProDay'}`,
     });
     return ref.id;
   },

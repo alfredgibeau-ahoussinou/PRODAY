@@ -59,7 +59,7 @@ export function DemoHero({ pole }: DemoHeroProps) {
           transition={{ duration: 0.55, delay: 0.14, ease }}
           className="mt-6 max-w-md text-base leading-relaxed text-white/70 sm:text-lg"
         >
-          Cinq pôles. Navigation réelle. Zéro compte. Choisis Joueur, Club, Coach, Supporter ou
+          Portes d’entrée. Navigation réelle. Zéro compte. Choisis Joueur, Club, Coach, Supporter ou
           Sponsor : puis entre dans le téléphone.
         </motion.p>
         <motion.div
@@ -70,7 +70,7 @@ export function DemoHero({ pole }: DemoHeroProps) {
         >
           <a
             href="#demo-app"
-            className="inline-flex items-center gap-2 rounded-full bg-[#006CFC] px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-full bg-[#7C3AED] px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Essayer
             <ArrowDown size={16} />

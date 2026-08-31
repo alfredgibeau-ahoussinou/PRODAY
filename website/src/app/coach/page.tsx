@@ -5,17 +5,19 @@ import {
   CoachTacticsBoard,
   ImmersivePoleHero,
 } from "@/components/poles/immersivePoleExperience";
+import { CoachAppHub } from "@/components/poles/CoachAppHub";
 import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { RosterBourseSection } from "@/components/poles/RosterBourseSection";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
+import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
 import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Pôle Coach · Tactique IA et analyse de forme",
   description:
-    "Profil coach : analyse de forme de l’effectif, Tactique IA, bourse interne, IA et préparation match.",
+    "Profil coach : app Accueil, effectif, IA · analyse de forme, Tactique IA, bourse interne et préparation match. Parrainage possible.",
 };
 
 const COACH_CAPS = [
@@ -37,7 +39,7 @@ const COACH_CAPS = [
   },
   {
     title: "Invitations de match",
-    body: "Proposez un amical pour votre équipe : club adverse, date, lieu. Contre-propositions et calendriers synchronisés.",
+    body: "Proposez un amical pour votre équipe : club adverse, date, lieu. contre propositions et calendriers synchronisés.",
   },
   {
     title: "Coaching à l’heure",
@@ -48,7 +50,7 @@ const COACH_CAPS = [
     body: "Préparation, analyse adversaire, rapports IA et débriefs automatiques.",
   },
   {
-    title: "Vidéo multi-caméras",
+    title: "Vidéo multi caméras",
     body: "Smartphone, tablette, Veo, Trace, Pixellot, Spiideo : jamais obligatoires.",
   },
   {
@@ -71,9 +73,12 @@ export default function CoachPolePage() {
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre le Pôle Coach"
-        secondaryHref="#analyse-de-forme"
-        secondaryLabel="Analyse de forme"
+        secondaryHref="#app"
+        secondaryLabel="Voir l’app Coach"
+        perk={POLE_REFERRAL_LINE}
       />
+
+      <CoachAppHub />
 
       <FormAnalysisFeature audience="coach" />
 
@@ -91,7 +96,7 @@ export default function CoachPolePage() {
 
       <TerminalCta
         title="Le coach, moteur du club."
-        description="Effectif, analyse de forme et board tactique : dans la même app que vos licenciés."
+        description={`Effectif, analyse de forme et board tactique : dans la même app que vos licenciés. ${POLE_REFERRAL_LINE}`}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Commencer côté Coach"
         secondaryHref={`${ROUTES.proClub}#analyse-de-forme`}

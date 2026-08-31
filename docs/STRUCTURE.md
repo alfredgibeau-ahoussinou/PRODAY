@@ -57,7 +57,7 @@ src/
 └── STRUCTURE.md      Guide navigation détaillé dans src/
 ```
 
-**Admin** : pas de dossier racine `admin/` — console dans `src/screens/admin/` et `src/components/admin/`.
+**Admin** : Control Center dans `src/features/admin/` (shell + panes). Services partagés : `src/services/admin.service.ts`. Site fondateurs : `website/` `/admin` (surface séparée).
 
 **V3 vs legacy** : voir [src/STRUCTURE.md](../src/STRUCTURE.md).
 

@@ -1,23 +1,24 @@
 import { colors as baseColors } from './designTokens';
 import type { AppColors } from './universeTheme';
 import { SPONSOR_THEME } from '../content/sponsorExperience';
+import { poleAccentSoft } from './prodayBrand';
 
-/** Chrome fixe de l'espace partenaire — indépendant des autres pôles. */
+/** Chrome fixe de l'espace Sponsor — noir + violet, indépendant des autres pôles. */
 export const sponsorChrome = {
-  shell: SPONSOR_THEME.surface,
+  shell: SPONSOR_THEME.background,
   shellElevated: SPONSOR_THEME.surfaceElevated,
   shellBorder: SPONSOR_THEME.borderSubtle,
   accent: SPONSOR_THEME.primary,
   accentMuted: SPONSOR_THEME.primaryBorder,
-  gold: SPONSOR_THEME.gold,
+  gold: SPONSOR_THEME.primary,
   text: SPONSOR_THEME.text,
   textMuted: SPONSOR_THEME.textMuted,
-  overlay: 'rgba(148, 163, 184, 0.08)',
-  overlayStrong: 'rgba(212, 175, 55, 0.18)',
+  overlay: 'rgba(255, 255, 255, 0.06)',
+  overlayStrong: poleAccentSoft('sponsor', 0.18),
   background: SPONSOR_THEME.background,
 } as const;
 
-/** Palette partenaire figée pour la console shell. */
+/** Palette Sponsor figée pour la console shell. */
 export const SPONSOR_SHELL_COLORS: AppColors = {
   ...baseColors,
   accent: SPONSOR_THEME.primary,
@@ -46,14 +47,14 @@ export const SPONSOR_SHELL_COLORS: AppColors = {
   textMuted: SPONSOR_THEME.textMuted,
   success: SPONSOR_THEME.success,
   successBg: SPONSOR_THEME.successSurface,
-  warning: SPONSOR_THEME.gold,
+  warning: SPONSOR_THEME.primaryHover,
   warningBg: SPONSOR_THEME.goldSurface,
   pending: SPONSOR_THEME.textMuted,
   pendingBg: SPONSOR_THEME.surfaceMuted,
   error: '#F87171',
   errorBg: 'rgba(248, 113, 113, 0.12)',
   tone1: SPONSOR_THEME.primary,
-  tone2: SPONSOR_THEME.gold,
+  tone2: SPONSOR_THEME.primaryHover,
   tone3: SPONSOR_THEME.textSecondary,
   tone4: SPONSOR_THEME.textMuted,
   navy: SPONSOR_THEME.primaryDeeper,

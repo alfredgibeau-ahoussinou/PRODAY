@@ -15,6 +15,7 @@ import { PlayerPositionPitchPicker } from '../profile/PlayerPositionPitchPicker'
 import { PlayerCvLivePreview } from '../profile/PlayerCvLivePreview';
 import { ProfileGalleryEditor } from '../profile/ProfileGalleryEditor';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
+import { PlayerThemeSettingsPanel } from './PlayerThemeSettingsPanel';
 import { AppSpacePill } from '../appSpace/AppSpaceBanner';
 import { JoueurMesVideosPanel } from './JoueurMesVideosPanel';
 import { spacing } from '../../theme/designTokens';
@@ -26,16 +27,19 @@ function PanelShell({
   kicker,
   title,
   children,
+  wash,
 }: {
   accent: Accent;
   kicker: string;
   title: string;
   children: React.ReactNode;
+  wash?: [string, string, string];
 }) {
+  const gradient = wash ?? (['#0B1220', '#07101C', '#05080F'] as [string, string, string]);
   return (
     <View style={styles.shell}>
       <LinearGradient
-        colors={['#0B1220', '#07101C', '#05080F']}
+        colors={gradient}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
@@ -59,6 +63,7 @@ function Block({
   children,
 }: {
   accent: Accent;
+  wash?: [string, string, string];
   label: string;
   children: React.ReactNode;
 }) {
@@ -80,6 +85,7 @@ function ActionTile({
   onPress,
 }: {
   accent: Accent;
+  wash?: [string, string, string];
   icon: React.ComponentProps<typeof Icon>['name'];
   title: string;
   sub: string;
@@ -108,6 +114,7 @@ type VitrineProps = {
   colors: AppColors;
   productLine: ProductLineId;
   accent: Accent;
+  wash?: [string, string, string];
   gallery: string[];
   videos: string[];
   uploadingGallery: boolean;
@@ -125,7 +132,7 @@ type VitrineProps = {
 export function JoueurVitrinePanel(props: VitrineProps) {
   const p = props.profile.profile;
   return (
-    <PanelShell accent={props.accent} kicker="VITRINE" title="Studio public">
+    <PanelShell accent={props.accent} wash={props.wash} kicker="VITRINE" title="Studio public">
       <Block accent={props.accent} label="01 · POSTE">
         <PlayerPositionPitchPicker
           value={p.position ?? ''}
@@ -205,6 +212,7 @@ export function JoueurVitrinePanel(props: VitrineProps) {
 
 type ActiviteProps = {
   accent: Accent;
+  wash?: [string, string, string];
   productLine: ProductLineId;
   playerUid: string;
   clubId?: string | null;
@@ -219,7 +227,7 @@ type ActiviteProps = {
 
 export function JoueurActivitePanel(props: ActiviteProps) {
   return (
-    <PanelShell accent={props.accent} kicker="ACTIVITÉ" title="Activité joueur">
+    <PanelShell accent={props.accent} wash={props.wash} kicker="ACTIVITÉ" title="Activité joueur">
       <Block accent={props.accent} label="MERCATO">
         <ActionTile
           accent={props.accent}
@@ -293,6 +301,7 @@ export function JoueurActivitePanel(props: ActiviteProps) {
 
 type ParamsProps = {
   accent: Accent;
+  wash?: [string, string, string];
   showPlayerVerificationReminder: boolean;
   playerVerifyLabel?: string;
   pendingVerify: boolean;
@@ -325,10 +334,16 @@ type ParamsProps = {
 
 export function JoueurParamsPanel(props: ParamsProps) {
   return (
-    <PanelShell accent={props.accent} kicker="PARAMÈTRES" title="Contrôle compte">
+    <PanelShell accent={props.accent} wash={props.wash} kicker="PARAMÈTRES" title="Contrôle compte">
       <Block accent={props.accent} label="LANGUE">
         <LanguageSettingControl variant="card" />
       </Block>
+
+      {props.isPlayer ? (
+        <Block accent={props.accent} label="COULEURS DE MON ESPACE">
+          <PlayerThemeSettingsPanel />
+        </Block>
+      ) : null}
 
       {props.showPlayerVerificationReminder && props.playerVerifyLabel ? (
         <Block accent={props.accent} label="VÉRIFICATION">

@@ -8,9 +8,17 @@ import { useState, type CSSProperties } from "react";
 import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
 import { TerminalCta } from "@/components/terminal";
 import { MODULES } from "@/lib/content";
-import { POLE_BRAND_HEX, SHOWCASE_POLES, poleSectionHref } from "@/lib/poles";
+import { SHOWCASE_POLES, poleNavAccentHex, poleSectionHref } from "@/lib/poles";
 import { getRoleVisuals } from "@/lib/roleVisuals";
-import { ROUTES } from "@/lib/routes";
+import {
+  CLUB_APP_HREF,
+  COACH_APP_HREF,
+  JOUEUR_APP_HREF,
+  PARENT_APP_HREF,
+  PRESIDENT_HUB_HREF,
+  ROUTES,
+  SPONSOR_APP_HREF,
+} from "@/lib/routes";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -21,19 +29,28 @@ const POLE_CAPABILITIES: Record<
   joueur: {
     title: "Ce que fait le joueur",
     items: [
-      "Analyse de forme personnelle (Ma forme)",
-      "Carte joueur, stats, convocations, covoiturage",
-      "Mercato & candidatures",
-      "Pass 3,99 € optionnel : programmes, vidéo, contenu avancé",
+      "Accueil & parcours : forme, objectifs, carte joueur",
+      "Centre Match : calendrier, lieu, préparation",
+      "Saison, stats et profil · Pass 3,99 € optionnel",
+      "Convocations, covoiturage, Mercato",
     ],
   },
   pro_club: {
     title: "Ce que fait le club",
     items: [
       "Analyse de forme incluse dans l’offre",
-      "Équipes, licenciés, espace président",
+      "Équipes, licenciés, permissions",
       "Invitations, tournois, covoiturage",
       "À partir de 3 € / adhérent (sur devis)",
+    ],
+  },
+  president: {
+    title: "Ce que fait le président",
+    items: [
+      "Cockpit : équipes, alertes, décisions",
+      "Finances, adhésions et sponsors",
+      "Assistant IA pour prioriser",
+      "Page dédiée · connectée au Pôle Club",
     ],
   },
   coach: {
@@ -48,19 +65,19 @@ const POLE_CAPABILITIES: Record<
   supporter: {
     title: "Ce que fait le supporter",
     items: [
-      "Tribune 100 % gratuite",
-      "Scores live & clubs suivis",
-      "Débats et moments",
-      "Aucun paywall",
+      "Suivre clubs et joueurs (favoris)",
+      "Matchs ProDay & externes, scores, compositions",
+      "Statistiques, calendriers, actualités",
+      "Expérience match · tribune gratuite",
     ],
   },
   sponsor: {
     title: "Ce que fait le sponsor",
     items: [
-      "Campagnes locales & nationales",
-      "Contact clubs et joueurs actifs",
-      "KPIs lisibles",
-      "Vitrine partenaire vérifiée",
+      "Trouver des opportunités de sponsoring",
+      "Identifier clubs, équipes et profils",
+      "Gérer partenariats et activations",
+      "Mesurer visibilité et impact",
     ],
   },
 };
@@ -81,16 +98,61 @@ const CROSS_MODULES = MODULES.filter((m) =>
   (FEATURE_MODULE_IDS as readonly string[]).includes(m.id),
 );
 
+type FeaturePoleTab = {
+  id: string;
+  kicker: string;
+  navLabel: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  href: string;
+};
+
+const PRESIDENT_FEATURE_TAB: FeaturePoleTab = {
+  id: "president",
+  kicker: "PÔLE PRÉSIDENT",
+  navLabel: "Président",
+  title: "Le club en un coup d’œil",
+  subtitle: "Cockpit · Finances · Assistant IA",
+  description:
+    "Dirigeants, DS et bureau : cockpit, finances et assistant IA · page dédiée Pôle Président.",
+  href: PRESIDENT_HUB_HREF,
+};
+
+const FEATURE_POLES: FeaturePoleTab[] = SHOWCASE_POLES.flatMap((pole) => {
+  const tab: FeaturePoleTab = {
+    id: pole.id,
+    kicker: pole.kicker,
+    navLabel: pole.navLabel,
+    title: pole.title,
+    subtitle: pole.subtitle,
+    description: pole.description,
+    href:
+      pole.id === "joueur"
+        ? JOUEUR_APP_HREF
+        : pole.id === "coach"
+          ? COACH_APP_HREF
+          : pole.id === "parent"
+            ? PARENT_APP_HREF
+            : pole.id === "sponsor"
+              ? SPONSOR_APP_HREF
+              : pole.id === "pro_club"
+                ? CLUB_APP_HREF
+                : pole.href,
+  };
+  return pole.id === "pro_club" ? [tab, PRESIDENT_FEATURE_TAB] : [tab];
+});
+
 export function FeaturesImmersive() {
   const visuals = getRoleVisuals("fonctionnalites");
-  const [activePole, setActivePole] = useState(SHOWCASE_POLES[0]!.id);
+  const [activePole, setActivePole] = useState(FEATURE_POLES[0]!.id);
   const [activeModule, setActiveModule] = useState(CROSS_MODULES[0]!.id);
   const reduce = useReducedMotion();
 
-  const pole = SHOWCASE_POLES.find((p) => p.id === activePole) ?? SHOWCASE_POLES[0]!;
+  const pole = FEATURE_POLES.find((p) => p.id === activePole) ?? FEATURE_POLES[0]!;
   const caps = POLE_CAPABILITIES[pole.id] ?? POLE_CAPABILITIES.joueur!;
   const mod = CROSS_MODULES.find((m) => m.id === activeModule) ?? CROSS_MODULES[0]!;
-  const accent = POLE_BRAND_HEX[pole.id] ?? "#006CFC";
+  const accent = poleNavAccentHex(pole.href);
 
   return (
     <div
@@ -103,14 +165,14 @@ export function FeaturesImmersive() {
     >
       <ImmersivePoleHero
         brand="Pro Day"
-        headline="Ce que fait ProDay."
-        support="Cinq portes. Un seul système. Joueur, Club, Coach, Supporter, Sponsor : les modules suivent le métier."
+        headline="L'infrastructure de votre football."
+        support="Des portes d'entrée · Joueur, Club, Coach, Parent, Supporter, Sponsor · vers le même écosystème. Pas huit produits. Pas un outil de plus."
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.demo}
         primaryLabel="Ouvrir la démo"
         secondaryHref="#poles"
-        secondaryLabel="Voir les pôles"
+        secondaryLabel="Voir les portes"
       />
 
       {/* Interactive poles */}
@@ -119,14 +181,15 @@ export function FeaturesImmersive() {
         className="scroll-mt-24 border-t border-white/10 bg-black px-4 py-20 sm:px-6 sm:py-28"
       >
         <div className="mx-auto max-w-6xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#006CFC)]">
-            Cinq portes
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[var(--pole-accent,#7C3AED)]">
+            Portes d&apos;entrée
           </p>
           <h2 className="mt-3 max-w-2xl font-display text-[clamp(1.8rem,4vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
-            Choisis ton entrée.
+            Choisis ton entrée. Même graphe.
           </h2>
           <p className="mt-3 max-w-lg text-sm text-white/55">
-            Santé, agent et recruteur ne sont plus des portes produit.
+            Ce ne sont pas des produits indépendants. Notion organise, Discord
+            discute : ProDay orchestre les objets métier du football.
           </p>
 
           <div
@@ -134,9 +197,9 @@ export function FeaturesImmersive() {
             role="tablist"
             aria-label="Pôles ProDay"
           >
-            {SHOWCASE_POLES.map((p) => {
+            {FEATURE_POLES.map((p) => {
               const on = p.id === activePole;
-              const hex = POLE_BRAND_HEX[p.id];
+              const hex = poleNavAccentHex(p.href);
               return (
                 <button
                   key={p.id}
@@ -190,7 +253,7 @@ export function FeaturesImmersive() {
                   ))}
                 </ul>
                 <Link
-                  href={poleSectionHref(pole)}
+                  href={pole.href.includes("#") ? pole.href : poleSectionHref(pole)}
                   className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:opacity-80"
                   style={{ color: accent }}
                 >
@@ -204,7 +267,7 @@ export function FeaturesImmersive() {
                   src={
                     pole.id === "joueur"
                       ? "/images/football-action-01.jpg"
-                      : pole.id === "pro_club"
+                      : pole.id === "pro_club" || pole.id === "president"
                         ? "/images/football-team-01.jpg"
                         : pole.id === "coach"
                           ? "/images/football-tactics-01.jpg"
@@ -300,20 +363,20 @@ export function FeaturesImmersive() {
             Système
           </p>
           <h2 className="mt-3 font-display text-[clamp(1.8rem,4vw,2.6rem)] font-medium tracking-[-0.03em] text-white">
-            Une plateforme. Plusieurs métiers.
+            Pas un outil de plus. L&apos;infrastructure.
           </h2>
           <ul className="mt-12 divide-y divide-white/10 border-y border-white/10">
             {[
               {
-                title: "Pôles clairs",
-                body: "Cinq portes marketing. Agent, recruteur et Santé ne sont plus proposés.",
+                title: "Portes d'entrée",
+                body: "Chaque univers ouvre le même écosystème football, pas des produits séparés. Agent, recruteur et Santé restent des rôles intégrés.",
               },
               {
-                title: "Club au centre",
-                body: "Effectif, compétitions, covoiturage et permissions. Le club orchestre ; coachs et joueurs se branchent.",
+                title: "Ce que ça supprime",
+                body: "WhatsApp pour une info, tableur pour une autre, docs / stats / calendrier / com ailleurs. Une seule donnée métier.",
               },
               {
-                title: "Prix par pôle",
+                title: "Prix par porte",
                 body: "Pass Joueur optionnel 3,99 €. Club sur devis selon adhérents. Caméra en option. Coach Premium. Supporter gratuit.",
               },
             ].map((item) => (

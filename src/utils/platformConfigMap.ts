@@ -23,6 +23,23 @@ export function mapPlatformConfig(data: Record<string, unknown>): PlatformConfig
       club_video: flags.club_video === true,
       coach_video: flags.coach_video === true,
     },
+    club_pricing: (() => {
+      const raw = data.club_pricing as Record<string, unknown> | undefined;
+      if (!raw) return DEFAULT_PLATFORM_CONFIG.club_pricing;
+      return {
+        min_per_member_eur: Number(
+          raw.min_per_member_eur ?? DEFAULT_PLATFORM_CONFIG.club_pricing!.min_per_member_eur,
+        ),
+        standard_per_member_eur: Number(
+          raw.standard_per_member_eur ??
+            DEFAULT_PLATFORM_CONFIG.club_pricing!.standard_per_member_eur,
+        ),
+        promo_per_member_eur: Number(
+          raw.promo_per_member_eur ??
+            DEFAULT_PLATFORM_CONFIG.club_pricing!.promo_per_member_eur,
+        ),
+      };
+    })(),
     updated_at:
       data.updated_at && typeof data.updated_at === 'object' && 'toDate' in data.updated_at
         ? (data.updated_at as { toDate: () => Date }).toDate()

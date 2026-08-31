@@ -19,10 +19,13 @@ import { trackV3Event } from '../core/analytics/v3Events';
 import { userStateStore } from '../core/state/userState.store';
 import { flushBrainState } from '../services/brainState.service';
 import { PushScreenTransition } from '../components/motion';
+import { JoueurUnavailableScreen } from '../components/joueur/JoueurUnavailableScreen';
+import { usePlatformFeatureFlags } from '../hooks/usePlatformFeatureFlags';
 
 export const ShopScreen: React.FC = () => {
   const { productLine } = useThemedScreen();
   const { profile } = useAuth();
+  const { isEnabled, disabledCopy, loading } = usePlatformFeatureFlags();
   const { requireAuth } = useRequireAuth();
   const copy = useMemo(() => getShopCopy(productLine), [productLine]);
   const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
@@ -30,6 +33,13 @@ export const ShopScreen: React.FC = () => {
   const { cart, cartCount, wishlist, addToCart, setQty, toggleWishlist, clearCart } =
     useShopCart();
   const { orders, loading: ordersLoading, refresh: refreshOrders } = useShopOrders(profile?.uid);
+
+  if (profile?.role === 'player' && !loading && !isEnabled('shop')) {
+    const copy = disabledCopy('shop');
+    return (
+      <JoueurUnavailableScreen title={copy.title} message={copy.message} icon="bag" />
+    );
+  }
 
   const onOrder = (product: ShopProduct, size?: string) => {
     const line = cart.find((l) => l.productId === product.id);

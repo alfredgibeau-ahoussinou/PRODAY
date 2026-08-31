@@ -168,6 +168,10 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
       ? toDate(data.last_active_at)
       : undefined,
     is_active: data.is_active !== false && data.isActive !== false,
+    admin_note: data.admin_note ? String(data.admin_note) : undefined,
+    admin_tags: Array.isArray(data.admin_tags)
+      ? (data.admin_tags as unknown[]).map(String)
+      : undefined,
     fcm_token: data.fcm_token as string | undefined,
     notification_radius_km: data.notification_radius_km as number | undefined,
     notification_preferences: data.notification_preferences as User['notification_preferences'],
@@ -389,8 +393,17 @@ export function teamEventFromFirestore(
 ): TeamEvent {
   const rsvpsRaw = (data.rsvps as Record<string, string>) ?? {};
   const rsvps: Record<string, RsvpStatus> = {};
+  const validRsvp = new Set<string>([
+    'pending',
+    'yes',
+    'no',
+    'maybe',
+    'late_under_10',
+    'late_over_10',
+    'late_unknown',
+  ]);
   for (const [uid, status] of Object.entries(rsvpsRaw)) {
-    if (['pending', 'yes', 'no', 'maybe'].includes(status)) {
+    if (validRsvp.has(status)) {
       rsvps[uid] = status as RsvpStatus;
     }
   }
@@ -434,6 +447,11 @@ export function teamEventFromFirestore(
       ? toDate(data.auto_reminder_sent_at)
       : undefined,
     lineup: data.lineup as EventLineup | undefined,
+    public_watch_url: (() => {
+      const raw =
+        data.public_watch_url ?? data.stream_url ?? data.visio_url ?? data.watch_url;
+      return typeof raw === 'string' && raw.startsWith('https://') ? raw : undefined;
+    })(),
     live_state: mapMatchLiveState(data.live_state),
     live_actions: mapLiveActions(data.live_actions),
     player_match_stats: mapPlayerMatchStats(data.player_match_stats),
@@ -896,6 +914,10 @@ export function sponsorOfferFromFirestore(
     city: String(data.city ?? ''),
     active: data.active !== false,
     created_at: toDate(data.created_at),
+    sponsor_target: (data.sponsor_target as SponsorOffer['sponsor_target']) ?? undefined,
+    duration_days: typeof data.duration_days === 'number' ? data.duration_days : null,
+    amount_cents: typeof data.amount_cents === 'number' ? data.amount_cents : null,
+    desired_visibility: data.desired_visibility ? String(data.desired_visibility) : undefined,
     views_count: data.views_count != null ? Number(data.views_count) : undefined,
     clicks_count: data.clicks_count != null ? Number(data.clicks_count) : undefined,
     leads_count: data.leads_count != null ? Number(data.leads_count) : undefined,

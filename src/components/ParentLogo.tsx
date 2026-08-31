@@ -5,9 +5,9 @@ import { BrandWordmarkLogo } from './branding/BrandWordmarkLogo';
 import type { LogoBackground } from './Logo';
 
 const PARENT_COLORS = {
-  brand: '#134E4A',
-  accent: '#14B8A6',
-  taglineLight: '#0F766E',
+  brand: '#FFFFFF',
+  accent: '#F97316',
+  taglineLight: '#FB923C',
   taglineDark: 'rgba(255, 255, 255, 0.92)',
 } as const;
 

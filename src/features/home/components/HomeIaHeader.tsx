@@ -112,7 +112,7 @@ const TopIconBtn: React.FC<{
     <PressableSpring
       style={[iconStyles.iconBtn, { backgroundColor: colors.surfaceMuted, borderColor: colors.borderStrong }]}
       onPress={onPress}
-      scaleTo={0.92}
+      scaleTo={0.97}
       haptic
     >
       <Icon name={icon} size={20} color={colors.ink} />

@@ -6,6 +6,10 @@ import {
   View,
 } from 'react-native';
 import { PushScreenTransition } from '../../../components/motion';
+import {
+  PaneTransition,
+  useShellNavDirection,
+} from '../../../motion';
 import { StatusBar } from 'expo-status-bar';
 import { CoachSidebar } from './CoachSidebar';
 import { CoachTabBar } from './CoachTabBar';
@@ -15,6 +19,8 @@ import { openCoachHelpChatbot } from './coachHelpOpen';
 import {
   canonicalizeCoachNav,
   coachNavFromTab,
+  COACH_PRIMARY_NAV_IDS,
+  COACH_SECONDARY_NAV_IDS,
   resolveCoachNavOnTabSync,
   tabFromCoachNav,
   type CoachNavItemId,
@@ -26,6 +32,7 @@ import {
   resolveCoachNavFolders,
 } from '../navigation/resolveCoachNavAccess';
 import { CoachPageFrame } from '../../../components/coach/CoachPageFrame';
+import { CoachEmptyState } from '../../../components/coach/coachPortalUi';
 import {
   COACH_LOCKED_IDENTITY,
   getCoachPageIdentity,
@@ -37,6 +44,7 @@ import { SmartTacticsPortalScreen } from '../../../screens/smartTactics/SmartTac
 import { TeamManagementScreen } from '../../../screens/TeamManagementScreen';
 import { MessagesScreen } from '../../../screens/MessagesScreen';
 import { CoachMenuPane } from './CoachMenuPane';
+import { CoachHourlyPane } from './CoachHourlyPane';
 import { CarpoolScreen } from '../../../screens/CarpoolScreen';
 import { ProfilTabScreen } from '../../../screens/ProfilTabScreen';
 import { useAuth } from '../../../context/AuthContext';
@@ -60,9 +68,12 @@ import type { MainTabId } from '../../../navigation/mainTabConfig';
 import type { User } from '../../../models/User';
 import { useCoachShellNav } from './CoachShellNavContext';
 import { CoachThemeProvider, useCoachTheme } from './CoachThemeContext';
+import { coachChrome } from '../theme/coachDesignSystem';
 
-const SIDEBAR_WIDTH = 248;
-const WIDE_BREAKPOINT = 900;
+const COACH_MOTION_ORDER: CoachNavItemId[] = [
+  ...COACH_PRIMARY_NAV_IDS,
+  ...COACH_SECONDARY_NAV_IDS,
+];
 
 function CoachGestionPane({ profile }: { profile: User }) {
   const shellNav = useCoachShellNav();
@@ -102,8 +113,9 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     openCarpool,
   } = useTabNavigation();
   const { width } = useWindowDimensions();
-  const wide = width >= WIDE_BREAKPOINT;
+  const wide = width >= coachChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const { direction, noteNav } = useShellNavDirection(COACH_MOTION_ORDER);
 
   const [members, setMembers] = useState<User[]>([]);
   const clubId = profile?.profile.club_id;
@@ -160,8 +172,12 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   }, [activeTab, onTabChange]);
 
   useEffect(() => {
-    setNavId((prev) => resolveCoachNavOnTabSync(prev, activeTab));
-  }, [activeTab]);
+    setNavId((prev) => {
+      const next = resolveCoachNavOnTabSync(prev, activeTab);
+      if (next !== prev) noteNav(next);
+      return next;
+    });
+  }, [activeTab, noteNav]);
 
   useEffect(() => {
     if (!shouldKeepCoachEventHubOverlay(activeTab, navId)) {
@@ -184,6 +200,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     if (coachNav) {
       setEventHubOverlay(null);
       const next = canonicalizeCoachNav(coachNav);
+      noteNav(next);
       setNavId(next);
       const nextTab = tabFromCoachNav(next);
       if (nextTab !== activeTab) {
@@ -193,19 +210,21 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
       return;
     }
     clearPendingMatchs();
-  }, [pendingMatchsLink, clearPendingMatchs, syncMatchCenterNav, activeTab, onTabChange]);
+  }, [pendingMatchsLink, clearPendingMatchs, syncMatchCenterNav, activeTab, onTabChange, noteNav]);
 
   useEffect(() => {
     if (pendingDashboardView === 'smart_tactics') {
+      noteNav('smart_tactics');
       setNavId('smart_tactics');
       onTabChange(tabFromCoachNav('smart_tactics'));
       clearPendingDashboard();
     } else if (pendingDashboardView === 'gestion') {
+      noteNav('gestion');
       setNavId('gestion');
       onTabChange(tabFromCoachNav('gestion'));
       clearPendingDashboard();
     }
-  }, [pendingDashboardView, clearPendingDashboard, onTabChange]);
+  }, [pendingDashboardView, clearPendingDashboard, onTabChange, noteNav]);
 
   const coachName = profile?.display_name ?? 'Coach';
   const resolved = findInCoachNavCatalog(catalog, navId);
@@ -213,6 +232,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   const onSelect = (id: CoachNavItemId) => {
     setEventHubOverlay(null);
     const next = canonicalizeCoachNav(id);
+    noteNav(next);
     setNavId(next);
     const nextTab = tabFromCoachNav(next);
     if (nextTab !== activeTab) {
@@ -245,7 +265,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     onSelect,
     onOpenHelp,
     onSignOut,
-    width: SIDEBAR_WIDTH,
+    width: coachChrome.sidebarWidth,
   } as const;
 
   const content =
@@ -264,7 +284,9 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
         {wide ? <CoachSidebar {...sidebarProps} /> : null}
 
         <View style={styles.pane}>
-          {content}
+          <PaneTransition sectionKey={navId} direction={direction} context="tab">
+            {React.isValidElement(content) ? content : null}
+          </PaneTransition>
           <PushScreenTransition
             active={Boolean(eventHubOverlay)}
             backgroundColor={tokens.bg}
@@ -331,9 +353,32 @@ function renderCoachPane(
     case 'smart_tactics':
       return <SmartTacticsPortalScreen />;
     case 'mes_videos':
-      return profile ? <CoachMesVideosScreen profile={profile} /> : null;
+      return profile ? (
+        <CoachMesVideosScreen profile={profile} />
+      ) : (
+        <CoachEmptyState
+          title="Mes vidéos"
+          body="Connectez-vous pour ouvrir vos captations match."
+        />
+      );
     case 'gestion':
-      return profile ? <CoachGestionPane profile={profile} /> : null;
+      return profile ? (
+        <CoachGestionPane profile={profile} />
+      ) : (
+        <CoachEmptyState
+          title="Gestion"
+          body="Connectez-vous pour accéder à la gestion d’équipe."
+        />
+      );
+    case 'coaching_perso':
+      return profile ? (
+        <CoachHourlyPane profile={profile} />
+      ) : (
+        <CoachEmptyState
+          title="Coaching perso"
+          body="Connectez-vous pour gérer vos créneaux à l’heure."
+        />
+      );
     case 'match_center':
     case 'matchs':
       return (

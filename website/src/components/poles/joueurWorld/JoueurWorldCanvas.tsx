@@ -13,7 +13,7 @@ function TexturedBall({ scale = 1 }: { scale?: number }) {
   const [map, bumpMap, logoBadge] = useLoader(THREE.TextureLoader, [
     "/textures/soccer_ball.png?v=2",
     "/textures/soccer_ball_bump.png?v=2",
-    "/textures/soccer_logo_badge.png?v=4",
+    "/textures/soccer_logo_badge.png?v=5",
   ]);
 
   useLayoutEffect(() => {
@@ -246,7 +246,7 @@ type Props = {
 /** Full-bleed WebGL stage for Joueur world (gate + universes). */
 export function JoueurWorldCanvas({
   kind,
-  accent = "#0054F0",
+  accent = "#FFFFFF",
   position,
   className,
   intensity = "medium",

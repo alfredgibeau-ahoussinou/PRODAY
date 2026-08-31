@@ -10,12 +10,13 @@ import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import { Text } from 'react-native';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 interface MessagesTabRailProps {
   active: MessagesChapterId;
   onSelect: (id: MessagesChapterId) => void;
   unreadBadge?: number;
-  variant?: 'default' | 'coach';
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 /** Segments Conversations / Réseau — même style que Candidature. */
@@ -29,8 +30,12 @@ export const MessagesTabRail: React.FC<MessagesTabRailProps> = ({
   const { t } = useTranslation();
   const chapters = useMemo(() => getMessagesChapters(t), [t]);
   const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
   const coachTokens = useCoachTokens();
+  const joueurTheme = useJoueurTheme();
   const styles = useMemo(() => createStyles(colors, coach), [colors, coach]);
+  const badgeBg = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
+  const badgeTextColor = joueur ? '#FFFFFF' : colors.brandInverse;
 
   const trackBg = coach ? coachTokens.surface : colors.surfaceMuted;
   const trackBorder = coach ? 'transparent' : colors.border;
@@ -63,8 +68,8 @@ export const MessagesTabRail: React.FC<MessagesTabRailProps> = ({
                   {ch.label}
                 </Text>
                 {badge ? (
-                  <View style={[styles.badge, { backgroundColor: coach ? coachTokens.accent : colors.accent }]}>
-                    <Text style={[styles.badgeText, { color: colors.brandInverse }]}>
+                  <View style={[styles.badge, { backgroundColor: badgeBg }]}>
+                    <Text style={[styles.badgeText, { color: badgeTextColor }]}>
                       {badge > 9 ? '9+' : badge}
                     </Text>
                   </View>

@@ -5,6 +5,8 @@ import { Icon } from './Icon';
 import { PlayerLevelBadgePill } from '../player/PlayerLevelBadgePill';
 import { spacing, radius, shadows } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 
 interface PlayerRowCardProps {
   user: User;
@@ -26,6 +28,11 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
   isOwnProfile,
 }) => {
   const { colors } = useAppTheme();
+  const profile = useSessionProfile();
+  const playerTheme = usePlayerThemeColors();
+  const isPlayerViewer = profile?.role === 'player';
+  const accent = isPlayerViewer ? playerTheme.accent : colors.brand;
+  const accentSoft = isPlayerViewer ? playerTheme.accentSoft : colors.accentSoft;
   const p = user.profile;
   const meta = [p.position, p.age ? `${p.age} ans` : null, user.city, p.level]
     .filter(Boolean)
@@ -37,7 +44,7 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
         styles.card,
         {
           backgroundColor: colors.surface,
-          borderColor: isOwnProfile ? colors.brand : colors.border,
+          borderColor: isOwnProfile ? accent : colors.border,
         },
         shadows.card,
         isOwnProfile && { borderWidth: 1.5 },
@@ -45,12 +52,12 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
       onPress={() => onPress(user)}
       activeOpacity={0.9}
     >
-      <View style={[styles.avatar, { backgroundColor: colors.accentSoft }]}>
-        <Text style={[styles.initial, { color: colors.brand }]}>
+      <View style={[styles.avatar, { backgroundColor: accentSoft }]}>
+        <Text style={[styles.initial, { color: accent }]}>
           {user.display_name.charAt(0).toUpperCase()}
         </Text>
         {user.is_verified ? (
-          <View style={[styles.verifiedDot, { backgroundColor: colors.brand }]} />
+          <View style={[styles.verifiedDot, { backgroundColor: accent }]} />
         ) : null}
       </View>
 
@@ -60,8 +67,8 @@ export const PlayerRowCard: React.FC<PlayerRowCardProps> = ({
             {user.display_name}
           </Text>
           {isOwnProfile ? (
-            <View style={[styles.ownBadge, { backgroundColor: colors.accentSoft }]}>
-              <Text style={[styles.ownBadgeText, { color: colors.brand }]}>Mon profil</Text>
+            <View style={[styles.ownBadge, { backgroundColor: accentSoft }]}>
+              <Text style={[styles.ownBadgeText, { color: accent }]}>Mon profil</Text>
             </View>
           ) : null}
         </View>

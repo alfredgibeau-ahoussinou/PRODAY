@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
-import { JoueurTacticsCoachChat } from '../../components/player/JoueurTacticsCoachChat';
+import { PlayerCoachAiChat } from '../../components/joueur/PlayerCoachAiChat';
 import { JoueurArcadeShell } from '../../features/joueur/JoueurGameFx';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
@@ -28,7 +28,7 @@ export function JoueurTacticsCoachScreen({ onBack }: Props) {
         <ProDayText variant="section" style={{ color: JOUEUR_SITE.foreground }}>
           Coach IA
         </ProDayText>
-        <JoueurTacticsCoachChat />
+        <PlayerCoachAiChat />
         <PressableSpring
           onPress={() => {
             joueurGamePress();
@@ -45,14 +45,14 @@ export function JoueurTacticsCoachScreen({ onBack }: Props) {
   }
 
   return (
-    <JoueurArcadeShell identity={identity} liveLabel="COACH IA" bootSound={false}>
+    <JoueurArcadeShell identity={identity} liveLabel="COACH IA">
       <View style={[styles.head, { paddingTop: Math.max(insets.top, 12) }]}>
         <PressableSpring
           onPress={() => {
             joueurGamePress();
             onBack();
           }}
-          scaleTo={0.94}
+          scaleTo={0.97}
           haptic
           style={[styles.backBtn, { borderColor: JOUEUR_SITE.border }]}
           accessibilityLabel="Retour"
@@ -72,7 +72,7 @@ export function JoueurTacticsCoachScreen({ onBack }: Props) {
         </View>
       </View>
       <View style={styles.chat}>
-        <JoueurTacticsCoachChat />
+        <PlayerCoachAiChat />
       </View>
     </JoueurArcadeShell>
   );

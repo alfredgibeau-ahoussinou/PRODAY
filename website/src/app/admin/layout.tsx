@@ -4,11 +4,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** Layout admin. sans indexation ; chrome site masqué via SiteShell. */
+/** Layout Admin Control Center — noindex ; chrome site masqué via SiteShell. */
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="min-h-screen bg-[#05070d] text-white">{children}</div>;
+  return <div className="acc-shell min-h-screen bg-[#06080f] text-white">{children}</div>;
 }

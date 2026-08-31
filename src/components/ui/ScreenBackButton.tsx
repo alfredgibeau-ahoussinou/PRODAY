@@ -2,7 +2,10 @@ import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { radius } from '../../theme/designTokens';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 
@@ -17,6 +20,12 @@ export const ScreenBackButton: React.FC<ScreenBackButtonProps> = ({
   accessibilityLabel,
 }) => {
   const { colors } = useAppTheme();
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const playerColors = usePlayerThemeColors();
+  const backBg = isPlayer ? playerColors.accentSoft : colors.brandSoft;
+  const backIcon = isPlayer ? joueurTheme.accent : colors.brand;
   const { t } = useTranslation();
   return (
     <Pressable
@@ -27,9 +36,9 @@ export const ScreenBackButton: React.FC<ScreenBackButtonProps> = ({
       }}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? t('common.back')}
-      style={[styles.btn, { backgroundColor: colors.brandSoft }]}
+      style={[styles.btn, { backgroundColor: backBg }]}
     >
-      <Ionicons name="chevron-back" size={22} color={colors.brand} />
+      <Ionicons name="chevron-back" size={22} color={backIcon} />
     </Pressable>
   );
 };

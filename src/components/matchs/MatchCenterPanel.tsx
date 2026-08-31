@@ -20,6 +20,7 @@ import {
   MatchEmptyState,
   MatchKpiRow,
   MatchLightPanel,
+  useMatchSkinTokens,
 } from './matchCenterUi';
 
 interface MatchCenterPanelProps {
@@ -35,6 +36,9 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
   onCreateEvent,
 }) => {
   const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
+  const accent = skin.joueurSkin ? skin.accent : colors.accent;
+  const liveColor = skin.live;
   const { t } = useTranslation();
 
   const hubEvents = useMemo(() => {
@@ -76,17 +80,17 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
           {
             label: t('matchs.center.live'),
             value: String(liveNow.length),
-            tone: liveNow.length > 0 ? MATCH_SITE.live : MATCH_SITE.muted,
+            tone: liveNow.length > 0 ? liveColor : skin.muted,
           },
           {
             label: t('matchs.center.upcoming'),
             value: String(upcoming.length),
-            tone: colors.accent,
+            tone: accent,
           },
           {
             label: 'Terminés',
             value: String(finishedToday.length),
-            tone: MATCH_SITE.muted,
+            tone: skin.muted,
           },
         ]}
       />
@@ -104,8 +108,8 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
       {liveNow.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHead}>
-            <LivePulseDot active size={8} color={MATCH_SITE.live} inactiveColor={colors.errorBg} />
-            <ProDayText variant="caption" style={[styles.sectionKicker, { color: MATCH_SITE.live }]}>
+            <LivePulseDot active size={8} color={liveColor} inactiveColor={colors.errorBg} />
+            <ProDayText variant="caption" style={[styles.sectionKicker, { color: liveColor }]}>
               {t('matchs.center.live')} · {liveNow.length}
             </ProDayText>
           </View>
@@ -119,7 +123,7 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
 
       {upcoming.length > 0 ? (
         <View style={styles.section}>
-          <ProDayText variant="caption" style={[styles.sectionKicker, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.sectionKicker, { color: accent }]}>
             {t('matchs.center.upcoming')} · {upcoming.length}
           </ProDayText>
           {upcoming.map((e, index) => (
@@ -147,10 +151,10 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
 };
 
 function MatchChapterHero({ title, subtitle }: { title: string; subtitle: string }) {
-  const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
   return (
     <View style={styles.hero}>
-      <ProDayText variant="caption" style={[styles.kicker, { color: colors.accent }]}>
+      <ProDayText variant="caption" style={[styles.kicker, { color: skin.accent }]}>
         Centre Match
       </ProDayText>
       <ProDayText variant="section" style={styles.heroTitle}>
@@ -173,10 +177,13 @@ function FeaturedMatchCard({
   onPress: () => void;
 }) {
   const { colors } = useAppTheme();
+  const skin = useMatchSkinTokens();
+  const accent = skin.joueurSkin ? skin.accent : colors.accent;
+  const liveColor = skin.live;
   const live = resolveLiveState(event);
   const confirmed = countRsvpYes(event);
   const pending = getPendingInviteeUids(event).length;
-  const barColor = isLive ? MATCH_SITE.live : colors.accent;
+  const barColor = isLive ? liveColor : accent;
 
   return (
     <PressableSpring onPress={onPress} scaleTo={0.98} haptic>
@@ -185,12 +192,12 @@ function FeaturedMatchCard({
         <View style={styles.featuredBody}>
           <View style={styles.featuredTop}>
             <View style={styles.featuredStatus}>
-              {isLive ? <LivePulseDot active size={7} color={MATCH_SITE.live} /> : null}
+              {isLive ? <LivePulseDot active size={7} color={liveColor} /> : null}
               <ProDayText
                 variant="caption"
                 style={[
                   styles.featuredStatusText,
-                  { color: isLive ? MATCH_SITE.live : colors.accent },
+                  { color: isLive ? liveColor : accent },
                 ]}
               >
                 {isLive
@@ -231,7 +238,7 @@ function FeaturedMatchCard({
 
           <View style={styles.featuredMeta}>
             {event.lineup ? (
-              <ProDayText variant="caption" style={{ color: colors.accent, fontWeight: '700' }}>
+              <ProDayText variant="caption" style={{ color: accent, fontWeight: '700' }}>
                 {event.lineup.formation}
               </ProDayText>
             ) : (
@@ -244,7 +251,7 @@ function FeaturedMatchCard({
             </ProDayText>
           </View>
 
-          <ProDayText variant="caption" style={[styles.featuredCta, { color: colors.accent }]}>
+          <ProDayText variant="caption" style={[styles.featuredCta, { color: accent }]}>
             Ouvrir le hub match →
           </ProDayText>
         </View>

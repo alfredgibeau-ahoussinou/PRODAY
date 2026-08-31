@@ -1,6 +1,13 @@
 import React, { useMemo } from 'react';
-import { View, Text, Image, StyleSheet, Platform, type ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import type { LogoBackground } from '../Logo';
+import { ProDaySymbol } from './ProDaySymbol';
+import {
+  brandVariantForProductLine,
+  PRODAY_POLE_LABELS,
+  type ProDayBrandVariant,
+} from '../../theme/prodayBrand';
+import { fontFamily } from '../../theme/typography';
 
 export interface BrandWordmark {
   name: string;
@@ -19,47 +26,62 @@ export interface BrandWordmarkColors {
 
 interface BrandWordmarkLogoProps {
   brand: BrandWordmark;
-  picto: ImageSourcePropType;
+  /** @deprecated Ignoré — symbole master unique. */
+  picto?: unknown;
   colors: BrandWordmarkColors;
   width?: number;
   background?: LogoBackground;
   opacity?: number;
   watermark?: boolean;
   centered?: boolean;
+  /** Variante brand explicite (sinon dérivée du libellé accent). */
+  variant?: ProDayBrandVariant;
 }
 
-const PICTO_ASPECT = 1.78;
+function variantFromBrand(brand: BrandWordmark): ProDayBrandVariant {
+  const accent = (brand.logoLine2Accent || '').toLowerCase();
+  if (accent.includes('sponsor')) return 'sponsor';
+  if (accent.includes('parent')) return 'parent';
+  if (accent.includes('supporter')) return 'supporter';
+  if (accent.includes('club')) return 'club';
+  if (accent.includes('président') || accent.includes('president')) return 'president';
+  if (accent.includes('coach') || accent.includes('staff')) return 'coach';
+  if (accent.includes('joueur') || accent.includes('women') || accent.includes('man')) {
+    return 'player';
+  }
+  if (accent.includes('admin')) return 'admin';
+  return brandVariantForProductLine(undefined);
+}
 
-/** Mot-symbole Pro Day (picto + lignes + tagline) — base commune des logos pôle. */
+/** Mot-symbole ProDay — symbole unique + wordmark / tagline natifs. */
 export const BrandWordmarkLogo: React.FC<BrandWordmarkLogoProps> = ({
   brand,
-  picto,
   colors,
   width = 200,
   background = 'light',
   opacity = 1,
   watermark = false,
   centered = false,
+  variant: variantProp,
 }) => {
   const onDark = background === 'dark' || background === 'photo';
+  const variant = variantProp ?? variantFromBrand(brand);
 
   const layout = useMemo(() => {
-    const pictoW = width * (watermark ? 1 : 0.76);
-    const pictoH = pictoW / PICTO_ASPECT;
+    const symbolSize = width * (watermark ? 1 : 0.72);
     const line1 = width * 0.1;
     const line2 = width * 0.115;
     const tagSize = width * 0.076;
-    const height = pictoH + line1 + line2 + tagSize * 2.2 + width * 0.05;
-    return { pictoW, pictoH, line1, line2, tagSize, height };
+    return { symbolSize, line1, line2, tagSize };
   }, [width, watermark]);
 
   if (watermark) {
     return (
-      <Image
-        source={picto}
-        style={{ width: layout.pictoW, height: layout.pictoH, opacity: opacity * 0.14 }}
-        resizeMode="contain"
-        accessibilityLabel={brand.name}
+      <ProDaySymbol
+        size={layout.symbolSize}
+        variant={variant}
+        tone={onDark ? 'white' : 'black'}
+        opacity={opacity * 0.14}
       />
     );
   }
@@ -75,29 +97,31 @@ export const BrandWordmarkLogo: React.FC<BrandWordmarkLogoProps> = ({
 
   return (
     <View style={[styles.wrap, { width, opacity }, centered && styles.wrapCentered]}>
-      <Image
-        source={picto}
-        style={{ width: layout.pictoW, height: layout.pictoH }}
-        resizeMode="contain"
-        accessibilityRole="image"
-        accessibilityLabel={brand.name}
+      <ProDaySymbol
+        size={layout.symbolSize}
+        variant={variant}
+        tone={onDark ? 'white' : 'black'}
       />
 
       <View style={[styles.wordBlock, { marginTop: width * 0.024 }, centered && styles.wordBlockCentered]}>
         <Text
           style={[
             styles.wordLine1,
-            { fontSize: layout.line1, color: onDark ? '#FFFFFF' : colors.brand },
+            {
+              fontSize: layout.line1,
+              color: onDark ? '#FFFFFF' : colors.brand,
+              fontFamily: fontFamily.brand,
+            },
             shadowSoft,
             centered && styles.textCenter,
           ]}
         >
-          {brand.logoLine1}
+          PRODAY
         </Text>
         <Text
           style={[
             styles.wordLine2,
-            { fontSize: layout.line2, color: colors.accent },
+            { fontSize: layout.line2, color: colors.accent, fontFamily: fontFamily.brandSemi },
             shadowSoft,
             centered && styles.textCenter,
           ]}
@@ -117,6 +141,7 @@ export const BrandWordmarkLogo: React.FC<BrandWordmarkLogoProps> = ({
         >
           {brand.tagline}
         </Text>
+        {variant !== 'master' && PRODAY_POLE_LABELS[variant] ? null : null}
       </View>
     </View>
   );
@@ -127,8 +152,8 @@ const styles = StyleSheet.create({
   wrapCentered: { alignItems: 'center' },
   wordBlock: { gap: 1 },
   wordBlockCentered: { alignItems: 'center', width: '100%' },
-  wordLine1: { fontWeight: '900', letterSpacing: -0.5 },
-  wordLine2: { fontWeight: '900', letterSpacing: -0.5, marginTop: -2 },
+  wordLine1: { letterSpacing: 2.4, textTransform: 'uppercase' },
+  wordLine2: { letterSpacing: -0.5, marginTop: -2 },
   tagline: {
     fontWeight: '700',
     letterSpacing: 1.8,

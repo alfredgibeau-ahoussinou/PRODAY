@@ -36,6 +36,48 @@ describe('adminInsights', () => {
     expect(queue[0]?.kind).toBe('verification');
   });
 
+  it('ajoute les adhésions et demandes d’abonnement en attente', () => {
+    const queue = buildAdminWorkQueue({
+      users: [],
+      communityReels: [],
+      reelReports: [],
+      payments: [],
+      applications: [],
+      posts: [],
+      memberships: [
+        {
+          id: 'm1',
+          club_id: 'c1',
+          team_id: 't1',
+          player_uid: 'p1',
+          player_name: 'Léa',
+          status: 'pending',
+          requested_at: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      ],
+      subscriptionUpgradeRequests: [
+        {
+          id: 's1',
+          user_uid: 'u2',
+          plan_id: 'player_plus',
+          role: 'player',
+          display_name: 'Max',
+          email: 'max@test.com',
+          billing: 'monthly',
+          status: 'pending',
+          created_at: new Date(),
+        },
+      ],
+      clubsById: { c1: 'AS Paris' },
+    });
+    expect(queue.map((i) => i.kind)).toEqual(
+      expect.arrayContaining(['membership', 'subscription_request']),
+    );
+    expect(queue.find((i) => i.kind === 'membership')?.subtitle).toBe('AS Paris');
+  });
+
   it('calcule la charge modération', () => {
     const stats: PlatformStats = {
       users: 10,

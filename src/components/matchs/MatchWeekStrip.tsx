@@ -51,7 +51,7 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
                 prodayHaptics.tabSwitch();
                 onSelectDay?.(day.date);
               }}
-              scaleTo={0.94}
+              scaleTo={0.97}
               haptic
             >
               <ProDayText

@@ -51,11 +51,12 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   },
   supporter: {
     key: 'supporter',
-    label: 'Tribune supporter',
-    adminHint: 'Espace Supporter. OFF = coque bloquée pour les fans',
-    disabledTitle: 'Tribune temporairement fermée',
+    label: 'Pôle Supporter',
+    adminHint:
+      'Pôle Supporter (rebuild). OFF = coque bloquée. Données football = à reconnecter plus tard.',
+    disabledTitle: 'Pôle Supporter temporairement fermé',
     disabledMessage:
-      'L’espace Supporter est temporairement désactivé. Réessayez bientôt.',
+      'Le pôle Supporter est temporairement désactivé. Réessayez bientôt.',
   },
   shop: {
     key: 'shop',
@@ -83,11 +84,12 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   },
   coach_video: {
     key: 'coach_video',
-    label: 'Vidéo Coach (Veo)',
-    adminHint: 'ON = Mes vidéos accessible aux coachs (captation, Live, IA, causerie)',
+    label: 'Vidéo Coach',
+    adminHint:
+      'ON = Mes vidéos accessible aux coachs (bibliothèque club). Hors OAuth Veo dans l’app.',
     disabledTitle: 'Mes vidéos verrouillé',
     disabledMessage:
-      'Le module vidéo Coach n’est pas encore ouvert. Réessayez quand ProDay l’aura activé.',
+      'Le module vidéo Coach n’est pas activé. Demandez l’ouverture à ProDay ou une formule club avec vidéo — pas de faux connecteur Veo.',
   },
 };
 

@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Carte des acteurs",
   description:
-    "Joueurs, clubs, coachs, recruteurs et organisateurs. Reliés par Mercato et Arène.",
+    "Joueurs, clubs, coachs, parents, supporters et sponsors : portes d'entrée vers le même écosystème football ProDay.",
 };
 
 export default function EcosystemPage() {
@@ -15,9 +15,9 @@ export default function EcosystemPage() {
     <>
       <PageHeader
         pathname={ROUTES.ecosystem}
-        kicker="ACTEURS"
-        title="Tous les acteurs, un même réseau"
-        description="Cliquez sur les nœuds. Comment ProDay relie votre saison à travers les cinq pôles et les rôles intégrés."
+        kicker="ÉCOSYSTÈME"
+        title="Tous les acteurs, une même donnée"
+        description="Des portes d'entrée, pas des produits séparés. Cliquez sur les nœuds : comment ProDay relie votre saison autour des objets métier du football."
         image="/images/football-club-01.jpg"
         dark
       />

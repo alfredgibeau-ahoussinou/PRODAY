@@ -1,21 +1,21 @@
 import type { MainTabId } from '../mainTabConfig';
 
 /**
- * Menus joueur type Instagram : 5 onglets primaires + overflow (⋯).
- * Autres rôles : shells métier inchangés.
+ * Pôle joueur — 5 onglets dock : Accueil · Matchs · Saison · Profil · Plus.
+ * Secondaires (équipe, reels, messages, covoit, shop…) via hub Plus.
  */
 
-/** Accueil · Équipe · Matchs · Performance · Profil (+ overflow) */
 export const AMATEUR_PLAYER_SHELL_TABS: MainTabId[] = [
-  'home', // Accueil
-  'recrutement', // Équipe (club)
-  'matchs', // Matchs
-  'feed', // Performance
-  'profil', // Moi
+  'home',
+  'matchs',
+  'feed',
+  'profil',
+  'plus',
 ];
 
-/** Secondaires joueur amateur — menu ⋯ */
 export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'progression',
+  'recrutement',
   'reels',
   'messages',
   'covoiturage',
@@ -23,11 +23,11 @@ export const AMATEUR_PLAYER_OVERFLOW_TABS: MainTabId[] = [
 ];
 
 export const AMATEUR_COACH_SHELL_TABS: MainTabId[] = [
-  'home', // Équipe (portail coach)
-  'matchs', // Matchs
-  'feed', // Performance (Smart Tactics)
+  'home',
+  'matchs',
+  'feed',
   'messages',
-  'profil', // Moi
+  'profil',
 ];
 
 export const AMATEUR_COACH_OVERFLOW_TABS: MainTabId[] = [
@@ -36,7 +36,6 @@ export const AMATEUR_COACH_OVERFLOW_TABS: MainTabId[] = [
   'shop',
 ];
 
-/** Dirigeants club amateur — Accueil · Recrut. · Matchs · Comm. · Vitrine */
 export const AMATEUR_CLUB_SHELL_TABS: MainTabId[] = [
   'home',
   'recrutement',
@@ -51,40 +50,42 @@ export const AMATEUR_CLUB_OVERFLOW_TABS: MainTabId[] = [
   'shop',
 ];
 
+/** Accueil · Matchs · Compétitions · Mes clubs · Vidéos · Profil. */
 export const SUPPORTER_SHELL_TABS: MainTabId[] = [
-  'home', // Tribune
+  'home',
   'matchs',
-  'feed', // Suivis
-  'messages', // Fil
-  'profil', // Compte
+  'feed',
+  'plus',
+  'reels',
+  'profil',
 ];
 
-/** Secondaires tribune — accessibles depuis Tribune / Compte. */
-export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = ['reels', 'shop'];
+export const SUPPORTER_OVERFLOW_TABS: MainTabId[] = [];
+
+/** @deprecated Ancien hub Plus — plus utilisé. */
+export const SUPPORTER_PLUS_DESTINATION_TABS: MainTabId[] = [];
 
 export const PRO_CLUB_SHELL_TABS: MainTabId[] = [
-  'home', // Accueil cockpit A→Z
-  'recrutement', // Pipeline + annonces
-  'matchs', // Match Center
-  'messages', // Communication
-  'profil', // Vitrine
+  'home',
+  'recrutement',
+  'matchs',
+  'messages',
+  'profil',
 ];
 
-export const PRO_CLUB_OVERFLOW_TABS: MainTabId[] = [
-  'covoiturage',
-  'shop',
-];
+export const PRO_CLUB_OVERFLOW_TABS: MainTabId[] = ['covoiturage', 'shop'];
 
 export const PRO_PLAYER_SHELL_TABS: MainTabId[] = [
-  'home', // PLAY
-  'recrutement', // SQUAD / opportunités
-  'matchs', // MATCH
-  'feed', // PERF / Smart Tactics
-  'profil', // CARD
+  'home',
+  'matchs',
+  'feed',
+  'profil',
+  'plus',
 ];
 
-/** Secondaires joueur pro — menu PAUSE */
 export const PRO_PLAYER_OVERFLOW_TABS: MainTabId[] = [
+  'progression',
+  'recrutement',
   'reels',
   'messages',
   'covoiturage',

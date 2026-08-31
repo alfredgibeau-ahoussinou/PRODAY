@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import {
   CoachChapterScroll,
   CoachEmptyState,
   CoachText,
 } from '../../../components/coach/coachPortalUi';
 import { CoachScreenHeader } from '../../../components/coach/CoachScreenHeader';
+import { ShellAccountSection } from '../../../components/shell/ShellAccountSection';
 import { getCoachPageIdentity } from '../../../content/coachPageIdentity';
 import { useTranslation } from '../../../context/LocaleContext';
 import { useCoachTheme } from './CoachThemeContext';
@@ -14,6 +15,7 @@ import { COACH_TOOL_GROUPS } from '../navigation/coachNavConfig';
 import { CoachToolsList } from './CoachToolsList';
 import { useCoachShellNav } from './CoachShellNavContext';
 import { spacing } from '../../../theme/designTokens';
+import { coachChrome } from '../theme/coachDesignSystem';
 
 type Props = {
   /** Legacy — liste d’outils résolus (deep link Menu / plus). */
@@ -22,11 +24,13 @@ type Props = {
 
 const pageIdentity = getCoachPageIdentity('plus');
 
-/** Hub Menu — outils groupés (Match, Club, Performance). */
+/** Hub Menu — outils groupés (Match, Club, Performance) + Compte / déconnexion. */
 export function CoachMenuPane({ items = [] }: Props) {
   const shellNav = useCoachShellNav();
   const { t } = useTranslation();
   const { tokens } = useCoachTheme();
+  const { width } = useWindowDimensions();
+  const wide = width >= coachChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const resolvedById = useMemo(
     () => new Map(items.map((item) => [item.id, item] as const)),
@@ -53,6 +57,29 @@ export function CoachMenuPane({ items = [] }: Props) {
             onSelect={(id) => shellNav?.requestNav(id)}
           />
         )}
+
+        <ShellAccountSection
+          tone={{
+            foreground: tokens.foreground,
+            muted: tokens.muted,
+            faint: tokens.muted,
+            surface: tokens.surface,
+            border: tokens.border,
+            destructive: '#DC2626',
+            iconBg: tokens.soft,
+          }}
+          links={[
+            {
+              key: 'profil',
+              label: 'Profil',
+              hint: 'Vitrine et paramètres coach',
+              icon: 'person',
+              onPress: () => shellNav?.requestNav('profil'),
+            },
+          ]}
+          onSignOut={shellNav?.signOut}
+          safeBottom={!wide}
+        />
       </CoachChapterScroll>
     </View>
   );

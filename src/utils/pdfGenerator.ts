@@ -192,7 +192,7 @@ export function buildPlayerCvHtml(data: PlayerCvData, logoDataUrl?: string): str
   <header class="header">
     <div>
       ${logoBlock}
-      <div class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</div>
+      <div class="tagline">CONNECTER. PROGRESSER. RÉVÉLER.</div>
     </div>
     <div class="meta-right">
       CV joueur ProDay<br />

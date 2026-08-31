@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
-import { Icon } from '../ui/Icon';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { ProDaySymbol } from '../branding/ProDaySymbol';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
-import { SPONSOR_BRANDING_LOGOS } from '../../content/brandingAssets';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 
 interface SponsorScreenHeaderProps {
   title: string;
@@ -11,97 +10,66 @@ interface SponsorScreenHeaderProps {
   label?: string;
 }
 
+/** En-tête d’écran Sponsor — minimal, accent violet. */
 export const SponsorScreenHeader: React.FC<SponsorScreenHeaderProps> = ({
-  label = 'Pro Day Sponsor',
+  label = 'ProDay Sponsor',
   title,
   subtitle,
 }) => (
   <View style={styles.wrap}>
-    <View style={styles.accentBar} />
-    <View style={styles.body}>
-      <View style={styles.badge}>
-        <View style={styles.badgeLogo}>
-          <Image
-            source={SPONSOR_BRANDING_LOGOS.picto}
-            style={styles.badgeLogoImage}
-            resizeMode="contain"
-          />
-        </View>
-        <Text style={styles.badgeText}>{label}</Text>
-      </View>
-      <Text
-        style={styles.title}
-        numberOfLines={2}
-        adjustsFontSizeToFit
-        minimumFontScale={0.75}
-      >
-        {title}
-      </Text>
-      {subtitle ? (
-        <Text style={styles.sub} numberOfLines={3}>
-          {subtitle}
-        </Text>
-      ) : null}
+    <View style={styles.row}>
+      <ProDaySymbol size={28} variant="sponsor" tone="white" />
+      <Text style={styles.badgeText}>{label}</Text>
     </View>
+    <Text
+      style={styles.title}
+      numberOfLines={2}
+      adjustsFontSizeToFit
+      minimumFontScale={0.75}
+    >
+      {title}
+    </Text>
+    {subtitle ? (
+      <Text style={styles.sub} numberOfLines={3}>
+        {subtitle}
+      </Text>
+    ) : null}
   </View>
 );
 
 const styles = StyleSheet.create({
   wrap: {
-    flexDirection: 'row',
     marginBottom: spacing.lg,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    backgroundColor: SPONSOR_THEME.surface,
-    borderWidth: 1,
-    borderColor: SPONSOR_THEME.borderSubtle,
+    gap: spacing.xs,
+    paddingBottom: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: SPONSOR_THEME.borderSubtle,
   },
-  accentBar: {
-    width: 4,
-    backgroundColor: SPONSOR_THEME.primary,
-  },
-  body: {
-    flex: 1,
-    flexShrink: 1,
-    minWidth: 0,
-    padding: spacing.md,
-  },
-  badge: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
-  badgeLogo: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    padding: 2,
-    overflow: 'hidden',
-    flexShrink: 0,
-  },
-  badgeLogoImage: { width: '100%', height: '100%' },
   badgeText: {
-    flexShrink: 1,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: SPONSOR_THEME.primary,
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
   title: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 22,
+    lineHeight: 26,
     fontWeight: '800',
     color: SPONSOR_THEME.text,
-    letterSpacing: -0.3,
-    flexShrink: 1,
+    letterSpacing: -0.4,
   },
   sub: {
-    marginTop: spacing.xs,
+    marginTop: 2,
     fontSize: 13,
     lineHeight: 18,
-    color: SPONSOR_THEME.textSecondary,
+    color: SPONSOR_THEME.textMuted,
   },
 });

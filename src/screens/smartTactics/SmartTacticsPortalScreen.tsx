@@ -24,6 +24,7 @@ import {
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useTranslation } from '../../context/LocaleContext';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useWearableHealth } from '../../hooks/useWearableHealth';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { usersService } from '../../services/users.service';
@@ -58,6 +59,7 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
   const playerMode = profile?.role === 'player';
   const mode: 'coach' | 'player' = playerMode ? 'player' : 'coach';
   const { colors } = useAppTheme();
+  const playerColors = usePlayerThemeColors();
   const inCoachShell = Boolean(useCoachShellNav());
   const { tokens: coachTokens } = useCoachTheme();
   const { metrics: wearableMetrics } = useWearableHealth();
@@ -159,9 +161,9 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
 
   if (playerMode) {
     const body = loading ? (
-      <SmartTacticsPlayerHomeLoading accent={colors.accent} />
+      <SmartTacticsPlayerHomeLoading accent={playerColors.accent} />
     ) : (
-      <SmartTacticsPlayerHome {...chapterProps} />
+      <SmartTacticsPlayerHome {...chapterProps} embedded={!onBack} />
     );
 
     if (onBack) {

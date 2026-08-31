@@ -32,15 +32,26 @@ Déploiement site : `cd website && npm run netlify:deploy`
 
 ## 3. Build mobile (TestFlight + APK interne)
 
-```bash
-# iOS TestFlight (distribution interne)
-eas build --profile preview --platform ios
+Version app courante : **1.0.8** (iOS build EAS suivant **17**, Android `versionCode` **10**).
+Pas d’OTA (`expo-updates` non installé) — chaque MAJ = rebuild EAS natif.
 
-# Android APK testeurs
+```bash
+# iOS → App Store Connect / TestFlight (profil store, pas preview)
+npm run eas:build:testflight
+# après succès :
+npm run eas:submit:testflight
+
+# Android APK testeurs (distribution interne)
+# Prérequis : aligner le versionCode distant (≥ 9, car APK local 1.0.7 = 8)
+#   eas build:version:set -p android --profile preview
+#   → saisir 9 (autoIncrement → 10)
 npm run eas:build:preview -- --platform android
 ```
 
-Le profil `preview` active `EXPO_PUBLIC_V3_SHELL=1` (UI V3).
+Les profils `production` / `testflight` / `preview` forcent `EXPO_PUBLIC_V3_SHELL=1` (UI V3).
+Le profil `preview` a aussi `autoIncrement: true` (incrémente le versionCode EAS distant à chaque build).
+
+> Le profil `preview` iOS est **adhoc interne**, pas TestFlight. Pour TestFlight utiliser `testflight` (voir `docs/STORE_RELEASE.md`).
 
 Après build iOS : App Store Connect → TestFlight → ajouter testeurs (emails waitlist).
 
@@ -66,12 +77,24 @@ Préparer pour la revue App Store :
 
 ## 6. Accès Pro bêta-testeurs
 
-Sans IAP actif, activer manuellement dans Firestore :
+Sans IAP actif :
+
+**A — Demande in-app (recommandé bêta)** : Abonnement → « Demander l’accès Pro (bêta) ».
+Admin FOC → Abonnements → **Demandes bêta** → Approuver (essai 1 mois).
+
+**B — Console Firestore** (rapide) :
 
 ```
 users/{uid}.subscription_tier = "pro"
 users/{uid}.subscription_status = "active"
 ```
+
+Optionnel : `subscription_plan_id` (ex. `player_plus`, `coach_pro`) et
+`subscription_period_end` (date future) pour coller au contrôle
+`isSubscriptionAccessActive`.
+
+**C — Admin app FOC** → Abonnements : `grantProSubscription` / passage payant
+(écrit les mêmes champs + journal d’achat).
 
 Voir `docs/PRICING_STRATEGY.md` § Phase déploiement.
 

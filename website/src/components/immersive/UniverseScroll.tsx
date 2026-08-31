@@ -43,14 +43,17 @@ export function UniverseScroll() {
             className="mx-auto w-full max-w-4xl px-5 sm:px-8"
           >
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#052424]/40">
-              Quatre espaces
+              Même écosystème
             </p>
             <h2 className="mt-6 font-display text-[clamp(2.1rem,6vw,4rem)] font-medium leading-[1.05] tracking-[-0.04em] text-[#052424]">
-              Joueur. Coach. Club. Dirigeant.
+              Des portes d&apos;entrée.
+              <br />
+              Un seul football.
             </h2>
             <p className="mt-5 max-w-md text-base leading-relaxed text-[#052424]/55">
-              Avant, pendant et après le match. Choisis ton espace et entre
-              direct. Pas de setup compliqué.
+              Joueur, Club, Coach, Parent, Supporter, Sponsor : ce ne sont pas
+              des produits séparés. Chaque univers ouvre le même graphe · objets
+              métier reliés, même donnée.
             </p>
           </motion.div>
         </div>
@@ -63,7 +66,7 @@ export function UniverseScroll() {
       >
         <div className="mx-auto max-w-4xl px-5 sm:px-8">
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#052424]/40">
-            Choisis ton profil
+            Choisis ta porte
           </p>
           <ul className="mt-10 divide-y divide-[#052424]/12 border-y border-[#052424]/12">
             {UNIVERSES.map((u) => (

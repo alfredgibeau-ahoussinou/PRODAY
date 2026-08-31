@@ -23,6 +23,8 @@ type PoleHelpWidgetProps = {
   colors: AppColors;
   onOpen: () => void;
   onCollapse: () => void;
+  /** Titre bulle (défaut Assistant ProDay). */
+  title?: string;
 };
 
 export const PoleHelpWidget: React.FC<PoleHelpWidgetProps> = ({
@@ -32,6 +34,7 @@ export const PoleHelpWidget: React.FC<PoleHelpWidgetProps> = ({
   colors,
   onOpen,
   onCollapse,
+  title = WIDGET_TITLE,
 }) => {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -41,11 +44,11 @@ export const PoleHelpWidget: React.FC<PoleHelpWidgetProps> = ({
         <AnimatedEntrance kind="fadeUp" index={0}>
           <PressableSpring
             onPress={onOpen}
-            scaleTo={0.94}
+            scaleTo={0.97}
             haptic
             style={styles.miniPressable}
             accessibilityRole="button"
-            accessibilityLabel={WIDGET_TITLE}
+            accessibilityLabel={title}
           >
             <View
               style={[
@@ -83,14 +86,14 @@ export const PoleHelpWidget: React.FC<PoleHelpWidgetProps> = ({
             haptic
             style={styles.cardPressable}
             accessibilityRole="button"
-            accessibilityLabel={`${WIDGET_TITLE}. ${teaser}`}
+            accessibilityLabel={`${title}. ${teaser}`}
           >
             <View style={styles.cardTopRow}>
               <View style={[styles.brandPill, { backgroundColor: colors.brandSoft }]}>
                 <PoleHelpIcon usesBriefcaseIcon={usesBriefcaseIcon} size={14} color={colors.brand} />
               </View>
               <ProDayText variant="caption" style={[styles.cardTitle, { color: colors.text }]}>
-                {WIDGET_TITLE}
+                {title}
               </ProDayText>
               <View style={styles.collapseSpacer} />
             </View>
@@ -100,7 +103,7 @@ export const PoleHelpWidget: React.FC<PoleHelpWidgetProps> = ({
           </PressableSpring>
           <PressableSpring
             onPress={onCollapse}
-            scaleTo={0.9}
+            scaleTo={0.97}
             haptic
             hitSlop={8}
             style={[styles.collapseBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}

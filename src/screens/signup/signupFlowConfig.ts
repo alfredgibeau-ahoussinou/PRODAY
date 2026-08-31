@@ -132,41 +132,41 @@ export function buildSignupSteps(
 ): SignupPageId[] {
   const { role, parentalRequired } = options;
 
+  // Compte d’abord (identité + mot de passe), univers/onboarding pôle ensuite.
+  // `launch` = moment bienvenue → sélecteur d’univers (BrandRevealIntro).
   if (flowKind === 'player') {
-    const pages: SignupPageId[] = ['welcome', 'space', 'sport', 'location', 'stats'];
+    const pages: SignupPageId[] = ['account', 'security', 'space', 'sport', 'location', 'stats'];
     if (parentalRequired) pages.push('family');
-    pages.push('account', 'security', 'launch');
+    pages.push('launch');
     return pages;
   }
 
   if (flowKind === 'sponsor') {
     return [
-      'welcome',
+      'account',
+      'security',
       'sponsor_company',
       'sponsor_campaign',
       'sponsor_targeting',
-      'account',
-      'security',
       'launch',
     ];
   }
 
   if (role === 'supporter') {
-    return ['welcome', 'account', 'security', 'launch'];
+    return ['account', 'security', 'launch'];
   }
 
   if (role === 'physio') {
     return [
-      'welcome',
-      'medical_specialty',
-      'medical_practice',
       'account',
       'security',
+      'medical_specialty',
+      'medical_practice',
       'launch',
     ];
   }
 
-  return ['welcome', staffProPage(role), 'account', 'security', 'launch'];
+  return ['account', 'security', staffProPage(role), 'launch'];
 }
 
 export function getSignupPhases(_flowKind?: SignupFlowKind, role?: UserRole): SignupPhase[] {
@@ -178,6 +178,19 @@ export function getCurrentPhase(page: SignupPageId): SignupPhaseId {
   if (page === 'account' || page === 'security') return 'acces';
   if (page === 'launch') return 'launch';
   return 'vous';
+}
+
+/**
+ * Action du bouton Retour signup.
+ * Étape 0 → fermer vers login ; étapes suivantes → précédent ; compte créé → aucun.
+ */
+export function resolveSignupBackKind(opts: {
+  accountCreated: boolean;
+  pageIndex: number;
+}): 'close' | 'previous' | 'none' {
+  if (opts.accountCreated) return 'none';
+  if (opts.pageIndex <= 0) return 'close';
+  return 'previous';
 }
 
 const PRO_PROFILE_PAGES: SignupPageId[] = [

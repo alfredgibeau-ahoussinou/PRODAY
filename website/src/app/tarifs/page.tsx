@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
 import { PolesPricingLayout } from "@/components/pricing/PolesPricingLayout";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
+import {
+  NO_COMMITMENT_INTRO,
+  POLE_REFERRAL_LINE,
+} from "@/lib/commercialCopy";
 import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Tarifs ProDay",
   description:
-    "Tarifs sans engagement. Mensuel ou annuel −20 %. Parrainage possible. Joueur, Club, Coach, Parent, Supporter, Sponsor.",
+    "Tarifs sans engagement. Sponsoring possible. Mensuel ou annuel −20 %. Parrainage possible. Joueur, Club, Coach, Parent, Supporter, Sponsor.",
 };
 
 export default function PricingPage() {
@@ -19,24 +23,25 @@ export default function PricingPage() {
       <ImmersivePoleHero
         brand="Pro Day Tarifs"
         headline="Un pôle. Un prix."
-        support="Sans engagement. Mensuel ou annuel (−20 %). Tu ouvres l’espace dont tu as besoin — et le parrainage est possible."
+        support={`${NO_COMMITMENT_INTRO} Mensuel ou annuel (moins 20 %). Sponsoring possible.`}
         video={visuals.heroVideo}
         poster={visuals.hero}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Liste d’attente"
         secondaryHref="#joueur"
         secondaryLabel="Voir les pôles"
+        perk={POLE_REFERRAL_LINE}
       />
 
       <PolesPricingLayout />
 
       <TerminalCta
         title="La bêta est ouverte."
-        description="Sans engagement. Parrainage possible. Les abonnements store suivent le même modèle."
+        description={`${NO_COMMITMENT_INTRO} Sponsoring possible pour les marques. ${POLE_REFERRAL_LINE}`}
         primaryHref={ROUTES.betaWaitlist}
         primaryLabel="Rejoindre la bêta"
-        secondaryHref={ROUTES.faq}
-        secondaryLabel="FAQ tarifs"
+        secondaryHref={ROUTES.sponsor}
+        secondaryLabel="Espace sponsor"
       />
     </TerminalPage>
   );

@@ -12,7 +12,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "ProDay · Écosystème",
   description:
-    "Cinq pôles : Joueur, Club, Coach, Supporter et Sponsor. Santé, agent, recruteur et organisateur en rôles intégrés.",
+    "Six portes : Joueur, Club, Coach, Parent, Supporter et Sponsor. Santé, agent, recruteur et organisateur en rôles intégrés.",
 };
 
 const HUB_POLES = SHOWCASE_POLES.filter((p) =>
@@ -47,7 +47,7 @@ export default function ProHubPage() {
     <>
       <PageHeader
         pathname={ROUTES.pro}
-        kicker="Cinq pôles"
+        kicker="Six portes"
         title="L’écosystème, clair et simple."
         description="Joueur, Club, Coach, Supporter, Sponsor. Même app : parcours dédiés. Agent, recruteur, organisateur et santé en rôles intégrés."
         image="/images/football-pro-01.jpg"
@@ -58,7 +58,7 @@ export default function ProHubPage() {
       />
 
       <PremiumSection
-        title="Cinq pôles"
+        title="Six portes"
         className="bg-black py-16 sm:py-20"
       >
         <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:grid-cols-2 lg:grid-cols-3">

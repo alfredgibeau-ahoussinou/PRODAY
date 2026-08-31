@@ -50,7 +50,7 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
           </p>
           <Link
             href={ROUTES.betaInstaller}
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#4C8BFF]"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#F5D04A]"
           >
             Guide d&apos;installation →
           </Link>
@@ -58,11 +58,11 @@ export function BetaAideContent({ session }: BetaAideContentProps) {
         <div className="border border-white/10 bg-transparent p-6">
           <SectionKicker>Programme</SectionKicker>
           <p className="mt-3 text-sm leading-relaxed text-white/55">
-            Calendrier, cinq pôles et modules à tester selon votre profil beta-testeur.
+            Calendrier, six portes d’entrée et modules à tester selon votre profil beta testeur.
           </p>
           <Link
             href={ROUTES.betaProgramme}
-            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#4C8BFF]"
+            className="mt-4 inline-flex text-sm font-semibold text-[var(--proday-accent)] hover:text-[#F5D04A]"
           >
             Voir le programme →
           </Link>

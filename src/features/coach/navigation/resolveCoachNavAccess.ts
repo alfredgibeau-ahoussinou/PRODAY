@@ -10,6 +10,7 @@ import {
   type CoachNavItemId,
   type CoachToolGroup,
 } from './coachNavConfig';
+import { coachVideoLockReason } from '../../../utils/coachVideoHonesty';
 
 export type CoachNavResolvedItem = CoachNavItem & {
   locked: boolean;
@@ -36,7 +37,7 @@ function isEntitled(item: CoachNavItem, input: CoachNavAccessInput): boolean {
 
 function lockReasonFor(item: CoachNavItem): string {
   if (item.requiresVideo) {
-    return 'Vidéo Coach : activez « Vidéo Coach (Veo) » dans l’admin Paramètres.';
+    return coachVideoLockReason();
   }
   return 'Tactique IA inclus avec Coach Pro, ou si ton club a l’offre Tout inclus.';
 }

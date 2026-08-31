@@ -1,3 +1,4 @@
+import { PRODAY_POLE_ACCENTS, poleAccentSoft } from './prodayBrand';
 import type { ProductLineId } from '../models/ProductLine';
 import { isProProductLine } from '../models/ProductLine';
 import type { UserRole } from '../models/User';
@@ -249,7 +250,7 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     flatLayout: true,
     cleanStyle: true,
     overflowKicker: 'Club',
-    accent: '#006CFC',
+    accent: PRODAY_POLE_ACCENTS.club,
     activeIcon: '#FAFAFA',
   }),
   pro_staff: makeChrome(PRO_PALETTE, {
@@ -257,30 +258,30 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     flatLayout: true,
     cleanStyle: true,
     overflowKicker: 'Staff',
-    accent: '#818CF8',
+    accent: PRODAY_POLE_ACCENTS.coach,
     activeIcon: '#FAFAFA',
   }),
   sponsor: makeChrome(
     {
-      accent: '#D4AF37',
-      brand: '#92700C',
+      accent: PRODAY_POLE_ACCENTS.sponsor,
+      brand: '#6B1F68',
       ink: '#FAFAF9',
-      accentSoft: 'rgba(212, 175, 55, 0.12)',
-      border: 'rgba(212, 175, 55, 0.22)',
-      borderStrong: 'rgba(212, 175, 55, 0.4)',
+      accentSoft: 'rgba(146, 39, 143, 0.12)',
+      border: 'rgba(146, 39, 143, 0.22)',
+      borderStrong: 'rgba(146, 39, 143, 0.4)',
       surface: '#0c0a06',
       background: '#070605',
       textMuted: '#A8A29E',
-      brandSoft: 'rgba(212, 175, 55, 0.1)',
+      brandSoft: poleAccentSoft('sponsor', 0.12),
       surfaceMuted: '#14110a',
-      accentLight: '#F5D76E',
+      accentLight: '#C45FC2',
     },
     {
       layout: 'dock',
       flatLayout: true,
       cleanStyle: true,
       overflowKicker: 'Sponsor',
-      accent: '#D4AF37',
+      accent: PRODAY_POLE_ACCENTS.sponsor,
       activeIcon: '#FAFAFA',
     },
   ),
@@ -289,7 +290,7 @@ const CHROME_BY_LINE: Record<ProductLineId, PoleTabBarChrome> = {
     flatLayout: true,
     cleanStyle: true,
     overflowKicker: 'Parent',
-    accent: '#0F766E',
+    accent: PRODAY_POLE_ACCENTS.parent,
   }),
 };
 

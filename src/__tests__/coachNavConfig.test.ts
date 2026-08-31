@@ -40,6 +40,7 @@ describe('coachNavConfig', () => {
 
   it('canonise les alias legacy et surligne Menu pour les outils secondaires', () => {
     expect(canonicalizeCoachNav('pitch')).toBe('today');
+    expect(canonicalizeCoachNav('accueil')).toBe('today');
     expect(canonicalizeCoachNav('effectif')).toBe('equipe');
     expect(canonicalizeCoachNav('planning')).toBe('entrainements');
     expect(canonicalizeCoachNav('matchs')).toBe('match_center');
@@ -101,7 +102,7 @@ describe('coachNavConfig', () => {
     expect(COACH_SECONDARY_NAV_IDS).not.toContain('plus');
     expect(COACH_MENU_DEST_IDS).toContain('planning');
     expect(COACH_HOME_DEST_IDS).toEqual(COACH_MENU_DEST_IDS);
-    expect(COACH_TOOL_GROUPS.flatMap((g) => g.toolIds)).toHaveLength(8);
+    expect(COACH_TOOL_GROUPS.flatMap((g) => g.toolIds)).toHaveLength(9);
     expect(COACH_TOOL_GROUPS.map((g) => g.id)).toEqual(['match', 'club', 'performance']);
     expect(COACH_TOOL_GROUPS.map((g) => g.label)).toEqual(['Match', 'Club', 'Performance']);
     expect(COACH_HOME_TOOLS.map((t) => t.id)).toEqual([
@@ -110,11 +111,15 @@ describe('coachNavConfig', () => {
       'gestion',
       'com_staff',
       'carpool',
+      'coaching_perso',
       'smart_tactics',
       'mes_videos',
       'forme',
     ]);
     expect(COACH_MORE_NAV_IDS).toContain('planning');
+    expect(COACH_SECONDARY_NAV_IDS).toContain('coaching_perso');
+    expect(findCoachNavItem('coaching_perso')?.label).toBe('Coaching perso');
+    expect(primaryTabForCoachNav('coaching_perso')).toBe('plus');
   });
 });
 
@@ -136,7 +141,7 @@ describe('resolveCoachNavAccess', () => {
     const more = resolveCoachMoreItems({ canSmartTactics: true, canVideo: false });
     const video = more.find((i) => i.id === 'mes_videos');
     expect(video?.locked).toBe(true);
-    expect(video?.lockReason).toMatch(/Vidéo Coach/i);
+    expect(video?.lockReason).toMatch(/formule vidéo|module/i);
   });
 
   it('résout 5 dossiers primaires', () => {
@@ -146,15 +151,16 @@ describe('resolveCoachNavAccess', () => {
     expect(folders.flatMap((f) => f.items).map((i) => i.id)).toContain('plus');
   });
 
-  it('expose les 8 lignes Outils depuis COACH_TOOL_GROUPS', () => {
+  it('expose les 9 lignes Outils depuis COACH_TOOL_GROUPS', () => {
     const menu = resolveCoachMenuItems({ canSmartTactics: true, canVideo: true });
     expect(menu.map((i) => i.id)).toEqual(COACH_HOME_TOOLS.map((t) => t.id));
     expect(menu.find((i) => i.id === 'match_center')?.label).toBe('Matchs');
     expect(menu.find((i) => i.id === 'entrainements')?.label).toBe('Séances');
     expect(menu.find((i) => i.id === 'com_staff')?.label).toBe('Communauté');
+    expect(menu.find((i) => i.id === 'coaching_perso')?.label).toBe('Coaching perso');
     const groups = resolveCoachToolGroups({ canSmartTactics: true, canVideo: true });
     expect(groups).toHaveLength(3);
-    expect(groups.flatMap((g) => g.items)).toHaveLength(8);
+    expect(groups.flatMap((g) => g.items)).toHaveLength(9);
   });
 });
 
@@ -163,7 +169,7 @@ describe('COACH_SITE night', () => {
     expect(COACH_SITE.bg).toBe('#000000');
     expect(COACH_SITE.surface).toBe('#1C1C1E');
     expect(COACH_SITE.foreground).toBe('#FFFFFF');
-    expect(COACH_SITE.accent).toBe('#006CFC');
+    expect(COACH_SITE.accent).toBe('#C5A059');
   });
 });
 
@@ -179,5 +185,6 @@ describe('coach page titles SportEasy', () => {
     expect(getCoachPageIdentity('plus').title).toBe('Menu');
     expect(getCoachPageIdentity('profil').title).toBe('Profil coach');
     expect(getCoachPageIdentity('com_staff').title).toBe('Communauté');
+    expect(getCoachPageIdentity('coaching_perso').title).toBe('Coaching perso');
   });
 });

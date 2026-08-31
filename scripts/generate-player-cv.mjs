@@ -118,7 +118,7 @@ function buildHtml(data) {
     <header class="header">
       <div>
         <img class="logo" src="${logoPath}" alt="ProDay" />
-        <div class="tagline">CONNECTER • PROGRESSER • RÉUSSIR</div>
+        <div class="tagline">CONNECTER. PROGRESSER. RÉVÉLER.</div>
       </div>
       <div style="text-align:right;font-size:9pt;color:#5c6478">
         ${escapeHtml(data.generated_at)}

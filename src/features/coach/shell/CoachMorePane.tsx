@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { CoachChapterScroll, CoachSettingsGroup, CoachSettingsRow } from '../../../components/coach/coachPortalUi';
 import { CoachPane } from '../../../components/coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../../content/coachPageIdentity';
@@ -15,6 +15,7 @@ type Props = {
   items: CoachNavResolvedItem[];
 };
 
+/** @deprecated Remplacé par CoachMenuPane — conserve un raccourci Coaching perso. */
 export function CoachMorePane({ items }: Props) {
   const shellNav = useCoachShellNav();
   const profile = useSessionProfile();
@@ -28,30 +29,6 @@ export function CoachMorePane({ items }: Props) {
       setSessionRequests(rows.filter((b) => b.status === 'requested').slice(0, 8));
     });
   }, [profile?.uid]);
-
-  const openHourlySlots = async () => {
-    if (!profile) return;
-    try {
-      await coachingSessionsService.upsertHourlyProfile({
-        coach_uid: profile.uid,
-        display_name: profile.display_name,
-        bio: profile.profile.bio,
-        specialties: profile.profile.specialties ?? [],
-        age_categories: profile.profile.category ? [profile.profile.category] : [],
-        positions_coached: [],
-        city: profile.city ?? 'France',
-        hourly_rate_eur: 30,
-        club_id: profile.profile.club_id,
-        available: true,
-      });
-      Alert.alert(
-        'Créneaux ouverts',
-        'Tu es visible dans Train Hub à 30 €/h. Modifie ton tarif plus tard dans ton profil.',
-      );
-    } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Enregistrement impossible.');
-    }
-  };
 
   const tools = items.filter((item) => item.id !== 'profil');
   const account = items.filter((item) => item.id === 'profil');
@@ -94,27 +71,14 @@ export function CoachMorePane({ items }: Props) {
             <CoachSettingsGroup>
               <CoachSettingsRow
                 icon="time"
-                label="Coaching à l’heure"
-                last={sessionRequests.length === 0}
-                onPress={() => void openHourlySlots()}
+                label={
+                  sessionRequests.length > 0
+                    ? `Coaching perso (${sessionRequests.length} demande${sessionRequests.length > 1 ? 's' : ''})`
+                    : 'Coaching perso'
+                }
+                last
+                onPress={() => shellNav?.requestNav('coaching_perso')}
               />
-              {sessionRequests.map((b, index) => (
-                <CoachSettingsRow
-                  key={b.id}
-                  icon="person"
-                  label={`${b.player_name} · ${b.duration_min} min`}
-                  last={index === sessionRequests.length - 1}
-                  onPress={() => {
-                    void coachingSessionsService.setStatus(b.id, 'accepted').then(() => {
-                      setSessionRequests((prev) => prev.filter((x) => x.id !== b.id));
-                      Alert.alert(
-                        'Séance acceptée',
-                        'Le joueur est notifié et peut payer la séance par carte.',
-                      );
-                    });
-                  }}
-                />
-              ))}
             </CoachSettingsGroup>
           ) : null}
 
@@ -123,6 +87,11 @@ export function CoachMorePane({ items }: Props) {
               icon="help"
               label="Aide"
               onPress={() => shellNav?.openHelp?.()}
+            />
+            <CoachSettingsRow
+              icon="person"
+              label="Profil"
+              onPress={() => shellNav?.requestNav('profil')}
             />
             <CoachSettingsRow
               icon="log-out"

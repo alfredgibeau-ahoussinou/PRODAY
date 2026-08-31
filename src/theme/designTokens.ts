@@ -1,31 +1,46 @@
 /**
- * ProDay — design system FLASH
- * Noir profond · cyan électrique · accents de pôle
+ * ProDay — design system identité officielle
+ * Noir / blanc / gris premium · or master · accents de pôle
  */
+
+import { PRODAY_MASTER, PRODAY_TAGLINE, poleAccentSoft } from './prodayBrand';
 
 export const BRAND = {
   name: 'ProDay',
-  tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
+  tagline: PRODAY_TAGLINE,
 } as const;
 
-/** RGB fond FLASH (#000000) — overlays photos */
+/** RGB fond (#000000) — overlays photos */
 export const BRAND_RGB = '0, 0, 0' as const;
 
-/** Cyan FLASH — accent marque (aligné site) */
-export const FLASH_CYAN = '#22D3EE' as const;
-export const FLASH_CYAN_DIM = '#0891B2' as const;
+/** Or master — accent marque mère / CTA */
+export const MASTER_GOLD = PRODAY_MASTER.gold;
+export const MASTER_GOLD_BRIGHT = PRODAY_MASTER.goldBright;
+export const MASTER_GOLD_DEEP = PRODAY_MASTER.goldDeep;
+
+/** @deprecated Alias legacy — préférer MASTER_GOLD */
+export const MASTER_BLUE = MASTER_GOLD;
+/** @deprecated Alias legacy */
+export const MASTER_BLUE_BRIGHT = MASTER_GOLD_BRIGHT;
+/** @deprecated Alias legacy */
+export const MASTER_BLUE_DEEP = MASTER_GOLD_DEEP;
+
+/** @deprecated Alias — préférer MASTER_GOLD */
+export const FLASH_CYAN = MASTER_GOLD;
+/** @deprecated Alias — préférer MASTER_GOLD_DEEP */
+export const FLASH_CYAN_DIM = MASTER_GOLD_DEEP;
 
 export const colors = {
-  /** Accent marque FLASH */
-  accent: FLASH_CYAN,
-  accentLight: '#67E8F9',
-  accentSoft: 'rgba(34, 211, 238, 0.12)',
-  accentMuted: 'rgba(34, 211, 238, 0.28)',
+  /** Accent marque mère */
+  accent: MASTER_GOLD,
+  accentLight: MASTER_GOLD_BRIGHT,
+  accentSoft: poleAccentSoft('master', 0.12),
+  accentMuted: poleAccentSoft('master', 0.28),
 
   /** Texte & marque */
-  brand: FLASH_CYAN,
-  brandLight: '#67E8F9',
-  brandSoft: 'rgba(34, 211, 238, 0.1)',
+  brand: MASTER_GOLD,
+  brandLight: MASTER_GOLD_BRIGHT,
+  brandSoft: poleAccentSoft('master', 0.1),
   brandInverse: '#FFFFFF',
 
   ink: '#FAFAFA',
@@ -67,32 +82,33 @@ export const colors = {
   statusBusy: '#FBBF24',
 
   /** Modules */
-  tone1: FLASH_CYAN,
-  tone2: FLASH_CYAN_DIM,
-  tone3: '#67E8F9',
-  tone4: '#A5F3FC',
+  tone1: MASTER_BLUE,
+  tone2: MASTER_BLUE_DEEP,
+  tone3: MASTER_BLUE_BRIGHT,
+  tone4: '#93C5FD',
 
   /** Compat héritage */
   navy: '#0A0A0A',
   navySoft: '#171717',
-  blueBright: FLASH_CYAN,
-  bluePrimary: FLASH_CYAN,
-  blueCyan: FLASH_CYAN,
+  blueBright: MASTER_BLUE_BRIGHT,
+  bluePrimary: MASTER_BLUE,
+  blueCyan: MASTER_BLUE_BRIGHT,
   gradientStart: '#000000',
-  gradientEnd: FLASH_CYAN_DIM,
+  gradientEnd: MASTER_BLUE_DEEP,
 } as const;
 
 export const gradients = {
   hero: ['#000000', '#0A0A0A'] as const,
   heroDark: ['#000000', '#000000'] as const,
   card: ['#1A1A1A', '#0A0A0A'] as const,
-  cta: [FLASH_CYAN, FLASH_CYAN_DIM] as const,
+  cta: [MASTER_BLUE, MASTER_BLUE_DEEP] as const,
 } as const;
 
 export const typography = {
   fontFamily: 'Inter',
   displayFamily: 'Syne',
-  brandSlant: '-3deg',
+  brandFamily: 'Sora',
+  brandSlant: '0deg',
   sizes: {
     hero: 30,
     title: 22,
@@ -131,30 +147,30 @@ export const radius = {
 export const shadows = {
   card: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 20,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 3,
   },
   interactive: {
-    shadowColor: FLASH_CYAN,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 22,
-    elevation: 6,
+    shadowColor: MASTER_BLUE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 4,
   },
   fab: {
-    shadowColor: FLASH_CYAN,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowColor: MASTER_BLUE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 6,
   },
   soft: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
     elevation: 2,
   },
 } as const;

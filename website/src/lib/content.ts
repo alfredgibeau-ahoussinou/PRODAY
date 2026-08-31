@@ -6,20 +6,20 @@ import {
 
 export const BRAND = {
   name: "ProDay",
-  tagline: "Le quotidien digital du football amateur",
+  tagline: "L'infrastructure de votre football",
   logo: "/branding/logo-proday-official.png",
   /** Phrase d’accueil : ce que fait l’app, en une ligne. */
-  mission: "Le football amateur, enfin réuni au même endroit.",
+  mission: "Pas un outil de plus. L'infrastructure de votre football.",
   heroSupport:
-    "Joueurs, coachs, clubs et familles : entraînez, organisez, suivez l’analyse de forme et faites vivre votre club depuis une seule application.",
+    "Joueurs, coachs, clubs, parents, supporters et sponsors : les objets métier du football reliés dans un même écosystème. Plus de WhatsApp, tableurs et docs éparpillés.",
 } as const;
 
 /** Pitch honnête : capacités réelles vs ambition long terme. Pas de métriques fictives. */
 export const PRODUCT_VISION = {
   intro:
-    "ProDay accompagne le joueur, le coach et le club avant, pendant et après le match. Le quotidien digital du football amateur : pas une simple app de gestion.",
+    "ProDay n'est pas une pile de fonctionnalités ni huit produits séparés : c'est l'infrastructure qui relie clubs, staffs, joueurs et leur écosystème autour de la même donnée. Notion organise l'info ; Discord discute ; ProDay orchestre le football.",
   disclaimer:
-    "Les chiffres du site décrivent le produit, pas l'audience en direct. L'analyse IA porte sur vos highlights de séance (vidéo ou image + notes). Pas sur chaque action en match.",
+    "Les chiffres du site décrivent le produit (tarifs, capacités), pas l'audience en direct. Aucune métrique d'usage inventée. L'analyse IA porte sur vos highlights de séance (vidéo ou image + notes). Pas sur chaque action en match.",
   today: {
     title: "Aujourd'hui",
     lead: "Ce qui est disponible ou en déploiement dans l'app.",
@@ -33,7 +33,7 @@ export const PRODUCT_VISION = {
       "Matchs, invitations entre clubs, convocations RSVP, Stats en direct",
       "Organisation d’événements et tournois (générateur, Hub en direct)",
       "Fil communauté, Reels et question hebdo",
-      "Espace partenaires / micro-sponsoring local",
+      "Espace partenaires / micro sponsoring local",
       "Covoiturage, contrôle parental et espace famille",
       "Analyse de forme : effectif (coach) et suivi personnel (joueur)",
       "Espace président : vision globale du club",
@@ -45,9 +45,9 @@ export const PRODUCT_VISION = {
     lead: "Ambitions produit. Pas encore livrées. Pas de promesse marketing ici.",
     items: [
       "Place de marché coaching humain généralisée (Stripe Connect)",
-      "Analyse vidéo frame-by-frame avancée",
+      "Analyse vidéo image par image avancée",
       "Causerie vidéo IA (« 3 choses à retenir »)",
-      "Bourse aux équipements et micro-sponsoring généralisés",
+      "Bourse aux équipements et micro sponsoring généralisés",
       "Paiements tournois intégrés",
     ],
   },
@@ -102,12 +102,12 @@ export const SPOTLIGHT_FEATURES = [
 export type ProductLineWeb = "homme" | "woman" | "amateur" | "supporter" | "pro" | "sante";
 
 export const UNIVERSE_LOGOS: Record<ProductLineWeb, string> = {
-  homme: "/branding/logo-man-picto.png",
-  woman: "/branding/logo-woman-picto.png",
-  amateur: "/branding/logo-amateur-picto.png",
-  supporter: "/branding/logo-supporter-picto.png",
-  pro: "/branding/logo-pro-picto.png",
-  sante: "/branding/logo-sante-picto.png",
+  homme: "/branding/logo-proday-mark-joueur.png",
+  woman: "/branding/logo-proday-mark-joueur.png",
+  amateur: "/branding/logo-proday-mark-joueur.png",
+  supporter: "/branding/logo-proday-mark-supporter.png",
+  pro: "/branding/logo-proday-mark-club.png",
+  sante: "/branding/logo-proday-mark-parent.png",
 };
 
 export const HOMME_BRAND = {
@@ -115,11 +115,11 @@ export const HOMME_BRAND = {
   shortName: "Man",
   fullName: "Pro Day Man",
   logo: UNIVERSE_LOGOS.homme,
-  tagline: "CONNECTER • PROGRESSER • RÉUSSIR",
+  tagline: "CONNECTER. PROGRESSER. RÉVÉLER.",
   mission:
     "Le foot masculin amateur. Mercato M, matchs, Arène, Visibilité, CV joueur, covoiturage, santé et Boutique. Réservé aux joueurs.",
-  accent: "#0054F0",
-  accentDark: "#001854",
+  accent: "#FFFFFF",
+  accentDark: "#CCCCCC",
 } as const;
 
 export const AMATEUR_BRAND = {
@@ -127,11 +127,11 @@ export const AMATEUR_BRAND = {
   shortName: "Joueur",
   fullName: "Pro Day Joueur",
   logo: UNIVERSE_LOGOS.amateur,
-  tagline: "Progresser · Jouer · Partager",
+  tagline: "CONNECTER. PROGRESSER. RÉVÉLER.",
   mission:
     "Espace Joueur : carte sportive réelle, entraînement, Mercato, CV et saison. Sans badge de prestige artificiel.",
-  accent: "#0054F0",
-  accentDark: "#001854",
+  accent: "#FFFFFF",
+  accentDark: "#CCCCCC",
 } as const;
 
 export const JOUEUR_BRAND = AMATEUR_BRAND;
@@ -141,11 +141,11 @@ export const SUPPORTER_BRAND = {
   shortName: "Supporter",
   fullName: "Pro Day Supporter",
   logo: UNIVERSE_LOGOS.supporter,
-  tagline: "Tribune libre · Zéro paywall",
+  tagline: "Matchs · Scores · Favoris · Expérience match",
   mission:
-    "Scores live, clubs favoris, débats et moments. Une tribune 100 % gratuite. Pas de Mercato. Pas d'abonnement store.",
-  accent: "#3C00F0",
-  accentDark: "#180078",
+    "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, statistiques, calendriers, favoris, actualités et expérience match. Tribune gratuite · porte d'entrée vers le même écosystème, pas un produit à part.",
+  accent: "#8B5CF6",
+  accentDark: "#5B21B6",
 } as const;
 
 export const PRO_BRAND = {
@@ -156,8 +156,8 @@ export const PRO_BRAND = {
   tagline: "CLUB • COACH • PERFORMANCE",
   mission:
     "Club au centre, Coach en pôle dédié. Agent, recruteur et organisateur restent des rôles intégrés.",
-  accent: "#006CFC",
-  accentDark: "#002478",
+  accent: "#2563EB",
+  accentDark: "#1E40AF",
 } as const;
 
 export const PRO_JOUEUR_BRAND = {
@@ -165,11 +165,11 @@ export const PRO_JOUEUR_BRAND = {
   shortName: "Joueur",
   fullName: "Pro Day Joueur",
   logo: UNIVERSE_LOGOS.homme,
-  tagline: "Amateur → Pro · Badges",
+  tagline: "CONNECTER. PROGRESSER. RÉVÉLER.",
   mission:
     "Même profil du district au contrat pro. Pass Premium 3,99 € : entraînements IA, heatmaps et passeport recruteur.",
-  accent: "#0054F0",
-  accentDark: "#001854",
+  accent: "#FFFFFF",
+  accentDark: "#CCCCCC",
 } as const;
 
 export const EVENEMENTS_BRAND = {
@@ -180,8 +180,8 @@ export const EVENEMENTS_BRAND = {
   tagline: "Tournois · Détections · Stages",
   mission:
     "Rôle intégré au Club : tournois Arène, détections et stages. Plus un pôle indépendant.",
-  accent: "#0891B2",
-  accentDark: "#0e4a5c",
+  accent: "#F97316",
+  accentDark: "#C2410C",
 } as const;
 
 export const EVENEMENTS_AUDIENCES = [
@@ -200,8 +200,8 @@ export const PRO_CLUB_BRAND = {
   tagline: "Cœur de ProDay",
   mission:
     "Équipes, licenciés, coachs, président, invitations de match, événements, tournois, covoiturage et permissions. Sur devis selon la taille du club.",
-  accent: "#006CFC",
-  accentDark: "#002478",
+  accent: "#2563EB",
+  accentDark: "#1E40AF",
 } as const;
 
 export const PRO_STAFF_BRAND = {
@@ -209,11 +209,11 @@ export const PRO_STAFF_BRAND = {
   shortName: "Coach",
   fullName: "Pro Day Coach",
   logo: UNIVERSE_LOGOS.pro,
-  tagline: "Tactique IA · IA · Effectif",
+  tagline: "Transmettre. Guider.",
   mission:
     "Profil coach rattaché au club : parcours, diplômes, Tactique IA, assistant IA, analyse vidéo et préparation match.",
-  accent: "#3B5BFF",
-  accentDark: "#001848",
+  accent: "#E8B923",
+  accentDark: "#B8941F",
 } as const;
 
 /** Message waitlist / page beta */
@@ -253,7 +253,7 @@ export const MODULES = [
     title: "Matchs",
     subtitle: "Invitations & amicaux",
     description:
-      "Proposez un match à un autre club, acceptez ou contre-proposez. Calendrier, convocations et RSVP une fois confirmé.",
+      "Proposez un match à un autre club, acceptez ou contre proposez. Calendrier, convocations et RSVP une fois confirmé.",
     image: "/images/football-match-01.jpg",
     color: "#262626",
   },
@@ -298,7 +298,7 @@ export const MODULES = [
     title: "Boutique ProDay",
     subtitle: "Équipement & textile",
     description:
-      "Trépieds, t-shirts et maillots officiels par univers. Précommande depuis l'app.",
+      "Trépieds, t shirts et maillots officiels par univers. Précommande depuis l'app.",
     image: "/images/football-training-01.jpg",
     color: "#57534e",
   },
@@ -546,8 +546,8 @@ export const SANTE_BRAND = {
   tagline: "Kiné · Mental · Nutrition",
   mission:
     "Rôle médical intégré : praticiens vérifiés près des clubs, agenda et téléconsultation. Plus un pôle indépendant.",
-  accent: "#00CCB4",
-  accentDark: "#006C60",
+  accent: "#F97316",
+  accentDark: "#7C2D12",
 } as const;
 
 export const WOMAN_BRAND = {
@@ -594,7 +594,7 @@ export const MAN_MODULES = [
     title: "Matchs",
     subtitle: "Invitations & convocations",
     description:
-      "Invitation club ↔ club, contre-proposition et calendrier unifié avec RSVP pour votre équipe.",
+      "Invitation club ↔ club, contre proposition et calendrier unifié avec RSVP pour votre équipe.",
     image: "/images/football-match-01.jpg",
   },
   {
@@ -634,7 +634,7 @@ export const MAN_MODULES = [
     title: "Boutique ProDay Man",
     subtitle: "Équipement & textile",
     description:
-      "Trépieds, t-shirts et maillots logo Pro Day Man. Précommande depuis l'app.",
+      "Trépieds, t shirts et maillots logo Pro Day Man. Précommande depuis l'app.",
     image: "/images/football-training-01.jpg",
   },
 ] as const;
@@ -693,7 +693,7 @@ export const WOMAN_MODULES = [
     title: "Boutique ProDay Woman",
     subtitle: "Équipement & textile",
     description:
-      "Trépieds, t-shirts et maillots logo ProDay Woman. Précommande depuis l'app.",
+      "Trépieds, t shirts et maillots logo ProDay Woman. Précommande depuis l'app.",
     image: "/images/football-training-01.jpg",
   },
 ] as const;
@@ -763,7 +763,7 @@ export const PRO_MODULES = [
     title: "Coach Pro",
     subtitle: "Effectifs & recrutement",
     description:
-      "Profil staff vérifié, annonces Mercato, convocations et stats candidatures. Multi-équipes.",
+      "Profil staff vérifié, annonces Mercato, convocations et stats candidatures. multi équipes.",
     image: "/showcase/classic-staff.jpg",
   },
   {
@@ -889,7 +889,7 @@ export const PRO_CLUB_MODULES = [
     title: "Convocations & retards",
     subtitle: "Présences centralisées",
     description:
-      "RSVP, retard annoncé en 1–2 clics (joueur ou parent), feuille de présence visible par le coach — sans WhatsApp.",
+      "RSVP, retard annoncé en 1 à 2 clics (joueur ou parent), feuille de présence visible par le coach · sans WhatsApp.",
     image: "/showcase/classic-exp-messages.jpg",
   },
   {
@@ -921,7 +921,7 @@ export const PRO_CLUB_MODULES = [
     title: "Vitrine & écosystème",
     subtitle: "Page club · équipements · caméras",
     description:
-      "Logo, palmarès, marketplace, et Caméras & Vidéo multi-marques (Veo, XbotGo, import…).",
+      "Logo, palmarès, marketplace, et Caméras & Vidéo multi marques (Veo, XbotGo, import…).",
     image: "/images/football-stadium-night-01.jpg",
   },
 ] as const;
@@ -940,7 +940,7 @@ export const PRO_STAFF_MODULES = [
     title: "Effectif & convocations",
     subtitle: "Présences · calendrier",
     description:
-      "Multi-équipes, convocations, présences et calendrier. Rattaché aux permissions du Club.",
+      "multi équipes, convocations, présences et calendrier. Rattaché aux permissions du Club.",
     image: "/showcase/classic-staff.jpg",
   },
   {
@@ -1040,7 +1040,7 @@ export const AMATEUR_MODULES = [
   {
     id: "matchs-amateur",
     title: "Matchs & covoiturage",
-    subtitle: "Le week-end organisé",
+    subtitle: "Le weekend organisé",
     description:
       "Invitations entre clubs, calendrier unifié, RSVP et covoiturage pour championnat, coupe ou amical.",
     image: "/images/football-match-01.jpg",
@@ -1085,7 +1085,7 @@ export const SUPPORTER_MODULES = [
     title: "Matchs en direct",
     subtitle: "PRODAY & monde",
     description:
-      "Scores live (API-Football), filtres H/F/mixte et calendrier. La tribune s'ouvre le jour du match.",
+      "Scores live (API Football), filtres H/F/mixte et calendrier. La tribune s'ouvre le jour du match.",
     image: "/images/football-fans-01.jpg",
   },
   {
@@ -1093,7 +1093,7 @@ export const SUPPORTER_MODULES = [
     title: "Suivis illimités",
     subtitle: "Clubs · joueurs · tournois",
     description:
-      "Ajoutez sans limite vos favoris. Alertes opt-in depuis le profil. Zéro plafond d'abonnement.",
+      "Ajoutez sans limite vos favoris. Alertes opt in depuis le profil. Zéro plafond d'abonnement.",
     image: "/images/football-supporter-01.jpg",
   },
   {
@@ -1212,22 +1212,22 @@ export const UNIVERSE_PAGE_CONFIG = {
     line: "supporter" as const,
     brand: SUPPORTER_BRAND,
     hero: {
-      title: "La tribune. Sans paywall.",
+      title: "Suivre clubs, joueurs et matchs.",
       image: "/images/football-fans-01.jpg",
     },
     highlights: [
       { label: "Prix", value: "Toujours 0 €" },
-      { label: "Direct", value: "PRODAY + monde" },
-      { label: "Favoris", value: "Suivis illimités" },
-      { label: "Voix", value: "Débats & moments" },
+      { label: "Matchs", value: "ProDay + externes" },
+      { label: "Favoris", value: "Clubs & joueurs" },
+      { label: "Jour J", value: "Scores & compositions" },
     ],
-    modulesTitle: "La tribune numérique",
+    modulesTitle: "La tribune dans l'écosystème",
     modulesSubtitle:
-      "Scores, suivis, fil et merch. Pas de Mercato. Pas d'abonnement. Le match, point.",
+      "Scores, compositions, stats, calendriers, favoris et actualités · porte d'entrée vers le même graphe football.",
     modules: SUPPORTER_MODULES as readonly UniverseModule[],
     journeyIds: ["supporter"] as const,
     audienceNote:
-      "Vous jouez ? Pôle Joueur. Vous coachez ? Pôle Coach. Vous représentez une marque ? Pôle Sponsor.",
+      "Vous jouez ? Pôle Joueur. Vous coachez ? Pôle Coach. Vous représentez une marque ? Pôle Sponsor. Même écosystème.",
     showPulse: false,
     showVerification: false,
     pricingPlanIds: [] as const,
@@ -1235,7 +1235,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     cta: {
       title: "Entrer dans la tribune",
       description:
-        "Compte supporter gratuit. Direct le jour J, suivis sans limite, débats et boutique.",
+        "Compte supporter gratuit. Suivre clubs et joueurs, matchs, scores et actualités.",
       beta: "Liste d'attente Supporter",
     },
   },
@@ -1318,7 +1318,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     },
     highlights: [
       { label: "Pour qui", value: "Présidents & DS" },
-      { label: "Organisation", value: "Multi-catégories" },
+      { label: "Organisation", value: "Multi catégories" },
       { label: "Offres", value: "Amateur → Premium" },
       { label: "Cœur", value: "Écosystème complet" },
     ],
@@ -1336,7 +1336,7 @@ export const UNIVERSE_PAGE_CONFIG = {
     cta: {
       title: "Structurer le club sur ProDay",
       description:
-        "Validation mandat, multi-équipes et recrutement local. Pour le bureau et la direction sportive.",
+        "Validation mandat, multi équipes et recrutement local. Pour le bureau et la direction sportive.",
       beta: "Liste d'attente Pro Club",
     },
   },
@@ -1380,20 +1380,20 @@ export type UniversePageId = keyof typeof UNIVERSE_PAGE_CONFIG;
 
 export const VISION_PILLARS = [
   {
-    title: "Mission",
-    body: "Relier carrière, club et communauté dans le foot amateur. Sans surestimer l'IA.",
+    title: "Infrastructure, pas outil",
+    body: "Messages liés aux convocations, joueurs liés à leurs perfs, matchs liés aux stats. Clubs, staffs, joueurs, parents, supporters et sponsors autour de la même donnée.",
   },
   {
-    title: "Aujourd'hui",
-    body: "Profil, Mercato, score carrière, journal, analyse IA des highlights, sponsors, Arène, admin et contrôle parental. Dans une app React Native / Expo.",
+    title: "Portes d'entrée, un écosystème",
+    body: "Chaque univers est une entrée vers le même graphe football, pas huit produits indépendants. Vous entrez par votre rôle ; la donnée reste partagée.",
+  },
+  {
+    title: "Pas Notion. Pas Discord.",
+    body: "Notion organise de l'information. Discord sert la communication communautaire. ProDay orchestre les objets métier du football : joueurs, matchs, convocations, stats, partenariats.",
   },
   {
     title: "IA honnête",
-    body: "L'analyse Mistral porte sur vos séances enregistrées (highlight vidéo ou image + contexte). Ce n'est pas une détection automatique sur chaque geste en match.",
-  },
-  {
-    title: "Demain",
-    body: "Frame-by-frame avancé, repérage talent mondial automatisé, paiements tournois. Voir Vision et roadmap pour le détail.",
+    body: "L'analyse porte sur vos séances enregistrées (highlight vidéo ou image + contexte). Ce n'est pas une détection automatique sur chaque geste en match. Pas de métriques d'audience inventées.",
   },
 ] as const;
 
@@ -1425,7 +1425,7 @@ export const ALL_PILLARS = [
     title: "Convocations ProDay",
     subtitle: "RSVP & relances",
     description:
-      "Présent, absent, peut-être ou retard annoncé (< 10 min / ≥ 10 min). Avec relances et composition d'équipe.",
+      "Présent, absent, peut être ou retard annoncé (< 10 min / ≥ 10 min). Avec relances et composition d'équipe.",
   },
   {
     id: "carpool-pillar",
@@ -1446,7 +1446,7 @@ export const ALL_PILLARS = [
     title: "Boutique ProDay",
     subtitle: "Équipement officiel",
     description:
-      "Trépieds, t-shirts et maillots par univers. Précommande depuis l'app.",
+      "Trépieds, t shirts et maillots par univers. Précommande depuis l'app.",
   },
   {
     id: "feed-pillar",
@@ -1498,7 +1498,7 @@ export const SPONSOR_PRICING_INTRO = {
   subtitle:
     "Sponsor et partenaire : même profil sur ProDay. Clubs, joueurs et organisateurs sur votre territoire. Visibilité mesurable. Sans intermédiaire.",
   footnote:
-    "Tarifs HT. Mensuel ou annuel (−20 %). Résiliation à tout moment sur les formules en ligne.",
+    "Tarifs HT. Mensuel ou annuel (moins 20 %). Sans engagement : résiliation à tout moment sur les formules en ligne. Parrainage possible.",
 } as const;
 
 export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
@@ -1548,7 +1548,7 @@ export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
       "Offres illimitées",
       "Logo mis en avant (onglet Sponsors)",
       "Campagnes locales ciblées",
-      "Push géolocalisé local (bêta, opt-in joueurs)",
+      "Push géolocalisé local (bêta, opt in joueurs)",
       "Account manager email",
       "Priorité support sponsors",
     ],
@@ -1558,18 +1558,18 @@ export const SPONSOR_PRICING_TIERS: readonly SponsorPricingTierWeb[] = [
 export const SPONSOR_VALUE_PILLARS = [
   {
     icon: "people" as const,
-    title: "Clubs qualifiés",
-    body: "Accédez aux structures actives sur ProDay : convocations, Mercato, financement.",
+    title: "Opportunités ciblées",
+    body: "Identifiez clubs, équipes et profils pertinents sur le même réseau que le terrain.",
   },
   {
     icon: "star-four-points" as const,
-    title: "Visibilité mesurée",
-    body: "Impressions, clics et conversions suivis depuis votre tableau de bord sponsor.",
+    title: "Activations suivies",
+    body: "Gérez partenariats et activations ; mesurez visibilité et impact depuis le tableau de bord.",
   },
   {
     icon: "briefcase" as const,
-    title: "Offres & financement",
-    body: "Publiez équipement, visibilité ou soutien financier aux campagnes clubs.",
+    title: "Même écosystème",
+    body: "Pas un pôle « en plus » : une porte d'entrée vers clubs, joueurs et événements ProDay.",
   },
 ] as const;
 
@@ -1619,7 +1619,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Analyse vidéo & adversaires",
       "Préparation des matchs",
       "Entraînements IA (collectifs & individuels)",
-      "Convocations, présences, multi-équipes",
+      "Convocations, présences, multi équipes",
     ],
   },
   {
@@ -1659,7 +1659,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Gestion, convocations, présences",
       "Calendrier, communication, covoiturage",
       "Compétitions & classements",
-      "Multi-équipes & suivi des candidatures",
+      "multi équipes & suivi des candidatures",
       "Coachs : souscription individuelle Tactique IA",
     ],
   },
@@ -1746,7 +1746,7 @@ export const SUBSCRIPTION_PLANS_WEB = [
       "Logo mis en avant (onglet Sponsors)",
       "Campagnes locales ciblées",
       "Espace partenaire dans l'app",
-      "Push géolocalisé local (bêta, opt-in joueurs)",
+      "Push géolocalisé local (bêta, opt in joueurs)",
     ],
   },
 ] as const;
@@ -1851,27 +1851,32 @@ const faqPricing = (planId: WebSubscriptionPlanBase["id"]) => {
 export const FAQ_ITEMS = [
   {
     category: "general",
-    q: "ProDay remplace-t-il WhatsApp pour mon équipe ?",
+    q: "ProDay remplace t il WhatsApp pour mon équipe ?",
     a: "ProDay regroupe convocations, invitations de match entre clubs, Mercato et stats. Fini les groupes WhatsApp pour trouver un adversaire. La messagerie reste pour les échanges directs.",
   },
   {
     category: "general",
-    q: "L'app est-elle gratuite ?",
+    q: "L'app est elle gratuite ?",
     a: "Oui. Un compte gratuit couvre profil, réseau, calendrier et limites Mercato. Le Pass Joueur (3,99 €), les offres Club et Coach Premium débloquent les outils avancés. Le pôle Supporter reste 100 % gratuit.",
   },
   {
     category: "general",
-    q: "Quels sont les cinq pôles ?",
-    a: "Joueur, Club, Coach, Supporter et Sponsor. Agent, recruteur et organisateur sont des rôles intégrés : pas des pôles vitrine.",
+    q: "Quels sont les pôles ?",
+    a: "Joueur, Club, Coach, Parent, Supporter et Sponsor sont des portes d'entrée vers le même écosystème football, pas des produits séparés. Agent, recruteur et organisateur restent des rôles intégrés.",
+  },
+  {
+    category: "general",
+    q: "ProDay, c'est comme Notion ou Discord ?",
+    a: "Non. Notion organise de l'information ; Discord sert la communication communautaire. ProDay orchestre les objets métier du football (joueurs, matchs, convocations, stats, partenariats…) dans un même graphe.",
   },
   {
     category: "general",
     q: "Comment fonctionne la bêta ?",
-    a: "Inscrivez-vous sur la liste d'attente. La bêta a été décalée au 15 août 2026 en raison d'améliorations nécessaires au bon développement de l'application. Les accès iOS (TestFlight) ouvrent à cette date ; Android via APK selon validation.",
+    a: "Inscrivez vous sur la liste d'attente. La bêta a été décalée au 15 août 2026 en raison d'améliorations nécessaires au bon développement de l'application. Les accès iOS (TestFlight) ouvrent à cette date ; Android via APK selon validation.",
   },
   {
     category: "general",
-    q: "Puis-je changer de pôle après inscription ?",
+    q: "Puis je changer de pôle après inscription ?",
     a: "Oui, dans les paramètres du compte. Certaines fonctionnalités restent liées au rôle (ex. Tactique IA pour le coach ou offre Tout inclus).",
   },
   {
@@ -1881,7 +1886,7 @@ export const FAQ_ITEMS = [
   },
   {
     category: "general",
-    q: "L'app fonctionne-t-elle hors ligne ?",
+    q: "L'app fonctionne t elle hors ligne ?",
     a: "Certaines fonctions restent accessibles hors ligne (profil, stats enregistrées). Les mises à jour et la messagerie nécessitent une connexion.",
   },
   {
@@ -1896,6 +1901,11 @@ export const FAQ_ITEMS = [
   },
   {
     category: "tarifs",
+    q: "Y a t il un engagement ?",
+    a: "Non. Les abonnements ProDay sont sans engagement : tu peux résilier à tout moment selon les règles de l’App Store ou Google Play. Le sponsoring est possible via le pôle Sponsor (formules Découverte, Territorial, National Pro). Le parrainage est disponible sur chaque pôle : partage ton lien ou ton code.",
+  },
+  {
+    category: "tarifs",
     q: "Comment fonctionne le tarif mensuel vs annuel ?",
     a: `Le mensuel est le tarif de base. L'annuel facture 12 mois avec ${ANNUAL_DISCOUNT_PERCENT} % de remise. Exemple Pass Joueur : ${faqPricing("player_plus")}.`,
   },
@@ -1907,22 +1917,22 @@ export const FAQ_ITEMS = [
   {
     category: "tarifs",
     q: "Quels tarifs pour le Club ?",
-    a: `Club Amateur ${faqPricing("club_amateur")} : licenciés, convocations, calendrier, analyse de forme. Club Essentiel ${faqPricing("club_pro")} : compétitions, multi-équipes (coachs en abo individuel). Tout inclus ${faqPricing("club_premium")} : Sur devis · À partir de 3 € / adhérent — Tactique IA + vidéo avec votre matériel. Option ProDay Pro + Veo (sur devis) pour le pack caméra clé en main.`,
+    a: `Club Amateur ${faqPricing("club_amateur")} : licenciés, convocations, calendrier, analyse de forme. Club Essentiel ${faqPricing("club_pro")} : compétitions, multi équipes (coachs en abo individuel). Tout inclus ${faqPricing("club_premium")} : Sur devis · À partir de 3 € / adhérent · Tactique IA + vidéo avec votre matériel. Option ProDay Pro + Veo (sur devis) pour le pack caméra clé en main.`,
   },
   {
     category: "tarifs",
     q: "Quel tarif pour Coach Premium ?",
-    a: `Coach Premium : ${faqPricing("coach_pro")}. Tactique IA, assistant IA, analyse vidéo, préparation match et multi-équipes.`,
+    a: `Coach Premium : ${faqPricing("coach_pro")}. Tactique IA, assistant IA, analyse vidéo, préparation match et multi équipes.`,
   },
   {
     category: "tarifs",
-    q: "Le Supporter est-il payant ?",
-    a: "Non. La tribune est 100 % gratuite : live, suivis illimités, débats et moments.",
+    q: "Le Supporter est il payant ?",
+    a: "Non. Tribune gratuite : suivre clubs et joueurs, matchs, scores, compositions, stats, calendriers, favoris et actualités.",
   },
   {
     category: "tarifs",
     q: "Quel tarif pour Sponsor ?",
-    a: `Partenaire / Sponsor : ${faqPricing("sponsor_pro")}. Visibilité, contact clubs et joueurs, KPIs de campagne. Tiers Découverte, Territorial et National selon l'ambition.`,
+    a: `Partenaire / Sponsor : ${faqPricing("sponsor_pro")}. Opportunités, ciblage clubs/profils, activations et mesure d'impact. Tiers Découverte, Territorial et National selon l'ambition.`,
   },
   {
     category: "joueur",
@@ -1936,12 +1946,12 @@ export const FAQ_ITEMS = [
   },
   {
     category: "joueur",
-    q: "Les stats sont-elles automatiques ?",
+    q: "Les stats sont elles automatiques ?",
     a: "Oui, si votre équipe utilise ProDay pour les matchs : buts, passes et temps de jeu se mettent à jour après chaque rencontre.",
   },
   {
     category: "joueur",
-    q: "Qu'est-ce que la Visibilité ProDay ?",
+    q: "Qu'est ce que la Visibilité ProDay ?",
     a: "Score combinant profil, stats saison, candidatures et confiance. Plus il monte, plus vous êtes visible des clubs et recruteurs.",
   },
   {
@@ -1961,13 +1971,13 @@ export const FAQ_ITEMS = [
   },
   {
     category: "club",
-    q: "La caméra est-elle obligatoire ?",
+    q: "La caméra est elle obligatoire ?",
     a: "Non. Le module vidéo accepte smartphone, tablette, Veo, Trace, Pixellot, Spiideo ou toute caméra compatible. Le matériel n’est jamais un frein à l’adoption.",
   },
   {
     category: "club",
-    q: "Qu’est-ce que ProDay Pro + Veo ?",
-    a: "Option clé en main au-dessus de Tout inclus : caméra Veo (achat, location ou déjà possédée), trépied, installation, formation, cloud, découpage auto et bibliothèque. Si le club a déjà une Veo, ProDay se connecte simplement. Prix sur devis. La vidéo smartphone / tablette reste disponible sans ce pack.",
+    q: "Qu’est ce que ProDay Pro + Veo ?",
+    a: "Option clé en main au dessus de Tout inclus : caméra Veo (achat, location ou déjà possédée), trépied, installation, formation, cloud, découpage auto et bibliothèque. Si le club a déjà une Veo, ProDay se connecte simplement. Prix sur devis. La vidéo smartphone / tablette reste disponible sans ce pack.",
   },
   {
     category: "club",
@@ -1976,8 +1986,8 @@ export const FAQ_ITEMS = [
   },
   {
     category: "coach",
-    q: "Puis-je proposer un match pour mon équipe ?",
-    a: "Oui, si vous êtes autorisé par le club. Sélectionnez votre équipe, le club recherché, la catégorie, la date et le lieu. L’invitation suit le même circuit d’acceptation / contre-proposition.",
+    q: "Puis je proposer un match pour mon équipe ?",
+    a: "Oui, si vous êtes autorisé par le club. Sélectionnez votre équipe, le club recherché, la catégorie, la date et le lieu. L’invitation suit le même circuit d’acceptation / contre proposition.",
   },
   {
     category: "coach",
@@ -1986,7 +1996,7 @@ export const FAQ_ITEMS = [
   },
   {
     category: "coach",
-    q: "Qu'est-ce que Tactique IA ?",
+    q: "Qu'est ce que Tactique IA ?",
     a: "Tableau tactique, formations, banc, disponibilité match, assistant IA, entraînements et analyse vidéo smartphone : le banc de touche digital.",
   },
   {
@@ -1997,12 +2007,12 @@ export const FAQ_ITEMS = [
   {
     category: "supporter",
     q: "Quelles fonctionnalités pour le supporter ?",
-    a: "Suivez vos clubs, scores live, fil communautaire et moments. Tout est gratuit, sans paywall.",
+    a: "Suivre clubs et joueurs, matchs ProDay et externes, scores, compositions, statistiques, calendriers, favoris, actualités et expérience match. Gratuit, sans paywall · porte d'entrée vers le même écosystème.",
   },
   {
     category: "sponsor",
     q: "Comment sponsoriser via ProDay ?",
-    a: "Choisissez un tier (Découverte, Territorial, National), ciblez clubs et joueurs actifs, suivez les KPIs. Contact organisateurs et vitrine partenaire vérifiée.",
+    a: "Identifiez clubs, équipes et profils pertinents, publiez des offres, suivez les activations et mesurez visibilité et impact (tiers Découverte, Territorial, National). Vitrine partenaire vérifiée.",
   },
   {
     category: "roles",
@@ -2026,32 +2036,12 @@ export const FAQ_CATEGORIES: { id: FaqCategoryId | "all"; label: string }[] = [
 ];
 
 
-export const TESTIMONIALS = [
-  {
-    quote:
-      "Enfin une app qui regroupe convocations, matchs et recrutement. Notre U17 ne jongle plus entre cinq groupes.",
-    author: "Marc D.",
-    role: "Coach",
-  },
-  {
-    quote:
-      "La Visibilité m'a poussée à compléter mon profil. Trois clubs m'ont contactée après mes candidatures Mercato F.",
-    author: "Léa M.",
-    role: "Joueuse U19, ProDay Woman",
-  },
-  {
-    quote:
-      "La vérification diplôme rassure les parents. On sait qui peut vraiment contacter nos joueuses.",
-    author: "Sophie R.",
-    role: "Responsable club féminin",
-  },
-  {
-    quote:
-      "Arène pour notre tournoi local : inscriptions et palmarès sur l'app, zéro tableur.",
-    author: "Karim B.",
-    role: "Organisateur tournoi",
-  },
-] as const;
+/** Pas de témoignages fictifs tant qu'aucun cas client réel n'est validé. */
+export const TESTIMONIALS: readonly {
+  quote: string;
+  author: string;
+  role: string;
+}[] = [];
 
 export const ROADMAP_ITEMS = [
   {
@@ -2090,7 +2080,7 @@ export const ROADMAP_ITEMS = [
     phase: "À venir",
     status: "pending" as const,
     items: [
-      "Analyse vidéo frame-by-frame avancée",
+      "Analyse vidéo image par image avancée",
       "Détection talent mondiale automatique",
       "Notifications géo agents",
       "Paiements tournois",
@@ -2148,7 +2138,7 @@ export const QUIZ_QUESTIONS = [
   },
   {
     id: "q4",
-    question: "Le week-end, tu passes ton temps plutôt à…",
+    question: "Le weekend, tu passes ton temps plutôt à…",
     options: [
       { label: "M'entraîner, jouer et analyser mes performances", role: "player" },
       { label: "Préparer mes séances et suivre mes joueurs", role: "coach" },
@@ -2197,14 +2187,14 @@ export const QUIZ_RESULTS: Record<
     title: "Profil Club",
     description: "Cœur de ProDay : équipes, compétitions, convocations et covoiturage.",
     thought: "Un club, c'est une famille, une vision, un projet. Construire quelque chose de durable demande de la rigueur et de l'organisation. Ton ambition mérite les meilleurs outils pour grandir.",
-    href: "/pro-club",
+    href: "/pro-club#app",
     cta: "Voir le Pôle Club",
   },
   organizer: {
     title: "Profil Organisateur",
     description: "Rôle intégré au Club : tournois, détections et stages.",
     thought: "Créer des moments inoubliables, rassembler la communauté autour d'une passion commune. C'est ça, la magie de l'organisation. ProDay simplifie la logistique pour que tu puisses te concentrer sur l'essentiel.",
-    href: "/pro-club",
+    href: "/pro-club#app",
     cta: "Voir le Pôle Club",
   },
   woman: {
@@ -2216,9 +2206,9 @@ export const QUIZ_RESULTS: Record<
   },
   parent: {
     title: "Pro Day Parent",
-    description: "Pôle Parent — supervision, contacts approuvés et limites de temps.",
+    description: "Pôle Parent · supervision, contacts approuvés et limites de temps.",
     thought: "Voir son enfant s'épanouir sur le terrain, c'est une fierté immense. L'accompagner dans son parcours demande du temps, de l'écoute et les bons outils. ProDay facilite ce rôle de guide.",
-    href: "/parent",
+    href: "/parent#app",
     cta: "Ouvrir le Pôle Parent",
   },
   agent: {
@@ -2251,7 +2241,7 @@ export const SHOP_HIGHLIGHTS = [
     description: "Filmez matchs et séquences pour votre CV. Sac de transport inclus.",
   },
   {
-    name: "T-shirt officiel",
+    name: "T shirt officiel",
     priceEur: 29.9,
     description: "Textile logo brodé. Par univers Man, Woman ou Pro.",
   },

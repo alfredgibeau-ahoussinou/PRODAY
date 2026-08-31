@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -6,12 +6,13 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { CoachText } from './coachPortalUi';
 import { CoachPlayerAiPanel } from './CoachPlayerAiPanel';
 import { CoachOptionalScoresBlock } from './CoachOptionalScoreInput';
-import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { spacing } from '../../theme/designTokens';
 import { coachEvaluationsService } from '../../services/coachEvaluations.service';
@@ -24,6 +25,7 @@ import {
   normalizeCoachRatings,
   type CoachRatingField,
 } from '../../utils/coachEvaluationRatings';
+import { coachChrome } from '../../features/coach/theme/coachDesignSystem';
 
 type Props = {
   visible: boolean;
@@ -48,7 +50,9 @@ export function CoachPlayerNoteSheet({
   onSaved,
 }: Props) {
   const { tokens } = useCoachTheme();
-  const styles = useCoachThemedStyles(createStyles);
+  const { width } = useWindowDimensions();
+  const sheetMode = coachChrome.modalIsSheet(width);
+  const styles = useMemo(() => createStyles(tokens, sheetMode), [tokens, sheetMode]);
   const [note, setNote] = useState('');
   const [scores, setScores] = useState<Partial<Record<CoachRatingField, number | undefined>>>({});
   const [saving, setSaving] = useState(false);
@@ -154,19 +158,25 @@ export function CoachPlayerNoteSheet({
   );
 }
 
-function createStyles(tokens: CoachThemeTokens) {
+function createStyles(tokens: CoachThemeTokens, sheetMode: boolean) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.65)',
-      justifyContent: 'flex-end',
+      justifyContent: sheetMode ? 'flex-end' : 'center',
+      alignItems: sheetMode ? undefined : 'center',
+      paddingHorizontal: sheetMode ? 0 : spacing.xl,
     },
     sheet: {
       backgroundColor: tokens.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      borderTopLeftRadius: sheetMode ? 20 : 16,
+      borderTopRightRadius: sheetMode ? 20 : 16,
+      borderBottomLeftRadius: sheetMode ? 0 : 16,
+      borderBottomRightRadius: sheetMode ? 0 : 16,
       padding: spacing.lg,
-      maxHeight: '88%',
+      maxHeight: sheetMode ? '88%' : '80%',
+      width: '100%',
+      maxWidth: sheetMode ? undefined : 520,
       gap: spacing.sm,
     },
     title: { fontWeight: '800', color: tokens.foreground },

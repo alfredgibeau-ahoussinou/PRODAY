@@ -42,6 +42,8 @@ export interface ProDayLiveMapProps {
   style?: ViewStyle;
   /** Contrôles flottants (rayon, localisation) */
   overlay?: React.ReactNode;
+  /** Accent personnalisé (ex. thème joueur). */
+  accent?: string;
 }
 
 function WebMapFallback({
@@ -116,8 +118,10 @@ export const ProDayLiveMap: React.FC<ProDayLiveMapProps> = ({
   onMarkerPress,
   style,
   overlay,
+  accent: accentProp,
 }) => {
   const { colors } = useAppTheme();
+  const accent = accentProp ?? colors.accent;
   const resolvedCenter = mapCenter(center);
   const mapRegion = useMemo(
     () => regionForRadius(resolvedCenter, radiusKm),
@@ -150,29 +154,34 @@ export const ProDayLiveMap: React.FC<ProDayLiveMapProps> = ({
           showsCompass={false}
           toolbarEnabled={false}
           loadingEnabled
-          loadingIndicatorColor={colors.accent}
+          loadingIndicatorColor={accent}
           mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
         >
           <NativeCircle
             center={resolvedCenter}
             radius={radiusKm * 1000}
-            fillColor={`${colors.accent}18`}
-            strokeColor={colors.accent}
+            fillColor={`${accent}18`}
+            strokeColor={accent}
             strokeWidth={1.5}
           />
-          {markers.map((marker) => (
-            <NativeMarker
-              key={marker.id}
-              coordinate={{
-                latitude: marker.location.latitude,
-                longitude: marker.location.longitude,
-              }}
-              onPress={() => onMarkerPress?.(marker.id)}
-              tracksViewChanges={false}
-            >
-              <GeoMapPin kind={marker.kind} accent={colors.accent} />
-            </NativeMarker>
-          ))}
+          {markers.map((marker) => {
+            const lat = marker.location?.latitude;
+            const lng = marker.location?.longitude;
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+            return (
+              <NativeMarker
+                key={marker.id}
+                coordinate={{
+                  latitude: lat,
+                  longitude: lng,
+                }}
+                onPress={() => onMarkerPress?.(marker.id)}
+                tracksViewChanges={false}
+              >
+                <GeoMapPin kind={marker.kind} accent={accent} />
+              </NativeMarker>
+            );
+          })}
         </NativeMapView>
       </NativeMapErrorBoundary>
     ) : (

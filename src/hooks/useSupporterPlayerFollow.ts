@@ -6,7 +6,7 @@ import { useFollows } from './useFollows';
 import { useAppTheme } from '../context/ProductLineContext';
 
 /**
- * Suivre un joueur : `follows` pour la tribune supporter,
+ * Suivre un joueur : `follows` pour le pôle supporter,
  * `favorites` pour le reste (scouting / recrutement).
  */
 export function useSupporterPlayerFollow(viewer: User | null | undefined) {
@@ -20,27 +20,20 @@ export function useSupporterPlayerFollow(viewer: User | null | undefined) {
       tribune
         ? follows.isFollowing('player', playerUid)
         : favorites.isFavorite(playerUid),
-    [tribune, follows, favorites]
+    [tribune, follows, favorites],
   );
 
   const togglePlayer = useCallback(
     async (player: Pick<User, 'uid' | 'display_name' | 'city' | 'profile'>) => {
       if (!viewer?.uid) return false;
       if (tribune) {
-        const meta = [
-          player.profile?.position,
-          player.city,
-        ]
-          .filter(Boolean)
-          .join(' · ');
-        const label = meta
-          ? `${player.display_name} · ${meta}`
-          : player.display_name;
+        const meta = [player.profile?.position, player.city].filter(Boolean).join(' · ');
+        const label = meta ? `${player.display_name} · ${meta}` : player.display_name;
         return follows.toggle('player', player.uid, label);
       }
       return favorites.toggle(player.uid, 'player');
     },
-    [viewer?.uid, tribune, follows, favorites]
+    [viewer?.uid, tribune, follows, favorites],
   );
 
   return {

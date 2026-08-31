@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   Apple,
+  ArrowRight,
   CheckCircle2,
   Clock,
   ExternalLink,
@@ -9,16 +11,20 @@ import {
   RefreshCw,
   Settings,
   Shield,
+  Smartphone,
 } from "lucide-react";
-import { BetaPageFrame } from "@/components/beta/BetaSiteShell";
+import { BetaPageFrame, SectionKicker } from "@/components/beta/BetaSiteShell";
 import { BetaIosLaunchBanner } from "@/components/beta/BetaIosLaunchBanner";
 import { BETA_APK_URL, BETA_APP_VERSION } from "@/lib/betaContent";
+import { BETA_ROLE_LABELS } from "@/lib/betaWelcomeEmail";
 import {
   IOS_BETA_LAUNCH_LABEL,
   getTestFlightUrl,
   isTestFlightAvailable,
 } from "@/lib/betaIosLaunch";
 import { ROUTES } from "@/lib/routes";
+
+const BETA_POLE_LABELS = Object.values(BETA_ROLE_LABELS);
 
 function StepList({ steps }: { steps: string[] }) {
   return (
@@ -77,6 +83,7 @@ function TroubleshootBlock({ title, items }: { title: string; items: string[] })
 }
 
 function PlatformSection({
+  id,
   platform,
   icon,
   title,
@@ -84,6 +91,7 @@ function PlatformSection({
   available,
   children,
 }: {
+  id: string;
   platform: "ios" | "android";
   icon: ReactNode;
   title: string;
@@ -93,7 +101,8 @@ function PlatformSection({
 }) {
   return (
     <section
-      className={`border p-8 ${
+      id={id}
+      className={`scroll-mt-28 border p-8 ${
         platform === "ios"
           ? "border-white/10 bg-transparent"
           : "border-[var(--proday-accent)]/25 bg-[var(--proday-accent-muted)]"
@@ -127,6 +136,92 @@ function PlatformSection({
   );
 }
 
+function PlatformQuickPick({
+  apkUrl,
+  testflightUrl,
+  testflightAvailable,
+}: {
+  apkUrl: string;
+  testflightUrl: string;
+  testflightAvailable: boolean;
+}) {
+  return (
+    <div className="mb-8 grid gap-4 sm:grid-cols-2">
+      <div className="border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] p-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40">
+            <Play size={18} className="text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">Android · APK</p>
+            <p className="mt-0.5 text-xs text-white/50">
+              {apkUrl ? `v${BETA_APP_VERSION} · téléchargement direct` : "Lien bientôt publié"}
+            </p>
+          </div>
+        </div>
+        {apkUrl ? (
+          <a
+            href={apkUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-accent-gradient px-4 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white transition hover:brightness-110"
+          >
+            Télécharger l&apos;APK
+            <ExternalLink size={12} />
+          </a>
+        ) : (
+          <p className="mt-4 text-sm text-white/45">Voir les étapes ci dessous.</p>
+        )}
+        <a
+          href="#android"
+          className="mt-3 inline-flex items-center gap-1 text-xs text-white/40 transition hover:text-white/60"
+        >
+          Guide pas à pas
+          <ArrowRight size={12} />
+        </a>
+      </div>
+
+      <div className="border border-white/10 bg-transparent p-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40">
+            <Apple size={18} className="text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">iOS · TestFlight</p>
+            <p className="mt-0.5 text-xs text-white/50">
+              {testflightAvailable
+                ? "Lien prêt · ouvrir sur iPhone"
+                : `Ouverture ${IOS_BETA_LAUNCH_LABEL}`}
+            </p>
+          </div>
+        </div>
+        {testflightAvailable && testflightUrl ? (
+          <a
+            href={testflightUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-accent-gradient px-4 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white transition hover:brightness-110"
+          >
+            Ouvrir TestFlight
+            <ExternalLink size={12} />
+          </a>
+        ) : (
+          <p className="mt-4 text-sm text-white/45">
+            Lien envoyé par email à l&apos;ouverture. Étapes ci dessous.
+          </p>
+        )}
+        <a
+          href="#ios"
+          className="mt-3 inline-flex items-center gap-1 text-xs text-white/40 transition hover:text-white/60"
+        >
+          Guide pas à pas
+          <ArrowRight size={12} />
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export function BetaInstallerContent() {
   const apkUrl = BETA_APK_URL;
   const testflightUrl = getTestFlightUrl();
@@ -137,46 +232,75 @@ export function BetaInstallerContent() {
       pathname={ROUTES.betaInstaller}
       kicker="Installation"
       title="Installer ProDay sur votre téléphone"
-      description="Guides pas à pas pour Android (APK) et iOS (TestFlight), avec dépannage des problèmes courants."
+      description="Choisissez Android (APK) ou iOS (TestFlight), suivez les étapes, puis explorez les six portes d’entrée · dont Parent et Supporter."
     >
       <BetaIosLaunchBanner />
+
+      <PlatformQuickPick
+        apkUrl={apkUrl}
+        testflightUrl={testflightUrl}
+        testflightAvailable={testflightAvailable}
+      />
+
       <p className="mb-8 max-w-3xl text-sm leading-relaxed text-white/65">
         Les builds mobiles sont distribués en dehors des stores publics pendant la bêta. Sur Android,
-        téléchargez l&apos;APK directement depuis cette page. Sur iOS, la bêta TestFlight a été décalée
-        au {IOS_BETA_LAUNCH_LABEL} (améliorations nécessaires). Lien envoyé par email à tous les inscrits.
+        téléchargez l&apos;APK directement depuis cette page. Sur iOS,{" "}
+        {testflightAvailable
+          ? "ouvrez le lien TestFlight ci dessous sur votre iPhone (bouton ou URL complète)."
+          : `la bêta TestFlight a été décalée au ${IOS_BETA_LAUNCH_LABEL} (améliorations nécessaires). Lien envoyé par email à tous les inscrits.`}{" "}
+        Une fois connecté, testez votre pôle (Joueur, Club, Coach, Supporter ou Sponsor) et les modules
+        transverses.
       </p>
 
       {apkUrl ? (
         <div className="mb-8 border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] p-6">
           <p className="text-sm font-semibold text-white">APK Android prêt à télécharger</p>
           <p className="mt-1 text-sm text-white/55">
-            Téléchargez directement depuis cette page. Aucun email requis.
+            Téléchargez directement depuis cette page. Aucun email requis. Build bêta · v
+            {BETA_APP_VERSION}.
           </p>
           <DownloadButton href={apkUrl} label="Télécharger l'APK Android" />
         </div>
-      ) : null}
+      ) : (
+        <div className="mb-8 border border-dashed border-white/15 bg-transparent p-6">
+          <p className="text-sm font-semibold text-white">APK Android bientôt disponible</p>
+          <p className="mt-1 text-sm text-white/45">
+            Le lien de téléchargement n&apos;est pas encore publié sur cette page. Dès qu&apos;il
+            l&apos;est, le bouton apparaîtra ici. En attendant, consultez les étapes ci dessous ou
+            l&apos;onglet Aide.
+          </p>
+        </div>
+      )}
 
       <div className="space-y-8">
         <PlatformSection
+          id="android"
           platform="android"
           icon={<Play size={22} className="text-white" />}
           title="Android. APK"
           subtitle="Téléchargement direct depuis cette page"
-          available
+          available={Boolean(apkUrl)}
         >
           <StepList
             steps={[
               "Sur votre téléphone Android, ouvrez Réglages → Sécurité (ou Applications) et activez « Installer des applications inconnues » pour votre navigateur ou gestionnaire de fichiers.",
               "Depuis votre téléphone Android, ouvrez cette page Installer dans votre espace bêta et appuyez sur « Télécharger l'APK Android ». Attendez la fin du téléchargement (fichier .apk).",
               "Ouvrez le fichier téléchargé depuis la barre de notifications ou l'application Fichiers, puis appuyez sur « Installer ».",
-              "Une fois installée, ouvrez ProDay, connectez-vous avec le même email que votre inscription bêta et acceptez les permissions demandées (notifications, stockage si nécessaire).",
+              "Une fois installée, ouvrez ProDay, connectez vous avec le même email que votre inscription bêta et acceptez les permissions demandées (notifications, stockage si nécessaire).",
+              "Choisissez votre pôle (Joueur, Club, Coach, Supporter ou Sponsor) et explorez les écrans proposés · signalez bugs et idées depuis l'onglet Aide.",
             ]}
           />
 
           <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--proday-accent-bright)]">
             Build bêta · v{BETA_APP_VERSION}
           </p>
-          <DownloadButton href={apkUrl} label="Télécharger l'APK Android" />
+          {apkUrl ? (
+            <DownloadButton href={apkUrl} label="Télécharger l'APK Android" />
+          ) : (
+            <p className="mt-6 border border-dashed border-white/15 px-4 py-3 text-sm text-white/45">
+              Le bouton de téléchargement apparaîtra ici dès que l&apos;APK sera publié.
+            </p>
+          )}
 
           <div className="mt-8 border-t border-white/10 pt-6">
             <div className="flex items-center gap-2">
@@ -196,7 +320,7 @@ export function BetaInstallerContent() {
                 items={[
                   "Vérifiez que le téléchargement est complet (pas interrompu).",
                   "Réessayez depuis Chrome ou Firefox avec les sources inconnues activées pour ce navigateur.",
-                  "Assurez-vous d'avoir au moins 200 Mo d'espace libre.",
+                  "Assurez vous d'avoir au moins 200 Mo d'espace libre.",
                 ]}
               />
               <TroubleshootBlock
@@ -211,7 +335,7 @@ export function BetaInstallerContent() {
                 title="Mise à jour de l'APK"
                 items={[
                   "Téléchargez la nouvelle version depuis cet onglet Installer.",
-                  "Installez par-dessus l'ancienne version. Vos données de connexion sont conservées.",
+                  "Installez par dessus l'ancienne version. Vos données de connexion sont conservées.",
                 ]}
               />
             </div>
@@ -219,24 +343,43 @@ export function BetaInstallerContent() {
         </PlatformSection>
 
         <PlatformSection
+          id="ios"
           platform="ios"
           icon={<Apple size={22} className="text-white" />}
           title="iOS. TestFlight"
-          subtitle="Distribution Apple officielle pour beta-testeurs"
+          subtitle="Distribution Apple officielle pour beta testeurs"
           available={testflightAvailable}
         >
           <StepList
             steps={[
-              "Recevez l'email d'invitation Apple « ProDay vous invite à tester… » sur l'adresse utilisée lors de l'inscription bêta.",
-              "Sur votre iPhone ou iPad, installez l'application TestFlight depuis l'App Store (gratuit, éditeur Apple).",
-              "Ouvrez l'email d'invitation sur votre appareil iOS et appuyez sur « View in TestFlight » ou « Commencer les tests ».",
+              testflightAvailable
+                ? "Sur votre iPhone, ouvrez le bouton « Ouvrir TestFlight » ci dessous (ou le lien complet), ou utilisez l'email d'invitation Apple reçu sur l'adresse de votre inscription bêta."
+                : "Recevez l'email d'invitation Apple « ProDay vous invite à tester… » sur l'adresse utilisée lors de l'inscription bêta.",
+              "Sur votre iPhone ou iPad, installez l'application TestFlight depuis l'App Store (gratuit, éditeur Apple) si ce n'est pas déjà fait.",
+              testflightAvailable
+                ? "Ouvrez le lien sur l'appareil iOS (Safari ou Messages) · pas dans « Redeem » / « Utiliser un code » de TestFlight. Acceptez l'invitation ProDay."
+                : "Ouvrez l'email d'invitation sur votre appareil iOS et appuyez sur « View in TestFlight » ou « Commencer les tests ».",
               "Dans TestFlight, acceptez les conditions, puis appuyez sur « Installer » pour ProDay. L'icône apparaît sur votre écran d'accueil.",
-              "Lancez ProDay, connectez-vous avec votre email bêta et testez l'app. Les mises à jour bêta arrivent automatiquement via TestFlight.",
+              "Lancez ProDay, connectez vous avec votre email bêta, choisissez votre pôle (dont Supporter) et testez. Les mises à jour bêta arrivent automatiquement via TestFlight.",
             ]}
           />
 
-          {testflightAvailable ? (
-            <DownloadButton href={testflightUrl} label="Ouvrir TestFlight" />
+          {testflightAvailable && testflightUrl ? (
+            <>
+              <DownloadButton href={testflightUrl} label="Ouvrir TestFlight" />
+              <p className="mt-3 text-sm leading-relaxed text-white/45">
+                À ouvrir sur l&apos;iPhone (Safari ou Messages), pas à coller dans
+                « Redeem » / « Utiliser un code » de TestFlight. Lien :{" "}
+                <a
+                  href={testflightUrl}
+                  className="break-all text-white/80 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {testflightUrl}
+                </a>
+              </p>
+            </>
           ) : (
             <TestFlightPendingNotice />
           )}
@@ -280,6 +423,46 @@ export function BetaInstallerContent() {
             </div>
           </div>
         </PlatformSection>
+      </div>
+
+      <div className="mt-8 border border-white/10 bg-transparent p-8">
+        <div className="flex items-start gap-3">
+          <Smartphone size={22} className="mt-0.5 shrink-0 text-[var(--proday-accent)]" />
+          <div>
+            <SectionKicker>Après l&apos;installation</SectionKicker>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65">
+              ProDay regroupe six portes d’entrée dans la même app. Connectez-vous avec votre email bêta, puis
+              explorez celui qui correspond à votre profil · le pôle Supporter (matchs, tribune, live)
+              comme les autres.
+            </p>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {BETA_POLE_LABELS.map((label) => (
+                <li
+                  key={label}
+                  className="border border-white/10 bg-black/40 px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70"
+                >
+                  {label}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                href={ROUTES.betaProgramme}
+                className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-[var(--proday-accent)] transition hover:text-[var(--proday-accent-bright)]"
+              >
+                Voir le programme &amp; les pôles
+                <ArrowRight size={14} />
+              </Link>
+              <Link
+                href={ROUTES.betaAide}
+                className="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-white/55 transition hover:text-white/80"
+              >
+                Aide &amp; retours
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 border border-[var(--proday-accent)]/30 bg-[var(--proday-accent-muted)] p-6">

@@ -9,6 +9,9 @@ export const fontFamily = {
   /** Display marketing uniquement (pas les titres d’écran UI). */
   display: 'Syne_700Bold',
   displayBold: 'Syne_800ExtraBold',
+  /** Wordmark / identité officielle (Sora → fallback Syne). */
+  brand: 'Sora_700Bold',
+  brandSemi: 'Sora_600SemiBold',
 } as const;
 
 /**
@@ -52,9 +55,9 @@ export const textVariants = {
     lineHeight: 18,
   },
   brand: {
-    fontFamily: fontFamily.displayBold,
+    fontFamily: fontFamily.brand,
     fontSize: 18,
-    letterSpacing: -0.3,
+    letterSpacing: 2.4,
   },
 } as const;
 

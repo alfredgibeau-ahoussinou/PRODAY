@@ -1,70 +1,51 @@
-import React, { useEffect, useRef } from 'react';
-import { StyleSheet } from 'react-native';
-import Animated, {
-  SlideInLeft,
-  SlideInRight,
-  SlideOutLeft,
-  SlideOutRight,
-} from 'react-native-reanimated';
-import { motion } from '../../theme/motion';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { RouteSwitch } from '../../motion/primitives/RouteSwitch';
+import { useReducedMotion } from '../../motion';
 
 interface AnimatedRouteContentProps {
-  /** Clé de route active (ex. onglet ou segment). */
   routeKey: string;
-  /** Ordre des routes pour la direction du slide. */
   routeOrder: string[];
   children: React.ReactNode;
+  /** Défaut `nav` (shells / segments). */
+  context?: 'tab' | 'nav' | 'live';
+  /** false = hauteur contenu (ScrollView / segments). */
+  fill?: boolean;
 }
 
 /**
- * Transition directionnelle entre routes (slide + spring), générique hors MainTabs.
+ * Transition directionnelle entre routes — RouteSwitch fiable.
  */
 export const AnimatedRouteContent: React.FC<AnimatedRouteContentProps> = ({
   routeKey,
   routeOrder,
   children,
+  context = 'nav',
+  fill = true,
 }) => {
-  const hasMounted = useRef(false);
-  const prevIndex = useRef(routeOrder.indexOf(routeKey));
-  const currentIndex = routeOrder.indexOf(routeKey);
-  const direction = currentIndex >= prevIndex.current ? 1 : -1;
+  const reduced = useReducedMotion();
 
-  useEffect(() => {
-    prevIndex.current = currentIndex >= 0 ? currentIndex : prevIndex.current;
-    hasMounted.current = true;
-  }, [currentIndex]);
-
-  const entering = hasMounted.current
-    ? direction > 0
-      ? SlideInRight.springify()
-          .damping(18)
-          .stiffness(165)
-          .mass(0.85)
-          .duration(motion.duration.normal)
-      : SlideInLeft.springify()
-          .damping(18)
-          .stiffness(165)
-          .mass(0.85)
-          .duration(motion.duration.normal)
-    : undefined;
-
-  const exiting =
-    direction > 0
-      ? SlideOutLeft.duration(motion.duration.fast).easing(motion.easing.in)
-      : SlideOutRight.duration(motion.duration.fast).easing(motion.easing.in);
+  if (reduced) {
+    return (
+      <View key={routeKey} style={fill ? styles.fill : styles.auto}>
+        {children}
+      </View>
+    );
+  }
 
   return (
-    <Animated.View
-      key={routeKey}
-      style={styles.fill}
-      entering={entering}
-      exiting={hasMounted.current ? exiting : undefined}
+    <RouteSwitch
+      routeKey={routeKey}
+      routeOrder={routeOrder}
+      context={context}
+      fill={fill}
     >
       {children}
-    </Animated.View>
+    </RouteSwitch>
   );
 };
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  auto: { alignSelf: 'stretch' },
 });

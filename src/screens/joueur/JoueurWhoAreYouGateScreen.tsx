@@ -20,7 +20,7 @@ import { BirthDateFields, birthPartsToIso } from '../../components/player/BirthD
 import { JoueurWorldScene } from '../../features/joueur/JoueurWorldScene';
 import { JoueurActionRow, JoueurIdentityProvider } from '../../components/player/joueurPortalUi';
 import { spacing } from '../../theme/designTokens';
-import { playJoueurSfxFireAndForget, joueurGameConfirm } from '../../features/joueur/joueurSfx';
+import { joueurGameConfirm } from '../../features/joueur/joueurSfx';
 
 type GenderChoice = Extract<Gender, 'men' | 'women'>;
 
@@ -88,7 +88,6 @@ export function JoueurWhoAreYouGateScreen({ uid, onComplete }: Props) {
         // gate locale suffit
       }
       onComplete(gate);
-      playJoueurSfxFireAndForget('levelup');
       joueurGameConfirm();
     } catch (e) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d’enregistrer.');

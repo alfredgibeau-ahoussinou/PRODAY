@@ -6,7 +6,8 @@
 export type ClubTournamentFormat =
   | 'pools_only'
   | 'pools_then_knockout'
-  | 'round_robin';
+  | 'round_robin'
+  | 'direct_elimination';
 
 export interface ClubTournamentSetupInput {
   name: string;

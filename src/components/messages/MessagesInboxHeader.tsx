@@ -3,6 +3,7 @@ import { View, ScrollView, Text, StyleSheet, Platform } from 'react-native';
 import type { MessagesThreadFilter } from '../../content/messagesChapters';
 import {
   getCoachMessagesThreadFilters,
+  getJoueurMessagesThreadFilters,
   getMessagesThreadFilters,
 } from '../../i18n/localizedChapters';
 import { SearchBar } from '../ui/SearchBar';
@@ -13,6 +14,8 @@ import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 
 export interface MessagesInboxHeaderProps {
   search: string;
@@ -20,8 +23,9 @@ export interface MessagesInboxHeaderProps {
   threadFilter: MessagesThreadFilter;
   onThreadFilterChange: (value: MessagesThreadFilter) => void;
   resultCount: number;
+  unreadCount?: number;
   loading: boolean;
-  variant?: 'default' | 'coach';
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
@@ -30,23 +34,37 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
   threadFilter,
   onThreadFilterChange,
   resultCount,
+  unreadCount = 0,
   loading,
   variant,
 }) => {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
   const coachTokens = useCoachTokens();
+  const joueurTheme = useJoueurTheme();
   const threadFilters = useMemo(
-    () => (coach ? getCoachMessagesThreadFilters(t) : getMessagesThreadFilters(t)),
-    [coach, t],
+    () =>
+      coach
+        ? getCoachMessagesThreadFilters(t)
+        : joueur
+          ? getJoueurMessagesThreadFilters(t)
+          : getMessagesThreadFilters(t),
+    [coach, joueur, t],
   );
-  const styles = useMemo(() => createStyles(colors, coach, coachTokens), [colors, coach, coachTokens]);
+  const styles = useMemo(
+    () => createStyles(colors, coach, joueur, coachTokens, joueurTheme),
+    [colors, coach, joueur, coachTokens, joueurTheme],
+  );
 
   const threadCountLabel = useMemo(() => {
     if (loading) return t('common.loading');
+    if (unreadCount > 0) {
+      return t('messages.inbox.threadCountWithUnread', { n: resultCount, u: unreadCount });
+    }
     return t('messages.inbox.threadCount', { n: resultCount });
-  }, [loading, resultCount, t]);
+  }, [loading, resultCount, unreadCount, t]);
 
   return (
     <View style={styles.block}>
@@ -63,7 +81,14 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                 text: coachTokens.foreground,
                 textMuted: coachTokens.muted,
               }
-            : undefined
+            : joueur
+              ? {
+                  surface: JOUEUR_SURFACES.listRow,
+                  border: joueurTheme.border,
+                  text: joueurTheme.ink,
+                  textMuted: joueurTheme.inkMuted,
+                }
+              : undefined
         }
       />
 
@@ -83,17 +108,25 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                   backgroundColor: on
                     ? coach
                       ? coachTokens.accent
-                      : colors.accent
+                      : joueur
+                        ? joueurTheme.accent
+                        : colors.accent
                     : coach
                       ? coachTokens.surface
-                      : colors.surface,
+                      : joueur
+                        ? JOUEUR_SURFACES.chip
+                        : colors.surface,
                   borderColor: on
                     ? coach
                       ? coachTokens.accent
-                      : colors.accent
+                      : joueur
+                        ? joueurTheme.accent
+                        : colors.accent
                     : coach
                       ? 'transparent'
-                      : colors.border,
+                      : joueur
+                        ? joueurTheme.border
+                        : colors.border,
                 },
               ]}
               onPress={() => onThreadFilterChange(opt.id)}
@@ -104,12 +137,14 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                   styles.chipText,
                   {
                     color: on
-                      ? coach
+                      ? coach || joueur
                         ? '#fff'
                         : colors.brandInverse
                       : coach
                         ? coachTokens.muted
-                        : colors.textSecondary,
+                        : joueur
+                          ? joueurTheme.inkMuted
+                          : colors.textSecondary,
                   },
                 ]}
               >
@@ -133,7 +168,9 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
 function createStyles(
   c: { text: string; textMuted: string },
   coach: boolean,
+  joueur: boolean,
   coachTokens: CoachThemeTokens,
+  joueurTheme: ReturnType<typeof useJoueurTheme>,
 ) {
   return StyleSheet.create({
     block: { gap: spacing.md, marginBottom: spacing.sm },
@@ -147,7 +184,7 @@ function createStyles(
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: radius.pill,
-      borderWidth: coach ? 0 : StyleSheet.hairlineWidth,
+      borderWidth: coach || joueur ? StyleSheet.hairlineWidth : StyleSheet.hairlineWidth,
       minHeight: 34,
       justifyContent: 'center',
     },
@@ -168,13 +205,13 @@ function createStyles(
       fontSize: 17,
       fontWeight: '800',
       letterSpacing: -0.2,
-      color: coach ? coachTokens.foreground : c.text,
+      color: coach ? coachTokens.foreground : joueur ? joueurTheme.ink : c.text,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     sectionCount: {
       fontFamily: fontFamily.regular,
       fontSize: 12,
-      color: coach ? coachTokens.muted : c.textMuted,
+      color: coach ? coachTokens.muted : joueur ? joueurTheme.inkMuted : c.textMuted,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });

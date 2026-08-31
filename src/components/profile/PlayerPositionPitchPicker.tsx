@@ -4,6 +4,8 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import {
   PLAYER_POSITIONS,
   type PlayerPosition,
@@ -36,7 +38,12 @@ export const PlayerPositionPitchPicker: React.FC<PlayerPositionPitchPickerProps>
   compact,
 }) => {
   const { colors: c } = useAppTheme();
-  const styles = useMemo(() => createStyles(c, compact), [c, compact]);
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const accent = isPlayer ? joueurTheme.accent : c.accent;
+  const accentInverse = isPlayer ? '#FFFFFF' : c.brandInverse;
+  const styles = useMemo(() => createStyles(c, accent, accentInverse, compact), [c, accent, accentInverse, compact]);
 
   return (
     <View style={styles.wrap}>
@@ -44,7 +51,7 @@ export const PlayerPositionPitchPicker: React.FC<PlayerPositionPitchPickerProps>
         <ProDayText variant="caption" muted style={styles.label}>
           {label}
         </ProDayText>
-        {saving ? <ActivityIndicator size="small" color={c.accent} /> : null}
+        {saving ? <ActivityIndicator size="small" color={accent} /> : null}
       </View>
 
       <View style={styles.pitch}>
@@ -60,7 +67,7 @@ export const PlayerPositionPitchPicker: React.FC<PlayerPositionPitchPickerProps>
               <PressableSpring
                 onPress={() => onChange(position)}
                 disabled={saving}
-                scaleTo={0.94}
+                scaleTo={0.97}
                 haptic
               >
                 <View style={[styles.slot, selected && styles.slotSelected]}>
@@ -76,7 +83,7 @@ export const PlayerPositionPitchPicker: React.FC<PlayerPositionPitchPickerProps>
                     {position}
                   </Text>
                   {selected ? (
-                    <Icon name="checkmark-circle" size={14} color={c.brandInverse} variant="filled" />
+                    <Icon name="checkmark-circle" size={14} color={accentInverse} variant="filled" />
                   ) : null}
                 </View>
               </PressableSpring>
@@ -98,7 +105,7 @@ export const PlayerPositionPitchPicker: React.FC<PlayerPositionPitchPickerProps>
   );
 };
 
-function createStyles(c: AppColors, compact?: boolean) {
+function createStyles(c: AppColors, accent: string, accentInverse: string, compact?: boolean) {
   const pitchHeight = compact ? 220 : 260;
 
   return StyleSheet.create({
@@ -178,10 +185,10 @@ function createStyles(c: AppColors, compact?: boolean) {
       gap: 2,
     },
     slotSelected: {
-      backgroundColor: c.accent,
-      borderColor: c.accent,
+      backgroundColor: accent,
+      borderColor: accent,
       borderWidth: 2,
-      shadowColor: c.accent,
+      shadowColor: accent,
       shadowOpacity: 0.35,
       shadowRadius: 8,
       shadowOffset: { width: 0, height: 2 },
@@ -193,12 +200,12 @@ function createStyles(c: AppColors, compact?: boolean) {
       paddingHorizontal: 6,
       paddingVertical: 1,
       borderRadius: radius.pill,
-      backgroundColor: c.accent,
+      backgroundColor: accent,
     },
     youBadgeText: {
       fontSize: 8,
       fontWeight: '900',
-      color: c.brandInverse,
+      color: accentInverse,
       letterSpacing: 0.4,
     },
     slotShort: {
@@ -208,7 +215,7 @@ function createStyles(c: AppColors, compact?: boolean) {
       letterSpacing: 1,
     },
     slotShortSelected: {
-      color: c.accent,
+      color: accent,
     },
     slotLabel: {
       fontSize: 12,
@@ -216,7 +223,7 @@ function createStyles(c: AppColors, compact?: boolean) {
       color: 'rgba(255,255,255,0.88)',
     },
     slotLabelSelected: {
-      color: c.brandInverse,
+      color: accentInverse,
       fontWeight: '900',
     },
     selectedCopy: {

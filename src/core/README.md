@@ -1,6 +1,6 @@
 # Core (`src/core/`)
 
-> Moteurs métier **sans UI** : algorithmes, règles, agrégations. Importable depuis services, hooks et features.
+Moteurs métier **sans UI** : algorithmes, règles, agrégations. Importable depuis services, hooks et features.
 
 ## Modules
 
@@ -8,7 +8,7 @@
 |---------|------|
 | `ai/` | Orchestration IA côté client |
 | `analytics/` | Événements et métriques |
-| `calendar/` | Logique calendrier / rappels |
+| `calendar/` | Calendrier / rappels |
 | `events/` | Événements domaine |
 | `gamification/` | Badges, scores |
 | `geo/` | Géolocalisation, zones |
@@ -16,7 +16,7 @@
 | `notifications/` | Règles de notification |
 | `recommendation/` | Reco matchs, joueurs |
 | `social/` | Graphe social, feed |
-| `state/` | Machines d'état partagées |
+| `state/` | Machines d’état partagées |
 | `types/` | Types core transverses |
 
 ## Conventions
@@ -25,10 +25,11 @@
 import { rankScore, buildMatchRecommendations } from '../core';
 ```
 
-- Pas d'import React ici
+- Pas d’import React
 - Tests unitaires dans `src/__tests__/`
 
 ## Liens
 
-- [features/README.md](../features/README.md) — modules V3 qui consomment le core
+- [../README.md](../README.md)
+- [features/README.md](../features/README.md)
 - [../STRUCTURE.md](../STRUCTURE.md)

@@ -132,6 +132,20 @@ export const SPONSOR_IDENTITY: UniverseIdentity = {
   entrySub: 'Visibilité mesurée · clubs · financement local',
 };
 
+export const PARENT_IDENTITY: UniverseIdentity = {
+  id: 'parent',
+  productName: PRODAY_PARENT_BRAND.name,
+  tagline: PRODAY_PARENT_BRAND.tagline,
+  heroLine: 'Accompagner\nsans étouffer.',
+  mission:
+    'Messages, agenda, retards coach et trajets — le suivi de votre enfant, sans bruit.',
+  accentLabel: 'Parent',
+  mercatoLabel: 'Famille',
+  playerLabel: 'Enfant',
+  cvLabel: 'Contrôle parental',
+  entrySub: 'Pôle dédié — lié au compte joueur mineur',
+};
+
 export function getUniverseIdentity(line: ProductLineId): UniverseIdentity {
   switch (line) {
     case 'woman':
@@ -152,19 +166,7 @@ export function getUniverseIdentity(line: ProductLineId): UniverseIdentity {
     case 'sponsor':
       return SPONSOR_IDENTITY;
     case 'parent':
-      return {
-        id: 'parent',
-        productName: PRODAY_PARENT_BRAND.name,
-        tagline: PRODAY_PARENT_BRAND.tagline,
-        heroLine: 'Accompagner\nsans étouffer.',
-        mission:
-          'Superviser le parcours de votre enfant : messages, agenda, retards coach, temps d’écran et trajets.',
-        accentLabel: 'Parent',
-        mercatoLabel: 'Famille',
-        playerLabel: 'Enfant',
-        cvLabel: 'Contrôle parental',
-        entrySub: 'Pôle dédié — lié au compte joueur mineur',
-      };
+      return PARENT_IDENTITY;
     default:
       return AMATEUR_IDENTITY;
   }
@@ -231,6 +233,19 @@ export function getDiscoverHomeCopy(line: ProductLineId) {
       sectionExplore: 'Votre tribune',
       secondaryMercato: 'Communauté',
       playersStatLabel: 'Supporters',
+    };
+  }
+
+  if (line === 'parent') {
+    return {
+      heroTitle: brand.heroLine,
+      heroSub: brand.mission,
+      trustText:
+        'Compte lié au profil mineur. Contrôles parentaux après validation.',
+      ctaText: 'Créer mon compte Parent',
+      sectionExplore: 'Espace Parent',
+      secondaryMercato: 'Famille',
+      playersStatLabel: 'Familles',
     };
   }
 

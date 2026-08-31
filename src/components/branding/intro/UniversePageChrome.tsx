@@ -1,166 +1,286 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-  type SharedValue,
-} from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { spacing, radius } from '../../../theme/designTokens';
 import { PressableSpring } from '../../motion';
 import { Icon } from '../../ui/Icon';
+import { prodayMotion, useReducedMotion } from '../../../motion';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
-import { getCarouselPoleIdentity } from '../../../content/carouselPoleExperience';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
-import { UNIVERSE_FEATURE_CHIPS } from './universeChoiceShared';
+import { UNIVERSE_AMBIENT_FALLBACK } from './universePagerSnap';
+import {
+  universeEnterCtaLabel,
+  universePoleDisplayName,
+  universePoleTagline,
+} from './universePoleBrand';
+import { UniverseGuideModal } from './UniverseGuideModal';
 
 interface UniversePageChromeProps {
   lines: CarouselPoleId[];
   activeIndex: number;
-  scrollX: SharedValue<number>;
-  pageWidth: number;
   touring: boolean;
   interactionLocked?: boolean;
+  /** Confirmation en cours — verrouille le CTA en état pressé. */
+  confirming?: boolean;
   showDismiss?: boolean;
+  cinematic?: boolean;
   onDismiss?: () => void;
   onSkip: () => void;
   onChoose: (line: CarouselPoleId) => void;
   onJumpToIndex: (index: number) => void;
+  /** Masque le pager mobile (dots) — tablette utilise la liste. */
+  hidePagerDots?: boolean;
+  /** Contenu latéral tablette (liste compacte). */
+  sideRail?: React.ReactNode;
 }
 
-const StorySegment: React.FC<{
-  index: number;
-  scrollX: SharedValue<number>;
-  pageWidth: number;
-  line: CarouselPoleId;
-}> = ({ index, scrollX, pageWidth, line }) => {
-  const accent = UNIVERSE_ACCENT[line];
+const DOT_INACTIVE = 'rgba(255,255,255,0.28)';
 
-  const fillStyle = useAnimatedStyle(() => {
-    if (pageWidth <= 0) return { width: '0%' };
-    const page = scrollX.value / pageWidth;
-    let ratio = 0;
-    if (page >= index + 1) ratio = 1;
-    else if (page > index) ratio = page - index;
-    return { width: `${ratio * 100}%` };
-  });
-
-  return (
-    <View style={[styles.segmentTrack, { backgroundColor: `${accent}40` }]}>
-      <Animated.View style={[styles.segmentFill, { backgroundColor: accent }, fillStyle]} />
-    </View>
-  );
-};
-
-/** Barres de progression, compteur et CTA contextualisé. */
+/** Header + copie + CTA — accent unique = univers actif (React, pas worklet Record). */
 export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   lines,
   activeIndex,
-  scrollX,
-  pageWidth,
   touring,
   interactionLocked = false,
+  confirming = false,
   showDismiss = false,
+  cinematic = false,
   onDismiss,
   onSkip,
   onChoose,
   onJumpToIndex,
+  hidePagerDots = false,
+  sideRail,
 }) => {
   const insets = useSafeAreaInsets();
-  const activeLine = lines[activeIndex];
-  const identity = getCarouselPoleIdentity(activeLine);
+  const reducedMotion = useReducedMotion();
+  const [guideVisible, setGuideVisible] = React.useState(false);
+  const activeLine = lines[activeIndex] ?? lines[0];
+  const activeAccent =
+    (activeLine ? UNIVERSE_ACCENT[activeLine] : undefined) ?? UNIVERSE_AMBIENT_FALLBACK;
+  const isLightCta = activeAccent.toUpperCase() === '#FFFFFF';
+  const ctaLabel = activeLine ? universeEnterCtaLabel(activeLine) : '';
+  const poleName = activeLine ? universePoleDisplayName(activeLine) : '';
+  const tagline = activeLine ? universePoleTagline(activeLine) : '';
+  const linesCount = lines.length;
+  const showHeaderAction = touring || (showDismiss && onDismiss);
+
+  const copyOpacity = useSharedValue(1);
+  const copyScale = useSharedValue(1);
+  const ctaConfirm = useSharedValue(0);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      copyOpacity.value = 1;
+      copyScale.value = 1;
+      return;
+    }
+    copyOpacity.value = 0.42;
+    copyScale.value = 0.985;
+    copyOpacity.value = withTiming(1, {
+      duration: prodayMotion.duration.slow,
+      easing: prodayMotion.easing.out,
+    });
+    copyScale.value = withSpring(1, prodayMotion.spring.smooth);
+  }, [activeIndex, copyOpacity, copyScale, reducedMotion]);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      ctaConfirm.value = confirming ? 1 : 0;
+      return;
+    }
+    ctaConfirm.value = withTiming(confirming ? 1 : 0, {
+      duration: 100,
+      easing: prodayMotion.easing.out,
+    });
+  }, [confirming, ctaConfirm, reducedMotion]);
+
+  const copyStyle = useAnimatedStyle(() => ({
+    opacity: copyOpacity.value,
+    transform: [{ scale: copyScale.value }],
+  }));
+
+  const ctaConfirmStyle = useAnimatedStyle(() => ({
+    opacity: 1 - ctaConfirm.value * 0.12,
+    transform: [{ scale: 1 - ctaConfirm.value * 0.035 }],
+  }));
+
+  if (!activeLine) {
+    return null;
+  }
+
+  const cta = (
+    <Animated.View style={ctaConfirmStyle}>
+      <PressableSpring
+        onPress={() => onChoose(activeLine)}
+        scaleTo={0.97}
+        haptic
+        disabled={interactionLocked || confirming}
+        style={styles.ctaWrap}
+        accessibilityRole="button"
+        accessibilityLabel={ctaLabel}
+        accessibilityState={{ busy: confirming }}
+      >
+        <View
+          style={[
+            styles.cta,
+            { backgroundColor: activeAccent },
+            isLightCta && styles.ctaOnLightAccent,
+          ]}
+        >
+          <Text style={[styles.ctaText, isLightCta && styles.ctaTextDark]} numberOfLines={1}>
+            {ctaLabel}
+          </Text>
+          <Icon name="chevron-forward" size={18} color={isLightCta ? '#0A0A0A' : '#FFFFFF'} />
+        </View>
+      </PressableSpring>
+    </Animated.View>
+  );
+
+  const copyBlock = (
+    <Animated.View style={[styles.copyBlock, copyStyle]} accessibilityLiveRegion="polite">
+      <Text
+        style={[styles.poleName, { color: activeAccent }]}
+        numberOfLines={1}
+        accessibilityRole="header"
+      >
+        {poleName}
+      </Text>
+      <Text style={styles.tagline} numberOfLines={1}>
+        {tagline}
+      </Text>
+    </Animated.View>
+  );
 
   return (
     <View style={styles.root} pointerEvents="box-none">
-      <View style={[styles.top, { paddingTop: insets.top + spacing.sm }]}>
-        <View style={styles.segments}>
-          {lines.map((line, index) => (
+      <View
+        style={[
+          styles.top,
+          {
+            paddingTop: insets.top + (cinematic ? spacing.lg : spacing.md),
+            paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
+          },
+        ]}
+      >
+        <View style={styles.headerRow}>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.title, cinematic && styles.titleWide]} numberOfLines={1}>
+              Changer d’univers
+            </Text>
             <Pressable
-              key={line}
-              style={styles.segmentHit}
-              disabled={interactionLocked}
-              onPress={() => onJumpToIndex(index)}
-              accessibilityLabel={UNIVERSE_SHORT[line]}
-              accessibilityState={{ selected: index === activeIndex }}
+              onPress={() => setGuideVisible(true)}
+              style={styles.guideTrigger}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Ouvrir le guide des univers"
             >
-              <StorySegment
-                line={line}
-                index={index}
-                scrollX={scrollX}
-                pageWidth={pageWidth}
-              />
-            </Pressable>
-          ))}
-        </View>
-        {touring ? (
-          <Pressable onPress={onSkip} hitSlop={12} accessibilityLabel="Passer la présentation">
-            <Text style={styles.skip}>Passer</Text>
-          </Pressable>
-        ) : showDismiss && onDismiss ? (
-          <Pressable
-            onPress={onDismiss}
-            disabled={interactionLocked}
-            hitSlop={12}
-            accessibilityLabel="Fermer le sélecteur de pôle"
-          >
-            <Text style={styles.skip}>Fermer</Text>
-          </Pressable>
-        ) : (
-          <View style={styles.skipSpacer} />
-        )}
-      </View>
-
-      <View style={[styles.bottom, { paddingBottom: insets.bottom + spacing.md }]} pointerEvents="box-none">
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.5)']}
-          style={styles.bottomFade}
-          pointerEvents="none"
-        />
-
-        <Text style={styles.counter}>
-          {String(activeIndex + 1).padStart(2, '0')} / {String(lines.length).padStart(2, '0')}
-          <Text style={styles.counterSep}> · </Text>
-          {UNIVERSE_SHORT[activeLine]}
-        </Text>
-
-        <View style={styles.chips}>
-          {UNIVERSE_FEATURE_CHIPS[activeLine].map((chip) => (
-            <View
-              key={chip}
-              style={[
-                styles.chip,
-                activeLine === 'sponsor' && styles.chipSponsor,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  activeLine === 'sponsor' && styles.chipTextSponsor,
-                ]}
-              >
-                {chip}
+              <Icon name="star-four-points" size={14} color={activeAccent} />
+              <Text style={[styles.guideTriggerText, { color: activeAccent }]}>
+                Quel pôle choisir ? (Guide)
               </Text>
-            </View>
-          ))}
+            </Pressable>
+          </View>
+          {showHeaderAction ? (
+            <Pressable
+              onPress={touring ? onSkip : onDismiss}
+              disabled={!touring && interactionLocked}
+              hitSlop={20}
+              accessibilityRole="button"
+              accessibilityLabel={
+                touring ? 'Passer la présentation' : 'Fermer le sélecteur de pôle'
+              }
+            >
+              <Text style={styles.skip}>{touring ? 'Passer' : 'Fermer'}</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.skipSpacer} />
+          )}
         </View>
-
-        <PressableSpring
-          onPress={() => onChoose(activeLine)}
-          scaleTo={0.98}
-          haptic
-          disabled={interactionLocked}
-          style={[styles.cta, activeLine === 'sponsor' && styles.ctaSponsor]}
-        >
-          <Text style={styles.ctaText} numberOfLines={1}>
-            Continuer · {identity.productName}
-          </Text>
-          <Icon name="chevron-forward" size={18} color="#0A0A0A" />
-        </PressableSpring>
-
-        <Text style={styles.hint}>Glissez pour parcourir les pôles</Text>
       </View>
+
+      {cinematic && sideRail ? (
+        <View
+          style={[
+            styles.cinematicBody,
+            {
+              paddingHorizontal: spacing.xl * 1.5,
+              paddingBottom: insets.bottom + spacing.md,
+            },
+          ]}
+          pointerEvents="box-none"
+        >
+          <View style={styles.railCol}>{sideRail}</View>
+          <View style={styles.previewCol} pointerEvents="box-none">
+            {copyBlock}
+            <View style={styles.ctaSlot}>{cta}</View>
+          </View>
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.bottom,
+            {
+              paddingBottom: insets.bottom + spacing.md,
+              paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
+            },
+          ]}
+          pointerEvents="box-none"
+        >
+          {copyBlock}
+
+          {!hidePagerDots && linesCount > 1 ? (
+            <View style={styles.dots} accessibilityRole="tablist">
+              {lines.map((line, index) => {
+                const selected = index === activeIndex;
+                return (
+                  <Pressable
+                    key={line}
+                    onPress={() => onJumpToIndex(index)}
+                    disabled={interactionLocked}
+                    hitSlop={8}
+                    accessibilityRole="tab"
+                    accessibilityLabel={UNIVERSE_SHORT[line]}
+                    accessibilityState={{ selected }}
+                  >
+                    <View
+                      style={[
+                        styles.dot,
+                        selected
+                          ? { width: 18, backgroundColor: activeAccent }
+                          : { width: 6, backgroundColor: DOT_INACTIVE },
+                      ]}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+
+          {cta}
+
+          {linesCount > 1 ? (
+            <Text style={styles.hint}>Glissez ou touchez pour changer</Text>
+          ) : null}
+        </View>
+      )}
+
+      <UniverseGuideModal
+        visible={guideVisible}
+        onClose={() => setGuideVisible(false)}
+        onSelectPole={(pole) => {
+          const idx = lines.indexOf(pole);
+          if (idx >= 0) {
+            onJumpToIndex(idx);
+          }
+        }}
+      />
     </View>
   );
 };
@@ -169,120 +289,150 @@ const styles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',
+    zIndex: 2,
   },
   top: {
+    gap: spacing.xs,
+  },
+  headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: spacing.md,
-    paddingHorizontal: spacing.lg,
   },
-  segments: {
+  headerCopy: {
     flex: 1,
-    flexDirection: 'row',
-    gap: 4,
-  },
-  segmentHit: {
-    flex: 1,
-  },
-  segmentTrack: {
-    height: 3,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-  },
-  segmentFill: {
-    height: '100%',
-    borderRadius: radius.pill,
   },
   skip: {
     fontSize: 14,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.88)',
+    color: 'rgba(255,255,255,0.72)',
+    paddingTop: 2,
   },
   skipSpacer: {
     width: 48,
   },
-  bottom: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-    alignItems: 'stretch',
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    color: 'rgba(255,255,255,0.88)',
+    ...Platform.select({ android: { includeFontPadding: false } }),
   },
-  bottomFade: {
-    ...StyleSheet.absoluteFillObject,
-    top: -40,
+  guideTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+    paddingVertical: 2,
+    alignSelf: 'flex-start',
   },
-  counter: {
-    textAlign: 'center',
+  guideTriggerText: {
     fontSize: 12,
     fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.55)',
-    ...Platform.select({ android: { includeFontPadding: false } }),
+    letterSpacing: -0.1,
   },
-  counterSep: {
-    color: 'rgba(255,255,255,0.28)',
+  titleWide: {
+    fontSize: 24,
+    letterSpacing: -0.5,
+    maxWidth: 520,
   },
-  chips: {
+  bottom: {
+    gap: spacing.md,
+    alignItems: 'stretch',
+  },
+  cinematicBody: {
+    flex: 1,
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'stretch',
+    gap: spacing.xl,
+    paddingTop: spacing.md,
+  },
+  railCol: {
+    width: 220,
+    maxWidth: '34%',
     justifyContent: 'center',
-    gap: 6,
-    marginBottom: 2,
   },
-  chip: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.18)',
+  previewCol: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    gap: spacing.lg,
+    paddingBottom: spacing.sm,
   },
-  chipSponsor: {
-    backgroundColor: 'rgba(212, 175, 55, 0.16)',
-    borderColor: 'rgba(212, 175, 55, 0.45)',
+  copyBlock: {
+    alignItems: 'center',
+    gap: spacing.xs,
   },
-  chipText: {
-    fontSize: 11,
+  poleName: {
+    fontSize: 28,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.82)',
-    letterSpacing: 0.2,
+    letterSpacing: -0.5,
+    textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
-  chipTextSponsor: {
-    color: '#F5D76E',
+  tagline: {
+    fontSize: 14,
+    fontWeight: '500',
+    letterSpacing: 0.1,
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    maxWidth: 280,
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 7,
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3,
+  },
+  ctaSlot: {
+    alignItems: 'stretch',
+  },
+  ctaWrap: {
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 420,
   },
   cta: {
     minHeight: 54,
     borderRadius: radius.pill,
-    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.22,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  ctaSponsor: {
-    backgroundColor: '#D4AF37',
-    shadowColor: '#D4AF37',
-    shadowOpacity: 0.35,
+  ctaOnLightAccent: {
+    shadowColor: '#FFFFFF',
+    shadowOpacity: 0.18,
   },
   ctaText: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '800',
-    color: '#0A0A0A',
-    flexShrink: 1,
+    color: '#FFFFFF',
+    textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  ctaTextDark: {
+    color: '#0A0A0A',
   },
   hint: {
     fontSize: 11,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.45)',
+    color: 'rgba(255,255,255,0.32)',
     textAlign: 'center',
-    marginTop: 2,
   },
 });

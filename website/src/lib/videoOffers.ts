@@ -74,11 +74,11 @@ export const VIDEO_HARDWARE_OPTIONS: Record<
 > = {
   own_camera: {
     title: "Caméra déjà possédée",
-    body: "Le club a déjà une Veo, XbotGo ou autre caméra compatible. ProDay se connecte — pas d’achat forcé.",
+    body: "Le club a déjà une Veo, XbotGo ou autre caméra compatible. ProDay se connecte, pas d’achat forcé.",
   },
   lease: {
     title: "Location via ProDay",
-    body: "Offre clé en main sur devis : caméra, trépied, installation, formation, cloud — selon adhérents et équipes.",
+    body: "Offre clé en main sur devis : caméra, trépied, installation, formation, cloud · selon adhérents et équipes.",
   },
   purchase: {
     title: "Achat via ProDay",
@@ -97,7 +97,7 @@ export const VIDEO_OFFERS: Record<VideoOfferId, VideoOfferDefinition> = {
     hardwareIncluded: true,
     annualEur: null,
     priceLabel: "Sur devis",
-    priceNote: "Sur devis — adhérents, équipes & matériel",
+    priceNote: "Sur devis · adhérents, équipes & matériel",
     includes: [
       "Toutes les fonctions Tout inclus",
       "Analyse vidéo BYO (smartphone / tablette / caméra existante)",
@@ -128,4 +128,4 @@ export const VIDEO_OFFERS: Record<VideoOfferId, VideoOfferDefinition> = {
 export const VIDEO_OFFER_ORDER: VideoOfferId[] = ["proday_pro_camera"];
 
 export const VIDEO_MODULE_PRINCIPLE =
-  "Vous avez une caméra ? Connectez-la à ProDay. Veo, XbotGo, Spiideo, Pixellot, Trace, smartphone — jamais limité à une marque. Matériel jamais obligatoire.";
+  "Vous avez une caméra ? Connectez la à ProDay. Veo, XbotGo, Spiideo, Pixellot, Trace, smartphone · jamais limité à une marque. Matériel jamais obligatoire.";

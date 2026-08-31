@@ -71,7 +71,7 @@ export function BetaStatutContent() {
   return (
     <section className="border-b border-white/10 bg-black">
       <div className="mx-auto max-w-xl px-4 py-16 sm:px-6 sm:py-24">
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#4C8BFF]">
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5D04A]">
           {copy.kicker}
         </p>
         <h1 className="mt-4 font-display text-[clamp(2rem,6vw,3.2rem)] font-medium leading-[1.05] tracking-[-0.035em] text-white">

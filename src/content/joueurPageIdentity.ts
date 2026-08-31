@@ -1,153 +1,99 @@
 import type { JoueurAgeGroup, JoueurGenderVisual } from '../utils/joueurExperienceTheme';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 
 /**
- * Tokens Pôle Joueur — 6 univers distincts (3 âges × 2 genres).
- * Youth = petit jeu ludique clair · Teen = carrière calme · Adult = cockpit pro.
+ * Tokens Pôle Joueur — dark premium unifié (ref. shield card + performance hub).
+ * Copy / hudLabel / density varient par âge×genre ; couleurs = PLAYER_DARK partout.
  */
 
-/** Accents de base (fallback adult). */
-export const JOUEUR_GENDER_ACCENTS = {
-  male: {
-    accent: '#4C8BFF',
-    accentBright: '#93C5FD',
-    soft: 'rgba(76, 139, 255, 0.16)',
-    glow: 'rgba(76, 139, 255, 0.4)',
-  },
-  female: {
-    accent: '#5EEAD4',
-    accentBright: '#99F6E4',
-    soft: 'rgba(94, 234, 212, 0.16)',
-    glow: 'rgba(94, 234, 212, 0.4)',
-  },
-  neutral: {
-    accent: '#4C8BFF',
-    accentBright: '#93C5FD',
-    soft: 'rgba(76, 139, 255, 0.16)',
-    glow: 'rgba(76, 139, 255, 0.4)',
-  },
+const MINT = {
+  accent: PLAYER_DARK.accent,
+  accentBright: PLAYER_DARK.accentAlt,
+  soft: PLAYER_DARK.accentSoft,
+  glow: PLAYER_DARK.accentGlow,
 } as const;
 
-/** Accents âge × genre — palettes volontairement éloignées. */
+/** Accents unifiés mint — conservé pour compat API. */
+export const JOUEUR_GENDER_ACCENTS = {
+  male: MINT,
+  female: MINT,
+  neutral: MINT,
+} as const;
+
+/** Accents âge × genre — palette mint unique (dark premium). */
 export const JOUEUR_AGE_GENDER_ACCENTS = {
-  youth: {
-    male: {
-      accent: '#F59E0B',
-      accentBright: '#FCD34D',
-      soft: 'rgba(245, 158, 11, 0.22)',
-      glow: 'rgba(245, 158, 11, 0.4)',
-    },
-    female: {
-      accent: '#EC4899',
-      accentBright: '#F9A8D4',
-      soft: 'rgba(236, 72, 153, 0.2)',
-      glow: 'rgba(236, 72, 153, 0.38)',
-    },
-    neutral: {
-      accent: '#F59E0B',
-      accentBright: '#FCD34D',
-      soft: 'rgba(245, 158, 11, 0.22)',
-      glow: 'rgba(245, 158, 11, 0.4)',
-    },
-  },
-  teen: {
-    male: {
-      accent: '#38BDF8',
-      accentBright: '#BAE6FD',
-      soft: 'rgba(56, 189, 248, 0.14)',
-      glow: 'rgba(56, 189, 248, 0.28)',
-    },
-    female: {
-      accent: '#A78BFA',
-      accentBright: '#DDD6FE',
-      soft: 'rgba(167, 139, 250, 0.14)',
-      glow: 'rgba(167, 139, 250, 0.28)',
-    },
-    neutral: {
-      accent: '#38BDF8',
-      accentBright: '#BAE6FD',
-      soft: 'rgba(56, 189, 248, 0.14)',
-      glow: 'rgba(56, 189, 248, 0.28)',
-    },
-  },
-  adult: {
-    male: JOUEUR_GENDER_ACCENTS.male,
-    female: JOUEUR_GENDER_ACCENTS.female,
-    neutral: JOUEUR_GENDER_ACCENTS.neutral,
-  },
+  youth: { male: MINT, female: MINT, neutral: MINT },
+  teen: { male: MINT, female: MINT, neutral: MINT },
+  adult: { male: MINT, female: MINT, neutral: MINT },
+} as const;
+
+const DARK_WASH: [string, string, string] = [
+  PLAYER_DARK.bgElevated,
+  PLAYER_DARK.bg,
+  PLAYER_DARK.bg,
+];
+
+const DARK_MOOD = {
+  wash: DARK_WASH,
+  band: PLAYER_DARK.bgElevated,
+  shellBg: PLAYER_DARK.bg,
+  ink: PLAYER_DARK.text,
+  inkMuted: PLAYER_DARK.textMuted,
+  surface: PLAYER_DARK.surface,
+  elevated: PLAYER_DARK.surfaceRaised,
+  border: PLAYER_DARK.border,
 } as const;
 
 export const JOUEUR_AGE_MOODS = {
   youth: {
     id: 'youth' as const,
     label: 'AVENTURE',
-    /** Fond clair ludique — garçon (soleil). */
-    wash: ['#FFF8E7', '#FFE08A', '#FBBF24'] as [string, string, string],
-    band: '#FFF3C4',
+    ...DARK_MOOD,
     motif: 'dots' as const,
     density: 'playful' as const,
     radius: 28,
     motion: 'bouncy' as const,
     hudLabel: 'PETIT JEU',
-    shellBg: '#FFF6D6',
-    ink: '#3F2A0A',
-    inkMuted: 'rgba(63, 42, 10, 0.62)',
-    surface: 'rgba(255,255,255,0.72)',
-    elevated: 'rgba(255,255,255,0.9)',
-    border: 'rgba(63, 42, 10, 0.12)',
   },
   teen: {
     id: 'teen' as const,
     label: 'CARRIÈRE',
-    wash: ['#0B1520', '#0E1C2A', '#081018'] as [string, string, string],
-    band: '#0C1824',
+    ...DARK_MOOD,
     motif: 'grid' as const,
     density: 'hud' as const,
     radius: 18,
     motion: 'snappy' as const,
     hudLabel: 'MODE CALME',
-    shellBg: '#0A121C',
-    ink: '#E8F1F8',
-    inkMuted: 'rgba(186, 210, 228, 0.72)',
-    surface: 'rgba(255,255,255,0.04)',
-    elevated: 'rgba(255,255,255,0.07)',
-    border: 'rgba(255,255,255,0.1)',
   },
   adult: {
     id: 'adult' as const,
     label: 'PRO',
-    wash: ['#0c1424', '#080e18', '#05080f'] as [string, string, string],
-    band: '#0a101c',
+    ...DARK_MOOD,
     motif: 'stripes' as const,
     density: 'pro' as const,
     radius: 14,
     motion: 'snappy' as const,
     hudLabel: 'ÉQUIPE PRO',
-    shellBg: '#070b14',
-    ink: '#F8FAFC',
-    inkMuted: 'rgba(148, 163, 184, 0.92)',
-    surface: 'rgba(255,255,255,0.04)',
-    elevated: 'rgba(255,255,255,0.07)',
-    border: 'rgba(255,255,255,0.10)',
   },
 } as const;
 
-/** Site tokens partagés (fallback adulte / chrome global). */
+/** Site tokens partagés — dark premium joueur. */
 export const JOUEUR_SITE = {
-  bg: '#070b14',
-  surface: 'rgba(255,255,255,0.04)',
-  elevated: 'rgba(255,255,255,0.07)',
-  panel: 'rgba(8, 14, 24, 0.92)',
-  border: 'rgba(255,255,255,0.10)',
-  borderStrong: 'rgba(255,255,255,0.22)',
-  foreground: '#F8FAFC',
-  muted: 'rgba(148, 163, 184, 0.92)',
-  dim: 'rgba(100, 116, 139, 0.9)',
+  bg: PLAYER_DARK.bg,
+  surface: PLAYER_DARK.surface,
+  elevated: PLAYER_DARK.surfaceRaised,
+  panel: PLAYER_DARK.surface,
+  border: PLAYER_DARK.border,
+  borderStrong: PLAYER_DARK.borderStrong,
+  foreground: PLAYER_DARK.text,
+  muted: PLAYER_DARK.textMuted,
+  dim: PLAYER_DARK.textDim,
   live: '#FB7185',
   warn: '#FBBF24',
-  ok: '#5EEAD4',
+  ok: PLAYER_DARK.accentAlt,
   xp: '#FDE68A',
-  gold: '#E8C872',
-  goldSoft: 'rgba(232, 200, 114, 0.18)',
+  gold: PLAYER_DARK.accent,
+  goldSoft: PLAYER_DARK.accentSoft,
   coachPriceEur: 30,
   scanline: 'rgba(255,255,255,0.02)',
 } as const;
@@ -169,14 +115,12 @@ export type JoueurPageIdentity = {
   title: string;
   support: string;
   genderLabel: string;
-  /** Encre UI (texte) — clair sur youth, clair/foncé selon âge. */
   ink: string;
   inkMuted: string;
   shellBg: string;
   surface: string;
   elevated: string;
   border: string;
-  /** Label court monde (HUD / dock). */
   worldTag: string;
 };
 
@@ -194,15 +138,12 @@ export function resolveJoueurPageIdentity(input: {
   const genderLabel = isF ? 'JOUEUSE' : input.gender === 'male' ? 'JOUEUR' : 'JOUEUR';
 
   if (input.ageGroup === 'youth') {
-    const wash: [string, string, string] = isF
-      ? ['#FFF1F7', '#CCFBF1', '#F9A8D4']
-      : mood.wash;
     return {
       ageGroup: 'youth',
       gender: input.gender,
       ...accents,
-      wash,
-      band: isF ? '#FCE7F3' : mood.band,
+      wash: mood.wash,
+      band: mood.band,
       motif: mood.motif,
       density: mood.density,
       radius: mood.radius,
@@ -219,26 +160,23 @@ export function resolveJoueurPageIdentity(input: {
         ? 'Collecte des étoiles, gagne des défis doux, joue à ton rythme.'
         : 'Collecte des étoiles, relève des défis fun, explore ton terrain.',
       genderLabel,
-      ink: isF ? '#4A1942' : mood.ink,
-      inkMuted: isF ? 'rgba(74, 25, 66, 0.62)' : mood.inkMuted,
-      shellBg: isF ? '#FDF2F8' : mood.shellBg,
+      ink: mood.ink,
+      inkMuted: mood.inkMuted,
+      shellBg: mood.shellBg,
       surface: mood.surface,
       elevated: mood.elevated,
-      border: isF ? 'rgba(74, 25, 66, 0.12)' : mood.border,
+      border: mood.border,
       worldTag: isF ? 'FILLE · -13' : 'GARÇON · -13',
     };
   }
 
   if (input.ageGroup === 'teen') {
-    const wash: [string, string, string] = isF
-      ? ['#15101F', '#1B1430', '#0C0A14']
-      : mood.wash;
     return {
       ageGroup: 'teen',
       gender: input.gender,
       ...accents,
-      wash,
-      band: isF ? '#181225' : mood.band,
+      wash: mood.wash,
+      band: mood.band,
       motif: mood.motif,
       density: mood.density,
       radius: mood.radius,
@@ -255,7 +193,7 @@ export function resolveJoueurPageIdentity(input: {
       genderLabel,
       ink: mood.ink,
       inkMuted: mood.inkMuted,
-      shellBg: isF ? '#100E18' : mood.shellBg,
+      shellBg: mood.shellBg,
       surface: mood.surface,
       elevated: mood.elevated,
       border: mood.border,
@@ -263,15 +201,11 @@ export function resolveJoueurPageIdentity(input: {
     };
   }
 
-  const wash: [string, string, string] = isF
-    ? ['#0c1a22', '#081218', '#05080f']
-    : mood.wash;
-
   return {
     ageGroup: 'adult',
     gender: input.gender,
     ...accents,
-    wash,
+    wash: mood.wash,
     band: mood.band,
     motif: mood.motif,
     density: mood.density,

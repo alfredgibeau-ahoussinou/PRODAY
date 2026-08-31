@@ -4,15 +4,25 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ROUTES } from "@/lib/routes";
+import {
+  COACH_APP_HREF,
+  CLUB_APP_HREF,
+  JOUEUR_APP_HREF,
+  PARENT_APP_HREF,
+  PRESIDENT_HUB_HREF,
+  ROUTES,
+  SPONSOR_APP_HREF,
+} from "@/lib/routes";
 
 const ROLE_CHOICES = [
-  { label: "Joueur", emoji: "⚽", href: ROUTES.joueur },
-  { label: "Coach", emoji: "📋", href: ROUTES.proStaff },
-  { label: "Club", emoji: "🏟️", href: ROUTES.proClub },
+  { label: "Joueur", emoji: "⚽", href: JOUEUR_APP_HREF },
+  { label: "Coach", emoji: "📋", href: COACH_APP_HREF },
+  { label: "Club", emoji: "🏟️", href: CLUB_APP_HREF },
+  { label: "Président", emoji: "🏛️", href: PRESIDENT_HUB_HREF },
   { label: "Supporter", emoji: "📣", href: ROUTES.supporter },
-  { label: "Parent", emoji: "👨‍👧", href: ROUTES.parent },
-  { label: "Organisateur", emoji: "🏆", href: ROUTES.proClub },
+  { label: "Parent", emoji: "👨‍👧", href: PARENT_APP_HREF },
+  { label: "Sponsor", emoji: "🏷️", href: SPONSOR_APP_HREF },
+  { label: "Organisateur", emoji: "🏆", href: CLUB_APP_HREF },
 ] as const;
 
 export function RoleQuiz({ compact, inline }: { compact?: boolean; inline?: boolean }) {

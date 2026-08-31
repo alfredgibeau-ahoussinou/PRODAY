@@ -4,6 +4,7 @@ import {
   needsParentalStep,
   validateAgeForAppSpace,
   getCurrentPhase,
+  resolveSignupBackKind,
 } from '../screens/signup/signupFlowConfig';
 
 describe('signupFlowConfig', () => {
@@ -21,61 +22,61 @@ describe('signupFlowConfig', () => {
     expect(needsParentalStep(false, 'men')).toBe(false);
   });
 
-  it('parcours joueur : micro-étapes puis accès', () => {
+  it('parcours joueur : compte d’abord, univers ensuite', () => {
     const steps = buildSignupSteps('player', {
       role: 'player',
       parentalRequired: false,
     });
     expect(steps).toEqual([
-      'welcome',
+      'account',
+      'security',
       'space',
       'sport',
       'location',
       'stats',
-      'account',
-      'security',
       'launch',
     ]);
+    expect(steps.indexOf('account')).toBe(0);
+    expect(steps.indexOf('security')).toBe(1);
   });
 
-  it('parcours joueur mineur : étape family', () => {
+  it('parcours joueur mineur : étape family avant launch', () => {
     const steps = buildSignupSteps('player', {
       role: 'player',
       parentalRequired: true,
     });
     expect(steps).toContain('family');
-    expect(steps.indexOf('family')).toBeLessThan(steps.indexOf('account'));
+    expect(steps.indexOf('family')).toBeGreaterThan(steps.indexOf('security'));
+    expect(steps.indexOf('family')).toBeLessThan(steps.indexOf('launch'));
   });
 
-  it('parcours coach : étape coach_pro dédiée', () => {
+  it('parcours coach : compte puis profil pro', () => {
     expect(
       buildSignupSteps('staff', { role: 'coach', parentalRequired: false })
-    ).toEqual(['welcome', 'coach_pro', 'account', 'security', 'launch']);
+    ).toEqual(['account', 'security', 'coach_pro', 'launch']);
   });
 
-  it('parcours médical : spécialité puis cabinet', () => {
+  it('parcours médical : compte puis spécialité / cabinet', () => {
     expect(
       buildSignupSteps('staff', { role: 'physio', parentalRequired: false })
     ).toEqual([
-      'welcome',
-      'medical_specialty',
-      'medical_practice',
       'account',
       'security',
+      'medical_specialty',
+      'medical_practice',
       'launch',
     ]);
   });
 
-  it('parcours partenaire : 5 étapes métier puis identité', () => {
+  it('parcours partenaire : compte puis étapes métier', () => {
     expect(
       buildSignupSteps('sponsor', { role: 'sponsor', parentalRequired: false })
     ).toEqual([
-      'welcome',
+      'account',
+      'security',
       'sponsor_company',
       'sponsor_campaign',
       'sponsor_targeting',
-      'account',
-      'security',
       'launch',
     ]);
   });
@@ -95,5 +96,11 @@ describe('signupFlowConfig', () => {
     expect(validateAgeForAppSpace(14, 'under_u13')).toMatch(/incompatible/i);
     expect(validateAgeForAppSpace(15, 'boys')).toBeUndefined();
     expect(validateAgeForAppSpace(12, 'boys')).toMatch(/13 et 19/i);
+  });
+
+  it('retour signup : étape 0 → login, suivantes → previous', () => {
+    expect(resolveSignupBackKind({ accountCreated: false, pageIndex: 0 })).toBe('close');
+    expect(resolveSignupBackKind({ accountCreated: false, pageIndex: 1 })).toBe('previous');
+    expect(resolveSignupBackKind({ accountCreated: true, pageIndex: 0 })).toBe('none');
   });
 });

@@ -6,6 +6,10 @@ import type { Tournament } from '../../models/Tournament';
 import type { TeamEvent, RsvpStatus } from '../../models/TeamEvent';
 import type { MatchChapterId, CalendarKindFilter, AmicauxStatusFilter } from '../../content/matchChapters';
 import {
+  filterJoueurMatchChapters,
+  normalizeJoueurMatchChapter,
+} from '../../content/matchChapters';
+import {
   groupByMonth,
   type SeasonCalendarItem,
 } from '../../utils/seasonCalendar';
@@ -21,7 +25,7 @@ import { CoachPane } from '../coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { MatchCenterPanel } from './MatchCenterPanel';
 import { CoachSeasonStatsPanel } from '../coach/CoachSeasonStatsPanel';
-import { CoachMatchSkinProvider } from './matchCenterUi';
+import { CoachMatchSkinProvider, JoueurMatchSkinProvider } from './matchCenterUi';
 import { MatchSeasonStatsPanel } from './MatchSeasonStatsPanel';
 import { isInMatchWindow } from '../../utils/matchLive';
 import { useTabNavigation } from '../../context/TabNavigationContext';
@@ -34,14 +38,15 @@ import type { SectionIntelligence } from '../../features/v3/models/sectionIntell
 import { MatchCalendarChapter } from './chapters/MatchCalendarChapter';
 import { MatchConvocationsChapter } from './chapters/MatchConvocationsChapter';
 import { MatchAmicauxChapter } from './chapters/MatchAmicauxChapter';
+import { MatchJoueurMatchsChapter } from './chapters/MatchJoueurMatchsChapter';
 import { MatchTournamentsChapter } from './chapters/MatchTournamentsChapter';
 import { MatchCompetitionsChapter } from './chapters/MatchCompetitionsChapter';
 import { MATCH_CHAPTER_PAD } from './chapters/matchChapterLayout';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
-import { playJoueurSfxFireAndForget } from '../../features/joueur/joueurSfx';
 import type { Competition, CompetitionFixture, CompetitionSeason } from '../../models/Competition';
 
 interface MatchHomeScreenProps {
@@ -139,9 +144,18 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   embeddedInShell = false,
 }) => {
   const { colors } = useAppTheme();
+  const playerTheme = usePlayerThemeColors();
   const { t } = useTranslation();
   const { openAuth } = useTabNavigation();
-  const [chapter, setChapter] = useState<MatchChapterId>(initialChapter);
+  const joueurSession = useJoueurSession();
+  const joueurProgress = useJoueurProgress();
+  const isJoueur =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
+  const refreshTint = isJoueur ? playerTheme.accent : colors.accent;
+
+  const [chapter, setChapter] = useState<MatchChapterId>(() =>
+    isJoueur ? normalizeJoueurMatchChapter(initialChapter) : initialChapter,
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
   const [calendarKind, setCalendarKind] = useState<CalendarKindFilter>('all');
@@ -150,8 +164,8 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   const [amicauxStatus, setAmicauxStatus] = useState<AmicauxStatusFilter>('all');
 
   useEffect(() => {
-    setChapter(initialChapter);
-  }, [initialChapter]);
+    setChapter(isJoueur ? normalizeJoueurMatchChapter(initialChapter) : initialChapter);
+  }, [initialChapter, isJoueur]);
 
   const weekDays = useMemo(() => countWeekEvents(items), [items]);
   const openMatchesCount = matches.filter((m) => m.status === 'OPEN').length;
@@ -229,6 +243,28 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     onRefresh: handleRefresh,
   };
 
+  const matchsInitialSegment =
+    initialChapter === 'tournois'
+      ? ('tournois' as const)
+      : initialChapter === 'competitions'
+        ? ('competitions' as const)
+        : ('amicaux' as const);
+
+  const calendrierLivePanel =
+    isJoueur && liveMatchCount > 0 ? (
+      loadingCalendar ? (
+        <SkeletonList count={2} variant="card" />
+      ) : (
+        <MatchCenterPanel
+          events={teamEvents}
+          onOpenEvent={(id) => {
+            const ev = teamEvents.find((e) => e.id === id);
+            onOpenEvent(id, ev && isInMatchWindow(ev) ? 'live' : 'apercu');
+          }}
+        />
+      )
+    ) : undefined;
+
   const pages = [
     {
       id: 'calendrier' as const,
@@ -251,6 +287,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           onOpenCalendarItem={onOpenCalendarItem}
           onPropose={onPropose}
           onLogin={() => openAuth('login')}
+          livePanel={calendrierLivePanel}
           geoMap={
             <MatchGeoMapPanel
               userLocation={geo.userLocation}
@@ -279,7 +316,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={colors.accent}
+              tintColor={refreshTint}
             />
           }
           showsVerticalScrollIndicator={false}
@@ -308,7 +345,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={colors.accent}
+              tintColor={refreshTint}
             />
           }
           showsVerticalScrollIndicator={false}
@@ -336,29 +373,69 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     },
     {
       id: 'amicaux' as const,
-      render: () => (
-        <MatchAmicauxChapter
-          profile={profile}
-          matches={matches}
-          filteredMatches={filteredMatches}
-          loadingMatches={loadingMatches}
-          amicauxSearch={amicauxSearch}
-          onAmicauxSearchChange={setAmicauxSearch}
-          amicauxStatus={amicauxStatus}
-          onAmicauxStatusChange={setAmicauxStatus}
-          myClubId={myClubId}
-          canAccept={canAccept}
-          {...chapterRefresh}
-          onPropose={onPropose}
-          onSearch={onSearch}
-          onOrganize={onOrganize}
-          onAcceptMatch={onAcceptMatch}
-          onCancelMatch={onCancelMatch}
-          onMarkPlayed={onMarkPlayed}
-          getMatchIaScore={getMatchIaScore}
-          getMatchHealthWarning={getMatchHealthWarning}
-        />
-      ),
+      render: () =>
+        isJoueur ? (
+          <MatchJoueurMatchsChapter
+            profile={profile}
+            matches={matches}
+            filteredMatches={filteredMatches}
+            loadingMatches={loadingMatches}
+            amicauxSearch={amicauxSearch}
+            onAmicauxSearchChange={setAmicauxSearch}
+            amicauxStatus={amicauxStatus}
+            onAmicauxStatusChange={setAmicauxStatus}
+            myClubId={myClubId}
+            canAccept={canAccept}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            onPropose={onPropose}
+            onSearch={onSearch}
+            onOrganize={onOrganize}
+            onAcceptMatch={onAcceptMatch}
+            onCancelMatch={onCancelMatch}
+            onMarkPlayed={onMarkPlayed}
+            getMatchIaScore={getMatchIaScore}
+            getMatchHealthWarning={getMatchHealthWarning}
+            tournaments={tournaments}
+            loadingTournaments={loadingTournaments}
+            onOpenTournament={onOpenTournament}
+            onCreateTournament={
+              (canManageTournaments ?? canManageEvents) ? onCreateTournament : undefined
+            }
+            competitions={competitions}
+            competitionSeasons={competitionSeasons}
+            competitionFixtures={competitionFixtures}
+            loadingCompetitions={loadingCompetitions}
+            onOpenCompetitionSeason={onOpenCompetitionSeason}
+            onOpenCompetitionFixture={onOpenCompetitionFixture}
+            onOrganizeCompetition={
+              (canManageTournaments ?? canManageEvents) ? onOrganizeCompetition : undefined
+            }
+            initialSegment={matchsInitialSegment}
+          />
+        ) : (
+          <MatchAmicauxChapter
+            profile={profile}
+            matches={matches}
+            filteredMatches={filteredMatches}
+            loadingMatches={loadingMatches}
+            amicauxSearch={amicauxSearch}
+            onAmicauxSearchChange={setAmicauxSearch}
+            amicauxStatus={amicauxStatus}
+            onAmicauxStatusChange={setAmicauxStatus}
+            myClubId={myClubId}
+            canAccept={canAccept}
+            {...chapterRefresh}
+            onPropose={onPropose}
+            onSearch={onSearch}
+            onOrganize={onOrganize}
+            onAcceptMatch={onAcceptMatch}
+            onCancelMatch={onCancelMatch}
+            onMarkPlayed={onMarkPlayed}
+            getMatchIaScore={getMatchIaScore}
+            getMatchHealthWarning={getMatchHealthWarning}
+          />
+        ),
     },
     {
       id: 'tournois' as const,
@@ -398,11 +475,9 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     },
   ];
 
+  const visiblePages = isJoueur ? filterJoueurMatchChapters(pages) : pages;
+
   const isClubOps = profile?.role === 'club';
-  const joueurSession = useJoueurSession();
-  const joueurProgress = useJoueurProgress();
-  const isJoueur =
-    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const hidePoleHero = isClubOps || embeddedInShell || isJoueur;
 
   useEffect(() => {
@@ -421,22 +496,22 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     const g = joueurSession.ageGroup;
     if (g === 'youth') {
       return {
-        caption: 'STAGE MATCH',
+        caption: 'Matchs',
         title: 'Arena',
-        subtitle: 'Fixture · Callout · Live — joue ta semaine.',
+        subtitle: 'Calendrier · Convocs · En direct — joue ta semaine.',
       };
     }
     if (g === 'teen') {
       return {
-        caption: 'RANKED MATCH',
-        title: 'Match stages',
+        caption: 'Matchs',
+        title: 'Centre match',
         subtitle: 'Convocs, stats, missions terrain.',
       };
     }
     return {
-      caption: 'ULTIMATE MATCH',
+      caption: 'Matchs',
       title: 'Centre Match',
-      subtitle: 'Stages : Fixture · Live · League.',
+      subtitle: 'Calendrier · En direct · Championnat.',
     };
   }, [isJoueur, joueurSession, t]);
 
@@ -463,7 +538,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                tintColor={colors.accent}
+                tintColor={refreshTint}
               />
             }
             showsVerticalScrollIndicator={false}
@@ -493,20 +568,17 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
             secondaryLabel="Chercher"
             onSecondaryPress={onSearch}
             mood="dynamic_competitive"
-            accentHex={colors.accent}
+            accentHex={isJoueur ? playerTheme.accent : colors.accent}
           />
         </View>
       ) : null}
       <MatchPager
-        pages={pages}
+        pages={visiblePages}
         activeChapter={chapter}
-        onChapterChange={(id) => {
-          if (isJoueur) playJoueurSfxFireAndForget('whoosh');
-          setChapter(id);
-        }}
+        onChapterChange={setChapter}
         amicauxBadge={openMatchesCount}
         convocationsBadge={pendingConvocations.length}
-        centreBadge={liveMatchCount > 0 ? 'LIVE' : undefined}
+        centreBadge={liveMatchCount > 0 ? 'Direct' : undefined}
         gameMode={isJoueur}
         coachSkin={embeddedInShell}
       />
@@ -524,9 +596,12 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
       }
       flat={hidePoleHero}
       hideHeader={embeddedInShell}
+      hideWorldScene={isJoueur}
       atmosphere={hidePoleHero ? undefined : 'dynamic_competitive'}
     >
-      {body}
+      <JoueurMatchSkinProvider enabled={isJoueur}>
+        {body}
+      </JoueurMatchSkinProvider>
     </TabScreenShell>
   );
 };

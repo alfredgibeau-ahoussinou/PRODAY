@@ -5,6 +5,8 @@ import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 
 interface CandidaturePostCardProps {
   clubName: string;
@@ -17,6 +19,7 @@ interface CandidaturePostCardProps {
   iaScore?: number;
   fitLabel?: string;
   onPress: () => void;
+  variant?: 'default' | 'joueur';
 }
 
 export const CandidaturePostCard: React.FC<CandidaturePostCardProps> = ({
@@ -30,60 +33,68 @@ export const CandidaturePostCard: React.FC<CandidaturePostCardProps> = ({
   iaScore,
   fitLabel,
   onPress,
+  variant = 'joueur',
 }) => {
   const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const joueurTheme = useJoueurTheme();
+  const joueur = variant === 'joueur';
+  const styles = useMemo(
+    () => createStyles(colors, joueur, joueurTheme),
+    [colors, joueur, joueurTheme],
+  );
   const meta = [position, category, level].filter(Boolean).join(' · ');
+  const accent = joueur ? joueurTheme.accent : colors.accent;
 
   return (
     <PressableSpring
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      style={styles.card}
       onPress={onPress}
       scaleTo={0.98}
       haptic
     >
-      <View style={[styles.avatar, { backgroundColor: colors.accentSoft }]}>
-        <Text style={[styles.initial, { color: colors.accent }]}>{clubName.charAt(0).toUpperCase()}</Text>
+      {joueur ? <View style={[styles.bar, { backgroundColor: accent }]} /> : null}
+      <View style={styles.avatar}>
+        <Text style={[styles.initial, { color: accent }]}>{clubName.charAt(0).toUpperCase()}</Text>
       </View>
 
       <View style={styles.body}>
         <View style={styles.head}>
-          <Text style={[styles.club, { color: colors.textMuted }]} numberOfLines={1}>
+          <Text style={styles.club} numberOfLines={1}>
             {clubName}
           </Text>
           {iaScore != null ? (
-            <View style={[styles.matchBadge, { backgroundColor: colors.accentSoft }]}>
-              <Text style={[styles.matchText, { color: colors.accent }]}>{iaScore}%</Text>
+            <View style={[styles.matchBadge, { backgroundColor: joueur ? JOUEUR_SURFACES.chipActive : colors.accentSoft }]}>
+              <Text style={[styles.matchText, { color: accent }]}>{iaScore}%</Text>
             </View>
           ) : (
-            <Text style={[styles.time, { color: colors.textMuted }]}>{timeLabel}</Text>
+            <Text style={styles.time}>{timeLabel}</Text>
           )}
         </View>
 
-        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
+        <Text style={styles.title} numberOfLines={2}>
           {title}
         </Text>
 
-        <Text style={[styles.meta, { color: colors.textSecondary }]} numberOfLines={1}>
+        <Text style={styles.meta} numberOfLines={1}>
           {meta}
         </Text>
 
         {fitLabel ? (
-          <Text style={[styles.fit, { color: colors.textMuted }]} numberOfLines={1}>
+          <Text style={styles.fit} numberOfLines={1}>
             {fitLabel}
           </Text>
         ) : null}
 
         <View style={styles.footer}>
           <View style={styles.location}>
-            <Icon name="location" size={13} color={colors.textMuted} />
-            <Text style={[styles.locationText, { color: colors.textMuted }]} numberOfLines={1}>
+            <Icon name="location" size={13} color={joueur ? joueurTheme.inkMuted : colors.textMuted} />
+            <Text style={styles.locationText} numberOfLines={1}>
               {city}
             </Text>
           </View>
           <View style={styles.cta}>
-            <Text style={[styles.ctaText, { color: colors.accent }]}>Postuler</Text>
-            <Icon name="chevron-forward" size={14} color={colors.accent} />
+            <Text style={[styles.ctaText, { color: accent }]}>Postuler</Text>
+            <Icon name="chevron-forward" size={14} color={accent} />
           </View>
         </View>
       </View>
@@ -91,31 +102,49 @@ export const CandidaturePostCard: React.FC<CandidaturePostCardProps> = ({
   );
 };
 
-function createStyles(c: { accent: string }) {
+function createStyles(
+  c: { accent: string; text: string; textMuted: string; textSecondary: string; surface: string; border: string; accentSoft: string },
+  joueur: boolean,
+  joueurTheme: ReturnType<typeof useJoueurTheme>,
+) {
+  const ink = joueur ? joueurTheme.ink : c.text;
+  const inkMuted = joueur ? joueurTheme.inkMuted : c.textMuted;
+  const inkSecondary = joueur ? joueurTheme.inkMuted : c.textSecondary;
+
   return StyleSheet.create({
     card: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: spacing.md,
-      borderRadius: radius.lg,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderRadius: joueur ? joueurTheme.cardRadius : radius.lg,
       padding: spacing.md,
       marginBottom: spacing.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: joueur ? joueurTheme.border : c.border,
+      backgroundColor: joueur ? JOUEUR_SURFACES.card : c.surface,
+      overflow: 'hidden',
+    },
+    bar: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 3,
     },
     avatar: {
-      width: 48,
-      height: 48,
+      width: 44,
+      height: 44,
       borderRadius: radius.md,
+      backgroundColor: joueur ? JOUEUR_SURFACES.chip : c.accentSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
     initial: {
-      fontFamily: fontFamily.extrabold,
+      fontFamily: fontFamily.bold,
       fontSize: 18,
       fontWeight: '800',
-      ...Platform.select({ android: { includeFontPadding: false } }),
     },
-    body: { flex: 1, gap: 4, minWidth: 0 },
+    body: { flex: 1, minWidth: 0, gap: 4 },
     head: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -124,46 +153,34 @@ function createStyles(c: { accent: string }) {
     },
     club: {
       flex: 1,
-      fontFamily: fontFamily.semibold,
-      fontSize: 12,
-      fontWeight: '600',
+      fontSize: 11,
+      fontWeight: '700',
+      color: inkMuted,
+      letterSpacing: 0.3,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     time: {
-      fontFamily: fontFamily.regular,
-      fontSize: 11,
-      ...Platform.select({ android: { includeFontPadding: false } }),
-    },
-    matchBadge: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 2,
-      borderRadius: radius.pill,
-    },
-    matchText: {
-      fontFamily: fontFamily.extrabold,
-      fontSize: 11,
-      fontWeight: '800',
-      ...Platform.select({ android: { includeFontPadding: false } }),
+      fontSize: 10,
+      fontWeight: '600',
+      color: inkMuted,
     },
     title: {
-      fontFamily: fontFamily.extrabold,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '800',
-      lineHeight: 21,
+      color: ink,
       letterSpacing: -0.2,
-      ...Platform.select({ android: { includeFontPadding: false } }),
+      lineHeight: 20,
     },
     meta: {
-      fontFamily: fontFamily.regular,
-      fontSize: 13,
-      lineHeight: 18,
-      ...Platform.select({ android: { includeFontPadding: false } }),
+      fontSize: 12,
+      fontWeight: '600',
+      color: inkSecondary,
     },
     fit: {
-      fontFamily: fontFamily.regular,
-      fontSize: 12,
+      fontSize: 11,
+      fontWeight: '600',
+      color: inkMuted,
       fontStyle: 'italic',
-      ...Platform.select({ android: { includeFontPadding: false } }),
     },
     footer: {
       flexDirection: 'row',
@@ -173,24 +190,34 @@ function createStyles(c: { accent: string }) {
       gap: spacing.sm,
     },
     location: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      flex: 1,
-      minWidth: 0,
     },
     locationText: {
-      fontFamily: fontFamily.regular,
-      fontSize: 12,
       flex: 1,
-      ...Platform.select({ android: { includeFontPadding: false } }),
+      fontSize: 11,
+      fontWeight: '600',
+      color: inkMuted,
     },
-    cta: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    matchBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: radius.pill,
+    },
+    matchText: {
+      fontSize: 11,
+      fontWeight: '800',
+    },
+    cta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
     ctaText: {
-      fontFamily: fontFamily.bold,
-      fontSize: 13,
-      fontWeight: '700',
-      ...Platform.select({ android: { includeFontPadding: false } }),
+      fontSize: 12,
+      fontWeight: '800',
     },
   });
 }

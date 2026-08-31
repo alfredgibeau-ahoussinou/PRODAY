@@ -10,11 +10,12 @@ import { ProDayText } from '../ui/ProDayText';
 import { CandidaturePager } from './CandidaturePager';
 import { CandidaturePostsPage } from './CandidaturePostsPage';
 import { CandidatureSuiviPage } from './CandidatureSuiviPage';
-import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { TabScreenShell } from '../app/TabScreenShell';
 import { useCandidatureMercato } from '../../hooks/useCandidatureMercato';
 import { trackV3Event } from '../../core/analytics/v3Events';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 
 interface CandidatureScreenProps {
   profile: User;
@@ -49,7 +50,7 @@ export const CandidatureScreen: React.FC<CandidatureScreenProps> = ({
   onSearchPlayers,
   onRefresh,
 }) => {
-  const { colors } = useAppTheme();
+  const joueurTheme = useJoueurTheme();
   const mercato = useCandidatureMercato(
     profile,
     productLine,
@@ -120,11 +121,14 @@ export const CandidatureScreen: React.FC<CandidatureScreenProps> = ({
     <PressableSpring
       style={[
         styles.topStat,
-        { backgroundColor: colors.surfaceMuted, borderColor: colors.borderStrong },
+        {
+          backgroundColor: JOUEUR_SURFACES.chipActive,
+          borderColor: joueurTheme.border,
+        },
       ]}
       onPress={applicationsCount > 0 ? onOpenApplications : undefined}
       disabled={applicationsCount === 0}
-      scaleTo={0.97}
+      scaleTo={0.98}
       haptic={applicationsCount > 0}
     >
       <ProDayText variant="section" accent={applicationsCount > 0}>
@@ -150,7 +154,7 @@ export const CandidatureScreen: React.FC<CandidatureScreenProps> = ({
       title={config.screenTitle}
       subtitle={config.screenSubtitle}
       right={applicationsBadge}
-      atmosphere="warm_playful"
+      flat
     >
       {pager}
     </TabScreenShell>

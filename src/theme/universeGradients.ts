@@ -29,13 +29,19 @@ export function gradientsForLine(line: ProductLineId): {
       ambient: ['rgba(244, 114, 182, 0.14)', '#0A0A0A', '#000000'] as const,
     };
   }
-  if (line === 'pro' || line === 'pro_player' || line === 'pro_club' || line === 'pro_staff') {
+  if (line === 'pro_club') {
+    return proClubGradients;
+  }
+  if (line === 'pro_player') {
+    return joueurGradients;
+  }
+  if (line === 'pro' || line === 'pro_staff') {
     return {
       hero: proGradients.hero,
       heroDark: proGradients.heroDark,
       card: proGradients.card,
       cta: proGradients.cta,
-      ambient: ['rgba(96, 165, 250, 0.14)', '#0A0A0A', '#000000'] as const,
+      ambient: ['rgba(197, 160, 89, 0.18)', '#0A0A0A', '#000000'] as const,
     };
   }
   if (line === 'amateur') {
@@ -44,7 +50,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: amateurGradients.heroDark,
       card: amateurGradients.card,
       cta: amateurGradients.cta,
-      ambient: ['rgba(249, 115, 22, 0.14)', '#0A0A0A', '#000000'] as const,
+      ambient: ['rgba(255, 255, 255, 0.12)', '#0A0A0A', '#000000'] as const,
     };
   }
   if (line === 'supporter') {
@@ -53,7 +59,7 @@ export function gradientsForLine(line: ProductLineId): {
       heroDark: supporterGradients.heroDark,
       card: supporterGradients.card,
       cta: supporterGradients.cta,
-      ambient: ['rgba(167, 139, 250, 0.14)', '#0A0A0A', '#000000'] as const,
+      ambient: ['rgba(6, 182, 212, 0.22)', '#0A0A0A', '#000000'] as const,
     };
   }
   if (line === 'sante') {
@@ -84,36 +90,70 @@ export function ctaGradient(line: ProductLineId): GradientStops {
   return gradientsForLine(line).cta;
 }
 
+/** Continuité couleurs planche brand → shells. */
 const proClubGradients = {
-  hero: ['#000000', '#020814'] as const,
-  heroDark: ['#000000', '#002478'] as const,
-  card: ['#0c0c0c', '#000000'] as const,
-  cta: ['#002478', '#006CFC'] as const,
-  ambient: ['rgba(0, 108, 252, 0.35)', '#020814', '#000000'] as const,
+  hero: ['#000000', '#000000'] as const,
+  heroDark: ['#000000', '#0A0A0A'] as const,
+  card: ['#0A0A0A', '#000000'] as const,
+  cta: ['#047857', '#10B981'] as const,
+  /** Discover / canvas Club — noir pur, pas de wash vert. */
+  ambient: ['#000000', '#000000', '#000000'] as const,
+};
+
+const presidentGradients = {
+  hero: ['#03050A', '#1A1408'] as const,
+  heroDark: ['#03050A', '#05070E'] as const,
+  card: ['#0E1524', '#05070E'] as const,
+  cta: ['#9A7B2F', '#C5A059'] as const,
+  ambient: ['rgba(197, 160, 89, 0.22)', '#05070E', '#03050A'] as const,
 };
 
 const proStaffGradients = {
-  hero: ['#000000', '#312E81'] as const,
-  heroDark: ['#000000', '#1e1b4b'] as const,
+  hero: ['#000000', '#1A1408'] as const,
+  heroDark: ['#000000', '#0A0A0A'] as const,
   card: ['#1A1A1A', '#0A0A0A'] as const,
-  cta: ['#4338CA', '#818CF8'] as const,
-  ambient: ['rgba(129, 140, 248, 0.14)', '#0A0A0A', '#000000'] as const,
+  cta: ['#9A7B2F', '#C5A059'] as const,
+  ambient: ['rgba(197, 160, 89, 0.18)', '#0A0A0A', '#000000'] as const,
 };
 
 const sponsorGradients = {
-  hero: ['#070605', '#1a1508'] as const,
+  hero: ['#070605', '#1a0818'] as const,
   heroDark: ['#030303', '#070605'] as const,
   card: ['#14110a', '#0c0a06'] as const,
-  cta: ['#92700C', '#D4AF37'] as const,
-  ambient: ['rgba(212, 175, 55, 0.2)', '#070605', '#030303'] as const,
+  cta: ['#6B1F68', '#92278F'] as const,
+  ambient: ['rgba(146, 39, 143, 0.2)', '#070605', '#030303'] as const,
 };
 
 const parentGradients = {
-  hero: ['#042f2e', '#0F766E'] as const,
-  heroDark: ['#022c22', '#134e4a'] as const,
-  card: ['#0f1f1e', '#042f2e'] as const,
-  cta: ['#0F766E', '#2DD4BF'] as const,
-  ambient: ['rgba(45, 212, 191, 0.18)', '#042f2e', '#000000'] as const,
+  hero: ['#0c0704', '#1A2408'] as const,
+  heroDark: ['#030303', '#141A06'] as const,
+  card: ['#1c120c', '#0c0704'] as const,
+  cta: ['#6B9A2E', '#8CC63F'] as const,
+  ambient: ['rgba(140, 198, 63, 0.2)', '#0c0704', '#000000'] as const,
+};
+
+const joueurGradients = {
+  hero: ['#000000', '#0A0A0A'] as const,
+  heroDark: ['#000000', '#050505'] as const,
+  card: ['#0c0c0c', '#000000'] as const,
+  cta: ['#E5E5E5', '#FFFFFF'] as const,
+  ambient: ['rgba(255, 255, 255, 0.12)', '#050505', '#000000'] as const,
+};
+
+const eventsGradients = {
+  hero: ['#0c0704', '#2A1808'] as const,
+  heroDark: ['#030303', '#1A1006'] as const,
+  card: ['#1c120c', '#0c0704'] as const,
+  cta: ['#D97B12', '#F7941D'] as const,
+  ambient: ['rgba(247, 148, 29, 0.2)', '#0c0704', '#000000'] as const,
+};
+
+const supporterBrandGradients = {
+  hero: ['#000000', '#083344'] as const,
+  heroDark: ['#000000', '#042f2e'] as const,
+  card: ['#0c0c0c', '#000000'] as const,
+  cta: ['#0891B2', '#06B6D4'] as const,
+  ambient: ['rgba(6, 182, 212, 0.22)', '#042f2e', '#000000'] as const,
 };
 
 /** Ambient FLASH générique (cyan) */
@@ -131,20 +171,16 @@ export function gradientsForCarouselPole(pole: CarouselPoleId): {
   ambient: GradientStops;
 } {
   if (pole === 'pro_club') return proClubGradients;
-  if (pole === 'pro_staff') return proStaffGradients;
+  if (pole === 'evenements') return eventsGradients;
+  if (pole === 'president') return presidentGradients;
+  if (pole === 'pro_staff' || pole === 'coach') return proStaffGradients;
   if (pole === 'sponsor') return sponsorGradients;
   if (pole === 'parent') return parentGradients;
-  if (pole === 'pro_player') {
-    return {
-      hero: proGradients.hero,
-      heroDark: proGradients.heroDark,
-      card: proGradients.card,
-      cta: proGradients.cta,
-      ambient: ['rgba(96, 165, 250, 0.14)', '#0A0A0A', '#000000'] as const,
-    };
+  if (pole === 'joueur' || pole === 'amateur' || pole === 'pro_player') {
+    return joueurGradients;
   }
-  const line =
-    pole === 'amateur' || pole === 'supporter' || pole === 'sante' ? pole : 'pro';
+  if (pole === 'supporter') return supporterBrandGradients;
+  const line = pole === 'sante' ? pole : 'pro';
   return gradientsForLine(line);
 }
 

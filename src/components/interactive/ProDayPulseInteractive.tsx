@@ -115,7 +115,7 @@ export const ProDayPulseInteractive: React.FC<ProDayPulseInteractiveProps> = ({
   };
 
   const ringControl = (
-    <PressableSpring onPress={toggle} scaleTo={0.92}>
+    <PressableSpring onPress={toggle} scaleTo={0.97}>
       <View style={styles.ringWrap}>
         <Animated.View style={[styles.ringGlow, glowAnim]}>
           <ProDayGradient kind="cta" style={styles.ringGlowFill} />

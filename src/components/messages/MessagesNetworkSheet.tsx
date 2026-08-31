@@ -16,6 +16,9 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { formatDistanceKm } from '../../utils/geoLocation';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { JOUEUR_SURFACES } from '../../theme/joueurDesignSystem';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 
@@ -37,6 +40,7 @@ interface MessagesNetworkSheetProps {
   messageBlockedReason?: string | null;
   onClose: () => void;
   onAction: (action: NetworkSheetAction) => void;
+  variant?: 'default' | 'coach' | 'joueur';
 }
 
 export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
@@ -50,8 +54,19 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
   messageBlockedReason,
   onClose,
   onAction,
+  variant,
 }) => {
   const { colors } = useAppTheme();
+  const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
+  const coachTokens = useCoachTokens();
+  const joueurTheme = useJoueurTheme();
+  const accent = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
+  const accentSoft = coach
+    ? coachTokens.elevated
+    : joueur
+      ? JOUEUR_SURFACES.chipActive
+      : colors.accentSoft;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   if (!suggestion) return null;
@@ -69,8 +84,8 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
         <View style={[styles.hero, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <ProDayGradient kind="cta" style={styles.heroAccent} />
           <View style={styles.heroBody}>
-            <View style={[styles.avatar, { backgroundColor: colors.accentSoft }]}>
-              <Text style={[styles.initial, { color: colors.accent }]}>{initial}</Text>
+            <View style={[styles.avatar, { backgroundColor: accentSoft }]}>
+              <Text style={[styles.initial, { color: accent }]}>{initial}</Text>
             </View>
             <View style={styles.heroCopy}>
               <ProDayText variant="section" style={styles.name}>
@@ -89,7 +104,7 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
                 </ProDayText>
               </View>
             </View>
-            <View style={[styles.score, { backgroundColor: colors.accent }]}>
+            <View style={[styles.score, { backgroundColor: accent }]}>
               <ProDayText variant="caption" inverse style={styles.scoreText}>
                 {suggestion.matchScore}%
               </ProDayText>
@@ -101,13 +116,13 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
         </View>
 
         {loadingTarget ? (
-          <ActivityIndicator color={colors.accent} style={styles.loader} />
+          <ActivityIndicator color={accent} style={styles.loader} />
         ) : null}
 
         <View style={styles.actions}>
           {isContact && targetUser ? (
             <PressableSpring
-              style={[styles.primaryBtn, { backgroundColor: colors.accent }]}
+              style={[styles.primaryBtn, { backgroundColor: accent }]}
               onPress={() => onAction('profile')}
               scaleTo={0.98}
               haptic
@@ -121,7 +136,7 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
 
           {!isContact && suggestion.kind === 'mercato' ? (
             <PressableSpring
-              style={[styles.primaryBtn, { backgroundColor: colors.accent }]}
+              style={[styles.primaryBtn, { backgroundColor: accent }]}
               onPress={() => onAction('explore')}
               scaleTo={0.98}
               haptic
@@ -135,7 +150,7 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
 
           {!isContact && suggestion.kind !== 'mercato' ? (
             <PressableSpring
-              style={[styles.primaryBtn, { backgroundColor: colors.accent }]}
+              style={[styles.primaryBtn, { backgroundColor: accent }]}
               onPress={() => onAction('explore')}
               scaleTo={0.98}
               haptic
@@ -161,7 +176,7 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
               <Icon
                 name={isFavorite ? 'bookmark' : 'bookmark-outline'}
                 size={18}
-                color={isFavorite ? '#F59E0B' : colors.accent}
+                color={isFavorite ? '#F59E0B' : accent}
               />
               <Text style={[styles.secondaryText, { color: colors.text }]}>
                 {favoriteBusy
@@ -185,7 +200,7 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
               scaleTo={0.98}
               haptic={canMessage}
             >
-              <Icon name="chat" size={18} color={canMessage ? colors.accent : colors.textMuted} />
+              <Icon name="chat" size={18} color={canMessage ? accent : colors.textMuted} />
               <Text
                 style={[
                   styles.secondaryText,

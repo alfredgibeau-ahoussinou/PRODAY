@@ -19,7 +19,7 @@ export default function AboutPage() {
       <PageHeader
         pathname={ROUTES.about}
         kicker="À PROPOS"
-        title="Connecter · Progresser · Réussir"
+        title="Connecter. Progresser. Révéler."
         description={BRAND.mission}
         logo={BRAND.logo}
         logoAlt={BRAND.name}

@@ -8,6 +8,10 @@ import type { CoachNavResolvedItem } from '../navigation/resolveCoachNavAccess';
 import { spacing } from '../../../theme/designTokens';
 import { useCoachThemedStyles } from './CoachThemeContext';
 import type { CoachThemeTokens } from '../../../utils/coachTeamTheme';
+import {
+  coachVideoLockBody,
+  coachVideoLockTitle,
+} from '../../../utils/coachVideoHonesty';
 
 type Props = {
   item: CoachNavResolvedItem;
@@ -16,6 +20,7 @@ type Props = {
 export function CoachLockedPane({ item }: Props) {
   const shellNav = useCoachShellNav();
   const styles = useCoachThemedStyles(createStyles);
+  const isVideo = Boolean(item.requiresVideo);
 
   return (
     <CoachPane title={item.label}>
@@ -25,18 +30,29 @@ export function CoachLockedPane({ item }: Props) {
             {item.label}
           </CoachText>
           <CoachEmptyState
-            title="Coach Pro requis"
-            body={item.lockReason ?? 'Débloque ce module avec Coach Pro ou l’offre club Tout inclus.'}
-            cta="Retour Calendrier"
-            onPress={() => shellNav?.requestNav('today')}
+            title={isVideo ? coachVideoLockTitle() : 'Coach Pro requis'}
+            body={
+              isVideo
+                ? coachVideoLockBody(item.lockReason)
+                : item.lockReason ??
+                  'Débloque ce module avec Coach Pro ou l’offre club Tout inclus.'
+            }
+            cta={isVideo ? 'Ouvrir Profil' : 'Retour Calendrier'}
+            onPress={() => shellNav?.requestNav(isVideo ? 'profil' : 'today')}
           />
+          {isVideo ? (
+            <CoachText variant="caption" muted style={styles.note}>
+              Le club gère pack / devis vidéo (Tout inclus, Pro + Veo). L’app coach n’ouvre pas
+              d’OAuth fabricant.
+            </CoachText>
+          ) : null}
           <PressableSpring
-            onPress={() => shellNav?.requestNav('forme')}
+            onPress={() => shellNav?.requestNav(isVideo ? 'today' : 'forme')}
             scaleTo={0.98}
             style={styles.link}
           >
             <CoachText variant="caption" style={styles.linkText}>
-              Voir Analyse de forme
+              {isVideo ? 'Retour Accueil jour J' : 'Voir Analyse de forme'}
             </CoachText>
           </PressableSpring>
         </View>
@@ -49,6 +65,7 @@ function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     stack: { gap: spacing.md },
     title: { color: tokens.foreground, fontWeight: '800' },
+    note: { color: tokens.muted, lineHeight: 18 },
     link: { paddingVertical: spacing.sm },
     linkText: { color: tokens.accent, fontWeight: '700' },
   });

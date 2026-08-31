@@ -5,7 +5,7 @@ export const ADMIN_SESSION_COOKIE = "proday_admin_session";
 /** Session courte : réduit la fenêtre si vol de cookie. */
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 12; // 12 heures
 export const ADMIN_LOGIN_PATH = "/admin/login";
-export const ADMIN_HOME_PATH = "/admin/dashboard";
+export const ADMIN_HOME_PATH = "/admin/home";
 
 const TOKEN_PREFIX = "adm1.";
 

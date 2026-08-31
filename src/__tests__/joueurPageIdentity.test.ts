@@ -4,33 +4,22 @@ import {
   JOUEUR_SITE,
   resolveJoueurPageIdentity,
 } from '../content/joueurPageIdentity';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import { getJoueurDailyQuests, getJoueurYouthChallenges } from '../features/joueur/constants';
 import { getJoueurGameTabLabel } from '../content/joueurGameMenu';
 
 describe('joueurPageIdentity', () => {
-  it('différence les accents fille / garçon à chaque âge', () => {
+  it('unifie les accents mint dark premium à chaque âge', () => {
     const youthM = resolveJoueurPageIdentity({ ageGroup: 'youth', gender: 'male' });
     const youthF = resolveJoueurPageIdentity({ ageGroup: 'youth', gender: 'female' });
     const teenM = resolveJoueurPageIdentity({ ageGroup: 'teen', gender: 'male' });
-    const teenF = resolveJoueurPageIdentity({ ageGroup: 'teen', gender: 'female' });
     const adultM = resolveJoueurPageIdentity({ ageGroup: 'adult', gender: 'male' });
-    const adultF = resolveJoueurPageIdentity({ ageGroup: 'adult', gender: 'female' });
 
+    expect(youthM.accent).toBe(PLAYER_DARK.accent);
+    expect(youthF.accent).toBe(PLAYER_DARK.accent);
+    expect(teenM.accent).toBe(PLAYER_DARK.accent);
+    expect(adultM.accent).toBe(PLAYER_DARK.accent);
     expect(youthM.accent).toBe(JOUEUR_AGE_GENDER_ACCENTS.youth.male.accent);
-    expect(youthF.accent).toBe(JOUEUR_AGE_GENDER_ACCENTS.youth.female.accent);
-    expect(youthM.accent).not.toBe(youthF.accent);
-
-    expect(teenM.accent).toBe(JOUEUR_AGE_GENDER_ACCENTS.teen.male.accent);
-    expect(teenF.accent).toBe(JOUEUR_AGE_GENDER_ACCENTS.teen.female.accent);
-    expect(teenM.accent).not.toBe(teenF.accent);
-
-    expect(adultM.accent).toBe(JOUEUR_AGE_GENDER_ACCENTS.adult.male.accent);
-    expect(adultF.accent).toBe(JOUEUR_AGE_GENDER_ACCENTS.adult.female.accent);
-    expect(adultM.accent).not.toBe(adultF.accent);
-
-    // Les modes âge ne partagent pas la même palette garçon
-    expect(youthM.accent).not.toBe(teenM.accent);
-    expect(teenM.accent).not.toBe(adultM.accent);
   });
 
   it('switch mood / wash / density par âge', () => {
@@ -42,7 +31,7 @@ describe('joueurPageIdentity', () => {
     expect(youth.wash).toEqual(JOUEUR_AGE_MOODS.youth.wash);
     expect(teen.wash).toEqual(JOUEUR_AGE_MOODS.teen.wash);
     expect(adult.wash).toEqual(JOUEUR_AGE_MOODS.adult.wash);
-    expect(youthF.wash).not.toEqual(youth.wash);
+    expect(youthF.wash).toEqual(youth.wash);
     expect(youth.density).toBe('playful');
     expect(teen.density).toBe('hud');
     expect(adult.density).toBe('pro');
@@ -53,7 +42,7 @@ describe('joueurPageIdentity', () => {
     expect(youthF.hudLabel).toBe('JEUX FILLE');
     expect(teen.hudLabel).toBe('MODE CALME');
     expect(adult.hudLabel).toBe('ÉQUIPE PRO');
-    expect(youth.shellBg).not.toBe(teen.shellBg);
+    expect(youth.shellBg).toBe(PLAYER_DARK.bg);
     expect(youth.worldTag).toMatch(/-13/);
     expect(youthF.worldTag).toMatch(/FILLE/);
   });
@@ -61,7 +50,7 @@ describe('joueurPageIdentity', () => {
   it('exposes coach price and game site tokens', () => {
     expect(JOUEUR_SITE.coachPriceEur).toBe(30);
     expect(JOUEUR_SITE.xp).toBeTruthy();
-    expect(JOUEUR_SITE.bg.startsWith('#')).toBe(true);
+    expect(JOUEUR_SITE.bg).toBe(PLAYER_DARK.bg);
   });
 
   it('personalizes youth / teen titles', () => {
@@ -77,7 +66,7 @@ describe('joueurPageIdentity', () => {
       displayName: 'Mia',
     });
     expect(youthF.title.toUpperCase()).toContain('MIA');
-    expect(youth.shellBg).not.toBe(youthF.shellBg);
+    expect(youth.shellBg).toBe(youthF.shellBg);
     const teen = resolveJoueurPageIdentity({
       ageGroup: 'teen',
       gender: 'female',
@@ -108,9 +97,9 @@ describe('joueurPageIdentity', () => {
 
   it('change les labels de dock par âge', () => {
     expect(getJoueurGameTabLabel('home', 'youth')).toBe('JOUER');
-    expect(getJoueurGameTabLabel('home', 'teen')).toBe('QG');
+    expect(getJoueurGameTabLabel('home', 'teen')).toBe('PARCOURS');
     expect(getJoueurGameTabLabel('home', 'adult')).toBe('ACCUEIL');
-    expect(getJoueurGameTabLabel('profil', 'adult')).toBe('CARTE');
+    expect(getJoueurGameTabLabel('profil', 'adult')).toBe('PROFIL');
     expect(getJoueurGameTabLabel('matchs', 'teen')).toBe('MATCHS');
   });
 });

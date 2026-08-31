@@ -1,5 +1,15 @@
 export type SponsorOfferType = 'equipment' | 'money' | 'visibility';
 
+export type SponsorTargetScope = 'club' | 'team' | 'match' | 'tournament' | 'event';
+
+export const SPONSOR_TARGET_SCOPES: { id: SponsorTargetScope; label: string }[] = [
+  { id: 'club', label: 'Club' },
+  { id: 'team', label: 'Équipe' },
+  { id: 'match', label: 'Match' },
+  { id: 'tournament', label: 'Tournoi' },
+  { id: 'event', label: 'Événement' },
+];
+
 export interface SponsorOffer {
   id: string;
   sponsor_uid?: string;
@@ -12,6 +22,14 @@ export interface SponsorOffer {
   city: string;
   active: boolean;
   created_at: Date;
+  /** Ce que le sponsor cible (club, équipe, match…). */
+  sponsor_target?: SponsorTargetScope;
+  /** Durée du sponsoring en jours (null = indéfinie). */
+  duration_days?: number | null;
+  /** Montant en centimes (configuré par le sponsor). */
+  amount_cents?: number | null;
+  /** Visibilité souhaitée (texte libre côté sponsor). */
+  desired_visibility?: string;
   /** Ville normalisée pour requêtes push géo */
   geo_target_city?: string;
   geo_push_sent_at?: Date;

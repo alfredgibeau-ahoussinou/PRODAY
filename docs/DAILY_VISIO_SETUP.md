@@ -25,8 +25,9 @@ firebase deploy --only functions:getVisioJoinUrl,functions:onMedicalAppointmentC
 
 ## App native
 
-Packages Expo 54 : `@daily-co/react-native-daily-js`, `@daily-co/react-native-webrtc`,
-`@daily-co/config-plugin-rn-daily-js` (voir `app.json`).
+Visio native Daily retirée du client Expo (bêta). Les salles Daily restent côté Cloud Functions
+(`functions/src/dailyVisio.ts`) pour les liens de rendez-vous ; plus de plugin
+`@daily-co/config-plugin-rn-daily-js` dans `app.json`.
 
 Rebuild natif requis (`eas build` / `npx expo prebuild`) — pas compatible Expo Go.
 

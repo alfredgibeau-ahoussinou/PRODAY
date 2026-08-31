@@ -50,12 +50,13 @@ export function ScrollVideoStage() {
 
   const hintOpacity = useTransform(progress, [0, 0.12, 0.22], [1, 0.7, 0]);
   const brandOpacity = useTransform(progress, [0, 0.15, 0.28], [1, 1, 0]);
+  // Copy visible dès le 1er paint (évite hero noir « cassé » avant le premier scroll).
   const copyOpacity = useTransform(
     progress,
-    reduced ? [0, 0.01] : [0.05, 0.18, 0.55, 0.72],
-    reduced ? [1, 1] : [0, 1, 1, 0],
+    reduced ? [0, 0.01] : [0, 0.12, 0.55, 0.72],
+    reduced ? [1, 1] : [1, 1, 1, 0],
   );
-  const copyY = useTransform(progress, [0.05, 0.2], [16, 0]);
+  const copyY = useTransform(progress, [0, 0.12], [0, 0]);
 
   return (
     <section
@@ -83,7 +84,7 @@ export function ScrollVideoStage() {
 
         <motion.p
           style={{ opacity: brandOpacity }}
-          className="absolute left-5 top-28 z-20 font-mono text-[10px] uppercase tracking-[0.28em] text-[#4C8BFF] sm:left-8 lg:left-12"
+          className="absolute left-5 top-28 z-20 font-mono text-[10px] uppercase tracking-[0.28em] text-[#F5D04A] sm:left-8 lg:left-12"
         >
           ProDay
         </motion.p>
@@ -98,7 +99,7 @@ export function ScrollVideoStage() {
         >
           <div className="mx-auto w-full max-w-xl">
             <h1 className="whitespace-pre-line font-display text-[clamp(1.55rem,6.2vw,3.1rem)] font-medium leading-[1.12] tracking-[-0.04em] text-white">
-              {"Le football amateur,\nenfin réuni au même endroit."}
+              {"Pas un outil de plus.\nL'infrastructure de votre football."}
             </h1>
             <p className="mt-3 text-[13px] leading-relaxed text-white/65 sm:mt-4 sm:text-[15px]">
               {BRAND.heroSupport}
@@ -106,7 +107,7 @@ export function ScrollVideoStage() {
             <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-5">
               <Link
                 href={ROUTES.proClub}
-                className="inline-flex flex-col items-start rounded-full bg-[#0054F0] px-5 py-2.5 text-white transition hover:bg-[#1A68FF]"
+                className="inline-flex flex-col items-start rounded-full bg-[#E8B923] px-5 py-2.5 text-white transition hover:bg-[#B8941F]"
               >
                 <span className="text-[11px] font-semibold uppercase tracking-[0.1em]">
                   Créer mon club
@@ -128,6 +129,15 @@ export function ScrollVideoStage() {
                 Je suis coach
               </Link>
             </div>
+            <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.18em] text-white/45 sm:mt-4 sm:text-[10px]">
+              Sans engagement ·{" "}
+              <Link
+                href={ROUTES.sponsor}
+                className="pointer-events-auto text-white/70 underline-offset-2 transition hover:text-white hover:underline"
+              >
+                Sponsoring possible
+              </Link>
+            </p>
           </div>
         </motion.div>
 

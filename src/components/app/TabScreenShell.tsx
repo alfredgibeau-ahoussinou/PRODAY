@@ -13,9 +13,12 @@ import {
 } from '../player/joueurPortalUi';
 import { JoueurWorldScene } from '../../features/joueur/JoueurWorldScene';
 import { JoueurParticleField } from '../../features/joueur/JoueurGameFx';
-import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { ProDayText } from '../ui/ProDayText';
 import { spacing } from '../../theme/designTokens';
+import { ScreenBackButton } from '../ui/ScreenBackButton';
+import { useJoueurSecondaryTabBack } from '../../hooks/useJoueurSecondaryTabBack';
 
 export type TabScreenShellProps = {
   caption?: string;
@@ -29,6 +32,8 @@ export type TabScreenShellProps = {
   hideHeader?: boolean;
   atmosphere?: ImmersivePitchMood;
   joueurUniverse?: boolean;
+  /** Masque la scène 2.5D décorative dans le header joueur (ex. onglet Matchs). */
+  hideWorldScene?: boolean;
   children: React.ReactNode;
 };
 
@@ -45,9 +50,12 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
   hideHeader = false,
   atmosphere,
   joueurUniverse,
+  hideWorldScene = true,
   children,
 }) => {
   const session = useJoueurSession();
+  const tabBack = useJoueurSecondaryTabBack();
+  const joueurTheme = useJoueurTheme();
   const useJoueur =
     joueurUniverse === true ||
     (joueurUniverse !== false &&
@@ -55,28 +63,33 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
 
   if (useJoueur && session) {
     const { identity, universeLabel } = session;
+    const accent = joueurTheme.accent;
+    const accentBright = joueurTheme.accentBright;
+    const headerLeft =
+      left ?? (tabBack.showBack ? <ScreenBackButton onPress={tabBack.onBack} /> : null);
 
     return (
       <ProDayScreenCanvas flat immersive={false}>
         <JoueurIdentityProvider identity={identity}>
-          <View style={[styles.root, { backgroundColor: JOUEUR_SITE.bg }]}>
+          <View style={[styles.root, { backgroundColor: joueurTheme.shellBg }]}>
             <LinearGradient
-              colors={identity.wash}
+              colors={[PLAYER_DARK.bgElevated, PLAYER_DARK.bg, PLAYER_DARK.bg]}
               locations={[0, 0.45, 1]}
               style={StyleSheet.absoluteFill}
               pointerEvents="none"
             />
-            <JoueurParticleField accent={identity.accent} density={identity.density} />
-            <View style={[styles.accentBar, { backgroundColor: identity.accent }]} />
+            <JoueurParticleField accent={accent} density={identity.density} />
+            <View style={[styles.accentBar, { backgroundColor: accent }]} />
             {!hideHeader ? (
               <View style={styles.headPad}>
-                <View style={[styles.hudPlate, { borderColor: identity.accent }]}>
-                  <JoueurHudCorners color={identity.accent} size={12} thickness={2} />
+                {headerLeft ? <View style={styles.backRow}>{headerLeft}</View> : null}
+                <View style={[styles.hudPlate, { borderColor: accent }]}>
+                  <JoueurHudCorners color={accent} size={12} thickness={2} />
                   <View style={styles.hudTop}>
                     <View style={{ flex: 1, gap: 4 }}>
                       <ProDayText
                         variant="caption"
-                        style={[styles.kicker, { color: identity.accent }]}
+                        style={[styles.kicker, { color: accent }]}
                       >
                         ▶ {(caption ?? universeLabel.short).toUpperCase()} ·{' '}
                         {identity.hudLabel}
@@ -90,13 +103,15 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
                         </ProDayText>
                       ) : null}
                     </View>
-                    <View style={{ width: 88 }}>
-                      <JoueurWorldScene
-                        identity={identity}
-                        compact
-                        height={56}
-                        showBanner={false}
-                      />
+                    <View style={{ width: hideWorldScene ? 0 : 88, overflow: 'hidden' }}>
+                      {hideWorldScene ? null : (
+                        <JoueurWorldScene
+                          identity={identity}
+                          compact
+                          height={56}
+                          showBanner={false}
+                        />
+                      )}
                     </View>
                   </View>
                   {stats && stats.length > 0 ? (
@@ -155,10 +170,14 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     zIndex: 2,
   },
+  backRow: {
+    marginBottom: spacing.xs,
+    alignSelf: 'flex-start',
+  },
   hudPlate: {
     borderWidth: 1.5,
     borderRadius: 22,
-    backgroundColor: JOUEUR_SITE.panel,
+    backgroundColor: PLAYER_DARK.surface,
     padding: spacing.md,
     gap: spacing.sm,
     overflow: 'hidden',
@@ -175,11 +194,11 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   title: {
-    color: JOUEUR_SITE.foreground,
+    color: PLAYER_DARK.text,
     fontWeight: '900',
     letterSpacing: 0.4,
     fontSize: 20,
   },
-  sub: { color: JOUEUR_SITE.muted, lineHeight: 17 },
+  sub: { color: PLAYER_DARK.textMuted, lineHeight: 17 },
   stats: { marginTop: 2 },
 });

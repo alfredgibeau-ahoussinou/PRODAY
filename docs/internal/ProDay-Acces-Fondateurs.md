@@ -15,7 +15,7 @@
 | 1 | Alfred Gibeau-Ahoussinou | Associé fondateur |
 | 2 | Ben | Associé fondateur |
 | 3 | Arthurus | Associé fondateur |
-| 4 | Yohan | Associé fondateur |
+| 4 | Yohan (`semedoyohan1@gmail.com`) | Associé fondateur — admin app |
 
 ---
 

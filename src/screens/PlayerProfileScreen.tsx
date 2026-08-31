@@ -16,6 +16,9 @@ import { useAppTheme } from '../context/ProductLineContext';
 import { buildPlayerCvHtmlFromUser } from '../utils/pdfGenerator';
 import { openPlayerCvHtml } from '../utils/openCvHtml';
 import { useAuth } from '../context/AuthContext';
+import { useJoueurSession } from '../context/JoueurSessionContext';
+import { usePlayerThemeColors } from '../context/PlayerThemeContext';
+import { PLAYER_DARK } from '../theme/playerDarkPremium';
 import { useSupporterPlayerFollow } from '../hooks/useSupporterPlayerFollow';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import { isSubScreenShellEnabled } from '../hooks/useSubScreenShell';
@@ -124,7 +127,10 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   onContact,
 }) => {
   const { colors: themeColors, productLine, isWoman } = useAppTheme();
-  const styles = useMemo(() => createStyles(themeColors), [themeColors]);
+  const joueurSession = useJoueurSession();
+  const playerColors = usePlayerThemeColors();
+  const joueurLive =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const { profile: myProfile } = useAuth();
   const { requireAuth } = useRequireAuth();
   const nav = useTabNavigationActions();
@@ -133,6 +139,26 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
   const isOwnProfile = myProfile?.uid === player.uid;
   const isStaffView =
     isSubScreenShellEnabled(myProfile, 'staff') && !isOwnProfile;
+
+  const profileColors = useMemo(() => {
+    if (!joueurLive || isStaffView) return themeColors;
+    return {
+      ...themeColors,
+      background: PLAYER_DARK.bg,
+      surface: PLAYER_DARK.surface,
+      surfaceMuted: PLAYER_DARK.bgElevated,
+      border: PLAYER_DARK.border,
+      text: PLAYER_DARK.text,
+      textSecondary: PLAYER_DARK.textMuted,
+      textMuted: PLAYER_DARK.textMuted,
+      brand: playerColors.accent,
+      accent: playerColors.accent,
+      accentSoft: playerColors.accentSoft,
+      accentMuted: playerColors.accentSoft,
+    };
+  }, [joueurLive, isStaffView, playerColors.accent, playerColors.accentSoft, themeColors]);
+
+  const styles = useMemo(() => createStyles(profileColors), [profileColors]);
   const { activities } = usePlayerActivities(isOwnProfile ? player.uid : undefined);
   const { activities: staffActivities, loading: staffActivitiesLoading } = usePlayerActivitiesForStaff(
     isStaffView ? player.uid : undefined
@@ -234,13 +260,13 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
           <View style={{ gap: spacing.md }}>
             <PlayerIdentityDetails
               player={player}
-              colors={themeColors}
+              colors={profileColors}
               visibleContacts={visibleContacts}
             />
             {gallery.length > 0 ? (
               <>
                 <View style={styles.galleryHeader}>
-                  <Text style={[styles.emptyText, { color: themeColors.text, fontWeight: '700' }]}>
+                  <Text style={[styles.emptyText, { color: profileColors.text, fontWeight: '700' }]}>
                     Galerie
                   </Text>
                   {gallery.length > 6 ? (
@@ -249,7 +275,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
                     </PressableSpring>
                   ) : null}
                 </View>
-                <PlayerGalleryGrid urls={gallery} colors={themeColors} expanded={galleryExpanded} />
+                <PlayerGalleryGrid urls={gallery} colors={profileColors} expanded={galleryExpanded} />
               </>
             ) : null}
           </View>
@@ -257,11 +283,11 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       case 'stats':
         return hasStats && stats ? (
           <View style={styles.statsStrip}>
-            <StatItem icon="shirt" value={stats.matches} label="Matchs" brandColor={themeColors.brand} styles={styles} />
+            <StatItem icon="shirt" value={stats.matches} label="Matchs" brandColor={profileColors.brand} styles={styles} />
             <View style={styles.statDivider} />
-            <StatItem icon="football" value={stats.goals} label="Buts" brandColor={themeColors.brand} styles={styles} />
+            <StatItem icon="football" value={stats.goals} label="Buts" brandColor={profileColors.brand} styles={styles} />
             <View style={styles.statDivider} />
-            <StatItem icon="walk" value={stats.assists} label="Passes D." brandColor={themeColors.brand} styles={styles} />
+            <StatItem icon="walk" value={stats.assists} label="Passes D." brandColor={profileColors.brand} styles={styles} />
           </View>
         ) : (
           <Text style={styles.emptyText}>Stats saison non renseignées</Text>
@@ -274,7 +300,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
             </Text>
             {isStaffView && highlightUrl ? (
               <PressableSpring onPress={() => setHighlightSheetOpen(true)}>
-                <Text style={[styles.link, { color: themeColors.brand }]}>
+                <Text style={[styles.link, { color: profileColors.brand }]}>
                   Annoter le highlight
                   {highlightAnnotations.length > 0
                     ? ` · ${highlightAnnotations.length}`
@@ -299,7 +325,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       case 'availability': {
         const label = availabilityLabel(p.availability);
         return label ? (
-          <Text style={[styles.bodyText, { color: themeColors.brand, fontWeight: '700' }]}>{label}</Text>
+          <Text style={[styles.bodyText, { color: profileColors.brand, fontWeight: '700' }]}>{label}</Text>
         ) : (
           <Text style={styles.emptyText}>Disponibilité non indiquée</Text>
         );
@@ -319,7 +345,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {scouting && isStaffView ? (
         <AnimatedEntrance kind="fade">
-          <View style={[styles.scoutingBox, { backgroundColor: themeColors.accentSoft, borderColor: themeColors.accentMuted }]}>
+          <View style={[styles.scoutingBox, { backgroundColor: profileColors.accentSoft, borderColor: profileColors.accentMuted }]}>
             <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
               Opportunity Score {opportunity?.score ?? scouting.score}%
               {opportunity ? ` · ${opportunity.label}` : ` · ${scouting.label}`}
@@ -405,7 +431,7 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       <AnimatedEntrance kind="fadeUp">
         <PlayerProfileHero
           player={player}
-          colors={themeColors}
+          colors={profileColors}
           isOwnProfile={isOwnProfile}
           completionPercent={completion?.percent}
           careerScore={career?.total ?? staffCareer?.total}

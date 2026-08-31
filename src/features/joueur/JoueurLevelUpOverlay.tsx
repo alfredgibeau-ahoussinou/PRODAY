@@ -12,20 +12,20 @@ import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
-import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { spacing } from '../../theme/designTokens';
 import { joueurGameConfirm } from './joueurSfx';
 
 /** Flash level-up plein écran — moments de progression. */
 export function JoueurLevelUpOverlay() {
   const progress = useJoueurProgress();
-  const session = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
   const scale = useSharedValue(0.7);
   const opacity = useSharedValue(0);
 
   const event = progress?.levelUp ?? null;
-  const accent = session?.identity.accent ?? '#4C8BFF';
-  const accentBright = session?.identity.accentBright ?? '#93C5FD';
+  const accent = joueurTheme.accent;
+  const accentBright = joueurTheme.accentBright;
 
   useEffect(() => {
     if (!event) return;

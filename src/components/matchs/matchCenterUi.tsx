@@ -4,11 +4,16 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
+import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
+import { useJoueurPageIdentity } from '../player/joueurPortalUi';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 
 const CoachMatchSkinContext = createContext(false);
+const JoueurMatchSkinContext = createContext(false);
 
 export function CoachMatchSkinProvider({
   children,
@@ -22,18 +27,118 @@ export function CoachMatchSkinProvider({
   );
 }
 
+export function JoueurMatchSkinProvider({
+  children,
+  enabled,
+}: {
+  children: React.ReactNode;
+  enabled: boolean;
+}) {
+  return (
+    <JoueurMatchSkinContext.Provider value={enabled}>{children}</JoueurMatchSkinContext.Provider>
+  );
+}
+
 function useCoachMatchSkin() {
   return useContext(CoachMatchSkinContext);
 }
 
-type SiteTokens = Pick<CoachThemeTokens, 'surface' | 'border' | 'foreground' | 'muted'>;
-
-function matchSiteTokens(coachSkin: boolean, coachTokens: CoachThemeTokens): SiteTokens {
-  return coachSkin ? coachTokens : MATCH_SITE;
+function useJoueurMatchSkin() {
+  return useContext(JoueurMatchSkinContext);
 }
 
-function matchAccent(coachSkin: boolean, themeAccent: string, coachTokens: CoachThemeTokens) {
-  return coachSkin ? coachTokens.accent : themeAccent;
+export type MatchSkinTokens = {
+  accent: string;
+  soft: string;
+  live: string;
+  warn: string;
+  border: string;
+  foreground: string;
+  muted: string;
+  surface: string;
+  elevated: string;
+  cardRadius: number;
+  joueurSkin: boolean;
+  coachSkin: boolean;
+};
+
+/** Tokens Match Center — coach / joueur FUT18 / défaut. */
+export function useMatchSkinTokens(): MatchSkinTokens {
+  const { colors } = useAppTheme();
+  const coachSkin = useCoachMatchSkin();
+  const joueurSkin = useJoueurMatchSkin();
+  const coachTokens = useCoachTokens();
+  const identity = useJoueurPageIdentity();
+  const playerTheme = usePlayerThemeColors();
+
+  return useMemo(() => {
+    if (coachSkin) {
+      return {
+        accent: coachTokens.accent,
+        soft: coachTokens.soft ?? 'rgba(255,255,255,0.08)',
+        live: MATCH_SITE.live,
+        warn: MATCH_SITE.warn,
+        border: coachTokens.border,
+        foreground: coachTokens.foreground,
+        muted: coachTokens.muted,
+        surface: coachTokens.surface,
+        elevated: coachTokens.elevated ?? coachTokens.surface,
+        cardRadius: 16,
+        joueurSkin: false,
+        coachSkin: true,
+      };
+    }
+    if (joueurSkin) {
+      return {
+        accent: playerTheme.accent,
+        soft: playerTheme.accentSoft,
+        live: playerTheme.accent,
+        warn: JOUEUR_SITE.warn,
+        border: PLAYER_DARK.border,
+        foreground: PLAYER_DARK.text,
+        muted: PLAYER_DARK.textMuted,
+        surface: playerTheme.surface,
+        elevated: playerTheme.surfaceRaised,
+        cardRadius: identity?.density === 'playful' ? 20 : 16,
+        joueurSkin: true,
+        coachSkin: false,
+      };
+    }
+    return {
+      accent: colors.accent,
+      soft: MATCH_SITE.soft,
+      live: MATCH_SITE.live,
+      warn: MATCH_SITE.warn,
+      border: MATCH_SITE.border,
+      foreground: MATCH_SITE.foreground,
+      muted: MATCH_SITE.muted,
+      surface: MATCH_SITE.surface,
+      elevated: MATCH_SITE.elevated,
+      cardRadius: 2,
+      joueurSkin: false,
+      coachSkin: false,
+    };
+  }, [coachSkin, joueurSkin, coachTokens, identity, colors.accent, playerTheme]);
+}
+
+type SiteTokens = Pick<CoachThemeTokens, 'surface' | 'border' | 'foreground' | 'muted'>;
+
+function matchSiteTokens(
+  coachSkin: boolean,
+  joueurSkin: boolean,
+  coachTokens: CoachThemeTokens,
+  skin: MatchSkinTokens,
+): SiteTokens {
+  if (coachSkin) return coachTokens;
+  if (joueurSkin) {
+    return {
+      surface: skin.surface,
+      border: skin.border,
+      foreground: skin.foreground,
+      muted: skin.muted,
+    };
+  }
+  return MATCH_SITE;
 }
 
 /** Section terminal Match Center — kicker / titre / support. */
@@ -50,13 +155,12 @@ export function MatchSectionCard({
   children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colors } = useAppTheme();
-  const coachSkin = useCoachMatchSkin();
+  const skin = useMatchSkinTokens();
+  const coachSkin = skin.coachSkin;
   const coachTokens = useCoachTokens();
-  const accent = matchAccent(coachSkin, colors.accent, coachTokens);
   const styles = useMemo(
-    () => createCardStyles(accent, coachSkin, coachTokens),
-    [accent, coachSkin, coachTokens],
+    () => createCardStyles(skin.accent, coachSkin, skin.joueurSkin, coachTokens, skin),
+    [skin, coachSkin, coachTokens],
   );
 
   return (
@@ -84,13 +188,12 @@ export function MatchKpiRow({
 }: {
   items: { label: string; value: string; tone?: string }[];
 }) {
-  const { colors } = useAppTheme();
-  const coachSkin = useCoachMatchSkin();
+  const skin = useMatchSkinTokens();
+  const coachSkin = skin.coachSkin;
   const coachTokens = useCoachTokens();
-  const accent = matchAccent(coachSkin, colors.accent, coachTokens);
   const styles = useMemo(
-    () => createKpiStyles(accent, coachSkin, coachTokens),
-    [accent, coachSkin, coachTokens],
+    () => createKpiStyles(skin.accent, coachSkin, skin.joueurSkin, coachTokens, skin),
+    [skin, coachSkin, coachTokens],
   );
 
   return (
@@ -126,24 +229,23 @@ export function MatchActionRow({
   secondary?: string;
   onSecondary?: () => void;
 }) {
-  const { colors } = useAppTheme();
-  const coachSkin = useCoachMatchSkin();
+  const skin = useMatchSkinTokens();
+  const coachSkin = skin.coachSkin;
   const coachTokens = useCoachTokens();
-  const accent = matchAccent(coachSkin, colors.accent, coachTokens);
   const styles = useMemo(
-    () => createActionStyles(accent, coachSkin, coachTokens),
-    [accent, coachSkin, coachTokens],
+    () => createActionStyles(skin.accent, coachSkin, skin.joueurSkin, coachTokens, skin),
+    [skin, coachSkin, coachTokens],
   );
 
   return (
     <View style={styles.row}>
-      <PressableSpring onPress={onPrimary} scaleTo={0.97} haptic style={styles.primary}>
+      <PressableSpring onPress={onPrimary} scaleTo={0.98} haptic style={styles.primary}>
         <ProDayText variant="caption" style={styles.primaryText}>
           {primary}
         </ProDayText>
       </PressableSpring>
       {secondary && onSecondary ? (
-        <PressableSpring onPress={onSecondary} scaleTo={0.97} style={styles.secondary}>
+        <PressableSpring onPress={onSecondary} scaleTo={0.98} style={styles.secondary}>
           <ProDayText variant="caption" style={styles.secondaryText}>
             {secondary}
           </ProDayText>
@@ -179,7 +281,9 @@ export function MatchFilterBar({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  return <View style={[filterStyles.bar, style]}>{children}</View>;
+  const skin = useMatchSkinTokens();
+  const styles = useMemo(() => createFilterStyles(skin), [skin]);
+  return <View style={[styles.bar, style]}>{children}</View>;
 }
 
 /** Panneau léger (liste / détail) avec barre gauche accent. */
@@ -190,36 +294,49 @@ export function MatchLightPanel({
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colors } = useAppTheme();
-  const coachSkin = useCoachMatchSkin();
+  const skin = useMatchSkinTokens();
+  const coachSkin = skin.coachSkin;
   const coachTokens = useCoachTokens();
-  const accent = matchAccent(coachSkin, colors.accent, coachTokens);
   const styles = useMemo(
-    () => createCardStyles(accent, coachSkin, coachTokens),
-    [accent, coachSkin, coachTokens],
+    () => createCardStyles(skin.accent, coachSkin, skin.joueurSkin, coachTokens, skin),
+    [skin, coachSkin, coachTokens],
   );
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
-function createCardStyles(accent: string, coachSkin: boolean, coachTokens: CoachThemeTokens) {
-  const site = matchSiteTokens(coachSkin, coachTokens);
+function createCardStyles(
+  accent: string,
+  coachSkin: boolean,
+  joueurSkin: boolean,
+  coachTokens: CoachThemeTokens,
+  skin: MatchSkinTokens,
+) {
+  const site = matchSiteTokens(coachSkin, joueurSkin, coachTokens, skin);
   return StyleSheet.create({
     card: {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: site.border,
-      borderLeftWidth: coachSkin ? StyleSheet.hairlineWidth : 2,
-      borderLeftColor: coachSkin ? site.border : accent,
-      borderRadius: coachSkin ? 16 : 2,
+      borderLeftWidth: joueurSkin || coachSkin ? StyleSheet.hairlineWidth : 2,
+      borderLeftColor: joueurSkin || coachSkin ? site.border : accent,
+      borderRadius: skin.cardRadius,
       padding: spacing.md,
       gap: spacing.xs,
       backgroundColor: site.surface,
+      ...(joueurSkin
+        ? {
+            shadowColor: '#000',
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+          }
+        : null),
     },
     kicker: {
       color: accent,
       textTransform: 'uppercase',
-      letterSpacing: 2.4,
-      fontSize: 10,
-      fontWeight: '700',
+      letterSpacing: joueurSkin ? 2 : 2.4,
+      fontSize: joueurSkin ? 9 : 10,
+      fontWeight: '800',
     },
     title: {
       color: site.foreground,
@@ -233,15 +350,21 @@ function createCardStyles(accent: string, coachSkin: boolean, coachTokens: Coach
   });
 }
 
-function createKpiStyles(accent: string, coachSkin: boolean, coachTokens: CoachThemeTokens) {
-  const site = matchSiteTokens(coachSkin, coachTokens);
+function createKpiStyles(
+  accent: string,
+  coachSkin: boolean,
+  joueurSkin: boolean,
+  coachTokens: CoachThemeTokens,
+  skin: MatchSkinTokens,
+) {
+  const site = matchSiteTokens(coachSkin, joueurSkin, coachTokens, skin);
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: site.border,
       backgroundColor: site.surface,
-      borderRadius: coachSkin ? 16 : 0,
+      borderRadius: skin.cardRadius,
       overflow: 'hidden',
     },
     cell: {
@@ -269,8 +392,14 @@ function createKpiStyles(accent: string, coachSkin: boolean, coachTokens: CoachT
   });
 }
 
-function createActionStyles(accent: string, coachSkin: boolean, coachTokens: CoachThemeTokens) {
-  const site = matchSiteTokens(coachSkin, coachTokens);
+function createActionStyles(
+  accent: string,
+  coachSkin: boolean,
+  joueurSkin: boolean,
+  coachTokens: CoachThemeTokens,
+  skin: MatchSkinTokens,
+) {
+  const site = matchSiteTokens(coachSkin, joueurSkin, coachTokens, skin);
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -279,35 +408,37 @@ function createActionStyles(accent: string, coachSkin: boolean, coachTokens: Coa
       marginTop: spacing.sm,
     },
     primary: {
-      borderRadius: coachSkin ? 18 : 2,
+      borderRadius: skin.cardRadius,
       paddingHorizontal: spacing.lg,
       paddingVertical: 12,
       minHeight: 44,
       justifyContent: 'center',
       backgroundColor: accent,
     },
-    primaryText: { color: '#fff', fontWeight: '800', letterSpacing: 0.2 },
+    primaryText: { color: '#fff', fontWeight: '800', letterSpacing: joueurSkin ? 0.8 : 0.2 },
     secondary: {
-      borderRadius: coachSkin ? 18 : 2,
+      borderRadius: skin.cardRadius,
       paddingHorizontal: spacing.lg,
       paddingVertical: 12,
       minHeight: 44,
       justifyContent: 'center',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: site.border,
-      backgroundColor: 'transparent',
+      backgroundColor: joueurSkin ? 'rgba(255,255,255,0.04)' : 'transparent',
     },
     secondaryText: { color: site.foreground, fontWeight: '700' },
   });
 }
 
-const filterStyles = StyleSheet.create({
-  bar: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: MATCH_SITE.border,
-    borderRadius: 2,
-    padding: spacing.sm,
-    gap: spacing.sm,
-    backgroundColor: MATCH_SITE.surface,
-  },
-});
+function createFilterStyles(skin: MatchSkinTokens) {
+  return StyleSheet.create({
+    bar: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: skin.border,
+      borderRadius: skin.cardRadius,
+      padding: spacing.sm,
+      gap: spacing.sm,
+      backgroundColor: skin.joueurSkin ? PLAYER_DARK.bgElevated : skin.surface,
+    },
+  });
+}

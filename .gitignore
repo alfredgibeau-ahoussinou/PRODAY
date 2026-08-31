@@ -18,6 +18,8 @@ credentials.json
 *.local
 .DS_Store
 .firebase/
+.firebase-emulators/
+.firebase-cache/
 firebase/service-account.json
 firebase/*adminsdk*.json
 **/service-account*.json

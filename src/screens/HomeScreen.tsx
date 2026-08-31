@@ -10,7 +10,6 @@ import { DiscoverScreen } from './DiscoverScreen';
 import { RetiredRoleScreen } from './RetiredRoleScreen';
 import { isRetiredUserRole } from '../utils/retiredRoles';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
-import { SupporterHomeDashboard } from '../features/home/roles/SupporterHomeDashboard';
 import { AmateurPlayerHomeDashboard } from '../features/home/roles/AmateurPlayerHomeDashboard';
 import { resolveRoleHomeDashboard } from '../features/home/roles/resolveRoleHomeDashboard';
 import { getUserProductLine } from '../utils/productLineAccess';
@@ -37,6 +36,8 @@ type HomeOverlay =
   | 'partner-hub'
   | 'smart_tactics'
   | 'train'
+  | 'train_ai'
+  | 'train_coach'
   | 'tactics_coach'
   | null;
 
@@ -50,7 +51,7 @@ export const HomeScreen: React.FC = () => {
   const { productLine } = useAppTheme();
   const { count: unreadMessages } = useUnreadMessageCount();
   const { refresh } = useDashboardData(profile);
-  const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
+  const { pendingDashboardView, clearPendingDashboard, goBackTab, returnTab } = useTabNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [overlay, setOverlay] = useState<HomeOverlay>(null);
   const joueurSession = useJoueurSession();
@@ -68,12 +69,22 @@ export const HomeScreen: React.FC = () => {
     if (pendingDashboardView === 'gestion') setOverlay('team');
     else if (pendingDashboardView === 'smart_tactics') setOverlay('smart_tactics');
     else if (pendingDashboardView === 'train') setOverlay('train');
+    else if (pendingDashboardView === 'train_ai') setOverlay('train_ai');
+    else if (pendingDashboardView === 'train_coach') setOverlay('train_coach');
     else if (pendingDashboardView === 'tactics_coach') setOverlay('tactics_coach');
     else if (pendingDashboardView === 'sponsors') {
       setOverlay(profile.role === 'sponsor' ? 'partner-hub' : 'sponsors');
     }
     clearPendingDashboard();
   }, [pendingDashboardView, clearPendingDashboard, profile]);
+
+  const closeDashboardOverlay = useCallback(() => {
+    setOverlay(null);
+    if (returnTab) goBackTab();
+  }, [goBackTab, returnTab]);
+
+  const trainInitialView =
+    overlay === 'train_ai' ? 'ai' : overlay === 'train_coach' ? 'coach' : 'hub';
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -110,16 +121,6 @@ export const HomeScreen: React.FC = () => {
     if (!profile) return null;
     if (isRetiredUserRole(profile.role)) {
       return <RetiredRoleScreen />;
-    }
-    if (profile.role === 'supporter') {
-      return (
-        <SupporterHomeDashboard
-          profile={profile}
-          unreadMessages={unreadMessages}
-          onRefresh={handleRefresh}
-          refreshing={refreshing}
-        />
-      );
     }
     if (isAmateurPlayer) {
       return (
@@ -173,15 +174,18 @@ export const HomeScreen: React.FC = () => {
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'train'}>
-            {overlay === 'train' ? (
-              <TrainHubScreen onBack={() => setOverlay(null)} />
+          <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach'}>
+            {overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach' ? (
+              <TrainHubScreen
+                onBack={closeDashboardOverlay}
+                initialView={trainInitialView}
+              />
             ) : null}
           </PushScreenTransition>
 
           <PushScreenTransition active={overlay === 'tactics_coach'}>
             {overlay === 'tactics_coach' ? (
-              <JoueurTacticsCoachScreen onBack={() => setOverlay(null)} />
+              <JoueurTacticsCoachScreen onBack={closeDashboardOverlay} />
             ) : null}
           </PushScreenTransition>
 

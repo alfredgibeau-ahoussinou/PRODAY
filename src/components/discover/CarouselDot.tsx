@@ -14,6 +14,9 @@ interface CarouselDotProps {
   scrollX: SharedValue<number>;
   snap: number;
   onPress: () => void;
+  /** Override actif (ex. thème joueur Match Center). */
+  activeColor?: string;
+  inactiveColor?: string;
 }
 
 export const CarouselDot: React.FC<CarouselDotProps> = ({
@@ -21,8 +24,12 @@ export const CarouselDot: React.FC<CarouselDotProps> = ({
   scrollX,
   snap,
   onPress,
+  activeColor,
+  inactiveColor,
 }) => {
   const { colors: c } = useDiscoverStyles();
+  const active = activeColor ?? c.brand;
+  const inactive = inactiveColor ?? c.border;
 
   const style = useAnimatedStyle(() => ({
     width: interpolate(
@@ -38,8 +45,8 @@ export const CarouselDot: React.FC<CarouselDotProps> = ({
         [0, 1, 0],
         Extrapolation.CLAMP
       ) > 0.5
-        ? c.brand
-        : c.border,
+        ? active
+        : inactive,
   }));
 
   return (

@@ -12,7 +12,7 @@ import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
-import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
 import {
   sendPlayerTacticsMessage,
@@ -47,10 +47,10 @@ export function JoueurTacticsCoachChat({
   starters = JOUEUR_TACTICS_STARTERS,
   compact = false,
 }: Props) {
-  const session = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
   const progress = useJoueurProgress();
-  const accent = session?.identity.accent ?? '#4C8BFF';
-  const accentBright = session?.identity.accentBright ?? '#93C5FD';
+  const accent = joueurTheme.accent;
+  const accentBright = joueurTheme.accentBright;
 
   const [messages, setMessages] = useState<Bubble[]>([
     { id: 'welcome', role: 'assistant', content: WELCOME },
@@ -219,7 +219,7 @@ export function JoueurTacticsCoachChat({
           />
           <PressableSpring
             onPress={() => void send(draft)}
-            scaleTo={0.94}
+            scaleTo={0.97}
             haptic
             disabled={sending || !draft.trim()}
             style={[

@@ -2,72 +2,51 @@
 title: "ProDay — Brief produit"
 subtitle: "Document pour l'équipe et les partenaires"
 author: "ProDay © 2026"
-date: "Mai 2026"
+date: "Août 2026"
 lang: fr
-documentclass: article
-geometry: margin=2.2cm
-colorlinks: true
-linkcolor: "003399"
 ---
 
-# ProDay — Connecter · Progresser · Réussir
+# ProDay — Connecter. Progresser. Révéler.
 
-**ProDay** est une application mobile (React Native / Expo) qui relie joueurs, coachs, agents, clubs, organisateurs et sponsors sur un écosystème football. Les données vivent dans **Firebase** (comptes réels, pas de données fictives en production).
+**ProDay** est l’infrastructure mobile du football amateur et semi-pro (React Native / Expo, version **1.0.8**). Six portes d’entrée — Joueur, Club, Coach, Parent, Supporter, Sponsor — vers le **même** graphe de données. Site : [proday75.fr](https://proday75.fr).
 
-## Navigation — 5 onglets
+## Positionnement
 
-| Onglet | Rôle | Fonctions |
-|--------|------|-----------|
-| **Accueil** | Hub | Statistiques Firestore, modules Arena & Sponsors |
-| **Recherche** | Recrutement | Joueurs, clubs, coachs, annonces, contact |
-| **Matchs** | Amicaux | Proposer, chercher, **accepter** un match |
-| **Messagerie** | Contact | Conversations entre profils inscrits |
-| **Profil** | Compte | Inscription, stats saison, club, vérification |
+Pas un outil de plus. Notion organise, Discord discute — ProDay **orchestre** les objets métier du football (convocations, matchs, effectifs, stats, parents, sponsors).
+
+## Six portes d’entrée
+
+| Porte | Rôle |
+|-------|------|
+| **Joueur** | Progression, saison, Pulse, Mercato |
+| **Club** | Équipes, licenciés, tournois |
+| **Coach** | Forme, tactique, convocations |
+| **Parent** | Agenda, messages, trajets |
+| **Supporter** | Scores, compositions, tribune |
+| **Sponsor** | Activations, impact |
+
+Agent, recruteur, organisateur et santé restent des **rôles intégrés**.
 
 ## Sécurité : profils contrôlés
 
-Pour les **coachs** et **agents** :
+Pour les rôles à responsabilité (coach, agent, club, sponsor…) :
 
 1. Choix du rôle à l'inscription.
-2. Envoi obligatoire d'un **diplôme** ou **licence** (PDF / image).
-3. Badge orange « Vérification en cours » — messagerie limitée.
-4. Validation manuelle par un administrateur.
-5. Badge vert — accès complet.
+2. Envoi d'un diplôme / licence si requis.
+3. Badge « vérification en cours » — accès limité.
+4. Validation admin.
+5. Badge vérifié — accès complet.
 
-## Documents & exports PDF
+## Stack
 
-| Fichier | Export PDF |
-|---------|------------|
-| `docs/design/mockups/index.html` | Bouton *Exporter maquettes PDF* (impression navigateur) |
-| `docs/design/ProDay_Brief.html` | Brief produit mis en page |
-| `npm run docs:cv` | CV joueur HTML → Imprimer → PDF |
-
-## Stack technique
-
-- **Mobile :** React Native, Expo 52
-- **Backend :** Firebase Auth, Firestore, Storage
-- **Design :** `designTokens.ts`, logo `assets/branding/`
-
-## Roadmap
-
-### Mois 1
-- Identité visuelle, maquettes, pilote recrutement + validation profils, clubs testeurs.
-
-### Mois 2–3
-- Tournoi local (inscriptions et suivi sur l'app).
-
-### Mois 4
-- Premier sponsor local.
-
-## Documents associés
-
-| Fichier | Public |
-|---------|--------|
-| `docs/ARCHITECTURE.md` | Développeurs |
-| `docs/design/FIGMA_BRIEF.md` | Design |
-| `docs/design/ProDay_Brief.html` | Brief HTML/PDF |
-| `docs/ProDay_Brief_NonDev.pdf` | Brief PDF (pandoc) |
+- **Mobile :** Expo SDK 54 · React Native · TypeScript — `com.proday.app`
+- **Site :** Next.js (`website/`) — [proday75.fr](https://proday75.fr)
+- **Backend :** Firebase Auth, Firestore, Storage, Cloud Functions
+- **Identité :** `assets/branding/` · lockup horizontal site `website/public/branding/logo-proday-official.png`
 
 ## Contact
 
-Dépôt : **https://github.com/alfredgibeau-ahoussinou/PRODAY**
+- Site : https://proday75.fr  
+- Email : proday.admin@gmail.com  
+- Dépôt privé : https://github.com/alfredgibeau-ahoussinou/PRODAY  
+- Doc publique : https://github.com/alfredgibeau-ahoussinou/PRODAY-docs

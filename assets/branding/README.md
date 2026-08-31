@@ -1,81 +1,79 @@
-# Logos ProDay
+# Logos ProDay — identité officielle
+
+<div align="center">
+
+<img src="logo-proday-official.png" alt="ProDay" width="220" />
+
+<br />
+
+**CONNECTER. PROGRESSER. RÉVÉLER.**  
+*L’infrastructure de votre football*
+
+</div>
+
+**1 Master Brand** : symbole P incliné + ballon + trait de frappe, wordmark PRODAY (tracking large), tagline officielle ci-dessus.
+
+| | |
+|--|--|
+| **Couleurs master** | noir `#000` · blanc `#FFF` · or/champagne `#C5A059` |
+| **Version app** | **1.0.8** (`app.json`) |
+| **Site** | [proday75.fr](https://proday75.fr) |
+| **CDN logo** | https://proday75.fr/branding/logo-proday-official.png |
+| **GitHub** | [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) (privé) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) (public) |
+
+Régénération app :
+
+```bash
+node scripts/generate-app-brand.mjs --lockup [chemin-lockup-officiel.png]
+# ou
+npm run branding:app
+```
+
+Source de vérité lockup : `proday-lockup-official-source.png`.  
+Lockup site / emails : généré dans `website/public/branding/` via `npm run branding:official` (préfixe `website/`).
+
+---
+
+## Icône store vs lockup
+
+| Usage | Asset | Contenu |
+|-------|--------|---------|
+| App Store / home / favicon | `proday-app-icon.png` | Lockup officiel (P + PRODAY + tagline sur charcoal) |
+| Adaptive Android | `proday-adaptive-foreground.png` | Marque seule, ~20 % safe padding |
+| Notification Android | `proday-notification-icon.png` | Marque blanche transparente |
+| Splash Expo / iOS | `proday-splash.png` | Lockup centré sur `#000` |
+| Auth / brand in-app | `ProDayOfficialLockup` / `ProDayLogo` | Composé natif — **pas** le PNG carré store |
+| UI petite | `proday-symbol-*.png` / `ProDaySymbol` | Marque teintée par porte |
 
 | Fichier | Usage |
 |---------|--------|
-| `logo-light.png` | Legacy — fond blanc |
-| `logo-dark.png` | Legacy — fond sombre |
-| `logo-transparent-hero.png` | **Transparent** — hero photo, headers sombres |
-| `logo-transparent-dark.png` | **Transparent** — cartes blanches, headers clairs |
-| `logo-auth-dark.png` | Legacy — variante traitée (préférer `logo-transparent-hero` sur bandeau noir) |
-| `logo-mark-transparent.png` | Picto P seul — filigrane sur photos |
+| `proday-lockup-official-source.png` | Source lockup |
+| `proday-symbol-master-source.png` | Crop marque |
+| `proday-symbol-white.png` / `*-black.png` / `*-mark.png` | Symbole UI |
+| `proday-logo-master-white.png` / `*-black.png` | Lockup badge |
+| `proday-lockup-horizontal-*.png` | Compat horizontal |
+| `proday-symbol-pole-*.png` | Accents par porte |
+| `proday-app-icon.png` · `proday-splash.png` · `proday-adaptive-foreground.png` | Store / splash |
+| `logo-proday-official.png` | Docs, emails, README — peut être le badge carré ; le site publie le lockup horizontal |
 
-Génération : **ISNet** pour `logo-dark` · clé blanc pour `logo-light` (le coureur blanc n’est pas confondu avec le fond).
-`logo-auth-dark` : trous intérieurs (coureur) remplis en blanc + détourage.
-Commande : `node scripts/generate-transparent-logos.mjs`
+---
 
-## Pro Day for Women (rose)
+## Accents par porte
 
-| Fichier | Usage |
-|---------|--------|
-| `logo-woman-picto.png` | Picto P rose (haute résolution) |
-| `logo-woman-mark-transparent.png` | Filigrane (= picto) |
+Runtime (source code) : `src/theme/prodayBrand.ts`.
 
-Le libellé **Pro Day for Women** + tagline sont rendus en natif par `src/components/WomanLogo.tsx` (texte net).
+| Porte / rôle | Hex (tokens app) |
+|--------------|------------------|
+| Master / CTA | `#C5A059` |
+| Joueur | `#FFFFFF` |
+| Coach / Président | `#C5A059` |
+| Club | `#10B981` |
+| Parent | `#8CC63F` |
+| Supporter | `#06B6D4` |
+| Sponsor | `#92278F` |
+| Événements | `#F7941D` |
+| Admin | `#A3A3A3` |
 
-Génération picto : `npm run branding:logos:woman` (nécessite `logo-mark-transparent.png`).
+Six portes produit : **Joueur · Club · Coach · Parent · Supporter · Sponsor** — pas huit apps séparées.
 
-## Pro Day Man (anthracite)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-man-picto.png` | Picto P anthracite |
-| `logo-man-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Man** + tagline via `src/components/ManLogo.tsx`.
-
-## Pro Day Pro (bleu vif)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-pro-picto.png` | Picto P bleu pro |
-| `logo-pro-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Pro** + tagline via `src/components/ProLogo.tsx`.
-
-## Pro Day Santé (teal)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-sante-picto.png` | Picto P teal santé |
-| `logo-sante-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Santé** + tagline via `src/components/SanteLogo.tsx`.
-
-## Pro Day Amateur (orange)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-amateur-picto.png` | Picto P orange amateur |
-| `logo-amateur-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Amateur** + tagline via `src/components/AmateurLogo.tsx`.
-
-## Pro Day Supporter (violet)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-supporter-picto.png` | Picto P violet supporter |
-| `logo-supporter-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Supporter** + tagline via `src/components/SupporterLogo.tsx`.
-
-## Pro Day Sponsor (or #D4AF37)
-
-| Fichier | Usage |
-|---------|--------|
-| `logo-sponsor-picto.png` | Picto P or sponsor |
-| `logo-sponsor-mark-transparent.png` | Filigrane (= picto) |
-
-Libellé **Pro Day Sponsor** + tagline via `src/components/SponsorLogo.tsx`.
-
-Génération pictos Man + Pro + Santé + Amateur + Supporter + Sponsor : `npm run branding:logos:universes` (nécessite `logo-mark-transparent.png`).
+Composants : `ProDaySymbol` · `ProDayWordmark` · `ProDayLogo` · `ProDayOfficialLockup` (`src/components/branding/`).

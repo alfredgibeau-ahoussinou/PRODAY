@@ -1,1 +1,1 @@
-export { ClubVitrineScreen } from './vitrine/ClubVitrineScreen';
+export { ClubHubScreen as ClubVitrineScreen } from './ClubHubScreen';

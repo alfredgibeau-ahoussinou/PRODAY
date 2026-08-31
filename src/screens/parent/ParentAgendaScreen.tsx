@@ -4,17 +4,17 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Alert,
   RefreshControl,
   Linking,
 } from 'react-native';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { useThemedScreen } from '../../hooks/useThemedScreen';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { useParentShell } from '../../navigation/parentShellContext';
 import { parentPortalService } from '../../services/parentPortal.service';
 import type { TeamEvent } from '../../models/TeamEvent';
-import { EVENT_TYPE_LABELS, RSVP_STATUS_LABELS, type RsvpStatus } from '../../models/TeamEvent';
 import { LateReportControl } from '../../components/team/LateReportControl';
 import { ParentPageFrame } from '../../components/parent/ParentPageFrame';
 import {
@@ -22,6 +22,21 @@ import {
   ParentSectionCard,
 } from '../../components/parent/parentPortalUi';
 import { PARENT_PAGES } from '../../content/parentPageIdentity';
+import {
+  ParentRsvpChoiceRow,
+  ParentRsvpEmptyCard,
+  ParentRsvpEventHero,
+} from '../../features/parent/ui/ParentRsvpChrome';
+import {
+  formatParentEventType,
+  formatParentEventWhen,
+  needsParentRsvpResponse,
+  parentAgendaSubtitle,
+  parentRsvpStatusLabel,
+  pickNextChildEvent,
+  resolveChildRsvp,
+  type ParentRsvpChoice,
+} from '../../features/parent/ui/parentRsvpModel';
 
 type Filter = 'upcoming' | 'all';
 
@@ -34,10 +49,7 @@ export const ParentAgendaScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<Filter>('upcoming');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const rsvpLabel = (status: RsvpStatus): string => {
-    return RSVP_STATUS_LABELS[status] ?? status;
-  };
+  const [rsvpBusyId, setRsvpBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!selected) {
@@ -72,6 +84,40 @@ export const ParentAgendaScreen: React.FC = () => {
     return sorted.filter((e) => e.starts_at.getTime() >= cutoff);
   }, [events, filter]);
 
+  const nextEvent = useMemo(() => pickNextChildEvent(events), [events]);
+
+  const agendaSub = useMemo(() => {
+    if (!selected) return '';
+    const pending = visible.filter((e) =>
+      needsParentRsvpResponse(resolveChildRsvp(e, selected.uid)),
+    ).length;
+    return parentAgendaSubtitle({
+      upcomingCount: visible.length,
+      pendingRsvpCount: pending,
+    });
+  }, [visible, selected]);
+
+  const onRsvp = useCallback(
+    async (eventId: string, choice: ParentRsvpChoice) => {
+      if (!selected) return;
+      setRsvpBusyId(eventId);
+      try {
+        await parentPortalService.updateChildRsvp(selected.uid, eventId, choice, {
+          childName: selected.display_name,
+        });
+        await load();
+      } catch (e) {
+        Alert.alert(
+          'Présence',
+          e instanceof Error ? e.message : 'Impossible d’enregistrer la réponse.',
+        );
+      } finally {
+        setRsvpBusyId(null);
+      }
+    },
+    [selected, load],
+  );
+
   if (!selected) {
     return (
       <ParentPageFrame identity={PARENT_PAGES.agenda}>
@@ -96,6 +142,10 @@ export const ParentAgendaScreen: React.FC = () => {
           />
         }
       >
+        <ProDayText variant="caption" muted>
+          {agendaSub}
+        </ProDayText>
+
         <View style={styles.filters}>
           <ParentActionButton
             label="À venir"
@@ -112,75 +162,94 @@ export const ParentAgendaScreen: React.FC = () => {
         {loading && !refreshing ? (
           <ActivityIndicator color={c.brand} />
         ) : visible.length === 0 ? (
-          <ParentSectionCard title={t('parent.agenda.empty')}>
-            <ProDayText variant="caption" muted>
-              Tirez pour actualiser · les retards coach apparaissent dès qu’une séance est planifiée.
-            </ProDayText>
-          </ParentSectionCard>
+          <ParentRsvpEmptyCard childName={selected.display_name} />
         ) : (
-          visible.map((event) => {
-            const rsvp = event.rsvps?.[selected.uid];
-            const open = expandedId === event.id;
-            return (
-              <ParentSectionCard
-                key={event.id}
-                title={event.title}
-                subtitle={`${EVENT_TYPE_LABELS[event.event_type] ?? event.event_type} · ${event.starts_at.toLocaleString(
-                  'fr-FR',
-                  {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  },
-                )}${event.city ? ` · ${event.city}` : ''}`}
-              >
-                {event.location_label ? (
-                  <ProDayText variant="caption" muted>
-                    {event.location_label}
-                  </ProDayText>
-                ) : null}
-                {rsvp ? (
-                  <ProDayText variant="caption">
-                    {t('parent.agenda.rsvp', { status: rsvpLabel(rsvp) })}
-                  </ProDayText>
-                ) : null}
-                <View style={styles.row}>
-                  <ParentActionButton
-                    label={open ? 'Masquer actions' : 'Prévenir le coach'}
-                    tone={open ? 'ghost' : 'primary'}
-                    icon="warning"
-                    onPress={() => setExpandedId(open ? null : event.id)}
-                  />
-                  {event.location_label || event.city ? (
-                    <ParentActionButton
-                      label="Ouvrir Maps"
-                      tone="ghost"
-                      icon="location"
-                      onPress={() => {
-                        const q = encodeURIComponent(
-                          [event.location_label, event.city].filter(Boolean).join(', '),
-                        );
-                        void Linking.openURL(`https://maps.apple.com/?q=${q}`);
-                      }}
-                    />
-                  ) : null}
-                </View>
-                {open ? (
+          <>
+            {filter === 'upcoming' && nextEvent ? (
+              <ParentRsvpEventHero
+                event={nextEvent}
+                childName={selected.display_name}
+                childUid={selected.uid}
+                busy={rsvpBusyId === nextEvent.id}
+                onChoose={(choice) => void onRsvp(nextEvent.id, choice)}
+                footer={
                   <LateReportControl
-                    eventId={event.id}
+                    eventId={nextEvent.id}
                     playerUid={selected.uid}
                     playerName={selected.display_name}
-                    currentRsvp={rsvp}
+                    currentRsvp={resolveChildRsvp(nextEvent, selected.uid)}
                     reportedByParent
                     enablePickupLate
                     onReported={() => void load()}
                   />
-                ) : null}
-              </ParentSectionCard>
-            );
-          })
+                }
+              />
+            ) : null}
+
+            {visible
+              .filter((e) => !(filter === 'upcoming' && nextEvent && e.id === nextEvent.id))
+              .map((event) => {
+                const rsvp = resolveChildRsvp(event, selected.uid);
+                const open = expandedId === event.id;
+                return (
+                  <ParentSectionCard
+                    key={event.id}
+                    title={event.title}
+                    subtitle={`${formatParentEventType(event)} · ${formatParentEventWhen(
+                      event.starts_at,
+                    )}${event.city ? ` · ${event.city}` : ''}`}
+                  >
+                    {event.location_label ? (
+                      <ProDayText variant="caption" muted>
+                        {event.location_label}
+                      </ProDayText>
+                    ) : null}
+                    <ProDayText variant="caption">
+                      {t('parent.agenda.rsvp', { status: parentRsvpStatusLabel(rsvp) })}
+                    </ProDayText>
+
+                    <ParentRsvpChoiceRow
+                      current={rsvp}
+                      busy={rsvpBusyId === event.id}
+                      onChoose={(choice) => void onRsvp(event.id, choice)}
+                    />
+
+                    <View style={styles.row}>
+                      <ParentActionButton
+                        label={open ? 'Masquer retard' : 'Signaler un retard'}
+                        tone={open ? 'ghost' : 'ghost'}
+                        icon="warning"
+                        onPress={() => setExpandedId(open ? null : event.id)}
+                      />
+                      {event.location_label || event.city ? (
+                        <ParentActionButton
+                          label="Ouvrir Maps"
+                          tone="ghost"
+                          icon="location"
+                          onPress={() => {
+                            const q = encodeURIComponent(
+                              [event.location_label, event.city].filter(Boolean).join(', '),
+                            );
+                            void Linking.openURL(`https://maps.apple.com/?q=${q}`);
+                          }}
+                        />
+                      ) : null}
+                    </View>
+                    {open ? (
+                      <LateReportControl
+                        eventId={event.id}
+                        playerUid={selected.uid}
+                        playerName={selected.display_name}
+                        currentRsvp={rsvp}
+                        reportedByParent
+                        enablePickupLate
+                        onReported={() => void load()}
+                      />
+                    ) : null}
+                  </ParentSectionCard>
+                );
+              })}
+          </>
         )}
       </ScrollView>
     </ParentPageFrame>

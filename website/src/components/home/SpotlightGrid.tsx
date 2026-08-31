@@ -4,14 +4,14 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { SPOTLIGHT_FEATURES } from "@/lib/content";
-import { ROUTES, routeWithHash } from "@/lib/routes";
+import { PARENT_APP_HREF, ROUTES, SPONSOR_APP_HREF, routeWithHash } from "@/lib/routes";
 import { Section } from "@/components/ui/Section";
 
 const LINKS: Record<string, string> = {
   reels: ROUTES.demo,
   feed: ROUTES.demo,
-  partners: routeWithHash(ROUTES.sponsor, "formules"),
-  family: ROUTES.parent,
+  partners: SPONSOR_APP_HREF,
+  family: PARENT_APP_HREF,
   tournaments: routeWithHash(ROUTES.features, "modules"),
   auth: ROUTES.demo,
 };
@@ -22,7 +22,7 @@ export function SpotlightGrid() {
       id="decouvrir"
       kicker="SIGNATURE"
       title="Les fondations de la plateforme"
-      description="Reels, communauté, partenaires, famille et compétition. Structurés autour de cinq pôles : Joueur, Club, Coach, Supporter, Sponsor."
+      description="Reels, communauté, partenaires, famille et compétition. Portes d'entrée vers le même écosystème : Joueur, Club, Coach, Parent, Supporter, Sponsor."
       className="bg-black"
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

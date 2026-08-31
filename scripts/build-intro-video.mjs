@@ -24,31 +24,41 @@ const TMP = join(ROOT, 'assets/intro/.build');
 const W = 1080;
 const H = 1920;
 const FPS = 30;
-const CLIP_DUR = 3.5;
-const XFADE = 0.7;
-const CARD_DUR = 4.2;
+const CLIP_DUR = 3.2;
+const XFADE = 0.6;
+const CARD_DUR = 4.0;
 
 const CFG = {
   width: W,
   height: H,
   logo: join(ROOT, 'assets/branding/logo-proday-official.png'),
-  tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
-  endcardSubtitle: 'Bêta iOS · 11 août 2026',
   fonts: {
     title: '/System/Library/Fonts/Supplemental/Arial Black.ttf',
     body: '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
   },
   captions: [
-    { title: 'CONNECTER', subtitle: 'Ton équipe, tes matchs, ta communauté' },
-    { title: 'PROGRESSER', subtitle: 'Pôle Joueur · Amateur → Pro' },
-    { title: 'RÉUSSIR', subtitle: '7 pôles · covoiturage · carrière' },
+    {
+      badge: '⚡ PRODAY FOOTBALL',
+      title: 'RÉVÈLE TON JEU',
+      subtitle: 'Matchs, entraînements & performance',
+    },
+    {
+      badge: '🌟 ÉCOSYSTÈME COMPLET',
+      title: 'JOUEUR · COACH · CLUB',
+      subtitle: "Stats en direct & séances d'entraînement IA",
+    },
+    {
+      badge: '🚀 NOUVELLE EXPÉRIENCE',
+      title: 'ENTRE SUR LE TERRAIN',
+      subtitle: 'Rejoins la communauté ProDay',
+    },
   ],
 };
 
 const CLIP_SEQUENCE = [
-  { file: 'match-two-teams.mp4', start: 0.5 },
-  { file: 'player-dribbling.mp4', start: 0.0 },
-  { file: 'goal-play.mp4', start: 3.6 },
+  { file: 'stadium-lights.mp4', start: 1.0 },
+  { file: 'live-match-action.mp4', start: 2.0 },
+  { file: 'player-skills.mp4', start: 0.5 },
 ];
 
 const N = CLIP_SEQUENCE.length;
@@ -94,7 +104,7 @@ function main() {
     inputs.push('-loop', '1', '-framerate', String(FPS), '-t', String(CLIP_DUR), '-i', join(TMP, `caption${i}.png`)),
   );
   inputs.push('-loop', '1', '-framerate', String(FPS), '-t', String(CARD_DUR), '-i', join(TMP, 'endcard.png'));
-  inputs.push('-i', join(ROOT, 'assets/intro/music/sports-highlights.mp3'));
+  inputs.push('-i', join(ROOT, 'assets/intro/music/talent-in-the-air.mp3'));
 
   const capBase = N;
   const cardIdx = N * 2;

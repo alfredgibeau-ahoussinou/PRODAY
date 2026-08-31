@@ -8,6 +8,7 @@ import {
 import {
   PRODAY_COACH_BRAND,
   PRODAY_PARENT_BRAND,
+  PRODAY_PRESIDENT_BRAND,
   PRODAY_PRO_CLUB_BRAND,
   PRODAY_SPONSOR_BRAND,
 } from '../models/ProductLine';
@@ -38,6 +39,20 @@ const PRO_CLUB_IDENTITY: UniverseIdentity = {
   playerLabel: 'Structure',
   cvLabel: 'Vitrine club',
   entrySub: 'Dirigeants, staff et bénévoles — un seul cockpit',
+};
+
+const PRESIDENT_IDENTITY: UniverseIdentity = {
+  id: 'pro',
+  productName: PRODAY_PRESIDENT_BRAND.name,
+  tagline: PRODAY_PRESIDENT_BRAND.tagline,
+  heroLine: 'La direction\ndu club.',
+  mission:
+    'Cockpit exécutif : santé du club, finances, décisions. Toujours lié au Pôle Club pour l’opérationnel.',
+  accentLabel: 'Président',
+  mercatoLabel: 'Stratégie',
+  playerLabel: 'Direction',
+  cvLabel: 'Pilotage',
+  entrySub: 'Même club · shell exécutif distinct',
 };
 
 const COACH_IDENTITY: UniverseIdentity = {
@@ -93,6 +108,8 @@ export function getCarouselPoleIdentity(pole: CarouselPoleId): UniverseIdentity 
     case 'pro_club':
     case 'evenements':
       return PRO_CLUB_IDENTITY;
+    case 'president':
+      return PRESIDENT_IDENTITY;
     case 'coach':
     case 'pro_staff':
       return COACH_IDENTITY;

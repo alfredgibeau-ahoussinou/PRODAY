@@ -87,7 +87,12 @@ describe('buildCoachComposedPlan', () => {
       title: 'FC Rivaux',
       event_type: 'friendly',
       starts_at: new Date(Date.now() + 36 * 3_600_000),
-      live_state: { opponent_name: 'FC Rivaux', status: 'scheduled' },
+      live_state: {
+        opponent_name: 'FC Rivaux',
+        status: 'scheduled',
+        home_score: 0,
+        away_score: 0,
+      },
     });
     const plan = buildCoachComposedPlan({
       events: [match],

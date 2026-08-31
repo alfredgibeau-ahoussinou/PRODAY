@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ScrollVideoStage, UniverseScroll } from "@/components/immersive";
+import { ProductPositioning } from "@/components/home/ProductPositioning";
 import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { ROUTES } from "@/lib/routes";
 
@@ -8,6 +9,8 @@ export default function HomePage() {
     <>
       <ScrollVideoStage />
       <UniverseScroll />
+
+      <ProductPositioning />
 
       <FormAnalysisFeature audience="all" />
 
@@ -18,15 +21,25 @@ export default function HomePage() {
               ProDay
             </p>
             <h2 className="mt-4 max-w-xl font-display text-3xl font-medium tracking-[-0.035em] sm:text-4xl">
-              Le quotidien digital du football amateur.
+              L&apos;infrastructure de votre football.
             </h2>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
-              Club → gère. Coach → entraîne et analyse la forme de l’effectif.
-              Joueur → suit sa forme et sa progression. Président → pilote depuis
-              le Pôle Club.
+              Une porte d&apos;entrée par rôle · Club, Coach, Joueur, Parent,
+              Supporter, Sponsor · vers le même écosystème. Plus de WhatsApp
+              pour une info et de tableur pour une autre.
             </p>
             <p className="mt-3 text-sm font-semibold text-white/90">
-              Club : à partir de 3 € / adhérent — sur devis selon la taille.
+              Club : à partir de 3 € / adhérent · sur devis selon la taille.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-white/65">
+              Sans engagement.{" "}
+              <Link
+                href={ROUTES.sponsor}
+                className="font-semibold text-white/90 underline-offset-2 hover:underline"
+              >
+                Sponsoring possible
+              </Link>{" "}
+              pour les marques et commerces locaux.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -47,6 +60,12 @@ export default function HomePage() {
               className="inline-flex items-center rounded-full border border-white/40 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
             >
               Je suis coach
+            </Link>
+            <Link
+              href={ROUTES.sponsor}
+              className="inline-flex items-center rounded-full border border-white/40 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
+            >
+              Je suis sponsor
             </Link>
           </div>
         </div>

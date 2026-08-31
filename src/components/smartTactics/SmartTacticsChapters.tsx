@@ -30,6 +30,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { smartTacticsService } from '../../services/smartTactics.service';
 import { teamEventsService } from '../../services/teamEvents.service';
+import { smartTacticsVideoHonestAlert } from '../../utils/coachVideoHonesty';
 import type {
   TacticalBoardSlot,
   LiveTagKind,
@@ -626,7 +627,7 @@ export const SmartBoardChapter: React.FC<SmartTacticsChapterProps> = ({
         />
         {aiPrep ? (
           <SmartTacticsAccentText variant="caption" style={{ fontWeight: '700' }}>
-            {aiPrep.source === 'mistral' ? 'Mistral' : 'Local'} · {aiPrep.formation_recommendation} ·{' '}
+            {aiPrep.source === 'mistral' ? 'Cloud' : 'Local'} · {aiPrep.formation_recommendation} ·{' '}
             {compactBoardStarters(starters).length} titulaires
             {aiPrep.briefing_fr ? ` — ${aiPrep.briefing_fr}` : ''}
           </SmartTacticsAccentText>
@@ -785,7 +786,7 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
       });
       setPrep(remote);
       Alert.alert(
-        remote.source === 'mistral' ? 'Préparation Mistral' : 'Préparation locale',
+        remote.source === 'mistral' ? 'Préparation cloud' : 'Préparation locale',
         remote.briefing_fr ||
           remote.tactical_suggestions[0] ||
           `Formation ${remote.formation_recommendation}`,
@@ -850,7 +851,7 @@ export const SmartPrepChapter: React.FC<SmartTacticsChapterProps> = ({
 
       <View style={styles.prepActions}>
         <SmartTacticsPrimaryCta
-          label={busy ? 'Analyse…' : 'Lancer l’IA Mistral'}
+          label={busy ? 'Analyse…' : 'Lancer l’analyse IA'}
           onPress={() => void runAi()}
           disabled={busy}
           icon={<Icon name="star-four-points" size={16} color={theme.ctaText} />}
@@ -1127,10 +1128,7 @@ export const SmartVideoChapter: React.FC<SmartTacticsChapterProps> = ({ profile,
       source,
     });
     setJobs((prev) => [`${job.id} · ${source} · ${job.status}`, ...prev].slice(0, 6));
-    Alert.alert(
-      'Analyse vidéo (VO)',
-      'Job cloud créé. Pipeline : queued → processing → ready. Sans média uploadé, des clips stubs sont générés ; ajoutez une URL storage pour enrichir.',
-    );
+    Alert.alert('Analyse vidéo', smartTacticsVideoHonestAlert());
     // Poll briefly for cloud worker status
     for (const delay of [1500, 3500, 6000]) {
       await new Promise((r) => setTimeout(r, delay));
@@ -1151,7 +1149,7 @@ export const SmartVideoChapter: React.FC<SmartTacticsChapterProps> = ({ profile,
     <SmartTacticsChapterScroll>
       <SmartTacticsPageHeader
         title="Analyse vidéo"
-        body="Smartphone, tablette, Veo ou caméra compatible · cloud · highlights auto. Matériel jamais obligatoire."
+        body="Smartphone ou trépied — job cloud si disponible. Matériel jamais obligatoire. Pas de highlights inventés sans fichier."
       />
       <View style={styles.reportRow}>
         <SmartTacticsPrimaryCta

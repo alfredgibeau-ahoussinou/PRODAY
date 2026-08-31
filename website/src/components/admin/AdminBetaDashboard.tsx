@@ -616,7 +616,7 @@ export function AdminBetaDashboard({
                               window.location.href = `mailto:${entry.email}?subject=${subject}`;
                             }}
                           >
-                            <Mail size={12} /> Répondre par e-mail
+                            <Mail size={12} /> Répondre par email
                           </AdminButton>
                         ) : null}
                       </div>

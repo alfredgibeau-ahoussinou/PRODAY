@@ -26,6 +26,8 @@ import {
 } from '../../components/parent/parentPortalUi';
 import { ParentUnlockCard } from '../../components/parent/ParentUnlockCard';
 import { PARENT_PAGES } from '../../content/parentPageIdentity';
+import { useProductLine } from '../../context/ProductLineContext';
+import { usePlatformFeatureFlags } from '../../hooks/usePlatformFeatureFlags';
 
 interface Props {
   onSignOut: () => Promise<void> | void;
@@ -37,6 +39,8 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
   const { colors: c } = useThemedScreen();
   const { profile } = useAuth();
   const { selected, reload } = useParentShell();
+  const { openParentSupporterGuest } = useProductLine();
+  const { isEnabled } = usePlatformFeatureFlags();
   const email = normalizeGuardianEmail(profile?.email);
   const [mode, setMode] = useState<SubMode>('list');
   const [saving, setSaving] = useState(false);
@@ -308,6 +312,31 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
             </ParentSectionCard>
           </>
         )}
+
+        <ParentSectionCard
+          title="Pôle Supporter"
+          subtitle="Matchs et clubs suivis — vous pourrez revenir ici depuis Profil Supporter"
+        >
+          <ParentActionButton
+            label="Ouvrir le pôle Supporter"
+            icon="swap-horizontal"
+            onPress={() => {
+              if (!isEnabled('supporter')) {
+                Alert.alert(
+                  'Pôle temporairement fermé',
+                  'Le pôle Supporter est désactivé pour le moment.',
+                );
+                return;
+              }
+              void openParentSupporterGuest().catch((e) =>
+                Alert.alert(
+                  'Bascule impossible',
+                  e instanceof Error ? e.message : 'Réessayez plus tard.',
+                ),
+              );
+            }}
+          />
+        </ParentSectionCard>
 
         <ParentSectionCard
           title="Lier un autre enfant"

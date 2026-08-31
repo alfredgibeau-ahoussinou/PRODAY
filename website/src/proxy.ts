@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import {
   BETA_ACCESS_REDIRECT_PARAM,
   BETA_ACCESS_REDIRECT_VALUE,
-} from "@/lib/betaAccess";
+} from "@/lib/betaAccessConstants";
 import {
   ADMIN_HOME_PATH,
   ADMIN_LOGIN_PATH,
@@ -30,7 +30,7 @@ function withSecurityHeaders(
   return response;
 }
 
-/** Protège /admin/* (session HMAC) et gère les jetons bêta /beta. */
+/** Protège /admin/* (session HMAC) et gère les jetons bêta /beta. Convention Next.js 16 proxy. */
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 

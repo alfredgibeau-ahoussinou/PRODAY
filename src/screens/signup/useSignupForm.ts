@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { Gender, UserRole } from '../../models/User';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import { DEFAULT_APP_SPACE, type AppSpaceId } from '../../models/AppSpace';
@@ -108,7 +108,9 @@ export function useSignupForm(initial?: {
   const [gender, setGenderState] = useState<Gender>('men');
   const [genderTouched, setGenderTouched] = useState(false);
   const [parentalRequired, setParentalRequired] = useState(false);
-  const [currentPageId, setCurrentPageId] = useState<SignupPageId>('welcome');
+  const [currentPageId, setCurrentPageId] = useState<SignupPageId>(
+    initial?.startAtAccount === false ? 'welcome' : 'account',
+  );
   const [accountCreated, setAccountCreated] = useState(false);
 
   const [displayName, setDisplayName] = useState(initial?.initialDisplayName ?? '');
@@ -654,6 +656,12 @@ export function useSignupForm(initial?: {
     return Object.keys(errs).length === 0;
   };
 
+  /** Appelé depuis SignupFlow : crée le compte quand l’étape suivante est `launch`. */
+  const createBeforeLaunchRef = useRef<(() => Promise<boolean>) | null>(null);
+  const registerCreateBeforeLaunch = useCallback((fn: (() => Promise<boolean>) | null) => {
+    createBeforeLaunchRef.current = fn;
+  }, []);
+
   const advanceFromCurrentPage = useCallback(() => {
     switch (currentPage) {
       case 'space':
@@ -705,6 +713,11 @@ export function useSignupForm(initial?: {
       default:
         break;
     }
+    const next = steps[pageIndex + 1];
+    if (next === 'launch') {
+      void createBeforeLaunchRef.current?.();
+      return true;
+    }
     goNext();
     return true;
   }, [
@@ -725,6 +738,8 @@ export function useSignupForm(initial?: {
     isMinor,
     appSpace,
     goNext,
+    steps,
+    pageIndex,
   ]);
 
   const buildPlayerPayload = () => ({
@@ -1057,6 +1072,7 @@ export function useSignupForm(initial?: {
     validateStats,
     validateAccountIdentity,
     advanceFromCurrentPage,
+    registerCreateBeforeLaunch,
     createAccount,
     setError,
     setLoading,

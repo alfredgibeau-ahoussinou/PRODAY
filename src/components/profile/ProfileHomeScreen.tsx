@@ -41,6 +41,7 @@ import { isAmateurProductLine, type ProductLineId } from '../../models/ProductLi
 import type { OrganizerReminderItem } from '../../hooks/useOrganizerReminders';
 import type { SubscriptionUsagePeriod } from '../../models/Subscription';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
+import { screenScrollPad } from '../../navigation/screenLayout';
 import { spacing, radius } from '../../theme/designTokens';
 import { ProfilePreferencesCard } from './ProfilePreferencesCard';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
@@ -71,11 +72,13 @@ import {
 } from '../coach/CoachAccountPanels';
 import { computeHealthSnapshot } from '../../core/health/healthState.engine';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import {
   resolveJoueurAgeGroup,
   resolveJoueurGenderVisual,
 } from '../../utils/joueurExperienceTheme';
 import { resolveJoueurPageIdentity } from '../../content/joueurPageIdentity';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 
 export interface ProfileHomeScreenProps {
   profile: User;
@@ -174,8 +177,9 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   );
   const styles = useMemo(() => createStyles(colors), [colors]);
   const joueurSession = useJoueurSession();
-  const joueurAccent = useMemo(() => {
-    if (!isPlayer) return colors.accent;
+  const playerTheme = usePlayerThemeColors();
+  const joueurIdentity = useMemo(() => {
+    if (!isPlayer) return null;
     const ageGroup =
       joueurSession?.ageGroup ??
       resolveJoueurAgeGroup({
@@ -186,10 +190,9 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     const gender = resolveJoueurGenderVisual(
       joueurSession?.gate?.gender ?? props.profile.profile.gender,
     );
-    return resolveJoueurPageIdentity({ ageGroup, gender }).accent;
+    return resolveJoueurPageIdentity({ ageGroup, gender });
   }, [
     isPlayer,
-    colors.accent,
     joueurSession?.ageGroup,
     joueurSession?.ageYears,
     joueurSession?.gate?.gender,
@@ -197,6 +200,21 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     props.profile.profile.gender,
     props.profile.profile.birth_date,
   ]);
+  const joueurAccent = playerTheme.accent;
+  const joueurPagerColors = useMemo(
+    () =>
+      ({
+        ...appColors,
+        background: playerTheme.bg,
+        surface: playerTheme.surfaceRaised,
+        border: PLAYER_DARK.border,
+        text: PLAYER_DARK.text,
+        textMuted: PLAYER_DARK.textMuted,
+        accent: playerTheme.accent,
+        brandInverse: playerTheme.bg,
+      }) as AppColors,
+    [appColors, playerTheme.accent, playerTheme.bg, playerTheme.surfaceRaised],
+  );
   const { activities, loading: activitiesLoading, refresh: refreshActivities } =
     usePlayerActivities(isPlayer ? props.profile.uid : undefined);
   const career = useCareerProgression(isPlayer ? props.profile : null, {
@@ -227,6 +245,12 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       setChapter('cv');
       return;
     }
+    setChapter('apercu');
+    props.onEdit();
+  };
+
+  const handleEdit = () => {
+    setChapter('apercu');
     props.onEdit();
   };
 
@@ -242,7 +266,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         render: () => (
           <ScrollView
             style={styles.chapterScroll}
-            contentContainerStyle={useHubChrome ? { paddingBottom: spacing.xl } : pagePad}
+            contentContainerStyle={useHubChrome ? screenScrollPad(spacing.lg) : pagePad}
             {...scrollProps}
           >
             {isPlayer ? (
@@ -254,13 +278,14 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                   joueurSession?.gate?.gender ?? props.profile.profile.gender
                 }
                 gateAgeGroup={joueurSession?.ageGroup}
-                onEdit={props.onEdit}
+                onEdit={handleEdit}
+                onOpenThemeSettings={() => setChapter('reglages')}
               />
             ) : isCoach ? (
               <CoachProfileHub
                 profile={props.profile}
                 subscriptionTier={props.subscriptionTier}
-                onEdit={props.onEdit}
+                onEdit={handleEdit}
                 onPublicProfile={props.onPublicProfile}
                 onAvatarPress={props.onAvatarPress}
                 onSubscriptionPress={props.onSubscriptionPress}
@@ -318,7 +343,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 >
                   <ProfileCompletionPanel
                     user={props.profile}
-                    onCompletePress={props.onEdit}
+                    onCompletePress={handleEdit}
                     onItemPress={handleCompletionItem}
                   />
                 </ProfileSection>
@@ -368,6 +393,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 colors={colors}
                 productLine={props.productLine}
                 accent={joueurAccent}
+                wash={joueurIdentity?.wash}
                 gallery={props.gallery}
                 videos={props.videos}
                 uploadingGallery={props.uploadingGallery}
@@ -391,7 +417,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             ) : isCoach ? (
               <CoachVitrinePanel
                 profile={props.profile}
-                onEdit={props.onEdit}
+                onEdit={handleEdit}
                 onPublicProfile={props.onPublicProfile}
               />
             ) : (
@@ -420,6 +446,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             {props.profile.role === 'player' ? (
               <JoueurActivitePanel
                 accent={joueurAccent}
+                wash={joueurIdentity?.wash}
                 productLine={props.productLine}
                 playerUid={props.profile.uid}
                 clubId={props.profile.profile.club_id}
@@ -495,6 +522,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             {isPlayer ? (
               <JoueurParamsPanel
                 accent={joueurAccent}
+                wash={joueurIdentity?.wash}
                 colors={colors}
                 AlertCard={AlertCard}
                 showPlayerVerificationReminder={props.showPlayerVerificationReminder}
@@ -708,9 +736,15 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         activeChapter={chapter}
         onChapterChange={setChapter}
         showFooter={false}
-        variant={useHubChrome ? 'rail' : 'pills'}
+        variant={useHubChrome ? (isPlayer ? 'pills' : 'rail') : 'pills'}
         compact={useHubChrome}
-        colors={inCoachShell ? colors : undefined}
+        colors={
+          isPlayer && useHubChrome
+            ? joueurPagerColors
+            : inCoachShell
+              ? colors
+              : undefined
+        }
         badges={{
           reglages:
             props.pendingVerify || props.showPlayerVerificationReminder ? 1 : undefined,
@@ -720,7 +754,13 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
   );
 
   const content = (
-    <View style={[styles.root, inCoachShell && { backgroundColor: coachTokens.bg }]}>
+    <View
+      style={[
+        styles.root,
+        inCoachShell && { backgroundColor: coachTokens.bg },
+        isPlayer && useHubChrome && { backgroundColor: PLAYER_DARK.bg },
+      ]}
+    >
       {identityHeader}
       <View style={useHubChrome ? styles.playerPager : undefined}>{pager}</View>
     </View>
@@ -859,7 +899,7 @@ function createStyles(_c: AppColors) {
     managementPad: {
       paddingHorizontal: spacing.md,
       paddingTop: spacing.sm,
-      paddingBottom: spacing.xl + 24,
+      paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
       gap: spacing.xs,
     },
     managementScreen: {

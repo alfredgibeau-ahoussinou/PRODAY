@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Dimensions, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { CoachText } from './coachPortalUi';
 import { CoachAccentColorAssistant } from './CoachAccentColorAssistant';
 import { CoachAccentColorBoard } from './CoachAccentColorBoard';
-import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
+import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import { useTranslation } from '../../context/LocaleContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { radius, spacing } from '../../theme/designTokens';
+import { coachChrome } from '../../features/coach/theme/coachDesignSystem';
 
 type ColorPickerTab = 'assistant' | 'grid';
 
@@ -27,7 +28,9 @@ export function CoachAccentColorPickerModal({
 }: Props) {
   const { t } = useTranslation();
   const { tokens } = useCoachTheme();
-  const styles = useCoachThemedStyles(createStyles);
+  const { width } = useWindowDimensions();
+  const sheetMode = coachChrome.modalIsSheet(width);
+  const styles = useMemo(() => createStyles(tokens, sheetMode), [tokens, sheetMode]);
   const [draftColor, setDraftColor] = useState(selectedColor);
   const [tab, setTab] = useState<ColorPickerTab>('assistant');
 
@@ -127,21 +130,27 @@ export function CoachAccentColorPickerModal({
   );
 }
 
-function createStyles(tokens: CoachThemeTokens) {
+function createStyles(tokens: CoachThemeTokens, sheetMode: boolean) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.65)',
-      justifyContent: 'flex-end',
+      justifyContent: sheetMode ? 'flex-end' : 'center',
+      alignItems: sheetMode ? undefined : 'center',
+      paddingHorizontal: sheetMode ? 0 : spacing.xl,
     },
     sheet: {
       backgroundColor: tokens.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      borderTopLeftRadius: sheetMode ? 20 : 16,
+      borderTopRightRadius: sheetMode ? 20 : 16,
+      borderBottomLeftRadius: sheetMode ? 0 : 16,
+      borderBottomRightRadius: sheetMode ? 0 : 16,
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.lg,
       paddingBottom: spacing.lg,
-      maxHeight: '88%',
+      maxHeight: sheetMode ? '88%' : '80%',
+      width: '100%',
+      maxWidth: sheetMode ? undefined : 520,
       gap: spacing.sm,
     },
     header: {

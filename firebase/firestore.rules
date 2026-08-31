@@ -10,8 +10,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isPlatformAdminEmail() {
+      return isSignedIn()
+        && request.auth.token.email in [
+          'proday.admin@gmail.com',
+          'semedoyohan1@gmail.com',
+        ];
+    }
+
     function isAdmin() {
-      return isSignedIn() && request.auth.token.get('admin', false) == true;
+      return isSignedIn()
+        && (request.auth.token.get('admin', false) == true || isPlatformAdminEmail());
     }
 
     function userDoc(uid) {
@@ -339,6 +348,14 @@ service cloud.firestore {
       return resource.data.invitee_uids.hasAny([request.auth.uid]);
     }
 
+    /** Parent lié (parent_of) dont un enfant est convoqué — RSVP / notes uniquement. */
+    function isParentOfEventInvitee() {
+      return isSignedIn()
+        && userDoc(request.auth.uid).data.role == 'parent'
+        && parentOfUids().size() > 0
+        && resource.data.invitee_uids.hasAny(parentOfUids());
+    }
+
     function isCarpoolCoordinationUpdate() {
       return isSignedIn()
         && isEventInvitee()
@@ -576,8 +593,17 @@ service cloud.firestore {
 
     match /friendly_matches/{matchId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.requester_uid == request.auth.uid;
+      allow update: if isSignedIn()
+        && (
+          isAdmin()
+          || resource.data.requester_uid == request.auth.uid
+          || resource.data.get('opponent_club_id', null) == userClubId()
+          || resource.data.get('requester_club_id', null) == userClubId()
+          || (resource.data.status == 'OPEN' && request.resource.data.status in ['MATCHED', 'INVITED'])
+        );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.requester_uid == request.auth.uid);
     }
 
     match /competitions/{competitionId} {
@@ -594,7 +620,7 @@ service cloud.firestore {
 
     match /competition_seasons/{seasonId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() && (isAdmin() || isStaff());
       allow update: if isSignedIn()
         && (isAdmin() || request.auth.uid in resource.data.organizer_uids);
       allow delete: if isAdmin();
@@ -602,25 +628,25 @@ service cloud.firestore {
 
     match /competition_teams/{teamId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (isAdmin() || isStaff());
       allow delete: if isAdmin();
     }
 
     match /competition_fixtures/{fixtureId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (isAdmin() || isStaff());
       allow delete: if isAdmin();
     }
 
     match /competition_standings/{seasonId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (isAdmin() || isStaff());
       allow delete: if isAdmin();
     }
 
     match /player_competition_stats/{statsId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (isAdmin() || isStaff());
       allow delete: if isAdmin();
     }
 
@@ -645,7 +671,7 @@ service cloud.firestore {
             && (
               resource.data.organizer_uid == request.auth.uid
               || (
-                isEventInvitee()
+                (isEventInvitee() || isParentOfEventInvitee())
                 && request.resource.data.diff(resource.data).affectedKeys()
                   .hasOnly(['rsvps', 'rsvp_notes', 'invitee_uids', 'updated_at'])
                 && !request.resource.data.diff(resource.data).affectedKeys()
@@ -841,11 +867,14 @@ service cloud.firestore {
         && canManageClubEntity()
         && request.resource.data.owner_uid == request.auth.uid
         && request.resource.data.verified == false;
+      // Owner OU compte rôle club rattaché (pôle Club) — owner_uid / verified immuables.
       allow update: if isAdmin()
         || (isSignedIn()
-            && resource.data.owner_uid == request.auth.uid
             && request.resource.data.owner_uid == resource.data.owner_uid
-            && request.resource.data.verified == resource.data.verified);
+            && request.resource.data.verified == resource.data.verified
+            && (resource.data.owner_uid == request.auth.uid
+                || (userDoc(request.auth.uid).data.role == 'club'
+                    && userDoc(request.auth.uid).data.get('profile', {}).get('club_id', '') == clubId)));
       allow delete: if isAdmin();
     }
 
@@ -928,7 +957,10 @@ service cloud.firestore {
 
     match /club_funding_goals/{goalId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow create: if isStaffOrAdmin();
+      allow update: if isStaffOrAdmin()
+        || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['raised_amount_eur', 'updated_at']));
+      allow delete: if isAdmin() || (isStaff() && resource.data.club_id == userClubId());
     }
 
     match /message_threads/{threadId} {
@@ -1188,6 +1220,15 @@ service cloud.firestore {
         && resource.data.recipient_uid == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read_at']);
       allow delete: if isAdmin();
+    }
+
+    /** File d’attente push (Expo/FCM) — écriture client, lecture/update CF admin. */
+    match /push_outbox/{outboxId} {
+      allow create: if isSignedIn()
+        && request.resource.data.recipient_uid is string
+        && request.resource.data.title is string
+        && request.resource.data.body is string;
+      allow read, update, delete: if isAdmin();
     }
 
     /** Rendez-vous pôle santé — praticien ↔ joueur (+ parent si consentement médical) */
@@ -1591,6 +1632,31 @@ service cloud.firestore {
         || (isSignedIn() && resource.data.author_uid == request.auth.uid);
     }
 
+    /**
+     * Ledger cotisations / dépenses / recettes club.
+     * Staff rattaché au club (role club|coach|organizer|agent + profile.club_id) — même ACL branding.
+     */
+    match /club_finance_entries/{id} {
+      allow read: if isAdmin()
+        || (isSignedIn() && isClubStaffForClub(resource.data.club_id));
+      allow create: if isAdmin()
+        || (isSignedIn()
+            && isClubStaffForClub(request.resource.data.club_id)
+            && request.resource.data.created_by_uid == request.auth.uid
+            && request.resource.data.club_id is string
+            && request.resource.data.type in ['cotisation', 'depense', 'recette', 'autre']
+            && request.resource.data.amount_eur is number
+            && request.resource.data.amount_eur > 0
+            && request.resource.data.label is string
+            && request.resource.data.status == 'active');
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && isClubStaffForClub(resource.data.club_id)
+            && request.resource.data.club_id == resource.data.club_id
+            && request.resource.data.created_by_uid == resource.data.created_by_uid);
+      allow delete: if isAdmin();
+    }
+
     /** Causeries match */
     match /match_talk_briefs/{id} {
       allow read: if isSignedIn()
@@ -1687,6 +1753,51 @@ service cloud.firestore {
         && request.resource.data.title is string;
       allow update, delete: if isAdmin()
         || (isSignedIn() && resource.data.author_uid == request.auth.uid);
+    }
+
+    // --- Pôle Supporter V2 (Phase 2) ---
+    // supporter_watch_history/{uid}/entries/{matchId}
+    // supporter_saved_matches/{uid}/entries/{matchId}
+    // supporter_match_polls/{matchId}
+    // supporter_match_predictions/{matchId}/entries/{uid}
+    // supporter_match_reactions/{matchId}/entries/{uid}
+    // supporter_match_summaries/{matchId}
+    // supporter_video_rights/{videoId}
+
+    match /supporter_watch_history/{uid}/entries/{matchId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /supporter_saved_matches/{uid}/entries/{matchId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /supporter_match_polls/{matchId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /supporter_match_predictions/{matchId}/entries/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+
+    match /supporter_match_reactions/{matchId}/entries/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+
+    match /supporter_match_summaries/{matchId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /supporter_video_rights/{videoId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

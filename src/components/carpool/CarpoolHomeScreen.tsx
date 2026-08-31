@@ -76,6 +76,10 @@ interface CarpoolHomeScreenProps {
   onOpenEvent: (eventId: string) => void;
   onRefresh: () => void;
   onLoginRequired?: () => void;
+  /** Header déjà fourni par TabScreenShell joueur. */
+  hideHero?: boolean;
+  /** Mode shell joueur dark premium. */
+  joueurShell?: boolean;
 }
 
 const pagePad = {
@@ -98,6 +102,8 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   onOpenEvent,
   onRefresh,
   onLoginRequired,
+  hideHero = false,
+  joueurShell = false,
 }) => {
   const { t } = useTranslation();
   const coachShell = Boolean(useCoachShellNav());
@@ -699,7 +705,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
 
   return (
     <View style={[styles.root, coachShell && { backgroundColor: coachTokens.bg }]}>
-      {coachShell ? null : <CarpoolSpaceBackground />}
+      {coachShell || joueurShell ? null : <CarpoolSpaceBackground />}
       <View style={styles.foreground}>
         {coachShell ? (
           <CoachPane title={getCoachPageIdentity('carpool').title}>
@@ -736,6 +742,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
               badges={badges}
               reminderCount={reminderEvents.length}
               onReminderPress={() => setHubMode('ride')}
+              hideHero={hideHero}
             />
             <View style={styles.body}>
               <CrossfadeSwitch switchKey={mode}>

@@ -10,12 +10,15 @@ import { BackToTop } from "@/components/BackToTop";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { PageTransition } from "./PageTransition";
 import { ScrollToHash } from "./ScrollToHash";
+import { MASTER_ACCENT_CSS_VARS, poleAccentCssVars } from "@/lib/brandColors";
 
 const SiteHelpChatbot = lazy(() =>
   import("@/components/SiteHelpChatbot").then((mod) => ({
     default: mod.SiteHelpChatbot,
   })),
 );
+
+const joueurShellVars = poleAccentCssVars("joueur");
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,18 +31,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <MotionConfig reducedMotion="user">
         <div
           className="page-terminal relative min-h-screen bg-black text-white"
-          style={
-            {
-              ["--proday-accent" as string]: "#0054F0",
-              ["--proday-accent-bright" as string]: "#4C8BFF",
-              ["--proday-accent-deep" as string]: "#001F6B",
-              ["--proday-accent-dim" as string]: "#1A68FF",
-              ["--proday-accent-glow" as string]: "rgba(0, 84, 240, 0.42)",
-              ["--proday-accent-muted" as string]: "rgba(0, 84, 240, 0.16)",
-              ["--proday-accent-gradient" as string]:
-                "linear-gradient(135deg, #001F6B 0%, #0054F0 48%, #4C8BFF 100%)",
-            } as React.CSSProperties
-          }
+          style={MASTER_ACCENT_CSS_VARS as React.CSSProperties}
         >
           <div className="relative z-10">{children}</div>
         </div>
@@ -54,24 +46,12 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         <SiteVisitTracker />
         <div
           className="page-joueur-world relative min-h-screen overflow-x-clip bg-[#020617] text-white"
-          style={
-            {
-              ["--proday-accent" as string]: "#0054F0",
-              ["--proday-accent-bright" as string]: "#4C8BFF",
-              ["--proday-accent-deep" as string]: "#001F6B",
-              ["--proday-accent-dim" as string]: "#1A68FF",
-              ["--proday-accent-glow" as string]: "rgba(0, 84, 240, 0.5)",
-              ["--proday-accent-muted" as string]: "rgba(0, 84, 240, 0.2)",
-              ["--proday-accent-gradient" as string]:
-                "linear-gradient(135deg, #001F6B 0%, #0054F0 48%, #4C8BFF 100%)",
-            } as React.CSSProperties
-          }
+          style={joueurShellVars as React.CSSProperties}
         >
           <ScrollToHash />
           <Suspense fallback={null}>
             <ReferralCapture />
           </Suspense>
-          {/* Nav hors du stacking du main pour rester cliquable et visible */}
           <div className="relative z-[110]">
             <SiteNav />
           </div>
@@ -93,18 +73,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <SiteVisitTracker />
       <div
         className="page-terminal relative min-h-screen text-[#f5f5f0]"
-        style={
-          {
-            ["--proday-accent" as string]: "#0054F0",
-            ["--proday-accent-bright" as string]: "#4C8BFF",
-            ["--proday-accent-deep" as string]: "#001F6B",
-            ["--proday-accent-dim" as string]: "#1A68FF",
-            ["--proday-accent-glow" as string]: "rgba(0, 84, 240, 0.42)",
-            ["--proday-accent-muted" as string]: "rgba(0, 84, 240, 0.16)",
-            ["--proday-accent-gradient" as string]:
-              "linear-gradient(135deg, #001F6B 0%, #0054F0 48%, #4C8BFF 100%)",
-          } as React.CSSProperties
-        }
+        style={MASTER_ACCENT_CSS_VARS as React.CSSProperties}
       >
         <div className="relative z-10">
           <ScrollToHash />

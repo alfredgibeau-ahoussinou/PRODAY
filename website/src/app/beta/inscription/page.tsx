@@ -10,7 +10,7 @@ import { ROUTES } from "@/lib/routes";
 export const metadata: Metadata = {
   title: "Rejoindre la bêta",
   description:
-    "Inscrivez-vous sur la liste d'attente ProDay. Accès prioritaire à la bêta iOS TestFlight et à l'APK Android.",
+    "Inscrivez vous sur la liste d'attente ProDay. Accès prioritaire à la bêta iOS TestFlight et à l'APK Android.",
 };
 
 export default async function BetaWaitlistPage({

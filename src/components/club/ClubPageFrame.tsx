@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
-import { CLUB_SITE, type ClubPageIdentity } from '../../content/clubPageIdentity';
+import { type ClubPageIdentity } from '../../content/clubPageIdentity';
+import { CLUB_TOKENS } from '../../features/club/theme/clubTokens';
 import { spacing } from '../../theme/designTokens';
 
 const ClubPageIdentityContext = createContext<ClubPageIdentity | null>(null);
@@ -19,8 +19,8 @@ type Props = {
 };
 
 /**
- * Cadre terminal cinéma — langage site `/pro-club`.
- * Mono kicker, wash navy→noir, accent électrique unique.
+ * Cadre page Club — fond noir pur (chrome app).
+ * Conservé pour panels legacy / upsell ; le shell principal utilise ClubBrandHeader.
  */
 export function ClubPageFrame({ identity, showHero = true, children }: Props) {
   const styles = useMemo(() => createStyles(identity), [identity]);
@@ -28,22 +28,7 @@ export function ClubPageFrame({ identity, showHero = true, children }: Props) {
   return (
     <ClubPageIdentityContext.Provider value={identity}>
       <View style={styles.root}>
-        <LinearGradient
-          colors={identity.wash}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        {/* Glow bas — comme ImmersivePoleHero */}
-        <LinearGradient
-          colors={['transparent', CLUB_SITE.glow, 'transparent']}
-          start={{ x: 0.5, y: 0.15 }}
-          end={{ x: 0.5, y: 0.55 }}
-          style={styles.glow}
-          pointerEvents="none"
-        />
-        <View style={styles.accentBar} pointerEvents="none" />
+        <View style={[styles.accentBar, { backgroundColor: CLUB_TOKENS.pitch }]} pointerEvents="none" />
 
         {identity.motif === 'grid' ? (
           <View style={styles.hairGrid} pointerEvents="none" />
@@ -55,7 +40,7 @@ export function ClubPageFrame({ identity, showHero = true, children }: Props) {
         {showHero ? (
           <View style={styles.hero}>
             <View style={styles.heroTop}>
-              <Icon name={identity.icon} size={14} color={CLUB_SITE.accent} />
+              <Icon name={identity.icon} size={14} color={CLUB_TOKENS.pitch} />
               <ProDayText variant="caption" style={styles.eyebrow}>
                 {identity.eyebrow}
               </ProDayText>
@@ -83,21 +68,13 @@ export function ClubPageFrame({ identity, showHero = true, children }: Props) {
   );
 }
 
-function createStyles(identity: ClubPageIdentity) {
+function createStyles(_identity: ClubPageIdentity) {
   return StyleSheet.create({
     root: {
       flex: 1,
       minHeight: 0,
       overflow: 'hidden',
-      backgroundColor: CLUB_SITE.bg,
-    },
-    glow: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      top: 0,
-      height: 180,
-      opacity: 0.45,
+      backgroundColor: CLUB_TOKENS.bg,
     },
     accentBar: {
       position: 'absolute',
@@ -105,8 +82,7 @@ function createStyles(identity: ClubPageIdentity) {
       top: 0,
       bottom: 0,
       width: 2,
-      backgroundColor: CLUB_SITE.accent,
-      opacity: 0.9,
+      opacity: 0.85,
     },
     hairGrid: {
       position: 'absolute',
@@ -115,8 +91,8 @@ function createStyles(identity: ClubPageIdentity) {
       width: 120,
       height: 120,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: CLUB_SITE.border,
-      opacity: 0.5,
+      borderColor: CLUB_TOKENS.border,
+      opacity: 0.45,
     },
     hairStripe: {
       position: 'absolute',
@@ -124,7 +100,7 @@ function createStyles(identity: ClubPageIdentity) {
       top: 0,
       bottom: 0,
       width: StyleSheet.hairlineWidth,
-      backgroundColor: CLUB_SITE.border,
+      backgroundColor: CLUB_TOKENS.border,
     },
     hero: {
       paddingHorizontal: spacing.lg,
@@ -133,7 +109,7 @@ function createStyles(identity: ClubPageIdentity) {
       gap: 6,
       zIndex: 1,
       borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: CLUB_SITE.border,
+      borderBottomColor: CLUB_TOKENS.border,
     },
     heroTop: {
       flexDirection: 'row',
@@ -142,15 +118,15 @@ function createStyles(identity: ClubPageIdentity) {
       marginBottom: 4,
     },
     eyebrow: {
-      color: CLUB_SITE.accent,
+      color: CLUB_TOKENS.pitch,
       textTransform: 'uppercase',
-      letterSpacing: 2.8,
+      letterSpacing: 2.4,
       fontSize: 10,
       fontWeight: '700',
       fontVariant: ['tabular-nums'],
     },
     title: {
-      color: CLUB_SITE.foreground,
+      color: CLUB_TOKENS.foreground,
       fontWeight: '800',
       letterSpacing: -0.8,
       fontSize: 26,
@@ -166,7 +142,7 @@ function createStyles(identity: ClubPageIdentity) {
       lineHeight: 32,
     },
     support: {
-      color: CLUB_SITE.muted,
+      color: CLUB_TOKENS.muted,
       lineHeight: 18,
       maxWidth: 340,
       marginTop: 2,
@@ -175,8 +151,8 @@ function createStyles(identity: ClubPageIdentity) {
       marginTop: spacing.sm,
       height: 2,
       width: 48,
-      backgroundColor: CLUB_SITE.accent,
-      opacity: 0.85,
+      backgroundColor: CLUB_TOKENS.pitch,
+      opacity: 0.9,
     },
     body: {
       flex: 1,

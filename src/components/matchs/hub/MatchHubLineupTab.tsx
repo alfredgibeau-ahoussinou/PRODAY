@@ -30,6 +30,19 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
   const { colors } = useAppTheme();
   const isCoachShell = useIsCoachShell();
   const lineup = event.lineup;
+  const starters = useMemo(
+    () => (lineup?.slots ?? []).filter((s) => s.role === 'starter'),
+    [lineup?.slots],
+  );
+  const subs = useMemo(
+    () => (lineup?.slots ?? []).filter((s) => s.role === 'sub'),
+    [lineup?.slots],
+  );
+  const coachCells = useMemo(
+    () => eventStartersToStadiumCells(starters, lineup?.formation ?? '4-4-2'),
+    [starters, lineup?.formation],
+  );
+  const coachBench = useMemo(() => eventSubsToBenchPlayers(subs), [subs]);
 
   if (!lineup || lineup.slots.length === 0) {
     return (
@@ -53,14 +66,6 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
       </ProDaySurface>
     );
   }
-
-  const starters = lineup.slots.filter((s) => s.role === 'starter');
-  const subs = lineup.slots.filter((s) => s.role === 'sub');
-  const coachCells = useMemo(
-    () => eventStartersToStadiumCells(starters, lineup.formation),
-    [starters, lineup.formation],
-  );
-  const coachBench = useMemo(() => eventSubsToBenchPlayers(subs), [subs]);
 
   return (
     <View style={styles.wrap}>

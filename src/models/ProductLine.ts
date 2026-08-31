@@ -21,13 +21,15 @@ export type LegacyProductLineId = 'standard';
 
 export const PRODUCT_LINE_STORAGE_KEY = 'proday_product_line';
 export const WOMAN_SPACE_ACTIVE_KEY = 'proday_woman_space_active';
+/** Parent connecté en visite temporaire sur le scaffold Supporter. */
+export const PARENT_GUEST_SUPPORTER_KEY = 'proday_parent_guest_supporter';
 
 export const PRODAY_HOMME_BRAND = {
   name: 'Pro Day Man',
   logoLine1: 'Pro Day',
   logoLine2Lead: '',
   logoLine2Accent: 'Man',
-  tagline: 'CONNECTER • PROGRESSER • RÉUSSIR',
+  tagline: 'CONNECTER. PROGRESSER. RÉVÉLER.',
   shortTagline: 'Le foot masculin amateur, par Pro Day',
   entryCta: 'For men',
 } as const;
@@ -98,6 +100,18 @@ export const PRODAY_PRO_CLUB_BRAND = {
   shortTagline:
     'Cœur de ProDay. Équipes, licenciés, compétitions, covoiturage et permissions',
   entryCta: 'Espace Club',
+} as const;
+
+/** Branding carousel / chrome — même product_line `pro_club`, shell Président. */
+export const PRODAY_PRESIDENT_BRAND = {
+  name: 'Pro Day Président',
+  logoLine1: 'Pro Day',
+  logoLine2Lead: '',
+  logoLine2Accent: 'Président',
+  tagline: 'DIRECTION • STRATÉGIE • PRESTIGE',
+  shortTagline:
+    'Cockpit exécutif du club. Pilotage, finances et décisions — lié au Pôle Club',
+  entryCta: 'Espace Président',
 } as const;
 
 export const PRODAY_PRO_STAFF_BRAND = {

@@ -2,19 +2,24 @@
   "expo": {
     "name": "ProDay",
     "slug": "proday",
-    "version": "1.0.7",
+    "version": "1.0.9",
     "scheme": "proday",
     "orientation": "portrait",
-    "icon": "./assets/branding/logo-proday-official.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/branding/proday-app-icon.png",
+    "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/branding/logo-proday-official.png",
+      "image": "./assets/branding/proday-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F1F5F9"
+      "backgroundColor": "#000000"
+    },
+    "notification": {
+      "icon": "./assets/branding/proday-notification-icon.png",
+      "color": "#C5A059"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.proday.app",
+      "buildNumber": "18",
       "associatedDomains": [
         "applinks:proday75.fr",
         "applinks:www.proday75.fr"
@@ -32,16 +37,16 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/branding/logo-proday-official.png",
-        "backgroundColor": "#F1F5F9"
+        "foregroundImage": "./assets/branding/proday-adaptive-foreground.png",
+        "backgroundColor": "#000000"
       },
       "package": "com.proday.app",
-      "versionCode": 8,
+      "versionCode": 11,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/branding/logo-proday-official.png"
+      "favicon": "./assets/branding/proday-app-icon.png"
     },
     "plugins": [
       "expo-apple-authentication",
@@ -63,6 +68,8 @@
       [
         "expo-notifications",
         {
+          "icon": "./assets/branding/proday-notification-icon.png",
+          "color": "#C5A059",
           "enableBackgroundRemoteNotifications": true
         }
       ],
@@ -84,7 +91,6 @@
           "healthUpdatePermission": "ProDay n'écrit pas de données dans Apple Santé."
         }
       ],
-      "expo-health-connect",
       [
         "expo-build-properties",
         {

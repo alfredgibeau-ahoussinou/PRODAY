@@ -1,28 +1,22 @@
 import type { IconName } from '../components/ui/iconNames';
 import type { ClubNavItemId } from '../features/club/navigation/clubNavConfig';
+import { CLUB_TOKENS, CLUB_SITE_LEGACY } from '../features/club/theme/clubTokens';
 
-/**
- * Identité visuelle Pôle Club — alignée site `/pro-club` (terminal cinéma).
- * Un seul accent électrique ; les pages se différencient par layout / copy / motif.
- */
-
-/** Tokens brand site `poleAccentCssVars('pro_club')`. */
+/** Chrome partagé app Club — fond noir + accent émeraude (UI only). */
 export const CLUB_SITE = {
-  accent: '#006CFC',
-  deep: '#002478',
-  soft: 'rgba(0, 108, 252, 0.14)',
-  glow: 'rgba(0, 108, 252, 0.35)',
-  bg: '#000000',
-  band: '#020814',
-  surface: '#0c0c0c',
-  elevated: '#141414',
-  border: 'rgba(255,255,255,0.12)',
-  foreground: '#f5f5f0',
-  muted: 'rgba(245,245,240,0.55)',
-  /** Terrain (ClubPitchMap site). */
-  pitchDeep: '#0a3d1a',
-  pitch: '#14532d',
-  pitchLight: '#166534',
+  ...CLUB_SITE_LEGACY,
+  accent: CLUB_TOKENS.accent,
+  deep: CLUB_TOKENS.accentDeep,
+  soft: CLUB_TOKENS.accentSoft,
+  glow: CLUB_TOKENS.pitchSoft,
+  bg: CLUB_TOKENS.bg,
+  band: CLUB_TOKENS.headerWash,
+  surface: CLUB_TOKENS.surface,
+  elevated: CLUB_TOKENS.elevated,
+  border: CLUB_TOKENS.border,
+  foreground: CLUB_TOKENS.foreground,
+  muted: CLUB_TOKENS.muted,
+  pitch: CLUB_TOKENS.pitch,
 } as const;
 
 export type ClubPageLayout =
@@ -50,9 +44,9 @@ export type ClubPageIdentity = {
 };
 
 const SITE_CHROME = {
-  accent: CLUB_SITE.accent,
-  accentSoft: CLUB_SITE.soft,
-  wash: [CLUB_SITE.band, CLUB_SITE.bg] as [string, string],
+  accent: CLUB_TOKENS.accent,
+  accentSoft: CLUB_TOKENS.accentSoft,
+  wash: [CLUB_TOKENS.bg, CLUB_TOKENS.surface] as [string, string],
 };
 
 function page(
@@ -69,162 +63,160 @@ function page(
   };
 }
 
-export const CLUB_PAGE_IDENTITIES: Record<ClubNavItemId, ClubPageIdentity> = {
+const DEFAULT_IDENTITY = page({
+  id: 'today',
+  eyebrow: 'Club',
+  title: 'Accueil',
+  support: 'Centre de contrôle',
+  icon: 'home',
+  layout: 'briefing',
+  motif: 'rays',
+});
+
+export const CLUB_PAGE_IDENTITIES: Partial<Record<ClubNavItemId, ClubPageIdentity>> = {
   today: page({
     id: 'today',
-    eyebrow: 'Briefing président',
-    title: 'Aujourd’hui',
-    support: 'Priorités, décisions, raccourcis — le QG du club.',
+    eyebrow: 'Pilotage',
+    title: 'Accueil',
+    support: 'AUJOURD’HUI · À FAIRE · statut club',
     icon: 'home',
     layout: 'briefing',
     motif: 'rays',
   }),
-  assistant: page({
-    id: 'assistant',
-    eyebrow: 'Copilote',
-    title: 'Assistant IA',
-    support: 'Chat live Mistral — vraies réponses, pas une FAQ.',
-    icon: 'star-four-points',
-    layout: 'signal',
-    motif: 'dots',
-  }),
-  pitch: page({
-    id: 'pitch',
-    eyebrow: 'Cockpit',
-    title: 'Un terrain. Six commandes.',
-    support: 'Le club en un coup d’œil — comme sur Pro Day Club.',
+  teams: page({
+    id: 'teams',
+    eyebrow: 'Effectifs',
+    title: 'Équipes',
+    support: 'U7 → Seniors',
     icon: 'football',
-    layout: 'map',
-    motif: 'grid',
-    wash: [CLUB_SITE.pitchDeep, CLUB_SITE.bg],
-  }),
-  structure: page({
-    id: 'structure',
-    eyebrow: 'Organisation',
-    title: 'Structure',
-    support: 'Arbre des équipes, coachs, adhésions.',
-    icon: 'people',
     layout: 'tree',
     motif: 'stripes',
   }),
-  vivier: page({
-    id: 'vivier',
-    eyebrow: 'Bourse interne',
-    title: 'Vivier',
-    support: 'Équipe B et réserve avant de chercher dehors.',
-    icon: 'football-outline',
-    layout: 'pipeline',
+  players: page({
+    id: 'players',
+    eyebrow: 'Effectifs',
+    title: 'Joueurs',
+    support: 'Liste · fiches · docs',
+    icon: 'people',
+    layout: 'tree',
     motif: 'grid',
   }),
-  pipeline: page({
-    id: 'pipeline',
-    eyebrow: 'Recrutement',
-    title: 'Pipeline Observé → Intégré',
-    support: 'Mercato externe après le vivier.',
-    icon: 'briefcase',
-    layout: 'pipeline',
-    motif: 'stripes',
+  coaches: page({
+    id: 'coaches',
+    eyebrow: 'Staff',
+    title: 'Coach',
+    support: 'Affectations & rôles',
+    icon: 'school',
+    layout: 'tree',
+    motif: 'dots',
   }),
   calendar: page({
     id: 'calendar',
-    eyebrow: 'Planning',
+    eyebrow: 'Sport',
     title: 'Calendrier',
-    support: 'Matchs, séances, convocations.',
+    support: 'Jour · semaine · mois',
     icon: 'calendar',
     layout: 'arena',
     motif: 'grid',
   }),
-  invites: page({
-    id: 'invites',
-    eyebrow: 'Matchs',
-    title: 'Invitations',
-    support: 'Club ↔ club — proposer, accepter, convoquer.',
-    icon: 'handshake',
+  matches: page({
+    id: 'matches',
+    eyebrow: 'Sport',
+    title: 'Matchs',
+    support: 'Convocs & invitations',
+    icon: 'trophy',
     layout: 'arena',
     motif: 'rays',
   }),
-  events: page({
-    id: 'events',
-    eyebrow: 'Compétition',
-    title: 'Tournois & Live',
-    support: 'Poules, QR, feuille live.',
-    icon: 'trophy',
+  trainings: page({
+    id: 'trainings',
+    eyebrow: 'Sport',
+    title: 'Entraînements',
+    support: 'Présences',
+    icon: 'time',
     layout: 'arena',
     motif: 'stripes',
   }),
-  messages: page({
-    id: 'messages',
-    eyebrow: 'Communication',
-    title: 'Messages',
-    support: 'Staff, effectif, fils d’équipe.',
+  communication: page({
+    id: 'communication',
+    eyebrow: 'Ops',
+    title: 'Communication',
+    support: 'Équipes · coachs · parents',
     icon: 'chat',
     layout: 'signal',
     motif: 'dots',
   }),
-  vitrine: page({
-    id: 'vitrine',
-    eyebrow: 'Image publique',
-    title: 'Vitrine',
-    support: 'Identité, galerie, annonces club.',
-    icon: 'image',
-    layout: 'editorial',
-    motif: 'none',
-  }),
-  offers: page({
-    id: 'offers',
-    eyebrow: 'Formules',
-    title: 'Offres Club',
-    support: 'Amateur · Essentiel · Tout inclus · Pro + Veo.',
-    icon: 'star-outline',
-    layout: 'market',
-    motif: 'grid',
-    wash: ['#050505', CLUB_SITE.bg],
-  }),
-  carpool: page({
-    id: 'carpool',
-    eyebrow: 'Déplacements',
-    title: 'Covoiturage',
-    support: 'Trajets matchs et déplacements groupés.',
-    icon: 'car',
-    layout: 'map',
+  recruitment: page({
+    id: 'recruitment',
+    eyebrow: 'Ops',
+    title: 'Recrutement',
+    support: 'Bassin & suivi des recrutements',
+    icon: 'briefcase',
+    layout: 'pipeline',
     motif: 'stripes',
-  }),
-  equipment: page({
-    id: 'equipment',
-    eyebrow: 'Matériel',
-    title: 'Équipements',
-    support: 'Marketplace entre licenciés.',
-    icon: 'shirt',
-    layout: 'market',
-    motif: 'grid',
-  }),
-  sponsors: page({
-    id: 'sponsors',
-    eyebrow: 'Partenariats',
-    title: 'Sponsors',
-    support: 'Micro-sponsoring et mises en avant.',
-    icon: 'business',
-    layout: 'editorial',
-    motif: 'rays',
   }),
   video: page({
     id: 'video',
-    eyebrow: 'Centre Vidéo',
-    title: 'Centre Vidéo',
-    support: 'Caméra → Match → IA → Clips → Causerie. Veo, XbotGo ou smartphone.',
+    eyebrow: 'Ops',
+    title: 'Vidéo',
+    support: 'Veo · XbotGo · smartphone',
     icon: 'videocam',
     layout: 'studio',
     motif: 'stripes',
-    wash: ['#050505', CLUB_SITE.bg],
   }),
-  shop: page({
-    id: 'shop',
-    eyebrow: 'Boutique',
-    title: 'Shop ProDay',
-    support: 'Équipement et merch club.',
-    icon: 'bag',
+  stats: page({
+    id: 'stats',
+    eyebrow: 'Ops',
+    title: 'Statistiques',
+    support: 'Insights club',
+    icon: 'stats-chart',
+    layout: 'signal',
+    motif: 'grid',
+  }),
+  club: page({
+    id: 'club',
+    eyebrow: 'Club',
+    title: 'Club',
+    support: 'Identité & réglages',
+    icon: 'business',
+    layout: 'editorial',
+    motif: 'none',
+  }),
+  pack: page({
+    id: 'pack',
+    eyebrow: 'Pack Club',
+    title: 'Pack Club',
+    support: 'SUR DEVIS · dès 3 € / adhérent',
+    icon: 'star-outline',
     layout: 'market',
+    motif: 'grid',
+  }),
+  assistant: page({
+    id: 'assistant',
+    eyebrow: 'IA',
+    title: 'Copilote Club',
+    support: 'Dialogue réel · confirmation',
+    icon: 'chat',
+    layout: 'signal',
     motif: 'dots',
+  }),
+  plus: page({
+    id: 'plus',
+    eyebrow: 'Outils',
+    title: 'Outils',
+    support: 'Pilotage & métiers du club',
+    icon: 'tune',
+    layout: 'market',
+    motif: 'none',
+  }),
+  events: page({
+    id: 'events',
+    eyebrow: 'Sport',
+    title: 'Événements',
+    support: 'Tournois & poules',
+    icon: 'flag',
+    layout: 'arena',
+    motif: 'rays',
   }),
 };
 
@@ -232,12 +224,12 @@ export const CLUB_LOCKED_IDENTITY: ClubPageIdentity = page({
   id: 'locked',
   eyebrow: 'Formule',
   title: 'Module verrouillé',
-  support: 'Ce dossier s’ouvre avec une offre adaptée.',
+  support: 'Ce module s’ouvre avec une offre adaptée. Voir Pack Club.',
   icon: 'lock',
   layout: 'signal',
   motif: 'none',
 });
 
 export function getClubPageIdentity(id: ClubNavItemId): ClubPageIdentity {
-  return CLUB_PAGE_IDENTITIES[id];
+  return CLUB_PAGE_IDENTITIES[id] ?? DEFAULT_IDENTITY;
 }

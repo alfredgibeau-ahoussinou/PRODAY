@@ -6,6 +6,11 @@ import {
   SUBSCRIPTION_PLANS_WEB,
   type ProductLineWeb,
 } from "@/lib/content";
+import {
+  NO_COMMITMENT_BADGE,
+  NO_COMMITMENT_INTRO,
+  POLE_REFERRAL_LINE,
+} from "@/lib/commercialCopy";
 import { formatPriceEur, yearlyPriceFromMonthly } from "@/lib/pricing";
 import { ROUTES } from "@/lib/routes";
 
@@ -30,8 +35,9 @@ export function PricingOverview() {
         Tous les tarifs ProDay
       </h2>
       <p className="mt-3 max-w-2xl text-white/55">
-        Compte gratuit pour chaque rôle. upgrade Pro au tarif mensuel de base, ou annuel
-        avec 20 % de remise. Partenaires : trois formules (dont gratuite et devis).
+        {NO_COMMITMENT_INTRO} Upgrade Pro au tarif mensuel de base, ou annuel
+        avec 20 % de remise. Sponsoring possible : trois formules (dont gratuite
+        et devis). {POLE_REFERRAL_LINE}
       </p>
 
       <div className="card-premium mt-10 overflow-x-auto rounded-2xl">
@@ -41,7 +47,8 @@ export function PricingOverview() {
               <th className="px-4 py-3 font-semibold">Formule</th>
               <th className="px-4 py-3 font-semibold">Univers</th>
               <th className="px-4 py-3 font-semibold">Mensuel</th>
-              <th className="px-4 py-3 font-semibold">Annuel (−20 %)</th>
+              <th className="px-4 py-3 font-semibold">Annuel (moins 20 %)</th>
+              <th className="px-4 py-3 font-semibold">Engagement</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/8">
@@ -66,6 +73,9 @@ export function PricingOverview() {
                   <td className="px-4 py-3 tabular-nums text-white/60">
                     {formatPriceEur(yearly)} €
                   </td>
+                  <td className="px-4 py-3 text-xs text-white/55">
+                    {NO_COMMITMENT_BADGE}
+                  </td>
                 </tr>
               );
             })}
@@ -86,6 +96,9 @@ export function PricingOverview() {
                   ? "Gratuit"
                   : `${formatPriceEur(tier.monthlyEur)} €/mois`}
               </p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-amber-200/70">
+                {NO_COMMITMENT_BADGE}
+              </p>
               <p className="mt-1 text-xs text-white/45">{tier.tagline}</p>
             </div>
           ))}
@@ -99,7 +112,8 @@ export function PricingOverview() {
       </div>
 
       <p className="mt-6 text-center text-xs text-white/35">
-        Tarifs HT · Abonnements App Store / Google Play (RevenueCat) · bêta gratuite pendant le lancement
+        Tarifs HT · {NO_COMMITMENT_BADGE} · Abonnements App Store / Google Play
+        (RevenueCat) · bêta gratuite pendant le lancement · {POLE_REFERRAL_LINE}
       </p>
     </div>
   );

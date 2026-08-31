@@ -1,13 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PressableSpring } from '../../../components/motion';
-import { ProDayText } from '../../../components/ui/ProDayText';
 import { Icon } from '../../../components/ui/Icon';
-import { CLUB_SITE } from '../../../content/clubPageIdentity';
-import type { ClubNavFolderId, ClubNavItemId } from '../navigation/clubNavConfig';
+import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
+import { ClubText } from '../ui/clubUi';
+import { primaryTabForClubNav, type ClubNavItemId } from '../navigation/clubNavConfig';
 import type { ClubNavResolvedFolder } from '../navigation/resolveClubNavAccess';
-import { spacing } from '../../../theme/designTokens';
+import { useClubTheme } from './ClubThemeContext';
+import type { ClubThemeTokens } from '../theme/clubTokens';
+import {
+  clubChrome,
+  clubRadius,
+  clubShadow,
+  clubSpace,
+} from '../theme/clubDesignSystem';
+import { PressableSpring } from '../../../components/motion';
 
 type Props = {
   activeId: ClubNavItemId;
@@ -19,11 +26,11 @@ type Props = {
   onSignOut: () => void;
   width?: number;
   inDrawer?: boolean;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 };
 
-/**
- * Sidebar terminal — même langage que `/pro-club` (noir, mono, accent #006CFC).
- */
+/** Sidebar desktop premium — logo ProDay, nav complète, profil / réglages en bas, collapsible. */
 export function ClubSidebar({
   activeId,
   clubName,
@@ -32,22 +39,18 @@ export function ClubSidebar({
   onSelect,
   onOpenHelp,
   onSignOut,
-  width = 268,
+  width = clubChrome.sidebarExpanded,
   inDrawer = false,
+  collapsed = false,
+  onToggleCollapse,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(width), [width]);
-  const [openFolders, setOpenFolders] = useState<Record<ClubNavFolderId, boolean>>({
-    accueil: true,
-    organisation: true,
-    sport: true,
-    communication: true,
-    ressources: true,
-  });
-
-  const toggleFolder = (id: ClubNavFolderId) => {
-    setOpenFolders((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  const { tokens } = useClubTheme();
+  const styles = useMemo(
+    () => createStyles(collapsed ? clubChrome.sidebarCollapsed : width, tokens, collapsed),
+    [width, tokens, collapsed],
+  );
+  const highlight = primaryTabForClubNav(activeId);
 
   return (
     <View
@@ -55,23 +58,47 @@ export function ClubSidebar({
         styles.root,
         inDrawer && {
           paddingTop: insets.top,
-          paddingBottom: Math.max(insets.bottom, spacing.md),
+          paddingBottom: Math.max(insets.bottom, clubSpace.md),
         },
       ]}
     >
       <View style={styles.brand}>
-        <ProDayText variant="caption" style={styles.kicker}>
-          Pro Day Club
-        </ProDayText>
-        <ProDayText variant="section" numberOfLines={2} style={styles.clubName}>
-          {clubName}
-        </ProDayText>
-        <View style={styles.formulaPill}>
-          <ProDayText variant="caption" style={styles.formulaText}>
-            {formulaLabel}
-          </ProDayText>
+        <View style={styles.brandRow}>
+          <ProDaySymbol size={collapsed ? 28 : 36} variant="club" tone="white" />
+          {!collapsed ? (
+            <View style={styles.brandCopy}>
+              <ClubText variant="label" muted style={styles.kicker}>
+                Club
+              </ClubText>
+              <ClubText variant="h3" numberOfLines={1}>
+                {clubName}
+              </ClubText>
+            </View>
+          ) : null}
         </View>
-        <View style={styles.brandRule} />
+        {!collapsed ? (
+          <View style={styles.formulaPill}>
+            <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+              {formulaLabel}
+            </ClubText>
+          </View>
+        ) : null}
+        {onToggleCollapse ? (
+          <PressableSpring
+            onPress={onToggleCollapse}
+            scaleTo={0.94}
+            haptic
+            style={styles.collapseBtn}
+            accessibilityRole="button"
+            accessibilityLabel={collapsed ? 'Déplier le menu' : 'Replier le menu'}
+          >
+            <Icon
+              name={collapsed ? 'chevron-forward' : 'menu'}
+              size={16}
+              color={tokens.muted}
+            />
+          </PressableSpring>
+        ) : null}
       </View>
 
       <ScrollView
@@ -80,255 +107,210 @@ export function ClubSidebar({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {folders.map((folder) => {
-          const open = openFolders[folder.id] ?? true;
-          return (
-            <View key={folder.id} style={styles.folder}>
-              <Pressable
-                onPress={() => toggleFolder(folder.id)}
-                style={styles.folderHeader}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: open }}
-              >
-                <Icon
-                  name={open ? 'chevron-down' : 'chevron-forward'}
-                  size={12}
-                  color={CLUB_SITE.muted}
-                />
-                <ProDayText variant="caption" style={styles.folderLabel}>
-                  {folder.label}
-                </ProDayText>
-              </Pressable>
-
-              {open
-                ? folder.items.map((item) => {
-                    const on = item.id === activeId;
-                    return (
-                      <PressableSpring
-                        key={item.id}
-                        onPress={() => onSelect(item.id)}
-                        scaleTo={0.98}
-                        haptic
-                        style={[styles.item, on && styles.itemOn, item.locked && !on && styles.itemLocked]}
+        {folders.map((folder) => (
+          <View key={folder.id} style={styles.folder}>
+            {!collapsed ? (
+              <ClubText variant="label" muted style={styles.folderLabel}>
+                {folder.label}
+              </ClubText>
+            ) : (
+              <View style={styles.folderDivider} />
+            )}
+            {folder.items.map((item) => {
+              const selected = item.id === activeId || (highlight === item.id && item.id === activeId);
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => onSelect(item.id)}
+                  style={[styles.row, selected && styles.rowOn]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={item.label}
+                >
+                  <Icon
+                    name={item.icon}
+                    size={18}
+                    color={selected ? tokens.accent : tokens.muted}
+                  />
+                  {!collapsed ? (
+                    <View style={styles.rowText}>
+                      <ClubText
+                        variant="nav"
+                        numberOfLines={1}
+                        style={{
+                          fontWeight: selected ? '700' : '500',
+                          color: selected ? tokens.foreground : tokens.muted,
+                        }}
                       >
-                        <Icon
-                          name={item.icon}
-                          size={15}
-                          color={item.locked ? CLUB_SITE.muted : on ? CLUB_SITE.accent : CLUB_SITE.foreground}
-                        />
-                        <View style={styles.itemText}>
-                          <View style={styles.itemTitleRow}>
-                            <ProDayText
-                              variant="caption"
-                              style={[
-                                styles.itemLabel,
-                                on && styles.itemLabelOn,
-                                item.locked && styles.itemLabelLocked,
-                              ]}
-                              numberOfLines={1}
-                            >
-                              {item.label}
-                            </ProDayText>
-                            {item.aiBadge ? (
-                              <View style={styles.aiBadge}>
-                                <ProDayText variant="caption" style={styles.aiBadgeText}>
-                                  IA
-                                </ProDayText>
-                              </View>
-                            ) : null}
-                            {item.locked ? (
-                              <Icon name="lock" size={11} color={CLUB_SITE.muted} />
-                            ) : null}
-                          </View>
-                          {item.hint ? (
-                            <ProDayText variant="caption" numberOfLines={1} style={styles.hint}>
-                              {item.hint}
-                            </ProDayText>
-                          ) : null}
-                        </View>
-                      </PressableSpring>
-                    );
-                  })
-                : null}
-            </View>
-          );
-        })}
+                        {item.label}
+                      </ClubText>
+                      {item.locked ? (
+                        <Icon name="lock" size={12} color={tokens.muted} />
+                      ) : null}
+                    </View>
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        ))}
       </ScrollView>
 
       <View style={styles.footer}>
-        <PressableSpring
+        <Pressable
+          onPress={() => onSelect('club')}
+          style={[styles.footerBtn, activeId === 'club' && styles.rowOn]}
+          accessibilityRole="button"
+          accessibilityLabel="Profil"
+        >
+          <Icon name="person" size={16} color={activeId === 'club' ? tokens.accent : tokens.muted} />
+          {!collapsed ? (
+            <ClubText variant="caption" muted={activeId !== 'club'}>
+              Profil
+            </ClubText>
+          ) : null}
+        </Pressable>
+        <Pressable
+          onPress={() => onSelect('pack')}
+          style={[styles.footerBtn, activeId === 'pack' && styles.rowOn]}
+          accessibilityRole="button"
+          accessibilityLabel="Paramètres"
+        >
+          <Icon name="settings" size={16} color={activeId === 'pack' ? tokens.accent : tokens.muted} />
+          {!collapsed ? (
+            <ClubText variant="caption" muted={activeId !== 'pack'}>
+              Paramètres
+            </ClubText>
+          ) : null}
+        </Pressable>
+        <Pressable
           onPress={onOpenHelp}
-          scaleTo={0.98}
-          haptic
-          style={styles.footerItem}
+          style={styles.footerBtn}
           accessibilityRole="button"
-          accessibilityLabel="Aide"
+          accessibilityLabel="Ouvrir le copilote Club"
         >
-          <Icon name="help" size={15} color={CLUB_SITE.foreground} />
-          <ProDayText variant="caption" style={styles.footerLabel}>
-            Aide
-          </ProDayText>
-        </PressableSpring>
-        <PressableSpring
-          onPress={onSignOut}
-          scaleTo={0.98}
-          haptic
-          style={styles.footerItem}
-          accessibilityRole="button"
-          accessibilityLabel="Se déconnecter"
-        >
-          <Icon name="log-out" size={15} color="#F87171" />
-          <ProDayText variant="caption" style={styles.footerSignOut}>
-            Se déconnecter
-          </ProDayText>
-        </PressableSpring>
+          <Icon name="chat" size={16} color={tokens.muted} />
+          {!collapsed ? (
+            <ClubText variant="caption" muted>
+              Copilote
+            </ClubText>
+          ) : null}
+        </Pressable>
+        <Pressable onPress={onSignOut} style={styles.footerBtn} accessibilityRole="button">
+          <Icon name="log-out" size={16} color={tokens.muted} />
+          {!collapsed ? (
+            <ClubText variant="caption" muted>
+              Quitter
+            </ClubText>
+          ) : null}
+        </Pressable>
       </View>
     </View>
   );
 }
 
-function createStyles(width: number) {
+function createStyles(width: number, tokens: ClubThemeTokens, collapsed: boolean) {
   return StyleSheet.create({
     root: {
       width,
-      flex: 1,
-      minHeight: 0,
-      alignSelf: 'stretch',
-      borderRightWidth: StyleSheet.hairlineWidth,
-      borderRightColor: CLUB_SITE.border,
-      backgroundColor: CLUB_SITE.bg,
+      backgroundColor: tokens.elevated,
+      borderRightWidth: 1,
+      borderRightColor: tokens.borderStrong,
+      flexShrink: 0,
+      ...clubShadow.soft,
     },
     brand: {
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
-      gap: 4,
+      paddingHorizontal: collapsed ? clubSpace.sm : clubSpace.md,
+      paddingTop: clubSpace.lg,
+      paddingBottom: clubSpace.md,
+      gap: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: tokens.border,
+      alignItems: collapsed ? 'center' : 'stretch',
+      backgroundColor: tokens.surface,
     },
-    kicker: {
-      color: CLUB_SITE.accent,
-      textTransform: 'uppercase',
-      letterSpacing: 2.8,
-      fontSize: 10,
-      fontWeight: '800',
+    brandRow: {
+      flexDirection: collapsed ? 'column' : 'row',
+      alignItems: 'center',
+      gap: 10,
     },
-    clubName: {
-      color: CLUB_SITE.foreground,
-      fontWeight: '800',
-      letterSpacing: -0.4,
-    },
+    logo: { width: 40, height: 38 },
+    logoCollapsed: { width: 32, height: 30 },
+    brandCopy: { flex: 1, minWidth: 0, gap: 2 },
+    kicker: { fontSize: 9 },
     formulaPill: {
       alignSelf: 'flex-start',
-      marginTop: 6,
       paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 999,
+      paddingVertical: 4,
+      borderRadius: clubRadius.xs,
+      backgroundColor: tokens.accentSoft,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: CLUB_SITE.border,
-      backgroundColor: 'rgba(255,255,255,0.03)',
+      borderColor: tokens.accent,
     },
-    formulaText: {
-      color: CLUB_SITE.muted,
-      fontSize: 10,
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      letterSpacing: 1.2,
-    },
-    brandRule: {
-      marginTop: spacing.sm,
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: CLUB_SITE.border,
-    },
-    scroll: { flex: 1, minHeight: 0 },
-    scrollContent: { paddingVertical: spacing.sm, paddingBottom: spacing.xl * 2 },
-    folder: {
-      marginBottom: spacing.xs,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: 'rgba(255,255,255,0.06)',
-      paddingBottom: spacing.xs,
-    },
-    folderHeader: {
-      flexDirection: 'row',
+    collapseBtn: {
+      position: 'absolute',
+      top: clubSpace.md,
+      right: clubSpace.sm,
+      width: 28,
+      height: 28,
+      borderRadius: 8,
       alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
+      justifyContent: 'center',
+      backgroundColor: tokens.raised,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    scroll: { flex: 1 },
+    scrollContent: { paddingVertical: clubSpace.md, paddingBottom: clubSpace.xl },
+    folder: {
+      marginBottom: clubSpace.md,
+      paddingHorizontal: collapsed ? clubSpace.xs : clubSpace.sm,
     },
     folderLabel: {
-      color: CLUB_SITE.muted,
-      fontWeight: '800',
-      textTransform: 'uppercase',
-      letterSpacing: 1.6,
-      fontSize: 10,
-    },
-    item: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.sm,
-      marginHorizontal: spacing.sm,
-      marginVertical: 1,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 10,
-      borderRadius: 2,
-      borderLeftWidth: 2,
-      borderLeftColor: 'transparent',
-    },
-    itemOn: {
-      backgroundColor: CLUB_SITE.soft,
-      borderLeftColor: CLUB_SITE.accent,
-    },
-    itemLocked: { opacity: 0.7 },
-    itemText: { flex: 1, minWidth: 0, gap: 1 },
-    itemTitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    itemLabel: {
-      flexShrink: 1,
-      fontWeight: '600',
-      color: CLUB_SITE.foreground,
-    },
-    itemLabelOn: { color: CLUB_SITE.accent, fontWeight: '800' },
-    itemLabelLocked: { color: CLUB_SITE.muted },
-    hint: { fontSize: 10, lineHeight: 13, color: CLUB_SITE.muted },
-    aiBadge: {
-      paddingHorizontal: 5,
-      paddingVertical: 1,
-      borderRadius: 999,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: CLUB_SITE.accent,
-      backgroundColor: CLUB_SITE.soft,
-    },
-    aiBadgeText: {
+      marginBottom: 6,
+      marginLeft: clubSpace.sm,
       fontSize: 9,
-      fontWeight: '800',
-      letterSpacing: 0.6,
-      color: CLUB_SITE.accent,
     },
-    footer: {
-      flexShrink: 0,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: CLUB_SITE.border,
-      paddingHorizontal: spacing.sm,
-      paddingTop: spacing.sm,
-      paddingBottom: spacing.sm,
-      gap: 2,
+    folderDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: tokens.border,
+      marginVertical: 6,
+      marginHorizontal: 8,
     },
-    footerItem: {
+    row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingHorizontal: spacing.sm,
+      justifyContent: collapsed ? 'center' : 'flex-start',
+      gap: 10,
       paddingVertical: 10,
-      borderRadius: 2,
+      paddingHorizontal: collapsed ? 0 : clubSpace.sm,
+      borderRadius: clubRadius.sm,
+      minHeight: 42,
     },
-    footerLabel: {
-      fontWeight: '600',
-      color: CLUB_SITE.foreground,
+    rowOn: {
+      backgroundColor: tokens.accentSoft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.accent,
     },
-    footerSignOut: {
-      fontWeight: '700',
-      color: '#F87171',
+    rowText: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
+    footer: {
+      borderTopWidth: 1,
+      borderTopColor: tokens.border,
+      padding: collapsed ? clubSpace.sm : clubSpace.md,
+      gap: clubSpace.xs,
+      alignItems: collapsed ? 'center' : 'stretch',
+      backgroundColor: tokens.surface,
+    },
+    footerBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: collapsed ? 'center' : 'flex-start',
+      gap: 8,
+      paddingVertical: 8,
+      paddingHorizontal: collapsed ? 0 : 6,
+      borderRadius: clubRadius.sm,
+      width: collapsed ? 42 : undefined,
     },
   });
 }
+

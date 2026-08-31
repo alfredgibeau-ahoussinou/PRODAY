@@ -95,4 +95,18 @@ export const teamsService = {
       updated_at: serverTimestamp(),
     });
   },
+
+  /** Retire un coach de l’équipe (sans supprimer le compte). */
+  async removeCoach(teamId: string, coachUid: string): Promise<void> {
+    if (!isFirebaseConfigured()) throw new Error('Firebase non configuré');
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const team = await this.getById(teamId);
+    if (!team) throw new Error('Équipe introuvable');
+    const coach_uids = team.coach_uids.filter((uid) => uid !== coachUid);
+    await updateDoc(doc(database, COL, teamId), {
+      coach_uids,
+      updated_at: serverTimestamp(),
+    });
+  },
 };

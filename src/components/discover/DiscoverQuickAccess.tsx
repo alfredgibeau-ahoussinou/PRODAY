@@ -3,42 +3,67 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import type { IconName } from '../ui/Icon';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
-import { spacing, radius, shadows } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { getLocalizedQuickAccessItems } from '../../i18n/localizedContent';
-import type { AppColors } from '../../theme/universeTheme';
+import type { ProductLineId } from '../../models/ProductLine';
+import {
+  brandVariantForProductLine,
+  poleAccent,
+  poleAccentSoft,
+} from '../../theme/prodayBrand';
+import {
+  discoverQuickIdsForLine,
+  type DiscoverQuickId,
+} from './discoverPoleHome';
+import { useDiscoverMetrics } from './useDiscoverMetrics';
 
-export type DiscoverQuickId = 'mercato' | 'matchs' | 'reels' | 'shop' | 'sponsors';
-
-const ITEM_IDS: DiscoverQuickId[] = ['mercato', 'matchs', 'reels', 'shop'];
+export type { DiscoverQuickId };
 
 interface DiscoverQuickAccessProps {
   onPress: (id: DiscoverQuickId) => void;
+  productLine?: ProductLineId;
   hideReels?: boolean;
 }
 
 export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   onPress,
+  productLine: lineProp,
   hideReels = false,
 }) => {
-  const { colors: c } = useAppTheme();
+  const { productLine: ctxLine } = useAppTheme();
+  const productLine = lineProp ?? ctxLine;
+  const variant = brandVariantForProductLine(productLine);
+  const accent = poleAccent(variant);
   const { t } = useTranslation();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const { homeChrome: chrome } = useDiscoverMetrics();
+  const styles = useMemo(
+    () => createStyles(accent, variant, chrome.quickTilePadV),
+    [accent, variant, chrome.quickTilePadV],
+  );
   const iconById: Partial<Record<DiscoverQuickId, IconName>> = {
     mercato: 'search',
     matchs: 'handshake',
     reels: 'football',
     shop: 'bag',
   };
+  const allowed = useMemo(() => {
+    const ids = discoverQuickIdsForLine(productLine);
+    return hideReels ? ids.filter((id) => id !== 'reels') : ids;
+  }, [hideReels, productLine]);
   const items = useMemo(() => {
     const localized = getLocalizedQuickAccessItems(t);
-    const list = localized.map((item) => ({
-      ...item,
-      icon: iconById[item.id] ?? 'search',
-    }));
-    return hideReels ? list.filter((item) => item.id !== 'reels') : list;
-  }, [hideReels, t]);
+    return localized
+      .filter((item) => allowed.includes(item.id))
+      .slice(0, 3)
+      .map((item) => ({
+        ...item,
+        icon: iconById[item.id] ?? 'search',
+      }));
+  }, [allowed, t]);
+
+  if (items.length === 0) return null;
 
   return (
     <View style={styles.row}>
@@ -46,12 +71,12 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
         <PressableSpring
           key={item.id}
           onPress={() => onPress(item.id)}
-          scaleTo={0.96}
+          scaleTo={0.98}
           haptic
           style={styles.tile}
         >
           <View style={styles.iconWrap}>
-            <Icon name={item.icon} size={20} color={c.ink} variant="filled" />
+            <Icon name={item.icon} size={18} color={accent} variant="filled" />
           </View>
           <Text style={styles.label}>{item.label}</Text>
           <Text style={styles.sub}>{item.sub}</Text>
@@ -61,7 +86,12 @@ export const DiscoverQuickAccess: React.FC<DiscoverQuickAccessProps> = ({
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles(
+  accent: string,
+  variant: ReturnType<typeof brandVariantForProductLine>,
+  tilePadV: number,
+) {
+  const soft = poleAccentSoft(variant, 0.14);
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -70,35 +100,34 @@ function createStyles(c: AppColors) {
     tile: {
       flex: 1,
       alignItems: 'center',
-      paddingVertical: spacing.md + 2,
+      paddingVertical: tilePadV,
       paddingHorizontal: spacing.xs,
       borderRadius: radius.xl,
-      backgroundColor: c.surface,
+      backgroundColor: 'rgba(255,255,255,0.04)',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      gap: 5,
-      ...shadows.soft,
+      borderColor: 'rgba(255,255,255,0.08)',
+      gap: 4,
     },
     iconWrap: {
-      width: 44,
-      height: 44,
+      width: 36,
+      height: 36,
       borderRadius: radius.lg,
-      backgroundColor: c.accentSoft,
+      backgroundColor: soft,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 2,
+      marginBottom: 1,
     },
     label: {
       fontSize: 12,
       fontWeight: '800',
-      color: c.text,
+      color: '#FAFAFA',
       textAlign: 'center',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     sub: {
       fontSize: 9,
       fontWeight: '600',
-      color: c.textMuted,
+      color: 'rgba(255,255,255,0.45)',
       textAlign: 'center',
     },
   });

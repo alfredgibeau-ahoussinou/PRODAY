@@ -6,6 +6,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { motion } from '../../theme/motion';
+import { sanitizeHostChildren } from '../../motion/sanitizeHostChildren';
 
 interface AnimatedTabLabelProps {
   active: boolean;
@@ -25,7 +26,11 @@ export const AnimatedTabLabel: React.FC<AnimatedTabLabelProps> = ({ active, chil
     transform: [{ scale: 0.94 + progress.value * 0.06 }],
   }));
 
-  return <Animated.View style={[styles.wrap, style]}>{children}</Animated.View>;
+  return (
+    <Animated.View style={[styles.wrap, style]}>
+      {sanitizeHostChildren(children)}
+    </Animated.View>
+  );
 };
 
 const styles = StyleSheet.create({

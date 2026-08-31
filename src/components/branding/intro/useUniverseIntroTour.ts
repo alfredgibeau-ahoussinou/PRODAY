@@ -25,7 +25,7 @@ interface UseUniverseIntroTourOptions {
   onTourEnd: () => void;
 }
 
-/** Tour Men → Women → Pro — transition native page par page. */
+/** Tour auto des univers au premier lancement — page par page. */
 export function useUniverseIntroTour({
   enabled,
   listReady,
@@ -50,11 +50,13 @@ export function useUniverseIntroTour({
   const goToPage = useCallback(
     (index: number, animated: boolean) => {
       if (pageWidth <= 0) return;
-      const clamped = Math.max(0, Math.min(index, lines.length - 1));
+      const maxIndex = Math.max(0, lines.length - 1);
+      const clamped = Math.max(0, Math.min(index, maxIndex));
+      const targetX = clamped * pageWidth;
       onActiveLine(lines[clamped]);
       runOnUI(() => {
         'worklet';
-        scrollTo(listRef, clamped * pageWidth, 0, animated);
+        scrollTo(listRef, targetX, 0, animated);
       })();
     },
     [lines, listRef, onActiveLine, pageWidth]

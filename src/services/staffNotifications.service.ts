@@ -118,4 +118,19 @@ export const staffNotificationsService = {
       read_at: serverTimestamp(),
     });
   },
+
+  /** Marque comme lues les alertes non lues fournies (best-effort). */
+  async markManyRead(ids: string[]): Promise<number> {
+    const unique = [...new Set(ids.filter(Boolean))];
+    let n = 0;
+    for (const id of unique) {
+      try {
+        await this.markRead(id);
+        n += 1;
+      } catch {
+        // best-effort
+      }
+    }
+    return n;
+  },
 };

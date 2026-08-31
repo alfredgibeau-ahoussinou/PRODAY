@@ -3,19 +3,19 @@ import { SPONSOR_PARTNER_CONTACT_EMAIL } from "./content";
 export const SPONSOR_BRAND = {
   name: "Pro Day Sponsor",
   shortName: "Sponsor",
-  tagline: "Visibilité · ROI · Terrain",
+  tagline: "Opportunités · Partenariats · Impact",
   mission:
-    "Publiez des offres auprès de clubs, joueurs et organisateurs actifs. Suivez impressions, clics et leads. Sans intermédiaire opaque.",
-  accent: "#D4AF37",
-  accentDark: "#92700C",
-  logo: "/branding/logo-sponsor-picto.png",
+    "Trouver des opportunités de sponsoring, identifier clubs, équipes et profils pertinents, gérer les partenariats, suivre les activations et mesurer visibilité et impact · dans le même écosystème que clubs et joueurs.",
+  accent: "#EF4444",
+  accentDark: "#7F1D1D",
+  logo: "/branding/logo-proday-mark-sponsor.png",
 } as const;
 
 export const SPONSOR_HERO = {
   kicker: "PÔLE SPONSOR",
-  title: "Votre marque sur le terrain.",
+  title: "Trouvez, activez, mesurez.",
   description:
-    "Clubs, joueurs et organisateurs actifs sur ProDay. Offres géolocalisées, tableau de bord et messagerie clubs. Pour les équipes marketing.",
+    "Opportunités de sponsoring, clubs et profils pertinents, partenariats, activations, visibilité et impact. Une porte d'entrée vers l'écosystème ProDay, pas un pôle « en plus ».",
   image: "/showcase/classic-exp-sponsors.jpg",
 } as const;
 
@@ -31,7 +31,7 @@ export const SPONSOR_CAPABILITIES = [
     id: "geo",
     title: "Push géolocalisé",
     description:
-      "Alertez les joueurs opt-in dans votre ville ou département lors du lancement d'une campagne locale (National Pro, bêta).",
+      "Alertez les joueurs opt in dans votre ville ou département lors du lancement d'une campagne locale (National Pro, bêta).",
     metric: "Ciblage ville / dépt.",
   },
   {
@@ -57,7 +57,7 @@ export const SPONSOR_SECTORS = [
   "Immobilier & construction",
   "Automobile & mobilité",
   "Tech & télécoms",
-  "Santé & bien-être",
+  "Santé & bien être",
   "Média & communication",
   "Grande distribution",
   "Autre",
@@ -92,18 +92,18 @@ export const SPONSOR_TARGET_AUDIENCES = [
 ] as const;
 
 export const SPONSOR_REGIONS = [
-  "Île-de-France",
-  "Auvergne-Rhône-Alpes",
-  "Provence-Alpes-Côte d'Azur",
+  "Île de France",
+  "Auvergne Rhône Alpes",
+  "Provence Alpes Côte d'Azur",
   "Occitanie",
-  "Nouvelle-Aquitaine",
-  "Hauts-de-France",
+  "Nouvelle Aquitaine",
+  "Hauts de France",
   "Grand Est",
   "Bretagne",
   "Pays de la Loire",
   "Normandie",
-  "Bourgogne-Franche-Comté",
-  "Centre-Val de Loire",
+  "Bourgogne Franche Comté",
+  "Centre Val de Loire",
   "Corse",
   "France entière",
   "International",
@@ -111,12 +111,12 @@ export const SPONSOR_REGIONS = [
 
 export const SPONSOR_SPORTS = [
   "Football amateur",
-  "Football semi-pro / Régional",
+  "Football semi pro / Régional",
   "Football féminin",
   "Futsal",
   "Football jeunes (U13 à U19)",
   "Tournois & événements",
-  "Multi-sports",
+  "Multi sports",
 ] as const;
 
 export const SPONSOR_SIGNUP_STEPS = [
@@ -248,15 +248,15 @@ export type SponsorSignupPayload = {
 export const SPONSOR_FAQ = [
   {
     q: "Quelle différence avec les autres pôles ProDay ?",
-    a: "Le pôle Sponsor est réservé aux marques et partenaires commerciaux. Vous publiez des offres, suivez un tableau de bord ROI et contactez les clubs via une vitrine vérifiée.",
+    a: "Sponsor n'est pas un produit séparé : c'est une porte d'entrée vers le même écosystème. Vous trouvez des opportunités, identifiez clubs/profils, gérez partenariats et activations, et mesurez l'impact · sur la même donnée que clubs et joueurs.",
   },
   {
-    q: "Puis-je tester avant de m'engager ?",
+    q: "Puis je tester avant de m'engager ?",
     a: "Oui. La formule Découverte (0 €) donne un profil vérifié, une offre active et 10 messages clubs / mois.",
   },
   {
     q: "Comment fonctionne le push géolocalisé ?",
-    a: "Les joueurs opt-in reçoivent une notification lors du lancement d'une offre dans leur ville. Disponible en National Pro (bêta), avec respect du consentement RGPD.",
+    a: "Les joueurs opt in reçoivent une notification lors du lancement d'une offre dans leur ville. Disponible en National Pro (bêta), avec respect du consentement RGPD.",
   },
   {
     q: "Qui traite ma demande d'inscription ?",

@@ -14,12 +14,12 @@ type PolesHubGridProps = {
 export function PolesHubGrid({ compact = false }: PolesHubGridProps) {
   return (
     <Section
-      kicker="PÔLES PRIORITAIRES"
-      title="Carrière, club, matchs d’abord"
+      kicker="PORTES D'ENTRÉE"
+      title="Un écosystème, plusieurs entrées"
       description={
         compact
-          ? "Joueur, Club et Coach au cœur. Supporter et Sponsor en extensions."
-          : "ProDay = carrière + club + coach. Tactique IA, compétitions et covoiturage sur le même graphe."
+          ? "Joueur, Club, Coach, Parent, Supporter, Sponsor : des portes vers la même donnée football."
+          : "Ce ne sont pas des produits séparés. Chaque pôle ouvre le même graphe : convocations, matchs, stats, partenariats et communauté reliés."
       }
       className="bg-black"
       compact={compact}

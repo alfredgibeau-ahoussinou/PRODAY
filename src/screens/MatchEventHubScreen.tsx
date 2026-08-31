@@ -32,6 +32,12 @@ import { Icon } from '../components/ui/Icon';
 import { useThemedScreen } from '../hooks/useThemedScreen';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 import { spacing } from '../theme/designTokens';
+import { useJoueurSession } from '../context/JoueurSessionContext';
+import { useJoueurTheme } from '../hooks/useJoueurTheme';
+import {
+  JoueurMatchSkinProvider,
+} from '../components/matchs/matchCenterUi';
+import { JoueurScreenChrome } from '../components/joueur/JoueurScreenChrome';
 
 interface MatchEventHubScreenProps {
   eventId: string;
@@ -50,6 +56,10 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
 }) => {
   const { profile, isAdmin } = useAuth();
   const { openAuth } = useTabNavigation();
+  const joueurSession = useJoueurSession();
+  const joueurTheme = useJoueurTheme();
+  const joueurLive =
+    Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
   const { colors: c, rootStyle } = useThemedScreen();
   const [subView, setSubView] = useState<SubView>('hub');
   const [event, setEvent] = useState<TeamEvent | null>(null);
@@ -277,12 +287,15 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
     },
   ];
 
-  return (
-    <>
-    <View style={[styles.root, rootStyle]}>
-      <PressableSpring style={styles.backRow} onPress={onBack} scaleTo={0.97} haptic>
-        <Icon name="arrow-back" size={22} color={c.text} />
-        <ProDayText variant="body" accent>
+  const hubShell = (
+    <View style={[styles.root, joueurLive ? { backgroundColor: joueurTheme.shellBg } : rootStyle]}>
+      <PressableSpring style={styles.backRow} onPress={onBack} scaleTo={0.98} haptic>
+        <Icon
+          name="arrow-back"
+          size={22}
+          color={joueurLive ? joueurTheme.ink : c.text}
+        />
+        <ProDayText variant="body" accent style={joueurLive ? { color: joueurTheme.accent } : undefined}>
           Matchs
         </ProDayText>
       </PressableSpring>
@@ -303,6 +316,17 @@ export const MatchEventHubScreen: React.FC<MatchEventHubScreenProps> = ({
         />
       </View>
     </View>
+  );
+
+  return (
+    <>
+      {joueurLive && joueurSession ? (
+        <JoueurScreenChrome identity={joueurSession.identity} variant="minimal" hideHero>
+          <JoueurMatchSkinProvider enabled>{hubShell}</JoueurMatchSkinProvider>
+        </JoueurScreenChrome>
+      ) : (
+        hubShell
+      )}
     <PushScreenTransition active={subView === 'lineup_edit' && Boolean(profile && event && hasAccess)}>
       {subView === 'lineup_edit' && profile && event && hasAccess ? (
         <EventLineupScreen

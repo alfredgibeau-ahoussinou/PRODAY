@@ -4,6 +4,8 @@ import type { MessageThread } from '../../lib/firestoreMappers';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { spacing, radius } from '../../theme/designTokens';
 
 export type MessageRequestsPanelProps = {
@@ -13,6 +15,7 @@ export type MessageRequestsPanelProps = {
   onAccept: (threadId: string) => void;
   onRefuse: (threadId: string) => void;
   onOpen: (threadId: string) => void;
+  variant?: 'default' | 'coach' | 'joueur';
 };
 
 /** Demandes joueur ↔ agent en attente (style Instagram). */
@@ -23,11 +26,17 @@ export function MessageRequestsPanel({
   onAccept,
   onRefuse,
   onOpen,
+  variant,
 }: MessageRequestsPanelProps) {
   const { colors } = useAppTheme();
+  const coach = variant === 'coach';
+  const joueur = variant === 'joueur';
+  const coachTokens = useCoachTokens();
+  const joueurTheme = useJoueurTheme();
+  const accent = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
 
   if (loading) {
-    return <ActivityIndicator color={colors.accent} style={{ marginVertical: spacing.md }} />;
+    return <ActivityIndicator color={accent} style={{ marginVertical: spacing.md }} />;
   }
   if (pendingThreads.length === 0) return null;
 
@@ -70,7 +79,7 @@ export function MessageRequestsPanel({
                   onPress={() => onAccept(thread.id)}
                   scaleTo={0.96}
                   haptic
-                  style={[styles.btn, styles.btnPrimary, { backgroundColor: colors.accent }]}
+                  style={[styles.btn, styles.btnPrimary, { backgroundColor: accent }]}
                 >
                   <ProDayText
                     variant="caption"
@@ -81,7 +90,11 @@ export function MessageRequestsPanel({
                 </PressableSpring>
               </View>
             ) : (
-              <ProDayText variant="caption" accent style={styles.waiting}>
+              <ProDayText
+                variant="caption"
+                accent={!joueur}
+                style={[styles.waiting, joueur ? { color: accent } : undefined]}
+              >
                 En attente
               </ProDayText>
             )}

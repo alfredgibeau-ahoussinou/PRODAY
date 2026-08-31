@@ -2,6 +2,8 @@ import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { useAppTheme } from '../../context/ProductLineContext';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 import { gradientsForLine, type GradientStops } from '../../theme/universeGradients';
 
 type GradientKind = 'hero' | 'heroDark' | 'card' | 'cta' | 'ambient';
@@ -24,7 +26,13 @@ export const ProDayGradient: React.FC<ProDayGradientProps> = ({
   end = { x: 1, y: 1 },
 }) => {
   const { productLine } = useAppTheme();
-  const stops = overrideColors ?? gradientsForLine(productLine)[kind];
+  const profile = useSessionProfile();
+  const isPlayer = profile?.role === 'player';
+  const joueurTheme = useJoueurTheme();
+  const playerCta: GradientStops = [joueurTheme.accentBright, joueurTheme.accent];
+  const stops =
+    overrideColors ??
+    (isPlayer && kind === 'cta' ? playerCta : gradientsForLine(productLine)[kind]);
 
   return (
     <LinearGradient colors={[...stops]} start={start} end={end} style={style}>

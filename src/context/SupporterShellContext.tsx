@@ -1,11 +1,12 @@
 import React, { createContext, useContext } from 'react';
 import type { MainTabId } from '../navigation/mainTabConfig';
+import type { SupporterDockTabId } from '../features/supporter/navigation/supporterTabs';
 
 export type SupporterShellNavigate = (tab: MainTabId) => void;
 
 interface SupporterShellContextValue {
   navigate: SupporterShellNavigate;
-  activeTab: MainTabId;
+  activeTab: SupporterDockTabId | MainTabId;
 }
 
 const SupporterShellContext = createContext<SupporterShellContextValue | null>(null);
