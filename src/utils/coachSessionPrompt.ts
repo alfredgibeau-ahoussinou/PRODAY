@@ -310,7 +310,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: 'Respecter le bloc bas sous pression',
           material: 'Mini-buts',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief principes bloc', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief principes bloc', material: '' },
       ];
     }
     case 'bloc_haut': {
@@ -335,7 +335,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: 'Maintenir le bloc haut',
           material: 'Mini-buts',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief', material: '' },
       ];
     }
     case 'physique_bas': {
@@ -360,7 +360,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: '5v5 rythme élevé, appels de jambes',
           material: 'Ballons',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Étirements ischio / mollets', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Étirements ischio / mollets', material: '' },
       ];
     }
     case 'pressing': {
@@ -385,7 +385,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: 'Pressing en bloc sur terrain réduit',
           material: 'Mini-buts',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief triggers', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief triggers', material: '' },
       ];
     }
     case 'transitions': {
@@ -410,7 +410,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: 'Transitions réelles 8v8',
           material: 'Chasubles',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief', material: '' },
       ];
     }
     case 'physique': {
@@ -435,13 +435,13 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: '5v5 intensité haute',
           material: 'Ballons',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Étirements', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Étirements', material: '' },
       ];
     }
     case 'recuperation': {
       const [w, a, b, c, d] = scale([10, 15, 20, 15, 10]);
       return [
-        { label: 'Échauffement', minutes: w, objective: 'Marche + mobilité', material: '—' },
+        { label: 'Échauffement', minutes: w, objective: 'Marche + mobilité', material: '' },
         {
           label: 'Technique douce',
           minutes: a,
@@ -460,7 +460,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: 'Étirements + respiration',
           material: 'Tapis',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Hydratation + débrief', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Hydratation + débrief', material: '' },
       ];
     }
     case 'tactique': {
@@ -485,7 +485,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: '8v8 respect du plan',
           material: 'Mini-buts',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief', material: '' },
       ];
     }
     case 'possession': {
@@ -510,7 +510,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: '7v7 garder le ballon',
           material: 'Mini-buts',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief possession', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief possession', material: '' },
       ];
     }
     case 'finition': {
@@ -535,7 +535,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: '4v4 buts multi, finir vite',
           material: 'Chasubles',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief finitions', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief finitions', material: '' },
       ];
     }
     case 'coups_de_pied': {
@@ -560,7 +560,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: 'CPA en opposition réelle',
           material: 'Mini-buts',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief CPA', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief CPA', material: '' },
       ];
     }
     case 'duels': {
@@ -585,7 +585,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: 'Jeu réduit intensité duels',
           material: 'Mini-buts',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief', material: '' },
       ];
     }
     case 'mental': {
@@ -596,7 +596,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           label: 'Routine',
           minutes: a,
           objective: 'Respiration, objectifs individuels',
-          material: '—',
+          material: '',
         },
         {
           label: 'Scénarios pression',
@@ -610,7 +610,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: 'Respect consignes mentales en opposition',
           material: 'Chasubles',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Débrief attitude', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Débrief attitude', material: '' },
       ];
     }
     case 'technique':
@@ -637,7 +637,7 @@ function themeBlocks(theme: CoachSessionTheme, totalMin: number): CoachComposedP
           objective: '4v4+2 application technique',
           material: 'Chasubles',
         },
-        { label: 'Retour au calme', minutes: d, objective: 'Étirements + débrief', material: '—' },
+        { label: 'Retour au calme', minutes: d, objective: 'Étirements + débrief', material: '' },
       ];
     }
   }

@@ -64,7 +64,7 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
   const { tokens: coachTokens } = useCoachTheme();
   const { metrics: wearableMetrics } = useWearableHealth();
   const [chapter, setChapter] = useState<SmartTacticsChapterId>(
-    initialChapter ?? (playerMode ? 'inbox' : 'dashboard'),
+    initialChapter ?? (playerMode ? 'inbox' : 'board'),
   );
   const [defaultApplied, setDefaultApplied] = useState(Boolean(initialChapter));
   const [hydratePlan, setHydratePlan] = useState<TacticalPlan | null>(null);

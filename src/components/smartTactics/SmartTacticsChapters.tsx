@@ -629,7 +629,7 @@ export const SmartBoardChapter: React.FC<SmartTacticsChapterProps> = ({
           <SmartTacticsAccentText variant="caption" style={{ fontWeight: '700' }}>
             {aiPrep.source === 'mistral' ? 'Cloud' : 'Local'} · {aiPrep.formation_recommendation} ·{' '}
             {compactBoardStarters(starters).length} titulaires
-            {aiPrep.briefing_fr ? ` — ${aiPrep.briefing_fr}` : ''}
+            {aiPrep.briefing_fr ? ` : ${aiPrep.briefing_fr.replace(/^[-—\s]+/, '')}` : ''}
           </SmartTacticsAccentText>
         ) : null}
       </SmartTacticsPanel>

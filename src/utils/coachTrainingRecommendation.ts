@@ -772,17 +772,24 @@ export function buildCoachComposedPlan(input: CoachComposedPlanInput): CoachComp
   );
 }
 
-/** Notes structurées pour session_plan.notes. */
+/** Notes structurées pour session_plan.notes sans tirets parasites. */
 export function formatRecommendedSessionNotes(plan: CoachComposedPlan): string {
   const typeLabel = plan.context === 'match' ? 'Préparation match' : 'Entraînement';
-  const header = `${typeLabel}\nFocus : ${plan.focus}\n${plan.reason}\n`;
+  const cleanFocus = plan.focus ? `Focus : ${plan.focus.replace(/\s*—\s*/g, ' · ')}\n` : '';
+  const cleanReason = plan.reason ? `${plan.reason.replace(/\s*—\s*/g, ' · ')}\n` : '';
+  const header = `${typeLabel}\n${cleanFocus}${cleanReason}`;
   if (plan.blocks.every((b) => b.minutes === 0)) {
-    return `${header}\n${plan.blocks.map((b) => `• ${b.label}${b.objective ? ` — ${b.objective}` : ''}`).join('\n')}`;
+    return `${header}\n${plan.blocks.map((b) => `• ${b.label}${b.objective ? ` : ${b.objective.replace(/^[-—\s]+/, '')}` : ''}`).join('\n')}`;
   }
   const lines = plan.blocks.map((b) => {
     const parts = [`• ${b.label} (${b.minutes} min)`];
-    if (b.objective) parts.push(` — ${b.objective}`);
-    if (b.material && b.material !== '—') parts.push(` [${b.material}]`);
+    if (b.objective) {
+      const cleanObj = b.objective.replace(/^[-—\s]+/, '');
+      parts.push(` : ${cleanObj}`);
+    }
+    if (b.material && b.material !== '—' && b.material !== '-' && b.material.trim().length > 0) {
+      parts.push(` [${b.material}]`);
+    }
     return parts.join('');
   });
   return `${header}\n${lines.join('\n')}`;

@@ -72,6 +72,8 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
     else if (id === 'gestion') nav.openDashboard('gestion');
     else if (id === 'messages') nav.setActiveTab('messages');
     else if (id === 'profil') nav.openProfile();
+    else if (id === 'smart_tactics') nav.openDashboard('smart_tactics');
+    else if (id === 'coach_ia') nav.openDashboard('train_ai');
   };
 
   const openCreate = () => {
