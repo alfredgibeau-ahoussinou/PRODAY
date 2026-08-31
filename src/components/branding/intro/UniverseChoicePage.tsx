@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -12,9 +13,8 @@ import Animated, {
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { prodayMotion } from '../../../motion';
 import { ProDaySymbol } from '../ProDaySymbol';
-import { spacing } from '../../../theme/designTokens';
 import { UNIVERSE_ACCENT } from './universeIntroAccents';
-import { brandVariantForCarouselPole } from './universePoleBrand';
+import { brandVariantForCarouselPole, universePoleDisplayName } from './universePoleBrand';
 
 interface UniverseChoicePageProps {
   line: CarouselPoleId;
@@ -35,10 +35,36 @@ interface UniverseChoicePageProps {
   focused?: boolean;
 }
 
-/**
- * Stage univers — symbole HD teinté pôle uniquement (pas de carte / bordure).
- * Nom + tagline vivent dans le chrome pour une seule accent active.
- */
+const POLE_FEATURES: Record<CarouselPoleId, string[]> = {
+  joueur: ['CV Sportif en ligne', 'Stats réelles de match', 'Détections & Mercato'],
+  amateur: ['CV Sportif en ligne', 'Stats réelles de match', 'Détections & Mercato'],
+  pro_player: ['CV Sportif en ligne', 'Stats réelles de match', 'Détections & Mercato'],
+  coach: ['Séances IA Blood Bath', 'Tableau tactique', 'Convocations RSVP'],
+  pro_staff: ['Séances IA Blood Bath', 'Tableau tactique', 'Convocations RSVP'],
+  pro_club: ['Gestion des effectifs', 'Tournois en direct', 'Licences & Adhésions'],
+  evenements: ['Organisation tournois', 'Matchs amicaux', 'Tableaux en direct'],
+  president: ['Cockpit décisionnel', 'Finances & Devis', 'Contrats & Staff'],
+  parent: ['Espace jeunes sécurisé', 'Contrôle tuteur', 'Covoiturage club'],
+  supporter: ['Scores & matchs en direct', 'Tribune & communauté', 'Votes MVP'],
+  sponsor: ['Packs de sponsoring', 'Visibilité locale', 'Reçus fiscaux'],
+  sante: ['Suivi médical & forme', 'Charge physique', 'Prévention blessures'],
+};
+
+const POLE_NUMBERS: Record<CarouselPoleId, string> = {
+  joueur: '01',
+  amateur: '01',
+  pro_player: '01',
+  coach: '02',
+  pro_staff: '02',
+  pro_club: '03',
+  evenements: '03',
+  president: '03',
+  parent: '04',
+  supporter: '05',
+  sponsor: '06',
+  sante: '07',
+};
+
 export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   line,
   index,
@@ -49,10 +75,13 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   staticFocus = false,
   focused = true,
 }) => {
-  const accent = UNIVERSE_ACCENT[line];
+  const accent = UNIVERSE_ACCENT[line] || '#C5A059';
   const variant = brandVariantForCarouselPole(line);
-  const symbolSize = cinematic ? 200 : 148;
-  const haloSize = symbolSize + (cinematic ? 96 : 72);
+  const poleNum = POLE_NUMBERS[line] || '01';
+  const poleName = universePoleDisplayName(line);
+  const features = POLE_FEATURES[line] || ['Performance', 'Développement', 'Partage'];
+
+  const symbolSize = cinematic ? 120 : 96;
   const styles = useMemo(
     () => createStyles(itemWidth, cinematic),
     [itemWidth, cinematic],
@@ -60,17 +89,14 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
 
   const staticOpacity = useSharedValue(focused ? 1 : reducedMotion ? 0.55 : 0.42);
   const staticScale = useSharedValue(focused ? 1 : reducedMotion ? 0.97 : 0.9);
-  const staticHalo = useSharedValue(focused ? (reducedMotion ? 0.16 : 0.22) : 0.06);
 
   useEffect(() => {
     if (!staticFocus) return;
     const nextOpacity = focused ? 1 : reducedMotion ? 0.55 : 0.42;
     const nextScale = focused ? 1 : reducedMotion ? 0.97 : 0.9;
-    const nextHalo = focused ? (reducedMotion ? 0.16 : 0.22) : 0.06;
     if (reducedMotion) {
       staticOpacity.value = nextOpacity;
       staticScale.value = nextScale;
-      staticHalo.value = nextHalo;
       return;
     }
     staticOpacity.value = withTiming(nextOpacity, {
@@ -78,19 +104,7 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
       easing: prodayMotion.easing.out,
     });
     staticScale.value = withSpring(nextScale, prodayMotion.spring.smooth);
-    staticHalo.value = withTiming(nextHalo, {
-      duration: prodayMotion.duration.normal,
-      easing: prodayMotion.easing.out,
-    });
-  }, [
-    focused,
-    line,
-    reducedMotion,
-    staticFocus,
-    staticHalo,
-    staticOpacity,
-    staticScale,
-  ]);
+  }, [focused, reducedMotion, staticFocus, staticOpacity, staticScale]);
 
   const stageStyle = useAnimatedStyle(() => {
     if (staticFocus) {
@@ -107,78 +121,154 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
     const abs = Math.abs(offset);
 
     if (reducedMotion) {
-      const opacity = interpolate(abs, [0, 0.5, 1], [1, 0.78, 0.5], Extrapolation.CLAMP);
+      const opacity = interpolate(abs, [0, 0.5, 1], [1, 0.8, 0.5], Extrapolation.CLAMP);
       const scale = interpolate(abs, [0, 1], [1, 0.96], Extrapolation.CLAMP);
       return { opacity, transform: [{ scale }] };
     }
 
-    // Courbes plus douces — moins de chute d’opacity en mid-swipe.
-    const scale = interpolate(abs, [0, 0.65, 1], [1, 0.96, 0.9], Extrapolation.CLAMP);
-    const opacity = interpolate(abs, [0, 0.5, 1], [1, 0.68, 0.36], Extrapolation.CLAMP);
+    const scale = interpolate(abs, [0, 0.65, 1], [1, 0.97, 0.92], Extrapolation.CLAMP);
+    const opacity = interpolate(abs, [0, 0.5, 1], [1, 0.72, 0.4], Extrapolation.CLAMP);
     return { opacity, transform: [{ scale }] };
   }, [index, itemWidth, reducedMotion, staticFocus]);
 
-  const haloStyle = useAnimatedStyle(() => {
-    if (staticFocus) {
-      return { opacity: staticHalo.value };
-    }
-    if (itemWidth <= 0) {
-      return { opacity: 0.08 };
-    }
-    const page = scrollX.value / itemWidth;
-    const abs = Math.abs(page - index);
-    const opacity = interpolate(abs, [0, 0.5, 1], [0.22, 0.12, 0.05], Extrapolation.CLAMP);
-    return { opacity };
-  }, [index, itemWidth, staticFocus]);
-
   return (
-    <View
-      style={styles.page}
-      accessibilityElementsHidden={!focused && staticFocus}
-      importantForAccessibility={focused || !staticFocus ? 'yes' : 'no-hide-descendants'}
-    >
-      <Animated.View style={[styles.stage, stageStyle]}>
-        <View style={styles.symbolWrap}>
-          <Animated.View
-            style={[
-              styles.halo,
-              {
-                width: haloSize,
-                height: haloSize,
-                borderRadius: haloSize / 2,
-                backgroundColor: accent,
-              },
-              haloStyle,
-            ]}
-          />
-          <ProDaySymbol size={symbolSize} variant={variant} tone="white" />
+    <Animated.View style={[styles.root, stageStyle]}>
+      {/* Carte Holographique ProDay */}
+      <View style={[styles.card, { borderColor: `${accent}40` }]}>
+        <LinearGradient
+          colors={[
+            `${accent}22`,
+            'rgba(18, 26, 22, 0.85)',
+            'rgba(7, 16, 12, 0.95)',
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+
+        {/* Halo lumineux d'ambiance */}
+        <View style={[styles.halo, { backgroundColor: accent }]} />
+
+        {/* Header de la carte : Numéro & Kicker */}
+        <View style={styles.cardHeader}>
+          <View style={[styles.numBadge, { borderColor: `${accent}60`, backgroundColor: `${accent}18` }]}>
+            <Text style={[styles.numText, { color: accent }]}>{poleNum}</Text>
+          </View>
+          <Text style={[styles.kickerText, { color: accent }]}>PÔLE {poleName.toUpperCase()}</Text>
         </View>
-      </Animated.View>
-    </View>
+
+        {/* Symbole officiel ProDay au centre */}
+        <View style={styles.symbolWrap}>
+          <ProDaySymbol variant={variant} size={symbolSize} />
+        </View>
+
+        {/* Séparateur subtil */}
+        <View style={[styles.divider, { backgroundColor: `${accent}30` }]} />
+
+        {/* Liste des fonctionnalités clés */}
+        <View style={styles.featuresList}>
+          {features.map((feat, fIdx) => (
+            <View key={fIdx} style={styles.featureRow}>
+              <View style={[styles.featureDot, { backgroundColor: accent }]} />
+              <Text style={styles.featureText} numberOfLines={1}>
+                {feat}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </Animated.View>
   );
 };
 
-function createStyles(itemWidth: number, cinematic: boolean) {
-  return StyleSheet.create({
-    page: {
-      width: itemWidth > 0 ? itemWidth : undefined,
-      flex: 1,
-      justifyContent: 'center',
+const createStyles = (itemWidth: number, cinematic: boolean) =>
+  StyleSheet.create({
+    root: {
+      width: itemWidth,
       alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 8,
     },
-    stage: {
+    card: {
       width: '100%',
+      maxWidth: cinematic ? 380 : 340,
+      borderRadius: 24,
+      borderWidth: 1.5,
+      padding: cinematic ? 24 : 20,
       alignItems: 'center',
-      paddingHorizontal: cinematic ? spacing.xl : spacing.md,
-      // Remonte le symbole au-dessus du chrome bas (nom + CTA).
-      marginBottom: cinematic ? 0 : 96,
-    },
-    symbolWrap: {
-      alignItems: 'center',
-      justifyContent: 'center',
+      overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.45,
+      shadowRadius: 20,
+      elevation: 8,
+      minHeight: cinematic ? 340 : 290,
+      justifyContent: 'space-between',
     },
     halo: {
       position: 'absolute',
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      top: -30,
+      alignSelf: 'center',
+      opacity: 0.18,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      width: '100%',
+      justifyContent: 'flex-start',
+    },
+    numBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    numText: {
+      fontFamily: 'System',
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+    },
+    kickerText: {
+      fontFamily: 'System',
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+      textTransform: 'uppercase',
+    },
+    symbolWrap: {
+      marginVertical: cinematic ? 18 : 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    divider: {
+      width: '100%',
+      height: 1,
+      marginVertical: 10,
+    },
+    featuresList: {
+      width: '100%',
+      gap: 8,
+      paddingTop: 4,
+    },
+    featureRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    featureDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 2.5,
+    },
+    featureText: {
+      color: '#E0E8E5',
+      fontSize: 13,
+      fontWeight: '500',
+      letterSpacing: 0.2,
     },
   });
-}

@@ -40,9 +40,8 @@ interface UniversePageChromeProps {
   sideRail?: React.ReactNode;
 }
 
-const DOT_INACTIVE = 'rgba(255,255,255,0.28)';
+const DOT_INACTIVE = 'rgba(255,255,255,0.22)';
 
-/** Header + copie + CTA — accent unique = univers actif (React, pas worklet Record). */
 export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   lines,
   activeIndex,
@@ -135,9 +134,9 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           ]}
         >
           <Text style={[styles.ctaText, isLightCta && styles.ctaTextDark]} numberOfLines={1}>
-            {ctaLabel}
+            {ctaLabel.toUpperCase()}
           </Text>
-          <Icon name="chevron-forward" size={18} color={isLightCta ? '#0A0A0A' : '#FFFFFF'} />
+          <Icon name="chevron-forward" size={20} color={isLightCta ? '#07100C' : '#07100C'} />
         </View>
       </PressableSpring>
     </Animated.View>
@@ -152,7 +151,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
       >
         {poleName}
       </Text>
-      <Text style={styles.tagline} numberOfLines={1}>
+      <Text style={styles.tagline} numberOfLines={2}>
         {tagline}
       </Text>
     </Animated.View>
@@ -160,30 +159,32 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
 
   return (
     <View style={styles.root} pointerEvents="box-none">
+      {/* Top Header */}
       <View
         style={[
           styles.top,
           {
-            paddingTop: insets.top + (cinematic ? spacing.lg : spacing.md),
+            paddingTop: insets.top + (cinematic ? spacing.lg : spacing.sm),
             paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
           },
         ]}
       >
         <View style={styles.headerRow}>
           <View style={styles.headerCopy}>
+            <Text style={styles.kicker}>ÉCOSYSTÈME PRODAY</Text>
             <Text style={[styles.title, cinematic && styles.titleWide]} numberOfLines={1}>
-              Changer d’univers
+              Choisis ta porte d’entrée
             </Text>
             <Pressable
               onPress={() => setGuideVisible(true)}
-              style={styles.guideTrigger}
+              style={[styles.guideTrigger, { borderColor: `${activeAccent}50`, backgroundColor: `${activeAccent}12` }]}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Ouvrir le guide des univers"
             >
-              <Icon name="star-four-points" size={14} color={activeAccent} />
+              <Icon name="star-four-points" size={13} color={activeAccent} />
               <Text style={[styles.guideTriggerText, { color: activeAccent }]}>
-                Quel pôle choisir ? (Guide)
+                Quel pôle choisir ?
               </Text>
             </Pressable>
           </View>
@@ -192,6 +193,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
               onPress={touring ? onSkip : onDismiss}
               disabled={!touring && interactionLocked}
               hitSlop={20}
+              style={styles.skipBtn}
               accessibilityRole="button"
               accessibilityLabel={
                 touring ? 'Passer la présentation' : 'Fermer le sélecteur de pôle'
@@ -253,7 +255,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
                       style={[
                         styles.dot,
                         selected
-                          ? { width: 18, backgroundColor: activeAccent }
+                          ? { width: 24, backgroundColor: activeAccent }
                           : { width: 6, backgroundColor: DOT_INACTIVE },
                       ]}
                     />
@@ -266,7 +268,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           {cta}
 
           {linesCount > 1 ? (
-            <Text style={styles.hint}>Glissez ou touchez pour changer</Text>
+            <Text style={styles.hint}>Glissez horizontalement pour naviguer entre les pôles</Text>
           ) : null}
         </View>
       )}
@@ -302,38 +304,55 @@ const styles = StyleSheet.create({
   },
   headerCopy: {
     flex: 1,
+    gap: 4,
+  },
+  kicker: {
+    fontFamily: 'System',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: '#C5A059',
+    textTransform: 'uppercase',
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    color: '#FFFFFF',
+    ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  skipBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   skip: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.72)',
-    paddingTop: 2,
+    color: 'rgba(255,255,255,0.85)',
   },
   skipSpacer: {
     width: 48,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: -0.4,
-    color: 'rgba(255,255,255,0.88)',
-    ...Platform.select({ android: { includeFontPadding: false } }),
-  },
   guideTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     marginTop: 4,
-    paddingVertical: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
     alignSelf: 'flex-start',
   },
   guideTriggerText: {
     fontSize: 12,
     fontWeight: '700',
-    letterSpacing: -0.1,
+    letterSpacing: 0.2,
   },
   titleWide: {
-    fontSize: 24,
+    fontSize: 26,
     letterSpacing: -0.5,
     maxWidth: 520,
   },
@@ -361,12 +380,13 @@ const styles = StyleSheet.create({
   },
   copyBlock: {
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 4,
+    paddingHorizontal: 16,
   },
   poleName: {
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: -0.5,
+    fontSize: 30,
+    fontWeight: '800',
+    letterSpacing: -0.6,
     textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
@@ -375,16 +395,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.1,
     lineHeight: 20,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.65)',
     textAlign: 'center',
-    maxWidth: 280,
+    maxWidth: 320,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 7,
+    gap: 8,
+    marginVertical: 4,
   },
   dot: {
     height: 6,
@@ -401,38 +422,38 @@ const styles = StyleSheet.create({
     maxWidth: 420,
   },
   cta: {
-    minHeight: 54,
+    minHeight: 56,
     borderRadius: radius.pill,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 8,
   },
   ctaOnLightAccent: {
     shadowColor: '#FFFFFF',
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.25,
   },
   ctaText: {
-    flex: 1,
     fontSize: 15,
-    fontWeight: '800',
-    color: '#FFFFFF',
+    fontWeight: '900',
+    color: '#07100C',
+    letterSpacing: 0.8,
     textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   ctaTextDark: {
-    color: '#0A0A0A',
+    color: '#07100C',
   },
   hint: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.32)',
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.38)',
     textAlign: 'center',
   },
 });
