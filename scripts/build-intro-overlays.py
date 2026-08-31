@@ -1,29 +1,17 @@
 #!/usr/bin/env python3
 """Génère les overlays PNG de l'intro ProDay (textes + carte logo).
-
-Usage : python3 build-intro-overlays.py <output_dir> <config_json>
+Design cinématographique, dynamique, ultra-pro avec halo lumineux doré.
 """
 import json
 import sys
-
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 
-def add_text_backdrop(img, top_ratio=0.52):
-    """Voile sombre en bas pour faire ressortir le texte."""
-    W, H = img.size
-    backdrop = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d = ImageDraw.Draw(backdrop)
-    top = int(H * top_ratio)
-    for y in range(top, H):
-        t = (y - top) / max(1, H - top)
-        alpha = int(180 * (t**1.4))
-        d.line([(0, y), (W, y)], fill=(0, 0, 0, alpha))
-    img.alpha_composite(backdrop)
-
-
 def load_font(path, size):
-    return ImageFont.truetype(path, size)
+    try:
+        return ImageFont.truetype(path, size)
+    except Exception:
+        return ImageFont.load_default()
 
 
 def text_size(draw, text, font):
@@ -31,8 +19,20 @@ def text_size(draw, text, font):
     return box[2] - box[0], box[3] - box[1], box[1]
 
 
-def draw_shadowed_text(img, pos, text, font, fill, shadow_alpha=150, blur=7, dy=4):
-    """Texte avec ombre douce (meilleure lisibilité sur vidéo)."""
+def draw_ambient_glow(img, center_x, center_y, radius, color, alpha=50):
+    W, H = img.size
+    glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    gdraw = ImageDraw.Draw(glow)
+    gdraw.ellipse(
+        [center_x - radius, center_y - radius, center_x + radius, center_y + radius],
+        fill=(color[0], color[1], color[2], alpha)
+    )
+    glow = glow.filter(ImageFilter.GaussianBlur(radius // 2))
+    img.alpha_composite(glow)
+
+
+def draw_shadowed_text(img, pos, text, font, fill, shadow_alpha=180, blur=8, dy=4):
+    """Texte avec ombre douce et nette."""
     shadow = Image.new("RGBA", img.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
     sd.text((pos[0], pos[1] + dy), text, font=font, fill=(0, 0, 0, shadow_alpha))
@@ -47,8 +47,8 @@ def rounded_bar(img, x, y, w, h, color):
     d.rounded_rectangle([x, y, x + w, y + h], radius=h / 2, fill=color)
 
 
-def draw_shadowed_text_centered(img, draw, y, text, font, fill, max_width, shadow_alpha=150, blur=7, dy=4):
-    """Texte centré horizontalement, avec retour à la ligne si nécessaire."""
+def draw_shadowed_text_centered(img, draw, y, text, font, fill, max_width, shadow_alpha=160, blur=8, dy=4):
+    """Texte centré horizontalement avec retour à la ligne."""
     W = img.size[0]
     words = text.split()
     lines = []
@@ -69,7 +69,7 @@ def draw_shadowed_text_centered(img, draw, y, text, font, fill, max_width, shado
         _, lh, loff = text_size(draw, line, font)
         line_heights.append((lh, loff))
 
-    line_gap = 10
+    line_gap = 12
     total_h = sum(lh for lh, _ in line_heights) + line_gap * max(0, len(lines) - 1)
     cursor_y = y
 
@@ -83,107 +83,111 @@ def draw_shadowed_text_centered(img, draw, y, text, font, fill, max_width, shado
     return y + total_h
 
 
-def make_caption(cfg, out_path, title, subtitle):
+def make_caption(cfg, out_path, badge, title, subtitle):
+    """Crée une carte de texte flottante moderne et ultra-lisible sans masquer la vidéo."""
     W, H = cfg["width"], cfg["height"]
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    add_text_backdrop(img, top_ratio=cfg.get("backdropTopRatio", 0.52))
     draw = ImageDraw.Draw(img)
 
-    title_size = int(cfg.get("titleFontSize", 92))
-    body_size = int(cfg.get("bodyFontSize", 38))
-    title_font = load_font(cfg["fonts"]["title"], title_size)
-    sub_font = load_font(cfg["fonts"]["body"], body_size)
+    title_font = load_font(cfg["fonts"]["title"], 68)
+    badge_font = load_font(cfg["fonts"]["body"], 24)
+    sub_font = load_font(cfg["fonts"]["body"], 32)
 
-    # Zone de texte centrée avec marges latérales confortables.
-    side_margin = int(cfg.get("sideMargin", 72))
-    max_text_w = W - side_margin * 2
+    # Position du bloc bas (1300px)
+    block_y = int(H * 0.66)
+    card_w = W - 140
+    card_x = 70
 
-    tw, t_h, t_off = text_size(draw, title, title_font)
-    # Réduire le titre si trop large.
-    min_title = int(cfg.get("minTitleFontSize", 64))
-    while tw > max_text_w and title_size > min_title:
-        title_size -= 4
-        title_font = load_font(cfg["fonts"]["title"], title_size)
-        tw, t_h, t_off = text_size(draw, title, title_font)
-
-    block_y = int(H * float(cfg.get("captionBlockYRatio", 0.62)))
-    bar_w = 64
-    bar_x = (W - bar_w) // 2
-    # Accent or master (#C5A059)
-    rounded_bar(img, bar_x, block_y, bar_w, 8, (197, 160, 89, 255))
-
-    title_y = block_y + 36
-    title_x = (W - tw) // 2
-    draw_shadowed_text(img, (title_x, title_y - t_off), title, title_font, (255, 255, 255, 255))
-
-    sub_y = title_y + t_h + 28
-    draw_shadowed_text_centered(
-        img,
-        draw,
-        sub_y,
-        subtitle,
-        sub_font,
-        (255, 255, 255, 242),
-        max_text_w,
-        shadow_alpha=140,
-        blur=6,
-        dy=3,
+    # Fond capsule verre fumé moderne
+    glass = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    gdraw = ImageDraw.Draw(glass)
+    card_h = 280
+    gdraw.rounded_rectangle(
+        [card_x, block_y, card_x + card_w, block_y + card_h],
+        radius=28,
+        fill=(10, 14, 22, 210),
+        outline=(197, 160, 89, 140),
+        width=2
     )
+    glass = glass.filter(ImageFilter.GaussianBlur(1))
+    img.alpha_composite(glass)
+
+    draw = ImageDraw.Draw(img)
+
+    # Badge or / néon
+    if badge:
+        bw, bh, _ = text_size(draw, badge, badge_font)
+        badge_w = bw + 32
+        badge_h = bh + 16
+        bx = (W - badge_w) // 2
+        by = block_y + 28
+        draw.rounded_rectangle([bx, by, bx + badge_w, by + badge_h], radius=999, fill=(197, 160, 89, 45), outline=(197, 160, 89, 180), width=1)
+        draw.text((bx + 16, by + 6), badge, font=badge_font, fill=(230, 200, 140, 255))
+        content_y = by + badge_h + 16
+    else:
+        content_y = block_y + 35
+
+    # Titre imposant
+    draw_shadowed_text_centered(img, draw, content_y, title, title_font, (255, 255, 255, 255), card_w - 40, shadow_alpha=180, blur=6, dy=3)
+
+    # Sous-titre doré
+    draw_shadowed_text_centered(img, draw, content_y + 80, subtitle, sub_font, (197, 160, 89, 255), card_w - 40, shadow_alpha=140, blur=4, dy=2)
 
     img.save(out_path)
 
 
 def make_endcard(cfg, out_path):
+    """Carte de fin prestigieuse avec halo doré et logo officiel."""
     W, H = cfg["width"], cfg["height"]
-    img = Image.new("RGBA", (W, H), (8, 11, 17, 255))
+    img = Image.new("RGBA", (W, H), (8, 11, 18, 255))
 
+    # Halos dorés d'ambiance
+    draw_ambient_glow(img, W // 2, H // 2 - 120, 360, (197, 160, 89), 55)
+    draw_ambient_glow(img, W // 2, H // 2 + 250, 420, (56, 189, 248), 25)
+
+    # Logo ProDay Officiel
     logo = Image.open(cfg["logo"]).convert("RGBA")
-    lw = int(W * float(cfg.get("logoWidthRatio", 0.72)))
+    lw = int(W * 0.72)
     lh = int(lw * logo.height / logo.width)
     logo = logo.resize((lw, lh), Image.LANCZOS)
     lx = (W - lw) // 2
-    ly = H // 2 - lh // 2 - int(cfg.get("logoYOffset", 60))
+    ly = H // 2 - lh // 2 - 140
     img.alpha_composite(logo, (lx, ly))
 
     draw = ImageDraw.Draw(img)
     logo_bottom = ly + lh
 
-    # Accent or master (#C5A059)
-    bar_w = 72
-    rounded_bar(img, (W - bar_w) // 2, logo_bottom + 32, bar_w, 6, (197, 160, 89, 255))
+    # Barre dorée centrale
+    bar_w = 80
+    rounded_bar(img, (W - bar_w) // 2, logo_bottom + 35, bar_w, 6, (197, 160, 89, 255))
 
     # Message principal : Bienvenue dans cette nouvelle expérience
-    welcome_text = cfg.get("welcomeText", "Bienvenue dans cette nouvelle expérience")
-    welcome_font = load_font(cfg["fonts"]["title"], int(cfg.get("welcomeFontSize", 42)))
+    welcome_text = "BIENVENUE DANS CETTE\nNOUVELLE EXPÉRIENCE"
+    welcome_font = load_font(cfg["fonts"]["title"], 48)
     draw_shadowed_text_centered(
         img,
         draw,
-        logo_bottom + 65,
+        logo_bottom + 75,
         welcome_text,
         welcome_font,
         (255, 255, 255, 255),
-        W - 140,
-        shadow_alpha=160,
-        blur=8,
-        dy=4,
+        W - 120,
+        shadow_alpha=200,
+        blur=10,
+        dy=5,
     )
 
-    # Sous-titre officiel
-    subtitle = cfg.get("endcardSubtitle", "L'Application Officielle du Football")
-    if subtitle:
-        sub_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardSubtitleFontSize", 28)))
-        draw_shadowed_text_centered(
-            img,
-            draw,
-            logo_bottom + 175,
-            subtitle,
-            sub_font,
-            (197, 160, 89, 255),
-            W - 140,
-            shadow_alpha=120,
-            blur=5,
-            dy=2,
-        )
+    # Badge signature en bas
+    tag_w = 640
+    tag_h = 60
+    tag_x = (W - tag_w) // 2
+    tag_y = logo_bottom + 260
+    draw.rounded_rectangle([tag_x, tag_y, tag_x + tag_w, tag_y + tag_h], radius=999, fill=(197, 160, 89, 35), outline=(197, 160, 89, 180), width=1)
+    
+    sub_font = load_font(cfg["fonts"]["body"], 22)
+    sub_text = "CONNECTER · PROGRESSER · RÉVÉLER"
+    tw, th, _ = text_size(draw, sub_text, sub_font)
+    draw.text(((W - tw) // 2, tag_y + (tag_h - th) // 2 - 2), sub_text, font=sub_font, fill=(230, 200, 140, 255))
 
     img.convert("RGB").save(out_path)
 
@@ -192,9 +196,10 @@ def main():
     out_dir = sys.argv[1]
     cfg = json.loads(sys.argv[2])
     for i, cap in enumerate(cfg["captions"]):
-        make_caption(cfg, f"{out_dir}/caption{i}.png", cap["title"], cap["subtitle"])
+        badge = cap.get("badge", "PRODAY")
+        make_caption(cfg, f"{out_dir}/caption{i}.png", badge, cap["title"], cap["subtitle"])
     make_endcard(cfg, f"{out_dir}/endcard.png")
-    print(f"✓ Overlays générés dans {out_dir}")
+    print(f"✓ Nouveaux overlays générés dans {out_dir}")
 
 
 if __name__ == "__main__":

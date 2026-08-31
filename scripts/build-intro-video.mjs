@@ -24,24 +24,34 @@ const TMP = join(ROOT, 'assets/intro/.build');
 const W = 1080;
 const H = 1920;
 const FPS = 30;
-const CLIP_DUR = 3.5;
-const XFADE = 0.7;
-const CARD_DUR = 4.2;
+const CLIP_DUR = 3.2;
+const XFADE = 0.6;
+const CARD_DUR = 4.0;
 
 const CFG = {
   width: W,
   height: H,
   logo: join(ROOT, 'assets/branding/logo-proday-official.png'),
-  welcomeText: 'Bienvenue dans cette nouvelle expérience',
-  endcardSubtitle: "L'Application Officielle du Football",
   fonts: {
     title: '/System/Library/Fonts/Supplemental/Arial Black.ttf',
     body: '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
   },
   captions: [
-    { title: 'JOUE TON MEILLEUR FOOTBALL', subtitle: 'Matchs, entraînements & passion sur le terrain' },
-    { title: 'PÔLE JOUEUR · COACH · CLUB', subtitle: 'Tout ton écosystème football réuni' },
-    { title: 'PRODAY', subtitle: "L'expérience nouvelle génération" },
+    {
+      badge: '⚡ PRODAY FOOTBALL',
+      title: 'RÉVÈLE TON JEU',
+      subtitle: 'Matchs, entraînements & performance',
+    },
+    {
+      badge: '🌟 ÉCOSYSTÈME COMPLET',
+      title: 'JOUEUR · COACH · CLUB',
+      subtitle: "Stats en direct & séances d'entraînement IA",
+    },
+    {
+      badge: '🚀 NOUVELLE EXPÉRIENCE',
+      title: 'ENTRE SUR LE TERRAIN',
+      subtitle: 'Rejoins la communauté ProDay',
+    },
   ],
 };
 
