@@ -16,6 +16,7 @@ export const UNIVERSE_ACCENT: Record<CarouselPoleId, string> = {
   evenements: PRODAY_POLE_ACCENTS.events,
   sponsor: PRODAY_POLE_ACCENTS.sponsor,
   sante: santeColorOverrides.accent,
+  admin: '#D4AF37',
 };
 
 /** Soft pour glows / surfaces — dérivé des accents brand. */
@@ -32,6 +33,7 @@ export const UNIVERSE_ACCENT_SOFT: Record<CarouselPoleId, string> = {
   evenements: poleAccentSoft('events', 0.22),
   sponsor: poleAccentSoft('sponsor', 0.22),
   sante: santeColorOverrides.accentSoft,
+  admin: poleAccentSoft('admin', 0.25),
 };
 
 export const UNIVERSE_SHORT: Record<CarouselPoleId, string> = {
@@ -47,4 +49,5 @@ export const UNIVERSE_SHORT: Record<CarouselPoleId, string> = {
   evenements: 'Événements',
   sponsor: 'Sponsor',
   sante: 'Santé',
+  admin: 'Admin Fondateurs',
 };

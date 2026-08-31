@@ -36,9 +36,12 @@ export function filterAccessibleUniversePoles(
   const mail = opts.email ?? email ?? null;
   const showcase = UNIVERSE_CHOICE_ORDER.map(normalizeCarouselPole);
 
+  if (opts.isAdmin) {
+    return [...showcase, 'admin'];
+  }
+
   if (
     !role ||
-    opts.isAdmin ||
     isUniversalPoleTestAccount(mail) ||
     isPartnerPoleTestAccount(mail)
   ) {

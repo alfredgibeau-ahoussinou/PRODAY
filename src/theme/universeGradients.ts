@@ -172,7 +172,7 @@ export function gradientsForCarouselPole(pole: CarouselPoleId): {
 } {
   if (pole === 'pro_club') return proClubGradients;
   if (pole === 'evenements') return eventsGradients;
-  if (pole === 'president') return presidentGradients;
+  if (pole === 'president' || pole === 'admin') return presidentGradients;
   if (pole === 'pro_staff' || pole === 'coach') return proStaffGradients;
   if (pole === 'sponsor') return sponsorGradients;
   if (pole === 'parent') return parentGradients;

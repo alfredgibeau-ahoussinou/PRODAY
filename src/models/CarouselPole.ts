@@ -18,6 +18,7 @@ export type CarouselPoleId =
   | 'parent'
   | 'sponsor'
   | 'sante'
+  | 'admin'
   /** @deprecated → coach */
   | 'pro_staff'
   /** @deprecated → pro_club (organisateurs intégrés au Club) */
@@ -75,6 +76,7 @@ export function normalizeCarouselPole(pole: CarouselPoleId): CarouselPoleId {
 
 export function carouselPoleToProductLine(pole: CarouselPoleId): ProductLineId {
   const normalized = normalizeCarouselPole(pole);
+  if (normalized === 'admin') return 'pro_club';
   if (normalized === 'joueur') return 'amateur';
   // Président = même ligne produit Club (données / ACL) + mode shell distinct.
   if (normalized === 'pro_club' || normalized === 'president') return 'pro_club';
@@ -95,6 +97,8 @@ export function carouselPoleToProSegment(pole: CarouselPoleId): ProProductSegmen
 /** Rôle présélectionné à l'inscription après choix carousel. */
 export function carouselPoleSignupPresetRole(pole: CarouselPoleId): UserRole | null {
   switch (normalizeCarouselPole(pole)) {
+    case 'admin':
+      return null;
     case 'joueur':
       return 'player';
     case 'pro_club':

@@ -48,9 +48,11 @@ const POLE_FEATURES: Record<CarouselPoleId, string[]> = {
   supporter: ['Scores & matchs en direct', 'Tribune & communauté', 'Votes MVP'],
   sponsor: ['Packs de sponsoring', 'Visibilité locale', 'Reçus fiscaux'],
   sante: ['Suivi médical & forme', 'Charge physique', 'Prévention blessures'],
+  admin: ['Centre de commande VIP', 'Surveillance IA & Système', 'Vérifications & Devis'],
 };
 
 const POLE_NUMBERS: Record<CarouselPoleId, string> = {
+  admin: 'VIP',
   joueur: '01',
   amateur: '01',
   pro_player: '01',

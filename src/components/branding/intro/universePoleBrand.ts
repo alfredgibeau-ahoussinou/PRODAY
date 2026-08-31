@@ -25,6 +25,8 @@ export function brandVariantForCarouselPole(pole: CarouselPoleId): ProDayBrandVa
       return 'supporter';
     case 'sponsor':
       return 'sponsor';
+    case 'admin':
+      return 'admin';
     case 'sante':
       return 'master';
     default:
@@ -35,6 +37,8 @@ export function brandVariantForCarouselPole(pole: CarouselPoleId): ProDayBrandVa
 /** Icône rôle (planche brand) — Icon existants, pas d’emoji device. */
 export function universePoleIcon(pole: CarouselPoleId): IconName {
   switch (pole) {
+    case 'admin':
+      return 'shield';
     case 'joueur':
     case 'amateur':
     case 'pro_player':
@@ -78,6 +82,7 @@ const UNIVERSE_POLE_TAGLINE: Record<CarouselPoleId, string> = {
   supporter: 'Vivre · Encourager',
   sponsor: 'Visibilité · Impact local',
   sante: 'Prévention · Suivi médical',
+  admin: 'Pilotage exécutif · Décision & Contrôle',
 };
 
 export function universePoleTagline(pole: CarouselPoleId): string {
@@ -86,5 +91,6 @@ export function universePoleTagline(pole: CarouselPoleId): string {
 
 /** CTA « Entrer dans Coach / Club / … ». */
 export function universeEnterCtaLabel(pole: CarouselPoleId): string {
+  if (pole === 'admin') return 'Ouvrir le Cockpit Admin';
   return `Entrer dans ${universePoleDisplayName(pole)}`;
 }
