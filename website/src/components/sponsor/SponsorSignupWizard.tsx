@@ -198,16 +198,6 @@ export function SponsorSignupWizard() {
     setForm((prev) => ({ ...prev, ...partial }));
   }, []);
 
-  useEffect(() => {
-    if (
-      packageFromUrl === "starter" ||
-      packageFromUrl === "territorial" ||
-      packageFromUrl === "national"
-    ) {
-      setPackageTier(packageFromUrl);
-    }
-  }, [packageFromUrl]);
-
   const packageLabel = useMemo(() => {
     switch (packageTier) {
       case "starter":

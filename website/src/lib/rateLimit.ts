@@ -1,109 +1,83 @@
-type Bucket = { count: number; resetAt: number };
+/**
+ * Simple in-memory rate limiter for Next.js Route Handlers.
+ * In serverless environments, this acts per instance/lambda and stops rapid brute-force/spam.
+ */
 
-const memoryBuckets = new Map<string, Bucket>();
+type RateLimitRecord = {
+  count: number;
+  resetAt: number;
+};
 
-export type RateLimitResult = { allowed: boolean; retryAfterSec?: number };
+const store = new Map<string, RateLimitRecord>();
 
-function memoryCheck(key: string, limit: number, windowMs: number): RateLimitResult {
+// Cleanup stale entries every 5 minutes
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, val] of store.entries()) {
+      if (val.resetAt <= now) {
+        store.delete(key);
+      }
+    }
+  }, 5 * 60 * 1000).unref?.();
+}
+
+export interface RateLimitResult {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  retryAfterSec?: number;
+  reset: number;
+}
+
+export async function checkRateLimit(
+  identifier: string,
+  maxRequests: number = 10,
+  windowMs: number = 60_000
+): Promise<RateLimitResult> {
   const now = Date.now();
-  const bucket = memoryBuckets.get(key);
+  const record = store.get(identifier);
 
-  if (!bucket || now > bucket.resetAt) {
-    memoryBuckets.set(key, { count: 1, resetAt: now + windowMs });
-    return { allowed: true };
-  }
-
-  if (bucket.count >= limit) {
+  if (!record || record.resetAt <= now) {
+    store.set(identifier, {
+      count: 1,
+      resetAt: now + windowMs,
+    });
     return {
-      allowed: false,
-      retryAfterSec: Math.ceil((bucket.resetAt - now) / 1000),
+      allowed: true,
+      limit: maxRequests,
+      remaining: maxRequests - 1,
+      reset: Math.ceil((now + windowMs) / 1000),
     };
   }
 
-  bucket.count += 1;
-  return { allowed: true };
+  if (record.count >= maxRequests) {
+    const retryAfterSec = Math.max(1, Math.ceil((record.resetAt - now) / 1000));
+    return {
+      allowed: false,
+      limit: maxRequests,
+      remaining: 0,
+      retryAfterSec,
+      reset: Math.ceil(record.resetAt / 1000),
+    };
+  }
+
+  record.count += 1;
+  return {
+    allowed: true,
+    limit: maxRequests,
+    remaining: maxRequests - record.count,
+    reset: Math.ceil(record.resetAt / 1000),
+  };
 }
 
-/**
- * IP client : préférer les en-têtes plateforme (non spoofables),
- * jamais le premier hop X-Forwarded-For (contrôlé par le client).
- */
 export function getClientIp(request: Request): string {
-  const nf = request.headers.get("x-nf-client-connection-ip")?.trim();
-  if (nf) return nf;
-
-  const cf = request.headers.get("cf-connecting-ip")?.trim();
-  if (cf) return cf;
-
-  const realIp = request.headers.get("x-real-ip")?.trim();
-  if (realIp) return realIp;
-
-  // Netlify / reverse-proxy : l'IP client est le dernier hop de la chaîne.
-  const xff = request.headers.get("x-forwarded-for");
-  if (xff) {
-    const parts = xff
-      .split(",")
-      .map((p) => p.trim())
-      .filter(Boolean);
-    if (parts.length > 0) return parts[parts.length - 1]!;
+  const xForwardedFor = request.headers.get("x-forwarded-for");
+  if (xForwardedFor) {
+    const first = xForwardedFor.split(",")[0]?.trim();
+    if (first) return first;
   }
-
-  return "unknown";
-}
-
-async function blobsCheck(
-  key: string,
-  limit: number,
-  windowMs: number,
-): Promise<RateLimitResult | null> {
-  // Uniquement sur Netlify (évite d'exiger des credentials en local).
-  if (process.env.NETLIFY !== "true" && !process.env.NETLIFY_BLOBS_CONTEXT) {
-    return null;
-  }
-
-  try {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore({ name: "proday-rate-limits", consistency: "strong" });
-    const now = Date.now();
-    const raw = await store.get(key, { type: "json" });
-    const bucket =
-      raw &&
-      typeof raw === "object" &&
-      typeof (raw as Bucket).count === "number" &&
-      typeof (raw as Bucket).resetAt === "number"
-        ? (raw as Bucket)
-        : null;
-
-    if (!bucket || now > bucket.resetAt) {
-      const next: Bucket = { count: 1, resetAt: now + windowMs };
-      await store.setJSON(key, next);
-      return { allowed: true };
-    }
-
-    if (bucket.count >= limit) {
-      return {
-        allowed: false,
-        retryAfterSec: Math.ceil((bucket.resetAt - now) / 1000),
-      };
-    }
-
-    const next: Bucket = { count: bucket.count + 1, resetAt: bucket.resetAt };
-    await store.setJSON(key, next);
-    return { allowed: true };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Rate limit partagé (Netlify Blobs en prod, mémoire en local / fallback).
- */
-export async function checkRateLimit(
-  key: string,
-  limit: number,
-  windowMs: number,
-): Promise<RateLimitResult> {
-  const durable = await blobsCheck(key, limit, windowMs);
-  if (durable) return durable;
-  return memoryCheck(key, limit, windowMs);
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  return "127.0.0.1";
 }

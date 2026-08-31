@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -41,6 +41,15 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [cooldownLeft, setCooldownLeft] = useState(0);
+
+  useEffect(() => {
+    return () => {
+      if (cooldownTimer.current) {
+        clearInterval(cooldownTimer.current);
+        cooldownTimer.current = null;
+      }
+    };
+  }, []);
 
   const validateEmail = () => {
     const value = email.trim();

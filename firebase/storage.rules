@@ -77,16 +77,24 @@ service firebase.storage {
     }
 
     match /voice_reflections/{userId}/{fileName} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && (isOwner(userId) || isAdmin());
       allow write: if isOwner(userId)
         && request.resource.size < 15 * 1024 * 1024
         && request.resource.contentType.matches('audio/(m4a|mp4|aac|mpeg|wav|x-m4a|cafe)');
     }
 
-    /** Documents partagés équipe — staff club (chemin clubId) */
+    function isClubMemberOrStaff(clubId) {
+      return request.auth != null && (
+        request.auth.uid == clubId ||
+        isAdmin() ||
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.profile.club_id == clubId
+      );
+    }
+
+    /** Documents partagés équipe — staff club / adhérents (chemin clubId) */
     match /team_vault/{clubId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null
+      allow read: if isClubMemberOrStaff(clubId);
+      allow write: if isClubMemberOrStaff(clubId)
         && request.resource.size < 15 * 1024 * 1024
         && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif)|application/pdf|text/plain');
     }

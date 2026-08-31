@@ -1,14 +1,9 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { configStr } from './runtimeConfig';
-import {
-  MISTRAL_CHAT_MODEL,
-  extractMistralChatText,
-} from './mistralModels';
 import { stripDashTypography } from './clubAssistantChat';
+import { generateAiChatCompletion } from './aiProvider';
 
 const db = admin.firestore();
-const MISTRAL_TEXT_MODEL = MISTRAL_CHAT_MODEL;
 const MAX_HISTORY = 16;
 const MAX_USER_CHARS = 1200;
 const MAX_REPLY_CHARS = 2400;
@@ -19,10 +14,6 @@ type ChatMessageIn = {
   role: ChatRole;
   content: string;
 };
-
-function getMistralApiKey(): string | null {
-  return configStr('mistral', 'api_key', ['MISTRAL_API_KEY']) ?? null;
-}
 
 function sanitizeMessages(raw: unknown): ChatMessageIn[] {
   if (!Array.isArray(raw)) return [];
@@ -42,71 +33,49 @@ function sanitizeMessages(raw: unknown): ChatMessageIn[] {
 }
 
 async function buildPlayerContext(uid: string): Promise<string> {
-  const userSnap = await db.doc(`users/${uid}`).get();
+  const [userSnap, memberSnap, subSnap] = await Promise.all([
+    db.doc(`users/${uid}`).get(),
+    db.collection('memberships').where('user_id', '==', uid).limit(1).get(),
+    db.doc(`subscriptions/${uid}`).get(),
+  ]);
+
   const user = userSnap.data() ?? {};
-  const profile = (user.profile as Record<string, unknown> | undefined) ?? {};
-  const displayName = String(user.display_name ?? 'Joueur');
-  const position = String(profile.position ?? profile.preferred_position ?? 'non précisé');
-  const foot = String(profile.preferred_foot ?? profile.strong_foot ?? 'non précisé');
-  const age = profile.age != null ? String(profile.age) : 'non précisé';
-  const gender = String(profile.gender ?? 'non précisé');
-  const clubId = profile.club_id ? String(profile.club_id) : null;
-  const plan = String(user.subscription_plan_id ?? 'none');
-  const tier = String(user.subscription_tier ?? 'free');
+  const profile = (user.profile as Record<string, unknown>) ?? {};
+  const membership = memberSnap.docs[0]?.data();
+  const sub = subSnap.data() ?? {};
 
-  let clubName = 'sans club';
-  if (clubId) {
-    try {
-      const clubSnap = await db.doc(`clubs/${clubId}`).get();
-      clubName = String(clubSnap.data()?.name ?? clubId);
-    } catch {
-      clubName = clubId;
-    }
-  }
+  const name = user.display_name ?? 'Joueur';
+  const role = user.role ?? 'player';
+  const post = profile.position ?? profile.favorite_role ?? 'Non renseigné';
+  const secondary = profile.secondary_position ?? 'Aucun';
+  const age = profile.birth_year ? `${new Date().getFullYear() - Number(profile.birth_year)} ans` : 'Non renseigné';
+  const preferredFoot = profile.preferred_foot ?? 'Droit';
+  const level = profile.level ?? 'Amateur';
+  const clubName = membership?.club_name ?? profile.club_name ?? 'Sans club';
+  const tier = sub.tier ?? 'free';
+  const plan = sub.plan ?? 'none';
 
-  let nextMatchLine = 'Aucun match à venir chargé.';
-  try {
-    const now = admin.firestore.Timestamp.now();
-    const eventsSnap = await db
-      .collection('team_events')
-      .where('starts_at', '>=', now)
-      .orderBy('starts_at', 'asc')
-      .limit(12)
-      .get();
-    const events = eventsSnap.docs.map((d) => {
-      const data = d.data();
-      return {
-        id: d.id,
-        title: data.title,
-        event_type: data.event_type,
-        starts_at: data.starts_at as admin.firestore.Timestamp | undefined,
-        club_id: data.club_id as string | undefined,
-        player_uids: Array.isArray(data.player_uids) ? (data.player_uids as unknown[]) : [],
-        member_uids: Array.isArray(data.member_uids) ? (data.member_uids as unknown[]) : [],
-      };
-    });
-    const mine = events.find(
-      (e) =>
-        e.player_uids.includes(uid) ||
-        e.member_uids.includes(uid) ||
-        (clubId != null && e.club_id === clubId),
-    );
-    if (mine) {
-      const title = String(mine.title ?? 'Match');
-      const when = mine.starts_at?.toDate?.()?.toISOString?.() ?? 'date inconnue';
-      const type = String(mine.event_type ?? 'event');
-      nextMatchLine = `Prochain événement: ${title} (${type}) · ${when}`;
+  let nextMatchLine = 'Prochain match: non planifié';
+  const matchSnap = await db
+    .collection('team_events')
+    .where('type', '==', 'match')
+    .where('date', '>=', new Date())
+    .orderBy('date', 'asc')
+    .limit(1)
+    .get()
+    .catch(() => null);
+
+  if (matchSnap && !matchSnap.empty) {
+    const m = matchSnap.docs[0]?.data();
+    if (m) {
+      nextMatchLine = `Prochain match: vs ${m.opponent_name ?? 'Adversaire'} (${m.home_away ?? 'domicile'}) le ${m.date?.toDate?.()?.toLocaleDateString('fr-FR') ?? 'bientôt'}`;
     }
-  } catch {
-    nextMatchLine = 'Calendrier match indisponible (contexte partiel).';
   }
 
   return [
-    `Joueur: ${displayName} (uid=${uid})`,
-    `Poste: ${position}`,
-    `Pied fort: ${foot}`,
-    `Âge: ${age}`,
-    `Genre profil: ${gender}`,
+    `Identité: ${name} (${role})`,
+    `Poste principal: ${post}, Secondaire: ${secondary}`,
+    `Pied fort: ${preferredFoot}, Âge: ${age}, Niveau: ${level}`,
     `Club: ${clubName}`,
     `Abonnement: tier=${tier}, plan=${plan}`,
     nextMatchLine,
@@ -114,45 +83,8 @@ async function buildPlayerContext(uid: string): Promise<string> {
   ].join('\n');
 }
 
-async function callMistralChat(
-  apiKey: string,
-  system: string,
-  messages: ChatMessageIn[],
-): Promise<string> {
-  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: MISTRAL_TEXT_MODEL,
-      temperature: 0.65,
-      top_p: 0.9,
-      max_tokens: 1600,
-      reasoning_effort: 'high',
-      messages: [{ role: 'system', content: system }, ...messages],
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error('[playerTacticsChat] Mistral error', res.status, body.slice(0, 400));
-    throw new HttpsError('internal', 'Le Coach IA a échoué. Réessayez dans un instant.');
-  }
-
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: unknown } }[];
-  };
-  const text = extractMistralChatText(json.choices?.[0]?.message?.content);
-  if (!text) {
-    throw new HttpsError('internal', 'Réponse IA vide.');
-  }
-  return text.slice(0, MAX_REPLY_CHARS);
-}
-
 /**
- * Coach IA joueur — football + amélioration tactique (dialogue Mistral).
+ * Coach IA joueur — football + amélioration tactique (dialogue Gemini / Mistral).
  */
 export const playerTacticsChat = onCall(
   {
@@ -165,13 +97,6 @@ export const playerTacticsChat = onCall(
       throw new HttpsError('unauthenticated', 'Connexion requise.');
     }
     const uid = request.auth.uid;
-    const apiKey = getMistralApiKey();
-    if (!apiKey) {
-      throw new HttpsError(
-        'failed-precondition',
-        'Coach IA non configuré (clé Mistral manquante côté serveur).',
-      );
-    }
 
     const userSnap = await db.doc(`users/${uid}`).get();
     if (!userSnap.exists) {
@@ -222,11 +147,27 @@ Ne remplace pas le coach de club : tu complètes, tu n’imposes pas un XI.
 Contexte joueur (faits serveur) :
 ${contextBlock}`;
 
-    const reply = stripDashTypography(await callMistralChat(apiKey, system, messages));
+    let aiRes;
+    try {
+      aiRes = await generateAiChatCompletion({
+        systemPrompt: system,
+        messages,
+        temperature: 0.65,
+      });
+    } catch (e: unknown) {
+      console.error('[playerTacticsChat] AI error', e);
+      throw new HttpsError(
+        'internal',
+        e instanceof Error ? e.message : 'Le Coach IA a échoué. Réessayez dans un instant.',
+      );
+    }
+
+    const reply = stripDashTypography(aiRes.text.slice(0, MAX_REPLY_CHARS));
 
     return {
       reply,
-      model: MISTRAL_TEXT_MODEL,
+      model: aiRes.model,
+      provider: aiRes.provider,
     };
   },
 );

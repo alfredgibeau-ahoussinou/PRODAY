@@ -5,6 +5,36 @@ import "./globals.css";
 /** Bump when favicon/PWA icons change (cache navigateurs agressif). */
 const ICON_VERSION = "20260826-official";
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "ProDay",
+      "applicationCategory": "SportsApplication",
+      "operatingSystem": "iOS, Android, Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+      },
+      "description":
+        "L'infrastructure numérique du football amateur et pro. Gestion d'équipe, convocations, stats, carnet médical, carpooling et sponsoring.",
+      "url": "https://proday75.fr",
+    },
+    {
+      "@type": "SportsOrganization",
+      "name": "ProDay",
+      "url": "https://proday75.fr",
+      "logo": "https://proday75.fr/branding/logo-proday-official.png",
+      "sameAs": [
+        "https://www.instagram.com/proday_off",
+        "https://tiktok.com/@proday_off",
+      ],
+    },
+  ],
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://proday75.fr",
@@ -91,15 +121,9 @@ export default function RootLayout({
   return (
     <html lang="fr" className="scroll-smooth">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body className="min-h-screen antialiased">

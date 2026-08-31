@@ -78,12 +78,18 @@ function leadPriceLabel(poleId: PoleId, yearly: boolean): { amount: string; unit
 
 export function PolesPricingLayout() {
   const [yearly, setYearly] = useState(false);
-  const [activePole, setActivePole] = useState<PoleId>(SHOWCASE_POLES[0]!.id);
+  const [activePole, setActivePole] = useState<PoleId>(() => {
+    if (typeof window === "undefined") return SHOWCASE_POLES[0]!.id;
+    const fromHash = resolvePricingPoleFromHash(window.location.hash);
+    if (fromHash && SHOWCASE_POLES.some((p) => p.id === fromHash)) {
+      return fromHash;
+    }
+    return SHOWCASE_POLES[0]!.id;
+  });
 
   useEffect(() => {
     const fromHash = resolvePricingPoleFromHash(window.location.hash);
     if (fromHash && SHOWCASE_POLES.some((p) => p.id === fromHash)) {
-      setActivePole(fromHash);
       const el = document.getElementById(fromHash);
       if (el) {
         window.setTimeout(() => {

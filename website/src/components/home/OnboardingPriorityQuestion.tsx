@@ -53,7 +53,7 @@ export function OnboardingPriorityQuestion() {
           className="mb-10 max-w-2xl"
         >
           <p className="font-signature text-2xl italic text-[var(--proday-accent)]">
-            C'est quoi ?
+            C&apos;est quoi ?
           </p>
           <h2 className="font-display mt-1 text-3xl font-extrabold uppercase tracking-[-0.03em] text-white sm:text-4xl">
             Quelle est votre priorité cette saison ?

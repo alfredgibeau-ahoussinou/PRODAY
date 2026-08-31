@@ -7,10 +7,21 @@ import {
   verifySignedBetaAccessToken,
 } from "@/lib/betaSignedToken";
 
-export const BETA_ACCESS_COOKIE = "proday_beta_session";
-export const BETA_ACCESS_COOKIE_MAX_AGE = 60 * 60 * 24 * 90;
-/** Page d'atterrissage après validation du jeton email ou visite `/beta` avec cookie. */
-export const BETA_LANDING_PATH = "/beta/programme";
+import {
+  BETA_ACCESS_COOKIE,
+  BETA_ACCESS_COOKIE_MAX_AGE,
+  BETA_LANDING_PATH,
+  BETA_ACCESS_REDIRECT_PARAM,
+  BETA_ACCESS_REDIRECT_VALUE,
+} from "@/lib/betaAccessConstants";
+
+export {
+  BETA_ACCESS_COOKIE,
+  BETA_ACCESS_COOKIE_MAX_AGE,
+  BETA_LANDING_PATH,
+  BETA_ACCESS_REDIRECT_PARAM,
+  BETA_ACCESS_REDIRECT_VALUE,
+};
 
 export type BetaAccessSession = {
   email: string;
@@ -29,10 +40,6 @@ export function buildBetaAccessUrl(siteUrl: string, accessToken?: string): strin
   }
   return `${site}${BETA_LANDING_PATH}`;
 }
-
-/** Param factice pour que Netlify remplace `?token=` au lieu de le conserver (OpenNext #2209). */
-export const BETA_ACCESS_REDIRECT_PARAM = "from";
-export const BETA_ACCESS_REDIRECT_VALUE = "access";
 
 /** Redirection interne absolue sans query (évite boucle middleware ↔ API sur Netlify). */
 export function buildBetaInternalRedirectUrl(request: Request, pathname: string): string {

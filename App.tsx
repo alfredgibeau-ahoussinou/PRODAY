@@ -181,6 +181,7 @@ import type { UserRole } from './src/models/User';
 import type { ProductLineId } from './src/models/ProductLine';
 import { trafficService } from './src/services/traffic.service';
 import { referralService } from './src/services/referral.service';
+import { useAndroidBackHandler } from './src/hooks/useAndroidBackHandler';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -408,6 +409,65 @@ function AppShell() {
     setPendingSignupRole(null);
   }, []);
 
+  const handleTabPress = useCallback(
+    (tab: MainTabId, options?: SetActiveTabOptions) => {
+      if (tab !== activeTab) prodayHaptics.tabSwitch();
+      if (guestProfilTabOpensAuthOverlay(tab, isGuest, activeTab)) {
+        setPendingAuthIntent((prev) => prev ?? 'login');
+        return;
+      }
+      const nextReturn = resolveAutoReturnTab(
+        activeTab,
+        tab,
+        primaryDockTabs,
+        options?.returnTo,
+      );
+      if (nextReturn !== undefined) {
+        setReturnTab(nextReturn);
+      }
+      setActiveTab(isGuest ? resolveGuestTab(tab, productLine) : tab);
+    },
+    [activeTab, isGuest, primaryDockTabs, productLine],
+  );
+
+  const goBackTab = useCallback(() => {
+    if (!returnTab) return;
+    const target = returnTab;
+    setReturnTab(null);
+    setActiveTab(isGuest ? resolveGuestTab(target, productLine) : target);
+  }, [returnTab, isGuest, productLine]);
+
+  const hasPendingModals = Boolean(
+    pendingChatThreadId ||
+      pendingTeamEventId ||
+      pendingMatchsLink ||
+      pendingMercatoView ||
+      pendingProfileView ||
+      pendingDashboardView ||
+      pendingCarpoolLink,
+  );
+
+  const clearAllPendingModals = useCallback(() => {
+    setPendingChatThreadId(null);
+    setPendingTeamEventId(null);
+    setPendingMatchsLink(null);
+    setPendingMercatoView(null);
+    setPendingProfileView(null);
+    setPendingDashboardView(null);
+    setPendingCarpoolLink(null);
+  }, []);
+
+  useAndroidBackHandler({
+    activeTab,
+    returnTab,
+    pendingAuthIntent,
+    hasPendingModals,
+    onDismissAuth: dismissAuthOverlay,
+    onClearPendingModals: clearAllPendingModals,
+    onGoBackTab: goBackTab,
+    onGoHome: () => setActiveTab('home'),
+  });
+
   // Must stay above every conditional return — auth/role gates skip the main shell
   // and would otherwise drop this hook ("Rendered fewer hooks than expected").
   const { width: windowWidth } = useWindowDimensions();
@@ -538,31 +598,6 @@ function AppShell() {
       </SubscriptionProvider>
     );
   }
-
-  const handleTabPress = (tab: MainTabId, options?: SetActiveTabOptions) => {
-    if (tab !== activeTab) prodayHaptics.tabSwitch();
-    if (guestProfilTabOpensAuthOverlay(tab, isGuest, activeTab)) {
-      setPendingAuthIntent((prev) => prev ?? 'login');
-      return;
-    }
-    const nextReturn = resolveAutoReturnTab(
-      activeTab,
-      tab,
-      primaryDockTabs,
-      options?.returnTo,
-    );
-    if (nextReturn !== undefined) {
-      setReturnTab(nextReturn);
-    }
-    setActiveTab(isGuest ? resolveGuestTab(tab, productLine) : tab);
-  };
-
-  const goBackTab = () => {
-    if (!returnTab) return;
-    const target = returnTab;
-    setReturnTab(null);
-    setActiveTab(isGuest ? resolveGuestTab(target, productLine) : target);
-  };
 
   const openChat = (threadId: string) => {
     if (isGuest) {

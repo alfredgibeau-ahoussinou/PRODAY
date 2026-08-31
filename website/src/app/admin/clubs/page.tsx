@@ -18,6 +18,7 @@ export default async function AccClubsPage() {
   if (!ok) redirect(ADMIN_LOGIN_PATH);
   const ov = await loadAccOverview();
   const clubUsers = ov.platform.data.users.items.filter((u) => u.role === "club");
+  const nowMs = Date.now();
 
   return (
     <Suspense fallback={<div className="p-6 text-sm text-white/40">Chargement…</div>}>
@@ -27,7 +28,7 @@ export default async function AccClubsPage() {
         healthScore={ov.health.score}
         healthLabel={ov.health.label}
         error={ov.platform.ok ? null : (ov.platform.error ?? "Chargement impossible")}
-        nowMs={Date.now()}
+        nowMs={nowMs}
       />
     </Suspense>
   );

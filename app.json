@@ -91,7 +91,6 @@
           "healthUpdatePermission": "ProDay n'écrit pas de données dans Apple Santé."
         }
       ],
-      "expo-health-connect",
       [
         "expo-build-properties",
         {

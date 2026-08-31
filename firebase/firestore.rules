@@ -593,8 +593,17 @@ service cloud.firestore {
 
     match /friendly_matches/{matchId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.requester_uid == request.auth.uid;
+      allow update: if isSignedIn()
+        && (
+          isAdmin()
+          || resource.data.requester_uid == request.auth.uid
+          || resource.data.get('opponent_club_id', null) == userClubId()
+          || resource.data.get('requester_club_id', null) == userClubId()
+          || (resource.data.status == 'OPEN' && request.resource.data.status in ['MATCHED', 'INVITED'])
+        );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.requester_uid == request.auth.uid);
     }
 
     match /competitions/{competitionId} {
@@ -611,7 +620,7 @@ service cloud.firestore {
 
     match /competition_seasons/{seasonId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() && (isAdmin() || isStaff());
       allow update: if isSignedIn()
         && (isAdmin() || request.auth.uid in resource.data.organizer_uids);
       allow delete: if isAdmin();
@@ -619,25 +628,25 @@ service cloud.firestore {
 
     match /competition_teams/{teamId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (isAdmin() || isStaff());
       allow delete: if isAdmin();
     }
 
     match /competition_fixtures/{fixtureId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (isAdmin() || isStaff());
       allow delete: if isAdmin();
     }
 
     match /competition_standings/{seasonId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (isAdmin() || isStaff());
       allow delete: if isAdmin();
     }
 
     match /player_competition_stats/{statsId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isSignedIn() && (isAdmin() || isStaff());
       allow delete: if isAdmin();
     }
 
@@ -948,7 +957,10 @@ service cloud.firestore {
 
     match /club_funding_goals/{goalId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow create: if isStaffOrAdmin();
+      allow update: if isStaffOrAdmin()
+        || (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['raised_amount_eur', 'updated_at']));
+      allow delete: if isAdmin() || (isStaff() && resource.data.club_id == userClubId());
     }
 
     match /message_threads/{threadId} {
@@ -1762,7 +1774,7 @@ service cloud.firestore {
 
     match /supporter_match_polls/{matchId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn();
+      allow create, update: if isStaffOrAdmin();
       allow delete: if isAdmin();
     }
 

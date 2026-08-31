@@ -2,8 +2,8 @@
 
 import { Check, Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { PACKAGE_LABELS } from "@/components/sponsor/devis/DevisSteps";
 import { DevisWizardShell } from "@/components/sponsor/devis/DevisWizardShell";
 import { useSponsorDevisForm } from "@/hooks/useSponsorDevisForm";
@@ -187,7 +187,9 @@ export function DevisConfirmationPage() {
         <h1 className="font-display mt-6 text-2xl font-bold text-white sm:text-3xl">
           Demande envoyée
         </h1>
-        <ConfirmationCopy />
+        <Suspense fallback={<p className="mx-auto mt-3 max-w-md text-white/60">Merci. L&apos;équipe partenaires ProDay a bien reçu votre demande.</p>}>
+          <ConfirmationCopy />
+        </Suspense>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             href={ROUTES.sponsor}
@@ -208,14 +210,9 @@ export function DevisConfirmationPage() {
 }
 
 function ConfirmationCopy() {
-  const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setName(params.get("name") ?? "");
-    setCompany(params.get("company") ?? "");
-  }, []);
+  const searchParams = useSearchParams();
+  const name = searchParams.get("name") ?? "";
+  const company = searchParams.get("company") ?? "";
 
   return (
     <p className="mx-auto mt-3 max-w-md text-white/60">

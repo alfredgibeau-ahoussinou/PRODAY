@@ -1,11 +1,10 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { configStr } from './runtimeConfig';
-import { MISTRAL_CHAT_MODEL, extractMistralChatText } from './mistralModels';
 import { resolveIntents } from './aiAgents/intentRouter';
 import { dispatchAgents } from './aiAgents/agentDispatcher';
 import type { AgentResult } from './aiAgents/types';
 import { stripDashTypography } from './clubAssistantChat';
+import { generateAiChatCompletion } from './aiProvider';
 
 const db = admin.firestore();
 
@@ -14,10 +13,6 @@ const MAX_REPLY_CHARS = 2500;
 
 type ChatRole = 'user' | 'assistant';
 type ChatMsg = { role: ChatRole; content: string };
-
-function getMistralApiKey(): string | null {
-  return configStr('mistral', 'api_key', ['MISTRAL_API_KEY']) ?? null;
-}
 
 function sanitizeMessages(raw: unknown): ChatMsg[] {
   if (!Array.isArray(raw)) return [];
@@ -62,40 +57,6 @@ ${errorBlocks ? `\nAgents en erreur (ne pas mentionner) : ${errorBlocks}` : ''}
 Réponds à la question de l'utilisateur en te basant UNIQUEMENT sur ces données.`;
 }
 
-async function callMistralSynthesis(
-  apiKey: string,
-  systemPrompt: string,
-  messages: ChatMsg[],
-): Promise<string> {
-  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: MISTRAL_CHAT_MODEL,
-      temperature: 0.5,
-      max_tokens: 1600,
-      reasoning_effort: 'high',
-      messages: [{ role: 'system', content: systemPrompt }, ...messages],
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error('[prodayAiChat] Mistral error', res.status, body.slice(0, 400));
-    throw new HttpsError('internal', 'Le modèle IA a échoué. Réessayez dans un instant.');
-  }
-
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: unknown } }[];
-  };
-  const text = extractMistralChatText(json.choices?.[0]?.message?.content);
-  if (!text) throw new HttpsError('internal', 'Réponse IA vide.');
-  return text.slice(0, MAX_REPLY_CHARS);
-}
-
 export const prodayAiChat = onCall(
   {
     region: 'europe-west1',
@@ -108,11 +69,6 @@ export const prodayAiChat = onCall(
     }
 
     const uid = request.auth.uid;
-    const apiKey = getMistralApiKey();
-    if (!apiKey) {
-      throw new HttpsError('failed-precondition', 'ProDay AI non configuré (clé Mistral manquante).');
-    }
-
     const userSnap = await db.doc(`users/${uid}`).get();
     if (!userSnap.exists) {
       throw new HttpsError('not-found', 'Profil introuvable.');
@@ -146,12 +102,28 @@ export const prodayAiChat = onCall(
     });
 
     const systemPrompt = buildSynthesisPrompt(agentResults, role);
-    const reply = stripDashTypography(await callMistralSynthesis(apiKey, systemPrompt, messages));
+    let aiRes;
+    try {
+      aiRes = await generateAiChatCompletion({
+        systemPrompt,
+        messages,
+        temperature: 0.5,
+      });
+    } catch (e: unknown) {
+      console.error('[prodayAiChat] AI error', e);
+      throw new HttpsError(
+        'internal',
+        e instanceof Error ? e.message : 'Le modèle IA a échoué. Réessayez dans un instant.',
+      );
+    }
+
+    const reply = stripDashTypography(aiRes.text.slice(0, MAX_REPLY_CHARS));
 
     return {
       reply,
       agents_used: agentNames,
-      model: MISTRAL_CHAT_MODEL,
+      model: aiRes.model,
+      provider: aiRes.provider,
     };
   },
 );

@@ -1,8 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { configStr } from './runtimeConfig';
-import { MISTRAL_CHAT_MODEL, extractMistralChatText } from './mistralModels';
 import { stripDashTypography } from './clubAssistantChat';
 import { playerAgent, formatPlayerAgentFacts } from './aiAgents/agents/playerAgent';
+import { generateAiChatCompletion } from './aiProvider';
 import {
   buildPlayerCoachSuggestions,
   detectPlayerCoachActions,
@@ -16,10 +15,6 @@ const MAX_REPLY_CHARS = 2400;
 
 type ChatRole = 'user' | 'assistant';
 type ChatMessageIn = { role: ChatRole; content: string };
-
-function getMistralApiKey(): string | null {
-  return configStr('mistral', 'api_key', ['MISTRAL_API_KEY']) ?? null;
-}
 
 function sanitizeMessages(raw: unknown): ChatMessageIn[] {
   if (!Array.isArray(raw)) return [];
@@ -53,40 +48,6 @@ Contexte joueur (données réelles):
 ${contextBlock || 'Aucune donnée disponible.'}`;
 }
 
-async function callMistralChat(
-  apiKey: string,
-  system: string,
-  messages: ChatMessageIn[],
-): Promise<string> {
-  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: MISTRAL_CHAT_MODEL,
-      temperature: 0.6,
-      max_tokens: 1600,
-      reasoning_effort: 'high',
-      messages: [{ role: 'system', content: system }, ...messages],
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error('[playerCoachAiChat] Mistral error', res.status, body.slice(0, 400));
-    throw new HttpsError('internal', 'Le Coach IA a échoué. Réessayez dans un instant.');
-  }
-
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: unknown } }[];
-  };
-  const text = extractMistralChatText(json.choices?.[0]?.message?.content);
-  if (!text) throw new HttpsError('internal', 'Réponse IA vide.');
-  return stripDashTypography(text.slice(0, MAX_REPLY_CHARS));
-}
-
 /** Coach IA joueur — contexte enrichi via playerAgent + actions structurées. */
 export const playerCoachAiChat = onCall(
   {
@@ -97,11 +58,6 @@ export const playerCoachAiChat = onCall(
   async (request) => {
     if (!request.auth?.uid) {
       throw new HttpsError('unauthenticated', 'Connexion requise.');
-    }
-
-    const apiKey = getMistralApiKey();
-    if (!apiKey) {
-      throw new HttpsError('failed-precondition', 'Coach IA non configuré.');
     }
 
     const uid = request.auth.uid;
@@ -120,7 +76,22 @@ export const playerCoachAiChat = onCall(
     const contextBlock = formatPlayerAgentFacts(agentResult);
     const system = buildSystemPrompt(contextBlock);
 
-    const reply = await callMistralChat(apiKey, system, messages);
+    let aiRes;
+    try {
+      aiRes = await generateAiChatCompletion({
+        systemPrompt: system,
+        messages,
+        temperature: 0.6,
+      });
+    } catch (e: unknown) {
+      console.error('[playerCoachAiChat] AI error', e);
+      throw new HttpsError(
+        'internal',
+        e instanceof Error ? e.message : 'Le Coach IA a échoué. Réessayez dans un instant.',
+      );
+    }
+
+    const reply = stripDashTypography(aiRes.text.slice(0, MAX_REPLY_CHARS));
 
     const actions: PlayerAiAction[] = detectPlayerCoachActions(query, facts);
     for (const action of actions) {
@@ -133,7 +104,8 @@ export const playerCoachAiChat = onCall(
 
     return {
       reply,
-      model: MISTRAL_CHAT_MODEL,
+      model: aiRes.model,
+      provider: aiRes.provider,
       agents_used: ['player'],
       actions: actions.length > 0 ? actions : undefined,
       suggestions,

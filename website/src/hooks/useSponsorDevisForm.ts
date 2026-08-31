@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import {
   SPONSOR_DEVIS_INITIAL,
   type SponsorDevisFormState,
@@ -11,13 +11,19 @@ import {
   saveSponsorDevisState,
 } from "@/lib/sponsorDevisStorage";
 
+const emptySubscribe = () => () => {};
+
 export function useSponsorDevisForm(options?: {
   seedPackage?: string | null;
 }) {
-  const [form, setForm] = useState<SponsorDevisFormState>(SPONSOR_DEVIS_INITIAL);
-  const [hydrated, setHydrated] = useState(false);
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
-  useEffect(() => {
+  const [form, setForm] = useState<SponsorDevisFormState>(() => {
+    if (typeof window === "undefined") return SPONSOR_DEVIS_INITIAL;
     const loaded = loadSponsorDevisState();
     const seed = options?.seedPackage;
     if (
@@ -28,9 +34,10 @@ export function useSponsorDevisForm(options?: {
     ) {
       loaded.packageTier = seed;
     }
-    setForm(loaded);
-    setHydrated(true);
-  }, [options?.seedPackage]);
+    return loaded;
+  });
+
+  const hydrated = isClient;
 
   useEffect(() => {
     if (!hydrated) return;

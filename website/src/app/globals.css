@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --font-space: "Sora", "Space Grotesk", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-space: "Sora", "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --proday-ink: #052424;
   --proday-ink-muted: rgba(5, 36, 36, 0.62);
   --proday-bg: #000000;
@@ -401,29 +401,34 @@ a, button, [role="button"], summary, label[for] {
   --sponsor-surface: #070605;
 }
 
-/* ── Admin Control Center (identité dédiée, pas SaaS violet) ── */
+/* ── Admin Control Center (Modern High-Contrast Dark Slate & Glass) ── */
 .acc-shell,
 .admin-shell.acc-shell {
   --acc-bg: #06080f;
-  --acc-surface: #0c1018;
-  --acc-surface-2: #10151f;
-  --acc-line: rgba(148, 163, 184, 0.14);
-  --acc-mute: rgba(148, 163, 184, 0.45);
-  --acc-accent-soft: rgba(30, 58, 255, 0.18);
+  --acc-surface: #0a0e17;
+  --acc-surface-2: #0f1420;
+  --acc-line: rgba(255, 255, 255, 0.08);
+  --acc-line-highlight: rgba(255, 255, 255, 0.16);
+  --acc-mute: rgba(148, 163, 184, 0.55);
+  --acc-accent-soft: rgba(30, 58, 255, 0.16);
+  --acc-accent-glow: rgba(30, 58, 255, 0.25);
+  --acc-gold-soft: rgba(217, 119, 6, 0.15);
   --acc-steel: #9db7ff;
   background-color: var(--acc-bg);
   background-image:
-    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(30, 58, 255, 0.09), transparent 55%),
-    linear-gradient(180deg, #06080f 0%, #080b14 100%);
+    radial-gradient(ellipse 90% 60% at 5% 0%, rgba(30, 58, 255, 0.12), transparent 60%),
+    radial-gradient(ellipse 70% 45% at 95% 10%, rgba(217, 119, 6, 0.06), transparent 50%),
+    linear-gradient(180deg, #06080f 0%, #080c16 100%);
 }
 
 .acc-mark {
-  background: #000000;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #111522 0%, #06080f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .acc-panel {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 body.admin-nav-lock {
@@ -462,29 +467,30 @@ body.admin-nav-lock {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #111114;
+  background: #0d121c;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .admin-table-shell th {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.45);
   white-space: nowrap;
 }
 .admin-table-shell tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 150ms ease;
 }
 .admin-table-shell tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(255, 255, 255, 0.012);
 }
 .admin-table-shell tbody tr:hover {
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.04);
 }
 .admin-table-shell td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.875rem;
   vertical-align: middle;
 }
 .admin-page > * + * {
