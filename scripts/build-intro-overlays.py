@@ -135,39 +135,54 @@ def make_caption(cfg, out_path, title, subtitle):
 
 def make_endcard(cfg, out_path):
     W, H = cfg["width"], cfg["height"]
-    # Fond brand noir — lockup officiel (charcoal) se fond sans « carte blanche ».
-    img = Image.new("RGBA", (W, H), (0, 0, 0, 255))
+    img = Image.new("RGBA", (W, H), (8, 11, 17, 255))
 
     logo = Image.open(cfg["logo"]).convert("RGBA")
-    lw = int(W * float(cfg.get("logoWidthRatio", 0.68)))
+    lw = int(W * float(cfg.get("logoWidthRatio", 0.72)))
     lh = int(lw * logo.height / logo.width)
     logo = logo.resize((lw, lh), Image.LANCZOS)
     lx = (W - lw) // 2
-    ly = H // 2 - lh // 2 - int(cfg.get("logoYOffset", 40))
+    ly = H // 2 - lh // 2 - int(cfg.get("logoYOffset", 60))
     img.alpha_composite(logo, (lx, ly))
 
     draw = ImageDraw.Draw(img)
     logo_bottom = ly + lh
 
-    # Accent or master (#C5A059).
-    bar_w = 64
-    rounded_bar(img, (W - bar_w) // 2, logo_bottom + 26, bar_w, 6, (197, 160, 89, 255))
+    # Accent or master (#C5A059)
+    bar_w = 72
+    rounded_bar(img, (W - bar_w) // 2, logo_bottom + 32, bar_w, 6, (197, 160, 89, 255))
 
-    tag = cfg["tagline"]
-    tag_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardFontSize", 34)))
-    tw, th, toff = text_size(draw, tag, tag_font)
-    tag_y = logo_bottom + 52 - toff
-    draw.text(((W - tw) // 2, tag_y), tag, font=tag_font, fill=(197, 160, 89, 255))
+    # Message principal : Bienvenue dans cette nouvelle expérience
+    welcome_text = cfg.get("welcomeText", "Bienvenue dans cette nouvelle expérience")
+    welcome_font = load_font(cfg["fonts"]["title"], int(cfg.get("welcomeFontSize", 42)))
+    draw_shadowed_text_centered(
+        img,
+        draw,
+        logo_bottom + 65,
+        welcome_text,
+        welcome_font,
+        (255, 255, 255, 255),
+        W - 140,
+        shadow_alpha=160,
+        blur=8,
+        dy=4,
+    )
 
-    subtitle = cfg.get("endcardSubtitle")
+    # Sous-titre officiel
+    subtitle = cfg.get("endcardSubtitle", "L'Application Officielle du Football")
     if subtitle:
-        sub_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardSubtitleFontSize", 26)))
-        sw, sh, soff = text_size(draw, subtitle, sub_font)
-        draw.text(
-            ((W - sw) // 2, tag_y + th + 18 - soff),
+        sub_font = load_font(cfg["fonts"]["body"], int(cfg.get("endcardSubtitleFontSize", 28)))
+        draw_shadowed_text_centered(
+            img,
+            draw,
+            logo_bottom + 175,
             subtitle,
-            font=sub_font,
-            fill=(200, 200, 200, 255),
+            sub_font,
+            (197, 160, 89, 255),
+            W - 140,
+            shadow_alpha=120,
+            blur=5,
+            dy=2,
         )
 
     img.convert("RGB").save(out_path)

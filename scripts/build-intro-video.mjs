@@ -32,16 +32,16 @@ const CFG = {
   width: W,
   height: H,
   logo: join(ROOT, 'assets/branding/logo-proday-official.png'),
-  tagline: 'CONNECTER. PROGRESSER. RÉVÉLER.',
-  endcardSubtitle: 'Bienvenue dans cette nouvelle expérience',
+  welcomeText: 'Bienvenue dans cette nouvelle expérience',
+  endcardSubtitle: "L'Application Officielle du Football",
   fonts: {
     title: '/System/Library/Fonts/Supplemental/Arial Black.ttf',
     body: '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
   },
   captions: [
-    { title: 'CONNECTER', subtitle: 'Ton équipe, tes matchs, ta communauté' },
-    { title: 'PROGRESSER', subtitle: 'Pôle Joueur · Amateur → Pro' },
-    { title: 'RÉVÉLER', subtitle: '7 pôles · covoiturage · carrière' },
+    { title: 'JOUE TON MEILLEUR FOOTBALL', subtitle: 'Matchs, entraînements & passion sur le terrain' },
+    { title: 'PÔLE JOUEUR · COACH · CLUB', subtitle: 'Tout ton écosystème football réuni' },
+    { title: 'PRODAY', subtitle: "L'expérience nouvelle génération" },
   ],
 };
 
