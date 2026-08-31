@@ -30,8 +30,8 @@ import { UNIVERSE_CONFIRM_LEAVE } from '../components/branding/intro/launchIntro
  */
 export const LAUNCH_VIDEO_SEEN_KEY = 'proday_launch_video_seen_v2';
 
-/** Vidéo pré-rendue désactivée tant qu’elle n’est pas régénérée avec le lockup officiel. */
-const ENABLE_LAUNCH_VIDEO_INTRO = false;
+/** Vidéo d’intro activée pour présenter l'univers football & l'expérience ProDay. */
+const ENABLE_LAUNCH_VIDEO_INTRO = true;
 
 /**
  * Import dynamique : `expo-video` n’est chargé que si la vidéo d’intro monte

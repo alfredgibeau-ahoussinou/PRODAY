@@ -208,9 +208,11 @@ const styles = StyleSheet.create({
   },
   message: {
     color: PRODAY_MASTER.white,
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: -0.35,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.3,
     textAlign: 'center',
+    fontWeight: '800',
+    maxWidth: 320,
   },
 });

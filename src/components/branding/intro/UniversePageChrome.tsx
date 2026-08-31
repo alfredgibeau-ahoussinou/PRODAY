@@ -19,6 +19,7 @@ import {
   universePoleDisplayName,
   universePoleTagline,
 } from './universePoleBrand';
+import { UniverseGuideModal } from './UniverseGuideModal';
 
 interface UniversePageChromeProps {
   lines: CarouselPoleId[];
@@ -59,6 +60,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
+  const [guideVisible, setGuideVisible] = React.useState(false);
   const activeLine = lines[activeIndex] ?? lines[0];
   const activeAccent =
     (activeLine ? UNIVERSE_ACCENT[activeLine] : undefined) ?? UNIVERSE_AMBIENT_FALLBACK;
@@ -172,6 +174,18 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
             <Text style={[styles.title, cinematic && styles.titleWide]} numberOfLines={1}>
               Changer d’univers
             </Text>
+            <Pressable
+              onPress={() => setGuideVisible(true)}
+              style={styles.guideTrigger}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Ouvrir le guide des univers"
+            >
+              <Icon name="star-four-points" size={14} color={activeAccent} />
+              <Text style={[styles.guideTriggerText, { color: activeAccent }]}>
+                Quel pôle choisir ? (Guide)
+              </Text>
+            </Pressable>
           </View>
           {showHeaderAction ? (
             <Pressable
@@ -256,6 +270,17 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           ) : null}
         </View>
       )}
+
+      <UniverseGuideModal
+        visible={guideVisible}
+        onClose={() => setGuideVisible(false)}
+        onSelectPole={(pole) => {
+          const idx = lines.indexOf(pole);
+          if (idx >= 0) {
+            onJumpToIndex(idx);
+          }
+        }}
+      />
     </View>
   );
 };
@@ -293,6 +318,19 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     color: 'rgba(255,255,255,0.88)',
     ...Platform.select({ android: { includeFontPadding: false } }),
+  },
+  guideTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+    paddingVertical: 2,
+    alignSelf: 'flex-start',
+  },
+  guideTriggerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: -0.1,
   },
   titleWide: {
     fontSize: 24,

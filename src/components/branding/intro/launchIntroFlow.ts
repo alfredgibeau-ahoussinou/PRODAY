@@ -61,7 +61,7 @@ export const BRAND_WELCOME_REVEAL = {
 export type BrandSessionTone = 'welcome' | 'goodbye';
 
 export const BRAND_SESSION_COPY: Record<BrandSessionTone, string> = {
-  welcome: 'Bienvenue',
+  welcome: 'Bienvenue dans cette nouvelle expérience',
   goodbye: 'Au revoir',
 };
 

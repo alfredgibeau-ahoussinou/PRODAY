@@ -47,7 +47,7 @@ describe('launchIntroFlow', () => {
   });
 
   it('orchestre Bienvenue / Au revoir en phases fluides sans cut noir', () => {
-    expect(BRAND_SESSION_COPY.welcome).toBe('Bienvenue');
+    expect(BRAND_SESSION_COPY.welcome).toBe('Bienvenue dans cette nouvelle expérience');
     expect(BRAND_SESSION_COPY.goodbye).toBe('Au revoir');
     expect(BRAND_SESSION_REVEAL.logoInMs).toBeGreaterThanOrEqual(400);
     expect(BRAND_SESSION_REVEAL.logoInMs).toBeLessThanOrEqual(700);
