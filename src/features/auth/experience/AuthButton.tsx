@@ -76,11 +76,11 @@ function createStyles(variant: AuthButtonProps['variant']) {
   const ghost = variant === 'ghost';
   return StyleSheet.create({
     btn: {
-      minHeight: 54,
+      minHeight: 52,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 2,
-      paddingHorizontal: 20,
+      borderRadius: AUTH_XP.radiusMd,
+      paddingHorizontal: 24,
       overflow: 'hidden',
       backgroundColor: primary
         ? AUTH_XP.gold
@@ -89,16 +89,16 @@ function createStyles(variant: AuthButtonProps['variant']) {
           : AUTH_XP.surfaceRaised,
       borderWidth: primary ? 0 : 1,
       borderColor: ghost ? AUTH_XP.border : AUTH_XP.border,
-      marginTop: 8,
+      marginTop: 10,
     },
     label: {
       color: primary ? AUTH_XP.black : AUTH_XP.white,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '700',
-      letterSpacing: 0.2,
+      letterSpacing: 0.3,
     },
     disabled: {
-      opacity: 0.55,
+      opacity: 0.5,
     },
     shine: {
       position: 'absolute',
@@ -106,7 +106,7 @@ function createStyles(variant: AuthButtonProps['variant']) {
       left: 0,
       right: 0,
       height: 1,
-      backgroundColor: 'rgba(255,255,255,0.35)',
+      backgroundColor: 'rgba(255,255,255,0.4)',
     },
   });
 }

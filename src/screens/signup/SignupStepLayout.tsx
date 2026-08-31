@@ -120,9 +120,10 @@ function createStyles(contentMaxWidth: number) {
       height: 40,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 2,
+      borderRadius: AUTH_XP.radiusMd,
       borderWidth: 1,
       borderColor: AUTH_XP.border,
+      backgroundColor: 'rgba(255,255,255,0.03)',
     },
     scroll: {
       paddingHorizontal: 20,

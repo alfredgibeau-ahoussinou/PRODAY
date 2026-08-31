@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 14,
-    borderRadius: 2,
+    borderRadius: AUTH_XP.radiusMd,
     backgroundColor: AUTH_XP.surfaceRaised,
     borderWidth: 1,
     borderColor: AUTH_XP.border,
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   iconRing: {
     width: 40,
     height: 40,
-    borderRadius: 2,
+    borderRadius: AUTH_XP.radiusSm,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: AUTH_XP.gold,

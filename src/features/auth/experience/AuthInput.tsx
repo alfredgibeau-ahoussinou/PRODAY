@@ -125,28 +125,29 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
 function createStyles() {
   return StyleSheet.create({
     wrap: {
-      gap: 8,
-      marginBottom: 14,
+      gap: 6,
+      marginBottom: 16,
     },
     label: {
       color: AUTH_XP.textMuted,
-      letterSpacing: 0.4,
+      letterSpacing: 0.5,
       textTransform: 'uppercase',
       fontSize: 11,
+      fontWeight: '600',
     },
     field: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
+      gap: 12,
       minHeight: 52,
-      paddingHorizontal: 14,
-      borderRadius: 2,
+      paddingHorizontal: 16,
+      borderRadius: AUTH_XP.radiusMd,
       borderWidth: 1,
     },
     input: {
       flex: 1,
       color: AUTH_XP.white,
-      fontSize: 16,
+      fontSize: 15,
       paddingVertical: 12,
       fontWeight: '500',
     },
@@ -155,7 +156,8 @@ function createStyles() {
     },
     error: {
       color: AUTH_XP.error,
-      marginTop: -2,
+      marginTop: 2,
+      fontSize: 12,
     },
   });
 }

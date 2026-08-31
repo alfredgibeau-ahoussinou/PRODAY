@@ -331,7 +331,7 @@ function createSocialStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 10,
-      borderRadius: 2,
+      borderRadius: AUTH_XP.radiusMd,
       paddingVertical: 14,
       minHeight: 52,
       borderWidth: 1,
