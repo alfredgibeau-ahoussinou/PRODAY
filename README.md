@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="assets/branding/logo-proday-official.png" alt="ProDay — CONNECTER. PROGRESSER. RÉVÉLER." width="380" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/branding/logo-proday-lockup-white.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/branding/logo-proday-lockup-black.png">
+  <img src="assets/branding/logo-proday-official.png" alt="ProDay — CONNECTER. PROGRESSER. RÉVÉLER." width="380" />
+</picture>
 
 <br /><br />
 

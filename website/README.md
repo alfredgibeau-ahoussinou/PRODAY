@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="public/branding/logo-proday-official.png" alt="ProDay" width="320" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/branding/logo-proday-lockup-white.png">
+  <source media="(prefers-color-scheme: light)" srcset="public/branding/logo-proday-lockup-black.png">
+  <img src="public/branding/logo-proday-official.png" alt="ProDay" width="320" />
+</picture>
 
 <br /><br />
 
