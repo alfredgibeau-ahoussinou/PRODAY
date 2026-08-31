@@ -56,9 +56,9 @@ const CFG = {
 };
 
 const CLIP_SEQUENCE = [
-  { file: 'match-two-teams.mp4', start: 0.5 },
-  { file: 'player-dribbling.mp4', start: 0.0 },
-  { file: 'goal-play.mp4', start: 3.6 },
+  { file: 'stadium-lights.mp4', start: 1.0 },
+  { file: 'live-match-action.mp4', start: 2.0 },
+  { file: 'player-skills.mp4', start: 0.5 },
 ];
 
 const N = CLIP_SEQUENCE.length;
