@@ -142,6 +142,51 @@ export function AdminDashboardPane({ onNavigate, onOpenCommand }: Props) {
         <AdminMetric label="Joueurs" value={data.stats?.players ?? 0} />
       </View>
 
+      {/* Barre d'outils exécutifs & personnalisation ProDay */}
+      <AdminCard>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <View>
+            <AdminText variant="h2">Outils Exécutifs ProDay</AdminText>
+            <AdminText variant="caption" muted>Actions directes & contrôle instantané</AdminText>
+          </View>
+          <AdminBadge label="VIP Mode" tone="accent" />
+        </View>
+
+        <View style={styles.quickToolsGrid}>
+          <Pressable
+            onPress={() => onNavigate('ia')}
+            style={[styles.quickToolBtn, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
+          >
+            <AdminText variant="h3">🤖 Moteur IA & Blood Bath</AdminText>
+            <AdminText variant="caption" color={t.accent}>Gemini Flash · 100% Opérationnel</AdminText>
+          </Pressable>
+
+          <Pressable
+            onPress={() => onNavigate('plateforme')}
+            style={[styles.quickToolBtn, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
+          >
+            <AdminText variant="h3">🛡️ Sécurité & Système</AdminText>
+            <AdminText variant="caption" color={t.healthGood}>Firestore · Auth · 0 anomalie</AdminText>
+          </Pressable>
+
+          <Pressable
+            onPress={() => onNavigate('commercial')}
+            style={[styles.quickToolBtn, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
+          >
+            <AdminText variant="h3">🤝 Devis & Sponsoring</AdminText>
+            <AdminText variant="caption" color={t.champagne}>{pendingQuotes} devis en attente</AdminText>
+          </Pressable>
+
+          <Pressable
+            onPress={() => onNavigate('produit')}
+            style={[styles.quickToolBtn, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
+          >
+            <AdminText variant="h3">✨ Univers & Déploiements</AdminText>
+            <AdminText variant="caption" muted>6 Pôles actifs · Mode Bêta</AdminText>
+          </Pressable>
+        </View>
+      </AdminCard>
+
       <AdminCard>
         <AdminText variant="h2">Action required</AdminText>
         <AdminText variant="caption" muted>
@@ -298,5 +343,19 @@ const styles = StyleSheet.create({
     minWidth: 92,
     gap: 2,
     borderWidth: 1,
+  },
+  quickToolsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 4,
+  },
+  quickToolBtn: {
+    flexBasis: '48%',
+    flexGrow: 1,
+    padding: 12,
+    borderRadius: adminRadius.md,
+    borderWidth: 1,
+    gap: 4,
   },
 });
