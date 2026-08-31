@@ -104,7 +104,7 @@ function main() {
     inputs.push('-loop', '1', '-framerate', String(FPS), '-t', String(CLIP_DUR), '-i', join(TMP, `caption${i}.png`)),
   );
   inputs.push('-loop', '1', '-framerate', String(FPS), '-t', String(CARD_DUR), '-i', join(TMP, 'endcard.png'));
-  inputs.push('-i', join(ROOT, 'assets/intro/music/sports-highlights.mp3'));
+  inputs.push('-i', join(ROOT, 'assets/intro/music/talent-in-the-air.mp3'));
 
   const capBase = N;
   const cardIdx = N * 2;
