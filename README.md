@@ -1,22 +1,22 @@
 <div align="center">
 
-<img src="assets/branding/logo-proday-official.png" alt="ProDay — CONNECTER. PROGRESSER. RÉVÉLER." width="360" />
+<img src="assets/branding/logo-proday-official.png" alt="ProDay — CONNECTER. PROGRESSER. RÉVÉLER." width="380" />
 
 <br /><br />
 
-**CONNECTER. PROGRESSER. RÉVÉLER.**
+# **CONNECTER · PROGRESSER · RÉVÉLER**
 
 <br />
 
-*Pas un outil de plus — l’infrastructure de votre football.*  
-App mobile **1.0.8** · Site [proday75.fr](https://proday75.fr)
+*Pas un outil de plus. L’infrastructure de votre football.*  
+App mobile **1.0.9** (Build iOS 19 / VersionCode Android 11) · Site [proday75.fr](https://proday75.fr)
 
 <br />
 
-[![Site](https://img.shields.io/badge/Site-proday75.fr-22d3ee?style=flat-square)](https://proday75.fr)
-[![Bêta](https://img.shields.io/badge/Bêta-Inscription-0891b2?style=flat-square)](https://proday75.fr/beta/inscription)
-[![App](https://img.shields.io/badge/App-1.0.8-0ea5e9?style=flat-square)](https://proday75.fr/beta/inscription)
-[![Docs](https://img.shields.io/badge/Docs-PRODAY--docs-64748b?style=flat-square)](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+[![Site](https://img.shields.io/badge/Site-proday75.fr-F5D04A?style=flat-square&logo=googlechrome&logoColor=black)](https://proday75.fr)
+[![Bêta TestFlight](https://img.shields.io/badge/TestFlight-iOS%20v1.0.9%20(19)-0ea5e9?style=flat-square&logo=apple)](https://appstoreconnect.apple.com/apps/6801583755/testflight/ios)
+[![APK Android](https://img.shields.io/badge/APK-v1.0.9%20(11)-34d399?style=flat-square&logo=android)](https://proday75.fr/downloads/proday-beta.apk)
+[![Tests](https://img.shields.io/badge/Tests-264%20suites%20(1386%20tests)-22c55e?style=flat-square)](https://github.com/alfredgibeau-ahoussinou/PRODAY)
 
 <br />
 
@@ -27,133 +27,144 @@ App mobile **1.0.8** · Site [proday75.fr](https://proday75.fr)
 
 ---
 
-## ProDay en bref
+## 🌟 ProDay en Bref
 
-ProDay n’est **pas huit produits** ni une pile de features marketing. C’est l’**infrastructure** du football amateur et semi-pro : joueurs, clubs, matchs, convocations, stats, parents et sponsors reliés dans **une** app — plus de WhatsApp, tableurs et docs éparpillés.
+ProDay n’est pas une juxtaposition d'applications disparates. C’est **l’infrastructure unifiée du football amateur et professionnel** : joueurs, coachs, dirigeants de clubs, familles, supporters et sponsors réunis au sein d'une seule donnée partagée.
 
-| | |
-|--|--|
-| **Tagline** | CONNECTER. PROGRESSER. RÉVÉLER. |
+| Information | Détail |
+| :--- | :--- |
+| **Slogan** | CONNECTER · PROGRESSER · RÉVÉLER |
 | **Positionnement** | L’infrastructure de votre football |
-| **Site** | [proday75.fr](https://proday75.fr) |
-| **App** | **1.0.8** (bêta fermée — TestFlight / APK) |
-| **Code** | Dépôt **privé** [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) |
-| **Docs publiques** | [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) |
-| **Logo officiel** | `assets/branding/logo-proday-official.png` · CDN [proday75.fr/branding/…](https://proday75.fr/branding/logo-proday-official.png) |
-
-> Les chiffres du site (onglets, modules, tarifs) décrivent l’**architecture produit**, pas une audience en temps réel. **Pas de métriques inventées.** L’IA analyse les **highlights de séance**, pas chaque geste en match.
+| **Site Officiel** | [https://proday75.fr](https://proday75.fr) |
+| **Application Mobile** | **Version 1.0.9** (TestFlight iOS Build 19 · APK Android VersionCode 11) |
+| **Moteur IA** | Google Gemini 1.5 Flash (100% quota gratuit · Séances sur-mesure & Mode Blood Bath) |
+| **Identifiants App Store** | Bundle `com.proday.app` · ASC App ID `6801583755` · Team `F452SUU638` |
+| **Logo & Charte** | `assets/branding/logo-proday-official.png` · Palette officielle `#07100c` / `#F5D04A` / `#C5A059` |
 
 ---
 
-## Six portes d’entrée
+## 🧭 Les 6 Pôles Métier
 
-Des **portes d’entrée** vers le même écosystème — pas des apps séparées.
+Une porte d’entrée dédiée par rôle vers le même graphe de données :
 
-| Porte | Public | En bref |
-|-------|--------|---------|
-| **Joueur** | Amateur → centre → pro | Saison, Pulse, Mercato, CV |
-| **Club** | Structures & équipes | Équipes, licenciés, tournois |
-| **Coach** | Staff terrain | Forme, tactique, convocations |
-| **Parent** | Familles | Agenda, messages, trajets |
-| **Supporter** | Fans | Scores, compositions — tribune gratuite |
-| **Sponsor** | Marques | Activations & impact |
-
-Agent, recruteur, organisateur et santé restent des **rôles intégrés**, pas des produits distincts.  
-Détail : [proday75.fr/ecosysteme](https://proday75.fr/ecosysteme) · [docs/ECOSYSTEM_POLES_EVOLUTION.md](docs/ECOSYSTEM_POLES_EVOLUTION.md)
+```mermaid
+graph TD
+    PRODAY(("⚡ PRODAY Écosystème"))
+    PRODAY --> J["⚽ Pôle Joueur<br/>CV digital, stats réelles, highlights & détections"]
+    PRODAY --> C["📋 Pôle Coach & Staff<br/>Séances IA Gemini Blood Bath, tableau tactique & convocations"]
+    PRODAY --> CL["🛡️ Pôle Club & Dirigeants<br/>Gestion équipes, licences, tournois en direct & covoiturage"]
+    PRODAY --> P["👨‍👩‍👧 Pôle Parent & Famille<br/>Espace jeunes sécurisé, contrôle tuteur & trajets partagés"]
+    PRODAY --> S["📣 Pôle Supporter<br/>Scores en direct, moments forts, communauté & votes MVP"]
+    PRODAY --> SP["🤝 Pôle Sponsor & Partenaires<br/>Visibilité commerces locaux, packages & reçus fiscaux"]
+```
 
 ---
 
-## Monorepo
+## 🏗️ Architecture du Monorepo
 
 ```
 PRODAY/
-├── src/              App mobile Expo (React Native)     → src/README.md
-├── website/          Site Next.js — proday75.fr         → website/README.md
-├── functions/        Cloud Functions TypeScript         → functions/README.md
-├── firebase/         Règles Firestore / Storage         → firebase/README.md
-├── docs/             Guides opérateur & architecture    → docs/README.md
-├── assets/branding/  Logos & identité officielle        → assets/branding/README.md
-└── scripts/          CLI, branding, seed, bêta          → scripts/README.md
+├── src/                  Application mobile Expo (React Native & TypeScript)
+│   ├── features/admin/   Centre de commande exécutif VIP & outils rapides
+│   ├── screens/          Écrans des 6 pôles métier et auth
+│   ├── services/         Services Firestore, Gemini AI, Stripe & Storage
+│   └── context/          Contextes React (Auth, Mode, Admin, Offline)
+├── website/              Site web officiel (Next.js 16, React 19, Tailwind CSS 4)
+│   ├── public/downloads/ APK téléchargeable (proday-beta.apk)
+│   └── public/videos/    Vidéo Motion 60 FPS (proday-intro.mp4)
+├── functions/            Cloud Functions Firebase (TypeScript & Gemini Flash)
+├── firebase/             Règles de sécurité Firestore, Storage & Indexes
+├── assets/               Identité de marque, logos transparents, vidéo intro & Stories Instagram
+├── docs/                 Guides opérateur, conformité stores & architecture
+└── scripts/              Outils CLI, build APK local, seed démo & génération vidéo
 ```
-
-| Couche | Stack |
-|--------|--------|
-| **Mobile** | Expo SDK 54 · React Native · TypeScript · `com.proday.app` · version **1.0.8** |
-| **Site** | Next.js 16 (App Router) · React 19 · Tailwind 4 · Netlify |
-| **Backend** | Firebase Auth · Firestore · Storage · Cloud Functions · FCM |
-| **IA** | Mistral (highlights journal) via Cloud Functions |
-| **Builds** | EAS (`preview` APK · `testflight` / `production`) |
 
 ---
 
-## Démarrage
+## 🛠️ Stack Technologique
 
-### Prérequis
+| Couche | Technologies |
+| :--- | :--- |
+| **Mobile** | Expo SDK 54 · React Native 0.81.5 · React 19 · TypeScript 5.9 · Reanimated 3 |
+| **Web Production** | Next.js 16 (App Router / Turbopack) · Tailwind CSS 4 · Framer Motion · Netlify |
+| **Backend & Base** | Firebase Auth · Cloud Firestore · Cloud Storage · Cloud Functions (Node.js 20) |
+| **Intelligence Artificielle** | Google Gemini 1.5 Flash (génération de séances complètes d'entraînement) |
+| **Paiements & Mécénat** | Stripe API & Webhooks pour abonnements clubs et packs sponsoring |
+| **Builds & CI/CD** | EAS CLI (iOS TestFlight & Android APK/AAB) · Gradle 8.14 (JDK 17) |
 
-Node.js **20+** · compte Firebase `proday-155b0` · (optionnel) EAS CLI pour les builds store.
+---
 
+## ⚡ Démarrage Rapide
+
+### 1. Cloner et installer les dépendances
 ```bash
 git clone https://github.com/alfredgibeau-ahoussinou/PRODAY.git
 cd PRODAY
 npm install
-cp .env.example .env   # clés Firebase — voir docs/FIREBASE_SETUP.md
 ```
 
-### App mobile
-
+### 2. Configuration d'environnement
 ```bash
-npm start              # Expo — QR / simulateurs
-npm run ios            # Simulateur iOS
-npm run android        # Émulateur Android
+cp .env.example .env
+# Renseigner vos variables Firebase et Google Client ID
 ```
 
-### Site vitrine
-
+### 3. Lancer l'application mobile en local
 ```bash
-npm run website:dev    # → http://localhost:3000
-# ou : cd website && npm run dev
+npm start           # Lance le serveur Metro Expo
+npm run start:ios   # Lance le simulateur iOS
+npm run android     # Lance sur émulateur Android
 ```
 
-Variables site (bêta EmailJS, etc.) : `website/.env.example` → `website/.env.local`.  
-Déploiement Netlify : [website/README.md](website/README.md).
+### 4. Lancer le site web en local
+```bash
+npm run website:dev # Démarre Next.js sur http://localhost:3000
+```
 
-### Qualité
+---
+
+## 🧪 Tests & Qualité de Code
 
 ```bash
+# Vérification TypeScript stricte
 npm run typecheck
+
+# Exécution des 264 suites de tests Jest (1 386 tests unitaires)
 npm test
-npm run beta:check     # checklist avant PR / release bêta
+
+# Tests des Cloud Functions
+cd functions && npm test
 ```
 
 ---
 
-## Bêta
+## 🚀 Déploiement & Builds Bêta
 
-Inscription publique : [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)  
-Guides opérateur : [docs/BETA_GUIDE.md](docs/BETA_GUIDE.md) · [docs/BETA_LAUNCH.md](docs/BETA_LAUNCH.md)
+### 🍏 iOS (TestFlight)
+```bash
+# Build cloud sur EAS et soumission à App Store Connect
+npm run eas:build:testflight
+npm run eas:submit:testflight
+```
 
-Les CTA « Accès anticipé » pointent **uniquement** vers `/beta/inscription`.
+### 🤖 Android (APK & AAB)
+```bash
+# Compiler l'APK localement et le copier dans website/public/downloads/
+npm run android:apk:beta
+
+# Ou compiler via EAS Cloud
+npm run eas:build:android:apk
+```
+
+### 🌐 Site Web (Netlify Production)
+```bash
+cd website
+npm run netlify:deploy
+```
 
 ---
 
-## Documentation
+## 📄 Licence & Propriété
 
-| Document | Rôle |
-|----------|------|
-| [docs/README.md](docs/README.md) | Index complet |
-| [docs/STRUCTURE.md](docs/STRUCTURE.md) | Carte du monorepo |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Diagrammes techniques |
-| [docs/design/DESIGN_SYSTEM.md](docs/design/DESIGN_SYSTEM.md) | Identité visuelle |
-| [assets/branding/README.md](assets/branding/README.md) | Logos (usages store / UI / emails) |
-| [website/README.md](website/README.md) | Routes site & Netlify |
-| [src/README.md](src/README.md) | Navigation app |
-
----
-
-## Contact
-
-[proday75.fr](https://proday75.fr) · [proday.admin@gmail.com](mailto:proday.admin@gmail.com)  
-Code (privé) : [alfredgibeau-ahoussinou/PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY)  
-Docs (public) : [alfredgibeau-ahoussinou/PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
-
-**ProDay © 2026** — Tous droits réservés · [LICENSE](./LICENSE) · [SECURITY.md](./SECURITY.md) · [COPYRIGHT.md](./COPYRIGHT.md)
+© 2026 **ProDay** — Tous droits réservés.  
+Ce code est un logiciel propriétaire confidentiel. Toute reproduction ou distribution non autorisée est strictement interdite.
