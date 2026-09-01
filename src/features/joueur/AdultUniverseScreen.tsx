@@ -7,6 +7,7 @@ import type { JoueurPageIdentity } from '../../content/joueurPageIdentity';
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { FUT18_PREMIUM } from '../../theme/fut18PremiumPalette';
 import { ProDayText } from '../../components/ui/ProDayText';
+import { Icon } from '../../components/ui/Icon';
 import { PressableSpring } from '../../components/motion';
 import {
   JoueurActionRow,
@@ -246,21 +247,25 @@ export function AdultUniverseScreen({
                 {
                   t: isWoman ? 'Session' : 'S’entraîner',
                   s: '+XP session',
+                  icon: 'walk' as const,
                   a: onOpenTrain,
                 },
                 {
                   t: 'Matchs',
                   s: isWoman ? 'Calendrier & live' : 'Matchs live',
+                  icon: 'football' as const,
                   a: onOpenMatchs,
                 },
                 {
                   t: isWoman ? 'Club' : 'Groupe',
                   s: isWoman ? 'Ton équipe' : 'Ton groupe',
+                  icon: 'shield' as const,
                   a: onOpenClub,
                 },
                 {
                   t: 'Carte',
                   s: 'Passeport',
+                  icon: 'person' as const,
                   a: () => onOpenProfile?.() ?? nav.setActiveTab('profil'),
                 },
               ] as const
@@ -273,8 +278,11 @@ export function AdultUniverseScreen({
                 }}
                 scaleTo={0.98}
                 haptic
-                style={[styles.tile, { borderColor: JOUEUR_SITE.border }]}
+                style={[styles.tile, { borderColor: `${accent}33` }]}
               >
+                <View style={[styles.tileIconWrap, { backgroundColor: `${accent}18` }]}>
+                  <Icon name={tile.icon} size={18} color={accent} />
+                </View>
                 <ProDayText variant="section" style={styles.tileTitle}>
                   {tile.t}
                 </ProDayText>
@@ -384,13 +392,21 @@ const styles = StyleSheet.create({
   tile: {
     width: '47%',
     flexGrow: 1,
-    minHeight: 78,
-    borderRadius: 16,
+    minHeight: 96,
+    borderRadius: 18,
     borderWidth: 1,
     backgroundColor: FUT18_PREMIUM.panelBg,
     padding: spacing.md,
-    justifyContent: 'flex-end',
-    gap: 2,
+    justifyContent: 'space-between',
+    gap: 4,
+  },
+  tileIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
   tileTitle: {
     color: JOUEUR_SITE.foreground,
