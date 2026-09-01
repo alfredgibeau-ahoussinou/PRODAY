@@ -295,7 +295,6 @@ function createStyles(
     initial: {
       fontFamily: fontFamily.extrabold,
       fontSize: 18,
-      fontWeight: '800',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     body: { flex: 1, minWidth: 0, gap: 4 },
@@ -309,15 +308,13 @@ function createStyles(
       flex: 1,
       fontFamily: fontFamily.extrabold,
       fontSize: 16,
-      fontWeight: '800',
       letterSpacing: -0.2,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
-    nameUnread: { fontWeight: '900' },
+    nameUnread: { fontFamily: fontFamily.black },
     time: {
       fontFamily: fontFamily.semibold,
       fontSize: 11,
-      fontWeight: '600',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     preview: {

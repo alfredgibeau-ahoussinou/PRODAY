@@ -105,9 +105,9 @@ export const gradients = {
 } as const;
 
 export const typography = {
-  fontFamily: 'Inter',
-  displayFamily: 'Syne',
-  brandFamily: 'Sora',
+  fontFamily: 'Inter_400Regular',
+  displayFamily: 'Syne_700Bold',
+  brandFamily: 'Sora_700Bold',
   brandSlant: '0deg',
   sizes: {
     hero: 30,

@@ -140,9 +140,8 @@ function createStyles(
       justifyContent: 'center',
     },
     initial: {
-      fontFamily: fontFamily.bold,
+      fontFamily: fontFamily.extrabold,
       fontSize: 18,
-      fontWeight: '800',
     },
     body: { flex: 1, minWidth: 0, gap: 4 },
     head: {

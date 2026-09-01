@@ -30,6 +30,6 @@ export const CARPOOL_SITE = {
     string,
     string,
   ],
-  display: fontFamily.displayBold,
-  body: typography.fontFamily,
+  display: fontFamily.extrabold,
+  body: fontFamily.regular,
 } as const;

@@ -428,12 +428,11 @@ function createStyles(
     },
     tabLabel: {
       fontFamily: fontFamily.semibold,
-      fontWeight: '600',
       color: c.textMuted,
       fontSize: compact && Platform.OS !== 'web' ? 12 : 11,
       textAlign: 'center',
     },
-    tabLabelOn: { fontWeight: '800', fontFamily: fontFamily.extrabold },
+    tabLabelOn: { fontFamily: fontFamily.extrabold },
     badge: {
       minWidth: 18,
       height: 18,
