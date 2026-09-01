@@ -108,7 +108,6 @@ function cardStyles(tokens: ClubThemeTokens) {
       gap: clubSpace.md,
       paddingVertical: clubSpace.md,
       paddingHorizontal: clubSpace.lg,
-      paddingLeft: clubSpace.lg + 6,
       borderRadius: clubRadius.xl,
       backgroundColor: tokens.surface,
       borderWidth: 1,

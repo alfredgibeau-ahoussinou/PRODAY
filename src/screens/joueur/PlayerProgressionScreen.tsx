@@ -176,7 +176,7 @@ export function PlayerProgressionScreen({ embedded = false }: { embedded?: boole
 const styles = StyleSheet.create({
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: PLAYER_DARK.bg },
   scroll: { flex: 1 },
-  pad: { padding: spacing.lg, gap: spacing.md },
+  pad: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.md },
   statRow: { flexDirection: 'row', gap: spacing.sm },
   empty: { color: PLAYER_DARK.textMuted, marginTop: spacing.sm },
 });

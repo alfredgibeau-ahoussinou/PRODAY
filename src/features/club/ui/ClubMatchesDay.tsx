@@ -283,9 +283,8 @@ const heroStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     card: {
       gap: clubSpace.sm,
-      paddingVertical: clubSpace.xl,
+      paddingVertical: clubSpace.lg,
       paddingHorizontal: clubSpace.lg,
-      paddingLeft: clubSpace.lg + 6,
       borderRadius: clubRadius.xxl,
       backgroundColor: tokens.surface,
       borderWidth: 1,
