@@ -178,6 +178,7 @@ import { usePlatformFeatureFlags } from './src/hooks/usePlatformFeatureFlags';
 import { RetiredRoleScreen } from './src/screens/RetiredRoleScreen';
 import { isRetiredUserRole, isRetiredProductLine } from './src/utils/retiredRoles';
 import type { UserRole } from './src/models/User';
+import type { CarouselPoleId } from './src/models/CarouselPole';
 import type { ProductLineId } from './src/models/ProductLine';
 import { trafficService } from './src/services/traffic.service';
 import { referralService } from './src/services/referral.service';
@@ -304,6 +305,7 @@ function AppShell() {
     null
   );
   const [pendingAuthIntent, setPendingAuthIntent] = useState<AuthIntent | null>(null);
+  const [pendingChosenPole, setPendingChosenPole] = useState<CarouselPoleId | null>(null);
   const [pendingSignupProductLine, setPendingSignupProductLine] = useState<ProductLineId | null>(
     null,
   );
@@ -696,10 +698,17 @@ function AppShell() {
           },
           clearPendingProfile: () => setPendingProfileView(null),
           pendingAuthIntent,
-          openAuth: (intent) => {
+          pendingChosenPole,
+          openAuth: (intent, opts) => {
+            if (opts?.pole) setPendingChosenPole(opts.pole);
+            if (opts?.productLine) setPendingSignupProductLine(opts.productLine);
+            if (opts?.role) setPendingSignupRole(opts.role);
             setPendingAuthIntent(intent);
           },
-          clearPendingAuthIntent: () => setPendingAuthIntent(null),
+          clearPendingAuthIntent: () => {
+            setPendingAuthIntent(null);
+            setPendingChosenPole(null);
+          },
           pendingSignupProductLine,
           pendingSignupRole,
           openSponsorSignup: (tier) => {
@@ -831,6 +840,7 @@ function AppShell() {
               intent={pendingAuthIntent}
               signupProductLine={pendingSignupProductLine ?? undefined}
               signupInitialRole={pendingSignupRole ?? undefined}
+              initialPole={pendingChosenPole ?? undefined}
               onDismiss={dismissAuthOverlay}
             />
           ) : null}

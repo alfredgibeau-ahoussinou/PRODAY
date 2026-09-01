@@ -9,6 +9,7 @@ import Animated, {
 import { AuthScreen } from '../screens/AuthScreen';
 import type { AuthIntent } from '../context/TabNavigationContext';
 import type { UserRole } from '../models/User';
+import type { CarouselPoleId } from '../models/CarouselPole';
 import type { ProductLineId } from '../models/ProductLine';
 import { prodayMotion, useReducedMotion } from '../motion';
 import { AUTH_OVERLAY_ENTER } from './authOverlay';
@@ -17,6 +18,7 @@ type Props = {
   intent: AuthIntent;
   signupProductLine?: ProductLineId;
   signupInitialRole?: UserRole;
+  initialPole?: CarouselPoleId;
   onDismiss: () => void;
 };
 
@@ -28,6 +30,7 @@ export function AuthOverlayHost({
   intent,
   signupProductLine,
   signupInitialRole,
+  initialPole,
   onDismiss,
 }: Props) {
   const reduced = useReducedMotion();
@@ -67,8 +70,9 @@ export function AuthOverlayHost({
       accessibilityLabel="Connexion"
     >
       <AuthScreen
-        key={intent}
+        key={`${intent}-${initialPole ?? 'default'}`}
         initialIntent={intent}
+        initialPole={initialPole}
         signupProductLine={signupProductLine}
         signupInitialRole={signupInitialRole}
         onDismiss={onDismiss}

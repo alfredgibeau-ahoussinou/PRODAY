@@ -116,7 +116,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
       await setProductLine(line);
 
       if (!profile) {
-        tabNav?.openAuth('login');
+        tabNav?.openAuth('login', { pole });
       }
     },
     [setProductLine, setProSignupPresetRole, setClubShellMode, profile, tabNav],

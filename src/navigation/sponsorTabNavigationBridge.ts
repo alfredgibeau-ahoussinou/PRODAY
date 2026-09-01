@@ -57,6 +57,7 @@ export function useSponsorTabNavigationBridge({
       openProfile: () => navigate(sponsorTabRoute('marque')),
       clearPendingProfile: noop,
       pendingAuthIntent: null,
+      pendingChosenPole: null,
       openAuth: noop,
       clearPendingAuthIntent: noop,
       pendingSignupProductLine: null,

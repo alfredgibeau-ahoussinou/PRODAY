@@ -2,6 +2,7 @@ import React, { createContext, useContext } from 'react';
 import type { MainTabId } from '../navigation/mainTabConfig';
 
 import type { UserRole } from '../models/User';
+import type { CarouselPoleId } from '../models/CarouselPole';
 import type { ProductLineId } from '../models/ProductLine';
 
 export type AuthIntent = 'login' | 'signup';
@@ -46,7 +47,15 @@ export interface TabNavigationContextValue {
   clearPendingProfile: () => void;
 
   pendingAuthIntent: AuthIntent | null;
-  openAuth: (intent: AuthIntent) => void;
+  pendingChosenPole: CarouselPoleId | null;
+  openAuth: (
+    intent: AuthIntent,
+    opts?: {
+      productLine?: ProductLineId;
+      role?: UserRole;
+      pole?: CarouselPoleId;
+    },
+  ) => void;
   clearPendingAuthIntent: () => void;
 
   /** Inscription sponsor : ligne Pro + rôle sponsor. */

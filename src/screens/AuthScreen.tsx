@@ -43,6 +43,8 @@ import { isGoogleAuthConfigured } from '../config/oauth';
 import { isPlatformAdminEmail } from '../config/admin';
 import { Platform } from 'react-native';
 
+import type { CarouselPoleId } from '../models/CarouselPole';
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface AuthScreenProps {
@@ -50,6 +52,7 @@ interface AuthScreenProps {
   initialIntent?: AuthIntent;
   signupProductLine?: ProductLineId;
   signupInitialRole?: UserRole;
+  initialPole?: CarouselPoleId;
 }
 
 /**
@@ -60,6 +63,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   initialIntent = 'login',
   signupProductLine,
   signupInitialRole,
+  initialPole,
 }) => {
   const { loading: authLoading, configured, refreshProfile, isAdmin } = useAuth();
   const { setActiveTab } = useTabNavigation();
@@ -68,12 +72,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const { t } = useTranslation();
   const { isEnabled, disabledCopy } = usePlatformFeatureFlags();
   const registrationOpen = isEnabled('registration_open');
+  const quickLogin = useAuthQuickLogin();
+
+  const isAdminAuth =
+    initialPole === 'admin' ||
+    isAdmin ||
+    Boolean(quickLogin.savedEmail && isPlatformAdminEmail(quickLogin.savedEmail)) ||
+    signupInitialRole === ('admin' as any);
 
   const [mode, setMode] = useState<'login' | 'signupTeaser'>(
-    initialIntent === 'signup' && registrationOpen ? 'signupTeaser' : 'login',
+    !isAdminAuth && initialIntent === 'signup' && registrationOpen ? 'signupTeaser' : 'login',
   );
   const [signupOpen, setSignupOpen] = useState(
-    initialIntent === 'signup' && registrationOpen,
+    !isAdminAuth && initialIntent === 'signup' && registrationOpen,
   );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -90,7 +101,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const [postLoginReveal, setPostLoginReveal] = useState(false);
   const pendingAfterReveal = useRef<(() => void) | null>(null);
   const passwordRef = useRef<TextInput>(null);
-  const quickLogin = useAuthQuickLogin();
   const showOAuth =
     isGoogleAuthConfigured() || Platform.OS === 'ios';
 
@@ -111,6 +121,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   };
 
   const openSignup = useCallback(() => {
+    if (isAdminAuth) return;
     if (!registrationOpen) {
       setBanner(disabledCopy('registration_open').message);
       setMode('signupTeaser');
@@ -118,7 +129,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     }
     clearErrors();
     setSignupOpen(true);
-  }, [registrationOpen, disabledCopy]);
+  }, [isAdminAuth, registrationOpen, disabledCopy]);
 
   const closeSignup = useCallback(() => {
     setSignupOpen(false);
@@ -263,11 +274,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   );
 
   const universeAuthCopy = useMemo(() => {
-    if (isAdmin || (quickLogin.savedEmail && isPlatformAdminEmail(quickLogin.savedEmail))) {
+    if (isAdminAuth) {
       return {
         kicker: 'ACCÈS FONDATION VIP',
         title: 'Espace Administrateur',
-        sub: 'Connexion sécurisée réservée aux fondateurs et administrateurs ProDay.',
+        sub: 'Connexion réservée aux fondateurs et administrateurs autorisés.',
         cta: 'Connexion Admin',
       };
     }
@@ -317,7 +328,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       sub: 'Connectez-vous pour accéder à vos statistiques, matchs et CV sportif.',
       cta: 'Connexion Joueur',
     };
-  }, [productLine, signupInitialRole, isAdmin, quickLogin.savedEmail]);
+  }, [isAdminAuth, productLine, signupInitialRole]);
 
   return (
     <>
@@ -426,27 +437,35 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   <AuthSocialButtons
                     disabled={loading}
                     onSuccess={() => void goHomeAfterAuth()}
-                    onNeedsProfile={(prefill) => {
-                      if (!registrationOpen) {
-                        setBanner(disabledCopy('registration_open').message);
-                        return;
-                      }
-                      setSignupPrefill(prefill);
-                      openSignup();
-                    }}
+                    onNeedsProfile={
+                      !isAdminAuth
+                        ? (prefill) => {
+                            if (!registrationOpen) {
+                              setBanner(disabledCopy('registration_open').message);
+                              return;
+                            }
+                            setSignupPrefill(prefill);
+                            openSignup();
+                          }
+                        : () => {
+                            setBanner('Accès administrateur non autorisé pour ce compte.');
+                          }
+                    }
                     onError={(msg) => setBanner(msg)}
                   />
                 </>
               ) : null}
 
-              <View style={styles.switchRow}>
-                <AuthLink
-                  leading={t('auth.newOnProday')}
-                  label={t('auth.createAccount')}
-                  onPress={openSignup}
-                  align="center"
-                />
-              </View>
+              {!isAdminAuth ? (
+                <View style={styles.switchRow}>
+                  <AuthLink
+                    leading={t('auth.newOnProday')}
+                    label={t('auth.createAccount')}
+                    onPress={openSignup}
+                    align="center"
+                  />
+                </View>
+              ) : null}
             </View>
           ) : !registrationOpen ? (
             <FeatureDisabledPanel flag="registration_open" />

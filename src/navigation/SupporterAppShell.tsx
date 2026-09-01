@@ -128,6 +128,7 @@ export const SupporterAppShell: React.FC = () => {
         },
         clearPendingProfile: () => setPendingProfileView(null),
         pendingAuthIntent: null,
+        pendingChosenPole: null,
         openAuth: () => handleTabPress('profil'),
         clearPendingAuthIntent: () => undefined,
         pendingSignupProductLine: null,
