@@ -239,6 +239,7 @@ describe('ecosystem — carousel poles', () => {
       'parent',
       'supporter',
       'sponsor',
+      'admin',
       'sante',
     ]);
     expect(normalizeCarouselPole('amateur')).toBe('joueur');

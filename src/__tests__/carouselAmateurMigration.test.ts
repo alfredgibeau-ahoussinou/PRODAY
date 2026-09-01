@@ -19,6 +19,7 @@ describe('migration carousel Pôle Joueur (écosystème)', () => {
       'parent',
       'supporter',
       'sponsor',
+      'admin',
     ]);
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('amateur');
     expect(UNIVERSE_CHOICE_ORDER).not.toContain('pro_player');

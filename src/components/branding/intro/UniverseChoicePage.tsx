@@ -45,19 +45,19 @@ const POLE_DESCRIPTIONS: Record<CarouselPoleId, string> = {
 };
 
 const POLE_INDEX_LABEL: Record<CarouselPoleId, string> = {
-  joueur: '01 / 07',
-  amateur: '01 / 07',
-  pro_player: '01 / 07',
-  coach: '02 / 07',
-  pro_staff: '02 / 07',
-  pro_club: '03 / 07',
-  evenements: '03 / 07',
-  president: '03 / 07',
-  parent: '04 / 07',
-  supporter: '05 / 07',
-  sponsor: '06 / 07',
-  sante: '07 / 07',
-  admin: 'VIP EXCLUSIF',
+  joueur: '01 / 08',
+  amateur: '01 / 08',
+  pro_player: '01 / 08',
+  pro_club: '02 / 08',
+  evenements: '02 / 08',
+  president: '03 / 08',
+  coach: '04 / 08',
+  pro_staff: '04 / 08',
+  parent: '05 / 08',
+  supporter: '06 / 08',
+  sponsor: '07 / 08',
+  admin: '08 / 08 · VIP',
+  sante: 'SANTÉ',
 };
 
 export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({

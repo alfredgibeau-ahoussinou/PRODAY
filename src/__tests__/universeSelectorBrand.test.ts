@@ -78,10 +78,10 @@ describe('sélecteur univers — brand + ACL', () => {
     expect(universePoleTagline('pro_club').length).toBeLessThanOrEqual(60);
   });
 
-  it('pré-auth / admin : vitrine complète (avec pôle admin pour les administrateurs)', () => {
+  it('pré-auth / admin : vitrine complète (avec pôle admin)', () => {
     expect(filterAccessibleUniversePoles(null)).toEqual(UNIVERSE_CHOICE_ORDER);
     expect(filterAccessibleUniversePoles({ isAdmin: true, role: 'player' })).toEqual(
-      [...UNIVERSE_CHOICE_ORDER, 'admin'],
+      UNIVERSE_CHOICE_ORDER,
     );
   });
 

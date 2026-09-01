@@ -37,7 +37,7 @@ export function filterAccessibleUniversePoles(
   const showcase = UNIVERSE_CHOICE_ORDER.map(normalizeCarouselPole);
 
   if (opts.isAdmin) {
-    return [...showcase, 'admin'];
+    return Array.from(new Set([...showcase, 'admin']));
   }
 
   if (
@@ -49,6 +49,7 @@ export function filterAccessibleUniversePoles(
   }
 
   return showcase.filter((pole) => {
+    if (pole === 'admin') return opts.isAdmin === true;
     const line = carouselPoleToProductLine(pole);
     if (canAccessProductLine(role, line)) return true;
     // Parent peut ouvrir le guest Supporter (shell dédié).

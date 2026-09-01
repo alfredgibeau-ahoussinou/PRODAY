@@ -37,6 +37,7 @@ export const CAROUSEL_SHOWCASE_POLE_ORDER: CarouselPoleId[] = [
   'parent',
   'supporter',
   'sponsor',
+  'admin',
 ];
 
 /** Hors vitrine GTM — rôle médical intégré, page sur invitation. */
