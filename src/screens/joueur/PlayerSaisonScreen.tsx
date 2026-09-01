@@ -22,7 +22,7 @@ export function PlayerSaisonScreen() {
         segmentRow: {
           flexDirection: 'row',
           gap: spacing.sm,
-          paddingHorizontal: spacing.lg,
+          paddingHorizontal: spacing.md,
           paddingTop: spacing.sm,
           paddingBottom: spacing.xs,
         },
