@@ -417,15 +417,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
         pointerEvents="none"
       />
 
-      {/* Halo ambient — accent unique de l’univers actif (JS, pas worklet). */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.ambientGlow,
-          { backgroundColor: activeAccent },
-          ambientStyle,
-        ]}
-      />
+
 
       {cinematic ? (
         <View style={styles.cinematicStage} pointerEvents="none">

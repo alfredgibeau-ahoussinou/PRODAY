@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { spacing, radius } from '../../../theme/designTokens';
@@ -13,7 +12,6 @@ import { Icon } from '../../ui/Icon';
 import { prodayMotion, useReducedMotion } from '../../../motion';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_ACCENT, UNIVERSE_SHORT } from './universeIntroAccents';
-import { UNIVERSE_AMBIENT_FALLBACK } from './universePagerSnap';
 import {
   universeEnterCtaLabel,
   universePoleDisplayName,
@@ -51,14 +49,13 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   onChoose,
   onJumpToIndex,
   hidePagerDots = false,
-  sideRail,
 }) => {
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const [guideVisible, setGuideVisible] = React.useState(false);
   const activeLine = lines[activeIndex] ?? lines[0];
-  const activeAccent =
-    (activeLine ? UNIVERSE_ACCENT[activeLine] : undefined) ?? UNIVERSE_AMBIENT_FALLBACK;
+  const rawAccent = activeLine ? UNIVERSE_ACCENT[activeLine] : undefined;
+  const activeAccent = !rawAccent || rawAccent.toUpperCase() === '#FFFFFF' ? '#F5D04A' : rawAccent;
   const isLightCta = activeAccent.toUpperCase() === '#FFFFFF';
   const ctaLabel = activeLine ? universeEnterCtaLabel(activeLine) : '';
   const linesCount = lines.length;
@@ -120,8 +117,8 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         style={[
           styles.top,
           {
-            paddingTop: insets.top + (cinematic ? spacing.lg : spacing.sm),
-            paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
+            paddingTop: insets.top + 8,
+            paddingHorizontal: 20,
           },
         ]}
       >
@@ -151,8 +148,8 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         style={[
           styles.bottom,
           {
-            paddingBottom: insets.bottom + spacing.md,
-            paddingHorizontal: cinematic ? spacing.xl * 1.5 : spacing.lg,
+            paddingBottom: insets.bottom + 16,
+            paddingHorizontal: 20,
           },
         ]}
         pointerEvents="box-none"
@@ -220,17 +217,19 @@ const styles = StyleSheet.create({
   },
   top: {
     paddingHorizontal: 20,
+    zIndex: 3,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    minHeight: 40,
   },
   headerTitleWrap: {
     flex: 1,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.75)',
     letterSpacing: -0.2,
@@ -253,6 +252,7 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: 'stretch',
     paddingHorizontal: 20,
+    zIndex: 3,
   },
   dots: {
     flexDirection: 'row',
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     maxWidth: 380,
   },
   cta: {
-    minHeight: 52,
+    minHeight: 54,
     borderRadius: radius.pill,
     flexDirection: 'row',
     alignItems: 'center',
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#07100C',
     letterSpacing: 0.2,
     textAlign: 'center',

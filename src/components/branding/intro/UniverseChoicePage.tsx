@@ -76,7 +76,7 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   const description = POLE_DESCRIPTIONS[line] || '';
   const indexLabel = POLE_INDEX_LABEL[line] || '01 / 07';
 
-  const symbolSize = cinematic ? 140 : 115;
+  const symbolSize = cinematic ? 120 : 92;
   const styles = useMemo(
     () => createStyles(itemWidth, cinematic),
     [itemWidth, cinematic],
@@ -130,9 +130,6 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   return (
     <Animated.View style={[styles.root, stageStyle]}>
       <View style={styles.centerStage}>
-        {/* Halo d'ambiance ultra-doux */}
-        <View style={[styles.softHalo, { backgroundColor: accent }]} />
-
         {/* Symbole officiel ProDay haute fidélité */}
         <View style={styles.symbolWrap}>
           <ProDaySymbol variant={variant} size={symbolSize} />
@@ -140,7 +137,7 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
 
         {/* Kicker minimaliste */}
         <View style={styles.kickerRow}>
-          <View style={[styles.kickerDot, { backgroundColor: accent }]} />
+          <View style={[styles.kickerDot, { backgroundColor: accent === '#FFFFFF' ? '#F5D04A' : accent }]} />
           <Text style={styles.kickerText}>{indexLabel}</Text>
         </View>
 
@@ -158,45 +155,37 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   );
 };
 
-const createStyles = (itemWidth: number, cinematic: boolean) =>
-  StyleSheet.create({
+function createStyles(itemWidth: number, cinematic: boolean) {
+  return StyleSheet.create({
     root: {
       width: itemWidth,
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
+      paddingTop: 70,
+      paddingBottom: 130,
     },
     centerStage: {
       width: '100%',
       maxWidth: cinematic ? 420 : 340,
       alignItems: 'center',
       justifyContent: 'center',
-      position: 'relative',
-      paddingVertical: 12,
-    },
-    softHalo: {
-      position: 'absolute',
-      width: 260,
-      height: 260,
-      borderRadius: 130,
-      top: -20,
-      alignSelf: 'center',
-      opacity: 0.12,
     },
     symbolWrap: {
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 20,
+      marginBottom: 24,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.4,
-      shadowRadius: 20,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.35,
+      shadowRadius: 16,
     },
     kickerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      marginBottom: 8,
+      marginBottom: 10,
     },
     kickerDot: {
       width: 5,
@@ -204,7 +193,7 @@ const createStyles = (itemWidth: number, cinematic: boolean) =>
       borderRadius: 2.5,
     },
     kickerText: {
-      color: 'rgba(255, 255, 255, 0.5)',
+      color: 'rgba(255, 255, 255, 0.45)',
       fontSize: 11,
       fontWeight: '700',
       letterSpacing: 1.5,
@@ -216,7 +205,7 @@ const createStyles = (itemWidth: number, cinematic: boolean) =>
       fontWeight: '800',
       letterSpacing: -0.6,
       textAlign: 'center',
-      marginBottom: 10,
+      marginBottom: 12,
     },
     description: {
       color: 'rgba(255, 255, 255, 0.65)',
@@ -227,3 +216,4 @@ const createStyles = (itemWidth: number, cinematic: boolean) =>
       maxWidth: 300,
     },
   });
+}
