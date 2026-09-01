@@ -35,20 +35,85 @@ interface UniverseChoicePageProps {
   focused?: boolean;
 }
 
-const POLE_FEATURES: Record<CarouselPoleId, string[]> = {
-  joueur: ['CV Sportif en ligne', 'Stats réelles de match', 'Détections & Mercato'],
-  amateur: ['CV Sportif en ligne', 'Stats réelles de match', 'Détections & Mercato'],
-  pro_player: ['CV Sportif en ligne', 'Stats réelles de match', 'Détections & Mercato'],
-  coach: ['Séances IA Blood Bath', 'Tableau tactique', 'Convocations RSVP'],
-  pro_staff: ['Séances IA Blood Bath', 'Tableau tactique', 'Convocations RSVP'],
-  pro_club: ['Gestion des effectifs', 'Tournois en direct', 'Licences & Adhésions'],
-  evenements: ['Organisation tournois', 'Matchs amicaux', 'Tableaux en direct'],
-  president: ['Cockpit décisionnel', 'Finances & Devis', 'Contrats & Staff'],
-  parent: ['Espace jeunes sécurisé', 'Contrôle tuteur', 'Covoiturage club'],
-  supporter: ['Scores & matchs en direct', 'Tribune & communauté', 'Votes MVP'],
-  sponsor: ['Packs de sponsoring', 'Visibilité locale', 'Reçus fiscaux'],
-  sante: ['Suivi médical & forme', 'Charge physique', 'Prévention blessures'],
-  admin: ['Centre de commande VIP', 'Surveillance IA & Système', 'Vérifications & Devis'],
+const POLE_PERKS: Record<CarouselPoleId, { icon: string; title: string }[]> = {
+  joueur: [
+    { icon: '⚡', title: 'CV & Highlight Vidéo' },
+    { icon: '📊', title: 'Statistiques Réelles' },
+    { icon: '🎯', title: 'Détections & Mercato' },
+    { icon: '🔥', title: 'Assistant IA Training' },
+  ],
+  amateur: [
+    { icon: '⚡', title: 'CV & Highlight Vidéo' },
+    { icon: '📊', title: 'Statistiques Réelles' },
+    { icon: '🎯', title: 'Détections & Mercato' },
+    { icon: '🔥', title: 'Assistant IA Training' },
+  ],
+  pro_player: [
+    { icon: '⚡', title: 'CV & Highlight Vidéo' },
+    { icon: '📊', title: 'Statistiques Réelles' },
+    { icon: '🎯', title: 'Détections & Mercato' },
+    { icon: '🔥', title: 'Assistant IA Training' },
+  ],
+  coach: [
+    { icon: '🔥', title: 'Séances IA Blood Bath' },
+    { icon: '📋', title: 'Tableau Tactique 3D' },
+    { icon: '📲', title: 'Convocations & RSVP' },
+    { icon: '📈', title: 'Forme & Débriefs' },
+  ],
+  pro_staff: [
+    { icon: '🔥', title: 'Séances IA Blood Bath' },
+    { icon: '📋', title: 'Tableau Tactique 3D' },
+    { icon: '📲', title: 'Convocations & RSVP' },
+    { icon: '📈', title: 'Forme & Débriefs' },
+  ],
+  pro_club: [
+    { icon: '🛡️', title: 'Gestion Effectifs U7-Seniors' },
+    { icon: '🏆', title: 'Tournois & Live Scores' },
+    { icon: '📝', title: 'Licences & Adhésions' },
+    { icon: '🚗', title: 'Covoiturage Équipe' },
+  ],
+  evenements: [
+    { icon: '🏆', title: 'Tournois & Live Scores' },
+    { icon: '🤝', title: 'Matchs Amicaux' },
+    { icon: '📊', title: 'Poules & Classements' },
+    { icon: '📢', title: 'Billetterie Événement' },
+  ],
+  president: [
+    { icon: '👑', title: 'Cockpit Décisionnel' },
+    { icon: '💰', title: 'Finances & Devis' },
+    { icon: '📜', title: 'Contrats & Staff' },
+    { icon: '⚡', title: 'Validation Membres' },
+  ],
+  parent: [
+    { icon: '👨‍👩‍👧', title: 'Espace Jeunes Sécurisé' },
+    { icon: '🛡️', title: 'Contrôle Parental & Tuteur' },
+    { icon: '🚗', title: 'Covoiturage Matchs' },
+    { icon: '💬', title: 'Lien Direct Coach' },
+  ],
+  supporter: [
+    { icon: '🔴', title: 'Matchs & Scores Live' },
+    { icon: '🎬', title: 'Reels Vidéo & Buts' },
+    { icon: '⭐', title: 'Élection Joueur MVP' },
+    { icon: '🏟️', title: 'Tribune Communauté' },
+  ],
+  sponsor: [
+    { icon: '💎', title: 'Packs Visibilité Locale' },
+    { icon: '🎯', title: 'Mécénat & Déduction' },
+    { icon: '🤝', title: 'Partenariats Clubs' },
+    { icon: '📈', title: 'Portée & ROI Mesuré' },
+  ],
+  sante: [
+    { icon: '❤️', title: 'Bilan Médical & Forme' },
+    { icon: '⚡', title: 'Charge Physique & GPS' },
+    { icon: '🛡️', title: 'Prévention Blessures' },
+    { icon: '🩺', title: 'Suivi Kiné & Staff' },
+  ],
+  admin: [
+    { icon: '👑', title: 'Centre de Commande VIP' },
+    { icon: '🤖', title: 'Surveillance IA & Système' },
+    { icon: '⚡', title: 'Vérifications & Devis' },
+    { icon: '🛡️', title: 'Contrôle Déploiements' },
+  ],
 };
 
 const POLE_NUMBERS: Record<CarouselPoleId, string> = {
@@ -67,6 +132,22 @@ const POLE_NUMBERS: Record<CarouselPoleId, string> = {
   sante: '07',
 };
 
+const POLE_BADGE: Record<CarouselPoleId, string> = {
+  admin: 'ACCÈS FONDATION',
+  joueur: 'PASS ATHLÈTE',
+  amateur: 'PASS ATHLÈTE',
+  pro_player: 'PASS PRO',
+  coach: 'PASS STAFF',
+  pro_staff: 'PASS STAFF',
+  pro_club: 'PASS DIRIGEANT',
+  evenements: 'PASS EVENT',
+  president: 'PASS EXÉCUTIF',
+  parent: 'PASS FAMILLE',
+  supporter: 'PASS FAN CLUB',
+  sponsor: 'PASS PARTENAIRE',
+  sante: 'PASS MÉDICAL',
+};
+
 export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   line,
   index,
@@ -77,13 +158,19 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
   staticFocus = false,
   focused = true,
 }) => {
-  const accent = UNIVERSE_ACCENT[line] || '#C5A059';
+  const accent = UNIVERSE_ACCENT[line] || '#F5D04A';
   const variant = brandVariantForCarouselPole(line);
   const poleNum = POLE_NUMBERS[line] || '01';
   const poleName = universePoleDisplayName(line);
-  const features = POLE_FEATURES[line] || ['Performance', 'Développement', 'Partage'];
+  const badgeLabel = POLE_BADGE[line] || 'PASS PRODAY';
+  const perks = POLE_PERKS[line] || [
+    { icon: '⚡', title: 'Performance' },
+    { icon: '🔥', title: 'Entraînement' },
+    { icon: '🤝', title: 'Partage' },
+    { icon: '🏆', title: 'Victoire' },
+  ];
 
-  const symbolSize = cinematic ? 120 : 96;
+  const symbolSize = cinematic ? 110 : 88;
   const styles = useMemo(
     () => createStyles(itemWidth, cinematic),
     [itemWidth, cinematic],
@@ -135,48 +222,68 @@ export const UniverseChoicePage: React.FC<UniverseChoicePageProps> = ({
 
   return (
     <Animated.View style={[styles.root, stageStyle]}>
-      {/* Carte Holographique ProDay */}
-      <View style={[styles.card, { borderColor: `${accent}40` }]}>
+      {/* Carte Fitness Park / Athletic Pass */}
+      <View style={[styles.card, { borderColor: `${accent}60` }]}>
+        {/* Background Carbon & Dégradé athlétique */}
         <LinearGradient
-          colors={[
-            `${accent}22`,
-            'rgba(18, 26, 22, 0.85)',
-            'rgba(7, 16, 12, 0.95)',
-          ]}
+          colors={['#16221B', '#0E1712', '#07100C']}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0.9, y: 1 }}
+          end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
 
-        {/* Halo lumineux d'ambiance */}
+        {/* Liseré supérieur néon / accent */}
+        <View style={[styles.topNeonStripe, { backgroundColor: accent }]} />
+
+        {/* Halo d'ambiance intense */}
         <View style={[styles.halo, { backgroundColor: accent }]} />
 
-        {/* Header de la carte : Numéro & Kicker */}
+        {/* Header de la carte de membre : Numéro + Badge Type */}
         <View style={styles.cardHeader}>
-          <View style={[styles.numBadge, { borderColor: `${accent}60`, backgroundColor: `${accent}18` }]}>
-            <Text style={[styles.numText, { color: accent }]}>{poleNum}</Text>
+          <View style={[styles.numBadge, { backgroundColor: accent }]}>
+            <Text style={styles.numText}>{poleNum}</Text>
           </View>
-          <Text style={[styles.kickerText, { color: accent }]}>PÔLE {poleName.toUpperCase()}</Text>
+          <View style={[styles.typeBadge, { borderColor: `${accent}70`, backgroundColor: `${accent}18` }]}>
+            <Text style={[styles.typeText, { color: accent }]}>{badgeLabel}</Text>
+          </View>
         </View>
 
-        {/* Symbole officiel ProDay au centre */}
-        <View style={styles.symbolWrap}>
-          <ProDaySymbol variant={variant} size={symbolSize} />
+        {/* Bloc Titre Athlétique & Symbole Central */}
+        <View style={styles.centerBlock}>
+          <View style={styles.symbolAura}>
+            <ProDaySymbol variant={variant} size={symbolSize} />
+          </View>
+          <Text style={[styles.poleTitle, { color: '#FFFFFF' }]}>
+            {poleName.toUpperCase()}
+          </Text>
         </View>
 
-        {/* Séparateur subtil */}
-        <View style={[styles.divider, { backgroundColor: `${accent}30` }]} />
-
-        {/* Liste des fonctionnalités clés */}
-        <View style={styles.featuresList}>
-          {features.map((feat, fIdx) => (
-            <View key={fIdx} style={styles.featureRow}>
-              <View style={[styles.featureDot, { backgroundColor: accent }]} />
-              <Text style={styles.featureText} numberOfLines={1}>
-                {feat}
+        {/* Grille 2x2 des avantages & fonctionnalités (Style Fitness Park) */}
+        <View style={styles.perksGrid}>
+          {perks.map((perk, pIdx) => (
+            <View
+              key={pIdx}
+              style={[
+                styles.perkItem,
+                { borderColor: 'rgba(255, 255, 255, 0.08)', backgroundColor: 'rgba(255, 255, 255, 0.04)' },
+              ]}
+            >
+              <Text style={styles.perkIcon}>{perk.icon}</Text>
+              <Text style={styles.perkTitle} numberOfLines={1}>
+                {perk.title}
               </Text>
             </View>
           ))}
+        </View>
+
+        {/* Pied de Carte : Puce Digitale & Sécurité ProDay */}
+        <View style={styles.cardFooter}>
+          <View style={styles.chipGraphic}>
+            <View style={[styles.chipLine, { backgroundColor: accent }]} />
+            <View style={[styles.chipLine, { backgroundColor: accent }]} />
+            <View style={[styles.chipLine, { backgroundColor: accent }]} />
+          </View>
+          <Text style={styles.footerCode}>PRODAY · ATHLETIC CLUB 2026</Text>
         </View>
       </View>
     </Animated.View>
@@ -193,84 +300,141 @@ const createStyles = (itemWidth: number, cinematic: boolean) =>
     },
     card: {
       width: '100%',
-      maxWidth: cinematic ? 380 : 340,
+      maxWidth: cinematic ? 390 : 345,
       borderRadius: 24,
-      borderWidth: 1.5,
-      padding: cinematic ? 24 : 20,
+      borderWidth: 2,
+      padding: cinematic ? 24 : 18,
       alignItems: 'center',
       overflow: 'hidden',
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.45,
-      shadowRadius: 20,
-      elevation: 8,
-      minHeight: cinematic ? 340 : 290,
+      shadowOffset: { width: 0, height: 16 },
+      shadowOpacity: 0.6,
+      shadowRadius: 24,
+      elevation: 12,
+      minHeight: cinematic ? 370 : 330,
       justifyContent: 'space-between',
+      position: 'relative',
+    },
+    topNeonStripe: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 4,
     },
     halo: {
       position: 'absolute',
-      width: 180,
-      height: 180,
-      borderRadius: 90,
-      top: -30,
+      width: 220,
+      height: 220,
+      borderRadius: 110,
+      top: -40,
       alignSelf: 'center',
-      opacity: 0.18,
+      opacity: 0.22,
     },
     cardHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
+      justifyContent: 'space-between',
       width: '100%',
-      justifyContent: 'flex-start',
+      marginTop: 4,
     },
     numBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
       borderRadius: 8,
-      borderWidth: 1,
     },
     numText: {
+      color: '#07100C',
       fontFamily: 'System',
-      fontSize: 12,
-      fontWeight: '800',
+      fontSize: 13,
+      fontWeight: '900',
       letterSpacing: 0.5,
     },
-    kickerText: {
+    typeBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 20,
+      borderWidth: 1,
+    },
+    typeText: {
       fontFamily: 'System',
-      fontSize: 12,
-      fontWeight: '700',
-      letterSpacing: 1.5,
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 1,
       textTransform: 'uppercase',
     },
-    symbolWrap: {
-      marginVertical: cinematic ? 18 : 12,
+    centerBlock: {
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    divider: {
-      width: '100%',
-      height: 1,
-      marginVertical: 10,
-    },
-    featuresList: {
-      width: '100%',
+      marginVertical: cinematic ? 12 : 8,
       gap: 8,
-      paddingTop: 4,
     },
-    featureRow: {
+    symbolAura: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.5,
+      shadowRadius: 16,
+    },
+    poleTitle: {
+      fontFamily: 'System',
+      fontSize: cinematic ? 22 : 19,
+      fontWeight: '900',
+      letterSpacing: 1.8,
+      textAlign: 'center',
+    },
+    perksGrid: {
+      width: '100%',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      justifyContent: 'space-between',
+      marginTop: 4,
+    },
+    perkItem: {
+      width: '48.5%',
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 6,
+      paddingVertical: 7,
+      paddingHorizontal: 8,
+      borderRadius: 10,
+      borderWidth: 1,
     },
-    featureDot: {
-      width: 5,
-      height: 5,
-      borderRadius: 2.5,
-    },
-    featureText: {
-      color: '#E0E8E5',
+    perkIcon: {
       fontSize: 13,
-      fontWeight: '500',
-      letterSpacing: 0.2,
+    },
+    perkTitle: {
+      color: '#E2E8F0',
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.1,
+      flex: 1,
+    },
+    cardFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    chipGraphic: {
+      flexDirection: 'row',
+      gap: 3,
+    },
+    chipLine: {
+      width: 4,
+      height: 12,
+      borderRadius: 2,
+      opacity: 0.7,
+    },
+    footerCode: {
+      color: 'rgba(255, 255, 255, 0.35)',
+      fontSize: 9,
+      fontWeight: '800',
+      letterSpacing: 1.5,
     },
   });
