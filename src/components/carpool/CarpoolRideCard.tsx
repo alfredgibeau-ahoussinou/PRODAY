@@ -99,8 +99,11 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
     }
   };
 
-  const handleBook = async () => {
-    if (!pickupPlace.trim() && !pickupLocation) {
+  const handleBook = async (forceDirect = false) => {
+    const effectivePlace = pickupPlace.trim() || profile.city || (forceDirect ? 'Point de RDV par défaut' : '');
+    const effectiveLocation = pickupLocation ?? profile.location;
+
+    if (!forceDirect && !pickupPlace.trim() && !pickupLocation && !profile.city && !profile.location) {
       Alert.alert(t('carpool.standalone.form.pickupRequired'), t('carpool.ride.pickupRequired'));
       return;
     }
@@ -112,8 +115,8 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
         profile.uid,
         profile.display_name,
         {
-          pickup_place: pickupPlace.trim() || undefined,
-          pickup_location: pickupLocation,
+          pickup_place: effectivePlace || undefined,
+          pickup_location: effectiveLocation,
         }
       );
       onUpdated();
@@ -124,6 +127,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
       setBusy(false);
     }
   };
+
 
   const handleCancel = async () => {
     setBusy(true);
@@ -195,30 +199,50 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
             disabled={busy}
             compact
           />
-          <PressableSpring
-            onPress={() => {
-              prodayHaptics.confirm();
-              void handleBook();
-            }}
-            disabled={busy}
-            scaleTo={0.96}
-            haptic={!busy}
-            style={styles.ticketCta}
-          >
-            {busy ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <ProDayText variant="caption" style={styles.ticketCtaText}>
-                Réserver une place
+          <View style={styles.bookButtonsRow}>
+            <PressableSpring
+              onPress={() => {
+                prodayHaptics.confirm();
+                void handleBook(true);
+              }}
+              disabled={busy}
+              scaleTo={0.96}
+              haptic={!busy}
+              style={[styles.ticketCta, styles.ticketDirectCta]}
+            >
+              {busy ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <View style={styles.directBtnContent}>
+                  <Icon name="star-four-points" size={14} color={palette.onSignal} />
+                  <ProDayText variant="caption" style={styles.ticketCtaText}>
+                    Réserver en 1 tap
+                  </ProDayText>
+                </View>
+              )}
+            </PressableSpring>
+            <PressableSpring
+              onPress={() => {
+                prodayHaptics.confirm();
+                void handleBook(false);
+              }}
+              disabled={busy}
+              scaleTo={0.96}
+              haptic={!busy}
+              style={[styles.ticketGhost, { flex: 1 }]}
+            >
+              <ProDayText variant="caption" style={styles.ticketGhostText}>
+                Confirmer avec GPS
               </ProDayText>
-            )}
-          </PressableSpring>
+            </PressableSpring>
+          </View>
         </>
       ) : isMine ? (
         <ProDayText variant="caption" style={styles.ticketGhostText}>
           Votre trajet
         </ProDayText>
       ) : null}
+
     </View>
   );
 
@@ -388,30 +412,49 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
                 disabled={busy}
                 compact
               />
-            <PressableSpring
-              onPress={() => {
-                prodayHaptics.confirm();
-                void handleBook();
-              }}
-              disabled={busy}
-              scaleTo={0.96}
-              haptic={!busy}
-            >
-              <ProDayGradient kind="cta" style={cardStyles.primaryBtn}>
-                {busy ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <>
-                    <Icon name="checkmark-circle" size={14} color="#FFFFFF" />
-                    <ProDayText variant="caption" inverse style={cardStyles.btnText}>
-                      Réserver une place
-                    </ProDayText>
-                  </>
-                )}
-              </ProDayGradient>
-            </PressableSpring>
+            <View style={{ flexDirection: 'row', gap: spacing.xs, alignItems: 'center' }}>
+              <PressableSpring
+                onPress={() => {
+                  prodayHaptics.confirm();
+                  void handleBook(true);
+                }}
+                disabled={busy}
+                scaleTo={0.96}
+                haptic={!busy}
+              >
+                <ProDayGradient kind="cta" style={cardStyles.primaryBtn}>
+                  {busy ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <>
+                      <Icon name="star-four-points" size={14} color="#FFFFFF" />
+                      <ProDayText variant="caption" inverse style={cardStyles.btnText}>
+                        1-tap
+                      </ProDayText>
+                    </>
+                  )}
+                </ProDayGradient>
+              </PressableSpring>
+              <PressableSpring
+                onPress={() => {
+                  prodayHaptics.confirm();
+                  void handleBook(false);
+                }}
+                disabled={busy}
+                scaleTo={0.96}
+                haptic={!busy}
+              >
+                <View style={[cardStyles.ghostBtn, { borderColor: colors.accent, marginBottom: 0 }]}>
+                  <Icon name="checkmark-circle" size={14} color={colors.accent} />
+                  <ProDayText variant="caption" accent style={cardStyles.btnText}>
+                    Réserver
+                  </ProDayText>
+                </View>
+              </PressableSpring>
+            </View>
             </>
           ) : isMine ? (
+
             <ProDayText variant="caption" accent>
               Votre trajet
             </ProDayText>
@@ -525,5 +568,21 @@ function createTicketStyles(palette: CarpoolUiPalette) {
       backgroundColor: palette.signal,
     },
     ticketCtaText: { fontWeight: '800', color: palette.onSignal },
+    bookButtonsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    ticketDirectCta: {
+      flex: 1.2,
+      paddingVertical: 12,
+    },
+    directBtnContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+    },
   });
 }
+

@@ -29,6 +29,9 @@ import { parseFrenchDate } from '../../utils/parseFrenchDate';
 import { ImmersivePoleHero, ImmersiveStepStrip } from '../../components/poles';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { useJoueurProgress } from '../../context/JoueurProgressContext';
+import { prodayHaptics } from '../../utils/prodayHaptics';
+import { joueurGameReward } from '../../features/joueur/joueurSfx';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import {
   JoueurPageFrame,
@@ -36,6 +39,7 @@ import {
   JoueurActionRow,
   JoueurKpiRow,
 } from '../../components/player/joueurPortalUi';
+
 import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { spacing, radius } from '../../theme/designTokens';
@@ -177,12 +181,71 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
   const [myBookings, setMyBookings] = useState<CoachSessionBooking[]>([]);
   const [payingId, setPayingId] = useState<string | null>(null);
   const [aiObjective, setAiObjective] = useState<TrainingObjective>('pied_faible');
+
   const [aiLevel, setAiLevel] = useState<TrainingLevel>('intermediate');
   const [aiDuration, setAiDuration] = useState(30);
   const [aiEquipment, setAiEquipment] = useState<string[]>(['ballon']);
   const [aiPartner, setAiPartner] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiResult, setAiResult] = useState<TrainingPhase[] | null>(null);
+  const progressApi = useJoueurProgress();
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerInitial, setTimerInitial] = useState(60);
+  const [xpRewardEarned, setXpRewardEarned] = useState<number | null>(null);
+
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (timerRunning) {
+      interval = setInterval(() => {
+        setTimerSeconds((s) => {
+          if (s <= 1) {
+            setTimerRunning(false);
+            prodayHaptics.confirm();
+            void completeTrainingSession(selected?.duration_min ? selected.duration_min * 10 : 30);
+            return 0;
+          }
+          return s - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [timerRunning, selected?.duration_min]);
+
+  const startStopwatch = (durationSec = 60) => {
+    setTimerInitial(durationSec);
+    setTimerSeconds(durationSec);
+    setTimerRunning(true);
+    setXpRewardEarned(null);
+    prodayHaptics.press();
+  };
+
+  const toggleStopwatch = () => {
+    if (timerSeconds === 0) {
+      startStopwatch(timerInitial);
+    } else {
+      setTimerRunning((r) => !r);
+      prodayHaptics.press();
+    }
+  };
+
+  const resetStopwatch = () => {
+    setTimerRunning(false);
+    setTimerSeconds(timerInitial);
+    setXpRewardEarned(null);
+  };
+
+  const completeTrainingSession = async (xpGain = 30) => {
+    setXpRewardEarned(xpGain);
+    joueurGameReward('xp');
+    if (progressApi) {
+      await progressApi.grantXp(xpGain, 1);
+    }
+  };
+
 
   const exercises = useMemo(
     () =>
@@ -589,6 +652,87 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
               ))}
             </>
           ) : null}
+
+          {/* Chronomètre Interactif & Feedback XP */}
+          <ProDaySurface variant="module" style={[styles.timerCard, { borderColor: ui.border }]}>
+            <View style={styles.timerHeader}>
+              <Icon name="time" size={20} color={ui.brand} />
+              <ProDayText variant="section" style={{ flex: 1 }}>
+                Chronomètre d'entraînement
+              </ProDayText>
+              {xpRewardEarned ? (
+                <View style={[styles.xpPill, { backgroundColor: ui.brand }]}>
+                  <ProDayText variant="caption" inverse style={{ fontWeight: '900' }}>
+                    +{xpRewardEarned} XP VALIDÉ
+                  </ProDayText>
+                </View>
+              ) : null}
+            </View>
+
+            <View style={styles.timerDisplayWrap}>
+              <ProDayText variant="hero" style={[styles.timerDigit, { color: timerRunning ? ui.brand : ui.text }]}>
+                {Math.floor(timerSeconds / 60)}:{(timerSeconds % 60).toString().padStart(2, '0')}
+              </ProDayText>
+              <ProDayText variant="caption" muted>
+                {timerRunning ? 'Session en cours… donne tout !' : timerSeconds === 0 && xpRewardEarned ? 'Exercice accompli avec succès !' : 'Prêt à démarrer la séance ?'}
+              </ProDayText>
+            </View>
+
+            <View style={styles.timerPresetsRow}>
+              {[30, 60, 120, 300].map((sec) => (
+                <PressableSpring
+                  key={sec}
+                  style={[
+                    styles.timerPresetChip,
+                    { borderColor: ui.border },
+                    timerInitial === sec && { backgroundColor: `${ui.brand}22`, borderColor: ui.brand },
+                  ]}
+                  onPress={() => startStopwatch(sec)}
+                  scaleTo={0.96}
+                >
+                  <ProDayText variant="caption" style={{ color: timerInitial === sec ? ui.brand : ui.textSecondary, fontWeight: '700' }}>
+                    {sec < 60 ? `${sec}s` : `${sec / 60}m`}
+                  </ProDayText>
+                </PressableSpring>
+              ))}
+            </View>
+
+            <View style={styles.timerControlsRow}>
+              <PressableSpring
+                style={[styles.timerMainBtn, { backgroundColor: ui.brand }]}
+                onPress={toggleStopwatch}
+                scaleTo={0.97}
+                haptic
+              >
+                <Icon name={timerRunning ? 'time' : 'play'} size={18} color={ui.brandInverse} />
+                <ProDayText variant="section" inverse style={styles.timerBtnText}>
+                  {timerRunning ? 'Pause' : timerSeconds === 0 ? 'Démarrer' : 'Reprendre'}
+                </ProDayText>
+              </PressableSpring>
+
+              <PressableSpring
+                style={[styles.timerResetBtn, { borderColor: ui.border }]}
+                onPress={resetStopwatch}
+                scaleTo={0.97}
+                haptic
+              >
+                <Icon name="time" size={16} color={ui.textSecondary} />
+              </PressableSpring>
+
+              <PressableSpring
+                style={[styles.timerFinishBtn, { backgroundColor: `${ui.brand}22`, borderColor: ui.brand }]}
+                onPress={() => void completeTrainingSession(selected.duration_min ? selected.duration_min * 10 : 30)}
+                scaleTo={0.97}
+                haptic
+              >
+                <Icon name="checkmark-circle" size={16} color={ui.brand} />
+                <ProDayText variant="caption" style={{ color: ui.brand, fontWeight: '800' }}>
+                  Valider XP
+                </ProDayText>
+              </PressableSpring>
+            </View>
+          </ProDaySurface>
+
         </ScrollView>
       </View>
       </PushScreenTransition>
@@ -1072,5 +1216,81 @@ function createStyles(c: AppColors) {
       paddingVertical: spacing.sm,
       alignItems: 'center',
     },
+    timerCard: {
+      marginTop: spacing.lg,
+      borderWidth: 1.5,
+      borderRadius: radius.xl,
+      padding: spacing.md,
+      gap: spacing.md,
+    },
+    timerHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    xpPill: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+    },
+    timerDisplayWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.md,
+      gap: 4,
+    },
+    timerDigit: {
+      fontSize: 48,
+      fontWeight: '900',
+      letterSpacing: 2,
+    },
+    timerPresetsRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
+    timerPresetChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+    },
+    timerControlsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    timerMainBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+      paddingVertical: 12,
+      borderRadius: radius.pill,
+    },
+    timerBtnText: {
+      fontWeight: '900',
+      letterSpacing: 0.5,
+    },
+    timerResetBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    timerFinishBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+    },
   });
 }
+

@@ -1008,21 +1008,32 @@ export interface ChatMessage {
   receiver_id: string;
   body: string;
   created_at: Date;
+  reactions?: Record<string, string[]>;
 }
 
 export function chatMessageFromFirestore(
   id: string,
   data: Record<string, unknown>
 ): ChatMessage {
+  const reactionsRaw = (data.reactions as Record<string, unknown> | undefined) ?? {};
+  const reactions: Record<string, string[]> = {};
+  for (const [emoji, uids] of Object.entries(reactionsRaw)) {
+    if (Array.isArray(uids)) {
+      reactions[emoji] = uids.map(String);
+    }
+  }
+
   return {
     id,
     thread_id: String(data.thread_id ?? ''),
     sender_id: String(data.sender_id ?? ''),
     receiver_id: String(data.receiver_id ?? ''),
     body: String(data.body ?? ''),
+    reactions: Object.keys(reactions).length > 0 ? reactions : undefined,
     created_at: toDate(data.created_at),
   };
 }
+
 
 export function clubAnnouncementFromFirestore(
   id: string,

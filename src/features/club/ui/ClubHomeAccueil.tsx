@@ -601,6 +601,91 @@ export function ClubHomeWeekPeek({
   );
 }
 
+/** Tracker de statut des dossiers de licences (Certificat médical, Paiement cotisation, Licence validée FFF). */
+export function ClubHomeLicenseTrackerCard({
+  pendingCount,
+  medicalMissingCount = 0,
+  paymentPendingCount = 0,
+  fffPendingCount = 0,
+  onPress,
+}: {
+  pendingCount: number;
+  medicalMissingCount?: number;
+  paymentPendingCount?: number;
+  fffPendingCount?: number;
+  onPress: () => void;
+}) {
+  const { tokens } = useClubTheme();
+  const styles = useMemo(() => licenseTrackerStyles(tokens), [tokens]);
+
+  const hasIssues = pendingCount > 0 || medicalMissingCount > 0 || paymentPendingCount > 0 || fffPendingCount > 0;
+
+  return (
+    <AnimatedEntrance kind="fadeUp" index={3} delayStep={36}>
+      <PressableSpring onPress={onPress} scaleTo={0.98} haptic style={styles.card}>
+        <View style={styles.head}>
+          <View style={[styles.iconBadge, { backgroundColor: hasIssues ? tokens.warningSoft : tokens.pitchSoft }]}>
+            <Icon name="document" size={18} color={hasIssues ? tokens.warning : tokens.pitch} />
+          </View>
+          <View style={styles.col}>
+            <View style={styles.titleRow}>
+              <ClubText variant="body" style={{ fontWeight: '700' }}>
+                Suivi dossiers de licences
+              </ClubText>
+              {pendingCount > 0 ? (
+                <View style={[styles.countChip, { backgroundColor: tokens.warningSoft }]}>
+                  <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '800', fontSize: 11 }}>
+                    {pendingCount} en attente
+                  </ClubText>
+                </View>
+              ) : null}
+            </View>
+            <ClubText variant="caption" muted numberOfLines={1}>
+              Certificat médical · Cotisation · Validation FFF
+            </ClubText>
+          </View>
+          <Icon name="chevron-forward" size={15} color={tokens.faint} />
+        </View>
+
+        <View style={styles.stepsRow}>
+          <View style={[styles.stepItem, { borderColor: medicalMissingCount > 0 ? tokens.warning + '66' : tokens.pitch + '55', backgroundColor: medicalMissingCount > 0 ? tokens.warningSoft : tokens.pitchSoft }]}>
+            <Icon
+              name={medicalMissingCount > 0 ? 'alert-circle' : 'checkmark-circle'}
+              size={12}
+              color={medicalMissingCount > 0 ? tokens.warning : tokens.pitch}
+            />
+            <ClubText variant="caption" style={{ color: medicalMissingCount > 0 ? tokens.warning : tokens.pitch, fontWeight: '700', fontSize: 11 }}>
+              {medicalMissingCount > 0 ? `${medicalMissingCount} certif. manquant` : 'Certificats OK'}
+            </ClubText>
+          </View>
+
+          <View style={[styles.stepItem, { borderColor: paymentPendingCount > 0 ? tokens.warning + '66' : tokens.pitch + '55', backgroundColor: paymentPendingCount > 0 ? tokens.warningSoft : tokens.pitchSoft }]}>
+            <Icon
+              name={paymentPendingCount > 0 ? 'gift' : 'checkmark-circle'}
+              size={12}
+              color={paymentPendingCount > 0 ? tokens.warning : tokens.pitch}
+            />
+            <ClubText variant="caption" style={{ color: paymentPendingCount > 0 ? tokens.warning : tokens.pitch, fontWeight: '700', fontSize: 11 }}>
+              {paymentPendingCount > 0 ? `${paymentPendingCount} cotis. dues` : 'Cotisations OK'}
+            </ClubText>
+          </View>
+
+          <View style={[styles.stepItem, { borderColor: fffPendingCount > 0 ? tokens.accent + '66' : tokens.pitch + '55', backgroundColor: fffPendingCount > 0 ? tokens.accentSoft : tokens.pitchSoft }]}>
+            <Icon
+              name={fffPendingCount > 0 ? 'time' : 'checkmark-circle'}
+              size={12}
+              color={fffPendingCount > 0 ? tokens.accent : tokens.pitch}
+            />
+            <ClubText variant="caption" style={{ color: fffPendingCount > 0 ? tokens.accent : tokens.pitch, fontWeight: '700', fontSize: 11 }}>
+              {fffPendingCount > 0 ? `${fffPendingCount} FFF en cours` : 'Licences FFF OK'}
+            </ClubText>
+          </View>
+        </View>
+      </PressableSpring>
+    </AnimatedEntrance>
+  );
+}
+
 /** Alerte présence — RSVP en attente (conservée pour réemploi ; Accueil privilégie le CTA priorité). */
 export function ClubHomePresenceAlert({
   pendingCount,
@@ -1298,6 +1383,58 @@ const presenceStyles = (tokens: ClubThemeTokens) =>
       justifyContent: 'center',
     },
     col: { flex: 1, minWidth: 0, gap: 2 },
+  });
+
+const licenseTrackerStyles = (tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    card: {
+      gap: clubSpace.sm,
+      paddingVertical: clubSpace.md,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.xl,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.soft,
+    },
+    head: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.sm,
+    },
+    iconBadge: {
+      width: 36,
+      height: 36,
+      borderRadius: clubRadius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    col: { flex: 1, minWidth: 0, gap: 2 },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.xs,
+    },
+    countChip: {
+      paddingVertical: 1,
+      paddingHorizontal: 6,
+      borderRadius: clubRadius.pill,
+    },
+    stepsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: clubSpace.xs,
+      paddingTop: 2,
+    },
+    stepItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 3,
+      paddingHorizontal: 8,
+      borderRadius: clubRadius.pill,
+      borderWidth: 1,
+    },
   });
 
 const commPeekStyles = (tokens: ClubThemeTokens) =>

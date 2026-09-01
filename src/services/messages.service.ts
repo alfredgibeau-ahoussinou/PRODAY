@@ -379,6 +379,30 @@ export const messagesService = {
     );
   },
 
+  async toggleReaction(
+    messageId: string,
+    emoji: string,
+    uid: string,
+  ): Promise<void> {
+
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const ref = doc(database, 'messages', messageId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+    const data = snap.data() as Record<string, unknown>;
+    const reactions = (data.reactions as Record<string, string[]> | undefined) ?? {};
+    const existing = reactions[emoji] ?? [];
+    const hasReacted = existing.includes(uid);
+    const nextList = hasReacted
+      ? existing.filter((id) => id !== uid)
+      : [...existing, uid];
+
+    await updateDoc(ref, {
+      [`reactions.${emoji}`]: nextList.length > 0 ? nextList : arrayRemove(uid),
+    });
+  },
+
   subscribeMessages(
     threadId: string,
     onUpdate: (messages: ChatMessage[]) => void,
@@ -407,3 +431,4 @@ export const messagesService = {
     );
   },
 };
+

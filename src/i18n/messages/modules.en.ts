@@ -139,8 +139,12 @@ export const MODULES_EN: MessageCatalog = {
   'messages.chapter.inbox': 'Conversations',
   'messages.chapter.network': 'Network',
   'messages.filter.all': 'All',
+  'messages.filter.coach': 'Coach',
+  'messages.filter.team': 'Locker / Team',
+  'messages.filter.mercato': 'Market / Transfers',
   'messages.filter.unread': 'Unread',
   'messages.filter.care': 'Physio',
+
   'messages.stats.threads': 'threads',
   'messages.stats.unread': 'unread',
   'messages.stats.care': 'physio',

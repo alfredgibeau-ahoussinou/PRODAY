@@ -10,7 +10,15 @@ interface SponsorAnalyticsPanelProps {
 
 export const SponsorAnalyticsPanel: React.FC<SponsorAnalyticsPanelProps> = ({ analytics }) => (
   <View style={styles.wrap}>
-    <Text style={styles.title}>Performance marque</Text>
+    <View style={styles.headerRow}>
+      <Text style={styles.title}>Performance marque</Text>
+      {typeof analytics.engagement_score === 'number' ? (
+        <View style={styles.scoreBadge}>
+          <Text style={styles.scoreLabel}>Score d'engagement</Text>
+          <Text style={styles.scoreValue}>{analytics.engagement_score}/100</Text>
+        </View>
+      ) : null}
+    </View>
     <View style={styles.row}>
       <Metric label="Impressions" value={formatNum(analytics.impressions)} />
       <Metric label="Clics offres" value={formatNum(analytics.offer_clicks)} highlight />
@@ -18,9 +26,15 @@ export const SponsorAnalyticsPanel: React.FC<SponsorAnalyticsPanelProps> = ({ an
     </View>
     <View style={styles.row}>
       <Metric label="Clubs touchés" value={String(analytics.clubs_reached)} />
-      <Metric label="Vues profil" value={formatNum(analytics.profile_views)} />
+      <Metric label="Taux de clic" value={`${analytics.ctr_rate ?? (analytics.impressions > 0 ? Math.round((analytics.offer_clicks / analytics.impressions) * 100) : 0)} %`} />
       <Metric label="Conversion" value={`${analytics.conversion_rate} %`} />
     </View>
+    {analytics.estimated_roi_eur ? (
+      <View style={styles.roiBanner}>
+        <Text style={styles.roiLabel}>Retombées estimées :</Text>
+        <Text style={styles.roiValue}>+{analytics.estimated_roi_eur.toLocaleString('fr-FR')} €</Text>
+      </View>
+    ) : null}
   </View>
 );
 
@@ -55,7 +69,56 @@ const styles = StyleSheet.create({
     color: SPONSOR_THEME.sectionLabel,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.sm,
+  },
+  scoreBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: radius.pill,
+    backgroundColor: SPONSOR_THEME.primarySoft,
+    borderWidth: 1,
+    borderColor: SPONSOR_THEME.primary + '55',
+  },
+  scoreLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: SPONSOR_THEME.primary,
+    textTransform: 'uppercase',
+  },
+  scoreValue: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: SPONSOR_THEME.primary,
+  },
+  roiBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: 'rgba(234, 179, 8, 0.08)',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.25)',
+    marginTop: 2,
+  },
+  roiLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: SPONSOR_THEME.textMuted,
+  },
+  roiValue: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: SPONSOR_THEME.primary,
   },
   row: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
   metric: {

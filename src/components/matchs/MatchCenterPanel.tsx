@@ -10,7 +10,10 @@ import {
 } from '../../utils/matchLive';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { MatchLiveEventCard } from './MatchLiveEventCard';
+import { MatchCountdownWidget } from './MatchCountdownWidget';
+import { MatchMvpVoteWidget } from './MatchMvpVoteWidget';
 import { LivePulseDot, StaggerReveal, PressableSpring } from '../motion';
+
 import { ProDayText } from '../ui/ProDayText';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
@@ -97,6 +100,15 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
 
       {featured ? (
         <StaggerReveal index={0}>
+          {!featuredLive && resolveLiveState(featured).status === 'scheduled' ? (
+            <MatchCountdownWidget
+              startsAt={featured.starts_at}
+              matchTitle={featured.title}
+              opponent={featured.live_state?.opponent_name}
+              accentColor={accent}
+              style={{ marginBottom: spacing.sm }}
+            />
+          ) : null}
           <FeaturedMatchCard
             event={featured}
             isLive={featuredLive}
@@ -104,6 +116,7 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
           />
         </StaggerReveal>
       ) : null}
+
 
       {liveNow.length > 0 ? (
         <View style={styles.section}>
@@ -134,21 +147,23 @@ export const MatchCenterPanel: React.FC<MatchCenterPanelProps> = ({
         </View>
       ) : null}
 
-      {finishedToday.length > 0 && liveNow.length === 0 ? (
+      {finishedToday.length > 0 ? (
         <View style={styles.section}>
           <ProDayText variant="caption" style={[styles.sectionKicker, { color: MATCH_SITE.muted }]}>
             Terminés · {finishedToday.length}
           </ProDayText>
-          {finishedToday.slice(0, 4).map((e, index) => (
-            <StaggerReveal key={e.id} index={upcoming.length + index + 1}>
+          {finishedToday.map((e) => (
+            <View key={e.id} style={{ gap: spacing.xs }}>
               <MatchLiveEventCard event={e} onPress={() => onOpenEvent(e.id)} />
-            </StaggerReveal>
+              <MatchMvpVoteWidget event={e} currentUid={e.organizer_uid} accentColor={accent} />
+            </View>
           ))}
         </View>
       ) : null}
     </View>
   );
 };
+
 
 function MatchChapterHero({ title, subtitle }: { title: string; subtitle: string }) {
   const skin = useMatchSkinTokens();

@@ -80,11 +80,18 @@ export function ClubPlayersPendingHero({
   );
 }
 
-/** Ligne demande pending avec Valider / Refuser. */
+export type LicenseFolderStatus = {
+  medicalCertificate?: 'valid' | 'pending' | 'missing';
+  membershipFee?: 'paid' | 'pending' | 'unpaid';
+  fffLicense?: 'validated' | 'in_review' | 'pending';
+};
+
+/** Ligne demande pending avec Valider / Refuser et tracker de dossier de licence. */
 export function ClubPlayersPendingRow({
   name,
   teamHint,
   busy,
+  licenseStatus,
   onOpen,
   onApprove,
   onReject,
@@ -92,12 +99,23 @@ export function ClubPlayersPendingRow({
   name: string;
   teamHint?: string;
   busy?: boolean;
+  licenseStatus?: LicenseFolderStatus;
   onOpen: () => void;
   onApprove: () => void;
   onReject: () => void;
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => pendingRowStyles(tokens), [tokens]);
+
+  const medical = licenseStatus?.medicalCertificate ?? 'missing';
+  const payment = licenseStatus?.membershipFee ?? 'pending';
+  const fff = licenseStatus?.fffLicense ?? 'pending';
+
+  const badgeColor = (status: string) => {
+    if (status === 'valid' || status === 'paid' || status === 'validated') return tokens.pitch;
+    if (status === 'in_review' || status === 'pending') return tokens.warning;
+    return tokens.danger;
+  };
 
   return (
     <View style={styles.row}>
@@ -112,6 +130,38 @@ export function ClubPlayersPendingRow({
           <ClubText variant="caption" muted numberOfLines={1}>
             {teamHint?.trim() || 'Adhésion en attente'}
           </ClubText>
+          <View style={styles.trackerRow}>
+            <View style={[styles.trackerPill, { borderColor: badgeColor(medical) + '55', backgroundColor: badgeColor(medical) + '15' }]}>
+              <Icon
+                name={medical === 'valid' ? 'checkmark-circle' : medical === 'pending' ? 'time' : 'alert-circle'}
+                size={11}
+                color={badgeColor(medical)}
+              />
+              <ClubText variant="caption" style={{ color: badgeColor(medical), fontSize: 10, fontWeight: '700' }}>
+                Certif. médical
+              </ClubText>
+            </View>
+            <View style={[styles.trackerPill, { borderColor: badgeColor(payment) + '55', backgroundColor: badgeColor(payment) + '15' }]}>
+              <Icon
+                name={payment === 'paid' ? 'checkmark-circle' : 'gift'}
+                size={11}
+                color={badgeColor(payment)}
+              />
+              <ClubText variant="caption" style={{ color: badgeColor(payment), fontSize: 10, fontWeight: '700' }}>
+                Cotisation
+              </ClubText>
+            </View>
+            <View style={[styles.trackerPill, { borderColor: badgeColor(fff) + '55', backgroundColor: badgeColor(fff) + '15' }]}>
+              <Icon
+                name={fff === 'validated' ? 'checkmark-circle' : fff === 'in_review' ? 'time' : 'document'}
+                size={11}
+                color={badgeColor(fff)}
+              />
+              <ClubText variant="caption" style={{ color: badgeColor(fff), fontSize: 10, fontWeight: '700' }}>
+                Licence FFF
+              </ClubText>
+            </View>
+          </View>
         </View>
       </PressableSpring>
       <View style={styles.actions}>
@@ -237,6 +287,21 @@ const pendingRowStyles = (tokens: ClubThemeTokens) =>
       justifyContent: 'center',
     },
     col: { flex: 1, minWidth: 0, gap: 2 },
+    trackerRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 4,
+      marginTop: 4,
+    },
+    trackerPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      paddingVertical: 2,
+      paddingHorizontal: 6,
+      borderRadius: clubRadius.pill,
+      borderWidth: 1,
+    },
     actions: {
       flexDirection: 'row',
       justifyContent: 'flex-end',

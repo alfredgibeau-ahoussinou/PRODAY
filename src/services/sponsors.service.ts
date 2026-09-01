@@ -273,6 +273,21 @@ export const sponsorsService = {
       this.countProfileViews(sponsorUid),
     ]);
     const fundedGoals = new Set(contributions.map((c) => c.goal_id));
+    const totalContributed = contributions.reduce((s, c) => s + (c.amount_eur ?? 0), 0);
+    const ctrRate = impressions > 0 ? Math.round((offerClicks / impressions) * 100) : 0;
+    const engagementScore = Math.min(
+      100,
+      Math.round(
+        (impressions > 0 ? 20 : 0) +
+          (offerClicks * 5) +
+          (leads * 15) +
+          (fundedGoals.size * 20)
+      )
+    );
+    const estimatedRoiEur = totalContributed > 0
+      ? Math.round(totalContributed * 1.8 + leads * 150)
+      : Math.round(leads * 150 + offerClicks * 10);
+
     return {
       impressions,
       profile_views: profileViews,
@@ -280,6 +295,9 @@ export const sponsorsService = {
       clubs_reached: fundedGoals.size,
       leads,
       conversion_rate: offerClicks > 0 ? Math.round((leads / offerClicks) * 100) : 0,
+      engagement_score: engagementScore,
+      ctr_rate: ctrRate,
+      estimated_roi_eur: estimatedRoiEur,
     };
   },
 

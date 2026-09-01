@@ -110,6 +110,9 @@ export function getMessagesChapters(t: TranslateFn) {
 export function getMessagesThreadFilters(t: TranslateFn) {
   return [
     { id: 'all' as const, label: tr(t, 'messages.filter.all', 'Tous') },
+    { id: 'coach' as const, label: tr(t, 'messages.filter.coach', 'Coach') },
+    { id: 'team' as const, label: tr(t, 'messages.filter.team', 'Vestiaire / Équipe') },
+    { id: 'mercato' as const, label: tr(t, 'messages.filter.mercato', 'Mercato') },
     { id: 'unread' as const, label: tr(t, 'messages.filter.unread', 'Non lus') },
     { id: 'care' as const, label: tr(t, 'messages.filter.care', 'Kiné') },
   ] satisfies { id: MessagesThreadFilter; label: string }[];
@@ -120,8 +123,9 @@ export function getCoachMessagesThreadFilters(t: TranslateFn) {
   return getMessagesThreadFilters(t).filter((f) => f.id !== 'care');
 }
 
-/** Filtres messagerie joueur — sans Kiné (Tous + Non lus). */
+/** Filtres messagerie joueur — avec Coach, Vestiaire/Équipe, Mercato. */
 export const getJoueurMessagesThreadFilters = getCoachMessagesThreadFilters;
+
 
 export function getCarpoolChapters(t: TranslateFn) {
   return [

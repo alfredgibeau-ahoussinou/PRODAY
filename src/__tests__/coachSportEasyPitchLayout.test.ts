@@ -1,3 +1,16 @@
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+jest.mock('firebase/auth', () => ({
+  onAuthStateChanged: jest.fn(),
+}));
+jest.mock('firebase/firestore', () => ({
+  doc: jest.fn(),
+  onSnapshot: jest.fn(),
+}));
+jest.mock('../lib/firebase', () => ({ getFirebaseAuth: jest.fn(), getDb: jest.fn() }));
+jest.mock('../config/firebase', () => ({ isFirebaseConfigured: jest.fn(() => false) }));
+
 import type { EventLineupSlot } from '../models/TeamEvent';
 import { layoutPitchTokens } from '../utils/formationPitch';
 import {
@@ -55,5 +68,15 @@ describe('coachSportEasyPitchLayout', () => {
       { uid: 's1', display_name: 'Remplaçant Un', role: 'sub' },
     ]);
     expect(bench[0]).toMatchObject({ uid: 's1', jerseyNumber: 12, shortName: 'R. Un' });
+  });
+
+  it('fournit les consignes d’animation tactiques (pressing, bloc, projection)', () => {
+    const { TACTICAL_DIRECTIVES } = require('../utils/coachTacticalDirectives');
+    expect(TACTICAL_DIRECTIVES.pressing).toBeDefined();
+    expect(TACTICAL_DIRECTIVES.pressing.badge).toContain('Pressing');
+    expect(TACTICAL_DIRECTIVES.bloc).toBeDefined();
+    expect(TACTICAL_DIRECTIVES.bloc.badge).toContain('Bloc');
+    expect(TACTICAL_DIRECTIVES.projection).toBeDefined();
+    expect(TACTICAL_DIRECTIVES.projection.badge).toContain('Projection');
   });
 });

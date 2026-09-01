@@ -640,6 +640,27 @@ export const teamEventsService = {
     }
   },
 
+  async sendRsvpReminders(
+    eventId: string,
+    actor?: TeamEventActor,
+  ): Promise<{ remindedCount: number; recipientUids: string[] }> {
+    const event = await this.getById(eventId);
+    if (!event) throw new Error('Événement introuvable');
+    if (actor) assertManage(event, actor);
+    const { executeBulkRsvpReminders } = await import('../utils/coachRsvpReminders');
+    const result = await executeBulkRsvpReminders([event], actor);
+    return { remindedCount: result.remindedCount, recipientUids: result.recipientUids };
+  },
+
+  async sendBulkRsvpReminders(
+    events: TeamEvent[],
+    actor?: TeamEventActor,
+  ): Promise<{ remindedCount: number; eventCount: number }> {
+    const { executeBulkRsvpReminders } = await import('../utils/coachRsvpReminders');
+    const result = await executeBulkRsvpReminders(events, actor);
+    return { remindedCount: result.remindedCount, eventCount: result.eventCount };
+  },
+
   async addInvitees(eventId: string, uids: string[], actor: TeamEventActor): Promise<void> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');

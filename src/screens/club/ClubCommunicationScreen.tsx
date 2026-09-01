@@ -13,7 +13,12 @@ import {
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
-import { ClubCommInboxHero, ClubCommTileRow } from '../../features/club/ui/ClubCommunicationHub';
+import {
+  ClubCommInboxHero,
+  ClubCommTileRow,
+  ClubUrgentAnnouncementsCard,
+  type ClubUrgentAnnouncement,
+} from '../../features/club/ui/ClubCommunicationHub';
 import {
   buildClubCommHubTiles,
   resolveClubCommSubtitle,
@@ -84,6 +89,21 @@ export function ClubCommunicationScreen() {
       }),
     [ws.pendingMemberships, unreadNotifications, unreadMessages],
   );
+
+  const urgentAnnouncements = useMemo<ClubUrgentAnnouncement[]>(() => {
+    const list: ClubUrgentAnnouncement[] = [];
+    if (ws.teamsWithoutCoach > 0) {
+      list.push({
+        id: 'urgent-no-coach',
+        type: 'general_alert',
+        title: `${ws.teamsWithoutCoach} équipe(s) sans encadrement`,
+        message: 'Affectez un coach pour sécuriser les prochaines séances et rencontres officielles.',
+        priority: 'high',
+        targetGroup: 'Staff technique',
+      });
+    }
+    return list;
+  }, [ws.teamsWithoutCoach]);
 
   const onTile = (id: ClubCommTileId) => {
     switch (id) {
@@ -159,6 +179,11 @@ export function ClubCommunicationScreen() {
           ]}
           value={channel}
           onChange={setChannel}
+        />
+
+        <ClubUrgentAnnouncementsCard
+          announcements={urgentAnnouncements}
+          onCreateUrgent={() => setChannel('inbox')}
         />
 
         <ClubCommInboxHero

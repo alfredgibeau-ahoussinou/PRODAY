@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,10 +11,13 @@ import Svg, {
   Defs,
   G,
   Line,
+  Path,
+  Polygon,
   Rect,
 } from 'react-native-svg';
-import { PressableSpring } from '../motion';
+import { PressableSpring } from '../motion/PressableSpring';
 import { Icon } from '../ui/Icon';
+
 import { CoachText } from './coachPortalUi';
 import {
   useCoachTheme,
@@ -23,6 +26,17 @@ import {
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { radius, spacing } from '../../theme/designTokens';
 import { fillPitchSlots } from '../../utils/formationPitch';
+import {
+  TACTICAL_DIRECTIVES,
+  type TacticalAnimationDirective,
+  type TacticalDirectiveConfig,
+} from '../../utils/coachTacticalDirectives';
+
+export {
+  TACTICAL_DIRECTIVES,
+  type TacticalAnimationDirective,
+  type TacticalDirectiveConfig,
+};
 
 const GRASS_A = '#43B05A';
 const GRASS_B = '#348C42';
@@ -58,6 +72,9 @@ export type CoachSportEasyPitchSurfaceProps = {
   pendingBenchUid?: string | null;
   formations?: readonly string[];
   onFormationChange?: (formation: string) => void;
+  directive?: TacticalAnimationDirective;
+  onDirectiveChange?: (directive: TacticalAnimationDirective) => void;
+  showDirectivesSelector?: boolean;
   variant?: 'card' | 'embedded';
   showHeader?: boolean;
   showBench?: boolean;
@@ -69,7 +86,215 @@ function isFilled(cell: CoachEasyPitchCell | null | undefined): boolean {
   return Boolean(cell?.uid);
 }
 
-export function SportEasyPitchMarkings() {
+export function TacticalAnimationOverlay({
+  directive,
+}: {
+  directive?: TacticalAnimationDirective;
+}) {
+  if (!directive || directive === 'none') return null;
+
+  if (directive === 'pressing') {
+    return (
+      <G opacity={0.94}>
+        {/* Zone de déclenchement pressing */}
+        <Circle
+          cx={34}
+          cy={20}
+          r={9}
+          fill="rgba(245, 158, 11, 0.16)"
+          stroke="#F59E0B"
+          strokeWidth={0.5}
+          strokeDasharray="2,2"
+        />
+        {/* Attaquant gauche pressant le défenseur central adverse */}
+        <Path
+          d="M 18 29 C 23 21, 26 16, 31 11"
+          fill="none"
+          stroke="#F59E0B"
+          strokeWidth={1.1}
+          strokeDasharray="2.5,1.5"
+        />
+        <Polygon points="31,11 26.5,13 29,15.5" fill="#F59E0B" />
+
+        {/* Attaquant droit pressant le défenseur central adverse */}
+        <Path
+          d="M 50 29 C 45 21, 42 16, 37 11"
+          fill="none"
+          stroke="#F59E0B"
+          strokeWidth={1.1}
+          strokeDasharray="2.5,1.5"
+        />
+        <Polygon points="37,11 39,15.5 41.5,13" fill="#F59E0B" />
+
+        {/* Attaquant de pointe pressant la relance */}
+        <Path
+          d="M 34 23 L 34 8"
+          fill="none"
+          stroke="#F59E0B"
+          strokeWidth={1.3}
+        />
+        <Polygon points="34,6.5 31.5,10.5 36.5,10.5" fill="#F59E0B" />
+
+        {/* Milieu gauche montant au cadrage */}
+        <Path
+          d="M 22 52 L 22 37"
+          fill="none"
+          stroke="#F59E0B"
+          strokeWidth={0.9}
+          strokeDasharray="2,1"
+        />
+        <Polygon points="22,35.5 20,39 24,39" fill="#F59E0B" />
+
+        {/* Milieu droit montant au cadrage */}
+        <Path
+          d="M 46 52 L 46 37"
+          fill="none"
+          stroke="#F59E0B"
+          strokeWidth={0.9}
+          strokeDasharray="2,1"
+        />
+        <Polygon points="46,35.5 44,39 48,39" fill="#F59E0B" />
+      </G>
+    );
+  }
+
+  if (directive === 'bloc') {
+    return (
+      <G opacity={0.94}>
+        {/* Zone de compression bloc compact */}
+        <Rect
+          x={8}
+          y={50}
+          width={52}
+          height={28}
+          rx={2.5}
+          fill="rgba(56, 189, 248, 0.16)"
+          stroke="#38BDF8"
+          strokeWidth={0.7}
+          strokeDasharray="2.5,2"
+        />
+        {/* Latéral gauche resserre vers l'axe */}
+        <Path
+          d="M 12 73 L 23 73"
+          fill="none"
+          stroke="#38BDF8"
+          strokeWidth={1.1}
+        />
+        <Polygon points="24.5,73 21,71 21,75" fill="#38BDF8" />
+
+        {/* Latéral droit resserre vers l'axe */}
+        <Path
+          d="M 56 73 L 45 73"
+          fill="none"
+          stroke="#38BDF8"
+          strokeWidth={1.1}
+        />
+        <Polygon points="43.5,73 47,71 47,75" fill="#38BDF8" />
+
+        {/* Milieu central resserre le bloc médian */}
+        <Path
+          d="M 34 42 L 34 54"
+          fill="none"
+          stroke="#38BDF8"
+          strokeWidth={1.1}
+          strokeDasharray="2,1"
+        />
+        <Polygon points="34,55.5 31.5,52 36.5,52" fill="#38BDF8" />
+
+        {/* Repli ailier gauche */}
+        <Path
+          d="M 14 30 L 17 48"
+          fill="none"
+          stroke="#38BDF8"
+          strokeWidth={0.85}
+          strokeDasharray="2,1"
+        />
+        <Polygon points="17.5,49.5 15.5,46 19,46.5" fill="#38BDF8" />
+
+        {/* Repli ailier droit */}
+        <Path
+          d="M 54 30 L 51 48"
+          fill="none"
+          stroke="#38BDF8"
+          strokeWidth={0.85}
+          strokeDasharray="2,1"
+        />
+        <Polygon points="50.5,49.5 49,46.5 52.5,46" fill="#38BDF8" />
+      </G>
+    );
+  }
+
+  if (directive === 'projection') {
+    return (
+      <G opacity={0.94}>
+        {/* Dédoublement latéral gauche */}
+        <Path
+          d="M 9 68 C 5 52, 5 36, 12 18"
+          fill="none"
+          stroke="#10B981"
+          strokeWidth={1.2}
+        />
+        <Polygon points="12.5,16.5 9.5,20 14,21" fill="#10B981" />
+
+        {/* Dédoublement latéral droit */}
+        <Path
+          d="M 59 68 C 63 52, 63 36, 56 18"
+          fill="none"
+          stroke="#10B981"
+          strokeWidth={1.2}
+        />
+        <Polygon points="55.5,16.5 54,21 58.5,20" fill="#10B981" />
+
+        {/* Course vers l'intérieur ailier gauche */}
+        <Path
+          d="M 15 28 C 22 22, 26 18, 31 14"
+          fill="none"
+          stroke="#10B981"
+          strokeWidth={1.0}
+          strokeDasharray="2.5,1.5"
+        />
+        <Polygon points="32.5,12.5 28.5,14.5 30.5,17" fill="#10B981" />
+
+        {/* Course vers l'intérieur ailier droit */}
+        <Path
+          d="M 53 28 C 46 22, 42 18, 37 14"
+          fill="none"
+          stroke="#10B981"
+          strokeWidth={1.0}
+          strokeDasharray="2.5,1.5"
+        />
+        <Polygon points="35.5,12.5 37.5,17 39.5,14.5" fill="#10B981" />
+
+        {/* Projection milieu axial */}
+        <Path
+          d="M 34 50 L 34 26"
+          fill="none"
+          stroke="#10B981"
+          strokeWidth={1.2}
+          strokeDasharray="3,1.5"
+        />
+        <Polygon points="34,24.5 31.5,28.5 36.5,28.5" fill="#10B981" />
+
+        {/* Attaquant de pointe vers la surface */}
+        <Path
+          d="M 34 18 L 34 6"
+          fill="none"
+          stroke="#10B981"
+          strokeWidth={1.3}
+        />
+        <Polygon points="34,4.5 31.5,8.5 36.5,8.5" fill="#10B981" />
+      </G>
+    );
+  }
+
+  return null;
+}
+
+export function SportEasyPitchMarkings({
+  directive,
+}: {
+  directive?: TacticalAnimationDirective;
+} = {}) {
   const stripes = Array.from({ length: STRIPE_COUNT }, (_, i) => {
     const h = 105 / STRIPE_COUNT;
     return (
@@ -142,6 +367,9 @@ export function SportEasyPitchMarkings() {
         <Circle cx={68} cy={0} r={1} fill="none" stroke={MARK} strokeWidth={0.4} />
         <Circle cx={0} cy={105} r={1} fill="none" stroke={MARK} strokeWidth={0.4} />
         <Circle cx={68} cy={105} r={1} fill="none" stroke={MARK} strokeWidth={0.4} />
+
+        {/* Flèches tactiques & zones d'animation */}
+        <TacticalAnimationOverlay directive={directive} />
       </G>
     </Svg>
   );
@@ -235,6 +463,9 @@ export function CoachSportEasyPitchSurface({
   pendingBenchUid = null,
   formations,
   onFormationChange,
+  directive: directiveProp,
+  onDirectiveChange,
+  showDirectivesSelector = true,
   variant = 'card',
   showHeader = true,
   showBench = true,
@@ -244,6 +475,10 @@ export function CoachSportEasyPitchSurface({
   const { width: winW } = useWindowDimensions();
   const { tokens: themeTokens } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
+  const [internalDirective, setInternalDirective] = useState<TacticalAnimationDirective>('none');
+
+  const activeDirective = directiveProp !== undefined ? directiveProp : internalDirective;
+  const setDirective = onDirectiveChange ?? setInternalDirective;
 
   const pitchW = pitchWidthProp ?? Math.min(winW - spacing.md * 4, 360);
   const pitchH = Math.round(pitchW * (105 / 68));
@@ -253,17 +488,21 @@ export function CoachSportEasyPitchSurface({
     [cells, formation],
   );
 
+  const activeDirectiveInfo =
+    activeDirective !== 'none' ? TACTICAL_DIRECTIVES[activeDirective] : null;
+
   const pitchScene = (
     <View style={variant === 'card' ? styles.pitchFrame : styles.embeddedFrame}>
       {showHeader ? (
         <View style={styles.pitchHead}>
           <CoachText variant="caption" muted style={styles.headerKicker}>
             {headerTitle ?? (readOnly ? 'Composition publiée' : 'Composition')} · {formation}
+            {activeDirectiveInfo ? ` · ${activeDirectiveInfo.badge}` : ''}
           </CoachText>
         </View>
       ) : null}
       <View style={[styles.pitch, { width: pitchW, height: pitchH }]}>
-        <SportEasyPitchMarkings />
+        <SportEasyPitchMarkings directive={activeDirective} />
         {pitchSlots.map((cell) => {
           const slotCell = cell.player;
           const filled = isFilled(slotCell);
@@ -303,6 +542,83 @@ export function CoachSportEasyPitchSurface({
       </View>
     </View>
   );
+
+  const directivesSection = showDirectivesSelector ? (
+    <View style={styles.directiveBlock}>
+      <View style={styles.directiveHeader}>
+        <CoachText variant="caption" style={styles.directiveTitle}>
+          Animation & Flèches tactiques
+        </CoachText>
+        {activeDirective !== 'none' ? (
+          <PressableSpring onPress={() => setDirective('none')} scaleTo={0.96} haptic>
+            <CoachText variant="caption" muted style={styles.resetDirectiveLink}>
+              Masquer flèches
+            </CoachText>
+          </PressableSpring>
+        ) : null}
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.directiveChipsRow}
+      >
+        {(
+          [
+            { id: 'pressing' as const, label: '⚡ Pressing' },
+            { id: 'bloc' as const, label: '🛡️ Bloc' },
+            { id: 'projection' as const, label: '🚀 Projection' },
+          ] as const
+        ).map((d) => {
+          const on = activeDirective === d.id;
+          return (
+            <PressableSpring
+              key={d.id}
+              onPress={() => setDirective(on ? 'none' : d.id)}
+              scaleTo={0.97}
+              haptic
+              style={[
+                styles.directiveChip,
+                on && {
+                  borderColor: TACTICAL_DIRECTIVES[d.id].color,
+                  backgroundColor: themeTokens.isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.12)',
+                },
+              ]}
+            >
+              <CoachText
+                variant="caption"
+                style={[
+                  styles.directiveChipText,
+                  on && { color: TACTICAL_DIRECTIVES[d.id].color, fontWeight: '800' },
+                ]}
+              >
+                {d.label}
+              </CoachText>
+            </PressableSpring>
+          );
+        })}
+      </ScrollView>
+
+      {activeDirectiveInfo ? (
+        <View
+          style={[
+            styles.directiveCard,
+            { borderLeftColor: activeDirectiveInfo.color },
+          ]}
+        >
+          <CoachText
+            variant="caption"
+            style={[styles.directiveCardTitle, { color: activeDirectiveInfo.color }]}
+          >
+            {activeDirectiveInfo.badge} — {activeDirectiveInfo.summary}
+          </CoachText>
+          <CoachText variant="caption" muted style={styles.directiveCardDetail}>
+            {activeDirectiveInfo.detail}
+          </CoachText>
+        </View>
+      ) : null}
+    </View>
+  ) : null;
 
   const benchSection =
     showBench && bench.length > 0 ? (
@@ -385,13 +701,19 @@ export function CoachSportEasyPitchSurface({
     ) : null;
 
   if (variant === 'embedded') {
-    return <View style={styles.embeddedRoot}>{pitchScene}</View>;
+    return (
+      <View style={styles.embeddedRoot}>
+        {pitchScene}
+        {directivesSection}
+      </View>
+    );
   }
 
   return (
     <View style={styles.root}>
       {formationChips}
       {pitchScene}
+      {directivesSection}
       {benchSection}
     </View>
   );
@@ -409,6 +731,7 @@ function createStyles(tokens: CoachThemeTokens) {
     },
     embeddedRoot: {
       alignItems: 'center',
+      gap: spacing.xs,
     },
     chipRow: {
       flexDirection: 'row',
@@ -504,6 +827,56 @@ function createStyles(tokens: CoachThemeTokens) {
       textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 2,
       height: TOKEN_LABEL,
+    },
+    directiveBlock: {
+      marginTop: spacing.xs,
+      gap: 6,
+    },
+    directiveHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    directiveTitle: {
+      fontWeight: '700',
+      color: tokens.foreground,
+    },
+    resetDirectiveLink: {
+      fontSize: 11,
+      textDecorationLine: 'underline',
+    },
+    directiveChipsRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      paddingVertical: 2,
+    },
+    directiveChip: {
+      borderWidth: 1,
+      borderColor: tokens.border,
+      backgroundColor: tokens.elevated,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 6,
+    },
+    directiveChipText: {
+      fontWeight: '600',
+      fontSize: 12,
+    },
+    directiveCard: {
+      borderLeftWidth: 3,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      backgroundColor: tokens.elevated,
+      borderRadius: 6,
+      gap: 2,
+    },
+    directiveCardTitle: {
+      fontWeight: '800',
+      fontSize: 12,
+    },
+    directiveCardDetail: {
+      fontSize: 11,
+      lineHeight: 15,
     },
     benchLabel: {
       color: tokens.foreground,

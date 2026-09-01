@@ -174,6 +174,9 @@ describe('sponsorsService', () => {
         clubs_reached: 0,
         leads: 2,
         conversion_rate: 50,
+        ctr_rate: 40,
+        engagement_score: 70,
+        estimated_roi_eur: 340,
       });
     });
 

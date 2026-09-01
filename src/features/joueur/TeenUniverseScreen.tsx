@@ -24,7 +24,9 @@ import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import { JoueurArcadeShell, JoueurScorePop } from './JoueurGameFx';
+import { JoueurAttributeRadar } from './JoueurAttributeRadar';
 import { joueurGameReward, joueurGamePress } from './joueurSfx';
+
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
 
 type Actions = {
@@ -237,8 +239,23 @@ export function TeenUniverseScreen({
             })}
           </View>
 
-          {/* Stats compactes */}
+          {/* Stats & Radar 6 axes */}
           <View style={[styles.statsCard, { borderColor: identity.border, backgroundColor: identity.surface }]}>
+            <ProDayText variant="caption" style={[styles.pathLabel, { color: accent, marginTop: 0 }]}>
+              RADAR DE PROGRESSION
+            </ProDayText>
+            <JoueurAttributeRadar
+              attributes={{
+                pace: Math.min(99, Math.max(50, 65 + (level?.level ?? 1) * 3)),
+                shooting: Math.min(99, Math.max(45, 60 + (level?.level ?? 1) * 2)),
+                passing: Math.min(99, Math.max(55, 68 + (level?.level ?? 1) * 2)),
+                dribbling: Math.min(99, Math.max(52, 70 + (level?.level ?? 1) * 3)),
+                defending: Math.min(99, Math.max(40, 58 + (level?.level ?? 1) * 2)),
+                physical: Math.min(99, Math.max(50, 64 + (level?.level ?? 1) * 2)),
+              }}
+              size={200}
+              accent={accent}
+            />
             {STATS.map((s) => (
               <JoueurXpBar
                 key={s.label}
@@ -255,6 +272,7 @@ export function TeenUniverseScreen({
               onSecondary={onOpenPass}
             />
           </View>
+
 
           {/* Missions du jour — liste sobre */}
           <ProDayText variant="caption" style={[styles.pathLabel, { color: accent }]}>

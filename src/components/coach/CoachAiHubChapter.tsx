@@ -69,6 +69,10 @@ import {
   resolveClubCoversCoachFromMembers,
   userCanManageConvocations,
 } from '../../utils/clubFeatureAccess';
+import {
+  executeBulkRsvpReminders,
+  getPendingConvocationsSummary,
+} from '../../utils/coachRsvpReminders';
 import { coachHubHeuristicFootnote } from '../../utils/aiUxHonesty';
 
 type Props = CoachChapterCommonProps & {
@@ -136,6 +140,28 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const rosterUids = useMemo(() => teamMembers.map((m) => m.uid), [teamMembers]);
   const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
   const canManage = userCanManageConvocations(profile, { clubCoversCoach });
+  const [remindingRsvp, setRemindingRsvp] = useState(false);
+
+  const pendingSummary = useMemo(() => getPendingConvocationsSummary(events), [events]);
+
+  const handleBulkReminder = useCallback(async () => {
+    if (pendingSummary.totalPendingCount === 0) {
+      Alert.alert('Convocations', 'Toutes les convocations sont à jour (aucune réponse en attente).');
+      return;
+    }
+    setRemindingRsvp(true);
+    try {
+      const res = await executeBulkRsvpReminders(events, { user: profile });
+      Alert.alert(
+        'Relance groupée envoyée',
+        `${res.remindedCount} relance(s) envoyée(s) avec succès pour ${res.eventCount} convocation(s) en attente.`,
+      );
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Relance impossible.');
+    } finally {
+      setRemindingRsvp(false);
+    }
+  }, [pendingSummary.totalPendingCount, events, profile]);
 
   useEffect(() => {
     if (!clubId) return;
@@ -178,10 +204,14 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const runAction = useCallback(
     (action: CoachAiAction) => {
       setActionsOpen(false);
+      if (action.id === 'remind-rsvp') {
+        void handleBulkReminder();
+        return;
+      }
       const target = actionNavTarget(action.id);
       if (target) openNav(target);
     },
-    [openNav],
+    [openNav, handleBulkReminder],
   );
 
   const { overview, strategy, actions } = insights;
@@ -387,6 +417,32 @@ export const CoachAiHubChapter: React.FC<Props> = ({
               </CoachText>
             </Pressable>
           </View>
+
+          {/* Bannière Relance Groupée en 1 clic si convocations en attente */}
+          {pendingSummary.totalPendingCount > 0 ? (
+            <View style={styles.bulkReminderBanner}>
+              <View style={styles.bulkReminderLeft}>
+                <Icon name="mail" size={18} color={tokens.accent} />
+                <View style={styles.bulkReminderInfo}>
+                  <CoachText variant="caption" style={styles.bulkReminderTitle}>
+                    {pendingSummary.totalPendingCount} convocation{pendingSummary.totalPendingCount > 1 ? 's' : ''} sans réponse
+                  </CoachText>
+                  <CoachText variant="caption" muted numberOfLines={1}>
+                    {pendingSummary.eventsWithPending.length} événement{pendingSummary.eventsWithPending.length > 1 ? 's' : ''} en attente
+                  </CoachText>
+                </View>
+              </View>
+              <Pressable
+                style={styles.bulkReminderBtn}
+                onPress={() => void handleBulkReminder()}
+                disabled={remindingRsvp}
+              >
+                <CoachText variant="caption" inverse style={styles.bulkReminderBtnText}>
+                  {remindingRsvp ? 'Envoi…' : '⚡ Relancer en 1 clic'}
+                </CoachText>
+              </Pressable>
+            </View>
+          ) : null}
 
           {/* Navigation par Onglets Clairs */}
           <View style={styles.hubTabRow}>
@@ -1193,5 +1249,35 @@ function createStyles(tokens: CoachThemeTokens) {
     },
     actionTitle: { fontWeight: '700', marginBottom: 4 },
     modalClose: { alignItems: 'center', paddingTop: spacing.md },
+    bulkReminderBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.accent,
+      borderRadius: 14,
+      padding: spacing.sm,
+      gap: spacing.sm,
+    },
+    bulkReminderLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    bulkReminderInfo: { flex: 1, gap: 2 },
+    bulkReminderTitle: { fontWeight: '800', color: tokens.foreground },
+    bulkReminderBtn: {
+      backgroundColor: tokens.accent,
+      paddingVertical: 8,
+      paddingHorizontal: spacing.md,
+      borderRadius: 10,
+    },
+    bulkReminderBtnText: {
+      fontWeight: '700',
+      color: tokens.onAccent,
+      fontSize: 12,
+    },
   });
 }

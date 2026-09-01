@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { CoachSportEasyPitchSurface } from './CoachSportEasyPitchSurface';
+import {
+  CoachSportEasyPitchSurface,
+  type TacticalAnimationDirective,
+} from './CoachSportEasyPitchSurface';
 import { CoachText } from './coachPortalUi';
 import {
   useCoachTheme,
@@ -198,6 +201,8 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
     setPendingUid((cur) => (cur === uid ? null : uid));
   };
 
+  const [directive, setDirective] = useState<TacticalAnimationDirective>('none');
+
   if (roster.length === 0) {
     return (
       <View style={styles.empty}>
@@ -229,6 +234,9 @@ export function CoachSportEasyPitch({ memberships, members, clubId }: Props) {
           changeCoachPitchFormation(prev, formation as CoachPitchFormation),
         )
       }
+      directive={directive}
+      onDirectiveChange={setDirective}
+      showDirectivesSelector={true}
       showHeader={false}
     />
   );

@@ -132,6 +132,31 @@ export const MessagesScreen: React.FC = () => {
     const filtered = threads.filter((t) => {
       if (threadFilter === 'unread' && !t.unread) return false;
       if (threadFilter === 'care' && !t.thread_kind?.startsWith('physio')) return false;
+      if (threadFilter === 'coach') {
+        const isCoach =
+          (t.thread_kind as string) === 'coach_chat' ||
+          t.participant_name.toLowerCase().includes('coach') ||
+          (t.thread_title?.toLowerCase().includes('coach') ?? false);
+        if (!isCoach) return false;
+      }
+      if (threadFilter === 'team') {
+        const isTeam =
+          t.thread_kind === 'team_group' ||
+          t.id.startsWith('team__') ||
+          t.participant_name.toLowerCase().includes('équipe') ||
+          t.participant_name.toLowerCase().includes('vestiaire') ||
+          (t.thread_title?.toLowerCase().includes('équipe') ?? false);
+        if (!isTeam) return false;
+      }
+      if (threadFilter === 'mercato') {
+        const isMercato =
+          t.thread_kind === 'message_request' ||
+          (t.thread_kind as string) === 'recruitment' ||
+          t.participant_name.toLowerCase().includes('recruteur') ||
+          t.participant_name.toLowerCase().includes('agent') ||
+          t.participant_name.toLowerCase().includes('mercato');
+        if (!isMercato) return false;
+      }
       if (threadFilter === 'requests') {
         if (
           t.request_status !== 'pending' &&
@@ -148,6 +173,7 @@ export const MessagesScreen: React.FC = () => {
     });
     return sortThreadsForInbox(filtered);
   }, [threads, search, threadFilter]);
+
 
   const resolveRequest = useCallback(
     async (threadId: string, action: 'accept' | 'refuse') => {

@@ -350,6 +350,19 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
           }
           renderItem={({ item }) => {
             const mine = item.sender_id === currentUid;
+            const FOOTBALL_EMOJIS = ['⚽', '🔥', '👏', '🎯', '💪'];
+            const reactions = (item.reactions ?? {}) as Record<string, string[]>;
+            const hasReactions = Object.keys(reactions).some((k) => (reactions[k]?.length ?? 0) > 0);
+
+            const handleToggleEmoji = async (emoji: string) => {
+              try {
+                await messagesService.toggleReaction(item.id, emoji, currentUid);
+                prodayHaptics.press();
+              } catch {
+                // best-effort
+              }
+            };
+
             return (
               <View style={[styles.bubbleWrap, mine && styles.bubbleWrapMine]}>
                 {mine ? (
@@ -370,17 +383,67 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
                     </ProDayText>
                   </View>
                 )}
-                <ProDayText variant="caption" muted style={styles.time}>
-                  {item.created_at.toLocaleTimeString(locale, {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </ProDayText>
+
+                {hasReactions ? (
+                  <View style={[styles.reactionBadgesRow, mine && styles.reactionBadgesMine]}>
+                    {Object.entries(reactions).map(([emoji, uids]) => {
+                      if (!uids || uids.length === 0) return null;
+                      const userReacted = uids.includes(currentUid);
+                      return (
+                        <PressableSpring
+                          key={emoji}
+                          style={[
+                            styles.reactionBadge,
+                            { borderColor: userReacted ? ui.accent : ui.border },
+                            userReacted && { backgroundColor: `${ui.accent}22` },
+                          ]}
+                          onPress={() => void handleToggleEmoji(emoji)}
+                          scaleTo={0.94}
+                        >
+                          <ProDayText variant="caption" style={styles.reactionBadgeText}>
+                            {emoji} {uids.length > 1 ? uids.length : ''}
+                          </ProDayText>
+                        </PressableSpring>
+                      );
+                    })}
+                  </View>
+                ) : null}
+
+                <View style={[styles.reactionsRow, mine && styles.reactionsRowMine]}>
+                  <View style={styles.emojiPicker}>
+                    {FOOTBALL_EMOJIS.map((emoji) => {
+                      const active = (reactions[emoji] ?? []).includes(currentUid);
+                      return (
+                        <PressableSpring
+                          key={emoji}
+                          onPress={() => void handleToggleEmoji(emoji)}
+                          style={[
+                            styles.emojiBtn,
+                            active && { backgroundColor: `${ui.accent}22` },
+                          ]}
+                          scaleTo={0.9}
+                          haptic
+                        >
+                          <ProDayText variant="caption" style={styles.emojiText}>
+                            {emoji}
+                          </ProDayText>
+                        </PressableSpring>
+                      );
+                    })}
+                  </View>
+                  <ProDayText variant="caption" muted style={styles.time}>
+                    {item.created_at.toLocaleTimeString(locale, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </ProDayText>
+                </View>
               </View>
             );
           }}
         />
       )}
+
 
       {sendBlocked ? (
         <View style={[styles.blocked, { backgroundColor: ui.warningBg }]}>
@@ -508,6 +571,47 @@ function createStyles(_c: AppColors, joueurLive = false, joueurAccent: string = 
     },
     bubbleText: { lineHeight: 22 },
     time: { marginTop: 4, fontSize: 11 },
+    reactionsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      marginTop: 4,
+      width: '100%',
+    },
+    reactionsRowMine: {
+      justifyContent: 'flex-end',
+      gap: spacing.sm,
+    },
+    reactionBadgesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 4,
+      marginTop: 4,
+    },
+    reactionBadgesMine: {
+      justifyContent: 'flex-end',
+    },
+    reactionBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+    },
+    reactionBadgeText: { fontSize: 11, fontWeight: '700' },
+    emojiPicker: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      opacity: 0.85,
+    },
+    emojiBtn: {
+      padding: 3,
+      borderRadius: radius.pill,
+    },
+    emojiText: { fontSize: 13 },
     blocked: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -517,6 +621,7 @@ function createStyles(_c: AppColors, joueurLive = false, joueurAccent: string = 
       padding: spacing.sm,
       borderRadius: radius.md,
     },
+
     composerWrap: {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,

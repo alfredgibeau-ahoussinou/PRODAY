@@ -47,6 +47,12 @@ export interface SponsorAnalytics {
   clubs_reached: number;
   leads: number;
   conversion_rate: number;
+  /** Score d'engagement global (0-100) calculé selon interactions / visibilité */
+  engagement_score?: number;
+  /** Taux de clic / interaction moyen (%) */
+  ctr_rate?: number;
+  /** Retombées / ROI estimé (€) */
+  estimated_roi_eur?: number;
 }
 
 export interface SponsorActivityItem {

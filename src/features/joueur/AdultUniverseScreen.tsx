@@ -21,7 +21,9 @@ import { userToProDayCard } from '../../utils/prodayFutCard';
 import { JoueurWorldScene } from './JoueurWorldScene';
 import { JoueurPricingStrip } from './JoueurPricingStrip';
 import { JoueurDailyQuestBoard } from './JoueurDailyQuestBoard';
+import { JoueurAttributeRadar } from './JoueurAttributeRadar';
 import { JoueurArcadeShell, JoueurScorePop } from './JoueurGameFx';
+
 import { joueurGamePress } from './joueurSfx';
 import { JOUEUR_SEASON_OBJECTIVES, getJoueurDailyQuests } from './constants';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
@@ -188,6 +190,25 @@ export function AdultUniverseScreen({
               }}
             />
           </View>
+
+          <View style={[styles.radarCard, { borderColor: `${accent}44`, backgroundColor: identity.surface }]}>
+            <ProDayText variant="caption" style={[styles.brand, { color: accent, marginBottom: 8 }]}>
+              RADAR DE PERFORMANCE (6 AXES)
+            </ProDayText>
+            <JoueurAttributeRadar
+              attributes={{
+                pace: Math.min(99, Math.max(50, ovr - 2 + (level?.level ?? 1))),
+                shooting: Math.min(99, Math.max(45, ovr - 6 + (level?.level ?? 1))),
+                passing: Math.min(99, Math.max(55, ovr + 1)),
+                dribbling: Math.min(99, Math.max(52, ovr + (level?.level ?? 1))),
+                defending: Math.min(99, Math.max(40, ovr - 8)),
+                physical: Math.min(99, Math.max(50, ovr - 1)),
+              }}
+              size={220}
+              accent={accent}
+            />
+          </View>
+
 
           <JoueurDailyQuestBoard
             accent={accent}
@@ -374,7 +395,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
   },
+  radarCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   seasonWrap: { gap: 8 },
+
   seasonRow: {
     flexDirection: 'row',
     alignItems: 'center',

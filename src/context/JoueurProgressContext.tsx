@@ -84,12 +84,21 @@ export function JoueurProgressProvider({
     void refresh();
   }, [refresh]);
 
+  const [levelUp, setLevelUp] = useState<JoueurLevelUpEvent | null>(null);
+
+  const clearLevelUp = useCallback(() => {
+    setLevelUp(null);
+  }, []);
+
   const claimDaily = useCallback(
     async (questId: string, xp: number, stars = 0) => {
       if (!uid) return false;
       const result = await claimJoueurDailyQuest(uid, questId, xp, stars);
       setProgress(result.progress);
       if (result.alreadyDone) return false;
+      if (result.leveledUp) {
+        setLevelUp({ from: result.previousLevel, to: result.nextLevel, at: Date.now() });
+      }
       joueurGameReward(result.leveledUp ? 'levelup' : stars > 0 ? 'star' : 'xp');
       return true;
     },
@@ -103,6 +112,9 @@ export function JoueurProgressProvider({
       const result = await completeJoueurChallenge(uid, challengeId, starsGain);
       setProgress(result.progress);
       if (result.alreadyDone) return false;
+      if (result.leveledUp) {
+        setLevelUp({ from: result.previousLevel, to: result.nextLevel, at: Date.now() });
+      }
       joueurGameReward(result.leveledUp ? 'levelup' : 'star');
       return true;
     },
@@ -114,6 +126,9 @@ export function JoueurProgressProvider({
       if (!uid) return;
       const result = await awardJoueurXp(uid, xp, { starsGain: stars });
       setProgress(result.progress);
+      if (result.leveledUp) {
+        setLevelUp({ from: result.previousLevel, to: result.nextLevel, at: Date.now() });
+      }
       joueurGameReward(result.leveledUp ? 'levelup' : 'xp');
     },
     [uid],
@@ -126,14 +141,15 @@ export function JoueurProgressProvider({
       progress,
       level,
       ovr: joueurOvrFromProgress(progress),
-      levelUp: null,
-      clearLevelUp: () => {},
+      levelUp,
+      clearLevelUp,
       refresh,
       claimDaily,
       claimChallenge,
       grantXp,
     };
-  }, [ready, progress, refresh, claimDaily, claimChallenge, grantXp]);
+  }, [ready, progress, levelUp, clearLevelUp, refresh, claimDaily, claimChallenge, grantXp]);
+
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

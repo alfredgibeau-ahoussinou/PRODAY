@@ -14,7 +14,7 @@ import type { User } from '../../models/User';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing } from '../../theme/designTokens';
+import { radius, spacing } from '../../theme/designTokens';
 import { CoachSportEasyPitch } from './CoachSportEasyPitch';
 import { CoachPane } from './CoachScreenHeader';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
@@ -34,6 +34,7 @@ import { coachEvaluationsService } from '../../services/coachEvaluations.service
 import { wellnessCheckinsService } from '../../services/wellnessCheckins.service';
 import type { CoachPlayerEvaluation } from '../../models/CoachEvaluation';
 import type { WellnessSignals } from '../../models/SmartTactics';
+import { hasAnyCoachRating } from '../../utils/coachEvaluationRatings';
 import { Icon } from '../ui/Icon';
 
 import { CoachPlayerAiPanel } from './CoachPlayerAiPanel';
@@ -215,44 +216,56 @@ export const CoachEffectifChapter: React.FC<EffectifProps> = ({
                 {t('coach.portal.effectif.rosterEmpty')}
               </CoachText>
             ) : (
-              teamMembers.map((m, index) => (
-                <View key={m.uid} style={styles.playerRow}>
-                  <PressableSpring
-                    onPress={() => setNotePlayer(m)}
-                    scaleTo={0.98}
-                    haptic
-                    style={styles.playerRowMain}
-                  >
-                    <View style={styles.playerNumWrap}>
-                      <CoachText variant="caption" style={styles.playerNum}>
-                        {jerseyOf(m, index)}
-                      </CoachText>
-                    </View>
-                    <View style={styles.playerInfo}>
-                      <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
-                        {m.display_name}
-                      </CoachText>
-                      {resolvedFocus === 'joueurs' ? (
-                        <CoachPlayerAiPanel
-                          playerUid={m.uid}
-                          playerName={m.display_name}
-                          events={events}
-                          evaluations={evaluations}
-                          wellness={wellnessByUid[m.uid]}
-                          compact
-                        />
-                      ) : null}
-                    </View>
-                  </PressableSpring>
-                  <Pressable
-                    accessibilityLabel="Message"
-                    onPress={() => void messageUser(m.uid, m.display_name)}
-                    style={styles.msgBtn}
-                  >
-                    <Icon name="chat" size={16} color={tokens.muted} />
-                  </Pressable>
-                </View>
-              ))
+              teamMembers.map((m, index) => {
+                const hasPrivateNote = evaluations.some(
+                  (e) => e.player_uid === m.uid && (Boolean(e.notes?.trim()) || hasAnyCoachRating(e.ratings)),
+                );
+                return (
+                  <View key={m.uid} style={styles.playerRow}>
+                    <PressableSpring
+                      onPress={() => setNotePlayer(m)}
+                      scaleTo={0.98}
+                      haptic
+                      style={styles.playerRowMain}
+                    >
+                      <View style={styles.playerNumWrap}>
+                        <CoachText variant="caption" style={styles.playerNum}>
+                          {jerseyOf(m, index)}
+                        </CoachText>
+                      </View>
+                      <View style={styles.playerInfo}>
+                        <View style={styles.playerNameRow}>
+                          <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
+                            {m.display_name}
+                          </CoachText>
+                          {hasPrivateNote ? (
+                            <View style={styles.privateNoteBadge}>
+                              <Icon name="document" size={12} color={tokens.accent} />
+                            </View>
+                          ) : null}
+                        </View>
+                        {resolvedFocus === 'joueurs' ? (
+                          <CoachPlayerAiPanel
+                            playerUid={m.uid}
+                            playerName={m.display_name}
+                            events={events}
+                            evaluations={evaluations}
+                            wellness={wellnessByUid[m.uid]}
+                            compact
+                          />
+                        ) : null}
+                      </View>
+                    </PressableSpring>
+                    <Pressable
+                      accessibilityLabel="Message"
+                      onPress={() => void messageUser(m.uid, m.display_name)}
+                      style={styles.msgBtn}
+                    >
+                      <Icon name="chat" size={16} color={tokens.muted} />
+                    </Pressable>
+                  </View>
+                );
+              })
             )}
           </>
         ) : null}
@@ -366,11 +379,21 @@ function createStyles(tokens: CoachThemeTokens) {
       fontWeight: '800',
       color: tokens.foreground,
     },
+    playerNameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
     playerName: {
       flex: 1,
       fontWeight: '600',
       color: tokens.foreground,
       fontSize: 17,
+    },
+    privateNoteBadge: {
+      padding: 3,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.soft,
     },
     pendingLine: {
       paddingVertical: spacing.md,

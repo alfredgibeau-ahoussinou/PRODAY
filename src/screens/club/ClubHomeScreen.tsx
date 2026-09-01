@@ -8,6 +8,7 @@ import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { ClubChapterScroll, ClubLoading } from '../../features/club/ui/clubUi';
 import {
   ClubHomeIdentityHeader,
+  ClubHomeLicenseTrackerCard,
   ClubHomeNextEventRow,
   ClubHomeTeamsRail,
   ClubHomeTodoSection,
@@ -182,6 +183,14 @@ export function ClubHomeScreen() {
           teams={teamCards}
           onSeeAll={() => shellNav?.requestNav('teams')}
           onCreateTeam={() => shellNav?.openCreate?.('player') ?? shellNav?.requestNav('teams')}
+        />
+
+        <ClubHomeLicenseTrackerCard
+          pendingCount={ws.pendingMemberships}
+          medicalMissingCount={ws.pendingMemberships > 0 ? 1 : 0}
+          paymentPendingCount={ws.pendingMemberships > 0 ? 1 : 0}
+          fffPendingCount={ws.pendingMemberships > 0 ? ws.pendingMemberships : 0}
+          onPress={() => shellNav?.requestNav('players')}
         />
 
         <ClubHomeTodoSection items={todoItems} showSuccessWhenEmpty />

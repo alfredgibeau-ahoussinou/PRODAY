@@ -139,8 +139,12 @@ export const MODULES_FR: MessageCatalog = {
   'messages.chapter.inbox': 'Conversations',
   'messages.chapter.network': 'Réseau',
   'messages.filter.all': 'Tous',
+  'messages.filter.coach': 'Coach',
+  'messages.filter.team': 'Vestiaire / Équipe',
+  'messages.filter.mercato': 'Mercato',
   'messages.filter.unread': 'Non lus',
   'messages.filter.care': 'Kiné',
+
   'messages.stats.threads': 'fils',
   'messages.stats.unread': 'non lus',
   'messages.stats.care': 'kiné',

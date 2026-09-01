@@ -13,6 +13,8 @@ import { getProfileCompletion } from '../../utils/profileCompletion';
 import { YouthUniverseScreen } from './YouthUniverseScreen';
 import { TeenUniverseScreen } from './TeenUniverseScreen';
 import { AdultUniverseScreen } from './AdultUniverseScreen';
+import { JoueurLevelUpOverlay } from './JoueurLevelUpOverlay';
+
 
 type Props = {
   profile: User;
@@ -104,17 +106,21 @@ export function JoueurAdaptiveHome({ profile, onRefresh, refreshing }: Props) {
     refreshing,
   };
 
-  if (theme.ageGroup === 'youth') {
-    return <YouthUniverseScreen {...shared} />;
-  }
-  if (theme.ageGroup === 'teen') {
-    return <TeenUniverseScreen {...shared} />;
-  }
   return (
-    <AdultUniverseScreen
-      {...shared}
-      health={health}
-      onOpenProfile={onOpenProfile}
-    />
+    <>
+      <JoueurLevelUpOverlay />
+      {theme.ageGroup === 'youth' ? (
+        <YouthUniverseScreen {...shared} />
+      ) : theme.ageGroup === 'teen' ? (
+        <TeenUniverseScreen {...shared} />
+      ) : (
+        <AdultUniverseScreen
+          {...shared}
+          health={health}
+          onOpenProfile={onOpenProfile}
+        />
+      )}
+    </>
   );
 }
+
