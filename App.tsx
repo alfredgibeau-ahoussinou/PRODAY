@@ -250,11 +250,9 @@ export default function App() {
             <PlatformConfigProvider>
               <ProductLineProvider>
                 <AuthGreetingProvider>
-                  <LaunchIntroProvider>
-                    <ProDayMotionProvider>
-                      <AppShell />
-                    </ProDayMotionProvider>
-                  </LaunchIntroProvider>
+                  <ProDayMotionProvider>
+                    <AppShell />
+                  </ProDayMotionProvider>
                 </AuthGreetingProvider>
               </ProductLineProvider>
             </PlatformConfigProvider>
@@ -762,90 +760,92 @@ function AppShell() {
           clearPendingCarpool: () => setPendingCarpoolLink(null),
         }}
       >
-        <SafeAreaView
-          key={locale}
-          style={[
-            styles.root,
-            { backgroundColor: shellBackground },
-            desktopWideTabs ? styles.rootDesktop : null,
-          ]}
-          edges={previewUserMode ? [] : ['top', 'left', 'right']}
-        >
-          <StatusBar style="light" />
-          {previewUserMode ? (
-            <AdminPreviewBanner
-              onExitPreview={() => {
-                setPreviewUserMode(false);
-                setAdminPresidentPreview(false);
-                void setClubShellMode('club');
-              }}
-            />
-          ) : null}
-          {profile ? <ProdayNotificationBridge /> : null}
-          {profile ? <ProdayBrainBridge /> : null}
-          {profile ? <ProdayCalendarSyncBridge /> : null}
-          {profile && !joueurPoleActive ? <PoleHelpChatbot /> : null}
-          {profile && !joueurPoleActive && !isClubShell ? <ProDayAiChat /> : null}
-          {desktopWideTabs ? (
-            <JoueurTabBarSlot
-              activeTab={activeTab}
-              onTabPress={handleTabPress}
-              unreadCount={unreadCount}
-              visibleTabs={screenTabs}
-            />
-          ) : null}
-          <View
+        <LaunchIntroProvider>
+          <SafeAreaView
+            key={locale}
             style={[
-              styles.screen,
-              desktopWideTabs
-                ? [
-                    styles.screenDesktop,
-                    { maxWidth: desktopShellChrome.contentMaxWidth },
-                  ]
-                : null,
+              styles.root,
+              { backgroundColor: shellBackground },
+              desktopWideTabs ? styles.rootDesktop : null,
             ]}
+            edges={previewUserMode ? [] : ['top', 'left', 'right']}
           >
-            <JoueurGateGuard>
-              {isClubShell ? (
-                <PresidentShellBridgeProvider>
-                  <ClubPresidentShellSwitch
-                    activeTab={activeTab}
-                    onTabChange={handleTabPress}
-                    adminPreviewBypass={forcePresidentPreview}
-                  />
-                </PresidentShellBridgeProvider>
-              ) : isCoachShell ? (
-                <CoachAppShell activeTab={activeTab} onTabChange={handleTabPress} />
-              ) : (
-                <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
-                  {showFeatureDisabledPanel ? (
-                    <FeatureDisabledPanel flag={blockedFlag} />
-                  ) : (
-                    <Screen />
-                  )}
-                </AnimatedTabContent>
-              )}
-            </JoueurGateGuard>
-          </View>
-          {usesRoleShell || desktopWideTabs ? null : (
-            <JoueurTabBarSlot
-              activeTab={activeTab}
-              onTabPress={handleTabPress}
-              unreadCount={unreadCount}
-              visibleTabs={screenTabs}
-            />
-          )}
-          {isGuestAuthOverlayVisible(isGuest, pendingAuthIntent) ? (
-            <AuthOverlayHost
-              intent={pendingAuthIntent}
-              signupProductLine={pendingSignupProductLine ?? undefined}
-              signupInitialRole={pendingSignupRole ?? undefined}
-              initialPole={pendingChosenPole ?? undefined}
-              onDismiss={dismissAuthOverlay}
-            />
-          ) : null}
-        </SafeAreaView>
-        <JoueurShellExtras />
+            <StatusBar style="light" />
+            {previewUserMode ? (
+              <AdminPreviewBanner
+                onExitPreview={() => {
+                  setPreviewUserMode(false);
+                  setAdminPresidentPreview(false);
+                  void setClubShellMode('club');
+                }}
+              />
+            ) : null}
+            {profile ? <ProdayNotificationBridge /> : null}
+            {profile ? <ProdayBrainBridge /> : null}
+            {profile ? <ProdayCalendarSyncBridge /> : null}
+            {profile && !joueurPoleActive ? <PoleHelpChatbot /> : null}
+            {profile && !joueurPoleActive && !isClubShell ? <ProDayAiChat /> : null}
+            {desktopWideTabs ? (
+              <JoueurTabBarSlot
+                activeTab={activeTab}
+                onTabPress={handleTabPress}
+                unreadCount={unreadCount}
+                visibleTabs={screenTabs}
+              />
+            ) : null}
+            <View
+              style={[
+                styles.screen,
+                desktopWideTabs
+                  ? [
+                      styles.screenDesktop,
+                      { maxWidth: desktopShellChrome.contentMaxWidth },
+                    ]
+                  : null,
+              ]}
+            >
+              <JoueurGateGuard>
+                {isClubShell ? (
+                  <PresidentShellBridgeProvider>
+                    <ClubPresidentShellSwitch
+                      activeTab={activeTab}
+                      onTabChange={handleTabPress}
+                      adminPreviewBypass={forcePresidentPreview}
+                    />
+                  </PresidentShellBridgeProvider>
+                ) : isCoachShell ? (
+                  <CoachAppShell activeTab={activeTab} onTabChange={handleTabPress} />
+                ) : (
+                  <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
+                    {showFeatureDisabledPanel ? (
+                      <FeatureDisabledPanel flag={blockedFlag} />
+                    ) : (
+                      <Screen />
+                    )}
+                  </AnimatedTabContent>
+                )}
+              </JoueurGateGuard>
+            </View>
+            {usesRoleShell || desktopWideTabs ? null : (
+              <JoueurTabBarSlot
+                activeTab={activeTab}
+                onTabPress={handleTabPress}
+                unreadCount={unreadCount}
+                visibleTabs={screenTabs}
+              />
+            )}
+            {isGuestAuthOverlayVisible(isGuest, pendingAuthIntent) ? (
+              <AuthOverlayHost
+                intent={pendingAuthIntent}
+                signupProductLine={pendingSignupProductLine ?? undefined}
+                signupInitialRole={pendingSignupRole ?? undefined}
+                initialPole={pendingChosenPole ?? undefined}
+                onDismiss={dismissAuthOverlay}
+              />
+            ) : null}
+          </SafeAreaView>
+          <JoueurShellExtras />
+        </LaunchIntroProvider>
       </TabNavigationProvider>
     </AppSpaceProvider>
     </JoueurProgressProvider>
