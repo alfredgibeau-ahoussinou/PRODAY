@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProductLineId } from '../../models/ProductLine';
 import { useTranslation } from '../../context/LocaleContext';
 import { getLocalizedDiscoverCopy } from '../../i18n/localizedContent';
-import { ProDayLogo } from '../branding/ProDayLogo';
+import { ProDaySymbol } from '../branding/ProDaySymbol';
+import { ProDayWordmark } from '../branding/ProDayWordmark';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { spacing, radius } from '../../theme/designTokens';
@@ -26,7 +27,9 @@ interface DiscoverGuestHeroProps {
   universeLabel?: string;
 }
 
-/** Home pôle invité — aperçu compte, un accent, un CTA. */
+/**
+ * Home pôle invité — Design épuré, moderne et compréhensible avec logo officiel ProDay.
+ */
 export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
   productLine,
   onSignup,
@@ -48,18 +51,23 @@ export const DiscoverGuestHero: React.FC<DiscoverGuestHeroProps> = ({
   );
 
   return (
-    <View style={[styles.shell, { paddingTop: insets.top + chrome.topExtra }]}>
+    <View style={[styles.shell, { paddingTop: insets.top + chrome.topExtra + 12 }]}>
       {universeLabel && onUniversePress ? (
-        <PressableSpring onPress={onUniversePress} scaleTo={0.98} style={styles.universeBtn}>
+        <PressableSpring onPress={onUniversePress} scaleTo={0.96} style={styles.universeBtn}>
           <Text style={styles.universeText}>{universeLabel}</Text>
-          <Icon name="chevron-down" size={12} color="rgba(255,255,255,0.45)" />
+          <Icon name="chevron-down" size={14} color="#F5D04A" />
         </PressableSpring>
       ) : null}
 
       <View style={styles.brandBlock}>
-        <ProDayLogo variant={variant} width={chrome.logoSize} onDark layout="symbol" />
-        <Text style={styles.wordmark}>PRODAY</Text>
-        {poleName ? <Text style={styles.poleName}>{poleName}</Text> : null}
+        <ProDaySymbol size={64} variant="master" tone="white" />
+        <ProDayWordmark width={130} onDark align="center" />
+        {poleName ? (
+          <View style={styles.polePill}>
+            <View style={[styles.poleDot, { backgroundColor: accent }]} />
+            <Text style={[styles.poleName, { color: accent }]}>{poleName}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.copy}>
@@ -83,97 +91,109 @@ function createStyles(accent: string, onAccent: string, chrome: DiscoverHomeChro
   return StyleSheet.create({
     shell: {
       paddingHorizontal: spacing.lg,
-      marginBottom: chrome.heroMarginBottom,
-      gap: chrome.shellGap,
+      marginBottom: 20,
+      gap: 16,
       alignItems: 'center',
     },
     universeBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      paddingVertical: 2,
-      paddingHorizontal: 2,
+      gap: 6,
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 16,
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.12)',
     },
     universeText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: 'rgba(255,255,255,0.48)',
-      letterSpacing: 0.2,
+      fontSize: 13,
+      fontWeight: '700',
+      color: '#FFFFFF',
+      letterSpacing: 0.3,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     brandBlock: {
       alignItems: 'center',
-      gap: chrome.brandGap,
+      gap: 10,
       width: '100%',
     },
-    wordmark: {
-      fontFamily: fontFamily.brand,
-      fontSize: chrome.wordmarkSize,
-      letterSpacing: 3.2,
-      color: '#FFFFFF',
-      textTransform: 'uppercase',
-      ...Platform.select({ android: { includeFontPadding: false } }),
+    polePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 12,
+      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      marginTop: 2,
+    },
+    poleDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
     },
     poleName: {
-      fontFamily: fontFamily.brandSemi,
-      fontSize: chrome.poleNameSize,
-      letterSpacing: 2.4,
-      color: accent,
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 1.5,
       textTransform: 'uppercase',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     copy: {
-      gap: chrome.copyGap,
+      gap: 8,
       alignItems: 'center',
       width: '100%',
     },
     hero: {
-      fontSize: chrome.heroFontSize,
+      fontSize: 24,
       fontWeight: '800',
-      color: '#fff',
+      color: '#FFFFFF',
       letterSpacing: -0.5,
-      lineHeight: chrome.heroLineHeight,
+      lineHeight: 30,
       textAlign: 'center',
     },
     sub: {
-      fontSize: chrome.subFontSize,
-      lineHeight: chrome.subLineHeight,
-      fontWeight: '500',
-      color: 'rgba(255,255,255,0.58)',
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '400',
+      color: 'rgba(255, 255, 255, 0.65)',
       textAlign: 'center',
-      maxWidth: 320,
+      maxWidth: 340,
     },
     ctaCol: {
       alignSelf: 'stretch',
-      gap: chrome.ctaGap,
+      gap: 10,
       alignItems: 'stretch',
+      marginTop: 6,
     },
     signupBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: chrome.signupPadV,
+      paddingVertical: 14,
       paddingHorizontal: spacing.lg,
-      borderRadius: radius.pill,
-      minHeight: chrome.ctaMinHeight,
-      backgroundColor: accent,
+      borderRadius: 26,
+      minHeight: 52,
+      backgroundColor: '#F5D04A',
     },
     signupText: {
       fontSize: 15,
       fontWeight: '800',
-      color: onAccent,
+      color: '#000000',
+      letterSpacing: 0.2,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     loginBtn: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: spacing.xs,
-      minHeight: chrome.loginMinHeight,
+      paddingVertical: 10,
+      minHeight: 40,
     },
     loginBtnText: {
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: '600',
-      color: 'rgba(255,255,255,0.55)',
+      color: 'rgba(255, 255, 255, 0.7)',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });
