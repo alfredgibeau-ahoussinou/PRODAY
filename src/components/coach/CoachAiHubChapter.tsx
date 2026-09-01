@@ -123,6 +123,7 @@ export const CoachAiHubChapter: React.FC<Props> = ({
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [sessionPrompt, setSessionPrompt] = useState('');
   const [promptPlan, setPromptPlan] = useState<CoachComposedPlan | null>(null);
+  const [hubTab, setHubTab] = useState<'sessions' | 'tactics' | 'analysis'>('sessions');
 
   const teamMembers = useMemo(
     () => filterMembersForTeam(members, memberships, activeTeamId),
@@ -338,240 +339,298 @@ export const CoachAiHubChapter: React.FC<Props> = ({
     openNav,
   ]);
 
+  const QUICK_PROMPTS = [
+    { label: '🛡️ Bloc bas 90 min', prompt: 'Crée une séance bloc bas 90 min' },
+    { label: '⚡ Pressing haut', prompt: 'Crée une séance pressing haut et récupération 90 min' },
+    { label: '🔥 Blood Bath (Cardio)', prompt: 'Crée une séance blood bath haute intensité 75 min' },
+    { label: '🎯 Finition & Tirs', prompt: 'Crée une séance finition et face au but 60 min' },
+    { label: '🔄 Transitions rapides', prompt: 'Crée une séance transition offensive rapide 90 min' },
+  ];
+
+  const handleSelectQuickPrompt = useCallback(
+    (promptText: string) => {
+      setSessionPrompt(promptText);
+      const nextTraining = calendarContext.nextTraining;
+      const plan = composedPlanFromPrompt(promptText, {
+        targetEventId: nextTraining?.id,
+        playerCount: teamMembers.length || undefined,
+      });
+      setPromptPlan(plan);
+      setHubTab('sessions');
+    },
+    [calendarContext.nextTraining, teamMembers.length],
+  );
+
   return (
     <CoachPane title={getCoachPageIdentity('coach_ia').title}>
       <CoachChapterScroll>
         <View style={styles.stack}>
-          <CoachSectionCard
-            kicker="Vue d’ensemble"
-            title={overview.headline}
-            body={overview.synthesis}
-          >
-            <CoachText variant="caption" muted style={{ marginBottom: spacing.sm }}>
-              {coachHubHeuristicFootnote()}
-            </CoachText>
-            <View style={styles.metricsRow}>
-              {overview.metrics.map((m, index, arr) => (
-                <View
-                  key={m.label}
-                  style={[styles.metricCell, index < arr.length - 1 && styles.metricBorder]}
-                >
-                  <CoachText variant="section" style={styles.metricValue}>
-                    {m.value}
-                  </CoachText>
-                  <CoachText variant="caption" muted numberOfLines={1}>
-                    {m.label}
-                  </CoachText>
-                </View>
-              ))}
+          {/* Header & Quick Action */}
+          <View style={styles.hubHeaderCard}>
+            <View style={styles.hubHeaderRow}>
+              <View style={styles.hubHeaderIconWrap}>
+                <Icon name="star-four-points" size={20} color={tokens.accent} />
+              </View>
+              <View style={styles.hubHeaderTextWrap}>
+                <CoachText variant="section" style={styles.hubHeaderTitle}>
+                  Copilote IA Entraîneur
+                </CoachText>
+                <CoachText variant="caption" muted>
+                  Planification de séances, composition et analyses tactiques
+                </CoachText>
+              </View>
             </View>
-            {overview.emptyCta ? (
-              <Pressable
-                style={styles.ctaLink}
-                onPress={() => {
-                  const target = actionNavTarget(overview.emptyCta!.action);
-                  if (target) openNav(target);
-                }}
-              >
-                <CoachText variant="caption" accent>
-                  {overview.emptyCta.label} →
-                </CoachText>
-              </Pressable>
-            ) : null}
-          </CoachSectionCard>
-
-          <CoachSectionCard
-            kicker="Stratégie recommandée"
-            title={
-              strategy.formation
-                ? `Partir en ${strategy.formation}`
-                : strategy.level === 'none'
-                  ? 'Pas assez de données'
-                  : 'Pistes tactiques'
-            }
-            body={
-              strategy.formationDetail ??
-              strategy.emptyHint ??
-              'Basé sur tes feuilles de match, ta compo et la forme déclarée.'
-            }
-          >
-            {strategy.playersToStart.length > 0 ? (
-              <View style={styles.listBlock}>
-                <CoachText variant="caption" style={styles.listLabel}>
-                  À faire jouer
-                </CoachText>
-                {strategy.playersToStart.map((p) => (
-                  <View key={p.uid} style={styles.playerLine}>
-                    <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
-                      {p.name}
-                    </CoachText>
-                    <CoachText variant="caption" muted numberOfLines={2}>
-                      {p.reason}
-                    </CoachText>
-                  </View>
-                ))}
-              </View>
-            ) : null}
-
-            {strategy.playersToWatch.length > 0 ? (
-              <View style={styles.listBlock}>
-                <CoachText variant="caption" style={styles.listLabel}>
-                  À surveiller
-                </CoachText>
-                {strategy.playersToWatch.map((p) => (
-                  <View key={p.uid} style={styles.playerLine}>
-                    <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
-                      {p.name}
-                    </CoachText>
-                    <CoachText variant="caption" muted numberOfLines={2}>
-                      {p.reason}
-                    </CoachText>
-                  </View>
-                ))}
-              </View>
-            ) : null}
-
-            {strategy.matchBrief ? (
-              <View style={styles.focusBox}>
-                <CoachText variant="caption" muted>
-                  Brief match
-                </CoachText>
-                <CoachText variant="caption">{strategy.matchBrief}</CoachText>
-              </View>
-            ) : null}
-
-            {strategy.trainingFocus ? (
-              <View style={styles.focusBox}>
-                <CoachText variant="caption" muted>
-                  Focus entraînement
-                </CoachText>
-                <CoachText variant="caption">{strategy.trainingFocus}</CoachText>
-              </View>
-            ) : null}
-
-            <Pressable style={styles.secondaryBtn} onPress={() => openNav('smart_tactics')}>
-              <Icon name="star-four-points" size={14} color={tokens.accent} />
-              <CoachText variant="caption" accent>
-                Ouvrir Tactique IA
+            <Pressable style={styles.primaryActionPill} onPress={() => setActionsOpen(true)}>
+              <Icon name="star-four-points" size={14} color={tokens.onAccent} />
+              <CoachText variant="caption" inverse style={styles.primaryActionPillText}>
+                {actions.length > 0 ? `${actions.length} action(s) prioritaire(s)` : 'Actions prioritaires'} →
               </CoachText>
             </Pressable>
-          </CoachSectionCard>
+          </View>
 
-          <ComposedPlanCard
-            plan={activePlan}
-            applying={applyingPlan}
-            onApply={() => void applyComposedPlan()}
-            prompt={sessionPrompt}
-            onPromptChange={setSessionPrompt}
-            onComposeFromPrompt={composeFromPrompt}
-            onClearPromptPlan={
-              promptPlan
-                ? () => {
-                    setPromptPlan(null);
-                  }
-                : undefined
-            }
-            fromPrompt={Boolean(promptPlan)}
-          />
-
-          <Pressable style={styles.primaryBtn} onPress={() => setActionsOpen(true)}>
-            <Icon name="star-four-points" size={18} color={tokens.onAccent} />
-            <CoachText variant="section" inverse style={styles.primaryBtnText}>
-              Que dois-je faire maintenant ?
-            </CoachText>
-          </Pressable>
-
-          <CoachSectionCard
-            kicker="Analyse vidéo"
-            title={
-              videoCount > 0
-                ? `${videoCount} captation${videoCount > 1 ? 's' : ''} disponible${videoCount > 1 ? 's' : ''}`
-                : 'Aucune vidéo club'
-            }
-            body={
-              videoCount > 0
-                ? 'Matchs filmés liés à votre club — ouvrez Mes vidéos pour le détail.'
-                : 'Aucune captation ProDay enregistrée pour votre club. Importez ou connectez une caméra depuis Mes vidéos.'
-            }
-          >
-            {recentVideos.length > 0 ? (
-              <View style={styles.videoList}>
-                {recentVideos.map((v) => (
-                  <Pressable
-                    key={v.id}
-                    style={styles.videoRow}
-                    onPress={() => openNav('mes_videos')}
-                  >
-                    <Icon name="videocam" size={14} color={tokens.accent} />
-                    <View style={styles.videoRowBody}>
-                      <CoachText variant="caption" style={styles.videoTitle} numberOfLines={1}>
-                        {v.title}
-                      </CoachText>
-                      <CoachText variant="caption" muted>
-                        {v.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        {v.aiReady ? ' · IA prête' : ''}
-                      </CoachText>
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
-            <Pressable style={styles.secondaryBtn} onPress={() => openNav('mes_videos')}>
-              <Icon name="videocam" size={14} color={tokens.accent} />
-              <CoachText variant="caption" accent>
-                Ouvrir Mes vidéos
+          {/* Navigation par Onglets Clairs */}
+          <View style={styles.hubTabRow}>
+            <Pressable
+              style={[styles.hubTabItem, hubTab === 'sessions' && styles.hubTabItemActive]}
+              onPress={() => setHubTab('sessions')}
+            >
+              <Icon name="star-four-points" size={14} color={hubTab === 'sessions' ? tokens.accent : tokens.muted} />
+              <CoachText variant="caption" style={[styles.hubTabText, hubTab === 'sessions' && styles.hubTabTextActive]}>
+                Séances IA
               </CoachText>
             </Pressable>
-          </CoachSectionCard>
+            <Pressable
+              style={[styles.hubTabItem, hubTab === 'tactics' && styles.hubTabItemActive]}
+              onPress={() => setHubTab('tactics')}
+            >
+              <Icon name="tune" size={14} color={hubTab === 'tactics' ? tokens.accent : tokens.muted} />
+              <CoachText variant="caption" style={[styles.hubTabText, hubTab === 'tactics' && styles.hubTabTextActive]}>
+                Tactique & 11
+              </CoachText>
+            </Pressable>
+            <Pressable
+              style={[styles.hubTabItem, hubTab === 'analysis' && styles.hubTabItemActive]}
+              onPress={() => setHubTab('analysis')}
+            >
+              <Icon name="stats-chart" size={14} color={hubTab === 'analysis' ? tokens.accent : tokens.muted} />
+              <CoachText variant="caption" style={[styles.hubTabText, hubTab === 'analysis' && styles.hubTabTextActive]}>
+                Analyses & Vidéos
+              </CoachText>
+            </Pressable>
+          </View>
 
-          <CoachSectionCard
-            kicker="Après-match"
-            title={
-              postMatchAnalyses.length > 0
-                ? `${postMatchAnalyses.length} analyse${postMatchAnalyses.length > 1 ? 's' : ''} récente${postMatchAnalyses.length > 1 ? 's' : ''}`
-                : 'Aucune feuille finalisée'
-            }
-            body={
-              postMatchAnalyses.length > 0
-                ? 'Synthèse honnête depuis feuilles de match et scores live.'
-                : 'Validez une feuille de match pour générer une analyse post-match.'
-            }
-          >
-            {postMatchAnalyses.length > 0 ? (
-              <View style={styles.postMatchList}>
-                {postMatchAnalyses.map((a) => (
-                  <PostMatchCard
-                    key={a.eventId}
-                    analysis={a}
-                    onOpenVideos={() => openNav('mes_videos')}
-                  />
-                ))}
-              </View>
-            ) : null}
-          </CoachSectionCard>
-
-          {actions.length > 0 ? (
-            <View style={styles.previewActions}>
-              {actions.slice(0, 3).map((a) => (
-                <Pressable key={a.id} style={styles.previewRow} onPress={() => runAction(a)}>
-                  <CoachText variant="caption" style={styles.previewTitle}>
-                    {a.title}
-                  </CoachText>
-                  <CoachText variant="caption" muted numberOfLines={2}>
-                    {a.detail}
-                  </CoachText>
-                </Pressable>
-              ))}
-            </View>
+          {/* CONTENU ONGLET 1 : SÉANCES IA */}
+          {hubTab === 'sessions' ? (
+            <>
+              <ComposedPlanCard
+                plan={activePlan}
+                applying={applyingPlan}
+                onApply={() => void applyComposedPlan()}
+                prompt={sessionPrompt}
+                onPromptChange={setSessionPrompt}
+                onComposeFromPrompt={composeFromPrompt}
+                quickPrompts={QUICK_PROMPTS}
+                onSelectQuickPrompt={handleSelectQuickPrompt}
+                onClearPromptPlan={
+                  promptPlan
+                    ? () => {
+                        setPromptPlan(null);
+                      }
+                    : undefined
+                }
+                fromPrompt={Boolean(promptPlan)}
+              />
+            </>
           ) : null}
 
-          {showSeasonStats ? (
-            <View style={styles.statsBlock}>
-              <CoachText variant="caption" style={styles.statsTitle}>
-                Statistiques saison
-              </CoachText>
-              <CoachSeasonStatsPanel events={events} profile={profile} />
-            </View>
+          {/* CONTENU ONGLET 2 : TACTIQUE & 11 TYPE */}
+          {hubTab === 'tactics' ? (
+            <>
+              <CoachSectionCard
+                kicker="Stratégie recommandée"
+                title={
+                  strategy.formation
+                    ? `Partir en ${strategy.formation}`
+                    : strategy.level === 'none'
+                      ? 'Pas assez de données'
+                      : 'Pistes tactiques'
+                }
+                body={
+                  strategy.formationDetail ??
+                  strategy.emptyHint ??
+                  'Basé sur vos feuilles de match, votre composition et la forme déclarée des joueurs.'
+                }
+              >
+                {strategy.playersToStart.length > 0 ? (
+                  <View style={styles.listBlock}>
+                    <CoachText variant="caption" style={styles.listLabel}>
+                      À titulariser (Forme optimale)
+                    </CoachText>
+                    {strategy.playersToStart.map((p) => (
+                      <View key={p.uid} style={styles.playerLine}>
+                        <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
+                          {p.name}
+                        </CoachText>
+                        <CoachText variant="caption" muted numberOfLines={2}>
+                          {p.reason}
+                        </CoachText>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {strategy.playersToWatch.length > 0 ? (
+                  <View style={styles.listBlock}>
+                    <CoachText variant="caption" style={styles.listLabel}>
+                      À surveiller (Fatigue / Charge)
+                    </CoachText>
+                    {strategy.playersToWatch.map((p) => (
+                      <View key={p.uid} style={styles.playerLine}>
+                        <CoachText variant="section" numberOfLines={1} style={styles.playerName}>
+                          {p.name}
+                        </CoachText>
+                        <CoachText variant="caption" muted numberOfLines={2}>
+                          {p.reason}
+                        </CoachText>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {strategy.matchBrief ? (
+                  <View style={styles.focusBox}>
+                    <CoachText variant="caption" muted>
+                      Brief match
+                    </CoachText>
+                    <CoachText variant="caption">{strategy.matchBrief}</CoachText>
+                  </View>
+                ) : null}
+
+                {strategy.trainingFocus ? (
+                  <View style={styles.focusBox}>
+                    <CoachText variant="caption" muted>
+                      Focus entraînement
+                    </CoachText>
+                    <CoachText variant="caption">{strategy.trainingFocus}</CoachText>
+                  </View>
+                ) : null}
+
+                <Pressable style={styles.secondaryBtn} onPress={() => openNav('smart_tactics')}>
+                  <Icon name="star-four-points" size={14} color={tokens.accent} />
+                  <CoachText variant="caption" accent>
+                    Ouvrir le Tableau Noir & Tactique IA →
+                  </CoachText>
+                </Pressable>
+              </CoachSectionCard>
+            </>
+          ) : null}
+
+          {/* CONTENU ONGLET 3 : ANALYSES & VIDÉOS */}
+          {hubTab === 'analysis' ? (
+            <>
+              <CoachSectionCard
+                kicker="Vue d’ensemble de l'effectif"
+                title={overview.headline}
+                body={overview.synthesis}
+              >
+                <CoachText variant="caption" muted style={{ marginBottom: spacing.sm }}>
+                  {coachHubHeuristicFootnote()}
+                </CoachText>
+                <View style={styles.metricsRow}>
+                  {overview.metrics.map((m, index, arr) => (
+                    <View
+                      key={m.label}
+                      style={[styles.metricCell, index < arr.length - 1 && styles.metricBorder]}
+                    >
+                      <CoachText variant="section" style={styles.metricValue}>
+                        {m.value}
+                      </CoachText>
+                      <CoachText variant="caption" muted numberOfLines={1}>
+                        {m.label}
+                      </CoachText>
+                    </View>
+                  ))}
+                </View>
+              </CoachSectionCard>
+
+              <CoachSectionCard
+                kicker="Analyse vidéo"
+                title={
+                  videoCount > 0
+                    ? `${videoCount} captation${videoCount > 1 ? 's' : ''} disponible${videoCount > 1 ? 's' : ''}`
+                    : 'Aucune vidéo club'
+                }
+                body={
+                  videoCount > 0
+                    ? 'Matchs filmés liés à votre club — ouvrez Mes vidéos pour le détail.'
+                    : 'Aucune captation ProDay enregistrée pour votre club. Importez ou connectez une caméra depuis Mes vidéos.'
+                }
+              >
+                {recentVideos.length > 0 ? (
+                  <View style={styles.videoList}>
+                    {recentVideos.map((v) => (
+                      <Pressable
+                        key={v.id}
+                        style={styles.videoRow}
+                        onPress={() => openNav('mes_videos')}
+                      >
+                        <Icon name="videocam" size={14} color={tokens.accent} />
+                        <View style={styles.videoRowBody}>
+                          <CoachText variant="caption" style={styles.videoTitle} numberOfLines={1}>
+                            {v.title}
+                          </CoachText>
+                          <CoachText variant="caption" muted>
+                            {v.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                            {v.aiReady ? ' · IA prête' : ''}
+                          </CoachText>
+                        </View>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+                <Pressable style={styles.secondaryBtn} onPress={() => openNav('mes_videos')}>
+                  <Icon name="videocam" size={14} color={tokens.accent} />
+                  <CoachText variant="caption" accent>
+                    Ouvrir Mes vidéos →
+                  </CoachText>
+                </Pressable>
+              </CoachSectionCard>
+
+              <CoachSectionCard
+                kicker="Après-match"
+                title={
+                  postMatchAnalyses.length > 0
+                    ? `${postMatchAnalyses.length} analyse${postMatchAnalyses.length > 1 ? 's' : ''} récente${postMatchAnalyses.length > 1 ? 's' : ''}`
+                    : 'Aucune feuille finalisée'
+                }
+                body={
+                  postMatchAnalyses.length > 0
+                    ? 'Synthèse honnête depuis feuilles de match et scores live.'
+                    : 'Validez une feuille de match pour générer une analyse post-match.'
+                }
+              >
+                {postMatchAnalyses.length > 0 ? (
+                  <View style={styles.postMatchList}>
+                    {postMatchAnalyses.map((a) => (
+                      <PostMatchCard
+                        key={a.eventId}
+                        analysis={a}
+                        onOpenVideos={() => openNav('mes_videos')}
+                      />
+                    ))}
+                  </View>
+                ) : null}
+              </CoachSectionCard>
+
+              {showSeasonStats ? (
+                <View style={styles.statsBlock}>
+                  <CoachText variant="caption" style={styles.statsTitle}>
+                    Statistiques saison
+                  </CoachText>
+                  <CoachSeasonStatsPanel events={events} profile={profile} />
+                </View>
+              ) : null}
+            </>
           ) : null}
         </View>
       </CoachChapterScroll>
@@ -623,6 +682,8 @@ function ComposedPlanCard({
   onPromptChange,
   onComposeFromPrompt,
   onClearPromptPlan,
+  quickPrompts,
+  onSelectQuickPrompt,
   fromPrompt,
 }: {
   plan: CoachComposedPlan;
@@ -632,6 +693,8 @@ function ComposedPlanCard({
   onPromptChange: (v: string) => void;
   onComposeFromPrompt: () => void;
   onClearPromptPlan?: () => void;
+  quickPrompts?: { label: string; prompt: string }[];
+  onSelectQuickPrompt?: (prompt: string) => void;
   fromPrompt?: boolean;
 }) {
   const { tokens } = useCoachTheme();
@@ -644,17 +707,17 @@ function ComposedPlanCard({
       : plan.dataConfidence === 'low'
         ? 'Données partielles'
         : fromPrompt
-          ? 'Brouillon local depuis votre demande'
-          : 'Modèle générique';
+          ? 'Brouillon généré depuis votre demande'
+          : 'Modèle tactique ProDay';
 
   const ctaLabel = isEmpty
     ? plan.context === 'match'
       ? 'Planifier un match'
       : 'Planifier un entraînement'
     : isMatch
-      ? 'Enrichir l’événement'
+      ? 'Enrichir le match'
       : plan.targetEventId
-        ? 'Appliquer au créneau'
+        ? 'Appliquer au calendrier'
         : 'Créer l’entraînement';
 
   return (
@@ -664,7 +727,30 @@ function ComposedPlanCard({
       body={plan.reason}
     >
       <CoachText variant="caption" muted style={styles.label}>
-        Demande libre
+        Suggestions rapides en 1 clic
+      </CoachText>
+      {quickPrompts && quickPrompts.length > 0 ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsScroll}
+        >
+          {quickPrompts.map((q) => (
+            <Pressable
+              key={q.label}
+              style={[styles.promptChip, { borderColor: tokens.border, backgroundColor: tokens.surface }]}
+              onPress={() => onSelectQuickPrompt?.(q.prompt)}
+            >
+              <CoachText variant="caption" style={styles.promptChipText}>
+                {q.label}
+              </CoachText>
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : null}
+
+      <CoachText variant="caption" muted style={styles.label}>
+        Ou saisissez votre consigne libre
       </CoachText>
       <TextInput
         style={[
@@ -673,7 +759,7 @@ function ComposedPlanCard({
         ]}
         value={prompt}
         onChangeText={onPromptChange}
-        placeholder="Ex. crée une séance bloc bas, bas du corps 75 min…"
+        placeholder="Ex. crée une séance bloc bas 90 min, pressing haut, blood bath…"
         placeholderTextColor={tokens.muted}
         multiline
       />
@@ -681,13 +767,13 @@ function ComposedPlanCard({
         <Pressable style={[styles.secondaryBtn, styles.promptComposeBtn]} onPress={onComposeFromPrompt}>
           <Icon name="star-four-points" size={14} color={tokens.accent} />
           <CoachText variant="caption" accent>
-            Composer le brouillon
+            Générer la séance →
           </CoachText>
         </Pressable>
         {onClearPromptPlan ? (
           <Pressable onPress={onClearPromptPlan}>
             <CoachText variant="caption" muted>
-              Revenir à la suggestion auto
+              Réinitialiser
             </CoachText>
           </Pressable>
         ) : null}
@@ -837,6 +923,96 @@ function PostMatchCard({
 function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     stack: { gap: spacing.md, paddingBottom: spacing.xl },
+    hubHeaderCard: {
+      padding: spacing.md,
+      borderRadius: 16,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: spacing.sm,
+    },
+    hubHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    hubHeaderIconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: tokens.elevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    hubHeaderTextWrap: {
+      flex: 1,
+      gap: 2,
+    },
+    hubHeaderTitle: {
+      fontWeight: '800',
+      fontSize: 16,
+      color: tokens.foreground,
+    },
+    primaryActionPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      backgroundColor: tokens.accent,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: spacing.md,
+    },
+    primaryActionPillText: {
+      fontWeight: '700',
+      fontSize: 13,
+      color: tokens.onAccent,
+    },
+    hubTabRow: {
+      flexDirection: 'row',
+      backgroundColor: tokens.surface,
+      borderRadius: 14,
+      padding: 4,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: 4,
+    },
+    hubTabItem: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    hubTabItemActive: {
+      backgroundColor: tokens.elevated,
+    },
+    hubTabText: {
+      fontWeight: '600',
+      fontSize: 12,
+      color: tokens.muted,
+    },
+    hubTabTextActive: {
+      fontWeight: '800',
+      color: tokens.foreground,
+    },
+    chipsScroll: {
+      gap: 8,
+      paddingVertical: 6,
+    },
+    promptChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 20,
+      borderWidth: 1,
+    },
+    promptChipText: {
+      fontWeight: '700',
+      fontSize: 12,
+      color: tokens.foreground,
+    },
     metricsRow: {
       flexDirection: 'row',
       marginTop: spacing.sm,
