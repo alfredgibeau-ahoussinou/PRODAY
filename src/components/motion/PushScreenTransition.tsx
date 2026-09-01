@@ -7,46 +7,42 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
-import { getMotionPreset, prodayMotion, useReducedMotion } from '../../motion';
+import { prodayMotion, useReducedMotion } from '../../motion';
 import { PUSH_ENTER_SAFETY_MS, PUSH_EXIT_SAFETY_MS } from '../../motion/safety';
 import { useAppTheme } from '../../context/ProductLineContext';
 
-const { width: W } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export { PUSH_ENTER_SAFETY_MS, PUSH_EXIT_SAFETY_MS } from '../../motion/safety';
 
 interface PushScreenTransitionProps {
   active: boolean;
   children: React.ReactNode;
-  /** Fond plein écran (ex. #000 coach) — défaut thème produit. */
+  /** Fond plein écran */
   backgroundColor?: string;
-  /**
-   * Sortie courte en timing (pas de spring) — évite le double « redo »
-   * quand un enfant a déjà une leave locale (ex. sélecteur d’univers).
-   */
   directExit?: boolean;
-  /** Durée exit en mode directExit (ms). */
   directExitMs?: number;
 }
 
+const PUSH_ENTER_MS = 280;
+const PUSH_EXIT_MS = 240;
+
 /**
- * Navigation type “stack” / détail — glisse depuis la droite + fade (preset detail).
- * Timing only (pas de spring) — plus court, plus direct.
- * Démontage garanti après exit (timeout de secours).
+ * Navigation type “stack” / détail — glisse fluide et naturelle.
  */
 export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
   active,
   children,
   backgroundColor,
   directExit = false,
-  directExitMs = 160,
+  directExitMs = 200,
 }) => {
   const { colors } = useAppTheme();
   const reduced = useReducedMotion();
-  const preset = getMotionPreset('detail');
   const [mounted, setMounted] = useState(active);
-  const x = useSharedValue(active ? 0 : W);
+  const x = useSharedValue(active ? 0 : SCREEN_WIDTH * 0.35);
   const opacity = useSharedValue(active ? 1 : 0);
+  const scale = useSharedValue(active ? 1 : 0.985);
   const exitGen = useRef(0);
 
   useEffect(() => {
@@ -55,41 +51,48 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
       setMounted(true);
       cancelAnimation(x);
       cancelAnimation(opacity);
+      cancelAnimation(scale);
+
       if (reduced) {
         x.value = 0;
         opacity.value = 1;
+        scale.value = 1;
         return;
       }
-      if (opacity.value < prodayMotion.holdOpacity) {
-        opacity.value = prodayMotion.holdOpacity;
-      }
+
       x.value = withTiming(0, {
-        duration: preset.enterMs,
+        duration: PUSH_ENTER_MS,
         easing: prodayMotion.easing.out,
       });
-      opacity.value = withTiming(
-        1,
-        {
-          duration: preset.enterMs,
-          easing: prodayMotion.easing.out,
-        },
-        (finished) => {
-          if (token !== exitGen.current) return;
-          if (!finished) {
-            cancelAnimation(x);
-            cancelAnimation(opacity);
-            x.value = 0;
-            opacity.value = 1;
-          }
-        },
-      );
+      opacity.value = withTiming(1, {
+        duration: PUSH_ENTER_MS - 40,
+        easing: prodayMotion.easing.out,
+      });
+      scale.value = withTiming(1, {
+        duration: PUSH_ENTER_MS,
+        easing: prodayMotion.easing.out,
+      }, (finished) => {
+        if (token !== exitGen.current) return;
+        if (!finished) {
+          cancelAnimation(x);
+          cancelAnimation(opacity);
+          cancelAnimation(scale);
+          x.value = 0;
+          opacity.value = 1;
+          scale.value = 1;
+        }
+      });
+
       const enterSafety = setTimeout(() => {
         if (token !== exitGen.current) return;
         cancelAnimation(x);
         cancelAnimation(opacity);
+        cancelAnimation(scale);
         x.value = 0;
         opacity.value = 1;
-      }, preset.enterMs + PUSH_ENTER_SAFETY_MS);
+        scale.value = 1;
+      }, PUSH_ENTER_MS + PUSH_ENTER_SAFETY_MS);
+
       return () => clearTimeout(enterSafety);
     }
 
@@ -100,8 +103,10 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
       if (token !== exitGen.current) return;
       cancelAnimation(x);
       cancelAnimation(opacity);
+      cancelAnimation(scale);
       opacity.value = 0;
-      x.value = W;
+      x.value = SCREEN_WIDTH * 0.35;
+      scale.value = 0.985;
       setMounted(false);
     };
 
@@ -110,25 +115,30 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
       return;
     }
 
-    /** Timing only — exit court, interruptible (pas de plancher 180 ms). */
     const outMs = directExit
-      ? Math.max(100, Math.min(directExitMs, 220))
-      : preset.exitMs;
+      ? Math.max(140, Math.min(directExitMs, 260))
+      : PUSH_EXIT_MS;
 
     cancelAnimation(x);
     cancelAnimation(opacity);
+    cancelAnimation(scale);
+
     opacity.value = withTiming(0, {
       duration: outMs,
       easing: prodayMotion.easing.in,
     });
     x.value = withTiming(
-      W,
+      SCREEN_WIDTH * 0.35,
       { duration: outMs, easing: prodayMotion.easing.in },
       (finished) => {
         if (token !== exitGen.current) return;
         runOnJS(forceUnmount)();
       },
     );
+    scale.value = withTiming(0.985, {
+      duration: outMs,
+      easing: prodayMotion.easing.in,
+    });
 
     const safety = setTimeout(forceUnmount, outMs + PUSH_EXIT_SAFETY_MS);
     return () => clearTimeout(safety);
@@ -139,14 +149,16 @@ export const PushScreenTransition: React.FC<PushScreenTransitionProps> = ({
     mounted,
     x,
     opacity,
+    scale,
     reduced,
-    preset.enterMs,
-    preset.exitMs,
   ]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateX: x.value }],
+    transform: [
+      { translateX: x.value },
+      { scale: scale.value },
+    ],
   }));
 
   if (!mounted) return null;
