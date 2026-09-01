@@ -20,6 +20,7 @@ import { clubShellModeFromCarouselPole } from '../models/ClubShellMode';
 import { useAppLaunchIntro } from '../hooks/useAppLaunchIntro';
 import { useProductLine } from './ProductLineContext';
 import { useAuthOptional } from './AuthContext';
+import { useTabNavigationOptional } from './TabNavigationContext';
 import { PushScreenTransition } from '../components/motion';
 import { StyleSheet, View } from 'react-native';
 import { UNIVERSE_CONFIRM_LEAVE } from '../components/branding/intro/launchIntroFlow';
@@ -103,6 +104,8 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
     setManualOpen(false);
   }, []);
 
+  const tabNav = useTabNavigationOptional();
+
   const onChooseSpace = useCallback(
     async (pole: IntroSpaceChoice) => {
       const preset = carouselPoleSignupPresetRole(pole);
@@ -111,8 +114,12 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
       if (shellMode) await setClubShellMode(shellMode);
       const line = carouselPoleToProductLine(pole);
       await setProductLine(line);
+
+      if (!profile) {
+        tabNav?.openAuth('login');
+      }
     },
-    [setProductLine, setProSignupPresetRole, setClubShellMode],
+    [setProductLine, setProSignupPresetRole, setClubShellMode, profile, tabNav],
   );
 
   const onIntroExitComplete = useCallback(() => {

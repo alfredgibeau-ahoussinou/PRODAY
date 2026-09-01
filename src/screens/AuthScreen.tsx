@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   ActivityIndicator,
@@ -40,6 +40,7 @@ import {
   AUTH_XP,
 } from '../features/auth/experience';
 import { isGoogleAuthConfigured } from '../config/oauth';
+import { isPlatformAdminEmail } from '../config/admin';
 import { Platform } from 'react-native';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -60,7 +61,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   signupProductLine,
   signupInitialRole,
 }) => {
-  const { loading: authLoading, configured, refreshProfile } = useAuth();
+  const { loading: authLoading, configured, refreshProfile, isAdmin } = useAuth();
   const { setActiveTab } = useTabNavigation();
   const { productLine } = useAppTheme();
   const { openSpacePicker } = useLaunchIntro();
@@ -261,17 +262,80 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     </ProDayText>
   );
 
+  const universeAuthCopy = useMemo(() => {
+    if (isAdmin || (quickLogin.savedEmail && isPlatformAdminEmail(quickLogin.savedEmail))) {
+      return {
+        kicker: 'ACCÈS FONDATION VIP',
+        title: 'Espace Administrateur',
+        sub: 'Connexion sécurisée réservée aux fondateurs et administrateurs ProDay.',
+        cta: 'Connexion Admin',
+      };
+    }
+    if (productLine === 'pro_staff' || signupInitialRole === 'coach') {
+      return {
+        kicker: 'PÔLE COACH & STAFF',
+        title: 'Espace Coach',
+        sub: 'Connectez-vous pour piloter vos séances IA, tactiques et convocations.',
+        cta: 'Connexion Coach',
+      };
+    }
+    if (productLine === 'pro_club' || signupInitialRole === 'club') {
+      return {
+        kicker: 'PÔLE CLUB & DIRIGEANTS',
+        title: 'Espace Club',
+        sub: 'Connectez-vous pour administrer vos effectifs, tournois et adhésions.',
+        cta: 'Connexion Club',
+      };
+    }
+    if (productLine === 'parent' || signupInitialRole === 'parent') {
+      return {
+        kicker: 'PORTAIL PARENT & FAMILLE',
+        title: 'Espace Famille',
+        sub: 'Connectez-vous pour suivre votre enfant et le covoiturage club.',
+        cta: 'Connexion Famille',
+      };
+    }
+    if (productLine === 'sponsor' || signupInitialRole === 'sponsor') {
+      return {
+        kicker: 'ESPACE SPONSOR & PARTENAIRES',
+        title: 'Espace Partenaire',
+        sub: 'Connectez-vous pour gérer vos campagnes et votre visibilité locale.',
+        cta: 'Connexion Partenaire',
+      };
+    }
+    if (productLine === 'supporter' || signupInitialRole === 'supporter') {
+      return {
+        kicker: 'TRIBUNE SUPPORTERS',
+        title: 'Espace Supporter',
+        sub: 'Connectez-vous pour suivre les matchs en direct et voter MVP.',
+        cta: 'Connexion Supporter',
+      };
+    }
+    return {
+      kicker: 'PÔLE JOUEUR',
+      title: 'Espace Joueur',
+      sub: 'Connectez-vous pour accéder à vos statistiques, matchs et CV sportif.',
+      cta: 'Connexion Joueur',
+    };
+  }, [productLine, signupInitialRole, isAdmin, quickLogin.savedEmail]);
+
   return (
     <>
       <AuthExperienceShell toolbar={toolbar} footer={legalFooter}>
         <AuthModeSwitch modeKey={mode}>
           {mode === 'login' ? (
             <View>
+              <View style={styles.kickerBadge}>
+                <View style={styles.kickerDot} />
+                <ProDayText variant="eyebrow" style={styles.kickerText}>
+                  {universeAuthCopy.kicker}
+                </ProDayText>
+              </View>
               <ProDayText variant="title" style={styles.title}>
-                {t('auth.welcomeBack')}.
+                {universeAuthCopy.title}
               </ProDayText>
               <ProDayText variant="body" style={styles.sub}>
-                {t('auth.experience.loginSub')}
+                {universeAuthCopy.sub}
               </ProDayText>
 
               {banner ? (
@@ -345,7 +409,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               />
 
               <AuthButton
-                label={t('auth.loginCta')}
+                label={universeAuthCopy.cta}
                 onPress={() => void handleLogin()}
                 loading={loading}
               />
@@ -479,6 +543,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 19,
     backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  kickerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  kickerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#F5D04A',
+  },
+  kickerText: {
+    color: '#F5D04A',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   title: {
     color: '#FFFFFF',
