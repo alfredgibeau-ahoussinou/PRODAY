@@ -6,13 +6,12 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Icon } from '../../components/ui/Icon';
 import { PressableSpring } from '../../components/motion';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
-import { AuthProgress, AUTH_XP } from '../../features/auth/experience';
+import { AuthProgress } from '../../features/auth/experience';
 
 interface SignupStepLayoutProps {
   stepIndex: number;
@@ -31,7 +30,7 @@ interface SignupStepLayoutProps {
 }
 
 /**
- * Layout inscription — DA Experience luxueuse (fond vert nuit, barres or segmentées, typographie haute définition).
+ * Layout inscription épuré et minimaliste — fond noir pur, progression fine et typographie soignée.
  */
 export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   stepIndex,
@@ -54,25 +53,19 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Background subtil */}
-      <LinearGradient
-        colors={['rgba(245, 208, 74, 0.04)', '#07100C', '#050807']}
-        style={StyleSheet.absoluteFill}
-      />
-
       <View style={[styles.header, { paddingTop: headerTopPad }]}>
         <View style={styles.headerRow}>
           {onBack || onClose ? (
             <PressableSpring
               onPress={onBack ?? onClose}
               style={styles.iconBtn}
-              hitSlop={12}
-              scaleTo={0.94}
+              hitSlop={14}
+              scaleTo={0.92}
               haptic
               accessibilityRole="button"
               accessibilityLabel={onBack ? 'Retour' : 'Fermer'}
             >
-              <Icon name={onBack ? 'arrow-back' : 'close'} size={18} color={AUTH_XP.white} />
+              <Icon name={onBack ? 'arrow-back' : 'close'} size={18} color="#FFFFFF" />
             </PressableSpring>
           ) : (
             <View style={styles.headerSideSpacer} />
@@ -92,7 +85,7 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
         {stepName ? (
           <View style={styles.stepKickerWrap}>
             <ProDayText variant="eyebrow" style={styles.stepKicker}>
-              ÉTAPE {stepIndex + 1} · {stepName.toUpperCase()}
+              {stepName.toUpperCase()} · ÉTAPE {stepIndex + 1}
             </ProDayText>
           </View>
         ) : null}
@@ -118,38 +111,34 @@ function createStyles(contentMaxWidth: number) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: AUTH_XP.black,
+      backgroundColor: '#000000',
     },
     header: {
       paddingHorizontal: 16,
-      paddingBottom: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+      paddingBottom: 8,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    headerSideSpacer: { width: 42 },
+    headerSideSpacer: { width: 38 },
     progressWrap: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
     },
     iconBtn: {
-      width: 42,
-      height: 42,
+      width: 38,
+      height: 38,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.15)',
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      borderRadius: 19,
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
     },
     scroll: {
       paddingHorizontal: 20,
-      paddingTop: 24,
+      paddingTop: 16,
       maxWidth: contentMaxWidth + 40,
       width: '100%',
       alignSelf: 'center',
@@ -160,32 +149,30 @@ function createStyles(contentMaxWidth: number) {
     stepKicker: {
       color: '#F5D04A',
       fontSize: 10,
-      fontWeight: '800',
-      letterSpacing: 1.5,
+      fontWeight: '700',
+      letterSpacing: 1.2,
     },
     title: {
       color: '#FFFFFF',
-      fontSize: 28,
-      fontWeight: '900',
+      fontSize: 26,
+      fontWeight: '800',
       letterSpacing: -0.5,
-      marginBottom: 8,
+      marginBottom: 6,
     },
     subtitle: {
-      color: 'rgba(255, 255, 255, 0.65)',
-      fontSize: 15,
-      lineHeight: 22,
-      fontWeight: '500',
-      marginBottom: 24,
+      color: 'rgba(255, 255, 255, 0.55)',
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '400',
+      marginBottom: 20,
     },
     body: {
-      gap: 14,
+      gap: 12,
     },
     footer: {
       paddingHorizontal: 20,
-      paddingTop: 14,
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(255, 255, 255, 0.08)',
-      backgroundColor: '#07100C',
+      paddingTop: 10,
+      backgroundColor: '#000000',
     },
   });
 }

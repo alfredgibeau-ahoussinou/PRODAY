@@ -4,7 +4,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { PressableSpring } from '../../../components/motion';
 import { AUTH_XP } from './tokens';
@@ -18,7 +17,7 @@ type AuthButtonProps = {
 };
 
 /**
- * CTA premium — design luxury gold, anti double-submit (guard + disabled pendant loading).
+ * CTA minimaliste épuré — format pilule pleine or/noir avec gestion anti double-clic.
  */
 export const AuthButton: React.FC<AuthButtonProps> = ({
   label,
@@ -38,7 +37,6 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
     try {
       onPress();
     } finally {
-      // Relâche après le tick — le parent garde `loading` pour bloquer.
       requestAnimationFrame(() => {
         lock.current = false;
       });
@@ -56,18 +54,9 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       accessibilityLabel={label}
     >
-      {primary ? (
-        <LinearGradient
-          colors={['#FDE047', '#F5D04A', '#C5A059']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      ) : null}
-
       {loading ? (
         <ActivityIndicator
-          color={primary ? '#07100C' : AUTH_XP.gold}
+          color={primary ? '#000000' : '#FFFFFF'}
           size="small"
         />
       ) : (
@@ -75,10 +64,9 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
           variant="section"
           style={styles.label}
         >
-          {label.toUpperCase()}
+          {label}
         </ProDayText>
       )}
-      {primary ? <View style={styles.shine} pointerEvents="none" /> : null}
     </PressableSpring>
   );
 };
@@ -88,42 +76,28 @@ function createStyles(variant: AuthButtonProps['variant']) {
   const ghost = variant === 'ghost';
   return StyleSheet.create({
     btn: {
-      minHeight: 56,
+      minHeight: 52,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 16,
+      borderRadius: 26,
       paddingHorizontal: 24,
-      overflow: 'hidden',
       backgroundColor: primary
-        ? AUTH_XP.gold
+        ? '#F5D04A'
         : ghost
           ? 'transparent'
-          : 'rgba(255, 255, 255, 0.06)',
-      borderWidth: primary ? 0 : 1.5,
-      borderColor: ghost ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.15)',
-      marginTop: 12,
-      shadowColor: primary ? '#F5D04A' : '#000',
-      shadowOffset: { width: 0, height: primary ? 6 : 2 },
-      shadowOpacity: primary ? 0.35 : 0.2,
-      shadowRadius: 12,
-      elevation: 6,
+          : 'rgba(255, 255, 255, 0.08)',
+      borderWidth: ghost ? 1 : 0,
+      borderColor: ghost ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+      marginTop: 10,
     },
     label: {
-      color: primary ? '#07100C' : '#FFFFFF',
+      color: primary ? '#000000' : '#FFFFFF',
       fontSize: 15,
-      fontWeight: '900',
-      letterSpacing: 0.8,
+      fontWeight: '700',
+      letterSpacing: 0.2,
     },
     disabled: {
-      opacity: 0.5,
-    },
-    shine: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 1.5,
-      backgroundColor: 'rgba(255, 255, 255, 0.55)',
+      opacity: 0.45,
     },
   });
 }

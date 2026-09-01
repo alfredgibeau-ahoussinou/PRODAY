@@ -49,15 +49,15 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
     borderColor: error
       ? AUTH_XP.borderError
       : focusAnim.value > 0.5
-        ? AUTH_XP.borderFocus
-        : AUTH_XP.border,
+        ? '#F5D04A'
+        : 'rgba(255, 255, 255, 0.12)',
     backgroundColor: disabled
-      ? AUTH_XP.inputBgDisabled
+      ? 'rgba(255, 255, 255, 0.02)'
       : error
-        ? AUTH_XP.errorBg
+        ? 'rgba(239, 68, 68, 0.08)'
         : focusAnim.value > 0.5 || filled
-          ? 'rgba(255, 255, 255, 0.08)'
-          : 'rgba(255, 255, 255, 0.04)',
+          ? 'rgba(255, 255, 255, 0.06)'
+          : 'rgba(255, 255, 255, 0.03)',
   }));
 
   const styles = useMemo(() => createStyles(), []);
@@ -66,7 +66,7 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
     <View style={styles.wrap}>
       <ProDayText
         variant="caption"
-        style={[styles.label, focused && { color: AUTH_XP.gold }]}
+        style={[styles.label, focused && { color: '#F5D04A' }]}
       >
         {label}
       </ProDayText>
@@ -74,8 +74,8 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
         {icon ? (
           <Icon
             name={icon}
-            size={20}
-            color={focused ? AUTH_XP.gold : AUTH_XP.textMuted}
+            size={18}
+            color={focused ? '#F5D04A' : 'rgba(255, 255, 255, 0.4)'}
           />
         ) : null}
         <TextInput
@@ -84,17 +84,17 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
           value={value}
           editable={editable}
           secureTextEntry={isSecure}
-          placeholderTextColor={AUTH_XP.textDim}
-          selectionColor={AUTH_XP.gold}
+          placeholderTextColor="rgba(255, 255, 255, 0.25)"
+          selectionColor="#F5D04A"
           autoCorrect={false}
           onFocus={(e) => {
             setFocused(true);
-            focusAnim.value = withTiming(1, { duration: AUTH_XP.motionFast });
+            focusAnim.value = withTiming(1, { duration: 150 });
             onFocus?.(e);
           }}
           onBlur={(e) => {
             setFocused(false);
-            focusAnim.value = withTiming(0, { duration: AUTH_XP.motionFast });
+            focusAnim.value = withTiming(0, { duration: 150 });
             onBlur?.(e);
           }}
           accessibilityLabel={label}
@@ -110,8 +110,8 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
           >
             <Icon
               name={hidden ? 'eye' : 'eye-off'}
-              size={20}
-              color={focused ? AUTH_XP.gold : AUTH_XP.textMuted}
+              size={18}
+              color="rgba(255, 255, 255, 0.4)"
             />
           </PressableSpring>
         ) : null}
@@ -129,39 +129,38 @@ function createStyles() {
   return StyleSheet.create({
     wrap: {
       gap: 6,
-      marginBottom: 16,
+      marginBottom: 14,
     },
     label: {
-      color: AUTH_XP.textMuted,
-      letterSpacing: 0.8,
-      textTransform: 'uppercase',
-      fontSize: 11,
-      fontWeight: '700',
+      color: 'rgba(255, 255, 255, 0.55)',
+      letterSpacing: 0.5,
+      fontSize: 12,
+      fontWeight: '600',
     },
     field: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
-      minHeight: 56,
+      gap: 10,
+      minHeight: 50,
       paddingHorizontal: 16,
-      borderRadius: 16,
-      borderWidth: 1.5,
+      borderRadius: 14,
+      borderWidth: 1,
     },
     input: {
       flex: 1,
-      color: AUTH_XP.white,
-      fontSize: 16,
-      paddingVertical: 12,
-      fontWeight: '600',
+      color: '#FFFFFF',
+      fontSize: 15,
+      paddingVertical: 10,
+      fontWeight: '500',
     },
     disabled: {
-      opacity: 0.55,
+      opacity: 0.5,
     },
     error: {
-      color: AUTH_XP.error,
+      color: '#F87171',
       marginTop: 2,
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: '500',
     },
   });
 }

@@ -46,47 +46,40 @@ export const SignupOptionPicker: React.FC<SignupOptionPickerProps> = ({
 
 function createStyles(c: AppColors) {
   return StyleSheet.create({
-    wrap: { marginBottom: spacing.lg },
+    wrap: { marginBottom: spacing.md },
     label: {
-      fontSize: 11,
-      fontWeight: '800',
-      letterSpacing: 1.2,
-      textTransform: 'uppercase',
-      color: '#F5D04A',
-      marginBottom: spacing.sm,
+      fontSize: 12,
+      fontWeight: '600',
+      color: 'rgba(255, 255, 255, 0.55)',
+      marginBottom: spacing.xs,
     },
-    row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
-      paddingVertical: 10,
+      paddingVertical: 9,
       paddingHorizontal: 16,
-      borderRadius: 14,
-      borderWidth: 1.5,
+      borderRadius: 20,
+      borderWidth: 1,
       borderColor: 'rgba(255, 255, 255, 0.12)',
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      backgroundColor: 'rgba(255, 255, 255, 0.04)',
     },
     chipActive: {
       backgroundColor: '#F5D04A',
       borderColor: '#F5D04A',
-      shadowColor: '#F5D04A',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
-      elevation: 4,
     },
     chipText: {
       fontSize: 14,
-      fontWeight: '700',
-      color: 'rgba(255, 255, 255, 0.85)',
+      fontWeight: '500',
+      color: 'rgba(255, 255, 255, 0.8)',
     },
     chipTextActive: {
-      color: '#07100C',
-      fontWeight: '900',
+      color: '#000000',
+      fontWeight: '700',
     },
     error: {
       fontSize: 12,
       color: c.error,
       marginTop: spacing.xs,
-      fontWeight: '600',
+      fontWeight: '500',
     },
   });
 }

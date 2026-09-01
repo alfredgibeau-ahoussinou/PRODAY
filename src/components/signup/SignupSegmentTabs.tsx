@@ -18,7 +18,7 @@ interface SignupSegmentTabsProps<T extends string> {
 }
 
 /**
- * Segments inscription — pilules scrollables modernes or et verre dépoli.
+ * Segments inscription épurés et minimalistes.
  */
 export function SignupSegmentTabs<T extends string>({
   tabs,
@@ -71,56 +71,50 @@ export function SignupSegmentTabs<T extends string>({
 function createStyles(c: AppColors) {
   return StyleSheet.create({
     wrap: {
-      marginBottom: spacing.lg,
+      marginBottom: spacing.md,
       width: '100%',
     },
     wrapCompact: {
-      marginBottom: spacing.md,
+      marginBottom: spacing.sm,
     },
     rail: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       flexGrow: 1,
-      gap: spacing.sm,
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.xs,
+      gap: 8,
+      paddingVertical: 2,
     },
     pill: {
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-      borderRadius: 14,
-      borderWidth: 1.5,
+      paddingVertical: 9,
+      paddingHorizontal: 18,
+      borderRadius: 20,
+      borderWidth: 1,
       borderColor: 'rgba(255, 255, 255, 0.12)',
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      minHeight: 46,
+      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+      minHeight: 42,
       justifyContent: 'center',
     },
     pillCompact: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      minHeight: 40,
+      paddingVertical: 7,
+      paddingHorizontal: 14,
+      minHeight: 36,
     },
     pillOn: {
       backgroundColor: '#F5D04A',
       borderColor: '#F5D04A',
-      shadowColor: '#F5D04A',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
-      elevation: 4,
     },
     pillLabel: {
       fontSize: 14,
-      fontWeight: '700',
-      color: 'rgba(255, 255, 255, 0.8)',
+      fontWeight: '500',
+      color: 'rgba(255, 255, 255, 0.75)',
     },
     pillLabelCompact: {
       fontSize: 13,
     },
     pillLabelOn: {
-      color: '#07100C',
-      fontWeight: '900',
+      color: '#000000',
+      fontWeight: '700',
     },
   });
 }
