@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { PressableSpring } from '../motion';
 import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 
 export interface SignupSegmentTab<T extends string = string> {
@@ -18,7 +18,7 @@ interface SignupSegmentTabsProps<T extends string> {
 }
 
 /**
- * Segments inscription — pilules scrollables (évite les libellés collés sur petit écran).
+ * Segments inscription — pilules scrollables modernes or et verre dépoli.
  */
 export function SignupSegmentTabs<T extends string>({
   tabs,
@@ -28,7 +28,6 @@ export function SignupSegmentTabs<T extends string>({
 }: SignupSegmentTabsProps<T>) {
   const { colors: c } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
-  const accent = c.accent;
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]}>
@@ -45,10 +44,10 @@ export function SignupSegmentTabs<T extends string>({
               style={[
                 styles.pill,
                 compact && styles.pillCompact,
-                on && { backgroundColor: accent, borderColor: accent },
+                on && styles.pillOn,
               ]}
               onPress={() => onSelect(tab.id)}
-              scaleTo={0.97}
+              scaleTo={0.96}
             >
               <Text
                 style={[
@@ -88,34 +87,40 @@ function createStyles(c: AppColors) {
       paddingHorizontal: spacing.xs,
     },
     pill: {
-      paddingVertical: spacing.sm + 2,
-      paddingHorizontal: spacing.lg,
-      borderRadius: radius.pill,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 14,
       borderWidth: 1.5,
-      borderColor: c.borderStrong,
-      backgroundColor: c.surfaceMuted,
-      minHeight: 44,
+      borderColor: 'rgba(255, 255, 255, 0.12)',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      minHeight: 46,
       justifyContent: 'center',
     },
     pillCompact: {
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
       minHeight: 40,
+    },
+    pillOn: {
+      backgroundColor: '#F5D04A',
+      borderColor: '#F5D04A',
+      shadowColor: '#F5D04A',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.35,
+      shadowRadius: 8,
+      elevation: 4,
     },
     pillLabel: {
       fontSize: 14,
       fontWeight: '700',
-      color: c.textSecondary,
-      letterSpacing: 0.1,
-      textAlign: 'center',
-      ...Platform.select({ android: { includeFontPadding: false } }),
+      color: 'rgba(255, 255, 255, 0.8)',
     },
     pillLabelCompact: {
       fontSize: 13,
     },
     pillLabelOn: {
-      color: c.brandInverse,
-      fontWeight: '800',
+      color: '#07100C',
+      fontWeight: '900',
     },
   });
 }

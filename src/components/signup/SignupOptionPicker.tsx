@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
 import type { AppColors } from '../../theme/universeTheme';
 
@@ -52,30 +52,35 @@ function createStyles(c: AppColors) {
       fontWeight: '800',
       letterSpacing: 1.2,
       textTransform: 'uppercase',
-      color: c.textMuted,
+      color: '#F5D04A',
       marginBottom: spacing.sm,
     },
     row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     chip: {
-      paddingVertical: spacing.sm + 2,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.pill,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 14,
       borderWidth: 1.5,
-      borderColor: c.border,
-      backgroundColor: c.surface,
+      borderColor: 'rgba(255, 255, 255, 0.12)',
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
     },
     chipActive: {
-      backgroundColor: c.accent,
-      borderColor: c.accent,
+      backgroundColor: '#F5D04A',
+      borderColor: '#F5D04A',
+      shadowColor: '#F5D04A',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.35,
+      shadowRadius: 8,
+      elevation: 4,
     },
     chipText: {
       fontSize: 14,
       fontWeight: '700',
-      color: c.textSecondary,
+      color: 'rgba(255, 255, 255, 0.85)',
     },
     chipTextActive: {
-      color: '#000000',
-      fontWeight: '800',
+      color: '#07100C',
+      fontWeight: '900',
     },
     error: {
       fontSize: 12,

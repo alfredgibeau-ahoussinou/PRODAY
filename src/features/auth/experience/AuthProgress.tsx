@@ -7,7 +7,7 @@ type AuthProgressProps = {
   stepTotal: number;
 };
 
-/** Indicateur minimal ●─●─○ */
+/** Indicateur de progression moderne avec barres segmentées */
 export const AuthProgress: React.FC<AuthProgressProps> = ({
   stepIndex,
   stepTotal,
@@ -22,20 +22,20 @@ export const AuthProgress: React.FC<AuthProgressProps> = ({
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: total, now: active + 1 }}
     >
-      {Array.from({ length: total }).map((_, i) => (
-        <React.Fragment key={i}>
-          {i > 0 ? (
-            <View style={[styles.line, i <= active && styles.lineOn]} />
-          ) : null}
+      {Array.from({ length: total }).map((_, i) => {
+        const isDone = i < active;
+        const isActive = i === active;
+        return (
           <View
+            key={i}
             style={[
-              styles.dot,
-              i < active && styles.dotDone,
-              i === active && styles.dotActive,
+              styles.segment,
+              isDone && styles.segmentDone,
+              isActive && styles.segmentActive,
             ]}
           />
-        </React.Fragment>
-      ))}
+        );
+      })}
     </View>
   );
 };
@@ -46,31 +46,26 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 0,
+      gap: 6,
       paddingVertical: 8,
     },
-    dot: {
-      width: 7,
-      height: 7,
-      borderRadius: 4,
-      backgroundColor: AUTH_XP.border,
+    segment: {
+      width: 22,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
     },
-    dotDone: {
-      backgroundColor: AUTH_XP.goldDeep,
+    segmentDone: {
+      backgroundColor: '#C5A059',
     },
-    dotActive: {
-      backgroundColor: AUTH_XP.gold,
-      width: 8,
-      height: 8,
-    },
-    line: {
-      width: 18,
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: AUTH_XP.border,
-      marginHorizontal: 4,
-    },
-    lineOn: {
-      backgroundColor: AUTH_XP.goldDeep,
+    segmentActive: {
+      backgroundColor: '#F5D04A',
+      width: 32,
+      shadowColor: '#F5D04A',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.8,
+      shadowRadius: 6,
+      elevation: 4,
     },
   });
 }

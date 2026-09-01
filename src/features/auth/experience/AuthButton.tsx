@@ -4,6 +4,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { PressableSpring } from '../../../components/motion';
 import { AUTH_XP } from './tokens';
@@ -17,7 +18,7 @@ type AuthButtonProps = {
 };
 
 /**
- * CTA premium — anti double-submit (guard + disabled pendant loading).
+ * CTA premium — design luxury gold, anti double-submit (guard + disabled pendant loading).
  */
 export const AuthButton: React.FC<AuthButtonProps> = ({
   label,
@@ -29,6 +30,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   const lock = useRef(false);
   const isDisabled = disabled || loading;
   const styles = useMemo(() => createStyles(variant), [variant]);
+  const primary = variant === 'primary';
 
   const handlePress = () => {
     if (isDisabled || lock.current) return;
@@ -48,25 +50,35 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
       style={[styles.btn, isDisabled && styles.disabled]}
       onPress={handlePress}
       disabled={isDisabled}
-      scaleTo={0.98}
+      scaleTo={0.97}
       haptic
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       accessibilityLabel={label}
     >
+      {primary ? (
+        <LinearGradient
+          colors={['#FDE047', '#F5D04A', '#C5A059']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? AUTH_XP.black : AUTH_XP.gold}
+          color={primary ? '#07100C' : AUTH_XP.gold}
+          size="small"
         />
       ) : (
         <ProDayText
           variant="section"
           style={styles.label}
         >
-          {label}
+          {label.toUpperCase()}
         </ProDayText>
       )}
-      {variant === 'primary' ? <View style={styles.shine} pointerEvents="none" /> : null}
+      {primary ? <View style={styles.shine} pointerEvents="none" /> : null}
     </PressableSpring>
   );
 };
@@ -76,26 +88,31 @@ function createStyles(variant: AuthButtonProps['variant']) {
   const ghost = variant === 'ghost';
   return StyleSheet.create({
     btn: {
-      minHeight: 52,
+      minHeight: 56,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: AUTH_XP.radiusMd,
+      borderRadius: 16,
       paddingHorizontal: 24,
       overflow: 'hidden',
       backgroundColor: primary
         ? AUTH_XP.gold
         : ghost
           ? 'transparent'
-          : AUTH_XP.surfaceRaised,
-      borderWidth: primary ? 0 : 1,
-      borderColor: ghost ? AUTH_XP.border : AUTH_XP.border,
-      marginTop: 10,
+          : 'rgba(255, 255, 255, 0.06)',
+      borderWidth: primary ? 0 : 1.5,
+      borderColor: ghost ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.15)',
+      marginTop: 12,
+      shadowColor: primary ? '#F5D04A' : '#000',
+      shadowOffset: { width: 0, height: primary ? 6 : 2 },
+      shadowOpacity: primary ? 0.35 : 0.2,
+      shadowRadius: 12,
+      elevation: 6,
     },
     label: {
-      color: primary ? AUTH_XP.black : AUTH_XP.white,
+      color: primary ? '#07100C' : '#FFFFFF',
       fontSize: 15,
-      fontWeight: '700',
-      letterSpacing: 0.3,
+      fontWeight: '900',
+      letterSpacing: 0.8,
     },
     disabled: {
       opacity: 0.5,
@@ -105,8 +122,8 @@ function createStyles(variant: AuthButtonProps['variant']) {
       top: 0,
       left: 0,
       right: 0,
-      height: 1,
-      backgroundColor: 'rgba(255,255,255,0.4)',
+      height: 1.5,
+      backgroundColor: 'rgba(255, 255, 255, 0.55)',
     },
   });
 }

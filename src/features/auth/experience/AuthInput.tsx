@@ -56,23 +56,26 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
       : error
         ? AUTH_XP.errorBg
         : focusAnim.value > 0.5 || filled
-          ? AUTH_XP.inputBgFilled
-          : AUTH_XP.inputBg,
+          ? 'rgba(255, 255, 255, 0.08)'
+          : 'rgba(255, 255, 255, 0.04)',
   }));
 
   const styles = useMemo(() => createStyles(), []);
 
   return (
     <View style={styles.wrap}>
-      <ProDayText variant="caption" style={styles.label}>
+      <ProDayText
+        variant="caption"
+        style={[styles.label, focused && { color: AUTH_XP.gold }]}
+      >
         {label}
       </ProDayText>
       <Animated.View style={[styles.field, fieldAnim, disabled && styles.disabled]}>
         {icon ? (
           <Icon
             name={icon}
-            size={18}
-            color={focused ? AUTH_XP.goldBright : AUTH_XP.textMuted}
+            size={20}
+            color={focused ? AUTH_XP.gold : AUTH_XP.textMuted}
           />
         ) : null}
         <TextInput
@@ -107,8 +110,8 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
           >
             <Icon
               name={hidden ? 'eye' : 'eye-off'}
-              size={18}
-              color={AUTH_XP.textMuted}
+              size={20}
+              color={focused ? AUTH_XP.gold : AUTH_XP.textMuted}
             />
           </PressableSpring>
         ) : null}
@@ -130,26 +133,26 @@ function createStyles() {
     },
     label: {
       color: AUTH_XP.textMuted,
-      letterSpacing: 0.5,
+      letterSpacing: 0.8,
       textTransform: 'uppercase',
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: '700',
     },
     field: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-      minHeight: 52,
+      minHeight: 56,
       paddingHorizontal: 16,
-      borderRadius: AUTH_XP.radiusMd,
-      borderWidth: 1,
+      borderRadius: 16,
+      borderWidth: 1.5,
     },
     input: {
       flex: 1,
       color: AUTH_XP.white,
-      fontSize: 15,
+      fontSize: 16,
       paddingVertical: 12,
-      fontWeight: '500',
+      fontWeight: '600',
     },
     disabled: {
       opacity: 0.55,
@@ -158,6 +161,7 @@ function createStyles() {
       color: AUTH_XP.error,
       marginTop: 2,
       fontSize: 12,
+      fontWeight: '600',
     },
   });
 }
