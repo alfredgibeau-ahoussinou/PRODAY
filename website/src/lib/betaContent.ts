@@ -1,5 +1,3 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
 import { isTestFlightAvailable } from "./betaIosLaunch";
 
 const DEFAULT_APK_PATH = "/downloads/proday-beta.apk";
@@ -7,13 +5,6 @@ const DEFAULT_APK_PATH = "/downloads/proday-beta.apk";
 function resolveBetaApkUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_BETA_APK_URL?.trim();
   if (fromEnv) return fromEnv;
-
-  const localApk = path.join(process.cwd(), "public", "downloads", "proday-beta.apk");
-  if (existsSync(localApk)) {
-    return DEFAULT_APK_PATH;
-  }
-
-  // Lien sur le site. redirect Netlify vers Firebase Storage en production.
   return DEFAULT_APK_PATH;
 }
 

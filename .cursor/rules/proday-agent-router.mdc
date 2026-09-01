@@ -1,0 +1,18 @@
+---
+description: Auto-switch PRODAY work to proday-website or proday-app subagents. Always apply.
+alwaysApply: true
+---
+
+# PRODAY auto-route
+
+On every user request, pick a specialist and **Task-delegate immediately**. Do not implement website or app code in the parent chat.
+
+| Signal | Subagent (`subagent_type`) |
+|---|---|
+| `website/`, Next.js, Netlify, proday75.fr, admin PIN/session, Edge, CSP | `proday-website` |
+| `src/`, `App.tsx`, Expo, React Native, Metro, EAS, coach/joueur/club shells, Firebase **client** | `proday-app` |
+| Both in one message | Launch **both in parallel**, then merge |
+
+Stay in the parent only for routing, git/commit when asked, or questions that are neither site nor app.
+
+Never wait for “use the X subagent”. Never do the specialist’s edits yourself.

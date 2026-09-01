@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { ScrollVideoStage, UniverseScroll } from "@/components/immersive";
 import { ProductPositioning } from "@/components/home/ProductPositioning";
+import { HomeAppInstallBanner } from "@/components/home/HomeAppInstallBanner";
+import { HomeHeroPreload } from "@/components/home/HomeHeroPreload";
 import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { ROUTES } from "@/lib/routes";
 
 export default function HomePage() {
   return (
     <>
+      <HomeHeroPreload />
+      <HomeAppInstallBanner />
       <ScrollVideoStage />
       <UniverseScroll />
 

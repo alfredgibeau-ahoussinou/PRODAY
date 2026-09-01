@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { RoleAccentStage } from "@/components/immersive/RoleAccentStage";
 import {
   CoachCapabilityStrip,
-  CoachTacticsBoard,
   ImmersivePoleHero,
 } from "@/components/poles/immersivePoleExperience";
 import { CoachAppHub } from "@/components/poles/CoachAppHub";
 import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { RosterBourseSection } from "@/components/poles/RosterBourseSection";
+import { TacticalChalkboard } from "@/components/tactics/TacticalChalkboard";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
 import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
@@ -15,12 +15,16 @@ import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Pôle Coach · Tactique IA et analyse de forme",
+  title: "Pôle Coach · Tactique IA, Tableau Noir Interactif & Analyse de Forme",
   description:
-    "Profil coach : app Accueil, effectif, IA · analyse de forme, Tactique IA, bourse interne et préparation match. Parrainage possible.",
+    "Profil coach : démonstrateur de Tableau Noir Tactique interactif, consignes de jeu en temps réel, analyse de forme de l'effectif et bourse interne. Sans abonnement pour les coachs.",
 };
 
 const COACH_CAPS = [
+  {
+    title: "Tableau Noir Tactique IA",
+    body: "Démonstrateur interactif dans le navigateur, bascule de formations en direct, animations de phases (Attaque, Bloc, Contre, Pressing) et consignes individuelles.",
+  },
   {
     title: "Analyse de forme",
     body: "Vision complète de l’effectif : forme, charge, récupération déclarée, disponibilité et alertes avant match. Pas de diagnostic médical.",
@@ -32,10 +36,6 @@ const COACH_CAPS = [
   {
     title: "Effectif et bourse",
     body: "Poste manquant ? Déclarez le besoin, scannez le vivier (équipe B, réserve, catégorie voisine), proposez une montée. Le club valide.",
-  },
-  {
-    title: "Tactique IA",
-    body: "Tableau interactif, formations illimitées, banc, consignes et plans de jeu.",
   },
   {
     title: "Invitations de match",
@@ -67,12 +67,12 @@ export default function CoachPolePage() {
     <TerminalPage accentStyle={accentStyle}>
       <ImmersivePoleHero
         brand="Pro Day Coach"
-        headline="Votre banc de touche."
-        support="Analyse de forme de l’effectif, Tactique IA et bourse interne. Sous Tout inclus, les coachs ne paient rien."
+        headline="Votre banc de touche. Votre tableau noir."
+        support="Démonstrateur interactif de tactique et consignes de jeu, analyse de forme de l’effectif et bourse interne. Sous Tout inclus, les coachs ne paient rien."
         video={visuals.heroVideo}
         poster={visuals.hero}
-        primaryHref={ROUTES.betaWaitlist}
-        primaryLabel="Rejoindre le Pôle Coach"
+        primaryHref="#tactique"
+        primaryLabel="Tester le Tableau Noir Tactique"
         secondaryHref="#app"
         secondaryLabel="Voir l’app Coach"
         perk={POLE_REFERRAL_LINE}
@@ -80,9 +80,14 @@ export default function CoachPolePage() {
 
       <CoachAppHub />
 
-      <FormAnalysisFeature audience="coach" />
+      <div id="tactique">
+        <TacticalChalkboard
+          headline="Tableau Noir Tactique IA · Démonstrateur Interactif"
+          subtitle="Testez vos schémas tactiques directement dans le navigateur : animez les phases de jeu (Attaque, Bloc Défensif, Contre Éclair, Pressing Haut) et personnalisez les consignes individuelles et collectives."
+        />
+      </div>
 
-      <CoachTacticsBoard />
+      <FormAnalysisFeature audience="coach" />
 
       <RosterBourseSection audience="coach" />
 

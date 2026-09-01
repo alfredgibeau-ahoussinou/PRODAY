@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { PACKAGE_LABELS } from "@/components/sponsor/devis/DevisSteps";
 import { DevisWizardShell } from "@/components/sponsor/devis/DevisWizardShell";
+import { SponsorVisibilityWidget } from "@/components/sponsor/devis/SponsorVisibilityWidget";
 import { useSponsorDevisForm } from "@/hooks/useSponsorDevisForm";
 import { SPONSOR_PARTNER_CONTACT_EMAIL } from "@/lib/content";
 import { ROUTES } from "@/lib/routes";
@@ -117,7 +118,7 @@ export function DevisRecapStep() {
             </>
           ) : (
             <>
-              Envoyer ma demande
+              Envoyer ma demande de devis
               <Check size={18} />
             </>
           )}
@@ -128,27 +129,36 @@ export function DevisRecapStep() {
         <div className="flex items-start gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-5">
           <Sparkles size={20} className="mt-0.5 shrink-0 text-amber-400" />
           <p className="text-sm text-amber-100/80">
-            Votre demande sera envoyée à{" "}
-            <strong className="text-amber-200">{SPONSOR_PARTNER_CONTACT_EMAIL}</strong>. Réponse
-            sous 48 h ouvrées.
+            Votre dossier sera adressé directement à l&apos;équipe partenariats ProDay (
+            <strong className="text-amber-200">{SPONSOR_PARTNER_CONTACT_EMAIL}</strong>). Réponse
+            sous 48 h ouvrées avec proposition détaillée.
           </p>
         </div>
+
+        {/* Synthèse de l'estimation de visibilité */}
+        <SponsorVisibilityWidget
+          packageTier={form.packageTier}
+          regions={form.regions}
+          sports={form.sports}
+          budget={form.budget}
+          title="Projection validée de visibilité locale"
+        />
 
         <dl className="grid gap-4 sm:grid-cols-2">
           {(
             [
-              ["Formule", PACKAGE_LABELS[form.packageTier]],
-              ["Marque", form.companyName],
+              ["Formule sélectionnée", PACKAGE_LABELS[form.packageTier]],
+              ["Raison sociale / Marque", form.companyName],
               ["Secteur", form.sector],
-              ["Contact", form.contactName],
+              ["Contact référent", form.contactName],
               ["Fonction", form.contactRole || "…"],
-              ["Email", form.email],
+              ["Email professionnel", form.email],
               ["Téléphone", form.phone || "…"],
-              ["Budget", form.budget],
+              ["Budget mensuel", form.budget],
               ["Objectifs", form.goals.join(", ") || "…"],
               ["Public cible", form.audience.join(", ") || "…"],
-              ["Régions", form.regions.join(", ") || "…"],
-              ["Sports", form.sports.join(", ") || "…"],
+              ["Territoires", form.regions.join(", ") || "…"],
+              ["Disciplines", form.sports.join(", ") || "…"],
             ] as const
           ).map(([label, value]) => (
             <div key={label} className="rounded-xl border border-white/8 bg-white/[0.02] p-4">
@@ -163,7 +173,7 @@ export function DevisRecapStep() {
         {form.message ? (
           <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-amber-400/60">
-              Message
+              Message & précisions
             </p>
             <p className="mt-1 text-sm text-white/85">{form.message}</p>
           </div>
@@ -185,7 +195,7 @@ export function DevisConfirmationPage() {
           <Check size={32} className="text-amber-400" />
         </div>
         <h1 className="font-display mt-6 text-2xl font-bold text-white sm:text-3xl">
-          Demande envoyée
+          Demande envoyée avec succès
         </h1>
         <Suspense fallback={<p className="mx-auto mt-3 max-w-md text-white/60">Merci. L&apos;équipe partenaires ProDay a bien reçu votre demande.</p>}>
           <ConfirmationCopy />

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
 import { DemoPhoneStage } from "@/components/demo/DemoPhoneStage";
+import { TacticalChalkboard } from "@/components/tactics/TacticalChalkboard";
+import { FutCardStudio } from "@/components/cards/FutCardStudio";
 import { POLE_BRAND_HEX, SHOWCASE_POLES, pricingHrefForPole } from "@/lib/poles";
 import {
   DEMO_POLE_SHORT_LABEL,
@@ -20,11 +22,11 @@ type DemoPageContentProps = {
 
 const POLE_BLURB: Record<DemoPoleId, string> = {
   joueur:
-    "Profil, stats, covoiturage et Mercato. Pass optionnel pour IA et vidéo.",
+    "Profil, stats, simulateur de carte FUT 3D, covoiturage et Mercato. Pass optionnel pour IA et vidéo.",
   supporter: "Tribune gratuite : live, suivis et débats. Aucun paywall.",
   pro_club:
     "Équipes, convocations, compétitions et permissions. Amateur → Premium.",
-  coach: "Tactique IA, effectif, IA et préparation match.",
+  coach: "Tableau Noir Tactique interactif, effectif, IA et préparation match.",
   sponsor: "Campagnes, inventaire et contact clubs. KPIs lisibles.",
   sante: "Rôle intégré : agenda cabinet et demandes de sportifs.",
 };
@@ -56,8 +58,7 @@ export function DemoPageContent({ pole }: DemoPageContentProps) {
           Choisis un pôle. Touche l’écran.
         </h2>
         <p className="mt-3 max-w-lg text-sm text-white/55">
-          Contenu illustratif : aucune donnée réelle. Navigue comme dans l’app, puis rejoins la
-          bêta.
+          Contenu interactif temps réel : navigue comme dans l’app, teste le tableau noir tactique et le simulateur de cartes, puis rejoins la bêta.
         </p>
 
         <div className="mt-10 overflow-hidden border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-3 sm:p-6">
@@ -113,7 +114,7 @@ export function DemoPageContent({ pole }: DemoPageContentProps) {
               </motion.p>
               {[
                 "Changement de pôle instantané",
-                "Onglets réalistes",
+                "Onglets réalistes & simulateurs",
                 "Passage direct vers la bêta",
               ].map((point) => (
                 <div key={point} className="flex items-start gap-2 text-sm text-white/75">
@@ -162,6 +163,56 @@ export function DemoPageContent({ pole }: DemoPageContentProps) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* DEDICATED INTERACTIVE DEMONSTRATORS ACCORDING TO ACTIVE POLE */}
+      <div className="mt-16">
+        <AnimatePresence mode="wait">
+          {pole === "coach" && (
+            <motion.div
+              key="demo-coach-tactics"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <TacticalChalkboard
+                headline="Démonstrateur Interactif du Tableau Noir Coach"
+                subtitle="Testez en direct dans votre navigateur les plans tactiques, consignes de jeu et animations de phases de match du Pôle Coach."
+              />
+            </motion.div>
+          )}
+
+          {pole === "joueur" && (
+            <motion.div
+              key="demo-joueur-cards"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <FutCardStudio
+                headline="Démonstrateur Simulateur de Cartes FUT 3D Joueur"
+                subtitle="Manipulez les curseurs en temps réel (OVR, Vitesse, Tir, Passe, Dribble, Défense, Physique, Poste) et prévisualisez votre carte interactive en 3D."
+              />
+            </motion.div>
+          )}
+
+          {pole !== "coach" && pole !== "joueur" && (
+            <motion.div
+              key="demo-general-tactics"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <TacticalChalkboard
+                headline="Démonstrateur du Tableau Noir Tactique"
+                subtitle="Découvrez le moteur tactique ProDay intégré : consignes interactives, transitions et animations de match."
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

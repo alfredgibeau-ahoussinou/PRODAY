@@ -64,8 +64,8 @@ export function FaqAccordion({
                       ? "bg-white text-black"
                       : "bg-neutral-900 text-white"
                     : dark
-                      ? "border border white/15 text white/65 hover:text white"
-                      : "border border neutral 200 text neutral 600 hover:text neutral 900"
+                      ? "border border-white/15 text-white/65 hover:text-white"
+                      : "border border-neutral-200 text-neutral-600 hover:text-neutral-900"
                 }`}
               >
                 {cat.label}

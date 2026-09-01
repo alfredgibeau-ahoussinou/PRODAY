@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
 import { PresidentAppHub } from "@/components/poles/PresidentAppHub";
+import { ClubRoiCalculator } from "@/components/poles/ClubRoiCalculator";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
 import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
@@ -33,6 +34,25 @@ export default function PresidentPolePage() {
       />
 
       <PresidentAppHub />
+
+      {/* Section Rentabilité & Économies Dirigeants */}
+      <section className="relative border-t border-white/10 bg-[#080704] px-4 py-20 sm:px-6 sm:py-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 text-center sm:text-left">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#E8B923]">
+              Finances & Gestion club
+            </p>
+            <h2 className="mt-3 font-display text-[clamp(1.8rem,4.2vw,2.8rem)] font-medium tracking-[-0.03em] text-white">
+              Rentabilisez chaque euro investi dans votre club.
+            </h2>
+            <p className="mt-2 text-sm text-white/55 max-w-xl">
+              Estimez les gains de temps pour vos bénévoles, la récupération des cotisations et les économies de covoiturage pour vos familles.
+            </p>
+          </div>
+
+          <ClubRoiCalculator ctaHref={ROUTES.clubDevis} />
+        </div>
+      </section>
 
       <TerminalCta
         title="Décider sans perdre le fil."

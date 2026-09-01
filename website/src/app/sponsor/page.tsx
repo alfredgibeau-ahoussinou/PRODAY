@@ -7,6 +7,7 @@ import {
   SponsorTiersCompare,
   SponsorWarmCta,
 } from "@/components/poles/sponsorImmersive";
+import { SponsorVisibilitySimulator } from "@/components/sponsor/SponsorVisibilitySimulator";
 import { TerminalPage } from "@/components/terminal";
 import { poleAccentCssVars } from "@/lib/brandColors";
 import { POLE_REFERRAL_LINE } from "@/lib/commercialCopy";
@@ -48,6 +49,8 @@ export default function SponsorPolePage() {
         kicker="Marque"
         title="Visibilité mesurée."
       />
+
+      <SponsorVisibilitySimulator />
 
       <SponsorTiersCompare />
 

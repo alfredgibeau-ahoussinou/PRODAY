@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import { FutCardStudio } from "@/components/cards/FutCardStudio";
+import { ProDayCardsGallery } from "@/components/cards/ProDayCardsGallery";
 import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { ROUTES } from "@/lib/routes";
 
 export const metadata: Metadata = {
-  title: "Carte Joueur ProDay · Fiche sportive",
+  title: "Générateur de Cartes FUT 3D & Passeport · ProDay",
   description:
-    "Carte joueur réelle : photo, poste, stats, vidéos et objectifs. Partageable avec coachs et clubs. Sans note artificielle ni badge de prestige.",
+    "Générateur et simulateur interactif de cartes FUT 3D en temps réel. Ajuste tes stats OVR, Vitesse, Tir, Passe, Dribble, Défense, Physique et Poste avec rendu holographique 3D.",
 };
 
 const CARD_FIELDS = [
@@ -25,14 +27,27 @@ export default function CartesPage() {
     <TerminalPage>
       <ImmersivePoleHero
         brand="Pro Day Cartes"
-        headline="Le joueur réel. En carte."
-        support="Une fiche sportive digitale à partager avec un coach ou un club : selon vos autorisations. Sans note globale, sans badge Elite."
+        headline="Le joueur réel. En carte FUT 3D."
+        support="Générateur et simulateur de cartes interactives 3D en temps réel : ajuste tes statistiques, personnalise ton identité sportive et exporte ton profil."
         video="/videos/hero-match.mp4"
         poster="/images/football-pro-01.jpg"
-        primaryHref={ROUTES.betaWaitlist}
-        primaryLabel="Rejoindre la bêta"
+        primaryHref="#studio"
+        primaryLabel="Tester le Studio FUT 3D"
         secondaryHref={ROUTES.joueur}
         secondaryLabel="Espace Joueur"
+      />
+
+      <div id="studio">
+        <FutCardStudio
+          headline="Studio Simulateur de Cartes FUT 3D"
+          subtitle="Modifie chaque curseur statistique en direct (OVR, Vitesse, Tir, Passe, Dribble, Défense, Physique, Poste) et observe l'impact immédiat sur la carte avec inclinaison 3D gyroscope et verso interactif."
+        />
+      </div>
+
+      <ProDayCardsGallery
+        title="La Collection ProDay : Cinq Rôles"
+        support="Découvre l'ensemble des déclinaisons de cartes Joueur, Coach, Club, Supporter et Sponsor avec skins dynamiques."
+        showMoreLink={false}
       />
 
       <section
@@ -44,11 +59,11 @@ export default function CartesPage() {
             Carte Joueur ProDay
           </p>
           <h2 className="mt-4 font-display text-[clamp(1.6rem,3.5vw,2.4rem)] font-medium tracking-[-0.03em] text-white">
-            Présenter le joueur. Pas le noter.
+            Présenter le joueur. Valoriser le talent.
           </h2>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/55">
             Style carte de football moderne, contenu réel. Les cartes joueur
-            arrivent bientôt dans l’app : voici ce qu’elles afficheront.
+            dans l’app ProDay centralisent l’ensemble de vos performances certifiées sur le terrain.
           </p>
 
           <ul className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -64,7 +79,7 @@ export default function CartesPage() {
 
           <p className="mt-8 text-sm text-white/40">
             Même logique pour la Carte Coach : expérience, diplômes, spécialités,
-            tarif horaire et demandes de séances.
+            tactiques favorites et demandes de séances.
           </p>
         </div>
       </section>
