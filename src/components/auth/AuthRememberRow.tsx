@@ -1,9 +1,8 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
-import { AUTH_XP } from '../../features/auth/experience/tokens';
 
 interface AuthRememberRowProps {
   rememberMe: boolean;
@@ -26,10 +25,10 @@ const ToggleChip: React.FC<{
     scaleTo={0.97}
   >
     <View style={[styles.dot, on && styles.dotOn]}>
-      {on ? <Icon name="checkmark-circle" size={12} color={AUTH_XP.black} /> : null}
+      {on ? <Icon name="checkmark-circle" size={14} color="#000000" /> : null}
     </View>
     <View style={styles.copy}>
-      <ProDayText variant="caption" style={styles.label}>
+      <ProDayText variant="caption" style={[styles.label, on && styles.labelOn]}>
         {label}
       </ProDayText>
       {hint ? (
@@ -41,7 +40,7 @@ const ToggleChip: React.FC<{
   </PressableSpring>
 );
 
-/** Options connexion rapide — dark experience. */
+/** Options connexion rapide épurées et arrondies. */
 export const AuthRememberRow: React.FC<AuthRememberRowProps> = ({
   rememberMe,
   onRememberMeChange,
@@ -75,52 +74,58 @@ export const AuthRememberRow: React.FC<AuthRememberRowProps> = ({
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: 4,
-    marginBottom: 4,
+    marginTop: 6,
+    marginBottom: 8,
   },
   row: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   chip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 2,
+    paddingHorizontal: 14,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     minWidth: 0,
   },
   chipOn: {
-    borderColor: AUTH_XP.borderFocus,
-    backgroundColor: 'rgba(197,160,89,0.12)',
+    borderColor: '#F5D04A',
+    backgroundColor: 'rgba(245, 208, 74, 0.10)',
   },
   dot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: AUTH_XP.border,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   dotOn: {
-    borderColor: AUTH_XP.gold,
-    backgroundColor: AUTH_XP.gold,
+    borderColor: '#F5D04A',
+    backgroundColor: '#F5D04A',
   },
-  copy: { flex: 1, minWidth: 0 },
+  copy: {
+    flex: 1,
+  },
   label: {
-    color: AUTH_XP.white,
-    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  labelOn: {
+    color: '#FFFFFF',
     fontWeight: '700',
   },
   hint: {
-    color: AUTH_XP.textMuted,
-    fontSize: 10,
-    marginTop: 1,
+    color: 'rgba(255, 255, 255, 0.45)',
+    fontSize: 11,
   },
 });

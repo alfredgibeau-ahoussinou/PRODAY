@@ -99,8 +99,8 @@ export function getProStepMeta(page: SignupPageId, t?: TranslateFn): {
       };
     case 'account':
       return {
-        title: tr(t, 'signup.pro.step.account.title', 'Identité pro'),
-        subtitle: tr(t, 'signup.pro.step.account.subtitle', 'Nom affiché et email. Espace Pro lié à ce compte.'),
+        title: tr(t, 'signup.pro.step.account.title', 'Vos coordonnées'),
+        subtitle: tr(t, 'signup.pro.step.account.subtitle', 'Renseignez vos informations pour créer votre accès.'),
         heroIcon: 'person',
       };
     case 'security':

@@ -52,17 +52,17 @@ function createStyles(compact: boolean) {
       backgroundColor: '#000000',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingTop: compact ? 24 : 48,
-      paddingBottom: compact ? 16 : 32,
+      paddingTop: compact ? 8 : 16,
+      paddingBottom: compact ? 10 : 20,
     },
     content: {
       alignItems: 'center',
       justifyContent: 'center',
-      gap: compact ? 8 : 14,
+      gap: compact ? 6 : 10,
     },
     logoBlock: {
       alignItems: 'center',
-      gap: 12,
+      gap: 8,
     },
     wordmark: {
       alignItems: 'center',
