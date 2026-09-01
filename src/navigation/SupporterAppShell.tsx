@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type MainTabId } from './MainTabs';
@@ -14,6 +14,10 @@ import { PoleHelpChatbot } from '../components/help/PoleHelpChatbot';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import { useProductLine } from '../context/ProductLineContext';
 import { prodayHaptics } from '../utils/prodayHaptics';
+import {
+  desktopShellChrome,
+  isDesktopWideLayout,
+} from '../theme/desktopShellChrome';
 import {
   resolveAutoReturnTab,
   type CarpoolDeepLink,
@@ -31,12 +35,16 @@ import {
 export const SupporterAppShell: React.FC = () => {
   const profile = useSessionProfile();
   const { productLine, colors: themeColors } = useProductLine();
+  const { width: windowWidth } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<MainTabId>('home');
   const [returnTab, setReturnTab] = useState<MainTabId | null>(null);
   const [pendingChatThreadId, setPendingChatThreadId] = useState<string | null>(null);
   const [pendingMatchsLink, setPendingMatchsLink] = useState<MatchsDeepLink | null>(null);
   const [pendingProfileView, setPendingProfileView] = useState<ProfileDeepLink | null>(null);
   const [pendingDashboardView, setPendingDashboardView] = useState<DashboardDeepLink | null>(null);
+
+  const desktopWide =
+    Platform.OS === 'web' && isDesktopWideLayout(windowWidth);
 
   const dockTabs = useMemo(() => new Set<MainTabId>(SUPPORTER_DOCK_TABS), []);
   const screenTabs = useMemo((): MainTabId[] => [...SUPPORTER_DOCK_TABS], []);
@@ -150,22 +158,46 @@ export const SupporterAppShell: React.FC = () => {
     >
       <SupporterShellProvider value={shellValue}>
         <SafeAreaView
-          style={[styles.root, { backgroundColor: themeColors.background }]}
+          style={[
+            styles.root,
+            { backgroundColor: themeColors.background },
+            desktopWide ? styles.rootDesktop : null,
+          ]}
           edges={['top', 'left', 'right']}
         >
           <StatusBar style="light" />
           <ProdayNotificationBridge />
           <ProdayBrainBridge />
-          <View style={[styles.screen, { backgroundColor: themeColors.background }]}>
+          {desktopWide ? (
+            <BottomTabBar
+              activeTab={dockTabs.has(activeTab) ? activeTab : 'home'}
+              onTabPress={handleTabPress}
+              visibleTabs={[...SUPPORTER_DOCK_TABS]}
+            />
+          ) : null}
+          <View
+            style={[
+              styles.screen,
+              { backgroundColor: themeColors.background },
+              desktopWide
+                ? [
+                    styles.screenDesktop,
+                    { maxWidth: desktopShellChrome.contentMaxWidth },
+                  ]
+                : null,
+            ]}
+          >
             <AnimatedTabContent activeTab={activeTab} tabOrder={screenTabs}>
               <Screen />
             </AnimatedTabContent>
           </View>
-          <BottomTabBar
-            activeTab={dockTabs.has(activeTab) ? activeTab : 'home'}
-            onTabPress={handleTabPress}
-            visibleTabs={[...SUPPORTER_DOCK_TABS]}
-          />
+          {desktopWide ? null : (
+            <BottomTabBar
+              activeTab={dockTabs.has(activeTab) ? activeTab : 'home'}
+              onTabPress={handleTabPress}
+              visibleTabs={[...SUPPORTER_DOCK_TABS]}
+            />
+          )}
           <View style={styles.helpLayer} pointerEvents="box-none">
             <PoleHelpChatbot />
           </View>
@@ -177,7 +209,14 @@ export const SupporterAppShell: React.FC = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  rootDesktop: { flexDirection: 'row', alignItems: 'stretch' },
   screen: { flex: 1 },
+  screenDesktop: {
+    flex: 1,
+    width: '100%',
+    alignSelf: 'center',
+    minWidth: 0,
+  },
   helpLayer: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 80,

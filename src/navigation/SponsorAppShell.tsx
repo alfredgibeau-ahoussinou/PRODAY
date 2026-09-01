@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, useWindowDimensions, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabNavigationProvider } from '../context/TabNavigationContext';
@@ -31,6 +31,10 @@ import { useSponsorTabNavigationBridge } from './sponsorTabNavigationBridge';
 import { SubscriptionShell } from '../components/subscription/SubscriptionShell';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import { openSponsorProspectChat } from '../utils/openSponsorProspectChat';
+import {
+  desktopShellChrome,
+  isDesktopWideLayout,
+} from '../theme/desktopShellChrome';
 
 const SPONSOR_ROUTE_ORDER = SPONSOR_NAV_ITEMS.map((item) =>
   item.segment ? `${item.tab}:${item.segment}` : item.tab,
@@ -48,6 +52,9 @@ export const SponsorAppShell: React.FC = () => (
 
 const SponsorAppShellInner: React.FC = () => {
   const profile = useSessionProfile();
+  const { width: windowWidth } = useWindowDimensions();
+  const desktopWide = Platform.OS === 'web' && isDesktopWideLayout(windowWidth);
+
   const [activeTab, setActiveTab] = useState<SponsorMainTabId>('pilotage');
   const [activeSegment, setActiveSegment] = useState<SponsorContentSegment | undefined>();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -172,12 +179,24 @@ const SponsorAppShellInner: React.FC = () => {
           <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
             <StatusBar style="light" />
             <ProdayNotificationBridge />
-            <SponsorTopBar
-              title={pageMeta.title}
-              subtitle={pageMeta.subtitle}
-              onMenu={() => setMenuOpen(true)}
-            />
-            <View style={shellStyles.screen}>
+            <View style={desktopWide ? styles.centeredContainer : null}>
+              <SponsorTopBar
+                title={pageMeta.title}
+                subtitle={pageMeta.subtitle}
+                onMenu={() => setMenuOpen(true)}
+              />
+            </View>
+            <View
+              style={[
+                shellStyles.screen,
+                desktopWide
+                  ? [
+                      shellStyles.screenDesktop,
+                      { maxWidth: desktopShellChrome.contentMaxWidth },
+                    ]
+                  : null,
+              ]}
+            >
               <AnimatedRouteContent routeKey={routeKey} routeOrder={SPONSOR_ROUTE_ORDER}>
                 {renderPage()}
               </AnimatedRouteContent>
@@ -204,5 +223,11 @@ const SponsorAppShellInner: React.FC = () => {
 function createShellStyles() {
   return StyleSheet.create({
     screen: { flex: 1 },
+    screenDesktop: {
+      flex: 1,
+      width: '100%',
+      alignSelf: 'center',
+      minWidth: 0,
+    },
   });
 }

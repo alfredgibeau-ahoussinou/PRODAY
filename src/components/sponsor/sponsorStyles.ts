@@ -71,6 +71,11 @@ export function createSponsorStyles(c: AppColors) {
       color: c.textMuted,
       marginBottom: spacing.sm,
     },
+    centeredContainer: {
+      width: '100%',
+      maxWidth: 1180,
+      alignSelf: 'center',
+    },
   });
 }
 
