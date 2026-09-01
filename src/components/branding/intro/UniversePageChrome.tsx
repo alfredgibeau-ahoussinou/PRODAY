@@ -184,15 +184,20 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
 
         {cta}
 
-        <Pressable
+        <PressableSpring
           onPress={() => setGuideVisible(true)}
-          style={styles.guideLink}
-          hitSlop={12}
+          scaleTo={0.97}
+          haptic
+          style={styles.quizTriggerBtn}
           accessibilityRole="button"
-          accessibilityLabel="Ouvrir le guide des univers"
+          accessibilityLabel="Trouver mon pôle avec le Quiz Express"
         >
-          <Text style={styles.guideLinkText}>Guide et détails des pôles</Text>
-        </Pressable>
+          <View style={styles.quizTriggerBadge}>
+            <Text style={styles.quizTriggerBadgeText}>QUIZ EXPRESS</Text>
+          </View>
+          <Text style={styles.quizTriggerText}>🎯 Quel pôle choisir ? Guide 10s</Text>
+          <Icon name="chevron-forward" size={14} color="#F5D04A" />
+        </PressableSpring>
       </View>
 
       <UniverseGuideModal
@@ -297,14 +302,36 @@ const styles = StyleSheet.create({
   ctaTextDark: {
     color: '#000000',
   },
-  guideLink: {
+  quizTriggerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: 'rgba(245, 208, 74, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 208, 74, 0.35)',
     alignSelf: 'center',
-    paddingVertical: 4,
+    marginTop: 8,
   },
-  guideLinkText: {
+  quizTriggerBadge: {
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    backgroundColor: '#F5D04A',
+  },
+  quizTriggerBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#000000',
+    letterSpacing: 0.5,
+  },
+  quizTriggerText: {
     fontSize: 12,
-    fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.45)',
-    textAlign: 'center',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });
