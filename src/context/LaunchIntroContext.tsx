@@ -24,6 +24,7 @@ import { useTabNavigationOptional } from './TabNavigationContext';
 import { PushScreenTransition } from '../components/motion';
 import { StyleSheet, View } from 'react-native';
 import { UNIVERSE_CONFIRM_LEAVE } from '../components/branding/intro/launchIntroFlow';
+import { isPlatformAdminEmail } from '../config/admin';
 
 /**
  * Une seule lecture de la vidéo d’intro par installation (évite crash natif répété).
@@ -108,6 +109,17 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const onChooseSpace = useCallback(
     async (pole: IntroSpaceChoice) => {
+      const isPlatformAdmin = Boolean(
+        auth?.isAdmin || (profile?.email && isPlatformAdminEmail(profile.email)),
+      );
+
+      if (pole === 'admin') {
+        if (!isPlatformAdmin) {
+          tabNav?.openAuth('login', { pole: 'admin' });
+        }
+        return;
+      }
+
       const preset = carouselPoleSignupPresetRole(pole);
       await setProSignupPresetRole(preset);
       const shellMode = clubShellModeFromCarouselPole(pole);
@@ -119,7 +131,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
         tabNav?.openAuth('login', { pole });
       }
     },
-    [setProductLine, setProSignupPresetRole, setClubShellMode, profile, tabNav],
+    [auth?.isAdmin, profile, setProductLine, setProSignupPresetRole, setClubShellMode, tabNav],
   );
 
   const onIntroExitComplete = useCallback(() => {
