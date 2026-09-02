@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Share } from 'react-native';
 import type { User } from '../../models/User';
 import type { HealthSnapshot } from '../../core/types/health';
 import { PlayerCardReveal } from '../joueur/PlayerCardReveal';
@@ -310,19 +310,45 @@ export const JoueurProfileHub: React.FC<Props> = ({
           />
         </SectionCard>
 
-        {onEdit ? (
+        <View style={styles.ctaRow}>
+          {onEdit ? (
+            <PressableSpring
+              onPress={() => press(onEdit)}
+              scaleTo={0.98}
+              haptic
+              style={[styles.editCta, { backgroundColor: playerTheme.accent }]}
+            >
+              <Icon name="person" size={18} color={PLAYER_DARK.bg} variant="filled" />
+              <ProDayText variant="caption" style={styles.editCtaText}>
+                Modifier profil
+              </ProDayText>
+            </PressableSpring>
+          ) : null}
+
           <PressableSpring
-            onPress={() => press(onEdit)}
+            onPress={() => {
+              joueurGamePress();
+              void Share.share({
+                title: `Carte FUT ProDay - ${profile.display_name}`,
+                message: `⚽ Découvre ma Carte Joueur ProDay (Note OVR : ${ovr || 75}, Niveau : ${level}) ! Rejoins mon équipe sur ProDay : https://proday.app/joueur/${profile.uid}`,
+              });
+            }}
             scaleTo={0.98}
             haptic
-            style={[styles.editCta, { backgroundColor: playerTheme.accent }]}
+            style={[
+              styles.shareCta,
+              {
+                borderColor: `${playerTheme.accent}66`,
+                backgroundColor: playerTheme.accentSoft,
+              },
+            ]}
           >
-            <Icon name="person" size={18} color={PLAYER_DARK.bg} variant="filled" />
-            <ProDayText variant="caption" style={styles.editCtaText}>
-              Modifier profil
+            <Icon name="share" size={18} color={playerTheme.accentAlt} variant="outline" />
+            <ProDayText variant="caption" style={[styles.shareCtaText, { color: playerTheme.accentAlt }]}>
+              Partager ma Carte
             </ProDayText>
           </PressableSpring>
-        ) : null}
+        </View>
 
         {onOpenThemeSettings ? (
           <PressableSpring
@@ -554,7 +580,12 @@ const styles = StyleSheet.create({
     color: PLAYER_DARK.textDim,
     fontSize: 10,
   },
+  ctaRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
   editCta: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -564,6 +595,20 @@ const styles = StyleSheet.create({
   },
   editCtaText: {
     color: PLAYER_DARK.bg,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  shareCta: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+    borderWidth: 1,
+    paddingVertical: 14,
+  },
+  shareCtaText: {
     fontWeight: '800',
     letterSpacing: 0.3,
   },
