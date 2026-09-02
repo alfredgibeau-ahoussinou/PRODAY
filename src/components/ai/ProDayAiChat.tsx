@@ -14,6 +14,7 @@ import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, shadows } from '../../theme/designTokens';
+import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
 import { askProdayAi, type ProdayAiMessage } from '../../services/prodayAi.service';
 import { prodayAiChatHonestyHint } from '../../utils/aiUxHonesty';
 
@@ -24,6 +25,13 @@ type Msg = {
   agents?: string[];
 };
 
+const SUGGESTED_PROMPTS = [
+  '💡 Comment améliorer ma VMA et mon explosivité ?',
+  '📋 Conseils tactiques pour jouer contre un bloc bas',
+  '🥗 Quelle routine de récupération après match ?',
+  '⚽ Exercices pour progresser sur mon pied faible',
+];
+
 export const ProDayAiChat: React.FC = () => {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -33,8 +41,8 @@ export const ProDayAiChat: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
-  const send = useCallback(async () => {
-    const text = input.trim();
+  const sendWithText = useCallback(async (textToSend: string) => {
+    const text = textToSend.trim();
     if (!text || loading) return;
 
     const userMsg: Msg = { id: `${Date.now()}-u`, role: 'user', content: text };
@@ -59,16 +67,20 @@ export const ProDayAiChat: React.FC = () => {
       const errMsg: Msg = {
         id: `${Date.now()}-e`,
         role: 'assistant',
-        content: e instanceof Error ? e.message : 'Erreur. Réessayez.',
+        content: e instanceof Error ? e.message : 'Erreur réseau. Réessayez.',
       };
       setMessages((prev) => [...prev, errMsg]);
     } finally {
       setLoading(false);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
     }
-  }, [input, loading, messages]);
+  }, [loading, messages]);
 
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const send = useCallback(() => {
+    void sendWithText(input);
+  }, [input, sendWithText]);
+
+  const styles = useMemo(() => createStyles(), []);
 
   if (!open) {
     return (
@@ -79,7 +91,7 @@ export const ProDayAiChat: React.FC = () => {
         haptic
         accessibilityLabel="ProDay AI"
       >
-        <Icon name="star-four-points" size={22} color="#fff" />
+        <Icon name="star-four-points" size={24} color={PLAYER_DARK.bg} />
       </PressableSpring>
     );
   }
@@ -91,174 +103,343 @@ export const ProDayAiChat: React.FC = () => {
       variant="tall"
       handleOnly
     >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={[styles.sheetInner, { paddingBottom: insets.bottom + 8 }]}
-        >
-          <View style={styles.header}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.sheetInner, { paddingBottom: insets.bottom + 8 }]}
+      >
+        {/* Header Ultra Dark Glassmorphism */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <View style={styles.glowAiCircle}>
+              <Icon name="star-four-points" size={18} color={PLAYER_DARK.accent} />
+            </View>
             <View>
-              <ProDayText variant="caption" style={styles.kicker}>ProDay AI</ProDayText>
-              <ProDayText variant="section" style={{ color: colors.text }}>
-                Assistant intelligent
+              <View style={styles.kickerRow}>
+                <ProDayText variant="caption" style={styles.kicker}>
+                  PRODAY AI COPILOT
+                </ProDayText>
+                <View style={styles.liveDot} />
+              </View>
+              <ProDayText variant="section" style={styles.headerTitle}>
+                Coach & Stratégie
               </ProDayText>
             </View>
-            <PressableSpring
-              onPress={() => setOpen(false)}
-              style={[styles.closeBtn, { backgroundColor: colors.surfaceMuted }]}
-              scaleTo={0.94}
-            >
-              <Icon name="close" size={16} color={colors.textMuted} />
-            </PressableSpring>
           </View>
-
-          <ProDayText variant="caption" muted style={styles.hint}>
-            {prodayAiChatHonestyHint()}
-          </ProDayText>
-
-          <ScrollView
-            ref={scrollRef}
-            style={styles.thread}
-            contentContainerStyle={styles.threadInner}
-            onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+          <PressableSpring
+            onPress={() => setOpen(false)}
+            style={styles.closeBtn}
+            scaleTo={0.94}
+            haptic
           >
-            {messages.length === 0 ? (
-              <ProDayText variant="caption" muted style={styles.empty}>
-                Ex. « Pourquoi mon équipe perd ? », « Stats du club », « Prochains matchs »
-              </ProDayText>
-            ) : (
-              messages.map((m) => (
-                <View
-                  key={m.id}
-                  style={[
-                    styles.bubble,
-                    m.role === 'user' ? styles.bubbleUser : styles.bubbleAi,
-                  ]}
-                >
-                  <ProDayText
-                    variant="body"
-                    style={{
-                      color: m.role === 'user' ? '#fff' : colors.text,
-                      fontSize: 14,
-                      lineHeight: 20,
-                    }}
-                  >
-                    {m.content}
-                  </ProDayText>
-                </View>
-              ))
-            )}
-            {loading ? (
-              <View style={[styles.bubble, styles.bubbleAi]}>
-                <ActivityIndicator size="small" color={colors.brand} />
-              </View>
-            ) : null}
-          </ScrollView>
+            <Icon name="close" size={16} color={PLAYER_DARK.textMuted} />
+          </PressableSpring>
+        </View>
 
-          <View style={[styles.composer, { borderTopColor: colors.border }]}>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  color: colors.text,
-                  backgroundColor: colors.surfaceMuted,
-                  borderColor: colors.border,
-                },
-              ]}
-              placeholder="Posez une question..."
-              placeholderTextColor={colors.textMuted}
-              value={input}
-              onChangeText={setInput}
-              onSubmitEditing={send}
-              returnKeyType="send"
-              editable={!loading}
-            />
-            <PressableSpring
-              onPress={send}
-              style={[styles.sendBtn, { backgroundColor: colors.brand }]}
-              scaleTo={0.92}
-              haptic
-              accessibilityLabel="Envoyer"
-            >
-              <Icon name="chevron-forward" size={18} color="#fff" />
-            </PressableSpring>
-          </View>
-        </KeyboardAvoidingView>
+        <ProDayText variant="caption" style={styles.hint}>
+          {prodayAiChatHonestyHint()}
+        </ProDayText>
+
+        <ScrollView
+          ref={scrollRef}
+          style={styles.thread}
+          contentContainerStyle={styles.threadInner}
+          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+        >
+          {messages.length === 0 ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconWrap}>
+                <Icon name="chat" size={32} color={PLAYER_DARK.accent} />
+              </View>
+              <ProDayText variant="section" style={styles.emptyTitle}>
+                Comment puis-je t'aider aujourd'hui ?
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.emptySub}>
+                Pose une question sur ton entraînement, ta tactique, ton équipe ou ta nutrition.
+              </ProDayText>
+
+              <View style={styles.promptList}>
+                {SUGGESTED_PROMPTS.map((prompt, pIdx) => (
+                  <PressableSpring
+                    key={`prompt-${pIdx}`}
+                    onPress={() => void sendWithText(prompt.replace(/^[^\s]+\s/, ''))}
+                    scaleTo={0.97}
+                    haptic
+                    style={styles.promptChip}
+                  >
+                    <ProDayText variant="caption" style={styles.promptText}>
+                      {prompt}
+                    </ProDayText>
+                  </PressableSpring>
+                ))}
+              </View>
+            </View>
+          ) : (
+            messages.map((m) => (
+              <View
+                key={m.id}
+                style={[
+                  styles.bubble,
+                  m.role === 'user' ? styles.bubbleUser : styles.bubbleAi,
+                ]}
+              >
+                {m.role === 'assistant' ? (
+                  <View style={styles.aiBadgeRow}>
+                    <Icon name="star-four-points" size={12} color={PLAYER_DARK.accent} />
+                    <ProDayText variant="caption" style={styles.aiBadgeLabel}>
+                      Coach IA
+                    </ProDayText>
+                  </View>
+                ) : null}
+                <ProDayText
+                  variant="body"
+                  style={{
+                    color: m.role === 'user' ? PLAYER_DARK.bg : PLAYER_DARK.text,
+                    fontSize: 14,
+                    lineHeight: 21,
+                    fontWeight: m.role === 'user' ? '700' : '400',
+                  }}
+                >
+                  {m.content}
+                </ProDayText>
+              </View>
+            ))
+          )}
+          {loading ? (
+            <View style={[styles.bubble, styles.bubbleAi, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
+              <ActivityIndicator size="small" color={PLAYER_DARK.accent} />
+              <ProDayText variant="caption" style={{ color: PLAYER_DARK.textMuted }}>
+                Analyse tactique en cours...
+              </ProDayText>
+            </View>
+          ) : null}
+        </ScrollView>
+
+        <View style={styles.composer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Pose ta question au coach IA..."
+            placeholderTextColor={PLAYER_DARK.textMuted}
+            value={input}
+            onChangeText={setInput}
+            onSubmitEditing={send}
+            returnKeyType="send"
+            editable={!loading}
+          />
+          <PressableSpring
+            onPress={send}
+            style={[styles.sendBtn, !input.trim() && { opacity: 0.5 }]}
+            disabled={!input.trim() || loading}
+            scaleTo={0.92}
+            haptic
+            accessibilityLabel="Envoyer"
+          >
+            <Icon name="chevron-forward" size={18} color={PLAYER_DARK.bg} />
+          </PressableSpring>
+        </View>
+      </KeyboardAvoidingView>
     </AnimatedModalShell>
   );
 };
 
-function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
+function createStyles() {
   return StyleSheet.create({
     fab: {
       position: 'absolute',
       right: 18,
       bottom: 90,
-      width: 54,
-      height: 54,
-      borderRadius: 27,
-      backgroundColor: colors.brand,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: PLAYER_DARK.accent,
       alignItems: 'center',
       justifyContent: 'center',
-      ...shadows.fab,
+      shadowColor: PLAYER_DARK.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 10,
+      elevation: 6,
       zIndex: 45,
     },
-    sheetInner: { flex: 1 },
+    sheetInner: {
+      flex: 1,
+      backgroundColor: PLAYER_DARK.bg,
+    },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: spacing.md,
       paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: PLAYER_DARK.border,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    glowAiCircle: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: PLAYER_DARK.accentSoft,
+      borderWidth: 1,
+      borderColor: PLAYER_DARK.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    kickerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
     },
     kicker: {
-      color: colors.brand,
-      fontWeight: '800',
+      color: PLAYER_DARK.accent,
+      fontWeight: '900',
       fontSize: 10,
-      letterSpacing: 1.3,
+      letterSpacing: 1.2,
       textTransform: 'uppercase',
     },
+    liveDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: PLAYER_DARK.accent,
+    },
+    headerTitle: {
+      fontSize: 16,
+      fontWeight: '800',
+      color: PLAYER_DARK.text,
+    },
     closeBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: 10,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: PLAYER_DARK.surface,
+      borderWidth: 1,
+      borderColor: PLAYER_DARK.border,
       alignItems: 'center',
       justifyContent: 'center',
     },
     hint: {
       paddingHorizontal: spacing.md,
-      paddingTop: 6,
-      fontSize: 12,
-      lineHeight: 17,
+      paddingTop: 8,
+      fontSize: 11,
+      lineHeight: 16,
+      color: PLAYER_DARK.textMuted,
     },
-    thread: { flex: 1 },
-    threadInner: { padding: spacing.md, gap: spacing.sm, paddingBottom: 24 },
-    empty: { fontSize: 13, lineHeight: 20 },
-    bubble: { borderRadius: 14, padding: spacing.sm, maxWidth: '92%' },
-    bubbleUser: { alignSelf: 'flex-end', backgroundColor: colors.brand },
+    thread: {
+      flex: 1,
+    },
+    threadInner: {
+      padding: spacing.md,
+      gap: spacing.sm,
+      paddingBottom: 24,
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      gap: spacing.xs,
+    },
+    emptyIconWrap: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: PLAYER_DARK.surface,
+      borderWidth: 1,
+      borderColor: PLAYER_DARK.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.xs,
+    },
+    emptyTitle: {
+      fontSize: 16,
+      fontWeight: '800',
+      color: PLAYER_DARK.text,
+      textAlign: 'center',
+    },
+    emptySub: {
+      fontSize: 12,
+      color: PLAYER_DARK.textMuted,
+      textAlign: 'center',
+      maxWidth: '85%',
+      lineHeight: 18,
+    },
+    promptList: {
+      width: '100%',
+      gap: spacing.xs,
+      marginTop: spacing.md,
+    },
+    promptChip: {
+      backgroundColor: PLAYER_DARK.surface,
+      borderWidth: 1,
+      borderColor: PLAYER_DARK.border,
+      borderRadius: PLAYER_DARK_RADIUS.card,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    promptText: {
+      fontSize: 12,
+      color: PLAYER_DARK.text,
+      fontWeight: '600',
+    },
+    bubble: {
+      borderRadius: 16,
+      padding: spacing.md,
+      maxWidth: '88%',
+    },
+    bubbleUser: {
+      alignSelf: 'flex-end',
+      backgroundColor: PLAYER_DARK.accent,
+      borderBottomRightRadius: 4,
+    },
     bubbleAi: {
       alignSelf: 'flex-start',
-      backgroundColor: colors.surfaceMuted,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
+      backgroundColor: PLAYER_DARK.surface,
+      borderWidth: 1,
+      borderColor: PLAYER_DARK.border,
+      borderBottomLeftRadius: 4,
+      gap: 4,
+    },
+    aiBadgeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginBottom: 2,
+    },
+    aiBadgeLabel: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: PLAYER_DARK.accent,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
     composer: {
       flexDirection: 'row',
-      gap: 8,
+      gap: spacing.sm,
       padding: spacing.md,
-      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopWidth: 1,
+      borderTopColor: PLAYER_DARK.border,
+      backgroundColor: PLAYER_DARK.bgElevated,
       alignItems: 'center',
     },
     input: {
       flex: 1,
-      minHeight: 42,
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      borderWidth: StyleSheet.hairlineWidth,
+      minHeight: 46,
+      borderRadius: PLAYER_DARK_RADIUS.pill,
+      paddingHorizontal: spacing.md,
+      backgroundColor: PLAYER_DARK.surface,
+      borderWidth: 1,
+      borderColor: PLAYER_DARK.border,
+      color: PLAYER_DARK.text,
+      fontSize: 13,
     },
     sendBtn: {
-      width: 42,
-      height: 42,
-      borderRadius: 12,
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: PLAYER_DARK.accent,
       alignItems: 'center',
       justifyContent: 'center',
     },
