@@ -437,6 +437,26 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
 
   const renderRide = () => (
     <ScrollView contentContainerStyle={pagePad} refreshControl={refreshControl} {...scrollProps}>
+      {/* UBER STYLE SEARCH BANNER */}
+      <View style={[styles.uberSearchBlock, { backgroundColor: palette.surface, borderColor: palette.lane }]}>
+        <Text style={[styles.uberSearchTitle, { color: palette.ink }]}>Où allez-vous ?</Text>
+        <View style={[styles.uberInputRow, { backgroundColor: palette.bg }]}>
+          <Icon name="search" size={20} color={palette.ink} />
+          <TextInput 
+            style={[styles.uberInput, { color: palette.ink }]} 
+            placeholder="Stade, club, match..." 
+            placeholderTextColor={palette.ink + '88'} 
+          />
+        </View>
+        <View style={styles.uberQuickChips}>
+          {["Prochain match", "Entraînement", "Domicile"].map((chip) => (
+            <View key={chip} style={[styles.uberChip, { backgroundColor: palette.bg, borderColor: palette.lane }]}>
+              <Text style={[styles.uberChipText, { color: palette.ink }]}>{chip}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
       {coachShell ? null : (
         <>
           <Text style={styles.modeTitle}>{t('carpool.hub.rideTitle')}</Text>
@@ -763,7 +783,45 @@ function createStyles(palette: CarpoolUiPalette) {
     root: { flex: 1, backgroundColor: palette.bg },
     foreground: { flex: 1, zIndex: 1 },
     body: { flex: 1, minHeight: 0, backgroundColor: 'transparent' },
-    modeTitle: {
+      uberSearchBlock: {
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  uberSearchTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: spacing.md,
+  },
+  uberInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.md,
+    height: 48,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+  },
+  uberInput: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    fontSize: 16,
+  },
+  uberQuickChips: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  uberChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  uberChipText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  modeTitle: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 26,
       lineHeight: 30,

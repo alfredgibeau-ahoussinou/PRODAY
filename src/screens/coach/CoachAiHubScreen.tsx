@@ -55,7 +55,6 @@ export function CoachAiHubScreen({ showSeasonStats = true }: Props) {
       events={events}
       onRefresh={() => void load()}
       onOpenChapter={() => {}}
-      showSeasonStats={showSeasonStats}
     />
   );
 }
