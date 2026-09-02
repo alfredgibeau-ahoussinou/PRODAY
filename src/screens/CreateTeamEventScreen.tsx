@@ -313,9 +313,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     }
   };
 
-  const showCategories =
-    eventType !== 'meeting' &&
-    (eventType === 'detection' || Boolean(profile?.profile.club_id));
+  const showCategories = eventType === 'detection';
 
   const convokedCountLabel =
     convocationMode === 'teams' && convokedCount > 0
@@ -686,32 +684,22 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
 
           {showCategories ? (
             <CoachSectionCard
-              kicker={t('coach.event.create.categoriesKicker')}
-              title={
-                eventType === 'detection'
-                  ? t('coach.event.create.categoriesDetectionTitle')
-                  : t('coach.event.create.categoriesConvocTitle')
-              }
+              kicker="CATÉGORIES"
+title="Catégories ciblées (Optionnel)"
             >
-              {eventType === 'detection' ? (
-                <CoachFormField
-                  placeholder={t('coach.event.create.maxPlacesPlaceholder')}
-                  value={maxParticipants}
-                  onChangeText={setMaxParticipants}
-                  tokens={tokens}
-                  keyboardType="number-pad"
-                />
-              ) : null}
+              
               {categorySection}
             </CoachSectionCard>
           ) : null}
 
+          {eventType !== 'detection' ? (
           <CoachSectionCard
-            kicker={t('coach.event.create.convocKicker')}
-            title={t('coach.event.create.convocTitle')}
+            kicker="PARTICIPANTS"
+            title={eventType === 'training' ? "Groupes convoqués" : "Joueurs convoqués"}
           >
             {convocationSection}
           </CoachSectionCard>
+          ) : null}
 
           <CoachActionRow
             primary={
