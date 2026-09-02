@@ -19,6 +19,7 @@ import { PressableSpring, StaggerReveal } from '../../motion';
 import { useAppTheme } from '../../../context/ProductLineContext';
 import { spacing, radius } from '../../../theme/designTokens';
 import { OpponentMatchDaySheet } from '../OpponentMatchDaySheet';
+import { matchDayPdfService } from '../../../services/matchDayPdf.service';
 
 const RSVP_OPTIONS: { status: RsvpStatus; label: string }[] = [
   { status: 'yes', label: 'Présent' },
@@ -144,15 +145,29 @@ export const MatchHubOverviewTab: React.FC<MatchHubOverviewTabProps> = ({
 
       {isStaff ? (
         <ProDaySurface variant="module" style={[styles.infoCard, { borderColor: colors.border }]}>
-          <ProDayText variant="section">Staff</ProDayText>
+          <ProDayText variant="section">Staff & Convocations</ProDayText>
           <ProDayText variant="caption" muted>
             {yesCount} présents confirmés · {pendingCount} en attente
           </ProDayText>
-          <PressableSpring onPress={() => void shareConvocation()} scaleTo={0.96} haptic>
-            <ProDayText variant="caption" accent style={styles.link}>
-              Partager la convocation
-            </ProDayText>
-          </PressableSpring>
+          <View style={styles.staffActionRow}>
+            <PressableSpring onPress={() => void shareConvocation()} scaleTo={0.96} haptic style={styles.staffBtn}>
+              <Icon name="share" size={14} color={colors.accent} />
+              <ProDayText variant="caption" accent style={styles.link}>
+                Partager convocation
+              </ProDayText>
+            </PressableSpring>
+            <PressableSpring
+              onPress={() => void matchDayPdfService.printOrShareMatchSheet(event)}
+              scaleTo={0.96}
+              haptic
+              style={styles.staffBtn}
+            >
+              <Icon name="document" size={14} color={colors.accent} />
+              <ProDayText variant="caption" accent style={styles.link}>
+                Feuille de match (PDF / Print)
+              </ProDayText>
+            </PressableSpring>
+          </View>
         </ProDaySurface>
       ) : null}
 
@@ -224,7 +239,19 @@ const styles = StyleSheet.create({
   },
   kindText: { fontWeight: '800', fontSize: 10 },
   desc: { marginTop: spacing.xs, lineHeight: 22 },
-  link: { fontWeight: '800', marginTop: spacing.xs },
+  link: { fontWeight: '800' },
+  staffActionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  staffBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+  },
   rsvpBlock: { gap: spacing.sm },
   rsvpRow: { flexDirection: 'row', gap: spacing.sm },
   rsvpBtn: {
