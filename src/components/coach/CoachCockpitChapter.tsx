@@ -52,10 +52,6 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
       <CoachScreenHeader
         title="Tableau de bord"
         unreadMessages={unreadMessages}
-        actions={[
-          { icon: 'chat', onPress: () => shellNav?.requestNav('messages'), accessibilityLabel: t('messages.title') },
-          { icon: 'add', onPress: () => {}, accessibilityLabel: t('coach.calendar.create') },
-        ]}
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -216,7 +212,7 @@ const styles = StyleSheet.create({
   searchBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.md, height: 48, borderRadius: radius.pill, borderWidth: 1, marginBottom: spacing.md },
   searchInput: { flex: 1, marginLeft: spacing.sm, fontSize: 15 },
   root: { flex: 1 },
-  scrollContent: { padding: spacing.md, paddingBottom: 60 },
+  scrollContent: { padding: spacing.md, paddingBottom: 120 },
   
   welcomeSection: { marginBottom: spacing.lg, marginTop: spacing.sm },
   welcomeTitle: { fontSize: 24, fontWeight: '800' },
