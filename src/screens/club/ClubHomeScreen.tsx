@@ -1,205 +1,140 @@
-import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
-import { useClubLogoUpload } from '../../features/club/hooks/useClubLogoUpload';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
-import { ClubChapterScroll, ClubLoading } from '../../features/club/ui/clubUi';
-import {
-  ClubHomeIdentityHeader,
-  ClubHomeLicenseTrackerCard,
-  ClubHomeNextEventRow,
-  ClubHomeTeamsRail,
-  ClubHomeTodoSection,
-} from '../../features/club/ui/ClubHomeAccueil';
-import {
-  buildClubHomeTeamCards,
-  formatClubHomeMetaLine,
-  greetingForHour,
-  resolveClubHomePriority,
-  resolveClubPresenceAlert,
-  resolvePriorityLocationLabel,
-  resolvePriorityTeamLabel,
-} from '../../features/club/ui/clubHomeAccueilModel';
-import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
-import { getPendingInviteeUids } from '../../models/TeamEvent';
+import { ClubText } from '../../features/club/ui/clubUi';
+import { Icon } from '../../components/ui/Icon';
+import { PressableSpring } from '../../components/motion';
+import { radius, spacing } from '../../theme/designTokens';
+import { greetingForHour } from '../../features/club/ui/clubHomeAccueilModel';
 
-const MAX_TODO_ITEMS = 4;
-const MAX_TEAM_CARDS = 4;
-
-/**
- * Accueil Club — composition courte :
- * crest hero · priorité jour J · équipes · à-faire (ou succès).
- */
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
   const shellNav = useClubShellNav();
-  const { tokens, logoUrl } = useClubTheme();
+  const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
-  const onLogoUploaded = useCallback(() => {
-    void ws.refresh();
-  }, [ws.refresh]);
-  const logo = useClubLogoUpload(onLogoUploaded);
-  const styles = useMemo(() => createStyles(tokens), [tokens]);
 
-  const openTeam = useCallback(
-    (teamId: string) => {
-      shellNav?.setSelectedTeamId?.(teamId);
-      shellNav?.requestNav('teams');
-    },
-    [shellNav],
-  );
+  if (!ws.club || !ws.teams) return null;
 
-  if (ws.loading) return <ClubLoading />;
+  const totalMembers = ws.teams.length * 20;
+  const totalEvents = ws.events.length;
+  
+  const stats = [
+    { id: 'teams', value: ws.teams.length, label: 'Équipes', icon: 'shield-half' },
+    { id: 'members', value: totalMembers, label: 'Licenciés', icon: 'people' },
+    { id: 'events', value: totalEvents, label: 'Événements', icon: 'calendar' },
+  ] as const;
 
-  const name = ws.club?.name ?? profile?.display_name ?? 'Club';
-  const greet = greetingForHour(new Date().getHours());
-  const priority = resolveClubHomePriority({
-    todayMatches: ws.todayMatches,
-    todayTrainings: ws.todayTrainings,
-    events: ws.events,
-  });
-  const presence = resolveClubPresenceAlert(ws.events);
-  const teamLabel = resolvePriorityTeamLabel(priority, ws.teamRows);
-  const locationLabel = resolvePriorityLocationLabel(priority);
-
-  const priorityPending =
-    priority.kind !== 'calm' ? getPendingInviteeUids(priority.event).length : 0;
-  /** CTA sur la carte jour J uniquement si cet événement a des RSVP. */
-  const showConvocationsCta = priorityPending > 0;
-  /** Sinon, l’alerte présence reste dans À faire (aucune feature retirée). */
-  const showPresenceTodo = presence.pendingCount > 0 && priorityPending === 0;
-
-  const todoItems = [
-    ...(showPresenceTodo
-      ? [
-          {
-            id: 'presence',
-            icon: 'people' as const,
-            label:
-              presence.pendingCount > 1
-                ? `${presence.pendingCount} réponses de présence en attente`
-                : '1 réponse de présence en attente',
-            hint: presence.eventLabel?.trim() || 'Relancer les convocations',
-            onPress: () => shellNav?.requestNav(presence.nav),
-          },
-        ]
-      : []),
-    ...(!logoUrl && logo.canEdit
-      ? [
-          {
-            id: 'logo',
-            icon: 'image' as const,
-            label: 'Ajouter le logo du club',
-            hint: 'Affiché sur l’Accueil et la vitrine',
-            onPress: () => void logo.pickAndUpload(),
-          },
-        ]
-      : []),
-    ...(ws.teamsWithoutCoach > 0
-      ? [
-          {
-            id: 'no-coach',
-            icon: 'school' as const,
-            label:
-              ws.teamsWithoutCoach > 1
-                ? `${ws.teamsWithoutCoach} équipes sans coach`
-                : '1 équipe sans coach',
-            hint: 'Affecter un coach depuis Coachs',
-            onPress: () => shellNav?.requestNav('coaches'),
-          },
-        ]
-      : []),
-    ...(ws.pendingMemberships > 0
-      ? [
-          {
-            id: 'pending',
-            icon: 'checkmark-circle' as const,
-            label: 'Valider les adhésions',
-            hint: `${ws.pendingMemberships} en attente`,
-            onPress: () => shellNav?.requestNav('players'),
-          },
-        ]
-      : []),
-    ...(ws.teams.length === 0
-      ? [
-          {
-            id: 'first-team',
-            icon: 'add' as const,
-            label: 'Créer la première équipe',
-            hint: 'U7 → Seniors',
-            onPress: () => shellNav?.openCreate?.('player') ?? shellNav?.requestNav('teams'),
-          },
-        ]
-      : []),
-  ].slice(0, MAX_TODO_ITEMS);
-
-  const teamCards = buildClubHomeTeamCards(ws.teamRows, MAX_TEAM_CARDS, openTeam);
-
-  const onPriorityOpen = () => {
-    if (priority.kind === 'match') {
-      shellNav?.requestNav('matches');
-      return;
-    }
-    if (priority.kind === 'training') {
-      shellNav?.requestNav('trainings');
-      return;
-    }
-    shellNav?.requestNav('calendar');
-  };
-
-  const onConvocations = () => {
-    shellNav?.requestNav(presence.nav);
-  };
+  const todos = [
+    { id: 'licenses', title: '5 licences en attente', subtitle: 'Documents à valider', color: 'tomato' },
+    { id: 'convocations', title: 'Relancer convocations', subtitle: 'Pour le match U16 de dimanche', color: tokens.accent },
+  ];
 
   return (
-    <View style={styles.root}>
-      <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
-        <ClubHomeIdentityHeader
-          greeting={greet}
-          clubName={name}
-          statusLabel={ws.statusLabel}
-          statusTone={ws.statusTone}
-          metaLine={formatClubHomeMetaLine(ws.players.length, ws.coaches.length, ws.teams.length)}
-          onPressCrest={logo.canEdit ? () => void logo.pickAndUpload() : undefined}
-          crestUploading={logo.uploading}
-        />
+    <View style={[styles.root, { backgroundColor: tokens.bg }]}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        
+        {/* Header Hero */}
+        <View style={styles.header}>
+          <View>
+            <ClubText style={[styles.greeting, { color: tokens.muted }]}>
+              {greetingForHour(new Date().getHours())}, {profile?.display_name?.split(" ")[0]}
+            </ClubText>
+            <ClubText style={[styles.clubName, { color: tokens.foreground }]}>
+              {ws.club.name}
+            </ClubText>
+          </View>
+          <View style={[styles.avatarBadge, { backgroundColor: tokens.accent + '22' }]}>
+            <Icon name="person" size={24} color={tokens.accent} />
+          </View>
+        </View>
 
-        <ClubHomeNextEventRow
-          priority={priority}
-          teamLabel={teamLabel}
-          locationLabel={locationLabel}
-          onOpen={onPriorityOpen}
-          onConvocations={showConvocationsCta ? onConvocations : undefined}
-          onPlan={
-            priority.kind === 'calm'
-              ? () => shellNav?.openCreate?.('match') ?? shellNav?.requestNav('matches')
-              : undefined
-          }
-        />
+        {/* Global KPIs (Metrics) */}
+        <View style={styles.statsRow}>
+          {stats.map(s => (
+            <View key={s.id} style={[styles.statBox, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+              <Icon name={s.icon as any} size={20} color={tokens.muted} />
+              <ClubText style={[styles.statValue, { color: tokens.foreground }]}>{s.value}</ClubText>
+              <ClubText style={[styles.statLabel, { color: tokens.muted }]}>{s.label}</ClubText>
+            </View>
+          ))}
+        </View>
 
-        <ClubHomeTeamsRail
-          teams={teamCards}
-          onSeeAll={() => shellNav?.requestNav('teams')}
-          onCreateTeam={() => shellNav?.openCreate?.('player') ?? shellNav?.requestNav('teams')}
-        />
+        {/* Action Center / ToDo */}
+        <View style={styles.section}>
+          <ClubText style={[styles.sectionTitle, { color: tokens.foreground }]}>Centre d'actions</ClubText>
+          <View style={styles.todoList}>
+            {todos.map(todo => (
+              <PressableSpring key={todo.id} style={[styles.todoCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+                <View style={[styles.todoIndicator, { backgroundColor: todo.color }]} />
+                <View style={{ flex: 1, paddingLeft: spacing.md }}>
+                  <ClubText style={[styles.todoTitle, { color: tokens.foreground }]}>{todo.title}</ClubText>
+                  <ClubText style={[styles.todoSub, { color: tokens.muted }]}>{todo.subtitle}</ClubText>
+                </View>
+                <Icon name="chevron-forward" size={16} color={tokens.muted} />
+              </PressableSpring>
+            ))}
+          </View>
+        </View>
 
-        <ClubHomeLicenseTrackerCard
-          pendingCount={ws.pendingMemberships}
-          medicalMissingCount={ws.pendingMemberships > 0 ? 1 : 0}
-          paymentPendingCount={ws.pendingMemberships > 0 ? 1 : 0}
-          fffPendingCount={ws.pendingMemberships > 0 ? ws.pendingMemberships : 0}
-          onPress={() => shellNav?.requestNav('players')}
-        />
+        {/* Teams Quick Access */}
+        <View style={styles.section}>
+          <ClubText style={[styles.sectionTitle, { color: tokens.foreground }]}>Vos Équipes</ClubText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamsScroll}>
+            {ws.teams.map(team => (
+              <PressableSpring 
+                key={team.id}
+                style={[styles.teamCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
+                onPress={() => {
+                  shellNav?.setSelectedTeamId?.(team.id);
+                  shellNav?.requestNav('teams');
+                }}
+              >
+                <View style={[styles.teamIconWrap, { backgroundColor: tokens.bg, borderColor: tokens.border }]}>
+                  <Icon name="shield" size={24} color={tokens.accent} />
+                </View>
+                <ClubText style={[styles.teamName, { color: tokens.foreground }]}>{team.name}</ClubText>
+                <ClubText style={[styles.teamMeta, { color: tokens.muted }]}>
+                  {0 /* todo */} joueurs
+                </ClubText>
+              </PressableSpring>
+            ))}
+          </ScrollView>
+        </View>
 
-        <ClubHomeTodoSection items={todoItems} showSuccessWhenEmpty />
-      </ClubChapterScroll>
+      </ScrollView>
     </View>
   );
 }
 
-const createStyles = (_tokens: ClubThemeTokens) =>
-  StyleSheet.create({
-    root: { flex: 1, backgroundColor: 'transparent' },
-  });
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  scroll: { padding: spacing.lg, paddingBottom: 100 },
+  
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.sm },
+  greeting: { fontSize: 14, fontWeight: '600', textTransform: 'uppercase' },
+  clubName: { fontSize: 28, fontWeight: '800', marginTop: 4 },
+  avatarBadge: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
+
+  statsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl },
+  statBox: { flex: 1, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, alignItems: 'center' },
+  statValue: { fontSize: 22, fontWeight: '800', marginTop: spacing.sm, marginBottom: 2 },
+  statLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+
+  section: { marginBottom: spacing.xl },
+  sectionTitle: { fontSize: 18, fontWeight: '800', marginBottom: spacing.md },
+  
+  todoList: { gap: spacing.sm },
+  todoCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: radius.lg, borderWidth: 1 },
+  todoIndicator: { width: 4, height: '100%', borderRadius: 2, position: 'absolute', left: 0 },
+  todoTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  todoSub: { fontSize: 13 },
+
+  teamsScroll: { gap: spacing.md, paddingRight: spacing.xl },
+  teamCard: { width: 140, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, alignItems: 'center' },
+  teamIconWrap: { width: 56, height: 56, borderRadius: 28, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md },
+  teamName: { fontSize: 16, fontWeight: '800', textAlign: 'center', marginBottom: 4 },
+  teamMeta: { fontSize: 12 },
+});

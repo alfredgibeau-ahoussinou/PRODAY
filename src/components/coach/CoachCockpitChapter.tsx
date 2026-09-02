@@ -1,414 +1,178 @@
-import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { Pressable, StyleSheet, View, ScrollView } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
-import { CoachChapterScroll, CoachText } from './coachPortalUi';
+import { CoachText } from './coachPortalUi';
 import { Icon } from '../ui/Icon';
-import { type TeamEvent } from '../../models/TeamEvent';
-import { isInMatchWindow } from '../../utils/matchLive';
-import { userCanManageConvocations, resolveClubCoversCoachFromMembers } from '../../utils/clubFeatureAccess';
+import type { TeamEvent } from '../../models/TeamEvent';
 import { useTabNavigation } from '../../context/TabNavigationContext';
-import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
+import { useCoachShellNav } from "../../features/coach/shell/CoachShellNavContext";
+
 import { useTranslation } from '../../context/LocaleContext';
 import { radius, spacing } from '../../theme/designTokens';
-import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
-import type { CoachNavItemId } from '../../features/coach/navigation/coachNavConfig';
-import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
-import { CreateTeamEventScreen } from '../../screens/CreateTeamEventScreen';
 import { CoachScreenHeader } from './CoachScreenHeader';
-import {
-  coachCalendarEventSummary,
-  coachEventPlaceLabel,
-  formatCoachCalendarDateStack,
-  listCoachCalendarRest,
-  resolveCoachDayPriority,
-} from '../../utils/coachCalendarHome';
-import { findLatestPostMatchAnalysis } from '../../utils/coachPostMatchAnalysis';
-import { CoachSectionCard } from './coachPortalUi';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
-import {
-  CoachCockpitShortcutRow,
-  CoachDayCalmEmpty,
-  CoachDayPriorityHero,
-} from './CoachCockpitChrome';
-
-const PEOPLE_GOLD = '#F5C518';
+import { PressableSpring } from '../motion';
+import { formatCalendarDate } from '../../utils/seasonCalendar';
 
 export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
   events,
   members,
+  onOpenChapter,
   onRefresh,
 }) => {
   const { t } = useTranslation();
+  const { tokens } = useCoachTheme();
   const tabNav = useTabNavigation();
-  const nav = useTabNavigationActions();
   const shellNav = useCoachShellNav();
-  const { tokens, teamId: activeTeamId } = useCoachTheme();
-  const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { count: unreadMessages } = useUnreadMessageCount();
-  const clubCoversCoach = useMemo(() => resolveClubCoversCoachFromMembers(members), [members]);
-  const canConvoc = userCanManageConvocations(profile, { clubCoversCoach });
-  const hasClub = Boolean(profile.profile.club_id);
-  const [creating, setCreating] = useState(false);
 
-  const priority = useMemo(() => resolveCoachDayPriority(events), [events]);
-  const heroEventId =
-    priority.kind === 'calm' ? null : priority.event.id;
-  const restUpcoming = useMemo(
-    () => listCoachCalendarRest(events, heroEventId),
-    [events, heroEventId],
-  );
+  const nextEvent = events.find(e => new Date(e.starts_at) >= new Date()) || events[events.length - 1];
 
-  const lastPostMatch = useMemo(
-    () => findLatestPostMatchAnalysis(events, members),
-    [events, members],
-  );
-
-  const openNav = (id: CoachNavItemId) => {
-    if (shellNav) shellNav.requestNav(id);
-    else if (id === 'carpool') nav.openCarpool();
-    else if (id === 'match_center' || id === 'matchs') tabNav.openMatchs();
-    else if (id === 'gestion') nav.openDashboard('gestion');
-    else if (id === 'messages') nav.setActiveTab('messages');
-    else if (id === 'profil') nav.openProfile();
-    else if (id === 'smart_tactics') nav.openDashboard('smart_tactics');
-    else if (id === 'coach_ia') nav.openDashboard('train_ai');
-  };
-
-  const openCreate = () => {
-    if (!hasClub) {
-      openNav('gestion');
-      return;
-    }
-    if (!canConvoc) {
-      Alert.alert(t('coach.portal.proGate.title'), t('coach.portal.proGate.body'));
-      return;
-    }
-    setCreating(true);
-  };
-
-  const openMoreMenu = () => {
-    Alert.alert(t('coach.calendar.title'), undefined, [
-      { text: t('coach.calendar.agenda'), onPress: () => openNav('planning') },
-      { text: t('coach.calendar.help'), onPress: () => shellNav?.openHelp?.() },
-      { text: t('common.cancel'), style: 'cancel' },
-    ]);
-  };
-
-  const openPointage = (eventId: string) => {
-    tabNav.openMatchs({ eventId, hubChapter: 'effectif' });
-  };
-
-  const openEvent = (eventId: string, hubChapter?: 'live' | 'composition' | 'effectif') => {
-    tabNav.openMatchs({ eventId, hubChapter });
-  };
-
-  if (creating) {
-    return (
-      <CreateTeamEventScreen
-        activeTeamId={activeTeamId}
-        onBack={() => setCreating(false)}
-        onCreated={(eventId) => {
-          setCreating(false);
-          onRefresh();
-          tabNav.openMatchs({ eventId });
-        }}
-      />
-    );
-  }
+  const shortcuts = [
+    { id: 'matchs', label: 'Matchs', icon: 'trophy', color: '#F5C518', nav: 'match_center' },
+    { id: 'trainings', label: 'Séances', icon: 'football', color: tokens.accent, nav: 'entrainements' },
+    { id: 'effectif', label: 'Effectif', icon: 'people', color: '#10B981', nav: 'equipe' },
+    { id: 'planning', label: 'Planning', icon: 'calendar', color: '#3B82F6', nav: 'planning' },
+  ] as const;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: tokens.bg }]}>
       <CoachScreenHeader
-        title={t('coach.calendar.title')}
+        title="Tableau de bord"
         unreadMessages={unreadMessages}
         actions={[
-          {
-            icon: 'chat',
-            onPress: () => openNav('messages'),
-            accessibilityLabel: t('messages.title'),
-          },
-          {
-            icon: 'add',
-            onPress: openCreate,
-            accessibilityLabel: t('coach.calendar.create'),
-          },
-          {
-            icon: 'ellipsis-horizontal',
-            onPress: openMoreMenu,
-            accessibilityLabel: t('coach.calendar.more'),
-          },
+          { icon: 'chat', onPress: () => shellNav?.requestNav('messages'), accessibilityLabel: t('messages.title') },
+          { icon: 'add', onPress: () => {}, accessibilityLabel: t('coach.calendar.create') },
         ]}
       />
 
-      <CoachChapterScroll>
-        <CoachCockpitShortcutRow
-          items={[
-            {
-              id: 'matchs',
-              label: 'Matchs',
-              icon: 'trophy',
-              onPress: () => openNav('match_center'),
-            },
-            {
-              id: 'trainings',
-              label: 'Séances',
-              icon: 'football',
-              onPress: () => openNav('entrainements'),
-            },
-            {
-              id: 'effectif',
-              label: 'Effectif',
-              icon: 'people',
-              onPress: () => openNav('equipe'),
-            },
-            {
-              id: 'planning',
-              label: 'Planning',
-              icon: 'calendar',
-              onPress: () => openNav('planning'),
-            },
-          ]}
-        />
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Welcome Section */}
+        <View style={styles.welcomeSection}>
+          <CoachText style={[styles.welcomeTitle, { color: tokens.foreground }]}>
+            Bonjour Coach {profile?.display_name?.split(" ")[0]},
+          </CoachText>
+          <CoachText style={[styles.welcomeSub, { color: tokens.muted }]}>
+            Prêt pour une nouvelle semaine de succès ?
+          </CoachText>
+        </View>
 
-        {priority.kind === 'calm' ? (
-          <CoachDayCalmEmpty
-            onCreate={openCreate}
-            onPlanning={() => openNav('planning')}
-          />
+        {/* Hero Next Event */}
+        <View style={styles.sectionHeader}>
+          <CoachText style={[styles.sectionTitle, { color: tokens.foreground }]}>Prochaine échéance</CoachText>
+        </View>
+        {nextEvent ? (
+          <PressableSpring 
+            style={[styles.heroCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
+            onPress={() => tabNav.openMatchs({ eventId: nextEvent.id })}
+          >
+            <View style={styles.heroTop}>
+              <View style={[styles.eventTypeBadge, { backgroundColor: (nextEvent.title || "").toLowerCase().includes("match") ? '#F5C51822' : tokens.accent + '22' }]}>
+                <Icon name={(nextEvent.title || "").toLowerCase().includes("match") ? 'trophy' : 'football'} size={14} color={(nextEvent.title || "").toLowerCase().includes("match") ? '#F5C518' : tokens.accent} />
+                <CoachText style={[styles.eventTypeText, { color: (nextEvent.title || "").toLowerCase().includes("match") ? '#F5C518' : tokens.accent }]}>
+                  {(nextEvent.title || "").toLowerCase().includes("match") ? 'Match' : 'Entraînement'}
+                </CoachText>
+              </View>
+              <CoachText style={[styles.heroDate, { color: tokens.muted }]}>
+                {formatCalendarDate(nextEvent.starts_at)}
+              </CoachText>
+            </View>
+            <CoachText style={[styles.heroTitle, { color: tokens.foreground }]}>{nextEvent.title}</CoachText>
+            
+            <View style={styles.heroActions}>
+              <Pressable style={[styles.heroBtnPrimary, { backgroundColor: tokens.accent }]}>
+                <CoachText style={[styles.heroBtnText, { color: tokens.onAccent }]}>Pointer les présences</CoachText>
+              </Pressable>
+              {(nextEvent.title || "").toLowerCase().includes("match") && (
+                <Pressable style={[styles.heroBtnSecondary, { borderColor: tokens.border }]}>
+                  <CoachText style={[styles.heroBtnText, { color: tokens.foreground }]}>Composition</CoachText>
+                </Pressable>
+              )}
+            </View>
+          </PressableSpring>
         ) : (
-          <CoachDayPriorityHero
-            priority={priority}
-            onOpenHub={() => openEvent(priority.event.id)}
-            onPointage={() => openPointage(priority.event.id)}
-            onComposition={
-              priority.kind === 'match' || priority.kind === 'live'
-                ? () => openEvent(priority.event.id, 'composition')
-                : undefined
-            }
-            onLive={
-              priority.kind === 'live'
-                ? () => openEvent(priority.event.id, 'live')
-                : undefined
-            }
-          />
+          <View style={[styles.heroCard, { backgroundColor: tokens.surface, alignItems: 'center' }]}>
+            <CoachText style={{ color: tokens.muted }}>Aucun événement prévu.</CoachText>
+          </View>
         )}
 
-        {lastPostMatch ? (
-          <CoachSectionCard
-            kicker="Dernier match"
-            title={lastPostMatch.title}
-            body={
-              lastPostMatch.scoreLabel
-                ? `Score ${lastPostMatch.scoreLabel} — ${lastPostMatch.positives[0] ?? lastPostMatch.nextMatchRecommendation}`
-                : lastPostMatch.nextMatchRecommendation
-            }
-          >
-            <Pressable
-              onPress={() => {
-                if (lastPostMatch.eventId) {
-                  openEvent(lastPostMatch.eventId, 'composition');
-                  return;
-                }
-                openNav('match_center');
-              }}
-              style={({ pressed }) => [styles.postMatchLink, pressed && { opacity: 0.65 }]}
+        {/* Quick Actions Grid */}
+        <View style={styles.sectionHeader}>
+          <CoachText style={[styles.sectionTitle, { color: tokens.foreground }]}>Raccourcis</CoachText>
+        </View>
+        <View style={styles.grid}>
+          {shortcuts.map((s) => (
+            <PressableSpring 
+              key={s.id} 
+              style={[styles.widgetTile, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
+              onPress={() => shellNav?.requestNav(s.nav as any)}
             >
-              <CoachText variant="caption" accent>
-                Voir le hub match →
-              </CoachText>
-            </Pressable>
-          </CoachSectionCard>
-        ) : null}
+              <View style={[styles.widgetIconBg, { backgroundColor: s.color + '22' }]}>
+                <Icon name={s.icon} size={24} color={s.color} />
+              </View>
+              <CoachText style={[styles.widgetLabel, { color: tokens.foreground }]}>{s.label}</CoachText>
+            </PressableSpring>
+          ))}
+        </View>
 
-        {restUpcoming.length > 0 ? (
-          <>
-            <CoachText variant="section" style={styles.sectionTitle}>
-              {t('coach.calendar.upcoming')}
-            </CoachText>
-            {restUpcoming.map((event) => (
-              <CalendarEventCard
-                key={event.id}
-                event={event}
-                styles={styles}
-                live={isInMatchWindow(event)}
-                liveLabel={t('coach.calendar.live')}
-                convokedLabel={t('coach.calendar.convoked')}
-                confirmedLabel={t('coach.calendar.confirmed')}
-                pointageLabel={t('coach.calendar.pointage')}
-                onOpen={() => openEvent(event.id)}
-                onPointage={() => openPointage(event.id)}
-              />
-            ))}
-          </>
-        ) : null}
-      </CoachChapterScroll>
+        {/* Focus Effectif */}
+        <View style={styles.sectionHeader}>
+          <CoachText style={[styles.sectionTitle, { color: tokens.foreground }]}>Vue d'ensemble</CoachText>
+        </View>
+        <View style={[styles.statsCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+          <View style={styles.statCol}>
+            <CoachText style={[styles.statValue, { color: tokens.foreground }]}>{members.length}</CoachText>
+            <CoachText style={[styles.statLabel, { color: tokens.muted }]}>Joueurs</CoachText>
+          </View>
+          <View style={[styles.statDivider, { backgroundColor: tokens.border }]} />
+          <View style={styles.statCol}>
+            <CoachText style={[styles.statValue, { color: tokens.foreground }]}>{events.filter(e => (e.title || "").toLowerCase().includes("match")).length}</CoachText>
+            <CoachText style={[styles.statLabel, { color: tokens.muted }]}>Matchs</CoachText>
+          </View>
+          <View style={[styles.statDivider, { backgroundColor: tokens.border }]} />
+          <View style={styles.statCol}>
+            <CoachText style={[styles.statValue, { color: tokens.accent }]}>100%</CoachText>
+            <CoachText style={[styles.statLabel, { color: tokens.muted }]}>Forme</CoachText>
+          </View>
+        </View>
+
+      </ScrollView>
     </View>
   );
 };
 
-function CalendarEventCard({
-  event,
-  styles,
-  live,
-  liveLabel,
-  convokedLabel,
-  confirmedLabel,
-  pointageLabel,
-  onOpen,
-  onPointage,
-}: {
-  event: TeamEvent;
-  styles: ReturnType<typeof createStyles>;
-  live: boolean;
-  liveLabel: string;
-  convokedLabel: string;
-  confirmedLabel: string;
-  pointageLabel: string;
-  onOpen: () => void;
-  onPointage: () => void;
-}) {
-  const { tokens } = useCoachTheme();
-  const stack = formatCoachCalendarDateStack(event.starts_at);
-  const summary = coachCalendarEventSummary(event);
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  scrollContent: { padding: spacing.md, paddingBottom: 60 },
+  
+  welcomeSection: { marginBottom: spacing.lg, marginTop: spacing.sm },
+  welcomeTitle: { fontSize: 24, fontWeight: '800' },
+  welcomeSub: { fontSize: 14, marginTop: 4 },
+  
+  sectionHeader: { marginBottom: spacing.sm, marginTop: spacing.lg },
+  sectionTitle: { fontSize: 18, fontWeight: '800' },
+  
+  heroCard: { padding: spacing.lg, borderRadius: radius.xl, borderWidth: 1, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 },
+  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  eventTypeBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, gap: 6 },
+  eventTypeText: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  heroDate: { fontSize: 13, fontWeight: '600' },
+  heroTitle: { fontSize: 22, fontWeight: '800', marginBottom: spacing.xl },
+  heroActions: { flexDirection: 'row', gap: spacing.sm },
+  heroBtnPrimary: { flex: 1, paddingVertical: 14, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
+  heroBtnSecondary: { flex: 1, paddingVertical: 14, borderRadius: radius.lg, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  heroBtnText: { fontSize: 14, fontWeight: '700' },
 
-  return (
-    <Pressable
-      onPress={onOpen}
-      style={({ pressed }) => [styles.card, pressed && { opacity: 0.92 }]}
-    >
-      <View style={styles.dateCol}>
-        <CoachText variant="caption" muted style={styles.dateWeek}>
-          {stack.weekday}
-        </CoachText>
-        <CoachText variant="title" style={styles.dateDay}>
-          {stack.day}
-        </CoachText>
-        <CoachText variant="caption" style={styles.dateMonth}>
-          {stack.month}
-        </CoachText>
-        <CoachText variant="caption" muted style={styles.dateTime}>
-          {stack.time}
-        </CoachText>
-      </View>
-      <View style={styles.cardDivider} />
-      <View style={styles.cardBody}>
-        <View style={styles.cardTitleRow}>
-          <CoachText variant="section" style={styles.eventTitle}>
-            {event.title}
-          </CoachText>
-          {live ? (
-            <View style={styles.liveBadge}>
-              <CoachText variant="caption" style={styles.liveBadgeText}>
-                {liveLabel}
-              </CoachText>
-            </View>
-          ) : null}
-        </View>
-        <View style={styles.attendanceRow}>
-          <CoachText variant="caption" muted style={styles.attendanceSummary}>
-            {convokedLabel} {summary.invited} · {confirmedLabel} {summary.confirmed}
-          </CoachText>
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation();
-              onPointage();
-            }}
-            style={({ pressed }) => [styles.pointageBtn, pressed && { opacity: 0.85 }]}
-            accessibilityRole="button"
-            accessibilityLabel={pointageLabel}
-          >
-            <Icon name="checkmark-circle" size={16} color={tokens.foreground} />
-            <CoachText variant="caption" style={styles.pointageBtnText}>
-              {pointageLabel}
-            </CoachText>
-          </Pressable>
-        </View>
-        <View style={styles.cardFooter}>
-          <CoachText variant="caption" muted numberOfLines={1} style={styles.place}>
-            {coachEventPlaceLabel(event)}
-          </CoachText>
-          <View style={styles.people}>
-            <Icon name="people" size={16} color={PEOPLE_GOLD} />
-            <CoachText variant="caption" style={styles.peopleCount}>
-              {summary.confirmed}
-            </CoachText>
-          </View>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  widgetTile: { width: '48%', padding: spacing.lg, borderRadius: radius.xl, borderWidth: 1, alignItems: 'flex-start' },
+  widgetIconBg: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  widgetLabel: { fontSize: 16, fontWeight: '700' },
 
-const createStyles = (tokens: CoachThemeTokens) =>
-  StyleSheet.create({
-    root: { flex: 1, minHeight: 0, backgroundColor: tokens.bg },
-    sectionTitle: {
-      color: tokens.foreground,
-      fontWeight: '800',
-      fontSize: 22,
-      marginTop: spacing.sm,
-    },
-    card: {
-      flexDirection: 'row',
-      alignItems: 'stretch',
-      backgroundColor: tokens.surface,
-      borderRadius: 20,
-      paddingVertical: spacing.lg,
-      paddingHorizontal: spacing.md,
-      gap: spacing.md,
-    },
-    dateCol: {
-      width: 58,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 2,
-    },
-    dateWeek: { fontSize: 13, fontWeight: '600' },
-    dateDay: { color: tokens.foreground, fontWeight: '800', fontSize: 22, lineHeight: 24 },
-    dateMonth: { color: tokens.foreground, fontWeight: '700', fontSize: 13 },
-    dateTime: { fontSize: 12, fontWeight: '600', marginTop: 4 },
-    cardDivider: {
-      width: StyleSheet.hairlineWidth,
-      backgroundColor: tokens.border,
-      marginVertical: 4,
-    },
-    cardBody: { flex: 1, minWidth: 0, gap: spacing.md },
-    cardTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-    eventTitle: { flex: 1, color: tokens.foreground, fontWeight: '700', fontSize: 17 },
-    liveBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: radius.pill,
-      backgroundColor: '#FF3B30',
-    },
-    liveBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-    attendanceRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
-    },
-    attendanceSummary: { flex: 1, fontSize: 13, fontWeight: '600' },
-    pointageBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      minHeight: 36,
-      borderRadius: radius.pill,
-      backgroundColor: tokens.elevated,
-      paddingHorizontal: spacing.md,
-    },
-    pointageBtnText: { color: tokens.foreground, fontWeight: '700' },
-    cardFooter: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
-    },
-    place: { flex: 1, fontSize: 13 },
-    people: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    peopleCount: { color: tokens.foreground, fontWeight: '700' },
-    postMatchLink: { marginTop: spacing.sm },
-  });
+  statsCard: { flexDirection: 'row', padding: spacing.lg, borderRadius: radius.xl, borderWidth: 1, alignItems: 'center' },
+  statCol: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, height: 40 },
+  statValue: { fontSize: 24, fontWeight: '800', marginBottom: 4 },
+  statLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase' },
+});
