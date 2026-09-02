@@ -13,6 +13,7 @@ import type { TeamEventType } from '../models/TeamEvent';
 import type { User } from '../models/User';
 import type { Team } from '../models/Team';
 import type { Membership } from '../models/Membership';
+import { Icon } from "../components/ui/Icon";
 import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { usersService } from '../services/users.service';
@@ -94,7 +95,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
     return coachTeams.find((row) => row.id === id)?.category?.trim();
   }, [activeTeamId, teamId, coachTeams]);
 
-  const [eventType, setEventType] = useState<TeamEventType>(defaultType);
+  const [eventType, setEventType] = useState<TeamEventType | null>(null);
   const [title, setTitle] = useState('');
   const [dateStr, setDateStr] = useState(
     defaultType === 'training' ? trainingDefault.date : '',
@@ -278,7 +279,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
       const id = await teamEventsService.create({
         title: title.trim(),
         description: description.trim() || undefined,
-        event_type: eventType,
+        event_type: eventType as TeamEventType,
         organizer_uid: profile.uid,
         organizer_name: profile.display_name,
         club_id: clubId,
@@ -527,40 +528,49 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
         title={t('coach.event.create.title')}
         actions={[
           {
-            icon: 'close',
-            onPress: onBack,
+            icon: eventType ? 'arrow-back' : 'close',
+            onPress: eventType ? () => setEventType(null) : onBack,
             accessibilityLabel: t('common.close'),
           },
         ]}
       >
         <CoachChapterScroll>
-          <CoachSectionCard
-            kicker={t('coach.event.create.typeKicker')}
-            title={t('coach.event.create.typeTitle')}
-          >
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={coachStyles.typeChipScroll}
-            >
-              {EVENT_TYPES.map((item) => {
-                const on = eventType === item.id;
-                return (
-                  <PressableSpring
-                    key={item.id}
-                    style={[coachStyles.typeChip, coachChipContainerStyle(on, tokens)]}
-                    onPress={() => setEventType(item.id)}
-                    scaleTo={0.96}
-                    haptic
-                  >
-                    <CoachText variant="caption" {...coachChipTextProps(on, tokens)}>
-                      {item.label}
+          {!eventType ? (
+            <View style={{ gap: 12, padding: 16 }}>
+              {EVENT_TYPES.map((item) => (
+                <PressableSpring
+                  key={item.id}
+                  style={{
+                    backgroundColor: tokens.surface,
+                    padding: 20,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: tokens.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 16
+                  }}
+                  onPress={() => setEventType(item.id)}
+                  scaleTo={0.96}
+                  haptic
+                >
+                  <Icon 
+                    name={item.id === 'training' ? 'football' : item.id === 'friendly' ? 'trophy' : item.id === 'detection' ? 'search' : item.id === 'meeting' ? 'people' : 'calendar'} 
+                    size={28} 
+                    color={tokens.accent} 
+                  />
+                  <View style={{ flex: 1 }}>
+                    <CoachText variant="section" style={{ color: tokens.foreground, fontSize: 18 }}>{item.label}</CoachText>
+                    <CoachText variant="caption" muted style={{ marginTop: 4 }}>
+                      {item.id === 'training' ? "Organiser une séance sur le terrain" : item.id === 'friendly' ? "Programmer un match ou amical" : item.id === 'detection' ? "Créer une journée de recrutement" : item.id === 'meeting' ? "Planifier une réunion tactique" : "Autre événement"}
                     </CoachText>
-                  </PressableSpring>
-                );
-              })}
-            </ScrollView>
-          </CoachSectionCard>
+                  </View>
+                  <Icon name="chevron-forward" size={20} color={tokens.muted} />
+                </PressableSpring>
+              ))}
+            </View>
+          ) : (
+            <>
 
           <CoachSectionCard
             kicker={eventType === 'training' ? "SÉANCE" : eventType === 'friendly' ? "MATCH" : eventType === 'detection' ? "DÉTECTION" : "RÉUNION"}
@@ -660,6 +670,8 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           {submitting ? (
             <ActivityIndicator color={tokens.accent} style={coachStyles.loader} />
           ) : null}
+          </>
+          )}
         </CoachChapterScroll>
       </CoachPane>
     );
@@ -667,27 +679,32 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
 
   return (
     <View style={[defaultStyles.root, rootStyle]}>
-      <ScreenHeader title="Nouvel événement" onBack={onBack} centered />
+      <ScreenHeader title={eventType ? "Détails" : "Nouvel événement"} onBack={eventType ? () => setEventType(null) : onBack} centered />
       <ScrollView contentContainerStyle={defaultStyles.content} keyboardShouldPersistTaps="handled">
-        <Text style={defaultStyles.label}>Type</Text>
-        <View style={defaultStyles.typeRow}>
-          {EVENT_TYPES.map((item) => (
-            <PressableSpring
-              key={item.id}
-              style={[defaultStyles.typeChip, eventType === item.id && defaultStyles.typeChipActive]}
-              onPress={() => setEventType(item.id)}
-            >
-              <Text
-                style={[
-                  defaultStyles.typeText,
-                  eventType === item.id && defaultStyles.typeTextActive,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </PressableSpring>
-          ))}
-        </View>
+        {!eventType ? (
+           <View style={{ gap: 12 }}>
+              {EVENT_TYPES.map((item) => (
+                <PressableSpring
+                  key={item.id}
+                  style={{
+                    backgroundColor: c.surface,
+                    padding: 16,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: c.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                  onPress={() => setEventType(item.id)}
+                >
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: c.text }}>{item.label}</Text>
+                  <Text style={{ color: c.textMuted }}>➔</Text>
+                </PressableSpring>
+              ))}
+            </View>
+        ) : (
+          <>
 
         <TextInput
           style={defaultStyles.input}
@@ -765,6 +782,8 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
             <Text style={defaultStyles.submitText}>Créer et convoquer</Text>
           )}
         </PressableSpring>
+        </>
+        )}
       </ScrollView>
     </View>
   );
