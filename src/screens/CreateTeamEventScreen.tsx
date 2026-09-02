@@ -584,14 +584,8 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
   if (isCoach) {
     return (
       <CoachPane
-        title={t('coach.event.create.title')}
-        actions={[
-          {
-            icon: eventType ? 'arrow-back' : 'close',
-            onPress: eventType ? () => setEventType(null) : onBack,
-            accessibilityLabel: t('common.close'),
-          },
-        ]}
+        title={eventType === 'training' ? "Nouvel Entraînement" : eventType === 'friendly' ? "Nouveau Match" : eventType === 'detection' ? "Nouvelle Détection" : eventType === 'meeting' ? "Nouvelle Réunion" : t('coach.event.create.title')}
+        onBack={eventType ? () => setEventType(null) : onBack}
       >
         <CoachChapterScroll>
           {!eventType ? (
@@ -635,14 +629,14 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
             kicker={eventType === 'training' ? "SÉANCE" : eventType === 'friendly' ? "MATCH" : eventType === 'detection' ? "DÉTECTION" : "RÉUNION"}
             title={eventType === 'training' ? "Détails de l'entraînement" : eventType === 'friendly' ? "Détails du match" : "Détails de l'événement"}
           >
-            <CoachSettingsGroup>
+            <View style={{ paddingTop: spacing.sm }}>
               <CoachFormField
                 placeholder={t('coach.event.create.titlePlaceholder')}
                 value={title}
                 onChangeText={setTitle}
                 tokens={tokens}
               />
-              <View style={coachStyles.dateRow}>
+              <View style={{ flexDirection: 'row', gap: spacing.md }}>
                 <CoachFormField
                   placeholder={t('coach.event.create.datePlaceholder')}
                   value={dateStr}
@@ -687,7 +681,7 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
                 multiline
                 last
               />
-            </CoachSettingsGroup>
+            </View>
           </CoachSectionCard>
 
           {showCategories ? (
@@ -877,16 +871,18 @@ function CoachFormField({
       keyboardType={keyboardType}
       style={[
         {
-          paddingHorizontal: spacing.md,
+          paddingHorizontal: spacing.lg,
           paddingVertical: spacing.md,
-          fontSize: 15,
+          fontSize: 16,
+          fontWeight: '500',
           color: tokens.foreground,
-          minHeight: multiline ? 80 : 48,
+          backgroundColor: tokens.bg,
+          minHeight: multiline ? 100 : 56,
           textAlignVertical: multiline ? 'top' : 'center',
-        },
-        !last && {
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: tokens.border,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: tokens.border,
+          marginBottom: spacing.md,
         },
         style,
       ]}

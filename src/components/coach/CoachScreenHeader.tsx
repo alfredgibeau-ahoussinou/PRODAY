@@ -20,6 +20,7 @@ export type CoachHeaderAction = {
 type Props = {
   title: string;
   actions?: CoachHeaderAction[];
+  onBack?: () => void;
   /** Rangée club + messages / profil — à garder sur les onglets primaires. */
   showTeamRow?: boolean;
   /** Badge messagerie (header Accueil). */
@@ -60,6 +61,7 @@ export function CoachScreenHeader({
   title,
   actions,
   showTeamRow = true,
+  onBack,
   unreadMessages = 0,
 }: Props) {
   const { t } = useTranslation();
@@ -161,10 +163,12 @@ export function CoachScreenHeader({
 export function CoachPane({
   title,
   actions,
+  onBack,
   children,
 }: {
   title: string;
   actions?: CoachHeaderAction[];
+  onBack?: () => void;
   children: React.ReactNode;
 }) {
   const { tokens } = useCoachTheme();
@@ -172,7 +176,7 @@ export function CoachPane({
 
   return (
     <View style={styles.pane}>
-      <CoachScreenHeader title={title} actions={actions} />
+      <CoachScreenHeader title={title} actions={actions} onBack={onBack} />
       <View style={styles.paneBody}>{children}</View>
     </View>
   );
