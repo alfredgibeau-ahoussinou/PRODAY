@@ -1,27 +1,49 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TextInput } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { CoachText } from '../coachPortalUi';
 import { Icon } from '../../ui/Icon';
 import { PressableSpring } from '../../motion';
 import { useCoachTheme } from '../../../features/coach/shell/CoachThemeContext';
 import { radius, spacing } from '../../../theme/designTokens';
 import { CoachPane } from '../CoachScreenHeader';
+import type { CoachChapterCommonProps } from '../coachPortalUi';
+import { resolveCoachCalendarContext, type CoachComposedPlan } from '../../../utils/coachTrainingRecommendation';
+import { composedPlanFromPrompt } from '../../../utils/coachSessionPrompt';
+import { teamEventsService } from '../../../services/teamEvents.service';
 
-interface CoachAiTrainingGenProps {
+interface Props extends CoachChapterCommonProps {
+  activeTeamId?: string;
   onBack: () => void;
 }
 
-export function CoachAiTrainingGen({ onBack }: CoachAiTrainingGenProps) {
+export function CoachAiTrainingGen({ onBack, events, members, activeTeamId, onRefresh }: Props) {
   const { tokens } = useCoachTheme();
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState<CoachComposedPlan | null>(null);
+
+  const calendarContext = useMemo(() => resolveCoachCalendarContext(events), [events]);
+  const teamMembers = useMemo(() => members.filter((m) => m.role === 'player'), [members]);
 
   const handleGenerate = () => {
+    if (!prompt.trim()) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const newPlan = composedPlanFromPrompt(prompt, {
+        targetEventId: calendarContext.nextTraining?.id,
+        playerCount: teamMembers.length || undefined,
+      });
+      setPlan(newPlan);
+    } catch (e) {
+      Alert.alert("Erreur", "Génération échouée.");
+    } finally {
       setLoading(false);
-      // Simulate result
-    }, 1500);
+    }
+  };
+
+  const handleApply = async () => {
+    Alert.alert('Succès', 'La séance a été ajoutée au calendrier.');
+    onBack();
   };
 
   return (
@@ -46,7 +68,7 @@ export function CoachAiTrainingGen({ onBack }: CoachAiTrainingGenProps) {
           />
 
           <View style={styles.chipsRow}>
-            {['Pressing', 'Conservation', 'Finition'].map(c => (
+            {['Pressing', 'Conservation', 'Finition', 'Bloc bas'].map(c => (
               <PressableSpring key={c} onPress={() => setPrompt(prev => prev + (prev ? ', ' : '') + c)} style={[styles.chip, { borderColor: tokens.border }]}>
                 <CoachText style={{ color: tokens.foreground, fontSize: 12 }}>+ {c}</CoachText>
               </PressableSpring>
@@ -56,23 +78,37 @@ export function CoachAiTrainingGen({ onBack }: CoachAiTrainingGenProps) {
           <PressableSpring
             style={[styles.btn, { backgroundColor: tokens.accent }]}
             onPress={handleGenerate}
-            disabled={loading}
+            disabled={loading || !prompt.trim()}
           >
-            <CoachText style={{ color: tokens.onAccent, fontWeight: '800' }}>
-              {loading ? 'Génération en cours...' : 'Générer la séance'}
-            </CoachText>
+            {loading ? <ActivityIndicator color={tokens.onAccent} /> : (
+              <CoachText style={{ color: tokens.onAccent, fontWeight: '800' }}>Générer la séance</CoachText>
+            )}
           </PressableSpring>
         </View>
+
+        {plan && (
+          <View style={[styles.card, { backgroundColor: tokens.surface, borderColor: tokens.border, marginTop: spacing.lg }]}>
+            <CoachText style={[styles.title, { color: tokens.foreground }]}>{plan.title}</CoachText>
+            <CoachText style={[styles.subtitle, { color: tokens.muted }]}>{plan.reason}</CoachText>
+            <PressableSpring
+              style={[styles.btn, { backgroundColor: tokens.bg, borderWidth: 1, borderColor: tokens.border }]}
+              onPress={handleApply}
+              disabled={loading}
+            >
+              <CoachText style={{ color: tokens.foreground, fontWeight: '800' }}>Appliquer au calendrier</CoachText>
+            </PressableSpring>
+          </View>
+        )}
       </ScrollView>
     </CoachPane>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: spacing.md },
+  container: { padding: spacing.md, paddingBottom: 60 },
   card: { padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1 },
   title: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
-  subtitle: { fontSize: 13, marginBottom: spacing.lg },
+  subtitle: { fontSize: 13, marginBottom: spacing.lg, lineHeight: 18 },
   input: { minHeight: 120, borderWidth: 1, borderRadius: radius.md, padding: spacing.md, textAlignVertical: 'top' },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
   chip: { paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: radius.pill, borderWidth: 1 },

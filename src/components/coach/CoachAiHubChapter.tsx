@@ -11,11 +11,11 @@ export const CoachAiHubChapter: React.FC<Props> = (props) => {
   const [currentPage, setCurrentPage] = useState<AiPageId | 'dashboard'>('dashboard');
 
   if (currentPage === 'training') {
-    return <CoachAiTrainingGen onBack={() => setCurrentPage('dashboard')} />;
+    return <CoachAiTrainingGen onBack={() => setCurrentPage('dashboard')} {...props} />;
   }
 
   if (currentPage === 'opponent') {
-    return <CoachAiOpponentAnalysis onBack={() => setCurrentPage('dashboard')} />;
+    return <CoachAiOpponentAnalysis onBack={() => setCurrentPage('dashboard')} {...props} />;
   }
 
   if (currentPage === 'chat') {
