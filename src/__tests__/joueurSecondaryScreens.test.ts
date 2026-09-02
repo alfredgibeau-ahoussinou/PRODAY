@@ -9,8 +9,8 @@ describe('joueurSecondaryScreens palette', () => {
     expect(JOUEUR_SURFACES.listRow).toBe(PLAYER_DARK.bgElevated);
   });
 
-  it('reels et discover invité mint sur fond #0A0A0F', () => {
-    expect(JOUEUR_REELS.stage).toBe('#0A0A0F');
+  it('reels et discover invité mint sur fond #000000', () => {
+    expect(JOUEUR_REELS.stage).toBe('#000000');
     expect(JOUEUR_REELS.accent).toBe('#00E676');
     expect(JOUEUR_DISCOVER.heroBg).toBe('#1A1A24');
   });

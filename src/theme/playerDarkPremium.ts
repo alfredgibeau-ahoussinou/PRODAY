@@ -3,10 +3,10 @@
  * Tokens statiques, indépendants du contexte React.
  */
 export const PLAYER_DARK = {
-  bg: '#0A0A0F',
-  bgElevated: '#121218',
-  surface: '#1A1A24',
-  surfaceRaised: '#222230',
+  bg: '#000000',
+  bgElevated: '#0A0A0F',
+  surface: '#121218',
+  surfaceRaised: '#1A1A24',
   border: 'rgba(255,255,255,0.08)',
   borderStrong: 'rgba(255,255,255,0.14)',
   text: '#FFFFFF',
