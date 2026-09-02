@@ -1,13 +1,10 @@
 import React, { useMemo } from 'react';
 import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion/PressableSpring';
-import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
+import { FUT18_TIER_THEME } from '../../theme/fut18PremiumPalette';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
-import { spacing } from '../../theme/designTokens';
-import { Icon } from '../ui/Icon';
 
 export type PlayerShieldCardStats = {
   matches?: number | null;
@@ -48,93 +45,25 @@ function positionShort(pos: string | undefined | null): string | null {
   return pos.slice(0, 3).toUpperCase();
 }
 
-function StatRing({
-  label,
-  value,
-  color,
-  size = 54,
+function StatGrid({
+  stats,
+  ink,
 }: {
-  label: string;
-  value: string;
-  color: string;
-  size?: number;
+  stats: Array<{ l: string; v: string | number }>;
+  ink: string;
 }) {
-  const stroke = 4;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const hasValue = value !== '—';
-
   return (
-    <View style={[ringStyles.wrap, { width: size, height: size + 18 }]}>
-      <Svg width={size} height={size}>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke="rgba(255,255,255,0.1)"
-          strokeWidth={stroke}
-          fill="none"
-        />
-        {hasValue ? (
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            stroke={color}
-            strokeWidth={stroke}
-            fill="none"
-            strokeDasharray={`${c * 0.72} ${c}`}
-            strokeLinecap="round"
-            rotation="-90"
-            origin={`${size / 2}, ${size / 2}`}
-          />
-        ) : null}
-      </Svg>
-      <View style={ringStyles.center}>
-        <ProDayText variant="caption" style={ringStyles.value}>
-          {value}
-        </ProDayText>
-      </View>
-      <ProDayText variant="caption" style={ringStyles.label} numberOfLines={2}>
-        {label}
-      </ProDayText>
-    </View>
-  );
-}
-
-function RatingCircle({ rating, size = 72 }: { rating: number | null | undefined; size?: number }) {
-  const stroke = 5;
-  const r = (size - stroke) / 2;
-  const display = rating != null && rating > 0 ? rating.toFixed(1) : '—';
-
-  return (
-    <View style={[ratingStyles.wrap, { width: size, height: size }]}>
-      <Svg width={size} height={size}>
-        <Defs>
-          <SvgGradient id="ratingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            {PLAYER_DARK.ratingRing.map((c, i) => (
-              <Stop
-                key={c}
-                offset={`${(i / (PLAYER_DARK.ratingRing.length - 1)) * 100}%`}
-                stopColor={c}
-              />
-            ))}
-          </SvgGradient>
-        </Defs>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          stroke="url(#ratingGrad)"
-          strokeWidth={stroke}
-          fill="rgba(10,10,15,0.85)"
-        />
-      </Svg>
-      <View style={ratingStyles.center}>
-        <ProDayText variant="section" style={ratingStyles.value}>
-          {display}
-        </ProDayText>
-      </View>
+    <View style={statStyles.grid}>
+      {stats.map((s, idx) => (
+        <View key={idx} style={statStyles.row}>
+          <ProDayText variant="caption" style={[statStyles.value, { color: ink }]}>
+            {s.v}
+          </ProDayText>
+          <ProDayText variant="caption" style={[statStyles.label, { color: ink }]}>
+            {s.l}
+          </ProDayText>
+        </View>
+      ))}
     </View>
   );
 }
@@ -146,274 +75,248 @@ export function PlayerShieldCard({
   clubName,
   clubLogoUrl,
   stats,
-  width = 280,
+  width = 240,
   onPress,
   style,
 }: PlayerShieldCardProps) {
-  const playerTheme = usePlayerThemeColors();
-  const height = Math.round(width * 1.62);
-  const pos = positionShort(position);
-  const goals = stats?.goals ?? null;
-  const assists = stats?.assists ?? null;
-  const ga =
-    goals != null || assists != null
-      ? String((goals ?? 0) + (assists ?? 0))
-      : '—';
-  const matches =
-    stats?.matches != null && stats.matches > 0 ? String(stats.matches) : stats?.matches === 0 ? '0' : '—';
-  const notes =
-    stats?.notes != null && stats.notes > 0 ? stats.notes.toFixed(1) : stats?.notes === 0 ? '0' : '—';
+  const height = Math.round(width * 1.45);
+  const pos = positionShort(position) || 'BU';
+  
+  // Choose Gold tier as the default visual for the player profile card to match the premium FIFA look
+  const theme = FUT18_TIER_THEME.gold;
+  const ink = theme.ink;
+  
+  const ratingValue = stats?.rating != null ? Math.round(stats.rating * 10) : 85;
 
-  const card = useMemo(
-    () => (
-      <View style={[styles.shell, { width, height }, style]}>
-        <LinearGradient
-          colors={PLAYER_DARK.shieldGradient}
-          start={{ x: 0.2, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={styles.face}
-        >
-          <View style={styles.watermark} pointerEvents="none">
-            <Icon name="star-four-points" size={120} color="rgba(255,255,255,0.04)" variant="outline" />
-          </View>
+  const cardStats = [
+    { l: 'MAT', v: stats?.matches || 0 },
+    { l: 'BUT', v: stats?.goals || 0 },
+    { l: 'PAS', v: stats?.assists || 0 },
+    { l: 'NOT', v: stats?.notes ? stats.notes.toFixed(1) : '—' },
+    { l: 'G+A', v: (stats?.goals || 0) + (stats?.assists || 0) },
+    { l: 'PHY', v: ratingValue - 3 },
+  ];
 
-          <View style={styles.hexTop} pointerEvents="none">
-            <LinearGradient
-              colors={[`${playerTheme.accent}1F`, 'transparent']}
-              style={StyleSheet.absoluteFill}
-            />
-          </View>
-
-          <View style={styles.photoZone}>
-            {photoUrl ? (
-              <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
-            ) : (
-              <LinearGradient
-                colors={[playerTheme.accent, playerTheme.accentAlt, '#121218']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.photo, styles.photoPh]}
-              >
-                <ProDayText variant="title" style={styles.photoLetter}>
-                  {displayName.charAt(0).toUpperCase()}
+  const content = (
+    <View style={[styles.cardContainer, { width, height }, style]}>
+      <View style={chrome.wrapper}>
+        <LinearGradient colors={theme.frame} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+        
+        <View style={chrome.innerFace}>
+          <LinearGradient
+            colors={theme.face}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <LinearGradient
+            colors={['rgba(255,255,255,0.4)', 'transparent', 'rgba(255,255,255,0.1)']}
+            style={chrome.shine}
+            locations={[0, 0.4, 1]}
+            start={{ x: -0.5, y: -0.5 }}
+            end={{ x: 1.5, y: 1.5 }}
+          />
+          
+          <View style={styles.col}>
+            <View style={styles.topRow}>
+              <View style={styles.ratingCol}>
+                <ProDayText variant="section" style={[styles.ovr, { color: ink }]}>
+                  {ratingValue}
                 </ProDayText>
-              </LinearGradient>
-            )}
-            {pos ? (
-              <View style={[styles.posBadge, { backgroundColor: playerTheme.accent }]}>
-                <ProDayText variant="caption" style={styles.posText}>
+                <ProDayText variant="caption" style={[styles.pos, { color: ink }]}>
                   {pos}
                 </ProDayText>
+                
+                <View style={styles.flagIcon} />
+                <View style={styles.clubIcon}>
+                  {clubLogoUrl && <Image source={{ uri: clubLogoUrl }} style={styles.clubLogoImg} />}
+                </View>
               </View>
-            ) : null}
-          </View>
-
-          <ProDayText variant="section" style={styles.name} numberOfLines={2}>
-            {displayName}
-          </ProDayText>
-
-          <View style={styles.clubPill}>
-            {clubLogoUrl ? (
-              <Image source={{ uri: clubLogoUrl }} style={styles.clubLogo} />
-            ) : (
-              <View style={styles.clubLogoPh}>
-                <Icon name="shield" size={12} color={PLAYER_DARK.bg} variant="filled" />
+              <View style={styles.photoWrap}>
+                {photoUrl ? (
+                  <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
+                ) : (
+                  <View style={[styles.photo, styles.photoFallback]} />
+                )}
               </View>
-            )}
-            <ProDayText variant="caption" style={styles.clubText} numberOfLines={2}>
-              {clubName?.trim() || 'Sans club'}
-            </ProDayText>
+            </View>
+            <View style={nameStyles.plate}>
+              <ProDayText variant="body" style={[nameStyles.text, { color: ink }]} numberOfLines={1}>
+                {displayName}
+              </ProDayText>
+              <View style={[nameStyles.line, { backgroundColor: theme.inkMuted }]} />
+            </View>
+            
+            <View style={styles.statsContainer}>
+              <StatGrid stats={cardStats.slice(0, 3)} ink={ink} />
+              <View style={[styles.statDivider, { backgroundColor: theme.inkMuted }]} />
+              <StatGrid stats={cardStats.slice(3, 6)} ink={ink} />
+            </View>
           </View>
 
-          <View style={styles.ringsRow}>
-            <StatRing label="Matchs" value={matches} color={PLAYER_DARK.statBlue} />
-            <StatRing label="Notes" value={notes} color={PLAYER_DARK.statYellow} />
-            <StatRing label="G+A" value={ga} color={PLAYER_DARK.statGreen} />
-          </View>
-
-          <View style={styles.ratingWrap}>
-            <RatingCircle rating={stats?.rating} size={Math.round(width * 0.32)} />
-          </View>
-        </LinearGradient>
+        </View>
       </View>
-    ),
-    [
-      width,
-      height,
-      style,
-      photoUrl,
-      displayName,
-      pos,
-      clubName,
-      clubLogoUrl,
-      matches,
-      notes,
-      ga,
-      stats?.rating,
-      playerTheme.accent,
-      playerTheme.accentAlt,
-    ],
+    </View>
   );
 
   if (onPress) {
     return (
       <PressableSpring onPress={onPress} scaleTo={0.98} haptic>
-        {card}
+        {content}
       </PressableSpring>
     );
   }
-  return card;
+  return content;
 }
 
-const ringStyles = StyleSheet.create({
-  wrap: { alignItems: 'center' },
-  center: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
+const chrome = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    overflow: 'hidden',
+    padding: 3,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
   },
-  value: {
-    color: PLAYER_DARK.text,
-    fontWeight: '800',
-    fontSize: 13,
+  innerFace: {
+    flex: 1,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    borderBottomLeftRadius: 33,
+    borderBottomRightRadius: 33,
+    paddingHorizontal: 8,
+    paddingTop: 14,
+    paddingBottom: 10,
+    overflow: 'hidden',
   },
-  label: {
-    color: PLAYER_DARK.textMuted,
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-    marginTop: 2,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-    width: '100%',
+  shine: {
+    ...StyleSheet.absoluteFillObject,
   },
 });
 
-const ratingStyles = StyleSheet.create({
-  wrap: { alignItems: 'center', justifyContent: 'center' },
-  center: {
-    ...StyleSheet.absoluteFillObject,
+const nameStyles = StyleSheet.create({
+  plate: {
+    marginTop: -8,
     alignItems: 'center',
-    justifyContent: 'center',
+    zIndex: 10,
+  },
+  text: {
+    fontFamily: 'RobotoCondensed-Bold',
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontSize: 20,
+    textAlign: 'center',
+  },
+  line: {
+    height: 1,
+    width: '85%',
+    marginTop: 2,
+    opacity: 0.4,
+  },
+});
+
+const statStyles = StyleSheet.create({
+  grid: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  label: {
+    opacity: 0.8,
+    fontSize: 11,
+    fontWeight: '400',
+    fontFamily: 'RobotoCondensed-Regular',
   },
   value: {
-    color: PLAYER_DARK.text,
-    fontWeight: '900',
-    fontSize: 22,
-    letterSpacing: -0.5,
+    fontSize: 14,
+    fontWeight: '800',
+    fontFamily: 'RobotoCondensed-Bold',
   },
 });
 
 const styles = StyleSheet.create({
-  shell: {
-    borderRadius: PLAYER_DARK_RADIUS.shield,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.borderStrong,
+  cardContainer: {
     shadowColor: '#000',
-    shadowOpacity: 0.45,
-    shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
-    elevation: 12,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 15,
+    backgroundColor: 'transparent',
   },
-  face: {
-    flex: 1,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl + 14,
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  hexTop: {
-    position: 'absolute',
-    top: 0,
-    left: '18%',
-    right: '18%',
-    height: 14,
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 6,
-    overflow: 'hidden',
-  },
-  watermark: {
-    position: 'absolute',
-    right: -20,
-    bottom: 40,
-    opacity: 0.9,
-  },
-  photoZone: {
-    width: '62%',
-    aspectRatio: 0.88,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-    backgroundColor: PLAYER_DARK.surfaceRaised,
-  },
-  photo: { width: '100%', height: '100%' },
-  photoPh: { alignItems: 'center', justifyContent: 'center' },
-  photoLetter: { color: PLAYER_DARK.text, fontWeight: '900' },
-  posBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  posText: {
-    color: PLAYER_DARK.bg,
-    fontWeight: '900',
-    fontSize: 10,
-    letterSpacing: 0.6,
-  },
-  name: {
-    color: PLAYER_DARK.text,
-    fontWeight: '800',
-    fontSize: 18,
-    letterSpacing: -0.3,
-    textAlign: 'center',
-    width: '100%',
-  },
-  clubPill: {
+  col: { flex: 1 },
+  topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFFFFF',
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    maxWidth: '92%',
+    height: '55%',
+    zIndex: 5,
   },
-  clubLogo: { width: 18, height: 18, borderRadius: 9 },
-  clubLogoPh: {
-    width: 18,
+  ratingCol: {
+    width: '35%',
+    alignItems: 'center',
+    paddingTop: 4,
+    gap: 2,
+  },
+  ovr: {
+    fontSize: 36,
+    fontWeight: '900',
+    lineHeight: 40,
+    fontFamily: 'RobotoCondensed-Bold',
+  },
+  pos: {
+    fontWeight: '500',
+    fontSize: 14,
+    marginTop: -4,
+    fontFamily: 'RobotoCondensed-Regular',
+  },
+  flagIcon: {
+    width: 26,
     height: 18,
-    borderRadius: 9,
-    backgroundColor: PLAYER_DARK.textMuted,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginTop: 4,
+  },
+  clubIcon: {
+    width: 24,
+    height: 28,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginTop: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  clubText: {
-    color: PLAYER_DARK.bg,
-    fontWeight: '700',
-    fontSize: 11,
-    flexShrink: 1,
+  clubLogoImg: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
   },
-  ringsRow: {
+  photoWrap: {
+    width: '75%',
+    height: '110%',
+    position: 'absolute',
+    right: -10,
+    bottom: -15,
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+  },
+  photoFallback: {
+    opacity: 0.5,
+  },
+  statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 4,
-    marginTop: 4,
-  },
-  ratingWrap: {
-    marginTop: spacing.xs,
-    marginBottom: spacing.sm,
     alignItems: 'center',
-    paddingBottom: 2,
+    marginTop: 10,
+    paddingHorizontal: 8,
+  },
+  statDivider: {
+    width: 1,
+    height: '80%',
+    opacity: 0.3,
   },
 });
