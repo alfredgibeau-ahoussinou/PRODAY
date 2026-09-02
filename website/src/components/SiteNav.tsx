@@ -203,7 +203,7 @@ export function SiteNav({ light: _light }: { light?: boolean } = {}) {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-[110] flex justify-center px-3 pt-3 sm:px-5 sm:pt-5">
+      <div className="pointer-events-none sticky inset-x-0 top-0 z-[110] flex justify-center px-3 pt-3 sm:px-5 sm:pt-5">
         <nav
           aria-label="Principal"
           className={`site-nav-dock pointer-events-auto flex w-full max-w-[52rem] items-center gap-1 rounded-full pl-2 pr-2 py-1 sm:gap-1 sm:pl-2.5 sm:pr-2 sm:py-1.5 ${
