@@ -42,7 +42,7 @@ export function CoachAiOpponentAnalysis({ onBack, events, members }: Props) {
                 <View style={styles.section}>
                   <CoachText style={[styles.sectionTitle, { color: tokens.accent }]}>Points positifs</CoachText>
                   {analysis.positives.map(p => (
-                    <CoachText key={p} style={{ color: tokens.foreground }}>+ {p}</CoachText>
+                    <CoachText key={p} style={{ color: tokens.foreground }}>• {p}</CoachText>
                   ))}
                 </View>
               )}
@@ -51,7 +51,7 @@ export function CoachAiOpponentAnalysis({ onBack, events, members }: Props) {
                 <View style={styles.section}>
                   <CoachText style={[styles.sectionTitle, { color: 'tomato' }]}>À améliorer</CoachText>
                   {analysis.improvements.map(p => (
-                    <CoachText key={p} style={{ color: tokens.foreground }}>- {p}</CoachText>
+                    <CoachText key={p} style={{ color: tokens.foreground }}>• {p}</CoachText>
                   ))}
                 </View>
               )}
