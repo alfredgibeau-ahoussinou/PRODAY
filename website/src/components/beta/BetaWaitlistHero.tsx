@@ -47,17 +47,10 @@ export function BetaWaitlistHero({ video, poster }: Props) {
           transition={{ duration: 0.45, delay: reduce ? 0 : 0.12 }}
           className="mt-4 max-w-md text-sm leading-relaxed text-white/60 sm:text-[15px]"
         >
-          {BETA_PITCH.summary}
+          Installe l'application directement. Gratuit pour la phase bêta.
         </motion.p>
 
-        <motion.p
-          initial={reduce ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: reduce ? 0 : 0.16 }}
-          className="mt-3 max-w-lg border-l border-white/20 pl-3 text-sm leading-relaxed text-white/50"
-        >
-          {BETA_PITCH.delayNotice}
-        </motion.p>
+        
 
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 10 }}
@@ -69,7 +62,7 @@ export function BetaWaitlistHero({ video, poster }: Props) {
             href="#inscription"
             className="inline-flex min-h-12 items-center justify-center bg-[var(--proday-accent)] px-7 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition hover:brightness-110 active:scale-[0.98]"
           >
-            S&apos;inscrire
+            Télécharger l'app
           </a>
           <Link
             href={ROUTES.demo}

@@ -218,15 +218,11 @@ export const PRO_STAFF_BRAND = {
 
 /** Message waitlist / page beta */
 export const BETA_PITCH = {
-  summary:
-    "Laisse ton email. Bêta décalée au 15 août 2026 (améliorations en cours). iOS TestFlight à 18 h. Gratuit pour les inscrits.",
-  dailyUpdates:
-    "Les inscrits reçoivent des emails réguliers : report de date, ouverture TestFlight, astuces et nouveautés (tous les 2 jours après le lancement).",
-  launch:
-    "Bêta iOS ouverte le 15 août 2026 à 18 h. Lien TestFlight envoyé par email. APK Android disponible dès validation.",
-  iosLaunchLabel: "15 août 2026 à 18 h",
-  delayNotice:
-    "La bêta a été décalée au 15 août 2026 en raison d'améliorations nécessaires au bon développement de l'application.",
+  summary: "Rejoignez la version bêta de ProDay sur iOS et Android.",
+  dailyUpdates: "",
+  launch: "",
+  iosLaunchLabel: "",
+  delayNotice: ""
 } as const;
 
 export const MODULES = [

@@ -20,11 +20,11 @@ export function DownloadSection() {
           <div>
             <Smartphone className="text-[var(--proday-accent)]" size={32} />
             <h2 className="font-display mt-4 text-2xl font-bold uppercase tracking-wide text-[var(--proday-accent)] sm:text-3xl">
-              Bientôt sur iOS & Android
+              Disponible sur iOS & Android
             </h2>
-            <p className="mt-3 leading-relaxed text-white/55">{BETA_PITCH.summary}</p>
-            <p className="mt-2 text-sm leading-relaxed text-white/45">{BETA_PITCH.delayNotice}</p>
-            <p className="mt-2 text-sm text-white/35">{BETA_PITCH.dailyUpdates}</p>
+            <p className="mt-3 leading-relaxed text-white/55">La version bêta est désormais ouverte à tous.</p>
+            
+            
           </div>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:mt-0">
             <button
