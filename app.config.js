@@ -1,5 +1,6 @@
 /** @type {import('expo/config').ExpoConfig} */
-const appJson = require('./app.json');
+// Expo passes the static app.json (expo.*) as `config`. Spreading it keeps
+// hasUnusedStaticConfig=false for expo-doctor.
 
 // Ensure `.env` / `.env.local` are loaded when this config is evaluated
 // (Expo CLI usually does this; explicit load covers tooling / EAS edge cases).
@@ -9,39 +10,38 @@ try {
   // @expo/env optional at evaluate-time in exotic hosts
 }
 
-const iosGoogleClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
-const googleUrlScheme = iosGoogleClientId.includes('.apps.googleusercontent.com')
-  ? `com.googleusercontent.apps.${iosGoogleClientId.replace('.apps.googleusercontent.com', '')}`
-  : null;
+module.exports = ({ config }) => {
+  const iosGoogleClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '';
+  const googleUrlScheme = iosGoogleClientId.includes('.apps.googleusercontent.com')
+    ? `com.googleusercontent.apps.${iosGoogleClientId.replace('.apps.googleusercontent.com', '')}`
+    : null;
 
-const baseIos = appJson.expo.ios ?? {};
-const existingUrlTypes = baseIos.infoPlist?.CFBundleURLTypes ?? [];
+  const baseIos = config.ios ?? {};
+  const existingUrlTypes = baseIos.infoPlist?.CFBundleURLTypes ?? [];
 
-const easProjectId =
-  process.env.EAS_PROJECT_ID ?? process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? '';
+  const easProjectId =
+    process.env.EAS_PROJECT_ID ?? process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? '';
 
-/** Store / TestFlight → production APNs ; dev / preview device → development. */
-const easProfile = (process.env.EAS_BUILD_PROFILE ?? '').toLowerCase();
-const apsEnvironment =
-  easProfile === 'production' || easProfile === 'testflight'
-    ? 'production'
-    : 'development';
+  /** Store / TestFlight → production APNs ; dev / preview device → development. */
+  const easProfile = (process.env.EAS_BUILD_PROFILE ?? '').toLowerCase();
+  const apsEnvironment =
+    easProfile === 'production' || easProfile === 'testflight'
+      ? 'production'
+      : 'development';
 
-// Embed public RC keys in `extra` so runtime can read them via expo-constants
-// even if Metro inlining of process.env is stale (restart Metro with `-c`
-// after changing `.env`).
-const revenueCatIosApiKey =
-  process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY?.trim() ?? '';
-const revenueCatAndroidApiKey =
-  process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY?.trim() ?? '';
+  // Embed public RC keys in `extra` so runtime can read them via expo-constants
+  // even if Metro inlining of process.env is stale (restart Metro with `-c`
+  // after changing `.env`).
+  const revenueCatIosApiKey =
+    process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY?.trim() ?? '';
+  const revenueCatAndroidApiKey =
+    process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY?.trim() ?? '';
 
-module.exports = () => ({
-  ...appJson,
-  expo: {
-    ...appJson.expo,
-    scheme: appJson.expo.scheme ?? 'proday',
+  return {
+    ...config,
+    scheme: config.scheme ?? 'proday',
     extra: {
-      ...(appJson.expo.extra ?? {}),
+      ...(config.extra ?? {}),
       ...(easProjectId ? { eas: { projectId: easProjectId } } : {}),
       revenueCat: {
         iosApiKey: revenueCatIosApiKey,
@@ -72,5 +72,5 @@ module.exports = () => ({
         ],
       },
     },
-  },
-});
+  };
+};

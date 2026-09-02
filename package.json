@@ -145,6 +145,11 @@
     "react-refresh": "^0.14.2",
     "typescript": "~5.9.2"
   },
+  "overrides": {
+    "react-native-health": {
+      "@expo/config-plugins": "54.0.4"
+    }
+  },
   "expo": {
     "install": {
       "exclude": [
