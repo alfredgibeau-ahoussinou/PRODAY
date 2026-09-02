@@ -70,7 +70,7 @@ export function CoachAiTrainingGen({ onBack, events, members, activeTeamId, onRe
           <View style={styles.chipsRow}>
             {['Pressing', 'Conservation', 'Finition', 'Bloc bas'].map(c => (
               <PressableSpring key={c} onPress={() => setPrompt(prev => prev + (prev ? ', ' : '') + c)} style={[styles.chip, { borderColor: tokens.border }]}>
-                <CoachText style={{ color: tokens.foreground, fontSize: 12 }}>+ {c}</CoachText>
+                <CoachText style={{ color: tokens.foreground, fontSize: 12 }}>{c}</CoachText>
               </PressableSpring>
             ))}
           </View>

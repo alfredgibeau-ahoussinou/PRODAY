@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, View, ScrollView } from 'react-native';
+import { Pressable, StyleSheet, View, ScrollView, TextInput } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
 import { CoachText } from './coachPortalUi';
 import { Icon } from '../ui/Icon';
@@ -49,6 +49,17 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* Search Bar */}
+        <View style={[styles.searchBar, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+          <Icon name="search" size={20} color={tokens.muted} />
+          <TextInput
+            style={[styles.searchInput, { color: tokens.foreground }]}
+            placeholder="Rechercher un joueur, un match..."
+            placeholderTextColor={tokens.muted}
+          />
+        </View>
+  
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <CoachText style={[styles.welcomeTitle, { color: tokens.foreground }]}>
@@ -144,6 +155,8 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
 };
 
 const styles = StyleSheet.create({
+  searchBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.md, height: 48, borderRadius: radius.pill, borderWidth: 1, marginBottom: spacing.md },
+  searchInput: { flex: 1, marginLeft: spacing.sm, fontSize: 15 },
   root: { flex: 1 },
   scrollContent: { padding: spacing.md, paddingBottom: 60 },
   

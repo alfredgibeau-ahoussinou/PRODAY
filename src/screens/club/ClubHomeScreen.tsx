@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, TextInput } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
@@ -36,6 +36,17 @@ export function ClubHomeScreen() {
     <View style={[styles.root, { backgroundColor: tokens.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         
+        
+        {/* Search Bar */}
+        <View style={[styles.searchBar, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+          <Icon name="search" size={20} color={tokens.muted} />
+          <TextInput
+            style={[styles.searchInput, { color: tokens.foreground }]}
+            placeholder="Rechercher (joueurs, entraîneurs, équipes)..."
+            placeholderTextColor={tokens.muted}
+          />
+        </View>
+  
         {/* Header Hero */}
         <View style={styles.header}>
           <View>
@@ -110,6 +121,8 @@ export function ClubHomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  searchBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.md, height: 48, borderRadius: radius.pill, borderWidth: 1, marginTop: spacing.md },
+  searchInput: { flex: 1, marginLeft: spacing.sm, fontSize: 15 },
   root: { flex: 1 },
   scroll: { padding: spacing.lg, paddingBottom: 100 },
   
