@@ -215,7 +215,7 @@ export const CompetitionFixtureDetailScreen: React.FC<CompetitionFixtureDetailSc
               variant="title"
               style={{ color: c.text, textAlign: 'center', marginTop: spacing.sm }}
             >
-              {fixture.home_score ?? '-'} - {fixture.away_score ?? '-'}
+              {fixture.home_score ?? 0} à {fixture.away_score ?? 0}
             </ProDayText>
           )}
         </View>

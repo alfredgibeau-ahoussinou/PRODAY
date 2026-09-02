@@ -305,7 +305,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     if (!statsEvent) return;
     const summary = Object.values(statsEvent.player_match_stats ?? {})
       .slice(0, 4)
-      .map((s) => `${s.player_name}: ${s.goals ?? 0}b/${s.assists ?? 0}p, note ${s.rating ?? '-'}`)
+      .map((s) => `${s.player_name}: ${s.goals ?? 0}b/${s.assists ?? 0}p, note ${s.rating ?? 'N/A'}`)
       .join('\n');
     await Share.share({
       message: `Rapport d'après-match. ${statsEvent.title}\n${statsEvent.city} · ${statsEvent.starts_at.toLocaleDateString('fr-FR')}\n\n${summary || 'Aucune stat individuelle.'}`,

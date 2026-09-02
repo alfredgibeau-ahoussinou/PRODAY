@@ -68,7 +68,7 @@ export const calendarExportService = {
     try {
       await Share.share({
         title: event.title,
-        message: `${event.title} - ${event.startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}\nLieu : ${event.location || 'Stade'}\nAjouter au calendrier : ${googleUrl}`,
+        message: `${event.title} • ${event.startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}\nLieu : ${event.location || 'Stade'}\nAjouter au calendrier : ${googleUrl}`,
       });
     } catch {
       await Linking.openURL(googleUrl);

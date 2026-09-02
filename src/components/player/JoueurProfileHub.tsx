@@ -329,7 +329,7 @@ export const JoueurProfileHub: React.FC<Props> = ({
             onPress={() => {
               joueurGamePress();
               void Share.share({
-                title: `Carte FUT ProDay - ${profile.display_name}`,
+                title: `Carte FUT ProDay • ${profile.display_name}`,
                 message: `⚽ Découvre ma Carte Joueur ProDay (Note OVR : ${ovr || 75}, Niveau : ${level}) ! Rejoins mon équipe sur ProDay : https://proday.app/joueur/${profile.uid}`,
               });
             }}

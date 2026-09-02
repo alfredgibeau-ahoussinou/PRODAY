@@ -73,7 +73,7 @@ export function isMatchHubEligible(event: TeamEvent): boolean {
 }
 
 export function formatScoreLine(state: MatchLiveState): string {
-  return `${state.home_score} - ${state.away_score}`;
+  return `${state.home_score} à ${state.away_score}`;
 }
 
 export function getMyMatchStat(

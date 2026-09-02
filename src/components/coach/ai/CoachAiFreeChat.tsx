@@ -37,7 +37,7 @@ export function CoachAiFreeChat({ onBack }: { onBack: () => void }) {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: spacing.lg }}>
           {messages.map((m, i) => (
             <View key={i} style={[styles.bubble, m.role === 'user' ? [styles.bubbleUser, { backgroundColor: tokens.accent }] : [styles.bubbleAssistant, { backgroundColor: tokens.surface }]]}>
-              <CoachText style={{ color: m.role === 'user' ? tokens.onAccent : tokens.foreground }}>{m.content}</CoachText>
+              <CoachText style={{ color: m.role === 'user' ? tokens.onAccent : tokens.foreground }}>{m.content.replace(/(^|\n)\s*[-*]\s/g, "$1• ")}</CoachText>
             </View>
           ))}
         </ScrollView>

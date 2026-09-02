@@ -258,7 +258,7 @@ function FixtureRow({
               keyboardType="number-pad"
               maxLength={2}
             />
-            <ProDayText variant="body">-</ProDayText>
+            <ProDayText variant="body"> </ProDayText>/ProDayText>
             <TextInput
               style={styles.scoreInput}
               value={awayS}
@@ -269,7 +269,7 @@ function FixtureRow({
           </>
         ) : (
           <ProDayText variant="title" style={styles.titleText}>
-            {f.home_score ?? '-'} - {f.away_score ?? '-'}
+            {f.home_score ?? 0} à {f.away_score ?? 0}
           </ProDayText>
         )}
         <ProDayText variant="body" style={styles.bodyStrong}>
@@ -392,7 +392,7 @@ function BracketTab({
                     {f.homeName}
                   </ProDayText>
                   <ProDayText variant="title" style={styles.titleText}>
-                    {f.home_score ?? '-'} - {f.away_score ?? '-'}
+                    {f.home_score ?? 0} à {f.away_score ?? 0}
                   </ProDayText>
                   <ProDayText variant="body" style={styles.bodyStrong}>
                     {f.awayName}

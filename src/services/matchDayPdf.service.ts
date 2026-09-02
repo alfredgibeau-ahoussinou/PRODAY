@@ -125,7 +125,7 @@ export const matchDayPdfService = {
     const subs = event.lineup?.slots.filter((s) => s.role === 'sub') ?? [];
     const summary = [
       `⚽ FEUILLE DE MATCH PRODAY : ${event.title}`,
-      `📅 ${event.starts_at ? formatCalendarDate(event.starts_at) : 'Date à venir'} - ${event.city}`,
+      `📅 ${event.starts_at ? formatCalendarDate(event.starts_at) : 'Date à venir'} • ${event.city}`,
       event.lineup?.formation ? `📐 Formation : ${event.lineup.formation}` : '',
       `\n🌟 TITULAIRES (${starters.length}) :`,
       ...starters.map((s, i) => `${i + 1}. ${s.display_name} (${s.position_label ?? 'Joueur'})`),
@@ -134,7 +134,7 @@ export const matchDayPdfService = {
     ].filter(Boolean).join('\n');
 
     await Share.share({
-      title: `Feuille de match - ${event.title}`,
+      title: `Feuille de match • ${event.title}`,
       message: summary,
     });
   },

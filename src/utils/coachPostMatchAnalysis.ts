@@ -82,11 +82,11 @@ export function buildPostMatchAnalysis(
       ? ['domination au tableau', 'avantage au score']
       : ['résistance malgré le score', 'esprit combatif'];
     if ((event.live_state?.home_score ?? 0) > (event.live_state?.away_score ?? 0)) {
-      positives.push(`Victoire ${score} — ${home}.`);
+      positives.push(`Victoire ${score} : ${home}.`);
     } else if ((event.live_state?.home_score ?? 0) < (event.live_state?.away_score ?? 0)) {
-      improvements.push(`Défaite ${score} — analyser les phases clés.`);
+      improvements.push(`Défaite ${score} : analyser les phases clés.`);
     } else {
-      positives.push(`Match nul ${score} — ${home}.`);
+      positives.push(`Match nul ${score} : ${home}.`);
     }
   }
 
@@ -101,7 +101,7 @@ export function buildPostMatchAnalysis(
     if (totalGoals >= 2) {
       positives.push(`${totalGoals} but${totalGoals > 1 ? 's' : ''} inscrit${totalGoals > 1 ? 's' : ''} par l’effectif.`);
     } else if (totalGoals === 0) {
-      improvements.push('Finition à travailler — 0 but marqué sur la feuille.');
+      improvements.push('Finition à travailler : 0 but marqué sur la feuille.');
     }
 
     if (avgRating != null && avgRating >= 7) {
@@ -115,12 +115,12 @@ export function buildPostMatchAnalysis(
       0,
     );
     if (cards >= 3) {
-      improvements.push(`${cards} cartons — discipline à renforcer.`);
+      improvements.push(`${cards} cartons : discipline à renforcer.`);
     } else if (cards === 0 && statRows.length >= 7) {
       positives.push('Discipline exemplaire (aucun carton).');
     }
   } else if (finalized) {
-    improvements.push('Feuille joueur incomplète — ajoutez notes et stats pour affiner l’analyse.');
+    improvements.push('Feuille joueur incomplète : ajoutez notes et stats pour affiner l’analyse.');
   }
 
   let mvp: PostMatchAnalysis['mvp'] = null;
@@ -154,7 +154,7 @@ export function buildPostMatchAnalysis(
   } else if (improvements.some((i) => /discipline|carton/i.test(i))) {
     nextMatchRecommendation = 'Travail comportemental et gestion émotionnelle avant le prochain match.';
   } else if (positives.length >= 2) {
-    nextMatchRecommendation = 'Capitalisez sur cette dynamique — conservez le XI type et le pressing.';
+    nextMatchRecommendation = 'Capitalisez sur cette dynamique : conservez le XI type et le pressing.';
   }
 
   const videoStatus = buildEventVideoStatus(event.id, event.title, clubVideos);
@@ -166,7 +166,7 @@ export function buildPostMatchAnalysis(
     if (score) {
       positives.push(`Match terminé ${score}.`);
     } else {
-      improvements.push('Données limitées — complétez la feuille de match.');
+      improvements.push('Données limitées : complétez la feuille de match.');
     }
   }
 

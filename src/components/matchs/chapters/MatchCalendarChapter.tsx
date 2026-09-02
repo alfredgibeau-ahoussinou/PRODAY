@@ -205,7 +205,7 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
                     void calendarExportService.exportEventToCalendar({
                       id: item.id,
                       title: item.title,
-                      description: `${item.subtitle} - ProDay Football`,
+                      description: `${item.subtitle} • ProDay Football`,
                       location: item.city,
                       startDate: start,
                       endDate: end,

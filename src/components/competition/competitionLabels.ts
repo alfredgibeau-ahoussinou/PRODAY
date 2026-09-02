@@ -35,7 +35,7 @@ export function competitionFixtureScoreLine(f: {
   away_score: number | null;
 }): string {
   if (f.home_score != null && f.away_score != null) {
-    return `${f.home_score} - ${f.away_score}`;
+    return `${f.home_score} à ${f.away_score}`;
   }
   return 'vs';
 }
