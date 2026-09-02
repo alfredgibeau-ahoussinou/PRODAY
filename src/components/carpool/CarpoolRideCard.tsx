@@ -246,302 +246,101 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
     </View>
   );
 
-  if (compact) {
-    return (
-      <CarpoolTripTicket
-        meta={`${formatCalendarDate(event.starts_at)} · ${event.title}`}
-        metaRight={metaRight || null}
-        from={fromLabel}
-        to={toLabel}
-        driver={slot.driver_name}
-        seatsLabel={seatsLabel}
-        timeLabel={slot.meeting_time ? `Départ ${slot.meeting_time}` : null}
-        onPress={onOpenDetail}
-        footer={ticketActions}
-      />
-    );
-  }
+  
+  const fullFooter = (
+    <View style={styles.ticketActions}>
+      {ticketActions}
+      
+      {!compact && (
+        <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+          {slot.meeting_location && (
+            <PressableSpring
+              onPress={() => openMapsAt(slot.meeting_location!, slot.meeting_place)}
+              scaleTo={0.98}
+            >
+              <ProDayText variant="caption" accent style={cardStyles.mapLink}>
+                📍 Voir le RDV ({slot.meeting_place?.trim() || 'GPS'}) sur Maps
+              </ProDayText>
+            </PressableSpring>
+          )}
 
-  return (
-    <PressableSpring
-      style={[cardStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.soft]}
-      onPress={onOpenDetail}
-      scaleTo={0.98}
-      haptic
-    >
-      <CarpoolCardAccent kind="cta" />
-      <View style={cardStyles.body}>
-        <ProDayText variant="caption" muted>
-          {formatCalendarDate(event.starts_at)} · {event.title}
-        </ProDayText>
-
-        <View style={cardStyles.driverRow}>
-          <View style={[cardStyles.avatar, { backgroundColor: colors.accentSoft }]}>
-            <Icon name="person" size={18} color={colors.accent} />
-          </View>
-          <View style={cardStyles.driverCopy}>
-            <ProDayText variant="section">{slot.driver_name}</ProDayText>
-            <ProDayText variant="caption" muted>
-              {slot.volunteered ? t('carpool.ride.volunteer') : t('carpool.ride.assigned')}
-              {slot.vehicle_type
-                ? ` · ${t(`carpool.vehicle.${slot.vehicle_type}`)}`
-                : ''}
-            </ProDayText>
-          </View>
-          {available != null ? (
-            <View style={[cardStyles.seatsPill, { backgroundColor: colors.accentSoft }]}>
-              <ProDayText variant="caption" accent style={cardStyles.seatsText}>
-                {available} place{available !== 1 ? 's' : ''}
+          {(slot.passengers?.length ?? 0) > 0 && (
+            <View style={cardStyles.passengers}>
+              <ProDayText variant="caption" muted>
+                Passagers : {(slot.passengers ?? []).map((p) => p.name).join(', ')}
               </ProDayText>
             </View>
-          ) : (
-            <ProDayText variant="caption" muted>
-              Places ?
-            </ProDayText>
           )}
-        </View>
 
-        {(distanceKm != null || etaLabel || iaScore != null) ? (
-          <ProDayText variant="caption" muted style={cardStyles.etaText}>
-            {[
-              distanceKm != null ? formatDistanceKm(distanceKm) : null,
-              etaLabel,
-              iaScore != null ? `IA ${iaScore}%` : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          </ProDayText>
-        ) : null}
-
-        <View style={cardStyles.route}>
-          <Icon name="location" size={14} color={colors.textMuted} />
-          <ProDayText variant="body" muted numberOfLines={compact ? 1 : 2} style={cardStyles.routeText}>
-            {slot.meeting_place?.trim() || t('carpool.ride.meetingTbd')} → {destination || event.city}
-          </ProDayText>
-        </View>
-        {!compact && slot.meeting_location ? (
-          <PressableSpring
-            onPress={() => openMapsAt(slot.meeting_location!, slot.meeting_place)}
-            scaleTo={0.98}
-          >
-            <ProDayText variant="caption" accent style={cardStyles.mapLink}>
-              RDV conducteur sur la carte
-            </ProDayText>
-          </PressableSpring>
-        ) : null}
-
-        {slot.meeting_time ? (
-          <ProDayText variant="caption" accent style={cardStyles.time}>
-            Départ {slot.meeting_time}
-          </ProDayText>
-        ) : null}
-
-        {!compact && slot.notes ? (
-          <ProDayText variant="caption" muted numberOfLines={2} style={cardStyles.notes}>
-            {slot.notes}
-          </ProDayText>
-        ) : null}
-
-        {!compact && (slot.passengers?.length ?? 0) > 0 ? (
-          <View style={cardStyles.passengers}>
-            <ProDayText variant="caption" muted>
-              Passagers : {(slot.passengers ?? []).map((p) => p.name).join(', ')}
-            </ProDayText>
-            {(slot.passengers ?? []).map((p) => {
-              if (!p.pickup_place && !p.pickup_location) return null;
-              const dist = pickupDistanceFromMeeting(slot, p);
-              return (
-                <ProDayText key={p.uid} variant="caption" muted>
-                  {p.name}. {p.pickup_place?.trim() || 'GPS'}
-                  {dist ? ` (${dist} du RDV)` : ''}
-                </ProDayText>
-              );
-            })}
-          </View>
-        ) : null}
-
-        <View style={cardStyles.actions}>
-          {!isMine && tabNav ? (
+          {!isMine && tabNav && (
             <PressableSpring
-              style={[
-                cardStyles.ghostBtn,
-                { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
-              ]}
+              style={styles.ticketGhost}
               onPress={() => void handleContactDriver()}
               disabled={contactBusy}
-              scaleTo={0.97}
             >
-              {contactBusy ? (
-                <ActivityIndicator color={colors.accent} size="small" />
-              ) : (
+              {contactBusy ? <ActivityIndicator color={palette.signal} size="small" /> : (
                 <>
-                  <Icon name="chat" size={14} color={colors.accent} />
-                  <ProDayText variant="caption" accent style={cardStyles.btnText}>
+                  <Icon name="chat" size={14} color={palette.signal} />
+                  <ProDayText variant="caption" style={styles.ticketGhostText}>
                     {t('carpool.ride.contactDriver')}
                   </ProDayText>
                 </>
               )}
             </PressableSpring>
-          ) : null}
-          {bookedHere ? (
-            <PressableSpring
-              style={[
-                cardStyles.ghostBtn,
-                { borderColor: colors.borderStrong, backgroundColor: colors.surfaceMuted },
-              ]}
-              onPress={() => void handleCancel()}
-              disabled={busy}
-              scaleTo={0.97}
-            >
-              {busy ? (
-                <ActivityIndicator color={colors.accent} size="small" />
-              ) : (
-                <ProDayText variant="caption" accent style={cardStyles.btnText}>
-                  Annuler ma place
-                </ProDayText>
-              )}
-            </PressableSpring>
-          ) : canBook ? (
-            <>
-              <CarpoolLocationCapture
-                label={t('carpool.standalone.pickupPoint')}
-                place={pickupPlace}
-                location={pickupLocation}
-                onPlaceChange={setPickupPlace}
-                onLocationChange={setPickupLocation}
-                disabled={busy}
-                compact
-              />
-            <View style={{ flexDirection: 'row', gap: spacing.xs, alignItems: 'center' }}>
-              <PressableSpring
-                onPress={() => {
-                  prodayHaptics.confirm();
-                  void handleBook(true);
-                }}
-                disabled={busy}
-                scaleTo={0.96}
-                haptic={!busy}
-              >
-                <ProDayGradient kind="cta" style={cardStyles.primaryBtn}>
-                  {busy ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <>
-                      <Icon name="star-four-points" size={14} color="#FFFFFF" />
-                      <ProDayText variant="caption" inverse style={cardStyles.btnText}>
-                        1-tap
-                      </ProDayText>
-                    </>
-                  )}
-                </ProDayGradient>
-              </PressableSpring>
-              <PressableSpring
-                onPress={() => {
-                  prodayHaptics.confirm();
-                  void handleBook(false);
-                }}
-                disabled={busy}
-                scaleTo={0.96}
-                haptic={!busy}
-              >
-                <View style={[cardStyles.ghostBtn, { borderColor: colors.accent, marginBottom: 0 }]}>
-                  <Icon name="checkmark-circle" size={14} color={colors.accent} />
-                  <ProDayText variant="caption" accent style={cardStyles.btnText}>
-                    Réserver
-                  </ProDayText>
-                </View>
-              </PressableSpring>
-            </View>
-            </>
-          ) : isMine ? (
+          )}
 
-            <ProDayText variant="caption" accent>
-              Votre trajet
-            </ProDayText>
-          ) : null}
+          {canBook && !compact && (
+             <CarpoolLocationCapture
+               label={t('carpool.standalone.pickupPoint')}
+               place={pickupPlace}
+               location={pickupLocation}
+               onPlaceChange={setPickupPlace}
+               onLocationChange={setPickupLocation}
+               disabled={busy}
+               compact
+             />
+          )}
         </View>
-
-        {!compact &&
-        (isMine ||
-          (slot.passengers ?? []).some(
-            (p) => p.uid === profile.uid && isPassengerConfirmed(p),
-          )) ? (
-          <CarpoolLiveTripPanel
-            tripId={eventTripId(event.id, slot.driver_uid)}
-            viewerUid={profile.uid}
-            driverUid={slot.driver_uid}
-            driverName={slot.driver_name}
-            passengers={slot.passengers}
-            tripStatus={slotTripStatus(slot)}
-            onStartTrip={() => teamEventsService.startCarpoolTrip(event.id, profile.uid)}
-            onEndTrip={() => teamEventsService.endCarpoolTrip(event.id, profile.uid)}
-            onTripChanged={onUpdated}
-          />
-        ) : null}
-      </View>
-    </PressableSpring>
+      )}
+    </View>
   );
-};
+
+  return (
+    <CarpoolTripTicket
+      meta={`${formatCalendarDate(event.starts_at)} · ${event.title}`}
+      metaRight={metaRight || null}
+      from={fromLabel}
+      to={toLabel}
+      driver={slot.driver_name}
+      seatsLabel={seatsLabel}
+      timeLabel={slot.meeting_time ? `Départ ${slot.meeting_time}` : null}
+      onPress={onOpenDetail}
+      footer={fullFooter}
+    />
+  );
+}
 
 const cardStyles = StyleSheet.create({
-  card: {
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    overflow: 'hidden',
-    marginBottom: spacing.sm,
-    paddingLeft: spacing.sm,
-  },
-  body: { padding: spacing.md, paddingLeft: spacing.sm, gap: spacing.xs },
-  driverRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  driverCopy: { flex: 1 },
-  seatsPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  seatsText: { fontWeight: '800' },
-  scorePill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  etaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs },
-  etaText: { fontWeight: '700' },
-  route: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs, marginTop: spacing.xs },
-  routeText: { flex: 1 },
+  card: {},
+  body: {},
+  driverRow: {},
+  avatar: {},
+  driverCopy: {},
+  seatsPill: {},
+  seatsText: {},
+  scorePill: {},
+  etaRow: {},
+  etaText: {},
+  route: {},
+  routeText: {},
   mapLink: { fontWeight: '700', marginTop: 2 },
   passengers: { gap: 2 },
-  time: { fontWeight: '700' },
-  notes: { fontStyle: 'italic' },
+  time: {},
+  notes: {},
   actions: { marginTop: spacing.sm },
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-  },
-  ghostBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    marginBottom: spacing.xs,
-  },
-  btnText: { fontWeight: '800' },
+  primaryBtn: {},
+  ghostBtn: {},
+  btnText: {},
 });
 
 function createTicketStyles(palette: CarpoolUiPalette) {
@@ -585,4 +384,3 @@ function createTicketStyles(palette: CarpoolUiPalette) {
     },
   });
 }
-

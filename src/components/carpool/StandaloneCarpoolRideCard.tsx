@@ -285,304 +285,103 @@ export const StandaloneCarpoolRideCard: React.FC<StandaloneCarpoolRideCardProps>
     </View>
   );
 
-  if (compact) {
-    return (
-      <CarpoolTripTicket
-        meta={`${formatFrenchDepartureDate(offer.departs_at)}${
-          offer.meeting_time ? t('carpool.standalone.departure', { time: offer.meeting_time }) : ''
-        }`}
-        metaRight={offer.club_only ? t('carpool.standalone.clubOnly') : t('carpool.standalone.freeTrip')}
-        from={fromLabel}
-        to={toLabel}
-        driver={driverLabel}
-        seatsLabel={seatsLabel}
-        timeLabel={offer.meeting_time || null}
-        footer={ticketFooter}
-      />
-    );
-  }
+  
+  const fullFooter = (
+    <View style={styles.ticketActions}>
+      {ticketFooter}
 
-  return (
-    <View style={[cardStyles.card, { borderColor: colors.border, backgroundColor: colors.surface }, shadows.soft]}>
-      <CarpoolCardAccent kind="cta" />
-      <View style={cardStyles.inner}>
-      <View style={cardStyles.header}>
-        <View style={cardStyles.pillRow}>
-          <View style={[cardStyles.pill, { backgroundColor: colors.accentSoft }]}>
-            <ProDayText variant="caption" accent style={cardStyles.pillText}>
-              {t('carpool.standalone.freeTrip')}
-            </ProDayText>
-          </View>
-          {offer.club_only ? (
-            <View style={[cardStyles.pill, { backgroundColor: colors.surfaceMuted }]}>
-              <ProDayText variant="caption" muted style={cardStyles.pillText}>
-                {t('carpool.standalone.clubOnly')}
+      {!compact && (
+        <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+          {offer.meeting_location && (
+            <PressableSpring
+              onPress={() => openMapsAt(offer.meeting_location!, offer.meeting_place)}
+              scaleTo={0.98}
+            >
+              <ProDayText variant="caption" accent style={cardStyles.mapLink}>
+                📍 Voir le RDV ({offer.meeting_place?.trim() || 'GPS'}) sur Maps
+              </ProDayText>
+            </PressableSpring>
+          )}
+
+          {(offer.passengers?.length ?? 0) > 0 && (
+            <View style={cardStyles.passengers}>
+              <ProDayText variant="caption" muted>
+                Passagers : {(offer.passengers ?? []).map((p) => p.name).join(', ')}
               </ProDayText>
             </View>
-          ) : null}
-        </View>
-        <ProDayText variant="section">{offer.title}</ProDayText>
-        <ProDayText variant="caption" muted>
-          {formatFrenchDepartureDate(offer.departs_at)}
-          {offer.meeting_time ? t('carpool.standalone.departure', { time: offer.meeting_time }) : ''}
-        </ProDayText>
-        {offer.destination_label ? (
-          <ProDayText variant="caption" muted>
-            → {offer.destination_label}
-          </ProDayText>
-        ) : null}
-        {offer.vehicle_type ? (
-          <ProDayText variant="caption" muted>
-            {t('carpool.vehicle.label')}: {t(`carpool.vehicle.${offer.vehicle_type}`)}
-          </ProDayText>
-        ) : null}
-        <ProDayText variant="caption" accent style={cardStyles.driver}>
-          {offer.driver_name}
-          {tripsDone >= 3 ? t('carpool.standalone.verified') : ''}
-          {t('carpool.standalone.seats', { n: available })}
-        </ProDayText>
-      </View>
+          )}
 
-      {offer.meeting_place ? (
-          <ProDayText variant="caption" muted style={cardStyles.meeting}>
-            {t('carpool.standalone.meeting', { place: offer.meeting_place })}
-          </ProDayText>
-      ) : null}
-
-      {offer.meeting_location ? (
-        <PressableSpring
-          onPress={() => openMapsAt(offer.meeting_location!, offer.meeting_place)}
-          scaleTo={0.96}
-          haptic
-        >
-          <ProDayText variant="caption" accent style={cardStyles.mapLink}>
-            {t('carpool.standalone.openMeetingMaps')}
-          </ProDayText>
-        </PressableSpring>
-      ) : null}
-
-      {offer.destination_location ? (
-        <PressableSpring
-          onPress={() => openMapsAt(offer.destination_location!, offer.destination_label)}
-          scaleTo={0.96}
-        >
-          <ProDayText variant="caption" accent style={cardStyles.mapLink}>
-            {t('carpool.standalone.openDestinationMaps')}
-          </ProDayText>
-        </PressableSpring>
-      ) : null}
-
-      {canBook ? (
-        <View style={cardStyles.bookBlock}>
-          {!isMine && tabNav ? (
+          {!isMine && tabNav && (
             <PressableSpring
+              style={styles.ticketGhost}
               onPress={() => void handleContactDriver()}
               disabled={contactBusy}
-              scaleTo={0.97}
-              haptic
             >
-              <View style={[cardStyles.contactBtn, { borderColor: colors.border }]}>
-                {contactBusy ? (
-                  <ActivityIndicator color={colors.accent} size="small" />
-                ) : (
-                  <>
-                    <Icon name="chat" size={14} color={colors.accent} />
-                    <ProDayText variant="caption" accent style={cardStyles.ctaText}>
-                      {t('carpool.ride.contactDriver')}
-                    </ProDayText>
-                  </>
-                )}
-              </View>
-            </PressableSpring>
-          ) : null}
-          <CarpoolLocationCapture
-            label={t('carpool.standalone.pickupLabel')}
-            place={pickupPlace}
-            location={pickupLocation}
-            onPlaceChange={setPickupPlace}
-            onLocationChange={setPickupLocation}
-            disabled={busy}
-            compact
-          />
-          <PressableSpring onPress={handleBook} disabled={busy} scaleTo={0.96} haptic>
-            <ProDayGradient kind="cta" style={cardStyles.cta}>
-              {busy ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <ProDayText variant="caption" inverse style={cardStyles.ctaText}>
-                  {t('carpool.standalone.requestSeat')}
-                </ProDayText>
+              {contactBusy ? <ActivityIndicator color={palette.signal} size="small" /> : (
+                <>
+                  <Icon name="chat" size={14} color={palette.signal} />
+                  <ProDayText variant="caption" style={styles.ticketGhostText}>
+                    {t('carpool.ride.contactDriver')}
+                  </ProDayText>
+                </>
               )}
-            </ProDayGradient>
-          </PressableSpring>
+            </PressableSpring>
+          )}
         </View>
-      ) : null}
-
-      {!canBook && !isMine && tabNav ? (
-        <PressableSpring
-          onPress={() => void handleContactDriver()}
-          disabled={contactBusy}
-          scaleTo={0.97}
-          haptic
-        >
-          <View style={[cardStyles.contactBtn, { borderColor: colors.border }]}>
-            {contactBusy ? (
-              <ActivityIndicator color={colors.accent} size="small" />
-            ) : (
-              <>
-                <Icon name="chat" size={14} color={colors.accent} />
-                <ProDayText variant="caption" accent style={cardStyles.ctaText}>
-                  {t('carpool.ride.contactDriver')}
-                </ProDayText>
-              </>
-            )}
-          </View>
-        </PressableSpring>
-      ) : null}
-
-      {bookedHere ? (
-        <PressableSpring onPress={handleCancel} disabled={busy} scaleTo={0.96} haptic>
-          <View style={[cardStyles.booked, { borderColor: colors.border }]}>
-            <Icon
-              name={pendingHere ? 'time' : 'checkmark-circle'}
-              size={16}
-              color={pendingHere ? colors.warning : colors.success}
-            />
-            <ProDayText variant="caption" accent style={cardStyles.bookedText}>
-              {pendingHere ? t('carpool.standalone.pending') : t('carpool.standalone.confirmed')}
-            </ProDayText>
-          </View>
-        </PressableSpring>
-      ) : null}
-
-      {isMine ? (
-        <View style={cardStyles.mineBlock}>
-          <ProDayText variant="caption" muted>
-            {t('carpool.standalone.passengersConfirmed', {
-              n: (offer.passengers ?? []).filter((p) => p.status === 'confirmed' || !p.status).length,
-            })}
-            {standalonePendingCount(offer) > 0
-              ? t('carpool.standalone.passengersPendingSuffix', { n: standalonePendingCount(offer) })
-              : ''}
-          </ProDayText>
-          {(offer.passengers ?? [])
-            .filter((p) => p.status === 'pending')
-            .map((p) => (
-              <View key={p.uid} style={[cardStyles.passengerRow, { borderColor: colors.border }]}>
-                <View style={{ flex: 1 }}>
-                  <ProDayText variant="caption" style={cardStyles.passengerName}>
-                    {p.name}
-                  </ProDayText>
-                  {p.pickup_place ? (
-                    <ProDayText variant="caption" muted>
-                      {p.pickup_place}
-                    </ProDayText>
-                  ) : null}
-                </View>
-                <PressableSpring onPress={() => handleRespond(p.uid, true)} scaleTo={0.97} haptic>
-                  <ProDayText variant="caption" accent style={cardStyles.action}>
-                    {t('carpool.standalone.accept')}
-                  </ProDayText>
-                </PressableSpring>
-                <PressableSpring onPress={() => handleRespond(p.uid, false)} scaleTo={0.97}>
-                  <ProDayText variant="caption" muted style={cardStyles.action}>
-                    {t('carpool.standalone.decline')}
-                  </ProDayText>
-                </PressableSpring>
-              </View>
-            ))}
-        </View>
-      ) : null}
-
-      {!compact && (isMine || isStandaloneConfirmedPassenger(offer, profile.uid)) ? (
-        <CarpoolLiveTripPanel
-          tripId={standaloneTripId(offer.id)}
-          viewerUid={profile.uid}
-          driverUid={offer.driver_uid}
-          driverName={offer.driver_name}
-          passengers={offer.passengers}
-          tripStatus={standaloneOfferTripStatus(offer)}
-          onStartTrip={() => carpoolOffersService.startTrip(offer.id, profile.uid)}
-          onEndTrip={() => carpoolOffersService.endTrip(offer.id, profile.uid)}
-          onTripChanged={onUpdated}
-        />
-      ) : null}
-      </View>
+      )}
     </View>
   );
-};
+
+  return (
+    <CarpoolTripTicket
+      meta={`${formatFrenchDepartureDate(offer.departs_at)}${
+        offer.meeting_time ? t('carpool.standalone.departure', { time: offer.meeting_time }) : ''
+      }`}
+      metaRight={offer.club_only ? t('carpool.standalone.clubOnly') : t('carpool.standalone.freeTrip')}
+      from={fromLabel}
+      to={toLabel}
+      driver={driverLabel}
+      seatsLabel={seatsLabel}
+      timeLabel={offer.meeting_time || null}
+      footer={fullFooter}
+    />
+  );
+}
 
 const cardStyles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: radius.xl,
-    marginBottom: spacing.sm,
-    overflow: 'hidden',
-    paddingLeft: spacing.sm,
-  },
-  inner: {
-    padding: spacing.md,
-    paddingLeft: spacing.sm,
-    gap: spacing.xs,
-  },
-  header: { gap: 4 },
-  pillRow: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
-  pill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
-    marginBottom: 2,
-  },
-  pillText: { fontWeight: '800', fontSize: 10 },
-  driver: { fontWeight: '700', marginTop: 4 },
-  meeting: { lineHeight: 18 },
-  mapLink: { fontWeight: '700' },
-  bookBlock: { gap: spacing.sm, marginTop: spacing.sm },
-  contactBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
-    marginTop: spacing.xs,
-  },
-  cta: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-  },
-  ctaText: { fontWeight: '800' },
-  booked: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    marginTop: spacing.xs,
-  },
-  bookedText: { fontWeight: '700' },
-  mineBlock: { marginTop: spacing.xs, gap: spacing.xs },
-  passengerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
-  passengerName: { fontWeight: '700' },
-  action: { fontWeight: '700' },
+  card: {},
+  inner: {},
+  header: {},
+  pillRow: {},
+  typePill: {},
+  typeText: {},
+  freePill: {},
+  freeText: {},
+  seatsPill: {},
+  seatsText: {},
+  body: {},
+  driverRow: {},
+  avatar: {},
+  driverCopy: {},
+  actions: { marginTop: spacing.sm },
+  ghostBtn: {},
+  btnText: {},
+  primaryBtn: {},
+  routeGroup: {},
+  routeRow: {},
+  routeIcon: {},
+  routeText: {},
+  passengers: {},
+  mapLink: { fontWeight: '700', marginTop: 2 },
 });
 
 function createTicketStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
     ticketActions: { gap: spacing.sm },
+    mineBlock: { padding: spacing.md, backgroundColor: palette.surfaceMuted, borderRadius: radius.md, marginBottom: spacing.sm },
+    ticketPassengerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.xs },
+    ticketAccept: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: palette.signal },
+
     ticketGhost: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -604,13 +403,20 @@ function createTicketStyles(palette: CarpoolUiPalette) {
       backgroundColor: palette.signal,
     },
     ticketCtaText: { fontWeight: '800', color: palette.onSignal },
-    ticketPassengerRow: {
+    bookButtonsRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      paddingVertical: spacing.xs,
     },
-    ticketAccept: { fontWeight: '800', color: palette.signalDeep },
-    mineBlock: { marginTop: spacing.xs, gap: spacing.xs },
+    ticketDirectCta: {
+      flex: 1.2,
+      paddingVertical: 12,
+    },
+    directBtnContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+    },
   });
 }
