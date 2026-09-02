@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
-import { ProDayGradient } from '../ui/ProDayGradient';
-import { ProDaySurface } from '../ui/ProDaySurface';
 import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring, StaggerReveal } from '../motion';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing, radius } from '../../theme/designTokens';
+import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
 import type {
   TrainingPhase,
   TrainingObjective,
@@ -21,24 +20,30 @@ import {
   phaseLabel,
 } from '../../models/TrainingSession';
 
-const OBJECTIVE_ICONS: Record<TrainingObjective, IconName> = {
-  technique: 'football',
-  physique: 'star',
-  tactique: 'trophy',
-  recuperation: 'heart',
-  vitesse: 'star',
-  endurance: 'walk',
-  frappe: 'star',
-  dribble: 'football',
-  passes: 'football',
-  heading: 'shield',
-  pied_faible: 'football',
+const OBJECTIVE_CONFIG: Record<
+  TrainingObjective,
+  { icon: IconName; subtitle: string; gradient: [string, string] }
+> = {
+  technique: { icon: 'football', subtitle: 'Précision & Toucher', gradient: ['#10B981', '#047857'] },
+  vitesse: { icon: 'star', subtitle: 'Explosivité & VMA', gradient: ['#F59E0B', '#D97706'] },
+  frappe: { icon: 'star', subtitle: 'Finition & Puissance', gradient: ['#EF4444', '#B91C1C'] },
+  dribble: { icon: 'football', subtitle: '1v1 & Dextérité', gradient: ['#8B5CF6', '#6D28D9'] },
+  passes: { icon: 'football', subtitle: 'Vision & Jeu court/long', gradient: ['#06B6D4', '#0891B2'] },
+  tactique: { icon: 'trophy', subtitle: 'Placement & Anticipation', gradient: ['#3B82F6', '#1D4ED8'] },
+  physique: { icon: 'star', subtitle: 'Gainage & Puissance', gradient: ['#F97316', '#C2410C'] },
+  endurance: { icon: 'walk', subtitle: 'Cardio & Résistance', gradient: ['#EC4899', '#BE185D'] },
+  recuperation: { icon: 'heart', subtitle: 'Mobilité & Décrassage', gradient: ['#14B8A6', '#0F766E'] },
+  heading: { icon: 'shield', subtitle: 'Jeu de tête & Timing', gradient: ['#64748B', '#334155'] },
+  pied_faible: { icon: 'football', subtitle: 'Symétrie & Confort', gradient: ['#A855F7', '#7E22CE'] },
 };
 
-const LEVEL_COLORS: Record<TrainingLevel, string> = {
-  beginner: '#10B981',
-  intermediate: '#F59E0B',
-  advanced: '#EF4444',
+const LEVEL_THEMES: Record<
+  TrainingLevel,
+  { label: string; color: string; bg: string; border: string }
+> = {
+  beginner: { label: 'Accessible', color: '#34D399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.35)' },
+  intermediate: { label: 'Rythmé', color: '#FBBF24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.35)' },
+  advanced: { label: 'Intense Pro', color: '#F87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.35)' },
 };
 
 interface AiTrainingGeneratorViewProps {
@@ -74,119 +79,118 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
   onGenerate,
   result,
   onReset,
-  onStartSession,
 }) => {
   const { colors } = useAppTheme();
-  const [activeTab, setActiveTab] = useState<number>(0);
 
+  // Mode Résultats de Séance
   if (result && result.length > 0) {
     const totalExercises = result.reduce((acc, phase) => acc + phase.exercises.length, 0);
 
     return (
-      <ScrollView contentContainerStyle={styles.resultContainer} showsVerticalScrollIndicator={false}>
-        {/* Header Carte Cyber Fut */}
-        <ProDaySurface variant="card" style={[styles.summaryCard, { borderColor: `${colors.accent}66` }]}>
-          <View style={styles.summaryTop}>
-            <View style={[styles.aiBadge, { backgroundColor: colors.accentSoft }]}>
-              <Icon name="star-four-points" size={14} color={colors.accent} />
-              <ProDayText variant="caption" accent style={styles.aiBadgeText}>
-                PROGRAMME IA SUR-MESURE
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        {/* En-tête Carte Gold / Cyber */}
+        <View style={styles.heroSummary}>
+          <View style={styles.heroTopRow}>
+            <View style={styles.aiTag}>
+              <Icon name="star-four-points" size={13} color={PLAYER_DARK.accent} />
+              <ProDayText variant="caption" style={styles.aiTagText}>
+                PROGRAMME INTELLIGENT
               </ProDayText>
             </View>
-            <View style={[styles.levelTag, { backgroundColor: `${LEVEL_COLORS[level]}22`, borderColor: LEVEL_COLORS[level] }]}>
-              <ProDayText variant="caption" style={{ color: LEVEL_COLORS[level], fontWeight: '800' }}>
-                {TRAINING_LEVEL_LABELS[level]}
+            <View style={[styles.badgePill, { backgroundColor: LEVEL_THEMES[level].bg, borderColor: LEVEL_THEMES[level].border }]}>
+              <ProDayText variant="caption" style={{ color: LEVEL_THEMES[level].color, fontWeight: '800', fontSize: 11 }}>
+                {LEVEL_THEMES[level].label}
               </ProDayText>
             </View>
           </View>
 
-          <ProDayText variant="title" style={styles.resultTitle}>
+          <ProDayText variant="title" style={styles.heroTitle}>
             {TRAINING_OBJECTIVE_LABELS[objective]}
           </ProDayText>
 
-          <View style={styles.kpiRow}>
-            <View style={styles.kpiCol}>
-              <ProDayText variant="title" accent style={styles.kpiVal}>
+          <View style={styles.metricsRow}>
+            <View style={styles.metricItem}>
+              <ProDayText variant="title" style={styles.metricNumber}>
                 {duration}
               </ProDayText>
-              <ProDayText variant="caption" muted style={styles.kpiLbl}>
-                Minutes
+              <ProDayText variant="caption" style={styles.metricLabel}>
+                MINUTES
               </ProDayText>
             </View>
-            <View style={[styles.kpiDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.kpiCol}>
-              <ProDayText variant="title" style={[styles.kpiVal, { color: colors.text }]}>
+            <View style={styles.metricSep} />
+            <View style={styles.metricItem}>
+              <ProDayText variant="title" style={[styles.metricNumber, { color: PLAYER_DARK.text }]}>
                 {result.length}
               </ProDayText>
-              <ProDayText variant="caption" muted style={styles.kpiLbl}>
-                Phases
+              <ProDayText variant="caption" style={styles.metricLabel}>
+                PHASES
               </ProDayText>
             </View>
-            <View style={[styles.kpiDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.kpiCol}>
-              <ProDayText variant="title" style={[styles.kpiVal, { color: colors.text }]}>
+            <View style={styles.metricSep} />
+            <View style={styles.metricItem}>
+              <ProDayText variant="title" style={[styles.metricNumber, { color: PLAYER_DARK.accentAlt }]}>
                 {totalExercises}
               </ProDayText>
-              <ProDayText variant="caption" muted style={styles.kpiLbl}>
-                Exercices
+              <ProDayText variant="caption" style={styles.metricLabel}>
+                EXERCICES
               </ProDayText>
             </View>
           </View>
-        </ProDaySurface>
+        </View>
 
-        {/* Phase Timeline Cards */}
+        {/* Déroulé des Phases */}
         {result.map((phase, idx) => (
           <StaggerReveal key={`${phase.name}-${idx}`} index={idx} delayStep={50}>
-            <ProDaySurface variant="module" style={[styles.phaseCard, { borderColor: colors.border }]}>
-              <View style={styles.phaseHeader}>
-                <View style={[styles.phaseNumber, { backgroundColor: colors.accentSoft }]}>
-                  <ProDayText variant="caption" accent style={{ fontWeight: '900' }}>
+            <View style={styles.phaseBlock}>
+              <View style={styles.phaseHead}>
+                <View style={styles.phaseIdxWrap}>
+                  <ProDayText variant="caption" style={styles.phaseIdx}>
                     0{idx + 1}
                   </ProDayText>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <ProDayText variant="section" style={{ fontWeight: '800' }}>
+                <View style={styles.phaseHeadCopy}>
+                  <ProDayText variant="section" style={styles.phaseName}>
                     {phase.label || phaseLabel(phase.name)}
                   </ProDayText>
-                  <ProDayText variant="caption" muted>
-                    {phase.duration_min} minutes d’entraînement
+                  <ProDayText variant="caption" style={styles.phaseDur}>
+                    {phase.duration_min} minutes
                   </ProDayText>
                 </View>
               </View>
 
-              <View style={styles.exercisesList}>
+              <View style={styles.exStack}>
                 {phase.exercises.map((ex, exIdx) => (
-                  <View key={`ex-${idx}-${exIdx}`} style={[styles.exerciseItem, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-                    <View style={styles.exTop}>
-                      <ProDayText variant="body" style={styles.exName}>
+                  <View key={`ex-${idx}-${exIdx}`} style={styles.exCard}>
+                    <View style={styles.exHeaderRow}>
+                      <ProDayText variant="body" style={styles.exTitle}>
                         {ex.name}
                       </ProDayText>
                       {(ex.sets || ex.reps) ? (
-                        <View style={[styles.repsPill, { backgroundColor: colors.accentSoft }]}>
-                          <ProDayText variant="caption" accent style={{ fontWeight: '800' }}>
+                        <View style={styles.setsTag}>
+                          <ProDayText variant="caption" style={styles.setsTagText}>
                             {ex.sets ? `${ex.sets} séries` : ''} {ex.reps ? `× ${ex.reps} reps` : ''}
                           </ProDayText>
                         </View>
                       ) : null}
                     </View>
 
-                    <ProDayText variant="caption" muted style={styles.exDesc}>
+                    <ProDayText variant="caption" style={styles.exDesc}>
                       {ex.description}
                     </ProDayText>
 
                     {ex.rest_sec ? (
-                      <View style={styles.restRow}>
-                        <Icon name="time" size={12} color={colors.textMuted} />
-                        <ProDayText variant="caption" muted>
-                          Repos conseillé : {ex.rest_sec} secondes
+                      <View style={styles.restBar}>
+                        <Icon name="time" size={12} color={PLAYER_DARK.textMuted} />
+                        <ProDayText variant="caption" style={styles.restText}>
+                          Repos : {ex.rest_sec}s
                         </ProDayText>
                       </View>
                     ) : null}
 
                     {ex.tips && ex.tips.length > 0 ? (
-                      <View style={[styles.tipsBox, { borderLeftColor: colors.accent }]}>
+                      <View style={styles.tipCard}>
                         {ex.tips.map((tip, tIdx) => (
-                          <ProDayText key={`tip-${tIdx}`} variant="caption" accent style={styles.tipText}>
+                          <ProDayText key={`tip-${tIdx}`} variant="caption" style={styles.tipBody}>
                             💡 {tip}
                           </ProDayText>
                         ))}
@@ -195,88 +199,93 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
                   </View>
                 ))}
               </View>
-            </ProDaySurface>
+            </View>
           </StaggerReveal>
         ))}
 
-        {/* Action Bottom Controls */}
-        <View style={styles.resultActions}>
-          <PressableSpring onPress={onReset} scaleTo={0.97} haptic style={styles.halfBtn}>
-            <View style={[styles.ghostBtn, { borderColor: colors.border }]}>
-              <Icon name="tune" size={16} color={colors.text} />
-              <ProDayText variant="caption" style={{ fontWeight: '800' }}>
-                Paramètres
+        {/* Actions Réglages & Fin */}
+        <View style={styles.actionBottomRow}>
+          <PressableSpring onPress={onReset} scaleTo={0.97} haptic style={styles.flexBtn}>
+            <View style={styles.secondaryBtn}>
+              <Icon name="tune" size={16} color={PLAYER_DARK.text} />
+              <ProDayText variant="caption" style={styles.secondaryBtnText}>
+                Modifier
               </ProDayText>
             </View>
           </PressableSpring>
 
-          <PressableSpring onPress={onReset} scaleTo={0.97} haptic style={styles.halfBtn}>
-            <ProDayGradient kind="cta" style={styles.primaryBtn}>
-              <Icon name="football" size={16} color="#0B1220" />
-              <ProDayText variant="caption" inverse style={{ fontWeight: '900' }}>
-                Terminer la séance
+          <PressableSpring onPress={onReset} scaleTo={0.97} haptic style={styles.flexBtn}>
+            <View style={styles.primaryFinishBtn}>
+              <Icon name="football" size={16} color={PLAYER_DARK.bg} />
+              <ProDayText variant="caption" style={styles.primaryFinishText}>
+                Terminer (+30 XP)
               </ProDayText>
-            </ProDayGradient>
+            </View>
           </PressableSpring>
         </View>
       </ScrollView>
     );
   }
 
+  // Mode Configuration Formulaire
   return (
-    <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
-      {/* Intro Bannière High-Tech */}
-      <View style={[styles.banner, { backgroundColor: colors.accentSoft, borderColor: `${colors.accent}44` }]}>
-        <Icon name="star-four-points" size={24} color={colors.accent} />
-        <View style={{ flex: 1 }}>
-          <ProDayText variant="section" accent style={{ fontWeight: '900' }}>
-            Coach IA ProDay
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Header Glassmorphism Pro */}
+      <View style={styles.headerGlass}>
+        <View style={styles.headerGlowCircle}>
+          <Icon name="star-four-points" size={26} color={PLAYER_DARK.accent} />
+        </View>
+        <View style={styles.headerCopy}>
+          <ProDayText variant="section" style={styles.headerMainTitle}>
+            Générateur ProDay IA
           </ProDayText>
-          <ProDayText variant="caption" muted>
-            Sélectionne tes critères et obtiens une séance individualisée en 2 secondes.
+          <ProDayText variant="caption" style={styles.headerSubtitle}>
+            Séance sur-mesure calibrée selon ta forme et tes objectifs.
           </ProDayText>
         </View>
       </View>
 
-      {/* 1. Objectif Athlétique & Tactique */}
-      <View style={styles.sectionBlock}>
-        <View style={styles.sectionHeader}>
-          <Icon name="trophy" size={16} color={colors.accent} />
-          <ProDayText variant="section" style={styles.sectionTitle}>
-            1. Objectif d’entraînement
+      {/* 1. Objectif Athlétique */}
+      <View style={styles.sectionGroup}>
+        <View style={styles.labelRow}>
+          <Icon name="trophy" size={15} color={PLAYER_DARK.accent} />
+          <ProDayText variant="section" style={styles.sectionHeading}>
+            1. Thématique de travail
           </ProDayText>
         </View>
-        <View style={styles.gridGrid}>
+        <View style={styles.objectiveGrid}>
           {INDIVIDUAL_OBJECTIVES.map((obj) => {
             const isSelected = objective === obj;
+            const cfg = OBJECTIVE_CONFIG[obj] || { icon: 'football', subtitle: 'Entraînement' };
             return (
               <PressableSpring
                 key={obj}
                 style={[
-                  styles.objectiveCard,
-                  {
-                    borderColor: isSelected ? colors.accent : colors.border,
-                    backgroundColor: isSelected ? colors.accentSoft : colors.surface,
-                  },
+                  styles.objCell,
+                  isSelected && styles.objCellActive,
                 ]}
                 onPress={() => onObjectiveChange(obj)}
                 scaleTo={0.96}
                 haptic
               >
-                <Icon
-                  name={OBJECTIVE_ICONS[obj] || 'football'}
-                  size={20}
-                  color={isSelected ? colors.accent : colors.textMuted}
-                />
-                <ProDayText
-                  variant="caption"
-                  style={[
-                    styles.cardText,
-                    { color: isSelected ? colors.accent : colors.text, fontWeight: isSelected ? '800' : '600' },
-                  ]}
-                >
-                  {TRAINING_OBJECTIVE_LABELS[obj]}
-                </ProDayText>
+                <View style={[styles.objIconWrap, isSelected && styles.objIconWrapActive]}>
+                  <Icon
+                    name={cfg.icon}
+                    size={18}
+                    color={isSelected ? PLAYER_DARK.accent : PLAYER_DARK.textMuted}
+                  />
+                </View>
+                <View style={styles.objCellText}>
+                  <ProDayText
+                    variant="caption"
+                    style={[styles.objName, isSelected && { color: PLAYER_DARK.accent, fontWeight: '800' }]}
+                  >
+                    {TRAINING_OBJECTIVE_LABELS[obj]}
+                  </ProDayText>
+                  <ProDayText variant="caption" style={styles.objSub} numberOfLines={1}>
+                    {cfg.subtitle}
+                  </ProDayText>
+                </View>
               </PressableSpring>
             );
           })}
@@ -284,34 +293,27 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
       </View>
 
       {/* 2. Durée de Séance */}
-      <View style={styles.sectionBlock}>
-        <View style={styles.sectionHeader}>
-          <Icon name="time" size={16} color={colors.accent} />
-          <ProDayText variant="section" style={styles.sectionTitle}>
-            2. Temps disponible
+      <View style={styles.sectionGroup}>
+        <View style={styles.labelRow}>
+          <Icon name="time" size={15} color={PLAYER_DARK.accent} />
+          <ProDayText variant="section" style={styles.sectionHeading}>
+            2. Durée
           </ProDayText>
         </View>
-        <View style={styles.durationRow}>
+        <View style={styles.pillRow}>
           {INDIVIDUAL_DURATIONS.map((d) => {
             const isSelected = duration === d;
             return (
               <PressableSpring
                 key={d}
-                style={[
-                  styles.durationChip,
-                  {
-                    borderColor: isSelected ? colors.accent : colors.border,
-                    backgroundColor: isSelected ? colors.accent : colors.surface,
-                  },
-                ]}
+                style={[styles.timeChip, isSelected && styles.timeChipActive]}
                 onPress={() => onDurationChange(d)}
                 scaleTo={0.96}
                 haptic
               >
                 <ProDayText
                   variant="caption"
-                  inverse={isSelected}
-                  style={[styles.durationText, !isSelected && { color: colors.text }]}
+                  style={[styles.timeChipText, isSelected && styles.timeChipTextActive]}
                 >
                   {d} min
                 </ProDayText>
@@ -321,27 +323,24 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
         </View>
       </View>
 
-      {/* 3. Niveau d'Exigence */}
-      <View style={styles.sectionBlock}>
-        <View style={styles.sectionHeader}>
-          <Icon name="stats-chart" size={16} color={colors.accent} />
-          <ProDayText variant="section" style={styles.sectionTitle}>
-            3. Intensité / Niveau
+      {/* 3. Niveau d'Intensité */}
+      <View style={styles.sectionGroup}>
+        <View style={styles.labelRow}>
+          <Icon name="stats-chart" size={15} color={PLAYER_DARK.accent} />
+          <ProDayText variant="section" style={styles.sectionHeading}>
+            3. Intensité
           </ProDayText>
         </View>
         <View style={styles.levelRow}>
           {(['beginner', 'intermediate', 'advanced'] as TrainingLevel[]).map((lvl) => {
             const isSelected = level === lvl;
-            const lvlColor = LEVEL_COLORS[lvl];
+            const theme = LEVEL_THEMES[lvl];
             return (
               <PressableSpring
                 key={lvl}
                 style={[
-                  styles.levelCard,
-                  {
-                    borderColor: isSelected ? lvlColor : colors.border,
-                    backgroundColor: isSelected ? `${lvlColor}22` : colors.surface,
-                  },
+                  styles.lvlBtn,
+                  isSelected && { backgroundColor: theme.bg, borderColor: theme.color },
                 ]}
                 onPress={() => onLevelChange(lvl)}
                 scaleTo={0.96}
@@ -349,12 +348,9 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
               >
                 <ProDayText
                   variant="caption"
-                  style={{
-                    color: isSelected ? lvlColor : colors.textSecondary,
-                    fontWeight: isSelected ? '800' : '600',
-                  }}
+                  style={[styles.lvlText, isSelected && { color: theme.color, fontWeight: '900' }]}
                 >
-                  {TRAINING_LEVEL_LABELS[lvl]}
+                  {theme.label}
                 </ProDayText>
               </PressableSpring>
             );
@@ -362,38 +358,33 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
         </View>
       </View>
 
-      {/* 4. Matériel Disponible */}
-      <View style={styles.sectionBlock}>
-        <View style={styles.sectionHeader}>
-          <Icon name="bag" size={16} color={colors.accent} />
-          <ProDayText variant="section" style={styles.sectionTitle}>
-            4. Équipement disponible
+      {/* 4. Matériel */}
+      <View style={styles.sectionGroup}>
+        <View style={styles.labelRow}>
+          <Icon name="bag" size={15} color={PLAYER_DARK.accent} />
+          <ProDayText variant="section" style={styles.sectionHeading}>
+            4. Matériel sur place
           </ProDayText>
         </View>
-        <View style={styles.equipmentRow}>
+        <View style={styles.equipRow}>
           {EQUIPMENT_OPTIONS.map((eq) => {
             const isSelected = equipment.includes(eq);
             return (
               <PressableSpring
                 key={eq}
-                style={[
-                  styles.eqChip,
-                  {
-                    borderColor: isSelected ? colors.accent : colors.border,
-                    backgroundColor: isSelected ? colors.accentSoft : colors.surface,
-                  },
-                ]}
+                style={[styles.equipTag, isSelected && styles.equipTagActive]}
                 onPress={() => onToggleEquipment(eq)}
                 scaleTo={0.96}
                 haptic
               >
-                <Icon name={isSelected ? 'checkmark-circle' : 'add'} size={14} color={isSelected ? colors.accent : colors.textMuted} />
+                <Icon
+                  name={isSelected ? 'checkmark-circle' : 'add'}
+                  size={14}
+                  color={isSelected ? PLAYER_DARK.accent : PLAYER_DARK.textMuted}
+                />
                 <ProDayText
                   variant="caption"
-                  style={{
-                    color: isSelected ? colors.accent : colors.textSecondary,
-                    fontWeight: isSelected ? '800' : '500',
-                  }}
+                  style={[styles.equipText, isSelected && styles.equipTextActive]}
                 >
                   {eq}
                 </ProDayText>
@@ -403,41 +394,36 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
         </View>
       </View>
 
-      {/* 5. Partenaire */}
-      <View style={styles.sectionBlock}>
-        <View style={styles.sectionHeader}>
-          <Icon name="people" size={16} color={colors.accent} />
-          <ProDayText variant="section" style={styles.sectionTitle}>
-            5. Modalité
+      {/* 5. Mode Solo / Duo */}
+      <View style={styles.sectionGroup}>
+        <View style={styles.labelRow}>
+          <Icon name="people" size={15} color={PLAYER_DARK.accent} />
+          <ProDayText variant="section" style={styles.sectionHeading}>
+            5. Joueurs
           </ProDayText>
         </View>
-        <View style={styles.partnerRow}>
+        <View style={styles.modalRow}>
           {[
             { val: false, label: 'Solo (Seul)', icon: 'person' as const },
-            { val: true, label: 'Duo (Avec partenaire)', icon: 'people' as const },
+            { val: true, label: 'Avec un coéquipier', icon: 'people' as const },
           ].map((opt) => {
             const isSelected = partner === opt.val;
             return (
               <PressableSpring
                 key={String(opt.val)}
-                style={[
-                  styles.partnerCard,
-                  {
-                    borderColor: isSelected ? colors.accent : colors.border,
-                    backgroundColor: isSelected ? colors.accentSoft : colors.surface,
-                  },
-                ]}
+                style={[styles.modalCard, isSelected && styles.modalCardActive]}
                 onPress={() => onPartnerChange(opt.val)}
                 scaleTo={0.96}
                 haptic
               >
-                <Icon name={opt.icon} size={18} color={isSelected ? colors.accent : colors.textMuted} />
+                <Icon
+                  name={opt.icon}
+                  size={16}
+                  color={isSelected ? PLAYER_DARK.accent : PLAYER_DARK.textMuted}
+                />
                 <ProDayText
                   variant="caption"
-                  style={{
-                    color: isSelected ? colors.accent : colors.text,
-                    fontWeight: isSelected ? '800' : '600',
-                  }}
+                  style={[styles.modalLabel, isSelected && { color: PLAYER_DARK.accent, fontWeight: '800' }]}
                 >
                   {opt.label}
                 </ProDayText>
@@ -447,7 +433,7 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
         </View>
       </View>
 
-      {/* Bouton de Lancement IA */}
+      {/* CTA de Génération Ultra-Glow */}
       <PressableSpring
         onPress={() => void onGenerate()}
         disabled={generating}
@@ -455,282 +441,442 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
         haptic
         style={{ marginTop: spacing.md }}
       >
-        <ProDayGradient kind="cta" style={styles.generateCta}>
+        <View style={styles.glowCta}>
           {generating ? (
-            <ActivityIndicator color="#0B1220" />
+            <ActivityIndicator color={PLAYER_DARK.bg} />
           ) : (
             <>
-              <Icon name="star-four-points" size={20} color="#0B1220" />
-              <ProDayText variant="section" inverse style={styles.ctaLabel}>
+              <Icon name="star-four-points" size={18} color={PLAYER_DARK.bg} />
+              <ProDayText variant="section" style={styles.glowCtaLabel}>
                 Générer mon programme IA
               </ProDayText>
             </>
           )}
-        </ProDayGradient>
+        </View>
       </PressableSpring>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  formContainer: {
+  container: {
     padding: spacing.lg,
     gap: spacing.lg,
     paddingBottom: spacing.xxl,
   },
-  resultContainer: {
-    padding: spacing.lg,
-    gap: spacing.md,
-    paddingBottom: spacing.xxl,
-  },
-  banner: {
+  headerGlass: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.xl,
+    backgroundColor: PLAYER_DARK.surface,
     borderWidth: 1,
+    borderColor: PLAYER_DARK.borderStrong,
+    borderRadius: PLAYER_DARK_RADIUS.card,
+    padding: spacing.md,
   },
-  sectionBlock: {
-    gap: spacing.sm,
+  headerGlowCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: PLAYER_DARK.accentSoft,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sectionHeader: {
+  headerCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  headerMainTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: PLAYER_DARK.text,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: PLAYER_DARK.textMuted,
+    lineHeight: 16,
+  },
+  sectionGroup: {
+    gap: spacing.xs,
+  },
+  labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginBottom: 2,
   },
-  sectionTitle: {
-    fontSize: 14,
+  sectionHeading: {
+    fontSize: 13,
     fontWeight: '800',
+    color: PLAYER_DARK.text,
+    letterSpacing: 0.2,
   },
-  gridGrid: {
+  objectiveGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
   },
-  objectiveCard: {
+  objCell: {
     width: '48.5%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    backgroundColor: PLAYER_DARK.surface,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+    borderRadius: 14,
     padding: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: 1,
   },
-  cardText: {
-    fontSize: 12,
-    flexShrink: 1,
+  objCellActive: {
+    borderColor: PLAYER_DARK.accent,
+    backgroundColor: PLAYER_DARK.accentSoft,
   },
-  durationRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  durationChip: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: radius.pill,
-    borderWidth: 1,
+  objIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.04)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  durationText: {
+  objIconWrapActive: {
+    backgroundColor: 'rgba(0,230,118,0.2)',
+  },
+  objCellText: {
+    flex: 1,
+  },
+  objName: {
+    fontSize: 12,
+    color: PLAYER_DARK.text,
+    fontWeight: '600',
+  },
+  objSub: {
+    fontSize: 10,
+    color: PLAYER_DARK.textMuted,
+    marginTop: 1,
+  },
+  pillRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  timeChip: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+    backgroundColor: PLAYER_DARK.surface,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timeChipActive: {
+    backgroundColor: PLAYER_DARK.accent,
+    borderColor: PLAYER_DARK.accent,
+  },
+  timeChipText: {
     fontWeight: '800',
     fontSize: 13,
+    color: PLAYER_DARK.text,
+  },
+  timeChipTextActive: {
+    color: PLAYER_DARK.bg,
   },
   levelRow: {
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  levelCard: {
+  lvlBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    borderRadius: 14,
+    backgroundColor: PLAYER_DARK.surface,
+    borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  equipmentRow: {
+  lvlText: {
+    fontWeight: '700',
+    fontSize: 12,
+    color: PLAYER_DARK.textMuted,
+  },
+  equipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
   },
-  eqChip: {
+  equipTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: spacing.md,
     paddingVertical: 8,
-    borderRadius: radius.pill,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+    backgroundColor: PLAYER_DARK.surface,
     borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
   },
-  partnerRow: {
+  equipTagActive: {
+    backgroundColor: PLAYER_DARK.accentSoft,
+    borderColor: PLAYER_DARK.accent,
+  },
+  equipText: {
+    fontSize: 12,
+    color: PLAYER_DARK.textMuted,
+    fontWeight: '600',
+  },
+  equipTextActive: {
+    color: PLAYER_DARK.accent,
+    fontWeight: '800',
+  },
+  modalRow: {
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  partnerCard: {
+  modalCard: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
     paddingVertical: 12,
-    borderRadius: radius.lg,
+    borderRadius: 14,
+    backgroundColor: PLAYER_DARK.surface,
     borderWidth: 1,
+    borderColor: PLAYER_DARK.border,
   },
-  generateCta: {
+  modalCardActive: {
+    backgroundColor: PLAYER_DARK.accentSoft,
+    borderColor: PLAYER_DARK.accent,
+  },
+  modalLabel: {
+    fontSize: 12,
+    color: PLAYER_DARK.textMuted,
+    fontWeight: '600',
+  },
+  glowCta: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
     paddingVertical: 16,
-    borderRadius: radius.pill,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+    backgroundColor: PLAYER_DARK.accent,
+    shadowColor: PLAYER_DARK.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  ctaLabel: {
+  glowCtaLabel: {
+    fontSize: 14,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    color: PLAYER_DARK.bg,
+    letterSpacing: 0.4,
   },
-  summaryCard: {
-    borderWidth: 1.5,
-    borderRadius: radius.xl,
+  heroSummary: {
+    backgroundColor: PLAYER_DARK.surface,
+    borderWidth: 1,
+    borderColor: `${PLAYER_DARK.accent}55`,
+    borderRadius: PLAYER_DARK_RADIUS.card,
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  summaryTop: {
+  heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  aiBadge: {
+  aiTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
+    paddingVertical: 3,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+    backgroundColor: PLAYER_DARK.accentSoft,
   },
-  aiBadgeText: {
-    fontSize: 10,
+  aiTagText: {
+    fontSize: 9,
     fontWeight: '900',
-    letterSpacing: 0.8,
+    color: PLAYER_DARK.accent,
+    letterSpacing: 0.6,
   },
-  levelTag: {
+  badgePill: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.pill,
+    paddingVertical: 3,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
     borderWidth: 1,
   },
-  resultTitle: {
+  heroTitle: {
     fontSize: 22,
     fontWeight: '900',
+    color: PLAYER_DARK.text,
   },
-  kpiRow: {
+  metricsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
     marginTop: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: PLAYER_DARK.border,
   },
-  kpiCol: {
+  metricItem: {
     alignItems: 'center',
     gap: 2,
   },
-  kpiVal: {
-    fontSize: 20,
+  metricNumber: {
+    fontSize: 22,
     fontWeight: '900',
+    color: PLAYER_DARK.accent,
   },
-  kpiLbl: {
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+  metricLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: PLAYER_DARK.textMuted,
+    letterSpacing: 0.6,
   },
-  kpiDivider: {
+  metricSep: {
     width: 1,
-    height: 28,
+    height: 24,
+    backgroundColor: PLAYER_DARK.border,
   },
-  phaseCard: {
+  phaseBlock: {
+    backgroundColor: PLAYER_DARK.surface,
     borderWidth: 1,
-    borderRadius: radius.xl,
+    borderColor: PLAYER_DARK.border,
+    borderRadius: PLAYER_DARK_RADIUS.card,
     padding: spacing.md,
     gap: spacing.md,
   },
-  phaseHeader: {
+  phaseHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  phaseNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  phaseIdxWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: PLAYER_DARK.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  exercisesList: {
-    gap: spacing.sm,
+  phaseIdx: {
+    fontWeight: '900',
+    color: PLAYER_DARK.accent,
   },
-  exerciseItem: {
-    padding: spacing.md,
-    borderRadius: radius.lg,
+  phaseHeadCopy: {
+    flex: 1,
+  },
+  phaseName: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: PLAYER_DARK.text,
+  },
+  phaseDur: {
+    fontSize: 11,
+    color: PLAYER_DARK.textMuted,
+  },
+  exStack: {
+    gap: spacing.xs,
+  },
+  exCard: {
+    backgroundColor: PLAYER_DARK.bgElevated,
     borderWidth: 1,
-    gap: 6,
+    borderColor: PLAYER_DARK.border,
+    borderRadius: 12,
+    padding: spacing.md,
+    gap: 4,
   },
-  exTop: {
+  exHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
-  exName: {
+  exTitle: {
+    fontSize: 13,
     fontWeight: '800',
-    fontSize: 14,
+    color: PLAYER_DARK.text,
     flexShrink: 1,
   },
-  repsPill: {
-    paddingHorizontal: spacing.sm,
+  setsTag: {
+    backgroundColor: PLAYER_DARK.accentSoft,
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: radius.pill,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+  },
+  setsTagText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: PLAYER_DARK.accent,
   },
   exDesc: {
-    lineHeight: 18,
+    fontSize: 12,
+    color: PLAYER_DARK.textMuted,
+    lineHeight: 16,
   },
-  restRow: {
+  restBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginTop: 2,
   },
-  tipsBox: {
-    borderLeftWidth: 2.5,
+  restText: {
+    fontSize: 10,
+    color: PLAYER_DARK.textMuted,
+  },
+  tipCard: {
+    borderLeftWidth: 2,
+    borderLeftColor: PLAYER_DARK.accentAlt,
     paddingLeft: spacing.sm,
     marginTop: 4,
     gap: 2,
   },
-  tipText: {
+  tipBody: {
     fontSize: 11,
-    fontWeight: '600',
+    color: PLAYER_DARK.accentAlt,
   },
-  resultActions: {
+  actionBottomRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
-  halfBtn: {
+  flexBtn: {
     flex: 1,
   },
-  ghostBtn: {
+  secondaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 14,
-    borderRadius: radius.pill,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+    backgroundColor: PLAYER_DARK.surface,
     borderWidth: 1,
+    borderColor: PLAYER_DARK.borderStrong,
   },
-  primaryBtn: {
+  secondaryBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: PLAYER_DARK.text,
+  },
+  primaryFinishBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 14,
-    borderRadius: radius.pill,
+    borderRadius: PLAYER_DARK_RADIUS.pill,
+    backgroundColor: PLAYER_DARK.accent,
+  },
+  primaryFinishText: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: PLAYER_DARK.bg,
   },
 });
