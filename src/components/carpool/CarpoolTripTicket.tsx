@@ -23,6 +23,9 @@ export function CarpoolTripTicket({ meta, from, to, driver, seatsLabel, timeLabe
   
   return (
     <PressableSpring onPress={onPress} style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.lane }]}>
+      <View style={styles.metaRow}>
+        {meta && <ProDayText style={[styles.metaText, { color: palette.inkDim }]}>{meta}</ProDayText>}
+      </View>
       <View style={styles.header}>
         <ProDayText style={[styles.driverName, { color: palette.ink }]}>{driver}</ProDayText>
         {seatsLabel && (
@@ -42,12 +45,12 @@ export function CarpoolTripTicket({ meta, from, to, driver, seatsLabel, timeLabe
         
         <View style={styles.locations}>
           <View style={styles.locationRow}>
-            <ProDayText style={[styles.time, { color: palette.ink }]}>{timeLabel?.split('-')[0]?.trim() || "10:00"}</ProDayText>
-            <ProDayText style={[styles.address, { color: palette.ink }]} numberOfLines={1}>{from}</ProDayText>
+            <ProDayText style={[styles.time, { color: palette.ink }]} numberOfLines={1}>{timeLabel || "--:--"}</ProDayText>
+            <ProDayText style={[styles.address, { color: palette.ink }]} numberOfLines={2}>{from}</ProDayText>
           </View>
-          <View style={[styles.locationRow, { marginTop: spacing.xl }]}>
-            <ProDayText style={[styles.time, { color: palette.ink }]}>{timeLabel?.split('-')[1]?.trim() || "11:30"}</ProDayText>
-            <ProDayText style={[styles.address, { color: palette.ink, fontWeight: '700' }]} numberOfLines={1}>{to}</ProDayText>
+          <View style={[styles.locationRow, { marginTop: spacing.lg }]}>
+            <View style={styles.timePlaceholder} />
+            <ProDayText style={[styles.address, { color: palette.ink, fontWeight: '700' }]} numberOfLines={2}>{to}</ProDayText>
           </View>
         </View>
       </View>
@@ -59,6 +62,8 @@ export function CarpoolTripTicket({ meta, from, to, driver, seatsLabel, timeLabe
 
 const styles = StyleSheet.create({
   card: { padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, marginBottom: spacing.md },
+  metaRow: { marginBottom: spacing.sm },
+  metaText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   driverName: { fontSize: 16, fontWeight: '800' },
   seatsBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.pill, gap: 4 },
@@ -69,7 +74,8 @@ const styles = StyleSheet.create({
   line: { width: 2, flex: 1, marginVertical: 4 },
   locations: { flex: 1 },
   locationRow: { flexDirection: 'row', alignItems: 'center' },
-  time: { fontSize: 16, fontWeight: '800', width: 50 },
+  time: { fontSize: 14, fontWeight: '800', width: 65, marginRight: 8 },
+  timePlaceholder: { width: 65, marginRight: 8 },
   address: { flex: 1, fontSize: 16 },
   footer: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1 },
 });
