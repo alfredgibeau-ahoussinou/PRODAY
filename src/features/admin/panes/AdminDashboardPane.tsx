@@ -358,4 +358,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 4,
   },
+  godAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: ADMIN_TOKENS.surface,
+    borderRadius: adminRadius.md,
+    borderWidth: 1,
+    borderColor: ADMIN_TOKENS.border,
+    gap: 12,
+  },
+  godIcon: {
+    fontSize: 24,
+  },
 });

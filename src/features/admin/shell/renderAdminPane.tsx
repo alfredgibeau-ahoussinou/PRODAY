@@ -53,13 +53,13 @@ export function renderAdminPane({
     case 'produit':
       return <AdminProductPane />;
     case 'ia':
-      return <AdminAiPane onNavigate={onNavigate} />;
+      return <AdminAiPane onNavigate={onNavigate} focusId={focusId} />;
     case 'support':
       return <AdminSupportPane onNavigate={onNavigate} />;
     case 'securite':
-      return <AdminSecurityPane />;
+      return <AdminSecurityPane focusId={focusId} />;
     case 'systeme':
-      return <AdminSystemPane onPreviewUserApp={onPreviewUserApp} />;
+      return <AdminSystemPane onPreviewUserApp={onPreviewUserApp} focusId={focusId} />;
     case 'menu':
       return (
         <AdminMenuPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />

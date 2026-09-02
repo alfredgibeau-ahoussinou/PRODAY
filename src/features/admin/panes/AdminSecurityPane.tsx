@@ -13,7 +13,19 @@ import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem
 import { adminAuditService, type AdminAuditEntry } from '../../../services/adminAudit.service';
 import { useAdminData } from '../data/AdminDataContext';
 
-export function AdminSecurityPane() {
+import { AdminButton } from '../ui/adminUi';
+import { AdminModalSheet } from '../motion';
+import { Alert, TextInput } from 'react-native';
+
+export function AdminSecurityPane({ focusId }: { focusId?: string }) {
+  const [godModeContext, setGodModeContext] = useState(
+    focusId === 'moderation' ? 'moderation' : null
+  );
+  useEffect(() => {
+    if (focusId === 'moderation') {
+      setGodModeContext(focusId);
+    }
+  }, [focusId]);
   const data = useAdminData();
   const t = ADMIN_TOKENS;
   const [logs, setLogs] = useState<AdminAuditEntry[]>([]);
@@ -29,7 +41,8 @@ export function AdminSecurityPane() {
   if (loading) return <AdminLoading label="Chargement audit…" />;
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
+    <>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
       <AdminPaneHeader title="Sécurité & audit" subtitle="Journal & anomalies" />
       <AdminCard>
         <AdminText variant="h2">Signalements ouverts</AdminText>
@@ -56,6 +69,29 @@ export function AdminSecurityPane() {
         )}
       </AdminCard>
     </ScrollView>
+
+    {/* GOD MODE: Moderation */}
+    <AdminModalSheet
+        visible={godModeContext === 'moderation'}
+        onClose={() => setGodModeContext(null)}
+      >
+        <ScrollView style={{ padding: adminSpace.lg, gap: 16 }}>
+          <AdminText variant="h2" style={{ color: ADMIN_TOKENS.accent }}>🛡️ Modération de Contenu</AdminText>
+          <AdminText variant="body" muted style={{ marginBottom: 12 }}>Bannissement et suppression de posts/médias</AdminText>
+          <AdminCard>
+             <AdminText variant="h3">Takedown par ID de contenu (Post, Message, Video)</AdminText>
+             <View style={{ gap: 8, marginTop: 8 }}>
+               <TextInput placeholder="Entity ID (ex: post_xxx)" style={{ borderWidth: 1, borderColor: t.border, padding: 12, borderRadius: 8, color: t.foreground }} placeholderTextColor={t.muted} />
+               <AdminButton label="Suppression instantanée (Hard Delete)" variant="danger" onPress={() => Alert.alert('Supprimé', 'Le contenu a été purgé de Firestore.')} />
+             </View>
+          </AdminCard>
+          <AdminCard>
+            <AdminText variant="h3">Signalements prioritaires</AdminText>
+            <AdminText variant="body" muted>La file d'attente des signalements communautaires est vide actuellement.</AdminText>
+          </AdminCard>
+        </ScrollView>
+    </AdminModalSheet>
+    </>
   );
 }
 

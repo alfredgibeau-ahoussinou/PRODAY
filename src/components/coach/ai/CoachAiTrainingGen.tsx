@@ -9,6 +9,7 @@ import { CoachPane } from '../CoachScreenHeader';
 import type { CoachChapterCommonProps } from '../coachPortalUi';
 import { resolveCoachCalendarContext, type CoachComposedPlan } from '../../../utils/coachTrainingRecommendation';
 import { composedPlanFromPrompt } from '../../../utils/coachSessionPrompt';
+import { aiTrainingService } from '../../../services/aiTraining.service';
 import { teamEventsService } from '../../../services/teamEvents.service';
 
 interface Props extends CoachChapterCommonProps {
@@ -16,7 +17,7 @@ interface Props extends CoachChapterCommonProps {
   onBack: () => void;
 }
 
-export function CoachAiTrainingGen({ onBack, events, members, activeTeamId, onRefresh }: Props) {
+export function CoachAiTrainingGen({ onBack, events, members, activeTeamId, onRefresh, profile }: Props) {
   const { tokens } = useCoachTheme();
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,15 +26,35 @@ export function CoachAiTrainingGen({ onBack, events, members, activeTeamId, onRe
   const calendarContext = useMemo(() => resolveCoachCalendarContext(events), [events]);
   const teamMembers = useMemo(() => members.filter((m) => m.role === 'player'), [members]);
 
-  const handleGenerate = () => {
-    if (!prompt.trim()) return;
+  const handleGenerate = async () => {
+    if (!prompt.trim() || !profile.profile.club_id) return;
     setLoading(true);
     try {
-      const newPlan = composedPlanFromPrompt(prompt, {
-        targetEventId: calendarContext.nextTraining?.id,
-        playerCount: teamMembers.length || undefined,
+      const res = await aiTrainingService.generateCollective({
+        club_id: profile.profile.club_id,
+        team_id: activeTeamId,
+        objective: 'technique',
+        duration_min: 90,
+        level: 'intermediate',
+        player_count: teamMembers.length || 18,
+        coach_notes: prompt,
       });
-      setPlan(newPlan);
+      const generatedPlan = {
+        context: 'training' as const,
+        archetype: 'collective' as const,
+        title: res.objective || 'Séance générée',
+        focus: prompt,
+        reason: `${res.duration_min} min - ${res.phases.length} phases`,
+        totalMinutes: res.duration_min,
+        blocks: res.phases.map(p => ({
+          label: p.label,
+          minutes: p.duration_min,
+          objective: p.exercises.map(e => e.name).join(', ')
+        })),
+        difficulty: 'moyen' as const,
+        dataConfidence: 'none' as const,
+      };
+      setPlan(generatedPlan);
     } catch (e) {
       Alert.alert("Erreur", "Génération échouée.");
     } finally {
@@ -42,8 +63,33 @@ export function CoachAiTrainingGen({ onBack, events, members, activeTeamId, onRe
   };
 
   const handleApply = async () => {
-    Alert.alert('Succès', 'La séance a été ajoutée au calendrier.');
-    onBack();
+    if (!plan || !profile.profile.club_id) return;
+    setLoading(true);
+    try {
+      const startsAt = new Date();
+      startsAt.setDate(startsAt.getDate() + 1);
+      startsAt.setHours(18, 30, 0, 0);
+      
+      await teamEventsService.create({
+        title: plan.title,
+        description: plan.reason,
+        event_type: 'training',
+        organizer_uid: profile.uid,
+        organizer_name: `${profile.display_name} ${""}`,
+        team_id: activeTeamId,
+        club_id: profile.profile.club_id,
+        starts_at: startsAt,
+        city: profile.city || 'Terrain',
+        invitee_uids: teamMembers.map(m => m.uid),
+      });
+      Alert.alert('Succès', 'La séance a été ajoutée au calendrier.');
+      onRefresh();
+      onBack();
+    } catch (e) {
+      Alert.alert('Erreur', "Ajout impossible.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
