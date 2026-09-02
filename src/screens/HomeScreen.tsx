@@ -23,6 +23,7 @@ import { JoueurWhoAreYouGateScreen } from './joueur/JoueurWhoAreYouGateScreen';
 import { CrossfadeSwitch, PushScreenTransition } from '../components/motion';
 import { ProDayScreenCanvas } from '../components/ui/ProDayScreenCanvas';
 import { WeeklyQuestionHomePopup } from '../components/weeklyQuestion/WeeklyQuestionHomePopup';
+import { CoachOnboardingModal } from '../components/onboarding/CoachOnboardingModal';
 import { canParticipateWeeklyQuestion } from '../utils/weeklyQuestionAccess';
 import {
   type JoueurGateProfile,
@@ -54,6 +55,7 @@ export const HomeScreen: React.FC = () => {
   const { pendingDashboardView, clearPendingDashboard, goBackTab, returnTab } = useTabNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [overlay, setOverlay] = useState<HomeOverlay>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const joueurSession = useJoueurSession();
 
   const userLine = profile ? getUserProductLine(profile) : null;
@@ -209,6 +211,13 @@ export const HomeScreen: React.FC = () => {
 
           {profile && canParticipateWeeklyQuestion(profile.role) ? (
             <WeeklyQuestionHomePopup profile={profile} />
+          ) : null}
+
+          {profile ? (
+            <CoachOnboardingModal
+              visible={showOnboarding}
+              onDismiss={() => setShowOnboarding(false)}
+            />
           ) : null}
         </View>
       ) : (
