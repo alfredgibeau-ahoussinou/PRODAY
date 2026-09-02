@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, Share, Alert } from 'react-native';
 import type { CarpoolPassenger } from '../../models/TeamEvent';
 import type { CarpoolTripStatus } from '../../models/CarpoolLiveTrip';
 import type { GeoMarker } from '../../core/types/geo';
@@ -333,6 +333,28 @@ export const CarpoolLiveMission: React.FC<CarpoolLiveMissionProps> = ({
           </PressableSpring>
         ) : null}
 
+        <PressableSpring
+          onPress={async () => {
+            try {
+              await Share.share({
+                title: 'Statut Covoiturage ProDay',
+                message: `✅ Je suis bien arrivé(e) à destination (${destinationLabel || 'au stade / complexe'}) pour le match/entraînement avec ProDay Covoiturage !`,
+              });
+            } catch {
+              Alert.alert('Info', 'Message de statut partagé.');
+            }
+          }}
+          scaleTo={0.97}
+          haptic
+        >
+          <View style={[styles.arrivedBtn, { borderColor: `${colors.accent}66`, backgroundColor: colors.accentSoft }]}>
+            <Icon name="checkmark-circle" size={14} color={colors.accent} />
+            <ProDayText variant="caption" accent style={styles.ctaText}>
+              Prévenir : « Je suis bien arrivé »
+            </ProDayText>
+          </View>
+        </PressableSpring>
+
         {onContactDriver && !isDriver ? (
           <PressableSpring onPress={onContactDriver} scaleTo={0.97} haptic>
             <View style={[styles.secondary, { borderColor: colors.border }]}>
@@ -430,6 +452,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radius.lg,
     borderWidth: 1.5,
+  },
+  arrivedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
   },
   secondary: {
     flexDirection: 'row',
