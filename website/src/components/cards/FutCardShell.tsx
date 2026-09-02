@@ -189,18 +189,20 @@ export function FutFaceLayout({
   position,
   flagLabel,
   clubLabel,
+  leagueLabel,
   photoUrl,
   name,
   stats,
   ink,
 }: {
-  rating: number;
+  rating: number | string;
   position: string;
   flagLabel: string;
   clubLabel: string;
+  leagueLabel?: string;
   photoUrl?: string | null;
   name: string;
-  stats: { label: string; value: number }[];
+  stats: { label: string; value: number | string }[];
   ink: string;
   inkMuted: string;
   divider: string;
@@ -258,10 +260,10 @@ export function FutFaceLayout({
   );
 }
 
-function StatChip({ label, value }: { label: string; value: number }) {
+export function StatChip({ label, value, accent, animate }: { label: string; value: number | string; accent?: string; animate?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="text-lg font-bold text-white">{value}</span>
+      <span className="text-lg font-bold text-white" style={{ color: accent || 'white' }}>{value}</span>
       <span className="text-[10px] font-semibold tracking-wider text-white/50">{label}</span>
     </div>
   );
@@ -288,21 +290,37 @@ export function FutBackDetails({
 export function StatBar({
   label,
   value,
+  max = 100,
   ink,
 }: {
   label: string;
   value: number;
+  max?: number;
   ink: string;
 }) {
+  const pct = Math.min(100, Math.max(0, (value / max) * 100));
   return (
     <div className="flex items-center justify-between py-1">
       <span className="text-xs font-bold text-white/60">{label}</span>
       <div className="flex items-center gap-2">
         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
-           <div className="h-full rounded-full bg-white/90" style={{ width: `${value}%` }} />
+           <div className="h-full rounded-full bg-white/90" style={{ width: `${pct}%` }} />
         </div>
         <span className="w-6 text-right text-sm font-black text-white">{value}</span>
       </div>
     </div>
+  );
+}
+
+export function FutSkinSwatch({ skin, active }: { skin: any; active: boolean }) {
+  return (
+    <div
+      className={`h-8 w-8 rounded-full border-2 ${
+        active ? "border-white" : "border-transparent"
+      }`}
+      style={{
+        background: `linear-gradient(135deg, ${skin.frame[0]}, ${skin.frame[1]})`,
+      }}
+    />
   );
 }
