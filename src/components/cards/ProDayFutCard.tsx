@@ -255,7 +255,7 @@ function Photo({
       {photoUrl ? (
         <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="contain" />
       ) : (
-        <Image source={require('../../../assets/images/default-avatar.png')} style={[styles.photo, styles.photoFallback]} resizeMode="contain" />
+        <View style={[styles.photo, styles.photoFallback]} />
       )}
     </View>
   );
