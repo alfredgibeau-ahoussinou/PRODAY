@@ -1,35 +1,40 @@
 # Core (`src/core/`)
 
-Moteurs métier **sans UI** : algorithmes, règles, agrégations. Importable depuis services, hooks et features.
+**CONNECTER. PROGRESSER. RÉVÉLER.** — ProDay **1.0.9**
+
+Moteurs métier **sans UI** : scores, règles, agrégations, recommandations. Importables depuis `services/`, `hooks/`, `features/` et tests.
 
 ## Modules
 
 | Dossier | Rôle |
 |---------|------|
-| `ai/` | Orchestration IA côté client |
-| `analytics/` | Événements et métriques |
-| `calendar/` | Calendrier / rappels |
-| `events/` | Événements domaine |
-| `gamification/` | Badges, scores |
-| `geo/` | Géolocalisation, zones |
-| `health/` | Calculs santé / charge |
+| `recommendation/` | Scoring & suggestions (matchs, contenus…) |
+| `recruitment/` | Logique recrutement / mercato |
+| `health/` | Programmes & règles santé |
+| `gamification/` | Badges, progression |
+| `geo/` | Proximité, filtres géo |
+| `calendar/` | Agrégation calendrier |
+| `social/` | Règles sociales / feed |
+| `ai/` | Helpers IA côté client |
+| `analytics/` | Événements analytics métier |
 | `notifications/` | Règles de notification |
-| `recommendation/` | Reco matchs, joueurs |
-| `social/` | Graphe social, feed |
-| `state/` | Machines d’état partagées |
-| `types/` | Types core transverses |
+| `events/` | Modèle événements |
+| `state/` | État métier partagé (non-React) |
+| `types/` | Types partagés core |
+| `actionDispatch.ts` · `index.ts` | Dispatch / barrel exports |
 
 ## Conventions
 
+- Pas de composants React, pas d’imports `screens/` / `components/`.
+- Fonctions pures ou quasi-pures préférées — facile à tester dans `__tests__/`.
+- UI et I/O réseau restent dans `components/` et `services/`.
+
+## Exemple d’import
+
 ```ts
-import { rankScore, buildMatchRecommendations } from '../core';
+import { /* helpers exportés */ } from '../core';
 ```
 
-- Pas d’import React
-- Tests unitaires dans `src/__tests__/`
+[PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
 
-## Liens
-
-- [../README.md](../README.md)
-- [features/README.md](../features/README.md)
-- [../STRUCTURE.md](../STRUCTURE.md)
+[`../README.md`](../README.md) · [`../services/README.md`](../services/README.md) · [`../features/README.md`](../features/README.md)

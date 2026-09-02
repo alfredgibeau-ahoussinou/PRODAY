@@ -1,18 +1,19 @@
-# Flows Maestro (`.maestro/`)
+# Maestro (`.maestro/`)
 
-Scénarios E2E UI sur simulateur ou appareil. **Non exécutés en CI.**
+**CONNECTER. PROGRESSER. RÉVÉLER.** — scénarios UI ProDay **1.0.9** (`com.proday.app`).
 
-App cible : ProDay **1.0.8** (`com.proday.app`).
+Flows YAML pour simulateur ou appareil. **Hors CI** — validation manuelle / pré-release.
 
-## Contenu
+## Scénarios
 
-| Fichier | Scénario |
+| Fichier | Objectif |
 |---------|----------|
-| `reels-smoke.yaml` | Reels + empty state + sheet publication |
+| `reels-smoke.yaml` | Reels : empty state + sheet publication |
 | `reels-publish.yaml` | Login joueur → vidéo démo → publish |
 | `sponsor-tabs.yaml` | Connexion sponsor → navigation shell |
-| `admin-gate.yaml` | Connexion admin → gate ou console |
 | `sponsor-prospect-smoke.yaml` | Smoke segment Prospects |
+| `admin-gate.yaml` | Connexion admin → gate / console |
+| `supporter-screenshot.yaml` | Capture supporter (marketing) |
 | `subflows/` | Sous-flows login réutilisables |
 
 ## Lancer
@@ -21,24 +22,28 @@ App cible : ProDay **1.0.8** (`com.proday.app`).
 export PATH="$PATH:$HOME/.maestro/bin"
 export MAESTRO_CLI_NO_ANALYTICS=1
 
+# Smoke reels
 maestro test .maestro/reels-smoke.yaml
 
-# Publish (compte joueur — mots de passe hors repo)
+# Suite npm
+npm run test:e2e:maestro
+npm run test:e2e:maestro:reels
+```
+
+Publish (identifiants **uniquement en variables d’environnement**, jamais commités) :
+
+```bash
 export MAESTRO_PLAYER_EMAIL=…
 export MAESTRO_PLAYER_PASSWORD=…
 maestro test .maestro/reels-publish.yaml
-
-npm run test:e2e:maestro
+# ou : npm run test:e2e:maestro:reels-publish
 ```
 
-Prérequis : Dev Client natif (`npm run ios`), Maestro CLI, comptes test.  
-`reels-publish` exige `__DEV__` (bouton « Vidéo démo E2E »).
-
-## Guide complet
-
-→ [../e2e/README.md](../e2e/README.md)
+Prérequis : app native Dev Client (`npm run ios` / `npm run ios:sim`), Maestro CLI.  
+`reels-publish` attend le bouton « Vidéo démo E2E » (`__DEV__`).
 
 ## Liens
 
-- [../src/README.md](../src/README.md)
-- [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr)
+- Guide E2E : [`../e2e/README.md`](../e2e/README.md)
+- App : [`../src/README.md`](../src/README.md)
+- [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)

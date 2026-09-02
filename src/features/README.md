@@ -1,23 +1,44 @@
 # Features (`src/features/`)
 
-Modules produit **riches** (V3) : écrans composites, engines, dashboards. Au-dessus de `core/` et `components/`.
+**CONNECTER. PROGRESSER. RÉVÉLER.** — ProDay **1.0.9**
 
-## Contenu
+Modules produit riches : shells de rôle, hubs, engines V3. Au-dessus de `core/`, `components/` et `services/`.
 
-| Dossier | Rôle |
-|---------|------|
-| `home/` | Dashboard accueil V3 (`HomeIaDashboard`…) |
-| `v3/` | Engines V3, intelligence par onglet |
+## Modules
 
-## V3 vs legacy
+| Dossier | Contenu |
+|---------|---------|
+| `coach/` | `CoachAppShell`, hub profil, panes menu / outils |
+| `club/` | `ClubAppShell`, sidebar, assistant, create sheets |
+| `president/` | `PresidentAppShell`, bridge, panes président |
+| `joueur/` | Extras shell joueur (HUD, overlays métier) |
+| `parent/` | Tab bar / sidebar / contexte nav parent |
+| `admin/` | Console admin (`AdminAppShell`, top bar, work queue) |
+| `auth/` | Expérience auth (shell présentation) |
+| `home/` | Accueil / dashboards feature |
+| `supporter/` | Logique feature supporter |
+| `v3/` | Engines & shell V3 (`EXPO_PUBLIC_V3_SHELL=1`) |
 
-- **V3** (cible) : `features/` + `components/v3/` + `EXPO_PUBLIC_V3_SHELL=1` (déjà sur profils EAS store)
-- **Legacy** : `screens/DashboardScreen` + `components/dashboard/`
+## Shells vs `navigation/`
 
-Objectif : converger vers V3, puis retirer le legacy.
+- **Coach, club, président, admin** : définis ici (`*/shell/`).
+- **Parent, sponsor, supporter, MainTabs joueur** : `src/navigation/`.
+- `App.tsx` bascule selon `profile.role` / preview admin.
+
+## Conventions
+
+- Isoler le chrome par rôle : pas de HUD joueur sur coach/club/admin.
+- Safe-area : les shells coach/club paddent déjà le haut.
+- Profil coach : hub + chapter pager — si corps noir vide, vérifier d’abord la hauteur du pager.
 
 ## Liens
 
-- [../README.md](../README.md)
-- [../STRUCTURE.md](../STRUCTURE.md)
-- [../../docs/PRODAY_V3_MODULES.md](../../docs/PRODAY_V3_MODULES.md)
+```bash
+npm start
+npm run ios:sim
+eas build --profile preview
+```
+
+[PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+
+[`../README.md`](../README.md) · [`../navigation/README.md`](../navigation/README.md) · [`../screens/README.md`](../screens/README.md)

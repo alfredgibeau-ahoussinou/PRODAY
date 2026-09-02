@@ -1,30 +1,55 @@
 # Navigation (`src/navigation/`)
 
-Onglets, stacks et shells de rôle — ProDay **1.0.8**.
+**CONNECTER. PROGRESSER. RÉVÉLER.** — ProDay **1.0.9**
+
+Couche de routage mobile : onglets, overlays d’auth, shells parent / sponsor / supporter. Les shells coach, club, président et admin vivent sous `features/*/shell/` et sont branchés depuis `App.tsx`.
 
 ## Contenu
 
-| Élément | Rôle |
-|---------|------|
-| Fichiers racine | `MainTabs`, résolveurs d’écrans, deep links |
-| `shells/` | Shells : joueur, coach, club, parent, sponsor, admin, président, supporter |
+| Fichier / dossier | Rôle |
+|-------------------|------|
+| `MainTabs.tsx` | Barre d’onglets joueur (accueil, mercato, matchs, feed, profil…) |
+| `resolveMainTabScreen.tsx` | Résolution écran ↔ onglet |
+| `mainTabConfig.ts` · `mobileTabConfig.ts` | Config onglets |
+| `ParentAppShell.tsx` | Shell parent (tabs + contexte nav) |
+| `SponsorAppShell.tsx` | Shell sponsor (sidebar / tabs produit) |
+| `SupporterAppShell.tsx` | Shell supporter |
+| `AuthOverlayHost.tsx` · `authOverlay.ts` | Overlay connexion / inscription |
+| `guestAccess.ts` | Accès invité |
+| `sponsorTabConfig.ts` · `sponsorTabNavigationBridge.ts` | Navigation pôle sponsor |
+| `tabBarLayout.ts` · `screenLayout.ts` | Mesures layout barre / écrans |
+| `shells/` | Helpers partagés (ex. `productShellTabs`) |
+| `parentShellContext.ts` | Contexte navigation parent |
 
-## Shells
+## Qui orchestre quoi
 
-- **Joueur** : Accueil, Covoiturage, Mercato, Matchs, Santé, Feed / Reels, Messages, Profil (univers âge × genre)
-- **Coach / Club / Parent / Président** : hubs + chapter pagers (chrome dédié, pas le HUD joueur)
-- **Sponsor** : menu latéral (pilotage, offres, réseau…)
-- **Admin** : console plateforme (`screens/admin/`)
-- **V3** : `EXPO_PUBLIC_V3_SHELL=1` → `V3TabShell`
+```
+App.tsx
+  ├─ AdminAppShell          → features/admin/
+  ├─ CoachAppShell          → features/coach/
+  ├─ ClubAppShell           → features/club/
+  ├─ PresidentAppShell      → features/president/
+  ├─ ParentAppShell         → ici
+  ├─ SponsorAppShell        → ici
+  ├─ SupporterAppShell      → ici
+  └─ MainTabs (joueur)      → ici + features/joueur/
+```
+
+Flag V3 : `EXPO_PUBLIC_V3_SHELL=1` active le shell / dashboard V3 (voir `features/v3/`).
 
 ## Conventions
 
-- Écrans importés depuis `src/screens/`
-- Pas de logique métier ici — routing et layout uniquement
-- Hauteur des pagers horizontaux : mesurer et passer à `PagerPage` (`flex: 1` ne donne pas de hauteur dans un `ScrollView` horizontal)
+- Importer les écrans depuis `screens/` — pas de logique métier lourde ici.
+- Shells dédiés : ne pas réutiliser le chrome HUD joueur sur coach / club / admin.
+- Pagers horizontaux (`ProDayTabPager`, hubs profil) : passer une hauteur mesurée aux pages.
 
-## Liens
+## Lancer
 
-- [../README.md](../README.md) — lancer l’app / EAS
-- [screens/README.md](../screens/README.md)
-- [../STRUCTURE.md](../STRUCTURE.md)
+```bash
+npm start
+npm run ios:sim
+```
+
+Repo : [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · Site : [proday75.fr](https://proday75.fr) · Docs : [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+
+Voir aussi : [`../README.md`](../README.md) · [`../screens/README.md`](../screens/README.md)

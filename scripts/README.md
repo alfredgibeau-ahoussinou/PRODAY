@@ -1,99 +1,79 @@
 # Scripts CLI (`scripts/`)
 
-Outils Node / shell invoqués via `npm run` à la racine du monorepo. **Pas d’import depuis `src/`** — exploitation, seeds, branding, docs.
+**CONNECTER. PROGRESSER. RÉVÉLER.** — outils Node / shell pour l’app Expo ProDay **1.0.9**.
 
-App cible : Expo **1.0.8** · tagline **CONNECTER. PROGRESSER. RÉVÉLER.**
+Invoqués depuis la racine via `npm run …`. **Pas d’import depuis `src/`** : exploitation, seeds, branding, docs PDF, marketing store.
 
-> Ne jamais committer de secrets (`.env`, clés service account, mots de passe). Les scripts de comptes lisent l’env locale.
+> Ne jamais committer de secrets (`.env`, service accounts, mots de passe). Les scripts de comptes lisent l’environnement local.
+
+## App & simulateur
+
+| Commande | Script | Rôle |
+|----------|--------|------|
+| `npm start` | (Expo) | Metro |
+| `npm run start:ios` | Expo `--localhost` | Appareil / sim en local |
+| `npm run ios:sim` | `run-ios-simulator.sh` | Lance le simulateur iOS |
+| `eas build --profile …` | `eas.json` | Dev / preview / production / TestFlight |
 
 ## Firebase & données
 
-| Script | Commande npm | Rôle |
-|--------|--------------|------|
-| `seed-firestore.mjs` | `firebase:seed` | Données de démo Firestore |
-| `seed-demo-club.mjs` | `seed:demo-club` | Club démo (équipes + stade) |
-| `seed-demo-player.mjs` | `seed:demo-player` | Joueur démo Lucas (adulte · ASC) |
-| `seed-demo-parent.mjs` | `seed:demo-parent` | Parent + enfant U17 dédié |
-| `seed-demo-review.mjs` | `seed:demo-review` | Orchestrateur App Review (tous comptes) |
-| `firebase-health.mjs` | `firebase:health` · `firebase:deploy:check` | Santé projet |
-| `firestore-rules.test.mjs` | `firebase:rules:test` | Tests règles (émulateur) |
-| `cleanup-demo-data.mjs` | `cleanup:demo` | Nettoyage démo |
-| `migrate-product-lines.mjs` | `migrate:product-lines` | Migration lignes produit |
-| `migrate-joueur-pole.mjs` | `migrate:joueur-pole` | Migration pôle joueur |
-| `refresh-platform-stats.mjs` | `stats:refresh` | Stats plateforme |
-| `scale-load-test.mjs` | `test:scale` | Test charge |
-| `beta-readiness.mjs` | `beta:check` | Checklist bêta |
-| `stripe-subscriptions-readiness.mjs` | `stripe:subscriptions:check` | Checklist Stripe |
+| npm | Fichier | Rôle |
+|-----|---------|------|
+| `firebase:seed` | `seed-firestore.mjs` | Seed Firestore démo |
+| `seed:demo-club` | `seed-demo-club.mjs` | Club démo |
+| `seed:demo-player` | `seed-demo-player.mjs` | Joueur démo |
+| `seed:demo-parent` | `seed-demo-parent.mjs` | Parent + enfant |
+| `seed:demo-supporter` | `seed-demo-supporter.mjs` | Supporter démo |
+| `seed:demo-review` | `seed-demo-review.mjs` | Orchestrateur App Review |
+| `firebase:health` | `firebase-health.mjs` | Santé projet |
+| `firebase:rules:test` | `firestore-rules.test.mjs` | Règles (émulateur) |
+| `cleanup:demo` | `cleanup-demo-data.mjs` | Nettoyage démo |
+| `migrate:product-lines` | `migrate-product-lines.mjs` | Migration lignes produit |
+| `migrate:joueur-pole` | `migrate-joueur-pole.mjs` | Migration pôle joueur |
+| `stats:refresh` | `refresh-platform-stats.mjs` | Stats plateforme |
+| `test:scale` | `scale-load-test.mjs` | Charge |
+| `beta:check` | `beta-readiness.mjs` | Checklist bêta |
+| `stripe:subscriptions:check` | `stripe-subscriptions-readiness.mjs` | Checklist Stripe |
 
-## Comptes test & auth
+## Comptes & auth (env locale)
 
-| Script | Commande npm |
-|--------|--------------|
-| `setup-admin.mjs` | `admin:setup` |
-| `setup-test-account.mjs` | `test-account:setup` |
-| `setup-partner-test-account.mjs` | `partner-account:setup` |
-| `send-verification-email.mjs` | `auth:send-verification` |
-| `send-password-reset-email.mjs` | `auth:send-password-reset` |
+| npm | Fichier |
+|-----|---------|
+| `admin:setup` | `setup-admin.mjs` |
+| `test-account:setup` | `setup-test-account.mjs` |
+| `partner-account:setup` | `setup-partner-test-account.mjs` |
+| `auth:send-verification` | `send-verification-email.mjs` |
+| `auth:send-password-reset` | `send-password-reset-email.mjs` |
 
-## Branding & assets (app)
+## Branding & store
 
-| Script | Commande npm | Rôle |
-|--------|--------------|------|
-| `generate-app-brand.mjs` | `branding:app` | Icône / splash / adaptive / lockup officiels |
-| `generate-transparent-logos.mjs` | `branding:logos` | Logos transparents |
-| `generate-woman-logos.mjs` | `branding:logos:woman` | Variantes Woman |
-| `generate-universe-logos.mjs` | `branding:logos:universes` | Pictos pôles |
-| `download-*-showcase-images.mjs` | *(manuel)* | Images showcase |
-| `generate-app-store-screenshots.mjs` | `marketing:app-store-ios` | Captures App Store iOS 6,5" (1284×2778) |
+| npm | Fichier | Rôle |
+|-----|---------|------|
+| `branding:app` | `generate-app-brand.mjs` | Icône / splash / adaptive depuis lockup officiel |
+| `branding:logos` | `generate-transparent-logos.mjs` | Logos transparents |
+| `branding:logos:woman` | `generate-woman-logos.mjs` | Variantes femme |
+| `branding:logos:universes` | `generate-universe-logos.mjs` | Logos univers |
+| `marketing:app-store-ios` | `generate-app-store-screenshots.mjs` | Captures iOS |
+| `marketing:app-store-ipad` | idem `--ipad` | iPad |
+| `marketing:app-store-mac` | idem `--mac` | Mac |
+| `marketing:capture-supporter` | `capture-supporter-screenshot.mjs` | Capture supporter |
+| `android:apk:beta` | `build-beta-apk.mjs` | APK bêta |
+| `android:apk:publish` | `publish-beta-apk.mjs` | Publication APK |
 
-Guide logos : [../assets/branding/README.md](../assets/branding/README.md).  
-Captures store : [../assets/marketing/app-store/ios-6.5/README.md](../assets/marketing/app-store/ios-6.5/README.md).
+Lockup source officiel : `assets/branding/proday-lockup-official-source.png`.
 
-## Natif & bêta APK
+## Docs & i18n (liés app)
 
-| Script | Commande npm | Rôle |
-|--------|--------------|------|
-| `run-ios-simulator.sh` | `ios:sim` | Lancer le simulateur iOS |
-| `build-beta-apk.mjs` | `android:apk:beta` | Build APK bêta local |
-| `publish-beta-apk.mjs` | `android:apk:publish` | Publier APK bêta |
-| `broadcast-beta-ios-pre-announcement.mjs` | `beta:broadcast-ios` | Annonce pré-lancement iOS |
-
-Builds store (EAS, pas dans `scripts/` mais via CLI) :
-
-```bash
-npm run eas:build:testflight      # iOS build 17+ → TestFlight
-npm run eas:build:android:apk
-npm run eas:build:production
-```
-
-Voir [../docs/STORE_RELEASE.md](../docs/STORE_RELEASE.md) (crash fix build 17, profils `eas.json`).
-
-## Documentation & PDF
-
-| Script | Commande npm |
-|--------|--------------|
-| `generate-pacte-pdf.mjs` | `docs:pactes` |
-| `generate-legal-pdf.mjs` | `docs:legal` |
-| `generate-guide-restant-pdf.mjs` | `docs:guide-restant` |
-| `generate-player-cv.mjs` | `docs:cv` |
-| `build-intro-video.mjs` | `intro:build` |
-| `build-website-intro-video.mjs` | `intro:build:website` |
-
-## i18n
-
-| Script | Commande npm |
-|--------|--------------|
-| `generate-handcraft-locales.mjs` | `i18n:locales` |
-| `sync-tertiary-locales.mjs` | *(manuel)* |
-| `wire-i18n-files.mjs` | *(manuel)* |
-
-## Sous-dossier `lib/`
-
-Helpers partagés entre scripts (pas destinés à l’app runtime).
+| npm | Fichier |
+|-----|---------|
+| `docs:cv` | `generate-player-cv.mjs` |
+| `docs:pactes` | `generate-pacte-pdf.mjs` |
+| `docs:legal` | `generate-legal-pdf.mjs` |
+| `i18n:locales` | `generate-handcraft-locales.mjs` |
+| `intro:build` | `build-intro-video.mjs` |
 
 ## Liens
 
-- [../src/README.md](../src/README.md) — app Expo
-- [../docs/STORE_RELEASE.md](../docs/STORE_RELEASE.md) — EAS / TestFlight
-- [../package.json](../package.json) — liste complète des commandes npm
+- App source : [`../src/README.md`](../src/README.md)
+- E2E : [`../e2e/README.md`](../e2e/README.md) · Maestro : [`../.maestro/README.md`](../.maestro/README.md)
 - [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) · [proday75.fr](https://proday75.fr)

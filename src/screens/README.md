@@ -1,34 +1,57 @@
 # Écrans (`src/screens/`)
 
-Un fichier ≈ un écran navigation. Orchestration composants + services ; logique lourde → `core/` ou `services/`.
+**CONNECTER. PROGRESSER. RÉVÉLER.** — ProDay **1.0.9**
 
-App : ProDay **1.0.8** · **CONNECTER. PROGRESSER. RÉVÉLER.**
+Un fichier ≈ un écran enregistré dans la navigation. L’écran compose `components/`, appelle `hooks/` / `services/`, et délègue le calcul lourd à `core/`.
 
 ## Organisation
 
-| Sous-dossier | Rôle |
-|--------------|------|
-| *(racine)* | Mercato, Matchs, Santé, Feed, Messages, Profil, Auth… |
-| `admin/` | Console admin (modération, stats, bêta) |
-| `club/` | Hub club, annonces, structure |
-| `discover/` | Découverte joueurs / clubs |
-| `medical/` | Dossier médical |
-| `men/` | Parcours univers Homme |
-| `proPlayer/` | Parcours joueur Pro |
-| `signup/` | Inscription multi-étapes |
-| `sponsor/` | Shell partenaire / sponsor |
-| `supporter/` | Parcours supporter |
+```
+screens/
+├── (racine)          Auth, feed, mercato, matchs, reels, profil, shop…
+├── joueur/           Parcours joueur dédiés
+├── coach/            Profil & outils coach
+├── club/             Hub club, annonces, roster…
+├── president/        Vue président
+├── parent/           Contrôle parental, rapports
+├── sponsor/          Offres & profil public sponsor
+├── supporter/        Parcours supporter
+├── signup/           Inscription multi-étapes
+├── training/         Séances & log activité
+├── competition/      Tournois, matchday
+├── smartTactics/     Tactiques
+└── proPlayer/        Variante pro
+```
+
+## Rôles ↔ dossiers
+
+| Pôle | Dossier(s) typiques |
+|------|---------------------|
+| Joueur | racine + `joueur/` + `training/` |
+| Coach | `coach/` |
+| Club / Président | `club/`, `president/` |
+| Parent | `parent/` |
+| Sponsor | `sponsor/` |
+| Supporter | `supporter/` |
+| Auth / onboarding | `AuthScreen`, `signup/`, vérifications |
+
+Les shells (`navigation/`, `features/*/shell/`) montent ces écrans ; ils ne vivent pas dans ce dossier.
 
 ## Conventions
 
-- Nommage : `*Screen.tsx`
-- Navigation déclarée dans `src/navigation/`
-- Textes longs → `src/content/` ; Firebase → `src/services/`
-- Typo titres UI : Inter via `ProDayText` (Syne réservé à `brand`)
+- Pas d’accès Firestore direct — passer par `services/`.
+- Copy produit longue : préférer `content/`.
+- Typo UI via `ProDayText` (Inter pour titres, Syne pour `brand` uniquement).
+- Univers joueur (âge × genre) : respecter les tokens d’identité / theme existants.
 
-## Liens
+## Lancer & tester
 
-- [../README.md](../README.md)
-- [navigation/README.md](../navigation/README.md)
-- [components/README.md](../components/README.md)
-- [../STRUCTURE.md](../STRUCTURE.md)
+```bash
+npm start
+npm run ios:sim
+npm test
+```
+
+[PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+
+[`../README.md`](../README.md) · [`../navigation/README.md`](../navigation/README.md) · [`../features/README.md`](../features/README.md)

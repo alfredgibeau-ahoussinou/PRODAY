@@ -1,41 +1,41 @@
-# Composants UI (`src/components/`)
+# Composants (`src/components/`)
 
-Composants React réutilisables par **domaine produit**. Pas d’accès Firebase direct — passer par `services/` ou `hooks/`.
+**CONNECTER. PROGRESSER. RÉVÉLER.** — ProDay **1.0.9**
 
-## Domaines principaux
+Bibliothèque UI React Native réutilisable. Pas d’accès Firebase ici : données via props, hooks ou `services/`.
 
-| Dossier | Domaine |
-|---------|---------|
-| `ui/` | Primitives (`ProDayText`, boutons, inputs) |
-| `branding/` | `ProDayLogo`, `ProDayOfficialLockup`, `ProDaySymbol` |
-| `motion/` | Animations (`PressableSpring`…) |
-| `navigation/` | Barres, onglets, headers |
-| `auth/` · `signup/` | Connexion, inscription |
-| `profile/` | Profil joueur / staff / hubs |
-| `mercato/` | Recrutement, annonces |
-| `matchs/` | Matchs amicaux, stats live |
-| `feed/` · `reels/` | Fil social, reels |
-| `carpool/` | Covoiturage |
-| `health/` · `medical/` | Santé, dossier médical |
-| `messages/` | Messagerie |
-| `shop/` · `subscription/` | Boutique, abonnements |
-| `sponsor/` · `supporter/` | Shells partenaire / supporter |
-| `team/` | Événements équipe, compo |
-| `discover/` | Cartes découverte |
-| `dashboard/` · `home/` | Accueil legacy |
-| `v3/` | Shell et blocs V3 |
-| `admin/` | UI console admin |
-| `settings/` · `help/` | Réglages, aide |
+## Domaines (aperçu)
 
-## Conventions
+| Dossier | Usage |
+|---------|--------|
+| `ui/` · `cards/` | Primitives & cartes |
+| `branding/` | Logos lockup / symboles (assets officiels) |
+| `shell/` · `app/` · `navigation/` | Chrome app, tab shells |
+| `auth/` · `signup/` | Flux connexion / inscription |
+| `joueur/` · `football/` · `recruitment/` | Mercato, joueur, foot |
+| `club/` | UI club |
+| `home/` · `discover/` · `messages/` | Accueil, découverte, messagerie |
+| `video/` | Players / reels |
+| `training/` · `health/` | Entraînement & santé |
+| `geo/` · `carpool/` | Carte / covoiturage |
+| `shop/` · `settings/` · `platform/` | Boutique, réglages, plateforme |
+| `aurora/` · `appSpace/` | Ambiances / espaces app |
+| `motion/` (souvent via `src/motion`) | Transitions, dialogs animés |
 
-- Générique → `components/ui/` ; métier → dossier domaine
-- Icônes via `Icon` (pas d’emojis device — affichage `?`)
-- Thème : `src/theme/` + `context/`
-- Tests : colocaliser ou `src/__tests__/`
+Texte : toujours `ProDayText` — titres Inter, `brand` Syne. Icônes via `Icon` (pas d’emojis device).
 
-## Liens
+## Branding
 
-- [../README.md](../README.md)
-- [screens/README.md](../screens/README.md)
-- [../../assets/branding/README.md](../../assets/branding/README.md)
+Sources image dans `assets/branding/` (ex. `proday-app-icon.png`, `proday-lockup-official-source.png`, symboles pôles). Ne pas inventer de chemins hors de ce dossier pour le logo officiel.
+
+## Lancer
+
+```bash
+npm start
+npm run ios:sim
+npm test
+```
+
+[PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+
+[`../README.md`](../README.md) · [`../screens/README.md`](../screens/README.md) · [`../theme/`](../theme/)

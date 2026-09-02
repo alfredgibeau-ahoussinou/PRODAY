@@ -1,35 +1,44 @@
 # Services (`src/services/`)
 
-Couche d’accès données : Firestore, Storage, Cloud Functions, APIs, IAP.
+**CONNECTER. PROGRESSER. RÉVÉLER.** — ProDay **1.0.9**
 
-## Rôle
+Couche d’accès données côté client Expo : Auth, Firestore, Storage, Cloud Functions (`europe-west1`), push, IAP. Les écrans et hooks appellent les services — pas d’appels Firebase dispersés dans l’UI.
 
-Encapsuler Firebase et les callables. Écrans / hooks appellent les services — pas d’accès Firestore direct dans l’UI.
+## Familles de fichiers
 
-## Catégories
+| Préfixe / zone | Domaine |
+|----------------|---------|
+| `auth*.service.ts` · `biometricAuth` | Authentification |
+| `profile.service.ts` | Profils & validations rôle |
+| `clubs*` · `club*` · `teamEvents*` | Clubs, équipements, finance, tournois |
+| `coach*` | Évaluations, objectifs, paiements séance |
+| `sponsors*` · `mercato*` · `recruitment*` | Sponsoring & recrutement |
+| `friendlyMatches*` · `competition*` | Matchs & compétitions |
+| `messaging*` · `communityReels*` · `actorReels*` | Messages & reels |
+| `notification*` · `pushToken*` | Notifications |
+| `subscription*` · `iap*` | Abonnements stores |
+| `admin*` | Opérations console admin |
+| `carpool*` | Covoiturage |
+| `wearableHealth/` (si présent) | Santé connectée |
+| `aiTraining*` · `brainState*` | IA / coaching |
 
-| Préfixe / fichier | Domaine |
-|-------------------|---------|
-| `auth*.service.ts` | Authentification |
-| `profile.service.ts` | Profils, validation coach/agent |
-| `clubs.service.ts` · `teamEvents.service.ts` | Clubs, événements équipe |
-| `sponsors.service.ts` | Offres, push géo partenaires |
-| `mercato*.ts` · `recruitment*.ts` | Recrutement |
-| `messaging.service.ts` | Conversations |
-| `notification*.ts` · `pushToken.service.ts` | FCM / Expo push |
-| `subscription*.ts` · `iap*.ts` | Abonnements store |
-| `admin*.service.ts` | Opérations admin |
-| `wearableHealth/` | Santé connectée |
+Suffixe standard : `.service.ts`.
 
-## Conventions
+## Sécurité
 
-- Suffixe `.service.ts`
-- Callables : région `europe-west1`
-- Contrats : [../../docs/API_CONTRACTS.md](../../docs/API_CONTRACTS.md)
-- Pas de secrets dans le code — variables `EXPO_PUBLIC_*` / EAS secrets
+- Aucun secret dans le repo (pas de clés privées, pas de mots de passe de comptes test).
+- Config client : variables `EXPO_PUBLIC_*` et secrets EAS.
+- Contrats API documentés côté docs monorepo / [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs).
 
-## Liens
+## Scripts liés (hors `src/`)
 
-- [../README.md](../README.md)
-- [../../functions/README.md](../../functions/README.md)
-- [../../docs/FIREBASE_SETUP.md](../../docs/FIREBASE_SETUP.md)
+Seeds, santé Firebase, migrations : voir [`../../scripts/README.md`](../../scripts/README.md).
+
+```bash
+npm run firebase:health
+npm run firebase:seed
+```
+
+[PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr)
+
+[`../README.md`](../README.md) · [`../core/README.md`](../core/README.md)

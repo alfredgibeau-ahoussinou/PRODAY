@@ -1,36 +1,45 @@
-# Tests End-to-End & Intégration (`e2e/`)
+# Tests E2E (`e2e/` + Jest / Maestro)
 
-> Suites de tests End-to-End (E2E) Jest et scénarios mobiles Maestro pour l'application ProDay (Version 1.0.9).
+**CONNECTER. PROGRESSER. RÉVÉLER.** — ProDay **1.0.9**
 
----
+Ce dossier documente la stratégie E2E de l’app Expo. Les suites Jest vivent sous `src/__tests__/e2e/` ; les scénarios appareil sont dans [`.maestro/`](../.maestro/).
 
-## 🧪 1. Tests E2E Automatisés (Jest)
-
-Les tests E2E Jest simulent les parcours complets des utilisateurs sans nécessiter de simulateur lourd :
+## Jest E2E (sans simulateur)
 
 ```bash
-# Lancer les tests E2E spécifiques
-npm run test:e2e
-
-# Lancer la suite complète de 264 suites de tests
-npm test
+npm run test:e2e          # src/__tests__/e2e/
+npm test                  # suite Jest complète
+npm run typecheck
 ```
 
-### Parcours testés :
-- **`sponsorNavigation.e2e.test.ts`** : Navigation du Pôle Sponsor, simulateur de packs et segmentation.
-- **`sponsorProspectFlow.e2e.test.ts`** : Scoring des entreprises locales et premier contact.
-- **`adminWorkNavigation.test.ts`** : File d'attente prioritaire et outils d'administration VIP.
+Couvrent notamment la navigation sponsor, les flux prospects et des parcours admin — en mémoire, sans UI native.
 
----
+## Maestro (simulateur / appareil)
 
-## 📱 2. Tests sur Appareil & Simulateur (Maestro)
-
-Les scénarios Maestro sont situés dans le dossier [`.maestro/`](../.maestro/) et testent les interactions graphiques réelles sur iOS et Android :
+Prérequis : Dev Client (`npm run ios` / `ios:sim`), [Maestro CLI](https://maestro.mobile.dev/), comptes de test **hors repo**.
 
 ```bash
-# Lancer tous les flux Maestro
+export PATH="$PATH:$HOME/.maestro/bin"
+export MAESTRO_CLI_NO_ANALYTICS=1
+
 npm run test:e2e:maestro
-
-# Tester le parcours des Reels vidéo
 npm run test:e2e:maestro:reels
+npm run test:e2e:maestro:reels-publish   # emails / mots de passe via env
 ```
+
+Détail des YAML : [`.maestro/README.md`](../.maestro/README.md).  
+**Non exécuté en CI** par défaut — usage local / release.
+
+## Charge
+
+```bash
+npm run test:scale
+```
+
+## Liens
+
+- App : [`../src/README.md`](../src/README.md)
+- Scripts : [`../scripts/README.md`](../scripts/README.md)
+- [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+
+Pas de secrets dans les fichiers de test versionnés.
