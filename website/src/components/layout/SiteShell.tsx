@@ -10,6 +10,7 @@ import { BackToTop } from "@/components/BackToTop";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { PageTransition } from "./PageTransition";
 import { ScrollToHash } from "./ScrollToHash";
+import { SupportModal } from "@/components/SupportModal";
 import { MASTER_ACCENT_CSS_VARS, poleAccentCssVars } from "@/lib/brandColors";
 
 const SiteHelpChatbot = lazy(() =>
@@ -87,6 +88,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             </main>
           </div>
           <SiteFooter />
+          <Suspense fallback={null}>
+            <SupportModal />
+          </Suspense>
           <Suspense fallback={null}>
             <SiteHelpChatbot />
           </Suspense>

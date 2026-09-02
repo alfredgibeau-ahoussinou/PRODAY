@@ -18,7 +18,7 @@ const EXPLORE = [
   { href: ROUTES.pricing, label: "Tarifs" },
   { href: ROUTES.faq, label: "FAQ" },
   { href: ROUTES.betaWaitlist, label: "Installer (Bêta)" },
-  { href: "mailto:proday.admin@gmail.com", label: "Signaler un problème (Admin)" },
+  { href: "#support", label: "Signaler un problème (Admin)" },
   { href: PARENT_APP_HREF, label: "Espace Parent" },
   { href: ROUTES.trust, label: "Confiance" },
 ] as const;

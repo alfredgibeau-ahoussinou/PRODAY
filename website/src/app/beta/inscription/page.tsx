@@ -69,7 +69,7 @@ export default async function BetaWaitlistPage() {
       <TerminalCta
         title="Besoin d'aide ?"
         description="Si vous rencontrez des problèmes pour télécharger ou installer l'application, contactez l'équipe."
-        primaryHref="mailto:proday.admin@gmail.com"
+        primaryHref="#support"
         primaryLabel="Contacter le support"
         secondaryHref={ROUTES.demo}
         secondaryLabel="Ouvrir la démo web"

@@ -12,11 +12,14 @@
 
 *Pas un outil de plus. L’infrastructure de votre football.*
 
-App mobile **1.0.9** (iOS build 18 · Android versionCode 11) · [proday75.fr](https://proday75.fr)
+[![Site](https://img.shields.io/badge/Site-proday75.fr-F5D04A?style=for-the-badge&logo=googlechrome&logoColor=black)](https://proday75.fr)
+[![Bêta](https://img.shields.io/badge/Bêta-Ouverte-0891b2?style=for-the-badge)](https://proday75.fr/beta/inscription)
+[![Docs publiques](https://img.shields.io/badge/Docs-PRODAY--docs-0ea5e9?style=for-the-badge)](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+[![App Version](https://img.shields.io/badge/App-v1.0.9-blue?style=for-the-badge&logo=react)](package.json)
 
-[![Site](https://img.shields.io/badge/Site-proday75.fr-F5D04A?style=flat-square&logo=googlechrome&logoColor=black)](https://proday75.fr)
-[![Bêta](https://img.shields.io/badge/Bêta-Inscription-0891b2?style=flat-square)](https://proday75.fr/beta/inscription)
-[![Docs publiques](https://img.shields.io/badge/Docs-PRODAY--docs-0ea5e9?style=flat-square)](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
+<br/>
+<img src="assets/marketing/app-store/ios-6.5/08-objectif-infrastructure.png" alt="Aperçu ProDay" width="800" />
+<br/>
 
 © ProDay 2026 · Tous droits réservés · Code propriétaire  
 Documentation publique : [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
@@ -25,126 +28,119 @@ Documentation publique : [PRODAY-docs](https://github.com/alfredgibeau-ahoussino
 
 ---
 
-## Qu’est-ce que ProDay ?
+## 📖 Qu’est-ce que ProDay ?
 
 ProDay n’est pas une collection d’apps séparées. C’est **l’infrastructure unifiée** du football amateur et professionnel : joueurs, coachs, clubs, familles, supporters et sponsors partagent le **même graphe de données**.
 
-Six portes d’entrée, une seule plateforme :
+### 🌟 Six portes d’entrée, une seule plateforme
 
-| Porte | Rôle |
-|-------|------|
-| **Joueur** | CV digital, saison, Pulse, Mercato, highlights |
-| **Coach** | Forme, tactique, convocations, séances |
-| **Club** | Équipes, licenciés, tournois, organisation |
-| **Parent** | Agenda, messages, trajets, contrôle tuteur |
-| **Supporter** | Scores, compositions, communauté |
-| **Sponsor** | Activations locales, packages, impact |
+| <img src="assets/marketing/app-store/ios-6.5/01-pole-joueur.png" width="80"> | <img src="assets/marketing/app-store/ios-6.5/02-pole-coach.png" width="80"> | <img src="assets/marketing/app-store/ios-6.5/03-pole-club.png" width="80"> |
+| :---: | :---: | :---: |
+| **Joueur** | **Coach** | **Club** |
+| CV digital, saison, Pulse, Mercato, highlights | Forme, tactique, convocations, séances | Équipes, licenciés, tournois, organisation |
 
-Agent, recruteur, organisateur et santé restent des **rôles intégrés**, pas des produits séparés.
+| <img src="assets/marketing/app-store/ios-6.5/05-pole-parent.png" width="80"> | <img src="assets/marketing/app-store/ios-6.5/06-pole-supporter.png" width="80"> | <img src="assets/marketing/app-store/ios-6.5/07-pole-sponsor.png" width="80"> |
+| :---: | :---: | :---: |
+| **Parent** | **Supporter** | **Sponsor** |
+| Agenda, messages, trajets, contrôle tuteur | Scores, compositions, communauté | Activations locales, packages, impact |
 
-| | |
-|--|--|
-| Slogan | CONNECTER · PROGRESSER · RÉVÉLER |
-| Site | [https://proday75.fr](https://proday75.fr) |
-| App | **1.0.9** (`app.json` / `package.json`) |
-| Bundle | `com.proday.app` |
-| Logo | `assets/branding/logo-proday-official.png` |
-| Palette | `#000` / `#FFF` / `#C5A059` (or master) · accents site `#07100c` / `#F5D04A` |
-| Dépôt code | [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) (privé) |
-| Docs publiques | [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) |
+*(Agent, recruteur, organisateur et santé restent des **rôles intégrés**, pas des produits séparés.)*
 
 ---
 
-## Structure du monorepo
+## 🏗 Structure du Monorepo
 
-```
-PRODAY/
-├── src/            App mobile Expo (React Native + TypeScript)
-├── website/        Site officiel Next.js 16 · Netlify · proday75.fr
-├── functions/      Cloud Functions Firebase
-├── firebase/       Règles Firestore / Storage / index
-├── assets/         Branding, marketing, intro vidéo, mockups
-├── docs/           Guides opérateur, architecture, légal, stores
-├── presentation/   Deck HTML pitch
-└── scripts/        CLI build, seed, branding, marketing
+```mermaid
+graph TD
+    A[PRODAY Monorepo] --> B(src/ : App mobile Expo)
+    A --> C(website/ : Site officiel Next.js)
+    A --> D(functions/ : Cloud Functions Firebase)
+    A --> E(firebase/ : Règles Firestore / Storage)
+    
+    B --> F{React Native + TS}
+    C --> G{Next.js 16 + Tailwind}
+    
+    A --> H[assets/ : Branding, marketing, mockups]
+    A --> I[docs/ : Guides opérateur, légal]
+    A --> J[presentation/ : Pitch Deck HTML]
+    A --> K[scripts/ : Outils CLI]
 ```
 
----
+### 🛠 Stack Technologique
 
-## Stack
-
-| Couche | Techno |
-|--------|--------|
-| Mobile | Expo SDK 54 · React Native 0.81 · React 19 · TypeScript |
-| Web | Next.js 16 (App Router) · Tailwind CSS 4 · Netlify |
-| Backend | Firebase Auth · Firestore · Storage · Cloud Functions |
-| Paiements | Stripe (abonnements clubs / sponsoring) |
-| Builds | EAS (TestFlight / APK) · Gradle |
+| Couche | Technologies clés |
+|--------|------------------|
+| **Mobile** | Expo SDK 54 · React Native 0.81 · React 19 · TypeScript |
+| **Web** | Next.js 16 (App Router) · Tailwind CSS 4 · Framer Motion · Netlify |
+| **Backend** | Firebase Auth · Firestore · Cloud Storage · Cloud Functions |
+| **Paiements** | Stripe (abonnements clubs / sponsoring) |
+| **Builds / CI** | EAS (TestFlight / APK) · Gradle |
 
 ---
 
-## Démarrage
+## 🚀 Démarrage Rapide
 
-### Prérequis
+### 1️⃣ Prérequis
+Assurez-vous d'avoir installé **Node.js LTS** et **npm**. Vous devez également disposer d'un compte Firebase configuré (voir [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md)).
 
-Node.js LTS, npm, compte Firebase configuré (voir `docs/FIREBASE_SETUP.md`).
-
-### Installation
+### 2️⃣ Installation
 
 ```bash
 git clone https://github.com/alfredgibeau-ahoussinou/PRODAY.git
 cd PRODAY
 npm install
-cp .env.example .env   # renseigner Firebase / clés nécessaires
+# Configuration des variables d'environnement
+cp .env.example .env   
 ```
 
-### App mobile
+### 3️⃣ Lancement de l'App Mobile
 
 ```bash
-npm start              # Metro Expo
-npm run start:ios      # simulateur iOS
-npm run android        # émulateur Android
+npm start              # Lancer Metro (Expo)
+npm run start:ios      # Lancer sur simulateur iOS
+npm run android        # Lancer sur émulateur Android
 ```
 
-### Site web
+### 4️⃣ Lancement du Site Web
 
 ```bash
-npm run website:dev    # http://localhost:3000
-# ou
-cd website && npm install && npm run dev
+npm run website:dev    # Serveur de dev sur http://localhost:3000
 ```
+*(Ou en naviguant dans `cd website && npm install && npm run dev`)*
 
-### Qualité
+### 5️⃣ Contrôle Qualité
 
 ```bash
-npm run typecheck
-npm test
+npm run typecheck      # Vérification TypeScript
+npm test               # Lancement des tests Jest
 ```
 
 ---
 
-## Déploiements (aperçu)
+## 🚢 Déploiements (Aperçu)
 
-| Cible | Commande / doc |
-|-------|----------------|
-| Site Netlify | `cd website && npm run netlify:deploy` |
-| APK bêta | `npm run android:apk:beta` |
-| TestFlight | voir `docs/STORE_RELEASE.md` et `docs/BETA_IOS_LAUNCH.md` |
+| Cible | Commande | Documentation Associée |
+|-------|----------|------------------------|
+| **Site Netlify** | `cd website && npm run netlify:deploy` | [`website/README.md`](website/README.md) |
+| **APK Bêta** | `npm run android:apk:beta` | [`docs/STORE_RELEASE.md`](docs/STORE_RELEASE.md) |
+| **TestFlight** | (via EAS) | [`docs/BETA_IOS_LAUNCH.md`](docs/BETA_IOS_LAUNCH.md) |
 
-Bêta publique : [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)
-
----
-
-## Documentation
-
-- Index interne : [`docs/README.md`](docs/README.md)
-- Sécurité site : [`docs/WEBSITE_SECURITY.md`](docs/WEBSITE_SECURITY.md)
-- Branding : [`assets/branding/README.md`](assets/branding/README.md)
-- Site : [`website/README.md`](website/README.md)
+💡 **Bêta Ouverte (Direct) :** [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)
 
 ---
 
-## Licence
+## 📚 Documentation Additionnelle
 
-© 2026 ProDay · Tous droits réservés.  
-Logiciel propriétaire. Reproduction ou distribution non autorisée interdite.
+Plongez plus profondément dans l'écosystème ProDay via nos guides dédiés :
+
+- 📖 **Index interne principal :** [`docs/README.md`](docs/README.md)
+- 🔒 **Sécurité et Architecture :** [`docs/WEBSITE_SECURITY.md`](docs/WEBSITE_SECURITY.md)
+- 🎨 **Branding et Assets :** [`assets/branding/README.md`](assets/branding/README.md)
+- 🌐 **Site Web détaillé :** [`website/README.md`](website/README.md)
+
+---
+
+## ⚖️ Licence & Propriété
+
+© 2026 **ProDay** · Tous droits réservés.  
+*Logiciel propriétaire. Reproduction, modification ou distribution non autorisée strictement interdite.*
