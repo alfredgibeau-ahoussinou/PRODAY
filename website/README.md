@@ -8,103 +8,106 @@
 
 <br /><br />
 
-# **Site Web Officiel & Portail Bêta ProDay**
+# Site ProDay · proday75.fr
 
 **CONNECTER · PROGRESSER · RÉVÉLER**  
-*Pas un outil de plus. L’infrastructure de votre football.*
+*L’infrastructure de votre football · six portes d’entrée, une plateforme*
 
-<br />
-
-[![Site](https://img.shields.io/badge/Production-proday75.fr-F5D04A?style=flat-square&logo=googlechrome&logoColor=black)](https://proday75.fr)
+[![Production](https://img.shields.io/badge/Production-proday75.fr-F5D04A?style=flat-square&logo=googlechrome&logoColor=black)](https://proday75.fr)
 [![Bêta](https://img.shields.io/badge/Bêta-Inscription-0891b2?style=flat-square)](https://proday75.fr/beta/inscription)
-[![Téléchargement APK](https://img.shields.io/badge/Download-proday--beta.apk-34d399?style=flat-square&logo=android)](https://proday75.fr/downloads/proday-beta.apk)
+[![APK](https://img.shields.io/badge/APK-bêta-34d399?style=flat-square&logo=android)](https://proday75.fr/downloads/proday-beta.apk)
 
 </div>
 
 ---
 
-## 📖 Présentation
+## Rôle
 
-Le site officiel **[proday75.fr](https://proday75.fr)** est conçu avec **Next.js 16 (App Router)**, **React 19**, **Tailwind CSS 4** et **Framer Motion**, déployé sur **Netlify**.
+Marketing, inscription bêta, pages des portes métier, devis clubs/sponsors, légal (CGU / confidentialité), admin PIN, téléchargement APK.
 
-Il présente l'écosystème ProDay, les **6 portes d'entrée métier**, l'accès au programme bêta, les formulaires de devis pour les clubs et sponsors, ainsi que la vidéo de présentation Motion 60 FPS et le téléchargement direct de l'APK Android.
+Stack : **Next.js 16** (App Router) · **React 19** · **Tailwind CSS 4** · **Framer Motion** · hébergement **Netlify**.
+
+Version app documentée côté site : **1.0.9** (alignée sur `app.json` du monorepo).
 
 ---
 
-## 🗂️ Structure du Projet Web
+## Arborescence
 
 ```
 website/
 ├── src/
-│   ├── app/                      Pages & routes App Router
-│   │   ├── page.tsx              Page d'accueil avec immersion vidéo & univers
-│   │   ├── beta/                 Hub bêta-testeurs (inscription, programme, installer, aide)
-│   │   ├── joueur/               Page Pôle Joueur (CV, highlights, stats)
-│   │   ├── coach/                Page Pôle Coach & IA Blood Bath
-│   │   ├── pro-club/             Page Pôle Club, tarifs & devis
-│   │   ├── sponsor/              Page Pôle Sponsor, mécénat & simulateur
-│   │   ├── parent/               Page Pôle Famille & covoiturage
-│   │   ├── supporter/            Page Pôle Supporter & tribune
-│   │   ├── confidentialite/      Politique de confidentialité (RGPD / CNIL)
-│   │   └── cgu/                  Conditions Générales d'Utilisation
-│   ├── components/               Composants d'interface (UI, immersive, formulaires)
-│   │   ├── immersive/            Lecteur vidéo Canvas, UniverseScroll & animations 60 FPS
-│   │   └── home/                 ProductPositioning, comparaison & témoignages
-│   └── lib/                      Contenu éditorial, routes et hooks
+│   ├── app/            Routes App Router (+ api/)
+│   ├── components/     UI (home, portes, bêta, admin, immersive…)
+│   ├── content/        Copy marketing / légal
+│   ├── lib/            Contenu, pôles, helpers
+│   └── hooks/
 ├── public/
-│   ├── downloads/                Fichiers distribuables (proday-beta.apk)
-│   ├── videos/                   Vidéos MP4 (proday-intro.mp4)
-│   └── branding/                 Logos officiels et favicons
-└── netlify.toml                  Configuration de routage, headers de sécurité et redirects
+│   ├── branding/       Logos / favicons publiés
+│   ├── downloads/      proday-beta.apk
+│   ├── videos/         Intro Motion
+│   └── images/         Captures marketing
+├── scripts/            Deploy Netlify, branding
+└── netlify.toml        Headers, redirects, plugin Next
 ```
 
 ---
 
-## ⚡ Démarrage en Local
+## Routes principales
 
-### 1. Installation des dépendances
+| Zone | Exemples |
+|------|----------|
+| Accueil | `/` |
+| Portes | `/joueur` · `/coach` · `/pro-club` · `/parent` · `/supporter` · `/sponsor` |
+| Produit | `/fonctionnalites` · `/ecosysteme` · `/demo` · `/tarifs` · `/roadmap` · `/comparatif` |
+| Bêta | `/beta/inscription` · `/beta/programme` · `/beta/installer` · `/beta/aide` |
+| Légal | `/cgu` · `/confidentialite` |
+| Admin | `/admin` (session PIN Edge) |
+
+Détail du code : [`src/README.md`](src/README.md).
+
+---
+
+## Démarrage local
+
 ```bash
 cd website
 npm install
 ```
 
-### 2. Variables d'environnement (`.env.local`)
+Variables typiques dans `.env.local` (ne jamais committer de secrets) :
+
 ```env
 NEXT_PUBLIC_SITE_URL=https://proday75.fr
 NEXT_PUBLIC_BETA_APP_VERSION=1.0.9
 NEXT_PUBLIC_BETA_APK_URL=/downloads/proday-beta.apk
-NEXT_PUBLIC_BETA_TESTFLIGHT_URL=https://appstoreconnect.apple.com/apps/6801583755/testflight/ios
-EMAILJS_SERVICE_ID=...
-EMAILJS_TEMPLATE_ID=...
-EMAILJS_PUBLIC_KEY=...
-EMAILJS_PRIVATE_KEY=...
+# BETA_ADMIN_PIN, EmailJS, etc. selon docs/
 ```
 
-### 3. Lancer le serveur de développement
 ```bash
-npm run dev
-# Accessible sur http://localhost:3000
-```
-
-### 4. Compiler pour la production
-```bash
+npm run dev      # http://localhost:3000
 npm run build
+npm run lint
 ```
+
+Depuis la racine monorepo : `npm run website:dev` / `npm run website:build`.
 
 ---
 
-## 🚀 Déploiement en Production
+## Déploiement Netlify
 
-Le déploiement en production vers **[https://proday75.fr](https://proday75.fr)** utilise le script dédié avec gestion du SSR et des Edge Functions Netlify :
+Production : [https://proday75.fr](https://proday75.fr)
 
 ```bash
-# Depuis la racine ou le dossier website
 npm run netlify:deploy
+# script : scripts/netlify-deploy.sh (isole .env.local)
 ```
+
+Sécurité (CSP, session admin HMAC, robots) : [`../docs/WEBSITE_SECURITY.md`](../docs/WEBSITE_SECURITY.md).
 
 ---
 
-## 🔒 Sécurité & Performance
-- **Content Security Policy (CSP)** stricte avec règles HTTPS et protections contre le clickjacking (`X-Frame-Options: DENY`).
-- **PWA & Cache CDN** optimisé avec compression Turbopack et streaming Edge.
-- **Formulaires sécurisés** avec rate limiting et protection anti-abus.
+## Liens
+
+- Monorepo : [`../README.md`](../README.md)
+- Branding source : [`../assets/branding/`](../assets/branding/)
+- Docs publiques : [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)

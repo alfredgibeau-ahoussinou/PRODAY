@@ -1,4 +1,4 @@
-# ProDay Présentation
+# Présentation ProDay
 
 Ouvre [`index.html`](./index.html) dans un navigateur :
 
@@ -6,28 +6,30 @@ Ouvre [`index.html`](./index.html) dans un navigateur :
 open presentation/index.html
 ```
 
-Navigation : flèches ← →, Espace, swipe, boutons en bas, dots à gauche. `F` = plein écran.
+Navigation : flèches ← →, Espace, swipe, boutons bas, dots à gauche. `F` = plein écran.
 
 ## En 30 secondes
 
 **CONNECTER. PROGRESSER. RÉVÉLER.**  
-ProDay, c’est l’**infrastructure** du football : six portes d’entrée (Joueur, Club, Coach, Parent, Supporter, Sponsor) dans la même app — pas huit produits.
+ProDay, c’est l’**infrastructure** du football : six portes d’entrée (Joueur, Club, Coach, Parent, Supporter, Sponsor) dans la même app. Pas des produits séparés.
 
-Aujourd’hui : WhatsApp, Excel, Mercato Facebook, trajets bricolés. ProDay centralise. Deux points optionnels à faire retenir selon l’audience :
+Aujourd’hui : WhatsApp, Excel, Mercato Facebook, trajets bricolés. ProDay centralise.
 
-1. **Covoiturage** — Proposer, chercher, réserver ; filtres match / événement.
-2. **Rôles intégrés** (santé, agent, recruteur, organisateur) — pas des apps séparées.
+Points optionnels selon l’audience :
+
+1. **Covoiturage** · proposer, chercher, réserver · filtres match / événement  
+2. **Rôles intégrés** (santé, agent, recruteur, organisateur) · pas des apps séparées
 
 [proday75.fr](https://proday75.fr) · Bêta : [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)  
-App marketing : **1.0.8** · Calendrier TestFlight : voir [docs/BETA_IOS_LAUNCH.md](../docs/BETA_IOS_LAUNCH.md)
+App : **1.0.9** · calendrier TestFlight : [`docs/BETA_IOS_LAUNCH.md`](../docs/BETA_IOS_LAUNCH.md)
 
-## Le pitch (environ 4 à 5 min)
+## Pitch (environ 4 à 5 min)
 
-### 1. Le problème
+### 1. Problème
 
-Convocs WhatsApp, Excel, Mercato Facebook, trajets bricolés. Temps perdu, peu de visibilité, recrutement difficile.
+Convocs WhatsApp, Excel, Mercato Facebook, trajets bricolés. Temps perdu, peu de visibilité.
 
-### 2. La solution
+### 2. Solution
 
 Une app + [proday75.fr](https://proday75.fr) : carrière, club, coach, parent, supporter, sponsor. IA limitée aux highlights de séance. Pas de métriques d’audience inventées.
 
@@ -39,8 +41,8 @@ Une app + [proday75.fr](https://proday75.fr) : carrière, club, coach, parent, s
 | **Club** | Équipes, licenciés, tournois |
 | **Coach** | Forme, tactique, convocations |
 | **Parent** | Agenda, messages, trajets |
-| **Supporter** | Tribune gratuite |
-| **Sponsor** | Activations & impact |
+| **Supporter** | Tribune |
+| **Sponsor** | Activations et impact |
 
 ### 4. Confiance
 
@@ -48,12 +50,11 @@ Joueurs et supporters : accès rapide. Coach, agent, recruteur, praticien, club 
 
 ### 5. Bêta
 
-Liste d’attente : [proday75.fr/beta/inscription](https://proday75.fr/beta/inscription)  
-TestFlight / APK selon calendrier opérateur (docs bêta).
+[proday75.fr/beta/inscription](https://proday75.fr/beta/inscription) · TestFlight / APK selon calendrier opérateur.
 
 ### 6. Technique (bref)
 
-Expo / React Native, Next.js, Firebase, IA Mistral (highlights). Données réelles en prod. Version app **1.0.8**.
+Expo / React Native, Next.js, Firebase. Version app **1.0.9**.
 
 ## Raccourcis
 
@@ -64,4 +65,6 @@ Expo / React Native, Next.js, Firebase, IA Mistral (highlights). Données réell
 | `Home` / `End` | Première / dernière |
 | `F` | Plein écran |
 
-© ProDay 2026 — **CONNECTER. PROGRESSER. RÉVÉLER.**
+Script détaillé : [`SCRIPT_PRESENTATION.md`](./SCRIPT_PRESENTATION.md)
+
+© ProDay 2026 · **CONNECTER. PROGRESSER. RÉVÉLER.**

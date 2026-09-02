@@ -1,7 +1,7 @@
-# Visuels ProDay (showcase UI)
+# Visuels générés (`assets/generated/`)
 
-Images locales pour Discover, Arena, dashboard — sans Firebase Storage.  
-App **1.0.8** · tagline **CONNECTER. PROGRESSER. RÉVÉLER.**
+Images locales pour showcase Discover / Arena (sans Firebase Storage).  
+App **1.0.9** · **CONNECTER. PROGRESSER. RÉVÉLER.**
 
 ## Classique (`classic/`)
 
@@ -19,7 +19,7 @@ App **1.0.8** · tagline **CONNECTER. PROGRESSER. RÉVÉLER.**
 node scripts/download-classic-showcase-images.mjs
 ```
 
-Référence code : `src/content/showcaseAssets.ts`.
+Référence : `src/content/showcaseAssets.ts`.
 
 ## Woman (`woman/`)
 
@@ -29,8 +29,7 @@ Foot féminin (sujets vérifiés) :
 node scripts/download-woman-showcase-images.mjs
 ```
 
-Référence : `src/content/womanShowcaseAssets.ts`.  
-Affichage : `ShowcaseImageBackground` dans Discover / inscription.
+Référence : `src/content/womanShowcaseAssets.ts`.
 
 ## Anciens PNG
 
@@ -38,5 +37,5 @@ Les `*.png` à la racine de `generated/` sont dépréciés.
 
 ## Liens
 
-- Branding store : [../branding/README.md](../branding/README.md)
-- [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) · [proday75.fr](https://proday75.fr)
+- Branding : [`../branding/README.md`](../branding/README.md)  
+- [proday75.fr](https://proday75.fr)

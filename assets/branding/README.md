@@ -1,4 +1,4 @@
-# Logos ProDay — identité officielle
+# Logos ProDay · identité officielle
 
 <div align="center">
 
@@ -11,17 +11,17 @@
 
 </div>
 
-**1 Master Brand** : symbole P incliné + ballon + trait de frappe, wordmark PRODAY (tracking large), tagline officielle ci-dessus.
+**Master brand** : symbole P (ballon + trait de frappe) · wordmark PRODAY · tagline ci-dessus.
 
 | | |
 |--|--|
-| **Couleurs master** | noir `#000` · blanc `#FFF` · or/champagne `#C5A059` |
-| **Version app** | **1.0.8** (`app.json`) |
-| **Site** | [proday75.fr](https://proday75.fr) |
-| **CDN logo** | https://proday75.fr/branding/logo-proday-official.png |
-| **GitHub** | [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) (privé) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) (public) |
+| Couleurs master | noir `#000` · blanc `#FFF` · or `#C5A059` |
+| Version app | **1.0.9** (`app.json`) |
+| Site | [proday75.fr](https://proday75.fr) |
+| CDN logo | https://proday75.fr/branding/logo-proday-official.png |
+| GitHub | [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) (privé) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) (public) |
 
-Régénération app :
+## Régénération
 
 ```bash
 node scripts/generate-app-brand.mjs --lockup [chemin-lockup-officiel.png]
@@ -29,8 +29,8 @@ node scripts/generate-app-brand.mjs --lockup [chemin-lockup-officiel.png]
 npm run branding:app
 ```
 
-Source de vérité lockup : `proday-lockup-official-source.png`.  
-Lockup site / emails : généré dans `website/public/branding/` via `npm run branding:official` (préfixe `website/`).
+Source lockup : `proday-lockup-official-source.png`.  
+Lockup site / emails : `website/public/branding/` via `npm run branding:official` (préfixe `website/`).
 
 ---
 
@@ -38,11 +38,11 @@ Lockup site / emails : généré dans `website/public/branding/` via `npm run br
 
 | Usage | Asset | Contenu |
 |-------|--------|---------|
-| App Store / home / favicon | `proday-app-icon.png` | Lockup officiel (P + PRODAY + tagline sur charcoal) |
-| Adaptive Android | `proday-adaptive-foreground.png` | Marque seule, ~20 % safe padding |
+| App Store / home / favicon | `proday-app-icon.png` | Lockup sur charcoal |
+| Adaptive Android | `proday-adaptive-foreground.png` | Marque · safe padding ~20 % |
 | Notification Android | `proday-notification-icon.png` | Marque blanche transparente |
 | Splash Expo / iOS | `proday-splash.png` | Lockup centré sur `#000` |
-| Auth / brand in-app | `ProDayOfficialLockup` / `ProDayLogo` | Composé natif — **pas** le PNG carré store |
+| Auth / brand in-app | composants `ProDayOfficialLockup` / `ProDayLogo` | Composé natif (pas le PNG store) |
 | UI petite | `proday-symbol-*.png` / `ProDaySymbol` | Marque teintée par porte |
 
 | Fichier | Usage |
@@ -53,17 +53,16 @@ Lockup site / emails : généré dans `website/public/branding/` via `npm run br
 | `proday-logo-master-white.png` / `*-black.png` | Lockup badge |
 | `proday-lockup-horizontal-*.png` | Compat horizontal |
 | `proday-symbol-pole-*.png` | Accents par porte |
-| `proday-app-icon.png` · `proday-splash.png` · `proday-adaptive-foreground.png` | Store / splash |
-| `logo-proday-official.png` | Docs, emails, README — peut être le badge carré ; le site publie le lockup horizontal |
+| `logo-proday-official.png` · `logo-proday-lockup-*.png` | Docs, emails, README |
 
 ---
 
 ## Accents par porte
 
-Runtime (source code) : `src/theme/prodayBrand.ts`.
+Tokens runtime : `src/theme/prodayBrand.ts`.
 
-| Porte / rôle | Hex (tokens app) |
-|--------------|------------------|
+| Porte / rôle | Hex |
+|--------------|-----|
 | Master / CTA | `#C5A059` |
 | Joueur | `#FFFFFF` |
 | Coach / Président | `#C5A059` |
@@ -74,6 +73,7 @@ Runtime (source code) : `src/theme/prodayBrand.ts`.
 | Événements | `#F7941D` |
 | Admin | `#A3A3A3` |
 
-Six portes produit : **Joueur · Club · Coach · Parent · Supporter · Sponsor** — pas huit apps séparées.
+Six portes produit : **Joueur · Club · Coach · Parent · Supporter · Sponsor**.  
+Pas des apps séparées.
 
-Composants : `ProDaySymbol` · `ProDayWordmark` · `ProDayLogo` · `ProDayOfficialLockup` (`src/components/branding/`).
+Composants app : `ProDaySymbol` · `ProDayWordmark` · `ProDayLogo` · `ProDayOfficialLockup` (`src/components/branding/`).

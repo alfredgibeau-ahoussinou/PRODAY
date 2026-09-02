@@ -1,33 +1,32 @@
 # Code source site (`website/src/`)
 
-Next.js **16** App Router — [proday75.fr](https://proday75.fr).  
-**CONNECTER. PROGRESSER. RÉVÉLER.** · six portes d’entrée · pas huit produits.
+Next.js **16** App Router pour [proday75.fr](https://proday75.fr).  
+**CONNECTER. PROGRESSER. RÉVÉLER.** · six portes d’entrée · une infrastructure.
 
-## Structure
+## Dossiers
 
 | Dossier | Rôle |
 |---------|------|
-| `app/` | Routes — un dossier ≈ une URL |
-| `components/` | UI (home, portes, demo, pricing, beta, admin…) |
-| `content/` | Copy marketing / légal |
-| `lib/` | `content.ts`, `poles.ts`, API bêta, thèmes |
-| `middleware.ts` | Cookies bêta, garde-fous Edge |
+| `app/` | Pages et API routes (un dossier ≈ une URL) |
+| `components/` | UI (home, portes, bêta, admin, immersive…) |
+| `content/` | Textes marketing et légaux |
+| `lib/` | Contenu structuré, pôles, helpers API |
+| `hooks/` | Hooks React côté site |
 
 ## Routes utiles
 
 | Zone | Exemples |
 |------|----------|
-| Portes | `/joueur`, `/pro-club`, `/coach`, `/parent`, `/supporter`, `/sponsor` |
-| Produit | `/fonctionnalites`, `/ecosysteme`, `/demo`, `/tarifs`, `/roadmap` |
-| Bêta | `/beta/inscription`, `/beta/programme`, `/beta/installer` |
-| API | `app/api/beta/…` |
+| Portes | `/joueur` · `/pro-club` · `/coach` · `/parent` · `/supporter` · `/sponsor` |
+| Produit | `/fonctionnalites` · `/ecosysteme` · `/demo` · `/tarifs` · `/roadmap` |
+| Bêta | `/beta/inscription` · `/beta/programme` · `/beta/installer` |
+| API | `app/api/…` |
 
-Liste & déploiement : [../README.md](../README.md).
+Vue d’ensemble et déploiement : [`../README.md`](../README.md).
 
 ## Liens
 
-- [../README.md](../README.md) — site & Netlify  
-- [../../README.md](../../README.md) — monorepo  
-- [../../docs/WEBSITE_SECURITY.md](../../docs/WEBSITE_SECURITY.md)  
-- [../../docs/BETA_GUIDE.md](../../docs/BETA_GUIDE.md)  
-- [../../assets/branding/README.md](../../assets/branding/README.md)
+- [`../README.md`](../README.md) · site et Netlify  
+- [`../../README.md`](../../README.md) · monorepo  
+- [`../../docs/WEBSITE_SECURITY.md`](../../docs/WEBSITE_SECURITY.md)  
+- [`../../assets/branding/README.md`](../../assets/branding/README.md)
