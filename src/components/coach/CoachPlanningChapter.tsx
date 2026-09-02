@@ -92,6 +92,8 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
   const [remindingRsvp, setRemindingRsvp] = useState(false);
   const [syncDrawerVisible, setSyncDrawerVisible] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [hasSynced, setHasSynced] = useState(false);
+  const [syncedTeamName, setSyncedTeamName] = useState("");
 
   const clubId = profile.profile.club_id;
 
@@ -386,10 +388,38 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
                   Synchronisation en cours...
                 </CoachText>
                 <CoachText variant="caption" muted>
-                  Récupération des matchs officiels
+                  Récupération des données officielles
                 </CoachText>
               </View>
             </View>
+          </View>
+        ) : hasSynced ? (
+          <View style={[styles.bulkReminderBanner, { borderColor: tokens.border, backgroundColor: tokens.surface }]}>
+            <View style={styles.bulkReminderInfo}>
+              <Icon name="checkmark-circle" size={18} color={tokens.accent} />
+              <View style={{ flex: 1 }}>
+                <CoachText variant="section" style={styles.bulkReminderTitle}>
+                  {syncedTeamName || "Championnat lié"}
+                </CoachText>
+                <CoachText variant="caption" muted>
+                  Mise à jour auto. activée
+                </CoachText>
+              </View>
+            </View>
+            <PressableSpring
+              onPress={async () => {
+                setIsSyncing(true);
+                await federationService.triggerSync("fed-123", activeTeamId || "");
+                setIsSyncing(false);
+              }}
+              scaleTo={0.96}
+              haptic
+              style={[styles.bulkReminderBtn, { backgroundColor: tokens.border }]}
+            >
+              <CoachText variant="caption" style={{ color: tokens.foreground, fontWeight: "600" }}>
+                Actualiser
+              </CoachText>
+            </PressableSpring>
           </View>
         ) : (
           <PressableSpring
@@ -504,9 +534,11 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
         visible={syncDrawerVisible}
         onClose={() => setSyncDrawerVisible(false)}
         localTeamId={activeTeamId || ""}
-        onSyncStarted={async () => {
+        onSyncStarted={async (teamName?: string) => {
           setIsSyncing(true);
           await federationService.triggerSync("fed-123", activeTeamId || "");
+          if (teamName) setSyncedTeamName(teamName);
+          setHasSynced(true);
           setIsSyncing(false);
           Alert.alert("Succès", "Vos événements ont été importés avec succès !");
         }}

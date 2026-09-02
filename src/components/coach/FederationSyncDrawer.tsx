@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
   KeyboardAvoidingView,
+  Switch,
   Platform,
 } from 'react-native';
 import { CoachText } from './coachPortalUi';
@@ -20,7 +21,7 @@ import type { FederationTeam } from '../../models/Federation';
 interface FederationSyncDrawerProps {
   visible: boolean;
   onClose: () => void;
-  onSyncStarted: () => void;
+  onSyncStarted: (teamName?: string) => void;
   localTeamId: string;
 }
 
@@ -35,6 +36,7 @@ export function FederationSyncDrawer({
   const [results, setResults] = useState<FederationTeam[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<FederationTeam | null>(null);
+  const [autoSync, setAutoSync] = useState(true);
 
   const handleSearch = async (text: string) => {
     setQuery(text);
@@ -51,7 +53,7 @@ export function FederationSyncDrawer({
   const handleImport = async () => {
     if (!selectedTeam) return;
     onClose();
-    onSyncStarted();
+    onSyncStarted(selectedTeam.name);
   };
 
   return (
@@ -129,6 +131,24 @@ export function FederationSyncDrawer({
               </CoachText>
             )}
           </ScrollView>
+
+          {selectedTeam && (
+            <View style={styles.autoSyncContainer}>
+              <View style={styles.autoSyncText}>
+                <CoachText style={[styles.autoSyncTitle, { color: tokens.foreground }]}>
+                  Synchronisation automatique
+                </CoachText>
+                <CoachText style={[styles.autoSyncDesc, { color: tokens.muted }]}>
+                  Actualiser les scores et reports de matchs chaque semaine.
+                </CoachText>
+              </View>
+              <Switch
+                value={autoSync}
+                onValueChange={setAutoSync}
+                trackColor={{ false: tokens.border, true: tokens.accent }}
+              />
+            </View>
+          )}
 
           <View style={[styles.footer, { borderTopColor: tokens.border }]}>
             <PressableSpring
@@ -230,6 +250,28 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     fontStyle: 'italic',
   },
+  autoSyncContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.05)",
+  },
+  autoSyncText: {
+    flex: 1,
+    paddingRight: spacing.md,
+  },
+  autoSyncTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  autoSyncDesc: {
+    fontSize: 12,
+  },
+
   footer: {
     paddingVertical: spacing.lg,
     borderTopWidth: 1,
