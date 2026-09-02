@@ -17,7 +17,8 @@ const EXPLORE = [
   { href: ROUTES.features, label: "Fonctionnalités" },
   { href: ROUTES.pricing, label: "Tarifs" },
   { href: ROUTES.faq, label: "FAQ" },
-  { href: ROUTES.betaWaitlist, label: "Liste d'attente" },
+  { href: ROUTES.betaWaitlist, label: "Installer (Bêta)" },
+  { href: "mailto:proday.admin@gmail.com", label: "Signaler un problème (Admin)" },
   { href: PARENT_APP_HREF, label: "Espace Parent" },
   { href: ROUTES.trust, label: "Confiance" },
 ] as const;
@@ -54,7 +55,7 @@ export function SiteFooter() {
             href={ROUTES.betaWaitlist}
             className={`bg-accent-gradient inline-flex min-h-12 w-fit items-center justify-center rounded-full px-7 py-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] transition hover:brightness-110 ${isExperimentalBrand() ? "text-black" : "text-white"}`}
           >
-            Rejoindre la bêta
+            Installer (Bêta)
           </Link>
         </div>
 
