@@ -258,7 +258,7 @@ function FixtureRow({
               keyboardType="number-pad"
               maxLength={2}
             />
-            <ProDayText variant="body"> </ProDayText>/ProDayText>
+            <ProDayText variant="body">{" "}</ProDayText>/ProDayText>
             <TextInput
               style={styles.scoreInput}
               value={awayS}
