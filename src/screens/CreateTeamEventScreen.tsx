@@ -58,7 +58,7 @@ const EVENT_TYPES: { id: TeamEventType; label: string }[] = [
   { id: 'training', label: 'Entraînement' },
   { id: 'detection', label: 'Journée détection' },
   { id: 'meeting', label: 'Réunion' },
-  { id: 'friendly', label: 'Convocation match' },
+  { id: 'friendly', label: 'Match' },
   { id: 'other', label: 'Autre' },
 ];
 
@@ -563,8 +563,8 @@ export const CreateTeamEventScreen: React.FC<CreateTeamEventScreenProps> = ({
           </CoachSectionCard>
 
           <CoachSectionCard
-            kicker={t('coach.event.create.infoKicker')}
-            title={t('coach.event.create.infoTitle')}
+            kicker={eventType === 'training' ? "SÉANCE" : eventType === 'friendly' ? "MATCH" : eventType === 'detection' ? "DÉTECTION" : "RÉUNION"}
+            title={eventType === 'training' ? "Détails de l'entraînement" : eventType === 'friendly' ? "Détails du match" : "Détails de l'événement"}
           >
             <CoachSettingsGroup>
               <CoachFormField
