@@ -135,6 +135,39 @@ proday.admin@gmail.com · https://proday75.fr
 
 ---
 
+## Reply Resolution Center (copier-coller)
+
+Coller tel quel dans **Répondre à l’équipe de vérification des apps** (Resolution Center). Texte en anglais (standard App Review).
+
+```
+Hello App Review Team,
+
+Thank you for your message. We apologize for the missing demo credentials.
+
+Sign-in is required. Demo account (also filled in App Review Information for this version):
+
+• Username / email: player.demo@proday.app
+• Password: ProDayDemo2026!
+
+How to access the app:
+1. Open ProDay.
+2. On the universe carousel, select “Pro Day Joueur”.
+3. Sign in with the credentials above.
+4. You will land in the adult player space (Lucas Démo — FC ProDay Démo) with profile, stats, and membership data. No 2FA, OTP, or manual approval.
+
+Other poles (same password ProDayDemo2026!): sign out → return to the carousel → pick the pole → sign in with the matching account (coach.demo@proday.app, club.demo@proday.app, parent.demo@proday.app, supporter.demo@proday.app, part@gmail.com for Sponsor). Full step-by-step notes are in App Review Information → Notes.
+
+In-app purchases / Pro subscriptions are optional and not required to review core features.
+
+We kindly request that you resume review of this build (1.0.9). Please let us know if you need anything else.
+
+Best regards,
+ProDay Team
+proday.admin@gmail.com
+```
+
+---
+
 ## Procédure App Store Connect (rappel)
 
 1. [App Store Connect](https://appstoreconnect.apple.com) → mon app **ProDay** → version en attente / refusée.
@@ -142,8 +175,8 @@ proday.admin@gmail.com · https://proday75.fr
 3. Cocher **Connexion requise** / Sign-in required.
 4. Renseigner utilisateur + mot de passe (tableau en tête de ce doc).
 5. Coller les **Notes pour l’examen**.
-6. Répondre au message Resolution Center si besoin (« Identifiants fournis dans les infos d’examen de cette version »).
-7. **Soumettre de nouveau** pour examen.
+6. Répondre au message Resolution Center avec le texte de la section ci-dessus.
+7. **Soumettre de nouveau** pour examen si la version n’est plus en file (sinon la réponse Resolution Center peut suffire).
 
 ---
 
