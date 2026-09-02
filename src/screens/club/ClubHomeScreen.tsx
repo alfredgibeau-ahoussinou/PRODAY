@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, View, ScrollView, TextInput } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
@@ -15,8 +15,17 @@ export function ClubHomeScreen() {
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
+  const [searchQuery, setSearchQuery] = useState('');
 
   if (!ws.club || !ws.teams) return null;
+
+  
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    const q = searchQuery.toLowerCase();
+    const foundTeams = ws.teams.filter(t => t.name?.toLowerCase().includes(q));
+    return { teams: foundTeams };
+  }, [searchQuery, ws.teams]);
 
   const totalMembers = ws.teams.length * 20;
   const totalEvents = ws.events.length;
@@ -44,10 +53,44 @@ export function ClubHomeScreen() {
             style={[styles.searchInput, { color: tokens.foreground }]}
             placeholder="Rechercher (joueurs, entraîneurs, équipes)..."
             placeholderTextColor={tokens.muted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <PressableSpring onPress={() => setSearchQuery('')}>
+              <Icon name="close" size={20} color={tokens.muted} />
+            </PressableSpring>
+          )}
         </View>
   
-        {/* Header Hero */}
+        {searchResults ? (
+          <View style={styles.searchResults}>
+            {searchResults.teams.length === 0 ? (
+              <ClubText style={{ color: tokens.muted, textAlign: 'center', marginTop: spacing.xl }}>Aucun résultat trouvé.</ClubText>
+            ) : null}
+            
+            {searchResults.teams.length > 0 && (
+              <View style={styles.resultSection}>
+                <ClubText style={[styles.sectionTitle, { color: tokens.foreground }]}>Équipes</ClubText>
+                {searchResults.teams.map(t => (
+                  <PressableSpring 
+                    key={t.id} 
+                    style={[styles.resultItem, { borderColor: tokens.border }]} 
+                    onPress={() => {
+                       shellNav?.setSelectedTeamId?.(t.id);
+                       shellNav?.requestNav('teams');
+                    }}
+                  >
+                    <Icon name="shield" size={20} color={tokens.accent} />
+                    <ClubText style={{ color: tokens.foreground, marginLeft: spacing.sm }}>{t.name}</ClubText>
+                  </PressableSpring>
+                ))}
+              </View>
+            )}
+          </View>
+        ) : (
+          <>
+            {/* Header Hero */}
         <View style={styles.header}>
           <View>
             <ClubText style={[styles.greeting, { color: tokens.muted }]}>
@@ -115,12 +158,17 @@ export function ClubHomeScreen() {
           </ScrollView>
         </View>
 
+        </>
+        )}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  resultSection: { marginTop: spacing.lg },
+  resultItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderBottomWidth: 1 },
+  searchResults: { flex: 1, paddingBottom: 40 },
   searchBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.md, height: 48, borderRadius: radius.pill, borderWidth: 1, marginTop: spacing.md },
   searchInput: { flex: 1, marginLeft: spacing.sm, fontSize: 15 },
   root: { flex: 1 },

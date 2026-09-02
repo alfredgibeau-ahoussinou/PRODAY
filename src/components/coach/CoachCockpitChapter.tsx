@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View, ScrollView, TextInput } from 'react-native';
 import type { CoachChapterCommonProps } from './coachPortalUi';
 import { CoachText } from './coachPortalUi';
@@ -26,7 +26,17 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   const { tokens } = useCoachTheme();
   const tabNav = useTabNavigation();
   const shellNav = useCoachShellNav();
+  const [searchQuery, setSearchQuery] = useState("");
   const { count: unreadMessages } = useUnreadMessageCount();
+
+  
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    const q = searchQuery.toLowerCase();
+    const foundMembers = members.filter(m => m.display_name?.toLowerCase().includes(q));
+    const foundEvents = events.filter(e => e.title?.toLowerCase().includes(q));
+    return { members: foundMembers, events: foundEvents };
+  }, [searchQuery, members, events]);
 
   const nextEvent = events.find(e => new Date(e.starts_at) >= new Date()) || events[events.length - 1];
 
@@ -57,10 +67,53 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             style={[styles.searchInput, { color: tokens.foreground }]}
             placeholder="Rechercher un joueur, un match..."
             placeholderTextColor={tokens.muted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <PressableSpring onPress={() => setSearchQuery('')}>
+              <Icon name="close" size={20} color={tokens.muted} />
+            </PressableSpring>
+          )}
         </View>
   
-        {/* Welcome Section */}
+        {searchResults ? (
+          <View style={styles.searchResults}>
+            {searchResults.members.length === 0 && searchResults.events.length === 0 ? (
+              <CoachText style={{ color: tokens.muted, textAlign: 'center', marginTop: spacing.xl }}>Aucun résultat trouvé.</CoachText>
+            ) : null}
+            
+            {searchResults.members.length > 0 && (
+              <View style={styles.resultSection}>
+                <CoachText style={[styles.sectionTitle, { color: tokens.foreground }]}>Joueurs & Staff</CoachText>
+                {searchResults.members.map(m => (
+                  <PressableSpring key={m.uid} style={[styles.resultItem, { borderColor: tokens.border }]} onPress={() => {}}>
+                    <Icon name="person" size={20} color={tokens.accent} />
+                    <CoachText style={{ color: tokens.foreground, marginLeft: spacing.sm }}>{m.display_name}</CoachText>
+                  </PressableSpring>
+                ))}
+              </View>
+            )}
+
+            {searchResults.events.length > 0 && (
+              <View style={styles.resultSection}>
+                <CoachText style={[styles.sectionTitle, { color: tokens.foreground }]}>Événements</CoachText>
+                {searchResults.events.map(e => (
+                  <PressableSpring 
+                    key={e.id} 
+                    style={[styles.resultItem, { borderColor: tokens.border }]} 
+                    onPress={() => tabNav.openMatchs({ eventId: e.id })}
+                  >
+                    <Icon name="calendar" size={20} color={tokens.accent} />
+                    <CoachText style={{ color: tokens.foreground, marginLeft: spacing.sm }}>{e.title} - {formatCalendarDate(e.starts_at)}</CoachText>
+                  </PressableSpring>
+                ))}
+              </View>
+            )}
+          </View>
+        ) : (
+          <>
+            {/* Welcome Section */}
         <View style={styles.welcomeSection}>
           <CoachText style={[styles.welcomeTitle, { color: tokens.foreground }]}>
             Bonjour Coach {profile?.display_name?.split(" ")[0]},
@@ -149,12 +202,17 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
           </View>
         </View>
 
+        </>
+        )} 
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  resultSection: { marginTop: spacing.lg },
+  resultItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderBottomWidth: 1 },
+  searchResults: { flex: 1 },
   searchBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.md, height: 48, borderRadius: radius.pill, borderWidth: 1, marginBottom: spacing.md },
   searchInput: { flex: 1, marginLeft: spacing.sm, fontSize: 15 },
   root: { flex: 1 },
