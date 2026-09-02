@@ -29,8 +29,8 @@ export function CoachTabBar({ items, activeId, onSelect }: Props) {
   const highlight = primaryTabForCoachNav(activeId);
 
   return (
-    <View style={[styles.root, { paddingBottom: 0 }]}>
-      <View style={[styles.row, { paddingBottom: 0 }]}>
+    <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+      <View style={styles.row}>
         {items.map((item) => {
           const on = item.id === highlight;
           const label = item.shortLabel ?? item.label;
@@ -77,20 +77,11 @@ function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
     root: {
       backgroundColor: tokens.surface,
-      position: 'absolute',
-      bottom: 24,
-      left: 20,
-      right: 20,
-      borderRadius: 36,
-      borderWidth: 1,
-      borderColor: tokens.border,
-      paddingTop: 0,
-      zIndex: 100,
-      elevation: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.3,
-      shadowRadius: 24,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+      paddingTop: 8,
+      flexShrink: 0,
+      zIndex: 20,
     },
     row: {
       flexDirection: 'row',
@@ -103,19 +94,12 @@ function createStyles(tokens: CoachThemeTokens) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 4,
-      minHeight: 64,
+      minHeight: 48,
       paddingHorizontal: 2,
-      paddingTop: 4,
-      paddingBottom: 8,
       position: 'relative',
     },
     indicator: {
-      position: 'absolute',
-      bottom: 6,
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: tokens.accent,
+      display: 'none',
     },
     iconWrap: { position: 'relative' },
     aiDot: {
