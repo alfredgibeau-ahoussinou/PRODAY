@@ -44,6 +44,9 @@ import {
   filterTrainingsForTeam,
   teamPlayerUids,
 } from '../../utils/coachTeamTheme';
+import { FederationSyncDrawer } from "./FederationSyncDrawer";
+import { federationService } from "../../services/federation.service";
+import { ActivityIndicator } from "react-native";
 import { CoachTeamSwitcher } from './CoachTeamSwitcher';
 import { TrainingRosterPreview } from './CoachTrainingTeamRoster';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
@@ -87,6 +90,8 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
   const canManage = userCanManageConvocations(profile, { clubCoversCoach });
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [remindingRsvp, setRemindingRsvp] = useState(false);
+  const [syncDrawerVisible, setSyncDrawerVisible] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const clubId = profile.profile.club_id;
 
@@ -371,6 +376,43 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
       <CoachChapterScroll>
         <View style={styles.teamSwitcherWrap}>
           <CoachTeamSwitcher />
+
+        {isSyncing ? (
+          <View style={[styles.bulkReminderBanner, { borderColor: tokens.accent }]}>
+            <View style={styles.bulkReminderInfo}>
+              <ActivityIndicator size="small" color={tokens.accent} />
+              <View style={{ flex: 1 }}>
+                <CoachText variant="section" style={styles.bulkReminderTitle}>
+                  Synchronisation en cours...
+                </CoachText>
+                <CoachText variant="caption" muted>
+                  Récupération des matchs officiels
+                </CoachText>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <PressableSpring
+            onPress={() => setSyncDrawerVisible(true)}
+            scaleTo={0.96}
+            haptic
+            style={styles.syncBtnBanner}
+          >
+            <View style={styles.bulkReminderInfo}>
+              <Icon name="calendar" size={18} color={tokens.foreground} />
+              <View style={{ flex: 1 }}>
+                <CoachText variant="section" style={styles.bulkReminderTitle}>
+                  Synchroniser les rencontres
+                </CoachText>
+                <CoachText variant="caption" muted>
+                  Récupérez vos matchs officiels (FFF, etc.)
+                </CoachText>
+              </View>
+            </View>
+            <Icon name="chevron-forward" size={16} color={tokens.muted} />
+          </PressableSpring>
+        )}
+
         </View>
 
         {/* Bannière Relance Groupée en 1 clic */}
@@ -457,6 +499,19 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
             ) : null}
           </>
         )}
+
+      <FederationSyncDrawer
+        visible={syncDrawerVisible}
+        onClose={() => setSyncDrawerVisible(false)}
+        localTeamId={activeTeamId || ""}
+        onSyncStarted={async () => {
+          setIsSyncing(true);
+          await federationService.triggerSync("fed-123", activeTeamId || "");
+          setIsSyncing(false);
+          Alert.alert("Succès", "Vos événements ont été importés avec succès !");
+        }}
+      />
+
       </CoachChapterScroll>
     </CoachPane>
   );
@@ -508,6 +563,19 @@ const createStyles = (tokens: CoachThemeTokens) =>
       fontWeight: '700',
       fontSize: 12,
     },
+    syncBtnBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+      padding: spacing.sm,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: spacing.sm,
+    },
+
     bulkReminderBanner: {
       flexDirection: 'row',
       alignItems: 'center',
