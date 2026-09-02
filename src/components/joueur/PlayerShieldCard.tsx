@@ -3,8 +3,8 @@ import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-n
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion/PressableSpring';
-import { FUT18_TIER_THEME } from '../../theme/fut18PremiumPalette';
-import Svg, { Path } from 'react-native-svg';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { Icon } from '../ui/Icon';
 
 export type PlayerShieldCardStats = {
   matches?: number | null;
@@ -45,52 +45,15 @@ function positionShort(pos: string | undefined | null): string | null {
   return pos.slice(0, 3).toUpperCase();
 }
 
-function StatGrid({
-  stats,
-  ink,
-}: {
-  stats: Array<{ l: string; v: string | number }>;
-  ink: string;
-}) {
+function GlassStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <View style={statStyles.grid}>
-      {stats.map((s, idx) => (
-        <View key={idx} style={statStyles.row}>
-          <ProDayText variant="caption" style={[statStyles.value, { color: ink }]}>
-            {s.v}
-          </ProDayText>
-          <ProDayText variant="caption" style={[statStyles.label, { color: ink }]}>
-            {s.l}
-          </ProDayText>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-// Composant SVG de la forme de la carte FUT
-function ShieldMask({ width, height, children }: { width: number; height: number; children: React.ReactNode }) {
-  // Shape proportion: width 100, height 140
-  // Top horizontal line, top right curves down slightly, straight sides, bottom curves inward to a point.
-  const w = width;
-  const h = height;
-  const path = `M0 12 Q ${w*0.5} -5, ${w} 12 L ${w} ${h*0.75} Q ${w*0.5} ${h*1.05}, 0 ${h*0.75} Z`;
-  const innerPath = `M4 15 Q ${w*0.5} -2, ${w-4} 15 L ${w-4} ${h*0.74} Q ${w*0.5} ${h*1.01}, 4 ${h*0.74} Z`;
-
-  return (
-    <View style={{ width, height }}>
-      {/* Background Frame */}
-      <View style={StyleSheet.absoluteFill}>
-         <Svg width={w} height={h}>
-            <LinearGradient
-              colors={FUT18_TIER_THEME.gold.frame}
-              style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            />
-            {/* We draw the shape with standard Views to avoid complex SVG clipping if possible, but actually let's use standard masking or just simple borders with the FUT style */}
-         </Svg>
-      </View>
+    <View style={styles.glassStat}>
+      <ProDayText variant="section" style={styles.statValue}>
+        {value}
+      </ProDayText>
+      <ProDayText variant="caption" style={styles.statLabel}>
+        {label}
+      </ProDayText>
     </View>
   );
 }
@@ -102,133 +65,93 @@ export function PlayerShieldCard({
   clubName,
   clubLogoUrl,
   stats,
-  width = 240,
+  width = 280,
   onPress,
   style,
 }: PlayerShieldCardProps) {
-  const height = Math.round(width * 1.5);
-  const pos = positionShort(position) || 'BU';
-  
-  // Theme Gold 
-  const theme = FUT18_TIER_THEME.gold;
-  const ink = theme.ink;
+  // Ratio plus moderne et élancé (1.35 ou 1.4)
+  const height = Math.round(width * 1.35);
+  const pos = positionShort(position) || 'PRO';
   
   const ratingValue = stats?.rating != null ? Math.round(stats.rating * 10) : 85;
-
-  const cardStats = [
-    { l: 'MAT', v: stats?.matches || 0 },
-    { l: 'BUT', v: stats?.goals || 0 },
-    { l: 'PAS', v: stats?.assists || 0 },
-    { l: 'NOT', v: stats?.notes ? stats.notes.toFixed(1) : '—' },
-    { l: 'G+A', v: (stats?.goals || 0) + (stats?.assists || 0) },
-    { l: 'PHY', v: ratingValue - 3 },
-  ];
-
-  // Le but ici est de recréer de manière bcp plus convaincante le design de la carte.
-  // Notamment la découpe en biseau (shield) via des borders/border-radius pour coller au vrai style
-  // et enlever l'aspect de boîte jaune.
+  const matches = stats?.matches || 0;
+  const ratingNote = stats?.notes ? stats.notes.toFixed(1) : '—';
+  const ga = (stats?.goals || 0) + (stats?.assists || 0);
 
   const content = (
     <View style={[styles.cardContainer, { width, height }, style]}>
-      {/* Container principal de la carte (Fond or/jaune) */}
-      <View style={chrome.wrapper}>
-        
-        {/* Le dégradé principal du cadre (Frame) */}
-        <LinearGradient 
-          colors={['#E5C370', '#8D6E2E', '#F6E294']}
+      {/* Background Image full cover */}
+      {photoUrl ? (
+        <Image source={{ uri: photoUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      ) : (
+        <Image 
+          source={require('../../../assets/generated/player-profile-showcase.png')} 
           style={StyleSheet.absoluteFill} 
-          start={{ x: 0.1, y: 0 }} 
-          end={{ x: 0.9, y: 1 }} 
+          resizeMode="cover" 
         />
+      )}
+
+      {/* Modern gradient overlays to ensure text readability */}
+      <LinearGradient
+        colors={['rgba(15, 15, 20, 0.7)', 'transparent', 'transparent']}
+        style={StyleSheet.absoluteFill}
+        locations={[0, 0.3, 1]}
+      />
+      <LinearGradient
+        colors={['transparent', 'rgba(15, 15, 20, 0.6)', 'rgba(15, 15, 20, 1)']}
+        style={StyleSheet.absoluteFill}
+        locations={[0.4, 0.75, 1]}
+      />
+
+      {/* Inner Content Padding */}
+      <View style={styles.innerContent}>
         
-        {/* Face interne */}
-        <View style={chrome.innerFace}>
-          <LinearGradient
-            colors={['#493916', '#1E170A']}
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-          />
-          {/* Rayons du fond façon FUT */}
-          <LinearGradient
-            colors={['rgba(255, 230, 150, 0.15)', 'transparent']}
-            style={StyleSheet.absoluteFill}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-          />
-
-          <View style={styles.contentCol}>
-            {/* En-tête (Note, Pos, Photo) */}
-            <View style={styles.topRow}>
-              {/* Colonne Note OVR + Info */}
-              <View style={styles.ratingCol}>
-                <ProDayText variant="section" style={[styles.ovr, { color: '#E8D293' }]}>
-                  {ratingValue}
-                </ProDayText>
-                <ProDayText variant="caption" style={[styles.pos, { color: '#C8B06C' }]}>
-                  {pos}
-                </ProDayText>
-                
-                <View style={styles.dividerXSM} />
-
-                {/* Nation (Drapeau) */}
-                <View style={styles.flagIcon} />
-                
-                <View style={styles.dividerXSM} />
-
-                {/* Club */}
-                <View style={styles.clubIcon}>
-                  {clubLogoUrl ? (
-                    <Image source={{ uri: clubLogoUrl }} style={styles.clubLogoImg} />
-                  ) : (
-                    <View style={styles.clubFallback} />
-                  )}
-                </View>
-              </View>
-
-              {/* Photo du joueur */}
-              <View style={styles.photoWrap}>
-                {photoUrl ? (
-                  <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="contain" />
-                ) : (
-                  <Image source={require('../../../assets/generated/player-profile-showcase.png')} style={styles.photo} resizeMode="contain" />
-                )}
-                <LinearGradient
-                  colors={['transparent', 'rgba(30, 23, 10, 0.8)', '#1E170A']}
-                  style={styles.photoFade}
-                  locations={[0.6, 0.9, 1]}
-                />
-              </View>
-            </View>
-
-            {/* Nom du Joueur */}
-            <View style={nameStyles.plate}>
-              <ProDayText variant="body" style={[nameStyles.text, { color: '#E8D293' }]} numberOfLines={1}>
-                {displayName}
-              </ProDayText>
-              <View style={[nameStyles.line, { backgroundColor: '#C8B06C' }]} />
-            </View>
-            
-            {/* Grille de stats */}
-            <View style={styles.statsContainer}>
-              <StatGrid stats={cardStats.slice(0, 3)} ink="#E8D293" />
-              <View style={[styles.statDivider, { backgroundColor: '#C8B06C' }]} />
-              <StatGrid stats={cardStats.slice(3, 6)} ink="#E8D293" />
-            </View>
+        {/* TOP BAR: Glass badges */}
+        <View style={styles.topBar}>
+          <View style={styles.glassBadge}>
+            <ProDayText variant="section" style={styles.ovrText}>{ratingValue}</ProDayText>
+            <View style={styles.badgeDivider} />
+            <ProDayText variant="caption" style={styles.posText}>{pos}</ProDayText>
+          </View>
+          
+          <View style={styles.glassBadgeCircle}>
+            {clubLogoUrl ? (
+              <Image source={{ uri: clubLogoUrl }} style={styles.clubLogoImg} />
+            ) : (
+              <Icon name="shield" size={14} color="#FFF" variant="outline" />
+            )}
           </View>
         </View>
-      </View>
 
-      {/* Shapes SVG pour couper le bas en pointe */}
-      <View style={styles.shieldCuts} pointerEvents="none">
-         <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-           {/* Masque le coin bas-gauche */}
-           <Path d="M 0,100 L 0,85 L 50,105 Z" fill="#121218" />
-           {/* Masque le coin bas-droite */}
-           <Path d="M 100,100 L 100,85 L 50,105 Z" fill="#121218" />
-         </Svg>
-      </View>
+        <View style={styles.spacer} />
 
+        {/* BOTTOM SECTION: Info & Stats */}
+        <View style={styles.bottomSection}>
+          
+          <View style={styles.nameContainer}>
+            <ProDayText variant="title" style={styles.nameText} numberOfLines={1}>
+              {displayName}
+            </ProDayText>
+            <ProDayText variant="caption" style={styles.clubName} numberOfLines={1}>
+              {clubName || 'Agent Libre'}
+            </ProDayText>
+          </View>
+
+          {/* Glass Panel Stats */}
+          <View style={styles.glassPanel}>
+            <GlassStat label="Matchs" value={matches} />
+            <View style={styles.panelDivider} />
+            <GlassStat label="Note" value={ratingNote} />
+            <View style={styles.panelDivider} />
+            <GlassStat label="G+A" value={ga} />
+          </View>
+
+        </View>
+
+      </View>
+      
+      {/* Subtle border overlay to emphasize the rounded corners */}
+      <View style={styles.borderOverlay} pointerEvents="none" />
     </View>
   );
 
@@ -242,182 +165,126 @@ export function PlayerShieldCard({
   return content;
 }
 
-const chrome = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 6,
-    padding: 3,
-    backgroundColor: '#1E170A', // Fond noir derrière le dégradé
-    overflow: 'hidden',
-  },
-  innerFace: {
-    flex: 1,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-});
-
-const nameStyles = StyleSheet.create({
-  plate: {
-    alignItems: 'center',
-    zIndex: 10,
-    marginTop: -8, // Remonter légèrement le nom sur l'image
-  },
-  text: {
-    fontFamily: 'RobotoCondensed-Bold',
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontSize: 22,
-    textAlign: 'center',
-  },
-  line: {
-    height: 1,
-    width: '85%',
-    marginTop: 2,
-    opacity: 0.6,
-  },
-});
-
-const statStyles = StyleSheet.create({
-  grid: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    width: '100%',
-  },
-  label: {
-    opacity: 0.9,
-    fontSize: 12,
-    fontWeight: '500',
-    fontFamily: 'RobotoCondensed-Regular',
-    width: 26,
-  },
-  value: {
-    fontSize: 16,
-    fontWeight: '900',
-    fontFamily: 'RobotoCondensed-Bold',
-    width: 22,
-    textAlign: 'right',
-  },
-});
-
 const styles = StyleSheet.create({
   cardContainer: {
-    shadowColor: '#F6E294',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 15,
-    backgroundColor: 'transparent',
-    overflow: 'visible',
+    borderRadius: 32,
+    backgroundColor: '#0F0F14',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    elevation: 20,
   },
-  shieldCuts: {
+  borderOverlay: {
     ...StyleSheet.absoluteFillObject,
-    zIndex: 20, // Par dessus la carte
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  contentCol: { 
+  innerContent: {
     flex: 1,
-    paddingBottom: 15,
-    paddingTop: 10,
+    padding: 16,
   },
-  topRow: {
-    flexDirection: 'row',
-    flex: 1,
-    zIndex: 5,
-    position: 'relative',
-  },
-  ratingCol: {
-    width: '32%',
-    alignItems: 'center',
-    paddingTop: 10,
-    paddingLeft: 5,
-    zIndex: 10,
-  },
-  ovr: {
-    fontSize: 38,
-    fontWeight: '900',
-    lineHeight: 42,
-    fontFamily: 'RobotoCondensed-Bold',
-  },
-  pos: {
-    fontWeight: '700',
-    fontSize: 14,
-    marginTop: -5,
-    fontFamily: 'RobotoCondensed-Regular',
-  },
-  dividerXSM: {
-    width: '50%',
-    height: 1,
-    backgroundColor: 'rgba(232, 210, 147, 0.3)',
-    marginVertical: 4,
-  },
-  flagIcon: {
-    width: 28,
-    height: 18,
-    backgroundColor: '#fff', // Fake France/Brazil flag could go here
-    opacity: 0.5,
-  },
-  clubIcon: {
-    width: 26,
-    height: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clubLogoImg: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
-  },
-  clubFallback: {
-    width: 24,
-    height: 28,
-    backgroundColor: '#E8D293',
-    opacity: 0.3,
-    borderRadius: 12,
-  },
-  photoWrap: {
-    position: 'absolute',
-    right: -5,
-    bottom: -10, // Le bas de l'image
-    width: '90%',
-    height: '120%', 
-    zIndex: 1,
-  },
-  photo: {
-    width: '100%',
-    height: '100%',
-  },
-  photoFade: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '40%',
-  },
-  statsContainer: {
+  topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 6,
-    paddingHorizontal: 12,
+    alignItems: 'flex-start',
   },
-  statDivider: {
+  glassBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    gap: 8,
+  },
+  ovrText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  badgeDivider: {
     width: 1,
-    height: '75%',
-    opacity: 0.5,
+    height: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  posText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  glassBadgeCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  clubLogoImg: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
+  },
+  spacer: {
+    flex: 1,
+  },
+  bottomSection: {
+    gap: 12,
+  },
+  nameContainer: {
+    gap: 2,
+  },
+  nameText: {
+    color: '#FFF',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  clubName: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  glassPanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  glassStat: {
+    alignItems: 'center',
+    gap: 2,
+    flex: 1,
+  },
+  statValue: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  statLabel: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '600',
+  },
+  panelDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
 });
