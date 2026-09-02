@@ -109,16 +109,34 @@ export function SiteFooter() {
               Explorer
             </p>
             <ul className="mt-5 space-y-3">
-              {EXPLORE.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href === ROUTES.pricing ? pricingHref : l.href}
-                    className="text-sm text-white/60 transition hover:text-[var(--proday-accent-bright)]"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
+              {EXPLORE.map((l) => {
+    const finalHref = l.href === ROUTES.pricing ? pricingHref : l.href;
+    const isExternal = finalHref.startsWith('http') || finalHref.startsWith('mailto:');
+    
+    if (isExternal) {
+      return (
+        <li key={l.href}>
+          <a
+            href={finalHref}
+            className="text-sm text-white/60 transition hover:text-[var(--proday-accent-bright)]"
+          >
+            {l.label}
+          </a>
+        </li>
+      );
+    }
+    
+    return (
+      <li key={l.href}>
+        <Link
+          href={finalHref}
+          className="text-sm text-white/60 transition hover:text-[var(--proday-accent-bright)]"
+        >
+          {l.label}
+        </Link>
+      </li>
+    );
+  })}
             </ul>
           </div>
         </div>

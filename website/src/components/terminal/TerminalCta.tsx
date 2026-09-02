@@ -10,7 +10,6 @@ type TerminalCtaProps = {
   className?: string;
 };
 
-/** Closing cinematic band before the footer. */
 export function TerminalCta({
   title,
   description,
@@ -20,6 +19,9 @@ export function TerminalCta({
   secondaryLabel,
   className = "",
 }: TerminalCtaProps) {
+  const isPrimaryExt = primaryHref.startsWith('mailto:') || primaryHref.startsWith('http');
+  const isSecondaryExt = secondaryHref ? (secondaryHref.startsWith('mailto:') || secondaryHref.startsWith('http')) : false;
+
   return (
     <section
       className={`relative overflow-hidden border-t border-white/10 bg-black px-4 py-24 sm:px-6 sm:py-32 ${className}`}
@@ -48,19 +50,38 @@ export function TerminalCta({
             ) : null}
           </div>
           <div className="flex flex-wrap gap-3 lg:justify-end">
-            <Link
-              href={primaryHref}
-              className="bg-accent-gradient inline-flex min-h-12 items-center justify-center rounded-full px-7 py-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:brightness-110"
-            >
-              {primaryLabel}
-            </Link>
-            {secondaryHref && secondaryLabel ? (
-              <Link
-                href={secondaryHref}
-                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white/70 transition hover:border-white/45 hover:text-[var(--pole-accent,#F5D04A)]"
+            {isPrimaryExt ? (
+              <a
+                href={primaryHref}
+                className="bg-accent-gradient inline-flex min-h-12 items-center justify-center rounded-full px-7 py-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:brightness-110"
               >
-                {secondaryLabel}
+                {primaryLabel}
+              </a>
+            ) : (
+              <Link
+                href={primaryHref}
+                className="bg-accent-gradient inline-flex min-h-12 items-center justify-center rounded-full px-7 py-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:brightness-110"
+              >
+                {primaryLabel}
               </Link>
+            )}
+            
+            {secondaryHref && secondaryLabel ? (
+              isSecondaryExt ? (
+                <a
+                  href={secondaryHref}
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white/70 transition hover:border-white/45 hover:text-[var(--pole-accent,#F5D04A)]"
+                >
+                  {secondaryLabel}
+                </a>
+              ) : (
+                <Link
+                  href={secondaryHref}
+                  className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-7 py-3.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white/70 transition hover:border-white/45 hover:text-[var(--pole-accent,#F5D04A)]"
+                >
+                  {secondaryLabel}
+                </Link>
+              )
             ) : null}
           </div>
         </div>
