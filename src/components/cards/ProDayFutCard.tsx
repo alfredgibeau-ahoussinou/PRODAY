@@ -49,7 +49,8 @@ export const ProDayFutCard: React.FC<Props> = ({ card, width = 220, onAction, on
         scaleTo={0.98}
         haptic
       >
-        <View style={[styles.shell, { shadowColor: theme.frame[1] }]}>
+        {/* Découpe géométrique "Bouclier FIFA" via un masque transparent et LinearGradient */}
+        <View style={styles.cardContainer}>
           <FifaChrome theme={theme} tier={card.tier}>
             <FrontFace card={card} styles={styles} theme={theme} />
           </FifaChrome>
@@ -80,7 +81,6 @@ export const ProDayFutCard: React.FC<Props> = ({ card, width = 220, onAction, on
                   { l: 'MIN', v: card.minutesPlayed },
                 ]}
                 ink={theme.ink}
-                compact={false}
               />
             ) : null}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.actionsRow}>
@@ -118,24 +118,33 @@ function FifaChrome({
 }: {
   children: React.ReactNode;
   theme: (typeof FUT18_TIER_THEME)[ProDayCardTier];
-  tier: string;
+  tier: ProDayCardTier;
 }) {
   return (
-    <LinearGradient colors={theme.frame} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={chrome.frame}>
-      <LinearGradient colors={theme.face} start={{ x: 0.15, y: 0 }} end={{ x: 0.85, y: 1 }} style={chrome.face}>
+    <View style={chrome.wrapper}>
+      {/* Fond du bouclier (Gradient Card) */}
+      <LinearGradient colors={theme.frame} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+      
+      {/* Face interne (Surface) */}
+      <View style={chrome.innerFace}>
         <LinearGradient
-          colors={['rgba(255,255,255,0.14)', 'transparent']}
+          colors={theme.face}
+          style={StyleSheet.absoluteFill}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0.6, y: 0.5 }}
-          style={chrome.shine}
-          pointerEvents="none"
+          end={{ x: 1, y: 1 }}
         />
-        <ProDayText variant="caption" style={[chrome.brand, { color: theme.inkMuted }]}>
-          ProDay · {tier}
-        </ProDayText>
+        {/* Rayons / Effet de Brillance FIFA */}
+        <LinearGradient
+          colors={['rgba(255,255,255,0.4)', 'transparent', 'rgba(255,255,255,0.1)']}
+          style={chrome.shine}
+          locations={[0, 0.4, 1]}
+          start={{ x: -0.5, y: -0.5 }}
+          end={{ x: 1.5, y: 1.5 }}
+        />
+        
         {children}
-      </LinearGradient>
-    </LinearGradient>
+      </View>
+    </View>
   );
 }
 
@@ -157,6 +166,8 @@ function FrontFace({
       { l: 'SHO', v: clampStat(ovr - 6 + card.goals) },
       { l: 'PAS', v: clampStat(ovr - 4 + card.assists) },
       { l: 'DRI', v: clampStat(ovr - 1) },
+      { l: 'DEF', v: clampStat(ovr - 10) },
+      { l: 'PHY', v: clampStat(ovr - 3) },
     ];
     return (
       <View style={styles.col}>
@@ -168,17 +179,19 @@ function FrontFace({
             <ProDayText variant="caption" style={[styles.pos, { color: ink }]}>
               {card.primaryPosition}
             </ProDayText>
-            <ProDayText variant="caption" style={[styles.metaTiny, { color: theme.inkMuted }]}>
-              {card.nationality.slice(0, 3).toUpperCase()}
-            </ProDayText>
-            <ProDayText variant="caption" style={[styles.metaTiny, { color: theme.inkMuted }]} numberOfLines={1}>
-              {card.clubName.slice(0, 8)}
-            </ProDayText>
+            
+            <View style={styles.flagIcon} />
+            <View style={styles.clubIcon} />
           </View>
           <Photo photoUrl={card.photoUrl} styles={styles} />
         </View>
         <NamePlate name={card.lastName} theme={theme} />
-        <StatGrid stats={stats} ink={ink} compact />
+        
+        <View style={styles.statsContainer}>
+          <StatGrid stats={stats.slice(0, 3)} ink={ink} />
+          <View style={[styles.statDivider, { backgroundColor: theme.inkMuted }]} />
+          <StatGrid stats={stats.slice(3, 6)} ink={ink} />
+        </View>
       </View>
     );
   }
@@ -240,9 +253,9 @@ function Photo({
   return (
     <View style={styles.photoWrap}>
       {photoUrl ? (
-        <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
+        <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="contain" />
       ) : (
-        <View style={[styles.photo, styles.photoFallback]} />
+        <Image source={require('../../../assets/images/default-avatar.png')} style={[styles.photo, styles.photoFallback]} resizeMode="contain" />
       )}
     </View>
   );
@@ -256,10 +269,11 @@ function NamePlate({
   theme: (typeof FUT18_TIER_THEME)[ProDayCardTier];
 }) {
   return (
-    <View style={[nameStyles.plate, { backgroundColor: theme.plate, borderColor: theme.rim }]}>
+    <View style={nameStyles.plate}>
       <ProDayText variant="body" style={[nameStyles.text, { color: theme.ink }]} numberOfLines={1}>
         {name}
       </ProDayText>
+      <View style={[nameStyles.line, { backgroundColor: theme.inkMuted }]} />
     </View>
   );
 }
@@ -267,21 +281,19 @@ function NamePlate({
 function StatGrid({
   stats,
   ink,
-  compact,
 }: {
   stats: Array<{ l: string; v: string | number }>;
   ink: string;
-  compact?: boolean;
 }) {
   return (
-    <View style={[statStyles.grid, compact && statStyles.gridCompact]}>
+    <View style={statStyles.grid}>
       {stats.map((s) => (
         <View key={s.l} style={statStyles.row}>
-          <ProDayText variant="caption" style={[statStyles.label, { color: ink }]}>
-            {s.l}
-          </ProDayText>
           <ProDayText variant="caption" style={[statStyles.value, { color: ink }]}>
             {s.v}
+          </ProDayText>
+          <ProDayText variant="caption" style={[statStyles.label, { color: ink }]}>
+            {s.l}
           </ProDayText>
         </View>
       ))}
@@ -290,78 +302,157 @@ function StatGrid({
 }
 
 const chrome = StyleSheet.create({
-  frame: { flex: 1, borderRadius: 14, padding: 3, overflow: 'hidden' },
-  face: { flex: 1, borderRadius: 12, padding: spacing.sm, paddingTop: spacing.md, overflow: 'hidden' },
-  shine: { ...StyleSheet.absoluteFillObject, borderRadius: 12 },
-  brand: {
-    position: 'absolute',
-    top: 4,
-    alignSelf: 'center',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    fontSize: 7,
-    letterSpacing: 1.4,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+  wrapper: {
+    flex: 1,
+    overflow: 'hidden',
+    padding: 3,
+    // Forme de carte bouclier type FIFA (via border radius pour l'instant)
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+  },
+  innerFace: {
+    flex: 1,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    borderBottomLeftRadius: 33,
+    borderBottomRightRadius: 33,
+    paddingHorizontal: 8,
+    paddingTop: 14,
+    paddingBottom: 10,
+    overflow: 'hidden',
+  },
+  shine: {
+    ...StyleSheet.absoluteFillObject,
   },
 });
 
 const nameStyles = StyleSheet.create({
   plate: {
-    marginTop: 6,
-    paddingVertical: 5,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginTop: -8,
+    alignItems: 'center',
+    zIndex: 10,
   },
   text: {
-    textAlign: 'center',
+    fontFamily: 'RobotoCondensed-Bold',
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontSize: 13,
+    letterSpacing: 0.5,
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  line: {
+    height: 1,
+    width: '80%',
+    marginTop: 2,
+    opacity: 0.4,
   },
 });
 
 const statStyles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 6, paddingHorizontal: 2 },
-  gridCompact: { marginTop: 4 },
-  row: {
-    width: '50%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+  grid: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
   },
-  label: { opacity: 0.72, fontSize: 9, fontWeight: '800' },
-  value: { fontSize: 12, fontWeight: '900' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  label: {
+    opacity: 0.8,
+    fontSize: 10,
+    fontWeight: '400',
+    fontFamily: 'RobotoCondensed-Regular',
+  },
+  value: {
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: 'RobotoCondensed-Bold',
+  },
 });
 
 function createStyles(width: number) {
-  const height = Math.round(width * 1.38);
+  const height = Math.round(width * 1.45);
   return StyleSheet.create({
-    shell: {
+    cardContainer: {
       width,
       height,
-      borderRadius: 14,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.28,
-      shadowRadius: 14,
-      elevation: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 15,
+      backgroundColor: 'transparent',
     },
     col: { flex: 1 },
-    topRow: { flex: 1, flexDirection: 'row', gap: 4, minHeight: 0 },
-    ratingCol: { width: 52, alignItems: 'center', paddingTop: 6 },
-    ovr: { fontSize: 32, fontWeight: '900', lineHeight: 34 },
-    pos: { fontWeight: '900', fontSize: 11, letterSpacing: 1, marginTop: 2 },
-    metaTiny: { fontSize: 8, fontWeight: '700', marginTop: 2 },
-    photoWrap: { flex: 1, borderRadius: radius.sm, overflow: 'hidden' },
-    photo: { width: '100%', height: '100%' },
-    photoFallback: { backgroundColor: 'rgba(0,0,0,0.2)' },
+    topRow: {
+      flexDirection: 'row',
+      height: '55%',
+      zIndex: 5,
+    },
+    ratingCol: {
+      width: '35%',
+      alignItems: 'center',
+      paddingTop: 4,
+      gap: 2,
+    },
+    ovr: {
+      fontSize: 34,
+      fontWeight: '900',
+      lineHeight: 38,
+      fontFamily: 'RobotoCondensed-Bold',
+    },
+    pos: {
+      fontWeight: '500',
+      fontSize: 13,
+      marginTop: -4,
+      fontFamily: 'RobotoCondensed-Regular',
+    },
+    flagIcon: {
+      width: 24,
+      height: 16,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      marginTop: 4,
+    },
+    clubIcon: {
+      width: 20,
+      height: 24,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      marginTop: 4,
+    },
+    photoWrap: {
+      width: '75%',
+      height: '110%',
+      position: 'absolute',
+      right: -10,
+      bottom: -15,
+    },
+    photo: {
+      width: '100%',
+      height: '100%',
+    },
+    photoFallback: {
+      opacity: 0.5,
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 6,
+      paddingHorizontal: 8,
+    },
+    statDivider: {
+      width: 1,
+      height: '80%',
+      opacity: 0.3,
+    },
     modalBackdrop: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.72)',
-      justifyContent: 'flex-end',
+      backgroundColor: 'rgba(0,0,0,0.85)',
+      justifyContent: 'center',
       padding: spacing.md,
     },
     modalSheet: {
@@ -371,16 +462,16 @@ function createStyles(width: number) {
       overflow: 'hidden',
       gap: spacing.sm,
     },
-    modalTitle: { color: '#fff', fontWeight: '800', fontSize: 22 },
-    actionsRow: { gap: spacing.sm, paddingVertical: spacing.sm },
+    modalTitle: { color: '#fff', fontWeight: '800', fontSize: 24, textAlign: 'center' },
+    actionsRow: { gap: spacing.sm, paddingVertical: spacing.sm, justifyContent: 'center' },
     actionChip: {
       borderRadius: 999,
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.2)',
       backgroundColor: 'rgba(255,255,255,0.08)',
-      paddingHorizontal: 14,
-      paddingVertical: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
     },
-    actionLabel: { color: '#fff', fontWeight: '700', textTransform: 'uppercase', fontSize: 10 },
+    actionLabel: { color: '#fff', fontWeight: '800', textTransform: 'uppercase', fontSize: 11 },
   });
 }
