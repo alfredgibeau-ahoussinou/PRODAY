@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../ui/ProDayText';
 import { PressableSpring } from '../motion/PressableSpring';
 import { FUT18_TIER_THEME } from '../../theme/fut18PremiumPalette';
-import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import Svg, { Path } from 'react-native-svg';
 
 export type PlayerShieldCardStats = {
   matches?: number | null;
@@ -68,6 +68,33 @@ function StatGrid({
   );
 }
 
+// Composant SVG de la forme de la carte FUT
+function ShieldMask({ width, height, children }: { width: number; height: number; children: React.ReactNode }) {
+  // Shape proportion: width 100, height 140
+  // Top horizontal line, top right curves down slightly, straight sides, bottom curves inward to a point.
+  const w = width;
+  const h = height;
+  const path = `M0 12 Q ${w*0.5} -5, ${w} 12 L ${w} ${h*0.75} Q ${w*0.5} ${h*1.05}, 0 ${h*0.75} Z`;
+  const innerPath = `M4 15 Q ${w*0.5} -2, ${w-4} 15 L ${w-4} ${h*0.74} Q ${w*0.5} ${h*1.01}, 4 ${h*0.74} Z`;
+
+  return (
+    <View style={{ width, height }}>
+      {/* Background Frame */}
+      <View style={StyleSheet.absoluteFill}>
+         <Svg width={w} height={h}>
+            <LinearGradient
+              colors={FUT18_TIER_THEME.gold.frame}
+              style={StyleSheet.absoluteFill}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            {/* We draw the shape with standard Views to avoid complex SVG clipping if possible, but actually let's use standard masking or just simple borders with the FUT style */}
+         </Svg>
+      </View>
+    </View>
+  );
+}
+
 export function PlayerShieldCard({
   displayName,
   position,
@@ -79,10 +106,10 @@ export function PlayerShieldCard({
   onPress,
   style,
 }: PlayerShieldCardProps) {
-  const height = Math.round(width * 1.45);
+  const height = Math.round(width * 1.5);
   const pos = positionShort(position) || 'BU';
   
-  // Choose Gold tier as the default visual for the player profile card to match the premium FIFA look
+  // Theme Gold 
   const theme = FUT18_TIER_THEME.gold;
   const ink = theme.ink;
   
@@ -97,71 +124,117 @@ export function PlayerShieldCard({
     { l: 'PHY', v: ratingValue - 3 },
   ];
 
+  // Le but ici est de recréer de manière bcp plus convaincante le design de la carte.
+  // Notamment la découpe en biseau (shield) via des borders/border-radius pour coller au vrai style
+  // et enlever l'aspect de boîte jaune.
+
   const content = (
     <View style={[styles.cardContainer, { width, height }, style]}>
+      {/* Container principal de la carte (Fond or/jaune) */}
       <View style={chrome.wrapper}>
-        <LinearGradient colors={theme.frame} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
         
+        {/* Le dégradé principal du cadre (Frame) */}
+        <LinearGradient 
+          colors={['#E5C370', '#8D6E2E', '#F6E294']}
+          style={StyleSheet.absoluteFill} 
+          start={{ x: 0.1, y: 0 }} 
+          end={{ x: 0.9, y: 1 }} 
+        />
+        
+        {/* Face interne */}
         <View style={chrome.innerFace}>
           <LinearGradient
-            colors={theme.face}
+            colors={['#493916', '#1E170A']}
             style={StyleSheet.absoluteFill}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            end={{ x: 0, y: 1 }}
           />
+          {/* Rayons du fond façon FUT */}
           <LinearGradient
-            colors={['rgba(255,255,255,0.4)', 'transparent', 'rgba(255,255,255,0.1)']}
-            style={chrome.shine}
-            locations={[0, 0.4, 1]}
-            start={{ x: -0.5, y: -0.5 }}
-            end={{ x: 1.5, y: 1.5 }}
+            colors={['rgba(255, 230, 150, 0.15)', 'transparent']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
           />
-          
-          <View style={styles.col}>
+
+          <View style={styles.contentCol}>
+            {/* En-tête (Note, Pos, Photo) */}
             <View style={styles.topRow}>
+              {/* Colonne Note OVR + Info */}
               <View style={styles.ratingCol}>
-                <ProDayText variant="section" style={[styles.ovr, { color: ink }]}>
+                <ProDayText variant="section" style={[styles.ovr, { color: '#E8D293' }]}>
                   {ratingValue}
                 </ProDayText>
-                <ProDayText variant="caption" style={[styles.pos, { color: ink }]}>
+                <ProDayText variant="caption" style={[styles.pos, { color: '#C8B06C' }]}>
                   {pos}
                 </ProDayText>
                 
+                <View style={styles.dividerXSM} />
+
+                {/* Nation (Drapeau) */}
                 <View style={styles.flagIcon} />
+                
+                <View style={styles.dividerXSM} />
+
+                {/* Club */}
                 <View style={styles.clubIcon}>
-                  {clubLogoUrl && <Image source={{ uri: clubLogoUrl }} style={styles.clubLogoImg} />}
+                  {clubLogoUrl ? (
+                    <Image source={{ uri: clubLogoUrl }} style={styles.clubLogoImg} />
+                  ) : (
+                    <View style={styles.clubFallback} />
+                  )}
                 </View>
               </View>
+
+              {/* Photo du joueur */}
               <View style={styles.photoWrap}>
                 {photoUrl ? (
-                  <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="cover" />
+                  <Image source={{ uri: photoUrl }} style={styles.photo} resizeMode="contain" />
                 ) : (
-                  <View style={[styles.photo, styles.photoFallback]} />
+                  <Image source={require('../../../assets/generated/player-profile-showcase.png')} style={styles.photo} resizeMode="contain" />
                 )}
+                <LinearGradient
+                  colors={['transparent', 'rgba(30, 23, 10, 0.8)', '#1E170A']}
+                  style={styles.photoFade}
+                  locations={[0.6, 0.9, 1]}
+                />
               </View>
             </View>
+
+            {/* Nom du Joueur */}
             <View style={nameStyles.plate}>
-              <ProDayText variant="body" style={[nameStyles.text, { color: ink }]} numberOfLines={1}>
+              <ProDayText variant="body" style={[nameStyles.text, { color: '#E8D293' }]} numberOfLines={1}>
                 {displayName}
               </ProDayText>
-              <View style={[nameStyles.line, { backgroundColor: theme.inkMuted }]} />
+              <View style={[nameStyles.line, { backgroundColor: '#C8B06C' }]} />
             </View>
             
+            {/* Grille de stats */}
             <View style={styles.statsContainer}>
-              <StatGrid stats={cardStats.slice(0, 3)} ink={ink} />
-              <View style={[styles.statDivider, { backgroundColor: theme.inkMuted }]} />
-              <StatGrid stats={cardStats.slice(3, 6)} ink={ink} />
+              <StatGrid stats={cardStats.slice(0, 3)} ink="#E8D293" />
+              <View style={[styles.statDivider, { backgroundColor: '#C8B06C' }]} />
+              <StatGrid stats={cardStats.slice(3, 6)} ink="#E8D293" />
             </View>
           </View>
-
         </View>
       </View>
+
+      {/* Shapes SVG pour couper le bas en pointe */}
+      <View style={styles.shieldCuts} pointerEvents="none">
+         <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+           {/* Masque le coin bas-gauche */}
+           <Path d="M 0,100 L 0,85 L 50,105 Z" fill="#121218" />
+           {/* Masque le coin bas-droite */}
+           <Path d="M 100,100 L 100,85 L 50,105 Z" fill="#121218" />
+         </Svg>
+      </View>
+
     </View>
   );
 
   if (onPress) {
     return (
-      <PressableSpring onPress={onPress} scaleTo={0.98} haptic>
+      <PressableSpring onPress={onPress} scaleTo={0.97} haptic>
         {content}
       </PressableSpring>
     );
@@ -172,48 +245,44 @@ export function PlayerShieldCard({
 const chrome = StyleSheet.create({
   wrapper: {
     flex: 1,
-    overflow: 'hidden',
-    padding: 3,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
+    padding: 3,
+    backgroundColor: '#1E170A', // Fond noir derrière le dégradé
+    overflow: 'hidden',
   },
   innerFace: {
     flex: 1,
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
-    borderBottomLeftRadius: 33,
-    borderBottomRightRadius: 33,
-    paddingHorizontal: 8,
-    paddingTop: 14,
-    paddingBottom: 10,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
     overflow: 'hidden',
-  },
-  shine: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'relative',
   },
 });
 
 const nameStyles = StyleSheet.create({
   plate: {
-    marginTop: -8,
     alignItems: 'center',
     zIndex: 10,
+    marginTop: -8, // Remonter légèrement le nom sur l'image
   },
   text: {
     fontFamily: 'RobotoCondensed-Bold',
     fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    fontSize: 20,
+    letterSpacing: 1,
+    fontSize: 22,
     textAlign: 'center',
   },
   line: {
     height: 1,
     width: '85%',
     marginTop: 2,
-    opacity: 0.4,
+    opacity: 0.6,
   },
 });
 
@@ -221,70 +290,90 @@ const statStyles = StyleSheet.create({
   grid: {
     flex: 1,
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 5,
+    width: '100%',
   },
   label: {
-    opacity: 0.8,
-    fontSize: 11,
-    fontWeight: '400',
+    opacity: 0.9,
+    fontSize: 12,
+    fontWeight: '500',
     fontFamily: 'RobotoCondensed-Regular',
+    width: 26,
   },
   value: {
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '900',
     fontFamily: 'RobotoCondensed-Bold',
+    width: 22,
+    textAlign: 'right',
   },
 });
 
 const styles = StyleSheet.create({
   cardContainer: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowColor: '#F6E294',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
     elevation: 15,
     backgroundColor: 'transparent',
+    overflow: 'visible',
   },
-  col: { flex: 1 },
+  shieldCuts: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 20, // Par dessus la carte
+  },
+  contentCol: { 
+    flex: 1,
+    paddingBottom: 15,
+    paddingTop: 10,
+  },
   topRow: {
     flexDirection: 'row',
-    height: '55%',
+    flex: 1,
     zIndex: 5,
+    position: 'relative',
   },
   ratingCol: {
-    width: '35%',
+    width: '32%',
     alignItems: 'center',
-    paddingTop: 4,
-    gap: 2,
+    paddingTop: 10,
+    paddingLeft: 5,
+    zIndex: 10,
   },
   ovr: {
-    fontSize: 36,
+    fontSize: 38,
     fontWeight: '900',
-    lineHeight: 40,
+    lineHeight: 42,
     fontFamily: 'RobotoCondensed-Bold',
   },
   pos: {
-    fontWeight: '500',
+    fontWeight: '700',
     fontSize: 14,
-    marginTop: -4,
+    marginTop: -5,
     fontFamily: 'RobotoCondensed-Regular',
   },
+  dividerXSM: {
+    width: '50%',
+    height: 1,
+    backgroundColor: 'rgba(232, 210, 147, 0.3)',
+    marginVertical: 4,
+  },
   flagIcon: {
-    width: 26,
+    width: 28,
     height: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginTop: 4,
+    backgroundColor: '#fff', // Fake France/Brazil flag could go here
+    opacity: 0.5,
   },
   clubIcon: {
-    width: 24,
-    height: 28,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginTop: 4,
+    width: 26,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -293,30 +382,42 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'contain',
   },
+  clubFallback: {
+    width: 24,
+    height: 28,
+    backgroundColor: '#E8D293',
+    opacity: 0.3,
+    borderRadius: 12,
+  },
   photoWrap: {
-    width: '75%',
-    height: '110%',
     position: 'absolute',
-    right: -10,
-    bottom: -15,
+    right: -5,
+    bottom: -10, // Le bas de l'image
+    width: '90%',
+    height: '120%', 
+    zIndex: 1,
   },
   photo: {
     width: '100%',
     height: '100%',
   },
-  photoFallback: {
-    opacity: 0.5,
+  photoFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
-    paddingHorizontal: 8,
+    marginTop: 6,
+    paddingHorizontal: 12,
   },
   statDivider: {
     width: 1,
-    height: '80%',
-    opacity: 0.3,
+    height: '75%',
+    opacity: 0.5,
   },
 });
