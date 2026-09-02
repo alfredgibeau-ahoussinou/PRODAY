@@ -53,6 +53,8 @@ export function TerminalCta({
             {isPrimaryExt ? (
               <a
                 href={primaryHref}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-accent-gradient inline-flex min-h-12 items-center justify-center rounded-full px-7 py-3.5 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition hover:brightness-110"
               >
                 {primaryLabel}
