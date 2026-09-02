@@ -273,8 +273,8 @@ export function clampStat(n: number) {
   return Math.max(40, Math.min(99, Math.round(n)));
 }
 
-export function nationCode(n: string) {
-  return n.slice(0, 3).toUpperCase();
+export function nationCode(n: string | undefined | null) {
+  return (n || "FRA").slice(0, 3).toUpperCase();
 }
 
 export function FutBackDetails({
