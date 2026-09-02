@@ -46,6 +46,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import type { AppColors } from '../../theme/universeTheme';
 import { isFunctionsUnavailable } from '../../lib/firebaseFunctions';
 import { aiTrainingService } from '../../services/aiTraining.service';
+import { AiTrainingGeneratorView } from '../../components/training/AiTrainingGeneratorView';
 import type { TrainingPhase, TrainingObjective, TrainingLevel } from '../../models/TrainingSession';
 import {
   INDIVIDUAL_OBJECTIVES,
@@ -388,218 +389,34 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
   if (view === 'ai') {
     return (
       <PushScreenTransition active>
-      <View style={[styles.root, screenRootStyle]}>
-        <ScreenHeader
-          title={aiResult ? 'Programme IA' : 'Entraînement IA'}
-          onBack={() => {
-            if (aiResult) {
-              setAiResult(null);
-            } else {
-              exitSubView();
-            }
-          }}
-        />
-        <ScrollView contentContainerStyle={styles.pad}>
-          {!aiResult ? (
-            <>
-              <ProDayText variant="caption" muted>
-                L'IA génère un programme personnalisé selon tes paramètres.
-              </ProDayText>
-
-              <ProDayText variant="section" style={styles.mt}>Objectif</ProDayText>
-              <View style={styles.row}>
-                {INDIVIDUAL_OBJECTIVES.map((obj) => (
-                  <PressableSpring
-                    key={obj}
-                    style={[
-                      styles.chip,
-                      { borderColor: ui.border },
-                      aiObjective === obj && { backgroundColor: ui.brand },
-                    ]}
-                    onPress={() => setAiObjective(obj)}
-                    scaleTo={0.96}
-                  >
-                    <ProDayText
-                      variant="caption"
-                      inverse={aiObjective === obj}
-                      style={aiObjective !== obj ? { color: ui.textSecondary } : undefined}
-                    >
-                      {TRAINING_OBJECTIVE_LABELS[obj]}
-                    </ProDayText>
-                  </PressableSpring>
-                ))}
-              </View>
-
-              <ProDayText variant="section" style={styles.mt}>Durée</ProDayText>
-              <View style={styles.row}>
-                {INDIVIDUAL_DURATIONS.map((d) => (
-                  <PressableSpring
-                    key={d}
-                    style={[
-                      styles.chip,
-                      { borderColor: ui.border },
-                      aiDuration === d && { backgroundColor: ui.brand },
-                    ]}
-                    onPress={() => setAiDuration(d)}
-                    scaleTo={0.96}
-                  >
-                    <ProDayText
-                      variant="caption"
-                      inverse={aiDuration === d}
-                      style={aiDuration !== d ? { color: ui.textSecondary } : undefined}
-                    >
-                      {d} min
-                    </ProDayText>
-                  </PressableSpring>
-                ))}
-              </View>
-
-              <ProDayText variant="section" style={styles.mt}>Niveau</ProDayText>
-              <View style={styles.row}>
-                {(['beginner', 'intermediate', 'advanced'] as TrainingLevel[]).map((lvl) => (
-                  <PressableSpring
-                    key={lvl}
-                    style={[
-                      styles.chip,
-                      { borderColor: ui.border },
-                      aiLevel === lvl && { backgroundColor: ui.brand },
-                    ]}
-                    onPress={() => setAiLevel(lvl)}
-                    scaleTo={0.96}
-                  >
-                    <ProDayText
-                      variant="caption"
-                      inverse={aiLevel === lvl}
-                      style={aiLevel !== lvl ? { color: ui.textSecondary } : undefined}
-                    >
-                      {TRAINING_LEVEL_LABELS[lvl]}
-                    </ProDayText>
-                  </PressableSpring>
-                ))}
-              </View>
-
-              <ProDayText variant="section" style={styles.mt}>Matériel disponible</ProDayText>
-              <View style={styles.row}>
-                {EQUIPMENT_OPTIONS.map((eq) => (
-                  <PressableSpring
-                    key={eq}
-                    style={[
-                      styles.chip,
-                      { borderColor: ui.border },
-                      aiEquipment.includes(eq) && { backgroundColor: ui.brand },
-                    ]}
-                    onPress={() => toggleEquipment(eq)}
-                    scaleTo={0.96}
-                  >
-                    <ProDayText
-                      variant="caption"
-                      inverse={aiEquipment.includes(eq)}
-                      style={!aiEquipment.includes(eq) ? { color: ui.textSecondary } : undefined}
-                    >
-                      {eq}
-                    </ProDayText>
-                  </PressableSpring>
-                ))}
-              </View>
-
-              <ProDayText variant="section" style={styles.mt}>Partenaire</ProDayText>
-              <View style={styles.row}>
-                {[false, true].map((val) => (
-                  <PressableSpring
-                    key={String(val)}
-                    style={[
-                      styles.chip,
-                      { borderColor: ui.border },
-                      aiPartner === val && { backgroundColor: ui.brand },
-                    ]}
-                    onPress={() => setAiPartner(val)}
-                    scaleTo={0.96}
-                  >
-                    <ProDayText
-                      variant="caption"
-                      inverse={aiPartner === val}
-                      style={aiPartner !== val ? { color: ui.textSecondary } : undefined}
-                    >
-                      {val ? 'Avec quelqu\u2019un' : 'Seul'}
-                    </ProDayText>
-                  </PressableSpring>
-                ))}
-              </View>
-
-              <PressableSpring
-                style={[styles.cta, { backgroundColor: ui.brand, marginTop: spacing.lg }]}
-                onPress={() => void generateAiTraining()}
-                disabled={aiGenerating}
-                scaleTo={0.97}
-                haptic
-              >
-                {aiGenerating ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <ProDayText variant="caption" inverse>
-                    Générer mon programme
-                  </ProDayText>
-                )}
-              </PressableSpring>
-            </>
-          ) : (
-            <>
-              <ProDayText variant="caption" accent>
-                {TRAINING_OBJECTIVE_LABELS[aiObjective]} · {aiDuration} min · {TRAINING_LEVEL_LABELS[aiLevel]}
-              </ProDayText>
-              {aiResult.map((phase, i) => (
-                <ProDaySurface
-                  key={`${phase.name}-${i}`}
-                  variant="module"
-                  style={[styles.card, { borderColor: ui.border }]}
-                >
-                  <ProDayText variant="section">
-                    {phase.label || phaseLabel(phase.name)} · {phase.duration_min} min
-                  </ProDayText>
-                  {phase.exercises.map((ex, j) => (
-                    <View key={`ex-${i}-${j}`} style={{ marginTop: spacing.xs }}>
-                      <ProDayText variant="caption" style={{ fontWeight: '700' }}>
-                        {ex.name}
-                      </ProDayText>
-                      <ProDayText variant="caption" muted>{ex.description}</ProDayText>
-                      {(ex.reps || ex.sets || ex.duration_min) ? (
-                        <ProDayText variant="caption" muted>
-                          {ex.duration_min ? `${ex.duration_min} min` : ''}
-                          {ex.reps ? ` · ${ex.reps} reps` : ''}
-                          {ex.sets ? ` × ${ex.sets} séries` : ''}
-                          {ex.rest_sec ? ` · ${ex.rest_sec}s repos` : ''}
-                        </ProDayText>
-                      ) : null}
-                      {ex.equipment?.length ? (
-                        <ProDayText variant="caption" muted>
-                          Matériel : {ex.equipment.join(', ')}
-                        </ProDayText>
-                      ) : null}
-                      {ex.tips?.map((tip, k) => (
-                        <ProDayText key={`tip-${k}`} variant="caption" accent>
-                          {tip}
-                        </ProDayText>
-                      ))}
-                    </View>
-                  ))}
-                </ProDaySurface>
-              ))}
-              <PressableSpring
-                style={[styles.cta, { backgroundColor: ui.brand }]}
-                onPress={() => {
-                  setAiResult(null);
-                }}
-                scaleTo={0.97}
-                haptic
-              >
-                <ProDayText variant="caption" inverse>
-                  Regénérer
-                </ProDayText>
-              </PressableSpring>
-            </>
-          )}
-        </ScrollView>
-      </View>
+        <View style={[styles.root, screenRootStyle]}>
+          <ScreenHeader
+            title={aiResult ? 'Programme IA' : 'Entraînement IA'}
+            onBack={() => {
+              if (aiResult) {
+                setAiResult(null);
+              } else {
+                exitSubView();
+              }
+            }}
+          />
+          <AiTrainingGeneratorView
+            objective={aiObjective}
+            onObjectiveChange={setAiObjective}
+            duration={aiDuration}
+            onDurationChange={setAiDuration}
+            level={aiLevel}
+            onLevelChange={setAiLevel}
+            equipment={aiEquipment}
+            onToggleEquipment={toggleEquipment}
+            partner={aiPartner}
+            onPartnerChange={setAiPartner}
+            generating={aiGenerating}
+            onGenerate={generateAiTraining}
+            result={aiResult}
+            onReset={() => setAiResult(null)}
+          />
+        </View>
       </PushScreenTransition>
     );
   }
