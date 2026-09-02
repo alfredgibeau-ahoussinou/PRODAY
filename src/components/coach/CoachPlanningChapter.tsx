@@ -409,7 +409,7 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
             <PressableSpring
               onPress={async () => {
                 setIsSyncing(true);
-                await federationService.triggerSync("fed-123", activeTeamId || "");
+                await federationService.triggerSync("fed-club-torcy", "c2", "Équipe 1", () => {});
                 setIsSyncing(false);
               }}
               scaleTo={0.96}
@@ -533,14 +533,9 @@ export const CoachPlanningChapter: React.FC<CoachChapterCommonProps> = ({
       <FederationSyncDrawer
         visible={syncDrawerVisible}
         onClose={() => setSyncDrawerVisible(false)}
-        localTeamId={activeTeamId || ""}
-        onSyncStarted={async (teamName?: string) => {
-          setIsSyncing(true);
-          await federationService.triggerSync("fed-123", activeTeamId || "");
-          if (teamName) setSyncedTeamName(teamName);
+        onSyncComplete={(clubName) => {
+          setSyncedTeamName(clubName);
           setHasSynced(true);
-          setIsSyncing(false);
-          Alert.alert("Succès", "Vos événements ont été importés avec succès !");
         }}
       />
 

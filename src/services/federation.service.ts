@@ -1,58 +1,84 @@
-import type { FederationClub, FederationTeam } from '../models/Federation';
+import type { FederationClub, FederationChampionship, FederationCategory } from '../models/Federation';
 
-const MOCK_TEAMS: FederationTeam[] = [
+const MOCK_CLUBS: FederationClub[] = [
   {
-    id: 'fed-team-1',
-    clubId: 'fed-club-1',
-    name: 'TORCY PARIS VALLEE DE LA MARNE FOOTBALL U.S.',
-    category: 'U16',
-    division: 'D1',
-    poule: 'Poule Unique',
+    id: 'fed-club-torcy',
+    name: 'US TORCY PVM',
+    city: 'Torcy',
+    logoUrl: 'https://placehold.co/100x100/1E3A8A/FFFFFF?text=UST',
   },
   {
-    id: 'fed-team-2',
-    clubId: 'fed-club-1',
-    name: 'TORCY PARIS VALLEE DE LA MARNE FOOTBALL U.S.',
-    category: 'U19',
-    division: 'N2',
-    poule: 'Poule A',
-  },
-  {
-    id: 'fed-team-3',
-    clubId: 'fed-club-2',
-    name: 'PARIS SAINT-GERMAIN FC',
-    category: 'U17',
-    division: 'Nat',
-    poule: 'Poule B',
+    id: 'fed-club-psg',
+    name: 'PARIS SG',
+    city: 'Paris',
+    logoUrl: 'https://placehold.co/100x100/1D4ED8/FFFFFF?text=PSG',
   }
 ];
 
+const MOCK_CHAMPS: FederationChampionship[] = [
+  {
+    id: 'c1',
+    clubId: 'fed-club-torcy',
+    name: 'Régional 1',
+    division: 'R1',
+    poule: 'Poule A',
+    categoryTag: 'Seniors',
+    teamsAvailable: ['Équipe 1', 'Équipe 2'],
+  },
+  {
+    id: 'c2',
+    clubId: 'fed-club-torcy',
+    name: 'U16',
+    division: 'D1',
+    poule: 'Poule Unique',
+    categoryTag: 'Jeunes',
+    teamsAvailable: ['Équipe 1'],
+  },
+  {
+    id: 'c3',
+    clubId: 'fed-club-torcy',
+    name: 'Féminines R2',
+    division: 'R2',
+    poule: 'Poule B',
+    categoryTag: 'Féminines',
+    teamsAvailable: ['Équipe 1'],
+  },
+];
+
 export const federationService = {
-  /**
-   * Simulate searching directly for a club/team string.
-   */
-  async searchTeams(query: string): Promise<FederationTeam[]> {
+  async searchClubs(query: string): Promise<FederationClub[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
         const q = query.toLowerCase();
-        if (!q) {
-          resolve([]);
-          return;
-        }
-        const matches = MOCK_TEAMS.filter((t) => t.name.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
-        resolve(matches);
-      }, 600);
+        if (!q) return resolve([]);
+        resolve(MOCK_CLUBS.filter((c) => c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q)));
+      }, 500);
     });
   },
 
-  /**
-   * Simulate a long-running sync job that dispatches progress events or just takes time.
-   */
-  async triggerSync(federationTeamId: string, localTeamId: string): Promise<void> {
+  async getClubChampionships(clubId: string): Promise<FederationChampionship[]> {
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve();
-      }, 4000);
+        resolve(MOCK_CHAMPS.filter((c) => c.clubId === clubId));
+      }, 400);
+    });
+  },
+
+  async triggerSync(clubId: string, champId: string, teamNum: string, onProgress: (pct: number) => void): Promise<{ importedCount: number; nextMatchStr: string }> {
+    return new Promise((resolve) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 15;
+        if (progress > 100) progress = 100;
+        onProgress(progress);
+        if (progress === 100) {
+          clearInterval(interval);
+          resolve({
+            importedCount: 18,
+            nextMatchStr: 'Dim 12 Nov. • 15h00 vs US Créteil',
+          });
+        }
+      }, 400);
     });
   }
 };
