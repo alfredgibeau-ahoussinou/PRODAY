@@ -454,13 +454,8 @@ export const DEMO_SPONSOR_CARD_GOLD: ProDaySponsorCardData = {
 /** Collection démo : 2 éditions par rôle pour sentir la collection. */
 export const DEMO_CARDS: ProDayCardData[] = [
   DEMO_PLAYER_CARD,
-  DEMO_PLAYER_CARD_ELITE,
   DEMO_COACH_CARD,
-  DEMO_COACH_CARD_GOLD,
   DEMO_CLUB_CARD,
-  DEMO_CLUB_CARD_ELITE,
   DEMO_SUPPORTER_CARD,
-  DEMO_SUPPORTER_CARD_GOLD,
   DEMO_SPONSOR_CARD,
-  DEMO_SPONSOR_CARD_GOLD,
 ];
