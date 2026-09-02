@@ -140,7 +140,14 @@ export function CoachScreenHeader({
       ) : null}
 
       <View style={styles.titleRow}>
-        <CoachText variant="title" style={styles.pageTitle}>
+        {onBack && (
+          <CoachCircleIconButton
+            icon="arrow-back"
+            onPress={onBack}
+            accessibilityLabel="Retour"
+          />
+        )}
+        <CoachText variant="title" style={[styles.pageTitle, onBack && { marginLeft: -8 }]}>
           {title}
         </CoachText>
         {actions && actions.length > 0 ? (
