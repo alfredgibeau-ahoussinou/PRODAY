@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { ProDayText } from '../ui/ProDayText';
+import { Icon } from '../ui/Icon';
 import { useMatchSkinTokens } from './matchCenterUi';
 import { spacing } from '../../theme/designTokens';
 
@@ -13,6 +14,7 @@ interface MatchCalendarCardProps {
   city: string;
   linkLabel: string;
   onPress: () => void;
+  onExportCalendar?: () => void;
 }
 
 export const MatchCalendarCard: React.FC<MatchCalendarCardProps> = ({
@@ -23,6 +25,7 @@ export const MatchCalendarCard: React.FC<MatchCalendarCardProps> = ({
   city,
   linkLabel,
   onPress,
+  onExportCalendar,
 }) => {
   const skin = useMatchSkinTokens();
   const styles = useMemo(() => createStyles(skin), [skin]);
@@ -40,9 +43,25 @@ export const MatchCalendarCard: React.FC<MatchCalendarCardProps> = ({
           <ProDayText variant="caption" style={[styles.kind, { color: skin.accent }]}>
             {kindLabel}
           </ProDayText>
-          <ProDayText variant="caption" style={[styles.date, { color: skin.muted }]}>
-            {dateLabel}
-          </ProDayText>
+          <View style={styles.topRight}>
+            <ProDayText variant="caption" style={[styles.date, { color: skin.muted }]}>
+              {dateLabel}
+            </ProDayText>
+            {onExportCalendar ? (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onExportCalendar();
+                }}
+                hitSlop={8}
+                style={styles.calendarBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Ajouter au calendrier"
+              >
+                <Icon name="calendar" size={14} color={skin.accent} />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
         <ProDayText variant="section" numberOfLines={2} style={[styles.title, { color: skin.foreground }]}>
           {title}
@@ -80,6 +99,15 @@ function createStyles(skin: ReturnType<typeof useMatchSkinTokens>) {
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 8,
+    },
+    topRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    calendarBtn: {
+      padding: 2,
+      borderRadius: 4,
     },
     kind: {
       textTransform: 'uppercase',

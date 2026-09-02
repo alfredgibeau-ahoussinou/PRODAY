@@ -22,6 +22,7 @@ import { useTranslation } from '../../../context/LocaleContext';
 import { spacing } from '../../../theme/designTokens';
 import { MATCH_CHAPTER_PAD } from './matchChapterLayout';
 import { MatchEmptyState, MatchFilterBar, MatchKpiRow, useMatchSkinTokens } from '../matchCenterUi';
+import { calendarExportService } from '../../../services/calendarExport.service';
 
 const scrollProps = {
   showsVerticalScrollIndicator: false,
@@ -198,6 +199,18 @@ export const MatchCalendarChapter: React.FC<MatchCalendarChapterProps> = ({
                   city={item.city}
                   linkLabel={`${calendarLinkLabel(item, t)} →`}
                   onPress={() => onOpenCalendarItem(item)}
+                  onExportCalendar={() => {
+                    const start = item.starts_at ? new Date(item.starts_at) : new Date();
+                    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+                    void calendarExportService.exportEventToCalendar({
+                      id: item.id,
+                      title: item.title,
+                      description: `${item.subtitle} - ProDay Football`,
+                      location: item.city,
+                      startDate: start,
+                      endDate: end,
+                    });
+                  }}
                 />
               </InteractiveListItem>
             ))}
