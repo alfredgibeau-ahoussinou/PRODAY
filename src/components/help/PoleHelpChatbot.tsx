@@ -62,8 +62,8 @@ export const PoleHelpChatbot: React.FC = () => {
 
   return (
     <>
-      {/* Club : FAB premium dans ClubAppShell (plus de chip ballon football-outline). */}
-      {visible && !open && !clubMode ? (
+      {/* Club & Coach : bouton copilote dédié dans leur shell — pas de widget flottant. */}
+      {visible && !open && !clubMode && profile?.role !== 'coach' ? (
         <PoleHelpWidget
           expanded={showBubble}
           teaser={content.bubbleTeaser}
