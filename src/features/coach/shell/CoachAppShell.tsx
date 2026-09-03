@@ -114,8 +114,8 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   } = useTabNavigation();
   const { width } = useWindowDimensions();
   const wide = width >= coachChrome.wideBreakpoint;
-  /** Rail étroit par défaut — le menu élargi envahissait le contenu PC. */
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  /** Menu élargi par défaut pour afficher les labels de navigation. */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { direction, noteNav } = useShellNavDirection(COACH_MOTION_ORDER);
 
