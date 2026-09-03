@@ -94,8 +94,28 @@ Site : https://proday75.fr
 | Catégorie principale | Sports |
 | Catégorie secondaire | Réseaux sociaux ou Productivité |
 | Classification d'âge | 12+ (messagerie, UGC) |
-| URL confidentialité | Politique hébergée (voir `docs/legal/`) |
-| URL support | Site + e-mail support |
+| **URL confidentialité** | **https://proday75.fr/confidentialite** |
+| URL support | https://proday75.fr · proday.admin@gmail.com |
+
+### App Privacy (Nutrition Labels) — à aligner sur l’app
+
+Dans ASC → App Privacy, déclarer **les données collectées** (Linked to User = Yes, Used for Tracking = **No**) :
+
+| Catégorie ASC | Exemples ProDay | Pourquoi |
+|---------------|-----------------|----------|
+| Contact Info | Email, Name, Phone | Compte / profil |
+| Location | Precise + Coarse | Covoiturage (opt-in) |
+| Sensitive Info | Pièces d’identité, diplômes | Vérification coach / staff |
+| Photos or Videos | Avatar, reels, justificatifs | Galerie / vérif |
+| Audio Data | Micro reels / clips | Enregistrement volontaire |
+| Health & Fitness | Pas, sommeil, FC (HealthKit) | État forme (opt-in) |
+| User Content | Messages, fil, Mercato | Fonctionnalités produit |
+| Identifiers | User ID, Device ID | Auth Firebase, push |
+| Purchases | Abonnements StoreKit | IAP |
+| Usage Data | Product Interaction | Analytics produit internes (pas IDFA) |
+
+**Tracking = No** — pas d’ATT / IDFA / publicité cross-app.  
+Manifeste natif : `ios/ProDay/PrivacyInfo.xcprivacy` (+ `expo.ios.privacyManifests` dans `app.json`).
 
 ### Examen Apple — connexion requise (obligatoire)
 
@@ -182,6 +202,8 @@ Dossier : [`assets/marketing/app-store/ipad-13/`](../assets/marketing/app-store/
 Upload : **Médias de l’app** → **Captures d’écran pour iPad** → **13 pouces**.
 
 ### Contenu commun (iPhone + iPad)
+
+**Guideline 2.3.6** : les captures doivent représenter **l’UI réelle** de la build soumise (pas uniquement des slides branding). Les fichiers `08`–`10` (texte / branding sans UI) ne doivent **pas** être les seules captures ; privilégier 01–07 ou des screenshots device (Simulateur / TestFlight) du coach, joueur, club.
 
 Ordre d’upload (01 → 10) :
 

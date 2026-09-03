@@ -135,7 +135,61 @@ proday.admin@gmail.com · https://proday75.fr
 
 ---
 
-## Reply Resolution Center (copier-coller)
+## Reply Resolution Center — refus metadata / software / privacy (2.3.6 · 2.5.1 · 2.5.4 · 5.1.1 · 5.1.2)
+
+Coller tel quel dans **Répondre à l’équipe de vérification des apps** (Resolution Center). Texte en anglais.
+
+```
+Hello App Review Team,
+
+Thank you for reviewing ProDay and for the feedback on guidelines 2.3.6, 2.5.1, 2.5.4, 5.1.1, and 5.1.2.
+
+We have addressed each point as follows:
+
+1) Guideline 2.3.6 — Accurate Metadata
+• App Store screenshots and promotional text have been aligned with the actual current app experience (coach, player, club poles).
+• We no longer rely on branding-only slides as representative screenshots of core functionality.
+• The in-app Privacy Policy and Terms are available from Profile → Settings → Legal (Confidentialité / Conditions), and on the web at https://proday75.fr/confidentialite and https://proday75.fr/cgu.
+
+2) Guidelines 2.5.1 / 2.5.4 — Software Requirements
+• We removed the unused “audio” UIBackgroundModes key. ProDay only plays audio while the app is in the foreground (reels / clips); it does not provide background audio.
+• The remaining background mode is remote-notification only (push notifications).
+• Usage descriptions for Camera, Microphone, Photo Library, Location, Calendar/Reminders, and HealthKit are present and describe real features (reels, identity/diploma verification uploads, carpool meeting points, calendar sync, optional HealthKit fitness read).
+• HealthKit entitlement is declared only for optional read of steps / sleep / resting heart rate; we do not write to Health.
+
+3) Guidelines 5.1.1 / 5.1.2 — Privacy
+• Privacy Policy URL in App Store Connect: https://proday75.fr/confidentialite
+• We do not track users across apps/websites for advertising (no IDFA / ATT). NSPrivacyTracking = false.
+• App Privacy (Nutrition Labels) and the PrivacyInfo.xcprivacy manifest now declare data we collect and link to the user for app functionality, including: Contact Info, Identifiers, Photos/Videos, Audio, User Content, Sensitive Info (identity & diploma verification), Location (carpool, opt-in), Health & Fitness (opt-in HealthKit), Purchases, and Product Interaction.
+• Sensitive documents (coach verification) are collected only after account creation, for verification, and are disclosed in the Privacy Policy and in-app Settings → Verification.
+• At sign-up, users must accept Terms and Privacy, with tappable links to the live policy pages.
+• Data is not sold. Sharing is limited to service providers needed to operate the app (e.g. Firebase hosting/auth/storage, Apple for IAP/push), as described in the Privacy Policy.
+
+Demo account for review (also in App Review Information):
+• Email: player.demo@proday.app
+• Password: ProDayDemo2026!
+• Universe carousel: select “Pro Day Joueur”, then sign in. No 2FA / OTP.
+• Coach verification UI (identity & diplomas): coach.demo@proday.app → “Pro Day Coach” → Profile → Settings.
+
+We kindly request review of the new binary once available (background modes + privacy manifest fixes require a new build). Please let us know if anything else is needed.
+
+Best regards,
+ProDay Team
+proday.admin@gmail.com
+```
+
+### Checklist ASC avant renvoi (privacy + metadata)
+
+- [ ] **Privacy Policy URL** = `https://proday75.fr/confidentialite` (App Information)
+- [ ] **App Privacy** mis à jour (tableau ci-dessus dans [APP_STORE_LISTING.md](./APP_STORE_LISTING.md)) — Tracking = **No**
+- [ ] Captures iPhone 6,5" + iPad 13" = UI réelle (pas seulement slides 08–10 branding)
+- [ ] Description FR alignée sur [APP_STORE_LISTING.md](./APP_STORE_LISTING.md) (pas de promesses roadmap non livrées)
+- [ ] Connexion requise + notes démo (section plus haut)
+- [ ] **Nouvelle build TestFlight** soumise (retrait `audio` background + PrivacyInfo) puis « Soumettre pour examen »
+
+---
+
+## Reply Resolution Center — identifiants manquants (historique)
 
 Coller tel quel dans **Répondre à l’équipe de vérification des apps** (Resolution Center). Texte en anglais (standard App Review).
 

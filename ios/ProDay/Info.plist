@@ -64,16 +64,21 @@
     <key>NSCameraUsageDescription</key>
     <string>ProDay utilise la caméra pour filmer vos reels, capturer des clips match et la vérification d’identité.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>ProDay utilise votre position pour organiser les points de rendez-vous et de prise en charge en covoiturage.</string>
+    <string>ProDay utilise votre position pour les points de rendez-vous covoiturage et pour partager votre position en direct avec les passagers pendant un trajet en cours.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>ProDay utilise le micro pour filmer vos reels et les clips vidéo.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>ProDay accède à vos photos pour votre avatar et votre galerie joueur.</string>
+    <string>ProDay accède à vos photos pour votre avatar, votre galerie, vos reels et l’envoi de justificatifs (identité, diplômes).</string>
+    <key>NSHealthShareUsageDescription</key>
+    <string>ProDay lit vos pas, sommeil et fréquence cardiaque pour affiner votre état santé sportif.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>ProDay n'écrit pas de données dans Apple Santé.</string>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>RCTNewArchEnabled</key>
     <true/>
     <key>UIBackgroundModes</key>
     <array>
-      <string>audio</string>
       <string>remote-notification</string>
     </array>
     <key>UILaunchStoryboardName</key>

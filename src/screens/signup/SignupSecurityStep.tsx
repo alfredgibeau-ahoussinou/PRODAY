@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { Linking, Text, StyleSheet, View } from 'react-native';
 import { Icon } from '../../components/ui/Icon';
 import { getPasswordStrength, SIGNUP_PASSWORD_MIN } from '../../utils/signupValidation';
 import { AuthTextField } from '../../components/auth/AuthTextField';
@@ -18,6 +18,7 @@ import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { spacing } from '../../theme/designTokens';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import type { AppColors } from '../../theme/universeTheme';
+import { legalWebUrl } from '../../content/legalDocuments';
 
 interface SignupSecurityStepProps {
   form: SignupForm;
@@ -143,8 +144,21 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
             ) : null}
           </View>
           <Text style={styles.termsText}>
-            Je certifie l’exactitude des informations et j’accepte les conditions d’utilisation
-            ProDay (CGU et confidentialité).
+            Je certifie l’exactitude des informations et j’accepte les{' '}
+            <Text
+              style={styles.termsLink}
+              onPress={() => void Linking.openURL(legalWebUrl('terms'))}
+            >
+              CGU
+            </Text>
+            {' '}et la{' '}
+            <Text
+              style={styles.termsLink}
+              onPress={() => void Linking.openURL(legalWebUrl('privacy'))}
+            >
+              politique de confidentialité
+            </Text>
+            {' '}ProDay.
           </Text>
         </SignupPressable>
         {form.fieldErrors.acceptedTerms ? (
@@ -190,6 +204,10 @@ function createStyles(c: AppColors) {
       fontSize: 12,
       lineHeight: 18,
       color: c.textSecondary,
+    },
+    termsLink: {
+      color: c.brand,
+      textDecorationLine: 'underline',
     },
     termsError: {
       color: c.error,
