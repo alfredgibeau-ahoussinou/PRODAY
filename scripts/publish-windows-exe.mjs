@@ -12,8 +12,8 @@ import { getStorage } from "firebase-admin/storage";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 
-const LOCAL_EXE = resolve(root, "desktop/dist/ProDay Setup 1.0.0.exe");
-const STORAGE_PATH = "beta/ProDay-Setup-1.0.0.exe";
+const LOCAL_ZIP = resolve(root, "desktop/dist/ProDay-Windows-PC.zip");
+const STORAGE_PATH = "beta/ProDay-Windows-PC.zip";
 
 function findServiceAccount() {
   const firebaseDir = resolve(root, "firebase");
@@ -35,8 +35,8 @@ function loadBucket() {
 }
 
 async function main() {
-  if (!existsSync(LOCAL_EXE)) {
-    console.error("❌ Fichier .exe introuvable. Lancez d'abord : npm run desktop:build:win");
+  if (!existsSync(LOCAL_ZIP)) {
+    console.error("❌ Fichier ZIP introuvable.");
     process.exit(1);
   }
 
@@ -57,14 +57,14 @@ async function main() {
   const bucket = getStorage().bucket();
   const file = bucket.file(STORAGE_PATH);
 
-  console.log(`\n📤 Upload Windows Setup EXE → gs://${bucketName}/${STORAGE_PATH}\n`);
+  console.log(`\n📤 Upload Windows PC ZIP (contenant l'app ProDay.exe) → gs://${bucketName}/${STORAGE_PATH}\n`);
 
   await new Promise((res, rej) => {
-    createReadStream(LOCAL_EXE)
+    createReadStream(LOCAL_ZIP)
       .pipe(
         file.createWriteStream({
           metadata: {
-            contentType: "application/vnd.microsoft.portable-executable",
+            contentType: "application/zip",
             metadata: {
               version: "1.0.0",
               uploadedAt: new Date().toISOString(),

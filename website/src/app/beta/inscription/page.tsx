@@ -17,7 +17,7 @@ export default async function BetaWaitlistPage() {
   const visuals = getRoleVisuals("beta");
   const testFlightUrl = getTestFlightUrl() || BETA_TESTFLIGHT_URL || "https://testflight.apple.com/join/zgch5bQd";
   const apkUrl = BETA_APK_URL || "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/proday-beta.apk";
-  const winExeUrl = "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/ProDay-Setup-1.0.0.exe";
+  const winExeUrl = "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/ProDay-Windows-PC.zip";
 
   return (
     <TerminalPage>
@@ -65,7 +65,7 @@ export default async function BetaWaitlistPage() {
                 className="flex items-center justify-center gap-3 rounded-xl border border-cyan-500/30 bg-cyan-950/20 text-cyan-200 px-6 py-3.5 font-semibold hover:bg-cyan-900/30 transition-colors"
               >
                 <Monitor size={20} className="text-cyan-400" />
-                <span>Télécharger pour PC (Windows .exe)</span>
+                <span>Télécharger pour PC (Windows ProDay.exe)</span>
               </a>
             </div>
             
@@ -85,6 +85,7 @@ export default async function BetaWaitlistPage() {
               <div className="rounded-xl border border-white/5 bg-black/40 p-3.5 text-xs text-white/50 space-y-1.5">
                 <p><strong>iOS :</strong> Nécessite l'application gratuite TestFlight d'Apple pour installer la bêta.</p>
                 <p><strong>Android :</strong> Pensez également à autoriser l'installation depuis votre navigateur si demandé (<em>« Sources inconnues »</em>).</p>
+                <p><strong>Windows PC :</strong> Téléchargez le dossier ZIP, extrayez-le et lancez directement <strong>ProDay.exe</strong>.</p>
               </div>
             </div>
           </div>
