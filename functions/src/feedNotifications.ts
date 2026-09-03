@@ -13,11 +13,28 @@ async function notifyUsersWithRole(
 ): Promise<number> {
   let pushes = 0;
   for (const role of roles) {
-    const snap = await db.collection('users').where('role', '==', role).limit(PUSH_CAP).get();
-    for (const doc of snap.docs) {
-      if (doc.id === excludeUid) continue;
-      const sent = await sendPushToUser(doc.id, payload);
-      if (sent) pushes += 1;
+    let lastDoc: admin.firestore.DocumentSnapshot | null = null;
+    let hasMore = true;
+    while (hasMore) {
+      let query = db.collection('users').where('role', '==', role).limit(500);
+      if (lastDoc) {
+        query = query.startAfter(lastDoc);
+      }
+      const snap = await query.get();
+      if (snap.empty) {
+        hasMore = false;
+        break;
+      }
+      lastDoc = snap.docs[snap.docs.length - 1];
+      
+      const promises = snap.docs.map(async (doc) => {
+        if (doc.id === excludeUid) return 0;
+        const sent = await sendPushToUser(doc.id, payload);
+        return sent ? 1 : 0;
+      });
+      
+      const results = await Promise.all(promises);
+      pushes += results.reduce((acc, v) => acc + v, 0);
     }
   }
   return pushes;

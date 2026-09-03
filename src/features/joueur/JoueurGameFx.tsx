@@ -379,6 +379,8 @@ const styles = StyleSheet.create({
     top: 10,
     left: 14,
     right: 14,
+    maxWidth: 860,
+    alignSelf: 'center',
     zIndex: 5,
     flexDirection: 'row',
     alignItems: 'center',

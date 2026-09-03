@@ -127,7 +127,7 @@ export function resolveMainTabScreen(
   if (isProProductLine(line ?? 'pro_player') && role === 'player') {
     return PRO_PLAYER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
-  if (role === 'coach') {
+  if (role === 'coach' || role === 'organizer') {
     return COACH_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   if (

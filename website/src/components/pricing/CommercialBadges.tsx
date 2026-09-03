@@ -1,7 +1,5 @@
 "use client";
 
-import { ShieldCheck, Gift } from "lucide-react";
-
 type CommercialBadgesProps = {
   className?: string;
   size?: "sm" | "md" | "lg";
@@ -10,9 +8,9 @@ type CommercialBadgesProps = {
 };
 
 /**
- * Badges commerciaux ultra-visibles :
- * 1. "Sans engagement" (Vert émeraude vibrant #10B981 / #00E676)
- * 2. "Parrainage possible" (Or / Ambre brillant #F59E0B / #FBBF24)
+ * Mentions commerciales intégrées élégamment en texte pur coloré :
+ * 1. "Sans engagement" (Vert émeraude vif #10B981)
+ * 2. "Parrainage possible" (Or / Ambre chaud #F59E0B)
  */
 export function CommercialBadges({
   className = "",
@@ -21,49 +19,37 @@ export function CommercialBadges({
   showDescriptions = false,
 }: CommercialBadgesProps) {
   const alignClasses = {
-    left: "justify-start",
+    left: "justify-start text-left",
     center: "justify-center text-center",
-    right: "justify-end",
+    right: "justify-end text-right",
   }[align];
 
-  const badgeSize = {
-    sm: "px-3 py-1 text-xs gap-1.5",
-    md: "px-4 py-1.5 text-xs sm:text-sm gap-2",
-    lg: "px-5 py-2.5 text-sm sm:text-base gap-2.5",
+  const textSize = {
+    sm: "text-xs gap-x-3 gap-y-1",
+    md: "text-sm sm:text-base gap-x-4 gap-y-1.5",
+    lg: "text-base sm:text-lg gap-x-6 gap-y-2",
   }[size];
 
   return (
-    <div className={`flex flex-wrap items-center gap-3 ${alignClasses} ${className}`}>
-      {/* Badge 1 : Sans engagement (Vert Émeraude Néon Ultra-Visible) */}
-      <div className="group relative inline-flex items-center">
-        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 opacity-70 blur-sm transition group-hover:opacity-100" />
-        <div
-          className={`relative inline-flex items-center rounded-full border-2 border-emerald-400 bg-[#02241b] font-bold uppercase tracking-wider text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.45)] backdrop-blur-md transition hover:scale-105 hover:border-emerald-300 hover:text-white ${badgeSize}`}
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-          </span>
-          <ShieldCheck size={size === "lg" ? 18 : size === "sm" ? 14 : 16} className="text-emerald-400" />
-          <span>Sans engagement</span>
-        </div>
-      </div>
+    <div className={`flex flex-wrap items-center ${alignClasses} ${textSize} ${className}`}>
+      {/* 1. Sans engagement (Texte Vert Émeraude Vif) */}
+      <span className="inline-flex items-center gap-1.5 font-bold tracking-tight text-emerald-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        Sans engagement
+      </span>
 
-      {/* Badge 2 : Parrainage possible (Or / Ambre Flamboyant Ultra-Visible) */}
-      <div className="group relative inline-flex items-center">
-        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-300 opacity-70 blur-sm transition group-hover:opacity-100" />
-        <div
-          className={`relative inline-flex items-center rounded-full border-2 border-amber-400 bg-[#2d1d03] font-bold uppercase tracking-wider text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.45)] backdrop-blur-md transition hover:scale-105 hover:border-amber-300 hover:text-white ${badgeSize}`}
-        >
-          <Gift size={size === "lg" ? 18 : size === "sm" ? 14 : 16} className="text-amber-400" />
-          <span>Parrainage possible</span>
-        </div>
-      </div>
+      <span className="text-white/30">·</span>
+
+      {/* 2. Parrainage possible (Texte Or / Ambre Vif) */}
+      <span className="inline-flex items-center gap-1.5 font-bold tracking-tight text-amber-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+        Parrainage possible
+      </span>
 
       {showDescriptions && (
-        <p className="w-full text-xs text-white/70">
-          Résiliation à tout moment en 1 clic · Code parrainage dispo dès l’inscription
-        </p>
+        <span className="text-xs font-normal text-white/50 sm:ml-2">
+          (résiliation libre · code actif dès l’inscription)
+        </span>
       )}
     </div>
   );

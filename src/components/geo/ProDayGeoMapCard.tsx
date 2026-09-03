@@ -123,7 +123,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
         height={GEO_MAP_HEIGHT}
         overlay={mapOverlay}
         accent={accent}
-        onMarkerPress={(id) => {
+        onMarkerPress={(id: string) => {
           const marker = visibleMarkers.find((m) => m.id === id);
           if (marker) onMarkerPress(marker);
         }}

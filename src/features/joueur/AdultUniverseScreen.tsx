@@ -353,6 +353,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl + 8,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
     gap: spacing.md,
+    maxWidth: 860,
+    width: '100%',
+    alignSelf: 'center',
   },
   switchLabel: {
     fontWeight: '600',

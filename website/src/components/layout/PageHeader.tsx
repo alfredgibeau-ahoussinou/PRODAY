@@ -122,12 +122,13 @@ export function PageHeader({
           <p>{description}</p>
           {(description.toLowerCase().includes("sans engagement") ||
             description.toLowerCase().includes("parrainage")) && (
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-[#02241b] px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
+              <span className="inline-flex items-center gap-1.5 font-bold text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 Sans engagement
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-[#2d1d03] px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+              <span className="text-white/30">·</span>
+              <span className="inline-flex items-center gap-1.5 font-bold text-amber-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                 Parrainage possible
               </span>

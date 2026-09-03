@@ -598,6 +598,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl + 26,
     paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl,
     gap: 14,
+    maxWidth: 860,
+    width: '100%',
+    alignSelf: 'center',
   },
   mapFrame: {
     alignSelf: 'center',

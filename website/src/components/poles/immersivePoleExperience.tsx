@@ -110,16 +110,17 @@ export function ImmersivePoleHero({
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.45, delay: 0.32, ease }}
-            className="mt-6 flex flex-wrap items-center gap-3"
+            className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs sm:text-sm font-medium"
           >
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-950/60 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)] backdrop-blur-sm">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="inline-flex items-center gap-1.5 font-bold text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               Sans engagement
-            </div>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-950/60 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)] backdrop-blur-sm">
-              <span className="h-2 w-2 rounded-full bg-amber-400" />
+            </span>
+            <span className="text-white/30">·</span>
+            <span className="inline-flex items-center gap-1.5 font-bold text-amber-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
               Parrainage disponible
-            </div>
+            </span>
           </motion.div>
         ) : null}
       </div>
