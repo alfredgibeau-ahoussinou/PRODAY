@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isPlatformAdminEmail } from '../config/admin';
 import { isFeminineAppSpace } from '../models/AppSpace';
 import {
   normalizeStoredProductLine,
@@ -53,11 +54,13 @@ export function getUserProductLine(user: User): ProductLineId {
 export function getProductLineMismatchMessage(
   userLine: ProductLineId,
   activeLine: ProductLineId,
+  role: UserRole = 'player',
 ): string {
-  if (productLinesEquivalent(userLine, activeLine, 'player')) {
-    return 'Ce compte n’est pas compatible avec cette version de l’application.';
+  // Même ligne « joueur » mais rôle / segment incompatible → message générique.
+  if (productLinesEquivalent(userLine, activeLine, role)) {
+    return 'Ce compte n’est pas compatible avec cet espace. Choisissez le bon pôle au lancement, ou utilisez l’accès Fondation VIP pour un compte administrateur.';
   }
-  return `Ce compte a été créé sur ${productLineLabel(canonicalizeUserProductLine(userLine, 'player'))}. Choisissez « ${productLineLabel(canonicalizeActiveProductLine(activeLine, 'player'))} » au lancement pour vous connecter.`;
+  return `Ce compte a été créé sur ${productLineLabel(canonicalizeUserProductLine(userLine, role))}. Choisissez « ${productLineLabel(canonicalizeActiveProductLine(activeLine, role))} » au lancement pour vous connecter.`;
 }
 
 export class ProductLineMismatchError extends Error {
@@ -66,8 +69,9 @@ export class ProductLineMismatchError extends Error {
   constructor(
     public readonly userLine: ProductLineId,
     public readonly activeLine: ProductLineId,
+    role: UserRole = 'player',
   ) {
-    super(getProductLineMismatchMessage(userLine, activeLine));
+    super(getProductLineMismatchMessage(userLine, activeLine, role));
     this.name = 'ProductLineMismatchError';
   }
 }
@@ -93,7 +97,18 @@ export function getEffectiveRoleForProductLine(
   return user.role;
 }
 
+/**
+ * Comptes fondateurs / admin plateforme : pas de gate pôle.
+ * L’accès Control Center reste protégé par le claim Firebase `admin`
+ * (voir AdminAppShell / useIsAdmin). Aligné avec App.tsx qui ignore déjà
+ * le forçage product_line pour ces emails.
+ */
+export function isProductLineGateExempt(email: string | null | undefined): boolean {
+  return isPlatformAdminEmail(email);
+}
+
 export function profileMatchesActiveLine(user: User, activeLine: ProductLineId): boolean {
+  if (isProductLineGateExempt(user.email)) return true;
   if (isPartnerPoleTestAccount(user.email)) {
     return activeLine === 'sponsor' || isProFamilyLine(activeLine);
   }
@@ -119,9 +134,10 @@ export function assertProfileMatchesActiveLine(
   user: User,
   activeLine: ProductLineId,
 ): void {
+  if (isProductLineGateExempt(user.email)) return;
   if (isPartnerPoleTestAccount(user.email)) {
     if (activeLine !== 'sponsor' && !isProFamilyLine(activeLine)) {
-      throw new ProductLineMismatchError('sponsor', activeLine);
+      throw new ProductLineMismatchError('sponsor', activeLine, user.role);
     }
     return;
   }
@@ -129,10 +145,9 @@ export function assertProfileMatchesActiveLine(
 
   if (!profileMatchesActiveLine(user, activeLine)) {
     const userLine = getUserProductLine(user);
-    throw new ProductLineMismatchError(userLine, activeLine);
+    throw new ProductLineMismatchError(userLine, activeLine, user.role);
   }
 }
-
 /** Profil adapté à l’univers actif (comptes test multi-pôles). */
 export function getSessionProfile(user: User, activeLine: ProductLineId): User {
   if (isPartnerPoleTestAccount(user.email)) {

@@ -3,6 +3,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 import {
+  assertProfileMatchesActiveLine,
   getEffectiveRoleForProductLine,
   getProductLineMismatchMessage,
   getSessionProfile,
@@ -144,6 +145,30 @@ describe('productLineAccess', () => {
     expect(profileMatchesActiveLine(womanPlayer, 'woman')).toBe(true);
     expect(getProductLineMismatchMessage('amateur', 'sante')).toMatch(/Pro Day/);
     expect(getProductLineMismatchMessage('amateur', 'pro_club')).toMatch(/Club|Amateur|Joueur/);
+  });
+
+  it('autorise le compte fondateur admin hors de son pôle stocké', () => {
+    const founder = {
+      ...baseUser,
+      email: 'proday.admin@gmail.com',
+      role: 'coach' as const,
+      product_line: 'pro_staff' as const,
+    } as User;
+    expect(profileMatchesActiveLine(founder, 'amateur')).toBe(true);
+    expect(profileMatchesActiveLine(founder, 'sponsor')).toBe(true);
+    expect(profileMatchesActiveLine(founder, 'pro_club')).toBe(true);
+    expect(() => assertProfileMatchesActiveLine(founder, 'amateur')).not.toThrow();
+  });
+
+  it('autorise le second email admin plateforme', () => {
+    const yohan = {
+      ...baseUser,
+      email: 'semedoyohan1@gmail.com',
+      role: 'player' as const,
+      product_line: 'amateur' as const,
+    } as User;
+    expect(profileMatchesActiveLine(yohan, 'pro_staff')).toBe(true);
+    expect(() => assertProfileMatchesActiveLine(yohan, 'sante')).not.toThrow();
   });
 
   it('refuse le compte joueur standard hors de son pôle', () => {
