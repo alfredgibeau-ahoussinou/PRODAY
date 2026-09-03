@@ -2,7 +2,7 @@
 
 import { MotionConfig } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { Suspense, lazy } from "react";
+import { Suspense } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteVisitTracker } from "@/components/analytics/SiteVisitTracker";
@@ -12,12 +12,6 @@ import { PageTransition } from "./PageTransition";
 import { ScrollToHash } from "./ScrollToHash";
 import { SupportModal } from "@/components/SupportModal";
 import { MASTER_ACCENT_CSS_VARS, poleAccentCssVars } from "@/lib/brandColors";
-
-const SiteHelpChatbot = lazy(() =>
-  import("@/components/SiteHelpChatbot").then((mod) => ({
-    default: mod.SiteHelpChatbot,
-  })),
-);
 
 const joueurShellVars = poleAccentCssVars("joueur");
 
@@ -91,9 +85,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <Suspense fallback={null}>
             <SupportModal />
           </Suspense>
-          <Suspense fallback={null}>
-            <SiteHelpChatbot />
-          </Suspense>
+
           <BackToTop />
         </div>
       </div>
