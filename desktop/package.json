@@ -1,0 +1,58 @@
+{
+  "name": "proday-desktop",
+  "version": "1.0.0",
+  "description": "ProDay - Application PC Windows & Mac",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64",
+    "build:mac": "electron-builder --mac",
+    "build:all": "electron-builder -mw"
+  },
+  "author": "ProDay",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "electron-serve": "^2.1.1"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "fr.proday.desktop",
+    "productName": "ProDay",
+    "copyright": "Copyright © 2026 ProDay",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ProDay"
+    },
+    "mac": {
+      "category": "public.app-category.sports",
+      "target": ["dmg", "zip"],
+      "icon": "assets/icon.png"
+    }
+  }
+}

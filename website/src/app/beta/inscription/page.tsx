@@ -4,7 +4,7 @@ import { TerminalCta, TerminalPage } from "@/components/terminal";
 import { getRoleVisuals } from "@/lib/roleVisuals";
 import { ROUTES } from "@/lib/routes";
 import { BETA_APK_URL, BETA_TESTFLIGHT_URL } from "@/lib/betaContent";
-import { Apple, Play } from "lucide-react";
+import { Apple, Play, Monitor } from "lucide-react";
 import { getTestFlightUrl } from "@/lib/betaIosLaunch";
 
 export const metadata: Metadata = {
@@ -17,6 +17,7 @@ export default async function BetaWaitlistPage() {
   const visuals = getRoleVisuals("beta");
   const testFlightUrl = getTestFlightUrl() || BETA_TESTFLIGHT_URL || "https://testflight.apple.com/join/zgch5bQd";
   const apkUrl = BETA_APK_URL || "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/proday-beta.apk";
+  const winExeUrl = "https://storage.googleapis.com/proday-155b0.firebasestorage.app/beta/ProDay-Setup-1.0.0.exe";
 
   return (
     <TerminalPage>
@@ -33,15 +34,15 @@ export default async function BetaWaitlistPage() {
           <div className="border border-white/10 bg-[#111114] p-6 sm:p-8 rounded-2xl text-center">
             <h2 className="text-2xl font-display font-bold text-white mb-4">La Bêta est ouverte</h2>
             <p className="text-white/70 text-sm mb-8">
-              Vous n'avez plus besoin de vous inscrire sur liste d'attente. Téléchargez directement l'application pour votre appareil ci-dessous.
+              Téléchargez directement l'application ProDay pour votre appareil ci-dessous.
             </p>
             
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3.5">
               <a
                 href={testFlightUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 rounded-xl bg-white text-black px-6 py-4 font-semibold hover:bg-white/90 transition-colors"
+                className="flex items-center justify-center gap-3 rounded-xl bg-white text-black px-6 py-3.5 font-semibold hover:bg-white/90 transition-colors"
               >
                 <Apple size={20} />
                 <span>Installer via TestFlight (iOS)</span>
@@ -51,10 +52,20 @@ export default async function BetaWaitlistPage() {
                 href={apkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-white/5 text-white px-6 py-4 font-semibold hover:bg-white/10 transition-colors"
+                className="flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-white/5 text-white px-6 py-3.5 font-semibold hover:bg-white/10 transition-colors"
               >
                 <Play size={20} className="text-[#00E676]" />
                 <span>Télécharger l'APK (Android)</span>
+              </a>
+
+              <a
+                href={winExeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 rounded-xl border border-cyan-500/30 bg-cyan-950/20 text-cyan-200 px-6 py-3.5 font-semibold hover:bg-cyan-900/30 transition-colors"
+              >
+                <Monitor size={20} className="text-cyan-400" />
+                <span>Télécharger pour PC (Windows .exe)</span>
               </a>
             </div>
             
