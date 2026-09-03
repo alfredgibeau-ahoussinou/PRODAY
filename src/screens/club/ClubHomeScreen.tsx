@@ -1,201 +1,276 @@
-import React, { useMemo, useState } from 'react';
-import { StyleSheet, View, ScrollView, TextInput } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
+import { useClubLogoUpload } from '../../features/club/hooks/useClubLogoUpload';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
-import { ClubText } from '../../features/club/ui/clubUi';
-import { Icon } from '../../components/ui/Icon';
-import { PressableSpring } from '../../components/motion';
-import { radius, spacing } from '../../theme/designTokens';
-import { greetingForHour } from '../../features/club/ui/clubHomeAccueilModel';
+import {
+  ClubChapterScroll,
+  ClubEmptyState,
+  ClubLoading,
+} from '../../features/club/ui/clubUi';
+import {
+  ClubHomeIdentityHeader,
+  ClubHomeNextEventRow,
+  ClubHomeTeamsRail,
+  ClubHomeTodoSection,
+} from '../../features/club/ui/ClubHomeAccueil';
+import {
+  buildClubHomeTeamCards,
+  formatClubHomeMetaLine,
+  greetingForHour,
+  resolveClubHomePriority,
+  resolveClubPresenceAlert,
+  resolvePriorityLocationLabel,
+  resolvePriorityTeamLabel,
+} from '../../features/club/ui/clubHomeAccueilModel';
+import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
+import { getPendingInviteeUids } from '../../models/TeamEvent';
+import { PushScreenTransition } from '../../components/motion';
+import { CreateClubScreen } from '../CreateClubScreen';
+import { ShellAccountSection } from '../../components/shell/ShellAccountSection';
 
+const MAX_TODO_ITEMS = 4;
+const MAX_TEAM_CARDS = 4;
+
+/**
+ * Accueil Club (Ball Club / Pôle Club) — crest · priorité jour J · équipes · à-faire.
+ * Ne jamais `return null` : loading / empty / contenu (prod sinon = écran noir).
+ */
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
   const shellNav = useClubShellNav();
-  const { tokens } = useClubTheme();
+  const { tokens, logoUrl } = useClubTheme();
   const ws = useClubWorkspace();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+  const onLogoUploaded = useCallback(() => {
+    void ws.refresh();
+  }, [ws.refresh]);
+  const logo = useClubLogoUpload(onLogoUploaded);
+  const styles = useMemo(() => createStyles(tokens), [tokens]);
 
-  if (!ws.club || !ws.teams) return null;
+  const openTeam = useCallback(
+    (teamId: string) => {
+      shellNav?.setSelectedTeamId?.(teamId);
+      shellNav?.requestNav('teams');
+    },
+    [shellNav],
+  );
 
-  
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return null;
-    const q = searchQuery.toLowerCase();
-    const foundTeams = ws.teams.filter(t => t.name?.toLowerCase().includes(q));
-    return { teams: foundTeams };
-  }, [searchQuery, ws.teams]);
+  const priority = useMemo(
+    () =>
+      resolveClubHomePriority({
+        todayMatches: ws.todayMatches,
+        todayTrainings: ws.todayTrainings,
+        events: ws.events,
+      }),
+    [ws.todayMatches, ws.todayTrainings, ws.events],
+  );
+  const presence = useMemo(() => resolveClubPresenceAlert(ws.events), [ws.events]);
+  const teamLabel = useMemo(
+    () => resolvePriorityTeamLabel(priority, ws.teamRows),
+    [priority, ws.teamRows],
+  );
+  const locationLabel = useMemo(() => resolvePriorityLocationLabel(priority), [priority]);
 
-  const totalMembers = ws.teams.length * 20;
-  const totalEvents = ws.events.length;
-  
-  const stats = [
-    { id: 'teams', value: ws.teams.length, label: 'Équipes', icon: 'shield-half' },
-    { id: 'members', value: totalMembers, label: 'Licenciés', icon: 'people' },
-    { id: 'events', value: totalEvents, label: 'Événements', icon: 'calendar' },
-  ] as const;
+  const priorityPending =
+    priority.kind !== 'calm' ? getPendingInviteeUids(priority.event).length : 0;
+  const showConvocationsCta = priorityPending > 0;
+  const showPresenceTodo = presence.pendingCount > 0 && priorityPending === 0;
 
-  const todos = [
-    { id: 'licenses', title: '5 licences en attente', subtitle: 'Documents à valider', color: 'tomato' },
-    { id: 'convocations', title: 'Relancer convocations', subtitle: 'Pour le match U16 de dimanche', color: tokens.accent },
-  ];
+  const todoItems = useMemo(() => {
+    return [
+      ...(showPresenceTodo
+        ? [
+            {
+              id: 'presence',
+              icon: 'people' as const,
+              label:
+                presence.pendingCount > 1
+                  ? `${presence.pendingCount} réponses de présence en attente`
+                  : '1 réponse de présence en attente',
+              hint: presence.eventLabel?.trim() || 'Relancer les convocations',
+              onPress: () => shellNav?.requestNav(presence.nav),
+            },
+          ]
+        : []),
+      ...(!logoUrl && logo.canEdit
+        ? [
+            {
+              id: 'logo',
+              icon: 'image' as const,
+              label: 'Ajouter le logo du club',
+              hint: 'Affiché sur l’Accueil et la vitrine',
+              onPress: () => void logo.pickAndUpload(),
+            },
+          ]
+        : []),
+      ...(ws.teamsWithoutCoach > 0
+        ? [
+            {
+              id: 'no-coach',
+              icon: 'school' as const,
+              label:
+                ws.teamsWithoutCoach > 1
+                  ? `${ws.teamsWithoutCoach} équipes sans coach`
+                  : '1 équipe sans coach',
+              hint: 'Affecter un coach depuis Coachs',
+              onPress: () => shellNav?.requestNav('coaches'),
+            },
+          ]
+        : []),
+      ...(ws.pendingMemberships > 0
+        ? [
+            {
+              id: 'pending',
+              icon: 'checkmark-circle' as const,
+              label: 'Valider les adhésions',
+              hint: `${ws.pendingMemberships} en attente`,
+              onPress: () => shellNav?.requestNav('players'),
+            },
+          ]
+        : []),
+      ...(ws.teams.length === 0
+        ? [
+            {
+              id: 'first-team',
+              icon: 'add' as const,
+              label: 'Créer la première équipe',
+              hint: 'U7 → Seniors',
+              onPress: () => shellNav?.openCreate?.('player') ?? shellNav?.requestNav('teams'),
+            },
+          ]
+        : []),
+    ].slice(0, MAX_TODO_ITEMS);
+  }, [
+    showPresenceTodo,
+    presence.pendingCount,
+    presence.eventLabel,
+    presence.nav,
+    logoUrl,
+    logo,
+    ws.teamsWithoutCoach,
+    ws.pendingMemberships,
+    ws.teams.length,
+    shellNav,
+  ]);
+
+  const teamCards = useMemo(
+    () => buildClubHomeTeamCards(ws.teamRows, MAX_TEAM_CARDS, openTeam),
+    [ws.teamRows, openTeam],
+  );
+
+  if (ws.loading) return <ClubLoading />;
+
+  if (!ws.clubId || !ws.club) {
+    return (
+      <View style={styles.root}>
+        <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
+          <ClubHomeIdentityHeader
+            greeting={greetingForHour(new Date().getHours())}
+            clubName={profile?.display_name ?? 'Votre club'}
+            statusLabel="Hors club"
+            statusTone="warn"
+            metaLine="Rattachez ou créez la structure pour piloter le Ball Club"
+          />
+          <ClubEmptyState
+            title="Aucun club rattaché"
+            body="Le Pôle Club (Ball Club) a besoin d’une structure liée. Créez votre club ou rattachez-en un pour voir Accueil, équipes et matchs."
+            icon="football"
+            actionLabel={profile ? 'Créer mon club' : undefined}
+            onAction={profile ? () => setCreateOpen(true) : undefined}
+          />
+          <ShellAccountSection
+            tone={{
+              foreground: tokens.foreground,
+              muted: tokens.muted,
+              faint: tokens.faint,
+              surface: tokens.surface,
+              border: tokens.border,
+              destructive: '#EF4444',
+              iconBg: tokens.elevated,
+            }}
+            onSignOut={shellNav?.signOut}
+            safeBottom
+          />
+        </ClubChapterScroll>
+        {profile ? (
+          <PushScreenTransition active={createOpen}>
+            {createOpen ? (
+              <CreateClubScreen
+                profile={profile}
+                onBack={() => setCreateOpen(false)}
+                onCreated={() => {
+                  setCreateOpen(false);
+                  void ws.refresh();
+                }}
+              />
+            ) : null}
+          </PushScreenTransition>
+        ) : null}
+      </View>
+    );
+  }
+
+  const name = ws.club.name ?? profile?.display_name ?? 'Club';
+  const greet = greetingForHour(new Date().getHours());
+
+  const onPriorityOpen = () => {
+    if (priority.kind === 'match') {
+      shellNav?.requestNav('matches');
+      return;
+    }
+    if (priority.kind === 'training') {
+      shellNav?.requestNav('trainings');
+      return;
+    }
+    shellNav?.requestNav('calendar');
+  };
+
+  const onConvocations = () => {
+    shellNav?.requestNav(presence.nav);
+  };
 
   return (
-    <View style={[styles.root, { backgroundColor: tokens.bg }]}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        
-        
-        {/* Search Bar */}
-        <View style={[styles.searchBar, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-          <Icon name="search" size={20} color={tokens.muted} />
-          <TextInput
-            style={[styles.searchInput, { color: tokens.foreground }]}
-            placeholder="Rechercher (joueurs, entraîneurs, équipes)..."
-            placeholderTextColor={tokens.muted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <PressableSpring onPress={() => setSearchQuery('')}>
-              <Icon name="close" size={20} color={tokens.muted} />
-            </PressableSpring>
-          )}
-        </View>
-  
-        {searchResults ? (
-          <View style={styles.searchResults}>
-            {searchResults.teams.length === 0 ? (
-              <ClubText style={{ color: tokens.muted, textAlign: 'center', marginTop: spacing.xl }}>Aucun résultat trouvé.</ClubText>
-            ) : null}
-            
-            {searchResults.teams.length > 0 && (
-              <View style={styles.resultSection}>
-                <ClubText style={[styles.sectionTitle, { color: tokens.foreground }]}>Équipes</ClubText>
-                {searchResults.teams.map(t => (
-                  <PressableSpring 
-                    key={t.id} 
-                    style={[styles.resultItem, { borderColor: tokens.border }]} 
-                    onPress={() => {
-                       shellNav?.setSelectedTeamId?.(t.id);
-                       shellNav?.requestNav('teams');
-                    }}
-                  >
-                    <Icon name="shield" size={20} color={tokens.accent} />
-                    <ClubText style={{ color: tokens.foreground, marginLeft: spacing.sm }}>{t.name}</ClubText>
-                  </PressableSpring>
-                ))}
-              </View>
-            )}
-          </View>
-        ) : (
-          <>
-            {/* Header Hero */}
-        <View style={styles.header}>
-          <View>
-            <ClubText style={[styles.greeting, { color: tokens.muted }]}>
-              {greetingForHour(new Date().getHours())}, {profile?.display_name?.split(" ")[0]}
-            </ClubText>
-            <ClubText style={[styles.clubName, { color: tokens.foreground }]}>
-              {ws.club.name}
-            </ClubText>
-          </View>
-          <View style={[styles.avatarBadge, { backgroundColor: tokens.accent + '22' }]}>
-            <Icon name="person" size={24} color={tokens.accent} />
-          </View>
-        </View>
+    <View style={styles.root}>
+      <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
+        <ClubHomeIdentityHeader
+          greeting={greet}
+          clubName={name}
+          statusLabel={ws.statusLabel}
+          statusTone={ws.statusTone}
+          metaLine={formatClubHomeMetaLine(ws.players.length, ws.coaches.length, ws.teams.length)}
+          onPressCrest={logo.canEdit ? () => void logo.pickAndUpload() : undefined}
+          crestUploading={logo.uploading}
+        />
 
-        {/* Global KPIs (Metrics) */}
-        <View style={styles.statsRow}>
-          {stats.map(s => (
-            <View key={s.id} style={[styles.statBox, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-              <Icon name={s.icon as any} size={20} color={tokens.muted} />
-              <ClubText style={[styles.statValue, { color: tokens.foreground }]}>{s.value}</ClubText>
-              <ClubText style={[styles.statLabel, { color: tokens.muted }]}>{s.label}</ClubText>
-            </View>
-          ))}
-        </View>
+        <ClubHomeNextEventRow
+          priority={priority}
+          teamLabel={teamLabel}
+          locationLabel={locationLabel}
+          onOpen={onPriorityOpen}
+          onConvocations={showConvocationsCta ? onConvocations : undefined}
+          onPlan={
+            priority.kind === 'calm'
+              ? () => shellNav?.openCreate?.('match') ?? shellNav?.requestNav('matches')
+              : undefined
+          }
+        />
 
-        {/* Action Center / ToDo */}
-        <View style={styles.section}>
-          <ClubText style={[styles.sectionTitle, { color: tokens.foreground }]}>Centre d'actions</ClubText>
-          <View style={styles.todoList}>
-            {todos.map(todo => (
-              <PressableSpring key={todo.id} style={[styles.todoCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
-                <View style={[styles.todoIndicator, { backgroundColor: todo.color }]} />
-                <View style={{ flex: 1, paddingLeft: spacing.md }}>
-                  <ClubText style={[styles.todoTitle, { color: tokens.foreground }]}>{todo.title}</ClubText>
-                  <ClubText style={[styles.todoSub, { color: tokens.muted }]}>{todo.subtitle}</ClubText>
-                </View>
-                <Icon name="chevron-forward" size={16} color={tokens.muted} />
-              </PressableSpring>
-            ))}
-          </View>
-        </View>
+        <ClubHomeTeamsRail
+          teams={teamCards}
+          onSeeAll={() => shellNav?.requestNav('teams')}
+          onCreateTeam={() => shellNav?.openCreate?.('player') ?? shellNav?.requestNav('teams')}
+        />
 
-        {/* Teams Quick Access */}
-        <View style={styles.section}>
-          <ClubText style={[styles.sectionTitle, { color: tokens.foreground }]}>Vos Équipes</ClubText>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.teamsScroll}>
-            {ws.teams.map(team => (
-              <PressableSpring 
-                key={team.id}
-                style={[styles.teamCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
-                onPress={() => {
-                  shellNav?.setSelectedTeamId?.(team.id);
-                  shellNav?.requestNav('teams');
-                }}
-              >
-                <View style={[styles.teamIconWrap, { backgroundColor: tokens.bg, borderColor: tokens.border }]}>
-                  <Icon name="shield" size={24} color={tokens.accent} />
-                </View>
-                <ClubText style={[styles.teamName, { color: tokens.foreground }]}>{team.name}</ClubText>
-                <ClubText style={[styles.teamMeta, { color: tokens.muted }]}>
-                  {0 /* todo */} joueurs
-                </ClubText>
-              </PressableSpring>
-            ))}
-          </ScrollView>
-        </View>
-
-        </>
-        )}
-      </ScrollView>
+        <ClubHomeTodoSection items={todoItems} showSuccessWhenEmpty />
+      </ClubChapterScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  resultSection: { marginTop: spacing.lg },
-  resultItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderBottomWidth: 1 },
-  searchResults: { flex: 1, paddingBottom: 40 },
-  searchBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.md, height: 48, borderRadius: radius.pill, borderWidth: 1, marginTop: spacing.md },
-  searchInput: { flex: 1, marginLeft: spacing.sm, fontSize: 15 },
-  root: { flex: 1 },
-  scroll: { padding: spacing.lg, paddingBottom: 100 },
-  
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.sm },
-  greeting: { fontSize: 14, fontWeight: '600', textTransform: 'uppercase' },
-  clubName: { fontSize: 28, fontWeight: '800', marginTop: 4 },
-  avatarBadge: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
-
-  statsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.xl },
-  statBox: { flex: 1, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, alignItems: 'center' },
-  statValue: { fontSize: 22, fontWeight: '800', marginTop: spacing.sm, marginBottom: 2 },
-  statLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-
-  section: { marginBottom: spacing.xl },
-  sectionTitle: { fontSize: 18, fontWeight: '800', marginBottom: spacing.md },
-  
-  todoList: { gap: spacing.sm },
-  todoCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: radius.lg, borderWidth: 1 },
-  todoIndicator: { width: 4, height: '100%', borderRadius: 2, position: 'absolute', left: 0 },
-  todoTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  todoSub: { fontSize: 13 },
-
-  teamsScroll: { gap: spacing.md, paddingRight: spacing.xl },
-  teamCard: { width: 140, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, alignItems: 'center' },
-  teamIconWrap: { width: 56, height: 56, borderRadius: 28, borderWidth: 1, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md },
-  teamName: { fontSize: 16, fontWeight: '800', textAlign: 'center', marginBottom: 4 },
-  teamMeta: { fontSize: 12 },
-});
+const createStyles = (_tokens: ClubThemeTokens) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: 'transparent' },
+  });

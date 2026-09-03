@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { clubsService } from '../../../services/clubs.service';
+import { profileService } from '../../../services/profile.service';
 import { teamsService } from '../../../services/teams.service';
 import { membershipsService } from '../../../services/memberships.service';
 import { usersService } from '../../../services/users.service';
@@ -18,6 +19,7 @@ import {
   type ClubTeamRow,
 } from '../../../utils/clubStructureView';
 import { buildClubAiBriefing } from '../../../utils/clubAiBriefing';
+import { resolveClubWorkspaceClubId } from './resolveClubWorkspaceClubId';
 
 export type ClubWorkspace = {
   loading: boolean;
@@ -64,10 +66,11 @@ function isSameDay(a: Date, b: Date): boolean {
  */
 export function useClubWorkspace(): ClubWorkspace {
   const profile = useSessionProfile();
-  const clubId = profile?.profile.club_id ?? null;
+  const profileClubId = profile?.profile.club_id ?? null;
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [clubId, setClubId] = useState<string | null>(profileClubId);
   const [club, setClub] = useState<Club | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [memberships, setMemberships] = useState<Membership[]>([]);
@@ -75,7 +78,27 @@ export function useClubWorkspace(): ClubWorkspace {
   const [events, setEvents] = useState<TeamEvent[]>([]);
 
   const load = useCallback(async () => {
-    if (!clubId) {
+    const resolved = await resolveClubWorkspaceClubId({
+      profileClubId,
+      role: profile?.role,
+      uid: profile?.uid,
+      getByOwner: (uid) => clubsService.getByOwner(uid),
+    });
+    const nextClubId = resolved.clubId;
+    setClubId(nextClubId);
+
+    if (
+      resolved.shouldBackfill &&
+      nextClubId &&
+      profile?.uid &&
+      profileClubId !== nextClubId
+    ) {
+      void profileService
+        .updateProfile(profile.uid, { profile: { club_id: nextClubId } })
+        .catch(() => undefined);
+    }
+
+    if (!nextClubId) {
       setClub(null);
       setTeams([]);
       setMemberships([]);
@@ -86,11 +109,11 @@ export function useClubWorkspace(): ClubWorkspace {
     }
     try {
       const [clubDoc, teamList, membershipList, memberList, eventList] = await Promise.all([
-        clubsService.getById(clubId),
-        teamsService.listByClubId(clubId),
-        membershipsService.listByClub(clubId),
-        usersService.listMembersByClubId(clubId),
-        teamEventsService.listForClub(clubId, 80),
+        clubsService.getById(nextClubId),
+        teamsService.listByClubId(nextClubId),
+        membershipsService.listByClub(nextClubId),
+        usersService.listMembersByClubId(nextClubId),
+        teamEventsService.listForClub(nextClubId, 80),
       ]);
       setClub(clubDoc);
       setTeams(teamList);
@@ -98,6 +121,7 @@ export function useClubWorkspace(): ClubWorkspace {
       setMembers(memberList);
       setEvents(eventList);
     } catch {
+      setClub(null);
       setTeams([]);
       setMemberships([]);
       setMembers([]);
@@ -105,7 +129,7 @@ export function useClubWorkspace(): ClubWorkspace {
     } finally {
       setLoading(false);
     }
-  }, [clubId]);
+  }, [profileClubId, profile?.role, profile?.uid]);
 
   useEffect(() => {
     setLoading(true);
