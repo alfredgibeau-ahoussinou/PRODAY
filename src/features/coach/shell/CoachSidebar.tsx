@@ -46,7 +46,6 @@ export function CoachSidebar({
     [railWidth, tokens, collapsed],
   );
   const highlight = primaryTabForCoachNav(activeId);
-  const items = folders.flatMap((folder) => folder.items);
 
   return (
     <View
@@ -58,28 +57,32 @@ export function CoachSidebar({
         },
       ]}
     >
+      {/* Brand header */}
       <View style={styles.brand}>
-        {!collapsed ? (
-          <>
-            <CoachText variant="caption" accent style={styles.kicker}>
-              ProDay Coach
-            </CoachText>
-            <CoachText variant="section" numberOfLines={1} style={styles.name}>
-              {coachName}
-            </CoachText>
-            <View style={styles.formulaPill}>
-              <CoachText variant="caption" muted style={styles.formulaText}>
-                {formulaLabel}
-              </CoachText>
-            </View>
-          </>
-        ) : (
-          <View style={styles.brandCollapsedMark}>
-            <CoachText variant="caption" accent style={styles.kickerCollapsed}>
+        <View style={styles.brandRow}>
+          <View style={styles.monogram}>
+            <CoachText variant="caption" accent style={styles.monogramText}>
               C
             </CoachText>
           </View>
-        )}
+          {!collapsed ? (
+            <View style={styles.brandCopy}>
+              <CoachText variant="caption" muted style={styles.kicker}>
+                Coach
+              </CoachText>
+              <CoachText variant="section" numberOfLines={1} style={styles.name}>
+                {coachName}
+              </CoachText>
+            </View>
+          ) : null}
+        </View>
+        {!collapsed ? (
+          <View style={styles.formulaPill}>
+            <CoachText variant="caption" style={styles.formulaText}>
+              {formulaLabel}
+            </CoachText>
+          </View>
+        ) : null}
         {onToggleCollapse ? (
           <PressableSpring
             onPress={onToggleCollapse}
@@ -87,59 +90,74 @@ export function CoachSidebar({
             haptic
             style={styles.collapseBtn}
             accessibilityRole="button"
-            accessibilityLabel={collapsed ? 'Déplier le menu' : 'Replier le menu'}
+            accessibilityLabel={collapsed ? 'Deployer' : 'Replier'}
           >
-            <Icon
-              name={collapsed ? 'chevron-forward' : 'menu'}
-              size={16}
-              color={tokens.muted}
-            />
+            <Icon name={collapsed ? 'chevron-forward' : 'menu'} size={14} color={tokens.muted} />
           </PressableSpring>
         ) : null}
       </View>
 
+      {/* Nav folders */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {items.map((item) => (
-          <SidebarItem
-            key={item.id}
-            item={item}
-            on={item.id === highlight}
-            onSelect={onSelect}
-            styles={styles}
-            tokens={tokens}
-            collapsed={collapsed}
-          />
+        {folders.map((folder) => (
+          <View key={folder.id} style={styles.folder}>
+            {!collapsed ? (
+              <CoachText variant="caption" muted style={styles.folderLabel}>
+                {folder.label.toUpperCase()}
+              </CoachText>
+            ) : (
+              <View style={styles.folderDivider} />
+            )}
+            {folder.items.map((item) => {
+              const selected = item.id === highlight || item.id === activeId;
+              return (
+                <Pressable
+                  key={item.id}
+                  onPress={() => onSelect(item.id)}
+                  style={[styles.row, selected && styles.rowOn]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={item.label}
+                >
+                  <Icon name={item.icon} size={17} color={selected ? tokens.accent : tokens.muted} />
+                  {!collapsed ? (
+                    <CoachText
+                      variant="section"
+                      numberOfLines={1}
+                      style={{
+                        flex: 1,
+                        fontWeight: selected ? '700' : '500',
+                        color: selected ? tokens.foreground : tokens.muted,
+                        fontSize: 13,
+                      }}
+                    >
+                      {item.label}
+                    </CoachText>
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
         ))}
       </ScrollView>
 
+      {/* Footer */}
       <View style={styles.footer}>
-        <Pressable
-          onPress={onOpenHelp}
-          style={({ pressed }) => [styles.footerItem, pressed && styles.footerPressed]}
-          accessibilityLabel="Aide"
-        >
-          <Icon name="help" size={18} color={tokens.foreground} />
+        <Pressable onPress={onOpenHelp} style={styles.footerBtn} accessibilityLabel="Aide">
+          <Icon name="help" size={16} color={tokens.muted} />
           {!collapsed ? (
-            <CoachText variant="caption" style={styles.footerLabel}>
-              Aide
-            </CoachText>
+            <CoachText variant="caption" muted style={styles.footerLabel}>Aide</CoachText>
           ) : null}
         </Pressable>
-        <Pressable
-          onPress={onSignOut}
-          style={({ pressed }) => [styles.footerItem, pressed && styles.footerPressed]}
-          accessibilityLabel="Se déconnecter"
-        >
-          <Icon name="log-out" size={18} color="#DC2626" />
+        <Pressable onPress={onSignOut} style={styles.footerBtn} accessibilityLabel="Se deconnecter">
+          <Icon name="log-out" size={16} color="#DC2626" />
           {!collapsed ? (
-            <CoachText variant="caption" style={styles.footerSignOut}>
-              Se déconnecter
-            </CoachText>
+            <CoachText variant="caption" style={styles.footerSignOut}>Se deconnecter</CoachText>
           ) : null}
         </Pressable>
       </View>
@@ -147,168 +165,120 @@ export function CoachSidebar({
   );
 }
 
-function SidebarItem({
-  item,
-  on,
-  onSelect,
-  styles,
-  tokens,
-  collapsed,
-}: {
-  item: CoachNavResolvedItem;
-  on: boolean;
-  onSelect: (id: CoachNavItemId) => void;
-  styles: ReturnType<typeof createStyles>;
-  tokens: CoachThemeTokens;
-  collapsed: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={() => onSelect(item.id)}
-      style={({ pressed }) => [styles.item, on && styles.itemOn, pressed && styles.itemPressed]}
-      accessibilityLabel={item.label}
-      accessibilityState={{ selected: on }}
-    >
-      <View style={[styles.iconWrap, on && styles.iconWrapOn]}>
-        <Icon name={item.icon} size={18} color={on ? '#fff' : tokens.accent} />
-      </View>
-      {!collapsed ? (
-        <CoachText
-          variant="section"
-          style={[styles.itemLabel, on && styles.itemLabelOn]}
-          numberOfLines={1}
-        >
-          {item.label}
-        </CoachText>
-      ) : null}
-    </Pressable>
-  );
-}
-
 function createStyles(width: number, tokens: CoachThemeTokens, collapsed: boolean) {
   return StyleSheet.create({
     root: {
       width,
-      flex: 1,
-      minHeight: 0,
+      flexShrink: 0,
       alignSelf: 'stretch',
       borderRightWidth: StyleSheet.hairlineWidth,
       borderRightColor: tokens.border,
-      backgroundColor: tokens.bg,
+      backgroundColor: tokens.surface,
     },
     brand: {
       paddingHorizontal: collapsed ? spacing.xs : spacing.sm,
       paddingTop: spacing.md,
       paddingBottom: spacing.sm,
-      gap: 4,
+      gap: 6,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
       alignItems: collapsed ? 'center' : 'stretch',
+      backgroundColor: tokens.bg,
     },
-    brandCollapsedMark: {
-      width: 36,
-      height: 36,
+    brandRow: {
+      flexDirection: collapsed ? 'column' : 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    monogram: {
+      width: collapsed ? 34 : 38,
+      height: collapsed ? 34 : 38,
       borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: tokens.soft,
-      marginBottom: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
     },
-    kicker: {
-      fontSize: 11,
-      fontWeight: '700',
+    monogramText: {
+      fontSize: collapsed ? 16 : 18,
+      fontWeight: '900',
+      letterSpacing: -0.5,
     },
-    kickerCollapsed: {
-      fontSize: 14,
-      fontWeight: '800',
-    },
-    name: {
-      color: tokens.foreground,
-      fontWeight: '700',
-      letterSpacing: -0.3,
-      fontSize: 15,
-    },
+    brandCopy: { flex: 1, minWidth: 0, gap: 1 },
+    kicker: { fontSize: 9, letterSpacing: 0.5 },
+    name: { color: tokens.foreground, fontWeight: '700', letterSpacing: -0.3, fontSize: 14 },
     formulaPill: {
       alignSelf: 'flex-start',
-      marginTop: 4,
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: radius.pill,
       backgroundColor: tokens.soft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.accent,
     },
-    formulaText: {
-      fontSize: 10,
-      fontWeight: '700',
-      color: tokens.accent,
-    },
+    formulaText: { fontSize: 10, fontWeight: '700', color: tokens.accent },
     collapseBtn: {
-      marginTop: 6,
-      alignSelf: collapsed ? 'center' : 'flex-end',
-      width: 32,
-      height: 28,
+      position: 'absolute',
+      top: spacing.sm,
+      right: spacing.xs,
+      width: 26,
+      height: 26,
       borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: tokens.bg,
+      backgroundColor: tokens.soft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
     },
     scroll: { flex: 1, minHeight: 0 },
-    scrollContent: {
-      paddingVertical: spacing.xs,
-      paddingBottom: spacing.lg,
-      gap: 2,
-      alignItems: collapsed ? 'center' : 'stretch',
+    scrollContent: { paddingVertical: spacing.sm, paddingBottom: spacing.lg },
+    folder: {
+      marginBottom: spacing.sm,
+      paddingHorizontal: collapsed ? spacing.xs : spacing.sm,
     },
-    item: {
+    folderLabel: { marginBottom: 4, marginLeft: 6, fontSize: 9, letterSpacing: 0.8, fontWeight: '700' },
+    folderDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: tokens.border,
+      marginVertical: 4,
+      marginHorizontal: 6,
+    },
+    row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.xs,
-      marginHorizontal: collapsed ? 0 : spacing.xs,
-      paddingHorizontal: collapsed ? 0 : spacing.xs,
-      paddingVertical: collapsed ? 6 : 8,
-      minHeight: collapsed ? 44 : 44,
-      borderRadius: radius.md,
       justifyContent: collapsed ? 'center' : 'flex-start',
-      width: collapsed ? 44 : undefined,
+      gap: 10,
+      paddingVertical: 9,
+      paddingHorizontal: collapsed ? 0 : spacing.xs,
+      borderRadius: radius.md,
+      minHeight: 40,
     },
-    itemOn: { backgroundColor: tokens.soft },
-    itemPressed: { opacity: 0.7 },
-    iconWrap: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: tokens.bg,
+    rowOn: {
+      backgroundColor: tokens.soft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: `${tokens.accent}40`,
     },
-    iconWrapOn: { backgroundColor: tokens.accent },
-    itemLabel: {
-      flex: 1,
-      fontWeight: '600',
-      color: tokens.foreground,
-      fontSize: 13,
-    },
-    itemLabelOn: { color: tokens.accent, fontWeight: '700' },
     footer: {
-      flexShrink: 0,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: tokens.border,
-      paddingHorizontal: collapsed ? spacing.xs : spacing.xs,
+      paddingHorizontal: collapsed ? spacing.xs : spacing.sm,
       paddingTop: spacing.xs,
       paddingBottom: spacing.xs,
       gap: 2,
       alignItems: collapsed ? 'center' : 'stretch',
+      backgroundColor: tokens.bg,
     },
-    footerItem: {
+    footerBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: collapsed ? 0 : spacing.xs,
-      paddingVertical: 10,
-      minHeight: 40,
-      borderRadius: radius.md,
       justifyContent: collapsed ? 'center' : 'flex-start',
-      width: collapsed ? 52 : undefined,
+      gap: 8,
+      paddingVertical: 8,
+      paddingHorizontal: collapsed ? 0 : 4,
+      borderRadius: radius.md,
     },
-    footerPressed: { opacity: 0.7 },
-    footerLabel: { fontWeight: '600', color: tokens.foreground, fontSize: 12 },
+    footerLabel: { fontWeight: '600', fontSize: 12 },
     footerSignOut: { fontWeight: '700', color: '#DC2626', fontSize: 12 },
   });
 }
