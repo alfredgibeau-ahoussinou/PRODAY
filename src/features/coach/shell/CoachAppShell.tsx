@@ -114,6 +114,8 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   } = useTabNavigation();
   const { width } = useWindowDimensions();
   const wide = width >= coachChrome.wideBreakpoint;
+  /** Rail étroit par défaut — le menu élargi envahissait le contenu PC. */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { direction, noteNav } = useShellNavDirection(COACH_MOTION_ORDER);
 
@@ -257,6 +259,10 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     ]);
   };
 
+  const sidebarWidth = sidebarCollapsed
+    ? coachChrome.sidebarCollapsed
+    : coachChrome.sidebarExpanded;
+
   const sidebarProps = {
     activeId: navId,
     coachName,
@@ -265,7 +271,9 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     onSelect,
     onOpenHelp,
     onSignOut,
-    width: coachChrome.sidebarWidth,
+    width: sidebarWidth,
+    collapsed: sidebarCollapsed,
+    onToggleCollapse: () => setSidebarCollapsed((v) => !v),
   } as const;
 
   const content =

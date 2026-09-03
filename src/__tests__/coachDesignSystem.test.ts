@@ -6,7 +6,9 @@ import {
 describe('coachDesignSystem breakpoints', () => {
   it('masque le dock et active la sidebar dès 900px', () => {
     expect(coachChrome.wideBreakpoint).toBe(900);
-    expect(coachChrome.sidebarWidth).toBe(248);
+    expect(coachChrome.sidebarCollapsed).toBe(76);
+    expect(coachChrome.sidebarExpanded).toBe(200);
+    expect(coachChrome.sidebarWidth).toBe(200);
     expect(coachChrome.contentMaxWidth).toBe(1180);
   });
 
@@ -27,9 +29,10 @@ describe('coachDesignSystem breakpoints', () => {
     expect(coachChrome.modalIsSheet(1366)).toBe(false);
   });
 
-  it('borne la largeur de contenu hors sidebar', () => {
-    expect(coachContentWidth(1920, true)).toBe(1180);
-    expect(coachContentWidth(1000, true)).toBe(1000 - coachChrome.sidebarWidth);
+  it('borne la largeur de contenu hors sidebar (rail étroit par défaut)', () => {
+    expect(coachContentWidth(1920, true, true)).toBe(1180);
+    expect(coachContentWidth(1000, true, true)).toBe(1000 - coachChrome.sidebarCollapsed);
+    expect(coachContentWidth(1000, true, false)).toBe(1000 - coachChrome.sidebarExpanded);
     expect(coachContentWidth(390, false)).toBe(390);
   });
 });

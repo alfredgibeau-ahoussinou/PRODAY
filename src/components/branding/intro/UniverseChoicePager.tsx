@@ -31,14 +31,15 @@ import { filterAccessibleUniversePoles } from './filterAccessibleUniversePoles';
 import { UNIVERSE_ACCENT } from './universeIntroAccents';
 import { universePoleDisplayName } from './universePoleBrand';
 import {
+  isUniverseCinematicLayout,
+  resolveUniverseItemWidth,
   shouldSnapOnDragEnd,
   snapIndexFromOffset,
   UNIVERSE_AMBIENT_BASE,
   UNIVERSE_AMBIENT_FALLBACK,
   UNIVERSE_DECELERATION_RATE,
+  UNIVERSE_SIDE_RAIL_WIDTH,
 } from './universePagerSnap';
-
-const TABLET_BREAKPOINT = 768;
 
 interface UniverseChoicePagerProps {
   onChoose: (pole: CarouselPoleId) => void;
@@ -56,11 +57,6 @@ interface UniverseChoicePagerProps {
   onDismiss?: () => void;
 }
 
-function resolveItemWidth(screenWidth: number, cinematic: boolean): number {
-  if (cinematic) return Math.min(screenWidth * 0.42, 400);
-  return Math.min(screenWidth * 0.78, screenWidth - 48);
-}
-
 export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   onChoose,
   introTour = false,
@@ -76,8 +72,8 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 }) => {
   const reducedMotion = useReducedMotion();
   const { width } = useWindowDimensions();
-  const cinematic = width >= TABLET_BREAKPOINT;
-  const itemWidth = resolveItemWidth(width, cinematic);
+  const cinematic = isUniverseCinematicLayout(width);
+  const itemWidth = resolveUniverseItemWidth(width, cinematic);
   const sidePad = Math.max(0, (width - itemWidth) / 2);
   const lines = useMemo(
     () =>
@@ -359,7 +355,7 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
   const styles = useMemo(() => createStyles(), []);
 
   const sideRail = cinematic ? (
-    <View style={styles.rail} accessibilityRole="list">
+    <View style={[styles.rail, { width: UNIVERSE_SIDE_RAIL_WIDTH }]} accessibilityRole="list">
       {lines.map((line, index) => {
         const selected = index === liveIndex;
         const label = universePoleDisplayName(line);
@@ -368,7 +364,10 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
             key={line}
             onPress={() => handleTapNeighbor(index)}
             disabled={interactionLocked}
-            style={[styles.railItem, selected && styles.railItemSelected]}
+            style={[
+              styles.railItem,
+              selected && styles.railItemSelected,
+            ]}
             accessibilityRole="button"
             accessibilityLabel={`Univers ${label}`}
             accessibilityState={{ selected }}
@@ -420,13 +419,16 @@ export const UniverseChoicePager: React.FC<UniverseChoicePagerProps> = ({
 
 
       {cinematic ? (
-        <View style={styles.cinematicStage} pointerEvents="none">
+        <View
+          style={[styles.cinematicStage, { paddingLeft: UNIVERSE_SIDE_RAIL_WIDTH }]}
+          pointerEvents="none"
+        >
           <UniverseChoicePage
             line={lines[liveIndex] ?? lines[0]}
             index={liveIndex}
             pageWidth={width}
             pageHeight={layoutHeight}
-            itemWidth={Math.min(width * 0.5, 480)}
+            itemWidth={itemWidth}
             scrollX={scrollX}
             cinematic
             reducedMotion={reducedMotion}
@@ -510,17 +512,9 @@ function createStyles() {
       ...StyleSheet.absoluteFillObject,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingLeft: '28%',
-      paddingBottom: '12%',
-    },
-    ambientGlow: {
-      position: 'absolute',
-      width: '70%',
-      height: '42%',
-      borderRadius: 999,
-      top: '22%',
-      alignSelf: 'center',
-      left: '15%',
+      paddingRight: spacing.xl,
+      paddingBottom: '14%',
+      paddingTop: '8%',
     },
     vignetteTop: {
       position: 'absolute',
@@ -539,27 +533,29 @@ function createStyles() {
       zIndex: 1,
     },
     rail: {
-      gap: spacing.xs,
+      gap: 2,
+      paddingRight: spacing.sm,
     },
     railItem: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      paddingVertical: spacing.sm + 2,
+      paddingVertical: 10,
       paddingHorizontal: spacing.sm,
       borderRadius: 10,
+      ...Platform.select({ web: { cursor: 'pointer' as const } }),
     },
     railItemSelected: {
-      backgroundColor: 'rgba(255,255,255,0.04)',
+      backgroundColor: 'rgba(255,255,255,0.08)',
     },
     railMark: {
       width: 3,
-      height: 18,
+      height: 16,
       borderRadius: 2,
     },
     railLabel: {
       flex: 1,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '500',
       letterSpacing: -0.2,
       color: 'rgba(255,255,255,0.48)',

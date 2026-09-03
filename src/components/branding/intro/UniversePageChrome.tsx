@@ -17,6 +17,7 @@ import {
   universePoleDisplayName,
 } from './universePoleBrand';
 import { UniverseGuideModal } from './UniverseGuideModal';
+import { UNIVERSE_SIDE_RAIL_WIDTH } from './universePagerSnap';
 
 interface UniversePageChromeProps {
   lines: CarouselPoleId[];
@@ -49,6 +50,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   onChoose,
   onJumpToIndex,
   hidePagerDots = false,
+  sideRail,
 }) => {
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
@@ -60,6 +62,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   const ctaLabel = activeLine ? universeEnterCtaLabel(activeLine) : '';
   const linesCount = lines.length;
   const showHeaderAction = touring || (showDismiss && onDismiss);
+  const hasSideRail = Boolean(sideRail);
 
   const ctaConfirm = useSharedValue(0);
 
@@ -110,21 +113,47 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
     </Animated.View>
   );
 
+  const mainPadLeft = hasSideRail ? UNIVERSE_SIDE_RAIL_WIDTH + 8 : 20;
+
   return (
     <View style={styles.root} pointerEvents="box-none">
+      {hasSideRail ? (
+        <View
+          style={[
+            styles.sideRailHost,
+            {
+              width: UNIVERSE_SIDE_RAIL_WIDTH,
+              paddingTop: insets.top + 56,
+              paddingBottom: insets.bottom + 24,
+            },
+          ]}
+          pointerEvents="box-none"
+        >
+          {sideRail}
+        </View>
+      ) : null}
+
       {/* Header minimaliste épuré */}
       <View
         style={[
           styles.top,
           {
             paddingTop: insets.top + 8,
-            paddingHorizontal: 20,
+            paddingLeft: mainPadLeft,
+            paddingRight: 20,
           },
         ]}
       >
         <View style={styles.headerRow}>
           <View style={styles.headerTitleWrap}>
-            <Text style={styles.headerTitle}>Sélectionnez votre univers</Text>
+            <Text style={styles.headerTitle}>
+              {cinematic ? 'Choisissez votre univers' : 'Sélectionnez votre univers'}
+            </Text>
+            {cinematic && activeLine ? (
+              <Text style={styles.headerActive} numberOfLines={1}>
+                {universePoleDisplayName(activeLine)}
+              </Text>
+            ) : null}
           </View>
           {showHeaderAction ? (
             <Pressable
@@ -143,13 +172,14 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         </View>
       </View>
 
-      {/* Footer minimaliste : Dots + CTA élégant + Guide */}
+      {/* Footer : dots (mobile) + CTA + guide */}
       <View
         style={[
           styles.bottom,
           {
             paddingBottom: insets.bottom + 16,
-            paddingHorizontal: 20,
+            paddingLeft: mainPadLeft,
+            paddingRight: 20,
           },
         ]}
         pointerEvents="box-none"
@@ -195,7 +225,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
           <View style={styles.quizTriggerBadge}>
             <Text style={styles.quizTriggerBadgeText}>QUIZ EXPRESS</Text>
           </View>
-          <Text style={styles.quizTriggerText}>🎯 Quel pôle choisir ? Guide 10s</Text>
+          <Text style={styles.quizTriggerText}>Quel pôle choisir ? Guide 10s</Text>
           <Icon name="chevron-forward" size={14} color="#F5D04A" />
         </PressableSpring>
       </View>
@@ -220,8 +250,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     zIndex: 2,
   },
+  sideRailHost: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 4,
+    paddingLeft: spacing.md,
+    justifyContent: 'center',
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
   top: {
-    paddingHorizontal: 20,
     zIndex: 3,
   },
   headerRow: {
@@ -232,12 +273,18 @@ const styles = StyleSheet.create({
   },
   headerTitleWrap: {
     flex: 1,
+    gap: 2,
   },
   headerTitle: {
     fontSize: 15,
     fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.75)',
     letterSpacing: -0.2,
+  },
+  headerActive: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.45)',
   },
   actionBtn: {
     paddingHorizontal: 12,
@@ -256,7 +303,6 @@ const styles = StyleSheet.create({
   bottom: {
     gap: 12,
     alignItems: 'stretch',
-    paddingHorizontal: 20,
     zIndex: 3,
   },
   dots: {

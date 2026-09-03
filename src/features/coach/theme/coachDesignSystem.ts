@@ -1,6 +1,6 @@
 /**
  * Chrome / layout Pôle Coach — breakpoints partagés (shell, scroll, grilles, modales).
- * Pas de refonte : aligne desktop 1366–1920 sans casser le dock mobile.
+ * Desktop : rail étroit collé à gauche (collapsed par défaut), pas un menu mobile élargi.
  */
 
 export const coachChrome = {
@@ -8,7 +8,12 @@ export const coachChrome = {
   wideBreakpoint: 900,
   /** Tablette / petite fenêtre desktop. */
   tabletBreakpoint: 680,
-  sidebarWidth: 248,
+  /** Rail icônes — collé à gauche (aligné club/admin collapsed). */
+  sidebarCollapsed: 76,
+  /** Menu labels — borné 72–220. */
+  sidebarExpanded: 200,
+  /** Alias expanded (rétrocompat). */
+  sidebarWidth: 200,
   /** Largeur max contenu lisible (dashboard / listes). */
   contentMaxWidth: 1180,
   /** Grille dashboard : 1 → 2 → 3 → 4 colonnes. */
@@ -35,9 +40,14 @@ export const coachLayout = {
   dockClearance: 72,
 } as const;
 
-export function coachContentWidth(windowWidth: number, sidebarVisible: boolean): number {
-  const usable = sidebarVisible
-    ? windowWidth - coachChrome.sidebarWidth
-    : windowWidth;
+export function coachContentWidth(
+  windowWidth: number,
+  sidebarVisible: boolean,
+  sidebarCollapsed = true,
+): number {
+  const sidebarW = sidebarCollapsed
+    ? coachChrome.sidebarCollapsed
+    : coachChrome.sidebarExpanded;
+  const usable = sidebarVisible ? windowWidth - sidebarW : windowWidth;
   return Math.min(usable, coachChrome.contentMaxWidth);
 }
