@@ -129,15 +129,16 @@ export function ScrollVideoStage() {
                 Je suis coach
               </Link>
             </div>
-            <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.18em] text-white/45 sm:mt-4 sm:text-[10px]">
-              Sans engagement ·{" "}
-              <Link
-                href={ROUTES.sponsor}
-                className="pointer-events-auto text-white/70 underline-offset-2 transition hover:text-white hover:underline"
-              >
-                Sponsoring possible
-              </Link>
-            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:mt-5">
+              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/50 bg-emerald-950/70 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)] sm:text-[10px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Sans engagement
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/50 bg-amber-950/70 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)] sm:text-[10px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                Parrainage possible
+              </span>
+            </div>
           </div>
         </motion.div>
 

@@ -3,6 +3,7 @@ import { ScrollVideoStage, UniverseScroll } from "@/components/immersive";
 import { ProductPositioning } from "@/components/home/ProductPositioning";
 import { HomeHeroPreload } from "@/components/home/HomeHeroPreload";
 import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
+import { CommercialBadges } from "@/components/pricing/CommercialBadges";
 import { ROUTES } from "@/lib/routes";
 
 export default function HomePage() {
@@ -33,11 +34,14 @@ export default function HomePage() {
             <p className="mt-3 text-sm font-semibold text-white/90">
               Club : à partir de 3 € / adhérent · sur devis selon la taille.
             </p>
-            <p className="mt-2 text-sm leading-relaxed text-white/65">
-              Sans engagement.{" "}
+            <div className="mt-5">
+              <CommercialBadges size="md" align="left" />
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-white/70">
+              Résiliation libre à tout moment sur les stores.{" "}
               <Link
                 href={ROUTES.sponsor}
-                className="font-semibold text-white/90 underline-offset-2 hover:underline"
+                className="font-semibold text-amber-300 underline-offset-2 hover:underline"
               >
                 Sponsoring possible
               </Link>{" "}

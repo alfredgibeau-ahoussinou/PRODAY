@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ImmersivePoleHero } from "@/components/poles/immersivePoleExperience";
 import { PolesPricingLayout } from "@/components/pricing/PolesPricingLayout";
+import { CommercialBadges } from "@/components/pricing/CommercialBadges";
 import { TerminalCta, TerminalPage } from "@/components/terminal";
 import {
   NO_COMMITMENT_INTRO,
@@ -33,6 +34,12 @@ export default function PricingPage() {
         perk={POLE_REFERRAL_LINE}
       />
 
+      <div className="border-y border-white/10 bg-[#08080a] py-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <CommercialBadges size="lg" align="center" showDescriptions />
+        </div>
+      </div>
+
       <PolesPricingLayout />
 
       <TerminalCta
@@ -46,3 +53,4 @@ export default function PricingPage() {
     </TerminalPage>
   );
 }
+

@@ -48,6 +48,19 @@ export function TerminalCta({
                 {description}
               </p>
             ) : null}
+            {(description?.toLowerCase().includes("sans engagement") ||
+              description?.toLowerCase().includes("parrainage")) && (
+              <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-[#02241b] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.35)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  Sans engagement
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-[#2d1d03] px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.35)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  Parrainage possible
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-3 lg:justify-end">
             {isPrimaryExt ? (

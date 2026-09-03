@@ -30,6 +30,7 @@ import {
 } from "@/lib/pricing";
 import { ROUTES } from "@/lib/routes";
 import { PricingPoleAccent } from "@/components/pricing/PricingPoleAccent";
+import { CommercialBadges } from "@/components/pricing/CommercialBadges";
 import { VeoCameraMark } from "@/components/poles/VeoCameraMark";
 import type { ReactNode } from "react";
 
@@ -106,20 +107,23 @@ export function PolesPricingLayout() {
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:px-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
+              <div className="mb-2">
+                <CommercialBadges size="sm" align="left" />
+              </div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/50">
                 {yearly
                   ? `Annuel · −${ANNUAL_DISCOUNT_PERCENT} % · ${NO_COMMITMENT_BADGE.toLowerCase()}`
                   : `Mensuel · ${NO_COMMITMENT_BADGE.toLowerCase()}`}
               </p>
-              <p className="mt-1 text-xs text-white/45 sm:text-sm">
+              <p className="mt-1 text-xs text-white/60 sm:text-sm">
                 {NO_COMMITMENT_INTRO} Sponsoring possible ·{" "}
                 <Link
                   href={ROUTES.sponsor}
-                  className="text-white/70 underline-offset-2 hover:text-white hover:underline"
+                  className="text-amber-400 font-semibold underline-offset-2 hover:text-amber-300 hover:underline"
                 >
                   voir le pôle Sponsor
                 </Link>
-                . {POLE_REFERRAL_LINE}
+                .
               </p>
             </div>
             <div className="inline-flex rounded-full border border-white/15 p-1">
@@ -257,6 +261,9 @@ function PolePricingChapter({
                   {lead.unit}
                 </span>
               </p>
+              <div className="mt-4">
+                <CommercialBadges size="sm" align="left" />
+              </div>
               <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
                 {lead.note}
               </p>
@@ -523,7 +530,7 @@ function ClubPlansCompare({
                   <span className="mt-1 block font-display text-sm text-[var(--pole-accent)] sm:text-base">
                     {priceLabel(p)}
                   </span>
-                  <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.12em] text-white/40">
+                  <span className="mt-1.5 inline-block rounded-full border border-emerald-400/40 bg-emerald-950/70 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
                     {NO_COMMITMENT_BADGE}
                   </span>
                 </th>
@@ -599,9 +606,9 @@ function SponsorTierCards({ yearly }: { yearly: boolean }) {
               </p>
               <div className="text-right">
                 <p className="font-display text-xl font-medium text-white">{price}</p>
-                <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-white/40">
+                <span className="mt-1 inline-block rounded-full border border-emerald-400/40 bg-emerald-950/70 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
                   {NO_COMMITMENT_BADGE}
-                </p>
+                </span>
               </div>
             </div>
             <p className="mt-1 text-sm text-white/45">{tier.tagline}</p>

@@ -113,14 +113,27 @@ export function PageHeader({
           </motion.h1>
         </div>
 
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12 }}
           className="max-w-md border-t border-white/15 pt-6 text-base leading-relaxed text-white/70 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0"
         >
-          {description}
-        </motion.p>
+          <p>{description}</p>
+          {(description.toLowerCase().includes("sans engagement") ||
+            description.toLowerCase().includes("parrainage")) && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-[#02241b] px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Sans engagement
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-[#2d1d03] px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                Parrainage possible
+              </span>
+            </div>
+          )}
+        </motion.div>
       </div>
     </header>
   );
