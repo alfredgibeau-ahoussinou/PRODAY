@@ -197,7 +197,11 @@ const SponsorAppShellInner: React.FC = () => {
                   : null,
               ]}
             >
-              <AnimatedRouteContent routeKey={routeKey} routeOrder={SPONSOR_ROUTE_ORDER}>
+              <AnimatedRouteContent
+                routeKey={routeKey}
+                routeOrder={SPONSOR_ROUTE_ORDER}
+                context="tab"
+              >
                 {renderPage()}
               </AnimatedRouteContent>
             </View>

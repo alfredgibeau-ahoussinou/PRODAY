@@ -19,8 +19,8 @@ export const prodayMotion = {
     video: 110,
     /** Live / match — micro, jamais bloquant. */
     live: 130,
-    /** Onglets dock — une phase, 180–220 ms. */
-    tab: 190,
+    /** Onglets dock — cross-fade premium, 240–300 ms. */
+    tab: 280,
     /** prefers-reduced-motion : cut ou micro-fade. */
     reduced: 90,
   },

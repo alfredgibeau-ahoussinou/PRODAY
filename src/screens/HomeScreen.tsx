@@ -168,19 +168,19 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.root}>
           <ProDayScreenCanvas>{renderHomeDashboard()}</ProDayScreenCanvas>
 
-          <PushScreenTransition active={overlay === 'team'}>
+          <PushScreenTransition active={overlay === 'team'} variant="fade">
             {overlay === 'team' ? (
               <TeamManagementScreen profile={profile} onBack={() => setOverlay(null)} />
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'smart_tactics'}>
+          <PushScreenTransition active={overlay === 'smart_tactics'} variant="fade">
             {overlay === 'smart_tactics' ? (
               <SmartTacticsPortalScreen onBack={() => setOverlay(null)} />
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach'}>
+          <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach'} variant="fade">
             {overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach' ? (
               <TrainHubScreen
                 onBack={closeDashboardOverlay}
@@ -189,13 +189,13 @@ export const HomeScreen: React.FC = () => {
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'tactics_coach'}>
+          <PushScreenTransition active={overlay === 'tactics_coach'} variant="fade">
             {overlay === 'tactics_coach' ? (
               <JoueurTacticsCoachScreen onBack={closeDashboardOverlay} />
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'partner-hub'}>
+          <PushScreenTransition active={overlay === 'partner-hub'} variant="fade">
             {overlay === 'partner-hub' ? (
               <SponsorHubScreen
                 onBack={() => setOverlay(null)}
@@ -204,7 +204,7 @@ export const HomeScreen: React.FC = () => {
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'sponsors'}>
+          <PushScreenTransition active={overlay === 'sponsors'} variant="fade">
             {overlay === 'sponsors' ? (
               <SponsorsScreen
                 onBack={() => setOverlay('partner-hub')}

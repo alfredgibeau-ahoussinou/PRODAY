@@ -30,7 +30,7 @@ export function JoueurDashboardOverlayHost() {
       pointerEvents="auto"
       testID="joueur-dashboard-overlay-host"
     >
-      <PushScreenTransition active={Boolean(overlay)} backgroundColor={PLAYER_DARK.bg}>
+      <PushScreenTransition active={Boolean(overlay)} variant="fade" backgroundColor={PLAYER_DARK.bg}>
         {overlay === 'tactics_coach' ? (
           <JoueurTacticsCoachScreen onBack={clearPendingDashboard} />
         ) : overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach' ? (

@@ -39,12 +39,14 @@ describe('ProDayMotionSystem', () => {
     expect(getMotionPreset('sheet').spring).toEqual(prodayMotion.spring.sheet);
   });
 
-  it('garde les onglets dans la fenêtre 180–220 ms (enter + exit)', () => {
+  it('garde les onglets en cross-fade 200–350 ms (enter + exit), sans slide', () => {
     const tab = getMotionPreset('tab');
-    expect(tab.enterMs).toBeGreaterThanOrEqual(180);
-    expect(tab.enterMs).toBeLessThanOrEqual(220);
-    expect(tab.enterMs + tab.exitMs).toBeLessThanOrEqual(280);
-    expect(tab.shift).toBeLessThanOrEqual(24);
+    expect(tab.enterMs).toBeGreaterThanOrEqual(200);
+    expect(tab.enterMs).toBeLessThanOrEqual(350);
+    expect(tab.exitMs).toBeGreaterThanOrEqual(180);
+    expect(tab.exitMs).toBeLessThanOrEqual(350);
+    expect(tab.enterMs + tab.exitMs).toBeLessThanOrEqual(600);
+    expect(tab.shift).toBe(0);
   });
 
   it('calcule forward / back selon un ordre générique', () => {
@@ -80,9 +82,9 @@ describe('anti-écran-noir — filets motion', () => {
 
   it('CrossfadeSwitch : pas d’opacity 0 permanente', () => {
     expect(prodayMotion.holdOpacity).toBeGreaterThan(0);
-    expect(prodayMotion.duration.tab).toBeGreaterThanOrEqual(180);
-    expect(prodayMotion.duration.tab).toBeLessThanOrEqual(220);
-    expect(prodayMotion.duration.tab + CROSSFADE_SAFETY_MS).toBeLessThan(500);
+    expect(prodayMotion.duration.tab).toBeGreaterThanOrEqual(200);
+    expect(prodayMotion.duration.tab).toBeLessThanOrEqual(350);
+    expect(prodayMotion.duration.tab + CROSSFADE_SAFETY_MS).toBeLessThanOrEqual(520);
   });
 
   it('PushScreenTransition : filets enter/exit', () => {
@@ -102,13 +104,32 @@ describe('AnimatedTabContent — Accueil ↔ Matchs', () => {
     expect(src).not.toMatch(/from ['"].*RouteSwitch['"]/);
     expect(src).not.toMatch(/<RouteSwitch/);
     expect(src).toMatch(/TabKeepAliveLayer/);
-    expect(src).toMatch(/holdOpacity/);
     expect(src).toMatch(/size > 2/);
+  });
+
+  it('utilise un cross-fade opacity (pas de translateX)', () => {
+    expect(src).toMatch(/opacity/);
+    expect(src).not.toMatch(/translateX/);
+    expect(src).toMatch(/withTiming/);
   });
 
   it('home → matchs est forward dans l’ordre joueur type', () => {
     const playerOrder = ['home', 'reels', 'matchs', 'messages'] as const;
     expect(navDirectionFromOrder(playerOrder, 'home', 'matchs')).toBe(1);
     expect(navDirectionFromOrder(playerOrder, 'matchs', 'home')).toBe(-1);
+  });
+});
+
+describe('PaneTransition — cross-fade onglets', () => {
+  const src = fs.readFileSync(
+    path.join(__dirname, '../motion/primitives/PaneTransition.tsx'),
+    'utf8',
+  );
+
+  it('branche fade (shift 0) sur PaneCrossfade / CrossfadeLayer', () => {
+    expect(src).toMatch(/PaneCrossfade/);
+    expect(src).toMatch(/CrossfadeLayer/);
+    expect(src).toMatch(/fadeOnly/);
+    expect(src).toMatch(/preset\.shift <= 0/);
   });
 });

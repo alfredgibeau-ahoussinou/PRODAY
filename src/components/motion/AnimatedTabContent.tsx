@@ -9,11 +9,9 @@ import Animated, {
 import { MAIN_TAB_ITEMS, type MainTabId } from '../../navigation/mainTabConfig';
 import {
   getMotionPreset,
-  navDirectionFromOrder,
   PANE_ENTER_SAFETY_MS,
   prodayMotion,
   useReducedMotion,
-  type NavDirection,
 } from '../../motion';
 
 interface AnimatedTabContentProps {
@@ -23,11 +21,11 @@ interface AnimatedTabContentProps {
 }
 
 /**
- * Micro-transition entre onglets + keep-alive (max 2).
+ * Cross-fade entre onglets + keep-alive (max 2).
  *
- * Important : animer **chaque couche**, pas envelopper le stack dans un switch de route.
- * Sinon double transition (swap opacity instantané des layers + enter sur le même arbre)
- * — flash / contenu déjà changé puis slide, surtout Accueil ↔ Matchs.
+ * Important : animer **chaque couche** (opacity), pas envelopper le stack dans un
+ * switch de route — sinon double transition / flash, surtout Accueil ↔ Matchs.
+ * Pas de glissement horizontal : fondu premium uniquement.
  */
 export const AnimatedTabContent: React.FC<AnimatedTabContentProps> = ({
   activeTab,
@@ -38,9 +36,7 @@ export const AnimatedTabContent: React.FC<AnimatedTabContentProps> = ({
   const order = tabOrder ?? MAIN_TAB_ITEMS.map((t) => t.id);
   const cacheRef = useRef(new Map<MainTabId, React.ReactNode>());
   const prevTabRef = useRef(activeTab);
-  const fromTab = prevTabRef.current;
-  const tabSwitched = fromTab !== activeTab;
-  const direction = navDirectionFromOrder(order, fromTab, activeTab);
+  const tabSwitched = prevTabRef.current !== activeTab;
 
   useEffect(() => {
     prevTabRef.current = activeTab;
@@ -73,10 +69,8 @@ export const AnimatedTabContent: React.FC<AnimatedTabContentProps> = ({
             key={id}
             active={on}
             animateOnMount={tabSwitched && on}
-            direction={direction}
             enterMs={preset.enterMs}
             exitMs={preset.exitMs}
-            shift={preset.shift}
           >
             {node}
           </TabKeepAliveLayer>
@@ -89,25 +83,18 @@ export const AnimatedTabContent: React.FC<AnimatedTabContentProps> = ({
 function TabKeepAliveLayer({
   active,
   animateOnMount,
-  direction,
   enterMs,
   exitMs,
-  shift,
   children,
 }: {
   active: boolean;
   animateOnMount: boolean;
-  direction: NavDirection;
   enterMs: number;
   exitMs: number;
-  shift: number;
   children: React.ReactNode;
 }) {
   const prevActive = useRef(animateOnMount ? false : active);
-  const opacity = useSharedValue(
-    animateOnMount ? prodayMotion.holdOpacity : active ? 1 : 0,
-  );
-  const translateX = useSharedValue(animateOnMount ? direction * shift : 0);
+  const opacity = useSharedValue(animateOnMount ? 0 : active ? 1 : 0);
   const gen = useRef(0);
 
   useEffect(() => {
@@ -117,17 +104,11 @@ function TabKeepAliveLayer({
 
     const token = ++gen.current;
     cancelAnimation(opacity);
-    cancelAnimation(translateX);
 
     if (active) {
-      opacity.value = prodayMotion.holdOpacity;
-      translateX.value = direction * shift;
-      opacity.value = withTiming(1, {
-        duration: enterMs,
-        easing: prodayMotion.easing.out,
-      });
-      translateX.value = withTiming(
-        0,
+      opacity.value = 0;
+      opacity.value = withTiming(
+        1,
         {
           duration: enterMs,
           easing: prodayMotion.easing.out,
@@ -136,9 +117,7 @@ function TabKeepAliveLayer({
           if (token !== gen.current) return;
           if (!finished) {
             cancelAnimation(opacity);
-            cancelAnimation(translateX);
             opacity.value = 1;
-            translateX.value = 0;
           }
         },
       );
@@ -146,9 +125,7 @@ function TabKeepAliveLayer({
       const safety = setTimeout(() => {
         if (token !== gen.current) return;
         cancelAnimation(opacity);
-        cancelAnimation(translateX);
         opacity.value = 1;
-        translateX.value = 0;
       }, enterMs + PANE_ENTER_SAFETY_MS);
       return () => clearTimeout(safety);
     }
@@ -157,15 +134,10 @@ function TabKeepAliveLayer({
       duration: exitMs,
       easing: prodayMotion.easing.in,
     });
-    translateX.value = withTiming(-direction * shift * 0.4, {
-      duration: enterMs,
-      easing: prodayMotion.easing.in,
-    });
-  }, [active, direction, enterMs, exitMs, opacity, shift, translateX]);
+  }, [active, enterMs, exitMs, opacity]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateX: translateX.value }],
     zIndex: active ? 2 : 1,
   }));
 

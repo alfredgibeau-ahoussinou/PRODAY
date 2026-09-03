@@ -14,7 +14,6 @@ export type PoleShellId = 'parent' | 'supporter' | 'club' | 'president';
 
 const TAB_PRESET = getMotionPreset('tab');
 const ENTER_MS = TAB_PRESET.enterMs;
-const SHIFT = TAB_PRESET.shift;
 
 /** Parent → Supporter = 1 ; Club → Président = 1 ; retours = -1. */
 export function poleShellTransitionDirection(
@@ -35,8 +34,8 @@ interface PoleShellTransitionProps {
 }
 
 /**
- * Transition légère Parent ↔ Supporter / Club ↔ Président.
- * Une phase (slide + opacity), plancher holdOpacity, timeout de secours.
+ * Cross-fade Parent ↔ Supporter / Club ↔ Président.
+ * Opacity seule — pas de slide.
  */
 export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
   shellKey,
@@ -52,7 +51,6 @@ export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
   pendingChildren.current = safeChildren;
 
   const opacity = useSharedValue(1);
-  const translateX = useSharedValue(0);
 
   const clearBusy = useCallback((token: number) => {
     if (token !== gen.current) return;
@@ -65,15 +63,14 @@ export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
       return;
     }
 
-    const dir = poleShellTransitionDirection(currentKey.current, shellKey);
+    // Direction API conservée pour les tests / bridge Parent↔Supporter.
+    void poleShellTransitionDirection(currentKey.current, shellKey);
     currentKey.current = shellKey;
     setDisplayed(pendingChildren.current);
 
     if (reduced) {
       cancelAnimation(opacity);
-      cancelAnimation(translateX);
       opacity.value = 1;
-      translateX.value = 0;
       busy.current = false;
       return;
     }
@@ -81,23 +78,18 @@ export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
     const token = ++gen.current;
     busy.current = true;
     cancelAnimation(opacity);
-    cancelAnimation(translateX);
     opacity.value = prodayMotion.holdOpacity;
-    translateX.value = dir * SHIFT;
-    opacity.value = withTiming(1, {
-      duration: ENTER_MS,
-      easing: motion.easing.out,
-    });
-    translateX.value = withTiming(
-      0,
-      { duration: ENTER_MS, easing: motion.easing.out },
+    opacity.value = withTiming(
+      1,
+      {
+        duration: ENTER_MS,
+        easing: motion.easing.out,
+      },
       (finished) => {
         if (token !== gen.current) return;
         if (!finished) {
           cancelAnimation(opacity);
-          cancelAnimation(translateX);
           opacity.value = 1;
-          translateX.value = 0;
         }
         runOnJS(clearBusy)(token);
       },
@@ -106,17 +98,14 @@ export const PoleShellTransition: React.FC<PoleShellTransitionProps> = ({
     const safety = setTimeout(() => {
       if (token !== gen.current) return;
       cancelAnimation(opacity);
-      cancelAnimation(translateX);
       opacity.value = 1;
-      translateX.value = 0;
       busy.current = false;
     }, ENTER_MS + 200);
     return () => clearTimeout(safety);
-  }, [shellKey, reduced, opacity, translateX, clearBusy]);
+  }, [shellKey, reduced, opacity, clearBusy]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ translateX: translateX.value }],
   }));
 
   return (
