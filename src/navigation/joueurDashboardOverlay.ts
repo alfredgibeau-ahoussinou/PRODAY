@@ -23,15 +23,20 @@ export function isJoueurDashboardOverlayView(
 }
 
 /**
- * Pôle joueur : ces vues s’ouvrent en overlay global.
- * Ne pas `setActiveTab('home')` — sinon Accueil keep-alive avale le pending
- * et l’utilisateur retombe sur le hub sans écran.
+ * Ne pas `setActiveTab('home')` pour ces deep links : le shell / overlay
+ * consomme `pendingDashboardView` sur l’onglet courant.
+ * Sinon Accueil keep-alive (joueur) ou sync tab Club (Pack Club) avale la nav.
  */
 export function shouldStayOnTabForDashboard(
   view: DashboardDeepLink,
   role?: UserRole | null,
 ): boolean {
-  return role === 'player' && isJoueurDashboardOverlayView(view);
+  if (role === 'player') return isJoueurDashboardOverlayView(view);
+  if (role === 'coach') return view === 'gestion' || view === 'smart_tactics';
+  if (role === 'club') {
+    return view === 'gestion' || view === 'sponsors' || view === 'smart_tactics';
+  }
+  return false;
 }
 
 export function trainHubViewForDashboard(

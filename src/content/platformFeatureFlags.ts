@@ -93,9 +93,12 @@ export const PLATFORM_FEATURE_FLAG_META: Record<
   },
 };
 
-/** Onglets bas filtrés par feature flag. */
+/**
+ * Onglets bas filtrés par feature flag.
+ * `recrutement` n’est PAS lié à `mercato` : joueur = Club/Équipe, club = recrutement interne.
+ * Le flag `mercato` reste lu dans MercatoScreen.
+ */
 export const TAB_FEATURE_FLAG: Partial<Record<MainTabId, PlatformFeatureFlagKey>> = {
-  recrutement: 'mercato',
   shop: 'shop',
   reels: 'community_reels',
 };

@@ -61,7 +61,10 @@ import { PlayerThemeProvider } from './src/context/PlayerThemeContext';
 import { JoueurProgressProvider } from './src/context/JoueurProgressContext';
 import { JoueurShellExtras } from './src/features/joueur/JoueurShellExtras';
 import { JoueurDashboardOverlayHost } from './src/features/joueur/JoueurDashboardOverlayHost';
-import { shouldStayOnTabForDashboard } from './src/navigation/joueurDashboardOverlay';
+import {
+  isJoueurDashboardOverlayView,
+  shouldStayOnTabForDashboard,
+} from './src/navigation/joueurDashboardOverlay';
 import {
   JoueurGateGuard,
   useJoueurGateBlocksTabs,
@@ -360,10 +363,11 @@ function AppShell() {
   }, [profile]);
 
   useEffect(() => {
+    if (sessionProfile?.role === 'club' || sessionProfile?.role === 'coach') return;
     if (!screenTabs.includes(activeTab)) {
       setActiveTab(screenTabs[0] ?? 'home');
     }
-  }, [screenTabs, activeTab]);
+  }, [screenTabs, activeTab, sessionProfile?.role]);
 
   useEffect(() => {
     if (productLineLoading || authLoading || !profile) return;
@@ -418,6 +422,12 @@ function AppShell() {
         setPendingAuthIntent((prev) => prev ?? 'login');
         return;
       }
+      if (
+        tab !== activeTab &&
+        isJoueurDashboardOverlayView(pendingDashboardView)
+      ) {
+        setPendingDashboardView(null);
+      }
       const nextReturn = resolveAutoReturnTab(
         activeTab,
         tab,
@@ -429,7 +439,7 @@ function AppShell() {
       }
       setActiveTab(isGuest ? resolveGuestTab(tab, productLine) : tab);
     },
-    [activeTab, isGuest, primaryDockTabs, productLine],
+    [activeTab, isGuest, pendingDashboardView, primaryDockTabs, productLine],
   );
 
   const goBackTab = useCallback(() => {

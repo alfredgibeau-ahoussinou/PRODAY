@@ -28,10 +28,10 @@ export type JoueurPlusMenuItem = {
 };
 
 /** Feature flags admin liés aux tuiles hub Plus (id menu → flag). */
+/** Club / Équipe (recrutement) n’est pas le Mercato — jamais gated par `mercato`. */
 export const PLUS_MENU_FEATURE_FLAG: Partial<Record<string, PlatformFeatureFlagKey>> = {
   reels: 'community_reels',
   shop: 'shop',
-  recrutement: 'mercato',
 };
 
 export function plusMenuFeatureFlag(itemId: string): PlatformFeatureFlagKey | null {

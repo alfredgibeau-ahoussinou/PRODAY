@@ -2,6 +2,7 @@ import type { IconName } from '../../../components/ui/iconNames';
 import type { ClubOfferFeatureId } from '../../../content/clubOffers';
 import type { PlatformFeatureFlagKey } from '../../../content/platformFeatureFlags';
 import type { MainTabId } from '../../../navigation/mainTabConfig';
+import type { DashboardDeepLink } from '../../../utils/navigationDeepLink';
 
 /**
  * Navigation Pôle Club v1 — gestion amateur simple.
@@ -504,8 +505,18 @@ export function tabFromClubNav(id: ClubNavItemId): MainTabId {
 export function resolveClubNavOnTabSync(
   prev: ClubNavItemId,
   activeTab: MainTabId,
+  intended?: ClubNavItemId | null,
 ): ClubNavItemId {
+  if (intended) return canonicalizeClubNav(intended);
   const mapped = clubNavFromTab(activeTab);
   if (tabFromClubNav(prev) === activeTab) return prev;
   return mapped;
+}
+
+/** Deep links `openDashboard` → pane Club (ne pas forcer Accueil). */
+export function clubNavFromDashboard(view: DashboardDeepLink): ClubNavItemId | null {
+  if (view === 'gestion') return 'players';
+  if (view === 'sponsors') return 'sponsoring';
+  if (view === 'smart_tactics') return 'stats';
+  return null;
 }

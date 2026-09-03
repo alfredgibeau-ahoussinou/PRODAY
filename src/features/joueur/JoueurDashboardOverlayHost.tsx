@@ -20,15 +20,14 @@ export function JoueurDashboardOverlayHost() {
   const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
 
   if (profile?.role !== 'player') return null;
+  if (!isJoueurDashboardOverlayView(pendingDashboardView)) return null;
 
-  const overlay = isJoueurDashboardOverlayView(pendingDashboardView)
-    ? pendingDashboardView
-    : null;
+  const overlay = pendingDashboardView;
 
   return (
     <View
       style={styles.host}
-      pointerEvents={overlay ? 'auto' : 'none'}
+      pointerEvents="auto"
       testID="joueur-dashboard-overlay-host"
     >
       <PushScreenTransition active={Boolean(overlay)} backgroundColor={PLAYER_DARK.bg}>

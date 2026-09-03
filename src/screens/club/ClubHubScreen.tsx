@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
-import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { ClubOffersComparePanel } from '../../components/club/ClubOffersComparePanel';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
@@ -329,7 +328,6 @@ export function ClubHubScreen() {
 
 /** Pack Club — devis (pas Premium). */
 export function ClubPackScreen() {
-  const nav = useTabNavigationActions();
   const shellNav = useClubShellNav();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
@@ -359,7 +357,6 @@ export function ClubPackScreen() {
                 'Demande de devis',
                 `Votre demande pour ${offerId} sera transmise. SUR DEVIS — à partir de 3 € / adhérent.`,
               );
-              nav.openDashboard?.('gestion');
             }}
           />
           <ClubActionRow

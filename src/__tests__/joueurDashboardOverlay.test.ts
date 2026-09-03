@@ -22,6 +22,10 @@ describe('joueurDashboardOverlay', () => {
     expect(shouldStayOnTabForDashboard('train', 'player')).toBe(true);
     expect(shouldStayOnTabForDashboard('gestion', 'player')).toBe(false);
     expect(shouldStayOnTabForDashboard('train_ai', 'coach')).toBe(false);
+    expect(shouldStayOnTabForDashboard('gestion', 'coach')).toBe(true);
+    expect(shouldStayOnTabForDashboard('smart_tactics', 'coach')).toBe(true);
+    expect(shouldStayOnTabForDashboard('gestion', 'club')).toBe(true);
+    expect(shouldStayOnTabForDashboard('sponsors', 'club')).toBe(true);
     expect(shouldStayOnTabForDashboard('train_ai', null)).toBe(false);
   });
 

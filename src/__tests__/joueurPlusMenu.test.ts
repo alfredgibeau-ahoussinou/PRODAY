@@ -62,7 +62,7 @@ describe('joueurPlusMenu', () => {
     expect(shop?.unavailable).toBe(false);
   });
 
-  it('marque reels/shop/recrutement indisponibles quand les flags admin sont OFF', () => {
+  it('marque reels/shop indisponibles quand les flags admin sont OFF (Club reste ouvert)', () => {
     const isFeatureEnabled = (key: string) =>
       !['community_reels', 'shop', 'mercato'].includes(key);
 
@@ -74,7 +74,7 @@ describe('joueurPlusMenu', () => {
 
     expect(items.find((i) => i.id === 'reels')?.unavailable).toBe(true);
     expect(items.find((i) => i.id === 'shop')?.unavailable).toBe(true);
-    expect(items.find((i) => i.id === 'recrutement')?.unavailable).toBe(true);
+    expect(items.find((i) => i.id === 'recrutement')?.unavailable).toBe(false);
   });
 
   it('active reels/shop quand les flags admin sont ON', () => {
@@ -102,7 +102,7 @@ describe('joueurPlusMenu', () => {
   it('mappe les tuiles Plus aux feature flags admin', () => {
     expect(plusMenuFeatureFlag('reels')).toBe('community_reels');
     expect(plusMenuFeatureFlag('shop')).toBe('shop');
-    expect(plusMenuFeatureFlag('recrutement')).toBe('mercato');
+    expect(plusMenuFeatureFlag('recrutement')).toBeNull();
     expect(plusMenuFeatureFlag('messages')).toBeNull();
   });
 
@@ -115,7 +115,7 @@ describe('joueurPlusMenu', () => {
     };
     expect(isJoueurUnavailableTab('reels', flagsOff)).toBe(true);
     expect(isJoueurUnavailableTab('shop', flagsOff)).toBe(true);
-    expect(isJoueurUnavailableTab('recrutement', flagsOff)).toBe(true);
+    expect(isJoueurUnavailableTab('recrutement', flagsOff)).toBe(false);
     expect(isJoueurUnavailableTab('home', flagsOff)).toBe(false);
 
     expect(

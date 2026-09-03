@@ -5,6 +5,7 @@ import {
   CLUB_PRIMARY_NAV_IDS,
   CLUB_TOOL_GROUPS,
   canonicalizeClubNav,
+  clubNavFromDashboard,
   clubNavFromTab,
   findClubNavItem,
   primaryTabForClubNav,
@@ -79,6 +80,20 @@ describe('clubNavConfig', () => {
     expect(resolveClubNavOnTabSync('matches', 'home')).toBe('today');
     expect(resolveClubNavOnTabSync('matches', 'matchs')).toBe('matches');
     expect(resolveClubNavOnTabSync('carpool', 'covoiturage')).toBe('carpool');
+  });
+
+  it('conserve Pack Club lors du sync profil (évite Accueil)', () => {
+    expect(tabFromClubNav('pack')).toBe('profil');
+    expect(resolveClubNavOnTabSync('pack', 'profil')).toBe('pack');
+    expect(resolveClubNavOnTabSync('plus', 'profil', 'pack')).toBe('pack');
+    expect(resolveClubNavOnTabSync('plus', 'profil')).toBe('club');
+  });
+
+  it('mappe openDashboard club vers une pane (pas Accueil)', () => {
+    expect(clubNavFromDashboard('gestion')).toBe('players');
+    expect(clubNavFromDashboard('sponsors')).toBe('sponsoring');
+    expect(clubNavFromDashboard('smart_tactics')).toBe('stats');
+    expect(clubNavFromDashboard('train')).toBeNull();
   });
 
   it('expose 7 actions CRÉER en français', () => {

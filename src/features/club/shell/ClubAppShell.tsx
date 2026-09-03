@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   StyleSheet,
@@ -20,6 +20,7 @@ import { openClubHelpChatbot, registerClubCopilotOpener } from './clubHelpOpen';
 import { ClubCopilotSheet } from '../ai/ClubCopilotSheet';
 import {
   canonicalizeClubNav,
+  clubNavFromDashboard,
   clubNavFromTab,
   CLUB_CREATE_ACTIONS,
   CLUB_MENU_DEST_IDS,
@@ -29,6 +30,7 @@ import {
   type ClubCreateActionId,
   type ClubNavItemId,
 } from '../navigation/clubNavConfig';
+import { useTabNavigation } from '../../../context/TabNavigationContext';
 import { PaneTransition, useShellNavDirection } from '../../../motion';
 import {
   findInClubNavCatalog,
@@ -116,15 +118,32 @@ function ClubAppShellInner({
   const wide = width >= clubChrome.wideBreakpoint;
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const presidentBridge = usePresidentShellBridge();
+  const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
   const { direction, noteNav } = useShellNavDirection(CLUB_MOTION_ORDER);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [navId, setNavId] = useState<ClubNavItemId>(() =>
     canonicalizeClubNav(clubNavFromTab(activeTab)),
   );
+  const intendedNavRef = useRef<ClubNavItemId | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createFormAction, setCreateFormAction] = useState<ClubCreateActionId | null>(null);
   const [selectedPlayerUid, setSelectedPlayerUid] = useState<string | null>(null);
   const [copilotOpen, setCopilotOpen] = useState(false);
+
+  const applyNav = useCallback((id: ClubNavItemId) => {
+    const next = canonicalizeClubNav(id);
+    noteNav(next);
+    intendedNavRef.current = next;
+    setNavId(next);
+    if (next !== 'teams') setSelectedTeamId(null);
+    if (next !== 'players') setSelectedPlayerUid(null);
+    const nextTab = tabFromClubNav(next);
+    if (nextTab !== activeTab) {
+      onTabChange(nextTab);
+    } else {
+      intendedNavRef.current = null;
+    }
+  }, [activeTab, noteNav, onTabChange, setSelectedTeamId]);
 
   const offerId = resolveClubOfferId(profile);
   const formulaLabel = offerId ? CLUB_OFFERS[offerId].label : 'Sans formule';
@@ -146,8 +165,10 @@ function ClubAppShellInner({
   const toolItems = useMemo(() => resolveClubMenuItems(access), [access]);
 
   useEffect(() => {
+    const intended = intendedNavRef.current;
+    intendedNavRef.current = null;
     setNavId((prev) => {
-      const next = resolveClubNavOnTabSync(prev, activeTab);
+      const next = resolveClubNavOnTabSync(prev, activeTab, intended);
       if (next !== prev) noteNav(next);
       return next;
     });
@@ -162,25 +183,22 @@ function ClubAppShellInner({
     if (!presidentBridge?.pendingClubNav) return;
     const pending = presidentBridge.consumePendingClubNav();
     if (!pending) return;
-    const next = canonicalizeClubNav(pending);
-    noteNav(next);
-    setNavId(next);
-    const nextTab = tabFromClubNav(next);
-    if (nextTab !== activeTab) onTabChange(nextTab);
-  }, [presidentBridge, presidentBridge?.pendingClubNav, activeTab, onTabChange, noteNav]);
+    applyNav(pending);
+  }, [presidentBridge, presidentBridge?.pendingClubNav, applyNav]);
 
   const clubName = profile?.display_name ?? 'Club';
   const resolved = findInClubNavCatalog(catalog, navId);
   const pageTitle = resolved?.label ?? 'Club';
 
+  useEffect(() => {
+    if (!pendingDashboardView) return;
+    const dest = clubNavFromDashboard(pendingDashboardView);
+    clearPendingDashboard();
+    if (dest) applyNav(dest);
+  }, [pendingDashboardView, clearPendingDashboard, applyNav]);
+
   const onSelect = (id: ClubNavItemId) => {
-    const next = canonicalizeClubNav(id);
-    noteNav(next);
-    setNavId(next);
-    if (next !== 'teams') setSelectedTeamId(null);
-    if (next !== 'players') setSelectedPlayerUid(null);
-    const nextTab = tabFromClubNav(next);
-    if (nextTab !== activeTab) onTabChange(nextTab);
+    applyNav(id);
   };
 
   const onOpenHelp = () => {
