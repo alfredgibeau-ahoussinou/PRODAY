@@ -58,9 +58,23 @@ export default async function BetaWaitlistPage() {
               </a>
             </div>
             
-            <div className="mt-8 text-xs text-white/50 text-left space-y-3 bg-black/50 p-4 rounded-xl border border-white/5">
-              <p><strong>iOS :</strong> Nécessite l'application gratuite TestFlight d'Apple pour installer la bêta.</p>
-              <p><strong>Android :</strong> Lors de l'installation de l'APK, votre téléphone peut vous demander d'autoriser l'installation d'applications "issues de sources inconnues".</p>
+            <div className="mt-8 space-y-4 text-left">
+              <div className="rounded-xl border border-white/10 bg-black/60 p-4 text-xs text-white/70">
+                <p className="font-semibold text-white flex items-center gap-1.5 mb-1">
+                  <span>📱</span> Information installation Android (Play Protect)
+                </p>
+                <p className="leading-relaxed text-white/60 mb-2">
+                  Comme l'application est en phase de test bêta privée et téléchargée directement sous forme d'APK, <strong>Google Play Protect</strong> peut afficher un avertissement standard (<em>« Application non reconnue »</em> ou <em>« Bloqué par Play Protect »</em>).
+                </p>
+                <div className="rounded-lg bg-emerald-950/40 border border-emerald-500/30 p-2.5 text-emerald-200">
+                  👉 <strong>Pour installer :</strong> Cliquez sur <strong>« Plus de détails »</strong> puis sur <strong>« Installer quand même »</strong>. L'APK ProDay est 100% sécurisé et certifié par notre équipe.
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/5 bg-black/40 p-3.5 text-xs text-white/50 space-y-1.5">
+                <p><strong>iOS :</strong> Nécessite l'application gratuite TestFlight d'Apple pour installer la bêta.</p>
+                <p><strong>Android :</strong> Pensez également à autoriser l'installation depuis votre navigateur si demandé (<em>« Sources inconnues »</em>).</p>
+              </div>
             </div>
           </div>
         </div>
