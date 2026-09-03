@@ -114,8 +114,8 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   } = useTabNavigation();
   const { width } = useWindowDimensions();
   const wide = width >= coachChrome.wideBreakpoint;
-  /** Menu élargi par défaut pour afficher les labels de navigation. */
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  /** Rail icônes collé à gauche par défaut — compact comme le pôle club. */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const { direction, noteNav } = useShellNavDirection(COACH_MOTION_ORDER);
 

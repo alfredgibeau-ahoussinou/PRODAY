@@ -194,7 +194,7 @@ function createStyles(width: number, tokens: CoachThemeTokens, collapsed: boolea
       alignSelf: 'stretch',
       borderRightWidth: StyleSheet.hairlineWidth,
       borderRightColor: tokens.border,
-      backgroundColor: tokens.surface,
+      backgroundColor: tokens.bg,
     },
     brand: {
       paddingHorizontal: collapsed ? spacing.xs : spacing.sm,
@@ -266,7 +266,7 @@ function createStyles(width: number, tokens: CoachThemeTokens, collapsed: boolea
       minHeight: collapsed ? 44 : 44,
       borderRadius: radius.md,
       justifyContent: collapsed ? 'center' : 'flex-start',
-      width: collapsed ? 52 : undefined,
+      width: collapsed ? 44 : undefined,
     },
     itemOn: { backgroundColor: tokens.soft },
     itemPressed: { opacity: 0.7 },
