@@ -60,6 +60,8 @@ import { JoueurSessionProvider } from './src/context/JoueurSessionContext';
 import { PlayerThemeProvider } from './src/context/PlayerThemeContext';
 import { JoueurProgressProvider } from './src/context/JoueurProgressContext';
 import { JoueurShellExtras } from './src/features/joueur/JoueurShellExtras';
+import { JoueurDashboardOverlayHost } from './src/features/joueur/JoueurDashboardOverlayHost';
+import { shouldStayOnTabForDashboard } from './src/navigation/joueurDashboardOverlay';
 import {
   JoueurGateGuard,
   useJoueurGateBlocksTabs,
@@ -739,6 +741,9 @@ function AppShell() {
               return;
             }
             setPendingDashboardView(view);
+            if (shouldStayOnTabForDashboard(view, sessionProfile?.role)) {
+              return;
+            }
             const preserveOrigin = activeTab !== 'home';
             handleTabPress(
               'home',
@@ -845,6 +850,7 @@ function AppShell() {
             ) : null}
           </SafeAreaView>
           <JoueurShellExtras />
+          <JoueurDashboardOverlayHost />
         </LaunchIntroProvider>
       </TabNavigationProvider>
     </AppSpaceProvider>

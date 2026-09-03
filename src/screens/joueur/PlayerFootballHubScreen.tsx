@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -10,7 +10,6 @@ import {
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { usePlayerHubData } from '../../hooks/usePlayerHubData';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { JoueurScreenChrome } from '../../components/joueur/JoueurScreenChrome';
 import {
@@ -26,9 +25,6 @@ import {
   PlayerMatchDayEmpty,
   PlayerMatchDayHero,
 } from '../../components/joueur/PlayerMatchDayChrome';
-import { PushScreenTransition } from '../../components/motion';
-import { TrainHubScreen } from '../training/TrainHubScreen';
-import { JoueurTacticsCoachScreen } from './JoueurTacticsCoachScreen';
 import { screenScrollPad } from '../../navigation/screenLayout';
 import { resolvePlayerShieldWidth } from '../../utils/playerShieldLayout';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
@@ -45,27 +41,14 @@ import {
   type PlayerRsvpChoice,
 } from '../../utils/amateurPlayerHome';
 
-type HubOverlay = 'train' | 'train_ai' | 'train_coach' | 'tactics_coach' | null;
-
 /** Accueil Football Hub — match day, RSVP réel, pas de stats inventées. */
 export function PlayerFootballHubScreen() {
   const profile = useSessionProfile();
   const session = useJoueurSession();
   const nav = useTabNavigationActions();
-  const { pendingDashboardView, clearPendingDashboard, goBackTab, returnTab } = useTabNavigation();
   const hub = usePlayerHubData(profile);
   const [refreshing, setRefreshing] = useState(false);
-  const [overlay, setOverlay] = useState<HubOverlay>(null);
   const [rsvpBusy, setRsvpBusy] = useState(false);
-
-  useEffect(() => {
-    if (!pendingDashboardView || !profile) return;
-    if (pendingDashboardView === 'train') setOverlay('train');
-    else if (pendingDashboardView === 'train_ai') setOverlay('train_ai');
-    else if (pendingDashboardView === 'train_coach') setOverlay('train_coach');
-    else if (pendingDashboardView === 'tactics_coach') setOverlay('tactics_coach');
-    clearPendingDashboard();
-  }, [pendingDashboardView, clearPendingDashboard, profile]);
 
   const playerTheme = usePlayerThemeColors();
   const accent = playerTheme.accent;
@@ -108,14 +91,6 @@ export function PlayerFootballHubScreen() {
     () => getJoueurDailyQuests(ageGroup === 'youth' ? 'youth' : ageGroup === 'teen' ? 'teen' : 'adult')[0],
     [ageGroup],
   );
-
-  const closeDashboardOverlay = useCallback(() => {
-    setOverlay(null);
-    if (returnTab) goBackTab();
-  }, [goBackTab, returnTab]);
-
-  const trainInitialView =
-    overlay === 'train_ai' ? 'ai' : overlay === 'train_coach' ? 'coach' : 'hub';
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -166,8 +141,7 @@ export function PlayerFootballHubScreen() {
     hub.nextTraining && hub.nextTraining.id !== heroEvent?.id ? hub.nextTraining : null;
 
   return (
-    <>
-      <JoueurScreenChrome variant="page" kicker="Parcours" title={`Bonjour ${hub.firstName}`}>
+    <JoueurScreenChrome variant="page" kicker="Parcours" title={`Bonjour ${hub.firstName}`}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={[styles.pad, screenScrollPad(spacing.xl + spacing.md)]}
@@ -330,23 +304,7 @@ export function PlayerFootballHubScreen() {
             />
           </View>
         </ScrollView>
-      </JoueurScreenChrome>
-
-      <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach'}>
-        {overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach' ? (
-          <TrainHubScreen
-            onBack={closeDashboardOverlay}
-            initialView={trainInitialView}
-          />
-        ) : null}
-      </PushScreenTransition>
-
-      <PushScreenTransition active={overlay === 'tactics_coach'}>
-        {overlay === 'tactics_coach' ? (
-          <JoueurTacticsCoachScreen onBack={closeDashboardOverlay} />
-        ) : null}
-      </PushScreenTransition>
-    </>
+    </JoueurScreenChrome>
   );
 }
 

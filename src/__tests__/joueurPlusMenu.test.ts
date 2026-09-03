@@ -48,6 +48,10 @@ describe('joueurPlusMenu', () => {
     expect(coachHumain?.label).toBe('Coach humain');
     expect(coachHumain?.action).toEqual({ kind: 'dashboard', view: 'train_coach' });
 
+    const coachIa = items.find((i) => i.id === 'coach_ia');
+    expect(coachIa?.label).toBe('Mon Coach IA');
+    expect(coachIa?.action).toEqual({ kind: 'dashboard', view: 'tactics_coach' });
+
     const messages = items.find((i) => i.id === 'messages');
     expect(messages?.badge).toBe(3);
     expect(messages?.action).toEqual({ kind: 'tab', tab: 'messages' });

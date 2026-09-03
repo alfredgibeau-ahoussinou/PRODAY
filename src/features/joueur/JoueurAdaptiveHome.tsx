@@ -88,7 +88,7 @@ export function JoueurAdaptiveHome({ profile, onRefresh, refreshing }: Props) {
   const onOpenPass = useCallback(() => {
     nav.openDashboard('tactics_coach');
   }, [nav]);
-  const onOpenCoach = useCallback(() => nav.openDashboard('tactics_coach'), [nav]);
+  const onOpenCoach = useCallback(() => nav.openDashboard('train_coach'), [nav]);
   const onOpenMatchs = useCallback(() => nav.openMatchs(), [nav]);
   const onOpenClub = useCallback(() => nav.setActiveTab('recrutement'), [nav]);
   const onOpenProfile = useCallback(() => nav.setActiveTab('profil'), [nav]);

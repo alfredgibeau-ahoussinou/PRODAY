@@ -9,6 +9,7 @@ import { useTabNavigation } from '../context/TabNavigationContext';
 import { DiscoverScreen } from './DiscoverScreen';
 import { RetiredRoleScreen } from './RetiredRoleScreen';
 import { isRetiredUserRole } from '../utils/retiredRoles';
+import { isJoueurDashboardOverlayView } from '../navigation/joueurDashboardOverlay';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
 import { AmateurPlayerHomeDashboard } from '../features/home/roles/AmateurPlayerHomeDashboard';
 import { resolveRoleHomeDashboard } from '../features/home/roles/resolveRoleHomeDashboard';
@@ -68,6 +69,9 @@ export const HomeScreen: React.FC = () => {
 
   useEffect(() => {
     if (!pendingDashboardView || !profile) return;
+    if (profile.role === 'player' && isJoueurDashboardOverlayView(pendingDashboardView)) {
+      return;
+    }
     if (pendingDashboardView === 'gestion') setOverlay('team');
     else if (pendingDashboardView === 'smart_tactics') setOverlay('smart_tactics');
     else if (pendingDashboardView === 'train') setOverlay('train');

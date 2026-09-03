@@ -152,7 +152,7 @@ export function buildJoueurPlusMenuItems({
       label: 'Mon Coach IA',
       subtitle: 'Conseils personnalisés',
       icon: 'star-four-points',
-      action: { kind: 'dashboard', view: 'train_ai' },
+      action: { kind: 'dashboard', view: 'tactics_coach' },
       visible: true,
     },
     {

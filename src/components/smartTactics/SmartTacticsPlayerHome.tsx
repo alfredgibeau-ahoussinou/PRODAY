@@ -220,7 +220,15 @@ export function SmartTacticsPlayerHome({
 
       {/* 1. COACH IA — CARTE INTERACTIVE & SUGGESTIONS */}
       <View style={[styles.coachCta, { borderColor: `${accent}44`, backgroundColor: PLAYER_DARK.surface }]}>
-        <View style={styles.coachCtaHead}>
+        <PressableSpring
+          onPress={() => {
+            joueurGamePress();
+            nav.openDashboard('tactics_coach');
+          }}
+          scaleTo={0.98}
+          haptic
+          style={styles.coachCtaHead}
+        >
           <View style={[styles.coachIconBadge, { backgroundColor: `${accent}20` }]}>
             <Icon name="star-four-points" size={18} color={accent} />
           </View>
@@ -232,7 +240,7 @@ export function SmartTacticsPlayerHome({
               Parler tactique & drills
             </ProDayText>
           </View>
-        </View>
+        </PressableSpring>
         <ProDayText variant="caption" style={styles.heroBody}>
           Pose une question tactique pour ton poste ou choisis une consigne rapide :
         </ProDayText>

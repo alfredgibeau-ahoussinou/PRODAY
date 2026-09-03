@@ -2,6 +2,7 @@ import React from 'react';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useTabNavigationOptional } from '../../context/TabNavigationContext';
 import { PlayerCoachAiFab } from '../../components/joueur/PlayerCoachAiFab';
+import { isJoueurDashboardOverlayView } from '../../navigation/joueurDashboardOverlay';
 
 /** FAB Coach IA — visible uniquement quand le shell joueur est actif. */
 export function JoueurShellExtras() {
@@ -10,5 +11,6 @@ export function JoueurShellExtras() {
   const live = Boolean(joueur?.isJoueurPlayer && joueur.ready && !joueur.needsGate);
   if (!live) return null;
   if (tabNav?.activeTab === 'profil') return null;
+  if (isJoueurDashboardOverlayView(tabNav?.pendingDashboardView)) return null;
   return <PlayerCoachAiFab />;
 }
