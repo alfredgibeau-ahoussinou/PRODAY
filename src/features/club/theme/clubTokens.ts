@@ -53,12 +53,12 @@ const CLUB = PRODAY_POLE_ACCENTS.club;
 
 /** Tokens Club — root noir, charcoal neutre, wash émeraude 6 % / 3 %. */
 export const CLUB_TOKENS: ClubThemeTokens = {
-  bg: '#080B11',
-  surface: '#101522',
-  elevated: '#171F32',
-  raised: '#1F293D',
-  border: 'rgba(255, 255, 255, 0.08)',
-  borderStrong: 'rgba(255, 255, 255, 0.16)',
+  bg: '#000000',
+  surface: '#0A0A0A',
+  elevated: '#141414',
+  raised: '#1A1A1A',
+  border: 'rgba(255, 255, 255, 0.10)',
+  borderStrong: 'rgba(255, 255, 255, 0.18)',
   foreground: '#F4F7FC',
   muted: 'rgba(244, 247, 252, 0.68)',
   faint: 'rgba(244, 247, 252, 0.44)',

@@ -11,6 +11,7 @@ import { RetiredRoleScreen } from './RetiredRoleScreen';
 import { isRetiredUserRole } from '../utils/retiredRoles';
 import { isJoueurDashboardOverlayView } from '../navigation/joueurDashboardOverlay';
 import { HomeIaDashboard } from '../features/home/HomeIaDashboard';
+import { EliteHomeScreen } from '../features/home/EliteHomeScreen';
 import { AmateurPlayerHomeDashboard } from '../features/home/roles/AmateurPlayerHomeDashboard';
 import { resolveRoleHomeDashboard } from '../features/home/roles/resolveRoleHomeDashboard';
 import { getUserProductLine } from '../utils/productLineAccess';
@@ -130,12 +131,10 @@ export const HomeScreen: React.FC = () => {
     }
     if (isAmateurPlayer) {
       return (
-        <AmateurPlayerHomeDashboard
+        <EliteHomeScreen
           profile={profile}
-          unreadMessages={unreadMessages}
           onRefresh={handleRefresh}
           refreshing={refreshing}
-          joueurGate={joueurGate}
         />
       );
     }

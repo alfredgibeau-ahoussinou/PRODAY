@@ -1,8 +1,7 @@
 /**
  * ProDay Elite Design System — Standard Visuel Unifié (Style MyCoach FFF / SportEasy / Footbar)
- * Un seul thème sombre athlétique, contrasté, responsive et lisible sur iPhone, iPad, Mac & PC.
+ * Un seul thème sombre athlétique, contrasté et lisible partout.
  */
-import { useWindowDimensions } from 'react-native';
 
 export const ELITE_COLORS = {
   // Fonds
@@ -15,7 +14,6 @@ export const ELITE_COLORS = {
   border: 'rgba(255, 255, 255, 0.08)',
   borderHighlight: 'rgba(255, 255, 255, 0.16)',
   borderAccent: 'rgba(0, 230, 118, 0.35)',
-  borderGold: 'rgba(245, 158, 11, 0.35)',
 
   // Accents Sportifs
   primary: '#00E676',         // Vert Électrique Sport (Actions, Présent, Victoire)
@@ -33,11 +31,6 @@ export const ELITE_COLORS = {
 
   warning: '#F97316',         // Orange En attente / Attention
   warningSoft: 'rgba(249, 115, 22, 0.15)',
-
-  // Copilote IA
-  aiPurple: '#8B5CF6',
-  aiPurpleSoft: 'rgba(139, 92, 246, 0.15)',
-  aiPurpleGlow: 'rgba(139, 92, 246, 0.35)',
 
   // Textes & Typo
   textPrimary: '#FFFFFF',
@@ -63,30 +56,3 @@ export const ELITE_SPACING = {
   xl: 24,
   xxl: 32,
 };
-
-/**
- * Breakpoints réactifs pour iPhone, iPad, Mac et PC Windows.
- */
-export function useEliteResponsive() {
-  const { width, height } = useWindowDimensions();
-  const isMobile = width < 680;
-  const isTablet = width >= 680 && width < 1024;
-  const isDesktop = width >= 1024;
-  const maxContentWidth = 1180;
-
-  return {
-    width,
-    height,
-    isMobile,
-    isTablet,
-    isDesktop,
-    maxContentWidth,
-    // Permet de centrer automatiquement et d'éviter les étirements démesurés sur grand écran
-    containerStyle: {
-      width: '100%' as const,
-      maxWidth: maxContentWidth,
-      alignSelf: 'center' as const,
-    },
-    contentPadding: isMobile ? ELITE_SPACING.lg : ELITE_SPACING.xl,
-  };
-}

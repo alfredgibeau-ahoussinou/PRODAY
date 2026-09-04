@@ -5,8 +5,6 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
@@ -14,48 +12,85 @@ import { usePlayerHubData } from '../../hooks/usePlayerHubData';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { JoueurScreenChrome } from '../../components/joueur/JoueurScreenChrome';
+import {
+  JoueurSectionHeader,
+  PlayerMatchCard,
+  PlayerStatCard,
+  PlayerChallengeCard,
+  PlayerProgressBar,
+  JoueurCard,
+} from '../../components/joueur';
+import {
+  PlayerHubShortcutRow,
+  PlayerMatchDayEmpty,
+  PlayerMatchDayHero,
+} from '../../components/joueur/PlayerMatchDayChrome';
 import { screenScrollPad } from '../../navigation/screenLayout';
+import { resolvePlayerShieldWidth } from '../../utils/playerShieldLayout';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { spacing } from '../../theme/designTokens';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
+import { resolveJoueurAgeGroup } from '../../utils/joueurExperienceTheme';
+import { getJoueurDailyQuests } from '../../features/joueur/constants';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
+import { PlayerShieldCard } from '../../components/joueur/PlayerShieldCard';
 import { userToProDayCard } from '../../utils/prodayFutCard';
 import { teamEventsService } from '../../services/teamEvents.service';
-import type { PlayerRsvpChoice } from '../../utils/amateurPlayerHome';
-import { EliteStandingsBoard } from '../../components/competition/EliteStandingsBoard';
-import { EliteAiQuickBar } from '../../components/home/EliteAiQuickBar';
-import { EliteNextMatchHero, type NextMatchDetails } from '../../components/home/EliteNextMatchHero';
-import { EliteCard } from '../../components/ui/EliteCard';
-import { EliteBadge } from '../../components/ui/EliteBadge';
-import { Icon } from '../../components/ui/Icon';
-import { ELITE_COLORS, ELITE_RADIUS, ELITE_SPACING } from '../../theme/prodayEliteTheme';
+import {
+  playerCanShowRsvp,
+  type PlayerRsvpChoice,
+} from '../../utils/amateurPlayerHome';
 
-/**
- * Pôle Joueur — Dashboard épuré, ultra-simple et puissant (Standard SportEasy / Footbar).
- * L'essentiel en un clin d'œil :
- * 1. Mon Prochain Match & Mon RSVP 1-tap immédiat
- * 2. L'état des présences de l'équipe (14/16 prêts)
- * 3. 4 Grosses actions directes (Calendrier, Vestiaire, Covoiturage, Entraînement)
- * 4. Classement Officiel FFF & Meilleurs Buteurs
- * 5. Ma Carte Joueur & Stats Réelles
- */
+/** Accueil Football Hub — match day, RSVP réel, pas de stats inventées. */
 export function PlayerFootballHubScreen() {
   const profile = useSessionProfile();
   const session = useJoueurSession();
   const nav = useTabNavigationActions();
   const hub = usePlayerHubData(profile);
   const [refreshing, setRefreshing] = useState(false);
-  const [localRsvp, setLocalRsvp] = useState<'attending' | 'declined' | 'pending'>('attending');
-  const [rsvpFeedback, setRsvpFeedback] = useState<string | null>(null);
+  const [rsvpBusy, setRsvpBusy] = useState(false);
 
   const playerTheme = usePlayerThemeColors();
   const accent = playerTheme.accent;
+  const accentAlt = playerTheme.accentAlt;
   const progressApi = useJoueurProgress();
 
-  const ovr = progressApi?.ovr ?? 84;
-  const clubName = hub.clubName || 'FC ProDay';
-  const position = profile?.profile?.position || 'Attaquant';
-  const firstName = profile?.display_name?.split(' ')[0] || 'Joueur';
+  const shieldCard = useMemo(() => {
+    if (!profile) return null;
+    const card = userToProDayCard(profile, { clubName: hub.clubName ?? undefined });
+    const ovr = progressApi?.ovr ?? card.overall;
+    return {
+      displayName: profile.display_name,
+      position: profile.profile.position,
+      photoUrl: profile.avatar_url,
+      clubName: hub.clubName ?? card.clubName,
+      stats: {
+        matches: card.matches,
+        notes: card.formPct > 0 ? card.formPct / 10 : null,
+        goals: card.goals,
+        assists: card.assists,
+        rating: ovr > 0 ? ovr / 10 : null,
+      },
+    };
+  }, [profile, hub.clubName, progressApi?.ovr]);
+
+  const ageGroup = useMemo(
+    () =>
+      session?.ageGroup ??
+      resolveJoueurAgeGroup({
+        age: profile?.profile.age,
+        birthDate: profile?.profile.birth_date,
+        gender: profile?.profile.gender,
+      }),
+    [session?.ageGroup, profile],
+  );
+
+  const dailyDone = new Set(progressApi?.progress.dailyCompletedIds ?? []);
+
+  const dailyQuest = useMemo(
+    () => getJoueurDailyQuests(ageGroup === 'youth' ? 'youth' : ageGroup === 'teen' ? 'teen' : 'adult')[0],
+    [ageGroup],
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -67,19 +102,20 @@ export function PlayerFootballHubScreen() {
   }, [hub]);
 
   const onRsvp = useCallback(
-    async (choice: 'attending' | 'declined') => {
-      setLocalRsvp(choice);
-      const isYes = choice === 'attending';
-      setRsvpFeedback(isYes ? 'Présence confirmée au coach ✅' : 'Absence signalée au coach ❌');
-      setTimeout(() => setRsvpFeedback(null), 3500);
-
-      if (hub.dayPriority.kind !== 'calm' && profile) {
-        try {
-          await teamEventsService.updateRsvp(hub.dayPriority.event.id, profile.uid, isYes ? 'yes' : 'no');
-          await hub.refresh();
-        } catch {
-          // Ignorer silencieusement pour le mode local
-        }
+    async (choice: PlayerRsvpChoice) => {
+      if (!profile || hub.dayPriority.kind === 'calm') return;
+      const event = hub.dayPriority.event;
+      setRsvpBusy(true);
+      try {
+        await teamEventsService.updateRsvp(event.id, profile.uid, choice);
+        await hub.refresh();
+      } catch (e) {
+        Alert.alert(
+          'Présence',
+          e instanceof Error ? e.message : 'Impossible d’enregistrer la réponse.',
+        );
+      } finally {
+        setRsvpBusy(false);
       }
     },
     [profile, hub],
@@ -88,407 +124,197 @@ export function PlayerFootballHubScreen() {
   if (!profile) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator color={accent} size="large" />
+        <ActivityIndicator color={accent} />
       </View>
     );
   }
 
-  // Construit les détails du prochain match :
-  // S'il y a un événement réel dans le hub, on l'utilise. Sinon, match de championnat par défaut pour que l'écran soit toujours vivant !
-  const matchDetails: NextMatchDetails = useMemo(() => {
-    if (hub.dayPriority.kind !== 'calm') {
-      const ev = hub.dayPriority.event;
-      return {
-        id: ev.id,
-        opponentName: ev.live_state?.opponent_name || ev.title || 'Adversaire',
-        homeClubName: clubName,
-        isHome: true,
-        dateLabel: 'Ce weekend',
-        timeLabel: '15:00',
-        competitionLabel: 'Championnat Régional',
-        stadiumName: ev.location_label || 'Stade Municipal',
-        stadiumAddress: ev.city || 'Terrain d’honneur',
-        userRsvpStatus: localRsvp,
-        totalAttending: 14,
-        totalCalled: 16,
-      };
-    }
-    return {
-      id: 'default-upcoming-match',
-      opponentName: 'AS Meudon',
-      homeClubName: clubName,
-      isHome: true,
-      dateLabel: 'Dimanche 8 Septembre',
-      timeLabel: '15:00',
-      competitionLabel: 'Départemental 1 · J14',
-      stadiumName: 'Stade Jean Moulin',
-      stadiumAddress: 'Avenue du Sport, 92190 Meudon',
-      userRsvpStatus: localRsvp,
-      totalAttending: localRsvp === 'attending' ? 14 : 13,
-      totalCalled: 16,
-    };
-  }, [hub.dayPriority, clubName, localRsvp]);
+  const nextDefiTitle = dailyQuest?.title ?? 'Connecte-toi chaque jour';
+  const nextDefiProgress = dailyDone.has('daily-login') || hub.streakDays > 0 ? 1 : 0;
+  const nextDefiMax = 1;
+
+  const shieldWidth = resolvePlayerShieldWidth();
+  const priority = hub.dayPriority;
+  const heroEvent = priority.kind === 'calm' ? null : priority.event;
+  const showRsvp = heroEvent ? playerCanShowRsvp(heroEvent, profile.uid) : false;
+  const secondaryTraining =
+    hub.nextTraining && hub.nextTraining.id !== heroEvent?.id ? hub.nextTraining : null;
 
   return (
-    <JoueurScreenChrome variant="page" kicker="Pôle Joueur" title={`Bonjour ${firstName} 👋`}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.pad, screenScrollPad(spacing.xl + spacing.md)]}
-        showsVerticalScrollIndicator={false}
-        decelerationRate="normal"
-        nestedScrollEnabled
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
-        }
-      >
-        {/* 1. Bandeau Profil Express SportEasy Style */}
-        <EliteCard padding="md" style={styles.profileHeaderCard}>
-          <View style={styles.profileHeaderRow}>
-            <View style={styles.profileAvatar}>
-              <Text style={styles.profileAvatarText}>⚽</Text>
+    <JoueurScreenChrome variant="page" kicker="Parcours" title={`Bonjour ${hub.firstName}`}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.pad, screenScrollPad(spacing.xl + spacing.md)]}
+          showsVerticalScrollIndicator={false}
+          decelerationRate="normal"
+          nestedScrollEnabled
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={accent} />
+          }
+        >
+          {shieldCard ? (
+            <View style={styles.shieldWrap}>
+              <PlayerShieldCard
+                displayName={shieldCard.displayName}
+                position={shieldCard.position}
+                photoUrl={shieldCard.photoUrl}
+                clubName={shieldCard.clubName}
+                stats={shieldCard.stats}
+                width={shieldWidth}
+                onPress={() => nav.setActiveTab('profil')}
+              />
+              <PlayerProgressBar
+                value={hub.profileCompletion}
+                label={`Profil ${hub.profileCompletion}%`}
+                accent={accent}
+                style={[styles.profileBar, { width: shieldWidth }]}
+              />
             </View>
-            <View style={styles.profileInfo}>
-              <View style={styles.nameRow}>
-                <Text style={styles.playerName}>{profile.display_name}</Text>
-                <EliteBadge label={`OVR ${ovr}`} variant="gold" size="sm" />
-              </View>
-              <Text style={styles.playerMeta}>
-                {position} · {clubName}
-              </Text>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => nav.setActiveTab('profil')}
-              style={styles.profileEditBtn}
-            >
-              <Text style={styles.profileEditBtnText}>Mon profil ↗</Text>
-            </TouchableOpacity>
-          </View>
-        </EliteCard>
+          ) : null}
 
-        {/* 2. Notification de RSVP en direct si cliqué */}
-        {rsvpFeedback ? (
-          <View style={styles.feedbackBanner}>
-            <Text style={styles.feedbackText}>{rsvpFeedback}</Text>
-          </View>
-        ) : null}
+          <PlayerHubShortcutRow
+            accent={accent}
+            items={[
+              {
+                id: 'matchs',
+                label: 'Matchs',
+                icon: 'trophy',
+                onPress: () => nav.setActiveTab('matchs'),
+              },
+              {
+                id: 'train',
+                label: 'Train',
+                icon: 'football',
+                onPress: () => nav.openDashboard('train'),
+              },
+              {
+                id: 'messages',
+                label: 'Messages',
+                icon: 'chat',
+                onPress: () => nav.setActiveTab('messages'),
+              },
+              {
+                id: 'equipe',
+                label: 'Équipe',
+                icon: 'people',
+                onPress: () => nav.setActiveTab('recrutement'),
+              },
+            ]}
+          />
 
-        {/* 3. Hero XXL Prochain Match avec RSVP 1-tap et Itinéraire GPS */}
-        <EliteNextMatchHero
-          match={matchDetails}
-          onRsvp={onRsvp}
-          onOpenCarpool={() => nav.setActiveTab('covoiturage')}
-          onOpenMatchDetail={() => nav.setActiveTab('matchs')}
-        />
+          <JoueurSectionHeader
+            title="Match day"
+            subtitle={
+              hub.pendingConvocations.length > 0
+                ? `${hub.pendingConvocations.length} à confirmer`
+                : undefined
+            }
+          />
+          {hub.loading ? (
+            <ActivityIndicator color={accent} style={styles.inlineLoader} />
+          ) : priority.kind === 'calm' ? (
+            <PlayerMatchDayEmpty
+              accent={accent}
+              onOpenMatchs={() => nav.setActiveTab('matchs')}
+              onOpenTrain={() => nav.openDashboard('train')}
+            />
+          ) : (
+            <PlayerMatchDayHero
+              priority={priority}
+              playerUid={profile.uid}
+              accent={accent}
+              busy={rsvpBusy}
+              showRsvp={showRsvp}
+              onOpen={() => {
+                if (priority.kind === 'live') {
+                  nav.openTeamEvent(priority.event.id);
+                  return;
+                }
+                nav.openTeamEvent(priority.event.id);
+              }}
+              onChooseRsvp={(choice) => void onRsvp(choice)}
+            />
+          )}
 
-        {/* 4. 4 Grosses Actions Directes (Simple, Efficace, Sans Détour) */}
-        <View style={styles.quickGrid}>
-          {/* Calendrier / Convocations */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => nav.setActiveTab('matchs')}
-            style={styles.quickTile}
-          >
-            <View style={[styles.tileIconCircle, { backgroundColor: '#38BDF820' }]}>
-              <Icon name="calendar" size={22} color="#38BDF8" />
-            </View>
-            <Text style={styles.tileTitle}>Matchs & Dates</Text>
-            <Text style={styles.tileSubtitle}>Calendrier & convocations</Text>
-          </TouchableOpacity>
+          {secondaryTraining ? (
+            <>
+              <JoueurSectionHeader title="Prochain entraînement" />
+              <PlayerMatchCard
+                event={secondaryTraining}
+                accent={accentAlt}
+                onPress={() => nav.openTeamEvent(secondaryTraining.id)}
+              />
+            </>
+          ) : null}
 
-          {/* Vestiaire / Chat */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => nav.setActiveTab('messages')}
-            style={styles.quickTile}
-          >
-            <View style={[styles.tileIconCircle, { backgroundColor: '#00E67620' }]}>
-              <Icon name="chat" size={22} color="#00E676" />
-            </View>
-            <Text style={styles.tileTitle}>Vestiaire</Text>
-            <Text style={styles.tileSubtitle}>Discussions & coach</Text>
-          </TouchableOpacity>
+          <JoueurSectionHeader title="Ton prochain défi" />
+          <PlayerChallengeCard
+            title={nextDefiTitle}
+            description={dailyQuest?.body}
+            progress={nextDefiProgress}
+            progressMax={nextDefiMax}
+            progressLabel={`${nextDefiProgress}/${nextDefiMax}`}
+            done={nextDefiProgress >= nextDefiMax}
+            accent={accent}
+            onPress={() => nav.setActiveTab('feed')}
+          />
 
-          {/* Covoiturage */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => nav.setActiveTab('covoiturage')}
-            style={styles.quickTile}
-          >
-            <View style={[styles.tileIconCircle, { backgroundColor: '#F59E0B20' }]}>
-              <Icon name="car" size={22} color="#F59E0B" />
-            </View>
-            <Text style={styles.tileTitle}>Covoiturage</Text>
-            <Text style={styles.tileSubtitle}>Trajets du weekend</Text>
-          </TouchableOpacity>
-
-          {/* Entraînement */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => nav.openDashboard('train')}
-            style={styles.quickTile}
-          >
-            <View style={[styles.tileIconCircle, { backgroundColor: '#A855F720' }]}>
-              <Icon name="football" size={22} color="#A855F7" />
-            </View>
-            <Text style={styles.tileTitle}>Entraînement</Text>
-            <Text style={styles.tileSubtitle}>Exercices & forme</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 5. Copilote IA Joueur */}
-        <EliteAiQuickBar
-          role="player"
-          onOpenAssistant={() => nav.setActiveTab('messages')}
-        />
-
-        {/* 6. Classement Officiel de la Ligue FFF & Meilleurs Buteurs */}
-        <EliteStandingsBoard
-          leagueName="Départemental 1 · Poule A"
-          onTeamPress={() => nav.setActiveTab('matchs')}
-          onScorerPress={() => nav.setActiveTab('profil')}
-        />
-
-        {/* 7. Carte FUT Joueur & Performance */}
-        <EliteCard padding="lg" style={styles.futCardContainer}>
-          <View style={styles.futCardHeader}>
-            <View style={styles.futTag}>
-              <Text style={styles.futTagText}>PRODAY CARTE JOUEUR</Text>
-            </View>
-            <EliteBadge label="SAISON 2026-2027" variant="neutral" size="sm" />
-          </View>
-
-          <View style={styles.futMainRow}>
-            <View style={styles.futOvrBlock}>
-              <Text style={styles.futOvrNumber}>{ovr}</Text>
-              <Text style={styles.futPosition}>{position.toUpperCase().slice(0, 3)}</Text>
-            </View>
-            <View style={styles.futStatsGrid}>
-              <View style={styles.futStatItem}>
-                <Text style={styles.futStatValue}>11</Text>
-                <Text style={styles.futStatLabel}>MATCHS</Text>
-              </View>
-              <View style={styles.futStatItem}>
-                <Text style={styles.futStatValue}>7</Text>
-                <Text style={styles.futStatLabel}>BUTS</Text>
-              </View>
-              <View style={styles.futStatItem}>
-                <Text style={styles.futStatValue}>4</Text>
-                <Text style={styles.futStatLabel}>PASSES</Text>
-              </View>
-              <View style={styles.futStatItem}>
-                <Text style={styles.futStatValue}>96%</Text>
-                <Text style={styles.futStatLabel}>FORME</Text>
-              </View>
-            </View>
+          <JoueurSectionHeader title="Ma forme" />
+          <View style={styles.statRow}>
+            <PlayerStatCard
+              label="Forme"
+              value={hub.formPercent != null ? `${hub.formPercent}%` : '—'}
+              hint={
+                hub.formPercent != null
+                  ? 'Basé sur ton dernier check wellness'
+                  : 'Pas encore de check-in wellness'
+              }
+              empty={hub.formPercent == null}
+              accent={accent}
+              onPress={() => nav.setActiveTab('feed')}
+            />
+            <PlayerStatCard
+              label="Niveau"
+              value={hub.level}
+              hint={`OVR ${hub.ovr || '—'}`}
+              accent={accent}
+              onPress={() => nav.setActiveTab('feed')}
+            />
           </View>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => nav.setActiveTab('profil')}
-            style={styles.futCardFooter}
-          >
-            <Text style={styles.futCardFooterText}>Voir mon radar 6 axes complet & défis XP ↗</Text>
-          </TouchableOpacity>
-        </EliteCard>
-      </ScrollView>
+          <JoueurSectionHeader title="Plus" />
+          <View style={styles.actions}>
+            <JoueurCard
+              variant="list"
+              title="Calendrier matchs"
+              subtitle="Convocations & résultats"
+              onPress={() => nav.setActiveTab('matchs')}
+            />
+            <JoueurCard
+              variant="list"
+              title="S’entraîner"
+              subtitle="Hub entraînement"
+              onPress={() => nav.openDashboard('train')}
+            />
+            <JoueurCard
+              variant="list"
+              title="Messages"
+              subtitle="Chat équipe"
+              onPress={() => nav.setActiveTab('messages')}
+            />
+          </View>
+        </ScrollView>
     </JoueurScreenChrome>
   );
 }
 
 const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: PLAYER_DARK.bg,
-  },
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: PLAYER_DARK.bg },
   scroll: { flex: 1 },
-  pad: {
-    paddingHorizontal: ELITE_SPACING.md,
-    paddingTop: ELITE_SPACING.sm,
-    gap: ELITE_SPACING.md,
-  },
-  profileHeaderCard: {
-    backgroundColor: '#101522',
-    borderColor: '#1E293B',
-  },
-  profileHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  profileAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#172033',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#00E676',
-  },
-  profileAvatarText: {
-    fontSize: 20,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  playerName: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  playerMeta: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 2,
-  },
-  profileEditBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: '#1E293B',
-  },
-  profileEditBtnText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#38BDF8',
-  },
-  feedbackBanner: {
-    backgroundColor: '#00E67620',
-    borderColor: '#00E676',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    alignItems: 'center',
-  },
-  feedbackText: {
-    color: '#00E676',
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  quickGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  quickTile: {
-    flex: 1,
-    minWidth: '47%',
-    backgroundColor: '#101522',
-    borderWidth: 1,
-    borderColor: '#1E293B',
-    borderRadius: ELITE_RADIUS.lg,
-    padding: 14,
-    gap: 4,
-  },
-  tileIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  tileTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  tileSubtitle: {
-    fontSize: 11,
-    color: '#94A3B8',
-  },
-  futCardContainer: {
-    backgroundColor: '#101522',
-    borderColor: '#F59E0B40',
-    borderWidth: 1,
-  },
-  futCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  futTag: {
-    backgroundColor: '#F59E0B20',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  futTagText: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: '#F59E0B',
-    letterSpacing: 0.5,
-  },
-  futMainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-    gap: 16,
-  },
-  futOvrBlock: {
-    alignItems: 'center',
-    backgroundColor: '#1E1B10',
-    borderColor: '#F59E0B60',
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    minWidth: 64,
-  },
-  futOvrNumber: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#F59E0B',
-    lineHeight: 32,
-  },
-  futPosition: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#CBD5E1',
-  },
-  futStatsGrid: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#080C14',
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-  },
-  futStatItem: {
-    alignItems: 'center',
-  },
-  futStatValue: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  futStatLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#64748B',
-    marginTop: 2,
-  },
-  futCardFooter: {
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#1E293B',
-    alignItems: 'center',
-  },
-  futCardFooterText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#38BDF8',
-  },
+  pad: { padding: spacing.lg, gap: spacing.md },
+  shieldWrap: { alignItems: 'center', marginBottom: spacing.sm, gap: spacing.sm, width: '100%' },
+  profileBar: { opacity: 0.85 },
+  inlineLoader: { marginVertical: spacing.md },
+  statRow: { flexDirection: 'row', gap: spacing.sm },
+  actions: { gap: spacing.xs },
 });

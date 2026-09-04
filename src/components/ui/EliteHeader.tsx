@@ -1,15 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, type ViewStyle } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ELITE_COLORS, ELITE_SPACING, useEliteResponsive } from '../../theme/prodayEliteTheme';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableSpring } from '../motion';
 import { Icon } from './Icon';
+import { ELITE_COLORS, ELITE_RADIUS, ELITE_SPACING } from '../../theme/prodayEliteTheme';
 
 interface EliteHeaderProps {
   title: string;
   subtitle?: string;
   onBack?: () => void;
   rightAction?: React.ReactNode;
-  style?: ViewStyle;
 }
 
 export const EliteHeader: React.FC<EliteHeaderProps> = ({
@@ -17,96 +16,80 @@ export const EliteHeader: React.FC<EliteHeaderProps> = ({
   subtitle,
   onBack,
   rightAction,
-  style,
 }) => {
-  const insets = useSafeAreaInsets();
-  const { isMobile, containerStyle } = useEliteResponsive();
-
   return (
-    <View style={[styles.wrapper, { paddingTop: insets.top > 0 ? insets.top : ELITE_SPACING.md }, style]}>
-      <View style={[styles.inner, containerStyle]}>
-        <View style={styles.left}>
-          {onBack ? (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={onBack}
-              style={styles.backButton}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            >
-              <Icon name="arrow-back" size={20} color={ELITE_COLORS.textPrimary} />
-            </TouchableOpacity>
-          ) : null}
-          <View style={styles.titleContainer}>
-            <Text style={[styles.title, isMobile ? styles.titleMobile : styles.titleDesktop]} numberOfLines={1}>
-              {title}
+    <View style={styles.header}>
+      <View style={styles.leftRow}>
+        {onBack ? (
+          <PressableSpring
+            onPress={onBack}
+            haptic
+            scaleTo={0.92}
+            style={styles.backBtn}
+          >
+            <Icon name="arrow-back" size={20} color={ELITE_COLORS.textPrimary} />
+          </PressableSpring>
+        ) : null}
+        <View style={styles.titleWrap}>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {subtitle}
             </Text>
-            {subtitle ? (
-              <Text style={styles.subtitle} numberOfLines={1}>
-                {subtitle}
-              </Text>
-            ) : null}
-          </View>
+          ) : null}
         </View>
-
-        {rightAction ? <View style={styles.right}>{rightAction}</View> : null}
       </View>
+
+      {rightAction ? <View style={styles.right}>{rightAction}</View> : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    backgroundColor: ELITE_COLORS.bg,
-    borderBottomWidth: 1,
-    borderBottomColor: ELITE_COLORS.border,
-    paddingBottom: ELITE_SPACING.md,
-    zIndex: 10,
-  },
-  inner: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: ELITE_SPACING.lg,
+    paddingVertical: ELITE_SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: ELITE_COLORS.border,
+    backgroundColor: ELITE_COLORS.bg,
   },
-  left: {
+  leftRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
     gap: ELITE_SPACING.md,
+    flex: 1,
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: ELITE_RADIUS.sm,
     backgroundColor: ELITE_COLORS.bgSurfaceElevated,
     borderWidth: 1,
     borderColor: ELITE_COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleContainer: {
+  titleWrap: {
     flex: 1,
+    gap: 2,
   },
   title: {
-    color: ELITE_COLORS.textPrimary,
+    fontSize: 18,
     fontWeight: '800',
+    color: ELITE_COLORS.textPrimary,
     letterSpacing: -0.3,
   },
-  titleMobile: {
-    fontSize: 18,
-  },
-  titleDesktop: {
-    fontSize: 22,
-  },
   subtitle: {
-    color: ELITE_COLORS.textSecondary,
     fontSize: 12,
     fontWeight: '500',
-    marginTop: 1,
+    color: ELITE_COLORS.textSecondary,
   },
   right: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ELITE_SPACING.sm,
+    marginLeft: ELITE_SPACING.md,
   },
 });

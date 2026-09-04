@@ -267,17 +267,13 @@ function createStyles(
 ) {
   return StyleSheet.create({
     card: {
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.08)',
-      backgroundColor: '#101522',
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
       overflow: 'hidden',
       marginBottom: spacing.sm,
     },
     cardUnread: {
-      borderWidth: 1,
-      borderColor: 'rgba(0, 230, 118, 0.4)',
-      backgroundColor: '#141B2D',
+      borderWidth: 1.5,
     },
     stripe: {
       height: 3,

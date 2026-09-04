@@ -3,14 +3,14 @@
  * Tokens statiques, indépendants du contexte React.
  */
 export const PLAYER_DARK = {
-  bg: '#080B11',
-  bgElevated: '#101522',
-  surface: '#101522',
-  surfaceRaised: '#171F32',
+  bg: '#000000',
+  bgElevated: '#0A0A0F',
+  surface: '#121218',
+  surfaceRaised: '#1A1A24',
   border: 'rgba(255,255,255,0.08)',
-  borderStrong: 'rgba(255,255,255,0.16)',
+  borderStrong: 'rgba(255,255,255,0.14)',
   text: '#FFFFFF',
-  textMuted: '#94A3B8',
+  textMuted: '#8B8B9A',
   textDim: 'rgba(139,139,154,0.72)',
   accent: '#00E676',
   accentAlt: '#2DD4BF',

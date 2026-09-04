@@ -11,7 +11,6 @@ import { useAppTheme } from '../../context/ProductLineContext';
 import { MATCH_SITE } from '../../content/matchPageIdentity';
 import { spacing } from '../../theme/designTokens';
 import { MatchEmptyState, MatchKpiRow, MatchLightPanel } from './matchCenterUi';
-import { EliteStandingsBoard } from '../competition/EliteStandingsBoard';
 
 interface MatchSeasonStatsPanelProps {
   profile: User | null;
@@ -121,11 +120,6 @@ export const MatchSeasonStatsPanel: React.FC<MatchSeasonStatsPanelProps> = ({
           {totals.minutes} minutes jouées (feuilles ProDay)
         </ProDayText>
       ) : null}
-
-      {/* Module de Classement & Buteurs officiel (MyCoach / SportEasy) */}
-      <EliteStandingsBoard
-        leagueName="Départemental 1 · Poule A"
-      />
 
       <ProDayText variant="caption" style={[styles.sectionKicker, { color: colors.accent }]}>
         {t('matchs.stats.history')}

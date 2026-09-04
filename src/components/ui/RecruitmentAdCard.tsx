@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, ImageSourcePropType } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
-import { ELITE_COLORS, ELITE_RADIUS, ELITE_SPACING } from '../../theme/prodayEliteTheme';
-import { EliteBadge } from './EliteBadge';
+import { spacing, radius, shadows } from '../../theme/designTokens';
+import { useAppTheme } from '../../context/ProductLineContext';
 
 interface RecruitmentAdCardProps {
   clubName: string;
@@ -21,44 +21,43 @@ export const RecruitmentAdCard: React.FC<RecruitmentAdCardProps> = ({
   imageSource,
   badge,
 }) => {
+  const { colors } = useAppTheme();
+
   return (
     <PressableSpring
-      style={styles.card}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+        },
+        shadows.soft,
+      ]}
       onPress={onPress}
       disabled={!onPress}
-      scaleTo={0.97}
+      scaleTo={0.96}
       haptic={Boolean(onPress)}
     >
       {imageSource ? (
         <Image source={imageSource} style={styles.thumb} resizeMode="cover" />
       ) : (
-        <View style={styles.logo}>
-          <Text style={styles.logoText}>{clubName.charAt(0).toUpperCase()}</Text>
+        <View style={[styles.logo, { backgroundColor: colors.accentSoft }]}>
+          <Text style={[styles.logoText, { color: colors.brand }]}>{clubName.charAt(0)}</Text>
         </View>
       )}
-
       <View style={styles.body}>
         <View style={styles.titleRow}>
-          <Text style={styles.club} numberOfLines={1}>
-            {clubName}
-          </Text>
+          <Text style={[styles.club, { color: colors.text }]}>{clubName}</Text>
           {badge ? (
-            <EliteBadge label={badge} variant="success" size="sm" />
+            <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
+              <Text style={[styles.badgeText, { color: colors.brand }]}>{badge}</Text>
+            </View>
           ) : null}
         </View>
-
-        <Text style={styles.role} numberOfLines={1}>
-          {roleLine}
-        </Text>
-
-        <Text style={styles.meta} numberOfLines={1}>
-          {meta}
-        </Text>
+        <Text style={[styles.role, { color: colors.textSecondary }]}>{roleLine}</Text>
+        <Text style={[styles.meta, { color: colors.textMuted }]}>{meta}</Text>
       </View>
-
-      <View style={styles.chevronContainer}>
-        <Text style={styles.chevron}>›</Text>
-      </View>
+      <Text style={[styles.chevron, { color: colors.brand }]}>›</Text>
     </PressableSpring>
   );
 };
@@ -67,70 +66,37 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: ELITE_SPACING.md,
-    marginBottom: ELITE_SPACING.sm,
-    backgroundColor: ELITE_COLORS.bgSurface,
-    borderRadius: ELITE_RADIUS.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    overflow: 'hidden',
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: ELITE_COLORS.border,
   },
   thumb: {
-    width: 48,
-    height: 48,
-    borderRadius: ELITE_RADIUS.md,
-    marginRight: ELITE_SPACING.md,
+    width: 52,
+    height: 52,
+    borderRadius: radius.md,
+    marginRight: spacing.md,
   },
   logo: {
     width: 48,
     height: 48,
-    borderRadius: ELITE_RADIUS.md,
-    backgroundColor: ELITE_COLORS.bgSurfaceElevated,
-    borderWidth: 1,
-    borderColor: ELITE_COLORS.borderHighlight,
-    alignItems: 'center',
+    borderRadius: radius.md,
     justifyContent: 'center',
-    marginRight: ELITE_SPACING.md,
-  },
-  logoText: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: ELITE_COLORS.primary,
-  },
-  body: {
-    flex: 1,
-    gap: 3,
-  },
-  titleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
+    marginRight: spacing.md,
   },
-  club: {
-    color: ELITE_COLORS.textPrimary,
-    fontSize: 15,
-    fontWeight: '800',
-    flex: 1,
+  logoText: { fontSize: 20, fontWeight: '800' },
+  body: { flex: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  club: { fontSize: 16, fontWeight: '800', flex: 1 },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
   },
-  role: {
-    color: ELITE_COLORS.primary,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  meta: {
-    color: ELITE_COLORS.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  chevronContainer: {
-    width: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: ELITE_SPACING.sm,
-  },
-  chevron: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: ELITE_COLORS.textMuted,
-  },
+  badgeText: { fontSize: 10, fontWeight: '700' },
+  role: { fontSize: 14, marginTop: 2 },
+  meta: { fontSize: 12, marginTop: 4 },
+  chevron: { fontSize: 22, fontWeight: '600', marginLeft: spacing.sm },
 });

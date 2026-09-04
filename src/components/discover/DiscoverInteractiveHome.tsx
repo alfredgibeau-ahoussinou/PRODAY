@@ -15,9 +15,6 @@ import type { ProductLineId } from '../../models/ProductLine';
 import { useTranslation } from '../../context/LocaleContext';
 import type { DiscoverHomeChrome } from './discoverPoleHome';
 import { ProDayScreenCanvas } from '../ui/ProDayScreenCanvas';
-import { EliteNextMatchHero } from '../home/EliteNextMatchHero';
-import { EliteStandingsBoard } from '../competition/EliteStandingsBoard';
-import { EliteAiQuickBar } from '../home/EliteAiQuickBar';
 
 export interface DiscoverInteractiveHomeProps {
   productLine: ProductLineId;
@@ -117,50 +114,16 @@ export const DiscoverInteractiveHome: React.FC<DiscoverInteractiveHomeProps> = (
             onUniversePress={onUniversePress}
           />
 
-          {/* 1. Prochain Match & Convocations SportEasy style */}
-          <EliteNextMatchHero
-            match={{
-              id: 'guest-next-match',
-              opponentName: 'US Créteil Lusitanos',
-              homeClubName: 'FC Melun',
-              isHome: true,
-              dateLabel: 'Dimanche 8 Septembre',
-              timeLabel: '15:00',
-              competitionLabel: 'Départemental 1 · J13',
-              stadiumName: 'Stade Municipal des Prés',
-              stadiumAddress: 'Avenue du Sport, 77000 Melun',
-              userRsvpStatus: 'pending',
-              totalAttending: 13,
-              totalCalled: 16,
-            }}
-            onRsvp={() => onSignup()}
-            onOpenCarpool={onSignup}
-            onOpenMatchDetail={onMatchs}
-          />
-
-          {/* 2. Copilote IA rapide */}
-          <EliteAiQuickBar
-            role="player"
-            onOpenAssistant={() => onSignup()}
-          />
-
-          {/* 3. Classement & Buteurs FFF / MyCoach style */}
-          <EliteStandingsBoard
-            leagueName="Départemental 1 · Poule A"
-            onTeamPress={() => onMatchs()}
-            onScorerPress={() => onSignup()}
-          />
-
           {showQuick ? (
             <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-              <DiscoverSectionLabel>Accès Rapide</DiscoverSectionLabel>
+              <DiscoverSectionLabel>{t('discover.quickAccess')}</DiscoverSectionLabel>
               <DiscoverQuickAccess productLine={productLine} onPress={onQuickPress} />
             </View>
           ) : null}
 
           {showActivity ? (
             <View style={[local.section, { paddingHorizontal: metrics.pad }]}>
-              <DiscoverSectionLabel>Mercato en direct</DiscoverSectionLabel>
+              <DiscoverSectionLabel>{t('discover.live')}</DiscoverSectionLabel>
               <DiscoverActivityStrip
                 posts={posts}
                 loading={loading}

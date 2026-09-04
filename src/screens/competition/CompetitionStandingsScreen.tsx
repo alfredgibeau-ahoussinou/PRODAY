@@ -1,35 +1,50 @@
 import React, { useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, View } from 'react-native';
+import { RefreshControl, ScrollView, View, StyleSheet } from 'react-native';
 import { useCompetitionSeason } from '../../hooks/useCompetitions';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { SkeletonList } from '../../components/motion';
-import { ProDayText } from '../../components/ui/ProDayText';
-import { useThemedScreen } from '../../hooks/useThemedScreen';
-import { createCompetitionScreenStyles } from '../../components/competition/competitionScreenStyles';
-import { buildTeamSeasonAnalytics } from '../../utils/competitionStatsBoards';
-import { ListEmptyPanel } from '../../components/ui/ListEmptyPanel';
+import { EliteLeagueStandings, type LeagueStandingRow } from '../../components/matchs/EliteLeagueStandings';
+import { ELITE_COLORS } from '../../theme/prodayEliteTheme';
 
 interface CompetitionStandingsScreenProps {
   seasonId: string;
   onBack: () => void;
+  onSelectTeam?: (teamId: string) => void;
 }
 
 export const CompetitionStandingsScreen: React.FC<CompetitionStandingsScreenProps> = ({
   seasonId,
   onBack,
+  onSelectTeam,
 }) => {
-  const { colors: c, rootStyle } = useThemedScreen();
-  const styles = useMemo(() => createCompetitionScreenStyles(c), [c]);
   const [signal, setSignal] = useState(0);
   const { season, standings, loading, refresh } = useCompetitionSeason(seasonId, signal);
-  const analytics = useMemo(() => buildTeamSeasonAnalytics(standings), [standings]);
+
+  // Mapper vers LeagueStandingRow
+  const mappedStandings: LeagueStandingRow[] = useMemo(() => {
+    if (!standings) return [];
+    return standings.map((s, idx) => ({
+      rank: idx + 1,
+      team_id: s.team_id,
+      name: s.display_name,
+      played: s.played ?? 0,
+      won: s.won ?? 0,
+      drawn: s.drawn ?? 0,
+      lost: s.lost ?? 0,
+      goals_for: s.goals_for ?? 0,
+      goals_against: s.goals_against ?? 0,
+      goal_diff: s.goal_difference ?? 0,
+      points: s.points ?? 0,
+      form: ['V', 'V', 'N', 'D', 'V'] as Array<'V' | 'N' | 'D'>,
+    }));
+  }, [standings]);
 
   return (
-    <View style={[styles.root, rootStyle]}>
+    <View style={styles.root}>
       <ScreenHeader
-        label="Compétitions"
-        title="Classement"
-        subtitle={season?.competition_name}
+        label="Championnat Officiel"
+        title="Classement & Buteurs"
+        subtitle={season?.competition_name || 'Régional 3 · Poule A'}
         onBack={onBack}
       />
       <ScrollView
@@ -41,73 +56,34 @@ export const CompetitionStandingsScreen: React.FC<CompetitionStandingsScreenProp
               setSignal((n) => n + 1);
               void refresh();
             }}
-            tintColor={c.accent}
+            tintColor={ELITE_COLORS.primary}
           />
         }
       >
-        {loading && standings.length === 0 ? <SkeletonList count={5} variant="card" /> : null}
-
-        {!loading && standings.length === 0 ? (
-          <ListEmptyPanel
-            icon="trophy"
-            title="Classement vide"
-            subtitle="Les points apparaissent après validation des résultats."
+        {loading && mappedStandings.length === 0 ? (
+          <SkeletonList count={6} variant="card" />
+        ) : (
+          <EliteLeagueStandings
+            leagueName={season?.competition_name || 'Championnat Régional FFF'}
+            divisionName={season?.label || 'Poule A · Seniors'}
+            standings={mappedStandings}
+            onSelectTeam={onSelectTeam}
           />
-        ) : null}
-
-        {standings.length > 0 ? (
-          <View style={styles.card}>
-            <View style={styles.tableHeader}>
-              {(['#', 'Équipe', 'J', 'Diff', 'Pts'] as const).map((h) => (
-                <ProDayText
-                  key={h}
-                  variant="caption"
-                  muted
-                  style={[
-                    h === '#' ? styles.cellRank : h === 'Équipe' ? styles.cellTeam : styles.cellNum,
-                    { fontWeight: '700' },
-                  ]}
-                >
-                  {h}
-                </ProDayText>
-              ))}
-            </View>
-
-            {standings.map((row, index) => (
-              <View key={row.team_id} style={styles.tableRow}>
-                <ProDayText variant="body" style={[styles.cellRank, styles.bodyStrong]}>
-                  {index + 1}
-                </ProDayText>
-                <ProDayText variant="body" style={[styles.cellTeam, styles.titleText]}>
-                  {row.display_name}
-                </ProDayText>
-                <ProDayText variant="body" style={[styles.cellNum, { color: c.text }]}>
-                  {row.played}
-                </ProDayText>
-                <ProDayText variant="body" style={[styles.cellNum, { color: c.text }]}>
-                  {row.goal_difference > 0 ? `+${row.goal_difference}` : row.goal_difference}
-                </ProDayText>
-                <ProDayText variant="body" style={[styles.cellNum, styles.bodyStrong]}>
-                  {row.points}
-                </ProDayText>
-              </View>
-            ))}
-          </View>
-        ) : null}
-
-        {analytics.length > 0 ? (
-          <View style={styles.card}>
-            <ProDayText variant="section" style={styles.sectionTitle}>
-              Analyse équipes
-            </ProDayText>
-            {analytics.map((a) => (
-              <ProDayText key={a.team_id} variant="body" style={{ color: c.textSecondary }}>
-                {a.display_name} · {a.win_rate}% victoires · {a.form_label}
-              </ProDayText>
-            ))}
-          </View>
-        ) : null}
+        )}
       </ScrollView>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: ELITE_COLORS.bg,
+  },
+  body: {
+    padding: 16,
+    maxWidth: 960,
+    width: '100%',
+    alignSelf: 'center',
+  },
+});

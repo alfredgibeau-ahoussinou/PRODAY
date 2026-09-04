@@ -32,9 +32,6 @@ import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 import { spacing } from '../../theme/designTokens';
 import type { JoueurDailyQuestDef } from './constants';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
-import { EliteNextMatchHero } from '../../components/home/EliteNextMatchHero';
-import { EliteAiQuickBar } from '../../components/home/EliteAiQuickBar';
-import { EliteStandingsBoard } from '../../components/competition/EliteStandingsBoard';
 
 type Actions = {
   onOpenTrain: () => void;
@@ -155,35 +152,9 @@ export function AdultUniverseScreen({
           <ProDayText variant="title" style={styles.hero}>
             {identity.title}
           </ProDayText>
-
-          {/* 1. Prochain Match & Convocations SportEasy style */}
-          <EliteNextMatchHero
-            match={{
-              id: 'next-match-1',
-              opponentName: 'US Créteil Lusitanos',
-              homeClubName: profile.display_name ? `FC ${profile.display_name}` : 'Mon Club',
-              isHome: true,
-              dateLabel: 'Dimanche 8 Septembre',
-              timeLabel: '15:00',
-              competitionLabel: 'Départemental 1 · J13',
-              stadiumName: 'Stade Municipal des Prés',
-              stadiumAddress: 'Avenue du Sport, 77000 Melun',
-              userRsvpStatus: 'pending',
-              totalAttending: 13,
-              totalCalled: 16,
-            }}
-            onRsvp={(status) => {
-              flash(status === 'attending' ? 'Présence validée ✅' : 'Absence enregistrée ❌');
-            }}
-            onOpenCarpool={() => nav.setActiveTab('covoiturage')}
-            onOpenMatchDetail={onOpenMatchs}
-          />
-
-          {/* 2. Copilote IA Joueur / Coach rapide */}
-          <EliteAiQuickBar
-            role="player"
-            onOpenAssistant={() => onOpenPass()}
-          />
+          <ProDayText variant="caption" style={styles.support}>
+            {identity.support}
+          </ProDayText>
 
           <View style={[styles.hud, { borderColor: accent }]}>
             <JoueurLevelBadge level={level?.level ?? 1} />
@@ -361,17 +332,6 @@ export function AdultUniverseScreen({
             onPrimary={onOpenCoach}
             secondary="Pass IA"
             onSecondary={onOpenPass}
-          />
-
-          {/* 3. Classement & Buteurs officiel (MyCoach / SportEasy) */}
-          <EliteStandingsBoard
-            leagueName="Départemental 1 · Poule A"
-            onTeamPress={(teamId) => {
-              onOpenClub();
-            }}
-            onScorerPress={(playerId) => {
-              if (onOpenProfile) onOpenProfile();
-            }}
           />
 
           <JoueurPricingStrip

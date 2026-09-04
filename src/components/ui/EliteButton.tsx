@@ -1,21 +1,19 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View, type ViewStyle, type TextStyle } from 'react-native';
+import { StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { PressableSpring } from '../motion';
+import { Icon, type IconName } from './Icon';
 import { ELITE_COLORS, ELITE_RADIUS, ELITE_SPACING } from '../../theme/prodayEliteTheme';
-import { Icon } from './Icon';
-import type { IconName } from './iconNames';
 
 interface EliteButtonProps {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'ai';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'gold';
   size?: 'sm' | 'md' | 'lg';
   icon?: IconName;
-  iconRight?: IconName;
+  iconPosition?: 'left' | 'right';
   loading?: boolean;
   disabled?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
-  fullWidth?: boolean;
+  style?: any;
 }
 
 export const EliteButton: React.FC<EliteButtonProps> = ({
@@ -24,134 +22,177 @@ export const EliteButton: React.FC<EliteButtonProps> = ({
   variant = 'primary',
   size = 'md',
   icon,
-  iconRight,
+  iconPosition = 'left',
   loading = false,
   disabled = false,
   style,
-  textStyle,
-  fullWidth = false,
 }) => {
-  const getBackgroundColor = () => {
-    if (disabled) return '#1E293B';
+  const getVariantStyles = () => {
     switch (variant) {
-      case 'primary':
-        return ELITE_COLORS.primary;
       case 'secondary':
-        return ELITE_COLORS.bgSurfaceElevated;
+        return {
+          btn: styles.btnSecondary,
+          text: styles.textSecondary,
+          iconColor: ELITE_COLORS.textPrimary,
+        };
       case 'danger':
-        return ELITE_COLORS.danger;
-      case 'ai':
-        return ELITE_COLORS.aiPurple;
+        return {
+          btn: styles.btnDanger,
+          text: styles.textDanger,
+          iconColor: ELITE_COLORS.danger,
+        };
+      case 'gold':
+        return {
+          btn: styles.btnGold,
+          text: styles.textGold,
+          iconColor: '#000000',
+        };
       case 'ghost':
-        return 'transparent';
+        return {
+          btn: styles.btnGhost,
+          text: styles.textGhost,
+          iconColor: ELITE_COLORS.textSecondary,
+        };
       default:
-        return ELITE_COLORS.primary;
+        return {
+          btn: styles.btnPrimary,
+          text: styles.textPrimary,
+          iconColor: '#000000',
+        };
     }
   };
 
-  const getTextColor = () => {
-    if (disabled) return ELITE_COLORS.textDisabled;
-    switch (variant) {
-      case 'primary':
-        return '#000000'; // Noir sur vert néon pour un contraste parfait
-      case 'secondary':
-        return ELITE_COLORS.textPrimary;
-      case 'danger':
-      case 'ai':
-        return '#FFFFFF';
-      case 'ghost':
-        return ELITE_COLORS.primary;
+  const getSizeStyles = () => {
+    switch (size) {
+      case 'sm':
+        return {
+          btn: styles.btnSm,
+          text: styles.textSm,
+          iconSize: 14,
+        };
+      case 'lg':
+        return {
+          btn: styles.btnLg,
+          text: styles.textLg,
+          iconSize: 20,
+        };
       default:
-        return '#000000';
+        return {
+          btn: styles.btnMd,
+          text: styles.textMd,
+          iconSize: 17,
+        };
     }
   };
 
-  const getBorderColor = () => {
-    if (variant === 'secondary') return ELITE_COLORS.borderHighlight;
-    if (variant === 'ai') return ELITE_COLORS.aiPurpleGlow;
-    if (variant === 'ghost') return 'transparent';
-    return 'transparent';
-  };
-
-  const sizeStyles = {
-    sm: { paddingVertical: 6, paddingHorizontal: 12, minHeight: 32 },
-    md: { paddingVertical: 10, paddingHorizontal: 16, minHeight: 44 },
-    lg: { paddingVertical: 14, paddingHorizontal: 22, minHeight: 52 },
-  }[size];
-
-  const fontSize = {
-    sm: 12,
-    md: 14,
-    lg: 16,
-  }[size];
+  const v = getVariantStyles();
+  const s = getSizeStyles();
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
+    <PressableSpring
       onPress={onPress}
       disabled={disabled || loading}
+      scaleTo={0.97}
+      haptic
       style={[
-        styles.button,
-        sizeStyles,
-        {
-          backgroundColor: getBackgroundColor(),
-          borderColor: getBorderColor(),
-          borderWidth: variant === 'secondary' || variant === 'ai' ? 1 : 0,
-          width: fullWidth ? '100%' : 'auto',
-          alignSelf: fullWidth ? 'stretch' : 'flex-start',
-        },
+        styles.base,
+        v.btn,
+        s.btn,
+        disabled && styles.disabled,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={getTextColor()} />
+        <ActivityIndicator
+          size="small"
+          color={variant === 'primary' || variant === 'gold' ? '#000' : '#FFF'}
+        />
       ) : (
         <>
-          {icon && (
-            <View style={{ marginRight: ELITE_SPACING.sm }}>
-              <Icon
-                name={icon}
-                size={fontSize + 2}
-                color={getTextColor()}
-              />
-            </View>
-          )}
-          <Text
-            style={[
-              styles.text,
-              {
-                color: getTextColor(),
-                fontSize,
-              },
-              textStyle,
-            ]}
-          >
-            {label}
-          </Text>
-          {iconRight && (
-            <View style={{ marginLeft: ELITE_SPACING.sm }}>
-              <Icon
-                name={iconRight}
-                size={fontSize + 2}
-                color={getTextColor()}
-              />
-            </View>
-          )}
+          {icon && iconPosition === 'left' ? (
+            <Icon name={icon} size={s.iconSize} color={v.iconColor} />
+          ) : null}
+          <Text style={[styles.textBase, v.text, s.text]}>{label}</Text>
+          {icon && iconPosition === 'right' ? (
+            <Icon name={icon} size={s.iconSize} color={v.iconColor} />
+          ) : null}
         </>
       )}
-    </TouchableOpacity>
+    </PressableSpring>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    borderRadius: ELITE_RADIUS.md,
+  base: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: ELITE_SPACING.sm,
+    borderRadius: ELITE_RADIUS.md,
+    borderWidth: 1,
   },
-  text: {
+  btnSm: {
+    paddingVertical: 8,
+    paddingHorizontal: ELITE_SPACING.md,
+  },
+  btnMd: {
+    paddingVertical: 12,
+    paddingHorizontal: ELITE_SPACING.lg,
+  },
+  btnLg: {
+    paddingVertical: 15,
+    paddingHorizontal: ELITE_SPACING.xl,
+    borderRadius: ELITE_RADIUS.lg,
+  },
+  btnPrimary: {
+    backgroundColor: ELITE_COLORS.primary,
+    borderColor: ELITE_COLORS.primary,
+  },
+  btnSecondary: {
+    backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+    borderColor: ELITE_COLORS.borderHighlight,
+  },
+  btnDanger: {
+    backgroundColor: ELITE_COLORS.dangerSoft,
+    borderColor: ELITE_COLORS.danger,
+  },
+  btnGold: {
+    backgroundColor: ELITE_COLORS.gold,
+    borderColor: ELITE_COLORS.gold,
+  },
+  btnGhost: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+  },
+  textBase: {
     fontWeight: '700',
-    letterSpacing: 0.2,
+    letterSpacing: -0.2,
+  },
+  textSm: {
+    fontSize: 12,
+  },
+  textMd: {
+    fontSize: 14,
+  },
+  textLg: {
+    fontSize: 16,
+  },
+  textPrimary: {
+    color: '#000000',
+  },
+  textSecondary: {
+    color: ELITE_COLORS.textPrimary,
+  },
+  textDanger: {
+    color: ELITE_COLORS.danger,
+  },
+  textGold: {
+    color: '#000000',
+  },
+  textGhost: {
+    color: ELITE_COLORS.textSecondary,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

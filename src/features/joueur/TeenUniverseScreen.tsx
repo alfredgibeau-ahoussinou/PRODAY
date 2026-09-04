@@ -28,9 +28,6 @@ import { JoueurAttributeRadar } from './JoueurAttributeRadar';
 import { joueurGameReward, joueurGamePress } from './joueurSfx';
 
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
-import { EliteNextMatchHero } from '../../components/home/EliteNextMatchHero';
-import { EliteStandingsBoard } from '../../components/competition/EliteStandingsBoard';
-import { EliteAiQuickBar } from '../../components/home/EliteAiQuickBar';
 
 type Actions = {
   onOpenTrain: () => void;
@@ -156,40 +153,6 @@ export function TeenUniverseScreen({
           <ProDayText variant="caption" style={[styles.eyebrow, { color: accent }]}>
             {identity.worldTag} · DIV {Math.min(10, level?.level ?? 1)}
           </ProDayText>
-
-          {/* 1. Prochain Match & Convocations SportEasy style */}
-          <EliteNextMatchHero
-            match={{
-              id: 'teen-next-match',
-              opponentName: 'US Créteil U17',
-              homeClubName: profile.display_name ? `FC ${profile.display_name}` : 'Mon Club',
-              isHome: true,
-              dateLabel: 'Dimanche 8 Septembre',
-              timeLabel: '13:00',
-              competitionLabel: 'Championnat U17 R2 · J8',
-              stadiumName: 'Complexe Sportif Municipal',
-              stadiumAddress: 'Rue du Stade, 77000 Melun',
-              userRsvpStatus: 'pending',
-              totalAttending: 14,
-              totalCalled: 16,
-            }}
-            onRsvp={() => {}}
-            onOpenCarpool={() => nav.setActiveTab('covoiturage')}
-            onOpenMatchDetail={onOpenMatchs}
-          />
-
-          {/* 2. Copilote IA Progression */}
-          <EliteAiQuickBar
-            role="player"
-            onOpenAssistant={() => onOpenPass()}
-          />
-
-          {/* 3. Classement & Buteurs FFF / MyCoach style */}
-          <EliteStandingsBoard
-            leagueName="Championnat U17 Régional 2 · Poule B"
-            onTeamPress={() => onOpenClub()}
-            onScorerPress={() => {}}
-          />
 
           {/* Header calme */}
           <View style={[styles.hqCard, { borderColor: `${accent}44`, backgroundColor: identity.surface }]}>

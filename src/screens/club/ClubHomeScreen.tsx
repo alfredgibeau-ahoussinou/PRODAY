@@ -30,8 +30,6 @@ import { getPendingInviteeUids } from '../../models/TeamEvent';
 import { PushScreenTransition } from '../../components/motion';
 import { CreateClubScreen } from '../CreateClubScreen';
 import { ShellAccountSection } from '../../components/shell/ShellAccountSection';
-import { EliteAiQuickBar } from '../../components/home/EliteAiQuickBar';
-import { EliteStandingsBoard } from '../../components/competition/EliteStandingsBoard';
 
 const MAX_TODO_ITEMS = 4;
 const MAX_TEAM_CARDS = 4;
@@ -267,18 +265,6 @@ export function ClubHomeScreen() {
         />
 
         <ClubHomeTodoSection items={todoItems} showSuccessWhenEmpty />
-
-        {/* Copilote IA Club & Président */}
-        <EliteAiQuickBar
-          role="coach"
-          onOpenAssistant={() => shellNav?.requestNav('copilot' as any)}
-        />
-
-        {/* Classement Général Officiel (MyCoach FFF style) */}
-        <EliteStandingsBoard
-          leagueName="Départemental 1 · Équipes Club"
-          onTeamPress={() => shellNav?.requestNav('teams')}
-        />
       </ClubChapterScroll>
     </View>
   );

@@ -49,10 +49,10 @@ export const colors = {
   inkFaint: '#737373',
 
   /** Fonds FLASH */
-  background: '#080B11',
-  backgroundAlt: '#0D121D',
-  surface: '#101522',
-  surfaceMuted: '#171F32',
+  background: '#000000',
+  backgroundAlt: '#0A0A0A',
+  surface: '#141414',
+  surfaceMuted: '#1A1A1A',
   surfaceInverse: '#FAFAFA',
   heroMuted: 'rgba(255, 255, 255, 0.72)',
 

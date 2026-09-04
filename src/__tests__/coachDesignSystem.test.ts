@@ -6,7 +6,7 @@ import {
 describe('coachDesignSystem breakpoints', () => {
   it('masque le dock et active la sidebar dès 900px', () => {
     expect(coachChrome.wideBreakpoint).toBe(900);
-    expect(coachChrome.sidebarCollapsed).toBe(76);
+    expect(coachChrome.sidebarCollapsed).toBe(56);
     expect(coachChrome.sidebarExpanded).toBe(200);
     expect(coachChrome.sidebarWidth).toBe(200);
     expect(coachChrome.contentMaxWidth).toBe(1180);
