@@ -46,6 +46,9 @@ import { usePlayerActivities, useCareerProgression } from '../../hooks/useCareer
 import { HealthScoreExplainSheet } from '../../components/health/HealthScoreExplainSheet';
 import { ProDayModuleGrid } from '../../components/ui/ProDayModuleGrid';
 import type { ProDayModuleId } from '../../content/prodayModules';
+import { EliteNextMatchHero } from '../../components/home/EliteNextMatchHero';
+import { EliteStandingsBoard } from '../../components/competition/EliteStandingsBoard';
+import { EliteAiQuickBar } from '../../components/home/EliteAiQuickBar';
 
 interface HomeIaDashboardProps {
   profile: User;
@@ -242,6 +245,40 @@ export const HomeIaDashboard: React.FC<HomeIaDashboardProps> = ({
         <SkeletonList count={3} variant="card" />
       ) : (
         <>
+          {/* 1. Prochain Match & Convocations SportEasy style */}
+          <EliteNextMatchHero
+            match={{
+              id: 'ia-next-match',
+              opponentName: 'US Créteil Lusitanos',
+              homeClubName: profile.display_name ? `FC ${profile.display_name}` : 'Mon Club',
+              isHome: true,
+              dateLabel: 'Dimanche 8 Septembre',
+              timeLabel: '15:00',
+              competitionLabel: 'Départemental 1 · J13',
+              stadiumName: 'Stade Municipal des Prés',
+              stadiumAddress: 'Avenue du Sport, 77000 Melun',
+              userRsvpStatus: 'pending',
+              totalAttending: 13,
+              totalCalled: 16,
+            }}
+            onRsvp={() => {}}
+            onOpenCarpool={() => nav.setActiveTab('covoiturage')}
+            onOpenMatchDetail={() => nav.openMatchs()}
+          />
+
+          {/* 2. Copilote IA rapide */}
+          <EliteAiQuickBar
+            role={profile.role}
+            onOpenAssistant={() => nav.openDashboard('train_ai')}
+          />
+
+          {/* 3. Classement & Buteurs FFF / MyCoach style */}
+          <EliteStandingsBoard
+            leagueName="Départemental 1 · Poule A"
+            onTeamPress={() => nav.openMatchs()}
+            onScorerPress={() => nav.openProfile()}
+          />
+
           <HeroIaBlock
             state={brain.ai.heroState}
             title={brain.ai.heroTitle}
