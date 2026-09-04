@@ -14,6 +14,7 @@ import { YouthUniverseScreen } from './YouthUniverseScreen';
 import { TeenUniverseScreen } from './TeenUniverseScreen';
 import { AdultUniverseScreen } from './AdultUniverseScreen';
 import { JoueurLevelUpOverlay } from './JoueurLevelUpOverlay';
+import { ElitePlayerCockpitScreen } from './ElitePlayerCockpitScreen';
 
 
 type Props = {
@@ -107,20 +108,12 @@ export function JoueurAdaptiveHome({ profile, onRefresh, refreshing }: Props) {
   };
 
   return (
-    <>
-      <JoueurLevelUpOverlay />
-      {theme.ageGroup === 'youth' ? (
-        <YouthUniverseScreen {...shared} />
-      ) : theme.ageGroup === 'teen' ? (
-        <TeenUniverseScreen {...shared} />
-      ) : (
-        <AdultUniverseScreen
-          {...shared}
-          health={health}
-          onOpenProfile={onOpenProfile}
-        />
-      )}
-    </>
+    <ElitePlayerCockpitScreen
+      profile={profile}
+      onOpenCoachAi={onOpenCoach}
+      onOpenMatchs={onOpenMatchs}
+      onOpenCarpool={() => nav.openCarpool()}
+    />
   );
 }
 

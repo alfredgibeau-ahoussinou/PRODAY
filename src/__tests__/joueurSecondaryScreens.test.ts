@@ -12,7 +12,7 @@ describe('joueurSecondaryScreens palette', () => {
   it('reels et discover invité mint sur fond #000000', () => {
     expect(JOUEUR_REELS.stage).toBe('#000000');
     expect(JOUEUR_REELS.accent).toBe('#00E676');
-    expect(JOUEUR_DISCOVER.heroBg).toBe('#121218');
+    expect(JOUEUR_DISCOVER.heroBg).toBe('#1A1A24');
   });
 
   it('aucun token secondaire joueur blanc plat', () => {

@@ -55,7 +55,6 @@ import { PlayerActivityPublicSummary } from '../components/player/PlayerActivity
 import { SkillEndorsementsCard } from '../components/player/SkillEndorsementsCard';
 import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 import { usersService } from '../services/users.service';
-import { ElitePlayerProfile } from '../components/player/ElitePlayerProfile';
 
 interface PlayerProfileScreenProps {
   player: User;
@@ -510,18 +509,6 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
       ? 'Ma fiche joueuse'
       : 'Ma fiche joueur'
     : player.display_name;
-
-  // Si le profil affiché est un joueur (notre profil ou un profil public de joueur)
-  if (player.role === 'player' || !isStaffView) {
-    return (
-      <ElitePlayerProfile
-        player={player}
-        isOwnProfile={isOwnProfile}
-        onBack={onBack}
-        onOpenAiAdvisor={() => nav.setActiveTab('plus')}
-      />
-    );
-  }
 
   return (
     <TabScreenShell

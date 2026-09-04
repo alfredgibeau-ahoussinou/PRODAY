@@ -8,8 +8,8 @@ export const coachChrome = {
   wideBreakpoint: 900,
   /** Tablette / petite fenêtre desktop. */
   tabletBreakpoint: 680,
-  /** Rail icônes — slim, collé à gauche (56 px aligné pôle club). */
-  sidebarCollapsed: 56,
+  /** Rail icônes — slim, collé à gauche (76 px aligné pôle club). */
+  sidebarCollapsed: 76,
   /** Menu labels — borné 72–220. */
   sidebarExpanded: 200,
   /** Alias expanded (rétrocompat). */

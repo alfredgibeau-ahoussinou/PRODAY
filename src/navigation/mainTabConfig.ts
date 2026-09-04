@@ -29,7 +29,7 @@ export const MAIN_TAB_ITEMS: {
   { id: 'reels', label: 'Vidéos', icon: 'videocam' },
   { id: 'famille', label: 'Famille', icon: 'shield' },
   { id: 'messages', label: 'Vestiaire', icon: 'chat' },
-  { id: 'profil', label: 'Profil', icon: 'user' },
+  { id: 'profil', label: 'Mon Profil', icon: 'user' },
   { id: 'shop', label: 'Boutique', icon: 'bag' },
   { id: 'plus', label: 'Services', icon: 'hamburger' },
 ];
