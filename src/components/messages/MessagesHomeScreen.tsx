@@ -75,7 +75,7 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
     }
     if (joueurSession.ageGroup === 'teen') {
       return {
-        caption: 'Inbox',
+        caption: 'Vestiaire',
         title: 'Messages',
         subtitle: unreadHint ? `${unreadHint} · Réseau, club, staff.` : 'Réseau, club, staff.',
       };

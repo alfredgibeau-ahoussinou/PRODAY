@@ -84,7 +84,7 @@ export function JoueurPlusHubScreen() {
         decelerationRate="normal"
       >
         <ProDayText variant="caption" style={styles.lead}>
-          Retrouve messages, équipe, entraînement, reels et boutique sans chercher dans l’accueil.
+          Retrouve messages, équipe, entraînement, vidéos et boutique sans chercher dans l’accueil.
         </ProDayText>
         <View style={styles.grid}>
           {items.map((item) => (

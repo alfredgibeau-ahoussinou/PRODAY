@@ -169,7 +169,7 @@ export const SmartTacticsPortalScreen: React.FC<SmartTacticsPortalScreenProps> =
     if (onBack) {
       return (
         <View style={[styles.fill, { backgroundColor: JOUEUR_SITE.bg }]}>
-          <ScreenHeader title="Tactics" onBack={onBack} />
+          <ScreenHeader title="Tactique" onBack={onBack} />
           {body}
         </View>
       );

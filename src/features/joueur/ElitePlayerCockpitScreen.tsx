@@ -195,7 +195,9 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
 
           <View style={styles.matchTeamsRow}>
             <View style={styles.teamCol}>
-              <ProDayText style={styles.teamNameMain}>Mon Équipe</ProDayText>
+              <ProDayText style={styles.teamNameMain}>
+                {profile.profile?.club_id || (isDemo ? 'FC ProDay' : 'Mon Équipe')}
+              </ProDayText>
               <ProDayText style={styles.teamSubRole}>Domicile</ProDayText>
             </View>
 
@@ -416,33 +418,43 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
               <ProDayText style={styles.sectionTitle}>Dernières Rencontres Disputées</ProDayText>
             </View>
 
-            <View style={styles.matchHistoryList}>
-              <View style={styles.historyRow}>
-                <View style={[styles.resultPill, { backgroundColor: 'rgba(0, 230, 118, 0.15)' }]}>
-                  <ProDayText style={{ color: ELITE_COLORS.pitchGreen, fontWeight: '800', fontSize: 12 }}>V</ProDayText>
+            {isDemo ? (
+              <View style={styles.matchHistoryList}>
+                <View style={styles.historyRow}>
+                  <View style={[styles.resultPill, { backgroundColor: 'rgba(0, 230, 118, 0.15)' }]}>
+                    <ProDayText style={{ color: ELITE_COLORS.pitchGreen, fontWeight: '800', fontSize: 12 }}>V</ProDayText>
+                  </View>
+                  <View style={styles.historyCenter}>
+                    <ProDayText style={styles.historyMatch}>vs FC Asnières (3 - 1)</ProDayText>
+                    <ProDayText style={styles.historyDetail}>Titulaire · 90 min · 1 But</ProDayText>
+                  </View>
+                  <View style={styles.historyBadge}>
+                    <ProDayText style={styles.historyNote}>7.8 / 10</ProDayText>
+                  </View>
                 </View>
-                <View style={styles.historyCenter}>
-                  <ProDayText style={styles.historyMatch}>vs FC Asnières (3 - 1)</ProDayText>
-                  <ProDayText style={styles.historyDetail}>Titulaire · 90 min · 1 But</ProDayText>
-                </View>
-                <View style={styles.historyBadge}>
-                  <ProDayText style={styles.historyNote}>7.8 / 10</ProDayText>
-                </View>
-              </View>
 
-              <View style={styles.historyRow}>
-                <View style={[styles.resultPill, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-                  <ProDayText style={{ color: ELITE_COLORS.goldMaster, fontWeight: '800', fontSize: 12 }}>N</ProDayText>
-                </View>
-                <View style={styles.historyCenter}>
-                  <ProDayText style={styles.historyMatch}>vs Red Star (2 - 2)</ProDayText>
-                  <ProDayText style={styles.historyDetail}>Titulaire · 85 min · 1 Passe décisive</ProDayText>
-                </View>
-                <View style={styles.historyBadge}>
-                  <ProDayText style={styles.historyNote}>7.1 / 10</ProDayText>
+                <View style={styles.historyRow}>
+                  <View style={[styles.resultPill, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                    <ProDayText style={{ color: ELITE_COLORS.goldMaster, fontWeight: '800', fontSize: 12 }}>N</ProDayText>
+                  </View>
+                  <View style={styles.historyCenter}>
+                    <ProDayText style={styles.historyMatch}>vs Red Star (2 - 2)</ProDayText>
+                    <ProDayText style={styles.historyDetail}>Titulaire · 85 min · 1 Passe décisive</ProDayText>
+                  </View>
+                  <View style={styles.historyBadge}>
+                    <ProDayText style={styles.historyNote}>7.1 / 10</ProDayText>
+                  </View>
                 </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.noHistoryBox}>
+                <ProDayGlyph name="calendar" size={24} color={ELITE_COLORS.titanium} />
+                <ProDayText style={styles.noHistoryTitle}>Aucune rencontre archivée</ProDayText>
+                <ProDayText style={styles.noHistorySub}>
+                  Vos statistiques et notes de match s'afficheront ici automatiquement après validation des feuilles de match par votre staff.
+                </ProDayText>
+              </View>
+            )}
           </View>
         </View>
       )}
@@ -849,6 +861,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+  },
+  noHistoryBox: {
+    alignItems: 'center',
+    paddingVertical: ELITE_SPACING.lg,
+    paddingHorizontal: ELITE_SPACING.md,
+    gap: 6,
+  },
+  noHistoryTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: ELITE_COLORS.textPrimary,
+    marginTop: 4,
+  },
+  noHistorySub: {
+    fontSize: 12,
+    color: ELITE_COLORS.textMuted,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   historyNote: {
     fontSize: 12,

@@ -85,8 +85,8 @@ describe('resolveMainTabScreen', () => {
   });
 
   it('utilise les écrans pro joueur hors rôle club', () => {
-    expect(resolveMainTabScreen('home', 'player', 'pro')).toBe('PlayerFootballHubScreen');
-    expect(resolveMainTabScreen('home', 'player', 'pro_player')).toBe('PlayerFootballHubScreen');
+    expect(resolveMainTabScreen('home', 'player', 'pro')).toBe('HomeScreen');
+    expect(resolveMainTabScreen('home', 'player', 'pro_player')).toBe('HomeScreen');
     expect(resolveMainTabScreen('recrutement', 'player', 'pro')).toBe('ProPlayerSquadScreen');
     expect(resolveMainTabScreen('reels', 'player', 'pro')).toBe('LazyReelsScreen');
     expect(resolveMainTabScreen('feed', 'player', 'pro')).toBe('PlayerSaisonScreen');

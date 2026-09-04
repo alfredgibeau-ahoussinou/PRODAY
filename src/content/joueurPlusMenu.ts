@@ -100,7 +100,7 @@ export function buildJoueurPlusMenuItems({
     {
       id: 'reels',
       label: getJoueurGameTabLabel('reels', ageGroup),
-      subtitle: 'Clips & highlights',
+      subtitle: 'Clips & résumés vidéo',
       icon: 'videocam',
       action: { kind: 'tab', tab: 'reels' },
       visible: has('reels'),
@@ -109,7 +109,7 @@ export function buildJoueurPlusMenuItems({
     {
       id: 'covoiturage',
       label: getJoueurGameTabLabel('covoiturage', ageGroup),
-      subtitle: 'Trajets match & training',
+      subtitle: 'Trajets match & entraînement',
       icon: 'car',
       action: { kind: 'tab', tab: 'covoiturage' },
       visible: has('covoiturage'),
