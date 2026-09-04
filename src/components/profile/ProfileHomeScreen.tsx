@@ -54,6 +54,7 @@ import { CareerScoreCard } from '../player/CareerScoreCard';
 import { WeeklyGoalSettings } from '../player/WeeklyGoalSettings';
 import { usePlayerActivities, useCareerProgression } from '../../hooks/useCareerProgression';
 import { JoueurProfileHub } from '../player/JoueurProfileHub';
+import { ElitePlayerProfile } from '../player/ElitePlayerProfile';
 import {
   JoueurActivitePanel,
   JoueurParamsPanel,
@@ -270,16 +271,9 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
             {...scrollProps}
           >
             {isPlayer ? (
-              <JoueurProfileHub
-                profile={props.profile}
-                health={playerHealth}
-                gateAge={joueurSession?.ageYears ?? props.profile.profile.age}
-                gateGender={
-                  joueurSession?.gate?.gender ?? props.profile.profile.gender
-                }
-                gateAgeGroup={joueurSession?.ageGroup}
+              <ElitePlayerProfile
+                player={props.profile}
                 onEdit={handleEdit}
-                onOpenThemeSettings={() => setChapter('reglages')}
               />
             ) : isCoach ? (
               <CoachProfileHub

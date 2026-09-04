@@ -23,9 +23,10 @@ import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 
 interface ElitePlayerProfileProps {
   player: User;
-  isOwnProfile: boolean;
+  isOwnProfile?: boolean;
   onBack?: () => void;
   onOpenAiAdvisor?: () => void;
+  onEdit?: () => void;
 }
 
 type TabKey = 'carte' | 'stats' | 'parcours';

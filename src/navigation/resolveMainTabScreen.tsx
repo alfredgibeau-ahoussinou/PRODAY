@@ -86,7 +86,7 @@ const COACH_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 };
 
 const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: PlayerFootballHubScreen,
+  home: HomeScreen,
   feed: PlayerSaisonScreen,
   progression: PlayerProgressionScreen,
   recrutement: AmateurClubScreen,
@@ -94,7 +94,7 @@ const AMATEUR_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 };
 
 const PRO_PLAYER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: PlayerFootballHubScreen,
+  home: HomeScreen,
   feed: PlayerSaisonScreen,
   progression: PlayerProgressionScreen,
   recrutement: ProPlayerSquadScreen,

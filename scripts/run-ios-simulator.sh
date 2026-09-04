@@ -31,17 +31,22 @@ UDID="$(xcrun simctl list devices available | grep "$SIMULATOR_NAME (" | head -1
 DERIVED_DATA="$ROOT/ios/build/DerivedData"
 APP_PATH="$DERIVED_DATA/Build/Products/Debug-iphonesimulator/ProDay.app"
 
+# Metro doit survivre à la fin du script (Debug = bundle distant).
+# Ne jamais `trap EXIT kill` ici : ça provoque « No script URL provided ».
+# nohup + disown : le packager ne meurt pas quand ce script (ou le shell agent) se termine.
 if ! curl -sf "http://127.0.0.1:${METRO_PORT}/status" >/dev/null 2>&1; then
   echo "→ Démarrage Metro sur localhost:${METRO_PORT} (obligatoire en Debug)"
-  REACT_NATIVE_PACKAGER_HOSTNAME=localhost npx expo start --localhost --clear &
-  METRO_PID=$!
-  trap 'kill "$METRO_PID" 2>/dev/null || true' EXIT
+  nohup env REACT_NATIVE_PACKAGER_HOSTNAME=localhost \
+    npx expo start --localhost --clear \
+    >/tmp/proday-metro.log 2>&1 &
+  echo $! >/tmp/proday-metro.pid
+  disown $! 2>/dev/null || true
   if ! wait_for_metro; then
     echo "❌ Metro n’a pas démarré sur le port ${METRO_PORT}."
-    echo "   Lancez dans un autre terminal : npm run start:ios"
+    echo "   Lancez dans un autre terminal : REACT_NATIVE_PACKAGER_HOSTNAME=localhost npx expo start --localhost"
     exit 1
   fi
-  echo "✓ Metro prêt"
+  echo "✓ Metro prêt (PID $(cat /tmp/proday-metro.pid 2>/dev/null) — laisse tourner)"
 else
   echo "✓ Metro déjà actif sur le port ${METRO_PORT}"
 fi
