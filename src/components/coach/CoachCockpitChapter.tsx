@@ -14,6 +14,8 @@ import { CoachScreenHeader } from './CoachScreenHeader';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 import { PressableSpring } from '../motion';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
+import { EliteAiQuickBar } from '../home/EliteAiQuickBar';
+import { EliteStandingsBoard } from '../competition/EliteStandingsBoard';
 
 export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
@@ -197,6 +199,18 @@ export const CoachCockpitChapter: React.FC<CoachChapterCommonProps> = ({
             <CoachText style={[styles.statLabel, { color: tokens.muted }]}>Forme</CoachText>
           </View>
         </View>
+
+        {/* Copilote IA Entraîneur */}
+        <EliteAiQuickBar
+          role="coach"
+          onOpenAssistant={() => shellNav?.requestNav('coach_ia' as any)}
+        />
+
+        {/* Classement de la Poule (FFF / MyCoach style) */}
+        <EliteStandingsBoard
+          leagueName="Départemental 1 · Poule A"
+          onTeamPress={() => {}}
+        />
 
         </>
         )} 
