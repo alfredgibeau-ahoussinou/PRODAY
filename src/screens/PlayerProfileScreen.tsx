@@ -39,9 +39,8 @@ import {
 import { getProfileCompletion } from '../utils/profileCompletion';
 import { availabilityLabel } from '../utils/playerProfileLabels';
 import { PlayerBadgesRow } from '../components/player/PlayerBadgesRow';
-import { ProDayFutCard } from '../components/cards/ProDayFutCard';
+import { PlayerCardReveal } from '../components/joueur/PlayerCardReveal';
 import { userToProDayCard } from '../utils/prodayFutCard';
-import type { ProDayCardActionId } from '../models/ProDayCard';
 import { useTabNavigationActions } from '../hooks/useTabNavigationActions';
 import { PlayerTacticalInbox } from '../components/player/PlayerTacticalInbox';
 import { PlayerScoutingShortlistPanel } from '../components/player/PlayerScoutingShortlistPanel';
@@ -374,28 +373,10 @@ export const PlayerProfileScreen: React.FC<PlayerProfileScreenProps> = ({
 
       <AnimatedEntrance kind="fadeUp">
         <View style={{ alignItems: 'center', marginVertical: spacing.sm }}>
-          <ProDayFutCard
+          <PlayerCardReveal
             card={userToProDayCard(player)}
-            width={200}
-            onAction={(action: ProDayCardActionId) => {
-              if (action === 'view_profile') return;
-              if (action === 'message') {
-                if (isOwnProfile) nav.setActiveTab('messages');
-                else onContact?.(player);
-                return;
-              }
-              if (action === 'view_club' || action === 'recruit') {
-                nav.openMercato('home');
-                return;
-              }
-              if (action === 'invite') {
-                nav.openMatchs();
-                return;
-              }
-              if (action === 'follow') {
-                void togglePlayer(player);
-              }
-            }}
+            width={240}
+            onPress={handleExportCv}
           />
         </View>
       </AnimatedEntrance>

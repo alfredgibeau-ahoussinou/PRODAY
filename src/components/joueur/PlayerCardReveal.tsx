@@ -37,10 +37,10 @@ export function PlayerCardReveal({ card, width = 240, onPress, style }: Props) {
     card.role === 'player'
       ? {
           matches: card.matches,
-          notes: card.formPct > 0 ? card.formPct / 10 : null,
+          notes: card.formPct > 0 ? card.formPct : 85,
           goals: card.goals,
           assists: card.assists,
-          rating: card.overall > 0 ? card.overall / 10 : null,
+          rating: card.overall > 0 ? card.overall : 85,
         }
       : undefined;
 

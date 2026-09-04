@@ -73,9 +73,17 @@ export function PlayerShieldCard({
   const height = Math.round(width * 1.35);
   const pos = positionShort(position) || 'PRO';
   
-  const ratingValue = stats?.rating != null ? Math.round(stats.rating * 10) : 85;
+  const ratingValue =
+    stats?.rating != null
+      ? Math.round(stats.rating > 10 ? stats.rating : stats.rating * 10)
+      : 85;
   const matches = stats?.matches || 0;
-  const ratingNote = stats?.notes ? stats.notes.toFixed(1) : '—';
+  const ratingNote =
+    stats?.notes != null
+      ? (stats.notes >= 10 ? String(Math.round(stats.notes)) : String(Math.round(stats.notes * 10)))
+      : stats?.rating != null
+      ? (stats.rating >= 10 ? String(Math.round(stats.rating)) : String(Math.round(stats.rating * 10)))
+      : '85';
   const ga = (stats?.goals || 0) + (stats?.assists || 0);
 
   const content = (
@@ -139,9 +147,9 @@ export function PlayerShieldCard({
 
           {/* Glass Panel Stats */}
           <View style={styles.glassPanel}>
-            <GlassStat label="Matchs" value={matches} />
+            <GlassStat label="MAT" value={matches} />
             <View style={styles.panelDivider} />
-            <GlassStat label="Note" value={ratingNote} />
+            <GlassStat label="NOTE" value={ratingNote} />
             <View style={styles.panelDivider} />
             <GlassStat label="G+A" value={ga} />
           </View>

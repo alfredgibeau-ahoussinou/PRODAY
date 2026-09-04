@@ -13,7 +13,7 @@ import { useSeasonCalendar } from '../../hooks/useAppData';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { ProDayGlyph } from '../../components/ui/prodayGlyphs';
-import { ProDayFutCard } from '../../components/cards/ProDayFutCard';
+import { PlayerCardReveal } from '../../components/joueur/PlayerCardReveal';
 import { userToProDayCard } from '../../utils/prodayFutCard';
 import { JoueurAttributeRadar } from './JoueurAttributeRadar';
 import { ELITE_COLORS, ELITE_RADIUS, ELITE_SPACING } from '../../theme/prodayEliteTheme';
@@ -90,10 +90,27 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
     return null;
   }, [calendarItems, profile]);
 
-  // Carte ProDay officielle (design intact)
+  // Carte ProDay officielle (design intact bouclier ProDay)
+  const isDemo = profile.email?.includes('demo') || profile.display_name?.includes('Demo');
   const cardData = useMemo(() => {
-    return userToProDayCard(profile);
-  }, [profile]);
+    const base = userToProDayCard(profile);
+    if (isDemo) {
+      return {
+        ...base,
+        matches: 18,
+        goals: 10,
+        assists: 5,
+        overall: 89,
+        formPct: 87,
+        clubName: profile.profile?.club_id || 'FC ProDay',
+        primaryPosition: profile.profile?.position || 'MC',
+      };
+    }
+    return {
+      ...base,
+      clubName: profile.profile?.club_id || 'FC ProDay',
+    };
+  }, [profile, isDemo]);
 
   // Gestion réponse convocation
   const handleRsvp = async (status: 'present' | 'absent') => {
@@ -334,9 +351,16 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
       {/* 4. CONTENU SELON ONGLET ACTIF */}
       {activeTab === 'carte' && (
         <View style={styles.tabContent}>
-          {/* Écrin Carte FUT ProDay (Design Intact) */}
+          {/* Écrin Carte Joueur ProDay (Design Intact) */}
           <View style={styles.cardEcrin}>
-            <ProDayFutCard card={cardData} width={Math.min(270, WINDOW_WIDTH - 64)} />
+            <PlayerCardReveal
+              card={cardData}
+              width={Math.min(280, WINDOW_WIDTH - 48)}
+              onPress={() => {
+                prodayHaptics.press();
+                nav.setActiveTab('profil');
+              }}
+            />
           </View>
 
           {/* Radar des Qualités 6 Axes */}

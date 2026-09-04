@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   Linking,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { User } from '../../models/User';
 import { ELITE_COLORS } from '../../theme/prodayEliteTheme';
-import { ProDayFutCard } from '../cards/ProDayFutCard';
+import { PlayerCardReveal } from '../joueur/PlayerCardReveal';
 import { userToProDayCard } from '../../utils/prodayFutCard';
 import { useTeamEvents } from '../../hooks/useAppData';
 import { teamEventsService } from '../../services/teamEvents.service';
@@ -57,7 +58,26 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
 
   const p = player.profile;
   const stats = p.season_stats;
-  const cardData = useMemo(() => userToProDayCard(player), [player]);
+  const isDemo = player.email?.includes('demo') || player.display_name?.includes('Demo');
+  const cardData = useMemo(() => {
+    const base = userToProDayCard(player);
+    if (isDemo) {
+      return {
+        ...base,
+        matches: 18,
+        goals: 10,
+        assists: 5,
+        overall: 89,
+        formPct: 87,
+        clubName: p.club_id || 'FC ProDay',
+        primaryPosition: p.position || 'MC',
+      };
+    }
+    return {
+      ...base,
+      clubName: p.club_id || 'FC ProDay',
+    };
+  }, [player, isDemo, p.club_id, p.position]);
 
   // Statut présence
   const myRsvp = useMemo(() => {
@@ -306,7 +326,11 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
           <View style={styles.cardTabContainer}>
             {/* LA CARTE PRODAY OFFICIELLE INTACTE */}
             <View style={styles.futCardWrap}>
-              <ProDayFutCard card={cardData} width={240} />
+              <PlayerCardReveal
+                card={cardData}
+                width={Math.min(280, Dimensions.get('window').width - 48)}
+                onPress={handleExportCv}
+              />
             </View>
 
             {/* RÉSUMÉ CLÉ DU JOUEUR */}

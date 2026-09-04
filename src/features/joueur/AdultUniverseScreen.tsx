@@ -16,7 +16,7 @@ import {
   JoueurXpBar,
 } from '../../components/player/joueurPortalUi';
 import { PlayerMaFormeCard } from '../../components/player/PlayerMaFormeCard';
-import { ProDayFutCard } from '../../components/cards/ProDayFutCard';
+import { PlayerCardReveal } from '../../components/joueur/PlayerCardReveal';
 import { userToProDayCard } from '../../utils/prodayFutCard';
 import { JoueurWorldScene } from './JoueurWorldScene';
 import { JoueurPricingStrip } from './JoueurPricingStrip';
@@ -180,14 +180,10 @@ export function AdultUniverseScreen({
           </View>
 
           <View style={styles.cardStage}>
-            <ProDayFutCard
+            <PlayerCardReveal
               card={{ ...card, overall: ovr }}
-              width={200}
-              onAction={(action) => {
-                if (action === 'view_club' || action === 'recruit') onOpenClub();
-                if (action === 'invite') onOpenMatchs();
-                if (action === 'message' && onOpenProfile) onOpenProfile();
-              }}
+              width={240}
+              onPress={() => onOpenProfile?.() ?? nav.setActiveTab('profil')}
             />
           </View>
 
