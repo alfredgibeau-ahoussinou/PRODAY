@@ -14,6 +14,7 @@ import { YouthUniverseScreen } from './YouthUniverseScreen';
 import { TeenUniverseScreen } from './TeenUniverseScreen';
 import { AdultUniverseScreen } from './AdultUniverseScreen';
 import { JoueurLevelUpOverlay } from './JoueurLevelUpOverlay';
+import { PlayerFootballHubScreen } from '../../screens/joueur/PlayerFootballHubScreen';
 
 
 type Props = {
@@ -109,17 +110,7 @@ export function JoueurAdaptiveHome({ profile, onRefresh, refreshing }: Props) {
   return (
     <>
       <JoueurLevelUpOverlay />
-      {theme.ageGroup === 'youth' ? (
-        <YouthUniverseScreen {...shared} />
-      ) : theme.ageGroup === 'teen' ? (
-        <TeenUniverseScreen {...shared} />
-      ) : (
-        <AdultUniverseScreen
-          {...shared}
-          health={health}
-          onOpenProfile={onOpenProfile}
-        />
-      )}
+      <PlayerFootballHubScreen />
     </>
   );
 }
