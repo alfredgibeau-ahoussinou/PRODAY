@@ -32,21 +32,33 @@ DERIVED_DATA="$ROOT/ios/build/DerivedData"
 APP_PATH="$DERIVED_DATA/Build/Products/Debug-iphonesimulator/ProDay.app"
 
 # Metro doit survivre à la fin du script (Debug = bundle distant).
-# Ne jamais `trap EXIT kill` ici : ça provoque « No script URL provided ».
-# nohup + disown : le packager ne meurt pas quand ce script (ou le shell agent) se termine.
+# Ne jamais `trap EXIT kill` : ça provoque « No script URL provided ».
+# Préférer Terminal.app (processus détaché du shell agent) ; fallback nohup.
 if ! curl -sf "http://127.0.0.1:${METRO_PORT}/status" >/dev/null 2>&1; then
   echo "→ Démarrage Metro sur localhost:${METRO_PORT} (obligatoire en Debug)"
-  nohup env REACT_NATIVE_PACKAGER_HOSTNAME=localhost \
-    npx expo start --localhost --clear \
-    >/tmp/proday-metro.log 2>&1 &
-  echo $! >/tmp/proday-metro.pid
-  disown $! 2>/dev/null || true
+  cat > /tmp/proday-start-metro.sh <<'METROEOF'
+#!/bin/bash
+cd "__ROOT__"
+export REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+export RCT_METRO_PORT=8081
+exec npx expo start --localhost 2>&1 | tee /tmp/proday-metro.log
+METROEOF
+  # Inject project root without breaking heredoc quoting
+  sed -i '' "s|__ROOT__|$ROOT|g" /tmp/proday-start-metro.sh
+  chmod +x /tmp/proday-start-metro.sh
+  if command -v osascript >/dev/null 2>&1; then
+    osascript -e 'tell application "Terminal" to do script "/tmp/proday-start-metro.sh"' >/dev/null
+  else
+    nohup /tmp/proday-start-metro.sh >/dev/null 2>&1 &
+    echo $! >/tmp/proday-metro.pid
+    disown $! 2>/dev/null || true
+  fi
   if ! wait_for_metro; then
     echo "❌ Metro n’a pas démarré sur le port ${METRO_PORT}."
     echo "   Lancez dans un autre terminal : REACT_NATIVE_PACKAGER_HOSTNAME=localhost npx expo start --localhost"
     exit 1
   fi
-  echo "✓ Metro prêt (PID $(cat /tmp/proday-metro.pid 2>/dev/null) — laisse tourner)"
+  echo "✓ Metro prêt (laisse la fenêtre Terminal ouverte — http://localhost:${METRO_PORT})"
 else
   echo "✓ Metro déjà actif sur le port ${METRO_PORT}"
 fi
