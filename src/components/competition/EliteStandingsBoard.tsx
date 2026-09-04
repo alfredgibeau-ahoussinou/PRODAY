@@ -1,9 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { ELITE_COLORS, ELITE_RADIUS, ELITE_SPACING, useEliteResponsive } from '../../theme/prodayEliteTheme';
 import { EliteCard } from '../ui/EliteCard';
 import { EliteBadge } from '../ui/EliteBadge';
 import { Icon } from '../ui/Icon';
+import {
+  fffScraperService,
+  OFFICIAL_FFF_LEAGUES,
+  type FffLeagueDataset,
+} from '../../services/fffScraper.service';
 
 export interface LeagueStandingItem {
   rank: number;
@@ -32,29 +47,6 @@ export interface TopScorerItem {
   photoUrl?: string;
 }
 
-const MOCK_STANDINGS: LeagueStandingItem[] = [
-  { rank: 1, clubId: '1', clubName: 'ES Vitry', played: 12, won: 10, drawn: 1, lost: 1, goalsFor: 29, goalsAgainst: 9, diff: 20, points: 31, form: ['V', 'V', 'V', 'N', 'V'] },
-  { rank: 2, clubId: '2', clubName: 'FC Melun (Ton Club)', played: 12, won: 9, drawn: 2, lost: 1, goalsFor: 27, goalsAgainst: 11, diff: 16, points: 29, form: ['V', 'V', 'N', 'V', 'V'], isUserClub: true },
-  { rank: 3, clubId: '3', clubName: 'Red Star FC 2', played: 12, won: 8, drawn: 2, lost: 2, goalsFor: 24, goalsAgainst: 12, diff: 12, points: 26, form: ['V', 'N', 'V', 'D', 'V'] },
-  { rank: 4, clubId: '4', clubName: 'US Créteil Lusitanos', played: 12, won: 7, drawn: 3, lost: 2, goalsFor: 22, goalsAgainst: 14, diff: 8, points: 24, form: ['N', 'V', 'V', 'V', 'D'] },
-  { rank: 5, clubId: '5', clubName: 'Paris FC 3', played: 12, won: 6, drawn: 2, lost: 4, goalsFor: 19, goalsAgainst: 16, diff: 3, points: 20, form: ['D', 'V', 'D', 'V', 'N'] },
-  { rank: 6, clubId: '6', clubName: 'CS Meaux', played: 12, won: 5, drawn: 3, lost: 4, goalsFor: 18, goalsAgainst: 17, diff: 1, points: 18, form: ['N', 'D', 'V', 'N', 'V'] },
-  { rank: 7, clubId: '7', clubName: 'FC Fleury 91', played: 12, won: 4, drawn: 4, lost: 4, goalsFor: 16, goalsAgainst: 18, diff: -2, points: 16, form: ['N', 'V', 'D', 'D', 'N'] },
-  { rank: 8, clubId: '8', clubName: 'US Sénart-Moissy', played: 12, won: 4, drawn: 2, lost: 6, goalsFor: 15, goalsAgainst: 20, diff: -5, points: 14, form: ['D', 'D', 'V', 'D', 'N'] },
-  { rank: 9, clubId: '9', clubName: 'RC Joinville', played: 12, won: 3, drawn: 3, lost: 6, goalsFor: 13, goalsAgainst: 22, diff: -9, points: 12, form: ['D', 'N', 'D', 'D', 'V'] },
-  { rank: 10, clubId: '10', clubName: 'ESA Linas-Montlhéry', played: 12, won: 2, drawn: 2, lost: 8, goalsFor: 11, goalsAgainst: 24, diff: -13, points: 8, form: ['D', 'D', 'D', 'V', 'D'] },
-  { rank: 11, clubId: '11', clubName: 'FC Gobelins 2', played: 12, won: 1, drawn: 3, lost: 8, goalsFor: 9, goalsAgainst: 26, diff: -17, points: 6, form: ['D', 'D', 'N', 'D', 'D'] },
-  { rank: 12, clubId: '12', clubName: 'AS Choisy-le-Roi', played: 12, won: 0, drawn: 3, lost: 9, goalsFor: 7, goalsAgainst: 31, diff: -24, points: 3, form: ['D', 'N', 'D', 'D', 'D'] },
-];
-
-const MOCK_SCORERS: TopScorerItem[] = [
-  { rank: 1, playerId: 'p1', name: 'Yanis Benali', clubName: 'ES Vitry', goals: 13, matches: 11 },
-  { rank: 2, playerId: 'p2', name: 'Thomas Dupont (Toi)', clubName: 'FC Melun', goals: 11, matches: 12 },
-  { rank: 3, playerId: 'p3', name: 'Mamadou Diallo', clubName: 'Red Star FC 2', goals: 9, matches: 10 },
-  { rank: 4, playerId: 'p4', name: 'Alexandre Petit', clubName: 'US Créteil Lusitanos', goals: 8, matches: 12 },
-  { rank: 5, playerId: 'p5', name: 'Lucas Martin', clubName: 'Paris FC 3', goals: 7, matches: 11 },
-];
-
 interface Props {
   leagueName?: string;
   standings?: LeagueStandingItem[];
@@ -64,14 +56,52 @@ interface Props {
 }
 
 export const EliteStandingsBoard: React.FC<Props> = ({
-  leagueName = 'Départemental 1 · Poule A',
-  standings = MOCK_STANDINGS,
-  scorers = MOCK_SCORERS,
   onTeamPress,
   onScorerPress,
 }) => {
   const [tab, setTab] = useState<'standings' | 'scorers'>('standings');
+  const [selectedLeagueId, setSelectedLeagueId] = useState<string>('d1-idf');
+  const [dataset, setDataset] = useState<FffLeagueDataset>(OFFICIAL_FFF_LEAGUES['d1-idf']);
+  const [isScraping, setIsScraping] = useState(false);
+  const [showScrapeModal, setShowScrapeModal] = useState(false);
+  const [scrapeUrlInput, setScrapeUrlInput] = useState('');
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+
   const { isMobile, containerStyle } = useEliteResponsive();
+
+  useEffect(() => {
+    void (async () => {
+      const data = await fffScraperService.getLeagueStandings(selectedLeagueId);
+      setDataset(data);
+    })();
+  }, [selectedLeagueId]);
+
+  const handleSelectLeague = (leagueId: string) => {
+    setSelectedLeagueId(leagueId);
+    if (OFFICIAL_FFF_LEAGUES[leagueId]) {
+      setDataset(OFFICIAL_FFF_LEAGUES[leagueId]);
+    }
+  };
+
+  const handleLiveScrape = async () => {
+    if (!scrapeUrlInput.trim()) {
+      Alert.alert('Lien manquant', 'Veuillez entrer une URL de compétition FFF.');
+      return;
+    }
+
+    setIsScraping(true);
+    try {
+      const scraped = await fffScraperService.scrapeFffUrl(scrapeUrlInput);
+      setDataset(scraped);
+      setShowScrapeModal(false);
+      setSyncStatus('✓ Données FFF synchronisées avec succès !');
+      setTimeout(() => setSyncStatus(null), 4000);
+    } catch (err: any) {
+      Alert.alert('Erreur de scraping', err?.message || 'Impossible de scraper cette URL FFF.');
+    } finally {
+      setIsScraping(false);
+    }
+  };
 
   const renderFormBadge = (result: 'V' | 'N' | 'D', index: number) => {
     const bg = result === 'V' ? ELITE_COLORS.primary : result === 'N' ? '#94A3B8' : ELITE_COLORS.danger;
@@ -84,6 +114,60 @@ export const EliteStandingsBoard: React.FC<Props> = ({
 
   return (
     <View style={[styles.wrapper, containerStyle]}>
+      {/* Barre de Source Officielle FFF */}
+      <View style={styles.sourceBar}>
+        <View style={styles.sourceIndicator}>
+          <View style={styles.sourceDot} />
+          <Text style={styles.sourceText}>DONNÉES OFFICIELLES FFF EN DIRECT</Text>
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setShowScrapeModal(true)}
+          style={styles.scrapeBtn}
+        >
+          <Icon name="globe" size={13} color="#00E676" />
+          <Text style={styles.scrapeBtnText}>Scraper ma poule</Text>
+        </TouchableOpacity>
+      </View>
+
+      {syncStatus ? (
+        <View style={styles.syncBanner}>
+          <Text style={styles.syncBannerText}>{syncStatus}</Text>
+        </View>
+      ) : null}
+
+      {/* Sélecteur de ligues officielles réelles */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.leagueScroll}>
+        <View style={styles.leaguePills}>
+          <TouchableOpacity
+            style={[styles.leaguePill, selectedLeagueId === 'd1-idf' && styles.leaguePillActive]}
+            onPress={() => handleSelectLeague('d1-idf')}
+          >
+            <Text style={[styles.leaguePillText, selectedLeagueId === 'd1-idf' && styles.leaguePillTextActive]}>
+              D1 Hauts-de-Seine (92)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.leaguePill, selectedLeagueId === 'r1-idf' && styles.leaguePillActive]}
+            onPress={() => handleSelectLeague('r1-idf')}
+          >
+            <Text style={[styles.leaguePillText, selectedLeagueId === 'r1-idf' && styles.leaguePillTextActive]}>
+              R1 Paris Île-de-France
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.leaguePill, selectedLeagueId === 'n3-groupe-h' && styles.leaguePillActive]}
+            onPress={() => handleSelectLeague('n3-groupe-h')}
+          >
+            <Text style={[styles.leaguePillText, selectedLeagueId === 'n3-groupe-h' && styles.leaguePillTextActive]}>
+              National 3 (Groupe H)
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
       {/* Sélecteur d'onglet style FFF / MyCoach */}
       <View style={styles.segmentNav}>
         <TouchableOpacity
@@ -92,7 +176,7 @@ export const EliteStandingsBoard: React.FC<Props> = ({
         >
           <Icon name="trophy" size={16} color={tab === 'standings' ? ELITE_COLORS.textPrimary : ELITE_COLORS.textSecondary} />
           <Text style={[styles.segmentText, tab === 'standings' && styles.segmentTextActive]}>
-            Classement Général
+            Classement Officiel
           </Text>
         </TouchableOpacity>
 
@@ -102,12 +186,15 @@ export const EliteStandingsBoard: React.FC<Props> = ({
         >
           <Icon name="football" size={16} color={tab === 'scorers' ? ELITE_COLORS.textPrimary : ELITE_COLORS.textSecondary} />
           <Text style={[styles.segmentText, tab === 'scorers' && styles.segmentTextActive]}>
-            Top Buteurs
+            Meilleurs Buteurs
           </Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.leagueTitle}>{leagueName}</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.leagueTitle}>{dataset.leagueName}</Text>
+        <Text style={styles.updatedHint}>{dataset.lastUpdated}</Text>
+      </View>
 
       {tab === 'standings' ? (
         <EliteCard padding="sm" style={styles.card}>
@@ -126,7 +213,7 @@ export const EliteStandingsBoard: React.FC<Props> = ({
 
           {/* Lignes du classement */}
           <ScrollView showsVerticalScrollIndicator={false}>
-            {standings.map((item) => {
+            {dataset.standings.map((item) => {
               const isPromotion = item.rank <= 2;
               const isRelegation = item.rank >= 11;
               const isUserClub = item.isUserClub;
@@ -136,10 +223,7 @@ export const EliteStandingsBoard: React.FC<Props> = ({
                   key={item.clubId}
                   activeOpacity={0.7}
                   onPress={() => onTeamPress?.(item.clubId)}
-                  style={[
-                    styles.row,
-                    isUserClub && styles.userRow,
-                  ]}
+                  style={[styles.row, isUserClub && styles.userRow]}
                 >
                   <View style={styles.rankContainer}>
                     <View
@@ -167,7 +251,19 @@ export const EliteStandingsBoard: React.FC<Props> = ({
                   <Text style={styles.statText}>{item.won}</Text>
                   <Text style={styles.statText}>{item.drawn}</Text>
                   <Text style={styles.statText}>{item.lost}</Text>
-                  <Text style={[styles.statText, { color: item.diff > 0 ? ELITE_COLORS.primary : item.diff < 0 ? ELITE_COLORS.danger : ELITE_COLORS.textSecondary }]}>
+                  <Text
+                    style={[
+                      styles.statText,
+                      {
+                        color:
+                          item.diff > 0
+                            ? ELITE_COLORS.primary
+                            : item.diff < 0
+                            ? ELITE_COLORS.danger
+                            : ELITE_COLORS.textSecondary,
+                      },
+                    ]}
+                  >
                     {item.diff > 0 ? `+${item.diff}` : item.diff}
                   </Text>
                   <Text style={[styles.ptsText, isUserClub && { color: ELITE_COLORS.gold }]}>
@@ -185,258 +281,457 @@ export const EliteStandingsBoard: React.FC<Props> = ({
           </ScrollView>
 
           {/* Légende FFF */}
-          <View style={styles.legend}>
+          <View style={styles.legendRow}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: ELITE_COLORS.primary }]} />
-              <Text style={styles.legendText}>Zone de Montée</Text>
+              <Text style={styles.legendText}>Accession R3 / Régional</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: ELITE_COLORS.danger }]} />
-              <Text style={styles.legendText}>Zone de Relégation</Text>
+              <Text style={styles.legendText}>Relégation District</Text>
             </View>
           </View>
         </EliteCard>
       ) : (
-        /* Top Buteurs */
-        <EliteCard padding="md" style={styles.card}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {scorers.map((scorer) => (
-              <TouchableOpacity
-                key={scorer.playerId}
-                activeOpacity={0.7}
-                onPress={() => onScorerPress?.(scorer.playerId)}
-                style={styles.scorerRow}
-              >
-                <View style={styles.scorerRank}>
-                  <Text style={[styles.scorerRankText, scorer.rank === 1 && { color: ELITE_COLORS.gold }]}>
-                    {scorer.rank}
-                  </Text>
-                </View>
-
-                <View style={styles.scorerInfo}>
-                  <Text style={styles.scorerName}>{scorer.name}</Text>
-                  <Text style={styles.scorerClub}>{scorer.clubName} · {scorer.matches} matchs</Text>
-                </View>
-
-                <View style={styles.scorerBadge}>
-                  <View style={{ marginRight: 4 }}>
-                    <Icon name="football" size={14} color={ELITE_COLORS.primary} />
-                  </View>
-                  <Text style={styles.scorerGoals}>{scorer.goals}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+        <EliteCard padding="sm" style={styles.card}>
+          {dataset.scorers.map((scorer) => (
+            <TouchableOpacity
+              key={scorer.playerId}
+              activeOpacity={0.7}
+              onPress={() => onScorerPress?.(scorer.playerId)}
+              style={styles.scorerRow}
+            >
+              <View style={styles.scorerRank}>
+                <Text style={styles.scorerRankText}>{scorer.rank}</Text>
+              </View>
+              <View style={styles.scorerInfo}>
+                <Text style={styles.scorerName}>{scorer.name}</Text>
+                <Text style={styles.scorerClub}>{scorer.clubName}</Text>
+              </View>
+              <View style={styles.scorerGoalsBlock}>
+                <Text style={styles.scorerGoals}>{scorer.goals}</Text>
+                <Text style={styles.scorerGoalsLabel}>BUTS ({scorer.matches} M)</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
         </EliteCard>
       )}
+
+      {/* Modal de Scraping FFF */}
+      <Modal visible={showScrapeModal} transparent animationType="slide">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Scraper une Poule FFF en Direct</Text>
+              <TouchableOpacity onPress={() => setShowScrapeModal(false)}>
+                <Icon name="close" size={20} color="#94A3B8" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSub}>
+              Collez l&apos;adresse web de votre poule FFF (ligue régionale ou district) pour importer en 1 seconde le vrai classement officiel de votre équipe.
+            </Text>
+
+            <TextInput
+              style={styles.urlInput}
+              placeholder="https://paris-idf.fff.fr/competitions/?id=..."
+              placeholderTextColor="#64748B"
+              value={scrapeUrlInput}
+              onChangeText={setScrapeUrlInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setShowScrapeModal(false)}
+              >
+                <Text style={styles.cancelBtnText}>Annuler</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.confirmScrapeBtn}
+                onPress={handleLiveScrape}
+                disabled={isScraping}
+              >
+                {isScraping ? (
+                  <ActivityIndicator size="small" color="#000000" />
+                ) : (
+                  <Text style={styles.confirmScrapeBtnText}>Lancer le Scraping ⚡</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: ELITE_SPACING.lg,
-    paddingVertical: ELITE_SPACING.md,
+    width: '100%',
+    marginVertical: ELITE_SPACING.sm,
+  },
+  sourceBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  sourceIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sourceDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00E676',
+  },
+  sourceText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#00E676',
+    letterSpacing: 0.5,
+  },
+  scrapeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 230, 118, 0.1)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 118, 0.25)',
+  },
+  scrapeBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#00E676',
+  },
+  syncBanner: {
+    backgroundColor: 'rgba(0, 230, 118, 0.15)',
+    borderColor: '#00E676',
+    borderWidth: 1,
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  syncBannerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#00E676',
+  },
+  leagueScroll: {
+    marginBottom: 10,
+  },
+  leaguePills: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  leaguePill: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: '#101522',
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  leaguePillActive: {
+    backgroundColor: '#00E676',
+    borderColor: '#00E676',
+  },
+  leaguePillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  leaguePillTextActive: {
+    color: '#000000',
+    fontWeight: '800',
   },
   segmentNav: {
     flexDirection: 'row',
-    backgroundColor: ELITE_COLORS.bgSurfaceElevated,
-    borderRadius: ELITE_RADIUS.lg,
-    padding: 4,
-    marginBottom: ELITE_SPACING.md,
+    backgroundColor: '#101522',
+    borderRadius: ELITE_RADIUS.md,
+    padding: 3,
+    marginBottom: ELITE_SPACING.sm,
+    borderWidth: 1,
+    borderColor: '#1E293B',
   },
   segmentBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    borderRadius: ELITE_RADIUS.md,
+    paddingVertical: 8,
+    borderRadius: ELITE_RADIUS.sm,
+    gap: 6,
   },
   segmentBtnActive: {
-    backgroundColor: ELITE_COLORS.bgSurface,
-    borderWidth: 1,
-    borderColor: ELITE_COLORS.borderHighlight,
+    backgroundColor: '#172033',
   },
   segmentText: {
-    color: ELITE_COLORS.textSecondary,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
+    color: '#94A3B8',
   },
   segmentTextActive: {
-    color: ELITE_COLORS.textPrimary,
+    color: '#00E676',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 8,
+    paddingHorizontal: 4,
   },
   leagueTitle: {
-    color: ELITE_COLORS.textPrimary,
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '800',
-    marginBottom: ELITE_SPACING.sm,
+    color: '#FFFFFF',
+  },
+  updatedHint: {
+    fontSize: 10,
+    color: '#64748B',
   },
   card: {
-    borderRadius: ELITE_RADIUS.lg,
+    backgroundColor: '#101522',
+    borderColor: '#1E293B',
   },
   tableHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: ELITE_COLORS.border,
-    paddingHorizontal: 8,
+    borderBottomColor: '#1E293B',
   },
   headerLabel: {
-    color: ELITE_COLORS.textMuted,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    color: '#64748B',
+    textAlign: 'center',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 11,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.04)',
-    paddingHorizontal: 8,
+    borderBottomColor: '#101522',
   },
   userRow: {
     backgroundColor: 'rgba(245, 158, 11, 0.08)',
-    borderRadius: ELITE_RADIUS.sm,
-    borderColor: ELITE_COLORS.borderGold,
-    borderWidth: 1,
+    borderLeftWidth: 3,
+    borderLeftColor: ELITE_COLORS.gold,
   },
-  colRank: { width: 32, textAlign: 'center' },
-  colClub: { flex: 1, paddingLeft: 6 },
-  colStat: { width: 28, textAlign: 'center' },
-  colPts: { width: 38, textAlign: 'center' },
-  colForm: { width: 110, textAlign: 'center' },
   rankContainer: {
-    width: 32,
+    width: 28,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
   },
   rankIndicator: {
-    position: 'absolute',
-    left: 0,
     width: 3,
-    height: 16,
+    height: 14,
     borderRadius: 2,
   },
   rankText: {
-    color: ELITE_COLORS.textPrimary,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
+    color: '#FFFFFF',
   },
   clubContainer: {
     flex: 1,
-    paddingLeft: 6,
+    paddingRight: 6,
   },
   clubName: {
-    color: ELITE_COLORS.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  statText: {
-    width: 28,
-    textAlign: 'center',
-    color: ELITE_COLORS.textSecondary,
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  colRank: { width: 28 },
+  colClub: { flex: 1, textAlign: 'left', paddingLeft: 6 },
+  colStat: { width: 22 },
+  colPts: { width: 32 },
+  colForm: { width: 85 },
+  statText: {
+    width: 22,
+    fontSize: 11,
+    color: '#94A3B8',
+    textAlign: 'center',
   },
   ptsText: {
-    width: 38,
-    textAlign: 'center',
-    color: ELITE_COLORS.textPrimary,
-    fontSize: 14,
+    width: 32,
+    fontSize: 13,
     fontWeight: '800',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   formContainer: {
-    width: 110,
+    width: 85,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 3,
   },
   formDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 15,
+    height: 15,
+    borderRadius: 3,
     alignItems: 'center',
     justifyContent: 'center',
   },
   formText: {
-    color: '#000000',
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: '900',
+    color: '#FFFFFF',
   },
-  legend: {
+  legendRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    paddingTop: 12,
-    paddingHorizontal: 8,
+    justifyContent: 'space-around',
+    paddingTop: 8,
+    marginTop: 6,
     borderTopWidth: 1,
-    borderTopColor: ELITE_COLORS.border,
-    marginTop: 4,
+    borderTopColor: '#1E293B',
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   legendText: {
-    color: ELITE_COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 10,
+    color: '#64748B',
   },
   scorerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: '#1E293B',
   },
   scorerRank: {
-    width: 32,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1E293B',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
   },
   scorerRankText: {
-    color: ELITE_COLORS.textPrimary,
-    fontSize: 16,
-    fontWeight: '900',
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#F59E0B',
   },
   scorerInfo: {
     flex: 1,
-    paddingHorizontal: 8,
   },
   scorerName: {
-    color: ELITE_COLORS.textPrimary,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
+    color: '#FFFFFF',
   },
   scorerClub: {
-    color: ELITE_COLORS.textSecondary,
-    fontSize: 12,
+    fontSize: 11,
+    color: '#94A3B8',
     marginTop: 2,
   },
-  scorerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: ELITE_COLORS.primarySoft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: ELITE_RADIUS.full,
-    borderWidth: 1,
-    borderColor: ELITE_COLORS.borderAccent,
+  scorerGoalsBlock: {
+    alignItems: 'flex-end',
   },
   scorerGoals: {
-    color: ELITE_COLORS.primary,
+    fontSize: 16,
     fontWeight: '900',
-    fontSize: 14,
+    color: '#00E676',
+  },
+  scorerGoalsLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#101522',
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  modalSub: {
+    fontSize: 12,
+    color: '#94A3B8',
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  urlInput: {
+    backgroundColor: '#080C14',
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: '#FFFFFF',
+    fontSize: 13,
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  cancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: '#1E293B',
+  },
+  cancelBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  confirmScrapeBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    backgroundColor: '#00E676',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 140,
+  },
+  confirmScrapeBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#000000',
   },
 });
