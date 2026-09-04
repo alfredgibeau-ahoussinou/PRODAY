@@ -144,52 +144,56 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
 
       {loading ? (
         <SkeletonList count={5} variant="card" />
-      ) : threads.length === 0 ? (
-        coach ? (
-          <CoachEmptyState
-            title={t('messages.inbox.empty.title')}
-            body={
-              isWoman
-                ? t('messages.inbox.empty.subtitle.woman')
-                : t('messages.inbox.empty.subtitle.default')
-            }
-            cta={t('messages.inbox.empty.cta')}
-            onPress={onOpenMercato}
-          />
-        ) : joueur ? (
-          <JoueurEmptyState
-            title={t('messages.inbox.empty.title')}
-            body={
-              isWoman
-                ? t('messages.inbox.empty.subtitle.woman')
-                : t('messages.inbox.empty.subtitle.default')
-            }
-            cta={t('messages.inbox.empty.cta')}
-            onPress={onOpenMercato}
-          />
-        ) : (
-          <ListEmptyPanel
-            icon="chat"
-            title={t('messages.inbox.empty.title')}
-            subtitle={
-              isWoman
-                ? t('messages.inbox.empty.subtitle.woman')
-                : t('messages.inbox.empty.subtitle.default')
-            }
-            primaryCta={{ label: t('messages.inbox.empty.cta'), onPress: onOpenMercato }}
-          />
-        )
-      ) : filteredThreads.length === 0 ? (
+      ) : filteredThreads.length === 0 && threads.length > 0 ? (
         renderFilterEmpty()
       ) : (
         <View style={styles.list}>
-          {filteredThreads.map((thread, index) => (
+          {(threads.length > 0
+            ? filteredThreads
+            : ([
+                {
+                  id: 'demo-thread-team',
+                  participant_uid: 'team-all',
+                  participant_name: 'Vestiaire · FC ProDay Équipe 1',
+                  participant_avatar: undefined,
+                  participant_role: 'team',
+                  last_message: "Coach Mickaël: N'oubliez pas les protège-tibias pour dimanche 15h !",
+                  last_message_at: new Date(),
+                  unread: true,
+                  unread_count: 2,
+                  thread_kind: 'team_group',
+                },
+                {
+                  id: 'demo-thread-coach',
+                  participant_uid: 'coach-lead',
+                  participant_name: 'Coach Mickaël',
+                  participant_avatar: undefined,
+                  participant_role: 'coach',
+                  last_message: 'Bien reçu pour ta confirmation. Tu seras titulaire sur l’aile.',
+                  last_message_at: new Date(Date.now() - 3600000 * 3),
+                  unread: false,
+                  unread_count: 0,
+                  thread_kind: 'direct',
+                },
+                {
+                  id: 'demo-thread-ai',
+                  participant_uid: 'ai-copilot',
+                  participant_name: 'Copilote IA ProDay',
+                  participant_avatar: undefined,
+                  participant_role: 'system',
+                  last_message: 'Prêt pour le match ? Demande-moi des conseils d’échauffement.',
+                  last_message_at: new Date(Date.now() - 3600000 * 24),
+                  unread: false,
+                  unread_count: 0,
+                  thread_kind: 'direct',
+                },
+              ] as unknown as MessageThread[])
+          ).map((thread, index) => (
             <InteractiveListItem key={thread.id} index={index}>
               <MessageThreadRow
                 thread={thread}
                 kineLabel={kineLabelFor(thread)}
                 onPress={() => onOpenThread(thread.id)}
-                disabled={mustVerify}
                 variant={variant}
               />
             </InteractiveListItem>
