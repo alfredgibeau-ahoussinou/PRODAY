@@ -1,77 +1,81 @@
 import Link from "next/link";
-import { ProDayEliteHero } from "@/components/home/ProDayEliteHero";
-import { ProDayVersusMatrix } from "@/components/home/ProDayVersusMatrix";
-import { EliteInteractiveShowcase } from "@/components/home/EliteInteractiveShowcase";
-import { ClubSavingsSimulator } from "@/components/home/ClubSavingsSimulator";
-import { EliteTestimonials } from "@/components/home/EliteTestimonials";
+import { ScrollVideoStage, UniverseScroll } from "@/components/immersive";
+import { ProductPositioning } from "@/components/home/ProductPositioning";
+import { HomeHeroPreload } from "@/components/home/HomeHeroPreload";
+import { FormAnalysisFeature } from "@/components/poles/FormAnalysisFeature";
 import { CommercialBadges } from "@/components/pricing/CommercialBadges";
-import { Zap, Shield, ArrowRight } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#06090E] text-white selection:bg-[#00E676] selection:text-black">
-      {/* 1. New High-Impact Hero with Multi-Role Interactive App Mockup */}
-      <ProDayEliteHero />
+    <>
+      <HomeHeroPreload />
+      <ScrollVideoStage />
+      <UniverseScroll />
 
-      {/* 2. Direct Head-to-Head Comparison vs SportEasy & MyCoach FFF */}
-      <ProDayVersusMatrix />
+      <ProductPositioning />
 
-      {/* 3. Interactive Live Demos (Tactical Board & FUT 3D Card Generator) */}
-      <EliteInteractiveShowcase />
+      <FormAnalysisFeature audience="all" />
 
-      {/* 4. Club Savings & Time Simulator */}
-      <ClubSavingsSimulator />
-
-      {/* 5. Real Club & Coach Testimonials */}
-      <EliteTestimonials />
-
-      {/* 6. High-Conversion Final CTA Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#090D16] to-[#04060A] py-24 sm:py-32 border-t border-slate-800">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#00E676]/10 via-transparent to-transparent blur-2xl" />
-
-        <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#00E676]/30 bg-[#00E676]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#00E676]">
-            <Zap className="h-3.5 w-3.5 fill-[#00E676]" />
-            PRÊT POUR LE COUP D&apos;ENVOI ?
+      <section className="bg-accent-gradient py-20 text-white sm:py-24">
+        <div className="mx-auto flex max-w-4xl flex-col gap-10 px-5 sm:px-8">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/50">
+              ProDay
+            </p>
+            <h2 className="mt-4 max-w-xl font-display text-3xl font-medium tracking-[-0.035em] sm:text-4xl">
+              L&apos;infrastructure de votre football.
+            </h2>
+            <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
+              Une porte d&apos;entrée par rôle · Club, Coach, Joueur, Parent,
+              Supporter, Sponsor · vers le même écosystème. Plus de WhatsApp
+              pour une info et de tableur pour une autre.
+            </p>
+            <p className="mt-3 text-sm font-semibold text-white/90">
+              Club : à partir de 3 € / adhérent · sur devis selon la taille.
+            </p>
+            <div className="mt-5">
+              <CommercialBadges size="md" align="left" />
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-white/70">
+              Résiliation libre à tout moment sur les stores.{" "}
+              <Link
+                href={ROUTES.sponsor}
+                className="font-semibold text-amber-300 underline-offset-2 hover:underline"
+              >
+                Sponsoring possible
+              </Link>{" "}
+              pour les marques et commerces locaux.
+            </p>
           </div>
-
-          <h2 className="mt-6 font-display text-3xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Offrez à votre club l&apos;infrastructure qu&apos;il mérite.
-          </h2>
-
-          <p className="mx-auto mt-6 max-w-2xl text-base text-slate-300 sm:text-lg">
-            Rejoignez plus de 500 clubs et 25 000 licenciés qui ont simplifié leur saison. 
-            Démarrez votre essai gratuit de 30 jours, sans engagement et sans carte bancaire.
-          </p>
-
-          <div className="mt-8 flex justify-center">
-            <CommercialBadges size="md" align="center" />
-          </div>
-
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          <div className="flex flex-wrap gap-3">
             <Link
               href={ROUTES.proClub}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00E676] to-[#00C853] px-9 py-4 text-base font-bold text-black shadow-xl shadow-[#00E676]/25 transition hover:scale-[1.02] active:scale-[0.99]"
+              className="inline-flex items-center rounded-full bg-black px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-[#050A30]"
             >
-              <Zap className="h-5 w-5 fill-black" />
-              Créer mon Club Gratuitement
+              Créer mon club
             </Link>
-
             <Link
-              href={ROUTES.pricing}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-8 py-4 text-base font-semibold text-white transition hover:bg-slate-800"
+              href={ROUTES.joueur}
+              className="inline-flex items-center rounded-full border border-white/40 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
             >
-              Voir les Formules & Tarifs
-              <ArrowRight className="h-4 w-4" />
+              Je suis joueur
+            </Link>
+            <Link
+              href={`${ROUTES.coach}#analyse-de-forme`}
+              className="inline-flex items-center rounded-full border border-white/40 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
+            >
+              Je suis coach
+            </Link>
+            <Link
+              href={ROUTES.sponsor}
+              className="inline-flex items-center rounded-full border border-white/40 px-7 py-3.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-white/10"
+            >
+              Je suis sponsor
             </Link>
           </div>
-
-          <p className="mt-6 text-xs text-slate-400">
-            Installation instantanée · Import de vos données Excel ou SportEasy assisté par nos équipes en 48h.
-          </p>
         </div>
       </section>
-    </main>
+    </>
   );
 }
