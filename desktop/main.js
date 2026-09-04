@@ -1,8 +1,9 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, session } = require('electron');
 const path = require('path');
 const serve = require('electron-serve');
 
-const loadURL = serve({ directory: path.join(__dirname, 'app-dist') });
+// Configuration electron-serve avec schéma app://
+const loadURL = serve({ directory: path.join(__dirname, 'app-dist'), scheme: 'app' });
 
 let mainWindow;
 
@@ -18,7 +19,8 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      spellcheck: true,
+      webSecurity: false, // Permet les requêtes API / Firebase sans blocage CORS local
+      allowRunningInsecureContent: true,
     },
     autoHideMenuBar: true,
     show: false,
@@ -31,7 +33,7 @@ function createWindow() {
     mainWindow.show();
   });
 
-  // Ouvrir les liens externes dans le navigateur par défaut
+  // Gestion des liens externes
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('app://') || url.startsWith('file://')) {
       return { action: 'allow' };
