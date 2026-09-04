@@ -76,7 +76,7 @@ export const JOUEUR_REELS = {
 
 /** Tokens Discover invité — hero dark premium. */
 export const JOUEUR_DISCOVER = {
-  heroBg: PLAYER_DARK.surfaceRaised,
+  heroBg: PLAYER_DARK.surface,
   heroBorder: PLAYER_DARK.border,
   heroMuted: PLAYER_DARK.textMuted,
   tileBg: JOUEUR_SURFACES.card,
