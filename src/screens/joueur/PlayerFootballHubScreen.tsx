@@ -40,6 +40,8 @@ import {
   playerCanShowRsvp,
   type PlayerRsvpChoice,
 } from '../../utils/amateurPlayerHome';
+import { EliteStandingsBoard } from '../../components/competition/EliteStandingsBoard';
+import { EliteAiQuickBar } from '../../components/home/EliteAiQuickBar';
 
 /** Accueil Football Hub — match day, RSVP réel, pas de stats inventées. */
 export function PlayerFootballHubScreen() {
@@ -281,6 +283,19 @@ export function PlayerFootballHubScreen() {
               onPress={() => nav.setActiveTab('feed')}
             />
           </View>
+
+          {/* Copilote IA Joueur */}
+          <EliteAiQuickBar
+            role="player"
+            onOpenAssistant={() => nav.setActiveTab('messages')}
+          />
+
+          {/* Classement Officiel Ligue FFF / SportEasy */}
+          <EliteStandingsBoard
+            leagueName="Départemental 1 · Poule A"
+            onTeamPress={() => nav.setActiveTab('matchs')}
+            onScorerPress={() => nav.setActiveTab('profil')}
+          />
 
           <JoueurSectionHeader title="Plus" />
           <View style={styles.actions}>
