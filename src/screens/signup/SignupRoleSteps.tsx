@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { AuthTextField } from '../../components/auth/AuthTextField';
 import { SignupOptionPicker } from '../../components/signup/SignupOptionPicker';
+import { SignupRecapCard } from '../../components/signup/SignupRecapCard';
+import { SignupPoleShell } from './SignupPoleShell';
 import { SignupStepLayout } from './SignupStepLayout';
 import { SignupFooterButton } from './SignupFooterButton';
 import type { SignupForm } from './useSignupForm';
@@ -11,14 +13,15 @@ import {
   getMedicalPracticeMetaById,
   getMedicalSpecialtyConfigs,
 } from './signupMedicalI18n';
-import { getProStepMeta } from './signupProConfig';
-import { getSanteStepMeta } from './signupSanteConfig';
-import type { SignupPageId } from './signupFlowConfig';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { openCalComSignup } from '../../utils/calComBooking';
 import { SignupFffAffiliationCard } from '../../components/signup/SignupFffAffiliationCard';
+import { ProDayText } from '../../components/ui/ProDayText';
+import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
+import { getSignupRoleStepCopy } from './signupRoleStepCopy';
+import { fontFamily } from '../../theme/typography';
 
 type StepProps = {
   form: SignupForm;
@@ -30,163 +33,156 @@ type StepProps = {
   onBack: () => void;
 };
 
-const RoleStepShell: React.FC<
-  StepProps & { page: SignupPageId; children: React.ReactNode; hint?: string }
-> = ({ form, page, children, hint, ...layout }) => {
-  const { colors, isProSignup, isSanteSignup } = useSignupFlowTheme();
-  const { t } = useTranslation();
-  const meta = isSanteSignup
-    ? getSanteStepMeta(page, t)
-    : isProSignup
-      ? getProStepMeta(page, t)
-      : getStepMetaForRole(page, form.role, t);
-  return (
-    <SignupStepLayout
-      {...layout}
-      title={meta.title}
-      subtitle={meta.subtitle}
-      heroIcon={meta.heroIcon}
-      stepName={meta.stepName ?? layout.stepName}
-      contentKey={`${page}-${form.role}`}
-      onBack={layout.onBack}
-      footer={
-        <SignupFooterButton label={t('common.continue')} onPress={() => form.advanceFromCurrentPage()} />
-      }
-    >
-      {hint ? (
-        <View style={[styles.hintBox, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}>
-          <Text style={[styles.hintText, { color: colors.textSecondary }]}>{hint}</Text>
-        </View>
-      ) : null}
-      {children}
-    </SignupStepLayout>
-  );
-};
-
-import { getSignupRoleStepCopy } from './signupRoleStepCopy';
-
 export const SignupCoachProStep: React.FC<StepProps> = (props) => {
   const { t } = useTranslation();
   const copy = getSignupRoleStepCopy(t);
+  const cat = props.form.selectedFffCategory || props.form.category;
+  const summaryReady = Boolean(props.form.selectedFffClub || !props.form.hasClub);
+
   return (
-  <RoleStepShell {...props} page="coach_pro" hint={copy.coach.hint}>
-    <SignupFffAffiliationCard
-      role="coach"
-      hasClub={props.form.hasClub}
-      onToggleHasClub={props.form.setHasClub}
-      selectedClub={props.form.selectedFffClub}
-      onSelectClub={(club) => {
-        props.form.setSelectedFffClub(club);
-        if (club?.city && !props.form.city) {
-          props.form.setCity(club.city);
-        }
-        if (club?.department && !props.form.department) {
-          props.form.setDepartment(club.department);
-        }
-      }}
-      selectedCategory={props.form.selectedFffCategory || props.form.category}
-      onSelectCategory={(cat) => {
-        props.form.setSelectedFffCategory(cat);
-        props.form.setCategory(cat);
-      }}
-      selectedRosterMember={props.form.selectedRosterMember}
-      onSelectRosterMember={(member) => {
-        props.form.setSelectedRosterMember(member);
-        if (member?.displayName && !props.form.displayName) {
-          props.form.setDisplayName(member.displayName);
-        }
-      }}
-      isCustomProfile={props.form.isCustomProfile}
-      onToggleCustomProfile={props.form.setIsCustomProfile}
-      identityDoc={props.form.identityDoc}
-      onSetIdentityDoc={props.form.setIdentityDoc}
-      defaultUserName={props.form.displayName}
-    />
-    <AuthTextField
-      label={copy.coach.diplomaLabel}
-      icon="school"
-      placeholder={copy.coach.diplomaPlaceholder}
-      value={props.form.professionalHeadline}
-      onChangeText={props.form.setProfessionalHeadline}
-      error={props.form.fieldErrors.professionalHeadline}
-    />
-    <AuthTextField
-      label={copy.coach.cityLabel}
-      icon="location"
-      placeholder={copy.coach.cityPlaceholder}
-      value={props.form.city}
-      onChangeText={props.form.setCity}
-      error={props.form.fieldErrors.city}
-    />
-    <AuthTextField
-      label={t('signup.form.departmentOptional')}
-      icon="location"
-      placeholder={copy.departmentPlaceholder}
-      value={props.form.department}
-      onChangeText={props.form.setDepartment}
-      error={props.form.fieldErrors.department}
-    />
-  </RoleStepShell>
+    <SignupPoleShell {...props} page="coach_pro" hint={copy.coach.hint}>
+      <SignupFffAffiliationCard
+        role="coach"
+        hasClub={props.form.hasClub}
+        onToggleHasClub={props.form.setHasClub}
+        selectedClub={props.form.selectedFffClub}
+        onSelectClub={(club) => {
+          props.form.setSelectedFffClub(club);
+          if (club?.city && !props.form.city) {
+            props.form.setCity(club.city);
+          }
+          if (club?.department && !props.form.department) {
+            props.form.setDepartment(club.department);
+          }
+        }}
+        selectedCategory={cat}
+        onSelectCategory={(c) => {
+          props.form.setSelectedFffCategory(c);
+          props.form.setCategory(c);
+        }}
+        selectedRosterMember={props.form.selectedRosterMember}
+        onSelectRosterMember={(member) => {
+          props.form.setSelectedRosterMember(member);
+          if (member?.displayName && !props.form.displayName) {
+            props.form.setDisplayName(member.displayName);
+          }
+        }}
+        isCustomProfile={props.form.isCustomProfile}
+        onToggleCustomProfile={props.form.setIsCustomProfile}
+        identityDoc={props.form.identityDoc}
+        onSetIdentityDoc={props.form.setIdentityDoc}
+        defaultUserName={props.form.displayName}
+        error={props.form.fieldErrors.club || props.form.fieldErrors.category}
+      />
+      <AuthTextField
+        label={copy.coach.diplomaLabel}
+        icon="school"
+        placeholder={copy.coach.diplomaPlaceholder}
+        value={props.form.professionalHeadline}
+        onChangeText={props.form.setProfessionalHeadline}
+        error={props.form.fieldErrors.professionalHeadline}
+      />
+      <AuthTextField
+        label={copy.coach.cityLabel}
+        icon="location"
+        placeholder={copy.coach.cityPlaceholder}
+        value={props.form.city}
+        onChangeText={props.form.setCity}
+        error={props.form.fieldErrors.city}
+      />
+      <AuthTextField
+        label={t('signup.form.departmentOptional')}
+        icon="location"
+        placeholder={copy.departmentPlaceholder}
+        value={props.form.department}
+        onChangeText={props.form.setDepartment}
+        error={props.form.fieldErrors.department}
+      />
+      {summaryReady ? (
+        <SignupRecapCard
+          club={props.form.selectedFffClub}
+          category={cat}
+          displayName={props.form.displayName}
+          withoutClub={!props.form.hasClub}
+          warn={!cat && props.form.hasClub ? 'Sélectionnez votre catégorie FFF ci-dessus.' : null}
+          extraLines={
+            props.form.professionalHeadline.trim()
+              ? [`Diplôme : ${props.form.professionalHeadline.trim()}`]
+              : undefined
+          }
+        />
+      ) : null}
+    </SignupPoleShell>
   );
 };
 
 export const SignupClubProStep: React.FC<StepProps> = (props) => {
   const { t } = useTranslation();
   const copy = getSignupRoleStepCopy(t);
+  const summaryReady = Boolean(props.form.selectedFffClub);
+
   return (
-  <RoleStepShell {...props} page="club_pro" hint={copy.club.hint}>
-    <SignupFffAffiliationCard
-      role="club"
-      hasClub={true}
-      onToggleHasClub={() => {}}
-      selectedClub={props.form.selectedFffClub}
-      onSelectClub={(club) => {
-        props.form.setSelectedFffClub(club);
-        if (club?.name) {
-          props.form.setStructureName(club.name);
-        }
-        if (club?.city) {
-          props.form.setCity(club.city);
-        }
-        if (club?.department) {
-          props.form.setDepartment(club.department);
-        }
-      }}
-      selectedCategory={props.form.selectedFffCategory}
-      onSelectCategory={props.form.setSelectedFffCategory}
-      selectedRosterMember={null}
-      onSelectRosterMember={() => {}}
-      isCustomProfile={true}
-      onToggleCustomProfile={() => {}}
-      identityDoc={props.form.identityDoc}
-      onSetIdentityDoc={props.form.setIdentityDoc}
-      defaultUserName={props.form.displayName}
-    />
-    <AuthTextField
-      label={copy.club.nameLabel}
-      icon="business"
-      placeholder={copy.club.namePlaceholder}
-      value={props.form.structureName}
-      onChangeText={props.form.setStructureName}
-      error={props.form.fieldErrors.structureName}
-    />
-    <AuthTextField
-      label={copy.club.cityLabel}
-      icon="location"
-      placeholder={copy.club.cityPlaceholder}
-      value={props.form.city}
-      onChangeText={props.form.setCity}
-      error={props.form.fieldErrors.city}
-    />
-    <AuthTextField
-      label={t('signup.form.departmentRequired')}
-      icon="location"
-      placeholder={copy.departmentPlaceholderWide}
-      value={props.form.department}
-      onChangeText={props.form.setDepartment}
-      error={props.form.fieldErrors.department}
-    />
-  </RoleStepShell>
+    <SignupPoleShell {...props} page="club_pro" hint={copy.club.hint}>
+      <SignupFffAffiliationCard
+        role="club"
+        hasClub={true}
+        onToggleHasClub={() => {}}
+        selectedClub={props.form.selectedFffClub}
+        onSelectClub={(club) => {
+          props.form.setSelectedFffClub(club);
+          if (club?.name) {
+            props.form.setStructureName(club.name);
+          }
+          if (club?.city) {
+            props.form.setCity(club.city);
+          }
+          if (club?.department) {
+            props.form.setDepartment(club.department);
+          }
+        }}
+        selectedCategory={props.form.selectedFffCategory}
+        onSelectCategory={props.form.setSelectedFffCategory}
+        selectedRosterMember={null}
+        onSelectRosterMember={() => {}}
+        isCustomProfile={true}
+        onToggleCustomProfile={() => {}}
+        identityDoc={props.form.identityDoc}
+        onSetIdentityDoc={props.form.setIdentityDoc}
+        defaultUserName={props.form.displayName}
+        error={props.form.fieldErrors.club}
+      />
+      <AuthTextField
+        label={copy.club.nameLabel}
+        icon="business"
+        placeholder={copy.club.namePlaceholder}
+        value={props.form.structureName}
+        onChangeText={props.form.setStructureName}
+        error={props.form.fieldErrors.structureName}
+      />
+      <AuthTextField
+        label={copy.club.cityLabel}
+        icon="location"
+        placeholder={copy.club.cityPlaceholder}
+        value={props.form.city}
+        onChangeText={props.form.setCity}
+        error={props.form.fieldErrors.city}
+      />
+      <AuthTextField
+        label={t('signup.form.departmentRequired')}
+        icon="location"
+        placeholder={copy.departmentPlaceholderWide}
+        value={props.form.department}
+        onChangeText={props.form.setDepartment}
+        error={props.form.fieldErrors.department}
+      />
+      {summaryReady ? (
+        <SignupRecapCard
+          club={props.form.selectedFffClub}
+          category={props.form.selectedFffCategory || undefined}
+          displayName={props.form.structureName}
+        />
+      ) : null}
+    </SignupPoleShell>
   );
 };
 
@@ -194,32 +190,32 @@ export const SignupAgentProStep: React.FC<StepProps> = (props) => {
   const { t } = useTranslation();
   const copy = getSignupRoleStepCopy(t);
   return (
-  <RoleStepShell {...props} page="agent_pro" hint={copy.agent.hint}>
-    <AuthTextField
-      label={copy.agent.licenseLabel}
-      icon="document"
-      placeholder={copy.agent.licensePlaceholder}
-      value={props.form.professionalHeadline}
-      onChangeText={props.form.setProfessionalHeadline}
-      error={props.form.fieldErrors.professionalHeadline}
-    />
-    <AuthTextField
-      label={copy.agent.cityLabel}
-      icon="location"
-      placeholder={copy.agent.cityPlaceholder}
-      value={props.form.city}
-      onChangeText={props.form.setCity}
-      error={props.form.fieldErrors.city}
-    />
-    <AuthTextField
-      label={t('signup.form.departmentRequired')}
-      icon="location"
-      placeholder={copy.departmentPlaceholder}
-      value={props.form.department}
-      onChangeText={props.form.setDepartment}
-      error={props.form.fieldErrors.department}
-    />
-  </RoleStepShell>
+    <SignupPoleShell {...props} page="agent_pro" hint={copy.agent.hint}>
+      <AuthTextField
+        label={copy.agent.licenseLabel}
+        icon="document"
+        placeholder={copy.agent.licensePlaceholder}
+        value={props.form.professionalHeadline}
+        onChangeText={props.form.setProfessionalHeadline}
+        error={props.form.fieldErrors.professionalHeadline}
+      />
+      <AuthTextField
+        label={copy.agent.cityLabel}
+        icon="location"
+        placeholder={copy.agent.cityPlaceholder}
+        value={props.form.city}
+        onChangeText={props.form.setCity}
+        error={props.form.fieldErrors.city}
+      />
+      <AuthTextField
+        label={t('signup.form.departmentRequired')}
+        icon="location"
+        placeholder={copy.departmentPlaceholder}
+        value={props.form.department}
+        onChangeText={props.form.setDepartment}
+        error={props.form.fieldErrors.department}
+      />
+    </SignupPoleShell>
   );
 };
 
@@ -227,36 +223,32 @@ export const SignupRecruiterProStep: React.FC<StepProps> = (props) => {
   const { t } = useTranslation();
   const copy = getSignupRoleStepCopy(t);
   return (
-  <RoleStepShell
-    {...props}
-    page="recruiter_pro"
-    hint={copy.recruiter.hint}
-  >
-    <AuthTextField
-      label={copy.recruiter.specialtyLabel}
-      icon="search"
-      placeholder={copy.recruiter.specialtyPlaceholder}
-      value={props.form.professionalHeadline}
-      onChangeText={props.form.setProfessionalHeadline}
-      error={props.form.fieldErrors.professionalHeadline}
-    />
-    <AuthTextField
-      label={copy.recruiter.cityLabel}
-      icon="location"
-      placeholder={copy.recruiter.cityPlaceholder}
-      value={props.form.city}
-      onChangeText={props.form.setCity}
-      error={props.form.fieldErrors.city}
-    />
-    <AuthTextField
-      label={t('signup.form.departmentRequired')}
-      icon="location"
-      placeholder={copy.departmentPlaceholder}
-      value={props.form.department}
-      onChangeText={props.form.setDepartment}
-      error={props.form.fieldErrors.department}
-    />
-  </RoleStepShell>
+    <SignupPoleShell {...props} page="recruiter_pro" hint={copy.recruiter.hint}>
+      <AuthTextField
+        label={copy.recruiter.specialtyLabel}
+        icon="search"
+        placeholder={copy.recruiter.specialtyPlaceholder}
+        value={props.form.professionalHeadline}
+        onChangeText={props.form.setProfessionalHeadline}
+        error={props.form.fieldErrors.professionalHeadline}
+      />
+      <AuthTextField
+        label={copy.recruiter.cityLabel}
+        icon="location"
+        placeholder={copy.recruiter.cityPlaceholder}
+        value={props.form.city}
+        onChangeText={props.form.setCity}
+        error={props.form.fieldErrors.city}
+      />
+      <AuthTextField
+        label={t('signup.form.departmentRequired')}
+        icon="location"
+        placeholder={copy.departmentPlaceholder}
+        value={props.form.department}
+        onChangeText={props.form.setDepartment}
+        error={props.form.fieldErrors.department}
+      />
+    </SignupPoleShell>
   );
 };
 
@@ -264,32 +256,32 @@ export const SignupOrganizerProStep: React.FC<StepProps> = (props) => {
   const { t } = useTranslation();
   const copy = getSignupRoleStepCopy(t);
   return (
-  <RoleStepShell {...props} page="organizer_pro" hint={copy.organizer.hint}>
-    <AuthTextField
-      label={copy.organizer.structureLabel}
-      icon="trophy"
-      placeholder={copy.organizer.structurePlaceholder}
-      value={props.form.structureName}
-      onChangeText={props.form.setStructureName}
-      error={props.form.fieldErrors.structureName}
-    />
-    <AuthTextField
-      label={copy.organizer.cityLabel}
-      icon="location"
-      placeholder={copy.organizer.cityPlaceholder}
-      value={props.form.city}
-      onChangeText={props.form.setCity}
-      error={props.form.fieldErrors.city}
-    />
-    <AuthTextField
-      label={t('signup.form.departmentOptional')}
-      icon="location"
-      placeholder={copy.departmentPlaceholder}
-      value={props.form.department}
-      onChangeText={props.form.setDepartment}
-      error={props.form.fieldErrors.department}
-    />
-  </RoleStepShell>
+    <SignupPoleShell {...props} page="organizer_pro" hint={copy.organizer.hint}>
+      <AuthTextField
+        label={copy.organizer.structureLabel}
+        icon="trophy"
+        placeholder={copy.organizer.structurePlaceholder}
+        value={props.form.structureName}
+        onChangeText={props.form.setStructureName}
+        error={props.form.fieldErrors.structureName}
+      />
+      <AuthTextField
+        label={copy.organizer.cityLabel}
+        icon="location"
+        placeholder={copy.organizer.cityPlaceholder}
+        value={props.form.city}
+        onChangeText={props.form.setCity}
+        error={props.form.fieldErrors.city}
+      />
+      <AuthTextField
+        label={t('signup.form.departmentOptional')}
+        icon="location"
+        placeholder={copy.departmentPlaceholder}
+        value={props.form.department}
+        onChangeText={props.form.setDepartment}
+        error={props.form.fieldErrors.department}
+      />
+    </SignupPoleShell>
   );
 };
 
@@ -297,24 +289,24 @@ export const SignupSponsorProStep: React.FC<StepProps> = (props) => {
   const { t } = useTranslation();
   const copy = getSignupRoleStepCopy(t);
   return (
-  <RoleStepShell {...props} page="sponsor_pro" hint={copy.sponsor.hint}>
-    <AuthTextField
-      label={copy.sponsor.brandLabel}
-      icon="star-four-points"
-      placeholder={copy.sponsor.brandPlaceholder}
-      value={props.form.structureName}
-      onChangeText={props.form.setStructureName}
-      error={props.form.fieldErrors.structureName}
-    />
-    <AuthTextField
-      label={copy.sponsor.territoryLabel}
-      icon="location"
-      placeholder={copy.sponsor.territoryPlaceholder}
-      value={props.form.city}
-      onChangeText={props.form.setCity}
-      error={props.form.fieldErrors.city}
-    />
-  </RoleStepShell>
+    <SignupPoleShell {...props} page="sponsor_pro" hint={copy.sponsor.hint}>
+      <AuthTextField
+        label={copy.sponsor.brandLabel}
+        icon="star-four-points"
+        placeholder={copy.sponsor.brandPlaceholder}
+        value={props.form.structureName}
+        onChangeText={props.form.setStructureName}
+        error={props.form.fieldErrors.structureName}
+      />
+      <AuthTextField
+        label={copy.sponsor.territoryLabel}
+        icon="location"
+        placeholder={copy.sponsor.territoryPlaceholder}
+        value={props.form.city}
+        onChangeText={props.form.setCity}
+        error={props.form.fieldErrors.city}
+      />
+    </SignupPoleShell>
   );
 };
 
@@ -322,6 +314,7 @@ export const SignupMedicalSpecialtyStep: React.FC<StepProps> = (props) => {
   const { colors } = useSignupFlowTheme();
   const { t } = useTranslation();
   const meta = getStepMetaForRole('medical_specialty', 'physio', t);
+
   const configs = getMedicalSpecialtyConfigs(t);
 
   return (
@@ -333,9 +326,20 @@ export const SignupMedicalSpecialtyStep: React.FC<StepProps> = (props) => {
       stepName={meta.stepName}
       contentKey="medical-specialty"
       footer={
-        <SignupFooterButton label={t('signup.form.continue')} onPress={() => props.form.advanceFromCurrentPage()} />
+        <SignupFooterButton
+          label={t('signup.form.continue')}
+          onPress={() => props.form.advanceFromCurrentPage()}
+        />
       }
     >
+      {props.form.error ? (
+        <View style={{ marginBottom: spacing.md }}>
+          <ProDayErrorBanner
+            message={props.form.error}
+            onDismiss={() => props.form.setError(null)}
+          />
+        </View>
+      ) : null}
       <View style={styles.specialtyGrid}>
         {configs.map((cfg) => {
           const active = props.form.medicalSpecialty === cfg.id;
@@ -349,19 +353,23 @@ export const SignupMedicalSpecialtyStep: React.FC<StepProps> = (props) => {
               ]}
               onPress={() => props.form.setMedicalSpecialty(cfg.id)}
             >
-              <Text style={[styles.specialtyTag, active && { color: colors.accent }]}>
+              <ProDayText style={[styles.specialtyTag, active && { color: colors.accent }]}>
                 {cfg.shortLabel}
-              </Text>
-              <Text style={[styles.specialtyTitle, { color: colors.text }]}>{cfg.label}</Text>
-              <Text style={[styles.specialtySub, { color: colors.textSecondary }]}>{cfg.tagline}</Text>
+              </ProDayText>
+              <ProDayText style={[styles.specialtyTitle, { color: colors.text }]}>
+                {cfg.label}
+              </ProDayText>
+              <ProDayText style={[styles.specialtySub, { color: colors.textSecondary }]}>
+                {cfg.tagline}
+              </ProDayText>
             </Pressable>
           );
         })}
       </View>
       {props.form.fieldErrors.medicalSpecialty ? (
-        <Text style={[styles.fieldErr, { color: colors.error }]}>
+        <ProDayText style={[styles.fieldErr, { color: colors.error }]}>
           {props.form.fieldErrors.medicalSpecialty}
-        </Text>
+        </ProDayText>
       ) : null}
     </SignupStepLayout>
   );
@@ -382,11 +390,26 @@ export const SignupMedicalPracticeStep: React.FC<StepProps> = (props) => {
       stepName={meta.stepName}
       contentKey={`medical-practice-${cfg.id}`}
       footer={
-        <SignupFooterButton label={t('signup.form.continue')} onPress={() => props.form.advanceFromCurrentPage()} />
+        <SignupFooterButton
+          label={t('signup.form.continue')}
+          onPress={() => props.form.advanceFromCurrentPage()}
+        />
       }
     >
-      <View style={[styles.hintBox, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}>
-        <Text style={[styles.hintText, { color: colors.textSecondary }]}>{cfg.practiceHint}</Text>
+      {props.form.error ? (
+        <View style={{ marginBottom: spacing.md }}>
+          <ProDayErrorBanner
+            message={props.form.error}
+            onDismiss={() => props.form.setError(null)}
+          />
+        </View>
+      ) : null}
+      <View
+        style={[styles.hintBox, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}
+      >
+        <ProDayText style={[styles.hintText, { color: colors.textSecondary }]}>
+          {cfg.practiceHint}
+        </ProDayText>
       </View>
       <SignupOptionPicker
         label={cfg.practiceFocusLabel}
@@ -411,20 +434,23 @@ export const SignupMedicalPracticeStep: React.FC<StepProps> = (props) => {
         onChangeText={props.form.setDepartment}
         error={props.form.fieldErrors.department}
       />
-      <View style={[styles.hintBox, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}>
-        <Text style={[styles.hintText, { color: colors.textSecondary }]}>
-          Créez (ou connectez) votre compte Cal.com. C’est votre agenda public pour les téléconsultations.
-          Les sportifs réservent sans créer de compte Cal.com, via votre fiche ProDay.
-        </Text>
+      <View
+        style={[styles.hintBox, { backgroundColor: colors.accentSoft, borderColor: colors.border }]}
+      >
+        <ProDayText style={[styles.hintText, { color: colors.textSecondary }]}>
+          Créez (ou connectez) votre compte Cal.com. C’est votre agenda public pour les
+          téléconsultations. Les sportifs réservent sans créer de compte Cal.com, via votre fiche
+          ProDay.
+        </ProDayText>
         <Pressable
           onPress={() => {
             void openCalComSignup().catch(() => undefined);
           }}
           style={{ marginTop: spacing.sm }}
         >
-          <Text style={{ color: colors.accent, fontWeight: '700', fontSize: 14 }}>
+          <ProDayText style={{ color: colors.accent, fontFamily: fontFamily.bold, fontSize: 14 }}>
             Ouvrir l’inscription Cal.com →
-          </Text>
+          </ProDayText>
         </Pressable>
       </View>
       <AuthTextField
@@ -448,7 +474,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: spacing.lg,
   },
-  hintText: { fontSize: 13, lineHeight: 19, fontWeight: '500' },
+  hintText: { fontSize: 13, lineHeight: 19, fontFamily: fontFamily.semibold },
   specialtyGrid: { gap: spacing.sm, width: '100%' },
   specialtyCard: {
     padding: spacing.md,
@@ -457,12 +483,17 @@ const styles = StyleSheet.create({
   },
   specialtyTag: {
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: fontFamily.bold,
     letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: spacing.xs,
   },
-  specialtyTitle: { fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },
-  specialtySub: { fontSize: 12, lineHeight: 17, marginTop: 4 },
-  fieldErr: { fontSize: 12, fontWeight: '600', marginTop: spacing.sm, textAlign: 'center' },
+  specialtyTitle: { fontSize: 15, fontFamily: fontFamily.bold, letterSpacing: -0.2 },
+  specialtySub: { fontSize: 12, lineHeight: 17, marginTop: 4, fontFamily: fontFamily.regular },
+  fieldErr: {
+    fontSize: 12,
+    fontFamily: fontFamily.semibold,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
 });

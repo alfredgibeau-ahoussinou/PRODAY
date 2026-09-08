@@ -505,8 +505,34 @@ export function useSignupForm(initial?: {
       structureName,
       professionalHeadline,
     });
+
+    // Coach / club : même exigence FFF réelle que le joueur (pas de club inventé).
+    if (role === 'coach' || role === 'club') {
+      if (role === 'club' || hasClub) {
+        if (!selectedFffClub) {
+          errs.club =
+            'Recherchez et sélectionnez le club FFF (ville, code postal ou n° d’affiliation).';
+        } else if (role === 'coach') {
+          const activeCat = selectedFffCategory || category;
+          if (!activeCat) {
+            errs.category =
+              'Sélectionnez votre catégorie / équipe FFF (liste DOFA), ou saisissez-la telle qu’indiquée sur votre licence.';
+          }
+        }
+      }
+      if (selectedFffClub) {
+        if (!city && selectedFffClub.city) setCity(selectedFffClub.city);
+        if (!department && selectedFffClub.department) setDepartment(selectedFffClub.department);
+      }
+    }
+
     setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
+    if (Object.keys(errs).length > 0) {
+      setError(Object.values(errs)[0]);
+      return false;
+    }
+    setError(null);
+    return true;
   };
 
   const validateMedicalSpecialtyOnly = () => {

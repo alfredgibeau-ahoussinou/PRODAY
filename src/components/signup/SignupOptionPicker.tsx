@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { spacing } from '../../theme/designTokens';
-import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
-import type { AppColors } from '../../theme/universeTheme';
+import { ProDayText } from '../ui/ProDayText';
+import { AUTH_XP } from '../../features/auth/experience/tokens';
+import { fontFamily } from '../../theme/typography';
 
 interface SignupOptionPickerProps {
   label: string;
@@ -19,12 +20,11 @@ export const SignupOptionPicker: React.FC<SignupOptionPickerProps> = ({
   onChange,
   error,
 }) => {
-  const { colors: c } = useSignupFlowTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const styles = useMemo(() => createStyles(), []);
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>{label}</Text>
+      <ProDayText variant="caption" style={styles.label}>{label}</ProDayText>
       <View style={styles.row}>
         {options.map((opt) => {
           const active = value === opt;
@@ -34,24 +34,28 @@ export const SignupOptionPicker: React.FC<SignupOptionPickerProps> = ({
               style={[styles.chip, active && styles.chipActive]}
               onPress={() => onChange(opt)}
             >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt}</Text>
+              <ProDayText style={[styles.chipText, active && styles.chipTextActive]}>
+                {opt}
+              </ProDayText>
             </Pressable>
           );
         })}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <ProDayText style={styles.error}>{error}</ProDayText> : null}
     </View>
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles() {
   return StyleSheet.create({
     wrap: { marginBottom: spacing.md },
     label: {
       fontSize: 12,
-      fontWeight: '600',
-      color: 'rgba(255, 255, 255, 0.55)',
+      fontFamily: fontFamily.bold,
+      color: AUTH_XP.textMuted,
       marginBottom: spacing.xs,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
     row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
@@ -59,27 +63,28 @@ function createStyles(c: AppColors) {
       paddingHorizontal: 16,
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: 'rgba(255, 255, 255, 0.12)',
-      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+      borderColor: AUTH_XP.border,
+      backgroundColor: AUTH_XP.inputBg,
     },
     chipActive: {
-      backgroundColor: '#F5D04A',
-      borderColor: '#F5D04A',
+      backgroundColor: AUTH_XP.goldBright,
+      borderColor: AUTH_XP.goldBright,
     },
     chipText: {
       fontSize: 14,
-      fontWeight: '500',
-      color: 'rgba(255, 255, 255, 0.8)',
+      fontFamily: fontFamily.semibold,
+      color: AUTH_XP.text,
     },
     chipTextActive: {
       color: '#000000',
-      fontWeight: '700',
+      fontFamily: fontFamily.bold,
     },
     error: {
       fontSize: 12,
-      color: c.error,
+      color: AUTH_XP.error,
       marginTop: spacing.xs,
-      fontWeight: '500',
+      fontFamily: fontFamily.semibold,
     },
   });
 }
+

@@ -64,11 +64,11 @@ export function getProPlayerStepMeta(
       };
     case 'sport':
       return {
-        title: tr(t, 'signup.proPlayer.step.sport.title', 'Ton club & équipe FFF'),
+        title: tr(t, 'signup.proPlayer.step.sport.title', 'Affiliation FFF'),
         subtitle: tr(
           t,
           'signup.proPlayer.step.sport.subtitle',
-          'Sélectionne ton club, ta catégorie et ton nom officiel FFF.',
+          'Club et catégorie officiels DOFA. Aucune liste inventée.',
         ),
         heroIcon: 'shield',
       };

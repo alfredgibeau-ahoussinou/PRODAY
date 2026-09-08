@@ -17,15 +17,15 @@ export { MEDICAL_POLE_SPECIALTIES };
 export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   welcome: 'Bienvenue',
   space: 'Espace',
-  sport: 'Club & Licence FFF',
+  sport: 'Affiliation FFF',
   location: 'Ville',
   stats: 'Stats',
   staff: 'Profil pro',
-  coach_pro: 'Coach',
-  club_pro: 'Club',
-  agent_pro: 'Agent',
-  recruiter_pro: 'Recruteur',
-  organizer_pro: 'Orga',
+  coach_pro: 'Affiliation FFF',
+  club_pro: 'Affiliation FFF',
+  agent_pro: 'Profil agent',
+  recruiter_pro: 'Profil recruteur',
+  organizer_pro: 'Profil orga',
   medical_specialty: 'Spécialité',
   medical_practice: 'Cabinet',
   sponsor_pro: 'Sponsor',
@@ -37,6 +37,11 @@ export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   security: 'Sécurité',
   launch: 'Lancement',
 };
+
+/** Rôles foot : affiliation FFF/DOFA en première étape métier. */
+export function isFffFirstSignupRole(role: UserRole): boolean {
+  return role === 'player' || role === 'coach' || role === 'club' || role === 'parent';
+}
 
 export const SIGNUP_PHASES: SignupPhase[] = [
   { id: 'vous', label: 'Vous' },
@@ -124,7 +129,9 @@ function staffProPage(role: UserRole): SignupPageId {
 }
 
 /**
- * Parcours multi-pages — une séquence par rôle (joueur, coach, club, agent, orga, médical, sponsor).
+ * Parcours multi-pages — rythme commun pour tous les pôles :
+ * 1) Vous (affiliation FFF ou profil métier) → 2) Accès (identité + sécurité) → 3) Go
+ * Exception sponsor / médical / staff hors foot : identité d’abord, puis étapes métier.
  */
 export function buildSignupSteps(
   flowKind: SignupFlowKind,
@@ -132,12 +139,17 @@ export function buildSignupSteps(
 ): SignupPageId[] {
   const { role, parentalRequired } = options;
 
-  // Parcours officiel FFF joueur : Affiliation Club & Licence FFF d'abord, puis Identité & Compte, puis Sécurité, Accord parental si mineur, Lancement.
-  if (flowKind === 'player') {
+  // Joueur + parent : affiliation FFF d’abord (même chrome, champs adaptés).
+  if (flowKind === 'player' || role === 'parent') {
     const pages: SignupPageId[] = ['sport', 'account', 'security'];
-    if (parentalRequired) pages.push('family');
+    if (flowKind === 'player' && parentalRequired) pages.push('family');
     pages.push('launch');
     return pages;
+  }
+
+  // Coach / club : affiliation FFF réelle avant le compte (aligné joueur).
+  if (role === 'coach' || role === 'club') {
+    return [staffProPage(role), 'account', 'security', 'launch'];
   }
 
   if (flowKind === 'sponsor') {
@@ -165,6 +177,7 @@ export function buildSignupSteps(
     ];
   }
 
+  // Agent / recruteur / organisateur : compte puis profil métier.
   return ['account', 'security', staffProPage(role), 'launch'];
 }
 

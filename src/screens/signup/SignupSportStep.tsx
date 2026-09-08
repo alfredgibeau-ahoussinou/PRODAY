@@ -10,6 +10,7 @@ import type { SignupForm } from './useSignupForm';
 import { suggestAppSpaceFromAge } from './signupFlowConfig';
 import { suggestFeminineAppSpaceFromAge } from '../../utils/signupAppSpace';
 import { getPlayerStepMeta } from './signupPlayerStepMeta';
+import { getStepMetaForRole } from './signupRoleExperience';
 import { useTranslation } from '../../context/LocaleContext';
 import { APP_SPACE_LABELS } from '../../models/AppSpace';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
@@ -19,7 +20,9 @@ import { spacing, radius } from '../../theme/designTokens';
 import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { fontFamily } from '../../theme/typography';
 import { ProDayText } from '../../components/ui/ProDayText';
+import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { SignupFffAffiliationCard } from '../../components/signup/SignupFffAffiliationCard';
+import { SignupRecapCard } from '../../components/signup/SignupRecapCard';
 
 interface SignupSportStepProps {
   form: SignupForm;
@@ -40,6 +43,8 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   phaseIndex,
   onBack,
 }) => {
+  const isParent = form.role === 'parent';
+  const affiliationRole = isParent ? 'parent' : 'player';
   const isFeminineSpace = form.gender === 'women';
   const suggestedSpace = useMemo(() => {
     if (form.parsedAge == null || form.parsedAge < 5) return null;
@@ -49,16 +54,19 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   }, [form.parsedAge, isFeminineSpace]);
 
   const universeHint = useMemo(() => {
+    if (isParent) return null;
     const iso = birthPartsToIso(form.birthDay, form.birthMonth, form.birthYear);
     const v = isValidPlayerBirthDate(iso);
     if (!v.ok) return null;
     return JOUEUR_UNIVERSE_LABELS[v.ageGroup];
-  }, [form.birthDay, form.birthMonth, form.birthYear]);
+  }, [form.birthDay, form.birthMonth, form.birthYear, isParent]);
 
   const styles = useMemo(() => createStyles(), []);
-  const willNeedParental = form.isMinor || isUnderU13AppSpace(form.appSpace);
+  const willNeedParental = !isParent && (form.isMinor || isUnderU13AppSpace(form.appSpace));
   const { t } = useTranslation();
-  const meta = getPlayerStepMeta(form.productLine, 'sport', t);
+  const meta = isParent
+    ? getStepMetaForRole('sport', 'parent', t)
+    : getPlayerStepMeta(form.productLine, 'sport', t);
 
   const fffCategory = form.selectedFffCategory || form.category;
   const summaryReady = Boolean(
@@ -74,14 +82,20 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
       phaseIndex={phaseIndex}
       title={meta.title}
       subtitle={meta.subtitle}
-      contentKey="player-sport"
+      contentKey={`${affiliationRole}-sport`}
       heroIcon={meta.heroIcon}
       onBack={onBack}
       footer={
         <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }
     >
-      {form.ageSpaceMismatch && suggestedSpace ? (
+      {form.error ? (
+        <View style={{ marginBottom: spacing.md }}>
+          <ProDayErrorBanner message={form.error} onDismiss={() => form.setError(null)} />
+        </View>
+      ) : null}
+
+      {form.ageSpaceMismatch && suggestedSpace && !isParent ? (
         <View>
           <View style={styles.mismatchBox}>
             <ProDayText style={styles.mismatchText}>{form.ageSpaceMismatch}</ProDayText>
@@ -98,9 +112,8 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
         </View>
       ) : null}
 
-      {/* Uniquement données FFF/DOFA — plus de chips Catégorie/Niveau inventées */}
       <SignupFffAffiliationCard
-        role="player"
+        role={affiliationRole}
         hasClub={form.hasClub}
         onToggleHasClub={(has) => {
           form.setHasClub(has);
@@ -117,7 +130,6 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
         onSelectCategory={(cat) => {
           form.setSelectedFffCategory(cat);
           form.setCategory(cat);
-          // Niveau ProDay = catégorie FFF retenue (plus de doublon inventé)
           form.setLevel(cat);
         }}
         selectedRosterMember={form.selectedRosterMember}
@@ -144,8 +156,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
         error={form.fieldErrors.club || form.fieldErrors.category || form.fieldErrors.displayName}
       />
 
-      {/* Poste = préférence ProDay (pas une donnée FFF inventée) — après club/catégorie */}
-      {(form.selectedFffClub || !form.hasClub) && (
+      {!isParent && (form.selectedFffClub || !form.hasClub) ? (
         <View style={styles.positionBlock}>
           <SignupOptionPicker
             label="Poste (optionnel)"
@@ -154,45 +165,30 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
             onChange={form.setPosition}
           />
         </View>
-      )}
+      ) : null}
 
       {summaryReady ? (
-        <View style={styles.summaryCard}>
-          <ProDayText style={styles.summaryTitle}>Récapitulatif FFF</ProDayText>
-          {form.hasClub && form.selectedFffClub ? (
-            <>
-              <ProDayText style={styles.summaryLine}>
-                Club : {form.selectedFffClub.name}
-                {form.selectedFffClub.fffNumber ? ` · N° ${form.selectedFffClub.fffNumber}` : ''}
-              </ProDayText>
-              <ProDayText style={styles.summaryMuted}>
-                {[form.selectedFffClub.city, form.selectedFffClub.postalCode, form.selectedFffClub.league]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </ProDayText>
-              {fffCategory ? (
-                <ProDayText style={styles.summaryLine}>Équipe / catégorie : {fffCategory}</ProDayText>
-              ) : (
-                <ProDayText style={styles.summaryWarn}>Sélectionnez votre catégorie FFF ci-dessus.</ProDayText>
-              )}
-            </>
-          ) : (
-            <ProDayText style={styles.summaryLine}>Sans club · {form.displayName.trim()}</ProDayText>
-          )}
-          {form.displayName.trim() && form.hasClub ? (
-            <ProDayText style={styles.summaryLine}>Identité : {form.displayName.trim()}</ProDayText>
-          ) : null}
-          {universeHint ? (
-            <ProDayText style={styles.summaryMuted}>
-              Univers ProDay : {universeHint.title} ({universeHint.range})
-            </ProDayText>
-          ) : null}
-          {willNeedParental ? (
-            <ProDayText style={styles.minorHint}>
-              Accord du responsable légal requis à l'étape suivante (-18 ans).
-            </ProDayText>
-          ) : null}
-        </View>
+        <SignupRecapCard
+          club={form.selectedFffClub}
+          category={fffCategory}
+          displayName={form.displayName}
+          withoutClub={!form.hasClub}
+          warn={
+            form.hasClub && !fffCategory
+              ? 'Sélectionnez votre catégorie FFF ci-dessus.'
+              : null
+          }
+          extraLines={
+            universeHint
+              ? [`Univers ProDay : ${universeHint.title} (${universeHint.range})`]
+              : undefined
+          }
+          minorHint={
+            willNeedParental
+              ? 'Accord du responsable légal requis avant le lancement (-18 ans).'
+              : null
+          }
+        />
       ) : null}
     </SignupStepLayout>
   );
@@ -229,47 +225,6 @@ function createStyles() {
     },
     positionBlock: {
       marginTop: spacing.sm,
-    },
-    summaryCard: {
-      backgroundColor: AUTH_XP.surface,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: AUTH_XP.border,
-      padding: spacing.md,
-      marginTop: spacing.md,
-      gap: 4,
-    },
-    summaryTitle: {
-      fontSize: 13,
-      fontFamily: fontFamily.bold,
-      color: AUTH_XP.goldBright,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-      marginBottom: spacing.xs,
-    },
-    summaryLine: {
-      fontSize: 13,
-      color: AUTH_XP.text,
-      lineHeight: 18,
-      fontFamily: fontFamily.semibold,
-    },
-    summaryMuted: {
-      fontSize: 12,
-      color: AUTH_XP.textMuted,
-      lineHeight: 17,
-      fontFamily: fontFamily.regular,
-    },
-    summaryWarn: {
-      fontSize: 12,
-      color: AUTH_XP.error,
-      fontFamily: fontFamily.semibold,
-      marginTop: 2,
-    },
-    minorHint: {
-      fontSize: 12,
-      color: '#FBBF24',
-      fontFamily: fontFamily.semibold,
-      marginTop: spacing.xs,
     },
   });
 }

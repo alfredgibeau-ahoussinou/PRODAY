@@ -307,7 +307,11 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
       {!isClubRole && (
         <View style={styles.section}>
           <ProDayText style={styles.label}>
-            Faites-vous partie d'un club ou d'une équipe ?
+            {role === 'parent'
+              ? 'Votre enfant est-il licencié dans un club ?'
+              : role === 'coach'
+                ? 'Encadrez-vous un club ou une équipe ?'
+                : "Faites-vous partie d'un club ou d'une équipe ?"}
           </ProDayText>
           <View style={styles.toggleRow}>
             <PressableSpring
@@ -316,7 +320,11 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
             >
               <Icon name="shield" size={16} color={hasClub ? AUTH_XP.goldBright : AUTH_XP.textMuted} />
               <ProDayText style={[styles.toggleBtnText, hasClub && styles.toggleBtnTextActive]}>
-                Oui, je suis dans un club
+                {role === 'parent'
+                  ? 'Oui, club licencié'
+                  : role === 'coach'
+                    ? 'Oui, j’encadre un club'
+                    : 'Oui, je suis dans un club'}
               </ProDayText>
             </PressableSpring>
             <PressableSpring
@@ -325,7 +333,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
             >
               <Icon name="close" size={16} color={!hasClub ? AUTH_XP.goldBright : AUTH_XP.textMuted} />
               <ProDayText style={[styles.toggleBtnText, !hasClub && styles.toggleBtnTextActive]}>
-                Sans club pour le moment
+                {role === 'parent' ? 'Pas encore de club' : 'Sans club pour le moment'}
               </ProDayText>
             </PressableSpring>
           </View>

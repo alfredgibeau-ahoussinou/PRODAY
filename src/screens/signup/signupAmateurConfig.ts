@@ -66,11 +66,11 @@ export function getAmateurStepMeta(page: SignupPageId, t?: TranslateFn): {
       };
     case 'sport':
       return {
-        title: tr(t, 'signup.amateur.step.sport.title', 'Votre club & équipe FFF'),
+        title: tr(t, 'signup.amateur.step.sport.title', 'Affiliation FFF'),
         subtitle: tr(
           t,
           'signup.amateur.step.sport.subtitle',
-          'Sélectionnez votre club, votre catégorie et votre nom officiel FFF. Visible sur le Mercato Amateur.'
+          'Club et catégorie officiels DOFA. Aucune liste inventée.'
         ),
         heroIcon: 'shield',
       };

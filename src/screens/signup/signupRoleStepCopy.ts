@@ -1,80 +1,88 @@
+/** Libellés des étapes pro (coach, club, agent…) — fallbacks FR. */
 import type { TranslateFn } from '../../i18n/types';
 import { tr } from '../../i18n/translate';
 
-/** Libellés des étapes pro (coach, club, agent…) — source EN dans tertiary. */
 export function getSignupRoleStepCopy(t: TranslateFn) {
   return {
     coach: {
       hint: tr(
         t,
         'signup.role.coach.hint',
-        'BEF, UEFA or equivalent diploma. Photographed after email confirmation.'
+        'Diplôme BEF, UEFA ou équivalent. Club FFF via recherche DOFA — aucune liste inventée.'
       ),
-      diplomaLabel: tr(t, 'signup.role.diplomaLabel', 'Diploma or certification *'),
-      diplomaPlaceholder: tr(t, 'signup.role.diplomaPlaceholder', 'E.g. BEF, UEFA B, DESJEPS…'),
-      cityLabel: tr(t, 'signup.role.cityPracticeLabel', 'Practice city *'),
-      cityPlaceholder: tr(t, 'signup.role.cityPlaceholder', 'E.g. Lyon, Marseille…'),
+      diplomaLabel: tr(t, 'signup.role.diplomaLabel', 'Diplôme ou certification *'),
+      diplomaPlaceholder: tr(t, 'signup.role.diplomaPlaceholder', 'Ex. BEF, UEFA B, DESJEPS…'),
+      cityLabel: tr(t, 'signup.role.cityPracticeLabel', 'Ville de pratique *'),
+      cityPlaceholder: tr(t, 'signup.role.cityPlaceholder', 'Ex. Lyon, Marseille…'),
     },
     club: {
       hint: tr(
         t,
         'signup.role.club.hint',
-        'Club mandate or statutes. AI verification after email.'
+        'Retrouvez votre club FFF (ville, CP ou n° d’affiliation). Mandat contrôlé après l’email.'
       ),
-      nameLabel: tr(t, 'signup.role.clubNameLabel', 'Club / organization name *'),
-      namePlaceholder: tr(t, 'signup.role.clubNamePlaceholder', 'E.g. FC Example, Local AS…'),
-      cityLabel: tr(t, 'signup.form.cityRequired', 'City *'),
-      cityPlaceholder: tr(t, 'signup.role.cityPlaceholderShort', 'E.g. Paris, Lille…'),
+      nameLabel: tr(t, 'signup.role.clubNameLabel', 'Nom du club / structure *'),
+      namePlaceholder: tr(t, 'signup.role.clubNamePlaceholder', 'Ex. FC Melun, AS Le Mée…'),
+      cityLabel: tr(t, 'signup.form.cityRequired', 'Ville *'),
+      cityPlaceholder: tr(t, 'signup.role.cityPlaceholderShort', 'Ex. Paris, Lille…'),
     },
     agent: {
       hint: tr(
         t,
         'signup.role.agent.hint',
-        'Agent licence. Automatic check after email validation.'
+        'Licence d’agent. Contrôle automatique après validation de l’email.'
       ),
-      licenseLabel: tr(t, 'signup.role.licenseLabel', 'Licence or approval no. *'),
-      licensePlaceholder: tr(t, 'signup.role.licensePlaceholder', 'E.g. FIFA / FFF licence…'),
-      cityLabel: tr(t, 'signup.role.cityMainLabel', 'Main city *'),
-      cityPlaceholder: tr(t, 'signup.role.cityPlaceholder', 'E.g. Paris, Bordeaux…'),
+      licenseLabel: tr(t, 'signup.role.licenseLabel', 'N° de licence ou agrément *'),
+      licensePlaceholder: tr(t, 'signup.role.licensePlaceholder', 'Ex. licence FIFA / FFF…'),
+      cityLabel: tr(t, 'signup.role.cityMainLabel', 'Ville principale *'),
+      cityPlaceholder: tr(t, 'signup.role.cityPlaceholder', 'Ex. Paris, Bordeaux…'),
     },
     recruiter: {
       hint: tr(
         t,
         'signup.role.recruiter.hint',
-        'Recruiter mandate or club certificate. AI verification after email.'
+        'Mandat recruteur ou attestation club. Vérification IA après l’email.'
       ),
-      specialtyLabel: tr(t, 'signup.role.recruitSpecialtyLabel', 'Recruitment specialty *'),
+      specialtyLabel: tr(t, 'signup.role.recruitSpecialtyLabel', 'Spécialité recrutement *'),
       specialtyPlaceholder: tr(
         t,
         'signup.role.recruitSpecialtyPlaceholder',
-        'E.g. independent scout, head of recruitment, scouting…'
+        'Ex. scout indépendant, responsable recrutement…'
       ),
-      cityLabel: tr(t, 'signup.role.cityMainLabel', 'Main city *'),
-      cityPlaceholder: tr(t, 'signup.role.cityPlaceholder', 'E.g. Lyon, Lille…'),
+      cityLabel: tr(t, 'signup.role.cityMainLabel', 'Ville principale *'),
+      cityPlaceholder: tr(t, 'signup.role.cityPlaceholder', 'Ex. Lyon, Lille…'),
     },
     organizer: {
       hint: tr(
         t,
         'signup.role.organizer.hint',
-        'Tournaments, trials. Organization proof after email.'
+        'Tournois, détections. Justificatif d’organisation après l’email.'
       ),
-      structureLabel: tr(t, 'signup.role.structureLabel', 'Organization / collective *'),
-      structurePlaceholder: tr(t, 'signup.role.structurePlaceholder', 'E.g. local league, events assoc…'),
-      cityLabel: tr(t, 'signup.form.cityRequired', 'City *'),
-      cityPlaceholder: tr(t, 'signup.role.cityPlaceholderShort', 'E.g. Toulouse, Nantes…'),
+      structureLabel: tr(t, 'signup.role.structureLabel', 'Organisation / collectif *'),
+      structurePlaceholder: tr(
+        t,
+        'signup.role.structurePlaceholder',
+        'Ex. ligue locale, association événements…'
+      ),
+      cityLabel: tr(t, 'signup.form.cityRequired', 'Ville *'),
+      cityPlaceholder: tr(t, 'signup.role.cityPlaceholderShort', 'Ex. Toulouse, Nantes…'),
     },
     sponsor: {
       hint: tr(
         t,
         'signup.role.sponsor.hint',
-        'Your brand will be visible on the Sponsors tab for local clubs.'
+        'Votre marque sera visible dans l’onglet Sponsors pour les clubs locaux.'
       ),
-      brandLabel: tr(t, 'signup.role.brandLabel', 'Brand or company *'),
-      brandPlaceholder: tr(t, 'signup.role.brandPlaceholder', 'E.g. Sport Shop, local bank…'),
-      territoryLabel: tr(t, 'signup.role.territoryLabel', 'City / territory *'),
-      territoryPlaceholder: tr(t, 'signup.role.territoryPlaceholder', 'E.g. Île-de-France region, Lyon…'),
+      brandLabel: tr(t, 'signup.role.brandLabel', 'Marque ou entreprise *'),
+      brandPlaceholder: tr(t, 'signup.role.brandPlaceholder', 'Ex. Magasin sport, banque locale…'),
+      territoryLabel: tr(t, 'signup.role.territoryLabel', 'Ville / territoire *'),
+      territoryPlaceholder: tr(
+        t,
+        'signup.role.territoryPlaceholder',
+        'Ex. Île-de-France, Lyon…'
+      ),
     },
-    departmentPlaceholder: tr(t, 'signup.role.departmentPlaceholder', 'E.g. 69, 13…'),
-    departmentPlaceholderWide: tr(t, 'signup.role.departmentPlaceholderWide', 'E.g. 75, 59, 971…'),
+    departmentPlaceholder: tr(t, 'signup.role.departmentPlaceholder', 'Ex. 69, 13…'),
+    departmentPlaceholderWide: tr(t, 'signup.role.departmentPlaceholderWide', 'Ex. 75, 59, 971…'),
   };
 }

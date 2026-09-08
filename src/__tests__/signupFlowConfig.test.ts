@@ -5,6 +5,7 @@ import {
   validateAgeForAppSpace,
   getCurrentPhase,
   resolveSignupBackKind,
+  isFffFirstSignupRole,
 } from '../screens/signup/signupFlowConfig';
 
 describe('signupFlowConfig', () => {
@@ -14,6 +15,15 @@ describe('signupFlowConfig', () => {
 
   it('déduit le parcours staff pour club', () => {
     expect(getFlowKind('club')).toBe('staff');
+  });
+
+  it('marque joueur / coach / club / parent comme FFF-first', () => {
+    expect(isFffFirstSignupRole('player')).toBe(true);
+    expect(isFffFirstSignupRole('coach')).toBe(true);
+    expect(isFffFirstSignupRole('club')).toBe(true);
+    expect(isFffFirstSignupRole('parent')).toBe(true);
+    expect(isFffFirstSignupRole('sponsor')).toBe(false);
+    expect(isFffFirstSignupRole('agent')).toBe(false);
   });
 
   it('inclut family pour mineur ou espace -13', () => {
@@ -27,12 +37,7 @@ describe('signupFlowConfig', () => {
       role: 'player',
       parentalRequired: false,
     });
-    expect(steps).toEqual([
-      'sport',
-      'account',
-      'security',
-      'launch',
-    ]);
+    expect(steps).toEqual(['sport', 'account', 'security', 'launch']);
     expect(steps.indexOf('sport')).toBe(0);
     expect(steps.indexOf('account')).toBe(1);
     expect(steps.indexOf('security')).toBe(2);
@@ -48,10 +53,28 @@ describe('signupFlowConfig', () => {
     expect(steps.indexOf('family')).toBeLessThan(steps.indexOf('launch'));
   });
 
-  it('parcours coach : compte puis profil pro', () => {
+  it('parcours coach : affiliation FFF d’abord, puis compte', () => {
     expect(
       buildSignupSteps('staff', { role: 'coach', parentalRequired: false })
-    ).toEqual(['account', 'security', 'coach_pro', 'launch']);
+    ).toEqual(['coach_pro', 'account', 'security', 'launch']);
+  });
+
+  it('parcours club : affiliation FFF d’abord, puis compte', () => {
+    expect(
+      buildSignupSteps('staff', { role: 'club', parentalRequired: false })
+    ).toEqual(['club_pro', 'account', 'security', 'launch']);
+  });
+
+  it('parcours parent : affiliation FFF d’abord (club enfant)', () => {
+    expect(
+      buildSignupSteps('staff', { role: 'parent', parentalRequired: false })
+    ).toEqual(['sport', 'account', 'security', 'launch']);
+  });
+
+  it('parcours agent : compte puis profil pro', () => {
+    expect(
+      buildSignupSteps('staff', { role: 'agent', parentalRequired: false })
+    ).toEqual(['account', 'security', 'agent_pro', 'launch']);
   });
 
   it('parcours médical : compte puis spécialité / cabinet', () => {
@@ -79,10 +102,18 @@ describe('signupFlowConfig', () => {
     ]);
   });
 
+  it('parcours supporter : identité + sécurité + go', () => {
+    expect(
+      buildSignupSteps('supporter', { role: 'supporter', parentalRequired: false })
+    ).toEqual(['account', 'security', 'launch']);
+  });
+
   it('phases unifiées Vous / Accès / Go', () => {
     expect(getCurrentPhase('welcome')).toBe('vous');
     expect(getCurrentPhase('space')).toBe('vous');
     expect(getCurrentPhase('sport')).toBe('vous');
+    expect(getCurrentPhase('coach_pro')).toBe('vous');
+    expect(getCurrentPhase('club_pro')).toBe('vous');
     expect(getCurrentPhase('family')).toBe('vous');
     expect(getCurrentPhase('account')).toBe('acces');
     expect(getCurrentPhase('security')).toBe('acces');

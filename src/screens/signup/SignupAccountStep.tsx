@@ -50,6 +50,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
       : getPlayerStepMeta(form.productLine, 'account', t);
 
   const isPlayer = form.role === 'player';
+  const showFffClubBanner = Boolean(form.selectedFffClub);
 
   return (
     <SignupStepLayout
@@ -78,7 +79,18 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
           <View style={styles.fffBanner}>
             <Icon name="shield" size={16} color={AUTH_XP.goldBright} />
             <ProDayText style={styles.fffBannerText}>
-              Licencié FFF sélectionné : {form.selectedRosterMember.displayName} (Lic. {form.selectedRosterMember.licenseNumber})
+              Licencié FFF sélectionné : {form.selectedRosterMember.displayName} (Lic.{' '}
+              {form.selectedRosterMember.licenseNumber})
+            </ProDayText>
+          </View>
+        ) : showFffClubBanner ? (
+          <View style={styles.fffBanner}>
+            <Icon name="shield" size={16} color={AUTH_XP.goldBright} />
+            <ProDayText style={styles.fffBannerText}>
+              Club FFF : {form.selectedFffClub!.name}
+              {form.selectedFffClub!.fffNumber
+                ? ` · N° ${form.selectedFffClub!.fffNumber}`
+                : ''}
             </ProDayText>
           </View>
         ) : null}

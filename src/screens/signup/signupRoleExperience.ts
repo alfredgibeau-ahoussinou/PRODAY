@@ -154,17 +154,19 @@ const DEFAULT_ACCENT: RoleSignupAccent = {
   accentMuted: '#E5E5E5',
 };
 
+const UNIFIED_PHASES: SignupPhase[] = [
+  { id: 'vous', label: 'Vous' },
+  { id: 'acces', label: 'Accès' },
+  { id: 'launch', label: 'Go' },
+];
+
 const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   player: {
     id: 'player',
     welcomeTitle: 'Devenir joueur ProDay',
     welcomeSubtitle: 'Mercato, stats live et candidatures. Construisez votre saison.',
-    previewSteps: ['Espace', 'Fiche sport', 'Ville', 'Stats', 'Identité', 'Accès'],
-    phases: [
-      { id: 'vous', label: 'Terrain' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Affiliation FFF', 'Identité', 'Sécurité', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#0A0A0A', accentSoft: '#E8F5E9', accentMuted: '#C8E6C9' },
     launchTitle: 'Terrain prêt',
     launchBody: 'Votre cockpit joueur s’active après confirmation email. Mercato et stats vous attendent.',
@@ -174,12 +176,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'coach',
     welcomeTitle: 'Espace coach',
     welcomeSubtitle: 'Convocations, effectif et diplôme vérifié par IA.',
-    previewSteps: ['Profil coach', 'Identité', 'Sécurité', 'Lancement'],
-    phases: [
-      { id: 'vous', label: 'Encadrement' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Affiliation FFF', 'Identité', 'Sécurité', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#1D4ED8', accentSoft: '#DBEAFE', accentMuted: '#93C5FD' },
     launchTitle: 'Banc technique ouvert',
     launchBody: 'Gérez convocations et messagerie dès que votre diplôme est validé.',
@@ -189,12 +187,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'club',
     welcomeTitle: 'Espace club',
     welcomeSubtitle: 'Recrutement, stages et vie de structure. Mandat vérifié.',
-    previewSteps: ['Structure', 'Identité', 'Sécurité', 'Lancement'],
-    phases: [
-      { id: 'vous', label: 'Club' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Affiliation FFF', 'Identité', 'Sécurité', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#10B981', accentSoft: '#D1FAE5', accentMuted: '#6EE7B7' },
     launchTitle: 'Club en ligne',
     launchBody: 'Publiez annonces et gérez vos équipes depuis votre QG ProDay.',
@@ -204,12 +198,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'agent',
     welcomeTitle: 'Espace agent',
     welcomeSubtitle: 'Scouting, mandats et placement. Licence pro contrôlée.',
-    previewSteps: ['Zone pro', 'Identité', 'Sécurité', 'Lancement'],
-    phases: [
-      { id: 'vous', label: 'Mandat' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Identité', 'Sécurité', 'Profil pro', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#4C1D95', accentSoft: '#EDE9FE', accentMuted: '#C4B5FD' },
     launchTitle: 'Réseau agent activé',
     launchBody: 'Repérez les profils et contactez les clubs après validation de licence.',
@@ -219,12 +209,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'recruiter',
     welcomeTitle: 'Espace recruteur',
     welcomeSubtitle: 'Scouting, annonces Mercato et suivi des candidatures. Profil vérifié.',
-    previewSteps: ['Profil recruteur', 'Identité', 'Sécurité', 'Lancement'],
-    phases: [
-      { id: 'vous', label: 'Recrutement' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Identité', 'Sécurité', 'Profil pro', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#059669', accentSoft: '#D1FAE5', accentMuted: '#6EE7B7' },
     launchTitle: 'Mercato recruteur ouvert',
     launchBody: 'Publiez vos annonces et suivez les candidatures dès validation du mandat.',
@@ -234,12 +220,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'organizer',
     welcomeTitle: 'Espace organisateur',
     welcomeSubtitle: 'Tournois, détections et animation du territoire foot.',
-    previewSteps: ['Organisation', 'Identité', 'Sécurité', 'Lancement'],
-    phases: [
-      { id: 'vous', label: 'Événements' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Identité', 'Sécurité', 'Organisation', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#B45309', accentSoft: '#FEF3C7', accentMuted: '#FCD34D' },
     launchTitle: 'Événements',
     launchBody: 'Créez tournois et journées scouting dès votre email confirmé.',
@@ -249,12 +231,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'physio',
     welcomeTitle: 'Pôle médical ProDay',
     welcomeSubtitle: 'Chaque spécialité a son parcours. Kiné, médecin, prépa, nutrition…',
-    previewSteps: ['Spécialité', 'Cabinet', 'Identité', 'Sécurité', 'Go'],
-    phases: [
-      { id: 'vous', label: 'Métier' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Identité', 'Sécurité', 'Spécialité', 'Cabinet', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#0F766E', accentSoft: '#CCFBF1', accentMuted: '#5EEAD4' },
     launchTitle: 'Cabinet enregistré',
     launchBody: 'Votre spécialité apparaît sur le fil santé. Validation des diplômes à suivre.',
@@ -264,12 +242,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'sponsor',
     welcomeTitle: 'Espace sponsor',
     welcomeSubtitle: 'Visibilité mesurée, campagnes géolocalisées et tableau de bord ROI.',
-    previewSteps: ['Marque', 'Campagne', 'Ciblage', 'Compte', 'Lancement'],
-    phases: [
-      { id: 'vous', label: 'Marque' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Identité', 'Sécurité', 'Marque', 'Campagne', 'Ciblage', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#D4AF37', accentSoft: 'rgba(212, 175, 55, 0.12)', accentMuted: '#B8941F' },
     launchTitle: 'Espace sponsor activé',
     launchBody: 'Publiez vos offres, suivez vos KPIs et touchez les clubs de votre territoire.',
@@ -279,12 +253,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'supporter',
     welcomeTitle: 'Espace supporter',
     welcomeSubtitle: 'Matchs, réels et fil. Votre tribune numérique ProDay.',
-    previewSteps: ['Clubs', 'Profil', 'Sécurité', 'Lancement'],
-    phases: [
-      { id: 'vous', label: 'Profil' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Identité', 'Sécurité', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#7C3AED', accentSoft: '#EDE9FE', accentMuted: '#C4B5FD' },
     launchTitle: 'Bienvenue en tribune',
     launchBody: 'Suivez vos clubs, réagissez au fil et partagez les moments forts.',
@@ -294,12 +264,8 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
     id: 'parent',
     welcomeTitle: 'Espace parent',
     welcomeSubtitle: 'Supervisez le compte mineur de votre enfant sur ProDay.',
-    previewSteps: ['Enfant', 'Sécurité', 'Lancement'],
-    phases: [
-      { id: 'vous', label: 'Famille' },
-      { id: 'acces', label: 'Compte' },
-      { id: 'launch', label: 'Go' },
-    ],
+    previewSteps: ['Club enfant FFF', 'Identité', 'Sécurité', 'Lancement'],
+    phases: UNIFIED_PHASES,
     accent: { accent: '#0F766E', accentSoft: '#CCFBF1', accentMuted: '#5EEAD4' },
     launchTitle: 'Portail parent prêt',
     launchBody: 'Définissez votre mot de passe via l’e-mail reçu, puis connectez-vous.',
@@ -392,11 +358,25 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
         stepName: metaKey('stepName', tr(t, 'signup.page.space', 'Espace')),
       };
     case 'sport':
+      if (role === 'parent') {
+        return {
+          title: metaKey('title', 'Club de votre enfant'),
+          subtitle: metaKey(
+            'subtitle',
+            'Recherchez le club FFF où votre enfant est licencié (ville, CP ou n° d’affiliation).'
+          ),
+          heroIcon: 'shirt',
+          stepName: metaKey('stepName', tr(t, 'signup.page.sport', 'Affiliation FFF')),
+        };
+      }
       return {
-        title: metaKey('title', 'Ta fiche sportive'),
-        subtitle: metaKey('subtitle', 'Poste, catégorie, niveau. Une page, une étape.'),
+        title: metaKey('title', 'Affiliation FFF'),
+        subtitle: metaKey(
+          'subtitle',
+          'Club et catégorie officiels DOFA. Aucune liste inventée.'
+        ),
         heroIcon: 'shirt',
-        stepName: metaKey('stepName', tr(t, 'signup.page.sport', 'Sport')),
+        stepName: metaKey('stepName', tr(t, 'signup.page.sport', 'Affiliation FFF')),
       };
     case 'location':
       return {
@@ -414,17 +394,23 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
       };
     case 'coach_pro':
       return {
-        title: metaKey('title', 'Profil coach'),
-        subtitle: metaKey('subtitle', 'Diplôme, ville et zone d’intervention. Vérification IA après l’email.'),
+        title: metaKey('title', 'Affiliation FFF & profil'),
+        subtitle: metaKey(
+          'subtitle',
+          'Club officiel DOFA, diplôme et ville. Vérification IA après l’email.'
+        ),
         heroIcon: 'school',
-        stepName: metaKey('stepName', tr(t, 'signup.page.coach_pro', 'Coach')),
+        stepName: metaKey('stepName', tr(t, 'signup.page.coach_pro', 'Affiliation FFF')),
       };
     case 'club_pro':
       return {
-        title: metaKey('title', 'Votre structure'),
-        subtitle: metaKey('subtitle', 'Nom du club, ville et département. Mandat contrôlé ensuite.'),
+        title: metaKey('title', 'Affiliation FFF & structure'),
+        subtitle: metaKey(
+          'subtitle',
+          'Retrouvez votre club FFF, puis confirmez le nom et la localisation.'
+        ),
         heroIcon: 'business',
-        stepName: metaKey('stepName', tr(t, 'signup.page.club_pro', 'Club')),
+        stepName: metaKey('stepName', tr(t, 'signup.page.club_pro', 'Affiliation FFF')),
       };
     case 'agent_pro':
       return {
