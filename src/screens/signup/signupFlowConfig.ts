@@ -181,6 +181,12 @@ export function buildSignupSteps(
   return ['account', 'security', staffProPage(role), 'launch'];
 }
 
+/** Première page réelle du parcours (jamais sauter sport/club_pro/coach_pro). */
+export function resolveSignupStartPage(options: SignupFlowOptions): SignupPageId {
+  const steps = buildSignupSteps(getFlowKind(options.role), options);
+  return steps[0] ?? 'account';
+}
+
 export function getSignupPhases(_flowKind?: SignupFlowKind, role?: UserRole): SignupPhase[] {
   if (role) return getRoleSignupPhases(role);
   return SIGNUP_PHASES;

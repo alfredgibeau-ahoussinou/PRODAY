@@ -41,6 +41,7 @@ import {
   getCurrentPhase,
   getPhaseIndex,
   getSignupPhases,
+  resolveSignupStartPage,
   type SignupPageId,
   type SignupFlowKind,
 } from './signupFlowConfig';
@@ -115,7 +116,10 @@ export function useSignupForm(initial?: {
   const [gender, setGenderState] = useState<Gender>('men');
   const [genderTouched, setGenderTouched] = useState(false);
   const [parentalRequired, setParentalRequired] = useState(false);
-  const defaultStartPage: SignupPageId = defaultRole === 'player' ? 'sport' : 'account';
+  const defaultStartPage: SignupPageId = resolveSignupStartPage({
+    role: defaultRole,
+    parentalRequired: false,
+  });
   const [currentPageId, setCurrentPageId] = useState<SignupPageId>(
     initial?.startAtAccount === false ? 'welcome' : defaultStartPage,
   );
@@ -210,6 +214,14 @@ export function useSignupForm(initial?: {
   const pageIndex = useMemo(() => {
     const idx = steps.indexOf(currentPageId);
     return idx >= 0 ? idx : 0;
+  }, [steps, currentPageId]);
+
+  // Si le parcours change et que la page courante n’y est plus → revenir à l’étape 1.
+  useEffect(() => {
+    if (steps.length === 0) return;
+    if (!steps.includes(currentPageId)) {
+      setCurrentPageId(steps[0]);
+    }
   }, [steps, currentPageId]);
 
   const currentPage = steps[pageIndex] ?? 'welcome';
@@ -322,9 +334,9 @@ export function useSignupForm(initial?: {
       role: nextRole,
       parentalRequired: false,
     });
-    setCurrentPageId(nextSteps[1] ?? 'account');
+    setCurrentPageId(nextSteps[0] ?? resolveSignupStartPage({ role: nextRole, parentalRequired: false }));
     clearErrors();
-  }, [draftRole, productLine, resetPlayerFields, clearErrors]);
+  }, [draftRole, productLine, resetPlayerFields, clearErrors, isProPlayerSignup, isAmateurProduct, isStaffProduct]);
 
   const setAppSpace = useCallback((space: AppSpaceId) => {
     setAppSpaceState(space);

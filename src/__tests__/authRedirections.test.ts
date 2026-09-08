@@ -5,7 +5,11 @@ import {
 } from '../utils/authBackStack';
 import { resolveGuestAuthIntentAfterUniverse } from '../components/branding/intro/universeEntryAuth';
 import { shouldDismissUniverseWithoutAuth } from '../components/branding/intro/launchIntroFlow';
-import { buildSignupSteps } from '../screens/signup/signupFlowConfig';
+import {
+  buildSignupSteps,
+  resolveSignupStartPage,
+  resolveSignupBackKind,
+} from '../screens/signup/signupFlowConfig';
 
 describe('Auth redirections — univers → gate → login/signup → home', () => {
   it('n’ouvre pas l’univers après auth si le pôle a déjà été choisi', () => {
@@ -74,5 +78,13 @@ describe('Auth redirections — univers → gate → login/signup → home', () 
     expect(
       buildSignupSteps('player', { role: 'parent', parentalRequired: false }),
     ).toEqual(['sport', 'account', 'security', 'launch']);
+  });
+
+  it('Créer un compte ouvre toujours l’étape 1 réelle du pôle (pas account en 2e)', () => {
+    expect(resolveSignupStartPage({ role: 'player', parentalRequired: false })).toBe('sport');
+    expect(resolveSignupStartPage({ role: 'coach', parentalRequired: false })).toBe('coach_pro');
+    expect(resolveSignupStartPage({ role: 'club', parentalRequired: false })).toBe('club_pro');
+    expect(resolveSignupStartPage({ role: 'parent', parentalRequired: false })).toBe('sport');
+    expect(resolveSignupBackKind({ accountCreated: false, pageIndex: 0 })).toBe('close');
   });
 });

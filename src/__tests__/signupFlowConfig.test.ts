@@ -6,6 +6,7 @@ import {
   getCurrentPhase,
   resolveSignupBackKind,
   isFffFirstSignupRole,
+  resolveSignupStartPage,
 } from '../screens/signup/signupFlowConfig';
 
 describe('signupFlowConfig', () => {
@@ -63,6 +64,13 @@ describe('signupFlowConfig', () => {
     expect(
       buildSignupSteps('staff', { role: 'club', parentalRequired: false })
     ).toEqual(['club_pro', 'account', 'security', 'launch']);
+  });
+
+  it('start page = première étape du parcours (coach/club ≠ account)', () => {
+    expect(resolveSignupStartPage({ role: 'coach', parentalRequired: false })).toBe('coach_pro');
+    expect(resolveSignupStartPage({ role: 'club', parentalRequired: false })).toBe('club_pro');
+    expect(resolveSignupStartPage({ role: 'player', parentalRequired: false })).toBe('sport');
+    expect(resolveSignupStartPage({ role: 'parent', parentalRequired: false })).toBe('sport');
   });
 
   it('parcours parent : affiliation FFF d’abord (club enfant)', () => {
