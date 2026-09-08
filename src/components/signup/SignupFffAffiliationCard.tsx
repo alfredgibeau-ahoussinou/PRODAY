@@ -96,9 +96,11 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
       try {
         const results = await fffOfficialRegistryService.searchOfficialClubs(q);
         if (!active) return;
-        setSearchResults(results.slice(0, 12));
+        setSearchResults(results.slice(0, 25));
         if (results.length === 0) {
-          setSearchError('Aucun club FFF trouvé pour cette recherche.');
+          setSearchError(
+            'Aucun club FFF trouvé. Essayez la ville, le code postal (5 chiffres) ou le n° d’affiliation.'
+          );
         }
       } catch (err) {
         if (!active) return;
@@ -305,7 +307,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
               {isClubRole ? '1. Club officiel FFF' : '1. Club officiel FFF'}
             </ProDayText>
             <ProDayText style={styles.sourceHint}>
-              Recherche live sur le registre FFF (DOFA). Aucun club inventé.
+              Recherche officielle FFF (ville, code postal ou n° d’affiliation). Aucun club inventé.
             </ProDayText>
 
             {selectedClub ? (
@@ -346,7 +348,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                   <Icon name="search" size={16} color={AUTH_XP.goldBright} />
                   <TextInput
                     style={styles.searchInput}
-                    placeholder="Nom, ville ou n° d'affiliation FFF…"
+                    placeholder="Ex. Melun, 77350, Le Mée, n° affiliation…"
                     placeholderTextColor={AUTH_XP.textDim}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -355,6 +357,9 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                   />
                   {isSearching && <ActivityIndicator size="small" color={AUTH_XP.goldBright} />}
                 </View>
+                {searchQuery.trim().length > 0 && searchQuery.trim().length < 2 ? (
+                  <ProDayText style={styles.infoText}>Saisissez au moins 2 caractères.</ProDayText>
+                ) : null}
                 {searchError ? (
                   <ProDayText style={styles.infoText}>{searchError}</ProDayText>
                 ) : null}

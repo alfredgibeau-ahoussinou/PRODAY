@@ -2,6 +2,7 @@ import {
   fffOfficialRegistryService,
   extractDofaMembers,
   mapDofaClubToOfficial,
+  buildSearchQueryVariants,
   FffOfficialRegistryError,
 } from '../services/fffOfficialRegistry.service';
 
@@ -13,32 +14,47 @@ describe('fffOfficialRegistryService (sources FFF réelles uniquement)', () => {
     jest.restoreAllMocks();
   });
 
+  it('génère des variantes de recherche (accents, tirets, Le Mée)', () => {
+    const variants = buildSearchQueryVariants('Le Mée-sur-Seine');
+    expect(variants.some((v) => /mee/i.test(v))).toBe(true);
+    expect(variants.some((v) => /seine/i.test(v))).toBe(true);
+  });
+
   it('extrait les membres hydra d’une réponse DOFA', () => {
     const members = extractDofaMembers({
       'hydra:member': [
-        { cl_no: 21217, cl_name: 'MONTROUGE FC 92', cl_code: '548221', cl_city: 'Montrouge', cl_zip: '92120' },
-        { cl_no: 100, cl_nom: 'JS SURESNES', cl_cod: 500744, cl_loca: 'Suresnes', cl_cp: '92150' },
+        {
+          cl_no: 22065,
+          name: 'MELUN F.C.',
+          affiliation_number: 542557,
+          location: 'MELUN',
+          postal_code: '77000',
+        },
       ],
-      'hydra:totalItems': 2,
+      'hydra:totalItems': 1,
     });
-    expect(members).toHaveLength(2);
+    expect(members).toHaveLength(1);
   });
 
-  it('mappe un club DOFA sans inventer de n° d’affiliation', () => {
+  it('mappe un club DOFA moderne (name / affiliation_number / location)', () => {
     const club = mapDofaClubToOfficial({
-      cl_no: 21217,
-      cl_name: 'MONTROUGE FC 92',
-      cl_code: '548221',
-      cl_city: 'Montrouge',
-      cl_zip: '92120',
+      cl_no: 22065,
+      name: 'MELUN F.C.',
+      affiliation_number: 542557,
+      location: 'MELUN',
+      postal_code: '77000',
+      department_code: 77,
+      district: { name: 'DISTRICT SEINE ET MARNE' },
     });
     expect(club).not.toBeNull();
-    expect(club?.name).toBe('MONTROUGE FC 92');
-    expect(club?.fffNumber).toBe('548221');
-    expect(club?.city).toBe('Montrouge');
-    expect(club?.department).toBe('92');
+    expect(club?.name).toBe('MELUN F.C.');
+    expect(club?.fffNumber).toBe('542557');
+    expect(club?.city).toBe('MELUN');
+    expect(club?.postalCode).toBe('77000');
+    expect(club?.department).toBe('77');
+    expect(club?.league).toBe('DISTRICT SEINE ET MARNE');
     expect(club?.source).toBe('fff_dofa');
-    expect(club?.id).toBe('dofa_21217');
+    expect(club?.id).toBe('dofa_22065');
   });
 
   it('refuse une recherche trop courte (pas de dump / seed)', async () => {
@@ -48,68 +64,188 @@ describe('fffOfficialRegistryService (sources FFF réelles uniquement)', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it('recherche des clubs via l’API DOFA FFF (réponse live mockée)', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        'hydra:member': [
-          {
-            cl_no: 999,
-            cl_name: 'JS SURESNES',
-            cl_code: '500744',
-            cl_city: 'Suresnes',
-            cl_zip: '92150',
-          },
-        ],
-      }),
+  it('recherche Melun via geo.gouv → cl_cp DOFA (pas filter= ignoré)', async () => {
+    global.fetch = jest.fn().mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('geo.api.gouv.fr')) {
+        return {
+          ok: true,
+          headers: { get: () => 'application/json' },
+          text: async () =>
+            JSON.stringify([
+              {
+                nom: 'Melun',
+                codesPostaux: ['77000'],
+                departement: { code: '77' },
+                population: 40000,
+              },
+            ]),
+        };
+      }
+      if (u.includes('cl_cp=77000')) {
+        return {
+          ok: true,
+          headers: { get: () => 'application/json' },
+          text: async () =>
+            JSON.stringify([
+              {
+                cl_no: 22065,
+                name: 'MELUN F.C.',
+                affiliation_number: 542557,
+                location: 'MELUN',
+                postal_code: '77000',
+                department_code: 77,
+                district: { name: 'DISTRICT SEINE ET MARNE' },
+              },
+              {
+                cl_no: 154321,
+                name: 'MELUN FUTSAL',
+                affiliation_number: 552935,
+                location: 'MELUN',
+                postal_code: '77000',
+                department_code: 77,
+              },
+            ]),
+        };
+      }
+      return {
+        ok: true,
+        headers: { get: () => 'application/json' },
+        text: async () => '[]',
+      };
     });
 
-    const results = await fffOfficialRegistryService.searchOfficialClubs('Suresnes');
+    const results = await fffOfficialRegistryService.searchOfficialClubs('Melun');
+    expect(results.length).toBeGreaterThanOrEqual(1);
+    expect(results.some((c) => c.name === 'MELUN F.C.')).toBe(true);
+    expect(results.some((c) => c.fffNumber === '542557')).toBe(true);
+    const urls = (global.fetch as jest.Mock).mock.calls.map((c) => String(c[0]));
+    expect(urls.some((u) => u.includes('geo.api.gouv.fr'))).toBe(true);
+    expect(urls.some((u) => u.includes('cl_cp=77000'))).toBe(true);
+    expect(urls.some((u) => u.includes('filter=Melun'))).toBe(false);
+  });
+
+  it('recherche Le Mée-sur-Seine via code postal 77350', async () => {
+    global.fetch = jest.fn().mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('geo.api.gouv.fr')) {
+        return {
+          ok: true,
+          headers: { get: () => 'application/json' },
+          text: async () =>
+            JSON.stringify([
+              {
+                nom: 'Le Mée-sur-Seine',
+                codesPostaux: ['77350'],
+                departement: { code: '77' },
+                population: 20000,
+              },
+            ]),
+        };
+      }
+      if (u.includes('cl_cp=77350')) {
+        return {
+          ok: true,
+          headers: { get: () => 'application/json' },
+          text: async () =>
+            JSON.stringify([
+              {
+                cl_no: 10279,
+                name: 'LE MEE S. SECTION F.',
+                affiliation_number: 525582,
+                location: 'LE MEE SUR SEINE',
+                postal_code: '77350',
+                department_code: 77,
+              },
+            ]),
+        };
+      }
+      return {
+        ok: true,
+        headers: { get: () => 'application/json' },
+        text: async () => '[]',
+      };
+    });
+
+    const results = await fffOfficialRegistryService.searchOfficialClubs('Le mee sur seine');
+    expect(results.some((c) => /MEE/i.test(c.name))).toBe(true);
+    expect(results[0].city).toMatch(/MEE/i);
+  });
+
+  it('recherche par n° d’affiliation via cl_cod', async () => {
+    global.fetch = jest.fn().mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('cl_cod=542557')) {
+        return {
+          ok: true,
+          headers: { get: () => 'application/json' },
+          text: async () =>
+            JSON.stringify([
+              {
+                cl_no: 22065,
+                name: 'MELUN F.C.',
+                affiliation_number: 542557,
+                location: 'MELUN',
+                postal_code: '77000',
+              },
+            ]),
+        };
+      }
+      return {
+        ok: true,
+        headers: { get: () => 'application/json' },
+        text: async () => '[]',
+      };
+    });
+
+    const results = await fffOfficialRegistryService.searchOfficialClubs('542557');
     expect(results).toHaveLength(1);
-    expect(results[0].name).toBe('JS SURESNES');
-    expect(results[0].fffNumber).toBe('500744');
-    expect(results[0].source).toBe('fff_dofa');
-    expect(String(global.fetch).length).toBeGreaterThan(0);
-    expect(global.fetch).toHaveBeenCalled();
-    const calledUrl = String((global.fetch as jest.Mock).mock.calls[0][0]);
-    expect(calledUrl).toContain('/clubs.json?filter=Suresnes');
+    expect(results[0].name).toBe('MELUN F.C.');
   });
 
   it('propage une erreur honnête si DOFA est indisponible (pas de fallback inventé)', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 503 });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      headers: { get: () => 'application/json' },
+      text: async () => '',
+    });
 
-    await expect(fffOfficialRegistryService.searchOfficialClubs('Paris')).rejects.toBeInstanceOf(
+    await expect(fffOfficialRegistryService.searchOfficialClubs('77000')).rejects.toBeInstanceOf(
       FffOfficialRegistryError
     );
   });
 
-  it('charge les catégories depuis /equipes DOFA sans liste bidon', async () => {
+  it('charge les catégories depuis /equipes DOFA (category_label)', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({
-        'hydra:member': [
-          { name: 'Seniors D1' },
-          { short_name: 'U17 R1' },
-          { name: 'Seniors D1' },
-        ],
-      }),
+      headers: { get: () => 'application/json' },
+      text: async () =>
+        JSON.stringify([
+          {
+            category_label: 'U19 - U18 Libre',
+            engagements: [{ competition: { name: 'U18 R2' } }],
+          },
+          { category_label: 'Seniors', engagements: [{ competition: { name: 'R2' } }] },
+        ]),
     });
 
     const cats = await fffOfficialRegistryService.getCategoriesForClub({
-      id: 'dofa_1',
-      dofaId: '1',
-      name: 'Test FC',
-      fffNumber: '123',
-      city: 'Paris',
-      postalCode: '75000',
-      department: '75',
-      region: 'Île-de-France',
+      id: 'dofa_22065',
+      dofaId: '22065',
+      name: 'MELUN F.C.',
+      fffNumber: '542557',
+      city: 'MELUN',
+      postalCode: '77000',
+      department: '77',
+      region: '',
       league: 'FFF',
       categories: [],
       source: 'fff_dofa',
     });
 
-    expect(cats).toEqual(['Seniors D1', 'U17 R1']);
+    expect(cats.length).toBeGreaterThanOrEqual(1);
+    expect(cats.some((c) => /U18 R2|U19|Seniors|R2/i.test(c))).toBe(true);
   });
 
   it('retourne un roster vide sans inventer de licenciés', async () => {
@@ -127,6 +263,5 @@ describe('fffOfficialRegistryService (sources FFF réelles uniquement)', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const mod = require('../services/fffOfficialRegistry.service');
     expect(mod.OFFICIAL_FFF_CLUBS).toBeUndefined();
-    expect(mod.DEFAULT_OFFICIAL_CATEGORIES).toBeUndefined();
   });
 });

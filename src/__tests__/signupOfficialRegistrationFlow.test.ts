@@ -120,35 +120,48 @@ describe('Official FFF Registration Workflow', () => {
   });
 
   describe('Official FFF Club Registry & Roster Lookup', () => {
-    it('trouve un club officiel FFF via DOFA (pas de seed locale)', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          'hydra:member': [
-            {
-              cl_no: 21217,
-              cl_name: 'MONTROUGE FC 92',
-              cl_code: '548221',
-              cl_city: 'Montrouge',
-              cl_zip: '92120',
-            },
-          ],
-        }),
+    it('trouve Melun via geo → cl_cp (pas de seed locale)', async () => {
+      global.fetch = jest.fn().mockImplementation(async (url: string) => {
+        const u = String(url);
+        if (u.includes('geo.api.gouv.fr')) {
+          return {
+            ok: true,
+            headers: { get: () => 'application/json' },
+            text: async () =>
+              JSON.stringify([{ nom: 'Melun', codesPostaux: ['77000'], population: 40000 }]),
+          };
+        }
+        if (u.includes('cl_cp=77000')) {
+          return {
+            ok: true,
+            headers: { get: () => 'application/json' },
+            text: async () =>
+              JSON.stringify([
+                {
+                  cl_no: 22065,
+                  name: 'MELUN F.C.',
+                  affiliation_number: 542557,
+                  location: 'MELUN',
+                  postal_code: '77000',
+                },
+              ]),
+          };
+        }
+        return { ok: true, headers: { get: () => 'application/json' }, text: async () => '[]' };
       });
 
-      const results = await fffOfficialRegistryService.searchOfficialClubs('548221');
+      const results = await fffOfficialRegistryService.searchOfficialClubs('Melun');
       expect(results.length).toBeGreaterThanOrEqual(1);
-      const club = results[0];
-      expect(club.name).toBe('MONTROUGE FC 92');
-      expect(club.fffNumber).toBe('548221');
-      expect(club.source).toBe('fff_dofa');
+      const club = results.find((c) => c.name === 'MELUN F.C.');
+      expect(club?.fffNumber).toBe('542557');
+      expect(club?.source).toBe('fff_dofa');
     });
 
     it('ne fabrique pas de licenciés fictifs si aucun import FootClubs', async () => {
-      const roster = await fffOfficialRegistryService.getRosterForTeam('dofa_21217', 'Seniors D1', {
-        name: 'MONTROUGE FC 92',
-        city: 'Montrouge',
-        fffNumber: '548221',
+      const roster = await fffOfficialRegistryService.getRosterForTeam('dofa_22065', 'Seniors D1', {
+        name: 'MELUN F.C.',
+        city: 'MELUN',
+        fffNumber: '542557',
       });
       expect(roster).toEqual([]);
     });

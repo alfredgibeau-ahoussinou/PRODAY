@@ -1,6 +1,11 @@
 /**
  * Registre clubs / équipes / licenciés pour l’inscription.
- * Source unique : API publique DOFA FFF (+ imports FootClubs Firestore si présents).
+ *
+ * Sources officielles uniquement :
+ * - API DOFA FFF (`cl_cp`, `cl_cod`) — le param `filter=` est ignoré par DOFA
+ * - geo.api.gouv.fr pour résoudre ville → code(s) postal(aux)
+ * - Imports FootClubs / memberships Firestore pour les licenciés
+ *
  * Aucune liste mock, aucun n° d’affiliation inventé, aucun effectif fictif.
  */
 
@@ -27,7 +32,7 @@ export interface OfficialFffClub {
   region: string;
   league: string;
   categories: string[];
-  /** Toujours fff_dofa — pas de clubs « custom » inventés côté client */
+  /** Toujours source officielle — pas de clubs « custom » inventés côté client */
   source: 'fff_dofa';
 }
 
@@ -38,20 +43,30 @@ export class FffOfficialRegistryError extends Error {
   }
 }
 
-const DOFA_BASES = [
-  'https://api-dofa.prd-aws.fff.fr/api',
-  'https://api-dofa.fff.fr/api',
-] as const;
-
-const FETCH_TIMEOUT_MS = 10_000;
+const DOFA_BASE = 'https://api-dofa.fff.fr/api';
+const GEO_GOUV_BASE = 'https://geo.api.gouv.fr';
+const FETCH_TIMEOUT_MS = 12_000;
 const MIN_SEARCH_CHARS = 2;
+const MAX_RESULTS = 40;
+
+const DOFA_HEADERS: Record<string, string> = {
+  Accept: 'application/json, application/ld+json, text/plain, */*',
+  'Accept-Language': 'fr-FR,fr;q=0.9',
+  Origin: 'https://www.fff.fr',
+  Referer: 'https://www.fff.fr/',
+  'User-Agent':
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 ProDay/1.0',
+};
 
 function normalize(s: string): string {
   return s
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .trim();
+    .replace(/['’]/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -89,6 +104,37 @@ function pickNestedString(
   return pickString(leaf, leafKeys);
 }
 
+/** Variantes de saisie utilisateur (accents, tirets, « Le Mée »…). */
+export function buildSearchQueryVariants(query: string): string[] {
+  const raw = query.trim();
+  if (!raw) return [];
+
+  const variants = new Set<string>();
+  const add = (s: string) => {
+    const t = s.trim();
+    if (t.length >= MIN_SEARCH_CHARS) variants.add(t);
+  };
+
+  add(raw);
+  add(normalize(raw));
+  add(raw.replace(/-/g, ' '));
+  add(normalize(raw.replace(/-/g, ' ')));
+
+  // « Le Mée-sur-Seine » / « Le mee sur seine »
+  const withoutArticle = normalize(raw).replace(/^(le|la|les|l)\s+/, '');
+  add(withoutArticle);
+  add(withoutArticle.replace(/\s+sur\s+/g, ' sur '));
+
+  // Tokens utiles (≥ 3 lettres) pour geo + ranking
+  for (const token of normalize(raw).split(' ')) {
+    if (token.length >= 3 && !['sur', 'saint', 'ste', 'fc', 'as', 'us', 'sc'].includes(token)) {
+      add(token);
+    }
+  }
+
+  return Array.from(variants);
+}
+
 /** Extrait la collection Hydra / tableau brut d’une réponse DOFA. */
 export function extractDofaMembers(json: unknown): Record<string, unknown>[] {
   if (Array.isArray(json)) {
@@ -108,22 +154,13 @@ export function extractDofaMembers(json: unknown): Record<string, unknown>[] {
   return members.map(asRecord).filter((x): x is Record<string, unknown> => !!x);
 }
 
-function departmentFromPostal(postalCode: string): string {
-  const digits = postalCode.replace(/\D/g, '');
-  if (digits.length >= 5) {
-    if (digits.startsWith('97') || digits.startsWith('98')) return digits.slice(0, 3);
-    return digits.slice(0, 2);
-  }
-  return '';
-}
-
 /** Mappe un objet club DOFA / FFF vers le modèle ProDay. */
 export function mapDofaClubToOfficial(raw: Record<string, unknown>): OfficialFffClub | null {
   const name = pickString(raw, [
+    'name',
     'cl_name',
     'cl_nom',
     'clName',
-    'name',
     'nom',
     'short_name',
     'cl_short_name',
@@ -132,42 +169,51 @@ export function mapDofaClubToOfficial(raw: Record<string, unknown>): OfficialFff
 
   const dofaId = pickString(raw, ['cl_no', 'clNo', 'id', 'cl_id']);
   const fffNumber = pickString(raw, [
-    'cl_code',
+    'affiliation_number',
     'cl_cod',
+    'cl_code',
     'clCode',
     'code',
     'affiliation',
-    'affiliation_number',
     'numero_affiliation',
   ]);
 
   const city =
-    pickString(raw, ['cl_city', 'cl_loca', 'city', 'ville', 'localite', 'locality']) ||
+    pickString(raw, ['location', 'cl_city', 'cl_loca', 'city', 'ville', 'localite', 'locality']) ||
     pickNestedString(raw, ['adresse'], ['city', 'ville', 'localite', 'cl_loca']);
 
-  const postalCode =
-    pickString(raw, ['cl_zip', 'cl_cp', 'postal_code', 'postalCode', 'cp', 'code_postal']) ||
-    pickNestedString(raw, ['adresse'], ['cp', 'postal_code', 'cl_cp']);
+  const postalCode = pickString(raw, [
+    'postal_code',
+    'cl_cp',
+    'cl_zip',
+    'postalCode',
+    'cp',
+    'code_postal',
+  ]);
 
   const department =
-    pickString(raw, ['cl_department', 'department', 'departement', 'dept']) ||
-    departmentFromPostal(postalCode);
+    pickString(raw, ['department_code', 'cl_department', 'department', 'departement', 'dept']) ||
+    (postalCode.replace(/\D/g, '').length >= 5
+      ? postalCode.replace(/\D/g, '').startsWith('97') || postalCode.replace(/\D/g, '').startsWith('98')
+        ? postalCode.replace(/\D/g, '').slice(0, 3)
+        : postalCode.replace(/\D/g, '').slice(0, 2)
+      : '');
 
   const league =
+    pickNestedString(raw, ['district'], ['name', 'short_name', 'cg_name', 'nom']) ||
     pickString(raw, ['league', 'ligue', 'district', 'cdg_name']) ||
-    pickNestedString(raw, ['cdg'], ['cg_name', 'name', 'nom', 'cg_nom']) ||
     'FFF';
 
   const region =
     pickString(raw, ['region', 'région', 'cl_region']) ||
-    pickNestedString(raw, ['cdg'], ['region', 'région']) ||
+    pickNestedString(raw, ['district'], ['region', 'région']) ||
     '';
 
   const id = dofaId
     ? `dofa_${dofaId}`
     : fffNumber
       ? `fff_${fffNumber}`
-      : `fff_${normalize(name).replace(/[^a-z0-9]+/g, '_').slice(0, 48)}`;
+      : `fff_${normalize(name).replace(/\s+/g, '_').slice(0, 48)}`;
 
   return {
     id,
@@ -176,7 +222,7 @@ export function mapDofaClubToOfficial(raw: Record<string, unknown>): OfficialFff
     fffNumber: fffNumber || '',
     city,
     postalCode,
-    department,
+    department: String(department),
     region,
     league,
     categories: [],
@@ -186,6 +232,8 @@ export function mapDofaClubToOfficial(raw: Record<string, unknown>): OfficialFff
 
 function mapEquipeCategory(raw: Record<string, unknown>): string | null {
   const label = pickString(raw, [
+    'category_label',
+    'category_code',
     'short_name',
     'name',
     'nom',
@@ -193,58 +241,167 @@ function mapEquipeCategory(raw: Record<string, unknown>): string | null {
     'label',
     'category',
     'categorie',
-    'eq_name',
-    'equipe_name',
   ]);
+
+  // Préfère le libellé compétition engagée si plus précis
+  const engagements = raw.engagements;
+  if (Array.isArray(engagements) && engagements.length > 0) {
+    const first = asRecord(engagements[0]);
+    const comp = first ? asRecord(first.competition) : null;
+    const compName = comp ? pickString(comp, ['name', 'nom', 'short_name']) : '';
+    if (compName && !/coupe/i.test(compName)) return compName;
+    if (label && compName) return `${label} · ${compName}`;
+  }
+
   if (!label) return null;
-  // Évite les libellés purement techniques
   if (/^\d+$/.test(label)) return null;
   return label;
 }
 
-async function fetchDofaJson(pathAndQuery: string): Promise<unknown> {
-  let lastError: unknown;
+async function fetchJson(
+  url: string,
+  headers: Record<string, string> = DOFA_HEADERS
+): Promise<unknown> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+      signal: controller.signal,
+    });
 
-  for (const base of DOFA_BASES) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok) {
+      throw new FffOfficialRegistryError(`Source officielle indisponible (${response.status}).`);
+    }
+
+    const text = await response.text();
+    if (
+      contentType.includes('text/html') ||
+      text.trimStart().startsWith('<!DOCTYPE') ||
+      text.trimStart().startsWith('<html')
+    ) {
+      throw new FffOfficialRegistryError(
+        'Le registre FFF a bloqué la requête. Réessayez dans un instant.'
+      );
+    }
+
     try {
-      const url = `${base}${pathAndQuery.startsWith('/') ? pathAndQuery : `/${pathAndQuery}`}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json, application/ld+json, text/plain, */*',
-          'User-Agent':
-            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 ProDay/1.0',
-        },
-        signal: controller.signal,
+      return JSON.parse(text);
+    } catch {
+      throw new FffOfficialRegistryError('Réponse FFF illisible.');
+    }
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchDofaClubsByParams(params: Record<string, string>): Promise<OfficialFffClub[]> {
+  const qs = new URLSearchParams({ page: '1', itemsPerPage: '50', ...params });
+  const json = await fetchJson(`${DOFA_BASE}/clubs.json?${qs.toString()}`);
+  return extractDofaMembers(json)
+    .map(mapDofaClubToOfficial)
+    .filter((c): c is OfficialFffClub => !!c);
+}
+
+interface GeoCommune {
+  nom: string;
+  codesPostaux: string[];
+  departement?: { code?: string; nom?: string };
+  population?: number;
+}
+
+/** Résout une saisie libre vers des codes postaux officiels (API geo gouv). */
+export async function resolvePostalCodesFromQuery(query: string): Promise<string[]> {
+  const variants = buildSearchQueryVariants(query);
+  const codes = new Set<string>();
+
+  for (const variant of variants.slice(0, 4)) {
+    const qs = new URLSearchParams({
+      nom: variant,
+      fields: 'nom,codesPostaux,departement,population',
+      boost: 'population',
+      limit: '8',
+    });
+    try {
+      const json = await fetchJson(`${GEO_GOUV_BASE}/communes?${qs.toString()}`, {
+        Accept: 'application/json',
+        'User-Agent': DOFA_HEADERS['User-Agent'],
       });
-
-      if (!response.ok) {
-        lastError = new FffOfficialRegistryError(
-          `FFF DOFA indisponible (${response.status}).`
-        );
-        continue;
+      if (!Array.isArray(json)) continue;
+      const communes = json as GeoCommune[];
+      // Prefer exact-ish matches first
+      const qn = normalize(variant);
+      const ranked = [...communes].sort((a, b) => {
+        const an = normalize(a.nom || '');
+        const bn = normalize(b.nom || '');
+        const as = an === qn ? 0 : an.startsWith(qn) ? 1 : an.includes(qn) ? 2 : 3;
+        const bs = bn === qn ? 0 : bn.startsWith(qn) ? 1 : bn.includes(qn) ? 2 : 3;
+        if (as !== bs) return as - bs;
+        return (b.population || 0) - (a.population || 0);
+      });
+      for (const c of ranked.slice(0, 4)) {
+        for (const cp of c.codesPostaux || []) {
+          if (/^\d{5}$/.test(cp)) codes.add(cp);
+        }
       }
-
-      return await response.json();
-    } catch (err) {
-      lastError = err;
-    } finally {
-      clearTimeout(timer);
+      if (codes.size >= 8) break;
+    } catch {
+      // try next variant
     }
   }
 
-  if (lastError instanceof FffOfficialRegistryError) throw lastError;
-  throw new FffOfficialRegistryError(
-    'Impossible de joindre le registre officiel FFF. Réessayez ou vérifiez votre connexion.'
-  );
+  return Array.from(codes);
+}
+
+function clubMatchesQuery(club: OfficialFffClub, query: string): boolean {
+  const q = normalize(query);
+  if (!q) return true;
+  const hay = normalize(`${club.name} ${club.city} ${club.postalCode} ${club.fffNumber} ${club.league}`);
+  if (hay.includes(q)) return true;
+  // Tous les tokens significatifs doivent matcher
+  const tokens = q.split(' ').filter((t) => t.length >= 3);
+  if (tokens.length === 0) return hay.includes(q);
+  return tokens.every((t) => hay.includes(t));
+}
+
+function rankClub(club: OfficialFffClub, query: string): number {
+  const q = normalize(query);
+  const name = normalize(club.name);
+  const city = normalize(club.city);
+  let score = 0;
+  if (name === q || city === q) score += 100;
+  if (name.startsWith(q) || city.startsWith(q)) score += 50;
+  if (name.includes(q)) score += 30;
+  if (city.includes(q)) score += 40;
+  if (club.fffNumber && club.fffNumber === query.trim()) score += 200;
+  if (club.postalCode === query.trim()) score += 180;
+  // Pénalise les « CLUB DISTRICT … » génériques
+  if (/^club district/i.test(club.name)) score -= 40;
+  return score;
+}
+
+function dedupeClubs(clubs: OfficialFffClub[]): OfficialFffClub[] {
+  const seen = new Set<string>();
+  const out: OfficialFffClub[] = [];
+  for (const club of clubs) {
+    const key = club.fffNumber
+      ? `n:${club.fffNumber}`
+      : club.dofaId
+        ? `d:${club.dofaId}`
+        : `n:${normalize(club.name)}|${normalize(club.city)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(club);
+  }
+  return out;
 }
 
 export const fffOfficialRegistryService = {
   /**
-   * Recherche live sur l’API DOFA FFF.
-   * Sans requête (≥ 2 caractères) → liste vide (pas de dump / pas de seed).
+   * Recherche live FFF.
+   * DOFA ignore `filter=` / `name=` — on utilise `cl_cp` (via geo.gouv) et `cl_cod` (n° affiliation).
    */
   async searchOfficialClubs(
     query: string,
@@ -253,24 +410,70 @@ export const fffOfficialRegistryService = {
     const q = query.trim();
     if (q.length < MIN_SEARCH_CHARS) return [];
 
-    const encoded = encodeURIComponent(q);
-    const json = await fetchDofaJson(`/clubs.json?filter=${encoded}&page=1`);
-    const members = extractDofaMembers(json);
+    const collected: OfficialFffClub[] = [];
+    const errors: string[] = [];
 
-    let clubs = members
-      .map(mapDofaClubToOfficial)
-      .filter((c): c is OfficialFffClub => !!c);
+    // 1) Code postal exact → cl_cp (filtre DOFA réellement supporté)
+    if (/^\d{5}$/.test(q)) {
+      try {
+        collected.push(...(await fetchDofaClubsByParams({ cl_cp: q })));
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : 'Erreur DOFA CP');
+      }
+    }
 
-    // Déduplication par n° d’affiliation ou nom+ville
-    const seen = new Set<string>();
-    clubs = clubs.filter((club) => {
-      const key = club.fffNumber
-        ? `n:${club.fffNumber}`
-        : `n:${normalize(club.name)}|${normalize(club.city)}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    // 2) N° d’affiliation FFF → cl_cod (filtre DOFA réellement supporté)
+    if (/^\d{4,7}$/.test(q) && !/^\d{5}$/.test(q)) {
+      try {
+        collected.push(...(await fetchDofaClubsByParams({ cl_cod: q })));
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : 'Erreur DOFA affiliation');
+      }
+    } else if (/^\d{5,7}$/.test(q)) {
+      // Un CP à 5 chiffres peut aussi être un n° d’affiliation — tenter les deux
+      try {
+        collected.push(...(await fetchDofaClubsByParams({ cl_cod: q })));
+      } catch {
+        // ignore
+      }
+    }
+
+    // 3) Ville / libellé → communes officielles → codes postaux → clubs DOFA
+    if (!/^\d{4,7}$/.test(q)) {
+      try {
+        const postalCodes = await resolvePostalCodesFromQuery(q);
+        // Limite les appels parallèles
+        const cps = postalCodes.slice(0, 6);
+        const batches = await Promise.all(
+          cps.map(async (cp) => {
+            try {
+              return await fetchDofaClubsByParams({ cl_cp: cp });
+            } catch {
+              return [] as OfficialFffClub[];
+            }
+          })
+        );
+        for (const batch of batches) collected.push(...batch);
+
+        if (postalCodes.length === 0 && collected.length === 0) {
+          // Dernier recours : si la saisie ressemble à un CP partiel 2 chiffres département — non supporté
+          // On ne dump pas la page 1 DOFA (fausse couverture).
+        }
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : 'Erreur geo gouv');
+      }
+    }
+
+    let clubs = dedupeClubs(collected);
+
+    // Filtre client pour coller à la requête (évite tout le CP voisin hors sujet)
+    if (!/^\d{4,7}$/.test(q)) {
+      const filtered = clubs.filter((c) => clubMatchesQuery(c, q));
+      // Si trop strict (ex. nom club ≠ ville), garder les résultats CP
+      if (filtered.length > 0) clubs = filtered;
+    }
+
+    clubs.sort((a, b) => rankClub(b, q) - rankClub(a, q));
 
     if (options?.department) {
       clubs = clubs.filter((c) => c.department === options.department);
@@ -280,31 +483,29 @@ export const fffOfficialRegistryService = {
       clubs = clubs.filter((c) => normalize(c.region).includes(r));
     }
 
-    return clubs;
+    if (clubs.length === 0 && errors.length > 0 && collected.length === 0) {
+      throw new FffOfficialRegistryError(errors[0]);
+    }
+
+    return clubs.slice(0, MAX_RESULTS);
   },
 
-  /** Lookup exact par numéro d’affiliation FFF (cl_cod / code). */
+  /** Lookup exact par numéro d’affiliation FFF (`cl_cod`). */
   async getOfficialClubByFffNumber(fffNumber: string): Promise<OfficialFffClub | null> {
     const code = fffNumber.trim();
     if (!code) return null;
 
-    const results = await this.searchOfficialClubs(code);
-    const exact = results.find((c) => c.fffNumber === code);
-    if (exact) return exact;
-
-    // Certains endpoints filtrent mal les codes numériques — tentative item direct
     try {
-      const json = await fetchDofaJson(`/clubs/${encodeURIComponent(code)}.json`);
-      const root = asRecord(json);
-      if (root) {
-        const mapped = mapDofaClubToOfficial(root);
-        if (mapped) return mapped;
-      }
+      const byCod = await fetchDofaClubsByParams({ cl_cod: code });
+      const exact = byCod.find((c) => c.fffNumber === code);
+      if (exact) return exact;
+      if (byCod[0]) return byCod[0];
     } catch {
-      // ignore — on reste sur le résultat recherche
+      // fallback search
     }
 
-    return results[0] ?? null;
+    const results = await this.searchOfficialClubs(code);
+    return results.find((c) => c.fffNumber === code) ?? results[0] ?? null;
   },
 
   async getOfficialClubById(clubId: string): Promise<OfficialFffClub | null> {
@@ -314,7 +515,7 @@ export const fffOfficialRegistryService = {
     if (id.startsWith('dofa_')) {
       const dofaId = id.slice('dofa_'.length);
       try {
-        const json = await fetchDofaJson(`/clubs/${encodeURIComponent(dofaId)}.json`);
+        const json = await fetchJson(`${DOFA_BASE}/clubs/${encodeURIComponent(dofaId)}.json`);
         const root = asRecord(json);
         if (root) return mapDofaClubToOfficial(root);
       } catch {
@@ -338,9 +539,7 @@ export const fffOfficialRegistryService = {
     if (!dofaId) return [];
 
     try {
-      const json = await fetchDofaJson(
-        `/clubs/${encodeURIComponent(dofaId)}/equipes.json`
-      );
+      const json = await fetchJson(`${DOFA_BASE}/clubs/${encodeURIComponent(dofaId)}/equipes.json`);
       const members = extractDofaMembers(json);
       const labels = members
         .map(mapEquipeCategory)
@@ -372,14 +571,11 @@ export const fffOfficialRegistryService = {
     if (!isFirebaseConfigured()) return [];
 
     try {
-      // Imports dynamiques pour éviter de tirer Firebase dans tous les chemins (tests DOFA).
       const { membershipsService } = await import('./memberships.service');
       const { clubsService } = await import('./clubs.service');
 
-      // 1) Si clubId est déjà un id Firestore ProDay
       let memberships = await membershipsService.listByClub(clubId);
 
-      // 2) Correspondance ProDay par nom (hint du club FFF déjà sélectionné — pas de re-fetch DOFA)
       if (memberships.length === 0 && clubHint?.name) {
         const matches = await clubsService.searchByName(clubHint.name);
         const match =

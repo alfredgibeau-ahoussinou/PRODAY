@@ -596,21 +596,22 @@ export function useSignupForm(initial?: {
     const errs: Record<string, string> = {};
     if (hasClub) {
       if (!selectedFffClub) {
-        errs.club = 'Veuillez sélectionner votre club officiel FFF ou choisir "Sans club".';
-      }
-      const activeCat = selectedFffCategory || category;
-      if (!activeCat) {
-        errs.category = 'Veuillez sélectionner votre catégorie d’équipe.';
-      }
-      if (!selectedRosterMember && displayName.trim().length < 2) {
-        errs.displayName = 'Veuillez sélectionner votre nom dans la liste des licenciés ou saisir votre nom.';
+        errs.club =
+          'Recherchez et sélectionnez votre club FFF (ville, code postal ou n° d’affiliation), ou choisissez « Sans club ».';
+      } else {
+        const activeCat = selectedFffCategory || category;
+        if (!activeCat) {
+          errs.category =
+            'Sélectionnez votre catégorie / équipe FFF du club (liste officielle DOFA), ou saisissez-la telle qu’indiquée sur votre licence.';
+        }
+        if (!selectedRosterMember && displayName.trim().length < 2) {
+          errs.displayName =
+            'Indiquez votre nom tel qu’il figure sur votre licence FFF.';
+        }
       }
     } else {
-      if (!category) {
-        errs.category = 'Veuillez sélectionner votre catégorie.';
-      }
       if (displayName.trim().length < 2) {
-        errs.displayName = 'Veuillez renseigner votre nom et prénom officiels.';
+        errs.displayName = 'Renseignez votre nom et prénom officiels.';
       }
     }
 
@@ -1168,6 +1169,7 @@ export function useSignupForm(initial?: {
     loading,
     error,
     fieldErrors,
+    setFieldErrors,
     createdDisplayName,
     createdWithEmailPassword,
     clearErrors,
