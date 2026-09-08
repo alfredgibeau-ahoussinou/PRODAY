@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import {
   fffOfficialRegistryService,
@@ -12,7 +12,6 @@ import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
 import type { SignupVisualChrome } from '../../screens/signup/signupVisualSystem';
 import {
   buildClubSignupAutofill,
-  formatClubAutofillSummary,
   type ClubSignupAutofill,
 } from '../../utils/clubSignupAutofill';
 import {
@@ -21,7 +20,6 @@ import {
   pickVerificationPdf,
 } from '../../utils/pickVerificationDocument';
 import { PublicClubAutocomplete } from './PublicClubAutocomplete';
-import { ClubCrestThumb } from './ClubCrestThumb';
 
 type IdentityDoc = { uri: string; name: string; type: string };
 
@@ -34,8 +32,11 @@ type Props = {
   error?: string;
 };
 
+const TEAMS_TIMEOUT_MS = 8_000;
+
 /**
- * Parcours club : recherche annuaire public + DOFA, puis fiche auto.
+ * Parcours club : recherche annuaire public + DOFA, puis justificatif claim.
+ * La fiche club sélectionnée est uniquement dans PublicClubAutocomplete (pas de doublon).
  */
 export const SignupClubFffFinder: React.FC<Props> = ({
   selectedClub,
@@ -47,7 +48,9 @@ export const SignupClubFffFinder: React.FC<Props> = ({
 }) => {
   const { visual } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(visual), [visual]);
-  const [teams, setTeams] = useState<string[]>([]);
+  const onAutofillRef = useRef(onAutofill);
+  onAutofillRef.current = onAutofill;
+
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [teamsNote, setTeamsNote] = useState<string | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -55,38 +58,44 @@ export const SignupClubFffFinder: React.FC<Props> = ({
   useEffect(() => {
     let active = true;
     if (!selectedClub) {
-      setTeams([]);
       setTeamsNote(null);
+      setLoadingTeams(false);
       return;
     }
+
+    // Préremplir tout de suite (sans attendre DOFA /equipes) pour débloquer « Continuer ».
+    onAutofillRef.current(buildClubSignupAutofill(selectedClub, []));
     setLoadingTeams(true);
     setTeamsNote(null);
+
     void (async () => {
       try {
-        const list = await fffOfficialRegistryService.getCategoriesForClub(selectedClub);
+        const list = await Promise.race([
+          fffOfficialRegistryService.getCategoriesForClub(selectedClub),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error('teams_timeout')), TEAMS_TIMEOUT_MS);
+          }),
+        ]);
         if (!active) return;
-        setTeams(list);
-        onAutofill(buildClubSignupAutofill(selectedClub, list));
-        if (list.length === 0) {
-          setTeamsNote('Équipes DOFA non listées — la fiche club reste préremplie.');
-        }
+        onAutofillRef.current(buildClubSignupAutofill(selectedClub, list));
+        setTeamsNote(
+          list.length === 0
+            ? 'Équipes DOFA non listées — la fiche club reste préremplie.'
+            : `${list.length} équipe${list.length > 1 ? 's' : ''} engagée${list.length > 1 ? 's' : ''} FFF.`,
+        );
       } catch {
         if (!active) return;
-        setTeams([]);
-        onAutofill(buildClubSignupAutofill(selectedClub, []));
-        setTeamsNote('Équipes indisponibles pour le moment.');
+        setTeamsNote('Équipes FFF indisponibles pour le moment — vous pouvez continuer.');
       } finally {
         if (active) setLoadingTeams(false);
       }
     })();
+
     return () => {
       active = false;
     };
-  }, [selectedClub, onAutofill]);
-
-  const summary = selectedClub
-    ? formatClubAutofillSummary(buildClubSignupAutofill(selectedClub, teams))
-    : [];
+    // Intentionnel : pas de onAutofill en deps (callback parent non mémoïsé → boucle spinner).
+  }, [selectedClub]);
 
   const pickDoc = async (fn: () => Promise<IdentityDoc | null>) => {
     setUploadingDoc(true);
@@ -120,40 +129,18 @@ export const SignupClubFffFinder: React.FC<Props> = ({
 
       {selectedClub ? (
         <View style={styles.sheet}>
-          <View style={styles.sheetHead}>
-            <ClubCrestThumb
-              name={selectedClub.name}
-              logoUrl={selectedClub.logoUrl}
-              size={52}
-              accent={visual.accent}
-            />
-            <View style={styles.sheetHeadCopy}>
-              <ProDayText variant="section" style={styles.sheetClubName}>
-                {selectedClub.name}
-              </ProDayText>
+          {loadingTeams ? (
+            <View style={styles.teamsStatus}>
+              <ActivityIndicator size="small" color={visual.accent} />
               <ProDayText variant="caption" style={styles.note}>
-                {[selectedClub.city, selectedClub.department, selectedClub.fffNumber]
-                  .filter(Boolean)
-                  .join(' · ')}
+                Chargement des équipes FFF…
               </ProDayText>
             </View>
-          </View>
-          {loadingTeams ? (
-            <ActivityIndicator color={visual.accent} />
-          ) : (
-            <>
-              {summary.map((line) => (
-                <ProDayText key={line} variant="caption" style={styles.summaryLine}>
-                  {line}
-                </ProDayText>
-              ))}
-              {teamsNote ? (
-                <ProDayText variant="caption" style={styles.note}>
-                  {teamsNote}
-                </ProDayText>
-              ) : null}
-            </>
-          )}
+          ) : teamsNote ? (
+            <ProDayText variant="caption" style={styles.note}>
+              {teamsNote}
+            </ProDayText>
+          ) : null}
 
           <ProDayText variant="section" style={styles.mandateTitle}>
             Mandat / justificatif (optionnel)
@@ -240,20 +227,16 @@ function createStyles(v: SignupVisualChrome) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: v.border,
     },
-    sheetHead: {
+    teamsStatus: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
-      minHeight: 52,
-      marginBottom: 4,
+      gap: 10,
+      minHeight: 20,
     },
-    sheetHeadCopy: { flex: 1, gap: 2 },
-    sheetClubName: { color: v.text, fontSize: 16, fontWeight: '800' },
-    summaryLine: { color: v.textMuted, lineHeight: 18 },
-    note: { color: v.textFaint },
+    note: { color: v.textFaint, flexShrink: 1 },
     mandateTitle: {
       color: v.text,
-      marginTop: 8,
+      marginTop: 4,
       fontSize: 14,
       fontWeight: '700',
     },

@@ -119,22 +119,26 @@ export const SignupCoachProStep: React.FC<StepProps> = (props) => {
 };
 
 export const SignupClubProStep: React.FC<StepProps> = (props) => {
-  const applyClubAutofill = (fill: {
-    structureName: string;
-    city: string;
-    department: string;
-    teams: string[];
-  }) => {
-    if (fill.structureName) props.form.setStructureName(fill.structureName);
-    if (fill.city) props.form.setCity(fill.city);
-    if (fill.department) props.form.setDepartment(fill.department);
-    if (fill.teams.length > 0) {
-      props.form.setSelectedFffCategory(fill.teams[0]);
-    }
-    props.form.setHasClub(true);
-    props.form.setFieldErrors({});
-    props.form.setError(null);
-  };
+  const form = props.form;
+  const applyClubAutofill = React.useCallback(
+    (fill: {
+      structureName: string;
+      city: string;
+      department: string;
+      teams: string[];
+    }) => {
+      if (fill.structureName) form.setStructureName(fill.structureName);
+      if (fill.city) form.setCity(fill.city);
+      if (fill.department) form.setDepartment(fill.department);
+      if (fill.teams.length > 0) {
+        form.setSelectedFffCategory(fill.teams[0]);
+      }
+      form.setHasClub(true);
+      form.setFieldErrors({});
+      form.setError(null);
+    },
+    [form],
+  );
 
   return (
     <SignupPoleShell

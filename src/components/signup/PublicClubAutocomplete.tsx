@@ -64,6 +64,7 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
     if (selectedClub) {
       setResults([]);
       setSearchError(null);
+      setIsSearching(false);
       return;
     }
     const q = searchQuery.trim();
@@ -217,22 +218,17 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
               <PressableSpring
                 key={`${club.id}-${club.fffNumber}`}
                 onPress={() => {
-                  void (async () => {
-                    let next = club;
-                    if (club.fffNumber && !club.logoUrl) {
-                      try {
-                        const entry = await publicClubDirectoryService.getByAffiliation(
-                          club.fffNumber,
-                        );
-                        if (entry?.logo_url?.trim()) {
-                          next = { ...club, logoUrl: entry.logo_url.trim() };
-                        }
-                      } catch {
-                        // ignore
-                      }
-                    }
-                    onSelectClub(next);
-                  })();
+                  // Sélection immédiate (masque le dropdown) — enrichissement logo en arrière-plan.
+                  onSelectClub(club);
+                  if (club.fffNumber && !club.logoUrl) {
+                    void publicClubDirectoryService
+                      .getByAffiliation(club.fffNumber)
+                      .then((entry) => {
+                        const url = entry?.logo_url?.trim();
+                        if (url) onSelectClub({ ...club, logoUrl: url });
+                      })
+                      .catch(() => undefined);
+                  }
                 }}
                 scaleTo={0.98}
                 haptic
