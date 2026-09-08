@@ -147,6 +147,7 @@ export function ClubLicensesScreen() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [csvText, setCsvText] = useState('');
   const [parsedRows, setParsedRows] = useState<ParsedLicenseRow[]>([]);
+  const [parseError, setParseError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [verifyingUid, setVerifyingUid] = useState<string | null>(null);
 
@@ -163,11 +164,14 @@ export function ClubLicensesScreen() {
       const res = parseFootclubsCsv(text);
       if (res.success) {
         setParsedRows(res.rows);
+        setParseError(null);
       } else {
         setParsedRows([]);
+        setParseError(res.errors[0] || 'CSV invalide — vérifiez les colonnes Licence / Nom.');
       }
     } else {
       setParsedRows([]);
+      setParseError(null);
     }
   };
 
@@ -551,6 +555,12 @@ export function ClubLicensesScreen() {
               value={csvText}
               onChangeText={handleCsvChange}
             />
+
+            {parseError ? (
+              <ClubText variant="caption" style={{ color: '#F87171', marginBottom: 12 }}>
+                {parseError}
+              </ClubText>
+            ) : null}
 
             {/* Aperçu */}
             {parsedRows.length > 0 ? (

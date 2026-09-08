@@ -18,6 +18,7 @@ import {
   ClubPlayersPendingHero,
   ClubPlayersPendingRow,
 } from '../../features/club/ui/ClubPlayersChrome';
+import { ClubImportSquadPanel } from '../../features/club/ui/ClubImportSquadPanel';
 import {
   filterClubPlayersList,
   listPendingMembershipPlayers,
@@ -208,6 +209,18 @@ export function ClubPlayersScreen() {
             </ClubText>
           </PressableSpring>
         </View>
+
+        {ws.clubId && profile?.uid ? (
+          <ClubImportSquadPanel
+            clubId={ws.clubId}
+            existingPlayers={ws.players}
+            approverUid={profile.uid}
+            fffAffiliationNumber={ws.club?.fff_affiliation_number}
+            clubName={ws.club?.name}
+            clubCity={ws.club?.city}
+            onImported={() => void ws.refresh()}
+          />
+        ) : null}
 
         {pendingItems.length > 0 && filter !== 'pending' ? (
           <ClubPlayersPendingHero

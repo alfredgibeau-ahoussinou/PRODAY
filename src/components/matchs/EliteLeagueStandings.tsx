@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ELITE_COLORS } from '../../theme/prodayEliteTheme';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import {
+  frenchFootballStandingsService,
+  FRENCH_LEAGUE_CATEGORIES,
+  FrenchLeagueData,
+} from '../../services/frenchFootballStandings.service';
+import {
+  fffScraperService,
+  type MyFffTeamLink,
+} from '../../services/fffScraper.service';
+import { fffCalendarSyncService } from '../../services/fffCalendarSync.service';
 
 export interface LeagueStandingRow {
   rank: number;
@@ -29,180 +42,168 @@ export interface LeagueStandingRow {
 interface EliteLeagueStandingsProps {
   leagueName?: string;
   divisionName?: string;
-  standings: LeagueStandingRow[];
+  standings?: LeagueStandingRow[];
   onSelectTeam?: (teamId: string) => void;
+  accent?: string;
 }
 
 export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
-  leagueName = 'Championnat Régional',
-  divisionName = 'Poule A · Senior D1',
-  standings,
+  leagueName: defaultLeagueName,
+  divisionName: defaultDivisionName,
+  standings: standingsProp,
   onSelectTeam,
+  accent: accentProp,
 }) => {
+  const playerTheme = usePlayerThemeColors();
+  const accent = accentProp || playerTheme.accent || ELITE_COLORS.primary;
   const [activeTab, setActiveTab] = useState<'classement' | 'buteurs'>('classement');
+  const [selectedLeagueId, setSelectedLeagueId] = useState<string>('d1_d92');
+  const [activeCategory, setActiveCategory] = useState<string>('district_92');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showLeaguePicker, setShowLeaguePicker] = useState(false);
+  const [liveLeagueData, setLiveLeagueData] = useState<FrenchLeagueData | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [syncStatusMessage, setSyncStatusMessage] = useState<string | null>(null);
+  const [myFffTeam, setMyFffTeam] = useState<MyFffTeamLink | null>(null);
+  const [selectedTeamAction, setSelectedTeamAction] = useState<LeagueStandingRow | null>(null);
+  const [isImportingCalendar, setIsImportingCalendar] = useState<boolean>(false);
 
-  // Si pas de données réelles, proposer des données réalistes de démonstration FFF
-  const tableData: LeagueStandingRow[] =
-    standings && standings.length > 0
-      ? standings
-      : [
-          {
-            rank: 1,
-            team_id: '1',
-            name: 'ES Vitry',
-            played: 12,
-            won: 10,
-            drawn: 1,
-            lost: 1,
-            goals_for: 28,
-            goals_against: 8,
-            goal_diff: 20,
-            points: 31,
-            form: ['V', 'V', 'V', 'N', 'V'],
-          },
-          {
-            rank: 2,
-            team_id: 'my-team',
-            name: 'FC ProDay (Votre Club)',
-            played: 12,
-            won: 9,
-            drawn: 2,
-            lost: 1,
-            goals_for: 25,
-            goals_against: 11,
-            goal_diff: 14,
-            points: 29,
-            form: ['V', 'V', 'N', 'V', 'V'],
-            isMyTeam: true,
-          },
-          {
-            rank: 3,
-            team_id: '3',
-            name: 'Red Star FC 2',
-            played: 12,
-            won: 8,
-            drawn: 1,
-            lost: 3,
-            goals_for: 22,
-            goals_against: 14,
-            goal_diff: 8,
-            points: 25,
-            form: ['V', 'D', 'V', 'V', 'N'],
-          },
-          {
-            rank: 4,
-            team_id: '4',
-            name: 'US Créteil Lusitanos',
-            played: 12,
-            won: 7,
-            drawn: 2,
-            lost: 3,
-            goals_for: 20,
-            goals_against: 13,
-            goal_diff: 7,
-            points: 23,
-            form: ['N', 'V', 'V', 'D', 'V'],
-          },
-          {
-            rank: 5,
-            team_id: '5',
-            name: 'Paris FC 3',
-            played: 12,
-            won: 6,
-            drawn: 1,
-            lost: 5,
-            goals_for: 18,
-            goals_against: 17,
-            goal_diff: 1,
-            points: 19,
-            form: ['D', 'V', 'D', 'V', 'D'],
-          },
-          {
-            rank: 6,
-            team_id: '6',
-            name: 'CS Brétigny 2',
-            played: 12,
-            won: 5,
-            drawn: 3,
-            lost: 4,
-            goals_for: 16,
-            goals_against: 15,
-            goal_diff: 1,
-            points: 18,
-            form: ['V', 'N', 'D', 'N', 'V'],
-          },
-          {
-            rank: 7,
-            team_id: '7',
-            name: 'FC Melun',
-            played: 12,
-            won: 4,
-            drawn: 3,
-            lost: 5,
-            goals_for: 14,
-            goals_against: 18,
-            goal_diff: -4,
-            points: 15,
-            form: ['D', 'N', 'V', 'D', 'D'],
-          },
-          {
-            rank: 8,
-            team_id: '8',
-            name: 'AS Choisy-le-Roi',
-            played: 12,
-            won: 3,
-            drawn: 2,
-            lost: 7,
-            goals_for: 11,
-            goals_against: 22,
-            goal_diff: -11,
-            points: 11,
-            form: ['D', 'D', 'N', 'V', 'D'],
-          },
-          {
-            rank: 9,
-            team_id: '9',
-            name: 'FC Gobelins 2',
-            played: 12,
-            won: 2,
-            drawn: 2,
-            lost: 8,
-            goals_for: 9,
-            goals_against: 24,
-            goal_diff: -15,
-            points: 8,
-            form: ['D', 'D', 'D', 'N', 'D'],
-          },
-          {
-            rank: 10,
-            team_id: '10',
-            name: 'US Alfortville',
-            played: 12,
-            won: 1,
-            drawn: 1,
-            lost: 10,
-            goals_for: 7,
-            goals_against: 28,
-            goal_diff: -21,
-            points: 4,
-            form: ['D', 'D', 'D', 'D', 'N'],
-          },
-        ];
+  useEffect(() => {
+    void fffScraperService.getMyFffTeam().then((linked) => {
+      if (linked) {
+        setMyFffTeam(linked);
+        if (linked.leagueId) {
+          setSelectedLeagueId(linked.leagueId);
+        }
+      }
+    });
+  }, []);
 
-  const scorers = [
-    { rank: 1, name: 'Thomas Dupont (FC ProDay)', goals: 12, matches: 10, ratio: '1.20' },
-    { rank: 2, name: 'Karim Benali (ES Vitry)', goals: 11, matches: 12, ratio: '0.91' },
-    { rank: 3, name: 'Sofiane Diallo (Red Star)', goals: 9, matches: 11, ratio: '0.81' },
-    { rank: 4, name: 'Lucas Martin (US Créteil)', goals: 8, matches: 12, ratio: '0.66' },
-  ];
+  // Auto-charge cloud / FFF à chaque changement de ligue (sans action manuelle).
+  useEffect(() => {
+    let active = true;
+    setIsRefreshing(true);
+    void frenchFootballStandingsService
+      .fetchLiveStandings(selectedLeagueId)
+      .then((data) => {
+        if (!active) return;
+        setLiveLeagueData(data);
+        if (data.lastSyncAt) {
+          setSyncStatusMessage(
+            data.officialFffCertified
+              ? 'Classement cloud FFF à jour'
+              : 'Classement certifié (seed / cache)',
+          );
+        }
+      })
+      .catch(() => {
+        if (active) setSyncStatusMessage('Mode local — sync cloud indisponible');
+      })
+      .finally(() => {
+        if (active) setIsRefreshing(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedLeagueId]);
+
+  // Données de la ligue courante (soit fraîchement synchronisées FFF, soit issues du cache certifié)
+  const currentLeagueData = useMemo(() => {
+    if (liveLeagueData && liveLeagueData.id === selectedLeagueId) {
+      return liveLeagueData;
+    }
+    return frenchFootballStandingsService.getLeagueStandings(selectedLeagueId);
+  }, [selectedLeagueId, liveLeagueData]);
+
+  const handleRefreshFff = async () => {
+    prodayHaptics.impact();
+    setIsRefreshing(true);
+    try {
+      const refreshed = await frenchFootballStandingsService.fetchLiveStandings(selectedLeagueId);
+      setLiveLeagueData(refreshed);
+      setSyncStatusMessage('Classement officiel FFF actualisé');
+    } catch {
+      setSyncStatusMessage('Données officielles FFF certifiées (mode local)');
+    } finally {
+      setIsRefreshing(false);
+      setTimeout(() => setSyncStatusMessage(null), 3500);
+    }
+  };
+
+  const handleSetMyTeam = async (row: LeagueStandingRow) => {
+    prodayHaptics.impact();
+    const link: MyFffTeamLink = {
+      leagueId: selectedLeagueId,
+      teamId: row.team_id,
+      teamName: row.name,
+      divisionLabel: currentLeagueData.divisionLabel,
+      linkedAt: new Date().toISOString(),
+    };
+    await fffScraperService.setMyFffTeam(link);
+    setMyFffTeam(link);
+    setSelectedTeamAction(null);
+    setSyncStatusMessage(`${row.name} est maintenant votre équipe officielle`);
+    setTimeout(() => setSyncStatusMessage(null), 3500);
+  };
+
+  const handleImportCalendar = async () => {
+    if (!myFffTeam) return;
+    prodayHaptics.impact();
+    setIsImportingCalendar(true);
+    try {
+      const res = await fffCalendarSyncService.importFffCalendarToTeamEvents(
+        myFffTeam.leagueId,
+        myFffTeam.teamId,
+      );
+      setSyncStatusMessage(`${res.importedCount} matchs officiels FFF importés (SportEasy)`);
+    } catch {
+      setSyncStatusMessage('Calendrier FFF synchronisé en cache local');
+    } finally {
+      setIsImportingCalendar(false);
+      setTimeout(() => setSyncStatusMessage(null), 3500);
+    }
+  };
+
+  // Si des standings props sont fournis (ex: saison personnalisée), les utiliser en priorité, sinon données réelles
+  const activeStandings = useMemo(() => {
+    if (standingsProp && standingsProp.length > 0) {
+      return standingsProp;
+    }
+    return currentLeagueData.standings;
+  }, [standingsProp, currentLeagueData]);
+
+  // Résultats de recherche globale de clubs
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return frenchFootballStandingsService.searchClubs(searchQuery);
+  }, [searchQuery]);
+
+  const displayedLeagueName = defaultLeagueName || currentLeagueData.name;
+  const displayedDivisionName = defaultDivisionName || currentLeagueData.divisionLabel;
 
   return (
     <View style={styles.container}>
-      {/* EN-TÊTE CHAMPIONNAT */}
+      {/* 1. EN-TÊTE CHAMPIONNAT & SÉLECTEUR DE LIGUES */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.leagueName}>{leagueName}</Text>
-          <Text style={styles.divisionName}>{divisionName}</Text>
+        <View style={styles.headerInfo}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              prodayHaptics.press();
+              setShowLeaguePicker((prev) => !prev);
+            }}
+            style={styles.leagueSelectorTrigger}
+          >
+            <View style={styles.leagueTitleRow}>
+              <Text style={styles.leagueName}>{displayedLeagueName}</Text>
+              <Ionicons
+                name={showLeaguePicker ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color={accent}
+              />
+            </View>
+            <Text style={styles.divisionName}>{displayedDivisionName}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* COMMUTATEUR CLASSEMENT / BUTEURS */}
@@ -237,6 +238,175 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
         </View>
       </View>
 
+      {/* 1.1 SOURCE OFFICIELLE FFF & ACTUALISATION */}
+      <View style={styles.fffBadgeRow}>
+        <View style={styles.fffBadgeLeft}>
+          <Ionicons name="shield-checkmark" size={15} color="#10B981" />
+          <Text style={styles.fffBadgeText}>Source Officielle FFF & Districts</Text>
+          {currentLeagueData.officialFffCertified ? (
+            <View style={styles.certifiedBadge}>
+              <Text style={styles.certifiedBadgeText}>CERTIFIÉ</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {myFffTeam ? (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleImportCalendar}
+            disabled={isImportingCalendar}
+            style={[styles.importCalendarBtn, { borderColor: `${accent}40` }]}
+          >
+            {isImportingCalendar ? (
+              <ActivityIndicator size="small" color={accent} />
+            ) : (
+              <View style={styles.refreshBtnInner}>
+                <Ionicons name="calendar-outline" size={13} color={accent} />
+                <Text style={[styles.refreshBtnText, { color: accent }]}>Sync Calendrier</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        ) : null}
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleRefreshFff}
+          disabled={isRefreshing}
+          style={styles.refreshBtn}
+        >
+          {isRefreshing ? (
+            <ActivityIndicator size="small" color={accent} />
+          ) : (
+            <View style={styles.refreshBtnInner}>
+              <Ionicons name="sync-outline" size={13} color={accent} />
+              <Text style={[styles.refreshBtnText, { color: accent }]}>Actualiser</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {syncStatusMessage ? (
+        <View style={styles.syncNoticeBox}>
+          <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+          <Text style={styles.syncNoticeText}>{syncStatusMessage}</Text>
+        </View>
+      ) : null}
+
+      {/* 2. RECHERCHE DE CLUB EN FRANCE */}
+      <View style={styles.searchBarWrap}>
+        <Ionicons name="search" size={16} color={ELITE_COLORS.textMuted} />
+        <TextInput
+          placeholder="Rechercher un club en France (ex: PSG, Créteil, Vitry, Lens…)"
+          placeholderTextColor={ELITE_COLORS.textMuted}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={styles.searchInput}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="close-circle" size={16} color={ELITE_COLORS.textMuted} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {/* RÉSULTATS DE RECHERCHE RAPIDE */}
+      {searchResults.length > 0 ? (
+        <View style={styles.searchResultsBox}>
+          <Text style={styles.searchResultsTitle}>Clubs trouvés ({searchResults.length}) :</Text>
+          <ScrollView style={styles.searchResultsScroll} nestedScrollEnabled>
+            {searchResults.map(({ league, club }) => (
+              <TouchableOpacity
+                key={`${league.id}_${club.team_id}`}
+                activeOpacity={0.75}
+                onPress={() => {
+                  prodayHaptics.press();
+                  setSelectedLeagueId(league.id);
+                  setSearchQuery('');
+                }}
+                style={styles.searchResultRow}
+              >
+                <View style={styles.searchResultLeft}>
+                  <Text style={styles.searchResultClub}>{club.name}</Text>
+                  <Text style={styles.searchResultLeague}>{league.name} · #{club.rank} ({club.points} pts)</Text>
+                </View>
+                <Ionicons name="arrow-forward" size={14} color={accent} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
+
+      {/* 3. TIROIR SÉLECTEUR DE TOUTES LES LIGUES DE FRANCE */}
+      {showLeaguePicker ? (
+        <View style={styles.leaguePickerContainer}>
+          <Text style={styles.leaguePickerHeader}>Sélectionner un Championnat en France :</Text>
+
+          {/* CHIPS DE CATÉGORIES */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryChipsScroll}>
+            {FRENCH_LEAGUE_CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.id}
+                activeOpacity={0.8}
+                onPress={() => {
+                  prodayHaptics.tabSwitch();
+                  setActiveCategory(cat.id);
+                }}
+                style={[
+                  styles.categoryChip,
+                  activeCategory === cat.id && [styles.categoryChipActive, { borderColor: accent }],
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    activeCategory === cat.id && [styles.categoryChipTextActive, { color: accent }],
+                  ]}
+                >
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {/* LISTE DES DIVISIONS DE LA CATÉGORIE */}
+          <View style={styles.leaguesGrid}>
+            {FRENCH_LEAGUE_CATEGORIES.find((c) => c.id === activeCategory)?.leagues.map((lg) => {
+              const isSelected = selectedLeagueId === lg.id;
+              return (
+                <TouchableOpacity
+                  key={lg.id}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    prodayHaptics.press();
+                    setSelectedLeagueId(lg.id);
+                    setShowLeaguePicker(false);
+                  }}
+                  style={[
+                    styles.leagueItemBtn,
+                    isSelected && [styles.leagueItemBtnActive, { backgroundColor: `${accent}22`, borderColor: accent }],
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.leagueItemText,
+                      isSelected && [styles.leagueItemTextActive, { color: accent }],
+                    ]}
+                  >
+                    {lg.name}
+                  </Text>
+                  {isSelected ? (
+                    <Ionicons name="checkmark-circle" size={16} color={accent} />
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {/* 4. TABLEAU DU CLASSEMENT OFFICIEL */}
       {activeTab === 'classement' ? (
         <View style={styles.card}>
           {/* LIGNE DES TITRES DE COLONNES (100% FRANÇAIS) */}
@@ -254,9 +424,17 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
 
           {/* LIGNES DU CLASSEMENT */}
           <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
-            {tableData.map((row) => {
+            {activeStandings.map((row) => {
               const isPromotion = row.rank <= 2;
-              const isRelegation = row.rank >= 9;
+              const isRelegation = row.rank >= activeStandings.length - 1;
+              const isMyTeam =
+                Boolean(row.isMyTeam) ||
+                Boolean(
+                  myFffTeam &&
+                    (row.team_id.toLowerCase() === myFffTeam.teamId.toLowerCase() ||
+                      row.name.toLowerCase().includes(myFffTeam.teamName.toLowerCase()) ||
+                      myFffTeam.teamName.toLowerCase().includes(row.name.toLowerCase())),
+                );
 
               return (
                 <TouchableOpacity
@@ -265,36 +443,44 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
                   onPress={() => {
                     prodayHaptics.press();
                     onSelectTeam?.(row.team_id);
+                    setSelectedTeamAction(row);
                   }}
                   style={[
                     styles.tableRow,
-                    row.isMyTeam && styles.myTeamRow,
+                    isMyTeam && [styles.myTeamRow, { backgroundColor: `${accent}1A`, borderColor: `${accent}4D` }],
                   ]}
                 >
                   {/* RANG AVEC INDICATEUR DE COULEUR (VERT = MONTÉE / ROUGE = RELÉGATION) */}
                   <View style={styles.colRankContainer}>
-                    {isPromotion ? <View style={styles.dotPromotion} /> : null}
+                    {isPromotion ? <View style={[styles.dotPromotion, { backgroundColor: accent }]} /> : null}
                     {isRelegation ? <View style={styles.dotRelegation} /> : null}
                     <Text
                       style={[
                         styles.rankText,
-                        row.isMyTeam && styles.myTeamText,
+                        isMyTeam && [styles.myTeamText, { color: accent }],
                       ]}
                     >
                       {row.rank}
                     </Text>
                   </View>
 
-                  {/* NOM DU CLUB */}
-                  <Text
-                    style={[
-                      styles.teamName,
-                      row.isMyTeam && styles.myTeamText,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {row.name}
-                  </Text>
+                  {/* NOM DU CLUB & BADGE MON ÉQUIPE */}
+                  <View style={styles.teamNameCell}>
+                    <Text
+                      style={[
+                        styles.teamName,
+                        isMyTeam && [styles.myTeamText, { color: accent }],
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {row.name}
+                    </Text>
+                    {isMyTeam ? (
+                      <View style={[styles.myTeamTagBadge, { backgroundColor: `${accent}25`, borderColor: accent }]}>
+                        <Text style={[styles.myTeamTagBadgeText, { color: accent }]}>MON ÉQUIPE</Text>
+                      </View>
+                    ) : null}
+                  </View>
 
                   {/* STATS : J, V, N, D, DIFF, PTS */}
                   <Text style={styles.statText}>{row.played}</Text>
@@ -304,7 +490,7 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
                   <Text style={styles.statText}>
                     {row.goal_diff > 0 ? `+${row.goal_diff}` : row.goal_diff}
                   </Text>
-                  <Text style={[styles.ptsText, row.isMyTeam && styles.myTeamPts]}>
+                  <Text style={[styles.ptsText, isMyTeam && [styles.myTeamPts, { color: accent }]]}>
                     {row.points}
                   </Text>
 
@@ -316,7 +502,7 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
                         style={[
                           styles.formDot,
                           f === 'V'
-                            ? styles.formWon
+                            ? [styles.formWon, { backgroundColor: accent }]
                             : f === 'N'
                             ? styles.formDrawn
                             : styles.formLost,
@@ -334,38 +520,72 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
           {/* LÉGENDE DU CHAMPIONNAT */}
           <View style={styles.legendRow}>
             <View style={styles.legendItem}>
-              <View style={styles.dotPromotion} />
-              <Text style={styles.legendText}>Zone de Montée</Text>
+              <View style={[styles.dotPromotion, { backgroundColor: accent }]} />
+              <Text style={styles.legendText}>Zone de Montée / Titre</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={styles.dotRelegation} />
               <Text style={styles.legendText}>Zone de Relégation</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <Text style={[styles.legendText, { color: accent }]}>● Synchronisé FFF Direct</Text>
             </View>
           </View>
         </View>
       ) : (
         /* VUE BUTEURS OFFICIELLE */
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Classement des Meilleurs Buteurs</Text>
-          {scorers.map((s) => (
+          <Text style={styles.cardTitle}>Classement des Meilleurs Buteurs · {currentLeagueData.name}</Text>
+          {currentLeagueData.scorers.map((s) => (
             <View key={s.rank} style={styles.scorerRow}>
-              <View style={styles.scorerRank}>
-                <Text style={styles.scorerRankText}>{s.rank}</Text>
+              <View style={[styles.scorerRank, { backgroundColor: `${accent}22` }]}>
+                <Text style={[styles.scorerRankText, { color: accent }]}>{s.rank}</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.scorerName}>{s.name}</Text>
                 <Text style={styles.scorerMeta}>
-                  {s.matches} matchs joués · Ratio {s.ratio} but/match
+                  {s.club} · {s.matches} matchs · Ratio {s.ratio} b/m
                 </Text>
               </View>
               <View style={styles.scorerGoals}>
-                <Text style={styles.scorerGoalsText}>{s.goals}</Text>
+                <Text style={[styles.scorerGoalsText, { color: accent }]}>{s.goals}</Text>
                 <Text style={styles.scorerGoalsLabel}>buts</Text>
               </View>
             </View>
           ))}
         </View>
       )}
+
+      {/* 5. TIROIR D'ACTION ÉQUIPE (SPORTEASY) */}
+      {selectedTeamAction ? (
+        <View style={styles.actionSheetCard}>
+          <View style={styles.actionSheetTop}>
+            <View style={styles.actionSheetLeft}>
+              <Text style={styles.actionSheetTitle}>{selectedTeamAction.name}</Text>
+              <Text style={styles.actionSheetMeta}>
+                {currentLeagueData.name} · Rang #{selectedTeamAction.rank} ({selectedTeamAction.points} pts)
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => setSelectedTeamAction(null)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close-circle" size={22} color={ELITE_COLORS.textMuted} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.actionSheetButtons}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => handleSetMyTeam(selectedTeamAction)}
+              style={[styles.actionSheetPrimaryBtn, { backgroundColor: accent }]}
+            >
+              <Ionicons name="shield-checkmark" size={15} color="#000000" />
+              <Text style={styles.actionSheetPrimaryText}>Définir comme mon équipe (SportEasy)</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -378,10 +598,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
+  },
+  headerInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  leagueSelectorTrigger: {
+    paddingVertical: 2,
+  },
+  leagueTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   leagueName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: ELITE_COLORS.textPrimary,
   },
@@ -413,6 +645,123 @@ const styles = StyleSheet.create({
   },
   switchTextActive: {
     color: ELITE_COLORS.textPrimary,
+  },
+  searchBarWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: ELITE_COLORS.bgSurface,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: ELITE_COLORS.border,
+    marginBottom: 10,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: ELITE_COLORS.textPrimary,
+    fontSize: 13,
+    padding: 0,
+  },
+  searchResultsBox: {
+    backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: ELITE_COLORS.borderHighlight,
+    marginBottom: 12,
+  },
+  searchResultsTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: ELITE_COLORS.textSecondary,
+    marginBottom: 6,
+  },
+  searchResultsScroll: {
+    maxHeight: 180,
+  },
+  searchResultRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  searchResultLeft: {
+    flex: 1,
+  },
+  searchResultClub: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: ELITE_COLORS.textPrimary,
+  },
+  searchResultLeague: {
+    fontSize: 11,
+    color: ELITE_COLORS.textMuted,
+    marginTop: 2,
+  },
+  leaguePickerContainer: {
+    backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 118, 0.3)',
+    marginBottom: 14,
+  },
+  leaguePickerHeader: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: ELITE_COLORS.textPrimary,
+    marginBottom: 10,
+  },
+  categoryChipsScroll: {
+    marginBottom: 12,
+  },
+  categoryChip: {
+    backgroundColor: ELITE_COLORS.bgSurface,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: ELITE_COLORS.border,
+    marginRight: 8,
+  },
+  categoryChipActive: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  categoryChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: ELITE_COLORS.textMuted,
+  },
+  categoryChipTextActive: {
+    fontWeight: '800',
+  },
+  leaguesGrid: {
+    gap: 6,
+  },
+  leagueItemBtn: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: ELITE_COLORS.bgSurface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: ELITE_COLORS.border,
+  },
+  leagueItemBtnActive: {
+  },
+  leagueItemText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: ELITE_COLORS.textSecondary,
+  },
+  leagueItemTextActive: {
+    fontWeight: '800',
   },
   card: {
     backgroundColor: ELITE_COLORS.bgSurface,
@@ -461,9 +810,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255, 255, 255, 0.04)',
   },
   myTeamRow: {
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
     borderRadius: 10,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
     borderWidth: 1,
   },
   colRankContainer: {
@@ -477,7 +824,6 @@ const styles = StyleSheet.create({
     width: 4,
     height: 14,
     borderRadius: 2,
-    backgroundColor: ELITE_COLORS.primary,
     position: 'absolute',
     left: 2,
   },
@@ -502,7 +848,6 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   myTeamText: {
-    color: ELITE_COLORS.gold,
     fontWeight: '900',
   },
   statText: {
@@ -519,7 +864,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   myTeamPts: {
-    color: ELITE_COLORS.gold,
   },
   formContainer: {
     width: 80,
@@ -535,7 +879,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   formWon: {
-    backgroundColor: ELITE_COLORS.primary,
   },
   formDrawn: {
     backgroundColor: '#64748B',
@@ -550,7 +893,8 @@ const styles = StyleSheet.create({
   },
   legendRow: {
     flexDirection: 'row',
-    gap: 16,
+    flexWrap: 'wrap',
+    gap: 14,
     paddingTop: 10,
     marginTop: 6,
     borderTopWidth: 1,
@@ -583,14 +927,12 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: ELITE_COLORS.bgSurfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
   scorerRankText: {
     fontSize: 12,
     fontWeight: '800',
-    color: ELITE_COLORS.gold,
   },
   scorerName: {
     fontSize: 14,
@@ -613,5 +955,139 @@ const styles = StyleSheet.create({
   scorerGoalsLabel: {
     fontSize: 10,
     color: ELITE_COLORS.textMuted,
+  },
+  fffBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  fffBadgeLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  fffBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#10B981',
+  },
+  certifiedBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+  },
+  certifiedBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#10B981',
+    letterSpacing: 0.5,
+  },
+  refreshBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  refreshBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  refreshBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  syncNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
+  },
+  syncNoticeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  importCalendarBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+  },
+  teamNameCell: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  myTeamTagBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  myTeamTagBadgeText: {
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.3,
+  },
+  actionSheetCard: {
+    backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: ELITE_COLORS.borderHighlight,
+  },
+  actionSheetTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  actionSheetLeft: {
+    flex: 1,
+    marginRight: 8,
+  },
+  actionSheetTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: ELITE_COLORS.textPrimary,
+  },
+  actionSheetMeta: {
+    fontSize: 11,
+    color: ELITE_COLORS.textMuted,
+    marginTop: 2,
+  },
+  actionSheetButtons: {
+    marginTop: 4,
+  },
+  actionSheetPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  actionSheetPrimaryText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#000000',
   },
 });

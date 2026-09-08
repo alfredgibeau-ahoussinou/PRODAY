@@ -53,6 +53,10 @@ export interface CreateClubInput {
   owner_uid: string;
   location?: GeoPoint;
   fff_affiliation_number?: string;
+  /** Blason public (annuaire FFF / DOFA) — pas d’upload obligatoire. */
+  logo_url?: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
 }
 
 export const clubsService = {
@@ -151,10 +155,49 @@ export const clubsService = {
       sponsor_ids: [],
       owner_uid: input.owner_uid,
       fff_affiliation_number: input.fff_affiliation_number?.trim() || null,
+      logo_url: input.logo_url?.trim() || null,
+      primary_color: input.primary_color?.trim() || null,
+      secondary_color: input.secondary_color?.trim() || null,
       is_active: true,
       created_at: serverTimestamp(),
     });
     return ref.id;
+  },
+
+  /**
+   * Backfill blason / couleurs depuis l’annuaire public FFF si le club ProDay est vide.
+   * Ne remplace jamais un logo déjà uploadé.
+   */
+  async ensureBrandingFromDirectory(clubId: string): Promise<Club | null> {
+    const database = getDb();
+    if (!database || !clubId) return null;
+    const club = await this.getById(clubId);
+    if (!club) return null;
+    if (club.logo_url?.trim()) return club;
+    const fff = club.fff_affiliation_number?.trim();
+    if (!fff) return club;
+    try {
+      const { publicClubDirectoryService } = await import('./publicClubDirectory.service');
+      const entry = await publicClubDirectoryService.getByAffiliation(fff);
+      if (!entry?.logo_url?.trim() && !entry?.primary_color && !entry?.secondary_color) {
+        return club;
+      }
+      const patch: Record<string, unknown> = {
+        updated_at: serverTimestamp(),
+      };
+      if (!club.logo_url && entry.logo_url?.trim()) patch.logo_url = entry.logo_url.trim();
+      if (!club.primary_color && entry.primary_color?.trim()) {
+        patch.primary_color = entry.primary_color.trim();
+      }
+      if (!club.secondary_color && entry.secondary_color?.trim()) {
+        patch.secondary_color = entry.secondary_color.trim();
+      }
+      if (Object.keys(patch).length <= 1) return club;
+      await updateDoc(doc(database, 'clubs', clubId), patch);
+      return this.getById(clubId);
+    } catch {
+      return club;
+    }
   },
 
   /** Lie / met à jour le n° d’affiliation FFF d’un club ProDay. */

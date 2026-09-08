@@ -86,6 +86,22 @@ export async function requestClubMembershipInFirestore(
     throw new Error('Club introuvable — sélectionnez un club FFF ou un espace ProDay.');
   }
 
+  // Backfill blason si club existant sans logo.
+  if (fff) {
+    const clubSnap0 = await db.collection('clubs').doc(clubId).get();
+    const existingLogo = asString(clubSnap0.data()?.logo_url);
+    if (!existingLogo) {
+      const dirSnap0 = await db.collection('fff_public_clubs').doc(fff).get();
+      const dirLogo = asString(dirSnap0.data()?.logo_url);
+      if (dirLogo) {
+        await db.collection('clubs').doc(clubId).set(
+          { logo_url: dirLogo, updated_at: FieldValue.serverTimestamp() },
+          { merge: true },
+        );
+      }
+    }
+  }
+
   const existing = await db
     .collection('memberships')
     .where('player_uid', '==', uid)

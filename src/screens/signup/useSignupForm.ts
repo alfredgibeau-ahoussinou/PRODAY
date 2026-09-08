@@ -1070,9 +1070,12 @@ export function useSignupForm(initial?: {
                         : selectedFffClub.categories,
                     owner_uid: user.uid,
                     fff_affiliation_number: selectedFffClub.fffNumber || undefined,
+                    logo_url: selectedFffClub.logoUrl || undefined,
                   },
                   user
                 );
+              } else if (selectedFffClub.logoUrl || selectedFffClub.fffNumber) {
+                void clubsService.ensureBrandingFromDirectory(clubId).catch(() => undefined);
               }
               if (selectedFffClub.fffNumber && clubId) {
                 void publicClubDirectoryService

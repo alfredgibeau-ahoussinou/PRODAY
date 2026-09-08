@@ -317,9 +317,25 @@ export async function claimPublicClubInFirestore(
     );
   }
 
+  // Backfill blason / couleurs annuaire → clubs (sans écraser un logo déjà posé).
+  const dirPreview = await db.collection(DIRECTORY).doc(fff).get();
+  const dirLogo = asString(dirPreview.data()?.logo_url);
+  const clubLogo = asString(club.logo_url);
+  const brandPatch: Record<string, unknown> = {};
+  if (!clubLogo && dirLogo) brandPatch.logo_url = dirLogo;
+  if (!asString(club.primary_color) && asString(dirPreview.data()?.primary_color)) {
+    brandPatch.primary_color = asString(dirPreview.data()?.primary_color);
+  }
+  if (!asString(club.secondary_color) && asString(dirPreview.data()?.secondary_color)) {
+    brandPatch.secondary_color = asString(dirPreview.data()?.secondary_color);
+  }
+  if (Object.keys(brandPatch).length > 0) {
+    brandPatch.updated_at = admin.firestore.FieldValue.serverTimestamp();
+    await clubRef.set(brandPatch, { merge: true });
+  }
+
   const dirRef = db.collection(DIRECTORY).doc(fff);
-  const dirSnap = await dirRef.get();
-  const existingStatus = asString(dirSnap.data()?.claim_status) || 'unclaimed';
+  const dirSnap = dirPreview;  const existingStatus = asString(dirSnap.data()?.claim_status) || 'unclaimed';
   const existingOwnerClub = asString(dirSnap.data()?.proday_club_id);
   if (
     existingOwnerClub &&

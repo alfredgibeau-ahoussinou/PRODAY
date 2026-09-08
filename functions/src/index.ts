@@ -3,6 +3,7 @@ import * as functions from 'firebase-functions';
 import { admin } from './firebaseAdmin';
 import { processScheduledEventReminders } from './eventReminders';
 import { processFffClubRosterDailySync } from './fffClubRosterSync';
+import { processFffStandingsDailySync } from './fffStandingsSync';
 import {
   processPublicClubDirectorySync,
   searchPublicClubsInFirestore,
@@ -285,6 +286,27 @@ export const syncFffClubRostersNow = functions.https.onCall(async (_data, contex
   const result = await processFffClubRosterDailySync(db);
   return result;
 });
+
+/**
+ * Classements FFF / nationaux (L1, L2, N1, R1/R2 IDF, districts) → fff_league_standings.
+ * Déployer : firebase deploy --only functions:scheduledFffStandingsSync,functions:syncFffStandingsNow
+ */
+export const scheduledFffStandingsSync = functions.pubsub
+  .schedule('every day 04:15')
+  .timeZone('Europe/Paris')
+  .onRun(async () => {
+    const result = await processFffStandingsDailySync(db);
+    console.log('[scheduledFffStandingsSync]', result);
+    return result;
+  });
+
+export const syncFffStandingsNow = functions.https.onCall(async (_data, context) => {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+  }
+  return processFffStandingsDailySync(db);
+});
+
 
 /**
  * Annuaire public clubs (sans PII) — seed depuis structure FootClubs + clubs ProDay.

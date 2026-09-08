@@ -55,7 +55,10 @@ export function ClubThemeProvider({ children, activeTeamId = null }: ProviderPro
         return;
       }
       try {
-        const doc = await clubsService.getById(clubId);
+        let doc = await clubsService.getById(clubId);
+        if (doc && !doc.logo_url?.trim()) {
+          doc = (await clubsService.ensureBrandingFromDirectory(clubId)) ?? doc;
+        }
         setClub(doc);
         const next = await resolveClubDynamicBrand({
           club: doc,
@@ -86,7 +89,10 @@ export function ClubThemeProvider({ children, activeTeamId = null }: ProviderPro
         return;
       }
       try {
-        const doc = await clubsService.getById(clubId);
+        let doc = await clubsService.getById(clubId);
+        if (doc && !doc.logo_url?.trim()) {
+          doc = (await clubsService.ensureBrandingFromDirectory(clubId)) ?? doc;
+        }
         if (cancelled) return;
         setClub(doc);
         const next = await resolveClubDynamicBrand({
