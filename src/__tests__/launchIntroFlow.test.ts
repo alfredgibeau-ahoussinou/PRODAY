@@ -5,6 +5,7 @@ import {
   BRAND_SESSION_REVEAL,
   BRAND_WELCOME_REVEAL,
   resolveIntroExitAction,
+  shouldDismissUniverseWithoutAuth,
   shouldSkipPoleTransition,
   UNIVERSE_CONFIRM_LEAVE,
 } from '../components/branding/intro/launchIntroFlow';
@@ -31,6 +32,36 @@ describe('launchIntroFlow', () => {
     expect(shouldSkipPoleTransition('supporter', 'amateur', 'player', true)).toBe(false);
     expect(shouldSkipPoleTransition('joueur', 'amateur', 'player', false)).toBe(false);
     expect(shouldSkipPoleTransition('joueur', undefined, undefined, true)).toBe(false);
+  });
+
+  it('invité : Entrer dans Joueur/Coach ouvre toujours l’auth (jamais dismiss-only)', () => {
+    expect(
+      shouldDismissUniverseWithoutAuth({
+        hasProfile: false,
+        chosenPole: 'joueur',
+        currentLine: 'amateur',
+        currentRole: null,
+        isManualReopen: true,
+      }),
+    ).toBe(false);
+    expect(
+      shouldDismissUniverseWithoutAuth({
+        hasProfile: false,
+        chosenPole: 'coach',
+        currentLine: 'amateur',
+        currentRole: null,
+        isManualReopen: true,
+      }),
+    ).toBe(false);
+    expect(
+      shouldDismissUniverseWithoutAuth({
+        hasProfile: true,
+        chosenPole: 'joueur',
+        currentLine: 'amateur',
+        currentRole: 'player',
+        isManualReopen: true,
+      }),
+    ).toBe(true);
   });
 
   it('garde une leave confirmation courte et directe', () => {

@@ -10,7 +10,7 @@ import Animated, {
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UniverseChoicePager } from './UniverseChoicePager';
 import { BrandWelcomeReveal } from './BrandWelcomeReveal';
-import { shouldSkipPoleTransition, UNIVERSE_CONFIRM_LEAVE } from './launchIntroFlow';
+import { shouldDismissUniverseWithoutAuth, UNIVERSE_CONFIRM_LEAVE } from './launchIntroFlow';
 import type { ClubShellMode } from '../../../models/ClubShellMode';
 import type { ProductLineId } from '../../../models/ProductLine';
 import type { UserRole } from '../../../models/User';
@@ -186,21 +186,30 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
 
   const handleChoose = useCallback(
     (line: IntroSpaceChoice) => {
-      if (
-        shouldSkipPoleTransition(
-          line,
-          initialLine,
-          initialRole,
-          skipReveal,
-          initialClubShellMode,
-        )
-      ) {
+      // Invité : JAMAIS dismiss-only — le skip « même pôle » fermait le picker
+      // sans openAuth (défaut productLine=amateur ≡ Joueur → Entrer dans Joueur = no-op).
+      const skipSamePole = shouldDismissUniverseWithoutAuth({
+        hasProfile: Boolean(profile),
+        chosenPole: line,
+        currentLine: initialLine,
+        currentRole: initialRole,
+        isManualReopen: skipReveal,
+        currentClubShellMode: initialClubShellMode,
+      });
+      if (skipSamePole) {
         beginLeave(null, true);
         return;
       }
       beginLeave(line, false);
     },
-    [beginLeave, initialClubShellMode, initialLine, initialRole, skipReveal],
+    [
+      beginLeave,
+      initialClubShellMode,
+      initialLine,
+      initialRole,
+      profile,
+      skipReveal,
+    ],
   );
 
   const handleDismiss = useCallback(() => {

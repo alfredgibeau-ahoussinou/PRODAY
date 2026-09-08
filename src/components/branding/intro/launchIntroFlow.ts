@@ -84,7 +84,7 @@ export function resolveIntroExitAction(isManualOpen: boolean): IntroExitAction {
   return isManualOpen ? 'close-manual' : 'mark-complete';
 }
 
-/** Évite une transition inutile quand l'utilisateur confirme le pôle déjà actif. */
+/** Évite une transition inutile quand un user CONNECTÉ confirme le pôle déjà actif. */
 export function shouldSkipPoleTransition(
   chosenPole: CarouselPoleId,
   currentLine: ProductLineId | undefined,
@@ -99,4 +99,26 @@ export function shouldSkipPoleTransition(
     currentClubShellMode,
   );
   return normalizeCarouselPole(chosenPole) === normalizeCarouselPole(currentPole);
+}
+
+/**
+ * Invité : toujours enchaîner le choix (openAuth).
+ * Connecté + même pôle en picker manuel : dismiss-only OK.
+ */
+export function shouldDismissUniverseWithoutAuth(opts: {
+  hasProfile: boolean;
+  chosenPole: CarouselPoleId;
+  currentLine: ProductLineId | undefined;
+  currentRole: UserRole | null | undefined;
+  isManualReopen: boolean;
+  currentClubShellMode?: ClubShellMode | null;
+}): boolean {
+  if (!opts.hasProfile) return false;
+  return shouldSkipPoleTransition(
+    opts.chosenPole,
+    opts.currentLine,
+    opts.currentRole,
+    opts.isManualReopen,
+    opts.currentClubShellMode,
+  );
 }
