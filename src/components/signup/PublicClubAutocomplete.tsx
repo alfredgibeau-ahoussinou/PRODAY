@@ -18,6 +18,7 @@ import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import type { PublicClubClaimStatus } from '../../models/PublicClubDirectory';
 import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
+import { ClubCrestThumb } from './ClubCrestThumb';
 
 type Props = {
   selectedClub: OfficialFffClub | null;
@@ -84,17 +85,28 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
             'Aucun club FFF trouvé. Essayez la ville, le CP (5 chiffres) ou le n° d’affiliation.',
           );
         }
-        // Badges claim (best-effort)
-        if (showClaimBadge) {
-          const statuses: Record<string, PublicClubClaimStatus> = {};
-          await Promise.all(
-            clubs.slice(0, 12).map(async (c) => {
-              if (!c.fffNumber) return;
-              const entry = await publicClubDirectoryService.getByAffiliation(c.fffNumber);
-              if (entry) statuses[c.fffNumber] = entry.claim_status;
-            }),
+        // Badges claim + logos annuaire (best-effort, enrichit les hits live sans blason)
+        const statuses: Record<string, PublicClubClaimStatus> = {};
+        const logos: Record<string, string> = {};
+        await Promise.all(
+          clubs.slice(0, 16).map(async (c) => {
+            if (!c.fffNumber) return;
+            const entry = await publicClubDirectoryService.getByAffiliation(c.fffNumber);
+            if (!entry) return;
+            if (showClaimBadge) statuses[c.fffNumber] = entry.claim_status;
+            if (entry.logo_url?.trim()) logos[c.fffNumber] = entry.logo_url.trim();
+          }),
+        );
+        if (!active) return;
+        if (showClaimBadge) setClaimByFff((prev) => ({ ...prev, ...statuses }));
+        if (Object.keys(logos).length > 0) {
+          setResults((prev) =>
+            prev.map((c) =>
+              c.fffNumber && logos[c.fffNumber] && !c.logoUrl
+                ? { ...c, logoUrl: logos[c.fffNumber] }
+                : c,
+            ),
           );
-          if (active) setClaimByFff((prev) => ({ ...prev, ...statuses }));
         }
       } catch (err) {
         if (!active) return;
@@ -121,6 +133,12 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
     return (
       <View style={styles.selectedCard}>
         <View style={[styles.selectedAccent, { backgroundColor: accent }]} />
+        <ClubCrestThumb
+          name={selectedClub.name}
+          logoUrl={selectedClub.logoUrl}
+          size={48}
+          accent={accent}
+        />
         <View style={styles.selectedBody}>
           <ProDayText variant="section" style={styles.selectedName}>
             {selectedClub.name}
@@ -198,14 +216,36 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
             return (
               <PressableSpring
                 key={`${club.id}-${club.fffNumber}`}
-                onPress={() => onSelectClub(club)}
+                onPress={() => {
+                  void (async () => {
+                    let next = club;
+                    if (club.fffNumber && !club.logoUrl) {
+                      try {
+                        const entry = await publicClubDirectoryService.getByAffiliation(
+                          club.fffNumber,
+                        );
+                        if (entry?.logo_url?.trim()) {
+                          next = { ...club, logoUrl: entry.logo_url.trim() };
+                        }
+                      } catch {
+                        // ignore
+                      }
+                    }
+                    onSelectClub(next);
+                  })();
+                }}
                 scaleTo={0.98}
                 haptic
                 style={styles.row}
                 accessibilityRole="button"
                 accessibilityLabel={club.name}
               >
-                <View style={[styles.dot, { backgroundColor: accent }]} />
+                <ClubCrestThumb
+                  name={club.name}
+                  logoUrl={club.logoUrl}
+                  size={40}
+                  accent={accent}
+                />
                 <View style={styles.rowCopy}>
                   <ProDayText variant="section" style={styles.rowTitle} numberOfLines={1}>
                     {club.name}
@@ -265,11 +305,11 @@ function createStyles(accent: string) {
       alignItems: 'center',
       gap: 12,
       paddingHorizontal: 14,
-      paddingVertical: 12,
+      paddingVertical: 10,
+      minHeight: 60,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: 'rgba(255,255,255,0.06)',
     },
-    dot: { width: 7, height: 7, borderRadius: 4 },
     rowCopy: { flex: 1, gap: 2 },
     rowTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
     rowSub: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },

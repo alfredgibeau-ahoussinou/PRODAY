@@ -16,6 +16,7 @@ import { getStepMetaForRole } from './signupRoleExperience';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { Icon } from '../../components/ui/Icon';
+import { ClubCrestThumb } from '../../components/signup/ClubCrestThumb';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
@@ -93,7 +94,12 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
           </View>
         ) : showFffClubBanner ? (
           <View style={styles.fffBanner}>
-            <Icon name="shield" size={16} color={visual.focus} />
+            <ClubCrestThumb
+              name={form.selectedFffClub!.name}
+              logoUrl={form.selectedFffClub!.logoUrl}
+              size={36}
+              accent={visual.focus}
+            />
             <ProDayText style={styles.fffBannerText}>
               {isClub ? 'Structure FFF : ' : 'Club FFF : '}
               {form.selectedFffClub!.name}

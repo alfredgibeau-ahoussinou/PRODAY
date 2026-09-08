@@ -53,6 +53,7 @@ describe('publicClubDirectory mapping', () => {
     region: 'IDF',
     league: 'District 77',
     categories: [],
+    logoUrl: 'https://cdn.example/melun.png',
     source: 'fff_dofa',
   };
 
@@ -61,17 +62,19 @@ describe('publicClubDirectory mapping', () => {
     expect(payload).not.toBeNull();
     expect(payload!.fff_affiliation_number).toBe('550001');
     expect(payload!.claim_status).toBe('unclaimed');
+    expect(payload!.logo_url).toBe('https://cdn.example/melun.png');
     expect(payload).not.toHaveProperty('members');
     expect(payload).not.toHaveProperty('claimed_by_uid');
   });
 
-  it('round-trip OfficialFffClub ↔ directory', () => {
+  it('round-trip OfficialFffClub ↔ directory conserve logo_url', () => {
     const payload = directoryPayloadFromOfficial(sample)!;
     const entry: PublicClubDirectoryEntry = { ...payload };
     const back = officialFffClubFromDirectory(entry);
     expect(back.fffNumber).toBe('550001');
     expect(back.name).toBe('US Melun');
     expect(back.city).toBe('Melun');
+    expect(back.logoUrl).toBe('https://cdn.example/melun.png');
     expect(back.source).toBe('fff_dofa');
   });
 });

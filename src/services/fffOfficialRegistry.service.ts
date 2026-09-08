@@ -32,6 +32,8 @@ export interface OfficialFffClub {
   region: string;
   league: string;
   categories: string[];
+  /** Blason / logo public association (URL), si connu. */
+  logoUrl?: string | null;
   /** Toujours source officielle — pas de clubs « custom » inventés côté client */
   source: 'fff_dofa';
 }
@@ -215,6 +217,8 @@ export function mapDofaClubToOfficial(raw: Record<string, unknown>): OfficialFff
       ? `fff_${fffNumber}`
       : `fff_${normalize(name).replace(/\s+/g, '_').slice(0, 48)}`;
 
+  const logoUrl = extractDofaClubLogoUrl(raw);
+
   return {
     id,
     dofaId: dofaId || undefined,
@@ -226,8 +230,50 @@ export function mapDofaClubToOfficial(raw: Record<string, unknown>): OfficialFff
     region,
     league,
     categories: [],
+    logoUrl,
     source: 'fff_dofa',
   };
+}
+
+/** Extrait une URL de blason/logo publique depuis un payload DOFA (champs variables). */
+export function extractDofaClubLogoUrl(raw: Record<string, unknown>): string | null {
+  const direct = pickString(raw, [
+    'logo_url',
+    'logoUrl',
+    'logo',
+    'cl_logo',
+    'clLogo',
+    'blason',
+    'emblem',
+    'crest',
+    'image',
+    'photo',
+    'thumbnail',
+    'thumb',
+  ]);
+  const fromDirect = resolvePublicAssetUrl(direct);
+  if (fromDirect) return fromDirect;
+
+  const nestedLogo =
+    pickNestedString(raw, ['logo'], ['url', 'href', '@id', 'contentUrl', 'src']) ||
+    pickNestedString(raw, ['media'], ['url', 'href', '@id', 'contentUrl', 'src']) ||
+    pickNestedString(raw, ['image'], ['url', 'href', '@id', 'contentUrl', 'src']) ||
+    pickNestedString(raw, ['blason'], ['url', 'href', '@id', 'contentUrl', 'src']);
+  return resolvePublicAssetUrl(nestedLogo);
+}
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+/** Accepte URL absolue ou chemin relatif DOFA / CDN FFF. */
+export function resolvePublicAssetUrl(value: string): string | null {
+  const v = value.trim();
+  if (!v) return null;
+  if (isHttpUrl(v)) return v;
+  if (v.startsWith('//')) return `https:${v}`;
+  if (v.startsWith('/')) return `https://api-dofa.fff.fr${v}`;
+  return null;
 }
 
 function mapEquipeCategory(raw: Record<string, unknown>): string | null {

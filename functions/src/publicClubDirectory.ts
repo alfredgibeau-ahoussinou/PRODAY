@@ -167,7 +167,7 @@ export async function processPublicClubDirectorySync(
         ...payload,
         claim_status: keepStatus,
         proday_club_id: prev.proday_club_id ?? payload.proday_club_id ?? null,
-        logo_url: prev.logo_url ?? payload.logo_url ?? null,
+        logo_url: payload.logo_url || prev.logo_url || null,
         primary_color: prev.primary_color ?? payload.primary_color ?? null,
         secondary_color: prev.secondary_color ?? payload.secondary_color ?? null,
         ...(snap.exists ? {} : { created_at: admin.firestore.FieldValue.serverTimestamp() }),

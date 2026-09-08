@@ -6,6 +6,7 @@ import { fontFamily } from '../../theme/typography';
 import type { OfficialFffClub } from '../../services/fffOfficialRegistry.service';
 import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
 import type { SignupVisualChrome } from '../../screens/signup/signupVisualSystem';
+import { ClubCrestThumb } from './ClubCrestThumb';
 
 type SignupRecapCardProps = {
   title?: string;
@@ -43,13 +44,23 @@ export const SignupRecapCard: React.FC<SignupRecapCardProps> = ({
           </ProDayText>
         ) : club ? (
           <>
-            <ProDayText style={styles.line}>
-              Club : {club.name}
-              {club.fffNumber ? ` · N° ${club.fffNumber}` : ''}
-            </ProDayText>
-            <ProDayText style={styles.muted}>
-              {[club.city, club.postalCode, club.league].filter(Boolean).join(' · ')}
-            </ProDayText>
+            <View style={styles.clubRow}>
+              <ClubCrestThumb
+                name={club.name}
+                logoUrl={club.logoUrl}
+                size={44}
+                accent={visual.accent}
+              />
+              <View style={styles.clubCopy}>
+                <ProDayText style={styles.line}>
+                  {club.name}
+                  {club.fffNumber ? ` · N° ${club.fffNumber}` : ''}
+                </ProDayText>
+                <ProDayText style={styles.muted}>
+                  {[club.city, club.postalCode, club.league].filter(Boolean).join(' · ')}
+                </ProDayText>
+              </View>
+            </View>
             {category ? (
               <ProDayText style={styles.line}>Équipe / catégorie : {category}</ProDayText>
             ) : warn ? (
@@ -90,6 +101,14 @@ function createStyles(v: SignupVisualChrome) {
       padding: spacing.md,
       gap: 4,
     },
+    clubRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 4,
+      minHeight: 44,
+    },
+    clubCopy: { flex: 1, gap: 2 },
     title: {
       fontSize: 11,
       fontFamily: fontFamily.bold,

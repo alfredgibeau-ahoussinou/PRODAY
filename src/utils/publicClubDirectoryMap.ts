@@ -24,6 +24,7 @@ export function officialFffClubFromDirectory(
     region: entry.region ?? '',
     league: entry.league ?? '',
     categories: [],
+    logoUrl: entry.logo_url?.trim() || null,
     source: 'fff_dofa',
   };
 }
@@ -46,6 +47,10 @@ export function directoryPayloadFromOfficial(
   const city = club.city?.trim() || '';
   const postal = club.postalCode?.trim() || '';
   const department = club.department?.trim() || '';
+  const logo =
+    extras?.logo_url?.trim() ||
+    club.logoUrl?.trim() ||
+    null;
   return {
     fff_affiliation_number: fff,
     dofa_id: club.dofaId,
@@ -57,7 +62,7 @@ export function directoryPayloadFromOfficial(
     department,
     region: club.region || undefined,
     league: club.league || undefined,
-    logo_url: extras?.logo_url ?? null,
+    logo_url: logo,
     primary_color: extras?.primary_color ?? null,
     secondary_color: extras?.secondary_color ?? null,
     search_prefixes: buildClubSearchPrefixes([name, city, postal, department, fff]),

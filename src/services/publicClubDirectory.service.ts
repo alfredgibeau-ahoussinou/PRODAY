@@ -127,7 +127,8 @@ export const publicClubDirectoryService = {
         ...payload,
         claim_status: keepStatus,
         proday_club_id: prev?.proday_club_id ?? payload.proday_club_id ?? null,
-        logo_url: prev?.logo_url ?? payload.logo_url ?? null,
+        // Nouveau logo DOFA/ProDay remplit ; on ne jamais écraser un logo existant par null.
+        logo_url: payload.logo_url || prev?.logo_url || null,
         primary_color: prev?.primary_color ?? payload.primary_color ?? null,
         secondary_color: prev?.secondary_color ?? payload.secondary_color ?? null,
         updated_at: serverTimestamp(),
@@ -177,11 +178,34 @@ export const publicClubDirectoryService = {
 
     const byFff = new Map<string, OfficialFffClub>();
 
+    const putClub = (club: OfficialFffClub, preferLiveMeta = false) => {
+      if (!club.fffNumber) return;
+      const prev = byFff.get(club.fffNumber);
+      if (!prev) {
+        byFff.set(club.fffNumber, club);
+        return;
+      }
+      // Conserve le blason connu ; les hits live peuvent mettre à jour nom/ville.
+      byFff.set(
+        club.fffNumber,
+        preferLiveMeta
+          ? {
+              ...club,
+              logoUrl: club.logoUrl || prev.logoUrl || null,
+              dofaId: club.dofaId || prev.dofaId,
+            }
+          : {
+              ...prev,
+              logoUrl: prev.logoUrl || club.logoUrl || null,
+              dofaId: prev.dofaId || club.dofaId,
+            },
+      );
+    };
+
     try {
       const local = await this.searchDirectoryLocal(q, 25);
       for (const entry of local) {
-        const club = officialFffClubFromDirectory(entry);
-        if (club.fffNumber) byFff.set(club.fffNumber, club);
+        putClub(officialFffClubFromDirectory(entry));
       }
     } catch (err) {
       console.warn('[publicClubDirectory] local search:', err);
@@ -193,10 +217,7 @@ export const publicClubDirectoryService = {
         { clubs: PublicClubDirectoryEntry[] }
       >('searchPublicClubs', { query: q, limit: 30 });
       for (const entry of remote.clubs ?? []) {
-        const club = officialFffClubFromDirectory(entry);
-        if (club.fffNumber && !byFff.has(club.fffNumber)) {
-          byFff.set(club.fffNumber, club);
-        }
+        putClub(officialFffClubFromDirectory(entry));
       }
     } catch {
       // CF absente / offline — OK
@@ -206,7 +227,7 @@ export const publicClubDirectoryService = {
       const live = await fffOfficialRegistryService.searchOfficialClubs(q);
       for (const club of live) {
         if (club.fffNumber) {
-          byFff.set(club.fffNumber, club);
+          putClub(club, true);
           void this.upsertFromOfficial(club).catch(() => undefined);
         }
       }

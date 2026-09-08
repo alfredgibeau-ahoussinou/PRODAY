@@ -55,6 +55,27 @@ describe('fffOfficialRegistryService (sources FFF réelles uniquement)', () => {
     expect(club?.league).toBe('DISTRICT SEINE ET MARNE');
     expect(club?.source).toBe('fff_dofa');
     expect(club?.id).toBe('dofa_22065');
+    expect(club?.logoUrl).toBeNull();
+  });
+
+  it('extrait logo_url DOFA (absolu ou relatif)', () => {
+    const withUrl = mapDofaClubToOfficial({
+      cl_no: 1,
+      name: 'LE MEE SPORTS',
+      affiliation_number: 111,
+      location: 'LE MEE',
+      logo_url: 'https://cdn.fff.fr/blasons/le-mee.png',
+    });
+    expect(withUrl?.logoUrl).toBe('https://cdn.fff.fr/blasons/le-mee.png');
+
+    const relative = mapDofaClubToOfficial({
+      cl_no: 2,
+      name: 'MELUN F.C.',
+      affiliation_number: 222,
+      location: 'MELUN',
+      logo: { url: '/media/clubs/melun.png' },
+    });
+    expect(relative?.logoUrl).toBe('https://api-dofa.fff.fr/media/clubs/melun.png');
   });
 
   it('refuse une recherche trop courte (pas de dump / seed)', async () => {

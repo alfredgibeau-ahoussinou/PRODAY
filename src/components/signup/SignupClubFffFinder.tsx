@@ -21,6 +21,7 @@ import {
   pickVerificationPdf,
 } from '../../utils/pickVerificationDocument';
 import { PublicClubAutocomplete } from './PublicClubAutocomplete';
+import { ClubCrestThumb } from './ClubCrestThumb';
 
 type IdentityDoc = { uri: string; name: string; type: string };
 
@@ -119,6 +120,24 @@ export const SignupClubFffFinder: React.FC<Props> = ({
 
       {selectedClub ? (
         <View style={styles.sheet}>
+          <View style={styles.sheetHead}>
+            <ClubCrestThumb
+              name={selectedClub.name}
+              logoUrl={selectedClub.logoUrl}
+              size={52}
+              accent={visual.accent}
+            />
+            <View style={styles.sheetHeadCopy}>
+              <ProDayText variant="section" style={styles.sheetClubName}>
+                {selectedClub.name}
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.note}>
+                {[selectedClub.city, selectedClub.department, selectedClub.fffNumber]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </ProDayText>
+            </View>
+          </View>
           {loadingTeams ? (
             <ActivityIndicator color={visual.accent} />
           ) : (
@@ -221,6 +240,15 @@ function createStyles(v: SignupVisualChrome) {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: v.border,
     },
+    sheetHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      minHeight: 52,
+      marginBottom: 4,
+    },
+    sheetHeadCopy: { flex: 1, gap: 2 },
+    sheetClubName: { color: v.text, fontSize: 16, fontWeight: '800' },
     summaryLine: { color: v.textMuted, lineHeight: 18 },
     note: { color: v.textFaint },
     mandateTitle: {
