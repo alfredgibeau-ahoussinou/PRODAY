@@ -151,7 +151,6 @@ import {
 } from './src/features/president';
 import { COACH_SITE } from './src/content/coachPageIdentity';
 import { PoleHelpChatbot } from './src/components/help/PoleHelpChatbot';
-import { ProDayAiChat } from './src/components/ai/ProDayAiChat';
 import { isJoueurPoleProductLine } from './src/utils/joueurPoleAccess';
 import { useIsAdmin } from './src/hooks/useIsAdmin';
 import { isPlatformAdminEmail } from './src/config/admin';
@@ -413,6 +412,7 @@ function AppShell() {
     setPendingAuthIntent(null);
     setPendingSignupProductLine(null);
     setPendingSignupRole(null);
+    setPendingChosenPole(null);
   }, []);
 
   const handleTabPress = useCallback(
@@ -799,7 +799,6 @@ function AppShell() {
             {profile ? <ProdayBrainBridge /> : null}
             {profile ? <ProdayCalendarSyncBridge /> : null}
             {profile && !joueurPoleActive ? <PoleHelpChatbot /> : null}
-            {profile && !joueurPoleActive && !isClubShell ? <ProDayAiChat /> : null}
             {desktopWideTabs ? (
               <JoueurTabBarSlot
                 activeTab={activeTab}

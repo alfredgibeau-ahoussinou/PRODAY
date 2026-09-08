@@ -33,10 +33,10 @@ export function useAndroidBackHandler({
     if (Platform.OS !== 'android') return;
 
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      // 1. Fermer l'overlay d'authentification si actif
+      // 1. Auth overlay : AuthScreen gère son propre historique (gate → login → dismiss).
+      // Ne pas dismiss ici — sinon on saute la page Créer/Se connecter.
       if (pendingAuthIntent) {
-        onDismissAuth();
-        return true;
+        return false;
       }
 
       // 2. Fermer les vues/modales profondes en attente

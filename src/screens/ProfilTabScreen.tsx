@@ -8,11 +8,18 @@ import { ProDayConfigNotice } from '../components/ui/ProDayConfigNotice';
 import { ProfileScreen } from './ProfileScreen';
 import { AuthScreen } from './AuthScreen';
 
-/** Onglet Profil — fiche connectée. Invité : fallback Auth (CTA Discover = overlay App). */
+/** Onglet Profil — fiche connectée. Invité : overlay App exclusif (pas de double Auth). */
 export const ProfilTabScreen: React.FC = () => {
   const { profile, loading, configured, refreshProfile, signOut } = useAuth();
   const sessionProfile = useSessionProfile();
-  const { pendingAuthIntent, clearPendingAuthIntent, setActiveTab, pendingSignupProductLine, pendingSignupRole, clearSignupPreset } = useTabNavigation();
+  const {
+    pendingAuthIntent,
+    clearPendingAuthIntent,
+    setActiveTab,
+    pendingSignupProductLine,
+    pendingSignupRole,
+    clearSignupPreset,
+  } = useTabNavigation();
   const { colors } = useAppTheme();
   const wasGuestRef = useRef(!profile);
 
@@ -31,7 +38,7 @@ export const ProfilTabScreen: React.FC = () => {
 
   if (!configured) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
         <ProDayConfigNotice blockingOnly />
       </View>
     );
@@ -39,7 +46,7 @@ export const ProfilTabScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.ink} />
       </View>
     );
@@ -58,12 +65,16 @@ export const ProfilTabScreen: React.FC = () => {
     );
   }
 
-  const authIntent = pendingAuthIntent ?? 'login';
+  // Overlay App déjà ouvert → placeholder vide (évite AuthScreen en double).
+  if (pendingAuthIntent) {
+    return <View style={[styles.centered, { backgroundColor: '#000000' }]} />;
+  }
 
+  // Fallback invité sans overlay (ex. deep link onglet profil).
   return (
     <AuthScreen
-      key={authIntent}
-      initialIntent={authIntent}
+      key="profil-fallback-login"
+      initialIntent="login"
       signupProductLine={pendingSignupProductLine ?? undefined}
       signupInitialRole={pendingSignupRole ?? undefined}
       onDismiss={() => {
@@ -80,6 +91,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
   },
 });

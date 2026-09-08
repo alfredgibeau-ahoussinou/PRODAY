@@ -3,6 +3,8 @@ import {
   View,
   ActivityIndicator,
   StyleSheet,
+  BackHandler,
+  Platform,
   type TextInput,
 } from 'react-native';
 import { authService } from '../services/auth.service';
@@ -41,13 +43,15 @@ import {
 } from '../features/auth/experience';
 import { isGoogleAuthConfigured } from '../config/oauth';
 import { isPlatformAdminEmail } from '../config/admin';
-import { Platform } from 'react-native';
-
 import type { CarouselPoleId } from '../models/CarouselPole';
 import {
   resolvePoleAuthPalette,
 } from '../components/branding/intro/universeEntryAuth';
 import { universePoleDisplayName } from '../components/branding/intro/universePoleBrand';
+import {
+  resolveAuthBackAction,
+  resolveAuthSurface,
+} from '../utils/authBackStack';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -84,8 +88,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     Boolean(quickLogin.savedEmail && isPlatformAdminEmail(quickLogin.savedEmail)) ||
     signupInitialRole === ('admin' as any);
 
+  /** Entrée via univers → choix Créer / Se connecter (pas login direct). */
+  const enteredViaGate =
+    !isAdminAuth && initialIntent === 'signup' && registrationOpen;
+
   const [mode, setMode] = useState<'login' | 'signupTeaser'>(
-    !isAdminAuth && initialIntent === 'signup' && registrationOpen ? 'signupTeaser' : 'login',
+    enteredViaGate ? 'signupTeaser' : 'login',
   );
   // Ne jamais ouvrir SignupFlow d’emblée : le teaser propose d’abord créer / se connecter.
   const [signupOpen, setSignupOpen] = useState(false);
@@ -146,9 +154,71 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const closeSignup = useCallback(() => {
     setSignupOpen(false);
     setSignupPrefill(null);
-    setMode('login');
+    // Depuis le gate : retour au choix Créer / Se connecter (pas login forcé).
+    setMode(enteredViaGate ? 'signupTeaser' : 'login');
     clearErrors();
-  }, []);
+  }, [enteredViaGate]);
+
+  const dismissAuth = useCallback(() => {
+    if (onDismiss) {
+      onDismiss();
+      return;
+    }
+    setActiveTab('home');
+  }, [onDismiss, setActiveTab]);
+
+  const handleBack = useCallback(() => {
+    const surface = resolveAuthSurface({
+      signupOpen,
+      showForgotPassword,
+      legalDocument: legalDocument != null,
+      mode,
+    });
+    const action = resolveAuthBackAction({ surface, enteredViaGate });
+    switch (action) {
+      case 'close-legal':
+        setLegalDocument(null);
+        return;
+      case 'close-forgot':
+        setShowForgotPassword(false);
+        clearErrors();
+        return;
+      case 'close-signup-to-gate':
+        setSignupOpen(false);
+        setSignupPrefill(null);
+        setMode('signupTeaser');
+        clearErrors();
+        return;
+      case 'close-signup-to-login':
+        setSignupOpen(false);
+        setSignupPrefill(null);
+        setMode('login');
+        clearErrors();
+        return;
+      case 'to-gate':
+        setMode('signupTeaser');
+        clearErrors();
+        return;
+      case 'dismiss':
+      default:
+        dismissAuth();
+    }
+  }, [
+    signupOpen,
+    showForgotPassword,
+    legalDocument,
+    mode,
+    enteredViaGate,
+    dismissAuth,
+  ]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, [handleBack]);
 
   const finishAuthNavigation = useCallback(async () => {
     await refreshProfile();
@@ -217,15 +287,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     } finally {
       setBiometricLoading(false);
     }
-  };
-
-  const handleBack = () => {
-    // Overlay : onDismiss unmount immédiat. Fallback onglet : home.
-    if (onDismiss) {
-      onDismiss();
-      return;
-    }
-    setActiveTab('home');
   };
 
   if (!configured) {
@@ -378,6 +439,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   {universeAuthCopy.kicker}
                 </ProDayText>
               </View>
+              <View style={[styles.gateAccentBar, { backgroundColor: polePalette.accent }]} />
               <ProDayText variant="title" style={styles.title}>
                 {universeAuthCopy.title}
               </ProDayText>
@@ -518,6 +580,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   {universeAuthCopy.kicker}
                 </ProDayText>
               </View>
+              <View style={[styles.gateAccentBar, { backgroundColor: polePalette.accent }]} />
               <ProDayText variant="title" style={styles.title}>
                 {universeAuthCopy.gateTitle}
               </ProDayText>
@@ -623,33 +686,36 @@ const styles = StyleSheet.create({
   kickerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 14,
   },
   kickerDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
   kickerText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1.2,
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '800',
-    letterSpacing: -0.5,
-    marginBottom: 6,
+    letterSpacing: -0.6,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   sub: {
-    color: 'rgba(255, 255, 255, 0.55)',
-    fontSize: 14,
-    lineHeight: 20,
+    color: 'rgba(255, 255, 255, 0.58)',
+    fontSize: 15,
+    lineHeight: 22,
     fontWeight: '400',
-    marginBottom: 20,
+    marginBottom: 28,
+    textAlign: 'center',
   },
   biometricWrap: {
     marginBottom: 12,
@@ -675,7 +741,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   gateLoginWrap: {
-    marginTop: 12,
+    marginTop: 14,
+  },
+  gateAccentBar: {
+    alignSelf: 'center',
+    width: 36,
+    height: 3,
+    borderRadius: 2,
+    marginBottom: 18,
   },
   legal: {
     color: AUTH_XP.textDim,

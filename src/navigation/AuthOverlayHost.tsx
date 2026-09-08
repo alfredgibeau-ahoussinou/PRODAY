@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -22,12 +22,11 @@ type Props = {
   onDismiss: () => void;
 };
 
-const { height: SCREEN_H } = Dimensions.get('window');
-const ENTER_DURATION = 220;
-const EXIT_DURATION = 180;
+const ENTER_DURATION = 260;
+const EXIT_DURATION = 200;
 
 /**
- * Auth plein écran — fade + léger rise (pas de slide agressif).
+ * Auth plein écran — fade doux (pas de slide agressif / flash double).
  */
 export function AuthOverlayHost({
   intent,
@@ -38,21 +37,20 @@ export function AuthOverlayHost({
 }: Props) {
   const reduced = useReducedMotion();
   const opacity = useSharedValue(reduced ? 1 : 0);
-  const translateY = useSharedValue(reduced ? 0 : 18);
-  const scale = useSharedValue(reduced ? 1 : 0.99);
+  const translateY = useSharedValue(reduced ? 0 : 10);
   const [mounted, setMounted] = useState(true);
   const isClosing = useRef(false);
+  const mountedRef = useRef(true);
+  const dismissFallback = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (reduced) {
       opacity.value = 1;
       translateY.value = 0;
-      scale.value = 1;
       return;
     }
     cancelAnimation(opacity);
     cancelAnimation(translateY);
-    cancelAnimation(scale);
 
     opacity.value = withTiming(1, {
       duration: ENTER_DURATION,
@@ -62,53 +60,59 @@ export function AuthOverlayHost({
       duration: ENTER_DURATION,
       easing: prodayMotion.easing.out,
     });
-    scale.value = withTiming(1, {
-      duration: ENTER_DURATION,
-      easing: prodayMotion.easing.out,
-    });
-  }, [opacity, reduced, scale, translateY]);
+  }, [opacity, reduced, translateY]);
+
+  const finishDismiss = useCallback(() => {
+    if (dismissFallback.current) {
+      clearTimeout(dismissFallback.current);
+      dismissFallback.current = null;
+    }
+    if (!mountedRef.current) return;
+    mountedRef.current = false;
+    setMounted(false);
+    onDismiss();
+  }, [onDismiss]);
 
   const handleDismiss = useCallback(() => {
     if (isClosing.current) return;
     isClosing.current = true;
 
     if (reduced) {
-      onDismiss();
+      finishDismiss();
       return;
     }
 
     cancelAnimation(opacity);
     cancelAnimation(translateY);
-    cancelAnimation(scale);
 
     opacity.value = withTiming(0, {
       duration: EXIT_DURATION,
       easing: prodayMotion.easing.in,
     });
-    translateY.value = withTiming(12, {
-      duration: EXIT_DURATION,
-      easing: prodayMotion.easing.in,
-    });
-    scale.value = withTiming(0.99, {
+    translateY.value = withTiming(6, {
       duration: EXIT_DURATION,
       easing: prodayMotion.easing.in,
     }, (finished) => {
       if (finished) {
-        runOnJS(onDismiss)();
+        runOnJS(finishDismiss)();
       }
     });
 
-    setTimeout(() => {
-      onDismiss();
-    }, EXIT_DURATION + 60);
-  }, [onDismiss, opacity, reduced, scale, translateY]);
+    dismissFallback.current = setTimeout(() => {
+      finishDismiss();
+    }, EXIT_DURATION + 80);
+  }, [finishDismiss, opacity, reduced, translateY]);
+
+  useEffect(
+    () => () => {
+      if (dismissFallback.current) clearTimeout(dismissFallback.current);
+    },
+    [],
+  );
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
+    transform: [{ translateY: translateY.value }],
   }));
 
   if (!mounted) return null;

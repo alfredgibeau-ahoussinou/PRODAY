@@ -146,12 +146,14 @@ function createStyles(
     },
     formScrollContent: {
       flexGrow: 1,
-      paddingBottom: Math.max(bottomInset, 16) + 16,
+      justifyContent: 'center',
+      paddingBottom: Math.max(bottomInset, 16) + 24,
+      paddingTop: compact ? 8 : 16,
     },
     formInner: {
-      flexGrow: 1,
-      paddingHorizontal: compact ? 20 : 24,
-      maxWidth: 480,
+      flexGrow: 0,
+      paddingHorizontal: compact ? 20 : 28,
+      maxWidth: 420,
       width: '100%',
       alignSelf: 'center',
     },

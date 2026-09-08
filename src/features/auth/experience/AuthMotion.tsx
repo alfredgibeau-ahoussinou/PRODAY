@@ -132,7 +132,7 @@ export const AuthModeSwitch: React.FC<AuthModeSwitchProps> = ({ modeKey, childre
     cancelAnimation(opacity);
     cancelAnimation(translateY);
     opacity.value = prodayMotion.holdOpacity;
-    translateY.value = 6;
+    translateY.value = 4;
     opacity.value = withTiming(
       1,
       { duration: AUTH_XP.motionNormal, easing: prodayMotion.easing.out },
