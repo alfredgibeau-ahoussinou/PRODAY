@@ -92,7 +92,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
         onPress={() => onChoose(activeLine)}
         scaleTo={0.97}
         haptic
-        disabled={interactionLocked || confirming}
+        disabled={interactionLocked || confirming || guideVisible}
         style={styles.ctaWrap}
         accessibilityRole="button"
         accessibilityLabel={ctaLabel}
@@ -196,7 +196,7 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
                 <Pressable
                   key={line}
                   onPress={() => onJumpToIndex(index)}
-                  disabled={interactionLocked}
+                  disabled={interactionLocked || guideVisible}
                   hitSlop={10}
                   accessibilityRole="tab"
                   accessibilityLabel={UNIVERSE_SHORT[line]}
@@ -218,24 +218,21 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
 
         {cta}
 
-        <PressableSpring
+        <Pressable
           onPress={() => setGuideVisible(true)}
-          scaleTo={0.97}
-          haptic
-          style={styles.quizTriggerBtn}
+          disabled={interactionLocked || confirming}
+          hitSlop={10}
+          style={styles.guideLink}
           accessibilityRole="button"
-          accessibilityLabel="Trouver mon pôle avec le Quiz Express"
+          accessibilityLabel="Aide au choix d’univers"
         >
-          <View style={styles.quizTriggerBadge}>
-            <Text style={styles.quizTriggerBadgeText}>QUIZ EXPRESS</Text>
-          </View>
-          <Text style={styles.quizTriggerText}>Quel pôle choisir ? Guide 10s</Text>
-          <Icon name="chevron-forward" size={14} color="#F5D04A" />
-        </PressableSpring>
+          <Text style={styles.guideLinkText}>Pas sûr ? Aide au choix</Text>
+        </Pressable>
       </View>
 
       <UniverseGuideModal
         visible={guideVisible}
+        lines={lines}
         onClose={() => setGuideVisible(false)}
         onSelectPole={(pole) => {
           const idx = lines.indexOf(pole);
@@ -352,36 +349,17 @@ const styles = StyleSheet.create({
   ctaTextDark: {
     color: '#000000',
   },
-  quizTriggerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: 'rgba(245, 208, 74, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(245, 208, 74, 0.35)',
+  guideLink: {
     alignSelf: 'center',
-    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
   },
-  quizTriggerBadge: {
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 6,
-    backgroundColor: '#F5D04A',
-  },
-  quizTriggerBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#000000',
-    letterSpacing: 0.5,
-  },
-  quizTriggerText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
+  guideLinkText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.1,
+    textDecorationLine: 'underline',
+    textDecorationColor: 'rgba(255,255,255,0.25)',
   },
 });
