@@ -241,6 +241,87 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     setPostLoginReveal(true);
   }, [finishAuthNavigation]);
 
+  const universeAuthCopy = useMemo(() => {
+    const poleLabel = initialPole ? universePoleDisplayName(initialPole) : null;
+    if (isAdminAuth) {
+      return {
+        kicker: 'ACCÈS FONDATION VIP',
+        title: 'Espace Administrateur',
+        sub: 'Connexion réservée aux fondateurs et administrateurs autorisés.',
+        cta: 'Connexion Admin',
+        gateTitle: 'Espace Administrateur',
+        gateSub: 'Accès réservé.',
+      };
+    }
+    if (productLine === 'pro_staff' || signupInitialRole === 'coach' || initialPole === 'coach') {
+      return {
+        kicker: 'PÔLE COACH & STAFF',
+        title: 'Espace Coach',
+        sub: 'Connectez-vous pour piloter vos séances IA, tactiques et convocations.',
+        cta: 'Connexion Coach',
+        gateTitle: 'Bienvenue dans le pôle Coach',
+        gateSub: 'Créez le compte de votre staff, ou connectez-vous si vous êtes déjà inscrit.',
+      };
+    }
+    if (
+      productLine === 'pro_club' ||
+      signupInitialRole === 'club' ||
+      initialPole === 'pro_club' ||
+      initialPole === 'president'
+    ) {
+      return {
+        kicker: 'PÔLE CLUB & DIRIGEANTS',
+        title: 'Espace Club',
+        sub: 'Connectez-vous pour administrer vos effectifs, tournois et adhésions.',
+        cta: 'Connexion Club',
+        gateTitle: 'Bienvenue dans le pôle Club',
+        gateSub: 'Retrouvez votre club FFF à l’inscription, ou connectez-vous à votre espace.',
+      };
+    }
+    if (productLine === 'parent' || signupInitialRole === 'parent' || initialPole === 'parent') {
+      return {
+        kicker: 'PORTAIL PARENT & FAMILLE',
+        title: 'Espace Famille',
+        sub: 'Connectez-vous pour suivre votre enfant et le covoiturage club.',
+        cta: 'Connexion Famille',
+        gateTitle: 'Bienvenue dans l’espace Famille',
+        gateSub: 'Créez un compte parent, ou connectez-vous si vous avez déjà un accès.',
+      };
+    }
+    if (productLine === 'sponsor' || signupInitialRole === 'sponsor' || initialPole === 'sponsor') {
+      return {
+        kicker: 'ESPACE SPONSOR & PARTENAIRES',
+        title: 'Espace Partenaire',
+        sub: 'Connectez-vous pour gérer vos campagnes et votre visibilité locale.',
+        cta: 'Connexion Partenaire',
+        gateTitle: 'Bienvenue chez les partenaires',
+        gateSub: 'Créez votre espace marque, ou connectez-vous pour reprendre vos campagnes.',
+      };
+    }
+    if (
+      productLine === 'supporter' ||
+      signupInitialRole === 'supporter' ||
+      initialPole === 'supporter'
+    ) {
+      return {
+        kicker: 'TRIBUNE SUPPORTERS',
+        title: 'Espace Supporter',
+        sub: 'Connectez-vous pour suivre les matchs en direct et voter MVP.',
+        cta: 'Connexion Supporter',
+        gateTitle: 'Bienvenue en tribune',
+        gateSub: 'Créez un compte supporter, ou connectez-vous pour retrouver vos clubs.',
+      };
+    }
+    return {
+      kicker: 'PÔLE JOUEUR',
+      title: 'Espace Joueur',
+      sub: 'Connectez-vous pour accéder à vos statistiques, matchs et CV sportif.',
+      cta: 'Connexion Joueur',
+      gateTitle: poleLabel ? `Bienvenue dans le pôle ${poleLabel}` : 'Bienvenue dans le pôle Joueur',
+      gateSub: 'Créez votre compte joueur, ou connectez-vous si vous êtes déjà sur ProDay.',
+    };
+  }, [isAdminAuth, productLine, signupInitialRole, initialPole]);
+
   const validateEmail = (value: string) => {
     if (!value.trim()) return t('auth.emailRequired') || 'Email requis';
     if (!EMAIL_RE.test(value.trim())) return t('auth.emailInvalid') || 'Format email invalide';
@@ -345,87 +426,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       .
     </ProDayText>
   );
-
-  const universeAuthCopy = useMemo(() => {
-    const poleLabel = initialPole ? universePoleDisplayName(initialPole) : null;
-    if (isAdminAuth) {
-      return {
-        kicker: 'ACCÈS FONDATION VIP',
-        title: 'Espace Administrateur',
-        sub: 'Connexion réservée aux fondateurs et administrateurs autorisés.',
-        cta: 'Connexion Admin',
-        gateTitle: 'Espace Administrateur',
-        gateSub: 'Accès réservé.',
-      };
-    }
-    if (productLine === 'pro_staff' || signupInitialRole === 'coach' || initialPole === 'coach') {
-      return {
-        kicker: 'PÔLE COACH & STAFF',
-        title: 'Espace Coach',
-        sub: 'Connectez-vous pour piloter vos séances IA, tactiques et convocations.',
-        cta: 'Connexion Coach',
-        gateTitle: 'Bienvenue dans le pôle Coach',
-        gateSub: 'Créez le compte de votre staff, ou connectez-vous si vous êtes déjà inscrit.',
-      };
-    }
-    if (
-      productLine === 'pro_club' ||
-      signupInitialRole === 'club' ||
-      initialPole === 'pro_club' ||
-      initialPole === 'president'
-    ) {
-      return {
-        kicker: 'PÔLE CLUB & DIRIGEANTS',
-        title: 'Espace Club',
-        sub: 'Connectez-vous pour administrer vos effectifs, tournois et adhésions.',
-        cta: 'Connexion Club',
-        gateTitle: 'Bienvenue dans le pôle Club',
-        gateSub: 'Retrouvez votre club FFF à l’inscription, ou connectez-vous à votre espace.',
-      };
-    }
-    if (productLine === 'parent' || signupInitialRole === 'parent' || initialPole === 'parent') {
-      return {
-        kicker: 'PORTAIL PARENT & FAMILLE',
-        title: 'Espace Famille',
-        sub: 'Connectez-vous pour suivre votre enfant et le covoiturage club.',
-        cta: 'Connexion Famille',
-        gateTitle: 'Bienvenue dans l’espace Famille',
-        gateSub: 'Créez un compte parent, ou connectez-vous si vous avez déjà un accès.',
-      };
-    }
-    if (productLine === 'sponsor' || signupInitialRole === 'sponsor' || initialPole === 'sponsor') {
-      return {
-        kicker: 'ESPACE SPONSOR & PARTENAIRES',
-        title: 'Espace Partenaire',
-        sub: 'Connectez-vous pour gérer vos campagnes et votre visibilité locale.',
-        cta: 'Connexion Partenaire',
-        gateTitle: 'Bienvenue chez les partenaires',
-        gateSub: 'Créez votre espace marque, ou connectez-vous pour reprendre vos campagnes.',
-      };
-    }
-    if (
-      productLine === 'supporter' ||
-      signupInitialRole === 'supporter' ||
-      initialPole === 'supporter'
-    ) {
-      return {
-        kicker: 'TRIBUNE SUPPORTERS',
-        title: 'Espace Supporter',
-        sub: 'Connectez-vous pour suivre les matchs en direct et voter MVP.',
-        cta: 'Connexion Supporter',
-        gateTitle: 'Bienvenue en tribune',
-        gateSub: 'Créez un compte supporter, ou connectez-vous pour retrouver vos clubs.',
-      };
-    }
-    return {
-      kicker: 'PÔLE JOUEUR',
-      title: 'Espace Joueur',
-      sub: 'Connectez-vous pour accéder à vos statistiques, matchs et CV sportif.',
-      cta: 'Connexion Joueur',
-      gateTitle: poleLabel ? `Bienvenue dans le pôle ${poleLabel}` : 'Bienvenue dans le pôle Joueur',
-      gateSub: 'Créez votre compte joueur, ou connectez-vous si vous êtes déjà sur ProDay.',
-    };
-  }, [isAdminAuth, productLine, signupInitialRole, initialPole]);
 
   return (
     <>

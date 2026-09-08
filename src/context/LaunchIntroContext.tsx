@@ -122,28 +122,29 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
         isPlatformAdmin,
       });
 
+      const preset = carouselPoleSignupPresetRole(pole);
+      const line = carouselPoleToProductLine(pole);
+
+      // Ouvrir l’auth EN SYNCHRONE avant les awaits / fermeture intro —
+      // sinon GuestUniverseHome rouvre l’univers et l’UI freeze.
       if (pole === 'admin') {
         if (authIntent === 'login') {
           tabNav?.openAuth('login', { pole: 'admin' });
         }
         return;
       }
-
-      const preset = carouselPoleSignupPresetRole(pole);
-      await setProSignupPresetRole(preset);
-      const shellMode = clubShellModeFromCarouselPole(pole);
-      if (shellMode) await setClubShellMode(shellMode);
-      const line = carouselPoleToProductLine(pole);
-      await setProductLine(line);
-
       if (authIntent) {
-        // `signup` ouvre le teaser (créer un compte / se connecter) — jamais login forcé.
         tabNav?.openAuth(authIntent, {
           pole,
           productLine: line,
           role: preset ?? undefined,
         });
       }
+
+      await setProSignupPresetRole(preset);
+      const shellMode = clubShellModeFromCarouselPole(pole);
+      if (shellMode) await setClubShellMode(shellMode);
+      await setProductLine(line);
     },
     [auth?.isAdmin, profile, setProductLine, setProSignupPresetRole, setClubShellMode, tabNav],
   );

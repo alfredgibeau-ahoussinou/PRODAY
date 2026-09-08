@@ -20,8 +20,13 @@ export const GuestUniverseHome: React.FC = () => {
     }
     if (isUniverseVisible) return;
     if (askedRef.current) return;
-    askedRef.current = true;
-    openSpacePicker();
+    // Laisse le temps à openAuth sync de poser pendingAuthIntent avant de rouvrir l’univers.
+    const t = setTimeout(() => {
+      if (askedRef.current) return;
+      askedRef.current = true;
+      openSpacePicker();
+    }, 320);
+    return () => clearTimeout(t);
   }, [pendingAuthIntent, isUniverseVisible, openSpacePicker]);
 
   return <View style={styles.root} accessibilityLabel="Accueil ProDay" />;

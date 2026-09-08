@@ -111,9 +111,9 @@ export const BrandRevealIntro: React.FC<BrandRevealIntroProps> = ({
         onDismiss?.();
         return;
       }
-      // Fermer l’intro AVANT d’ouvrir l’auth — évite overlay + univers en double.
-      onExitComplete();
+      // Auth d’abord (sync via onChooseSpace), puis fermeture intro.
       if (line) void onChooseSpace(line);
+      onExitComplete();
     },
     [onChooseSpace, onDismiss, onExitComplete],
   );

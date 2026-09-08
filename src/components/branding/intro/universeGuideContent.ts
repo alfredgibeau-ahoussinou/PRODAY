@@ -117,17 +117,19 @@ export function resolveGuidePoleInLines(
   pole: CarouselPoleId,
   lines: CarouselPoleId[],
 ): CarouselPoleId | null {
-  if (lines.includes(pole)) return pole;
-  // Fallbacks legacy / alias
-  if (pole === 'joueur') {
-    const alt = lines.find((l) => l === 'amateur' || l === 'pro_player');
-    return alt ?? null;
+  if (!Array.isArray(lines) || !lines.includes(pole)) {
+    // Fallbacks legacy / alias
+    if (pole === 'joueur' && Array.isArray(lines)) {
+      const alt = lines.find((l) => l === 'amateur' || l === 'pro_player');
+      return alt ?? null;
+    }
+    if (pole === 'coach' && Array.isArray(lines)) {
+      const alt = lines.find((l) => l === 'pro_staff');
+      return alt ?? null;
+    }
+    return null;
   }
-  if (pole === 'coach') {
-    const alt = lines.find((l) => l === 'pro_staff');
-    return alt ?? null;
-  }
-  return null;
+  return pole;
 }
 
 export function filterGuideRootForLines(
