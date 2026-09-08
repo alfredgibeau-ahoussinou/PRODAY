@@ -1,10 +1,9 @@
-import React, { useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { defaultCategoriesForAppSpace } from '../../constants/appSpaces';
-import { AuthTextField } from '../../components/auth/AuthTextField';
 import { SignupOptionPicker } from '../../components/signup/SignupOptionPicker';
 import { SignupPressable } from '../../components/signup/SignupPressable';
-import { BirthDateFields, birthPartsToIso } from '../../components/player/BirthDateFields';
+import { birthPartsToIso } from '../../components/player/BirthDateFields';
 import { JOUEUR_UNIVERSE_LABELS, isValidPlayerBirthDate } from '../../utils/joueurBirthAge';
 
 import { SignupStepLayout } from './SignupStepLayout';
@@ -18,8 +17,10 @@ import { APP_SPACE_LABELS } from '../../models/AppSpace';
 import { isUnderU13AppSpace } from '../../models/AppSpace';
 import { PLAYER_LEVELS, PLAYER_POSITIONS } from '../../constants/playerProfile';
 import { spacing, radius } from '../../theme/designTokens';
-import { useSignupFlowTheme } from './SignupFlowContext';
-import type { AppColors } from '../../theme/universeTheme';
+import { AUTH_XP } from '../../features/auth/experience/tokens';
+import { fontFamily } from '../../theme/typography';
+import { ProDayText } from '../../components/ui/ProDayText';
+import { SignupFffAffiliationCard } from '../../components/signup/SignupFffAffiliationCard';
 
 interface SignupSportStepProps {
   form: SignupForm;
@@ -60,17 +61,12 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
     return JOUEUR_UNIVERSE_LABELS[v.ageGroup];
   }, [form.birthDay, form.birthMonth, form.birthYear]);
 
-  useEffect(() => {
-    if (form.category && !categoryOptions.includes(form.category)) {
-      form.setCategory('');
-    }
-  }, [categoryOptions, form.category, form.setCategory]);
-
-  const { colors: c } = useSignupFlowTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const styles = useMemo(() => createStyles(), []);
   const willNeedParental = form.isMinor || isUnderU13AppSpace(form.appSpace);
   const { t } = useTranslation();
   const meta = getPlayerStepMeta(form.productLine, 'sport', t);
+
+  const showStandaloneCategoryPicker = !form.hasClub || !form.selectedFffClub;
 
   return (
     <SignupStepLayout
@@ -91,19 +87,53 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
       {form.ageSpaceMismatch && suggestedSpace ? (
         <View>
           <View style={styles.mismatchBox}>
-            <Text style={styles.mismatchText}>{form.ageSpaceMismatch}</Text>
+            <ProDayText style={styles.mismatchText}>{form.ageSpaceMismatch}</ProDayText>
             <SignupPressable
               style={styles.mismatchBtn}
               onPress={() => form.setAppSpace(suggestedSpace)}
               scaleTo={0.96}
             >
-              <Text style={styles.mismatchBtnText}>
+              <ProDayText style={styles.mismatchBtnText}>
                 {t('signup.sport.switchSpace', { space: APP_SPACE_LABELS[suggestedSpace] })}
-              </Text>
+              </ProDayText>
             </SignupPressable>
           </View>
         </View>
       ) : null}
+
+      <SignupFffAffiliationCard
+        role="player"
+        hasClub={form.hasClub}
+        onToggleHasClub={form.setHasClub}
+        selectedClub={form.selectedFffClub}
+        onSelectClub={form.setSelectedFffClub}
+        selectedCategory={form.selectedFffCategory || form.category}
+        onSelectCategory={(cat) => {
+          form.setSelectedFffCategory(cat);
+          form.setCategory(cat);
+        }}
+        selectedRosterMember={form.selectedRosterMember}
+        onSelectRosterMember={(member) => {
+          form.setSelectedRosterMember(member);
+          if (member?.displayName && !form.displayName) {
+            form.setDisplayName(member.displayName);
+          }
+          if (member?.position && !form.position) {
+            form.setPosition(member.position);
+          }
+          // ✅ Auto-sélectionner la catégorie du joueur depuis l'effectif
+          if (member?.category) {
+            form.setSelectedFffCategory(member.category);
+            form.setCategory(member.category);
+          }
+        }}
+        isCustomProfile={form.isCustomProfile}
+        onToggleCustomProfile={form.setIsCustomProfile}
+        identityDoc={form.identityDoc}
+        onSetIdentityDoc={form.setIdentityDoc}
+        defaultUserName={form.displayName}
+        onChangeCustomName={form.setDisplayName}
+      />
 
       <View>
         <SignupOptionPicker
@@ -114,15 +144,19 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
           error={form.fieldErrors.position}
         />
       </View>
-      <View>
-        <SignupOptionPicker
-          label={t('signup.form.category')}
-          options={categoryOptions}
-          value={form.category}
-          onChange={form.setCategory}
-          error={form.fieldErrors.category}
-        />
-      </View>
+
+      {showStandaloneCategoryPicker && (
+        <View>
+          <SignupOptionPicker
+            label={t('signup.form.category')}
+            options={categoryOptions}
+            value={form.category}
+            onChange={form.setCategory}
+            error={form.fieldErrors.category}
+          />
+        </View>
+      )}
+
       <View>
         <SignupOptionPicker
           label={t('signup.form.level')}
@@ -132,58 +166,80 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
           error={form.fieldErrors.level}
         />
       </View>
-      <View>
-        <BirthDateFields
-          variant="light"
-          day={form.birthDay}
-          month={form.birthMonth}
-          year={form.birthYear}
-          onDay={form.setBirthDay}
-          onMonth={form.setBirthMonth}
-          onYear={form.setBirthYear}
-          accent={c.accent}
-          error={form.fieldErrors.age}
-          hint="L’univers (-13 / ado / 18+) évolue automatiquement à chaque anniversaire."
-        />
-        {universeHint ? (
-          <Text style={styles.minorHint}>
-            {universeHint.title} · {universeHint.range}
-          </Text>
-        ) : null}
+
+      <View style={styles.summaryCard}>
+        <ProDayText style={styles.summaryTitle}>Licence & Catégorie FFF</ProDayText>
+        <ProDayText style={styles.summaryText}>
+          {form.displayName || 'Joueur'}
+          {form.hasClub && form.selectedFffClub ? ` · ${form.selectedFffClub.name}` : ''}
+          {form.category ? ` · ${form.category}` : ''}
+          {universeHint ? ` · ${universeHint.title} (${universeHint.range})` : ''}
+          {form.city ? ` · ${form.city}` : ''}
+        </ProDayText>
         {willNeedParental ? (
-          <Text style={styles.minorHint}>Étape « Famille » prévue ensuite.</Text>
+          <ProDayText style={styles.minorHint}>Accord du responsable légal requis à l'étape suivante (-18 ans).</ProDayText>
         ) : null}
       </View>
     </SignupStepLayout>
   );
 };
 
-function createStyles(c: AppColors) {
+function createStyles() {
   return StyleSheet.create({
     mismatchBox: {
-      backgroundColor: c.brandSoft,
+      backgroundColor: 'rgba(245, 208, 74, 0.08)',
       borderRadius: radius.md,
       padding: spacing.md,
       marginBottom: spacing.md,
       borderWidth: 1,
-      borderColor: c.warning,
+      borderColor: AUTH_XP.borderHighlight,
     },
-    mismatchText: { fontSize: 13, color: c.text, lineHeight: 19, fontWeight: '600' },
+    mismatchText: {
+      fontSize: 13,
+      color: AUTH_XP.text,
+      lineHeight: 19,
+      fontFamily: fontFamily.semibold,
+    },
     mismatchBtn: {
       marginTop: spacing.sm,
       alignSelf: 'flex-start',
       paddingVertical: spacing.xs,
       paddingHorizontal: spacing.sm,
-      backgroundColor: c.accent,
+      backgroundColor: AUTH_XP.goldBright,
       borderRadius: radius.sm,
     },
-    mismatchBtnText: { color: c.brandInverse, fontSize: 12, fontWeight: '800' },
+    mismatchBtnText: {
+      color: '#000000',
+      fontSize: 12,
+      fontFamily: fontFamily.bold,
+    },
+    summaryCard: {
+      backgroundColor: AUTH_XP.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: AUTH_XP.border,
+      padding: spacing.md,
+      marginTop: spacing.sm,
+    },
+    summaryTitle: {
+      fontSize: 13,
+      fontFamily: fontFamily.bold,
+      color: AUTH_XP.goldBright,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: spacing.xs,
+    },
+    summaryText: {
+      fontSize: 13,
+      color: AUTH_XP.textMuted,
+      lineHeight: 18,
+      fontFamily: fontFamily.regular,
+    },
     minorHint: {
       fontSize: 12,
-      color: c.warning,
-      fontWeight: '600',
-      marginTop: -spacing.sm,
-      marginBottom: spacing.sm,
+      color: '#FBBF24',
+      fontFamily: fontFamily.semibold,
+      marginTop: spacing.xs,
     },
   });
 }

@@ -66,13 +66,13 @@ export function getAmateurStepMeta(page: SignupPageId, t?: TranslateFn): {
       };
     case 'sport':
       return {
-        title: tr(t, 'signup.amateur.step.sport.title', 'Votre fiche joueur'),
+        title: tr(t, 'signup.amateur.step.sport.title', 'Votre club & équipe FFF'),
         subtitle: tr(
           t,
           'signup.amateur.step.sport.subtitle',
-          'Poste, catégorie, niveau et âge. Profil visible sur le Mercato Amateur.'
+          'Sélectionnez votre club, votre catégorie et votre nom officiel FFF. Visible sur le Mercato Amateur.'
         ),
-        heroIcon: 'shirt',
+        heroIcon: 'shield',
       };
     case 'location':
       return {

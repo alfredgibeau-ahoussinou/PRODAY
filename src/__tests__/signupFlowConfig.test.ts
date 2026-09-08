@@ -22,22 +22,20 @@ describe('signupFlowConfig', () => {
     expect(needsParentalStep(false, 'men')).toBe(false);
   });
 
-  it('parcours joueur : compte d’abord, univers ensuite', () => {
+  it('parcours joueur : sélection club/équipe FFF d’abord, identité & sécurité ensuite', () => {
     const steps = buildSignupSteps('player', {
       role: 'player',
       parentalRequired: false,
     });
     expect(steps).toEqual([
+      'sport',
       'account',
       'security',
-      'space',
-      'sport',
-      'location',
-      'stats',
       'launch',
     ]);
-    expect(steps.indexOf('account')).toBe(0);
-    expect(steps.indexOf('security')).toBe(1);
+    expect(steps.indexOf('sport')).toBe(0);
+    expect(steps.indexOf('account')).toBe(1);
+    expect(steps.indexOf('security')).toBe(2);
   });
 
   it('parcours joueur mineur : étape family avant launch', () => {

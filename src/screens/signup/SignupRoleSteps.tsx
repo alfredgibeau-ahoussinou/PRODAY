@@ -18,6 +18,7 @@ import { useSignupFlowTheme } from './SignupFlowContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { openCalComSignup } from '../../utils/calComBooking';
+import { SignupFffAffiliationCard } from '../../components/signup/SignupFffAffiliationCard';
 
 type StepProps = {
   form: SignupForm;
@@ -69,6 +70,38 @@ export const SignupCoachProStep: React.FC<StepProps> = (props) => {
   const copy = getSignupRoleStepCopy(t);
   return (
   <RoleStepShell {...props} page="coach_pro" hint={copy.coach.hint}>
+    <SignupFffAffiliationCard
+      role="coach"
+      hasClub={props.form.hasClub}
+      onToggleHasClub={props.form.setHasClub}
+      selectedClub={props.form.selectedFffClub}
+      onSelectClub={(club) => {
+        props.form.setSelectedFffClub(club);
+        if (club?.city && !props.form.city) {
+          props.form.setCity(club.city);
+        }
+        if (club?.department && !props.form.department) {
+          props.form.setDepartment(club.department);
+        }
+      }}
+      selectedCategory={props.form.selectedFffCategory || props.form.category}
+      onSelectCategory={(cat) => {
+        props.form.setSelectedFffCategory(cat);
+        props.form.setCategory(cat);
+      }}
+      selectedRosterMember={props.form.selectedRosterMember}
+      onSelectRosterMember={(member) => {
+        props.form.setSelectedRosterMember(member);
+        if (member?.displayName && !props.form.displayName) {
+          props.form.setDisplayName(member.displayName);
+        }
+      }}
+      isCustomProfile={props.form.isCustomProfile}
+      onToggleCustomProfile={props.form.setIsCustomProfile}
+      identityDoc={props.form.identityDoc}
+      onSetIdentityDoc={props.form.setIdentityDoc}
+      defaultUserName={props.form.displayName}
+    />
     <AuthTextField
       label={copy.coach.diplomaLabel}
       icon="school"
@@ -102,6 +135,33 @@ export const SignupClubProStep: React.FC<StepProps> = (props) => {
   const copy = getSignupRoleStepCopy(t);
   return (
   <RoleStepShell {...props} page="club_pro" hint={copy.club.hint}>
+    <SignupFffAffiliationCard
+      role="club"
+      hasClub={true}
+      onToggleHasClub={() => {}}
+      selectedClub={props.form.selectedFffClub}
+      onSelectClub={(club) => {
+        props.form.setSelectedFffClub(club);
+        if (club?.name) {
+          props.form.setStructureName(club.name);
+        }
+        if (club?.city) {
+          props.form.setCity(club.city);
+        }
+        if (club?.department) {
+          props.form.setDepartment(club.department);
+        }
+      }}
+      selectedCategory={props.form.selectedFffCategory}
+      onSelectCategory={props.form.setSelectedFffCategory}
+      selectedRosterMember={null}
+      onSelectRosterMember={() => {}}
+      isCustomProfile={true}
+      onToggleCustomProfile={() => {}}
+      identityDoc={props.form.identityDoc}
+      onSetIdentityDoc={props.form.setIdentityDoc}
+      defaultUserName={props.form.displayName}
+    />
     <AuthTextField
       label={copy.club.nameLabel}
       icon="business"

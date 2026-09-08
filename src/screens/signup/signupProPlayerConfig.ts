@@ -64,13 +64,13 @@ export function getProPlayerStepMeta(
       };
     case 'sport':
       return {
-        title: tr(t, 'signup.proPlayer.step.sport.title', 'Ta fiche pro'),
+        title: tr(t, 'signup.proPlayer.step.sport.title', 'Ton club & équipe FFF'),
         subtitle: tr(
           t,
           'signup.proPlayer.step.sport.subtitle',
-          'Poste, niveau (R1 à N3), licence et mobilité. Profil recruteurs.',
+          'Sélectionne ton club, ta catégorie et ton nom officiel FFF.',
         ),
-        heroIcon: 'shirt',
+        heroIcon: 'shield',
       };
     case 'location':
       return {

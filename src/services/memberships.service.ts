@@ -97,6 +97,12 @@ export const membershipsService = {
       team_id: teamId,
       player_uid: input.player_uid,
       player_name: input.player_name.trim(),
+      role: input.role ?? 'player',
+      category: input.category?.trim() || null,
+      identity_document_name: input.identity_document_name?.trim() || null,
+      identity_document_url: input.identity_document_url?.trim() || null,
+      identity_document_type: input.identity_document_type ?? null,
+      pre_registered_roster_id: input.pre_registered_roster_id ?? null,
       status: 'pending',
       license_number: input.license_number?.trim() || null,
       requested_at: serverTimestamp(),
@@ -186,7 +192,10 @@ export const membershipsService = {
     });
 
     await profileService.updateProfile(membership.player_uid, {
-      profile: { club_id: membership.club_id },
+      profile: {
+        club_id: membership.club_id,
+        ...(membership.category ? { category: membership.category } : {}),
+      },
     });
   },
 

@@ -164,16 +164,19 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
     case 'account':
       content = <SignupAccountStep form={form} {...layout} onBack={onBack} />;
       break;
-    case 'security':
+    case 'security': {
+      const isLastBeforeLaunch = form.steps[form.pageIndex + 1] === 'launch';
       content = (
         <SignupSecurityStep
           form={form}
           {...layout}
           onBack={onBack}
+          nextLabel={!isLastBeforeLaunch ? t('signup.form.continue') : undefined}
           onSubmit={() => void submitSecurity()}
         />
       );
       break;
+    }
     case 'launch':
     default: {
       const verificationPending =

@@ -521,9 +521,6 @@ export function validateSignupIntegrity(input: SignupIntegrityInput): Record<str
     errs.role = 'Ce profil n’est pas disponible sur cet univers ProDay.';
   }
 
-  if (!input.spaceTouched && input.flowKind === 'player') {
-    errs.appSpace = 'Sélectionnez un espace ProDay';
-  }
 
   if (input.flowKind === 'player' && input.player) {
     Object.assign(errs, validatePlayerStepFields(input.player));

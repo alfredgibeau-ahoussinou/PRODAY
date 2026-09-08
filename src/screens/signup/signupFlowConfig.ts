@@ -17,7 +17,7 @@ export { MEDICAL_POLE_SPECIALTIES };
 export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   welcome: 'Bienvenue',
   space: 'Espace',
-  sport: 'Sport',
+  sport: 'Club & Licence FFF',
   location: 'Ville',
   stats: 'Stats',
   staff: 'Profil pro',
@@ -132,10 +132,9 @@ export function buildSignupSteps(
 ): SignupPageId[] {
   const { role, parentalRequired } = options;
 
-  // Compte d’abord (identité + mot de passe), univers/onboarding pôle ensuite.
-  // `launch` = moment bienvenue → sélecteur d’univers (BrandRevealIntro).
+  // Parcours officiel FFF joueur : Affiliation Club & Licence FFF d'abord, puis Identité & Compte, puis Sécurité, Accord parental si mineur, Lancement.
   if (flowKind === 'player') {
-    const pages: SignupPageId[] = ['account', 'security', 'space', 'sport', 'location', 'stats'];
+    const pages: SignupPageId[] = ['sport', 'account', 'security'];
     if (parentalRequired) pages.push('family');
     pages.push('launch');
     return pages;

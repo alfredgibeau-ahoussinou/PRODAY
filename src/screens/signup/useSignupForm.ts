@@ -25,6 +25,8 @@ import {
   validateSponsorCompanyStep,
   validateSponsorCampaignStep,
   validateSponsorTargetingStep,
+  validateCity,
+  validateFrenchDepartment,
 } from '../../utils/signupValidation';
 import { normalizeCalComBookingInput } from '../../utils/calComBooking';
 import {
@@ -33,6 +35,7 @@ import {
   getPostCreatePage,
   validateAgeForAppSpace,
   needsParentalStep,
+  suggestAppSpaceFromAge,
   SIGNUP_PAGE_LABELS,
   getSignupPageLabel,
   getCurrentPhase,
@@ -62,6 +65,9 @@ import { submitSponsorSignup } from '../../services/sponsorSignup.service';
 import { resolveSignupOAuthState } from '../../utils/authOAuthLink';
 import { referralService } from '../../services/referral.service';
 import { parentPortalService } from '../../services/parentPortal.service';
+import type { OfficialFffClub, PreRegisteredMember } from '../../services/fffOfficialRegistry.service';
+import { membershipsService } from '../../services/memberships.service';
+import { clubsService } from '../../services/clubs.service';
 
 export type { SignupPageId, SignupFlowKind };
 
@@ -108,8 +114,9 @@ export function useSignupForm(initial?: {
   const [gender, setGenderState] = useState<Gender>('men');
   const [genderTouched, setGenderTouched] = useState(false);
   const [parentalRequired, setParentalRequired] = useState(false);
+  const defaultStartPage: SignupPageId = defaultRole === 'player' ? 'sport' : 'account';
   const [currentPageId, setCurrentPageId] = useState<SignupPageId>(
-    initial?.startAtAccount === false ? 'welcome' : 'account',
+    initial?.startAtAccount === false ? 'welcome' : defaultStartPage,
   );
   const [accountCreated, setAccountCreated] = useState(false);
 
@@ -151,6 +158,14 @@ export function useSignupForm(initial?: {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [createdDisplayName, setCreatedDisplayName] = useState('');
   const [createdWithEmailPassword, setCreatedWithEmailPassword] = useState(false);
+
+  // Affiliation Club FFF & Vérification identité
+  const [hasClub, setHasClub] = useState(true);
+  const [selectedFffClub, setSelectedFffClub] = useState<OfficialFffClub | null>(null);
+  const [selectedFffCategory, setSelectedFffCategory] = useState('');
+  const [selectedRosterMember, setSelectedRosterMember] = useState<PreRegisteredMember | null>(null);
+  const [isCustomProfile, setIsCustomProfile] = useState(true);
+  const [identityDoc, setIdentityDoc] = useState<{ uri: string; name: string; type: string } | null>(null);
 
   useEffect(() => {
     void referralService.getPendingCode().then((pending) => {
@@ -340,10 +355,31 @@ export function useSignupForm(initial?: {
     return space === 'boys' || space === 'girls' || space === 'under_u13';
   }
 
-  const allowedCategories = useMemo(
-    () => [...defaultCategoriesForAppSpace(appSpace, productLine, gender)],
-    [appSpace, productLine, gender]
-  );
+  useEffect(() => {
+    if (parsedAge != null && parsedAge >= 5) {
+      const suggested =
+        gender === 'women'
+          ? suggestFeminineAppSpaceFromAge(parsedAge)
+          : suggestAppSpaceFromAge(parsedAge);
+      if (suggested) {
+        setAppSpaceState(suggested);
+        setSpaceTouched(true);
+      }
+      setParentalRequired(needsParentalStep(isMinorAge(parsedAge), suggested ?? appSpace));
+    }
+  }, [parsedAge, gender, appSpace]);
+
+  const allowedCategories = useMemo(() => {
+    const base = defaultCategoriesForAppSpace(appSpace, productLine, gender);
+    const extras: string[] = [];
+    if (selectedFffCategory && !base.includes(selectedFffCategory)) {
+      extras.push(selectedFffCategory);
+    }
+    if (category && !base.includes(category) && !extras.includes(category)) {
+      extras.push(category);
+    }
+    return [...extras, ...base];
+  }, [appSpace, productLine, gender, selectedFffCategory, category]);
 
   const buildIntegrityInput = useCallback(
     () => ({
@@ -366,7 +402,7 @@ export function useSignupForm(initial?: {
         role === 'player'
           ? {
               position,
-              category,
+              category: selectedFffCategory || category,
               level,
               city,
               department,
@@ -438,9 +474,6 @@ export function useSignupForm(initial?: {
       isAmateurProduct || (isProProduct && role === 'player');
     if (needsGender && !genderTouched) {
       errs.gender = t('signup.form.selectGender');
-    }
-    if (!spaceTouched) {
-      errs.appSpace = t('signup.form.selectSpace');
     }
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
@@ -538,7 +571,7 @@ export function useSignupForm(initial?: {
   const validatePlayer = () => {
     const errs = validatePlayerStepFields({
       position,
-      category,
+      category: selectedFffCategory || category,
       level,
       city,
       department,
@@ -560,36 +593,45 @@ export function useSignupForm(initial?: {
     Object.fromEntries(Object.entries(all).filter(([k]) => keys.includes(k)));
 
   const validateSport = () => {
-    if (!validateProgram()) return false;
-    if (role === 'player' && (isAmateurProduct || isProPlayerSignup)) {
-      const valid = isValidPlayerBirthDate(birthDateIso);
-      if (!valid.ok) {
-        setFieldErrors({ age: valid.reason });
-        return false;
+    const errs: Record<string, string> = {};
+    if (hasClub) {
+      if (!selectedFffClub) {
+        errs.club = 'Veuillez sélectionner votre club officiel FFF ou choisir "Sans club".';
+      }
+      const activeCat = selectedFffCategory || category;
+      if (!activeCat) {
+        errs.category = 'Veuillez sélectionner votre catégorie d’équipe.';
+      }
+      if (!selectedRosterMember && displayName.trim().length < 2) {
+        errs.displayName = 'Veuillez sélectionner votre nom dans la liste des licenciés ou saisir votre nom.';
+      }
+    } else {
+      if (!category) {
+        errs.category = 'Veuillez sélectionner votre catégorie.';
+      }
+      if (displayName.trim().length < 2) {
+        errs.displayName = 'Veuillez renseigner votre nom et prénom officiels.';
       }
     }
-    const all = validatePlayerStepFields({
-      position,
-      category,
-      level,
-      city: '',
-      department,
-      parsedAge,
-      appSpace,
-      allowedCategories,
-      statMatches,
-      statGoals,
-      statAssists,
-    });
-    const errs = pickPlayerErrors(all, ['position', 'category', 'level', 'age']);
+
+    if (selectedFffClub) {
+      if (!city && selectedFffClub.city) setCity(selectedFffClub.city);
+      if (!department && selectedFffClub.department) setDepartment(selectedFffClub.department);
+    }
+
     setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
+    if (Object.keys(errs).length > 0) {
+      setError(Object.values(errs)[0]);
+      return false;
+    }
+    setError(null);
+    return true;
   };
 
   const validateLocation = () => {
     const all = validatePlayerStepFields({
       position,
-      category,
+      category: selectedFffCategory || category,
       level,
       city,
       department,
@@ -608,7 +650,7 @@ export function useSignupForm(initial?: {
   const validateStats = () => {
     const all = validatePlayerStepFields({
       position,
-      category,
+      category: selectedFffCategory || category,
       level,
       city,
       department,
@@ -641,6 +683,18 @@ export function useSignupForm(initial?: {
         ? ['displayName', 'email', 'city']
         : ['displayName', 'email'];
     const errs = pickPlayerErrors(all, keys);
+
+    if (role === 'player') {
+      const valid = isValidPlayerBirthDate(birthDateIso);
+      if (!valid.ok) {
+        errs.age = valid.reason;
+      }
+      const cityErr = validateCity(city, { required: true });
+      if (cityErr) errs.city = cityErr;
+      const deptErr = validateFrenchDepartment(department);
+      if (deptErr) errs.department = deptErr;
+    }
+
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -709,6 +763,7 @@ export function useSignupForm(initial?: {
         break;
       case 'account':
         if (!validateAccountIdentity()) return false;
+        setParentalRequired(needsParentalStep(isMinor, appSpace));
         break;
       default:
         break;
@@ -870,6 +925,63 @@ export function useSignupForm(initial?: {
         }
 
         await refreshProfile();
+
+        // Envoi de la demande d'accès au club officiel FFF sélectionné
+        if (hasClub && selectedFffClub) {
+          if (role === 'player' || role === 'coach' || role === 'parent') {
+            try {
+              await membershipsService.requestJoin({
+                club_id: selectedFffClub.id,
+                player_uid: user.uid,
+                player_name: user.display_name,
+                role: role === 'coach' ? 'coach' : role === 'parent' ? 'parent' : 'player',
+                category: selectedFffCategory || category || undefined,
+                license_number: role === 'player' ? selectedRosterMember?.licenseNumber : undefined,
+                identity_document_name: identityDoc?.name,
+                identity_document_url: identityDoc?.uri,
+                identity_document_type: identityDoc?.type as any,
+                pre_registered_roster_id: selectedRosterMember?.id,
+              });
+            } catch (err) {
+              console.warn('[signup] requestJoin membership:', err);
+            }
+          } else if (role === 'club') {
+            try {
+              await clubsService.create(
+                {
+                  name: selectedFffClub.name,
+                  city: selectedFffClub.city,
+                  department: selectedFffClub.department,
+                  categories:
+                    selectedFffCategory || category
+                      ? [selectedFffCategory || category]
+                      : selectedFffClub.categories,
+                  owner_uid: user.uid,
+                },
+                user
+              );
+            } catch (err) {
+              console.warn('[signup] create club:', err);
+            }
+          }
+        }
+
+        if (identityDoc) {
+          try {
+            const { profileService } = await import('../../services/profile.service');
+            await profileService.uploadVerificationDocument(
+              user.uid,
+              {
+                uri: identityDoc.uri,
+                mimeType: identityDoc.uri.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+              },
+              role === 'club' ? 'diploma' : 'id'
+            );
+          } catch (err) {
+            console.warn('[signup] uploadVerificationDocument:', err);
+          }
+        }
+
         void referralService.bootstrapAfterSignup({
           codeFromForm: referralCode,
           role,
@@ -1074,6 +1186,19 @@ export function useSignupForm(initial?: {
     advanceFromCurrentPage,
     registerCreateBeforeLaunch,
     createAccount,
+    // FFF Affiliation & Justificatif
+    hasClub,
+    setHasClub,
+    selectedFffClub,
+    setSelectedFffClub,
+    selectedFffCategory,
+    setSelectedFffCategory,
+    selectedRosterMember,
+    setSelectedRosterMember,
+    isCustomProfile,
+    setIsCustomProfile,
+    identityDoc,
+    setIdentityDoc,
     setError,
     setLoading,
   };
