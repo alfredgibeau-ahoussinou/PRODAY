@@ -45,7 +45,7 @@ import { Platform } from 'react-native';
 
 import type { CarouselPoleId } from '../models/CarouselPole';
 import {
-  UNIVERSE_ENTRY_ACCENT,
+  resolvePoleAuthPalette,
 } from '../components/branding/intro/universeEntryAuth';
 import { universePoleDisplayName } from '../components/branding/intro/universePoleBrand';
 
@@ -106,6 +106,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const passwordRef = useRef<TextInput>(null);
   const showOAuth =
     isGoogleAuthConfigured() || Platform.OS === 'ios';
+  const polePalette = useMemo(
+    () =>
+      resolvePoleAuthPalette({
+        pole: initialPole,
+        productLine: signupProductLine ?? productLine,
+        role: signupInitialRole,
+      }),
+    [initialPole, signupProductLine, productLine, signupInitialRole],
+  );
 
   useEffect(() => {
     if (!quickLogin.hydrated || !quickLogin.savedEmail) return;
@@ -230,7 +239,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   if (authLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={UNIVERSE_ENTRY_ACCENT} />
+        <ActivityIndicator size="large" color={polePalette.accent} />
       </View>
     );
   }
@@ -259,7 +268,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       {t('auth.legalPrefix')}{' '}
       <ProDayText
         variant="caption"
-        style={styles.legalLink}
+        style={[styles.legalLink, { color: polePalette.accent }]}
         onPress={() => setLegalDocument('terms')}
       >
         {t('auth.terms')}
@@ -267,7 +276,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       {t('auth.and')}{' '}
       <ProDayText
         variant="caption"
-        style={styles.legalLink}
+        style={[styles.legalLink, { color: polePalette.accent }]}
         onPress={() => setLegalDocument('privacy')}
       >
         {t('auth.privacy')}
@@ -364,8 +373,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           {mode === 'login' ? (
             <View>
               <View style={styles.kickerBadge}>
-                <View style={styles.kickerDot} />
-                <ProDayText variant="eyebrow" style={styles.kickerText}>
+                <View style={[styles.kickerDot, { backgroundColor: polePalette.accent }]} />
+                <ProDayText variant="eyebrow" style={[styles.kickerText, { color: polePalette.accent }]}>
                   {universeAuthCopy.kicker}
                 </ProDayText>
               </View>
@@ -450,6 +459,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 label={universeAuthCopy.cta}
                 onPress={() => void handleLogin()}
                 loading={loading}
+                accent={polePalette.accent}
+                onAccent={polePalette.onAccent}
               />
 
               {showOAuth ? (
@@ -499,8 +510,11 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           ) : (
             <View>
               <View style={styles.kickerBadge}>
-                <View style={styles.kickerDot} />
-                <ProDayText variant="eyebrow" style={styles.kickerText}>
+                <View style={[styles.kickerDot, { backgroundColor: polePalette.accent }]} />
+                <ProDayText
+                  variant="eyebrow"
+                  style={[styles.kickerText, { color: polePalette.accent }]}
+                >
                   {universeAuthCopy.kicker}
                 </ProDayText>
               </View>
@@ -513,12 +527,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               <AuthButton
                 label={t('auth.createAccount') || 'Créer un compte'}
                 onPress={openSignup}
+                accent={polePalette.accent}
+                onAccent={polePalette.onAccent}
               />
               <View style={styles.gateLoginWrap}>
                 <AuthButton
                   label={t('auth.login') || 'Se connecter'}
                   onPress={() => setMode('login')}
                   variant="secondary"
+                  accent={polePalette.accent}
+                  onAccent={polePalette.onAccent}
                 />
               </View>
             </View>
@@ -536,7 +554,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         }}
       />
 
-      <PushScreenTransition active={signupOpen}>
+      <PushScreenTransition active={signupOpen} variant="fade">
         {signupOpen ? (
           <View style={styles.overlayRoot}>
             <SignupFlow
@@ -550,8 +568,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </View>
         ) : null}
       </PushScreenTransition>
-      <PushScreenTransition active={showForgotPassword || legalDocument != null}>
-        {showForgotPassword ? (
+      <PushScreenTransition
+        active={showForgotPassword || legalDocument != null}
+        variant="fade"
+      >        {showForgotPassword ? (
           <ForgotPasswordScreen
             initialEmail={email}
             onBack={() => {
@@ -610,10 +630,8 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: UNIVERSE_ENTRY_ACCENT,
   },
   kickerText: {
-    color: UNIVERSE_ENTRY_ACCENT,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1.2,
@@ -665,6 +683,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   legalLink: {
-    color: UNIVERSE_ENTRY_ACCENT,
+    color: AUTH_XP.goldBright,
   },
 });

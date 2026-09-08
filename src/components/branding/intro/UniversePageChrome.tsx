@@ -12,10 +12,7 @@ import { Icon } from '../../ui/Icon';
 import { prodayMotion, useReducedMotion } from '../../../motion';
 import type { CarouselPoleId } from '../../../models/CarouselPole';
 import { UNIVERSE_SHORT } from './universeIntroAccents';
-import {
-  UNIVERSE_ENTRY_ACCENT,
-  UNIVERSE_ENTRY_INK_ON_ACCENT,
-} from './universeEntryAuth';
+import { resolveUniverseCtaAccent } from './universeEntryAuth';
 import {
   universeEnterCtaLabel,
   universePoleDisplayName,
@@ -60,8 +57,8 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
   const reducedMotion = useReducedMotion();
   const [guideVisible, setGuideVisible] = React.useState(false);
   const activeLine = lines[activeIndex] ?? lines[0];
-  // Chrome d’entrée unifié look Club (émeraude) — plus de CTA blanc/or disparates.
-  const activeAccent = UNIVERSE_ENTRY_ACCENT;
+  const activeAccent = activeLine ? resolveUniverseCtaAccent(activeLine) : '#C5A059';
+  const isLightCta = activeAccent.toUpperCase() === '#FFFFFF';
   const ctaLabel = activeLine ? universeEnterCtaLabel(activeLine) : '';
   const linesCount = lines.length;
   const showHeaderAction = touring || (showDismiss && onDismiss);
@@ -107,10 +104,14 @@ export const UniversePageChrome: React.FC<UniversePageChromeProps> = ({
             { backgroundColor: activeAccent },
           ]}
         >
-          <Text style={styles.ctaText} numberOfLines={1}>
+          <Text style={[styles.ctaText, isLightCta && styles.ctaTextDark]} numberOfLines={1}>
             {ctaLabel}
           </Text>
-          <Icon name="chevron-forward" size={18} color={UNIVERSE_ENTRY_INK_ON_ACCENT} />
+          <Icon
+            name="chevron-forward"
+            size={18}
+            color={isLightCta ? '#000000' : '#07100C'}
+          />
         </View>
       </PressableSpring>
     </Animated.View>

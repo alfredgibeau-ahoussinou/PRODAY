@@ -2,14 +2,10 @@ import React, { useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
-  View,
 } from 'react-native';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { PressableSpring } from '../../../components/motion';
-import {
-  UNIVERSE_ENTRY_ACCENT,
-  UNIVERSE_ENTRY_INK_ON_ACCENT,
-} from '../../../components/branding/intro/universeEntryAuth';
+import { PRODAY_MASTER } from '../../../theme/prodayBrand';
 
 type AuthButtonProps = {
   label: string;
@@ -17,10 +13,14 @@ type AuthButtonProps = {
   loading?: boolean;
   disabled?: boolean;
   variant?: 'primary' | 'ghost' | 'secondary';
+  /** Accent du pôle (joueur / coach / club…). */
+  accent?: string;
+  /** Encre sur fond accent. */
+  onAccent?: string;
 };
 
 /**
- * CTA auth — look pôle Club (émeraude) pour cohérence d’entrée tous pôles.
+ * CTA auth — couleurs du pôle actif (pas d’émeraude Club forcée).
  */
 export const AuthButton: React.FC<AuthButtonProps> = ({
   label,
@@ -28,10 +28,15 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   loading = false,
   disabled = false,
   variant = 'primary',
+  accent = PRODAY_MASTER.gold,
+  onAccent = PRODAY_MASTER.black,
 }) => {
   const lock = useRef(false);
   const isDisabled = disabled || loading;
-  const styles = useMemo(() => createStyles(variant), [variant]);
+  const styles = useMemo(
+    () => createStyles(variant, accent, onAccent),
+    [variant, accent, onAccent],
+  );
   const primary = variant === 'primary';
 
   const handlePress = () => {
@@ -59,14 +64,11 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
     >
       {loading ? (
         <ActivityIndicator
-          color={primary ? UNIVERSE_ENTRY_INK_ON_ACCENT : '#FFFFFF'}
+          color={primary ? onAccent : '#FFFFFF'}
           size="small"
         />
       ) : (
-        <ProDayText
-          variant="section"
-          style={styles.label}
-        >
+        <ProDayText variant="section" style={styles.label}>
           {label}
         </ProDayText>
       )}
@@ -74,7 +76,11 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
   );
 };
 
-function createStyles(variant: AuthButtonProps['variant']) {
+function createStyles(
+  variant: AuthButtonProps['variant'],
+  accent: string,
+  onAccent: string,
+) {
   const primary = variant === 'primary';
   const ghost = variant === 'ghost';
   return StyleSheet.create({
@@ -85,16 +91,16 @@ function createStyles(variant: AuthButtonProps['variant']) {
       borderRadius: 26,
       paddingHorizontal: 24,
       backgroundColor: primary
-        ? UNIVERSE_ENTRY_ACCENT
+        ? accent
         : ghost
           ? 'transparent'
-          : 'rgba(16, 185, 129, 0.12)',
+          : 'rgba(255, 255, 255, 0.08)',
       borderWidth: primary ? 0 : 1,
-      borderColor: primary ? 'transparent' : UNIVERSE_ENTRY_ACCENT,
+      borderColor: primary ? 'transparent' : accent,
       marginTop: 10,
     },
     label: {
-      color: primary ? UNIVERSE_ENTRY_INK_ON_ACCENT : '#FFFFFF',
+      color: primary ? onAccent : '#FFFFFF',
       fontSize: 15,
       fontWeight: '700',
       letterSpacing: 0.2,

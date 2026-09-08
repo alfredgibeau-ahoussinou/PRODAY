@@ -133,12 +133,11 @@ const parentGradients = {
 };
 
 const joueurGradients = {
-  hero: ['#000000', '#000000'] as const,
-  heroDark: ['#000000', '#0A0A0A'] as const,
-  card: ['#0A0A0A', '#000000'] as const,
-  /** Aligné pôle Club — chrome d’entrée unifié. */
-  cta: ['#047857', '#10B981'] as const,
-  ambient: ['#000000', '#000000', '#000000'] as const,
+  hero: ['#000000', '#0A0A0A'] as const,
+  heroDark: ['#000000', '#050505'] as const,
+  card: ['#0c0c0c', '#000000'] as const,
+  cta: ['#E5E5E5', '#FFFFFF'] as const,
+  ambient: ['rgba(255, 255, 255, 0.12)', '#050505', '#000000'] as const,
 };
 
 const eventsGradients = {

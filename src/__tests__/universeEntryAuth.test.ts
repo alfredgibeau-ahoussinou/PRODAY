@@ -1,5 +1,8 @@
-import { resolveGuestAuthIntentAfterUniverse } from '../components/branding/intro/universeEntryAuth';
-import { UNIVERSE_ENTRY_ACCENT } from '../components/branding/intro/universeEntryAuth';
+import {
+  resolveGuestAuthIntentAfterUniverse,
+  resolvePoleAuthPalette,
+  resolveUniverseCtaAccent,
+} from '../components/branding/intro/universeEntryAuth';
 import { gradientsForCarouselPole } from '../theme/universeGradients';
 
 describe('universe entry auth gate', () => {
@@ -52,9 +55,15 @@ describe('universe entry auth gate', () => {
     ).toBeNull();
   });
 
-  it('aligne le CTA joueur sur l’émeraude club', () => {
-    expect(UNIVERSE_ENTRY_ACCENT).toBe('#10B981');
-    expect(gradientsForCarouselPole('joueur').cta[1]).toBe('#10B981');
+  it('palette auth = accent du pôle (pas vert Club partout)', () => {
+    expect(resolvePoleAuthPalette({ pole: 'joueur' }).accent).toBe('#FFFFFF');
+    expect(resolvePoleAuthPalette({ pole: 'coach' }).accent).toBe('#C5A059');
+    expect(resolvePoleAuthPalette({ pole: 'pro_club' }).accent).toBe('#10B981');
+    expect(resolvePoleAuthPalette({ pole: 'parent' }).accent).toBe('#8CC63F');
+    expect(resolvePoleAuthPalette({ pole: 'sponsor' }).accent).toBe('#92278F');
+    expect(resolveUniverseCtaAccent('joueur')).toBe('#C5A059');
+    expect(resolveUniverseCtaAccent('pro_club')).toBe('#10B981');
+    expect(gradientsForCarouselPole('joueur').cta[1]).toBe('#FFFFFF');
     expect(gradientsForCarouselPole('pro_club').cta[1]).toBe('#10B981');
   });
 });

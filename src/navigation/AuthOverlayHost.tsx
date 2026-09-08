@@ -23,11 +23,11 @@ type Props = {
 };
 
 const { height: SCREEN_H } = Dimensions.get('window');
-const ENTER_DURATION = 260;
-const EXIT_DURATION = 220;
+const ENTER_DURATION = 220;
+const EXIT_DURATION = 180;
 
 /**
- * Auth plein écran avec transition fluide (Slide Up + Fade).
+ * Auth plein écran — fade + léger rise (pas de slide agressif).
  */
 export function AuthOverlayHost({
   intent,
@@ -38,8 +38,8 @@ export function AuthOverlayHost({
 }: Props) {
   const reduced = useReducedMotion();
   const opacity = useSharedValue(reduced ? 1 : 0);
-  const translateY = useSharedValue(reduced ? 0 : 36);
-  const scale = useSharedValue(reduced ? 1 : 0.985);
+  const translateY = useSharedValue(reduced ? 0 : 18);
+  const scale = useSharedValue(reduced ? 1 : 0.99);
   const [mounted, setMounted] = useState(true);
   const isClosing = useRef(false);
 
@@ -85,11 +85,11 @@ export function AuthOverlayHost({
       duration: EXIT_DURATION,
       easing: prodayMotion.easing.in,
     });
-    translateY.value = withTiming(32, {
+    translateY.value = withTiming(12, {
       duration: EXIT_DURATION,
       easing: prodayMotion.easing.in,
     });
-    scale.value = withTiming(0.985, {
+    scale.value = withTiming(0.99, {
       duration: EXIT_DURATION,
       easing: prodayMotion.easing.in,
     }, (finished) => {

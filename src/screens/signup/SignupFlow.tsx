@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import Animated, { Easing, FadeInRight } from 'react-native-reanimated';
-import { motion, useReducedMotion } from '../../motion';
+import Animated, { Easing, FadeIn, FadeOut } from 'react-native-reanimated';
+import { useReducedMotion } from '../../motion';
 import { useSignupForm } from './useSignupForm';
 import { SignupWelcomeStep } from './SignupWelcomeStep';
 import { SignupSpaceStep } from './SignupSpaceStep';
@@ -89,7 +89,10 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
     backKind === 'none' ? undefined : backKind === 'close' ? onClose : form.goBack;
   const pageEntering = reduced
     ? undefined
-    : FadeInRight.duration(240).easing(Easing.out(Easing.cubic));
+    : FadeIn.duration(200).easing(Easing.out(Easing.cubic));
+  const pageExiting = reduced
+    ? undefined
+    : FadeOut.duration(140).easing(Easing.in(Easing.cubic));
 
   const submitSecurity = async () => {
     if (!form.validateAccount()) return;
@@ -248,7 +251,12 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
 
   return (
     <View style={[styles.root, { backgroundColor: AUTH_XP.black }]}>
-      <Animated.View key={form.currentPage} entering={pageEntering} style={styles.page}>
+      <Animated.View
+        key={form.currentPage}
+        entering={pageEntering}
+        exiting={pageExiting}
+        style={styles.page}
+      >
         {content}
       </Animated.View>
     </View>
