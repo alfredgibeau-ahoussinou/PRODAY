@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AccShell } from "@/components/admin/cc/AccShell";
-import { AccBanner, AccButton, AccInput, AccPanel, AccStatus } from "@/components/admin/cc/AccUi";
+import { AccBanner, AccPanel, AccStatus } from "@/components/admin/cc/AccUi";
 
 const AGENTS = [
-  { id: "admin", label: "Admin AI", role: "Orchestrateur" },
-  { id: "finance", label: "Finance AI", role: "MRR, impayés, devis" },
-  { id: "sales", label: "Sales AI", role: "CRM & pipeline" },
-  { id: "support", label: "Support AI", role: "Tickets" },
-  { id: "security", label: "Security AI", role: "Audit & sessions" },
-  { id: "product", label: "Product AI", role: "Flags & modules" },
+  { id: "admin", label: "Admin AI", role: "Orchestrateur", href: "/admin/home" },
+  { id: "finance", label: "Finance AI", role: "MRR, impayés, devis", href: "/admin/finances" },
+  { id: "sales", label: "Sales AI", role: "CRM & pipeline", href: "/admin/commercial" },
+  { id: "support", label: "Support AI", role: "Tickets", href: "/admin/ops/feedback" },
+  { id: "security", label: "Security AI", role: "Audit & sessions", href: "/admin/security/audit" },
+  { id: "product", label: "Product AI", role: "Flags & modules", href: "/admin/product" },
 ] as const;
 
 type Props = {
@@ -20,6 +21,7 @@ type Props = {
   contextSummary: string;
 };
 
+/** Coque multi-agents en lecture seule — pas de faux LLM ni mutations fantômes. */
 export function AccAiCenter({
   badges,
   healthScore = null,
@@ -27,44 +29,25 @@ export function AccAiCenter({
   contextSummary,
 }: Props) {
   const [agent, setAgent] = useState<(typeof AGENTS)[number]["id"]>("admin");
-  const [prompt, setPrompt] = useState("");
-  const [log, setLog] = useState<{ q: string; a: string }[]>([]);
-  const [pendingConfirm, setPendingConfirm] = useState<string | null>(null);
-
-  function ask() {
-    const q = prompt.trim();
-    if (!q) return;
-    const a = [
-      `[${AGENTS.find((x) => x.id === agent)?.label}] Contexte plateforme :`,
-      contextSummary,
-      "",
-      "Réponse déterministe (pas d’appel LLM branché) :",
-      "Utilisez les modules Control Center (Finances, Commercial, Utilisateurs, Santé) pour l’action.",
-      "Les actions sensibles exigeront une confirmation Admin.",
-    ].join("\n");
-    setLog((prev) => [{ q, a }, ...prev].slice(0, 8));
-    setPrompt("");
-    if (/tarif|prix|suspend|supprim|rembours/i.test(q)) {
-      setPendingConfirm("Action sensible détectée — confirmation requise avant exécution.");
-    }
-  }
+  const selected = AGENTS.find((x) => x.id === agent) ?? AGENTS[0];
 
   return (
     <AccShell
       title="ProDay Admin AI"
-      subtitle="Assistant contextualisé — multi agents prévus. Pas de faux LLM : réponses basées sur le résumé ops branché."
+      subtitle="Contexte ops branché — provider LLM non branché (pas de chat fictif)."
       badges={badges}
       healthScore={healthScore}
       healthLabel={healthLabel}
     >
       <AccBanner tone="info">
-        L’inférence LLM (Vertex / OpenAI) n’est pas branchée ici. La coque agents + confirmation
-        Admin est en place pour brancher le provider ensuite.
+        Aucune inférence Vertex / OpenAI ici. Utilisez les modules Control Center (liens
+        ci-dessous) pour agir. Les agents listés sont une carte de navigation, pas un
+        copilote exécutable.
       </AccBanner>
 
       <div className="grid gap-3 lg:grid-cols-12">
         <div className="lg:col-span-4">
-          <AccPanel title="Agents">
+          <AccPanel title="Agents (navigation)">
             <ul className="space-y-1">
               {AGENTS.map((a) => (
                 <li key={a.id}>
@@ -87,62 +70,28 @@ export function AccAiCenter({
         </div>
 
         <div className="space-y-3 lg:col-span-8">
-          <AccPanel title="Console">
-            <p className="mb-3 whitespace-pre-wrap text-[11px] leading-relaxed text-white/40">
+          <AccPanel
+            title={`Contexte · ${selected.label}`}
+            description="Résumé déterministe des agrégats déjà chargés (bêta, plateforme, santé)."
+            action={
+              <Link
+                href={selected.href}
+                className="border border-[var(--acc-line)] px-3 py-1.5 text-[11px] font-semibold text-white/70 hover:bg-white/[0.04] hover:text-white"
+              >
+                Ouvrir le module →
+              </Link>
+            }
+          >
+            <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-white/55">
               {contextSummary}
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <AccInput
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder='Ex. « Quels devis / waitlist sont en attente ? »'
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") ask();
-                }}
-              />
-              <AccButton onClick={ask}>Analyser</AccButton>
-            </div>
-            {pendingConfirm ? (
-              <div className="mt-3 border border-amber-500/30 bg-amber-500/10 p-3">
-                <p className="text-xs text-amber-100">{pendingConfirm}</p>
-                <div className="mt-2 flex gap-2">
-                  <AccButton variant="ghost" onClick={() => setPendingConfirm(null)}>
-                    Annuler
-                  </AccButton>
-                  <AccButton
-                    onClick={() => {
-                      setPendingConfirm(null);
-                      setLog((prev) => [
-                        {
-                          q: "CONFIRMATION",
-                          a: "Confirmé — aucune mutation exécutée (provider IA non branché).",
-                        },
-                        ...prev,
-                      ]);
-                    }}
-                  >
-                    Confirmer
-                  </AccButton>
-                </div>
-              </div>
-            ) : null}
+            </pre>
           </AccPanel>
 
-          <AccPanel title="Journal session">
-            {log.length === 0 ? (
-              <p className="text-xs text-white/40">Aucune requête dans cette session.</p>
-            ) : (
-              <ul className="space-y-3">
-                {log.map((entry, i) => (
-                  <li key={i} className="border border-[var(--acc-line)] bg-[var(--acc-surface-2)] p-3">
-                    <p className="text-sm text-white">{entry.q}</p>
-                    <pre className="mt-2 whitespace-pre-wrap font-mono text-[11px] text-white/45">
-                      {entry.a}
-                    </pre>
-                  </li>
-                ))}
-              </ul>
-            )}
+          <AccPanel title="Statut provider">
+            <p className="text-xs text-white/45">
+              LLM : non configuré sur le site. Mutations admin (suspendre, rembourser, flags
+              runtime) : Espace Admin app ou routes ops déjà branchées (bêta, facturation).
+            </p>
           </AccPanel>
         </div>
       </div>

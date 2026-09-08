@@ -307,10 +307,22 @@ export function AccShell({
                 title={healthLabel ?? "Santé ProDay"}
               >
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-500" />
+                  {healthScore != null && healthScore >= 75 ? (
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
+                  ) : null}
+                  <span
+                    className={`relative inline-flex h-2 w-2 rounded-full ${
+                      healthScore == null
+                        ? "bg-white/30"
+                        : healthScore >= 75
+                          ? "bg-teal-500"
+                          : healthScore >= 55
+                            ? "bg-amber-400"
+                            : "bg-rose-400"
+                    }`}
+                  />
                 </span>
-                {healthScore != null ? `${healthScore}%` : "100%"}
+                {healthScore != null ? `${healthScore}%` : "—"}
                 {healthLabel ? <span className="font-sans font-normal text-white/40">{healthLabel}</span> : null}
               </Link>
             </div>

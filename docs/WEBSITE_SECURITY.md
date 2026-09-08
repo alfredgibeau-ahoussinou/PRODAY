@@ -38,6 +38,15 @@ Configuration appliquée dans `website/netlify.toml`, `netlify.toml` (monorepo) 
 - APIs admin : session HMAC Node + CSRF Origin/Referer + proxy secret vers Cloud Functions.
 - Ne jamais préfixer `BETA_ADMIN_PIN`, `BETA_ADMIN_SESSION_SECRET`, `BETA_WEBSITE_ADMIN_SECRET` par `NEXT_PUBLIC_`.
 
+### Périmètre Control Center site vs app
+
+| Surface | Rôle |
+|---------|------|
+| **Site** `/admin` (PIN) | Ops fondateurs : waitlist bêta, trafic, annuaires users/clubs (lecture), pipeline commercial, devis / facturation Stripe, santé config, feedback |
+| **App** Espace Admin (`admin: true`) | Contrôle produit : droits Firebase, Remote Config / flags runtime, modération profonde, mutations métier |
+
+Les écrans site sans backend (CMS, helpdesk unifié, LLM, flags runtime) sont en **lecture seule / empty state** — pas de boutons morts qui prétendent muter.
+
 ## Secrets (serveur uniquement)
 
 Ne jamais préfixer par `NEXT_PUBLIC_` :

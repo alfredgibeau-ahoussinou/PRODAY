@@ -59,7 +59,8 @@ export function AdminPinGate() {
           Accès fondateurs
         </h1>
         <p className="mt-1.5 text-xs leading-relaxed text-white/45">
-          Minicode partagé — console desktop complète (ops, commercial, finances, plateforme).
+          Minicode fondateurs — ops site (bêta, trafic, commercial, finances). Contrôle produit
+          total = Espace Admin app.
         </p>
 
         <form onSubmit={onSubmit} className="mt-5 space-y-3">

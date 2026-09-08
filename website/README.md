@@ -75,7 +75,7 @@ graph TD
 | 📦 **Produit** | `/fonctionnalites`, `/ecosysteme`, `/roadmap`, `/tarifs` | Détails de la plateforme et offres |
 | 🧪 **Bêta** | `/beta/inscription`, `/beta/programme`, `/beta/installer` | Accès anticipé et guides d'installation |
 | ⚖️ **Légal** | `/cgu`, `/confidentialite` | Conditions générales et RGPD |
-| 🔒 **Admin** | `/admin` | Portail d'administration (Session PIN Edge) |
+| 🔒 **Admin** | `/admin` | Control Center ops (PIN HMAC) — produit total = app |
 
 👉 *Pour plus de détails sur le code, voir [`src/README.md`](src/README.md).*
 

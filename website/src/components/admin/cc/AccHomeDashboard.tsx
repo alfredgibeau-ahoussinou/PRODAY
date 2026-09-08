@@ -60,6 +60,12 @@ export function AccHomeDashboard({
       healthScore={healthScore}
       healthLabel={healthLabel}
     >
+      <AccBanner tone="info">
+        Périmètre site : ops fondateurs (PIN HMAC, waitlist, trafic, annuaires, devis /
+        facturation). Le contrôle produit total (rôles Firebase admin, Remote Config, modération
+        profonde) reste dans l’Espace Admin de l’app Expo.
+      </AccBanner>
+
       {(errors.beta || errors.visits || errors.platform) && (
         <div className="space-y-2">
           {errors.beta ? <AccBanner tone="warning">Bêta : {errors.beta}</AccBanner> : null}
@@ -100,7 +106,11 @@ export function AccHomeDashboard({
                   {healthLabel}
                 </AccStatus>
                 <p className="mt-2 text-xs text-white/45">
-                  Tous les systèmes principaux sont opérationnels.
+                  {healthScore >= 75
+                    ? "Signaux principaux OK (config, file bêta, impayés, signalements)."
+                    : healthScore >= 55
+                      ? "Attention : au moins un signal nécessite un suivi."
+                      : "Critique : plusieurs signaux dégradés — ouvrir le diagnostic."}
                 </p>
               </div>
             </div>
@@ -244,7 +254,7 @@ export function AccHomeDashboard({
               href="/admin/users"
               className="rounded-lg border border-[var(--acc-line)] bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-white/70 transition hover:bg-white/[0.06] hover:text-white"
             >
-              Gérer les utilisateurs
+              Annuaire utilisateurs
             </Link>
             <Link
               href="/admin/commercial/pricing"

@@ -6,7 +6,7 @@ import {
   getAdminSessionFromCookies,
 } from "@/lib/adminSession";
 import { AccShell } from "@/components/admin/cc/AccShell";
-import { AccPanel } from "@/components/admin/cc/AccUi";
+import { AccBanner, AccPanel } from "@/components/admin/cc/AccUi";
 import { loadAccOverview } from "@/lib/adminCc/loadOverview";
 
 export const metadata: Metadata = {
@@ -21,12 +21,17 @@ export default async function AccSecurityPage() {
   return (
     <AccShell
       title="Sécurité · Rôles & permissions"
-      subtitle="RBAC fondateurs — session PIN HMAC. Rôles granulaires = backlog (super admin / commercial / modérateur)."
+      subtitle="Session site = PIN HMAC unique. RBAC granulaire = Espace Admin app (Firebase admin)."
       badges={ov.badges}
       healthScore={ov.health.score}
       healthLabel={ov.health.label}
     >
-      <AccPanel title="Rôles prévus">
+      <AccBanner tone="info">
+        Ce site n’implémente pas encore Super Admin / Commercial / Modérateur. Un seul minicode
+        fondateurs ouvre tout le Control Center ops. Les claims `admin: true` et la modération
+        métier restent dans l’app.
+      </AccBanner>
+      <AccPanel title="Rôles prévus (backlog)">
         <ul className="grid gap-2 sm:grid-cols-2">
           {["Super Admin", "Commercial", "Finance", "Modérateur", "Support", "Lecture seule"].map(
             (r) => (

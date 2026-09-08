@@ -9,14 +9,15 @@ Finances, Produit, Admin AI, Support, Sécurité, Système.
 
 ### Auth
 
-- Droit Firebase `admin: true`
+- Droit Firebase `admin: true` (app)
 - Liste d'e-mails autorisés → aide au setup (`src/config/admin.ts`)
-- Site `/admin` = code fondateur (bêta / trafic), **surface séparée** (website)
+- Site `/admin` = **minicode PIN** (HMAC Edge) pour ops fondateurs (bêta / trafic / commercial / finances) — **surface séparée** du Control Center app ; pas le contrôle produit total
 
 ### Données
 
-- `admin.service.ts`, `adminAudit.service.ts`, `clubQuote.service.ts` — Firestore réel
+- `admin.service.ts`, `adminAudit.service.ts`, `clubQuote.service.ts` — Firestore réel (app)
 - Pas de fake payments / subscriptions dans le Control Center
+- Site : proxies Cloud Functions (`websiteAdminStats`, waitlist, billing) — voir `docs/WEBSITE_SECURITY.md`
 
 ### Setup
 
