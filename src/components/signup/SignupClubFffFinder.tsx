@@ -18,6 +18,11 @@ import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import {
+  buildClubSignupAutofill,
+  formatClubAutofillSummary,
+  type ClubSignupAutofill,
+} from '../../utils/clubSignupAutofill';
+import {
   pickVerificationFromCamera,
   pickVerificationFromGallery,
   pickVerificationPdf,
@@ -29,7 +34,7 @@ type Props = {
   selectedClub: OfficialFffClub | null;
   onSelectClub: (club: OfficialFffClub | null) => void;
   /** Appelé dès qu’un club est choisi / équipes DOFA chargées — pour préremplir le form. */
-  onAutofill: (payload: ReturnType<typeof buildClubSignupAutofill>) => void;
+  onAutofill: (payload: ClubSignupAutofill) => void;
   identityDoc: IdentityDoc | null;
   onSetIdentityDoc: (doc: IdentityDoc | null) => void;
   error?: string;
