@@ -69,6 +69,7 @@ import { parentPortalService } from '../../services/parentPortal.service';
 import type { OfficialFffClub, PreRegisteredMember } from '../../services/fffOfficialRegistry.service';
 import { membershipsService } from '../../services/memberships.service';
 import { clubsService } from '../../services/clubs.service';
+import { callFunction } from '../../lib/firebaseFunctions';
 import { publicClubDirectoryService } from '../../services/publicClubDirectory.service';
 
 export type { SignupPageId, SignupFlowKind };
@@ -997,7 +998,7 @@ export function useSignupForm(initial?: {
 
         await refreshProfile();
 
-        // Envoi de la demande d'accès au club officiel FFF sélectionné
+        // Demande d’adhésion pending — le club doit Confirmer / Refuser.
         if (hasClub && selectedFffClub) {
           if (role === 'player' || role === 'coach' || role === 'parent') {
             try {
@@ -1013,25 +1014,40 @@ export function useSignupForm(initial?: {
                 existing?.id ||
                 directory?.proday_club_id ||
                 null;
-              if (clubId) {
-                await membershipsService.requestJoin({
-                  club_id: clubId,
-                  player_uid: user.uid,
-                  player_name: user.display_name,
-                  role: role === 'coach' ? 'coach' : role === 'parent' ? 'parent' : 'player',
-                  category: selectedFffCategory || category || undefined,
-                  license_number: role === 'player' ? selectedRosterMember?.licenseNumber : undefined,
-                  identity_document_name: identityDoc?.name,
-                  identity_document_url: identityDoc?.uri,
-                  identity_document_type: identityDoc?.type as any,
-                  pre_registered_roster_id: selectedRosterMember?.id,
-                });
-              } else {
-                console.warn(
-                  '[signup] Aucun club ProDay pour FFF',
-                  selectedFffClub.fffNumber,
-                  '— demande d’adhésion différée',
-                );
+              const joinPayload = {
+                club_id: clubId,
+                fff_affiliation_number: selectedFffClub.fffNumber || null,
+                player_name: user.display_name,
+                role:
+                  role === 'coach' ? ('coach' as const) : role === 'parent' ? ('parent' as const) : ('player' as const),
+                category: selectedFffCategory || category || null,
+                license_number:
+                  role === 'player' ? selectedRosterMember?.licenseNumber ?? null : null,
+                identity_document_name: identityDoc?.name ?? null,
+                identity_document_url: identityDoc?.uri ?? null,
+                identity_document_type: identityDoc?.type ?? null,
+                pre_registered_roster_id: selectedRosterMember?.id ?? null,
+              };
+              try {
+                await callFunction('requestClubMembership', joinPayload);
+              } catch (cfErr) {
+                // Fallback client si la CF n’est pas encore déployée.
+                if (clubId) {
+                  await membershipsService.requestJoin({
+                    club_id: clubId,
+                    player_uid: user.uid,
+                    player_name: user.display_name,
+                    role: joinPayload.role,
+                    category: joinPayload.category ?? undefined,
+                    license_number: joinPayload.license_number ?? undefined,
+                    identity_document_name: identityDoc?.name,
+                    identity_document_url: identityDoc?.uri,
+                    identity_document_type: identityDoc?.type as any,
+                    pre_registered_roster_id: selectedRosterMember?.id,
+                  });
+                } else {
+                  console.warn('[signup] requestClubMembership:', cfErr);
+                }
               }
             } catch (err) {
               console.warn('[signup] requestJoin membership:', err);

@@ -8,6 +8,7 @@ import {
   searchPublicClubsInFirestore,
   claimPublicClubInFirestore,
 } from './publicClubDirectory';
+import { requestClubMembershipInFirestore } from './requestClubMembership';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
 import { createShopCheckoutSession } from './shopPayments';
@@ -332,6 +333,41 @@ export const claimPublicClub = functions.https.onCall(async (data, context) => {
  *
  * Déployer : firebase deploy --only functions:scheduledBetaIosCampaign
  */
+
+/**
+ * Joueur / coach / parent : demande d’adhésion pending (confirmation staff club).
+ * Déployer : firebase deploy --only functions:requestClubMembership,functions:claimPublicClub
+ */
+export const requestClubMembership = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+  }
+  try {
+    return await requestClubMembershipInFirestore(db, context.auth.uid, {
+      club_id: typeof data?.club_id === 'string' ? data.club_id : null,
+      fff_affiliation_number:
+        typeof data?.fff_affiliation_number === 'string' ? data.fff_affiliation_number : null,
+      player_name: String(data?.player_name ?? ''),
+      role: data?.role === 'coach' || data?.role === 'parent' ? data.role : 'player',
+      category: typeof data?.category === 'string' ? data.category : null,
+      license_number: typeof data?.license_number === 'string' ? data.license_number : null,
+      identity_document_name:
+        typeof data?.identity_document_name === 'string' ? data.identity_document_name : null,
+      identity_document_url:
+        typeof data?.identity_document_url === 'string' ? data.identity_document_url : null,
+      identity_document_type:
+        typeof data?.identity_document_type === 'string' ? data.identity_document_type : null,
+      pre_registered_roster_id:
+        typeof data?.pre_registered_roster_id === 'string' ? data.pre_registered_roster_id : null,
+    });
+  } catch (e) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      e instanceof Error ? e.message : 'Demande d’adhésion impossible',
+    );
+  }
+});
+
 export const scheduledBetaIosCampaign = functions.pubsub
   .schedule('every 1 hours')
   .timeZone('Europe/Paris')

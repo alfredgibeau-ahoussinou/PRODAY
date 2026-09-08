@@ -18,6 +18,8 @@ import { profileService } from './profile.service';
 import { clubsService } from './clubs.service';
 import { teamsService } from './teams.service';
 import { membershipFromFirestore } from '../lib/firestoreMappers';
+import { staffNotificationsService } from './staffNotifications.service';
+import { usersService } from './users.service';
 
 const COL = 'memberships';
 
@@ -111,7 +113,33 @@ export const membershipsService = {
     };
     await setDoc(ref, payload);
     const snap = await getDoc(ref);
-    return membershipFromFirestore(snap.id, snap.data() as Record<string, unknown>);
+    const membership = membershipFromFirestore(snap.id, snap.data() as Record<string, unknown>);
+
+    try {
+      const recipients = new Set<string>();
+      if (club.owner_uid) recipients.add(club.owner_uid);
+      const staff = await usersService.listMembersByClubId(input.club_id);
+      for (const u of staff) {
+        if (u.role === 'club' || u.role === 'coach' || u.role === 'admin') {
+          recipients.add(u.uid);
+        }
+      }
+      recipients.delete(input.player_uid);
+      const roleLabel =
+        input.role === 'coach' ? 'Coach' : input.role === 'parent' ? 'Parent' : 'Joueur';
+      await staffNotificationsService.notifyRecipients({
+        recipient_uids: [...recipients],
+        type: 'generic',
+        title: 'Demande d’adhésion',
+        body: `${input.player_name.trim()} (${roleLabel}) demande à rejoindre le club. Confirmez ou refusez.`,
+        club_id: input.club_id,
+        player_uid: input.player_uid,
+      });
+    } catch {
+      // best-effort
+    }
+
+    return membership;
   },
 
   /** Staff club invite un joueur — membership pending jusqu'à acceptation joueur ou validation staff. */
@@ -216,5 +244,18 @@ export const membershipsService = {
       validated_by_uid: approverUid,
       updated_at: serverTimestamp(),
     });
+
+    // Détache le profil si encore pointé sur ce club (pas de PII supplémentaire).
+    try {
+      const user = await usersService.getById(membership.player_uid);
+      if (user?.profile?.club_id === membership.club_id) {
+        await updateDoc(doc(database, 'users', membership.player_uid), {
+          'profile.club_id': null,
+          updated_at: serverTimestamp(),
+        });
+      }
+    } catch {
+      // best-effort
+    }
   },
 };

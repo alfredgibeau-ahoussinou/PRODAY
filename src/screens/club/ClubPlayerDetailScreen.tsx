@@ -16,6 +16,7 @@ import {
 } from '../../features/club/ui/clubUi';
 import { ClubPlayerHero } from '../../features/club/ui/ClubPlayerHero';
 import { membershipsService } from '../../services/memberships.service';
+import { clubLicenseService } from '../../features/club/services/clubLicenseService';
 import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
@@ -35,6 +36,7 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
   const ws = useClubWorkspace();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const [busy, setBusy] = useState(false);
+  const [verifyingLicense, setVerifyingLicense] = useState(false);
 
   if (ws.loading) return <ClubLoading />;
 
@@ -113,6 +115,26 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
     ]);
   };
 
+  const handleVerifyLicense = async () => {
+    if (!ws.clubId || !profile?.uid) return;
+    setVerifyingLicense(true);
+    try {
+      await clubLicenseService.verifyPlayerLicense({
+        clubId: ws.clubId,
+        playerUid: player.uid,
+        approverUid: profile.uid,
+      });
+      await ws.refresh();
+      Alert.alert('Licence validée', `La licence de ${player.display_name || 'ce joueur'} a été certifiée avec succès.`);
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible de certifier la licence.');
+    } finally {
+      setVerifyingLicense(false);
+    }
+  };
+
+  const isVerified = (player.profile as Record<string, unknown> | undefined)?.verification_status === 'verified';
+
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
@@ -153,8 +175,8 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
             </ClubText>
             <ClubActionRow
               icon="checkmark-circle"
-              label="Valider l’adhésion"
-              hint="Active le joueur dans l’effectif"
+              label="Confirmer"
+              hint="Active le membre dans l’effectif"
               onPress={() => !busy && void approve()}
             />
             <ClubActionRow
@@ -222,11 +244,27 @@ export function ClubPlayerDetailScreen({ playerUid, onBack }: Props) {
           />
         </ClubSectionCard>
 
-        <ClubSectionCard title="Documents">
-          <ClubText variant="caption" muted>
-            Licences & pièces : accès réservé Admin / Dirigeant selon le rôle compte — pas de
-            dossier médical ici.
+        <ClubSectionCard title="Licence & Documents FFF">
+          <ClubText variant="body" muted>
+            Numéro FFF : {membership?.license_number || (player.profile as Record<string, unknown> | undefined)?.license_number as string || 'Non renseigné'}
           </ClubText>
+          <ClubText variant="caption" muted style={{ marginTop: 2, marginBottom: 8 }}>
+            Certification : {isVerified ? '✓ Certifié Footclubs FFF' : 'À vérifier auprès de la ligue'}
+          </ClubText>
+          {!isVerified && ws.clubId && profile ? (
+            <ClubActionRow
+              icon="checkmark-circle"
+              label={verifyingLicense ? 'Certification en cours…' : 'Certifier la licence Footclubs (1 tap)'}
+              hint="Marque la licence comme vérifiée pour la saison"
+              onPress={() => !verifyingLicense && void handleVerifyLicense()}
+            />
+          ) : null}
+          <ClubActionRow
+            icon="document-text"
+            label="Module Licences & Documents"
+            hint="Imports CSV Footclubs, certificats et exports"
+            onPress={() => shellNav?.requestNav('licenses')}
+          />
         </ClubSectionCard>
       </ClubChapterScroll>
     </View>

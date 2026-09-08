@@ -12,8 +12,7 @@ import { ClubTabBar } from './ClubTabBar';
 import { ClubShellNavProvider } from './ClubShellNavContext';
 import { ClubThemeProvider, useClubTheme } from './ClubThemeContext';
 import { ClubMenuPane } from './ClubMenuPane';
-import { ClubCreateFab, ClubCreateSheet } from './ClubCreateSheet';
-import { ClubCopilotFab } from './ClubCopilotFab';
+import { ClubCreateSheet } from './ClubCreateSheet';
 import { ClubCreateFormModal } from '../create/ClubCreateFormModal';
 import { ClubLockedPane } from './ClubLockedPane';
 import { openClubHelpChatbot, registerClubCopilotOpener } from './clubHelpOpen';
@@ -48,13 +47,8 @@ import { ClubCalendarScreen } from '../../../screens/club/ClubCalendarScreen';
 import { ClubMatchesScreen } from '../../../screens/club/ClubMatchesScreen';
 import { ClubTrainingsScreen } from '../../../screens/club/ClubTrainingsScreen';
 import { ClubCommunicationScreen } from '../../../screens/club/ClubCommunicationScreen';
-import { ClubRecruitmentScreen } from '../../../screens/club/ClubRecruitmentScreen';
-import { ClubVideoScreen } from '../../../screens/club/ClubVideoScreen';
-import { ClubStatsScreen } from '../../../screens/club/ClubStatsScreen';
 import { ClubHubScreen, ClubPackScreen } from '../../../screens/club/ClubHubScreen';
 import { renderClubSecondaryStub } from '../../../screens/club/ClubSecondaryScreens';
-import { CarpoolScreen } from '../../../screens/CarpoolScreen';
-import { ShopScreen } from '../../../screens/ShopScreen';
 import { useAuth } from '../../../context/AuthContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { usePlatformFeatureFlags } from '../../../hooks/usePlatformFeatureFlags';
@@ -128,6 +122,7 @@ function ClubAppShellInner({
   const [createOpen, setCreateOpen] = useState(false);
   const [createFormAction, setCreateFormAction] = useState<ClubCreateActionId | null>(null);
   const [selectedPlayerUid, setSelectedPlayerUid] = useState<string | null>(null);
+  const [playersPendingFocus, setPlayersPendingFocus] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
 
   const applyNav = useCallback((id: ClubNavItemId) => {
@@ -264,7 +259,6 @@ function ClubAppShellInner({
       renderClubPane(navId, toolItems)
     );
 
-  const showFab = !wide && navId !== 'plus';
 
   return (
     <ClubShellNavProvider
@@ -277,6 +271,12 @@ function ClubAppShellInner({
       setSelectedTeamId={setSelectedTeamId}
       selectedPlayerUid={selectedPlayerUid}
       setSelectedPlayerUid={setSelectedPlayerUid}
+      openPlayersPending={() => {
+        setPlayersPendingFocus(true);
+        onSelect('players');
+      }}
+      playersPendingFocus={playersPendingFocus}
+      clearPlayersPendingFocus={() => setPlayersPendingFocus(false)}
     >
       <StatusBar style="light" />
       <View style={[styles.root, !wide && styles.rootColumn]}>
@@ -304,13 +304,6 @@ function ClubAppShellInner({
             <PaneTransition sectionKey={navId} direction={direction} context="tab">
               {React.isValidElement(content) ? content : null}
             </PaneTransition>
-            {showFab ? (
-              <>
-                {/* Accueil (`today`) : un seul FAB (créer) — copilote via Outils / chrome. */}
-                {navId !== 'today' ? <ClubCopilotFab onPress={onOpenHelp} /> : null}
-                <ClubCreateFab onPress={() => setCreateOpen(true)} />
-              </>
-            ) : null}
           </View>
         </View>
 
@@ -355,12 +348,6 @@ function renderClubPane(navId: ClubNavItemId, toolItems: ReturnType<typeof resol
       return <ClubTrainingsScreen />;
     case 'communication':
       return <ClubCommunicationScreen />;
-    case 'recruitment':
-      return <ClubRecruitmentScreen />;
-    case 'video':
-      return <ClubVideoScreen />;
-    case 'stats':
-      return <ClubStatsScreen />;
     case 'club':
       return <ClubHubScreen />;
     case 'pack':
@@ -369,10 +356,6 @@ function renderClubPane(navId: ClubNavItemId, toolItems: ReturnType<typeof resol
       return <ClubMenuPane items={toolItems} />;
     case 'assistant':
       return <ClubAiAssistant />;
-    case 'carpool':
-      return <CarpoolScreen />;
-    case 'shop':
-      return <ShopScreen />;
     default:
       return <ClubHomeScreen />;
   }

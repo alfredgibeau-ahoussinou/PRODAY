@@ -14,6 +14,11 @@ type ClubShellNavValue = {
   /** Joueur sélectionné (fiche). */
   selectedPlayerUid?: string | null;
   setSelectedPlayerUid?: (uid: string | null) => void;
+  /** Ouvre Joueurs sur le filtre « En attente » (adhésions à confirmer). */
+  openPlayersPending?: () => void;
+  /** Consommé par ClubPlayersScreen puis remis à false. */
+  playersPendingFocus?: boolean;
+  clearPlayersPendingFocus?: () => void;
 };
 
 const ClubShellNavContext = createContext<ClubShellNavValue | null>(null);
@@ -28,6 +33,9 @@ export function ClubShellNavProvider({
   setSelectedTeamId,
   selectedPlayerUid,
   setSelectedPlayerUid,
+  openPlayersPending,
+  playersPendingFocus,
+  clearPlayersPendingFocus,
   children,
 }: ClubShellNavValue & { children: React.ReactNode }) {
   return (
@@ -42,6 +50,9 @@ export function ClubShellNavProvider({
         setSelectedTeamId,
         selectedPlayerUid,
         setSelectedPlayerUid,
+        openPlayersPending,
+        playersPendingFocus,
+        clearPlayersPendingFocus,
       }}
     >
       {children}

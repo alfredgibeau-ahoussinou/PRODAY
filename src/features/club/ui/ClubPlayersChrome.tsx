@@ -59,7 +59,7 @@ export function ClubPlayersPendingHero({
           <View style={styles.ctaRow}>
             <PressableSpring onPress={onFilterPending} scaleTo={0.97} haptic style={styles.ctaPrimary}>
               <ClubText variant="caption" style={styles.ctaPrimaryLabel}>
-                Voir
+                Confirmer
               </ClubText>
               <Icon name="chevron-forward" size={12} color={tokens.onAccent} />
             </PressableSpring>
@@ -70,7 +70,7 @@ export function ClubPlayersPendingHero({
               style={[styles.ctaGhost, { borderColor: tokens.warning + '66' }]}
             >
               <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '800' }}>
-                Traiter
+                Voir la liste
               </ClubText>
             </PressableSpring>
           </View>
@@ -90,6 +90,10 @@ export type LicenseFolderStatus = {
 export function ClubPlayersPendingRow({
   name,
   teamHint,
+  roleBadge,
+  categoryHint,
+  identityDocName,
+  identityDocType,
   busy,
   licenseStatus,
   onOpen,
@@ -98,6 +102,10 @@ export function ClubPlayersPendingRow({
 }: {
   name: string;
   teamHint?: string;
+  roleBadge?: string;
+  categoryHint?: string;
+  identityDocName?: string;
+  identityDocType?: string;
   busy?: boolean;
   licenseStatus?: LicenseFolderStatus;
   onOpen: () => void;
@@ -124,13 +132,37 @@ export function ClubPlayersPendingRow({
           <Icon name="person" size={16} color={tokens.warning} />
         </View>
         <View style={styles.col}>
-          <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>
-            {name}
-          </ClubText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <ClubText variant="body" numberOfLines={1} style={{ fontWeight: '700' }}>
+              {name}
+            </ClubText>
+            {roleBadge && (
+              <View style={[styles.rolePill, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent + '44' }]}>
+                <ClubText variant="caption" style={{ color: tokens.accent, fontSize: 10, fontWeight: '800' }}>
+                  {roleBadge}
+                </ClubText>
+              </View>
+            )}
+            {categoryHint && (
+              <View style={[styles.rolePill, { backgroundColor: tokens.surfaceElevated, borderColor: tokens.borderStrong }]}>
+                <ClubText variant="caption" style={{ color: tokens.foreground, fontSize: 10, fontWeight: '700' }}>
+                  {categoryHint}
+                </ClubText>
+              </View>
+            )}
+          </View>
           <ClubText variant="caption" muted numberOfLines={1}>
             {teamHint?.trim() || 'Adhésion en attente'}
           </ClubText>
           <View style={styles.trackerRow}>
+            {identityDocName ? (
+              <View style={[styles.trackerPill, { borderColor: tokens.pitch + '66', backgroundColor: tokens.pitch + '20' }]}>
+                <Icon name="checkmark-circle" size={11} color={tokens.pitch} />
+                <ClubText variant="caption" style={{ color: tokens.pitch, fontSize: 10, fontWeight: '800' }}>
+                  {identityDocType === 'fff_license' ? 'Licence FFF fournie' : identityDocType === 'club_mandate' ? 'Attestation fournie' : 'Pièce d\'identité fournie'}
+                </ClubText>
+              </View>
+            ) : null}
             <View style={[styles.trackerPill, { borderColor: badgeColor(medical) + '55', backgroundColor: badgeColor(medical) + '15' }]}>
               <Icon
                 name={medical === 'valid' ? 'checkmark-circle' : medical === 'pending' ? 'time' : 'alert-circle'}
@@ -184,7 +216,7 @@ export function ClubPlayersPendingRow({
           style={[styles.btn, styles.btnOk]}
         >
           <ClubText variant="caption" style={{ color: tokens.onAccent, fontWeight: '800' }}>
-            Valider
+            Confirmer
           </ClubText>
         </PressableSpring>
       </View>
@@ -297,6 +329,12 @@ const pendingRowStyles = (tokens: ClubThemeTokens) =>
       alignItems: 'center',
       gap: 3,
       paddingVertical: 2,
+      paddingHorizontal: 6,
+      borderRadius: clubRadius.pill,
+      borderWidth: 1,
+    },
+    rolePill: {
+      paddingVertical: 1,
       paddingHorizontal: 6,
       borderRadius: clubRadius.pill,
       borderWidth: 1,

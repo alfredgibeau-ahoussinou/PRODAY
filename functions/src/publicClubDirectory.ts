@@ -298,10 +298,22 @@ export async function claimPublicClubInFirestore(
     throw new functions.https.HttpsError('not-found', 'Club ProDay introuvable');
   }
   const club = clubSnap.data()!;
-  if (asString(club.owner_uid) !== uid) {
+  const currentOwner = asString(club.owner_uid);
+  // Stub créé à l’adhésion joueur (owner vide) : le claimant devient propriétaire.
+  if (currentOwner && currentOwner !== uid) {
     throw new functions.https.HttpsError(
       'permission-denied',
       'Seul le propriétaire du club peut claim',
+    );
+  }
+  if (!currentOwner || club.unclaimed_stub === true) {
+    await clubRef.set(
+      {
+        owner_uid: uid,
+        unclaimed_stub: false,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
     );
   }
 

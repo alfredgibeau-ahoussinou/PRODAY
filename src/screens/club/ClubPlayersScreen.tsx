@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
@@ -43,6 +43,12 @@ export function ClubPlayersScreen() {
   const [busyMembershipId, setBusyMembershipId] = useState<string | null>(null);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const selected = shellNav?.selectedPlayerUid ?? null;
+
+  useEffect(() => {
+    if (!shellNav?.playersPendingFocus) return;
+    setFilter('pending');
+    shellNav.clearPlayersPendingFocus?.();
+  }, [shellNav?.playersPendingFocus, shellNav]);
 
   const basePlayers = useMemo(
     () =>
@@ -233,11 +239,21 @@ export function ClubPlayersScreen() {
             <View style={styles.list}>
               {pendingItems.map((item) => {
                 const team = ws.teams.find((t) => t.id === item.membership.team_id);
+                const roleBadge =
+                  item.membership.role === 'coach'
+                    ? 'Coach'
+                    : item.membership.role === 'parent'
+                      ? 'Parent'
+                      : 'Joueur';
                 return (
                   <ClubPlayersPendingRow
                     key={item.membership.id}
                     name={item.name}
-                    teamHint={team?.name}
+                    teamHint={item.membership.category ? `${item.membership.category} · ${team?.name ?? 'Équipe'}` : team?.name}
+                    roleBadge={roleBadge}
+                    categoryHint={item.membership.category}
+                    identityDocName={item.membership.identity_document_name}
+                    identityDocType={item.membership.identity_document_type}
                     busy={busyMembershipId === item.membership.id}
                     onOpen={() => shellNav?.setSelectedPlayerUid?.(item.membership.player_uid)}
                     onApprove={() => void approve(item.membership.id)}
