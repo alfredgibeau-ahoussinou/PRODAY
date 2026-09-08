@@ -25,15 +25,17 @@ interface SignupStepLayoutProps {
   subtitle?: string;
   contentKey?: string;
   heroIcon?: string;
+  /** Étape précédente, ou fermer si étape 1. */
   onBack?: () => void;
+  /** Toujours disponible — quitte l’inscription (gate). */
   onClose?: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
 
 /**
- * Layout inscription — look shell authentifié :
- * wash pôle, badge pôle, progress fine, typo Inter, surfaces charcoal.
+ * Chrome inscription — direction shells ProDay :
+ * wash plein, header back + barre + close, typo éditoriale, zero clutter.
  */
 export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   stepIndex,
@@ -50,6 +52,9 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   const { visual } = useSignupFlowTheme();
   const total = Math.max(1, Math.min(stepTotal, 8));
   const active = Math.min(Math.max(stepIndex, 0), total - 1);
+  const progress = (active + 1) / total;
+  const canNavigateBack = Boolean(onBack);
+  const canClose = Boolean(onClose);
   const scrollBottomPad = tabInset({ stickyFooter: Boolean(footer) });
   const footerBottomPad = tabInset();
   const styles = useMemo(() => createStyles(contentMaxWidth, visual), [contentMaxWidth, visual]);
@@ -60,63 +65,64 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <LinearGradient
-        colors={[visual.washTop, visual.washMid, visual.washTransparent]}
-        locations={[0, 0.35, 1]}
-        style={styles.wash}
+        colors={[visual.washTop, visual.washMid, visual.bg]}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
 
       <View style={[styles.header, { paddingTop: headerTopPad }]}>
         <View style={styles.headerRow}>
-          {onBack || onClose ? (
+          {canNavigateBack ? (
             <PressableSpring
-              onPress={onBack ?? onClose}
+              onPress={onBack}
               style={styles.iconBtn}
-              hitSlop={14}
+              hitSlop={16}
               scaleTo={0.92}
               haptic
               accessibilityRole="button"
-              accessibilityLabel={onBack ? 'Retour' : 'Fermer'}
+              accessibilityLabel="Retour"
+              testID="signup-back"
             >
-              <Icon name={onBack ? 'arrow-back' : 'close'} size={18} color={visual.text} />
+              <Icon name="arrow-back" size={20} color={visual.text} />
             </PressableSpring>
           ) : (
-            <View style={styles.headerSideSpacer} />
+            <View style={styles.iconSpacer} />
           )}
 
-          <View style={[styles.poleBadge, { borderColor: visual.accentSoft }]}>
-            <View style={[styles.poleDot, { backgroundColor: visual.accent }]} />
-            <ProDayText variant="caption" style={[styles.poleLabel, { color: visual.focus }]}>
-              {visual.poleLabel}
+          <View style={styles.progressWrap}>
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${Math.round(progress * 100)}%`,
+                    backgroundColor: visual.accent,
+                  },
+                ]}
+              />
+            </View>
+            <ProDayText variant="caption" style={styles.stepCount}>
+              {active + 1} / {total}
             </ProDayText>
           </View>
 
-          <ProDayText variant="caption" style={styles.stepCount}>
-            {active + 1}/{total}
-          </ProDayText>
-        </View>
-
-        <View
-          style={styles.progressTrack}
-          accessibilityRole="progressbar"
-          accessibilityValue={{ min: 0, max: total, now: active + 1 }}
-        >
-          {Array.from({ length: total }).map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.progressSeg,
-                {
-                  backgroundColor:
-                    i < active
-                      ? visual.accentSoft
-                      : i === active
-                        ? visual.accent
-                        : 'rgba(255,255,255,0.12)',
-                },
-              ]}
-            />
-          ))}
+          {canClose ? (
+            <PressableSpring
+              onPress={onClose}
+              style={styles.iconBtn}
+              hitSlop={16}
+              scaleTo={0.92}
+              haptic
+              accessibilityRole="button"
+              accessibilityLabel="Fermer l’inscription"
+              testID="signup-close"
+            >
+              <Icon name="close" size={20} color={visual.text} />
+            </PressableSpring>
+          ) : (
+            <View style={styles.iconSpacer} />
+          )}
         </View>
       </View>
 
@@ -125,11 +131,11 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {stepName ? (
-          <ProDayText variant="eyebrow" style={[styles.stepKicker, { color: visual.focus }]}>
-            {stepName}
-          </ProDayText>
-        ) : null}
+        <ProDayText variant="eyebrow" style={[styles.poleKicker, { color: visual.focus }]}>
+          {visual.poleLabel}
+          {stepName ? `  ·  ${stepName}` : ''}
+        </ProDayText>
+
         <ProDayText variant="title" style={styles.title}>
           {title}
         </ProDayText>
@@ -138,11 +144,17 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
             {subtitle}
           </ProDayText>
         ) : null}
-        <View style={styles.body}>{children}</View>
+
+        <View style={[styles.panel, { borderColor: visual.border, backgroundColor: visual.elevated }]}>
+          <View style={[styles.panelRail, { backgroundColor: visual.accent }]} />
+          <View style={styles.panelBody}>{children}</View>
+        </View>
       </ScrollView>
 
       {footer ? (
-        <View style={[styles.footer, { paddingBottom: footerBottomPad }]}>{footer}</View>
+        <View style={[styles.footer, { paddingBottom: footerBottomPad, borderTopColor: visual.border }]}>
+          {footer}
+        </View>
       ) : null}
     </KeyboardAvoidingView>
   );
@@ -154,111 +166,98 @@ function createStyles(contentMaxWidth: number, v: SignupVisualChrome) {
       flex: 1,
       backgroundColor: v.bg,
     },
-    wash: {
-      ...StyleSheet.absoluteFillObject,
-      height: 280,
-    },
     header: {
-      paddingHorizontal: 18,
-      paddingBottom: 10,
+      paddingHorizontal: 16,
+      paddingBottom: 8,
       zIndex: 2,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-      marginBottom: 14,
+      gap: 12,
     },
-    headerSideSpacer: { width: 40 },
     iconBtn: {
-      width: 40,
-      height: 40,
+      width: 44,
+      height: 44,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 12,
-      backgroundColor: v.elevated,
+      borderRadius: 14,
+      backgroundColor: 'rgba(255,255,255,0.06)',
       borderWidth: 1,
       borderColor: v.border,
     },
-    poleBadge: {
+    iconSpacer: { width: 44, height: 44 },
+    progressWrap: {
       flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
+      gap: 6,
       justifyContent: 'center',
-      gap: 8,
-      alignSelf: 'center',
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 12,
-      backgroundColor: v.surface,
-      borderWidth: 1,
-    },
-    poleDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-    },
-    poleLabel: {
-      fontSize: 11,
-      fontWeight: '700',
-      letterSpacing: 1.6,
-    },
-    stepCount: {
-      minWidth: 40,
-      textAlign: 'right',
-      color: v.textFaint,
-      fontSize: 12,
-      fontWeight: '600',
-      letterSpacing: 0.3,
     },
     progressTrack: {
-      flexDirection: 'row',
-      gap: 5,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: 'rgba(255,255,255,0.12)',
+      overflow: 'hidden',
     },
-    progressSeg: {
-      flex: 1,
-      height: 3,
+    progressFill: {
+      height: '100%',
       borderRadius: 2,
     },
+    stepCount: {
+      color: v.textFaint,
+      fontSize: 11,
+      fontWeight: '600',
+      letterSpacing: 0.4,
+      textAlign: 'center',
+    },
     scroll: {
-      paddingHorizontal: 22,
-      paddingTop: 8,
-      maxWidth: contentMaxWidth + 40,
+      paddingHorizontal: 20,
+      paddingTop: 18,
+      maxWidth: contentMaxWidth + 36,
       width: '100%',
       alignSelf: 'center',
-      zIndex: 1,
     },
-    stepKicker: {
+    poleKicker: {
       fontSize: 11,
       fontWeight: '700',
-      letterSpacing: 1.4,
+      letterSpacing: 1.8,
       textTransform: 'uppercase',
-      marginBottom: 10,
+      marginBottom: 12,
     },
     title: {
       color: v.text,
-      fontSize: 30,
+      fontSize: 32,
       fontWeight: '800',
-      letterSpacing: -0.7,
-      marginBottom: 8,
-      lineHeight: 36,
+      letterSpacing: -0.8,
+      marginBottom: 10,
+      lineHeight: 38,
     },
     subtitle: {
       color: v.textMuted,
       fontSize: 15,
       lineHeight: 22,
       fontWeight: '400',
-      marginBottom: 22,
+      marginBottom: 20,
     },
-    body: {
+    panel: {
+      borderRadius: 18,
+      borderWidth: 1,
+      overflow: 'hidden',
+      flexDirection: 'row',
+      minHeight: 120,
+    },
+    panelRail: {
+      width: 3,
+    },
+    panelBody: {
+      flex: 1,
+      padding: 18,
       gap: 14,
     },
     footer: {
-      paddingHorizontal: 22,
-      paddingTop: 12,
-      backgroundColor: v.bg,
+      paddingHorizontal: 20,
+      paddingTop: 14,
+      backgroundColor: 'rgba(0,0,0,0.72)',
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: v.border,
       zIndex: 2,
     },
   });

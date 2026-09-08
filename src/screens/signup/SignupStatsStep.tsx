@@ -17,6 +17,7 @@ interface SignupStatsStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack: () => void;
+  onClose?: () => void;
 }
 
 export const SignupStatsStep: React.FC<SignupStatsStepProps> = ({
@@ -27,6 +28,7 @@ export const SignupStatsStep: React.FC<SignupStatsStepProps> = ({
   phases,
   phaseIndex,
   onBack,
+  onClose,
 }) => {
   const { colors: c } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
@@ -45,6 +47,7 @@ export const SignupStatsStep: React.FC<SignupStatsStepProps> = ({
       contentKey="player-stats"
       heroIcon={meta.heroIcon}
       onBack={onBack}
+      onClose={onClose}
       footer={
         <>
           <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />

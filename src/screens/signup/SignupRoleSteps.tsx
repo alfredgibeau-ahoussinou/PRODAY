@@ -32,6 +32,7 @@ type StepProps = {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack: () => void;
+  onClose?: () => void;
 };
 
 export const SignupCoachProStep: React.FC<StepProps> = (props) => {

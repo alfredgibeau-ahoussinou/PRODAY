@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, BackHandler } from 'react-native';
 import Animated, { Easing, FadeIn, FadeOut } from 'react-native-reanimated';
 import { useReducedMotion } from '../../motion';
 import { useSignupForm } from './useSignupForm';
@@ -39,7 +39,6 @@ import { getSanteLaunchCopy } from './signupSanteConfig';
 import { useTranslation } from '../../context/LocaleContext';
 import type { UserRole } from '../../models/User';
 import { needsOnboardingDocumentUpload } from '../../utils/onboardingGate';
-import { AUTH_XP } from '../../features/auth/experience';
 import { resolveSignupBackKind } from './signupFlowConfig';
 
 interface SignupFlowProps {
@@ -85,8 +84,18 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
     accountCreated: form.accountCreated,
     pageIndex: form.pageIndex,
   });
+  /** Étape 1 → gate ; sinon étape précédente. Toujours quittable. */
   const onBack =
-    backKind === 'none' ? undefined : backKind === 'close' ? onClose : form.goBack;
+    backKind === 'none' ? onClose : backKind === 'close' ? onClose : form.goBack;
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, [onBack]);
+
   const pageEntering = reduced
     ? undefined
     : FadeIn.duration(200).easing(Easing.out(Easing.cubic));
@@ -104,68 +113,70 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
     form.goNext();
   };
 
+  const nav = { onBack, onClose };
+
   let content: React.ReactNode;
   switch (form.currentPage) {
     case 'welcome':
       content = <SignupWelcomeStep form={form} {...layout} onClose={onClose} />;
       break;
     case 'space':
-      content = <SignupSpaceStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupSpaceStep form={form} {...layout} {...nav} />;
       break;
     case 'sport':
-      content = <SignupSportStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupSportStep form={form} {...layout} {...nav} />;
       break;
     case 'location':
-      content = <SignupLocationStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupLocationStep form={form} {...layout} {...nav} />;
       break;
     case 'stats':
-      content = <SignupStatsStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupStatsStep form={form} {...layout} {...nav} />;
       break;
     case 'coach_pro':
-      content = <SignupCoachProStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupCoachProStep form={form} {...layout} {...nav} />;
       break;
     case 'club_pro':
-      content = <SignupClubProStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupClubProStep form={form} {...layout} {...nav} />;
       break;
     case 'agent_pro':
-      content = <SignupAgentProStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupAgentProStep form={form} {...layout} {...nav} />;
       break;
     case 'recruiter_pro':
-      content = <SignupRecruiterProStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupRecruiterProStep form={form} {...layout} {...nav} />;
       break;
     case 'organizer_pro':
-      content = <SignupOrganizerProStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupOrganizerProStep form={form} {...layout} {...nav} />;
       break;
     case 'medical_specialty':
-      content = <SignupMedicalSpecialtyStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupMedicalSpecialtyStep form={form} {...layout} {...nav} />;
       break;
     case 'medical_practice':
-      content = <SignupMedicalPracticeStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupMedicalPracticeStep form={form} {...layout} {...nav} />;
       break;
     case 'sponsor_pro':
-      content = <SignupSponsorProStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupSponsorProStep form={form} {...layout} {...nav} />;
       break;
     case 'sponsor_company':
-      content = <SignupSponsorCompanyStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupSponsorCompanyStep form={form} {...layout} {...nav} />;
       break;
     case 'sponsor_campaign':
-      content = <SignupSponsorCampaignStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupSponsorCampaignStep form={form} {...layout} {...nav} />;
       break;
     case 'sponsor_targeting':
-      content = <SignupSponsorTargetingStep form={form} {...layout} onBack={form.goBack} />;
+      content = <SignupSponsorTargetingStep form={form} {...layout} {...nav} />;
       break;
     case 'family':
       content = (
         <SignupParentalStep
           form={form}
           {...layout}
-          onBack={form.goBack}
+          {...nav}
           onSubmit={() => form.advanceFromCurrentPage()}
         />
       );
       break;
     case 'account':
-      content = <SignupAccountStep form={form} {...layout} onBack={onBack} />;
+      content = <SignupAccountStep form={form} {...layout} {...nav} />;
       break;
     case 'security': {
       const isLastBeforeLaunch = form.steps[form.pageIndex + 1] === 'launch';
@@ -173,7 +184,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
         <SignupSecurityStep
           form={form}
           {...layout}
-          onBack={onBack}
+          {...nav}
           nextLabel={!isLastBeforeLaunch ? t('signup.form.continue') : undefined}
           onSubmit={() => void submitSecurity()}
         />
@@ -250,7 +261,7 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: AUTH_XP.black }]}>
+    <View style={styles.root}>
       <Animated.View
         key={form.currentPage}
         entering={pageEntering}
@@ -287,6 +298,7 @@ export const SignupFlow: React.FC<SignupFlowProps> = (props) => <SignupFlowWithT
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: '#000000',
   },
   page: { flex: 1, minHeight: 0 },
 });

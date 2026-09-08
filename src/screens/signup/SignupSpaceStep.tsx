@@ -17,6 +17,7 @@ interface SignupSpaceStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack: () => void;
+  onClose?: () => void;
 }
 
 export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
@@ -27,6 +28,7 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
   phases,
   phaseIndex,
   onBack,
+  onClose,
 }) => {
   const signupTheme = useSignupTheme();
   const { colors } = useSignupFlowTheme();
@@ -51,6 +53,7 @@ export const SignupSpaceStep: React.FC<SignupSpaceStepProps> = ({
       subtitle={meta.subtitle}
       heroIcon={meta.heroIcon}
       onBack={onBack}
+      onClose={onClose}
       footer={
         <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }

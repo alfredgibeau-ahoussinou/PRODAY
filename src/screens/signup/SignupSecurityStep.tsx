@@ -28,6 +28,7 @@ interface SignupSecurityStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack?: () => void;
+  onClose?: () => void;
   onSubmit: () => void;
   nextLabel?: string;
 }
@@ -40,6 +41,7 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
   phases,
   phaseIndex,
   onBack,
+  onClose,
   onSubmit,
   nextLabel = undefined,
 }) => {
@@ -68,6 +70,7 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
       contentKey="security"
       heroIcon={meta.heroIcon}
       onBack={onBack}
+      onClose={onClose}
       footer={
         <SignupFooterButton
           label={

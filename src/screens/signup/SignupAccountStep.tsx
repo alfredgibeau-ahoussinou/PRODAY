@@ -29,6 +29,7 @@ interface SignupAccountStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack?: () => void;
+  onClose?: () => void;
 }
 
 export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
@@ -39,6 +40,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   phases,
   phaseIndex,
   onBack,
+  onClose,
 }) => {
   const { t } = useTranslation();
   const { visual } = useSignupFlowTheme();
@@ -69,6 +71,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
       contentKey={`account-${form.role}`}
       heroIcon={meta.heroIcon}
       onBack={onBack}
+      onClose={onClose}
       footer={
         <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }

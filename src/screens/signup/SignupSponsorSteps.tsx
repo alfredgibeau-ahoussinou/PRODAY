@@ -26,6 +26,7 @@ type StepProps = {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack: () => void;
+  onClose?: () => void;
 };
 
 const SignupChipMultiPicker: React.FC<{

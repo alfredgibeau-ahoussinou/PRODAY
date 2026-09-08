@@ -86,5 +86,6 @@ describe('Auth redirections — univers → gate → login/signup → home', () 
     expect(resolveSignupStartPage({ role: 'club', parentalRequired: false })).toBe('club_pro');
     expect(resolveSignupStartPage({ role: 'parent', parentalRequired: false })).toBe('sport');
     expect(resolveSignupBackKind({ accountCreated: false, pageIndex: 0 })).toBe('close');
+    expect(resolveSignupBackKind({ accountCreated: false, pageIndex: 2 })).toBe('previous');
   });
 });

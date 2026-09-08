@@ -33,6 +33,7 @@ interface SignupSportStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack: () => void;
+  onClose?: () => void;
 }
 
 export const SignupSportStep: React.FC<SignupSportStepProps> = ({
@@ -43,6 +44,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   phases,
   phaseIndex,
   onBack,
+  onClose,
 }) => {
   const isParent = form.role === 'parent';
   const affiliationRole = isParent ? 'parent' : 'player';
@@ -87,6 +89,7 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
       contentKey={`${affiliationRole}-sport`}
       heroIcon={meta.heroIcon}
       onBack={onBack}
+      onClose={onClose}
       footer={
         <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
       }

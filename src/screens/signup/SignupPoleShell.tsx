@@ -22,6 +22,7 @@ type LayoutProps = {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack?: () => void;
+  onClose?: () => void;
 };
 
 export type SignupPoleShellProps = LayoutProps & {
@@ -59,6 +60,7 @@ export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
       stepName={meta.stepName ?? layout.stepName}
       contentKey={`${page}-${form.role}`}
       onBack={layout.onBack}
+      onClose={layout.onClose}
       footer={
         <SignupFooterButton
           label={continueLabel ?? t('signup.form.continue')}

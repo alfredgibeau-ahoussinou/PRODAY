@@ -15,6 +15,7 @@ interface SignupLocationStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack: () => void;
+  onClose?: () => void;
 }
 
 export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
@@ -25,6 +26,7 @@ export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
   phases,
   phaseIndex,
   onBack,
+  onClose,
 }) => {
   const { t } = useTranslation();
   const meta = getPlayerStepMeta(form.productLine, 'location', t);
@@ -40,6 +42,7 @@ export const SignupLocationStep: React.FC<SignupLocationStepProps> = ({
     contentKey="player-location"
     heroIcon={meta.heroIcon}
     onBack={onBack}
+      onClose={onClose}
     footer={
       <SignupFooterButton label={t('signup.form.continue')} onPress={() => form.advanceFromCurrentPage()} />
     }

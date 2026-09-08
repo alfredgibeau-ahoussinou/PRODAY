@@ -20,6 +20,7 @@ interface SignupParentalStepProps {
   phases?: SignupForm['phases'];
   phaseIndex?: number;
   onBack: () => void;
+  onClose?: () => void;
   onSubmit: () => void;
 }
 
@@ -31,6 +32,7 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
   phases,
   phaseIndex,
   onBack,
+  onClose,
   onSubmit,
 }) => {
   const { colors: c, productLine } = useSignupFlowTheme();
@@ -57,6 +59,7 @@ export const SignupParentalStep: React.FC<SignupParentalStepProps> = ({
       contentKey={`family-${form.appSpace}`}
       heroIcon={meta.heroIcon}
       onBack={onBack}
+      onClose={onClose}
       footer={
         <SignupFooterButton
           label={t('signup.form.continue')}
