@@ -9,6 +9,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthHero } from './AuthHero';
 import { AuthEnter } from './AuthMotion';
@@ -16,19 +17,18 @@ import { AUTH_XP } from './tokens';
 
 type AuthExperienceShellProps = {
   children: React.ReactNode;
-  /** Toolbar (back, language) */
   toolbar?: React.ReactNode;
-  /** Hide brand copy on very tight layouts. */
   brandCopy?: boolean;
-  /** Extra footer under the form (legal). */
   footer?: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
   scroll?: boolean;
+  /** Wash pôle (inscription / gate) — comme les shells club/coach. */
+  washTop?: string;
+  washMid?: string;
 };
 
 /**
- * Shell d'authentification épuré — Toolbar en flux naturel (pas d'overlay qui chevauche le logo),
- * logo officiel ProDay centré et formulaire aéré.
+ * Shell auth — noir + wash pôle optionnel, logo ProDay, formulaire aéré.
  */
 export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
   children,
@@ -37,6 +37,8 @@ export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
   footer,
   contentStyle,
   scroll = true,
+  washTop,
+  washMid,
 }) => {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -83,11 +85,16 @@ export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
       style={styles.root}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {toolbar ? (
-        <View style={styles.toolbarRow}>
-          {toolbar}
-        </View>
+      {washTop ? (
+        <LinearGradient
+          colors={[washTop, washMid ?? 'transparent', 'transparent']}
+          locations={[0, 0.4, 1]}
+          style={styles.wash}
+          pointerEvents="none"
+        />
       ) : null}
+
+      {toolbar ? <View style={styles.toolbarRow}>{toolbar}</View> : null}
 
       {isWide ? (
         <View style={styles.wideRow}>
@@ -97,9 +104,7 @@ export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
           <View style={styles.formPanel}>{form}</View>
         </View>
       ) : (
-        <View style={styles.mobileCol}>
-          {form}
-        </View>
+        <View style={styles.mobileCol}>{form}</View>
       )}
     </KeyboardAvoidingView>
   );
@@ -116,20 +121,29 @@ function createStyles(
       flex: 1,
       backgroundColor: '#000000',
     },
+    wash: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 320,
+      zIndex: 0,
+    },
     toolbarRow: {
       paddingTop: Math.max(topInset, 12),
       paddingHorizontal: compact ? 16 : 20,
       paddingBottom: 4,
-      backgroundColor: '#000000',
+      backgroundColor: 'transparent',
       zIndex: 10,
     },
     wideRow: {
       flex: 1,
       flexDirection: 'row',
+      zIndex: 1,
     },
     brandPanel: {
       width: '100%',
-      backgroundColor: '#000000',
+      backgroundColor: 'transparent',
       paddingBottom: compact ? 8 : 14,
     },
     formPanel: {
@@ -140,6 +154,7 @@ function createStyles(
     },
     mobileCol: {
       flex: 1,
+      zIndex: 1,
     },
     formScroll: {
       flex: 1,

@@ -17,12 +17,13 @@ import { isUnderU13AppSpace } from '../../models/AppSpace';
 import { SignupOptionPicker } from '../../components/signup/SignupOptionPicker';
 import { PLAYER_POSITIONS } from '../../constants/playerProfile';
 import { spacing, radius } from '../../theme/designTokens';
-import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { fontFamily } from '../../theme/typography';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { SignupFffAffiliationCard } from '../../components/signup/SignupFffAffiliationCard';
 import { SignupRecapCard } from '../../components/signup/SignupRecapCard';
+import { useSignupFlowTheme } from './SignupFlowContext';
+import type { SignupVisualChrome } from './signupVisualSystem';
 
 interface SignupSportStepProps {
   form: SignupForm;
@@ -61,9 +62,10 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
     return JOUEUR_UNIVERSE_LABELS[v.ageGroup];
   }, [form.birthDay, form.birthMonth, form.birthYear, isParent]);
 
-  const styles = useMemo(() => createStyles(), []);
-  const willNeedParental = !isParent && (form.isMinor || isUnderU13AppSpace(form.appSpace));
   const { t } = useTranslation();
+  const { visual } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(visual), [visual]);
+  const willNeedParental = !isParent && (form.isMinor || isUnderU13AppSpace(form.appSpace));
   const meta = isParent
     ? getStepMetaForRole('sport', 'parent', t)
     : getPlayerStepMeta(form.productLine, 'sport', t);
@@ -194,19 +196,19 @@ export const SignupSportStep: React.FC<SignupSportStepProps> = ({
   );
 };
 
-function createStyles() {
+function createStyles(v: SignupVisualChrome) {
   return StyleSheet.create({
     mismatchBox: {
-      backgroundColor: 'rgba(245, 208, 74, 0.08)',
-      borderRadius: radius.md,
+      backgroundColor: v.accentSoft,
+      borderRadius: 12,
       padding: spacing.md,
       marginBottom: spacing.md,
       borderWidth: 1,
-      borderColor: AUTH_XP.borderHighlight,
+      borderColor: v.borderStrong,
     },
     mismatchText: {
       fontSize: 13,
-      color: AUTH_XP.text,
+      color: v.text,
       lineHeight: 19,
       fontFamily: fontFamily.semibold,
     },
@@ -215,11 +217,11 @@ function createStyles() {
       alignSelf: 'flex-start',
       paddingVertical: spacing.xs,
       paddingHorizontal: spacing.sm,
-      backgroundColor: AUTH_XP.goldBright,
+      backgroundColor: v.accent,
       borderRadius: radius.sm,
     },
     mismatchBtnText: {
-      color: '#000000',
+      color: v.onAccent,
       fontSize: 12,
       fontFamily: fontFamily.bold,
     },

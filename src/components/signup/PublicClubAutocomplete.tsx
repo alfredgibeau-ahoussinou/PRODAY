@@ -14,10 +14,10 @@ import { publicClubDirectoryService } from '../../services/publicClubDirectory.s
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
-import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { spacing, radius } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 import type { PublicClubClaimStatus } from '../../models/PublicClubDirectory';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
 
 type Props = {
   selectedClub: OfficialFffClub | null;
@@ -44,11 +44,13 @@ const CLAIM_LABEL: Record<PublicClubClaimStatus, string> = {
 export const PublicClubAutocomplete: React.FC<Props> = ({
   selectedClub,
   onSelectClub,
-  accent = AUTH_XP.gold,
+  accent: accentProp,
   placeholder = 'Club, ville, CP ou n° affiliation FFF',
   error,
   showClaimBadge = true,
 }) => {
+  const { visual } = useSignupFlowTheme();
+  const accent = accentProp ?? visual.accent;
   const styles = useMemo(() => createStyles(accent), [accent]);
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<OfficialFffClub[]>([]);

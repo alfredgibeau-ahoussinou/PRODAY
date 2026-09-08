@@ -1,85 +1,82 @@
 import { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
-import { spacing, radius, shadows } from '../../theme/designTokens';
-import type { AppColors } from '../../theme/universeTheme';
-import { AUTH_SHEET } from '../../components/auth/authSheetPalette';
+import { spacing, radius } from '../../theme/designTokens';
 import { useSignupFlowTheme } from './SignupFlowContext';
+import type { SignupVisualChrome } from './signupVisualSystem';
 
-/** Styles partagés — parcours d'inscription ProDay */
-export function createSignupTheme(c: AppColors) {
+/** Styles partagés — chrome inscription = shells (plus de AUTH_SHEET blanc). */
+export function createSignupTheme(v: SignupVisualChrome) {
   return StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: AUTH_SHEET.background,
+      backgroundColor: v.bg,
     },
     sectionLabel: {
       fontSize: 11,
-      fontWeight: '800',
-      letterSpacing: 1.4,
+      fontWeight: '700',
+      letterSpacing: 1.3,
       textTransform: 'uppercase',
-      color: AUTH_SHEET.textMuted,
+      color: v.textFaint,
       marginBottom: spacing.sm,
-      textAlign: 'center',
     },
     card: {
-      backgroundColor: AUTH_SHEET.backgroundMuted,
+      backgroundColor: v.elevated,
       borderRadius: radius.lg,
       borderWidth: 1,
-      borderColor: AUTH_SHEET.border,
+      borderColor: v.border,
       padding: spacing.lg,
       marginBottom: spacing.md,
-      ...shadows.card,
     },
     cardMuted: {
-      backgroundColor: AUTH_SHEET.backgroundMuted,
+      backgroundColor: v.surface,
       borderRadius: radius.lg,
       borderWidth: 1,
-      borderColor: AUTH_SHEET.border,
+      borderColor: v.border,
       padding: spacing.lg,
       marginBottom: spacing.md,
     },
     chip: {
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
-      borderWidth: 1.5,
-      borderColor: AUTH_SHEET.border,
-      backgroundColor: AUTH_SHEET.background,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: v.border,
+      backgroundColor: v.surface,
       minHeight: 52,
       justifyContent: 'center',
     },
     chipActive: {
-      backgroundColor: c.accent,
-      borderColor: c.accent,
+      backgroundColor: v.accent,
+      borderColor: v.accent,
     },
     chipTitle: {
       fontSize: 15,
-      fontWeight: '800',
-      color: AUTH_SHEET.text,
+      fontWeight: '700',
+      color: v.text,
     },
     chipTitleActive: {
-      color: '#000000',
+      color: v.onAccent,
     },
     chipHint: {
       fontSize: 12,
-      color: AUTH_SHEET.textMuted,
+      color: v.textMuted,
       marginTop: 2,
       lineHeight: 17,
     },
     chipHintActive: {
-      color: 'rgba(255,255,255,0.72)',
+      color: v.onAccent,
+      opacity: 0.8,
     },
     fieldError: {
-      color: c.error,
+      color: v.danger,
       fontSize: 12,
       marginBottom: spacing.sm,
       fontWeight: '600',
-      textAlign: 'center',
     },
   });
 }
 
 export function useSignupTheme() {
-  const { colors } = useSignupFlowTheme();
-  return useMemo(() => createSignupTheme(colors), [colors]);
+  const { visual } = useSignupFlowTheme();
+  return useMemo(() => createSignupTheme(visual), [visual]);
 }

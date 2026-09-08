@@ -9,6 +9,10 @@ import type { PlayerSegment } from '../../utils/playerSegment';
 import { genderToPlayerSegment } from '../../utils/playerSegment';
 import type { Gender } from '../../models/User';
 import { reconcileProSignupPreset } from '../../utils/authBrandContext';
+import {
+  resolveSignupVisual,
+  type SignupVisualChrome,
+} from './signupVisualSystem';
 
 interface SignupFlowContextValue {
   productLine: ProductLineId;
@@ -20,6 +24,8 @@ interface SignupFlowContextValue {
   isSponsorSignup: boolean;
   colors: AppColors;
   experienceRole: UserRole;
+  /** Chrome inscription = accents shells (pas AppColors legacy). */
+  visual: SignupVisualChrome;
 }
 
 const SignupFlowContext = createContext<SignupFlowContextValue | null>(null);
@@ -59,6 +65,16 @@ export const SignupFlowProvider: React.FC<{
         ? getSponsorAppColors()
         : getThemedColorsForLine(productLine, playerSegment),
     [isSponsorSignup, productLine, playerSegment],
+  );
+
+  const visual = useMemo(
+    () =>
+      resolveSignupVisual({
+        role: experienceRole,
+        productLine,
+        sante: isSanteSignup || experienceRole === 'physio',
+      }),
+    [experienceRole, productLine, isSanteSignup],
   );
 
   useEffect(() => {
@@ -125,12 +141,15 @@ export const SignupFlowProvider: React.FC<{
         isSponsorSignup,
         colors,
         experienceRole,
+        visual,
       }}
     >
       {children}
     </SignupFlowContext.Provider>
   );
 };
+
+const FALLBACK_VISUAL = resolveSignupVisual({ role: 'player', productLine: 'amateur' });
 
 export function useSignupFlowTheme(): SignupFlowContextValue {
   const ctx = useContext(SignupFlowContext);
@@ -145,6 +164,7 @@ export function useSignupFlowTheme(): SignupFlowContextValue {
       isSponsorSignup: false,
       colors: getThemedColorsForLine('amateur'),
       experienceRole: 'player',
+      visual: FALLBACK_VISUAL,
     };
   }
   return ctx;

@@ -27,14 +27,12 @@ type LayoutProps = {
 export type SignupPoleShellProps = LayoutProps & {
   page: SignupPageId;
   children: React.ReactNode;
-  /** Aide sous le titre — caption légère, pas de boîte clutter. */
   hint?: string;
   continueLabel?: string;
 };
 
 /**
- * Chrome d’étape métier partagé (coach, club, agent, sponsor, médical…).
- * Même famille visuelle que login / gate.
+ * Chrome métier — délègue entièrement au design system inscription (visual).
  */
 export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
   form,
@@ -44,7 +42,7 @@ export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
   continueLabel,
   ...layout
 }) => {
-  const { colors, isProSignup, isSanteSignup } = useSignupFlowTheme();
+  const { visual, isProSignup, isSanteSignup } = useSignupFlowTheme();
   const { t } = useTranslation();
   const meta = isSanteSignup
     ? getSanteStepMeta(page, t)
@@ -65,7 +63,8 @@ export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
         <SignupFooterButton
           label={continueLabel ?? t('signup.form.continue')}
           onPress={() => form.advanceFromCurrentPage()}
-          accent={colors.accent?.toUpperCase() === '#FFFFFF' ? '#C5A059' : colors.accent}
+          accent={visual.accent}
+          onAccent={visual.onAccent}
         />
       }
     >
@@ -76,7 +75,7 @@ export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
       ) : null}
 
       {hint ? (
-        <ProDayText style={[styles.hintText, { color: colors.textSecondary }]}>{hint}</ProDayText>
+        <ProDayText style={[styles.hintText, { color: visual.textMuted }]}>{hint}</ProDayText>
       ) : null}
 
       {children}
@@ -91,6 +90,5 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontFamily: fontFamily.regular,
     marginBottom: spacing.sm,
-    opacity: 0.9,
   },
 });

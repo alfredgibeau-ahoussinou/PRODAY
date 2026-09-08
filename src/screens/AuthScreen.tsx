@@ -45,15 +45,13 @@ import {
 import { isGoogleAuthConfigured } from '../config/oauth';
 import { isPlatformAdminEmail } from '../config/admin';
 import type { CarouselPoleId } from '../models/CarouselPole';
-import {
-  resolvePoleAuthPalette,
-} from '../components/branding/intro/universeEntryAuth';
 import { universePoleDisplayName } from '../components/branding/intro/universePoleBrand';
 import {
   resolveAuthBackAction,
   resolveAuthSurface,
 } from '../utils/authBackStack';
 import { shouldReopenUniverseAfterAuth } from '../utils/postAuthNavigation';
+import { resolveSignupVisual } from './signup/signupVisualSystem';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -116,9 +114,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const passwordRef = useRef<TextInput>(null);
   const showOAuth =
     isGoogleAuthConfigured() || Platform.OS === 'ios';
-  const polePalette = useMemo(
+  const signupVisual = useMemo(
     () =>
-      resolvePoleAuthPalette({
+      resolveSignupVisual({
         pole: initialPole,
         productLine: signupProductLine ?? productLine,
         role: signupInitialRole,
@@ -386,7 +384,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   if (authLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={polePalette.accent} />
+        <ActivityIndicator size="large" color={signupVisual.focus} />
       </View>
     );
   }
@@ -415,7 +413,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       {t('auth.legalPrefix')}{' '}
       <ProDayText
         variant="caption"
-        style={[styles.legalLink, { color: polePalette.accent }]}
+        style={[styles.legalLink, { color: signupVisual.focus }]}
         onPress={() => setLegalDocument('terms')}
       >
         {t('auth.terms')}
@@ -423,7 +421,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       {t('auth.and')}{' '}
       <ProDayText
         variant="caption"
-        style={[styles.legalLink, { color: polePalette.accent }]}
+        style={[styles.legalLink, { color: signupVisual.focus }]}
         onPress={() => setLegalDocument('privacy')}
       >
         {t('auth.privacy')}
@@ -434,17 +432,22 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
   return (
     <>
-      <AuthExperienceShell toolbar={toolbar} footer={legalFooter} brandCopy={mode === 'signupTeaser'}>
-        <AuthModeSwitch modeKey={mode}>
+      <AuthExperienceShell
+        toolbar={toolbar}
+        footer={legalFooter}
+        brandCopy={mode === 'signupTeaser'}
+        washTop={signupVisual.washTop}
+        washMid={signupVisual.washMid}
+      >        <AuthModeSwitch modeKey={mode}>
           {mode === 'login' ? (
             <View>
               <View style={styles.kickerBadge}>
-                <View style={[styles.kickerDot, { backgroundColor: polePalette.accent }]} />
-                <ProDayText variant="eyebrow" style={[styles.kickerText, { color: polePalette.accent }]}>
+                <View style={[styles.kickerDot, { backgroundColor: signupVisual.accent }]} />
+                <ProDayText variant="eyebrow" style={[styles.kickerText, { color: signupVisual.focus }]}>
                   {universeAuthCopy.kicker}
                 </ProDayText>
               </View>
-              <View style={[styles.gateAccentBar, { backgroundColor: polePalette.accent }]} />
+              <View style={[styles.gateAccentBar, { backgroundColor: signupVisual.accent }]} />
               <ProDayText variant="title" style={styles.title}>
                 {universeAuthCopy.title}
               </ProDayText>
@@ -484,7 +487,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 blurOnSubmit={false}
                 onSubmitEditing={() => passwordRef.current?.focus()}
                 error={fieldErrors.email}
-                accent={polePalette.accent}
+                accent={signupVisual.focus}
               />
               <AuthInput
                 ref={passwordRef}
@@ -502,7 +505,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 returnKeyType="go"
                 onSubmitEditing={() => void handleLogin()}
                 error={fieldErrors.password}
-                accent={polePalette.accent}
+                accent={signupVisual.focus}
               />
 
               <AuthRememberRow
@@ -528,8 +531,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 label={universeAuthCopy.cta}
                 onPress={() => void handleLogin()}
                 loading={loading}
-                accent={polePalette.accent}
-                onAccent={polePalette.onAccent}
+                accent={signupVisual.accent}
+                onAccent={signupVisual.onAccent}
               />
 
               {showOAuth ? (
@@ -578,11 +581,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             <FeatureDisabledPanel flag="registration_open" />
           ) : (
             <AuthGatePanel
-              kicker={universeAuthCopy.kicker}
+              visual={signupVisual}
               title={universeAuthCopy.gateTitle}
               subtitle={universeAuthCopy.gateSub}
-              accent={polePalette.accent}
-              onAccent={polePalette.onAccent}
               createLabel={t('auth.createAccount') || 'Créer un compte'}
               loginLabel={t('auth.login') || 'Se connecter'}
               onCreate={openSignup}

@@ -2,8 +2,9 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { spacing } from '../../theme/designTokens';
 import { ProDayText } from '../ui/ProDayText';
-import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { fontFamily } from '../../theme/typography';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
+import type { SignupVisualChrome } from '../../screens/signup/signupVisualSystem';
 
 interface SignupOptionPickerProps {
   label: string;
@@ -20,21 +21,35 @@ export const SignupOptionPicker: React.FC<SignupOptionPickerProps> = ({
   onChange,
   error,
 }) => {
-  const styles = useMemo(() => createStyles(), []);
+  const { visual } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(visual), [visual]);
 
   return (
     <View style={styles.wrap}>
-      <ProDayText variant="caption" style={styles.label}>{label}</ProDayText>
+      <ProDayText variant="caption" style={styles.label}>
+        {label}
+      </ProDayText>
       <View style={styles.row}>
         {options.map((opt) => {
           const active = value === opt;
           return (
             <Pressable
               key={opt}
-              style={[styles.chip, active && styles.chipActive]}
+              style={[
+                styles.chip,
+                active && {
+                  backgroundColor: visual.accent,
+                  borderColor: visual.accent,
+                },
+              ]}
               onPress={() => onChange(opt)}
             >
-              <ProDayText style={[styles.chipText, active && styles.chipTextActive]}>
+              <ProDayText
+                style={[
+                  styles.chipText,
+                  active && { color: visual.onAccent, fontFamily: fontFamily.bold },
+                ]}
+              >
                 {opt}
               </ProDayText>
             </Pressable>
@@ -46,45 +61,36 @@ export const SignupOptionPicker: React.FC<SignupOptionPickerProps> = ({
   );
 };
 
-function createStyles() {
+function createStyles(v: SignupVisualChrome) {
   return StyleSheet.create({
     wrap: { marginBottom: spacing.md },
     label: {
       fontSize: 12,
       fontFamily: fontFamily.bold,
-      color: AUTH_XP.textMuted,
+      color: v.textMuted,
       marginBottom: spacing.xs,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
-      paddingVertical: 9,
-      paddingHorizontal: 16,
-      borderRadius: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 12,
       borderWidth: 1,
-      borderColor: AUTH_XP.border,
-      backgroundColor: AUTH_XP.inputBg,
-    },
-    chipActive: {
-      backgroundColor: AUTH_XP.goldBright,
-      borderColor: AUTH_XP.goldBright,
+      borderColor: v.border,
+      backgroundColor: v.surface,
     },
     chipText: {
       fontSize: 14,
       fontFamily: fontFamily.semibold,
-      color: AUTH_XP.text,
-    },
-    chipTextActive: {
-      color: '#000000',
-      fontFamily: fontFamily.bold,
+      color: v.text,
     },
     error: {
       fontSize: 12,
-      color: AUTH_XP.error,
+      color: v.danger,
       marginTop: spacing.xs,
       fontFamily: fontFamily.semibold,
     },
   });
 }
-

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   TextInput,
@@ -9,8 +9,9 @@ import {
 import { Icon } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
-import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { fontFamily } from '../../theme/typography';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
+import type { SignupVisualChrome } from '../../screens/signup/signupVisualSystem';
 import {
   fffOfficialRegistryService,
   type OfficialFffClub,
@@ -61,6 +62,8 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
   onChangeCustomName,
   error,
 }) => {
+  const { visual } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(visual), [visual]);
   const [rosterMembers, setRosterMembers] = useState<PreRegisteredMember[]>([]);
   const [loadingRoster, setLoadingRoster] = useState(false);
   const [rosterMeta, setRosterMeta] = useState<{
@@ -265,7 +268,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
               onPress={() => onToggleHasClub(true)}
               style={[styles.toggleBtn, hasClub && styles.toggleBtnActive]}
             >
-              <Icon name="shield" size={16} color={hasClub ? AUTH_XP.goldBright : AUTH_XP.textMuted} />
+              <Icon name="shield" size={16} color={hasClub ? visual.focus : visual.textMuted} />
               <ProDayText style={[styles.toggleBtnText, hasClub && styles.toggleBtnTextActive]}>
                 {role === 'parent'
                   ? 'Oui, club licencié'
@@ -278,7 +281,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
               onPress={() => onToggleHasClub(false)}
               style={[styles.toggleBtn, !hasClub && styles.toggleBtnActive]}
             >
-              <Icon name="close" size={16} color={!hasClub ? AUTH_XP.goldBright : AUTH_XP.textMuted} />
+              <Icon name="close" size={16} color={!hasClub ? visual.focus : visual.textMuted} />
               <ProDayText style={[styles.toggleBtnText, !hasClub && styles.toggleBtnTextActive]}>
                 {role === 'parent' ? 'Pas encore de club' : 'Sans club pour le moment'}
               </ProDayText>
@@ -298,6 +301,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
             </ProDayText>
 
             <PublicClubAutocomplete
+              accent={visual.accent}
               selectedClub={selectedClub}
               onSelectClub={(club) => {
                 if (!club) {
@@ -311,15 +315,6 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                 }
                 selectClub(club);
               }}
-              accent={
-                role === 'coach'
-                  ? '#C5A059'
-                  : role === 'club'
-                    ? '#2E7D4F'
-                    : role === 'parent'
-                      ? '#7CB342'
-                      : AUTH_XP.gold
-              }
               error={error}
             />
           </View>
@@ -328,7 +323,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
             <View style={styles.section}>
               <ProDayText style={styles.label}>2. Catégorie / équipe FFF</ProDayText>
               {loadingCategories ? (
-                <ActivityIndicator size="small" color={AUTH_XP.goldBright} style={{ marginVertical: 12 }} />
+                <ActivityIndicator size="small" color={visual.focus} style={{ marginVertical: 12 }} />
               ) : displayCategories.length > 0 ? (
                 <View style={styles.categoriesGrid}>
                   {displayCategories.map((cat) => {
@@ -360,7 +355,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                   <TextInput
                     style={styles.manualCategoryInput}
                     placeholder="Ex. Seniors D1, U17 R1…"
-                    placeholderTextColor={AUTH_XP.textDim}
+                    placeholderTextColor={visual.textFaint}
                     value={manualCategory}
                     onChangeText={setManualCategory}
                     onSubmitEditing={applyManualCategory}
@@ -382,7 +377,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                 3. Trouver mon nom dans l’effectif du club
               </ProDayText>
               {loadingRoster ? (
-                <ActivityIndicator size="small" color={AUTH_XP.goldBright} style={{ marginVertical: 12 }} />
+                <ActivityIndicator size="small" color={visual.focus} style={{ marginVertical: 12 }} />
               ) : rosterMembers.length > 0 ? (
                 <View style={styles.rosterContainer}>
                   <ProDayText style={styles.rosterHint}>
@@ -414,7 +409,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                           <Icon
                             name={isSelected ? 'checkmark-circle' : 'person'}
                             size={18}
-                            color={isSelected ? AUTH_XP.goldBright : AUTH_XP.textMuted}
+                            color={isSelected ? visual.focus : visual.textMuted}
                           />
                           <View style={styles.rosterItemCol}>
                             <ProDayText
@@ -465,7 +460,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                     <Icon
                       name={isCustomProfile ? 'checkmark-circle' : 'add'}
                       size={18}
-                      color={isCustomProfile ? AUTH_XP.goldBright : AUTH_XP.textMuted}
+                      color={isCustomProfile ? visual.focus : visual.textMuted}
                     />
                     <ProDayText
                       style={[
@@ -485,7 +480,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                       <TextInput
                         style={styles.customNameInput}
                         placeholder="Prénom Nom"
-                        placeholderTextColor={AUTH_XP.textDim}
+                        placeholderTextColor={visual.textFaint}
                         value={defaultUserName || ''}
                         onChangeText={onChangeCustomName}
                       />
@@ -494,7 +489,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                 </View>
               ) : (
                 <View style={styles.noRosterBox}>
-                  <Icon name="person" size={20} color={AUTH_XP.goldBright} />
+                  <Icon name="person" size={20} color={visual.focus} />
                   <View style={{ flex: 1 }}>
                     <ProDayText style={styles.noRosterTitle}>
                       Effectif non publié sur ProDay pour ce club
@@ -512,7 +507,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                       <TextInput
                         style={styles.customNameInput}
                         placeholder="Prénom Nom"
-                        placeholderTextColor={AUTH_XP.textDim}
+                        placeholderTextColor={visual.textFaint}
                         value={defaultUserName || ''}
                         onChangeText={(text) => {
                           onToggleCustomProfile(true);
@@ -546,21 +541,21 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                     <ProDayText style={styles.docAttachedName}>{identityDoc.name}</ProDayText>
                   </View>
                   <PressableSpring onPress={() => onSetIdentityDoc(null)} style={styles.removeDocBtn}>
-                    <Icon name="trash" size={16} color={AUTH_XP.error} />
+                    <Icon name="trash" size={16} color={visual.danger} />
                   </PressableSpring>
                 </View>
               ) : (
                 <View style={styles.docButtonsRow}>
                   <PressableSpring onPress={handlePickCamera} disabled={uploadingDoc} style={styles.uploadDocBtn}>
-                    <Icon name="camera" size={18} color={AUTH_XP.goldBright} />
+                    <Icon name="camera" size={18} color={visual.focus} />
                     <ProDayText style={styles.uploadDocBtnText}>Caméra</ProDayText>
                   </PressableSpring>
                   <PressableSpring onPress={handlePickGallery} disabled={uploadingDoc} style={styles.uploadDocBtn}>
-                    <Icon name="image" size={18} color={AUTH_XP.goldBright} />
+                    <Icon name="image" size={18} color={visual.focus} />
                     <ProDayText style={styles.uploadDocBtnText}>Galerie</ProDayText>
                   </PressableSpring>
                   <PressableSpring onPress={handlePickPdf} disabled={uploadingDoc} style={styles.uploadDocBtn}>
-                    <Icon name="document-text" size={18} color={AUTH_XP.goldBright} />
+                    <Icon name="document-text" size={18} color={visual.focus} />
                     <ProDayText style={styles.uploadDocBtnText}>PDF</ProDayText>
                   </PressableSpring>
                 </View>
@@ -578,7 +573,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
               <TextInput
                 style={styles.customNameInput}
                 placeholder="Prénom Nom"
-                placeholderTextColor={AUTH_XP.textDim}
+                placeholderTextColor={visual.textFaint}
                 value={defaultUserName || ''}
                 onChangeText={onChangeCustomName}
               />
@@ -598,21 +593,21 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                   <ProDayText style={styles.docAttachedName}>{identityDoc.name}</ProDayText>
                 </View>
                 <PressableSpring onPress={() => onSetIdentityDoc(null)} style={styles.removeDocBtn}>
-                  <Icon name="trash" size={16} color={AUTH_XP.error} />
+                  <Icon name="trash" size={16} color={visual.danger} />
                 </PressableSpring>
               </View>
             ) : (
               <View style={styles.docButtonsRow}>
                 <PressableSpring onPress={handlePickCamera} disabled={uploadingDoc} style={styles.uploadDocBtn}>
-                  <Icon name="camera" size={18} color={AUTH_XP.goldBright} />
+                  <Icon name="camera" size={18} color={visual.focus} />
                   <ProDayText style={styles.uploadDocBtnText}>Caméra</ProDayText>
                 </PressableSpring>
                 <PressableSpring onPress={handlePickGallery} disabled={uploadingDoc} style={styles.uploadDocBtn}>
-                  <Icon name="image" size={18} color={AUTH_XP.goldBright} />
+                  <Icon name="image" size={18} color={visual.focus} />
                   <ProDayText style={styles.uploadDocBtnText}>Galerie</ProDayText>
                 </PressableSpring>
                 <PressableSpring onPress={handlePickPdf} disabled={uploadingDoc} style={styles.uploadDocBtn}>
-                  <Icon name="document-text" size={18} color={AUTH_XP.goldBright} />
+                  <Icon name="document-text" size={18} color={visual.focus} />
                   <ProDayText style={styles.uploadDocBtnText}>PDF</ProDayText>
                 </PressableSpring>
               </View>
@@ -626,26 +621,27 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
   );
 };
 
-const styles = StyleSheet.create({
+function createStyles(v: SignupVisualChrome) {
+  return StyleSheet.create({
   container: { gap: spacing.md },
   section: { gap: spacing.xs },
   label: {
     fontSize: 12,
     fontFamily: fontFamily.bold,
-    color: AUTH_XP.textMuted,
+    color: v.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sourceHint: {
     fontSize: 11,
     fontFamily: fontFamily.regular,
-    color: AUTH_XP.textDim,
+    color: v.textFaint,
     marginBottom: 4,
   },
   infoText: {
     fontSize: 12,
     fontFamily: fontFamily.regular,
-    color: AUTH_XP.textMuted,
+    color: v.textMuted,
     lineHeight: 16,
   },
   toggleRow: { flexDirection: 'row', gap: spacing.sm, marginTop: 4 },
@@ -659,12 +655,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: v.border,
+    backgroundColor: v.surface,
   },
-  toggleBtnActive: { borderColor: AUTH_XP.gold, backgroundColor: 'rgba(245, 208, 74, 0.12)' },
-  toggleBtnText: { fontSize: 12, fontFamily: fontFamily.semibold, color: AUTH_XP.textMuted },
-  toggleBtnTextActive: { color: AUTH_XP.goldBright, fontFamily: fontFamily.bold },
+  toggleBtnActive: { borderColor: v.accent, backgroundColor: v.accentSoft },
+  toggleBtnText: { fontSize: 12, fontFamily: fontFamily.semibold, color: v.textMuted },
+  toggleBtnTextActive: { color: v.focus, fontFamily: fontFamily.bold },
   searchWrapper: { gap: spacing.xs },
   searchBar: {
     flexDirection: 'row',
@@ -674,22 +670,22 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: v.border,
+    backgroundColor: v.surface,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
     fontFamily: fontFamily.regular,
-    color: AUTH_XP.text,
+    color: v.text,
     paddingVertical: 0,
   },
   resultsList: {
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
+    borderColor: v.border,
     overflow: 'hidden',
-    backgroundColor: AUTH_XP.inputBg,
+    backgroundColor: v.surface,
   },
   resultItem: {
     flexDirection: 'row',
@@ -697,20 +693,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: AUTH_XP.border,
+    borderBottomColor: v.border,
     gap: spacing.xs,
   },
   resultCol: { flex: 1, gap: 2 },
   resultTopRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  resultClubName: { fontSize: 14, fontFamily: fontFamily.semibold, color: AUTH_XP.text },
-  resultCity: { fontSize: 12, fontFamily: fontFamily.regular, color: AUTH_XP.textMuted },
+  resultClubName: { fontSize: 14, fontFamily: fontFamily.semibold, color: v.text },
+  resultCity: { fontSize: 12, fontFamily: fontFamily.regular, color: v.textMuted },
   fffBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    backgroundColor: 'rgba(245, 208, 74, 0.15)',
+    backgroundColor: v.accentSoft,
   },
-  fffBadgeText: { fontSize: 10, fontFamily: fontFamily.bold, color: AUTH_XP.goldBright },
+  fffBadgeText: { fontSize: 10, fontFamily: fontFamily.bold, color: v.focus },
   selectedClubCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -718,54 +714,54 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.gold,
+    borderColor: v.accent,
     backgroundColor: 'rgba(245, 208, 74, 0.08)',
   },
   clubBadge: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: AUTH_XP.goldBright,
+    backgroundColor: v.focus,
     alignItems: 'center',
     justifyContent: 'center',
   },
   clubInfo: { flex: 1, gap: 2 },
-  clubName: { fontSize: 15, fontFamily: fontFamily.bold, color: AUTH_XP.text },
-  clubSub: { fontSize: 12, fontFamily: fontFamily.regular, color: AUTH_XP.textMuted },
-  clubLeague: { fontSize: 11, fontFamily: fontFamily.regular, color: AUTH_XP.textDim },
+  clubName: { fontSize: 15, fontFamily: fontFamily.bold, color: v.text },
+  clubSub: { fontSize: 12, fontFamily: fontFamily.regular, color: v.textMuted },
+  clubLeague: { fontSize: 11, fontFamily: fontFamily.regular, color: v.textFaint },
   changeClubBtn: { paddingHorizontal: 8, paddingVertical: 6 },
-  changeClubBtnText: { fontSize: 12, fontFamily: fontFamily.bold, color: AUTH_XP.goldBright },
+  changeClubBtnText: { fontSize: 12, fontFamily: fontFamily.bold, color: v.focus },
   categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   categoryPill: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: v.border,
+    backgroundColor: v.surface,
   },
-  categoryPillActive: { borderColor: AUTH_XP.gold, backgroundColor: 'rgba(245, 208, 74, 0.15)' },
-  categoryPillText: { fontSize: 12, fontFamily: fontFamily.semibold, color: AUTH_XP.textMuted },
-  categoryPillTextActive: { color: AUTH_XP.goldBright, fontFamily: fontFamily.bold },
+  categoryPillActive: { borderColor: v.accent, backgroundColor: v.accentSoft },
+  categoryPillText: { fontSize: 12, fontFamily: fontFamily.semibold, color: v.textMuted },
+  categoryPillTextActive: { color: v.focus, fontFamily: fontFamily.bold },
   manualCategoryBox: { gap: spacing.xs, marginTop: 4 },
   manualCategoryInput: {
     height: 44,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: v.border,
+    backgroundColor: v.surface,
     paddingHorizontal: spacing.sm,
     fontSize: 14,
     fontFamily: fontFamily.regular,
-    color: AUTH_XP.text,
+    color: v.text,
   },
   selectedManualCat: {
     fontSize: 12,
     fontFamily: fontFamily.semibold,
-    color: AUTH_XP.goldBright,
+    color: v.focus,
   },
   rosterContainer: { gap: spacing.sm },
-  rosterHint: { fontSize: 12, fontFamily: fontFamily.regular, color: AUTH_XP.textMuted },
+  rosterHint: { fontSize: 12, fontFamily: fontFamily.regular, color: v.textMuted },
   rosterList: { gap: 6 },
   rosterItem: {
     flexDirection: 'row',
@@ -774,13 +770,13 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: v.border,
+    backgroundColor: v.surface,
   },
-  rosterItemActive: { borderColor: AUTH_XP.gold, backgroundColor: 'rgba(245, 208, 74, 0.1)' },
+  rosterItemActive: { borderColor: v.accent, backgroundColor: v.accentSoft },
   rosterItemCol: { flex: 1, gap: 4 },
-  rosterMemberName: { fontSize: 14, fontFamily: fontFamily.semibold, color: AUTH_XP.text },
-  rosterMemberNameActive: { color: AUTH_XP.goldBright },
+  rosterMemberName: { fontSize: 14, fontFamily: fontFamily.semibold, color: v.text },
+  rosterMemberNameActive: { color: v.focus },
   rosterMemberMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   categoryTag: {
     paddingHorizontal: 6,
@@ -789,16 +785,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   categoryTagActive: { backgroundColor: 'rgba(245, 208, 74, 0.2)' },
-  categoryTagText: { fontSize: 10, fontFamily: fontFamily.semibold, color: AUTH_XP.textMuted },
-  categoryTagTextActive: { color: AUTH_XP.goldBright },
-  rosterLicense: { fontSize: 11, fontFamily: fontFamily.regular, color: AUTH_XP.textMuted },
+  categoryTagText: { fontSize: 10, fontFamily: fontFamily.semibold, color: v.textMuted },
+  categoryTagTextActive: { color: v.focus },
+  rosterLicense: { fontSize: 11, fontFamily: fontFamily.regular, color: v.textMuted },
   selectedCheckBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: radius.pill,
     backgroundColor: 'rgba(245, 208, 74, 0.2)',
   },
-  selectedCheckText: { fontSize: 10, fontFamily: fontFamily.bold, color: AUTH_XP.goldBright },
+  selectedCheckText: { fontSize: 10, fontFamily: fontFamily.bold, color: v.focus },
   customProfileBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -806,24 +802,24 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
+    borderColor: v.border,
     borderStyle: 'dashed',
   },
-  customProfileBtnActive: { borderColor: AUTH_XP.gold, borderStyle: 'solid' },
-  customProfileBtnText: { fontSize: 13, fontFamily: fontFamily.semibold, color: AUTH_XP.textMuted },
-  customProfileBtnTextActive: { color: AUTH_XP.goldBright },
+  customProfileBtnActive: { borderColor: v.accent, borderStyle: 'solid' },
+  customProfileBtnText: { fontSize: 13, fontFamily: fontFamily.semibold, color: v.textMuted },
+  customProfileBtnTextActive: { color: v.focus },
   customNameBox: { gap: 6, marginTop: 8 },
-  customNameLabel: { fontSize: 12, fontFamily: fontFamily.semibold, color: AUTH_XP.textMuted },
+  customNameLabel: { fontSize: 12, fontFamily: fontFamily.semibold, color: v.textMuted },
   customNameInput: {
     height: 44,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: v.border,
+    backgroundColor: v.surface,
     paddingHorizontal: spacing.sm,
     fontSize: 14,
     fontFamily: fontFamily.regular,
-    color: AUTH_XP.text,
+    color: v.text,
   },
   noRosterBox: {
     flexDirection: 'row',
@@ -831,21 +827,21 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: v.border,
+    backgroundColor: v.surface,
   },
-  noRosterTitle: { fontSize: 13, fontFamily: fontFamily.bold, color: AUTH_XP.text, marginBottom: 4 },
+  noRosterTitle: { fontSize: 13, fontFamily: fontFamily.bold, color: v.text, marginBottom: 4 },
   noRosterText: {
     fontSize: 12,
     fontFamily: fontFamily.regular,
-    color: AUTH_XP.textMuted,
+    color: v.textMuted,
     lineHeight: 16,
     marginBottom: 8,
   },
   docHint: {
     fontSize: 12,
     fontFamily: fontFamily.regular,
-    color: AUTH_XP.textMuted,
+    color: v.textMuted,
     lineHeight: 16,
     marginBottom: 4,
   },
@@ -860,8 +856,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.08)',
   },
   docAttachedCol: { flex: 1 },
-  docAttachedTitle: { fontSize: 13, fontFamily: fontFamily.bold, color: AUTH_XP.text },
-  docAttachedName: { fontSize: 11, fontFamily: fontFamily.regular, color: AUTH_XP.textMuted },
+  docAttachedTitle: { fontSize: 13, fontFamily: fontFamily.bold, color: v.text },
+  docAttachedName: { fontSize: 11, fontFamily: fontFamily.regular, color: v.textMuted },
   removeDocBtn: { padding: 6 },
   docButtonsRow: { flexDirection: 'row', gap: spacing.sm },
   uploadDocBtn: {
@@ -872,9 +868,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: AUTH_XP.border,
-    backgroundColor: AUTH_XP.inputBg,
+    borderColor: v.border,
+    backgroundColor: v.surface,
   },
-  uploadDocBtnText: { fontSize: 11, fontFamily: fontFamily.semibold, color: AUTH_XP.goldBright },
-  errorText: { fontSize: 12, fontFamily: fontFamily.semibold, color: AUTH_XP.error },
+  uploadDocBtnText: { fontSize: 11, fontFamily: fontFamily.semibold, color: v.focus },
+  errorText: { fontSize: 12, fontFamily: fontFamily.semibold, color: v.danger },
 });
+}

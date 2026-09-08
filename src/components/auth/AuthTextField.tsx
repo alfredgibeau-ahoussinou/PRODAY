@@ -14,17 +14,20 @@ import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { AUTH_XP } from '../../features/auth/experience/tokens';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
 
 interface AuthTextFieldProps extends TextInputProps {
   label: string;
   icon?: IconName;
   error?: string;
   secureToggle?: boolean;
-  /** @deprecated Conservé pour compat — la DA Experience est always dark. */
+  /** @deprecated Conservé pour compat. */
   tone?: 'default' | 'sheet';
+  /** Override accent focus (sinon chrome inscription courant). */
+  accent?: string;
 }
 
-/** Champ auth — délègue le look à Auth Experience (noir / or). */
+/** Champ auth/signup — focus & surfaces = pôle courant. */
 export const AuthTextField = forwardRef<TextInput, AuthTextFieldProps>(
   function AuthTextField(
     {
@@ -38,36 +41,54 @@ export const AuthTextField = forwardRef<TextInput, AuthTextFieldProps>(
       onFocus,
       onBlur,
       style,
+      accent: accentProp,
       ...rest
     },
     ref,
   ) {
+    const { visual } = useSignupFlowTheme();
+    const focusColor = accentProp ?? visual.focus;
     const [hidden, setHidden] = useState(Boolean(secureTextEntry || secureToggle));
     const [focused, setFocused] = useState(false);
     const focusAnim = useSharedValue(0);
     const isSecure = secureToggle ? hidden : secureTextEntry;
     const filled = Boolean(value && String(value).length > 0);
     const disabled = editable === false;
-    const styles = useMemo(() => createStyles(), []);
+    const styles = useMemo(
+      () =>
+        createStyles({
+          text: visual.text,
+          textMuted: visual.textMuted,
+          border: visual.border,
+          surface: visual.surface,
+          elevated: visual.elevated,
+          danger: visual.danger,
+          dangerSoft: visual.dangerSoft,
+        }),
+      [visual],
+    );
 
     const fieldAnim = useAnimatedStyle(() => ({
       borderColor: error
-        ? AUTH_XP.borderError
+        ? visual.danger
         : focusAnim.value > 0.5
-          ? AUTH_XP.borderFocus
-          : AUTH_XP.border,
+          ? focusColor
+          : visual.border,
       backgroundColor: disabled
-        ? AUTH_XP.inputBgDisabled
+        ? 'rgba(255,255,255,0.02)'
         : error
-          ? AUTH_XP.errorBg
+          ? visual.dangerSoft
           : focusAnim.value > 0.5 || filled
-            ? AUTH_XP.inputBgFilled
-            : AUTH_XP.inputBg,
+            ? visual.elevated
+            : visual.surface,
     }));
 
     return (
       <View style={styles.wrap}>
-        <ProDayText variant="caption" style={styles.label}>
+        <ProDayText
+          variant="caption"
+          style={[styles.label, focused && { color: focusColor }]}
+        >
           {label}
         </ProDayText>
         <Animated.View style={[styles.field, fieldAnim, disabled && styles.disabled]}>
@@ -75,7 +96,7 @@ export const AuthTextField = forwardRef<TextInput, AuthTextFieldProps>(
             <Icon
               name={icon}
               size={18}
-              color={focused ? AUTH_XP.goldBright : AUTH_XP.textMuted}
+              color={focused ? focusColor : visual.textMuted}
             />
           ) : null}
           <TextInput
@@ -84,8 +105,8 @@ export const AuthTextField = forwardRef<TextInput, AuthTextFieldProps>(
             value={value}
             editable={editable}
             secureTextEntry={isSecure}
-            placeholderTextColor={AUTH_XP.textDim}
-            selectionColor={AUTH_XP.gold}
+            placeholderTextColor={visual.textFaint}
+            selectionColor={focusColor}
             autoCorrect={false}
             onFocus={(e) => {
               setFocused(true);
@@ -111,7 +132,7 @@ export const AuthTextField = forwardRef<TextInput, AuthTextFieldProps>(
               <Icon
                 name={hidden ? 'eye' : 'eye-off'}
                 size={18}
-                color={AUTH_XP.textMuted}
+                color={visual.textMuted}
               />
             </PressableSpring>
           ) : null}
@@ -126,14 +147,22 @@ export const AuthTextField = forwardRef<TextInput, AuthTextFieldProps>(
   },
 );
 
-function createStyles() {
+function createStyles(v: {
+  text: string;
+  textMuted: string;
+  border: string;
+  surface: string;
+  elevated: string;
+  danger: string;
+  dangerSoft: string;
+}) {
   return StyleSheet.create({
     wrap: {
       gap: 6,
-      marginBottom: 16,
+      marginBottom: 14,
     },
     label: {
-      color: AUTH_XP.textMuted,
+      color: v.textMuted,
       letterSpacing: 0.5,
       textTransform: 'uppercase',
       fontSize: 11,
@@ -145,19 +174,19 @@ function createStyles() {
       gap: 12,
       minHeight: 52,
       paddingHorizontal: 16,
-      borderRadius: AUTH_XP.radiusMd,
+      borderRadius: 12,
       borderWidth: 1,
     },
     input: {
       flex: 1,
-      color: AUTH_XP.white,
+      color: v.text,
       fontSize: 15,
       paddingVertical: 12,
       fontWeight: '500',
     },
     disabled: { opacity: 0.55 },
     error: {
-      color: AUTH_XP.error,
+      color: v.danger,
       marginTop: 2,
       fontSize: 12,
     },

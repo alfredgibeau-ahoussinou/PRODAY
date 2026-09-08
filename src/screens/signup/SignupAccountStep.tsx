@@ -17,10 +17,9 @@ import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { Icon } from '../../components/ui/Icon';
 import { useSignupFlowTheme } from './SignupFlowContext';
-import type { AppColors } from '../../theme/universeTheme';
 import { spacing, radius } from '../../theme/designTokens';
-import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { fontFamily } from '../../theme/typography';
+import type { SignupVisualChrome } from './signupVisualSystem';
 
 interface SignupAccountStepProps {
   form: SignupForm;
@@ -42,8 +41,8 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   onBack,
 }) => {
   const { t } = useTranslation();
-  const { colors: c } = useSignupFlowTheme();
-  const styles = useMemo(() => createStyles(c), [c]);
+  const { visual } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(visual), [visual]);
   const isPlayer = form.role === 'player';
   const isClub = form.role === 'club';
   const meta = isClub
@@ -83,7 +82,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
       <SignupFormCard>
         {form.selectedRosterMember ? (
           <View style={styles.fffBanner}>
-            <Icon name="shield" size={16} color={AUTH_XP.goldBright} />
+            <Icon name="shield" size={16} color={visual.focus} />
             <ProDayText style={styles.fffBannerText}>
               Licencié FFF sélectionné : {form.selectedRosterMember.displayName} (Lic.{' '}
               {form.selectedRosterMember.licenseNumber})
@@ -91,7 +90,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
           </View>
         ) : showFffClubBanner ? (
           <View style={styles.fffBanner}>
-            <Icon name="shield" size={16} color={AUTH_XP.goldBright} />
+            <Icon name="shield" size={16} color={visual.focus} />
             <ProDayText style={styles.fffBannerText}>
               {isClub ? 'Structure FFF : ' : 'Club FFF : '}
               {form.selectedFffClub!.name}
@@ -139,7 +138,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
                   onDay={form.setBirthDay}
                   onMonth={form.setBirthMonth}
                   onYear={form.setBirthYear}
-                  accent={AUTH_XP.gold}
+                  accent={visual.accent}
                   error={form.fieldErrors.age}
                   hint="Date de naissance légale (calcul automatique de votre catégorie officielle FFF)"
                 />
@@ -159,7 +158,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
                     <Icon
                       name="person"
                       size={16}
-                      color={form.gender === 'men' ? AUTH_XP.goldBright : AUTH_XP.textMuted}
+                      color={form.gender === 'men' ? visual.focus : visual.textMuted}
                     />
                     <ProDayText
                       variant="body"
@@ -178,7 +177,7 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
                     <Icon
                       name="person"
                       size={16}
-                      color={form.gender === 'women' ? AUTH_XP.goldBright : AUTH_XP.textMuted}
+                      color={form.gender === 'women' ? visual.focus : visual.textMuted}
                     />
                     <ProDayText
                       variant="body"
@@ -278,12 +277,12 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   );
 };
 
-function createStyles(_c: AppColors) {
+function createStyles(v: SignupVisualChrome) {
   return StyleSheet.create({
     emailHint: {
       fontSize: 12,
       lineHeight: 17,
-      color: AUTH_XP.textDim,
+      color: v.textFaint,
       marginTop: -spacing.xs,
       marginBottom: spacing.xs,
       fontFamily: fontFamily.regular,
@@ -298,7 +297,7 @@ function createStyles(_c: AppColors) {
     genderLabel: {
       fontSize: 11,
       fontFamily: fontFamily.semibold,
-      color: AUTH_XP.textMuted,
+      color: v.textMuted,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
@@ -312,29 +311,29 @@ function createStyles(_c: AppColors) {
       flexDirection: 'row',
       gap: 8,
       paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
+      borderRadius: 12,
       borderWidth: 1,
-      borderColor: AUTH_XP.border,
-      backgroundColor: AUTH_XP.inputBg,
+      borderColor: v.border,
+      backgroundColor: v.surface,
       alignItems: 'center',
       justifyContent: 'center',
     },
     genderBtnActive: {
-      backgroundColor: 'rgba(245, 208, 74, 0.12)',
-      borderColor: AUTH_XP.gold,
+      backgroundColor: v.accentSoft,
+      borderColor: v.accent,
     },
     genderBtnText: {
       fontSize: 14,
       fontFamily: fontFamily.semibold,
-      color: AUTH_XP.textMuted,
+      color: v.textMuted,
     },
     genderBtnTextActive: {
-      color: AUTH_XP.goldBright,
+      color: v.focus,
       fontFamily: fontFamily.bold,
     },
     fieldError: {
       fontSize: 12,
-      color: AUTH_XP.error,
+      color: v.danger,
       marginTop: spacing.xs,
       fontFamily: fontFamily.semibold,
     },
@@ -352,10 +351,10 @@ function createStyles(_c: AppColors) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      backgroundColor: 'rgba(245, 208, 74, 0.12)',
+      backgroundColor: v.accentSoft,
       borderWidth: 1,
-      borderColor: AUTH_XP.gold,
-      borderRadius: radius.md,
+      borderColor: v.accent,
+      borderRadius: 12,
       paddingVertical: 10,
       paddingHorizontal: 12,
       marginBottom: 12,
@@ -363,7 +362,7 @@ function createStyles(_c: AppColors) {
     fffBannerText: {
       fontSize: 12,
       fontFamily: fontFamily.bold,
-      color: AUTH_XP.goldBright,
+      color: v.focus,
       flex: 1,
     },
   });

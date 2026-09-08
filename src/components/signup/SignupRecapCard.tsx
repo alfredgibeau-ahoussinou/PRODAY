@@ -2,9 +2,10 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import { spacing, radius } from '../../theme/designTokens';
-import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { fontFamily } from '../../theme/typography';
 import type { OfficialFffClub } from '../../services/fffOfficialRegistry.service';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
+import type { SignupVisualChrome } from '../../screens/signup/signupVisualSystem';
 
 type SignupRecapCardProps = {
   title?: string;
@@ -17,7 +18,7 @@ type SignupRecapCardProps = {
   minorHint?: string | null;
 };
 
-/** Récap affiliation FFF partagé (joueur, coach, club, parent). */
+/** Récap FFF — surface shell + accent pôle (plus d’or générique). */
 export const SignupRecapCard: React.FC<SignupRecapCardProps> = ({
   title = 'Récapitulatif FFF',
   club,
@@ -28,84 +29,96 @@ export const SignupRecapCard: React.FC<SignupRecapCardProps> = ({
   warn,
   minorHint,
 }) => {
-  const styles = useMemo(() => createStyles(), []);
+  const { visual } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(visual), [visual]);
 
   return (
     <View style={styles.card}>
-      <ProDayText style={styles.title}>{title}</ProDayText>
-      {withoutClub ? (
-        <ProDayText style={styles.line}>
-          Sans club{displayName?.trim() ? ` · ${displayName.trim()}` : ''}
-        </ProDayText>
-      ) : club ? (
-        <>
+      <View style={[styles.accentRail, { backgroundColor: visual.accent }]} />
+      <View style={styles.content}>
+        <ProDayText style={styles.title}>{title}</ProDayText>
+        {withoutClub ? (
           <ProDayText style={styles.line}>
-            Club : {club.name}
-            {club.fffNumber ? ` · N° ${club.fffNumber}` : ''}
+            Sans club{displayName?.trim() ? ` · ${displayName.trim()}` : ''}
           </ProDayText>
-          <ProDayText style={styles.muted}>
-            {[club.city, club.postalCode, club.league].filter(Boolean).join(' · ')}
+        ) : club ? (
+          <>
+            <ProDayText style={styles.line}>
+              Club : {club.name}
+              {club.fffNumber ? ` · N° ${club.fffNumber}` : ''}
+            </ProDayText>
+            <ProDayText style={styles.muted}>
+              {[club.city, club.postalCode, club.league].filter(Boolean).join(' · ')}
+            </ProDayText>
+            {category ? (
+              <ProDayText style={styles.line}>Équipe / catégorie : {category}</ProDayText>
+            ) : warn ? (
+              <ProDayText style={styles.warn}>{warn}</ProDayText>
+            ) : null}
+          </>
+        ) : null}
+        {displayName?.trim() && !withoutClub ? (
+          <ProDayText style={styles.line}>Identité : {displayName.trim()}</ProDayText>
+        ) : null}
+        {extraLines?.map((line) => (
+          <ProDayText key={line} style={styles.muted}>
+            {line}
           </ProDayText>
-          {category ? (
-            <ProDayText style={styles.line}>Équipe / catégorie : {category}</ProDayText>
-          ) : warn ? (
-            <ProDayText style={styles.warn}>{warn}</ProDayText>
-          ) : null}
-        </>
-      ) : null}
-      {displayName?.trim() && !withoutClub ? (
-        <ProDayText style={styles.line}>Identité : {displayName.trim()}</ProDayText>
-      ) : null}
-      {extraLines?.map((line) => (
-        <ProDayText key={line} style={styles.muted}>
-          {line}
-        </ProDayText>
-      ))}
-      {minorHint ? <ProDayText style={styles.minor}>{minorHint}</ProDayText> : null}
+        ))}
+        {minorHint ? <ProDayText style={styles.minor}>{minorHint}</ProDayText> : null}
+      </View>
     </View>
   );
 };
 
-function createStyles() {
+function createStyles(v: SignupVisualChrome) {
   return StyleSheet.create({
     card: {
-      backgroundColor: AUTH_XP.surface,
-      borderRadius: radius.md,
+      flexDirection: 'row',
+      backgroundColor: v.elevated,
+      borderRadius: radius.lg,
       borderWidth: 1,
-      borderColor: AUTH_XP.border,
+      borderColor: v.border,
+      marginTop: spacing.sm,
+      overflow: 'hidden',
+    },
+    accentRail: {
+      width: 3,
+    },
+    content: {
+      flex: 1,
       padding: spacing.md,
-      marginTop: spacing.md,
       gap: 4,
     },
     title: {
-      fontSize: 13,
+      fontSize: 11,
       fontFamily: fontFamily.bold,
-      color: AUTH_XP.goldBright,
+      color: v.focus,
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: 1.1,
       marginBottom: spacing.xs,
     },
     line: {
       fontSize: 13,
-      color: AUTH_XP.text,
+      color: v.text,
       lineHeight: 18,
       fontFamily: fontFamily.semibold,
     },
     muted: {
       fontSize: 12,
-      color: AUTH_XP.textMuted,
+      color: v.textMuted,
       lineHeight: 17,
       fontFamily: fontFamily.regular,
     },
     warn: {
       fontSize: 12,
-      color: AUTH_XP.error,
+      color: v.danger,
       fontFamily: fontFamily.semibold,
       marginTop: 2,
     },
     minor: {
       fontSize: 12,
-      color: '#FBBF24',
+      color: v.focus,
       fontFamily: fontFamily.semibold,
       marginTop: spacing.xs,
     },

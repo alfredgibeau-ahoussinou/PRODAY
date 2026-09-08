@@ -1,5 +1,6 @@
 import React from 'react';
 import { AuthButton } from '../../features/auth/experience';
+import { useSignupFlowTheme } from './SignupFlowContext';
 
 interface SignupFooterButtonProps {
   label: string;
@@ -8,7 +9,6 @@ interface SignupFooterButtonProps {
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
   showArrow?: boolean;
-  /** Accent pôle (évite l’or master forcé partout). */
   accent?: string;
   onAccent?: string;
 }
@@ -21,14 +21,17 @@ export const SignupFooterButton: React.FC<SignupFooterButtonProps> = ({
   disabled,
   accent,
   onAccent,
-}) => (
-  <AuthButton
-    label={label}
-    onPress={onPress}
-    loading={loading}
-    disabled={disabled}
-    variant={variant === 'secondary' ? 'secondary' : 'primary'}
-    accent={accent}
-    onAccent={onAccent}
-  />
-);
+}) => {
+  const { visual } = useSignupFlowTheme();
+  return (
+    <AuthButton
+      label={label}
+      onPress={onPress}
+      loading={loading}
+      disabled={disabled}
+      variant={variant === 'secondary' ? 'secondary' : 'primary'}
+      accent={accent ?? visual.accent}
+      onAccent={onAccent ?? visual.onAccent}
+    />
+  );
+};

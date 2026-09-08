@@ -7,8 +7,9 @@ import {
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
-import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { spacing, radius } from '../../theme/designTokens';
+import { useSignupFlowTheme } from '../../screens/signup/SignupFlowContext';
+import type { SignupVisualChrome } from '../../screens/signup/signupVisualSystem';
 import {
   buildClubSignupAutofill,
   formatClubAutofillSummary,
@@ -43,7 +44,8 @@ export const SignupClubFffFinder: React.FC<Props> = ({
   onSetIdentityDoc,
   error,
 }) => {
-  const styles = useMemo(() => createStyles(), []);
+  const { visual } = useSignupFlowTheme();
+  const styles = useMemo(() => createStyles(visual), [visual]);
   const [teams, setTeams] = useState<string[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [teamsNote, setTeamsNote] = useState<string | null>(null);
@@ -111,14 +113,14 @@ export const SignupClubFffFinder: React.FC<Props> = ({
       <PublicClubAutocomplete
         selectedClub={selectedClub}
         onSelectClub={onSelectClub}
-        accent="#2E7D4F"
+        accent={visual.accent}
         error={error}
       />
 
       {selectedClub ? (
         <View style={styles.sheet}>
           {loadingTeams ? (
-            <ActivityIndicator color={AUTH_XP.gold} />
+            <ActivityIndicator color={visual.accent} />
           ) : (
             <>
               {summary.map((line) => (
@@ -148,7 +150,7 @@ export const SignupClubFffFinder: React.FC<Props> = ({
               scaleTo={0.97}
               haptic
             >
-              <Icon name="camera" size={16} color="#FFF" />
+              <Icon name="camera" size={16} color={visual.text} />
               <ProDayText variant="caption" style={styles.docBtnText}>
                 Photo
               </ProDayText>
@@ -160,7 +162,7 @@ export const SignupClubFffFinder: React.FC<Props> = ({
               scaleTo={0.97}
               haptic
             >
-              <Icon name="image" size={16} color="#FFF" />
+              <Icon name="image" size={16} color={visual.text} />
               <ProDayText variant="caption" style={styles.docBtnText}>
                 Galerie
               </ProDayText>
@@ -172,7 +174,7 @@ export const SignupClubFffFinder: React.FC<Props> = ({
               scaleTo={0.97}
               haptic
             >
-              <Icon name="document" size={16} color="#FFF" />
+              <Icon name="document" size={16} color={visual.text} />
               <ProDayText variant="caption" style={styles.docBtnText}>
                 PDF
               </ProDayText>
@@ -189,24 +191,24 @@ export const SignupClubFffFinder: React.FC<Props> = ({
   );
 };
 
-function createStyles() {
+function createStyles(v: SignupVisualChrome) {
   return StyleSheet.create({
     root: { gap: spacing.md },
     kicker: {
-      color: '#2E7D4F',
+      color: v.focus,
       letterSpacing: 1.2,
       textTransform: 'uppercase',
       fontWeight: '700',
       fontSize: 11,
     },
     title: {
-      color: '#FFFFFF',
+      color: v.text,
       fontSize: 24,
       fontWeight: '800',
       letterSpacing: -0.4,
     },
     sub: {
-      color: 'rgba(255,255,255,0.55)',
+      color: v.textMuted,
       fontSize: 14,
       lineHeight: 20,
       marginBottom: 4,
@@ -215,14 +217,14 @@ function createStyles() {
       gap: 8,
       padding: 14,
       borderRadius: radius.lg,
-      backgroundColor: 'rgba(255,255,255,0.04)',
+      backgroundColor: v.elevated,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(255,255,255,0.08)',
+      borderColor: v.border,
     },
-    summaryLine: { color: 'rgba(255,255,255,0.75)', lineHeight: 18 },
-    note: { color: 'rgba(255,255,255,0.45)' },
+    summaryLine: { color: v.textMuted, lineHeight: 18 },
+    note: { color: v.textFaint },
     mandateTitle: {
-      color: '#FFFFFF',
+      color: v.text,
       marginTop: 8,
       fontSize: 14,
       fontWeight: '700',
@@ -235,10 +237,12 @@ function createStyles() {
       justifyContent: 'center',
       gap: 6,
       paddingVertical: 10,
-      borderRadius: radius.md,
-      backgroundColor: 'rgba(255,255,255,0.08)',
+      borderRadius: 12,
+      backgroundColor: v.surface,
+      borderWidth: 1,
+      borderColor: v.border,
     },
-    docBtnText: { color: '#FFF', fontWeight: '600' },
-    docName: { color: AUTH_XP.gold, marginTop: 4 },
+    docBtnText: { color: v.text, fontWeight: '600' },
+    docName: { color: v.accent, marginTop: 4 },
   });
 }

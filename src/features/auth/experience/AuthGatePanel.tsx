@@ -1,17 +1,16 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { Icon } from '../../../components/ui/Icon';
 import { PressableSpring } from '../../../components/motion';
 import { AuthButton } from './AuthButton';
-import { AUTH_XP } from './tokens';
+import type { SignupVisualChrome } from '../../../screens/signup/signupVisualSystem';
 
 type AuthGatePanelProps = {
-  kicker: string;
+  visual: SignupVisualChrome;
   title: string;
   subtitle: string;
-  accent: string;
-  onAccent: string;
   createLabel: string;
   loginLabel: string;
   onCreate: () => void;
@@ -19,53 +18,61 @@ type AuthGatePanelProps = {
 };
 
 /**
- * Gate Créer / Se connecter — composition centrée, accent pôle, zero clutter.
+ * Gate Créer / Se connecter — composition shell (wash + badge pôle + CTAs).
  */
 export const AuthGatePanel: React.FC<AuthGatePanelProps> = ({
-  kicker,
+  visual,
   title,
   subtitle,
-  accent,
-  onAccent,
   createLabel,
   loginLabel,
   onCreate,
   onLogin,
 }) => (
   <View style={styles.root}>
-    <View style={styles.kickerRow}>
-      <View style={[styles.kickerDot, { backgroundColor: accent }]} />
-      <ProDayText variant="eyebrow" style={[styles.kicker, { color: accent }]}>
-        {kicker}
+    <LinearGradient
+      colors={[visual.washTop, visual.washTransparent]}
+      style={styles.wash}
+      pointerEvents="none"
+    />
+
+    <View style={[styles.poleBadge, { borderColor: visual.accentSoft, backgroundColor: visual.surface }]}>
+      <View style={[styles.poleDot, { backgroundColor: visual.accent }]} />
+      <ProDayText variant="caption" style={[styles.poleLabel, { color: visual.focus }]}>
+        {visual.poleLabel}
       </ProDayText>
     </View>
 
-    <View style={[styles.accentBar, { backgroundColor: accent }]} />
-
-    <ProDayText variant="title" style={styles.title}>
+    <ProDayText variant="title" style={[styles.title, { color: visual.text }]}>
       {title}
     </ProDayText>
-    <ProDayText variant="body" style={styles.sub}>
+    <ProDayText variant="body" style={[styles.sub, { color: visual.textMuted }]}>
       {subtitle}
     </ProDayText>
 
     <AuthButton
       label={createLabel}
       onPress={onCreate}
-      accent={accent}
-      onAccent={onAccent}
+      accent={visual.accent}
+      onAccent={visual.onAccent}
     />
 
     <PressableSpring
       onPress={onLogin}
-      style={[styles.loginChoice, { borderColor: accent }]}
+      style={[
+        styles.loginChoice,
+        {
+          borderColor: visual.borderStrong,
+          backgroundColor: visual.elevated,
+        },
+      ]}
       scaleTo={0.98}
       haptic
       accessibilityRole="button"
       accessibilityLabel={loginLabel}
     >
-      <Icon name="person" size={18} color="#FFFFFF" />
-      <ProDayText variant="section" style={styles.loginChoiceLabel}>
+      <Icon name="person" size={18} color={visual.text} />
+      <ProDayText variant="section" style={[styles.loginChoiceLabel, { color: visual.text }]}>
         {loginLabel}
       </ProDayText>
     </PressableSpring>
@@ -75,34 +82,36 @@ export const AuthGatePanel: React.FC<AuthGatePanelProps> = ({
 const styles = StyleSheet.create({
   root: {
     alignItems: 'stretch',
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 16,
   },
-  kickerRow: {
+  wash: {
+    ...StyleSheet.absoluteFillObject,
+    height: 160,
+  },
+  poleBadge: {
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
-    marginBottom: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 22,
   },
-  kickerDot: {
-    width: 7,
-    height: 7,
+  poleDot: {
+    width: 8,
+    height: 8,
     borderRadius: 4,
   },
-  kicker: {
+  poleLabel: {
     fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  accentBar: {
-    alignSelf: 'center',
-    width: 40,
-    height: 3,
-    borderRadius: 2,
-    marginBottom: 20,
+    letterSpacing: 1.6,
   },
   title: {
-    color: AUTH_XP.white,
     fontSize: 30,
     fontWeight: '800',
     letterSpacing: -0.7,
@@ -111,27 +120,24 @@ const styles = StyleSheet.create({
     lineHeight: 36,
   },
   sub: {
-    color: 'rgba(255, 255, 255, 0.58)',
     fontSize: 15,
     lineHeight: 22,
     fontWeight: '400',
-    marginBottom: 32,
+    marginBottom: 28,
     textAlign: 'center',
   },
   loginChoice: {
     marginTop: 12,
     minHeight: 52,
-    borderRadius: AUTH_XP.radiusLg,
+    borderRadius: 16,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
     paddingHorizontal: 20,
   },
   loginChoiceLabel: {
-    color: AUTH_XP.white,
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.2,
