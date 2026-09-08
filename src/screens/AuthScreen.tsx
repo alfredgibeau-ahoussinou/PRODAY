@@ -39,6 +39,7 @@ import {
   AuthLink,
   AuthModeSwitch,
   AuthPostLoginReveal,
+  AuthGatePanel,
   AUTH_XP,
 } from '../features/auth/experience';
 import { isGoogleAuthConfigured } from '../config/oauth';
@@ -52,6 +53,7 @@ import {
   resolveAuthBackAction,
   resolveAuthSurface,
 } from '../utils/authBackStack';
+import { shouldReopenUniverseAfterAuth } from '../utils/postAuthNavigation';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -222,9 +224,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
   const finishAuthNavigation = useCallback(async () => {
     await refreshProfile();
-    openSpacePicker();
     setActiveTab('home');
-  }, [refreshProfile, openSpacePicker, setActiveTab]);
+    // Pôle déjà choisi à l’univers → ne pas réouvrir le carousel (double entrée).
+    if (shouldReopenUniverseAfterAuth({ hasChosenPole: Boolean(initialPole) })) {
+      openSpacePicker();
+    }
+  }, [refreshProfile, openSpacePicker, setActiveTab, initialPole]);
 
   const goHomeAfterAuth = useCallback(async () => {
     pendingAfterReveal.current = () => {
@@ -246,21 +251,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     if (isAdminAuth) {
       return {
         kicker: 'ACCÈS FONDATION VIP',
-        title: 'Espace Administrateur',
-        sub: 'Connexion réservée aux fondateurs et administrateurs autorisés.',
-        cta: 'Connexion Admin',
+        title: 'Connexion Admin',
+        sub: 'Réservé aux fondateurs et administrateurs autorisés.',
+        cta: 'Se connecter',
         gateTitle: 'Espace Administrateur',
-        gateSub: 'Accès réservé.',
+        gateSub: 'Accès réservé à l’équipe fondatrice.',
       };
     }
     if (productLine === 'pro_staff' || signupInitialRole === 'coach' || initialPole === 'coach') {
       return {
-        kicker: 'PÔLE COACH & STAFF',
-        title: 'Espace Coach',
-        sub: 'Connectez-vous pour piloter vos séances IA, tactiques et convocations.',
-        cta: 'Connexion Coach',
-        gateTitle: 'Bienvenue dans le pôle Coach',
-        gateSub: 'Créez le compte de votre staff, ou connectez-vous si vous êtes déjà inscrit.',
+        kicker: 'PÔLE COACH',
+        title: 'Connexion Coach',
+        sub: 'Séances, tactiques et convocations — en un accès.',
+        cta: 'Se connecter',
+        gateTitle: poleLabel ? `Pôle ${poleLabel}` : 'Pôle Coach',
+        gateSub: 'Créez votre espace staff, ou connectez-vous.',
       };
     }
     if (
@@ -270,32 +275,32 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       initialPole === 'president'
     ) {
       return {
-        kicker: 'PÔLE CLUB & DIRIGEANTS',
-        title: 'Espace Club',
-        sub: 'Connectez-vous pour administrer vos effectifs, tournois et adhésions.',
-        cta: 'Connexion Club',
-        gateTitle: 'Bienvenue dans le pôle Club',
-        gateSub: 'Retrouvez votre club FFF à l’inscription, ou connectez-vous à votre espace.',
+        kicker: 'PÔLE CLUB',
+        title: 'Connexion Club',
+        sub: 'Effectifs, matchs et adhésions — votre structure.',
+        cta: 'Se connecter',
+        gateTitle: poleLabel ? `Pôle ${poleLabel}` : 'Pôle Club',
+        gateSub: 'Retrouvez votre club FFF à l’inscription, ou connectez-vous.',
       };
     }
     if (productLine === 'parent' || signupInitialRole === 'parent' || initialPole === 'parent') {
       return {
-        kicker: 'PORTAIL PARENT & FAMILLE',
-        title: 'Espace Famille',
-        sub: 'Connectez-vous pour suivre votre enfant et le covoiturage club.',
-        cta: 'Connexion Famille',
-        gateTitle: 'Bienvenue dans l’espace Famille',
-        gateSub: 'Créez un compte parent, ou connectez-vous si vous avez déjà un accès.',
+        kicker: 'ESPACE FAMILLE',
+        title: 'Connexion Famille',
+        sub: 'Suivi enfant et covoiturage club.',
+        cta: 'Se connecter',
+        gateTitle: 'Espace Famille',
+        gateSub: 'Créez un compte parent, ou reconnectez-vous.',
       };
     }
     if (productLine === 'sponsor' || signupInitialRole === 'sponsor' || initialPole === 'sponsor') {
       return {
-        kicker: 'ESPACE SPONSOR & PARTENAIRES',
-        title: 'Espace Partenaire',
-        sub: 'Connectez-vous pour gérer vos campagnes et votre visibilité locale.',
-        cta: 'Connexion Partenaire',
-        gateTitle: 'Bienvenue chez les partenaires',
-        gateSub: 'Créez votre espace marque, ou connectez-vous pour reprendre vos campagnes.',
+        kicker: 'PARTENAIRES',
+        title: 'Connexion Partenaire',
+        sub: 'Campagnes et visibilité locale.',
+        cta: 'Se connecter',
+        gateTitle: 'Espace Partenaire',
+        gateSub: 'Créez votre espace marque, ou reconnectez-vous.',
       };
     }
     if (
@@ -304,21 +309,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       initialPole === 'supporter'
     ) {
       return {
-        kicker: 'TRIBUNE SUPPORTERS',
-        title: 'Espace Supporter',
-        sub: 'Connectez-vous pour suivre les matchs en direct et voter MVP.',
-        cta: 'Connexion Supporter',
-        gateTitle: 'Bienvenue en tribune',
-        gateSub: 'Créez un compte supporter, ou connectez-vous pour retrouver vos clubs.',
+        kicker: 'TRIBUNE',
+        title: 'Connexion Supporter',
+        sub: 'Matchs en direct et votes MVP.',
+        cta: 'Se connecter',
+        gateTitle: 'Tribune Supporters',
+        gateSub: 'Créez un compte, ou reconnectez-vous.',
       };
     }
     return {
       kicker: 'PÔLE JOUEUR',
-      title: 'Espace Joueur',
-      sub: 'Connectez-vous pour accéder à vos statistiques, matchs et CV sportif.',
-      cta: 'Connexion Joueur',
-      gateTitle: poleLabel ? `Bienvenue dans le pôle ${poleLabel}` : 'Bienvenue dans le pôle Joueur',
-      gateSub: 'Créez votre compte joueur, ou connectez-vous si vous êtes déjà sur ProDay.',
+      title: 'Connexion Joueur',
+      sub: 'Stats, matchs et CV sportif — votre cockpit.',
+      cta: 'Se connecter',
+      gateTitle: poleLabel ? `Pôle ${poleLabel}` : 'Pôle Joueur',
+      gateSub: 'Créez votre compte, ou reconnectez-vous à ProDay.',
     };
   }, [isAdminAuth, productLine, signupInitialRole, initialPole]);
 
@@ -429,7 +434,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
   return (
     <>
-      <AuthExperienceShell toolbar={toolbar} footer={legalFooter}>
+      <AuthExperienceShell toolbar={toolbar} footer={legalFooter} brandCopy={mode === 'signupTeaser'}>
         <AuthModeSwitch modeKey={mode}>
           {mode === 'login' ? (
             <View>
@@ -479,6 +484,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 blurOnSubmit={false}
                 onSubmitEditing={() => passwordRef.current?.focus()}
                 error={fieldErrors.email}
+                accent={polePalette.accent}
               />
               <AuthInput
                 ref={passwordRef}
@@ -496,6 +502,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 returnKeyType="go"
                 onSubmitEditing={() => void handleLogin()}
                 error={fieldErrors.password}
+                accent={polePalette.accent}
               />
 
               <AuthRememberRow
@@ -570,39 +577,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           ) : !registrationOpen ? (
             <FeatureDisabledPanel flag="registration_open" />
           ) : (
-            <View>
-              <View style={styles.kickerBadge}>
-                <View style={[styles.kickerDot, { backgroundColor: polePalette.accent }]} />
-                <ProDayText
-                  variant="eyebrow"
-                  style={[styles.kickerText, { color: polePalette.accent }]}
-                >
-                  {universeAuthCopy.kicker}
-                </ProDayText>
-              </View>
-              <View style={[styles.gateAccentBar, { backgroundColor: polePalette.accent }]} />
-              <ProDayText variant="title" style={styles.title}>
-                {universeAuthCopy.gateTitle}
-              </ProDayText>
-              <ProDayText variant="body" style={styles.sub}>
-                {universeAuthCopy.gateSub}
-              </ProDayText>
-              <AuthButton
-                label={t('auth.createAccount') || 'Créer un compte'}
-                onPress={openSignup}
-                accent={polePalette.accent}
-                onAccent={polePalette.onAccent}
-              />
-              <View style={styles.gateLoginWrap}>
-                <AuthButton
-                  label={t('auth.login') || 'Se connecter'}
-                  onPress={() => setMode('login')}
-                  variant="secondary"
-                  accent={polePalette.accent}
-                  onAccent={polePalette.onAccent}
-                />
-              </View>
-            </View>
+            <AuthGatePanel
+              kicker={universeAuthCopy.kicker}
+              title={universeAuthCopy.gateTitle}
+              subtitle={universeAuthCopy.gateSub}
+              accent={polePalette.accent}
+              onAccent={polePalette.onAccent}
+              createLabel={t('auth.createAccount') || 'Créer un compte'}
+              loginLabel={t('auth.login') || 'Se connecter'}
+              onCreate={openSignup}
+              onLogin={() => setMode('login')}
+            />
           )}
         </AuthModeSwitch>
       </AuthExperienceShell>
@@ -703,11 +688,12 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
-    letterSpacing: -0.6,
-    marginBottom: 8,
+    letterSpacing: -0.7,
+    marginBottom: 10,
     textAlign: 'center',
+    lineHeight: 36,
   },
   sub: {
     color: 'rgba(255, 255, 255, 0.58)',
@@ -740,12 +726,9 @@ const styles = StyleSheet.create({
   switchRow: {
     marginTop: 20,
   },
-  gateLoginWrap: {
-    marginTop: 14,
-  },
   gateAccentBar: {
     alignSelf: 'center',
-    width: 36,
+    width: 40,
     height: 3,
     borderRadius: 2,
     marginBottom: 18,

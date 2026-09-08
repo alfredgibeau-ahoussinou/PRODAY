@@ -12,6 +12,7 @@ import { ProDayText } from '../../components/ui/ProDayText';
 import { useAuthLayout } from '../../components/auth/useAuthLayout';
 import type { SignupPhase } from './signupFlowConfig';
 import { AuthProgress } from '../../features/auth/experience';
+import { useSignupFlowTheme } from './SignupFlowContext';
 
 interface SignupStepLayoutProps {
   stepIndex: number;
@@ -30,7 +31,7 @@ interface SignupStepLayoutProps {
 }
 
 /**
- * Layout inscription épuré et minimaliste — fond noir pur, progression fine et typographie soignée.
+ * Layout inscription — même famille visuelle que login (noir, accent pôle, typo claire).
  */
 export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   stepIndex,
@@ -44,9 +45,13 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   footer,
 }) => {
   const { headerTopPad, contentMaxWidth, tabBarScrollInset: tabInset } = useAuthLayout();
+  const { colors } = useSignupFlowTheme();
+  // Accent pôle — blanc joueur illisible en barre → or master
+  const rawAccent = colors.accent || '#C5A059';
+  const accent = rawAccent.toUpperCase() === '#FFFFFF' ? '#C5A059' : rawAccent;
   const scrollBottomPad = tabInset({ stickyFooter: Boolean(footer) });
   const footerBottomPad = tabInset();
-  const styles = useMemo(() => createStyles(contentMaxWidth), [contentMaxWidth]);
+  const styles = useMemo(() => createStyles(contentMaxWidth, accent), [contentMaxWidth, accent]);
 
   return (
     <KeyboardAvoidingView
@@ -71,9 +76,17 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
             <View style={styles.headerSideSpacer} />
           )}
           <View style={styles.progressWrap}>
-            <AuthProgress stepIndex={stepIndex} stepTotal={Math.min(stepTotal, 8)} />
+            <AuthProgress
+              stepIndex={stepIndex}
+              stepTotal={Math.min(stepTotal, 8)}
+              accent={accent}
+            />
           </View>
-          <View style={styles.headerSideSpacer} />
+          <View style={styles.stepCountWrap}>
+            <ProDayText variant="caption" style={styles.stepCount}>
+              {stepIndex + 1}/{Math.min(stepTotal, 8)}
+            </ProDayText>
+          </View>
         </View>
       </View>
 
@@ -83,12 +96,11 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
         showsVerticalScrollIndicator={false}
       >
         {stepName ? (
-          <View style={styles.stepKickerWrap}>
-            <ProDayText variant="eyebrow" style={styles.stepKicker}>
-              {stepName.toUpperCase()} · ÉTAPE {stepIndex + 1}
-            </ProDayText>
-          </View>
+          <ProDayText variant="eyebrow" style={styles.stepKicker}>
+            {stepName}
+          </ProDayText>
         ) : null}
+        <View style={[styles.titleAccent, { backgroundColor: accent }]} />
         <ProDayText variant="title" style={styles.title}>
           {title}
         </ProDayText>
@@ -107,7 +119,7 @@ export const SignupStepLayout: React.FC<SignupStepLayoutProps> = ({
   );
 };
 
-function createStyles(contentMaxWidth: number) {
+function createStyles(contentMaxWidth: number, accent: string) {
   return StyleSheet.create({
     root: {
       flex: 1,
@@ -115,18 +127,27 @@ function createStyles(contentMaxWidth: number) {
     },
     header: {
       paddingHorizontal: 16,
-      paddingBottom: 8,
+      paddingBottom: 4,
     },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
+      gap: 8,
     },
     headerSideSpacer: { width: 38 },
     progressWrap: {
       flex: 1,
-      alignItems: 'center',
       justifyContent: 'center',
+    },
+    stepCountWrap: {
+      minWidth: 38,
+      alignItems: 'flex-end',
+    },
+    stepCount: {
+      color: 'rgba(255,255,255,0.4)',
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.3,
     },
     iconBtn: {
       width: 38,
@@ -137,42 +158,50 @@ function createStyles(contentMaxWidth: number) {
       backgroundColor: 'rgba(255, 255, 255, 0.08)',
     },
     scroll: {
-      paddingHorizontal: 20,
-      paddingTop: 16,
+      paddingHorizontal: 24,
+      paddingTop: 12,
       maxWidth: contentMaxWidth + 40,
       width: '100%',
       alignSelf: 'center',
     },
-    stepKickerWrap: {
-      marginBottom: 6,
-    },
     stepKicker: {
-      color: '#F5D04A',
-      fontSize: 10,
+      color: accent,
+      fontSize: 11,
       fontWeight: '700',
-      letterSpacing: 1.2,
+      letterSpacing: 1.3,
+      textTransform: 'uppercase',
+      marginBottom: 10,
+    },
+    titleAccent: {
+      width: 28,
+      height: 3,
+      borderRadius: 2,
+      marginBottom: 12,
     },
     title: {
       color: '#FFFFFF',
-      fontSize: 26,
+      fontSize: 28,
       fontWeight: '800',
-      letterSpacing: -0.5,
-      marginBottom: 6,
+      letterSpacing: -0.6,
+      marginBottom: 8,
+      lineHeight: 34,
     },
     subtitle: {
       color: 'rgba(255, 255, 255, 0.55)',
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 15,
+      lineHeight: 22,
       fontWeight: '400',
-      marginBottom: 20,
+      marginBottom: 24,
     },
     body: {
-      gap: 12,
+      gap: 14,
     },
     footer: {
-      paddingHorizontal: 20,
-      paddingTop: 10,
+      paddingHorizontal: 24,
+      paddingTop: 12,
       backgroundColor: '#000000',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: 'rgba(255,255,255,0.06)',
     },
   });
 }

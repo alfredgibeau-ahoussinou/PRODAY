@@ -9,3 +9,4 @@ export { AuthProgress } from './AuthProgress';
 export { AuthPostLoginReveal } from './AuthPostLoginReveal';
 export { AuthSuccessMoment } from './AuthSuccessMoment';
 export { AuthEnter, AuthModeSwitch } from './AuthMotion';
+export { AuthGatePanel } from './AuthGatePanel';

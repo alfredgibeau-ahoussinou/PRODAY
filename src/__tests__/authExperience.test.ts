@@ -14,12 +14,12 @@ describe('ProDay Auth Experience', () => {
     expect(AUTH_XP.headline).toMatch(/terrain/i);
   });
 
-  it('ne place plus le choix d’univers avant le compte', () => {
+  it('place la sélection officielle club/licence au début du parcours', () => {
     const steps = buildSignupSteps('player', {
       role: 'player',
       parentalRequired: false,
     });
-    expect(steps[0]).toBe('account');
+    expect(steps[0]).toBe('sport');
     expect(steps.includes('welcome')).toBe(false);
   });
 

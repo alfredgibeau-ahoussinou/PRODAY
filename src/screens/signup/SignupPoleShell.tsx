@@ -11,7 +11,7 @@ import { useSignupFlowTheme } from './SignupFlowContext';
 import { useTranslation } from '../../context/LocaleContext';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { ProDayText } from '../../components/ui/ProDayText';
-import { spacing, radius } from '../../theme/designTokens';
+import { spacing } from '../../theme/designTokens';
 import { fontFamily } from '../../theme/typography';
 
 type LayoutProps = {
@@ -27,14 +27,14 @@ type LayoutProps = {
 export type SignupPoleShellProps = LayoutProps & {
   page: SignupPageId;
   children: React.ReactNode;
-  /** Bandeau d’aide sous le titre — même chrome pour tous les pôles. */
+  /** Aide sous le titre — caption légère, pas de boîte clutter. */
   hint?: string;
   continueLabel?: string;
 };
 
 /**
  * Chrome d’étape métier partagé (coach, club, agent, sponsor, médical…).
- * Même header / progress / CTA / erreurs que le reste de l’inscription.
+ * Même famille visuelle que login / gate.
  */
 export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
   form,
@@ -65,6 +65,7 @@ export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
         <SignupFooterButton
           label={continueLabel ?? t('signup.form.continue')}
           onPress={() => form.advanceFromCurrentPage()}
+          accent={colors.accent?.toUpperCase() === '#FFFFFF' ? '#C5A059' : colors.accent}
         />
       }
     >
@@ -75,14 +76,7 @@ export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
       ) : null}
 
       {hint ? (
-        <View
-          style={[
-            styles.hintBox,
-            { backgroundColor: colors.accentSoft, borderColor: colors.border },
-          ]}
-        >
-          <ProDayText style={[styles.hintText, { color: colors.textSecondary }]}>{hint}</ProDayText>
-        </View>
+        <ProDayText style={[styles.hintText, { color: colors.textSecondary }]}>{hint}</ProDayText>
       ) : null}
 
       {children}
@@ -92,15 +86,11 @@ export const SignupPoleShell: React.FC<SignupPoleShellProps> = ({
 
 const styles = StyleSheet.create({
   errorWrap: { marginBottom: spacing.md },
-  hintBox: {
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    marginBottom: spacing.lg,
-  },
   hintText: {
     fontSize: 13,
     lineHeight: 19,
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.regular,
+    marginBottom: spacing.sm,
+    opacity: 0.9,
   },
 });

@@ -88,7 +88,7 @@ function createStyles(
       minHeight: 52,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 26,
+      borderRadius: 16,
       paddingHorizontal: 24,
       backgroundColor: primary
         ? accent

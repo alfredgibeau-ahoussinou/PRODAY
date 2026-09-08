@@ -20,6 +20,8 @@ export type AuthInputProps = TextInputProps & {
   error?: string;
   icon?: IconName;
   secureToggle?: boolean;
+  /** Accent focus pôle (sinon or master). */
+  accent?: string;
 };
 
 export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInput(
@@ -34,6 +36,7 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
     onFocus,
     onBlur,
     style,
+    accent = AUTH_XP.goldBright,
     ...rest
   },
   ref,
@@ -44,12 +47,13 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
   const isSecure = secureToggle ? hidden : secureTextEntry;
   const filled = Boolean(value && String(value).length > 0);
   const disabled = editable === false;
+  const focusColor = accent.toUpperCase() === '#FFFFFF' ? AUTH_XP.goldBright : accent;
 
   const fieldAnim = useAnimatedStyle(() => ({
     borderColor: error
       ? AUTH_XP.borderError
       : focusAnim.value > 0.5
-        ? '#F5D04A'
+        ? focusColor
         : 'rgba(255, 255, 255, 0.12)',
     backgroundColor: disabled
       ? 'rgba(255, 255, 255, 0.02)'
@@ -66,7 +70,7 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
     <View style={styles.wrap}>
       <ProDayText
         variant="caption"
-        style={[styles.label, focused && { color: '#F5D04A' }]}
+        style={[styles.label, focused && { color: focusColor }]}
       >
         {label}
       </ProDayText>
@@ -75,7 +79,7 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
           <Icon
             name={icon}
             size={18}
-            color={focused ? '#F5D04A' : 'rgba(255, 255, 255, 0.4)'}
+            color={focused ? focusColor : 'rgba(255, 255, 255, 0.4)'}
           />
         ) : null}
         <TextInput
@@ -85,7 +89,7 @@ export const AuthInput = forwardRef<TextInput, AuthInputProps>(function AuthInpu
           editable={editable}
           secureTextEntry={isSecure}
           placeholderTextColor="rgba(255, 255, 255, 0.25)"
-          selectionColor="#F5D04A"
+          selectionColor={focusColor}
           autoCorrect={false}
           onFocus={(e) => {
             setFocused(true);

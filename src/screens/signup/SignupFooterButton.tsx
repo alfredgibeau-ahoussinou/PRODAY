@@ -8,6 +8,9 @@ interface SignupFooterButtonProps {
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
   showArrow?: boolean;
+  /** Accent pôle (évite l’or master forcé partout). */
+  accent?: string;
+  onAccent?: string;
 }
 
 export const SignupFooterButton: React.FC<SignupFooterButtonProps> = ({
@@ -16,6 +19,8 @@ export const SignupFooterButton: React.FC<SignupFooterButtonProps> = ({
   loading,
   variant = 'primary',
   disabled,
+  accent,
+  onAccent,
 }) => (
   <AuthButton
     label={label}
@@ -23,5 +28,7 @@ export const SignupFooterButton: React.FC<SignupFooterButtonProps> = ({
     loading={loading}
     disabled={disabled}
     variant={variant === 'secondary' ? 'secondary' : 'primary'}
+    accent={accent}
+    onAccent={onAccent}
   />
 );

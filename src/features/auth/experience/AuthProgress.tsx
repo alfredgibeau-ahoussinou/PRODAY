@@ -5,14 +5,17 @@ import { AUTH_XP } from './tokens';
 type AuthProgressProps = {
   stepIndex: number;
   stepTotal: number;
+  /** Accent pôle (sinon or master). */
+  accent?: string;
 };
 
-/** Indicateur de progression moderne avec barres segmentées */
+/** Progression segmentée — accent pôle, pas de glow kitsch. */
 export const AuthProgress: React.FC<AuthProgressProps> = ({
   stepIndex,
   stepTotal,
+  accent = AUTH_XP.goldBright,
 }) => {
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(() => createStyles(accent), [accent]);
   const total = Math.max(stepTotal, 1);
   const active = Math.min(Math.max(stepIndex, 0), total - 1);
 
@@ -40,32 +43,29 @@ export const AuthProgress: React.FC<AuthProgressProps> = ({
   );
 };
 
-function createStyles() {
+function createStyles(accent: string) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      paddingVertical: 8,
+      gap: 5,
+      paddingVertical: 6,
     },
     segment: {
-      width: 22,
-      height: 4,
+      flex: 1,
+      maxWidth: 40,
+      height: 3,
       borderRadius: 2,
-      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      backgroundColor: 'rgba(255, 255, 255, 0.12)',
     },
     segmentDone: {
-      backgroundColor: '#C5A059',
+      backgroundColor: accent,
+      opacity: 0.55,
     },
     segmentActive: {
-      backgroundColor: '#F5D04A',
-      width: 32,
-      shadowColor: '#F5D04A',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.8,
-      shadowRadius: 6,
-      elevation: 4,
+      backgroundColor: accent,
+      opacity: 1,
     },
   });
 }
