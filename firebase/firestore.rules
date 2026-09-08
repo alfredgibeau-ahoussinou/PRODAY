@@ -899,6 +899,32 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    /**
+     * Annuaire public clubs FFF — identité association uniquement (pas de PII).
+     * Lecture ouverte (onboarding). Écriture client = enrichissement identité
+     * sans toucher claim_status / proday_club_id (réservés Functions / admin).
+     */
+    match /fff_public_clubs/{affiliationNumber} {
+      allow read: if true;
+      allow create: if request.resource.data.fff_affiliation_number == affiliationNumber
+        && request.resource.data.claim_status == 'unclaimed'
+        && request.resource.data.keys().hasAll(['name', 'fff_affiliation_number', 'search_prefixes', 'search_haystack'])
+        && !request.resource.data.keys().hasAny(['claimed_by_uid', 'members', 'president', 'phone']);
+      allow update: if isAdmin()
+        || (request.resource.data.fff_affiliation_number == affiliationNumber
+            && request.resource.data.claim_status == resource.data.claim_status
+            && request.resource.data.get('proday_club_id', null) == resource.data.get('proday_club_id', null)
+            && !request.resource.data.keys().hasAny(['claimed_by_uid', 'members']));
+      allow delete: if isAdmin();
+    }
+
+    /** Claims privés (UID claimer) — pas de lecture publique. */
+    match /fff_public_club_claims/{affiliationNumber} {
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.claimed_by_uid == request.auth.uid);
+      allow create, update, delete: if false; // Admin SDK / Cloud Functions uniquement
+    }
+
     match /teams/{teamId} {
       allow read: if true;
       allow create: if isSignedIn()

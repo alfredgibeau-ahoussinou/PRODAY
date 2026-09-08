@@ -13,10 +13,10 @@ import { AUTH_XP } from '../../features/auth/experience/tokens';
 import { fontFamily } from '../../theme/typography';
 import {
   fffOfficialRegistryService,
-  FffOfficialRegistryError,
   type OfficialFffClub,
   type PreRegisteredMember,
 } from '../../services/fffOfficialRegistry.service';
+import { PublicClubAutocomplete } from './PublicClubAutocomplete';
 import {
   pickVerificationFromCamera,
   pickVerificationFromGallery,
@@ -61,10 +61,6 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
   onChangeCustomName,
   error,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<OfficialFffClub[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
   const [rosterMembers, setRosterMembers] = useState<PreRegisteredMember[]>([]);
   const [loadingRoster, setLoadingRoster] = useState(false);
   const [rosterMeta, setRosterMeta] = useState<{
@@ -77,54 +73,6 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [manualCategory, setManualCategory] = useState('');
   const [uploadingDoc, setUploadingDoc] = useState(false);
-
-  // Recherche clubs FFF (live DOFA) — jamais de seed locale
-  useEffect(() => {
-    let active = true;
-    if (selectedClub) {
-      setSearchResults([]);
-      setSearchError(null);
-      return;
-    }
-
-    const q = searchQuery.trim();
-    if (q.length < 2) {
-      setSearchResults([]);
-      setSearchError(null);
-      setIsSearching(false);
-      return;
-    }
-
-    setIsSearching(true);
-    setSearchError(null);
-    const timer = setTimeout(async () => {
-      try {
-        const results = await fffOfficialRegistryService.searchOfficialClubs(q);
-        if (!active) return;
-        setSearchResults(results.slice(0, 25));
-        if (results.length === 0) {
-          setSearchError(
-            'Aucun club FFF trouvé. Essayez la ville, le code postal (5 chiffres) ou le n° d’affiliation.'
-          );
-        }
-      } catch (err) {
-        if (!active) return;
-        setSearchResults([]);
-        setSearchError(
-          err instanceof FffOfficialRegistryError
-            ? err.message
-            : 'Erreur lors de la recherche FFF. Réessayez.'
-        );
-      } finally {
-        if (active) setIsSearching(false);
-      }
-    }, 350);
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [searchQuery, selectedClub]);
 
   // Catégories / équipes engagées DOFA pour le club sélectionné
   useEffect(() => {
@@ -288,7 +236,6 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
     onSelectRosterMember(null);
     onToggleCustomProfile(false);
     setManualCategory('');
-    setSearchQuery('');
   };
 
   const applyManualCategory = () => {
@@ -347,93 +294,34 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
               {isClubRole ? '1. Club officiel FFF' : '1. Club officiel FFF'}
             </ProDayText>
             <ProDayText style={styles.sourceHint}>
-              Recherche officielle FFF (ville, code postal ou n° d’affiliation). Aucun club inventé.
+              Annuaire public ProDay + FFF (ville, CP ou n° d’affiliation). Aucune donnée personnelle.
             </ProDayText>
 
-            {selectedClub ? (
-              <View style={styles.selectedClubCard}>
-                <View style={styles.clubBadge}>
-                  <Icon name="shield" size={18} color="#000000" />
-                </View>
-                <View style={styles.clubInfo}>
-                  <ProDayText style={styles.clubName}>{selectedClub.name}</ProDayText>
-                  <ProDayText style={styles.clubSub}>
-                    {selectedClub.fffNumber
-                      ? `N° FFF : ${selectedClub.fffNumber} · `
-                      : ''}
-                    {selectedClub.city}
-                    {selectedClub.department ? ` (${selectedClub.department})` : ''}
-                  </ProDayText>
-                  {!!selectedClub.league && (
-                    <ProDayText style={styles.clubLeague}>{selectedClub.league}</ProDayText>
-                  )}
-                </View>
-                <PressableSpring
-                  onPress={() => {
-                    onSelectClub(null);
-                    onSelectCategory('');
-                    onSelectRosterMember(null);
-                    onToggleCustomProfile(false);
-                    setClubCategories([]);
-                    setManualCategory('');
-                  }}
-                  style={styles.changeClubBtn}
-                >
-                  <ProDayText style={styles.changeClubBtnText}>Changer</ProDayText>
-                </PressableSpring>
-              </View>
-            ) : (
-              <View style={styles.searchWrapper}>
-                <View style={styles.searchBar}>
-                  <Icon name="search" size={16} color={AUTH_XP.goldBright} />
-                  <TextInput
-                    style={styles.searchInput}
-                    placeholder="Ex. Melun, 77350, Le Mée, n° affiliation…"
-                    placeholderTextColor={AUTH_XP.textDim}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    autoCorrect={false}
-                    autoCapitalize="none"
-                  />
-                  {isSearching && <ActivityIndicator size="small" color={AUTH_XP.goldBright} />}
-                </View>
-                {searchQuery.trim().length > 0 && searchQuery.trim().length < 2 ? (
-                  <ProDayText style={styles.infoText}>Saisissez au moins 2 caractères.</ProDayText>
-                ) : null}
-                {searchError ? (
-                  <ProDayText style={styles.infoText}>{searchError}</ProDayText>
-                ) : null}
-                {searchResults.length > 0 && (
-                  <View style={styles.resultsList}>
-                    {searchResults.map((club) => (
-                      <PressableSpring
-                        key={club.id}
-                        onPress={() => selectClub(club)}
-                        style={styles.resultItem}
-                      >
-                        <View style={styles.resultCol}>
-                          <View style={styles.resultTopRow}>
-                            <ProDayText style={styles.resultClubName}>{club.name}</ProDayText>
-                            {!!club.fffNumber && (
-                              <View style={styles.fffBadge}>
-                                <ProDayText style={styles.fffBadgeText}>
-                                  FFF #{club.fffNumber}
-                                </ProDayText>
-                              </View>
-                            )}
-                          </View>
-                          <ProDayText style={styles.resultCity}>
-                            {[club.city, club.postalCode].filter(Boolean).join(' ')}
-                            {club.league ? ` · ${club.league}` : ''}
-                          </ProDayText>
-                        </View>
-                        <Icon name="chevron-forward" size={16} color={AUTH_XP.textMuted} />
-                      </PressableSpring>
-                    ))}
-                  </View>
-                )}
-              </View>
-            )}
+            <PublicClubAutocomplete
+              selectedClub={selectedClub}
+              onSelectClub={(club) => {
+                if (!club) {
+                  onSelectClub(null);
+                  onSelectCategory('');
+                  onSelectRosterMember(null);
+                  onToggleCustomProfile(false);
+                  setClubCategories([]);
+                  setManualCategory('');
+                  return;
+                }
+                selectClub(club);
+              }}
+              accent={
+                role === 'coach'
+                  ? '#C5A059'
+                  : role === 'club'
+                    ? '#2E7D4F'
+                    : role === 'parent'
+                      ? '#7CB342'
+                      : AUTH_XP.gold
+              }
+              error={error}
+            />
           </View>
 
           {selectedClub && (

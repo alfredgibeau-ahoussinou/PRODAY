@@ -3,6 +3,11 @@ import * as functions from 'firebase-functions';
 import { admin } from './firebaseAdmin';
 import { processScheduledEventReminders } from './eventReminders';
 import { processFffClubRosterDailySync } from './fffClubRosterSync';
+import {
+  processPublicClubDirectorySync,
+  searchPublicClubsInFirestore,
+  claimPublicClubInFirestore,
+} from './publicClubDirectory';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
 import { createShopCheckoutSession } from './shopPayments';
@@ -278,6 +283,47 @@ export const syncFffClubRostersNow = functions.https.onCall(async (_data, contex
   }
   const result = await processFffClubRosterDailySync(db);
   return result;
+});
+
+/**
+ * Annuaire public clubs (sans PII) — seed depuis structure FootClubs + clubs ProDay.
+ * Déployer : firebase deploy --only functions:scheduledPublicClubDirectorySync,functions:syncPublicClubDirectoryNow,functions:searchPublicClubs,functions:claimPublicClub
+ */
+export const scheduledPublicClubDirectorySync = functions.pubsub
+  .schedule('every day 03:45')
+  .timeZone('Europe/Paris')
+  .onRun(async () => {
+    const result = await processPublicClubDirectorySync(db);
+    console.log('[scheduledPublicClubDirectorySync]', result);
+    return result;
+  });
+
+export const syncPublicClubDirectoryNow = functions.https.onCall(async (_data, context) => {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+  }
+  return processPublicClubDirectorySync(db);
+});
+
+/** Recherche annuaire public (auth optionnelle — onboarding invité). */
+export const searchPublicClubs = functions.https.onCall(async (data) => {
+  const queryText = typeof data?.query === 'string' ? data.query : '';
+  const lim = typeof data?.limit === 'number' ? Math.min(50, data.limit) : 30;
+  const clubs = await searchPublicClubsInFirestore(db, queryText, lim);
+  return { clubs };
+});
+
+/** Claim / liaison club FFF → espace ProDay (pending verification). */
+export const claimPublicClub = functions.https.onCall(async (data, context) => {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+  }
+  return claimPublicClubInFirestore(db, context.auth.uid, {
+    fff_affiliation_number: String(data?.fff_affiliation_number ?? ''),
+    proday_club_id: String(data?.proday_club_id ?? ''),
+    mandate_document_name:
+      typeof data?.mandate_document_name === 'string' ? data.mandate_document_name : null,
+  });
 });
 
 /**

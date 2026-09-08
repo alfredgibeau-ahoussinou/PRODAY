@@ -104,6 +104,27 @@ export const clubsService = {
     );
   },
 
+  /** Résout un club ProDay par n° d’affiliation FFF (join joueur/coach). */
+  async getByFffAffiliationNumber(fffNumber: string): Promise<Club | null> {
+    const database = getDb();
+    if (!database) return null;
+    const code = fffNumber.trim();
+    if (!code) return null;
+    try {
+      const snap = await getDocs(
+        query(
+          collection(database, 'clubs'),
+          where('fff_affiliation_number', '==', code),
+          limit(1),
+        ),
+      );
+      if (snap.empty) return null;
+      return clubFromFirestore(snap.docs[0].id, snap.docs[0].data() as Record<string, unknown>);
+    } catch {
+      return null;
+    }
+  },
+
   async create(input: CreateClubInput, owner?: User): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');

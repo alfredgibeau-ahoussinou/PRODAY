@@ -68,6 +68,7 @@ import { parentPortalService } from '../../services/parentPortal.service';
 import type { OfficialFffClub, PreRegisteredMember } from '../../services/fffOfficialRegistry.service';
 import { membershipsService } from '../../services/memberships.service';
 import { clubsService } from '../../services/clubs.service';
+import { publicClubDirectoryService } from '../../services/publicClubDirectory.service';
 
 export type { SignupPageId, SignupFlowKind };
 
@@ -988,39 +989,77 @@ export function useSignupForm(initial?: {
         if (hasClub && selectedFffClub) {
           if (role === 'player' || role === 'coach' || role === 'parent') {
             try {
-              await membershipsService.requestJoin({
-                club_id: selectedFffClub.id,
-                player_uid: user.uid,
-                player_name: user.display_name,
-                role: role === 'coach' ? 'coach' : role === 'parent' ? 'parent' : 'player',
-                category: selectedFffCategory || category || undefined,
-                license_number: role === 'player' ? selectedRosterMember?.licenseNumber : undefined,
-                identity_document_name: identityDoc?.name,
-                identity_document_url: identityDoc?.uri,
-                identity_document_type: identityDoc?.type as any,
-                pre_registered_roster_id: selectedRosterMember?.id,
-              });
+              const existing =
+                (selectedFffClub.fffNumber
+                  ? await clubsService.getByFffAffiliationNumber(selectedFffClub.fffNumber)
+                  : null) ??
+                (await clubsService.getById(selectedFffClub.id));
+              const directory = selectedFffClub.fffNumber
+                ? await publicClubDirectoryService.getByAffiliation(selectedFffClub.fffNumber)
+                : null;
+              const clubId =
+                existing?.id ||
+                directory?.proday_club_id ||
+                null;
+              if (clubId) {
+                await membershipsService.requestJoin({
+                  club_id: clubId,
+                  player_uid: user.uid,
+                  player_name: user.display_name,
+                  role: role === 'coach' ? 'coach' : role === 'parent' ? 'parent' : 'player',
+                  category: selectedFffCategory || category || undefined,
+                  license_number: role === 'player' ? selectedRosterMember?.licenseNumber : undefined,
+                  identity_document_name: identityDoc?.name,
+                  identity_document_url: identityDoc?.uri,
+                  identity_document_type: identityDoc?.type as any,
+                  pre_registered_roster_id: selectedRosterMember?.id,
+                });
+              } else {
+                console.warn(
+                  '[signup] Aucun club ProDay pour FFF',
+                  selectedFffClub.fffNumber,
+                  '— demande d’adhésion différée',
+                );
+              }
             } catch (err) {
               console.warn('[signup] requestJoin membership:', err);
             }
           } else if (role === 'club') {
             try {
-              await clubsService.create(
-                {
-                  name: selectedFffClub.name,
-                  city: selectedFffClub.city,
-                  department: selectedFffClub.department,
-                  categories:
-                    selectedFffCategory || category
-                      ? [selectedFffCategory || category]
-                      : selectedFffClub.categories,
-                  owner_uid: user.uid,
-                  fff_affiliation_number: selectedFffClub.fffNumber || undefined,
-                },
-                user
-              );
+              const existing = selectedFffClub.fffNumber
+                ? await clubsService.getByFffAffiliationNumber(selectedFffClub.fffNumber)
+                : null;
+              let clubId = existing?.id;
+              if (!clubId) {
+                clubId = await clubsService.create(
+                  {
+                    name: selectedFffClub.name,
+                    city: selectedFffClub.city,
+                    department: selectedFffClub.department,
+                    categories:
+                      selectedFffCategory || category
+                        ? [selectedFffCategory || category]
+                        : selectedFffClub.categories,
+                    owner_uid: user.uid,
+                    fff_affiliation_number: selectedFffClub.fffNumber || undefined,
+                  },
+                  user
+                );
+              }
+              if (selectedFffClub.fffNumber && clubId) {
+                void publicClubDirectoryService
+                  .upsertFromOfficial(selectedFffClub)
+                  .then(() =>
+                    publicClubDirectoryService.claimClub({
+                      fffAffiliationNumber: selectedFffClub.fffNumber,
+                      prodayClubId: clubId!,
+                      mandateDocumentName: identityDoc?.name,
+                    }),
+                  )
+                  .catch((err) => console.warn('[signup] claimPublicClub:', err));
+              }
             } catch (err) {
-              console.warn('[signup] create club:', err);
+              console.warn('[signup] create/claim club:', err);
             }
           }
         }
