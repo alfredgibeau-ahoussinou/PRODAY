@@ -438,7 +438,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         brandCopy={mode === 'signupTeaser'}
         washTop={signupVisual.washTop}
         washMid={signupVisual.washMid}
-      >        <AuthModeSwitch modeKey={mode}>
+      >
+        <AuthModeSwitch modeKey={mode}>
           {mode === 'login' ? (
             <View>
               <View style={styles.kickerBadge}>
@@ -620,7 +621,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       <PushScreenTransition
         active={showForgotPassword || legalDocument != null}
         variant="fade"
-      >        {showForgotPassword ? (
+      >
+        {showForgotPassword ? (
           <ForgotPasswordScreen
             initialEmail={email}
             onBack={() => {

@@ -57,7 +57,9 @@ export const AuthExperienceShell: React.FC<AuthExperienceShellProps> = ({
 
   const formContent = (
     <View style={[styles.formInner, contentStyle]}>
-      {children}
+      {React.Children.map(children, (child) =>
+        typeof child === 'string' && child.trim() === '' ? null : child,
+      )}
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </View>
   );
