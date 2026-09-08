@@ -6,7 +6,10 @@ import {
 } from 'react-native';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { PressableSpring } from '../../../components/motion';
-import { AUTH_XP } from './tokens';
+import {
+  UNIVERSE_ENTRY_ACCENT,
+  UNIVERSE_ENTRY_INK_ON_ACCENT,
+} from '../../../components/branding/intro/universeEntryAuth';
 
 type AuthButtonProps = {
   label: string;
@@ -17,7 +20,7 @@ type AuthButtonProps = {
 };
 
 /**
- * CTA minimaliste épuré — format pilule pleine or/noir avec gestion anti double-clic.
+ * CTA auth — look pôle Club (émeraude) pour cohérence d’entrée tous pôles.
  */
 export const AuthButton: React.FC<AuthButtonProps> = ({
   label,
@@ -56,7 +59,7 @@ export const AuthButton: React.FC<AuthButtonProps> = ({
     >
       {loading ? (
         <ActivityIndicator
-          color={primary ? '#000000' : '#FFFFFF'}
+          color={primary ? UNIVERSE_ENTRY_INK_ON_ACCENT : '#FFFFFF'}
           size="small"
         />
       ) : (
@@ -82,16 +85,16 @@ function createStyles(variant: AuthButtonProps['variant']) {
       borderRadius: 26,
       paddingHorizontal: 24,
       backgroundColor: primary
-        ? '#F5D04A'
+        ? UNIVERSE_ENTRY_ACCENT
         : ghost
           ? 'transparent'
-          : 'rgba(255, 255, 255, 0.08)',
-      borderWidth: ghost ? 1 : 0,
-      borderColor: ghost ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+          : 'rgba(16, 185, 129, 0.12)',
+      borderWidth: primary ? 0 : 1,
+      borderColor: primary ? 'transparent' : UNIVERSE_ENTRY_ACCENT,
       marginTop: 10,
     },
     label: {
-      color: primary ? '#000000' : '#FFFFFF',
+      color: primary ? UNIVERSE_ENTRY_INK_ON_ACCENT : '#FFFFFF',
       fontSize: 15,
       fontWeight: '700',
       letterSpacing: 0.2,

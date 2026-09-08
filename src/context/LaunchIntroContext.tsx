@@ -12,6 +12,7 @@ import { FirstLaunchIntro } from '../components/branding/FirstLaunchIntro';
 import { LaunchVideoErrorBoundary } from '../components/branding/intro/LaunchVideoErrorBoundary';
 import type { IntroSpaceChoice } from '../components/branding/intro/BrandRevealIntro';
 import { resolveIntroExitAction } from '../components/branding/intro/launchIntroFlow';
+import { resolveGuestAuthIntentAfterUniverse } from '../components/branding/intro/universeEntryAuth';
 import {
   carouselPoleSignupPresetRole,
   carouselPoleToProductLine,
@@ -113,8 +114,14 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
         auth?.isAdmin || (profile?.email && isPlatformAdminEmail(profile.email)),
       );
 
+      const authIntent = resolveGuestAuthIntentAfterUniverse({
+        pole,
+        hasProfile: Boolean(profile),
+        isPlatformAdmin,
+      });
+
       if (pole === 'admin') {
-        if (!isPlatformAdmin) {
+        if (authIntent === 'login') {
           tabNav?.openAuth('login', { pole: 'admin' });
         }
         return;
@@ -127,8 +134,13 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
       const line = carouselPoleToProductLine(pole);
       await setProductLine(line);
 
-      if (!profile) {
-        tabNav?.openAuth('login', { pole });
+      if (authIntent) {
+        // `signup` ouvre le teaser (créer un compte / se connecter) — jamais login forcé.
+        tabNav?.openAuth(authIntent, {
+          pole,
+          productLine: line,
+          role: preset ?? undefined,
+        });
       }
     },
     [auth?.isAdmin, profile, setProductLine, setProSignupPresetRole, setClubShellMode, tabNav],
