@@ -18,20 +18,28 @@ import { getAuth } from 'firebase-admin/auth';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
-const EMAIL = (process.env.ADMIN_SETUP_EMAIL || 'proday.admin@gmail.com').trim().toLowerCase();
-const PASSWORD = process.env.ADMIN_SETUP_PASSWORD;
-const DISPLAY_NAME = process.env.ADMIN_SETUP_NAME || 'Admin ProDay';
-
 function loadEnv() {
   const path = resolve(root, '.env');
   if (!existsSync(path)) return {};
   const env = {};
   for (const line of readFileSync(path, 'utf8').split('\n')) {
     const m = line.match(/^([^#=]+)=(.*)$/);
-    if (m) env[m[1].trim()] = m[2].trim();
+    if (m) env[m[1].trim()] = m[2].trim().replace(/^['"]|['"]$/g, '');
   }
   return env;
 }
+
+const fileEnv = loadEnv();
+const EMAIL = (
+  process.env.ADMIN_SETUP_EMAIL ||
+  fileEnv.ADMIN_SETUP_EMAIL ||
+  'proday.admin@gmail.com'
+)
+  .trim()
+  .toLowerCase();
+const PASSWORD = process.env.ADMIN_SETUP_PASSWORD || fileEnv.ADMIN_SETUP_PASSWORD;
+const DISPLAY_NAME =
+  process.env.ADMIN_SETUP_NAME || fileEnv.ADMIN_SETUP_NAME || 'Admin ProDay';
 
 function findServiceAccount() {
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
@@ -49,13 +57,16 @@ function findServiceAccount() {
   return fixed;
 }
 
-const env = loadEnv();
-const projectId = env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || 'proday-155b0';
+const projectId =
+  process.env.GCLOUD_PROJECT ||
+  fileEnv.EXPO_PUBLIC_FIREBASE_PROJECT_ID ||
+  'proday-155b0';
 const serviceAccountPath = findServiceAccount();
 
 if (!PASSWORD || PASSWORD.length < 8) {
   console.error(
-    'Définissez ADMIN_SETUP_PASSWORD (8+ caractères), ex. dans .env :\n  ADMIN_SETUP_PASSWORD=***'
+    'Définissez ADMIN_SETUP_PASSWORD (8+ caractères), ex. dans .env :\n  ADMIN_SETUP_PASSWORD=***\n' +
+      'Ou exportez-le : ADMIN_SETUP_PASSWORD=… npm run admin:setup'
   );
   process.exit(1);
 }

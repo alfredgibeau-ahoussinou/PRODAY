@@ -20,12 +20,15 @@ Finances, Produit, Admin AI, Support, Sécurité, Système.
 
 ### Setup
 
+Placez les variables dans `.env` (gitignored) — le script les lit automatiquement :
+
 ```bash
 ADMIN_SETUP_EMAIL=proday.admin@gmail.com
-ADMIN_SETUP_PASSWORD=…
+ADMIN_SETUP_PASSWORD=…   # même MDP que docs/internal/ProDay-Acces-Fondateurs.md (compte app)
 npm run admin:setup
 ```
 
+Cela crée/met à jour le compte Firebase Auth, applique `admin: true`, et aligne le mot de passe sur `.env`.  
 Puis reconnecte-toi dans l'app pour recharger le jeton.
 
 ```bash
