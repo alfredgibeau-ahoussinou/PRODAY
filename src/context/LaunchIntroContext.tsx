@@ -48,6 +48,8 @@ const LaunchVideoIntroLazy = lazy(() =>
 
 interface LaunchIntroContextValue {
   openSpacePicker: () => void;
+  /** Intro premier lancement ou picker manuel ouvert. */
+  isUniverseVisible: boolean;
 }
 
 const LaunchIntroContext = createContext<LaunchIntroContextValue | null>(null);
@@ -156,9 +158,13 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [manualOpen, markIntroComplete]);
 
   const showLaunchVideo = videoReady && shouldPlayVideo && !videoIntroDone;
+  const isUniverseVisible = Boolean(
+    (firstLaunchVisible && !manualOpen) || manualOpen,
+  );
+  const guestLockedToUniverse = !profile;
 
   return (
-    <LaunchIntroContext.Provider value={{ openSpacePicker }}>
+    <LaunchIntroContext.Provider value={{ openSpacePicker, isUniverseVisible }}>
       <View style={styles.wrap}>
         {children}
         {firstLaunchVisible && !manualOpen ? (
@@ -179,7 +185,7 @@ export const LaunchIntroProvider: React.FC<{ children: React.ReactNode }> = ({
             key={`manual-${pickerSession}`}
             onChooseSpace={onChooseSpace}
             onExitComplete={onIntroExitComplete}
-            onDismiss={closeSpacePicker}
+            onDismiss={guestLockedToUniverse ? undefined : closeSpacePicker}
             initialLine={productLine}
             initialRole={profile?.role}
             initialClubShellMode={clubShellMode}

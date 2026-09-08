@@ -1,7 +1,7 @@
 import type { ProductLineId } from '../models/ProductLine';
 import type { MainTabId } from './mainTabConfig';
 
-/** Onglets invité — Discover reste monté ; auth via overlay (pas le scaffold rebuild). */
+/** Onglets invité — shell minimal ; auth via overlay (pas de landing Discover). */
 const GUEST_VISIBLE_TABS_SUPPORTER: MainTabId[] = ['home', 'reels', 'shop', 'profil'];
 
 /** Onglets invité — aperçu générique (amateur / pro). */

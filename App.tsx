@@ -42,7 +42,7 @@ import {
   guestProfilTabOpensAuthOverlay,
   isGuestAuthOverlayVisible,
 } from './src/navigation/authOverlay';
-import { AuthOverlayHost } from './src/navigation/AuthOverlayHost';
+import { GuestAuthOverlayHost } from './src/navigation/GuestAuthOverlayHost';
 import {
   TabNavigationProvider,
   type AuthIntent,
@@ -849,12 +849,12 @@ function AppShell() {
               />
             )}
             {isGuestAuthOverlayVisible(isGuest, pendingAuthIntent) ? (
-              <AuthOverlayHost
+              <GuestAuthOverlayHost
                 intent={pendingAuthIntent}
                 signupProductLine={pendingSignupProductLine ?? undefined}
                 signupInitialRole={pendingSignupRole ?? undefined}
                 initialPole={pendingChosenPole ?? undefined}
-                onDismiss={dismissAuthOverlay}
+                onClear={dismissAuthOverlay}
               />
             ) : null}
           </SafeAreaView>

@@ -6,7 +6,7 @@ import { useAppTheme } from '../context/ProductLineContext';
 import { useUnreadMessageCount } from '../hooks/useUnreadMessages';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useTabNavigation } from '../context/TabNavigationContext';
-import { DiscoverScreen } from './DiscoverScreen';
+import { GuestUniverseHome } from './GuestUniverseHome';
 import { RetiredRoleScreen } from './RetiredRoleScreen';
 import { isRetiredUserRole } from '../utils/retiredRoles';
 import { isJoueurDashboardOverlayView } from '../navigation/joueurDashboardOverlay';
@@ -18,7 +18,6 @@ import { TeamManagementScreen } from './TeamManagementScreen';
 import { SponsorsScreen } from './SponsorsScreen';
 import { SponsorHubScreen } from './sponsor/SponsorHubScreen';
 import { SmartTacticsPortalScreen } from './smartTactics/SmartTacticsPortalScreen';
-import { TrainHubScreen } from './training/TrainHubScreen';
 import { JoueurTacticsCoachScreen } from './joueur/JoueurTacticsCoachScreen';
 import { JoueurWhoAreYouGateScreen } from './joueur/JoueurWhoAreYouGateScreen';
 import { CrossfadeSwitch, PushScreenTransition } from '../components/motion';
@@ -88,9 +87,6 @@ export const HomeScreen: React.FC = () => {
     setOverlay(null);
     if (returnTab) goBackTab();
   }, [goBackTab, returnTab]);
-
-  const trainInitialView =
-    overlay === 'train_ai' ? 'ai' : overlay === 'train_coach' ? 'coach' : 'hub';
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -180,17 +176,19 @@ export const HomeScreen: React.FC = () => {
             ) : null}
           </PushScreenTransition>
 
-          <PushScreenTransition active={overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach'} variant="fade">
-            {overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach' ? (
-              <TrainHubScreen
-                onBack={closeDashboardOverlay}
-                initialView={trainInitialView}
-              />
-            ) : null}
-          </PushScreenTransition>
-
-          <PushScreenTransition active={overlay === 'tactics_coach'} variant="fade">
-            {overlay === 'tactics_coach' ? (
+          <PushScreenTransition
+            active={
+              overlay === 'tactics_coach' ||
+              overlay === 'train' ||
+              overlay === 'train_ai' ||
+              overlay === 'train_coach'
+            }
+            variant="fade"
+          >
+            {overlay === 'tactics_coach' ||
+            overlay === 'train' ||
+            overlay === 'train_ai' ||
+            overlay === 'train_coach' ? (
               <JoueurTacticsCoachScreen onBack={closeDashboardOverlay} />
             ) : null}
           </PushScreenTransition>
@@ -225,7 +223,7 @@ export const HomeScreen: React.FC = () => {
           ) : null}
         </View>
       ) : (
-        <DiscoverScreen />
+        <GuestUniverseHome />
       )}
     </CrossfadeSwitch>
   );
