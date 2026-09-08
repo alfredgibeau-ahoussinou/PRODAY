@@ -18,6 +18,7 @@ import { useTranslation } from '../../context/LocaleContext';
 import { spacing, radius } from '../../theme/designTokens';
 import { openCalComSignup } from '../../utils/calComBooking';
 import { SignupFffAffiliationCard } from '../../components/signup/SignupFffAffiliationCard';
+import { SignupClubFffFinder } from '../../components/signup/SignupClubFffFinder';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { getSignupRoleStepCopy } from './signupRoleStepCopy';
@@ -117,71 +118,47 @@ export const SignupCoachProStep: React.FC<StepProps> = (props) => {
 };
 
 export const SignupClubProStep: React.FC<StepProps> = (props) => {
-  const { t } = useTranslation();
-  const copy = getSignupRoleStepCopy(t);
-  const summaryReady = Boolean(props.form.selectedFffClub);
+  const applyClubAutofill = (fill: {
+    structureName: string;
+    city: string;
+    department: string;
+    teams: string[];
+  }) => {
+    if (fill.structureName) props.form.setStructureName(fill.structureName);
+    if (fill.city) props.form.setCity(fill.city);
+    if (fill.department) props.form.setDepartment(fill.department);
+    if (fill.teams.length > 0) {
+      props.form.setSelectedFffCategory(fill.teams[0]);
+    }
+    props.form.setHasClub(true);
+    props.form.setFieldErrors({});
+    props.form.setError(null);
+  };
 
   return (
-    <SignupPoleShell {...props} page="club_pro" hint={copy.club.hint}>
-      <SignupFffAffiliationCard
-        role="club"
-        hasClub={true}
-        onToggleHasClub={() => {}}
+    <SignupPoleShell
+      {...props}
+      page="club_pro"
+      continueLabel={
+        props.form.selectedFffClub ? 'Continuer avec ce club' : 'Sélectionnez votre club FFF'
+      }
+    >
+      <SignupClubFffFinder
         selectedClub={props.form.selectedFffClub}
         onSelectClub={(club) => {
           props.form.setSelectedFffClub(club);
-          if (club?.name) {
-            props.form.setStructureName(club.name);
-          }
-          if (club?.city) {
-            props.form.setCity(club.city);
-          }
-          if (club?.department) {
-            props.form.setDepartment(club.department);
+          if (!club) {
+            props.form.setStructureName('');
+            props.form.setCity('');
+            props.form.setDepartment('');
+            props.form.setSelectedFffCategory('');
           }
         }}
-        selectedCategory={props.form.selectedFffCategory}
-        onSelectCategory={props.form.setSelectedFffCategory}
-        selectedRosterMember={null}
-        onSelectRosterMember={() => {}}
-        isCustomProfile={true}
-        onToggleCustomProfile={() => {}}
+        onAutofill={applyClubAutofill}
         identityDoc={props.form.identityDoc}
         onSetIdentityDoc={props.form.setIdentityDoc}
-        defaultUserName={props.form.displayName}
         error={props.form.fieldErrors.club}
       />
-      <AuthTextField
-        label={copy.club.nameLabel}
-        icon="business"
-        placeholder={copy.club.namePlaceholder}
-        value={props.form.structureName}
-        onChangeText={props.form.setStructureName}
-        error={props.form.fieldErrors.structureName}
-      />
-      <AuthTextField
-        label={copy.club.cityLabel}
-        icon="location"
-        placeholder={copy.club.cityPlaceholder}
-        value={props.form.city}
-        onChangeText={props.form.setCity}
-        error={props.form.fieldErrors.city}
-      />
-      <AuthTextField
-        label={t('signup.form.departmentRequired')}
-        icon="location"
-        placeholder={copy.departmentPlaceholderWide}
-        value={props.form.department}
-        onChangeText={props.form.setDepartment}
-        error={props.form.fieldErrors.department}
-      />
-      {summaryReady ? (
-        <SignupRecapCard
-          club={props.form.selectedFffClub}
-          category={props.form.selectedFffCategory || undefined}
-          displayName={props.form.structureName}
-        />
-      ) : null}
     </SignupPoleShell>
   );
 };

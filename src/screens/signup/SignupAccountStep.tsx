@@ -12,6 +12,7 @@ import { getPlayerStepMeta } from './signupPlayerStepMeta';
 import { useTranslation } from '../../context/LocaleContext';
 import { getProStepMeta } from './signupProConfig';
 import { getSanteStepMeta } from './signupSanteConfig';
+import { getStepMetaForRole } from './signupRoleExperience';
 import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { Icon } from '../../components/ui/Icon';
@@ -43,13 +44,18 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
   const { t } = useTranslation();
   const { colors: c } = useSignupFlowTheme();
   const styles = useMemo(() => createStyles(c), [c]);
-  const meta = form.isSanteProduct
-    ? getSanteStepMeta('account', t)
-    : form.isProProduct
-      ? getProStepMeta('account', t)
-      : getPlayerStepMeta(form.productLine, 'account', t);
-
   const isPlayer = form.role === 'player';
+  const isClub = form.role === 'club';
+  const meta = isClub
+    ? getStepMetaForRole('account', 'club', t)
+    : form.isSanteProduct
+      ? getSanteStepMeta('account', t)
+      : form.isProProduct
+        ? getProStepMeta('account', t)
+        : isPlayer
+          ? getPlayerStepMeta(form.productLine, 'account', t)
+          : getStepMetaForRole('account', form.role, t);
+
   const showFffClubBanner = Boolean(form.selectedFffClub);
 
   return (
@@ -87,9 +93,13 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
           <View style={styles.fffBanner}>
             <Icon name="shield" size={16} color={AUTH_XP.goldBright} />
             <ProDayText style={styles.fffBannerText}>
-              Club FFF : {form.selectedFffClub!.name}
+              {isClub ? 'Structure FFF : ' : 'Club FFF : '}
+              {form.selectedFffClub!.name}
               {form.selectedFffClub!.fffNumber
                 ? ` · N° ${form.selectedFffClub!.fffNumber}`
+                : ''}
+              {isClub && form.selectedFffClub!.city
+                ? ` · ${form.selectedFffClub!.city}`
                 : ''}
             </ProDayText>
           </View>
@@ -97,9 +107,21 @@ export const SignupAccountStep: React.FC<SignupAccountStepProps> = ({
 
         <StaggerReveal index={0}>
           <AuthTextField
-            label={isPlayer ? 'Nom et Prénom officiels' : t('signup.form.displayName')}
+            label={
+              isClub
+                ? 'Responsable / contact du club'
+                : isPlayer
+                  ? 'Nom et Prénom officiels'
+                  : t('signup.form.displayName')
+            }
             icon="person"
-            placeholder={isPlayer ? 'Ex. Kylian Mbappé' : t('signup.form.displayNamePlaceholder')}
+            placeholder={
+              isClub
+                ? 'Ex. Marie Dupont · Président(e) / Secrétaire'
+                : isPlayer
+                  ? 'Ex. Kylian Mbappé'
+                  : t('signup.form.displayNamePlaceholder')
+            }
             value={form.displayName}
             onChangeText={form.setDisplayName}
             error={form.fieldErrors.displayName}

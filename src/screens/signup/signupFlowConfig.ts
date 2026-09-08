@@ -22,7 +22,7 @@ export const SIGNUP_PAGE_LABELS: Record<SignupPageId, string> = {
   stats: 'Stats',
   staff: 'Profil pro',
   coach_pro: 'Affiliation FFF',
-  club_pro: 'Affiliation FFF',
+  club_pro: 'Mon club FFF',
   agent_pro: 'Profil agent',
   recruiter_pro: 'Profil recruteur',
   organizer_pro: 'Profil orga',

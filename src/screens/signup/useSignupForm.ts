@@ -496,6 +496,37 @@ export function useSignupForm(initial?: {
   };
 
   const validateStaff = () => {
+    // Club : validation = club FFF sélectionné (+ fiche déjà auto). Pas de re-saisie manuelle.
+    if (role === 'club') {
+      const errs: Record<string, string> = {};
+      if (!selectedFffClub) {
+        errs.club =
+          'Recherchez et sélectionnez votre club FFF (ville, code postal ou n° d’affiliation).';
+      } else {
+        if (!structureName.trim() && selectedFffClub.name) {
+          setStructureName(selectedFffClub.name);
+        }
+        if (!city.trim() && selectedFffClub.city) {
+          setCity(selectedFffClub.city);
+        }
+        if (!department.trim() && selectedFffClub.department) {
+          setDepartment(selectedFffClub.department);
+        }
+        const resolvedName = (structureName.trim() || selectedFffClub.name || '').trim();
+        if (resolvedName.length < 2) {
+          errs.structureName =
+            'Le nom du club n’a pas pu être récupéré auprès de la FFF. Réessayez la recherche.';
+        }
+      }
+      setFieldErrors(errs);
+      if (Object.keys(errs).length > 0) {
+        setError(Object.values(errs)[0]);
+        return false;
+      }
+      setError(null);
+      return true;
+    }
+
     const errs = validateRoleProFields({
       role,
       city,
@@ -506,13 +537,13 @@ export function useSignupForm(initial?: {
       professionalHeadline,
     });
 
-    // Coach / club : même exigence FFF réelle que le joueur (pas de club inventé).
-    if (role === 'coach' || role === 'club') {
-      if (role === 'club' || hasClub) {
+    // Coach : affiliation FFF réelle (pas de club inventé).
+    if (role === 'coach') {
+      if (hasClub) {
         if (!selectedFffClub) {
           errs.club =
             'Recherchez et sélectionnez le club FFF (ville, code postal ou n° d’affiliation).';
-        } else if (role === 'coach') {
+        } else {
           const activeCat = selectedFffCategory || category;
           if (!activeCat) {
             errs.category =

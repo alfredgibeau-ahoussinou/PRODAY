@@ -185,9 +185,10 @@ const ROLE_EXPERIENCES: Record<UserRole, RoleSignupExperience> = {
   },
   club: {
     id: 'club',
-    welcomeTitle: 'Espace club',
-    welcomeSubtitle: 'Recrutement, stages et vie de structure. Mandat vérifié.',
-    previewSteps: ['Affiliation FFF', 'Identité', 'Sécurité', 'Lancement'],
+    welcomeTitle: 'Inscrire mon club',
+    welcomeSubtitle:
+      'Recherchez votre club FFF : la fiche se remplit toute seule. Puis créez le compte admin.',
+    previewSteps: ['Trouver mon club FFF', 'Compte admin', 'Sécurité', 'Lancement'],
     phases: UNIFIED_PHASES,
     accent: { accent: '#10B981', accentSoft: '#D1FAE5', accentMuted: '#6EE7B7' },
     launchTitle: 'Club en ligne',
@@ -404,13 +405,13 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
       };
     case 'club_pro':
       return {
-        title: metaKey('title', 'Affiliation FFF & structure'),
+        title: metaKey('title', 'Trouvez votre club FFF'),
         subtitle: metaKey(
           'subtitle',
-          'Retrouvez votre club FFF, puis confirmez le nom et la localisation.'
+          'Ville, CP ou n° d’affiliation. Une sélection → fiche structure automatique.'
         ),
         heroIcon: 'business',
-        stepName: metaKey('stepName', tr(t, 'signup.page.club_pro', 'Affiliation FFF')),
+        stepName: metaKey('stepName', tr(t, 'signup.page.club_pro', 'Mon club')),
       };
     case 'agent_pro':
       return {
@@ -486,16 +487,33 @@ export function getStepMetaForRole(page: SignupPageId, role: UserRole, t?: Trans
       return {
         title: metaKey(
           'title',
-          role === 'sponsor' ? 'Identité sponsor' : 'Ton identité'
+          role === 'sponsor'
+            ? 'Identité sponsor'
+            : role === 'club'
+              ? 'Compte administrateur'
+              : 'Ton identité'
         ),
-        subtitle: metaKey('subtitle', 'Nom affiché et email. Base de votre espace.'),
+        subtitle: metaKey(
+          'subtitle',
+          role === 'club'
+            ? 'Responsable du club et email de connexion. Le reste vient de la FFF.'
+            : 'Nom affiché et email. Base de votre espace.'
+        ),
         heroIcon: 'person',
         stepName: metaKey('stepName', tr(t, 'signup.page.account', 'Identité')),
       };
     case 'security':
       return {
-        title: metaKey('title', 'Sécurisez l’accès'),
-        subtitle: metaKey('subtitle', 'Mot de passe robuste puis confirmation par email.'),
+        title: metaKey(
+          'title',
+          role === 'club' ? 'Sécurisez le compte club' : 'Sécurisez l’accès'
+        ),
+        subtitle: metaKey(
+          'subtitle',
+          role === 'club'
+            ? 'Mot de passe du compte admin, puis confirmation par email.'
+            : 'Mot de passe robuste puis confirmation par email.'
+        ),
         heroIcon: 'lock',
         stepName: metaKey('stepName', tr(t, 'signup.page.security', 'Sécurité')),
       };

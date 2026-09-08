@@ -19,7 +19,7 @@ export function getSignupRoleStepCopy(t: TranslateFn) {
       hint: tr(
         t,
         'signup.role.club.hint',
-        'Retrouvez votre club FFF (ville, CP ou n° d’affiliation). Mandat contrôlé après l’email.'
+        'Cherchez votre club FFF : la fiche structure se remplit automatiquement.'
       ),
       nameLabel: tr(t, 'signup.role.clubNameLabel', 'Nom du club / structure *'),
       namePlaceholder: tr(t, 'signup.role.clubNamePlaceholder', 'Ex. FC Melun, AS Le Mée…'),
