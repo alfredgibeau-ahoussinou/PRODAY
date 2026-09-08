@@ -38,6 +38,9 @@ function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
     categories: (data.categories as string[]) ?? [],
     sponsor_ids: (data.sponsor_ids as string[]) ?? [],
     owner_uid: String(data.owner_uid ?? ''),
+    fff_affiliation_number: data.fff_affiliation_number
+      ? String(data.fff_affiliation_number)
+      : undefined,
     created_at: new Date(),
   };
 }
@@ -49,6 +52,7 @@ export interface CreateClubInput {
   categories: string[];
   owner_uid: string;
   location?: GeoPoint;
+  fff_affiliation_number?: string;
 }
 
 export const clubsService = {
@@ -125,10 +129,23 @@ export const clubsService = {
       categories: validated.categories,
       sponsor_ids: [],
       owner_uid: input.owner_uid,
+      fff_affiliation_number: input.fff_affiliation_number?.trim() || null,
       is_active: true,
       created_at: serverTimestamp(),
     });
     return ref.id;
+  },
+
+  /** Lie / met à jour le n° d’affiliation FFF d’un club ProDay. */
+  async setFffAffiliationNumber(clubId: string, fffNumber: string): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const code = fffNumber.trim();
+    if (!code) throw new Error('Numéro d’affiliation FFF requis.');
+    await updateDoc(doc(database, 'clubs', clubId), {
+      fff_affiliation_number: code,
+      updated_at: serverTimestamp(),
+    });
   },
 
   /**

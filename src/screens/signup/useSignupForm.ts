@@ -958,6 +958,7 @@ export function useSignupForm(initial?: {
                       ? [selectedFffCategory || category]
                       : selectedFffClub.categories,
                   owner_uid: user.uid,
+                  fff_affiliation_number: selectedFffClub.fffNumber || undefined,
                 },
                 user
               );

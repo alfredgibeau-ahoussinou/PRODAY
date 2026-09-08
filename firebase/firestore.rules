@@ -884,6 +884,21 @@ service cloud.firestore {
         && userDoc(request.auth.uid).data.get('profile', {}).get('club_id', '') == clubId;
     }
 
+    /**
+     * Cache effectif FootClubs indexé par n° d’affiliation FFF.
+     * Lecture publique (inscription) — écriture staff club / admin / Functions.
+     * Pas de données inventées : uniquement imports FootClubs republishés.
+     */
+    match /fff_club_rosters/{affiliationNumber} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        || (isSignedIn()
+            && request.resource.data.proday_club_id is string
+            && isClubStaffForClub(request.resource.data.proday_club_id)
+            && request.resource.data.affiliation_number == affiliationNumber);
+      allow delete: if isAdmin();
+    }
+
     match /teams/{teamId} {
       allow read: if true;
       allow create: if isSignedIn()

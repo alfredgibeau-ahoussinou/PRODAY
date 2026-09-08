@@ -560,60 +560,101 @@ export const fffOfficialRegistryService = {
   },
 
   /**
-   * Licenciés pré-inscrits : uniquement imports FootClubs / memberships Firestore réels.
-   * Jamais de noms inventés. Si le club n’existe pas encore sur ProDay → [].
+   * Licenciés pour l’inscription.
+   * 1) Cache public `fff_club_rosters/{n° affiliation}` (FootClubs + sync quotidienne)
+   * 2) Pas de lecture memberships côté client anonyme (ACL Firestore) — d’où le cache.
+   * Jamais de noms inventés. FFF/DOFA ne publie pas les listes de licenciés.
    */
   async getRosterForTeam(
     clubId: string,
     category?: string,
     clubHint?: Pick<OfficialFffClub, 'name' | 'city' | 'fffNumber'>
   ): Promise<PreRegisteredMember[]> {
-    if (!isFirebaseConfigured()) return [];
-
     try {
-      const { membershipsService } = await import('./memberships.service');
-      const { clubsService } = await import('./clubs.service');
+      const { fffClubRosterService } = await import('./fffClubRoster.service');
 
-      let memberships = await membershipsService.listByClub(clubId);
+      // Priorité : n° d’affiliation FFF du club DOFA sélectionné
+      if (clubHint?.fffNumber?.trim()) {
+        const fromCache = await fffClubRosterService.listMembersForSignup(
+          clubHint.fffNumber,
+          category
+        );
+        if (fromCache.members.length > 0) return fromCache.members;
+      }
 
-      if (memberships.length === 0 && clubHint?.name) {
-        const matches = await clubsService.searchByName(clubHint.name);
-        const match =
-          matches.find(
-            (c) =>
-              normalize(c.name) === normalize(clubHint.name) &&
-              (!clubHint.city || normalize(c.city) === normalize(clubHint.city))
-          ) ??
-          matches.find((c) => normalize(c.name) === normalize(clubHint.name)) ??
-          null;
-        if (match) {
-          memberships = await membershipsService.listByClub(match.id);
+      // Si Firebase non configuré → vide honnête
+      if (!isFirebaseConfigured()) return [];
+
+      // Tentative : club ProDay déjà lié à ce n° (lecture clubs = publique)
+      if (clubHint?.fffNumber?.trim()) {
+        const prodayId = await fffClubRosterService.findProdayClubIdByAffiliation(
+          clubHint.fffNumber
+        );
+        if (prodayId) {
+          const again = await fffClubRosterService.listMembersForSignup(
+            clubHint.fffNumber,
+            category
+          );
+          if (again.members.length > 0) return again.members;
         }
       }
 
-      const catNorm = category ? normalize(category) : '';
+      // Dernier recours staff déjà connecté : memberships (échoue silencieusement sinon)
+      try {
+        const { membershipsService } = await import('./memberships.service');
+        const { clubsService } = await import('./clubs.service');
 
-      return memberships
-        .filter((m) => {
-          if (!m.player_name?.trim()) return false;
-          const hasLicense = Boolean(m.license_number?.trim());
-          const isImportLike =
-            Boolean(m.pre_registered_roster_id) ||
-            hasLicense ||
-            m.player_uid.startsWith('pre_');
-          if (!isImportLike) return false;
-          if (!catNorm) return true;
-          if (!m.category) return false;
-          const mc = normalize(m.category);
-          return mc.includes(catNorm) || catNorm.includes(mc);
-        })
-        .map((m) => ({
-          id: m.id,
-          displayName: m.player_name,
-          role: (m.role === 'coach' ? 'coach' : 'player') as 'player' | 'coach',
-          category: m.category || category || '',
-          licenseNumber: m.license_number,
-        }));
+        let memberships = clubId.startsWith('dofa_') || clubId.startsWith('fff_')
+          ? []
+          : await membershipsService.listByClub(clubId);
+
+        if (memberships.length === 0 && clubHint?.name) {
+          const matches = await clubsService.searchByName(clubHint.name);
+          const match =
+            matches.find(
+              (c) =>
+                normalize(c.name) === normalize(clubHint.name) &&
+                (!clubHint.city || normalize(c.city) === normalize(clubHint.city))
+            ) ??
+            matches.find((c) => normalize(c.name) === normalize(clubHint.name)) ??
+            null;
+          if (match) {
+            if (match.fff_affiliation_number) {
+              const cached = await fffClubRosterService.listMembersForSignup(
+                match.fff_affiliation_number,
+                category
+              );
+              if (cached.members.length > 0) return cached.members;
+            }
+            memberships = await membershipsService.listByClub(match.id);
+          }
+        }
+
+        const catNorm = category ? normalize(category) : '';
+        return memberships
+          .filter((m) => {
+            if (!m.player_name?.trim()) return false;
+            const hasLicense = Boolean(m.license_number?.trim());
+            const isImportLike =
+              Boolean(m.pre_registered_roster_id) ||
+              hasLicense ||
+              m.player_uid.startsWith('pre_');
+            if (!isImportLike) return false;
+            if (!catNorm) return true;
+            if (!m.category) return true; // ne pas exclure si catégorie absente
+            const mc = normalize(m.category);
+            return mc.includes(catNorm) || catNorm.includes(mc);
+          })
+          .map((m) => ({
+            id: m.id,
+            displayName: m.player_name,
+            role: (m.role === 'coach' ? 'coach' : 'player') as 'player' | 'coach',
+            category: m.category || category || '',
+            licenseNumber: m.license_number,
+          }));
+      } catch {
+        return [];
+      }
     } catch {
       return [];
     }

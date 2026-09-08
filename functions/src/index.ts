@@ -2,6 +2,7 @@ import './firebaseAdmin';
 import * as functions from 'firebase-functions';
 import { admin } from './firebaseAdmin';
 import { processScheduledEventReminders } from './eventReminders';
+import { processFffClubRosterDailySync } from './fffClubRosterSync';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
 import { createShopCheckoutSession } from './shopPayments';
@@ -253,6 +254,31 @@ export const scheduledEventReminders = functions.pubsub
     console.log('[scheduledEventReminders]', result);
     return result;
   });
+
+/**
+ * Republie chaque nuit les effectifs FootClubs → cache inscription
+ * (`fff_club_rosters/{n° affiliation FFF}`).
+ * La FFF ne publie pas les listes de licenciés : sync depuis ProDay uniquement.
+ *
+ * Déployer : firebase deploy --only functions:scheduledFffClubRosterSync
+ */
+export const scheduledFffClubRosterSync = functions.pubsub
+  .schedule('every day 03:15')
+  .timeZone('Europe/Paris')
+  .onRun(async () => {
+    const result = await processFffClubRosterDailySync(db);
+    console.log('[scheduledFffClubRosterSync]', result);
+    return result;
+  });
+
+/** Relance manuelle (admin) de la sync effectifs FFF / FootClubs. */
+export const syncFffClubRostersNow = functions.https.onCall(async (_data, context) => {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+  }
+  const result = await processFffClubRosterDailySync(db);
+  return result;
+});
 
 /**
  * Campagne bêta iOS : lancement TestFlight (15 août 2026 18 h Paris)

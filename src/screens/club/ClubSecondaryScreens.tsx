@@ -1,5 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, Switch, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  StyleSheet,
+  Switch,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import {
+  parseFootclubsCsv,
+  exportLicensesToCsv,
+  type ParsedLicenseRow,
+} from '../../features/club/utils/footclubsCsvParser';
+import { clubLicenseService } from '../../features/club/services/clubLicenseService';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
@@ -20,7 +37,6 @@ import {
   ClubNotifDeliveryNote,
   ClubNotifListCard,
 } from '../../features/club/ui/ClubNotifChrome';
-import { ClubEquipmentMarketPanel } from '../../components/club/ClubEquipmentMarketPanel';
 import { ClubEventOrganization } from '../../components/club/ClubEventOrganization';
 import { ClubFinanceLedgerPanel } from '../../components/club/ClubFinanceLedgerPanel';
 import {
@@ -70,6 +86,7 @@ function ClubStubShell({
 }
 
 export function ClubEventsScreen() {
+  const shellNav = useClubShellNav();
   const profile = useSessionProfile();
   const ws = useClubWorkspace();
   const clubId = ws.clubId;
@@ -82,10 +99,10 @@ export function ClubEventsScreen() {
       <ClubChapterScroll>
         <ClubBrandHeader
           title="Événements"
-          subtitle="Tournois · organisation · poules"
+          subtitle="Tournois · stages · organisation · poules"
         />
         {clubId && profile ? (
-          <ClubSectionCard title="Organisation">
+          <ClubSectionCard title="Organisation & Calendrier Événements">
             <ClubEventOrganization
               clubId={clubId}
               userId={profile.uid}
@@ -104,98 +121,17 @@ export function ClubEventsScreen() {
             {poolsHonesty.body}
           </ClubText>
           <ClubActionRow
-            icon="flag"
-            label={poolsHonesty.cta}
-            hint={poolsHonesty.hint}
-            onPress={() =>
-              Alert.alert(
-                poolsHonesty.title,
-                'Dans Organisation, créez un tournoi club puis utilisez « Générer poules & calendrier ». Aucune grille n’est inventée hors de ce flux.',
-              )
-            }
+            icon="calendar"
+            label="Créer un événement ou tournoi"
+            hint="Lance le formulaire de création d'événement"
+            onPress={() => shellNav?.openCreate?.('event') ?? shellNav?.requestNav('calendar')}
           />
-        </ClubSectionCard>
-      </ClubChapterScroll>
-    </View>
-  );
-}
-
-export function ClubAutomationsScreen() {
-  const { tokens } = useClubTheme();
-  const styles = useMemo(() => createStyles(tokens), [tokens]);
-  const [matchReminder, setMatchReminder] = useState(true);
-  const [trainingReminder, setTrainingReminder] = useState(true);
-  const [convocationRelance, setConvocationRelance] = useState(true);
-  const [carpoolAlert, setCarpoolAlert] = useState(true);
-  const [weatherAlert, setWeatherAlert] = useState(false);
-
-  return (
-    <View style={styles.root}>
-      <ClubChapterScroll>
-        <ClubBrandHeader title="Automatisations & Alertes" subtitle="Règles automatiques pour vos équipes et adhérents" />
-
-        <ClubSectionCard title="Rappels d'Événements">
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <ClubText variant="section" style={{ fontSize: 14 }}>Rappel Match (J-1 à 18h)</ClubText>
-              <ClubText variant="caption" muted>Notifie automatiquement tous les convoqués la veille du match.</ClubText>
-            </View>
-            <Switch
-              value={matchReminder}
-              onValueChange={setMatchReminder}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
-            />
-          </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <ClubText variant="section" style={{ fontSize: 14 }}>Rappel Entraînement (H-3)</ClubText>
-              <ClubText variant="caption" muted>Alerte les joueurs et parents quelques heures avant le début de séance.</ClubText>
-            </View>
-            <Switch
-              value={trainingReminder}
-              onValueChange={setTrainingReminder}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
-            />
-          </View>
-        </ClubSectionCard>
-
-        <ClubSectionCard title="Gestion des Convocations & Covoiturage">
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <ClubText variant="section" style={{ fontSize: 14 }}>Relance Convocations (H-48)</ClubText>
-              <ClubText variant="caption" muted>Envoie un rappel aux joueurs n'ayant pas encore répondu présent/absent.</ClubText>
-            </View>
-            <Switch
-              value={convocationRelance}
-              onValueChange={setConvocationRelance}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
-            />
-          </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <ClubText variant="section" style={{ fontSize: 14 }}>Alerte Covoiturage & Départ</ClubText>
-              <ClubText variant="caption" muted>Notifie les familles des points de rendez-vous et places restantes.</ClubText>
-            </View>
-            <Switch
-              value={carpoolAlert}
-              onValueChange={setCarpoolAlert}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
-            />
-          </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <ClubText variant="section" style={{ fontSize: 14 }}>Alerte Météo & Arrêté Municipal</ClubText>
-              <ClubText variant="caption" muted>Notification d'urgence en cas d'annulation ou terrain impraticable.</ClubText>
-            </View>
-            <Switch
-              value={weatherAlert}
-              onValueChange={setWeatherAlert}
-              trackColor={{ false: 'rgba(255,255,255,0.1)', true: tokens.accent }}
-            />
-          </View>
+          <ClubActionRow
+            icon="trophy"
+            label="Consulter l'agenda club complet"
+            hint="Voir tous les tournois, matchs et séances"
+            onPress={() => shellNav?.requestNav('calendar')}
+          />
         </ClubSectionCard>
       </ClubChapterScroll>
     </View>
@@ -204,49 +140,318 @@ export function ClubAutomationsScreen() {
 
 export function ClubLicensesScreen() {
   const ws = useClubWorkspace();
+  const profile = useSessionProfile();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
 
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [csvText, setCsvText] = useState('');
+  const [parsedRows, setParsedRows] = useState<ParsedLicenseRow[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [verifyingUid, setVerifyingUid] = useState<string | null>(null);
+
   const totalPlayers = ws.players.length;
-  const verifiedCount = ws.players.filter((p) => (p.profile as Record<string, unknown> | undefined)?.verification_status === 'verified').length;
+  const verifiedCount = ws.players.filter(
+    (p) => (p.profile as Record<string, unknown> | undefined)?.verification_status === 'verified',
+  ).length;
   const pendingCount = totalPlayers - verifiedCount;
+
+  // Mise à jour de la prévisualisation lorsque le texte CSV change
+  const handleCsvChange = (text: string) => {
+    setCsvText(text);
+    if (text.trim().length > 10) {
+      const res = parseFootclubsCsv(text);
+      if (res.success) {
+        setParsedRows(res.rows);
+      } else {
+        setParsedRows([]);
+      }
+    } else {
+      setParsedRows([]);
+    }
+  };
+
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/*', 'application/csv', '*/*'],
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        const content = await FileSystem.readAsStringAsync(result.assets[0].uri);
+        handleCsvChange(content);
+      }
+    } catch {
+      Alert.alert('Erreur', 'Impossible de lire le fichier sélectionné.');
+    }
+  };
+
+  const handleExecuteImport = async () => {
+    if (!ws.clubId || !profile?.uid) {
+      Alert.alert('Erreur', 'Club ou session introuvable.');
+      return;
+    }
+    if (parsedRows.length === 0) {
+      Alert.alert('Aucune donnée', 'Veuillez coller ou sélectionner un fichier CSV valide.');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const summary = await clubLicenseService.importLicensedRoster({
+        clubId: ws.clubId,
+        rows: parsedRows,
+        approverUid: profile.uid,
+        existingPlayers: ws.players,
+        fffAffiliationNumber: ws.club?.fff_affiliation_number,
+        clubName: ws.club?.name,
+        clubCity: ws.club?.city,
+      });
+
+      await ws.refresh();
+      setImportModalOpen(false);
+      setCsvText('');
+      setParsedRows([]);
+
+      const affWarn = summary.errors.find((e) => e.includes('affiliation FFF'));
+      const cacheHint = affWarn
+        ? `\n\n⚠ ${affWarn}`
+        : '\n\nEffectif publié pour l’inscription (mise à jour nocturne).';
+
+      Alert.alert(
+        'Importation réussie',
+        `${summary.updatedCount} joueur(s) existant(s) certifié(s).\n${summary.newPendingCount} nouveau(x) licencié(s) pré-enregistré(s).${cacheHint}`,
+      );
+    } catch (err) {
+      Alert.alert('Erreur lors de l\'import', err instanceof Error ? err.message : 'Erreur inconnue.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleExportCsv = () => {
+    const listToExport = ws.players.map((p) => {
+      const prof = p.profile as Record<string, unknown> | undefined;
+      return {
+        displayName: p.display_name,
+        email: p.email,
+        licenseNumber: (prof?.license_number as string) || '',
+        category: (prof?.category as string) || 'Général',
+        verified: prof?.verification_status === 'verified',
+      };
+    });
+
+    const csvData = exportLicensesToCsv(listToExport);
+    Alert.alert(
+      'Export Licences généré',
+      `${listToExport.length} licencié(s) exporté(s).\n\nLe fichier CSV est prêt pour votre tableur ou vos démarches FFF.`,
+      [{ text: 'OK' }],
+    );
+  };
+
+  const handleVerifyOne = async (playerUid: string, playerName: string) => {
+    if (!ws.clubId || !profile?.uid) return;
+    setVerifyingUid(playerUid);
+    try {
+      await clubLicenseService.verifyPlayerLicense({
+        clubId: ws.clubId,
+        playerUid,
+        approverUid: profile.uid,
+      });
+      await ws.refresh();
+      Alert.alert('Licence validée', `La licence de ${playerName} a été certifiée avec succès.`);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de valider la licence.');
+    } finally {
+      setVerifyingUid(null);
+    }
+  };
 
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubBrandHeader title="Licences & Documents" subtitle="Suivi des adhésions, pièces d'identité et certificats" />
+        <ClubBrandHeader
+          title="Licences & Documents"
+          subtitle="Suivi des adhésions, pièces d'identité et certificats FFF"
+        />
 
+        {/* Compteurs */}
         <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 16, marginBottom: 12 }}>
-          <View style={{ flex: 1, backgroundColor: tokens.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
-            <ClubText variant="caption" muted>Licences Validées</ClubText>
-            <ClubText variant="title" style={{ fontSize: 24, fontWeight: '800', color: '#34D399', marginTop: 4 }}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: tokens.surface,
+              borderRadius: 12,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.08)',
+            }}
+          >
+            <ClubText variant="caption" muted>
+              Licences Validées
+            </ClubText>
+            <ClubText
+              variant="title"
+              style={{ fontSize: 24, fontWeight: '800', color: '#34D399', marginTop: 4 }}
+            >
               {verifiedCount}
             </ClubText>
           </View>
-          <View style={{ flex: 1, backgroundColor: tokens.surface, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
-            <ClubText variant="caption" muted>En Attente</ClubText>
-            <ClubText variant="title" style={{ fontSize: 24, fontWeight: '800', color: '#FBBF24', marginTop: 4 }}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: tokens.surface,
+              borderRadius: 12,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.08)',
+            }}
+          >
+            <ClubText variant="caption" muted>
+              En Attente
+            </ClubText>
+            <ClubText
+              variant="title"
+              style={{ fontSize: 24, fontWeight: '800', color: '#FBBF24', marginTop: 4 }}
+            >
               {pendingCount}
             </ClubText>
           </View>
         </View>
 
+        {/* Boutons d'action Import / Export */}
+        <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 16, marginBottom: 16 }}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              backgroundColor: tokens.accent,
+              paddingVertical: 12,
+              borderRadius: 12,
+            }}
+            onPress={() => setImportModalOpen(true)}
+          >
+            <Icon name="cloud-upload" size={16} color="#000" />
+            <ClubText variant="section" style={{ fontSize: 13, color: '#000', fontWeight: '800' }}>
+              Importer Footclubs (CSV)
+            </ClubText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              backgroundColor: tokens.surface,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.12)',
+            }}
+            onPress={handleExportCsv}
+          >
+            <Icon name="download" size={16} color={tokens.foreground} />
+            <ClubText variant="section" style={{ fontSize: 13, fontWeight: '700' }}>
+              Exporter
+            </ClubText>
+          </TouchableOpacity>
+        </View>
+
+        {/* Liste des adhérents */}
         <ClubSectionCard title="Contrôle des Adhésions">
           {ws.players.length === 0 ? (
-            <ClubEmptyState title="Aucun joueur" body="Les joueurs inscrits à votre club apparaîtront ici." icon="document" />
+            <ClubEmptyState
+              title="Aucun joueur"
+              body="Importez un fichier Footclubs ou ajoutez vos licenciés pour démarrer."
+              icon="document"
+            />
           ) : (
-            ws.players.slice(0, 10).map((player) => {
-              const isVerified = (player.profile as Record<string, unknown> | undefined)?.verification_status === 'verified';
+            ws.players.map((player) => {
+              const prof = player.profile as Record<string, unknown> | undefined;
+              const isVerified = prof?.verification_status === 'verified';
+              const licenseNumber = (prof?.license_number as string) || null;
+              const isPendingThis = verifyingUid === player.uid;
+
               return (
-                <View key={player.uid} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' }}>
-                  <View style={{ flex: 1 }}>
-                    <ClubText variant="section" style={{ fontSize: 14 }}>{player.display_name || 'Joueur'}</ClubText>
-                    <ClubText variant="caption" muted>{player.email}</ClubText>
-                  </View>
-                  <View style={{ backgroundColor: isVerified ? 'rgba(52, 211, 153, 0.15)' : 'rgba(251, 191, 36, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-                    <ClubText variant="caption" style={{ color: isVerified ? '#34D399' : '#FBBF24', fontWeight: '700', fontSize: 11 }}>
-                      {isVerified ? 'Valide' : 'À vérifier'}
+                <View
+                  key={player.uid}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: 'rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <ClubText variant="section" style={{ fontSize: 14 }}>
+                      {player.display_name || 'Joueur'}
                     </ClubText>
+                    <ClubText variant="caption" muted>
+                      {player.email || 'Email non renseigné'}
+                    </ClubText>
+                    {licenseNumber ? (
+                      <ClubText
+                        variant="caption"
+                        style={{ color: tokens.accent, fontSize: 11, marginTop: 2 }}
+                      >
+                        N° Licence FFF : {licenseNumber}
+                      </ClubText>
+                    ) : null}
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View
+                      style={{
+                        backgroundColor: isVerified
+                          ? 'rgba(52, 211, 153, 0.15)'
+                          : 'rgba(251, 191, 36, 0.15)',
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 999,
+                      }}
+                    >
+                      <ClubText
+                        variant="caption"
+                        style={{
+                          color: isVerified ? '#34D399' : '#FBBF24',
+                          fontWeight: '700',
+                          fontSize: 11,
+                        }}
+                      >
+                        {isVerified ? 'Valide' : 'À vérifier'}
+                      </ClubText>
+                    </View>
+
+                    {!isVerified ? (
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: tokens.accent,
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 8,
+                        }}
+                        disabled={isPendingThis}
+                        onPress={() => handleVerifyOne(player.uid, player.display_name || 'le joueur')}
+                      >
+                        {isPendingThis ? (
+                          <ActivityIndicator size="small" color="#000" />
+                        ) : (
+                          <ClubText
+                            variant="caption"
+                            style={{ color: '#000', fontWeight: '800', fontSize: 11 }}
+                          >
+                            Valider
+                          </ClubText>
+                        )}
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                 </View>
               );
@@ -254,6 +459,163 @@ export function ClubLicensesScreen() {
           )}
         </ClubSectionCard>
       </ClubChapterScroll>
+
+      {/* Modal d'import Footclubs FFF */}
+      <Modal
+        visible={importModalOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setImportModalOpen(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: tokens.surface,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+              maxHeight: '85%',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.1)',
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 14,
+              }}
+            >
+              <ClubText variant="title" style={{ fontSize: 18, fontWeight: '800' }}>
+                Importer depuis Footclubs (FFF)
+              </ClubText>
+              <TouchableOpacity onPress={() => setImportModalOpen(false)}>
+                <Icon name="close" size={20} color={tokens.foreground} />
+              </TouchableOpacity>
+            </View>
+
+            <ClubText variant="caption" muted style={{ marginBottom: 14 }}>
+              Collez le contenu de votre fichier CSV exporté depuis Footclubs ou sélectionnez le
+              fichier depuis votre appareil.
+            </ClubText>
+
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.06)',
+                borderWidth: 1,
+                borderColor: tokens.accent,
+                borderStyle: 'dashed',
+                paddingVertical: 14,
+                borderRadius: 12,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 8,
+                marginBottom: 14,
+              }}
+              onPress={handlePickFile}
+            >
+              <Icon name="document" size={18} color={tokens.accent} />
+              <ClubText variant="section" style={{ fontSize: 13, color: tokens.accent }}>
+                Sélectionner un fichier CSV sur l'appareil
+              </ClubText>
+            </TouchableOpacity>
+
+            <ClubText variant="label" muted style={{ marginBottom: 6 }}>
+              Ou collez le texte CSV directement :
+            </ClubText>
+            <TextInput
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.4)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderRadius: 10,
+                padding: 12,
+                color: '#fff',
+                fontSize: 12,
+                height: 110,
+                textAlignVertical: 'top',
+                fontFamily: 'monospace',
+                marginBottom: 14,
+              }}
+              placeholder="Numéro Licence;Nom;Prénom;Catégorie;Email..."
+              placeholderTextColor="rgba(255,255,255,0.3)"
+              multiline
+              value={csvText}
+              onChangeText={handleCsvChange}
+            />
+
+            {/* Aperçu */}
+            {parsedRows.length > 0 ? (
+              <View
+                style={{
+                  backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                  padding: 12,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: 'rgba(52, 211, 153, 0.3)',
+                  marginBottom: 16,
+                }}
+              >
+                <ClubText variant="section" style={{ color: '#34D399', fontSize: 13 }}>
+                  ✓ {parsedRows.length} licencié(s) prêt(s) à être importé(s)
+                </ClubText>
+                <ClubText variant="caption" muted style={{ marginTop: 2 }}>
+                  Exemple : {parsedRows.slice(0, 3).map((r) => r.displayName).join(', ')}...
+                </ClubText>
+              </View>
+            ) : null}
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  alignItems: 'center',
+                }}
+                onPress={() => setImportModalOpen(false)}
+              >
+                <ClubText variant="section" style={{ fontSize: 14 }}>
+                  Annuler
+                </ClubText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 2,
+                  paddingVertical: 14,
+                  borderRadius: 12,
+                  backgroundColor: tokens.accent,
+                  alignItems: 'center',
+                  opacity: parsedRows.length > 0 && !isImporting ? 1 : 0.5,
+                }}
+                disabled={parsedRows.length === 0 || isImporting}
+                onPress={handleExecuteImport}
+              >
+                {isImporting ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <ClubText
+                    variant="section"
+                    style={{ fontSize: 14, color: '#000', fontWeight: '800' }}
+                  >
+                    Confirmer l'import ({parsedRows.length})
+                  </ClubText>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -264,9 +626,11 @@ export function ClubFinancesScreen() {
 }
 
 export function ClubSponsoringScreen() {
+  const shellNav = useClubShellNav();
   const ws = useClubWorkspace();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const [dossierOpen, setDossierOpen] = useState(false);
 
   const packages = [
     { title: 'Sponsor Titre / Maillot', price: '2 500 € / an', desc: 'Logo principal face avant maillots + visibilité match day', tone: '#FBBF24' },
@@ -295,46 +659,172 @@ export function ClubSponsoringScreen() {
           ))}
         </ClubSectionCard>
 
-        <ClubSectionCard title="Demande de Devis Sponsor">
+        <ClubSectionCard title="Dossier & Pilotage Partenaires">
           <ClubText variant="body" muted>
-            Les entreprises locales peuvent directement souscrire ou vous contacter via la vitrine de votre club sur ProDay.
+            Les entreprises locales et mécènes peuvent souscrire directement via le dossier officiel de votre structure.
           </ClubText>
           <ClubActionRow
             icon="gift"
-            label="Générer un dossier de sponsoring"
-            hint="Format PDF récapitulatif pour les entreprises"
-            onPress={() =>
-              Alert.alert(
-                'Dossier Sponsoring',
-                'Le dossier sponsoring de votre club est accessible et personnalisable depuis la vitrine ProDay.',
-              )
-            }
+            label="Consulter le dossier de sponsoring club"
+            hint="Plaquette partenaires, chiffres clés et fiscalité mécénat"
+            onPress={() => setDossierOpen(true)}
+          />
+          <ClubActionRow
+            icon="bag"
+            label="Trésorerie & Suivi des cotisations"
+            hint="Consulter les versements et encaissements sponsors"
+            onPress={() => shellNav?.requestNav('finances')}
+          />
+          <ClubActionRow
+            icon="chat"
+            label="Communication & Diffusion partenaires"
+            hint="Canaux officiels pour valoriser vos sponsors"
+            onPress={() => shellNav?.requestNav('communication')}
           />
         </ClubSectionCard>
       </ClubChapterScroll>
-    </View>
-  );
-}
 
-export function ClubEquipmentScreen() {
-  const profile = useSessionProfile();
-  const ws = useClubWorkspace();
-  const { tokens } = useClubTheme();
-  const styles = useMemo(() => createStyles(tokens), [tokens]);
-  return (
-    <View style={styles.root}>
-      <ClubChapterScroll>
-        <ClubBrandHeader title="Bourse équipements" subtitle="Échanges entre membres" />
-        {ws.clubId && profile ? (
-          <ClubEquipmentMarketPanel clubId={ws.clubId} profile={profile} />
-        ) : (
-          <ClubEmptyState
-            title="Bourse"
-            body="Liez un club pour publier ou trouver du matériel."
-            icon="shirt"
-          />
-        )}
-      </ClubChapterScroll>
+      {/* Modal Dossier Sponsoring */}
+      <Modal
+        visible={dossierOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDossierOpen(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: tokens.surface,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 20,
+              maxHeight: '90%',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.12)',
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 16,
+              }}
+            >
+              <View>
+                <ClubText variant="title" style={{ fontSize: 18, fontWeight: '800' }}>
+                  Dossier Sponsoring Club
+                </ClubText>
+                <ClubText variant="caption" muted>
+                  {ws.club?.name || 'Votre Club'} · Présentation Partenaires
+                </ClubText>
+              </View>
+              <TouchableOpacity onPress={() => setDossierOpen(false)}>
+                <Icon name="close" size={20} color={tokens.foreground} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Chiffres clés */}
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 8,
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                padding: 12,
+                borderRadius: 12,
+                marginBottom: 14,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.06)',
+              }}
+            >
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <ClubText variant="title" style={{ color: tokens.accent, fontSize: 18, fontWeight: '800' }}>
+                  {ws.players.length}
+                </ClubText>
+                <ClubText variant="caption" muted style={{ fontSize: 11 }}>
+                  Licenciés
+                </ClubText>
+              </View>
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <ClubText variant="title" style={{ color: tokens.accent, fontSize: 18, fontWeight: '800' }}>
+                  {ws.teams.length}
+                </ClubText>
+                <ClubText variant="caption" muted style={{ fontSize: 11 }}>
+                  Équipes
+                </ClubText>
+              </View>
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <ClubText variant="title" style={{ color: tokens.accent, fontSize: 18, fontWeight: '800' }}>
+                  {ws.events.length}
+                </ClubText>
+                <ClubText variant="caption" muted style={{ fontSize: 11 }}>
+                  Événements
+                </ClubText>
+              </View>
+            </View>
+
+            {/* Fiscalité mécénat */}
+            <View
+              style={{
+                backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                padding: 12,
+                borderRadius: 10,
+                marginBottom: 14,
+                borderWidth: 1,
+                borderColor: 'rgba(52, 211, 153, 0.3)',
+              }}
+            >
+              <ClubText variant="section" style={{ color: '#34D399', fontSize: 13, fontWeight: '800' }}>
+                Avantage fiscal mécénat : 60% déductible
+              </ClubText>
+              <ClubText variant="caption" muted style={{ color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
+                Article 238 bis du Code Général des Impôts : les dons des entreprises ouvrent droit à une réduction d'impôt sur les sociétés de 60%.
+              </ClubText>
+            </View>
+
+            <TouchableOpacity
+              style={{
+                backgroundColor: tokens.accent,
+                paddingVertical: 13,
+                borderRadius: 12,
+                alignItems: 'center',
+                marginBottom: 8,
+              }}
+              onPress={() => {
+                setDossierOpen(false);
+                Alert.alert(
+                  'Dossier Partenaire',
+                  `Plaquette du club ${ws.club?.name || ''} prête. Transmettez ce récapitulatif avec vos packages (${packages.map((p) => p.title).join(', ')}) aux entreprises de votre bassin.`,
+                );
+              }}
+            >
+              <ClubText variant="section" style={{ color: '#000', fontWeight: '800', fontSize: 14 }}>
+                Télécharger / Partager le récapitulatif
+              </ClubText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                paddingVertical: 12,
+                borderRadius: 12,
+                alignItems: 'center',
+              }}
+              onPress={() => setDossierOpen(false)}
+            >
+              <ClubText variant="section" style={{ fontSize: 13 }}>
+                Fermer
+              </ClubText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -557,16 +1047,12 @@ export function renderClubSecondaryStub(id: ClubNavItemId): React.ReactNode | nu
   switch (id) {
     case 'events':
       return <ClubEventsScreen />;
-    case 'automations':
-      return <ClubAutomationsScreen />;
     case 'licenses':
       return <ClubLicensesScreen />;
     case 'finances':
       return <ClubFinancesScreen />;
     case 'sponsoring':
       return <ClubSponsoringScreen />;
-    case 'equipment':
-      return <ClubEquipmentScreen />;
     case 'notifications':
       return <ClubNotificationsScreen />;
     case 'permissions':

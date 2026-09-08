@@ -67,6 +67,11 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
   const [searchError, setSearchError] = useState<string | null>(null);
   const [rosterMembers, setRosterMembers] = useState<PreRegisteredMember[]>([]);
   const [loadingRoster, setLoadingRoster] = useState(false);
+  const [rosterMeta, setRosterMeta] = useState<{
+    totalInClub: number;
+    syncedAt?: Date;
+    categoryFallback: boolean;
+  } | null>(null);
   const [clubCategories, setClubCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
@@ -160,36 +165,63 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
     };
   }, [selectedClub]);
 
-  // Licenciés : uniquement imports FootClubs / memberships réels (sinon vide)
+  // Licenciés : cache FootClubs public (fff_club_rosters) — pas memberships (ACL)
   useEffect(() => {
     let active = true;
     if (!selectedClub || !selectedCategory) {
       setRosterMembers([]);
+      setRosterMeta(null);
       return;
     }
 
     setLoadingRoster(true);
-    void fffOfficialRegistryService
-      .getRosterForTeam(selectedClub.id, selectedCategory, {
-        name: selectedClub.name,
-        city: selectedClub.city,
-        fffNumber: selectedClub.fffNumber,
-      })
-      .then((members) => {
+    void (async () => {
+      try {
+        const { fffClubRosterService } = await import('../../services/fffClubRoster.service');
+        if (selectedClub.fffNumber) {
+          const cached = await fffClubRosterService.listMembersForSignup(
+            selectedClub.fffNumber,
+            selectedCategory
+          );
+          if (!active) return;
+          if (cached.totalInClub > 0) {
+            setRosterMembers(cached.members);
+            setRosterMeta({
+              totalInClub: cached.totalInClub,
+              syncedAt: cached.syncedAt,
+              categoryFallback: cached.categoryFallback,
+            });
+            if (cached.members.length === 0) onToggleCustomProfile(true);
+            return;
+          }
+        }
+
+        const members = await fffOfficialRegistryService.getRosterForTeam(
+          selectedClub.id,
+          selectedCategory,
+          {
+            name: selectedClub.name,
+            city: selectedClub.city,
+            fffNumber: selectedClub.fffNumber,
+          }
+        );
         if (!active) return;
         setRosterMembers(members);
-        if (members.length === 0) {
-          onToggleCustomProfile(true);
-        }
-      })
-      .catch(() => {
+        setRosterMeta(
+          members.length > 0
+            ? { totalInClub: members.length, categoryFallback: false }
+            : { totalInClub: 0, categoryFallback: false }
+        );
+        if (members.length === 0) onToggleCustomProfile(true);
+      } catch {
         if (!active) return;
         setRosterMembers([]);
+        setRosterMeta({ totalInClub: 0, categoryFallback: false });
         onToggleCustomProfile(true);
-      })
-      .finally(() => {
+      } finally {
         if (active) setLoadingRoster(false);
-      });
+      }
+    })();
 
     return () => {
       active = false;
@@ -451,7 +483,7 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
           {selectedClub && selectedCategory && !isClubRole && (
             <View style={styles.section}>
               <ProDayText style={styles.label}>
-                3. Licenciés FootClubs / ProDay ({selectedCategory})
+                3. Trouver mon nom dans l’effectif du club
               </ProDayText>
               {loadingRoster ? (
                 <ActivityIndicator size="small" color={AUTH_XP.goldBright} style={{ marginVertical: 12 }} />
@@ -460,8 +492,17 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                   <ProDayText style={styles.rosterHint}>
                     {rosterMembers.length} licencié
                     {rosterMembers.length > 1 ? 's' : ''} trouvé
-                    {rosterMembers.length > 1 ? 's' : ''} (import FootClubs / club) — sélectionnez votre nom :
+                    {rosterMembers.length > 1 ? 's' : ''}
+                    {rosterMeta?.syncedAt
+                      ? ` · maj. ${rosterMeta.syncedAt.toLocaleDateString('fr-FR')}`
+                      : ''}{' '}
+                    — sélectionnez votre nom :
                   </ProDayText>
+                  {rosterMeta?.categoryFallback ? (
+                    <ProDayText style={styles.infoText}>
+                      Aucun match exact pour « {selectedCategory} » — effectif complet du club affiché.
+                    </ProDayText>
+                  ) : null}
                   <View style={styles.rosterList}>
                     {rosterMembers.map((member) => {
                       const isSelected = selectedRosterMember?.id === member.id && !isCustomProfile;
@@ -489,16 +530,18 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                               {member.displayName}
                             </ProDayText>
                             <View style={styles.rosterMemberMeta}>
-                              <View style={[styles.categoryTag, isSelected && styles.categoryTagActive]}>
-                                <ProDayText
-                                  style={[
-                                    styles.categoryTagText,
-                                    isSelected && styles.categoryTagTextActive,
-                                  ]}
-                                >
-                                  {member.category}
-                                </ProDayText>
-                              </View>
+                              {!!member.category && (
+                                <View style={[styles.categoryTag, isSelected && styles.categoryTagActive]}>
+                                  <ProDayText
+                                    style={[
+                                      styles.categoryTagText,
+                                      isSelected && styles.categoryTagTextActive,
+                                    ]}
+                                  >
+                                    {member.category}
+                                  </ProDayText>
+                                </View>
+                              )}
                               {member.licenseNumber ? (
                                 <ProDayText style={styles.rosterLicense}>
                                   Lic. {member.licenseNumber}
@@ -558,10 +601,13 @@ export const SignupFffAffiliationCard: React.FC<SignupFffAffiliationCardProps> =
                   <Icon name="person" size={20} color={AUTH_XP.goldBright} />
                   <View style={{ flex: 1 }}>
                     <ProDayText style={styles.noRosterTitle}>
-                      Aucun licencié pré-importé pour cette catégorie
+                      Effectif non publié sur ProDay pour ce club
                     </ProDayText>
                     <ProDayText style={styles.noRosterText}>
-                      Le club n’a pas encore importé son effectif FootClubs sur ProDay — ou votre nom n’y figure pas encore. Saisissez votre identité telle qu’elle apparaît sur votre licence FFF.
+                      La FFF ne publie pas les listes de licenciés (données personnelles). Votre club doit
+                      importer son fichier FootClubs sur ProDay — la liste se met à jour chaque nuit.
+                      En attendant, saisissez votre nom tel qu’il figure sur votre licence : ce n’est pas
+                      un bug, c’est le parcours normal.
                     </ProDayText>
                     <View style={styles.customNameBox}>
                       <ProDayText style={styles.customNameLabel}>

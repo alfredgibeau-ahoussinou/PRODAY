@@ -24,6 +24,8 @@ export interface Club {
   categories: string[];
   sponsor_ids: string[];
   owner_uid: string;
+  /** N° d’affiliation FFF officiel (DOFA / FootClubs) — clé du cache inscription. */
+  fff_affiliation_number?: string;
   /** Forfait commercial live / Veo / all-inclusive (devis). */
   commercial_offer_id?: ClubLivePackId;
   /** Montant HT/TTC convenu (admin) — source pour facture Stripe. */
