@@ -79,7 +79,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     shortLabel: 'Cmd',
     icon: 'grid',
     group: 'command',
-    hint: 'Vue ops · actions urgentes · raccourcis',
+    hint: 'Vue ops · file prioritaire · métriques',
   },
   {
     id: 'queue',
@@ -328,7 +328,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   },
 ];
 
-/** Rail = menu complet (scroll OK). */
+/** Rail / menu = catalogue complet (scroll OK). Mobile = drawer labels, tablette = rail. */
 export const ADMIN_RAIL_IDS: AdminNavSectionId[] = ADMIN_NAV_ITEMS.map((n) => n.id);
 
 /** @deprecated alias tests. */

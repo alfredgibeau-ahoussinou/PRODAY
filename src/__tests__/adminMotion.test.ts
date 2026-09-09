@@ -4,7 +4,9 @@ import { adminChrome, adminLayout, adminSpace } from '../features/admin/theme/ad
 describe('Espace Admin layout chrome', () => {
   it('rail permanent + strip — plus de dock bottom', () => {
     expect(adminChrome.dockRailHeight).toBe(0);
-    expect(adminChrome.sidebarCollapsed).toBeGreaterThanOrEqual(56);
+    /** Mobile : pas de rail compact (drawer). Tablette : sidebarExpanded. */
+    expect(adminChrome.sidebarCollapsed).toBe(0);
+    expect(adminChrome.sidebarExpanded).toBeGreaterThanOrEqual(200);
     expect(adminLayout.statusBarMin).toBeGreaterThanOrEqual(44);
     expect(adminLayout.contentTop).toBeGreaterThanOrEqual(adminSpace.md);
     expect(adminLayout.hitTarget).toBeGreaterThanOrEqual(44);

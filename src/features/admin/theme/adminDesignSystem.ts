@@ -156,9 +156,10 @@ export const adminShadow = {
 export const adminChrome = {
   wideBreakpoint: 920,
   tabletBreakpoint: 700,
-  /** Menu riche : largeur confortable pour labels. */
+  /** Rail tablette+ uniquement (labels). Mobile = drawer, pas de rail. */
   sidebarExpanded: 228,
-  sidebarCollapsed: 72,
+  /** 0 = pas de rail compact / icônes seules sur mobile. */
+  sidebarCollapsed: 0,
   topBarHeight: 56,
   dockRailHeight: 0,
   tabBarIcon: 20,

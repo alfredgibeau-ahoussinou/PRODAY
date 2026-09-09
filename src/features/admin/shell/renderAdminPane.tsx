@@ -40,7 +40,6 @@ type Props = {
   onNavigate: (section: AdminNavSectionId, focusId?: string) => void;
   onPreviewUserApp: () => void;
   onPreviewPresidentPole?: () => void;
-  onOpenCommand?: () => void;
 };
 
 export function renderAdminPane({
@@ -49,11 +48,10 @@ export function renderAdminPane({
   onNavigate,
   onPreviewUserApp,
   onPreviewPresidentPole,
-  onOpenCommand,
 }: Props) {
   switch (section) {
     case 'overview':
-      return <AdminOverviewPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />;
+      return <AdminOverviewPane onNavigate={onNavigate} />;
     case 'queue':
       return <AdminQueuePane onNavigate={onNavigate} />;
     case 'health':
@@ -126,6 +124,6 @@ export function renderAdminPane({
     case 'tournaments':
       return <AdminTournamentsPane />;
     default:
-      return <AdminOverviewPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />;
+      return <AdminOverviewPane onNavigate={onNavigate} />;
   }
 }

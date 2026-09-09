@@ -52,7 +52,15 @@ describe('Espace Admin navigation', () => {
     expect(ADMIN_PRIMARY_NAV_IDS.length).toBe(ids.length);
     expect(ADMIN_MENU_DEST_IDS).toEqual([]);
     expect(adminChrome.dockRailHeight).toBe(0);
+    expect(adminChrome.sidebarCollapsed).toBe(0);
+    expect(adminChrome.sidebarExpanded).toBeGreaterThanOrEqual(200);
     expect(adminChrome.brandMark).toBe('ESPACE ADMIN');
+  });
+
+  it('menu mobile = drawer labels (pas rail icônes)', () => {
+    expect(adminChrome.sidebarCollapsed).toBe(0);
+    expect(ADMIN_NAV_ITEMS.every((n) => n.label.trim().length > 0)).toBe(true);
+    expect(ADMIN_NAV_GROUPS.length).toBeGreaterThanOrEqual(5);
   });
 
   it('résout les legacy FOC / Cockpit / Bureau Ops', () => {

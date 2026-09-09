@@ -11,19 +11,22 @@ type Props = {
   healthScore: number;
   actionCount: number;
   topInset?: number;
+  /** Affiche le bouton Menu (mobile — pas de rail permanent). */
+  showMenuButton?: boolean;
   onOpenCommand: () => void;
   onOpenOverview: () => void;
   onOpenMenu?: () => void;
 };
 
 /**
- * Bandeau commande Espace Admin.
+ * Bandeau Espace Admin — un seul bouton Menu clair + recherche secondaire.
  */
 export function OpsDeskStrip({
   section,
   healthScore,
   actionCount,
   topInset = 0,
+  showMenuButton = false,
   onOpenCommand,
   onOpenOverview,
   onOpenMenu,
@@ -44,9 +47,19 @@ export function OpsDeskStrip({
       ]}
     >
       <View style={styles.zone}>
-        {onOpenMenu ? (
-          <Pressable onPress={onOpenMenu} hitSlop={8} style={styles.menuBtn}>
-            <Icon name="menu" size={16} color={t.signal} />
+        {showMenuButton && onOpenMenu ? (
+          <Pressable
+            onPress={onOpenMenu}
+            hitSlop={8}
+            style={styles.menuBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Ouvrir le menu"
+            testID="admin-menu-open"
+          >
+            <Icon name="hamburger" size={18} color={t.signal} />
+            <AdminText variant="caption" color={t.signal}>
+              Menu
+            </AdminText>
           </Pressable>
         ) : null}
         <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
@@ -87,11 +100,14 @@ export function OpsDeskStrip({
         ) : (
           <AdminBadge label="FILE OK" tone="success" />
         )}
-        <Pressable onPress={onOpenCommand} style={styles.cmdBtn} hitSlop={8}>
-          <Icon name="search" size={16} color={t.accentText} />
-          <AdminText variant="caption" color={t.accentText}>
-            CMD
-          </AdminText>
+        <Pressable
+          onPress={onOpenCommand}
+          style={styles.searchBtn}
+          hitSlop={8}
+          accessibilityLabel="Recherche commande"
+          testID="admin-command-open"
+        >
+          <Icon name="search" size={18} color={t.muted} />
         </Pressable>
       </View>
     </View>
@@ -117,14 +133,16 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   menuBtn: {
-    width: 36,
-    height: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: adminLayout.hitTarget,
     borderRadius: adminRadius.sm,
     borderWidth: 1,
-    borderColor: ADMIN_TOKENS.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: ADMIN_TOKENS.surface,
+    borderColor: ADMIN_TOKENS.signal,
+    backgroundColor: 'rgba(232,184,74,0.12)',
   },
   metrics: {
     flexDirection: 'row',
@@ -143,16 +161,14 @@ const styles = StyleSheet.create({
     gap: 2,
     minWidth: 64,
   },
-  cmdBtn: {
-    flexDirection: 'row',
+  searchBtn: {
+    width: adminLayout.hitTarget,
+    height: adminLayout.hitTarget,
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: adminLayout.hitTarget,
+    justifyContent: 'center',
     borderRadius: adminRadius.sm,
-    backgroundColor: ADMIN_TOKENS.accentHot,
     borderWidth: 1,
-    borderColor: ADMIN_TOKENS.borderLuxury,
+    borderColor: ADMIN_TOKENS.border,
+    backgroundColor: ADMIN_TOKENS.surface,
   },
 });

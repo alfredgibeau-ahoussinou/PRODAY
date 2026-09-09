@@ -24,6 +24,7 @@ import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminLayout, adminRadius, adminSpace, adminSurfaceHero } from '../theme/adminDesignSystem';
 import { AdminListRow } from '../motion';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
+import { ADMIN_NAV_ITEMS } from '../navigation/adminNavConfig';
 import { adminService } from '../../../services/admin.service';
 import { adminAuditService, type AdminAuditEntry } from '../../../services/adminAudit.service';
 import { membershipsService } from '../../../services/memberships.service';
@@ -39,7 +40,6 @@ type NavFn = (section: AdminNavSectionId, focusId?: string) => void;
 /** Commande — hub dense (remplace Pulse clinique). */
 export function AdminOverviewPane({
   onNavigate,
-  onOpenCommand,
 }: {
   onNavigate: NavFn;
   onOpenCommand?: () => void;
@@ -69,18 +69,18 @@ export function AdminOverviewPane({
           Commande
         </AdminText>
         <AdminText variant="body" color={t.muted}>
-          Pilotage exhaustif — utilisateurs, clubs, FFF, business, contenu. Menu riche à gauche ·
-          une page par capacité.
+          Pilotage exhaustif — utilisateurs, clubs, FFF, business, contenu. Ouvrez Menu pour les{' '}
+          {ADMIN_NAV_ITEMS.length} pages.
         </AdminText>
-        <View style={styles.heroActions}>
-          <AdminButton label="Commande ⌘K" onPress={() => onOpenCommand?.()} />
-          <AdminButton
-            label={`File (${data.workQueue.length})`}
-            variant="soft"
-            onPress={() => onNavigate('queue')}
-          />
-          <AdminButton label="Utilisateurs" variant="ghost" onPress={() => onNavigate('users')} />
-        </View>
+        {data.workQueue.length > 0 ? (
+          <View style={styles.heroActions}>
+            <AdminButton
+              label={`File prioritaire (${data.workQueue.length})`}
+              variant="soft"
+              onPress={() => onNavigate('queue')}
+            />
+          </View>
+        ) : null}
       </LinearGradient>
 
       <View style={styles.metricGrid}>
@@ -146,25 +146,6 @@ export function AdminOverviewPane({
         )}
       </AdminCard>
 
-      <AdminCard>
-        <AdminText variant="h2">Raccourcis ops</AdminText>
-        <View style={styles.chipRow}>
-          {(
-            [
-              ['claims', 'Claims FFF'],
-              ['effectifs', 'Effectifs'],
-              ['classements', 'Classements'],
-              ['sync', 'Jobs sync'],
-              ['subscriptions', 'Abonnements'],
-              ['reels', 'Reels'],
-              ['config', 'Config'],
-              ['audit', 'Audit'],
-            ] as const
-          ).map(([id, label]) => (
-            <AdminButton key={id} label={label} variant="ghost" onPress={() => onNavigate(id)} />
-          ))}
-        </View>
-      </AdminCard>
     </ScrollView>
   );
 }

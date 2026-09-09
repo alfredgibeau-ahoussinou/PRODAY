@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../../components/ui/Icon';
 import { ProDaySymbol } from '../../../components/branding/ProDaySymbol';
@@ -16,20 +16,15 @@ type Props = {
   activeId: AdminNavSectionId;
   onSelect: (id: AdminNavSectionId) => void;
   onOpenCommand: () => void;
-  /** Compact = mobile drawer trigger + icons rail. Expanded = labels. */
-  compact?: boolean;
   queueCount?: number;
   claimsCount?: number;
   membershipsCount?: number;
   verificationsCount?: number;
-  menuOpen?: boolean;
-  onMenuOpenChange?: (open: boolean) => void;
   /** Safe-area top (notch / Dynamic Island) — fourni par le shell. */
   topInset?: number;
 };
 
 function badgeFor(
-  itemId: string,
   badgeKey: string | undefined,
   counts: {
     queue: number;
@@ -47,26 +42,23 @@ function badgeFor(
 }
 
 /**
- * Menu riche Espace Admin — scroll OK, 30+ pages.
+ * Rail latéral tablette+ uniquement — labels textuels groupés.
+ * Sur mobile le menu est un drawer (OpsDeskMenuDrawer), pas ce rail.
  */
 export function OpsDeskRail({
   activeId,
   onSelect,
   onOpenCommand,
-  compact = false,
   queueCount = 0,
   claimsCount = 0,
   membershipsCount = 0,
   verificationsCount = 0,
-  menuOpen = false,
-  onMenuOpenChange,
   topInset,
 }: Props) {
   const insets = useSafeAreaInsets();
   const resolvedTop = Math.max(topInset ?? 0, insets.top);
   const t = ADMIN_TOKENS;
-  const width = compact ? adminChrome.sidebarCollapsed : adminChrome.sidebarExpanded;
-  const styles = useMemo(() => createStyles(compact), [compact]);
+  const styles = useMemo(() => createStyles(), []);
   const counts = {
     queue: queueCount,
     claims: claimsCount,
@@ -74,14 +66,54 @@ export function OpsDeskRail({
     verifications: verificationsCount,
   };
 
-  const renderNav = (showLabels: boolean) => (
-    <>
-      {ADMIN_NAV_GROUPS.map((group) => {
-        const items = ADMIN_NAV_ITEMS.filter((n) => n.group === group.id);
-        if (!items.length) return null;
-        return (
-          <View key={group.id} style={{ gap: 3 }}>
-            {showLabels ? (
+  return (
+    <View
+      style={[
+        styles.root,
+        {
+          width: adminChrome.sidebarExpanded,
+          paddingTop: resolvedTop + adminSpace.sm,
+          paddingBottom: Math.max(insets.bottom, adminSpace.sm),
+        },
+      ]}
+      testID="admin-sidebar-rail"
+    >
+      <View style={styles.brand}>
+        <ProDaySymbol size={30} variant="admin" tone="white" />
+        <View style={{ flex: 1, gap: 2 }}>
+          <AdminText variant="brand" color={t.railInk}>
+            ESPACE ADMIN
+          </AdminText>
+          <AdminText variant="mono" color="rgba(244,246,248,0.4)">
+            PRODAY · CONTROL
+          </AdminText>
+        </View>
+      </View>
+
+      <Pressable
+        onPress={onOpenCommand}
+        style={styles.cmd}
+        accessibilityLabel="Recherche commande"
+      >
+        <Icon name="search" size={14} color={t.signal} />
+        <AdminText variant="caption" color="rgba(244,246,248,0.55)" style={{ flex: 1 }}>
+          Rechercher
+        </AdminText>
+        <AdminText variant="mono" color={t.signal}>
+          ⌘K
+        </AdminText>
+      </Pressable>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 16, gap: 16 }}
+      >
+        {ADMIN_NAV_GROUPS.map((group) => {
+          const items = ADMIN_NAV_ITEMS.filter((n) => n.group === group.id);
+          if (!items.length) return null;
+          return (
+            <View key={group.id} style={{ gap: 3 }}>
               <AdminText
                 variant="label"
                 color="rgba(244,246,248,0.35)"
@@ -89,34 +121,29 @@ export function OpsDeskRail({
               >
                 {group.label}
               </AdminText>
-            ) : null}
-            {items.map((item) => {
-              const active = activeId === item.id;
-              const badge = badgeFor(item.id, item.badgeKey, counts);
-              return (
-                <Pressable
-                  key={item.id}
-                  onPress={() => {
-                    onSelect(item.id);
-                    onMenuOpenChange?.(false);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  testID={`admin-nav-${item.id}`}
-                  style={[
-                    styles.item,
-                    active && {
-                      backgroundColor: 'rgba(232,184,74,0.16)',
-                      borderColor: t.signal,
-                    },
-                  ]}
-                >
-                  <Icon
-                    name={item.icon}
-                    size={18}
-                    color={active ? t.signal : 'rgba(244,246,248,0.55)'}
-                  />
-                  {showLabels ? (
+              {items.map((item) => {
+                const active = activeId === item.id;
+                const badge = badgeFor(item.badgeKey, counts);
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => onSelect(item.id)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    testID={`admin-nav-${item.id}`}
+                    style={[
+                      styles.item,
+                      active && {
+                        backgroundColor: 'rgba(232,184,74,0.16)',
+                        borderColor: t.signal,
+                      },
+                    ]}
+                  >
+                    <Icon
+                      name={item.icon}
+                      size={18}
+                      color={active ? t.signal : 'rgba(244,246,248,0.55)'}
+                    />
                     <AdminText
                       variant="nav"
                       color={active ? t.railInk : 'rgba(244,246,248,0.68)'}
@@ -125,168 +152,36 @@ export function OpsDeskRail({
                     >
                       {item.label}
                     </AdminText>
-                  ) : null}
-                  {showLabels && badge > 0 ? (
-                    <View style={styles.badge}>
-                      <AdminText
-                        variant="label"
-                        color="#0B0D12"
-                        style={{ letterSpacing: 0, fontSize: 9 }}
-                      >
-                        {badge > 99 ? '99+' : String(badge)}
-                      </AdminText>
-                    </View>
-                  ) : null}
-                </Pressable>
-              );
-            })}
-          </View>
-        );
-      })}
-    </>
-  );
-
-  return (
-    <>
-      <View
-        style={[
-          styles.root,
-          {
-            width,
-            paddingTop: resolvedTop + adminSpace.sm,
-            paddingBottom: Math.max(insets.bottom, adminSpace.sm),
-          },
-        ]}
-      >
-        <View style={styles.brand}>
-          <ProDaySymbol size={compact ? 26 : 30} variant="admin" tone="white" />
-          {!compact ? (
-            <View style={{ flex: 1, gap: 2 }}>
-              <AdminText variant="brand" color={t.railInk}>
-                ESPACE ADMIN
-              </AdminText>
-              <AdminText variant="mono" color="rgba(244,246,248,0.4)">
-                PRODAY · CONTROL
-              </AdminText>
+                    {badge > 0 ? (
+                      <View style={styles.badge}>
+                        <AdminText
+                          variant="label"
+                          color="#0B0D12"
+                          style={{ letterSpacing: 0, fontSize: 9 }}
+                        >
+                          {badge > 99 ? '99+' : String(badge)}
+                        </AdminText>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
             </View>
-          ) : null}
-        </View>
-
-        {compact ? (
-          <Pressable
-            onPress={() => onMenuOpenChange?.(true)}
-            style={styles.cmdIcon}
-            accessibilityLabel="Ouvrir le menu"
-            testID="admin-menu-open"
-          >
-            <Icon name="menu" size={18} color={t.signal} />
-          </Pressable>
-        ) : null}
-
-        <Pressable
-          onPress={onOpenCommand}
-          style={compact ? styles.cmdIcon : styles.cmd}
-          accessibilityLabel="Ouvrir commande"
-        >
-          <Icon name="search" size={compact ? 18 : 14} color={t.signal} />
-          {!compact ? (
-            <>
-              <AdminText variant="caption" color="rgba(244,246,248,0.55)" style={{ flex: 1 }}>
-                Commande
-              </AdminText>
-              <AdminText variant="mono" color={t.signal}>
-                ⌘K
-              </AdminText>
-            </>
-          ) : null}
-        </Pressable>
-
-        {!compact ? (
-          <ScrollView
-            style={{ flex: 1 }}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 16, gap: 16 }}
-          >
-            {renderNav(true)}
-          </ScrollView>
-        ) : (
-          <ScrollView
-            style={{ flex: 1 }}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 16, gap: 4 }}
-          >
-            {ADMIN_NAV_ITEMS.slice(0, 12).map((item) => {
-              const active = activeId === item.id;
-              return (
-                <Pressable
-                  key={item.id}
-                  onPress={() => onSelect(item.id)}
-                  style={[
-                    styles.item,
-                    active && {
-                      backgroundColor: 'rgba(232,184,74,0.16)',
-                      borderColor: t.signal,
-                    },
-                  ]}
-                >
-                  <Icon
-                    name={item.icon}
-                    size={18}
-                    color={active ? t.signal : 'rgba(244,246,248,0.55)'}
-                  />
-                </Pressable>
-              );
-            })}
-            <Pressable onPress={() => onMenuOpenChange?.(true)} style={styles.item}>
-              <Icon name="grid" size={18} color={t.signal} />
-            </Pressable>
-          </ScrollView>
-        )}
-      </View>
-
-      <Modal
-        visible={!!menuOpen}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => onMenuOpenChange?.(false)}
-      >
-        <View
-          style={[
-            styles.drawer,
-            { paddingTop: Math.max(resolvedTop, insets.top) + 12, paddingBottom: Math.max(insets.bottom, 16) },
-          ]}
-        >
-          <View style={styles.drawerHead}>
-            <AdminText variant="h1" color={t.foreground}>
-              Menu admin
-            </AdminText>
-            <Pressable onPress={() => onMenuOpenChange?.(false)} hitSlop={8}>
-              <Icon name="close" size={22} color={t.muted} />
-            </Pressable>
-          </View>
-          <AdminText variant="caption" color={t.muted} style={{ paddingHorizontal: 16 }}>
-            {ADMIN_NAV_ITEMS.length} pages · défilez librement
-          </AdminText>
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}
-          >
-            {renderNav(true)}
-          </ScrollView>
-        </View>
-      </Modal>
-    </>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
 
-function createStyles(compact?: boolean) {
+function createStyles() {
   const t = ADMIN_TOKENS;
   return StyleSheet.create({
     root: {
       backgroundColor: t.sidebarBg,
       borderRightWidth: 1,
       borderRightColor: t.borderStrong,
-      paddingHorizontal: compact ? 8 : 12,
+      paddingHorizontal: 12,
       gap: adminSpace.md,
     },
     brand: {
@@ -307,26 +202,16 @@ function createStyles(compact?: boolean) {
       borderColor: 'rgba(244,246,248,0.14)',
       backgroundColor: 'rgba(255,255,255,0.04)',
     },
-    cmdIcon: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-      borderRadius: adminRadius.sm,
-      borderWidth: 1,
-      borderColor: 'rgba(244,246,248,0.14)',
-      backgroundColor: 'rgba(255,255,255,0.04)',
-    },
     item: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
       paddingVertical: 10,
-      paddingHorizontal: compact ? 10 : 10,
+      paddingHorizontal: 10,
       minHeight: 42,
       borderRadius: adminRadius.sm,
       borderWidth: 1,
       borderColor: 'transparent',
-      justifyContent: compact ? 'center' : 'flex-start',
     },
     badge: {
       minWidth: 20,
@@ -336,17 +221,6 @@ function createStyles(compact?: boolean) {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 5,
-    },
-    drawer: {
-      flex: 1,
-      backgroundColor: t.bg,
-    },
-    drawerHead: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      marginBottom: 4,
     },
   });
 }

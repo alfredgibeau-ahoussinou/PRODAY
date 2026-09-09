@@ -6,6 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AdminDataProvider, useAdminData } from '../data/AdminDataContext';
 import { AdminGateScreen } from '../screens/AdminGateScreen';
 import { OpsDeskRail } from './OpsDeskRail';
+import { OpsDeskMenuDrawer } from './OpsDeskMenuDrawer';
 import { OpsDeskStrip } from './OpsDeskStrip';
 import { renderAdminPane } from './renderAdminPane';
 import { AdminCommandPalette } from '../ui/AdminCommandPalette';
@@ -73,30 +74,31 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
         onNavigate: navigate,
         onPreviewUserApp,
         onPreviewPresidentPole,
-        onOpenCommand: openCommand,
       }),
-    [section, focusId, navigate, onPreviewUserApp, onPreviewPresidentPole, openCommand],
+    [section, focusId, navigate, onPreviewUserApp, onPreviewPresidentPole],
   );
 
   const verificationsCount = data.users.filter(userNeedsAdminVerificationReview).length;
+  const badgeCounts = {
+    queueCount: data.workQueue.length,
+    membershipsCount: data.pendingMemberships.length,
+    verificationsCount,
+  };
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={['left', 'right']}>
         <View style={styles.row}>
-          <OpsDeskRail
-            activeId={section}
-            onSelect={(id) => navigate(id)}
-            onOpenCommand={openCommand}
-            compact={!expandedRail}
-            queueCount={data.workQueue.length}
-            membershipsCount={data.pendingMemberships.length}
-            verificationsCount={verificationsCount}
-            menuOpen={menuOpen}
-            onMenuOpenChange={setMenuOpen}
-            topInset={topInset}
-          />
+          {expandedRail ? (
+            <OpsDeskRail
+              activeId={section}
+              onSelect={(id) => navigate(id)}
+              onOpenCommand={openCommand}
+              topInset={topInset}
+              {...badgeCounts}
+            />
+          ) : null}
 
           <View style={styles.main}>
             <OpsDeskStrip
@@ -104,6 +106,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
               healthScore={data.health.score}
               actionCount={data.workQueue.length}
               topInset={topInset}
+              showMenuButton={!expandedRail}
               onOpenCommand={openCommand}
               onOpenOverview={() => navigate('overview')}
               onOpenMenu={() => setMenuOpen(true)}
@@ -126,6 +129,17 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
           </View>
         </View>
       </SafeAreaView>
+
+      {!expandedRail ? (
+        <OpsDeskMenuDrawer
+          open={menuOpen}
+          activeId={section}
+          onSelect={(id) => navigate(id)}
+          onClose={() => setMenuOpen(false)}
+          topInset={topInset}
+          {...badgeCounts}
+        />
+      ) : null}
 
       <AdminCommandPalette
         open={commandOpen}
