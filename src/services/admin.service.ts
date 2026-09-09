@@ -753,6 +753,10 @@ export const adminService = {
       admin_note?: string | null;
       admin_tags?: string[] | null;
       owner_uid?: string;
+      logo_url?: string | null;
+      primary_color?: string | null;
+      secondary_color?: string | null;
+      fff_affiliation_number?: string | null;
     },
     actorUid?: string,
   ): Promise<void> {
@@ -768,6 +772,16 @@ export const adminService = {
     if (patch.admin_note !== undefined) update.admin_note = patch.admin_note?.trim() || null;
     if (patch.admin_tags !== undefined) update.admin_tags = patch.admin_tags ?? [];
     if (patch.owner_uid !== undefined) update.owner_uid = patch.owner_uid.trim();
+    if (patch.logo_url !== undefined) update.logo_url = patch.logo_url?.trim() || null;
+    if (patch.primary_color !== undefined) {
+      update.primary_color = patch.primary_color?.trim() || null;
+    }
+    if (patch.secondary_color !== undefined) {
+      update.secondary_color = patch.secondary_color?.trim() || null;
+    }
+    if (patch.fff_affiliation_number !== undefined) {
+      update.fff_affiliation_number = patch.fff_affiliation_number?.trim() || null;
+    }
     await updateDoc(doc(database, 'clubs', clubId), update);
     await adminAuditService.log({
       action: 'other',
@@ -2042,6 +2056,138 @@ export const adminService = {
     return callFunction('syncPublicClubDirectoryNow', {});
   },
 
+  async triggerFffClubRosterForClub(input: {
+    club_id?: string;
+    fff_affiliation_number?: string;
+  }): Promise<unknown> {
+    return callFunction('syncFffClubRosterForClubNow', {
+      club_id: input.club_id ?? null,
+      fff_affiliation_number: input.fff_affiliation_number ?? null,
+    });
+  },
+
+  async adjustLeagueStanding(input: {
+    league_id: string;
+    team_id: string;
+    patch: Partial<{
+      name: string;
+      played: number;
+      won: number;
+      drawn: number;
+      lost: number;
+      goals_for: number;
+      goals_against: number;
+      points: number;
+      rank: number;
+    }>;
+    reason?: string;
+  }): Promise<unknown> {
+    return callFunction('adminAdjustLeagueStanding', {
+      league_id: input.league_id,
+      team_id: input.team_id,
+      patch: input.patch,
+      reason: input.reason ?? null,
+    });
+  },
+
+  async getLeagueStandingDetail(leagueId: string): Promise<{
+    id: string;
+    name: string;
+    category?: string;
+    season?: string;
+    source?: string;
+    lastSyncAt?: string;
+    standings: Array<{
+      rank: number;
+      team_id: string;
+      name: string;
+      played: number;
+      won: number;
+      drawn: number;
+      lost: number;
+      goals_for: number;
+      goals_against: number;
+      goal_diff: number;
+      points: number;
+    }>;
+  } | null> {
+    if (!isFirebaseConfigured() || !leagueId.trim()) return null;
+    const database = getDb();
+    if (!database) return null;
+    const snap = await getDoc(doc(database, 'fff_league_standings', leagueId.trim()));
+    if (!snap.exists()) return null;
+    const data = snap.data() as Record<string, unknown>;
+    const standings = Array.isArray(data.standings) ? data.standings : [];
+    return {
+      id: snap.id,
+      name: String(data.name ?? snap.id),
+      category: data.category ? String(data.category) : undefined,
+      season: data.season ? String(data.season) : undefined,
+      source: data.source ? String(data.source) : undefined,
+      lastSyncAt: data.lastSyncAt ? String(data.lastSyncAt) : undefined,
+      standings: standings.map((raw) => {
+        const r = raw as Record<string, unknown>;
+        return {
+          rank: Number(r.rank ?? 0),
+          team_id: String(r.team_id ?? ''),
+          name: String(r.name ?? ''),
+          played: Number(r.played ?? 0),
+          won: Number(r.won ?? 0),
+          drawn: Number(r.drawn ?? 0),
+          lost: Number(r.lost ?? 0),
+          goals_for: Number(r.goals_for ?? 0),
+          goals_against: Number(r.goals_against ?? 0),
+          goal_diff: Number(r.goal_diff ?? 0),
+          points: Number(r.points ?? 0),
+        };
+      }),
+    };
+  },
+
+  async getClubRosterDetail(affiliationOrId: string): Promise<{
+    id: string;
+    club_name?: string;
+    city?: string;
+    proday_club_id?: string;
+    members: Array<{
+      id: string;
+      displayName: string;
+      role?: string;
+      category?: string;
+      licenseNumber?: string | null;
+    }>;
+    updated_at?: Date;
+  } | null> {
+    if (!isFirebaseConfigured() || !affiliationOrId.trim()) return null;
+    const database = getDb();
+    if (!database) return null;
+    const snap = await getDoc(doc(database, 'fff_club_rosters', affiliationOrId.trim()));
+    if (!snap.exists()) return null;
+    const data = snap.data() as Record<string, unknown>;
+    const members = Array.isArray(data.members) ? data.members : [];
+    const updated =
+      data.updated_at && typeof data.updated_at === 'object' && 'toDate' in data.updated_at
+        ? (data.updated_at as { toDate: () => Date }).toDate()
+        : undefined;
+    return {
+      id: snap.id,
+      club_name: data.club_name ? String(data.club_name) : data.name ? String(data.name) : undefined,
+      city: data.city ? String(data.city) : undefined,
+      proday_club_id: data.proday_club_id ? String(data.proday_club_id) : undefined,
+      members: members.map((raw) => {
+        const m = raw as Record<string, unknown>;
+        return {
+          id: String(m.id ?? ''),
+          displayName: String(m.displayName ?? m.name ?? ''),
+          role: m.role ? String(m.role) : undefined,
+          category: m.category ? String(m.category) : undefined,
+          licenseNumber: m.licenseNumber != null ? String(m.licenseNumber) : null,
+        };
+      }),
+      updated_at: updated,
+    };
+  },
+
   async listLeagueStandingsMeta(max = 40): Promise<
     Array<{
       id: string;
@@ -2078,6 +2224,7 @@ export const adminService = {
       club_name?: string;
       city?: string;
       members: number;
+      proday_club_id?: string;
       updated_at?: Date;
     }>
   > {
@@ -2097,6 +2244,7 @@ export const adminService = {
         club_name: data.club_name ? String(data.club_name) : data.name ? String(data.name) : undefined,
         city: data.city ? String(data.city) : undefined,
         members,
+        proday_club_id: data.proday_club_id ? String(data.proday_club_id) : undefined,
         updated_at: updated,
       };
     });

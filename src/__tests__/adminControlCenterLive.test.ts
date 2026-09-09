@@ -7,17 +7,22 @@ import {
 import { mapPlatformConfig } from '../utils/platformConfigMap';
 import { DEFAULT_AI_OPS } from '../models/PlatformConfig';
 
-describe('Admin Data & classements nav', () => {
-  it('expose la section donnees dans le menu', () => {
-    expect(ADMIN_NAV_ITEMS.some((n) => n.id === 'donnees')).toBe(true);
-    expect(ADMIN_MENU_DEST_IDS).toContain('donnees');
-    expect(resolveAdminNav('standings').section).toBe('donnees');
-    expect(resolveAdminNav('classements').section).toBe('donnees');
+describe('Cockpit Total · data & claims nav', () => {
+  it('expose effectifs + classements + identité', () => {
+    expect(ADMIN_NAV_ITEMS.some((n) => n.id === 'effectifs')).toBe(true);
+    expect(ADMIN_NAV_ITEMS.some((n) => n.id === 'classements')).toBe(true);
+    expect(ADMIN_NAV_ITEMS.some((n) => n.id === 'identite')).toBe(true);
+    expect(ADMIN_MENU_DEST_IDS).toContain('effectifs');
+    expect(ADMIN_MENU_DEST_IDS).toContain('classements');
+    expect(resolveAdminNav('standings').section).toBe('classements');
+    expect(resolveAdminNav('donnees').section).toBe('effectifs');
+    expect(resolveAdminNav('claims').section).toBe('identite');
   });
 
-  it('ajoute la commande palette data FFF', () => {
+  it('ajoute les commandes palette sync', () => {
     const cmds = resolveAdminCommandItems();
-    expect(cmds.some((c) => c.section === 'donnees')).toBe(true);
+    expect(cmds.some((c) => c.section === 'classements')).toBe(true);
+    expect(cmds.some((c) => c.section === 'effectifs')).toBe(true);
   });
 });
 

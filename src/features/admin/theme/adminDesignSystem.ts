@@ -163,7 +163,7 @@ export const adminChrome = {
   dockRailHeight: 54,
   tabBarIcon: 21,
   contentMax: 1200,
-  brandMark: 'PRODAY CONTROL',
+  brandMark: 'COCKPIT TOTAL',
 } as const;
 
 export const adminLayout = {

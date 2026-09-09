@@ -2,8 +2,12 @@ import './firebaseAdmin';
 import * as functions from 'firebase-functions';
 import { admin } from './firebaseAdmin';
 import { processScheduledEventReminders } from './eventReminders';
-import { processFffClubRosterDailySync } from './fffClubRosterSync';
+import {
+  processFffClubRosterDailySync,
+  processFffClubRosterForClub,
+} from './fffClubRosterSync';
 import { processFffStandingsDailySync } from './fffStandingsSync';
+import { adjustLeagueStandingInFirestore } from './adminStandingsOverride';
 import {
   processPublicClubDirectorySync,
   searchPublicClubsInFirestore,
@@ -296,6 +300,16 @@ export const syncFffClubRostersNow = functions.https.onCall(async (_data, contex
   return result;
 });
 
+/** Force-sync effectif pour un club (id ProDay ou n° affiliation FFF). */
+export const syncFffClubRosterForClubNow = functions.https.onCall(async (data, context) => {
+  assertCallableAdmin(context);
+  return processFffClubRosterForClub(db, {
+    club_id: typeof data?.club_id === 'string' ? data.club_id : null,
+    fff_affiliation_number:
+      typeof data?.fff_affiliation_number === 'string' ? data.fff_affiliation_number : null,
+  });
+});
+
 /**
  * Classements FFF / nationaux (L1, L2, N1, R1/R2 IDF, districts) → fff_league_standings.
  * Déployer : firebase deploy --only functions:scheduledFffStandingsSync,functions:syncFffStandingsNow
@@ -312,6 +326,28 @@ export const scheduledFffStandingsSync = functions.pubsub
 export const syncFffStandingsNow = functions.https.onCall(async (_data, context) => {
   assertCallableAdmin(context);
   return processFffStandingsDailySync(db);
+});
+
+/** Ajustement manuel d’une ligne de classement (admin override). */
+export const adminAdjustLeagueStanding = functions.https.onCall(async (data, context) => {
+  const adminUid = assertCallableAdmin(context);
+  const rawPatch = data?.patch && typeof data.patch === 'object' ? data.patch : {};
+  return adjustLeagueStandingInFirestore(db, adminUid, {
+    league_id: String(data?.league_id ?? ''),
+    team_id: String(data?.team_id ?? ''),
+    patch: rawPatch as {
+      name?: string;
+      played?: number;
+      won?: number;
+      drawn?: number;
+      lost?: number;
+      goals_for?: number;
+      goals_against?: number;
+      points?: number;
+      rank?: number;
+    },
+    reason: typeof data?.reason === 'string' ? data.reason : null,
+  });
 });
 
 

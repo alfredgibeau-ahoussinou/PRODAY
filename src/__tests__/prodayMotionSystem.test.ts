@@ -64,11 +64,13 @@ describe('Admin motion → ProDayMotionSystem', () => {
   });
 
   it('conserve la direction dock+menu admin', () => {
-    expect(adminNavDirection('accueil', 'clubs')).toBe(1);
-    expect(adminNavDirection('clubs', 'accueil')).toBe(-1);
-    expect(adminNavDirection('ia', 'systeme')).toBe(1);
-    expect(adminNavDirection('systeme', 'menu')).toBe(-1);
-    expect(ADMIN_MOTION_SECTION_ORDER).toContain('commercial');
+    expect(adminNavDirection('tour', 'clubs')).toBe(1);
+    expect(adminNavDirection('clubs', 'tour')).toBe(-1);
+    expect(adminNavDirection('identite', 'classements')).toBe(1);
+    expect(adminNavDirection('classements', 'menu')).toBe(-1);
+    expect(ADMIN_MOTION_SECTION_ORDER).toContain('tour');
+    expect(ADMIN_MOTION_SECTION_ORDER).toContain('classements');
+    expect(ADMIN_MOTION_SECTION_ORDER).not.toContain('commercial');
   });
 });
 

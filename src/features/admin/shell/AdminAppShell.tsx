@@ -48,7 +48,7 @@ function AdminShellInner({
   const t = ADMIN_TOKENS;
   const { recordNav, navDirection } = useAdminMotion();
 
-  const [section, setSection] = useState<AdminNavSectionId>('accueil');
+  const [section, setSection] = useState<AdminNavSectionId>('tour');
   const [focusId, setFocusId] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
@@ -58,7 +58,7 @@ function AdminShellInner({
 
   const navigate = useCallback(
     (next: AdminNavSectionId, nextFocus?: string) => {
-      const target = next === 'menu' && wide ? 'accueil' : next;
+      const target = next === 'menu' && wide ? 'tour' : next;
       const dir = recordNav(sectionRef.current, target);
       setDirection(dir);
       setSection(target);
@@ -116,7 +116,7 @@ function AdminShellInner({
                 actionCount={data.workQueue.length}
                 topInset={insets.top}
                 onOpenCommand={openCommand}
-                onOpenHealth={() => navigate('plateforme')}
+                onOpenHealth={() => navigate('tour')}
               />
             ) : null}
 
@@ -139,7 +139,7 @@ function AdminShellInner({
                 />
                 <View style={styles.dockRail}>
                   {ADMIN_PRIMARY_NAV_IDS.map((id) => {
-                    const item = findAdminNavItem(id === 'menu' ? 'accueil' : id);
+                    const item = findAdminNavItem(id === 'menu' ? 'tour' : id);
                     const active =
                       id === 'menu'
                         ? section === 'menu' || ADMIN_MENU_DEST_IDS.includes(section)
@@ -184,7 +184,7 @@ export const AdminAppShell: React.FC<AdminAppShellProps> = ({
         <StatusBar style="light" />
         <AdminPaneSkeleton rows={4} />
         <AdminText variant="caption" color={t.muted} style={styles.loaderHint}>
-          Chargement du Control Center…
+          Chargement du Cockpit Total…
         </AdminText>
       </SafeAreaView>
     );

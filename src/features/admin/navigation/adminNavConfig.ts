@@ -1,30 +1,19 @@
 import type { IconName } from '../../../components/ui/iconNames';
 
 /**
- * Navigation Admin Control Center — domaines opérationnels.
- * Desktop : sidebar par groupes · Mobile : dock + Menu.
+ * Cockpit Total — navigation unique du Control Center fondateur.
+ * Sections opérationnelles réelles uniquement (pas de silos marketing).
  */
 
-export type AdminNavGroupId =
-  | 'command'
-  | 'people'
-  | 'growth'
-  | 'ops'
-  | 'system';
+export type AdminNavGroupId = 'tower' | 'ops' | 'people';
 
 export type AdminNavSectionId =
-  | 'accueil'
-  | 'plateforme'
-  | 'utilisateurs'
+  | 'tour'
   | 'clubs'
-  | 'commercial'
-  | 'finances'
-  | 'produit'
-  | 'ia'
-  | 'support'
-  | 'securite'
-  | 'systeme'
-  | 'donnees'
+  | 'identite'
+  | 'effectifs'
+  | 'classements'
+  | 'utilisateurs'
   | 'menu';
 
 export type AdminNavItem = {
@@ -42,122 +31,74 @@ export type AdminNavGroup = {
 };
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
-  { id: 'command', label: 'Commande' },
-  { id: 'people', label: 'Écosystème' },
-  { id: 'growth', label: 'Commercial' },
-  { id: 'ops', label: 'Opérations' },
-  { id: 'system', label: 'Système' },
+  { id: 'tower', label: 'Tour de contrôle' },
+  { id: 'ops', label: 'Données live' },
+  { id: 'people', label: 'Identité' },
 ];
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   {
-    id: 'accueil',
-    label: 'Accueil',
-    shortLabel: 'Accueil',
+    id: 'tour',
+    label: 'Cockpit',
+    shortLabel: 'Tour',
     icon: 'home',
-    group: 'command',
-    hint: 'Que se passe-t-il maintenant',
-  },
-  {
-    id: 'plateforme',
-    label: 'Plateforme',
-    shortLabel: 'Plateforme',
-    icon: 'stats-chart',
-    group: 'command',
-    hint: 'Santé & activité globale',
-  },
-  {
-    id: 'utilisateurs',
-    label: 'Utilisateurs',
-    shortLabel: 'Users',
-    icon: 'people',
-    group: 'people',
+    group: 'tower',
+    hint: 'Vue d’ensemble · files · sync',
   },
   {
     id: 'clubs',
-    label: 'Clubs',
+    label: 'Clubs & Visual',
     shortLabel: 'Clubs',
     icon: 'business',
-    group: 'people',
+    group: 'tower',
+    hint: 'CRUD clubs · logos · données publiques',
   },
   {
-    id: 'commercial',
-    label: 'Commercial',
-    shortLabel: 'Devis',
-    icon: 'document',
-    group: 'growth',
-    hint: 'Prospects, devis, CRM',
-  },
-  {
-    id: 'finances',
-    label: 'Finances',
-    shortLabel: 'Finance',
-    icon: 'bag',
-    group: 'growth',
-  },
-  {
-    id: 'produit',
-    label: 'Produit',
-    shortLabel: 'Produit',
-    icon: 'tune',
-    group: 'ops',
-  },
-  {
-    id: 'ia',
-    label: 'Admin AI',
-    shortLabel: 'IA',
-    icon: 'star-four-points',
-    group: 'ops',
-  },
-  {
-    id: 'support',
-    label: 'Support',
-    shortLabel: 'Support',
-    icon: 'chat',
-    group: 'ops',
-  },
-  {
-    id: 'securite',
-    label: 'Sécurité',
-    shortLabel: 'Sécu.',
+    id: 'identite',
+    label: 'Identity & Claims',
+    shortLabel: 'Claims',
     icon: 'shield',
-    group: 'system',
+    group: 'people',
+    hint: 'Claims FFF · adhésions · docs ID',
   },
   {
-    id: 'donnees',
-    label: 'Data & classements',
-    shortLabel: 'Data',
+    id: 'effectifs',
+    label: 'Roster & Data',
+    shortLabel: 'Rosters',
+    icon: 'people',
+    group: 'ops',
+    hint: 'Effectifs FootClubs · force sync',
+  },
+  {
+    id: 'classements',
+    label: 'Standings Override',
+    shortLabel: 'Class.',
     icon: 'stats-chart',
-    group: 'system',
-    hint: 'Sync FFF · standings · rosters · claims',
+    group: 'ops',
+    hint: 'Monitor · sync · ajustement manuel',
   },
   {
-    id: 'systeme',
-    label: 'Système',
-    shortLabel: 'Système',
-    icon: 'settings',
-    group: 'system',
+    id: 'utilisateurs',
+    label: 'Users & Roles',
+    shortLabel: 'Users',
+    icon: 'person',
+    group: 'people',
+    hint: 'Comptes · rôles · permissions',
   },
 ];
 
 /** Dock mobile (5 max). */
 export const ADMIN_PRIMARY_NAV_IDS: AdminNavSectionId[] = [
-  'accueil',
-  'commercial',
+  'tour',
   'clubs',
+  'identite',
+  'utilisateurs',
   'menu',
-  'ia',
 ];
 
 export const ADMIN_MENU_DEST_IDS: AdminNavSectionId[] = [
-  'plateforme',
-  'utilisateurs',
-  'finances',
-  'produit',
-  'support',
-  'securite',
-  'donnees',
-  'systeme',
+  'effectifs',
+  'classements',
 ];
 
 export type AdminNavTarget = {
@@ -180,35 +121,43 @@ export function adminNavItemsInGroup(group: AdminNavGroupId): AdminNavItem[] {
   return ADMIN_NAV_ITEMS.filter((n) => n.group === group);
 }
 
-/** Anciens ids FOC / HQ → nouvelle navigation. */
+/** Anciens ids Control Center / FOC → Cockpit Total. */
 const LEGACY_MAP: Record<string, AdminNavTarget> = {
-  dashboard: { section: 'accueil' },
-  accueil: { section: 'accueil' },
-  ia: { section: 'ia' },
+  dashboard: { section: 'tour' },
+  accueil: { section: 'tour' },
+  tour: { section: 'tour' },
+  cockpit: { section: 'tour' },
+  ia: { section: 'tour' },
   users: { section: 'utilisateurs' },
   utilisateurs: { section: 'utilisateurs' },
   personnes: { section: 'utilisateurs' },
   adherents: { section: 'utilisateurs' },
   clubs: { section: 'clubs' },
-  activite: { section: 'plateforme' },
-  business: { section: 'finances' },
-  finances: { section: 'finances' },
-  abonnements: { section: 'finances' },
-  commercial: { section: 'commercial' },
-  devis: { section: 'commercial' },
-  contenus: { section: 'support' },
-  securite: { section: 'securite' },
-  parametres: { section: 'systeme' },
-  systeme: { section: 'systeme' },
-  plateforme: { section: 'plateforme' },
-  produit: { section: 'produit' },
-  support: { section: 'support' },
-  donnees: { section: 'donnees' },
-  data: { section: 'donnees' },
-  standings: { section: 'donnees' },
-  classements: { section: 'donnees' },
-  pilotage: { section: 'accueil' },
-  decisions: { section: 'support' },
+  visual: { section: 'clubs' },
+  activite: { section: 'tour' },
+  business: { section: 'tour' },
+  finances: { section: 'tour' },
+  abonnements: { section: 'utilisateurs' },
+  commercial: { section: 'tour' },
+  devis: { section: 'tour' },
+  contenus: { section: 'identite' },
+  securite: { section: 'identite' },
+  parametres: { section: 'tour' },
+  systeme: { section: 'tour' },
+  plateforme: { section: 'tour' },
+  produit: { section: 'tour' },
+  support: { section: 'identite' },
+  donnees: { section: 'effectifs' },
+  data: { section: 'effectifs' },
+  effectifs: { section: 'effectifs' },
+  rosters: { section: 'effectifs' },
+  standings: { section: 'classements' },
+  classements: { section: 'classements' },
+  claims: { section: 'identite' },
+  identite: { section: 'identite' },
+  identity: { section: 'identite' },
+  pilotage: { section: 'tour' },
+  decisions: { section: 'identite' },
   gestion: { section: 'utilisateurs' },
 };
 
@@ -216,7 +165,7 @@ export function resolveAdminNav(id: string): AdminNavTarget {
   if (isAdminNavSectionId(id) && id !== 'menu') {
     return { section: id };
   }
-  return LEGACY_MAP[id] ?? { section: 'accueil' };
+  return LEGACY_MAP[id] ?? { section: 'tour' };
 }
 
 export function resolveAdminCommandItems(): {
@@ -234,28 +183,28 @@ export function resolveAdminCommandItems(): {
   return [
     ...base,
     {
-      id: 'cmd-quote',
-      label: 'Nouveau devis / demandes',
-      section: 'commercial',
-      keywords: ['devis', 'quote', 'prospect', 'crm'],
+      id: 'cmd-claims',
+      label: 'File claims & adhésions',
+      section: 'identite',
+      keywords: ['claim', 'adhésion', 'verify', 'fff', 'pending'],
     },
     {
-      id: 'cmd-health',
-      label: 'Santé ProDay',
-      section: 'plateforme',
-      keywords: ['health', 'santé', 'erreurs', 'api'],
+      id: 'cmd-standings',
+      label: 'Force sync classements',
+      section: 'classements',
+      keywords: ['fff', 'standings', 'classements', 'r1', 'r2', 'sync'],
     },
     {
-      id: 'cmd-data',
-      label: 'Data & classements FFF',
-      section: 'donnees',
-      keywords: ['fff', 'standings', 'classements', 'rosters', 'sync', 'claims'],
+      id: 'cmd-rosters',
+      label: 'Force sync effectifs',
+      section: 'effectifs',
+      keywords: ['roster', 'effectif', 'footclubs', 'sync'],
     },
     {
       id: 'cmd-actions',
       label: 'Actions requises',
-      section: 'accueil',
-      keywords: ['todo', 'à faire', 'urgent', 'file'],
+      section: 'tour',
+      keywords: ['todo', 'à faire', 'urgent', 'file', 'queue'],
     },
   ];
 }

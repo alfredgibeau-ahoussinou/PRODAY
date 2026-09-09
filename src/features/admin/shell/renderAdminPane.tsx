@@ -1,17 +1,11 @@
 import React from 'react';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
-import { AdminDashboardPane } from '../panes/AdminDashboardPane';
-import { AdminPlatformPane } from '../panes/AdminPlatformPane';
+import { AdminTowerPane } from '../panes/AdminTowerPane';
 import { AdminUsersPane } from '../panes/AdminUsersPane';
 import { AdminClubsPane } from '../panes/AdminClubsPane';
-import { AdminCommercialPane } from '../panes/AdminCommercialPane';
-import { AdminFinancePane } from '../panes/AdminFinancePane';
-import { AdminProductPane } from '../panes/AdminProductPane';
-import { AdminAiPane } from '../panes/AdminAiPane';
-import { AdminSupportPane } from '../panes/AdminSupportPane';
-import { AdminSecurityPane } from '../panes/AdminSecurityPane';
-import { AdminSystemPane } from '../panes/AdminSystemPane';
-import { AdminDataPane } from '../panes/AdminDataPane';
+import { AdminIdentityQueuePane } from '../panes/AdminIdentityQueuePane';
+import { AdminRosterDataPane } from '../panes/AdminRosterDataPane';
+import { AdminStandingsPane } from '../panes/AdminStandingsPane';
 import { AdminMenuPane } from '../panes/AdminMenuPane';
 
 type Props = {
@@ -32,12 +26,18 @@ export function renderAdminPane({
   onOpenCommand,
 }: Props) {
   switch (section) {
-    case 'accueil':
+    case 'tour':
       return (
-        <AdminDashboardPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
+        <AdminTowerPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
       );
-    case 'plateforme':
-      return <AdminPlatformPane />;
+    case 'clubs':
+      return <AdminClubsPane focusId={focusId} />;
+    case 'identite':
+      return <AdminIdentityQueuePane focusId={focusId} />;
+    case 'effectifs':
+      return <AdminRosterDataPane />;
+    case 'classements':
+      return <AdminStandingsPane />;
     case 'utilisateurs':
       return (
         <AdminUsersPane
@@ -46,31 +46,13 @@ export function renderAdminPane({
           onPreviewUserApp={onPreviewUserApp}
         />
       );
-    case 'clubs':
-      return <AdminClubsPane focusId={focusId} />;
-    case 'commercial':
-      return <AdminCommercialPane focusId={focusId} />;
-    case 'finances':
-      return <AdminFinancePane />;
-    case 'produit':
-      return <AdminProductPane />;
-    case 'ia':
-      return <AdminAiPane onNavigate={onNavigate} focusId={focusId} />;
-    case 'support':
-      return <AdminSupportPane onNavigate={onNavigate} />;
-    case 'securite':
-      return <AdminSecurityPane focusId={focusId} />;
-    case 'donnees':
-      return <AdminDataPane />;
-    case 'systeme':
-      return <AdminSystemPane onPreviewUserApp={onPreviewUserApp} focusId={focusId} />;
     case 'menu':
       return (
         <AdminMenuPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
       );
     default:
       return (
-        <AdminDashboardPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
+        <AdminTowerPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
       );
   }
 }

@@ -1,5 +1,5 @@
 import { resolveAdminWorkItemNavigation, resolveAdminSearchHitNavigation } from '../utils/adminWorkNavigation';
-import type { AdminWorkItem } from '../utils/adminInsights';
+import type { AdminWorkItem, GlobalSearchResult } from '../utils/adminInsights';
 
 function navItem(
   kind: AdminWorkItem['kind'],
@@ -7,42 +7,52 @@ function navItem(
   entityId?: string,
 ): AdminWorkItem {
   return {
-    id: `${kind}-1`,
+    id: `t-${kind}`,
     kind,
-    priority: 'medium',
-    title: 'Test',
-    subtitle: 'Sub',
+    priority: 'high',
+    title: 't',
+    subtitle: 's',
     targetSection,
     entityId,
   };
 }
 
-describe('adminWorkNavigation', () => {
-  it('conserve la section cible de la file', () => {
+describe('resolveAdminWorkItemNavigation', () => {
+  it('route vers les sections Cockpit', () => {
     expect(resolveAdminWorkItemNavigation(navItem('verification', 'utilisateurs', 'u1'))).toEqual({
       section: 'utilisateurs',
       focusId: 'u1',
     });
-    expect(resolveAdminWorkItemNavigation(navItem('club_quote', 'commercial', 'q1'))).toEqual({
-      section: 'commercial',
+    expect(resolveAdminWorkItemNavigation(navItem('club_quote', 'clubs', 'q1'))).toEqual({
+      section: 'clubs',
       focusId: 'q1',
     });
-    expect(resolveAdminWorkItemNavigation(navItem('payment', 'finances'))).toEqual({
-      section: 'finances',
+    expect(resolveAdminWorkItemNavigation(navItem('membership', 'identite', 'm1'))).toEqual({
+      section: 'identite',
+      focusId: 'm1',
+    });
+    expect(resolveAdminWorkItemNavigation(navItem('payment', 'tour'))).toEqual({
+      section: 'tour',
       focusId: undefined,
     });
   });
+});
 
-  it('mappe un hit recherche club vers Clubs', () => {
-    expect(
-      resolveAdminSearchHitNavigation({
-        id: 'c-1',
-        kind: 'club',
-        title: 'AS Test',
-        subtitle: 'Paris',
-        targetSection: 'clubs',
-        entityId: 'c-1',
-      }),
-    ).toEqual({ section: 'clubs', focusId: 'c-1', query: undefined });
+describe('resolveAdminSearchHitNavigation', () => {
+  it('préserve focusId', () => {
+    const hit: GlobalSearchResult = {
+      id: 'u-1',
+      kind: 'user',
+      title: 'A',
+      subtitle: 'b',
+      targetSection: 'utilisateurs',
+      entityId: 'uid-1',
+      focusQuery: 'A',
+    };
+    expect(resolveAdminSearchHitNavigation(hit)).toEqual({
+      section: 'utilisateurs',
+      focusId: 'uid-1',
+      query: 'A',
+    });
   });
 });

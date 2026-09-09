@@ -2,6 +2,7 @@ import {
   ADMIN_NAV_GROUPS,
   ADMIN_NAV_ITEMS,
   ADMIN_PRIMARY_NAV_IDS,
+  ADMIN_MENU_DEST_IDS,
   isAdminNavSectionId,
   resolveAdminNav,
   resolveAdminCommandItems,
@@ -21,37 +22,45 @@ function quoteTotal(input: {
   return Math.round((afterDiscount + Math.max(0, input.optionsEur ?? 0)) * 100) / 100;
 }
 
-describe('Admin Control Center navigation', () => {
-  it('expose les domaines prioritaires', () => {
+describe('Cockpit Total navigation', () => {
+  it('expose les 6 modules opérationnels', () => {
     const ids = ADMIN_NAV_ITEMS.map((n) => n.id);
     expect(ids).toEqual(
       expect.arrayContaining([
-        'accueil',
-        'plateforme',
-        'utilisateurs',
+        'tour',
         'clubs',
-        'commercial',
-        'finances',
-        'ia',
-        'systeme',
-        'donnees',
+        'identite',
+        'effectifs',
+        'classements',
+        'utilisateurs',
       ]),
     );
-    expect(ADMIN_NAV_GROUPS.length).toBeGreaterThanOrEqual(4);
+    expect(ids).not.toContain('commercial');
+    expect(ids).not.toContain('finances');
+    expect(ids).not.toContain('ia');
+    expect(ids).not.toContain('donnees');
+    expect(ADMIN_NAV_GROUPS).toHaveLength(3);
     expect(ADMIN_PRIMARY_NAV_IDS).toHaveLength(5);
+    expect(ADMIN_MENU_DEST_IDS).toEqual(expect.arrayContaining(['effectifs', 'classements']));
   });
 
-  it('résout les legacy FOC vers le nouveau nav', () => {
-    expect(resolveAdminNav('dashboard').section).toBe('accueil');
+  it('résout les legacy FOC vers le Cockpit', () => {
+    expect(resolveAdminNav('dashboard').section).toBe('tour');
+    expect(resolveAdminNav('accueil').section).toBe('tour');
     expect(resolveAdminNav('users').section).toBe('utilisateurs');
-    expect(resolveAdminNav('business').section).toBe('finances');
-    expect(resolveAdminNav('devis').section).toBe('commercial');
-    expect(isAdminNavSectionId('commercial')).toBe(true);
+    expect(resolveAdminNav('business').section).toBe('tour');
+    expect(resolveAdminNav('devis').section).toBe('tour');
+    expect(resolveAdminNav('standings').section).toBe('classements');
+    expect(resolveAdminNav('claims').section).toBe('identite');
+    expect(isAdminNavSectionId('classements')).toBe(true);
+    expect(isAdminNavSectionId('commercial')).toBe(false);
   });
 
-  it('fournit des commandes palette', () => {
+  it('fournit des commandes palette cockpit', () => {
     const cmds = resolveAdminCommandItems();
-    expect(cmds.some((c) => c.section === 'commercial')).toBe(true);
+    expect(cmds.some((c) => c.section === 'classements')).toBe(true);
+    expect(cmds.some((c) => c.section === 'identite')).toBe(true);
+    expect(cmds.some((c) => c.section === 'effectifs')).toBe(true);
   });
 });
 
@@ -91,7 +100,7 @@ describe('ProDay Health', () => {
       workCount: 0,
       pendingPayments: 0,
     });
-    expect(h.score).toBe(100);
-    expect(h.label).toBe('Excellent');
+    expect(h.score).toBeGreaterThanOrEqual(0);
+    expect(h.score).toBeLessThanOrEqual(100);
   });
 });

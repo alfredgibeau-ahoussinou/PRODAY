@@ -42,8 +42,6 @@ import { useAuth } from '../../../context/AuthContext';
 import { useProductLine } from '../../../context/ProductLineContext';
 import { adminAuditService } from '../../../services/adminAudit.service';
 import type { User, VerificationStatus } from '../../../models/User';
-import { AdminClubCommercialBillingCard } from '../ui/AdminClubCommercialBillingCard';
-import { clubLivePackFromOfferHint } from '../../../content/clubLivePacks';
 
 const ROLE_FILTERS: { id: 'all' | AdminRoleOption; label: string }[] = [
   { id: 'all', label: 'Tous' },
@@ -719,18 +717,6 @@ function UserEditor({
   );
   const isPresident = isAdminPresidentUser(user, data.clubs);
 
-  const linkedQuote = useMemo(() => {
-    if (!linkedClub) return null;
-    return (
-      data.clubQuoteRequests.find(
-        (q) =>
-          (q.requester_uid === user.uid ||
-            q.club_name.toLowerCase() === linkedClub.name.toLowerCase()) &&
-          q.quoted_total_eur != null,
-      ) ?? null
-    );
-  }, [data.clubQuoteRequests, linkedClub, user.uid]);
-
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
     try {
@@ -985,31 +971,6 @@ function UserEditor({
             />
           </View>
         </AdminCard>
-
-        {linkedClub ? (
-          <AdminClubCommercialBillingCard
-            club={linkedClub}
-            busy={busy}
-            setBusy={setBusy}
-            actorUid={actorUid}
-            actorEmail={actorEmail}
-            onRefresh={onRefresh}
-            suggestedAmountEur={linkedQuote?.quoted_total_eur}
-            suggestedOfferId={
-              linkedQuote
-                ? clubLivePackFromOfferHint(linkedQuote.offer_hint)
-                : null
-            }
-          />
-        ) : user.role === 'club' || roleOption === 'president' ? (
-          <AdminCard>
-            <AdminText variant="h2">Facturation live / Veo</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              Aucun document clubs lié à ce compte. Ouvrez le pôle Clubs pour créer / rattacher
-              le club, puis fixer le montant et envoyer la facture Stripe.
-            </AdminText>
-          </AdminCard>
-        ) : null}
 
         <AdminCard>
           <AdminText variant="h2">Zone danger</AdminText>

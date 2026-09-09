@@ -32,7 +32,7 @@ export function AdminTopBar({
   onOpenHealth,
 }: Props) {
   const t = ADMIN_TOKENS;
-  const item = findAdminNavItem(section === 'menu' ? 'accueil' : section);
+  const item = findAdminNavItem(section === 'menu' ? 'tour' : section);
 
   return (
     <View

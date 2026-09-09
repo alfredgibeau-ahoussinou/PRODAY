@@ -10,20 +10,15 @@ import {
  */
 export const adminMotion = prodayMotion;
 
-/** Ordre de navigation pour forward/back (dock + menu). */
+/** Ordre de navigation pour forward/back (dock + menu) — Cockpit Total. */
 export const ADMIN_MOTION_SECTION_ORDER: AdminNavSectionId[] = [
-  'accueil',
-  'commercial',
+  'tour',
   'clubs',
-  'menu',
-  'ia',
-  'plateforme',
+  'identite',
   'utilisateurs',
-  'finances',
-  'produit',
-  'support',
-  'securite',
-  'systeme',
+  'menu',
+  'effectifs',
+  'classements',
 ];
 
 export type AdminNavDirection = NavDirection;

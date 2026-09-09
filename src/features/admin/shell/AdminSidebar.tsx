@@ -53,7 +53,7 @@ export function AdminSidebar({
           <View style={{ flex: 1, gap: 2 }}>
             <AdminBrandMark compact />
             <AdminText variant="caption" muted numberOfLines={1}>
-              Espace fondateur
+              Cockpit Total
             </AdminText>
           </View>
         ) : null}
@@ -118,7 +118,7 @@ export function AdminSidebar({
                         {item.label}
                       </AdminText>
                     ) : null}
-                    {!collapsed && item.id === 'accueil' && actionCount > 0 ? (
+                    {!collapsed && item.id === 'tour' && actionCount > 0 ? (
                       <View style={styles.badge}>
                         <AdminText
                           variant="label"

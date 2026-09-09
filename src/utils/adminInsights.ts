@@ -97,7 +97,7 @@ export function buildAdminWorkQueue(input: {
       title: `Modérer publication · ${reel.author_name}`,
       subtitle: reel.caption?.slice(0, 80) || 'Sans légende',
       meta: reel.theme,
-      targetSection: 'support',
+      targetSection: 'tour',
       createdAt: reel.created_at,
     });
   }
@@ -110,7 +110,7 @@ export function buildAdminWorkQueue(input: {
       title: 'Signalement publication',
       subtitle: report.reason,
       meta: report.bookmark_key.slice(0, 24),
-      targetSection: 'securite',
+      targetSection: 'identite',
       entityId: report.bookmark_key,
       createdAt: report.created_at,
     });
@@ -124,7 +124,7 @@ export function buildAdminWorkQueue(input: {
       title: `Paiement en attente · ${pay.label}`,
       subtitle: `${pay.amount_eur} €`,
       meta: pay.club_id,
-      targetSection: 'finances',
+      targetSection: 'tour',
       createdAt: pay.created_at,
     });
   }
@@ -149,7 +149,7 @@ export function buildAdminWorkQueue(input: {
       title: `Devis partenaire · ${quote.company_name}`,
       subtitle: `${quote.contact_name} · ${quote.contact_email}`,
       meta: quote.package_tier,
-      targetSection: 'commercial',
+      targetSection: 'tour',
       entityId: quote.id,
       createdAt: quote.created_at,
     });
@@ -163,7 +163,7 @@ export function buildAdminWorkQueue(input: {
       title: `Devis club · ${quote.club_name}`,
       subtitle: `${quote.owner_name} · ${quote.email}`,
       meta: quote.offer_hint,
-      targetSection: 'commercial',
+      targetSection: 'clubs',
       entityId: quote.id,
       createdAt: quote.created_at,
     });
@@ -178,7 +178,7 @@ export function buildAdminWorkQueue(input: {
       title: `Adhésion · ${mem.player_name}`,
       subtitle: clubName,
       meta: mem.license_number,
-      targetSection: 'clubs',
+      targetSection: 'identite',
       entityId: mem.id,
       createdAt: mem.requested_at ?? mem.created_at,
     });
@@ -192,7 +192,7 @@ export function buildAdminWorkQueue(input: {
       title: `Demande abo · ${req.display_name}`,
       subtitle: `${req.plan_id} · ${req.billing === 'yearly' ? 'annuel' : 'mensuel'}`,
       meta: req.email,
-      targetSection: 'finances',
+      targetSection: 'utilisateurs',
       entityId: req.user_uid,
       createdAt: req.created_at,
     });
@@ -347,7 +347,7 @@ export function globalAdminSearch(
         kind: 'event',
         title: e.title,
         subtitle: e.city,
-        targetSection: 'plateforme',
+        targetSection: 'tour',
         entityId: e.id,
         focusQuery: e.title,
       });
