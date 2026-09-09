@@ -199,12 +199,6 @@ export function AdminSponsorQuoteDetail({
     }
   };
 
-  const toggleDoc = (id: string) => {
-    setSelectedDocs((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-  };
-
   const runSendQuote = () => {
     confirmAdminAction(
       quote.status === 'sent' ? 'Renvoyer le devis ?' : 'Envoyer le devis ?',
