@@ -94,8 +94,8 @@ describe('Espace Admin navigation', () => {
 
   it('utilise un thème control room sombre premium', () => {
     expect(ADMIN_TOKENS.bg.toLowerCase()).toMatch(/^#0/);
-    expect(ADMIN_TOKENS.foreground).toBe('#F4F6F8');
-    expect(ADMIN_TOKENS.signal).toBe('#E8B84A');
+    expect(ADMIN_TOKENS.foreground).toBe('#EEF1F5');
+    expect(ADMIN_TOKENS.signal).toBe('#D4AF5F');
   });
 });
 

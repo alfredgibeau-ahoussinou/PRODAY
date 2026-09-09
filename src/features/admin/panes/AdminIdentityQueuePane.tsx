@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import {
+  AdminAvatarMark,
   AdminBadge,
   AdminButton,
   AdminCard,
   AdminEmptyState,
+  AdminEntityRow,
   AdminLoading,
   AdminPaneHeader,
   AdminText,
@@ -171,35 +173,39 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
             <AdminBadge label={String(claims.length)} tone={claims.length ? 'warn' : 'success'} />
           </View>
           {claims.length === 0 ? (
-            <AdminEmptyState title="Aucun claim pending" body="File claimed_pending vide." />
+            <AdminEmptyState
+              title="Aucun claim pending"
+              body="Les revendications clubs publics FFF apparaîtront ici."
+              icon="shield"
+            />
           ) : (
             claims.map((c) => (
-              <View key={c.fff_affiliation_number} style={[styles.row, { borderColor: t.hairline }]}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <AdminText variant="h3">{c.club_name || c.fff_affiliation_number}</AdminText>
-                  <AdminText variant="caption" color={t.muted}>
-                    FFF {c.fff_affiliation_number} · club {c.proday_club_id ?? '—'}
-                  </AdminText>
-                  {c.mandate_document_name ? (
-                    <AdminText variant="caption" color={t.signal}>
-                      Doc · {c.mandate_document_name}
-                    </AdminText>
-                  ) : null}
-                </View>
-                <View style={styles.actions}>
-                  <AdminButton
-                    label="OK"
-                    disabled={!!busy}
-                    onPress={() => resolveClaim(c, 'approve')}
-                  />
-                  <AdminButton
-                    label="Refus"
-                    variant="danger"
-                    disabled={!!busy}
-                    onPress={() => resolveClaim(c, 'reject')}
-                  />
-                </View>
-              </View>
+              <AdminEntityRow
+                key={c.fff_affiliation_number}
+                title={c.club_name || c.fff_affiliation_number}
+                subtitle={`FFF ${c.fff_affiliation_number} · club ${c.proday_club_id ?? '—'}`}
+                meta={c.mandate_document_name ? `Doc · ${c.mandate_document_name}` : undefined}
+                badge="CLAIM"
+                badgeTone="warn"
+                leading={<AdminAvatarMark label={c.club_name || 'C'} tone="warn" />}
+                actions={
+                  <>
+                    <AdminButton
+                      label="OK"
+                      compact
+                      disabled={!!busy}
+                      onPress={() => resolveClaim(c, 'approve')}
+                    />
+                    <AdminButton
+                      label="Refus"
+                      variant="danger"
+                      compact
+                      disabled={!!busy}
+                      onPress={() => resolveClaim(c, 'reject')}
+                    />
+                  </>
+                }
+              />
             ))
           )}
         </AdminCard>
@@ -213,30 +219,38 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
             />
           </View>
           {data.pendingMemberships.length === 0 ? (
-            <AdminEmptyState title="Aucune adhésion en attente" />
+            <AdminEmptyState
+              title="Aucune adhésion en attente"
+              body="File claire pour les demandes membres."
+              icon="handshake"
+            />
           ) : (
             data.pendingMemberships.map((m) => (
-              <View key={m.id} style={[styles.row, { borderColor: t.hairline }]}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <AdminText variant="h3">{m.player_name}</AdminText>
-                  <AdminText variant="caption" color={t.muted}>
-                    Club {m.club_id} · {m.license_number || 'sans licence'}
-                  </AdminText>
-                </View>
-                <View style={styles.actions}>
-                  <AdminButton
-                    label="OK"
-                    disabled={!!busy}
-                    onPress={() => resolveMembership(m.id, true)}
-                  />
-                  <AdminButton
-                    label="Refus"
-                    variant="danger"
-                    disabled={!!busy}
-                    onPress={() => resolveMembership(m.id, false)}
-                  />
-                </View>
-              </View>
+              <AdminEntityRow
+                key={m.id}
+                title={m.player_name}
+                subtitle={`Club ${m.club_id} · ${m.license_number || 'sans licence'}`}
+                badge="PENDING"
+                badgeTone="warn"
+                leading={<AdminAvatarMark label={m.player_name} tone="warn" />}
+                actions={
+                  <>
+                    <AdminButton
+                      label="OK"
+                      compact
+                      disabled={!!busy}
+                      onPress={() => resolveMembership(m.id, true)}
+                    />
+                    <AdminButton
+                      label="Refus"
+                      variant="danger"
+                      compact
+                      disabled={!!busy}
+                      onPress={() => resolveMembership(m.id, false)}
+                    />
+                  </>
+                }
+              />
             ))
           )}
         </AdminCard>
@@ -250,19 +264,22 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
             />
           </View>
           {pendingUsers.length === 0 ? (
-            <AdminEmptyState title="Aucune vérif en attente" />
+            <AdminEmptyState
+              title="Aucune vérif en attente"
+              body="Les profils à valider (documents ID) s’afficheront ici."
+              icon="checkmark-circle"
+            />
           ) : (
             pendingUsers.slice(0, 40).map((u, index) => (
               <AdminListRow key={u.uid} index={index} onPress={() => void openDocs(u)}>
-                <View style={[styles.row, { borderColor: t.hairline }]}>
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <AdminText variant="h3">{u.display_name || u.email || u.uid}</AdminText>
-                    <AdminText variant="caption" color={t.muted}>
-                      {u.role} · {u.verification_status ?? '—'}
-                    </AdminText>
-                  </View>
-                  <AdminBadge label="Docs" tone="info" />
-                </View>
+                <AdminEntityRow
+                  title={u.display_name || u.email || u.uid}
+                  subtitle={`${u.role} · ${u.verification_status ?? '—'}`}
+                  badge="DOCS"
+                  badgeTone="info"
+                  leading={<AdminAvatarMark label={u.display_name || u.email || '?'} tone="info" />}
+                  onPress={() => void openDocs(u)}
+                />
               </AdminListRow>
             ))
           )}

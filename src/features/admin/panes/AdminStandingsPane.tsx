@@ -9,12 +9,15 @@ import {
   View,
 } from 'react-native';
 import {
+  AdminAvatarMark,
   AdminBadge,
   AdminButton,
   AdminCard,
   AdminEmptyState,
+  AdminEntityRow,
   AdminLoading,
   AdminPaneHeader,
+  AdminSearchField,
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
@@ -47,6 +50,7 @@ export function AdminStandingsPane() {
   const [ga, setGa] = useState('');
   const [reason, setReason] = useState('');
   const [lastMsg, setLastMsg] = useState<string | null>(null);
+  const [q, setQ] = useState('');
 
   const load = useCallback(async () => {
     const rows = await adminService.listLeagueStandingsMeta(60);
@@ -182,6 +186,7 @@ export function AdminStandingsPane() {
           <AdminButton label={busy === 'sync' ? '…' : 'Force sync'} disabled={!!busy} onPress={syncAll} />
           <AdminBadge label={`${meta.length} ligues`} tone="info" />
         </View>
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="Ligues, saison, source…" />
         {lastMsg ? (
           <AdminText variant="caption" color={t.faint}>
             {lastMsg}
@@ -190,37 +195,40 @@ export function AdminStandingsPane() {
       </View>
 
       <FlatList
-        data={meta}
+        data={meta.filter((m) => {
+          const query = q.trim().toLowerCase();
+          if (!query) return true;
+          return (
+            m.name.toLowerCase().includes(query) ||
+            m.id.toLowerCase().includes(query) ||
+            (m.season?.toLowerCase().includes(query) ?? false) ||
+            (m.source?.toLowerCase().includes(query) ?? false)
+          );
+        })}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={t.accent} />
         }
         contentContainerStyle={{ padding: adminSpace.lg, gap: 8, paddingBottom: adminLayout.dockClearance }}
         ListEmptyComponent={
-          <AdminEmptyState title="Aucun snapshot" body="Lancez une sync ou attendez le job 04:15." />
+          <AdminEmptyState
+            title="Aucun snapshot"
+            body="Lancez une sync ou attendez le job 04:15."
+            icon="stats-chart"
+            actionLabel="Force sync"
+            onAction={syncAll}
+          />
         }
         renderItem={({ item }) => (
-          <Pressable onPress={() => void openLeague(item)}>
-            <AdminCard>
-              <View style={styles.row}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <AdminText variant="h3">{item.name}</AdminText>
-                  <AdminText variant="caption" color={t.muted}>
-                    {item.id} · {item.season ?? '—'} · {item.source ?? '—'}
-                  </AdminText>
-                  {item.lastSyncAt ? (
-                    <AdminText variant="caption" color={t.faint}>
-                      Sync {item.lastSyncAt}
-                    </AdminText>
-                  ) : null}
-                </View>
-                <AdminBadge
-                  label={`${item.rows}`}
-                  tone={item.source === 'admin_override' ? 'warn' : item.rows > 0 ? 'success' : 'warn'}
-                />
-              </View>
-            </AdminCard>
-          </Pressable>
+          <AdminEntityRow
+            title={item.name}
+            subtitle={`${item.id} · ${item.season ?? '—'} · ${item.source ?? '—'}`}
+            meta={item.lastSyncAt ? `Sync ${item.lastSyncAt}` : undefined}
+            badge={`${item.rows}`}
+            badgeTone={item.source === 'admin_override' ? 'warn' : item.rows > 0 ? 'success' : 'warn'}
+            leading={<AdminAvatarMark label={item.name} tone="info" />}
+            onPress={() => void openLeague(item)}
+          />
         )}
       />
 

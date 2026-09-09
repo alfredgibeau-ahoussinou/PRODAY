@@ -12,6 +12,7 @@ import {
   AdminBadge,
   AdminButton,
   AdminCard,
+  AdminFilterChip,
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
@@ -297,27 +298,15 @@ export function AdminUserDetail({
         style={styles.tabsScroll}
         contentContainerStyle={styles.tabs}
       >
-        {ADMIN_USER_SUBPAGE_LABELS.map((p) => {
-          const active = page === p.id;
-          return (
-            <Pressable
-              key={p.id}
-              onPress={() => setPage(p.id)}
-              testID={`admin-user-tab-${p.id}`}
-              style={[
-                styles.tab,
-                {
-                  backgroundColor: active ? t.accentSoft : t.surfaceMuted,
-                  borderColor: active ? t.signal : t.border,
-                },
-              ]}
-            >
-              <AdminText variant="caption" color={active ? t.signal : t.muted}>
-                {p.label}
-              </AdminText>
-            </Pressable>
-          );
-        })}
+        {ADMIN_USER_SUBPAGE_LABELS.map((p) => (
+          <AdminFilterChip
+            key={p.id}
+            label={p.label}
+            active={page === p.id}
+            onPress={() => setPage(p.id)}
+            testID={`admin-user-tab-${p.id}`}
+          />
+        ))}
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.body}>

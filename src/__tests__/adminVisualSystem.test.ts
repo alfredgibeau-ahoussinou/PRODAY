@@ -26,11 +26,24 @@ describe('Espace Admin visual system', () => {
 
   it('expose un chrome control room sombre premium', () => {
     expect(ADMIN_TOKENS.bg.startsWith('#0')).toBe(true);
-    expect(ADMIN_TOKENS.surface).toBe('#151A24');
+    expect(ADMIN_TOKENS.surface).toBe('#121821');
+    expect(ADMIN_TOKENS.accentHot).toBe('#D4AF5F');
     expect(adminChrome.brandMark).toContain('ADMIN');
     expect(adminChrome.dockRailHeight).toBe(0);
     expect(adminRadius.hero).toBeLessThanOrEqual(16);
     expect(ADMIN_NAV_ITEMS.length).toBeGreaterThanOrEqual(28);
+  });
+
+  it('expose des primitives page unifiées', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const src = require('fs').readFileSync(
+      require('path').join(__dirname, '../features/admin/ui/adminUi.tsx'),
+      'utf8',
+    ) as string;
+    expect(src).toContain('export function AdminEntityRow');
+    expect(src).toContain('export function AdminSearchField');
+    expect(src).toContain('export function AdminEmptyState');
+    expect(src).toContain('export function AdminMetricTile');
   });
 });
 

@@ -1,6 +1,6 @@
 /**
- * Design system — ProDay Espace Admin (control room).
- * Typo densifiée · Inter UI · surfaces sombres premium.
+ * Design system — ProDay Espace Admin (ops desk raffiné).
+ * Typo Inter · surfaces obsidian · champagne discret · densifié.
  */
 
 import type { TextStyle, ViewStyle } from 'react-native';
@@ -106,48 +106,48 @@ export const adminSpace = {
 
 export const adminRadius = {
   xs: 4,
-  sm: 6,
-  md: 10,
-  lg: 12,
-  xl: 14,
-  xxl: 16,
-  hero: 14,
+  sm: 8,
+  md: 12,
+  lg: 14,
+  xl: 16,
+  xxl: 18,
+  hero: 16,
   pill: 999,
 } as const;
 
 export const adminShadow = {
   soft: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.28,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 1,
   } satisfies ViewStyle,
   card: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    elevation: 3,
   } satisfies ViewStyle,
   deep: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 6,
   } satisfies ViewStyle,
   glow: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
     shadowColor: tokens.signal,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    elevation: 2,
   }),
   champagne: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
     shadowColor: tokens.champagne,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.14,
     shadowRadius: 8,
     elevation: 2,
   }),
@@ -211,8 +211,20 @@ export function adminSurfaceHero(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewS
 export function adminSurfaceCard(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
   return {
     backgroundColor: tokens.surface,
-    borderRadius: adminRadius.md,
+    borderRadius: adminRadius.lg,
     borderWidth: 1,
     borderColor: tokens.border,
+  };
+}
+
+export function adminSurfaceRow(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
+  return {
+    backgroundColor: tokens.surface,
+    borderRadius: adminRadius.lg,
+    borderWidth: 1,
+    borderColor: tokens.border,
+    paddingVertical: adminSpace.md,
+    paddingHorizontal: adminSpace.lg,
+    minHeight: adminLayout.listRowMinHeight,
   };
 }

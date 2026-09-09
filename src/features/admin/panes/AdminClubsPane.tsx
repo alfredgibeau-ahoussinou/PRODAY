@@ -11,12 +11,16 @@ import {
 } from 'react-native';
 import { useAdminData } from '../data/AdminDataContext';
 import {
+  AdminAvatarMark,
   AdminBadge,
   AdminButton,
   AdminCard,
   AdminEmptyState,
+  AdminEntityRow,
+  AdminFilterChip,
   AdminLoading,
   AdminPaneHeader,
+  AdminSearchField,
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
@@ -136,15 +140,10 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
           title="Annuaire clubs"
           subtitle={`${data.clubs.length} clubs FR · CRUD · logos · données publiques`}
         />
-        <TextInput
+        <AdminSearchField
           value={q}
           onChangeText={setQ}
           placeholder="Nom, ville, FFF, owner, tag…"
-          placeholderTextColor={t.faint}
-          style={[
-            styles.input,
-            { color: t.foreground, borderColor: t.border, backgroundColor: t.surfaceGlass },
-          ]}
         />
         <View style={styles.chips}>
           {(
@@ -156,21 +155,12 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
               ['new', 'Nouveaux'],
             ] as const
           ).map(([id, label]) => (
-            <Pressable
+            <AdminFilterChip
               key={id}
+              label={label}
+              active={filter === id}
               onPress={() => setFilter(id)}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor: filter === id ? t.signalSoft : t.surfaceRaised,
-                  borderColor: filter === id ? t.borderStrong : t.border,
-                },
-              ]}
-            >
-              <AdminText variant="caption" color={filter === id ? t.accentHot : t.muted}>
-                {label}
-              </AdminText>
-            </Pressable>
+            />
           ))}
         </View>
         <View style={styles.bulkBar}>
@@ -198,43 +188,40 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: adminSpace.lg, gap: 8, paddingBottom: adminLayout.dockClearance }}
-        ListEmptyComponent={<AdminEmptyState title="Aucun club" />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucun club"
+            body="Ajustez les filtres ou créez une fiche club."
+            icon="business"
+            actionLabel="Créer un club"
+            onAction={() => setCreateOpen(true)}
+          />
+        }
         renderItem={({ item, index }) => (
           <AdminListRow
             index={index}
             onPress={() => setSelected(item)}
             onLongPress={() => selection.toggle(item.id)}
           >
-            <AdminCard
-              style={selection.isSelected(item.id) ? { borderColor: ADMIN_TOKENS.accent } : undefined}
-            >
-              <View style={styles.row}>
-                {item.logo_url ? (
+            <AdminEntityRow
+              title={item.name}
+              subtitle={
+                [item.city, item.department, item.fff_affiliation_number]
+                  .filter(Boolean)
+                  .join(' · ') || 'Fiche incomplète'
+              }
+              badge={item.suspended ? 'Suspendu' : item.verified ? 'Validé' : 'Attente'}
+              badgeTone={item.suspended ? 'danger' : item.verified ? 'success' : 'warn'}
+              selected={selection.isSelected(item.id)}
+              leading={
+                item.logo_url ? (
                   <Image source={{ uri: item.logo_url }} style={styles.logo} />
                 ) : (
-                  <View style={[styles.logo, styles.logoFallback, { backgroundColor: t.surfaceRaised }]}>
-                    <AdminText variant="caption" color={t.faint}>
-                      —
-                    </AdminText>
-                  </View>
-                )}
-                <View style={{ flex: 1, gap: 2 }}>
-                  <AdminText variant="h3">{item.name}</AdminText>
-                  <AdminText variant="caption" color={t.muted}>
-                    {[item.city, item.department, item.fff_affiliation_number]
-                      .filter(Boolean)
-                      .join(' · ') || '—'}
-                  </AdminText>
-                </View>
-                <View style={{ gap: 4, alignItems: 'flex-end' }}>
-                  {item.suspended ? <AdminBadge label="Suspendu" tone="danger" /> : null}
-                  <AdminBadge
-                    label={item.verified ? 'Validé' : 'Attente'}
-                    tone={item.verified ? 'success' : 'warn'}
-                  />
-                </View>
-              </View>
-            </AdminCard>
+                  <AdminAvatarMark label={item.name} tone={item.verified ? 'success' : 'warn'} />
+                )
+              }
+              onPress={() => setSelected(item)}
+            />
           </AdminListRow>
         )}
       />

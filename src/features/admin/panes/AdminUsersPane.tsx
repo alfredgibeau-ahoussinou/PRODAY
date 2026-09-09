@@ -10,12 +10,16 @@ import {
 } from 'react-native';
 import { useAdminData } from '../data/AdminDataContext';
 import {
+  AdminAvatarMark,
   AdminBadge,
   AdminButton,
   AdminCard,
   AdminEmptyState,
+  AdminEntityRow,
+  AdminFilterChip,
   AdminLoading,
   AdminPaneHeader,
+  AdminSearchField,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
@@ -178,26 +182,21 @@ export function AdminUsersPane({
             </View>
           }
         />
-        <TextInput
+        <AdminSearchField
           value={q}
           onChangeText={setQ}
           placeholder="Nom, e-mail, ville, uid, tag…"
-          placeholderTextColor={t.faint}
-          style={[
-            styles.input,
-            { color: t.foreground, borderColor: t.border, backgroundColor: t.surfaceGlass },
-          ]}
         />
         <View style={styles.chips}>
           {ROLE_FILTERS.map((f) => (
-            <Chip
+            <AdminFilterChip
               key={f.id}
               label={f.label}
               active={role === f.id}
               onPress={() => setRole(f.id)}
             />
           ))}
-          <Chip
+          <AdminFilterChip
             label="À vérifier"
             active={onlyPending}
             onPress={() => setOnlyPending((v) => !v)}
@@ -235,60 +234,44 @@ export function AdminUsersPane({
         keyExtractor={(item) => item.uid}
         contentContainerStyle={{ padding: adminSpace.lg, gap: 8 }}
         ListEmptyComponent={
-          <AdminEmptyState title="Aucun utilisateur" body="Ajustez les filtres." />
+          <AdminEmptyState
+            title="Aucun utilisateur"
+            body="Ajustez la recherche ou les filtres rôle / vérification."
+            icon="person"
+            actionLabel="Créer un compte"
+            onAction={() => setGodModeContext('create')}
+          />
         }
         renderItem={({ item, index }) => {
           const needs = userNeedsAdminVerificationReview(item);
+          const paid = !!(item.subscription_tier && item.subscription_tier !== 'free');
           return (
             <AdminListRow
               index={index}
               onPress={() => setSelected(item)}
               onLongPress={() => selection.toggle(item.uid)}
             >
-              <AdminCard
-                style={
-                  selection.isSelected(item.uid)
-                    ? { borderColor: ADMIN_TOKENS.accent }
-                    : undefined
-                }
-              >
-                <View style={styles.row}>
-                  {canBulk ? (
+              <AdminEntityRow
+                title={item.display_name}
+                subtitle={`${adminRoleOptionLabel(adminRoleOptionFromUser(item, data.clubs))} · ${item.email}`}
+                meta={`${item.is_active === false ? 'Désactivé' : 'Actif'}${item.city ? ` · ${item.city}` : ''}`}
+                badge={needs ? 'À vérifier' : paid ? 'Payant' : 'Gratuit'}
+                badgeTone={needs ? 'warn' : paid ? 'accent' : 'info'}
+                selected={selection.isSelected(item.uid)}
+                leading={
+                  canBulk ? (
                     <Pressable onPress={() => selection.toggle(item.uid)} hitSlop={8}>
-                      <AdminBadge
-                        label={selection.isSelected(item.uid) ? '✓' : '○'}
+                      <AdminAvatarMark
+                        label={selection.isSelected(item.uid) ? '✓' : item.display_name}
                         tone={selection.isSelected(item.uid) ? 'accent' : 'info'}
                       />
                     </Pressable>
-                  ) : null}
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <AdminText variant="h3">{item.display_name}</AdminText>
-                    <AdminText variant="caption" color={t.muted}>
-                      {adminRoleOptionLabel(adminRoleOptionFromUser(item, data.clubs))} ·{' '}
-                      {item.email}
-                    </AdminText>
-                    <AdminText variant="caption" color={t.faint}>
-                      {item.is_active === false ? 'Désactivé' : 'Actif'}
-                      {item.city ? ` · ${item.city}` : ''}
-                    </AdminText>
-                  </View>
-                  <View style={{ gap: 4, alignItems: 'flex-end' }}>
-                    {needs ? <AdminBadge label="À vérifier" tone="warn" /> : null}
-                    <AdminBadge
-                      label={
-                        item.subscription_tier && item.subscription_tier !== 'free'
-                          ? 'Payant'
-                          : 'Gratuit'
-                      }
-                      tone={
-                        item.subscription_tier && item.subscription_tier !== 'free'
-                          ? 'accent'
-                          : 'info'
-                      }
-                    />
-                  </View>
-                </View>
-              </AdminCard>
+                  ) : (
+                    <AdminAvatarMark label={item.display_name} tone={needs ? 'warn' : 'info'} />
+                  )
+                }
+                onPress={() => setSelected(item)}
+              />
             </AdminListRow>
           );
         }}

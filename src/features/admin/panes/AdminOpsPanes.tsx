@@ -2,22 +2,25 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAdminData } from '../data/AdminDataContext';
 import {
+  AdminAvatarMark,
   AdminBadge,
   AdminButton,
   AdminCard,
   AdminEmptyState,
+  AdminEntityRow,
+  AdminField,
   AdminLoading,
+  AdminMetricTile,
   AdminPaneHeader,
+  AdminSearchField,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
@@ -37,7 +40,7 @@ import { AdminClubsPane } from './AdminClubsPane';
 
 type NavFn = (section: AdminNavSectionId, focusId?: string) => void;
 
-/** Commande — hub dense (remplace Pulse clinique). */
+/** Commande — hub ops raffiné. */
 export function AdminOverviewPane({
   onNavigate,
 }: {
@@ -57,30 +60,33 @@ export function AdminOverviewPane({
       testID="admin-overview"
     >
       <LinearGradient
-        colors={['#1C2330', '#12161F', '#090B10']}
+        colors={[t.surfaceRaised, t.surfaceMuted, t.bg]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[adminSurfaceHero(), styles.hero]}
       >
         <AdminText variant="label" color={t.signal}>
-          ESPACE ADMIN · CONTROL ROOM
+          ESPACE ADMIN · OPS DESK
         </AdminText>
         <AdminText variant="display" color={t.foreground}>
           Commande
         </AdminText>
         <AdminText variant="body" color={t.muted}>
-          Pilotage exhaustif — utilisateurs, clubs, FFF, business, contenu. Ouvrez Menu pour les{' '}
+          Pilotage unifié — personnes, clubs, FFF, business et contenu. Menu ·{' '}
           {ADMIN_NAV_ITEMS.length} pages.
         </AdminText>
-        {data.workQueue.length > 0 ? (
-          <View style={styles.heroActions}>
-            <AdminButton
-              label={`File prioritaire (${data.workQueue.length})`}
-              variant="soft"
-              onPress={() => onNavigate('queue')}
-            />
-          </View>
-        ) : null}
+        <View style={styles.heroActions}>
+          <AdminButton
+            label={
+              data.workQueue.length > 0
+                ? `File prioritaire (${data.workQueue.length})`
+                : 'Ouvrir la file'
+            }
+            variant="soft"
+            onPress={() => onNavigate('queue')}
+          />
+          <AdminButton label="Utilisateurs" variant="ghost" onPress={() => onNavigate('users')} />
+        </View>
       </LinearGradient>
 
       <View style={styles.metricGrid}>
@@ -96,64 +102,60 @@ export function AdminOverviewPane({
           },
           { label: 'Adhésions', value: data.pendingMemberships.length, go: 'memberships' as const },
         ].map((m) => (
-          <Pressable
+          <AdminMetricTile
             key={m.label}
+            label={m.label}
+            value={m.value}
+            hot={m.hot}
             onPress={() => onNavigate(m.go)}
-            style={[
-              styles.metric,
-              {
-                borderColor: m.hot && Number(m.value) > 0 ? t.warn : t.border,
-                backgroundColor: t.surface,
-              },
-            ]}
-          >
-            <AdminText variant="label" color={t.faint}>
-              {m.label}
-            </AdminText>
-            <AdminText variant="statSm" color={m.hot && Number(m.value) > 0 ? t.warn : t.foreground}>
-              {m.value}
-            </AdminText>
-          </Pressable>
+          />
         ))}
       </View>
 
       <AdminCard>
         <View style={styles.rowBetween}>
           <AdminText variant="h2">File prioritaire</AdminText>
-          <AdminButton label="Tout voir" variant="ghost" onPress={() => onNavigate('queue')} />
+          <AdminButton label="Tout voir" variant="ghost" compact onPress={() => onNavigate('queue')} />
         </View>
         {top.length === 0 ? (
-          <AdminEmptyState title="File claire" body="Rien d’urgent pour l’instant." />
+          <AdminEmptyState
+            title="File claire"
+            body="Rien d’urgent pour l’instant. Les claims, IDs et adhésions apparaîtront ici."
+            icon="checkmark-circle"
+            actionLabel="Santé plateforme"
+            onAction={() => onNavigate('health')}
+          />
         ) : (
           top.map((item) => (
-            <Pressable
+            <AdminEntityRow
               key={item.id}
+              title={item.title}
+              subtitle={item.subtitle}
+              badge={item.priority.toUpperCase()}
+              badgeTone={item.priority === 'critical' ? 'danger' : 'warn'}
+              leading={<AdminAvatarMark label={item.title} tone={item.priority === 'critical' ? 'danger' : 'warn'} />}
               onPress={() => onNavigate(item.targetSection, item.entityId)}
-              style={styles.queueRow}
-            >
-              <AdminBadge
-                label={item.priority.toUpperCase()}
-                tone={item.priority === 'critical' ? 'danger' : 'warn'}
-              />
-              <View style={{ flex: 1, gap: 2 }}>
-                <AdminText variant="h3">{item.title}</AdminText>
-                <AdminText variant="caption" color={t.muted} numberOfLines={1}>
-                  {item.subtitle}
-                </AdminText>
-              </View>
-            </Pressable>
+            />
           ))
         )}
       </AdminCard>
-
     </ScrollView>
   );
 }
 
 export function AdminQueuePane({ onNavigate }: { onNavigate: NavFn }) {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
+  const [q, setQ] = useState('');
   if (data.loading) return <AdminLoading />;
+  const filtered = data.workQueue.filter((i) => {
+    const query = q.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      i.title.toLowerCase().includes(query) ||
+      i.subtitle.toLowerCase().includes(query) ||
+      i.priority.toLowerCase().includes(query)
+    );
+  });
   return (
     <View style={styles.root} testID="admin-queue">
       <View style={styles.header}>
@@ -161,28 +163,42 @@ export function AdminQueuePane({ onNavigate }: { onNavigate: NavFn }) {
           title="File prioritaire"
           subtitle={`${data.workQueue.length} actions · triées par criticité`}
         />
+        <AdminSearchField
+          value={q}
+          onChangeText={setQ}
+          placeholder="Filtrer titre, priorité…"
+        />
       </View>
       <FlatList
-        data={data.workQueue}
+        data={filtered}
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="File vide" body="Aucune action en attente." />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="File vide"
+            body="Aucune action en attente. Les claims FFF, vérifs ID et adhésions s’affichent ici."
+            icon="list"
+            actionLabel="Voir les claims"
+            onAction={() => onNavigate('claims')}
+          />
+        }
         renderItem={({ item, index }) => (
           <AdminListRow index={index} onPress={() => onNavigate(item.targetSection, item.entityId)}>
-            <AdminCard>
-              <View style={styles.queueRow}>
-                <AdminBadge
-                  label={item.priority.toUpperCase()}
-                  tone={item.priority === 'critical' ? 'danger' : item.priority === 'high' ? 'warn' : 'info'}
+            <AdminEntityRow
+              title={item.title}
+              subtitle={item.subtitle}
+              badge={item.priority.toUpperCase()}
+              badgeTone={
+                item.priority === 'critical' ? 'danger' : item.priority === 'high' ? 'warn' : 'info'
+              }
+              leading={
+                <AdminAvatarMark
+                  label={item.title}
+                  tone={item.priority === 'critical' ? 'danger' : 'warn'}
                 />
-                <View style={{ flex: 1 }}>
-                  <AdminText variant="h3">{item.title}</AdminText>
-                  <AdminText variant="caption" color={t.muted}>
-                    {item.subtitle}
-                  </AdminText>
-                </View>
-              </View>
-            </AdminCard>
+              }
+              onPress={() => onNavigate(item.targetSection, item.entityId)}
+            />
           </AdminListRow>
         )}
       />
@@ -201,11 +217,14 @@ export function AdminHealthPane() {
         title="Santé plateforme"
         subtitle={`${data.health.label} · score ${data.health.score}`}
       />
-      <AdminCard>
+      <AdminCard hero>
+        <AdminText variant="label" color={t.signal}>
+          SCORE OPS
+        </AdminText>
         <AdminText variant="stat" color={data.health.score >= 80 ? t.success : t.warn}>
           {data.health.score}
         </AdminText>
-        <AdminText variant="caption" color={t.muted}>
+        <AdminText variant="caption" muted>
           Modération {data.moderationScore} · dernière sync{' '}
           {data.lastRefreshedAt?.toLocaleTimeString('fr-FR') ?? '—'}
         </AdminText>
@@ -221,17 +240,12 @@ export function AdminHealthPane() {
           ['Paiements', s?.pendingPayments],
           ['Reports', s?.reelReports],
         ].map(([label, value]) => (
-          <View key={String(label)} style={[styles.metric, { backgroundColor: t.surface, borderColor: t.border }]}>
-            <AdminText variant="label" color={t.faint}>
-              {label}
-            </AdminText>
-            <AdminText variant="statSm">{value ?? 0}</AdminText>
-          </View>
+          <AdminMetricTile key={String(label)} label={String(label)} value={value ?? 0} />
         ))}
       </View>
       <AdminCard>
         <AdminText variant="h2">Trafic</AdminText>
-        <AdminText variant="body" color={t.muted}>
+        <AdminText variant="body" muted>
           Site {data.trafficTotals.site_visits} · App {data.trafficTotals.app_opens}
         </AdminText>
       </AdminCard>
@@ -278,17 +292,20 @@ export function AdminAuditPane() {
           />
         }
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="Vide" body="Aucun audit récent." />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Journal vide"
+            body="Aucune action admin récente. Les mutations (users, clubs, claims) s’auditeront ici."
+            icon="document-text"
+          />
+        }
         renderItem={({ item }) => (
-          <AdminCard style={{ marginBottom: 8 }}>
-            <AdminText variant="caption" color={t.signal}>
-              {item.action}
-            </AdminText>
-            <AdminText variant="h3">{item.summary}</AdminText>
-            <AdminText variant="mono" color={t.faint}>
-              {item.target_type}/{item.target_id.slice(0, 12)} · {item.created_at.toLocaleString('fr-FR')}
-            </AdminText>
-          </AdminCard>
+          <AdminEntityRow
+            title={item.summary}
+            subtitle={item.action}
+            meta={`${item.target_type}/${item.target_id.slice(0, 12)} · ${item.created_at.toLocaleString('fr-FR')}`}
+            leading={<AdminAvatarMark label={item.action} tone="info" />}
+          />
         )}
       />
     </View>
@@ -322,7 +339,6 @@ export function AdminVerificationsPane({ focusId }: { focusId?: string }) {
 export function AdminMembershipsPane({ focusId }: { focusId?: string }) {
   const data = useAdminData();
   const { firebaseUser, profile } = useAuth();
-  const t = ADMIN_TOKENS;
   const [busy, setBusy] = useState<string | null>(null);
 
   const decide = (id: string, approve: boolean) => {
@@ -369,27 +385,38 @@ export function AdminMembershipsPane({ focusId }: { focusId?: string }) {
         data={list}
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="Aucune adhésion" body="File claire." />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucune adhésion en attente"
+            body="Les demandes d’adhésion club apparaîtront ici pour validation."
+            icon="handshake"
+          />
+        }
         renderItem={({ item }) => (
-          <AdminCard style={{ marginBottom: 8, gap: 8 }}>
-            <AdminText variant="h3">{item.player_name}</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              Club {item.club_id} · {item.license_number ?? 'sans licence'}
-            </AdminText>
-            <View style={styles.chipRow}>
-              <AdminButton
-                label={busy === item.id ? '…' : 'Approuver'}
-                disabled={!!busy}
-                onPress={() => decide(item.id, true)}
-              />
-              <AdminButton
-                label="Refuser"
-                variant="danger"
-                disabled={!!busy}
-                onPress={() => decide(item.id, false)}
-              />
-            </View>
-          </AdminCard>
+          <AdminEntityRow
+            title={item.player_name}
+            subtitle={`Club ${item.club_id} · ${item.license_number ?? 'sans licence'}`}
+            badge="PENDING"
+            badgeTone="warn"
+            leading={<AdminAvatarMark label={item.player_name} tone="warn" />}
+            actions={
+              <>
+                <AdminButton
+                  label={busy === item.id ? '…' : 'Approuver'}
+                  compact
+                  disabled={!!busy}
+                  onPress={() => decide(item.id, true)}
+                />
+                <AdminButton
+                  label="Refuser"
+                  variant="danger"
+                  compact
+                  disabled={!!busy}
+                  onPress={() => decide(item.id, false)}
+                />
+              </>
+            }
+          />
         )}
       />
     </View>
@@ -397,7 +424,6 @@ export function AdminMembershipsPane({ focusId }: { focusId?: string }) {
 }
 
 export function AdminBetaPane() {
-  const t = ADMIN_TOKENS;
   const { firebaseUser, profile } = useAuth();
   const [rows, setRows] = useState<Awaited<ReturnType<typeof adminService.listBetaWaitlist>>>([]);
   const [loading, setLoading] = useState(true);
@@ -457,20 +483,47 @@ export function AdminBetaPane() {
         data={rows}
         keyExtractor={(r) => r.id}
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="Vide" body="Aucune inscription bêta." />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Liste bêta vide"
+            body="Aucune inscription en attente. Les leads site atterrissent ici."
+            icon="star"
+          />
+        }
         renderItem={({ item }) => (
-          <AdminCard style={{ marginBottom: 8, gap: 6 }}>
-            <AdminText variant="h3">{item.name || item.email}</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              {item.email} · {item.status} · {item.role_label || item.role || '—'}
-            </AdminText>
-            <View style={styles.chipRow}>
-              <AdminButton label="OK" disabled={!!busy} onPress={() => act(item.id, 'approve')} />
-              <AdminButton label="Refus" variant="danger" disabled={!!busy} onPress={() => act(item.id, 'reject')} />
-              <AdminButton label="Mail" variant="ghost" disabled={!!busy} onPress={() => act(item.id, 'resend')} />
-              <AdminButton label="Suppr." variant="ghost" disabled={!!busy} onPress={() => act(item.id, 'delete')} />
-            </View>
-          </AdminCard>
+          <AdminEntityRow
+            title={item.name || item.email}
+            subtitle={`${item.email} · ${item.role_label || item.role || '—'}`}
+            badge={String(item.status || 'pending').toUpperCase()}
+            badgeTone={item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : 'warn'}
+            leading={<AdminAvatarMark label={item.name || item.email} tone="accent" />}
+            actions={
+              <>
+                <AdminButton label="OK" compact disabled={!!busy} onPress={() => act(item.id, 'approve')} />
+                <AdminButton
+                  label="Refus"
+                  variant="danger"
+                  compact
+                  disabled={!!busy}
+                  onPress={() => act(item.id, 'reject')}
+                />
+                <AdminButton
+                  label="Mail"
+                  variant="ghost"
+                  compact
+                  disabled={!!busy}
+                  onPress={() => act(item.id, 'resend')}
+                />
+                <AdminButton
+                  label="Suppr."
+                  variant="ghost"
+                  compact
+                  disabled={!!busy}
+                  onPress={() => act(item.id, 'delete')}
+                />
+              </>
+            }
+          />
         )}
       />
     </View>
@@ -479,25 +532,41 @@ export function AdminBetaPane() {
 
 export function AdminTeamsPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
+  const [q, setQ] = useState('');
   if (data.loading) return <AdminLoading />;
+  const filtered = data.teams.filter((team) => {
+    const query = q.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      team.name.toLowerCase().includes(query) ||
+      team.club_id.toLowerCase().includes(query) ||
+      (team.category?.toLowerCase().includes(query) ?? false)
+    );
+  });
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <AdminPaneHeader title="Équipes" subtitle={`${data.teams.length} équipes`} />
+        <AdminPaneHeader title="Équipes" subtitle={`${data.teams.length} équipes Firestore`} />
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="Nom, club, catégorie…" />
       </View>
       <FlatList
-        data={data.teams}
-        keyExtractor={(t) => t.id}
+        data={filtered}
+        keyExtractor={(team) => team.id}
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="Aucune équipe" body="—" />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucune équipe"
+            body="Les équipes créées par les clubs apparaîtront ici."
+            icon="shirt"
+          />
+        }
         renderItem={({ item }) => (
-          <AdminCard style={{ marginBottom: 8 }}>
-            <AdminText variant="h3">{item.name}</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              Club {item.club_id} · {item.category ?? '—'}
-            </AdminText>
-          </AdminCard>
+          <AdminEntityRow
+            title={item.name}
+            subtitle={`Club ${item.club_id}`}
+            meta={item.category ?? 'Sans catégorie'}
+            leading={<AdminAvatarMark label={item.name} tone="info" />}
+          />
         )}
       />
     </View>
@@ -506,25 +575,44 @@ export function AdminTeamsPane() {
 
 export function AdminCamerasPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
+  const [q, setQ] = useState('');
   if (data.loading) return <AdminLoading />;
+  const filtered = data.cameras.filter((c) => {
+    const query = q.trim().toLowerCase();
+    if (!query) return true;
+    const label = (c.display_name || c.brand_label || c.id).toLowerCase();
+    return (
+      label.includes(query) ||
+      c.club_id.toLowerCase().includes(query) ||
+      c.vendor.toLowerCase().includes(query) ||
+      c.status.toLowerCase().includes(query)
+    );
+  });
   return (
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader title="Caméras club" subtitle={`${data.cameras.length} caméras`} />
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="Nom, club, vendor…" />
       </View>
       <FlatList
-        data={data.cameras}
+        data={filtered}
         keyExtractor={(c) => c.id}
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="Aucune caméra" body="—" />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucune caméra"
+            body="L’inventaire caméras clubs s’affichera dès qu’un club en ajoute."
+            icon="camera"
+          />
+        }
         renderItem={({ item }) => (
-          <AdminCard style={{ marginBottom: 8 }}>
-            <AdminText variant="h3">{item.display_name || item.brand_label || item.id}</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              {item.club_id} · {item.vendor} · {item.status}
-            </AdminText>
-          </AdminCard>
+          <AdminEntityRow
+            title={item.display_name || item.brand_label || item.id}
+            subtitle={`${item.club_id} · ${item.vendor}`}
+            badge={String(item.status || '—').toUpperCase()}
+            badgeTone={item.status === 'connected' ? 'success' : 'info'}
+            leading={<AdminAvatarMark label={item.display_name || item.id} tone="info" />}
+          />
         )}
       />
     </View>
@@ -558,7 +646,7 @@ export function AdminDirectoryPane() {
     <ScrollView style={styles.root} contentContainerStyle={styles.pad} testID="admin-directory">
       <AdminPaneHeader title="Annuaire public FFF" subtitle="Sync directory clubs publics" />
       <AdminCard style={{ gap: 12 }}>
-        <AdminText variant="body" color={t.muted}>
+        <AdminText variant="body" muted>
           Déclenche la synchronisation de l’annuaire public (callable réelle).
         </AdminText>
         <AdminButton label={busy ? '…' : 'Force sync directory'} disabled={busy} onPress={run} />
@@ -566,7 +654,13 @@ export function AdminDirectoryPane() {
           <AdminText variant="mono" color={t.faint}>
             {result}
           </AdminText>
-        ) : null}
+        ) : (
+          <AdminEmptyState
+            title="Prêt à synchroniser"
+            body="Lancez un sync pour rafraîchir l’annuaire clubs publics FFF."
+            icon="globe"
+          />
+        )}
       </AdminCard>
     </ScrollView>
   );
@@ -595,6 +689,9 @@ export function AdminSyncJobsPane() {
     <ScrollView style={styles.root} contentContainerStyle={styles.pad} testID="admin-sync">
       <AdminPaneHeader title="Jobs de sync" subtitle="FFF · FootClubs · directory" />
       <AdminCard style={{ gap: 10 }}>
+        <AdminText variant="body" muted>
+          Déclencheurs callables — confirmez avant chaque job.
+        </AdminText>
         <AdminButton
           label={busy === 'standings' ? '…' : 'Sync classements'}
           disabled={!!busy}
@@ -614,12 +711,14 @@ export function AdminSyncJobsPane() {
       <AdminCard>
         <AdminText variant="h2">Journal local</AdminText>
         {log.length === 0 ? (
-          <AdminText variant="caption" color={t.faint}>
-            Aucun job lancé cette session.
-          </AdminText>
+          <AdminEmptyState
+            title="Aucun job cette session"
+            body="Les résultats des syncs s’affichent ici après lancement."
+            icon="refresh"
+          />
         ) : (
           log.map((l, i) => (
-            <AdminText key={i} variant="mono" color={t.muted}>
+            <AdminText key={i} variant="mono" muted>
               {l}
             </AdminText>
           ))
@@ -631,45 +730,65 @@ export function AdminSyncJobsPane() {
 
 export function AdminPaymentsPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
   const [busy, setBusy] = useState<string | null>(null);
+  const [q, setQ] = useState('');
   if (data.loading) return <AdminLoading />;
+  const filtered = data.payments.filter((p) => {
+    const query = q.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      p.label.toLowerCase().includes(query) ||
+      p.status.toLowerCase().includes(query) ||
+      p.club_id.toLowerCase().includes(query)
+    );
+  });
   return (
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader title="Paiements" subtitle={`${data.payments.length} demandes`} />
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="Libellé, statut, club…" />
       </View>
       <FlatList
-        data={data.payments}
+        data={filtered}
         keyExtractor={(p) => p.id}
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="Aucun paiement" body="—" />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucun paiement"
+            body="Les demandes de paiement équipe apparaîtront ici."
+            icon="bag"
+          />
+        }
         renderItem={({ item }) => (
-          <AdminCard style={{ marginBottom: 8, gap: 8 }}>
-            <AdminText variant="h3">{item.label}</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              {item.amount_eur} € · {item.status} · {item.club_id}
-            </AdminText>
-            {item.status === 'pending' ? (
-              <AdminButton
-                label={busy === item.id ? '…' : 'Marquer payé'}
-                disabled={!!busy}
-                onPress={() =>
-                  confirmAdminAction('Marquer payé ?', item.label, async () => {
-                    setBusy(item.id);
-                    try {
-                      await adminService.updatePaymentStatus(item.id, 'paid');
-                      await data.refresh();
-                    } catch (e) {
-                      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
-                    } finally {
-                      setBusy(null);
-                    }
-                  })
-                }
-              />
-            ) : null}
-          </AdminCard>
+          <AdminEntityRow
+            title={item.label}
+            subtitle={`${item.amount_eur} € · Club ${item.club_id}`}
+            badge={item.status.toUpperCase()}
+            badgeTone={item.status === 'paid' ? 'success' : item.status === 'pending' ? 'warn' : 'info'}
+            leading={<AdminAvatarMark label={item.label} tone="accent" />}
+            actions={
+              item.status === 'pending' ? (
+                <AdminButton
+                  label={busy === item.id ? '…' : 'Marquer payé'}
+                  compact
+                  disabled={!!busy}
+                  onPress={() =>
+                    confirmAdminAction('Marquer payé ?', item.label, async () => {
+                      setBusy(item.id);
+                      try {
+                        await adminService.updatePaymentStatus(item.id, 'paid');
+                        await data.refresh();
+                      } catch (e) {
+                        Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+                      } finally {
+                        setBusy(null);
+                      }
+                    })
+                  }
+                />
+              ) : undefined
+            }
+          />
         )}
       />
     </View>
@@ -678,94 +797,134 @@ export function AdminPaymentsPane() {
 
 export function AdminSubscriptionsPane({ onNavigate }: { onNavigate: NavFn }) {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
   if (data.loading) return <AdminLoading />;
   const upgrades = data.subscriptionUpgradeRequests.filter((r) => r.status === 'pending');
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
       <AdminPaneHeader title="Abonnements" subtitle={`${upgrades.length} demandes upgrade`} />
       <AdminCard style={{ gap: 8 }}>
-        <AdminText variant="body" color={t.muted}>
-          Pour offrir / révoquer un abo, ouvrez la fiche utilisateur → onglet Abo.
+        <AdminText variant="body" muted>
+          Pour offrir ou révoquer un abo, ouvrez la fiche utilisateur → onglet Abo.
         </AdminText>
         <AdminButton label="Ouvrir utilisateurs" variant="soft" onPress={() => onNavigate('users')} />
       </AdminCard>
-      {upgrades.map((r) => (
-        <AdminCard key={r.id} style={{ marginBottom: 8 }}>
-          <AdminText variant="h3">{r.display_name}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            {r.plan_id} · {r.billing} · {r.email}
-          </AdminText>
-          <AdminButton
-            label="Ouvrir compte"
-            variant="ghost"
+      {upgrades.length === 0 ? (
+        <AdminEmptyState
+          title="Aucune demande upgrade"
+          body="Les demandes d’abonnement Pro arriveront ici."
+          icon="star"
+          actionLabel="Voir les comptes"
+          onAction={() => onNavigate('users')}
+        />
+      ) : (
+        upgrades.map((r) => (
+          <AdminEntityRow
+            key={r.id}
+            title={r.display_name}
+            subtitle={`${r.plan_id} · ${r.billing}`}
+            meta={r.email}
+            badge="PENDING"
+            badgeTone="warn"
+            leading={<AdminAvatarMark label={r.display_name} tone="accent" />}
             onPress={() => onNavigate('users', r.user_uid)}
+            actions={
+              <AdminButton
+                label="Ouvrir compte"
+                variant="ghost"
+                compact
+                onPress={() => onNavigate('users', r.user_uid)}
+              />
+            }
           />
-        </AdminCard>
-      ))}
+        ))
+      )}
     </ScrollView>
   );
 }
 
 export function AdminQuotesPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
   if (data.loading) return <AdminLoading />;
+  const empty =
+    data.clubQuoteRequests.length === 0 && data.sponsorQuoteRequests.length === 0;
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
       <AdminPaneHeader
         title="Devis clubs"
         subtitle={`${data.clubQuoteRequests.length} devis · ${data.sponsorQuoteRequests.length} partenaires`}
       />
+      {empty ? (
+        <AdminEmptyState
+          title="Aucun devis"
+          body="Les demandes commerciales club et partenaires s’affichent ici."
+          icon="document"
+        />
+      ) : null}
       {data.clubQuoteRequests.map((q) => (
-        <AdminCard key={q.id} style={{ marginBottom: 8 }}>
-          <AdminBadge label={q.status} tone="warn" />
-          <AdminText variant="h3">{q.club_name}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            {q.owner_name} · {q.email} · {q.offer_hint}
-          </AdminText>
-        </AdminCard>
+        <AdminEntityRow
+          key={q.id}
+          title={q.club_name}
+          subtitle={`${q.owner_name} · ${q.email}`}
+          meta={q.offer_hint}
+          badge={q.status}
+          badgeTone="warn"
+          leading={<AdminAvatarMark label={q.club_name} tone="warn" />}
+        />
       ))}
       {data.sponsorQuoteRequests.map((q) => (
-        <AdminCard key={q.id} style={{ marginBottom: 8 }}>
-          <AdminBadge label={q.status} tone="info" />
-          <AdminText variant="h3">{q.company_name}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            {q.contact_name} · {q.contact_email}
-          </AdminText>
-        </AdminCard>
+        <AdminEntityRow
+          key={q.id}
+          title={q.company_name}
+          subtitle={`${q.contact_name} · ${q.contact_email}`}
+          badge={q.status}
+          badgeTone="info"
+          leading={<AdminAvatarMark label={q.company_name} tone="info" />}
+        />
       ))}
     </ScrollView>
   );
 }
 
 export function AdminShopPane() {
-  const t = ADMIN_TOKENS;
   const [rows, setRows] = useState<Awaited<ReturnType<typeof adminService.listShopOrders>>>([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState('');
 
   useEffect(() => {
     void adminService.listShopOrders(80).then(setRows).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <AdminLoading />;
+  const filtered = rows.filter((o) => {
+    const query = q.trim().toLowerCase();
+    if (!query) return true;
+    return o.id.toLowerCase().includes(query) || String(o.status).toLowerCase().includes(query);
+  });
   return (
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader title="Commandes boutique" subtitle={`${rows.length} commandes`} />
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="ID, statut…" />
       </View>
       <FlatList
-        data={rows}
+        data={filtered}
         keyExtractor={(o) => o.id}
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="Aucune commande" body="—" />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucune commande"
+            body="Les commandes boutique ProDay apparaîtront ici."
+            icon="bag"
+          />
+        }
         renderItem={({ item }) => (
-          <AdminCard style={{ marginBottom: 8 }}>
-            <AdminText variant="h3">{item.id}</AdminText>
-            <AdminText variant="caption" color={t.muted}>
-              {item.status}
-            </AdminText>
-          </AdminCard>
+          <AdminEntityRow
+            title={item.id}
+            subtitle={String(item.status)}
+            badge={String(item.status).toUpperCase()}
+            badgeTone="info"
+            leading={<AdminAvatarMark label={item.id} tone="info" />}
+          />
         )}
       />
     </View>
@@ -774,29 +933,38 @@ export function AdminShopPane() {
 
 export function AdminSponsorsPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
   if (data.loading) return <AdminLoading />;
+  const empty = data.sponsorOffers.length === 0 && data.fundingGoals.length === 0;
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
       <AdminPaneHeader
         title="Sponsors & funding"
         subtitle={`${data.sponsorOffers.length} offres · ${data.fundingGoals.length} goals`}
       />
+      {empty ? (
+        <AdminEmptyState
+          title="Aucun sponsor"
+          body="Offres sponsors et objectifs de funding apparaîtront ici."
+          icon="briefcase"
+        />
+      ) : null}
       {data.sponsorOffers.map((o) => (
-        <AdminCard key={o.id} style={{ marginBottom: 8 }}>
-          <AdminText variant="h3">{o.company_name || o.id}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            {o.offer_type} · {o.value}
-          </AdminText>
-        </AdminCard>
+        <AdminEntityRow
+          key={o.id}
+          title={o.company_name || o.id}
+          subtitle={`${o.offer_type} · ${o.value}`}
+          leading={<AdminAvatarMark label={o.company_name || o.id} tone="accent" />}
+        />
       ))}
       {data.fundingGoals.map((g) => (
-        <AdminCard key={g.id} style={{ marginBottom: 8 }}>
-          <AdminText variant="h3">{g.title || g.id}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            Goal · {g.club_id}
-          </AdminText>
-        </AdminCard>
+        <AdminEntityRow
+          key={g.id}
+          title={g.title || g.id}
+          subtitle={`Goal · club ${g.club_id}`}
+          badge="GOAL"
+          badgeTone="info"
+          leading={<AdminAvatarMark label={g.title || g.id} tone="info" />}
+        />
       ))}
     </ScrollView>
   );
@@ -804,7 +972,6 @@ export function AdminSponsorsPane() {
 
 export function AdminReelsPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
   const { firebaseUser, profile } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
   if (data.loading) return <AdminLoading />;
@@ -837,27 +1004,47 @@ export function AdminReelsPane() {
         title="Reels communauté"
         subtitle={`${data.communityReels.length} · ${data.reelReports.length} signalements`}
       />
+      {data.communityReels.length === 0 ? (
+        <AdminEmptyState
+          title="Aucun reel"
+          body="Les reels en modération et signalements apparaîtront ici."
+          icon="videocam"
+        />
+      ) : null}
       {data.communityReels.slice(0, 60).map((r) => (
-        <AdminCard key={r.id} style={{ marginBottom: 8, gap: 8 }}>
-          <AdminBadge label={r.status} tone={r.status === 'pending' ? 'warn' : 'info'} />
-          <AdminText variant="h3">{r.author_name}</AdminText>
-          <AdminText variant="caption" color={t.muted} numberOfLines={2}>
-            {r.caption || 'Sans légende'}
-          </AdminText>
-          {r.status === 'pending' ? (
-            <View style={styles.chipRow}>
-              <AdminButton label="OK" disabled={!!busy} onPress={() => setStatus(r.id, 'approved')} />
-              <AdminButton label="Refus" variant="danger" disabled={!!busy} onPress={() => setStatus(r.id, 'rejected')} />
-            </View>
-          ) : null}
-        </AdminCard>
+        <AdminEntityRow
+          key={r.id}
+          title={r.author_name}
+          subtitle={r.caption || 'Sans légende'}
+          badge={r.status}
+          badgeTone={r.status === 'pending' ? 'warn' : 'info'}
+          leading={<AdminAvatarMark label={r.author_name} tone="warn" />}
+          actions={
+            r.status === 'pending' ? (
+              <>
+                <AdminButton
+                  label="OK"
+                  compact
+                  disabled={!!busy}
+                  onPress={() => setStatus(r.id, 'approved')}
+                />
+                <AdminButton
+                  label="Refus"
+                  variant="danger"
+                  compact
+                  disabled={!!busy}
+                  onPress={() => setStatus(r.id, 'rejected')}
+                />
+              </>
+            ) : undefined
+          }
+        />
       ))}
     </ScrollView>
   );
 }
 
 export function AdminFeedPane() {
-  const t = ADMIN_TOKENS;
   const { firebaseUser, profile } = useAuth();
   const [rows, setRows] = useState<Awaited<ReturnType<typeof adminService.listPlatformFeedPosts>>>([]);
   const [title, setTitle] = useState('');
@@ -876,33 +1063,22 @@ export function AdminFeedPane() {
   if (loading) return <AdminLoading />;
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
-      <AdminPaneHeader title="Feed plateforme" subtitle="News admin" />
-      <AdminCard style={{ gap: 8 }}>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Titre"
-          placeholderTextColor={t.faint}
-          style={styles.input}
-        />
-        <TextInput
-          value={body}
-          onChangeText={setBody}
-          placeholder="Corps"
-          placeholderTextColor={t.faint}
-          multiline
-          style={[styles.input, { minHeight: 72 }]}
-        />
+      <AdminPaneHeader title="Feed plateforme" subtitle="Publier une news admin" />
+      <AdminCard style={{ gap: 10 }}>
+        <AdminText variant="h2">Nouvelle publication</AdminText>
+        <AdminField value={title} onChangeText={setTitle} placeholder="Titre" />
+        <AdminField value={body} onChangeText={setBody} placeholder="Corps du message" multiline />
         <AdminButton
           label={busy ? '…' : 'Publier'}
-          disabled={busy}
+          disabled={busy || !title.trim()}
           onPress={() =>
             confirmAdminAction('Publier la news ?', title, async () => {
               setBusy(true);
               try {
                 await adminService.createPlatformFeedNews({
                   author_uid: firebaseUser?.uid ?? 'admin',
-                  author_name: profile?.display_name || profile?.email || firebaseUser?.email || 'Admin',
+                  author_name:
+                    profile?.display_name || profile?.email || firebaseUser?.email || 'Admin',
                   title: title.trim(),
                   body: body.trim(),
                 });
@@ -918,45 +1094,67 @@ export function AdminFeedPane() {
           }
         />
       </AdminCard>
-      {rows.map((p) => (
-        <AdminCard key={p.id} style={{ marginBottom: 8 }}>
-          <AdminText variant="h3">{p.title}</AdminText>
-          <AdminText variant="caption" color={t.muted} numberOfLines={2}>
-            {p.body}
-          </AdminText>
-        </AdminCard>
-      ))}
+      {rows.length === 0 ? (
+        <AdminEmptyState
+          title="Feed vide"
+          body="Publiez une news pour la diffuser sur la plateforme."
+          icon="flash"
+        />
+      ) : (
+        rows.map((p) => (
+          <AdminEntityRow
+            key={p.id}
+            title={p.title}
+            subtitle={p.body}
+            leading={<AdminAvatarMark label={p.title} tone="accent" />}
+          />
+        ))
+      )}
     </ScrollView>
   );
 }
 
 export function AdminMessagesPane() {
-  const t = ADMIN_TOKENS;
   const [rows, setRows] = useState<Awaited<ReturnType<typeof adminService.listAllMessageThreads>>>([]);
   const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState('');
 
   useEffect(() => {
     void adminService.listAllMessageThreads(60).then(setRows).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <AdminLoading />;
+  const filtered = rows.filter((r) => {
+    const query = q.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      r.label.toLowerCase().includes(query) ||
+      (r.last_message?.toLowerCase().includes(query) ?? false)
+    );
+  });
   return (
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader title="Messages" subtitle={`${rows.length} threads`} />
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="Thread, dernier message…" />
       </View>
       <FlatList
-        data={rows}
+        data={filtered}
         keyExtractor={(r) => r.id}
         contentContainerStyle={styles.pad}
-        ListEmptyComponent={<AdminEmptyState title="Aucun thread" body="—" />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucun thread"
+            body="Les conversations plateforme s’affichent ici pour modération."
+            icon="chatbubbles"
+          />
+        }
         renderItem={({ item }) => (
-          <AdminCard style={{ marginBottom: 8 }}>
-            <AdminText variant="h3">{item.label}</AdminText>
-            <AdminText variant="caption" color={t.muted} numberOfLines={2}>
-              {item.last_message}
-            </AdminText>
-          </AdminCard>
+          <AdminEntityRow
+            title={item.label}
+            subtitle={item.last_message}
+            leading={<AdminAvatarMark label={item.label} tone="info" />}
+          />
         )}
       />
     </View>
@@ -965,26 +1163,34 @@ export function AdminMessagesPane() {
 
 export function AdminStagesPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
   if (data.loading) return <AdminLoading />;
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
       <AdminPaneHeader title="Stages" subtitle={`${data.stageOffers.length} offres`} />
-      {data.stageOffers.map((s) => (
-        <AdminCard key={s.id} style={{ marginBottom: 8 }}>
-          <AdminText variant="h3">{s.title || s.id}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            {s.status}
-          </AdminText>
-        </AdminCard>
-      ))}
+      {data.stageOffers.length === 0 ? (
+        <AdminEmptyState
+          title="Aucune offre de stage"
+          body="Les offres publiées par les clubs apparaîtront ici."
+          icon="school"
+        />
+      ) : (
+        data.stageOffers.map((s) => (
+          <AdminEntityRow
+            key={s.id}
+            title={s.title || s.id}
+            subtitle={s.status}
+            badge={String(s.status || '—').toUpperCase()}
+            badgeTone="info"
+            leading={<AdminAvatarMark label={s.title || s.id} tone="info" />}
+          />
+        ))
+      )}
     </ScrollView>
   );
 }
 
 export function AdminRecruitmentPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
   if (data.loading) return <AdminLoading />;
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
@@ -992,20 +1198,29 @@ export function AdminRecruitmentPane() {
         title="Recrutement"
         subtitle={`${data.posts.length} annonces · ${data.applications.length} candidatures`}
       />
-      {data.posts.slice(0, 40).map((p) => (
-        <AdminCard key={p.id} style={{ marginBottom: 8 }}>
-          <AdminText variant="h3">{p.title || p.id}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            {p.status}
-          </AdminText>
-        </AdminCard>
-      ))}
+      {data.posts.length === 0 ? (
+        <AdminEmptyState
+          title="Aucune annonce"
+          body="Les annonces de recrutement et candidatures s’affichent ici."
+          icon="search"
+        />
+      ) : (
+        data.posts.slice(0, 40).map((p) => (
+          <AdminEntityRow
+            key={p.id}
+            title={p.title || p.id}
+            subtitle={p.status}
+            badge={String(p.status || '—').toUpperCase()}
+            badgeTone="info"
+            leading={<AdminAvatarMark label={p.title || p.id} tone="accent" />}
+          />
+        ))
+      )}
     </ScrollView>
   );
 }
 
 export function AdminConfigPane() {
-  const t = ADMIN_TOKENS;
   const { firebaseUser } = useAuth();
   const [maintenance, setMaintenance] = useState(false);
   const [message, setMessage] = useState('');
@@ -1035,26 +1250,29 @@ export function AdminConfigPane() {
           <AdminButton label="Activer" variant="danger" onPress={() => setMaintenance(true)} />
           <AdminButton label="Désactiver" variant="soft" onPress={() => setMaintenance(false)} />
         </View>
-        <TextInput
+        <AdminField
           value={message}
           onChangeText={setMessage}
-          placeholder="Message maintenance"
-          placeholderTextColor={t.faint}
-          style={styles.input}
+          placeholder="Message maintenance affiché aux users"
         />
       </AdminCard>
       <AdminCard style={{ gap: 8 }}>
         <AdminText variant="h2">Feature flags</AdminText>
-        {Object.keys(flags).map((key) => (
-          <Pressable
-            key={key}
-            onPress={() => setFlags((prev) => ({ ...prev, [key]: !prev[key] }))}
-            style={styles.queueRow}
-          >
-            <AdminBadge label={flags[key] ? 'ON' : 'OFF'} tone={flags[key] ? 'success' : 'info'} />
-            <AdminText variant="body">{key}</AdminText>
-          </Pressable>
-        ))}
+        {Object.keys(flags).length === 0 ? (
+          <AdminText variant="caption" muted>
+            Aucun flag chargé — enregistrez pour initialiser.
+          </AdminText>
+        ) : (
+          Object.keys(flags).map((key) => (
+            <AdminEntityRow
+              key={key}
+              title={key}
+              badge={flags[key] ? 'ON' : 'OFF'}
+              badgeTone={flags[key] ? 'success' : 'info'}
+              onPress={() => setFlags((prev) => ({ ...prev, [key]: !prev[key] }))}
+            />
+          ))
+        )}
         <AdminButton
           label={busy ? '…' : 'Enregistrer'}
           disabled={busy}
@@ -1088,51 +1306,76 @@ export function AdminConfigPane() {
 
 export function AdminTrafficPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
   if (data.loading) return <AdminLoading />;
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
       <AdminPaneHeader title="Trafic & stats" subtitle="Site · app opens · snapshots" />
-      <AdminCard>
-        <AdminText variant="statSm">{data.trafficTotals.site_visits}</AdminText>
-        <AdminText variant="caption" color={t.muted}>
-          Visites site
-        </AdminText>
-        <AdminText variant="statSm" style={{ marginTop: 12 }}>
-          {data.trafficTotals.app_opens}
-        </AdminText>
-        <AdminText variant="caption" color={t.muted}>
-          Ouvertures app
-        </AdminText>
-      </AdminCard>
-      {data.trafficDaily.slice(0, 14).map((d) => (
-        <AdminCard key={d.day_key} style={{ marginBottom: 6 }}>
-          <AdminText variant="h3">{d.day_key}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            Site {d.site_visits} · App {d.app_opens}
-          </AdminText>
-        </AdminCard>
-      ))}
+      <View style={styles.metricGrid}>
+        <AdminMetricTile label="Visites site" value={data.trafficTotals.site_visits} />
+        <AdminMetricTile label="Ouvertures app" value={data.trafficTotals.app_opens} />
+      </View>
+      {data.trafficDaily.length === 0 ? (
+        <AdminEmptyState
+          title="Pas encore de snapshots"
+          body="Les totaux journaliers s’accumuleront ici."
+          icon="stats-chart"
+        />
+      ) : (
+        data.trafficDaily.slice(0, 14).map((d) => (
+          <AdminEntityRow
+            key={d.day_key}
+            title={d.day_key}
+            subtitle={`Site ${d.site_visits} · App ${d.app_opens}`}
+            leading={<AdminAvatarMark label={d.day_key} tone="info" />}
+          />
+        ))
+      )}
     </ScrollView>
   );
 }
 
 export function AdminTournamentsPane() {
   const data = useAdminData();
-  const t = ADMIN_TOKENS;
+  const [q, setQ] = useState('');
   if (data.loading) return <AdminLoading />;
+  const filtered = data.tournaments.filter((tour) => {
+    const query = q.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      tour.name.toLowerCase().includes(query) ||
+      (tour.city?.toLowerCase().includes(query) ?? false) ||
+      (tour.status?.toLowerCase().includes(query) ?? false)
+    );
+  });
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
-      <AdminPaneHeader title="Tournois" subtitle={`${data.tournaments.length} tournois`} />
-      {data.tournaments.map((tour) => (
-        <AdminCard key={tour.id} style={{ marginBottom: 8 }}>
-          <AdminText variant="h3">{tour.name}</AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            {tour.city ?? '—'} · {tour.status ?? '—'}
-          </AdminText>
-        </AdminCard>
-      ))}
-    </ScrollView>
+    <View style={styles.root}>
+      <View style={styles.header}>
+        <AdminPaneHeader title="Tournois" subtitle={`${data.tournaments.length} tournois`} />
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="Nom, ville, statut…" />
+      </View>
+      <FlatList
+        data={filtered}
+        keyExtractor={(tour) => tour.id}
+        contentContainerStyle={styles.pad}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucun tournoi"
+            body="Les tournois organisés sur ProDay apparaîtront ici."
+            icon="trophy"
+          />
+        }
+        renderItem={({ item }) => (
+          <AdminEntityRow
+            title={item.name}
+            subtitle={item.city ?? 'Ville non renseignée'}
+            meta={item.status ?? '—'}
+            badge={String(item.status || '—').toUpperCase()}
+            badgeTone="accent"
+            leading={<AdminAvatarMark label={item.name} tone="accent" />}
+          />
+        )}
+      />
+    </View>
   );
 }
 

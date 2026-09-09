@@ -9,12 +9,15 @@ import {
   View,
 } from 'react-native';
 import {
+  AdminAvatarMark,
   AdminBadge,
   AdminButton,
   AdminCard,
   AdminEmptyState,
+  AdminEntityRow,
   AdminLoading,
   AdminPaneHeader,
+  AdminSearchField,
   AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
@@ -146,13 +149,7 @@ export function AdminRosterDataPane() {
           title="Effectifs live"
           subtitle="Inspect · manage · force-trigger imports effectifs"
         />
-        <TextInput
-          value={q}
-          onChangeText={setQ}
-          placeholder="FFF, club, ville…"
-          placeholderTextColor={t.faint}
-          style={[styles.input, { color: t.foreground, borderColor: t.border, backgroundColor: t.surfaceGlass }]}
-        />
+        <AdminSearchField value={q} onChangeText={setQ} placeholder="FFF, club, ville…" />
         <View style={styles.actions}>
           <AdminButton
             label={busy === 'global' ? '…' : 'Sync global'}
@@ -175,21 +172,24 @@ export function AdminRosterDataPane() {
           <RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={t.accent} />
         }
         contentContainerStyle={{ padding: adminSpace.lg, gap: 8, paddingBottom: adminLayout.dockClearance }}
-        ListEmptyComponent={<AdminEmptyState title="Aucun roster" body="Lancez une sync." />}
+        ListEmptyComponent={
+          <AdminEmptyState
+            title="Aucun roster"
+            body="Lancez une sync globale pour peupler les caches FootClubs."
+            icon="people"
+            actionLabel="Sync global"
+            onAction={runGlobalSync}
+          />
+        }
         renderItem={({ item }) => (
-          <Pressable onPress={() => void openRoster(item)}>
-            <AdminCard>
-              <View style={styles.row}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <AdminText variant="h3">{item.club_name || item.id}</AdminText>
-                  <AdminText variant="caption" color={t.muted}>
-                    FFF {item.id} · {item.city ?? '—'} · {item.members} licenciés
-                  </AdminText>
-                </View>
-                <AdminBadge label={String(item.members)} tone={item.members > 0 ? 'success' : 'warn'} />
-              </View>
-            </AdminCard>
-          </Pressable>
+          <AdminEntityRow
+            title={item.club_name || item.id}
+            subtitle={`FFF ${item.id} · ${item.city ?? '—'} · ${item.members} licenciés`}
+            badge={String(item.members)}
+            badgeTone={item.members > 0 ? 'success' : 'warn'}
+            leading={<AdminAvatarMark label={item.club_name || item.id} tone="info" />}
+            onPress={() => void openRoster(item)}
+          />
         )}
       />
 
