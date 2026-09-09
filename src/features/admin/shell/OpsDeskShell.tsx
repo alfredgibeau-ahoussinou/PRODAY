@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Platform, StatusBar as RNStatusBar, StyleSheet, View, useWindowDimensions } from 'react-native';
+import Constants from 'expo-constants';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdminDataProvider, useAdminData } from '../data/AdminDataContext';
@@ -27,9 +28,19 @@ interface OpsDeskShellProps {
   onPreviewPresidentPole?: () => void;
 }
 
+/** Inset top fiable (hook + fallback status bar — évite le collé sous le notch). */
+function useAdminTopInset(): number {
+  const insets = useSafeAreaInsets();
+  const fallback =
+    Platform.OS === 'android'
+      ? RNStatusBar.currentHeight ?? 0
+      : Constants.statusBarHeight ?? 0;
+  return Math.max(insets.top, fallback);
+}
+
 function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShellProps) {
   const data = useAdminData();
-  const insets = useSafeAreaInsets();
+  const topInset = useAdminTopInset();
   const { width } = useWindowDimensions();
   const expandedRail = width >= adminChrome.tabletBreakpoint;
   const { recordNav, navDirection } = useAdminMotion();
@@ -72,7 +83,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <SafeAreaView style={styles.safe} edges={['right']}>
+      <SafeAreaView style={styles.safe} edges={['left', 'right']}>
         <View style={styles.row}>
           <OpsDeskRail
             activeId={section}
@@ -84,6 +95,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
             verificationsCount={verificationsCount}
             menuOpen={menuOpen}
             onMenuOpenChange={setMenuOpen}
+            topInset={topInset}
           />
 
           <View style={styles.main}>
@@ -91,7 +103,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
               section={section}
               healthScore={data.health.score}
               actionCount={data.workQueue.length}
-              topInset={expandedRail ? insets.top : 0}
+              topInset={topInset}
               onOpenCommand={openCommand}
               onOpenOverview={() => navigate('overview')}
               onOpenMenu={() => setMenuOpen(true)}

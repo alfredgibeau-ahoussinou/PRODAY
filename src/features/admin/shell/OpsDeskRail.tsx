@@ -24,6 +24,8 @@ type Props = {
   verificationsCount?: number;
   menuOpen?: boolean;
   onMenuOpenChange?: (open: boolean) => void;
+  /** Safe-area top (notch / Dynamic Island) — fourni par le shell. */
+  topInset?: number;
 };
 
 function badgeFor(
@@ -58,8 +60,10 @@ export function OpsDeskRail({
   verificationsCount = 0,
   menuOpen = false,
   onMenuOpenChange,
+  topInset,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const resolvedTop = Math.max(topInset ?? 0, insets.top);
   const t = ADMIN_TOKENS;
   const width = compact ? adminChrome.sidebarCollapsed : adminChrome.sidebarExpanded;
   const styles = useMemo(() => createStyles(compact), [compact]);
@@ -149,8 +153,8 @@ export function OpsDeskRail({
           styles.root,
           {
             width,
-            paddingTop: insets.top + 8,
-            paddingBottom: Math.max(insets.bottom, 10),
+            paddingTop: resolvedTop + adminSpace.sm,
+            paddingBottom: Math.max(insets.bottom, adminSpace.sm),
           },
         ]}
       >
@@ -249,7 +253,7 @@ export function OpsDeskRail({
         <View
           style={[
             styles.drawer,
-            { paddingTop: insets.top + 12, paddingBottom: Math.max(insets.bottom, 16) },
+            { paddingTop: Math.max(resolvedTop, insets.top) + 12, paddingBottom: Math.max(insets.bottom, 16) },
           ]}
         >
           <View style={styles.drawerHead}>
