@@ -30,17 +30,32 @@ const SPONSOR_QUOTE_FUNCTION_URL =
 const SPONSOR_ADMIN_FUNCTIONS_REGION = 'europe-west1';
 
 /**
- * Callables desk / message / docs absentes du projet tant que le deploy
- * (bloqué si facturation Blaze inactive) n’a pas réussi.
+ * Callables desk / message / docs absentes (région ou deploy manquant).
+ * Ne pas mentionner Blaze ici : ce code n’est atteint que pour un vrai not-found.
  */
 const SPONSOR_QUOTE_WRITE_CF_HINT =
-  'Cloud Function devis sponsor non déployée (europe-west1). Réactivez la facturation Blaze sur proday-155b0 puis : firebase deploy --only functions:getSponsorQuoteDesk,functions:adminSponsorQuoteMessage,functions:adminRequestSponsorQuoteDocs,functions:sponsorFulfillQuoteDoc';
+  'Cloud Function devis sponsor introuvable (europe-west1). Déployez : firebase deploy --only functions:getSponsorQuoteDesk,functions:adminSponsorQuoteMessage,functions:adminRequestSponsorQuoteDocs,functions:sponsorFulfillQuoteDoc,functions:adminSendSponsorQuote';
 
 function isCallableNotFound(error: unknown): boolean {
   const code = getErrorCode(error);
-  if (code === 'functions/not-found') return true;
-  const msg = error instanceof Error ? error.message : getCallableErrorMessage(error);
-  return /Cloud Function introuvable|functions\/not-found|not-found/i.test(msg);
+  const msg = (error instanceof Error ? error.message : getCallableErrorMessage(error)).trim();
+
+  // HttpsError métier renvoyé par la CF (pas une CF absente).
+  if (/demande de devis introuvable|document introuvable|club introuvable/i.test(msg)) {
+    return false;
+  }
+
+  if (code === 'functions/not-found') {
+    // Message nu SDK, ou texte deploy déjà humanisé.
+    return (
+      !msg ||
+      /Cloud Function introuvable|functions\/not-found|^not-found$|^not_found$|^not found$/i.test(msg) ||
+      /introuvable \(europe-west1|non déployée/i.test(msg)
+    );
+  }
+
+  // callFunction a parfois déjà remplacé le code ; ne matcher que le hint deploy.
+  return /Cloud Function introuvable \(région europe-west1/i.test(msg);
 }
 
 function parseTimestamp(value: unknown): Date | undefined {

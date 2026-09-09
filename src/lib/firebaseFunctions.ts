@@ -55,12 +55,56 @@ function isBareFunctionsNotFoundMessage(msg: string): boolean {
   );
 }
 
+/** Codes SDK bruts sans détail métier (ex. message === "internal"). */
+function isBareFunctionsCodeMessage(msg: string): boolean {
+  const n = msg.trim().toLowerCase();
+  return (
+    !n ||
+    isBareFunctionsNotFoundMessage(n) ||
+    n === 'unavailable' ||
+    n === 'functions/unavailable' ||
+    n === 'internal' ||
+    n === 'functions/internal' ||
+    n === 'unknown' ||
+    n === 'functions/unknown' ||
+    n === 'deadline-exceeded' ||
+    n === 'functions/deadline-exceeded' ||
+    n === 'deadline_exceeded'
+  );
+}
+
+/** Ancien fallback trop agressif (ba178ae7) — ne jamais le réafficher tel quel. */
+function isLegacyBlazeDeployFalsePositive(msg: string): boolean {
+  return /plan\s+blaze/i.test(msg) && /firebase deploy|cloud functions indisponibles/i.test(msg);
+}
+
+/** Déjà humanisé côté client — ne pas remapper vers Blaze / deploy. */
+function isAlreadyHumanizedCallableMessage(msg: string): boolean {
+  const n = msg.trim();
+  if (!n || isBareFunctionsCodeMessage(n) || isLegacyBlazeDeployFalsePositive(n)) return false;
+  // Phrases FR produites par getCallableErrorMessage / services.
+  if (
+    /cloud function introuvable|session expir|droits admin|trop de tentatives|délai dépassé|erreur serveur|temporairement indisponible|réessay/i.test(
+      n,
+    )
+  ) {
+    return true;
+  }
+  // Message métier serveur (HttpsError) : phrase libre.
+  return n.length > 12 && !/^functions\//i.test(n) && !/cloud functions indisponibles/i.test(n);
+}
+
 export function getCallableErrorMessage(error: unknown): string {
   const code = getErrorCode(error);
   const rawMsg =
     error && typeof error === 'object' && 'message' in error
       ? String((error as { message: string }).message).trim()
       : '';
+
+  // Déjà passé par callFunction / un service : garder le texte honnête.
+  if (rawMsg && isAlreadyHumanizedCallableMessage(rawMsg)) {
+    return humanizeAuthErrorText(rawMsg);
+  }
 
   // Codes d’abord : le SDK renvoie souvent message === "not-found".
   if (code === 'functions/permission-denied') {
@@ -71,6 +115,11 @@ export function getCallableErrorMessage(error: unknown): string {
   }
   if (code === 'functions/resource-exhausted') {
     return 'Trop de tentatives. Attendez 15 à 60 minutes avant un nouvel envoi.';
+  }
+  if (code === 'functions/invalid-argument') {
+    return rawMsg && !isBareFunctionsCodeMessage(rawMsg)
+      ? humanizeAuthErrorText(rawMsg)
+      : 'Paramètres invalides. Vérifiez la saisie.';
   }
   if (code === 'functions/failed-precondition') {
     // IA / Mistral : garder le message serveur (clé manquante), pas le texte Auth e-mail.
@@ -87,8 +136,18 @@ export function getCallableErrorMessage(error: unknown): string {
     }
     return 'Cloud Function introuvable (région europe-west1 ou non déployée). Déployez avec firebase deploy --only functions.';
   }
-  if (isFunctionsUnavailable(error)) {
-    return 'Cloud Functions indisponibles (plan Blaze + firebase deploy --only functions).';
+  // Indispo / timeout / crash : messages honnêtes — PAS « plan Blaze » (souvent faux positif).
+  if (code === 'functions/unavailable') {
+    return 'Service Cloud Functions temporairement indisponible. Réessayez dans un instant.';
+  }
+  if (code === 'functions/deadline-exceeded') {
+    return 'Délai dépassé côté serveur. Réessayez.';
+  }
+  if (code === 'functions/internal' || code === 'functions/unknown') {
+    if (rawMsg && !isBareFunctionsCodeMessage(rawMsg)) {
+      return humanizeAuthErrorText(rawMsg);
+    }
+    return 'Erreur serveur Cloud Functions. Réessayez. Si ça continue, consultez les logs Firebase de la fonction.';
   }
   if (rawMsg && rawMsg !== 'internal') {
     if (isBareFunctionsNotFoundMessage(rawMsg)) {

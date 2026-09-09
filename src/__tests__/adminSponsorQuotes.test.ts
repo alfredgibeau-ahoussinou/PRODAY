@@ -115,6 +115,44 @@ describe('Admin devis sponsors', () => {
     );
     await expect(
       sponsorQuoteService.sendMessage({ requestId: 'eb93d7b9', body: 'Bonjour' }),
-    ).rejects.toThrow(/facturation Blaze|non déployée/i);
+    ).rejects.toThrow(/introuvable|europe-west1|deploy --only functions/i);
+  });
+
+  it('requestDocuments appelle adminRequestSponsorQuoteDocs en europe-west1', async () => {
+    (callFunction as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      requestedIds: ['d1'],
+      emailSent: true,
+    });
+    const res = await sponsorQuoteService.requestDocuments({
+      requestId: 'sq-transport',
+      docTypes: ['kbis'],
+      sendEmail: true,
+    });
+    expect(res.success).toBe(true);
+    expect(callFunction).toHaveBeenCalledWith(
+      'adminRequestSponsorQuoteDocs',
+      expect.objectContaining({ requestId: 'sq-transport', docTypes: ['kbis'], sendEmail: true }),
+      'europe-west1',
+    );
+  });
+
+  it('requestDocuments ne mappe pas unavailable vers hint Blaze', async () => {
+    (callFunction as jest.Mock).mockRejectedValueOnce(
+      Object.assign(new Error('Service Cloud Functions temporairement indisponible. Réessayez dans un instant.'), {
+        code: 'functions/unavailable',
+      }),
+    );
+    try {
+      await sponsorQuoteService.requestDocuments({
+        requestId: 'sq-transport',
+        docTypes: ['kbis'],
+      });
+      throw new Error('expected reject');
+    } catch (e) {
+      expect(e).toBeInstanceOf(Error);
+      expect((e as Error).message).toMatch(/temporairement indisponible/i);
+      expect((e as Error).message).not.toMatch(/Blaze/i);
+    }
   });
 });

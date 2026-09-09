@@ -228,6 +228,8 @@ export const subscriptionService = {
         /Stripe non configuré/i.test(msg) ||
         /Cloud Function introuvable/i.test(msg) ||
         /Cloud Functions indisponibles/i.test(msg) ||
+        /temporairement indisponible/i.test(msg) ||
+        /Erreur serveur Cloud Functions/i.test(msg) ||
         /Firebase Functions non configurées/i.test(msg);
 
       if (!canFallbackToStore) {

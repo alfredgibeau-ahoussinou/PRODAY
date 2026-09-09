@@ -42,4 +42,39 @@ describe('firebaseFunctions AI error honesty', () => {
     expect(msg).toMatch(/Mistral|Assistant IA/i);
     expect(msg).not.toMatch(/proday\.admin@gmail\.com/i);
   });
+
+  it('ne mappe plus unavailable/internal vers le faux message Blaze', () => {
+    expect(
+      getCallableErrorMessage(
+        Object.assign(new Error('unavailable'), { code: 'functions/unavailable' }),
+      ),
+    ).toMatch(/temporairement indisponible/i);
+    expect(
+      getCallableErrorMessage(
+        Object.assign(new Error('internal'), { code: 'functions/internal' }),
+      ),
+    ).toMatch(/Erreur serveur/i);
+    expect(
+      getCallableErrorMessage(
+        Object.assign(new Error('deadline-exceeded'), {
+          code: 'functions/deadline-exceeded',
+        }),
+      ),
+    ).toMatch(/Délai dépassé/i);
+
+    const legacy = Object.assign(
+      new Error('Cloud Functions indisponibles (plan Blaze + firebase deploy --only functions).'),
+      { code: 'functions/unavailable' },
+    );
+    expect(getCallableErrorMessage(legacy)).not.toMatch(/Blaze/i);
+    expect(getCallableErrorMessage(legacy)).toMatch(/temporairement indisponible/i);
+  });
+
+  it('garde not-found nu comme hint deploy (sans Blaze)', () => {
+    const msg = getCallableErrorMessage(
+      Object.assign(new Error('not-found'), { code: 'functions/not-found' }),
+    );
+    expect(msg).toMatch(/introuvable|déploy/i);
+    expect(msg).not.toMatch(/Blaze/i);
+  });
 });
