@@ -28,7 +28,7 @@ function quoteTotal(input: {
 describe('Espace Admin navigation', () => {
   it('expose un menu exhaustif (pas 6 zones Pulse)', () => {
     const ids = ADMIN_NAV_ITEMS.map((n) => n.id);
-    expect(ids.length).toBeGreaterThanOrEqual(28);
+    expect(ids.length).toBeGreaterThanOrEqual(29);
     expect(ids).toContain('overview');
     expect(ids).toContain('users');
     expect(ids).toContain('user_create');
@@ -36,6 +36,7 @@ describe('Espace Admin navigation', () => {
     expect(ids).toContain('verifications');
     expect(ids).toContain('sync');
     expect(ids).toContain('subscriptions');
+    expect(ids).toContain('sponsor_quotes');
     expect(ids).not.toContain('tour');
     expect(ids).not.toContain('pulse');
     expect(ids).not.toContain('menu');
@@ -72,6 +73,7 @@ describe('Espace Admin navigation', () => {
     expect(resolveAdminNav('comptes').section).toBe('users');
     expect(resolveAdminNav('business').section).toBe('quotes');
     expect(resolveAdminNav('devis').section).toBe('quotes');
+    expect(resolveAdminNav('sponsor_quotes').section).toBe('sponsor_quotes');
     expect(resolveAdminNav('standings').section).toBe('classements');
     expect(resolveAdminNav('claims').section).toBe('claims');
     expect(resolveAdminNav('clubs').section).toBe('clubs');

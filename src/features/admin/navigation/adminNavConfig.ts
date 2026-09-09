@@ -36,6 +36,7 @@ export type AdminNavSectionId =
   | 'payments'
   | 'subscriptions'
   | 'quotes'
+  | 'sponsor_quotes'
   | 'shop'
   | 'sponsors'
   | 'reels'
@@ -247,6 +248,14 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     hint: 'Quotes commerciaux club',
   },
   {
+    id: 'sponsor_quotes',
+    label: 'Devis sponsors',
+    shortLabel: 'Sp. devis',
+    icon: 'briefcase',
+    group: 'business',
+    hint: 'Demandes · mails · docs · thread',
+  },
+  {
     id: 'shop',
     label: 'Commandes boutique',
     shortLabel: 'Shop',
@@ -260,7 +269,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     shortLabel: 'Spons.',
     icon: 'briefcase',
     group: 'business',
-    hint: 'Offres · goals · devis partenaires',
+    hint: 'Offres · goals partenaires',
   },
   {
     id: 'reels',
@@ -381,6 +390,9 @@ const LEGACY_MAP: Record<string, AdminNavTarget> = {
   abonnements: { section: 'subscriptions' },
   commercial: { section: 'quotes' },
   devis: { section: 'quotes' },
+  devis_sponsors: { section: 'sponsor_quotes' },
+  sponsor_quotes: { section: 'sponsor_quotes' },
+  sponsor_devis: { section: 'sponsor_quotes' },
   contenus: { section: 'reels' },
   securite: { section: 'verifications' },
   parametres: { section: 'config' },

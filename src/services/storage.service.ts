@@ -246,6 +246,16 @@ async function uploadNativeFileViaFetch(
   if (result.status >= 200 && result.status < 300) return;
 
   const bodyPreview = (await result.text()).slice(0, 320);
+  if (
+    result.status === 402 ||
+    bodyPreview.includes('billing account') ||
+    bodyPreview.includes('delinquent') ||
+    bodyPreview.toLowerCase().includes('billing')
+  ) {
+    throw new Error(
+      'Le compte de facturation Firebase / Google Cloud est suspendu ou désactivé (erreur 402). Veuillez réactiver la facturation sur Google Cloud Console pour envoyer des images.'
+    );
+  }
   if (result.status === 403 || bodyPreview.includes('storage/unauthorized')) {
     throw new Error(
       `Accès Storage refusé (${cleanContentType}). Reconnectez-vous, puis vérifiez les règles Storage. ${bodyPreview || 'firebase deploy --only storage'}`
@@ -319,6 +329,16 @@ async function uploadNativeFileViaRest(
   if (result.status >= 200 && result.status < 300) return;
 
   const bodyPreview = result.body?.slice(0, 320) ?? '';
+  if (
+    result.status === 402 ||
+    bodyPreview.includes('billing account') ||
+    bodyPreview.includes('delinquent') ||
+    bodyPreview.toLowerCase().includes('billing')
+  ) {
+    throw new Error(
+      'Le compte de facturation Firebase / Google Cloud est suspendu ou désactivé (erreur 402). Veuillez réactiver la facturation sur Google Cloud Console pour envoyer des images.'
+    );
+  }
   if (result.status === 403 || bodyPreview.includes('storage/unauthorized')) {
     throw new Error(
       `Accès Storage refusé (${cleanContentType}). Reconnectez-vous, puis vérifiez les règles Storage. ${bodyPreview || 'firebase deploy --only storage'}`
@@ -428,6 +448,16 @@ async function uploadFileToStorageRef(
 
 function mapStorageUploadError(error: unknown): Error {
   const msg = error instanceof Error ? error.message : String(error);
+  if (
+    msg.includes('402') ||
+    msg.includes('billing account') ||
+    msg.includes('delinquent') ||
+    msg.toLowerCase().includes('billing')
+  ) {
+    return new Error(
+      'Le compte de facturation Firebase / Google Cloud est suspendu ou désactivé (erreur 402). Veuillez réactiver la facturation sur Google Cloud Console pour envoyer des images.'
+    );
+  }
   if (msg.includes('storage/unauthorized') || msg.includes('403')) {
     return new Error(
       'Accès Storage refusé. Vérifiez la session utilisateur, puis que Firebase Storage est activé et les règles déployées (firebase deploy --only storage).'
@@ -510,6 +540,32 @@ export const storageService = {
     const storageRef = ref(storage, path);
 
     await uploadFileToStorageRef(storageRef, file.uri, contentType, `document:${documentType}`);
+    return getDownloadURL(storageRef);
+  },
+
+  async uploadSponsorQuoteDocument(
+    uid: string,
+    quoteRequestId: string,
+    documentRequestId: string,
+    file: UploadFileInput,
+  ): Promise<string> {
+    const storage = getFirebaseStorage();
+    if (!storage) {
+      throw new Error('Firebase Storage non configuré.');
+    }
+    const ownerUid = requireAuthUid(uid);
+    const contentType = file.mimeType.includes('pdf')
+      ? 'application/pdf'
+      : normalizeImageMimeType(file.mimeType);
+    const ext = extensionForMime(contentType);
+    const path = `sponsor_quotes/${quoteRequestId}/${documentRequestId}_${ownerUid}_${Date.now()}.${ext}`;
+    const storageRef = ref(storage, path);
+    await uploadFileToStorageRef(
+      storageRef,
+      file.uri,
+      contentType,
+      `sponsor-quote-doc:${documentRequestId}`,
+    );
     return getDownloadURL(storageRef);
   },
 

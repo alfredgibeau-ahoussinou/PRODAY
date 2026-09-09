@@ -842,21 +842,27 @@ export function AdminSubscriptionsPane({ onNavigate }: { onNavigate: NavFn }) {
   );
 }
 
-export function AdminQuotesPane() {
+export function AdminQuotesPane({ onNavigate }: { onNavigate?: NavFn }) {
   const data = useAdminData();
   if (data.loading) return <AdminLoading />;
-  const empty =
-    data.clubQuoteRequests.length === 0 && data.sponsorQuoteRequests.length === 0;
+  const empty = data.clubQuoteRequests.length === 0;
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.pad}>
       <AdminPaneHeader
         title="Devis clubs"
-        subtitle={`${data.clubQuoteRequests.length} devis · ${data.sponsorQuoteRequests.length} partenaires`}
+        subtitle={`${data.clubQuoteRequests.length} demandes club`}
       />
+      {onNavigate ? (
+        <AdminButton
+          label={`Devis sponsors (${data.sponsorQuoteRequests.length})`}
+          variant="soft"
+          onPress={() => onNavigate('sponsor_quotes')}
+        />
+      ) : null}
       {empty ? (
         <AdminEmptyState
-          title="Aucun devis"
-          body="Les demandes commerciales club et partenaires s’affichent ici."
+          title="Aucun devis club"
+          body="Les demandes commerciales club s’affichent ici. Les devis partenaires sont dans Devis sponsors."
           icon="document"
         />
       ) : null}
@@ -869,16 +875,6 @@ export function AdminQuotesPane() {
           badge={q.status}
           badgeTone="warn"
           leading={<AdminAvatarMark label={q.club_name} tone="warn" />}
-        />
-      ))}
-      {data.sponsorQuoteRequests.map((q) => (
-        <AdminEntityRow
-          key={q.id}
-          title={q.company_name}
-          subtitle={`${q.contact_name} · ${q.contact_email}`}
-          badge={q.status}
-          badgeTone="info"
-          leading={<AdminAvatarMark label={q.company_name} tone="info" />}
         />
       ))}
     </ScrollView>
@@ -931,7 +927,7 @@ export function AdminShopPane() {
   );
 }
 
-export function AdminSponsorsPane() {
+export function AdminSponsorsPane({ onNavigate }: { onNavigate?: NavFn }) {
   const data = useAdminData();
   if (data.loading) return <AdminLoading />;
   const empty = data.sponsorOffers.length === 0 && data.fundingGoals.length === 0;
@@ -941,6 +937,13 @@ export function AdminSponsorsPane() {
         title="Sponsors & funding"
         subtitle={`${data.sponsorOffers.length} offres · ${data.fundingGoals.length} goals`}
       />
+      {onNavigate ? (
+        <AdminButton
+          label={`Ouvrir devis sponsors (${data.sponsorQuoteRequests.length})`}
+          variant="soft"
+          onPress={() => onNavigate('sponsor_quotes')}
+        />
+      ) : null}
       {empty ? (
         <AdminEmptyState
           title="Aucun sponsor"

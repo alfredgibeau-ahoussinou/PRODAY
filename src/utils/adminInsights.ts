@@ -149,7 +149,7 @@ export function buildAdminWorkQueue(input: {
       title: `Devis partenaire · ${quote.company_name}`,
       subtitle: `${quote.contact_name} · ${quote.contact_email}`,
       meta: quote.package_tier,
-      targetSection: 'quotes',
+      targetSection: 'sponsor_quotes',
       entityId: quote.id,
       createdAt: quote.created_at,
     });

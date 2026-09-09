@@ -68,6 +68,10 @@ import { createSubmitSponsorQuoteRequestHandler } from './sponsorQuoteRequest';
 import {
   createAdminSendSponsorQuoteHandler,
   createAdminRejectSponsorQuoteHandler,
+  createAdminSponsorQuoteMessageHandler,
+  createAdminRequestSponsorQuoteDocsHandler,
+  createSponsorFulfillQuoteDocHandler,
+  createGetSponsorQuoteDeskHandler,
 } from './sponsorQuoteAdmin';
 import { onV3BrainWrite } from './v3Brain';
 import { activateStoreSubscription } from './subscriptionIap';
@@ -1253,3 +1257,23 @@ export const adminSendSponsorQuote = functions
 export const adminRejectSponsorQuote = functions
   .region('europe-west1')
   .https.onCall(createAdminRejectSponsorQuoteHandler(db));
+
+/** Message / e-mail libre admin → sponsor (devis). */
+export const adminSponsorQuoteMessage = functions
+  .region('europe-west1')
+  .https.onCall(createAdminSponsorQuoteMessageHandler(db));
+
+/** Demande de documents sur un devis sponsor. */
+export const adminRequestSponsorQuoteDocs = functions
+  .region('europe-west1')
+  .https.onCall(createAdminRequestSponsorQuoteDocsHandler(db));
+
+/** Sponsor (ou admin) dépose un document demandé. */
+export const sponsorFulfillQuoteDoc = functions
+  .region('europe-west1')
+  .https.onCall(createSponsorFulfillQuoteDocHandler(db));
+
+/** Desk devis sponsor — thread, docs, historique. */
+export const getSponsorQuoteDesk = functions
+  .region('europe-west1')
+  .https.onCall(createGetSponsorQuoteDeskHandler(db));

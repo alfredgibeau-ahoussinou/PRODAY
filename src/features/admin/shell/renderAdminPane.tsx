@@ -33,6 +33,7 @@ import {
   AdminTrafficPane,
   AdminTournamentsPane,
 } from '../panes/AdminOpsPanes';
+import { AdminSponsorQuotesPane } from '../panes/AdminSponsorQuotesPane';
 
 type Props = {
   section: AdminNavSectionId;
@@ -102,11 +103,13 @@ export function renderAdminPane({
     case 'subscriptions':
       return <AdminSubscriptionsPane onNavigate={onNavigate} />;
     case 'quotes':
-      return <AdminQuotesPane />;
+      return <AdminQuotesPane onNavigate={onNavigate} />;
+    case 'sponsor_quotes':
+      return <AdminSponsorQuotesPane focusId={focusId} />;
     case 'shop':
       return <AdminShopPane />;
     case 'sponsors':
-      return <AdminSponsorsPane />;
+      return <AdminSponsorsPane onNavigate={onNavigate} />;
     case 'reels':
       return <AdminReelsPane />;
     case 'feed':

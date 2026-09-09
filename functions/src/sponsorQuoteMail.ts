@@ -174,3 +174,115 @@ export function getAdminAlertEmail(): string {
   const override = configStr('admin', 'alert_email', ['ADMIN_ALERT_EMAIL']);
   return override || ADMIN_ALERT_EMAIL;
 }
+
+export function buildThreadMessageEmailHtml(input: {
+  contactName: string;
+  companyName: string;
+  body: string;
+}): string {
+  const greeting = input.contactName.trim() || 'Bonjour';
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#0a0f1a;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0f1a;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" style="max-width:600px;background:#111827;border-radius:16px;border:1px solid #1e293b;">
+        <tr><td style="padding:32px;border-bottom:1px solid #1e293b;text-align:center;">
+          <p style="margin:0;font-size:24px;font-weight:700;letter-spacing:0.12em;color:#fff;">PRO<span style="color:#22d3ee;">DAY</span></p>
+          <p style="margin:8px 0 0;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#64748b;">Partenaires &amp; Sponsors</p>
+        </td></tr>
+        <tr><td style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.65;">
+          <p style="margin:0 0 16px;">${escapeHtml(greeting)},</p>
+          <p style="margin:0 0 16px;">Concernant votre demande pour <strong>${escapeHtml(input.companyName || 'votre entreprise')}</strong> :</p>
+          <div style="margin:24px 0;padding:20px;background:#0f172a;border-radius:12px;border:1px solid #334155;white-space:pre-wrap;">${escapeHtml(input.body)}</div>
+          <p style="margin:24px 0 0;color:#94a3b8;">Cordialement,<br/><strong style="color:#e2e8f0;">L'équipe ProDay Partenaires</strong><br/>proday.admin@gmail.com</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export function buildThreadMessageEmailText(input: {
+  contactName: string;
+  companyName: string;
+  body: string;
+}): string {
+  const greeting = input.contactName.trim() || 'Bonjour';
+  return [
+    `${greeting},`,
+    '',
+    `Concernant votre demande pour ${input.companyName || 'votre entreprise'} :`,
+    '',
+    input.body,
+    '',
+    'Cordialement,',
+    "L'équipe ProDay Partenaires",
+    'proday.admin@gmail.com',
+  ].join('\n');
+}
+
+export function buildDocumentRequestEmailHtml(input: {
+  contactName: string;
+  companyName: string;
+  labels: string[];
+  message?: string;
+}): string {
+  const greeting = input.contactName.trim() || 'Bonjour';
+  const list = input.labels.map((l) => `<li>${escapeHtml(l)}</li>`).join('');
+  const note = input.message
+    ? `<p style="margin:16px 0 0;">${escapeHtml(input.message)}</p>`
+    : '';
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+<body style="margin:0;padding:0;background:#0a0f1a;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0f1a;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" style="max-width:600px;background:#111827;border-radius:16px;border:1px solid #1e293b;">
+        <tr><td style="padding:32px;border-bottom:1px solid #1e293b;text-align:center;">
+          <p style="margin:0;font-size:24px;font-weight:700;letter-spacing:0.12em;color:#fff;">PRO<span style="color:#22d3ee;">DAY</span></p>
+          <p style="margin:8px 0 0;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#64748b;">Documents demandés</p>
+        </td></tr>
+        <tr><td style="padding:32px;color:#e2e8f0;font-size:15px;line-height:1.65;">
+          <p style="margin:0 0 16px;">${escapeHtml(greeting)},</p>
+          <p style="margin:0 0 16px;">Pour finaliser le dossier partenaire de <strong>${escapeHtml(input.companyName || 'votre entreprise')}</strong>, merci de nous transmettre :</p>
+          <ul style="margin:0;padding-left:20px;color:#cbd5e1;">${list}</ul>
+          ${note}
+          <p style="margin:24px 0 0;">Vous pouvez déposer les fichiers depuis l’espace Sponsor ProDay (si votre compte est lié), ou répondre à cet e-mail.</p>
+          <p style="margin:24px 0 0;color:#94a3b8;">Cordialement,<br/><strong style="color:#e2e8f0;">L'équipe ProDay Partenaires</strong></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export function buildDocumentRequestEmailText(input: {
+  contactName: string;
+  companyName: string;
+  labels: string[];
+  message?: string;
+}): string {
+  const greeting = input.contactName.trim() || 'Bonjour';
+  const lines = [
+    `${greeting},`,
+    '',
+    `Pour finaliser le dossier partenaire de ${input.companyName || 'votre entreprise'}, merci de nous transmettre :`,
+    ...input.labels.map((l) => `- ${l}`),
+  ];
+  if (input.message) {
+    lines.push('', input.message);
+  }
+  lines.push(
+    '',
+    'Vous pouvez déposer les fichiers depuis l’espace Sponsor ProDay (si votre compte est lié), ou répondre à cet e-mail.',
+    '',
+    'Cordialement,',
+    "L'équipe ProDay Partenaires",
+  );
+  return lines.join('\n');
+}

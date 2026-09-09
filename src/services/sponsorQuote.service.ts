@@ -9,14 +9,31 @@ import {
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
 import { callFunction } from '../lib/firebaseFunctions';
-import type { SponsorQuoteRequest, SponsorQuoteRequestStatus } from '../models/SponsorQuoteRequest';
+import type {
+  SponsorQuoteDocumentRequest,
+  SponsorQuoteEvent,
+  SponsorQuoteRequest,
+  SponsorQuoteRequestStatus,
+  SponsorQuoteThreadMessage,
+} from '../models/SponsorQuoteRequest';
+import {
+  buildDefaultQuoteHtmlPreview,
+  buildDefaultQuoteSubject,
+} from '../utils/sponsorQuoteCopy';
 
-const SPONSOR_QUOTE_FUNCTION_URL = 'https://europe-west1-proday-155b0.cloudfunctions.net/submitSponsorQuoteRequest';
+export { buildDefaultQuoteHtmlPreview, buildDefaultQuoteSubject };
+
+const SPONSOR_QUOTE_FUNCTION_URL =
+  'https://europe-west1-proday-155b0.cloudfunctions.net/submitSponsorQuoteRequest';
 const SPONSOR_ADMIN_FUNCTIONS_REGION = 'europe-west1';
 
 function parseTimestamp(value: unknown): Date | undefined {
   if (!value) return undefined;
   if (value instanceof Date) return value;
+  if (typeof value === 'string') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  }
   if (typeof value === 'object' && value !== null && 'toDate' in value) {
     return (value as { toDate: () => Date }).toDate();
   }
@@ -29,6 +46,7 @@ function quoteFromFirestore(id: string, data: Record<string, unknown>): SponsorQ
     company_name: String(data.company_name ?? ''),
     contact_email: String(data.contact_email ?? ''),
     contact_name: String(data.contact_name ?? ''),
+    contact_role: data.contact_role ? String(data.contact_role) : undefined,
     phone: data.phone ? String(data.phone) : undefined,
     budget: data.budget ? String(data.budget) : undefined,
     goals: Array.isArray(data.goals) ? data.goals.map(String) : undefined,
@@ -43,6 +61,8 @@ function quoteFromFirestore(id: string, data: Record<string, unknown>): SponsorQ
     status: (data.status as SponsorQuoteRequestStatus) ?? 'pending',
     admin_note: data.admin_note ? String(data.admin_note) : undefined,
     quote_subject: data.quote_subject ? String(data.quote_subject) : undefined,
+    docs_pending: data.docs_pending === true,
+    last_contact_at: parseTimestamp(data.last_contact_at),
     created_at: parseTimestamp(data.created_at) ?? new Date(),
     sent_at: parseTimestamp(data.sent_at),
     updated_at: parseTimestamp(data.updated_at),
@@ -53,29 +73,42 @@ function sortByCreatedDesc(items: SponsorQuoteRequest[]): SponsorQuoteRequest[] 
   return [...items].sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
 }
 
-export function buildDefaultQuoteSubject(companyName: string): string {
-  const name = companyName.trim() || 'votre entreprise';
-  return `Votre devis ProDay Sponsor. ${name}`;
+function mapThread(raw: Record<string, unknown>): SponsorQuoteThreadMessage {
+  return {
+    id: String(raw.id ?? ''),
+    author_role: (raw.author_role as SponsorQuoteThreadMessage['author_role']) ?? 'system',
+    author_uid: String(raw.author_uid ?? ''),
+    body: String(raw.body ?? ''),
+    channel: raw.channel === 'email' ? 'email' : 'internal',
+    email_sent: raw.email_sent === true,
+    email_error: raw.email_error ? String(raw.email_error) : undefined,
+    subject: raw.subject ? String(raw.subject) : undefined,
+    created_at: parseTimestamp(raw.created_at) ?? new Date(),
+  };
 }
 
-export function buildDefaultQuoteHtmlPreview(request: SponsorQuoteRequest): string {
-  const packageLabels = {
-    starter: 'Découverte (0 €)',
-    territorial: 'Territorial (49 €/mois)',
-    national: 'National Pro (99 €/mois)',
-    custom: 'Sur-mesure',
+function mapDoc(raw: Record<string, unknown>): SponsorQuoteDocumentRequest {
+  return {
+    id: String(raw.id ?? ''),
+    type: String(raw.type ?? 'other'),
+    label: String(raw.label ?? raw.type ?? 'Document'),
+    status: (raw.status as SponsorQuoteDocumentRequest['status']) ?? 'requested',
+    file_url: raw.file_url ? String(raw.file_url) : undefined,
+    file_name: raw.file_name ? String(raw.file_name) : undefined,
+    requested_at: parseTimestamp(raw.requested_at) ?? new Date(),
+    uploaded_at: parseTimestamp(raw.uploaded_at),
   };
-  const greeting = request.contact_name.trim() || 'Bonjour';
-  const goals = request.goals?.length ? `<li>Objectifs : ${request.goals.join(', ')}</li>` : '';
-  const regions = request.regions?.length ? `<li>Zones : ${request.regions.join(', ')}</li>` : '';
-  const budget = request.budget ? `<li>Budget : ${request.budget}</li>` : '';
+}
 
-  return `<p>${greeting},</p>
-<p>Merci pour votre intérêt pour <strong>ProDay Sponsor</strong>. Voici notre proposition pour <strong>${request.company_name}</strong>.</p>
-<p><strong>${packageLabels[request.package_tier]}</strong></p>
-<ul>${budget}${goals}${regions}</ul>
-<p>Répondez à cet email pour valider ou ajuster la proposition.</p>
-<p>Cordialement,<br/>L'équipe ProDay Partenaires</p>`;
+function mapEvent(raw: Record<string, unknown>): SponsorQuoteEvent {
+  return {
+    id: String(raw.id ?? ''),
+    type: String(raw.type ?? ''),
+    actor_uid: String(raw.actor_uid ?? ''),
+    actor_role: (raw.actor_role as SponsorQuoteEvent['actor_role']) ?? 'system',
+    summary: String(raw.summary ?? ''),
+    created_at: parseTimestamp(raw.created_at) ?? new Date(),
+  };
 }
 
 export const sponsorQuoteService = {
@@ -171,22 +204,64 @@ export const sponsorQuoteService = {
     }
   },
 
+  async listForSponsor(sponsorUid: string, max = 20): Promise<SponsorQuoteRequest[]> {
+    if (!isFirebaseConfigured() || !sponsorUid.trim()) return [];
+    const database = getDb();
+    if (!database) return [];
+    try {
+      const q = query(
+        collection(database, 'sponsor_quote_requests'),
+        where('sponsor_uid', '==', sponsorUid),
+        orderBy('created_at', 'desc'),
+        limit(max),
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => quoteFromFirestore(d.id, d.data() as Record<string, unknown>));
+    } catch {
+      const snap = await getDocs(collection(database, 'sponsor_quote_requests'));
+      return sortByCreatedDesc(
+        snap.docs
+          .map((d) => quoteFromFirestore(d.id, d.data() as Record<string, unknown>))
+          .filter((q) => q.sponsor_uid === sponsorUid),
+      ).slice(0, max);
+    }
+  },
+
+  async getDesk(requestId: string): Promise<{
+    thread: SponsorQuoteThreadMessage[];
+    documents: SponsorQuoteDocumentRequest[];
+    events: SponsorQuoteEvent[];
+  }> {
+    const res = await callFunction<
+      { requestId: string },
+      {
+        thread: Array<Record<string, unknown>>;
+        documents: Array<Record<string, unknown>>;
+        events: Array<Record<string, unknown>>;
+      }
+    >('getSponsorQuoteDesk', { requestId }, SPONSOR_ADMIN_FUNCTIONS_REGION);
+    return {
+      thread: (res.thread ?? []).map(mapThread),
+      documents: (res.documents ?? []).map(mapDoc),
+      events: (res.events ?? []).map(mapEvent),
+    };
+  },
+
   async sendQuote(input: {
     requestId: string;
     subject: string;
     htmlBody: string;
     textBody?: string;
+    allowResend?: boolean;
   }): Promise<{ success: boolean; emailSent: boolean; emailError?: string }> {
-    return callFunction<
-      { requestId: string; subject: string; htmlBody: string; textBody?: string },
-      { success: boolean; emailSent: boolean; emailError?: string }
-    >(
+    return callFunction(
       'adminSendSponsorQuote',
       {
         requestId: input.requestId,
         subject: input.subject,
         htmlBody: input.htmlBody,
         textBody: input.textBody,
+        allowResend: input.allowResend,
       },
       SPONSOR_ADMIN_FUNCTIONS_REGION,
     );
@@ -198,5 +273,42 @@ export const sponsorQuoteService = {
       { requestId, note },
       SPONSOR_ADMIN_FUNCTIONS_REGION,
     );
+  },
+
+  async sendMessage(input: {
+    requestId: string;
+    body: string;
+    subject?: string;
+    sendEmail?: boolean;
+  }): Promise<{ success: boolean; messageId: string; emailSent: boolean; emailError?: string }> {
+    return callFunction(
+      'adminSponsorQuoteMessage',
+      input,
+      SPONSOR_ADMIN_FUNCTIONS_REGION,
+    );
+  },
+
+  async requestDocuments(input: {
+    requestId: string;
+    docTypes: string[];
+    customLabels?: string[];
+    message?: string;
+    sendEmail?: boolean;
+  }): Promise<{
+    success: boolean;
+    requestedIds: string[];
+    emailSent: boolean;
+    emailError?: string;
+  }> {
+    return callFunction('adminRequestSponsorQuoteDocs', input, SPONSOR_ADMIN_FUNCTIONS_REGION);
+  },
+
+  async fulfillDocument(input: {
+    requestId: string;
+    documentRequestId: string;
+    fileUrl: string;
+    fileName?: string;
+  }): Promise<{ success: boolean }> {
+    return callFunction('sponsorFulfillQuoteDoc', input, SPONSOR_ADMIN_FUNCTIONS_REGION);
   },
 };

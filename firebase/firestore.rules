@@ -1241,10 +1241,35 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    /** Demandes de devis sponsor — création serveur, lecture/admin envoi */
+    /** Demandes de devis sponsor — création serveur, lecture admin ou sponsor lié */
     match /sponsor_quote_requests/{requestId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.sponsor_uid == request.auth.uid);
       allow write: if false;
+
+      match /thread/{messageId} {
+        allow read: if isAdmin()
+          || (isSignedIn()
+            && get(/databases/$(database)/documents/sponsor_quote_requests/$(requestId)).data.sponsor_uid
+              == request.auth.uid);
+        allow write: if false;
+      }
+
+      match /document_requests/{docId} {
+        allow read: if isAdmin()
+          || (isSignedIn()
+            && get(/databases/$(database)/documents/sponsor_quote_requests/$(requestId)).data.sponsor_uid
+              == request.auth.uid);
+        allow write: if false;
+      }
+
+      match /events/{eventId} {
+        allow read: if isAdmin()
+          || (isSignedIn()
+            && get(/databases/$(database)/documents/sponsor_quote_requests/$(requestId)).data.sponsor_uid
+              == request.auth.uid);
+        allow write: if false;
+      }
     }
 
     /** Demandes de devis Club (Tout inclus / Pro+Veo) — création app, lecture admin */

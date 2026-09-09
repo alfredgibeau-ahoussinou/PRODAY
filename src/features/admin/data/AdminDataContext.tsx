@@ -163,7 +163,7 @@ export const AdminDataProvider: React.FC<{ children: React.ReactNode }> = ({
       adminService.listCommunityReels(),
       adminService.listReelReports(),
       adminService.listDailyPlatformSnapshots(14),
-      sponsorQuoteService.listForAdmin('pending', 30),
+      sponsorQuoteService.listForAdmin('all', 80),
       clubQuoteService.listForAdmin('all', 80),
       adminService.getTrafficTotals(),
       adminService.listTrafficDaily(30),

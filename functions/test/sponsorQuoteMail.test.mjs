@@ -4,6 +4,8 @@ import {
   buildDefaultQuoteHtml,
   buildDefaultQuoteSubject,
   buildDefaultQuoteText,
+  buildDocumentRequestEmailText,
+  buildThreadMessageEmailHtml,
   SPONSOR_QUOTE_PACKAGE_LABELS,
 } from '../lib/sponsorQuoteMail.js';
 
@@ -39,4 +41,26 @@ test('buildDefaultQuoteText — version texte lisible', () => {
   assert.ok(text.includes('Marie'));
   assert.ok(text.includes(SPONSOR_QUOTE_PACKAGE_LABELS.national));
   assert.ok(text.includes('500 €'));
+});
+
+test('buildDocumentRequestEmailText — liste les pièces', () => {
+  const text = buildDocumentRequestEmailText({
+    contactName: 'Marie',
+    companyName: 'Acme',
+    labels: ['Kbis', 'Logo HD'],
+    message: 'Merci sous 48 h',
+  });
+  assert.ok(text.includes('Kbis'));
+  assert.ok(text.includes('Logo HD'));
+  assert.ok(text.includes('Merci sous 48 h'));
+});
+
+test('buildThreadMessageEmailHtml — corps message', () => {
+  const html = buildThreadMessageEmailHtml({
+    contactName: 'Marie',
+    companyName: 'Acme',
+    body: 'Pouvez-vous confirmer le budget ?',
+  });
+  assert.match(html, /Pouvez-vous confirmer/);
+  assert.match(html, /Acme/);
 });

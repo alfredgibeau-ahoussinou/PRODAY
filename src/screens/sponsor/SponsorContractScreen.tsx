@@ -11,6 +11,7 @@ import { resolveSponsorPricingTier } from '../../utils/sponsorTier';
 import { SPONSOR_NAV_INSET } from '../../navigation/sponsorTabConfig';
 import { SPONSOR_THEME } from '../../content/sponsorExperience';
 import { spacing, radius } from '../../theme/designTokens';
+import { SponsorQuoteDocsPanel } from '../../components/sponsor/SponsorQuoteDocsPanel';
 
 interface SponsorContractScreenProps {
   shellMode?: boolean;
@@ -73,6 +74,8 @@ export const SponsorContractScreen: React.FC<SponsorContractScreenProps> = ({
       <PressableSpring style={styles.cta} onPress={contactCommercial} scaleTo={0.97} haptic>
         <Text style={styles.ctaText}>{t('sponsor.contract.contactCta')}</Text>
       </PressableSpring>
+
+      <SponsorQuoteDocsPanel />
     </ScrollView>
   );
 };
