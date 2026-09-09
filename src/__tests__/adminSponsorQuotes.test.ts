@@ -10,6 +10,32 @@ import {
 } from '../utils/sponsorQuoteCopy';
 import { resolveAdminNav, isAdminNavSectionId } from '../features/admin/navigation/adminNavConfig';
 import { buildAdminWorkQueue } from '../utils/adminInsights';
+import { sponsorQuoteService } from '../services/sponsorQuote.service';
+import { callFunction } from '../lib/firebaseFunctions';
+
+jest.mock('../lib/firebaseFunctions', () => ({
+  callFunction: jest.fn(),
+  getCallableErrorMessage: (e: unknown) =>
+    e instanceof Error ? e.message : 'erreur',
+}));
+
+jest.mock('../lib/firebase', () => ({
+  getDb: () => ({}),
+}));
+
+jest.mock('../config/firebase', () => ({
+  isFirebaseConfigured: () => true,
+}));
+
+const mockGetDocs = jest.fn();
+jest.mock('firebase/firestore', () => ({
+  collection: jest.fn((...args: unknown[]) => args),
+  getDocs: (...args: unknown[]) => mockGetDocs(...args),
+  query: jest.fn((...args: unknown[]) => args),
+  orderBy: jest.fn((...args: unknown[]) => args),
+  limit: jest.fn((...args: unknown[]) => args),
+  where: jest.fn((...args: unknown[]) => args),
+}));
 
 describe('Admin devis sponsors', () => {
   it('expose la section sponsor_quotes dans la nav', () => {
@@ -69,5 +95,26 @@ describe('Admin devis sponsors', () => {
     const hit = queue.find((i) => i.kind === 'quote');
     expect(hit?.targetSection).toBe('sponsor_quotes');
     expect(hit?.entityId).toBe('sq1');
+  });
+
+  it('getDesk bascule sur Firestore si getSponsorQuoteDesk est absente', async () => {
+    (callFunction as jest.Mock).mockRejectedValueOnce(
+      Object.assign(new Error('Cloud Function introuvable (région europe-west1 ou non déployée).'), {
+        code: 'functions/not-found',
+      }),
+    );
+    mockGetDocs.mockResolvedValue({ docs: [] });
+    const desk = await sponsorQuoteService.getDesk('eb93d7b9');
+    expect(desk).toEqual({ thread: [], documents: [], events: [] });
+    expect(mockGetDocs).toHaveBeenCalled();
+  });
+
+  it('sendMessage refuse honnêtement si CF absente (pas de fake e-mail)', async () => {
+    (callFunction as jest.Mock).mockRejectedValueOnce(
+      Object.assign(new Error('not-found'), { code: 'functions/not-found' }),
+    );
+    await expect(
+      sponsorQuoteService.sendMessage({ requestId: 'eb93d7b9', body: 'Bonjour' }),
+    ).rejects.toThrow(/facturation Blaze|non déployée/i);
   });
 });

@@ -8,7 +8,8 @@ import {
 } from 'firebase/firestore';
 import { getDb } from '../lib/firebase';
 import { isFirebaseConfigured } from '../config/firebase';
-import { callFunction } from '../lib/firebaseFunctions';
+import { callFunction, getCallableErrorMessage } from '../lib/firebaseFunctions';
+import { getErrorCode } from '../utils/errors';
 import type {
   SponsorQuoteDocumentRequest,
   SponsorQuoteEvent,
@@ -25,7 +26,22 @@ export { buildDefaultQuoteHtmlPreview, buildDefaultQuoteSubject };
 
 const SPONSOR_QUOTE_FUNCTION_URL =
   'https://europe-west1-proday-155b0.cloudfunctions.net/submitSponsorQuoteRequest';
+/** Aligné avec `functions/src/index.ts` (`.region('europe-west1')`). */
 const SPONSOR_ADMIN_FUNCTIONS_REGION = 'europe-west1';
+
+/**
+ * Callables desk / message / docs absentes du projet tant que le deploy
+ * (bloqué si facturation Blaze inactive) n’a pas réussi.
+ */
+const SPONSOR_QUOTE_WRITE_CF_HINT =
+  'Cloud Function devis sponsor non déployée (europe-west1). Réactivez la facturation Blaze sur proday-155b0 puis : firebase deploy --only functions:getSponsorQuoteDesk,functions:adminSponsorQuoteMessage,functions:adminRequestSponsorQuoteDocs,functions:sponsorFulfillQuoteDoc';
+
+function isCallableNotFound(error: unknown): boolean {
+  const code = getErrorCode(error);
+  if (code === 'functions/not-found') return true;
+  const msg = error instanceof Error ? error.message : getCallableErrorMessage(error);
+  return /Cloud Function introuvable|functions\/not-found|not-found/i.test(msg);
+}
 
 function parseTimestamp(value: unknown): Date | undefined {
   if (!value) return undefined;
@@ -227,24 +243,94 @@ export const sponsorQuoteService = {
     }
   },
 
+  /**
+   * Lecture desk via Firestore (règles : admin ou sponsor lié).
+   * Fallback honnête quand `getSponsorQuoteDesk` n’est pas encore déployée.
+   */
+  async getDeskFromFirestore(requestId: string): Promise<{
+    thread: SponsorQuoteThreadMessage[];
+    documents: SponsorQuoteDocumentRequest[];
+    events: SponsorQuoteEvent[];
+  }> {
+    if (!isFirebaseConfigured() || !requestId.trim()) {
+      return { thread: [], documents: [], events: [] };
+    }
+    const database = getDb();
+    if (!database) return { thread: [], documents: [], events: [] };
+
+    const base = ['sponsor_quote_requests', requestId.trim()] as const;
+    const mapSnap = (
+      snap: Awaited<ReturnType<typeof getDocs>>,
+      kind: 'thread' | 'doc' | 'event',
+    ) =>
+      snap.docs.map((d) => {
+        const raw = { id: d.id, ...(d.data() as Record<string, unknown>) };
+        if (kind === 'thread') return mapThread(raw);
+        if (kind === 'doc') return mapDoc(raw);
+        return mapEvent(raw);
+      });
+
+    try {
+      const [threadSnap, docsSnap, eventsSnap] = await Promise.all([
+        getDocs(query(collection(database, ...base, 'thread'), orderBy('created_at', 'asc'), limit(200))),
+        getDocs(
+          query(
+            collection(database, ...base, 'document_requests'),
+            orderBy('requested_at', 'desc'),
+            limit(50),
+          ),
+        ),
+        getDocs(query(collection(database, ...base, 'events'), orderBy('created_at', 'desc'), limit(100))),
+      ]);
+      return {
+        thread: mapSnap(threadSnap, 'thread') as SponsorQuoteThreadMessage[],
+        documents: mapSnap(docsSnap, 'doc') as SponsorQuoteDocumentRequest[],
+        events: mapSnap(eventsSnap, 'event') as SponsorQuoteEvent[],
+      };
+    } catch {
+      // Index / orderBy indispo : lecture brute puis tri local.
+      const [threadSnap, docsSnap, eventsSnap] = await Promise.all([
+        getDocs(collection(database, ...base, 'thread')),
+        getDocs(collection(database, ...base, 'document_requests')),
+        getDocs(collection(database, ...base, 'events')),
+      ]);
+      const thread = (mapSnap(threadSnap, 'thread') as SponsorQuoteThreadMessage[]).sort(
+        (a, b) => a.created_at.getTime() - b.created_at.getTime(),
+      );
+      const documents = (mapSnap(docsSnap, 'doc') as SponsorQuoteDocumentRequest[]).sort(
+        (a, b) => b.requested_at.getTime() - a.requested_at.getTime(),
+      );
+      const events = (mapSnap(eventsSnap, 'event') as SponsorQuoteEvent[]).sort(
+        (a, b) => b.created_at.getTime() - a.created_at.getTime(),
+      );
+      return { thread, documents, events };
+    }
+  },
+
   async getDesk(requestId: string): Promise<{
     thread: SponsorQuoteThreadMessage[];
     documents: SponsorQuoteDocumentRequest[];
     events: SponsorQuoteEvent[];
   }> {
-    const res = await callFunction<
-      { requestId: string },
-      {
-        thread: Array<Record<string, unknown>>;
-        documents: Array<Record<string, unknown>>;
-        events: Array<Record<string, unknown>>;
-      }
-    >('getSponsorQuoteDesk', { requestId }, SPONSOR_ADMIN_FUNCTIONS_REGION);
-    return {
-      thread: (res.thread ?? []).map(mapThread),
-      documents: (res.documents ?? []).map(mapDoc),
-      events: (res.events ?? []).map(mapEvent),
-    };
+    try {
+      const res = await callFunction<
+        { requestId: string },
+        {
+          thread: Array<Record<string, unknown>>;
+          documents: Array<Record<string, unknown>>;
+          events: Array<Record<string, unknown>>;
+        }
+      >('getSponsorQuoteDesk', { requestId }, SPONSOR_ADMIN_FUNCTIONS_REGION);
+      return {
+        thread: (res.thread ?? []).map(mapThread),
+        documents: (res.documents ?? []).map(mapDoc),
+        events: (res.events ?? []).map(mapEvent),
+      };
+    } catch (e) {
+      if (!isCallableNotFound(e)) throw e;
+      // Pas de mismatch de région : CF absente (deploy / billing). Lecture Firestore OK.
+      return this.getDeskFromFirestore(requestId);
+    }
   },
 
   async sendQuote(input: {
@@ -281,11 +367,20 @@ export const sponsorQuoteService = {
     subject?: string;
     sendEmail?: boolean;
   }): Promise<{ success: boolean; messageId: string; emailSent: boolean; emailError?: string }> {
-    return callFunction(
-      'adminSponsorQuoteMessage',
-      input,
-      SPONSOR_ADMIN_FUNCTIONS_REGION,
-    );
+    try {
+      return await callFunction(
+        'adminSponsorQuoteMessage',
+        input,
+        SPONSOR_ADMIN_FUNCTIONS_REGION,
+      );
+    } catch (e) {
+      if (isCallableNotFound(e)) {
+        throw Object.assign(new Error(SPONSOR_QUOTE_WRITE_CF_HINT), {
+          code: 'functions/not-found',
+        });
+      }
+      throw e;
+    }
   },
 
   async requestDocuments(input: {
@@ -300,7 +395,20 @@ export const sponsorQuoteService = {
     emailSent: boolean;
     emailError?: string;
   }> {
-    return callFunction('adminRequestSponsorQuoteDocs', input, SPONSOR_ADMIN_FUNCTIONS_REGION);
+    try {
+      return await callFunction(
+        'adminRequestSponsorQuoteDocs',
+        input,
+        SPONSOR_ADMIN_FUNCTIONS_REGION,
+      );
+    } catch (e) {
+      if (isCallableNotFound(e)) {
+        throw Object.assign(new Error(SPONSOR_QUOTE_WRITE_CF_HINT), {
+          code: 'functions/not-found',
+        });
+      }
+      throw e;
+    }
   },
 
   async fulfillDocument(input: {
@@ -309,6 +417,19 @@ export const sponsorQuoteService = {
     fileUrl: string;
     fileName?: string;
   }): Promise<{ success: boolean }> {
-    return callFunction('sponsorFulfillQuoteDoc', input, SPONSOR_ADMIN_FUNCTIONS_REGION);
+    try {
+      return await callFunction(
+        'sponsorFulfillQuoteDoc',
+        input,
+        SPONSOR_ADMIN_FUNCTIONS_REGION,
+      );
+    } catch (e) {
+      if (isCallableNotFound(e)) {
+        throw Object.assign(new Error(SPONSOR_QUOTE_WRITE_CF_HINT), {
+          code: 'functions/not-found',
+        });
+      }
+      throw e;
+    }
   },
 };
