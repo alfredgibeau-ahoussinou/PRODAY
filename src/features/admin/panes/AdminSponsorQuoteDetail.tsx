@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
-  Linking,
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -26,6 +24,7 @@ import {
   buildDefaultQuoteSubject,
 } from '../../../utils/sponsorQuoteCopy';
 import { sponsorQuoteService } from '../../../services/sponsorQuote.service';
+import { downloadRemoteFile } from '../../../utils/downloadRemoteFile';
 import {
   SPONSOR_QUOTE_DOC_TYPE_OPTIONS,
   SPONSOR_QUOTE_PACKAGE_AMOUNTS,
@@ -48,6 +47,12 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'historique', label: 'Historique' },
 ];
 
+const DOC_STATUS_LABELS: Record<string, string> = {
+  requested: 'En attente',
+  uploaded: 'Reçu',
+  waived: 'Dispensé',
+};
+
 type Props = {
   quote: SponsorQuoteRequest;
   busy: boolean;
@@ -56,6 +61,8 @@ type Props = {
   onRefresh: () => Promise<void>;
   actorUid: string;
   actorEmail?: string;
+  /** Ouvre directement l’onglet Documents (ex. file « Docs reçus »). */
+  initialTab?: TabId;
 };
 
 function formatDate(d?: Date): string {
@@ -80,6 +87,12 @@ function statusTone(status: SponsorQuoteRequest['status']): 'warn' | 'success' |
   return 'info';
 }
 
+function docTone(status: SponsorQuoteDocumentRequest['status']): 'warn' | 'success' | 'info' {
+  if (status === 'uploaded') return 'success';
+  if (status === 'requested') return 'warn';
+  return 'info';
+}
+
 export function AdminSponsorQuoteDetail({
   quote,
   busy,
@@ -88,13 +101,17 @@ export function AdminSponsorQuoteDetail({
   onRefresh,
   actorUid,
   actorEmail,
+  initialTab,
 }: Props) {
   const t = ADMIN_TOKENS;
-  const [tab, setTab] = useState<TabId>('resume');
+  const [tab, setTab] = useState<TabId>(
+    initialTab ?? (quote.has_uploaded_docs ? 'docs' : 'resume'),
+  );
   const [deskLoading, setDeskLoading] = useState(true);
   const [thread, setThread] = useState<SponsorQuoteThreadMessage[]>([]);
   const [documents, setDocuments] = useState<SponsorQuoteDocumentRequest[]>([]);
   const [events, setEvents] = useState<SponsorQuoteEvent[]>([]);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const [subject, setSubject] = useState(buildDefaultQuoteSubject(quote.company_name));
   const [htmlBody, setHtmlBody] = useState(buildDefaultQuoteHtmlPreview(quote));
@@ -131,10 +148,56 @@ export function AdminSponsorQuoteDetail({
     setMessageSubject(`ProDay Partenaires — ${quote.company_name}`);
   }, [quote]);
 
+  useEffect(() => {
+    if (initialTab) setTab(initialTab);
+  }, [initialTab, quote.id]);
+
   const pendingDocs = useMemo(
     () => documents.filter((d) => d.status === 'requested').length,
     [documents],
   );
+  const receivedDocs = useMemo(
+    () => documents.filter((d) => d.status === 'uploaded' && Boolean(d.file_url)),
+    [documents],
+  );
+  const waitingDocs = useMemo(
+    () => documents.filter((d) => d.status === 'requested'),
+    [documents],
+  );
+
+  const toggleDoc = (id: string) => {
+    setSelectedDocs((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const downloadDoc = async (d: SponsorQuoteDocumentRequest) => {
+    if (!d.file_url) {
+      Alert.alert('Télécharger', 'Aucun fichier disponible pour ce document.');
+      return;
+    }
+    const inferredExt = (() => {
+      const fromName = d.file_name?.match(/\.(pdf|png|jpe?g|webp)$/i)?.[0];
+      if (fromName) return fromName.toLowerCase();
+      if (/\.pdf(\?|$)/i.test(d.file_url) || /application%2Fpdf/i.test(d.file_url)) return '.pdf';
+      if (/\.png(\?|$)/i.test(d.file_url)) return '.png';
+      if (/\.jpe?g(\?|$)/i.test(d.file_url)) return '.jpg';
+      if (/\.webp(\?|$)/i.test(d.file_url)) return '.webp';
+      return '.pdf';
+    })();
+    const fileName =
+      d.file_name?.trim() ||
+      `${(d.label || 'document').replace(/\s+/g, '_')}${inferredExt}`;
+    setDownloadingId(d.id);
+    try {
+      const res = await downloadRemoteFile(d.file_url, fileName);
+      if (!res.ok) {
+        Alert.alert('Télécharger', res.error);
+      }
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const toggleDoc = (id: string) => {
     setSelectedDocs((prev) =>
@@ -336,8 +399,12 @@ export function AdminSponsorQuoteDetail({
           <AdminFilterChip
             key={item.id}
             label={
-              item.id === 'docs' && pendingDocs > 0
-                ? `Documents (${pendingDocs})`
+              item.id === 'docs'
+                ? receivedDocs.length > 0
+                  ? `Documents (${receivedDocs.length} reçus)`
+                  : pendingDocs > 0
+                    ? `Documents (${pendingDocs})`
+                    : item.label
                 : item.label
             }
             active={tab === item.id}
@@ -493,31 +560,77 @@ export function AdminSponsorQuoteDetail({
             ) : documents.length === 0 ? (
               <AdminText muted>Aucune demande de document.</AdminText>
             ) : (
-              documents.map((d) => (
-                <AdminCard key={d.id}>
-                  <View style={styles.rowBetween}>
-                    <AdminText variant="h3">{d.label}</AdminText>
-                    <AdminBadge
-                      label={d.status.toUpperCase()}
-                      tone={
-                        d.status === 'uploaded'
-                          ? 'success'
-                          : d.status === 'requested'
-                            ? 'warn'
-                            : 'info'
-                      }
-                    />
+              <>
+                {receivedDocs.length > 0 ? (
+                  <View style={styles.stack}>
+                    <AdminText variant="h2">Reçus — à télécharger</AdminText>
+                    {receivedDocs.map((d) => (
+                      <AdminCard key={d.id}>
+                        <View style={styles.rowBetween}>
+                          <AdminText variant="h3">{d.label}</AdminText>
+                          <AdminBadge
+                            label={(DOC_STATUS_LABELS[d.status] ?? d.status).toUpperCase()}
+                            tone={docTone(d.status)}
+                          />
+                        </View>
+                        <AdminText variant="caption" muted>
+                          Fichier · {d.file_name || 'Sans nom'}
+                        </AdminText>
+                        <AdminText variant="caption" muted>
+                          Reçu · {formatDate(d.uploaded_at)}
+                        </AdminText>
+                        <AdminText variant="caption" muted>
+                          Demandé · {formatDate(d.requested_at)}
+                        </AdminText>
+                        <View style={[styles.row, { marginTop: 8 }]}>
+                          <AdminButton
+                            label={
+                              downloadingId === d.id ? 'Téléchargement…' : 'Télécharger'
+                            }
+                            compact
+                            disabled={downloadingId === d.id || !d.file_url}
+                            onPress={() => void downloadDoc(d)}
+                          />
+                        </View>
+                      </AdminCard>
+                    ))}
                   </View>
-                  <AdminText variant="caption" muted>
-                    Demandé · {formatDate(d.requested_at)}
-                  </AdminText>
-                  {d.file_url ? (
-                    <Pressable onPress={() => void Linking.openURL(d.file_url!)}>
-                      <AdminText champagne>Ouvrir le fichier</AdminText>
-                    </Pressable>
-                  ) : null}
-                </AdminCard>
-              ))
+                ) : null}
+
+                {waitingDocs.length > 0 ? (
+                  <View style={styles.stack}>
+                    <AdminText variant="h2">En attente côté sponsor</AdminText>
+                    {waitingDocs.map((d) => (
+                      <AdminCard key={d.id}>
+                        <View style={styles.rowBetween}>
+                          <AdminText variant="h3">{d.label}</AdminText>
+                          <AdminBadge
+                            label={(DOC_STATUS_LABELS[d.status] ?? d.status).toUpperCase()}
+                            tone={docTone(d.status)}
+                          />
+                        </View>
+                        <AdminText variant="caption" muted>
+                          Demandé · {formatDate(d.requested_at)}
+                        </AdminText>
+                      </AdminCard>
+                    ))}
+                  </View>
+                ) : null}
+
+                {documents
+                  .filter((d) => d.status !== 'uploaded' && d.status !== 'requested')
+                  .map((d) => (
+                    <AdminCard key={d.id}>
+                      <View style={styles.rowBetween}>
+                        <AdminText variant="h3">{d.label}</AdminText>
+                        <AdminBadge
+                          label={(DOC_STATUS_LABELS[d.status] ?? d.status).toUpperCase()}
+                          tone={docTone(d.status)}
+                        />
+                      </View>
+                    </AdminCard>
+                  ))}
+              </>
             )}
             <AdminText variant="h2">Nouvelle demande</AdminText>
             <View style={styles.chipsWrap}>

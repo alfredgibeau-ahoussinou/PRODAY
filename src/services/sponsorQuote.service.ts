@@ -93,6 +93,8 @@ function quoteFromFirestore(id: string, data: Record<string, unknown>): SponsorQ
     admin_note: data.admin_note ? String(data.admin_note) : undefined,
     quote_subject: data.quote_subject ? String(data.quote_subject) : undefined,
     docs_pending: data.docs_pending === true,
+    has_uploaded_docs: data.has_uploaded_docs === true,
+    last_doc_uploaded_at: parseTimestamp(data.last_doc_uploaded_at),
     last_contact_at: parseTimestamp(data.last_contact_at),
     created_at: parseTimestamp(data.created_at) ?? new Date(),
     sent_at: parseTimestamp(data.sent_at),

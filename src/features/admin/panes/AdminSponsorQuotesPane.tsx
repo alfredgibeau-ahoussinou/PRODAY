@@ -24,7 +24,7 @@ import {
 } from '../../../models/SponsorQuoteRequest';
 import { AdminSponsorQuoteDetail } from './AdminSponsorQuoteDetail';
 
-type StatusFilter = 'all' | SponsorQuoteRequestStatus;
+type StatusFilter = 'all' | SponsorQuoteRequestStatus | 'docs_ready';
 
 function statusTone(
   status: SponsorQuoteRequestStatus,
@@ -51,17 +51,25 @@ export function AdminSponsorQuotesPane({ focusId }: { focusId?: string }) {
   const [status, setStatus] = useState<StatusFilter>('all');
   const [selected, setSelected] = useState<SponsorQuoteRequest | null>(null);
   const [busy, setBusy] = useState(false);
+  const [detailTab, setDetailTab] = useState<'docs' | undefined>(undefined);
 
   useEffect(() => {
     if (!focusId) return;
     const hit = data.sponsorQuoteRequests.find((r) => r.id === focusId);
-    if (hit) setSelected(hit);
+    if (hit) {
+      setSelected(hit);
+      if (hit.has_uploaded_docs) setDetailTab('docs');
+    }
   }, [focusId, data.sponsorQuoteRequests]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
     return data.sponsorQuoteRequests.filter((r) => {
-      if (status !== 'all' && r.status !== status) return false;
+      if (status === 'docs_ready') {
+        if (!r.has_uploaded_docs) return false;
+      } else if (status !== 'all' && r.status !== status) {
+        return false;
+      }
       if (!query) return true;
       return (
         r.company_name.toLowerCase().includes(query) ||
@@ -81,6 +89,7 @@ export function AdminSponsorQuotesPane({ focusId }: { focusId?: string }) {
       sent: all.filter((r) => r.status === 'sent').length,
       rejected: all.filter((r) => r.status === 'rejected').length,
       docs: all.filter((r) => r.docs_pending).length,
+      docsReady: all.filter((r) => r.has_uploaded_docs).length,
     };
   }, [data.sponsorQuoteRequests]);
 
@@ -91,7 +100,7 @@ export function AdminSponsorQuotesPane({ focusId }: { focusId?: string }) {
       <View style={styles.header}>
         <AdminPaneHeader
           title="Devis sponsors"
-          subtitle={`${counts.pending} en attente · ${counts.docs} docs · ${counts.all} total`}
+          subtitle={`${counts.pending} en attente · ${counts.docsReady} docs reçus · ${counts.docs} demandes ouvertes · ${counts.all} total`}
         />
         <AdminSearchField
           value={q}
@@ -103,6 +112,7 @@ export function AdminSponsorQuotesPane({ focusId }: { focusId?: string }) {
             [
               { id: 'all' as const, label: `Tous (${counts.all})` },
               { id: 'pending' as const, label: `Attente (${counts.pending})` },
+              { id: 'docs_ready' as const, label: `Docs reçus (${counts.docsReady})` },
               { id: 'sent' as const, label: `Envoyés (${counts.sent})` },
               { id: 'rejected' as const, label: `Refusés (${counts.rejected})` },
             ] as const
@@ -116,7 +126,7 @@ export function AdminSponsorQuotesPane({ focusId }: { focusId?: string }) {
           ))}
         </View>
         <AdminText variant="caption" muted>
-          Communication réelle · e-mails Brevo · demande de documents · thread persisté
+          Communication réelle · e-mails Brevo · documents Storage · téléchargement admin
         </AdminText>
       </View>
 
@@ -138,27 +148,41 @@ export function AdminSponsorQuotesPane({ focusId }: { focusId?: string }) {
           <AdminEntityRow
             title={item.company_name || 'Sans nom'}
             subtitle={`${item.contact_name} · ${item.contact_email}`}
-            meta={`${SPONSOR_QUOTE_PACKAGE_LABELS[item.package_tier]} · ${SPONSOR_QUOTE_PACKAGE_AMOUNTS[item.package_tier]}${item.budget ? ` · ${item.budget}` : ''} · ${formatShortDate(item.created_at)}${item.docs_pending ? ' · docs' : ''}`}
+            meta={`${SPONSOR_QUOTE_PACKAGE_LABELS[item.package_tier]} · ${SPONSOR_QUOTE_PACKAGE_AMOUNTS[item.package_tier]}${item.budget ? ` · ${item.budget}` : ''} · ${formatShortDate(item.created_at)}${item.has_uploaded_docs ? ' · docs reçus' : item.docs_pending ? ' · docs demandés' : ''}`}
             badge={SPONSOR_QUOTE_STATUS_LABELS[item.status].toUpperCase()}
             badgeTone={statusTone(item.status)}
             leading={<AdminAvatarMark label={item.company_name} tone="accent" />}
-            onPress={() => setSelected(item)}
+            onPress={() => {
+              setDetailTab(item.has_uploaded_docs ? 'docs' : undefined);
+              setSelected(item);
+            }}
           />
         )}
       />
 
-      <AdminModalSheet visible={!!selected} onClose={() => setSelected(null)} variant="full">
+      <AdminModalSheet
+        visible={!!selected}
+        onClose={() => {
+          setSelected(null);
+          setDetailTab(undefined);
+        }}
+        variant="full"
+      >
         {selected ? (
           <AdminSponsorQuoteDetail
             quote={selected}
             busy={busy}
             setBusy={setBusy}
-            onClose={() => setSelected(null)}
+            onClose={() => {
+              setSelected(null);
+              setDetailTab(undefined);
+            }}
             onRefresh={async () => {
               await data.refresh();
             }}
             actorUid={firebaseUser?.uid ?? 'admin'}
             actorEmail={profile?.email ?? undefined}
+            initialTab={detailTab}
           />
         ) : null}
       </AdminModalSheet>

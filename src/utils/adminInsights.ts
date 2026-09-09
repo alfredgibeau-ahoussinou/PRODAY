@@ -155,6 +155,20 @@ export function buildAdminWorkQueue(input: {
     });
   }
 
+  for (const quote of (input.sponsorQuotes ?? []).filter((q) => q.has_uploaded_docs)) {
+    items.push({
+      id: `quotedocs-${quote.id}`,
+      kind: 'quote',
+      priority: 'high',
+      title: `Docs reçus · ${quote.company_name}`,
+      subtitle: 'Télécharger les pièces dans Documents',
+      meta: quote.contact_email,
+      targetSection: 'sponsor_quotes',
+      entityId: quote.id,
+      createdAt: quote.last_doc_uploaded_at ?? quote.updated_at ?? quote.created_at,
+    });
+  }
+
   for (const quote of (input.clubQuotes ?? []).filter((q) => q.status === 'pending')) {
     items.push({
       id: `clubquote-${quote.id}`,

@@ -34,6 +34,9 @@ export interface SponsorQuoteRequest {
   admin_note?: string;
   quote_subject?: string;
   docs_pending?: boolean;
+  /** Au moins un document a été déposé par le sponsor — visible admin à télécharger. */
+  has_uploaded_docs?: boolean;
+  last_doc_uploaded_at?: Date;
   last_contact_at?: Date;
   created_at: Date;
   sent_at?: Date;

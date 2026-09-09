@@ -175,6 +175,43 @@ export function getAdminAlertEmail(): string {
   return override || ADMIN_ALERT_EMAIL;
 }
 
+/** Alerte ops : un document demandé a été déposé — à télécharger dans l’Espace Admin. */
+export async function notifyAdminSponsorDocUploaded(input: {
+  requestId: string;
+  companyName: string;
+  contactEmail: string;
+  docLabel: string;
+  fileName?: string;
+}): Promise<void> {
+  if (!isBrevoConfigured()) {
+    console.warn('[sponsorQuoteMail] Alerte docs reçus ignorée — Brevo non configuré');
+    return;
+  }
+  const summary = [
+    'Document partenaire reçu',
+    '',
+    `Entreprise : ${input.companyName}`,
+    `Contact : ${input.contactEmail}`,
+    `Document : ${input.docLabel}`,
+    input.fileName ? `Fichier : ${input.fileName}` : '',
+    '',
+    'Ouvrez Espace Admin → Devis sponsors → Documents pour télécharger.',
+    `ID : sponsor_quote_requests/${input.requestId}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+  try {
+    await sendTransactionalEmail({
+      to: getAdminAlertEmail(),
+      subject: `[ProDay Admin] Doc reçu — ${input.companyName} · ${input.docLabel}`,
+      html: `<pre style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;">${escapeHtml(summary)}</pre>`,
+      text: summary,
+    });
+  } catch (e) {
+    console.error('[sponsorQuoteMail] Alerte docs reçus échouée:', e);
+  }
+}
+
 export function buildThreadMessageEmailHtml(input: {
   contactName: string;
   companyName: string;

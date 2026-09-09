@@ -97,6 +97,35 @@ describe('Admin devis sponsors', () => {
     expect(hit?.entityId).toBe('sq1');
   });
 
+  it('file prioritaire Docs reçus quand has_uploaded_docs', () => {
+    const queue = buildAdminWorkQueue({
+      users: [],
+      communityReels: [],
+      reelReports: [],
+      payments: [],
+      applications: [],
+      posts: [],
+      sponsorQuotes: [
+        {
+          id: 'sq-docs',
+          company_name: 'Transport',
+          contact_email: 'hello@gocityservices.com',
+          contact_name: 'Go City',
+          package_tier: 'territorial',
+          source: 'website',
+          status: 'sent',
+          has_uploaded_docs: true,
+          last_doc_uploaded_at: new Date('2026-09-09T12:00:00Z'),
+          created_at: new Date('2026-09-01T10:00:00Z'),
+        },
+      ],
+    });
+    const hit = queue.find((i) => i.id === 'quotedocs-sq-docs');
+    expect(hit?.title).toMatch(/Docs reçus/i);
+    expect(hit?.targetSection).toBe('sponsor_quotes');
+    expect(hit?.entityId).toBe('sq-docs');
+  });
+
   it('getDesk bascule sur Firestore si getSponsorQuoteDesk est absente', async () => {
     (callFunction as jest.Mock).mockRejectedValueOnce(
       Object.assign(new Error('Cloud Function introuvable (région europe-west1 ou non déployée).'), {

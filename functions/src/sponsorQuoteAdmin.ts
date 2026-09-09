@@ -9,6 +9,7 @@ import {
   buildDocumentRequestEmailText,
   buildThreadMessageEmailHtml,
   buildThreadMessageEmailText,
+  notifyAdminSponsorDocUploaded,
   type SponsorQuotePackageTier,
 } from './sponsorQuoteMail';
 
@@ -548,10 +549,12 @@ export function createSponsorFulfillQuoteDocHandler(db: admin.firestore.Firestor
     }
 
     const now = admin.firestore.FieldValue.serverTimestamp();
+    const docLabel = String(docSnap.data()?.label ?? documentRequestId);
+    const fileName = String(data.fileName ?? '').trim().slice(0, 200) || null;
     await docRef.update({
       status: 'uploaded',
       file_url: fileUrl,
-      file_name: String(data.fileName ?? '').trim().slice(0, 200) || null,
+      file_name: fileName,
       uploaded_by: uid,
       uploaded_at: now,
       updated_at: now,
@@ -564,6 +567,8 @@ export function createSponsorFulfillQuoteDocHandler(db: admin.firestore.Firestor
       .get();
     await ref.update({
       docs_pending: !pendingSnap.empty,
+      has_uploaded_docs: true,
+      last_doc_uploaded_at: now,
       updated_at: now,
     });
 
@@ -571,14 +576,25 @@ export function createSponsorFulfillQuoteDocHandler(db: admin.firestore.Firestor
       type: 'doc_uploaded',
       actor_uid: uid,
       actor_role: isAdmin ? 'admin' : 'sponsor',
-      summary: `Document déposé · ${String(docSnap.data()?.label ?? documentRequestId)}`,
+      summary: `Document déposé · ${docLabel}`,
+      meta: { documentRequestId, fileName: fileName ?? undefined },
     });
     await appendThread(ref, {
       author_role: isAdmin ? 'admin' : 'sponsor',
       author_uid: uid,
-      body: `Document déposé : ${String(docSnap.data()?.label ?? documentRequestId)}`,
+      body: `Document déposé : ${docLabel}${fileName ? ` (${fileName})` : ''}`,
       channel: 'internal',
     });
+
+    if (!isAdmin) {
+      void notifyAdminSponsorDocUploaded({
+        requestId,
+        companyName: String(entry.company_name ?? '').trim() || 'Sponsor',
+        contactEmail: String(entry.contact_email ?? '').trim(),
+        docLabel,
+        fileName: fileName ?? undefined,
+      }).catch((e) => console.error('[sponsorFulfillQuoteDoc] notify admin', e));
+    }
 
     return { success: true };
   };
