@@ -14,7 +14,6 @@ import { ADMIN_TOKENS } from '../theme/adminTokens';
 import {
   adminChrome,
   adminRadius,
-  adminShadow,
   adminSpace,
 } from '../theme/adminDesignSystem';
 
@@ -43,18 +42,18 @@ export function AdminSidebar({
   return (
     <View style={[styles.root, { width, paddingTop: insets.top + 10 }]}>
       <LinearGradient
-        colors={['rgba(212,184,128,0.08)', 'transparent']}
+        colors={['rgba(139,168,196,0.1)', 'transparent']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0.35 }}
+        end={{ x: 1, y: 0.4 }}
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.brand}>
-        <ProDaySymbol size={collapsed ? 28 : 36} variant="admin" tone="white" />
+        <ProDaySymbol size={collapsed ? 28 : 34} variant="admin" tone="white" />
         {!collapsed ? (
-          <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flex: 1, gap: 2 }}>
             <AdminBrandMark compact />
-            <AdminText variant="h3" numberOfLines={1}>
-              Control Center
+            <AdminText variant="caption" muted numberOfLines={1}>
+              Espace fondateur
             </AdminText>
           </View>
         ) : null}
@@ -62,17 +61,17 @@ export function AdminSidebar({
 
       {!collapsed ? (
         <Pressable onPress={onOpenCommand} style={styles.cmd}>
-          <Icon name="search" size={14} color={t.accent} />
+          <Icon name="search" size={14} color={t.signal} />
           <AdminText variant="caption" muted style={{ flex: 1 }}>
             Commande…
           </AdminText>
-          <AdminText variant="caption" champagne>
+          <AdminText variant="caption" color={t.signal}>
             ⌘K
           </AdminText>
         </Pressable>
       ) : (
         <Pressable onPress={onOpenCommand} style={styles.cmdIcon}>
-          <Icon name="search" size={18} color={t.accent} />
+          <Icon name="search" size={18} color={t.signal} />
         </Pressable>
       )}
 
@@ -104,13 +103,12 @@ export function AdminSidebar({
                     style={[
                       styles.item,
                       active && {
-                        backgroundColor: t.accentSoft,
+                        backgroundColor: t.signalSoft,
                         borderColor: t.borderStrong,
-                        ...adminShadow.champagne(t),
                       },
                     ]}
                   >
-                    <Icon name={item.icon} size={18} color={active ? t.accent : t.muted} />
+                    <Icon name={item.icon} size={18} color={active ? t.signal : t.muted} />
                     {!collapsed ? (
                       <AdminText
                         variant="nav"

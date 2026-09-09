@@ -1,6 +1,6 @@
 /**
  * Design system — ProDay Admin Control Center.
- * Densités / typo / chrome calés sur le Pôle Président (série executive).
+ * Densité instrument / fondateur · Inter pour l’UI · Syne/Sora réservés au brand mark.
  */
 
 import type { TextStyle, ViewStyle } from 'react-native';
@@ -9,77 +9,77 @@ import { ADMIN_TOKENS, type AdminThemeTokens } from './adminTokens';
 
 export const adminType = {
   display: {
-    fontFamily: fontFamily.displayBold,
-    fontSize: 36,
-    letterSpacing: -1.4,
-    lineHeight: 42,
+    fontFamily: fontFamily.extrabold,
+    fontSize: 32,
+    letterSpacing: -0.9,
+    lineHeight: 38,
   },
   displaySm: {
-    fontFamily: fontFamily.displayBold,
-    fontSize: 28,
-    letterSpacing: -1,
-    lineHeight: 34,
+    fontFamily: fontFamily.extrabold,
+    fontSize: 26,
+    letterSpacing: -0.7,
+    lineHeight: 32,
   },
   h1: {
     fontFamily: fontFamily.extrabold,
-    fontSize: 24,
-    letterSpacing: -0.6,
-    lineHeight: 30,
+    fontSize: 22,
+    letterSpacing: -0.45,
+    lineHeight: 28,
   },
   h2: {
     fontFamily: fontFamily.bold,
-    fontSize: 19,
-    letterSpacing: -0.35,
-    lineHeight: 25,
+    fontSize: 17,
+    letterSpacing: -0.25,
+    lineHeight: 23,
   },
   h3: {
     fontFamily: fontFamily.bold,
-    fontSize: 15,
-    letterSpacing: -0.15,
-    lineHeight: 21,
+    fontSize: 14,
+    letterSpacing: -0.1,
+    lineHeight: 19,
   },
   body: {
     fontFamily: fontFamily.regular,
-    fontSize: 15,
-    letterSpacing: 0.05,
-    lineHeight: 22,
+    fontSize: 14,
+    letterSpacing: 0.01,
+    lineHeight: 21,
   },
   caption: {
     fontFamily: fontFamily.semibold,
     fontSize: 12,
-    letterSpacing: 0.12,
+    letterSpacing: 0.08,
     lineHeight: 16,
   },
   label: {
     fontFamily: fontFamily.bold,
     fontSize: 10,
-    letterSpacing: 1.8,
+    letterSpacing: 1.5,
     lineHeight: 13,
     textTransform: 'uppercase' as const,
   },
   brand: {
-    fontFamily: fontFamily.displayBold,
+    fontFamily: fontFamily.brand,
     fontSize: 11,
-    letterSpacing: 2.2,
+    letterSpacing: 2.4,
     lineHeight: 14,
     textTransform: 'uppercase' as const,
   },
   stat: {
-    fontFamily: fontFamily.displayBold,
-    fontSize: 42,
-    letterSpacing: -1.6,
-    lineHeight: 46,
+    fontFamily: fontFamily.extrabold,
+    fontSize: 40,
+    letterSpacing: -1.2,
+    lineHeight: 44,
   },
   statSm: {
-    fontFamily: fontFamily.displayBold,
+    fontFamily: fontFamily.extrabold,
     fontSize: 22,
-    letterSpacing: -0.6,
+    letterSpacing: -0.5,
     lineHeight: 26,
   },
   nav: {
     fontFamily: fontFamily.semibold,
     fontSize: 13,
-    letterSpacing: 0.08,
+    letterSpacing: 0.04,
     lineHeight: 18,
   },
   mono: {
@@ -104,64 +104,65 @@ export const adminSpace = {
   hero: 56,
 } as const;
 
+/** Rayons plus instrumentaux — moins « bubbly » club. */
 export const adminRadius = {
   xs: 6,
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 24,
-  xxl: 28,
-  hero: 32,
+  sm: 8,
+  md: 12,
+  lg: 14,
+  xl: 18,
+  xxl: 22,
+  hero: 20,
   pill: 999,
 } as const;
 
 export const adminShadow = {
   soft: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 20,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    elevation: 3,
   } satisfies ViewStyle,
   card: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.55,
-    shadowRadius: 36,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 6,
   } satisfies ViewStyle,
   deep: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 22 },
-    shadowOpacity: 0.62,
-    shadowRadius: 48,
-    elevation: 14,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.42,
+    shadowRadius: 28,
+    elevation: 10,
   } satisfies ViewStyle,
   glow: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
-    shadowColor: tokens.accent,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.32,
-    shadowRadius: 28,
-    elevation: 8,
+    shadowColor: tokens.signal,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 5,
   }),
   champagne: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
-    shadowColor: tokens.champagne,
+    shadowColor: tokens.accentHot,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 3,
   }),
 };
 
 export const adminChrome = {
   wideBreakpoint: 920,
   tabletBreakpoint: 700,
-  sidebarExpanded: 276,
-  sidebarCollapsed: 76,
-  topBarHeight: 62,
-  dockRailHeight: 56,
-  tabBarIcon: 22,
-  contentMax: 1280,
+  sidebarExpanded: 268,
+  sidebarCollapsed: 72,
+  topBarHeight: 56,
+  dockRailHeight: 54,
+  tabBarIcon: 21,
+  contentMax: 1200,
   brandMark: 'PRODAY CONTROL',
 } as const;
 
@@ -169,13 +170,12 @@ export const adminLayout = {
   pageGutter: adminSpace.lg,
   cardPad: adminSpace.lg,
   heroPad: adminSpace.xl,
-  sectionGap: adminSpace.xl,
-  stackGap: adminSpace.lg,
+  sectionGap: adminSpace.lg + 4,
+  stackGap: adminSpace.md + 2,
   gridGap: adminSpace.md,
   dockClearance: adminSpace.hero + adminChrome.dockRailHeight,
   /**
    * Air sous la status bar / Dynamic Island (mobile, dock seul).
-   * Pas juste 1–12 px : zone cliquable Rechercher / actions hors système.
    */
   contentTop: adminSpace.xl,
   /** Plancher insets.top (évite le flash à 0 au mount / îlot). */
@@ -186,10 +186,10 @@ export const adminLayout = {
 } as const;
 
 export const adminMotion = {
-  press: 100,
-  enter: 380,
-  settle: 560,
-  stagger: 48,
+  press: 90,
+  enter: 320,
+  settle: 480,
+  stagger: 40,
 } as const;
 
 export function adminPanelStyle(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
@@ -198,7 +198,6 @@ export function adminPanelStyle(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewSt
     borderColor: tokens.border,
     borderWidth: 1,
     borderRadius: adminRadius.lg,
-    ...adminShadow.card,
   };
 }
 
@@ -209,8 +208,7 @@ export function adminSurfaceHero(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewS
     borderWidth: 1,
     borderColor: tokens.borderLuxury,
     overflow: 'hidden',
-    ...adminShadow.deep,
-    ...adminShadow.champagne(tokens),
+    ...adminShadow.soft,
   };
 }
 
@@ -220,6 +218,6 @@ export function adminSurfaceCard(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewS
     borderRadius: adminRadius.lg,
     borderWidth: 1,
     borderColor: tokens.border,
-    ...adminShadow.card,
+    ...adminShadow.soft,
   };
 }

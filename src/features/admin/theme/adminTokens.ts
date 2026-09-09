@@ -1,6 +1,6 @@
 /**
  * Tokens — ProDay Admin Control Center.
- * Surfaces graphite premium · accent pôle Admin #A3A3A3.
+ * Void graphite · platine pôle Admin · signal acier (pas émeraude club, pas or président).
  */
 
 import { PRODAY_POLE_ACCENTS, poleAccentSoft } from '../../../theme/prodayBrand';
@@ -23,6 +23,9 @@ export type AdminThemeTokens = {
   accentHot: string;
   accentSoft: string;
   accentText: string;
+  /** Signal interactif acier (focus, chrome actif). */
+  signal: string;
+  signalSoft: string;
   champagne: string;
   champagneBright: string;
   champagneSoft: string;
@@ -49,41 +52,43 @@ export type AdminThemeTokens = {
 const ADMIN = PRODAY_POLE_ACCENTS.admin;
 
 export const ADMIN_TOKENS: AdminThemeTokens = {
-  bg: '#05070E',
-  bgElevated: '#0A0F1A',
-  surface: '#0E1524',
-  surfaceRaised: '#141E32',
-  surfaceMuted: '#0B111C',
-  surfaceGlass: 'rgba(20, 30, 50, 0.72)',
-  border: 'rgba(163, 163, 163, 0.16)',
-  borderStrong: 'rgba(163, 163, 163, 0.34)',
-  borderLuxury: 'rgba(212, 212, 212, 0.28)',
-  foreground: '#F7F3EB',
-  muted: '#9AA3B8',
-  faint: '#5A6478',
+  bg: '#02040A',
+  bgElevated: '#060A12',
+  surface: '#0B111A',
+  surfaceRaised: '#121A28',
+  surfaceMuted: '#080C14',
+  surfaceGlass: 'rgba(14, 20, 32, 0.78)',
+  border: 'rgba(184, 190, 204, 0.12)',
+  borderStrong: 'rgba(184, 190, 204, 0.28)',
+  borderLuxury: 'rgba(232, 234, 238, 0.18)',
+  foreground: '#F2F4F7',
+  muted: '#8B93A7',
+  faint: '#545C70',
   accent: ADMIN,
-  accentHot: '#D4D4D4',
-  accentSoft: poleAccentSoft('admin', 0.14),
-  accentText: '#0A0F1A',
-  champagne: '#D4D4D4',
-  champagneBright: '#E5E5E5',
+  accentHot: '#E8EAEE',
+  accentSoft: poleAccentSoft('admin', 0.16),
+  accentText: '#060A12',
+  signal: '#8BA8C4',
+  signalSoft: 'rgba(139, 168, 196, 0.16)',
+  champagne: '#C4C8D0',
+  champagneBright: '#E8EAEE',
   champagneSoft: poleAccentSoft('admin', 0.1),
   champagneGlow: poleAccentSoft('admin', 0.22),
-  success: '#4AB894',
-  successSoft: 'rgba(74, 184, 148, 0.14)',
-  warn: '#D9A84A',
-  warnSoft: 'rgba(217, 168, 74, 0.14)',
-  danger: '#C86A6A',
-  dangerSoft: 'rgba(200, 106, 106, 0.14)',
-  info: '#7A96BE',
-  infoSoft: 'rgba(122, 150, 190, 0.14)',
-  sidebarBg: '#070B14',
-  headerBg: 'rgba(5, 7, 14, 0.92)',
-  dockBg: 'rgba(5, 7, 14, 0.96)',
-  overlay: 'rgba(2, 4, 10, 0.78)',
-  hairline: 'rgba(163, 163, 163, 0.12)',
-  ink: '#03050A',
-  healthGood: '#4AB894',
-  healthMid: '#D9A84A',
-  healthBad: '#C86A6A',
+  success: '#5CB89A',
+  successSoft: 'rgba(92, 184, 154, 0.14)',
+  warn: '#D4A85C',
+  warnSoft: 'rgba(212, 168, 92, 0.14)',
+  danger: '#D07070',
+  dangerSoft: 'rgba(208, 112, 112, 0.14)',
+  info: '#8BA8C4',
+  infoSoft: 'rgba(139, 168, 196, 0.14)',
+  sidebarBg: '#04070F',
+  headerBg: 'rgba(2, 4, 10, 0.94)',
+  dockBg: 'rgba(2, 4, 10, 0.97)',
+  overlay: 'rgba(1, 2, 6, 0.82)',
+  hairline: 'rgba(184, 190, 204, 0.1)',
+  ink: '#010206',
+  healthGood: '#5CB89A',
+  healthMid: '#D4A85C',
+  healthBad: '#D07070',
 };

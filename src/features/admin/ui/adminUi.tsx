@@ -48,7 +48,7 @@ export function AdminText({
   const tokens = ADMIN_TOKENS;
   const resolved =
     color ??
-    (champagne ? tokens.champagne : muted ? tokens.muted : tokens.foreground);
+    (champagne ? tokens.champagneBright : muted ? tokens.muted : tokens.foreground);
   return (
     <ProDayText
       variant="body"
@@ -69,7 +69,7 @@ export function AdminBrandMark({ compact }: { compact?: boolean }) {
         variant="brand"
         style={{
           fontSize: compact ? 9 : 10,
-          letterSpacing: compact ? 1.6 : 2.2,
+          letterSpacing: compact ? 1.8 : 2.4,
           color: t.accentHot,
         }}
       >
@@ -97,7 +97,7 @@ export function AdminButton({
   const t = ADMIN_TOKENS;
   const bg =
     variant === 'primary'
-      ? t.accent
+      ? t.accentHot
       : variant === 'danger'
         ? t.danger
         : variant === 'soft'
@@ -107,9 +107,9 @@ export function AdminButton({
     variant === 'primary'
       ? t.accentText
       : variant === 'danger'
-        ? '#F7F3EB'
+        ? '#F2F4F7'
         : variant === 'soft'
-          ? t.champagneBright
+          ? t.accentHot
           : t.foreground;
   return (
     <AdminPressable
@@ -122,7 +122,12 @@ export function AdminButton({
         styles.btn,
         {
           backgroundColor: bg,
-          borderColor: variant === 'ghost' ? t.borderStrong : 'transparent',
+          borderColor:
+            variant === 'ghost'
+              ? t.borderStrong
+              : variant === 'soft'
+                ? t.border
+                : 'transparent',
           opacity: disabled ? 0.45 : 1,
           ...(variant === 'primary' ? adminShadow.glow(t) : null),
         },
@@ -160,6 +165,7 @@ export function AdminSheetHeader({
         {
           paddingTop: Math.max(insets.top, 12) + adminSpace.sm,
           borderBottomColor: t.hairline,
+          backgroundColor: t.bgElevated,
         },
       ]}
     >
@@ -171,13 +177,13 @@ export function AdminSheetHeader({
         style={({ pressed }) => [
           styles.sheetClose,
           {
-            backgroundColor: t.accentSoft,
+            backgroundColor: t.surfaceMuted,
             borderColor: t.borderStrong,
             opacity: pressed ? 0.88 : 1,
           },
         ]}
       >
-        <Icon name="close" size={20} color={t.champagneBright} />
+        <Icon name="close" size={18} color={t.accentHot} />
         <AdminText variant="h3" champagne style={{ fontWeight: '800' }}>
           {closeLabel}
         </AdminText>
@@ -212,11 +218,11 @@ export function AdminBadge({
     success: { bg: t.successSoft, fg: t.success },
     warn: { bg: t.warnSoft, fg: t.warn },
     danger: { bg: t.dangerSoft, fg: t.danger },
-    accent: { bg: t.accentSoft, fg: t.champagneBright },
+    accent: { bg: t.accentSoft, fg: t.accentHot },
   }[tone];
   return (
-    <View style={[styles.badge, { backgroundColor: map.bg, borderColor: `${map.fg}33` }]}>
-      <AdminText variant="label" color={map.fg} style={{ letterSpacing: 0.9, fontSize: 9 }}>
+    <View style={[styles.badge, { backgroundColor: map.bg, borderColor: `${map.fg}40` }]}>
+      <AdminText variant="label" color={map.fg} style={{ letterSpacing: 0.8, fontSize: 9 }}>
         {label}
       </AdminText>
     </View>
@@ -242,7 +248,7 @@ export function AdminMetric({
         ? t.warn
         : tone === 'danger'
           ? t.danger
-          : t.champagneBright;
+          : t.accentHot;
   return (
     <View style={[styles.metric, adminSurfaceCard(t)]}>
       <AdminText variant="label" muted>
@@ -281,7 +287,7 @@ export function AdminCard({
   );
 }
 
-/** En-tête de pane unifié — densités Président. */
+/** En-tête de pane unifié — control center. */
 export function AdminPaneHeader({
   title,
   subtitle,
@@ -295,7 +301,7 @@ export function AdminPaneHeader({
   return (
     <View style={styles.paneHeader}>
       <View style={styles.paneHeaderRow}>
-        <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
+        <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
           <AdminBrandMark compact />
           <AdminText variant="h1" numberOfLines={1}>
             {title}
@@ -308,7 +314,7 @@ export function AdminPaneHeader({
         </View>
         {right}
       </View>
-      <View style={[styles.paneHairline, { backgroundColor: t.hairline }]} />
+      <View style={[styles.paneAccent, { backgroundColor: t.signal }]} />
     </View>
   );
 }
@@ -324,12 +330,14 @@ export function AdminEmptyState({
   return (
     <View style={[styles.empty, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}>
       <LinearGradient
-        colors={[t.champagneSoft, 'transparent']}
+        colors={[t.signalSoft, 'transparent']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <AdminBrandMark compact />
+      <View style={[styles.emptyIcon, { backgroundColor: t.accentSoft, borderColor: t.border }]}>
+        <Icon name="stats-chart" size={18} color={t.signal} />
+      </View>
       <AdminText variant="h2">{title}</AdminText>
       {body ? (
         <AdminText variant="body" muted>
@@ -359,12 +367,42 @@ export function AdminSkeleton({ height = 72 }: { height?: number }) {
   return <AdminSkeletonBlock height={height} />;
 }
 
+/** Chip filtre / segment control center. */
+export function AdminFilterChip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const t = ADMIN_TOKENS;
+  return (
+    <AdminPressable
+      onPress={onPress}
+      scaleTo={0.97}
+      style={[
+        styles.filterChip,
+        {
+          backgroundColor: active ? t.accentSoft : t.surfaceMuted,
+          borderColor: active ? t.borderStrong : t.border,
+        },
+      ]}
+    >
+      <AdminText variant="caption" color={active ? t.accentHot : t.muted}>
+        {label}
+      </AdminText>
+    </AdminPressable>
+  );
+}
+
 const styles = StyleSheet.create({
   btn: {
     minHeight: 40,
     paddingHorizontal: adminSpace.lg,
     paddingVertical: adminSpace.sm + 2,
-    borderRadius: adminRadius.pill,
+    borderRadius: adminRadius.md,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -376,15 +414,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   sheetClose: {
-    minHeight: 52,
+    minHeight: 48,
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
     paddingHorizontal: adminSpace.xl,
-    paddingVertical: 14,
-    borderRadius: adminRadius.pill,
+    paddingVertical: 12,
+    borderRadius: adminRadius.md,
     borderWidth: 1,
   },
   sheetTitleRow: {
@@ -395,7 +433,7 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: adminRadius.pill,
+    borderRadius: adminRadius.sm,
     alignSelf: 'flex-start',
     borderWidth: StyleSheet.hairlineWidth,
   },
@@ -412,7 +450,7 @@ const styles = StyleSheet.create({
   paneHeader: {
     paddingHorizontal: 0,
     paddingTop: 0,
-    paddingBottom: adminSpace.md,
+    paddingBottom: adminSpace.md + 2,
     gap: adminSpace.sm,
     position: 'relative',
   },
@@ -421,12 +459,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: adminSpace.md,
   },
-  paneHairline: {
+  paneAccent: {
     position: 'absolute',
     left: 0,
-    right: 0,
     bottom: 0,
-    height: StyleSheet.hairlineWidth,
+    width: 36,
+    height: 2,
+    borderRadius: 1,
   },
   empty: {
     padding: adminSpace.xl,
@@ -435,7 +474,14 @@ const styles = StyleSheet.create({
     borderRadius: adminRadius.xl,
     borderWidth: 1,
     overflow: 'hidden',
-    ...adminShadow.soft,
+  },
+  emptyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: adminRadius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loading: {
     flex: 1,
@@ -445,6 +491,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: adminSpace.lg,
     gap: adminSpace.sm,
     marginBottom: adminSpace.sm,
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: adminRadius.md,
+    borderWidth: 1,
+    minHeight: 36,
+    justifyContent: 'center',
   },
 });
 

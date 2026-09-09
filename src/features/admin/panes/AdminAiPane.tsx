@@ -240,13 +240,13 @@ export function AdminAiPane({ onNavigate, focusId }: Props & { focusId?: string 
               styles.agent,
               {
                 borderColor: agent === a.id ? t.borderStrong : t.border,
-                backgroundColor: agent === a.id ? t.accentSoft : t.surface,
+                backgroundColor: agent === a.id ? t.signalSoft : t.surface,
               },
             ]}
           >
             <AdminText
               variant="caption"
-              color={agent === a.id ? t.champagneBright : t.muted}
+              color={agent === a.id ? t.accentHot : t.muted}
             >
               {a.label}
             </AdminText>

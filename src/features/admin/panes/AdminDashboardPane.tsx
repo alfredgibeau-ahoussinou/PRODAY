@@ -27,11 +27,52 @@ import {
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
 import { countWorkByKind } from '../../../utils/adminInsights';
 import { getRoleLabel } from '../../../screens/signup/signupFlowConfig';
+import { Icon } from '../../../components/ui/Icon';
+import type { IconName } from '../../../components/ui/iconNames';
+import { AdminPressable } from '../motion';
 
 type Props = {
   onNavigate: (section: AdminNavSectionId, focusId?: string) => void;
   onOpenCommand?: () => void;
 };
+
+const QUICK_TOOLS: {
+  section: AdminNavSectionId;
+  icon: IconName;
+  title: string;
+  hint: (ctx: { pendingQuotes: number }) => string;
+  hintTone?: 'signal' | 'success' | 'muted' | 'accent';
+}[] = [
+  {
+    section: 'ia',
+    icon: 'star-four-points',
+    title: 'Moteur IA',
+    hint: () => 'Config & ops agents',
+    hintTone: 'signal',
+  },
+  {
+    section: 'systeme',
+    icon: 'shield',
+    title: 'Sécurité & système',
+    hint: () => 'Auth · flags · santé',
+    hintTone: 'success',
+  },
+  {
+    section: 'commercial',
+    icon: 'briefcase',
+    title: 'Devis & sponsoring',
+    hint: ({ pendingQuotes }) =>
+      pendingQuotes > 0 ? `${pendingQuotes} devis en attente` : 'Pipeline commercial',
+    hintTone: 'accent',
+  },
+  {
+    section: 'produit',
+    icon: 'sparkles',
+    title: 'Univers & produit',
+    hint: () => 'Pôles · features · bêta',
+    hintTone: 'muted',
+  },
+];
 
 export function AdminDashboardPane({ onNavigate, onOpenCommand }: Props) {
   const { profile } = useAuth();
@@ -45,6 +86,7 @@ export function AdminDashboardPane({ onNavigate, onOpenCommand }: Props) {
     (u) => u.subscription_tier && u.subscription_tier !== 'free',
   ).length;
   const pendingQuotes = data.clubQuoteRequests.filter((q) => q.status === 'pending').length;
+  const firstName = profile?.display_name?.split(' ')[0];
 
   return (
     <ScrollView
@@ -55,19 +97,19 @@ export function AdminDashboardPane({ onNavigate, onOpenCommand }: Props) {
         <RefreshControl
           refreshing={data.refreshing}
           onRefresh={() => void data.refresh()}
-          tintColor={t.accent}
+          tintColor={t.signal}
         />
       }
     >
-      <View style={styles.hero}>
+      <View style={[styles.hero, { borderColor: t.borderLuxury }]}>
         <LinearGradient
           colors={[
-            'rgba(212,184,128,0.28)',
-            'rgba(14,21,36,0.55)',
-            'rgba(5,7,14,0.92)',
+            'rgba(139,168,196,0.22)',
+            'rgba(11,17,26,0.72)',
+            'rgba(2,4,10,0.96)',
           ]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0.85, y: 1 }}
+          end={{ x: 0.9, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.heroTop}>
@@ -76,17 +118,17 @@ export function AdminDashboardPane({ onNavigate, onOpenCommand }: Props) {
             {onOpenCommand ? (
               <AdminButton label="Rechercher" variant="soft" onPress={onOpenCommand} />
             ) : null}
-            <AdminBadge label="Directif" tone="accent" />
+            <AdminBadge label="Fondateur" tone="accent" />
           </View>
         </View>
-        <AdminText variant="label" champagne>
-          ProDay · maintenant
+        <AdminText variant="label" color={t.signal}>
+          Control Center · live
         </AdminText>
         <AdminText variant="display" numberOfLines={2}>
-          Bonjour{profile?.display_name ? `, ${profile.display_name.split(' ')[0]}` : ''}
+          {firstName ? `Bonjour, ${firstName}` : 'Bonjour'}
         </AdminText>
-        <AdminText variant="body" muted style={{ maxWidth: 440 }}>
-          Centre de contrôle exécutif. Surveillez, décidez, agissez.
+        <AdminText variant="body" muted style={{ maxWidth: 420 }}>
+          Surveillez la plateforme, tranchez les files, pilotez l’écosystème.
         </AdminText>
       </View>
 
@@ -142,48 +184,52 @@ export function AdminDashboardPane({ onNavigate, onOpenCommand }: Props) {
         <AdminMetric label="Joueurs" value={data.stats?.players ?? 0} />
       </View>
 
-      {/* Barre d'outils exécutifs & personnalisation ProDay */}
       <AdminCard>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <View>
-            <AdminText variant="h2">Outils Exécutifs ProDay</AdminText>
-            <AdminText variant="caption" muted>Actions directes & contrôle instantané</AdminText>
+        <View style={styles.sectionHead}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <AdminText variant="h2">Accès rapides</AdminText>
+            <AdminText variant="caption" muted>
+              Domaines opérationnels
+            </AdminText>
           </View>
-          <AdminBadge label="VIP Mode" tone="accent" />
+          <AdminBadge label="Live" tone="info" />
         </View>
 
         <View style={styles.quickToolsGrid}>
-          <Pressable
-            onPress={() => onNavigate('ia')}
-            style={[styles.quickToolBtn, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
-          >
-            <AdminText variant="h3">🤖 Moteur IA & Blood Bath</AdminText>
-            <AdminText variant="caption" color={t.accent}>Gemini Flash · 100% Opérationnel</AdminText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => onNavigate('plateforme')}
-            style={[styles.quickToolBtn, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
-          >
-            <AdminText variant="h3">🛡️ Sécurité & Système</AdminText>
-            <AdminText variant="caption" color={t.healthGood}>Firestore · Auth · 0 anomalie</AdminText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => onNavigate('commercial')}
-            style={[styles.quickToolBtn, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
-          >
-            <AdminText variant="h3">🤝 Devis & Sponsoring</AdminText>
-            <AdminText variant="caption" color={t.champagne}>{pendingQuotes} devis en attente</AdminText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => onNavigate('produit')}
-            style={[styles.quickToolBtn, { borderColor: t.border, backgroundColor: t.surfaceMuted }]}
-          >
-            <AdminText variant="h3">✨ Univers & Déploiements</AdminText>
-            <AdminText variant="caption" muted>6 Pôles actifs · Mode Bêta</AdminText>
-          </Pressable>
+          {QUICK_TOOLS.map((tool) => {
+            const hint = tool.hint({ pendingQuotes });
+            const hintColor =
+              tool.hintTone === 'success'
+                ? t.success
+                : tool.hintTone === 'signal'
+                  ? t.signal
+                  : tool.hintTone === 'accent'
+                    ? t.accentHot
+                    : t.muted;
+            return (
+              <AdminPressable
+                key={tool.section}
+                onPress={() => onNavigate(tool.section)}
+                style={[
+                  styles.quickToolBtn,
+                  { borderColor: t.border, backgroundColor: t.surfaceMuted },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.quickIcon,
+                    { backgroundColor: t.signalSoft, borderColor: t.border },
+                  ]}
+                >
+                  <Icon name={tool.icon} size={16} color={t.signal} />
+                </View>
+                <AdminText variant="h3">{tool.title}</AdminText>
+                <AdminText variant="caption" color={hintColor}>
+                  {hint}
+                </AdminText>
+              </AdminPressable>
+            );
+          })}
         </View>
       </AdminCard>
 
@@ -269,7 +315,7 @@ export function AdminDashboardPane({ onNavigate, onOpenCommand }: Props) {
               <AdminText variant="caption" muted>
                 {getRoleLabel(r.role)}
               </AdminText>
-              <AdminText variant="h3" champagne>
+              <AdminText variant="h3" color={t.accentHot}>
                 {r.count}
               </AdminText>
             </View>
@@ -284,7 +330,6 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: {
     paddingHorizontal: adminLayout.pageGutter,
-    /** Le shell gère insets.top — ici seulement un léger air interne. */
     paddingTop: adminSpace.sm,
     paddingBottom: adminLayout.dockClearance,
     gap: adminLayout.sectionGap,
@@ -297,8 +342,7 @@ const styles = StyleSheet.create({
     paddingBottom: adminLayout.heroPad,
     gap: adminSpace.md,
     borderWidth: 1,
-    borderColor: ADMIN_TOKENS.borderLuxury,
-    minHeight: 188,
+    minHeight: 176,
   },
   heroTop: {
     flexDirection: 'row',
@@ -316,6 +360,12 @@ const styles = StyleSheet.create({
   },
   healthRow: { flexDirection: 'row', alignItems: 'center', gap: adminSpace.md },
   metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: adminLayout.gridGap },
+  sectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: adminSpace.md,
+  },
   actionGrid: { gap: adminSpace.sm, marginTop: adminSpace.sm },
   actionRow: {
     flexDirection: 'row',
@@ -353,22 +403,17 @@ const styles = StyleSheet.create({
   quickToolBtn: {
     flexBasis: '48%',
     flexGrow: 1,
-    padding: 12,
+    padding: 14,
     borderRadius: adminRadius.md,
     borderWidth: 1,
-    gap: 4,
+    gap: 8,
   },
-  godAction: {
-    flexDirection: 'row',
+  quickIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: adminRadius.sm,
+    borderWidth: 1,
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: ADMIN_TOKENS.surface,
-    borderRadius: adminRadius.md,
-    borderWidth: 1,
-    borderColor: ADMIN_TOKENS.border,
-    gap: 12,
-  },
-  godIcon: {
-    fontSize: 24,
+    justifyContent: 'center',
   },
 });

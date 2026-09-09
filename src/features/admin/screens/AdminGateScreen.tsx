@@ -27,7 +27,7 @@ export const AdminGateScreen: React.FC = () => {
   return (
     <View style={styles.root} testID="admin-gate">
       <LinearGradient
-        colors={['rgba(212,184,128,0.22)', 'transparent']}
+        colors={['rgba(139,168,196,0.18)', 'transparent']}
         style={StyleSheet.absoluteFillObject}
         pointerEvents="none"
       />

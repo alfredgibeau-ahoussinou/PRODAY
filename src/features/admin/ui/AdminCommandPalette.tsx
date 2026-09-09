@@ -95,7 +95,7 @@ export function AdminCommandPalette({ open, onClose, onNavigate }: Props) {
           <AdminBrandMark compact />
         </View>
         <View style={styles.searchRow}>
-          <Icon name="search" size={18} color={t.accent} />
+          <Icon name="search" size={18} color={t.signal} />
           <TextInput
             autoFocus
             value={q}

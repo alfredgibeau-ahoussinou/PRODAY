@@ -51,19 +51,19 @@ export function AdminDockTab({ label, icon, active, onPress, style }: Props) {
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
       >
-        <DockPillIndicator active={active} color={t.accentSoft} />
+        <DockPillIndicator active={active} color={t.signalSoft} />
         <Icon
           name={icon}
           size={adminChrome.tabBarIcon}
-          color={active ? t.accent : t.muted}
+          color={active ? t.signal : t.muted}
         />
         <AdminText
           variant="caption"
-          color={active ? t.champagneBright : t.muted}
+          color={active ? t.accentHot : t.muted}
           style={{
             fontWeight: active ? '800' : '500',
             fontSize: 10,
-            letterSpacing: active ? 0.4 : 0,
+            letterSpacing: active ? 0.35 : 0,
           }}
           numberOfLines={1}
         >

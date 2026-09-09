@@ -24,7 +24,7 @@ export function AdminMenuPane({ onNavigate, onOpenCommand }: Props) {
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
       <AdminPaneHeader
         title="Menu"
-        subtitle="Domaines supplémentaires"
+        subtitle="Tous les domaines du Control Center"
         right={
           onOpenCommand ? (
             <AdminButton label="⌘K" variant="soft" onPress={onOpenCommand} />
@@ -36,11 +36,11 @@ export function AdminMenuPane({ onNavigate, onOpenCommand }: Props) {
           onPress={onOpenCommand}
           style={[styles.cmd, { borderColor: t.border, backgroundColor: t.surfaceGlass }]}
         >
-          <Icon name="search" size={16} color={t.accent} />
+          <Icon name="search" size={16} color={t.signal} />
           <AdminText variant="caption" muted style={{ flex: 1 }}>
             Rechercher clubs, devis, users…
           </AdminText>
-          <AdminText variant="caption" champagne>
+          <AdminText variant="caption" color={t.signal}>
             ⌘K
           </AdminText>
         </AdminPressable>
@@ -52,8 +52,15 @@ export function AdminMenuPane({ onNavigate, onOpenCommand }: Props) {
           onPress={() => onNavigate(item.id)}
           style={[styles.row, { borderColor: t.border, backgroundColor: t.surface }]}
         >
-          <Icon name={item.icon} size={18} color={t.accent} />
-          <View style={{ flex: 1 }}>
+          <View
+            style={[
+              styles.iconWrap,
+              { backgroundColor: t.signalSoft, borderColor: t.border },
+            ]}
+          >
+            <Icon name={item.icon} size={16} color={t.signal} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
             <AdminText variant="h3">{item.label}</AdminText>
             {item.hint ? (
               <AdminText variant="caption" muted>
@@ -92,5 +99,13 @@ const styles = StyleSheet.create({
     borderRadius: adminRadius.lg,
     borderWidth: 1,
     minHeight: adminLayout.listRowMinHeight,
+  },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: adminRadius.sm,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -51,13 +51,13 @@ export function AdminTopBar({
         </AdminText>
       </View>
       <Pressable onPress={onOpenHealth} style={styles.pill} hitSlop={8}>
-        <AdminText variant="caption" champagne style={{ fontWeight: '700' }}>
+        <AdminText variant="caption" color={t.signal} style={{ fontWeight: '700' }}>
           Health {healthScore}%
         </AdminText>
       </Pressable>
       {actionCount > 0 ? <AdminBadge label={`${actionCount}`} tone="warn" /> : null}
       <Pressable onPress={onOpenCommand} style={styles.iconBtn} hitSlop={8}>
-        <Icon name="search" size={18} color={t.champagne} />
+        <Icon name="search" size={18} color={t.accentHot} />
       </Pressable>
     </View>
   );
@@ -87,8 +87,8 @@ const styles = StyleSheet.create({
   pill: {
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: adminRadius.pill,
-    backgroundColor: ADMIN_TOKENS.accentSoft,
+    borderRadius: adminRadius.md,
+    backgroundColor: ADMIN_TOKENS.signalSoft,
     borderWidth: 1,
     borderColor: ADMIN_TOKENS.border,
   },

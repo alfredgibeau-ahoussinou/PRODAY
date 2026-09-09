@@ -437,12 +437,12 @@ export function AdminCommercialPane({ focusId }: { focusId?: string }) {
               style={[
                 styles.chip,
                 {
-                  backgroundColor: filter === id ? t.accentSoft : t.surfaceRaised,
-                  borderColor: filter === id ? t.accent : t.border,
+                  backgroundColor: filter === id ? t.signalSoft : t.surfaceRaised,
+                  borderColor: filter === id ? t.borderStrong : t.border,
                 },
               ]}
             >
-              <AdminText variant="caption" color={filter === id ? t.champagneBright : t.muted}>
+              <AdminText variant="caption" color={filter === id ? t.accentHot : t.muted}>
                 {label}
               </AdminText>
             </Pressable>

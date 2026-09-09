@@ -133,7 +133,7 @@ function AdminShellInner({
             {!wide ? (
               <View style={[styles.dock, { paddingBottom: dockPadBottom }]}>
                 <LinearGradient
-                  colors={['transparent', 'rgba(212,184,128,0.06)']}
+                  colors={['transparent', 'rgba(139,168,196,0.05)']}
                   style={StyleSheet.absoluteFill}
                   pointerEvents="none"
                 />

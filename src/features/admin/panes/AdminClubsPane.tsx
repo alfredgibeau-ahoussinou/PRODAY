@@ -156,14 +156,14 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
               style={[
                 styles.chip,
                 {
-                  backgroundColor: filter === id ? t.accentSoft : t.surfaceRaised,
+                  backgroundColor: filter === id ? t.signalSoft : t.surfaceRaised,
                   borderColor: filter === id ? t.borderStrong : t.border,
                 },
               ]}
             >
               <AdminText
                 variant="caption"
-                color={filter === id ? t.champagneBright : t.muted}
+                color={filter === id ? t.accentHot : t.muted}
               >
                 {label}
               </AdminText>

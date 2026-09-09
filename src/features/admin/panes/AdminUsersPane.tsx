@@ -663,12 +663,12 @@ function Chip({
       style={[
         styles.chip,
         {
-          backgroundColor: active ? t.accentSoft : t.surfaceRaised,
-          borderColor: active ? t.accent : t.border,
+          backgroundColor: active ? t.signalSoft : t.surfaceRaised,
+          borderColor: active ? t.borderStrong : t.border,
         },
       ]}
     >
-      <AdminText variant="caption" color={active ? t.champagneBright : t.muted}>
+      <AdminText variant="caption" color={active ? t.accentHot : t.muted}>
         {label}
       </AdminText>
     </Pressable>

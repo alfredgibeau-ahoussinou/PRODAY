@@ -135,12 +135,12 @@ export function AdminSupportPane({ onNavigate }: Props) {
             style={[
               styles.chip,
               {
-                backgroundColor: kind === k ? t.accentSoft : t.surfaceRaised,
+                backgroundColor: kind === k ? t.signalSoft : t.surfaceRaised,
                 borderColor: kind === k ? t.borderStrong : t.border,
               },
             ]}
           >
-            <AdminText variant="caption" color={kind === k ? t.champagneBright : t.muted}>
+            <AdminText variant="caption" color={kind === k ? t.accentHot : t.muted}>
               {k}
             </AdminText>
           </Pressable>
