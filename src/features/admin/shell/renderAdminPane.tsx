@@ -1,12 +1,11 @@
 import React from 'react';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
-import { AdminTowerPane } from '../panes/AdminTowerPane';
+import { OpsPulsePane } from './OpsPulsePane';
 import { AdminUsersPane } from '../panes/AdminUsersPane';
 import { AdminClubsPane } from '../panes/AdminClubsPane';
 import { AdminIdentityQueuePane } from '../panes/AdminIdentityQueuePane';
 import { AdminRosterDataPane } from '../panes/AdminRosterDataPane';
 import { AdminStandingsPane } from '../panes/AdminStandingsPane';
-import { AdminMenuPane } from '../panes/AdminMenuPane';
 
 type Props = {
   section: AdminNavSectionId;
@@ -26,19 +25,17 @@ export function renderAdminPane({
   onOpenCommand,
 }: Props) {
   switch (section) {
-    case 'tour':
-      return (
-        <AdminTowerPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
-      );
-    case 'clubs':
+    case 'pulse':
+      return <OpsPulsePane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />;
+    case 'annuaire':
       return <AdminClubsPane focusId={focusId} />;
-    case 'identite':
+    case 'file':
       return <AdminIdentityQueuePane focusId={focusId} />;
     case 'effectifs':
       return <AdminRosterDataPane />;
     case 'classements':
       return <AdminStandingsPane />;
-    case 'utilisateurs':
+    case 'comptes':
       return (
         <AdminUsersPane
           focusId={focusId}
@@ -46,13 +43,7 @@ export function renderAdminPane({
           onPreviewUserApp={onPreviewUserApp}
         />
       );
-    case 'menu':
-      return (
-        <AdminMenuPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
-      );
     default:
-      return (
-        <AdminTowerPane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />
-      );
+      return <OpsPulsePane onNavigate={onNavigate} onOpenCommand={onOpenCommand} />;
   }
 }

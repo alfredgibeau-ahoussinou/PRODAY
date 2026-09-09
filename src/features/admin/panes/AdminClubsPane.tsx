@@ -129,7 +129,7 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader
-          title="Clubs & Visual"
+          title="Annuaire clubs"
           subtitle={`${data.clubs.length} clubs FR · CRUD · logos · données publiques`}
         />
         <TextInput

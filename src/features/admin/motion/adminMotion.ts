@@ -6,17 +6,16 @@ import {
 } from '../../../motion';
 
 /**
- * Motion Admin — consomme ProDayMotionSystem (plus de silo tokens).
+ * Motion Admin — consomme ProDayMotionSystem.
  */
 export const adminMotion = prodayMotion;
 
-/** Ordre de navigation pour forward/back (dock + menu) — Cockpit Total. */
+/** Ordre rail Bureau Ops (Pulse → File → Annuaire → Comptes → Effectifs → Tableaux). */
 export const ADMIN_MOTION_SECTION_ORDER: AdminNavSectionId[] = [
-  'tour',
-  'clubs',
-  'identite',
-  'utilisateurs',
-  'menu',
+  'pulse',
+  'file',
+  'annuaire',
+  'comptes',
   'effectifs',
   'classements',
 ];

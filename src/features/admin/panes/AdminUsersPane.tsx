@@ -164,7 +164,7 @@ export function AdminUsersPane({
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader
-          title="Utilisateurs"
+          title="Comptes"
           subtitle={`${data.users.length} comptes · édition · bulk · CSV`}
           right={
             <View style={{ flexDirection: 'row', gap: 6 }}>
@@ -830,7 +830,7 @@ function UserEditor({
             user.uid,
             user.role === 'coach' ? 'coach_plus' : 'player_plus',
             1,
-            'Cadeau admin Control Center',
+            'Cadeau admin Bureau Ops',
             false,
           );
           await adminAuditService.log({

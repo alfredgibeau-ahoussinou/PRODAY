@@ -70,7 +70,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
           await adminService.resolvePublicClubClaim(
             claim.fff_affiliation_number,
             action,
-            action === 'reject' ? 'Refus admin Cockpit' : undefined,
+            action === 'reject' ? 'Refus admin Bureau Ops' : undefined,
           );
           await adminAuditService.log({
             action: 'other',
@@ -133,7 +133,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
           await adminService.updateUser(user.uid, {
             verification_status: status,
             is_verified: status === 'APPROVED',
-            rejection_reason: status === 'REJECTED' ? 'Refus admin Cockpit' : null,
+            rejection_reason: status === 'REJECTED' ? 'Refus admin Bureau Ops' : null,
           });
           await data.refresh();
           setDocUser(null);
@@ -161,7 +161,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
         }
       >
         <AdminPaneHeader
-          title="Identity & Claims"
+          title="File identité"
           subtitle="Claims club · adhésions · documents ID — approve / reject 1-clic"
         />
 

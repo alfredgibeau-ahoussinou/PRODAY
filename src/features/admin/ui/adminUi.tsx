@@ -64,16 +64,16 @@ export function AdminBrandMark({ compact }: { compact?: boolean }) {
   const t = ADMIN_TOKENS;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: compact ? 8 : 10 }}>
-      <ProDaySymbol size={compact ? 22 : 28} variant="admin" tone="white" />
+      <ProDaySymbol size={compact ? 22 : 28} variant="admin" tone="black" />
       <AdminText
         variant="brand"
         style={{
           fontSize: compact ? 9 : 10,
-          letterSpacing: compact ? 1.8 : 2.4,
-          color: t.accentHot,
+          letterSpacing: compact ? 1.8 : 2.8,
+          color: t.ink,
         }}
       >
-        {compact ? 'CONTROL' : adminChrome.brandMark}
+        {compact ? 'OPS' : adminChrome.brandMark}
       </AdminText>
     </View>
   );
@@ -107,7 +107,7 @@ export function AdminButton({
     variant === 'primary'
       ? t.accentText
       : variant === 'danger'
-        ? '#F2F4F7'
+        ? '#FFFFFF'
         : variant === 'soft'
           ? t.accentHot
           : t.foreground;
@@ -287,7 +287,7 @@ export function AdminCard({
   );
 }
 
-/** En-tête de pane unifié — control center. */
+/** En-tête de pane Bureau Ops. */
 export function AdminPaneHeader({
   title,
   subtitle,
@@ -302,7 +302,9 @@ export function AdminPaneHeader({
     <View style={styles.paneHeader}>
       <View style={styles.paneHeaderRow}>
         <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
-          <AdminBrandMark compact />
+          <AdminText variant="label" color={t.signal}>
+            BUREAU OPS
+          </AdminText>
           <AdminText variant="h1" numberOfLines={1}>
             {title}
           </AdminText>
@@ -314,7 +316,7 @@ export function AdminPaneHeader({
         </View>
         {right}
       </View>
-      <View style={[styles.paneAccent, { backgroundColor: t.signal }]} />
+      <View style={[styles.paneAccent, { backgroundColor: t.ink }]} />
     </View>
   );
 }

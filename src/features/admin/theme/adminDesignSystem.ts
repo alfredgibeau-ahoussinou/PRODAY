@@ -1,6 +1,6 @@
 /**
- * Design system — ProDay Admin Control Center.
- * Densité instrument / fondateur · Inter pour l’UI · Syne/Sora réservés au brand mark.
+ * Design system — ProDay Bureau Ops.
+ * Typo densifiée type instrument · Inter UI · angles nets (pas soft-bubble).
  */
 
 import type { TextStyle, ViewStyle } from 'react-native';
@@ -9,83 +9,83 @@ import { ADMIN_TOKENS, type AdminThemeTokens } from './adminTokens';
 
 export const adminType = {
   display: {
-    fontFamily: fontFamily.extrabold,
-    fontSize: 32,
-    letterSpacing: -0.9,
+    fontFamily: fontFamily.black,
+    fontSize: 34,
+    letterSpacing: -1.1,
     lineHeight: 38,
   },
   displaySm: {
     fontFamily: fontFamily.extrabold,
-    fontSize: 26,
-    letterSpacing: -0.7,
-    lineHeight: 32,
+    fontSize: 24,
+    letterSpacing: -0.6,
+    lineHeight: 28,
   },
   h1: {
     fontFamily: fontFamily.extrabold,
-    fontSize: 22,
-    letterSpacing: -0.45,
-    lineHeight: 28,
+    fontSize: 20,
+    letterSpacing: -0.4,
+    lineHeight: 26,
   },
   h2: {
     fontFamily: fontFamily.bold,
-    fontSize: 17,
-    letterSpacing: -0.25,
-    lineHeight: 23,
+    fontSize: 15,
+    letterSpacing: -0.15,
+    lineHeight: 20,
   },
   h3: {
     fontFamily: fontFamily.bold,
-    fontSize: 14,
-    letterSpacing: -0.1,
-    lineHeight: 19,
+    fontSize: 13,
+    letterSpacing: -0.05,
+    lineHeight: 18,
   },
   body: {
     fontFamily: fontFamily.regular,
     fontSize: 14,
     letterSpacing: 0.01,
-    lineHeight: 21,
+    lineHeight: 20,
   },
   caption: {
     fontFamily: fontFamily.semibold,
-    fontSize: 12,
-    letterSpacing: 0.08,
-    lineHeight: 16,
+    fontSize: 11,
+    letterSpacing: 0.12,
+    lineHeight: 15,
   },
   label: {
     fontFamily: fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    lineHeight: 13,
+    fontSize: 9,
+    letterSpacing: 1.8,
+    lineHeight: 12,
     textTransform: 'uppercase' as const,
   },
   brand: {
     fontFamily: fontFamily.brand,
-    fontSize: 11,
-    letterSpacing: 2.4,
-    lineHeight: 14,
+    fontSize: 10,
+    letterSpacing: 2.8,
+    lineHeight: 13,
     textTransform: 'uppercase' as const,
   },
   stat: {
-    fontFamily: fontFamily.extrabold,
-    fontSize: 40,
-    letterSpacing: -1.2,
+    fontFamily: fontFamily.black,
+    fontSize: 42,
+    letterSpacing: -1.4,
     lineHeight: 44,
   },
   statSm: {
     fontFamily: fontFamily.extrabold,
     fontSize: 22,
-    letterSpacing: -0.5,
+    letterSpacing: -0.6,
     lineHeight: 26,
   },
   nav: {
     fontFamily: fontFamily.semibold,
-    fontSize: 13,
-    letterSpacing: 0.04,
-    lineHeight: 18,
+    fontSize: 12,
+    letterSpacing: 0.2,
+    lineHeight: 16,
   },
   mono: {
     fontFamily: 'Menlo',
     fontSize: 11,
-    letterSpacing: 0.2,
+    letterSpacing: 0.35,
     lineHeight: 15,
   },
 } satisfies Record<string, TextStyle>;
@@ -104,120 +104,116 @@ export const adminSpace = {
   hero: 56,
 } as const;
 
-/** Rayons plus instrumentaux — moins « bubbly » club. */
+/** Angles instrument — presque rectangulaires. */
 export const adminRadius = {
-  xs: 6,
-  sm: 8,
-  md: 12,
-  lg: 14,
-  xl: 18,
-  xxl: 22,
-  hero: 20,
+  xs: 2,
+  sm: 4,
+  md: 6,
+  lg: 8,
+  xl: 10,
+  xxl: 12,
+  hero: 8,
   pill: 999,
 } as const;
 
 export const adminShadow = {
   soft: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowColor: '#071525',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   } satisfies ViewStyle,
   card: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowColor: '#071525',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   } satisfies ViewStyle,
   deep: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.42,
-    shadowRadius: 28,
-    elevation: 10,
+    shadowColor: '#071525',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 4,
   } satisfies ViewStyle,
   glow: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
     shadowColor: tokens.signal,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 2,
   }),
-  champagne: (tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
-    shadowColor: tokens.accentHot,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 3,
+  champagne: (_tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle => ({
+    shadowColor: '#071525',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   }),
 };
 
 export const adminChrome = {
   wideBreakpoint: 920,
   tabletBreakpoint: 700,
-  sidebarExpanded: 268,
-  sidebarCollapsed: 72,
-  topBarHeight: 56,
-  dockRailHeight: 54,
-  tabBarIcon: 21,
-  contentMax: 1200,
-  brandMark: 'COCKPIT TOTAL',
+  /** Rail permanent (toujours visible, y compris mobile). */
+  sidebarExpanded: 196,
+  sidebarCollapsed: 64,
+  topBarHeight: 52,
+  /** Plus de dock bas — clearance minimale. */
+  dockRailHeight: 0,
+  tabBarIcon: 20,
+  contentMax: 1280,
+  brandMark: 'BUREAU OPS',
 } as const;
 
 export const adminLayout = {
   pageGutter: adminSpace.lg,
   cardPad: adminSpace.lg,
   heroPad: adminSpace.xl,
-  sectionGap: adminSpace.lg + 4,
-  stackGap: adminSpace.md + 2,
+  sectionGap: adminSpace.lg,
+  stackGap: adminSpace.md,
   gridGap: adminSpace.md,
-  dockClearance: adminSpace.hero + adminChrome.dockRailHeight,
-  /**
-   * Air sous la status bar / Dynamic Island (mobile, dock seul).
-   */
-  contentTop: adminSpace.xl,
-  /** Plancher insets.top (évite le flash à 0 au mount / îlot). */
-  statusBarMin: 54,
+  dockClearance: adminSpace.xxl,
+  contentTop: adminSpace.md,
+  statusBarMin: 48,
   headerPadX: adminSpace.lg,
-  listRowMinHeight: 52,
+  listRowMinHeight: 48,
   hitTarget: 44,
 } as const;
 
 export const adminMotion = {
-  press: 90,
-  enter: 320,
-  settle: 480,
-  stagger: 40,
+  press: 80,
+  enter: 280,
+  settle: 420,
+  stagger: 36,
 } as const;
 
 export function adminPanelStyle(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
   return {
     backgroundColor: tokens.surface,
-    borderColor: tokens.border,
-    borderWidth: 1,
-    borderRadius: adminRadius.lg,
+    borderColor: tokens.borderStrong,
+    borderWidth: 1.5,
+    borderRadius: adminRadius.md,
   };
 }
 
 export function adminSurfaceHero(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
   return {
-    backgroundColor: tokens.surfaceRaised,
+    backgroundColor: tokens.surface,
     borderRadius: adminRadius.hero,
-    borderWidth: 1,
-    borderColor: tokens.borderLuxury,
+    borderWidth: 2,
+    borderColor: tokens.ink,
     overflow: 'hidden',
-    ...adminShadow.soft,
   };
 }
 
 export function adminSurfaceCard(tokens: AdminThemeTokens = ADMIN_TOKENS): ViewStyle {
   return {
     backgroundColor: tokens.surface,
-    borderRadius: adminRadius.lg,
-    borderWidth: 1,
-    borderColor: tokens.border,
-    ...adminShadow.soft,
+    borderRadius: adminRadius.md,
+    borderWidth: 1.5,
+    borderColor: tokens.borderStrong,
   };
 }

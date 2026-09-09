@@ -27,13 +27,13 @@ export const AdminGateScreen: React.FC = () => {
   return (
     <View style={styles.root} testID="admin-gate">
       <LinearGradient
-        colors={['rgba(139,168,196,0.18)', 'transparent']}
+        colors={['rgba(13,138,138,0.12)', 'transparent']}
         style={StyleSheet.absoluteFillObject}
         pointerEvents="none"
       />
       <AdminBrandMark />
       <AdminText variant="display" style={{ textAlign: 'center' }}>
-        {needsSetup ? 'Configuration requise' : 'Accès refusé'}
+        {needsSetup ? 'Configuration requise' : 'Accès Bureau Ops'}
       </AdminText>
       <AdminText variant="body" muted style={{ maxWidth: 420, textAlign: 'center' }}>
         {needsSetup

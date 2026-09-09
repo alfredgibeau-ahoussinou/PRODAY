@@ -145,7 +145,7 @@ export function AdminStandingsPane() {
               goals_for: Number(gf) || 0,
               goals_against: Number(ga) || 0,
             },
-            reason: reason.trim() || 'Override Cockpit',
+            reason: reason.trim() || 'Override Bureau Ops',
           });
           await adminAuditService.log({
             action: 'other',
@@ -175,7 +175,7 @@ export function AdminStandingsPane() {
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader
-          title="Standings Override"
+          title="Tableaux classements"
           subtitle="Monitor · force-sync · ajustement manuel (R1, R2, nationaux)"
         />
         <View style={styles.actions}>

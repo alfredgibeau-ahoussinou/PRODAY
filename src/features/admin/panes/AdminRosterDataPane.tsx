@@ -143,7 +143,7 @@ export function AdminRosterDataPane() {
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader
-          title="Roster & Data"
+          title="Effectifs live"
           subtitle="Inspect · manage · force-trigger imports effectifs"
         />
         <TextInput

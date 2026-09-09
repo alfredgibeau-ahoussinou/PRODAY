@@ -1,22 +1,25 @@
 import {
   ADMIN_NAV_ITEMS,
   ADMIN_MENU_DEST_IDS,
+  ADMIN_RAIL_IDS,
   resolveAdminNav,
   resolveAdminCommandItems,
 } from '../features/admin/navigation/adminNavConfig';
 import { mapPlatformConfig } from '../utils/platformConfigMap';
 import { DEFAULT_AI_OPS } from '../models/PlatformConfig';
 
-describe('Cockpit Total · data & claims nav', () => {
-  it('expose effectifs + classements + identité', () => {
+describe('Bureau Ops · data & file nav', () => {
+  it('expose effectifs + classements + file sur le rail (pas Menu)', () => {
     expect(ADMIN_NAV_ITEMS.some((n) => n.id === 'effectifs')).toBe(true);
     expect(ADMIN_NAV_ITEMS.some((n) => n.id === 'classements')).toBe(true);
-    expect(ADMIN_NAV_ITEMS.some((n) => n.id === 'identite')).toBe(true);
-    expect(ADMIN_MENU_DEST_IDS).toContain('effectifs');
-    expect(ADMIN_MENU_DEST_IDS).toContain('classements');
+    expect(ADMIN_NAV_ITEMS.some((n) => n.id === 'file')).toBe(true);
+    expect(ADMIN_RAIL_IDS).toContain('effectifs');
+    expect(ADMIN_RAIL_IDS).toContain('classements');
+    expect(ADMIN_MENU_DEST_IDS).toEqual([]);
     expect(resolveAdminNav('standings').section).toBe('classements');
     expect(resolveAdminNav('donnees').section).toBe('effectifs');
-    expect(resolveAdminNav('claims').section).toBe('identite');
+    expect(resolveAdminNav('claims').section).toBe('file');
+    expect(resolveAdminNav('identite').section).toBe('file');
   });
 
   it('ajoute les commandes palette sync', () => {

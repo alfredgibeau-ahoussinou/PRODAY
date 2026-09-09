@@ -1,20 +1,19 @@
 import type { IconName } from '../../../components/ui/iconNames';
 
 /**
- * Cockpit Total — navigation unique du Control Center fondateur.
- * Sections opérationnelles réelles uniquement (pas de silos marketing).
+ * Bureau Ops — information architecture fondateur.
+ * Workflows opérationnels (pas silos Tour/Claims/Menu du dock legacy).
  */
 
-export type AdminNavGroupId = 'tower' | 'ops' | 'people';
+export type AdminNavGroupId = 'desk' | 'directory' | 'live';
 
 export type AdminNavSectionId =
-  | 'tour'
-  | 'clubs'
-  | 'identite'
+  | 'pulse'
+  | 'file'
+  | 'annuaire'
+  | 'comptes'
   | 'effectifs'
-  | 'classements'
-  | 'utilisateurs'
-  | 'menu';
+  | 'classements';
 
 export type AdminNavItem = {
   id: AdminNavSectionId;
@@ -31,75 +30,70 @@ export type AdminNavGroup = {
 };
 
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
-  { id: 'tower', label: 'Tour de contrôle' },
-  { id: 'ops', label: 'Données live' },
-  { id: 'people', label: 'Identité' },
+  { id: 'desk', label: 'Bureau' },
+  { id: 'directory', label: 'Répertoire' },
+  { id: 'live', label: 'Flux live' },
 ];
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   {
-    id: 'tour',
-    label: 'Cockpit',
-    shortLabel: 'Tour',
-    icon: 'home',
-    group: 'tower',
-    hint: 'Vue d’ensemble · files · sync',
+    id: 'pulse',
+    label: 'Pulse',
+    shortLabel: 'Pulse',
+    icon: 'flash',
+    group: 'desk',
+    hint: 'Santé plateforme · file prioritaire',
   },
   {
-    id: 'clubs',
-    label: 'Clubs & Visual',
-    shortLabel: 'Clubs',
-    icon: 'business',
-    group: 'tower',
-    hint: 'CRUD clubs · logos · données publiques',
-  },
-  {
-    id: 'identite',
-    label: 'Identity & Claims',
-    shortLabel: 'Claims',
+    id: 'file',
+    label: 'File',
+    shortLabel: 'File',
     icon: 'shield',
-    group: 'people',
+    group: 'desk',
     hint: 'Claims FFF · adhésions · docs ID',
   },
   {
+    id: 'annuaire',
+    label: 'Annuaire',
+    shortLabel: 'Clubs',
+    icon: 'business',
+    group: 'directory',
+    hint: 'CRUD clubs · logos · données publiques',
+  },
+  {
+    id: 'comptes',
+    label: 'Comptes',
+    shortLabel: 'Comptes',
+    icon: 'person',
+    group: 'directory',
+    hint: 'Comptes · rôles · permissions',
+  },
+  {
     id: 'effectifs',
-    label: 'Roster & Data',
-    shortLabel: 'Rosters',
+    label: 'Effectifs',
+    shortLabel: 'Eff.',
     icon: 'people',
-    group: 'ops',
-    hint: 'Effectifs FootClubs · force sync',
+    group: 'live',
+    hint: 'Rosters FootClubs · force sync',
   },
   {
     id: 'classements',
-    label: 'Standings Override',
-    shortLabel: 'Class.',
+    label: 'Tableaux',
+    shortLabel: 'Tab.',
     icon: 'stats-chart',
-    group: 'ops',
-    hint: 'Monitor · sync · ajustement manuel',
-  },
-  {
-    id: 'utilisateurs',
-    label: 'Users & Roles',
-    shortLabel: 'Users',
-    icon: 'person',
-    group: 'people',
-    hint: 'Comptes · rôles · permissions',
+    group: 'live',
+    hint: 'Classements · sync · override',
   },
 ];
 
-/** Dock mobile (5 max). */
-export const ADMIN_PRIMARY_NAV_IDS: AdminNavSectionId[] = [
-  'tour',
-  'clubs',
-  'identite',
-  'utilisateurs',
-  'menu',
-];
+/** Rail permanent — les 6 zones, aucun overflow « Menu ». */
+export const ADMIN_RAIL_IDS: AdminNavSectionId[] = ADMIN_NAV_ITEMS.map((n) => n.id);
 
-export const ADMIN_MENU_DEST_IDS: AdminNavSectionId[] = [
-  'effectifs',
-  'classements',
-];
+/** @deprecated Plus de dock bottom — alias rail pour tests legacy. */
+export const ADMIN_PRIMARY_NAV_IDS: AdminNavSectionId[] = ADMIN_RAIL_IDS;
+
+/** @deprecated Plus de menu overflow. */
+export const ADMIN_MENU_DEST_IDS: AdminNavSectionId[] = [];
 
 export type AdminNavTarget = {
   section: AdminNavSectionId;
@@ -110,7 +104,7 @@ export type AdminNavTarget = {
 const SECTION_SET = new Set<string>(ADMIN_NAV_ITEMS.map((n) => n.id));
 
 export function isAdminNavSectionId(id: string): id is AdminNavSectionId {
-  return SECTION_SET.has(id) || id === 'menu';
+  return SECTION_SET.has(id);
 }
 
 export function findAdminNavItem(id: AdminNavSectionId): AdminNavItem | undefined {
@@ -121,51 +115,57 @@ export function adminNavItemsInGroup(group: AdminNavGroupId): AdminNavItem[] {
   return ADMIN_NAV_ITEMS.filter((n) => n.group === group);
 }
 
-/** Anciens ids Control Center / FOC → Cockpit Total. */
+/** Legacy Cockpit Total / FOC / Control Center → Bureau Ops. */
 const LEGACY_MAP: Record<string, AdminNavTarget> = {
-  dashboard: { section: 'tour' },
-  accueil: { section: 'tour' },
-  tour: { section: 'tour' },
-  cockpit: { section: 'tour' },
-  ia: { section: 'tour' },
-  users: { section: 'utilisateurs' },
-  utilisateurs: { section: 'utilisateurs' },
-  personnes: { section: 'utilisateurs' },
-  adherents: { section: 'utilisateurs' },
-  clubs: { section: 'clubs' },
-  visual: { section: 'clubs' },
-  activite: { section: 'tour' },
-  business: { section: 'tour' },
-  finances: { section: 'tour' },
-  abonnements: { section: 'utilisateurs' },
-  commercial: { section: 'tour' },
-  devis: { section: 'tour' },
-  contenus: { section: 'identite' },
-  securite: { section: 'identite' },
-  parametres: { section: 'tour' },
-  systeme: { section: 'tour' },
-  plateforme: { section: 'tour' },
-  produit: { section: 'tour' },
-  support: { section: 'identite' },
+  dashboard: { section: 'pulse' },
+  accueil: { section: 'pulse' },
+  tour: { section: 'pulse' },
+  cockpit: { section: 'pulse' },
+  pulse: { section: 'pulse' },
+  ia: { section: 'pulse' },
+  menu: { section: 'pulse' },
+  users: { section: 'comptes' },
+  utilisateurs: { section: 'comptes' },
+  comptes: { section: 'comptes' },
+  personnes: { section: 'comptes' },
+  adherents: { section: 'comptes' },
+  clubs: { section: 'annuaire' },
+  annuaire: { section: 'annuaire' },
+  visual: { section: 'annuaire' },
+  activite: { section: 'pulse' },
+  business: { section: 'pulse' },
+  finances: { section: 'pulse' },
+  abonnements: { section: 'comptes' },
+  commercial: { section: 'pulse' },
+  devis: { section: 'annuaire' },
+  contenus: { section: 'file' },
+  securite: { section: 'file' },
+  parametres: { section: 'pulse' },
+  systeme: { section: 'pulse' },
+  plateforme: { section: 'pulse' },
+  produit: { section: 'pulse' },
+  support: { section: 'file' },
   donnees: { section: 'effectifs' },
   data: { section: 'effectifs' },
   effectifs: { section: 'effectifs' },
   rosters: { section: 'effectifs' },
   standings: { section: 'classements' },
   classements: { section: 'classements' },
-  claims: { section: 'identite' },
-  identite: { section: 'identite' },
-  identity: { section: 'identite' },
-  pilotage: { section: 'tour' },
-  decisions: { section: 'identite' },
-  gestion: { section: 'utilisateurs' },
+  tableaux: { section: 'classements' },
+  claims: { section: 'file' },
+  identite: { section: 'file' },
+  identity: { section: 'file' },
+  file: { section: 'file' },
+  pilotage: { section: 'pulse' },
+  decisions: { section: 'file' },
+  gestion: { section: 'comptes' },
 };
 
 export function resolveAdminNav(id: string): AdminNavTarget {
-  if (isAdminNavSectionId(id) && id !== 'menu') {
+  if (isAdminNavSectionId(id)) {
     return { section: id };
   }
-  return LEGACY_MAP[id] ?? { section: 'tour' };
+  return LEGACY_MAP[id] ?? { section: 'pulse' };
 }
 
 export function resolveAdminCommandItems(): {
@@ -184,15 +184,15 @@ export function resolveAdminCommandItems(): {
     ...base,
     {
       id: 'cmd-claims',
-      label: 'File claims & adhésions',
-      section: 'identite',
-      keywords: ['claim', 'adhésion', 'verify', 'fff', 'pending'],
+      label: 'Traiter file claims & adhésions',
+      section: 'file',
+      keywords: ['claim', 'adhésion', 'verify', 'fff', 'pending', 'file'],
     },
     {
       id: 'cmd-standings',
       label: 'Force sync classements',
       section: 'classements',
-      keywords: ['fff', 'standings', 'classements', 'r1', 'r2', 'sync'],
+      keywords: ['fff', 'standings', 'classements', 'r1', 'r2', 'sync', 'tableaux'],
     },
     {
       id: 'cmd-rosters',
@@ -202,9 +202,21 @@ export function resolveAdminCommandItems(): {
     },
     {
       id: 'cmd-actions',
-      label: 'Actions requises',
-      section: 'tour',
-      keywords: ['todo', 'à faire', 'urgent', 'file', 'queue'],
+      label: 'Actions requises Pulse',
+      section: 'pulse',
+      keywords: ['todo', 'à faire', 'urgent', 'file', 'queue', 'pulse'],
+    },
+    {
+      id: 'cmd-clubs',
+      label: 'Créer / éditer club',
+      section: 'annuaire',
+      keywords: ['club', 'annuaire', 'crud', 'logo'],
+    },
+    {
+      id: 'cmd-users',
+      label: 'Gérer comptes & rôles',
+      section: 'comptes',
+      keywords: ['user', 'compte', 'role', 'permission'],
     },
   ];
 }

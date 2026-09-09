@@ -63,13 +63,14 @@ describe('Admin motion → ProDayMotionSystem', () => {
     expect(adminMotion.duration.fast).toBe(prodayMotion.duration.fast);
   });
 
-  it('conserve la direction dock+menu admin', () => {
-    expect(adminNavDirection('tour', 'clubs')).toBe(1);
-    expect(adminNavDirection('clubs', 'tour')).toBe(-1);
-    expect(adminNavDirection('identite', 'classements')).toBe(1);
-    expect(adminNavDirection('classements', 'menu')).toBe(-1);
-    expect(ADMIN_MOTION_SECTION_ORDER).toContain('tour');
+  it('conserve la direction rail Bureau Ops', () => {
+    expect(adminNavDirection('pulse', 'file')).toBe(1);
+    expect(adminNavDirection('file', 'pulse')).toBe(-1);
+    expect(adminNavDirection('annuaire', 'classements')).toBe(1);
+    expect(adminNavDirection('classements', 'comptes')).toBe(-1);
+    expect(ADMIN_MOTION_SECTION_ORDER).toContain('pulse');
     expect(ADMIN_MOTION_SECTION_ORDER).toContain('classements');
+    expect(ADMIN_MOTION_SECTION_ORDER).not.toContain('menu');
     expect(ADMIN_MOTION_SECTION_ORDER).not.toContain('commercial');
   });
 });

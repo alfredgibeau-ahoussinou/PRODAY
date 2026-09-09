@@ -83,7 +83,7 @@ export function buildAdminWorkQueue(input: {
       title: `Vérifier ${u.display_name}`,
       subtitle: `${getRoleLabel(u.role)} · ${u.email}`,
       meta: u.city ?? undefined,
-      targetSection: 'utilisateurs',
+      targetSection: 'comptes',
       entityId: u.uid,
       createdAt: u.created_at,
     });
@@ -97,7 +97,7 @@ export function buildAdminWorkQueue(input: {
       title: `Modérer publication · ${reel.author_name}`,
       subtitle: reel.caption?.slice(0, 80) || 'Sans légende',
       meta: reel.theme,
-      targetSection: 'tour',
+      targetSection: 'pulse',
       createdAt: reel.created_at,
     });
   }
@@ -110,7 +110,7 @@ export function buildAdminWorkQueue(input: {
       title: 'Signalement publication',
       subtitle: report.reason,
       meta: report.bookmark_key.slice(0, 24),
-      targetSection: 'identite',
+      targetSection: 'file',
       entityId: report.bookmark_key,
       createdAt: report.created_at,
     });
@@ -124,7 +124,7 @@ export function buildAdminWorkQueue(input: {
       title: `Paiement en attente · ${pay.label}`,
       subtitle: `${pay.amount_eur} €`,
       meta: pay.club_id,
-      targetSection: 'tour',
+      targetSection: 'pulse',
       createdAt: pay.created_at,
     });
   }
@@ -136,7 +136,7 @@ export function buildAdminWorkQueue(input: {
       priority: 'medium',
       title: `Candidature · ${app.player_name ?? 'Joueur'}`,
       subtitle: app.cover_letter.slice(0, 72),
-      targetSection: 'clubs',
+      targetSection: 'annuaire',
       createdAt: app.created_at,
     });
   }
@@ -149,7 +149,7 @@ export function buildAdminWorkQueue(input: {
       title: `Devis partenaire · ${quote.company_name}`,
       subtitle: `${quote.contact_name} · ${quote.contact_email}`,
       meta: quote.package_tier,
-      targetSection: 'tour',
+      targetSection: 'pulse',
       entityId: quote.id,
       createdAt: quote.created_at,
     });
@@ -163,7 +163,7 @@ export function buildAdminWorkQueue(input: {
       title: `Devis club · ${quote.club_name}`,
       subtitle: `${quote.owner_name} · ${quote.email}`,
       meta: quote.offer_hint,
-      targetSection: 'clubs',
+      targetSection: 'annuaire',
       entityId: quote.id,
       createdAt: quote.created_at,
     });
@@ -178,7 +178,7 @@ export function buildAdminWorkQueue(input: {
       title: `Adhésion · ${mem.player_name}`,
       subtitle: clubName,
       meta: mem.license_number,
-      targetSection: 'identite',
+      targetSection: 'file',
       entityId: mem.id,
       createdAt: mem.requested_at ?? mem.created_at,
     });
@@ -192,7 +192,7 @@ export function buildAdminWorkQueue(input: {
       title: `Demande abo · ${req.display_name}`,
       subtitle: `${req.plan_id} · ${req.billing === 'yearly' ? 'annuel' : 'mensuel'}`,
       meta: req.email,
-      targetSection: 'utilisateurs',
+      targetSection: 'comptes',
       entityId: req.user_uid,
       createdAt: req.created_at,
     });
@@ -301,7 +301,7 @@ export function globalAdminSearch(
         kind: 'user',
         title: u.display_name,
         subtitle: `${getRoleLabel(u.role)} · ${u.email}`,
-        targetSection: 'utilisateurs',
+        targetSection: 'comptes',
         entityId: u.uid,
         focusQuery: u.display_name,
       });
@@ -315,7 +315,7 @@ export function globalAdminSearch(
         kind: 'club',
         title: c.name,
         subtitle: c.city,
-        targetSection: 'clubs',
+        targetSection: 'annuaire',
         entityId: c.id,
         focusQuery: c.name,
       });
@@ -333,7 +333,7 @@ export function globalAdminSearch(
         kind: 'post',
         title: p.title,
         subtitle: `${p.club_name} · ${p.city}`,
-        targetSection: 'clubs',
+        targetSection: 'annuaire',
         entityId: p.id,
         focusQuery: p.title,
       });
@@ -347,7 +347,7 @@ export function globalAdminSearch(
         kind: 'event',
         title: e.title,
         subtitle: e.city,
-        targetSection: 'tour',
+        targetSection: 'pulse',
         entityId: e.id,
         focusQuery: e.title,
       });
