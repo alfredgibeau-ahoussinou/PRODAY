@@ -63,6 +63,19 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
   const [showLeaguePicker, setShowLeaguePicker] = useState(false);
   const [liveLeagueData, setLiveLeagueData] = useState<FrenchLeagueData | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // Résultats de recherche globale de clubs
+  const [searchResults, setSearchResults] = useState<{ league: FrenchLeagueData; club: LeagueStandingRow }[]>([]);
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    let active = true;
+    frenchFootballStandingsService.searchClubs(searchQuery).then((results) => {
+      if (active) setSearchResults(results);
+    });
+    return () => { active = false; };
+  }, [searchQuery]);
   const [syncStatusMessage, setSyncStatusMessage] = useState<string | null>(null);
   const [myFffTeam, setMyFffTeam] = useState<MyFffTeamLink | null>(null);
   const [selectedTeamAction, setSelectedTeamAction] = useState<LeagueStandingRow | null>(null);
@@ -92,7 +105,9 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
           setSyncStatusMessage(
             data.officialFffCertified
               ? 'Classement cloud FFF à jour'
-              : 'Classement certifié (seed / cache)',
+              : data.standings && data.standings.length > 0
+                ? 'Classement certifié (seed / cache)'
+                : 'En attente de première synchronization',
           );
         }
       })
@@ -108,15 +123,30 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
   }, [selectedLeagueId]);
 
   // Données de la ligue courante (soit fraîchement synchronisées FFF, soit issues du cache certifié)
+  const [fallbackLeagueData, setFallbackLeagueData] = useState<FrenchLeagueData | null>(null);
   const currentLeagueData = useMemo(() => {
     if (liveLeagueData && liveLeagueData.id === selectedLeagueId) {
       return liveLeagueData;
     }
-    return frenchFootballStandingsService.getLeagueStandings(selectedLeagueId);
-  }, [selectedLeagueId, liveLeagueData]);
+    return fallbackLeagueData;
+  }, [selectedLeagueId, liveLeagueData, fallbackLeagueData]);
+
+  // Charger les données de fallback dès qu'une nouvelle ligue est sélectionnée
+  useEffect(() => {
+    let active = true;
+    frenchFootballStandingsService
+      .getLeagueStandings(selectedLeagueId)
+      .then((data) => {
+        if (active) setFallbackLeagueData(data);
+      })
+      .catch(() => {
+        if (active) setFallbackLeagueData(null);
+      });
+    return () => { active = false; };
+  }, [selectedLeagueId]);
 
   const handleRefreshFff = async () => {
-    prodayHaptics.impact();
+    prodayHaptics.press();
     setIsRefreshing(true);
     try {
       const refreshed = await frenchFootballStandingsService.fetchLiveStandings(selectedLeagueId);
@@ -131,12 +161,12 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
   };
 
   const handleSetMyTeam = async (row: LeagueStandingRow) => {
-    prodayHaptics.impact();
+    prodayHaptics.press();
     const link: MyFffTeamLink = {
       leagueId: selectedLeagueId,
       teamId: row.team_id,
       teamName: row.name,
-      divisionLabel: currentLeagueData.divisionLabel,
+      divisionLabel: currentLeagueData?.divisionLabel ?? '',
       linkedAt: new Date().toISOString(),
     };
     await fffScraperService.setMyFffTeam(link);
@@ -148,7 +178,7 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
 
   const handleImportCalendar = async () => {
     if (!myFffTeam) return;
-    prodayHaptics.impact();
+    prodayHaptics.press();
     setIsImportingCalendar(true);
     try {
       const res = await fffCalendarSyncService.importFffCalendarToTeamEvents(
@@ -171,12 +201,6 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
     }
     return currentLeagueData.standings;
   }, [standingsProp, currentLeagueData]);
-
-  // Résultats de recherche globale de clubs
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    return frenchFootballStandingsService.searchClubs(searchQuery);
-  }, [searchQuery]);
 
   const displayedLeagueName = defaultLeagueName || currentLeagueData.name;
   const displayedDivisionName = defaultDivisionName || currentLeagueData.divisionLabel;
@@ -243,9 +267,15 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
         <View style={styles.fffBadgeLeft}>
           <Ionicons name="shield-checkmark" size={15} color="#10B981" />
           <Text style={styles.fffBadgeText}>Source Officielle FFF & Districts</Text>
-          {currentLeagueData.officialFffCertified ? (
+          {currentLeagueData ? (
             <View style={styles.certifiedBadge}>
-              <Text style={styles.certifiedBadgeText}>CERTIFIÉ</Text>
+              {currentLeagueData.officialFffCertified ? (
+                <Text style={styles.certifiedBadgeText}>CERTIFIÉ</Text>
+              ) : currentLeagueData.standings && currentLeagueData.standings.length > 0 ? (
+                <Text style={[styles.certifiedBadgeText, { color: '#F59E0B' }]}>SEED</Text>
+              ) : (
+                <Text style={[styles.certifiedBadgeText, { color: '#EF4444' }]}>ATTENTE</Text>
+              )}
             </View>
           ) : null}
         </View>

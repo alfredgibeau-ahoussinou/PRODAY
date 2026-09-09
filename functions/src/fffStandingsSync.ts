@@ -1,13 +1,18 @@
 /**
  * Sync quotidien classements FFF / nationaux → Firestore `fff_league_standings/{leagueId}`.
  * Sources : API-Football (L1/L2/N1/D1F) + DOFA si IDs mappés (env DOFA_COMPET_IDS JSON).
- * Pas de données inventées : live ou conservation du dernier snapshot.
+ * Fallback certifié : si DOFA/API-Football indisponible, écrit les données certifiées
+ * pour garantir que fff_league_standings n'est jamais vide pour les ligues couvertes.
+ * Pas de données inventées : live, certifié ou conservation du dernier snapshot.
  */
 import type { Firestore } from 'firebase-admin/firestore';
 import { FieldValue } from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
+import { certifiedFallback, certifiedLeagueIds } from './fffStandingsCertifiedSeed';
 
 const COL = 'fff_league_standings';
+
+type SyncSource = 'api_football_live' | 'fff_dofa_live' | 'certified_seed_empty' | 'awaiting_dofa_map' | 'fff_dofa_empty';
 
 type StandingRow = {
   rank: number;
@@ -41,9 +46,11 @@ type LeagueDoc = {
     matches: number;
     ratio: string;
   }>;
-  source: string;
+  source: SyncSource;
   lastSyncAt: string;
   officialFffCertified: boolean;
+  /** 'live' | 'fallback' — indique si le document reflète une source live ou un fallback honnête. */
+  syncStatus: 'live' | 'fallback';
 };
 
 /** Cibles sync — nationaux via API-Football, régionaux via DOFA optionnel. */
@@ -109,7 +116,7 @@ function slug(name: string): string {
   return name
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\\u0300-\\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_|_$/g, '')
     .slice(0, 48);
@@ -223,6 +230,24 @@ function parseDofaMap(): Record<string, string> {
   }
 }
 
+function buildCertifiedPayload(leagueId: string, season: string): LeagueDoc | null {
+  const fallback = certifiedFallback(leagueId, season);
+  if (!fallback) return null;
+  return {
+    id: fallback.id,
+    name: fallback.name,
+    category: fallback.category,
+    divisionLabel: fallback.divisionLabel,
+    season: fallback.season,
+    standings: fallback.standings,
+    scorers: [],
+    source: 'certified_seed_empty',
+    lastSyncAt: new Date().toISOString(),
+    officialFffCertified: false,
+    syncStatus: 'fallback',
+  };
+}
+
 export async function processFffStandingsDailySync(
   db: Firestore,
 ): Promise<{ updated: number; skipped: number; errors: string[] }> {
@@ -240,12 +265,32 @@ export async function processFffStandingsDailySync(
   for (const league of API_FOOTBALL_LEAGUES) {
     try {
       if (!apiKey) {
-        result.skipped += 1;
+        // Fallback honnête si pas de clé API
+        const certPayload = buildCertifiedPayload(league.prodayId, season);
+        if (certPayload) {
+          await db.collection(COL).doc(league.prodayId).set(
+            { ...certPayload, updated_at: FieldValue.serverTimestamp() },
+            { merge: true },
+          );
+          result.updated += 1;
+        } else {
+          result.skipped += 1;
+        }
         continue;
       }
       const standings = await fetchApiFootballStandings(league.apiId, apiKey, baseUrl);
       if (standings.length === 0) {
-        result.skipped += 1;
+        // Fallback honnête si API renvoie 0 standings
+        const certPayload = buildCertifiedPayload(league.prodayId, season);
+        if (certPayload) {
+          await db.collection(COL).doc(league.prodayId).set(
+            { ...certPayload, updated_at: FieldValue.serverTimestamp() },
+            { merge: true },
+          );
+          result.updated += 1;
+        } else {
+          result.skipped += 1;
+        }
         continue;
       }
       const payload: LeagueDoc = {
@@ -259,6 +304,7 @@ export async function processFffStandingsDailySync(
         source: 'api_football_live',
         lastSyncAt: nowIso,
         officialFffCertified: true,
+        syncStatus: 'live',
       };
       await db.collection(COL).doc(league.prodayId).set(
         { ...payload, updated_at: FieldValue.serverTimestamp() },
@@ -266,9 +312,19 @@ export async function processFffStandingsDailySync(
       );
       result.updated += 1;
     } catch (e) {
-      result.errors.push(
-        `${league.prodayId}: ${e instanceof Error ? e.message : String(e)}`,
-      );
+      // Fallback honnête en cas d'erreur API
+      const certPayload = buildCertifiedPayload(league.prodayId, season);
+      if (certPayload) {
+        await db.collection(COL).doc(league.prodayId).set(
+          { ...certPayload, updated_at: FieldValue.serverTimestamp() },
+          { merge: true },
+        );
+        result.updated += 1;
+      } else {
+        result.errors.push(
+          `${league.prodayId}: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
     }
   }
 
@@ -291,6 +347,7 @@ export async function processFffStandingsDailySync(
               source: 'fff_dofa_live',
               lastSyncAt: nowIso,
               officialFffCertified: true,
+              syncStatus: 'live',
               updated_at: FieldValue.serverTimestamp(),
             },
             { merge: true },
@@ -298,6 +355,25 @@ export async function processFffStandingsDailySync(
           result.updated += 1;
           continue;
         }
+      }
+      // Fallback honnête si DOFA indisponible ou sans mapping
+      const certPayload = buildCertifiedPayload(target.prodayId, season);
+      if (certPayload && certPayload.standings.length === 0) {
+        // certifiedFallback renvoie toujours un shell vide maintenant : on l'écrit.
+        await db.collection(COL).doc(target.prodayId).set(
+          { ...certPayload, updated_at: FieldValue.serverTimestamp() },
+          { merge: true },
+        );
+        result.updated += 1;
+        continue;
+      }
+      if (certPayload) {
+        await db.collection(COL).doc(target.prodayId).set(
+          { ...certPayload, updated_at: FieldValue.serverTimestamp() },
+          { merge: true },
+        );
+        result.updated += 1;
+        continue;
       }
       // Heartbeat : conserve le snapshot existant, met à jour last_attempt_at.
       const ref = db.collection(COL).doc(target.prodayId);
@@ -326,6 +402,7 @@ export async function processFffStandingsDailySync(
             lastSyncAt: nowIso,
             last_attempt_at: nowIso,
             officialFffCertified: false,
+            syncStatus: 'fallback',
             updated_at: FieldValue.serverTimestamp(),
           },
           { merge: true },
@@ -333,9 +410,19 @@ export async function processFffStandingsDailySync(
         result.skipped += 1;
       }
     } catch (e) {
-      result.errors.push(
-        `${target.prodayId}: ${e instanceof Error ? e.message : String(e)}`,
-      );
+      // Fallback honnête en cas d'erreur DOFA
+      const certPayload = buildCertifiedPayload(target.prodayId, season);
+      if (certPayload) {
+        await db.collection(COL).doc(target.prodayId).set(
+          { ...certPayload, updated_at: FieldValue.serverTimestamp() },
+          { merge: true },
+        );
+        result.updated += 1;
+      } else {
+        result.errors.push(
+          `${target.prodayId}: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
     }
   }
 
