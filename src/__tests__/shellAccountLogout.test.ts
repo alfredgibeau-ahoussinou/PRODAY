@@ -40,6 +40,27 @@ describe('logout mobile Club / Coach / Président', () => {
   });
 });
 
+describe('logout Espace Admin', () => {
+  it('expose Déconnexion dans le drawer menu et le rail, branché sur AuthContext', () => {
+    const drawer = source('features/admin/shell/OpsDeskMenuDrawer.tsx');
+    const rail = source('features/admin/shell/OpsDeskRail.tsx');
+    const shell = source('features/admin/shell/OpsDeskShell.tsx');
+
+    expect(drawer).toContain('onSignOut');
+    expect(drawer).toContain('Déconnexion');
+    expect(drawer).toContain('admin-sign-out');
+
+    expect(rail).toContain('onSignOut');
+    expect(rail).toContain('Déconnexion');
+    expect(rail).toContain('admin-sign-out');
+
+    expect(shell).toContain('useAuth');
+    expect(shell).toContain('signOut');
+    expect(shell).toContain('onSignOut={requestSignOut}');
+    expect(shell).toContain("Alert.alert('Déconnexion'");
+  });
+});
+
 describe('notifications identité officielle', () => {
   it('pointe app.json et le plugin vers proday-notification-icon', () => {
     const app = source('../app.json');

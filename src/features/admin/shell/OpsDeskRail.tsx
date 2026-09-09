@@ -16,6 +16,8 @@ type Props = {
   activeId: AdminNavSectionId;
   onSelect: (id: AdminNavSectionId) => void;
   onOpenCommand: () => void;
+  /** Déconnexion Auth réelle (bas du rail). */
+  onSignOut?: () => void;
   queueCount?: number;
   claimsCount?: number;
   membershipsCount?: number;
@@ -49,6 +51,7 @@ export function OpsDeskRail({
   activeId,
   onSelect,
   onOpenCommand,
+  onSignOut,
   queueCount = 0,
   claimsCount = 0,
   membershipsCount = 0,
@@ -170,6 +173,21 @@ export function OpsDeskRail({
           );
         })}
       </ScrollView>
+
+      {onSignOut ? (
+        <Pressable
+          onPress={onSignOut}
+          accessibilityRole="button"
+          accessibilityLabel="Déconnexion"
+          testID="admin-sign-out"
+          style={styles.signOut}
+        >
+          <Icon name="log-out" size={16} color="#F87171" />
+          <AdminText variant="nav" color="#F87171" numberOfLines={1}>
+            Déconnexion
+          </AdminText>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -221,6 +239,18 @@ function createStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 5,
+    },
+    signOut: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 10,
+      minHeight: 44,
+      borderRadius: adminRadius.sm,
+      borderWidth: 1,
+      borderColor: 'rgba(248,113,113,0.28)',
+      backgroundColor: 'rgba(248,113,113,0.08)',
     },
   });
 }

@@ -1,5 +1,12 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, StatusBar as RNStatusBar, StyleSheet, View, useWindowDimensions } from 'react-native';
+import {
+  Alert,
+  Platform,
+  StatusBar as RNStatusBar,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import Constants from 'expo-constants';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +19,7 @@ import { renderAdminPane } from './renderAdminPane';
 import { AdminCommandPalette } from '../ui/AdminCommandPalette';
 import { AdminText } from '../ui/adminUi';
 import { useIsAdmin } from '../../../hooks/useIsAdmin';
+import { useAuth } from '../../../context/AuthContext';
 import type { AdminNavSectionId } from '../navigation/adminNavConfig';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
 import { adminChrome, adminSpace } from '../theme/adminDesignSystem';
@@ -41,6 +49,7 @@ function useAdminTopInset(): number {
 
 function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShellProps) {
   const data = useAdminData();
+  const { signOut } = useAuth();
   const topInset = useAdminTopInset();
   const { width } = useWindowDimensions();
   const expandedRail = width >= adminChrome.tabletBreakpoint;
@@ -65,6 +74,20 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
   );
 
   const openCommand = useCallback(() => setCommandOpen(true), []);
+
+  const requestSignOut = useCallback(() => {
+    Alert.alert('Déconnexion', 'Quitter l’Espace Admin ?', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Déconnexion',
+        style: 'destructive',
+        onPress: () => {
+          setMenuOpen(false);
+          void signOut();
+        },
+      },
+    ]);
+  }, [signOut]);
 
   const pane = useMemo(
     () =>
@@ -95,6 +118,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
               activeId={section}
               onSelect={(id) => navigate(id)}
               onOpenCommand={openCommand}
+              onSignOut={requestSignOut}
               topInset={topInset}
               {...badgeCounts}
             />
@@ -136,6 +160,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
           activeId={section}
           onSelect={(id) => navigate(id)}
           onClose={() => setMenuOpen(false)}
+          onSignOut={requestSignOut}
           topInset={topInset}
           {...badgeCounts}
         />

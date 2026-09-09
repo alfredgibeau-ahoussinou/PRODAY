@@ -16,6 +16,8 @@ type Props = {
   activeId: AdminNavSectionId;
   onSelect: (id: AdminNavSectionId) => void;
   onClose: () => void;
+  /** Déconnexion Auth réelle (bas de menu). */
+  onSignOut?: () => void;
   /** Safe-area top (notch / Dynamic Island) — fourni par le shell. */
   topInset?: number;
   queueCount?: number;
@@ -50,6 +52,7 @@ export function OpsDeskMenuDrawer({
   activeId,
   onSelect,
   onClose,
+  onSignOut,
   topInset,
   queueCount = 0,
   claimsCount = 0,
@@ -179,6 +182,30 @@ export function OpsDeskMenuDrawer({
               </View>
             );
           })}
+
+          {onSignOut ? (
+            <View style={styles.accountGroup}>
+              <AdminText
+                variant="label"
+                color="rgba(244,246,248,0.4)"
+                style={styles.groupLabel}
+              >
+                Compte
+              </AdminText>
+              <Pressable
+                onPress={onSignOut}
+                accessibilityRole="button"
+                accessibilityLabel="Déconnexion"
+                testID="admin-sign-out"
+                style={styles.signOutItem}
+              >
+                <Icon name="log-out" size={18} color="#F87171" />
+                <AdminText variant="nav" color="#F87171" style={{ flex: 1 }}>
+                  Déconnexion
+                </AdminText>
+              </Pressable>
+            </View>
+          ) : null}
         </ScrollView>
       </View>
     </Modal>
@@ -238,5 +265,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 5,
+  },
+  accountGroup: {
+    gap: 4,
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(244,246,248,0.12)',
+  },
+  signOutItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    minHeight: 52,
+    borderRadius: adminRadius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(248,113,113,0.28)',
+    backgroundColor: 'rgba(248,113,113,0.08)',
   },
 });
