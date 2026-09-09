@@ -145,7 +145,7 @@ export function AdminStandingsPane() {
               goals_for: Number(gf) || 0,
               goals_against: Number(ga) || 0,
             },
-            reason: reason.trim() || 'Override Bureau Ops',
+            reason: reason.trim() || 'Override admin',
           });
           await adminAuditService.log({
             action: 'other',

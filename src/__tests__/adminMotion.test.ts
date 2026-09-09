@@ -1,7 +1,7 @@
 import { adminChrome, adminLayout, adminSpace } from '../features/admin/theme/adminDesignSystem';
 
 /** Tokens / direction couverts par prodayMotionSystem.test.ts (alias global). */
-describe('Bureau Ops layout chrome', () => {
+describe('Espace Admin layout chrome', () => {
   it('rail permanent + strip — plus de dock bottom', () => {
     expect(adminChrome.dockRailHeight).toBe(0);
     expect(adminChrome.sidebarCollapsed).toBeGreaterThanOrEqual(56);

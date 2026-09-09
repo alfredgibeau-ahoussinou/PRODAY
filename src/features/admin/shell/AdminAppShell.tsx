@@ -1,5 +1,5 @@
 /**
  * Compat — App.tsx importe encore AdminAppShell.
- * Implémentation = Bureau Ops (OpsDeskShell).
+ * Implémentation = Espace Admin (OpsDeskShell).
  */
 export { OpsDeskShell as AdminAppShell } from './OpsDeskShell';

@@ -12,12 +12,12 @@ type Props = {
   actionCount: number;
   topInset?: number;
   onOpenCommand: () => void;
-  onOpenPulse: () => void;
+  onOpenOverview: () => void;
+  onOpenMenu?: () => void;
 };
 
 /**
- * Bandeau commande Bureau Ops — metrics live + palette.
- * Remplace AdminTopBar (control center sombre).
+ * Bandeau commande Espace Admin.
  */
 export function OpsDeskStrip({
   section,
@@ -25,7 +25,8 @@ export function OpsDeskStrip({
   actionCount,
   topInset = 0,
   onOpenCommand,
-  onOpenPulse,
+  onOpenOverview,
+  onOpenMenu,
 }: Props) {
   const t = ADMIN_TOKENS;
   const item = findAdminNavItem(section);
@@ -43,21 +44,28 @@ export function OpsDeskStrip({
       ]}
     >
       <View style={styles.zone}>
-        <AdminText variant="label" color={t.signal}>
-          ZONE
-        </AdminText>
-        <AdminText variant="h2" numberOfLines={1}>
-          {item?.label ?? 'Bureau'}
-        </AdminText>
-        {item?.hint ? (
-          <AdminText variant="mono" color={t.faint} numberOfLines={1}>
-            {item.hint}
-          </AdminText>
+        {onOpenMenu ? (
+          <Pressable onPress={onOpenMenu} hitSlop={8} style={styles.menuBtn}>
+            <Icon name="menu" size={16} color={t.signal} />
+          </Pressable>
         ) : null}
+        <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+          <AdminText variant="label" color={t.signal}>
+            ESPACE ADMIN
+          </AdminText>
+          <AdminText variant="h2" numberOfLines={1}>
+            {item?.label ?? 'Commande'}
+          </AdminText>
+          {item?.hint ? (
+            <AdminText variant="mono" color={t.faint} numberOfLines={1}>
+              {item.hint}
+            </AdminText>
+          ) : null}
+        </View>
       </View>
 
       <View style={styles.metrics}>
-        <Pressable onPress={onOpenPulse} style={styles.metricChip} hitSlop={6}>
+        <Pressable onPress={onOpenOverview} style={styles.metricChip} hitSlop={6}>
           <AdminText variant="mono" color={t.muted}>
             HEALTH
           </AdminText>
@@ -97,14 +105,26 @@ const styles = StyleSheet.create({
     gap: adminSpace.md,
     paddingHorizontal: adminLayout.headerPadX,
     paddingBottom: adminSpace.sm,
-    borderBottomWidth: 2,
-    borderBottomColor: ADMIN_TOKENS.ink,
+    borderBottomWidth: 1,
+    borderBottomColor: ADMIN_TOKENS.borderStrong,
     backgroundColor: ADMIN_TOKENS.stripBg,
   },
   zone: {
     flex: 1,
-    gap: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     minWidth: 0,
+  },
+  menuBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: adminRadius.sm,
+    borderWidth: 1,
+    borderColor: ADMIN_TOKENS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ADMIN_TOKENS.surface,
   },
   metrics: {
     flexDirection: 'row',
@@ -116,9 +136,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: adminRadius.sm,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: ADMIN_TOKENS.borderStrong,
-    backgroundColor: ADMIN_TOKENS.bgElevated,
+    backgroundColor: ADMIN_TOKENS.surface,
     alignItems: 'center',
     gap: 2,
     minWidth: 64,
@@ -132,7 +152,7 @@ const styles = StyleSheet.create({
     minHeight: adminLayout.hitTarget,
     borderRadius: adminRadius.sm,
     backgroundColor: ADMIN_TOKENS.accentHot,
-    borderWidth: 1.5,
-    borderColor: ADMIN_TOKENS.ink,
+    borderWidth: 1,
+    borderColor: ADMIN_TOKENS.borderLuxury,
   },
 });

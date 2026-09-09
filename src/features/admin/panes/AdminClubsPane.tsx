@@ -50,6 +50,10 @@ export function AdminClubsPane({ focusId }: { focusId?: string }) {
 
   useEffect(() => {
     if (!focusId) return;
+    if (focusId === '__create__') {
+      setCreateOpen(true);
+      return;
+    }
     const hit = data.clubs.find((c) => c.id === focusId);
     if (hit) setSelected(hit);
   }, [focusId, data.clubs]);

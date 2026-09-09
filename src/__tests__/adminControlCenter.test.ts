@@ -25,59 +25,69 @@ function quoteTotal(input: {
   return Math.round((afterDiscount + Math.max(0, input.optionsEur ?? 0)) * 100) / 100;
 }
 
-describe('Bureau Ops navigation', () => {
-  it('expose les 6 zones workflow (pas Tour/Claims/Menu)', () => {
+describe('Espace Admin navigation', () => {
+  it('expose un menu exhaustif (pas 6 zones Pulse)', () => {
     const ids = ADMIN_NAV_ITEMS.map((n) => n.id);
-    expect(ids).toEqual([
-      'pulse',
-      'file',
-      'annuaire',
-      'comptes',
-      'effectifs',
-      'classements',
-    ]);
+    expect(ids.length).toBeGreaterThanOrEqual(28);
+    expect(ids).toContain('overview');
+    expect(ids).toContain('users');
+    expect(ids).toContain('user_create');
+    expect(ids).toContain('memberships');
+    expect(ids).toContain('verifications');
+    expect(ids).toContain('sync');
+    expect(ids).toContain('subscriptions');
     expect(ids).not.toContain('tour');
-    expect(ids).not.toContain('identite');
-    expect(ids).not.toContain('utilisateurs');
+    expect(ids).not.toContain('pulse');
     expect(ids).not.toContain('menu');
-    expect(ids).not.toContain('commercial');
-    expect(ADMIN_NAV_GROUPS.map((g) => g.id)).toEqual(['desk', 'directory', 'live']);
-    expect(ADMIN_RAIL_IDS).toHaveLength(6);
-    expect(ADMIN_PRIMARY_NAV_IDS).toHaveLength(6);
+    expect(ADMIN_NAV_GROUPS.map((g) => g.id)).toEqual([
+      'command',
+      'people',
+      'orgs',
+      'fff',
+      'business',
+      'content',
+      'platform',
+    ]);
+    expect(ADMIN_RAIL_IDS.length).toBe(ids.length);
+    expect(ADMIN_PRIMARY_NAV_IDS.length).toBe(ids.length);
     expect(ADMIN_MENU_DEST_IDS).toEqual([]);
     expect(adminChrome.dockRailHeight).toBe(0);
-    expect(adminChrome.brandMark).toBe('BUREAU OPS');
+    expect(adminChrome.brandMark).toBe('ESPACE ADMIN');
   });
 
-  it('résout les legacy FOC / Cockpit vers Bureau Ops', () => {
-    expect(resolveAdminNav('dashboard').section).toBe('pulse');
-    expect(resolveAdminNav('accueil').section).toBe('pulse');
-    expect(resolveAdminNav('tour').section).toBe('pulse');
-    expect(resolveAdminNav('users').section).toBe('comptes');
-    expect(resolveAdminNav('business').section).toBe('pulse');
-    expect(resolveAdminNav('devis').section).toBe('annuaire');
+  it('résout les legacy FOC / Cockpit / Bureau Ops', () => {
+    expect(resolveAdminNav('dashboard').section).toBe('overview');
+    expect(resolveAdminNav('accueil').section).toBe('overview');
+    expect(resolveAdminNav('tour').section).toBe('overview');
+    expect(resolveAdminNav('pulse').section).toBe('overview');
+    expect(resolveAdminNav('users').section).toBe('users');
+    expect(resolveAdminNav('comptes').section).toBe('users');
+    expect(resolveAdminNav('business').section).toBe('quotes');
+    expect(resolveAdminNav('devis').section).toBe('quotes');
     expect(resolveAdminNav('standings').section).toBe('classements');
-    expect(resolveAdminNav('claims').section).toBe('file');
-    expect(resolveAdminNav('clubs').section).toBe('annuaire');
+    expect(resolveAdminNav('claims').section).toBe('claims');
+    expect(resolveAdminNav('clubs').section).toBe('clubs');
+    expect(resolveAdminNav('file').section).toBe('queue');
     expect(isAdminNavSectionId('classements')).toBe(true);
-    expect(isAdminNavSectionId('file')).toBe(true);
+    expect(isAdminNavSectionId('users')).toBe(true);
     expect(isAdminNavSectionId('commercial')).toBe(false);
     expect(isAdminNavSectionId('menu')).toBe(false);
+    expect(isAdminNavSectionId('pulse')).toBe(false);
   });
 
   it('fournit des commandes palette ops réelles', () => {
     const cmds = resolveAdminCommandItems();
     expect(cmds.some((c) => c.section === 'classements')).toBe(true);
-    expect(cmds.some((c) => c.section === 'file')).toBe(true);
+    expect(cmds.some((c) => c.section === 'claims')).toBe(true);
     expect(cmds.some((c) => c.section === 'effectifs')).toBe(true);
-    expect(cmds.some((c) => c.section === 'annuaire')).toBe(true);
-    expect(cmds.some((c) => c.section === 'comptes')).toBe(true);
+    expect(cmds.some((c) => c.section === 'clubs')).toBe(true);
+    expect(cmds.some((c) => c.section === 'users')).toBe(true);
   });
 
-  it('utilise un thème clair high-contrast (pas void graphite)', () => {
-    expect(ADMIN_TOKENS.bg.toLowerCase()).not.toMatch(/^#0/);
-    expect(ADMIN_TOKENS.foreground).toBe('#071525');
-    expect(ADMIN_TOKENS.signal).toBe('#0D8A8A');
+  it('utilise un thème control room sombre premium', () => {
+    expect(ADMIN_TOKENS.bg.toLowerCase()).toMatch(/^#0/);
+    expect(ADMIN_TOKENS.foreground).toBe('#F4F6F8');
+    expect(ADMIN_TOKENS.signal).toBe('#E8B84A');
   });
 });
 

@@ -70,7 +70,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
           await adminService.resolvePublicClubClaim(
             claim.fff_affiliation_number,
             action,
-            action === 'reject' ? 'Refus admin Bureau Ops' : undefined,
+            action === 'reject' ? 'Refus admin' : undefined,
           );
           await adminAuditService.log({
             action: 'other',
@@ -123,17 +123,17 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
     }
   };
 
-  const decideUser = (user: User, status: 'APPROVED' | 'REJECTED') => {
+  const decideUser = (user: User, status: 'VERIFIED' | 'REJECTED') => {
     confirmAdminAction(
-      status === 'APPROVED' ? 'Approuver identité ?' : 'Rejeter identité ?',
+      status === 'VERIFIED' ? 'Approuver identité ?' : 'Rejeter identité ?',
       user.display_name || user.email || user.uid,
       async () => {
         setBusy(`user-${user.uid}`);
         try {
           await adminService.updateUser(user.uid, {
             verification_status: status,
-            is_verified: status === 'APPROVED',
-            rejection_reason: status === 'REJECTED' ? 'Refus admin Bureau Ops' : null,
+            is_verified: status === 'VERIFIED',
+            rejection_reason: status === 'REJECTED' ? 'Refus admin' : null,
           });
           await data.refresh();
           setDocUser(null);
@@ -297,7 +297,7 @@ export function AdminIdentityQueuePane({ focusId }: { focusId?: string }) {
               <AdminButton
                 label="Approuver"
                 disabled={!!busy}
-                onPress={() => decideUser(docUser, 'APPROVED')}
+                onPress={() => decideUser(docUser, 'VERIFIED')}
               />
               <AdminButton
                 label="Rejeter"

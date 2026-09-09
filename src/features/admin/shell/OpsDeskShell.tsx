@@ -20,6 +20,7 @@ import {
   useAdminMotion,
   type AdminNavDirection,
 } from '../motion';
+import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
 
 interface OpsDeskShellProps {
   onPreviewUserApp: () => void;
@@ -33,9 +34,10 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
   const expandedRail = width >= adminChrome.tabletBreakpoint;
   const { recordNav, navDirection } = useAdminMotion();
 
-  const [section, setSection] = useState<AdminNavSectionId>('pulse');
+  const [section, setSection] = useState<AdminNavSectionId>('overview');
   const [focusId, setFocusId] = useState<string | undefined>();
   const [commandOpen, setCommandOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [direction, setDirection] = useState<AdminNavDirection>(1);
   const sectionRef = useRef(section);
   sectionRef.current = section;
@@ -65,9 +67,11 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
     [section, focusId, navigate, onPreviewUserApp, onPreviewPresidentPole, openCommand],
   );
 
+  const verificationsCount = data.users.filter(userNeedsAdminVerificationReview).length;
+
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <SafeAreaView style={styles.safe} edges={['right']}>
         <View style={styles.row}>
           <OpsDeskRail
@@ -76,6 +80,10 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
             onOpenCommand={openCommand}
             compact={!expandedRail}
             queueCount={data.workQueue.length}
+            membershipsCount={data.pendingMemberships.length}
+            verificationsCount={verificationsCount}
+            menuOpen={menuOpen}
+            onMenuOpenChange={setMenuOpen}
           />
 
           <View style={styles.main}>
@@ -85,7 +93,8 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
               actionCount={data.workQueue.length}
               topInset={expandedRail ? insets.top : 0}
               onOpenCommand={openCommand}
-              onOpenPulse={() => navigate('pulse')}
+              onOpenOverview={() => navigate('overview')}
+              onOpenMenu={() => setMenuOpen(true)}
             />
 
             <View
@@ -116,8 +125,7 @@ function OpsDeskInner({ onPreviewUserApp, onPreviewPresidentPole }: OpsDeskShell
 }
 
 /**
- * Bureau Ops — shell fondateur.
- * Remplace AdminAppShell (dock 5 onglets + void graphite).
+ * Espace Admin — shell fondateur control room.
  */
 export const OpsDeskShell: React.FC<OpsDeskShellProps> = ({
   onPreviewUserApp,
@@ -129,10 +137,10 @@ export const OpsDeskShell: React.FC<OpsDeskShellProps> = ({
   if (claimLoading) {
     return (
       <SafeAreaView style={styles.loader} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <AdminPaneSkeleton rows={4} />
         <AdminText variant="caption" color={t.muted} style={styles.loaderHint}>
-          Chargement du Bureau Ops…
+          Chargement Espace Admin…
         </AdminText>
       </SafeAreaView>
     );
@@ -141,7 +149,7 @@ export const OpsDeskShell: React.FC<OpsDeskShellProps> = ({
   if (!isAdmin) {
     return (
       <SafeAreaView style={styles.loader} edges={['top', 'left', 'right', 'bottom']}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <AdminGateScreen />
       </SafeAreaView>
     );

@@ -64,16 +64,16 @@ export function AdminBrandMark({ compact }: { compact?: boolean }) {
   const t = ADMIN_TOKENS;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: compact ? 8 : 10 }}>
-      <ProDaySymbol size={compact ? 22 : 28} variant="admin" tone="black" />
+      <ProDaySymbol size={compact ? 22 : 28} variant="admin" tone="white" />
       <AdminText
         variant="brand"
         style={{
           fontSize: compact ? 9 : 10,
           letterSpacing: compact ? 1.8 : 2.8,
-          color: t.ink,
+          color: t.railInk,
         }}
       >
-        {compact ? 'OPS' : adminChrome.brandMark}
+        {compact ? 'ADMIN' : adminChrome.brandMark}
       </AdminText>
     </View>
   );
@@ -287,7 +287,7 @@ export function AdminCard({
   );
 }
 
-/** En-tête de pane Bureau Ops. */
+/** En-tête de pane Espace Admin. */
 export function AdminPaneHeader({
   title,
   subtitle,
@@ -303,7 +303,7 @@ export function AdminPaneHeader({
       <View style={styles.paneHeaderRow}>
         <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
           <AdminText variant="label" color={t.signal}>
-            BUREAU OPS
+            BUREAU ADMIN
           </AdminText>
           <AdminText variant="h1" numberOfLines={1}>
             {title}

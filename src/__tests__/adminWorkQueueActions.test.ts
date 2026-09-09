@@ -60,7 +60,7 @@ function item(kind: AdminWorkItem['kind'], id: string, entityId?: string): Admin
     priority: 'medium',
     title: 'Test',
     subtitle: 'Sub',
-    targetSection: 'comptes',
+    targetSection: 'users',
     entityId,
   };
 }

@@ -33,7 +33,7 @@ export const AdminGateScreen: React.FC = () => {
       />
       <AdminBrandMark />
       <AdminText variant="display" style={{ textAlign: 'center' }}>
-        {needsSetup ? 'Configuration requise' : 'Accès Bureau Ops'}
+        {needsSetup ? 'Configuration requise' : 'Accès Espace Admin'}
       </AdminText>
       <AdminText variant="body" muted style={{ maxWidth: 420, textAlign: 'center' }}>
         {needsSetup

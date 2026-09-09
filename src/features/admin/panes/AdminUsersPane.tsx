@@ -16,21 +16,16 @@ import {
   AdminEmptyState,
   AdminLoading,
   AdminPaneHeader,
-  AdminSheetHeader,
   AdminText,
 } from '../ui/adminUi';
 import { ADMIN_TOKENS } from '../theme/adminTokens';
-import { adminLayout, adminRadius, adminSpace } from '../theme/adminDesignSystem';
+import { adminSpace } from '../theme/adminDesignSystem';
 import { AdminListRow, AdminModalSheet } from '../motion';
 import { userNeedsAdminVerificationReview } from '../../../utils/adminUserVerification';
 import {
-  ADMIN_EDITABLE_ROLE_OPTIONS,
   adminRoleOptionFromUser,
   adminRoleOptionLabel,
   adminUserMatchesRoleFilter,
-  findClubForAdminUser,
-  isAdminPresidentUser,
-  persistedUserRoleFromAdminOption,
   type AdminRoleOption,
 } from '../../../utils/adminPresidentRole';
 import { useAdminSelection } from '../utils/useAdminSelection';
@@ -39,9 +34,9 @@ import { canAdminUi } from '../utils/adminRbac';
 import { confirmAdminAction } from '../utils/confirmAdminAction';
 import { adminService } from '../../../services/admin.service';
 import { useAuth } from '../../../context/AuthContext';
-import { useProductLine } from '../../../context/ProductLineContext';
 import { adminAuditService } from '../../../services/adminAudit.service';
-import type { User, VerificationStatus } from '../../../models/User';
+import type { User } from '../../../models/User';
+import { AdminUserDetail } from './AdminUserDetail';
 
 const ROLE_FILTERS: { id: 'all' | AdminRoleOption; label: string }[] = [
   { id: 'all', label: 'Tous' },
@@ -164,8 +159,8 @@ export function AdminUsersPane({
     <View style={styles.root}>
       <View style={styles.header}>
         <AdminPaneHeader
-          title="Comptes"
-          subtitle={`${data.users.length} comptes · édition · bulk · CSV`}
+          title="Utilisateurs"
+          subtitle={`${data.users.length} comptes · détail multi-pages · bulk · CSV`}
           right={
             <View style={{ flexDirection: 'row', gap: 6 }}>
               <AdminButton
@@ -301,7 +296,7 @@ export function AdminUsersPane({
 
       <AdminModalSheet visible={!!selected} onClose={() => setSelected(null)} variant="full">
         {selected ? (
-          <UserEditor
+          <AdminUserDetail
             user={selected}
             busy={busy}
             onClose={() => setSelected(null)}
@@ -673,374 +668,6 @@ function Chip({
   );
 }
 
-function UserEditor({
-  user,
-  busy,
-  onClose,
-  onRefresh,
-  setBusy,
-  actorUid,
-  actorEmail,
-  onPreviewPresidentPole,
-}: {
-  user: User;
-  busy: boolean;
-  onClose: () => void;
-  onRefresh: () => Promise<void>;
-  setBusy: (v: boolean) => void;
-  actorUid: string;
-  actorEmail?: string;
-  onPreviewPresidentPole?: () => void;
-}) {
-  const t = ADMIN_TOKENS;
-  const data = useAdminData();
-  const { setClubShellMode } = useProductLine();
-  const [name, setName] = useState(user.display_name);
-  const [city, setCity] = useState(user.city ?? '');
-  const [note, setNote] = useState(user.admin_note ?? '');
-  const [tags, setTags] = useState((user.admin_tags ?? []).join(', '));
-  const [roleOption, setRoleOption] = useState<AdminRoleOption>(() =>
-    adminRoleOptionFromUser(user, data.clubs),
-  );
-
-  useEffect(() => {
-    setName(user.display_name);
-    setCity(user.city ?? '');
-    setNote(user.admin_note ?? '');
-    setTags((user.admin_tags ?? []).join(', '));
-    setRoleOption(adminRoleOptionFromUser(user, data.clubs));
-  }, [user, data.clubs]);
-
-  const linkedClub = useMemo(
-    () => findClubForAdminUser(user, data.clubs),
-    [data.clubs, user],
-  );
-  const isPresident = isAdminPresidentUser(user, data.clubs);
-
-  const run = async (fn: () => Promise<void>) => {
-    setBusy(true);
-    try {
-      await fn();
-      await onRefresh();
-    } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const parseTags = () =>
-    tags
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-  const saveProfile = () => {
-    if (roleOption === 'president' && !linkedClub) {
-      Alert.alert(
-        'Club requis',
-        'Rattachez ce compte à un club (pôle Clubs) avant de le désigner Président (owner).',
-      );
-      return;
-    }
-    const persistedRole = persistedUserRoleFromAdminOption(roleOption);
-    const summary =
-      roleOption === 'president'
-        ? `Profil / rôle → Président (club + owner ${linkedClub!.id})`
-        : `Profil / rôle → ${persistedRole}`;
-    confirmAdminAction('Enregistrer le profil ?', 'Modification Firestore + audit.', () =>
-      run(async () => {
-        await adminService.updateUser(user.uid, {
-          display_name: name.trim() || user.display_name,
-          city: city.trim(),
-          admin_note: note,
-          admin_tags: parseTags(),
-          role: persistedRole,
-          ...(roleOption === 'president'
-            ? { product_line: 'pro_club', club_id: linkedClub!.id }
-            : {}),
-        });
-        if (roleOption === 'president' && linkedClub) {
-          await adminService.setClubOwner(linkedClub.id, user.uid, actorUid);
-        }
-        await adminAuditService.log({
-          action: 'user_updated',
-          actor_uid: actorUid,
-          actor_email: actorEmail,
-          target_type: 'user',
-          target_id: user.uid,
-          summary,
-        });
-      }),
-    );
-  };
-
-  const openPresidentPole = () => {
-    if (!onPreviewPresidentPole) return;
-    confirmAdminAction(
-      'Ouvrir le pôle Président ?',
-      'Aperçu admin du shell Président (ACL owner inchangée pour les adhérents).',
-      () => {
-        void setClubShellMode('president');
-        onPreviewPresidentPole();
-      },
-    );
-  };
-
-  const setActive = (active: boolean) =>
-    confirmAdminAction(
-      active ? 'Réactiver le compte ?' : 'Désactiver le compte ?',
-      active
-        ? 'Le compte pourra à nouveau utiliser ProDay.'
-        : 'Le compte restera en base mais is_active=false.',
-      () =>
-        run(async () => {
-          await adminService.updateUser(user.uid, { is_active: active });
-        }),
-      !active,
-    );
-
-  const setVerification = (status: VerificationStatus) =>
-    confirmAdminAction(
-      status === 'VERIFIED' ? 'Valider le profil ?' : 'Refuser / reset vérification ?',
-      `Statut → ${status}`,
-      () =>
-        run(async () => {
-          if (status === 'VERIFIED') {
-            await adminService.validateProfile(user.uid, 'approve');
-          } else if (status === 'REJECTED') {
-            await adminService.validateProfile(user.uid, 'reject', 'Refus admin');
-          } else {
-            await adminService.updateUser(user.uid, {
-              verification_status: status,
-              is_verified: false,
-            });
-          }
-        }),
-      status === 'REJECTED',
-    );
-
-  const grantPro = () =>
-    confirmAdminAction(
-      'Offrir un abonnement Pro ?',
-      '1 mois Pro (cadeau admin) — écriture users/* + journal achat.',
-      () =>
-        run(async () => {
-          await adminService.grantProSubscription(
-            user.uid,
-            user.role === 'coach' ? 'coach_plus' : 'player_plus',
-            1,
-            'Cadeau admin Bureau Ops',
-            false,
-          );
-          await adminAuditService.log({
-            action: 'subscription_granted',
-            actor_uid: actorUid,
-            actor_email: actorEmail,
-            target_type: 'user',
-            target_id: user.uid,
-            summary: 'Abonnement Pro offert (1 mois)',
-          });
-        }),
-    );
-
-  const revokePro = () =>
-    confirmAdminAction(
-      'Repasser en gratuit ?',
-      'Annule l’abonnement payant sur le compte.',
-      () =>
-        run(async () => {
-          await adminService.revokeToFreeSubscription(user.uid, 'Révocation admin', true);
-          await adminAuditService.log({
-            action: 'subscription_revoked',
-            actor_uid: actorUid,
-            actor_email: actorEmail,
-            target_type: 'user',
-            target_id: user.uid,
-            summary: 'Passage gratuit',
-          });
-        }),
-      true,
-    );
-
-  return (
-    <View style={[styles.editorRoot, { backgroundColor: t.bg }]}>
-      <AdminSheetHeader
-        title={user.display_name}
-        subtitle={`${user.email} · ${user.uid.slice(0, 10)}…`}
-        onClose={onClose}
-        closeLabel="Fermer"
-      />
-      <ScrollView contentContainerStyle={styles.editorBody}>
-        <AdminCard>
-          <AdminText variant="h2">Identité</AdminText>
-          <Field label="Nom affiché" value={name} onChange={setName} />
-          <Field label="Ville" value={city} onChange={setCity} />
-          <Field label="Note admin" value={note} onChange={setNote} multiline />
-          <Field label="Tags (virgules)" value={tags} onChange={setTags} />
-          <AdminText variant="label" color={t.faint}>
-            Rôle
-          </AdminText>
-          <AdminText variant="caption" color={t.muted}>
-            Président = rôle Club + owner du club lié (ACL pôle Président).
-          </AdminText>
-          <View style={styles.chips}>
-            {ADMIN_EDITABLE_ROLE_OPTIONS.map((r) => (
-              <Chip
-                key={r}
-                label={adminRoleOptionLabel(r)}
-                active={roleOption === r}
-                onPress={() => setRoleOption(r)}
-              />
-            ))}
-          </View>
-          <AdminButton label={busy ? '…' : 'Enregistrer'} onPress={saveProfile} disabled={busy} />
-        </AdminCard>
-
-        {(roleOption === 'president' || isPresident || user.role === 'club') &&
-        onPreviewPresidentPole ? (
-          <AdminCard>
-            <AdminText variant="h2">Pôle Président</AdminText>
-            <AdminText variant="body" color={t.muted}>
-              {isPresident
-                ? `Owner de ${linkedClub?.name ?? 'club'} — accès réel au pôle pour cet adhérent.`
-                : roleOption === 'president'
-                  ? 'Enregistrez d’abord pour désigner le président (owner), puis ouvrez l’aperçu.'
-                  : 'Staff Club (non owner) : pas d’accès Président tant qu’il n’est pas owner.'}
-            </AdminText>
-            <View style={styles.actions}>
-              <AdminButton
-                label="Ouvrir pôle Président"
-                variant="soft"
-                disabled={busy || (!isPresident && roleOption !== 'president')}
-                onPress={openPresidentPole}
-              />
-            </View>
-          </AdminCard>
-        ) : null}
-
-        <AdminCard>
-          <AdminText variant="h2">Statut compte</AdminText>
-          <AdminBadge
-            label={user.is_active === false ? 'Désactivé' : 'Actif'}
-            tone={user.is_active === false ? 'danger' : 'success'}
-          />
-          <View style={styles.actions}>
-            <AdminButton
-              label="Désactiver"
-              variant="danger"
-              disabled={busy || user.is_active === false}
-              onPress={() => setActive(false)}
-            />
-            <AdminButton
-              label="Réactiver"
-              variant="soft"
-              disabled={busy || user.is_active !== false}
-              onPress={() => setActive(true)}
-            />
-          </View>
-        </AdminCard>
-
-        <AdminCard>
-          <AdminText variant="h2">Vérification</AdminText>
-          <AdminBadge label={user.verification_status ?? '—'} tone="info" />
-          <View style={styles.actions}>
-            <AdminButton label="Valider" disabled={busy} onPress={() => setVerification('VERIFIED')} />
-            <AdminButton
-              label="Refuser"
-              variant="danger"
-              disabled={busy}
-              onPress={() => setVerification('REJECTED')}
-            />
-          </View>
-        </AdminCard>
-
-        <AdminCard>
-          <AdminText variant="h2">Abonnement</AdminText>
-          <AdminText variant="body" color={t.muted}>
-            {user.subscription_tier ?? 'free'} · {user.subscription_status ?? '—'} ·{' '}
-            {user.subscription_plan_id ?? 'sans formule'}
-          </AdminText>
-          <View style={styles.actions}>
-            <AdminButton label="Offrir Pro 1 mois" disabled={busy} onPress={grantPro} />
-            <AdminButton
-              label="Passer gratuit"
-              variant="ghost"
-              disabled={busy}
-              onPress={revokePro}
-            />
-          </View>
-        </AdminCard>
-
-        <AdminCard>
-          <AdminText variant="h2">Zone danger</AdminText>
-          <AdminButton
-            label="Supprimer le compte"
-            variant="danger"
-            disabled={busy}
-            onPress={() =>
-              confirmAdminAction(
-                'Supprimer définitivement ?',
-                'Auth + Firestore (callable adminDeleteUser). Irréversible.',
-                () =>
-                  run(async () => {
-                    await adminService.deleteUserFull(user.uid);
-                    await adminAuditService.log({
-                      action: 'other',
-                      actor_uid: actorUid,
-                      actor_email: actorEmail,
-                      target_type: 'user',
-                      target_id: user.uid,
-                      summary: 'Compte utilisateur supprimé',
-                    });
-                    onClose();
-                  }),
-                true,
-              )
-            }
-          />
-        </AdminCard>
-      </ScrollView>
-    </View>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  multiline,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  multiline?: boolean;
-}) {
-  const t = ADMIN_TOKENS;
-  return (
-    <View style={{ gap: 4 }}>
-      <AdminText variant="label" color={t.faint}>
-        {label}
-      </AdminText>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        multiline={multiline}
-        placeholderTextColor={t.faint}
-        style={[
-          styles.input,
-          {
-            color: t.foreground,
-            borderColor: t.border,
-            backgroundColor: t.surfaceRaised,
-            minHeight: multiline ? 72 : undefined,
-          },
-        ]}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: {
@@ -1065,7 +692,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   row: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  editorRoot: { flex: 1 },
-  editorBody: { padding: adminSpace.lg, gap: adminSpace.md, paddingBottom: 48 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
 });

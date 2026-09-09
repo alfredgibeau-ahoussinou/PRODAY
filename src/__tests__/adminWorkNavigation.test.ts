@@ -18,21 +18,21 @@ function navItem(
 }
 
 describe('resolveAdminWorkItemNavigation', () => {
-  it('route vers les zones Bureau Ops', () => {
-    expect(resolveAdminWorkItemNavigation(navItem('verification', 'comptes', 'u1'))).toEqual({
-      section: 'comptes',
+  it('route vers les pages Espace Admin', () => {
+    expect(resolveAdminWorkItemNavigation(navItem('verification', 'users', 'u1'))).toEqual({
+      section: 'users',
       focusId: 'u1',
     });
-    expect(resolveAdminWorkItemNavigation(navItem('club_quote', 'annuaire', 'q1'))).toEqual({
-      section: 'annuaire',
+    expect(resolveAdminWorkItemNavigation(navItem('club_quote', 'quotes', 'q1'))).toEqual({
+      section: 'quotes',
       focusId: 'q1',
     });
-    expect(resolveAdminWorkItemNavigation(navItem('membership', 'file', 'm1'))).toEqual({
-      section: 'file',
+    expect(resolveAdminWorkItemNavigation(navItem('membership', 'memberships', 'm1'))).toEqual({
+      section: 'memberships',
       focusId: 'm1',
     });
-    expect(resolveAdminWorkItemNavigation(navItem('payment', 'pulse'))).toEqual({
-      section: 'pulse',
+    expect(resolveAdminWorkItemNavigation(navItem('payment', 'payments'))).toEqual({
+      section: 'payments',
       focusId: undefined,
     });
   });
@@ -45,12 +45,12 @@ describe('resolveAdminSearchHitNavigation', () => {
       kind: 'user',
       title: 'A',
       subtitle: 'b',
-      targetSection: 'comptes',
+      targetSection: 'users',
       entityId: 'uid-1',
       focusQuery: 'A',
     };
     expect(resolveAdminSearchHitNavigation(hit)).toEqual({
-      section: 'comptes',
+      section: 'users',
       focusId: 'uid-1',
       query: 'A',
     });
