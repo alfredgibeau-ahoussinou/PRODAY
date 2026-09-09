@@ -8,7 +8,18 @@ import {
   processPublicClubDirectorySync,
   searchPublicClubsInFirestore,
   claimPublicClubInFirestore,
+  resolvePublicClubClaimInFirestore,
 } from './publicClubDirectory';
+
+function assertCallableAdmin(context: functions.https.CallableContext): string {
+  if (!context.auth?.uid) {
+    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+  }
+  if (!context.auth.token?.admin) {
+    throw new functions.https.HttpsError('permission-denied', 'Admin only');
+  }
+  return context.auth.uid;
+}
 import { requestClubMembershipInFirestore } from './requestClubMembership';
 import { sendFcmToUser } from './messaging';
 import { createPaymentCheckoutSession, stripeWebhook } from './stripePayments';
@@ -280,9 +291,7 @@ export const scheduledFffClubRosterSync = functions.pubsub
 
 /** Relance manuelle (admin) de la sync effectifs FFF / FootClubs. */
 export const syncFffClubRostersNow = functions.https.onCall(async (_data, context) => {
-  if (!context.auth?.uid) {
-    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
-  }
+  assertCallableAdmin(context);
   const result = await processFffClubRosterDailySync(db);
   return result;
 });
@@ -301,9 +310,7 @@ export const scheduledFffStandingsSync = functions.pubsub
   });
 
 export const syncFffStandingsNow = functions.https.onCall(async (_data, context) => {
-  if (!context.auth?.uid) {
-    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
-  }
+  assertCallableAdmin(context);
   return processFffStandingsDailySync(db);
 });
 
@@ -322,10 +329,18 @@ export const scheduledPublicClubDirectorySync = functions.pubsub
   });
 
 export const syncPublicClubDirectoryNow = functions.https.onCall(async (_data, context) => {
-  if (!context.auth?.uid) {
-    throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
-  }
+  assertCallableAdmin(context);
   return processPublicClubDirectorySync(db);
+});
+
+/** Admin : approve / reject claim annuaire FFF. */
+export const adminResolvePublicClubClaim = functions.https.onCall(async (data, context) => {
+  const adminUid = assertCallableAdmin(context);
+  return resolvePublicClubClaimInFirestore(db, adminUid, {
+    fff_affiliation_number: String(data?.fff_affiliation_number ?? ''),
+    action: data?.action === 'reject' ? 'reject' : 'approve',
+    reason: typeof data?.reason === 'string' ? data.reason : null,
+  });
 });
 
 /** Recherche annuaire public (auth optionnelle — onboarding invité). */

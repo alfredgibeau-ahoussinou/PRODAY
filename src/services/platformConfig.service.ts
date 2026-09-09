@@ -12,6 +12,7 @@ import {
   DEFAULT_PLATFORM_CONFIG,
   type PlatformConfig,
   type PlatformFeatureFlags,
+  type PlatformAiOpsConfig,
 } from '../models/PlatformConfig';
 import { mapPlatformConfig } from '../utils/platformConfigMap';
 
@@ -59,7 +60,10 @@ export const platformConfigService = {
 
   async saveConfig(
     patch: Partial<
-      Pick<PlatformConfig, 'maintenance_mode' | 'maintenance_message' | 'club_pricing'> & {
+      Pick<
+        PlatformConfig,
+        'maintenance_mode' | 'maintenance_message' | 'club_pricing' | 'ai_ops'
+      > & {
         feature_flags: Partial<PlatformFeatureFlags>;
       }
     >,
@@ -77,6 +81,10 @@ export const platformConfigService = {
       ...(current.club_pricing ?? DEFAULT_PLATFORM_CONFIG.club_pricing!),
       ...(patch.club_pricing ?? {}),
     };
+    const nextAi: PlatformAiOpsConfig = {
+      ...(current.ai_ops ?? DEFAULT_PLATFORM_CONFIG.ai_ops!),
+      ...(patch.ai_ops ?? {}),
+    };
 
     await setDoc(
       doc(database, DOC_PATH),
@@ -85,6 +93,7 @@ export const platformConfigService = {
         maintenance_message: patch.maintenance_message ?? current.maintenance_message,
         feature_flags: nextFlags,
         club_pricing: nextPricing,
+        ai_ops: nextAi,
         updated_at: serverTimestamp(),
         updated_by_uid: actorUid,
       },

@@ -17,6 +17,12 @@ export interface PlatformFeatureFlags {
   coach_video: boolean;
 }
 
+/** Quotas / prompt système Coach AI (admin). */
+export interface PlatformAiOpsConfig {
+  coach_system_prompt: string;
+  max_calls_per_user_per_day: number;
+}
+
 export interface PlatformConfig {
   maintenance_mode: boolean;
   maintenance_message: string;
@@ -39,9 +45,17 @@ export interface PlatformConfig {
     standard_per_member_eur: number;
     promo_per_member_eur: number;
   };
+  /** Config IA ops (prompt + quotas). */
+  ai_ops?: PlatformAiOpsConfig;
   updated_at?: Date;
   updated_by_uid?: string;
 }
+
+export const DEFAULT_AI_OPS: PlatformAiOpsConfig = {
+  coach_system_prompt:
+    "Tu es l'assistant de coaching tactique PRODAY. Ton rôle est d'analyser les matchs et de proposer des axes concrets.",
+  max_calls_per_user_per_day: 50,
+};
 
 export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   maintenance_mode: false,
@@ -62,4 +76,5 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     standard_per_member_eur: 3.5,
     promo_per_member_eur: 2.8,
   },
+  ai_ops: { ...DEFAULT_AI_OPS },
 };

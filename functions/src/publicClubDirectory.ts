@@ -410,3 +410,97 @@ export async function claimPublicClubInFirestore(
 
   return { status: nextStatus, proday_club_id: clubId };
 }
+
+/**
+ * Admin : valider ou refuser un claim d’annuaire public.
+ * Approve → verified (+ club.verified) · Reject → unclaimed (lien retiré).
+ */
+export async function resolvePublicClubClaimInFirestore(
+  db: Firestore,
+  adminUid: string,
+  input: {
+    fff_affiliation_number: string;
+    action: 'approve' | 'reject';
+    reason?: string | null;
+  },
+): Promise<{ status: ClaimStatus; proday_club_id: string | null }> {
+  const fff = asString(input.fff_affiliation_number);
+  if (!fff) {
+    throw new functions.https.HttpsError('invalid-argument', 'fff_affiliation_number requis');
+  }
+  if (input.action !== 'approve' && input.action !== 'reject') {
+    throw new functions.https.HttpsError('invalid-argument', 'action invalide');
+  }
+
+  const dirRef = db.collection(DIRECTORY).doc(fff);
+  const claimRef = db.collection(CLAIMS).doc(fff);
+  const [dirSnap, claimSnap] = await Promise.all([dirRef.get(), claimRef.get()]);
+
+  if (!dirSnap.exists && !claimSnap.exists) {
+    throw new functions.https.HttpsError('not-found', 'Claim / club FFF introuvable');
+  }
+
+  const prodayClubId =
+    asString(claimSnap.data()?.proday_club_id) ||
+    asString(dirSnap.data()?.proday_club_id) ||
+    null;
+
+  if (input.action === 'approve') {
+    if (prodayClubId) {
+      await db
+        .collection('clubs')
+        .doc(prodayClubId)
+        .set(
+          {
+            verified: true,
+            suspended: false,
+            fff_affiliation_number: fff,
+            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+    }
+    await dirRef.set(
+      {
+        claim_status: 'verified',
+        proday_club_id: prodayClubId,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+    await claimRef.set(
+      {
+        status: 'verified',
+        resolved_by_uid: adminUid,
+        resolved_at: admin.firestore.FieldValue.serverTimestamp(),
+        rejection_reason: null,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+    return { status: 'verified', proday_club_id: prodayClubId };
+  }
+
+  // reject
+  await dirRef.set(
+    {
+      claim_status: 'unclaimed',
+      proday_club_id: null,
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+  if (claimSnap.exists) {
+    await claimRef.set(
+      {
+        status: 'unclaimed',
+        resolved_by_uid: adminUid,
+        resolved_at: admin.firestore.FieldValue.serverTimestamp(),
+        rejection_reason: input.reason?.trim() || 'Refus admin',
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+  }
+  return { status: 'unclaimed', proday_club_id: prodayClubId };
+}

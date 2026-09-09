@@ -514,6 +514,27 @@ function ClubEditor({
             </AdminText>
           ))}
         </AdminCard>
+
+        <AdminCard>
+          <AdminText variant="h2">Zone danger</AdminText>
+          <AdminButton
+            label="Supprimer le club"
+            variant="danger"
+            disabled={busy}
+            onPress={() =>
+              confirmAdminAction(
+                'Supprimer le club ?',
+                'Suppression Firestore clubs/{id}. Irréversible.',
+                () =>
+                  run(async () => {
+                    await adminService.deleteClub(club.id);
+                    onClose();
+                  }),
+                true,
+              )
+            }
+          />
+        </AdminCard>
       </ScrollView>
     </View>
   );

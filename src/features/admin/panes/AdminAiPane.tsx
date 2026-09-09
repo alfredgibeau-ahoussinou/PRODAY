@@ -338,26 +338,148 @@ export function AdminAiPane({ onNavigate, focusId }: Props & { focusId?: string 
         visible={godModeContext === 'config'}
         onClose={() => setGodModeContext(null)}
       >
-        <ScrollView style={{ padding: adminSpace.lg, gap: 16 }}>
-          <AdminText variant="h2" style={{ color: ADMIN_TOKENS.accent }}>🧠 Configuration IA Globale</AdminText>
-          <AdminText variant="body" muted style={{ marginBottom: 12 }}>Règles et limites des modèles Gemini Flash & Pro</AdminText>
-          <AdminCard>
-             <AdminText variant="h3">Prompt Système Global (Coach AI)</AdminText>
-             <View style={{ gap: 8, marginTop: 8 }}>
-               <TextInput multiline value="Tu es l'assistant de coaching tactique PRODAY. Ton rôle est d'analyser les matchs et de..." style={{ borderWidth: 1, borderColor: ADMIN_TOKENS.border, padding: 12, borderRadius: 8, color: ADMIN_TOKENS.foreground, height: 100 }} />
-               <AdminButton label="Déployer ce prompt" onPress={() => Alert.alert('Déployé', 'Le nouveau comportement IA est actif pour tous les coachs.')} />
-             </View>
-          </AdminCard>
-          <AdminCard>
-             <AdminText variant="h3">Limites de tokens / Appels IA</AdminText>
-             <View style={{ gap: 8, marginTop: 8 }}>
-               <TextInput placeholder="Max appels / jour / user (ex: 50)" style={{ borderWidth: 1, borderColor: ADMIN_TOKENS.border, padding: 12, borderRadius: 8, color: ADMIN_TOKENS.foreground }} placeholderTextColor={ADMIN_TOKENS.muted} />
-               <AdminButton label="Mettre à jour les quotas" onPress={() => Alert.alert('Sauvegardé', 'Quotas mis à jour.')} />
-             </View>
-          </AdminCard>
-        </ScrollView>
+        <AiOpsConfigSheet
+          onClose={() => setGodModeContext(null)}
+          actorUid={firebaseUser?.uid ?? 'admin'}
+          actorEmail={profile?.email ?? undefined}
+        />
     </AdminModalSheet>
     </>
+  );
+}
+
+function AiOpsConfigSheet({
+  onClose,
+  actorUid,
+  actorEmail,
+}: {
+  onClose: () => void;
+  actorUid: string;
+  actorEmail?: string;
+}) {
+  const [prompt, setPrompt] = useState('');
+  const [quota, setQuota] = useState('50');
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    void adminService
+      .getPlatformConfig()
+      .then((c) => {
+        setPrompt(c.ai_ops?.coach_system_prompt ?? '');
+        setQuota(String(c.ai_ops?.max_calls_per_user_per_day ?? 50));
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const savePrompt = () => {
+    confirmAdminAction('Déployer le prompt système ?', 'Écriture platform_config.ai_ops', async () => {
+      setBusy(true);
+      try {
+        await adminService.updatePlatformConfig(
+          { ai_ops: { coach_system_prompt: prompt.trim(), max_calls_per_user_per_day: Number(quota) || 50 } },
+          actorUid,
+          actorEmail,
+        );
+        Alert.alert('Enregistré', 'Prompt système Coach AI mis à jour.');
+        onClose();
+      } catch (e) {
+        Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+      } finally {
+        setBusy(false);
+      }
+    });
+  };
+
+  const saveQuota = () => {
+    const n = Math.max(1, Math.min(500, Number(quota) || 50));
+    confirmAdminAction('Mettre à jour les quotas ?', `${n} appels / jour / user`, async () => {
+      setBusy(true);
+      try {
+        await adminService.updatePlatformConfig(
+          {
+            ai_ops: {
+              coach_system_prompt: prompt.trim(),
+              max_calls_per_user_per_day: n,
+            },
+          },
+          actorUid,
+          actorEmail,
+        );
+        Alert.alert('Sauvegardé', `Quota ${n}/jour enregistré.`);
+        onClose();
+      } catch (e) {
+        Alert.alert('Erreur', e instanceof Error ? e.message : 'Échec');
+      } finally {
+        setBusy(false);
+      }
+    });
+  };
+
+  if (loading) {
+    return (
+      <View style={{ padding: adminSpace.lg }}>
+        <AdminLoading label="Chargement config IA…" />
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={{ padding: adminSpace.lg }} contentContainerStyle={{ gap: 16 }}>
+      <AdminText variant="h2" style={{ color: ADMIN_TOKENS.accent }}>
+        Configuration IA globale
+      </AdminText>
+      <AdminText variant="body" muted>
+        Persisté dans `platform_config/main.ai_ops` (lecture live clients).
+      </AdminText>
+      <AdminCard>
+        <AdminText variant="h3">Prompt système (Coach AI)</AdminText>
+        <View style={{ gap: 8, marginTop: 8 }}>
+          <TextInput
+            multiline
+            value={prompt}
+            onChangeText={setPrompt}
+            style={{
+              borderWidth: 1,
+              borderColor: ADMIN_TOKENS.border,
+              padding: 12,
+              borderRadius: 8,
+              color: ADMIN_TOKENS.foreground,
+              height: 120,
+            }}
+          />
+          <AdminButton
+            label={busy ? '…' : 'Déployer ce prompt'}
+            disabled={busy}
+            onPress={savePrompt}
+          />
+        </View>
+      </AdminCard>
+      <AdminCard>
+        <AdminText variant="h3">Limites d’appels IA</AdminText>
+        <View style={{ gap: 8, marginTop: 8 }}>
+          <TextInput
+            value={quota}
+            onChangeText={setQuota}
+            keyboardType="number-pad"
+            placeholder="Max appels / jour / user (ex: 50)"
+            placeholderTextColor={ADMIN_TOKENS.muted}
+            style={{
+              borderWidth: 1,
+              borderColor: ADMIN_TOKENS.border,
+              padding: 12,
+              borderRadius: 8,
+              color: ADMIN_TOKENS.foreground,
+            }}
+          />
+          <AdminButton
+            label={busy ? '…' : 'Mettre à jour les quotas'}
+            disabled={busy}
+            onPress={saveQuota}
+          />
+        </View>
+      </AdminCard>
+    </ScrollView>
   );
 }
 

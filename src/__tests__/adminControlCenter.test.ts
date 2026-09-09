@@ -34,6 +34,7 @@ describe('Admin Control Center navigation', () => {
         'finances',
         'ia',
         'systeme',
+        'donnees',
       ]),
     );
     expect(ADMIN_NAV_GROUPS.length).toBeGreaterThanOrEqual(4);

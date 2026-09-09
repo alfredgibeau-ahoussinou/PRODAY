@@ -11,6 +11,7 @@ import { AdminAiPane } from '../panes/AdminAiPane';
 import { AdminSupportPane } from '../panes/AdminSupportPane';
 import { AdminSecurityPane } from '../panes/AdminSecurityPane';
 import { AdminSystemPane } from '../panes/AdminSystemPane';
+import { AdminDataPane } from '../panes/AdminDataPane';
 import { AdminMenuPane } from '../panes/AdminMenuPane';
 
 type Props = {
@@ -42,6 +43,7 @@ export function renderAdminPane({
         <AdminUsersPane
           focusId={focusId}
           onPreviewPresidentPole={onPreviewPresidentPole}
+          onPreviewUserApp={onPreviewUserApp}
         />
       );
     case 'clubs':
@@ -58,6 +60,8 @@ export function renderAdminPane({
       return <AdminSupportPane onNavigate={onNavigate} />;
     case 'securite':
       return <AdminSecurityPane focusId={focusId} />;
+    case 'donnees':
+      return <AdminDataPane />;
     case 'systeme':
       return <AdminSystemPane onPreviewUserApp={onPreviewUserApp} focusId={focusId} />;
     case 'menu':

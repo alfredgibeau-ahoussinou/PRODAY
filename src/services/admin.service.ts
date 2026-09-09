@@ -1560,6 +1560,8 @@ export const adminService = {
     title: string;
     body: string;
     audience?: FeedAudience;
+    /** Rôles ciblés pour le push FCM (sinon audience all/agents). */
+    notify_roles?: string[];
   }): Promise<string> {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
@@ -1572,6 +1574,7 @@ export const adminService = {
       author_role: 'club',
       title: input.title.trim(),
       body: input.body.trim(),
+      ...(input.notify_roles?.length ? { notify_roles: input.notify_roles } : {}),
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
     });
@@ -1984,5 +1987,222 @@ export const adminService = {
         };
       })
       .slice(0, max);
+  },
+
+  /** Création club admin (owner = admin ou UID fourni). */
+  async createClub(input: {
+    name: string;
+    city?: string;
+    department?: string;
+    owner_uid: string;
+    actor_uid?: string;
+    verified?: boolean;
+  }): Promise<string> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const name = input.name.trim();
+    if (!name) throw new Error('Nom du club requis');
+    const owner = input.owner_uid.trim();
+    if (!owner) throw new Error('owner_uid requis');
+    const ref = doc(collection(database, 'clubs'));
+    await setDoc(ref, {
+      name,
+      city: (input.city ?? '').trim() || '—',
+      department: input.department?.trim() || null,
+      location: { latitude: 0, longitude: 0 },
+      verified: input.verified === true,
+      suspended: false,
+      archived: false,
+      categories: [],
+      sponsor_ids: [],
+      owner_uid: owner,
+      is_active: true,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
+    await adminAuditService.log({
+      action: 'other',
+      actor_uid: input.actor_uid || 'admin',
+      target_type: 'club',
+      target_id: ref.id,
+      summary: `Club créé · ${name}`,
+    });
+    return ref.id;
+  },
+
+  async triggerFffStandingsSync(): Promise<unknown> {
+    return callFunction('syncFffStandingsNow', {});
+  },
+
+  async triggerFffClubRostersSync(): Promise<unknown> {
+    return callFunction('syncFffClubRostersNow', {});
+  },
+
+  async triggerPublicClubDirectorySync(): Promise<unknown> {
+    return callFunction('syncPublicClubDirectoryNow', {});
+  },
+
+  async listLeagueStandingsMeta(max = 40): Promise<
+    Array<{
+      id: string;
+      name: string;
+      category?: string;
+      season?: string;
+      rows: number;
+      lastSyncAt?: string;
+      source?: string;
+    }>
+  > {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    const snap = await getDocs(query(collection(database, 'fff_league_standings'), limit(max)));
+    return snap.docs.map((d) => {
+      const data = d.data() as Record<string, unknown>;
+      const standings = Array.isArray(data.standings) ? data.standings : [];
+      return {
+        id: d.id,
+        name: String(data.name ?? d.id),
+        category: data.category ? String(data.category) : undefined,
+        season: data.season ? String(data.season) : undefined,
+        rows: standings.length,
+        lastSyncAt: data.lastSyncAt ? String(data.lastSyncAt) : undefined,
+        source: data.source ? String(data.source) : undefined,
+      };
+    });
+  },
+
+  async listClubRosterMeta(max = 40): Promise<
+    Array<{
+      id: string;
+      club_name?: string;
+      city?: string;
+      members: number;
+      updated_at?: Date;
+    }>
+  > {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    const snap = await getDocs(query(collection(database, 'fff_club_rosters'), limit(max)));
+    return snap.docs.map((d) => {
+      const data = d.data() as Record<string, unknown>;
+      const members = Array.isArray(data.members) ? data.members.length : Number(data.member_count ?? 0);
+      const updated =
+        data.updated_at && typeof data.updated_at === 'object' && 'toDate' in data.updated_at
+          ? (data.updated_at as { toDate: () => Date }).toDate()
+          : undefined;
+      return {
+        id: d.id,
+        club_name: data.club_name ? String(data.club_name) : data.name ? String(data.name) : undefined,
+        city: data.city ? String(data.city) : undefined,
+        members,
+        updated_at: updated,
+      };
+    });
+  },
+
+  async listPendingPublicClubClaims(max = 50): Promise<
+    Array<{
+      fff_affiliation_number: string;
+      claimed_by_uid: string;
+      status: string;
+      proday_club_id?: string | null;
+      mandate_document_name?: string | null;
+      claimed_at?: Date;
+      club_name?: string;
+    }>
+  > {
+    if (!isFirebaseConfigured()) return [];
+    const database = getDb();
+    if (!database) return [];
+    const snap = await getDocs(query(collection(database, 'fff_public_club_claims'), limit(max)));
+    const rows = snap.docs.map((d) => {
+      const data = d.data() as Record<string, unknown>;
+      const claimedAt =
+        data.claimed_at && typeof data.claimed_at === 'object' && 'toDate' in data.claimed_at
+          ? (data.claimed_at as { toDate: () => Date }).toDate()
+          : undefined;
+      return {
+        fff_affiliation_number: String(data.fff_affiliation_number ?? d.id),
+        claimed_by_uid: String(data.claimed_by_uid ?? ''),
+        status: String(data.status ?? ''),
+        proday_club_id: data.proday_club_id ? String(data.proday_club_id) : null,
+        mandate_document_name: data.mandate_document_name
+          ? String(data.mandate_document_name)
+          : null,
+        claimed_at: claimedAt,
+      };
+    });
+    const pending = rows.filter((r) => r.status === 'claimed_pending');
+    const enriched = await Promise.all(
+      pending.map(async (r) => {
+        try {
+          const dir = await getDoc(
+            doc(database, 'fff_public_clubs', r.fff_affiliation_number),
+          );
+          return {
+            ...r,
+            club_name: dir.exists()
+              ? String((dir.data() as Record<string, unknown>).name ?? '')
+              : undefined,
+          };
+        } catch {
+          return r;
+        }
+      }),
+    );
+    return enriched;
+  },
+
+  async resolvePublicClubClaim(
+    fffAffiliationNumber: string,
+    action: 'approve' | 'reject',
+    reason?: string,
+  ): Promise<{ status: string; proday_club_id: string | null }> {
+    return callFunction(
+      'adminResolvePublicClubClaim',
+      {
+        fff_affiliation_number: fffAffiliationNumber,
+        action,
+        reason: reason ?? null,
+      },
+    );
+  },
+
+  /**
+   * Hard delete par collection + id (admin). Collections autorisées uniquement.
+   */
+  async hardDeleteEntity(
+    collectionName: string,
+    entityId: string,
+    actor?: { uid: string; email?: string },
+  ): Promise<void> {
+    const allowed = new Set([
+      'community_reels',
+      'platform_feed',
+      'reel_reports',
+      'recruitment_posts',
+      'club_announcements',
+      'weekly_questions',
+    ]);
+    if (!allowed.has(collectionName)) {
+      throw new Error(`Collection non autorisée pour hard delete: ${collectionName}`);
+    }
+    const id = entityId.trim();
+    if (!id) throw new Error('Entity ID requis');
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    await deleteDoc(doc(database, collectionName, id));
+    if (actor?.uid) {
+      await adminAuditService.log({
+        action: 'other',
+        actor_uid: actor.uid,
+        actor_email: actor.email,
+        target_type: collectionName,
+        target_id: id,
+        summary: `Hard delete ${collectionName}/${id}`,
+      });
+    }
   },
 };

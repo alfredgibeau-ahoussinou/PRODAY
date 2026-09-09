@@ -24,6 +24,7 @@ export type AdminNavSectionId =
   | 'support'
   | 'securite'
   | 'systeme'
+  | 'donnees'
   | 'menu';
 
 export type AdminNavItem = {
@@ -123,6 +124,14 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     group: 'system',
   },
   {
+    id: 'donnees',
+    label: 'Data & classements',
+    shortLabel: 'Data',
+    icon: 'stats-chart',
+    group: 'system',
+    hint: 'Sync FFF · standings · rosters · claims',
+  },
+  {
     id: 'systeme',
     label: 'Système',
     shortLabel: 'Système',
@@ -147,6 +156,7 @@ export const ADMIN_MENU_DEST_IDS: AdminNavSectionId[] = [
   'produit',
   'support',
   'securite',
+  'donnees',
   'systeme',
 ];
 
@@ -193,6 +203,10 @@ const LEGACY_MAP: Record<string, AdminNavTarget> = {
   plateforme: { section: 'plateforme' },
   produit: { section: 'produit' },
   support: { section: 'support' },
+  donnees: { section: 'donnees' },
+  data: { section: 'donnees' },
+  standings: { section: 'donnees' },
+  classements: { section: 'donnees' },
   pilotage: { section: 'accueil' },
   decisions: { section: 'support' },
   gestion: { section: 'utilisateurs' },
@@ -230,6 +244,12 @@ export function resolveAdminCommandItems(): {
       label: 'Santé ProDay',
       section: 'plateforme',
       keywords: ['health', 'santé', 'erreurs', 'api'],
+    },
+    {
+      id: 'cmd-data',
+      label: 'Data & classements FFF',
+      section: 'donnees',
+      keywords: ['fff', 'standings', 'classements', 'rosters', 'sync', 'claims'],
     },
     {
       id: 'cmd-actions',

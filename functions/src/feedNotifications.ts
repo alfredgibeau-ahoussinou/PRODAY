@@ -4,8 +4,6 @@ import { sendPushToUser } from './messaging';
 
 const db = admin.firestore();
 
-const PUSH_CAP = 80;
-
 async function notifyUsersWithRole(
   roles: string[],
   payload: { title: string; body: string; data?: Record<string, string> },
@@ -34,7 +32,7 @@ async function notifyUsersWithRole(
       });
       
       const results = await Promise.all(promises);
-      pushes += results.reduce((acc, v) => acc + v, 0);
+      pushes += results.reduce<number>((acc, v) => acc + v, 0);
     }
   }
   return pushes;
@@ -62,12 +60,20 @@ export const onPlatformFeedCreated = functions.firestore
       data: { type: 'platform_feed', postId: snap.id },
     };
 
+    const targetRoles = Array.isArray(data.notify_roles)
+      ? (data.notify_roles as unknown[])
+          .map((r) => String(r).trim())
+          .filter(Boolean)
+      : [];
+
     let pushes = 0;
-    if (audience === 'agents') {
+    if (targetRoles.length > 0) {
+      pushes = await notifyUsersWithRole(targetRoles, payload, authorUid);
+    } else if (audience === 'agents') {
       pushes = await notifyUsersWithRole(['agent'], payload, authorUid);
     } else {
       pushes = await notifyUsersWithRole(
-        ['player', 'coach', 'agent', 'physio', 'organizer'],
+        ['player', 'coach', 'agent', 'physio', 'organizer', 'club', 'parent', 'sponsor'],
         payload,
         authorUid
       );
