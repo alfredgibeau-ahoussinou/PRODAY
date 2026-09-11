@@ -6,20 +6,32 @@ export type ProfileChapterId = 'apercu' | 'cv' | 'activite' | 'reglages';
 export function getProfileChapters(
   role: UserRole,
   t?: TranslateFn,
-): { id: ProfileChapterId; label: string }[] {
+): { id: ProfileChapterId; label: string; icon?: string; activeIcon?: string }[] {
   const label = (key: string, fallback: string) => (t ? t(key) : fallback);
-  if (role === 'player') {
-    return [
-      { id: 'apercu', label: 'COMPTE' },
-      { id: 'cv', label: 'VITRINE' },
-      { id: 'activite', label: 'ACTIVITÉ' },
-      { id: 'reglages', label: 'RÉGLAGES' },
-    ];
-  }
   return [
-    { id: 'apercu', label: label('profile.chapters.account', 'Compte') },
-    { id: 'cv', label: label('profile.chapters.career', 'Parcours') },
-    { id: 'activite', label: label('profile.chapters.activity', 'Activité') },
-    { id: 'reglages', label: label('profile.chapters.settings', 'Paramètres') },
+    {
+      id: 'apercu',
+      label: label('profile.chapters.account', 'Compte'),
+      icon: 'person-circle-outline',
+      activeIcon: 'person-circle',
+    },
+    {
+      id: 'cv',
+      label: label('profile.chapters.career', 'Parcours'),
+      icon: 'briefcase-outline',
+      activeIcon: 'briefcase',
+    },
+    {
+      id: 'activite',
+      label: label('profile.chapters.activity', 'Activité'),
+      icon: 'pulse-outline',
+      activeIcon: 'pulse',
+    },
+    {
+      id: 'reglages',
+      label: label('profile.chapters.settings', 'Paramètres'),
+      icon: 'settings-outline',
+      activeIcon: 'settings',
+    },
   ];
 }

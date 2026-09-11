@@ -38,8 +38,8 @@ export function planClubAiReply(text: string, ws: ClubWorkspace): ClubAiPlan {
       sensitive: {
         id: 'refuse_auto_move',
         title: 'Mouvement d’effectif',
-        body: 'L’IA ne déplace pas les joueurs. Ouvrir le recrutement pour une proposition manuelle ?',
-        confirmLabel: 'Voir recrutement',
+        body: 'L’IA ne déplace pas les joueurs. Ouvrir l’effectif pour une proposition manuelle ?',
+        confirmLabel: 'Voir effectif',
       },
     };
   }

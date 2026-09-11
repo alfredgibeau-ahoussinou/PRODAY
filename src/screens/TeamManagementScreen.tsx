@@ -5,13 +5,12 @@ import {
   ScrollView,
   Share,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
 import { PressableSpring, PushScreenTransition } from '../components/motion';
-import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Icon } from '../components/ui/Icon';
+import { ProDayText } from '../components/ui/ProDayText';
 import type { User } from '../models/User';
 import type { PlayerMatchSheetStat, TeamEvent } from '../models/TeamEvent';
 import { countRsvpYes, getPendingInviteeUids } from '../models/TeamEvent';
@@ -31,21 +30,17 @@ import { useAuth } from '../context/AuthContext';
 import { TeamEventDetailScreen } from './TeamEventDetailScreen';
 import { CreateTeamEventScreen } from './CreateTeamEventScreen';
 import { JoinClubScreen } from './JoinClubScreen';
-import { ClubAnnouncementsScreen } from './ClubAnnouncementsScreen';
-import { ClubHubScreen } from './ClubHubScreen';
 import { useTabNavigation } from '../context/TabNavigationContext';
 import { EventAttendancePanel } from '../components/team/EventAttendancePanel';
 import { CarpoolBalanceTable } from '../components/team/CarpoolBalanceTable';
 import { aggregateCarpoolBalance } from '../utils/carpoolBalance';
 import { radius, spacing } from '../theme/designTokens';
 import { useThemedScreen } from '../hooks/useThemedScreen';
-import type { AppColors } from '../theme/universeTheme';
 import { useCoachShellNav } from '../features/coach/shell/CoachShellNavContext';
-import { CoachScreenHeader } from '../components/coach/CoachScreenHeader';
-import { getCoachPageIdentity } from '../content/coachPageIdentity';
-import { coachTokensAsAppColors, useCoachTheme } from '../features/coach/shell/CoachThemeContext';
+import { useCoachTheme } from '../features/coach/shell/CoachThemeContext';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 
-type TeamTab = 'planning' | 'roster' | 'attendance' | 'stats';
+type TeamTab = 'roster' | 'planning' | 'attendance' | 'stats';
 type HubView = 'hub' | 'event' | 'create' | 'join' | 'announcements' | 'club';
 
 interface TeamManagementScreenProps {
@@ -59,20 +54,14 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
 }) => {
   const { isAdmin } = useAuth();
   const { openChat, setActiveTab } = useTabNavigation();
-  const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
-  const inCoachShell = Boolean(useCoachShellNav());
+  const { isWoman } = useThemedScreen();
   const shellNav = useCoachShellNav();
-  const { tokens: coachTokens } = useCoachTheme();
-  const screenColors = useMemo(
-    () => (inCoachShell ? coachTokensAsAppColors(coachTokens) : c),
-    [inCoachShell, coachTokens, c],
-  );
-  const styles = useMemo(() => createStyles(screenColors), [screenColors]);
-  
+  const { tokens } = useCoachTheme();
+
   const [hubView, setHubView] = useState<HubView>(profile.profile.club_id ? 'hub' : 'join');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [attendanceEventId, setAttendanceEventId] = useState<string | null>(null);
-  const [tab, setTab] = useState<TeamTab>('planning');
+  const [tab, setTab] = useState<TeamTab>('roster');
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<TeamEvent[]>([]);
   const [membersCount, setMembersCount] = useState(0);
@@ -96,7 +85,7 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [listEvents, members, clubSeasonEvents, pending, staffRows] = await Promise.all([
+      const [listEvents, membersList, clubSeasonEvents, pending, staffRows] = await Promise.all([
         teamEventsService.listForUser(profile.uid, clubId),
         clubId ? usersService.listMembersByClubId(clubId) : Promise.resolve([]),
         clubId ? teamEventsService.listForClub(clubId, 120) : Promise.resolve([]),
@@ -106,12 +95,12 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
         clubId ? teamStaffService.listForClub(clubId) : Promise.resolve([]),
       ]);
       setEvents(listEvents);
-      setMembersCount(members.length);
-      setMembers(members);
+      setMembersCount(membersList.length);
+      setMembers(membersList);
       setPendingMemberships(pending);
       setStaff(staffRows);
       setSeasonEvents(clubSeasonEvents);
-      if (!selectedStatUid && members[0]) setSelectedStatUid(members[0].uid);
+      if (!selectedStatUid && membersList[0]) setSelectedStatUid(membersList[0].uid);
     } finally {
       setLoading(false);
     }
@@ -126,18 +115,18 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     const training = events.filter((e) => e.event_type === 'training').length;
     const yes = events.reduce(
       (acc, e) => acc + Object.values(e.rsvps).filter((s) => s === 'yes').length,
-      0
+      0,
     );
     const pending = events.reduce(
       (acc, e) => acc + Object.values(e.rsvps).filter((s) => s === 'pending').length,
-      0
+      0,
     );
     return { convocation, training, yes, pending };
   }, [events]);
 
   const carpoolBalance = useMemo(
     () => aggregateCarpoolBalance(seasonEvents),
-    [seasonEvents]
+    [seasonEvents],
   );
 
   const topStats = useMemo(() => {
@@ -154,103 +143,12 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     return { topGoals, topAssists };
   }, [events]);
 
-  const updateMyAttendance = async (
-    event: TeamEvent,
-    status: 'yes' | 'no' | 'maybe',
-    reason?: string
-  ) => {
-    await teamEventsService.updateRsvpWithReason(event.id, profile.uid, status, reason);
-    await load();
-  };
-
   const attendanceEvent =
     events.find((e) => e.id === attendanceEventId) ??
     events.find((e) => e.invitee_uids.length > 0);
   const editableAttendanceEvent = attendanceEvent;
   const statsEvent = events.find((e) => e.event_type === 'friendly' || e.event_type === 'training');
-  const isStaff =
-    Boolean(isAdmin) ||
-    profile.role === 'coach' ||
-    profile.role === 'organizer' ||
-    profile.role === 'agent' ||
-    profile.role === 'club';
 
-  const joinAsRoot = hubView === 'join' && !clubId;
-
-  let subView: React.ReactNode = null;
-  if (hubView === 'join' && clubId) {
-    subView = (
-      <JoinClubScreen
-        profile={profile}
-        onBack={() => setHubView('hub')}
-        onJoined={() => {
-          setHubView('hub');
-          void load();
-        }}
-      />
-    );
-  } else if (hubView === 'create' && canCreateConvocations) {
-    subView = (
-      <CreateTeamEventScreen
-        onBack={() => setHubView('hub')}
-        onCreated={(id) => {
-          setSelectedEventId(id);
-          setHubView('event');
-        }}
-      />
-    );
-  } else if (hubView === 'announcements') {
-    subView = (
-      <ClubAnnouncementsScreen
-        profile={profile}
-        canManage={isStaff}
-        onBack={() => setHubView('hub')}
-      />
-    );
-  } else if (hubView === 'club') {
-    subView = (
-      <ClubHubScreen
-        profile={profile}
-        events={events}
-        onBack={() => setHubView('hub')}
-        onChannel={(channel) => {
-          if (channel === 'general') {
-            setHubView('announcements');
-          } else if (channel === 'mercato') {
-            setActiveTab('recrutement');
-          } else if (channel === 'covoit') {
-            setActiveTab('covoiturage');
-          } else if (channel === 'convocations') {
-            setHubView('hub');
-            setTab('planning');
-          }
-        }}
-        onOpenEvent={(eventId) => {
-          setSelectedEventId(eventId);
-          setHubView('event');
-        }}
-        onOpenTeamChat={(threadId) => openChat(threadId)}
-      />
-    );
-  } else if (hubView === 'event' && selectedEventId) {
-    subView = (
-      <TeamEventDetailScreen
-        eventId={selectedEventId}
-        onBack={() => {
-          setHubView('hub');
-          void load();
-        }}
-      />
-    );
-  }
-
-  const canManageFinalizedReport =
-    Boolean(isAdmin) ||
-    profile.role === 'coach' ||
-    profile.role === 'organizer' ||
-    profile.role === 'agent' ||
-    profile.role === 'club';
-  const reportLocked = Boolean(statsEvent?.match_report_finalized_at) && !canManageFinalizedReport;
   const statPlayers = useMemo(() => {
     if (!statsEvent) return [];
     return statsEvent.invitee_uids
@@ -259,61 +157,77 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   }, [statsEvent, members]);
   const selectedStatPlayer = statPlayers.find((p) => p.uid === selectedStatUid) ?? statPlayers[0];
 
-  const addQuickPlayerStat = async () => {
-    if (reportLocked) {
-      Alert.alert('Rapport verrouillé', 'Le rapport validé est en lecture seule.');
-      return;
+  const handleMembershipDecision = async (membershipId: string, approve: boolean) => {
+    try {
+      if (approve) {
+        await membershipsService.approve(membershipId, profile.uid);
+      } else {
+        await membershipsService.reject(membershipId, profile.uid);
+      }
+      await load();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
     }
-    if (!statsEvent) {
-      Alert.alert(
-        'Aucun match',
-        isWoman
-          ? 'Créez un événement training/friendly avec des joueuses.'
-          : 'Créez un événement training/friendly avec joueurs.'
-      );
-      return;
-    }
-    const uid = statsEvent.invitee_uids[0];
-    if (!uid) {
-      Alert.alert(
-        'Aucun convoqué',
-        isWoman ? 'Ajoutez des joueuses convoquées.' : 'Ajoutez des joueurs convoqués.'
-      );
-      return;
-    }
-    const user = await usersService.getPublicById(uid);
-    if (!user) return;
-    const current = statsEvent.player_match_stats?.[uid];
-    await teamEventsService.updatePlayerMatchStat(
-      statsEvent.id,
-      uid,
-      {
-        player_name: user.display_name,
-        minutes_played: Math.min(90, (current?.minutes_played ?? 0) + 15),
-        rating: Math.min(10, Number((current?.rating ?? 6) + 0.5)),
-        goals: (current?.goals ?? 0) + 1,
-        assists: current?.assists ?? 0,
-        yellow_cards: current?.yellow_cards ?? 0,
-        red_cards: current?.red_cards ?? 0,
-      },
-      { user: profile, isAdmin },
-    );
-    await load();
   };
 
-  const shareMatchReport = async () => {
-    if (!statsEvent) return;
-    const summary = Object.values(statsEvent.player_match_stats ?? {})
-      .slice(0, 4)
-      .map((s) => `${s.player_name}: ${s.goals ?? 0}b/${s.assists ?? 0}p, note ${s.rating ?? 'N/A'}`)
-      .join('\n');
-    await Share.share({
-      message: `Rapport d'après-match. ${statsEvent.title}\n${statsEvent.city} · ${statsEvent.starts_at.toLocaleDateString('fr-FR')}\n\n${summary || 'Aucune stat individuelle.'}`,
-    });
+  const searchPlayers = async () => {
+    if (!playerSearch.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    try {
+      const players = await usersService.listPlayers(playerSearch.trim());
+      const memberUids = new Set(members.map((m) => m.uid));
+      const pendingUids = new Set(pendingMemberships.map((m) => m.player_uid));
+      setSearchResults(
+        players.filter((p) => !memberUids.has(p.uid) && !pendingUids.has(p.uid)).slice(0, 8),
+      );
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleInvitePlayer = async (player: User) => {
+    if (!clubId) return;
+    setInvitingUid(player.uid);
+    try {
+      await membershipsService.invitePlayer({
+        club_id: clubId,
+        player_uid: player.uid,
+        player_name: player.display_name,
+        invited_by_uid: profile.uid,
+      });
+      Alert.alert('Invitation envoyée', `${player.display_name} doit accepter l'affiliation.`);
+      setPlayerSearch('');
+      setSearchResults([]);
+      await load();
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Invitation impossible.');
+    } finally {
+      setInvitingUid(null);
+    }
+  };
+
+  const handleAddStaff = async () => {
+    if (!clubId || !staffUid.trim()) return;
+    try {
+      await teamStaffService.add({
+        club_id: clubId,
+        uid: staffUid.trim(),
+        display_name: staffName.trim() || staffUid.trim(),
+        staff_role: staffRole,
+      });
+      setStaffUid('');
+      setStaffName('');
+      setStaff(await teamStaffService.listForClub(clubId));
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d’ajouter le staff.');
+    }
   };
 
   const updateSelectedStat = async (patch: Partial<PlayerMatchSheetStat>) => {
-    if (reportLocked) {
+    if (statsEvent?.match_report_finalized_at) {
       Alert.alert('Rapport verrouillé', 'Le rapport validé est en lecture seule.');
       return;
     }
@@ -347,88 +261,36 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
     Alert.alert('Rapport validé', 'Le rapport d’après-match est figé et partageable.');
   };
 
-  const unlockReport = async () => {
-    if (!statsEvent) return;
-    if (!canManageFinalizedReport) {
-      Alert.alert('Accès refusé', 'Seul le staff peut déverrouiller un rapport validé.');
-      return;
-    }
-    await teamEventsService.setMatchReportFinalized(statsEvent.id, false, {
-      user: profile,
-      isAdmin,
-    });
-    await load();
-    Alert.alert('Rapport déverrouillé', 'Le rapport est à nouveau modifiable.');
-  };
+  const formatCalendarDate = (date: Date) => date.toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
 
-  const handleMembershipDecision = async (membershipId: string, approve: boolean) => {
-    try {
-      if (approve) {
-        await membershipsService.approve(membershipId, profile.uid);
-      } else {
-        await membershipsService.reject(membershipId, profile.uid);
-      }
-      await load();
-    } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Action impossible.');
-    }
-  };
+  let subView: React.ReactNode = null;
+  if (hubView === 'create' && canCreateConvocations) {
+    subView = (
+      <CreateTeamEventScreen
+        onBack={() => setHubView('hub')}
+        onCreated={(id) => {
+          setSelectedEventId(id);
+          setHubView('event');
+        }}
+      />
+    );
+  } else if (hubView === 'event' && selectedEventId) {
+    subView = (
+      <TeamEventDetailScreen
+        eventId={selectedEventId}
+        onBack={() => {
+          setHubView('hub');
+          void load();
+        }}
+      />
+    );
+  }
 
-  const searchPlayers = async () => {
-    if (!playerSearch.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    setSearchLoading(true);
-    try {
-      const players = await usersService.listPlayers(playerSearch.trim());
-      const memberUids = new Set(members.map((m) => m.uid));
-      const pendingUids = new Set(pendingMemberships.map((m) => m.player_uid));
-      setSearchResults(
-        players.filter((p) => !memberUids.has(p.uid) && !pendingUids.has(p.uid)).slice(0, 8),
-      );
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  const handleAddStaff = async () => {
-    if (!clubId || !staffUid.trim()) return;
-    try {
-      await teamStaffService.add({
-        club_id: clubId,
-        uid: staffUid.trim(),
-        display_name: staffName.trim() || staffUid.trim(),
-        staff_role: staffRole,
-      });
-      setStaffUid('');
-      setStaffName('');
-      setStaff(await teamStaffService.listForClub(clubId));
-    } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Impossible d’ajouter le staff.');
-    }
-  };
-
-  const handleInvitePlayer = async (player: User) => {
-    if (!clubId) return;
-    setInvitingUid(player.uid);
-    try {
-      await membershipsService.invitePlayer({
-        club_id: clubId,
-        player_uid: player.uid,
-        player_name: player.display_name,
-        invited_by_uid: profile.uid,
-      });
-      Alert.alert('Invitation envoyée', `${player.display_name} doit accepter l'affiliation.`);
-      setPlayerSearch('');
-      setSearchResults([]);
-      await load();
-    } catch (e) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Invitation impossible.');
-    } finally {
-      setInvitingUid(null);
-    }
-  };
+  const joinAsRoot = hubView === 'join' && !clubId;
 
   return (
     <>
@@ -442,452 +304,509 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
           }}
         />
       ) : (
-        <View style={[styles.root, rootStyle, inCoachShell && { backgroundColor: coachTokens.bg }]}>
-      {inCoachShell ? (
-        <CoachScreenHeader title={getCoachPageIdentity('gestion').title} />
-      ) : (
-        <ScreenHeader title="Gestion équipe" onBack={onBack} centered />
-      )}
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.tabs}>
-          <TabBtn styles={styles} id="planning" label="Planning" tab={tab} setTab={setTab} />
-          <TabBtn styles={styles} id="roster" label="Effectif" tab={tab} setTab={setTab} />
-          <TabBtn styles={styles} id="attendance" label="Présences" tab={tab} setTab={setTab} />
-          <TabBtn styles={styles} id="stats" label="Stats" tab={tab} setTab={setTab} />
-        </View>
-
-        {clubId ? (
-          <>
-            {canCreateConvocations ? (
-              <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')}>
-                <Text style={styles.createEventBtnText}>+ Nouvelle convocation</Text>
-              </PressableSpring>
-            ) : null}
+        <View style={styles.root}>
+          <View style={styles.headerRow}>
             <PressableSpring
-              style={styles.secondaryHubBtn}
-              onPress={() => setHubView('announcements')}
+              style={styles.backBtn}
+              onPress={onBack}
+              scaleTo={0.92}
+              haptic
             >
-              <Text style={styles.secondaryHubBtnText}>Annonces club</Text>
+              <Icon name="arrow-back" size={20} color="#FFFFFF" />
             </PressableSpring>
-            <PressableSpring
-              style={styles.secondaryHubBtn}
-              onPress={() => {
-                if (inCoachShell && shellNav) {
-                  shellNav.requestNav('com_staff');
-                } else {
-                  setHubView('club');
-                }
-              }}
-            >
-              <Text style={styles.secondaryHubBtnText}>Communauté club</Text>
-            </PressableSpring>
-          </>
-        ) : (
-          <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('join')}>
-            <Text style={styles.createEventBtnText}>Rejoindre un club</Text>
-          </PressableSpring>
-        )}
-
-        {loading ? (
-          <ActivityIndicator color={screenColors.accent} style={styles.loader} />
-        ) : null}
-
-        {!loading && tab === 'planning' ? (
-          <>
-            <View style={styles.planningKpiRow}>
-              <Kpi styles={styles} label="Convocations" value={String(eventStats.convocation)} />
-              <Kpi styles={styles} label="Présents" value={String(eventStats.yes)} />
-              <Kpi styles={styles} label="En attente" value={String(eventStats.pending)} />
+            <View style={styles.headerTitles}>
+              <ProDayText variant="title" style={styles.headerMainTitle}>
+                Gestion de l'équipe
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.headerSub}>
+                {profile.profile.club_id ? `Club rattaché · ${membersCount} joueurs` : 'Configuration équipe'}
+              </ProDayText>
             </View>
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Prochains événements</Text>
-              {events.slice(0, 8).map((e) => {
-                const yes = countRsvpYes(e);
-                const pending = getPendingInviteeUids(e).length;
-                const no = Object.values(e.rsvps).filter((s) => s === 'no').length;
-                const rsvpSummary = `${yes} présents · ${no} absents · ${pending} en attente`;
-                return (
-                  <PressableSpring
-                    key={e.id}
-                    style={styles.rowTouchable}
-                    onPress={() => {
-                      setSelectedEventId(e.id);
-                      setHubView('event');
-                    }}
-                  >
-                    <Row
-                      styles={styles}
-                      title={e.title}
-                      subtitle={`${e.starts_at.toLocaleDateString('fr-FR', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })} · ${e.city}${e.categories?.length ? ` · ${e.categories.join(', ')}` : ''}`}
-                      right={rsvpSummary}
-                    />
-                  </PressableSpring>
-                );
-              })}
-              {events.length === 0 ? (
-                <View style={styles.emptyBlock}>
-                  <Text style={styles.empty}>
-                    {canCreateConvocations
-                      ? 'Aucun événement planifié pour le moment.'
-                      : 'Aucun événement. Les convocations sont gérées par le coach Premium (ou Tout inclus).'}
-                  </Text>
-                  {canCreateConvocations ? (
-                    <PressableSpring style={styles.createEventBtn} onPress={() => setHubView('create')} scaleTo={0.97} haptic>
-                      <Text style={styles.createEventBtnText}>Créer une convocation</Text>
-                    </PressableSpring>
+          </View>
+
+          <View style={styles.tabsRow}>
+            <PressableSpring
+              style={[styles.tabPill, tab === 'roster' && styles.tabPillActive]}
+              onPress={() => setTab('roster')}
+              scaleTo={0.95}
+            >
+              <Icon name="people" size={13} color={tab === 'roster' ? '#000000' : '#8B8B9A'} />
+              <ProDayText
+                variant="caption"
+                style={[styles.tabPillText, tab === 'roster' && styles.tabPillTextActive]}
+              >
+                Effectif ({membersCount})
+              </ProDayText>
+            </PressableSpring>
+
+            <PressableSpring
+              style={[styles.tabPill, tab === 'planning' && styles.tabPillActive]}
+              onPress={() => setTab('planning')}
+              scaleTo={0.95}
+            >
+              <Icon name="calendar" size={13} color={tab === 'planning' ? '#000000' : '#8B8B9A'} />
+              <ProDayText
+                variant="caption"
+                style={[styles.tabPillText, tab === 'planning' && styles.tabPillTextActive]}
+              >
+                Convocations
+              </ProDayText>
+            </PressableSpring>
+
+            <PressableSpring
+              style={[styles.tabPill, tab === 'attendance' && styles.tabPillActive]}
+              onPress={() => setTab('attendance')}
+              scaleTo={0.95}
+            >
+              <Icon name="checkmark-circle" size={13} color={tab === 'attendance' ? '#000000' : '#8B8B9A'} />
+              <ProDayText
+                variant="caption"
+                style={[styles.tabPillText, tab === 'attendance' && styles.tabPillTextActive]}
+              >
+                Présences
+              </ProDayText>
+            </PressableSpring>
+
+            <PressableSpring
+              style={[styles.tabPill, tab === 'stats' && styles.tabPillActive]}
+              onPress={() => setTab('stats')}
+              scaleTo={0.95}
+            >
+              <Icon name="stats-chart" size={13} color={tab === 'stats' ? '#000000' : '#8B8B9A'} />
+              <ProDayText
+                variant="caption"
+                style={[styles.tabPillText, tab === 'stats' && styles.tabPillTextActive]}
+              >
+                Stats & Bilan
+              </ProDayText>
+            </PressableSpring>
+          </View>
+
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xxl }]}
+            showsVerticalScrollIndicator={false}
+          >
+            {loading ? (
+              <View style={styles.loadingWrap}>
+                <ActivityIndicator color={tokens.accent} />
+              </View>
+            ) : null}
+
+            {!loading && tab === 'roster' ? (
+              <>
+                {canManageRoster && pendingMemberships.length > 0 ? (
+                  <View style={styles.card}>
+                    <View style={styles.cardHeaderRow}>
+                      <Icon name="alert-circle" size={16} color="#F59E0B" />
+                      <ProDayText variant="section" style={styles.cardSectionTitle}>
+                        Demandes d'affiliation ({pendingMemberships.length})
+                      </ProDayText>
+                    </View>
+
+                    {pendingMemberships.map((m) => (
+                      <View key={m.id} style={styles.pendingRow}>
+                        <View style={{ flex: 1 }}>
+                          <ProDayText variant="section" style={styles.rowPlayerName}>
+                            {m.player_name}
+                          </ProDayText>
+                          <ProDayText variant="caption" style={styles.rowSubText}>
+                            Demandé le {m.requested_at.toLocaleDateString('fr-FR')}
+                          </ProDayText>
+                        </View>
+                        <View style={styles.pendingActionBtns}>
+                          <PressableSpring
+                            style={[styles.actionBtnApprove, { backgroundColor: tokens.accent }]}
+                            onPress={() => void handleMembershipDecision(m.id, true)}
+                            scaleTo={0.95}
+                            haptic
+                          >
+                            <ProDayText variant="caption" style={styles.actionBtnApproveText}>
+                              Valider
+                            </ProDayText>
+                          </PressableSpring>
+                          <PressableSpring
+                            style={styles.actionBtnReject}
+                            onPress={() => void handleMembershipDecision(m.id, false)}
+                            scaleTo={0.95}
+                            haptic
+                          >
+                            <ProDayText variant="caption" style={styles.actionBtnRejectText}>
+                              Refuser
+                            </ProDayText>
+                          </PressableSpring>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {canManageRoster && clubId ? (
+                  <View style={styles.card}>
+                    <View style={styles.cardHeaderRow}>
+                      <Icon name="people" size={16} color={tokens.accent} />
+                      <ProDayText variant="section" style={styles.cardSectionTitle}>
+                        Inviter un joueur au club
+                      </ProDayText>
+                    </View>
+                    <ProDayText variant="caption" style={styles.cardBodyText}>
+                      Recherchez un joueur sur la plateforme ProDay pour lui proposer une affiliation.
+                    </ProDayText>
+
+                    <View style={styles.searchRow}>
+                      <TextInput
+                        style={styles.searchInput}
+                        placeholder="Nom ou prénom du joueur..."
+                        placeholderTextColor="#6B6B7F"
+                        value={playerSearch}
+                        onChangeText={setPlayerSearch}
+                        onSubmitEditing={() => void searchPlayers()}
+                        returnKeyType="search"
+                      />
+                      <PressableSpring
+                        style={[styles.searchBtn, { backgroundColor: tokens.accent }]}
+                        onPress={() => void searchPlayers()}
+                        disabled={searchLoading}
+                        scaleTo={0.95}
+                        haptic
+                      >
+                        {searchLoading ? (
+                          <ActivityIndicator size="small" color="#000000" />
+                        ) : (
+                          <ProDayText variant="caption" style={styles.searchBtnText}>
+                            Rechercher
+                          </ProDayText>
+                        )}
+                      </PressableSpring>
+                    </View>
+
+                    {searchResults.map((player) => (
+                      <View key={player.uid} style={styles.searchResultItem}>
+                        <View style={{ flex: 1 }}>
+                          <ProDayText variant="section" style={styles.rowPlayerName}>
+                            {player.display_name}
+                          </ProDayText>
+                          <ProDayText variant="caption" style={styles.rowSubText}>
+                            {[player.profile.position, player.city].filter(Boolean).join(' · ')}
+                          </ProDayText>
+                        </View>
+                        <PressableSpring
+                          style={[styles.inviteBtn, { backgroundColor: tokens.accent }]}
+                          onPress={() => void handleInvitePlayer(player)}
+                          disabled={invitingUid === player.uid}
+                          scaleTo={0.95}
+                          haptic
+                        >
+                          <ProDayText variant="caption" style={styles.inviteBtnText}>
+                            Inviter
+                          </ProDayText>
+                        </PressableSpring>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                <View style={styles.card}>
+                  <View style={styles.cardHeaderRow}>
+                    <Icon name="shield" size={16} color="#8B5CF6" />
+                    <ProDayText variant="section" style={styles.cardSectionTitle}>
+                      Staff technique & Encadrement
+                    </ProDayText>
+                  </View>
+
+                  {staff.map((s) => (
+                    <View key={s.id} style={styles.staffItem}>
+                      <View style={{ flex: 1 }}>
+                        <ProDayText variant="section" style={styles.rowPlayerName}>
+                          {s.display_name}
+                        </ProDayText>
+                        <ProDayText variant="caption" style={styles.rowSubText}>
+                          {TEAM_STAFF_ROLE_LABELS[s.staff_role]}
+                        </ProDayText>
+                      </View>
+                    </View>
+                  ))}
+
+                  {staff.length === 0 ? (
+                    <ProDayText variant="caption" style={styles.emptyText}>
+                      Aucun membre de staff assigné.
+                    </ProDayText>
+                  ) : null}
+
+                  {canManageRoster ? (
+                    <View style={styles.addStaffBox}>
+                      <TextInput
+                        style={styles.addStaffInput}
+                        placeholder="Nom du membre staff"
+                        placeholderTextColor="#6B6B7F"
+                        value={staffName}
+                        onChangeText={setStaffName}
+                      />
+                      <TextInput
+                        style={styles.addStaffInput}
+                        placeholder="Identifiant UID ProDay"
+                        placeholderTextColor="#6B6B7F"
+                        value={staffUid}
+                        onChangeText={setStaffUid}
+                      />
+                      <View style={styles.rolesGrid}>
+                        {(['assistant', 'analyst', 'physio', 'coach'] as TeamStaffRole[]).map((r) => (
+                          <PressableSpring
+                            key={r}
+                            onPress={() => setStaffRole(r)}
+                            scaleTo={0.96}
+                            style={[
+                              styles.roleChip,
+                              staffRole === r && { backgroundColor: `${tokens.accent}25`, borderColor: tokens.accent },
+                            ]}
+                          >
+                            <ProDayText
+                              variant="caption"
+                              style={[
+                                styles.roleChipText,
+                                staffRole === r && { color: tokens.accent, fontWeight: '800' },
+                              ]}
+                            >
+                              {TEAM_STAFF_ROLE_LABELS[r]}
+                            </ProDayText>
+                          </PressableSpring>
+                        ))}
+                      </View>
+                      <PressableSpring
+                        style={[styles.addStaffBtn, { backgroundColor: tokens.accent }]}
+                        onPress={() => void handleAddStaff()}
+                        scaleTo={0.96}
+                        haptic
+                      >
+                        <ProDayText variant="caption" style={styles.addStaffBtnText}>
+                          Ajouter au staff
+                        </ProDayText>
+                      </PressableSpring>
+                    </View>
                   ) : null}
                 </View>
-              ) : null}
-            </View>
-          </>
-        ) : null}
 
-        {!loading && tab === 'roster' ? (
-          <>
-            {canManageRoster && pendingMemberships.length > 0 ? (
-              <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Demandes d&apos;affiliation</Text>
-                {pendingMemberships.map((m) => (
-                  <View key={m.id} style={styles.pendingRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowTitle}>{m.player_name}</Text>
-                      <Text style={styles.body}>
-                        Demandé le {m.requested_at.toLocaleDateString('fr-FR')}
-                      </Text>
-                    </View>
-                    <PressableSpring
-                      style={[styles.pendingBtn, { backgroundColor: screenColors.brand }]}
-                      onPress={() => void handleMembershipDecision(m.id, true)}
-                      scaleTo={0.97}
-                    >
-                      <Text style={styles.pendingBtnText}>Valider</Text>
-                    </PressableSpring>
-                    <PressableSpring
-                      style={[styles.pendingBtn, styles.pendingBtnGhost]}
-                      onPress={() => void handleMembershipDecision(m.id, false)}
-                      scaleTo={0.97}
-                    >
-                      <Text style={styles.pendingBtnGhostText}>Refuser</Text>
-                    </PressableSpring>
+                <View style={styles.card}>
+                  <View style={styles.cardHeaderRow}>
+                    <Icon name="people" size={16} color={tokens.accent} />
+                    <ProDayText variant="section" style={styles.cardSectionTitle}>
+                      Effectif licencié ({membersCount})
+                    </ProDayText>
                   </View>
-                ))}
-              </View>
-            ) : null}
-            {canManageRoster && clubId ? (
-              <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Inviter un joueur</Text>
-                <Text style={styles.body}>
-                  Recherchez un joueur ProDay pour lui proposer une affiliation au club.
-                </Text>
-                <View style={styles.inviteRow}>
-                  <TextInput
-                    style={[styles.inviteInput, { borderColor: screenColors.border, color: screenColors.text }]}
-                    placeholder="Nom du joueur…"
-                    placeholderTextColor={screenColors.textMuted}
-                    value={playerSearch}
-                    onChangeText={setPlayerSearch}
-                    onSubmitEditing={() => void searchPlayers()}
-                    returnKeyType="search"
-                  />
-                  <PressableSpring
-                    style={[styles.pendingBtn, { backgroundColor: screenColors.brand }]}
-                    onPress={() => void searchPlayers()}
-                    disabled={searchLoading}
-                    scaleTo={0.97}
-                  >
-                    <Text style={styles.pendingBtnText}>
-                      {searchLoading ? '…' : 'Chercher'}
-                    </Text>
-                  </PressableSpring>
+
+                  {members.map((m) => (
+                    <View key={m.uid} style={styles.playerItemRow}>
+                      <View style={styles.playerAvatar}>
+                        <Icon name="person" size={16} color={tokens.accent} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <ProDayText variant="section" style={styles.rowPlayerName}>
+                          {m.display_name}
+                        </ProDayText>
+                        <ProDayText variant="caption" style={styles.rowSubText}>
+                          {[m.profile?.position, m.profile?.category].filter(Boolean).join(' · ') || 'Joueur'}
+                        </ProDayText>
+                      </View>
+                      {m.uid === profile.uid ? (
+                        <View style={styles.youBadge}>
+                          <ProDayText variant="caption" style={styles.youBadgeText}>
+                            Vous
+                          </ProDayText>
+                        </View>
+                      ) : null}
+                    </View>
+                  ))}
                 </View>
-                {searchResults.map((player) => (
-                  <View key={player.uid} style={styles.pendingRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowTitle}>{player.display_name}</Text>
-                      <Text style={styles.body}>
-                        {[player.profile.position, player.city].filter(Boolean).join(' · ')}
-                      </Text>
-                    </View>
-                    <PressableSpring
-                      style={[styles.pendingBtn, { backgroundColor: screenColors.brand }]}
-                      onPress={() => void handleInvitePlayer(player)}
-                      disabled={invitingUid === player.uid}
-                      scaleTo={0.97}
-                    >
-                      <Text style={styles.pendingBtnText}>Inviter</Text>
-                    </PressableSpring>
-                  </View>
-                ))}
-              </View>
+              </>
             ) : null}
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Staff</Text>
-              {staff.map((s) => (
-                <Row
-                  styles={styles}
-                  key={s.id}
-                  title={s.display_name}
-                  subtitle={TEAM_STAFF_ROLE_LABELS[s.staff_role]}
-                  right=""
-                />
-              ))}
-              {staff.length === 0 ? (
-                <Text style={styles.empty}>Aucun membre staff pour le moment.</Text>
-              ) : null}
-              {canManageRoster ? (
-                <View style={{ gap: spacing.xs, marginTop: spacing.xs }}>
-                  <TextInput
-                    style={[styles.inviteInput, { flexGrow: 0, borderColor: screenColors.border, color: screenColors.text }]}
-                    placeholder="Nom affiché"
-                    placeholderTextColor={screenColors.textMuted}
-                    value={staffName}
-                    onChangeText={setStaffName}
-                  />
-                  <TextInput
-                    style={[styles.inviteInput, { flexGrow: 0, borderColor: screenColors.border, color: screenColors.text }]}
-                    placeholder="UID ProDay"
-                    placeholderTextColor={screenColors.textMuted}
-                    value={staffUid}
-                    onChangeText={setStaffUid}
-                  />
-                  <View style={styles.roleRow}>
-                    {(['assistant', 'analyst', 'physio', 'coach'] as TeamStaffRole[]).map((r) => (
+
+            {!loading && tab === 'planning' ? (
+              <>
+                <View style={styles.kpiCardsRow}>
+                  <View style={styles.kpiCard}>
+                    <ProDayText variant="title" style={styles.kpiVal}>
+                      {eventStats.convocation}
+                    </ProDayText>
+                    <ProDayText variant="caption" style={styles.kpiLbl}>
+                      Matchs
+                    </ProDayText>
+                  </View>
+                  <View style={styles.kpiCard}>
+                    <ProDayText variant="title" style={[styles.kpiVal, { color: '#10B981' }]}>
+                      {eventStats.yes}
+                    </ProDayText>
+                    <ProDayText variant="caption" style={styles.kpiLbl}>
+                      Confirmés
+                    </ProDayText>
+                  </View>
+                  <View style={styles.kpiCard}>
+                    <ProDayText variant="title" style={[styles.kpiVal, { color: '#F59E0B' }]}>
+                      {eventStats.pending}
+                    </ProDayText>
+                    <ProDayText variant="caption" style={styles.kpiLbl}>
+                      En attente
+                    </ProDayText>
+                  </View>
+                </View>
+
+                {canCreateConvocations ? (
+                  <PressableSpring
+                    style={[styles.primaryCreateBtn, { backgroundColor: tokens.accent }]}
+                    onPress={() => setHubView('create')}
+                    scaleTo={0.97}
+                    haptic
+                  >
+                    <Icon name="add" size={18} color="#000000" />
+                    <ProDayText variant="section" style={styles.primaryCreateBtnText}>
+                      Créer une nouvelle convocation
+                    </ProDayText>
+                  </PressableSpring>
+                ) : null}
+
+                <View style={styles.card}>
+                  <ProDayText variant="section" style={styles.cardSectionTitle}>
+                    Historique des convocations
+                  </ProDayText>
+
+                  {events.slice(0, 10).map((e) => {
+                    const yes = countRsvpYes(e);
+                    const pending = getPendingInviteeUids(e).length;
+                    return (
                       <PressableSpring
-                        key={r}
-                        onPress={() => setStaffRole(r)}
-                        scaleTo={0.97}
-                        style={[
-                          styles.roleChip,
-                          staffRole === r ? { borderColor: screenColors.brand, backgroundColor: screenColors.surfaceMuted } : null,
-                        ]}
+                        key={e.id}
+                        style={styles.eventRow}
+                        onPress={() => {
+                          setSelectedEventId(e.id);
+                          setHubView('event');
+                        }}
+                        scaleTo={0.98}
+                        haptic
                       >
-                        <Text
-                          style={[
-                            styles.miniBtnText,
-                            staffRole === r ? { color: screenColors.brand, fontWeight: '800' } : null,
-                          ]}
-                        >
-                          {TEAM_STAFF_ROLE_LABELS[r]}
-                        </Text>
+                        <View style={{ flex: 1 }}>
+                          <ProDayText variant="section" style={styles.rowPlayerName}>
+                            {e.title}
+                          </ProDayText>
+                          <ProDayText variant="caption" style={styles.rowSubText}>
+                            {formatCalendarDate(e.starts_at)} {e.city ? `· ${e.city}` : ''}
+                          </ProDayText>
+                        </View>
+                        <View style={styles.eventRsvpBadge}>
+                          <ProDayText variant="caption" style={styles.eventRsvpBadgeText}>
+                            {yes} confirmés · {pending} en attente
+                          </ProDayText>
+                          <Icon name="chevron-forward" size={14} color="#8B8B9A" />
+                        </View>
                       </PressableSpring>
-                    ))}
-                  </View>
-                  <PressableSpring
-                    style={[styles.pendingBtn, { backgroundColor: screenColors.brand, alignSelf: 'flex-start' }]}
-                    onPress={() => void handleAddStaff()}
-                    scaleTo={0.97}
-                  >
-                    <Text style={styles.pendingBtnText}>Ajouter au staff</Text>
-                  </PressableSpring>
-                </View>
-              ) : null}
-            </View>
-            <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Effectif club</Text>
-            <Text style={styles.body}>
-              {membersCount} membre(s) liés à votre structure.
-            </Text>
-            {members.map((m) => (
-              <Row
-                styles={styles}
-                key={m.uid}
-                title={m.display_name}
-                subtitle={`${m.role}${m.profile?.position ? ` · ${m.profile.position}` : ''}${m.profile?.category ? ` · ${m.profile.category}` : ''}`}
-                right={m.uid === profile.uid ? 'Vous' : ''}
-              />
-            ))}
-            {members.length === 0 ? (
-              <Text style={styles.empty}>
-                Aucun membre. Invitez les joueurs à rejoindre le club depuis leur profil.
-              </Text>
-            ) : null}
-          </View>
-          </>
-        ) : null}
+                    );
+                  })}
 
-        {!loading && tab === 'attendance' ? (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Présences & réponses</Text>
-            <Row styles={styles} title="Confirmés" subtitle="Présents" right={String(eventStats.yes)} />
-            <Row styles={styles} title="En attente" subtitle="Sans réponse" right={String(eventStats.pending)} />
-            <Row styles={styles} title="Convocations" subtitle="Matchs / feuilles" right={String(eventStats.convocation)} />
-            <Row styles={styles} title="Entraînements" subtitle="Séances" right={String(eventStats.training)} />
-            {events.filter((e) => e.invitee_uids.length > 0).length > 0 ? (
-              <>
-                <Text style={styles.inlineTitle}>Événement</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={styles.inlineBtns}>
-                    {events
-                      .filter((e) => e.invitee_uids.length > 0)
-                      .map((e) => (
-                        <MiniBtn
-                          styles={styles}
-                          key={e.id}
-                          label={e.title.slice(0, 18)}
-                          onPress={() => setAttendanceEventId(e.id)}
-                        />
-                      ))}
-                  </View>
-                </ScrollView>
+                  {events.length === 0 ? (
+                    <ProDayText variant="caption" style={styles.emptyText}>
+                      Aucun événement convoqué.
+                    </ProDayText>
+                  ) : null}
+                </View>
               </>
             ) : null}
-            {editableAttendanceEvent ? (
-              <View style={styles.inlineBlock}>
-                <Text style={styles.inlineTitle}>
-                  {editableAttendanceEvent.title} · {editableAttendanceEvent.starts_at.toLocaleDateString('fr-FR')}
-                </Text>
-                {profile.role === 'player' ? (
-                  <View style={styles.inlineBtns}>
-                    <MiniBtn styles={styles} label="Présent" onPress={() => void updateMyAttendance(editableAttendanceEvent, 'yes')} />
-                    <MiniBtn
-                      styles={styles}
-                      label="Absent"
-                      onPress={() =>
-                        void updateMyAttendance(
-                          editableAttendanceEvent,
-                          'no',
-                          'Empêchement personnel'
-                        )
-                      }
-                    />
-                    <MiniBtn styles={styles} label="Peut-être" onPress={() => void updateMyAttendance(editableAttendanceEvent, 'maybe')} />
-                  </View>
-                ) : null}
-                {isStaff ? (
-                  <EventAttendancePanel
-                    event={editableAttendanceEvent}
-                    profile={profile}
-                    isStaff
-                    onUpdated={load}
-                  />
-                ) : null}
-              </View>
-            ) : null}
-            <View style={styles.inlineBlock}>
-              <Text style={styles.inlineTitle}>Bilan covoiturage</Text>
-              <CarpoolBalanceTable rows={carpoolBalance} />
-            </View>
-          </View>
-        ) : null}
 
-        {!loading && tab === 'stats' ? (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Stats équipe</Text>
-            <Text style={styles.body}>
-              {isWoman
-                ? 'Les actions live de match peuvent être appliquées aux stats joueuses depuis les écrans Matchs (but, passe, cartons, remplacements).'
-                : 'Les actions live de match peuvent être appliquées aux stats joueurs depuis les écrans Matchs (but, passe, cartons, remplacements).'}
-            </Text>
-            <View style={styles.infoBox}>
-              <Icon name="document" size={18} color={screenColors.accent} />
-              <Text style={styles.infoText}>
-                Base prête: lineup, live actions et agrégation automatique vers les stats saison.
-              </Text>
-            </View>
-            <View style={styles.inlineBtns}>
-              <MiniBtn
-                styles={styles}
-                label={
-                  reportLocked
-                    ? 'Rapport verrouillé'
-                    : isWoman
-                      ? 'Ajouter stat joueuse #1'
-                      : 'Ajouter stat joueur #1'
-                }
-                onPress={() => void addQuickPlayerStat()}
-              />
-              <MiniBtn styles={styles} label="Partager rapport" onPress={() => void shareMatchReport()} />
-            </View>
-            {selectedStatPlayer && statsEvent ? (
-              <View style={styles.inlineBlock}>
-                <Text style={styles.inlineTitle}>
-                  {isWoman ? 'Édition feuille joueuse' : 'Édition feuille joueur'}
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <View style={styles.inlineBtns}>
-                    {statPlayers.slice(0, 8).map((p) => (
-                      <MiniBtn
-                        styles={styles}
-                        key={p.uid}
-                        label={p.display_name}
-                        onPress={() => setSelectedStatUid(p.uid)}
+            {!loading && tab === 'attendance' ? (
+              <View style={styles.card}>
+                <ProDayText variant="section" style={styles.cardSectionTitle}>
+                  Pointage des présences
+                </ProDayText>
+
+                {editableAttendanceEvent ? (
+                  <View style={styles.attendanceWrap}>
+                    <ProDayText variant="caption" style={styles.attendanceEventTitle}>
+                      {editableAttendanceEvent.title} · {formatCalendarDate(editableAttendanceEvent.starts_at)}
+                    </ProDayText>
+                    {isOrganizerCapable(profile.role) ? (
+                      <EventAttendancePanel
+                        event={editableAttendanceEvent}
+                        profile={profile}
+                        isStaff
+                        onUpdated={load}
                       />
-                    ))}
+                    ) : null}
                   </View>
-                </ScrollView>
-                <Text style={styles.rowSub}>
-                  {isWoman ? 'Joueuse sélectionnée' : 'Joueur sélectionné'}:{' '}
-                  {selectedStatPlayer.display_name}
-                </Text>
-                <View style={styles.inlineBtns}>
-                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+15 min'} onPress={() => void updateSelectedStat({ minutes_played: Math.min(120, (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.minutes_played ?? 0) + 15) })} />
-                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+1 but'} onPress={() => void updateSelectedStat({ goals: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.goals ?? 0) + 1 })} />
-                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+1 passe'} onPress={() => void updateSelectedStat({ assists: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.assists ?? 0) + 1 })} />
-                </View>
-                <View style={styles.inlineBtns}>
-                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+0.5 note'} onPress={() => void updateSelectedStat({ rating: Math.min(10, Number(((statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.rating ?? 6) + 0.5).toFixed(1))) })} />
-                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+1 jaune'} onPress={() => void updateSelectedStat({ yellow_cards: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.yellow_cards ?? 0) + 1 })} />
-                  <MiniBtn styles={styles} label={reportLocked ? 'Locked' : '+1 rouge'} onPress={() => void updateSelectedStat({ red_cards: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.red_cards ?? 0) + 1 })} />
+                ) : null}
+
+                <View style={styles.carpoolSection}>
+                  <ProDayText variant="section" style={styles.cardSectionTitle}>
+                    Bilan déplacements & Covoiturage
+                  </ProDayText>
+                  <CarpoolBalanceTable rows={carpoolBalance} />
                 </View>
               </View>
             ) : null}
-            {statsEvent ? (
-              <>
-                <PressableSpring
-                  style={[styles.primaryBtn, statsEvent.match_report_finalized_at && styles.primaryBtnDone]}
-                  onPress={() => void finalizeReport()}
-                  disabled={Boolean(statsEvent.match_report_finalized_at)}
-                >
-                  <Text style={styles.primaryBtnText}>
-                    {statsEvent.match_report_finalized_at ? 'Rapport validé' : 'Valider le rapport d’après-match'}
-                  </Text>
-                </PressableSpring>
-                {statsEvent.match_report_finalized_at ? (
+
+            {!loading && tab === 'stats' ? (
+              <View style={styles.card}>
+                <ProDayText variant="section" style={styles.cardSectionTitle}>
+                  Feuille de match & Statistiques
+                </ProDayText>
+                <ProDayText variant="caption" style={styles.cardBodyText}>
+                  Les performances live sont enregistrées et synchronisées automatiquement.
+                </ProDayText>
+
+                {selectedStatPlayer && statsEvent ? (
+                  <View style={styles.statEditorBox}>
+                    <ProDayText variant="section" style={styles.statEditorPlayer}>
+                      {isWoman ? 'Joueuse sélectionnée' : 'Joueur sélectionné'} : {selectedStatPlayer.display_name}
+                    </ProDayText>
+                    <View style={styles.statActionsRow}>
+                      <PressableSpring
+                        style={styles.statActionBtn}
+                        onPress={() => void updateSelectedStat({ minutes_played: Math.min(120, (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.minutes_played ?? 0) + 15) })}
+                      >
+                        <ProDayText variant="caption" style={styles.statActionBtnText}>+15 min</ProDayText>
+                      </PressableSpring>
+                      <PressableSpring
+                        style={styles.statActionBtn}
+                        onPress={() => void updateSelectedStat({ goals: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.goals ?? 0) + 1 })}
+                      >
+                        <ProDayText variant="caption" style={styles.statActionBtnText}>+1 But</ProDayText>
+                      </PressableSpring>
+                      <PressableSpring
+                        style={styles.statActionBtn}
+                        onPress={() => void updateSelectedStat({ assists: (statsEvent.player_match_stats?.[selectedStatPlayer.uid]?.assists ?? 0) + 1 })}
+                      >
+                        <ProDayText variant="caption" style={styles.statActionBtnText}>+1 Passe</ProDayText>
+                      </PressableSpring>
+                    </View>
+                  </View>
+                ) : null}
+
+                {statsEvent ? (
                   <PressableSpring
-                    style={styles.secondaryBtn}
-                    onPress={() => void unlockReport()}
-                    disabled={!canManageFinalizedReport}
+                    style={[styles.primaryCreateBtn, { backgroundColor: tokens.accent, marginTop: 12 }]}
+                    onPress={() => void finalizeReport()}
+                    disabled={Boolean(statsEvent.match_report_finalized_at)}
+                    scaleTo={0.97}
+                    haptic
                   >
-                    <Text style={styles.secondaryBtnText}>
-                      {canManageFinalizedReport
-                        ? 'Déverrouiller le rapport'
-                        : 'Rapport verrouillé (staff uniquement)'}
-                    </Text>
+                    <ProDayText variant="section" style={styles.primaryCreateBtnText}>
+                      {statsEvent.match_report_finalized_at ? 'Rapport validé' : 'Valider le rapport d’après-match'}
+                    </ProDayText>
                   </PressableSpring>
                 ) : null}
-              </>
+
+                <View style={styles.topStatsList}>
+                  <ProDayText variant="section" style={styles.cardSectionTitle}>
+                    Top Buteurs
+                  </ProDayText>
+                  {topStats.topGoals.map(([name, n]) => (
+                    <View key={`g-${name}`} style={styles.topStatItem}>
+                      <ProDayText variant="section" style={styles.rowPlayerName}>{name}</ProDayText>
+                      <ProDayText variant="section" style={[styles.rowPlayerName, { color: tokens.accent }]}>{n} buts</ProDayText>
+                    </View>
+                  ))}
+                </View>
+              </View>
             ) : null}
-            <View style={styles.inlineBlock}>
-              <Text style={styles.inlineTitle}>Top buteurs (live)</Text>
-              {topStats.topGoals.length ? (
-                topStats.topGoals.map(([name, n]) => (
-                  <Row styles={styles} key={`g-${name}`} title={name} subtitle="Buts" right={String(n)} />
-                ))
-              ) : (
-                <Text style={styles.empty}>Aucun but live enregistré pour le moment.</Text>
-              )}
-            </View>
-            <View style={styles.inlineBlock}>
-              <Text style={styles.inlineTitle}>Top passeurs (live)</Text>
-              {topStats.topAssists.length ? (
-                topStats.topAssists.map(([name, n]) => (
-                  <Row styles={styles} key={`a-${name}`} title={name} subtitle="Passes décisives" right={String(n)} />
-                ))
-              ) : (
-                <Text style={styles.empty}>Aucune passe live enregistrée pour le moment.</Text>
-              )}
-            </View>
-          </View>
-        ) : null}
-      </ScrollView>
-    </View>
+          </ScrollView>
+        </View>
       )}
+
       {!joinAsRoot ? (
         <PushScreenTransition active={hubView !== 'hub'}>{subView}</PushScreenTransition>
       ) : null}
@@ -895,211 +814,386 @@ export const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({
   );
 };
 
-const TabBtn: React.FC<{
-  styles: ReturnType<typeof createStyles>;
-  id: TeamTab;
-  label: string;
-  tab: TeamTab;
-  setTab: (t: TeamTab) => void;
-}> = ({ styles, id, label, tab, setTab }) => (
-  <PressableSpring
-    style={[styles.tabBtn, tab === id && styles.tabBtnOn]}
-    onPress={() => setTab(id)}
-  >
-    <Text style={[styles.tabText, tab === id && styles.tabTextOn]}>{label}</Text>
-  </PressableSpring>
-);
-
-const Kpi: React.FC<{
-  styles: ReturnType<typeof createStyles>;
-  label: string;
-  value: string;
-}> = ({ styles, label, value }) => (
-  <View style={styles.kpi}>
-    <Text style={styles.kpiValue}>{value}</Text>
-    <Text style={styles.kpiLabel}>{label}</Text>
-  </View>
-);
-
-const Row: React.FC<{
-  styles: ReturnType<typeof createStyles>;
-  title: string;
-  subtitle: string;
-  right: string;
-}> = ({ styles, title, subtitle, right }) => (
-  <View style={styles.row}>
-    <View style={{ flex: 1 }}>
-      <Text style={styles.rowTitle}>{title}</Text>
-      <Text style={styles.rowSub}>{subtitle}</Text>
-    </View>
-    <Text style={styles.rowRight}>{right}</Text>
-  </View>
-);
-
-const MiniBtn: React.FC<{
-  styles: ReturnType<typeof createStyles>;
-  label: string;
-  onPress: () => void;
-}> = ({ styles, label, onPress }) => (
-  <PressableSpring style={styles.miniBtn} onPress={onPress}>
-    <Text style={styles.miniBtnText}>{label}</Text>
-  </PressableSpring>
-);
-
-function createStyles(c: AppColors) {
-  return StyleSheet.create({
-  root: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md },
-  planningKpiRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#000000',
   },
-  kpi: { flex: 1, backgroundColor: c.surfaceMuted, borderRadius: radius.md, padding: spacing.sm },
-  kpiValue: { color: c.text, fontSize: 17, fontWeight: '900' },
-  kpiLabel: { color: c.textSecondary, fontSize: 10, marginTop: 2 },
-  tabs: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.md, flexWrap: 'wrap' },
-  tabBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-  },
-  tabBtnOn: { backgroundColor: c.accent, borderColor: c.accent },
-  tabText: { color: c.textSecondary, fontSize: 12, fontWeight: '700' },
-  tabTextOn: { color: c.brandInverse },
-  createEventBtn: {
-    backgroundColor: c.accent,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  createEventBtnText: { color: c.brandInverse, fontWeight: '800', fontSize: 13 },
-  secondaryHubBtn: {
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: c.border,
-  },
-  secondaryHubBtnText: { color: c.text, fontWeight: '800', fontSize: 13 },
-  rowTouchable: { marginHorizontal: -spacing.xs },
-  loader: { marginVertical: spacing.md },
-  card: {
-    backgroundColor: c.surface,
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: c.text, marginBottom: spacing.xs },
-  empty: { color: c.textMuted, fontSize: 12, marginTop: spacing.sm },
-  emptyBlock: { gap: spacing.sm, marginTop: spacing.sm },
-  row: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: c.border,
-    paddingVertical: spacing.sm,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
-  rowTitle: { color: c.text, fontWeight: '700', fontSize: 13 },
-  rowSub: { color: c.textMuted, fontSize: 11, marginTop: 1 },
-  rowRight: { color: c.textSecondary, fontSize: 11, fontWeight: '700' },
-  body: { color: c.textSecondary, fontSize: 12, lineHeight: 19, marginBottom: spacing.sm },
-  infoBox: {
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#14141A',
+    borderWidth: 1,
+    borderColor: '#22222E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitles: {
+    flex: 1,
+  },
+  headerMainTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+  },
+  headerSub: {
+    color: '#8B8B9A',
+    fontSize: 11.5,
+    marginTop: 1,
+  },
+  tabsRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    backgroundColor: c.surfaceMuted,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
   },
-  infoText: { flex: 1, color: c.textSecondary, fontSize: 11, lineHeight: 17 },
-  primaryBtn: {
-    backgroundColor: c.accent,
-    borderRadius: radius.md,
+  tabPill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    marginVertical: spacing.sm,
-  },
-  primaryBtnText: { color: c.brandInverse, fontSize: 13, fontWeight: '800' },
-  primaryBtnDone: { opacity: 0.7 },
-  secondaryBtn: {
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: '#14141A',
     borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
+    borderColor: '#22222E',
+  },
+  tabPillActive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#FFFFFF',
+  },
+  tabPillText: {
+    color: '#8B8B9A',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  tabPillTextActive: {
+    color: '#000000',
+    fontWeight: '800',
+  },
+  content: {
+    padding: 16,
+    gap: 14,
+  },
+  loadingWrap: {
+    paddingVertical: 30,
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    marginTop: spacing.xs,
   },
-  secondaryBtnText: { color: c.textSecondary, fontSize: 12, fontWeight: '700' },
-  inlineBlock: {
-    marginTop: spacing.sm,
-    backgroundColor: c.surfaceMuted,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-  },
-  inlineTitle: { color: c.text, fontSize: 12, fontWeight: '800', marginBottom: spacing.xs },
-  inlineBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
-  miniBtn: {
+  card: {
+    backgroundColor: '#14141A',
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    borderColor: '#22222E',
+    padding: 16,
+    gap: 10,
   },
-  miniBtnText: { fontSize: 10, fontWeight: '700', color: c.textSecondary },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginBottom: 2,
+  },
+  cardSectionTitle: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: -0.2,
+  },
+  cardBodyText: {
+    color: '#8B8B9A',
+    fontSize: 12,
+    lineHeight: 16,
+  },
   pendingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: c.border,
+    borderTopWidth: 1,
+    borderTopColor: '#1C1C24',
+    paddingTop: 10,
+    marginTop: 4,
+    gap: 8,
   },
-  pendingBtn: {
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+  rowPlayerName: {
+    color: '#FFFFFF',
+    fontSize: 13.5,
+    fontWeight: '800',
   },
-  pendingBtnText: { color: c.brandInverse, fontSize: 11, fontWeight: '800' },
-  pendingBtnGhost: {
-    backgroundColor: c.surface,
+  rowSubText: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    marginTop: 1,
+  },
+  pendingActionBtns: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  actionBtnApprove: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  actionBtnApproveText: {
+    color: '#000000',
+    fontWeight: '800',
+    fontSize: 11,
+  },
+  actionBtnReject: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#1C1C26',
     borderWidth: 1,
-    borderColor: c.border,
+    borderColor: '#2A2A38',
   },
-  pendingBtnGhostText: { color: c.textSecondary, fontSize: 11, fontWeight: '700' },
-  inviteRow: {
+  actionBtnRejectText: {
+    color: '#8B8B9A',
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: '#1C1C26',
+    borderWidth: 1,
+    borderColor: '#2A2A38',
+    borderRadius: 12,
+    color: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 12.5,
+  },
+  searchBtn: {
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchBtnText: {
+    color: '#000000',
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  searchResultItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
+    backgroundColor: '#181822',
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 4,
+    gap: 8,
   },
-  inviteInput: {
-    flex: 1,
+  inviteBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  inviteBtnText: {
+    color: '#000000',
+    fontWeight: '800',
+    fontSize: 11,
+  },
+  staffItem: {
+    borderTopWidth: 1,
+    borderTopColor: '#1C1C24',
+    paddingTop: 8,
+  },
+  addStaffBox: {
+    gap: 8,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#1C1C24',
+    paddingTop: 10,
+  },
+  addStaffInput: {
+    backgroundColor: '#1C1C26',
     borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    fontSize: 14,
+    borderColor: '#2A2A38',
+    borderRadius: 10,
+    color: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    fontSize: 12,
   },
-  roleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  rolesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
   roleChip: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 7,
+    backgroundColor: '#1C1C26',
     borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    borderColor: '#2A2A38',
   },
-  });
-}
+  roleChipText: {
+    color: '#8B8B9A',
+    fontSize: 10.5,
+    fontWeight: '600',
+  },
+  addStaffBtn: {
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  addStaffBtnText: {
+    color: '#000000',
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  playerItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#1C1C24',
+    paddingTop: 8,
+  },
+  playerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  youBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  youBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  emptyText: {
+    color: '#8B8B9A',
+    fontSize: 12,
+  },
+  kpiCardsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  kpiCard: {
+    flex: 1,
+    backgroundColor: '#14141A',
+    borderWidth: 1,
+    borderColor: '#22222E',
+    borderRadius: 14,
+    padding: 12,
+    alignItems: 'center',
+  },
+  kpiVal: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  kpiLbl: {
+    color: '#8B8B9A',
+    fontSize: 10.5,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  primaryCreateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  primaryCreateBtnText: {
+    color: '#000000',
+    fontSize: 13.5,
+    fontWeight: '900',
+  },
+  eventRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#1C1C24',
+    paddingTop: 8,
+  },
+  eventRsvpBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  eventRsvpBadgeText: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  attendanceWrap: {
+    gap: 8,
+  },
+  attendanceEventTitle: {
+    color: '#8B8B9A',
+    fontSize: 12,
+  },
+  carpoolSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#1C1C24',
+    paddingTop: 12,
+    marginTop: 6,
+  },
+  statEditorBox: {
+    backgroundColor: '#181822',
+    padding: 12,
+    borderRadius: 12,
+    gap: 8,
+    marginTop: 4,
+  },
+  statEditorPlayer: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  statActionsRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  statActionBtn: {
+    backgroundColor: '#222230',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  statActionBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  topStatsList: {
+    borderTopWidth: 1,
+    borderTopColor: '#1C1C24',
+    paddingTop: 12,
+    marginTop: 6,
+    gap: 8,
+  },
+  topStatItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+});

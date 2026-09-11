@@ -54,3 +54,10 @@ website/public/downloads/*.apk
 
 # Intro video build venv (Pillow)
 .venv-intro/
+
+# Scratch & temporary artifacts
+scratch/
+.freebuff/
+test_pdf.html
+*.pdf
+

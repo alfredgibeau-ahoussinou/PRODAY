@@ -90,7 +90,7 @@ export const fffClubRosterService = {
       }
 
       const membersRaw = Array.isArray(data.members) ? data.members : [];
-      const members: FffClubRosterMember[] = membersRaw
+      const members: FffClubRosterMember[] = (membersRaw
         .map((m) => {
           const row = m as Record<string, unknown>;
           const displayName = String(row.displayName ?? row.player_name ?? '').trim();
@@ -98,16 +98,16 @@ export const fffClubRosterService = {
           return {
             id: String(row.id ?? row.licenseNumber ?? displayName),
             displayName,
-            role: row.role === 'coach' ? 'coach' : 'player',
+            role: (row.role === 'coach' ? 'coach' : 'player') as 'coach' | 'player',
             category: String(row.category ?? ''),
             licenseNumber: row.licenseNumber
               ? String(row.licenseNumber)
               : row.license_number
                 ? String(row.license_number)
                 : undefined,
-          } satisfies FffClubRosterMember;
+          };
         })
-        .filter((m): m is FffClubRosterMember => !!m);
+        .filter((m) => m !== null) as FffClubRosterMember[]);
 
       return {
         affiliation_number: code,

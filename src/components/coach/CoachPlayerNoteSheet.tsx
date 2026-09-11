@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -51,7 +53,7 @@ const NOTE_QUICK_TAGS = [
 
 const CHARGE_PRESETS = [
   { label: 'Plein régime', tone: '#10B981', note: '[Charge] Plein régime validé.' },
-  { label: 'Charge allégée', tone: '#F59E0B', note: '[Charge] Allègement des intensités préconisé.' },
+  { label: 'Charge allégée', tone: 'rgba(255, 255, 255, 0.7)', note: '[Charge] Allègement des intensités préconisé.' },
   { label: 'Repos recommandé', tone: '#EF4444', note: '[Charge] Repos complet recommandé avant la prochaine échéance.' },
   { label: 'Soins / Kiné', tone: '#8B5CF6', note: '[Charge] Soins et protocole de récupération requis.' },
 ];
@@ -152,9 +154,13 @@ export function CoachPlayerNoteSheet({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <Pressable style={styles.backdrop} onPress={onClose}>
+          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             {/* Header Fiche & Confidentialité */}
             <View style={styles.headerRow}>
               <View style={styles.headerInfo}>
@@ -206,7 +212,7 @@ export function CoachPlayerNoteSheet({
                       variant="caption"
                       style={[
                         styles.metricValue,
-                        { color: (wellness.recovery ?? 10) <= 4 ? '#F59E0B' : tokens.foreground },
+                        { color: (wellness.recovery ?? 10) <= 4 ? 'rgba(255, 255, 255, 0.7)' : tokens.foreground },
                       ]}
                     >
                       {wellness.recovery != null ? `${wellness.recovery}/10` : '—'}
@@ -389,6 +395,7 @@ export function CoachPlayerNoteSheet({
           </ScrollView>
         </Pressable>
       </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

@@ -17,13 +17,13 @@ export const PLAYER_DARK = {
   accentSoft: 'rgba(0,230,118,0.14)',
   accentGlow: 'rgba(45,212,191,0.35)',
   statBlue: '#3B82F6',
-  statYellow: '#EAB308',
+  statYellow: '#FFFFFF',
   statGreen: '#22C55E',
   dockBg: 'rgba(18,18,24,0.96)',
   dockBorder: 'rgba(255,255,255,0.06)',
   cardGradient: ['#1A1A24', '#0A0A0F'] as [string, string],
   shieldGradient: ['#222230', '#121218', '#0A0A0F'] as [string, string, string],
-  ratingRing: ['#3B82F6', '#EAB308', '#22C55E', '#2DD4BF', '#00E676'] as [string, string, string, string, string],
+  ratingRing: ['#FFFFFF', '#2DD4BF', '#00E676', '#22C55E', '#00E676'] as [string, string, string, string, string],
 } as const;
 
 export const PLAYER_DARK_RADIUS = {

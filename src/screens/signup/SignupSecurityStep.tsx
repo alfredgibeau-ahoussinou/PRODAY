@@ -18,7 +18,8 @@ import { ProDayErrorBanner } from '../../components/ui/ProDayErrorBanner';
 import { spacing } from '../../theme/designTokens';
 import { useSignupFlowTheme } from './SignupFlowContext';
 import type { AppColors } from '../../theme/universeTheme';
-import { legalWebUrl } from '../../content/legalDocuments';
+import { legalWebUrl, type LegalDocumentId } from '../../content/legalDocuments';
+import { LegalDocumentModal } from '../../components/legal/LegalDocumentModal';
 
 interface SignupSecurityStepProps {
   form: SignupForm;
@@ -47,6 +48,7 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
 }) => {
   const { t } = useTranslation();
   const { colors: c } = useSignupFlowTheme();
+  const [modalLegalDoc, setModalLegalDoc] = React.useState<LegalDocumentId | null>(null);
   const styles = useMemo(() => createStyles(c), [c]);
   const passwordStrength =
     form.password.length > 0 ? getPasswordStrength(form.password) : null;
@@ -150,14 +152,14 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
             Je certifie l’exactitude des informations et j’accepte les{' '}
             <Text
               style={styles.termsLink}
-              onPress={() => void Linking.openURL(legalWebUrl('terms'))}
+              onPress={() => setModalLegalDoc('terms')}
             >
               CGU
             </Text>
             {' '}et la{' '}
             <Text
               style={styles.termsLink}
-              onPress={() => void Linking.openURL(legalWebUrl('privacy'))}
+              onPress={() => setModalLegalDoc('privacy')}
             >
               politique de confidentialité
             </Text>
@@ -168,6 +170,12 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
           <Text style={styles.termsError}>{form.fieldErrors.acceptedTerms}</Text>
         ) : null}
       </View>
+
+      <LegalDocumentModal
+        visible={modalLegalDoc !== null}
+        documentId={modalLegalDoc}
+        onClose={() => setModalLegalDoc(null)}
+      />
     </SignupStepLayout>
   );
 };

@@ -23,7 +23,6 @@ export const PRO_CLUB_PRODUCT_ROLES: UserRole[] = ['club'];
 /** Rôles staff pro (sans sponsor — pôle Sponsor séparé). Agent / recruteur / santé retirés du produit. */
 export const PRO_STAFF_PRODUCT_ROLES: UserRole[] = [
   'coach',
-  'organizer',
 ];
 
 /** @deprecated Rôles legacy encore présents en base — ne plus proposer à l’inscription. */
@@ -203,7 +202,7 @@ export function resolveSignupProductLine(
   if (carouselOrContextLine === 'pro' || isProFamilyLine(carouselOrContextLine)) {
     if (role === 'club') return 'pro_club';
     if (role === 'player') return 'pro_player';
-    if (['coach', 'organizer'].includes(role)) {
+    if (role === 'coach') {
       return 'pro_staff';
     }
   }

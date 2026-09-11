@@ -15,6 +15,7 @@ import { useTeamEvents } from '../../hooks/useAppData';
 import { teamEventsService } from '../../services/teamEvents.service';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { formatTrainingSessionTitle } from '../../utils/teamEventFormatting';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 
 interface EliteHomeScreenProps {
@@ -98,11 +99,12 @@ export const EliteHomeScreen: React.FC<EliteHomeScreenProps> = ({
             activeOpacity={0.85}
             onPress={() => {
               prodayHaptics.press();
-              nav.setActiveTab('plus');
+              nav.openDashboard('tactics_coach');
             }}
             style={styles.aiAdvisorBtn}
+            accessibilityLabel="Ouvrir Conseiller IA"
           >
-            <Ionicons name="sparkles" size={16} color="#000000" />
+            <Ionicons name="sparkles" size={14} color={ELITE_COLORS.primary} />
             <Text style={styles.aiAdvisorBtnText}>Conseiller IA</Text>
           </TouchableOpacity>
         </View>
@@ -129,7 +131,11 @@ export const EliteHomeScreen: React.FC<EliteHomeScreenProps> = ({
               </Text>
             </View>
 
-            <Text style={styles.matchTitleText}>{nextEvent.title}</Text>
+            <Text style={styles.matchTitleText}>
+              {nextEvent.event_type === 'training'
+                ? formatTrainingSessionTitle(nextEvent)
+                : nextEvent.title}
+            </Text>
 
             {eventLocation ? (
               <TouchableOpacity
@@ -210,7 +216,7 @@ export const EliteHomeScreen: React.FC<EliteHomeScreenProps> = ({
               style={styles.carpoolAction}
               activeOpacity={0.8}
             >
-              <Ionicons name="car-sport" size={18} color={ELITE_COLORS.gold} />
+              <Ionicons name="car-sport" size={18} color={ELITE_COLORS.primary} />
               <Text style={styles.carpoolActionText}>
                 Covoiturage pour ce match · Consulter ou proposer
               </Text>
@@ -238,13 +244,16 @@ export const EliteHomeScreen: React.FC<EliteHomeScreenProps> = ({
         >
           <View style={styles.cardHeaderWithAction}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="trophy" size={20} color={ELITE_COLORS.gold} />
+              <Ionicons name="trophy" size={20} color={ELITE_COLORS.primary} />
               <Text style={styles.cardHeaderTitle}>Classement Régional</Text>
             </View>
             <Text style={styles.viewMoreLink}>Voir le classement ➔</Text>
           </View>
           <View style={styles.standingsHighlight}>
-            <Text style={styles.standingsRankText}>🟢 2e place</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+              <Text style={styles.standingsRankText}>2e place</Text>
+            </View>
             <Text style={styles.standingsScoreText}>29 points · 12 matchs joués</Text>
           </View>
         </TouchableOpacity>
@@ -279,12 +288,12 @@ export const EliteHomeScreen: React.FC<EliteHomeScreenProps> = ({
           }}
           style={styles.myCardPromo}
         >
-          <Ionicons name="shield" size={24} color={ELITE_COLORS.gold} />
+          <Ionicons name="shield" size={24} color={ELITE_COLORS.primary} />
           <View style={{ flex: 1 }}>
             <Text style={styles.myCardPromoTitle}>Ma Carte Joueur & Radar de Performance</Text>
             <Text style={styles.myCardPromoSub}>Consultez votre note globale, vos buts et vos statistiques.</Text>
           </View>
-          <Ionicons name="arrow-forward" size={18} color={ELITE_COLORS.gold} />
+          <Ionicons name="arrow-forward" size={18} color={ELITE_COLORS.primary} />
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -329,15 +338,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: ELITE_COLORS.gold,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   aiAdvisorBtnText: {
-    color: '#000000',
-    fontWeight: '800',
-    fontSize: 13,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.1,
   },
   matchHeroCard: {
     marginBottom: 16,
@@ -396,9 +408,9 @@ const styles = StyleSheet.create({
   carpoolAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: ELITE_COLORS.goldSoft,
+    backgroundColor: ELITE_COLORS.primarySoft,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.25)',
+    borderColor: 'rgba(0, 230, 118, 0.25)',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -408,7 +420,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     fontWeight: '700',
-    color: ELITE_COLORS.gold,
+    color: ELITE_COLORS.primary,
   },
   noMatchCard: {
     flexDirection: 'row',
@@ -429,7 +441,7 @@ const styles = StyleSheet.create({
   },
   standingsExpressCard: {
     marginBottom: 16,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderColor: 'rgba(0, 230, 118, 0.2)',
   },
   cardHeaderWithAction: {
     flexDirection: 'row',
@@ -478,9 +490,9 @@ const styles = StyleSheet.create({
   myCardPromo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: ELITE_COLORS.goldSoft,
+    backgroundColor: ELITE_COLORS.primarySoft,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderColor: 'rgba(0, 230, 118, 0.25)',
     borderRadius: 16,
     padding: 16,
     gap: 12,
@@ -489,7 +501,7 @@ const styles = StyleSheet.create({
   myCardPromoTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: ELITE_COLORS.gold,
+    color: ELITE_COLORS.primary,
   },
   myCardPromoSub: {
     fontSize: 12,

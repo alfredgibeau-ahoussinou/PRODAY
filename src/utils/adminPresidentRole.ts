@@ -18,7 +18,6 @@ export const ADMIN_EDITABLE_ROLE_OPTIONS: AdminRoleOption[] = [
   'sponsor',
   'agent',
   'recruiter',
-  'organizer',
 ];
 
 export function findClubForAdminUser(

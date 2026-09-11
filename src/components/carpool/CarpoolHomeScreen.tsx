@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, RefreshControl, View, Text, TextInput } from 'react-native';
+import { ScrollView, StyleSheet, RefreshControl, View, Text, TextInput, ActivityIndicator, Alert } from 'react-native';
 import type { User } from '../../models/User';
 import type { TeamEvent, CarpoolSlot } from '../../models/TeamEvent';
 import type { StandaloneCarpoolOffer } from '../../models/StandaloneCarpoolOffer';
@@ -18,6 +18,7 @@ import {
 import { Icon } from '../ui/Icon';
 import { CarpoolEventCard } from './CarpoolEventCard';
 import { CarpoolRideCard } from './CarpoolRideCard';
+import { CarpoolTripTicket } from './CarpoolTripTicket';
 import { CarpoolBalancePanel } from './CarpoolBalancePanel';
 import { CarpoolProposePanel } from './CarpoolProposePanel';
 import { StandaloneCarpoolRideCard } from './StandaloneCarpoolRideCard';
@@ -27,6 +28,7 @@ import { CoachCarpoolModeBar } from './CoachCarpoolModeBar';
 import { CoachCarpoolReminder } from './CoachCarpoolReminder';
 import { CoachText } from '../coach/coachPortalUi';
 import { CarpoolLiveMission } from './CarpoolLiveMission';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 import { CarpoolSpaceBackground } from './CarpoolSpaceBackground';
 import { CARPOOL_SITE } from '../../content/carpoolSite';
 import {
@@ -90,6 +92,7 @@ const pagePad = {
 
 type RideOffer = { event: TeamEvent; slot: CarpoolSlot };
 type RideFilter = 'all' | 'club' | 'match';
+
 
 export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
   profile,
@@ -378,19 +381,7 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
     : allSeatOffers;
 
   const renderRideFilters = () => (
-    <>
-      <View style={styles.search}>
-        <Icon name="search" size={16} color={palette.inkDim} />
-        <TextInput
-          style={styles.searchInput}
-          value={searchCity}
-          onChangeText={setSearchCity}
-          placeholder={t('carpool.reserve.filter.city')}
-          placeholderTextColor={palette.inkDim}
-        />
-      </View>
-      <CarpoolFilterChips options={rideFilterOptions} value={rideFilter} onChange={setRideFilter} />
-    </>
+    <CarpoolFilterChips options={rideFilterOptions} value={rideFilter} onChange={setRideFilter} />
   );
 
   const renderSeatOffer = (
@@ -437,32 +428,154 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
 
   const renderRide = () => (
     <ScrollView contentContainerStyle={pagePad} refreshControl={refreshControl} {...scrollProps}>
-      {/* UBER STYLE SEARCH BANNER */}
-      <View style={[styles.uberSearchBlock, { backgroundColor: palette.surface, borderColor: palette.lane }]}>
-        <Text style={[styles.uberSearchTitle, { color: palette.ink }]}>Où allez-vous ?</Text>
-        <View style={[styles.uberInputRow, { backgroundColor: palette.bg }]}>
-          <Icon name="search" size={20} color={palette.ink} />
-          <TextInput 
-            style={[styles.uberInput, { color: palette.ink }]} 
-            placeholder="Stade, club, match..." 
-            placeholderTextColor={palette.ink + '88'} 
+      {/* UBER/CITYMAPPER STYLE SEARCH BANNER */}
+      <View
+        style={[
+          styles.uberSearchBlock,
+          {
+            backgroundColor: '#14141A',
+            borderColor: '#22222E',
+          },
+        ]}
+      >
+        <View style={styles.searchHeaderRow}>
+          <Text style={styles.uberSearchTitle}>Où allez-vous ?</Text>
+          {searchCity ? (
+            <PressableSpring onPress={() => setSearchCity('')} scaleTo={0.95} haptic>
+              <Text style={[styles.clearSearchText, { color: palette.signal }]}>Effacer</Text>
+            </PressableSpring>
+          ) : null}
+        </View>
+        <View style={styles.uberInputRow}>
+          <Icon name="search" size={18} color={palette.signal} />
+          <TextInput
+            style={styles.uberInput}
+            value={searchCity}
+            onChangeText={setSearchCity}
+            placeholder="Stade, club, ville ou match..."
+            placeholderTextColor="#71717A"
           />
         </View>
         <View style={styles.uberQuickChips}>
-          {["Prochain match", "Entraînement", "Domicile"].map((chip) => (
-            <View key={chip} style={[styles.uberChip, { backgroundColor: palette.bg, borderColor: palette.lane }]}>
-              <Text style={[styles.uberChipText, { color: palette.ink }]}>{chip}</Text>
-            </View>
-          ))}
+          <PressableSpring
+            onPress={() => {
+              setRideFilter('match');
+              setSearchCity('');
+            }}
+            scaleTo={0.96}
+            haptic
+            style={[
+              styles.uberChip,
+              rideFilter === 'match' && {
+                backgroundColor: `${palette.signal}20`,
+                borderColor: palette.signal,
+              },
+            ]}
+          >
+            <Icon name="football" size={13} color={rideFilter === 'match' ? palette.signal : '#A1A1AA'} />
+            <Text
+              style={[
+                styles.uberChipText,
+                rideFilter === 'match' && { color: palette.signal, fontWeight: '800' },
+              ]}
+            >
+              Matchs
+            </Text>
+          </PressableSpring>
+
+          <PressableSpring
+            onPress={() => {
+              setRideFilter('all');
+              setSearchCity('Entraînement');
+            }}
+            scaleTo={0.96}
+            haptic
+            style={[
+              styles.uberChip,
+              searchCity.toLowerCase() === 'entraînement' && {
+                backgroundColor: `${palette.signal}20`,
+                borderColor: palette.signal,
+              },
+            ]}
+          >
+            <Icon
+              name="walk"
+              size={13}
+              color={searchCity.toLowerCase() === 'entraînement' ? palette.signal : '#A1A1AA'}
+            />
+            <Text
+              style={[
+                styles.uberChipText,
+                searchCity.toLowerCase() === 'entraînement' && {
+                  color: palette.signal,
+                  fontWeight: '800',
+                },
+              ]}
+            >
+              Entraînements
+            </Text>
+          </PressableSpring>
+
+          <PressableSpring
+            onPress={() => {
+              setRideFilter('club');
+              setSearchCity('');
+            }}
+            scaleTo={0.96}
+            haptic
+            style={[
+              styles.uberChip,
+              rideFilter === 'club' && {
+                backgroundColor: `${palette.signal}20`,
+                borderColor: palette.signal,
+              },
+            ]}
+          >
+            <Icon name="shield" size={13} color={rideFilter === 'club' ? palette.signal : '#A1A1AA'} />
+            <Text
+              style={[
+                styles.uberChipText,
+                rideFilter === 'club' && { color: palette.signal, fontWeight: '800' },
+              ]}
+            >
+              Mon club
+            </Text>
+          </PressableSpring>
+
+          <PressableSpring
+            onPress={() => {
+              setRideFilter('all');
+              setSearchCity('');
+            }}
+            scaleTo={0.96}
+            haptic
+            style={[
+              styles.uberChip,
+              rideFilter === 'all' && !searchCity && {
+                backgroundColor: `${palette.signal}20`,
+                borderColor: palette.signal,
+              },
+            ]}
+          >
+            <Icon
+              name="car"
+              size={13}
+              color={rideFilter === 'all' && !searchCity ? palette.signal : '#A1A1AA'}
+            />
+            <Text
+              style={[
+                styles.uberChipText,
+                rideFilter === 'all' && !searchCity && {
+                  color: palette.signal,
+                  fontWeight: '800',
+                },
+              ]}
+            >
+              Tous
+            </Text>
+          </PressableSpring>
         </View>
       </View>
-
-      {coachShell ? null : (
-        <>
-          <Text style={styles.modeTitle}>{t('carpool.hub.rideTitle')}</Text>
-          <Text style={styles.modeSupport}>{t('carpool.hub.rideSupport')}</Text>
-        </>
-      )}
 
       {!profile ? (
         <CarpoolEmptyState
@@ -473,7 +586,9 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
           onCta={onLoginRequired}
         />
       ) : loading && standaloneLoading ? (
-        <SkeletonList count={3} variant="card" />
+        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={palette.signal} />
+        </View>
       ) : coachShell ? (
         <>
           {needsRideEvents.length > 0 ? (
@@ -544,16 +659,12 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
         </>
       ) : (
         <>
-          {renderRideFilters()}
-
-          {sortedAvailableRides.length === 0 &&
-          bookableStandalone.length === 0 &&
-          needsRideEvents.length === 0 ? (
+          {allSeatOffers.length === 0 && needsRideEvents.length === 0 ? (
             <CarpoolEmptyState
               icon="car"
-              title={t('carpool.reserve.empty.title')}
-              subtitle={t('carpool.reserve.empty.subtitle')}
-              ctaLabel={t('carpool.cta.proposeTrip')}
+              title="Aucun covoiturage disponible"
+              subtitle="Aucun trajet n'a encore été partagé pour les événements à venir. Proposez un covoiturage pour aider l'équipe !"
+              ctaLabel="+ Proposer un covoiturage"
               onCta={() => setHubMode('drive')}
             />
           ) : (
@@ -636,12 +747,97 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
 
   const renderTrips = () => (
     <ScrollView contentContainerStyle={pagePad} refreshControl={refreshControl} {...scrollProps}>
-      {coachShell ? null : (
-        <>
-          <Text style={styles.modeTitle}>{t('carpool.hub.tripsTitle')}</Text>
-          <Text style={styles.modeSupport}>{t('carpool.hub.tripsSupport')}</Text>
-        </>
-      )}
+      {/* HERO MES TRAJETS */}
+      <View
+        style={[
+          styles.uberSearchBlock,
+          {
+            backgroundColor: '#14141A',
+            borderColor: '#22222E',
+          },
+        ]}
+      >
+        <View style={styles.searchHeaderRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 12,
+                backgroundColor: `${palette.signal}18`,
+                borderColor: `${palette.signal}35`,
+                borderWidth: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="car" size={18} color={palette.signal} />
+            </View>
+            <View>
+              <Text style={styles.uberSearchTitle}>Mes Trajets & Déplacements</Text>
+              <Text style={{ fontSize: 12, color: '#A1A1AA', marginTop: 1 }}>
+                Suivez vos réservations et vos trajets confirmés.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.uberQuickChips}>
+          <PressableSpring
+            onPress={() => setMyTripsTab('upcoming')}
+            scaleTo={0.96}
+            haptic
+            style={[
+              styles.uberChip,
+              myTripsTab === 'upcoming' && {
+                backgroundColor: `${palette.signal}20`,
+                borderColor: palette.signal,
+              },
+            ]}
+          >
+            <Icon
+              name="calendar"
+              size={13}
+              color={myTripsTab === 'upcoming' ? palette.signal : '#A1A1AA'}
+            />
+            <Text
+              style={[
+                styles.uberChipText,
+                myTripsTab === 'upcoming' && { color: palette.signal, fontWeight: '800' },
+              ]}
+            >
+              À venir ({myTrips.length + myStandaloneTrips.length})
+            </Text>
+          </PressableSpring>
+
+          <PressableSpring
+            onPress={() => setMyTripsTab('past')}
+            scaleTo={0.96}
+            haptic
+            style={[
+              styles.uberChip,
+              myTripsTab === 'past' && {
+                backgroundColor: `${palette.signal}20`,
+                borderColor: palette.signal,
+              },
+            ]}
+          >
+            <Icon
+              name="time"
+              size={13}
+              color={myTripsTab === 'past' ? palette.signal : '#A1A1AA'}
+            />
+            <Text
+              style={[
+                styles.uberChipText,
+                myTripsTab === 'past' && { color: palette.signal, fontWeight: '800' },
+              ]}
+            >
+              Historique
+            </Text>
+          </PressableSpring>
+        </View>
+      </View>
 
       {profile && activeTrips.length > 0 ? (
         <View style={styles.liveBlock}>
@@ -669,22 +865,29 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
           onCta={onLoginRequired}
         />
       ) : loading ? (
-        <SkeletonList count={3} variant="card" />
+        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={palette.signal} />
+        </View>
       ) : myTrips.length === 0 && myStandaloneTrips.length === 0 && activeTrips.length === 0 ? (
-        <CarpoolEmptyState
-          icon="car"
-          title={t('carpool.trips.empty.title')}
-          subtitle={t('carpool.trips.empty.subtitle')}
-          ctaLabel={t('carpool.cta.viewSeats')}
-          onCta={() => setHubMode('ride')}
-        />
+        myTripsTab === 'past' ? (
+          <CarpoolEmptyState
+            icon="time"
+            title="Aucun trajet passé"
+            subtitle="Vos trajets terminés apparaîtront ici une fois les matchs terminés."
+            ctaLabel="Voir les trajets à venir"
+            onCta={() => setMyTripsTab('upcoming')}
+          />
+        ) : (
+          <CarpoolEmptyState
+            icon="car"
+            title="Aucun trajet à venir"
+            subtitle="Vous n'êtes inscrit sur aucun covoiturage pour l'instant. Réservez un trajet ou proposez vos places !"
+            ctaLabel="Rechercher un trajet"
+            onCta={() => setHubMode('ride')}
+          />
+        )
       ) : (
         <>
-          <CarpoolFilterChips
-            options={tripsTabFilters}
-            value={myTripsTab}
-            onChange={setMyTripsTab}
-          />
           {myStandaloneTrips.map((offer, index) => (
             <InteractiveListItem key={`standalone-trip-${offer.id}`} index={index}>
               <StandaloneCarpoolRideCard
@@ -710,13 +913,6 @@ export const CarpoolHomeScreen: React.FC<CarpoolHomeScreenProps> = ({
 
       {profile ? (
         <View style={styles.sectionBlock}>
-          {coachShell ? (
-            <CoachText variant="caption" accent style={styles.coachSectionLabel}>
-              {t('carpool.hub.teamBalance')}
-            </CoachText>
-          ) : (
-            <Text style={styles.sectionLabel}>{t('carpool.hub.teamBalance')}</Text>
-          )}
           <CarpoolBalancePanel events={upcoming} onPropose={() => setHubMode('drive')} />
         </View>
       ) : null}
@@ -783,45 +979,82 @@ function createStyles(palette: CarpoolUiPalette) {
     root: { flex: 1, backgroundColor: palette.bg },
     foreground: { flex: 1, zIndex: 1 },
     body: { flex: 1, minHeight: 0, backgroundColor: 'transparent' },
-      uberSearchBlock: {
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    marginBottom: spacing.md,
-  },
-  uberSearchTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    marginBottom: spacing.md,
-  },
-  uberInputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    height: 48,
-    borderRadius: radius.md,
-    marginBottom: spacing.md,
-  },
-  uberInput: {
-    flex: 1,
-    marginLeft: spacing.sm,
-    fontSize: 16,
-  },
-  uberQuickChips: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  uberChip: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-  },
-  uberChipText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  modeTitle: {
+    uberSearchBlock: {
+      padding: 16,
+      borderRadius: 20,
+      borderWidth: 1,
+      marginBottom: 12,
+    },
+    searchHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    uberSearchTitle: {
+      fontSize: 18,
+      fontWeight: '900',
+      color: '#FFFFFF',
+      letterSpacing: -0.3,
+    },
+    clearSearchText: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    uberInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: '#1C1D26',
+      borderWidth: 1,
+      borderColor: '#282836',
+      marginBottom: 12,
+      gap: 8,
+    },
+    uberInput: {
+      flex: 1,
+      fontSize: 14,
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
+    uberQuickChips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    uberChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      backgroundColor: '#1C1D26',
+      borderWidth: 1,
+      borderColor: '#282836',
+    },
+    uberChipText: {
+      fontSize: 11.5,
+      fontWeight: '600',
+      color: '#A1A1AA',
+    },
+    bookCta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      borderRadius: 12,
+      marginTop: 10,
+    },
+    bookCtaText: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: '#000000',
+    },
+    modeTitle: {
       fontFamily: CARPOOL_SITE.display,
       fontSize: 26,
       lineHeight: 30,

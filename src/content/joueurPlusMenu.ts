@@ -81,6 +81,15 @@ export function buildJoueurPlusMenuItems({
       badge: unreadCount,
     },
     {
+      id: 'covoiturage',
+      label: 'Covoiturage',
+      subtitle: 'Trajets équipe & matchs',
+      icon: 'car',
+      action: { kind: 'tab', tab: 'covoiturage' },
+      visible: has('covoiturage'),
+      unavailable: unavailable('covoiturage'),
+    },
+    {
       id: 'recrutement',
       label: getJoueurGameTabLabel('recrutement', ageGroup),
       subtitle: 'Club, groupe & mercato',
@@ -90,14 +99,6 @@ export function buildJoueurPlusMenuItems({
       unavailable: unavailable('recrutement'),
     },
     {
-      id: 'train',
-      label: 'Entraînement',
-      subtitle: 'Programme & séances',
-      icon: 'football',
-      action: { kind: 'dashboard', view: 'train' },
-      visible: true,
-    },
-    {
       id: 'reels',
       label: getJoueurGameTabLabel('reels', ageGroup),
       subtitle: 'Clips & résumés vidéo',
@@ -105,14 +106,6 @@ export function buildJoueurPlusMenuItems({
       action: { kind: 'tab', tab: 'reels' },
       visible: has('reels'),
       unavailable: unavailable('reels'),
-    },
-    {
-      id: 'covoiturage',
-      label: getJoueurGameTabLabel('covoiturage', ageGroup),
-      subtitle: 'Trajets match & entraînement',
-      icon: 'car',
-      action: { kind: 'tab', tab: 'covoiturage' },
-      visible: has('covoiturage'),
     },
     {
       id: 'shop',
@@ -153,14 +146,6 @@ export function buildJoueurPlusMenuItems({
       subtitle: 'Conseils personnalisés',
       icon: 'star-four-points',
       action: { kind: 'dashboard', view: 'tactics_coach' },
-      visible: true,
-    },
-    {
-      id: 'coach_humain',
-      label: 'Coach humain',
-      subtitle: 'Réserver un coach réel',
-      icon: 'football',
-      action: { kind: 'dashboard', view: 'train_coach' },
       visible: true,
     },
   ];

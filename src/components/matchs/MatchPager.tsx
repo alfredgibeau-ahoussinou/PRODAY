@@ -32,6 +32,7 @@ interface MatchPagerProps {
   centreBadge?: number | string;
   gameMode?: boolean;
   coachSkin?: boolean;
+  hideRail?: boolean;
 }
 
 export const MatchPager: React.FC<MatchPagerProps> = ({
@@ -43,6 +44,7 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
   centreBadge,
   gameMode = false,
   coachSkin = false,
+  hideRail = false,
 }) => {
   const { colors } = useAppTheme();
   const skin = useMatchSkinTokens();
@@ -172,15 +174,17 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
 
   return (
     <View style={styles.root}>
-      <MatchChapterRail
-        active={activeChapter}
-        onSelect={(id) => goToChapter(id, false)}
-        amicauxBadge={amicauxBadge}
-        convocationsBadge={convocationsBadge}
-        centreBadge={centreBadge}
-        gameMode={gameMode}
-        coachSkin={coachSkin}
-      />
+      {!hideRail ? (
+        <MatchChapterRail
+          active={activeChapter}
+          onSelect={(id) => goToChapter(id, false)}
+          amicauxBadge={amicauxBadge}
+          convocationsBadge={convocationsBadge}
+          centreBadge={centreBadge}
+          gameMode={gameMode}
+          coachSkin={coachSkin}
+        />
+      ) : null}
 
       <Animated.ScrollView
         ref={scrollRef}
@@ -235,15 +239,15 @@ export const MatchPager: React.FC<MatchPagerProps> = ({
 };
 
 function createStyles(accent: string, skin: ReturnType<typeof useMatchSkinTokens>) {
-  const border = skin.joueurSkin ? skin.border : MATCH_SITE.border;
+  const border = skin.joueurSkin ? 'rgba(255,255,255,0.06)' : MATCH_SITE.border;
   const muted = skin.joueurSkin ? skin.muted : MATCH_SITE.muted;
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
     pager: { flex: 1, minHeight: 0 },
     footer: {
       alignItems: 'center',
-      paddingVertical: spacing.sm,
-      gap: 2,
+      paddingVertical: 6,
+      gap: 3,
       marginHorizontal: spacing.lg,
       marginBottom: spacing.xs,
       borderTopWidth: StyleSheet.hairlineWidth,

@@ -34,7 +34,6 @@ import {
   PRO_CLUB_SHELL_TABS,
   PRO_CLUB_OVERFLOW_TABS,
   PRO_COACH_SHELL_TABS,
-  PRO_ORGANIZER_SHELL_TABS,
   PRO_PLAYER_SHELL_TABS,
   PRO_PLAYER_OVERFLOW_TABS,
   SUPPORTER_SHELL_TABS,
@@ -84,12 +83,6 @@ const PRO_SIGNUP_GROUPS: SignupRoleGroup[] = [
     label: 'Joueurs',
     hint: 'Carrière club, stats, convocations et progression',
     roles: ['player'],
-  },
-  {
-    id: 'events',
-    label: 'Événements (intégré)',
-    hint: 'Tournois et stages — gérés depuis l’espace Club',
-    roles: ['organizer'],
   },
   {
     id: 'partner',
@@ -218,8 +211,6 @@ export function getVisibleMainTabs(
   } else if (isProFamilyLine(effectiveLine)) {
     if (r === 'player') {
       tabs = [...PRO_PLAYER_SHELL_TABS, ...PRO_PLAYER_OVERFLOW_TABS];
-    } else if (r === 'organizer') {
-      tabs = [...PRO_ORGANIZER_SHELL_TABS];
     } else if (r === 'coach') {
       tabs = [...PRO_COACH_SHELL_TABS];
     } else if (r === 'club') {

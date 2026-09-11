@@ -144,7 +144,7 @@ export function ClubPlayersPendingRow({
               </View>
             )}
             {categoryHint && (
-              <View style={[styles.rolePill, { backgroundColor: tokens.surfaceElevated, borderColor: tokens.borderStrong }]}>
+              <View style={[styles.rolePill, { backgroundColor: tokens.elevated, borderColor: tokens.borderStrong }]}>
                 <ClubText variant="caption" style={{ color: tokens.foreground, fontSize: 10, fontWeight: '700' }}>
                   {categoryHint}
                 </ClubText>

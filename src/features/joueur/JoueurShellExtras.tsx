@@ -10,7 +10,15 @@ export function JoueurShellExtras() {
   const tabNav = useTabNavigationOptional();
   const live = Boolean(joueur?.isJoueurPlayer && joueur.ready && !joueur.needsGate);
   if (!live) return null;
-  if (tabNav?.activeTab === 'profil') return null;
+  if (
+    tabNav?.activeTab === 'profil' ||
+    tabNav?.activeTab === 'feed' ||
+    tabNav?.activeTab === 'plus' ||
+    tabNav?.activeTab === 'matchs' ||
+    tabNav?.activeTab === 'messages' ||
+    tabNav?.activeTab === 'covoiturage'
+  )
+    return null;
   if (isJoueurDashboardOverlayView(tabNav?.pendingDashboardView)) return null;
   return <PlayerCoachAiFab />;
 }

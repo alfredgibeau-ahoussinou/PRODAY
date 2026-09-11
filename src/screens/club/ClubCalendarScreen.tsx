@@ -21,6 +21,7 @@ import {
 } from '../../features/club/ui/clubCalendarModel';
 import { PressableSpring, PushScreenTransition } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
+import { detectPitchConflicts } from '../../features/club/ui/clubFacilitiesModel';
 import { MatchEventHubScreen } from '../MatchEventHubScreen';
 import { TeamEventDetailScreen } from '../TeamEventDetailScreen';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
@@ -57,6 +58,11 @@ export function ClubCalendarScreen() {
   const subtitle = useMemo(
     () => resolveClubCalendarSubtitle(range, items.length),
     [range, items.length],
+  );
+
+  const pitchConflicts = useMemo(
+    () => detectPitchConflicts(ws.events),
+    [ws.events],
   );
 
   const openList = (nav: 'matches' | 'trainings' | 'events') => {
@@ -129,6 +135,33 @@ export function ClubCalendarScreen() {
             </ClubText>
           </PressableSpring>
         </View>
+
+        {pitchConflicts.length > 0 ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              marginHorizontal: 16,
+              marginBottom: 12,
+              padding: 12,
+              borderRadius: 12,
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              borderWidth: 1,
+              borderColor: 'rgba(239, 68, 68, 0.3)',
+            }}
+          >
+            <Icon name="warning" size={20} color="#F87171" />
+            <View style={{ flex: 1 }}>
+              <ClubText variant="section" style={{ fontSize: 13, color: '#F87171', fontWeight: '800' }}>
+                Conflit horaire sur terrain ({pitchConflicts.length})
+              </ClubText>
+              <ClubText variant="caption" muted style={{ color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+                {pitchConflicts[0].pitchName} · {pitchConflicts[0].eventATitle} et {pitchConflicts[0].eventBTitle} ({pitchConflicts[0].timeSlotLabel})
+              </ClubText>
+            </View>
+          </View>
+        ) : null}
 
         {items.length === 0 ? (
           <ClubEmptyState

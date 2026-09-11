@@ -24,12 +24,14 @@ export default function HomePage() {
               ProDay
             </p>
             <h2 className="mt-4 max-w-xl font-display text-3xl font-medium tracking-[-0.035em] sm:text-4xl">
-              L&apos;infrastructure de votre football.
+              Tout votre club. Un seul endroit.
             </h2>
+            <p className="mt-2 font-display text-xl font-medium text-amber-300 sm:text-2xl">
+              Moins d&apos;administration. Plus de football.
+            </p>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/70 sm:text-base">
-              Une porte d&apos;entrée par rôle · Club, Coach, Joueur, Parent,
-              Supporter, Sponsor · vers le même écosystème. Plus de WhatsApp
-              pour une info et de tableur pour une autre.
+              Une plateforme unifiée par rôle · Club, Coach, Joueur, Parent,
+              Supporter, Sponsor · reliée en temps réel.
             </p>
             <p className="mt-3 text-sm font-semibold text-white/90">
               Club : à partir de 3 € / adhérent · sur devis selon la taille.

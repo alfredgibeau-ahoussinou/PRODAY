@@ -90,7 +90,6 @@ export const COACH_SECONDARY_NAV_IDS: CoachNavItemId[] = [
   'match_center',
   'entrainements',
   'joueurs',
-  'smart_tactics',
   'mes_videos',
   'forme',
   'carpool',
@@ -110,7 +109,6 @@ export const COACH_HOME_DEST_IDS: CoachNavItemId[] = COACH_MENU_DEST_IDS;
 
 /** @deprecated Utiliser COACH_SECONDARY_NAV_IDS — conservé pour compat tests/outils. */
 export const COACH_MORE_NAV_IDS: CoachNavItemId[] = [
-  'smart_tactics',
   'mes_videos',
   'forme',
   'carpool',
@@ -169,11 +167,11 @@ const joueursItem: CoachNavItem = {
 
 const coachIaItem: CoachNavItem = {
   id: 'coach_ia',
-  label: 'IA',
-  shortLabel: 'IA',
-  hint: 'Analyse · stratégie · actions',
+  label: 'Tactique',
+  shortLabel: 'Tactique',
+  hint: 'Analyse · stratégie · causerie',
   icon: 'star-four-points',
-  aiBadge: true,
+  aiBadge: false,
   tab: 'home',
 };
 
@@ -324,7 +322,7 @@ export const COACH_TOOL_GROUPS: CoachToolGroup[] = [
   {
     id: 'performance',
     label: 'Performance',
-    toolIds: ['smart_tactics', 'mes_videos', 'forme'],
+    toolIds: ['mes_videos', 'forme'],
   },
 ];
 
@@ -345,11 +343,9 @@ export const COACH_HOME_TOOLS: {
             ? 'Communauté'
             : id === 'mes_videos'
               ? 'Vidéos'
-              : id === 'smart_tactics'
-                ? 'Tactique'
-                : id === 'coaching_perso'
-                  ? 'Coaching perso'
-                  : (item?.label ?? id),
+              : id === 'coaching_perso'
+                ? 'Coaching perso'
+                : (item?.label ?? id),
       icon: item?.icon ?? 'settings',
     };
   }),
@@ -358,7 +354,7 @@ export const COACH_HOME_TOOLS: {
 /** Deep links d’anciennes pages → onglet parent. */
 export function canonicalizeCoachNav(id: CoachNavResolvableId): CoachNavItemId {
   if (id === 'pitch' || id === 'accueil') return 'today';
-  if (id === 'effectif') return 'equipe';
+  if (id === 'effectif' || id === 'smart_tactics') return 'equipe';
   if (id === 'planning') return 'entrainements';
   if (id === 'matchs') return 'match_center';
   return id;

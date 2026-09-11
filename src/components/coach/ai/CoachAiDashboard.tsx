@@ -9,7 +9,7 @@ import { radius, spacing } from '../../../theme/designTokens';
 import { CoachPane } from '../CoachScreenHeader';
 import { getCoachPageIdentity } from '../../../content/coachPageIdentity';
 
-export type AiPageId = 'training' | 'opponent' | 'performance' | 'chat';
+export type AiPageId = 'training' | 'opponent' | 'tactics' | 'chat';
 
 interface CoachAiDashboardProps {
   onSelectPage: (page: AiPageId) => void;
@@ -22,21 +22,27 @@ export function CoachAiDashboard({ onSelectPage }: CoachAiDashboardProps) {
     {
       id: 'training',
       title: 'Préparer une séance',
-      subtitle: 'Générer des exercices adaptés à votre équipe et au calendrier.',
+      subtitle: 'Générer des exercices et séances adaptées (Blood Bath, Bloc bas, CPA, etc.).',
       icon: 'football',
     },
     {
       id: 'opponent',
-      title: 'Analyse Tactique',
-      subtitle: 'Décortiquer l\'adversaire et tirer les leçons du dernier match.',
-      icon: 'stats-chart',
+      title: 'Analyse Tactique & Adversaire',
+      subtitle: 'Décortiquer le plan de jeu adverse (contrer 4-3-3, 3-5-2, bloc bas).',
+      icon: 'shield',
+    },
+    {
+      id: 'tactics',
+      title: 'Alignement & Schémas Tactiques IA',
+      subtitle: 'Configurer le 11 idéal parmi 24 schémas et l’appliquer directement sur le terrain de l’Équipe.',
+      icon: 'grid',
     },
     {
       id: 'chat',
-      title: 'Chat Assistant',
-      subtitle: 'Posez des questions libres au Copilote IA.',
-      icon: 'chat',
-    }
+      title: 'Chat Copilote IA',
+      subtitle: 'Posez vos questions libres sur la causerie, le management ou la stratégie.',
+      icon: 'chatbubbles',
+    },
   ];
 
   return (

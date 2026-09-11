@@ -183,7 +183,7 @@ const QUESTS_ADULT: JoueurDailyQuestDef[] = [
   {
     id: 'daily-train',
     title: 'Session terrain',
-    body: 'Lance un entraînement (IA ou solo)',
+    body: 'Lance un entraînement terrain ou individuel',
     xp: 40,
     stars: 2,
     tabHint: 'home',
@@ -214,7 +214,7 @@ const QUESTS_ADULT: JoueurDailyQuestDef[] = [
   },
   {
     id: 'daily-coach',
-    title: 'Coach IA',
+    title: 'Conseil Coach',
     body: 'Question tactique / amélioration',
     xp: 30,
     stars: 1,

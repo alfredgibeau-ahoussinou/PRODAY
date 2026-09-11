@@ -48,7 +48,9 @@ import { ClubMatchesScreen } from '../../../screens/club/ClubMatchesScreen';
 import { ClubTrainingsScreen } from '../../../screens/club/ClubTrainingsScreen';
 import { ClubCommunicationScreen } from '../../../screens/club/ClubCommunicationScreen';
 import { ClubHubScreen, ClubPackScreen } from '../../../screens/club/ClubHubScreen';
+import { ClubStandingsScreen } from '../../../screens/club/ClubStandingsScreen';
 import { renderClubSecondaryStub } from '../../../screens/club/ClubSecondaryScreens';
+
 import { useAuth } from '../../../context/AuthContext';
 import { useSessionProfile } from '../../../hooks/useSessionProfile';
 import { usePlatformFeatureFlags } from '../../../hooks/usePlatformFeatureFlags';
@@ -346,6 +348,8 @@ function renderClubPane(navId: ClubNavItemId, toolItems: ReturnType<typeof resol
       return <ClubMatchesScreen />;
     case 'trainings':
       return <ClubTrainingsScreen />;
+    case 'standings':
+      return <ClubStandingsScreen />;
     case 'communication':
       return <ClubCommunicationScreen />;
     case 'club':
@@ -360,6 +364,7 @@ function renderClubPane(navId: ClubNavItemId, toolItems: ReturnType<typeof resol
       return <ClubHomeScreen />;
   }
 }
+
 
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({

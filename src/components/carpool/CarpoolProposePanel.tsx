@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, ActivityIndicator, RefreshControl, View } from 'react-native';
+import { ScrollView, StyleSheet, ActivityIndicator, RefreshControl, View, Text } from 'react-native';
 import type { User } from '../../models/User';
 import type { TeamEvent } from '../../models/TeamEvent';
 import type { StandaloneCarpoolOffer } from '../../models/StandaloneCarpoolOffer';
@@ -8,18 +8,19 @@ import {
   isCarpoolDriver,
 } from '../../utils/carpoolBalance';
 import { ProDayText } from '../ui/ProDayText';
-import { CarpoolEmptyState, CarpoolSectionIntro } from './carpoolUi';
+import { Icon } from '../ui/Icon';
+import { PressableSpring } from '../motion';
+import { CarpoolEmptyState } from './carpoolUi';
 import { CarpoolProposeCard } from './CarpoolProposeCard';
 import { StandaloneCarpoolForm } from './StandaloneCarpoolForm';
 import { isUpcomingStandaloneOffer } from '../../utils/standaloneCarpool';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing } from '../../theme/designTokens';
+import { spacing, radius } from '../../theme/designTokens';
 import {
   type CarpoolUiPalette,
   useCarpoolThemedStyles,
   useCarpoolUi,
 } from './CarpoolUiContext';
-import { CARPOOL_SITE } from '../../content/carpoolSite';
 
 interface CarpoolProposePanelProps {
   profile: User | null;
@@ -33,7 +34,6 @@ interface CarpoolProposePanelProps {
   scrollProps: Record<string, unknown>;
   pagePad: { paddingHorizontal: number; paddingBottom: number };
   onLoginRequired?: () => void;
-  /** Coach shell — masque l’intro titre du mode. */
   coachShell?: boolean;
 }
 
@@ -58,6 +58,7 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
   const { t } = useTranslation();
   const palette = useCarpoolUi();
   const styles = useCarpoolThemedStyles(createStyles);
+  const [driverTab, setDriverTab] = useState<'convocations' | 'free'>('convocations');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [standaloneExpanded, setStandaloneExpanded] = useState<string | 'new' | null>('new');
 
@@ -83,13 +84,6 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
     [proposeEvents, profile?.uid]
   );
 
-  const bookedElsewhere = profile
-    ? proposeEvents.filter((e) => {
-        const s = carpoolEventSummaryForUser(e, profile.uid);
-        return s.myBookingDriverUid && !s.isDriver;
-      }).length
-    : 0;
-
   const activeStandalone = useMemo(
     () =>
       standaloneOffers.filter(
@@ -108,7 +102,7 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
         <CarpoolEmptyState
           icon="car"
           title={t('carpool.login.title')}
-        subtitle={t('carpool.propose.convocationsSub')}
+          subtitle={t('carpool.propose.convocationsSub')}
           ctaLabel={t('carpool.login.cta')}
           onCta={onLoginRequired}
         />
@@ -124,117 +118,170 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
       }
       {...scrollProps}
     >
-      {coachShell ? null : (
-        <CarpoolSectionIntro
-          icon="add"
-          title={t('carpool.hub.driveTitle')}
-          subtitle={t('carpool.hub.driveSupport')}
-        />
-      )}
-
-      {standaloneLoading ? (
-        <ActivityIndicator color={palette.signal} style={styles.loader} />
-      ) : (
-        <>
-          <ProDayText variant="section" style={styles.sectionTitle}>
-            {t('carpool.propose.freeTrips')}
-          </ProDayText>
-          <StandaloneCarpoolForm
-            profile={profile}
-            offer={null}
-            expanded={standaloneExpanded === 'new'}
-            onToggle={() =>
-              setStandaloneExpanded((prev) => (prev === 'new' ? null : 'new'))
-            }
-            onSaved={onRefresh}
-          />
-          {activeStandalone.map((offer) => (
-            <StandaloneCarpoolForm
-              key={offer.id}
-              profile={profile}
-              offer={offer}
-              expanded={standaloneExpanded === offer.id}
-              onToggle={() =>
-                setStandaloneExpanded((prev) => (prev === offer.id ? null : offer.id))
-              }
-              onSaved={onRefresh}
-            />
-          ))}
-        </>
-      )}
-
-      <ProDayText variant="section" style={styles.sectionTitle}>
-        {t('carpool.propose.onConvocations')}
-      </ProDayText>
-
-      {bookedElsewhere > 0 ? (
-        <View style={styles.hint}>
-          <ProDayText variant="caption" style={styles.hintText}>
-            {t('carpool.propose.bookedElsewhere', { n: bookedElsewhere })}
-          </ProDayText>
+      {/* COCKPIT CONDUCTEUR HERO */}
+      <View style={styles.heroCard}>
+        <View style={styles.heroHeader}>
+          <View style={[styles.heroIconOrb, { backgroundColor: `${palette.signal}18`, borderColor: `${palette.signal}35` }]}>
+            <Icon name="car" size={20} color={palette.signal} />
+          </View>
+          <View style={styles.heroTitleCol}>
+            <Text style={styles.heroTitle}>Espace Conducteur</Text>
+            <Text style={styles.heroSub}>
+              Emmenez vos coéquipiers aux matchs ou publiez un trajet libre.
+            </Text>
+          </View>
         </View>
-      ) : null}
 
-      {loading ? (
-        <ActivityIndicator color={palette.signal} style={styles.loader} />
-      ) : proposeEvents.length === 0 ? (
-        <CarpoolEmptyState
-          icon="calendar"
-          title={t('carpool.propose.noConvocation')}
-          subtitle={t('carpool.propose.noMatchSub')}
-        />
+        {/* DRIVER SEGMENTED BAR */}
+        <View style={styles.segmentTrack}>
+          <PressableSpring
+            onPress={() => setDriverTab('convocations')}
+            scaleTo={0.97}
+            haptic
+            style={[
+              styles.segmentPill,
+              driverTab === 'convocations' && [
+                styles.segmentPillActive,
+                { borderColor: `${palette.signal}60` },
+              ],
+            ]}
+          >
+            <Icon
+              name="calendar"
+              size={14}
+              color={driverTab === 'convocations' ? palette.signal : '#A1A1AA'}
+            />
+            <Text
+              style={[
+                styles.segmentText,
+                driverTab === 'convocations' && { color: palette.signal, fontWeight: '800' },
+              ]}
+            >
+              Sur Convocations ({proposeEvents.length})
+            </Text>
+          </PressableSpring>
+
+          <PressableSpring
+            onPress={() => setDriverTab('free')}
+            scaleTo={0.97}
+            haptic
+            style={[
+              styles.segmentPill,
+              driverTab === 'free' && [
+                styles.segmentPillActive,
+                { borderColor: `${palette.signal}60` },
+              ],
+            ]}
+          >
+            <Icon
+              name="add"
+              size={14}
+              color={driverTab === 'free' ? palette.signal : '#A1A1AA'}
+            />
+            <Text
+              style={[
+                styles.segmentText,
+                driverTab === 'free' && { color: palette.signal, fontWeight: '800' },
+              ]}
+            >
+              Trajet Libre ({activeStandalone.length})
+            </Text>
+          </PressableSpring>
+        </View>
+      </View>
+
+      {/* CONTENT BASED ON SELECTED TAB */}
+      {driverTab === 'convocations' ? (
+        <>
+          {loading ? (
+            <ActivityIndicator color={palette.signal} style={styles.loader} />
+          ) : proposeEvents.length === 0 ? (
+            <CarpoolEmptyState
+              icon="calendar"
+              title="Aucune convocation trouvée"
+              subtitle="Vous n'avez pas de match ou entraînement officiel nécessitant un covoiturage pour l'instant. Vous pouvez créer un trajet libre."
+              ctaLabel="Créer un trajet libre"
+              onCta={() => setDriverTab('free')}
+            />
+          ) : (
+            <>
+              {activeOffers.length > 0 ? (
+                <View style={styles.sectionWrap}>
+                  <Text style={styles.sectionHeader}>
+                    VOS TRAJETS PUBLIÉS ({activeOffers.length})
+                  </Text>
+                  {activeOffers.map((event) => (
+                    <CarpoolProposeCard
+                      key={event.id}
+                      event={event}
+                      profile={profile}
+                      expanded={expandedId === event.id}
+                      onToggle={() => toggleExpanded(event.id)}
+                      onPublished={onRefresh}
+                      onOpenDetail={() => onOpenEvent(event.id)}
+                    />
+                  ))}
+                </View>
+              ) : null}
+
+              {newProposals.length > 0 ? (
+                <View style={styles.sectionWrap}>
+                  <Text style={styles.sectionHeader}>
+                    ÉVÉNEMENTS À VENIR ({newProposals.length})
+                  </Text>
+                  {newProposals.map((event) => (
+                    <CarpoolProposeCard
+                      key={event.id}
+                      event={event}
+                      profile={profile}
+                      expanded={expandedId === event.id}
+                      onToggle={() => toggleExpanded(event.id)}
+                      onPublished={onRefresh}
+                      onOpenDetail={() => onOpenEvent(event.id)}
+                    />
+                  ))}
+                </View>
+              ) : null}
+            </>
+          )}
+        </>
       ) : (
         <>
-          {activeOffers.length > 0 ? (
-            <>
-              <ProDayText variant="section" style={styles.sectionTitle}>
-                {t('carpool.propose.publishedTrips', { n: activeOffers.length })}
-              </ProDayText>
-              {activeOffers.map((event) => (
-                <CarpoolProposeCard
-                  key={event.id}
-                  event={event}
-                  profile={profile}
-                  expanded={expandedId === event.id}
-                  onToggle={() => toggleExpanded(event.id)}
-                  onPublished={onRefresh}
-                  onOpenDetail={() => onOpenEvent(event.id)}
-                />
-              ))}
-            </>
-          ) : null}
-
-          {newProposals.length > 0 ? (
-            <>
-              <ProDayText variant="section" style={styles.sectionTitle}>
-                {t('carpool.propose.upcoming', {
-                  label: t(
-                    activeOffers.length > 0
-                      ? 'carpool.propose.upcomingNew'
-                      : 'carpool.propose.upcomingEvents'
-                  ),
-                  n: newProposals.length,
-                })}
-              </ProDayText>
-              {newProposals.map((event) => (
-                <CarpoolProposeCard
-                  key={event.id}
-                  event={event}
-                  profile={profile}
-                  expanded={expandedId === event.id}
-                  onToggle={() => toggleExpanded(event.id)}
-                  onPublished={onRefresh}
-                  onOpenDetail={() => onOpenEvent(event.id)}
-                />
-              ))}
-            </>
-          ) : activeOffers.length === 0 ? (
-            <CarpoolEmptyState
-              icon="car"
-              title={t('carpool.propose.empty.title')}
-              subtitle={t('carpool.propose.empty.subtitle')}
-            />
-          ) : null}
+          {standaloneLoading ? (
+            <ActivityIndicator color={palette.signal} style={styles.loader} />
+          ) : (
+            <View style={styles.sectionWrap}>
+              <Text style={styles.sectionHeader}>NOUVEAU TRAJET LIBRE</Text>
+              <StandaloneCarpoolForm
+                profile={profile}
+                offer={null}
+                expanded={standaloneExpanded === 'new'}
+                onToggle={() =>
+                  setStandaloneExpanded((prev) => (prev === 'new' ? null : 'new'))
+                }
+                onSaved={onRefresh}
+              />
+              {activeStandalone.length > 0 ? (
+                <>
+                  <Text style={[styles.sectionHeader, { marginTop: 16 }]}>
+                    VOS TRAJETS LIBRES ACTIFS ({activeStandalone.length})
+                  </Text>
+                  {activeStandalone.map((offer) => (
+                    <StandaloneCarpoolForm
+                      key={offer.id}
+                      profile={profile}
+                      offer={offer}
+                      expanded={standaloneExpanded === offer.id}
+                      onToggle={() =>
+                        setStandaloneExpanded((prev) => (prev === offer.id ? null : offer.id))
+                      }
+                      onSaved={onRefresh}
+                    />
+                  ))}
+                </>
+              ) : null}
+            </View>
+          )}
         </>
       )}
     </ScrollView>
@@ -243,20 +290,86 @@ export const CarpoolProposePanel: React.FC<CarpoolProposePanelProps> = ({
 
 function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
-    hint: {
-      padding: spacing.md,
-      marginBottom: spacing.md,
-      borderLeftWidth: 3,
-      borderLeftColor: palette.signal,
-      backgroundColor: palette.signalSoft,
+    heroCard: {
+      backgroundColor: '#14141A',
+      borderWidth: 1,
+      borderColor: '#22222E',
+      borderRadius: 20,
+      padding: 16,
+      marginBottom: 16,
+      gap: 14,
     },
-    hintText: { color: palette.ink, fontWeight: '700' },
-    sectionTitle: {
-      marginBottom: spacing.sm,
-      marginTop: spacing.xs,
-      color: palette.ink,
-      fontFamily: CARPOOL_SITE.display,
+    heroHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
-    loader: { marginVertical: spacing.xl },
+    heroIconOrb: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    heroTitleCol: {
+      flex: 1,
+      gap: 2,
+    },
+    heroTitle: {
+      fontSize: 18,
+      fontWeight: '900',
+      color: '#FFFFFF',
+      letterSpacing: -0.3,
+    },
+    heroSub: {
+      fontSize: 12,
+      color: '#A1A1AA',
+      lineHeight: 16,
+    },
+    segmentTrack: {
+      flexDirection: 'row',
+      backgroundColor: '#0F1015',
+      borderRadius: radius.pill,
+      padding: 4,
+      borderWidth: 1,
+      borderColor: '#1C1D26',
+      gap: 4,
+    },
+    segmentPill: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: 'transparent',
+    },
+    segmentPillActive: {
+      backgroundColor: '#1C1D26',
+    },
+    segmentText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#A1A1AA',
+    },
+    sectionWrap: {
+      gap: 10,
+      marginBottom: 16,
+    },
+    sectionHeader: {
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 0.8,
+      color: '#8B8B9A',
+      textTransform: 'uppercase',
+      marginLeft: 4,
+    },
+    loader: {
+      marginVertical: 40,
+    },
   });
 }
+

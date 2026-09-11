@@ -1,6 +1,6 @@
 {
   "name": "proday",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "private": true,
   "main": "index.js",
   "description": "ProDay — plateforme mobile recrutement, tournois, matchs amicaux et sponsoring",
@@ -88,7 +88,8 @@
     "eas:build:android:apk": "eas build --profile preview --platform android",
     "eas:build:android:aab": "eas build --profile production --platform android",
     "eas:submit:production": "eas submit --profile production",
-    "eas:submit:testflight": "eas submit --platform ios --latest --profile production"
+    "eas:submit:testflight": "eas submit --platform ios --latest --profile production",
+    "census:fff": "node scripts/seed-fff-club-census.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

@@ -53,8 +53,8 @@ export const clubLicenseService = {
     } catch {
       // Fallback via profileService
       await profileService.updateProfile(playerUid, {
+        verification_status: 'VERIFIED',
         profile: {
-          verification_status: 'verified',
           ...(licenseNumber ? { license_number: licenseNumber.trim() } : {}),
         },
       });

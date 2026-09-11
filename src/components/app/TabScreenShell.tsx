@@ -19,6 +19,8 @@ import { ProDayText } from '../ui/ProDayText';
 import { spacing } from '../../theme/designTokens';
 import { ScreenBackButton } from '../ui/ScreenBackButton';
 import { useJoueurSecondaryTabBack } from '../../hooks/useJoueurSecondaryTabBack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
 
 export type TabScreenShellProps = {
   caption?: string;
@@ -56,6 +58,7 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
   const session = useJoueurSession();
   const tabBack = useJoueurSecondaryTabBack();
   const joueurTheme = useJoueurTheme();
+  const insets = useSafeAreaInsets();
   const useJoueur =
     joueurUniverse === true ||
     (joueurUniverse !== false &&
@@ -63,8 +66,9 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
 
   if (useJoueur && session) {
     const { identity, universeLabel } = session;
+    const playerTheme = usePlayerThemeColors();
     const accent = joueurTheme.accent;
-    const accentBright = joueurTheme.accentBright;
+    const accentSoft = playerTheme.accentSoft ?? `${accent}22`;
     const headerLeft =
       left ?? (tabBack.showBack ? <ScreenBackButton onPress={tabBack.onBack} /> : null);
 
@@ -79,23 +83,24 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
               pointerEvents="none"
             />
             <JoueurParticleField accent={accent} density={identity.density} />
-            <View style={[styles.accentBar, { backgroundColor: accent }]} />
             {!hideHeader ? (
-              <View style={styles.headPad}>
+              <View style={[styles.headPad, { paddingTop: spacing.xs }]}>
                 {headerLeft ? <View style={styles.backRow}>{headerLeft}</View> : null}
-                <View style={[styles.hudPlate, { borderColor: accent }]}>
-                  <JoueurHudCorners color={accent} size={12} thickness={2} />
+                <View style={[styles.hudPlate, { borderColor: PLAYER_DARK.border }]}>
                   <View style={styles.hudTop}>
-                    <View style={{ flex: 1, gap: 4 }}>
-                      <ProDayText
-                        variant="caption"
-                        style={[styles.kicker, { color: accent }]}
-                      >
-                        ▶ {(caption ?? universeLabel.short).toUpperCase()} ·{' '}
-                        {identity.hudLabel}
-                      </ProDayText>
+                    <View style={{ flex: 1, gap: 5 }}>
+                      <View style={[styles.kickerBadge, { backgroundColor: accentSoft, borderColor: `${accent}33` }]}>
+                        <View style={[styles.kickerDot, { backgroundColor: accent }]} />
+                        <ProDayText
+                          variant="caption"
+                          style={[styles.kicker, { color: accent }]}
+                          numberOfLines={1}
+                        >
+                          {(caption ?? universeLabel.short).toUpperCase()} · {identity.hudLabel}
+                        </ProDayText>
+                      </View>
                       <ProDayText variant="title" style={styles.title}>
-                        {title.toUpperCase()}
+                        {title}
                       </ProDayText>
                       {subtitle ? (
                         <ProDayText variant="caption" style={styles.sub}>
@@ -156,17 +161,8 @@ export const TabScreenShell: React.FC<TabScreenShellProps> = ({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   body: { flex: 1, minHeight: 0, zIndex: 1 },
-  accentBar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    zIndex: 3,
-  },
   headPad: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
     paddingBottom: spacing.xs,
     zIndex: 2,
   },
@@ -175,10 +171,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   hudPlate: {
-    borderWidth: 1.5,
-    borderRadius: 22,
-    backgroundColor: PLAYER_DARK.surface,
-    padding: spacing.md,
+    borderWidth: 1,
+    borderRadius: 20,
+    backgroundColor: PLAYER_DARK.surfaceRaised,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md + 2,
     gap: spacing.sm,
     overflow: 'hidden',
   },
@@ -187,18 +184,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
+  kickerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  kickerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   kicker: {
     textTransform: 'uppercase',
-    letterSpacing: 2,
-    fontSize: 9,
-    fontWeight: '900',
+    letterSpacing: 1.2,
+    fontSize: 9.5,
+    fontWeight: '800',
   },
   title: {
     color: PLAYER_DARK.text,
     fontWeight: '900',
-    letterSpacing: 0.4,
-    fontSize: 20,
+    letterSpacing: -0.4,
+    fontSize: 22,
   },
-  sub: { color: PLAYER_DARK.textMuted, lineHeight: 17 },
+  sub: {
+    color: PLAYER_DARK.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500',
+  },
   stats: { marginTop: 2 },
 });

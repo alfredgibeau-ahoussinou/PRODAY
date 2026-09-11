@@ -5,6 +5,7 @@ import { ClubRosterBoardPanel } from '../../components/club/ClubRosterBoardPanel
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { openClubHelpChatbot } from '../../features/club/shell/clubHelpOpen';
 import {
   ClubActionRow,
@@ -25,6 +26,7 @@ const RECRUIT_TAB_ORDER: Tab[] = ['internal', 'external', 'ai'];
 
 /** Recrutement — bassin interne + Suivi + pistes IA (honnêtes / Copilote réel). */
 export function ClubRecruitmentScreen() {
+  const shellNav = useClubShellNav();
   const profile = useSessionProfile();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
@@ -96,10 +98,7 @@ export function ClubRecruitmentScreen() {
                 hint={aiEmpty.primaryHint}
                 onPress={() => {
                   if (!openClubHelpChatbot()) {
-                    Alert.alert(
-                      'Copilote Club',
-                      'Ouvrez le bouton Copilote en bas de l’écran Club pour dialoguer avec l’assistant.',
-                    );
+                    shellNav?.requestNav('assistant');
                   }
                 }}
               />

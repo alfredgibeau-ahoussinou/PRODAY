@@ -35,14 +35,14 @@ export const MessagesTabRail: React.FC<MessagesTabRailProps> = ({
   const joueurTheme = useJoueurTheme();
   const styles = useMemo(() => createStyles(colors, coach), [colors, coach]);
   const badgeBg = coach ? coachTokens.accent : joueur ? joueurTheme.accent : colors.accent;
-  const badgeTextColor = joueur ? '#FFFFFF' : colors.brandInverse;
+  const badgeTextColor = joueur ? '#000000' : colors.brandInverse;
 
-  const trackBg = coach ? coachTokens.surface : colors.surfaceMuted;
-  const trackBorder = coach ? 'transparent' : colors.border;
-  const onBg = coach ? coachTokens.elevated : colors.surface;
-  const onBorder = coach ? 'transparent' : colors.border;
-  const onColor = coach ? coachTokens.foreground : colors.text;
-  const offColor = coach ? coachTokens.muted : colors.textMuted;
+  const trackBg = coach ? coachTokens.surface : joueur ? '#14141A' : colors.surfaceMuted;
+  const trackBorder = coach ? 'transparent' : joueur ? '#22222E' : colors.border;
+  const onBg = coach ? coachTokens.elevated : joueur ? '#1C1D26' : colors.surface;
+  const onBorder = coach ? 'transparent' : joueur ? '#2A2A38' : colors.border;
+  const onColor = coach ? coachTokens.foreground : joueur ? '#FFFFFF' : colors.text;
+  const offColor = coach ? coachTokens.muted : joueur ? '#8B8B9A' : colors.textMuted;
 
   return (
     <View style={styles.wrap}>

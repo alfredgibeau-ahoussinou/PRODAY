@@ -10,15 +10,17 @@ import {
   linkWithCredential,
   GoogleAuthProvider,
   OAuthProvider,
+  deleteUser,
   type AuthCredential,
   type User as FirebaseAuthUser,
 } from 'firebase/auth';
+import { doc, deleteDoc } from 'firebase/firestore';
 import type { FirebaseError } from 'firebase/app';
 import type { User, UserRole, UserProfile } from '../models/User';
 import type { ParentalSettings } from '../models/ParentalSettings';
 import type { AppSpaceId } from '../models/AppSpace';
 import type { ProductLineId } from '../models/ProductLine';
-import { getFirebaseAuth } from '../lib/firebase';
+import { getFirebaseAuth, getDb } from '../lib/firebase';
 import { callFunction, getCallableErrorMessage, isFunctionsUnavailable } from '../lib/firebaseFunctions';
 import { profileService } from './profile.service';
 import { usersService } from './users.service';
@@ -455,11 +457,69 @@ export const authService = {
     if (auth) await firebaseSignOut(auth);
   },
 
+  async deleteAccount(): Promise<void> {
+    const auth = getFirebaseAuth();
+    const user = auth?.currentUser;
+    if (!user) throw new Error('Aucun utilisateur connecté');
+
+    const email = (user.email ?? '').toLowerCase();
+    const isDemo =
+      isBetaAccountBypassed(email) ||
+      email.includes('demo') ||
+      email === 'player.demo@proday.app' ||
+      email === 'coach.demo@proday.app';
+
+    if (isDemo) {
+      // Pour les comptes de démo Apple Review, déconnexion sans suppression du compte partagé
+      await this.signOut();
+      return;
+    }
+
+    // 1. Appel du backend sécurisé Firebase Cloud Functions deleteMyAccount
+    try {
+      await callFunction('deleteMyAccount', {});
+      await this.signOut();
+      return;
+    } catch (fnErr) {
+      if (__DEV__) {
+        console.warn('[authService] deleteMyAccount callable failed, fallback client SDK:', fnErr);
+      }
+    }
+
+    // 2. Fallback direct client SDK : suppression des documents Firestore associés
+    const db = getDb();
+    if (db && user.uid) {
+      try {
+        await deleteDoc(doc(db, 'users', user.uid));
+        await deleteDoc(doc(db, 'user_profiles', user.uid));
+      } catch (err) {
+        console.warn('[authService] Suppression Firestore partielle:', err);
+      }
+    }
+
+    // 3. Suppression du compte Firebase Auth
+    try {
+      await deleteUser(user);
+    } catch (error: unknown) {
+      const code = getFirebaseAuthErrorCode(error);
+      if (code === 'auth/requires-recent-login') {
+        throw new Error(
+          'Pour des raisons de sécurité, veuillez vous déconnecter et vous reconnecter avant de supprimer définitivement votre compte.'
+        );
+      }
+      throw error;
+    }
+  },
+
   async sendPasswordReset(email: string): Promise<void> {
     const auth = getFirebaseAuth();
     if (!auth) throw new Error('Firebase non configuré');
     const customSent = await tryCustomPasswordResetEmail(email.trim());
     if (!customSent) await sendPasswordResetEmail(auth, email.trim());
+  },
+
+  loadProfileAfterAuth(fbUser: FirebaseAuthUser): Promise<User> {
+    return loadProfileAfterAuth(fbUser);
   },
 
   getAuthErrorMessage(error: unknown): string {

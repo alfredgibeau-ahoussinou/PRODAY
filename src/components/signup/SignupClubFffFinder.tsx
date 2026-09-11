@@ -97,11 +97,19 @@ export const SignupClubFffFinder: React.FC<Props> = ({
     // Intentionnel : pas de onAutofill en deps (callback parent non mémoïsé → boucle spinner).
   }, [selectedClub]);
 
-  const pickDoc = async (fn: () => Promise<IdentityDoc | null>) => {
+  const pickDoc = async (
+    fn: () => Promise<{ uri: string; mimeType?: string; source?: string; name?: string; type?: string } | null>,
+  ) => {
     setUploadingDoc(true);
     try {
-      const doc = await fn();
-      if (doc) onSetIdentityDoc(doc);
+      const res = await fn();
+      if (res) {
+        onSetIdentityDoc({
+          uri: res.uri,
+          name: res.name || 'document_verification',
+          type: res.type || res.mimeType || 'application/octet-stream',
+        });
+      }
     } finally {
       setUploadingDoc(false);
     }

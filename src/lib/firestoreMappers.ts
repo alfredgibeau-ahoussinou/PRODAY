@@ -107,6 +107,7 @@ export function userFromFirestore(uid: string, data: Record<string, unknown>): U
     other_contact: data.other_contact as string | undefined,
     avatar_url: (data.avatar_url ?? data.avatarUrl) as string | undefined,
     role: (data.role as UserRole) ?? 'player',
+    is_admin: data.is_admin === true || data.isAdmin === true,
     email_verified: Boolean(data.email_verified ?? data.emailVerified ?? false),
     onboarding_documents_submitted: Boolean(
       data.onboarding_documents_submitted ?? data.onboardingDocumentsSubmitted ?? false
@@ -243,6 +244,13 @@ export function teamFromFirestore(id: string, data: Record<string, unknown>): Te
     gender_scope: (data.gender_scope as Team['gender_scope']) ?? 'unspecified',
     coach_uids: (data.coach_uids as string[]) ?? [],
     season_id: data.season_id as string | undefined,
+    fff_league_id: data.fff_league_id ? String(data.fff_league_id) : undefined,
+    fff_team_id: data.fff_team_id ? String(data.fff_team_id) : undefined,
+    fff_competition_id: data.fff_competition_id ? String(data.fff_competition_id) : undefined,
+    fff_district_code: data.fff_district_code ? String(data.fff_district_code) : undefined,
+    fff_division_label: data.fff_division_label ? String(data.fff_division_label) : undefined,
+    fff_group_label: data.fff_group_label ? String(data.fff_group_label) : undefined,
+    fff_season: data.fff_season ? String(data.fff_season) : undefined,
     is_default: Boolean(data.is_default),
     created_at: toDate(data.created_at),
     updated_at: toDate(data.updated_at),

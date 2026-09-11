@@ -14,13 +14,13 @@ export const ELITE_COLORS = {
   // Bordures
   borderLight: 'rgba(255, 255, 255, 0.07)',
   borderActive: 'rgba(0, 230, 118, 0.35)',
-  borderGold: 'rgba(245, 158, 11, 0.35)',
+  borderGold: 'rgba(255, 255, 255, 0.18)',
 
   // Couleurs d'action football
   pitchGreen: '#00E676',       // Vert pelouse électrique ProDay
   pitchGreenGlow: 'rgba(0, 230, 118, 0.15)',
-  goldMaster: '#F59E0B',       // Or Trophée / MVP
-  goldGlow: 'rgba(245, 158, 11, 0.15)',
+  goldMaster: '#00E676',
+  goldGlow: 'rgba(0, 230, 118, 0.15)',
   alertRed: '#EF4444',         // Rouge Défaite / Absence
   alertRedGlow: 'rgba(239, 68, 68, 0.15)',
   titanium: '#94A3B8',         // Gris titane neutre
@@ -29,8 +29,8 @@ export const ELITE_COLORS = {
   primary: '#00E676',
   primarySoft: 'rgba(0, 230, 118, 0.15)',
   secondary: '#94A3B8',
-  gold: '#F59E0B',
-  goldSoft: 'rgba(245, 158, 11, 0.15)',
+  gold: '#00E676',
+  goldSoft: 'rgba(0, 230, 118, 0.15)',
   danger: '#EF4444',
   dangerSoft: 'rgba(239, 68, 68, 0.15)',
   border: 'rgba(255, 255, 255, 0.07)',

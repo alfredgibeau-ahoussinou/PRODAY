@@ -12,7 +12,7 @@ type SponsorTierStatusBannerProps = {
 const TONE_COLORS = {
   discovery: SPONSOR_THEME.primary,
   territorial: '#34d399',
-  pro: '#fbbf24',
+  pro: SPONSOR_THEME.primary,
   pending: SPONSOR_THEME.textMuted,
 } as const;
 

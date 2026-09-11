@@ -49,12 +49,6 @@ function buildMatchChapters(t: TranslateFn) {
       icon: 'trophy' as IconName,
     },
     {
-      id: 'amicaux' as const,
-      label: tr(t, 'matchs.chapter.amicaux', 'Amicaux'),
-      shortLabel: tr(t, 'matchs.chapter.amicaux', 'Amicaux'),
-      icon: 'handshake' as IconName,
-    },
-    {
       id: 'tournois' as const,
       label: tr(t, 'matchs.chapter.tournois', 'Tournois'),
       shortLabel: tr(t, 'matchs.chapter.tournois', 'Tournois'),
@@ -74,7 +68,7 @@ function buildMatchChapters(t: TranslateFn) {
   }[];
 }
 
-/** Chapitres Match Center visibles pôle joueur (Calendrier · Convocs · En direct · Amicaux). */
+/** Chapitres Match Center visibles pôle joueur (Calendrier · Convocs · Stats). */
 export function getJoueurMatchChapters(t: TranslateFn) {
   return filterJoueurMatchChapters(buildMatchChapters(t));
 }

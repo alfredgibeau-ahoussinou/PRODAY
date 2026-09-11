@@ -15,7 +15,7 @@
 [![Site](https://img.shields.io/badge/Site-proday75.fr-F5D04A?style=for-the-badge&logo=googlechrome&logoColor=black)](https://proday75.fr)
 [![Bêta](https://img.shields.io/badge/Bêta-Ouverte-0891b2?style=for-the-badge)](https://proday75.fr/beta/inscription)
 [![Docs publiques](https://img.shields.io/badge/Docs-PRODAY--docs-0ea5e9?style=for-the-badge)](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
-[![App Version](https://img.shields.io/badge/App-v1.0.9-blue?style=for-the-badge&logo=react)](package.json)
+[![App Version](https://img.shields.io/badge/App-v1.0.10-blue?style=for-the-badge&logo=react)](package.json)
 
 <br/>
 <img src="assets/marketing/app-store/ios-6.5/08-objectif-infrastructure.png" alt="Aperçu ProDay" width="800" />

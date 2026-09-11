@@ -26,6 +26,20 @@ export interface Club {
   owner_uid: string;
   /** N° d’affiliation FFF officiel (DOFA / FootClubs) — clé du cache inscription. */
   fff_affiliation_number?: string;
+  /**
+   * Identifiant de la ligue officielle FFF du club (ex. 'd1_d92', 'r1_idf_a').
+   * Configuré via le hub club ou l'interface admin — source de vérité pour les Classements.
+   */
+  fff_league_id?: string;
+  /** Identifiant de compétition DOFA/FFF correspondant à la ligue active. */
+  fff_competition_id?: string;
+  /** District FFF officiel de la compétition active (ex. 92, 93, 75). */
+  fff_district_code?: string;
+  /** Libellés officiels de division et de groupe publiés par la FFF. */
+  fff_division_label?: string;
+  fff_group_label?: string;
+  /** Saison de rattachement de la configuration FFF (format 2026-2027). */
+  fff_season?: string;
   /** Forfait commercial live / Veo / all-inclusive (devis). */
   commercial_offer_id?: ClubLivePackId;
   /** Montant HT/TTC convenu (admin) — source pour facture Stripe. */

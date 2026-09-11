@@ -22,7 +22,7 @@ describe('poleExperience', () => {
     expect(rolesForProductLine('amateur')).toEqual(['player']);
     const amateurRoles = getSignupRoleGroups('amateur').flatMap((g) => g.roles);
     expect(amateurRoles).toEqual(['player']);
-    expect(rolesForProductLine('pro_staff')).toEqual(['coach', 'organizer']);
+    expect(rolesForProductLine('pro_staff')).toEqual(['coach']);
   });
 
   it('regroupe les supporters sur Supporter', () => {
@@ -38,7 +38,6 @@ describe('poleExperience', () => {
         'player',
         'coach',
         'club',
-        'organizer',
         'sponsor',
       ])
     );
@@ -120,8 +119,6 @@ describe('poleExperience', () => {
     expect(getVisibleMainTabs('pro', 'player').indexOf('feed')).toBe(2);
     expect(getVisibleMainTabs('pro', 'recruiter')).toEqual(['home', 'profil']);
     expect(getVisibleMainTabs('pro', 'agent')).toEqual(['home', 'profil']);
-    expect(getVisibleMainTabs('pro', 'organizer')).toContain('feed');
-    expect(getVisibleMainTabs('pro', 'organizer')).toContain('covoiturage');
     expect(getVisibleMainTabs('pro', 'coach')).toContain('covoiturage');
     expect(getVisibleMainTabs('amateur', 'coach')).toEqual([
       'home',

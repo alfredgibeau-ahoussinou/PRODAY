@@ -32,7 +32,7 @@ describe('coachNavConfig', () => {
     expect(COACH_PRIMARY_NAV_IDS).toEqual(dest);
     expect(findCoachNavItem('today')?.label).toBe('Accueil');
     expect(findCoachNavItem('equipe')?.label).toBe('Équipe');
-    expect(findCoachNavItem('coach_ia')?.label).toBe('IA');
+    expect(['Tactique', 'IA']).toContain(findCoachNavItem('coach_ia')?.label);
     expect(findCoachNavItem('plus')?.label).toBe('Menu');
     expect(findCoachNavItem('profil')?.label).toBe('Profil');
     expect(findCoachNavItem('messages')?.label).toBe('Messages');
@@ -44,9 +44,9 @@ describe('coachNavConfig', () => {
     expect(canonicalizeCoachNav('effectif')).toBe('equipe');
     expect(canonicalizeCoachNav('planning')).toBe('entrainements');
     expect(canonicalizeCoachNav('matchs')).toBe('match_center');
+    expect(canonicalizeCoachNav('smart_tactics')).toBe('equipe');
     expect(primaryTabForCoachNav('gestion')).toBe('plus');
     expect(primaryTabForCoachNav('joueurs')).toBe('plus');
-    expect(primaryTabForCoachNav('smart_tactics')).toBe('plus');
     expect(primaryTabForCoachNav('match_center')).toBe('plus');
     expect(primaryTabForCoachNav('entrainements')).toBe('plus');
     expect(primaryTabForCoachNav('carpool')).toBe('plus');
@@ -62,9 +62,7 @@ describe('coachNavConfig', () => {
     expect(tabFromCoachNav('plus')).toBe('home');
     expect(tabFromCoachNav('coach_ia')).toBe('home');
     expect(tabFromCoachNav('equipe')).toBe('home');
-    expect(coachNavFromTab('feed')).toBe('smart_tactics');
     expect(coachNavFromTab('home')).toBe('today');
-    expect(findCoachNavItem('smart_tactics')?.requiresSmartTactics).toBe(true);
     expect(findCoachNavItem('mes_videos')?.label).toBe('Mes vidéos');
   });
 
@@ -90,19 +88,17 @@ describe('coachNavConfig', () => {
     expect(dest).toContain('plus');
     expect(dest).not.toContain('messages');
     expect(dest).not.toContain('gestion');
-    expect(dest).not.toContain('smart_tactics');
     expect(dest).not.toContain('match_center');
     expect(dest).not.toContain('entrainements');
     expect(dest).not.toContain('joueurs');
     expect(COACH_SECONDARY_NAV_IDS).toContain('match_center');
     expect(COACH_SECONDARY_NAV_IDS).toContain('entrainements');
     expect(COACH_SECONDARY_NAV_IDS).toContain('joueurs');
-    expect(COACH_SECONDARY_NAV_IDS).toContain('smart_tactics');
     expect(COACH_SECONDARY_NAV_IDS).toContain('gestion');
     expect(COACH_SECONDARY_NAV_IDS).not.toContain('plus');
     expect(COACH_MENU_DEST_IDS).toContain('planning');
     expect(COACH_HOME_DEST_IDS).toEqual(COACH_MENU_DEST_IDS);
-    expect(COACH_TOOL_GROUPS.flatMap((g) => g.toolIds)).toHaveLength(9);
+    expect(COACH_TOOL_GROUPS.flatMap((g) => g.toolIds)).toHaveLength(8);
     expect(COACH_TOOL_GROUPS.map((g) => g.id)).toEqual(['match', 'club', 'performance']);
     expect(COACH_TOOL_GROUPS.map((g) => g.label)).toEqual(['Match', 'Club', 'Performance']);
     expect(COACH_HOME_TOOLS.map((t) => t.id)).toEqual([
@@ -112,7 +108,6 @@ describe('coachNavConfig', () => {
       'com_staff',
       'carpool',
       'coaching_perso',
-      'smart_tactics',
       'mes_videos',
       'forme',
     ]);
@@ -124,19 +119,6 @@ describe('coachNavConfig', () => {
 });
 
 describe('resolveCoachNavAccess', () => {
-  it('soft-lock Smart Tactics si hors formule', () => {
-    const more = resolveCoachMoreItems({ canSmartTactics: false, canVideo: true });
-    const st = more.find((i) => i.id === 'smart_tactics');
-    expect(st?.locked).toBe(true);
-    expect(st?.lockReason).toMatch(/Coach Pro/i);
-  });
-
-  it('ouvre Smart Tactics si Coach Pro / club covers', () => {
-    const more = resolveCoachMoreItems({ canSmartTactics: true, canVideo: true });
-    const st = more.find((i) => i.id === 'smart_tactics');
-    expect(st?.locked).toBe(false);
-  });
-
   it('soft-lock Mes vidéos si flag coach_video off', () => {
     const more = resolveCoachMoreItems({ canSmartTactics: true, canVideo: false });
     const video = more.find((i) => i.id === 'mes_videos');
@@ -151,7 +133,7 @@ describe('resolveCoachNavAccess', () => {
     expect(folders.flatMap((f) => f.items).map((i) => i.id)).toContain('plus');
   });
 
-  it('expose les 9 lignes Outils depuis COACH_TOOL_GROUPS', () => {
+  it('expose les 8 lignes Outils depuis COACH_TOOL_GROUPS', () => {
     const menu = resolveCoachMenuItems({ canSmartTactics: true, canVideo: true });
     expect(menu.map((i) => i.id)).toEqual(COACH_HOME_TOOLS.map((t) => t.id));
     expect(menu.find((i) => i.id === 'match_center')?.label).toBe('Matchs');
@@ -160,7 +142,7 @@ describe('resolveCoachNavAccess', () => {
     expect(menu.find((i) => i.id === 'coaching_perso')?.label).toBe('Coaching perso');
     const groups = resolveCoachToolGroups({ canSmartTactics: true, canVideo: true });
     expect(groups).toHaveLength(3);
-    expect(groups.flatMap((g) => g.items)).toHaveLength(9);
+    expect(groups.flatMap((g) => g.items)).toHaveLength(8);
   });
 });
 

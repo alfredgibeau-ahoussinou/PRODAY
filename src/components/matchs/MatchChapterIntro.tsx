@@ -21,13 +21,17 @@ export const MatchChapterIntro: React.FC<MatchChapterIntroProps> = ({
 
   return (
     <View style={styles.wrap}>
-      <ProDayText variant="caption" style={[styles.kicker, { color: skin.accent }]}>
-        {kicker}
-      </ProDayText>
-      <ProDayText variant="section" style={styles.title}>
+      {kicker ? (
+        <View style={[styles.kickerPill, { backgroundColor: skin.soft }]}>
+          <ProDayText variant="caption" style={[styles.kicker, { color: skin.accent }]}>
+            {kicker}
+          </ProDayText>
+        </View>
+      ) : null}
+      <ProDayText variant="section" style={[styles.title, { color: skin.foreground }]}>
         {title}
       </ProDayText>
-      <ProDayText variant="caption" style={styles.subtitle}>
+      <ProDayText variant="caption" style={[styles.subtitle, { color: skin.muted }]}>
         {subtitle}
       </ProDayText>
     </View>
@@ -36,23 +40,29 @@ export const MatchChapterIntro: React.FC<MatchChapterIntroProps> = ({
 
 const styles = StyleSheet.create({
   wrap: {
-    marginBottom: spacing.md,
-    gap: 4,
+    marginBottom: spacing.xs,
+    gap: 3,
+  },
+  kickerPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 999,
+    marginBottom: 2,
   },
   kicker: {
     textTransform: 'uppercase',
-    letterSpacing: 2.4,
-    fontSize: 10,
+    letterSpacing: 1.4,
+    fontSize: 9.5,
     fontWeight: '800',
   },
   title: {
     fontWeight: '800',
-    letterSpacing: -0.5,
-    fontSize: 22,
-    color: MATCH_SITE.foreground,
+    letterSpacing: -0.4,
+    fontSize: 20,
   },
   subtitle: {
-    lineHeight: 18,
-    color: MATCH_SITE.muted,
+    lineHeight: 16,
+    fontSize: 12,
   },
 });

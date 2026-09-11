@@ -42,7 +42,7 @@ export const HomeIaHeader: React.FC<HomeIaHeaderProps> = ({
     <AnimatedEntrance kind="fadeDown">
       <View style={styles.shell}>
         <ProDayGradient kind="cta" style={styles.accentBar} />
-        <View style={[styles.wrap, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
+        <View style={[styles.wrap, { paddingTop: spacing.xs }]}>
           <View style={styles.topBar}>
             <ProDayText variant="caption" muted style={styles.caption} numberOfLines={1}>
               {brand.name}

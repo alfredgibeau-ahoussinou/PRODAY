@@ -203,7 +203,7 @@ export function resolveProProductSegmentFromRole(
   role: string | null | undefined
 ): ProProductSegment {
   if (role === 'club') return 'pro_club';
-  if (role === 'coach' || role === 'agent' || role === 'recruiter' || role === 'organizer') {
+  if (role === 'coach' || role === 'agent' || role === 'recruiter') {
     return 'pro_staff';
   }
   return 'pro_player';

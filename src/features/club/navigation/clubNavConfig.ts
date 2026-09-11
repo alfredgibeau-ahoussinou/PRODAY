@@ -25,24 +25,22 @@ export type ClubNavItemId =
   | 'calendar'
   | 'matches'
   | 'trainings'
+  | 'standings'
   | 'communication'
-  | 'recruitment'
-  | 'video'
-  | 'stats'
   | 'club'
   | 'plus'
   | 'assistant'
   | 'events'
-  | 'automations'
   | 'licenses'
   | 'finances'
   | 'sponsoring'
-  | 'equipment'
   | 'pack'
   | 'notifications'
   | 'permissions'
-  | 'carpool'
-  | 'shop';
+  | 'stats'
+  | 'recruitment'
+  | 'video';
+
 
 export type ClubNavItem = {
   id: ClubNavItemId;
@@ -79,21 +77,15 @@ export const CLUB_MENU_DEST_IDS: ClubNavItemId[] = [
   'calendar',
   'trainings',
   'communication',
-  'recruitment',
-  'video',
-  'stats',
   'assistant',
   'events',
-  'automations',
+  'standings',
   'licenses',
   'finances',
   'sponsoring',
-  'equipment',
   'pack',
   'notifications',
   'permissions',
-  'carpool',
-  'shop',
 ];
 
 export type ClubCreateActionId =
@@ -196,36 +188,6 @@ const communicationItem: ClubNavItem = {
   requiresAnyFeature: ['communication'],
 };
 
-const recruitmentItem: ClubNavItem = {
-  id: 'recruitment',
-  label: 'Recrutement',
-  shortLabel: 'Recrut.',
-  hint: 'Bassin & suivi',
-  icon: 'briefcase',
-  tab: 'recrutement',
-  requiresAnyFeature: ['licensed_management'],
-  platformFlag: 'mercato',
-  lockMode: 'hide',
-};
-
-const videoItem: ClubNavItem = {
-  id: 'video',
-  label: 'Vidéo',
-  shortLabel: 'Vidéo',
-  hint: 'Veo · XbotGo · smartphone',
-  icon: 'videocam',
-  requiresAnyFeature: ['video_analysis', 'byo_video', 'hardware_kit'],
-};
-
-const statsItem: ClubNavItem = {
-  id: 'stats',
-  label: 'Statistiques',
-  shortLabel: 'Stats',
-  hint: 'Insights club',
-  icon: 'stats-chart',
-  requiresAnyFeature: ['licensed_management'],
-};
-
 const clubItem: ClubNavItem = {
   id: 'club',
   label: 'Club',
@@ -262,12 +224,12 @@ const eventsItem: ClubNavItem = {
   requiresAnyFeature: ['competitions'],
 };
 
-const automationsItem: ClubNavItem = {
-  id: 'automations',
-  label: 'Automatisations',
-  shortLabel: 'Auto',
-  hint: 'Rappels & règles',
-  icon: 'tune',
+const standingsItem: ClubNavItem = {
+  id: 'standings',
+  label: 'Classements',
+  shortLabel: 'Classement',
+  hint: 'Championnat officiel FFF',
+  icon: 'trophy',
 };
 
 const licensesItem: ClubNavItem = {
@@ -297,15 +259,6 @@ const sponsoringItem: ClubNavItem = {
   requiresAnyFeature: ['full_admin'],
 };
 
-const equipmentItem: ClubNavItem = {
-  id: 'equipment',
-  label: 'Bourse équipements',
-  shortLabel: 'Matériel',
-  hint: 'Échanges entre membres',
-  icon: 'shirt',
-  requiresAnyFeature: ['licensed_management'],
-};
-
 const packItem: ClubNavItem = {
   id: 'pack',
   label: 'Pack Club',
@@ -330,27 +283,6 @@ const permissionsItem: ClubNavItem = {
   icon: 'shield',
 };
 
-const carpoolItem: ClubNavItem = {
-  id: 'carpool',
-  label: 'Covoiturage',
-  shortLabel: 'Covoit',
-  hint: 'Déplacements',
-  icon: 'car',
-  tab: 'covoiturage',
-  requiresAnyFeature: ['carpool'],
-};
-
-const shopItem: ClubNavItem = {
-  id: 'shop',
-  label: 'Boutique',
-  shortLabel: 'Shop',
-  hint: 'Shop ProDay',
-  icon: 'bag',
-  tab: 'shop',
-  platformFlag: 'shop',
-  lockMode: 'hide',
-};
-
 export const CLUB_NAV_FOLDERS: ClubNavFolder[] = [
   {
     id: 'accueil',
@@ -365,18 +297,13 @@ export const CLUB_NAV_FOLDERS: ClubNavFolder[] = [
   {
     id: 'sport',
     label: 'Sport',
-    items: [calendarItem, matchesItem, trainingsItem, eventsItem],
+    items: [calendarItem, matchesItem, trainingsItem, eventsItem, standingsItem],
   },
+
   {
     id: 'ops',
     label: 'Opérations',
-    items: [
-      communicationItem,
-      recruitmentItem,
-      videoItem,
-      statsItem,
-      automationsItem,
-    ],
+    items: [communicationItem],
   },
   {
     id: 'club',
@@ -387,10 +314,7 @@ export const CLUB_NAV_FOLDERS: ClubNavFolder[] = [
       licensesItem,
       financesItem,
       sponsoringItem,
-      equipmentItem,
       permissionsItem,
-      carpoolItem,
-      shopItem,
     ],
   },
 ];
@@ -400,7 +324,7 @@ export const CLUB_NAV_ITEMS: ClubNavItem[] = [
   plusItem,
 ];
 
-/** Groupes Menu mobile — jobs + fréquents en tête (aucune destination retirée). */
+/** Groupes Menu mobile — jobs + fréquents en tête. */
 export type ClubToolGroup = {
   title: string;
   ids: ClubNavItemId[];
@@ -430,22 +354,14 @@ export const CLUB_TOOL_GROUPS: ClubToolGroup[] = [
   },
   {
     title: 'Compétition',
-    ids: ['matches', 'events', 'stats', 'video', 'recruitment'],
+    ids: ['matches', 'events', 'standings'],
     collapsible: true,
     defaultExpanded: false,
   },
+
   {
     title: 'Admin',
-    ids: [
-      'pack',
-      'licenses',
-      'sponsoring',
-      'equipment',
-      'automations',
-      'permissions',
-      'carpool',
-      'shop',
-    ],
+    ids: ['pack', 'licenses', 'sponsoring', 'permissions'],
     collapsible: true,
     defaultExpanded: false,
   },
@@ -470,7 +386,7 @@ export function clubNavFromTab(tab: MainTabId): ClubNavItemId {
     case 'home':
       return 'today';
     case 'recrutement':
-      return 'recruitment';
+      return 'players';
     case 'matchs':
       return 'matches';
     case 'messages':
@@ -478,9 +394,9 @@ export function clubNavFromTab(tab: MainTabId): ClubNavItemId {
     case 'profil':
       return 'club';
     case 'covoiturage':
-      return 'carpool';
+      return 'today';
     case 'shop':
-      return 'shop';
+      return 'today';
     case 'feed':
       return 'today';
     default:
@@ -494,11 +410,8 @@ export function tabFromClubNav(id: ClubNavItemId): MainTabId {
   if (id === 'calendar' || id === 'matches' || id === 'trainings' || id === 'events') {
     return 'matchs';
   }
-  if (id === 'recruitment') return 'recrutement';
   if (id === 'communication') return 'messages';
   if (id === 'club' || id === 'pack') return 'profil';
-  if (id === 'carpool') return 'covoiturage';
-  if (id === 'shop') return 'shop';
   return 'home';
 }
 
@@ -517,6 +430,6 @@ export function resolveClubNavOnTabSync(
 export function clubNavFromDashboard(view: DashboardDeepLink): ClubNavItemId | null {
   if (view === 'gestion') return 'players';
   if (view === 'sponsors') return 'sponsoring';
-  if (view === 'smart_tactics') return 'stats';
+  if (view === 'smart_tactics') return 'matches';
   return null;
 }

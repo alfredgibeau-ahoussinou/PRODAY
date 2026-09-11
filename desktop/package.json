@@ -5,8 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "export:app": "cd .. && npx expo export -p web --output-dir desktop/app-dist",
     "pack:win": "electron-packager . ProDay --platform=win32 --arch=x64 --out=dist --overwrite",
-    "zip:win": "cd dist/ProDay-win32-x64 && zip -r ../ProDay-Windows-PC.zip ."
+    "zip:win": "cd dist/win-unpacked && zip -r ../ProDay-Windows-PC.zip ."
   },
   "author": "ProDay",
   "license": "UNLICENSED",
@@ -15,6 +16,6 @@
   },
   "devDependencies": {
     "electron": "^35.0.0",
-    "electron-packager": "^17.1.2"
+    "electron-builder": "^25.1.8"
   }
 }

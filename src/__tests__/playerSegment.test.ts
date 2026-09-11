@@ -60,7 +60,7 @@ describe('playerSegment', () => {
     } as unknown as User;
     expect(resolvePlayerSegment(user, 'amateur')).toBe('minor');
     const colors = getThemedColorsForLine('amateur', 'minor');
-    expect(colors.accent).toBe('#FBBF24');
+    expect(colors.accent).toBe('#FFFFFF');
   });
 
   it('déduit le segment féminin depuis product_line woman legacy', () => {

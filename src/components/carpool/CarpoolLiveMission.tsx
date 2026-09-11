@@ -338,7 +338,7 @@ export const CarpoolLiveMission: React.FC<CarpoolLiveMissionProps> = ({
             try {
               await Share.share({
                 title: 'Statut Covoiturage ProDay',
-                message: `✅ Je suis bien arrivé(e) à destination (${destinationLabel || 'au stade / complexe'}) pour le match/entraînement avec ProDay Covoiturage !`,
+                message: `Je suis bien arrivé(e) à destination (${destinationLabel || 'au stade / complexe'}) pour le match/entraînement avec ProDay Covoiturage !`,
               });
             } catch {
               Alert.alert('Info', 'Message de statut partagé.');

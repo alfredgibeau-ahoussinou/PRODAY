@@ -5,6 +5,7 @@ export interface ClubAnnouncement {
   author_name: string;
   title: string;
   body: string;
+  pinned?: boolean;
   created_at: Date;
 }
 

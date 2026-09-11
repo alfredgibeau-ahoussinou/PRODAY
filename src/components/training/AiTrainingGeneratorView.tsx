@@ -1,52 +1,72 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { ProDayText } from '../ui/ProDayText';
-import { Icon, type IconName } from '../ui/Icon';
 import { PressableSpring, StaggerReveal } from '../motion';
-import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
-import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
+import { usePlayerTheme } from '../../context/PlayerThemeContext';
+import { joueurGamePress, joueurGameReward } from '../../features/joueur/joueurSfx';
 import type {
   TrainingPhase,
   TrainingObjective,
   TrainingLevel,
 } from '../../models/TrainingSession';
-import {
-  INDIVIDUAL_OBJECTIVES,
-  INDIVIDUAL_DURATIONS,
-  EQUIPMENT_OPTIONS,
-  TRAINING_OBJECTIVE_LABELS,
-  TRAINING_LEVEL_LABELS,
-  phaseLabel,
-} from '../../models/TrainingSession';
+import { phaseLabel } from '../../models/TrainingSession';
 
-const OBJECTIVE_CONFIG: Record<
-  TrainingObjective,
-  { icon: IconName; subtitle: string; gradient: [string, string] }
-> = {
-  technique: { icon: 'football', subtitle: 'Précision & Toucher', gradient: ['#10B981', '#047857'] },
-  vitesse: { icon: 'star', subtitle: 'Explosivité & VMA', gradient: ['#F59E0B', '#D97706'] },
-  frappe: { icon: 'star', subtitle: 'Finition & Puissance', gradient: ['#EF4444', '#B91C1C'] },
-  dribble: { icon: 'football', subtitle: '1v1 & Dextérité', gradient: ['#8B5CF6', '#6D28D9'] },
-  passes: { icon: 'football', subtitle: 'Vision & Jeu court/long', gradient: ['#06B6D4', '#0891B2'] },
-  tactique: { icon: 'trophy', subtitle: 'Placement & Anticipation', gradient: ['#3B82F6', '#1D4ED8'] },
-  physique: { icon: 'star', subtitle: 'Gainage & Puissance', gradient: ['#F97316', '#C2410C'] },
-  endurance: { icon: 'walk', subtitle: 'Cardio & Résistance', gradient: ['#EC4899', '#BE185D'] },
-  recuperation: { icon: 'heart', subtitle: 'Mobilité & Décrassage', gradient: ['#14B8A6', '#0F766E'] },
-  heading: { icon: 'shield', subtitle: 'Jeu de tête & Timing', gradient: ['#64748B', '#334155'] },
-  pied_faible: { icon: 'football', subtitle: 'Symétrie & Confort', gradient: ['#A855F7', '#7E22CE'] },
-};
+// 6 objectifs essentiels épurés pour éviter la surcharge
+const MAIN_OBJECTIVES: {
+  id: TrainingObjective;
+  label: string;
+  subtitle: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  {
+    id: 'pied_faible',
+    label: 'Pied faible',
+    subtitle: 'Symétrie & Précision',
+    icon: 'repeat-outline',
+  },
+  {
+    id: 'frappe',
+    label: 'Finition & Tirs',
+    subtitle: 'Face au but & Puissance',
+    icon: 'football-outline',
+  },
+  {
+    id: 'vitesse',
+    label: 'Vitesse & Explosivité',
+    subtitle: 'Accélération & VMA',
+    icon: 'flash-outline',
+  },
+  {
+    id: 'dribble',
+    label: 'Dribbles & 1v1',
+    subtitle: 'Élimination & Agilité',
+    icon: 'shuffle-outline',
+  },
+  {
+    id: 'passes',
+    label: 'Passes & Vision',
+    subtitle: 'Jeu court, long & tempo',
+    icon: 'arrow-redo-outline',
+  },
+  {
+    id: 'physique',
+    label: 'Physique & Cardio',
+    subtitle: 'Gainage, caisse & appuis',
+    icon: 'pulse-outline',
+  },
+];
 
-const LEVEL_THEMES: Record<
-  TrainingLevel,
-  { label: string; color: string; bg: string; border: string }
-> = {
-  beginner: { label: 'Accessible', color: '#34D399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.35)' },
-  intermediate: { label: 'Rythmé', color: '#FBBF24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.35)' },
-  advanced: { label: 'Intense Pro', color: '#F87171', bg: 'rgba(248,113,113,0.12)', border: 'rgba(248,113,113,0.35)' },
-};
+const DURATIONS = [15, 30, 45] as const;
 
-interface AiTrainingGeneratorViewProps {
+export interface AiTrainingGeneratorViewProps {
   objective: TrainingObjective;
   onObjectiveChange: (obj: TrainingObjective) => void;
   duration: number;
@@ -62,6 +82,7 @@ interface AiTrainingGeneratorViewProps {
   result: TrainingPhase[] | null;
   onReset: () => void;
   onStartSession?: () => void;
+  onBack?: () => void;
 }
 
 export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = ({
@@ -69,814 +90,642 @@ export const AiTrainingGeneratorView: React.FC<AiTrainingGeneratorViewProps> = (
   onObjectiveChange,
   duration,
   onDurationChange,
-  level,
-  onLevelChange,
-  equipment,
-  onToggleEquipment,
   partner,
   onPartnerChange,
   generating,
   onGenerate,
   result,
   onReset,
+  onBack,
 }) => {
-  const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const { colors: playerTheme, clubColors } = usePlayerTheme();
+  const teamColor = clubColors?.primary || playerTheme.accent || '#00E676';
+  const [completed, setCompleted] = useState(false);
 
-  // Mode Résultats de Séance
+  // ==========================================
+  // VUE 1 : RÉSULTATS DE LA SÉANCE IA (ÉPURÉE)
+  // ==========================================
   if (result && result.length > 0) {
     const totalExercises = result.reduce((acc, phase) => acc + phase.exercises.length, 0);
 
     return (
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {/* En-tête Carte Gold / Cyber */}
-        <View style={styles.heroSummary}>
-          <View style={styles.heroTopRow}>
-            <View style={styles.aiTag}>
-              <Icon name="star-four-points" size={13} color={PLAYER_DARK.accent} />
-              <ProDayText variant="caption" style={styles.aiTagText}>
-                PROGRAMME INTELLIGENT
-              </ProDayText>
-            </View>
-            <View style={[styles.badgePill, { backgroundColor: LEVEL_THEMES[level].bg, borderColor: LEVEL_THEMES[level].border }]}>
-              <ProDayText variant="caption" style={{ color: LEVEL_THEMES[level].color, fontWeight: '800', fontSize: 11 }}>
-                {LEVEL_THEMES[level].label}
-              </ProDayText>
-            </View>
+      <View style={styles.root}>
+        {/* Hood Ambient Glow */}
+        <View
+          style={[styles.ambientGlow, { backgroundColor: teamColor }]}
+          pointerEvents="none"
+        />
+
+        {/* Navigation Header */}
+        <View style={[styles.navHeader, { paddingTop: 6 }]}>
+          <TouchableOpacity
+            onPress={() => {
+              joueurGamePress();
+              onReset();
+            }}
+            style={styles.iconNavBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <View style={styles.modelPill}>
+            <Ionicons name="sparkles" size={13} color={teamColor} />
+            <ProDayText style={styles.modelPillText}>Séance Générée</ProDayText>
           </View>
 
-          <ProDayText variant="title" style={styles.heroTitle}>
-            {TRAINING_OBJECTIVE_LABELS[objective]}
-          </ProDayText>
-
-          <View style={styles.metricsRow}>
-            <View style={styles.metricItem}>
-              <ProDayText variant="title" style={styles.metricNumber}>
-                {duration}
-              </ProDayText>
-              <ProDayText variant="caption" style={styles.metricLabel}>
-                MINUTES
-              </ProDayText>
-            </View>
-            <View style={styles.metricSep} />
-            <View style={styles.metricItem}>
-              <ProDayText variant="title" style={[styles.metricNumber, { color: PLAYER_DARK.text }]}>
-                {result.length}
-              </ProDayText>
-              <ProDayText variant="caption" style={styles.metricLabel}>
-                PHASES
-              </ProDayText>
-            </View>
-            <View style={styles.metricSep} />
-            <View style={styles.metricItem}>
-              <ProDayText variant="title" style={[styles.metricNumber, { color: PLAYER_DARK.accentAlt }]}>
-                {totalExercises}
-              </ProDayText>
-              <ProDayText variant="caption" style={styles.metricLabel}>
-                EXERCICES
-              </ProDayText>
-            </View>
-          </View>
+          <TouchableOpacity
+            onPress={() => {
+              joueurGamePress();
+              onReset();
+            }}
+            style={styles.iconNavBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="refresh-outline" size={20} color="#A1A1AA" />
+          </TouchableOpacity>
         </View>
 
-        {/* Déroulé des Phases */}
-        {result.map((phase, idx) => (
-          <StaggerReveal key={`${phase.name}-${idx}`} index={idx} delayStep={50}>
-            <View style={styles.phaseBlock}>
-              <View style={styles.phaseHead}>
-                <View style={styles.phaseIdxWrap}>
-                  <ProDayText variant="caption" style={styles.phaseIdx}>
-                    0{idx + 1}
-                  </ProDayText>
-                </View>
-                <View style={styles.phaseHeadCopy}>
-                  <ProDayText variant="section" style={styles.phaseName}>
-                    {phase.label || phaseLabel(phase.name)}
-                  </ProDayText>
-                  <ProDayText variant="caption" style={styles.phaseDur}>
-                    {phase.duration_min} minutes
-                  </ProDayText>
-                </View>
-              </View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Hero Résumé */}
+          <View style={[styles.heroSummaryCard, { borderColor: `${teamColor}40` }]}>
+            <ProDayText style={styles.heroSummaryTitle}>
+              {MAIN_OBJECTIVES.find((o) => o.id === objective)?.label || 'Séance Personnalisée'}
+            </ProDayText>
+            <ProDayText style={styles.heroSummarySub}>
+              {duration} minutes · {result.length} phases · {totalExercises} exercices
+            </ProDayText>
+          </View>
 
-              <View style={styles.exStack}>
-                {phase.exercises.map((ex, exIdx) => (
-                  <View key={`ex-${idx}-${exIdx}`} style={styles.exCard}>
-                    <View style={styles.exHeaderRow}>
-                      <ProDayText variant="body" style={styles.exTitle}>
-                        {ex.name}
-                      </ProDayText>
-                      {(ex.sets || ex.reps) ? (
-                        <View style={styles.setsTag}>
-                          <ProDayText variant="caption" style={styles.setsTagText}>
-                            {ex.sets ? `${ex.sets} séries` : ''} {ex.reps ? `× ${ex.reps} reps` : ''}
-                          </ProDayText>
-                        </View>
-                      ) : null}
+          {/* Déroulé des phases */}
+          <View style={{ gap: 12 }}>
+            {result.map((phase, pIdx) => (
+              <StaggerReveal key={`${phase.name}-${pIdx}`} index={pIdx} delayStep={50}>
+                <View style={styles.phaseCard}>
+                  <View style={styles.phaseHeader}>
+                    <View style={[styles.phaseDot, { backgroundColor: teamColor }]}>
+                      <ProDayText style={styles.phaseDotText}>{pIdx + 1}</ProDayText>
                     </View>
-
-                    <ProDayText variant="caption" style={styles.exDesc}>
-                      {ex.description}
+                    <ProDayText style={styles.phaseTitle}>
+                      {phase.label || phaseLabel(phase.name)} ({phase.duration_min} min)
                     </ProDayText>
-
-                    {ex.rest_sec ? (
-                      <View style={styles.restBar}>
-                        <Icon name="time" size={12} color={PLAYER_DARK.textMuted} />
-                        <ProDayText variant="caption" style={styles.restText}>
-                          Repos : {ex.rest_sec}s
-                        </ProDayText>
-                      </View>
-                    ) : null}
-
-                    {ex.tips && ex.tips.length > 0 ? (
-                      <View style={styles.tipCard}>
-                        {ex.tips.map((tip, tIdx) => (
-                          <ProDayText key={`tip-${tIdx}`} variant="caption" style={styles.tipBody}>
-                            💡 {tip}
-                          </ProDayText>
-                        ))}
-                      </View>
-                    ) : null}
                   </View>
-                ))}
-              </View>
-            </View>
-          </StaggerReveal>
-        ))}
 
-        {/* Actions Réglages & Fin */}
-        <View style={styles.actionBottomRow}>
-          <PressableSpring onPress={onReset} scaleTo={0.97} haptic style={styles.flexBtn}>
-            <View style={styles.secondaryBtn}>
-              <Icon name="tune" size={16} color={PLAYER_DARK.text} />
-              <ProDayText variant="caption" style={styles.secondaryBtnText}>
-                Modifier
-              </ProDayText>
-            </View>
-          </PressableSpring>
+                  <View style={{ gap: 8 }}>
+                    {phase.exercises.map((ex, exIdx) => (
+                      <View key={`ex-${pIdx}-${exIdx}`} style={styles.exerciseItem}>
+                        <View style={styles.exerciseTopRow}>
+                          <ProDayText style={styles.exerciseName}>{ex.name}</ProDayText>
+                          {ex.sets || ex.reps ? (
+                            <ProDayText style={[styles.exerciseReps, { color: teamColor }]}>
+                              {ex.sets ? `${ex.sets} séries` : ''} {ex.reps ? `× ${ex.reps}` : ''}
+                            </ProDayText>
+                          ) : null}
+                        </View>
+                        <ProDayText style={styles.exerciseDesc}>{ex.description}</ProDayText>
+                        {ex.tips && ex.tips.length > 0 ? (
+                          <View style={styles.tipBox}>
+                            <ProDayText style={styles.tipText}>💡 {ex.tips[0]}</ProDayText>
+                          </View>
+                        ) : null}
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </StaggerReveal>
+            ))}
+          </View>
 
-          <PressableSpring onPress={onReset} scaleTo={0.97} haptic style={styles.flexBtn}>
-            <View style={styles.primaryFinishBtn}>
-              <Icon name="football" size={16} color={PLAYER_DARK.bg} />
-              <ProDayText variant="caption" style={styles.primaryFinishText}>
-                Terminer (+30 XP)
-              </ProDayText>
-            </View>
-          </PressableSpring>
-        </View>
-      </ScrollView>
+          {/* Bouton Terminer */}
+          <TouchableOpacity
+            onPress={() => {
+              joueurGameReward('xp');
+              setCompleted(true);
+            }}
+            style={[
+              styles.primaryActionBtn,
+              {
+                backgroundColor: completed ? '#10B981' : teamColor,
+                shadowColor: completed ? '#10B981' : teamColor,
+              },
+            ]}
+            activeOpacity={0.85}
+          >
+            <Ionicons
+              name={completed ? 'checkmark-circle' : 'play'}
+              size={18}
+              color="#000000"
+            />
+            <ProDayText style={styles.primaryActionText}>
+              {completed ? 'Séance Validée (+30 XP)' : 'Démarrer la séance (+30 XP)'}
+            </ProDayText>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
     );
   }
 
-  // Mode Configuration Formulaire
+  // ==========================================
+  // VUE 2 : GÉNÉRATEUR ÉPURÉ STYLE CHATGPT / GEMINI
+  // ==========================================
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header Glassmorphism Pro */}
-      <View style={styles.headerGlass}>
-        <View style={styles.headerGlowCircle}>
-          <Icon name="star-four-points" size={26} color={PLAYER_DARK.accent} />
+    <View style={styles.root}>
+      {/* Hood Ambient Glow Top */}
+      <View
+        style={[styles.ambientGlow, { backgroundColor: teamColor }]}
+        pointerEvents="none"
+      />
+
+      {/* En-tête Minimaliste */}
+      <View style={[styles.navHeader, { paddingTop: 6 }]}>
+        <TouchableOpacity
+          onPress={() => {
+            joueurGamePress();
+            if (onBack) onBack();
+          }}
+          style={styles.iconNavBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        <View style={styles.modelPill}>
+          <Ionicons name="sparkles" size={14} color={teamColor} />
+          <ProDayText style={styles.modelPillText}>Gemini Coach</ProDayText>
         </View>
-        <View style={styles.headerCopy}>
-          <ProDayText variant="section" style={styles.headerMainTitle}>
-            Générateur ProDay IA
-          </ProDayText>
-          <ProDayText variant="caption" style={styles.headerSubtitle}>
-            Séance sur-mesure calibrée selon ta forme et tes objectifs.
-          </ProDayText>
-        </View>
+
+        <View style={{ width: 38 }} />
       </View>
 
-      {/* 1. Objectif Athlétique */}
-      <View style={styles.sectionGroup}>
-        <View style={styles.labelRow}>
-          <Icon name="trophy" size={15} color={PLAYER_DARK.accent} />
-          <ProDayText variant="section" style={styles.sectionHeading}>
-            1. Thématique de travail
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Titre Principal Simplifié */}
+        <View style={styles.titleBlock}>
+          <ProDayText style={styles.mainTitle}>Que veux-tu bosser ?</ProDayText>
+          <ProDayText style={styles.subtitle}>
+            Sélectionne ton focus, l'IA génère ta routine sur-mesure.
           </ProDayText>
         </View>
-        <View style={styles.objectiveGrid}>
-          {INDIVIDUAL_OBJECTIVES.map((obj) => {
-            const isSelected = objective === obj;
-            const cfg = OBJECTIVE_CONFIG[obj] || { icon: 'football', subtitle: 'Entraînement' };
+
+        {/* 6 Cartes Focus Essentielles */}
+        <View style={styles.cardsGrid}>
+          {MAIN_OBJECTIVES.map((item) => {
+            const isSelected = objective === item.id;
             return (
               <PressableSpring
-                key={obj}
+                key={item.id}
                 style={[
-                  styles.objCell,
-                  isSelected && styles.objCellActive,
+                  styles.focusCard,
+                  isSelected && {
+                    borderColor: teamColor,
+                    backgroundColor: `${teamColor}14`,
+                  },
                 ]}
-                onPress={() => onObjectiveChange(obj)}
-                scaleTo={0.96}
+                onPress={() => {
+                  joueurGamePress();
+                  onObjectiveChange(item.id);
+                }}
+                scaleTo={0.97}
                 haptic
               >
-                <View style={[styles.objIconWrap, isSelected && styles.objIconWrapActive]}>
-                  <Icon
-                    name={cfg.icon}
-                    size={18}
-                    color={isSelected ? PLAYER_DARK.accent : PLAYER_DARK.textMuted}
+                <View
+                  style={[
+                    styles.cardIconWrap,
+                    isSelected && { backgroundColor: `${teamColor}25` },
+                  ]}
+                >
+                  <Ionicons
+                    name={item.icon}
+                    size={22}
+                    color={isSelected ? teamColor : '#9CA3AF'}
                   />
                 </View>
-                <View style={styles.objCellText}>
+
+                <View style={{ flex: 1, gap: 2 }}>
                   <ProDayText
-                    variant="caption"
-                    style={[styles.objName, isSelected && { color: PLAYER_DARK.accent, fontWeight: '800' }]}
+                    style={[
+                      styles.cardTitle,
+                      isSelected && { color: '#FFFFFF', fontWeight: '800' },
+                    ]}
                   >
-                    {TRAINING_OBJECTIVE_LABELS[obj]}
+                    {item.label}
                   </ProDayText>
-                  <ProDayText variant="caption" style={styles.objSub} numberOfLines={1}>
-                    {cfg.subtitle}
+                  <ProDayText
+                    style={[
+                      styles.cardSub,
+                      isSelected && { color: teamColor },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.subtitle}
                   </ProDayText>
                 </View>
+
+                {isSelected ? (
+                  <View style={[styles.activeDot, { backgroundColor: teamColor }]} />
+                ) : null}
               </PressableSpring>
             );
           })}
         </View>
-      </View>
 
-      {/* 2. Durée de Séance */}
-      <View style={styles.sectionGroup}>
-        <View style={styles.labelRow}>
-          <Icon name="time" size={15} color={PLAYER_DARK.accent} />
-          <ProDayText variant="section" style={styles.sectionHeading}>
-            2. Durée
-          </ProDayText>
-        </View>
-        <View style={styles.pillRow}>
-          {INDIVIDUAL_DURATIONS.map((d) => {
-            const isSelected = duration === d;
-            return (
-              <PressableSpring
-                key={d}
-                style={[styles.timeChip, isSelected && styles.timeChipActive]}
-                onPress={() => onDurationChange(d)}
-                scaleTo={0.96}
-                haptic
-              >
-                <ProDayText
-                  variant="caption"
-                  style={[styles.timeChipText, isSelected && styles.timeChipTextActive]}
+        {/* Barre Durée & Format Simplifiée */}
+        <View style={styles.settingsRow}>
+          {/* Durée */}
+          <View style={styles.durationSelector}>
+            {DURATIONS.map((d) => {
+              const isSelected = duration === d;
+              return (
+                <TouchableOpacity
+                  key={d}
+                  onPress={() => {
+                    joueurGamePress();
+                    onDurationChange(d);
+                  }}
+                  style={[
+                    styles.durationBtn,
+                    isSelected && {
+                      backgroundColor: teamColor,
+                      borderColor: teamColor,
+                    },
+                  ]}
+                  activeOpacity={0.8}
                 >
-                  {d} min
-                </ProDayText>
-              </PressableSpring>
-            );
-          })}
-        </View>
-      </View>
+                  <ProDayText
+                    style={[
+                      styles.durationText,
+                      isSelected && { color: '#000000', fontWeight: '900' },
+                    ]}
+                  >
+                    {d} min
+                  </ProDayText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-      {/* 3. Niveau d'Intensité */}
-      <View style={styles.sectionGroup}>
-        <View style={styles.labelRow}>
-          <Icon name="stats-chart" size={15} color={PLAYER_DARK.accent} />
-          <ProDayText variant="section" style={styles.sectionHeading}>
-            3. Intensité
-          </ProDayText>
+          {/* Solo / Duo Toggle */}
+          <TouchableOpacity
+            onPress={() => {
+              joueurGamePress();
+              onPartnerChange(!partner);
+            }}
+            style={[
+              styles.formatBtn,
+              partner && { borderColor: teamColor, backgroundColor: `${teamColor}12` },
+            ]}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={partner ? 'people' : 'person'}
+              size={15}
+              color={partner ? teamColor : '#9CA3AF'}
+            />
+            <ProDayText
+              style={[
+                styles.formatText,
+                partner && { color: '#FFFFFF', fontWeight: '700' },
+              ]}
+            >
+              {partner ? 'Duo' : 'Solo'}
+            </ProDayText>
+          </TouchableOpacity>
         </View>
-        <View style={styles.levelRow}>
-          {(['beginner', 'intermediate', 'advanced'] as TrainingLevel[]).map((lvl) => {
-            const isSelected = level === lvl;
-            const theme = LEVEL_THEMES[lvl];
-            return (
-              <PressableSpring
-                key={lvl}
-                style={[
-                  styles.lvlBtn,
-                  isSelected && { backgroundColor: theme.bg, borderColor: theme.color },
-                ]}
-                onPress={() => onLevelChange(lvl)}
-                scaleTo={0.96}
-                haptic
-              >
-                <ProDayText
-                  variant="caption"
-                  style={[styles.lvlText, isSelected && { color: theme.color, fontWeight: '900' }]}
-                >
-                  {theme.label}
-                </ProDayText>
-              </PressableSpring>
-            );
-          })}
-        </View>
-      </View>
 
-      {/* 4. Matériel */}
-      <View style={styles.sectionGroup}>
-        <View style={styles.labelRow}>
-          <Icon name="bag" size={15} color={PLAYER_DARK.accent} />
-          <ProDayText variant="section" style={styles.sectionHeading}>
-            4. Matériel sur place
-          </ProDayText>
-        </View>
-        <View style={styles.equipRow}>
-          {EQUIPMENT_OPTIONS.map((eq) => {
-            const isSelected = equipment.includes(eq);
-            return (
-              <PressableSpring
-                key={eq}
-                style={[styles.equipTag, isSelected && styles.equipTagActive]}
-                onPress={() => onToggleEquipment(eq)}
-                scaleTo={0.96}
-                haptic
-              >
-                <Icon
-                  name={isSelected ? 'checkmark-circle' : 'add'}
-                  size={14}
-                  color={isSelected ? PLAYER_DARK.accent : PLAYER_DARK.textMuted}
-                />
-                <ProDayText
-                  variant="caption"
-                  style={[styles.equipText, isSelected && styles.equipTextActive]}
-                >
-                  {eq}
-                </ProDayText>
-              </PressableSpring>
-            );
-          })}
-        </View>
-      </View>
-
-      {/* 5. Mode Solo / Duo */}
-      <View style={styles.sectionGroup}>
-        <View style={styles.labelRow}>
-          <Icon name="people" size={15} color={PLAYER_DARK.accent} />
-          <ProDayText variant="section" style={styles.sectionHeading}>
-            5. Joueurs
-          </ProDayText>
-        </View>
-        <View style={styles.modalRow}>
-          {[
-            { val: false, label: 'Solo (Seul)', icon: 'person' as const },
-            { val: true, label: 'Avec un coéquipier', icon: 'people' as const },
-          ].map((opt) => {
-            const isSelected = partner === opt.val;
-            return (
-              <PressableSpring
-                key={String(opt.val)}
-                style={[styles.modalCard, isSelected && styles.modalCardActive]}
-                onPress={() => onPartnerChange(opt.val)}
-                scaleTo={0.96}
-                haptic
-              >
-                <Icon
-                  name={opt.icon}
-                  size={16}
-                  color={isSelected ? PLAYER_DARK.accent : PLAYER_DARK.textMuted}
-                />
-                <ProDayText
-                  variant="caption"
-                  style={[styles.modalLabel, isSelected && { color: PLAYER_DARK.accent, fontWeight: '800' }]}
-                >
-                  {opt.label}
-                </ProDayText>
-              </PressableSpring>
-            );
-          })}
-        </View>
-      </View>
-
-      {/* CTA de Génération Ultra-Glow */}
-      <PressableSpring
-        onPress={() => void onGenerate()}
-        disabled={generating}
-        scaleTo={0.97}
-        haptic
-        style={{ marginTop: spacing.md }}
-      >
-        <View style={styles.glowCta}>
+        {/* Bouton Unique : Générer avec l'IA */}
+        <TouchableOpacity
+          onPress={() => {
+            joueurGamePress();
+            void onGenerate();
+          }}
+          disabled={generating}
+          style={[
+            styles.generateBtn,
+            {
+              backgroundColor: teamColor,
+              shadowColor: teamColor,
+            },
+          ]}
+          activeOpacity={0.88}
+        >
           {generating ? (
-            <ActivityIndicator color={PLAYER_DARK.bg} />
-          ) : (
-            <>
-              <Icon name="star-four-points" size={18} color={PLAYER_DARK.bg} />
-              <ProDayText variant="section" style={styles.glowCtaLabel}>
-                Générer mon programme IA
+            <View style={styles.generatingRow}>
+              <ActivityIndicator color="#000000" size="small" />
+              <ProDayText style={styles.generateBtnText}>
+                Calibrage Gemini...
               </ProDayText>
-            </>
+            </View>
+          ) : (
+            <View style={styles.ctaRow}>
+              <Ionicons name="sparkles" size={18} color="#000000" />
+              <ProDayText style={styles.generateBtnText}>
+                Générer ma séance IA
+              </ProDayText>
+              <View style={styles.xpBadge}>
+                <ProDayText style={styles.xpBadgeText}>+30 XP</ProDayText>
+              </View>
+            </View>
           )}
-        </View>
-      </PressableSpring>
-    </ScrollView>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: spacing.lg,
-    gap: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  headerGlass: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: PLAYER_DARK.surface,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.borderStrong,
-    borderRadius: PLAYER_DARK_RADIUS.card,
-    padding: spacing.md,
-  },
-  headerGlowCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: PLAYER_DARK.accentSoft,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerCopy: {
+  root: {
     flex: 1,
-    gap: 2,
+    backgroundColor: '#000000',
   },
-  headerMainTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: PLAYER_DARK.text,
+  ambientGlow: {
+    position: 'absolute',
+    top: -100,
+    left: '15%',
+    width: '70%',
+    height: 200,
+    borderRadius: 100,
+    opacity: 0.12,
   },
-  headerSubtitle: {
-    fontSize: 12,
-    color: PLAYER_DARK.textMuted,
-    lineHeight: 16,
-  },
-  sectionGroup: {
-    gap: spacing.xs,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-  sectionHeading: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: PLAYER_DARK.text,
-    letterSpacing: 0.2,
-  },
-  objectiveGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  objCell: {
-    width: '48.5%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: PLAYER_DARK.surface,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-    borderRadius: 14,
-    padding: spacing.sm,
-  },
-  objCellActive: {
-    borderColor: PLAYER_DARK.accent,
-    backgroundColor: PLAYER_DARK.accentSoft,
-  },
-  objIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  objIconWrapActive: {
-    backgroundColor: 'rgba(0,230,118,0.2)',
-  },
-  objCellText: {
-    flex: 1,
-  },
-  objName: {
-    fontSize: 12,
-    color: PLAYER_DARK.text,
-    fontWeight: '600',
-  },
-  objSub: {
-    fontSize: 10,
-    color: PLAYER_DARK.textMuted,
-    marginTop: 1,
-  },
-  pillRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  timeChip: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    backgroundColor: PLAYER_DARK.surface,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  timeChipActive: {
-    backgroundColor: PLAYER_DARK.accent,
-    borderColor: PLAYER_DARK.accent,
-  },
-  timeChipText: {
-    fontWeight: '800',
-    fontSize: 13,
-    color: PLAYER_DARK.text,
-  },
-  timeChipTextActive: {
-    color: PLAYER_DARK.bg,
-  },
-  levelRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  lvlBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: PLAYER_DARK.surface,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lvlText: {
-    fontWeight: '700',
-    fontSize: 12,
-    color: PLAYER_DARK.textMuted,
-  },
-  equipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  equipTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    backgroundColor: PLAYER_DARK.surface,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-  },
-  equipTagActive: {
-    backgroundColor: PLAYER_DARK.accentSoft,
-    borderColor: PLAYER_DARK.accent,
-  },
-  equipText: {
-    fontSize: 12,
-    color: PLAYER_DARK.textMuted,
-    fontWeight: '600',
-  },
-  equipTextActive: {
-    color: PLAYER_DARK.accent,
-    fontWeight: '800',
-  },
-  modalRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  modalCard: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: PLAYER_DARK.surface,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-  },
-  modalCardActive: {
-    backgroundColor: PLAYER_DARK.accentSoft,
-    borderColor: PLAYER_DARK.accent,
-  },
-  modalLabel: {
-    fontSize: 12,
-    color: PLAYER_DARK.textMuted,
-    fontWeight: '600',
-  },
-  glowCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: 16,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    backgroundColor: PLAYER_DARK.accent,
-    shadowColor: PLAYER_DARK.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  glowCtaLabel: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: PLAYER_DARK.bg,
-    letterSpacing: 0.4,
-  },
-  heroSummary: {
-    backgroundColor: PLAYER_DARK.surface,
-    borderWidth: 1,
-    borderColor: `${PLAYER_DARK.accent}55`,
-    borderRadius: PLAYER_DARK_RADIUS.card,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  heroTopRow: {
+  navHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    zIndex: 10,
   },
-  aiTag: {
+  iconNavBtn: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  modelPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#14141B',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modelPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 40,
+    gap: 20,
+  },
+  titleBlock: {
     gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    backgroundColor: PLAYER_DARK.accentSoft,
   },
-  aiTagText: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: PLAYER_DARK.accent,
-    letterSpacing: 0.6,
-  },
-  badgePill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    borderWidth: 1,
-  },
-  heroTitle: {
+  mainTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: PLAYER_DARK.text,
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
-  metricsRow: {
+  subtitle: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    lineHeight: 18,
+  },
+  cardsGrid: {
+    gap: 10,
+  },
+  focusCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    marginTop: spacing.xs,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: PLAYER_DARK.border,
-  },
-  metricItem: {
-    alignItems: 'center',
-    gap: 2,
-  },
-  metricNumber: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: PLAYER_DARK.accent,
-  },
-  metricLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: PLAYER_DARK.textMuted,
-    letterSpacing: 0.6,
-  },
-  metricSep: {
-    width: 1,
-    height: 24,
-    backgroundColor: PLAYER_DARK.border,
-  },
-  phaseBlock: {
-    backgroundColor: PLAYER_DARK.surface,
+    gap: 12,
+    backgroundColor: '#111116',
     borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-    borderRadius: PLAYER_DARK_RADIUS.card,
-    padding: spacing.md,
-    gap: spacing.md,
-  },
-  phaseHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  phaseIdxWrap: {
-    width: 32,
-    height: 32,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     borderRadius: 16,
-    backgroundColor: PLAYER_DARK.accentSoft,
+    padding: 14,
+    position: 'relative',
+  },
+  cardIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  phaseIdx: {
-    fontWeight: '900',
-    color: PLAYER_DARK.accent,
-  },
-  phaseHeadCopy: {
-    flex: 1,
-  },
-  phaseName: {
+  cardTitle: {
     fontSize: 14,
-    fontWeight: '800',
-    color: PLAYER_DARK.text,
+    fontWeight: '700',
+    color: '#E5E7EB',
   },
-  phaseDur: {
+  cardSub: {
     fontSize: 11,
-    color: PLAYER_DARK.textMuted,
+    color: '#6B7280',
   },
-  exStack: {
-    gap: spacing.xs,
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    top: 14,
+    right: 14,
   },
-  exCard: {
-    backgroundColor: PLAYER_DARK.bgElevated,
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  durationSelector: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#111116',
+    borderRadius: 14,
+    padding: 4,
     borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-    borderRadius: 12,
-    padding: spacing.md,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
     gap: 4,
   },
-  exHeaderRow: {
+  durationBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+  },
+  durationText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#9CA3AF',
+  },
+  formatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#111116',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  formatText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9CA3AF',
+  },
+  generateBtn: {
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  ctaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  generatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  generateBtnText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#000000',
+  },
+  xpBadge: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  xpBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#000000',
+  },
+  // Résultats
+  heroSummaryCard: {
+    backgroundColor: '#111116',
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 16,
+    gap: 4,
+  },
+  heroSummaryTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  heroSummarySub: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  phaseCard: {
+    backgroundColor: '#111116',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
+  },
+  phaseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  phaseDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  phaseDotText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#000000',
+  },
+  phaseTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  exerciseItem: {
+    backgroundColor: '#171720',
+    borderRadius: 12,
+    padding: 12,
+    gap: 4,
+  },
+  exerciseTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
-  exTitle: {
+  exerciseName: {
     fontSize: 13,
-    fontWeight: '800',
-    color: PLAYER_DARK.text,
+    fontWeight: '700',
+    color: '#FFFFFF',
     flexShrink: 1,
   },
-  setsTag: {
-    backgroundColor: PLAYER_DARK.accentSoft,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-  },
-  setsTagText: {
-    fontSize: 10,
+  exerciseReps: {
+    fontSize: 11,
     fontWeight: '800',
-    color: PLAYER_DARK.accent,
   },
-  exDesc: {
+  exerciseDesc: {
     fontSize: 12,
-    color: PLAYER_DARK.textMuted,
+    color: '#9CA3AF',
     lineHeight: 16,
   },
-  restBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  tipBox: {
     marginTop: 2,
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
-  restText: {
-    fontSize: 10,
-    color: PLAYER_DARK.textMuted,
-  },
-  tipCard: {
-    borderLeftWidth: 2,
-    borderLeftColor: PLAYER_DARK.accentAlt,
-    paddingLeft: spacing.sm,
-    marginTop: 4,
-    gap: 2,
-  },
-  tipBody: {
+  tipText: {
     fontSize: 11,
-    color: PLAYER_DARK.accentAlt,
+    color: '#FAFAFA',
   },
-  actionBottomRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  flexBtn: {
-    flex: 1,
-  },
-  secondaryBtn: {
+  primaryActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 14,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    backgroundColor: PLAYER_DARK.surface,
-    borderWidth: 1,
-    borderColor: PLAYER_DARK.borderStrong,
+    paddingVertical: 15,
+    borderRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    marginTop: 8,
   },
-  secondaryBtnText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: PLAYER_DARK.text,
-  },
-  primaryFinishBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 14,
-    borderRadius: PLAYER_DARK_RADIUS.pill,
-    backgroundColor: PLAYER_DARK.accent,
-  },
-  primaryFinishText: {
+  primaryActionText: {
     fontSize: 13,
     fontWeight: '900',
-    color: PLAYER_DARK.bg,
+    color: '#000000',
   },
 });

@@ -23,6 +23,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { teamEventsService } from '../services/teamEvents.service';
 import { useAuth } from '../context/AuthContext';
 import { formatCalendarDate } from '../utils/seasonCalendar';
+import { formatTrainingSessionTitle, formatEventScheduleLabel } from '../utils/teamEventFormatting';
 import { buildConvocationShareMessage } from '../utils/teamEventShare';
 import { EventLineupScreen } from './EventLineupScreen';
 import { EventLiveStatsScreen } from './EventLiveStatsScreen';
@@ -177,20 +178,25 @@ export const TeamEventDetailScreen: React.FC<TeamEventDetailScreenProps> = ({
     <View style={rootStyle}>
       <ScreenHeader title="Convocation" onBack={onBack} centered />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.badge, { backgroundColor: c.accentSoft }]}>
-          <Text style={[styles.badgeText, { color: c.brand }]}>
-            {EVENT_TYPE_LABELS[event.event_type]}
+        <View style={[styles.badge, { backgroundColor: event.event_type === 'training' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)', borderColor: event.event_type === 'training' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(59, 130, 246, 0.4)', borderWidth: 1 }]}>
+          <Text style={[styles.badgeText, { color: event.event_type === 'training' ? '#10B981' : '#3B82F6' }]}>
+            {EVENT_TYPE_LABELS[event.event_type] || 'Événement'}
           </Text>
         </View>
-        <Text style={[styles.title, { color: c.text }]}>{event.title}</Text>
-        <Text style={[styles.meta, { color: c.textSecondary }]}>
-          {formatCalendarDate(event.starts_at)}
+
+        <Text style={[styles.title, { color: '#FFFFFF' }]}>
+          {event.event_type === 'training'
+            ? formatTrainingSessionTitle(event)
+            : event.title}
         </Text>
-        <Text style={[styles.meta, { color: c.textSecondary }]}>
+        <Text style={[styles.meta, { color: '#8E8E9F' }]}>
+          {formatEventScheduleLabel(event)}
+        </Text>
+        <Text style={[styles.meta, { color: '#8E8E9F' }]}>
           {event.city}
           {event.location_label ? ` · ${event.location_label}` : ''}
         </Text>
-        <Text style={[styles.meta, { color: c.textSecondary }]}>Par {event.organizer_name}</Text>
+        <Text style={[styles.meta, { color: '#8E8E9F' }]}>Par {event.organizer_name}</Text>
 
         {event.event_type === 'detection' && event.max_participants ? (
           <Text style={[styles.stats, { color: c.brand }]}>

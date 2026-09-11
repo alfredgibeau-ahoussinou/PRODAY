@@ -110,20 +110,26 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
         disabled={disabled}
         haptic
         scaleTo={0.98}
-        style={[styles.joueurCard, unread && { borderColor: accent }]}
+        style={[
+          styles.joueurCard,
+          unread && { borderColor: `${accent}70` },
+        ]}
       >
         {unread ? <View style={[styles.stripe, { backgroundColor: accent }]} /> : null}
         <View style={styles.inner}>
           <View
             style={[
               styles.joueurAvatar,
-              { backgroundColor: unread ? accent : JOUEUR_SURFACES.chip },
+              {
+                backgroundColor: unread ? `${accent}25` : `${accent}14`,
+                borderColor: unread ? `${accent}80` : `${accent}30`,
+              },
             ]}
           >
             {isTeamGroup ? (
-              <Icon name="people" size={20} color={unread ? '#fff' : accent} variant="filled" />
+              <Icon name="people" size={20} color={accent} variant="filled" />
             ) : (
-              <Text style={[styles.joueurInitial, { color: unread ? '#fff' : accent }]}>
+              <Text style={[styles.joueurInitial, { color: accent }]}>
                 {initial}
               </Text>
             )}
@@ -145,19 +151,19 @@ export const MessageThreadRow: React.FC<MessageThreadRowProps> = ({
               {preview}
             </Text>
             {kineLabel ? (
-              <View style={[styles.joueurTag, { backgroundColor: joueurTheme.surface }]}>
+              <View style={[styles.joueurTag, { backgroundColor: '#1C1D26' }]}>
                 <Text style={[styles.joueurTagText, { color: accent }]}>{kineLabel}</Text>
               </View>
             ) : null}
             {unread ? (
-              <View style={[styles.joueurUnreadPill, { backgroundColor: joueurTheme.surface }]}>
+              <View style={[styles.joueurUnreadPill, { backgroundColor: `${accent}18` }]}>
                 <Text style={[styles.joueurUnreadPillText, { color: accent }]}>{unreadLabel}</Text>
               </View>
             ) : null}
           </View>
           <View style={styles.trail}>
             {unread ? <View style={[styles.dot, { backgroundColor: accent }]} /> : null}
-            <Icon name="chevron-forward" size={16} color={joueurTheme.inkMuted} />
+            <Icon name="chevron-forward" size={16} color="#71717A" />
           </View>
         </View>
       </PressableSpring>
@@ -449,24 +455,25 @@ function createStyles(
       backgroundColor: coachTokens.accent,
     },
     joueurCard: {
-      borderRadius: joueurTheme.cardRadius,
-      backgroundColor: JOUEUR_SURFACES.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: joueurTheme.border,
+      borderRadius: 18,
+      backgroundColor: '#14141A',
+      borderWidth: 1,
+      borderColor: '#22222E',
       overflow: 'hidden',
       marginBottom: spacing.sm,
     },
     joueurAvatar: {
       width: 48,
       height: 48,
-      borderRadius: joueurTheme.cardRadius,
+      borderRadius: 14,
+      borderWidth: 1,
       alignItems: 'center',
       justifyContent: 'center',
     },
     joueurInitial: {
       fontFamily: fontFamily.extrabold,
       fontSize: 18,
-      fontWeight: '800',
+      fontWeight: '900',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     joueurName: {
@@ -474,22 +481,22 @@ function createStyles(
       fontFamily: fontFamily.extrabold,
       fontSize: 16,
       fontWeight: '800',
-      color: joueurTheme.ink,
+      color: '#FFFFFF',
       letterSpacing: -0.2,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     joueurTime: {
       fontFamily: fontFamily.semibold,
-      fontSize: 11,
+      fontSize: 11.5,
       fontWeight: '600',
-      color: joueurTheme.inkMuted,
+      color: '#71717A',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     joueurPreview: {
       fontFamily: fontFamily.regular,
       fontSize: 13,
       lineHeight: 18,
-      color: joueurTheme.inkMuted,
+      color: '#8B8B9A',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     joueurTag: {

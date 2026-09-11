@@ -6,7 +6,7 @@ Code source Expo / React Native de ProDay. Point d’entrée : `App.tsx` (racine
 
 | | |
 |---|---|
-| Version | **1.0.9** (`package.json` / `app.json`) |
+| Version | **1.0.10** (`package.json` / `app.json`) |
 | Bundle | `com.proday.app` |
 | Stack | Expo ~54 · React Native · TypeScript |
 | Site | [proday75.fr](https://proday75.fr) |

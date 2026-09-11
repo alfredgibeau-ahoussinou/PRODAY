@@ -39,7 +39,7 @@ export const AppTabHeader: React.FC<AppTabHeaderProps> = ({
       <View
         style={[
           styles.wrap,
-          safeTop && { paddingTop: Math.max(insets.top, spacing.sm) },
+          safeTop && { paddingTop: spacing.xs },
         ]}
       >
       <View style={styles.row}>

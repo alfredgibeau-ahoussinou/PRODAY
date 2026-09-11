@@ -124,12 +124,12 @@ export const matchDayPdfService = {
     const starters = event.lineup?.slots.filter((s) => s.role === 'starter') ?? [];
     const subs = event.lineup?.slots.filter((s) => s.role === 'sub') ?? [];
     const summary = [
-      `⚽ FEUILLE DE MATCH PRODAY : ${event.title}`,
-      `📅 ${event.starts_at ? formatCalendarDate(event.starts_at) : 'Date à venir'} • ${event.city}`,
-      event.lineup?.formation ? `📐 Formation : ${event.lineup.formation}` : '',
-      `\n🌟 TITULAIRES (${starters.length}) :`,
+      `FEUILLE DE MATCH PRODAY : ${event.title}`,
+      `${event.starts_at ? formatCalendarDate(event.starts_at) : 'Date à venir'} • ${event.city}`,
+      event.lineup?.formation ? `Formation : ${event.lineup.formation}` : '',
+      `\nTITULAIRES (${starters.length}) :`,
       ...starters.map((s, i) => `${i + 1}. ${s.display_name} (${s.position_label ?? 'Joueur'})`),
-      `\n🔄 REMPLAÇANTS (${subs.length}) :`,
+      `\nREMPLAÇANTS (${subs.length}) :`,
       ...subs.map((s, i) => `${12 + i}. ${s.display_name}`),
     ].filter(Boolean).join('\n');
 

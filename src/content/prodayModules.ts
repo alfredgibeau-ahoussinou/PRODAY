@@ -17,7 +17,7 @@ export interface ProDayModuleDef {
 /** Grille modules — alignée maquettes `docs/design/mockups/index.html` */
 export const PRODAY_MODULES: ProDayModuleDef[] = [
   { id: 'recrutement', icon: 'search', title: 'Recrutement', subtitle: 'Joueurs & clubs' },
-  { id: 'matchs', icon: 'calendar', title: 'Matchs', subtitle: 'Amicaux' },
+  { id: 'matchs', icon: 'calendar', title: 'Matchs', subtitle: 'Calendrier' },
   { id: 'gestion', icon: 'people', title: 'Gestion équipe', subtitle: 'Planning · présences · stats' },
   {
     id: 'smart_tactics',

@@ -16,7 +16,7 @@ type Props = {
 };
 
 /**
- * Sheet immersif Copilote Club — vrai dialogue Mistral (clubAssistantChat),
+ * Sheet immersif Copilote Club — dialogue réel Google Gemini (clubAssistantChat),
  * remplace l’ancien FAQ « Aide Pôle Club ».
  */
 export function ClubCopilotSheet({ visible, onClose }: Props) {

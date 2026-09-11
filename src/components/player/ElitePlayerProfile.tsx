@@ -8,6 +8,7 @@ import {
   Linking,
   Platform,
   Dimensions,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { User } from '../../models/User';
@@ -21,6 +22,7 @@ import { prodayHaptics } from '../../utils/prodayHaptics';
 import { buildPlayerCvHtmlFromUser } from '../../utils/pdfGenerator';
 import { openPlayerCvHtml } from '../../utils/openCvHtml';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
+import { useAccountDeletion } from '../../hooks/useAccountDeletion';
 
 interface ElitePlayerProfileProps {
   player: User;
@@ -28,6 +30,7 @@ interface ElitePlayerProfileProps {
   onBack?: () => void;
   onOpenAiAdvisor?: () => void;
   onEdit?: () => void;
+  onAvatarPress?: () => void;
 }
 
 type TabKey = 'carte' | 'stats' | 'parcours';
@@ -37,10 +40,13 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
   isOwnProfile,
   onBack,
   onOpenAiAdvisor,
+  onEdit,
+  onAvatarPress,
 }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('carte');
   const [rsvpBusy, setRsvpBusy] = useState(false);
   const nav = useTabNavigationActions();
+  const { confirmDeleteAccount, deleting: deletingAccount } = useAccountDeletion();
 
   // Événements & prochain match
   const { events, refresh: refreshEvents } = useTeamEvents(
@@ -142,6 +148,29 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
                 <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
               </TouchableOpacity>
             ) : null}
+            {onAvatarPress ? (
+              <TouchableOpacity
+                onPress={() => {
+                  prodayHaptics.press();
+                  onAvatarPress();
+                }}
+                activeOpacity={0.8}
+                style={styles.avatarWrap}
+              >
+                {player.avatar_url ? (
+                  <Image source={{ uri: player.avatar_url }} style={styles.avatarImg} />
+                ) : (
+                  <View style={styles.avatarFallback}>
+                    <Text style={styles.avatarLetter}>
+                      {(player.display_name?.charAt(0) || 'J').toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.cameraIconBadge}>
+                  <Ionicons name="camera" size={10} color="#000000" />
+                </View>
+              </TouchableOpacity>
+            ) : null}
             <View>
               <Text style={styles.playerName}>{player.display_name}</Text>
               <Text style={styles.playerMeta}>
@@ -158,12 +187,13 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
               if (onOpenAiAdvisor) {
                 onOpenAiAdvisor();
               } else {
-                nav.setActiveTab('plus');
+                nav.openDashboard('tactics_coach');
               }
             }}
             style={styles.aiAdvisorBtn}
+            accessibilityLabel="Ouvrir Conseiller IA"
           >
-            <Ionicons name="sparkles" size={16} color="#000000" />
+            <Ionicons name="sparkles" size={14} color={ELITE_COLORS.primary} />
             <Text style={styles.aiAdvisorBtnText}>Conseiller IA</Text>
           </TouchableOpacity>
         </View>
@@ -273,7 +303,7 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
               style={styles.carpoolBanner}
               activeOpacity={0.8}
             >
-              <Ionicons name="car-sport" size={18} color={ELITE_COLORS.gold} />
+              <Ionicons name="car-sport" size={18} color={ELITE_COLORS.primary} />
               <Text style={styles.carpoolBannerText}>
                 Covoiturage pour ce match · Consulter ou proposer
               </Text>
@@ -329,9 +359,23 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
               <PlayerCardReveal
                 card={cardData}
                 width={Math.min(280, Dimensions.get('window').width - 48)}
-                onPress={handleExportCv}
+                onPress={onAvatarPress ?? handleExportCv}
               />
             </View>
+
+            {onAvatarPress ? (
+              <TouchableOpacity
+                onPress={() => {
+                  prodayHaptics.press();
+                  onAvatarPress();
+                }}
+                activeOpacity={0.85}
+                style={styles.changePhotoBtn}
+              >
+                <Ionicons name="camera-outline" size={16} color={ELITE_COLORS.primary} style={{ marginRight: 6 }} />
+                <Text style={styles.changePhotoBtnText}>Changer ma photo de profil</Text>
+              </TouchableOpacity>
+            ) : null}
 
             {/* RÉSUMÉ CLÉ DU JOUEUR */}
             <View style={[styles.card, styles.summaryCard]}>
@@ -361,10 +405,10 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
                   handleExportCv();
                 }}
                 activeOpacity={0.85}
-                style={[styles.btnBase, styles.btnGold, { marginTop: 16 }]}
+                style={[styles.btnBase, styles.btnPrimary, { marginTop: 16 }]}
               >
                 <Ionicons name="share-social" size={18} color="#000000" style={{ marginRight: 8 }} />
-                <Text style={[styles.btnText, styles.btnTextGold]}>Partager ma Carte ProDay</Text>
+                <Text style={[styles.btnText, styles.btnTextPrimary]}>Partager ma Carte ProDay</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -387,7 +431,7 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
               </View>
 
               <View style={[styles.card, styles.counterBox]}>
-                <Ionicons name="flash" size={24} color={ELITE_COLORS.gold} />
+                <Ionicons name="flash" size={24} color={ELITE_COLORS.primary} />
                 <Text style={styles.counterNum}>{stats?.assists ?? 0}</Text>
                 <Text style={styles.counterLabel}>Passes décisives</Text>
               </View>
@@ -404,7 +448,8 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
               <Text style={styles.sectionHeaderTitle}>Forme & Disponibilité</Text>
               <View style={styles.formRow}>
                 <View style={styles.badgeSuccess}>
-                  <Text style={styles.badgeSuccessText}>🟢 Disponible pour le week-end</Text>
+                  <Ionicons name="checkmark-circle" size={14} color="#10B981" style={{ marginRight: 5 }} />
+                  <Text style={styles.badgeSuccessText}>Disponible pour le week-end</Text>
                 </View>
                 <Text style={styles.formNote}>
                   Prêt physiquement · Aucune blessure signalée
@@ -448,6 +493,31 @@ export const ElitePlayerProfile: React.FC<ElitePlayerProfileProps> = ({
               <Ionicons name="document-text" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
               <Text style={styles.btnText}>Télécharger mon CV Sportif (PDF)</Text>
             </TouchableOpacity>
+
+            <View style={[styles.card, { marginTop: 20, borderColor: 'rgba(239, 68, 68, 0.35)' }]}>
+              <Text style={[styles.sectionHeaderTitle, { color: '#F87171' }]}>Zone de danger</Text>
+              <Text style={[styles.bioText, { color: '#9CA3AF', marginBottom: 12 }]}>
+                La suppression de votre compte efface définitivement l'ensemble de vos données, statistiques et fiches d'évaluation.
+              </Text>
+              <TouchableOpacity
+                onPress={confirmDeleteAccount}
+                disabled={deletingAccount}
+                activeOpacity={0.85}
+                style={[
+                  styles.btnBase,
+                  {
+                    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                    borderWidth: 1,
+                    borderColor: 'rgba(239, 68, 68, 0.5)',
+                  },
+                ]}
+              >
+                <Ionicons name="trash-outline" size={18} color="#EF4444" style={{ marginRight: 8 }} />
+                <Text style={[styles.btnText, { color: '#EF4444' }]}>
+                  {deletingAccount ? 'Suppression en cours…' : 'Supprimer définitivement mon compte'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ) : null}
       </ScrollView>
@@ -505,15 +575,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: ELITE_COLORS.gold,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   aiAdvisorBtnText: {
-    color: '#000000',
-    fontWeight: '800',
-    fontSize: 13,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.1,
   },
   urgentMatchCard: {
     marginBottom: 16,
@@ -571,9 +644,9 @@ const styles = StyleSheet.create({
   carpoolBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: ELITE_COLORS.goldSoft,
+    backgroundColor: ELITE_COLORS.primarySoft,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.25)',
+    borderColor: 'rgba(0, 230, 118, 0.25)',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -583,7 +656,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     fontWeight: '700',
-    color: ELITE_COLORS.gold,
+    color: ELITE_COLORS.primary,
   },
   tabSelector: {
     flexDirection: 'row',
@@ -768,5 +841,63 @@ const styles = StyleSheet.create({
   },
   btnTextOutline: {
     color: ELITE_COLORS.textSecondary,
+  },
+  avatarWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    position: 'relative',
+  },
+  avatarImg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+  },
+  avatarFallback: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: ELITE_COLORS.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 118, 0.3)',
+  },
+  avatarLetter: {
+    color: ELITE_COLORS.primary,
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  cameraIconBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: ELITE_COLORS.primary,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: ELITE_COLORS.bg,
+  },
+  changePhotoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ELITE_COLORS.primarySoft,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 118, 0.3)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    alignSelf: 'center',
+  },
+  changePhotoBtnText: {
+    color: ELITE_COLORS.primary,
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

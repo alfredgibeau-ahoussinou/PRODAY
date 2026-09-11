@@ -152,7 +152,7 @@ export const MatchsScreen: React.FC<{
       return;
     }
     if (pendingMatchsLink.homeTab === 'matches') {
-      setInitialChapter('amicaux');
+      setInitialChapter('calendrier');
     } else if (pendingMatchsLink.homeTab === 'convocations') {
       setInitialChapter('convocations');
     } else if (pendingMatchsLink.homeTab === 'centre') {
@@ -267,7 +267,7 @@ export const MatchsScreen: React.FC<{
         onBack={() => setView('home')}
         onCreated={() => {
           refreshAll();
-          setInitialChapter('amicaux');
+          setInitialChapter('calendrier');
           setView('home');
         }}
       />
@@ -278,7 +278,7 @@ export const MatchsScreen: React.FC<{
         onBack={() => setView('home')}
         onAccepted={() => {
           refreshAll();
-          setInitialChapter('amicaux');
+          setInitialChapter('calendrier');
         }}
       />
     );

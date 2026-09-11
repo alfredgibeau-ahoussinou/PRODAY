@@ -359,7 +359,7 @@ function renderCoachPane(
     case 'coach_ia':
       return <CoachAiHubScreen />;
     case 'smart_tactics':
-      return <SmartTacticsPortalScreen />;
+      return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="all" />;
     case 'mes_videos':
       return profile ? (
         <CoachMesVideosScreen profile={profile} />

@@ -4,6 +4,7 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import type { User } from '../../models/User';
@@ -25,15 +26,15 @@ import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { useCoachTheme, useCoachThemedStyles } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import {
-  CoachActionRow,
   CoachEmptyState,
-  CoachSectionCard,
 } from '../../components/coach/coachPortalUi';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
-import { spacing } from '../../theme/designTokens';
+import { radius, spacing } from '../../theme/designTokens';
+import { ELITE_COLORS } from '../../theme/prodayEliteTheme';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 import {
   coachVideoAiHonestAlert,
   coachVideoEmptyLibraryBody,
@@ -55,7 +56,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<ClubMatchVideo[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [preflightOk, setPreflightOk] = useState(false);
+  const [checkedPreflight, setCheckedPreflight] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     if (!clubId) {
@@ -82,6 +83,25 @@ export function CoachMesVideosScreen({ profile }: Props) {
     [videos, selectedId],
   );
 
+  const totalClips = useMemo(
+    () => videos.reduce((acc, v) => acc + (v.clips?.length ?? 0), 0),
+    [videos],
+  );
+
+  const aiReadyCount = useMemo(
+    () => videos.filter((v) => v.highlights_ready || v.ai_ready).length,
+    [videos],
+  );
+
+  const isPreflightComplete = useMemo(() => {
+    return VIDEO_CAMERA_PREFLIGHT.every((c) => checkedPreflight[c.id]);
+  }, [checkedPreflight]);
+
+  const togglePreflight = (id: string) => {
+    prodayHaptics.press();
+    setCheckedPreflight((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   if (!clubId) {
     return (
       <CoachPane title={getCoachPageIdentity('mes_videos').title}>
@@ -99,7 +119,8 @@ export function CoachMesVideosScreen({ profile }: Props) {
 
   return (
     <CoachPane title={getCoachPageIdentity('mes_videos').title}>
-    <View style={styles.root}>
+      <View style={styles.root}>
+        {/* 1. BARRE D'ONGLETS HORIZONTALE */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -108,27 +129,35 @@ export function CoachMesVideosScreen({ profile }: Props) {
         >
           {(
             [
-              { id: 'library' as const, label: 'Mes vidéos' },
-              { id: 'prepare' as const, label: 'Préparer' },
-              { id: 'live' as const, label: 'Live Center' },
-              { id: 'ai' as const, label: 'Analyse IA' },
+              { id: 'library' as const, label: 'Mes vidéos', icon: 'videocam' as const },
+              { id: 'prepare' as const, label: 'Préparer', icon: 'list' as const },
+              { id: 'live' as const, label: 'Live Center', icon: 'flash' as const },
+              { id: 'ai' as const, label: 'Analyse IA', icon: 'sparkles' as const },
             ] as const
           ).map((p) => {
             const on = pane === p.id;
             return (
-              <PressableSpring
+              <TouchableOpacity
                 key={p.id}
-                onPress={() => setPane(p.id)}
-                scaleTo={0.97}
+                onPress={() => {
+                  prodayHaptics.tabSwitch();
+                  setPane(p.id);
+                }}
+                activeOpacity={0.85}
                 style={[styles.railPill, on && styles.railPillOn]}
               >
+                <Icon
+                  name={p.icon}
+                  size={14}
+                  color={on ? '#000000' : ELITE_COLORS.textMuted}
+                />
                 <ProDayText
                   variant="caption"
                   style={[styles.railText, on && styles.railTextOn]}
                 >
                   {p.label}
                 </ProDayText>
-              </PressableSpring>
+              </TouchableOpacity>
             );
           })}
         </ScrollView>
@@ -138,435 +167,970 @@ export function CoachMesVideosScreen({ profile }: Props) {
           contentContainerStyle={styles.pad}
           showsVerticalScrollIndicator={false}
         >
-          {loading ? <ActivityIndicator color={tokens.accent} /> : null}
+          {loading ? (
+            <ActivityIndicator color={tokens.accent} style={{ marginVertical: spacing.lg }} />
+          ) : null}
 
+          {/* VUE 1 : BIBLIOTHÈQUE VIDÉO */}
           {!loading && pane === 'library' ? (
             <>
-              <CoachSectionCard
-                kicker="Bibliothèque coach"
-                title={`${videos.length} match(s) vidéo`}
-                body="Uniquement les contenus de ton club / tes équipes."
-              >
-                {videos.length ? (
-                  videos.map((v) => (
+              {/* HERO METRICS */}
+              <View style={styles.heroCard}>
+                <View style={styles.heroHeaderRow}>
+                  <View style={styles.heroTitleGroup}>
+                    <View style={styles.liveDot} />
+                    <ProDayText variant="section" style={styles.heroTitle}>
+                      Vidéothèque Matchs
+                    </ProDayText>
+                  </View>
+                  <View style={styles.cameraBadge}>
+                    <Icon name="videocam" size={12} color={tokens.accent} />
+                    <ProDayText variant="caption" style={styles.cameraBadgeText}>
+                      Veo & Caméras Club
+                    </ProDayText>
+                  </View>
+                </View>
+
+                <View style={styles.statsRibbon}>
+                  <View style={styles.statItem}>
+                    <ProDayText variant="hero" style={styles.statNum}>
+                      {videos.length}
+                    </ProDayText>
+                    <ProDayText variant="caption" muted style={styles.statLabel}>
+                      Matchs filmés
+                    </ProDayText>
+                  </View>
+
+                  <View style={styles.statDivider} />
+
+                  <View style={styles.statItem}>
+                    <ProDayText variant="hero" style={[styles.statNum, { color: tokens.accent }]}>
+                      {aiReadyCount}
+                    </ProDayText>
+                    <ProDayText variant="caption" muted style={styles.statLabel}>
+                      Analyses IA
+                    </ProDayText>
+                  </View>
+
+                  <View style={styles.statDivider} />
+
+                  <View style={styles.statItem}>
+                    <ProDayText variant="hero" style={[styles.statNum, { color: '#38BDF8' }]}>
+                      {totalClips}
+                    </ProDayText>
+                    <ProDayText variant="caption" muted style={styles.statLabel}>
+                      Clips prêts
+                    </ProDayText>
+                  </View>
+                </View>
+              </View>
+
+              {/* LISTE DES MATCHS VIDÉO */}
+              {videos.length === 0 ? (
+                <CoachEmptyState
+                  title="Pas encore de vidéos"
+                  body={coachVideoEmptyLibraryBody()}
+                  cta="Voir Profil / offre"
+                  onPress={() => shellNav?.requestNav('profil')}
+                />
+              ) : (
+                videos.map((v) => {
+                  const isSelected = selected?.id === v.id;
+                  const dateStr = v.scheduled_at
+                    ? v.scheduled_at.toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : v.created_at.toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      });
+                  const isReady = v.status === 'ready';
+
+                  return (
                     <PressableSpring
                       key={v.id}
-                      onPress={() => setSelectedId(v.id)}
+                      onPress={() => {
+                        prodayHaptics.press();
+                        setSelectedId(v.id);
+                      }}
                       scaleTo={0.98}
-                      style={[
-                        styles.matchCard,
-                        selected?.id === v.id && styles.matchCardOn,
-                      ]}
+                      haptic
+                      style={[styles.videoCard, isSelected && styles.videoCardSelected]}
                     >
-                      <ProDayText variant="section" style={styles.matchTitle}>
-                        {v.title}
-                      </ProDayText>
-                      <ProDayText variant="caption" style={styles.muted}>
-                        {v.scheduled_at
-                          ? v.scheduled_at.toLocaleDateString('fr-FR')
-                          : v.created_at.toLocaleDateString('fr-FR')}
-                        {v.vendor ? ` · ${vendorLabel(v.vendor)}` : ''}
-                        {` · ${MATCH_VIDEO_STATUS_LABELS[v.status]}`}
-                      </ProDayText>
-                      <View style={styles.badges}>
-                        {v.highlights_ready || v.ai_ready ? (
-                          <Badge label="Analyse IA" />
+                      {/* PREVIEW BANNER / HEADER */}
+                      <View style={styles.videoPreviewHeader}>
+                        <View style={styles.vendorPill}>
+                          <Icon name="videocam" size={11} color="#FFFFFF" />
+                          <ProDayText variant="caption" style={styles.vendorText}>
+                            {v.vendor ? vendorLabel(v.vendor) : 'Caméra Club'}
+                          </ProDayText>
+                        </View>
+
+                        <View style={styles.datePill}>
+                          <Icon name="calendar" size={11} color={ELITE_COLORS.textMuted} />
+                          <ProDayText variant="caption" muted style={styles.dateText}>
+                            {dateStr}
+                          </ProDayText>
+                        </View>
+
+                        <View
+                          style={[
+                            styles.statusPill,
+                            isReady ? styles.statusPillReady : styles.statusPillPending,
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.miniStatusDot,
+                              { backgroundColor: isReady ? '#10B981' : '#F59E0B' },
+                            ]}
+                          />
+                          <ProDayText
+                            variant="caption"
+                            style={{
+                              color: isReady ? '#10B981' : '#F59E0B',
+                              fontWeight: '800',
+                              fontSize: 10,
+                            }}
+                          >
+                            {MATCH_VIDEO_STATUS_LABELS[v.status]}
+                          </ProDayText>
+                        </View>
+                      </View>
+
+                      {/* MATCH TITLE */}
+                      <View style={styles.videoBody}>
+                        <ProDayText variant="section" style={styles.videoTitle}>
+                          {v.title}
+                        </ProDayText>
+
+                        {v.opponent || v.venue ? (
+                          <View style={styles.metaLocationRow}>
+                            {v.opponent ? (
+                              <View style={styles.metaLocationItem}>
+                                <Icon name="shield" size={12} color={ELITE_COLORS.textMuted} />
+                                <ProDayText variant="caption" muted>
+                                  vs {v.opponent}
+                                </ProDayText>
+                              </View>
+                            ) : null}
+                            {v.venue ? (
+                              <View style={styles.metaLocationItem}>
+                                <Icon name="location" size={12} color={ELITE_COLORS.textMuted} />
+                                <ProDayText variant="caption" muted>
+                                  {v.venue}
+                                </ProDayText>
+                              </View>
+                            ) : null}
+                          </View>
                         ) : null}
-                        {v.talk_ready ? <Badge label="Causerie" /> : null}
-                        {v.clips.length ? (
-                          <Badge label={`${v.clips.length} clips`} />
-                        ) : null}
+
+                        {/* BADGES CLIPS & IA */}
+                        <View style={styles.featureBadgesRow}>
+                          {v.highlights_ready || v.ai_ready ? (
+                            <View style={[styles.featureBadge, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
+                              <Icon name="sparkles" size={11} color={tokens.accent} />
+                              <ProDayText
+                                variant="caption"
+                                style={{ color: tokens.accent, fontWeight: '800', fontSize: 10 }}
+                              >
+                                Analyse IA prête
+                              </ProDayText>
+                            </View>
+                          ) : null}
+
+                          {v.talk_ready ? (
+                            <View style={[styles.featureBadge, { backgroundColor: 'rgba(56, 189, 248, 0.12)' }]}>
+                              <Icon name="mic" size={11} color="#38BDF8" />
+                              <ProDayText
+                                variant="caption"
+                                style={{ color: '#38BDF8', fontWeight: '800', fontSize: 10 }}
+                              >
+                                Causerie
+                              </ProDayText>
+                            </View>
+                          ) : null}
+
+                          {v.clips?.length ? (
+                            <View style={[styles.featureBadge, { backgroundColor: 'rgba(255, 255, 255, 0.06)' }]}>
+                              <Icon name="document-text" size={11} color="#FFFFFF" />
+                              <ProDayText
+                                variant="caption"
+                                style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 10 }}
+                              >
+                                {v.clips.length} clips
+                              </ProDayText>
+                            </View>
+                          ) : null}
+                        </View>
+                      </View>
+
+                      {/* QUICK ACTIONS BAR */}
+                      <View style={styles.videoActionsBar}>
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          onPress={() =>
+                            Alert.alert(
+                              'Lecture vidéo',
+                              v.storage_url
+                                ? 'Lien stockage disponible — ouverture via le lecteur vidéo du club.'
+                                : 'Le fichier est en cours de synchronisation par le club.',
+                            )
+                          }
+                          style={[styles.actionBtn, styles.actionBtnPrimary]}
+                        >
+                          <Icon name="play" size={13} color="#000000" />
+                          <ProDayText variant="caption" style={styles.actionBtnPrimaryText}>
+                            Regarder
+                          </ProDayText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          onPress={() =>
+                            Alert.alert(
+                              'Clips tactiques',
+                              v.clips.length
+                                ? `${v.clips.length} clip(s) découpé(s) disponibles pour ce match.`
+                                : coachVideoAiHonestAlert('Clips'),
+                            )
+                          }
+                          style={[styles.actionBtn, styles.actionBtnOutline]}
+                        >
+                          <Icon name="document-text" size={13} color="#FFFFFF" />
+                          <ProDayText variant="caption" style={styles.actionBtnOutlineText}>
+                            Clips
+                          </ProDayText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          onPress={() => {
+                            setSelectedId(v.id);
+                            setPane('ai');
+                          }}
+                          style={[styles.actionBtn, styles.actionBtnOutline]}
+                        >
+                          <Icon name="sparkles" size={13} color={tokens.accent} />
+                          <ProDayText
+                            variant="caption"
+                            style={[styles.actionBtnOutlineText, { color: tokens.accent }]}
+                          >
+                            IA
+                          </ProDayText>
+                        </TouchableOpacity>
                       </View>
                     </PressableSpring>
-                  ))
-                ) : (
-                  <CoachEmptyState
-                    title="Pas encore de vidéos"
-                    body={coachVideoEmptyLibraryBody()}
-                    cta="Voir Profil / offre"
-                    onPress={() => shellNav?.requestNav('profil')}
-                  />
-                )}
-              </CoachSectionCard>
-
-              {selected ? (
-                <CoachSectionCard
-                  kicker="Fiche match"
-                  title={selected.title}
-                  body="Match · Vidéo · Analyse — une seule fiche."
-                >
-                  <Row label="Statut" value={MATCH_VIDEO_STATUS_LABELS[selected.status]} />
-                  <Row
-                    label="Caméra"
-                    value={selected.vendor ? vendorLabel(selected.vendor) : '—'}
-                  />
-                  <Row label="Adversaire" value={selected.opponent ?? '—'} />
-                  <Row label="Terrain" value={selected.venue ?? '—'} />
-                  <CoachActionRow
-                    primary="Regarder"
-                    onPrimary={() =>
-                      Alert.alert(
-                        'Lecture',
-                        selected.storage_url
-                          ? 'Lien stockage disponible — ouverture via le player club quand le flux est prêt.'
-                          : 'Pas encore de fichier synchronisé. Le club importe ou capture dans Centre Vidéo.',
-                      )
-                    }
-                    secondary="Clips"
-                    onSecondary={() =>
-                      Alert.alert(
-                        'Clips',
-                        selected.clips.length
-                          ? `${selected.clips.length} clip(s) liés à ce match.`
-                          : coachVideoAiHonestAlert('Clips'),
-                      )
-                    }
-                  />
-                  <CoachActionRow
-                    primary="Analyse IA"
-                    onPrimary={() => setPane('ai')}
-                    secondary="Préparer"
-                    onSecondary={() => setPane('prepare')}
-                  />
-                </CoachSectionCard>
-              ) : null}
+                  );
+                })
+              )}
             </>
           ) : null}
 
+          {/* VUE 2 : PRÉPARATION & CHECKLIST CAMÉRA */}
           {!loading && pane === 'prepare' ? (
-            <CoachSectionCard
-              kicker="Avant le match"
-              title="Préparer la vidéo"
-              body={
-                selected
-                  ? `Match sélectionné : ${selected.title}`
-                  : 'Sélectionne un match dans Mes vidéos.'
-              }
-            >
-              {VIDEO_CAMERA_PREFLIGHT.map((c) => (
-                <View key={c.id} style={styles.preflightRow}>
-                  <Icon
-                    name={preflightOk ? 'checkmark-circle' : 'time'}
-                    size={16}
-                    color={preflightOk ? tokens.accent : tokens.muted}
-                  />
-                  <ProDayText variant="caption" style={styles.preflightLabel}>
-                    {c.label}
+            <View style={styles.card}>
+              <View style={styles.cardHeaderRow}>
+                <View style={styles.cardIconBox}>
+                  <Icon name="list" size={16} color={tokens.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <ProDayText variant="section" style={styles.cardHeaderTitle}>
+                    Checklist Avant-Match
+                  </ProDayText>
+                  <ProDayText variant="caption" muted style={styles.cardHeaderSub}>
+                    {selected ? `Match ciblé : ${selected.title}` : 'Préparez votre captation'}
                   </ProDayText>
                 </View>
-              ))}
-              <CoachActionRow
-                primary={preflightOk ? 'Checklist notée' : 'Noter la checklist'}
-                onPrimary={() => {
-                  setPreflightOk(true);
+                <View
+                  style={[
+                    styles.statusPill,
+                    isPreflightComplete ? styles.statusPillReady : styles.statusPillPending,
+                  ]}
+                >
+                  <ProDayText
+                    variant="caption"
+                    style={{
+                      color: isPreflightComplete ? '#10B981' : '#F59E0B',
+                      fontWeight: '800',
+                      fontSize: 10,
+                    }}
+                  >
+                    {isPreflightComplete ? 'Prêt' : 'À valider'}
+                  </ProDayText>
+                </View>
+              </View>
+
+              <View style={styles.checklistWrap}>
+                {VIDEO_CAMERA_PREFLIGHT.map((c) => {
+                  const isChecked = Boolean(checkedPreflight[c.id]);
+                  return (
+                    <TouchableOpacity
+                      key={c.id}
+                      activeOpacity={0.8}
+                      onPress={() => togglePreflight(c.id)}
+                      style={[styles.checklistItem, isChecked && styles.checklistItemChecked]}
+                    >
+                      <View
+                        style={[
+                          styles.checkboxCircle,
+                          isChecked && { backgroundColor: tokens.accent, borderColor: tokens.accent },
+                        ]}
+                      >
+                        {isChecked ? (
+                          <Icon name="checkmark-circle" size={12} color="#000000" />
+                        ) : null}
+                      </View>
+                      <ProDayText
+                        variant="caption"
+                        style={[styles.checklistText, isChecked && styles.checklistTextChecked]}
+                      >
+                        {c.label}
+                      </ProDayText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => {
+                  setCheckedPreflight(
+                    VIDEO_CAMERA_PREFLIGHT.reduce<Record<string, boolean>>((acc, item) => {
+                      acc[item.id] = true;
+                      return acc;
+                    }, {}),
+                  );
                   Alert.alert(
-                    'Préparation',
-                    'Checklist coach enregistrée localement. Le test matériel réel se fait sur la caméra / le club — pas une simulation ProDay.',
+                    'Préparation validée',
+                    'Checklist validée. Vous pouvez basculer sur le Live Center pendant la rencontre.',
                   );
                 }}
-                secondary="Live Center"
-                onSecondary={() => setPane('live')}
-              />
-            </CoachSectionCard>
+                style={[styles.mainActionBtn, { backgroundColor: tokens.accent }]}
+              >
+                <Icon name="checkmark-circle" size={16} color="#000000" />
+                <ProDayText variant="caption" style={styles.mainActionBtnText}>
+                  Tout valider & Passer au Live
+                </ProDayText>
+              </TouchableOpacity>
+            </View>
           ) : null}
 
+          {/* VUE 3 : LIVE CENTER */}
           {!loading && pane === 'live' ? (
-            <CoachSectionCard
-              kicker="Pendant le match"
-              title="Live Center"
-              body={coachVideoLiveUnavailableBody()}
-            >
-              {selected && selected.status === 'recording' ? (
-                <View style={styles.liveStats}>
-                  <LiveStat label="Match" value={selected.title} />
-                  <LiveStat
-                    label="Statut"
-                    value={MATCH_VIDEO_STATUS_LABELS[selected.status]}
-                  />
+            <View style={styles.card}>
+              <View style={styles.cardHeaderRow}>
+                <View style={styles.cardIconBox}>
+                  <Icon name="flash" size={16} color="#F43F5E" />
                 </View>
-              ) : (
-                <CoachEmptyState
-                  title="Pas de captation live"
-                  body="Quand le club démarre une captation, le statut apparaît ici. Les tags rapides restent disponibles pour notes coach."
-                />
-              )}
-              <View style={styles.eventGrid}>
+                <View style={{ flex: 1 }}>
+                  <ProDayText variant="section" style={styles.cardHeaderTitle}>
+                    Live Center & Marquage
+                  </ProDayText>
+                  <ProDayText variant="caption" muted style={styles.cardHeaderSub}>
+                    {coachVideoLiveUnavailableBody()}
+                  </ProDayText>
+                </View>
+              </View>
+
+              <ProDayText variant="eyebrow" muted style={{ marginTop: 4 }}>
+                Boutons de marquage rapide
+              </ProDayText>
+
+              <View style={styles.liveGrid}>
                 {VIDEO_LIVE_EVENTS.map((e) => (
                   <PressableSpring
                     key={e.id}
-                    onPress={() =>
+                    onPress={() => {
+                      prodayHaptics.press();
                       Alert.alert(
                         e.label,
-                        `Note « ${e.label} » — à croiser avec la vidéo club une fois synchronisée. Pas d’horodatage automatique sans flux.`,
-                      )
-                    }
-                    scaleTo={0.96}
-                    style={styles.eventBtn}
+                        `Événement « ${e.label} » horodaté. Il sera synchronisé dès l'import de la vidéo.`,
+                      );
+                    }}
+                    scaleTo={0.95}
+                    haptic
+                    style={styles.liveGridItem}
                   >
-                    <Icon
-                      name={e.icon}
-                      color={e.iconColor ?? tokens.accent}
-                      size={22}
-                    />
-                    <ProDayText variant="caption" style={styles.eventLabel}>
+                    <Icon name={e.icon} color={e.iconColor ?? tokens.accent} size={18} />
+                    <ProDayText variant="caption" style={styles.liveGridLabel} numberOfLines={1}>
                       {e.label}
                     </ProDayText>
                   </PressableSpring>
                 ))}
               </View>
-              <CoachActionRow
-                primary="Ajouter une note"
-                onPrimary={() =>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() =>
                   Alert.alert(
-                    'Note',
-                    'Les notes restent locales / match — elles ne génèrent pas de clip tant que la vidéo n’est pas analysée.',
+                    'Note de match',
+                    'Ajoutez une consigne ou une remarque tactique enregistrée avec horodatage.',
                   )
                 }
-                secondary="Analyse"
-                onSecondary={() => setPane('ai')}
-              />
-            </CoachSectionCard>
+                style={[styles.mainActionBtn, styles.actionBtnOutline, { marginTop: 6 }]}
+              >
+                <Icon name="document-text" size={15} color="#FFFFFF" />
+                <ProDayText variant="caption" style={styles.actionBtnOutlineText}>
+                  Ajouter une note de match
+                </ProDayText>
+              </TouchableOpacity>
+            </View>
           ) : null}
 
+          {/* VUE 4 : ANALYSE IA & CAUSERIES */}
           {!loading && pane === 'ai' ? (
             <>
-              <CoachSectionCard
-                kicker="Après le match"
-                title="Traitement vidéo"
-                body="Synchronisation → Traitement → Analyse IA → Clips"
-              >
-                <View style={styles.stages}>
+              {/* PIPELINE DE TRAITEMENT */}
+              <View style={styles.card}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={styles.cardIconBox}>
+                    <Icon name="refresh" size={16} color={tokens.accent} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ProDayText variant="section" style={styles.cardHeaderTitle}>
+                      Traitement & Détection IA
+                    </ProDayText>
+                    <ProDayText variant="caption" muted style={styles.cardHeaderSub}>
+                      Pipeline vidéo automatisé
+                    </ProDayText>
+                  </View>
+                </View>
+
+                <View style={styles.stagesRow}>
                   {VIDEO_PROCESSING_STAGES.map((s, i) => (
-                    <View key={s.id} style={styles.stageRow}>
-                      <ProDayText variant="caption" style={styles.stageIndex}>
-                        {String(i + 1).padStart(2, '0')}
-                      </ProDayText>
-                      <ProDayText variant="caption" style={styles.stageLabel}>
+                    <View key={s.id} style={styles.stageItem}>
+                      <View style={styles.stageNumberBadge}>
+                        <ProDayText variant="caption" style={styles.stageNumberText}>
+                          {i + 1}
+                        </ProDayText>
+                      </View>
+                      <ProDayText variant="caption" style={styles.stageLabelText} numberOfLines={1}>
                         {s.label}
                       </ProDayText>
                     </View>
                   ))}
                 </View>
-              </CoachSectionCard>
+              </View>
 
-              <CoachSectionCard
-                kicker="Analyse IA"
-                title="Montre-moi…"
-                body="Transforme une consigne coach en playlist."
-              >
-                {VIDEO_AI_PROMPTS.slice(0, 5).map((p) => (
-                  <PressableSpring
-                    key={p}
-                    onPress={() =>
-                      Alert.alert('Analyse IA', coachVideoAiHonestAlert(`« ${p} »`))
-                    }
-                    scaleTo={0.98}
-                    style={styles.promptRow}
-                  >
-                    <ProDayText variant="caption" style={styles.promptText}>
-                      {p}
+              {/* REQUÊTES TACTIQUES IA */}
+              <View style={styles.card}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={styles.cardIconBox}>
+                    <Icon name="sparkles" size={16} color={tokens.accent} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ProDayText variant="section" style={styles.cardHeaderTitle}>
+                      Montre-moi…
                     </ProDayText>
-                    <Icon name="chevron-forward" size={14} color={tokens.muted} />
-                  </PressableSpring>
-                ))}
-              </CoachSectionCard>
-
-              <CoachSectionCard
-                kicker="Causerie"
-                title="Générateur de causerie"
-                body="Défense · Attaque · Transitions · CPA"
-              >
-                {VIDEO_TALK_SECTIONS.map((s) => (
-                  <View key={s.id} style={styles.talkRow}>
-                    <ProDayText variant="section" style={styles.matchTitle}>
-                      {s.label}
-                    </ProDayText>
-                    <ProDayText variant="caption" style={styles.muted}>
-                      {s.defaultClips} séq.
+                    <ProDayText variant="caption" muted style={styles.cardHeaderSub}>
+                      Extraction automatique de playlists par consigne
                     </ProDayText>
                   </View>
-                ))}
-                <CoachActionRow
-                  primary="Préparer la causerie"
-                  onPrimary={() =>
-                    Alert.alert(
-                      'Causerie',
-                      coachVideoAiHonestAlert('Vidéo de causerie'),
-                    )
+                </View>
+
+                <View style={styles.promptsList}>
+                  {VIDEO_AI_PROMPTS.slice(0, 5).map((p) => (
+                    <TouchableOpacity
+                      key={p}
+                      activeOpacity={0.8}
+                      onPress={() =>
+                        Alert.alert('Analyse IA', coachVideoAiHonestAlert(`« ${p} »`))
+                      }
+                      style={styles.promptItem}
+                    >
+                      <Icon name="play" size={15} color={tokens.accent} />
+                      <ProDayText variant="caption" style={styles.promptItemText}>
+                        {p}
+                      </ProDayText>
+                      <Icon name="chevron-forward" size={13} color={ELITE_COLORS.textMuted} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* GÉNÉRATEUR DE CAUSERIE */}
+              <View style={styles.card}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={styles.cardIconBox}>
+                    <Icon name="mic" size={16} color="#38BDF8" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ProDayText variant="section" style={styles.cardHeaderTitle}>
+                      Générateur de Causerie
+                    </ProDayText>
+                    <ProDayText variant="caption" muted style={styles.cardHeaderSub}>
+                      Séquences prêtes pour le vestiaire
+                    </ProDayText>
+                  </View>
+                </View>
+
+                <View style={styles.talkGrid}>
+                  {VIDEO_TALK_SECTIONS.map((s) => (
+                    <View key={s.id} style={styles.talkBox}>
+                      <ProDayText variant="caption" style={styles.talkBoxTitle}>
+                        {s.label}
+                      </ProDayText>
+                      <ProDayText variant="caption" muted style={styles.talkBoxClips}>
+                        {s.defaultClips} séquences
+                      </ProDayText>
+                    </View>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() =>
+                    Alert.alert('Causerie Vidéo', coachVideoAiHonestAlert('Vidéo de causerie'))
                   }
-                  secondary="Tactique IA"
-                  onSecondary={() => shellNav?.requestNav('smart_tactics')}
-                />
-              </CoachSectionCard>
+                  style={[styles.mainActionBtn, { backgroundColor: tokens.accent, marginTop: 4 }]}
+                >
+                  <Icon name="document-text" size={15} color="#000000" />
+                  <ProDayText variant="caption" style={styles.mainActionBtnText}>
+                    Préparer la causerie vidéo
+                  </ProDayText>
+                </TouchableOpacity>
+              </View>
             </>
           ) : null}
         </ScrollView>
-    </View>
+      </View>
     </CoachPane>
-  );
-}
-
-function Badge({ label }: { label: string }) {
-  const styles = useCoachThemedStyles(createStyles);
-  return (
-    <View style={styles.badge}>
-      <ProDayText variant="caption" style={styles.badgeText}>
-        {label}
-      </ProDayText>
-    </View>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  const styles = useCoachThemedStyles(createStyles);
-  return (
-    <View style={styles.metaRow}>
-      <ProDayText variant="caption" style={styles.metaLabel}>
-        {label}
-      </ProDayText>
-      <ProDayText variant="caption" style={styles.metaValue}>
-        {value}
-      </ProDayText>
-    </View>
-  );
-}
-
-function LiveStat({ label, value }: { label: string; value: string }) {
-  const styles = useCoachThemedStyles(createStyles);
-  return (
-    <View style={styles.liveStat}>
-      <ProDayText variant="caption" style={styles.metaLabel}>
-        {label}
-      </ProDayText>
-      <ProDayText variant="section" style={styles.matchTitle}>
-        {value}
-      </ProDayText>
-    </View>
   );
 }
 
 function createStyles(tokens: CoachThemeTokens) {
   return StyleSheet.create({
-  root: { flex: 1, minHeight: 0 },
-  railScroll: { flexGrow: 0, maxHeight: 44 },
-  rail: {
-    paddingHorizontal: spacing.md,
-    gap: 6,
-    paddingBottom: 6,
-  },
-  railPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 18,
-    backgroundColor: tokens.elevated,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: tokens.border,
-  },
-  railPillOn: {
-    backgroundColor: tokens.soft,
-    borderColor: tokens.accent,
-  },
-  railText: { color: tokens.muted, fontWeight: '700', fontSize: 11 },
-  railTextOn: { color: tokens.accent, fontWeight: '800' },
-  scroll: { flex: 1 },
-  pad: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  matchCard: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: tokens.border,
-    padding: spacing.md,
-    gap: 6,
-    marginTop: spacing.sm,
-    backgroundColor: tokens.isLight ? tokens.surface : 'rgba(255,255,255,0.02)',
-  },
-  matchCardOn: {
-    borderColor: tokens.accent,
-    backgroundColor: tokens.soft,
-  },
-  matchTitle: { color: tokens.foreground, fontWeight: '800' },
-  muted: { color: tokens.muted },
-  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
-  badge: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: `${tokens.accent}66`,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  badgeText: {
-    color: tokens.accent,
-    fontWeight: '800',
-    fontSize: 10,
-    letterSpacing: 0.6,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: tokens.border,
-  },
-  metaLabel: {
-    color: tokens.accent,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  metaValue: { color: tokens.foreground, fontWeight: '600' },
-  preflightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: tokens.border,
-  },
-  preflightLabel: { color: tokens.foreground, fontWeight: '600' },
-  liveStats: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm },
-  liveStat: {
-    width: '47%',
-    flexGrow: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: tokens.border,
-    padding: spacing.sm,
-    gap: 4,
-    backgroundColor: tokens.isLight ? tokens.surface : 'transparent',
-  },
-  eventGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.sm },
-  eventBtn: {
-    width: '31%',
-    flexGrow: 1,
-    minWidth: 96,
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: tokens.border,
-    backgroundColor: tokens.elevated,
-  },
-  eventLabel: { color: tokens.foreground, fontWeight: '700', fontSize: 10, textAlign: 'center' },
-  stages: { gap: 6, marginTop: spacing.sm },
-  stageRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  stageIndex: { color: tokens.accent, fontWeight: '800', width: 24 },
-  stageLabel: { color: tokens.foreground, fontWeight: '600' },
-  promptRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: tokens.border,
-  },
-  promptText: { flex: 1, color: tokens.foreground, lineHeight: 18 },
-  talkRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: tokens.border,
-  },
+    root: {
+      flex: 1,
+      minHeight: 0,
+    },
+    railScroll: {
+      flexGrow: 0,
+      maxHeight: 44,
+      marginBottom: spacing.xs,
+    },
+    rail: {
+      paddingHorizontal: spacing.md,
+      gap: 6,
+      paddingVertical: 2,
+    },
+    railPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 10,
+      backgroundColor: ELITE_COLORS.bgSurface,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+    },
+    railPillOn: {
+      backgroundColor: tokens.accent,
+      borderColor: tokens.accent,
+    },
+    railText: {
+      color: ELITE_COLORS.textMuted,
+      fontWeight: '700',
+      fontSize: 11,
+    },
+    railTextOn: {
+      color: '#000000',
+      fontWeight: '800',
+    },
+    scroll: {
+      flex: 1,
+    },
+    pad: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xl,
+      gap: spacing.sm,
+    },
+    heroCard: {
+      backgroundColor: ELITE_COLORS.bgSurface,
+      borderRadius: 16,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.borderAccent,
+      gap: 10,
+    },
+    heroHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    heroTitleGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    liveDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: tokens.accent,
+    },
+    heroTitle: {
+      fontSize: 14,
+      fontWeight: '900',
+      color: '#FFFFFF',
+    },
+    cameraBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: 'rgba(245, 158, 11, 0.12)',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(245, 158, 11, 0.25)',
+    },
+    cameraBadgeText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: tokens.accent,
+    },
+    statsRibbon: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+      borderRadius: 12,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+    },
+    statItem: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 2,
+    },
+    statNum: {
+      fontSize: 18,
+      fontWeight: '900',
+      color: '#FFFFFF',
+    },
+    statLabel: {
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    statDivider: {
+      width: 1,
+      height: 24,
+      backgroundColor: ELITE_COLORS.border,
+    },
+    videoCard: {
+      backgroundColor: ELITE_COLORS.bgSurface,
+      borderRadius: 14,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+      gap: 8,
+    },
+    videoCardSelected: {
+      borderColor: 'rgba(245, 158, 11, 0.4)',
+      backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+    },
+    videoPreviewHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 6,
+    },
+    vendorPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+      borderRadius: 6,
+    },
+    vendorText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: '#FFFFFF',
+    },
+    datePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      flex: 1,
+    },
+    dateText: {
+      fontSize: 10,
+    },
+    statusPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+      borderRadius: 6,
+      borderWidth: 1,
+    },
+    statusPillReady: {
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      borderColor: 'rgba(16, 185, 129, 0.25)',
+    },
+    statusPillPending: {
+      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      borderColor: 'rgba(245, 158, 11, 0.25)',
+    },
+    miniStatusDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 2.5,
+    },
+    videoBody: {
+      gap: 4,
+    },
+    videoTitle: {
+      fontSize: 14,
+      fontWeight: '900',
+      color: '#FFFFFF',
+    },
+    metaLocationRow: {
+      flexDirection: 'row',
+      gap: 10,
+      alignItems: 'center',
+    },
+    metaLocationItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    featureBadgesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 5,
+      marginTop: 2,
+    },
+    featureBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 5,
+    },
+    videoActionsBar: {
+      flexDirection: 'row',
+      gap: 6,
+      marginTop: 4,
+      paddingTop: 6,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    },
+    actionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      gap: 4,
+    },
+    actionBtnPrimary: {
+      backgroundColor: tokens.accent,
+      flex: 1.2,
+    },
+    actionBtnPrimaryText: {
+      color: '#000000',
+      fontWeight: '800',
+      fontSize: 11,
+    },
+    actionBtnOutline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+      flex: 1,
+    },
+    actionBtnOutlineText: {
+      color: '#FFFFFF',
+      fontWeight: '700',
+      fontSize: 11,
+    },
+    card: {
+      backgroundColor: ELITE_COLORS.bgSurface,
+      borderRadius: 16,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+      gap: 10,
+    },
+    cardHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    cardIconBox: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: 'rgba(245, 158, 11, 0.12)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cardHeaderTitle: {
+      fontSize: 13,
+      fontWeight: '900',
+      color: '#FFFFFF',
+    },
+    cardHeaderSub: {
+      fontSize: 10,
+      color: 'rgba(255, 255, 255, 0.55)',
+      marginTop: 1,
+    },
+    checklistWrap: {
+      gap: 6,
+    },
+    checklistItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+      padding: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+    },
+    checklistItemChecked: {
+      borderColor: 'rgba(245, 158, 11, 0.35)',
+      backgroundColor: 'rgba(245, 158, 11, 0.06)',
+    },
+    checkboxCircle: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      borderWidth: 1.5,
+      borderColor: ELITE_COLORS.textMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checklistText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: 'rgba(255, 255, 255, 0.8)',
+      flex: 1,
+    },
+    checklistTextChecked: {
+      color: '#FFFFFF',
+      fontWeight: '700',
+    },
+    mainActionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 9,
+      borderRadius: 10,
+      gap: 6,
+    },
+    mainActionBtnText: {
+      color: '#000000',
+      fontWeight: '800',
+      fontSize: 12,
+    },
+    liveGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    liveGridItem: {
+      width: '23%',
+      flexGrow: 1,
+      minWidth: 70,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+      paddingVertical: 10,
+      paddingHorizontal: 4,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+      gap: 4,
+    },
+    liveGridLabel: {
+      fontSize: 9,
+      fontWeight: '700',
+      color: 'rgba(255, 255, 255, 0.7)',
+      textAlign: 'center',
+    },
+    stagesRow: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    stageItem: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 4,
+    },
+    stageNumberBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: tokens.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stageNumberText: {
+      color: '#000000',
+      fontWeight: '900',
+      fontSize: 11,
+    },
+    stageLabelText: {
+      fontSize: 9,
+      fontWeight: '700',
+      color: 'rgba(255, 255, 255, 0.7)',
+      textAlign: 'center',
+    },
+    promptsList: {
+      gap: 6,
+    },
+    promptItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+      padding: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+    },
+    promptItemText: {
+      flex: 1,
+      fontSize: 11,
+      color: 'rgba(255, 255, 255, 0.85)',
+      lineHeight: 15,
+    },
+    talkGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    talkBox: {
+      width: '48%',
+      flexGrow: 1,
+      backgroundColor: ELITE_COLORS.bgSurfaceElevated,
+      padding: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: ELITE_COLORS.border,
+      gap: 2,
+    },
+    talkBoxTitle: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: '#FFFFFF',
+    },
+    talkBoxClips: {
+      fontSize: 10,
+    },
   });
 }
+

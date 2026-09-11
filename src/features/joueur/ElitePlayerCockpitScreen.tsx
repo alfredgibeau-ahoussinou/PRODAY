@@ -8,6 +8,8 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useSeasonCalendar } from '../../hooks/useAppData';
 import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
@@ -20,10 +22,16 @@ import { ELITE_COLORS, ELITE_RADIUS, ELITE_SPACING } from '../../theme/prodayEli
 import { teamEventsService } from '../../services/teamEvents.service';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { User } from '../../models/User';
+import { PressableSpring } from '../../components/motion';
+import { Icon } from '../../components/ui/Icon';
+import { usePlayerTheme } from '../../context/PlayerThemeContext';
+import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
+import { GlobalSearchModal } from '../../components/search/GlobalSearchModal';
+import { PlayerAiCopilotHero } from '../../components/player/PlayerAiCopilotHero';
 
 interface Props {
   profile: User;
-  onOpenCoachAi?: () => void;
+  onOpenCoachAi?: (initialPrompt?: string) => void;
   onOpenMatchs?: () => void;
   onOpenCarpool?: (matchId?: string) => void;
 }
@@ -41,11 +49,15 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
   onOpenMatchs,
   onOpenCarpool,
 }) => {
+  const insets = useSafeAreaInsets();
+  const { colors: playerColors } = usePlayerTheme();
+  const accent = playerColors.accent || ELITE_COLORS.pitchGreen;
   const { profile: authProfile } = useAuth();
   const nav = useTabNavigationActions();
   const [activeTab, setActiveTab] = useState<'carte' | 'stats' | 'parcours'>('carte');
   const [, setRsvpLoading] = useState(false);
   const [userRsvp, setUserRsvp] = useState<'present' | 'absent' | null>(null);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
 
   const clubId = profile.profile?.club_id;
   const { items: calendarItems } = useSeasonCalendar(profile.uid, clubId);
@@ -129,14 +141,24 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
   };
 
   // Ouverture Waze / Maps
-  const handleOpenGps = () => {
+  const handleOpenGps = async () => {
+    prodayHaptics.press();
     const query = encodeURIComponent(nextMatch?.location || 'Stade de football');
     const url = Platform.select({
       ios: `maps:0,0?q=${query}`,
       android: `geo:0,0?q=${query}`,
       default: `https://www.google.com/maps/search/?api=1&query=${query}`,
     });
-    void Linking.openURL(url);
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        await Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
+      }
+    } catch {
+      void Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
+    }
   };
 
   const isDesktop = WINDOW_WIDTH >= 900;
@@ -144,21 +166,28 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={[styles.scrollContent, isDesktop && styles.desktopContainer]}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingTop: 10, paddingBottom: insets.bottom + 90 },
+        isDesktop && styles.desktopContainer,
+      ]}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. EN-TÊTE JOUEUR & CONSEILLER IA */}
+      {/* 1. EN-TÊTE JOUEUR & STATUT DU JOUR */}
       <View style={styles.headerRow}>
         <View style={styles.playerInfo}>
-          <ProDayText style={styles.kicker}>
-            {profile.profile?.club_id ? 'JOUEUR DU CLUB' : 'PROFIL JOUEUR PRODAY'}
-          </ProDayText>
+          <View style={styles.kickerRow}>
+            <View style={[styles.liveStatusDot, { backgroundColor: '#10B981' }]} />
+            <ProDayText style={[styles.kicker, { color: accent }]}>
+              {profile.profile?.club_id ? 'JOUEUR DU CLUB' : 'PROFIL ATHLÈTE PRODAY'}
+            </ProDayText>
+          </View>
           <ProDayText style={styles.playerName}>
             {profile.display_name?.toUpperCase() || 'JOUEUR'}
           </ProDayText>
           <View style={styles.subInfoRow}>
             <View style={styles.teamPill}>
-              <ProDayGlyph name="pitch" size={14} color={ELITE_COLORS.pitchGreen} />
+              <ProDayGlyph name="pitch" size={14} color={accent} />
               <ProDayText style={styles.teamText}>
                 {profile.profile?.position || 'Attaquant'} · {profile.profile?.age ? `${profile.profile.age} ans` : 'Sénior'}
               </ProDayText>
@@ -166,27 +195,60 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
           </View>
         </View>
 
-        <TouchableOpacity
+        <PressableSpring
           style={styles.aiButton}
           onPress={() => {
             prodayHaptics.press();
-            if (onOpenCoachAi) onOpenCoachAi();
-            else nav.openDashboard('train_coach');
+            nav.setActiveTab('profil');
           }}
-          activeOpacity={0.8}
+          scaleTo={0.96}
+          haptic
+          accessibilityLabel="Ouvrir Profil"
         >
-          <ProDayGlyph name="ai-spark" size={18} />
-          <ProDayText style={styles.aiButtonText}>Conseiller IA</ProDayText>
-        </TouchableOpacity>
+          <Ionicons name="person-circle-outline" size={18} color={accent} />
+          <ProDayText style={[styles.aiButtonText, { color: accent }]}>Mon Profil</ProDayText>
+        </PressableSpring>
       </View>
+
+      {/* 1.5. BARRE DE RECHERCHE UNIVERSELLE (Joueurs, Pages, Clubs...) */}
+      <GlobalSearchBar
+        onPress={() => setSearchModalVisible(true)}
+        accent={accent}
+        style={styles.searchBarWrap}
+      />
+
+      {/* 1.8. COPILOTE IA PRODAY (Briefing, Actions Proactives 1-Tap & Chat Rapide) */}
+      <PlayerAiCopilotHero
+        profile={profile}
+        nextMatchOpponent={nextMatch?.opponent}
+        nextMatchDate={nextMatch?.dateStr}
+        accentColor={accent}
+        onOpenCoachAi={(initialPrompt) => {
+          prodayHaptics.press();
+          if (onOpenCoachAi) onOpenCoachAi(initialPrompt);
+          else nav.openDashboard('tactics_coach');
+        }}
+        onGenerateTraining={() => {
+          prodayHaptics.press();
+          nav.openDashboard('train_ai');
+        }}
+        onOpenMatchPlan={() => {
+          prodayHaptics.press();
+          if (onOpenCoachAi) {
+            onOpenCoachAi(`Donne-moi les 3 clés tactiques pour faire la différence contre ${nextMatch?.opponent} à mon poste (${profile.profile?.position || 'Attaquant'}).`);
+          } else {
+            nav.openDashboard('tactics_coach');
+          }
+        }}
+      />
 
       {/* 2. LE BLOC PROCHAIN MATCH & CONVOCATION (Façon SportEasy Pro) */}
       {nextMatch ? (
         <View style={styles.matchCard}>
           <View style={styles.matchCardTop}>
-            <View style={styles.matchBadge}>
-              <ProDayGlyph name="calendar" size={13} color={ELITE_COLORS.pitchGreen} />
-              <ProDayText style={styles.matchBadgeText}>PROCHAIN MATCH</ProDayText>
+            <View style={[styles.matchBadge, { backgroundColor: `${accent}18` }]}>
+              <ProDayGlyph name="calendar" size={13} color={accent} />
+              <ProDayText style={[styles.matchBadgeText, { color: accent }]}>PROCHAIN MATCH</ProDayText>
             </View>
             <ProDayText style={styles.matchDateText}>
               {nextMatch.dateStr} à {nextMatch.timeStr}
@@ -220,39 +282,41 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
 
           {/* Boutons d'action convocation immédiate */}
           <View style={styles.rsvpRow}>
-            <TouchableOpacity
+            <PressableSpring
               style={[
                 styles.rsvpBtn,
                 styles.rsvpBtnYes,
-                userRsvp === 'present' && styles.rsvpBtnSelectedYes,
+                userRsvp === 'present' && [styles.rsvpBtnSelectedYes, { backgroundColor: accent, borderColor: accent }],
               ]}
               onPress={() => handleRsvp('present')}
-              activeOpacity={0.8}
+              scaleTo={0.97}
+              haptic
             >
               <ProDayGlyph
                 name="check-presence"
                 size={18}
-                secondaryColor={userRsvp === 'present' ? '#000000' : ELITE_COLORS.pitchGreen}
+                secondaryColor={userRsvp === 'present' ? '#000000' : accent}
               />
               <ProDayText
                 style={[
                   styles.rsvpBtnText,
                   styles.rsvpTextYes,
-                  userRsvp === 'present' && styles.rsvpTextActiveBlack,
+                  { color: userRsvp === 'present' ? '#000000' : accent },
                 ]}
               >
                 {userRsvp === 'present' ? 'Présence confirmée' : 'Je serai là'}
               </ProDayText>
-            </TouchableOpacity>
+            </PressableSpring>
 
-            <TouchableOpacity
+            <PressableSpring
               style={[
                 styles.rsvpBtn,
                 styles.rsvpBtnNo,
                 userRsvp === 'absent' && styles.rsvpBtnSelectedNo,
               ]}
               onPress={() => handleRsvp('absent')}
-              activeOpacity={0.8}
+              scaleTo={0.97}
+              haptic
             >
               <ProDayGlyph name="cross-absence" size={18} color={ELITE_COLORS.titanium} />
               <ProDayText
@@ -264,90 +328,128 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
               >
                 {userRsvp === 'absent' ? 'Noté absent' : 'Absent'}
               </ProDayText>
-            </TouchableOpacity>
+            </PressableSpring>
           </View>
 
           {/* Raccourcis utiles GPS & Covoiturage */}
           <View style={styles.quickLinksRow}>
-            <TouchableOpacity style={styles.quickLink} onPress={handleOpenGps}>
-              <ProDayGlyph name="location-pin" size={14} color={ELITE_COLORS.pitchGreen} />
+            <PressableSpring style={styles.quickLink} onPress={handleOpenGps} scaleTo={0.96} haptic>
+              <ProDayGlyph name="location-pin" size={14} color={accent} />
               <ProDayText style={styles.quickLinkText}>Itinéraire GPS</ProDayText>
-            </TouchableOpacity>
+            </PressableSpring>
 
-            <TouchableOpacity
+            <PressableSpring
               style={styles.quickLink}
               onPress={() => {
                 prodayHaptics.press();
-                if (onOpenCarpool) onOpenCarpool(nextMatch.id);
-                else nav.openCarpool();
+                if (onOpenCarpool) onOpenCarpool(nextMatch.teamEventId ?? nextMatch.id);
+                else nav.openCarpool({ eventId: nextMatch.teamEventId ?? nextMatch.id, chapter: 'reserver' });
               }}
+              scaleTo={0.96}
+              haptic
             >
-              <ProDayGlyph name="carpool" size={14} color={ELITE_COLORS.goldMaster} />
+              <ProDayGlyph name="carpool" size={14} color={accent} />
               <ProDayText style={styles.quickLinkText}>Covoiturage</ProDayText>
-            </TouchableOpacity>
+            </PressableSpring>
 
-            <TouchableOpacity
+            <PressableSpring
               style={styles.quickLink}
               onPress={() => {
                 prodayHaptics.press();
                 if (onOpenMatchs) onOpenMatchs();
-                else nav.openMatchs();
+                else nav.openMatchs({ eventId: nextMatch.teamEventId ?? nextMatch.id, homeTab: 'convocations' });
               }}
+              scaleTo={0.96}
+              haptic
             >
               <ProDayGlyph name="whistle" size={14} color={ELITE_COLORS.textSecondary} />
               <ProDayText style={styles.quickLinkText}>Feuille de match</ProDayText>
-            </TouchableOpacity>
+            </PressableSpring>
           </View>
         </View>
       ) : (
         <View style={styles.noMatchCard}>
-          <ProDayGlyph name="pitch" size={28} color={ELITE_COLORS.pitchGreen} />
-          <View style={styles.noMatchInfo}>
-            <ProDayText style={styles.noMatchTitle}>Aucun match programmé</ProDayText>
-            <ProDayText style={styles.noMatchSub}>
-              Le calendrier des rencontres apparaîtra dès publication par le club.
-            </ProDayText>
+          <View style={styles.noMatchHeader}>
+            <ProDayGlyph name="pitch" size={24} color={accent} />
+            <View style={styles.noMatchInfo}>
+              <ProDayText style={styles.noMatchTitle}>Aucun match programmé ce week-end</ProDayText>
+              <ProDayText style={styles.noMatchSub}>
+                Profite de ce temps libre pour perfectionner ta technique ou découvrir des détections.
+              </ProDayText>
+            </View>
+          </View>
+
+          <View style={styles.noMatchActions}>
+            <PressableSpring
+              style={[styles.noMatchActionBtn, { borderColor: `${accent}44`, backgroundColor: `${accent}14` }]}
+              onPress={() => {
+                prodayHaptics.press();
+                if (onOpenCoachAi) onOpenCoachAi();
+                else nav.openDashboard('tactics_coach');
+              }}
+              scaleTo={0.96}
+              haptic
+            >
+              <Ionicons name="sparkles" size={14} color={accent} />
+              <ProDayText style={[styles.noMatchActionText, { color: accent }]}>
+                Séance personnalisée IA
+              </ProDayText>
+            </PressableSpring>
+
+            <PressableSpring
+              style={styles.noMatchActionBtn}
+              onPress={() => {
+                prodayHaptics.press();
+                if (onOpenMatchs) onOpenMatchs();
+                else nav.setActiveTab('matchs');
+              }}
+              scaleTo={0.96}
+              haptic
+            >
+              <ProDayGlyph name="calendar" size={14} color={ELITE_COLORS.textSecondary} />
+              <ProDayText style={styles.noMatchActionText}>
+                Détections & Tournois
+              </ProDayText>
+            </PressableSpring>
           </View>
         </View>
       )}
 
       {/* 3. SÉLECTEUR D'ONGLETS SANS FRICTION */}
       <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'carte' && styles.tabBtnActive]}
-          onPress={() => {
-            prodayHaptics.press();
-            setActiveTab('carte');
-          }}
-        >
-          <ProDayText style={[styles.tabText, activeTab === 'carte' && styles.tabTextActive]}>
-            Ma Carte
-          </ProDayText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'stats' && styles.tabBtnActive]}
-          onPress={() => {
-            prodayHaptics.press();
-            setActiveTab('stats');
-          }}
-        >
-          <ProDayText style={[styles.tabText, activeTab === 'stats' && styles.tabTextActive]}>
-            Statistiques
-          </ProDayText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'parcours' && styles.tabBtnActive]}
-          onPress={() => {
-            prodayHaptics.press();
-            setActiveTab('parcours');
-          }}
-        >
-          <ProDayText style={[styles.tabText, activeTab === 'parcours' && styles.tabTextActive]}>
-            Parcours
-          </ProDayText>
-        </TouchableOpacity>
+        {(
+          [
+            { id: 'carte' as const, label: 'Ma Carte' },
+            { id: 'stats' as const, label: 'Statistiques' },
+            { id: 'parcours' as const, label: 'Parcours' },
+          ] as const
+        ).map((tab) => {
+          const active = activeTab === tab.id;
+          return (
+            <PressableSpring
+              key={tab.id}
+              style={[
+                styles.tabBtn,
+                active && [styles.tabBtnActive, { borderColor: `${accent}66`, backgroundColor: `${accent}18` }],
+              ]}
+              onPress={() => {
+                prodayHaptics.press();
+                setActiveTab(tab.id);
+              }}
+              scaleTo={0.96}
+              haptic
+            >
+              <ProDayText
+                style={[
+                  styles.tabText,
+                  active && [styles.tabTextActive, { color: accent }],
+                ]}
+              >
+                {tab.label}
+              </ProDayText>
+            </PressableSpring>
+          );
+        })}
       </View>
 
       {/* 4. CONTENU SELON ONGLET ACTIF */}
@@ -404,7 +506,7 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
             </View>
 
             <View style={styles.metricCard}>
-              <ProDayText style={[styles.metricValue, { color: ELITE_COLORS.goldMaster }]}>
+              <ProDayText style={[styles.metricValue, { color: accent }]}>
                 {profile.email?.includes('demo') ? '92%' : '100%'}
               </ProDayText>
               <ProDayText style={styles.metricLabel}>PRÉSENCE</ProDayText>
@@ -434,8 +536,8 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
                 </View>
 
                 <View style={styles.historyRow}>
-                  <View style={[styles.resultPill, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-                    <ProDayText style={{ color: ELITE_COLORS.goldMaster, fontWeight: '800', fontSize: 12 }}>N</ProDayText>
+                  <View style={[styles.resultPill, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
+                    <ProDayText style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>N</ProDayText>
                   </View>
                   <View style={styles.historyCenter}>
                     <ProDayText style={styles.historyMatch}>vs Red Star (2 - 2)</ProDayText>
@@ -491,6 +593,13 @@ export const ElitePlayerCockpitScreen: React.FC<Props> = ({
           </View>
         </View>
       )}
+
+      {/* MODAL DE RECHERCHE UNIVERSELLE */}
+      <GlobalSearchModal
+        visible={searchModalVisible}
+        onClose={() => setSearchModalVisible(false)}
+        accent={accent}
+      />
     </ScrollView>
   );
 };
@@ -514,17 +623,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: ELITE_SPACING.md,
+  },
+  searchBarWrap: {
     marginBottom: ELITE_SPACING.lg,
   },
   playerInfo: {
     flex: 1,
   },
-  kicker: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: ELITE_COLORS.pitchGreen,
-    letterSpacing: 1.1,
+  kickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     marginBottom: 4,
+  },
+  liveStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  kicker: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
   },
   playerName: {
     fontSize: 22,
@@ -556,18 +677,21 @@ const styles = StyleSheet.create({
   aiButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: ELITE_RADIUS.pill,
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    alignSelf: 'flex-start',
+    marginTop: 2,
   },
   aiButtonText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: ELITE_COLORS.goldMaster,
+    color: '#FFFFFF',
+    letterSpacing: 0.1,
   },
   matchCard: {
     backgroundColor: ELITE_COLORS.surfacePrimary,
@@ -719,15 +843,17 @@ const styles = StyleSheet.create({
     color: ELITE_COLORS.textSecondary,
   },
   noMatchCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
     backgroundColor: ELITE_COLORS.surfacePrimary,
     padding: ELITE_SPACING.md,
     borderRadius: ELITE_RADIUS.lg,
     borderWidth: 1,
     borderColor: ELITE_COLORS.borderLight,
     marginBottom: ELITE_SPACING.lg,
+  },
+  noMatchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   noMatchInfo: {
     flex: 1,
@@ -741,6 +867,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: ELITE_COLORS.textMuted,
     marginTop: 2,
+    lineHeight: 17,
+  },
+  noMatchActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: ELITE_SPACING.md,
+    paddingTop: ELITE_SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: ELITE_COLORS.borderLight,
+  },
+  noMatchActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderRadius: ELITE_RADIUS.md,
+    backgroundColor: ELITE_COLORS.surfaceSecondary,
+    borderWidth: 1,
+    borderColor: ELITE_COLORS.borderLight,
+  },
+  noMatchActionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: ELITE_COLORS.textSecondary,
   },
   tabBar: {
     flexDirection: 'row',

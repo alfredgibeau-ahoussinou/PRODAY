@@ -1,123 +1,116 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { PressableSpring } from '../../components/motion';
-import { Icon } from '../../components/ui/Icon';
 import { PlayerCoachAiChat } from '../../components/joueur/PlayerCoachAiChat';
-import { JoueurArcadeShell } from '../../features/joueur/JoueurGameFx';
-import { useJoueurSession } from '../../context/JoueurSessionContext';
-import { JOUEUR_SITE } from '../../content/joueurPageIdentity';
+import { usePlayerTheme } from '../../context/PlayerThemeContext';
 import { joueurGamePress } from '../../features/joueur/joueurSfx';
-import { spacing } from '../../theme/designTokens';
 
 type Props = {
   onBack: () => void;
+  initialPrompt?: string;
 };
 
-/** Écran plein Coach IA — football & tactique. */
-export function JoueurTacticsCoachScreen({ onBack }: Props) {
-  const session = useJoueurSession();
+/**
+ * Interface Épurée Style ChatGPT / Google Gemini pour le Coach Joueur
+ */
+export function JoueurTacticsCoachScreen({ onBack, initialPrompt }: Props) {
   const insets = useSafeAreaInsets();
-  const identity = session?.identity;
-  const accent = identity?.accent ?? '#4C8BFF';
+  const { colors: playerTheme, clubColors } = usePlayerTheme();
+  const teamColor = clubColors?.primary || playerTheme.accent || '#00E676';
+  const [chatKey, setChatKey] = useState(1);
 
-  if (!identity) {
-    return (
-      <View style={[styles.fallback, { paddingTop: insets.top }]}>
-        <ProDayText variant="section" style={{ color: JOUEUR_SITE.foreground }}>
-          Coach IA
-        </ProDayText>
-        <PlayerCoachAiChat />
-        <PressableSpring
-          onPress={() => {
-            joueurGamePress();
-            onBack();
-          }}
-          style={styles.backFab}
-        >
-          <ProDayText variant="caption" style={{ color: accent, fontWeight: '800' }}>
-            Fermer
-          </ProDayText>
-        </PressableSpring>
-      </View>
-    );
-  }
+  const handleResetChat = () => {
+    joueurGamePress();
+    setChatKey((k) => k + 1);
+  };
 
   return (
-    <JoueurArcadeShell identity={identity} liveLabel="COACH IA">
-      <View style={[styles.head, { paddingTop: Math.max(insets.top, 12) }]}>
-        <PressableSpring
+    <View style={styles.root}>
+      {/* 1. En-tête Minimaliste Style ChatGPT / Gemini */}
+      <View style={[styles.header, { paddingTop: 6 }]}>
+        {/* Bouton Retour Épuré */}
+        <TouchableOpacity
           onPress={() => {
             joueurGamePress();
             onBack();
           }}
-          scaleTo={0.97}
-          haptic
-          style={[styles.backBtn, { borderColor: JOUEUR_SITE.border }]}
+          style={styles.iconButton}
+          activeOpacity={0.7}
           accessibilityLabel="Retour"
         >
-          <Icon name="arrow-back" size={18} color={JOUEUR_SITE.foreground} />
-        </PressableSpring>
-        <View style={styles.headCopy}>
-          <ProDayText variant="caption" style={[styles.kicker, { color: accent }]}>
-            PASS IA · TACTIQUE
-          </ProDayText>
-          <ProDayText variant="title" style={styles.title}>
-            Coach IA
-          </ProDayText>
-          <ProDayText variant="caption" style={styles.sub}>
-            Football, principes de jeu, drills pour progresser.
-          </ProDayText>
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+
+        {/* Pilule Centrale Modèle IA Gemini */}
+        <View style={styles.modelPill}>
+          <Ionicons name="sparkles" size={14} color={teamColor} />
+          <ProDayText style={styles.modelTitle}>Gemini Coach</ProDayText>
+          <Ionicons name="chevron-down" size={12} color="#71717A" style={{ marginLeft: 2 }} />
         </View>
+
+        {/* Bouton Nouvelle Discussion */}
+        <TouchableOpacity
+          onPress={handleResetChat}
+          style={styles.iconButton}
+          activeOpacity={0.7}
+          accessibilityLabel="Nouvelle discussion"
+        >
+          <Ionicons name="create-outline" size={22} color="#A1A1AA" />
+        </TouchableOpacity>
       </View>
-      <View style={styles.chat}>
-        <PlayerCoachAiChat />
+
+      {/* 2. Corps de la Conversation */}
+      <View style={styles.chatWrapper}>
+        <PlayerCoachAiChat key={chatKey} initialPrompt={initialPrompt} />
       </View>
-    </JoueurArcadeShell>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  fallback: {
+  root: {
     flex: 1,
-    backgroundColor: JOUEUR_SITE.bg,
-    padding: spacing.md,
-    gap: spacing.md,
+    backgroundColor: '#000000',
   },
-  head: {
+  header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingBottom: 10,
+    backgroundColor: '#000000',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    zIndex: 10,
   },
-  backBtn: {
+  iconButton: {
     width: 40,
     height: 40,
-    borderRadius: 14,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: JOUEUR_SITE.surface,
-    marginTop: 4,
+    borderRadius: 20,
   },
-  headCopy: { flex: 1, gap: 2 },
-  kicker: {
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 2,
+  modelPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#16161D',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
-  title: {
-    color: JOUEUR_SITE.foreground,
-    fontWeight: '800',
-    fontSize: 28,
-    letterSpacing: -0.8,
+  modelTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
   },
-  sub: { color: JOUEUR_SITE.muted, fontSize: 13 },
-  chat: { flex: 1, minHeight: 0 },
-  backFab: {
-    alignSelf: 'flex-start',
-    padding: spacing.sm,
+  chatWrapper: {
+    flex: 1,
   },
 });

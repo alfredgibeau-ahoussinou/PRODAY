@@ -38,11 +38,12 @@ export {
   type TacticalDirectiveConfig,
 };
 
-const GRASS_A = '#43B05A';
-const GRASS_B = '#348C42';
-const MARK = 'rgba(255,255,255,0.92)';
-const TOKEN = 34;
-const TOKEN_LABEL = 15;
+const GRASS_A = '#0F2918';
+const GRASS_B = '#0A1E11';
+const MARK = 'rgba(255,255,255,0.48)';
+const TOKEN = 36;
+const TOKEN_WRAP_W = 84;
+const TOKEN_LABEL = 16;
 const STRIPE_COUNT = 12;
 
 export type CoachEasyPitchCell = {
@@ -106,54 +107,55 @@ export function TacticalAnimationOverlay({
           strokeWidth={0.5}
           strokeDasharray="2,2"
         />
-        {/* Attaquant gauche pressant le défenseur central adverse */}
+        {/* Course pressing attaquant axe gauche */}
         <Path
-          d="M 18 29 C 23 21, 26 16, 31 11"
+          d="M 28 32 C 29 25, 30 18, 30 11"
           fill="none"
-          stroke="#F59E0B"
-          strokeWidth={1.1}
-          strokeDasharray="2.5,1.5"
+          stroke="#FAFAFA"
+          strokeWidth={1.2}
+          strokeDasharray="2,1.5"
         />
-        <Polygon points="31,11 26.5,13 29,15.5" fill="#F59E0B" />
+        {/* Tête de flèche */}
+        <Polygon points="31,11 26.5,13 29,15.5" fill="#FAFAFA" />
 
-        {/* Attaquant droit pressant le défenseur central adverse */}
+        {/* Course pressing attaquant axe droit */}
         <Path
-          d="M 50 29 C 45 21, 42 16, 37 11"
+          d="M 40 32 C 39 25, 38 18, 38 11"
           fill="none"
-          stroke="#F59E0B"
-          strokeWidth={1.1}
-          strokeDasharray="2.5,1.5"
+          stroke="#FAFAFA"
+          strokeWidth={1.2}
+          strokeDasharray="2,1.5"
         />
-        <Polygon points="37,11 39,15.5 41.5,13" fill="#F59E0B" />
+        <Polygon points="37,11 39,15.5 41.5,13" fill="#FAFAFA" />
 
-        {/* Attaquant de pointe pressant la relance */}
+        {/* Blocage relance centrale */}
         <Path
-          d="M 34 23 L 34 8"
+          d="M 34 22 L 34 8"
           fill="none"
-          stroke="#F59E0B"
-          strokeWidth={1.3}
+          stroke="#FAFAFA"
+          strokeWidth={1.2}
         />
-        <Polygon points="34,6.5 31.5,10.5 36.5,10.5" fill="#F59E0B" />
+        <Polygon points="34,6.5 31.5,10.5 36.5,10.5" fill="#FAFAFA" />
 
-        {/* Milieu gauche montant au cadrage */}
+        {/* Pression milieu relayeur gauche */}
         <Path
-          d="M 22 52 L 22 37"
+          d="M 22 50 L 22 36"
           fill="none"
-          stroke="#F59E0B"
-          strokeWidth={0.9}
+          stroke="#FAFAFA"
+          strokeWidth={1.0}
           strokeDasharray="2,1"
         />
-        <Polygon points="22,35.5 20,39 24,39" fill="#F59E0B" />
+        <Polygon points="22,35.5 20,39 24,39" fill="#FAFAFA" />
 
-        {/* Milieu droit montant au cadrage */}
+        {/* Pression milieu relayeur droit */}
         <Path
-          d="M 46 52 L 46 37"
+          d="M 46 50 L 46 36"
           fill="none"
-          stroke="#F59E0B"
-          strokeWidth={0.9}
+          stroke="#FAFAFA"
+          strokeWidth={1.0}
           strokeDasharray="2,1"
         />
-        <Polygon points="46,35.5 44,39 48,39" fill="#F59E0B" />
+        <Polygon points="46,35.5 44,39 48,39" fill="#FAFAFA" />
       </G>
     );
   }
@@ -441,9 +443,13 @@ function CoachEasyPitchToken({
           />
         )}
       </View>
-      <CoachText variant="caption" inverse numberOfLines={1} style={styles.tokenName}>
-        {filled ? cell?.shortName ?? ' ' : ' '}
-      </CoachText>
+      {filled && cell?.shortName ? (
+        <View style={styles.tokenNamePill}>
+          <CoachText numberOfLines={1} style={styles.tokenNameText}>
+            {cell.shortName}
+          </CoachText>
+        </View>
+      ) : null}
     </PressableSpring>
   );
 }
@@ -518,8 +524,8 @@ export function CoachSportEasyPitchSurface({
             !readOnly &&
             !filled &&
             (selectedSlotIndex === cell.slotIndex || lineActive);
-          const left = cell.x * pitchW - TOKEN / 2;
-          const top = cell.y * pitchH - TOKEN / 2;
+          const left = Math.round(cell.x * pitchW - TOKEN_WRAP_W / 2);
+          const top = Math.round(cell.y * pitchH - TOKEN / 2);
 
           return (
             <CoachEasyPitchToken
@@ -760,10 +766,17 @@ function createStyles(tokens: CoachThemeTokens) {
     },
     pitchFrame: {
       alignItems: 'center',
-      backgroundColor: tokens.elevated,
-      borderRadius: radius.lg,
+      backgroundColor: '#071209',
+      borderRadius: radius.xxl,
+      borderWidth: 1,
+      borderColor: 'rgba(16, 185, 129, 0.25)',
       padding: spacing.sm,
       gap: spacing.xs,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.45,
+      shadowRadius: 16,
+      elevation: 6,
     },
     embeddedFrame: {
       alignItems: 'center',
@@ -779,12 +792,12 @@ function createStyles(tokens: CoachThemeTokens) {
       fontSize: 10,
     },
     pitch: {
-      borderRadius: 10,
+      borderRadius: 14,
       overflow: 'hidden',
     },
     tokenWrap: {
       position: 'absolute',
-      width: TOKEN,
+      width: TOKEN_WRAP_W,
       alignItems: 'center',
     },
     token: {
@@ -794,39 +807,58 @@ function createStyles(tokens: CoachThemeTokens) {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.35,
+      shadowRadius: 4,
+      elevation: 4,
     },
     tokenFilled: {
-      backgroundColor: '#FFFFFF',
-      borderColor: 'rgba(255,255,255,0.95)',
+      backgroundColor: '#111815',
+      borderColor: '#8B5CF6',
     },
     tokenEmpty: {
-      backgroundColor: 'rgba(255,255,255,0.22)',
-      borderColor: 'rgba(255,255,255,0.7)',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      borderColor: 'rgba(255,255,255,0.65)',
       borderStyle: 'dashed',
     },
     tokenSelected: {
-      borderColor: tokens.accent,
-      backgroundColor: tokens.accent,
+      borderColor: '#10B981',
+      backgroundColor: '#10B981',
       borderStyle: 'solid',
+      transform: [{ scale: 1.12 }],
     },
     tokenNum: {
       fontSize: 13,
-      fontWeight: '800',
+      fontWeight: '900',
       lineHeight: 16,
     },
-    tokenNumDark: { color: tokens.foreground },
-    tokenNumLight: { color: '#FFFFFF' },
-    tokenName: {
+    tokenNumDark: { color: '#FFFFFF' },
+    tokenNumLight: { color: '#000000' },
+    tokenNamePill: {
+      backgroundColor: 'rgba(5, 14, 8, 0.92)',
+      paddingHorizontal: 5,
+      paddingVertical: 1.5,
+      borderRadius: 4,
+      borderWidth: 0.5,
+      borderColor: 'rgba(255, 255, 255, 0.22)',
       marginTop: 2,
-      fontSize: 9,
-      fontWeight: '700',
+      maxWidth: 80,
+      minWidth: 42,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.35,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    tokenNameText: {
+      fontSize: 9.5,
+      fontWeight: '800',
       color: '#FFFFFF',
       textAlign: 'center',
-      width: TOKEN + 18,
-      textShadowColor: 'rgba(0,0,0,0.45)',
-      textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
-      height: TOKEN_LABEL,
+      letterSpacing: -0.2,
     },
     directiveBlock: {
       marginTop: spacing.xs,
@@ -889,7 +921,7 @@ function createStyles(tokens: CoachThemeTokens) {
       paddingRight: spacing.sm,
     },
     benchItem: {
-      width: 56,
+      width: 64,
       alignItems: 'center',
       gap: 4,
     },
@@ -904,11 +936,11 @@ function createStyles(tokens: CoachThemeTokens) {
       borderColor: tokens.border,
     },
     benchName: {
-      fontSize: 10,
-      fontWeight: '600',
+      fontSize: 9.5,
+      fontWeight: '700',
       color: tokens.foreground,
       textAlign: 'center',
-      width: 56,
+      width: 64,
     },
   });
 }

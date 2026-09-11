@@ -258,12 +258,14 @@ export const CoachPerformanceChapter: React.FC<CoachChapterCommonProps> = ({
     <CoachPane title={getCoachPageIdentity('forme').title}>
     <CoachChapterScroll>
       <CoachAnalyseFormePanel
+        members={members}
+        events={events}
         loadSignals={loadSignals}
         wellnessByUid={wellnessByUid}
         onOpenPlayer={(uid) => setPlayerUid(uid)}
         onOpenTraining={() => {
-          if (shellNav) shellNav.requestNav('smart_tactics');
-          else nav.openDashboard('smart_tactics');
+          if (shellNav) shellNav.requestNav('entrainements');
+          else tabNav.openMatchs({ homeTab: 'season' });
         }}
       />
 

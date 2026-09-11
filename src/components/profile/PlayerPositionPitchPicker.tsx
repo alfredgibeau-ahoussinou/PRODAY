@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { PressableSpring } from '../motion';
 import { ProDayText } from '../ui/ProDayText';
 import { Icon } from '../ui/Icon';
@@ -48,13 +49,22 @@ export const PlayerPositionPitchPicker: React.FC<PlayerPositionPitchPickerProps>
   return (
     <View style={styles.wrap}>
       <View style={styles.head}>
-        <ProDayText variant="caption" muted style={styles.label}>
-          {label}
-        </ProDayText>
+        <View style={styles.headLeft}>
+          <Icon name="football" size={14} color={accent} />
+          <ProDayText variant="caption" style={[styles.label, { color: accent }]}>
+            {label}
+          </ProDayText>
+        </View>
         {saving ? <ActivityIndicator size="small" color={accent} /> : null}
       </View>
 
       <View style={styles.pitch}>
+        <LinearGradient
+          colors={['#07160D', '#0C2817', '#06130B']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.centerLine} />
         <View style={styles.centerCircle} />
         <View style={styles.penaltyBox} />
@@ -106,27 +116,34 @@ export const PlayerPositionPitchPicker: React.FC<PlayerPositionPitchPickerProps>
 };
 
 function createStyles(c: AppColors, accent: string, accentInverse: string, compact?: boolean) {
-  const pitchHeight = compact ? 220 : 260;
+  const pitchHeight = compact ? 180 : 200;
 
   return StyleSheet.create({
-    wrap: { gap: spacing.sm },
+    wrap: { gap: spacing.xs + 2 },
     head: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      marginBottom: 2,
+    },
+    headLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
     },
     label: {
       fontWeight: '800',
       letterSpacing: 0.8,
+      fontSize: 12,
       textTransform: 'uppercase',
     },
     pitch: {
       height: pitchHeight,
-      backgroundColor: '#1B6B32',
-      borderRadius: radius.lg,
-      borderWidth: 2,
-      borderColor: 'rgba(255,255,255,0.32)',
-      paddingVertical: spacing.sm,
+      backgroundColor: '#07160D',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: 'rgba(16, 185, 129, 0.22)',
+      paddingVertical: 8,
       paddingHorizontal: spacing.md,
       justifyContent: 'space-between',
       overflow: 'hidden',
@@ -137,66 +154,68 @@ function createStyles(c: AppColors, accent: string, accentInverse: string, compa
       left: spacing.md,
       right: spacing.md,
       height: 1,
-      backgroundColor: 'rgba(255,255,255,0.28)',
+      backgroundColor: 'rgba(255,255,255,0.16)',
     },
     centerCircle: {
       position: 'absolute',
       top: '50%',
       left: '50%',
-      width: 52,
-      height: 52,
-      marginLeft: -26,
-      marginTop: -26,
-      borderRadius: 26,
+      width: 48,
+      height: 48,
+      marginLeft: -24,
+      marginTop: -24,
+      borderRadius: 24,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.28)',
+      borderColor: 'rgba(255,255,255,0.16)',
     },
     penaltyBox: {
       position: 'absolute',
-      bottom: spacing.sm,
+      bottom: 8,
       left: '22%',
       right: '22%',
-      height: '22%',
+      height: '24%',
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.22)',
+      borderColor: 'rgba(255,255,255,0.12)',
       borderBottomWidth: 0,
     },
     goalLine: {
       position: 'absolute',
-      bottom: spacing.sm,
+      bottom: 8,
       left: spacing.md,
       right: spacing.md,
-      height: 2,
-      backgroundColor: 'rgba(255,255,255,0.35)',
+      height: 1.5,
+      backgroundColor: 'rgba(255,255,255,0.22)',
     },
     lineRow: {
       alignItems: 'center',
       zIndex: 1,
     },
     slot: {
-      minWidth: 108,
-      paddingVertical: spacing.xs + 2,
-      paddingHorizontal: spacing.md,
-      borderRadius: radius.md,
-      backgroundColor: 'rgba(8, 12, 10, 0.72)',
-      borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.22)',
+      minWidth: 104,
+      paddingVertical: 5,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      backgroundColor: 'rgba(5, 12, 9, 0.82)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.16)',
       alignItems: 'center',
-      gap: 2,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 6,
     },
     slotSelected: {
-      backgroundColor: accent,
+      backgroundColor: `${accent}2A`,
       borderColor: accent,
-      borderWidth: 2,
+      borderWidth: 1.5,
       shadowColor: accent,
       shadowOpacity: 0.35,
-      shadowRadius: 8,
+      shadowRadius: 6,
       shadowOffset: { width: 0, height: 2 },
       elevation: 4,
     },
     youBadge: {
       position: 'absolute',
-      top: -9,
+      top: -7,
       paddingHorizontal: 6,
       paddingVertical: 1,
       borderRadius: radius.pill,
@@ -209,26 +228,28 @@ function createStyles(c: AppColors, accent: string, accentInverse: string, compa
       letterSpacing: 0.4,
     },
     slotShort: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '900',
       color: 'rgba(255,255,255,0.55)',
-      letterSpacing: 1,
+      letterSpacing: 0.8,
     },
     slotShortSelected: {
       color: accent,
     },
     slotLabel: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '700',
-      color: 'rgba(255,255,255,0.88)',
+      color: 'rgba(255,255,255,0.92)',
     },
     slotLabelSelected: {
-      color: accentInverse,
+      color: '#FFFFFF',
       fontWeight: '900',
     },
     selectedCopy: {
       textAlign: 'center',
-      lineHeight: 18,
+      fontSize: 12,
+      fontWeight: '600',
+      marginTop: 2,
     },
   });
 }

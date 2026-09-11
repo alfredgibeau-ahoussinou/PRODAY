@@ -194,8 +194,14 @@ export interface TeamEvent {
   competition_fixture_id?: string;
   starts_at: Date;
   ends_at?: Date;
+  /** Alias date de début (format ISO ou Date) */
+  date?: string | Date;
+  /** Durée en minutes estimée de la séance/du match */
+  duration_minutes?: number;
   city: string;
   location_label?: string;
+  /** Alias terrain / lieu */
+  location?: string;
   /** UIDs convoqués (réponses dans rsvps) */
   invitee_uids: string[];
   rsvps: Record<string, RsvpStatus>;
@@ -303,14 +309,17 @@ export function userRsvp(event: TeamEvent, uid: string): RsvpStatus {
 export type EventSessionStatus = 'scheduled' | 'in_progress' | 'finished';
 
 export function isCoachMatchEvent(e: TeamEvent): boolean {
+  if (e.event_type === 'training') return false;
   return (
     e.event_type === 'friendly' ||
     e.event_type === 'competition' ||
-    e.event_type === 'tournament'
+    e.event_type === 'tournament' ||
+    (e.event_type === 'other' && Boolean(e.title?.toLowerCase().includes('match')))
   );
 }
 
 export function isCoachTrainingEvent(e: TeamEvent): boolean {
+  if (isCoachMatchEvent(e)) return false;
   return e.event_type === 'training' || e.event_type === 'other';
 }
 

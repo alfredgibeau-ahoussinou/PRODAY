@@ -22,6 +22,7 @@ import {
 } from './joueurSfx';
 import { persistJoueurSfxMuted } from '../../utils/joueurSfxPrefs';
 import { useJoueurTheme } from '../../hooks/useJoueurTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Floating +XP / +★ popup. */
 export function JoueurScorePop({
@@ -100,7 +101,7 @@ export function JoueurParticleField({
             {
               left: `${10 + ((i * 17) % 80)}%`,
               top: `${12 + ((i * 23) % 70)}%`,
-              backgroundColor: i % 2 === 0 ? sparkColor : light ? '#FDE68A' : JOUEUR_SITE.gold,
+              backgroundColor: sparkColor,
               width: density === 'playful' ? 10 + (i % 3) * 4 : 5 + (i % 3) * 3,
               height: density === 'playful' ? 10 + (i % 3) * 4 : 5 + (i % 3) * 3,
               opacity: density === 'playful' ? 0.45 : 0.28,
@@ -129,6 +130,7 @@ export function JoueurArcadeShell({
   children,
 }: ShellProps) {
   const theme = useJoueurTheme();
+  const insets = useSafeAreaInsets();
   const pulse = useSharedValue(0.55);
   const [muted, setMuted] = useState(isJoueurSfxMuted());
   const isArcade = identity.density === 'playful';
@@ -208,7 +210,7 @@ export function JoueurArcadeShell({
         light={isArcade}
       />
 
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { top: Math.max(insets.top, 10) }]}>
         <View
           style={[
             styles.livePill,

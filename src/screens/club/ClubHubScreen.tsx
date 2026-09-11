@@ -1,6 +1,8 @@
-import React, { useCallback, useMemo } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ClubOffersComparePanel } from '../../components/club/ClubOffersComparePanel';
+import { ClubQuoteRequestScreen } from './dashboard/ClubQuoteRequestScreen';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { useClubLogoUpload } from '../../features/club/hooks/useClubLogoUpload';
@@ -19,28 +21,37 @@ import {
   ClubHubAlertCard,
   ClubHubIdentityHero,
   ClubHubPackHero,
-  ClubHubSettingsTileRow,
 } from '../../features/club/ui/ClubHubChrome';
 import {
   buildClubHubAlerts,
-  buildClubHubSettingsTiles,
   formatClubHubLocation,
   formatClubHubMetaLine,
   resolveClubHubBrandSourceLabel,
   resolveClubHubPackLabel,
-  resolveClubHubSubtitle,
 } from '../../features/club/ui/clubHubModel';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
-import { clubSpace } from '../../features/club/theme/clubDesignSystem';
+import { clubRadius, clubShadow, clubSpace } from '../../features/club/theme/clubDesignSystem';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
+import type { IconName } from '../../components/ui/iconNames';
 import { ShellAccountSection } from '../../components/shell/ShellAccountSection';
+import { useAccountDeletion } from '../../hooks/useAccountDeletion';
 
-/** Hub Club — identité, couleurs/logo, staff, pack, contacts, réglages. */
+type ExecutiveModuleRow = {
+  id: string;
+  label: string;
+  hint: string;
+  icon: IconName;
+  onPress: () => void;
+  accent?: boolean;
+};
+
+/** Hub Club — Identité Obsidian Glass, charte & logo studio, structure & modules exécutifs. */
 export function ClubHubScreen() {
   const shellNav = useClubShellNav();
   const { tokens, logoUrl, brand } = useClubTheme();
   const ws = useClubWorkspace();
+  const { confirmDeleteAccount } = useAccountDeletion();
   const onBrandUpdated = useCallback(() => {
     void ws.refresh();
   }, [ws.refresh]);
@@ -50,15 +61,6 @@ export function ClubHubScreen() {
   const location = useMemo(
     () => formatClubHubLocation(ws.club?.city, ws.club?.department),
     [ws.club?.city, ws.club?.department],
-  );
-  const subtitle = useMemo(
-    () =>
-      resolveClubHubSubtitle({
-        city: ws.club?.city,
-        department: ws.club?.department,
-        verified: ws.club?.verified,
-      }),
-    [ws.club?.city, ws.club?.department, ws.club?.verified],
   );
   const metaLine = useMemo(
     () =>
@@ -82,13 +84,97 @@ export function ClubHubScreen() {
       }),
     [ws.teamsWithoutCoach, ws.pendingMemberships],
   );
-  const settingsTiles = useMemo(
-    () =>
-      buildClubHubSettingsTiles({
-        hasPresident: Boolean(shellNav?.openPresident),
-        packHint: pack.hint,
-      }),
-    [shellNav?.openPresident, pack.hint],
+
+  // Grouped Executive Modules
+  const governanceRows: ExecutiveModuleRow[] = useMemo(() => {
+    const list: ExecutiveModuleRow[] = [
+      {
+        id: 'finances',
+        label: 'Finances & Cotisations',
+        hint: 'Trésorerie, adhésions et mouvements',
+        icon: 'bag',
+        onPress: () => shellNav?.requestNav('finances'),
+      },
+      {
+        id: 'permissions',
+        label: 'Rôles & Permissions',
+        hint: 'Gestion des droits d’accès et staff',
+        icon: 'shield',
+        onPress: () => shellNav?.requestNav('permissions'),
+      },
+      {
+        id: 'licenses',
+        label: 'Licences & Documents',
+        hint: 'Pièces d’identité, certificats et bordereaux',
+        icon: 'document',
+        onPress: () => shellNav?.requestNav('licenses'),
+      },
+    ];
+    if (shellNav?.openPresident) {
+      list.push({
+        id: 'president',
+        label: 'Pôle Président',
+        hint: 'Cockpit exécutif & gouvernance club',
+        icon: 'briefcase',
+        onPress: () => shellNav.openPresident?.(),
+        accent: true,
+      });
+    }
+    return list;
+  }, [shellNav]);
+
+  const operationsRows: ExecutiveModuleRow[] = useMemo(
+    () => [
+      {
+        id: 'matches',
+        label: 'Matchs & Calendrier',
+        hint: 'Rencontres officielles et résultats',
+        icon: 'football',
+        onPress: () => shellNav?.requestNav('matches'),
+      },
+      {
+        id: 'trainings',
+        label: 'Entraînements & Séances',
+        hint: 'Planification et suivi des présences',
+        icon: 'calendar',
+        onPress: () => shellNav?.requestNav('trainings'),
+      },
+      {
+        id: 'events',
+        label: 'Événements & Tournois',
+        hint: 'Stages vacances, rassemblements et dates clés',
+        icon: 'trophy',
+        onPress: () => shellNav?.requestNav('events'),
+      },
+      {
+        id: 'communication',
+        label: 'Communication Club',
+        hint: 'Canaux officiels, alertes et annonces',
+        icon: 'chat',
+        onPress: () => shellNav?.requestNav('communication'),
+      },
+    ],
+    [shellNav],
+  );
+
+  const servicesRows: ExecutiveModuleRow[] = useMemo(
+    () => [
+      {
+        id: 'sponsoring',
+        label: 'Sponsors & Partenaires',
+        hint: 'Mécénat, contrats et visibilité club',
+        icon: 'gift',
+        onPress: () => shellNav?.requestNav('sponsoring'),
+      },
+      {
+        id: 'notifications',
+        label: 'Notifications & Alertes',
+        hint: 'Rappels automatiques et centre d’alertes',
+        icon: 'notifications',
+        onPress: () => shellNav?.requestNav('notifications'),
+      },
+    ],
+    [shellNav],
   );
 
   if (ws.loading) return <ClubLoading />;
@@ -129,6 +215,7 @@ export function ClubHubScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
+        {/* Executive Identity Hero with Integrated 3-Stat Counters Dock */}
         <ClubHubIdentityHero
           clubName={ws.club.name || 'Club'}
           locationLine={location || undefined}
@@ -139,8 +226,15 @@ export function ClubHubScreen() {
           canEditCrest={logo.canEdit}
           crestUploading={logo.uploading}
           onPressCrest={logo.canEdit ? () => void logo.pickAndUpload() : undefined}
+          playerCount={ws.players.length}
+          teamCount={ws.teams.length}
+          coachCount={ws.coaches.length}
+          onPressPlayers={() => shellNav?.requestNav('players')}
+          onPressTeams={() => shellNav?.requestNav('teams')}
+          onPressCoaches={() => shellNav?.requestNav('coaches')}
         />
 
+        {/* Executive Quick Shortcuts Row */}
         <View style={styles.shortcutRow}>
           <PressableSpring
             onPress={() => shellNav?.requestNav('pack')}
@@ -148,51 +242,56 @@ export function ClubHubScreen() {
             haptic
             style={styles.shortcut}
           >
-            <Icon name="star-outline" size={14} color={tokens.accent} />
+            <View style={[styles.shortcutIconWrap, { backgroundColor: tokens.accentSoft }]}>
+              <Icon name="star-outline" size={14} color={tokens.accent} />
+            </View>
             <ClubText variant="caption" style={styles.shortcutLabel}>
-              Pack
+              Pack Club
             </ClubText>
           </PressableSpring>
+
           <PressableSpring
             onPress={() => shellNav?.requestNav('permissions')}
             scaleTo={0.97}
             haptic
             style={styles.shortcut}
           >
-            <Icon name="shield" size={14} color={tokens.accent} />
+            <View style={[styles.shortcutIconWrap, { backgroundColor: 'rgba(255, 255, 255, 0.06)' }]}>
+              <Icon name="shield" size={14} color={tokens.foreground} />
+            </View>
             <ClubText variant="caption" style={styles.shortcutLabel}>
-              Droits
+              Droits Staff
             </ClubText>
           </PressableSpring>
+
           <PressableSpring
             onPress={() => shellNav?.requestNav('finances')}
             scaleTo={0.97}
             haptic
             style={styles.shortcut}
           >
-            <Icon name="bag" size={14} color={tokens.accent} />
+            <View style={[styles.shortcutIconWrap, { backgroundColor: 'rgba(255, 255, 255, 0.06)' }]}>
+              <Icon name="bag" size={14} color={tokens.foreground} />
+            </View>
             <ClubText variant="caption" style={styles.shortcutLabel}>
-              Finances
+              Trésorerie
             </ClubText>
           </PressableSpring>
         </View>
 
-        <ClubText variant="caption" muted style={styles.pageSub}>
-          {subtitle}
-        </ClubText>
-
-        <ClubHubPackHero
-          title={pack.title}
-          hint={pack.hint}
-          onOpenPack={() => shellNav?.requestNav('pack')}
-          onOpenQuote={() => shellNav?.requestNav('pack')}
-        />
-
+        {/* Operational Alerts (if any pending coach assignment or membership) */}
         {alerts.length > 0 ? (
-          <View style={styles.section}>
-            <ClubText variant="label" muted style={styles.sectionLabel}>
-              À traiter
-            </ClubText>
+          <View style={styles.sectionWrap}>
+            <View style={styles.sectionHead}>
+              <ClubText variant="label" muted style={styles.sectionLabel}>
+                Actions prioritaires
+              </ClubText>
+              <View style={styles.alertCountBadge}>
+                <ClubText variant="caption" style={styles.alertCountText}>
+                  {alerts.length}
+                </ClubText>
+              </View>
+            </View>
             {alerts.map((alert, index) => (
               <ClubHubAlertCard
                 key={alert.id}
@@ -204,10 +303,143 @@ export function ClubHubScreen() {
           </View>
         ) : null}
 
-        <ClubSectionCard title="Couleurs & logo">
+        {/* Structure & Chiffres Clés (2x2 Obsidian Glass Grid) */}
+        <View style={styles.sectionWrap}>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
+            Structure & Effectifs
+          </ClubText>
+          <View style={styles.statsGrid}>
+            {/* Licenciés */}
+            <PressableSpring
+              onPress={() => shellNav?.requestNav('players')}
+              scaleTo={0.97}
+              haptic
+              style={styles.gridCard}
+            >
+              <LinearGradient
+                colors={['rgba(28, 34, 48, 0.7)', 'rgba(16, 20, 30, 0.85)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.gridCardHead}>
+                <View style={[styles.gridIconBadge, { backgroundColor: tokens.accentSoft }]}>
+                  <Icon name="people" size={17} color={tokens.accent} />
+                </View>
+                <Icon name="chevron-forward" size={14} color={tokens.faint} />
+              </View>
+              <ClubText variant="h2" style={styles.gridValue}>
+                {ws.players.length}
+              </ClubText>
+              <ClubText variant="caption" style={styles.gridTitle}>
+                Licenciés Joueurs
+              </ClubText>
+              <ClubText variant="caption" muted numberOfLines={1} style={styles.gridSub}>
+                {ws.pendingMemberships > 0
+                  ? `${ws.pendingMemberships} en attente`
+                  : 'Effectif actif'}
+              </ClubText>
+            </PressableSpring>
+
+            {/* Équipes */}
+            <PressableSpring
+              onPress={() => shellNav?.requestNav('teams')}
+              scaleTo={0.97}
+              haptic
+              style={styles.gridCard}
+            >
+              <LinearGradient
+                colors={['rgba(28, 34, 48, 0.7)', 'rgba(16, 20, 30, 0.85)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.gridCardHead}>
+                <View style={[styles.gridIconBadge, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+                  <Icon name="football" size={17} color="#60A5FA" />
+                </View>
+                <Icon name="chevron-forward" size={14} color={tokens.faint} />
+              </View>
+              <ClubText variant="h2" style={styles.gridValue}>
+                {ws.teams.length}
+              </ClubText>
+              <ClubText variant="caption" style={styles.gridTitle}>
+                Équipes Club
+              </ClubText>
+              <ClubText variant="caption" muted numberOfLines={1} style={styles.gridSub}>
+                {ws.teamsWithoutCoach > 0
+                  ? `${ws.teamsWithoutCoach} sans coach`
+                  : 'Toutes pourvues'}
+              </ClubText>
+            </PressableSpring>
+
+            {/* Staff */}
+            <PressableSpring
+              onPress={() => shellNav?.requestNav('coaches')}
+              scaleTo={0.97}
+              haptic
+              style={styles.gridCard}
+            >
+              <LinearGradient
+                colors={['rgba(28, 34, 48, 0.7)', 'rgba(16, 20, 30, 0.85)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.gridCardHead}>
+                <View style={[styles.gridIconBadge, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                  <Icon name="school" size={17} color="#FBBF24" />
+                </View>
+                <Icon name="chevron-forward" size={14} color={tokens.faint} />
+              </View>
+              <ClubText variant="h2" style={styles.gridValue}>
+                {ws.coaches.length}
+              </ClubText>
+              <ClubText variant="caption" style={styles.gridTitle}>
+                Staff Technique
+              </ClubText>
+              <ClubText variant="caption" muted numberOfLines={1} style={styles.gridSub}>
+                Éducateurs déclarés
+              </ClubText>
+            </PressableSpring>
+
+            {/* Siège FFF */}
+            <PressableSpring
+              onPress={() => shellNav?.requestNav('communication')}
+              scaleTo={0.97}
+              haptic
+              style={styles.gridCard}
+            >
+              <LinearGradient
+                colors={['rgba(28, 34, 48, 0.7)', 'rgba(16, 20, 30, 0.85)']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.gridCardHead}>
+                <View style={[styles.gridIconBadge, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
+                  <Icon name="location" size={17} color="#C084FC" />
+                </View>
+                <Icon name="chevron-forward" size={14} color={tokens.faint} />
+              </View>
+              <ClubText variant="h3" numberOfLines={1} style={[styles.gridValue, { fontSize: 16 }]}>
+                {ws.club.city || 'Siège'}
+              </ClubText>
+              <ClubText variant="caption" style={styles.gridTitle}>
+                Localisation
+              </ClubText>
+              <ClubText variant="caption" muted numberOfLines={1} style={styles.gridSub}>
+                {ws.club.department ? `Dép. ${ws.club.department}` : 'Affiliation FFF'}
+              </ClubText>
+            </PressableSpring>
+          </View>
+        </View>
+
+        {/* Club Membership / Pack Hero */}
+        <ClubHubPackHero
+          title={pack.title}
+          hint={pack.hint}
+          onOpenPack={() => shellNav?.requestNav('pack')}
+          onOpenQuote={() => shellNav?.requestNav('pack')}
+        />
+
+        {/* Charte Graphique & Identité Visuelle Studio */}
+        <ClubSectionCard title="Charte & Identité Visuelle">
           <ClubText variant="caption" muted>
-            Source actuelle : {brandSource}
-            {logoUrl ? ' · Logo affiché dans le chrome' : ''}
+            Source active : {brandSource}
+            {logoUrl ? ' · Crest synchronisé sur toute la plateforme' : ''}
           </ClubText>
           <ClubBrandColorsPanel onSaved={onBrandUpdated} />
           <ClubActionRow
@@ -215,12 +447,12 @@ export function ClubHubScreen() {
             label={logo.actionLabel}
             hint={
               !logo.canEdit
-                ? 'Rattaché à un autre club — logo non modifiable ici'
+                ? 'Rattaché à un autre club — crest non modifiable ici'
                 : logo.uploading
-                  ? 'Envoi en cours…'
+                  ? 'Import du blason en cours…'
                   : logoUrl
-                    ? 'Remplacer le crest affiché partout dans le pôle Club'
-                    : 'Importer le crest du club — thème et en-têtes s’adaptent'
+                    ? 'Remplacer le blason officiel affiché partout'
+                    : 'Importer le logo du club — adapte les maillots et les entêtes'
             }
             onPress={
               !logo.canEdit || logo.uploading
@@ -233,92 +465,152 @@ export function ClubHubScreen() {
           />
         </ClubSectionCard>
 
-        <ClubSectionCard title="Staff & structure">
-          <ClubActionRow
-            icon="school"
-            label={`${ws.coaches.length} coach(s)`}
-            hint={
-              ws.teamsWithoutCoach > 0
-                ? `${ws.teamsWithoutCoach} équipe(s) sans coach`
-                : 'Toutes les équipes ont un coach'
-            }
-            onPress={() => shellNav?.requestNav('coaches')}
-          />
-          <ClubActionRow
-            icon="football"
-            label={`${ws.teams.length} équipe(s)`}
-            hint={`${ws.players.length} joueur(s) · ${ws.pendingMemberships} adhésion(s) en attente`}
-            onPress={() => shellNav?.requestNav('teams')}
-          />
-          <ClubActionRow
-            icon="people"
-            label="Effectif joueurs"
-            onPress={() => shellNav?.requestNav('players')}
-          />
-        </ClubSectionCard>
+        {/* Categorized Executive Modules */}
 
-        <ClubSectionCard title="Contacts club">
-          <ClubText variant="body" muted>
-            Ville : {ws.club.city || '—'}
+        {/* 1. Gouvernance & Finances */}
+        <View style={styles.sectionWrap}>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
+            Gouvernance & Finances
           </ClubText>
-          <ClubText variant="body" muted>
-            Département : {ws.club.department || '—'}
-          </ClubText>
-          <ClubText variant="caption" muted>
-            Les contacts individuels des coachs sont dans l’annuaire Coachs.
-          </ClubText>
-          <ClubActionRow
-            icon="chat"
-            label="Communication club"
-            onPress={() => shellNav?.requestNav('communication')}
-          />
-        </ClubSectionCard>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHead}>
-            <ClubText variant="label" muted style={styles.sectionLabel}>
-              Pack & réglages
-            </ClubText>
-            <ClubText variant="caption" muted>
-              {settingsTiles.length}
-            </ClubText>
+          <View style={styles.moduleCard}>
+            {governanceRows.map((row, index) => (
+              <React.Fragment key={row.id}>
+                {index > 0 ? <View style={styles.rowDivider} /> : null}
+                <PressableSpring
+                  onPress={row.onPress}
+                  scaleTo={0.98}
+                  haptic
+                  style={styles.moduleRow}
+                >
+                  <View
+                    style={[
+                      styles.moduleIconWrap,
+                      {
+                        backgroundColor: row.accent
+                          ? tokens.accentSoft
+                          : 'rgba(255, 255, 255, 0.05)',
+                      },
+                    ]}
+                  >
+                    <Icon
+                      name={row.icon}
+                      size={18}
+                      color={row.accent ? tokens.accent : tokens.foreground}
+                    />
+                  </View>
+                  <View style={styles.moduleTextCol}>
+                    <ClubText variant="body" style={styles.moduleTitle}>
+                      {row.label}
+                    </ClubText>
+                    <ClubText variant="caption" muted numberOfLines={1}>
+                      {row.hint}
+                    </ClubText>
+                  </View>
+                  <Icon name="chevron-forward" size={15} color={tokens.faint} />
+                </PressableSpring>
+              </React.Fragment>
+            ))}
           </View>
-          {settingsTiles.map((tile, index) => (
-            <ClubHubSettingsTileRow
-              key={tile.id}
-              tile={tile}
-              index={index}
-              onPress={() => {
-                if (tile.president) {
-                  shellNav?.openPresident?.();
-                  return;
-                }
-                if (tile.nav) shellNav?.requestNav(tile.nav);
-              }}
-            />
-          ))}
         </View>
 
+        {/* 2. Opérations & Sport */}
+        <View style={styles.sectionWrap}>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
+            Opérations & Sport
+          </ClubText>
+          <View style={styles.moduleCard}>
+            {operationsRows.map((row, index) => (
+              <React.Fragment key={row.id}>
+                {index > 0 ? <View style={styles.rowDivider} /> : null}
+                <PressableSpring
+                  onPress={row.onPress}
+                  scaleTo={0.98}
+                  haptic
+                  style={styles.moduleRow}
+                >
+                  <View
+                    style={[
+                      styles.moduleIconWrap,
+                      { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+                    ]}
+                  >
+                    <Icon name={row.icon} size={18} color={tokens.foreground} />
+                  </View>
+                  <View style={styles.moduleTextCol}>
+                    <ClubText variant="body" style={styles.moduleTitle}>
+                      {row.label}
+                    </ClubText>
+                    <ClubText variant="caption" muted numberOfLines={1}>
+                      {row.hint}
+                    </ClubText>
+                  </View>
+                  <Icon name="chevron-forward" size={15} color={tokens.faint} />
+                </PressableSpring>
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+
+        {/* 3. Services & Partenaires */}
+        <View style={styles.sectionWrap}>
+          <ClubText variant="label" muted style={styles.sectionLabel}>
+            Services & Partenaires
+          </ClubText>
+          <View style={styles.moduleCard}>
+            {servicesRows.map((row, index) => (
+              <React.Fragment key={row.id}>
+                {index > 0 ? <View style={styles.rowDivider} /> : null}
+                <PressableSpring
+                  onPress={row.onPress}
+                  scaleTo={0.98}
+                  haptic
+                  style={styles.moduleRow}
+                >
+                  <View
+                    style={[
+                      styles.moduleIconWrap,
+                      { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+                    ]}
+                  >
+                    <Icon name={row.icon} size={18} color={tokens.foreground} />
+                  </View>
+                  <View style={styles.moduleTextCol}>
+                    <ClubText variant="body" style={styles.moduleTitle}>
+                      {row.label}
+                    </ClubText>
+                    <ClubText variant="caption" muted numberOfLines={1}>
+                      {row.hint}
+                    </ClubText>
+                  </View>
+                  <Icon name="chevron-forward" size={15} color={tokens.faint} />
+                </PressableSpring>
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+
+        {/* Compte & Session */}
         <ShellAccountSection
           tone={{
             foreground: tokens.foreground,
             muted: tokens.muted,
             faint: tokens.faint,
-            surface: tokens.surface,
-            border: tokens.border,
+            surface: 'rgba(18, 22, 34, 0.85)',
+            border: 'rgba(255, 255, 255, 0.08)',
             destructive: '#EF4444',
-            iconBg: tokens.elevated,
+            iconBg: 'rgba(255, 255, 255, 0.06)',
           }}
           links={[
             {
               key: 'pack',
-              label: 'Paramètres',
-              hint: 'Pack et options club',
+              label: 'Paramètres Club',
+              hint: 'Abonnement, options et conformité',
               icon: 'settings',
               onPress: () => shellNav?.requestNav('pack'),
             },
           ]}
           onSignOut={shellNav?.signOut}
+          onDeleteAccount={confirmDeleteAccount}
           safeBottom
         />
       </ClubChapterScroll>
@@ -332,6 +624,7 @@ export function ClubPackScreen() {
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const pack = useMemo(
     () => resolveClubHubPackLabel(ws.club?.commercial_offer_id),
     [ws.club?.commercial_offer_id],
@@ -352,12 +645,15 @@ export function ClubPackScreen() {
             {pack.hint}
           </ClubText>
           <ClubOffersComparePanel
-            onRequestQuote={(offerId) => {
-              Alert.alert(
-                'Demande de devis',
-                `Votre demande pour ${offerId} sera transmise. SUR DEVIS — à partir de 3 € / adhérent.`,
-              );
+            onRequestQuote={(_offerId) => {
+              setQuoteModalOpen(true);
             }}
+          />
+          <ClubActionRow
+            icon="document-text"
+            label="Demander un devis sur mesure"
+            hint="Remplir la demande officielle ProDay Club"
+            onPress={() => setQuoteModalOpen(true)}
           />
           <ClubActionRow
             icon="shield"
@@ -371,6 +667,17 @@ export function ClubPackScreen() {
           />
         </ClubSectionCard>
       </ClubChapterScroll>
+
+      <Modal
+        visible={quoteModalOpen}
+        animationType="slide"
+        onRequestClose={() => setQuoteModalOpen(false)}
+      >
+        <ClubQuoteRequestScreen
+          initialClubName={ws.club?.name || ''}
+          onBack={() => setQuoteModalOpen(false)}
+        />
+      </Modal>
     </View>
   );
 }
@@ -388,23 +695,30 @@ const createStyles = (tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
+      gap: 7,
       paddingVertical: 10,
-      borderRadius: 14,
-      backgroundColor: tokens.surface,
+      paddingHorizontal: 8,
+      borderRadius: clubRadius.xl,
+      backgroundColor: tokens.elevated,
       borderWidth: 1,
-      borderColor: tokens.borderStrong,
+      borderColor: tokens.border,
+      ...clubShadow.card,
+    },
+    shortcutIconWrap: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     shortcutLabel: {
       color: tokens.foreground,
       fontWeight: '800',
+      fontSize: 12,
     },
-    pageSub: {
-      marginBottom: clubSpace.sm,
-    },
-    section: {
-      gap: clubSpace.sm,
-      marginTop: clubSpace.md,
+    sectionWrap: {
+      gap: 8,
+      marginTop: clubSpace.sm,
       marginBottom: clubSpace.sm,
     },
     sectionHead: {
@@ -414,8 +728,102 @@ const createStyles = (tokens: ClubThemeTokens) =>
       paddingHorizontal: 2,
     },
     sectionLabel: {
-      letterSpacing: 0.5,
+      letterSpacing: 0.6,
       textTransform: 'uppercase',
       fontSize: 11,
+      fontWeight: '700',
+    },
+    alertCountBadge: {
+      paddingVertical: 2,
+      paddingHorizontal: 7,
+      borderRadius: clubRadius.pill,
+      backgroundColor: 'rgba(239, 68, 68, 0.18)',
+      borderWidth: 1,
+      borderColor: 'rgba(239, 68, 68, 0.3)',
+    },
+    alertCountText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: '#EF4444',
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    gridCard: {
+      width: '48.5%',
+      borderRadius: clubRadius.xl,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: clubSpace.md,
+      overflow: 'hidden',
+      gap: 3,
+      ...clubShadow.card,
+    },
+    gridCardHead: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 6,
+    },
+    gridIconBadge: {
+      width: 32,
+      height: 32,
+      borderRadius: clubRadius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    gridValue: {
+      fontWeight: '900',
+      fontSize: 22,
+      letterSpacing: -0.5,
+      color: tokens.foreground,
+    },
+    gridTitle: {
+      fontWeight: '700',
+      fontSize: 12,
+      color: tokens.foreground,
+    },
+    gridSub: {
+      fontSize: 11,
+    },
+    moduleCard: {
+      borderRadius: clubRadius.xl,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      overflow: 'hidden',
+      ...clubShadow.card,
+    },
+    moduleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.md,
+      paddingVertical: 13,
+      paddingHorizontal: clubSpace.lg,
+    },
+    rowDivider: {
+      height: 1,
+      backgroundColor: tokens.border,
+      marginLeft: 62,
+    },
+    moduleIconWrap: {
+      width: 38,
+      height: 38,
+      borderRadius: clubRadius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    moduleTextCol: {
+      flex: 1,
+      minWidth: 0,
+      gap: 2,
+    },
+    moduleTitle: {
+      fontWeight: '700',
+      fontSize: 14,
+      color: tokens.foreground,
     },
   });

@@ -30,6 +30,8 @@ type Props = {
   links?: ShellAccountLink[];
   onSignOut?: () => void;
   signOutLabel?: string;
+  onDeleteAccount?: () => void;
+  deleteAccountLabel?: string;
   /** Extra bottom pad so logout clears home indicator / dock. */
   safeBottom?: boolean;
   tone: Tone;
@@ -45,6 +47,8 @@ export function ShellAccountSection({
   links = [],
   onSignOut,
   signOutLabel = 'Se déconnecter',
+  onDeleteAccount,
+  deleteAccountLabel = 'Supprimer mon compte',
   safeBottom = true,
   tone,
   style,
@@ -53,7 +57,7 @@ export function ShellAccountSection({
   const styles = useMemo(() => createStyles(tone), [tone]);
   const bottomPad = safeBottom ? Math.max(insets.bottom, 12) + spacing.md : 0;
 
-  if (links.length === 0 && !onSignOut) return null;
+  if (links.length === 0 && !onSignOut && !onDeleteAccount) return null;
 
   return (
     <View style={[styles.root, { paddingBottom: bottomPad }, style]}>
@@ -62,7 +66,7 @@ export function ShellAccountSection({
       </ProDayText>
       <View style={styles.list}>
         {links.map((link, index) => {
-          const last = !onSignOut && index === links.length - 1;
+          const last = !onSignOut && !onDeleteAccount && index === links.length - 1;
           return (
             <View key={link.key}>
               <PressableSpring
@@ -93,20 +97,45 @@ export function ShellAccountSection({
           );
         })}
         {onSignOut ? (
+          <View>
+            <PressableSpring
+              onPress={onSignOut}
+              scaleTo={0.98}
+              haptic
+              style={styles.row}
+              accessibilityRole="button"
+              accessibilityLabel={signOutLabel}
+            >
+              <View style={[styles.iconWrap, styles.logoutIcon]}>
+                <Icon name="log-out" size={17} color={tone.destructive} />
+              </View>
+              <View style={styles.copy}>
+                <ProDayText variant="body" style={styles.logoutLabel}>
+                  {signOutLabel}
+                </ProDayText>
+              </View>
+            </PressableSpring>
+            {onDeleteAccount ? <View style={styles.divider} /> : null}
+          </View>
+        ) : null}
+        {onDeleteAccount ? (
           <PressableSpring
-            onPress={onSignOut}
+            onPress={onDeleteAccount}
             scaleTo={0.98}
             haptic
             style={styles.row}
             accessibilityRole="button"
-            accessibilityLabel={signOutLabel}
+            accessibilityLabel={deleteAccountLabel}
           >
-            <View style={[styles.iconWrap, styles.logoutIcon]}>
-              <Icon name="log-out" size={17} color={tone.destructive} />
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.12)' }]}>
+              <Icon name="trash" size={17} color={tone.destructive} />
             </View>
             <View style={styles.copy}>
               <ProDayText variant="body" style={styles.logoutLabel}>
-                {signOutLabel}
+                {deleteAccountLabel}
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.hint} numberOfLines={1}>
+                Suppression irréversible des données
               </ProDayText>
             </View>
           </PressableSpring>

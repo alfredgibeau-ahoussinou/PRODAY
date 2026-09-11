@@ -41,6 +41,12 @@ function clubFromFirestore(id: string, data: Record<string, unknown>): Club {
     fff_affiliation_number: data.fff_affiliation_number
       ? String(data.fff_affiliation_number)
       : undefined,
+    fff_league_id: data.fff_league_id ? String(data.fff_league_id) : undefined,
+    fff_competition_id: data.fff_competition_id ? String(data.fff_competition_id) : undefined,
+    fff_district_code: data.fff_district_code ? String(data.fff_district_code) : undefined,
+    fff_division_label: data.fff_division_label ? String(data.fff_division_label) : undefined,
+    fff_group_label: data.fff_group_label ? String(data.fff_group_label) : undefined,
+    fff_season: data.fff_season ? String(data.fff_season) : undefined,
     created_at: new Date(),
   };
 }
@@ -53,6 +59,12 @@ export interface CreateClubInput {
   owner_uid: string;
   location?: GeoPoint;
   fff_affiliation_number?: string;
+  fff_league_id?: string;
+  fff_competition_id?: string;
+  fff_district_code?: string;
+  fff_division_label?: string;
+  fff_group_label?: string;
+  fff_season?: string;
   /** Blason public (annuaire FFF / DOFA) — pas d’upload obligatoire. */
   logo_url?: string | null;
   primary_color?: string | null;
@@ -155,6 +167,12 @@ export const clubsService = {
       sponsor_ids: [],
       owner_uid: input.owner_uid,
       fff_affiliation_number: input.fff_affiliation_number?.trim() || null,
+      fff_league_id: input.fff_league_id?.trim() || null,
+      fff_competition_id: input.fff_competition_id?.trim() || null,
+      fff_district_code: input.fff_district_code?.trim() || null,
+      fff_division_label: input.fff_division_label?.trim() || null,
+      fff_group_label: input.fff_group_label?.trim() || null,
+      fff_season: input.fff_season?.trim() || null,
       logo_url: input.logo_url?.trim() || null,
       primary_color: input.primary_color?.trim() || null,
       secondary_color: input.secondary_color?.trim() || null,
@@ -208,6 +226,36 @@ export const clubsService = {
     if (!code) throw new Error('Numéro d’affiliation FFF requis.');
     await updateDoc(doc(database, 'clubs', clubId), {
       fff_affiliation_number: code,
+      updated_at: serverTimestamp(),
+    });
+  },
+
+  /**
+   * Configure le rattachement officiel FFF d'un club pour la saison active.
+   * Le Pôle Club ne déduit jamais une poule à partir du seul département.
+   */
+  async setFffLeagueMetadata(
+    clubId: string,
+    metadata: {
+      leagueId: string;
+      competitionId?: string;
+      districtCode?: string;
+      divisionLabel?: string;
+      groupLabel?: string;
+      season?: string;
+    },
+  ): Promise<void> {
+    const database = getDb();
+    if (!database) throw new Error('Firebase non configuré');
+    const leagueId = metadata.leagueId.trim();
+    if (!leagueId) throw new Error('Identifiant de ligue FFF requis.');
+    await updateDoc(doc(database, 'clubs', clubId), {
+      fff_league_id: leagueId,
+      fff_competition_id: metadata.competitionId?.trim() || null,
+      fff_district_code: metadata.districtCode?.trim() || null,
+      fff_division_label: metadata.divisionLabel?.trim() || null,
+      fff_group_label: metadata.groupLabel?.trim() || null,
+      fff_season: metadata.season?.trim() || null,
       updated_at: serverTimestamp(),
     });
   },

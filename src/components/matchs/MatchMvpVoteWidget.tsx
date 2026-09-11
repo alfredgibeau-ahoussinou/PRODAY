@@ -140,8 +140,11 @@ export const MatchMvpVoteWidget: React.FC<MatchMvpVoteWidgetProps> = ({
                 </ProDayText>
                 <View style={styles.voteCountPill}>
                   {votes > 0 ? (
-                    <ProDayText variant="caption" style={{ color: selected ? accentColor : '#94A3B8', fontWeight: '800' }}>
-                      {votes} ★
+                    <ProDayText
+                      variant="caption"
+                      style={[styles.badgeText, { color: accentColor }]}
+                    >
+                      {votes} {votes > 1 ? 'votes' : 'vote'}
                     </ProDayText>
                   ) : (
                     <ProDayText variant="caption" muted>
@@ -217,5 +220,9 @@ const styles = StyleSheet.create({
   },
   voteCountPill: {
     marginLeft: spacing.sm,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

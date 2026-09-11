@@ -29,12 +29,12 @@ export const FUT18_TIER_THEME: Record<
     rim: 'rgba(200,210,220,0.4)',
   },
   gold: {
-    frame: ['#FFF0A8', '#E8C040', '#A07818'],
-    face: ['#C9A018', '#9A7810', '#5C4808'],
-    ink: '#FFF8E0',
-    inkMuted: 'rgba(255,248,224,0.75)',
-    plate: 'rgba(40,28,4,0.58)',
-    rim: 'rgba(255,240,168,0.5)',
+    frame: ['#F5F5F7', '#CBD5E1', '#64748B'],
+    face: ['#1E293B', '#0F172A', '#020617'],
+    ink: '#FFFFFF',
+    inkMuted: 'rgba(255,255,255,0.75)',
+    plate: 'rgba(0,0,0,0.58)',
+    rim: 'rgba(255,255,255,0.35)',
   },
   elite: {
     frame: ['#6EE7D8', '#14B8A6', '#0D6B5E'],

@@ -176,7 +176,7 @@ export const MessagesNetworkSheet: React.FC<MessagesNetworkSheetProps> = ({
               <Icon
                 name={isFavorite ? 'bookmark' : 'bookmark-outline'}
                 size={18}
-                color={isFavorite ? '#F59E0B' : accent}
+                color={isFavorite ? colors.brand : accent}
               />
               <Text style={[styles.secondaryText, { color: colors.text }]}>
                 {favoriteBusy

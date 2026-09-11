@@ -87,8 +87,8 @@ export const ProDayGlyph: React.FC<GlyphProps> = ({
         <Svg width={s} height={s} viewBox="0 0 24 24" fill="none">
           <Defs>
             <LinearGradient id="goldAi" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#FBBF24" />
-              <Stop offset="100%" stopColor="#F59E0B" />
+              <Stop offset="0%" stopColor={secondaryColor} />
+              <Stop offset="100%" stopColor={secondaryColor} />
             </LinearGradient>
           </Defs>
           <Path
@@ -97,7 +97,7 @@ export const ProDayGlyph: React.FC<GlyphProps> = ({
           />
           <Path
             d="M18 16L19 19L22 20L19 21L18 24L17 21L14 20L17 19L18 16Z"
-            fill="#FBBF24"
+            fill={secondaryColor}
             opacity={0.8}
           />
         </Svg>
@@ -108,13 +108,13 @@ export const ProDayGlyph: React.FC<GlyphProps> = ({
         <Svg width={s} height={s} viewBox="0 0 24 24" fill="none">
           <Path
             d="M6 4H18V10C18 13.3 15.3 16 12 16C8.7 16 6 13.3 6 10V4Z"
-            stroke="#F59E0B"
+            stroke={secondaryColor}
             strokeWidth={1.6}
             strokeLinejoin="round"
           />
-          <Path d="M6 6H3C2.4 6 2 6.4 2 7V9C2 10.7 3.3 12 5 12H6" stroke="#F59E0B" strokeWidth={1.4} strokeLinecap="round" />
-          <Path d="M18 6H21C21.6 6 22 6.4 22 7V9C22 10.7 20.7 12 19 12H18" stroke="#F59E0B" strokeWidth={1.4} strokeLinecap="round" />
-          <Path d="M12 16V19M8 20H16" stroke="#F59E0B" strokeWidth={1.6} strokeLinecap="round" />
+          <Path d="M6 6H3C2.4 6 2 6.4 2 7V9C2 10.7 3.3 12 5 12H6" stroke={secondaryColor} strokeWidth={1.4} strokeLinecap="round" />
+          <Path d="M18 6H21C21.6 6 22 6.4 22 7V9C22 10.7 20.7 12 19 12H18" stroke={secondaryColor} strokeWidth={1.4} strokeLinecap="round" />
+          <Path d="M12 16V19M8 20H16" stroke={secondaryColor} strokeWidth={1.6} strokeLinecap="round" />
         </Svg>
       );
 

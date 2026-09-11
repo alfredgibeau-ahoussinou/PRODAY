@@ -62,7 +62,7 @@ function resolveLoadedFont(
     return fontFamily.display;
   }
 
-  if (w == null) return textVariants[variant].fontFamily;
+  if (w == null) return textVariants[variant]?.fontFamily || fontFamily.regular;
 
   if (DISPLAY_WEIGHT_VARIANTS.has(variant) || variant === 'eyebrow') {
     if (w >= 900) return fontFamily.black;

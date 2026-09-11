@@ -108,13 +108,14 @@ export function useClubWorkspace(): ClubWorkspace {
       return;
     }
     try {
-      const [clubDoc, teamList, membershipList, memberList, eventList] = await Promise.all([
+      const [clubDoc, teamList, membershipList, memberList] = await Promise.all([
         clubsService.getById(nextClubId),
         teamsService.listByClubId(nextClubId),
         membershipsService.listByClub(nextClubId),
         usersService.listMembersByClubId(nextClubId),
-        teamEventsService.listForClub(nextClubId, 80),
       ]);
+      const teamIds = teamList.map((t) => t.id);
+      const eventList = await teamEventsService.listForClub(nextClubId, 120, teamIds);
       setClub(clubDoc);
       setTeams(teamList);
       setMemberships(membershipList);

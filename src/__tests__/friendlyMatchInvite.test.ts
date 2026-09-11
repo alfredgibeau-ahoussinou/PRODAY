@@ -12,7 +12,6 @@ describe('friendly match invitations', () => {
   it('allows club and coach to propose', () => {
     expect(canProposeFriendlyMatch('club')).toBe(true);
     expect(canProposeFriendlyMatch('coach')).toBe(true);
-    expect(canProposeFriendlyMatch('organizer')).toBe(true);
     expect(canProposeFriendlyMatch('player')).toBe(false);
     expect(canProposeFriendlyMatch('supporter')).toBe(false);
   });

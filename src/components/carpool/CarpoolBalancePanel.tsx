@@ -5,9 +5,7 @@ import { aggregateCarpoolBalance } from '../../utils/carpoolBalance';
 import { StaggerReveal } from '../motion';
 import { Icon } from '../ui/Icon';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing } from '../../theme/designTokens';
-import { CARPOOL_SITE } from '../../content/carpoolSite';
-import { CarpoolEmptyState, CarpoolSectionIntro } from './carpoolUi';
+import { spacing, radius } from '../../theme/designTokens';
 import {
   type CarpoolUiPalette,
   useCarpoolThemedStyles,
@@ -23,141 +21,216 @@ export const CarpoolBalancePanel: React.FC<CarpoolBalancePanelProps> = ({ events
   const { t } = useTranslation();
   const palette = useCarpoolUi();
   const styles = useCarpoolThemedStyles(createStyles);
-  const balance = aggregateCarpoolBalance(events);
+  const realBalance = aggregateCarpoolBalance(events);
 
-  if (balance.length === 0) {
+  if (realBalance.length === 0) {
     return (
-      <CarpoolEmptyState
-        icon="car"
-        title={t('carpool.balance.noDriver')}
-        subtitle={t('carpool.balance.emptySub')}
-        ctaLabel={onPropose ? t('carpool.cta.proposeTrip') : undefined}
-        onCta={onPropose}
-      />
+      <View style={styles.emptyWrap}>
+        <View
+          style={[
+            styles.leaderBadge,
+            { backgroundColor: `${palette.signal}18`, borderColor: `${palette.signal}35`, alignSelf: 'center' },
+          ]}
+        >
+          <Icon name="trophy" size={22} color={palette.signal} />
+        </View>
+        <Text style={styles.emptyTitle}>Classement des conducteurs</Text>
+        <Text style={styles.emptyMeta}>
+          Les membres du groupe ayant assuré des covoiturages apparaîtront ici.
+        </Text>
+      </View>
     );
   }
 
-  const leader = balance[0];
+  const leader = realBalance[0];
 
   return (
     <View style={styles.list}>
-      <CarpoolSectionIntro
-        icon="people"
-        title={t('carpool.balance.title')}
-        subtitle={t('carpool.balance.subtitle')}
-      />
-
       {leader ? (
         <View style={styles.leaderCard}>
-          <View style={styles.leaderBadge}>
-            <Icon name="car" size={18} color={palette.onSignal} variant="filled" />
+          <View
+            style={[
+              styles.leaderBadge,
+              { backgroundColor: `${palette.signal}20`, borderColor: `${palette.signal}50` },
+            ]}
+          >
+            <Icon name="trophy" size={20} color={palette.signal} />
           </View>
           <View style={styles.leaderCopy}>
-            <Text style={styles.leaderKicker}>{t('carpool.balance.topDriver')}</Text>
+            <View style={styles.leaderKickerRow}>
+              <Text style={[styles.leaderKicker, { color: palette.signal }]}>
+                TOP CONDUCTEUR DU CLUB
+              </Text>
+            </View>
             <Text style={styles.leaderName}>{leader.name}</Text>
             <Text style={styles.leaderMeta}>
-              {leader.trips > 1
-                ? t('carpool.balance.trips', { n: leader.trips })
-                : t('carpool.balance.trip', { n: leader.trips })}
+              {leader.trips} trajets partagés · ~{leader.trips * 3} coéquipiers véhiculés
             </Text>
           </View>
         </View>
       ) : null}
 
-      {balance.map((row, index) => (
-        <StaggerReveal key={row.uid} index={index}>
-          <View style={styles.row}>
-            <View style={styles.rank}>
-              <Text style={styles.rankText}>{index + 1}</Text>
+      <Text style={styles.sectionTitle}>CLASSEMENT MOBILITÉ ÉQUIPE</Text>
+
+      {realBalance.map((row, index) => {
+        return (
+          <StaggerReveal key={row.uid} index={index}>
+            <View style={styles.row}>
+              <View
+                style={[
+                  styles.rank,
+                  index < 3 && { backgroundColor: '#1C1D26', borderColor: '#282836' },
+                ]}
+              >
+                <Text style={styles.rankText}>#{index + 1}</Text>
+              </View>
+              <View style={styles.copy}>
+                <Text style={styles.rowName}>{row.name}</Text>
+                <Text style={styles.rowMeta}>
+                  {row.trips} trajet{row.trips > 1 ? 's' : ''} assuré{row.trips > 1 ? 's' : ''}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.tripsBadge,
+                  { backgroundColor: `${palette.signal}18`, borderColor: `${palette.signal}35` },
+                ]}
+              >
+                <Icon name="car" size={12} color={palette.signal} />
+                <Text style={[styles.tripsText, { color: palette.signal }]}>{row.trips}</Text>
+              </View>
             </View>
-            <View style={styles.copy}>
-              <Text style={styles.rowName}>{row.name}</Text>
-              <Text style={styles.rowMeta}>
-                {row.trips > 1
-                  ? t('carpool.balance.rowTrips', { n: row.trips })
-                  : t('carpool.balance.rowTrip', { n: row.trips })}
-                {row.last_trip_at
-                  ? t('carpool.balance.lastTrip', {
-                      date: row.last_trip_at.toLocaleDateString(undefined, {
-                        day: 'numeric',
-                        month: 'short',
-                      }),
-                    })
-                  : ''}
-              </Text>
-            </View>
-            <Text style={styles.trips}>{row.trips}</Text>
-          </View>
-        </StaggerReveal>
-      ))}
+          </StaggerReveal>
+        );
+      })}
     </View>
   );
 };
 
 function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
-    list: { gap: spacing.sm },
+    list: { gap: 10 },
     leaderCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.md,
-      backgroundColor: palette.signal,
-      borderRadius: 16,
-      marginBottom: spacing.sm,
+      gap: 14,
+      padding: 16,
+      backgroundColor: '#14141A',
+      borderWidth: 1,
+      borderColor: '#22222E',
+      borderRadius: 18,
+      marginBottom: 8,
     },
     leaderBadge: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 46,
+      height: 46,
+      borderRadius: 14,
+      borderWidth: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: palette.signalSoft,
     },
     leaderCopy: { flex: 1, gap: 2 },
+    leaderKickerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
     leaderKicker: {
-      fontSize: 10,
-      fontWeight: '800',
-      letterSpacing: 1,
+      fontSize: 10.5,
+      fontWeight: '900',
+      letterSpacing: 0.6,
       textTransform: 'uppercase',
-      color: palette.onSignal,
-      opacity: 0.7,
     },
     leaderName: {
-      fontFamily: CARPOOL_SITE.display,
-      fontSize: 18,
-      fontWeight: '800',
-      color: palette.onSignal,
+      fontSize: 16,
+      fontWeight: '900',
+      color: '#FFFFFF',
+      letterSpacing: -0.2,
     },
-    leaderMeta: { fontSize: 12, fontWeight: '700', color: palette.onSignal },
+    leaderMeta: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#A1A1AA',
+    },
+    sectionTitle: {
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 0.8,
+      color: '#8B8B9A',
+      textTransform: 'uppercase',
+      marginLeft: 4,
+      marginTop: 6,
+    },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.md,
-      borderWidth: 1.5,
-      borderColor: palette.fog,
-      backgroundColor: palette.surface,
-      borderRadius: 14,
-      padding: spacing.md,
-      marginBottom: spacing.xs,
+      gap: 12,
+      borderWidth: 1,
+      borderColor: '#22222E',
+      backgroundColor: '#14141A',
+      borderRadius: 16,
+      padding: 14,
+      marginBottom: 4,
     },
     rank: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: 'transparent',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: palette.signalSoft,
     },
-    rankText: { fontWeight: '900', color: palette.signalDeep, fontSize: 12 },
+    rankText: {
+      fontWeight: '900',
+      color: '#FFFFFF',
+      fontSize: 14,
+    },
     copy: { flex: 1 },
-    rowName: { fontWeight: '800', color: palette.ink, fontSize: 15 },
-    rowMeta: { fontSize: 12, color: palette.inkMuted, marginTop: 2 },
-    trips: {
-      fontFamily: CARPOOL_SITE.display,
-      fontSize: 18,
+    rowName: {
       fontWeight: '800',
-      color: palette.signalDeep,
+      color: '#FFFFFF',
+      fontSize: 14,
+    },
+    rowMeta: {
+      fontSize: 12,
+      color: '#8B8B9A',
+      marginTop: 2,
+    },
+    tripsBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+    },
+    tripsText: {
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    emptyWrap: {
+      paddingVertical: 32,
+      paddingHorizontal: 20,
+      backgroundColor: '#14141A',
+      borderWidth: 1,
+      borderColor: '#22222E',
+      borderRadius: 18,
+      alignItems: 'center',
+      gap: 10,
+    },
+    emptyTitle: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: '#FFFFFF',
+      textAlign: 'center',
+    },
+    emptyMeta: {
+      fontSize: 13,
+      color: '#8B8B9A',
+      textAlign: 'center',
+      lineHeight: 18,
     },
   });
 }
+

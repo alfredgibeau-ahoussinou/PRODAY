@@ -1,13 +1,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { configStr } from './runtimeConfig';
 import {
-  MISTRAL_CHAT_MODEL,
-  extractMistralChatText,
-} from './mistralModels';
+  generateAiChatCompletion,
+  getGeminiApiKey,
+  getMistralApiKey,
+} from './aiProvider';
 
 const db = admin.firestore();
-const MISTRAL_TEXT_MODEL = MISTRAL_CHAT_MODEL;
 const MAX_HISTORY = 16;
 const MAX_USER_CHARS = 1200;
 const MAX_REPLY_CHARS = 2200;
@@ -18,10 +17,6 @@ type ChatMessageIn = {
   role: ChatRole;
   content: string;
 };
-
-function getMistralApiKey(): string | null {
-  return configStr('mistral', 'api_key', ['MISTRAL_API_KEY']) ?? null;
-}
 
 function sanitizeMessages(raw: unknown): ChatMessageIn[] {
   if (!Array.isArray(raw)) return [];
@@ -77,44 +72,6 @@ async function buildClubContext(uid: string, clubId: string): Promise<string> {
   ].join('\n');
 }
 
-async function callMistralChat(
-  apiKey: string,
-  system: string,
-  messages: ChatMessageIn[],
-): Promise<string> {
-  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: MISTRAL_TEXT_MODEL,
-      temperature: 0.7,
-      top_p: 0.9,
-      max_tokens: 1400,
-      /** Medium 3.5 (2026) — raisonnement avant réponse. */
-      reasoning_effort: 'high',
-      messages: [{ role: 'system', content: system }, ...messages],
-    }),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    console.error('[clubAssistantChat] Mistral error', res.status, body.slice(0, 400));
-    throw new HttpsError('internal', 'Le modèle IA a échoué. Réessayez dans un instant.');
-  }
-
-  const json = (await res.json()) as {
-    choices?: { message?: { content?: unknown } }[];
-  };
-  const text = extractMistralChatText(json.choices?.[0]?.message?.content);
-  if (!text) {
-    throw new HttpsError('internal', 'Réponse IA vide.');
-  }
-  return text.slice(0, MAX_REPLY_CHARS);
-}
-
 /**
  * Interdit définitivement les tirets typographiques et listes « - » dans les réponses.
  * Conserve les traits d’union dans les mots (ex. peut-être).
@@ -148,11 +105,12 @@ export const clubAssistantChat = onCall(
       throw new HttpsError('unauthenticated', 'Connexion requise.');
     }
     const uid = request.auth.uid;
-    const apiKey = getMistralApiKey();
-    if (!apiKey) {
+    const geminiKey = getGeminiApiKey();
+    const mistralKey = getMistralApiKey();
+    if (!geminiKey && !mistralKey) {
       throw new HttpsError(
         'failed-precondition',
-        'Assistant IA non configuré (clé Mistral manquante côté serveur).',
+        'Assistant IA non configuré (clé GEMINI_API_KEY ou MISTRAL_API_KEY manquante côté serveur).',
       );
     }
 
@@ -184,7 +142,8 @@ export const clubAssistantChat = onCall(
       contextBlock = `Club id=${clubId} (contexte partiel).`;
     }
 
-    const system = `Tu es le copilote conversationnel de Pro Day Club. Tu parles à un dirigeant ou président de club, comme un collègue compétent, pas comme un manuel.
+    const system = `Tu es le Copilote IA Dirigeant ProDay, propulsé par Google Gemini (modèle Gemini Flash Lite). Tu parles à un dirigeant ou président de club, comme un collègue compétent, pas comme un manuel.
+Si on te demande quelle IA tu es ou qui t'a conçu, réponds clairement que tu es Google Gemini intégré dans ProDay Club. Tu n'es ni Meta, ni Mistral, ni ChatGPT.
 
 Style d’écriture (obligatoire) :
 Interdiction absolue et permanente d’utiliser des tirets : ni -, ni –, ni —, ni puces « - item ». Jamais de listes à tirets. Écris uniquement des phrases ou des phrases numérotées (1. 2. 3.) si une énumération est vraiment utile.
@@ -201,11 +160,19 @@ Tu n’es ni avocat ni médecin.
 Contexte club (faits serveur) :
 ${contextBlock}`;
 
-    const reply = stripDashTypography(await callMistralChat(apiKey, system, messages));
+    const completion = await generateAiChatCompletion({
+      systemPrompt: system,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      temperature: 0.7,
+      maxTokens: 1400,
+      preferProvider: 'gemini',
+    });
+
+    const reply = stripDashTypography(completion.text).slice(0, MAX_REPLY_CHARS);
 
     return {
       reply,
-      model: MISTRAL_TEXT_MODEL,
+      model: completion.model || 'gemini-3.5-flash-lite',
       clubId,
     };
   },

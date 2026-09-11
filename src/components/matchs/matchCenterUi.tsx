@@ -11,6 +11,7 @@ import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { useJoueurPageIdentity } from '../player/joueurPortalUi';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 
 const CoachMatchSkinContext = createContext(false);
 const JoueurMatchSkinContext = createContext(false);
@@ -185,8 +186,12 @@ export function MatchSectionCard({
 
 export function MatchKpiRow({
   items,
+  selectedIndex,
+  onSelectIndex,
 }: {
   items: { label: string; value: string; tone?: string }[];
+  selectedIndex?: number;
+  onSelectIndex?: (index: number) => void;
 }) {
   const skin = useMatchSkinTokens();
   const coachSkin = skin.coachSkin;
@@ -198,22 +203,50 @@ export function MatchKpiRow({
 
   return (
     <View style={styles.row}>
-      {items.map((item, index) => (
-        <View
-          key={item.label}
-          style={[styles.cell, index < items.length - 1 && styles.cellBorder]}
-        >
-          <ProDayText
-            variant="title"
-            style={[styles.value, item.tone ? { color: item.tone } : null]}
+      {items.map((item, index) => {
+        const selected = selectedIndex === index;
+        const CellComponent = onSelectIndex ? PressableSpring : View;
+        const cellProps = onSelectIndex
+          ? {
+              onPress: () => {
+                prodayHaptics.press();
+                onSelectIndex(index);
+              },
+              scaleTo: 0.95,
+              haptic: true,
+            }
+          : {};
+
+        return (
+          <CellComponent
+            key={item.label}
+            style={[
+              styles.cell,
+              index < items.length - 1 && styles.cellBorder,
+              selected && styles.cellSelected,
+            ]}
+            {...cellProps}
           >
-            {item.value}
-          </ProDayText>
-          <ProDayText variant="caption" style={styles.label} numberOfLines={1}>
-            {item.label}
-          </ProDayText>
-        </View>
-      ))}
+            <ProDayText
+              variant="title"
+              style={[
+                styles.value,
+                item.tone ? { color: item.tone } : null,
+                selected && { color: skin.accent },
+              ]}
+            >
+              {item.value}
+            </ProDayText>
+            <ProDayText
+              variant="caption"
+              style={[styles.label, selected && styles.labelSelected]}
+              numberOfLines={1}
+            >
+              {item.label}
+            </ProDayText>
+          </CellComponent>
+        );
+      })}
     </View>
   );
 }
@@ -358,6 +391,62 @@ function createKpiStyles(
   skin: MatchSkinTokens,
 ) {
   const site = matchSiteTokens(coachSkin, joueurSkin, coachTokens, skin);
+  if (joueurSkin) {
+    return StyleSheet.create({
+      row: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+      },
+      cell: {
+        flex: 1,
+        position: 'relative',
+        paddingVertical: 13,
+        paddingHorizontal: spacing.xs,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        backgroundColor: PLAYER_DARK.surfaceRaised,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: PLAYER_DARK.border,
+      },
+      cellBorder: {},
+      cellSelected: {
+        borderColor: accent,
+        backgroundColor: skin.soft,
+        shadowColor: accent,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 3,
+      },
+      value: {
+        color: accent,
+        fontWeight: '900',
+        fontSize: 22,
+        letterSpacing: -0.4,
+      },
+      label: {
+        color: PLAYER_DARK.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 1.1,
+        fontSize: 9,
+        fontWeight: '800',
+      },
+      labelSelected: {
+        color: '#FFFFFF',
+        fontWeight: '900',
+      },
+      activeDot: {
+        position: 'absolute',
+        top: 7,
+        right: 7,
+        width: 5,
+        height: 5,
+        borderRadius: 2.5,
+      },
+    });
+  }
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
@@ -378,6 +467,9 @@ function createKpiStyles(
       borderRightWidth: StyleSheet.hairlineWidth,
       borderRightColor: site.border,
     },
+    cellSelected: {
+      backgroundColor: skin.soft,
+    },
     value: {
       color: accent,
       fontWeight: '800',
@@ -388,6 +480,14 @@ function createKpiStyles(
       letterSpacing: 1,
       fontSize: 9,
       fontWeight: '700',
+    },
+    labelSelected: {
+      color: accent,
+      fontWeight: '800',
+    },
+    activeDot: {
+      width: 0,
+      height: 0,
     },
   });
 }

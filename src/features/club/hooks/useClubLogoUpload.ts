@@ -42,10 +42,31 @@ export function useClubLogoUpload(onUploaded?: () => void | Promise<void>) {
       await refreshClub();
       await onUploaded?.();
     } catch (e) {
-      Alert.alert(
-        'Logo du club',
-        e instanceof Error ? e.message : 'Impossible d’enregistrer le logo.',
-      );
+      const errMsg = e instanceof Error ? e.message : 'Impossible d’enregistrer le logo.';
+      const isBilling =
+        errMsg.includes('402') ||
+        errMsg.toLowerCase().includes('billing') ||
+        errMsg.toLowerCase().includes('delinquent') ||
+        errMsg.toLowerCase().includes('facturation');
+
+      if (isBilling) {
+        Alert.alert(
+          'Facturation Firebase requise (402)',
+          'Le compte Google Cloud / Firebase du projet est suspendu (défaut de paiement sur la console GCP).\n\nSouhaitez-vous afficher ce logo en aperçu local sur cet appareil pour poursuivre ?',
+          [
+            { text: 'Annuler', style: 'cancel' },
+            {
+              text: 'Aperçu local',
+              onPress: () => {
+                applyLogoUrl(file.uri);
+                void onUploaded?.();
+              },
+            },
+          ],
+        );
+      } else {
+        Alert.alert('Logo du club', errMsg);
+      }
     } finally {
       setUploading(false);
     }

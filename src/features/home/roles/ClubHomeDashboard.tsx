@@ -124,8 +124,8 @@ export const ClubHomeDashboard: React.FC<StaffRoleHomeProps> = ({
           index={0}
           title={
             fundingGoals.some((g) => g.raised_amount_eur < g.target_amount_eur)
-              ? '🟠 Objectifs financement en cours'
-              : '🟢 Financement à jour'
+              ? 'Objectifs financement en cours'
+              : 'Financement à jour'
           }
           subtitle={`${announcements.length} annonce(s) · ${membersCount} licencié(s)`}
           onPress={() => nav.openDashboard('gestion')}

@@ -31,7 +31,7 @@ export function CoachPlayerAiPanel(props: Props) {
     if (wellness.injured) return { label: 'Blessé', color: '#EF4444', icon: 'medkit' as const };
     if (wellness.suspended) return { label: 'Suspendu', color: '#6B7280', icon: 'close-circle' as const };
     if ((wellness.fatigue ?? 0) >= 7 || (wellness.pain ?? 0) >= 5) {
-      return { label: 'Vigilance charge', color: '#F59E0B', icon: 'warning' as const };
+      return { label: 'Vigilance charge', color: 'rgba(255, 255, 255, 0.7)', icon: 'warning' as const };
     }
     if ((wellness.recovery ?? 10) >= 7 && (wellness.fatigue ?? 0) <= 4) {
       return { label: 'Pleine forme', color: '#10B981', icon: 'checkmark-circle' as const };

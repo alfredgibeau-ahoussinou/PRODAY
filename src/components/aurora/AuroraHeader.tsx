@@ -39,7 +39,7 @@ export const AuroraHeader: React.FC<AuroraHeaderProps> = ({
     <AnimatedEntrance kind="fadeDown">
       <View style={styles.shell}>
         <ProDayGradient kind="cta" style={styles.accentBar} />
-        <View style={[styles.wrap, { paddingTop: Math.max(insets.top, spacing.sm) }]}>
+        <View style={[styles.wrap, { paddingTop: spacing.xs }]}>
           {left ? <View style={styles.left}>{left}</View> : null}
           <View style={styles.copy}>
             {eyebrow ? (

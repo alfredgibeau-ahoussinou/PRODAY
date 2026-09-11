@@ -14,7 +14,7 @@ export const CoachLoadAlertsPanel: React.FC<{ alerts: LoadAlert[] }> = ({ alerts
   const levelMeta = useMemo(
     (): Record<LoadAlertLevel, { label: string; color: string }> => ({
       high: { label: 'Prioritaire', color: '#fb7185' },
-      caution: { label: 'À surveiller', color: '#fbbf24' },
+      caution: { label: 'À surveiller', color: 'rgba(255, 255, 255, 0.7)' },
       info: { label: 'Info', color: tokens.accent },
     }),
     [tokens.accent],

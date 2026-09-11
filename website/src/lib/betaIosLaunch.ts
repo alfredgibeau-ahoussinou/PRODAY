@@ -33,5 +33,8 @@ export function getIosBetaStatusMessage(now: Date = new Date()): string {
   if (isTestFlightAvailable(now)) {
     return "La bêta iOS est ouverte. Installez ProDay via TestFlight.";
   }
+  if (isIosBetaLaunched(now)) {
+    return "La bêta iOS est en cours de déploiement pour les beta-testeurs inscrits via TestFlight.";
+  }
   return `${IOS_BETA_DELAY_NOTICE} Ouverture iOS (TestFlight) : ${IOS_BETA_LAUNCH_LABEL}.`;
 }

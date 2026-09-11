@@ -8,7 +8,8 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import { FieldValue } from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
-import { certifiedFallback, certifiedLeagueIds } from './fffStandingsCertifiedSeed';
+import { certifiedFallback } from './fffStandingsCertifiedSeed';
+import { processFffStandingsFixturesDailySync } from './fffStandingsFixturesSync';
 
 const COL = 'fff_league_standings';
 
@@ -38,6 +39,20 @@ type LeagueDoc = {
   region?: string;
   districtCode?: string;
   standings: StandingRow[];
+  fixtures?: Array<{
+    id: string;
+    matchday: number;
+    homeTeamName: string;
+    awayTeamName: string;
+    homeTeamId: string;
+    awayTeamId: string;
+    date: string;
+    time: string;
+    venue?: string;
+    homeScore?: number | null;
+    awayScore?: number | null;
+    status: 'scheduled' | 'live' | 'finished';
+  }>;
   scorers: Array<{
     rank: number;
     name: string;
@@ -426,5 +441,9 @@ export async function processFffStandingsDailySync(
     }
   }
 
+  const fixtureResult = await processFffStandingsFixturesDailySync(db);
+  result.errors.push(...fixtureResult.errors.map((error) => `fixtures: ${error}`));
+  result.updated += fixtureResult.updated;
+  result.skipped += fixtureResult.skipped;
   return result;
 }

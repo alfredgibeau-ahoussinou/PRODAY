@@ -41,7 +41,7 @@ Le site web ProDay est le point d'entrée public de l'écosystème. Il gère :
 - **UI :** React 19 · Tailwind CSS 4 · Framer Motion
 - **Hébergement :** Netlify
 
-📌 *Version app documentée côté site : **1.0.9** (alignée sur `app.json` du monorepo).*
+📌 *Version app documentée côté site : **1.0.10** (alignée sur `app.json` du monorepo).*
 
 ---
 
@@ -96,7 +96,7 @@ npm install
 Créez un fichier `.env.local` *(ne jamais committer de secrets)* :
 ```env
 NEXT_PUBLIC_SITE_URL=https://proday75.fr
-NEXT_PUBLIC_BETA_APP_VERSION=1.0.9
+NEXT_PUBLIC_BETA_APP_VERSION=1.0.10
 NEXT_PUBLIC_BETA_APK_URL=/downloads/proday-beta.apk
 # BETA_ADMIN_PIN, EmailJS, etc. (se référer à la doc docs/)
 ```

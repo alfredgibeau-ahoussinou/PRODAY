@@ -35,6 +35,7 @@ interface AuthContextValue {
   resendEmailVerification: () => Promise<void>;
   refreshAdminClaim: () => Promise<boolean>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -188,6 +189,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsAdmin(false);
   }, [profile]);
 
+  const deleteAccount = useCallback(async () => {
+    try {
+      const { revenueCatService } = await import('../services/revenueCat.service');
+      await revenueCatService.logOut();
+    } catch {
+      // optional
+    }
+    await authService.deleteAccount();
+    userStateStore.reset();
+    setProfile(null);
+    setFirebaseUser(null);
+    setIsAdmin(false);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -203,6 +218,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         resendEmailVerification,
         refreshAdminClaim,
         signOut,
+        deleteAccount,
       }}
     >
       {children}

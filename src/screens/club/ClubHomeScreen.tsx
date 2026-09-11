@@ -17,7 +17,16 @@ import {
   ClubHomeNextEventRow,
   ClubHomeTeamsRail,
   ClubHomeTodoSection,
+  ClubHomeStadiumPitchSection,
+  ClubHomeCoachActivitySection,
+  ClubHomePlayerEngagementCard,
 } from '../../features/club/ui/ClubHomeAccueil';
+import {
+  DEFAULT_STADIUM_INFO,
+  resolvePitchOccupancies,
+  buildRecentCoachActivities,
+  calculatePlayerEngagementMetrics,
+} from '../../features/club/ui/clubFacilitiesModel';
 import { ClubPlayersPendingRow } from '../../features/club/ui/ClubPlayersChrome';
 import {
   buildClubHomeTeamCards,
@@ -222,6 +231,21 @@ export function ClubHomeScreen() {
     [ws.teamRows, openTeam],
   );
 
+  const pitchOccupancies = useMemo(
+    () => resolvePitchOccupancies(ws.events),
+    [ws.events],
+  );
+
+  const coachActivities = useMemo(
+    () => buildRecentCoachActivities(ws.events, ws.coaches),
+    [ws.events, ws.coaches],
+  );
+
+  const engagementMetrics = useMemo(
+    () => calculatePlayerEngagementMetrics(ws.events, ws.players),
+    [ws.events, ws.players],
+  );
+
   if (ws.loading) return <ClubLoading />;
 
   if (!ws.clubId || !ws.club) {
@@ -375,12 +399,28 @@ export function ClubHomeScreen() {
           onCreateTeam={() => shellNav?.requestNav('teams')}
         />
 
-        {/* 5. Widget Copilote IA Club */}
+        {/* 5. Stade & Terrains du Club */}
+        <ClubHomeStadiumPitchSection
+          stadium={DEFAULT_STADIUM_INFO}
+          occupancies={pitchOccupancies}
+          onOpenFacilities={() => shellNav?.requestNav('calendar')}
+        />
+
+        {/* 6. Activité Staff Coachs */}
+        <ClubHomeCoachActivitySection activities={coachActivities} />
+
+        {/* 7. Métriques Engagement & Assiduité Joueurs */}
+        <ClubHomePlayerEngagementCard
+          metrics={engagementMetrics}
+          onPress={() => shellNav?.requestNav('players')}
+        />
+
+        {/* 8. Widget Copilote IA Club */}
         <ClubHomeAiBriefingCard
           onOpenCopilot={() => shellNav?.requestNav('assistant')}
         />
 
-        {/* 6. Alertes & Opérations (si requises) */}
+        {/* 9. Alertes & Opérations (si requises) */}
         {todoItems.length > 0 ? (
           <ClubHomeTodoSection items={todoItems} />
         ) : null}

@@ -29,6 +29,8 @@ export interface MyFffTeamLink {
   teamName: string;
   districtCode?: string;
   divisionLabel?: string;
+  groupLabel?: string;
+  season?: string;
   linkedAt: string;
 }
 
@@ -332,6 +334,7 @@ export const fffScraperService = {
           officialFffCertified: cloud.officialFffCertified ?? false,
           standings: cloud.standings as FffStandingRow[],
           scorers: cloud.scorers as FffScrapedCompetition['scorers'],
+          fixtures: cloud.fixtures,
         };
       }
     } catch {
@@ -433,6 +436,7 @@ export const fffScraperService = {
         officialFffCertified: r.league.officialFffCertified ?? false,
         standings: r.league.standings,
         scorers: r.league.scorers,
+        fixtures: r.league.fixtures,
       },
       team: r.club,
       club: r.club,
@@ -474,22 +478,43 @@ export const fffScraperService = {
   },
 
   /**
-   * Récupère toutes les rencontres d'une équipe donnée dans un championnat.
-   * Sans données figées, renvoie les fixtures live depuis Firestore si disponibles.
+   * Récupère les rencontres d'une équipe depuis le dernier snapshot cloud/cache.
+   * Le service reste synchrone pour les consommateurs historiques : le screen
+   * charge d'abord la compétition puis peut passer ses fixtures à l'importateur.
    */
   getFixturesForTeam(leagueId: string, teamIdOrName: string): FffFixture[] {
-    // Sans le champ fixtures dans fff_league_standings pour l'instant,
-    // on renvoie un tableau vide. Le champ fixtures sera peuplé par le
-    // prochain enrichissement du sync quotidien (calendrier DOFA).
+    // La lecture Firestore est asynchrone ; utilisez getFixturesForLeague pour
+    // les nouveaux flux. Cette méthode ne fabrique plus de calendrier local.
+    void leagueId;
+    void teamIdOrName;
     return [];
   },
 
-  /**
-   * Récupère le prochain match officiel d'une équipe FFF.
-   */
+  async getFixturesForLeague(leagueId: string): Promise<FffFixture[]> {
+    const cloud = await frenchFootballStandingsService.getCloudLeagueStandings(leagueId);
+    if (cloud?.fixtures) return cloud.fixtures;
+    const cached = await this.loadFromCache(leagueId);
+    return cached?.fixtures ?? [];
+  },
+
+  /** Récupère le prochain match officiel d'une équipe depuis le snapshot cloud. */
+  async getNextFixtureAsync(leagueId: string, teamIdOrName: string): Promise<FffFixture | null> {
+    const fixtures = await this.getFixturesForLeague(leagueId);
+    const query = teamIdOrName.trim().toLowerCase();
+    const teamFixtures = fixtures.filter((fixture) =>
+      [fixture.homeTeamId, fixture.awayTeamId, fixture.homeTeamName, fixture.awayTeamName]
+        .some((value) => value.toLowerCase() === query || value.toLowerCase().includes(query)),
+    );
+    const scheduled = teamFixtures
+      .filter((fixture) => fixture.status === 'scheduled')
+      .sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
+    return scheduled[0] ?? null;
+  },
+
+  /** Compatibilité synchrone historique : aucun faux match n'est renvoyé. */
   getNextFixture(leagueId: string, teamIdOrName: string): FffFixture | null {
-    const fixtures = this.getFixturesForTeam(leagueId, teamIdOrName);
-    const scheduled = fixtures.filter((f) => f.status === 'scheduled');
-    return scheduled.length > 0 ? scheduled[0] : null;
+    void leagueId;
+    void teamIdOrName;
+    return null;
   },
 };

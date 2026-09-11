@@ -232,7 +232,7 @@ export const UI_FR: MessageCatalog = {
   'modules.recrutement.title': 'Recrutement',
   'modules.recrutement.subtitle': 'Joueurs & clubs',
   'modules.matchs.title': 'Matchs',
-  'modules.matchs.subtitle': 'Amicaux',
+  'modules.matchs.subtitle': 'Calendrier',
   'modules.gestion.title': 'Gestion équipe',
   'modules.gestion.subtitle': 'Planning · présences · stats',
   'modules.smart_tactics.title': 'Tactique IA',

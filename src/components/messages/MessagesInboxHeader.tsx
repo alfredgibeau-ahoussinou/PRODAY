@@ -73,23 +73,12 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
         value={search}
         onChangeText={onSearchChange}
         embedded
-        palette={
-          coach
-            ? {
-                surface: coachTokens.surface,
-                border: 'transparent',
-                text: coachTokens.foreground,
-                textMuted: coachTokens.muted,
-              }
-            : joueur
-              ? {
-                  surface: JOUEUR_SURFACES.listRow,
-                  border: joueurTheme.border,
-                  text: joueurTheme.ink,
-                  textMuted: joueurTheme.inkMuted,
-                }
-              : undefined
-        }
+        palette={{
+          surface: '#141418',
+          border: 'rgba(255, 255, 255, 0.08)',
+          text: '#FFFFFF',
+          textMuted: '#8E8E9F',
+        }}
       />
 
       <ScrollView
@@ -110,41 +99,31 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
                       ? coachTokens.accent
                       : joueur
                         ? joueurTheme.accent
-                        : colors.accent
-                    : coach
-                      ? coachTokens.surface
-                      : joueur
-                        ? JOUEUR_SURFACES.chip
-                        : colors.surface,
+                        : '#FFFFFF'
+                    : '#141418',
                   borderColor: on
                     ? coach
                       ? coachTokens.accent
                       : joueur
                         ? joueurTheme.accent
-                        : colors.accent
-                    : coach
-                      ? 'transparent'
-                      : joueur
-                        ? joueurTheme.border
-                        : colors.border,
+                        : '#FFFFFF'
+                    : 'rgba(255, 255, 255, 0.08)',
                 },
               ]}
               onPress={() => onThreadFilterChange(opt.id)}
-              scaleTo={0.97}
+              scaleTo={0.96}
+              haptic
             >
               <Text
                 style={[
                   styles.chipText,
                   {
                     color: on
-                      ? coach || joueur
-                        ? '#fff'
-                        : colors.brandInverse
-                      : coach
-                        ? coachTokens.muted
-                        : joueur
-                          ? joueurTheme.inkMuted
-                          : colors.textSecondary,
+                      ? coach
+                        ? '#FFFFFF'
+                        : '#000000'
+                      : '#8E8E9F',
+                    fontWeight: on ? '800' : '600',
                   },
                 ]}
               >
@@ -156,7 +135,9 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
       </ScrollView>
 
       <View style={styles.sectionHead}>
-        <Text style={styles.sectionTitle}>{t('messages.inbox.section')}</Text>
+        <Text style={styles.sectionTitle}>
+          {t('messages.inbox.section')}
+        </Text>
         <Text style={styles.sectionCount}>
           {threadCountLabel}
         </Text>
@@ -166,27 +147,29 @@ export const MessagesInboxHeader: React.FC<MessagesInboxHeaderProps> = ({
 };
 
 function createStyles(
-  c: { text: string; textMuted: string },
-  coach: boolean,
-  joueur: boolean,
-  coachTokens: CoachThemeTokens,
-  joueurTheme: ReturnType<typeof useJoueurTheme>,
+  _c: { text: string; textMuted: string },
+  _coach: boolean,
+  _joueur: boolean,
+  _coachTokens: CoachThemeTokens,
+  _joueurTheme: ReturnType<typeof useJoueurTheme>,
 ) {
   return StyleSheet.create({
     block: { gap: spacing.md, marginBottom: spacing.sm },
     filters: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: 2,
+      gap: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 2,
     },
     chip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.pill,
-      borderWidth: coach || joueur ? StyleSheet.hairlineWidth : StyleSheet.hairlineWidth,
-      minHeight: 34,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 18,
+      borderWidth: 1,
+      minHeight: 36,
       justifyContent: 'center',
+      alignItems: 'center',
     },
     chipText: {
       fontFamily: fontFamily.semibold,
@@ -199,19 +182,20 @@ function createStyles(
       alignItems: 'baseline',
       justifyContent: 'space-between',
       gap: spacing.sm,
+      marginTop: 2,
     },
     sectionTitle: {
       fontFamily: fontFamily.extrabold,
       fontSize: 17,
       fontWeight: '800',
       letterSpacing: -0.2,
-      color: coach ? coachTokens.foreground : joueur ? joueurTheme.ink : c.text,
+      color: '#FFFFFF',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     sectionCount: {
       fontFamily: fontFamily.regular,
-      fontSize: 12,
-      color: coach ? coachTokens.muted : joueur ? joueurTheme.inkMuted : c.textMuted,
+      fontSize: 13,
+      color: '#8E8E9F',
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
   });

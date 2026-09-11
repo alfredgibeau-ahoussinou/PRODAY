@@ -7,6 +7,7 @@ import {
   Linking,
   TextInput,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PressableSpring, StaggerReveal } from '../motion';
 import type { User, UserRole } from '../../models/User';
 import type { ProdayPulseResult, PulseBreakdownItem } from '../../utils/prodayPulse';
@@ -74,6 +75,7 @@ import {
 import { computeHealthSnapshot } from '../../core/health/healthState.engine';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { useAccountDeletion } from '../../hooks/useAccountDeletion';
 import {
   resolveJoueurAgeGroup,
   resolveJoueurGenderVisual,
@@ -222,6 +224,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
     activities,
     streakDays: props.progression?.streakDays,
   });
+  const { confirmDeleteAccount, deleting: deletingAccount } = useAccountDeletion();
 
   const playerHealth = useMemo(
     () =>
@@ -274,6 +277,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
               <ElitePlayerProfile
                 player={props.profile}
                 onEdit={handleEdit}
+                onAvatarPress={props.onAvatarPress}
               />
             ) : isCoach ? (
               <CoachProfileHub
@@ -399,6 +403,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 onCvEditor={props.onCvEditor}
                 onGalleryAdd={props.onGalleryAdd}
                 onGalleryRemove={props.onGalleryRemove}
+                onAvatarPress={props.onAvatarPress}
                 JerseyField={
                   <JerseyNumberField
                     value={p.jersey_number}
@@ -413,6 +418,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 profile={props.profile}
                 onEdit={handleEdit}
                 onPublicProfile={props.onPublicProfile}
+                onAvatarPress={props.onAvatarPress}
               />
             ) : (
               <ProfileSection title={t('profile.section.career')} subtitle={t('profile.section.careerSub')} first>
@@ -537,6 +543,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 onReferral={props.onReferral}
                 onLegal={props.onLegal}
                 onSignOut={props.onSignOut}
+                onAvatarPress={props.onAvatarPress}
               />
             ) : isCoach ? (
               <CoachParamsPanel
@@ -552,6 +559,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                 onLegal={props.onLegal}
                 onReferral={props.onReferral}
                 onSignOut={props.onSignOut}
+                onAvatarPress={props.onAvatarPress}
               />
             ) : (
               <>
@@ -663,6 +671,12 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                         onPress: () => props.onLegal('terms'),
                       },
                       { icon: 'lock', title: t('profile.privacy'), onPress: () => props.onLegal('privacy') },
+                      {
+                        icon: 'trash',
+                        title: 'Supprimer mon compte',
+                        subtitle: 'Suppression définitive des données',
+                        onPress: confirmDeleteAccount,
+                      },
                     ]}
                   />
                 </ProfileSection>
@@ -678,6 +692,23 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
                   >
                     <ProDayText variant="caption" style={{ color: colors.error, fontWeight: '800' }}>
                       {t('profile.logout')}
+                    </ProDayText>
+                  </PressableSpring>
+                  <PressableSpring
+                    style={[
+                      styles.logoutBtn,
+                      {
+                        marginTop: spacing.sm,
+                        borderColor: 'rgba(239, 68, 68, 0.4)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      },
+                    ]}
+                    onPress={confirmDeleteAccount}
+                    disabled={deletingAccount}
+                    scaleTo={0.97}
+                  >
+                    <ProDayText variant="caption" style={{ color: colors.error, fontWeight: '700' }}>
+                      {deletingAccount ? 'Suppression en cours…' : 'Supprimer mon compte'}
                     </ProDayText>
                   </PressableSpring>
                 </ProfileSection>
@@ -704,6 +735,8 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
       activitiesLoading,
       refreshActivities,
       handleCompletionItem,
+      confirmDeleteAccount,
+      deletingAccount,
     ]
   );
 
@@ -730,7 +763,7 @@ export const ProfileHomeScreen: React.FC<ProfileHomeScreenProps> = (props) => {
         activeChapter={chapter}
         onChapterChange={setChapter}
         showFooter={false}
-        variant={useHubChrome ? (isPlayer ? 'pills' : 'rail') : 'pills'}
+        variant="segments"
         compact={useHubChrome}
         colors={
           isPlayer && useHubChrome
@@ -769,31 +802,111 @@ const JerseyNumberField: React.FC<{
   value?: number;
   onCommit: (jersey: number | null) => void;
   colors: AppColors;
-  style: object;
-}> = ({ value, onCommit, colors, style }) => {
+  style?: object;
+}> = ({ value, onCommit, colors }) => {
   const [draft, setDraft] = useState(value != null ? String(value) : '');
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
-    <TextInput
-      value={draft}
-      onChangeText={(raw) => setDraft(raw.replace(/[^\d]/g, '').slice(0, 2))}
-      onEndEditing={() => {
-        if (!draft.trim()) {
-          onCommit(null);
-          return;
-        }
-        const n = Number(draft);
-        if (Number.isFinite(n) && n >= 0 && n <= 99) onCommit(n);
-      }}
-      keyboardType="number-pad"
-      placeholder="Ex. 10"
-      placeholderTextColor={colors.textMuted}
-      style={[
-        style,
-        { borderColor: colors.border, color: colors.text, backgroundColor: colors.surface },
-      ]}
-    />
+    <View style={jerseyStyles.card}>
+      <View style={jerseyStyles.left}>
+        <View style={[jerseyStyles.iconWrap, { backgroundColor: `${colors.accent}18` }]}>
+          <Ionicons name="shirt-outline" size={18} color={colors.accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={jerseyStyles.title}>Numéro de maillot</Text>
+          <Text style={jerseyStyles.subtitle}>Affiché sur votre carte et vitrine</Text>
+        </View>
+      </View>
+
+      <View style={jerseyStyles.right}>
+        <Text style={[jerseyStyles.hash, { color: colors.accent }]}>N°</Text>
+        <TextInput
+          value={draft}
+          onChangeText={(raw) => setDraft(raw.replace(/[^\d]/g, '').slice(0, 2))}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onEndEditing={() => {
+            setIsFocused(false);
+            if (!draft.trim()) {
+              onCommit(null);
+              return;
+            }
+            const n = Number(draft);
+            if (Number.isFinite(n) && n >= 0 && n <= 99) onCommit(n);
+          }}
+          keyboardType="number-pad"
+          placeholder="--"
+          placeholderTextColor="rgba(255, 255, 255, 0.3)"
+          style={[
+            jerseyStyles.input,
+            isFocused && { borderColor: colors.accent, backgroundColor: `${colors.accent}20` },
+          ]}
+        />
+      </View>
+    </View>
   );
 };
+
+const jerseyStyles = StyleSheet.create({
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  subtitle: {
+    color: 'rgba(255, 255, 255, 0.45)',
+    fontSize: 11,
+    marginTop: 1,
+  },
+  right: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  hash: {
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  input: {
+    width: 48,
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '900',
+    textAlign: 'center',
+    padding: 0,
+  },
+});
 
 const StatChip: React.FC<{ value: string; label: string; colors: AppColors }> = ({
   value,

@@ -17,7 +17,7 @@ export const TACTICAL_DIRECTIVES: Record<
     id: 'pressing',
     label: 'Pressing',
     badge: '⚡ Pressing Haut',
-    color: '#F59E0B',
+    color: '#FAFAFA',
     summary: 'Cadrage haut & pièges axiaux',
     detail: 'Déclenchement coordonné à la passe adverse, fermeture des lignes intérieures et cadrage agressif.',
   },

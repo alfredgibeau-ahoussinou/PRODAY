@@ -41,6 +41,7 @@ export interface ProfileUpdatePayload {
   department?: string;
   avatar_url?: string;
   email_verified?: boolean;
+  verification_status?: VerificationStatus;
   onboarding_documents_submitted?: boolean;
   profile?: Partial<User['profile']>;
   parental_settings?: Partial<ParentalSettings>;
@@ -266,9 +267,22 @@ export const profileService = {
   },
 
   async uploadAvatar(uid: string, file: UploadFileInput): Promise<string> {
-    const url = await storageService.uploadProfileImage(uid, file, 'avatars');
-    await this.updateProfile(uid, { avatar_url: url });
-    return url;
+    try {
+      const url = await storageService.uploadProfileImage(uid, file, 'avatars');
+      await this.updateProfile(uid, { avatar_url: url });
+      return url;
+    } catch (err) {
+      console.warn('[ProfileService] Storage avatar upload failed, using local URI fallback:', err);
+      if (file?.uri) {
+        try {
+          await this.updateProfile(uid, { avatar_url: file.uri });
+        } catch (dbErr) {
+          console.warn('[ProfileService] Local avatar update failed:', dbErr);
+        }
+        return file.uri;
+      }
+      throw err;
+    }
   },
 
   async addGalleryPhoto(uid: string, file: UploadFileInput): Promise<string[]> {
@@ -286,7 +300,12 @@ export const profileService = {
       throw new Error(`Maximum ${MAX_GALLERY_PHOTOS} photos dans la galerie.`);
     }
 
-    const url = await storageService.uploadProfileImage(uid, file, 'gallery');
+    let url = file.uri;
+    try {
+      url = await storageService.uploadProfileImage(uid, file, 'gallery');
+    } catch (err) {
+      console.warn('[ProfileService] Storage gallery upload failed, using local URI:', err);
+    }
     const next = [...gallery, url];
     await this.updateProfile(uid, { profile: { gallery_urls: next } });
     return next;
@@ -522,8 +541,8 @@ export const profileService = {
   ): Promise<void> {
     const message =
       action === 'approve'
-        ? '🎉 Votre profil ProDay a été vérifié ! Vous pouvez maintenant accéder à toutes les fonctionnalités.'
-        : `❌ Votre document a été rejeté. Raison : ${rejectionReason ?? 'Document illisible ou invalide.'}. Veuillez en soumettre un nouveau.`;
+        ? 'Votre profil ProDay a été vérifié ! Vous pouvez maintenant accéder à toutes les fonctionnalités.'
+        : `Votre document a été rejeté. Raison : ${rejectionReason ?? 'Document illisible ou invalide.'}. Veuillez en soumettre un nouveau.`;
 
     // [FIREBASE] await messaging.send({ token: userFcmToken, notification: { body: message } });
     console.log(`[Notification → ${uid}]: ${message}`);

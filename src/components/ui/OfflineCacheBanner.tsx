@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PressableSpring } from '../motion';
-import { Icon } from './Icon';
 import { ProDayText } from './ProDayText';
-import { useAppTheme } from '../../context/ProductLineContext';
-import { spacing, radius } from '../../theme/designTokens';
+import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 
 interface OfflineCacheBannerProps {
   visible: boolean;
@@ -12,30 +12,44 @@ interface OfflineCacheBannerProps {
   message?: string;
 }
 
-/** Bandeau discret — données calendrier en cache local. */
+/** Bandeau SportEasy — Mode hors ligne discret & synchronisation. */
 export const OfflineCacheBanner: React.FC<OfflineCacheBannerProps> = ({
   visible,
   onRefresh,
-  message = 'Données hors ligne. Dernière synchro enregistrée',
+  message = 'Dernières données enregistrées',
 }) => {
-  const { colors } = useAppTheme();
+  const playerTheme = usePlayerThemeColors();
+  const teamColor = playerTheme.accent;
+
   if (!visible) return null;
 
   return (
-    <View
-      style={[
-        styles.wrap,
-        { backgroundColor: colors.warningBg, borderColor: colors.warning },
-      ]}
-    >
-      <Icon name="warning" size={16} color={colors.warning} />
-      <ProDayText variant="caption" style={[styles.text, { color: colors.warning }]}>
-        {message}
-      </ProDayText>
+    <View style={styles.card}>
+      <View style={styles.leftCol}>
+        <Ionicons name="cloud-offline-outline" size={22} color={teamColor} />
+        <View style={styles.textCol}>
+          <ProDayText style={styles.title}>Mode hors ligne</ProDayText>
+          <ProDayText style={styles.subtitle} numberOfLines={1}>
+            {message}
+          </ProDayText>
+        </View>
+      </View>
+
+      <View style={styles.separator} />
+
       {onRefresh ? (
-        <PressableSpring onPress={onRefresh} scaleTo={0.94} haptic>
-          <ProDayText variant="caption" accent style={styles.action}>
-            Actualiser
+        <PressableSpring
+          onPress={() => {
+            prodayHaptics.press();
+            onRefresh();
+          }}
+          scaleTo={0.95}
+          haptic
+          style={styles.syncBtn}
+        >
+          <Ionicons name="sync-outline" size={16} color={teamColor} />
+          <ProDayText style={[styles.syncText, { color: teamColor }]}>
+            Synchroniser
           </ProDayText>
         </PressableSpring>
       ) : null}
@@ -44,17 +58,58 @@ export const OfflineCacheBanner: React.FC<OfflineCacheBannerProps> = ({
 };
 
 const styles = StyleSheet.create({
-  wrap: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    justifyContent: 'space-between',
+    backgroundColor: '#14141A',
+    borderColor: '#22222E',
     borderWidth: 1,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
   },
-  text: { flex: 1, fontWeight: '600' },
-  action: { fontWeight: '800' },
+  leftCol: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  textCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  title: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: -0.2,
+  },
+  subtitle: {
+    color: '#8B8B9A',
+    fontWeight: '500',
+    fontSize: 11,
+    marginTop: 1,
+  },
+  separator: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  syncBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  syncText: {
+    fontWeight: '800',
+    fontSize: 12.5,
+  },
 });
+
+

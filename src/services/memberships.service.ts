@@ -120,7 +120,7 @@ export const membershipsService = {
       if (club.owner_uid) recipients.add(club.owner_uid);
       const staff = await usersService.listMembersByClubId(input.club_id);
       for (const u of staff) {
-        if (u.role === 'club' || u.role === 'coach' || u.role === 'admin') {
+        if (u.role === 'club' || u.role === 'coach' || Boolean(u.is_admin)) {
           recipients.add(u.uid);
         }
       }

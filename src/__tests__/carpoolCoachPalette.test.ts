@@ -23,10 +23,10 @@ describe('carpoolCoachPalette', () => {
     expect(palette.surface).toBe('#F2F2F7');
   });
 
-  it('default palette matches CARPOOL_SITE light surfaces', () => {
+  it('default palette matches CARPOOL_SITE OLED dark surfaces', () => {
     const palette = carpoolPaletteDefault();
 
-    expect(palette.surface).toBe('#FFFFFF');
-    expect(palette.bg).toBe('#E8F4F8');
+    expect(palette.surface).toBe('#14141A');
+    expect(palette.bg).toBe('#000000');
   });
 });

@@ -229,6 +229,184 @@ export function buildPlayerCvHtml(data: PlayerCvData, logoDataUrl?: string): str
 </html>`;
 }
 
+export function buildCoachCvHtmlFromUser(user: User, logoDataUrl?: string): string {
+  const p = user.profile;
+  const logoBlock = logoDataUrl
+    ? `<img src="${logoDataUrl}" alt="ProDay" class="logo" />`
+    : `<div class="logo-text">Pro<span>Day</span></div>`;
+  const experiences = p.experiences ?? [];
+  const diplomas = p.diplomas_list ?? (p.diploma ? [{ id: '1', name: p.diploma, institution: 'FFF / Fédéral' }] : []);
+  const specialties = p.specialties ?? [];
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>CV Coach - ${escapeHtml(user.display_name)} | ProDay</title>
+  <style>
+    @page { size: A4; margin: 18mm 16mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Inter, system-ui, sans-serif;
+      color: ${NAVY};
+      font-size: 11pt;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 3px solid ${BRAND};
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+    .logo { height: 42px; width: auto; }
+    .logo-text { font-size: 22pt; font-weight: 800; color: ${NAVY}; font-style: italic; }
+    .logo-text span { color: ${BRAND}; }
+    .tagline {
+      font-size: 8pt;
+      letter-spacing: 0.12em;
+      color: #5c6478;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .meta-right { text-align: right; font-size: 9pt; color: #5c6478; }
+    h1 { font-size: 22pt; font-weight: 800; color: ${BRAND}; margin-bottom: 4px; }
+    .role { font-size: 12pt; color: #5c6478; font-weight: 600; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .card {
+      background: #f4f6fa;
+      border: 1px solid #dde3ed;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .card label {
+      display: block;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8b93a8;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .card strong { font-size: 12pt; color: ${NAVY}; }
+    h2 {
+      font-size: 11pt;
+      color: ${BRAND};
+      margin: 16px 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .bio { color: #1a1f36; white-space: pre-wrap; }
+    ul { padding-left: 18px; }
+    li { margin-bottom: 6px; }
+    .timeline-item { margin-bottom: 8px; }
+    .timeline-item strong { color: ${NAVY}; }
+    .timeline-item span { color: #5c6478; font-size: 9.5pt; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .tag { background: #e8eef8; color: #1d4ed8; padding: 4px 10px; border-radius: 6px; font-size: 9pt; font-weight: 600; }
+    .footer {
+      margin-top: 28px;
+      padding-top: 12px;
+      border-top: 1px solid #dde3ed;
+      font-size: 8pt;
+      color: #8b93a8;
+      display: flex;
+      justify-content: space-between;
+    }
+    @media screen {
+      body { max-width: 210mm; margin: 24px auto; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+      .print-hint {
+        background: #e8eef8;
+        color: ${BRAND};
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 10pt;
+        font-weight: 600;
+      }
+    }
+    @media print {
+      .print-hint { display: none; }
+      body { margin: 0; padding: 0; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <p class="print-hint">ProDay Coach. Utilisez <strong>Fichier → Imprimer → Enregistrer au format PDF</strong> pour exporter ce CV.</p>
+  <header class="header">
+    <div>
+      ${logoBlock}
+      <div class="tagline">CONNECTER. PROGRESSER. RÉVÉLER.</div>
+    </div>
+    <div class="meta-right">
+      CV Coach ProDay<br />
+      ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+    </div>
+  </header>
+  <h1>${escapeHtml(user.display_name)}</h1>
+  <p class="role">${escapeHtml([p.job_title || 'Entraîneur', p.diploma, p.category].filter(Boolean).join(' · '))}</p>
+  <div class="grid">
+    <div class="card"><label>Diplôme Principal</label><strong>${escapeHtml(p.diploma ?? 'BEF / UEFA')}</strong></div>
+    <div class="card"><label>Licence FFF</label><strong>${escapeHtml(p.license_number ?? 'Certifiée')}</strong></div>
+    <div class="card"><label>Club Rattaché</label><strong>${escapeHtml(p.club_id ?? 'Club Amateur / Pro')}</strong></div>
+    <div class="card"><label>Expérience</label><strong>${escapeHtml(p.years_experience ? `${p.years_experience} ans` : '5+ ans')}</strong></div>
+  </div>
+  <h2>Philosophie de jeu & Présentation</h2>
+  <p class="bio">${escapeHtml(p.bio?.trim() || 'Entraîneur diplômé, axé sur le développement tactique et individuel.')}</p>
+  ${
+    specialties.length
+      ? `<h2>Spécialités & Compétences</h2>
+  <div class="tags">
+    ${specialties.map((s) => `<span class="tag">${escapeHtml(s)}</span>`).join('')}
+  </div>`
+      : ''
+  }
+  ${
+    experiences.length
+      ? `<h2>Parcours & Clubs Entraînés</h2>
+  <ul>
+    ${experiences
+      .map(
+        (exp) => `
+      <li class="timeline-item">
+        <strong>${escapeHtml(exp.title || 'Entraîneur')}</strong> · ${escapeHtml(exp.organization || '')} ${exp.period ? `(${escapeHtml(exp.period)})` : ''}
+      </li>`,
+      )
+      .join('')}
+  </ul>`
+      : ''
+  }
+  ${
+    diplomas.length
+      ? `<h2>Certifications & Formations</h2>
+  <ul>
+    ${diplomas
+      .map(
+        (d) => `
+      <li>
+        <strong>${escapeHtml(d.name)}</strong> · ${escapeHtml(d.institution || 'FFF')}
+      </li>`,
+      )
+      .join('')}
+  </ul>`
+      : ''
+  }
+  <footer class="footer">
+    <span>Document généré via ProDay Staff · proday75.fr</span>
+    <span>${escapeHtml(user.email ?? '')}</span>
+  </footer>
+</body>
+</html>`;
+}
+
 export function buildPlayerCvHtmlFromUser(user: User, logoDataUrl?: string): string {
   return buildPlayerCvHtml(buildPlayerCvFromUser(user), logoDataUrl);
 }
@@ -246,3 +424,4 @@ export function generateCvPdfUrl(user: User): string {
   const slug = encodeURIComponent(user.display_name.replace(/\s+/g, '-'));
   return `https://storage.proday.app/cv/${user.uid}/${slug}.pdf`;
 }
+

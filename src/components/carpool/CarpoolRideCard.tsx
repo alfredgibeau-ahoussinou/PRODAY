@@ -259,7 +259,7 @@ export const CarpoolRideCard: React.FC<CarpoolRideCardProps> = ({
               scaleTo={0.98}
             >
               <ProDayText variant="caption" accent style={cardStyles.mapLink}>
-                📍 Voir le RDV ({slot.meeting_place?.trim() || 'GPS'}) sur Maps
+                Voir le RDV ({slot.meeting_place?.trim() || 'GPS'}) sur Maps
               </ProDayText>
             </PressableSpring>
           )}

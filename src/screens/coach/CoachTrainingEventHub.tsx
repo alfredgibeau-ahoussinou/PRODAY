@@ -21,6 +21,10 @@ import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { canViewTeamEvent } from '../../utils/teamEventAccess';
 import { useAuth } from '../../context/AuthContext';
 import { CoachKpiRow, CoachText } from '../../components/coach/coachPortalUi';
+import {
+  CoachTrainingDrillDiagram,
+  inferDrillType,
+} from '../../components/coach/CoachTrainingDrillDiagram';
 import { CoachTrainingTeamRoster } from '../../components/coach/CoachTrainingTeamRoster';
 import { formatCalendarDate } from '../../utils/seasonCalendar';
 import { Icon } from '../../components/ui/Icon';
@@ -694,6 +698,13 @@ export function CoachTrainingEventHub({
                             </CoachText>
                           </View>
                         ))}
+                        {/* Visual Football Drill Schema */}
+                        <CoachTrainingDrillDiagram
+                          drillType={inferDrillType(ex.name, ex.description)}
+                          title={ex.name}
+                          width={280}
+                          height={145}
+                        />
                       </View>
                     ))}
                   </View>

@@ -1,18 +1,43 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fffCalendarSyncService } from '../services/fffCalendarSync.service';
-import { frenchFootballStandingsService } from '../services/frenchFootballStandings.service';
 import { fffScraperService } from '../services/fffScraper.service';
+import type { RsvpStatus } from '../models/TeamEvent';
+type MockNamesRecord = {
+  d1_d92: string;
+  r1_idf_b: string;
+  r2_idf: string;
+  ligue1: string;
+};
+const mockGetName = (leagueId: string): string => {
+  const names: MockNamesRecord = {
+    d1_d92: 'Départemental 1 · District 92 (Hauts-de-Seine)',
+    r1_idf_b: 'Régional 1 Île-de-France · Poule B',
+    r2_idf: 'Régional 2 Île-de-France · Poule B',
+    ligue1: "Ligue 1 McDonald's",
+  };
+  return (names as Record<string, string>)[leagueId] ?? `Championnat FFF · ${leagueId}`;
+};
+
+const mockGetDivisionLabel = (leagueId: string): string => {
+  const labels: MockNamesRecord = {
+    d1_d92: 'District des Hauts-de-Seine FFF · Seniors D1 (Poule Unique)',
+    r1_idf_b: 'Ligue de Paris Île-de-France · Seniors R1 (Poule B)',
+    r2_idf: 'Ligue de Paris Île-de-France · Seniors R2 (Poule B)',
+    ligue1: 'Championnat de France',
+  };
+  return (labels as Record<string, string>)[leagueId] ?? 'Championnat FFF Officiel';
+};
 
 jest.mock('../services/frenchFootballStandings.service', () => ({
   frenchFootballStandingsService: {
-    getLeagueStandings: jest.fn((leagueId: string) =>
+    getLeagueStandings: jest.fn().mockImplementation((leagueId) =>
       Promise.resolve({
         id: leagueId,
-        name: frenchFootballStandingsService getName(leagueId),
+        name: mockGetName(leagueId),
         category: 'district',
         districtCode: '92',
         region: 'Île-de-France',
-        divisionLabel: `2026-2027 · ${getDivisionLabel(leagueId)}`,
+        divisionLabel: `2026-2027 · ${mockGetDivisionLabel(leagueId)}`,
         season: '2026-2027',
         standings: [],
         scorers: [],
@@ -20,29 +45,9 @@ jest.mock('../services/frenchFootballStandings.service', () => ({
         lastSyncAt: new Date().toISOString(),
       })
     ),
-    searchClubs: jest.fn(() => Promise.resolve([])),
+    searchClubs: jest.fn().mockReturnValue(Promise.resolve([])),
   },
 }));
-
-function getName(leagueId: string): string {
-  const names: Record<string, string> = {
-    d1_d92: 'Départemental 1 · District 92 (Hauts-de-Seine)',
-    r1_idf_b: 'Régional 1 Île-de-France · Poule B',
-    r2_idf: 'Régional 2 Île-de-France · Poule B',
-    ligue1: "Ligue 1 McDonald's",
-  };
-  return names[leagueId] ?? `Championnat FFF · ${leagueId}`;
-}
-
-function getDivisionLabel(leagueId: string): string {
-  const labels: Record<string, string> = {
-    d1_d92: 'District des Hauts-de-Seine FFF · Seniors D1 (Poule Unique)',
-    r1_idf_b: 'Ligue de Paris Île-de-France · Seniors R1 (Poule B)',
-    r2_idf: 'Ligue de Paris Île-de-France · Seniors R2 (Poule B)',
-    ligue1: 'Championnat de France',
-  };
-  return labels[leagueId] ?? 'Championnat FFF Officiel';
-}
 
 describe('fffCalendarSyncService', () => {
   beforeEach(async () => {
@@ -67,7 +72,7 @@ describe('fffCalendarSyncService', () => {
           city: 'Hauts-de-Seine',
           location_label: 'Stade de Montrouge',
           invitee_uids: [] as string[],
-          rsvps: {} as Record<string, unknown>,
+          rsvps: {} as Record<string, RsvpStatus>,
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -92,9 +97,6 @@ describe('fffCalendarSyncService', () => {
     });
 
     it('rend les fixtures disponibles une fois que le sync quotidien a peuplé Firestore', async () => {
-      // Ce test valide le flux asynchrone : quand les fixtures arrivent dans
-      // fff_league_standings.{leagueId}.fixtures, l'import les consomme.
-      // Pour l'instant, sans données live, on obtient 0 événements.
       const res = await fffCalendarSyncService.importFffCalendarToTeamEvents('d1_d92', 'montrouge');
       expect(Array.isArray(res.events)).toBe(true);
     });
@@ -103,13 +105,10 @@ describe('fffCalendarSyncService', () => {
   describe('getHeadToHeadMatchup (cloud-first)', () => {
     it('renvoie null quand aucune donnée live n\'est disponible dans Firestore', async () => {
       const matchup = await fffCalendarSyncService.getHeadToHeadMatchup('d1_d92', 'montrouge');
-      // Sans standings dans le shell vide, getHeadToHeadMatchup renvoie null
       expect(matchup).toBeNull();
     });
 
     it('calcule le face-à-face quand les données live sont disponibles', async () => {
-      // Ce test documente le comportement attendu une fois les données Firestore peuplées.
-      // Les données actuelles (shell vide) conduisent à null.
       const matchup = await fffCalendarSyncService.getHeadToHeadMatchup('d1_d92', 'montrouge');
       if (matchup) {
         expect(matchup.competitionName).toBeDefined();
@@ -120,3 +119,4 @@ describe('fffCalendarSyncService', () => {
     });
   });
 });
+

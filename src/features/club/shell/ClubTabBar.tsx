@@ -1,18 +1,18 @@
 import React, { useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
-import { DockPillIndicator, TabUnderline } from '../../../motion';
-import { ClubText } from '../ui/clubUi';
 import {
   primaryTabForClubNav,
   type ClubNavItemId,
 } from '../navigation/clubNavConfig';
 import type { ClubNavResolvedItem } from '../navigation/resolveClubNavAccess';
+import { spacing } from '../../../theme/designTokens';
 import { useClubTheme } from './ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
-import { clubChrome, clubRadius, clubSpace } from '../theme/clubDesignSystem';
+import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../../theme/playerDarkPremium';
 
 type Props = {
   items: ClubNavResolvedItem[];
@@ -20,71 +20,89 @@ type Props = {
   onSelect: (id: ClubNavItemId) => void;
 };
 
-const TAB_HIT_SLOP = { top: 12, bottom: 8, left: 4, right: 4 } as const;
-/** Labels dock — lisibles (≥11), jamais 9–10 px. */
-const LABEL_SIZE = 11;
+const TAB_HIT_SLOP = { top: 8, bottom: 6, left: 6, right: 6 } as const;
 
-/**
- * Dock mobile Pôle Club — Accueil · Équipes · Matchs · Outils · Club.
- * Actif = couleur d’équipe (`tokens.accent`) ; fallback émeraude Club.
- */
+/** Dock club dark premium — calqué sur le pôle coach (5 onglets capsule flottante, accent club & micro-labels). */
 export function ClubTabBar({ items, activeId, onSelect }: Props) {
   const insets = useSafeAreaInsets();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const highlight = primaryTabForClubNav(activeId);
-  const bottomPad = Math.max(insets.bottom, 10);
 
   return (
     <View
-      style={[styles.root, { paddingBottom: bottomPad }]}
+      style={[
+        styles.root,
+        {
+          paddingBottom: Math.max(insets.bottom, 8),
+        },
+      ]}
       accessibilityRole="tablist"
       testID="club-tab-bar"
     >
-      <View style={styles.rail}>
-        {items.map((item) => {
-          const on = item.id === highlight;
-          const label = item.shortLabel ?? item.label;
-          const ink = on ? tokens.accent : tokens.faint;
-          return (
-            <PressableSpring
-              key={item.id}
-              onPress={() => onSelect(item.id)}
-              style={styles.tab}
-              scaleTo={0.92}
-              haptic
-              hitSlop={TAB_HIT_SLOP}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: on }}
-              accessibilityLabel={item.label}
-              accessibilityHint={item.hint}
-              testID={`club-tab-${item.id}`}
-            >
-              <View style={styles.topMark} pointerEvents="none">
-                <TabUnderline active={on} color={tokens.accent} widthPercent="55%" />
-              </View>
-              <View style={styles.iconSlot}>
-                <DockPillIndicator active={on} color={tokens.accentSoft} />
-                <Icon
-                  name={item.icon}
-                  size={on ? clubChrome.tabBarIcon + 2 : clubChrome.tabBarIcon}
-                  color={ink}
-                  variant="outline"
-                />
-                {item.aiBadge ? (
-                  <View style={[styles.aiDot, { backgroundColor: tokens.accent }]} />
-                ) : null}
-              </View>
-              <ClubText
-                variant="caption"
-                numberOfLines={1}
-                style={[styles.label, on ? styles.labelOn : styles.labelOff, { color: ink }]}
+      <View style={styles.dock}>
+        <BlurView
+          intensity={Platform.OS === 'ios' ? 45 : 30}
+          tint="dark"
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.row}>
+          {items.map((item) => {
+            const on = item.id === highlight;
+            const label = (item.shortLabel ?? item.label).toUpperCase();
+            return (
+              <PressableSpring
+                key={item.id}
+                onPress={() => onSelect(item.id)}
+                style={styles.slot}
+                scaleTo={0.96}
+                haptic
+                hitSlop={TAB_HIT_SLOP}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={item.label}
+                accessibilityHint={item.hint}
+                testID={`club-tab-${item.id}`}
               >
-                {label}
-              </ClubText>
-            </PressableSpring>
-          );
-        })}
+                <View
+                  style={[
+                    styles.iconWrap,
+                    on && {
+                      borderColor: tokens.accent,
+                      backgroundColor: tokens.accentSoft,
+                    },
+                  ]}
+                >
+                  <Icon
+                    name={item.icon}
+                    size={22}
+                    color={on ? tokens.accent : PLAYER_DARK.textMuted}
+                    variant={on ? 'filled' : 'outline'}
+                  />
+                  {item.aiBadge ? (
+                    <View style={[styles.aiDot, { backgroundColor: tokens.accent }]} />
+                  ) : null}
+                </View>
+
+                <Text
+                  style={[
+                    styles.slotLabel,
+                    { color: on ? tokens.accent : PLAYER_DARK.textMuted },
+                  ]}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.82}
+                  numberOfLines={1}
+                >
+                  {label}
+                </Text>
+
+                {on ? (
+                  <View style={[styles.activeLine, { backgroundColor: tokens.accent }]} />
+                ) : null}
+              </PressableSpring>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -93,81 +111,75 @@ export function ClubTabBar({ items, activeId, onSelect }: Props) {
 function createStyles(tokens: ClubThemeTokens) {
   return StyleSheet.create({
     root: {
-      backgroundColor: tokens.bg,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: tokens.borderStrong,
-      paddingTop: clubSpace.xs,
+      paddingHorizontal: spacing.md,
+      paddingTop: 0,
+      backgroundColor: 'transparent',
       flexShrink: 0,
       zIndex: 20,
+    },
+    dock: {
+      borderWidth: 1,
+      borderRadius: PLAYER_DARK_RADIUS.dock,
+      paddingTop: 8,
+      paddingBottom: 8,
+      paddingHorizontal: 6,
       overflow: 'hidden',
+      backgroundColor: 'rgba(14, 16, 24, 0.72)',
+      borderColor: 'rgba(255, 255, 255, 0.12)',
       ...Platform.select({
         ios: {
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: -6 },
-          shadowOpacity: 0.28,
+          shadowColor: '#000',
+          shadowOpacity: 0.45,
           shadowRadius: 14,
+          shadowOffset: { width: 0, height: 6 },
         },
-        android: { elevation: 14 },
+        android: { elevation: 10 },
         default: {},
       }),
     },
-    rail: {
+    row: {
       flexDirection: 'row',
-      alignItems: 'stretch',
-      justifyContent: 'space-around',
-      paddingHorizontal: clubSpace.xs,
-      minHeight: clubChrome.dockRailHeight,
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
     },
-    tab: {
+    slot: {
       flex: 1,
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: 4,
-      minHeight: clubChrome.dockRailHeight,
-      paddingHorizontal: 2,
-      paddingTop: 8,
-      paddingBottom: 4,
-      position: 'relative',
+      gap: 3,
+      minWidth: 0,
+      paddingBottom: 2,
     },
-    topMark: {
-      position: 'absolute',
-      top: 2,
-      left: 0,
-      right: 0,
-      alignItems: 'center',
-      height: 3,
-    },
-    iconSlot: {
-      position: 'relative',
-      width: 48,
-      height: 32,
+    iconWrap: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: clubRadius.sm,
-      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: 'transparent',
+      position: 'relative',
     },
     aiDot: {
       position: 'absolute',
-      top: 3,
-      right: 6,
-      width: 6,
-      height: 6,
-      borderRadius: 3,
+      top: -2,
+      right: -2,
+      width: 7,
+      height: 7,
+      borderRadius: 4,
     },
-    label: {
-      fontSize: LABEL_SIZE,
-      lineHeight: 14,
-      maxWidth: 72,
+    slotLabel: {
+      fontSize: 9,
+      fontWeight: '800',
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
+      width: '100%',
       textAlign: 'center',
     },
-    labelOn: {
-      fontWeight: '700',
-      letterSpacing: 0.15,
-    },
-    labelOff: {
-      fontWeight: '500',
-      letterSpacing: 0,
-      opacity: 0.92,
+    activeLine: {
+      width: 18,
+      height: 2,
+      borderRadius: 1,
+      marginTop: 2,
     },
   });
 }

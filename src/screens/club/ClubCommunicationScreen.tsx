@@ -15,14 +15,13 @@ import {
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import {
   ClubCommInboxHero,
-  ClubCommTileRow,
+  ClubOperationalCanalsGrid,
+  type ClubOperationalCanalItem,
   ClubUrgentAnnouncementsCard,
   type ClubUrgentAnnouncement,
 } from '../../features/club/ui/ClubCommunicationHub';
 import {
-  buildClubCommHubTiles,
   resolveClubCommSubtitle,
-  type ClubCommTileId,
 } from '../../features/club/ui/clubCommunicationModel';
 import { staffNotificationsService } from '../../services/staffNotifications.service';
 import { messagesService } from '../../services/messages.service';
@@ -32,7 +31,7 @@ import { clubSpace } from '../../features/club/theme/clubDesignSystem';
 type Channel = 'hub' | 'inbox';
 
 /**
- * Communication Club — hub premium + messagerie MessagesScreen inchangée.
+ * Communication Club — hub opérationnel unifié + messagerie instantanée ProDay.
  */
 export function ClubCommunicationScreen() {
   const shellNav = useClubShellNav();
@@ -70,16 +69,6 @@ export function ClubCommunicationScreen() {
     void loadUnread();
   }, [loadUnread]);
 
-  const tiles = useMemo(
-    () =>
-      buildClubCommHubTiles({
-        pendingMemberships: ws.pendingMemberships,
-        unreadNotifications,
-        unreadMessages,
-      }),
-    [ws.pendingMemberships, unreadNotifications, unreadMessages],
-  );
-
   const subtitle = useMemo(
     () =>
       resolveClubCommSubtitle({
@@ -105,28 +94,62 @@ export function ClubCommunicationScreen() {
     return list;
   }, [ws.teamsWithoutCoach]);
 
-  const onTile = (id: ClubCommTileId) => {
-    switch (id) {
-      case 'inbox':
-      case 'announce':
-        setChannel('inbox');
-        return;
-      case 'notifications':
-        shellNav?.requestNav('notifications');
-        return;
-      case 'teams':
-        shellNav?.requestNav('teams');
-        return;
-      case 'coaches':
-        shellNav?.requestNav('coaches');
-        return;
-      case 'players':
-        shellNav?.requestNav('players');
-        return;
-      default:
-        return;
-    }
-  };
+  const operationalCanals = useMemo<ClubOperationalCanalItem[]>(() => {
+    return [
+      {
+        id: 'teams',
+        title: 'Équipes',
+        subtitle: 'Annonces & vestiaires',
+        icon: 'people',
+        badgeLabel: `${ws.teamRows.length} équipe${ws.teamRows.length > 1 ? 's' : ''}`,
+        badgeTone: 'default',
+        onPress: () => shellNav?.requestNav('teams'),
+      },
+      {
+        id: 'coaches',
+        title: 'Staff Coachs',
+        subtitle: 'Coordination staff',
+        icon: 'school',
+        badgeLabel:
+          ws.teamsWithoutCoach > 0
+            ? `${ws.teamsWithoutCoach} à pourvoir`
+            : 'Complet',
+        badgeTone: ws.teamsWithoutCoach > 0 ? 'warning' : 'success',
+        onPress: () => shellNav?.requestNav('coaches'),
+      },
+      {
+        id: 'players',
+        title: 'Effectif Joueurs',
+        subtitle: 'Licenciés & adhésions',
+        icon: 'football',
+        badgeLabel:
+          ws.pendingMemberships > 0
+            ? `${ws.pendingMemberships} en attente`
+            : `${ws.players.length} joueurs`,
+        badgeTone: ws.pendingMemberships > 0 ? 'warning' : 'default',
+        onPress: () => shellNav?.requestNav('players'),
+      },
+      {
+        id: 'notifications',
+        title: 'Notifications',
+        subtitle: 'Alertes officielles club',
+        icon: 'notifications',
+        badgeLabel:
+          unreadNotifications > 0
+            ? `${unreadNotifications} non lue${unreadNotifications > 1 ? 's' : ''}`
+            : 'À jour',
+        badgeTone: unreadNotifications > 0 ? 'warning' : 'success',
+        onPress: () => shellNav?.requestNav('notifications'),
+      },
+    ];
+  }, [
+    ws.teamRows.length,
+    ws.teamsWithoutCoach,
+    ws.pendingMemberships,
+    ws.players.length,
+    unreadNotifications,
+    shellNav,
+  ]);
 
   if (channel === 'inbox') {
     return (
@@ -164,9 +187,6 @@ export function ClubCommunicationScreen() {
     );
   }
 
-  const primaryTiles = tiles.filter((t) => t.id === 'inbox' || t.id === 'notifications' || t.id === 'announce');
-  const channelTiles = tiles.filter((t) => t.id === 'teams' || t.id === 'coaches' || t.id === 'players');
-
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void Promise.all([ws.refresh(), loadUnread()])}>
@@ -201,34 +221,9 @@ export function ClubCommunicationScreen() {
 
         <View style={styles.section}>
           <ClubText variant="label" muted style={styles.sectionLabel}>
-            Accès rapides
+            Canaux & Outils Opérationnels
           </ClubText>
-          <View style={styles.list}>
-            {primaryTiles.map((tile, index) => (
-              <ClubCommTileRow
-                key={tile.id}
-                tile={tile}
-                index={index}
-                onPress={() => onTile(tile.id)}
-              />
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <ClubText variant="label" muted style={styles.sectionLabel}>
-            Canaux club
-          </ClubText>
-          <View style={styles.list}>
-            {channelTiles.map((tile, index) => (
-              <ClubCommTileRow
-                key={tile.id}
-                tile={tile}
-                index={index + 3}
-                onPress={() => onTile(tile.id)}
-              />
-            ))}
-          </View>
+          <ClubOperationalCanalsGrid items={operationalCanals} />
         </View>
 
         <ClubText variant="caption" muted style={styles.footer}>

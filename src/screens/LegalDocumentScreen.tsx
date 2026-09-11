@@ -8,7 +8,7 @@ import {
   legalPdfUrl,
   type LegalDocumentId,
 } from '../content/legalDocuments';
-import { TAB_BAR_CONTENT_INSET } from '../components/navigation/BottomTabBar';
+import { TAB_BAR_CONTENT_INSET } from '../navigation/tabBarLayout';
 import { useSessionProfile } from '../hooks/useSessionProfile';
 import { isSponsorRole, SPONSOR_THEME } from '../content/sponsorExperience';
 import { spacing, radius } from '../theme/designTokens';

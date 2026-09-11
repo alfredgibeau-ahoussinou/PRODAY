@@ -14,17 +14,17 @@ export const BETA_APK_AVAILABLE = Boolean(BETA_APK_URL);
 export const BETA_TESTFLIGHT_URL =
   process.env.NEXT_PUBLIC_BETA_TESTFLIGHT_URL?.trim() ?? "";
 
-export const BETA_APP_VERSION = process.env.NEXT_PUBLIC_BETA_APP_VERSION?.trim() || "1.0.8";
+export const BETA_APP_VERSION = process.env.NEXT_PUBLIC_BETA_APP_VERSION?.trim() || "1.0.10";
 
 export const BETA_FEATURES = [
-  "Mercato : annonces, candidatures et suivi des réponses",
-  "Invitations de match entre clubs : proposer, accepter, contre proposer",
-  "Entraînement à domicile + coaching humain à l’heure",
-  "Matchs et tournois : convocations, RSVP et calendrier",
-  "Visibilité : score et dynamique de profil",
-  "Fil, Reels et Arène : communauté, contenus et événements",
-  "CV joueur : profil alimenté par vos matchs et stats",
-  "Étapes selon votre rôle : Joueur, Club, Coach, Supporter ou Sponsor",
+  "Pôle Club & Équipes : organisation complète U7 à Seniors, effectifs et licences",
+  "Hub Communication Opérationnelle : canaux officiels, coordination technique et alertes Flash Info",
+  "Messagerie Obsidian : messagerie fluide, filtres instantanés et conversations temps réel",
+  "Convocations 1 Tap : séparation stricte Matchs vs Entraînements, RSVP en direct",
+  "Ardoise tactique vectorielle, bibliothèque d'exercices et causeries coach IA",
+  "Pôle Président : cockpit stratégique et arbitrage exécutif",
+  "Trésorerie & Licences : cotisations en ligne Stripe et gestion des bordereaux FFF",
+  "Mercato, Covoiturage solidaire et Espace Famille / Parents",
 ] as const;
 
 const BETA_TIMELINE_BASE = [
@@ -39,8 +39,8 @@ const BETA_TIMELINE_BASE = [
     step: 2,
     title: "Installation de l'app",
     description:
-      "Android : APK sur l'onglet Installer. iOS : bêta TestFlight décalée au 15 août 2026 à 18 h (améliorations nécessaires). Lien envoyé par email à l'ouverture.",
-    done: false,
+      "Android : téléchargement direct APK v1.0.10. iOS : accès TestFlight en cours de déploiement pour les beta-testeurs inscrits.",
+    done: true,
   },
   {
     step: 3,
@@ -53,7 +53,7 @@ const BETA_TIMELINE_BASE = [
     step: 4,
     title: "Lancement public",
     description:
-      "Les beta testeurs gardent l'accès prioritaire. On vous prévient de la date de sortie grand public.",
+      "Les beta-testeurs gardent l'accès prioritaire. On vous prévient de la date de sortie grand public.",
     done: false,
   },
 ] as const;

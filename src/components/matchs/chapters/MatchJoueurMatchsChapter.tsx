@@ -5,7 +5,6 @@ import type { FriendlyMatch } from '../../../models/FriendlyMatch';
 import type { Tournament } from '../../../models/Tournament';
 import type { AmicauxStatusFilter } from '../../../content/matchChapters';
 import type { Competition, CompetitionFixture, CompetitionSeason } from '../../../models/Competition';
-import { MatchAmicauxChapter } from './MatchAmicauxChapter';
 import { MatchTournamentsChapter } from './MatchTournamentsChapter';
 import { MatchCompetitionsChapter } from './MatchCompetitionsChapter';
 import { ProDayText } from '../../ui/ProDayText';
@@ -13,10 +12,9 @@ import { usePlayerThemeColors } from '../../../context/PlayerThemeContext';
 import { PLAYER_DARK } from '../../../theme/playerDarkPremium';
 import { spacing } from '../../../theme/designTokens';
 
-type Segment = 'amicaux' | 'tournois' | 'competitions';
+type Segment = 'tournois' | 'competitions';
 
 const SEGMENTS: { id: Segment; label: string }[] = [
-  { id: 'amicaux', label: 'Amicaux' },
   { id: 'tournois', label: 'Tournois' },
   { id: 'competitions', label: 'Compét.' },
 ];
@@ -57,9 +55,9 @@ export interface MatchJoueurMatchsChapterProps {
   initialSegment?: Segment;
 }
 
-/** Hub Matchs joueur — amicaux + tournois + compétitions en sous-onglets. */
+/** Hub Matchs joueur — tournois + compétitions en sous-onglets. */
 export function MatchJoueurMatchsChapter({
-  initialSegment = 'amicaux',
+  initialSegment = 'tournois',
   ...props
 }: MatchJoueurMatchsChapterProps) {
   const playerTheme = usePlayerThemeColors();
@@ -96,30 +94,6 @@ export function MatchJoueurMatchsChapter({
       </View>
 
       <View style={styles.body}>
-        {segment === 'amicaux' ? (
-          <MatchAmicauxChapter
-            profile={props.profile}
-            matches={props.matches}
-            filteredMatches={props.filteredMatches}
-            loadingMatches={props.loadingMatches}
-            amicauxSearch={props.amicauxSearch}
-            onAmicauxSearchChange={props.onAmicauxSearchChange}
-            amicauxStatus={props.amicauxStatus}
-            onAmicauxStatusChange={props.onAmicauxStatusChange}
-            myClubId={props.myClubId}
-            canAccept={props.canAccept}
-            refreshing={props.refreshing}
-            onRefresh={props.onRefresh}
-            onPropose={props.onPropose}
-            onSearch={props.onSearch}
-            onOrganize={props.onOrganize}
-            onAcceptMatch={props.onAcceptMatch}
-            onCancelMatch={props.onCancelMatch}
-            onMarkPlayed={props.onMarkPlayed}
-            getMatchIaScore={props.getMatchIaScore}
-            getMatchHealthWarning={props.getMatchHealthWarning}
-          />
-        ) : null}
         {segment === 'tournois' ? (
           <MatchTournamentsChapter
             profile={props.profile}

@@ -87,7 +87,19 @@ const MAP: Record<IconName, keyof typeof Ionicons.glyphMap> = {
   'log-out': 'log-out-outline',
   help: 'help-circle-outline',
   'swap-horizontal': 'swap-horizontal-outline',
+  trash: 'trash-outline',
   flag: 'flag-outline',
+  refresh: 'reload-outline',
+  flash: 'flash-outline',
+  grid: 'grid-outline',
+  chatbubbles: 'chatbubbles-outline',
+  sparkles: 'sparkles-outline',
+  list: 'list-outline',
+  'document-text': 'document-text-outline',
+  mic: 'mic-outline',
+  fitness: 'fitness-outline',
+  'cloud-upload': 'cloud-upload-outline',
+  download: 'download-outline',
 };
 
 const FILLED_MAP: Partial<Record<IconName, keyof typeof Ionicons.glyphMap>> = {

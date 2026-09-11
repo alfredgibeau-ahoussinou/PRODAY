@@ -229,6 +229,7 @@ export interface AdminCreateUserInput {
 export type AdminUserUpdatePatch = {
   display_name?: string;
   role?: UserRole;
+  is_admin?: boolean;
   product_line?: ProductLineId;
   is_active?: boolean;
   is_verified?: boolean;
@@ -324,6 +325,7 @@ export const adminService = {
     const update: Record<string, unknown> = { updated_at: serverTimestamp() };
     if (patch.display_name !== undefined) update.display_name = patch.display_name;
     if (patch.role !== undefined) update.role = patch.role;
+    if (patch.is_admin !== undefined) update.is_admin = patch.is_admin;
     if (patch.is_active !== undefined) update.is_active = patch.is_active;
     if (patch.is_verified !== undefined) update.is_verified = patch.is_verified;
     if (patch.verification_status !== undefined) {

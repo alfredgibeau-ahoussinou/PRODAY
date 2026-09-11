@@ -63,7 +63,7 @@ export const CoachListCard: React.FC<CoachListCardProps> = ({
           <Icon
             name={bookmarked ? 'bookmark' : 'bookmark-outline'}
             size={22}
-            color={bookmarked ? '#F59E0B' : colors.border}
+            color={bookmarked ? colors.brand : colors.border}
           />
         </TouchableOpacity>
       )}

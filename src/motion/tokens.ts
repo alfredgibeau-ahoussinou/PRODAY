@@ -7,34 +7,35 @@ import type { MotionSpring } from './types';
  */
 export const prodayMotion = {
   duration: {
-    fast: 110,
-    normal: 180,
-    slow: 240,
-    enter: 200,
-    exit: 100,
-    modal: 220,
-    toast: 140,
+    fast: 140,
+    normal: 320,
+    slow: 380,
+    enter: 340,
+    exit: 220,
+    modal: 360,
+    toast: 180,
     number: 400,
     /** Vidéo / reels — ultra court pour ne pas retarder le média. */
-    video: 110,
+    video: 120,
     /** Live / match — micro, jamais bloquant. */
-    live: 130,
-    /** Onglets dock — cross-fade premium, 240–300 ms. */
-    tab: 280,
+    live: 150,
+    /** Onglets dock — cross-fade premium Apple, 300 ms. */
+    tab: 300,
     /** prefers-reduced-motion : cut ou micro-fade. */
     reduced: 90,
   },
   spring: {
-    snappy: { damping: 24, stiffness: 300, mass: 0.55 } satisfies MotionSpring,
-    smooth: { damping: 28, stiffness: 220, mass: 0.7 } satisfies MotionSpring,
-    sheet: { damping: 26, stiffness: 240, mass: 0.75 } satisfies MotionSpring,
-    dock: { damping: 22, stiffness: 320, mass: 0.5 } satisfies MotionSpring,
-    bouncy: { damping: 18, stiffness: 170, mass: 0.75 } satisfies MotionSpring,
+    snappy: { damping: 26, stiffness: 320, mass: 0.6 } satisfies MotionSpring,
+    smooth: { damping: 30, stiffness: 220, mass: 0.8 } satisfies MotionSpring,
+    sheet: { damping: 28, stiffness: 240, mass: 0.8 } satisfies MotionSpring,
+    dock: { damping: 24, stiffness: 300, mass: 0.6 } satisfies MotionSpring,
+    bouncy: { damping: 20, stiffness: 180, mass: 0.75 } satisfies MotionSpring,
   },
   easing: {
-    out: Easing.out(Easing.cubic),
-    in: Easing.in(Easing.cubic),
-    inOut: Easing.inOut(Easing.cubic),
+    // Apple standard cubic-bezier curves (iOS System Animation curves)
+    out: Easing.bezier(0.25, 0.1, 0.25, 1),
+    in: Easing.bezier(0.42, 0, 1, 1),
+    inOut: Easing.bezier(0.42, 0, 0.58, 1),
   },
   /**
    * Plancher d’opacity pendant un swap.

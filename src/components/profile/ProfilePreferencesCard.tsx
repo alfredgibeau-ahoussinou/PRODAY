@@ -19,6 +19,9 @@ import { PressableSpring } from '../motion';
 import { LanguageSettingControl } from '../settings/LanguageSettingControl';
 import { ContactPrivacySettingsCard } from './ContactPrivacySettingsCard';
 import { PlayerLevelSettingsCard } from './PlayerLevelSettingsCard';
+import { useAccountDeletion } from '../../hooks/useAccountDeletion';
+import type { LegalDocumentId } from '../../content/legalDocuments';
+import { LegalDocumentModal } from '../legal/LegalDocumentModal';
 
 interface ProfilePreferencesCardProps {
   profile: User;
@@ -29,6 +32,8 @@ export const ProfilePreferencesCard: React.FC<ProfilePreferencesCardProps> = ({ 
   const { colors, productLine } = useAppTheme();
   const { t } = useTranslation();
   const brain = useProDayBrain(profile, productLine);
+  const { confirmDeleteAccount, deleting: deletingAccount } = useAccountDeletion();
+  const [legalModalDoc, setLegalModalDoc] = useState<LegalDocumentId | null>(null);
   const [calendarSync, setCalendarSync] = useState(true);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -163,7 +168,87 @@ export const ProfilePreferencesCard: React.FC<ProfilePreferencesCardProps> = ({ 
             )}
           </PressableSpring>
         </View>
+
+        <View style={[styles.syncRow, { borderTopColor: colors.border }]}>
+          <View style={styles.rowCopy}>
+            <ProDayText variant="body" style={{ fontWeight: '600' }}>
+              Conditions Générales d’Utilisation (CGU)
+            </ProDayText>
+            <ProDayText variant="caption" muted>
+              Règles d’usage, rôles sportifs et engagements
+            </ProDayText>
+          </View>
+          <PressableSpring
+            onPress={() => setLegalModalDoc('terms')}
+            style={[styles.syncBtn, { borderColor: colors.border }]}
+            scaleTo={0.97}
+            haptic
+          >
+            <ProDayText variant="caption" accent style={styles.syncBtnText}>
+              Consulter
+            </ProDayText>
+          </PressableSpring>
+        </View>
+
+        <View style={[styles.syncRow, { borderTopColor: colors.border }]}>
+          <View style={styles.rowCopy}>
+            <ProDayText variant="body" style={{ fontWeight: '600' }}>
+              Politique de Confidentialité
+            </ProDayText>
+            <ProDayText variant="caption" muted>
+              Données personnelles, RGPD et conservation
+            </ProDayText>
+          </View>
+          <PressableSpring
+            onPress={() => setLegalModalDoc('privacy')}
+            style={[styles.syncBtn, { borderColor: colors.border }]}
+            scaleTo={0.97}
+            haptic
+          >
+            <ProDayText variant="caption" accent style={styles.syncBtnText}>
+              Consulter
+            </ProDayText>
+          </PressableSpring>
+        </View>
+
+        <View style={[styles.deleteRow, { borderTopColor: colors.border }]}>
+          <View style={styles.rowCopy}>
+            <ProDayText variant="body" style={{ color: colors.error, fontWeight: '700' }}>
+              Supprimer mon compte
+            </ProDayText>
+            <ProDayText variant="caption" muted>
+              Suppression définitive de votre compte et de toutes vos données
+            </ProDayText>
+          </View>
+          <PressableSpring
+            onPress={confirmDeleteAccount}
+            disabled={deletingAccount}
+            style={[
+              styles.deleteBtn,
+              {
+                borderColor: 'rgba(239, 68, 68, 0.4)',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              },
+            ]}
+            scaleTo={0.97}
+            haptic
+          >
+            {deletingAccount ? (
+              <ActivityIndicator size="small" color={colors.error} />
+            ) : (
+              <ProDayText variant="caption" style={{ color: colors.error, fontWeight: '800' }}>
+                Supprimer
+              </ProDayText>
+            )}
+          </PressableSpring>
+        </View>
       </ProDaySurface>
+
+      <LegalDocumentModal
+        visible={legalModalDoc !== null}
+        documentId={legalModalDoc}
+        onClose={() => setLegalModalDoc(null)}
+      />
     </>
   );
 };
@@ -197,6 +282,14 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
+  deleteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   rowCopy: { flex: 1, gap: 2 },
   syncBtn: {
     paddingHorizontal: spacing.md,
@@ -207,4 +300,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   syncBtnText: { fontWeight: '800' },
+  deleteBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    minWidth: 100,
+    alignItems: 'center',
+  },
 });

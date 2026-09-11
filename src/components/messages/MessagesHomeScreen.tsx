@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MessageThread } from '../../lib/firestoreMappers';
 import type { SocialProfileSuggestion } from '../../features/v3/engines/socialRecommendation.engine';
 import type { MessagesChapterId } from '../../content/messagesChapters';
@@ -15,6 +16,9 @@ import { spacing } from '../../theme/designTokens';
 import { CoachEmptyState } from '../coach/coachPortalUi';
 import { CoachPane } from '../coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
+import { ProDayText } from '../ui/ProDayText';
+import { CrestWatermark } from '../../screens/joueur/PlayerSaisonIcons';
+import { usePlayerTheme, usePlayerThemeColors } from '../../context/PlayerThemeContext';
 
 export interface MessagesHomeScreenProps {
   profile: { uid: string } | null;
@@ -51,10 +55,15 @@ export interface MessagesHomeScreenProps {
 }
 
 export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => {
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const joueurSession = useJoueurSession();
   const joueurLive =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
+  const playerThemeCtx = usePlayerTheme();
+  const playerColors = usePlayerThemeColors();
+  const teamPrimary = playerColors.accent;
+  const clubName = playerThemeCtx.clubName;
   const [chapter, setChapter] = useState<MessagesChapterId>('inbox');
   const coachSkin = props.variant === 'coach';
   const messagesVariant =
@@ -69,14 +78,14 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
     if (joueurSession.ageGroup === 'youth') {
       return {
         caption: 'Messages',
-        title: 'Discute',
-        subtitle: unreadHint ? `${unreadHint} · Club, coach, potes.` : 'Club, coach, potes — en sécurité.',
+        title: 'Discussions',
+        subtitle: unreadHint ? `${unreadHint} · Club, coach, potes.` : 'Club, coach, potes.',
       };
     }
     if (joueurSession.ageGroup === 'teen') {
       return {
         caption: 'Vestiaire',
-        title: 'Messages',
+        title: 'Messagerie',
         subtitle: unreadHint ? `${unreadHint} · Réseau, club, staff.` : 'Réseau, club, staff.',
       };
     }
@@ -200,6 +209,52 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
     />
   );
 
+  if (joueurLive) {
+    return (
+      <View style={[styles.joueurRoot, { paddingTop: 6 }]}>
+        <View style={styles.header}>
+          <View style={styles.headerTitleRow}>
+            <View
+              style={[
+                styles.clubCrest,
+                { borderColor: `${teamPrimary}40`, backgroundColor: `${teamPrimary}18` },
+              ]}
+            >
+              <CrestWatermark width={22} height={26} color={teamPrimary} opacity={0.95} />
+            </View>
+            <View style={styles.titleCol}>
+              <ProDayText variant="title" style={styles.headerTitleText}>
+                {joueurTitles?.title ?? 'Messagerie'}
+              </ProDayText>
+              {clubName ? (
+                <View style={styles.clubSubtitleRow}>
+                  <View style={[styles.clubDot, { backgroundColor: teamPrimary }]} />
+                  <ProDayText
+                    variant="caption"
+                    style={[styles.clubSubtitleText, { color: `${teamPrimary}D0` }]}
+                  >
+                    {clubName}
+                  </ProDayText>
+                  {props.unreadCount > 0 ? (
+                    <ProDayText variant="caption" style={[styles.unreadBadgeText, { color: teamPrimary }]}>
+                      · {props.unreadCount} non lu{props.unreadCount > 1 ? 's' : ''}
+                    </ProDayText>
+                  ) : null}
+                </View>
+              ) : (
+                <ProDayText variant="caption" style={styles.headerSub}>
+                  {subtitle}
+                </ProDayText>
+              )}
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.joueurBody}>{pager}</View>
+      </View>
+    );
+  }
+
   return (
     <TabScreenShell
       caption={joueurTitles?.caption ?? t('messages.caption')}
@@ -213,8 +268,73 @@ export const MessagesHomeScreen: React.FC<MessagesHomeScreenProps> = (props) => 
 };
 
 const styles = StyleSheet.create({
+  joueurRoot: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  joueurBody: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: '#000000',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  clubCrest: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  headerTitleText: {
+    fontSize: 21,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
+  },
+  headerSub: {
+    fontSize: 11.5,
+    color: '#8B8B9A',
+    marginTop: 1,
+  },
+  clubSubtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 1,
+  },
+  clubDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  clubSubtitleText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+  },
+  unreadBadgeText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    marginLeft: 2,
+  },
   guestPad: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
   },
 });
+

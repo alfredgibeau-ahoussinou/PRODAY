@@ -20,6 +20,7 @@ import { prodayHaptics } from '../utils/prodayHaptics';
 import { SignupFlow } from './signup/SignupFlow';
 import { ForgotPasswordScreen } from './ForgotPasswordScreen';
 import { LegalDocumentScreen } from './LegalDocumentScreen';
+import { AuthPhoneModal } from '../components/auth/AuthPhoneModal';
 import type { LegalDocumentId } from '../content/legalDocuments';
 import { useAuth } from '../context/AuthContext';
 import { useTabNavigation, type AuthIntent } from '../context/TabNavigationContext';
@@ -43,9 +44,8 @@ import {
   AUTH_XP,
 } from '../features/auth/experience';
 import { isGoogleAuthConfigured } from '../config/oauth';
-import { isPlatformAdminEmail } from '../config/admin';
 import type { CarouselPoleId } from '../models/CarouselPole';
-import { universePoleDisplayName } from '../components/branding/intro/universePoleBrand';
+import { resolveUniverseAuthCopy } from './authUniverseCopy';
 import {
   resolveAuthBackAction,
   resolveAuthSurface,
@@ -73,7 +73,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   signupInitialRole,
   initialPole,
 }) => {
-  const { loading: authLoading, configured, refreshProfile, isAdmin } = useAuth();
+  const { loading: authLoading, configured, refreshProfile } = useAuth();
   const { setActiveTab } = useTabNavigation();
   const { productLine } = useAppTheme();
   const { openSpacePicker } = useLaunchIntro();
@@ -82,11 +82,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const registrationOpen = isEnabled('registration_open');
   const quickLogin = useAuthQuickLogin();
 
-  const isAdminAuth =
-    initialPole === 'admin' ||
-    isAdmin ||
-    Boolean(quickLogin.savedEmail && isPlatformAdminEmail(quickLogin.savedEmail)) ||
-    signupInitialRole === ('admin' as any);
+  /**
+   * Entrée admin EXPLICITE (tuile VIP de l'univers) — verrouille la connexion seule.
+   * JAMAIS déduite d'un email mémorisé ou d'un claim : un admin déconnecté est un
+   * invité comme les autres (sinon « Espace Administrateur » fuit sur tous les
+   * pôles et « Créer un compte » devient silencieusement inopérant).
+   */
+  const isAdminAuth = initialPole === 'admin';
 
   /** Entrée via univers → choix Créer / Se connecter (pas login direct). */
   const enteredViaGate =
@@ -107,6 +109,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     displayName?: string;
   } | null>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showPhoneAuth, setShowPhoneAuth] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocumentId | null>(null);
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [postLoginReveal, setPostLoginReveal] = useState(false);
@@ -141,7 +144,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   };
 
   const openSignup = useCallback(() => {
-    if (isAdminAuth) return;
+    if (isAdminAuth) {
+      // Verrou admin : feedback visible, jamais un clic sans effet.
+      setBanner('Les comptes administrateur sont réservés — connexion seule.');
+      setMode('login');
+      return;
+    }
     if (!registrationOpen) {
       setBanner(disabledCopy('registration_open').message);
       setMode('signupTeaser');
@@ -244,86 +252,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     setPostLoginReveal(true);
   }, [finishAuthNavigation]);
 
-  const universeAuthCopy = useMemo(() => {
-    const poleLabel = initialPole ? universePoleDisplayName(initialPole) : null;
-    if (isAdminAuth) {
-      return {
-        kicker: 'ACCÈS FONDATION VIP',
-        title: 'Connexion Admin',
-        sub: 'Réservé aux fondateurs et administrateurs autorisés.',
-        cta: 'Se connecter',
-        gateTitle: 'Espace Administrateur',
-        gateSub: 'Accès réservé à l’équipe fondatrice.',
-      };
-    }
-    if (productLine === 'pro_staff' || signupInitialRole === 'coach' || initialPole === 'coach') {
-      return {
-        kicker: 'PÔLE COACH',
-        title: 'Connexion Coach',
-        sub: 'Séances, tactiques et convocations — en un accès.',
-        cta: 'Se connecter',
-        gateTitle: poleLabel ? `Pôle ${poleLabel}` : 'Pôle Coach',
-        gateSub: 'Créez votre espace staff, ou connectez-vous.',
-      };
-    }
-    if (
-      productLine === 'pro_club' ||
-      signupInitialRole === 'club' ||
-      initialPole === 'pro_club' ||
-      initialPole === 'president'
-    ) {
-      return {
-        kicker: 'PÔLE CLUB',
-        title: 'Connexion Club',
-        sub: 'Effectifs, matchs et adhésions — votre structure.',
-        cta: 'Se connecter',
-        gateTitle: poleLabel ? `Pôle ${poleLabel}` : 'Pôle Club',
-        gateSub: 'Retrouvez votre club FFF à l’inscription, ou connectez-vous.',
-      };
-    }
-    if (productLine === 'parent' || signupInitialRole === 'parent' || initialPole === 'parent') {
-      return {
-        kicker: 'ESPACE FAMILLE',
-        title: 'Connexion Famille',
-        sub: 'Suivi enfant et covoiturage club.',
-        cta: 'Se connecter',
-        gateTitle: 'Espace Famille',
-        gateSub: 'Créez un compte parent, ou reconnectez-vous.',
-      };
-    }
-    if (productLine === 'sponsor' || signupInitialRole === 'sponsor' || initialPole === 'sponsor') {
-      return {
-        kicker: 'PARTENAIRES',
-        title: 'Connexion Partenaire',
-        sub: 'Campagnes et visibilité locale.',
-        cta: 'Se connecter',
-        gateTitle: 'Espace Partenaire',
-        gateSub: 'Créez votre espace marque, ou reconnectez-vous.',
-      };
-    }
-    if (
-      productLine === 'supporter' ||
-      signupInitialRole === 'supporter' ||
-      initialPole === 'supporter'
-    ) {
-      return {
-        kicker: 'TRIBUNE',
-        title: 'Connexion Supporter',
-        sub: 'Matchs en direct et votes MVP.',
-        cta: 'Se connecter',
-        gateTitle: 'Tribune Supporters',
-        gateSub: 'Créez un compte, ou reconnectez-vous.',
-      };
-    }
-    return {
-      kicker: 'PÔLE JOUEUR',
-      title: 'Connexion Joueur',
-      sub: 'Stats, matchs et CV sportif — votre cockpit.',
-      cta: 'Se connecter',
-      gateTitle: poleLabel ? `Pôle ${poleLabel}` : 'Pôle Joueur',
-      gateSub: 'Créez votre compte, ou reconnectez-vous à ProDay.',
-    };
-  }, [isAdminAuth, productLine, signupInitialRole, initialPole]);
+  const universeAuthCopy = useMemo(
+    () =>
+      resolveUniverseAuthCopy({
+        isAdminAuth,
+        productLine,
+        signupInitialRole,
+        initialPole,
+      }),
+    [isAdminAuth, productLine, signupInitialRole, initialPole],
+  );
 
   const validateEmail = (value: string) => {
     if (!value.trim()) return t('auth.emailRequired') || 'Email requis';
@@ -568,6 +506,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               ) : null}
 
               {!isAdminAuth ? (
+                <PressableSpring
+                  style={styles.phoneAuthBtn}
+                  onPress={() => {
+                    clearErrors();
+                    setShowPhoneAuth(true);
+                  }}
+                  scaleTo={0.98}
+                  haptic
+                >
+                  <Icon name="call" size={16} color="rgba(255, 255, 255, 0.75)" />
+                  <ProDayText variant="caption" style={styles.phoneAuthText}>
+                    Connexion par Numéro de Téléphone
+                  </ProDayText>
+                </PressableSpring>
+              ) : null}
+
+              {!isAdminAuth ? (
                 <View style={styles.switchRow}>
                   <AuthLink
                     leading={t('auth.newOnProday')}
@@ -637,11 +592,37 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           />
         ) : null}
       </PushScreenTransition>
+
+      <AuthPhoneModal
+        visible={showPhoneAuth}
+        onClose={() => setShowPhoneAuth(false)}
+        onSuccess={() => void goHomeAfterAuth()}
+        onError={(msg) => setBanner(msg)}
+        accent={signupVisual.accent}
+      />
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  phoneAuthBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  phoneAuthText: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '600',
+    fontSize: 13,
+  },
   centered: {
     flex: 1,
     backgroundColor: AUTH_XP.black,

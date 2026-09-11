@@ -31,22 +31,18 @@ describe('joueurPlusMenu', () => {
     expect(ids).toEqual(
       expect.arrayContaining([
         'messages',
-        'recrutement',
-        'train',
-        'reels',
         'covoiturage',
+        'recrutement',
+        'reels',
         'shop',
         'progression',
         'settings',
         'coach_ia',
-        'coach_humain',
       ]),
     );
     expect(ids).not.toContain('famille');
-
-    const coachHumain = items.find((i) => i.id === 'coach_humain');
-    expect(coachHumain?.label).toBe('Coach humain');
-    expect(coachHumain?.action).toEqual({ kind: 'dashboard', view: 'train_coach' });
+    expect(ids).not.toContain('train');
+    expect(ids).not.toContain('coach_humain');
 
     const coachIa = items.find((i) => i.id === 'coach_ia');
     expect(coachIa?.label).toBe('Mon Coach IA');

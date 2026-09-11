@@ -7,6 +7,7 @@ import { getMatchChapters, getJoueurMatchChapters } from '../../i18n/localizedCh
 import { PressableSpring } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
+import { Icon, type IconName } from '../ui/Icon';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { spacing } from '../../theme/designTokens';
 import { useCoachTokens } from '../../features/coach/shell/CoachThemeContext';
@@ -31,7 +32,15 @@ const GAME_STAGE_LABELS: Partial<Record<MatchChapterId, string>> = {
   calendrier: 'Calendrier',
   convocations: 'Convocations',
   centre: 'En direct',
-  amicaux: 'Amicaux',
+};
+
+const CHAPTER_ICONS: Partial<Record<MatchChapterId, IconName>> = {
+  calendrier: 'calendar',
+  convocations: 'mail',
+  centre: 'stats-chart',
+  stats: 'trophy',
+  tournois: 'trophy',
+  competitions: 'shield',
 };
 
 /** Navigation Match Center — onglets terminal (hairline, pas de pills). */
@@ -53,7 +62,7 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
     [gameMode, t],
   );
   const chipAccent = gameMode ? playerTheme.accent : colors.accent;
-  const joueurChipBg = playerTheme.surface ?? PLAYER_DARK.surface;
+  const joueurAccent = playerTheme.accent ?? PLAYER_DARK.accent;
   const styles = useMemo(
     () => createStyles(chipAccent, gameMode, coachSkin, coachTokens, playerTheme),
     [chipAccent, gameMode, coachSkin, coachTokens, playerTheme],
@@ -70,14 +79,13 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
       {chapters.map((ch) => {
         const on = ch.id === active;
         const badge =
-          ch.id === 'amicaux' && amicauxBadge && amicauxBadge > 0
-            ? amicauxBadge
-            : ch.id === 'convocations' && convocationsBadge && convocationsBadge > 0
-              ? convocationsBadge
-              : ch.id === 'centre' && centreBadge
-                ? centreBadge
-                : null;
+          ch.id === 'convocations' && convocationsBadge && convocationsBadge > 0
+            ? convocationsBadge
+            : ch.id === 'centre' && centreBadge
+              ? centreBadge
+              : null;
         const label = gameMode ? GAME_STAGE_LABELS[ch.id] ?? ch.shortLabel : ch.shortLabel;
+        const iconName = CHAPTER_ICONS[ch.id];
 
         return (
           <PressableSpring
@@ -91,6 +99,21 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
             }}
             scaleTo={0.97}
           >
+            {iconName ? (
+              <Icon
+                name={iconName}
+                size={13}
+                color={
+                  on
+                    ? gameMode
+                      ? joueurAccent
+                      : chipAccent
+                    : gameMode
+                      ? PLAYER_DARK.textMuted
+                      : MATCH_SITE.muted
+                }
+              />
+            ) : null}
             <ProDayText
               variant="caption"
               style={[styles.label, on ? styles.labelOn : styles.labelOff]}
@@ -105,16 +128,28 @@ export const MatchChapterRail: React.FC<MatchChapterRailProps> = ({
                 style={[
                   styles.badge,
                   {
-                    backgroundColor: on ? chipAccent : gameMode ? joueurChipBg : MATCH_SITE.elevated,
+                    backgroundColor: on
+                      ? chipAccent
+                      : gameMode
+                        ? 'rgba(255,255,255,0.08)'
+                        : MATCH_SITE.elevated,
                   },
                 ]}
               >
-                <ProDayText variant="caption" style={styles.badgeText}>
+                <ProDayText
+                  variant="caption"
+                  style={[
+                    styles.badgeText,
+                    on && gameMode ? { color: '#000' } : undefined,
+                  ]}
+                >
                   {typeof badge === 'number' && badge > 9 ? '9+' : badge}
                 </ProDayText>
               </View>
             ) : null}
-            {on && !coachSkin ? <View style={[styles.underline, { backgroundColor: chipAccent }]} /> : null}
+            {on && !coachSkin && !gameMode ? (
+              <View style={[styles.underline, { backgroundColor: chipAccent }]} />
+            ) : null}
           </PressableSpring>
         );
       })}
@@ -141,13 +176,13 @@ function createStyles(
     wrap: {
       flexGrow: 0,
       flexShrink: 0,
-      maxHeight: gameMode || coachSkin ? 52 : 48,
+      maxHeight: gameMode || coachSkin ? 54 : 48,
       borderBottomWidth: coachSkin || gameMode ? 0 : StyleSheet.hairlineWidth,
       borderBottomColor: MATCH_SITE.border,
       backgroundColor: 'transparent',
     },
     scroll: {
-      paddingHorizontal: spacing.lg,
+      paddingHorizontal: spacing.md,
       paddingTop: spacing.xs,
       paddingBottom: gameMode ? spacing.xs : 0,
       gap: gameMode || coachSkin ? 8 : 2,
@@ -159,13 +194,13 @@ function createStyles(
       alignItems: 'center',
       gap: 6,
       paddingVertical: gameMode ? 8 : 10,
-      paddingHorizontal: gameMode ? spacing.lg : spacing.md,
+      paddingHorizontal: gameMode ? 12 : spacing.md,
       borderBottomWidth: gameMode || coachSkin ? 0 : 2,
       borderBottomColor: 'transparent',
-      borderRadius: gameMode || coachSkin ? 18 : 0,
+      borderRadius: gameMode || coachSkin ? 20 : 0,
       borderWidth: gameMode ? 1 : 0,
-      borderColor: gameMode ? joueurChipBorder : 'transparent',
-      backgroundColor: coachSkin ? coachSurface : gameMode ? joueurChipBg : 'transparent',
+      borderColor: gameMode ? PLAYER_DARK.border : 'transparent',
+      backgroundColor: coachSkin ? coachSurface : gameMode ? PLAYER_DARK.surfaceRaised : 'transparent',
       minHeight: gameMode ? 36 : undefined,
     },
     tabOn: {
@@ -174,33 +209,34 @@ function createStyles(
         : coachSkin
           ? coachElevated
           : MATCH_SITE.soft,
-      borderColor: gameMode ? joueurChipOnBorder : gameMode ? joueurChipBorder : 'transparent',
+      borderColor: gameMode ? accent : 'transparent',
     },
     label: {
-      fontWeight: '800',
-      fontSize: gameMode ? 11 : 12,
-      letterSpacing: gameMode ? 0.3 : 0.3,
+      fontWeight: '700',
+      fontSize: gameMode ? 11.5 : 12,
+      letterSpacing: gameMode ? 0.2 : 0.3,
       ...Platform.select({ android: { includeFontPadding: false } }),
     },
     labelOn: {
-      color: gameMode ? joueurAccent : accent,
+      color: gameMode ? '#FFFFFF' : accent,
+      fontWeight: '800',
     },
     labelOff: {
       color: gameMode ? PLAYER_DARK.textMuted : MATCH_SITE.muted,
     },
     badge: {
-      minWidth: 18,
+      minWidth: 16,
       height: 16,
-      paddingHorizontal: 4,
+      paddingHorizontal: 4.5,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 2,
+      borderRadius: 999,
     },
     badgeText: {
       color: '#fff',
       fontWeight: '900',
       fontSize: 9,
-      letterSpacing: 0.4,
+      letterSpacing: 0.2,
     },
     underline: {
       position: 'absolute',

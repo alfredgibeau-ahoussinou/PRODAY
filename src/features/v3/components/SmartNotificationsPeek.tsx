@@ -25,10 +25,10 @@ const KIND_LABEL: Record<NotificationKind, string> = {
 };
 
 const KIND_COLOR: Record<NotificationKind, string> = {
-  health: '#0F766E',
-  match: '#2563EB',
-  opportunity: '#D97706',
-  social: '#7C3AED',
+  health: '#10B981',
+  match: '#3B82F6',
+  opportunity: '#FAFAFA',
+  social: '#A855F7',
 };
 
 export const SmartNotificationsPeek: React.FC<SmartNotificationsPeekProps> = ({

@@ -44,6 +44,6 @@ describe('parent / president / admin breakpoints', () => {
     expect(presidentChrome.wideBreakpoint).toBe(920);
     expect(presidentChrome.contentMaxWidth).toBe(1180);
     expect(adminChrome.wideBreakpoint).toBe(920);
-    expect(adminChrome.contentMax).toBe(1280);
+    expect(adminChrome.contentMax).toBe(1320);
   });
 });

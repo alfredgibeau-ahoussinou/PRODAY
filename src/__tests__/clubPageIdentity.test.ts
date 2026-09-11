@@ -25,7 +25,7 @@ describe('clubPageIdentity', () => {
     );
     expect(layouts.size).toBeGreaterThanOrEqual(5);
     expect(getClubPageIdentity('today').layout).toBe('briefing');
-    expect(getClubPageIdentity('video').layout).toBe('studio');
+    expect(getClubPageIdentity('matches').layout).toBe('arena');
     expect(getClubPageIdentity('pack').support).toContain('SUR DEVIS');
   });
 });

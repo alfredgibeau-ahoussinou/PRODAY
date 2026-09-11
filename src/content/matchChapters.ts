@@ -9,11 +9,11 @@ export type MatchChapterId =
   | 'tournois'
   | 'competitions';
 
-/** Onglets Match visibles en mode joueur (4 max). */
+/** Onglets Match visibles en mode joueur (3 piliers : Calendrier · Convocations · Stats). */
 export const JOUEUR_MATCH_CHAPTER_IDS: MatchChapterId[] = [
   'calendrier',
+  'centre',
   'convocations',
-  'amicaux',
   'stats',
 ];
 
@@ -23,11 +23,10 @@ export const MATCH_CHAPTERS: {
   shortLabel: string;
   icon: IconName;
 }[] = [
-  { id: 'calendrier', label: 'Calendrier', shortLabel: 'Agenda', icon: 'calendar' },
-  { id: 'centre', label: 'Centre Match', shortLabel: 'Centre', icon: 'football' },
+  { id: 'calendrier', label: 'Matchs', shortLabel: 'Matchs', icon: 'calendar' },
+  { id: 'centre', label: 'Carte', shortLabel: 'Carte', icon: 'location' },
   { id: 'convocations', label: 'Convocations', shortLabel: 'Convocs', icon: 'mail' },
   { id: 'stats', label: 'Stats', shortLabel: 'Stats', icon: 'trophy' },
-  { id: 'amicaux', label: 'Amicaux', shortLabel: 'Amicaux', icon: 'handshake' },
   { id: 'tournois', label: 'Tournois', shortLabel: 'Tournois', icon: 'trophy' },
   { id: 'competitions', label: 'Compétitions', shortLabel: 'Compét.', icon: 'shield' },
 ];
@@ -51,11 +50,10 @@ export function filterJoueurMatchChapters<
   );
 }
 
-/** Mappe les deep links legacy (centre, tournois, compétitions) vers un onglet joueur. */
+/** Mappe les deep links legacy vers un onglet joueur. */
 export function normalizeJoueurMatchChapter(id: MatchChapterId): MatchChapterId {
   if (JOUEUR_MATCH_CHAPTER_IDS.includes(id)) return id;
-  if (id === 'centre') return 'calendrier';
-  if (id === 'tournois' || id === 'competitions') return 'amicaux';
+  if (id === 'tournois' || id === 'competitions' || id === 'amicaux') return 'calendrier';
   return 'calendrier';
 }
 

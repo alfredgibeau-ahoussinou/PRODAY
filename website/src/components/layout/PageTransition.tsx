@@ -1,7 +1,9 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export function PageTransition({
   children,
@@ -17,20 +19,24 @@ export function PageTransition({
     setEnableEnter(true);
   }, []);
 
-  const animateEnter = enableEnter && !reduceMotion;
+  const animate = enableEnter && !reduceMotion;
 
   return (
-    <motion.div
-      key={pathname}
-      initial={animateEnter ? { opacity: 0, y: 8 } : false}
-      animate={{ opacity: 1, y: 0 }}
-      transition={
-        animateEnter
-          ? { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
-          : { duration: 0 }
-      }
-    >
-      {children}
-    </motion.div>
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={pathname}
+        className="page-transition-root"
+        initial={animate ? { opacity: 0, y: 14 } : false}
+        animate={{ opacity: 1, y: 0 }}
+        exit={animate ? { opacity: 0, y: -10 } : undefined}
+        transition={
+          animate
+            ? { duration: 0.38, ease }
+            : { duration: 0 }
+        }
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 }

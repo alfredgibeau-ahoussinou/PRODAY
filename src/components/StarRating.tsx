@@ -26,7 +26,7 @@ export const StarRating: React.FC<StarRatingProps> = ({ rating, size = 'md' }) =
               key={i}
               name={filled ? 'star' : 'star-outline'}
               size={iconSize}
-              color="#F59E0B"
+              color={filled ? c.accent : c.border}
             />
           );
         })}

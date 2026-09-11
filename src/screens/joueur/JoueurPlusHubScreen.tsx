@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { JoueurScreenChrome } from '../../components/joueur/JoueurScreenChrome';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { ProDayText } from '../../components/ui/ProDayText';
@@ -18,20 +19,27 @@ import { usePlatformFeatureFlags } from '../../hooks/usePlatformFeatureFlags';
 import { isMinorUser } from '../../utils/minor';
 import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 import { formatTabBadge } from '../../components/navigation/tabBarShared';
-import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { usePlayerTheme, usePlayerThemeColors } from '../../context/PlayerThemeContext';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { PLAYER_DARK, PLAYER_DARK_RADIUS } from '../../theme/playerDarkPremium';
 import { spacing } from '../../theme/designTokens';
+import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
+import { GlobalSearchModal } from '../../components/search/GlobalSearchModal';
+import { CrestWatermark } from './PlayerSaisonIcons';
 
-/** Hub Plus — tuiles grandes style discover, accès aux modules secondaires. */
+/** Hub Plus — menu complet Tout ProDay */
 export function JoueurPlusHubScreen() {
+  const insets = useSafeAreaInsets();
   const profile = useSessionProfile();
   const session = useJoueurSession();
   const nav = useTabNavigationActions();
   const { productLine } = useAppTheme();
   const { count: unreadCount } = useUnreadMessageCount();
+  const playerThemeCtx = usePlayerTheme();
   const playerTheme = usePlayerThemeColors();
+  const teamPrimary = playerTheme.accent;
+  const clubName = playerThemeCtx.clubName;
   const { isEnabled, disabledCopy } = usePlatformFeatureFlags();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const visibleTabs = useMemo(
     () => getVisibleMainTabs(productLine, profile?.role, profile ?? undefined),
@@ -76,23 +84,60 @@ export function JoueurPlusHubScreen() {
   }
 
   return (
-    <JoueurScreenChrome variant="page" kicker="Menu" title="Tout ProDay">
+    <View style={[styles.root, { paddingTop: 6 }]}>
+      {/* 1. Header ProDay Stylisé */}
+      <View style={styles.header}>
+        <View style={styles.headerTitleRow}>
+          <View
+            style={[
+              styles.clubCrest,
+              { borderColor: `${teamPrimary}40`, backgroundColor: `${teamPrimary}18` },
+            ]}
+          >
+            <CrestWatermark width={22} height={26} color={teamPrimary} opacity={0.95} />
+          </View>
+          <View style={styles.titleCol}>
+            <ProDayText variant="title" style={styles.headerTitleText}>
+              Tout ProDay
+            </ProDayText>
+            {clubName ? (
+              <View style={styles.clubSubtitleRow}>
+                <View style={[styles.clubDot, { backgroundColor: teamPrimary }]} />
+                <ProDayText
+                  variant="caption"
+                  style={[styles.clubSubtitleText, { color: `${teamPrimary}D0` }]}
+                >
+                  {clubName}
+                </ProDayText>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </View>
+
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg }]}
+        contentContainerStyle={[styles.pad, { paddingBottom: TAB_BAR_CONTENT_INSET + spacing.xl }]}
         showsVerticalScrollIndicator={false}
         decelerationRate="normal"
       >
         <ProDayText variant="caption" style={styles.lead}>
           Retrouve messages, équipe, entraînement, vidéos et boutique sans chercher dans l’accueil.
         </ProDayText>
+
+        <GlobalSearchBar
+          onPress={() => setSearchOpen(true)}
+          accent={teamPrimary}
+          style={styles.searchBarWrap}
+        />
+
         <View style={styles.grid}>
           {items.map((item) => (
             <PressableSpring
               key={item.id}
               style={styles.tile}
               onPress={() => runItem(item)}
-              scaleTo={0.98}
+              scaleTo={0.97}
               haptic
               testID={`plus-menu-${item.id}`}
             >
@@ -101,15 +146,15 @@ export function JoueurPlusHubScreen() {
                   style={[
                     styles.iconWrap,
                     {
-                      backgroundColor: playerTheme.accentSoft,
-                      borderColor: `${playerTheme.accent}55`,
+                      backgroundColor: `${teamPrimary}14`,
+                      borderColor: `${teamPrimary}33`,
                     },
                   ]}
                 >
-                  <Icon name={item.icon} size={26} color={playerTheme.accentAlt} variant="outline" />
+                  <Icon name={item.icon} size={24} color={teamPrimary} variant="outline" />
                 </View>
                 {item.badge && item.badge > 0 ? (
-                  <View style={styles.badge}>
+                  <View style={[styles.badge, { backgroundColor: teamPrimary }]}>
                     <ProDayText variant="caption" style={styles.badgeText}>
                       {formatTabBadge(item.badge)}
                     </ProDayText>
@@ -122,44 +167,117 @@ export function JoueurPlusHubScreen() {
                   </View>
                 ) : null}
               </View>
-              <ProDayText variant="section" style={styles.tileLabel}>
-                {item.label}
-              </ProDayText>
-              {item.subtitle ? (
-                <ProDayText variant="caption" style={styles.tileSub} numberOfLines={2}>
-                  {item.subtitle}
+              <View style={styles.tileBottom}>
+                <ProDayText variant="section" style={styles.tileLabel}>
+                  {item.label}
                 </ProDayText>
-              ) : null}
+                {item.subtitle ? (
+                  <ProDayText variant="caption" style={styles.tileSub} numberOfLines={2}>
+                    {item.subtitle}
+                  </ProDayText>
+                ) : null}
+              </View>
             </PressableSpring>
           ))}
         </View>
       </ScrollView>
-    </JoueurScreenChrome>
+
+      <GlobalSearchModal
+        visible={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        accent={teamPrimary}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  loader: { flex: 1, backgroundColor: PLAYER_DARK.bg },
-  scroll: { flex: 1 },
-  pad: { padding: spacing.lg, gap: spacing.md },
+  root: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  loader: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  clubCrest: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  headerTitleText: {
+    fontSize: 21,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
+  },
+  clubSubtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 1,
+  },
+  clubDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  clubSubtitleText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+  },
+  scroll: {
+    flex: 1,
+  },
+  pad: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    gap: 12,
+  },
   lead: {
-    color: PLAYER_DARK.textMuted,
+    color: '#8B8B9A',
+    fontSize: 12.5,
     lineHeight: 18,
+  },
+  searchBarWrap: {
+    marginTop: 2,
+    marginBottom: 4,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    gap: 10,
   },
   tile: {
-    width: '47%',
-    minHeight: 128,
-    borderRadius: PLAYER_DARK_RADIUS.card,
+    width: '48.5%',
+    minHeight: 136,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
-    padding: spacing.md,
-    gap: spacing.xs,
-    backgroundColor: PLAYER_DARK.surface,
+    borderColor: '#22222E',
+    padding: 15,
+    justifyContent: 'space-between',
+    backgroundColor: '#14141A',
   },
   tileTop: {
     flexDirection: 'row',
@@ -167,22 +285,28 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   iconWrap: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
+  tileBottom: {
+    gap: 2,
+    marginTop: 8,
+  },
   tileLabel: {
-    color: PLAYER_DARK.text,
-    fontWeight: '800',
-    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '900',
+    fontSize: 14.5,
+    letterSpacing: -0.2,
   },
   tileSub: {
-    color: PLAYER_DARK.textMuted,
-    fontSize: 11,
-    lineHeight: 15,
+    color: '#8B8B9A',
+    fontSize: 10.5,
+    fontWeight: '500',
+    lineHeight: 14,
   },
   badge: {
     minWidth: 18,
@@ -191,25 +315,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
-    backgroundColor: PLAYER_DARK.statYellow,
   },
   badgeText: {
-    color: PLAYER_DARK.bg,
+    color: '#000000',
     fontSize: 9,
     fontWeight: '900',
   },
   soonBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: PLAYER_DARK.surfaceRaised,
+    backgroundColor: '#1C1D26',
     borderWidth: 1,
-    borderColor: PLAYER_DARK.border,
+    borderColor: '#282836',
   },
   soonBadgeText: {
-    color: PLAYER_DARK.textMuted,
-    fontSize: 8,
+    color: '#8B8B9A',
+    fontSize: 9,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 });

@@ -99,11 +99,11 @@ export function JoueurGameTabBar({
           <Icon
             name={icon}
             size={22}
-            color={active ? accentBright : dimColor}
+            color={active ? accent : dimColor}
             variant={active ? 'filled' : 'outline'}
           />
           {badge > 0 ? (
-            <View style={styles.badge}>
+            <View style={[styles.badge, { backgroundColor: accent }]}>
               <Text style={styles.badgeText}>{formatTabBadge(badge)}</Text>
             </View>
           ) : null}
@@ -112,7 +112,7 @@ export function JoueurGameTabBar({
           <Text
             style={[
               styles.slotLabel,
-              { color: active ? accentBright : dimColor },
+              { color: active ? accent : dimColor },
             ]}
             adjustsFontSizeToFit
             minimumFontScale={0.82}
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
-    backgroundColor: PLAYER_DARK.statYellow,
+    backgroundColor: PLAYER_DARK.accent,
   },
   badgeText: {
     color: PLAYER_DARK.bg,

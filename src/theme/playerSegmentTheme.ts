@@ -67,23 +67,23 @@ export const amateurFemaleOverrides = {
   gradientEnd: '#1E3AFF',
 } as const;
 
-/** Amateur mineur — ambre sur FLASH. */
+/** Amateur mineur — même pôle Joueur, monochrome dark/white. */
 export const amateurMinorOverrides = {
   ...amateurColorOverrides,
-  accent: '#FBBF24',
-  accentLight: '#FCD34D',
-  accentSoft: 'rgba(251, 191, 36, 0.14)',
-  accentMuted: 'rgba(251, 191, 36, 0.32)',
-  brand: '#FBBF24',
-  brandLight: '#FCD34D',
-  brandSoft: 'rgba(251, 191, 36, 0.1)',
-  borderStrong: 'rgba(251, 191, 36, 0.55)',
-  borderMedium: 'rgba(251, 191, 36, 0.28)',
-  tone1: '#B45309',
-  tone2: '#D97706',
-  tone3: '#FBBF24',
-  tone4: '#FCD34D',
-  gradientEnd: '#D97706',
+  accent: '#FFFFFF',
+  accentLight: '#F5F5F5',
+  accentSoft: 'rgba(255, 255, 255, 0.14)',
+  accentMuted: 'rgba(255, 255, 255, 0.32)',
+  brand: '#FFFFFF',
+  brandLight: '#F5F5F5',
+  brandSoft: 'rgba(255, 255, 255, 0.1)',
+  borderStrong: 'rgba(255, 255, 255, 0.35)',
+  borderMedium: 'rgba(255, 255, 255, 0.18)',
+  tone1: '#1529CC',
+  tone2: '#5B73FF',
+  tone3: '#FFFFFF',
+  tone4: '#D4D4D4',
+  gradientEnd: '#0A0A0A',
 } as const;
 
 function mergeColors(overrides: Record<string, string>): AppColors {

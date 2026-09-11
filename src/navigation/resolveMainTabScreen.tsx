@@ -44,7 +44,7 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   covoiturage: CarpoolScreen,
   sante: RetiredRoleScreen,
   feed: FeedTabScreen,
-  progression: RetiredRoleScreen,
+  progression: PlayerProgressionScreen,
   reels: LazyReelsScreen,
   famille: FamilleTabScreen,
   messages: MessagesScreen,
@@ -127,7 +127,7 @@ export function resolveMainTabScreen(
   if (isProProductLine(line ?? 'pro_player') && role === 'player') {
     return PRO_PLAYER_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
-  if (role === 'coach' || role === 'organizer') {
+  if (role === 'coach') {
     return COACH_SCREENS[tab] ?? DEFAULT_SCREENS[tab];
   }
   if (
@@ -153,8 +153,7 @@ export function shouldInjectShopTab(
   if (
     role === 'player' ||
     role === 'club' ||
-    role === 'coach' ||
-    role === 'organizer'
+    role === 'coach'
   ) {
     return (
       line === 'pro_player' ||

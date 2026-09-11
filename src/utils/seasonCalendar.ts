@@ -40,7 +40,7 @@ export function friendlyMatchesToCalendarItems(
     id: `match-${m.id}`,
     kind: 'friendly_match',
     title: formatMatchTeams(m),
-    subtitle: `Match amical · ${m.level_type}`,
+    subtitle: `Match · ${m.level_type}`,
     starts_at: m.date,
     city: m.city,
     friendly_match_id: m.id,

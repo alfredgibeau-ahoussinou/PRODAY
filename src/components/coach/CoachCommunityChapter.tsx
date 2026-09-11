@@ -1,16 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, StyleSheet, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import type { CoachChapterCommonProps } from './coachPortalUi';
 import {
   CoachChapterScroll,
   CoachEmptyState,
-  CoachSectionCard,
-  CoachText,
 } from './coachPortalUi';
 import { CoachPane } from './CoachScreenHeader';
 import { PressableSpring, PushScreenTransition } from '../motion';
 import { Icon } from '../ui/Icon';
+import { ProDayText } from '../ui/ProDayText';
 import { clubAnnouncementsService } from '../../services/clubAnnouncements.service';
 import { teamDocumentsService } from '../../services/teamDocuments.service';
 import { teamEventsService } from '../../services/teamEvents.service';
@@ -22,49 +21,18 @@ import type { ClubAnnouncement } from '../../models/ClubAnnouncement';
 import type { TeamDocument } from '../../models/TeamDocument';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing } from '../../theme/designTokens';
+import { radius, spacing } from '../../theme/designTokens';
 import { useCoachShellNav } from '../../features/coach/shell/CoachShellNavContext';
 import { useCoachThemedStyles, useCoachTheme } from '../../features/coach/shell/CoachThemeContext';
 import type { CoachThemeTokens } from '../../utils/coachTeamTheme';
 import { useCoachTeamChrome } from '../../hooks/useCoachTeamChrome';
-import { CLUB_COMMUNITY_CHANNELS } from '../../content/clubCommunityChannels';
+import { CLUB_COMMUNITY_CHANNELS, type ClubChannelId } from '../../content/clubCommunityChannels';
 import { useClubCommunityChannelNav } from '../../utils/clubCommunityNav';
 import { ClubAnnouncementsScreen } from '../../screens/ClubAnnouncementsScreen';
 import { isOrganizerCapable } from '../../utils/roleCapabilities';
 import { useAuth } from '../../context/AuthContext';
 
-function SalonTile({
-  label,
-  icon,
-  description,
-  onPress,
-}: {
-  label: string;
-  icon: (typeof CLUB_COMMUNITY_CHANNELS)[number]['icon'];
-  description: string;
-  onPress: () => void;
-}) {
-  const { tokens } = useCoachTheme();
-  const styles = useCoachThemedStyles(createTileStyles);
-
-  return (
-    <PressableSpring style={styles.cell} onPress={onPress} scaleTo={0.94} haptic>
-      <View style={styles.tile}>
-        <View style={styles.iconCircle}>
-          <Icon name={icon} size={22} color={tokens.accent} variant="filled" />
-        </View>
-        <CoachText variant="caption" style={styles.label} numberOfLines={1}>
-          {label}
-        </CoachText>
-        <CoachText variant="caption" muted numberOfLines={2} style={styles.desc}>
-          {description}
-        </CoachText>
-      </View>
-    </PressableSpring>
-  );
-}
-
-/** Communauté coach — salons équipe + alertes staff / parents / docs. */
+/** Hub Communauté & Salons Équipe — Design Système ProDay Elite */
 export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
   profile,
   members,
@@ -79,13 +47,15 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
   const { tokens } = useCoachTheme();
   const styles = useCoachThemedStyles(createStyles);
   const clubId = profile.profile.club_id;
+
   const [announcements, setAnnouncements] = useState<ClubAnnouncement[]>([]);
   const [docs, setDocs] = useState<TeamDocument[]>([]);
   const [staffNotifs, setStaffNotifs] = useState<StaffNotification[]>([]);
   const [busy, setBusy] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [showAnnouncements, setShowAnnouncements] = useState(false);
 
-  const pageTitle = teamName.trim() ? teamName : 'Communauté';
+  const pageTitle = teamName.trim() ? teamName : 'Seniors A';
   const isStaff =
     Boolean(isAdmin) ||
     profile.role === 'coach' ||
@@ -123,6 +93,8 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
     [events],
   );
 
+  const nextEvent = upcoming[0] ?? null;
+
   const minors = useMemo(
     () => members.filter((m) => m.parental_settings?.is_minor === true),
     [members],
@@ -140,14 +112,6 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
     });
   }, [minors, events]);
 
-  const nextEvent = useMemo(
-    () =>
-      [...events]
-        .filter((e) => e.starts_at.getTime() > Date.now())
-        .sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime())[0] ?? null,
-    [events],
-  );
-
   const uploadDoc = async () => {
     if (!clubId) return;
     try {
@@ -157,7 +121,7 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
       });
       if (picked.canceled || !picked.assets?.[0]) return;
       const asset = picked.assets[0];
-      setBusy(true);
+      setUploadingDoc(true);
       await teamDocumentsService.uploadAndCreate(
         profile.uid,
         profile.display_name,
@@ -174,7 +138,7 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
     } catch (e) {
       Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.error'));
     } finally {
-      setBusy(false);
+      setUploadingDoc(false);
     }
   };
 
@@ -222,69 +186,314 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
     );
   }
 
+  const channelBadges: Record<ClubChannelId, { badge: string; count?: number }> = {
+    general: { badge: 'En direct', count: announcements.length },
+    mercato: { badge: 'Ouvert' },
+    covoit: { badge: 'Trajets actifs' },
+    convocations: { badge: 'RSVP' },
+  };
+
   return (
     <CoachPane title={pageTitle}>
       <CoachChapterScroll>
-        <CoachText variant="caption" muted style={styles.subtitle}>
-          Salons équipe · Messagerie, mercato, trajets
-        </CoachText>
-
-        <CoachSectionCard kicker="Salons" title="Canaux équipe">
-          <View style={styles.salonGrid}>
-            {CLUB_COMMUNITY_CHANNELS.map((ch) => (
-              <SalonTile
-                key={ch.id}
-                label={ch.label}
-                icon={ch.icon}
-                description={ch.description}
-                onPress={() => openChannel(ch.id)}
-              />
-            ))}
-          </View>
-        </CoachSectionCard>
-
-        <CoachSectionCard kicker="Événements" title="Groupes événements">
-          {upcoming.length === 0 ? (
-            <CoachEmptyState
-              title="Aucun événement à venir"
-              body="Les groupes d'équipe apparaissent après RSVP sur une convocation."
-            />
-          ) : (
-            upcoming.map((event) => (
-              <PressableSpring
-                key={event.id}
-                onPress={() => openEvent(event.id)}
-                scaleTo={0.98}
-                haptic
-                style={styles.eventRow}
-              >
-                <Icon name="people" size={18} color={tokens.accent} />
-                <View style={styles.eventCopy}>
-                  <CoachText variant="caption" style={styles.eventTitle}>
-                    {event.title}
-                  </CoachText>
-                  <CoachText variant="caption" muted>
-                    {event.city} ·{' '}
-                    {event.starts_at.toLocaleDateString('fr-FR', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </CoachText>
+        {/* Hero Team Hub Banner */}
+        <View style={styles.heroCard}>
+          <View style={styles.heroHead}>
+            <View style={styles.heroIconCircle}>
+              <Icon name="people" size={24} color={tokens.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.heroBadgeRow}>
+                <View style={styles.liveIndicator}>
+                  <View style={styles.liveDot} />
+                  <ProDayText variant="caption" style={styles.liveText}>
+                    HUB CONNECTÉ
+                  </ProDayText>
                 </View>
-                <Icon name="chevron-forward" size={14} color={tokens.muted} />
-              </PressableSpring>
-            ))
-          )}
-        </CoachSectionCard>
+                <ProDayText variant="caption" style={styles.teamTag}>
+                  {profile.profile.category || 'SENIORS'}
+                </ProDayText>
+              </View>
+              <ProDayText variant="title" style={styles.heroTitle}>
+                {pageTitle}
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.heroSub}>
+                Canaux d’équipe, messagerie instantanée, trajets et convocations.
+              </ProDayText>
+            </View>
+          </View>
 
-        <CoachSectionCard kicker="Staff" title="Alertes staff">
-          {staffNotifs.length === 0 ? (
-            <CoachText variant="caption" muted>
-              Aucun retard ni alerte récente.
-            </CoachText>
-          ) : (
-            staffNotifs.slice(0, 8).map((n) => (
+          {/* Metric Pills */}
+          <View style={styles.metricsRow}>
+            <View style={styles.metricPill}>
+              <Icon name="chatbubbles" size={14} color={tokens.accent} />
+              <ProDayText variant="caption" style={styles.metricValue}>
+                4 Salons
+              </ProDayText>
+            </View>
+            <View style={styles.metricPill}>
+              <Icon name="calendar" size={14} color={tokens.accent} />
+              <ProDayText variant="caption" style={styles.metricValue}>
+                {upcoming.length} Événement{upcoming.length > 1 ? 's' : ''}
+              </ProDayText>
+            </View>
+            <View style={styles.metricPill}>
+              <Icon name="person" size={14} color={tokens.accent} />
+              <ProDayText variant="caption" style={styles.metricValue}>
+                {members.length} Membre{members.length > 1 ? 's' : ''}
+              </ProDayText>
+            </View>
+          </View>
+
+          {/* Quick Action Shortcuts */}
+          <View style={styles.heroActionRow}>
+            <PressableSpring
+              onPress={() => setShowAnnouncements(true)}
+              scaleTo={0.96}
+              haptic
+              style={styles.heroActionBtn}
+            >
+              <Icon name="notifications" size={14} color={tokens.accent} />
+              <ProDayText variant="caption" style={styles.heroActionText}>
+                Annonce
+              </ProDayText>
+            </PressableSpring>
+
+            <PressableSpring
+              onPress={() => {
+                if (shellNav) shellNav.requestNav('planning');
+                else tabNav.openMatchs();
+              }}
+              scaleTo={0.96}
+              haptic
+              style={styles.heroActionBtn}
+            >
+              <Icon name="calendar" size={14} color={tokens.accent} />
+              <ProDayText variant="caption" style={styles.heroActionText}>
+                Convoquer
+              </ProDayText>
+            </PressableSpring>
+
+            <PressableSpring
+              onPress={() => {
+                if (shellNav) shellNav.requestNav('carpool');
+                else tabNav.setActiveTab('covoiturage');
+              }}
+              scaleTo={0.96}
+              haptic
+              style={styles.heroActionBtn}
+            >
+              <Icon name="car" size={14} color={tokens.accent} />
+              <ProDayText variant="caption" style={styles.heroActionText}>
+                Trajet
+              </ProDayText>
+            </PressableSpring>
+
+            <PressableSpring
+              onPress={() => void uploadDoc()}
+              disabled={uploadingDoc}
+              scaleTo={0.96}
+              haptic
+              style={styles.heroActionBtn}
+            >
+              {uploadingDoc ? (
+                <ActivityIndicator size="small" color={tokens.accent} />
+              ) : (
+                <Icon name="document-text" size={14} color={tokens.accent} />
+              )}
+              <ProDayText variant="caption" style={styles.heroActionText}>
+                Document
+              </ProDayText>
+            </PressableSpring>
+          </View>
+        </View>
+
+        {/* Canaux Équipe Grid */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderLeft}>
+            <Icon name="grid" size={16} color={tokens.accent} />
+            <ProDayText variant="section" style={styles.sectionTitle}>
+              Canaux d’équipe
+            </ProDayText>
+          </View>
+          <ProDayText variant="caption" style={styles.sectionCounter}>
+            4 Salons
+          </ProDayText>
+        </View>
+
+        <View style={styles.channelGrid}>
+          {CLUB_COMMUNITY_CHANNELS.map((ch) => {
+            const meta = channelBadges[ch.id];
+            return (
+              <PressableSpring
+                key={ch.id}
+                style={styles.channelCard}
+                onPress={() => openChannel(ch.id)}
+                scaleTo={0.97}
+                haptic
+              >
+                <View style={styles.channelTop}>
+                  <View style={styles.channelIconBox}>
+                    <Icon name={ch.icon} size={22} color={tokens.accent} />
+                  </View>
+                  <View style={styles.channelBadge}>
+                    <ProDayText variant="caption" style={styles.channelBadgeText}>
+                      {meta?.badge}
+                    </ProDayText>
+                  </View>
+                </View>
+
+                <View style={styles.channelBody}>
+                  <ProDayText variant="section" style={styles.channelName}>
+                    {ch.label}
+                  </ProDayText>
+                  <ProDayText variant="caption" style={styles.channelDesc} numberOfLines={2}>
+                    {ch.description}
+                  </ProDayText>
+                </View>
+
+                <View style={styles.channelFooter}>
+                  <ProDayText variant="caption" style={styles.channelActionLink}>
+                    Accéder au salon
+                  </ProDayText>
+                  <Icon name="chevron-forward" size={14} color={tokens.accent} />
+                </View>
+              </PressableSpring>
+            );
+          })}
+        </View>
+
+        {/* Groupes Événements & Match Threads */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderLeft}>
+            <Icon name="calendar" size={16} color={tokens.accent} />
+            <ProDayText variant="section" style={styles.sectionTitle}>
+              Discussions Match & Événements
+            </ProDayText>
+          </View>
+          <ProDayText variant="caption" style={styles.sectionCounter}>
+            {upcoming.length} à venir
+          </ProDayText>
+        </View>
+
+        {upcoming.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIconCircle}>
+              <Icon name="calendar" size={28} color={tokens.accent} />
+            </View>
+            <ProDayText variant="section" style={styles.emptyTitle}>
+              Aucun match ni événement programmé
+            </ProDayText>
+            <ProDayText variant="caption" style={styles.emptyBody}>
+              Les salons de discussion dédiés se synchronisent automatiquement lors de la création d’une convocation.
+            </ProDayText>
+            <PressableSpring
+              onPress={() => {
+                if (shellNav) shellNav.requestNav('planning');
+                else tabNav.openMatchs();
+              }}
+              scaleTo={0.96}
+              haptic
+              style={styles.primaryActionBtn}
+            >
+              <Icon name="add" size={16} color={tokens.isLight ? '#FFFFFF' : '#000000'} />
+              <ProDayText variant="caption" style={styles.primaryActionBtnText}>
+                Planifier un match ou entraînement
+              </ProDayText>
+            </PressableSpring>
+          </View>
+        ) : (
+          <View style={styles.eventList}>
+            {upcoming.map((event) => {
+              const dateStr = event.starts_at.toLocaleDateString('fr-FR', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+              });
+              const timeStr = event.starts_at.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+              return (
+                <PressableSpring
+                  key={event.id}
+                  onPress={() => openEvent(event.id)}
+                  scaleTo={0.98}
+                  haptic
+                  style={styles.eventCard}
+                >
+                  <View style={styles.eventDateBlock}>
+                    <ProDayText variant="caption" style={styles.eventDateDay}>
+                      {dateStr.split(' ')[0]?.toUpperCase()}
+                    </ProDayText>
+                    <ProDayText variant="section" style={styles.eventDateNum}>
+                      {dateStr.split(' ')[1]}
+                    </ProDayText>
+                  </View>
+
+                  <View style={styles.eventContent}>
+                    <View style={styles.eventTitleRow}>
+                      <ProDayText variant="section" style={styles.eventTitle} numberOfLines={1}>
+                        {event.title}
+                      </ProDayText>
+                      <View style={styles.eventTimePill}>
+                        <ProDayText variant="caption" style={styles.eventTimeText}>
+                          {timeStr}
+                        </ProDayText>
+                      </View>
+                    </View>
+                    <View style={styles.eventMetaRow}>
+                      <Icon name="location" size={12} color={tokens.muted} />
+                      <ProDayText variant="caption" style={styles.eventCity} numberOfLines={1}>
+                        {event.city || 'Terrain officiel'}
+                      </ProDayText>
+                      <ProDayText variant="caption" style={styles.eventDot}>
+                        ·
+                      </ProDayText>
+                      <Icon name="chat" size={12} color={tokens.accent} />
+                      <ProDayText variant="caption" style={styles.eventChatTag}>
+                        Salon actif
+                      </ProDayText>
+                    </View>
+                  </View>
+
+                  <Icon name="chevron-forward" size={16} color={tokens.muted} />
+                </PressableSpring>
+              );
+            })}
+          </View>
+        )}
+
+        {/* Alertes Staff & Retards */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderLeft}>
+            <Icon name="shield" size={16} color={tokens.accent} />
+            <ProDayText variant="section" style={styles.sectionTitle}>
+              Alertes Staff & Retards
+            </ProDayText>
+          </View>
+          <ProDayText variant="caption" style={styles.sectionCounter}>
+            {staffNotifs.length > 0 ? `${staffNotifs.length} alerte(s)` : 'Effectif OK'}
+          </ProDayText>
+        </View>
+
+        {staffNotifs.length === 0 ? (
+          <View style={styles.reassuranceCard}>
+            <View style={styles.reassuranceIconBox}>
+              <Icon name="checkmark-circle" size={22} color={tokens.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <ProDayText variant="section" style={styles.reassuranceTitle}>
+                Effectif à l’heure & opérationnel
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.reassuranceBody}>
+                Aucun retard ni indisponibilité signalés sur les dernières 48h.
+              </ProDayText>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.notifList}>
+            {staffNotifs.slice(0, 5).map((n) => (
               <PressableSpring
                 key={n.id}
                 onPress={() => {
@@ -301,132 +510,185 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
                 }}
                 scaleTo={0.98}
                 haptic
+                style={[styles.notifCard, !n.read_at && styles.notifUnread]}
               >
-                <View style={styles.row}>
-                  <View style={{ flex: 1 }}>
-                    <CoachText variant="caption" style={{ fontWeight: n.read_at ? '500' : '800' }}>
-                      {n.title}
-                    </CoachText>
-                    <CoachText variant="caption" muted numberOfLines={2}>
-                      {n.body}
-                    </CoachText>
-                  </View>
-                  <Icon name="chevron-forward" size={14} color={tokens.muted} />
+                <View style={[styles.notifDot, !n.read_at && styles.notifDotActive]} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <ProDayText
+                    variant="caption"
+                    style={[styles.notifTitle, !n.read_at && styles.notifTitleBold]}
+                  >
+                    {n.title}
+                  </ProDayText>
+                  <ProDayText variant="caption" style={styles.notifBody} numberOfLines={2}>
+                    {n.body}
+                  </ProDayText>
                 </View>
+                <Icon name="chevron-forward" size={14} color={tokens.muted} />
               </PressableSpring>
-            ))
-          )}
-        </CoachSectionCard>
+            ))}
+          </View>
+        )}
 
+        {/* Inbox / Messagerie Équipe Directe */}
         <PressableSpring
           onPress={() => {
             if (shellNav) shellNav.requestNav('messages');
             else tabNav.setActiveTab('messages');
           }}
-          scaleTo={0.96}
+          scaleTo={0.97}
           haptic
+          style={styles.inboxBanner}
         >
-          <CoachSectionCard
-            kicker="Inbox"
-            title={t('coach.portal.communication.messages')}
-            body={t('coach.portal.communication.messagesBody')}
-          />
+          <View style={styles.inboxIconWrap}>
+            <Icon name="chatbubbles" size={22} color={tokens.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <ProDayText variant="section" style={styles.inboxTitle}>
+              {t('coach.portal.communication.messages')}
+            </ProDayText>
+            <ProDayText variant="caption" style={styles.inboxSub}>
+              {t('coach.portal.communication.messagesBody')}
+            </ProDayText>
+          </View>
+          <View style={styles.inboxActionPill}>
+            <ProDayText variant="caption" style={styles.inboxActionText}>
+              Ouvrir
+            </ProDayText>
+            <Icon name="chevron-forward" size={12} color={tokens.accent} />
+          </View>
         </PressableSpring>
 
-        <CoachSectionCard
-          kicker="Familles"
-          title={t('coach.portal.communication.parents')}
-          body={t('coach.portal.communication.parentsBody')}
-        >
+        {/* Espace Familles & Convocations */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderLeft}>
+            <Icon name="people" size={16} color={tokens.accent} />
+            <ProDayText variant="section" style={styles.sectionTitle}>
+              Suivi Familles & Présences
+            </ProDayText>
+          </View>
+          <ProDayText variant="caption" style={styles.sectionCounter}>
+            {minors.length} joueur(s) suivi(s)
+          </ProDayText>
+        </View>
+
+        <View style={styles.familyCard}>
+          <ProDayText variant="caption" style={styles.familyDesc}>
+            Justifications d’absence, consignes parentales et relances de convocation.
+          </ProDayText>
+
           {parentHints.length === 0 ? (
-            <CoachText variant="caption" muted>
-              {t('coach.portal.communication.parentsEmpty')}
-            </CoachText>
+            <View style={styles.familyEmptyBox}>
+              <Icon name="checkmark-circle" size={16} color={tokens.muted} />
+              <ProDayText variant="caption" style={styles.familyEmptyText}>
+                Toutes les autorisations et consignes de présence sont à jour.
+              </ProDayText>
+            </View>
           ) : (
-            parentHints.map(({ player, note }) => (
-              <View key={player.uid} style={styles.row}>
-                <View style={{ flex: 1 }}>
-                  <CoachText variant="caption" style={{ fontWeight: '700' }}>
-                    {player.display_name}
-                  </CoachText>
-                  {note ? (
-                    <CoachText variant="caption" muted>
-                      {note}
-                    </CoachText>
-                  ) : (
-                    <CoachText variant="caption" muted>
-                      {t('coach.portal.communication.noAbsenceNote')}
-                    </CoachText>
-                  )}
+            <View style={styles.familyHintList}>
+              {parentHints.map(({ player, note }) => (
+                <View key={player.uid} style={styles.familyHintRow}>
+                  <View style={styles.familyAvatarMini}>
+                    <ProDayText variant="caption" style={styles.familyAvatarText}>
+                      {player.display_name.charAt(0)}
+                    </ProDayText>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ProDayText variant="caption" style={styles.familyPlayerName}>
+                      {player.display_name}
+                    </ProDayText>
+                    <ProDayText variant="caption" style={styles.familyNote} numberOfLines={1}>
+                      {note || 'Présence confirmée par les parents'}
+                    </ProDayText>
+                  </View>
                 </View>
-              </View>
-            ))
+              ))}
+            </View>
           )}
+
           {nextEvent ? (
             <PressableSpring
               onPress={() => void remindEvent(nextEvent.id)}
               disabled={busy}
               scaleTo={0.96}
               haptic
+              style={styles.remindBtn}
             >
-              <CoachText variant="caption" accent style={styles.link}>
+              <Icon name="notifications" size={14} color={tokens.accent} />
+              <ProDayText variant="caption" style={styles.remindBtnText}>
                 {t('coach.portal.communication.remindConvoc')}
-              </CoachText>
+              </ProDayText>
             </PressableSpring>
           ) : null}
-        </CoachSectionCard>
+        </View>
 
-        <CoachSectionCard
-          kicker="Club"
-          title={t('coach.portal.communication.announcements')}
-        >
-          {announcements.length === 0 ? (
-            <CoachText variant="caption" muted>
-              {t('coach.portal.communication.announcementsEmpty')}
-            </CoachText>
+        {/* Coffre-fort Documents & Règlements */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderLeft}>
+            <Icon name="document-text" size={16} color={tokens.accent} />
+            <ProDayText variant="section" style={styles.sectionTitle}>
+              Documents & Coffre-fort Équipe
+            </ProDayText>
+          </View>
+          <ProDayText variant="caption" style={styles.sectionCounter}>
+            {docs.length} fichier(s)
+          </ProDayText>
+        </View>
+
+        <View style={styles.docsCard}>
+          {docs.length === 0 ? (
+            <View style={styles.docsEmpty}>
+              <Icon name="document" size={24} color={tokens.muted} />
+              <ProDayText variant="caption" style={styles.docsEmptyText}>
+                Aucun document partagé (projet de jeu, règlement, plannings).
+              </ProDayText>
+            </View>
           ) : (
-            announcements.map((a) => (
-              <CoachText key={a.id} variant="caption" muted>
-                {a.title}
-              </CoachText>
-            ))
+            <View style={styles.docsList}>
+              {docs.map((d) => (
+                <PressableSpring
+                  key={d.id}
+                  onPress={() => {
+                    if (d.download_url) void Linking.openURL(d.download_url);
+                  }}
+                  scaleTo={0.98}
+                  haptic
+                  style={styles.docRow}
+                >
+                  <View style={styles.docIconBox}>
+                    <Icon name="document-text" size={18} color={tokens.accent} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <ProDayText variant="caption" style={styles.docTitle} numberOfLines={1}>
+                      {d.title}
+                    </ProDayText>
+                    <ProDayText variant="caption" style={styles.docKind}>
+                      {d.kind || 'Fichier PDF/Doc'}
+                    </ProDayText>
+                  </View>
+                  <Icon name="document" size={16} color={tokens.muted} />
+                </PressableSpring>
+              ))}
+            </View>
           )}
-          <PressableSpring onPress={() => setShowAnnouncements(true)} scaleTo={0.96} haptic>
-            <CoachText variant="caption" accent style={styles.link}>
-              {t('coach.portal.communication.openAnnouncements')}
-            </CoachText>
-          </PressableSpring>
-        </CoachSectionCard>
 
-        <CoachSectionCard
-          kicker="Fichiers"
-          title={t('coach.portal.communication.docs')}
-          body={t('coach.portal.communication.docsBody')}
-        >
-          {docs.map((d) => (
-            <PressableSpring
-              key={d.id}
-              onPress={() => {
-                if (d.download_url) void Linking.openURL(d.download_url);
-              }}
-              scaleTo={0.97}
-              haptic
-              style={styles.row}
-            >
-              <CoachText variant="caption" style={{ flex: 1, fontWeight: '700' }}>
-                {d.title}
-              </CoachText>
-              <CoachText variant="caption" muted>
-                {d.kind}
-              </CoachText>
-            </PressableSpring>
-          ))}
-          <PressableSpring onPress={() => void uploadDoc()} disabled={busy} scaleTo={0.96} haptic>
-            <CoachText variant="caption" accent style={styles.link}>
+          <PressableSpring
+            onPress={() => void uploadDoc()}
+            disabled={uploadingDoc}
+            scaleTo={0.96}
+            haptic
+            style={styles.uploadDocBtn}
+          >
+            {uploadingDoc ? (
+              <ActivityIndicator size="small" color={tokens.accent} />
+            ) : (
+              <Icon name="add" size={16} color={tokens.accent} />
+            )}
+            <ProDayText variant="caption" style={styles.uploadDocBtnText}>
               {t('coach.portal.communication.upload')}
-            </CoachText>
+            </ProDayText>
           </PressableSpring>
-        </CoachSectionCard>
+        </View>
       </CoachChapterScroll>
     </CoachPane>
   );
@@ -434,58 +696,604 @@ export const CoachCommunityChapter: React.FC<CoachChapterCommonProps> = ({
 
 const createStyles = (tokens: CoachThemeTokens) =>
   StyleSheet.create({
-    subtitle: { marginBottom: spacing.xs, fontWeight: '600' },
-    salonGrid: {
+    heroCard: {
+      borderRadius: radius.lg,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    heroHead: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.sm,
+    },
+    heroIconCircle: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: tokens.soft,
+      borderWidth: 1,
+      borderColor: tokens.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    heroBadgeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      marginBottom: 2,
+    },
+    liveIndicator: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.soft,
+    },
+    liveDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: tokens.accent,
+    },
+    liveText: {
+      fontSize: 9,
+      fontWeight: '900',
+      letterSpacing: 0.8,
+      color: tokens.accent,
+    },
+    teamTag: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: tokens.muted,
+      textTransform: 'uppercase',
+    },
+    heroTitle: {
+      fontSize: 20,
+      fontWeight: '900',
+      color: tokens.foreground,
+    },
+    heroSub: {
+      fontSize: 12,
+      color: tokens.muted,
+      lineHeight: 16,
+      marginTop: 2,
+    },
+    metricsRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      paddingTop: 4,
+      paddingBottom: 4,
+    },
+    metricPill: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 6,
+      paddingHorizontal: 8,
+      borderRadius: radius.sm,
+      backgroundColor: tokens.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    metricValue: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tokens.foreground,
+    },
+    heroActionRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      paddingTop: 4,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+    },
+    heroActionBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+      paddingVertical: 8,
+      borderRadius: radius.sm,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    heroActionText: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: tokens.foreground,
+    },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: spacing.sm,
+      marginBottom: spacing.xs,
+      paddingHorizontal: 2,
+    },
+    sectionHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: tokens.foreground,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    sectionCounter: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tokens.muted,
+    },
+    channelGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: spacing.sm,
-      marginTop: spacing.xs,
+      marginBottom: spacing.md,
     },
-    eventRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: tokens.border,
-    },
-    eventCopy: { flex: 1 },
-    eventTitle: { fontWeight: '700' },
-    row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 4 },
-    link: { fontWeight: '800', marginTop: 4 },
-  });
-
-function createTileStyles(tokens: CoachThemeTokens) {
-  return StyleSheet.create({
-    cell: {
+    channelCard: {
       width: '48%',
       flexGrow: 1,
       minWidth: '46%',
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: spacing.xs,
     },
-    tile: {
-      minHeight: 96,
-      borderRadius: 16,
+    channelTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    channelIconBox: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: tokens.soft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    channelBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    channelBadgeText: {
+      fontSize: 9,
+      fontWeight: '800',
+      color: tokens.accent,
+      textTransform: 'uppercase',
+    },
+    channelBody: {
+      gap: 2,
+      marginTop: 4,
+    },
+    channelName: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: tokens.foreground,
+    },
+    channelDesc: {
+      fontSize: 11,
+      color: tokens.muted,
+      lineHeight: 15,
+      minHeight: 30,
+    },
+    channelFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 6,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: tokens.border,
+      marginTop: 2,
+    },
+    channelActionLink: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: tokens.accent,
+    },
+    emptyCard: {
+      padding: spacing.lg,
+      borderRadius: radius.md,
       backgroundColor: tokens.elevated,
       borderWidth: 1,
       borderColor: tokens.border,
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.sm,
       gap: spacing.xs,
+      marginBottom: spacing.md,
     },
-    iconCircle: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+    emptyIconCircle: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: tokens.soft,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: tokens.soft,
+      marginBottom: 4,
     },
-    label: { fontWeight: '800', textAlign: 'center' },
-    desc: { textAlign: 'center', fontSize: 11, lineHeight: 14 },
+    emptyTitle: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: tokens.foreground,
+      textAlign: 'center',
+    },
+    emptyBody: {
+      fontSize: 12,
+      color: tokens.muted,
+      textAlign: 'center',
+      lineHeight: 16,
+      maxWidth: '90%',
+    },
+    primaryActionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: spacing.sm,
+      backgroundColor: tokens.accent,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 10,
+      borderRadius: radius.pill,
+    },
+    primaryActionBtnText: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: tokens.isLight ? '#FFFFFF' : '#000000',
+    },
+    eventList: {
+      gap: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    eventCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    eventDateBlock: {
+      width: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 4,
+      paddingHorizontal: 2,
+      borderRadius: radius.sm,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    eventDateDay: {
+      fontSize: 9,
+      fontWeight: '900',
+      color: tokens.accent,
+    },
+    eventDateNum: {
+      fontSize: 15,
+      fontWeight: '900',
+      color: tokens.foreground,
+    },
+    eventContent: {
+      flex: 1,
+      gap: 2,
+    },
+    eventTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 6,
+    },
+    eventTitle: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: '800',
+      color: tokens.foreground,
+    },
+    eventTimePill: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.surface,
+    },
+    eventTimeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: tokens.muted,
+    },
+    eventMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    eventCity: {
+      fontSize: 11,
+      color: tokens.muted,
+      flexShrink: 1,
+    },
+    eventDot: {
+      color: tokens.muted,
+    },
+    eventChatTag: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: tokens.accent,
+    },
+    reassuranceCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      marginBottom: spacing.md,
+    },
+    reassuranceIconBox: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: tokens.soft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    reassuranceTitle: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: tokens.foreground,
+    },
+    reassuranceBody: {
+      fontSize: 11,
+      color: tokens.muted,
+      lineHeight: 15,
+    },
+    notifList: {
+      gap: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    notifCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    notifUnread: {
+      borderColor: tokens.accent,
+    },
+    notifDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: 'transparent',
+    },
+    notifDotActive: {
+      backgroundColor: tokens.accent,
+    },
+    notifTitle: {
+      fontSize: 12,
+      color: tokens.foreground,
+    },
+    notifTitleBold: {
+      fontWeight: '800',
+    },
+    notifBody: {
+      fontSize: 11,
+      color: tokens.muted,
+    },
+    inboxBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      marginBottom: spacing.md,
+    },
+    inboxIconWrap: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: tokens.soft,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: tokens.accent,
+    },
+    inboxTitle: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: tokens.foreground,
+    },
+    inboxSub: {
+      fontSize: 11,
+      color: tokens.muted,
+      lineHeight: 15,
+    },
+    inboxActionPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 6,
+      borderRadius: radius.pill,
+      backgroundColor: tokens.surface,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: tokens.border,
+    },
+    inboxActionText: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: tokens.accent,
+    },
+    familyCard: {
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    familyDesc: {
+      fontSize: 11,
+      color: tokens.muted,
+    },
+    familyEmptyBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      padding: spacing.sm,
+      borderRadius: radius.sm,
+      backgroundColor: tokens.surface,
+    },
+    familyEmptyText: {
+      fontSize: 11,
+      color: tokens.muted,
+      flex: 1,
+    },
+    familyHintList: {
+      gap: 6,
+    },
+    familyHintRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingVertical: 4,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    familyAvatarMini: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: tokens.soft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    familyAvatarText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: tokens.accent,
+    },
+    familyPlayerName: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: tokens.foreground,
+    },
+    familyNote: {
+      fontSize: 10,
+      color: tokens.muted,
+    },
+    remindBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      borderRadius: radius.sm,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.accent,
+      marginTop: 2,
+    },
+    remindBtnText: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: tokens.accent,
+    },
+    docsCard: {
+      padding: spacing.md,
+      borderRadius: radius.md,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: spacing.sm,
+      marginBottom: spacing.xl,
+    },
+    docsEmpty: {
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      gap: 4,
+    },
+    docsEmptyText: {
+      fontSize: 11,
+      color: tokens.muted,
+      textAlign: 'center',
+    },
+    docsList: {
+      gap: 6,
+    },
+    docRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: 6,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: tokens.border,
+    },
+    docIconBox: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: tokens.soft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    docTitle: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: tokens.foreground,
+    },
+    docKind: {
+      fontSize: 10,
+      color: tokens.muted,
+      textTransform: 'uppercase',
+    },
+    uploadDocBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 9,
+      borderRadius: radius.sm,
+      backgroundColor: tokens.surface,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      marginTop: 4,
+    },
+    uploadDocBtnText: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: tokens.accent,
+    },
   });
-}
 
 /** @deprecated Utiliser CoachCommunityChapter */
 export const CoachCommunicationChapter = CoachCommunityChapter;

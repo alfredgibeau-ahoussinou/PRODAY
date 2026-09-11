@@ -63,8 +63,8 @@ export const MOTION_PRESETS: Record<MotionContext, MotionPreset> = {
   tab: {
     context: 'tab',
     enterMs: prodayMotion.duration.tab,
-    /** Exit un peu plus court que l’enter pour un cross-fade net. */
-    exitMs: 220,
+    /** Exit calibré avec enterMs pour un cross-fade soyeux sans superposition excessive. */
+    exitMs: 240,
     spring: prodayMotion.spring.dock,
     /** 0 = fondu pur (pas de slide). */
     shift: 0,

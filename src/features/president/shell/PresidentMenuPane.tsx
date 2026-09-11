@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PresidentActionRow, PresidentSectionCard, PresidentText } from '../ui/presidentUi';
 import { usePresidentTheme } from './PresidentThemeContext';
 import { usePresidentShellNav } from './PresidentShellNavContext';
+import { LegalDocumentModal } from '../../../components/legal/LegalDocumentModal';
 import type { PresidentNavResolvedItem } from '../navigation/resolvePresidentNavAccess';
 import type { PresidentNavItemId } from '../navigation/presidentNavConfig';
 import {
@@ -25,6 +26,7 @@ export function PresidentMenuPane({ items, onSelect, onExitClub }: Props) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const wide = width >= presidentChrome.wideBreakpoint;
+  const [legalModalDoc, setLegalModalDoc] = useState<'terms' | 'privacy' | null>(null);
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const topPad = wide
     ? presidentLayout.contentTop
@@ -94,10 +96,30 @@ export function PresidentMenuPane({ items, onSelect, onExitClub }: Props) {
             icon: 'settings',
             onPress: () => onSelect('settings'),
           },
+          {
+            key: 'cgu',
+            label: 'Conditions Générales (CGU)',
+            hint: 'Règles d’utilisation du service',
+            icon: 'document-text',
+            onPress: () => setLegalModalDoc('terms'),
+          },
+          {
+            key: 'privacy',
+            label: 'Politique de Confidentialité',
+            hint: 'Données personnelles & RGPD',
+            icon: 'shield',
+            onPress: () => setLegalModalDoc('privacy'),
+          },
         ]}
         onSignOut={shellNav?.signOut}
         signOutLabel="Déconnexion"
         safeBottom={!wide}
+      />
+
+      <LegalDocumentModal
+        visible={legalModalDoc !== null}
+        documentId={legalModalDoc}
+        onClose={() => setLegalModalDoc(null)}
       />
     </ScrollView>
   );

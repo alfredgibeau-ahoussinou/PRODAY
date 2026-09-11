@@ -1,44 +1,57 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { PushScreenTransition } from '../../components/motion';
-import { TrainHubScreen } from '../../screens/training/TrainHubScreen';
 import { JoueurTacticsCoachScreen } from '../../screens/joueur/JoueurTacticsCoachScreen';
 import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import {
   isJoueurDashboardOverlayView,
-  trainHubViewForDashboard,
+  type JoueurDashboardOverlayView,
 } from '../../navigation/joueurDashboardOverlay';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { useAuth } from '../../context/AuthContext';
 
 /**
- * Overlay Coach IA / coach humain / train — toujours monté hors keep-alive onglets.
+ * Overlay Conseiller IA / coach — toujours monté hors keep-alive onglets.
  * Source de vérité : `pendingDashboardView` (le back Android le vide déjà).
  */
 export function JoueurDashboardOverlayHost() {
-  const profile = useSessionProfile();
+  const sessionProfile = useSessionProfile();
+  const { profile: authProfile } = useAuth();
+  const profile = sessionProfile ?? authProfile;
   const { pendingDashboardView, clearPendingDashboard } = useTabNavigation();
 
-  if (profile?.role !== 'player') return null;
-  if (!isJoueurDashboardOverlayView(pendingDashboardView)) return null;
+  const [activeOverlay, setActiveOverlay] = useState<JoueurDashboardOverlayView | null>(null);
 
-  const overlay = pendingDashboardView;
+  useEffect(() => {
+    if (isJoueurDashboardOverlayView(pendingDashboardView)) {
+      setActiveOverlay(pendingDashboardView);
+    }
+  }, [pendingDashboardView]);
+
+  if (profile?.role !== 'player' && authProfile?.role !== 'player') return null;
+
+  const currentView = pendingDashboardView ?? activeOverlay;
+  if (!currentView || !isJoueurDashboardOverlayView(currentView)) return null;
+
+  const handleClose = () => {
+    clearPendingDashboard();
+    setActiveOverlay(null);
+  };
 
   return (
     <View
       style={styles.host}
-      pointerEvents="auto"
+      pointerEvents={pendingDashboardView ? 'auto' : 'none'}
       testID="joueur-dashboard-overlay-host"
     >
-      <PushScreenTransition active={Boolean(overlay)} variant="fade" backgroundColor={PLAYER_DARK.bg}>
-        {overlay === 'tactics_coach' ? (
-          <JoueurTacticsCoachScreen onBack={clearPendingDashboard} />
-        ) : overlay === 'train' || overlay === 'train_ai' || overlay === 'train_coach' ? (
-          <TrainHubScreen
-            key={overlay}
-            onBack={clearPendingDashboard}
-            initialView={trainHubViewForDashboard(overlay)}
-          />
+      <PushScreenTransition
+        active={Boolean(pendingDashboardView)}
+        variant="fade"
+        backgroundColor={PLAYER_DARK.bg}
+      >
+        {currentView === 'tactics_coach' || currentView === 'train' || currentView === 'train_ai' || currentView === 'train_coach' ? (
+          <JoueurTacticsCoachScreen onBack={handleClose} />
         ) : null}
       </PushScreenTransition>
     </View>
@@ -48,6 +61,7 @@ export function JoueurDashboardOverlayHost() {
 const styles = StyleSheet.create({
   host: {
     ...StyleSheet.absoluteFillObject,
-    zIndex: 80,
+    zIndex: 9999,
+    elevation: 9999,
   },
 });

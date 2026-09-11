@@ -52,6 +52,15 @@ export function resolveClubBrandColors(club: ClubBrandInput | null | undefined):
     };
   }
 
+  const nameLower = (club.name || '').toLowerCase();
+  if (nameLower.includes('proday') || nameLower.includes('fc proday')) {
+    return {
+      primary: '#006CFC',
+      secondary: '#2DD4BF',
+      source: 'hash',
+    };
+  }
+
   const key = club.id?.trim() || club.name.trim();
   const index = hashKey(key) % COACH_TEAM_ACCENT_PALETTE.length;
   const primary = COACH_TEAM_ACCENT_PALETTE[index] ?? COACH_TEAM_ACCENT_PALETTE[0];

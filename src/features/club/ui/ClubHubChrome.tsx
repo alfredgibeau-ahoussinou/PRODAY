@@ -1,5 +1,5 @@
 /**
- * Composition visuelle hub Club (identité) — crest hero, pack, alertes, tuiles réglages.
+ * Composition visuelle hub Club (identité) — crest hero Obsidian Glass, pack, alertes, tuiles réglages.
  */
 import React, { useMemo } from 'react';
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
@@ -12,7 +12,7 @@ import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 import { ClubStatusPill, ClubText } from './clubUi';
 import type { ClubHubAlert, ClubHubSettingsTile } from './clubHubModel';
 
-/** Hero identité — crest dominant, nom, méta, statut. */
+/** Hero identité Obsidian Glass — crest dominant, nom, méta, statut & dock statistiques. */
 export function ClubHubIdentityHero({
   clubName,
   locationLine,
@@ -23,6 +23,12 @@ export function ClubHubIdentityHero({
   onPressCrest,
   crestUploading,
   canEditCrest,
+  playerCount,
+  teamCount,
+  coachCount,
+  onPressPlayers,
+  onPressTeams,
+  onPressCoaches,
 }: {
   clubName: string;
   locationLine?: string;
@@ -33,6 +39,12 @@ export function ClubHubIdentityHero({
   onPressCrest?: () => void;
   crestUploading?: boolean;
   canEditCrest?: boolean;
+  playerCount?: number;
+  teamCount?: number;
+  coachCount?: number;
+  onPressPlayers?: () => void;
+  onPressTeams?: () => void;
+  onPressCoaches?: () => void;
 }) {
   const { tokens, logoUrl } = useClubTheme();
   const styles = useMemo(() => identityStyles(tokens), [tokens]);
@@ -52,56 +64,134 @@ export function ClubHubIdentityHero({
     </LinearGradient>
   );
 
+  const hasStats = playerCount !== undefined && teamCount !== undefined && coachCount !== undefined;
+
   return (
     <View style={styles.wrap}>
-      <View style={styles.statusCol}>
-        <ClubStatusPill label={statusLabel} tone={statusTone} />
+      {/* Background radial glow */}
+      <LinearGradient
+        colors={['rgba(255, 255, 255, 0.04)', 'rgba(0, 0, 0, 0)']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+
+      {/* Top Status & Verification Row */}
+      <View style={styles.topRow}>
         {verified ? (
-          <ClubStatusPill label="Vérifié" tone="ok" />
+          <View style={styles.verifiedBadge}>
+            <Icon name="checkmark-circle" size={13} color={tokens.accent} />
+            <ClubText variant="caption" style={styles.verifiedText}>
+              Club Vérifié FFF
+            </ClubText>
+          </View>
         ) : (
-          <ClubStatusPill label="Non vérifié" tone="warn" />
+          <View style={styles.unverifiedBadge}>
+            <Icon name="warning" size={13} color={tokens.warning} />
+            <ClubText variant="caption" style={styles.unverifiedText}>
+              Vérification en cours
+            </ClubText>
+          </View>
         )}
+        <ClubStatusPill label={statusLabel} tone={statusTone} />
       </View>
+
+      {/* Crest & Hero Information */}
       <View style={styles.heroCol}>
         <PressableSpring
           onPress={editable ? onPressCrest : undefined}
           disabled={!editable || crestUploading}
-          scaleTo={0.97}
+          scaleTo={0.96}
           haptic={editable}
-          style={[styles.crest, { borderColor: tokens.successSoft }]}
+          style={styles.crestWrap}
           accessibilityRole={editable ? 'button' : undefined}
           accessibilityLabel={
             logoUrl ? 'Changer le logo du club' : 'Ajouter le logo du club'
           }
         >
-          <View style={styles.crestInner}>
-            {crestUploading ? (
-              <View style={[styles.crestPh, { backgroundColor: tokens.elevated }]}>
-                <ActivityIndicator color={tokens.accent} />
-              </View>
-            ) : (
-              crestInner
-            )}
+          <View style={[styles.crest, { borderColor: 'rgba(255, 255, 255, 0.16)' }]}>
+            <View style={styles.crestInner}>
+              {crestUploading ? (
+                <View style={[styles.crestPh, { backgroundColor: tokens.elevated }]}>
+                  <ActivityIndicator color={tokens.accent} />
+                </View>
+              ) : (
+                crestInner
+              )}
+            </View>
           </View>
           {editable && !crestUploading ? (
-            <View style={[styles.crestBadge, { backgroundColor: tokens.accent }]}>
-              <Icon name="camera" size={14} color={tokens.onAccent} />
+            <View style={[styles.crestBadge, { backgroundColor: tokens.accent, borderColor: tokens.bg }]}>
+              <Icon name="camera" size={13} color={tokens.onAccent} />
             </View>
           ) : null}
         </PressableSpring>
-        <ClubText variant="label" muted style={styles.eyebrow}>
-          Identité club
-        </ClubText>
+
         <ClubText variant="h1" numberOfLines={2} style={styles.clubName}>
           {clubName}
         </ClubText>
+
         {locationLine ? (
-          <ClubText variant="caption" muted numberOfLines={2} style={styles.meta}>
-            {locationLine}
-          </ClubText>
+          <View style={styles.locationPill}>
+            <Icon name="location" size={12} color={tokens.muted} />
+            <ClubText variant="caption" muted numberOfLines={1}>
+              {locationLine}
+            </ClubText>
+          </View>
         ) : null}
-        {metaLine ? (
-          <ClubText variant="caption" muted numberOfLines={2} style={styles.meta}>
+
+        {/* Integrated Executive Stats Capsule */}
+        {hasStats ? (
+          <View style={styles.statsCapsule}>
+            <PressableSpring
+              onPress={onPressPlayers}
+              scaleTo={0.96}
+              haptic
+              style={styles.statCol}
+            >
+              <ClubText variant="h3" style={styles.statValue}>
+                {playerCount}
+              </ClubText>
+              <ClubText variant="caption" muted style={styles.statLabel}>
+                Licenciés
+              </ClubText>
+            </PressableSpring>
+
+            <View style={styles.statDivider} />
+
+            <PressableSpring
+              onPress={onPressTeams}
+              scaleTo={0.96}
+              haptic
+              style={styles.statCol}
+            >
+              <ClubText variant="h3" style={styles.statValue}>
+                {teamCount}
+              </ClubText>
+              <ClubText variant="caption" muted style={styles.statLabel}>
+                Équipes
+              </ClubText>
+            </PressableSpring>
+
+            <View style={styles.statDivider} />
+
+            <PressableSpring
+              onPress={onPressCoaches}
+              scaleTo={0.96}
+              haptic
+              style={styles.statCol}
+            >
+              <ClubText variant="h3" style={styles.statValue}>
+                {coachCount}
+              </ClubText>
+              <ClubText variant="caption" muted style={styles.statLabel}>
+                Staff
+              </ClubText>
+            </PressableSpring>
+          </View>
+        ) : metaLine ? (
+          <ClubText variant="caption" muted numberOfLines={2} style={styles.metaFallback}>
             {metaLine}
           </ClubText>
         ) : null}
@@ -110,7 +200,7 @@ export function ClubHubIdentityHero({
   );
 }
 
-/** Carte Pack / offre — CTA vers Pack Club existant. */
+/** Carte Pack Obsidian Glass — offre, statut et CTA club. */
 export function ClubHubPackHero({
   title,
   hint,
@@ -129,47 +219,56 @@ export function ClubHubPackHero({
     <AnimatedEntrance kind="fadeUp" index={0} delayStep={36}>
       <View style={styles.card}>
         <LinearGradient
-          colors={[tokens.pitchSoft, tokens.surface]}
+          colors={['rgba(24, 28, 42, 0.95)', 'rgba(14, 16, 24, 0.98)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-        <View style={[styles.rail, { backgroundColor: tokens.pitch }]} />
-        <View
-          style={[
-            styles.iconBadge,
-            { backgroundColor: tokens.pitchSoft, borderColor: tokens.pitch },
-          ]}
-        >
-          <Icon name="star-outline" size={22} color={tokens.pitch} />
-        </View>
-        <View style={styles.col}>
-          <ClubText variant="label" style={{ color: tokens.pitch }}>
-            Offre
-          </ClubText>
-          <ClubText variant="h2" style={styles.title}>
-            {title}
-          </ClubText>
-          <ClubText variant="caption" muted numberOfLines={2}>
+        <View style={[styles.rail, { backgroundColor: tokens.accent }]} />
+        
+        <View style={styles.contentWrap}>
+          <View style={styles.headerRow}>
+            <View style={[styles.iconBadge, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}>
+              <Icon name="star-four-points" size={20} color={tokens.accent} />
+            </View>
+            <View style={styles.titleCol}>
+              <View style={styles.tagRow}>
+                <ClubText variant="caption" style={styles.tagText}>
+                  ESPACE & OFFRE CLUB
+                </ClubText>
+                <View style={styles.tierPill}>
+                  <ClubText variant="caption" style={styles.tierText}>
+                    SUR DEVIS
+                  </ClubText>
+                </View>
+              </View>
+              <ClubText variant="h2" style={styles.title}>
+                {title}
+              </ClubText>
+            </View>
+          </View>
+
+          <ClubText variant="caption" muted numberOfLines={2} style={styles.hintText}>
             {hint}
           </ClubText>
+
           <View style={styles.ctaRow}>
             <PressableSpring onPress={onOpenPack} scaleTo={0.97} haptic style={styles.ctaPrimary}>
               <ClubText variant="caption" style={styles.ctaPrimaryLabel}>
                 Voir le Pack
               </ClubText>
-              <Icon name="chevron-forward" size={12} color={tokens.onAccent} />
+              <Icon name="chevron-forward" size={13} color={tokens.onAccent} />
             </PressableSpring>
             {onOpenQuote ? (
               <PressableSpring
                 onPress={onOpenQuote}
                 scaleTo={0.97}
                 haptic
-                style={[styles.ctaGhost, { borderColor: tokens.borderStrong }]}
+                style={styles.ctaGhost}
               >
-                <ClubText variant="caption" style={{ color: tokens.foreground, fontWeight: '800' }}>
-                  Devis
+                <ClubText variant="caption" style={styles.ctaGhostLabel}>
+                  Demander un devis
                 </ClubText>
               </PressableSpring>
             ) : null}
@@ -180,7 +279,7 @@ export function ClubHubPackHero({
   );
 }
 
-/** Alerte opérationnelle (sans coach / adhésions). */
+/** Alerte opérationnelle Obsidian Glass (sans coach / adhésions). */
 export function ClubHubAlertCard({
   alert,
   index,
@@ -212,29 +311,30 @@ export function ClubHubAlertCard({
         <View style={[styles.icon, { backgroundColor: soft }]}>
           <Icon
             name={alert.id === 'without_coach' ? 'school' : 'people'}
-            size={16}
+            size={18}
             color={accent}
           />
         </View>
         <View style={styles.col}>
-          <ClubText variant="body" style={{ fontWeight: '800' }}>
+          <ClubText variant="body" style={styles.alertTitle}>
             {alert.title}
           </ClubText>
           <ClubText variant="caption" muted numberOfLines={2}>
             {alert.body}
           </ClubText>
         </View>
-        <View style={[styles.ctaChip, { borderColor: tokens.borderStrong }]}>
-          <ClubText variant="caption" style={{ color: tokens.foreground, fontWeight: '800' }}>
+        <View style={[styles.ctaChip, { borderColor: accent }]}>
+          <ClubText variant="caption" style={[styles.ctaChipLabel, { color: accent }]}>
             {alert.ctaLabel}
           </ClubText>
+          <Icon name="chevron-forward" size={12} color={accent} />
         </View>
       </PressableSpring>
     </AnimatedEntrance>
   );
 }
 
-/** Tuile réglages / outils. */
+/** Tuile réglages / outils Obsidian Glass. */
 export function ClubHubSettingsTileRow({
   tile,
   index,
@@ -254,21 +354,21 @@ export function ClubHubSettingsTileRow({
           style={[
             styles.icon,
             {
-              backgroundColor: tile.primary ? tokens.pitchSoft : tokens.accentSoft,
+              backgroundColor: tile.primary ? tokens.accentSoft : 'rgba(255, 255, 255, 0.05)',
             },
           ]}
         >
           <Icon
             name={tile.icon}
-            size={16}
-            color={tile.primary ? tokens.pitch : tokens.accent}
+            size={17}
+            color={tile.primary ? tokens.accent : tokens.foreground}
           />
         </View>
         <View style={styles.col}>
-          <ClubText variant="body" style={{ fontWeight: '700' }}>
+          <ClubText variant="body" style={styles.tileLabel}>
             {tile.label}
           </ClubText>
-          <ClubText variant="caption" muted numberOfLines={2}>
+          <ClubText variant="caption" muted numberOfLines={1}>
             {tile.hint}
           </ClubText>
         </View>
@@ -285,15 +385,51 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       marginTop: -clubSpace.sm,
       marginBottom: clubSpace.md,
       paddingBottom: clubSpace.lg,
+      backgroundColor: tokens.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: tokens.border,
       overflow: 'hidden',
     },
-    statusCol: {
+    topRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: clubSpace.lg,
       paddingTop: clubSpace.md,
-      justifyContent: 'flex-end',
+      gap: 8,
+    },
+    verifiedBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 4,
+      paddingHorizontal: 9,
+      borderRadius: clubRadius.pill,
+      backgroundColor: tokens.accentSoft,
+      borderWidth: 1,
+      borderColor: 'rgba(16, 185, 129, 0.25)',
+    },
+    verifiedText: {
+      color: tokens.accent,
+      fontWeight: '800',
+      fontSize: 11,
+      letterSpacing: 0.2,
+    },
+    unverifiedBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 4,
+      paddingHorizontal: 9,
+      borderRadius: clubRadius.pill,
+      backgroundColor: tokens.warningSoft,
+      borderWidth: 1,
+      borderColor: 'rgba(245, 158, 11, 0.25)',
+    },
+    unverifiedText: {
+      color: tokens.warning,
+      fontWeight: '700',
+      fontSize: 11,
     },
     heroCol: {
       alignItems: 'center',
@@ -301,21 +437,25 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       paddingTop: clubSpace.sm,
       gap: 6,
     },
-    crest: {
-      width: 96,
-      height: 96,
-      borderRadius: 28,
-      borderWidth: 2,
-      overflow: 'visible',
-      marginBottom: 4,
+    crestWrap: {
+      position: 'relative',
+      marginBottom: 6,
       ...clubShadow.lift,
+    },
+    crest: {
+      width: 100,
+      height: 100,
+      borderRadius: 30,
+      borderWidth: 1.5,
+      borderColor: tokens.border,
+      overflow: 'hidden',
+      backgroundColor: tokens.elevated,
     },
     crestInner: {
       width: '100%',
       height: '100%',
-      borderRadius: 26,
+      borderRadius: 28,
       overflow: 'hidden',
-      backgroundColor: tokens.elevated,
     },
     crestImg: { width: '100%', height: '100%' },
     crestPh: {
@@ -324,92 +464,169 @@ const identityStyles = (tokens: ClubThemeTokens) =>
       justifyContent: 'center',
     },
     crestLetter: {
-      fontSize: 36,
-      fontWeight: '800',
+      fontSize: 40,
+      fontWeight: '900',
       color: tokens.onAccent,
     },
     crestBadge: {
       position: 'absolute',
-      right: -4,
-      bottom: -4,
+      right: -3,
+      bottom: -3,
       width: 28,
       height: 28,
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 2,
-      borderColor: tokens.bg,
-    },
-    eyebrow: {
-      letterSpacing: 0.6,
-      textTransform: 'uppercase',
-      fontSize: 11,
-      marginTop: 4,
+      ...clubShadow.lift,
     },
     clubName: {
       textAlign: 'center',
-      fontWeight: '800',
-      letterSpacing: -0.4,
+      fontWeight: '900',
+      letterSpacing: -0.5,
+      fontSize: 24,
+      color: tokens.foreground,
+      marginTop: 2,
+    },
+    locationPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: clubRadius.pill,
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      marginTop: 2,
+    },
+    statsCapsule: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: clubSpace.md,
+      width: '100%',
+      maxWidth: 360,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: clubRadius.xl,
+      backgroundColor: tokens.elevated,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      ...clubShadow.card,
+    },
+    statCol: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 2,
+    },
+    statValue: {
+      fontWeight: '900',
+      fontSize: 19,
+      letterSpacing: -0.3,
       color: tokens.foreground,
     },
-    meta: {
+    statLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+    },
+    statDivider: {
+      width: 1,
+      height: 26,
+      backgroundColor: tokens.border,
+    },
+    metaFallback: {
       textAlign: 'center',
       maxWidth: 320,
+      marginTop: 4,
     },
   });
 
 const packStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     card: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: clubSpace.md,
-      paddingVertical: clubSpace.lg,
-      paddingHorizontal: clubSpace.lg,
-      borderRadius: clubRadius.xxl,
+      borderRadius: clubRadius.xl,
       backgroundColor: tokens.surface,
       borderWidth: 1,
-      borderColor: tokens.borderStrong,
+      borderColor: tokens.border,
       overflow: 'hidden',
+      marginBottom: clubSpace.sm,
       ...clubShadow.lift,
     },
     rail: {
       position: 'absolute',
       left: 0,
-      top: 16,
-      bottom: 16,
+      top: 0,
+      bottom: 0,
       width: 4,
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
+    },
+    contentWrap: {
+      padding: clubSpace.lg,
+      gap: clubSpace.sm,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: clubSpace.md,
     },
     iconBadge: {
-      width: 48,
-      height: 48,
-      borderRadius: clubRadius.md,
+      width: 46,
+      height: 46,
+      borderRadius: clubRadius.lg,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       flexShrink: 0,
-      marginTop: 2,
     },
-    col: { flex: 1, minWidth: 0, gap: 6 },
-    title: {
+    titleCol: { flex: 1, minWidth: 0, gap: 3 },
+    tagRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    tagText: {
+      fontSize: 10,
       fontWeight: '800',
-      letterSpacing: -0.35,
+      letterSpacing: 0.8,
+      color: tokens.accent,
+      textTransform: 'uppercase',
+    },
+    tierPill: {
+      paddingVertical: 2,
+      paddingHorizontal: 7,
+      borderRadius: clubRadius.pill,
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.12)',
+    },
+    tierText: {
+      fontSize: 9,
+      fontWeight: '800',
+      letterSpacing: 0.4,
       color: tokens.foreground,
+    },
+    title: {
+      fontWeight: '900',
+      letterSpacing: -0.4,
+      color: tokens.foreground,
+      fontSize: 17,
+    },
+    hintText: {
+      lineHeight: 18,
     },
     ctaRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
+      alignItems: 'center',
       gap: clubSpace.sm,
-      marginTop: clubSpace.xs,
+      marginTop: 4,
     },
     ctaPrimary: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: 5,
       paddingVertical: 8,
-      paddingHorizontal: 14,
+      paddingHorizontal: 16,
       borderRadius: clubRadius.pill,
       backgroundColor: tokens.accent,
     },
@@ -421,12 +638,17 @@ const packStyles = (tokens: ClubThemeTokens) =>
     ctaGhost: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
       paddingVertical: 7,
-      paddingHorizontal: 12,
+      paddingHorizontal: 14,
       borderRadius: clubRadius.pill,
       borderWidth: 1,
-      backgroundColor: tokens.elevated,
+      borderColor: 'rgba(255, 255, 255, 0.14)',
+      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    },
+    ctaGhostLabel: {
+      color: tokens.foreground,
+      fontWeight: '700',
+      fontSize: 12,
     },
   });
 
@@ -436,38 +658,51 @@ const alertStyles = (tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.md,
-      paddingVertical: clubSpace.md,
+      paddingVertical: 12,
       paddingHorizontal: clubSpace.lg,
       borderRadius: clubRadius.xl,
-      backgroundColor: tokens.surface,
+      backgroundColor: 'rgba(20, 24, 36, 0.95)',
       borderWidth: 1,
-      borderColor: tokens.borderStrong,
+      borderColor: 'rgba(255, 255, 255, 0.09)',
       overflow: 'hidden',
+      marginBottom: 6,
     },
     rail: {
       position: 'absolute',
       left: 0,
-      top: 12,
-      bottom: 12,
+      top: 10,
+      bottom: 10,
       width: 3,
       borderTopRightRadius: 2,
       borderBottomRightRadius: 2,
     },
     icon: {
-      width: 36,
-      height: 36,
+      width: 38,
+      height: 38,
       borderRadius: clubRadius.md,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
     },
     col: { flex: 1, minWidth: 0, gap: 2 },
+    alertTitle: {
+      fontWeight: '800',
+      fontSize: 14,
+      color: tokens.foreground,
+    },
     ctaChip: {
-      paddingVertical: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      paddingVertical: 5,
       paddingHorizontal: 10,
       borderRadius: clubRadius.pill,
       borderWidth: 1,
-      backgroundColor: tokens.elevated,
+      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    },
+    ctaChipLabel: {
+      fontWeight: '800',
+      fontSize: 11,
     },
   });
 
@@ -477,12 +712,13 @@ const tileStyles = (tokens: ClubThemeTokens) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: clubSpace.md,
-      paddingVertical: clubSpace.md,
-      paddingHorizontal: clubSpace.lg,
-      borderRadius: clubRadius.xl,
-      backgroundColor: tokens.surface,
+      paddingVertical: 12,
+      paddingHorizontal: clubSpace.md,
+      borderRadius: clubRadius.lg,
+      backgroundColor: 'rgba(22, 26, 38, 0.75)',
       borderWidth: 1,
-      borderColor: tokens.border,
+      borderColor: 'rgba(255, 255, 255, 0.07)',
+      marginBottom: 4,
     },
     icon: {
       width: 36,
@@ -493,4 +729,9 @@ const tileStyles = (tokens: ClubThemeTokens) =>
       flexShrink: 0,
     },
     col: { flex: 1, minWidth: 0, gap: 2 },
+    tileLabel: {
+      fontWeight: '700',
+      fontSize: 14,
+      color: tokens.foreground,
+    },
   });

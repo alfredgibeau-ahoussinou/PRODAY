@@ -76,10 +76,10 @@ export const colors = {
   error: '#EF4444',
   errorBg: 'rgba(239, 68, 68, 0.15)',
   /** Favoris / bookmark */
-  bookmark: '#F59E0B',
+  bookmark: MASTER_GOLD,
   /** Status admin / presence */
   statusOk: '#34D399',
-  statusBusy: '#FBBF24',
+  statusBusy: '#A3A3A3',
 
   /** Modules */
   tone1: MASTER_BLUE,

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, RefreshControl, View } from 'react-native';
+import { ScrollView, RefreshControl, View, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { User } from '../../models/User';
 import type { FriendlyMatch } from '../../models/FriendlyMatch';
 import type { Tournament } from '../../models/Tournament';
@@ -21,6 +23,9 @@ import {
 import { TabScreenShell } from '../app/TabScreenShell';
 import { ImmersivePoleHero } from '../poles';
 import { MatchPager } from './MatchPager';
+import { MatchBigTileRail } from './MatchBigTileRail';
+import { PressableSpring } from '../motion';
+import { ProDayText } from '../ui/ProDayText';
 import { CoachPane } from '../coach/CoachScreenHeader';
 import { getCoachPageIdentity } from '../../content/coachPageIdentity';
 import { MatchCenterPanel } from './MatchCenterPanel';
@@ -44,9 +49,13 @@ import { MatchCompetitionsChapter } from './chapters/MatchCompetitionsChapter';
 import { MATCH_CHAPTER_PAD } from './chapters/matchChapterLayout';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { useTranslation } from '../../context/LocaleContext';
-import { usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { usePlayerTheme, usePlayerThemeColors } from '../../context/PlayerThemeContext';
+import { CrestWatermark } from '../../screens/joueur/PlayerSaisonIcons';
+import { PLAYER_DARK } from '../../theme/playerDarkPremium';
 import { useJoueurSession } from '../../context/JoueurSessionContext';
 import { useJoueurProgress } from '../../context/JoueurProgressContext';
+import { spacing } from '../../theme/designTokens';
+import { prodayHaptics } from '../../utils/prodayHaptics';
 import type { Competition, CompetitionFixture, CompetitionSeason } from '../../models/Competition';
 
 interface MatchHomeScreenProps {
@@ -143,18 +152,27 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   getMatchHealthWarning,
   embeddedInShell = false,
 }) => {
+  const insets = useSafeAreaInsets();
   const { colors } = useAppTheme();
+  const playerThemeCtx = usePlayerTheme();
   const playerTheme = usePlayerThemeColors();
+  const teamPrimary = playerTheme.accent;
+  const teamSecondary = playerTheme.accentSoft;
+  const clubName = playerThemeCtx.clubName;
   const { t } = useTranslation();
   const { openAuth } = useTabNavigation();
   const joueurSession = useJoueurSession();
   const joueurProgress = useJoueurProgress();
   const isJoueur =
     Boolean(joueurSession?.isJoueurPlayer && joueurSession.ready && !joueurSession.needsGate);
-  const refreshTint = isJoueur ? playerTheme.accent : colors.accent;
+  const refreshTint = isJoueur ? teamPrimary : colors.accent;
 
   const [chapter, setChapter] = useState<MatchChapterId>(() =>
-    isJoueur ? normalizeJoueurMatchChapter(initialChapter) : initialChapter,
+    isJoueur
+      ? normalizeJoueurMatchChapter(initialChapter)
+      : initialChapter === 'amicaux'
+        ? 'calendrier'
+        : initialChapter,
   );
   const [refreshing, setRefreshing] = useState(false);
   const [calendarSearch, setCalendarSearch] = useState('');
@@ -164,7 +182,13 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   const [amicauxStatus, setAmicauxStatus] = useState<AmicauxStatusFilter>('all');
 
   useEffect(() => {
-    setChapter(isJoueur ? normalizeJoueurMatchChapter(initialChapter) : initialChapter);
+    setChapter(
+      isJoueur
+        ? normalizeJoueurMatchChapter(initialChapter)
+        : initialChapter === 'amicaux'
+          ? 'calendrier'
+          : initialChapter,
+    );
   }, [initialChapter, isJoueur]);
 
   const weekDays = useMemo(() => countWeekEvents(items), [items]);
@@ -220,7 +244,11 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     setTimeout(() => setRefreshing(false), 400);
   };
 
-  const handleDaySelect = (date: Date) => {
+  const handleDaySelect = (date: Date | null) => {
+    if (!date) {
+      setSelectedDay(null);
+      return;
+    }
     setSelectedDay((prev) =>
       prev && prev.toDateString() === date.toDateString() ? null : date
     );
@@ -234,7 +262,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
       return;
     }
     if (marker.kind === 'match') {
-      setChapter('amicaux');
+      setChapter('calendrier');
     }
   };
 
@@ -273,6 +301,8 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           profile={profile}
           items={items}
           nextItem={nextItem}
+          teamEvents={teamEvents}
+          pendingConvocations={pendingConvocations}
           weekDays={weekDays}
           selectedDay={selectedDay}
           onSelectDay={handleDaySelect}
@@ -287,6 +317,12 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           onOpenCalendarItem={onOpenCalendarItem}
           onPropose={onPropose}
           onLogin={() => openAuth('login')}
+          canManageEvents={canManageEvents}
+          pendingConvocationsCount={pendingConvocations.length}
+          onOpenConvocations={() => setChapter('convocations')}
+          onRsvp={onRsvp}
+          onOpenCarpoolForEvent={onOpenCarpoolForEvent}
+          rsvpBusy={rsvpBusy}
           livePanel={calendrierLivePanel}
           geoMap={
             <MatchGeoMapPanel
@@ -299,7 +335,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
               locating={geo.locating}
               locError={geo.locError}
               onMarkerPress={handleGeoMarkerPress}
-              onPropose={onPropose}
+              onPropose={canManageEvents ? onPropose : undefined}
               onSearch={onSearch}
               onCreateEvent={canManageEvents ? onCreateEvent : undefined}
             />
@@ -321,18 +357,33 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           }
           showsVerticalScrollIndicator={false}
         >
-          {loadingCalendar ? (
-            <SkeletonList count={3} variant="card" />
-          ) : (
-            <MatchCenterPanel
-              events={teamEvents}
-              onCreateEvent={canManageEvents ? onCreateEvent : undefined}
-              onOpenEvent={(id) => {
-                const ev = teamEvents.find((e) => e.id === id);
-                onOpenEvent(id, ev && isInMatchWindow(ev) ? 'live' : 'apercu');
-              }}
-            />
-          )}
+          <MatchGeoMapPanel
+            userLocation={geo.userLocation}
+            markers={geo.allMarkers}
+            density={geo.density}
+            radiusKm={geo.radiusKm}
+            onRadiusChange={geo.setRadiusKm}
+            onRefreshLocation={() => void geo.refreshLocation()}
+            locating={geo.locating}
+            locError={geo.locError}
+            onMarkerPress={handleGeoMarkerPress}
+            onPropose={onPropose}
+            onSearch={onSearch}
+            onCreateEvent={canManageEvents ? onCreateEvent : undefined}
+            initialExpanded={true}
+          />
+          {teamEvents.length > 0 ? (
+            <View style={{ marginTop: spacing.md }}>
+              <MatchCenterPanel
+                events={teamEvents}
+                onCreateEvent={canManageEvents ? onCreateEvent : undefined}
+                onOpenEvent={(id) => {
+                  const ev = teamEvents.find((e) => e.id === id);
+                  onOpenEvent(id, ev && isInMatchWindow(ev) ? 'live' : 'apercu');
+                }}
+              />
+            </View>
+          ) : null}
         </ScrollView>
       ),
     },
@@ -370,72 +421,6 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           onLogin={() => openAuth('login')}
         />
       ),
-    },
-    {
-      id: 'amicaux' as const,
-      render: () =>
-        isJoueur ? (
-          <MatchJoueurMatchsChapter
-            profile={profile}
-            matches={matches}
-            filteredMatches={filteredMatches}
-            loadingMatches={loadingMatches}
-            amicauxSearch={amicauxSearch}
-            onAmicauxSearchChange={setAmicauxSearch}
-            amicauxStatus={amicauxStatus}
-            onAmicauxStatusChange={setAmicauxStatus}
-            myClubId={myClubId}
-            canAccept={canAccept}
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            onPropose={onPropose}
-            onSearch={onSearch}
-            onOrganize={onOrganize}
-            onAcceptMatch={onAcceptMatch}
-            onCancelMatch={onCancelMatch}
-            onMarkPlayed={onMarkPlayed}
-            getMatchIaScore={getMatchIaScore}
-            getMatchHealthWarning={getMatchHealthWarning}
-            tournaments={tournaments}
-            loadingTournaments={loadingTournaments}
-            onOpenTournament={onOpenTournament}
-            onCreateTournament={
-              (canManageTournaments ?? canManageEvents) ? onCreateTournament : undefined
-            }
-            competitions={competitions}
-            competitionSeasons={competitionSeasons}
-            competitionFixtures={competitionFixtures}
-            loadingCompetitions={loadingCompetitions}
-            onOpenCompetitionSeason={onOpenCompetitionSeason}
-            onOpenCompetitionFixture={onOpenCompetitionFixture}
-            onOrganizeCompetition={
-              (canManageTournaments ?? canManageEvents) ? onOrganizeCompetition : undefined
-            }
-            initialSegment={matchsInitialSegment}
-          />
-        ) : (
-          <MatchAmicauxChapter
-            profile={profile}
-            matches={matches}
-            filteredMatches={filteredMatches}
-            loadingMatches={loadingMatches}
-            amicauxSearch={amicauxSearch}
-            onAmicauxSearchChange={setAmicauxSearch}
-            amicauxStatus={amicauxStatus}
-            onAmicauxStatusChange={setAmicauxStatus}
-            myClubId={myClubId}
-            canAccept={canAccept}
-            {...chapterRefresh}
-            onPropose={onPropose}
-            onSearch={onSearch}
-            onOrganize={onOrganize}
-            onAcceptMatch={onAcceptMatch}
-            onCancelMatch={onCancelMatch}
-            onMarkPlayed={onMarkPlayed}
-            getMatchIaScore={getMatchIaScore}
-            getMatchHealthWarning={getMatchHealthWarning}
-          />
-        ),
     },
     {
       id: 'tournois' as const,
@@ -551,16 +536,97 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
   }
 
   const body = (
-    <>
-      <OfflineCacheBanner visible={fromCache} onRefresh={onRefresh} />
-      {!hidePoleHero ? (
+    <View style={styles.bodyWrap}>
+      {isJoueur ? (
+        <View style={[styles.joueurTopHeader, { paddingTop: 6 }]}>
+          <View style={styles.joueurHeaderTitleRow}>
+            <View
+              style={[
+                styles.clubCrest,
+                { borderColor: `${teamPrimary}40`, backgroundColor: `${teamPrimary}18` },
+              ]}
+            >
+              <CrestWatermark width={20} height={24} color={teamPrimary} opacity={0.95} />
+            </View>
+            <View style={styles.joueurTitleCol}>
+              <ProDayText variant="title" style={styles.joueurHeaderTitleText}>
+                Centre Match
+              </ProDayText>
+              {clubName ? (
+                <View style={styles.clubSubtitleRow}>
+                  <View style={[styles.clubDot, { backgroundColor: teamPrimary }]} />
+                  <ProDayText
+                    variant="caption"
+                    style={[styles.clubSubtitleText, { color: `${teamPrimary}D0` }]}
+                  >
+                    {clubName}
+                  </ProDayText>
+                </View>
+              ) : null}
+            </View>
+
+            {canManageEvents && profile ? (
+              <PressableSpring
+                onPress={() => {
+                  prodayHaptics.press();
+                  onPropose();
+                }}
+                style={[
+                  styles.headerActionBtn,
+                  { backgroundColor: 'transparent', borderColor: teamPrimary },
+                ]}
+                scaleTo={0.95}
+                haptic
+              >
+                <Ionicons name="add" size={15} color={teamPrimary} />
+                <ProDayText
+                  variant="caption"
+                  style={[styles.headerActionText, { color: teamPrimary }]}
+                >
+                  Proposer
+                </ProDayText>
+              </PressableSpring>
+            ) : pendingConvocations.length > 0 ? (
+              <PressableSpring
+                onPress={() => {
+                  prodayHaptics.press();
+                  setChapter('convocations');
+                }}
+                style={[
+                  styles.headerActionBtn,
+                  { backgroundColor: `${teamPrimary}1C`, borderColor: `${teamPrimary}40` },
+                ]}
+                scaleTo={0.95}
+                haptic
+              >
+                <Ionicons name="mail" size={13} color={teamPrimary} />
+                <ProDayText
+                  variant="caption"
+                  style={[styles.headerActionText, { color: teamPrimary }]}
+                >
+                  {pendingConvocations.length} {pendingConvocations.length > 1 ? 'convocs' : 'convoc'}
+                </ProDayText>
+              </PressableSpring>
+            ) : null}
+          </View>
+
+          <MatchBigTileRail
+            active={chapter}
+            onSelect={setChapter}
+            amicauxBadge={openMatchesCount}
+            convocationsBadge={pendingConvocations.length}
+            accentColor={teamPrimary}
+          />
+          <OfflineCacheBanner visible={fromCache} onRefresh={onRefresh} />
+        </View>
+      ) : !hidePoleHero ? (
         <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>
           <ImmersivePoleHero
             kicker={t('matchs.caption')}
             title={t('matchs.title')}
             support={
               weekEventCount > 0
-                ? `${weekEventCount} rendez-vous cette semaine · calendrier, convocations, amicaux.`
+                ? `${weekEventCount} rendez-vous cette semaine · calendrier, convocations.`
                 : t('matchs.subtitle')
             }
             primaryLabel={canManageEvents ? 'Organiser' : 'Proposer'}
@@ -568,7 +634,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
             secondaryLabel="Chercher"
             onSecondaryPress={onSearch}
             mood="dynamic_competitive"
-            accentHex={isJoueur ? playerTheme.accent : colors.accent}
+            accentHex={isJoueur ? teamPrimary : colors.accent}
           />
         </View>
       ) : null}
@@ -581,8 +647,9 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
         centreBadge={liveMatchCount > 0 ? 'Direct' : undefined}
         gameMode={isJoueur}
         coachSkin={embeddedInShell}
+        hideRail={isJoueur}
       />
-    </>
+    </View>
   );
 
   return (
@@ -595,7 +662,7 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
           : matchCopy.subtitle
       }
       flat={hidePoleHero}
-      hideHeader={embeddedInShell}
+      hideHeader={embeddedInShell || isJoueur}
       hideWorldScene={isJoueur}
       atmosphere={hidePoleHero ? undefined : 'dynamic_competitive'}
     >
@@ -605,3 +672,68 @@ export const MatchHomeScreen: React.FC<MatchHomeScreenProps> = ({
     </TabScreenShell>
   );
 };
+
+const styles = StyleSheet.create({
+  bodyWrap: {
+    flex: 1,
+    position: 'relative',
+  },
+  joueurTopHeader: {
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+  },
+  joueurHeaderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 2,
+  },
+  clubCrest: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  joueurTitleCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  joueurHeaderTitleText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
+  },
+  clubSubtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 0,
+  },
+  clubDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+  },
+  clubSubtitleText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+  },
+  headerActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1.2,
+  },
+  headerActionText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+  },
+});

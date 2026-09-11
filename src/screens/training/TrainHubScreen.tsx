@@ -389,9 +389,8 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
   if (view === 'ai') {
     return (
       <PushScreenTransition active>
-        <View style={[styles.root, screenRootStyle]}>
-          <ScreenHeader
-            title={aiResult ? 'Programme IA' : 'Entraînement IA'}
+        <View style={{ flex: 1, backgroundColor: '#000000' }}>
+          <AiTrainingGeneratorView
             onBack={() => {
               if (aiResult) {
                 setAiResult(null);
@@ -399,8 +398,6 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
                 exitSubView();
               }
             }}
-          />
-          <AiTrainingGeneratorView
             objective={aiObjective}
             onObjectiveChange={setAiObjective}
             duration={aiDuration}
@@ -605,105 +602,257 @@ export const TrainHubScreen: React.FC<TrainHubScreenProps> = ({ onBack, initialV
   }
 
   if (view === 'coach' || view === 'book' || bookingCoach) {
+    const teamColor = ui.brand || '#00E676';
+    const filteredCoaches = coaches.filter((c) => {
+      if (!query.trim()) return true;
+      const q = query.toLowerCase();
+      return (
+        c.display_name.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        c.specialties.some((s) => s.toLowerCase().includes(q)) ||
+        (c.bio?.toLowerCase().includes(q) ?? false)
+      );
+    });
+
     return (
       <PushScreenTransition active>
-      <View style={[styles.root, screenRootStyle]}>
-        <ScreenHeader
-          title={bookingCoach ? 'Réserver' : 'Coach humain'}
-          onBack={() => {
-            if (bookingCoach) setBookingCoach(null);
-            else exitSubView();
-          }}
-        />
-        <ScrollView contentContainerStyle={styles.pad}>
-          <ProDayText variant="caption" muted>
-            Paiement à l’heure. Pas d’abonnement obligatoire. Tarif fixé par le coach.
-          </ProDayText>
+        <View style={[styles.root, { backgroundColor: '#000000' }]}>
+          {/* Header Épuré OLED */}
+          <View style={styles.coachHeader}>
+            <PressableSpring
+              onPress={() => {
+                if (bookingCoach) setBookingCoach(null);
+                else exitSubView();
+              }}
+              style={styles.backButton}
+              scaleTo={0.92}
+              haptic
+            >
+              <Icon name="arrow-back" size={22} color="#FFFFFF" />
+            </PressableSpring>
+            <View style={styles.coachHeaderTitleCol}>
+              <ProDayText variant="title" style={styles.coachHeaderTitle}>
+                {bookingCoach ? 'Réserver une séance' : 'Coachs Personnels'}
+              </ProDayText>
+              <ProDayText variant="caption" style={styles.coachHeaderSub}>
+                {bookingCoach
+                  ? bookingCoach.display_name
+                  : 'Séances individuelles & perfectionnement'}
+              </ProDayText>
+            </View>
+          </View>
 
-          {bookingCoach ? (
-            <ProDaySurface variant="module" style={[styles.card, { borderColor: ui.brand }]}>
-              <ProDayText variant="section">{bookingCoach.display_name}</ProDayText>
-              <ProDayText variant="caption" muted>
-                {bookingCoach.hourly_rate_eur} €/h · {bookingCoach.city}
-                {bookingCoach.club_name ? ` · ${bookingCoach.club_name}` : ' · Indépendant'}
-              </ProDayText>
-              <ProDayText variant="caption" style={styles.mt}>
-                Date (jj/mm/aaaa)
-              </ProDayText>
-              <TextInput
-                style={[styles.input, { borderColor: ui.border, color: ui.text }]}
-                value={dateStr}
-                onChangeText={setDateStr}
-                placeholder="12/09/2026"
-                placeholderTextColor={ui.textMuted}
-              />
-              <ProDayText variant="caption" style={styles.mt}>
-                Durée
-              </ProDayText>
-              <View style={styles.row}>
-                {([30, 60, 90] as CoachSessionDurationMin[]).map((d) => (
-                  <PressableSpring
-                    key={d}
-                    style={[
-                      styles.chip,
-                      duration === d && { backgroundColor: ui.brand },
-                      { borderColor: ui.border },
-                    ]}
-                    onPress={() => setDuration(d)}
-                    scaleTo={0.96}
-                  >
-                    <ProDayText
-                      variant="caption"
-                      inverse={duration === d}
-                      style={duration !== d ? { color: ui.textSecondary } : undefined}
-                    >
-                      {d} min
-                    </ProDayText>
-                  </PressableSpring>
-                ))}
+          <ScrollView contentContainerStyle={styles.coachScrollPad} showsVerticalScrollIndicator={false}>
+            {/* Info Banner */}
+            {!bookingCoach ? (
+              <View style={styles.infoBanner}>
+                <View
+                  style={[
+                    styles.infoIconOrb,
+                    { backgroundColor: `${teamColor}18`, borderColor: `${teamColor}35` },
+                  ]}
+                >
+                  <Icon name="shield" size={18} color={teamColor} />
+                </View>
+                <View style={styles.infoTextCol}>
+                  <ProDayText style={styles.infoTitle}>Coachs certifiés ProDay</ProDayText>
+                  <ProDayText style={styles.infoDesc}>
+                    Paiement à la séance sans engagement. Tarif transparent fixé par chaque coach.
+                  </ProDayText>
+                </View>
               </View>
-              <PressableSpring
-                style={[styles.cta, { backgroundColor: ui.brand }]}
-                onPress={() => void requestBooking()}
-                disabled={submitting}
-                scaleTo={0.97}
-                haptic
-              >
-                {submitting ? (
-                  <ActivityIndicator color={ui.brandInverse} />
-                ) : (
-                  <ProDayText variant="caption" inverse>
-                    Demander la séance
-                  </ProDayText>
-                )}
-              </PressableSpring>
-            </ProDaySurface>
-          ) : loadingCoaches ? (
-            <ActivityIndicator color={ui.brand} style={styles.mt} />
-          ) : (
-            coaches.map((coach) => (
-              <PressableSpring
-                key={coach.coach_uid}
-                style={[styles.card, { borderColor: ui.border, backgroundColor: ui.surface }]}
-                onPress={() => setBookingCoach(coach)}
-                scaleTo={0.98}
-                haptic
-              >
-                <ProDayText variant="section">{coach.display_name}</ProDayText>
-                <ProDayText variant="caption" muted>
-                  {coach.hourly_rate_eur} €/h · {coach.city}
-                  {coach.specialties.length ? ` · ${coach.specialties.slice(0, 2).join(', ')}` : ''}
+            ) : null}
+
+            {bookingCoach ? (
+              <View style={styles.bookingCard}>
+                <View style={styles.bookingCoachHeader}>
+                  <View
+                    style={[
+                      styles.coachAvatar,
+                      { backgroundColor: `${teamColor}18`, borderColor: `${teamColor}35` },
+                    ]}
+                  >
+                    <ProDayText style={[styles.avatarInitials, { color: teamColor }]}>
+                      {bookingCoach.display_name.charAt(0).toUpperCase()}
+                    </ProDayText>
+                  </View>
+                  <View style={styles.bookingCoachInfo}>
+                    <ProDayText style={styles.coachNameText}>
+                      {bookingCoach.display_name}
+                    </ProDayText>
+                    <ProDayText style={styles.coachCityText}>
+                      {bookingCoach.city} · {bookingCoach.club_name ?? 'Coach certifié'}
+                    </ProDayText>
+                  </View>
+                  <View
+                    style={[
+                      styles.pricePill,
+                      { backgroundColor: `${teamColor}18`, borderColor: `${teamColor}35` },
+                    ]}
+                  >
+                    <ProDayText style={[styles.pricePillText, { color: teamColor }]}>
+                      {bookingCoach.hourly_rate_eur} €/h
+                    </ProDayText>
+                  </View>
+                </View>
+
+                <View style={styles.bookingDivider} />
+
+                <ProDayText style={styles.inputLabel}>Date souhaitée (JJ/MM/AAAA)</ProDayText>
+                <TextInput
+                  style={styles.darkInput}
+                  value={dateStr}
+                  onChangeText={setDateStr}
+                  placeholder="Ex : 15/09/2026"
+                  placeholderTextColor="#71717A"
+                />
+
+                <ProDayText style={[styles.inputLabel, { marginTop: 14 }]}>
+                  Durée de la séance
                 </ProDayText>
-                {coach.bio ? (
-                  <ProDayText variant="caption" numberOfLines={2} style={styles.mtXs}>
-                    {coach.bio}
-                  </ProDayText>
-                ) : null}
-              </PressableSpring>
-            ))
-          )}
-        </ScrollView>
-      </View>
+                <View style={styles.durationRow}>
+                  {([30, 60, 90] as CoachSessionDurationMin[]).map((d) => (
+                    <PressableSpring
+                      key={d}
+                      style={[
+                        styles.durationChip,
+                        duration === d && {
+                          backgroundColor: teamColor,
+                          borderColor: teamColor,
+                        },
+                      ]}
+                      onPress={() => setDuration(d)}
+                      scaleTo={0.96}
+                      haptic
+                    >
+                      <ProDayText
+                        style={[
+                          styles.durationChipText,
+                          duration === d && { color: '#000000', fontWeight: '900' },
+                        ]}
+                      >
+                        {d} min
+                      </ProDayText>
+                    </PressableSpring>
+                  ))}
+                </View>
+
+                <PressableSpring
+                  style={[styles.confirmCta, { backgroundColor: teamColor }]}
+                  onPress={() => void requestBooking()}
+                  disabled={submitting}
+                  scaleTo={0.97}
+                  haptic
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="#000000" />
+                  ) : (
+                    <ProDayText style={styles.confirmCtaText}>
+                      Envoyer la demande de réservation
+                    </ProDayText>
+                  )}
+                </PressableSpring>
+              </View>
+            ) : (
+              <>
+                {/* Search Bar */}
+                <View style={styles.coachSearchRow}>
+                  <Icon name="search" size={16} color="#71717A" />
+                  <TextInput
+                    style={styles.coachSearchInput}
+                    placeholder="Chercher par coach, ville ou spécialité..."
+                    placeholderTextColor="#71717A"
+                    value={query}
+                    onChangeText={setQuery}
+                  />
+                  {query ? (
+                    <PressableSpring onPress={() => setQuery('')} scaleTo={0.95}>
+                      <Icon name="close" size={16} color="#71717A" />
+                    </PressableSpring>
+                  ) : null}
+                </View>
+
+                {loadingCoaches ? (
+                  <ActivityIndicator color={teamColor} style={{ marginTop: 24 }} />
+                ) : filteredCoaches.length === 0 ? (
+                  <View style={styles.emptyCoachesCard}>
+                    <Icon name="search" size={24} color="#71717A" />
+                    <ProDayText style={styles.emptyCoachesText}>
+                      Aucun coach disponible pour cette recherche.
+                    </ProDayText>
+                  </View>
+                ) : (
+                  filteredCoaches.map((coach) => (
+                    <View key={coach.coach_uid} style={styles.coachItemCard}>
+                      <View style={styles.coachCardTop}>
+                        <View
+                          style={[
+                            styles.coachAvatar,
+                            { backgroundColor: `${teamColor}18`, borderColor: `${teamColor}35` },
+                          ]}
+                        >
+                          <ProDayText style={[styles.avatarInitials, { color: teamColor }]}>
+                            {coach.display_name.charAt(0).toUpperCase()}
+                          </ProDayText>
+                        </View>
+                        <View style={styles.coachMainMeta}>
+                          <ProDayText style={styles.coachNameText}>
+                            {coach.display_name}
+                          </ProDayText>
+                          <View style={styles.coachCityRow}>
+                            <Icon name="location" size={12} color="#8B8B9A" />
+                            <ProDayText style={styles.coachCityText}>
+                              {coach.city}
+                              {coach.club_name ? ` · ${coach.club_name}` : ''}
+                            </ProDayText>
+                          </View>
+                        </View>
+                        <View
+                          style={[
+                            styles.pricePill,
+                            { backgroundColor: `${teamColor}18`, borderColor: `${teamColor}35` },
+                          ]}
+                        >
+                          <ProDayText style={[styles.pricePillText, { color: teamColor }]}>
+                            {coach.hourly_rate_eur} €/h
+                          </ProDayText>
+                        </View>
+                      </View>
+
+                      {coach.specialties.length > 0 ? (
+                        <View style={styles.specialtiesRow}>
+                          {coach.specialties.map((spec) => (
+                            <View key={spec} style={styles.specialtyChip}>
+                              <ProDayText style={styles.specialtyText}>{spec}</ProDayText>
+                            </View>
+                          ))}
+                        </View>
+                      ) : null}
+
+                      {coach.bio ? (
+                        <ProDayText style={styles.coachBioText} numberOfLines={2}>
+                          {coach.bio}
+                        </ProDayText>
+                      ) : null}
+
+                      <PressableSpring
+                        style={[styles.bookCta, { backgroundColor: teamColor }]}
+                        onPress={() => setBookingCoach(coach)}
+                        scaleTo={0.97}
+                        haptic
+                      >
+                        <Icon name="calendar" size={15} color="#000000" />
+                        <ProDayText style={styles.bookCtaText}>
+                          Réserver une séance
+                        </ProDayText>
+                      </PressableSpring>
+                    </View>
+                  ))
+                )}
+              </>
+            )}
+          </ScrollView>
+        </View>
       </PushScreenTransition>
     );
   }
@@ -1107,6 +1256,270 @@ function createStyles(c: AppColors) {
       paddingVertical: 12,
       borderRadius: radius.pill,
       borderWidth: 1,
+    },
+    // Styles pour la vue Coach Humain / Réservation (OLED Elite)
+    coachHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      paddingBottom: 16,
+      gap: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#1A1A22',
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: '#14141A',
+      borderWidth: 1,
+      borderColor: '#22222E',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    coachHeaderTitleCol: {
+      flex: 1,
+    },
+    coachHeaderTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: '#FFFFFF',
+      letterSpacing: -0.3,
+    },
+    coachHeaderSub: {
+      fontSize: 12,
+      color: '#8B8B9A',
+      marginTop: 2,
+    },
+    coachScrollPad: {
+      padding: 16,
+      paddingBottom: 40,
+    },
+    infoBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#14141A',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: '#22222E',
+      padding: 14,
+      marginBottom: 16,
+      gap: 12,
+    },
+    infoIconOrb: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    infoTextCol: {
+      flex: 1,
+    },
+    infoTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: '#FFFFFF',
+    },
+    infoDesc: {
+      fontSize: 11,
+      color: '#8B8B9A',
+      marginTop: 2,
+      lineHeight: 15,
+    },
+    coachSearchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#14141A',
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: '#22222E',
+      paddingHorizontal: 14,
+      height: 46,
+      gap: 10,
+      marginBottom: 16,
+    },
+    coachSearchInput: {
+      flex: 1,
+      fontSize: 13,
+      color: '#FFFFFF',
+    },
+    emptyCoachesCard: {
+      backgroundColor: '#14141A',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: '#22222E',
+      padding: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      marginTop: 12,
+    },
+    emptyCoachesText: {
+      fontSize: 13,
+      color: '#8B8B9A',
+      textAlign: 'center',
+    },
+    coachItemCard: {
+      backgroundColor: '#14141A',
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: '#22222E',
+      padding: 16,
+      marginBottom: 14,
+    },
+    coachCardTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    coachAvatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      borderWidth: 1.5,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarInitials: {
+      fontSize: 18,
+      fontWeight: '900',
+    },
+    coachMainMeta: {
+      flex: 1,
+    },
+    coachNameText: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: '#FFFFFF',
+    },
+    coachCityRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 2,
+    },
+    coachCityText: {
+      fontSize: 12,
+      color: '#8B8B9A',
+    },
+    pricePill: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    pricePillText: {
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    specialtiesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 12,
+    },
+    specialtyChip: {
+      backgroundColor: '#1E1E28',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#2A2A3A',
+    },
+    specialtyText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: '#D4D4D8',
+    },
+    coachBioText: {
+      fontSize: 12,
+      color: '#8B8B9A',
+      marginTop: 10,
+      lineHeight: 17,
+    },
+    bookCta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderRadius: 12,
+      paddingVertical: 12,
+      marginTop: 14,
+    },
+    bookCtaText: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: '#000000',
+    },
+    bookingCard: {
+      backgroundColor: '#14141A',
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: '#22222E',
+      padding: 18,
+    },
+    bookingCoachHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    bookingCoachInfo: {
+      flex: 1,
+    },
+    bookingDivider: {
+      height: 1,
+      backgroundColor: '#22222E',
+      marginVertical: 16,
+    },
+    inputLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#D4D4D8',
+      marginBottom: 8,
+    },
+    darkInput: {
+      backgroundColor: '#0D0D12',
+      borderWidth: 1,
+      borderColor: '#22222E',
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      height: 46,
+      fontSize: 13,
+      color: '#FFFFFF',
+    },
+    durationRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 20,
+    },
+    durationChip: {
+      flex: 1,
+      backgroundColor: '#0D0D12',
+      borderWidth: 1,
+      borderColor: '#22222E',
+      borderRadius: 12,
+      paddingVertical: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    durationChipText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: '#D4D4D8',
+    },
+    confirmCta: {
+      height: 48,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    confirmCtaText: {
+      fontSize: 14,
+      fontWeight: '900',
+      color: '#000000',
     },
   });
 }

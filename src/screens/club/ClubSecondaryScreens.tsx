@@ -23,6 +23,7 @@ import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
+import { ClubVideoScreen } from './ClubVideoScreen';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import {
   ClubActionRow,
@@ -1067,6 +1068,8 @@ export function renderClubSecondaryStub(id: ClubNavItemId): React.ReactNode | nu
       return <ClubNotificationsScreen />;
     case 'permissions':
       return <ClubPermissionsScreen />;
+    case 'video':
+      return <ClubVideoScreen />;
     default:
       return null;
   }

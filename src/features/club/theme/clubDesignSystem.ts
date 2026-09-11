@@ -90,8 +90,8 @@ export const clubShadow = {
 export const clubEventTone = {
   match: { key: 'match', label: 'MATCH', color: '#5BA3FF', soft: 'rgba(91,163,255,0.22)' },
   training: { key: 'training', label: 'ENTRAÎNEMENT', color: '#34D399', soft: 'rgba(52,211,153,0.20)' },
-  tournament: { key: 'tournament', label: 'TOURNOI', color: '#FBBF24', soft: 'rgba(251,191,36,0.20)' },
-  meeting: { key: 'meeting', label: 'RÉUNION', color: '#FBBF24', soft: 'rgba(251,191,36,0.18)' },
+  tournament: { key: 'tournament', label: 'TOURNOI', color: '#10B981', soft: 'rgba(16,185,129,0.20)' },
+  meeting: { key: 'meeting', label: 'RÉUNION', color: '#94A3B8', soft: 'rgba(148,163,184,0.18)' },
   event: { key: 'event', label: 'ÉVÉNEMENT', color: '#22D3EE', soft: 'rgba(34,211,238,0.18)' },
 } as const;
 

@@ -60,4 +60,16 @@ export type IconName =
   | 'log-out'
   | 'help'
   | 'swap-horizontal'
-  | 'flag';
+  | 'trash'
+  | 'flag'
+  | 'refresh'
+  | 'flash'
+  | 'grid'
+  | 'chatbubbles'
+  | 'sparkles'
+  | 'list'
+  | 'document-text'
+  | 'mic'
+  | 'fitness'
+  | 'cloud-upload'
+  | 'download';

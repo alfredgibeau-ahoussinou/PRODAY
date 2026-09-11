@@ -21,10 +21,14 @@ export interface AiCompletionResult {
   model: string;
 }
 
-export const GEMINI_DEFAULT_MODEL = 'gemini-1.5-flash';
+export const GEMINI_DEFAULT_MODEL = 'gemini-3.5-flash-lite';
+
+export function getGeminiModel(): string {
+  return configStr('gemini', 'model', ['GEMINI_MODEL', 'EXPO_PUBLIC_GEMINI_MODEL']) ?? GEMINI_DEFAULT_MODEL;
+}
 
 export function getGeminiApiKey(): string | null {
-  return configStr('gemini', 'api_key', ['GEMINI_API_KEY', 'GOOGLE_AI_API_KEY', 'GOOGLE_API_KEY']) ?? null;
+  return configStr('gemini', 'api_key', ['GEMINI_API_KEY', 'GOOGLE_AI_API_KEY', 'GOOGLE_API_KEY', 'EXPO_PUBLIC_GEMINI_API_KEY']) ?? null;
 }
 
 export function getMistralApiKey(): string | null {
@@ -33,6 +37,7 @@ export function getMistralApiKey(): string | null {
 
 /**
  * Appelle l'API Google Gemini (Google AI Studio — 100% Free Tier).
+ * Priorité à gemini-3.5-flash-lite (réponse instantanée sans latence de réflexion).
  */
 export async function callGeminiApi(
   apiKey: string,
@@ -40,47 +45,68 @@ export async function callGeminiApi(
   messages: AiChatMessage[],
   options?: { model?: string; temperature?: number; maxTokens?: number },
 ): Promise<string> {
-  const model = options?.model ?? GEMINI_DEFAULT_MODEL;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const preferredModel = options?.model ?? getGeminiModel();
+  const modelsToTry = [
+    preferredModel,
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-3.6-flash',
+  ].filter((v, i, a) => a.indexOf(v) === i && !!v);
 
-  const contents = messages.map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }));
+  let lastError: Error | null = null;
 
-  const body: Record<string, unknown> = {
-    contents,
-    generationConfig: {
-      temperature: options?.temperature ?? 0.5,
-      maxOutputTokens: options?.maxTokens ?? 1600,
-    },
-  };
+  for (const model of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-  if (systemPrompt) {
-    body.systemInstruction = {
-      parts: [{ text: systemPrompt }],
-    };
+      const contents = messages.map((m) => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+
+      const body: Record<string, unknown> = {
+        contents,
+        generationConfig: {
+          temperature: options?.temperature ?? 0.5,
+          maxOutputTokens: options?.maxTokens ?? 1600,
+        },
+      };
+
+      if (systemPrompt) {
+        body.systemInstruction = {
+          parts: [{ text: systemPrompt }],
+        };
+      }
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        console.warn(`[aiProvider] Gemini ${model} HTTP ${res.status}:`, errText.slice(0, 200));
+        lastError = new Error(`Gemini API error (${res.status}): ${errText.slice(0, 150)}`);
+        continue;
+      }
+
+      const json = (await res.json()) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+      };
+
+      const text = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (!text) {
+        lastError = new Error(`Réponse Gemini ${model} vide`);
+        continue;
+      }
+      return text;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+    }
   }
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    console.error('[aiProvider] Gemini error', res.status, errText.slice(0, 400));
-    throw new Error(`Gemini API error (${res.status}): ${errText.slice(0, 200)}`);
-  }
-
-  const json = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-  };
-
-  const text = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-  if (!text) throw new Error('Réponse Gemini vide');
-  return text;
+  throw lastError ?? new Error('Échec des appels à Google Gemini');
 }
 
 /**

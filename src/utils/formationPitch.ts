@@ -7,9 +7,55 @@ export interface PitchPlacement {
   countInLine: number;
 }
 
-/** Formations du onze coach (SportEasy). */
-export const COACH_PITCH_FORMATIONS = ['4-3-3', '4-4-2', '3-5-2', '4-2-3-1', '3-4-3'] as const;
-export type CoachPitchFormation = (typeof COACH_PITCH_FORMATIONS)[number];
+/** Formations complètes : Football à 11, Foot à 8, Foot à 7 et Foot à 5 / Futsal */
+export const COACH_PITCH_FORMATIONS = [
+  // 11 - Schémas à 4 défenseurs
+  '4-3-3',
+  '4-2-3-1',
+  '4-4-2',
+  '4-1-2-1-2',
+  '4-3-1-2',
+  '4-3-2-1',
+  '4-1-4-1',
+  '4-5-1',
+  '4-2-4',
+  '4-2-2-2',
+  '4-4-1-1',
+
+  // 11 - Schémas à 3 et 5 défenseurs
+  '3-5-2',
+  '3-4-3',
+  '3-4-1-2',
+  '3-4-2-1',
+  '3-1-4-2',
+  '3-3-3-1',
+  '5-3-2',
+  '5-4-1',
+  '5-2-3',
+  '5-2-1-2',
+
+  // Foot à 8 (U12 / U13)
+  '3-3-1',
+  '3-2-2',
+  '2-4-1',
+  '2-3-2',
+  '3-1-2-1',
+
+  // Foot à 7 (U10 / U11)
+  '2-3-1',
+  '3-2-1',
+  '2-2-2',
+  '3-1-2',
+
+  // Foot à 5 / Five / Futsal
+  '2-2',
+  '1-2-1',
+  '2-1-1',
+  '1-1-2',
+  '3-1',
+] as const;
+
+export type CoachPitchFormation = (typeof COACH_PITCH_FORMATIONS)[number] | string;
 
 export interface PitchTokenLayout {
   slotIndex: number;
@@ -34,7 +80,8 @@ export function pitchSlotCount(formation: string): number {
 }
 
 export function isCoachPitchFormation(value: string): value is CoachPitchFormation {
-  return (COACH_PITCH_FORMATIONS as readonly string[]).includes(value);
+  if ((COACH_PITCH_FORMATIONS as readonly string[]).includes(value)) return true;
+  return /^\d+(-\d+)+$/.test(value.trim());
 }
 
 export function assignStartersToPitch(

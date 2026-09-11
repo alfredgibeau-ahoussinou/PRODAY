@@ -5,6 +5,7 @@ import { CLUB_VIDEO_PROVIDERS } from '../../features/club/video/ClubVideoProvide
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
+import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import {
   ClubActionRow,
   ClubChapterScroll,
@@ -17,6 +18,7 @@ import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
 /** Vidéo & caméras — Veo / XbotGo / Smartphone / autre (jamais forcé). */
 export function ClubVideoScreen() {
+  const shellNav = useClubShellNav();
   const profile = useSessionProfile();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
@@ -59,6 +61,18 @@ export function ClubVideoScreen() {
               Liez un club pour enregistrer vos caméras (Veo, XbotGo, smartphone…).
             </ClubText>
           )}
+        </ClubSectionCard>
+
+        <ClubSectionCard title="Offre & Matériel Vidéo">
+          <ClubText variant="body" muted>
+            Intégrez des caméras tactiques Veo ou smartphone dans votre formule club ProDay.
+          </ClubText>
+          <ClubActionRow
+            icon="shield"
+            label="Pack Club & Devis Vidéo"
+            hint="Consulter les formules avec intégration vidéo"
+            onPress={() => shellNav?.requestNav('pack')}
+          />
         </ClubSectionCard>
       </ClubChapterScroll>
     </View>

@@ -3,6 +3,8 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import { ProDayText } from '../ui/ProDayText';
 import { spacing, radius } from '../../theme/designTokens';
 import { toBirthDateIso } from '../../utils/joueurBirthAge';
+import { fontFamily } from '../../theme/typography';
+import { AUTH_XP } from '../../features/auth/experience/tokens';
 
 type Props = {
   day: string;
@@ -15,7 +17,6 @@ type Props = {
   error?: string | null;
   label?: string;
   hint?: string;
-  /** dark = univers joueur · light = inscription. */
   variant?: 'dark' | 'light';
 };
 
@@ -27,13 +28,12 @@ export function BirthDateFields({
   onDay,
   onMonth,
   onYear,
-  accent = '#006CFC',
+  accent = AUTH_XP.gold,
   error,
   label = 'Date de naissance',
-  hint = 'Ton univers évolue automatiquement à chaque anniversaire.',
-  variant = 'dark',
+  hint = 'Votre catégorie officielle FFF évolue automatiquement à chaque anniversaire.',
 }: Props) {
-  const styles = useMemo(() => createStyles(accent, variant), [accent, variant]);
+  const styles = useMemo(() => createStyles(accent), [accent]);
 
   return (
     <View style={styles.wrap}>
@@ -74,11 +74,11 @@ export function BirthDateFields({
         <ProDayText variant="caption" style={styles.error}>
           {error}
         </ProDayText>
-      ) : (
+      ) : hint ? (
         <ProDayText variant="caption" style={styles.hint}>
           {hint}
         </ProDayText>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -98,17 +98,18 @@ function Field({
   styles: ReturnType<typeof createStyles>;
   flex?: number;
 }) {
+  const filled = Boolean(value && value.length > 0);
+
   return (
     <TextInput
       value={value}
       onChangeText={(t) => onChange(t.replace(/\D/g, '').slice(0, maxLength))}
       placeholder={placeholder}
-      placeholderTextColor={
-        styles.input.color === '#0a0a0a' ? 'rgba(0,0,0,0.35)' : 'rgba(245,245,240,0.35)'
-      }
+      placeholderTextColor={AUTH_XP.textDim}
       keyboardType="number-pad"
       maxLength={maxLength}
-      style={[styles.input, { flex }]}
+      selectionColor={AUTH_XP.gold}
+      style={[styles.input, filled && styles.inputFilled, { flex }]}
     />
   );
 }
@@ -121,33 +122,56 @@ export function birthPartsToIso(day: string, month: string, year: string): strin
   return toBirthDateIso(y, m, d);
 }
 
-function createStyles(accent: string, variant: 'dark' | 'light') {
-  const dark = variant === 'dark';
+function createStyles(accent: string) {
   return StyleSheet.create({
-    wrap: { gap: spacing.xs },
-    label: {
-      color: accent,
-      textTransform: 'uppercase',
-      letterSpacing: 2,
-      fontSize: 10,
-      fontWeight: '800',
+    wrap: {
+      gap: 6,
+      marginBottom: 16,
     },
-    row: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+    label: {
+      color: AUTH_XP.textMuted,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      fontSize: 11,
+      fontFamily: fontFamily.semibold,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
     input: {
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
-      backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-      borderRadius: radius.sm,
+      borderWidth: 1,
+      borderColor: AUTH_XP.border,
+      backgroundColor: AUTH_XP.inputBg,
+      borderRadius: radius.md,
       paddingVertical: 12,
       paddingHorizontal: spacing.sm,
-      color: dark ? '#f5f5f0' : '#0a0a0a',
-      fontWeight: '700',
+      color: AUTH_XP.text,
+      fontFamily: fontFamily.bold,
       fontSize: 16,
       textAlign: 'center',
-      minHeight: 48,
+      minHeight: 50,
     },
-    sep: { color: dark ? 'rgba(245,245,240,0.4)' : 'rgba(0,0,0,0.35)', fontWeight: '800' },
-    hint: { color: dark ? 'rgba(245,245,240,0.5)' : 'rgba(0,0,0,0.5)', lineHeight: 18 },
-    error: { color: '#fb7185', fontWeight: '600' },
+    inputFilled: {
+      backgroundColor: AUTH_XP.inputBgFilled,
+      borderColor: 'rgba(255, 255, 255, 0.22)',
+    },
+    sep: {
+      color: AUTH_XP.textDim,
+      fontFamily: fontFamily.bold,
+      fontSize: 18,
+    },
+    hint: {
+      color: AUTH_XP.textDim,
+      fontSize: 12,
+      lineHeight: 17,
+      fontFamily: fontFamily.regular,
+    },
+    error: {
+      color: AUTH_XP.error,
+      fontSize: 12,
+      fontFamily: fontFamily.semibold,
+    },
   });
 }

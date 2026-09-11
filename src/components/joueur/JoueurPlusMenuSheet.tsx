@@ -96,7 +96,7 @@ export function JoueurPlusMenuSheet({ visible, onClose, items, onSelect }: Props
           alignItems: 'center',
           justifyContent: 'center',
           paddingHorizontal: 4,
-          backgroundColor: PLAYER_DARK.statYellow,
+          backgroundColor: playerTheme.accent,
         },
         badgeText: {
           color: PLAYER_DARK.bg,

@@ -1277,3 +1277,73 @@ export const sponsorFulfillQuoteDoc = functions
 export const getSponsorQuoteDesk = functions
   .region('europe-west1')
   .https.onCall(createGetSponsorQuoteDeskHandler(db));
+
+/* ==========================================================================
+   PRODAY ENTERPRISE FFF INGESTION & DAILY STANDINGS WORKER INFRASTRUCTURE
+   ========================================================================== */
+
+import { harvestAndIngestClubStructure } from './fffEnterpriseIngestionEngine';
+import { runDailyEnterpriseStandingsWorker } from './fffDailyStandingsWorker';
+import { processClubIntegrationSynergy } from './fffIntegrationSynergy';
+
+/**
+ * WORKER AUTOMATISÉ QUOTIDIEN — Balayage & mise à jour quotidienne de TOUS les classements FFF
+ * (Ligue 1, Ligue 2, N1, N2, R1, R2, R3, District 92, 93, 75, 94...).
+ * Exécuté automatiquement chaque jour à 03h00.
+ */
+export const processFffEnterpriseDailyStandingsWorker = functions
+  .region('europe-west1')
+  .pubsub.schedule('0 3 * * *')
+  .timeZone('Europe/Paris')
+  .onRun(async () => {
+    const res = await runDailyEnterpriseStandingsWorker(db);
+    console.log(`[FFF Daily Standings Worker] Executed: ${res.leaguesProcessed} leagues processed, ${res.totalRowsUpdated} rows updated.`);
+    return null;
+  });
+
+/**
+ * ENTERPRISE INGESTION CALLABLE — Ingestion à la demande de la structure complète d'un club FFF.
+ */
+export const triggerFffIngestionForClub = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    assertCallableAdmin(context);
+    const fffAffiliationNumber = String(data?.fffAffiliationNumber || '').trim();
+    const rawName = String(data?.name || '').trim();
+    const city = String(data?.city || '').trim();
+    const department = String(data?.department || '92').trim();
+
+    if (!fffAffiliationNumber || !rawName) {
+      throw new functions.https.HttpsError('invalid-argument', 'N° affiliation et Nom du club requis');
+    }
+
+    const res = await harvestAndIngestClubStructure(db, {
+      fffAffiliationNumber,
+      rawName,
+      city,
+      department,
+      rawTeams: data?.teams,
+    });
+
+    return res;
+  });
+
+/**
+ * INTEGRATION SYNERGY CALLABLE — Raccordement automatique instantané d'un club ProDay avec son écosystème FFF.
+ */
+export const triggerClubIntegrationSynergy = functions
+  .region('europe-west1')
+  .https.onCall(async (data, context) => {
+    if (!context.auth?.uid) {
+      throw new functions.https.HttpsError('unauthenticated', 'Sign in required');
+    }
+    const clubId = String(data?.clubId || '').trim();
+    const fffAffiliationNumber = data?.fffAffiliationNumber ? String(data.fffAffiliationNumber).trim() : undefined;
+
+    if (!clubId) {
+      throw new functions.https.HttpsError('invalid-argument', 'clubId est requis');
+    }
+
+    const res = await processClubIntegrationSynergy(db, clubId, fffAffiliationNumber);
+    return res;
+  });

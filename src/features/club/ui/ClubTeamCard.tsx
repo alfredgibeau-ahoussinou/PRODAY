@@ -3,12 +3,11 @@ import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AnimatedEntrance, PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
-import { ClubText } from './clubUi';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import type { ClubThemeTokens } from '../theme/clubTokens';
 import type { ClubTeamRow } from '../../../utils/clubStructureView';
-import { clubRadius, clubShadow, clubSpace } from '../theme/clubDesignSystem';
 import { buildClubTeamCardMeta } from './clubTeamsModel';
+import { ProDayText } from '../../../components/ui/ProDayText';
 
 type Props = {
   row: ClubTeamRow;
@@ -17,76 +16,92 @@ type Props = {
   onPress: () => void;
 };
 
-/** Carte équipe — crest, meta lisible, pill Sans coach. */
+/** Carte équipe — Design Obsidian Glass moderne, badges statut, zéro émoji. */
 export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const meta = buildClubTeamCardMeta(row);
 
   return (
-    <AnimatedEntrance kind="fadeUp" index={index} delayStep={40}>
+    <AnimatedEntrance kind="fadeUp" index={index} delayStep={35}>
       <PressableSpring
         onPress={onPress}
-        scaleTo={0.97}
+        scaleTo={0.98}
         haptic
-        style={styles.press}
+        style={styles.cardContainer}
         accessibilityRole="button"
         accessibilityLabel={`${meta.title}${meta.hasCoach ? '' : ', sans coach'}`}
       >
         <LinearGradient
-          colors={[tokens.elevated, tokens.headerWash]}
+          colors={['rgba(255, 255, 255, 0.03)', 'rgba(14, 14, 20, 0.7)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.card}
-        >
-          <View style={styles.pitchWash} pointerEvents="none" />
-          <View
-            style={[
-              styles.kitStripe,
-              { backgroundColor: meta.hasCoach ? tokens.accent : tokens.warning },
-            ]}
-          />
-          <View style={[styles.crestWrap, { borderColor: tokens.accentSoft }]}>
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+
+        <View style={styles.cardHeader}>
+          <View style={styles.categoryBadge}>
+            <Icon name="football" size={12} color={tokens.accent} />
+            <ProDayText variant="caption" style={[styles.categoryText, { color: tokens.accent }]}>
+              {meta.metaPrimary || row.category}
+            </ProDayText>
+          </View>
+
+          <View style={styles.licensedPill}>
+            <Icon name="people" size={11} color="#9CA3AF" />
+            <ProDayText variant="caption" style={styles.licensedText}>
+              {meta.metaSecondary}
+            </ProDayText>
+          </View>
+        </View>
+
+        <View style={styles.cardBody}>
+          <View style={styles.crestWrap}>
             {logoUrl ? (
               <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="cover" />
             ) : (
-              <View style={[styles.logo, styles.logoPh, { backgroundColor: tokens.accentSoft }]}>
-                <Icon name="football" size={20} color={tokens.accent} />
+              <View style={[styles.logoPh, { backgroundColor: 'rgba(255, 255, 255, 0.06)' }]}>
+                <ProDayText variant="section" style={[styles.crestLetter, { color: tokens.accent }]}>
+                  {(row.name.trim().charAt(0) || 'E').toUpperCase()}
+                </ProDayText>
               </View>
             )}
-            <View style={[styles.crestCap, { backgroundColor: tokens.accent }]} />
           </View>
-          <View style={styles.copy}>
-            <ClubText variant="h3" numberOfLines={2} style={styles.title}>
+
+          <View style={styles.infoCol}>
+            <ProDayText variant="section" numberOfLines={1} style={styles.teamTitle}>
               {meta.title}
-            </ClubText>
-            {meta.metaPrimary ? (
-              <ClubText variant="caption" muted numberOfLines={2}>
-                {meta.metaPrimary}
-              </ClubText>
-            ) : null}
-            <ClubText variant="caption" muted numberOfLines={1}>
-              {meta.metaSecondary}
-            </ClubText>
-            {meta.hasCoach ? (
-              <ClubText variant="caption" numberOfLines={2} style={styles.coachLine}>
-                {meta.coachesLabel}
-              </ClubText>
-            ) : (
-              <View style={[styles.noCoachPill, { backgroundColor: tokens.warningSoft }]}>
-                <ClubText
-                  variant="caption"
-                  style={{ color: tokens.warning, fontWeight: '800', fontSize: 11 }}
-                >
-                  Sans coach
-                </ClubText>
-              </View>
-            )}
+            </ProDayText>
+
+            <View style={styles.coachRow}>
+              <Icon
+                name="school"
+                size={12}
+                color={meta.hasCoach ? '#10B981' : '#F59E0B'}
+              />
+              <ProDayText
+                variant="caption"
+                numberOfLines={1}
+                style={[
+                  styles.coachText,
+                  { color: meta.hasCoach ? '#9CA3AF' : '#F59E0B' },
+                ]}
+              >
+                {meta.hasCoach ? `Coach : ${meta.coachesLabel}` : 'Staff à pourvoir'}
+              </ProDayText>
+            </View>
           </View>
-          <View style={[styles.chevron, { backgroundColor: tokens.accentSoft }]}>
-            <Icon name="chevron-forward" size={16} color={tokens.accent} />
+        </View>
+
+        <View style={styles.cardFooter}>
+          <View style={styles.openRow}>
+            <ProDayText variant="caption" style={[styles.openText, { color: tokens.accent }]}>
+              Ouvrir le vestiaire
+            </ProDayText>
+            <Icon name="chevron-forward" size={13} color={tokens.accent} />
           </View>
-        </LinearGradient>
+        </View>
       </PressableSpring>
     </AnimatedEntrance>
   );
@@ -94,82 +109,112 @@ export function ClubTeamCard({ row, index = 0, logoUrl, onPress }: Props) {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    press: { borderRadius: clubRadius.xl },
-    card: {
+    cardContainer: {
+      backgroundColor: tokens.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.08)',
+      padding: 16,
+      gap: 12,
+      overflow: 'hidden',
+    },
+    cardHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: clubSpace.md,
-      paddingVertical: clubSpace.lg,
-      paddingRight: clubSpace.md,
-      paddingLeft: clubSpace.md + 4,
-      borderRadius: clubRadius.xl,
+      justifyContent: 'space-between',
+    },
+    categoryBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    categoryText: {
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+    },
+    licensedPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
       borderWidth: 1,
-      borderColor: tokens.border,
-      overflow: 'hidden',
-      minHeight: 96,
-      ...clubShadow.soft,
+      borderColor: 'rgba(255, 255, 255, 0.06)',
     },
-    pitchWash: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: tokens.pitchSoft,
-      opacity: 0.18,
+    licensedText: {
+      color: '#9CA3AF',
+      fontSize: 11,
+      fontWeight: '700',
     },
-    kitStripe: {
-      position: 'absolute',
-      left: 0,
-      top: 14,
-      bottom: 14,
-      width: 3,
-      borderTopRightRadius: 2,
-      borderBottomRightRadius: 2,
+    cardBody: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
     crestWrap: {
-      width: 52,
-      height: 60,
-      borderRadius: clubRadius.md,
-      borderTopLeftRadius: clubRadius.lg,
-      borderTopRightRadius: clubRadius.lg,
+      width: 44,
+      height: 44,
+      borderRadius: 12,
       overflow: 'hidden',
-      borderWidth: 1.5,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.08)',
       backgroundColor: tokens.elevated,
-      flexShrink: 0,
     },
-    crestCap: {
-      position: 'absolute',
-      top: 0,
-      left: '24%',
-      right: '24%',
-      height: 4,
-      borderBottomLeftRadius: 2,
-      borderBottomRightRadius: 2,
+    logo: {
+      width: '100%',
+      height: '100%',
     },
-    logo: { width: '100%', height: '100%' },
-    logoPh: { alignItems: 'center', justifyContent: 'center' },
-    copy: { flex: 1, minWidth: 0, gap: 3 },
-    title: {
-      fontWeight: '800',
-      letterSpacing: -0.25,
-      color: tokens.foreground,
-    },
-    coachLine: {
-      color: tokens.muted,
-      fontWeight: '600',
-      marginTop: 1,
-      lineHeight: 16,
-    },
-    noCoachPill: {
-      alignSelf: 'flex-start',
-      marginTop: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: clubRadius.pill,
-    },
-    chevron: {
-      width: 34,
-      height: 34,
-      borderRadius: clubRadius.sm,
+    logoPh: {
+      width: '100%',
+      height: '100%',
       alignItems: 'center',
       justifyContent: 'center',
-      flexShrink: 0,
+    },
+    crestLetter: {
+      fontSize: 18,
+      fontWeight: '900',
+    },
+    infoCol: {
+      flex: 1,
+      gap: 3,
+    },
+    teamTitle: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '800',
+      letterSpacing: -0.2,
+    },
+    coachRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    coachText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    cardFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(255, 255, 255, 0.06)',
+    },
+    openRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    openText: {
+      fontSize: 12,
+      fontWeight: '700',
     },
   });

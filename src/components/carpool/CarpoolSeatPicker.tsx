@@ -3,8 +3,7 @@ import { View, StyleSheet, Text } from 'react-native';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { useTranslation } from '../../context/LocaleContext';
-import { spacing } from '../../theme/designTokens';
-import { CARPOOL_SITE } from '../../content/carpoolSite';
+import { spacing, radius } from '../../theme/designTokens';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import {
   type CarpoolUiPalette,
@@ -20,10 +19,9 @@ interface CarpoolSeatPickerProps {
   label?: string;
 }
 
-/** Cabine interactive — taper une place pour régler le nombre. */
 export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
   seats,
-  maxSeats = 4,
+  maxSeats = 8,
   taken = 0,
   onChange,
   label,
@@ -31,180 +29,101 @@ export const CarpoolSeatPicker: React.FC<CarpoolSeatPickerProps> = ({
   const { t } = useTranslation();
   const palette = useCarpoolUi();
   const styles = useCarpoolThemedStyles(createStyles);
-  const safeSeats = Math.max(0, seats);
-  const free = Math.max(0, safeSeats - taken);
+  const safeSeats = Math.max(1, seats);
 
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>{label ?? t('carpool.hub.seatsTitle')}</Text>
-      <View style={styles.cabin}>
-        <View style={styles.driverRow}>
-          <View style={styles.driver}>
-            <Icon name="person" size={14} color={palette.onSignal} variant="filled" />
-            <Text style={styles.seatLabel}>{t('carpool.hub.driverSeat')}</Text>
-          </View>
+      <View style={styles.stepperRow}>
+        <PressableSpring
+          onPress={() => {
+            prodayHaptics.press();
+            onChange(Math.max(1, safeSeats - 1));
+          }}
+          disabled={safeSeats <= 1}
+          scaleTo={0.92}
+          haptic
+          style={[styles.stepBtn, safeSeats <= 1 && { opacity: 0.4 }]}
+        >
+          <Text style={styles.stepBtnText}>−</Text>
+        </PressableSpring>
+
+        <View style={styles.valueBox}>
+          <Icon name="person" size={16} color={palette.signal} />
+          <Text style={styles.valueText}>{safeSeats}</Text>
+          <Text style={styles.unitText}>place{safeSeats > 1 ? 's' : ''}</Text>
         </View>
-        <View style={styles.seatsGrid}>
-          {Array.from({ length: maxSeats }, (_, i) => {
-            const n = i + 1;
-            const selected = n <= safeSeats;
-            const occupied = n <= taken;
-            return (
-              <PressableSpring
-                key={n}
-                onPress={() => {
-                  prodayHaptics.press();
-                  onChange(Math.max(1, n));
-                }}
-                scaleTo={0.9}
-                haptic
-                style={[
-                  styles.seat,
-                  selected && styles.seatOn,
-                  occupied && styles.seatTaken,
-                ]}
-              >
-                {occupied || selected ? (
-                  <Icon
-                    name={occupied ? 'person' : 'checkmark-circle'}
-                    size={16}
-                    color={occupied ? palette.onSignal : palette.signalDeep}
-                    variant="filled"
-                  />
-                ) : null}
-                <Text
-                  style={[
-                    styles.seatNum,
-                    selected && styles.seatNumOn,
-                    occupied && styles.seatNumTaken,
-                  ]}
-                >
-                  {n}
-                </Text>
-              </PressableSpring>
-            );
-          })}
-        </View>
-        <View style={styles.stepper}>
-          <PressableSpring
-            onPress={() => {
-              prodayHaptics.press();
-              onChange(Math.max(1, safeSeats - 1));
-            }}
-            scaleTo={0.92}
-            haptic
-            style={styles.stepBtn}
-          >
-            <Text style={styles.stepText}>−</Text>
-          </PressableSpring>
-          <Text style={styles.stepValue}>{safeSeats}</Text>
-          <PressableSpring
-            onPress={() => {
-              prodayHaptics.press();
-              onChange(Math.min(maxSeats, safeSeats + 1));
-            }}
-            scaleTo={0.92}
-            haptic
-            style={styles.stepBtn}
-          >
-            <Text style={styles.stepText}>+</Text>
-          </PressableSpring>
-        </View>
+
+        <PressableSpring
+          onPress={() => {
+            prodayHaptics.press();
+            onChange(Math.min(maxSeats, safeSeats + 1));
+          }}
+          disabled={safeSeats >= maxSeats}
+          scaleTo={0.92}
+          haptic
+          style={[styles.stepBtn, safeSeats >= maxSeats && { opacity: 0.4 }]}
+        >
+          <Text style={styles.stepBtnText}>+</Text>
+        </PressableSpring>
       </View>
-      <Text style={styles.meta}>
-        {safeSeats < 1
-          ? t('carpool.hub.seatsPickHint')
-          : t('carpool.hub.seatsMeta', { seats: safeSeats, free })}
-      </Text>
     </View>
   );
 };
 
 function createStyles(palette: CarpoolUiPalette) {
   return StyleSheet.create({
-    wrap: { gap: spacing.sm },
-    title: {
-      fontSize: 12,
-      fontWeight: '800',
-      letterSpacing: 0.8,
-      textTransform: 'uppercase',
-      color: palette.ink,
-    },
-    cabin: {
-      borderWidth: 1.5,
-      borderColor: palette.fog,
-      backgroundColor: palette.surfaceMuted,
-      borderRadius: 18,
-      padding: spacing.md,
-      gap: spacing.sm,
-    },
-    driverRow: { alignItems: 'center' },
-    driver: {
-      minWidth: 130,
-      minHeight: 44,
-      borderRadius: 999,
-      alignItems: 'center',
-      justifyContent: 'center',
+    wrap: {
       gap: 6,
-      paddingHorizontal: 14,
-      flexDirection: 'row',
-      backgroundColor: palette.signal,
+      marginVertical: 4,
     },
-    seatsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: spacing.sm,
+    title: {
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 0.6,
+      textTransform: 'uppercase',
+      color: '#A1A1AA',
     },
-    seat: {
-      width: '22%',
-      maxWidth: 72,
-      minWidth: 48,
-      minHeight: 52,
+    stepperRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: '#1C1D26',
       borderRadius: 14,
-      borderWidth: 1.5,
-      borderColor: palette.fog,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 2,
-      backgroundColor: palette.surface,
-    },
-    seatOn: {
-      borderColor: palette.signal,
-      backgroundColor: palette.signalSoft,
-    },
-    seatTaken: {
-      backgroundColor: palette.signalDeep,
-      borderColor: palette.signalDeep,
-    },
-    seatLabel: { fontWeight: '700', fontSize: 11, color: palette.onSignal },
-    seatNum: { fontWeight: '800', color: palette.inkMuted, fontSize: 12 },
-    seatNumOn: { color: palette.signalDeep },
-    seatNumTaken: { color: palette.onSignal },
-    stepper: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 16,
-      marginTop: 4,
+      borderWidth: 1,
+      borderColor: '#282836',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
     },
     stepBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: '#282836',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: palette.signal,
     },
-    stepText: { color: palette.onSignal, fontSize: 22, fontWeight: '700', lineHeight: 24 },
-    stepValue: {
-      fontFamily: CARPOOL_SITE.display,
-      fontSize: 22,
+    stepBtnText: {
+      fontSize: 20,
       fontWeight: '800',
-      color: palette.ink,
-      minWidth: 28,
-      textAlign: 'center',
+      color: '#FFFFFF',
+      lineHeight: 22,
     },
-    meta: { textAlign: 'center', color: palette.inkMuted, fontSize: 12 },
+    valueBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    valueText: {
+      fontSize: 18,
+      fontWeight: '900',
+      color: '#FFFFFF',
+    },
+    unitText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: '#A1A1AA',
+    },
   });
 }
+

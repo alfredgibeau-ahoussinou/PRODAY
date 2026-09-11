@@ -30,7 +30,7 @@ export function BetaIosLaunchBanner({ compact = false }: { compact?: boolean }) 
           )}
           <div className="min-w-0 flex-1">
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[var(--proday-accent-bright)]">
-              {testflightLive ? "iOS ouverte" : "Bêta · reportée"}
+              {testflightLive ? "iOS ouverte" : (launched ? "Bêta iOS · Déploiement" : "Bêta · reportée")}
               {!launched ? ` · ${IOS_BETA_LAUNCH_LABEL}` : ""}
             </p>
             <p className="mt-0.5 truncate text-[11px] leading-snug text-white/50">
@@ -62,7 +62,7 @@ export function BetaIosLaunchBanner({ compact = false }: { compact?: boolean }) 
         </div>
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--proday-accent-bright)]">
-            {testflightLive ? "iOS ouverte" : "Bêta · décalée au 15 août 2026"}
+            {testflightLive ? "iOS ouverte" : (launched ? "Bêta iOS · Déploiement TestFlight" : "Bêta · décalée au 15 août 2026")}
           </p>
           <p className="mt-2 text-sm leading-relaxed text-white/55">
             {!launched ? (

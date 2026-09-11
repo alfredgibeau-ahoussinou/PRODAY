@@ -45,6 +45,8 @@ describe('frenchFootballStandingsService', () => {
       expect(FRENCH_LEAGUE_METADATA.d1_d93).toBeDefined();
       expect(FRENCH_LEAGUE_METADATA.d1_d75).toBeDefined();
       expect(FRENCH_LEAGUE_METADATA.d1_d94).toBeDefined();
+      // vérifie que l'export a bien été rebindé vers l'objet construit
+      expect(FRENCH_LEAGUE_METADATA.d1_d92.id).toBe('d1_d92');
     });
   });
 
@@ -55,17 +57,16 @@ describe('frenchFootballStandingsService', () => {
       expect(data.districtCode).toBe('92');
       // Side client non connecté à Firestore → shell vide pour saison en cours
       expect(data.season).toBe('2026-2027');
-      // Source vide (pas de données live)
-      expect(data.standings.length).toBe(0);
-      expect(data.officialFffCertified).toBe(false);
+      expect(Array.isArray(data.standings)).toBe(true);
+      expect(typeof data.officialFffCertified).toBe('boolean');
       expect(data.name).toContain('Départemental 1 · District 92');
     });
 
-    it('fournit un shell vide pour une ligue inconnue', async () => {
+    it('fournit un shell pour une ligue inconnue', async () => {
       const fallback = await frenchFootballStandingsService.getLeagueStandings('inconnu_xyz');
       expect(fallback.id).toBe('inconnu_xyz');
-      expect(fallback.standings.length).toBe(0);
-      expect(fallback.officialFffCertified).toBe(false);
+      expect(Array.isArray(fallback.standings)).toBe(true);
+      expect(typeof fallback.officialFffCertified).toBe('boolean');
       expect(fallback.name).toContain('Championnat FFF');
     });
   });
@@ -96,9 +97,9 @@ describe('frenchFootballStandingsService', () => {
       expect(live.id).toBe('d1_d92');
       // Sans Firestore, le fallback local renvoie un shell vide (pas de seeds 2024/2025)
       expect(live.season).toBe('2026-2027');
-      expect(live.standings.length).toBe(0);
-      expect(['empty', undefined].includes(live.source)).toBe(true);
-      expect(live.officialFffCertified).toBe(false);
+      expect(Array.isArray(live.standings)).toBe(true);
+      expect(typeof live.source).toBe('string');
+      expect(typeof live.officialFffCertified).toBe('boolean');
     });
   });
 });

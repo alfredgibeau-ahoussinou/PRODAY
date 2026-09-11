@@ -3,7 +3,6 @@ import {
   PRO_CLUB_OVERFLOW_TABS,
   PRO_CLUB_SHELL_TABS,
   PRO_COACH_SHELL_TABS,
-  PRO_ORGANIZER_SHELL_TABS,
   PRO_PLAYER_OVERFLOW_TABS,
   PRO_PLAYER_SHELL_TABS,
 } from '../navigation/shells/productShellTabs';
@@ -24,7 +23,6 @@ describe('club et staff shells', () => {
 
   it('différencie les onglets staff pro actifs et réduit les rôles retirés', () => {
     const coachTabs = getVisibleMainTabs('pro', 'coach');
-    const organizerTabs = getVisibleMainTabs('pro', 'organizer');
     const agentTabs = getVisibleMainTabs('pro', 'agent');
     const recruiterTabs = getVisibleMainTabs('pro', 'recruiter');
 
@@ -33,14 +31,6 @@ describe('club et staff shells', () => {
     expect(coachTabs.indexOf('covoiturage')).toBeLessThan(coachTabs.indexOf('matchs'));
     expect(coachTabs).not.toContain('feed');
     expect(coachTabs).toContain('shop');
-
-    expect(organizerTabs).toEqual([...PRO_ORGANIZER_SHELL_TABS]);
-    expect(organizerTabs).toContain('feed');
-    expect(organizerTabs).toContain('covoiturage');
-    expect(organizerTabs.indexOf('covoiturage')).toBeLessThan(
-      organizerTabs.indexOf('matchs'),
-    );
-    expect(organizerTabs).toContain('shop');
 
     expect(agentTabs).toEqual(['home', 'profil']);
     expect(recruiterTabs).toEqual(['home', 'profil']);

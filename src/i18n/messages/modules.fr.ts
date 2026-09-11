@@ -40,13 +40,13 @@ export const MODULES_FR: MessageCatalog = {
   'matchs.filter.friendly.mine': 'Les miens',
   'matchs.calendar.intro.title': 'Toute la saison, un seul agenda.',
   'matchs.calendar.intro.subtitle':
-    'Convocations, amicaux, détections et tournois — filtrez par jour ou par type.',
+    'Convocations, détections et tournois — filtrez par jour ou par type.',
   'matchs.calendar.search': 'Rechercher un événement…',
   'matchs.calendar.filter.type': 'Type',
   'matchs.calendar.empty.title': 'Aucun événement',
   'matchs.calendar.empty.guest': 'Connectez-vous pour voir votre calendrier club.',
   'matchs.calendar.empty.filtered': 'Aucun résultat pour ces filtres.',
-  'matchs.calendar.empty.suggest': 'Créez une convocation ou proposez un match amical.',
+  'matchs.calendar.empty.suggest': 'Créez une convocation ou un événement d’équipe.',
   'matchs.calendar.cta.login': 'Se connecter',
   'matchs.calendar.cta.propose': 'Proposer un match',
   'matchs.friendly.intro.title': 'Trouver ou proposer un amical.',
@@ -71,7 +71,7 @@ export const MODULES_FR: MessageCatalog = {
   'matchs.convocations.empty.upToDate': 'Tout est à jour',
   'matchs.center.empty.title': 'Aucun match à suivre',
   'matchs.center.empty.subtitle':
-    'Amicaux, tournois et convocations match apparaissent ici dès qu’ils sont planifiés.',
+    'Tournois et convocations match apparaissent ici dès qu’ils sont planifiés.',
   'matchs.center.intro.title': 'Le banc de touche, en direct.',
   'matchs.center.intro.subtitle':
     'Score live, compositions, confirmations RSVP — ouvrez le hub pour piloter le match.',

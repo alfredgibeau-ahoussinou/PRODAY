@@ -161,6 +161,9 @@ export interface User {
   avatar_url?: string;
   role: UserRole;
 
+  /** Privilèges Super Admin (Pôle Administrateur) */
+  is_admin?: boolean;
+
   /** Email confirmé via lien Firebase (comptes email/mot de passe) */
   email_verified?: boolean;
 

@@ -1,4 +1,4 @@
-import type { SponsorQuoteRequest } from '../SponsorQuoteRequest';
+import type { SponsorQuoteRequest } from '../models/SponsorQuoteRequest';
 
 export function buildDefaultQuoteSubject(companyName: string): string {
   const name = companyName.trim() || 'votre entreprise';
@@ -6,7 +6,7 @@ export function buildDefaultQuoteSubject(companyName: string): string {
 }
 
 export function buildDefaultQuoteHtmlPreview(request: SponsorQuoteRequest): string {
-  const packageLabels = {
+  const packageLabels: Record<string, string> = {
     starter: 'Découverte (0 €)',
     territorial: 'Territorial (49 €/mois)',
     national: 'National Pro (99 €/mois)',
@@ -17,9 +17,10 @@ export function buildDefaultQuoteHtmlPreview(request: SponsorQuoteRequest): stri
   const regions = request.regions?.length ? `<li>Zones : ${request.regions.join(', ')}</li>` : '';
   const budget = request.budget ? `<li>Budget : ${request.budget}</li>` : '';
 
+  const label = packageLabels[request.package_tier] ?? 'Sur-mesure';
   return `<p>${greeting},</p>
 <p>Merci pour votre intérêt pour <strong>ProDay Sponsor</strong>. Voici notre proposition pour <strong>${request.company_name}</strong>.</p>
-<p><strong>${packageLabels[request.package_tier]}</strong></p>
+<p><strong>${label}</strong></p>
 <ul>${budget}${goals}${regions}</ul>
 <p>Répondez à cet email pour valider ou ajuster la proposition.</p>
 <p>Cordialement,<br/>L'équipe ProDay Partenaires</p>`;

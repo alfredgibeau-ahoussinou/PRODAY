@@ -18,8 +18,6 @@ export type ClubHubSettingsTileId =
   | 'licenses'
   | 'finances'
   | 'sponsoring'
-  | 'equipment'
-  | 'automations'
   | 'president';
 
 export type ClubHubSettingsTile = {
@@ -177,20 +175,6 @@ export function buildClubHubSettingsTiles(input: {
       hint: 'Partenaires et offres',
       icon: 'gift',
       nav: 'sponsoring',
-    },
-    {
-      id: 'equipment',
-      label: 'Bourse équipements',
-      hint: 'Matériel et échanges',
-      icon: 'shirt',
-      nav: 'equipment',
-    },
-    {
-      id: 'automations',
-      label: 'Automatisations',
-      hint: 'Règles et rappels',
-      icon: 'tune',
-      nav: 'automations',
     },
   ];
   if (input.hasPresident) {

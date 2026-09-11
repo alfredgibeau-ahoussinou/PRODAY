@@ -26,10 +26,10 @@ interface PushScreenTransitionProps {
   variant?: 'push' | 'fade';
 }
 
-const PUSH_ENTER_MS = 280;
-const PUSH_EXIT_MS = 240;
-const FADE_ENTER_MS = 260;
-const FADE_EXIT_MS = 200;
+const PUSH_ENTER_MS = 340;
+const PUSH_EXIT_MS = 260;
+const FADE_ENTER_MS = 300;
+const FADE_EXIT_MS = 220;
 
 /**
  * Navigation type “stack” / détail — push (slide) ou fade overlay.

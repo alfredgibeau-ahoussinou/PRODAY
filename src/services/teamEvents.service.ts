@@ -10,6 +10,7 @@ import {
   query,
   orderBy,
   limit,
+  where,
   serverTimestamp,
   Timestamp,
   type Firestore,
@@ -226,29 +227,73 @@ export const teamEventsService = {
     }
   },
 
-  /** Événements club (passés + à venir) — bilan covoiturage saison */
-  async listForClub(clubId: string, max = 120): Promise<TeamEvent[]> {
+  /** Événements club (passés + à venir) — recherche ciblée par club_id et team_id */
+  async listForClub(clubId: string, max = 120, teamIds?: string[]): Promise<TeamEvent[]> {
     if (!isFirebaseConfigured() || !clubId) return [];
     const database = getDb();
     if (!database) return [];
 
     try {
-      const q = query(
-        collection(database, COL),
-        orderBy('starts_at', 'desc'),
-        limit(max)
-      );
-      const snap = await getDocs(q);
-      return snap.docs
-        .map((d) => teamEventFromFirestore(d.id, d.data() as Record<string, unknown>))
-        .filter((e) => e.club_id === clubId);
+      const map = new Map<string, TeamEvent>();
+
+      // 1. Requête ciblée directe par club_id
+      try {
+        const qClub = query(
+          collection(database, COL),
+          where('club_id', '==', clubId),
+          limit(max)
+        );
+        const snapClub = await getDocs(qClub);
+        snapClub.docs.forEach((d) => {
+          const ev = teamEventFromFirestore(d.id, d.data() as Record<string, unknown>);
+          map.set(ev.id, ev);
+        });
+      } catch (err) {
+        console.warn('[teamEvents.service] listForClub query club_id error:', err);
+      }
+
+      // 2. Requête ciblée pour les équipes affiliées au club
+      if (teamIds && teamIds.length > 0) {
+        for (let i = 0; i < teamIds.length; i += 10) {
+          const chunk = teamIds.slice(i, i + 10);
+          try {
+            const qTeam = query(
+              collection(database, COL),
+              where('team_id', 'in', chunk),
+              limit(max)
+            );
+            const snapTeam = await getDocs(qTeam);
+            snapTeam.docs.forEach((d) => {
+              const ev = teamEventFromFirestore(d.id, d.data() as Record<string, unknown>);
+              map.set(ev.id, ev);
+            });
+          } catch (err) {
+            console.warn('[teamEvents.service] listForClub query team_id error:', err);
+          }
+        }
+      }
+
+      // Si des événements ont été trouvés par requêtes ciblées
+      if (map.size > 0) {
+        return Array.from(map.values()).sort(
+          (a, b) => b.starts_at.getTime() - a.starts_at.getTime()
+        );
+      }
     } catch {
+      // Fallback global ci-dessous
+    }
+
+    // 3. Fallback si les requêtes Firestore indexées échouent ou ne renvoient rien
+    try {
       const snap = await getDocs(collection(database, COL));
+      const teamSet = new Set(teamIds ?? []);
       return snap.docs
         .map((d) => teamEventFromFirestore(d.id, d.data() as Record<string, unknown>))
-        .filter((e) => e.club_id === clubId)
+        .filter((e) => e.club_id === clubId || (e.team_id != null && teamSet.has(e.team_id)))
         .sort((a, b) => b.starts_at.getTime() - a.starts_at.getTime())
         .slice(0, max);
+    } catch {
+      return [];
     }
   },
 
@@ -265,14 +310,34 @@ export const teamEventsService = {
     const database = getDb();
     if (!database) throw new Error('Firebase non configuré');
 
-    const rsvps = buildInitialRsvps(input.invitee_uids);
+    let targetClubId = input.club_id && input.club_id !== 'club_default' ? input.club_id : null;
+    if (!targetClubId && input.organizer_uid) {
+      try {
+        const organizerUser = await usersService.getById(input.organizer_uid);
+        targetClubId = (organizerUser as { club_id?: string; profile?: { club_id?: string } })?.club_id ?? (organizerUser as { club_id?: string; profile?: { club_id?: string } })?.profile?.club_id ?? null;
+      } catch {
+        targetClubId = null;
+      }
+    }
+
+    let targetInviteeUids = input.invitee_uids ?? [];
+    if ((!targetInviteeUids || targetInviteeUids.length === 0) && targetClubId) {
+      try {
+        const clubMembers = await usersService.listMembersByClubId(targetClubId);
+        targetInviteeUids = clubMembers.map((m) => m.uid).filter((uid) => uid !== input.organizer_uid);
+      } catch {
+        targetInviteeUids = input.invitee_uids ?? [];
+      }
+    }
+
+    const rsvps = buildInitialRsvps(targetInviteeUids);
     const ref = await addDoc(collection(database, COL), {
       title: input.title.trim(),
       description: input.description?.trim() || null,
       event_type: input.event_type,
       organizer_uid: input.organizer_uid,
       organizer_name: input.organizer_name,
-      club_id: input.club_id ?? null,
+      club_id: targetClubId,
       club_name: input.club_name ?? null,
       team_id: input.team_id ?? null,
       tournament_id: input.tournament_id ?? null,
@@ -282,7 +347,7 @@ export const teamEventsService = {
       ends_at: input.ends_at ? Timestamp.fromDate(input.ends_at) : null,
       city: input.city.trim(),
       location_label: input.location_label?.trim() || null,
-      invitee_uids: input.invitee_uids,
+      invitee_uids: targetInviteeUids,
       rsvps,
       rsvp_notes: {},
       attendance_marks: {},
@@ -295,7 +360,7 @@ export const teamEventsService = {
     void notifyGuardiansForMinorInvitees(
       database,
       ref.id,
-      input.invitee_uids,
+      targetInviteeUids,
       input.title.trim(),
       input.starts_at,
       input.city
@@ -506,7 +571,7 @@ export const teamEventsService = {
 
         await scheduleProdayLocalNotification({
           identifier: `pickup-late-${eventId}-${uid}`,
-          title: `🚗 ${title}`,
+          title,
           body,
           data: {
             type: 'parent_pickup_late',

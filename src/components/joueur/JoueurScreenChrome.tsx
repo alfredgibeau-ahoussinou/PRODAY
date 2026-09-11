@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { JoueurPageIdentity } from '../../content/joueurPageIdentity';
 import {
@@ -39,13 +40,20 @@ export function JoueurScreenChrome({
   style,
   hideHero = false,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const theme = useJoueurTheme();
   const identity = identityProp ?? theme.identity;
   const accent = theme.accent;
 
   if (!identity) {
     return (
-      <View style={[styles.fallback, { backgroundColor: PLAYER_DARK.bg }, style]}>
+      <View
+        style={[
+          styles.fallback,
+          { backgroundColor: PLAYER_DARK.bg, paddingTop: spacing.xs },
+          style,
+        ]}
+      >
         {children}
       </View>
     );
@@ -68,7 +76,7 @@ export function JoueurScreenChrome({
         />
 
         {showHero ? (
-          <View style={styles.hero}>
+          <View style={[styles.hero, { paddingTop: spacing.xs }]}>
             <View style={[styles.heroPlate, { borderColor: PLAYER_DARK.border }]}>
               <JoueurHudCorners color={accent} size={8} thickness={1.5} />
               {kicker ? (

@@ -3,9 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { PressableSpring } from '../motion/PressableSpring';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { ProDayText } from '../ui/ProDayText';
-import { useAppTheme } from '../../context/ProductLineContext';
-import { MATCH_SITE } from '../../content/matchPageIdentity';
-import { spacing } from '../../theme/designTokens';
+import { useMatchSkinTokens } from './matchCenterUi';
 
 type WeekDay = { date: Date; count: number; isToday: boolean };
 
@@ -20,23 +18,57 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
   selectedDate,
   onSelectDay,
 }) => {
-  const { colors } = useAppTheme();
-  const styles = useMemo(() => createStyles(colors.accent), [colors.accent]);
+  const skin = useMatchSkinTokens();
+  const styles = useMemo(() => createStyles(skin), [skin]);
+
+  const todayDay = useMemo(() => days.find((d) => d.isToday), [days]);
+
+  const monthTitle = useMemo(() => {
+    const targetDate = selectedDate || todayDay?.date || days[0]?.date || new Date();
+    const formatted = targetDate.toLocaleDateString('fr-FR', {
+      month: 'long',
+      year: 'numeric',
+    });
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  }, [selectedDate, todayDay, days]);
 
   return (
     <View style={styles.panel}>
-      <ProDayText variant="caption" style={styles.label}>
-        Cette semaine
-      </ProDayText>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
-      >
+      <View style={styles.headerRow}>
+        <ProDayText variant="title" style={styles.monthTitle}>
+          {monthTitle}
+        </ProDayText>
+
+        {todayDay ? (
+          <PressableSpring
+            onPress={() => {
+              prodayHaptics.press();
+              onSelectDay?.(todayDay.date);
+            }}
+            scaleTo={0.94}
+            haptic
+            style={[
+              styles.todayBadge,
+              {
+                backgroundColor: `${skin.accent}18`,
+                borderColor: `${skin.accent}55`,
+              },
+            ]}
+          >
+            <ProDayText variant="caption" style={[styles.todayText, { color: skin.accent }]}>
+              Aujourd'hui
+            </ProDayText>
+          </PressableSpring>
+        ) : null}
+      </View>
+
+      <View style={styles.daysRow}>
         {days.map((day) => {
           const selected =
             selectedDate && day.date.toDateString() === selectedDate.toDateString();
-          const weekday = day.date.toLocaleDateString('fr-FR', { weekday: 'short' });
+          const weekday = day.date
+            .toLocaleDateString('fr-FR', { weekday: 'short' })
+            .replace('.', '');
           const dom = day.date.getDate();
 
           return (
@@ -44,94 +76,104 @@ export const MatchWeekStrip: React.FC<MatchWeekStripProps> = ({
               key={day.date.toISOString()}
               style={[
                 styles.chip,
-                selected && styles.chipOn,
-                day.isToday && !selected && styles.chipToday,
+                selected
+                  ? {
+                      backgroundColor: skin.accent,
+                    }
+                  : styles.chipInactive,
               ]}
               onPress={() => {
                 prodayHaptics.tabSwitch();
                 onSelectDay?.(day.date);
               }}
-              scaleTo={0.97}
+              scaleTo={0.94}
               haptic
             >
               <ProDayText
                 variant="caption"
-                style={[styles.weekday, selected ? styles.textOn : styles.textOff]}
+                style={[
+                  styles.weekday,
+                  { color: selected ? '#000000' : '#8B8B9A' },
+                ]}
               >
-                {weekday}
+                {weekday.toUpperCase()}
               </ProDayText>
               <ProDayText
                 variant="section"
-                style={[styles.dom, selected ? styles.textOn : styles.domOff]}
+                style={[
+                  styles.dom,
+                  { color: selected ? '#000000' : '#FFFFFF' },
+                ]}
               >
                 {dom}
               </ProDayText>
-              {day.count > 0 ? (
-                <ProDayText
-                  variant="caption"
-                  style={[styles.count, selected ? styles.textOn : { color: colors.accent }]}
-                >
-                  {day.count}
-                </ProDayText>
-              ) : (
-                <View style={styles.dotPlaceholder} />
-              )}
             </PressableSpring>
           );
         })}
-      </ScrollView>
+      </View>
     </View>
   );
 };
 
-function createStyles(accent: string) {
+function createStyles(_skin: ReturnType<typeof useMatchSkinTokens>) {
   return StyleSheet.create({
     panel: {
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: MATCH_SITE.border,
-      padding: spacing.sm,
-      gap: spacing.xs,
-      backgroundColor: MATCH_SITE.surface,
+      backgroundColor: '#14141A',
+      borderColor: '#22222E',
+      borderWidth: 1,
+      borderRadius: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      gap: 14,
     },
-    label: {
-      fontWeight: '800',
-      paddingHorizontal: spacing.xs,
-      textTransform: 'uppercase',
-      letterSpacing: 1.6,
-      fontSize: 10,
-      color: MATCH_SITE.muted,
-    },
-    row: {
-      gap: 4,
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingHorizontal: 2,
     },
-    chip: {
-      width: 48,
+    monthTitle: {
+      fontSize: 16,
+      fontWeight: '900',
+      color: '#FFFFFF',
+      letterSpacing: -0.3,
+    },
+    todayBadge: {
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 999,
+      borderWidth: 1,
+    },
+    todayText: {
+      fontWeight: '800',
+      fontSize: 11,
+    },
+    daysRow: {
+      flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: spacing.sm,
-      paddingHorizontal: 4,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: MATCH_SITE.border,
-      gap: 1,
+      justifyContent: 'space-between',
+    },
+    chip: {
+      width: 44,
+      height: 56,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      gap: 2,
+    },
+    chipInactive: {
       backgroundColor: 'transparent',
     },
-    chipOn: {
-      borderColor: accent,
-      backgroundColor: MATCH_SITE.soft,
-    },
-    chipToday: {
-      borderColor: accent,
-    },
     weekday: {
-      fontSize: 10,
-      fontWeight: '700',
-      textTransform: 'uppercase',
+      fontSize: 9.5,
+      fontWeight: '800',
+      letterSpacing: 0.2,
     },
-    textOn: { color: accent },
-    textOff: { color: MATCH_SITE.muted },
-    dom: { fontWeight: '800', fontSize: 17, lineHeight: 20 },
-    domOff: { color: MATCH_SITE.foreground },
-    count: { fontWeight: '900', fontSize: 9, marginTop: 2 },
-    dotPlaceholder: { height: 12, marginTop: 2 },
+    dom: {
+      fontWeight: '900',
+      fontSize: 17,
+      lineHeight: 20,
+    },
   });
 }
+

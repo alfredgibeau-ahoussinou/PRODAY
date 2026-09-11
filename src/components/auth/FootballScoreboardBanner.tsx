@@ -26,7 +26,7 @@ export const FootballScoreboardBanner: React.FC<FootballScoreboardBannerProps> =
   variant,
 }) => {
   const reveal = useSharedValue(0);
-  const accent = variant === 'welcome' ? '#34D399' : '#FBBF24';
+  const accent = '#10B981';
 
   const jerseyNumber = useMemo(() => 7 + (name.charCodeAt(0) % 9), [name]);
 

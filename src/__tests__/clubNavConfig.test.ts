@@ -34,20 +34,18 @@ describe('clubNavConfig', () => {
 
   it('mappe les onglets legacy vers la sidebar', () => {
     expect(clubNavFromTab('home')).toBe('today');
-    expect(clubNavFromTab('recrutement')).toBe('recruitment');
+    expect(clubNavFromTab('recrutement')).toBe('players');
     expect(clubNavFromTab('matchs')).toBe('matches');
     expect(clubNavFromTab('messages')).toBe('communication');
     expect(clubNavFromTab('profil')).toBe('club');
-    expect(clubNavFromTab('covoiturage')).toBe('carpool');
-    expect(clubNavFromTab('shop')).toBe('shop');
+    expect(clubNavFromTab('covoiturage')).toBe('today');
+    expect(clubNavFromTab('shop')).toBe('today');
   });
 
   it('conserve le tab home pour le pilotage', () => {
     expect(tabFromClubNav('today')).toBe('home');
     expect(tabFromClubNav('assistant')).toBe('home');
     expect(tabFromClubNav('teams')).toBe('home');
-    expect(tabFromClubNav('video')).toBe('home');
-    expect(tabFromClubNav('recruitment')).toBe('recrutement');
     expect(tabFromClubNav('calendar')).toBe('matchs');
     expect(tabFromClubNav('matches')).toBe('matchs');
   });
@@ -79,7 +77,6 @@ describe('clubNavConfig', () => {
     expect(resolveClubNavOnTabSync('players', 'home')).toBe('players');
     expect(resolveClubNavOnTabSync('matches', 'home')).toBe('today');
     expect(resolveClubNavOnTabSync('matches', 'matchs')).toBe('matches');
-    expect(resolveClubNavOnTabSync('carpool', 'covoiturage')).toBe('carpool');
   });
 
   it('conserve Pack Club lors du sync profil (évite Accueil)', () => {
@@ -92,7 +89,7 @@ describe('clubNavConfig', () => {
   it('mappe openDashboard club vers une pane (pas Accueil)', () => {
     expect(clubNavFromDashboard('gestion')).toBe('players');
     expect(clubNavFromDashboard('sponsors')).toBe('sponsoring');
-    expect(clubNavFromDashboard('smart_tactics')).toBe('stats');
+    expect(clubNavFromDashboard('smart_tactics')).toBe('matches');
     expect(clubNavFromDashboard('train')).toBeNull();
   });
 
@@ -115,16 +112,15 @@ describe('clubNavConfig', () => {
   it('retrouve Pack Club et Assistant', () => {
     expect(findClubNavItem('pack')?.label).toBe('Pack Club');
     expect(findClubNavItem('pack')?.hint).toContain('SUR DEVIS');
-    expect(findClubNavItem('carpool')?.tab).toBe('covoiturage');
     expect(findClubNavItem('assistant')?.aiBadge).toBe(true);
-    expect(findClubNavItem('recruitment')?.label).toBe('Recrutement');
+    expect(findClubNavItem('players')?.label).toBe('Joueurs');
   });
 });
 
 describe('resolveClubNavAccess', () => {
-  const allOn = (k: string) => k !== 'club_video' && k !== 'coach_video';
+  const allOn = (k: string) => true;
 
-  it('Amateur : événements et vidéo verrouillés, calendrier ouvert', () => {
+  it('Amateur : événements et sponsoring verrouillés, calendrier ouvert', () => {
     const folders = resolveClubNavFolders({
       offerId: 'club_amateur',
       isFeatureEnabled: allOn,
@@ -132,12 +128,11 @@ describe('resolveClubNavAccess', () => {
     const items = folders.flatMap((f) => f.items);
     expect(items.find((i) => i.id === 'calendar')?.locked).toBe(false);
     expect(items.find((i) => i.id === 'events')?.locked).toBe(true);
-    expect(items.find((i) => i.id === 'video')?.locked).toBe(true);
     expect(items.find((i) => i.id === 'sponsoring')?.locked).toBe(true);
     expect(items.find((i) => i.id === 'assistant')?.locked).toBe(false);
   });
 
-  it('Essentiel : événements et sponsoring ouverts, vidéo verrouillée', () => {
+  it('Essentiel : événements et sponsoring ouverts', () => {
     const folders = resolveClubNavFolders({
       offerId: 'club_essentiel',
       isFeatureEnabled: allOn,
@@ -145,35 +140,16 @@ describe('resolveClubNavAccess', () => {
     const items = folders.flatMap((f) => f.items);
     expect(items.find((i) => i.id === 'events')?.locked).toBe(false);
     expect(items.find((i) => i.id === 'sponsoring')?.locked).toBe(false);
-    expect(items.find((i) => i.id === 'video')?.locked).toBe(true);
   });
 
-  it('Tout inclus : vidéo ouverte', () => {
+  it('Tout inclus : tout ouvert', () => {
     const folders = resolveClubNavFolders({
       offerId: 'club_premium',
       isFeatureEnabled: allOn,
     });
     const items = folders.flatMap((f) => f.items);
-    expect(items.find((i) => i.id === 'video')?.locked).toBe(false);
-  });
-
-  it('flag admin club_video débloque la vidéo hors formule', () => {
-    const folders = resolveClubNavFolders({
-      offerId: 'club_amateur',
-      isFeatureEnabled: (k) => k === 'club_video',
-    });
-    const items = folders.flatMap((f) => f.items);
-    expect(items.find((i) => i.id === 'video')?.locked).toBe(false);
-    expect(items.find((i) => i.id === 'events')?.locked).toBe(true);
-  });
-
-  it('masque boutique si flag shop off', () => {
-    const folders = resolveClubNavFolders({
-      offerId: 'club_premium',
-      isFeatureEnabled: (k) => k !== 'shop',
-    });
-    const items = folders.flatMap((f) => f.items);
-    expect(items.find((i) => i.id === 'shop')).toBeUndefined();
+    expect(items.find((i) => i.id === 'events')?.locked).toBe(false);
+    expect(items.find((i) => i.id === 'sponsoring')?.locked).toBe(false);
   });
 
   it('sans formule : modules feature locked', () => {

@@ -17,7 +17,7 @@ export const VerificationSuccessScreen: React.FC<VerificationSuccessScreenProps>
   onBack,
   diplomaName = 'UEFA A Licence',
   institution = 'UEFA · 2022',
-  verifiedAt = '12 mai 2025',
+  verifiedAt = '12 septembre 2026',
 }) => {
   const { colors: c, productLine, isWoman, rootStyle } = useThemedScreen();
   const styles = useMemo(() => createStyles(c), [c]);

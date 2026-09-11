@@ -29,7 +29,6 @@ describe('adminProductLine', () => {
   it('expose les rôles métier par univers', () => {
     expect(adminRolesForProductLine('pro_staff')).toEqual([
       'coach',
-      'organizer',
     ]);
     expect(adminRolesForProductLine('amateur')).toEqual(['player']);
     expect(adminRolesForProductLine('sponsor')).toEqual(['sponsor']);

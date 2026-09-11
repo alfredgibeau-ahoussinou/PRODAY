@@ -4,7 +4,7 @@ describe('player tactics coach', () => {
   it('ajoute une quête daily Coach IA', () => {
     const quest = JOUEUR_DAILY_QUESTS.find((q) => q.id === 'daily-coach');
     expect(quest).toBeTruthy();
-    expect(quest?.title).toMatch(/Coach IA/i);
+    expect(quest?.title).toMatch(/(Coach IA|Conseil Coach)/i);
     expect(quest?.xp).toBeGreaterThan(0);
     expect(quest?.tabHint).toBe('feed');
   });

@@ -19,8 +19,7 @@ export function canPublishRecruitmentPost(role: UserRole): boolean {
     role === 'club' ||
     role === 'coach' ||
     role === 'agent' ||
-    role === 'recruiter' ||
-    role === 'organizer'
+    role === 'recruiter'
   );
 }
 
@@ -47,22 +46,22 @@ export function canEditClubBranding(
 
 /** Proposer / accepter un match amical entre clubs. */
 export function canProposeFriendlyMatch(role: UserRole): boolean {
-  return role === 'club' || role === 'coach' || role === 'organizer';
+  return role === 'club' || role === 'coach';
 }
 
 /** Création / rattachement entité club */
 export function canManageClubEntity(role: UserRole): boolean {
-  return role === 'club' || role === 'coach' || role === 'organizer' || role === 'agent';
+  return role === 'club' || role === 'coach' || role === 'agent';
 }
 
-/** Gestion effectif / planning équipe (club, coach, organisateur). */
+/** Gestion effectif / planning équipe (club, coach). */
 export function isOrganizerCapable(role: UserRole): boolean {
-  return role === 'club' || role === 'coach' || role === 'organizer';
+  return role === 'club' || role === 'coach';
 }
 
 /** Publication stages, annonces institutionnelles */
 export function canPublishStages(role: UserRole): boolean {
-  return role === 'club' || role === 'organizer' || role === 'coach';
+  return role === 'club' || role === 'coach';
 }
 
 export function isStaffRole(role: UserRole): boolean {

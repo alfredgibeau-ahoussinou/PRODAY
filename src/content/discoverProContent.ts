@@ -32,6 +32,6 @@ export const DISCOVER_UNIVERSE_CARDS_PRO = [
     subtitle: 'Visibilité & partenariats',
     image: SHOWCASE_IMAGES.coachFounder,
     icon: 'star-four-points' as IconName,
-    accent: '#F59E0B',
+    accent: '#FAFAFA',
   },
 ];

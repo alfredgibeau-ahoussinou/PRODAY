@@ -215,11 +215,11 @@ export function YouthUniverseScreen({
     else onOpenPass();
   };
 
-  const skyTop = isGirl ? '#2A0A1F' : '#2A1808';
-  const skyMid = isGirl ? '#6B1A52' : '#7C4A12';
-  const ground = isGirl ? '#DB2777' : '#D97706';
-  const pillBg = isGirl ? 'rgba(42,10,31,0.88)' : 'rgba(42,24,8,0.88)';
-  const speechBg = isGirl ? 'rgba(26,8,20,0.92)' : 'rgba(26,16,6,0.92)';
+  const skyTop = '#0A0A0F';
+  const skyMid = '#121218';
+  const ground = accent;
+  const pillBg = 'rgba(18,18,24,0.9)';
+  const speechBg = 'rgba(18,18,24,0.95)';
   const mascotIcon: IconName = isGirl ? 'star-four-points' : 'football';
   const worldTitle = isGirl ? 'Île magique' : 'Terrain secret';
 

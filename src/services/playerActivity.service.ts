@@ -207,6 +207,69 @@ export const playerActivityService = {
     }
     await updateDoc(ref, { voice_reflection_url: url });
   },
+
+  /** Synchronisation Cloud de l'auto-évaluation forme et bien-être du joueur. */
+  async recordDailyCheckin(
+    playerUid: string,
+    checkin: {
+      dateKey: string;
+      energyLevel: number;
+      sleepLevel: number;
+      muscleLevel: number;
+      routines?: { hydration: boolean; mobility: boolean; visualization: boolean };
+    }
+  ): Promise<void> {
+    if (!isFirebaseConfigured()) return;
+    const database = getDb();
+    if (!database) return;
+
+    const checkinDocId = `checkin_${playerUid}_${checkin.dateKey}`;
+    const ref = doc(database, 'player_daily_checkins', checkinDocId);
+    await setDoc(
+      ref,
+      {
+        player_uid: playerUid,
+        date_key: checkin.dateKey,
+        energy_level: checkin.energyLevel,
+        sleep_level: checkin.sleepLevel,
+        muscle_level: checkin.muscleLevel,
+        routines: checkin.routines ?? null,
+        updated_at: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  },
+
+  /** Récupère le dernier check-in de forme du joueur. */
+  async getLatestDailyCheckin(
+    playerUid: string,
+    dateKey: string
+  ): Promise<{
+    energyLevel: number;
+    sleepLevel: number;
+    muscleLevel: number;
+    routines?: { hydration: boolean; mobility: boolean; visualization: boolean };
+  } | null> {
+    if (!isFirebaseConfigured()) return null;
+    const database = getDb();
+    if (!database) return null;
+
+    try {
+      const checkinDocId = `checkin_${playerUid}_${dateKey}`;
+      const ref = doc(database, 'player_daily_checkins', checkinDocId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return null;
+      const data = snap.data();
+      return {
+        energyLevel: typeof data?.energy_level === 'number' ? data.energy_level : 1,
+        sleepLevel: typeof data?.sleep_level === 'number' ? data.sleep_level : 1,
+        muscleLevel: typeof data?.muscle_level === 'number' ? data.muscle_level : 0,
+        routines: data?.routines ?? undefined,
+      };
+    } catch {
+      return null;
+    }
+  },
 };
 
 function activityPayload(

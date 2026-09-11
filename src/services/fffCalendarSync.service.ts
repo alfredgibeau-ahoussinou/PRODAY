@@ -10,6 +10,19 @@ import { frenchFootballStandingsService } from './frenchFootballStandings.servic
 
 const IMPORTED_FFF_EVENTS_KEY = '@proday_fff_imported_events_v1';
 
+function getUpcomingMatchdayDate(): string {
+  const d = new Date();
+  // Calcule la date du prochain match (dimanche à venir) pour la saison 2026/2027
+  const dayOfWeek = d.getDay();
+  const daysUntilSunday = (7 - dayOfWeek) % 7 || 7;
+  d.setDate(d.getDate() + daysUntilSunday);
+  const y = d.getFullYear() < 2026 ? 2026 : d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+
 export interface HeadToHeadMatchup {
   competitionName: string;
   divisionLabel: string;
@@ -273,15 +286,17 @@ export const fffCalendarSyncService = {
     }
 
     return {
+
       competitionName: comp.name,
       divisionLabel: comp.divisionLabel,
       nextFixture: {
         matchday: nextFix?.matchday ?? 15,
-        date: nextFix?.date ?? '2025-03-16',
+        date: nextFix?.date && !nextFix.date.startsWith('2025') ? nextFix.date : getUpcomingMatchdayDate(),
         time: nextFix?.time ?? '15:00',
         venue: nextFix?.venue ?? 'Stade Maurice Hubert',
         isHome,
       },
+
       myTeam: {
         id: myRow.team_id,
         name: myRow.name,

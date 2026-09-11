@@ -199,6 +199,31 @@ export function AdminUserDetail({
     );
   };
 
+  const toggleAdminPrivileges = () => {
+    const nextAdmin = !user.is_admin;
+    confirmAdminAction(
+      nextAdmin ? 'Promouvoir Super Admin (Pôle Administrateur) ?' : 'Retirer le statut Super Admin ?',
+      nextAdmin
+        ? 'Accès complet au Cockpit Administrateur et permissions plateforme.'
+        : 'L’utilisateur n’aura plus les droits Super Admin.',
+      () =>
+        run(async () => {
+          await adminService.updateUser(user.uid, { is_admin: nextAdmin });
+          await adminAuditService.log({
+            action: 'user_updated',
+            actor_uid: actorUid,
+            actor_email: actorEmail,
+            target_type: 'user',
+            target_id: user.uid,
+            summary: nextAdmin
+              ? 'Promu au Pôle Administrateur (Super Admin)'
+              : 'Rétrogradé (retrait du Pôle Administrateur)',
+          });
+        }),
+      !nextAdmin,
+    );
+  };
+
   const setActive = (active: boolean) =>
     confirmAdminAction(
       active ? 'Réactiver le compte ?' : 'Suspendre le compte ?',
@@ -342,6 +367,33 @@ export function AdminUserDetail({
               ))}
             </View>
             <AdminButton label={busy ? '…' : 'Enregistrer le rôle'} onPress={saveRole} disabled={busy} />
+            
+            <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.hairline, gap: 8 }}>
+              <AdminText variant="h3">Pôle Administrateur (Super Admin)</AdminText>
+              <AdminText variant="caption" color={t.muted}>
+                {user.is_admin
+                  ? 'Ce compte dispose des accès Pôle Administrateur (Super Admin).'
+                  : 'Compte utilisateur sans accès au Pôle Administrateur.'}
+              </AdminText>
+              {user.is_admin ? (
+                <View style={{ alignSelf: 'flex-start' }}>
+                  <AdminBadge label="Super Admin (Actif)" tone="accent" />
+                </View>
+              ) : null}
+              <AdminButton
+                label={
+                  busy
+                    ? '…'
+                    : user.is_admin
+                    ? 'Rétrograder (Retirer statut Admin)'
+                    : 'Promouvoir au Pôle Administrateur (Super Admin)'
+                }
+                variant={user.is_admin ? 'danger' : 'soft'}
+                disabled={busy}
+                onPress={toggleAdminPrivileges}
+              />
+            </View>
+
             {(roleOption === 'president' || isPresident || user.role === 'club') &&
             onPreviewPresidentPole ? (
               <View style={{ gap: 8, marginTop: 8 }}>

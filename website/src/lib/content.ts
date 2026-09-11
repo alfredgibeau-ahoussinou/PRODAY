@@ -6,12 +6,12 @@ import {
 
 export const BRAND = {
   name: "ProDay",
-  tagline: "L'infrastructure de votre football",
+  tagline: "Tout votre club. Un seul endroit. Moins d'administration. Plus de football.",
   logo: "/branding/logo-proday-official.png",
   /** Phrase d’accueil : ce que fait l’app, en une ligne. */
-  mission: "Pas un outil de plus. L'infrastructure de votre football.",
+  mission: "Tout votre club. Un seul endroit. Moins d'administration. Plus de football.",
   heroSupport:
-    "Joueurs, coachs, clubs, parents, supporters et sponsors : les objets métier du football reliés dans un même écosystème. Plus de WhatsApp, tableurs et docs éparpillés.",
+    "Joueurs, coachs, clubs, parents, supporters et sponsors : les objets métier du football reliés dans un même écosystème. Plus de WhatsApp, tableurs et paperasse éparpillés.",
 } as const;
 
 /** Pitch honnête : capacités réelles vs ambition long terme. Pas de métriques fictives. */

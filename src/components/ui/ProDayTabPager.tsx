@@ -15,6 +15,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { PressableSpring, PagerPage, AnimatedTabLabel } from '../motion';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { motion } from '../../theme/motion';
@@ -25,7 +26,12 @@ import type { AppColors } from '../../theme/universeTheme';
 import { fontFamily } from '../../theme/typography';
 import { spacing, radius } from '../../theme/designTokens';
 
-export type ProDayChapterDef<T extends string> = { id: T; label: string };
+export type ProDayChapterDef<T extends string> = {
+  id: T;
+  label: string;
+  icon?: string;
+  activeIcon?: string;
+};
 
 export interface ProDayTabPage<T extends string> {
   id: T;
@@ -42,8 +48,8 @@ interface ProDayTabPagerProps<T extends string> {
   showFooter?: boolean;
   /** Rail d’onglets plus bas (40 px). */
   compact?: boolean;
-  /** Rail souligné (défaut), pills scrollables, ou bandeau jeu. */
-  variant?: 'rail' | 'pills' | 'game';
+  /** Rail souligné (défaut), pills scrollables, barre de segments unifiée, ou bandeau jeu. */
+  variant?: 'rail' | 'pills' | 'segments' | 'game';
   /** Palette explicite (ex. shell coach Clair). */
   colors?: AppColors;
 }
@@ -187,8 +193,83 @@ export function ProDayTabPager<T extends string>({
 
   return (
     <View style={styles.root} onLayout={onRootLayout}>
-      <View style={styles.railWrap}>
-        {variant === 'pills' ? (
+      <View style={variant === 'segments' ? styles.segmentsWrap : styles.railWrap}>
+        {variant === 'segments' ? (
+          <View style={styles.segmentsTrack}>
+            {chapters.map((ch) => {
+              const on = ch.id === activeChapter;
+              const badge = badges?.[ch.id];
+              const iconName = ch.icon ? (on ? ch.activeIcon || ch.icon : ch.icon) : undefined;
+              const activeBg =
+                colors.accent.startsWith('#') && colors.accent.length === 7
+                  ? `${colors.accent}1C`
+                  : 'rgba(255, 255, 255, 0.12)';
+              const activeBorder =
+                colors.accent.startsWith('#') && colors.accent.length === 7
+                  ? `${colors.accent}4D`
+                  : 'rgba(255, 255, 255, 0.2)';
+
+              return (
+                <PressableSpring
+                  key={ch.id}
+                  onPress={() => {
+                    prodayHaptics.tabSwitch();
+                    goToChapter(ch.id, true);
+                  }}
+                  scaleTo={0.96}
+                  haptic
+                  style={[
+                    styles.segmentBtn,
+                    on && [
+                      styles.segmentBtnActive,
+                      {
+                        borderColor: activeBorder,
+                        backgroundColor: activeBg,
+                      },
+                    ],
+                  ]}
+                >
+                  <View style={styles.segmentIconRow}>
+                    {iconName ? (
+                      <Ionicons
+                        name={iconName as any}
+                        size={16}
+                        color={on ? colors.accent : colors.textMuted}
+                      />
+                    ) : null}
+                    {badge && badge > 0 ? (
+                      <View
+                        style={[
+                          styles.segmentBadge,
+                          !iconName && { position: 'relative', top: 0, right: 0, marginLeft: 4 },
+                          { backgroundColor: on ? colors.accent : '#EF4444' },
+                        ]}
+                      >
+                        <ProDayText
+                          style={[
+                            styles.segmentBadgeText,
+                            { color: on ? '#000000' : '#FFFFFF' },
+                          ]}
+                        >
+                          {badge > 9 ? '9+' : badge}
+                        </ProDayText>
+                      </View>
+                    ) : null}
+                  </View>
+                  <ProDayText
+                    numberOfLines={1}
+                    style={[
+                      styles.segmentLabel,
+                      on && [styles.segmentLabelActive, { color: colors.accent }],
+                    ]}
+                  >
+                    {ch.label}
+                  </ProDayText>
+                </PressableSpring>
+              );
+            })}
+          </View>
+        ) : variant === 'pills' ? (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -363,17 +444,82 @@ function createStyles(
     surfaceMuted: string;
     accent: string;
     brandInverse: string;
+    surfaceRaised?: string;
   },
   compact: boolean,
-  variant: 'rail' | 'pills' | 'game',
+  variant: 'rail' | 'pills' | 'segments' | 'game',
 ) {
   return StyleSheet.create({
     root: { flex: 1, minHeight: 0 },
     railWrap: {
       backgroundColor: c.surface,
-      borderBottomWidth: variant === 'pills' ? 0 : StyleSheet.hairlineWidth,
+      borderBottomWidth: variant === 'pills' || variant === 'segments' ? 0 : StyleSheet.hairlineWidth,
       borderBottomColor: c.border,
       paddingBottom: variant === 'pills' ? spacing.xs : 0,
+    },
+    segmentsWrap: {
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.xs,
+      paddingBottom: spacing.sm,
+      backgroundColor: 'transparent',
+    },
+    segmentsTrack: {
+      flexDirection: 'row',
+      backgroundColor: c.surfaceRaised || 'rgba(255, 255, 255, 0.05)',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: c.border || 'rgba(255, 255, 255, 0.08)',
+      padding: 4,
+      gap: 4,
+    },
+    segmentBtn: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 2,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      gap: 3,
+    },
+    segmentBtnActive: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    segmentIconRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+    },
+    segmentLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: c.textMuted,
+      textAlign: 'center',
+    },
+    segmentLabelActive: {
+      fontWeight: '800',
+    },
+    segmentBadge: {
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      paddingHorizontal: 4,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      top: -5,
+      right: -10,
+    },
+    segmentBadgeText: {
+      fontSize: 9,
+      fontWeight: '900',
+      lineHeight: 11,
     },
     pillsRow: {
       flexDirection: 'row',

@@ -49,6 +49,16 @@ export const MatchCompetitionsChapter: React.FC<MatchCompetitionsChapterProps> =
     [fixtures],
   );
 
+  const filteredSeasons = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return seasons;
+    return seasons.filter(
+      (s) =>
+        s.competition_name?.toLowerCase().includes(q) ||
+        s.label?.toLowerCase().includes(q),
+    );
+  }, [seasons, search]);
+
   return (
     <ScrollView
       contentContainerStyle={[MATCH_CHAPTER_PAD, styles.stack]}
@@ -61,9 +71,6 @@ export const MatchCompetitionsChapter: React.FC<MatchCompetitionsChapterProps> =
     >
       {/* 1. TABLEAU DE CLASSEMENT OFFICIEL & BUTEURS EN TÊTE */}
       <EliteLeagueStandings
-        leagueName="Championnat Régional FFF"
-        divisionName="Poule A · Senior D1"
-        standings={[]}
         onSelectTeam={(teamId) => {
           if (seasons.length > 0) {
             onOpenSeason(seasons[0].id);
@@ -91,28 +98,34 @@ export const MatchCompetitionsChapter: React.FC<MatchCompetitionsChapterProps> =
         </View>
       ) : null}
 
-      {/* 3. RECHERCHE DE SAISONS / DIVISIONS */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Toutes les Poules & Divisions</Text>
-        <SearchBar
-          placeholder="Rechercher une poule, division…"
-          value={search}
-          onChangeText={setSearch}
-        />
-        {loading ? <SkeletonList count={2} variant="card" /> : null}
-        {!loading && seasons.length > 0 ? (
-          <View style={[styles.list, { marginTop: 8 }]}>
-            {seasons.map((s) => (
-              <MatchCompetitionSeasonCard
-                key={s.id}
-                season={s}
-                colors={c}
-                onPress={() => onOpenSeason(s.id)}
-              />
-            ))}
-          </View>
-        ) : null}
-      </View>
+      {/* 3. RECHERCHE DE SAISONS / DIVISIONS (affiché si des poules existent ou en cours de chargement) */}
+      {loading || seasons.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Toutes les Poules & Divisions</Text>
+          <SearchBar
+            placeholder="Rechercher une poule, division…"
+            value={search}
+            onChangeText={setSearch}
+          />
+          {loading ? <SkeletonList count={2} variant="card" /> : null}
+          {!loading && filteredSeasons.length > 0 ? (
+            <View style={[styles.list, { marginTop: 8 }]}>
+              {filteredSeasons.map((s) => (
+                <MatchCompetitionSeasonCard
+                  key={s.id}
+                  season={s}
+                  colors={c}
+                  onPress={() => onOpenSeason(s.id)}
+                />
+              ))}
+            </View>
+          ) : !loading && seasons.length > 0 && search.trim().length > 0 ? (
+            <Text style={[styles.emptySearchText, { color: c.textSecondary }]}>
+              Aucune division trouvée pour « {search.trim()} »
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
     </ScrollView>
   );
 };
@@ -148,5 +161,10 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 8,
+  },
+  emptySearchText: {
+    fontSize: 13,
+    paddingVertical: 12,
+    textAlign: 'center',
   },
 });

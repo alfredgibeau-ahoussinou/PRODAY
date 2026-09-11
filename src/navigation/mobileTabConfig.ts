@@ -109,10 +109,6 @@ const FLAT_RAIL_RULES: FlatRailRule[] = [
     match: (line, role) => isProProductLine(line) && role === 'recruiter',
     primary: ['home', 'recrutement', 'matchs', 'feed', 'messages', 'shop', 'profil'],
   },
-  {
-    match: (line, role) => isProProductLine(line) && role === 'organizer',
-    primary: ['home', 'covoiturage', 'matchs', 'recrutement', 'feed', 'messages', 'shop', 'profil'],
-  },
 ];
 
 function buildFlatRailLayout(

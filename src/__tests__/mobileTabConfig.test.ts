@@ -73,12 +73,7 @@ describe('mobileTabConfig', () => {
     expect(rail.center).toBeNull();
   });
 
-  it('affiche le menu organisateur avec covoiturage en 2e position', () => {
-    const rail = getMobileRailLayout('pro', 'organizer');
-    expect(rail.flat?.[0]).toBe('home');
-    expect(rail.flat?.[1]).toBe('covoiturage');
-    expect(rail.flat).toContain('matchs');
-  });
+
 
   it('place covoiturage en 2e pour coach pro', () => {
     const rail = getMobileRailLayout('pro', 'coach');

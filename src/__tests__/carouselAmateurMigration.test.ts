@@ -73,7 +73,7 @@ describe('migration carousel Pôle Joueur (écosystème)', () => {
     const spaceMeta = getPlayerStepMeta('amateur', 'space');
     expect(spaceMeta.title).toMatch(/genre/i);
     const sportMeta = getPlayerStepMeta('amateur', 'sport');
-    expect(sportMeta.subtitle).toMatch(/Mercato Amateur/i);
+    expect(sportMeta.subtitle).toMatch(/DOFA|Mercato/i);
     const locationMeta = getPlayerStepMeta('amateur', 'location');
     expect(locationMeta.heroIcon).toBe('location');
   });

@@ -58,19 +58,43 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
   const isNetwork = variant === 'network';
   const badgeLabel = isNetwork ? 'Réseau régional' : 'Autour de vous';
 
+  const overlayPillBg = 'rgba(18, 18, 24, 0.92)';
+  const overlayPillBorder = 'rgba(255, 255, 255, 0.12)';
+
   const mapOverlay = (
     <>
       <View style={styles.topBadge}>
-        <View style={[styles.badgePill, { backgroundColor: colors.surface }]}>
-          <Icon name={isNetwork ? 'people' : 'location'} size={14} color={accent} />
-          <ProDayText variant="caption" style={styles.badgeTitle}>
+        <View
+          style={[
+            styles.badgePill,
+            {
+              backgroundColor: overlayPillBg,
+              borderColor: overlayPillBorder,
+              borderWidth: 1,
+            },
+          ]}
+        >
+          <Icon name={isNetwork ? 'people' : 'location'} size={13} color={accent} />
+          <ProDayText
+            variant="caption"
+            style={[styles.badgeTitle, { color: '#FFFFFF' }]}
+          >
             {badgeLabel}
           </ProDayText>
         </View>
       </View>
 
       <View style={styles.bottomControls}>
-        <View style={[styles.radiusRail, { backgroundColor: `${colors.surface}EE` }]}>
+        <View
+          style={[
+            styles.radiusRail,
+            {
+              backgroundColor: overlayPillBg,
+              borderColor: overlayPillBorder,
+              borderWidth: 1,
+            },
+          ]}
+        >
           {RADII.map((r) => {
             const active = density.radiusKm === r;
             return (
@@ -84,7 +108,12 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
               >
                 <ProDayText
                   variant="caption"
-                  style={[styles.radiusLabel, active && styles.radiusLabelActive]}
+                  style={[
+                    styles.radiusLabel,
+                    active
+                      ? [styles.radiusLabelActive, { color: '#000000' }]
+                      : { color: 'rgba(255,255,255,0.7)' },
+                  ]}
                 >
                   {r} km
                 </ProDayText>
@@ -100,11 +129,11 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
           style={[styles.locateBtn, { backgroundColor: accent }]}
         >
           {locating ? (
-            <ActivityIndicator size="small" color={colors.surface} />
+            <ActivityIndicator size="small" color="#000000" />
           ) : (
             <>
-              <Icon name="location" size={18} color={colors.surface} />
-              <ProDayText variant="caption" inverse style={styles.locateLabel}>
+              <Icon name="location" size={15} color="#000000" />
+              <ProDayText variant="caption" style={[styles.locateLabel, { color: '#000000' }]}>
                 Vous
               </ProDayText>
             </>
@@ -137,7 +166,7 @@ export const ProDayGeoMapCard: React.FC<ProDayGeoMapCardProps> = ({
               Activité près de votre club
             </ProDayText>
             <ProDayText variant="caption" muted>
-              Matchs amicaux, convocations et signaux locaux pour scouting & logistique.
+              Matchs, convocations et signaux locaux pour scouting & logistique.
             </ProDayText>
           </View>
         ) : null}
@@ -275,13 +304,15 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       padding: 0,
       overflow: 'hidden',
       marginBottom: spacing.md,
+      borderRadius: 18,
+      borderWidth: 1,
     },
     map: {
       borderRadius: 0,
       borderWidth: 0,
     },
     body: {
-      padding: spacing.lg,
+      padding: spacing.md,
       gap: spacing.sm,
     },
     networkIntro: { gap: 2, marginBottom: spacing.xs },
@@ -366,22 +397,24 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     empty: {
       alignItems: 'center',
       gap: spacing.xs,
-      padding: spacing.lg,
-      borderRadius: radius.md,
+      padding: spacing.md,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
-    emptyText: { textAlign: 'center', lineHeight: 18 },
+    emptyText: { textAlign: 'center', lineHeight: 18, fontSize: 12 },
     nearbyCard: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
       padding: spacing.sm,
-      borderRadius: radius.md,
+      borderRadius: 14,
       borderWidth: 1,
     },
     nearbyIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: radius.md,
+      width: 36,
+      height: 36,
+      borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
     },

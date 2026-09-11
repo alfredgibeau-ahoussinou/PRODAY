@@ -110,7 +110,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               accent: joueurTheme.accent,
               onAccent: PLAYER_DARK.bg,
               warning: themeColors.warning,
-              warningBg: 'rgba(251,191,36,0.12)',
+              warningBg: 'rgba(255,255,255,0.08)',
             }
           : {
               bg: themeColors.background,

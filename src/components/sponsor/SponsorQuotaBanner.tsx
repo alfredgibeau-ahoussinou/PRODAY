@@ -81,8 +81,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   rootWarn: {
-    borderColor: 'rgba(251, 191, 36, 0.45)',
-    backgroundColor: 'rgba(251, 191, 36, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   line: {
     color: SPONSOR_THEME.textMuted,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   lineWarn: {
-    color: '#fcd34d',
+    color: '#FAFAFA',
     fontWeight: '600',
   },
 });

@@ -98,7 +98,7 @@ export function ClubCoachesScreen() {
             </ClubText>
           </PressableSpring>
           <PressableSpring
-            onPress={() => shellNav?.openCreate?.('coach')}
+            onPress={() => shellNav?.openCreate?.('invite_member')}
             scaleTo={0.97}
             haptic
             style={styles.shortcut}

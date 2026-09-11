@@ -8,7 +8,7 @@
 
 **Index des guides internes (architecture, stores, Firebase, légal, site)**
 
-[![App](https://img.shields.io/badge/App-1.0.9-0ea5e9?style=for-the-badge&logo=react)](../package.json)
+[![App](https://img.shields.io/badge/App-1.0.10-0ea5e9?style=for-the-badge&logo=react)](../package.json)
 [![Code](https://img.shields.io/badge/Code-PRODAY-black?style=for-the-badge&logo=github)](https://github.com/alfredgibeau-ahoussinou/PRODAY)
 [![Docs](https://img.shields.io/badge/Docs_Publiques-PRODAY--docs-blue?style=for-the-badge)](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs)
 
