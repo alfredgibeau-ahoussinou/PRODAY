@@ -166,7 +166,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     [folders],
   );
 
-  const [navId, setNavId] = useState<CoachNavItemId>('coach_ia');
+  const [navId, setNavId] = useState<CoachNavItemId>('today');
   const [eventHubOverlay, setEventHubOverlay] = useState<{
     eventId: string;
     hubChapter?: MatchHubChapterId;
