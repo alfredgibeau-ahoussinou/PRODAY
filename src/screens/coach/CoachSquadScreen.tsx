@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,7 +12,11 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { CoachStandingsTable } from '../../components/coach/CoachStandingsTable';
 import { FutPlayer } from '../../components/coach/CoachFutPlayerCard';
-import { CoachPitchView, FormationKey } from '../../components/coach/CoachPitchView';
+import {
+  CoachPitchView,
+  MatchFormatKey,
+  MATCH_FORMATS_CONFIG,
+} from '../../components/coach/CoachPitchView';
 import { CoachBenchDrawer } from '../../components/coach/CoachBenchDrawer';
 
 const INITIAL_SQUAD: FutPlayer[] = [
@@ -383,18 +387,13 @@ const INITIAL_SQUAD: FutPlayer[] = [
   },
 ];
 
-const FORMATION_OPTIONS: FormationKey[] = [
-  '4-3-3',
-  '4-2-3-1',
-  '4-4-2',
-  '3-5-2',
-  '5-3-2',
-];
+const FORMAT_OPTIONS: MatchFormatKey[] = ['11v11', '8v8', '5v5', '4v4', '3v3'];
 
 export const CoachSquadScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'composition' | 'convocations' | 'classement'>('composition');
+  const [format, setFormat] = useState<MatchFormatKey>('11v11');
+  const [formation, setFormation] = useState<string>('4-3-3');
   const [squad, setSquad] = useState<FutPlayer[]>(INITIAL_SQUAD);
-  const [formation, setFormation] = useState<FormationKey>('4-3-3');
   const [selectedStarterId, setSelectedStarterId] = useState<string | null>(null);
   const [selectedBenchId, setSelectedBenchId] = useState<string | null>(null);
 
@@ -405,10 +404,37 @@ export const CoachSquadScreen: React.FC = () => {
     description: string;
   } | null>(null);
 
-  // Derived squad subsets
-  const starters = squad.filter((p) => p.role === 'starter');
-  const subs = squad.filter((p) => p.role === 'sub');
-  const unselected = squad.filter((p) => p.role === 'unselected');
+  const formatConfig = MATCH_FORMATS_CONFIG[format];
+  const targetStartersCount = formatConfig.starterCount;
+
+  // Derive starters and subs dynamically according to format starter count
+  const { starters, subs, unselected } = useMemo(() => {
+    const presentOrFit = squad.filter((p) => p.rsvp !== 'injured' && p.rsvp !== 'absent');
+    const unavailable = squad.filter((p) => p.rsvp === 'injured' || p.rsvp === 'absent');
+
+    // Priority to players explicitly marked 'starter' or top N present
+    const currentStarters = squad.filter((p) => p.role === 'starter');
+
+    let finalStarters: FutPlayer[] = [];
+    if (currentStarters.length === targetStartersCount) {
+      finalStarters = currentStarters;
+    } else if (currentStarters.length > targetStartersCount) {
+      finalStarters = currentStarters.slice(0, targetStartersCount);
+    } else {
+      const remainingNeeded = targetStartersCount - currentStarters.length;
+      const candidates = squad.filter((p) => p.role !== 'starter' && p.rsvp === 'present');
+      finalStarters = [...currentStarters, ...candidates.slice(0, remainingNeeded)];
+    }
+
+    const starterIds = new Set(finalStarters.map((p) => p.id));
+    const finalSubs = squad.filter((p) => !starterIds.has(p.id) && p.rsvp !== 'injured' && p.rsvp !== 'absent');
+
+    return {
+      starters: finalStarters,
+      subs: finalSubs,
+      unselected: unavailable,
+    };
+  }, [squad, targetStartersCount]);
 
   // RSVP stats
   const presentCount = squad.filter((p) => p.rsvp === 'present').length;
@@ -420,14 +446,32 @@ export const CoachSquadScreen: React.FC = () => {
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch {
-      // ignore on unsupported
+      // ignore
     }
+  };
+
+  // Format Switcher
+  const handleSelectFormat = (f: MatchFormatKey) => {
+    triggerHaptic();
+    setFormat(f);
+    const newConfig = MATCH_FORMATS_CONFIG[f];
+    setFormation(newConfig.defaultFormation);
+    setSelectedStarterId(null);
+    setSelectedBenchId(null);
+
+    // Re-assign role attributes cleanly
+    setSquad((prev) => {
+      const needed = newConfig.starterCount;
+      return prev.map((p, idx) => ({
+        ...p,
+        role: idx < needed ? ('starter' as const) : ('sub' as const),
+      }));
+    });
   };
 
   // 1. Select starter on pitch
   const handleSelectStarter = (player: FutPlayer) => {
     if (selectedBenchId) {
-      // Swap bench player with this starter
       const benchPlayer = squad.find((p) => p.id === selectedBenchId);
       if (benchPlayer) {
         swapStarterWithBench(player, benchPlayer);
@@ -483,7 +527,7 @@ export const CoachSquadScreen: React.FC = () => {
     }
   };
 
-  // 4. Swap starter with bench player
+  // 4. Swap starter with bench player (100% manual override)
   const swapStarterWithBench = (starter: FutPlayer, sub: FutPlayer) => {
     triggerHaptic();
     setSquad((prev) =>
@@ -499,7 +543,7 @@ export const CoachSquadScreen: React.FC = () => {
     );
   };
 
-  // 5. AI Auto-Lineup Algorithm
+  // 5. Optional AI Auto-Lineup Suggestion
   const generateAiLineup = () => {
     triggerHaptic();
     setIsAiGenerating(true);
@@ -507,30 +551,26 @@ export const CoachSquadScreen: React.FC = () => {
     setTimeout(() => {
       setIsAiGenerating(false);
 
-      // AI Logic: Prioritize present players, bench fatigued ones, maximize team OVR & synergy
+      // AI Logic: Prioritize peak fitness, bench fatigue risk players
       setSquad((prev) => {
-        // Find if L. Mbeumo (fatigued RW) can be replaced by A. Virginius (peak RW)
-        const updated = prev.map((p) => {
+        return prev.map((p) => {
           if (p.id === '11' && p.fatigueRisk) {
-            // Demote fatigued starter to bench
             return { ...p, role: 'sub' as const, form: 'tired' as const };
           }
           if (p.id === '12' && p.role === 'sub') {
-            // Promote peak sub to starting XI
             return { ...p, role: 'starter' as const, form: 'peak' as const };
           }
           return p;
         });
-        return updated;
       });
 
       setAiReport({
         confidence: 98,
-        title: 'XI de Départ Optimisé par Moteur IA',
+        title: 'Composition Suggérée par l’IA (Modifiable à 100%)',
         description:
-          'L. Mbeumo ménagé pour risque de surcharge ACWR (>1.45). A. Virginius titularisé sur l’aile droite (Forme 100%, 89 VIT). Synergie collective +14%.',
+          'L. Mbeumo préservé pour surcharge ACWR. A. Virginius titularisé (Forme 100%). Vous conservez la liberté totale d’ajuster chaque poste manuellement.',
       });
-    }, 750);
+    }, 600);
   };
 
   const sendRsvpReminders = () => {
@@ -547,17 +587,19 @@ export const CoachSquadScreen: React.FC = () => {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. Header & Segment Tabs */}
+      {/* 1. Header: Segment Tabs & Subtitle */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
             <View style={styles.matchBadgeRow}>
               <View style={styles.matchBadge}>
-                <Text style={styles.matchBadgeText}>PROCHAIN MATCH · J14</Text>
+                <Text style={styles.matchBadgeText}>PROCHAIN MATCH · J17</Text>
               </View>
               <View style={styles.activePill}>
                 <View style={styles.activeDot} />
-                <Text style={styles.activePillText}>XI Confirmé</Text>
+                <Text style={styles.activePillText}>
+                  {formatConfig.name} ({targetStartersCount} Joueurs)
+                </Text>
               </View>
             </View>
             <Text style={styles.headerTitle}>Composition & Terrain Tactique</Text>
@@ -582,7 +624,7 @@ export const CoachSquadScreen: React.FC = () => {
                 activeTab === 'composition' && styles.segmentBtnTextActive,
               ]}
             >
-              Composition FUT
+              Terrain FUT
             </Text>
           </TouchableOpacity>
 
@@ -629,10 +671,32 @@ export const CoachSquadScreen: React.FC = () => {
       {/* TAB 1: COMPOSITION FUT & TERRAIN TACTIQUE */}
       {activeTab === 'composition' && (
         <>
-          {/* Tactical Command Bar: Formation Selector & 1-tap AI Button */}
+          {/* Universal Format Selector Bar (11v11, 8v8, 5v5 Futsal, 4v4, 3v3) */}
+          <View style={styles.formatSelectorCard}>
+            <Text style={styles.formatSelectorLabel}>FORMAT DE JEU :</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.formatScroll}>
+              {FORMAT_OPTIONS.map((fKey) => {
+                const isSelected = format === fKey;
+                const cfg = MATCH_FORMATS_CONFIG[fKey];
+                return (
+                  <TouchableOpacity
+                    key={fKey}
+                    style={[styles.formatPill, isSelected && styles.formatPillActive]}
+                    onPress={() => handleSelectFormat(fKey)}
+                  >
+                    <Text style={[styles.formatPillText, isSelected && styles.formatPillTextActive]}>
+                      {cfg.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Tactical Command Bar: Formations for Selected Format */}
           <View style={styles.tacticalCommandCard}>
             <View style={styles.formationPillsRow}>
-              {FORMATION_OPTIONS.map((fKey) => {
+              {formatConfig.formations.map((fKey) => {
                 const isActive = formation === fKey;
                 return (
                   <TouchableOpacity
@@ -656,6 +720,7 @@ export const CoachSquadScreen: React.FC = () => {
               })}
             </View>
 
+            {/* Optional AI Assistant Suggestion Button */}
             <TouchableOpacity
               style={[styles.aiActionBtn, isAiGenerating && styles.aiActionBtnLoading]}
               onPress={generateAiLineup}
@@ -668,7 +733,7 @@ export const CoachSquadScreen: React.FC = () => {
                 <>
                   <MaterialCommunityIcons name="magic-staff" size={14} color="#000000" />
                   <Text style={styles.aiActionBtnText}>
-                    Générer XI Optimal IA · Optimiser Charge Athlétique
+                    Suggérer XI Optimal IA · 100% Manuel
                   </Text>
                 </>
               )}
@@ -687,9 +752,10 @@ export const CoachSquadScreen: React.FC = () => {
             )}
           </View>
 
-          {/* Interactive FIFA-Inspired Pitch View */}
+          {/* Interactive FIFA-Inspired Pitch View (Adapts to format) */}
           <CoachPitchView
             starters={starters}
+            format={format}
             formation={formation}
             selectedPlayerId={selectedStarterId}
             onSelectPlayer={handleSelectStarter}
@@ -743,52 +809,52 @@ export const CoachSquadScreen: React.FC = () => {
           </View>
 
           <View style={styles.rosterCard}>
-          <Text style={styles.rosterTitle}>Effectif Convoqué ({squad.length} joueurs)</Text>
-          {squad.map((player) => (
-            <View key={player.id} style={styles.playerRow}>
-              <View style={styles.playerNum}>
-                <Text style={styles.playerNumText}>#{player.num}</Text>
-              </View>
-              <View style={styles.playerInfo}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={styles.playerName}>{player.name}</Text>
-                  <View style={styles.ovrMiniBadge}>
-                    <Text style={styles.ovrMiniText}>{player.ovr}</Text>
-                  </View>
+            <Text style={styles.rosterTitle}>Effectif Convoqué ({squad.length} joueurs)</Text>
+            {squad.map((player) => (
+              <View key={player.id} style={styles.playerRow}>
+                <View style={styles.playerNum}>
+                  <Text style={styles.playerNumText}>#{player.num}</Text>
                 </View>
-                <Text style={styles.playerMeta}>
-                  {player.pos} · {player.role === 'starter' ? 'Titulaire' : player.role === 'sub' ? 'Remplaçant' : 'Non retenu'}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.rsvpStatusPill,
-                  player.rsvp === 'present' && { backgroundColor: 'rgba(48, 209, 88, 0.2)' },
-                  player.rsvp === 'pending' && { backgroundColor: 'rgba(255, 159, 10, 0.2)' },
-                  player.rsvp === 'absent' && { backgroundColor: 'rgba(255, 69, 58, 0.2)' },
-                  player.rsvp === 'injured' && { backgroundColor: 'rgba(191, 90, 242, 0.2)' },
-                ]}
-              >
-                <Text
+                <View style={styles.playerInfo}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.playerName}>{player.name}</Text>
+                    <View style={styles.ovrMiniBadge}>
+                      <Text style={styles.ovrMiniText}>{player.ovr}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.playerMeta}>
+                    {player.pos} · {player.role === 'starter' ? 'Titulaire' : player.role === 'sub' ? 'Remplaçant' : 'Non retenu'}
+                  </Text>
+                </View>
+                <View
                   style={[
-                    styles.rsvpStatusText,
-                    player.rsvp === 'present' && { color: '#30D158' },
-                    player.rsvp === 'pending' && { color: '#FF9F0A' },
-                    player.rsvp === 'absent' && { color: '#FF453A' },
-                    player.rsvp === 'injured' && { color: '#BF5AF2' },
+                    styles.rsvpStatusPill,
+                    player.rsvp === 'present' && { backgroundColor: 'rgba(48, 209, 88, 0.2)' },
+                    player.rsvp === 'pending' && { backgroundColor: 'rgba(255, 159, 10, 0.2)' },
+                    player.rsvp === 'absent' && { backgroundColor: 'rgba(255, 69, 58, 0.2)' },
+                    player.rsvp === 'injured' && { backgroundColor: 'rgba(191, 90, 242, 0.2)' },
                   ]}
                 >
-                  {player.rsvp === 'present'
-                    ? 'Présent'
-                    : player.rsvp === 'pending'
-                    ? 'Attente'
-                    : player.rsvp === 'absent'
-                    ? 'Absent'
-                    : 'Blessé'}
-                </Text>
+                  <Text
+                    style={[
+                      styles.rsvpStatusText,
+                      player.rsvp === 'present' && { color: '#30D158' },
+                      player.rsvp === 'pending' && { color: '#FF9F0A' },
+                      player.rsvp === 'absent' && { color: '#FF453A' },
+                      player.rsvp === 'injured' && { color: '#BF5AF2' },
+                    ]}
+                  >
+                    {player.rsvp === 'present'
+                      ? 'Présent'
+                      : player.rsvp === 'pending'
+                      ? 'Attente'
+                      : player.rsvp === 'absent'
+                      ? 'Absent'
+                      : 'Blessé'}
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))}
+            ))}
           </View>
         </>
       )}
@@ -899,61 +965,45 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
-  rsvpBarometerCard: {
+  formatSelectorCard: {
     backgroundColor: '#141418',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 12,
-    marginBottom: 12,
-  },
-  rsvpBarometerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    padding: 10,
     marginBottom: 10,
   },
-  rsvpTitle: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  reminderBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(197, 160, 89, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  reminderBtnText: {
-    color: '#C5A059',
-    fontSize: 10.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  rsvpPillsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  rsvpPill: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 7,
-    borderRadius: 10,
-  },
-  rsvpCount: {
-    fontSize: 15,
-    fontWeight: '900',
-    fontFamily: '-apple-system',
-  },
-  rsvpLabel: {
+  formatSelectorLabel: {
     color: '#8B8B9A',
-    fontSize: 9.5,
+    fontSize: 9,
+    fontWeight: '800',
     fontFamily: '-apple-system',
-    marginTop: 1,
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  formatScroll: {
+    gap: 6,
+  },
+  formatPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#1C1C24',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  formatPillActive: {
+    backgroundColor: 'rgba(10, 132, 255, 0.2)',
+    borderColor: '#0A84FF',
+  },
+  formatPillText: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  formatPillTextActive: {
+    color: '#0A84FF',
   },
   tacticalCommandCard: {
     backgroundColor: '#141418',
@@ -962,37 +1012,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(197, 160, 89, 0.25)',
     padding: 10,
     marginBottom: 10,
-  },
-  tacticalCommandTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  formationSelectorCard: {
-    backgroundColor: '#141418',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 10,
-    marginBottom: 12,
-  },
-  formationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingHorizontal: 2,
-  },
-  formationTitle: {
-    color: '#FFFFFF',
-    fontSize: 11.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  formationHint: {
-    color: '#8B8B9A',
-    fontSize: 9.5,
-    fontFamily: '-apple-system',
   },
   formationPillsRow: {
     flexDirection: 'row',
@@ -1019,40 +1038,6 @@ const styles = StyleSheet.create({
   },
   formationPillTextActive: {
     color: '#C5A059',
-  },
-  aiCard: {
-    backgroundColor: '#141418',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.3)',
-    padding: 12,
-    marginBottom: 12,
-  },
-  aiTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-  },
-  aiIconBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    backgroundColor: '#C5A059',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  aiTitle: {
-    color: '#FFFFFF',
-    fontSize: 12.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-  },
-  aiSubtitle: {
-    color: '#8B8B9A',
-    fontSize: 10,
-    fontFamily: '-apple-system',
-    marginTop: 1,
   },
   aiActionBtn: {
     flexDirection: 'row',
@@ -1110,6 +1095,62 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     fontFamily: '-apple-system',
     lineHeight: 14,
+  },
+  rsvpBarometerCard: {
+    backgroundColor: '#141418',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+    marginBottom: 12,
+  },
+  rsvpBarometerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  rsvpTitle: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  reminderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(197, 160, 89, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  reminderBtnText: {
+    color: '#C5A059',
+    fontSize: 10.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  rsvpPillsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  rsvpPill: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 7,
+    borderRadius: 10,
+  },
+  rsvpCount: {
+    fontSize: 15,
+    fontWeight: '900',
+    fontFamily: '-apple-system',
+  },
+  rsvpLabel: {
+    color: '#8B8B9A',
+    fontSize: 9.5,
+    fontFamily: '-apple-system',
+    marginTop: 1,
   },
   rosterCard: {
     backgroundColor: '#141418',
