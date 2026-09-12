@@ -25,24 +25,25 @@ describe('CoachSquadFutLineup & Pitch View Architecture', () => {
   const formations11: FormationKey[] = ['4-3-3', '4-2-3-1', '4-4-2', '3-5-2', '5-3-2'];
   const allFormats: MatchFormatKey[] = ['11v11', '8v8', '5v5', 'futsal', '4v4', '3v3'];
 
-  it('defines exactly 11 starter tactical coordinates for every supported 11v11 formation', () => {
+  it('defines exactly 11 starter tactical coordinates for every supported 11v11 formation with safe visible bounds', () => {
     formations11.forEach((fKey) => {
       const slots = FORMATION_COORDINATES[fKey];
       expect(slots).toBeDefined();
       expect(slots).toHaveLength(11);
 
-      // Verify GK position is at bottom of pitch (y >= 0.8) and center (x ~ 0.5)
+      // Verify GK position is at safe bottom of pitch (0.80 <= y <= 0.85) to guarantee 100% on-screen visibility
       const gk = slots[0];
       expect(gk.defaultPos).toBe('GK');
       expect(gk.y).toBeGreaterThanOrEqual(0.8);
+      expect(gk.y).toBeLessThanOrEqual(0.85);
       expect(gk.x).toBeCloseTo(0.5, 1);
 
-      // All coordinates must be within [0, 1] normalized boundary
+      // All coordinates must be strictly within safe visible boundary
       slots.forEach((slot) => {
         expect(slot.x).toBeGreaterThanOrEqual(0);
         expect(slot.x).toBeLessThanOrEqual(1);
-        expect(slot.y).toBeGreaterThanOrEqual(0);
-        expect(slot.y).toBeLessThanOrEqual(1);
+        expect(slot.y).toBeGreaterThanOrEqual(0.1);
+        expect(slot.y).toBeLessThanOrEqual(0.85);
       });
     });
   });

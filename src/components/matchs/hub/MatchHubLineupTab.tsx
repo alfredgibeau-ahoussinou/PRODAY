@@ -30,21 +30,47 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
   const { colors } = useAppTheme();
   const isCoachShell = useIsCoachShell();
   const lineup = event.lineup;
-  const starters = useMemo(
-    () => (lineup?.slots ?? []).filter((s) => s.role === 'starter'),
-    [lineup?.slots],
+
+  const activeFormation = lineup?.formation ?? (isCoachShell ? '4-3-3' : '4-4-2');
+  const defaultCoachStarters = useMemo(
+    () =>
+      isCoachShell
+        ? [
+            { uid: '1', display_name: 'H. Lloris', role: 'starter' as const, position_label: 'GK' },
+            { uid: '2', display_name: 'E. Saliba', role: 'starter' as const, position_label: 'LB' },
+            { uid: '3', display_name: 'A. Pogba', role: 'starter' as const, position_label: 'CB' },
+            { uid: '4', display_name: 'K. Diallo', role: 'starter' as const, position_label: 'CB' },
+            { uid: '5', display_name: 'M. Badé', role: 'starter' as const, position_label: 'RB' },
+            { uid: '6', display_name: 'M. Ruiz', role: 'starter' as const, position_label: 'CM' },
+            { uid: '7', display_name: 'T. Doué', role: 'starter' as const, position_label: 'CDM' },
+            { uid: '8', display_name: 'R. Cherki', role: 'starter' as const, position_label: 'CM' },
+            { uid: '9', display_name: 'S. Tel', role: 'starter' as const, position_label: 'LW' },
+            { uid: '10', display_name: 'Y. Benali', role: 'starter' as const, position_label: 'ST' },
+            { uid: '11', display_name: 'L. Mbeumo', role: 'starter' as const, position_label: 'RW' },
+          ]
+        : [],
+    [isCoachShell]
   );
+
+  const starters = useMemo(() => {
+    const configured = (lineup?.slots ?? []).filter((s) => s.role === 'starter');
+    if (configured.length > 0) return configured;
+    if (isCoachShell) return defaultCoachStarters;
+    return [];
+  }, [lineup?.slots, isCoachShell, defaultCoachStarters]);
+
   const subs = useMemo(
     () => (lineup?.slots ?? []).filter((s) => s.role === 'sub'),
-    [lineup?.slots],
+    [lineup?.slots]
   );
+
   const coachCells = useMemo(
-    () => eventStartersToStadiumCells(starters, lineup?.formation ?? '4-4-2'),
-    [starters, lineup?.formation],
+    () => eventStartersToStadiumCells(starters, activeFormation),
+    [starters, activeFormation]
   );
   const coachBench = useMemo(() => eventSubsToBenchPlayers(subs), [subs]);
 
-  if (!lineup || lineup.slots.length === 0) {
+  if ((!lineup || lineup.slots.length === 0) && !isCoachShell) {
     return (
       <ProDaySurface variant="module" style={[styles.empty, { borderColor: colors.border }]}>
         <Icon name="football-outline" size={36} color={colors.textMuted} />
@@ -70,7 +96,7 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
   return (
     <View style={styles.wrap}>
       <View style={styles.headRow}>
-        <ProDayText variant="section">Système {lineup.formation}</ProDayText>
+        <ProDayText variant="section">Système {activeFormation}</ProDayText>
         {canEdit ? (
           <PressableSpring onPress={onEditLineup} scaleTo={0.96} haptic>
             <ProDayText variant="caption" accent style={styles.editLink}>
@@ -82,15 +108,15 @@ export const MatchHubLineupTab: React.FC<MatchHubLineupTabProps> = ({
 
       {isCoachShell ? (
         <CoachSportEasyPitchSurface
-          formation={lineup.formation}
+          formation={activeFormation}
           cells={coachCells}
           bench={coachBench}
           readOnly
           showHeader
-          headerTitle="Composition publiée"
+          headerTitle="Composition Officielle"
         />
       ) : (
-        <PitchLineupView formation={lineup.formation} starters={starters} />
+        <PitchLineupView formation={activeFormation} starters={starters} />
       )}
 
       {starters.length > 0 ? (

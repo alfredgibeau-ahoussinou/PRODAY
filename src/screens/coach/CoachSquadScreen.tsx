@@ -407,6 +407,8 @@ export const CoachSquadScreen: React.FC = () => {
   const formatConfig = MATCH_FORMATS_CONFIG[format];
   const targetStartersCount = formatConfig.starterCount;
 
+  const [showStartingRosterList, setShowStartingRosterList] = useState(true);
+
   // Derive starters and subs dynamically according to format starter count & fitness
   const { starters, subs, unselected } = useMemo(() => {
     const presentOrFit = squad.filter((p) => p.rsvp !== 'injured' && p.rsvp !== 'absent');
@@ -435,6 +437,21 @@ export const CoachSquadScreen: React.FC = () => {
       unselected: unavailable,
     };
   }, [squad, targetStartersCount]);
+
+  const teamOvr = useMemo(() => {
+    if (!starters.length) return 80;
+    const sum = starters.reduce((acc, p) => acc + (p.ovr || 75), 0);
+    return Math.round(sum / starters.length);
+  }, [starters]);
+
+  // Starters partitioned by tactical line (Gardien, Défense, Milieu, Attaque)
+  const startersByLine = useMemo(() => {
+    const gk = starters.filter((p) => p.pos === 'GK');
+    const def = starters.filter((p) => ['LB', 'CB', 'RB', 'LWB', 'RWB'].includes(p.pos));
+    const mid = starters.filter((p) => ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(p.pos));
+    const att = starters.filter((p) => ['ST', 'CF', 'RW', 'LW'].includes(p.pos));
+    return { gk, def, mid, att };
+  }, [starters]);
 
   // RSVP stats
   const presentCount = squad.filter((p) => p.rsvp === 'present').length;
@@ -626,7 +643,7 @@ export const CoachSquadScreen: React.FC = () => {
               <View style={styles.activePill}>
                 <View style={styles.activeDot} />
                 <Text style={styles.activePillText}>
-                  {formatConfig.name} ({targetStartersCount} Joueurs)
+                  {formatConfig.name} · {targetStartersCount}/{targetStartersCount} Titulaires
                 </Text>
               </View>
             </View>
@@ -699,73 +716,86 @@ export const CoachSquadScreen: React.FC = () => {
       {/* TAB 1: COMPOSITION FUT & TERRAIN TACTIQUE */}
       {activeTab === 'composition' && (
         <>
-          {/* Universal Format Selector Bar (11v11, 8v8, 5v5 Futsal, 4v4, 3v3) */}
-          <View style={styles.formatSelectorCard}>
-            <Text style={styles.formatSelectorLabel}>FORMAT DE JEU :</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.formatScroll}>
-              {FORMAT_OPTIONS.map((fKey) => {
-                const isSelected = format === fKey;
-                const cfg = MATCH_FORMATS_CONFIG[fKey];
-                return (
-                  <TouchableOpacity
-                    key={fKey}
-                    style={[styles.formatPill, isSelected && styles.formatPillActive]}
-                    onPress={() => handleSelectFormat(fKey)}
-                  >
-                    <Text style={[styles.formatPillText, isSelected && styles.formatPillTextActive]}>
-                      {cfg.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* Tactical Command Bar: Formations for Selected Format */}
-          <View style={styles.tacticalCommandCard}>
-            <View style={styles.formationPillsRow}>
-              {formatConfig.formations.map((fKey) => {
-                const isActive = formation === fKey;
-                return (
-                  <TouchableOpacity
-                    key={fKey}
-                    style={[styles.formationPill, isActive && styles.formationPillActive]}
-                    onPress={() => {
-                      triggerHaptic();
-                      setFormation(fKey);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.formationPillText,
-                        isActive && styles.formationPillTextActive,
-                      ]}
+          {/* Universal Consolidated Tactical Command Bar */}
+          <View style={styles.tacticalControlPanel}>
+            {/* Row 1: Format de jeu */}
+            <View style={styles.controlRow}>
+              <Text style={styles.controlLabel}>FORMAT :</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.controlScroll}>
+                {FORMAT_OPTIONS.map((fKey) => {
+                  const isSelected = format === fKey;
+                  const cfg = MATCH_FORMATS_CONFIG[fKey];
+                  return (
+                    <TouchableOpacity
+                      key={fKey}
+                      style={[styles.formatPill, isSelected && styles.formatPillActive]}
+                      onPress={() => handleSelectFormat(fKey)}
                     >
-                      {fKey}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                      <Text style={[styles.formatPillText, isSelected && styles.formatPillTextActive]}>
+                        {cfg.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </View>
 
-            {/* Optional AI Assistant Suggestion Button */}
-            <TouchableOpacity
-              style={[styles.aiActionBtn, isAiGenerating && styles.aiActionBtnLoading]}
-              onPress={generateAiLineup}
-              activeOpacity={0.85}
-              disabled={isAiGenerating}
-            >
-              {isAiGenerating ? (
-                <ActivityIndicator size="small" color="#000000" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="magic-staff" size={14} color="#000000" />
-                  <Text style={styles.aiActionBtnText}>
-                    Suggérer XI Optimal IA · 100% Manuel
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
+            {/* Row 2: Formations */}
+            <View style={styles.controlRow}>
+              <Text style={styles.controlLabel}>SYSTÈME :</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.controlScroll}>
+                {formatConfig.formations.map((fKey) => {
+                  const isActive = formation === fKey;
+                  return (
+                    <TouchableOpacity
+                      key={fKey}
+                      style={[styles.formationPill, isActive && styles.formationPillActive]}
+                      onPress={() => {
+                        triggerHaptic();
+                        setFormation(fKey);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.formationPillText,
+                          isActive && styles.formationPillTextActive,
+                        ]}
+                      >
+                        {fKey}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {/* Row 3: Action IA & Statut XI */}
+            <View style={styles.actionAndStatusRow}>
+              <TouchableOpacity
+                style={[styles.aiActionBtnCompact, isAiGenerating && styles.aiActionBtnLoading]}
+                onPress={generateAiLineup}
+                activeOpacity={0.85}
+                disabled={isAiGenerating}
+              >
+                {isAiGenerating ? (
+                  <ActivityIndicator size="small" color="#000000" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="magic-staff" size={13} color="#000000" />
+                    <Text style={styles.aiActionBtnTextCompact}>
+                      Suggérer XI Optimal IA
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.lineupStatusBadge}>
+                <Ionicons name="checkmark-circle" size={13} color="#30D158" />
+                <Text style={styles.lineupStatusText}>
+                  {format === '11v11' ? 'XI COMPLET (11/11)' : `${targetStartersCount} TITULAIRES`}
+                </Text>
+              </View>
+            </View>
 
             {/* AI Report Card */}
             {aiReport && (
@@ -789,6 +819,118 @@ export const CoachSquadScreen: React.FC = () => {
             onSelectPlayer={handleSelectStarter}
             onSwapPositions={handleSwapPositions}
           />
+
+          {/* Starting XI Detailed Roster Strip (Guarantees absolute clarity for Foot à 11) */}
+          <View style={styles.startingRosterCard}>
+            <TouchableOpacity
+              style={styles.startingRosterHeader}
+              onPress={() => setShowStartingRosterList(!showStartingRosterList)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.startingRosterHeaderLeft}>
+                <MaterialCommunityIcons name="clipboard-list-outline" size={16} color="#C5A059" />
+                <Text style={styles.startingRosterTitle}>
+                  {format === '11v11'
+                    ? 'Feuille de Match · XI Titulaire (11 Joueurs)'
+                    : `Feuille de Match · ${targetStartersCount} Titulaires`}
+                </Text>
+              </View>
+              <View style={styles.startingRosterHeaderRight}>
+                <View style={styles.startingRosterOvrBadge}>
+                  <Text style={styles.startingRosterOvrText}>{teamOvr} GEN</Text>
+                </View>
+                <Feather
+                  name={showStartingRosterList ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color="#8B8B9A"
+                />
+              </View>
+            </TouchableOpacity>
+
+            {showStartingRosterList && (
+              <View style={styles.startingRosterBody}>
+                {/* 1. Gardien */}
+                {startersByLine.gk.length > 0 && (
+                  <View style={styles.lineSection}>
+                    <Text style={styles.lineSectionTitle}>GARDIEN DE BUT ({startersByLine.gk.length})</Text>
+                    {startersByLine.gk.map((player) => (
+                      <View key={player.id} style={styles.rosterLinePlayer}>
+                        <View style={[styles.posBadgeMini, { backgroundColor: '#FF9F0A' }]}>
+                          <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
+                        </View>
+                        <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
+                        <Text style={styles.rosterPlayerName}>{player.name}</Text>
+                        <View style={styles.rosterPlayerRight}>
+                          <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
+                          <Ionicons name="checkmark-circle" size={14} color="#30D158" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* 2. Défense */}
+                {startersByLine.def.length > 0 && (
+                  <View style={styles.lineSection}>
+                    <Text style={styles.lineSectionTitle}>LIGNE DÉFENSIVE ({startersByLine.def.length})</Text>
+                    {startersByLine.def.map((player) => (
+                      <View key={player.id} style={styles.rosterLinePlayer}>
+                        <View style={[styles.posBadgeMini, { backgroundColor: '#0A84FF' }]}>
+                          <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
+                        </View>
+                        <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
+                        <Text style={styles.rosterPlayerName}>{player.name}</Text>
+                        <View style={styles.rosterPlayerRight}>
+                          <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
+                          <Ionicons name="checkmark-circle" size={14} color="#30D158" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* 3. Milieu */}
+                {startersByLine.mid.length > 0 && (
+                  <View style={styles.lineSection}>
+                    <Text style={styles.lineSectionTitle}>MILIEU DE TERRAIN ({startersByLine.mid.length})</Text>
+                    {startersByLine.mid.map((player) => (
+                      <View key={player.id} style={styles.rosterLinePlayer}>
+                        <View style={[styles.posBadgeMini, { backgroundColor: '#30D158' }]}>
+                          <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
+                        </View>
+                        <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
+                        <Text style={styles.rosterPlayerName}>{player.name}</Text>
+                        <View style={styles.rosterPlayerRight}>
+                          <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
+                          <Ionicons name="checkmark-circle" size={14} color="#30D158" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* 4. Attaque */}
+                {startersByLine.att.length > 0 && (
+                  <View style={styles.lineSection}>
+                    <Text style={styles.lineSectionTitle}>LIGNE D'ATTAQUE ({startersByLine.att.length})</Text>
+                    {startersByLine.att.map((player) => (
+                      <View key={player.id} style={styles.rosterLinePlayer}>
+                        <View style={[styles.posBadgeMini, { backgroundColor: '#FF453A' }]}>
+                          <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
+                        </View>
+                        <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
+                        <Text style={styles.rosterPlayerName}>{player.name}</Text>
+                        <View style={styles.rosterPlayerRight}>
+                          <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
+                          <Ionicons name="checkmark-circle" size={14} color="#30D158" />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
 
           {/* Bench & Reserves Collapsible Drawer */}
           <CoachBenchDrawer
@@ -1009,29 +1151,34 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
-  formatSelectorCard: {
+  tacticalControlPanel: {
     backgroundColor: '#141418',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 10,
-    marginBottom: 10,
+    borderColor: 'rgba(197, 160, 89, 0.25)',
+    padding: 8,
+    marginBottom: 8,
   },
-  formatSelectorLabel: {
+  controlRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  controlLabel: {
     color: '#8B8B9A',
     fontSize: 9,
     fontWeight: '800',
     fontFamily: '-apple-system',
     letterSpacing: 0.5,
-    marginBottom: 6,
+    width: 64,
   },
-  formatScroll: {
+  controlScroll: {
     gap: 6,
   },
   formatPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 7,
     backgroundColor: '#1C1C24',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
@@ -1042,30 +1189,17 @@ const styles = StyleSheet.create({
   },
   formatPillText: {
     color: '#8B8B9A',
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '700',
     fontFamily: '-apple-system',
   },
   formatPillTextActive: {
     color: '#0A84FF',
   },
-  tacticalCommandCard: {
-    backgroundColor: '#141418',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.25)',
-    padding: 10,
-    marginBottom: 10,
-  },
-  formationPillsRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
   formationPill: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 7,
     backgroundColor: '#1C1C24',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.05)',
@@ -1076,31 +1210,153 @@ const styles = StyleSheet.create({
   },
   formationPillText: {
     color: '#8B8B9A',
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '700',
     fontFamily: '-apple-system',
   },
   formationPillTextActive: {
     color: '#C5A059',
   },
-  aiActionBtn: {
+  actionAndStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 2,
+    gap: 8,
+  },
+  aiActionBtnCompact: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 5,
     backgroundColor: '#C5A059',
-    borderRadius: 10,
-    paddingVertical: 9,
-    marginTop: 8,
+    borderRadius: 8,
+    paddingVertical: 7,
   },
   aiActionBtnLoading: {
     opacity: 0.7,
   },
-  aiActionBtnText: {
+  aiActionBtnTextCompact: {
     color: '#000000',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     fontFamily: '-apple-system',
+  },
+  lineupStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(48, 209, 88, 0.3)',
+  },
+  lineupStatusText: {
+    color: '#30D158',
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  startingRosterCard: {
+    backgroundColor: '#141418',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  startingRosterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  startingRosterHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  startingRosterTitle: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  startingRosterHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  startingRosterOvrBadge: {
+    backgroundColor: 'rgba(197, 160, 89, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  startingRosterOvrText: {
+    color: '#FFD700',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  startingRosterBody: {
+    marginTop: 10,
+    gap: 10,
+  },
+  lineSection: {
+    gap: 4,
+  },
+  lineSectionTitle: {
+    color: '#8B8B9A',
+    fontSize: 8.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  rosterLinePlayer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A1A22',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    gap: 8,
+  },
+  posBadgeMini: {
+    width: 28,
+    height: 18,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  posBadgeMiniText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  rosterPlayerNum: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    fontWeight: '700',
+    width: 22,
+  },
+  rosterPlayerName: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  rosterPlayerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rosterPlayerOvr: {
+    color: '#FFD700',
+    fontSize: 11,
+    fontWeight: '800',
   },
   aiReportBox: {
     backgroundColor: 'rgba(197, 160, 89, 0.08)',

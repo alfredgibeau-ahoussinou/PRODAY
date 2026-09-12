@@ -81,69 +81,69 @@ export interface PitchSlot {
 export const ALL_FORMATION_COORDINATES: Record<string, PitchSlot[]> = {
   // 1. Foot à 11
   '4-3-3': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.14, y: 0.72, defaultPos: 'LB' },
-    { x: 0.38, y: 0.74, defaultPos: 'CB' },
-    { x: 0.62, y: 0.74, defaultPos: 'CB' },
-    { x: 0.86, y: 0.72, defaultPos: 'RB' },
-    { x: 0.28, y: 0.50, defaultPos: 'CM' },
-    { x: 0.50, y: 0.56, defaultPos: 'CDM' },
-    { x: 0.72, y: 0.50, defaultPos: 'CM' },
-    { x: 0.18, y: 0.22, defaultPos: 'LW' },
-    { x: 0.50, y: 0.16, defaultPos: 'ST' },
-    { x: 0.82, y: 0.22, defaultPos: 'RW' },
+    { x: 0.50, y: 0.83, defaultPos: 'GK' },
+    { x: 0.14, y: 0.68, defaultPos: 'LB' },
+    { x: 0.38, y: 0.69, defaultPos: 'CB' },
+    { x: 0.62, y: 0.69, defaultPos: 'CB' },
+    { x: 0.86, y: 0.68, defaultPos: 'RB' },
+    { x: 0.28, y: 0.46, defaultPos: 'CM' },
+    { x: 0.50, y: 0.52, defaultPos: 'CDM' },
+    { x: 0.72, y: 0.46, defaultPos: 'CM' },
+    { x: 0.18, y: 0.20, defaultPos: 'LW' },
+    { x: 0.50, y: 0.15, defaultPos: 'ST' },
+    { x: 0.82, y: 0.20, defaultPos: 'RW' },
   ],
   '4-2-3-1': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.14, y: 0.72, defaultPos: 'LB' },
-    { x: 0.38, y: 0.74, defaultPos: 'CB' },
-    { x: 0.62, y: 0.74, defaultPos: 'CB' },
-    { x: 0.86, y: 0.72, defaultPos: 'RB' },
-    { x: 0.34, y: 0.57, defaultPos: 'CDM' },
-    { x: 0.66, y: 0.57, defaultPos: 'CDM' },
-    { x: 0.18, y: 0.36, defaultPos: 'LAM' },
-    { x: 0.50, y: 0.34, defaultPos: 'CAM' },
-    { x: 0.82, y: 0.36, defaultPos: 'RAM' },
-    { x: 0.50, y: 0.16, defaultPos: 'ST' },
+    { x: 0.50, y: 0.83, defaultPos: 'GK' },
+    { x: 0.14, y: 0.68, defaultPos: 'LB' },
+    { x: 0.38, y: 0.69, defaultPos: 'CB' },
+    { x: 0.62, y: 0.69, defaultPos: 'CB' },
+    { x: 0.86, y: 0.68, defaultPos: 'RB' },
+    { x: 0.34, y: 0.53, defaultPos: 'CDM' },
+    { x: 0.66, y: 0.53, defaultPos: 'CDM' },
+    { x: 0.18, y: 0.34, defaultPos: 'LAM' },
+    { x: 0.50, y: 0.32, defaultPos: 'CAM' },
+    { x: 0.82, y: 0.34, defaultPos: 'RAM' },
+    { x: 0.50, y: 0.15, defaultPos: 'ST' },
   ],
   '4-4-2': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.14, y: 0.72, defaultPos: 'LB' },
-    { x: 0.38, y: 0.74, defaultPos: 'CB' },
-    { x: 0.62, y: 0.74, defaultPos: 'CB' },
-    { x: 0.86, y: 0.72, defaultPos: 'RB' },
-    { x: 0.15, y: 0.46, defaultPos: 'LM' },
-    { x: 0.38, y: 0.48, defaultPos: 'CM' },
-    { x: 0.62, y: 0.48, defaultPos: 'CM' },
-    { x: 0.85, y: 0.46, defaultPos: 'RM' },
-    { x: 0.35, y: 0.18, defaultPos: 'ST' },
-    { x: 0.65, y: 0.18, defaultPos: 'ST' },
+    { x: 0.50, y: 0.83, defaultPos: 'GK' },
+    { x: 0.14, y: 0.68, defaultPos: 'LB' },
+    { x: 0.38, y: 0.69, defaultPos: 'CB' },
+    { x: 0.62, y: 0.69, defaultPos: 'CB' },
+    { x: 0.86, y: 0.68, defaultPos: 'RB' },
+    { x: 0.15, y: 0.44, defaultPos: 'LM' },
+    { x: 0.38, y: 0.46, defaultPos: 'CM' },
+    { x: 0.62, y: 0.46, defaultPos: 'CM' },
+    { x: 0.85, y: 0.44, defaultPos: 'RM' },
+    { x: 0.35, y: 0.16, defaultPos: 'ST' },
+    { x: 0.65, y: 0.16, defaultPos: 'ST' },
   ],
   '3-5-2': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.26, y: 0.74, defaultPos: 'CB' },
-    { x: 0.50, y: 0.76, defaultPos: 'CB' },
-    { x: 0.74, y: 0.74, defaultPos: 'CB' },
-    { x: 0.12, y: 0.48, defaultPos: 'LWB' },
-    { x: 0.34, y: 0.52, defaultPos: 'CM' },
-    { x: 0.50, y: 0.40, defaultPos: 'CAM' },
-    { x: 0.66, y: 0.52, defaultPos: 'CM' },
-    { x: 0.88, y: 0.48, defaultPos: 'RWB' },
-    { x: 0.35, y: 0.18, defaultPos: 'ST' },
-    { x: 0.65, y: 0.18, defaultPos: 'ST' },
+    { x: 0.50, y: 0.83, defaultPos: 'GK' },
+    { x: 0.26, y: 0.69, defaultPos: 'CB' },
+    { x: 0.50, y: 0.71, defaultPos: 'CB' },
+    { x: 0.74, y: 0.69, defaultPos: 'CB' },
+    { x: 0.12, y: 0.46, defaultPos: 'LWB' },
+    { x: 0.34, y: 0.50, defaultPos: 'CM' },
+    { x: 0.50, y: 0.36, defaultPos: 'CAM' },
+    { x: 0.66, y: 0.50, defaultPos: 'CM' },
+    { x: 0.88, y: 0.46, defaultPos: 'RWB' },
+    { x: 0.35, y: 0.16, defaultPos: 'ST' },
+    { x: 0.65, y: 0.16, defaultPos: 'ST' },
   ],
   '5-3-2': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.12, y: 0.70, defaultPos: 'LWB' },
-    { x: 0.31, y: 0.75, defaultPos: 'CB' },
-    { x: 0.50, y: 0.77, defaultPos: 'CB' },
-    { x: 0.69, y: 0.75, defaultPos: 'CB' },
-    { x: 0.88, y: 0.70, defaultPos: 'RWB' },
-    { x: 0.28, y: 0.48, defaultPos: 'CM' },
-    { x: 0.50, y: 0.52, defaultPos: 'CDM' },
-    { x: 0.72, y: 0.48, defaultPos: 'CM' },
-    { x: 0.35, y: 0.18, defaultPos: 'ST' },
-    { x: 0.65, y: 0.18, defaultPos: 'ST' },
+    { x: 0.50, y: 0.83, defaultPos: 'GK' },
+    { x: 0.12, y: 0.66, defaultPos: 'LWB' },
+    { x: 0.31, y: 0.70, defaultPos: 'CB' },
+    { x: 0.50, y: 0.72, defaultPos: 'CB' },
+    { x: 0.69, y: 0.70, defaultPos: 'CB' },
+    { x: 0.88, y: 0.66, defaultPos: 'RWB' },
+    { x: 0.30, y: 0.45, defaultPos: 'CM' },
+    { x: 0.50, y: 0.50, defaultPos: 'CDM' },
+    { x: 0.70, y: 0.45, defaultPos: 'CM' },
+    { x: 0.35, y: 0.16, defaultPos: 'ST' },
+    { x: 0.65, y: 0.16, defaultPos: 'ST' },
   ],
 
   // 2. Foot à 8 (U12/U13)
@@ -417,7 +417,7 @@ export const CoachPitchView: React.FC<CoachPitchViewProps> = ({
   onSelectPlayer,
   onSwapPositions,
 }) => {
-  const [pitchLayout, setPitchLayout] = useState({ width: 340, height: 500 });
+  const [pitchLayout, setPitchLayout] = useState({ width: 340, height: 430 });
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -430,9 +430,9 @@ export const CoachPitchView: React.FC<CoachPitchViewProps> = ({
   const links = ALL_CHEMISTRY_LINKS[formation] || [];
   const isFutsal = format === 'futsal' || MATCH_FORMATS_CONFIG[format]?.isFutsal === true;
 
-  // Dynamic card dimensions based on format starter count
-  const cardWidth = format === '11v11' ? 66 : format === '8v8' ? 70 : 76;
-  const cardHeight = format === '11v11' ? 94 : format === '8v8' ? 98 : 104;
+  // Dynamic card dimensions based on format starter count (compact 11v11 ensures full pitch visibility)
+  const cardWidth = format === '11v11' ? 62 : format === '8v8' ? 68 : 74;
+  const cardHeight = format === '11v11' ? 84 : format === '8v8' ? 92 : 100;
 
   const triggerHaptic = () => {
     try {
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
   },
   pitchCanvas: {
     width: '100%',
-    height: 500,
+    height: 430,
     position: 'relative',
   },
   playerCardSlot: {

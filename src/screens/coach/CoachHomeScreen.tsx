@@ -118,6 +118,42 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
           </View>
         </View>
 
+        {/* Foot à 11 Starting XI Lineup Glance */}
+        <View style={styles.lineupPreviewBox}>
+          <View style={styles.lineupPreviewHeader}>
+            <View style={styles.lineupPreviewHeaderLeft}>
+              <MaterialCommunityIcons name="shield-check" size={13} color="#30D158" />
+              <Text style={styles.lineupPreviewTitle}>COMPOSITION DU MATCH · 4-3-3</Text>
+            </View>
+            <View style={styles.lineupCountBadge}>
+              <Text style={styles.lineupCountText}>11 Titulaires Prêts</Text>
+            </View>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lineupChipsScroll}>
+            {[
+              { num: 1, name: 'Lloris', pos: 'GK', ovr: 86 },
+              { num: 3, name: 'Saliba', pos: 'LB', ovr: 82 },
+              { num: 4, name: 'Pogba', pos: 'CB', ovr: 87 },
+              { num: 5, name: 'Diallo', pos: 'CB', ovr: 83 },
+              { num: 2, name: 'Badé', pos: 'RB', ovr: 81 },
+              { num: 8, name: 'Ruiz', pos: 'CM', ovr: 85 },
+              { num: 6, name: 'Doué', pos: 'CDM', ovr: 84 },
+              { num: 10, name: 'Cherki', pos: 'CM', ovr: 88 },
+              { num: 11, name: 'Tel', pos: 'LW', ovr: 83 },
+              { num: 9, name: 'Benali', pos: 'ST', ovr: 89 },
+              { num: 7, name: 'Mbeumo', pos: 'RW', ovr: 84 },
+            ].map((p) => (
+              <View key={p.num} style={styles.starterChip}>
+                <View style={[styles.starterPosBadge, p.pos === 'GK' && { backgroundColor: '#FF9F0A' }]}>
+                  <Text style={styles.starterPosText}>{p.pos}</Text>
+                </View>
+                <Text style={styles.starterChipName}>#{p.num} {p.name}</Text>
+                <Text style={styles.starterChipOvr}>{p.ovr}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
         {/* Single Primary Action Button */}
         <TouchableOpacity
           style={styles.primaryCtaBtn}
@@ -125,7 +161,7 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
           onPress={() => onNavigate?.('equipe')}
         >
           <MaterialCommunityIcons name="soccer-field" size={18} color="#000000" />
-          <Text style={styles.primaryCtaText}>Préparer la Composition & Tactique</Text>
+          <Text style={styles.primaryCtaText}>Ajuster la Composition & Tactique</Text>
           <Feather name="arrow-right" size={16} color="#000000" />
         </TouchableOpacity>
       </View>
@@ -466,6 +502,80 @@ const styles = StyleSheet.create({
     width: 1,
     height: 14,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  lineupPreviewBox: {
+    backgroundColor: '#16161F',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.2)',
+    padding: 10,
+    marginBottom: 12,
+  },
+  lineupPreviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  lineupPreviewHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  lineupPreviewTitle: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+    letterSpacing: 0.5,
+  },
+  lineupCountBadge: {
+    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  lineupCountText: {
+    color: '#30D158',
+    fontSize: 9.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  lineupChipsScroll: {
+    gap: 6,
+    paddingVertical: 2,
+  },
+  starterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E1E28',
+    borderRadius: 7,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    gap: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  starterPosBadge: {
+    backgroundColor: '#0A84FF',
+    borderRadius: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  starterPosText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '900',
+  },
+  starterChipName: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  starterChipOvr: {
+    color: '#FFD700',
+    fontSize: 10,
+    fontWeight: '800',
   },
   primaryCtaBtn: {
     flexDirection: 'row',

@@ -176,8 +176,8 @@ const styles = StyleSheet.create({
     }),
   },
   cardPitch: {
-    width: 66,
-    height: 94,
+    width: 62,
+    height: 84,
   },
   cardBench: {
     width: 56,
@@ -292,9 +292,9 @@ const styles = StyleSheet.create({
     marginVertical: 0,
   },
   jerseyCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#1E1E26',
     borderWidth: 1.5,
     alignItems: 'center',
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
   jerseyNum: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     fontFamily: '-apple-system',
   },
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'rgba(28, 28, 36, 0.9)',
     borderRadius: 4,
-    paddingVertical: 2,
+    paddingVertical: 1.5,
     alignItems: 'center',
     borderTopWidth: 0.5,
     borderTopColor: 'rgba(255, 215, 0, 0.3)',
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   },
   nameText: {
     color: '#FFFFFF',
-    fontSize: 8.5,
+    fontSize: 8,
     fontWeight: '800',
     fontFamily: '-apple-system',
     textTransform: 'uppercase',
