@@ -14,7 +14,6 @@ export { ClubVideoScreen } from './ClubVideoScreen';
 export { ClubStatsScreen } from './ClubStatsScreen';
 export { ClubHubScreen, ClubPackScreen, ClubHubScreen as ClubVitrineScreen } from './ClubHubScreen';
 export { ClubStandingsScreen } from './ClubStandingsScreen';
-export { ClubQuoteRequestScreen } from './dashboard/ClubQuoteRequestScreen';
+export { ClubQuoteRequestScreen } from './ClubQuoteRequestScreen';
+export { ClubCarpoolScreen } from './ClubCarpoolScreen';
 
-export { ClubCamerasScreen } from './outils/ClubCamerasScreen';
-export { ClubShell } from './shared/clubShell';

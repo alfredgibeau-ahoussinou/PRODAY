@@ -1,10 +1,16 @@
-import { Platform } from 'react-native';
+import { LogBox, Platform } from 'react-native';
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { firebaseConfig, isFirebaseConfigured } from '../config/firebase';
+
+LogBox.ignoreLogs([
+  '@firebase/firestore',
+  'Could not reach Cloud Firestore backend',
+  'FirebaseError: [code=unavailable]',
+]);
 
 let app: FirebaseApp | undefined;
 let db: Firestore | undefined;

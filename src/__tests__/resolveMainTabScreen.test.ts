@@ -2,7 +2,7 @@ jest.mock('../screens/HomeScreen', () => ({ HomeScreen: 'HomeScreen' }));
 jest.mock('../screens/MercatoScreen', () => ({ MercatoScreen: 'MercatoScreen' }));
 jest.mock('../screens/MatchsScreen', () => ({ MatchsScreen: 'MatchsScreen' }));
 jest.mock('../screens/MessagesScreen', () => ({ MessagesScreen: 'MessagesScreen' }));
-jest.mock('../screens/club/ClubPortalScreen', () => ({ ClubPortalScreen: 'ClubPortalScreen' }));
+jest.mock('../screens/club/ClubHomeScreen', () => ({ ClubHomeScreen: 'ClubHomeScreen' }));
 jest.mock('../screens/club/ClubRecruitmentScreen', () => ({
   ClubRecruitmentScreen: 'ClubRecruitmentScreen',
 }));
@@ -10,7 +10,7 @@ jest.mock('../screens/club/ClubCalendarScreen', () => ({ ClubCalendarScreen: 'Cl
 jest.mock('../screens/club/ClubCommunicationScreen', () => ({
   ClubCommunicationScreen: 'ClubCommunicationScreen',
 }));
-jest.mock('../screens/club/ClubVitrineScreen', () => ({ ClubVitrineScreen: 'ClubVitrineScreen' }));
+jest.mock('../screens/club/ClubHubScreen', () => ({ ClubHubScreen: 'ClubHubScreen' }));
 jest.mock('../screens/supporter/SupporterHomeScreen', () => ({
   SupporterHomeScreen: 'SupporterHomeScreen',
 }));
@@ -69,19 +69,19 @@ import { resolveMainTabScreen } from '../navigation/resolveMainTabScreen';
 
 describe('resolveMainTabScreen', () => {
   it('mappe les 5 onglets shell club pro', () => {
-    expect(resolveMainTabScreen('home', 'club', 'pro')).toBe('ClubPortalScreen');
+    expect(resolveMainTabScreen('home', 'club', 'pro')).toBe('ClubHomeScreen');
     expect(resolveMainTabScreen('recrutement', 'club', 'pro')).toBe('ClubRecruitmentScreen');
     expect(resolveMainTabScreen('matchs', 'club', 'pro')).toBe('ClubCalendarScreen');
     expect(resolveMainTabScreen('messages', 'club', 'pro')).toBe('ClubCommunicationScreen');
-    expect(resolveMainTabScreen('profil', 'club', 'pro')).toBe('ClubVitrineScreen');
+    expect(resolveMainTabScreen('profil', 'club', 'pro')).toBe('ClubHubScreen');
   });
 
   it('mappe le shell club amateur (portail + kanban + perf)', () => {
-    expect(resolveMainTabScreen('home', 'club', 'amateur')).toBe('ClubPortalScreen');
+    expect(resolveMainTabScreen('home', 'club', 'amateur')).toBe('ClubHomeScreen');
     expect(resolveMainTabScreen('recrutement', 'club', 'amateur')).toBe('ClubRecruitmentScreen');
     expect(resolveMainTabScreen('matchs', 'club', 'amateur')).toBe('ClubCalendarScreen');
     expect(resolveMainTabScreen('feed', 'club', 'amateur')).toBe('SmartTacticsPortalScreen');
-    expect(resolveMainTabScreen('profil', 'club', 'amateur')).toBe('ClubVitrineScreen');
+    expect(resolveMainTabScreen('profil', 'club', 'amateur')).toBe('ClubHubScreen');
   });
 
   it('utilise les écrans pro joueur hors rôle club', () => {

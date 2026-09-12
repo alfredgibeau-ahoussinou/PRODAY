@@ -24,6 +24,8 @@ import { useTabNavigation } from '../../context/TabNavigationContext';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
 import { ClubVideoScreen } from './ClubVideoScreen';
+import { ClubCarpoolScreen } from './ClubCarpoolScreen';
+import { ClubAuxiliaryModules } from '../../features/club/ui/ClubAuxiliaryModules';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import {
   ClubActionRow,
@@ -637,205 +639,18 @@ export function ClubFinancesScreen() {
 }
 
 export function ClubSponsoringScreen() {
-  const shellNav = useClubShellNav();
-  const ws = useClubWorkspace();
   const { tokens } = useClubTheme();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
-  const [dossierOpen, setDossierOpen] = useState(false);
-
-  const packages = [
-    { title: 'Sponsor Titre / Maillot', price: '2 500 € / an', desc: 'Logo principal face avant maillots + visibilité match day', tone: '#FBBF24' },
-    { title: 'Sponsor Équipement / Veste', price: '1 200 € / an', desc: 'Logo manche ou dos + bannières stade', tone: '#60A5FA' },
-    { title: 'Partenaire Local & Événementiel', price: '500 € / an', desc: 'Présence tournois club, page web vitrine et réseaux', tone: '#34D399' },
-  ];
 
   return (
     <View style={styles.root}>
       <ClubChapterScroll>
-        <ClubBrandHeader title="Sponsoring & Partenariats" subtitle="Offres de visibilité, packages maillots et mécénat club" />
-
-        <ClubSectionCard title="Packages de Visibilité Club">
-          {packages.map((pkg, i) => (
-            <View key={pkg.title} style={{ padding: 14, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 10, marginTop: i > 0 ? 10 : 0, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <ClubText variant="section" style={{ fontSize: 14, color: pkg.tone, fontWeight: '800' }}>
-                  {pkg.title}
-                </ClubText>
-                <ClubText variant="section" style={{ fontSize: 13, fontWeight: '700' }}>
-                  {pkg.price}
-                </ClubText>
-              </View>
-              <ClubText variant="caption" muted>{pkg.desc}</ClubText>
-            </View>
-          ))}
-        </ClubSectionCard>
-
-        <ClubSectionCard title="Dossier & Pilotage Partenaires">
-          <ClubText variant="body" muted>
-            Les entreprises locales et mécènes peuvent souscrire directement via le dossier officiel de votre structure.
-          </ClubText>
-          <ClubActionRow
-            icon="gift"
-            label="Consulter le dossier de sponsoring club"
-            hint="Plaquette partenaires, chiffres clés et fiscalité mécénat"
-            onPress={() => setDossierOpen(true)}
-          />
-          <ClubActionRow
-            icon="bag"
-            label="Trésorerie & Suivi des cotisations"
-            hint="Consulter les versements et encaissements sponsors"
-            onPress={() => shellNav?.requestNav('finances')}
-          />
-          <ClubActionRow
-            icon="chat"
-            label="Communication & Diffusion partenaires"
-            hint="Canaux officiels pour valoriser vos sponsors"
-            onPress={() => shellNav?.requestNav('communication')}
-          />
-        </ClubSectionCard>
+        <ClubBrandHeader
+          title="Sponsoring & Vie du Club"
+          subtitle="Partenaires · Buvette & Bénévolat · Médical FFF · Équipements"
+        />
+        <ClubAuxiliaryModules initialTab="sponsoring" />
       </ClubChapterScroll>
-
-      {/* Modal Dossier Sponsoring */}
-      <Modal
-        visible={dossierOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setDossierOpen(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            justifyContent: 'flex-end',
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: tokens.surface,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 20,
-              maxHeight: '90%',
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.12)',
-            }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 16,
-              }}
-            >
-              <View>
-                <ClubText variant="title" style={{ fontSize: 18, fontWeight: '800' }}>
-                  Dossier Sponsoring Club
-                </ClubText>
-                <ClubText variant="caption" muted>
-                  {ws.club?.name || 'Votre Club'} · Présentation Partenaires
-                </ClubText>
-              </View>
-              <TouchableOpacity onPress={() => setDossierOpen(false)}>
-                <Icon name="close" size={20} color={tokens.foreground} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Chiffres clés */}
-            <View
-              style={{
-                flexDirection: 'row',
-                gap: 8,
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                padding: 12,
-                borderRadius: 12,
-                marginBottom: 14,
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.06)',
-              }}
-            >
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                <ClubText variant="title" style={{ color: tokens.accent, fontSize: 18, fontWeight: '800' }}>
-                  {ws.players.length}
-                </ClubText>
-                <ClubText variant="caption" muted style={{ fontSize: 11 }}>
-                  Licenciés
-                </ClubText>
-              </View>
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                <ClubText variant="title" style={{ color: tokens.accent, fontSize: 18, fontWeight: '800' }}>
-                  {ws.teams.length}
-                </ClubText>
-                <ClubText variant="caption" muted style={{ fontSize: 11 }}>
-                  Équipes
-                </ClubText>
-              </View>
-              <View style={{ flex: 1, alignItems: 'center' }}>
-                <ClubText variant="title" style={{ color: tokens.accent, fontSize: 18, fontWeight: '800' }}>
-                  {ws.events.length}
-                </ClubText>
-                <ClubText variant="caption" muted style={{ fontSize: 11 }}>
-                  Événements
-                </ClubText>
-              </View>
-            </View>
-
-            {/* Fiscalité mécénat */}
-            <View
-              style={{
-                backgroundColor: 'rgba(52, 211, 153, 0.1)',
-                padding: 12,
-                borderRadius: 10,
-                marginBottom: 14,
-                borderWidth: 1,
-                borderColor: 'rgba(52, 211, 153, 0.3)',
-              }}
-            >
-              <ClubText variant="section" style={{ color: '#34D399', fontSize: 13, fontWeight: '800' }}>
-                Avantage fiscal mécénat : 60% déductible
-              </ClubText>
-              <ClubText variant="caption" muted style={{ color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
-                Article 238 bis du Code Général des Impôts : les dons des entreprises ouvrent droit à une réduction d'impôt sur les sociétés de 60%.
-              </ClubText>
-            </View>
-
-            <TouchableOpacity
-              style={{
-                backgroundColor: tokens.accent,
-                paddingVertical: 13,
-                borderRadius: 12,
-                alignItems: 'center',
-                marginBottom: 8,
-              }}
-              onPress={() => {
-                setDossierOpen(false);
-                Alert.alert(
-                  'Dossier Partenaire',
-                  `Plaquette du club ${ws.club?.name || ''} prête. Transmettez ce récapitulatif avec vos packages (${packages.map((p) => p.title).join(', ')}) aux entreprises de votre bassin.`,
-                );
-              }}
-            >
-              <ClubText variant="section" style={{ color: '#000', fontWeight: '800', fontSize: 14 }}>
-                Télécharger / Partager le récapitulatif
-              </ClubText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.08)',
-                paddingVertical: 12,
-                borderRadius: 12,
-                alignItems: 'center',
-              }}
-              onPress={() => setDossierOpen(false)}
-            >
-              <ClubText variant="section" style={{ fontSize: 13 }}>
-                Fermer
-              </ClubText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -1070,6 +885,8 @@ export function renderClubSecondaryStub(id: ClubNavItemId): React.ReactNode | nu
       return <ClubPermissionsScreen />;
     case 'video':
       return <ClubVideoScreen />;
+    case 'carpool':
+      return <ClubCarpoolScreen />;
     default:
       return null;
   }

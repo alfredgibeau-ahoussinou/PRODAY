@@ -39,7 +39,8 @@ export type ClubNavItemId =
   | 'permissions'
   | 'stats'
   | 'recruitment'
-  | 'video';
+  | 'video'
+  | 'carpool';
 
 
 export type ClubNavItem = {
@@ -86,6 +87,8 @@ export const CLUB_MENU_DEST_IDS: ClubNavItemId[] = [
   'pack',
   'notifications',
   'permissions',
+  'video',
+  'carpool',
 ];
 
 export type ClubCreateActionId =
@@ -283,6 +286,22 @@ const permissionsItem: ClubNavItem = {
   icon: 'shield',
 };
 
+const videoItem: ClubNavItem = {
+  id: 'video',
+  label: 'Vidéo & Analyse',
+  shortLabel: 'Vidéo',
+  hint: 'Veo · Smartphone · Clips IA',
+  icon: 'videocam',
+};
+
+const carpoolItem: ClubNavItem = {
+  id: 'carpool',
+  label: 'Covoiturage',
+  shortLabel: 'Covoiturage',
+  hint: 'Déplacements & logistique',
+  icon: 'car',
+};
+
 export const CLUB_NAV_FOLDERS: ClubNavFolder[] = [
   {
     id: 'accueil',
@@ -297,13 +316,13 @@ export const CLUB_NAV_FOLDERS: ClubNavFolder[] = [
   {
     id: 'sport',
     label: 'Sport',
-    items: [calendarItem, matchesItem, trainingsItem, eventsItem, standingsItem],
+    items: [calendarItem, matchesItem, trainingsItem, eventsItem, standingsItem, videoItem],
   },
 
   {
     id: 'ops',
     label: 'Opérations',
-    items: [communicationItem],
+    items: [communicationItem, carpoolItem],
   },
   {
     id: 'club',
@@ -342,7 +361,7 @@ export const CLUB_TOOL_GROUPS: ClubToolGroup[] = [
   },
   {
     title: 'Aujourd’hui',
-    ids: ['trainings', 'notifications'],
+    ids: ['trainings', 'notifications', 'carpool'],
     collapsible: true,
     defaultExpanded: true,
   },
@@ -354,7 +373,7 @@ export const CLUB_TOOL_GROUPS: ClubToolGroup[] = [
   },
   {
     title: 'Compétition',
-    ids: ['matches', 'events', 'standings'],
+    ids: ['matches', 'events', 'standings', 'video'],
     collapsible: true,
     defaultExpanded: false,
   },

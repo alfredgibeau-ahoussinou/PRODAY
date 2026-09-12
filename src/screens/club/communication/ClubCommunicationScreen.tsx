@@ -1,1 +1,0 @@
-export { ClubCommunicationScreen } from '../ClubCommunicationScreen';

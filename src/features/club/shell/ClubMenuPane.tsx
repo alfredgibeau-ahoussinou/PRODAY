@@ -125,6 +125,18 @@ export const CLUB_MENU_ITEMS: ClubMenuItemDef[] = [
     icon: 'shield',
   },
   {
+    id: 'video',
+    label: 'Vidéo & Analyse IA',
+    subtitle: 'Veo, Smartphone, smart clipping & tags',
+    icon: 'videocam',
+  },
+  {
+    id: 'carpool',
+    label: 'Covoiturage & Logistique',
+    subtitle: 'Déplacements extérieurs, places & GPS',
+    icon: 'car',
+  },
+  {
     id: 'pack',
     label: 'Pack Club & Options',
     subtitle: 'Formules, options & services',

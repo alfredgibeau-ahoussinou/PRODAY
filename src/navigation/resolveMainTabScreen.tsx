@@ -17,12 +17,12 @@ import { MessagesScreen } from '../screens/MessagesScreen';
 import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { ShopScreen } from '../screens/ShopScreen';
 import { RetiredRoleScreen } from '../screens/RetiredRoleScreen';
-import { ClubPortalScreen } from '../screens/club/ClubPortalScreen';
+import { ClubHomeScreen } from '../screens/club/ClubHomeScreen';
 import { CoachPortalScreen } from '../screens/coach/CoachPortalScreen';
 import { ClubRecruitmentScreen } from '../screens/club/ClubRecruitmentScreen';
 import { ClubCalendarScreen } from '../screens/club/ClubCalendarScreen';
 import { ClubCommunicationScreen } from '../screens/club/ClubCommunicationScreen';
-import { ClubVitrineScreen } from '../screens/club/ClubVitrineScreen';
+import { ClubHubScreen } from '../screens/club/ClubHubScreen';
 import { SupporterHomeScreen } from '../screens/supporter/SupporterHomeScreen';
 import { SupporterMatchsScreen } from '../screens/supporter/SupporterMatchsScreen';
 import { SupporterCompetitionsScreen } from '../screens/supporter/SupporterCompetitionsScreen';
@@ -64,20 +64,20 @@ const SUPPORTER_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
 };
 
 const PRO_CLUB_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: ClubPortalScreen,
+  home: ClubHomeScreen,
   recrutement: ClubRecruitmentScreen,
   matchs: ClubCalendarScreen,
   messages: ClubCommunicationScreen,
-  profil: ClubVitrineScreen,
+  profil: ClubHubScreen,
 };
 
 const AMATEUR_CLUB_SCREENS: Partial<Record<MainTabId, ComponentType>> = {
-  home: ClubPortalScreen,
+  home: ClubHomeScreen,
   recrutement: ClubRecruitmentScreen,
   matchs: ClubCalendarScreen,
   feed: SmartTacticsPortalScreen,
   messages: ClubCommunicationScreen,
-  profil: ClubVitrineScreen,
+  profil: ClubHubScreen,
 };
 
 const COACH_SCREENS: Partial<Record<MainTabId, ComponentType>> = {

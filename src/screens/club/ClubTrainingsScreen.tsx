@@ -1,3 +1,8 @@
+/**
+ * Pôle Club — Entraînements, Terrains & Suivi Technique (RTJ)
+ * Intégration complète : Planning des Terrains, Météo, Exercices & Feuilles de présence.
+ * Design System Apple Obsidian Glass · Zéro émoji unicode.
+ */
 import React, { useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
@@ -9,9 +14,12 @@ import {
   ClubLoading,
   ClubPresenceBar,
   ClubSectionCard,
+  ClubSegmentedControl,
   ClubText,
 } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { ClubPitchSchedule } from '../../features/club/ui/ClubPitchSchedule';
+import { ClubTrainingsOversight } from '../../features/club/ui/ClubTrainingsOversight';
 import { ClubTrainingDayHero, ClubTrainingListRow } from '../../features/club/ui/ClubTrainingsDay';
 import {
   buildClubTrainingCardModel,
@@ -32,6 +40,7 @@ import { TeamEventDetailScreen } from '../TeamEventDetailScreen';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
 
+type TrainingsTab = 'pitches' | 'oversight' | 'sessions';
 type PresenceChoice = 'present' | 'absent' | 'late_under_10' | 'late_over_10' | 'pending';
 
 const PRESENCE_CHOICES: { id: PresenceChoice; label: string }[] = [
@@ -51,15 +60,12 @@ function labelForUid(uid: string, names: Map<string, string>): string {
   return names.get(uid) ?? uid.slice(0, 8);
 }
 
-/**
- * Entraînements Club — hero séance + liste + feuille de présence RSVP
- * + détail événement existant (TeamEventDetailScreen).
- */
 export function ClubTrainingsScreen() {
   const shellNav = useClubShellNav();
   const profile = useSessionProfile();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
+  const [activeTab, setActiveTab] = useState<TrainingsTab>('pitches');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailEventId, setDetailEventId] = useState<string | null>(null);
   const [busyUid, setBusyUid] = useState<string | null>(null);
@@ -134,145 +140,163 @@ export function ClubTrainingsScreen() {
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
         <ClubBrandHeader
-          title="Entraînements"
-          subtitle={
-            heroModel?.isInProgress
-              ? 'Séance en cours — présences & détail'
-              : heroModel?.isToday
-                ? 'Séance du jour — présences & retards'
-                : 'Présences, retards et plan de séance'
-          }
+          title="Entraînements & Terrains"
+          subtitle="Planning des créneaux · Suivi RTJ · Exercices & pointages"
         />
 
-        {trainings.length === 0 ? (
-          <ClubEmptyState
-            title="Aucune séance planifiée"
-            body="Créez un entraînement pour suivre les présences (Présent / Absent / Retard / En attente)."
-            actionLabel="Créer une séance"
-            onAction={() => shellNav?.openCreate?.('training')}
-            icon="football"
-          />
-        ) : (
-          <View style={styles.list}>
-            {heroModel && heroEvent ? (
-              <ClubTrainingDayHero
-                model={heroModel}
-                actions={resolveTrainingActions(heroModel)}
-                onAction={(id) => {
-                  if (id === 'presence') openPresence(heroEvent.id);
-                  else openDetail(heroEvent.id);
-                }}
-              />
-            ) : null}
+        {/* Sélecteur d'onglet tripartite */}
+        <ClubSegmentedControl
+          options={[
+            { id: 'pitches' as const, label: 'Planning Terrains' },
+            { id: 'oversight' as const, label: 'Suivi RTJ & Exercices' },
+            { id: 'sessions' as const, label: `Séances (${trainings.length})` },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
 
-            {listModels.length > 0 ? (
-              <View style={styles.sectionHead}>
-                <ClubText variant="label" muted style={styles.sectionLabel}>
-                  {heroModel ? 'Autres séances' : 'Calendrier'}
-                </ClubText>
-                <ClubText variant="caption" muted>
-                  {listModels.length}
-                </ClubText>
-              </View>
-            ) : null}
+        {/* VUE 1 : PLANNING DES TERRAINS */}
+        {activeTab === 'pitches' ? (
+          <ClubPitchSchedule />
+        ) : null}
 
-            {listModels.map((model, index) => (
-              <ClubTrainingListRow
-                key={model.id}
-                model={model}
-                index={index}
-                selected={selectedId === model.id}
-                onOpenPresence={() => openPresence(model.id)}
-                onOpenDetail={() => openDetail(model.id)}
-              />
-            ))}
-          </View>
-        )}
+        {/* VUE 2 : SUIVI RTJ & BIBLIOTHÈQUE D'EXERCICES */}
+        {activeTab === 'oversight' ? (
+          <ClubTrainingsOversight />
+        ) : null}
 
-        {selected ? (
-          <ClubSectionCard title={`Présences · ${selected.title || 'Séance'}`}>
-            {(() => {
-              const presentCount = roster.filter((uid) => {
-                const mark = selected.attendance_marks?.[uid];
-                const rsvp = userRsvp(selected, uid);
-                return mark === 'present' || rsvp === 'yes';
-              }).length;
-              return roster.length > 0 ? (
-                <ClubPresenceBar present={presentCount} total={roster.length} />
-              ) : null;
-            })()}
-            <ClubText variant="body" muted>
-              Marquez chaque joueur. Retard &lt; 10 min ou ≥ 10 min.
-            </ClubText>
-            <PressableSpring
-              onPress={() => openDetail(selected.id)}
-              scaleTo={0.97}
-              haptic
-              style={styles.detailLink}
-            >
-              <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '800' }}>
-                Ouvrir le détail de la séance
-              </ClubText>
-            </PressableSpring>
-            {roster.length === 0 ? (
-              <ClubText variant="caption" muted>
-                Aucun joueur convoqué. Invitez l’effectif ou créez une séance avec équipe.
-              </ClubText>
-            ) : (
-              roster.map((uid) => {
-                const rsvp = userRsvp(selected, uid);
-                const mark = selected.attendance_marks?.[uid];
-                const hint = mark
-                  ? `Pointage : ${mark}`
-                  : RSVP_STATUS_LABELS[rsvp as RsvpStatus] ?? 'En attente';
-                return (
-                  <View key={uid} style={styles.playerBlock}>
-                    <ClubText variant="body" style={{ fontWeight: '700' }}>
-                      {labelForUid(uid, nameByUid)}
+        {/* VUE 3 : CALENDRIER SÉANCES & POINTAGES */}
+        {activeTab === 'sessions' ? (
+          trainings.length === 0 ? (
+            <ClubEmptyState
+              title="Aucune séance planifiée"
+              body="Créez un entraînement pour suivre les présences (Présent / Absent / Retard / En attente)."
+              actionLabel="Créer une séance"
+              onAction={() => shellNav?.openCreate?.('training')}
+              icon="football"
+            />
+          ) : (
+            <View style={styles.list}>
+              {heroModel && heroEvent ? (
+                <ClubTrainingDayHero
+                  model={heroModel}
+                  actions={resolveTrainingActions(heroModel)}
+                  onAction={(id) => {
+                    if (id === 'presence') openPresence(heroEvent.id);
+                    else openDetail(heroEvent.id);
+                  }}
+                />
+              ) : null}
+
+              {listModels.length > 0 ? (
+                <View style={styles.sectionHead}>
+                  <ClubText variant="label" muted style={styles.sectionLabel}>
+                    {heroModel ? 'Autres séances' : 'Calendrier'}
+                  </ClubText>
+                  <ClubText variant="caption" muted>
+                    {listModels.length}
+                  </ClubText>
+                </View>
+              ) : null}
+
+              {listModels.map((model, index) => (
+                <ClubTrainingListRow
+                  key={model.id}
+                  model={model}
+                  index={index}
+                  selected={selectedId === model.id}
+                  onOpenPresence={() => openPresence(model.id)}
+                  onOpenDetail={() => openDetail(model.id)}
+                />
+              ))}
+
+              {selected ? (
+                <ClubSectionCard title={`Présences · ${selected.title || 'Séance'}`}>
+                  {(() => {
+                    const presentCount = roster.filter((uid) => {
+                      const mark = selected.attendance_marks?.[uid];
+                      const rsvp = userRsvp(selected, uid);
+                      return mark === 'present' || rsvp === 'yes';
+                    }).length;
+                    return roster.length > 0 ? (
+                      <ClubPresenceBar present={presentCount} total={roster.length} />
+                    ) : null;
+                  })()}
+                  <ClubText variant="body" muted>
+                    Marquez chaque joueur. Retard &lt; 10 min ou ≥ 10 min.
+                  </ClubText>
+                  <PressableSpring
+                    onPress={() => openDetail(selected.id)}
+                    scaleTo={0.97}
+                    haptic
+                    style={styles.detailLink}
+                  >
+                    <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '800' }}>
+                      Ouvrir le détail de la séance
                     </ClubText>
+                  </PressableSpring>
+                  {roster.length === 0 ? (
                     <ClubText variant="caption" muted>
-                      {hint}
+                      Aucun joueur convoqué. Invitez l’effectif ou créez une séance avec équipe.
                     </ClubText>
-                    <View style={styles.markRow}>
-                      {PRESENCE_CHOICES.map((c) => {
-                        const active =
-                          (c.id === 'present' && (mark === 'present' || rsvp === 'yes')) ||
-                          (c.id === 'absent' && (mark === 'absent' || rsvp === 'no')) ||
-                          (c.id === 'late_under_10' && rsvp === 'late_under_10') ||
-                          (c.id === 'late_over_10' && rsvp === 'late_over_10') ||
-                          (c.id === 'pending' && rsvp === 'pending' && !mark);
-                        return (
-                          <PressableSpring
-                            key={c.id}
-                            onPress={() => void setPresence(uid, c.id)}
-                            scaleTo={0.94}
-                            haptic
-                            disabled={busyUid === uid}
-                            style={[styles.markBtn, active && styles.markBtnOn]}
-                          >
-                            <ClubText
-                              variant="caption"
-                              style={
-                                active
-                                  ? { color: '#fff', fontWeight: '700', fontSize: 10 }
-                                  : { fontWeight: '600', fontSize: 10 }
-                              }
-                            >
-                              {c.label}
-                            </ClubText>
-                          </PressableSpring>
-                        );
-                      })}
-                    </View>
-                  </View>
-                );
-              })
-            )}
-          </ClubSectionCard>
-        ) : trainings.length > 0 ? (
-          <ClubText variant="caption" muted style={styles.hintIdle}>
-            Choisissez une séance pour ouvrir la feuille de présence.
-          </ClubText>
+                  ) : (
+                    roster.map((uid) => {
+                      const rsvp = userRsvp(selected, uid);
+                      const mark = selected.attendance_marks?.[uid];
+                      const hint = mark
+                        ? `Pointage : ${mark}`
+                        : RSVP_STATUS_LABELS[rsvp as RsvpStatus] ?? 'En attente';
+                      return (
+                        <View key={uid} style={styles.playerBlock}>
+                          <ClubText variant="body" style={{ fontWeight: '700' }}>
+                            {labelForUid(uid, nameByUid)}
+                          </ClubText>
+                          <ClubText variant="caption" muted>
+                            {hint}
+                          </ClubText>
+                          <View style={styles.markRow}>
+                            {PRESENCE_CHOICES.map((c) => {
+                              const active =
+                                (c.id === 'present' && (mark === 'present' || rsvp === 'yes')) ||
+                                (c.id === 'absent' && (mark === 'absent' || rsvp === 'no')) ||
+                                (c.id === 'late_under_10' && rsvp === 'late_under_10') ||
+                                (c.id === 'late_over_10' && rsvp === 'late_over_10') ||
+                                (c.id === 'pending' && rsvp === 'pending' && !mark);
+                              return (
+                                <PressableSpring
+                                  key={c.id}
+                                  onPress={() => void setPresence(uid, c.id)}
+                                  scaleTo={0.94}
+                                  haptic
+                                  disabled={busyUid === uid}
+                                  style={[styles.markBtn, active && styles.markBtnOn]}
+                                >
+                                  <ClubText
+                                    variant="caption"
+                                    style={
+                                      active
+                                        ? { color: '#fff', fontWeight: '700', fontSize: 10 }
+                                        : { fontWeight: '600', fontSize: 10 }
+                                    }
+                                  >
+                                    {c.label}
+                                  </ClubText>
+                                </PressableSpring>
+                              );
+                            })}
+                          </View>
+                        </View>
+                      );
+                    })
+                  )}
+                </ClubSectionCard>
+              ) : trainings.length > 0 ? (
+                <ClubText variant="caption" muted style={styles.hintIdle}>
+                  Choisissez une séance pour ouvrir la feuille de présence.
+                </ClubText>
+              ) : null}
+            </View>
+          )
         ) : null}
       </ClubChapterScroll>
 

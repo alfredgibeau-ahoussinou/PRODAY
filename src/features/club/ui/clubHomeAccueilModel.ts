@@ -8,7 +8,21 @@ import {
   isCoachTrainingEvent,
   type TeamEvent,
 } from '../../../models/TeamEvent';
-import type { ClubHomePriority, ClubHomeTeamCard } from './ClubHomeAccueil';
+export type ClubHomePriority =
+  | { kind: 'match'; event: TeamEvent }
+  | { kind: 'training'; event: TeamEvent }
+  | { kind: 'calm' };
+
+export type ClubHomeTeamCard = {
+  id?: string;
+  teamId?: string;
+  name: string;
+  metaPrimary: string;
+  metaSecondary: string;
+  hasCoach: boolean;
+  coachesLabel: string;
+  onPress: () => void;
+};
 
 export function greetingForHour(h: number): string {
   if (h < 12) return 'Bonjour';

@@ -23,6 +23,7 @@ import { Icon } from '../../components/ui/Icon';
 import type { IconName } from '../../components/ui/iconNames';
 import { teamsService } from '../../services/teams.service';
 import { ClubTeamSpaceScreen } from './ClubTeamSpaceScreen';
+import { ClubTeamsHierarchy, type CategoryBracketId } from '../../features/club/ui/ClubTeamsHierarchy';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { ProDayText } from '../../components/ui/ProDayText';
 
@@ -85,6 +86,7 @@ export function ClubTeamsScreen() {
   // Filtres et recherche
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
+  const [bracket, setBracket] = useState<CategoryBracketId>('all');
 
   // État Studio IA
   const [aiPrompt, setAiPrompt] = useState('');
@@ -209,255 +211,14 @@ export function ClubTeamsScreen() {
           subtitle={`${summary.teamCount} équipe(s) · ${summary.licensedTotal} licencié(s) qualifié(s)`}
         />
 
-        <View style={styles.topActionsRow}>
-          <PressableSpring
-            onPress={() => setShowCreate(true)}
-            scaleTo={0.96}
-            haptic
-            style={styles.newTeamBtn}
-          >
-            <Icon name="add" size={14} color="#000000" />
-            <ProDayText variant="caption" style={styles.newTeamBtnText}>
-              Nouvelle équipe
-            </ProDayText>
-          </PressableSpring>
-        </View>
-
-        {/* 1. AUDIT & STRUCTURE EFFECTIF (Sleek Apple Obsidian Card) */}
-        <View style={styles.structureAuditCard}>
-          <LinearGradient
-            colors={['rgba(255, 255, 255, 0.03)', 'rgba(14, 14, 20, 0.7)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-
-          <View style={styles.auditHeaderRow}>
-            <View style={styles.auditBadge}>
-              <Icon name="shield" size={12} color="#D1D5DB" />
-              <ProDayText variant="caption" style={styles.auditBadgeText}>
-                AUDIT & STRUCTURE
-              </ProDayText>
-            </View>
-            <ProDayText variant="caption" style={styles.auditHeaderSub}>
-              Diagnostics effectifs & staff
-            </ProDayText>
-          </View>
-
-          {/* KPI Metrics Row */}
-          <View style={styles.kpiRow}>
-            <View style={styles.kpiBox}>
-              <ProDayText variant="caption" style={styles.kpiLabel}>
-                Équipes
-              </ProDayText>
-              <ProDayText variant="section" style={styles.kpiValue}>
-                {summary.teamCount}
-              </ProDayText>
-            </View>
-            <View style={styles.kpiDivider} />
-            <View style={styles.kpiBox}>
-              <ProDayText variant="caption" style={styles.kpiLabel}>
-                Licenciés
-              </ProDayText>
-              <ProDayText variant="section" style={styles.kpiValue}>
-                {summary.licensedTotal}
-              </ProDayText>
-            </View>
-            <View style={styles.kpiDivider} />
-            <View style={styles.kpiBox}>
-              <ProDayText variant="caption" style={styles.kpiLabel}>
-                Staff
-              </ProDayText>
-              <ProDayText
-                variant="section"
-                style={[
-                  styles.kpiValue,
-                  summary.withoutCoach > 0 ? styles.kpiWarn : styles.kpiGood,
-                ]}
-              >
-                {summary.withoutCoach > 0 ? `${summary.withoutCoach} à pourvoir` : 'Complet'}
-              </ProDayText>
-            </View>
-          </View>
-
-          {/* 4 Chips Instantanés */}
-          <View style={styles.chipsRow}>
-            {AI_TEAM_CHIPS.map((chip) => (
-              <PressableSpring
-                key={chip.id}
-                onPress={() => {
-                  setAiPrompt(chip.prompt);
-                  handleTriggerAi(chip.prompt);
-                }}
-                scaleTo={0.96}
-                haptic
-                style={styles.chipBtn}
-              >
-                <Icon name={chip.icon} size={12} color="#9CA3AF" />
-                <ProDayText variant="caption" style={styles.chipBtnText}>
-                  {chip.label}
-                </ProDayText>
-              </PressableSpring>
-            ))}
-          </View>
-
-          {/* Bouton de lancement Audit */}
-          <PressableSpring
-            onPress={() => handleTriggerAi()}
-            disabled={aiLoading}
-            scaleTo={0.96}
-            haptic
-            style={styles.auditActionBtn}
-          >
-            {aiLoading ? (
-              <ActivityIndicator size="small" color="#000000" />
-            ) : (
-              <>
-                <Icon name="star-four-points" size={13} color="#000000" />
-                <ProDayText variant="caption" style={styles.auditActionBtnText}>
-                  Lancer l'audit de structure
-                </ProDayText>
-              </>
-            )}
-          </PressableSpring>
-
-          {/* Résultat Conseil */}
-          {aiActiveTip ? (
-            <View style={styles.aiTipBox}>
-              <View style={styles.aiTipIcon}>
-                <Icon name="checkmark-circle" size={14} color="#10B981" />
-              </View>
-              <ProDayText variant="caption" style={styles.aiTipText}>
-                {aiActiveTip}
-              </ProDayText>
-              <PressableSpring onPress={() => setAiActiveTip(null)}>
-                <Icon name="close" size={14} color="#8E8E9F" />
-              </PressableSpring>
-            </View>
-          ) : null}
-        </View>
-
-        {/* 2. Barre de Recherche Rapide */}
-        <View style={styles.searchBar}>
-          <Icon name="search" size={16} color="#8E8E9F" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Rechercher une catégorie, équipe ou entraîneur..."
-            placeholderTextColor="#6B6B7F"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 ? (
-            <PressableSpring onPress={() => setSearchQuery('')}>
-              <Icon name="close" size={16} color="#8E8E9F" />
-            </PressableSpring>
-          ) : null}
-        </View>
-
-        {/* 3. Filtres de Catégories (Horizontal Scrollable Pills) */}
-        <View style={styles.filtersWrapper}>
-          {[
-            { id: 'all' as const, label: 'Toutes' },
-            { id: 'jeunes' as const, label: 'École de foot (U7-U13)' },
-            { id: 'formation' as const, label: 'Formation (U15-U17)' },
-            { id: 'seniors' as const, label: 'Seniors' },
-          ].map((f) => (
-            <PressableSpring
-              key={f.id}
-              onPress={() => setCategoryFilter(f.id)}
-              scaleTo={0.96}
-              haptic
-              style={[
-                styles.filterPill,
-                categoryFilter === f.id && styles.filterPillActive,
-              ]}
-            >
-              <ProDayText
-                variant="caption"
-                style={[
-                  styles.filterPillText,
-                  categoryFilter === f.id && styles.filterPillTextActive,
-                ]}
-              >
-                {f.label}
-              </ProDayText>
-            </PressableSpring>
-          ))}
-        </View>
-
-        {/* Alerte si équipe sans coach */}
-        {summary.withoutCoach > 0 ? (
-          <PressableSpring
-            onPress={() => shellNav?.requestNav('coaches')}
-            scaleTo={0.98}
-            haptic
-            style={styles.warnBanner}
-          >
-            <View style={styles.warnIconWrap}>
-              <Icon name="school" size={15} color="#F59E0B" />
-            </View>
-            <View style={styles.warnInfo}>
-              <ProDayText variant="body" style={styles.warnTitle}>
-                {summary.withoutCoach > 1
-                  ? `${summary.withoutCoach} équipes sans entraîneur référent`
-                  : '1 équipe sans entraîneur référent'}
-              </ProDayText>
-              <ProDayText variant="caption" style={styles.warnSub}>
-                Affecter un coach depuis le pôle Staff
-              </ProDayText>
-            </View>
-            <Icon name="chevron-forward" size={14} color="#F59E0B" />
-          </PressableSpring>
-        ) : null}
-
-        {/* 4. Liste des Équipes */}
-        <View style={styles.teamsSection}>
-          <View style={styles.sectionTitleRow}>
-            <ProDayText variant="section" style={styles.sectionTitle}>
-              Catégories & Effectifs ({filteredTeams.length})
-            </ProDayText>
-          </View>
-
-          {filteredTeams.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <View style={styles.emptyIconWrap}>
-                <Icon name="football" size={24} color="#8E8E9F" />
-              </View>
-              <ProDayText variant="section" style={styles.emptyTitle}>
-                {searchQuery ? 'Aucune équipe trouvée' : 'Aucune équipe enregistrée'}
-              </ProDayText>
-              <ProDayText variant="caption" style={styles.emptySub}>
-                {searchQuery
-                  ? 'Modifiez vos critères de recherche.'
-                  : 'Créez votre première catégorie pour organiser les effectifs.'}
-              </ProDayText>
-              <PressableSpring
-                onPress={() => setShowCreate(true)}
-                scaleTo={0.96}
-                haptic
-                style={styles.emptyActionBtn}
-              >
-                <Icon name="add" size={14} color="#000000" />
-                <ProDayText variant="caption" style={styles.emptyActionText}>
-                  Créer une équipe
-                </ProDayText>
-              </PressableSpring>
-            </View>
-          ) : (
-            <View style={styles.teamsList}>
-              {filteredTeams.map((row, index) => (
-                <ClubTeamCard
-                  key={row.teamId}
-                  row={row}
-                  index={index}
-                  logoUrl={logoUrl}
-                  onPress={() => shellNav?.setSelectedTeamId?.(row.teamId)}
-                />
-              ))}
-            </View>
-          )}
-        </View>
+        {/* Hiérarchie Complète Catégories FFF, Staff & Surclassements */}
+        <ClubTeamsHierarchy
+          teams={ws.teamRows}
+          onSelectTeam={(teamId) => shellNav?.setSelectedTeamId?.(teamId)}
+          onOpenCreateTeam={() => setShowCreate(true)}
+          selectedBracket={bracket}
+          onSelectBracket={setBracket}
+        />
       </ClubChapterScroll>
 
       {/* Modal Moderne de Création d'Équipe */}

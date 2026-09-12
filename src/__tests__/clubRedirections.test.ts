@@ -76,11 +76,13 @@ const ALL_EXPECTED_CLUB_NAV_IDS: ClubNavItemId[] = [
   'notifications',
   'permissions',
   'standings',
+  'video',
+  'carpool',
 ];
 
 describe('Club Redirections & Navigation Integrity', () => {
   it('contient les destinations Club essentielles épurées sans exception', () => {
-    expect(ALL_EXPECTED_CLUB_NAV_IDS.length).toBe(19);
+    expect(ALL_EXPECTED_CLUB_NAV_IDS.length).toBe(21);
     for (const navId of ALL_EXPECTED_CLUB_NAV_IDS) {
       const item = findClubNavItem(navId);
       expect(item).toBeDefined();
@@ -99,6 +101,7 @@ describe('Club Redirections & Navigation Integrity', () => {
       'notifications',
       'permissions',
       'video',
+      'carpool',
     ];
 
     for (const secId of secondaryIds) {

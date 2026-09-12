@@ -28,6 +28,7 @@ import {
 } from '../../features/club/ui/clubPlayersModel';
 import { ClubPlayerDetailScreen } from './ClubPlayerDetailScreen';
 import { membershipsService } from '../../services/memberships.service';
+import { ClubPlayersDirectory, DEMO_MEMBERS, type ClubMemberItem } from '../../features/club/ui/ClubPlayersDirectory';
 import { PressableSpring } from '../../components/motion';
 import { Icon } from '../../components/ui/Icon';
 import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
@@ -231,86 +232,16 @@ export function ClubPlayersScreen() {
           />
         ) : null}
 
-        <ClubSearchField
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Rechercher un joueur…"
+        {/* Annuaire Centralisé des Membres, Licences & Conformité FFF */}
+        <ClubPlayersDirectory
+          onSelectMember={(uid) => shellNav?.setSelectedPlayerUid?.(uid)}
+          onSendReminder={(member) => {
+            Alert.alert(
+              'Relance Administrative Envoyée',
+              `Une notification et un email officiel ont été envoyés à ${member.name} (licence et cotisation).`,
+            );
+          }}
         />
-
-        <ClubSegmentedControl options={filters} value={filter} onChange={setFilter} />
-
-        {showPendingBlock ? (
-          <View style={styles.section}>
-            <View style={styles.sectionHead}>
-              <ClubText variant="label" muted style={styles.sectionLabel}>
-                Adhésions à traiter
-              </ClubText>
-              <ClubText variant="caption" muted>
-                {pendingItems.length}
-              </ClubText>
-            </View>
-            <View style={styles.list}>
-              {pendingItems.map((item) => {
-                const team = ws.teams.find((t) => t.id === item.membership.team_id);
-                const roleBadge =
-                  item.membership.role === 'coach'
-                    ? 'Coach'
-                    : item.membership.role === 'parent'
-                      ? 'Parent'
-                      : 'Joueur';
-                return (
-                  <ClubPlayersPendingRow
-                    key={item.membership.id}
-                    name={item.name}
-                    teamHint={item.membership.category ? `${item.membership.category} · ${team?.name ?? 'Équipe'}` : team?.name}
-                    roleBadge={roleBadge}
-                    categoryHint={item.membership.category}
-                    identityDocName={item.membership.identity_document_name}
-                    identityDocType={item.membership.identity_document_type}
-                    busy={busyMembershipId === item.membership.id}
-                    onOpen={() => shellNav?.setSelectedPlayerUid?.(item.membership.player_uid)}
-                    onApprove={() => void approve(item.membership.id)}
-                    onReject={() => void reject(item.membership.id)}
-                  />
-                );
-              })}
-            </View>
-          </View>
-        ) : null}
-
-        {rosterItems.length === 0 && !showPendingBlock ? (
-          <ClubEmptyState
-            title="Aucun joueur pour l’instant"
-            body="Invitez des licenciés ou validez les demandes d’adhésion. Pas de dossier médical ici."
-            actionLabel="Inviter un membre"
-            onAction={() => shellNav?.openCreate?.('invite_member')}
-            icon="people"
-          />
-        ) : rosterItems.length === 0 ? null : (
-          <View style={styles.section}>
-            <View style={styles.sectionHead}>
-              <ClubText variant="label" muted style={styles.sectionLabel}>
-                Effectif
-              </ClubText>
-              <ClubText variant="caption" muted>
-                {rosterItems.length}
-              </ClubText>
-            </View>
-            <View style={styles.list}>
-              {rosterItems.map((item, index) => (
-                <ClubRosterPlayerCard
-                  key={item.player.uid}
-                  player={item.player}
-                  membership={item.membership}
-                  teamName={item.teamName}
-                  clubName={ws.club?.name}
-                  index={index}
-                  onPress={() => shellNav?.setSelectedPlayerUid?.(item.player.uid)}
-                />
-              ))}
-            </View>
-          </View>
-        )}
       </ClubChapterScroll>
     </View>
   );

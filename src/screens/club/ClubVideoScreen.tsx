@@ -1,25 +1,18 @@
+/**
+ * Pôle Club — Hub Vidéo, Analyse & Smart Highlights
+ * Veo Cam 3, Smartphone 4K, XbotGo, AI smart clipping & Brief du Lundi Matin.
+ * Design System Apple Obsidian Glass · Zéro émoji unicode.
+ */
 import React, { useMemo } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
-import { ClubCamerasPanel } from '../../components/club/ClubCamerasPanel';
-import { CLUB_VIDEO_PROVIDERS } from '../../features/club/video/ClubVideoProvider';
-import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { StyleSheet, View } from 'react-native';
 import { useClubWorkspace } from '../../features/club/hooks/useClubWorkspace';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
-import { useClubShellNav } from '../../features/club/shell/ClubShellNavContext';
-import {
-  ClubActionRow,
-  ClubChapterScroll,
-  ClubLoading,
-  ClubSectionCard,
-  ClubText,
-} from '../../features/club/ui/clubUi';
+import { ClubChapterScroll, ClubLoading } from '../../features/club/ui/clubUi';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
+import { ClubVideoHub } from '../../features/club/ui/ClubVideoHub';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 
-/** Vidéo & caméras — Veo / XbotGo / Smartphone / autre (jamais forcé). */
 export function ClubVideoScreen() {
-  const shellNav = useClubShellNav();
-  const profile = useSessionProfile();
   const { tokens } = useClubTheme();
   const ws = useClubWorkspace();
   const styles = useMemo(() => createStyles(tokens), [tokens]);
@@ -30,50 +23,10 @@ export function ClubVideoScreen() {
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
         <ClubBrandHeader
-          title="Vidéo"
-          subtitle="Outil vidéo — captation au choix, aucun vendeur imposé"
+          title="Vidéo & Analyse IA"
+          subtitle="Captation multi-sources · Smart Highlights · Le Brief du Lundi Matin"
         />
-
-        <ClubSectionCard title="Fournisseurs">
-          {CLUB_VIDEO_PROVIDERS.map((p) => (
-            <ClubActionRow
-              key={p.id}
-              icon="videocam"
-              label={p.label}
-              hint={p.description}
-              onPress={() =>
-                Alert.alert(
-                  p.label,
-                  p.connected
-                    ? 'Intégration native active pour ce fournisseur.'
-                    : 'Pas d’OAuth dans l’app pour l’instant. Enregistrez une fiche caméra ou importez des fichiers ci-dessous — pack / devis via Offre club si besoin.',
-                )
-              }
-            />
-          ))}
-        </ClubSectionCard>
-
-        <ClubSectionCard title="Caméras club">
-          {ws.clubId && profile ? (
-            <ClubCamerasPanel profile={profile} clubId={ws.clubId} />
-          ) : (
-            <ClubText variant="body" muted>
-              Liez un club pour enregistrer vos caméras (Veo, XbotGo, smartphone…).
-            </ClubText>
-          )}
-        </ClubSectionCard>
-
-        <ClubSectionCard title="Offre & Matériel Vidéo">
-          <ClubText variant="body" muted>
-            Intégrez des caméras tactiques Veo ou smartphone dans votre formule club ProDay.
-          </ClubText>
-          <ClubActionRow
-            icon="shield"
-            label="Pack Club & Devis Vidéo"
-            hint="Consulter les formules avec intégration vidéo"
-            onPress={() => shellNav?.requestNav('pack')}
-          />
-        </ClubSectionCard>
+        <ClubVideoHub />
       </ClubChapterScroll>
     </View>
   );
@@ -81,5 +34,8 @@ export function ClubVideoScreen() {
 
 const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
-    root: { flex: 1, backgroundColor: 'transparent' },
+    root: {
+      flex: 1,
+      backgroundColor: 'transparent',
+    },
   });
