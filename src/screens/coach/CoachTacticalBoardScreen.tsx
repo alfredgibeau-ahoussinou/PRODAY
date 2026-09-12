@@ -27,7 +27,7 @@ import Svg, {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export type TacticalFormat = '11v11' | '8v8' | '5v5' | '4v4';
+export type TacticalFormat = '11v11' | '8v8' | '5v5' | 'futsal' | '4v4' | '3v3';
 type BoardMode = '2d' | '3d' | 'cpa';
 type TacticalTool = 'select' | 'pass' | 'run' | 'press' | 'cone';
 type SetPieceType = 'corner_off' | 'corner_def' | 'freekick_direct' | 'freekick_wide';
@@ -111,9 +111,29 @@ const INITIAL_PLAYERS_BY_FORMAT: Record<TacticalFormat, TacticalPlayer[]> = {
     { id: 'a9', num: 9, name: 'Adv 9', x: 50, y: 74, team: 'away', role: 'PIV' },
     { id: 'a4', num: 4, name: 'Adv 4', x: 50, y: 22, team: 'away', role: 'FIX' },
   ],
+  'futsal': [
+    { id: 'h1', num: 1, name: 'Hugo L.', x: 50, y: 120, team: 'home', role: 'GB' },
+    { id: 'h3', num: 4, name: 'Axel P.', x: 50, y: 92, team: 'home', role: 'FIX' },
+    { id: 'h8', num: 10, name: 'Rayan K.', x: 24, y: 64, team: 'home', role: 'AL' },
+    { id: 'h9', num: 7, name: 'Lucas M.', x: 76, y: 64, team: 'home', role: 'AD' },
+    { id: 'h10', num: 9, name: 'Yanis B.', x: 50, y: 32, team: 'home', role: 'PIV' },
+
+    // Opponents
+    { id: 'a9', num: 9, name: 'Adv 9', x: 50, y: 74, team: 'away', role: 'PIV' },
+    { id: 'a4', num: 4, name: 'Adv 4', x: 50, y: 22, team: 'away', role: 'FIX' },
+  ],
   '4v4': [
     { id: 'h1', num: 1, name: 'Hugo L.', x: 50, y: 120, team: 'home', role: 'GB' },
     { id: 'h3', num: 4, name: 'Axel P.', x: 50, y: 88, team: 'home', role: 'DEF' },
+    { id: 'h8', num: 10, name: 'Rayan K.', x: 30, y: 40, team: 'home', role: 'ATT' },
+    { id: 'h10', num: 9, name: 'Yanis B.', x: 70, y: 40, team: 'home', role: 'ATT' },
+
+    // Opponents
+    { id: 'a9', num: 9, name: 'Adv 9', x: 50, y: 68, team: 'away', role: 'ATT' },
+    { id: 'a4', num: 4, name: 'Adv 4', x: 50, y: 24, team: 'away', role: 'DEF' },
+  ],
+  '3v3': [
+    { id: 'h1', num: 1, name: 'Hugo L.', x: 50, y: 110, team: 'home', role: 'DEF' },
     { id: 'h8', num: 10, name: 'Rayan K.', x: 30, y: 40, team: 'home', role: 'ATT' },
     { id: 'h10', num: 9, name: 'Yanis B.', x: 70, y: 40, team: 'home', role: 'ATT' },
 
@@ -140,7 +160,7 @@ export const CoachTacticalBoardScreen: React.FC = () => {
 
   const pitchWidth = SCREEN_WIDTH - 32;
   const pitchHeight = pitchWidth * 1.35;
-  const isFutsal = selectedFormat === '5v5';
+  const isFutsal = selectedFormat === 'futsal';
 
   const triggerHaptic = () => {
     try {
@@ -273,28 +293,36 @@ export const CoachTacticalBoardScreen: React.FC = () => {
 
       {/* 2. UNIVERSAL MULTI-FORMAT SELECTOR BAR */}
       <View style={styles.formatSelectorRow}>
-        {(
-          [
-            { key: '11v11', label: 'Foot à 11' },
-            { key: '8v8', label: 'Foot à 8' },
-            { key: '5v5', label: 'Futsal 5v5' },
-            { key: '4v4', label: 'Animation 4v4' },
-          ] as const
-        ).map((fmt) => {
-          const isActive = selectedFormat === fmt.key;
-          return (
-            <TouchableOpacity
-              key={fmt.key}
-              style={[styles.formatChip, isActive && styles.formatChipActive]}
-              activeOpacity={0.7}
-              onPress={() => handleFormatChange(fmt.key)}
-            >
-              <Text style={[styles.formatChipText, isActive && styles.formatChipTextActive]}>
-                {fmt.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.formatSelectorScroll}
+        >
+          {(
+            [
+              { key: '11v11', label: 'Foot à 11' },
+              { key: '8v8', label: 'Foot à 8' },
+              { key: '5v5', label: 'Foot à 5 (Five)' },
+              { key: 'futsal', label: 'Futsal 5v5' },
+              { key: '4v4', label: 'Animation 4v4' },
+              { key: '3v3', label: 'Animation 3v3' },
+            ] as const
+          ).map((fmt) => {
+            const isActive = selectedFormat === fmt.key;
+            return (
+              <TouchableOpacity
+                key={fmt.key}
+                style={[styles.formatChip, isActive && styles.formatChipActive]}
+                activeOpacity={0.7}
+                onPress={() => handleFormatChange(fmt.key)}
+              >
+                <Text style={[styles.formatChipText, isActive && styles.formatChipTextActive]}>
+                  {fmt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {/* 3. Drawing Toolbar & Manual Reset */}
@@ -876,17 +904,20 @@ const styles = StyleSheet.create({
     color: '#C5A059',
   },
   formatSelectorRow: {
-    flexDirection: 'row',
     backgroundColor: '#141418',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 4,
     marginBottom: 10,
-    gap: 4,
+  },
+  formatSelectorScroll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   formatChip: {
-    flex: 1,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 7,

@@ -387,7 +387,7 @@ const INITIAL_SQUAD: FutPlayer[] = [
   },
 ];
 
-const FORMAT_OPTIONS: MatchFormatKey[] = ['11v11', '8v8', '5v5', '4v4', '3v3'];
+const FORMAT_OPTIONS: MatchFormatKey[] = ['11v11', '8v8', '5v5', 'futsal', '4v4', '3v3'];
 
 export const CoachSquadScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'composition' | 'convocations' | 'classement'>('composition');
@@ -407,13 +407,13 @@ export const CoachSquadScreen: React.FC = () => {
   const formatConfig = MATCH_FORMATS_CONFIG[format];
   const targetStartersCount = formatConfig.starterCount;
 
-  // Derive starters and subs dynamically according to format starter count
+  // Derive starters and subs dynamically according to format starter count & fitness
   const { starters, subs, unselected } = useMemo(() => {
     const presentOrFit = squad.filter((p) => p.rsvp !== 'injured' && p.rsvp !== 'absent');
     const unavailable = squad.filter((p) => p.rsvp === 'injured' || p.rsvp === 'absent');
 
-    // Priority to players explicitly marked 'starter' or top N present
-    const currentStarters = squad.filter((p) => p.role === 'starter');
+    // Priority to players explicitly marked 'starter' AND who are present/fit
+    const currentStarters = presentOrFit.filter((p) => p.role === 'starter');
 
     let finalStarters: FutPlayer[] = [];
     if (currentStarters.length === targetStartersCount) {
@@ -422,7 +422,7 @@ export const CoachSquadScreen: React.FC = () => {
       finalStarters = currentStarters.slice(0, targetStartersCount);
     } else {
       const remainingNeeded = targetStartersCount - currentStarters.length;
-      const candidates = squad.filter((p) => p.role !== 'starter' && p.rsvp === 'present');
+      const candidates = presentOrFit.filter((p) => p.role !== 'starter');
       finalStarters = [...currentStarters, ...candidates.slice(0, remainingNeeded)];
     }
 
@@ -441,6 +441,34 @@ export const CoachSquadScreen: React.FC = () => {
   const pendingCount = squad.filter((p) => p.rsvp === 'pending').length;
   const absentCount = squad.filter((p) => p.rsvp === 'absent').length;
   const injuredCount = squad.filter((p) => p.rsvp === 'injured').length;
+
+  // Cycle player RSVP status: present -> pending -> absent -> injured -> present
+  const cyclePlayerRsvp = (playerId: string) => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {
+      // ignore
+    }
+    setSquad((prev) =>
+      prev.map((p) => {
+        if (p.id !== playerId) return p;
+        const nextMap: Record<'present' | 'pending' | 'absent' | 'injured', 'present' | 'pending' | 'absent' | 'injured'> = {
+          present: 'pending',
+          pending: 'absent',
+          absent: 'injured',
+          injured: 'present',
+        };
+        const nextRsvp = nextMap[p.rsvp] || 'present';
+        const demoteStarter = (nextRsvp === 'absent' || nextRsvp === 'injured') && p.role === 'starter';
+        return {
+          ...p,
+          rsvp: nextRsvp,
+          role: demoteStarter ? ('sub' as const) : p.role,
+          form: nextRsvp === 'injured' ? ('injured' as const) : p.form === 'injured' ? ('good' as const) : p.form,
+        };
+      })
+    );
+  };
 
   const triggerHaptic = () => {
     try {
@@ -826,7 +854,9 @@ export const CoachSquadScreen: React.FC = () => {
                     {player.pos} · {player.role === 'starter' ? 'Titulaire' : player.role === 'sub' ? 'Remplaçant' : 'Non retenu'}
                   </Text>
                 </View>
-                <View
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => cyclePlayerRsvp(player.id)}
                   style={[
                     styles.rsvpStatusPill,
                     player.rsvp === 'present' && { backgroundColor: 'rgba(48, 209, 88, 0.2)' },
@@ -852,7 +882,21 @@ export const CoachSquadScreen: React.FC = () => {
                       ? 'Absent'
                       : 'Blessé'}
                   </Text>
-                </View>
+                  <Feather
+                    name="refresh-cw"
+                    size={9}
+                    color={
+                      player.rsvp === 'present'
+                        ? '#30D158'
+                        : player.rsvp === 'pending'
+                        ? '#FF9F0A'
+                        : player.rsvp === 'absent'
+                        ? '#FF453A'
+                        : '#BF5AF2'
+                    }
+                    style={{ marginLeft: 4 }}
+                  />
+                </TouchableOpacity>
               </View>
             ))}
           </View>
@@ -1219,6 +1263,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   rsvpStatusText: {
     fontSize: 10.5,

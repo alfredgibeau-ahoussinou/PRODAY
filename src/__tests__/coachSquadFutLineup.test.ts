@@ -23,7 +23,7 @@ import {
 
 describe('CoachSquadFutLineup & Pitch View Architecture', () => {
   const formations11: FormationKey[] = ['4-3-3', '4-2-3-1', '4-4-2', '3-5-2', '5-3-2'];
-  const allFormats: MatchFormatKey[] = ['11v11', '8v8', '5v5', '4v4', '3v3'];
+  const allFormats: MatchFormatKey[] = ['11v11', '8v8', '5v5', 'futsal', '4v4', '3v3'];
 
   it('defines exactly 11 starter tactical coordinates for every supported 11v11 formation', () => {
     formations11.forEach((fKey) => {
@@ -47,7 +47,8 @@ describe('CoachSquadFutLineup & Pitch View Architecture', () => {
     });
   });
 
-  it('supports all 5 universal game formats with exact starter counts and valid default formations', () => {
+  it('supports all 6 universal game formats with exact starter counts and valid default formations', () => {
+    expect(allFormats).toHaveLength(6);
     allFormats.forEach((fmt) => {
       const config = MATCH_FORMATS_CONFIG[fmt];
       expect(config).toBeDefined();
@@ -73,10 +74,13 @@ describe('CoachSquadFutLineup & Pitch View Architecture', () => {
     });
   });
 
-  it('accurately distinguishes Futsal (5v5) court layout with 6m D-arc requirements', () => {
-    expect(MATCH_FORMATS_CONFIG['5v5'].isFutsal).toBe(true);
+  it('accurately distinguishes Futsal (5v5) indoor court layout from Foot à 5 (Five) outdoor turf', () => {
+    expect(MATCH_FORMATS_CONFIG['futsal'].isFutsal).toBe(true);
+    expect(MATCH_FORMATS_CONFIG['5v5'].isFutsal).toBe(false);
     expect(MATCH_FORMATS_CONFIG['11v11'].isFutsal).toBeFalsy();
     expect(MATCH_FORMATS_CONFIG['8v8'].isFutsal).toBeFalsy();
+    expect(MATCH_FORMATS_CONFIG['4v4'].isFutsal).toBeFalsy();
+    expect(MATCH_FORMATS_CONFIG['3v3'].isFutsal).toBeFalsy();
   });
 
   it('generates consistent chemistry passing lanes linking adjacent positions', () => {
@@ -134,10 +138,65 @@ describe('CoachSquadFutLineup & Pitch View Architecture', () => {
     expect(starters8).toHaveLength(8);
     expect(bench8).toHaveLength(10);
 
-    // 5v5 -> 5 starters, 13 bench
+    // 5v5 & Futsal -> 5 starters, 13 bench
     const starters5 = fullSquad.slice(0, MATCH_FORMATS_CONFIG['5v5'].starterCount);
     const bench5 = fullSquad.slice(MATCH_FORMATS_CONFIG['5v5'].starterCount);
     expect(starters5).toHaveLength(5);
     expect(bench5).toHaveLength(13);
+
+    // 4v4 -> 4 starters, 14 bench
+    const starters4 = fullSquad.slice(0, MATCH_FORMATS_CONFIG['4v4'].starterCount);
+    const bench4 = fullSquad.slice(MATCH_FORMATS_CONFIG['4v4'].starterCount);
+    expect(starters4).toHaveLength(4);
+    expect(bench4).toHaveLength(14);
+
+    // 3v3 -> 3 starters, 15 bench
+    const starters3 = fullSquad.slice(0, MATCH_FORMATS_CONFIG['3v3'].starterCount);
+    const bench3 = fullSquad.slice(MATCH_FORMATS_CONFIG['3v3'].starterCount);
+    expect(starters3).toHaveLength(3);
+    expect(bench3).toHaveLength(15);
+  });
+
+  it('cycles player RSVP through present -> pending -> absent -> injured -> present and demotes absent/injured starters', () => {
+    const nextMap = {
+      present: 'pending',
+      pending: 'absent',
+      absent: 'injured',
+      injured: 'present',
+    } as const;
+
+    expect(nextMap['present']).toBe('pending');
+    expect(nextMap['pending']).toBe('absent');
+    expect(nextMap['absent']).toBe('injured');
+    expect(nextMap['injured']).toBe('present');
+
+    const cyclePlayer = (p: { rsvp: 'present' | 'pending' | 'absent' | 'injured'; role: 'starter' | 'sub' }) => {
+      const nextRsvp = nextMap[p.rsvp];
+      const demote = (nextRsvp === 'absent' || nextRsvp === 'injured') && p.role === 'starter';
+      return {
+        ...p,
+        rsvp: nextRsvp,
+        role: demote ? ('sub' as const) : p.role,
+      };
+    };
+
+    let player: {
+      rsvp: 'present' | 'pending' | 'absent' | 'injured';
+      role: 'starter' | 'sub';
+    } = { rsvp: 'present', role: 'starter' };
+    player = cyclePlayer(player); // pending
+    expect(player.rsvp).toBe('pending');
+    expect(player.role).toBe('starter');
+
+    player = cyclePlayer(player); // absent -> demoted to sub
+    expect(player.rsvp).toBe('absent');
+    expect(player.role).toBe('sub');
+
+    player = cyclePlayer(player); // injured
+    expect(player.rsvp).toBe('injured');
+    expect(player.role).toBe('sub');
+
+    player = cyclePlayer(player); // present
+    expect(player.rsvp).toBe('present');
   });
 });

@@ -19,7 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CoachFutPlayerCard, FutPlayer } from './CoachFutPlayerCard';
 
-export type MatchFormatKey = '11v11' | '8v8' | '5v5' | '4v4' | '3v3';
+export type MatchFormatKey = '11v11' | '8v8' | '5v5' | 'futsal' | '4v4' | '3v3';
 
 export const MATCH_FORMATS_CONFIG: Record<
   MatchFormatKey,
@@ -44,7 +44,14 @@ export const MATCH_FORMATS_CONFIG: Record<
     formations: ['3-3-1', '3-2-2', '2-4-1', '2-3-2'],
   },
   '5v5': {
-    name: 'Futsal / Foot à 5',
+    name: 'Foot à 5 (Five)',
+    starterCount: 5,
+    defaultFormation: '1-2-1',
+    formations: ['1-2-1', '2-2', '2-1-1', '3-1'],
+    isFutsal: false,
+  },
+  'futsal': {
+    name: 'Futsal 5v5',
     starterCount: 5,
     defaultFormation: '1-2-1',
     formations: ['1-2-1', '2-2', '2-1-1', '3-1'],
@@ -421,7 +428,7 @@ export const CoachPitchView: React.FC<CoachPitchViewProps> = ({
 
   const slots = ALL_FORMATION_COORDINATES[formation] || ALL_FORMATION_COORDINATES['4-3-3'] || [];
   const links = ALL_CHEMISTRY_LINKS[formation] || [];
-  const isFutsal = format === '5v5';
+  const isFutsal = format === 'futsal' || MATCH_FORMATS_CONFIG[format]?.isFutsal === true;
 
   // Dynamic card dimensions based on format starter count
   const cardWidth = format === '11v11' ? 66 : format === '8v8' ? 70 : 76;
@@ -476,7 +483,15 @@ export const CoachPitchView: React.FC<CoachPitchViewProps> = ({
           <View style={styles.hudValueRow}>
             <MaterialCommunityIcons name="star-shooting" size={14} color="#30D158" />
             <Text style={[styles.hudOvrVal, { color: '#30D158' }]}>
-              {format === '11v11' ? '33/33' : format === '8v8' ? '24/24' : '15/15'}
+              {format === '11v11'
+                ? '33/33'
+                : format === '8v8'
+                ? '24/24'
+                : format === '5v5' || format === 'futsal'
+                ? '15/15'
+                : format === '4v4'
+                ? '12/12'
+                : '9/9'}
             </Text>
           </View>
         </View>
