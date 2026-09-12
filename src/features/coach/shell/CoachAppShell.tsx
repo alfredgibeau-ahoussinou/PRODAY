@@ -37,6 +37,17 @@ import {
   COACH_LOCKED_IDENTITY,
   getCoachPageIdentity,
 } from '../../../content/coachPageIdentity';
+import {
+  CoachHomeScreen,
+  CoachTacticalBoardScreen,
+  CoachTwinMatchLabScreen,
+  CoachSquadScreen,
+  CoachLiveMatchCenterScreen,
+  CoachTrainingPlannerScreen,
+  CoachWorkloadHealthScreen,
+  CoachVideoHubScreen,
+  CoachScoutingGrowthScreen,
+} from '../../../screens/coach';
 import { CoachPortalScreen } from '../../../screens/coach/CoachPortalScreen';
 import { CoachMesVideosScreen } from '../../../screens/coach/CoachMesVideosScreen';
 import { CoachAiHubScreen } from '../../../screens/coach/CoachAiHubScreen';
@@ -155,9 +166,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
     [folders],
   );
 
-  const [navId, setNavId] = useState<CoachNavItemId>(() =>
-    canonicalizeCoachNav(coachNavFromTab(activeTab)),
-  );
+  const [navId, setNavId] = useState<CoachNavItemId>('coach_ia');
   const [eventHubOverlay, setEventHubOverlay] = useState<{
     eventId: string;
     hubChapter?: MatchHubChapterId;
@@ -282,7 +291,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
         <CoachLockedPane item={resolved} />
       </CoachPageFrame>
     ) : (
-      wrapCoachPane(navId, renderCoachPane(navId, profile, toolItems))
+      wrapCoachPane(navId, renderCoachPane(navId, profile, toolItems, onSelect))
     );
 
   return (
@@ -337,38 +346,34 @@ function renderCoachPane(
   navId: CoachNavItemId,
   profile: User | null | undefined,
   toolItems: ReturnType<typeof resolveCoachMenuItems>,
+  onSelect: (id: CoachNavItemId) => void,
 ) {
+  if (navId === 'smart_tactics') {
+    return <CoachTacticalBoardScreen />;
+  }
   switch (canonicalizeCoachNav(navId)) {
     case 'today':
     case 'pitch':
-      return <CoachPortalScreen embedded hideRail chapter="cockpit" />;
+      return <CoachHomeScreen onNavigate={(id) => onSelect(id as CoachNavItemId)} />;
     case 'plus':
       return <CoachMenuPane items={toolItems} />;
     case 'equipe':
     case 'effectif':
-      return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="all" />;
     case 'joueurs':
-      return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="joueurs" />;
+      return <CoachSquadScreen />;
     case 'entrainements':
     case 'planning':
-      return <CoachPortalScreen embedded hideRail chapter="planning" />;
+      return <CoachTrainingPlannerScreen />;
     case 'forme':
-      return <CoachPortalScreen embedded hideRail chapter="performance" />;
+      return <CoachWorkloadHealthScreen />;
     case 'com_staff':
-      return <CoachPortalScreen embedded hideRail chapter="communication" />;
+      return <CoachScoutingGrowthScreen />;
     case 'coach_ia':
-      return <CoachAiHubScreen />;
+      return <CoachTwinMatchLabScreen />;
     case 'smart_tactics':
-      return <CoachPortalScreen embedded hideRail chapter="effectif" effectifFocus="all" />;
+      return <CoachTacticalBoardScreen />;
     case 'mes_videos':
-      return profile ? (
-        <CoachMesVideosScreen profile={profile} />
-      ) : (
-        <CoachEmptyState
-          title="Mes vidéos"
-          body="Connectez-vous pour ouvrir vos captations match."
-        />
-      );
+      return <CoachVideoHubScreen />;
     case 'gestion':
       return profile ? (
         <CoachGestionPane profile={profile} />
@@ -389,14 +394,7 @@ function renderCoachPane(
       );
     case 'match_center':
     case 'matchs':
-      return (
-        <CoachPortalScreen
-          key="coach-portal-matchs"
-          embedded
-          hideRail
-          chapter="matchs"
-        />
-      );
+      return <CoachLiveMatchCenterScreen />;
     case 'messages':
       return <MessagesScreen />;
     case 'carpool':
@@ -404,7 +402,7 @@ function renderCoachPane(
     case 'profil':
       return <ProfilTabScreen />;
     default:
-      return <CoachPortalScreen embedded hideRail chapter="cockpit" />;
+      return <CoachHomeScreen onNavigate={(id) => onSelect(id as CoachNavItemId)} />;
   }
 }
 
