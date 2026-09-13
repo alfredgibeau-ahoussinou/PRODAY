@@ -1,2011 +1,1580 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Alert,
-  Image,
-  RefreshControl,
-  ScrollView,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
+  Text,
   View,
+  ScrollView,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import Svg, { Circle } from 'react-native-svg';
-
-import { useSessionProfile } from '../../hooks/useSessionProfile';
-import { useJoueurProgress } from '../../context/JoueurProgressContext';
-import { usePlayerTheme, usePlayerThemeColors } from '../../context/PlayerThemeContext';
-import { usePlayerHubData } from '../../hooks/usePlayerHubData';
-import { useJoueurSession } from '../../context/JoueurSessionContext';
-import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { clubsService } from '../../services/clubs.service';
-import { playerActivityService } from '../../services/playerActivity.service';
-import { sendPlayerCoachMessage } from '../../services/playerCoachAi.service';
-import type { Club } from '../../models/Club';
-import { PressableSpring } from '../../components/motion';
-import { ProDayText } from '../../components/ui/ProDayText';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
-import { utcDateKey } from '../../utils/joueurUniverseProgress';
+import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { playerRsvpService, type PlayerRsvpStatus } from '../../services/playerRsvp.service';
 import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
-import { resolveJoueurAgeGroup } from '../../utils/joueurExperienceTheme';
-import { JOUEUR_SEASON_OBJECTIVES, getJoueurDailyQuests } from '../../features/joueur/constants';
-import {
-  ChalkboardPitchWatermark,
-  CrestWatermark,
-  EnergyBatteryIcon,
-  SleepMoonIcon,
-  MuscleFiberIcon,
-  HydrationNutritionIcon,
-  MobilityStretchIcon,
-  VisualizationBrainIcon,
-} from './PlayerSaisonIcons';
 
-type SaisonSegment = 'forme' | 'objectifs';
-
-const CHECKIN_STORAGE_PREFIX = 'proday_saison_checkin_';
-const ROUTINES_STORAGE_PREFIX = 'proday_saison_routines_';
+export type SaisonTabId = 'matchs' | 'classement' | 'objectifs';
 
 export function PlayerSaisonScreen() {
   const insets = useSafeAreaInsets();
   const profile = useSessionProfile();
-  const session = useJoueurSession();
-  const progressApi = useJoueurProgress();
-  const playerTheme = usePlayerTheme();
-  const hub = usePlayerHubData(profile);
-  const nav = useTabNavigationActions();
+  const userId = profile?.uid || 'player-demo';
 
-  const [segment, setSegment] = useState<SaisonSegment>('forme');
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-
-  // Club et couleurs de l'équipe
-  const [club, setClub] = useState<Club | null>(null);
-  const clubId = profile?.profile?.club_id;
-
-  const loadClub = useCallback(async () => {
-    if (clubId) {
-      try {
-        const c = await clubsService.getById(clubId);
-        if (c) setClub(c);
-      } catch {
-        // Silencieux
-      }
-    }
-  }, [clubId]);
+  const [activeTab, setActiveTab] = useState<SaisonTabId>('matchs');
+  const [rsvp, setRsvp] = useState<PlayerRsvpStatus>('present');
 
   useEffect(() => {
-    void loadClub();
-  }, [loadClub]);
+    void playerRsvpService.getRsvp(userId, 'match-j17').then(setRsvp);
+  }, [userId]);
 
-  // Détermination des couleurs de l'équipe et du pôle
-  const playerThemeColors = usePlayerThemeColors();
-  const teamPrimary = playerThemeColors.accent;
-  const teamSecondary = playerThemeColors.accentAlt || playerThemeColors.accent;
-  const teamGradient: [string, string] = [teamPrimary, teamSecondary];
+  const handleRsvpChange = (status: PlayerRsvpStatus) => {
+    prodayHaptics.impactMedium();
+    setRsvp(status);
+    void playerRsvpService.setRsvp(userId, 'match-j17', status);
+  };
 
-  // Nom et logo du club
-  const teamName = club?.name?.trim() || playerTheme.clubName || 'FC ProDay Démo';
-  const clubLogoUrl = club?.logo_url?.trim() || null;
+  const handleTabChange = (tabId: SaisonTabId) => {
+    prodayHaptics.selection();
+    setActiveTab(tabId);
+  };
 
-  // Données joueur
-  const displayName = profile?.display_name || 'Lucas Démo';
-  const position = profile?.profile?.position || 'Attaquant';
-  const firstName = displayName.split(' ')[0] || 'Joueur';
-  const levelNumber = progressApi?.level?.level ?? 5;
-  const ovrScore = progressApi?.ovr ?? 63;
-  const progress01 = progressApi?.level?.progress01 ?? 0.72;
-  const xpIntoLevel = progressApi?.level?.xpIntoLevel ?? 80;
-  const xpForNext = progressApi?.level?.xpForNext ?? 100;
-  const streak = progressApi?.progress?.streakDays ?? 0;
-  const activitiesCount = hub.activities.length;
-
-  // Forme : Énergie, Sommeil, Muscles
-  // Énergie: 0 = Plein (3 crans), 1 = Bon (2 crans), 2 = Faible (1 cran)
-  const [energyLevel, setEnergyLevel] = useState<number>(0);
-  // Sommeil: 0 = 8h+ (3 crans), 1 = 6-7h (2 crans), 2 = <6h (1 cran)
-  const [sleepLevel, setSleepLevel] = useState<number>(0);
-  // Muscles: 0 = Frais (1 cran), 1 = Courbatures (2 crans), 2 = Gêne (3 crans)
-  const [muscleLevel, setMuscleLevel] = useState<number>(0);
-  const [isValidatedToday, setIsValidatedToday] = useState<boolean>(false);
-
-  // Préparateur physique & État de forme
-  const [aiBriefing, setAiBriefing] = useState<string | null>(null);
-  const [loadingAiBriefing, setLoadingAiBriefing] = useState<boolean>(true);
-  const [promptInput, setPromptInput] = useState<string>('');
-
-  // Routines de préparation physique
-  const [routines, setRoutines] = useState({
-    hydration: true,
-    mobility: false,
-    visualization: false,
-  });
-
-  const todayKey = useMemo(() => utcDateKey(), []);
-
-  // Calcul du score de Readiness / Fraîcheur athlétique (0 à 100%)
-  const aiReadinessScore = useMemo(() => {
-    let score = 100;
-    if (energyLevel === 1) score -= 12;
-    if (energyLevel === 2) score -= 30;
-    if (sleepLevel === 1) score -= 10;
-    if (sleepLevel === 2) score -= 25;
-    if (muscleLevel === 1) score -= 10;
-    if (muscleLevel === 2) score -= 28;
-    if (routines.hydration) score += 3;
-    if (routines.mobility) score += 5;
-    if (routines.visualization) score += 4;
-    return Math.max(35, Math.min(99, score));
-  }, [energyLevel, sleepLevel, muscleLevel, routines]);
-
-  // Briefing athlétique quotidien automatique
-  useEffect(() => {
-    let active = true;
-    async function fetchAiBriefing() {
-      try {
-        setLoadingAiBriefing(true);
-        const prompt = `En tant que préparateur physique de football ProDay, donne un diagnostic de forme athlétique et un conseil court (2 phrases directes max) pour ${firstName} (${position}). État : Énergie ${energyLevel === 0 ? 'Pleine' : energyLevel === 1 ? 'Moyenne' : 'Basse'}, Muscles ${muscleLevel === 0 ? 'Frais' : muscleLevel === 1 ? 'Courbatures' : 'Gêne musculaire'}. Readiness : ${aiReadinessScore}%.`;
-        const res = await sendPlayerCoachMessage(
-          [{ role: 'user', content: prompt }],
-          { playerName: firstName, position, clubName: teamName }
-        );
-        if (active && res.reply) {
-          setAiBriefing(res.reply.replace(/[-*•]/g, '').trim());
-        }
-      } catch {
-        if (active) {
-          if (aiReadinessScore >= 85) {
-            setAiBriefing(`Forme Optimale (${aiReadinessScore}%) : Ton moteur est prêt pour un entraînement haute intensité. Travaille tes appuis et tes changements de rythme.`);
-          } else if (aiReadinessScore >= 65) {
-            setAiBriefing(`Forme Modérée (${aiReadinessScore}%) : Privilégie la mobilité et la précision technique pour préserver ton influx avant le prochain match.`);
-          } else {
-            setAiBriefing(`Alerte Récupération (${aiReadinessScore}%) : Fatigue musculaire détectée. Recommandation : 15 min d'étirements et une hydratation renforcée.`);
-          }
-        }
-      } finally {
-        if (active) setLoadingAiBriefing(false);
-      }
-    }
-    void fetchAiBriefing();
-    return () => {
-      active = false;
-    };
-  }, [firstName, position, teamName, energyLevel, sleepLevel, muscleLevel, aiReadinessScore]);
-
-  // Quêtes journalières adaptées
-  const ageGroup = useMemo(
-    () =>
-      session?.ageGroup ??
-      resolveJoueurAgeGroup({
-        age: profile?.profile?.age,
-        birthDate: profile?.profile?.birth_date,
-        gender: profile?.profile?.gender,
-      }),
-    [session?.ageGroup, profile],
-  );
-
-  const dailyQuests = useMemo(() => {
-    const band = ageGroup === 'youth' ? 'youth' : ageGroup === 'teen' ? 'teen' : 'adult';
-    const baseQuests = getJoueurDailyQuests(band);
-
-    const checkinQuest = {
-      id: 'daily-checkin',
-      title: 'Bilan de forme',
-      body: 'Valide ton état athlétique du jour (+10 XP)',
-      xp: 10,
-      stars: 1,
-      tabHint: 'forme' as const,
-    };
-
-    return [checkinQuest, ...baseQuests.filter((q) => q.id !== 'daily-checkin')];
-  }, [ageGroup]);
-
-  const dailyDone = useMemo(
-    () => new Set(progressApi?.progress?.dailyCompletedIds ?? []),
-    [progressApi?.progress?.dailyCompletedIds],
-  );
-  const seasonDone = useMemo(
-    () => new Set(progressApi?.progress?.completedChallengeIds ?? []),
-    [progressApi?.progress?.completedChallengeIds],
-  );
-
-  // Chargement état sauvegardé
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        let loadedFromLocal = false;
-        const checkinRaw = await AsyncStorage.getItem(`${CHECKIN_STORAGE_PREFIX}${todayKey}`);
-        if (checkinRaw && mounted) {
-          const data = JSON.parse(checkinRaw);
-          if (typeof data.energy === 'number') setEnergyLevel(data.energy);
-          if (typeof data.sleep === 'number') setSleepLevel(data.sleep);
-          if (typeof data.muscles === 'number') setMuscleLevel(data.muscles);
-          setIsValidatedToday(Boolean(data.validated));
-          loadedFromLocal = true;
-        }
-
-        if (!loadedFromLocal && profile?.uid) {
-          const cloudCheckin = await playerActivityService.getLatestDailyCheckin(profile.uid, todayKey);
-          if (cloudCheckin && mounted) {
-            setEnergyLevel(cloudCheckin.energyLevel);
-            setSleepLevel(cloudCheckin.sleepLevel);
-            setMuscleLevel(cloudCheckin.muscleLevel);
-            setIsValidatedToday(true);
-            if (cloudCheckin.routines) {
-              setRoutines((prev) => ({ ...prev, ...cloudCheckin.routines }));
-            }
-          }
-        }
-
-        const routinesRaw = await AsyncStorage.getItem(`${ROUTINES_STORAGE_PREFIX}${todayKey}`);
-        if (routinesRaw && mounted) {
-          const r = JSON.parse(routinesRaw);
-          setRoutines((prev) => ({ ...prev, ...r }));
-        }
-      } catch {
-        // Silencieux
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [todayKey, profile?.uid]);
-
-  // Donut niveau
-  const donutSize = 62;
-  const donutStroke = 3.5;
-  const donutRadius = (donutSize - donutStroke) / 2;
-  const donutCircumference = 2 * Math.PI * donutRadius;
-  const donutDashoffset = donutCircumference * (1 - Math.max(0.15, Math.min(0.95, progress01)));
-
-  // Avatar source avec fallback
-  const avatarSource = useMemo(() => {
-    if (profile?.avatar_url) {
-      return { uri: profile.avatar_url };
-    }
-    return require('../../../assets/branding/demo-player-avatar.png');
-  }, [profile?.avatar_url]);
-
-  // Pull-to-refresh
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await Promise.all([hub.refresh(), progressApi?.refresh?.(), loadClub()]);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [hub, progressApi, loadClub]);
-
-  // Validation formulaire bilan de forme
-  const handleValidateCheckin = useCallback(async () => {
-    prodayHaptics.confirm();
-    const wasAlready = isValidatedToday;
-    setIsValidatedToday(true);
-
-    try {
-      await AsyncStorage.setItem(
-        `${CHECKIN_STORAGE_PREFIX}${todayKey}`,
-        JSON.stringify({
-          energy: energyLevel,
-          sleep: sleepLevel,
-          muscles: muscleLevel,
-          validated: true,
-          validatedAt: new Date().toISOString(),
-        }),
-      );
-
-      if (profile?.uid) {
-        await playerActivityService.recordDailyCheckin(profile.uid, {
-          dateKey: todayKey,
-          energyLevel,
-          sleepLevel,
-          muscleLevel,
-          routines,
-        });
-      }
-
-      if (!wasAlready && progressApi?.grantXp) {
-        await progressApi.grantXp(10);
-        Alert.alert(
-          'Bilan de forme validé !',
-          `Ton état de fraîcheur a été enregistré (Indice de forme ${aiReadinessScore}%). +10 XP crédités à ta saison !`,
-        );
-      } else {
-        Alert.alert(
-          'Bilan actualisé',
-          `Tes ressentis physiques ont été mis à jour (Indice de forme : ${aiReadinessScore}%).`,
-        );
-      }
-    } catch {
-      // Ignorer
-    }
-  }, [todayKey, energyLevel, sleepLevel, muscleLevel, routines, profile?.uid, progressApi, isValidatedToday, aiReadinessScore]);
-
-  // Bascule routine de préparation
-  const toggleRoutine = useCallback(
-    async (key: 'mobility' | 'visualization' | 'hydration') => {
-      prodayHaptics.press();
-      const willBeActive = !routines[key];
-      const next = { ...routines, [key]: willBeActive };
-      setRoutines(next);
-      try {
-        await AsyncStorage.setItem(`${ROUTINES_STORAGE_PREFIX}${todayKey}`, JSON.stringify(next));
-      } catch {
-        // Silencieux
-      }
-      if (willBeActive && progressApi?.grantXp) {
-        try {
-          await progressApi.grantXp(5);
-          prodayHaptics.confirm();
-        } catch {
-          // Silencieux
-        }
-      }
+  const pastMatches = [
+    {
+      id: 'm16',
+      round: 'J16',
+      date: 'Sam. 14 Sept',
+      opponent: 'AS Meudon',
+      home: true,
+      scoreClub: 3,
+      scoreOpp: 1,
+      result: 'V',
+      started: true,
+      minutes: 90,
+      goals: 2,
+      assists: 0,
+      rating: 8.5,
+      isMotm: true,
     },
-    [routines, todayKey, progressApi],
-  );
-
-  // Demande directe au Préparateur
-  const handleAskAiCoach = useCallback(
-    (customPrompt?: string) => {
-      const q = (customPrompt || promptInput).trim();
-      if (!q) return;
-      prodayHaptics.press();
-      setPromptInput('');
-      nav.setActiveTab('profil');
-      Alert.alert(
-        'Préparateur ProDay',
-        `Question transmise à ton préparateur athlétique : "${q}"\n\nConsulte ton profil joueur pour le suivi complet.`,
-      );
+    {
+      id: 'm15',
+      round: 'J15',
+      date: 'Dim. 7 Sept',
+      opponent: 'ES Colombes',
+      home: false,
+      scoreClub: 2,
+      scoreOpp: 2,
+      result: 'N',
+      started: true,
+      minutes: 85,
+      goals: 1,
+      assists: 1,
+      rating: 7.8,
+      isMotm: false,
     },
-    [promptInput, nav],
-  );
-
-  // Réclamer une quête journalière
-  const handleClaimQuest = useCallback(
-    async (questId: string, xp: number, stars = 1) => {
-      prodayHaptics.confirm();
-      if (progressApi?.claimDaily) {
-        await progressApi.claimDaily(questId, xp, stars);
-        Alert.alert('Quête accomplie !', `+${xp} XP et ${stars} étoile(s) ajoutés à votre saison.`);
-      }
+    {
+      id: 'm14',
+      round: 'J14',
+      date: 'Sam. 31 Août',
+      opponent: 'FC Rueil',
+      home: true,
+      scoreClub: 4,
+      scoreOpp: 0,
+      result: 'V',
+      started: true,
+      minutes: 78,
+      goals: 2,
+      assists: 2,
+      rating: 8.2,
+      isMotm: true,
     },
-    [progressApi],
-  );
-
-  // Réclamer un défi de saison
-  const handleClaimChallenge = useCallback(
-    async (challengeId: string, starsGain = 2, xpGain = 60) => {
-      prodayHaptics.confirm();
-      if (progressApi?.claimChallenge) {
-        await progressApi.claimChallenge(challengeId, starsGain);
-        if (progressApi.grantXp) {
-          await progressApi.grantXp(xpGain);
-        }
-        Alert.alert('Défi Majeur Réussi !', `+${xpGain} XP et ${starsGain} étoile(s) crédités !`);
-      }
+    {
+      id: 'm13',
+      round: 'J13',
+      date: 'Dim. 24 Août',
+      opponent: 'US Suresnes',
+      home: false,
+      scoreClub: 1,
+      scoreOpp: 0,
+      result: 'V',
+      started: true,
+      minutes: 90,
+      goals: 0,
+      assists: 1,
+      rating: 7.4,
+      isMotm: false,
     },
-    [progressApi],
-  );
+    {
+      id: 'm12',
+      round: 'J12',
+      date: 'Sam. 17 Août',
+      opponent: 'Racing CFF',
+      home: true,
+      scoreClub: 2,
+      scoreOpp: 1,
+      result: 'V',
+      started: true,
+      minutes: 90,
+      goals: 1,
+      assists: 0,
+      rating: 8.0,
+      isMotm: false,
+    },
+    {
+      id: 'm11',
+      round: 'J11',
+      date: 'Dim. 10 Août',
+      opponent: 'Red Star FC B',
+      home: false,
+      scoreClub: 2,
+      scoreOpp: 1,
+      result: 'V',
+      started: true,
+      minutes: 90,
+      goals: 1,
+      assists: 0,
+      rating: 7.9,
+      isMotm: false,
+    },
+  ];
+
+  const upcomingMatches = [
+    { round: 'J18', date: 'Sam. 27 Sept · 18:00', opponent: 'Entente SSG', home: false },
+    { round: 'J19', date: 'Sam. 4 Oct · 18:00', opponent: 'US Créteil B', home: true },
+    { round: 'J20', date: 'Dim. 12 Oct · 15:00', opponent: 'Paris 13 Atletico B', home: false },
+  ];
+
+  const standingsData = [
+    { rank: 1, name: 'FC ProDay', pts: 39, m: 16, v: 12, n: 3, d: 1, diff: '+22', form: ['V', 'V', 'V', 'N', 'V'], isMyClub: true },
+    { rank: 2, name: 'RC France', pts: 36, m: 16, v: 11, n: 3, d: 2, diff: '+15', form: ['V', 'D', 'V', 'V', 'V'], isMyClub: false },
+    { rank: 3, name: 'Entente SSG', pts: 31, m: 16, v: 9, n: 4, d: 3, diff: '+8', form: ['D', 'V', 'N', 'V', 'N'], isMyClub: false },
+    { rank: 4, name: 'US Créteil B', pts: 28, m: 16, v: 8, n: 4, d: 4, diff: '+4', form: ['V', 'N', 'V', 'V', 'D'], isMyClub: false },
+    { rank: 5, name: 'Red Star FC B', pts: 26, m: 16, v: 7, n: 5, d: 4, diff: '+2', form: ['D', 'N', 'V', 'D', 'V'], isMyClub: false },
+    { rank: 6, name: 'Paris 13 Atletico B', pts: 24, m: 16, v: 6, n: 6, d: 4, diff: '0', form: ['V', 'D', 'V', 'N', 'N'], isMyClub: false },
+    { rank: 7, name: 'AS Meudon', pts: 22, m: 16, v: 6, n: 4, d: 6, diff: '-2', form: ['N', 'V', 'V', 'D', 'D'], isMyClub: false },
+    { rank: 8, name: 'ES Colombes', pts: 20, m: 16, v: 5, n: 5, d: 6, diff: '-4', form: ['D', 'N', 'D', 'V', 'N'], isMyClub: false },
+    { rank: 9, name: 'FC Rueil', pts: 17, m: 16, v: 4, n: 5, d: 7, diff: '-7', form: ['D', 'V', 'D', 'N', 'D'], isMyClub: false },
+    { rank: 10, name: 'US Suresnes', pts: 14, m: 16, v: 3, n: 5, d: 8, diff: '-11', form: ['V', 'D', 'N', 'D', 'D'], isMyClub: false },
+    { rank: 11, name: 'Montrouge FC', pts: 11, m: 16, v: 2, n: 5, d: 9, diff: '-14', form: ['D', 'D', 'D', 'N', 'D'], isMyClub: false },
+    { rank: 12, name: 'CS Brétigny B', pts: 7, m: 16, v: 1, n: 4, d: 11, diff: '-13', form: ['N', 'D', 'D', 'D', 'D'], isMyClub: false },
+  ];
 
   return (
-    <View style={[styles.screen, { paddingTop: 6 }]}>
-      {/* GRAND BLASON EN ARRIÈRE-PLAN */}
-      <View style={styles.backgroundTeamWatermark} pointerEvents="none">
-        {clubLogoUrl ? (
-          <Image
-            source={{ uri: clubLogoUrl }}
-            style={styles.backgroundClubImage}
-            resizeMode="contain"
-          />
-        ) : (
-          <CrestWatermark
-            width={280}
-            height={330}
-            color={teamPrimary}
-            opacity={0.12}
-          />
-        )}
-      </View>
-
-      {/* 1. HERO HEADER IDENTITÉ JOUEUR & ÉQUIPE */}
-      <View style={styles.heroWrap}>
-        <View style={styles.watermarkLeft} pointerEvents="none">
-          <ChalkboardPitchWatermark width={210} height={145} />
-        </View>
-
-        <PressableSpring
-          onPress={() => {
-            prodayHaptics.press();
-            Alert.alert(teamName, 'Club officiel ProDay · Saison 2026');
-          }}
-          style={styles.watermarkRight}
-        >
-          {clubLogoUrl ? (
-            <Image
-              source={{ uri: clubLogoUrl }}
-              style={styles.heroClubLogo}
-              resizeMode="contain"
-            />
-          ) : (
-            <CrestWatermark width={92} height={110} color={teamPrimary} opacity={0.3} />
-          )}
-        </PressableSpring>
-
-        <View style={styles.heroContent}>
-          {/* Avatar joueur circulaire */}
-          <PressableSpring
-            onPress={() => {
-              prodayHaptics.press();
-              nav.setActiveTab('profil');
-            }}
-            scaleTo={0.94}
-            style={[styles.avatarHolder, { borderColor: teamPrimary }]}
-          >
-            <Image source={avatarSource} style={styles.avatarImage} resizeMode="cover" />
-          </PressableSpring>
-
-          {/* Nom moderne sans-serif & Métriques */}
-          <View style={styles.heroMeta}>
-            <ProDayText variant="title" style={styles.playerName} numberOfLines={1}>
-              {displayName}
-            </ProDayText>
-
-            <View style={styles.heroStatsRow}>
-              {/* Jauge donut niveau */}
-              <PressableSpring
-                onPress={() => {
-                  prodayHaptics.press();
-                  Alert.alert(
-                    `Niveau ${levelNumber}`,
-                    `${xpIntoLevel} / ${xpForNext} XP accumulés vers le niveau ${levelNumber + 1}.`,
-                  );
-                }}
-                style={styles.donutContainer}
-              >
-                <Svg width={donutSize} height={donutSize}>
-                  <Circle
-                    cx={donutSize / 2}
-                    cy={donutSize / 2}
-                    r={donutRadius}
-                    stroke="rgba(255,255,255,0.08)"
-                    strokeWidth={donutStroke}
-                    fill="#14141A"
-                  />
-                  <Circle
-                    cx={donutSize / 2}
-                    cy={donutSize / 2}
-                    r={donutRadius}
-                    stroke={teamPrimary}
-                    strokeWidth={donutStroke}
-                    fill="none"
-                    strokeDasharray={`${donutCircumference} ${donutCircumference}`}
-                    strokeDashoffset={donutDashoffset}
-                    strokeLinecap="round"
-                    rotation="-90"
-                    origin={`${donutSize / 2}, ${donutSize / 2}`}
-                  />
-                </Svg>
-                <View style={styles.donutTextWrap} pointerEvents="none">
-                  <ProDayText style={styles.donutLevelLabel}>{`Niv. ${levelNumber}`}</ProDayText>
-                </View>
-              </PressableSpring>
-
-              {/* Note globale OVR */}
-              <PressableSpring
-                onPress={() => {
-                  prodayHaptics.press();
-                  Alert.alert(
-                    `Note Globale ${ovrScore}/99`,
-                    'Votre OVR évolue selon vos résultats, votre assiduité et vos diagnostics IA.',
-                  );
-                }}
-                style={styles.ovrContainer}
-              >
-                <ProDayText style={[styles.ovrScore, { color: teamPrimary }]}>{ovrScore}</ProDayText>
-                <ProDayText style={styles.ovrMax}>/99</ProDayText>
-              </PressableSpring>
+    <View style={[styles.root, { paddingTop: Math.max(insets.top, 12) }]}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[styles.content, { paddingBottom: TAB_BAR_CONTENT_INSET + 24 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Top Header : Identité de la Saison */}
+        <View style={styles.header}>
+          <View>
+            <View style={styles.seasonBadge}>
+              <Ionicons name="shield" size={13} color="#30D158" />
+              <Text style={styles.seasonBadgeText}>FFF · SENIORS R1 · POULE B</Text>
             </View>
+            <Text style={styles.headerTitle}>Saison 2025/2026</Text>
+            <Text style={styles.headerSub}>FC ProDay · Championnat Régional</Text>
+          </View>
+
+          <View style={styles.roundPill}>
+            <Text style={styles.roundPillVal}>J17 / 26</Text>
+            <Text style={styles.roundPillSub}>65% ÉCOULÉ</Text>
           </View>
         </View>
-      </View>
 
-      {/* 2. CAPSULE SÉLECTEUR D'ONGLETS AUX COULEURS DE L'ÉQUIPE */}
-      <View style={styles.tabCapsuleShell}>
-        <PressableSpring
-          onPress={() => {
-            prodayHaptics.tabSwitch();
-            setSegment('forme');
-          }}
-          scaleTo={0.97}
-          style={styles.tabButton}
+        {/* Hero Banner Équipe : Bilan Saison en Direct */}
+        <LinearGradient
+          colors={['#161E2E', '#0F172A']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroTeamBanner}
         >
-          {segment === 'forme' ? (
-            <LinearGradient
-              colors={teamGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.tabButtonActiveGradient}
-            >
-              <ProDayText style={styles.tabTextActive}>Ma forme</ProDayText>
-            </LinearGradient>
-          ) : (
-            <View style={styles.tabButtonInactive}>
-              <ProDayText style={styles.tabTextInactive}>Ma forme</ProDayText>
+          <View style={styles.heroBannerHeader}>
+            <View style={styles.heroRankPill}>
+              <MaterialCommunityIcons name="trophy" size={14} color="#FFD700" />
+              <Text style={styles.heroRankText}>1er du Championnat</Text>
             </View>
-          )}
-        </PressableSpring>
-
-        <PressableSpring
-          onPress={() => {
-            prodayHaptics.tabSwitch();
-            setSegment('objectifs');
-          }}
-          scaleTo={0.97}
-          style={styles.tabButton}
-        >
-          {segment === 'objectifs' ? (
-            <LinearGradient
-              colors={teamGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.tabButtonActiveGradient}
-            >
-              <ProDayText style={styles.tabTextActive}>Mes objectifs</ProDayText>
-            </LinearGradient>
-          ) : (
-            <View style={styles.tabButtonInactive}>
-              <ProDayText style={styles.tabTextInactive}>Mes objectifs</ProDayText>
-            </View>
-          )}
-        </PressableSpring>
-      </View>
-
-      {/* 3. CONTENU PRINCIPAL */}
-      {segment === 'forme' ? (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: TAB_BAR_CONTENT_INSET + 36 },
-          ]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={teamPrimary}
-              colors={[teamPrimary]}
-            />
-          }
-        >
-          {/* CARTE 1 : BILAN DE FORME & DIAGNOSTIC ATHLÉTIQUE */}
-          <View style={styles.cardShell}>
-            <View style={styles.copilotHeaderRow}>
-              <View style={[styles.copilotBadge, { backgroundColor: `${teamPrimary}18`, borderColor: `${teamPrimary}40` }]}>
-                <Ionicons name="pulse" size={13} color={teamPrimary} />
-                <ProDayText style={[styles.copilotBadgeText, { color: teamPrimary }]}>
-                  BILAN ATHLÉTIQUE PRODAY
-                </ProDayText>
-              </View>
-
-              <View style={[styles.readinessPill, { backgroundColor: `${teamPrimary}20`, borderColor: `${teamPrimary}55` }]}>
-                <Ionicons name="fitness" size={13} color={teamPrimary} />
-                <ProDayText style={[styles.readinessScoreText, { color: teamPrimary }]}>
-                  {`Forme ${aiReadinessScore}%`}
-                </ProDayText>
-              </View>
-            </View>
-
-            {/* Briefing dynamique de préparation */}
-            <View style={styles.aiBriefingContainer}>
-              <ProDayText style={styles.aiBriefingText}>
-                {loadingAiBriefing
-                  ? "Analyse de ton calendrier de match et de tes indicateurs athlétiques..."
-                  : aiBriefing}
-              </ProDayText>
-            </View>
-
-            {/* Actions Rapides de Préparation */}
-            <View style={styles.quickAiActionsRow}>
-              <PressableSpring
-                onPress={() => handleAskAiCoach('Comment optimiser ma récupération musculaire avant le match ?')}
-                scaleTo={0.96}
-                haptic
-                style={[styles.quickAiActionChip, { borderColor: `${teamPrimary}33`, backgroundColor: `${teamPrimary}10` }]}
-              >
-                <Ionicons name="flash-outline" size={12} color={teamPrimary} />
-                <ProDayText style={[styles.quickAiActionText, { color: teamPrimary }]}>
-                  Récupération
-                </ProDayText>
-              </PressableSpring>
-
-              <PressableSpring
-                onPress={() => handleAskAiCoach('Quelle alimentation et hydratation privilégier aujourd’hui ?')}
-                scaleTo={0.96}
-                haptic
-                style={[styles.quickAiActionChip, { borderColor: `${teamPrimary}33`, backgroundColor: `${teamPrimary}10` }]}
-              >
-                <Ionicons name="nutrition-outline" size={12} color={teamPrimary} />
-                <ProDayText style={[styles.quickAiActionText, { color: teamPrimary }]}>
-                  Nutrition
-                </ProDayText>
-              </PressableSpring>
-
-              <PressableSpring
-                onPress={() => handleAskAiCoach('Donne-moi 3 exercices d’appuis rapides adaptés à mon poste')}
-                scaleTo={0.96}
-                haptic
-                style={[styles.quickAiActionChip, { borderColor: `${teamPrimary}33`, backgroundColor: `${teamPrimary}10` }]}
-              >
-                <Ionicons name="football-outline" size={12} color={teamPrimary} />
-                <ProDayText style={[styles.quickAiActionText, { color: teamPrimary }]}>
-                  Séance poste
-                </ProDayText>
-              </PressableSpring>
-            </View>
+            <Text style={styles.heroPromotionTag}>Zone Montée N3</Text>
           </View>
 
-          {/* CARTE 2 : AUTO-ÉVALUATION QUOTIDIENNE */}
-          <View style={styles.cardShell}>
-            <View style={styles.cardHeaderWithKicker}>
-              <ProDayText style={[styles.kicker, { color: teamPrimary }]}>BILAN PHYSIOLOGIQUE</ProDayText>
-              <ProDayText style={styles.cardTitle}>Auto-Évaluation Quotidienne</ProDayText>
+          <View style={styles.heroStatsRow}>
+            <View style={styles.heroStatCol}>
+              <Text style={[styles.heroStatVal, { color: '#30D158' }]}>39</Text>
+              <Text style={styles.heroStatLbl}>POINTS</Text>
             </View>
-
-            <View style={styles.metricsRow}>
-              {/* COLONNE ÉNERGIE */}
-              <View style={styles.metricCol}>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    prodayHaptics.press();
-                    setEnergyLevel((prev) => (prev + 1) % 3);
-                  }}
-                  style={styles.metricHeaderPressable}
-                >
-                  <View style={[styles.iconCircle, { borderColor: `${teamPrimary}40`, backgroundColor: `${teamPrimary}14` }]}>
-                    <EnergyBatteryIcon size={32} color={teamPrimary} activeCrans={3 - energyLevel} />
-                  </View>
-                  <ProDayText style={styles.metricName}>Énergie</ProDayText>
-                  <View style={[styles.currentValuePill, { backgroundColor: `${teamPrimary}22` }]}>
-                    <ProDayText style={[styles.currentValueText, { color: teamPrimary }]}>
-                      {energyLevel === 0 ? 'Plein' : energyLevel === 1 ? 'Bon' : 'Faible'}
-                    </ProDayText>
-                  </View>
-                </TouchableOpacity>
-
-                {/* 3 SEGMENTS PILL */}
-                <View style={styles.segmentedPillTrack}>
-                  {[0, 1, 2].map((idx) => {
-                    const isActive = idx < 3 - energyLevel;
-                    return (
-                      <TouchableOpacity
-                        key={`energy-${idx}`}
-                        activeOpacity={0.7}
-                        onPress={() => {
-                          prodayHaptics.press();
-                          setEnergyLevel(idx);
-                        }}
-                        style={[
-                          styles.segmentPillItem,
-                          isActive
-                            ? [styles.segmentPillActive, { backgroundColor: teamPrimary }]
-                            : styles.segmentPillInactive,
-                        ]}
-                      />
-                    );
-                  })}
-                </View>
-
-                <View style={styles.metricLabelsRow}>
-                  {[
-                    { level: 0, label: 'Plein' },
-                    { level: 1, label: 'Bon' },
-                    { level: 2, label: 'Faible' },
-                  ].map((item) => (
-                    <TouchableOpacity
-                      key={`energy-lbl-${item.level}`}
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        prodayHaptics.press();
-                        setEnergyLevel(item.level);
-                      }}
-                      style={styles.stepLabelPill}
-                    >
-                      <ProDayText
-                        style={[
-                          styles.stepLabel,
-                          energyLevel === item.level && [styles.stepLabelActive, { color: teamPrimary }],
-                        ]}
-                      >
-                        {item.label}
-                      </ProDayText>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* COLONNE MUSCLES */}
-              <View style={styles.metricCol}>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    prodayHaptics.press();
-                    setMuscleLevel((prev) => (prev + 1) % 3);
-                  }}
-                  style={styles.metricHeaderPressable}
-                >
-                  <View style={[styles.iconCircle, { borderColor: `${teamPrimary}40`, backgroundColor: `${teamPrimary}14` }]}>
-                    <MuscleFiberIcon size={32} color={teamPrimary} activeCrans={muscleLevel + 1} />
-                  </View>
-                  <ProDayText style={styles.metricName}>Muscles</ProDayText>
-                  <View style={[styles.currentValuePill, { backgroundColor: `${teamPrimary}22` }]}>
-                    <ProDayText style={[styles.currentValueText, { color: teamPrimary }]}>
-                      {muscleLevel === 0 ? 'Frais' : muscleLevel === 1 ? 'Courbatures' : 'Gêne'}
-                    </ProDayText>
-                  </View>
-                </TouchableOpacity>
-
-                {/* 3 SEGMENTS PILL */}
-                <View style={styles.segmentedPillTrack}>
-                  {[0, 1, 2].map((idx) => {
-                    const isActive = idx <= muscleLevel;
-                    return (
-                      <TouchableOpacity
-                        key={`muscle-${idx}`}
-                        activeOpacity={0.7}
-                        onPress={() => {
-                          prodayHaptics.press();
-                          setMuscleLevel(idx);
-                        }}
-                        style={[
-                          styles.segmentPillItem,
-                          isActive
-                            ? [styles.segmentPillActive, { backgroundColor: teamPrimary }]
-                            : styles.segmentPillInactive,
-                        ]}
-                      />
-                    );
-                  })}
-                </View>
-
-                <View style={styles.metricLabelsRowMuscles}>
-                  {[
-                    { level: 0, label: 'Frais' },
-                    { level: 1, label: 'Courbatures' },
-                    { level: 2, label: 'Gêne' },
-                  ].map((item) => (
-                    <TouchableOpacity
-                      key={`muscle-lbl-${item.level}`}
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        prodayHaptics.press();
-                        setMuscleLevel(item.level);
-                      }}
-                      style={styles.stepLabelPill}
-                    >
-                      <ProDayText
-                        style={[
-                          styles.stepLabel,
-                          muscleLevel === item.level && [styles.stepLabelActive, { color: teamPrimary }],
-                        ]}
-                      >
-                        {item.label}
-                      </ProDayText>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+            <View style={styles.heroStatDivider} />
+            <View style={styles.heroStatCol}>
+              <Text style={styles.heroStatVal}>12 - 3 - 1</Text>
+              <Text style={styles.heroStatLbl}>V - N - D</Text>
             </View>
-
-            {/* BOUTON DE VALIDATION AUX COULEURS DE L'ÉQUIPE */}
-            <PressableSpring
-              onPress={handleValidateCheckin}
-              scaleTo={0.98}
-              style={styles.validateButtonShell}
-            >
-              <LinearGradient
-                colors={teamGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.validateButtonGradient}
-              >
-                <Ionicons name="checkmark-circle" size={20} color="#000000" />
-                <ProDayText style={styles.validateButtonText}>
-                  {isValidatedToday ? 'Bilan validé (+10 XP)' : 'Valider mon bilan (+10 XP)'}
-                </ProDayText>
-              </LinearGradient>
-            </PressableSpring>
+            <View style={styles.heroStatDivider} />
+            <View style={styles.heroStatCol}>
+              <Text style={[styles.heroStatVal, { color: '#0A84FF' }]}>+22</Text>
+              <Text style={styles.heroStatLbl}>DIFF. BUTS</Text>
+            </View>
+            <View style={styles.heroStatDivider} />
+            <View style={styles.heroStatCol}>
+              <Text style={[styles.heroStatVal, { color: '#FFD700' }]}>7.9</Text>
+              <Text style={styles.heroStatLbl}>NOTE MOY.</Text>
+            </View>
           </View>
+        </LinearGradient>
 
-          {/* CARTE 3 : PRÉPARATION & ROUTINES */}
-          <View style={styles.cardShell}>
-            <View style={styles.routinesHeaderRow}>
-              <View>
-                <ProDayText style={[styles.kicker, { color: teamPrimary }]}>PRÉPARATION DU JOUR</ProDayText>
-                <ProDayText style={styles.routinesTitle}>Mes Routines d'Entraînement</ProDayText>
-              </View>
-              <Ionicons name="checkmark-done" size={22} color={teamPrimary} />
-            </View>
-
-            {/* CARTES DE ROUTINE EN LIGNE */}
-            <View style={styles.routinesCardsRow}>
-              {/* ROUTINE 1 : MOBILITÉ */}
+        {/* Apple Segmented Pill Rail */}
+        <View style={styles.pillRail}>
+          {(
+            [
+              { id: 'matchs', label: 'Matchs & Calendrier', icon: 'football' },
+              { id: 'classement', label: 'Classement FFF', icon: 'trophy' },
+              { id: 'objectifs', label: 'Objectifs Saison', icon: 'flag' },
+            ] as const
+          ).map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
               <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() => toggleRoutine('mobility')}
-                style={[
-                  styles.routineCard,
-                  routines.mobility && [
-                    styles.routineCardActive,
-                    { backgroundColor: `${teamPrimary}18`, borderColor: teamPrimary },
-                  ],
-                ]}
-              >
-                {routines.mobility && (
-                  <View style={[styles.routineCheckPill, { backgroundColor: teamPrimary }]}>
-                    <Ionicons name="checkmark" size={11} color="#000000" />
-                  </View>
-                )}
-                <View style={styles.routineIconHolder}>
-                  <MobilityStretchIcon size={36} color={routines.mobility ? teamPrimary : '#8B8B9A'} />
-                </View>
-                <ProDayText
-                  style={[
-                    styles.routineCardLabel,
-                    routines.mobility && { color: '#FFFFFF', fontWeight: '800' },
-                  ]}
-                  numberOfLines={1}
-                >
-                  Mobilité
-                </ProDayText>
-              </TouchableOpacity>
-
-              {/* ROUTINE 2 : VISUALISATION */}
-              <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() => toggleRoutine('visualization')}
-                style={[
-                  styles.routineCard,
-                  routines.visualization && [
-                    styles.routineCardActive,
-                    { backgroundColor: `${teamPrimary}18`, borderColor: teamPrimary },
-                  ],
-                ]}
-              >
-                {routines.visualization && (
-                  <View style={[styles.routineCheckPill, { backgroundColor: teamPrimary }]}>
-                    <Ionicons name="checkmark" size={11} color="#000000" />
-                  </View>
-                )}
-                <View style={styles.routineIconHolder}>
-                  <VisualizationBrainIcon size={36} color={routines.visualization ? teamPrimary : '#8B8B9A'} />
-                </View>
-                <ProDayText
-                  style={[
-                    styles.routineCardLabel,
-                    routines.visualization && { color: '#FFFFFF', fontWeight: '800' },
-                  ]}
-                  numberOfLines={1}
-                >
-                  Visualisation
-                </ProDayText>
-              </TouchableOpacity>
-
-              {/* ROUTINE 3 : HYDRATATION */}
-              <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() => toggleRoutine('hydration')}
-                style={[
-                  styles.routineCard,
-                  routines.hydration && [
-                    styles.routineCardActive,
-                    { backgroundColor: `${teamPrimary}18`, borderColor: teamPrimary },
-                  ],
-                ]}
-              >
-                {routines.hydration && (
-                  <View style={[styles.routineCheckPill, { backgroundColor: teamPrimary }]}>
-                    <Ionicons name="checkmark" size={11} color="#000000" />
-                  </View>
-                )}
-                <View style={styles.routineIconHolder}>
-                  <HydrationNutritionIcon size={36} color={routines.hydration ? teamPrimary : '#8B8B9A'} />
-                </View>
-                <ProDayText
-                  style={[
-                    styles.routineCardLabel,
-                    routines.hydration && { color: '#FFFFFF', fontWeight: '800' },
-                  ]}
-                  numberOfLines={1}
-                >
-                  Hydratation
-                </ProDayText>
-              </TouchableOpacity>
-            </View>
-
-            {/* BARRE D'INTERACTION DIRECTE AVEC LE PRÉPARATEUR */}
-            <View style={styles.quickPromptBar}>
-              <Ionicons name="chatbubble-ellipses-outline" size={16} color="#8B8B9A" />
-              <TextInput
-                style={styles.promptInput}
-                placeholder="Pose une question à ton préparateur..."
-                placeholderTextColor="#8B8B9A"
-                value={promptInput}
-                onChangeText={setPromptInput}
-                onSubmitEditing={() => handleAskAiCoach()}
-                returnKeyType="send"
-              />
-              <TouchableOpacity
-                style={[
-                  styles.sendPromptBtn,
-                  { backgroundColor: promptInput.trim() ? teamPrimary : '#22222E' },
-                ]}
-                onPress={() => handleAskAiCoach()}
-                disabled={!promptInput.trim()}
+                key={tab.id}
+                style={[styles.tabButton, isActive && styles.tabButtonActive]}
+                onPress={() => handleTabChange(tab.id)}
                 activeOpacity={0.8}
               >
                 <Ionicons
-                  name="arrow-up"
-                  size={15}
-                  color={promptInput.trim() ? '#000000' : '#8B8B9A'}
+                  name={tab.icon as any}
+                  size={13}
+                  color={isActive ? '#000000' : '#94A3B8'}
                 />
+                <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                  {tab.label}
+                </Text>
               </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      ) : (
-        /* 4. ONGLET MES OBJECTIFS */
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: TAB_BAR_CONTENT_INSET + 36 },
-          ]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              tintColor={teamPrimary}
-              colors={[teamPrimary]}
-            />
-          }
-        >
-          {/* STATS DU JOUEUR */}
-          <View style={styles.statCardsRow}>
-            {/* NIVEAU */}
-            <PressableSpring
-              onPress={() => {
-                prodayHaptics.press();
-                Alert.alert(
-                  `Niveau ${levelNumber}`,
-                  `Progression : ${xpIntoLevel}/${xpForNext} XP. Complétez vos quêtes pour débloquer de nouveaux paliers.`,
-                );
-              }}
-              scaleTo={0.96}
-              style={[styles.statBadgeCard, { borderColor: `${teamPrimary}33` }]}
+            );
+          })}
+        </View>
+
+        {/* TAB 1: MATCHS & CALENDRIER */}
+        {activeTab === 'matchs' ? (
+          <View style={styles.tabContent}>
+            {/* Prochain Match Immédiat (Hero Card J17) */}
+            <LinearGradient
+              colors={['#181822', '#101016']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.nextMatchCard}
             >
-              <ProDayText style={styles.statBadgeKicker}>Niveau</ProDayText>
-              <ProDayText style={[styles.statBadgeValue, { color: teamPrimary }]}>{levelNumber}</ProDayText>
-              <ProDayText style={styles.statBadgeSub}>Progression</ProDayText>
-            </PressableSpring>
-
-            {/* SÉRIE DE JOURS */}
-            <PressableSpring
-              onPress={() => {
-                prodayHaptics.press();
-                Alert.alert(
-                  'Série d’activité',
-                  `Vous êtes actif depuis ${streak} jour(s) consécutif(s). Revenez chaque jour pour maintenir votre dynamique !`,
-                );
-              }}
-              scaleTo={0.96}
-              style={[styles.statBadgeCard, { borderColor: `${teamPrimary}33` }]}
-            >
-              <ProDayText style={styles.statBadgeKicker}>Série</ProDayText>
-              <View style={styles.streakRow}>
-                <Ionicons name="flame" size={18} color={teamPrimary} />
-                <ProDayText style={[styles.statBadgeValue, { color: teamPrimary }]}>{streak}</ProDayText>
+              <View style={styles.nextMatchHeader}>
+                <View style={styles.matchTagGreen}>
+                  <Ionicons name="flame" size={13} color="#30D158" />
+                  <Text style={styles.matchTagGreenText}>PROCHAIN MATCH · J17 AU SOMMET</Text>
+                </View>
+                <View style={styles.countdownBadge}>
+                  <Ionicons name="time" size={12} color="#FBBF24" />
+                  <Text style={styles.countdownText}>J-2 · 18:00</Text>
+                </View>
               </View>
-              <ProDayText style={styles.statBadgeSub}>Jours actifs</ProDayText>
-            </PressableSpring>
 
-            {/* ACTIVITÉS ENREGISTRÉES */}
-            <PressableSpring
-              onPress={() => {
-                prodayHaptics.press();
-                nav.setActiveTab('matchs');
-              }}
-              scaleTo={0.96}
-              style={[styles.statBadgeCard, { borderColor: `${teamPrimary}33` }]}
-            >
-              <ProDayText style={styles.statBadgeKicker}>Activités</ProDayText>
-              <ProDayText style={[styles.statBadgeValue, { color: teamPrimary }]}>
-                {activitiesCount || 2}
-              </ProDayText>
-              <ProDayText style={styles.statBadgeSub}>Voir matchs ›</ProDayText>
-            </PressableSpring>
-          </View>
+              <View style={styles.clashRow}>
+                <View style={styles.teamCol}>
+                  <Text style={styles.teamName}>FC ProDay</Text>
+                  <Text style={styles.teamRankLeader}>1er · Domicile</Text>
+                </View>
 
-          {/* CARTE : PROGRESSION XP SAISON */}
-          <View style={styles.cardShell}>
-            <View style={styles.sectionHeaderRow}>
-              <ProDayText style={styles.cardTitle}>XP Saison</ProDayText>
-              <ProDayText style={[styles.xpCountLabel, { color: teamPrimary }]}>
-                {`${xpIntoLevel} / ${xpForNext} XP`}
-              </ProDayText>
-            </View>
+                <View style={styles.vsBadge}>
+                  <Text style={styles.vsText}>VS</Text>
+                </View>
 
-            <View style={styles.xpBigProgressTrack}>
-              <LinearGradient
-                colors={teamGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[
-                  styles.xpBigProgressFill,
-                  { width: `${Math.min(100, Math.round((xpIntoLevel / xpForNext) * 100))}%` },
-                ]}
-              />
-            </View>
-
-            <ProDayText style={styles.xpMotivationText}>
-              {`Plus que ${Math.max(0, xpForNext - xpIntoLevel)} XP pour atteindre le Niveau ${levelNumber + 1} !`}
-            </ProDayText>
-          </View>
-
-          {/* CARTE : QUÊTES DU JOUR */}
-          <View style={styles.cardShell}>
-            <View style={styles.sectionHeaderRow}>
-              <View>
-                <ProDayText style={[styles.kicker, { color: teamPrimary }]}>OBJECTIFS DU JOUR</ProDayText>
-                <ProDayText style={styles.cardTitle}>Quêtes du jour</ProDayText>
+                <View style={styles.teamCol}>
+                  <Text style={styles.teamName}>RC France</Text>
+                  <Text style={styles.teamRankChallenger}>2e · Extérieur</Text>
+                </View>
               </View>
-              <View style={[styles.xpRewardPill, { backgroundColor: `${teamPrimary}18` }]}>
-                <ProDayText style={[styles.xpRewardPillText, { color: teamPrimary }]}>+80 XP max</ProDayText>
+
+              <View style={styles.matchInfoLine}>
+                <Ionicons name="location" size={12} color="#94A3B8" />
+                <Text style={styles.matchInfoText}>Stade Municipal · ☀️ 18°C · Pelouse Synthétique</Text>
               </View>
-            </View>
 
-            <View style={styles.questsList}>
-              {dailyQuests.map((q) => {
-                const isClaimed = dailyDone.has(q.id);
-                const isAutoDone =
-                  (q.id === 'daily-login' && streak > 0) ||
-                  (q.id === 'daily-checkin' && isValidatedToday);
-                const isCompleted = isClaimed || isAutoDone;
-
-                return (
-                  <PressableSpring
-                    key={q.id}
-                    onPress={() => {
-                      prodayHaptics.press();
-                      if (isClaimed) {
-                        Alert.alert(q.title, 'Quête déjà complétée et récompensée aujourd’hui !');
-                      } else if (isAutoDone) {
-                        void handleClaimQuest(q.id, q.xp, q.stars);
-                      } else if (q.id === 'daily-checkin') {
-                        setSegment('forme');
-                      } else if (q.tabHint === 'matchs' || q.id.includes('match')) {
-                        nav.setActiveTab('matchs');
-                      } else if (q.tabHint === 'profil' || q.id.includes('card')) {
-                        nav.setActiveTab('profil');
-                      } else {
-                        Alert.alert(q.title, q.body);
-                      }
-                    }}
-                    scaleTo={0.98}
-                    style={[
-                      styles.questItemCard,
-                      isCompleted && [
-                        styles.questItemCardCompleted,
-                        { borderColor: `${teamPrimary}44` },
-                      ],
-                    ]}
+              {/* RSVP Convocations */}
+              <View style={styles.rsvpSection}>
+                <Text style={styles.rsvpSectionTitle}>MA CONVOCATION / DISPONIBILITÉ :</Text>
+                <View style={styles.rsvpBar}>
+                  <TouchableOpacity
+                    style={[styles.rsvpBtn, rsvp === 'present' && styles.rsvpBtnPresent]}
+                    onPress={() => handleRsvpChange('present')}
+                    activeOpacity={0.8}
                   >
-                    <View style={styles.questItemLeft}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={14}
+                      color={rsvp === 'present' ? '#FFFFFF' : '#30D158'}
+                    />
+                    <Text
+                      style={[styles.rsvpBtnText, rsvp === 'present' && styles.rsvpBtnTextActive]}
+                    >
+                      Présent
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.rsvpBtn, rsvp === 'pending' && styles.rsvpBtnUncertain]}
+                    onPress={() => handleRsvpChange('pending')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="help-circle"
+                      size={14}
+                      color={rsvp === 'pending' ? '#FFFFFF' : '#FBBF24'}
+                    />
+                    <Text
+                      style={[styles.rsvpBtnText, rsvp === 'pending' && styles.rsvpBtnTextActive]}
+                    >
+                      Incertain
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.rsvpBtn, rsvp === 'absent' && styles.rsvpBtnAbsent]}
+                    onPress={() => handleRsvpChange('absent')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={14}
+                      color={rsvp === 'absent' ? '#FFFFFF' : '#FF453A'}
+                    />
+                    <Text
+                      style={[styles.rsvpBtnText, rsvp === 'absent' && styles.rsvpBtnTextActive]}
+                    >
+                      Absent
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </LinearGradient>
+
+            {/* Historique des Journées Passées avec Notes Staff */}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Feuilles de Match & Notations du Staff</Text>
+              <Text style={styles.sectionSub}>Officiel FFF</Text>
+            </View>
+
+            <View style={styles.matchList}>
+              {pastMatches.map((m) => (
+                <View key={m.id} style={styles.matchCard}>
+                  <View style={styles.matchCardTop}>
+                    <View style={styles.matchRoundBadge}>
+                      <Text style={styles.matchRoundText}>{m.round}</Text>
+                      <Text style={styles.matchDateSub}>{m.date}</Text>
+                    </View>
+
+                    <View style={styles.matchCenterCol}>
+                      <View style={styles.opponentRow}>
+                        <Text style={styles.matchOpponent}>{m.opponent}</Text>
+                        <Text style={styles.matchLocation}>({m.home ? 'Dom.' : 'Ext.'})</Text>
+                      </View>
+                      <Text style={styles.matchPlayerPerformance}>
+                        {m.started ? 'Titulaire' : 'Remplaçant'} · {m.minutes}' ·{' '}
+                        {m.goals > 0 ? `⚽ ${m.goals} but${m.goals > 1 ? 's' : ''}` : ''}
+                        {m.goals > 0 && m.assists > 0 ? ' · ' : ''}
+                        {m.assists > 0 ? `🎯 ${m.assists} passe${m.assists > 1 ? 's' : ''}` : ''}
+                        {m.goals === 0 && m.assists === 0 ? 'Actif' : ''}
+                      </Text>
+                    </View>
+
+                    <View style={styles.matchRightScore}>
                       <View
                         style={[
-                          styles.questIconHolder,
-                          {
-                            backgroundColor: isCompleted ? `${teamPrimary}20` : '#181924',
-                            borderColor: isCompleted ? teamPrimary : '#22222E',
-                          },
+                          styles.resultScoreBadge,
+                          m.result === 'V'
+                            ? styles.resScoreWin
+                            : m.result === 'N'
+                            ? styles.resScoreDraw
+                            : styles.resScoreLoss,
                         ]}
                       >
-                        <Ionicons
-                          name={
-                            isCompleted
-                              ? 'checkmark-circle'
-                              : q.id === 'daily-checkin'
-                                ? 'fitness'
-                                : q.id.includes('train')
-                                  ? 'football'
-                                  : q.id.includes('match')
-                                    ? 'trophy'
-                                    : 'flash'
-                          }
-                          size={18}
-                          color={isCompleted ? teamPrimary : '#8B8B9A'}
-                        />
+                        <Text style={styles.resScoreText}>
+                          {m.scoreClub} - {m.scoreOpp}
+                        </Text>
                       </View>
-                      <View style={styles.questCopyWrap}>
-                        <ProDayText style={styles.questTitle}>{q.title}</ProDayText>
-                        <ProDayText style={styles.questBody}>{q.body}</ProDayText>
-                        <View style={styles.questProgressTrack}>
-                          <View
-                            style={[
-                              styles.questProgressFill,
-                              {
-                                width: isCompleted ? '100%' : '20%',
-                                backgroundColor: isCompleted ? teamPrimary : 'rgba(255,255,255,0.15)',
-                              },
-                            ]}
-                          />
-                        </View>
-                      </View>
-                    </View>
 
-                    <View style={styles.questItemRight}>
-                      {isClaimed ? (
-                        <View style={[styles.claimedBadge, { backgroundColor: `${teamPrimary}18` }]}>
-                          <Ionicons name="checkmark" size={13} color={teamPrimary} />
-                          <ProDayText style={[styles.claimedText, { color: teamPrimary }]}>Fait</ProDayText>
-                        </View>
-                      ) : isAutoDone ? (
-                        <PressableSpring
-                          onPress={() => void handleClaimQuest(q.id, q.xp, q.stars)}
-                          scaleTo={0.94}
-                          style={styles.claimButtonShell}
-                        >
-                          <LinearGradient colors={teamGradient} style={styles.claimButtonGradient}>
-                            <ProDayText style={styles.claimButtonText}>{`+${q.xp} XP`}</ProDayText>
-                          </LinearGradient>
-                        </PressableSpring>
-                      ) : (
-                        <View style={styles.xpPendingBadge}>
-                          <ProDayText style={styles.xpPendingText}>{`+${q.xp} XP`}</ProDayText>
-                        </View>
-                      )}
+                      <View style={styles.ratingBox}>
+                        <Text style={styles.ratingVal}>{m.rating}</Text>
+                        <Text style={styles.ratingMax}>/10</Text>
+                      </View>
                     </View>
-                  </PressableSpring>
-                );
-              })}
+                  </View>
+
+                  {m.isMotm ? (
+                    <View style={styles.motmTag}>
+                      <MaterialCommunityIcons name="star" size={13} color="#FFD700" />
+                      <Text style={styles.motmTagText}>ÉLU HOMME DU MATCH PAR LE COACH</Text>
+                    </View>
+                  ) : null}
+                </View>
+              ))}
             </View>
-          </View>
 
-          {/* CARTE : DÉFIS DE SAISON */}
-          <View style={styles.cardShell}>
+            {/* Matchs à Venir */}
             <View style={styles.sectionHeaderRow}>
-              <View>
-                <ProDayText style={[styles.kicker, { color: teamPrimary }]}>{teamName.toUpperCase()}</ProDayText>
-                <ProDayText style={styles.cardTitle}>Défis de Saison</ProDayText>
-              </View>
-              <Ionicons name="trophy-outline" size={22} color={teamPrimary} />
+              <Text style={styles.sectionTitle}>Calendrier des Journées Suivantes</Text>
             </View>
 
-            <View style={styles.seasonObjectivesList}>
-              {JOUEUR_SEASON_OBJECTIVES.map((obj) => {
-                let current = 0;
-                let target = 1;
-                if (obj.id === 'season-streak-3') {
-                  current = Math.min(streak, 3);
-                  target = 3;
-                } else if (obj.id === 'season-ovr-70') {
-                  current = Math.min(ovrScore, 70);
-                  target = 70;
-                } else if (obj.id === 'season-train-3') {
-                  current = Math.min(activitiesCount || 2, 3);
-                  target = 3;
-                }
-                const isClaimed = seasonDone.has(obj.id);
-                const isReadyToClaim = !isClaimed && current >= target;
-                const ratio = Math.min(100, Math.round((current / target) * 100));
-
-                return (
-                  <PressableSpring
-                    key={obj.id}
-                    onPress={() => {
-                      prodayHaptics.press();
-                      if (isClaimed) {
-                        Alert.alert(obj.title, 'Ce défi majeur a déjà été validé et récompensé cette saison !');
-                      } else if (isReadyToClaim) {
-                        void handleClaimChallenge(obj.id, obj.stars, obj.xp);
-                      } else {
-                        Alert.alert(
-                          obj.title,
-                          `${obj.body}\nProgression actuelle : ${current}/${target} (${ratio}%)`,
-                        );
-                      }
-                    }}
-                    scaleTo={0.98}
-                    style={[
-                      styles.seasonObjCard,
-                      isClaimed && { borderColor: `${teamPrimary}44` },
-                    ]}
-                  >
-                    <View style={styles.seasonObjHeader}>
-                      <ProDayText style={styles.seasonObjTitle}>{obj.title}</ProDayText>
-                      <ProDayText
-                        style={[
-                          styles.seasonObjRatio,
-                          { color: isClaimed || isReadyToClaim ? teamPrimary : '#8B8B9A' },
-                        ]}
-                      >
-                        {`${current}/${target}`}
-                      </ProDayText>
-                    </View>
-                    <ProDayText style={styles.seasonObjBody}>{obj.body}</ProDayText>
-
-                    <View style={styles.seasonObjProgressTrack}>
-                      <LinearGradient
-                        colors={teamGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={[styles.seasonObjProgressFill, { width: `${ratio}%` }]}
-                      />
-                    </View>
-
-                    <View style={styles.seasonObjFooter}>
-                      <View style={styles.rewardRow}>
-                        <Ionicons name="star" size={13} color={teamPrimary} />
-                        <ProDayText style={[styles.seasonObjReward, { color: teamPrimary }]}>
-                          {`+${obj.xp} XP · ${obj.stars} ${obj.stars > 1 ? 'étoiles' : 'étoile'}`}
-                        </ProDayText>
-                      </View>
-                      {isClaimed ? (
-                        <View style={styles.seasonObjDoneTag}>
-                          <Ionicons name="checkmark-circle" size={14} color={teamPrimary} />
-                          <ProDayText style={[styles.seasonObjDoneText, { color: teamPrimary }]}>Validé</ProDayText>
-                        </View>
-                      ) : isReadyToClaim ? (
-                        <PressableSpring
-                          onPress={() => void handleClaimChallenge(obj.id, obj.stars, obj.xp)}
-                          scaleTo={0.94}
-                          style={styles.claimButtonShell}
-                        >
-                          <LinearGradient colors={teamGradient} style={styles.claimButtonGradient}>
-                            <ProDayText style={styles.claimButtonText}>Réclamer</ProDayText>
-                          </LinearGradient>
-                        </PressableSpring>
-                      ) : (
-                        <ProDayText style={styles.inProgressLabel}>En cours</ProDayText>
-                      )}
-                    </View>
-                  </PressableSpring>
-                );
-              })}
+            <View style={styles.upcomingList}>
+              {upcomingMatches.map((up, idx) => (
+                <View key={idx} style={styles.upcomingRow}>
+                  <View style={styles.upcomingRoundBadge}>
+                    <Text style={styles.upcomingRoundText}>{up.round}</Text>
+                  </View>
+                  <View style={styles.upcomingInfo}>
+                    <Text style={styles.upcomingOpponent}>{up.opponent}</Text>
+                    <Text style={styles.upcomingDate}>
+                      {up.date} · {up.home ? 'À Domicile' : 'En Déplacement'}
+                    </Text>
+                  </View>
+                  <Ionicons name="calendar-outline" size={16} color="#64748B" />
+                </View>
+              ))}
             </View>
           </View>
-        </ScrollView>
-      )}
+        ) : null}
+
+        {/* TAB 2: CLASSEMENT FFF OFFICIEL */}
+        {activeTab === 'classement' ? (
+          <View style={styles.tabContent}>
+            <View style={styles.standingsHeaderBlock}>
+              <View style={styles.seasonBadge}>
+                <Ionicons name="trophy" size={12} color="#FFD700" />
+                <Text style={styles.seasonBadgeText}>CLASSEMENT GÉNÉRAL · SENIORS R1 POULE B</Text>
+              </View>
+              <Text style={styles.standingsNotice}>
+                Mise à jour en temps réel après la 16e journée.
+              </Text>
+            </View>
+
+            {/* Table Header */}
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.thText, { width: 30 }]}>#</Text>
+              <Text style={[styles.thText, { flex: 1 }]}>CLUB</Text>
+              <Text style={[styles.thText, { width: 40, textAlign: 'center' }]}>PTS</Text>
+              <Text style={[styles.thText, { width: 30, textAlign: 'center' }]}>J</Text>
+              <Text style={[styles.thText, { width: 36, textAlign: 'center' }]}>DIFF</Text>
+              <Text style={[styles.thText, { width: 68, textAlign: 'right' }]}>FORME</Text>
+            </View>
+
+            {/* Standings Table Rows */}
+            <View style={styles.tableBody}>
+              {standingsData.map((item) => (
+                <View
+                  key={item.rank}
+                  style={[
+                    styles.tableRow,
+                    item.isMyClub && styles.myClubRow,
+                    item.rank === 1 && styles.firstPlaceBorder,
+                  ]}
+                >
+                  <View style={styles.rankCol}>
+                    <View
+                      style={[
+                        styles.rankBadge,
+                        item.rank === 1
+                          ? styles.rankGold
+                          : item.rank === 2
+                          ? styles.rankSilver
+                          : item.rank >= 10
+                          ? styles.rankRelegation
+                          : styles.rankStandard,
+                      ]}
+                    >
+                      <Text style={styles.rankNum}>{item.rank}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.clubNameCol}>
+                    <Text
+                      style={[
+                        styles.clubNameText,
+                        item.isMyClub && styles.myClubNameText,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {item.name}
+                    </Text>
+                    {item.isMyClub ? (
+                      <View style={styles.myClubIndicator}>
+                        <Text style={styles.myClubIndicatorText}>MON CLUB</Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  <Text style={[styles.ptsText, item.isMyClub && { color: '#30D158' }]}>
+                    {item.pts}
+                  </Text>
+                  <Text style={styles.mText}>{item.m}</Text>
+                  <Text style={styles.diffText}>{item.diff}</Text>
+
+                  <View style={styles.formRow}>
+                    {item.form.slice(-3).map((f, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.formDot,
+                          f === 'V'
+                            ? styles.formWin
+                            : f === 'N'
+                            ? styles.formDraw
+                            : styles.formLoss,
+                        ]}
+                      >
+                        <Text style={styles.formLetter}>{f}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            {/* Standings Legend */}
+            <View style={styles.legendRow}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: '#30D158' }]} />
+                <Text style={styles.legendLabel}>1er : Montée directe N3</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: '#0A84FF' }]} />
+                <Text style={styles.legendLabel}>2e : Barrage N3</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: '#FF453A' }]} />
+                <Text style={styles.legendLabel}>10-12e : Descente R2</Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
+        {/* TAB 3: OBJECTIFS & QUÊTES DE LA SAISON */}
+        {activeTab === 'objectifs' ? (
+          <View style={styles.tabContent}>
+            {/* Snapshot Individuel */}
+            <View style={styles.kpiGrid}>
+              <View style={styles.kpiCard}>
+                <Text style={[styles.kpiVal, { color: '#30D158' }]}>14</Text>
+                <Text style={styles.kpiLbl}>BUTS EN SAISON</Text>
+                <Text style={styles.kpiSub}>1er Buteur R1</Text>
+              </View>
+
+              <View style={styles.kpiCard}>
+                <Text style={[styles.kpiVal, { color: '#0A84FF' }]}>8</Text>
+                <Text style={styles.kpiLbl}>PASSES DÉCISIVES</Text>
+                <Text style={styles.kpiSub}>2e Passeur R1</Text>
+              </View>
+
+              <View style={styles.kpiCard}>
+                <Text style={[styles.kpiVal, { color: '#FFD700' }]}>7.9</Text>
+                <Text style={styles.kpiLbl}>NOTE MOYENNE</Text>
+                <Text style={styles.kpiSub}>Sur 16 feuilles</Text>
+              </View>
+
+              <View style={styles.kpiCard}>
+                <Text style={[styles.kpiVal, { color: '#A855F7' }]}>1 440'</Text>
+                <Text style={styles.kpiLbl}>TEMPS DE JEU</Text>
+                <Text style={styles.kpiSub}>16 Titularisations</Text>
+              </View>
+            </View>
+
+            {/* Jauges d'Objectifs Fixés avec le Coach */}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Objectifs Annuels du Joueur</Text>
+              <Text style={styles.sectionSub}>Fixés au début de saison</Text>
+            </View>
+
+            <View style={styles.goalCard}>
+              <View style={styles.goalHeaderRow}>
+                <Text style={styles.goalTitle}>⚽ Objectif Buts en Championnat</Text>
+                <Text style={styles.goalProgressVal}>14 / 20 Buts (70%)</Text>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: '70%', backgroundColor: '#30D158' }]} />
+              </View>
+              <Text style={styles.goalRemark}>Plus que 6 buts pour atteindre le Palier Or.</Text>
+            </View>
+
+            <View style={styles.goalCard}>
+              <View style={styles.goalHeaderRow}>
+                <Text style={styles.goalTitle}>🎯 Objectif Passes Décisives</Text>
+                <Text style={styles.goalProgressVal}>8 / 10 Passes (80%)</Text>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: '80%', backgroundColor: '#0A84FF' }]} />
+              </View>
+              <Text style={styles.goalRemark}>En excellente voie pour dépasser la cible.</Text>
+            </View>
+
+            <View style={styles.goalCard}>
+              <View style={styles.goalHeaderRow}>
+                <Text style={styles.goalTitle}>⏱️ Temps de Jeu & Titularisations</Text>
+                <Text style={styles.goalProgressVal}>1 440' / 2 000' (72%)</Text>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: '72%', backgroundColor: '#A855F7' }]} />
+              </View>
+              <Text style={styles.goalRemark}>100% de titularisations lors des 16 journées.</Text>
+            </View>
+
+            <View style={styles.goalCard}>
+              <View style={styles.goalHeaderRow}>
+                <Text style={styles.goalTitle}>⭐ Note Moyenne Staff Cible</Text>
+                <Text style={[styles.goalProgressVal, { color: '#FFD700' }]}>7.9 / 8.0 (98%)</Text>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: '98%', backgroundColor: '#FFD700' }]} />
+              </View>
+              <Text style={styles.goalRemark}>Objectif atteint et consolidé depuis 5 matchs.</Text>
+            </View>
+
+            {/* Quêtes & Défis Hebdomadaires */}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Quêtes de la Semaine</Text>
+              <Text style={styles.sectionSub}>+XP de Saison</Text>
+            </View>
+
+            <View style={styles.questCard}>
+              <View style={styles.questLeft}>
+                <View style={[styles.questIconBox, { backgroundColor: 'rgba(48, 209, 88, 0.12)' }]}>
+                  <Ionicons name="football" size={16} color="#30D158" />
+                </View>
+                <View style={styles.questTextWrap}>
+                  <Text style={styles.questTitle}>Cadre au moins 3 tirs au prochain match</Text>
+                  <Text style={styles.questDesc}>Contre le RC France lors du choc J17</Text>
+                </View>
+              </View>
+              <View style={styles.xpBadge}>
+                <Text style={styles.xpBadgeText}>+150 XP</Text>
+              </View>
+            </View>
+
+            <View style={styles.questCard}>
+              <View style={styles.questLeft}>
+                <View style={[styles.questIconBox, { backgroundColor: 'rgba(10, 132, 255, 0.12)' }]}>
+                  <Ionicons name="pulse" size={16} color="#0A84FF" />
+                </View>
+                <View style={styles.questTextWrap}>
+                  <Text style={styles.questTitle}>Check-in forme 5 jours d'affilée</Text>
+                  <Text style={styles.questDesc}>Progression actuelle : 4 / 5 jours</Text>
+                </View>
+              </View>
+              <View style={styles.xpBadge}>
+                <Text style={styles.xpBadgeText}>+200 XP</Text>
+              </View>
+            </View>
+
+            <View style={styles.questCard}>
+              <View style={styles.questLeft}>
+                <View style={[styles.questIconBox, { backgroundColor: 'rgba(255, 215, 0, 0.12)' }]}>
+                  <Ionicons name="checkmark-done" size={16} color="#FFD700" />
+                </View>
+                <View style={styles.questTextWrap}>
+                  <Text style={styles.questTitle}>Séance tactique vidéo validée</Text>
+                  <Text style={styles.questDesc}>Consignes d'attaque intégrées avec le coach</Text>
+                </View>
+              </View>
+              <View style={styles.completedTag}>
+                <Ionicons name="checkmark" size={12} color="#30D158" />
+                <Text style={styles.completedTagText}>Validée</Text>
+              </View>
+            </View>
+
+            {/* Distinctions & Trophées de la Saison */}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Distinctions de la Saison</Text>
+            </View>
+
+            <View style={styles.trophiesRow}>
+              <View style={styles.trophyCard}>
+                <MaterialCommunityIcons name="star-circle" size={24} color="#FFD700" />
+                <Text style={styles.trophyCount}>4x</Text>
+                <Text style={styles.trophyTitle}>Homme du Match</Text>
+                <Text style={styles.trophySub}>J3, J8, J14, J16</Text>
+              </View>
+
+              <View style={styles.trophyCard}>
+                <MaterialCommunityIcons name="medal" size={24} color="#30D158" />
+                <Text style={styles.trophyCount}>1x</Text>
+                <Text style={styles.trophyTitle}>Joueur du Mois</Text>
+                <Text style={styles.trophySub}>Novembre 2025</Text>
+              </View>
+
+              <View style={styles.trophyCard}>
+                <MaterialCommunityIcons name="shield-star" size={24} color="#0A84FF" />
+                <Text style={styles.trophyCount}>3x</Text>
+                <Text style={styles.trophyTitle}>Équipe Type</Text>
+                <Text style={styles.trophySub}>Seniors R1 FFF</Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+      </ScrollView>
     </View>
   );
 }
 
+export default PlayerSaisonScreen;
+
 const styles = StyleSheet.create({
-  screen: {
+  root: {
     flex: 1,
-    backgroundColor: '#000000',
-    position: 'relative',
+    backgroundColor: '#0B0B0E',
   },
-
-  /* GRAND BLASON EN ARRIÈRE-PLAN */
-  backgroundTeamWatermark: {
-    position: 'absolute',
-    top: 90,
-    alignSelf: 'center',
-    zIndex: 0,
-    opacity: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  container: {
+    flex: 1,
   },
-  backgroundClubImage: {
-    width: 280,
-    height: 320,
-    opacity: 0.16,
-  },
-
-  /* 1. HERO */
-  heroWrap: {
-    position: 'relative',
+  content: {
     paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 12,
-    overflow: 'hidden',
-    zIndex: 1,
+    paddingTop: 8,
   },
-  watermarkLeft: {
-    position: 'absolute',
-    left: -10,
-    top: 0,
-    opacity: 0.5,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  watermarkRight: {
-    position: 'absolute',
-    right: 12,
-    top: 4,
-    opacity: 1,
-  },
-  heroClubLogo: {
-    width: 88,
-    height: 100,
-    opacity: 0.28,
-  },
-  heroContent: {
+  seasonBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    zIndex: 2,
-  },
-  avatarHolder: {
-    width: 74,
-    height: 74,
-    borderRadius: 37,
-    borderWidth: 2,
-    overflow: 'hidden',
-    backgroundColor: '#141418',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  heroMeta: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  playerName: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+    gap: 5,
+    backgroundColor: 'rgba(48, 209, 88, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
     marginBottom: 6,
+  },
+  seasonBadgeText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#30D158',
+    letterSpacing: 0.5,
+  },
+  headerTitle: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
+  },
+  headerSub: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  roundPill: {
+    backgroundColor: '#16161E',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  roundPillVal: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#30D158',
+  },
+  roundPillSub: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#64748B',
+    marginTop: 2,
+  },
+
+  /* Hero Banner */
+  heroTeamBanner: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 16,
+    marginBottom: 16,
+  },
+  heroBannerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  heroRankPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 215, 0, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  heroRankText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFD700',
+  },
+  heroPromotionTag: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#30D158',
   },
   heroStatsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  donutContainer: {
-    width: 62,
-    height: 62,
-    position: 'relative',
+  heroStatCol: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  donutTextWrap: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  donutLevelLabel: {
-    color: '#FFFFFF',
-    fontSize: 12.5,
-    fontWeight: '700',
-    letterSpacing: -0.2,
-  },
-  ovrContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginLeft: 18,
-  },
-  ovrScore: {
-    fontSize: 40,
+  heroStatVal: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 18,
     fontWeight: '900',
-    lineHeight: 44,
-    letterSpacing: -0.8,
+    color: '#FFFFFF',
   },
-  ovrMax: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8B8B9A',
-    paddingBottom: 5,
-    marginLeft: 2,
+  heroStatLbl: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  heroStatDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
 
-  /* 2. SÉLECTEUR D'ONGLETS */
-  tabCapsuleShell: {
-    marginHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 14,
-    height: 44,
-    backgroundColor: '#121218',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+  /* Pill Rail */
+  pillRail: {
     flexDirection: 'row',
-    padding: 3,
-    zIndex: 1,
+    backgroundColor: '#141418',
+    borderRadius: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    marginBottom: 16,
   },
   tabButton: {
     flex: 1,
-    borderRadius: 19,
-    overflow: 'hidden',
-  },
-  tabButtonActiveGradient: {
-    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 19,
-  },
-  tabButtonInactive: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  tabTextActive: {
-    color: '#000000',
-    fontWeight: '800',
-    fontSize: 13.5,
-    letterSpacing: -0.2,
-  },
-  tabTextInactive: {
-    color: '#8B8B9A',
-    fontWeight: '600',
-    fontSize: 13.5,
-    letterSpacing: -0.2,
-  },
-
-  /* 3. CONTENU / CARTES */
-  scrollView: {
-    flex: 1,
-    zIndex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-  },
-  cardShell: {
-    backgroundColor: '#141418',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardHeaderWithKicker: {
-    marginBottom: 12,
-  },
-  cardTitle: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-
-  /* COPILOTE HEADER & READINESS */
-  copilotHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  copilotBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  copilotBadgeText: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  readinessPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  readinessScoreText: {
-    fontSize: 11.5,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-  },
-  aiBriefingContainer: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
-    padding: 12,
-    marginBottom: 12,
-  },
-  aiBriefingText: {
-    color: '#E5E7EB',
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: '500',
-  },
-  quickAiActionsRow: {
-    flexDirection: 'row',
     gap: 6,
+    paddingVertical: 9,
+    borderRadius: 12,
   },
-  quickAiActionChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 6,
-    borderRadius: 10,
-    borderWidth: 1,
+  tabButtonActive: {
+    backgroundColor: '#30D158',
+    shadowColor: '#30D158',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  quickAiActionText: {
+  tabLabel: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
     fontSize: 11,
     fontWeight: '700',
+    color: '#94A3B8',
   },
-
-  /* AUTO-ÉVALUATION */
-  metricsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 12,
-  },
-  metricCol: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  metricHeaderPressable: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  metricName: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: -0.2,
-    marginTop: 6,
-    marginBottom: 2,
-  },
-  currentValuePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  currentValueText: {
-    fontSize: 10.5,
-    fontWeight: '800',
-  },
-
-  /* 3 CRANS DU CURSEUR */
-  segmentedPillTrack: {
-    flexDirection: 'row',
-    width: '100%',
-    height: 22,
-    backgroundColor: '#1E1F2A',
-    borderRadius: 11,
-    overflow: 'hidden',
-    padding: 2.5,
-    gap: 3,
-  },
-  segmentPillItem: {
-    flex: 1,
-    borderRadius: 7,
-  },
-  segmentPillActive: {},
-  segmentPillInactive: {
-    backgroundColor: '#272834',
-  },
-  metricLabelsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginTop: 6,
-  },
-  metricLabelsRowMuscles: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginTop: 6,
-  },
-  stepLabelPill: {
-    paddingHorizontal: 2,
-    paddingVertical: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepLabel: {
-    fontSize: 10,
-    color: '#8B8B9A',
-    fontWeight: '600',
-  },
-  stepLabelActive: {
-    fontWeight: '800',
-  },
-
-  /* BOUTON VALIDATION */
-  validateButtonShell: {
-    height: 46,
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginTop: 4,
-  },
-  validateButtonGradient: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  validateButtonText: {
+  tabLabelActive: {
     color: '#000000',
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: -0.2,
+    fontWeight: '900',
+  },
+  tabContent: {
+    gap: 16,
   },
 
-  /* ROUTINES */
-  kicker: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    marginBottom: 2,
+  /* Prochain Match Card */
+  nextMatchCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 16,
   },
-  routinesHeaderRow: {
+  nextMatchHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  routinesTitle: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  routinesCardsRow: {
+  matchTagGreen: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
+    alignItems: 'center',
+    gap: 4,
   },
-  routineCard: {
-    flex: 1,
-    minHeight: 104,
-    backgroundColor: '#181820',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: 8,
+  matchTagGreenText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#30D158',
+    letterSpacing: 0.5,
+  },
+  countdownBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  countdownText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FBBF24',
+  },
+  clashRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    position: 'relative',
+    marginVertical: 6,
   },
-  routineCardActive: {
+  teamCol: {
+    flex: 1,
+  },
+  teamName: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  teamRankLeader: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#30D158',
+    marginTop: 2,
+  },
+  teamRankChallenger: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  vsBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 12,
+  },
+  vsText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#94A3B8',
+  },
+  matchInfoLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  matchInfoText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  rsvpSection: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  rsvpSectionTitle: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#64748B',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  rsvpBar: {
+    flexDirection: 'row',
+    backgroundColor: '#121218',
+    borderRadius: 14,
+    padding: 3,
+    gap: 4,
+  },
+  rsvpBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 7,
+    borderRadius: 11,
+  },
+  rsvpBtnPresent: {
+    backgroundColor: '#30D158',
+  },
+  rsvpBtnUncertain: {
+    backgroundColor: '#FBBF24',
+  },
+  rsvpBtnAbsent: {
+    backgroundColor: '#FF453A',
+  },
+  rsvpBtnText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  rsvpBtnTextActive: {
+    color: '#000000',
+    fontWeight: '900',
+  },
+
+  /* Section Titles */
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  sectionTitle: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  sectionSub: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    color: '#64748B',
+  },
+
+  /* Match Cards */
+  matchList: {
+    gap: 10,
+  },
+  matchCard: {
+    backgroundColor: '#141418',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+  },
+  matchCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  matchRoundBadge: {
+    backgroundColor: '#1C1C24',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    alignItems: 'center',
+    marginRight: 10,
+    width: 52,
+  },
+  matchRoundText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#30D158',
+  },
+  matchDateSub: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 8.5,
+    color: '#64748B',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  matchCenterCol: {
+    flex: 1,
+  },
+  opponentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  matchOpponent: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  matchLocation: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    color: '#64748B',
+  },
+  matchPlayerPerformance: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  matchRightScore: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  resultScoreBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  resScoreWin: {
+    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+  },
+  resScoreDraw: {
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+  },
+  resScoreLoss: {
+    backgroundColor: 'rgba(255, 69, 58, 0.15)',
+  },
+  resScoreText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  ratingBox: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  ratingVal: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 13,
+    fontWeight: '900',
+    color: '#FFD700',
+  },
+  ratingMax: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 9,
+    color: '#64748B',
+  },
+  motmTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 215, 0, 0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  motmTagText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#FFD700',
+    letterSpacing: 0.3,
+  },
+
+  /* Upcoming list */
+  upcomingList: {
+    gap: 8,
+  },
+  upcomingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#141418',
+    borderRadius: 14,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  upcomingRoundBadge: {
+    backgroundColor: '#1E1E28',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 10,
+  },
+  upcomingRoundText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#94A3B8',
+  },
+  upcomingInfo: {
+    flex: 1,
+  },
+  upcomingOpponent: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  upcomingDate: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10.5,
+    color: '#64748B',
+    marginTop: 1,
+  },
+
+  /* STANDINGS */
+  standingsHeaderBlock: {
+    marginBottom: 10,
+  },
+  standingsNotice: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 4,
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#121218',
+    borderRadius: 10,
+    marginBottom: 6,
+  },
+  thText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#64748B',
+    letterSpacing: 0.5,
+  },
+  tableBody: {
+    gap: 4,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#141418',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  myClubRow: {
+    backgroundColor: '#132018',
+    borderColor: '#30D158',
     borderWidth: 1.5,
   },
-  routineCheckPill: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
+  firstPlaceBorder: {
+    borderColor: 'rgba(48, 209, 88, 0.4)',
+  },
+  rankCol: {
+    width: 30,
+  },
+  rankBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankGold: {
+    backgroundColor: '#FFD700',
+  },
+  rankSilver: {
+    backgroundColor: '#0A84FF',
+  },
+  rankRelegation: {
+    backgroundColor: 'rgba(255, 69, 58, 0.2)',
+  },
+  rankStandard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  rankNum: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#000000',
+  },
+  clubNameCol: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  clubNameText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  myClubNameText: {
+    color: '#30D158',
+    fontWeight: '900',
+  },
+  myClubIndicator: {
+    backgroundColor: 'rgba(48, 209, 88, 0.2)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+  },
+  myClubIndicatorText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 8,
+    fontWeight: '900',
+    color: '#30D158',
+  },
+  ptsText: {
+    width: 40,
+    textAlign: 'center',
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 12.5,
+    fontWeight: '900',
+    color: '#FFFFFF',
+  },
+  mText: {
+    width: 30,
+    textAlign: 'center',
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  diffText: {
+    width: 36,
+    textAlign: 'center',
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  formRow: {
+    width: 68,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 3,
+  },
+  formDot: {
     width: 16,
     height: 16,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  routineIconHolder: {
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
+  formWin: {
+    backgroundColor: '#30D158',
   },
-  routineCardLabel: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 2,
+  formDraw: {
+    backgroundColor: '#64748B',
   },
-
-  /* QUICK PROMPT BAR */
-  quickPromptBar: {
+  formLoss: {
+    backgroundColor: '#FF453A',
+  },
+  formLetter: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 8,
+    fontWeight: '900',
+    color: '#000000',
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    marginTop: 6,
+  },
+  legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#181820',
-    borderRadius: 12,
-    paddingLeft: 12,
-    paddingRight: 4,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    gap: 4,
   },
-  promptInput: {
-    flex: 1,
-    fontSize: 12.5,
-    color: '#FFFFFF',
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  sendPromptBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+  legendLabel: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 9.5,
+    color: '#64748B',
   },
 
-  /* 4. OBJECTIFS */
-  statCardsRow: {
+  /* OBJECTIFS & QUÊTES */
+  kpiGrid: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 12,
   },
-  statBadgeCard: {
+  kpiCard: {
     flex: 1,
-    minHeight: 88,
-    justifyContent: 'space-between',
     backgroundColor: '#141418',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     padding: 10,
     alignItems: 'center',
   },
-  statBadgeKicker: {
-    color: '#8B8B9A',
-    fontSize: 10.5,
-    fontWeight: '600',
-    marginBottom: 2,
-    letterSpacing: 0.2,
-  },
-  statBadgeValue: {
-    fontSize: 22,
+  kpiVal: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 18,
     fontWeight: '900',
-    lineHeight: 26,
-    letterSpacing: -0.5,
+    color: '#FFFFFF',
   },
-  statBadgeSub: {
-    color: '#8B8B9A',
-    fontSize: 10,
-    fontWeight: '600',
+  kpiLbl: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#94A3B8',
     marginTop: 2,
     textAlign: 'center',
   },
-  streakRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
+  kpiSub: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 8,
+    color: '#64748B',
+    marginTop: 1,
+    textAlign: 'center',
   },
-  streakEmoji: {
-    fontSize: 16,
+  goalCard: {
+    backgroundColor: '#141418',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+    gap: 6,
   },
-
-  sectionHeaderRow: {
+  goalHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
   },
-  xpCountLabel: {
-    fontSize: 13,
+  goalTitle: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  goalProgressVal: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 11,
     fontWeight: '800',
-    letterSpacing: -0.2,
+    color: '#30D158',
   },
-  xpBigProgressTrack: {
+  progressTrack: {
     height: 6,
-    backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     overflow: 'hidden',
-    marginTop: 2,
-    marginBottom: 8,
   },
-  xpBigProgressFill: {
+  progressFill: {
     height: '100%',
     borderRadius: 3,
   },
-  xpMotivationText: {
-    color: '#8B8B9A',
-    fontSize: 11.5,
-    fontWeight: '500',
-  },
-
-  xpRewardPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  xpRewardPillText: {
+  goalRemark: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
     fontSize: 10.5,
-    fontWeight: '800',
+    color: '#64748B',
   },
-
-  /* LISTE DES QUÊTES */
-  questsList: {
-    gap: 8,
-  },
-  questItemCard: {
+  questCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#181820',
+    backgroundColor: '#141418',
     borderRadius: 14,
+    padding: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: 12,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 10,
   },
-  questItemCardCompleted: {
-    backgroundColor: '#16161E',
-  },
-  questItemLeft: {
+  questLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
     flex: 1,
-    marginRight: 10,
   },
-  questIconHolder: {
-    width: 36,
-    height: 36,
+  questIconBox: {
+    width: 32,
+    height: 32,
     borderRadius: 10,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
-  questCopyWrap: {
+  questTextWrap: {
     flex: 1,
   },
   questTitle: {
-    color: '#FFFFFF',
-    fontSize: 13.5,
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 12,
     fontWeight: '700',
-    letterSpacing: -0.2,
-    marginBottom: 2,
+    color: '#FFFFFF',
   },
-  questBody: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '500',
-    marginBottom: 4,
+  questDesc: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10,
+    color: '#64748B',
+    marginTop: 1,
   },
-  questProgressTrack: {
-    height: 3.5,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 2,
-    overflow: 'hidden',
-    width: '90%',
+  xpBadge: {
+    backgroundColor: 'rgba(255, 215, 0, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
-  questProgressFill: {
-    height: '100%',
-    borderRadius: 2,
+  xpBadgeText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#FFD700',
   },
-  questItemRight: {
-    alignItems: 'flex-end',
-  },
-  claimedBadge: {
+  completedTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    backgroundColor: 'rgba(48, 209, 88, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
-  },
-  claimedText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  claimButtonShell: {
     borderRadius: 8,
-    overflow: 'hidden',
   },
-  claimButtonGradient: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  claimButtonText: {
-    color: '#000000',
-    fontSize: 11.5,
+  completedTagText: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 10.5,
     fontWeight: '800',
+    color: '#30D158',
   },
-  xpPendingBadge: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  trophiesRow: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  xpPendingText: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '700',
+  trophyCard: {
+    flex: 1,
+    backgroundColor: '#141418',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+    alignItems: 'center',
   },
-
-  /* DÉFIS DE SAISON */
-  seasonObjectivesList: {
-    gap: 10,
+  trophyCount: {
+    fontFamily: Platform.select({ ios: 'SF Pro Display', default: 'System' }),
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#FFFFFF',
     marginTop: 4,
   },
-  seasonObjCard: {
-    backgroundColor: '#181820',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: 12,
-  },
-  seasonObjHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  seasonObjTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: -0.2,
-  },
-  seasonObjRatio: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  seasonObjBody: {
-    color: '#8B8B9A',
-    fontSize: 11,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  seasonObjProgressTrack: {
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  seasonObjProgressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  seasonObjFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  rewardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  seasonObjReward: {
-    fontSize: 11.5,
-    fontWeight: '800',
-  },
-  seasonObjDoneTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  seasonObjDoneText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  inProgressLabel: {
-    color: '#8B8B9A',
+  trophyTitle: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
     fontSize: 10.5,
-    fontWeight: '600',
+    fontWeight: '800',
+    color: '#94A3B8',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  trophySub: {
+    fontFamily: Platform.select({ ios: 'SF Pro Text', default: 'System' }),
+    fontSize: 9,
+    color: '#64748B',
+    marginTop: 1,
+    textAlign: 'center',
   },
 });
-
-export default PlayerSaisonScreen;
 

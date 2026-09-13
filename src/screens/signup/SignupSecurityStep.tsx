@@ -50,6 +50,17 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
   const { colors: c } = useSignupFlowTheme();
   const [modalLegalDoc, setModalLegalDoc] = React.useState<LegalDocumentId | null>(null);
   const styles = useMemo(() => createStyles(c), [c]);
+  const passwordChecks = useMemo(() => {
+    const p = form.password;
+    return [
+      { key: 'len', label: '10+ caractères', ok: p.length >= SIGNUP_PASSWORD_MIN },
+      { key: 'lower', label: '1 minuscule', ok: /[a-zàâäéèêëïîôùûüç]/.test(p) },
+      { key: 'upper', label: '1 majuscule', ok: /[A-ZÀÂÄÉÈÊËÏÎÔÙÛÜÇ]/.test(p) },
+      { key: 'num', label: '1 chiffre', ok: /\d/.test(p) },
+      { key: 'special', label: '1 spécial (!@#$…)', ok: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(p) },
+    ];
+  }, [form.password]);
+
   const passwordStrength =
     form.password.length > 0 ? getPasswordStrength(form.password) : null;
   const meta = form.isSanteProduct
@@ -121,9 +132,35 @@ export const SignupSecurityStep: React.FC<SignupSecurityStepProps> = ({
               />
             </StaggerReveal>
           ) : null}
-          {!form.fieldErrors.password && form.password.length > 0 ? (
+          {form.password.length > 0 ? (
+            <View style={styles.passwordChecksContainer}>
+              {passwordChecks.map((check) => (
+                <View
+                  key={check.key}
+                  style={[
+                    styles.passwordCheckItem,
+                    check.ok ? styles.passwordCheckItemOk : styles.passwordCheckItemPending,
+                  ]}
+                >
+                  <Icon
+                    name={check.ok ? 'checkmark-circle' : 'alert-circle'}
+                    size={11}
+                    color={check.ok ? '#30D158' : c.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.passwordCheckLabel,
+                      check.ok ? styles.passwordCheckLabelOk : styles.passwordCheckLabelPending,
+                    ]}
+                  >
+                    {check.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
             <Text style={styles.passwordRules}>{t('signup.security.passwordRules')}</Text>
-          ) : null}
+          )}
           <StaggerReveal index={2}>
             <AuthTextField
               label={t('signup.security.confirmPassword')}
@@ -188,6 +225,42 @@ function createStyles(c: AppColors) {
       marginTop: -spacing.xs,
       marginBottom: spacing.sm,
       lineHeight: 16,
+    },
+    passwordChecksContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 6,
+      marginBottom: spacing.sm,
+    },
+    passwordCheckItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    passwordCheckItemOk: {
+      backgroundColor: 'rgba(48, 209, 88, 0.12)',
+      borderColor: 'rgba(48, 209, 88, 0.3)',
+    },
+    passwordCheckItemPending: {
+      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+      borderColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    passwordCheckLabel: {
+      fontSize: 10,
+      fontFamily: '-apple-system',
+    },
+    passwordCheckLabelOk: {
+      color: '#30D158',
+      fontWeight: '700',
+    },
+    passwordCheckLabelPending: {
+      color: c.textMuted,
+      fontWeight: '500',
     },
     termsRow: {
       flexDirection: 'row',

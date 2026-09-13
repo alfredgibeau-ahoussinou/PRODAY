@@ -7,7 +7,9 @@ import {
   Alert,
   Platform,
   useWindowDimensions,
+  Text,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -134,6 +136,7 @@ import { ProDayMotionProvider } from './src/motion';
 import { colors, spacing } from './src/theme/designTokens';
 import { EmailVerificationScreen } from './src/screens/EmailVerificationScreen';
 import { useUnreadMessageCount } from './src/hooks/useUnreadMessages';
+import { useAndroidBackHandler } from './src/hooks/useAndroidBackHandler';
 import { AdminAppShell, AdminPreviewBanner } from './src/features/admin';
 import { SponsorAppShell } from './src/navigation/SponsorAppShell';
 import { SupporterAppShell } from './src/navigation/SupporterAppShell';
@@ -186,7 +189,12 @@ import type { CarouselPoleId } from './src/models/CarouselPole';
 import type { ProductLineId } from './src/models/ProductLine';
 import { trafficService } from './src/services/traffic.service';
 import { referralService } from './src/services/referral.service';
-import { useAndroidBackHandler } from './src/hooks/useAndroidBackHandler';
+// Production Performance & Privacy Guard: Strip console logs in production builds
+if (!__DEV__) {
+  console.log = () => {};
+  console.debug = () => {};
+  console.info = () => {};
+}
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -795,6 +803,14 @@ function AppShell() {
                 }}
               />
             ) : null}
+            {platformConfig.maintenance_mode ? (
+              <View style={styles.adminMaintenanceStatusBanner}>
+                <Ionicons name="warning" size={14} color="#000000" />
+                <Text style={styles.adminMaintenanceStatusText}>
+                  MODE MAINTENANCE ACTIF — Accès public verrouillé (Kill-Switch engagé)
+                </Text>
+              </View>
+            ) : null}
             {profile ? <ProdayNotificationBridge /> : null}
             {profile ? <ProdayBrainBridge /> : null}
             {profile ? <ProdayCalendarSyncBridge /> : null}
@@ -902,5 +918,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.md,
+  },
+  adminMaintenanceStatusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFD60A',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  adminMaintenanceStatusText: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });

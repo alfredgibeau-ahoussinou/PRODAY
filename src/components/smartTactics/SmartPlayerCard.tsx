@@ -9,13 +9,13 @@ import { radius, spacing } from '../../theme/designTokens';
 import { SMART_PITCH, SmartTacticsPressable, useSmartTacticsCoachSkin, useSmartTacticsTheme } from './smartTacticsUi';
 import { CoachText } from '../coach/coachPortalUi';
 import { Icon } from '../ui/Icon';
-import { ProDayFutCard } from '../cards/ProDayFutCard';
+import { PlayerCardReveal } from '../joueur/PlayerCardReveal';
 import { smartPlayerToProDayCard } from '../../utils/prodayFutCard';
 
 export const SmartPlayerCard: React.FC<{
   card: SmartPlayerCardData;
   compact?: boolean;
-  /** Affiche la carte passeport Fut (flip + aperçu long-press). */
+  /** Affiche la carte passeport ProDay officielle identique à la page compte. */
   fut?: boolean;
   onPress?: () => void;
 }> = ({ card, compact, fut, onPress }) => {
@@ -33,11 +33,10 @@ export const SmartPlayerCard: React.FC<{
 
   if (fut) {
     return (
-      <ProDayFutCard
+      <PlayerCardReveal
         card={smartPlayerToProDayCard(card)}
         width={compact ? 160 : 220}
-        onSelect={onPress}
-        onAction={onPress ? () => onPress() : undefined}
+        onPress={onPress}
       />
     );
   }

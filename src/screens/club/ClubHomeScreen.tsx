@@ -445,7 +445,48 @@ export function ClubHomeScreen() {
           </View>
         </View>
 
-        {/* 4. LE BRIEF EXÉCUTIF DE L'IA (APPLE INTELLIGENCE) */}
+        {/* 4. CHAMPIONNAT & CLASSEMENT FFF (ACCÈS DIRECT HUB) */}
+        <PressableSpring
+          onPress={() => shellNav?.requestNav('standings')}
+          style={[styles.standingsBannerCard, { backgroundColor: tokens.surface, borderColor: `${tokens.accent}40` }]}
+          scaleTo={0.98}
+        >
+          <View style={styles.standingsBannerTop}>
+            <View style={[styles.standingsBadge, { backgroundColor: tokens.accentSoft, borderColor: tokens.accent }]}>
+              <Icon name="trophy" size={13} color={tokens.accent} />
+              <ProDayText style={[styles.standingsBadgeText, { color: tokens.accent }]}>
+                Seniors R1 · Poule B (FFF)
+              </ProDayText>
+            </View>
+            <View style={styles.standingsPosPill}>
+              <ProDayText style={styles.standingsPosText}>1er · Zone Montée N3</ProDayText>
+            </View>
+          </View>
+
+          <View style={styles.standingsBannerMiddle}>
+            <View style={{ flex: 1 }}>
+              <ProDayText style={[styles.standingsClubName, { color: tokens.foreground }]}>
+                {clubName}
+              </ProDayText>
+              <ProDayText style={[styles.standingsSub, { color: tokens.muted }]}>
+                16 J · 12V 3N 1D · Diff +22 · 39 Pts
+              </ProDayText>
+            </View>
+            <View style={[styles.standingsPtsBadge, { backgroundColor: tokens.elevated, borderColor: `${tokens.accent}50` }]}>
+              <ProDayText style={[styles.standingsPtsNum, { color: tokens.accent }]}>39</ProDayText>
+              <ProDayText style={[styles.standingsPtsLabel, { color: tokens.muted }]}>PTS</ProDayText>
+            </View>
+          </View>
+
+          <View style={[styles.standingsBannerFooter, { borderTopColor: tokens.border }]}>
+            <ProDayText style={[styles.standingsFooterText, { color: tokens.muted }]}>
+              Voir le classement du club & explorer toutes les ligues FFF (L1, L2, N1-N3, Districts)
+            </ProDayText>
+            <Icon name="chevron-forward" size={16} color={tokens.accent} />
+          </View>
+        </PressableSpring>
+
+        {/* 5. LE BRIEF EXÉCUTIF DE L'IA (APPLE INTELLIGENCE) */}
         <View style={[styles.aiBriefCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
           <View style={styles.aiBriefHeader}>
             <View style={[styles.aiIconBox, { backgroundColor: tokens.accentSoft }]}>
@@ -893,6 +934,85 @@ const createStyles = (tokens: ClubThemeTokens) =>
     secondaryMatchBtnText: {
       ...APPLE_TYPOGRAPHY.footnote,
       fontWeight: '600',
+    },
+    standingsBannerCard: {
+      borderRadius: clubRadius.lg,
+      borderWidth: 1,
+      padding: 16,
+      gap: 12,
+      marginBottom: 16,
+    },
+    standingsBannerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    standingsBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    standingsBadgeText: {
+      ...APPLE_TYPOGRAPHY.caption1,
+      fontWeight: '700',
+    },
+    standingsPosPill: {
+      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    standingsPosText: {
+      ...APPLE_TYPOGRAPHY.caption1,
+      fontWeight: '800',
+      color: '#10B981',
+    },
+    standingsBannerMiddle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    standingsClubName: {
+      ...APPLE_TYPOGRAPHY.title3,
+      fontWeight: '800',
+      letterSpacing: -0.3,
+    },
+    standingsSub: {
+      ...APPLE_TYPOGRAPHY.footnote,
+      marginTop: 2,
+    },
+    standingsPtsBadge: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    standingsPtsNum: {
+      ...APPLE_TYPOGRAPHY.headline,
+      fontWeight: '900',
+    },
+    standingsPtsLabel: {
+      ...APPLE_TYPOGRAPHY.caption1,
+      fontWeight: '800',
+    },
+    standingsBannerFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 10,
+      borderTopWidth: 1,
+      gap: 8,
+    },
+    standingsFooterText: {
+      ...APPLE_TYPOGRAPHY.caption1,
+      flex: 1,
     },
     aiBriefCard: {
       borderRadius: clubRadius.lg,

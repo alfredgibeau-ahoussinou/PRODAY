@@ -22,6 +22,11 @@ import {
   PresidentTeamsScreen,
   PresidentVideoScreen,
 } from '../../../screens/president/PresidentSections';
+import {
+  AdminHomeScreen,
+  AdminStaffScreen,
+  AdminSystemScreen,
+} from '../../../screens/admin';
 import { PresidentMenuPane } from './PresidentMenuPane';
 import type { PresidentNavItemId } from '../navigation/presidentNavConfig';
 import type { PresidentNavResolvedItem } from '../navigation/resolvePresidentNavAccess';
@@ -34,7 +39,7 @@ export function renderPresidentPane(
 ): React.ReactNode {
   switch (navId) {
     case 'cockpit':
-      return <PresidentDashboardScreen />;
+      return <AdminHomeScreen />;
     case 'overview':
       return <PresidentOverviewScreen />;
     case 'sport':
@@ -46,7 +51,7 @@ export function renderPresidentPane(
     case 'teams':
       return <PresidentTeamsScreen />;
     case 'staff':
-      return <PresidentStaffScreen />;
+      return <AdminStaffScreen />;
     case 'sponsors':
       return <PresidentSponsorsScreen />;
     case 'communication':
@@ -66,7 +71,7 @@ export function renderPresidentPane(
     case 'ai':
       return <PresidentAiScreen />;
     case 'settings':
-      return <PresidentSettingsScreen />;
+      return <AdminSystemScreen />;
     case 'board':
       return <PresidentBoardScreen />;
     case 'season':

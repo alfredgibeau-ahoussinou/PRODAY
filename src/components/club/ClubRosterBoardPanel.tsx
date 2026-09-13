@@ -11,7 +11,7 @@ import {
 import { ProDayText } from '../ui/ProDayText';
 import { ProDaySurface } from '../ui/ProDaySurface';
 import { PressableSpring } from '../motion';
-import { ProDayFutCard } from '../cards/ProDayFutCard';
+import { PlayerCardReveal } from '../joueur/PlayerCardReveal';
 import { useAppTheme } from '../../context/ProductLineContext';
 import { clubRosterBoardService } from '../../services/clubRosterBoard.service';
 import { matchPlayersToRosterNeed } from '../../utils/clubRosterMatching';
@@ -728,7 +728,7 @@ export const ClubRosterBoardPanel: React.FC<ClubRosterBoardPanelProps> = ({
             ) : null}
             {cardPlayer ? (
               <View style={styles.cardCenter}>
-                <ProDayFutCard card={userToProDayCard(cardPlayer)} width={180} />
+                <PlayerCardReveal card={userToProDayCard(cardPlayer)} width={200} />
               </View>
             ) : null}
             <View style={styles.tabs}>

@@ -133,11 +133,16 @@ export function resolveActiveClubLeague(input: {
     };
   }
 
+  // Fallback officiel ProDay : Seniors R1 · Poule B (Ligue de Paris IDF)
+  const fallbackTeamName = input.club?.name || 'FC ProDay';
   return {
-    leagueId: null,
-    teamId: null,
-    teamName: input.club?.name || null,
-    source: null,
+    leagueId: 'r1_idf_b',
+    teamId: 'fc_proday',
+    teamName: fallbackTeamName,
+    source: 'profile',
+    districtCode: '92',
+    divisionLabel: 'Régional 1 IDF · Poule B',
+    groupLabel: 'Poule B (FFF)',
     season,
   };
 }

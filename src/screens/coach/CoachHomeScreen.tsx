@@ -68,9 +68,13 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
             <MaterialCommunityIcons name="trophy-variant" size={12} color="#0A84FF" />
             <Text style={styles.matchBadgeText}>CHAMPIONNAT R1 · J17</Text>
           </View>
+          <View style={styles.officialFeedTag}>
+            <View style={styles.officialFeedDot} />
+            <Text style={styles.officialFeedTagText}>FLUX FFF EN DIRECT</Text>
+          </View>
           <View style={styles.countdownBadge}>
-            <Feather name="clock" size={12} color="#FFFFFF" />
-            <Text style={styles.countdownText}>Dimanche · 15:00 (J-2)</Text>
+            <Feather name="clock" size={11} color="#FFFFFF" />
+            <Text style={styles.countdownText}>Dimanche 15:00</Text>
           </View>
         </View>
 
@@ -100,6 +104,19 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
           </View>
         </View>
 
+        {/* Weather & Pitch Condition Bar */}
+        <View style={styles.weatherPitchRow}>
+          <View style={styles.weatherItem}>
+            <MaterialCommunityIcons name="weather-sunny" size={14} color="#FFD700" />
+            <Text style={styles.weatherText}>18°C · Ensoleillé</Text>
+          </View>
+          <View style={styles.barDivider} />
+          <View style={styles.weatherItem}>
+            <MaterialCommunityIcons name="grass" size={14} color="#30D158" />
+            <Text style={styles.weatherText}>Pelouse Synthétique Impeccable</Text>
+          </View>
+        </View>
+
         {/* Location & Attendance Summary */}
         <View style={styles.attendanceBar}>
           <View style={styles.attendanceItem}>
@@ -118,40 +135,20 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
           </View>
         </View>
 
-        {/* Foot à 11 Starting XI Lineup Glance */}
-        <View style={styles.lineupPreviewBox}>
-          <View style={styles.lineupPreviewHeader}>
-            <View style={styles.lineupPreviewHeaderLeft}>
-              <MaterialCommunityIcons name="shield-check" size={13} color="#30D158" />
-              <Text style={styles.lineupPreviewTitle}>COMPOSITION DU MATCH · 4-3-3</Text>
-            </View>
-            <View style={styles.lineupCountBadge}>
-              <Text style={styles.lineupCountText}>11 Titulaires Prêts</Text>
+        {/* Official League Ranking Matchup Snippet */}
+        <View style={styles.rankingSnippetCard}>
+          <View style={styles.rankingSnippetLeft}>
+            <MaterialCommunityIcons name="shield-star-outline" size={16} color="#C5A059" />
+            <View>
+              <Text style={styles.rankingSnippetTitle}>Choc au Sommet · Régional 1</Text>
+              <Text style={styles.rankingSnippetDesc}>
+                1er FC ProDay (38 pts) vs 2e RC France (35 pts) · Écart : +3 pts
+              </Text>
             </View>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.lineupChipsScroll}>
-            {[
-              { num: 1, name: 'Lloris', pos: 'GK', ovr: 86 },
-              { num: 3, name: 'Saliba', pos: 'LB', ovr: 82 },
-              { num: 4, name: 'Pogba', pos: 'CB', ovr: 87 },
-              { num: 5, name: 'Diallo', pos: 'CB', ovr: 83 },
-              { num: 2, name: 'Badé', pos: 'RB', ovr: 81 },
-              { num: 8, name: 'Ruiz', pos: 'CM', ovr: 85 },
-              { num: 6, name: 'Doué', pos: 'CDM', ovr: 84 },
-              { num: 10, name: 'Cherki', pos: 'CM', ovr: 88 },
-              { num: 11, name: 'Tel', pos: 'LW', ovr: 83 },
-              { num: 9, name: 'Benali', pos: 'ST', ovr: 89 },
-              { num: 7, name: 'Mbeumo', pos: 'RW', ovr: 84 },
-            ].map((p) => (
-              <View key={p.num} style={styles.starterChip}>
-                <View style={[styles.starterPosBadge, p.pos === 'GK' && { backgroundColor: '#FF9F0A' }]}>
-                  <Text style={styles.starterPosText}>{p.pos}</Text>
-                </View>
-                <Text style={styles.starterChipName}>#{p.num} {p.name}</Text>
-                <Text style={styles.starterChipOvr}>{p.ovr}</Text>
-              </View>
-            ))}
-          </ScrollView>
+          <View style={styles.rankingBadgeProDay}>
+            <Text style={styles.rankingBadgeProDayText}>LEADER</Text>
+          </View>
         </View>
 
         {/* Single Primary Action Button */}
@@ -396,6 +393,30 @@ const styles = StyleSheet.create({
     fontFamily: '-apple-system',
     letterSpacing: 0.5,
   },
+  officialFeedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(48, 209, 88, 0.25)',
+  },
+  officialFeedDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#30D158',
+  },
+  officialFeedTagText: {
+    color: '#30D158',
+    fontSize: 8.5,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+    letterSpacing: 0.4,
+  },
   countdownBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -503,79 +524,73 @@ const styles = StyleSheet.create({
     height: 14,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
-  lineupPreviewBox: {
-    backgroundColor: '#16161F',
+  weatherPitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#181820',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.2)',
-    padding: 10,
-    marginBottom: 12,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+    gap: 10,
   },
-  lineupPreviewHeader: {
+  weatherItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  weatherText: {
+    color: '#E5E5EA',
+    fontSize: 10.5,
+    fontWeight: '600',
+    fontFamily: '-apple-system',
+  },
+  rankingSnippetCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    backgroundColor: '#16161F',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.25)',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginBottom: 12,
   },
-  lineupPreviewHeaderLeft: {
+  rankingSnippetLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 8,
+    flex: 1,
+    marginRight: 8,
   },
-  lineupPreviewTitle: {
-    color: '#FFFFFF',
-    fontSize: 10,
+  rankingSnippetTitle: {
+    color: '#FFD700',
+    fontSize: 11,
     fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  rankingSnippetDesc: {
+    color: '#8B8B9A',
+    fontSize: 10,
+    fontFamily: '-apple-system',
+    marginTop: 1,
+  },
+  rankingBadgeProDay: {
+    backgroundColor: 'rgba(197, 160, 89, 0.2)',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.4)',
+  },
+  rankingBadgeProDayText: {
+    color: '#FFD700',
+    fontSize: 9,
+    fontWeight: '900',
     fontFamily: '-apple-system',
     letterSpacing: 0.5,
-  },
-  lineupCountBadge: {
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  lineupCountText: {
-    color: '#30D158',
-    fontSize: 9.5,
-    fontWeight: '700',
-    fontFamily: '-apple-system',
-  },
-  lineupChipsScroll: {
-    gap: 6,
-    paddingVertical: 2,
-  },
-  starterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1E1E28',
-    borderRadius: 7,
-    paddingHorizontal: 7,
-    paddingVertical: 4,
-    gap: 5,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  starterPosBadge: {
-    backgroundColor: '#0A84FF',
-    borderRadius: 3,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-  },
-  starterPosText: {
-    color: '#FFFFFF',
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  starterChipName: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  starterChipOvr: {
-    color: '#FFD700',
-    fontSize: 10,
-    fontWeight: '800',
   },
   primaryCtaBtn: {
     flexDirection: 'row',

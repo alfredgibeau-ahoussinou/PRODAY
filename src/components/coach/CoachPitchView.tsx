@@ -19,384 +19,29 @@ import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CoachFutPlayerCard, FutPlayer } from './CoachFutPlayerCard';
 
-export type MatchFormatKey = '11v11' | '8v8' | '5v5' | 'futsal' | '4v4' | '3v3';
-
-export const MATCH_FORMATS_CONFIG: Record<
+export {
   MatchFormatKey,
-  {
-    name: string;
-    starterCount: number;
-    defaultFormation: string;
-    formations: string[];
-    isFutsal?: boolean;
-  }
-> = {
-  '11v11': {
-    name: 'Foot à 11',
-    starterCount: 11,
-    defaultFormation: '4-3-3',
-    formations: ['4-3-3', '4-2-3-1', '4-4-2', '3-5-2', '5-3-2'],
-  },
-  '8v8': {
-    name: 'Foot à 8',
-    starterCount: 8,
-    defaultFormation: '3-3-1',
-    formations: ['3-3-1', '3-2-2', '2-4-1', '2-3-2'],
-  },
-  '5v5': {
-    name: 'Foot à 5 (Five)',
-    starterCount: 5,
-    defaultFormation: '1-2-1',
-    formations: ['1-2-1', '2-2', '2-1-1', '3-1'],
-    isFutsal: false,
-  },
-  'futsal': {
-    name: 'Futsal 5v5',
-    starterCount: 5,
-    defaultFormation: '1-2-1',
-    formations: ['1-2-1', '2-2', '2-1-1', '3-1'],
-    isFutsal: true,
-  },
-  '4v4': {
-    name: 'Foot à 4',
-    starterCount: 4,
-    defaultFormation: '1-2-1 (4)',
-    formations: ['1-2-1 (4)', '1-1-2', '2-1-1 (4)', '2-2 (4)'],
-  },
-  '3v3': {
-    name: 'Foot à 3',
-    starterCount: 3,
-    defaultFormation: '1-2',
-    formations: ['1-2', '2-1', '1-1-1'],
-  },
-};
+  TacticalCategory,
+  PitchSlot,
+  TacticalSystem,
+  MATCH_FORMATS_CONFIG,
+  ALL_FORMATION_COORDINATES,
+  ALL_CHEMISTRY_LINKS,
+  ALL_TACTICAL_SYSTEMS,
+  TACTICAL_SYSTEMS_BY_ID,
+  DEFENSE_4_SYSTEMS,
+  DEFENSE_3_5_SYSTEMS,
+  HISTORICAL_HYBRID_SYSTEMS,
+  SMALL_SIDED_SYSTEMS,
+} from '../../constants/tacticalMatrix';
+import {
+  MatchFormatKey,
+  MATCH_FORMATS_CONFIG,
+  ALL_FORMATION_COORDINATES,
+  ALL_CHEMISTRY_LINKS,
+} from '../../constants/tacticalMatrix';
 
-export interface PitchSlot {
-  x: number; // 0 to 1
-  y: number; // 0 to 1 (0 = top / opp goal, 1 = bottom / our GK)
-  defaultPos: string;
-}
-
-// Normalized formation coordinates for all supported match formats
-export const ALL_FORMATION_COORDINATES: Record<string, PitchSlot[]> = {
-  // 1. Foot à 11
-  '4-3-3': [
-    { x: 0.50, y: 0.83, defaultPos: 'GK' },
-    { x: 0.14, y: 0.68, defaultPos: 'LB' },
-    { x: 0.38, y: 0.69, defaultPos: 'CB' },
-    { x: 0.62, y: 0.69, defaultPos: 'CB' },
-    { x: 0.86, y: 0.68, defaultPos: 'RB' },
-    { x: 0.28, y: 0.46, defaultPos: 'CM' },
-    { x: 0.50, y: 0.52, defaultPos: 'CDM' },
-    { x: 0.72, y: 0.46, defaultPos: 'CM' },
-    { x: 0.18, y: 0.20, defaultPos: 'LW' },
-    { x: 0.50, y: 0.15, defaultPos: 'ST' },
-    { x: 0.82, y: 0.20, defaultPos: 'RW' },
-  ],
-  '4-2-3-1': [
-    { x: 0.50, y: 0.83, defaultPos: 'GK' },
-    { x: 0.14, y: 0.68, defaultPos: 'LB' },
-    { x: 0.38, y: 0.69, defaultPos: 'CB' },
-    { x: 0.62, y: 0.69, defaultPos: 'CB' },
-    { x: 0.86, y: 0.68, defaultPos: 'RB' },
-    { x: 0.34, y: 0.53, defaultPos: 'CDM' },
-    { x: 0.66, y: 0.53, defaultPos: 'CDM' },
-    { x: 0.18, y: 0.34, defaultPos: 'LAM' },
-    { x: 0.50, y: 0.32, defaultPos: 'CAM' },
-    { x: 0.82, y: 0.34, defaultPos: 'RAM' },
-    { x: 0.50, y: 0.15, defaultPos: 'ST' },
-  ],
-  '4-4-2': [
-    { x: 0.50, y: 0.83, defaultPos: 'GK' },
-    { x: 0.14, y: 0.68, defaultPos: 'LB' },
-    { x: 0.38, y: 0.69, defaultPos: 'CB' },
-    { x: 0.62, y: 0.69, defaultPos: 'CB' },
-    { x: 0.86, y: 0.68, defaultPos: 'RB' },
-    { x: 0.15, y: 0.44, defaultPos: 'LM' },
-    { x: 0.38, y: 0.46, defaultPos: 'CM' },
-    { x: 0.62, y: 0.46, defaultPos: 'CM' },
-    { x: 0.85, y: 0.44, defaultPos: 'RM' },
-    { x: 0.35, y: 0.16, defaultPos: 'ST' },
-    { x: 0.65, y: 0.16, defaultPos: 'ST' },
-  ],
-  '3-5-2': [
-    { x: 0.50, y: 0.83, defaultPos: 'GK' },
-    { x: 0.26, y: 0.69, defaultPos: 'CB' },
-    { x: 0.50, y: 0.71, defaultPos: 'CB' },
-    { x: 0.74, y: 0.69, defaultPos: 'CB' },
-    { x: 0.12, y: 0.46, defaultPos: 'LWB' },
-    { x: 0.34, y: 0.50, defaultPos: 'CM' },
-    { x: 0.50, y: 0.36, defaultPos: 'CAM' },
-    { x: 0.66, y: 0.50, defaultPos: 'CM' },
-    { x: 0.88, y: 0.46, defaultPos: 'RWB' },
-    { x: 0.35, y: 0.16, defaultPos: 'ST' },
-    { x: 0.65, y: 0.16, defaultPos: 'ST' },
-  ],
-  '5-3-2': [
-    { x: 0.50, y: 0.83, defaultPos: 'GK' },
-    { x: 0.12, y: 0.66, defaultPos: 'LWB' },
-    { x: 0.31, y: 0.70, defaultPos: 'CB' },
-    { x: 0.50, y: 0.72, defaultPos: 'CB' },
-    { x: 0.69, y: 0.70, defaultPos: 'CB' },
-    { x: 0.88, y: 0.66, defaultPos: 'RWB' },
-    { x: 0.30, y: 0.45, defaultPos: 'CM' },
-    { x: 0.50, y: 0.50, defaultPos: 'CDM' },
-    { x: 0.70, y: 0.45, defaultPos: 'CM' },
-    { x: 0.35, y: 0.16, defaultPos: 'ST' },
-    { x: 0.65, y: 0.16, defaultPos: 'ST' },
-  ],
-
-  // 2. Foot à 8 (U12/U13)
-  '3-3-1': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.20, y: 0.72, defaultPos: 'LB' },
-    { x: 0.50, y: 0.75, defaultPos: 'CB' },
-    { x: 0.80, y: 0.72, defaultPos: 'RB' },
-    { x: 0.20, y: 0.46, defaultPos: 'LM' },
-    { x: 0.50, y: 0.48, defaultPos: 'CM' },
-    { x: 0.80, y: 0.46, defaultPos: 'RM' },
-    { x: 0.50, y: 0.20, defaultPos: 'ST' },
-  ],
-  '3-2-2': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.20, y: 0.72, defaultPos: 'LB' },
-    { x: 0.50, y: 0.75, defaultPos: 'CB' },
-    { x: 0.80, y: 0.72, defaultPos: 'RB' },
-    { x: 0.35, y: 0.48, defaultPos: 'CM' },
-    { x: 0.65, y: 0.48, defaultPos: 'CM' },
-    { x: 0.35, y: 0.20, defaultPos: 'ST' },
-    { x: 0.65, y: 0.20, defaultPos: 'ST' },
-  ],
-  '2-4-1': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.32, y: 0.74, defaultPos: 'CB' },
-    { x: 0.68, y: 0.74, defaultPos: 'CB' },
-    { x: 0.15, y: 0.48, defaultPos: 'LM' },
-    { x: 0.38, y: 0.50, defaultPos: 'CM' },
-    { x: 0.62, y: 0.50, defaultPos: 'CM' },
-    { x: 0.85, y: 0.48, defaultPos: 'RM' },
-    { x: 0.50, y: 0.20, defaultPos: 'ST' },
-  ],
-  '2-3-2': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.32, y: 0.74, defaultPos: 'CB' },
-    { x: 0.68, y: 0.74, defaultPos: 'CB' },
-    { x: 0.20, y: 0.48, defaultPos: 'LM' },
-    { x: 0.50, y: 0.50, defaultPos: 'CM' },
-    { x: 0.80, y: 0.48, defaultPos: 'RM' },
-    { x: 0.35, y: 0.20, defaultPos: 'ST' },
-    { x: 0.65, y: 0.20, defaultPos: 'ST' },
-  ],
-
-  // 3. Foot à 5 & Futsal
-  '1-2-1': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.50, y: 0.68, defaultPos: 'FIX' },
-    { x: 0.22, y: 0.46, defaultPos: 'AL' },
-    { x: 0.78, y: 0.46, defaultPos: 'AD' },
-    { x: 0.50, y: 0.22, defaultPos: 'PIV' },
-  ],
-  '2-2': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.30, y: 0.65, defaultPos: 'DEF' },
-    { x: 0.70, y: 0.65, defaultPos: 'DEF' },
-    { x: 0.30, y: 0.28, defaultPos: 'ATT' },
-    { x: 0.70, y: 0.28, defaultPos: 'ATT' },
-  ],
-  '2-1-1': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.30, y: 0.68, defaultPos: 'DEF' },
-    { x: 0.70, y: 0.68, defaultPos: 'DEF' },
-    { x: 0.50, y: 0.45, defaultPos: 'MIL' },
-    { x: 0.50, y: 0.22, defaultPos: 'PIV' },
-  ],
-  '3-1': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.20, y: 0.65, defaultPos: 'AL' },
-    { x: 0.50, y: 0.68, defaultPos: 'FIX' },
-    { x: 0.80, y: 0.65, defaultPos: 'AD' },
-    { x: 0.50, y: 0.22, defaultPos: 'PIV' },
-  ],
-
-  // 4. Foot à 4
-  '1-2-1 (4)': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.28, y: 0.54, defaultPos: 'MIL' },
-    { x: 0.72, y: 0.54, defaultPos: 'MIL' },
-    { x: 0.50, y: 0.24, defaultPos: 'ATT' },
-  ],
-  '1-1-2': [
-    { x: 0.50, y: 0.88, defaultPos: 'GK' },
-    { x: 0.50, y: 0.62, defaultPos: 'DEF' },
-    { x: 0.32, y: 0.28, defaultPos: 'ATT' },
-    { x: 0.68, y: 0.28, defaultPos: 'ATT' },
-  ],
-  '2-1-1 (4)': [
-    { x: 0.30, y: 0.76, defaultPos: 'DEF' },
-    { x: 0.70, y: 0.76, defaultPos: 'DEF' },
-    { x: 0.50, y: 0.50, defaultPos: 'MIL' },
-    { x: 0.50, y: 0.22, defaultPos: 'ATT' },
-  ],
-  '2-2 (4)': [
-    { x: 0.30, y: 0.72, defaultPos: 'DEF' },
-    { x: 0.70, y: 0.72, defaultPos: 'DEF' },
-    { x: 0.30, y: 0.28, defaultPos: 'ATT' },
-    { x: 0.70, y: 0.28, defaultPos: 'ATT' },
-  ],
-
-  // 5. Foot à 3
-  '1-2': [
-    { x: 0.50, y: 0.84, defaultPos: 'DEF' },
-    { x: 0.30, y: 0.28, defaultPos: 'ATT' },
-    { x: 0.70, y: 0.28, defaultPos: 'ATT' },
-  ],
-  '2-1': [
-    { x: 0.30, y: 0.74, defaultPos: 'DEF' },
-    { x: 0.70, y: 0.74, defaultPos: 'DEF' },
-    { x: 0.50, y: 0.26, defaultPos: 'ATT' },
-  ],
-  '1-1-1': [
-    { x: 0.50, y: 0.84, defaultPos: 'DEF' },
-    { x: 0.50, y: 0.52, defaultPos: 'MIL' },
-    { x: 0.50, y: 0.22, defaultPos: 'ATT' },
-  ],
-};
-
-// Chemistry Links mapping
-export const ALL_CHEMISTRY_LINKS: Record<string, [number, number][]> = {
-  // 11v11
-  '4-3-3': [
-    [0, 1], [0, 2], [0, 3], [0, 4],
-    [1, 2], [2, 3], [3, 4],
-    [1, 5], [2, 6], [3, 6], [4, 7],
-    [5, 6], [6, 7],
-    [5, 8], [6, 9], [7, 10],
-    [8, 9], [9, 10],
-  ],
-  '4-2-3-1': [
-    [0, 1], [0, 2], [0, 3], [0, 4],
-    [1, 2], [2, 3], [3, 4],
-    [1, 5], [2, 5], [3, 6], [4, 6],
-    [5, 6],
-    [5, 7], [5, 8], [6, 8], [6, 9],
-    [7, 8], [8, 9],
-    [7, 10], [8, 10], [9, 10],
-  ],
-  '4-4-2': [
-    [0, 1], [0, 2], [0, 3], [0, 4],
-    [1, 2], [2, 3], [3, 4],
-    [1, 5], [2, 6], [3, 7], [4, 8],
-    [5, 6], [6, 7], [7, 8],
-    [5, 9], [6, 9], [7, 10], [8, 10],
-    [9, 10],
-  ],
-  '3-5-2': [
-    [0, 1], [0, 2], [0, 3],
-    [1, 2], [2, 3],
-    [1, 4], [1, 5], [2, 5], [2, 7], [3, 7], [3, 8],
-    [4, 5], [5, 6], [6, 7], [7, 8],
-    [4, 9], [6, 9], [6, 10], [8, 10],
-    [9, 10],
-  ],
-  '5-3-2': [
-    [0, 1], [0, 2], [0, 3], [0, 4], [0, 5],
-    [1, 2], [2, 3], [3, 4], [4, 5],
-    [1, 6], [2, 6], [3, 7], [4, 8], [5, 8],
-    [6, 7], [7, 8],
-    [6, 9], [7, 9], [7, 10], [8, 10],
-    [9, 10],
-  ],
-
-  // 8v8
-  '3-3-1': [
-    [0, 1], [0, 2], [0, 3],
-    [1, 2], [2, 3],
-    [1, 4], [2, 5], [3, 6],
-    [4, 5], [5, 6],
-    [4, 7], [5, 7], [6, 7],
-  ],
-  '3-2-2': [
-    [0, 1], [0, 2], [0, 3],
-    [1, 2], [2, 3],
-    [1, 4], [2, 4], [2, 5], [3, 5],
-    [4, 5],
-    [4, 6], [5, 7], [6, 7],
-  ],
-  '2-4-1': [
-    [0, 1], [0, 2],
-    [1, 2],
-    [1, 3], [1, 4], [2, 5], [2, 6],
-    [3, 4], [4, 5], [5, 6],
-    [3, 7], [4, 7], [5, 7], [6, 7],
-  ],
-  '2-3-2': [
-    [0, 1], [0, 2],
-    [1, 2],
-    [1, 3], [1, 4], [2, 4], [2, 5],
-    [3, 4], [4, 5],
-    [3, 6], [4, 6], [4, 7], [5, 7],
-    [6, 7],
-  ],
-
-  // 5v5 Futsal
-  '1-2-1': [
-    [0, 1],
-    [1, 2], [1, 3],
-    [2, 3],
-    [2, 4], [3, 4],
-    [1, 4],
-  ],
-  '2-2': [
-    [0, 1], [0, 2],
-    [1, 2],
-    [1, 3], [2, 4],
-    [3, 4],
-    [1, 4], [2, 3],
-  ],
-  '2-1-1': [
-    [0, 1], [0, 2],
-    [1, 2],
-    [1, 3], [2, 3],
-    [3, 4],
-  ],
-  '3-1': [
-    [0, 1], [0, 2], [0, 3],
-    [1, 2], [2, 3],
-    [1, 4], [2, 4], [3, 4],
-  ],
-
-  // 4v4
-  '1-2-1 (4)': [
-    [0, 1], [0, 2], [1, 2], [1, 3], [2, 3],
-  ],
-  '1-1-2': [
-    [0, 1],
-    [1, 2], [1, 3],
-    [2, 3],
-  ],
-  '2-1-1 (4)': [
-    [0, 1], [0, 2], [1, 2], [2, 3],
-  ],
-  '2-2 (4)': [
-    [0, 1], [0, 2], [1, 3], [2, 3],
-  ],
-
-  // 3v3
-  '1-2': [
-    [0, 1], [0, 2],
-    [1, 2],
-  ],
-  '2-1': [
-    [0, 1],
-    [0, 2], [1, 2],
-  ],
-  '1-1-1': [
-    [0, 1],
-    [1, 2],
-  ],
-};
-
-export type FormationKey = '4-3-3' | '4-2-3-1' | '4-4-2' | '3-5-2' | '5-3-2';
+export type FormationKey = string;
 export const FORMATION_COORDINATES = ALL_FORMATION_COORDINATES;
 export const CHEMISTRY_LINKS = ALL_CHEMISTRY_LINKS;
 
@@ -417,7 +62,7 @@ export const CoachPitchView: React.FC<CoachPitchViewProps> = ({
   onSelectPlayer,
   onSwapPositions,
 }) => {
-  const [pitchLayout, setPitchLayout] = useState({ width: 340, height: 430 });
+  const [pitchLayout, setPitchLayout] = useState({ width: 340, height: 410 });
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
@@ -744,7 +389,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     backgroundColor: '#16161E',
-    paddingVertical: 10,
+    paddingVertical: 6,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
@@ -790,7 +435,7 @@ const styles = StyleSheet.create({
   },
   pitchCanvas: {
     width: '100%',
-    height: 430,
+    height: 410,
     position: 'relative',
   },
   playerCardSlot: {

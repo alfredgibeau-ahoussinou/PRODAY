@@ -245,8 +245,8 @@ export const EliteLeagueStandings: React.FC<EliteLeagueStandingsProps> = ({
     return currentLeagueData?.standings ?? [];
   }, [standingsProp, currentLeagueData]);
 
-  const displayedLeagueName = defaultLeagueName || (currentLeagueData?.name ?? '');
-  const displayedDivisionName = defaultDivisionName || (currentLeagueData?.divisionLabel ?? '');
+  const displayedLeagueName = currentLeagueData?.name || defaultLeagueName || '';
+  const displayedDivisionName = currentLeagueData?.divisionLabel || defaultDivisionName || '';
   const displayedSyncStatus = currentLeagueData?.syncStatus ?? syncStatus;
   const syncTimestampLabel = formatSyncTimestamp(currentLeagueData?.lastSyncAt);
 

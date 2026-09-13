@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -16,6 +18,10 @@ import {
   CoachPitchView,
   MatchFormatKey,
   MATCH_FORMATS_CONFIG,
+  TacticalCategory,
+  TacticalSystem,
+  ALL_TACTICAL_SYSTEMS,
+  TACTICAL_SYSTEMS_BY_ID,
 } from '../../components/coach/CoachPitchView';
 import { CoachBenchDrawer } from '../../components/coach/CoachBenchDrawer';
 
@@ -404,8 +410,56 @@ export const CoachSquadScreen: React.FC = () => {
     description: string;
   } | null>(null);
 
+  const [isTacticalModalVisible, setIsTacticalModalVisible] = useState(false);
+  const [tacticalCategory, setTacticalCategory] = useState<TacticalCategory>('all');
+  const [tacticalSearch, setTacticalSearch] = useState('');
+
+  // Guided Progressive Wizard Modal (3 Steps)
+  const [isWizardModalVisible, setIsWizardModalVisible] = useState(false);
+  const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
+  const [isFormatModalVisible, setIsFormatModalVisible] = useState(false);
+
   const formatConfig = MATCH_FORMATS_CONFIG[format];
   const targetStartersCount = formatConfig.starterCount;
+
+  const currentSystem = TACTICAL_SYSTEMS_BY_ID[formation];
+
+  const selectedPlayer = useMemo(() => {
+    if (selectedStarterId) return squad.find((p) => p.id === selectedStarterId) || null;
+    if (selectedBenchId) return squad.find((p) => p.id === selectedBenchId) || null;
+    return null;
+  }, [selectedStarterId, selectedBenchId, squad]);
+
+  const displayFormations = useMemo(() => {
+    const popularFormations = formatConfig.formations.slice(0, 5);
+    if (!popularFormations.includes(formation) && formatConfig.formations.includes(formation)) {
+      return [...popularFormations, formation];
+    }
+    return popularFormations;
+  }, [formatConfig, formation]);
+
+  const filteredSystems = useMemo(() => {
+    return ALL_TACTICAL_SYSTEMS.filter((sys) => {
+      // Category filter
+      if (tacticalCategory !== 'all') {
+        if (tacticalCategory === 'small-sided') {
+          if (sys.format === '11v11') return false;
+        } else if (sys.category !== tacticalCategory) {
+          return false;
+        }
+      }
+      // Search query filter
+      if (tacticalSearch.trim().length > 0) {
+        const query = tacticalSearch.toLowerCase().trim();
+        const matchesName = sys.name.toLowerCase().includes(query);
+        const matchesDesc = sys.description.toLowerCase().includes(query);
+        const matchesStyle = sys.style.toLowerCase().includes(query);
+        const matchesTeams = sys.famousTeams.some((t) => t.toLowerCase().includes(query));
+        return matchesName || matchesDesc || matchesStyle || matchesTeams;
+      }
+      return true;
+    });
+  }, [tacticalCategory, tacticalSearch]);
 
   const [showStartingRosterList, setShowStartingRosterList] = useState(true);
 
@@ -632,35 +686,41 @@ export const CoachSquadScreen: React.FC = () => {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. Header: Segment Tabs & Subtitle */}
+      {/* 1. Minimal Apple Header */}
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <View style={styles.matchBadgeRow}>
-              <View style={styles.matchBadge}>
-                <Text style={styles.matchBadgeText}>PROCHAIN MATCH · J17</Text>
-              </View>
-              <View style={styles.activePill}>
-                <View style={styles.activeDot} />
-                <Text style={styles.activePillText}>
-                  {formatConfig.name} · {targetStartersCount}/{targetStartersCount} Titulaires
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.headerTitle}>Composition & Terrain Tactique</Text>
-            <Text style={styles.headerSubtitle}>RC France · Dimanche 15:00 · Stade Municipal</Text>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>Composition</Text>
+            <Text style={styles.headerSubtitle}>
+              {formatConfig.name} · Dimanche 15:00 vs RC France
+            </Text>
           </View>
+          <TouchableOpacity
+            style={styles.wizardHeaderBtn}
+            onPress={() => {
+              triggerHaptic();
+              setWizardStep(1);
+              setIsWizardModalVisible(true);
+            }}
+            activeOpacity={0.85}
+          >
+            <MaterialCommunityIcons name="wizard-hat" size={13} color="#C5A059" />
+            <Text style={styles.wizardHeaderBtnText}>Mode Guidé</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Segment Switcher */}
+        {/* 2. Apple Segmented Control Bar */}
         <View style={styles.segmentBar}>
           <TouchableOpacity
             style={[styles.segmentBtn, activeTab === 'composition' && styles.segmentBtnActive]}
-            onPress={() => setActiveTab('composition')}
+            onPress={() => {
+              triggerHaptic();
+              setActiveTab('composition');
+            }}
           >
             <MaterialCommunityIcons
               name="soccer-field"
-              size={14}
+              size={13}
               color={activeTab === 'composition' ? '#FFFFFF' : '#8B8B9A'}
             />
             <Text
@@ -669,17 +729,20 @@ export const CoachSquadScreen: React.FC = () => {
                 activeTab === 'composition' && styles.segmentBtnTextActive,
               ]}
             >
-              Terrain FUT
+              Terrain
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.segmentBtn, activeTab === 'convocations' && styles.segmentBtnActive]}
-            onPress={() => setActiveTab('convocations')}
+            onPress={() => {
+              triggerHaptic();
+              setActiveTab('convocations');
+            }}
           >
             <MaterialCommunityIcons
-              name="clipboard-check-outline"
-              size={14}
+              name="clipboard-text-outline"
+              size={13}
               color={activeTab === 'convocations' ? '#FFFFFF' : '#8B8B9A'}
             />
             <Text
@@ -688,17 +751,20 @@ export const CoachSquadScreen: React.FC = () => {
                 activeTab === 'convocations' && styles.segmentBtnTextActive,
               ]}
             >
-              RSVP & Convocs
+              Feuille
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.segmentBtn, activeTab === 'classement' && styles.segmentBtnActive]}
-            onPress={() => setActiveTab('classement')}
+            onPress={() => {
+              triggerHaptic();
+              setActiveTab('classement');
+            }}
           >
             <MaterialCommunityIcons
               name="trophy-outline"
-              size={14}
+              size={13}
               color={activeTab === 'classement' ? '#FFFFFF' : '#8B8B9A'}
             />
             <Text
@@ -713,102 +779,100 @@ export const CoachSquadScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* TAB 1: COMPOSITION FUT & TERRAIN TACTIQUE */}
+      {/* TAB 1: TERRAIN FUT & DISPOSITIF TACTIQUE (APPLE SIMPLICITY) */}
       {activeTab === 'composition' && (
         <>
-          {/* Universal Consolidated Tactical Command Bar */}
-          <View style={styles.tacticalControlPanel}>
-            {/* Row 1: Format de jeu */}
-            <View style={styles.controlRow}>
-              <Text style={styles.controlLabel}>FORMAT :</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.controlScroll}>
-                {FORMAT_OPTIONS.map((fKey) => {
-                  const isSelected = format === fKey;
-                  const cfg = MATCH_FORMATS_CONFIG[fKey];
-                  return (
-                    <TouchableOpacity
-                      key={fKey}
-                      style={[styles.formatPill, isSelected && styles.formatPillActive]}
-                      onPress={() => handleSelectFormat(fKey)}
-                    >
-                      <Text style={[styles.formatPillText, isSelected && styles.formatPillTextActive]}>
-                        {cfg.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
+          {/* Apple Minimalist Tactical Command Bar (Single-Row Capsule) */}
+          <View style={styles.tacticalBarUnified}>
+            {/* Format Picker Pill */}
+            <TouchableOpacity
+              style={styles.formatPillUnified}
+              onPress={() => {
+                triggerHaptic();
+                setIsFormatModalVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="soccer" size={13} color="#C5A059" />
+              <Text style={styles.formatPillUnifiedText}>{formatConfig.name}</Text>
+              <Ionicons name="chevron-down" size={11} color="#8B8B9A" />
+            </TouchableOpacity>
 
-            {/* Row 2: Formations */}
-            <View style={styles.controlRow}>
-              <Text style={styles.controlLabel}>SYSTÈME :</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.controlScroll}>
-                {formatConfig.formations.map((fKey) => {
-                  const isActive = formation === fKey;
-                  return (
-                    <TouchableOpacity
-                      key={fKey}
-                      style={[styles.formationPill, isActive && styles.formationPillActive]}
-                      onPress={() => {
-                        triggerHaptic();
-                        setFormation(fKey);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.formationPillText,
-                          isActive && styles.formationPillTextActive,
-                        ]}
-                      >
-                        {fKey}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
+            {/* Formation / Tactical Library Capsule */}
+            <TouchableOpacity
+              style={styles.formationPillUnified}
+              onPress={() => {
+                triggerHaptic();
+                setIsTacticalModalVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="strategy" size={13} color="#C5A059" />
+              <Text style={styles.formationPillUnifiedText} numberOfLines={1}>
+                {currentSystem ? currentSystem.name : formation}
+              </Text>
+              <Ionicons name="chevron-down" size={11} color="#8B8B9A" />
+            </TouchableOpacity>
 
-            {/* Row 3: Action IA & Statut XI */}
-            <View style={styles.actionAndStatusRow}>
-              <TouchableOpacity
-                style={[styles.aiActionBtnCompact, isAiGenerating && styles.aiActionBtnLoading]}
-                onPress={generateAiLineup}
-                activeOpacity={0.85}
-                disabled={isAiGenerating}
-              >
-                {isAiGenerating ? (
-                  <ActivityIndicator size="small" color="#000000" />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="magic-staff" size={13} color="#000000" />
-                    <Text style={styles.aiActionBtnTextCompact}>
-                      Suggérer XI Optimal IA
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
+            {/* 1-Tap AI Suggestion Button */}
+            <TouchableOpacity
+              style={[styles.aiPillUnified, isAiGenerating && styles.aiPillUnifiedLoading]}
+              onPress={generateAiLineup}
+              activeOpacity={0.8}
+              disabled={isAiGenerating}
+            >
+              {isAiGenerating ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="magic-staff" size={12} color="#000000" />
+                  <Text style={styles.aiPillUnifiedText}>XI IA</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
 
-              <View style={styles.lineupStatusBadge}>
+          {/* AI Report Toast (Clean & Dismissible) */}
+          {aiReport && (
+            <View style={styles.aiReportToast}>
+              <View style={styles.aiReportToastLeft}>
                 <Ionicons name="checkmark-circle" size={13} color="#30D158" />
-                <Text style={styles.lineupStatusText}>
-                  {format === '11v11' ? 'XI COMPLET (11/11)' : `${targetStartersCount} TITULAIRES`}
+                <Text style={styles.aiReportToastText} numberOfLines={1}>
+                  {aiReport.title}
                 </Text>
               </View>
+              <TouchableOpacity onPress={() => setAiReport(null)}>
+                <Ionicons name="close" size={14} color="#8B8B9A" />
+              </TouchableOpacity>
             </View>
+          )}
 
-            {/* AI Report Card */}
-            {aiReport && (
-              <View style={styles.aiReportBox}>
-                <View style={styles.aiConfidenceBadge}>
-                  <Ionicons name="checkmark-circle" size={13} color="#30D158" />
-                  <Text style={styles.aiConfidenceText}>{aiReport.confidence}% FIABILITÉ IA</Text>
+          {/* Active Player Swap Feedback Banner (Apple Floating Notification) */}
+          {selectedPlayer && (
+            <View style={styles.activeSwapBanner}>
+              <View style={styles.activeSwapLeft}>
+                <View style={styles.swapIconHalo}>
+                  <MaterialCommunityIcons name="swap-horizontal-bold" size={14} color="#30D158" />
                 </View>
-                <Text style={styles.aiReportTitle}>{aiReport.title}</Text>
-                <Text style={styles.aiReportDesc}>{aiReport.description}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.activeSwapTitle}>Permutation en cours</Text>
+                  <Text style={styles.activeSwapDesc}>
+                    #{selectedPlayer.num} {selectedPlayer.name} ({selectedPlayer.pos}) · Touchez un joueur pour échanger
+                  </Text>
+                </View>
               </View>
-            )}
-          </View>
+              <TouchableOpacity
+                style={styles.cancelSwapBtn}
+                onPress={() => {
+                  triggerHaptic();
+                  setSelectedStarterId(null);
+                  setSelectedBenchId(null);
+                }}
+              >
+                <Text style={styles.cancelSwapText}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Interactive FIFA-Inspired Pitch View (Adapts to format) */}
           <CoachPitchView
@@ -819,118 +883,6 @@ export const CoachSquadScreen: React.FC = () => {
             onSelectPlayer={handleSelectStarter}
             onSwapPositions={handleSwapPositions}
           />
-
-          {/* Starting XI Detailed Roster Strip (Guarantees absolute clarity for Foot à 11) */}
-          <View style={styles.startingRosterCard}>
-            <TouchableOpacity
-              style={styles.startingRosterHeader}
-              onPress={() => setShowStartingRosterList(!showStartingRosterList)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.startingRosterHeaderLeft}>
-                <MaterialCommunityIcons name="clipboard-list-outline" size={16} color="#C5A059" />
-                <Text style={styles.startingRosterTitle}>
-                  {format === '11v11'
-                    ? 'Feuille de Match · XI Titulaire (11 Joueurs)'
-                    : `Feuille de Match · ${targetStartersCount} Titulaires`}
-                </Text>
-              </View>
-              <View style={styles.startingRosterHeaderRight}>
-                <View style={styles.startingRosterOvrBadge}>
-                  <Text style={styles.startingRosterOvrText}>{teamOvr} GEN</Text>
-                </View>
-                <Feather
-                  name={showStartingRosterList ? 'chevron-up' : 'chevron-down'}
-                  size={16}
-                  color="#8B8B9A"
-                />
-              </View>
-            </TouchableOpacity>
-
-            {showStartingRosterList && (
-              <View style={styles.startingRosterBody}>
-                {/* 1. Gardien */}
-                {startersByLine.gk.length > 0 && (
-                  <View style={styles.lineSection}>
-                    <Text style={styles.lineSectionTitle}>GARDIEN DE BUT ({startersByLine.gk.length})</Text>
-                    {startersByLine.gk.map((player) => (
-                      <View key={player.id} style={styles.rosterLinePlayer}>
-                        <View style={[styles.posBadgeMini, { backgroundColor: '#FF9F0A' }]}>
-                          <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
-                        </View>
-                        <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
-                        <Text style={styles.rosterPlayerName}>{player.name}</Text>
-                        <View style={styles.rosterPlayerRight}>
-                          <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
-                          <Ionicons name="checkmark-circle" size={14} color="#30D158" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                )}
-
-                {/* 2. Défense */}
-                {startersByLine.def.length > 0 && (
-                  <View style={styles.lineSection}>
-                    <Text style={styles.lineSectionTitle}>LIGNE DÉFENSIVE ({startersByLine.def.length})</Text>
-                    {startersByLine.def.map((player) => (
-                      <View key={player.id} style={styles.rosterLinePlayer}>
-                        <View style={[styles.posBadgeMini, { backgroundColor: '#0A84FF' }]}>
-                          <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
-                        </View>
-                        <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
-                        <Text style={styles.rosterPlayerName}>{player.name}</Text>
-                        <View style={styles.rosterPlayerRight}>
-                          <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
-                          <Ionicons name="checkmark-circle" size={14} color="#30D158" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                )}
-
-                {/* 3. Milieu */}
-                {startersByLine.mid.length > 0 && (
-                  <View style={styles.lineSection}>
-                    <Text style={styles.lineSectionTitle}>MILIEU DE TERRAIN ({startersByLine.mid.length})</Text>
-                    {startersByLine.mid.map((player) => (
-                      <View key={player.id} style={styles.rosterLinePlayer}>
-                        <View style={[styles.posBadgeMini, { backgroundColor: '#30D158' }]}>
-                          <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
-                        </View>
-                        <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
-                        <Text style={styles.rosterPlayerName}>{player.name}</Text>
-                        <View style={styles.rosterPlayerRight}>
-                          <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
-                          <Ionicons name="checkmark-circle" size={14} color="#30D158" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                )}
-
-                {/* 4. Attaque */}
-                {startersByLine.att.length > 0 && (
-                  <View style={styles.lineSection}>
-                    <Text style={styles.lineSectionTitle}>LIGNE D'ATTAQUE ({startersByLine.att.length})</Text>
-                    {startersByLine.att.map((player) => (
-                      <View key={player.id} style={styles.rosterLinePlayer}>
-                        <View style={[styles.posBadgeMini, { backgroundColor: '#FF453A' }]}>
-                          <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
-                        </View>
-                        <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
-                        <Text style={styles.rosterPlayerName}>{player.name}</Text>
-                        <View style={styles.rosterPlayerRight}>
-                          <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
-                          <Ionicons name="checkmark-circle" size={14} color="#30D158" />
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
 
           {/* Bench & Reserves Collapsible Drawer */}
           <CoachBenchDrawer
@@ -943,10 +895,111 @@ export const CoachSquadScreen: React.FC = () => {
         </>
       )}
 
-      {/* TAB 2: LISTE COMPLÈTE CONVOCATIONS & RSVP */}
+      {/* TAB 2: FEUILLE DE MATCH OFFICIELLE & CONVOCATIONS */}
       {activeTab === 'convocations' && (
         <>
-          {/* RSVP Barometer Bar */}
+          {/* Starting XI Partitioned Breakdown by Lines */}
+          <View style={styles.startingRosterCard}>
+            <View style={styles.startingRosterHeader}>
+              <View style={styles.startingRosterHeaderLeft}>
+                <MaterialCommunityIcons name="clipboard-list-outline" size={16} color="#C5A059" />
+                <Text style={styles.startingRosterTitle}>
+                  {format === '11v11'
+                    ? 'Feuille de Match · XI Titulaire Officiel (11 Joueurs)'
+                    : `Feuille de Match · ${targetStartersCount} Titulaires`}
+                </Text>
+              </View>
+              <View style={styles.startingRosterHeaderRight}>
+                <View style={styles.startingRosterOvrBadge}>
+                  <Text style={styles.startingRosterOvrText}>{teamOvr} GEN</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.startingRosterBody}>
+              {/* 1. Gardien */}
+              {startersByLine.gk.length > 0 && (
+                <View style={styles.lineSection}>
+                  <Text style={styles.lineSectionTitle}>GARDIEN DE BUT ({startersByLine.gk.length})</Text>
+                  {startersByLine.gk.map((player) => (
+                    <View key={player.id} style={styles.rosterLinePlayer}>
+                      <View style={[styles.posBadgeMini, { backgroundColor: '#FF9F0A' }]}>
+                        <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
+                      </View>
+                      <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
+                      <Text style={styles.rosterPlayerName}>{player.name}</Text>
+                      <View style={styles.rosterPlayerRight}>
+                        <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
+                        <Ionicons name="checkmark-circle" size={14} color="#30D158" />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* 2. Défense */}
+              {startersByLine.def.length > 0 && (
+                <View style={styles.lineSection}>
+                  <Text style={styles.lineSectionTitle}>LIGNE DÉFENSIVE ({startersByLine.def.length})</Text>
+                  {startersByLine.def.map((player) => (
+                    <View key={player.id} style={styles.rosterLinePlayer}>
+                      <View style={[styles.posBadgeMini, { backgroundColor: '#0A84FF' }]}>
+                        <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
+                      </View>
+                      <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
+                      <Text style={styles.rosterPlayerName}>{player.name}</Text>
+                      <View style={styles.rosterPlayerRight}>
+                        <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
+                        <Ionicons name="checkmark-circle" size={14} color="#30D158" />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* 3. Milieu */}
+              {startersByLine.mid.length > 0 && (
+                <View style={styles.lineSection}>
+                  <Text style={styles.lineSectionTitle}>MILIEU DE TERRAIN ({startersByLine.mid.length})</Text>
+                  {startersByLine.mid.map((player) => (
+                    <View key={player.id} style={styles.rosterLinePlayer}>
+                      <View style={[styles.posBadgeMini, { backgroundColor: '#30D158' }]}>
+                        <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
+                      </View>
+                      <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
+                      <Text style={styles.rosterPlayerName}>{player.name}</Text>
+                      <View style={styles.rosterPlayerRight}>
+                        <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
+                        <Ionicons name="checkmark-circle" size={14} color="#30D158" />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* 4. Attaque */}
+              {startersByLine.att.length > 0 && (
+                <View style={styles.lineSection}>
+                  <Text style={styles.lineSectionTitle}>LIGNE D'ATTAQUE ({startersByLine.att.length})</Text>
+                  {startersByLine.att.map((player) => (
+                    <View key={player.id} style={styles.rosterLinePlayer}>
+                      <View style={[styles.posBadgeMini, { backgroundColor: '#FF453A' }]}>
+                        <Text style={styles.posBadgeMiniText}>{player.pos}</Text>
+                      </View>
+                      <Text style={styles.rosterPlayerNum}>#{player.num}</Text>
+                      <Text style={styles.rosterPlayerName}>{player.name}</Text>
+                      <View style={styles.rosterPlayerRight}>
+                        <Text style={styles.rosterPlayerOvr}>{player.ovr} OVR</Text>
+                        <Ionicons name="checkmark-circle" size={14} color="#30D158" />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* RSVP Presence Barometer Bar */}
           <View style={styles.rsvpBarometerCard}>
             <View style={styles.rsvpBarometerTop}>
               <Text style={styles.rsvpTitle}>Baromètre de Présence Match</Text>
@@ -978,6 +1031,7 @@ export const CoachSquadScreen: React.FC = () => {
             </View>
           </View>
 
+          {/* Convocations & RSVP Interactive List */}
           <View style={styles.rosterCard}>
             <Text style={styles.rosterTitle}>Effectif Convoqué ({squad.length} joueurs)</Text>
             {squad.map((player) => (
@@ -1045,10 +1099,432 @@ export const CoachSquadScreen: React.FC = () => {
         </>
       )}
 
-      {/* TAB 3: CLASSEMENT OFFICIEL */}
+      {/* TAB 3: CLASSEMENT OFFICIEL FFF & FLUX EN DIRECT */}
       {activeTab === 'classement' && (
         <CoachStandingsTable compact={false} />
       )}
+
+      {/* CATEGORIZED TACTICAL LIBRARY MODAL (57+ SYSTEMS) */}
+      <Modal
+        visible={isTacticalModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsTacticalModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          {/* Modal Header */}
+          <View style={styles.modalHeader}>
+            <View>
+              <Text style={styles.modalTitle}>Bibliothèque Tactique</Text>
+              <Text style={styles.modalSubtitle}>
+                {filteredSystems.length} systèmes • Base mondiale ProDay
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setIsTacticalModalVisible(false)}
+            >
+              <Ionicons name="close" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Search Bar */}
+          <View style={styles.modalSearchContainer}>
+            <Ionicons name="search" size={16} color="rgba(255,255,255,0.4)" style={{ marginRight: 8 }} />
+            <TextInput
+              style={styles.modalSearchInput}
+              placeholder="Rechercher (ex: Bielsa, 3-2-4-1, Diamond, Faux 9...)"
+              placeholderTextColor="rgba(255,255,255,0.35)"
+              value={tacticalSearch}
+              onChangeText={setTacticalSearch}
+              clearButtonMode="while-editing"
+            />
+            {tacticalSearch.length > 0 && (
+              <TouchableOpacity onPress={() => setTacticalSearch('')}>
+                <Ionicons name="close-circle" size={16} color="rgba(255,255,255,0.4)" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Category Filter Chips */}
+          <View style={styles.modalCategoryRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modalCategoryScroll}>
+              {[
+                { key: 'all', label: `Tous (${ALL_TACTICAL_SYSTEMS.length})` },
+                { key: 'defense-4', label: 'Défense à 4 (19)' },
+                { key: 'defense-3-5', label: 'Défense à 3 & 5 (14)' },
+                { key: 'historical-hybrid', label: 'Historiques & Hybrides (6)' },
+                { key: 'small-sided', label: 'Formats Réduits (20)' },
+              ].map((cat) => {
+                const isSelected = tacticalCategory === cat.key;
+                return (
+                  <TouchableOpacity
+                    key={cat.key}
+                    style={[styles.catChip, isSelected && styles.catChipActive]}
+                    onPress={() => {
+                      triggerHaptic();
+                      setTacticalCategory(cat.key as TacticalCategory);
+                    }}
+                  >
+                    <Text style={[styles.catChipText, isSelected && styles.catChipTextActive]}>
+                      {cat.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Systems List */}
+          <ScrollView style={styles.modalList} contentContainerStyle={styles.modalListContent}>
+            {filteredSystems.map((sys) => {
+              const isSelected = formation === sys.id;
+              return (
+                <TouchableOpacity
+                  key={sys.id}
+                  style={[styles.tacticalCard, isSelected && styles.tacticalCardActive]}
+                  onPress={() => {
+                    triggerHaptic();
+                    if (sys.format !== format) {
+                      setFormat(sys.format);
+                    }
+                    setFormation(sys.id);
+                    setIsTacticalModalVisible(false);
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.tacticalCardHeader}>
+                    <View style={{ flex: 1, marginRight: 8 }}>
+                      <Text style={[styles.tacticalCardTitle, isSelected && styles.tacticalCardTitleActive]}>
+                        {sys.name}
+                      </Text>
+                      <View style={styles.badgeRow}>
+                        <View style={styles.formatBadge}>
+                          <Text style={styles.formatBadgeText}>{sys.categoryLabel}</Text>
+                        </View>
+                        <View style={styles.styleBadge}>
+                          <Text style={styles.styleBadgeText}>{sys.style}</Text>
+                        </View>
+                      </View>
+                    </View>
+                    {isSelected ? (
+                      <View style={styles.selectedBadge}>
+                        <Ionicons name="checkmark" size={16} color="#000000" />
+                      </View>
+                    ) : (
+                      <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.3)" />
+                    )}
+                  </View>
+
+                  <Text style={styles.tacticalCardDesc}>{sys.description}</Text>
+
+                  {sys.famousTeams && sys.famousTeams.length > 0 && (
+                    <View style={styles.famousTeamsRow}>
+                      <MaterialCommunityIcons name="trophy-outline" size={12} color="#FFD60A" style={{ marginRight: 4 }} />
+                      <Text style={styles.famousTeamsText}>
+                        {sys.famousTeams.join(' • ')}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* 3. FORMAT SELECTION MODAL (APPLE ACTION SHEET / BOTTOM SHEET) */}
+      <Modal
+        visible={isFormatModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setIsFormatModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.formatModalContainer}>
+            <View style={styles.formatModalHeader}>
+              <View>
+                <Text style={styles.formatModalTitle}>Format de Match</Text>
+                <Text style={styles.formatModalSubtitle}>Choisissez la formule de jeu</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setIsFormatModalVisible(false)}
+                style={styles.modalCloseBtn}
+              >
+                <Ionicons name="close" size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formatModalGrid}>
+              {FORMAT_OPTIONS.map((fKey) => {
+                const isSelected = format === fKey;
+                const cfg = MATCH_FORMATS_CONFIG[fKey];
+                return (
+                  <TouchableOpacity
+                    key={fKey}
+                    style={[styles.formatGridCard, isSelected && styles.formatGridCardActive]}
+                    onPress={() => {
+                      handleSelectFormat(fKey);
+                      setIsFormatModalVisible(false);
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.formatGridCardLeft}>
+                      <MaterialCommunityIcons
+                        name={cfg.isFutsal ? 'floor-plan' : 'soccer-field'}
+                        size={20}
+                        color={isSelected ? '#FFD700' : '#8B8B9A'}
+                      />
+                      <View>
+                        <Text style={[styles.formatGridCardTitle, isSelected && styles.formatGridCardTitleActive]}>
+                          {cfg.name}
+                        </Text>
+                        <Text style={styles.formatGridCardSub}>
+                          {cfg.starterCount} titulaires · {cfg.formations.length} formations
+                        </Text>
+                      </View>
+                    </View>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={18} color="#30D158" />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 4. PROGRESSIVE MATCHDAY PREPARATION WIZARD MODAL (APPLE STEP-BY-STEP) */}
+      <Modal
+        visible={isWizardModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsWizardModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          {/* Wizard Header */}
+          <View style={styles.modalHeader}>
+            <View>
+              <Text style={styles.modalTitle}>Préparation Guidée du Match</Text>
+              <Text style={styles.modalSubtitle}>
+                Étape {wizardStep}/3 · Assistant pas-à-pas ProDay
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setIsWizardModalVisible(false)}
+            >
+              <Ionicons name="close" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Stepper Progress Bar */}
+          <View style={styles.wizardStepperRow}>
+            {[
+              { step: 1, label: '1. Dispositif' },
+              { step: 2, label: '2. Titulaires' },
+              { step: 3, label: '3. Validation' },
+            ].map((s) => {
+              const isCurrent = wizardStep === s.step;
+              const isDone = wizardStep > s.step;
+              return (
+                <TouchableOpacity
+                  key={s.step}
+                  style={[styles.wizardStepChip, (isCurrent || isDone) && styles.wizardStepChipActive]}
+                  onPress={() => setWizardStep(s.step as 1 | 2 | 3)}
+                >
+                  <Text style={[styles.wizardStepText, (isCurrent || isDone) && styles.wizardStepTextActive]}>
+                    {s.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Step 1: Format & Dispositif */}
+          {wizardStep === 1 && (
+            <ScrollView style={styles.wizardContentScroll} showsVerticalScrollIndicator={false}>
+              <Text style={styles.wizardSectionTitle}>Choisissez le format de jeu :</Text>
+              <View style={styles.wizardFormatGrid}>
+                {FORMAT_OPTIONS.map((fKey) => {
+                  const cfg = MATCH_FORMATS_CONFIG[fKey];
+                  const isSelected = format === fKey;
+                  return (
+                    <TouchableOpacity
+                      key={fKey}
+                      style={[styles.wizardFormatCard, isSelected && styles.wizardFormatCardActive]}
+                      onPress={() => handleSelectFormat(fKey)}
+                    >
+                      <Text style={[styles.wizardFormatCardTitle, isSelected && styles.wizardFormatCardTitleActive]}>
+                        {cfg.name}
+                      </Text>
+                      <Text style={styles.wizardFormatCardSub}>
+                        {cfg.starterCount} titulaires · {cfg.formations.length} formations
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.wizardSectionTitle, { marginTop: 16 }]}>
+                Sélectionnez le système tactique de départ :
+              </Text>
+              <View style={styles.wizardSystemsList}>
+                {formatConfig.formations.map((fKey) => {
+                  const sys = TACTICAL_SYSTEMS_BY_ID[fKey];
+                  const isSelected = formation === fKey;
+                  return (
+                    <TouchableOpacity
+                      key={fKey}
+                      style={[styles.wizardSystemCard, isSelected && styles.wizardSystemCardActive]}
+                      onPress={() => {
+                        triggerHaptic();
+                        setFormation(fKey);
+                      }}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.wizardSystemCardName, isSelected && styles.wizardSystemCardNameActive]}>
+                          {sys ? sys.name : fKey}
+                        </Text>
+                        <Text style={styles.wizardSystemCardStyle}>
+                          {sys ? sys.style : 'Animation classique'}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <Ionicons name="checkmark-circle" size={18} color="#30D158" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          )}
+
+          {/* Step 2: Effectif Titulaire & Ajustements */}
+          {wizardStep === 2 && (
+            <ScrollView style={styles.wizardContentScroll} showsVerticalScrollIndicator={false}>
+              <View style={styles.wizardAiBanner}>
+                <MaterialCommunityIcons name="magic-staff" size={18} color="#C5A059" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.wizardAiTitle}>Optimisation IA de la Forme</Text>
+                  <Text style={styles.wizardAiDesc}>
+                    Titularise les joueurs au sommet de leur forme et préserve les joueurs fatigués.
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.wizardAiBtn}
+                  onPress={generateAiLineup}
+                  disabled={isAiGenerating}
+                >
+                  <Text style={styles.wizardAiBtnText}>Optimiser</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.wizardSectionTitle}>
+                Titulaires retenus ({starters.length}/{targetStartersCount}) :
+              </Text>
+              <View style={styles.wizardStartersGrid}>
+                {starters.map((p) => (
+                  <View key={p.id} style={styles.wizardPlayerRow}>
+                    <View style={styles.wizardPlayerPos}>
+                      <Text style={styles.wizardPlayerPosText}>{p.pos}</Text>
+                    </View>
+                    <Text style={styles.wizardPlayerName}>#{p.num} {p.name}</Text>
+                    <Text style={styles.wizardPlayerOvr}>{p.ovr} OVR</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Text style={[styles.wizardSectionTitle, { marginTop: 14 }]}>
+                Banc des remplaçants ({subs.length} joueurs disponibles) :
+              </Text>
+              <Text style={styles.wizardBenchNote}>
+                Les permutations fines peuvent s'effectuer directement sur le terrain 2D à l'issue de l'assistant.
+              </Text>
+            </ScrollView>
+          )}
+
+          {/* Step 3: Validation & Homologation */}
+          {wizardStep === 3 && (
+            <View style={styles.wizardStep3Container}>
+              <View style={styles.wizardRecapCard}>
+                <View style={styles.wizardRecapHeader}>
+                  <MaterialCommunityIcons name="shield-check" size={24} color="#30D158" />
+                  <Text style={styles.wizardRecapTitle}>Feuille de Match Prête</Text>
+                </View>
+
+                <View style={styles.wizardRecapRow}>
+                  <Text style={styles.wizardRecapLabel}>Format sélectionné :</Text>
+                  <Text style={styles.wizardRecapVal}>{formatConfig.name}</Text>
+                </View>
+
+                <View style={styles.wizardRecapRow}>
+                  <Text style={styles.wizardRecapLabel}>Système tactique :</Text>
+                  <Text style={styles.wizardRecapVal}>{currentSystem ? currentSystem.name : formation}</Text>
+                </View>
+
+                <View style={styles.wizardRecapRow}>
+                  <Text style={styles.wizardRecapLabel}>Titulaires validés :</Text>
+                  <Text style={styles.wizardRecapVal}>{starters.length} joueurs ({teamOvr} GEN)</Text>
+                </View>
+
+                <View style={styles.wizardRecapRow}>
+                  <Text style={styles.wizardRecapLabel}>Remplaçants sur le banc :</Text>
+                  <Text style={styles.wizardRecapVal}>{subs.length} joueurs</Text>
+                </View>
+
+                <View style={styles.wizardOfficialBadge}>
+                  <MaterialCommunityIcons name="check-decagram" size={14} color="#C5A059" />
+                  <Text style={styles.wizardOfficialBadgeText}>
+                    Synchronisé avec le flux FFF officiel · Homologation garantie
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.wizardConfirmFinalBtn}
+                onPress={() => {
+                  triggerHaptic();
+                  setIsWizardModalVisible(false);
+                  Alert.alert(
+                    'Feuille de Match Validée',
+                    'Le dispositif tactique et les titulaires ont été enregistrés avec succès. Le terrain 2D est actualisé.'
+                  );
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.wizardConfirmFinalBtnText}>Appliquer et Retourner au Terrain</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Wizard Footer Navigation */}
+          <View style={styles.wizardFooter}>
+            {wizardStep > 1 ? (
+              <TouchableOpacity
+                style={styles.wizardBackBtn}
+                onPress={() => setWizardStep((prev) => (prev - 1) as 1 | 2 | 3)}
+              >
+                <Feather name="arrow-left" size={14} color="#FFFFFF" />
+                <Text style={styles.wizardBackBtnText}>Précédent</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 80 }} />
+            )}
+
+            {wizardStep < 3 && (
+              <TouchableOpacity
+                style={styles.wizardNextBtn}
+                onPress={() => setWizardStep((prev) => (prev + 1) as 1 | 2 | 3)}
+              >
+                <Text style={styles.wizardNextBtnText}>Étape suivante</Text>
+                <Feather name="arrow-right" size={14} color="#000000" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -1062,84 +1538,71 @@ const styles = StyleSheet.create({
     padding: 14,
     paddingBottom: 48,
   },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
   header: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  headerTop: {
-    marginBottom: 12,
-  },
-  matchBadgeRow: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  matchBadge: {
+  wizardHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: 'rgba(197, 160, 89, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.35)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
-  matchBadgeText: {
+  wizardHeaderBtnText: {
     color: '#C5A059',
-    fontSize: 9.5,
-    fontWeight: '800',
-    fontFamily: '-apple-system',
-    letterSpacing: 0.5,
-  },
-  activePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(48, 209, 88, 0.15)',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  activeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#30D158',
-  },
-  activePillText: {
-    color: '#30D158',
-    fontSize: 9.5,
+    fontSize: 11,
     fontWeight: '700',
     fontFamily: '-apple-system',
   },
   headerTitle: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '900',
     fontFamily: '-apple-system',
     letterSpacing: -0.3,
   },
   headerSubtitle: {
     color: '#8B8B9A',
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: '-apple-system',
     marginTop: 2,
   },
   segmentBar: {
     flexDirection: 'row',
     backgroundColor: '#141418',
-    borderRadius: 12,
-    padding: 3,
+    borderRadius: 10,
+    padding: 2,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.06)',
   },
   segmentBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: 9,
+    gap: 5,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   segmentBtnActive: {
-    backgroundColor: '#1E1E26',
+    backgroundColor: '#1F1F27',
   },
   segmentBtnText: {
     color: '#8B8B9A',
@@ -1151,18 +1614,265 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
+  tacticalBarUnified: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  formatPillUnified: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#141418',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  formatPillUnifiedText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  formationPillUnified: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#141418',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  formationPillUnifiedText: {
+    color: '#FFD700',
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+    flex: 1,
+  },
+  aiPillUnified: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFD700',
+    borderRadius: 12,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+  },
+  aiPillUnifiedLoading: {
+    opacity: 0.7,
+  },
+  aiPillUnifiedText: {
+    color: '#000000',
+    fontSize: 11.5,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  aiReportToast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(48, 209, 88, 0.1)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(48, 209, 88, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 8,
+  },
+  aiReportToastLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+    marginRight: 8,
+  },
+  aiReportToastText: {
+    color: '#30D158',
+    fontSize: 10.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  formatModalContainer: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#16161E',
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  formatModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  formatModalTitle: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  formatModalSubtitle: {
+    color: '#8B8B9A',
+    fontSize: 11.5,
+    fontFamily: '-apple-system',
+    marginTop: 2,
+  },
+  formatModalGrid: {
+    gap: 8,
+  },
+  formatGridCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E1E28',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    justifyContent: 'space-between',
+  },
+  formatGridCardActive: {
+    borderColor: '#FFD700',
+    backgroundColor: 'rgba(255, 215, 0, 0.08)',
+  },
+  formatGridCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  formatGridCardTitle: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  formatGridCardTitleActive: {
+    color: '#FFD700',
+  },
+  formatGridCardSub: {
+    color: '#8B8B9A',
+    fontSize: 10.5,
+    fontFamily: '-apple-system',
+  },
   tacticalControlPanel: {
     backgroundColor: '#141418',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(197, 160, 89, 0.25)',
-    padding: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
+  popularRow: {
     marginBottom: 8,
+  },
+  activeSwapBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(48, 209, 88, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  activeSwapLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 8,
+    marginRight: 8,
+  },
+  swapIconHalo: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(48, 209, 88, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeSwapTitle: {
+    color: '#30D158',
+    fontSize: 11.5,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  activeSwapDesc: {
+    color: '#E5E5EA',
+    fontSize: 10,
+    fontWeight: '500',
+    fontFamily: '-apple-system',
+  },
+  cancelSwapBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 6,
+  },
+  cancelSwapText: {
+    color: '#FFFFFF',
+    fontSize: 10.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
   },
   controlRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 6,
+  },
+  controlRowVertical: {
+    marginBottom: 6,
+  },
+  controlHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  openLibraryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(197, 160, 89, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.3)',
+  },
+  openLibraryBtnText: {
+    color: '#C5A059',
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  morePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 7,
+    backgroundColor: 'rgba(197, 160, 89, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.35)',
+  },
+  morePillText: {
+    color: '#C5A059',
+    fontSize: 10.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
   },
   controlLabel: {
     color: '#8B8B9A',
@@ -1525,6 +2235,527 @@ const styles = StyleSheet.create({
   rsvpStatusText: {
     fontSize: 10.5,
     fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  tacticalSystemBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#141418',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.25)',
+    marginBottom: 8,
+  },
+  tacticalSystemBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    marginRight: 8,
+  },
+  tacticalSystemBannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  tacticalSystemBannerSubtitle: {
+    color: '#8B8B9A',
+    fontSize: 10,
+    fontFamily: '-apple-system',
+    marginTop: 1,
+  },
+  tacticalSystemBannerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  tacticalSystemBannerCategory: {
+    color: '#C5A059',
+    fontSize: 9.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+    textTransform: 'uppercase',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#0A0A0E',
+    paddingTop: 16,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '900',
+    fontFamily: '-apple-system',
+    letterSpacing: -0.3,
+  },
+  modalSubtitle: {
+    color: '#8B8B9A',
+    fontSize: 11.5,
+    fontFamily: '-apple-system',
+    marginTop: 2,
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1C1C24',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modalSearchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#141418',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalSearchInput: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontFamily: '-apple-system',
+    padding: 0,
+  },
+  modalCategoryRow: {
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  modalCategoryScroll: {
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  catChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: '#16161D',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  catChipActive: {
+    backgroundColor: 'rgba(197, 160, 89, 0.2)',
+    borderColor: '#C5A059',
+  },
+  catChipText: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  catChipTextActive: {
+    color: '#C5A059',
+  },
+  modalList: {
+    flex: 1,
+  },
+  modalListContent: {
+    padding: 16,
+    gap: 10,
+    paddingBottom: 40,
+  },
+  tacticalCard: {
+    backgroundColor: '#14141A',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  tacticalCardActive: {
+    backgroundColor: 'rgba(197, 160, 89, 0.08)',
+    borderColor: '#C5A059',
+  },
+  tacticalCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  tacticalCardTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  tacticalCardTitleActive: {
+    color: '#C5A059',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+    flexWrap: 'wrap',
+  },
+  formatBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  formatBadgeText: {
+    color: '#A0A0B0',
+    fontSize: 9.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  styleBadge: {
+    backgroundColor: 'rgba(10, 132, 255, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  styleBadgeText: {
+    color: '#0A84FF',
+    fontSize: 9.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  selectedBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#C5A059',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tacticalCardDesc: {
+    color: '#8B8B9A',
+    fontSize: 11.5,
+    lineHeight: 16,
+    fontFamily: '-apple-system',
+    marginTop: 4,
+  },
+  famousTeamsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  famousTeamsText: {
+    color: '#FFD60A',
+    fontSize: 10.5,
+    fontWeight: '600',
+    fontFamily: '-apple-system',
+    flex: 1,
+  },
+  wizardStepperRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  wizardStepChip: {
+    flex: 1,
+    paddingVertical: 6,
+    alignItems: 'center',
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  wizardStepChipActive: {
+    backgroundColor: 'rgba(197, 160, 89, 0.25)',
+    borderWidth: 1,
+    borderColor: '#C5A059',
+  },
+  wizardStepText: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: '-apple-system',
+  },
+  wizardStepTextActive: {
+    color: '#C5A059',
+    fontWeight: '800',
+  },
+  wizardContentScroll: {
+    flex: 1,
+    padding: 16,
+  },
+  wizardSectionTitle: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+    marginBottom: 10,
+  },
+  wizardFormatGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  wizardFormatCard: {
+    width: '48%',
+    backgroundColor: '#16161C',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 10,
+  },
+  wizardFormatCardActive: {
+    borderColor: '#C5A059',
+    backgroundColor: 'rgba(197, 160, 89, 0.12)',
+  },
+  wizardFormatCardTitle: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  wizardFormatCardTitleActive: {
+    color: '#C5A059',
+  },
+  wizardFormatCardSub: {
+    color: '#8B8B9A',
+    fontSize: 10,
+    fontFamily: '-apple-system',
+    marginTop: 2,
+  },
+  wizardSystemsList: {
+    gap: 6,
+    paddingBottom: 24,
+  },
+  wizardSystemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#16161C',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    padding: 10,
+  },
+  wizardSystemCardActive: {
+    borderColor: '#30D158',
+    backgroundColor: 'rgba(48, 209, 88, 0.1)',
+  },
+  wizardSystemCardName: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  wizardSystemCardNameActive: {
+    color: '#30D158',
+  },
+  wizardSystemCardStyle: {
+    color: '#8B8B9A',
+    fontSize: 10.5,
+    fontFamily: '-apple-system',
+  },
+  wizardAiBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(197, 160, 89, 0.12)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.25)',
+    padding: 12,
+    marginBottom: 14,
+  },
+  wizardAiTitle: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  wizardAiDesc: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10.5,
+    fontFamily: '-apple-system',
+    marginTop: 2,
+  },
+  wizardAiBtn: {
+    backgroundColor: '#C5A059',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  wizardAiBtnText: {
+    color: '#000000',
+    fontSize: 11,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  wizardStartersGrid: {
+    gap: 6,
+  },
+  wizardPlayerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#16161C',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  wizardPlayerPos: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  wizardPlayerPosText: {
+    color: '#FFD700',
+    fontSize: 9.5,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  wizardPlayerName: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: '-apple-system',
+    flex: 1,
+  },
+  wizardPlayerOvr: {
+    color: '#30D158',
+    fontSize: 11,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  wizardBenchNote: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    fontStyle: 'italic',
+    fontFamily: '-apple-system',
+  },
+  wizardStep3Container: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'space-between',
+  },
+  wizardRecapCard: {
+    backgroundColor: '#16161C',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 16,
+    gap: 12,
+  },
+  wizardRecapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  wizardRecapTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  wizardRecapRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  wizardRecapLabel: {
+    color: '#8B8B9A',
+    fontSize: 12,
+    fontFamily: '-apple-system',
+  },
+  wizardRecapVal: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  wizardOfficialBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(197, 160, 89, 0.1)',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 6,
+  },
+  wizardOfficialBadgeText: {
+    color: '#C5A059',
+    fontSize: 10.5,
+    fontWeight: '600',
+    fontFamily: '-apple-system',
+    flex: 1,
+  },
+  wizardConfirmFinalBtn: {
+    backgroundColor: '#30D158',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  wizardConfirmFinalBtnText: {
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  wizardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  wizardBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  wizardBackBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: '-apple-system',
+  },
+  wizardNextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+  wizardNextBtnText: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: '800',
     fontFamily: '-apple-system',
   },
 });

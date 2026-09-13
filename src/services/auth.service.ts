@@ -144,9 +144,11 @@ export interface SignUpInput {
 
 function mapAuthError(code: string): string {
   const messages: Record<string, string> = {
-    'auth/email-already-in-use': 'Cet email est déjà utilisé.',
-    'auth/invalid-email': 'Email invalide.',
-    'auth/weak-password': 'Mot de passe trop faible (6 caractères min.).',
+    'auth/email-already-in-use':
+      'Cet email est déjà utilisé. Connectez-vous ou réinitialisez votre mot de passe.',
+    'auth/invalid-email': 'Format d’email invalide. Vérifiez l’adresse saisie.',
+    'auth/weak-password':
+      'Mot de passe trop faible (10 caractères min., 1 majuscule, 1 chiffre, 1 caractère spécial).',
     'auth/user-not-found': 'Aucun compte avec cet email.',
     'auth/wrong-password': 'Mot de passe incorrect.',
     'auth/invalid-credential': 'Email ou mot de passe incorrect.',
@@ -301,6 +303,28 @@ async function loadProfileAfterAuth(fbUser: FirebaseAuthUser): Promise<User> {
   return profile;
 }
 
+async function createProfileWithRetry(
+  uid: string,
+  email: string,
+  role: UserRole,
+  displayName: string,
+  options: Parameters<typeof profileService.createProfile>[4],
+  maxAttempts = 3
+): Promise<User> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await profileService.createProfile(uid, email, role, displayName, options);
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxAttempts) {
+        await new Promise((r) => setTimeout(r, attempt * 500));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export const authService = {
   /** Profil Firestore après connexion Google / Apple (utilisateur Firebase déjà créé). */
   async completeProfile(
@@ -323,7 +347,7 @@ export const authService = {
       return existing;
     }
 
-    return profileService.createProfile(
+    return createProfileWithRetry(
       fb.uid,
       email,
       input.role,
@@ -344,16 +368,50 @@ export const authService = {
     const auth = getFirebaseAuth();
     if (!auth) throw new Error('Firebase non configuré');
 
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      input.email.trim(),
-      input.password
-    );
+    const cleanEmail = normalizeAuthEmail(input.email) || input.email.trim().toLowerCase();
+    const cleanPassword = input.password.trim();
+    const cleanDisplayName = input.display_name.trim();
+
+    let credUser: FirebaseAuthUser;
+    try {
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        cleanEmail,
+        cleanPassword
+      );
+      credUser = cred.user;
+    } catch (error) {
+      const code = getFirebaseAuthErrorCode(error);
+      if (code === 'auth/email-already-in-use') {
+        // Auto-healing: check if account exists without a Firestore profile (orphan account recovery)
+        try {
+          const signInCred = await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword);
+          const existingProfile = await usersService.getById(signInCred.user.uid).catch(() => null);
+          if (!existingProfile) {
+            if (__DEV__) {
+              console.info('[auth] Auto-healing orphan account without Firestore profile:', signInCred.user.uid);
+            }
+            credUser = signInCred.user;
+          } else {
+            throw new Error(
+              'Un compte actif existe déjà avec cet email. Veuillez vous connecter.'
+            );
+          }
+        } catch (signInErr) {
+          if (signInErr instanceof Error && signInErr.message.includes('Un compte actif')) {
+            throw signInErr;
+          }
+          throw error;
+        }
+      } else {
+        throw error;
+      }
+    }
 
     try {
-      await sendVerificationEmailForUser(cred.user);
+      await sendVerificationEmailForUser(credUser);
     } catch (e) {
-      markVerificationEmailResend(cred.user.uid);
+      markVerificationEmailResend(credUser.uid);
       if (__DEV__) {
         console.warn('[auth] verification email at signup:', e);
       }
@@ -361,20 +419,20 @@ export const authService = {
 
     const registrationLine: ProductLineId = input.product_line ?? 'amateur';
 
-    return profileService.createProfile(
-      cred.user.uid,
-      input.email.trim(),
+    return createProfileWithRetry(
+      credUser.uid,
+      cleanEmail,
       input.role,
-      input.display_name.trim(),
+      cleanDisplayName,
       {
-        city: input.city,
-        department: input.department,
+        city: input.city?.trim() || undefined,
+        department: input.department?.trim() || undefined,
         profile: input.profile,
         parental_settings: input.parental_settings,
         app_space: input.app_space,
         product_line: registrationLine,
-        email_verified: isBetaAccountBypassed(input.email.trim()),
-        onboarding_documents_submitted: isBetaAccountBypassed(input.email.trim()),
+        email_verified: isBetaAccountBypassed(cleanEmail),
+        onboarding_documents_submitted: isBetaAccountBypassed(cleanEmail),
       }
     );
   },

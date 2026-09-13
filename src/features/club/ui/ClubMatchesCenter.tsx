@@ -15,9 +15,10 @@ import {
 import { BlurView } from 'expo-blur';
 import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
-import type { IconName } from '../../../components/ui/iconNames';
 import { ProDayText } from '../../../components/ui/ProDayText';
 import { useClubTheme } from '../shell/ClubThemeContext';
+import { useClubShellNav } from '../shell/ClubShellNavContext';
+import { buildCertifiedSeedLeague } from '../../../services/frenchFootballStandings.service';
 import { APPLE_TYPOGRAPHY } from '../../../theme/appleTypography';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
 
@@ -137,6 +138,10 @@ export function ClubMatchesCenter({
   onSelectFixture,
 }: Props) {
   const { tokens } = useClubTheme();
+  const shellNav = useClubShellNav();
+  const poolStandings = useMemo(() => {
+    return buildCertifiedSeedLeague('r1_idf_b').standings;
+  }, []);
   const [filter, setFilter] = useState<MatchCategoryType>('all');
   const [activeTab, setActiveTab] = useState<'fixtures' | 'matrix' | 'scorers'>('fixtures');
   const [friendlyModalOpen, setFriendlyModalOpen] = useState(false);
@@ -402,12 +407,24 @@ export function ClubMatchesCenter({
       {activeTab === 'matrix' ? (
         <View style={[styles.matrixCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
           <View style={styles.matrixHeader}>
-            <ProDayText style={[styles.matrixTitle, { color: tokens.foreground }]}>
-              Régional 1 - Poule B
-            </ProDayText>
-            <ProDayText style={[styles.matrixUpdated, { color: tokens.accent }]}>
-              Synchro FFF Direct
-            </ProDayText>
+            <View>
+              <ProDayText style={[styles.matrixTitle, { color: tokens.foreground }]}>
+                Régional 1 · Poule B (FFF)
+              </ProDayText>
+              <ProDayText style={[styles.matrixUpdated, { color: tokens.accent, marginTop: 2 }]}>
+                Synchro Officielle FFF · FC ProDay 1er
+              </ProDayText>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => shellNav?.requestNav('standings')}
+              style={[styles.matrixHubBtn, { backgroundColor: tokens.accentSoft, borderColor: `${tokens.accent}40` }]}
+              activeOpacity={0.8}
+            >
+              <ProDayText style={[styles.matrixHubBtnText, { color: tokens.accent }]}>
+                Hub Complet →
+              </ProDayText>
+            </TouchableOpacity>
           </View>
 
           <View style={[styles.matrixTableRow, styles.matrixTableHead, { borderBottomColor: tokens.border }]}>
@@ -418,24 +435,78 @@ export function ClubMatchesCenter({
             <ProDayText style={[styles.colDiff, { color: tokens.muted }]}>Diff</ProDayText>
           </View>
 
-          {DEMO_STANDINGS_PREVIEW.map((row) => (
-            <View
-              key={row.rank}
-              style={[
-                styles.matrixTableRow,
-                row.team.includes('ProDay FC') && { backgroundColor: tokens.accentSoft },
-                { borderBottomColor: tokens.border },
-              ]}
-            >
-              <ProDayText style={[styles.colRank, { color: tokens.foreground }]}>{row.rank}</ProDayText>
-              <ProDayText style={[styles.colTeam, { color: tokens.foreground }]}>{row.team}</ProDayText>
-              <ProDayText style={[styles.colPts, { color: tokens.accent, fontWeight: '700' }]}>
-                {row.pts}
+          {poolStandings.map((row) => {
+            const isProDay = row.isMyTeam || row.name.toLowerCase().includes('proday');
+            return (
+              <View
+                key={row.team_id || row.rank}
+                style={[
+                  styles.matrixTableRow,
+                  isProDay && { backgroundColor: tokens.accentSoft },
+                  { borderBottomColor: tokens.border },
+                ]}
+              >
+                <ProDayText
+                  style={[
+                    styles.colRank,
+                    { color: isProDay ? tokens.accent : tokens.foreground, fontWeight: isProDay ? '800' : '600' },
+                  ]}
+                >
+                  {row.rank}
+                </ProDayText>
+                <View style={{ flex: 1, paddingRight: 6 }}>
+                  <ProDayText
+                    style={[
+                      styles.colTeam,
+                      { color: isProDay ? tokens.accent : tokens.foreground, fontWeight: isProDay ? '800' : '500' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {row.name}
+                  </ProDayText>
+                </View>
+                <ProDayText
+                  style={[
+                    styles.colPts,
+                    { color: isProDay ? tokens.accent : tokens.foreground, fontWeight: '800' },
+                  ]}
+                >
+                  {row.points}
+                </ProDayText>
+                <ProDayText style={[styles.colJ, { color: tokens.muted }]}>{row.played}</ProDayText>
+                <ProDayText
+                  style={[
+                    styles.colDiff,
+                    row.goal_diff > 0
+                      ? { color: '#10B981' }
+                      : row.goal_diff < 0
+                      ? { color: '#EF4444' }
+                      : { color: tokens.muted },
+                  ]}
+                >
+                  {row.goal_diff > 0 ? `+${row.goal_diff}` : row.goal_diff}
+                </ProDayText>
+              </View>
+            );
+          })}
+
+          {/* CTA vers toutes les ligues */}
+          <TouchableOpacity
+            onPress={() => shellNav?.requestNav('standings')}
+            style={[styles.matrixAllLeaguesCta, { backgroundColor: tokens.elevated, borderColor: `${tokens.accent}40` }]}
+            activeOpacity={0.8}
+          >
+            <Icon name="globe" size={18} color={tokens.accent} />
+            <View style={{ flex: 1 }}>
+              <ProDayText style={[styles.matrixCtaTitle, { color: tokens.foreground }]}>
+                Explorer tous les championnats de France
               </ProDayText>
-              <ProDayText style={[styles.colJ, { color: tokens.muted }]}>{row.j}</ProDayText>
-              <ProDayText style={[styles.colDiff, { color: tokens.foreground }]}>{row.diff}</ProDayText>
+              <ProDayText style={[styles.matrixCtaSub, { color: tokens.muted }]}>
+                Ligue 1, L2, N1-N3, Régionaux LPIFF & Districts (92, 93, 75…)
+              </ProDayText>
             </View>
-          ))}
+            <Icon name="chevron-forward" size={16} color={tokens.accent} />
+          </TouchableOpacity>
         </View>
       ) : null}
 
@@ -768,6 +839,33 @@ const styles = StyleSheet.create({
   colPts: { width: 45, textAlign: 'center', ...APPLE_TYPOGRAPHY.subheadline },
   colJ: { width: 35, textAlign: 'center', ...APPLE_TYPOGRAPHY.footnote },
   colDiff: { width: 45, textAlign: 'right', ...APPLE_TYPOGRAPHY.footnote },
+  matrixHubBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  matrixHubBtnText: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    fontWeight: '700',
+  },
+  matrixAllLeaguesCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: clubRadius.md,
+    borderWidth: 1,
+    gap: 10,
+    marginTop: 8,
+  },
+  matrixCtaTitle: {
+    ...APPLE_TYPOGRAPHY.subheadline,
+    fontWeight: '700',
+  },
+  matrixCtaSub: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    marginTop: 2,
+  },
   scorerRow: {
     flexDirection: 'row',
     alignItems: 'center',

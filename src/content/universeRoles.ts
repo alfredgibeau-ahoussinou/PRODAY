@@ -186,25 +186,15 @@ export function resolveSignupProductLine(
   role: UserRole,
 ): ProductLineId {
   if (role === 'sponsor' || carouselOrContextLine === 'sponsor') return 'sponsor';
-  // Coach n’appartient plus au Pôle Joueur / Amateur — toujours Staff.
-  if (
-    role === 'coach' &&
-    (carouselOrContextLine === 'amateur' ||
-      carouselOrContextLine === 'homme' ||
-      carouselOrContextLine === 'woman' ||
-      carouselOrContextLine === 'pro_player')
-  ) {
-    return 'pro_staff';
-  }
+  if (role === 'parent') return 'parent';
+  if (role === 'club') return 'pro_club';
+  if (role === 'coach') return 'pro_staff';
+  if (role === 'supporter') return 'supporter';
   if (carouselOrContextLine === 'pro_player' || carouselOrContextLine === 'pro_club' || carouselOrContextLine === 'pro_staff') {
     return carouselOrContextLine;
   }
   if (carouselOrContextLine === 'pro' || isProFamilyLine(carouselOrContextLine)) {
-    if (role === 'club') return 'pro_club';
     if (role === 'player') return 'pro_player';
-    if (role === 'coach') {
-      return 'pro_staff';
-    }
   }
   return carouselOrContextLine;
 }

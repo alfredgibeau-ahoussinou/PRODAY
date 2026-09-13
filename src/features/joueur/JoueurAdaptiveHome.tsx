@@ -1,7 +1,6 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import type { User } from '../../models/User';
-import { useTabNavigationActions } from '../../hooks/useTabNavigationActions';
-import { ElitePlayerCockpitScreen } from './ElitePlayerCockpitScreen';
+import { PlayerPortalScreen } from '../../screens/player/PlayerPortalScreen';
 
 type Props = {
   profile: User;
@@ -10,29 +9,10 @@ type Props = {
 };
 
 /**
- * Point d'entrée Pôle Joueur — délègue au cockpit ProDay Élite.
+ * Point d'entrée Pôle Joueur — monte le portail master Espace Joueur.
  */
-export function JoueurAdaptiveHome({ profile, onRefresh, refreshing }: Props) {
-  const nav = useTabNavigationActions();
-
-  const onOpenPass = useCallback(() => {
-    nav.openDashboard('tactics_coach');
-  }, [nav]);
-
-  const onOpenMatchs = useCallback(
-    () => nav.openMatchs({ homeTab: 'convocations' }),
-    [nav],
-  );
-
-  return (
-    <ElitePlayerCockpitScreen
-      profile={profile}
-      onOpenCoachAi={onOpenPass}
-      onOpenMatchs={onOpenMatchs}
-      onOpenCarpool={(eventId) =>
-        nav.openCarpool(eventId ? { eventId, chapter: 'reserver' } : undefined)
-      }
-    />
-  );
+export function JoueurAdaptiveHome({ profile }: Props) {
+  return <PlayerPortalScreen initialTab="cockpit" />;
 }
 
+export default JoueurAdaptiveHome;

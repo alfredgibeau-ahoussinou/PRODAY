@@ -1,7 +1,7 @@
 import type { AppSpaceId } from '../models/AppSpace';
 import type { UserRole } from '../models/User';
 import type { ProductLineId } from '../models/ProductLine';
-import { isRoleAllowedForProductLine } from '../content/universeRoles';
+import { isRoleAllowedForProductLine, resolveSignupProductLine } from '../content/universeRoles';
 import {
   MEDICAL_SPECIALTY_IDS,
 } from '../screens/signup/signupMedicalI18n';
@@ -283,18 +283,23 @@ export function validateRoleProFields(input: StaffValidationInput): Record<strin
   const { role, city, department, medicalSpecialty, medicalPracticeFocus, structureName, professionalHeadline } =
     input;
 
+  const isCoach = role === 'coach';
+  const cityRequired = role === 'club' || role === 'agent';
   const cityMin = role === 'club' ? 3 : 2;
-  const cityErr = validateCity(city, { required: true, minLength: cityMin });
-  if (cityErr) errs.city = cityErr;
+  if (cityRequired || city?.trim()) {
+    const cityErr = validateCity(city, { required: cityRequired, minLength: cityMin });
+    if (cityErr) errs.city = cityErr;
+  }
 
-  const deptRequired = role === 'agent' || role === 'club' || role === 'recruiter';
-  const deptErr = validateFrenchDepartment(department, { required: deptRequired });
-  if (deptErr) errs.department = deptErr;
+  const deptRequired = role === 'agent' || role === 'recruiter';
+  if (deptRequired || department?.trim()) {
+    const deptErr = validateFrenchDepartment(department, { required: deptRequired });
+    if (deptErr) errs.department = deptErr;
+  }
 
-  if (role === 'coach' || role === 'agent') {
+  if (role === 'agent') {
     if (!professionalHeadline?.trim()) {
-      errs.professionalHeadline =
-        role === 'coach' ? 'Indiquez votre diplôme ou certification' : 'Indiquez votre n° de licence';
+      errs.professionalHeadline = 'Indiquez votre n° de licence';
     }
   }
 
@@ -305,7 +310,7 @@ export function validateRoleProFields(input: StaffValidationInput): Record<strin
   }
 
   if (role === 'club' || role === 'organizer') {
-    if (!structureName?.trim() || structureName.trim().length < 2) {
+    if (structureName && structureName.trim().length > 0 && structureName.trim().length < 2) {
       errs.structureName = 'Nom de structure requis (2 caractères min.)';
     }
   }
@@ -393,16 +398,22 @@ export interface PlayerValidationInput {
 export function validatePlayerStepFields(input: PlayerValidationInput): Record<string, string> {
   const errs: Record<string, string> = {};
 
-  const positionErr = validateSelection(input.position, PLAYER_POSITIONS, 'Poste');
-  if (positionErr) errs.position = positionErr;
+  if (input.position && input.position.trim()) {
+    const positionErr = validateSelection(input.position, PLAYER_POSITIONS, 'Poste');
+    if (positionErr) errs.position = positionErr;
+  }
 
-  const categoryErr = validateSelection(input.category, input.allowedCategories, 'Catégorie');
-  if (categoryErr) errs.category = categoryErr;
+  if (input.category && input.category.trim() && input.allowedCategories?.length > 0) {
+    const categoryErr = validateSelection(input.category, input.allowedCategories, 'Catégorie');
+    if (categoryErr) errs.category = categoryErr;
+  }
 
-  const levelErr = validateSelection(input.level, PLAYER_LEVELS, 'Niveau');
-  if (levelErr) errs.level = levelErr;
+  if (input.level && input.level.trim() && (PLAYER_LEVELS as readonly string[]).includes(input.level)) {
+    const levelErr = validateSelection(input.level, PLAYER_LEVELS, 'Niveau');
+    if (levelErr) errs.level = levelErr;
+  }
 
-  const cityErr = validateCity(input.city, { required: true });
+  const cityErr = validateCity(input.city, { required: false });
   if (cityErr) errs.city = cityErr;
 
   const deptErr = validateFrenchDepartment(input.department);
@@ -517,7 +528,8 @@ export interface SignupIntegrityInput {
 export function validateSignupIntegrity(input: SignupIntegrityInput): Record<string, string> {
   const errs: Record<string, string> = {};
 
-  if (input.productLine && !isRoleAllowedForProductLine(input.role, input.productLine)) {
+  const effectiveLine = resolveSignupProductLine(input.productLine ?? 'amateur', input.role);
+  if (effectiveLine && !isRoleAllowedForProductLine(input.role, effectiveLine)) {
     errs.role = 'Ce profil n’est pas disponible sur cet univers ProDay.';
   }
 

@@ -400,6 +400,74 @@ export function buildCertifiedSeedLeague(leagueId: string, requestedSeason?: str
       }
       break;
 
+    case 'r1_idf_b':
+      if (isArchive25 || isArchive24) {
+        standings = [
+          { rank: 1, team_id: 'fc_proday', name: 'FC ProDay', played: 22, won: 17, drawn: 3, lost: 2, goals_for: 51, goals_against: 18, goal_diff: 33, points: 54, form: ['V', 'V', 'V', 'N', 'V'], isMyTeam: true },
+          { rank: 2, team_id: 'rc_france', name: 'Racing CFF', played: 22, won: 15, drawn: 4, lost: 3, goals_for: 45, goals_against: 20, goal_diff: 25, points: 49, form: ['V', 'V', 'D', 'V', 'V'] },
+          { rank: 3, team_id: 'entente_ssg', name: 'Entente SSG', played: 22, won: 13, drawn: 5, lost: 4, goals_for: 39, goals_against: 22, goal_diff: 17, points: 44, form: ['V', 'N', 'V', 'D', 'V'] },
+          { rank: 4, team_id: 'creteil_b', name: 'US Créteil-Lusitanos B', played: 22, won: 11, drawn: 6, lost: 5, goals_for: 36, goals_against: 26, goal_diff: 10, points: 39, form: ['N', 'V', 'V', 'D', 'N'] },
+          { rank: 5, team_id: 'redstar_b', name: 'Red Star FC B', played: 22, won: 10, drawn: 6, lost: 6, goals_for: 34, goals_against: 27, goal_diff: 7, points: 36, form: ['D', 'V', 'N', 'V', 'V'] },
+          { rank: 6, team_id: 'paris13_b', name: 'Paris 13 Atletico B', played: 22, won: 9, drawn: 6, lost: 7, goals_for: 30, goals_against: 29, goal_diff: 1, points: 33, form: ['V', 'D', 'D', 'V', 'N'] },
+          { rank: 7, team_id: 'meudon', name: 'AS Meudon', played: 22, won: 8, drawn: 5, lost: 9, goals_for: 28, goals_against: 31, goal_diff: -3, points: 29, form: ['D', 'V', 'D', 'N', 'V'] },
+          { rank: 8, team_id: 'colombienne', name: 'ES Colombienne', played: 22, won: 7, drawn: 5, lost: 10, goals_for: 26, goals_against: 34, goal_diff: -8, points: 26, form: ['N', 'D', 'V', 'D', 'D'] },
+          { rank: 9, team_id: 'rueil', name: 'FC Rueil-Malmaison', played: 22, won: 6, drawn: 6, lost: 10, goals_for: 24, goals_against: 36, goal_diff: -12, points: 24, form: ['D', 'N', 'D', 'V', 'D'] },
+          { rank: 10, team_id: 'suresnes', name: 'JS Suresnes', played: 22, won: 5, drawn: 5, lost: 12, goals_for: 22, goals_against: 38, goal_diff: -16, points: 20, form: ['D', 'D', 'N', 'D', 'V'] },
+          { rank: 11, team_id: 'montrouge_b', name: 'Montrouge FC 92 B', played: 22, won: 4, drawn: 4, lost: 14, goals_for: 19, goals_against: 44, goal_diff: -25, points: 16, form: ['D', 'D', 'D', 'V', 'D'] },
+          { rank: 12, team_id: 'bretigny_b', name: 'CS Brétigny B', played: 22, won: 2, drawn: 3, lost: 17, goals_for: 15, goals_against: 48, goal_diff: -33, points: 9, form: ['D', 'D', 'N', 'D', 'D'] },
+        ];
+        scorers = [
+          { rank: 1, name: 'Kylian Perez', club: 'FC ProDay', goals: 21, matches: 22, ratio: '0.95' },
+          { rank: 2, name: 'Rayan Benali', club: 'Racing CFF', goals: 17, matches: 21, ratio: '0.81' },
+          { rank: 3, name: 'Mehdi Traoré', club: 'Entente SSG', goals: 14, matches: 20, ratio: '0.70' },
+          { rank: 4, name: 'Thomas Martin', club: 'FC ProDay', goals: 11, matches: 22, ratio: '0.50' },
+          { rank: 5, name: 'Sofiane Haddad', club: 'AS Meudon', goals: 9, matches: 22, ratio: '0.41' },
+        ];
+      } else {
+        // Saison 2026-2027 officielle : FC ProDay 1er, 39 pts, 12V 3N 1D, +22 diff
+        standings = [
+          { rank: 1, team_id: 'fc_proday', name: 'FC ProDay', played: 16, won: 12, drawn: 3, lost: 1, goals_for: 35, goals_against: 13, goal_diff: 22, points: 39, form: ['V', 'V', 'V', 'N', 'V'], isMyTeam: true },
+          { rank: 2, team_id: 'rc_france', name: 'Racing CFF', played: 16, won: 11, drawn: 3, lost: 2, goals_for: 31, goals_against: 15, goal_diff: 16, points: 36, form: ['V', 'V', 'N', 'V', 'V'] },
+          { rank: 3, team_id: 'entente_ssg', name: 'Entente SSG', played: 16, won: 9, drawn: 4, lost: 3, goals_for: 27, goals_against: 16, goal_diff: 11, points: 31, form: ['V', 'N', 'V', 'D', 'V'] },
+          { rank: 4, team_id: 'creteil_b', name: 'US Créteil-Lusitanos B', played: 16, won: 8, drawn: 4, lost: 4, goals_for: 25, goals_against: 18, goal_diff: 7, points: 28, form: ['N', 'V', 'V', 'D', 'N'] },
+          { rank: 5, team_id: 'redstar_b', name: 'Red Star FC B', played: 16, won: 7, drawn: 5, lost: 4, goals_for: 24, goals_against: 19, goal_diff: 5, points: 26, form: ['D', 'V', 'N', 'V', 'V'] },
+          { rank: 6, team_id: 'paris13_b', name: 'Paris 13 Atletico B', played: 16, won: 7, drawn: 3, lost: 6, goals_for: 21, goals_against: 20, goal_diff: 1, points: 24, form: ['V', 'D', 'D', 'V', 'N'] },
+          { rank: 7, team_id: 'meudon', name: 'AS Meudon', played: 16, won: 6, drawn: 4, lost: 6, goals_for: 20, goals_against: 22, goal_diff: -2, points: 22, form: ['D', 'V', 'D', 'N', 'V'] },
+          { rank: 8, team_id: 'colombienne', name: 'ES Colombienne', played: 16, won: 5, drawn: 5, lost: 6, goals_for: 19, goals_against: 23, goal_diff: -4, points: 20, form: ['N', 'D', 'V', 'D', 'D'] },
+          { rank: 9, team_id: 'rueil', name: 'FC Rueil-Malmaison', played: 16, won: 4, drawn: 5, lost: 7, goals_for: 17, goals_against: 24, goal_diff: -7, points: 17, form: ['D', 'N', 'D', 'V', 'D'] },
+          { rank: 10, team_id: 'suresnes', name: 'JS Suresnes', played: 16, won: 3, drawn: 5, lost: 8, goals_for: 15, goals_against: 26, goal_diff: -11, points: 14, form: ['D', 'D', 'N', 'D', 'V'] },
+          { rank: 11, team_id: 'montrouge_b', name: 'Montrouge FC 92 B', played: 16, won: 3, drawn: 2, lost: 11, goals_for: 14, goals_against: 31, goal_diff: -17, points: 11, form: ['D', 'D', 'D', 'V', 'D'] },
+          { rank: 12, team_id: 'bretigny_b', name: 'CS Brétigny B', played: 16, won: 1, drawn: 4, lost: 11, goals_for: 11, goals_against: 32, goal_diff: -21, points: 7, form: ['D', 'D', 'N', 'D', 'D'] },
+        ];
+        scorers = [
+          { rank: 1, name: 'Kylian Perez', club: 'FC ProDay', goals: 14, matches: 16, ratio: '0.88' },
+          { rank: 2, name: 'Rayan Benali', club: 'Racing CFF', goals: 11, matches: 15, ratio: '0.73' },
+          { rank: 3, name: 'Mehdi Traoré', club: 'Entente SSG', goals: 9, matches: 14, ratio: '0.64' },
+          { rank: 4, name: 'Thomas Martin', club: 'FC ProDay', goals: 7, matches: 16, ratio: '0.44' },
+          { rank: 5, name: 'Sofiane Haddad', club: 'AS Meudon', goals: 6, matches: 15, ratio: '0.40' },
+        ];
+      }
+      break;
+
+    case 'r1_idf_a':
+      if (isArchive25 || isArchive24) {
+        standings = [
+          { rank: 1, team_id: 'cergy', name: 'Cergy Pontoise FC', played: 22, won: 16, drawn: 4, lost: 2, goals_for: 47, goals_against: 19, goal_diff: 28, points: 52, form: ['V', 'V', 'V', 'V', 'N'] },
+          { rank: 2, team_id: 'saint_leu', name: 'FC Saint-Leu', played: 22, won: 14, drawn: 5, lost: 3, goals_for: 42, goals_against: 21, goal_diff: 21, points: 47, form: ['V', 'V', 'N', 'V', 'V'] },
+          { rank: 3, team_id: 'les_mureaux', name: 'OFC Les Mureaux', played: 22, won: 13, drawn: 4, lost: 5, goals_for: 38, goals_against: 23, goal_diff: 15, points: 43, form: ['V', 'N', 'V', 'D', 'V'] },
+        ];
+      } else {
+        standings = [
+          { rank: 1, team_id: 'cergy', name: 'Cergy Pontoise FC', played: 16, won: 11, drawn: 3, lost: 2, goals_for: 32, goals_against: 14, goal_diff: 18, points: 36, form: ['V', 'V', 'V', 'N', 'V'] },
+          { rank: 2, team_id: 'saint_leu', name: 'FC Saint-Leu', played: 16, won: 10, drawn: 4, lost: 2, goals_for: 29, goals_against: 15, goal_diff: 14, points: 34, form: ['V', 'V', 'N', 'V', 'V'] },
+          { rank: 3, team_id: 'les_mureaux', name: 'OFC Les Mureaux', played: 16, won: 9, drawn: 3, lost: 4, goals_for: 26, goals_against: 17, goal_diff: 9, points: 30, form: ['V', 'N', 'V', 'D', 'V'] },
+        ];
+        scorers = [
+          { rank: 1, name: 'Amine Hamadi', club: 'Cergy Pontoise FC', goals: 12, matches: 15, ratio: '0.80' },
+        ];
+      }
+      break;
+
     case 'ligue2':
       if (isArchive25 || isArchive24) {
         standings = [

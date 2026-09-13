@@ -38,4 +38,9 @@ export const prodayHaptics = {
   rsvpConfirm: () => notify('success'),
   carpoolBook: () => notify('success'),
   matchGoal: () => impact('heavy'),
+  impactLight: () => impact('light'),
+  impactMedium: () => impact('medium'),
+  impactHeavy: () => impact('heavy'),
+  selection: () => impact('light'),
 };
+

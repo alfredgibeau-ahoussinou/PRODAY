@@ -34,6 +34,7 @@ import {
   AdminTournamentsPane,
 } from '../panes/AdminOpsPanes';
 import { AdminSponsorQuotesPane } from '../panes/AdminSponsorQuotesPane';
+import { AdminSystemScreen } from '../../../screens/admin';
 
 type Props = {
   section: AdminNavSectionId;
@@ -121,7 +122,7 @@ export function renderAdminPane({
     case 'recruitment':
       return <AdminRecruitmentPane />;
     case 'config':
-      return <AdminConfigPane />;
+      return <AdminSystemScreen />;
     case 'traffic':
       return <AdminTrafficPane />;
     case 'tournaments':

@@ -154,10 +154,63 @@ export const CoachStandingsTable: React.FC<Props> = ({
   onSelectTeam,
 }) => {
   const [filter, setFilter] = useState<'all' | 'home' | 'away'>('all');
+  const [isAutoSync, setIsAutoSync] = useState(true);
+  const [lastSyncTime, setLastSyncTime] = useState('À l’instant');
+  const [manualOverrideActive, setManualOverrideActive] = useState(false);
+
   const rows = compact ? data.slice(0, 5) : data;
+
+  const toggleSyncMode = () => {
+    setManualOverrideActive(!manualOverrideActive);
+    setIsAutoSync(manualOverrideActive);
+  };
 
   return (
     <View style={styles.card}>
+      {/* Official Automated League Feed Status Bar (Apple Style) */}
+      {!compact && (
+        <View style={styles.officialFeedBanner}>
+          <View style={styles.officialFeedLeft}>
+            <View style={[styles.liveSyncDot, manualOverrideActive && styles.liveSyncDotManual]} />
+            <View>
+              <Text style={styles.officialFeedTitle}>
+                {manualOverrideActive ? 'Mode Manuel Actif (Contestation)' : 'Flux FFF / District Officiel en Direct'}
+              </Text>
+              <Text style={styles.officialFeedSubtitle}>
+                {manualOverrideActive
+                  ? 'Modifications locales autorisées · Synchronisation suspendue'
+                  : `API FFF Synchronisée · Résultats homologués (${lastSyncTime})`}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.overrideBtn, manualOverrideActive && styles.overrideBtnActive]}
+            onPress={toggleSyncMode}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons
+              name={manualOverrideActive ? 'sync-alert' : 'shield-sync-outline'}
+              size={13}
+              color={manualOverrideActive ? '#FF9F0A' : '#30D158'}
+            />
+            <Text style={[styles.overrideBtnText, manualOverrideActive && styles.overrideBtnTextActive]}>
+              {manualOverrideActive ? 'Revenir Auto' : 'Forçage Manuel'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Latest Official Validated Match Strip */}
+      {!compact && (
+        <View style={styles.latestMatchStrip}>
+          <MaterialCommunityIcons name="check-decagram" size={14} color="#C5A059" />
+          <Text style={styles.latestMatchText}>
+            Dernier résultat validé FFF : <Text style={styles.latestMatchBold}>FC ProDay 3 - 1 AS Montferrand</Text> (J16)
+          </Text>
+        </View>
+      )}
+
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <MaterialCommunityIcons name="trophy-outline" size={18} color="#C5A059" />
@@ -309,12 +362,100 @@ export const CoachStandingsTable: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#141418',
-    borderRadius: 16,
+    backgroundColor: '#121217',
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 14,
+    padding: 16,
     marginVertical: 8,
+  },
+  officialFeedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  officialFeedLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  liveSyncDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#30D158',
+    marginRight: 8,
+  },
+  liveSyncDotManual: {
+    backgroundColor: '#FF9F0A',
+  },
+  officialFeedTitle: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  officialFeedSubtitle: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 10,
+    fontWeight: '500',
+    fontFamily: '-apple-system',
+    marginTop: 1,
+  },
+  overrideBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(48, 209, 88, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(48, 209, 88, 0.25)',
+  },
+  overrideBtnActive: {
+    backgroundColor: 'rgba(255, 159, 10, 0.12)',
+    borderColor: 'rgba(255, 159, 10, 0.25)',
+  },
+  overrideBtnText: {
+    color: '#30D158',
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  overrideBtnTextActive: {
+    color: '#FF9F0A',
+  },
+  latestMatchStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(197, 160, 89, 0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 14,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.18)',
+  },
+  latestMatchText: {
+    color: '#E5E5EA',
+    fontSize: 11,
+    fontWeight: '500',
+    fontFamily: '-apple-system',
+    flex: 1,
+  },
+  latestMatchBold: {
+    color: '#C5A059',
+    fontWeight: '700',
   },
   header: {
     flexDirection: 'row',

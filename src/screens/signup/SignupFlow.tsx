@@ -27,6 +27,7 @@ import { SignupAccountStep } from './SignupAccountStep';
 import { SignupSecurityStep } from './SignupSecurityStep';
 import { SignupParentalStep } from './SignupParentalStep';
 import { SignupSuccessStep } from './SignupSuccessStep';
+import { SignupErrorBoundary } from './SignupErrorBoundary';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES_REQUIRING_VERIFICATION } from '../../models/User';
 import type { ProductLineId } from '../../models/ProductLine';
@@ -262,14 +263,16 @@ const SignupFlowInner: React.FC<SignupFlowInnerProps> = ({
 
   return (
     <View style={styles.root}>
-      <Animated.View
-        key={form.currentPage}
-        entering={pageEntering}
-        exiting={pageExiting}
-        style={styles.page}
-      >
-        {content}
-      </Animated.View>
+      <SignupErrorBoundary onClose={onClose}>
+        <Animated.View
+          key={form.currentPage}
+          entering={pageEntering}
+          exiting={pageExiting}
+          style={styles.page}
+        >
+          {content}
+        </Animated.View>
+      </SignupErrorBoundary>
     </View>
   );
 };
@@ -293,7 +296,11 @@ const SignupFlowWithTheme: React.FC<SignupFlowProps> = (props) => {
   );
 };
 
-export const SignupFlow: React.FC<SignupFlowProps> = (props) => <SignupFlowWithTheme {...props} />;
+export const SignupFlow: React.FC<SignupFlowProps> = (props) => (
+  <SignupErrorBoundary onClose={props.onClose}>
+    <SignupFlowWithTheme {...props} />
+  </SignupErrorBoundary>
+);
 
 const styles = StyleSheet.create({
   root: {

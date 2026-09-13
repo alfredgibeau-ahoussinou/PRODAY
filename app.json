@@ -25,14 +25,14 @@
         "applinks:www.proday75.fr"
       ],
       "entitlements": {
-        "aps-environment": "development",
+        "aps-environment": "production",
         "keychain-access-groups": ["$(AppIdentifierPrefix)com.proday.app"]
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"],
         "NSCameraUsageDescription": "ProDay utilise la caméra pour filmer vos reels, capturer des clips match et la vérification d’identité.",
-        "NSMicrophoneUsageDescription": "ProDay utilise le micro pour filmer vos reels et les clips vidéo.",
+        "NSMicrophoneUsageDescription": "ProDay utilise le micro pour enregistrer vos notes vocales de scouting en direct de match, filmer vos reels et capturer des vidéos sportives.",
         "NSPhotoLibraryUsageDescription": "ProDay accède à vos photos pour votre avatar, votre galerie, vos reels et l’envoi de justificatifs (identité, diplômes).",
         "NSLocationWhenInUseUsageDescription": "ProDay utilise votre position pour les points de rendez-vous covoiturage et pour partager votre position en direct avec les passagers pendant un trajet en cours.",
         "NSHealthShareUsageDescription": "ProDay lit vos pas, sommeil et fréquence cardiaque pour affiner votre état santé sportif.",

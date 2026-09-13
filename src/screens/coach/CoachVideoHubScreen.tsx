@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 interface VideoClip {
   id: string;
@@ -31,7 +32,16 @@ export const CoachVideoHubScreen: React.FC = () => {
   const [isCasting, setIsCasting] = useState(false);
   const [selectedTool, setSelectedTool] = useState<'spotlight' | 'distance' | 'arrow'>('spotlight');
 
+  const triggerHaptic = () => {
+    try {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {
+      // ignore
+    }
+  };
+
   const toggleCasting = () => {
+    triggerHaptic();
     setIsCasting(!isCasting);
     if (!isCasting) {
       Alert.alert(
@@ -66,7 +76,11 @@ export const CoachVideoHubScreen: React.FC = () => {
       <View style={styles.segmentBar}>
         <TouchableOpacity
           style={[styles.segmentBtn, activeTab === 'causerie' && styles.segmentBtnActive]}
-          onPress={() => setActiveTab('causerie')}
+          activeOpacity={0.8}
+          onPress={() => {
+            triggerHaptic();
+            setActiveTab('causerie');
+          }}
         >
           <Text style={[styles.segmentBtnText, activeTab === 'causerie' && styles.segmentBtnTextActive]}>
             Causerie Vestiaire
@@ -74,7 +88,11 @@ export const CoachVideoHubScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.segmentBtn, activeTab === 'clips' && styles.segmentBtnActive]}
-          onPress={() => setActiveTab('clips')}
+          activeOpacity={0.8}
+          onPress={() => {
+            triggerHaptic();
+            setActiveTab('clips');
+          }}
         >
           <Text style={[styles.segmentBtnText, activeTab === 'clips' && styles.segmentBtnTextActive]}>
             Smart Highlights ({clips.length})
@@ -82,7 +100,11 @@ export const CoachVideoHubScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.segmentBtn, activeTab === 'telestration' && styles.segmentBtnActive]}
-          onPress={() => setActiveTab('telestration')}
+          activeOpacity={0.8}
+          onPress={() => {
+            triggerHaptic();
+            setActiveTab('telestration');
+          }}
         >
           <Text style={[styles.segmentBtnText, activeTab === 'telestration' && styles.segmentBtnTextActive]}>
             Telestration Pro
@@ -166,7 +188,11 @@ export const CoachVideoHubScreen: React.FC = () => {
 
               <TouchableOpacity
                 style={styles.clipShareBtn}
-                onPress={() => Alert.alert('Extrait Partagé', `Clip "${clip.title}" envoyé au groupe Joueurs.`)}
+                activeOpacity={0.8}
+                onPress={() => {
+                  triggerHaptic();
+                  Alert.alert('Extrait Partagé', `Clip "${clip.title}" envoyé au groupe Joueurs.`);
+                }}
               >
                 <Feather name="share-2" size={16} color="#0A84FF" />
               </TouchableOpacity>
@@ -186,7 +212,11 @@ export const CoachVideoHubScreen: React.FC = () => {
           <View style={styles.telestrationToolbar}>
             <TouchableOpacity
               style={[styles.teleBtn, selectedTool === 'spotlight' && styles.teleBtnActive]}
-              onPress={() => setSelectedTool('spotlight')}
+              activeOpacity={0.8}
+              onPress={() => {
+                triggerHaptic();
+                setSelectedTool('spotlight');
+              }}
             >
               <MaterialCommunityIcons name="flashlight" size={16} color={selectedTool === 'spotlight' ? '#C5A059' : '#8B8B9A'} />
               <Text style={[styles.teleBtnText, selectedTool === 'spotlight' && styles.teleBtnTextActive]}>Spotlight Joueur</Text>
@@ -194,7 +224,11 @@ export const CoachVideoHubScreen: React.FC = () => {
 
             <TouchableOpacity
               style={[styles.teleBtn, selectedTool === 'distance' && styles.teleBtnActive]}
-              onPress={() => setSelectedTool('distance')}
+              activeOpacity={0.8}
+              onPress={() => {
+                triggerHaptic();
+                setSelectedTool('distance');
+              }}
             >
               <MaterialCommunityIcons name="ruler" size={16} color={selectedTool === 'distance' ? '#30D158' : '#8B8B9A'} />
               <Text style={[styles.teleBtnText, selectedTool === 'distance' && styles.teleBtnTextActive]}>Mesure Distance</Text>
@@ -202,7 +236,11 @@ export const CoachVideoHubScreen: React.FC = () => {
 
             <TouchableOpacity
               style={[styles.teleBtn, selectedTool === 'arrow' && styles.teleBtnActive]}
-              onPress={() => setSelectedTool('arrow')}
+              activeOpacity={0.8}
+              onPress={() => {
+                triggerHaptic();
+                setSelectedTool('arrow');
+              }}
             >
               <MaterialCommunityIcons name="ray-start-arrow" size={16} color={selectedTool === 'arrow' ? '#0A84FF' : '#8B8B9A'} />
               <Text style={[styles.teleBtnText, selectedTool === 'arrow' && styles.teleBtnTextActive]}>Vecteur Course</Text>

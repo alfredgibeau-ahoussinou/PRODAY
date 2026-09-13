@@ -8,6 +8,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { AuthScreen } from '../screens/AuthScreen';
+import { AppErrorBoundary } from '../components/AppErrorBoundary';
 import type { AuthIntent } from '../context/TabNavigationContext';
 import type { UserRole } from '../models/User';
 import type { CarouselPoleId } from '../models/CarouselPole';
@@ -124,14 +125,16 @@ export function AuthOverlayHost({
       accessibilityViewIsModal
       accessibilityLabel="Connexion"
     >
-      <AuthScreen
-        key={`${intent}-${initialPole ?? 'default'}`}
-        initialIntent={intent}
-        initialPole={initialPole}
-        signupProductLine={signupProductLine}
-        signupInitialRole={signupInitialRole}
-        onDismiss={handleDismiss}
-      />
+      <AppErrorBoundary>
+        <AuthScreen
+          key={`${intent}-${initialPole ?? 'default'}`}
+          initialIntent={intent}
+          initialPole={initialPole}
+          signupProductLine={signupProductLine}
+          signupInitialRole={signupInitialRole}
+          onDismiss={handleDismiss}
+        />
+      </AppErrorBoundary>
     </Animated.View>
   );
 }

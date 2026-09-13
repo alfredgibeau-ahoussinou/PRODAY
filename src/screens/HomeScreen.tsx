@@ -124,7 +124,7 @@ export const HomeScreen: React.FC = () => {
     if (isRetiredUserRole(profile.role)) {
       return <RetiredRoleScreen />;
     }
-    if (isAmateurPlayer) {
+    if (isAmateurPlayer || profile.role === 'player') {
       return (
         <AmateurPlayerHomeDashboard
           profile={profile}

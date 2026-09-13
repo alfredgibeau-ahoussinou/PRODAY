@@ -21,6 +21,7 @@ import { CoachSquadScreen } from './CoachSquadScreen';
 import { CoachLiveMatchCenterScreen } from './CoachLiveMatchCenterScreen';
 import { CoachWorkloadHealthScreen } from './CoachWorkloadHealthScreen';
 import { CoachScoutingGrowthScreen } from './CoachScoutingGrowthScreen';
+import { CoachMessagingScreen } from './CoachMessagingScreen';
 
 const COACH_CHAPTER_ORDER: CoachPortalChapterId[] = [
   'cockpit',
@@ -50,7 +51,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
   const shellNav = useCoachShellNav();
   const styles = useCoachThemedStyles(createStyles);
   const [chapterState, setChapterState] = useState<CoachPortalChapterId>(
-    chapterProp ?? 'cockpit',
+    chapterProp ?? 'effectif',
   );
   const chapter = chapterProp ?? chapterState;
   const setChapter = (id: CoachPortalChapterId) => {
@@ -100,7 +101,7 @@ export const CoachPortalScreen: React.FC<CoachPortalScreenProps> = ({
           {chapter === 'effectif' ? <CoachSquadScreen /> : null}
           {chapter === 'matchs' ? <CoachLiveMatchCenterScreen /> : null}
           {chapter === 'performance' ? <CoachWorkloadHealthScreen /> : null}
-          {chapter === 'communication' ? <CoachScoutingGrowthScreen /> : null}
+          {chapter === 'communication' ? <CoachMessagingScreen /> : null}
         </AnimatedRouteContent>
       </View>
     </View>

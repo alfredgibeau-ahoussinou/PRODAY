@@ -107,6 +107,9 @@ export function isPlatformFeatureEnabled(
   flags: PlatformFeatureFlags,
   key: PlatformFeatureFlagKey,
 ): boolean {
+  if (key === 'registration_open') {
+    return flags[key] !== false;
+  }
   return flags[key] === true;
 }
 

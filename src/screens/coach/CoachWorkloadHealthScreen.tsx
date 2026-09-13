@@ -160,6 +160,41 @@ export const CoachWorkloadHealthScreen: React.FC = () => {
             <Text style={styles.kpiSub}>Optimal pour R1</Text>
           </View>
         </View>
+
+        {/* Morning Check-in Overview (Apple Health Style) */}
+        <View style={styles.morningCheckinCard}>
+          <View style={styles.morningHeaderRow}>
+            <View style={styles.morningHeaderLeft}>
+              <MaterialCommunityIcons name="weather-sunset-up" size={16} color="#FF9F0A" />
+              <Text style={styles.morningTitle}>Morning Check-In Équipe · Ce Matin</Text>
+            </View>
+            <View style={styles.morningBadge}>
+              <Text style={styles.morningBadgeText}>18/18 Répondus</Text>
+            </View>
+          </View>
+          <View style={styles.morningPillsRow}>
+            <View style={styles.morningPill}>
+              <Feather name="moon" size={13} color="#0A84FF" />
+              <Text style={styles.morningPillVal}>7.8h</Text>
+              <Text style={styles.morningPillLabel}>Sommeil</Text>
+            </View>
+            <View style={styles.morningPill}>
+              <MaterialCommunityIcons name="arm-flex-outline" size={14} color="#30D158" />
+              <Text style={styles.morningPillVal}>Faible</Text>
+              <Text style={styles.morningPillLabel}>Courbatures</Text>
+            </View>
+            <View style={styles.morningPill}>
+              <Ionicons name="battery-charging-outline" size={14} color="#30D158" />
+              <Text style={styles.morningPillVal}>89%</Text>
+              <Text style={styles.morningPillLabel}>Énergie</Text>
+            </View>
+            <View style={styles.morningPill}>
+              <MaterialCommunityIcons name="water-outline" size={14} color="#0A84FF" />
+              <Text style={styles.morningPillVal}>Optimal</Text>
+              <Text style={styles.morningPillLabel}>Hydratation</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       {/* 2. AI Workload Auto-Adjuster Banner (Innovation) */}
@@ -419,6 +454,70 @@ const styles = StyleSheet.create({
     color: '#636366',
     fontSize: 10,
     fontFamily: '-apple-system',
+  },
+  morningCheckinCard: {
+    backgroundColor: '#181822',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+    marginTop: 12,
+  },
+  morningHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  morningHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  morningTitle: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  morningBadge: {
+    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  morningBadgeText: {
+    color: '#30D158',
+    fontSize: 9.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  morningPillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+  },
+  morningPill: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#20202C',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  morningPillVal: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+    marginTop: 2,
+  },
+  morningPillLabel: {
+    color: '#8B8B9A',
+    fontSize: 8.5,
+    fontFamily: '-apple-system',
+    marginTop: 1,
   },
   autoAdjustBanner: {
     backgroundColor: '#141418',

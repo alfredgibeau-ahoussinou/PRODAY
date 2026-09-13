@@ -119,6 +119,15 @@ export const APPLE_TYPOGRAPHY = {
     letterSpacing: 0.2,
   } as TextStyle,
 
+  /** Badges ultra-compacts et micro-labels HIG Apple */
+  caption2: {
+    fontFamily: APPLE_FONT_STACK.system,
+    fontSize: 10,
+    fontWeight: '600',
+    lineHeight: 13,
+    letterSpacing: 0.2,
+  } as TextStyle,
+
   /** Sur-titres en majuscules (ex: "SAISON 2026/2027") */
   eyebrow: {
     fontFamily: APPLE_FONT_STACK.system,

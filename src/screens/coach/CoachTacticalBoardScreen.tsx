@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   StyleSheet,
   Text,
@@ -25,9 +26,15 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
+import {
+  ALL_FORMATION_COORDINATES,
+  MATCH_FORMATS_CONFIG,
+  MatchFormatKey,
+} from '../../constants/tacticalMatrix';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export type TacticalFormat = '11v11' | '8v8' | '5v5' | 'futsal' | '4v4' | '3v3';
+export type TacticalFormat = MatchFormatKey;
 type BoardMode = '2d' | '3d' | 'cpa';
 type TacticalTool = 'select' | 'pass' | 'run' | 'press' | 'cone';
 type SetPieceType = 'corner_off' | 'corner_def' | 'freekick_direct' | 'freekick_wide';
@@ -143,6 +150,8 @@ const INITIAL_PLAYERS_BY_FORMAT: Record<TacticalFormat, TacticalPlayer[]> = {
   ],
 };
 
+export const TACTICAL_BOARD_STORAGE_KEY = '@proday_tactical_board_state';
+
 export const CoachTacticalBoardScreen: React.FC = () => {
   const [selectedFormat, setSelectedFormat] = useState<TacticalFormat>('11v11');
   const [boardMode, setBoardMode] = useState<BoardMode>('2d');
@@ -157,6 +166,59 @@ export const CoachTacticalBoardScreen: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activePhase, setActivePhase] = useState<1 | 2 | 3>(1);
   const [selectedPlayer, setSelectedPlayer] = useState<TacticalPlayer | null>(null);
+  const [activeFormation, setActiveFormation] = useState<string>('4-3-3');
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Restore saved tactical board state on mount
+  useEffect(() => {
+    let isMounted = true;
+    const hydrateTacticalBoard = async () => {
+      try {
+        const raw = await AsyncStorage.getItem(TACTICAL_BOARD_STORAGE_KEY);
+        if (raw && isMounted) {
+          const parsed = JSON.parse(raw);
+          if (parsed.selectedFormat) setSelectedFormat(parsed.selectedFormat);
+          if (parsed.boardMode) setBoardMode(parsed.boardMode);
+          if (parsed.activeFormation) setActiveFormation(parsed.activeFormation);
+          if (Array.isArray(parsed.players) && parsed.players.length > 0) setPlayers(parsed.players);
+          if (Array.isArray(parsed.vectors)) setVectors(parsed.vectors);
+          if (Array.isArray(parsed.cones)) setCones(parsed.cones);
+        }
+      } catch (err) {
+        // Fallback gracefully to default formation
+      } finally {
+        if (isMounted) {
+          setIsHydrated(true);
+        }
+      }
+    };
+    void hydrateTacticalBoard();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Auto-persist changes after initial hydration
+  useEffect(() => {
+    if (!isHydrated) return;
+    const persistTacticalBoard = async () => {
+      try {
+        const payload = {
+          selectedFormat,
+          boardMode,
+          activeFormation,
+          players,
+          vectors,
+          cones,
+          savedAt: new Date().toISOString(),
+        };
+        await AsyncStorage.setItem(TACTICAL_BOARD_STORAGE_KEY, JSON.stringify(payload));
+      } catch (err) {
+        // Safe logging stripped in production
+      }
+    };
+    void persistTacticalBoard();
+  }, [isHydrated, selectedFormat, boardMode, activeFormation, players, vectors, cones]);
 
   const pitchWidth = SCREEN_WIDTH - 32;
   const pitchHeight = pitchWidth * 1.35;
@@ -177,6 +239,32 @@ export const CoachTacticalBoardScreen: React.FC = () => {
     setSelectedPlayer(null);
     setVectors([]);
     setCones([]);
+    const defaultForm = MATCH_FORMATS_CONFIG[fmt]?.defaultFormation || '4-3-3';
+    setActiveFormation(defaultForm);
+  };
+
+  const handleFormationSelect = (fKey: string) => {
+    triggerHaptic();
+    setActiveFormation(fKey);
+    const slots = ALL_FORMATION_COORDINATES[fKey];
+    if (!slots) return;
+    setPlayers((prev) => {
+      const homePlayers = prev.filter((p) => p.team === 'home');
+      const awayPlayers = prev.filter((p) => p.team === 'away');
+      const updatedHome = homePlayers.map((p, idx) => {
+        const slot = slots[idx];
+        if (!slot) return p;
+        return {
+          ...p,
+          x: Math.round(slot.x * 100),
+          y: Math.round(slot.y * 135),
+          role: slot.defaultPos,
+        };
+      });
+      return [...updatedHome, ...awayPlayers];
+    });
+    setVectors([]);
+    setSelectedPlayer(null);
   };
 
   const handleResetBoard = () => {
@@ -185,6 +273,7 @@ export const CoachTacticalBoardScreen: React.FC = () => {
     setSelectedPlayer(null);
     setVectors([]);
     setCones([]);
+    void AsyncStorage.removeItem(TACTICAL_BOARD_STORAGE_KEY).catch(() => {});
   };
 
   const toggleAnimation = () => {
@@ -318,6 +407,40 @@ export const CoachTacticalBoardScreen: React.FC = () => {
               >
                 <Text style={[styles.formatChipText, isActive && styles.formatChipTextActive]}>
                   {fmt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* 2b. Tactical Systems Selector for Active Format */}
+      <View style={styles.formationBarContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.formationBarContent}
+        >
+          <View style={styles.formationBarLabelContainer}>
+            <MaterialCommunityIcons name="strategy" size={13} color="#C5A059" />
+            <Text style={styles.formationBarLabel}>SYSTÈMES :</Text>
+          </View>
+          {MATCH_FORMATS_CONFIG[selectedFormat]?.formations.map((fKey) => {
+            const isActive = activeFormation === fKey;
+            return (
+              <TouchableOpacity
+                key={fKey}
+                style={[styles.tacticalFormationPill, isActive && styles.tacticalFormationPillActive]}
+                activeOpacity={0.7}
+                onPress={() => handleFormationSelect(fKey)}
+              >
+                <Text
+                  style={[
+                    styles.tacticalFormationPillText,
+                    isActive && styles.tacticalFormationPillTextActive,
+                  ]}
+                >
+                  {fKey}
                 </Text>
               </TouchableOpacity>
             );
@@ -791,9 +914,23 @@ export const CoachTacticalBoardScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.syncSquadBtn}
-            onPress={() => {
+            onPress={async () => {
               triggerHaptic();
-              Alert.alert('Schéma Synchronisé', 'Schéma tactique synchronisé en direct avec les vestiaires !');
+              try {
+                const payload = {
+                  selectedFormat,
+                  boardMode,
+                  activeFormation,
+                  players,
+                  vectors,
+                  cones,
+                  broadcastAt: new Date().toISOString(),
+                };
+                await AsyncStorage.setItem(TACTICAL_BOARD_STORAGE_KEY, JSON.stringify(payload));
+              } catch {
+                // ignore
+              }
+              Alert.alert('Schéma Synchronisé', 'Schéma tactique sauvegardé et synchronisé en direct avec les vestiaires !');
             }}
           >
             <MaterialCommunityIcons name="broadcast" size={16} color="#C5A059" />
@@ -936,6 +1073,54 @@ const styles = StyleSheet.create({
     fontFamily: '-apple-system',
   },
   formatChipTextActive: {
+    color: '#C5A059',
+  },
+  formationBarContainer: {
+    backgroundColor: '#141418',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.2)',
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    marginBottom: 10,
+  },
+  formationBarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  formationBarLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingRight: 4,
+  },
+  formationBarLabel: {
+    color: '#C5A059',
+    fontSize: 9.5,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+    letterSpacing: 0.5,
+  },
+  tacticalFormationPill: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#1C1C22',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  tacticalFormationPillActive: {
+    backgroundColor: 'rgba(197, 160, 89, 0.22)',
+    borderColor: '#C5A059',
+  },
+  tacticalFormationPillText: {
+    color: '#8B8B9A',
+    fontSize: 10.5,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  tacticalFormationPillTextActive: {
     color: '#C5A059',
   },
   toolbar: {

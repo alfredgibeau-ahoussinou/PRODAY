@@ -317,12 +317,28 @@ export function useSignupForm(initial?: {
     clearErrors();
   }, [clearErrors]);
 
+  const handleSetEmail = useCallback((raw: string) => {
+    setEmail(raw.replace(/[\r\n\t]/g, '').trimStart());
+  }, []);
+
+  const handleSetDisplayName = useCallback((raw: string) => {
+    setDisplayName(raw.replace(/[\r\n\t]/g, '').trimStart());
+  }, []);
+
+  const handleSetPassword = useCallback((raw: string) => {
+    setPassword(raw.trim());
+  }, []);
+
+  const handleSetConfirmPassword = useCallback((raw: string) => {
+    setConfirmPassword(raw.trim());
+  }, []);
+
   const confirmRoleAndContinue = useCallback(() => {
-    const nextRole =
-      isProPlayerSignup || (isAmateurProduct && !isStaffProduct) ? 'player' : draftRole;
-    if (!isRoleAllowedForProductLine(nextRole, productLine)) {
-      setError('Ce profil n’est pas disponible sur cet univers ProDay.');
-      return;
+    const nextRole = isProPlayerSignup ? 'player' : draftRole;
+    // Auto-healing: Dynamically adapt productLine to the selected role
+    const targetProductLine = resolveSignupProductLine(productLine, nextRole);
+    if (targetProductLine !== productLine) {
+      void setProductLine(targetProductLine);
     }
     setRoleState(nextRole);
     setAccountCreated(false);
@@ -337,7 +353,7 @@ export function useSignupForm(initial?: {
     });
     setCurrentPageId(nextSteps[0] ?? resolveSignupStartPage({ role: nextRole, parentalRequired: false }));
     clearErrors();
-  }, [draftRole, productLine, resetPlayerFields, clearErrors, isProPlayerSignup, isAmateurProduct, isStaffProduct]);
+  }, [draftRole, productLine, setProductLine, resetPlayerFields, clearErrors, isProPlayerSignup]);
 
   const setAppSpace = useCallback((space: AppSpaceId) => {
     setAppSpaceState(space);
@@ -396,58 +412,61 @@ export function useSignupForm(initial?: {
   }, [appSpace, productLine, gender, selectedFffCategory, category]);
 
   const buildIntegrityInput = useCallback(
-    () => ({
-      role,
-      productLine,
-      flowKind,
-      spaceTouched,
-      parentalRequired,
-      staff: {
+    () => {
+      const effectiveLine = resolveSignupProductLine(productLine, role);
+      return {
         role,
-        city,
-        department,
-        medicalSpecialty,
-        medicalPracticeFocus,
-        structureName,
-        professionalHeadline,
-        calComUsername,
-      },
-      player:
-        role === 'player'
+        productLine: effectiveLine,
+        flowKind,
+        spaceTouched,
+        parentalRequired,
+        staff: {
+          role,
+          city: city.trim(),
+          department: department.trim(),
+          medicalSpecialty,
+          medicalPracticeFocus,
+          structureName: structureName.trim() || undefined,
+          professionalHeadline: professionalHeadline.trim() || undefined,
+          calComUsername,
+        },
+        player:
+          role === 'player'
+            ? {
+                position: position.trim(),
+                category: (selectedFffCategory || category).trim(),
+                level: level.trim(),
+                city: city.trim(),
+                department: department.trim(),
+                parsedAge,
+                appSpace,
+                allowedCategories,
+                statMatches,
+                statGoals,
+                statAssists,
+              }
+            : undefined,
+        account: {
+          displayName: displayName.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+          confirmPassword,
+          isOAuth: isOAuthCompletion,
+          role,
+          city: city.trim(),
+          acceptedTerms,
+          guardianEmail: parentalRequired ? guardianEmail.trim().toLowerCase() : undefined,
+        },
+        parental: parentalRequired
           ? {
-              position,
-              category: selectedFffCategory || category,
-              level,
-              city,
-              department,
-              parsedAge,
-              appSpace,
-              allowedCategories,
-              statMatches,
-              statGoals,
-              statAssists,
+              guardianName: guardianName.trim(),
+              guardianEmail: guardianEmail.trim().toLowerCase(),
+              guardianConsent,
+              accountEmail: email.trim().toLowerCase(),
             }
           : undefined,
-      account: {
-        displayName,
-        email,
-        password,
-        confirmPassword,
-        isOAuth: isOAuthCompletion,
-        role,
-        city,
-        acceptedTerms,
-        guardianEmail: parentalRequired ? guardianEmail : undefined,
-      },
-      parental: parentalRequired
-        ? {
-            guardianName,
-            guardianEmail,
-            guardianConsent,
-            accountEmail: email,
-          }
-        : undefined,
-    }),
+      };
+    },
     [
       role,
       productLine,
@@ -463,6 +482,7 @@ export function useSignupForm(initial?: {
       calComUsername,
       position,
       category,
+      selectedFffCategory,
       level,
       parsedAge,
       appSpace,
@@ -494,18 +514,30 @@ export function useSignupForm(initial?: {
   };
 
   const validateAccount = () => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanDisplayName = displayName.trim();
     const errs = validateAccountStepFields({
-      displayName,
-      email,
+      displayName: cleanDisplayName,
+      email: cleanEmail,
       password,
       confirmPassword,
       isOAuth: isOAuthCompletion,
       role,
-      city,
+      city: city.trim(),
       acceptedTerms,
-      guardianEmail: parentalRequired ? guardianEmail : undefined,
+      guardianEmail: parentalRequired ? guardianEmail.trim().toLowerCase() : undefined,
     });
     setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      setError(
+        errs.password ||
+        errs.confirmPassword ||
+        errs.acceptedTerms ||
+        errs.email ||
+        errs.displayName ||
+        'Veuillez corriger les informations requises.'
+      );
+    }
     return Object.keys(errs).length === 0;
   };
 
@@ -739,16 +771,18 @@ export function useSignupForm(initial?: {
   };
 
   const validateAccountIdentity = () => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanDisplayName = displayName.trim();
     const all = validateAccountStepFields({
-      displayName,
-      email,
+      displayName: cleanDisplayName,
+      email: cleanEmail,
       password,
       confirmPassword,
       isOAuth: isOAuthCompletion,
       role,
-      city,
+      city: city.trim(),
       acceptedTerms,
-      guardianEmail: parentalRequired ? guardianEmail : undefined,
+      guardianEmail: parentalRequired ? guardianEmail.trim().toLowerCase() : undefined,
     });
     const keys =
       role === 'sponsor'
@@ -761,13 +795,27 @@ export function useSignupForm(initial?: {
       if (!valid.ok) {
         errs.age = valid.reason;
       }
-      const cityErr = validateCity(city, { required: true });
-      if (cityErr) errs.city = cityErr;
-      const deptErr = validateFrenchDepartment(department);
-      if (deptErr) errs.department = deptErr;
+      if (city.trim()) {
+        const cityErr = validateCity(city, { required: false });
+        if (cityErr) errs.city = cityErr;
+      }
+      if (department.trim()) {
+        const deptErr = validateFrenchDepartment(department);
+        if (deptErr) errs.department = deptErr;
+      }
     }
 
     setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      setError(
+        errs.email ||
+        errs.displayName ||
+        errs.age ||
+        errs.city ||
+        errs.department ||
+        'Veuillez renseigner les informations requises.'
+      );
+    }
     return Object.keys(errs).length === 0;
   };
 
@@ -870,9 +918,9 @@ export function useSignupForm(initial?: {
   ]);
 
   const buildPlayerPayload = () => ({
-    position: position.trim(),
-    category: category.trim(),
-    level: level.trim(),
+    position: position.trim() || undefined,
+    category: (selectedFffCategory || category).trim() || undefined,
+    level: level.trim() || undefined,
     age: parsedAge ?? undefined,
     birth_date: birthDateIso ?? undefined,
     gender:
@@ -902,20 +950,41 @@ export function useSignupForm(initial?: {
       if (Object.keys(integrityErrors).length > 0) {
         setFieldErrors(integrityErrors);
         setError(t('signup.form.fixFields'));
+
+        // Smart Navigation: if an error occurred on a field that belongs to an earlier step,
+        // navigate directly to that step so the user can see and fix the highlighted field!
+        const errKeys = Object.keys(integrityErrors);
+        if (errKeys.some((k) => ['guardianName', 'guardianEmail', 'guardianConsent'].includes(k))) {
+          goToPage('family');
+        } else if (errKeys.some((k) => ['displayName', 'email', 'age'].includes(k))) {
+          goToPage('account');
+        } else if (errKeys.some((k) => ['password', 'confirmPassword', 'terms', 'acceptedTerms'].includes(k))) {
+          goToPage('security');
+        } else if (errKeys.some((k) => ['club', 'position', 'category', 'level'].includes(k))) {
+          if (steps.includes('sport')) goToPage('sport');
+        } else if (errKeys.some((k) => ['city', 'department'].includes(k))) {
+          if (steps.includes('location')) goToPage('location');
+          else if (steps.includes('account')) goToPage('account');
+        } else if (errKeys.some((k) => ['structureName', 'professionalHeadline'].includes(k))) {
+          if (steps.includes('staff')) goToPage('staff');
+          else if (steps.includes('coach_pro')) goToPage('coach_pro');
+          else if (steps.includes('club_pro')) goToPage('club_pro');
+        }
+
         return false;
       }
 
       setLoading(true);
       clearErrors();
       try {
-        if (isSanteProduct) await setProductLine('sante');
-        else if (isAmateurProduct) await setProductLine('amateur');
-        else if (isSupporterProduct) await setProductLine('supporter');
-        else if (isProProduct) await setProductLine(resolveSignupProductLine(productLine, role));
+        const targetLine = resolveSignupProductLine(productLine, role);
+        await setProductLine(targetLine);
 
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanDisplayName = displayName.trim() || (cleanEmail ? cleanEmail.split('@')[0] : 'Membre');
         const common = {
-          email,
-          display_name: displayName,
+          email: cleanEmail,
+          display_name: cleanDisplayName,
           role,
           city: city.trim() || undefined,
           department: department.trim() || undefined,
@@ -996,7 +1065,11 @@ export function useSignupForm(initial?: {
           }
         }
 
-        await refreshProfile();
+        try {
+          await refreshProfile();
+        } catch (refreshErr) {
+          console.warn('[signup] refreshProfile non-blocking error:', refreshErr);
+        }
 
         // Demande d’adhésion pending — le club doit Confirmer / Refuser.
         if (hasClub && selectedFffClub) {
@@ -1219,15 +1292,15 @@ export function useSignupForm(initial?: {
     flowKind,
     draftFlowKind,
     displayName,
-    setDisplayName,
+    setDisplayName: handleSetDisplayName,
     email,
-    setEmail,
+    setEmail: handleSetEmail,
     referralCode,
     setReferralCode,
     password,
-    setPassword,
+    setPassword: handleSetPassword,
     confirmPassword,
-    setConfirmPassword,
+    setConfirmPassword: handleSetConfirmPassword,
     city,
     setCity,
     department,

@@ -47,6 +47,7 @@ import {
   CoachWorkloadHealthScreen,
   CoachVideoHubScreen,
   CoachScoutingGrowthScreen,
+  CoachMessagingScreen,
 } from '../../../screens/coach';
 import { CoachPortalScreen } from '../../../screens/coach/CoachPortalScreen';
 import { CoachMesVideosScreen } from '../../../screens/coach/CoachMesVideosScreen';
@@ -359,15 +360,16 @@ function renderCoachPane(
       return <CoachMenuPane items={toolItems} />;
     case 'equipe':
     case 'effectif':
-    case 'joueurs':
       return <CoachSquadScreen />;
+    case 'joueurs':
+      return <CoachScoutingGrowthScreen />;
     case 'entrainements':
     case 'planning':
       return <CoachTrainingPlannerScreen />;
     case 'forme':
       return <CoachWorkloadHealthScreen />;
     case 'com_staff':
-      return <CoachScoutingGrowthScreen />;
+      return <CoachMessagingScreen />;
     case 'coach_ia':
       return <CoachTwinMatchLabScreen />;
     case 'smart_tactics':
