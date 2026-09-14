@@ -11,8 +11,8 @@ import {
   useShellNavDirection,
 } from '../../../motion';
 import { StatusBar } from 'expo-status-bar';
-import { CoachSidebar } from './CoachSidebar';
-import { CoachTabBar } from './CoachTabBar';
+import { ProDayBottomTabBar } from '../../../components/navigation/ProDayBottomTabBar';
+import { ProDayMenuScreen } from '../../../screens/menu/ProDayMenuScreen';
 import { CoachShellNavProvider } from './CoachShellNavContext';
 import { CoachLockedPane } from './CoachLockedPane';
 import { openCoachHelpChatbot } from './coachHelpOpen';
@@ -51,7 +51,7 @@ import {
 } from '../../../screens/coach';
 import { CoachPortalScreen } from '../../../screens/coach/CoachPortalScreen';
 import { CoachMesVideosScreen } from '../../../screens/coach/CoachMesVideosScreen';
-import { CoachAiHubScreen } from '../../../screens/coach/CoachAiHubScreen';
+import { CoachDynamicTacticsScreenV4 } from '../../../screens/coach/CoachDynamicTacticsScreenV4';
 import { SmartTacticsPortalScreen } from '../../../screens/smartTactics/SmartTacticsPortalScreen';
 import { TeamManagementScreen } from '../../../screens/TeamManagementScreen';
 import { MessagesScreen } from '../../../screens/MessagesScreen';
@@ -298,9 +298,7 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
   return (
     <CoachShellNavProvider requestNav={onSelect} openHelp={onOpenHelp} signOut={onSignOut}>
       <StatusBar style={tokens.isLight ? 'dark' : 'light'} />
-      <View style={[styles.root, !wide && styles.rootColumn]}>
-        {wide ? <CoachSidebar {...sidebarProps} /> : null}
-
+      <View style={[styles.root, styles.rootColumn]}>
         <View style={styles.pane}>
           <PaneTransition sectionKey={navId} direction={direction} context="tab">
             {React.isValidElement(content) ? content : null}
@@ -326,9 +324,15 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
           </PushScreenTransition>
         </View>
 
-        {!wide ? (
-          <CoachTabBar items={primaryItems} activeId={navId} onSelect={onSelect} />
-        ) : null}
+        <ProDayBottomTabBar
+          activeTab={tabFromCoachNav(navId)}
+          onTabPress={(tab) => {
+            onTabChange(tab);
+            const cNav = coachNavFromTab(tab);
+            onSelect(cNav);
+          }}
+          unreadCount={0}
+        />
       </View>
     </CoachShellNavProvider>
   );
@@ -350,14 +354,14 @@ function renderCoachPane(
   onSelect: (id: CoachNavItemId) => void,
 ) {
   if (navId === 'smart_tactics') {
-    return <CoachTacticalBoardScreen />;
+    return <CoachDynamicTacticsScreenV4 />;
   }
   switch (canonicalizeCoachNav(navId)) {
     case 'today':
     case 'pitch':
       return <CoachHomeScreen onNavigate={(id) => onSelect(id as CoachNavItemId)} />;
     case 'plus':
-      return <CoachMenuPane items={toolItems} />;
+      return <ProDayMenuScreen />;
     case 'equipe':
     case 'effectif':
       return <CoachSquadScreen />;
@@ -373,7 +377,7 @@ function renderCoachPane(
     case 'coach_ia':
       return <CoachTwinMatchLabScreen />;
     case 'smart_tactics':
-      return <CoachTacticalBoardScreen />;
+      return <CoachDynamicTacticsScreenV4 />;
     case 'mes_videos':
       return <CoachVideoHubScreen />;
     case 'gestion':

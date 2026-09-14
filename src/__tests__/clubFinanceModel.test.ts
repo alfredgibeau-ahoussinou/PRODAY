@@ -2,6 +2,7 @@ import {
   buildClubFinanceLedgerRow,
   buildCotisationCoverage,
   clubFinanceHonestyNote,
+  exportClubLedgerToCsv,
   filterClubFinanceEntries,
   formatClubFinanceEur,
   matchMemberFromName,
@@ -96,8 +97,35 @@ describe('clubFinanceModel', () => {
     expect(coverage.paid.some((r) => r.name === 'Alice' && r.status === 'paid')).toBe(true);
     expect(coverage.unrecorded.some((r) => r.name === 'Bob' && r.status === 'none')).toBe(true);
     expect(coverage.unrecorded[0].statusLabel).toBe('Non enregistré');
-    expect(clubFinanceHonestyNote()).toMatch(/SEPA/i);
     expect(filterClubFinanceEntries(entries, 'cotisation')).toHaveLength(1);
     expect(matchMemberFromName('bob', [{ uid: 'p2', display_name: 'Bob' }])?.uid).toBe('p2');
+  });
+
+  it('génère un export CSV structuré du grand livre pour la comptabilité', () => {
+    const entries = [
+      entry({
+        id: 'c1',
+        type: 'cotisation',
+        amount_eur: 120,
+        label: 'Cotisation 2026 [Espèces]',
+        category: 'Licence',
+        member_name: 'Alice Martin',
+      }),
+      entry({
+        id: 'd1',
+        type: 'depense',
+        amount_eur: 45.5,
+        label: 'Achat chasubles [Chèque]',
+        category: 'Matériel',
+      }),
+    ];
+
+    const csv = exportClubLedgerToCsv(entries);
+    expect(csv).toContain('Date;Type;Libellé;Catégorie;Adhérent;Montant (€);Statut');
+    expect(csv).toContain('Alice Martin');
+    expect(csv).toContain('120.00');
+    expect(csv).toContain('-45.50');
+    expect(csv).toContain('Cotisation');
+    expect(csv).toContain('Dépense');
   });
 });

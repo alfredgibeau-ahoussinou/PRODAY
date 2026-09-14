@@ -148,12 +148,14 @@ export function ClubFinanceCotisationPanel({
   unrecorded,
   onAddCotisation,
   onOpenPlayers,
+  onRelanceCotisations,
 }: {
   summary: ClubCotisationSummary;
   paid: CotisationCoverageRow[];
   unrecorded: CotisationCoverageRow[];
   onAddCotisation: () => void;
   onOpenPlayers?: () => void;
+  onRelanceCotisations?: () => void;
 }) {
   const { tokens } = useClubTheme();
   const styles = useMemo(() => cotisStyles(tokens), [tokens]);
@@ -221,6 +223,14 @@ export function ClubFinanceCotisationPanel({
             Enregistrer une cotisation
           </ClubText>
         </PressableSpring>
+        {unrecorded.length > 0 && onRelanceCotisations ? (
+          <PressableSpring onPress={onRelanceCotisations} scaleTo={0.97} haptic style={styles.relanceBtn}>
+            <Icon name="mail" size={13} color={tokens.warning} />
+            <ClubText variant="caption" style={{ color: tokens.warning, fontWeight: '700' }}>
+              Relancer les impayés ({unrecorded.length})
+            </ClubText>
+          </PressableSpring>
+        ) : null}
         {onOpenPlayers ? (
           <PressableSpring onPress={onOpenPlayers} scaleTo={0.97} haptic style={styles.ghost}>
             <ClubText variant="caption" style={{ color: tokens.foreground, fontWeight: '700' }}>
@@ -266,6 +276,17 @@ const cotisStyles = (tokens: ClubThemeTokens) =>
     ghost: {
       borderWidth: 1,
       borderColor: tokens.borderStrong,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: clubRadius.pill,
+    },
+    relanceBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      borderWidth: 1,
+      borderColor: tokens.warning,
+      backgroundColor: tokens.warningSoft,
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: clubRadius.pill,

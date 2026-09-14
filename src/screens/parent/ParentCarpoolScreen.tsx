@@ -16,6 +16,7 @@ import {
 import { PARENT_PAGES } from '../../content/parentPageIdentity';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
+import { TAB_BAR_CONTENT_INSET } from '../../navigation/tabBarLayout';
 
 export const ParentCarpoolScreen: React.FC = () => {
   const { colors: c } = useThemedScreen();
@@ -193,6 +194,10 @@ export const ParentCarpoolScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl },
+  content: {
+    padding: spacing.lg,
+    gap: spacing.md,
+    paddingBottom: TAB_BAR_CONTENT_INSET + spacing.lg,
+  },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
 });

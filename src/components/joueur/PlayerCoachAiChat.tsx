@@ -39,7 +39,44 @@ type PromptSuggestion = {
   prompt: string;
 };
 
+export const POST_SESSION_DRILLS = [
+  {
+    id: 'drill-1',
+    icon: 'flash-outline' as const,
+    accent: '#30D158',
+    title: 'Appuis & Vivacité',
+    duration: '15 min',
+    focus: 'Explosivité · Changement d’angle',
+    prompt: 'Détaille-moi le protocole complet de l’exercice post-séance Appuis Courts & Vivacité (15 min) adapté à mon poste.',
+  },
+  {
+    id: 'drill-2',
+    icon: 'football-outline' as const,
+    accent: '#0A84FF',
+    title: 'Finition 1-Touch',
+    duration: '20 min',
+    focus: 'Précision · Cadrage rapide',
+    prompt: 'Détaille-moi le protocole complet de l’exercice post-séance Finition 1-Touch & Cadrage (20 min) adapté à mon poste.',
+  },
+  {
+    id: 'drill-3',
+    icon: 'shield-checkmark-outline' as const,
+    accent: '#FFD700',
+    title: 'Prévention Ischios',
+    duration: '10 min',
+    focus: 'Récupération · Mobilité',
+    prompt: 'Détaille-moi le protocole complet de l’exercice post-séance Gainage & Prévention Ischios (10 min).',
+  },
+];
+
 export const PROMPT_SUGGESTIONS: PromptSuggestion[] = [
+  {
+    id: 'post_session',
+    icon: 'flame-outline',
+    title: 'Recommandations post-séance',
+    subtitle: 'Exercices personnalisés suite à ta dernière séance / match',
+    prompt: 'Analyse mes dernières séances et recommande-moi 3 exercices personnalisés post-séance adaptés à mon profil et mon poste.',
+  },
   {
     id: 'tactics',
     icon: 'compass-outline',
@@ -230,6 +267,40 @@ export function PlayerCoachAiChat({ compact = false, initialPrompt }: Props) {
               <ProDayText style={styles.geminiQuestion}>
                 Comment puis-je t'aider aujourd'hui ?
               </ProDayText>
+            </View>
+
+            {/* Bannière Recommandations Post-Séance (Inspiration Fitness Park / Haute Performance) */}
+            <View style={styles.postSessionBanner}>
+              <View style={styles.postSessionHeader}>
+                <View style={styles.postSessionTag}>
+                  <Ionicons name="flame" size={13} color="#FF9F0A" />
+                  <ProDayText style={styles.postSessionTagText}>POST-SÉANCE · RECOMMANDATIONS IA</ProDayText>
+                </View>
+                <View style={[styles.badgePill, { backgroundColor: `${teamColor}22`, borderColor: `${teamColor}55` }]}>
+                  <ProDayText style={[styles.badgePillText, { color: teamColor }]}>SUR MESURE</ProDayText>
+                </View>
+              </View>
+              <ProDayText style={styles.postSessionTitle}>Exercices recommandés suite à ta séance</ProDayText>
+              <ProDayText style={styles.postSessionSub}>Ciblés selon ton profil et validés pour booster ta récupération et tes points clés.</ProDayText>
+
+              <View style={styles.drillsRow}>
+                {POST_SESSION_DRILLS.map((drill) => (
+                  <PressableSpring
+                    key={drill.id}
+                    onPress={() => send(drill.prompt)}
+                    scaleTo={0.96}
+                    haptic
+                    style={styles.drillItemCard}
+                  >
+                    <View style={styles.drillIconRow}>
+                      <Ionicons name={drill.icon} size={15} color={drill.accent} />
+                      <ProDayText style={[styles.drillTime, { color: drill.accent }]}>{drill.duration}</ProDayText>
+                    </View>
+                    <ProDayText style={styles.drillTitle} numberOfLines={1}>{drill.title}</ProDayText>
+                    <ProDayText style={styles.drillFocus} numberOfLines={1}>{drill.focus}</ProDayText>
+                  </PressableSpring>
+                ))}
+              </View>
             </View>
 
             {/* Cartes de suggestions minimalistes façon ChatGPT */}
@@ -427,6 +498,89 @@ function createStyles(teamColor: string) {
       fontWeight: '600',
       color: '#71717A',
       letterSpacing: -0.3,
+    },
+
+    /* Bannière Post-Séance */
+    postSessionBanner: {
+      width: '100%',
+      backgroundColor: '#12141D',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.08)',
+      padding: 12,
+      marginBottom: 16,
+    },
+    postSessionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 6,
+    },
+    postSessionTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    postSessionTagText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: '#FF9F0A',
+      letterSpacing: 0.6,
+    },
+    badgePill: {
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+      borderRadius: 6,
+      borderWidth: 1,
+    },
+    badgePillText: {
+      fontSize: 9,
+      fontWeight: '900',
+      letterSpacing: 0.5,
+    },
+    postSessionTitle: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: '#FFFFFF',
+      marginBottom: 3,
+    },
+    postSessionSub: {
+      fontSize: 11,
+      color: '#94A3B8',
+      lineHeight: 15,
+      marginBottom: 10,
+    },
+    drillsRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    drillItemCard: {
+      flex: 1,
+      backgroundColor: '#191C28',
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.06)',
+      padding: 8,
+      gap: 3,
+    },
+    drillIconRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 2,
+    },
+    drillTime: {
+      fontSize: 10,
+      fontWeight: '800',
+    },
+    drillTitle: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: '#FFFFFF',
+    },
+    drillFocus: {
+      fontSize: 8,
+      color: '#8E8E9F',
     },
 
     /* Grille de suggestions */

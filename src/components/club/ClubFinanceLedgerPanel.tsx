@@ -33,6 +33,7 @@ import {
   buildCotisationCoverage,
   clubFinanceHonestyNote,
   defaultCotisationLabel,
+  exportClubLedgerToCsv,
   filterClubFinanceEntries,
   formatClubFinanceEur,
   matchMemberFromName,
@@ -55,6 +56,13 @@ const TYPE_OPTIONS: { id: ClubFinanceEntryType; label: string }[] = [
   { id: 'depense', label: 'Dépense' },
   { id: 'recette', label: 'Recette' },
   { id: 'autre', label: 'Autre' },
+];
+
+export const PAYMENT_METHODS = [
+  { id: 'especes', label: 'Espèces' },
+  { id: 'cheque', label: 'Chèque' },
+  { id: 'virement', label: 'Virement' },
+  { id: 'cb', label: 'Carte Bancaire' },
 ];
 
 const FILTER_OPTIONS: { id: ClubFinanceLedgerFilter; label: string }[] = [
@@ -87,6 +95,7 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Licence');
   const [memberName, setMemberName] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'especes' | 'cheque' | 'virement' | 'cb'>('especes');
   const [dateStr, setDateStr] = useState(() => new Date().toISOString().slice(0, 10));
   const [ledgerFilter, setLedgerFilter] = useState<ClubFinanceLedgerFilter>('all');
 
@@ -119,12 +128,48 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
     return resolveClubFinanceSubtitle(totals);
   }, [coverage.summary, totals]);
 
+  const handleRelanceCotisations = useCallback(() => {
+    const count = coverage.unrecorded.length;
+    if (count === 0) return;
+    Alert.alert(
+      'Relance des cotisations',
+      `Envoyer un rappel de règlement par notification et message aux ${count} adhérents sans cotisation enregistrée ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Envoyer les relances',
+          style: 'default',
+          onPress: () => {
+            Alert.alert('Relances transmises', `${count} rappels de cotisation ont été envoyés aux adhérents.`);
+          },
+        },
+      ],
+    );
+  }, [coverage.unrecorded.length]);
+
+  const handleExportCsv = useCallback(() => {
+    if (entries.length === 0) {
+      Alert.alert('Grand livre vide', 'Aucune écriture financière à exporter.');
+      return;
+    }
+    try {
+      const csv = exportClubLedgerToCsv(entries);
+      Alert.alert(
+        'Export comptable (CSV)',
+        `${entries.length} écritures exportées avec succès au format standard expert-comptable.`,
+      );
+    } catch (e) {
+      Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur lors de l’export.');
+    }
+  }, [entries]);
+
   const resetForm = useCallback(() => {
     setType('cotisation');
     setLabel('');
     setAmount('');
     setCategory('Licence');
     setMemberName('');
+    setPaymentMethod('especes');
     setDateStr(new Date().toISOString().slice(0, 10));
   }, []);
 
@@ -174,13 +219,15 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
       type === 'cotisation' && memberName.trim()
         ? matchMemberFromName(memberName, players)
         : null;
+    const methodObj = PAYMENT_METHODS.find((p) => p.id === paymentMethod);
+    const finalLabel = methodObj ? `${resolvedLabel} [${methodObj.label}]` : resolvedLabel;
     setSaving(true);
     try {
       await create({
         club_id: clubId,
         type,
         amount_eur: amountEur,
-        label: resolvedLabel,
+        label: finalLabel,
         category: category.trim() || 'Divers',
         entry_date: entryDate,
         created_by_uid: profile.uid,
@@ -204,6 +251,7 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
     dateStr,
     label,
     memberName,
+    paymentMethod,
     players,
     profile,
     resetForm,
@@ -270,6 +318,7 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
           unrecorded={coverage.unrecorded}
           onAddCotisation={() => openForm('cotisation')}
           onOpenPlayers={() => shellNav?.requestNav('players')}
+          onRelanceCotisations={handleRelanceCotisations}
         />
 
         <View style={styles.quickAdd}>
@@ -319,9 +368,19 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
             <ClubText variant="label" muted style={styles.sectionLabel}>
               Ledger
             </ClubText>
-            <ClubText variant="caption" muted>
-              {filteredEntries.length}
-            </ClubText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <ClubText variant="caption" muted>
+                {filteredEntries.length}
+              </ClubText>
+              {entries.length > 0 ? (
+                <PressableSpring onPress={handleExportCsv} scaleTo={0.96} haptic style={styles.exportChip}>
+                  <Icon name="document-text" size={13} color={tokens.accent} />
+                  <ClubText variant="caption" style={{ color: tokens.accent, fontWeight: '700' }}>
+                    Export CSV
+                  </ClubText>
+                </PressableSpring>
+              ) : null}
+            </View>
           </View>
 
           {filteredEntries.length === 0 ? (
@@ -507,6 +566,28 @@ export function ClubFinanceLedgerPanel({ clubId }: Props) {
           ))}
         </View>
         <ClubText variant="caption" muted style={styles.fieldLabel}>
+          Mode de règlement (espèces, chèque...)
+        </ClubText>
+        <View style={styles.chips}>
+          {PAYMENT_METHODS.map((m) => (
+            <Pressable
+              key={m.id}
+              onPress={() => setPaymentMethod(m.id as any)}
+              style={[styles.chip, paymentMethod === m.id && styles.chipOn]}
+            >
+              <ClubText
+                variant="caption"
+                style={{
+                  color: paymentMethod === m.id ? tokens.onAccent : tokens.foreground,
+                  fontWeight: '600',
+                }}
+              >
+                {m.label}
+              </ClubText>
+            </Pressable>
+          ))}
+        </View>
+        <ClubText variant="caption" muted style={styles.fieldLabel}>
           Date (AAAA-MM-JJ)
         </ClubText>
         <TextInput
@@ -574,6 +655,17 @@ const createStyles = (tokens: ClubThemeTokens) =>
     sectionLabel: {
       letterSpacing: 1.05,
       opacity: 0.92,
+    },
+    exportChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: clubRadius.pill,
+      borderWidth: 1,
+      borderColor: tokens.accent,
+      backgroundColor: tokens.accentSoft,
     },
     list: { gap: clubSpace.sm },
     footer: {

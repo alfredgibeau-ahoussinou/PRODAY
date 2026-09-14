@@ -185,10 +185,12 @@ export function ClubErrorState({
 
 export function ClubSectionCard({
   title,
+  subtitle,
   children,
   style,
 }: {
   title?: string;
+  subtitle?: string;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
@@ -199,6 +201,11 @@ export function ClubSectionCard({
       {title ? (
         <ClubText variant="label" muted style={styles.title}>
           {title}
+        </ClubText>
+      ) : null}
+      {subtitle ? (
+        <ClubText variant="caption" muted style={{ marginTop: 2, marginBottom: 8 }}>
+          {subtitle}
         </ClubText>
       ) : null}
       {children}

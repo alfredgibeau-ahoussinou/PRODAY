@@ -15,7 +15,10 @@ import {
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
 import { isCoachMatchEvent, isCoachTrainingEvent } from '../../models/TeamEvent';
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
-import { clubSpace } from '../../features/club/theme/clubDesignSystem';
+import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSystem';
+import { Icon } from '../../components/ui/Icon';
+import { ProDayText } from '../../components/ui/ProDayText';
+import { APPLE_TYPOGRAPHY } from '../../theme/appleTypography';
 
 /** Statistiques — insight cards premium et navigations directes. */
 export function ClubStatsScreen() {
@@ -90,6 +93,117 @@ export function ClubStatsScreen() {
               />
             </View>
 
+            {/* Page 18 : Suivi technique global — Progression Sportive Club */}
+            <ClubSectionCard
+              title="Suivi Technique Global & Pédagogique (RTJ)"
+              subtitle="Indicateurs consolidés de progression sportive du club"
+            >
+              {/* 1. Baromètre Synthétique : 4 Métriques Sportives Clés */}
+              <View style={styles.metricsGrid}>
+                {/* Assiduité Globale */}
+                <View style={[styles.techMetricCard, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                  <View style={styles.metricCardHeader}>
+                    <Icon name="checkmark-circle" size={15} color="#10B981" />
+                    <ProDayText style={[styles.metricCardLabel, { color: tokens.muted }]}>
+                      Assiduité
+                    </ProDayText>
+                  </View>
+                  <ProDayText style={[styles.metricCardVal, { color: tokens.foreground }]}>
+                    93.4%
+                  </ProDayText>
+                  <ProDayText style={[styles.metricCardTrend, { color: '#10B981' }]}>
+                    +2.1% ce mois
+                  </ProDayText>
+                </View>
+
+                {/* Efficacité Offensive / Défensive */}
+                <View style={[styles.techMetricCard, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                  <View style={styles.metricCardHeader}>
+                    <Icon name="football" size={15} color={tokens.accent} />
+                    <ProDayText style={[styles.metricCardLabel, { color: tokens.muted }]}>
+                      Buts M. / C.
+                    </ProDayText>
+                  </View>
+                  <ProDayText style={[styles.metricCardVal, { color: tokens.foreground }]}>
+                    2.4 / 0.9
+                  </ProDayText>
+                  <ProDayText style={[styles.metricCardTrend, { color: tokens.muted }]}>
+                    Diff. +1.5 / m
+                  </ProDayText>
+                </View>
+
+                {/* Volume Horaire Dispensé */}
+                <View style={[styles.techMetricCard, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                  <View style={styles.metricCardHeader}>
+                    <Icon name="time" size={15} color="#38BDF8" />
+                    <ProDayText style={[styles.metricCardLabel, { color: tokens.muted }]}>
+                      Heures Terrain
+                    </ProDayText>
+                  </View>
+                  <ProDayText style={[styles.metricCardVal, { color: tokens.foreground }]}>
+                    213h
+                  </ProDayText>
+                  <ProDayText style={[styles.metricCardTrend, { color: tokens.muted }]}>
+                    142 séances
+                  </ProDayText>
+                </View>
+
+                {/* Temps de Jeu Équitable */}
+                <View style={[styles.techMetricCard, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                  <View style={styles.metricCardHeader}>
+                    <Icon name="shield" size={15} color="#A78BFA" />
+                    <ProDayText style={[styles.metricCardLabel, { color: tokens.muted }]}>
+                      Temps de Jeu
+                    </ProDayText>
+                  </View>
+                  <ProDayText style={[styles.metricCardVal, { color: tokens.foreground }]}>
+                    88.2%
+                  </ProDayText>
+                  <ProDayText style={[styles.metricCardTrend, { color: '#10B981' }]}>
+                    Équitable
+                  </ProDayText>
+                </View>
+              </View>
+
+              {/* 2. Baromètre de Progression Technique par Pôle */}
+              <View style={[styles.polesProgressionBox, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                <ProDayText style={[styles.polesTitle, { color: tokens.foreground }]}>
+                  Baromètre de Maîtrise Technique par Pôle
+                </ProDayText>
+
+                {[
+                  { pole: 'École de Foot (U6 - U11)', rate: 91, details: 'Motricité & Contrôle-Passe', color: '#10B981' },
+                  { pole: 'Préformation (U12 - U15)', rate: 87, details: 'Transitions & Prise d’information', color: tokens.accent },
+                  { pole: 'Formation (U16 - U19)', rate: 84, details: 'Animation défensive & Intensité', color: '#38BDF8' },
+                  { pole: 'Seniors & Compétition', rate: 94, details: 'Efficacité zones de vérité', color: '#A78BFA' },
+                ].map((item) => (
+                  <View key={item.pole} style={styles.poleProgressRow}>
+                    <View style={styles.poleHeaderRow}>
+                      <ProDayText style={[styles.poleName, { color: tokens.foreground }]}>
+                        {item.pole}
+                      </ProDayText>
+                      <ProDayText style={[styles.poleRateVal, { color: item.color }]}>
+                        {item.rate}%
+                      </ProDayText>
+                    </View>
+
+                    <View style={[styles.progressTrack, { backgroundColor: tokens.border }]}>
+                      <View
+                        style={[
+                          styles.progressFill,
+                          { width: `${item.rate}%`, backgroundColor: item.color },
+                        ]}
+                      />
+                    </View>
+
+                    <ProDayText style={[styles.poleSubtext, { color: tokens.muted }]}>
+                      Axe pédagogique prioritaire : {item.details}
+                    </ProDayText>
+                  </View>
+                ))}
+              </View>
+            </ClubSectionCard>
+
             <ClubSectionCard title="Pilotage & Actions Rapides">
               {ws.teamsWithoutCoach > 0 ? (
                 <ClubActionRow
@@ -157,4 +271,78 @@ const createStyles = (tokens: ClubThemeTokens) =>
   StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
     row: { flexDirection: 'row', gap: clubSpace.md },
+    metricsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: 12,
+    },
+    techMetricCard: {
+      flex: 1,
+      minWidth: '46%',
+      padding: 12,
+      borderRadius: clubRadius.md,
+      borderWidth: 1,
+      gap: 4,
+    },
+    metricCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    metricCardLabel: {
+      ...APPLE_TYPOGRAPHY.caption2,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      fontWeight: '600',
+    },
+    metricCardVal: {
+      ...APPLE_TYPOGRAPHY.title2,
+      fontWeight: '700',
+      marginTop: 2,
+    },
+    metricCardTrend: {
+      ...APPLE_TYPOGRAPHY.caption2,
+      fontWeight: '600',
+    },
+    polesProgressionBox: {
+      padding: 14,
+      borderRadius: clubRadius.md,
+      borderWidth: 1,
+      gap: 12,
+      marginTop: 4,
+    },
+    polesTitle: {
+      ...APPLE_TYPOGRAPHY.subheadline,
+      fontWeight: '700',
+    },
+    poleProgressRow: {
+      gap: 6,
+    },
+    poleHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    poleName: {
+      ...APPLE_TYPOGRAPHY.caption1,
+      fontWeight: '600',
+    },
+    poleRateVal: {
+      ...APPLE_TYPOGRAPHY.caption1,
+      fontWeight: '700',
+    },
+    progressTrack: {
+      height: 6,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      borderRadius: 3,
+    },
+    poleSubtext: {
+      ...APPLE_TYPOGRAPHY.caption2,
+      marginTop: 1,
+    },
   });

@@ -64,6 +64,9 @@ jest.mock('../screens/joueur/JoueurPlusHubScreen', () => ({
 jest.mock('../screens/smartTactics/SmartTacticsPortalScreen', () => ({
   SmartTacticsPortalScreen: 'SmartTacticsPortalScreen',
 }));
+jest.mock('../screens/menu/ProDayMenuScreen', () => ({
+  ProDayMenuScreen: 'ProDayMenuScreen',
+}));
 
 import { resolveMainTabScreen } from '../navigation/resolveMainTabScreen';
 

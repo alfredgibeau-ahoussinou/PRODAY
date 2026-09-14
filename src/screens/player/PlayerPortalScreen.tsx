@@ -11,8 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { AnimatedRouteContent } from '../../components/motion';
 
-import { PlayerHomeScreen } from './PlayerHomeScreen';
-import { PlayerStatsScreen } from './PlayerStatsScreen';
+import { PlayerHomeScreenV4 } from '../joueur/PlayerHomeScreenV4';
+import { PlayerMyCardScreenV4 } from '../joueur/PlayerMyCardScreenV4';
 import { PlayerWellnessScreen } from './PlayerWellnessScreen';
 import { PlayerTacticalView } from './PlayerTacticalView';
 
@@ -29,8 +29,8 @@ export const PlayerPortalScreen: React.FC<PlayerPortalScreenProps> = ({
   const [activeTab, setActiveTab] = useState<PlayerTabId>(initialTab);
 
   const tabs: { id: PlayerTabId; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-    { id: 'cockpit', label: 'Carrière', icon: 'person' },
-    { id: 'stats', label: 'Passeport & CV', icon: 'shield-checkmark' },
+    { id: 'cockpit', label: 'Accueil', icon: 'home' },
+    { id: 'stats', label: 'Ma Carte', icon: 'card' },
     { id: 'wellness', label: 'Santé', icon: 'heart' },
     { id: 'tactics', label: 'Tactique', icon: 'git-network' },
   ];
@@ -43,15 +43,15 @@ export const PlayerPortalScreen: React.FC<PlayerPortalScreenProps> = ({
   const renderContent = () => {
     switch (activeTab) {
       case 'cockpit':
-        return <PlayerHomeScreen onNavigateTab={handleTabChange} />;
+        return <PlayerHomeScreenV4 onNavigateTab={(tab) => handleTabChange(tab as PlayerTabId)} />;
       case 'stats':
-        return <PlayerStatsScreen />;
+        return <PlayerMyCardScreenV4 />;
       case 'wellness':
         return <PlayerWellnessScreen />;
       case 'tactics':
         return <PlayerTacticalView />;
       default:
-        return <PlayerHomeScreen onNavigateTab={handleTabChange} />;
+        return <PlayerHomeScreenV4 onNavigateTab={(tab) => handleTabChange(tab as PlayerTabId)} />;
     }
   };
 

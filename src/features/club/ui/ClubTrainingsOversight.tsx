@@ -6,8 +6,10 @@
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -32,6 +34,9 @@ export type SessionCheckInItem = {
   absentsCount: number;
   injuredCount: number;
   validationStatus: 'validated' | 'pending';
+  dtComment?: string;
+  dtCommentAuthor?: string;
+  dtCommentDate?: string;
 };
 
 export type PedagogicalDrill = {
@@ -58,6 +63,9 @@ export const DEMO_SESSIONS_CHECKIN: SessionCheckInItem[] = [
     absentsCount: 2,
     injuredCount: 1,
     validationStatus: 'pending',
+    dtComment: 'Très bon engagement au pressing haut. Veiller à doser l’effort des latéraux avant le match de dimanche.',
+    dtCommentAuthor: 'Directeur Technique (DT)',
+    dtCommentDate: 'Aujourd’hui 20:15',
   },
   {
     sessionId: 'chk-2',
@@ -72,6 +80,9 @@ export const DEMO_SESSIONS_CHECKIN: SessionCheckInItem[] = [
     absentsCount: 1,
     injuredCount: 1,
     validationStatus: 'validated',
+    dtComment: 'Séance conforme au plan de formation. Les circuits de relance axiaux progressent bien.',
+    dtCommentAuthor: 'Directeur Technique (DT)',
+    dtCommentDate: 'Aujourd’hui 20:35',
   },
   {
     sessionId: 'chk-3',
@@ -86,6 +97,9 @@ export const DEMO_SESSIONS_CHECKIN: SessionCheckInItem[] = [
     absentsCount: 2,
     injuredCount: 0,
     validationStatus: 'validated',
+    dtComment: 'Pointage assiduité complet. Relancer les 2 absents pour la convocation du week-end.',
+    dtCommentAuthor: 'Directeur Technique (DT)',
+    dtCommentDate: 'Aujourd’hui 19:10',
   },
   {
     sessionId: 'chk-4',
@@ -145,22 +159,25 @@ export function ClubTrainingsOversight({
 }: Props) {
   const { tokens } = useClubTheme();
   const [activeTab, setActiveTab] = useState<'checkin' | 'library'>('checkin');
+  const [sessionList, setSessionList] = useState<SessionCheckInItem[]>(sessions);
+  const [editingSession, setEditingSession] = useState<SessionCheckInItem | null>(null);
+  const [dtDraftComment, setDtDraftComment] = useState('');
 
   const totalPresents = useMemo(
-    () => sessions.reduce((sum, s) => sum + s.presentsCount, 0),
-    [sessions],
+    () => sessionList.reduce((sum, s) => sum + s.presentsCount, 0),
+    [sessionList],
   );
   const totalInvited = useMemo(
-    () => sessions.reduce((sum, s) => sum + s.totalInvited, 0),
-    [sessions],
+    () => sessionList.reduce((sum, s) => sum + s.totalInvited, 0),
+    [sessionList],
   );
   const globalAttendanceRate = useMemo(
     () => (totalInvited > 0 ? Math.round((totalPresents / totalInvited) * 100) : 0),
     [totalPresents, totalInvited],
   );
   const pendingValidationCount = useMemo(
-    () => sessions.filter((s) => s.validationStatus === 'pending').length,
-    [sessions],
+    () => sessionList.filter((s) => s.validationStatus === 'pending').length,
+    [sessionList],
   );
 
   const handleAssignToCoach = (drill: PedagogicalDrill) => {
@@ -172,6 +189,21 @@ export function ClubTrainingsOversight({
 
   return (
     <View style={styles.container}>
+      {/* BANNER VUE CONSOLIDÉE DT (PAGE 14 SPÉCIFICATIONS V4) */}
+      <View style={[styles.dtBanner, { backgroundColor: tokens.surface, borderColor: `${tokens.accent}40` }]}>
+        <View style={[styles.dtBannerIcon, { backgroundColor: tokens.accentSoft }]}>
+          <Icon name="school" size={16} color={tokens.accent} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <ProDayText style={[styles.dtBannerTitle, { color: tokens.foreground }]}>
+            Vue Consolidée DT · Lecture Seule
+          </ProDayText>
+          <ProDayText style={[styles.dtBannerSubtitle, { color: tokens.muted }]}>
+            Supervision de toutes les séances éducateurs · Commentaires internes DT
+          </ProDayText>
+        </View>
+      </View>
+
       {/* 1. Baromètre RTJ (Assiduité & Feuilles en attente) */}
       <View style={[styles.kpiCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
         <View style={styles.kpiCol}>
@@ -219,7 +251,7 @@ export function ClubTrainingsOversight({
               { color: activeTab === 'checkin' ? tokens.accent : tokens.muted },
             ]}
           >
-            Pointages Séances ({sessions.length})
+            Pointages Séances ({sessionList.length})
           </ProDayText>
         </PressableSpring>
 
@@ -242,7 +274,7 @@ export function ClubTrainingsOversight({
       {/* VUE 1 : POINTAGES DU JOUR */}
       {activeTab === 'checkin' ? (
         <View style={styles.sessionsList}>
-          {sessions.map((session) => (
+          {sessionList.map((session) => (
             <View
               key={session.sessionId}
               style={[styles.sessionCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
@@ -257,28 +289,35 @@ export function ClubTrainingsOversight({
                   </ProDayText>
                 </View>
 
-                <View
-                  style={[
-                    styles.statusPill,
-                    {
-                      backgroundColor:
-                        session.status === 'in_progress'
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : 'rgba(59, 130, 246, 0.2)',
-                    },
-                  ]}
-                >
-                  <ProDayText
+                <View style={styles.sessionBadgesCol}>
+                  <View
                     style={[
-                      styles.statusPillText,
+                      styles.statusPill,
                       {
-                        color:
-                          session.status === 'in_progress' ? '#10B981' : '#3B82F6',
+                        backgroundColor:
+                          session.status === 'in_progress'
+                            ? 'rgba(16, 185, 129, 0.2)'
+                            : 'rgba(59, 130, 246, 0.2)',
                       },
                     ]}
                   >
-                    {session.status === 'in_progress' ? 'EN COURS' : 'TERMINÉ'}
-                  </ProDayText>
+                    <ProDayText
+                      style={[
+                        styles.statusPillText,
+                        {
+                          color:
+                            session.status === 'in_progress' ? '#10B981' : '#3B82F6',
+                        },
+                      ]}
+                    >
+                      {session.status === 'in_progress' ? 'EN COURS' : 'TERMINÉ'}
+                    </ProDayText>
+                  </View>
+                  <View style={[styles.readOnlyPill, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
+                    <ProDayText style={[styles.readOnlyText, { color: tokens.muted }]}>
+                      Lecture seule
+                    </ProDayText>
+                  </View>
                 </View>
               </View>
 
@@ -306,6 +345,46 @@ export function ClubTrainingsOversight({
                     </ProDayText>
                   </View>
                 ) : null}
+              </View>
+
+              {/* Commentaires Internes DT */}
+              <View style={[styles.dtCommentContainer, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}>
+                <View style={styles.dtCommentHeader}>
+                  <View style={styles.dtCommentBadge}>
+                    <Icon name="chat" size={13} color={tokens.accent} />
+                    <ProDayText style={[styles.dtCommentBadgeText, { color: tokens.accent }]}>
+                      Commentaire Interne DT
+                    </ProDayText>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setEditingSession(session);
+                      setDtDraftComment(session.dtComment || '');
+                    }}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <ProDayText style={[styles.dtEditBtnText, { color: tokens.accent }]}>
+                      {session.dtComment ? 'Modifier' : '+ Ajouter note DT'}
+                    </ProDayText>
+                  </TouchableOpacity>
+                </View>
+
+                {session.dtComment ? (
+                  <View style={styles.dtCommentBody}>
+                    <ProDayText style={[styles.dtCommentText, { color: tokens.foreground }]}>
+                      « {session.dtComment} »
+                    </ProDayText>
+                    {session.dtCommentDate ? (
+                      <ProDayText style={[styles.dtCommentDate, { color: tokens.muted }]}>
+                        {session.dtCommentAuthor ? `${session.dtCommentAuthor} · ` : ''}{session.dtCommentDate}
+                      </ProDayText>
+                    ) : null}
+                  </View>
+                ) : (
+                  <ProDayText style={[styles.dtNoCommentText, { color: tokens.muted }]}>
+                    Aucune observation DT enregistrée pour cette séance.
+                  </ProDayText>
+                )}
               </View>
             </View>
           ))}
@@ -354,6 +433,71 @@ export function ClubTrainingsOversight({
           ))}
         </View>
       ) : null}
+
+      {/* MODAL COMMENTAIRE INTERNE DT (PAGE 14) */}
+      <Modal
+        visible={editingSession != null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditingSession(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalBox, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <ProDayText style={[styles.modalTitle, { color: tokens.foreground }]}>
+                  Commentaire Interne DT
+                </ProDayText>
+                <ProDayText style={[styles.modalSubtitle, { color: tokens.muted }]}>
+                  {editingSession?.teamName} · Éducateur {editingSession?.coachName}
+                </ProDayText>
+              </View>
+              <TouchableOpacity onPress={() => setEditingSession(null)}>
+                <Icon name="close" size={20} color={tokens.muted} />
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              style={[
+                styles.modalTextInput,
+                { color: tokens.foreground, borderColor: tokens.border, backgroundColor: tokens.elevated },
+              ]}
+              placeholder="Consigne ou observation pédagogique du Directeur Technique..."
+              placeholderTextColor={tokens.muted}
+              multiline
+              numberOfLines={4}
+              value={dtDraftComment}
+              onChangeText={setDtDraftComment}
+            />
+
+            <View style={styles.modalFooter}>
+              <PressableSpring
+                onPress={() => {
+                  if (!editingSession) return;
+                  setSessionList((prev) =>
+                    prev.map((s) =>
+                      s.sessionId === editingSession.sessionId
+                        ? {
+                            ...s,
+                            dtComment: dtDraftComment.trim() || undefined,
+                            dtCommentAuthor: 'Directeur Technique (DT)',
+                            dtCommentDate: 'Aujourd’hui (validé)',
+                          }
+                        : s,
+                    ),
+                  );
+                  setEditingSession(null);
+                  Alert.alert('Commentaire DT enregistré', 'L’observation interne a été enregistrée sur la séance.');
+                }}
+                style={[styles.modalSaveBtn, { backgroundColor: tokens.accent }]}
+                scaleTo={0.97}
+              >
+                <ProDayText style={styles.modalSaveBtnText}>Enregistrer la note DT</ProDayText>
+              </PressableSpring>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -501,5 +645,135 @@ const styles = StyleSheet.create({
   },
   drillObj: {
     ...APPLE_TYPOGRAPHY.caption1,
+  },
+  dtBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: clubRadius.lg,
+    borderWidth: 1,
+    marginBottom: 4,
+  },
+  dtBannerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dtBannerTitle: {
+    ...APPLE_TYPOGRAPHY.subheadline,
+    fontWeight: '700',
+  },
+  dtBannerSubtitle: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    marginTop: 2,
+  },
+  sessionBadgesCol: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  readOnlyPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  readOnlyText: {
+    fontSize: 9,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  dtCommentContainer: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 12,
+    gap: 6,
+    marginTop: 4,
+  },
+  dtCommentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dtCommentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  dtCommentBadgeText: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  dtEditBtnText: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    fontWeight: '600',
+    fontSize: 11,
+  },
+  dtCommentBody: {
+    gap: 3,
+  },
+  dtCommentText: {
+    ...APPLE_TYPOGRAPHY.footnote,
+    fontStyle: 'italic',
+    lineHeight: 18,
+  },
+  dtCommentDate: {
+    fontSize: 10,
+  },
+  dtNoCommentText: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    fontStyle: 'italic',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalBox: {
+    width: '100%',
+    maxWidth: 480,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 18,
+    gap: 14,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  modalTitle: {
+    ...APPLE_TYPOGRAPHY.headline,
+  },
+  modalSubtitle: {
+    ...APPLE_TYPOGRAPHY.caption1,
+    marginTop: 2,
+  },
+  modalTextInput: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    ...APPLE_TYPOGRAPHY.body,
+    fontSize: 14,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  modalFooter: {
+    alignItems: 'stretch',
+  },
+  modalSaveBtn: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalSaveBtnText: {
+    ...APPLE_TYPOGRAPHY.subheadline,
+    fontWeight: '700',
+    color: '#000000',
   },
 });

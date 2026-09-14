@@ -6,7 +6,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  Modal,
 } from 'react-native';
+import { ProDayVideoPlayer } from '../../components/video/ProDayVideoPlayer';
+import type { VeoMatchStream } from '../../services/veo/veoLiveStream.service';
 import type { User } from '../../models/User';
 import type { ClubMatchVideo } from '../../models/ClubCameras';
 import {
@@ -57,6 +60,7 @@ export function CoachMesVideosScreen({ profile }: Props) {
   const [videos, setVideos] = useState<ClubMatchVideo[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checkedPreflight, setCheckedPreflight] = useState<Record<string, boolean>>({});
+  const [activePlaybackStream, setActivePlaybackStream] = useState<VeoMatchStream | null>(null);
 
   const load = useCallback(async () => {
     if (!clubId) {
@@ -372,14 +376,22 @@ export function CoachMesVideosScreen({ profile }: Props) {
                       <View style={styles.videoActionsBar}>
                         <TouchableOpacity
                           activeOpacity={0.85}
-                          onPress={() =>
-                            Alert.alert(
-                              'Lecture vidéo',
-                              v.storage_url
-                                ? 'Lien stockage disponible — ouverture via le lecteur vidéo du club.'
-                                : 'Le fichier est en cours de synchronisation par le club.',
-                            )
-                          }
+                          onPress={() => {
+                            setActivePlaybackStream({
+                              id: v.id,
+                              match_id: v.event_id || v.id,
+                              club_id: v.club_id,
+                              title: v.title,
+                              stream_kind: v.source === 'camera_api' ? 'live' : 'replay',
+                              is_live: v.status === 'recording',
+                              stream_url:
+                                v.storage_url ||
+                                'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                              status: v.status === 'recording' ? 'live' : 'ready',
+                              duration_sec: v.duration_sec,
+                              updated_at: new Date().toISOString(),
+                            });
+                          }}
                           style={[styles.actionBtn, styles.actionBtnPrimary]}
                         >
                           <Icon name="play" size={13} color="#000000" />
@@ -698,6 +710,21 @@ export function CoachMesVideosScreen({ profile }: Props) {
           ) : null}
         </ScrollView>
       </View>
+
+      {activePlaybackStream ? (
+        <Modal
+          visible={Boolean(activePlaybackStream)}
+          animationType="slide"
+          onRequestClose={() => setActivePlaybackStream(null)}
+        >
+          <View style={{ flex: 1, backgroundColor: '#000000', justifyContent: 'center' }}>
+            <ProDayVideoPlayer
+              stream={activePlaybackStream}
+              onClose={() => setActivePlaybackStream(null)}
+            />
+          </View>
+        </Modal>
+      ) : null}
     </CoachPane>
   );
 }

@@ -104,11 +104,25 @@ export function getMessagesChapters(t: TranslateFn) {
 export function getMessagesThreadFilters(t: TranslateFn) {
   return [
     { id: 'all' as const, label: tr(t, 'messages.filter.all', 'Tous') },
+    { id: 'unread' as const, label: tr(t, 'messages.filter.unread', 'Non lus') },
+    { id: 'direct' as const, label: tr(t, 'messages.filter.direct', 'Directs') },
+    { id: 'groups' as const, label: tr(t, 'messages.filter.groups', 'Groupes') },
+    { id: 'announcements' as const, label: tr(t, 'messages.filter.announcements', 'Annonces') },
     { id: 'coach' as const, label: tr(t, 'messages.filter.coach', 'Coach') },
     { id: 'team' as const, label: tr(t, 'messages.filter.team', 'Vestiaire / Équipe') },
     { id: 'mercato' as const, label: tr(t, 'messages.filter.mercato', 'Mercato') },
-    { id: 'unread' as const, label: tr(t, 'messages.filter.unread', 'Non lus') },
     { id: 'care' as const, label: tr(t, 'messages.filter.care', 'Kiné') },
+  ] satisfies { id: MessagesThreadFilter; label: string }[];
+}
+
+/** Filtres messagerie compacts v4 : Tous, Non lus, Directs, Groupes, Annonces */
+export function getMessagesV4CompactFilters(t: TranslateFn) {
+  return [
+    { id: 'all' as const, label: tr(t, 'messages.filter.all', 'Tous') },
+    { id: 'unread' as const, label: tr(t, 'messages.filter.unread', 'Non lus') },
+    { id: 'direct' as const, label: tr(t, 'messages.filter.direct', 'Directs') },
+    { id: 'groups' as const, label: tr(t, 'messages.filter.groups', 'Groupes') },
+    { id: 'announcements' as const, label: tr(t, 'messages.filter.announcements', 'Annonces') },
   ] satisfies { id: MessagesThreadFilter; label: string }[];
 }
 
@@ -117,8 +131,10 @@ export function getCoachMessagesThreadFilters(t: TranslateFn) {
   return getMessagesThreadFilters(t).filter((f) => f.id !== 'care');
 }
 
-/** Filtres messagerie joueur — avec Coach, Vestiaire/Équipe, Mercato. */
-export const getJoueurMessagesThreadFilters = getCoachMessagesThreadFilters;
+/** Filtres messagerie joueur — compacts v4. */
+export function getJoueurMessagesThreadFilters(t: TranslateFn) {
+  return getMessagesV4CompactFilters(t);
+}
 
 
 export function getCarpoolChapters(t: TranslateFn) {

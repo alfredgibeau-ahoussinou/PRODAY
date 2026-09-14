@@ -107,12 +107,13 @@ function createStyles(palette: CarpoolUiPalette) {
     },
     segment: {
       flex: 1,
-      height: 38,
+      height: 40,
       borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: 'transparent',
+      paddingHorizontal: 2,
     },
     segmentActive: {
       backgroundColor: '#1C1D26',
@@ -121,11 +122,11 @@ function createStyles(palette: CarpoolUiPalette) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      paddingHorizontal: 4,
+      gap: 4,
+      paddingHorizontal: 2,
     },
     label: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '700',
     },
     labelActive: {

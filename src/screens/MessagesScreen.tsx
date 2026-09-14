@@ -139,31 +139,43 @@ export const MessagesScreen: React.FC = () => {
           (t.thread_title?.toLowerCase().includes('coach') ?? false);
         if (!isCoach) return false;
       }
-      if (threadFilter === 'team') {
-        const isTeam =
+      if (threadFilter === 'direct') {
+        const isGroup =
           t.thread_kind === 'team_group' ||
+          (t.thread_kind as string) === 'group' ||
           t.id.startsWith('team__') ||
+          t.participant_name.toLowerCase().includes('groupe') ||
+          t.participant_name.toLowerCase().includes('équipe') ||
+          t.participant_name.toLowerCase().includes('vestiaire');
+        const isAnnounce =
+          (t.thread_kind as string) === 'announcement' ||
+          (t.thread_kind as string) === 'broadcast' ||
+          t.participant_name.toLowerCase().includes('annonce') ||
+          t.participant_name.toLowerCase().includes('officiel');
+        if (isGroup || isAnnounce) return false;
+      }
+      if (threadFilter === 'groups') {
+        const isGroup =
+          t.thread_kind === 'team_group' ||
+          (t.thread_kind as string) === 'group' ||
+          t.id.startsWith('team__') ||
+          t.participant_name.toLowerCase().includes('groupe') ||
           t.participant_name.toLowerCase().includes('équipe') ||
           t.participant_name.toLowerCase().includes('vestiaire') ||
-          (t.thread_title?.toLowerCase().includes('équipe') ?? false);
-        if (!isTeam) return false;
+          (t.thread_title?.toLowerCase().includes('équipe') ?? false) ||
+          (t.thread_title?.toLowerCase().includes('groupe') ?? false);
+        if (!isGroup) return false;
       }
-      if (threadFilter === 'mercato') {
-        const isMercato =
-          t.thread_kind === 'message_request' ||
-          (t.thread_kind as string) === 'recruitment' ||
-          t.participant_name.toLowerCase().includes('recruteur') ||
-          t.participant_name.toLowerCase().includes('agent') ||
-          t.participant_name.toLowerCase().includes('mercato');
-        if (!isMercato) return false;
-      }
-      if (threadFilter === 'requests') {
-        if (
-          t.request_status !== 'pending' &&
-          !(t.thread_kind === 'message_request' && t.request_status !== 'accepted')
-        ) {
-          return false;
-        }
+      if (threadFilter === 'announcements') {
+        const isAnnounce =
+          (t.thread_kind as string) === 'announcement' ||
+          (t.thread_kind as string) === 'broadcast' ||
+          t.participant_name.toLowerCase().includes('annonce') ||
+          t.participant_name.toLowerCase().includes('officiel') ||
+          t.participant_name.toLowerCase().includes('direction') ||
+          t.participant_name.toLowerCase().includes('club') ||
+          (t.thread_title?.toLowerCase().includes('annonce') ?? false);
+        if (!isAnnounce) return false;
       }
       if (!q) return true;
       return (

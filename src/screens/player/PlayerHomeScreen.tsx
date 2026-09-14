@@ -516,6 +516,16 @@ export const PlayerHomeScreen: React.FC<PlayerHomeScreenProps> = ({ onNavigateTa
       <PlayerStoryExportModal
         visible={showStoryModal}
         player={playerData}
+        weekendStats={{
+          matchTitle: 'J17 · vs RC France',
+          result: 'Victoire 2 - 0',
+          matchRating: 8.7,
+          goals: 2,
+          assists: 1,
+          distanceKm: 11.2,
+          duelsPct: 81,
+          minutes: 90,
+        }}
         onClose={() => setShowStoryModal(false)}
       />
 

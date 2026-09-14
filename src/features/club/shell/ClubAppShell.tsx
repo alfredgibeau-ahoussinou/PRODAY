@@ -7,8 +7,8 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ClubSidebar } from './ClubSidebar';
-import { ClubTabBar } from './ClubTabBar';
+import { ProDayBottomTabBar } from '../../../components/navigation/ProDayBottomTabBar';
+import { ProDayMenuScreen } from '../../../screens/menu/ProDayMenuScreen';
 import { ClubShellNavProvider } from './ClubShellNavContext';
 import { ClubThemeProvider, useClubTheme } from './ClubThemeContext';
 import { ClubMenuPane } from './ClubMenuPane';
@@ -281,7 +281,7 @@ function ClubAppShellInner({
       clearPlayersPendingFocus={() => setPlayersPendingFocus(false)}
     >
       <StatusBar style="light" />
-      <View style={[styles.root, !wide && styles.rootColumn]}>
+      <View style={[styles.root, styles.rootColumn]}>
         <LinearGradient
           colors={[tokens.bgWash, tokens.bgWashMid, 'transparent']}
           locations={[0, 0.2, 0.52]}
@@ -290,7 +290,6 @@ function ClubAppShellInner({
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-        {wide ? <ClubSidebar {...sidebarProps} /> : null}
 
         <View style={styles.pane}>
           <ClubPageChrome
@@ -309,9 +308,15 @@ function ClubAppShellInner({
           </View>
         </View>
 
-        {!wide ? (
-          <ClubTabBar items={primaryItems} activeId={navId} onSelect={onSelect} />
-        ) : null}
+        <ProDayBottomTabBar
+          activeTab={tabFromClubNav(navId)}
+          onTabPress={(tab) => {
+            onTabChange(tab);
+            const cNav = clubNavFromTab(tab);
+            onSelect(cNav);
+          }}
+          unreadCount={0}
+        />
       </View>
 
       <ClubCreateSheet
@@ -357,7 +362,7 @@ function renderClubPane(navId: ClubNavItemId, toolItems: ReturnType<typeof resol
     case 'pack':
       return <ClubPackScreen />;
     case 'plus':
-      return <ClubMenuPane items={toolItems} />;
+      return <ProDayMenuScreen />;
     case 'assistant':
       return <ClubAiAssistant />;
     default:

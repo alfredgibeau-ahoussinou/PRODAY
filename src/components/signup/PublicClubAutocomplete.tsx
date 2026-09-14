@@ -5,12 +5,19 @@ import {
   TextInput,
   ActivityIndicator,
   ScrollView,
+  TouchableOpacity,
+  Modal,
+  Alert,
 } from 'react-native';
 import {
   type OfficialFffClub,
   FffOfficialRegistryError,
 } from '../../services/fffOfficialRegistry.service';
 import { publicClubDirectoryService } from '../../services/publicClubDirectory.service';
+import {
+  overseasClubsService,
+  OVERSEAS_TERRITORIES,
+} from '../../services/overseasClubs.service';
 import { PressableSpring } from '../motion';
 import { Icon } from '../ui/Icon';
 import { ProDayText } from '../ui/ProDayText';
@@ -54,39 +61,51 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
   const accent = accentProp ?? visual.accent;
   const styles = useMemo(() => createStyles(accent), [accent]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTerritory, setSelectedTerritory] = useState<string | null>(null);
+  const [customModalVisible, setCustomModalVisible] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [customCity, setCustomCity] = useState('');
+  const [customPostal, setCustomPostal] = useState('');
+  const [customTerritory, setCustomTerritory] = useState('971');
+  const [customDivision, setCustomDivision] = useState('Régionale 1');
+
   const [results, setResults] = useState<OfficialFffClub[]>([]);
   const [claimByFff, setClaimByFff] = useState<Record<string, PublicClubClaimStatus>>({});
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    if (selectedClub) {
+  const handleSelectTerritory = (code: string | null) => {
+    setSelectedTerritory(code);
+    if (code) {
+      const omClubs = overseasClubsService.searchOverseasClubs(searchQuery, code);
+      setResults(omClubs);
+      setSearchError(omClubs.length === 0 ? `Aucun club trouvé pour ce territoire.` : null);
+    } else if (searchQuery.trim().length >= 2) {
+      void executeSearch(searchQuery.trim());
+    } else {
       setResults([]);
       setSearchError(null);
-      setIsSearching(false);
-      return;
     }
-    const q = searchQuery.trim();
-    if (q.length < 2) {
-      setResults([]);
-      setSearchError(null);
-      setIsSearching(false);
-      return;
-    }
+  };
+
+  const executeSearch = async (q: string) => {
     setIsSearching(true);
     setSearchError(null);
-    const timer = setTimeout(async () => {
-      try {
-        const clubs = await publicClubDirectoryService.searchClubs(q);
-        if (!active) return;
-        setResults(clubs.slice(0, 25));
-        if (clubs.length === 0) {
-          setSearchError(
-            'Aucun club FFF trouvé. Essayez la ville, le CP (5 chiffres) ou le n° d’affiliation.',
-          );
-        }
-        // Badges claim + logos annuaire (best-effort, enrichit les hits live sans blason)
+    try {
+      let clubs: OfficialFffClub[] = [];
+      if (selectedTerritory) {
+        clubs = overseasClubsService.searchOverseasClubs(q, selectedTerritory);
+      } else {
+        clubs = await publicClubDirectoryService.searchClubs(q);
+      }
+      setResults(clubs.slice(0, 25));
+      if (clubs.length === 0) {
+        setSearchError(
+          'Aucun club trouvé. Vérifiez le nom, la ville, le code postal ou utilisez « Mon club n’apparaît pas » ci-dessous.',
+        );
+      }
+      // Badges claim
+      if (!selectedTerritory) {
         const statuses: Record<string, PublicClubClaimStatus> = {};
         const logos: Record<string, string> = {};
         await Promise.all(
@@ -98,7 +117,6 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
             if (entry.logo_url?.trim()) logos[c.fffNumber] = entry.logo_url.trim();
           }),
         );
-        if (!active) return;
         if (showClaimBadge) setClaimByFff((prev) => ({ ...prev, ...statuses }));
         if (Object.keys(logos).length > 0) {
           setResults((prev) =>
@@ -109,23 +127,62 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
             ),
           );
         }
-      } catch (err) {
-        if (!active) return;
-        setResults([]);
-        setSearchError(
-          err instanceof FffOfficialRegistryError
-            ? err.message
-            : 'Erreur de recherche club. Réessayez.',
-        );
-      } finally {
-        if (active) setIsSearching(false);
       }
+    } catch (err) {
+      setResults([]);
+      setSearchError(
+        err instanceof FffOfficialRegistryError
+          ? err.message
+          : 'Erreur de recherche club. Réessayez.',
+      );
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleCreateCustomClub = () => {
+    if (!customName.trim() || !customCity.trim()) {
+      Alert.alert('Champs obligatoires', 'Veuillez renseigner le nom du club et la ville.');
+      return;
+    }
+    const unlisted = overseasClubsService.createUnlistedClub({
+      name: customName,
+      city: customCity,
+      postalCode: customPostal,
+      territoryCodeOrDepartment: customTerritory,
+      estimatedDivision: customDivision,
+    });
+    onSelectClub(unlisted);
+    setCustomModalVisible(false);
+    setCustomName('');
+    setCustomCity('');
+    setCustomPostal('');
+  };
+
+  useEffect(() => {
+    let active = true;
+    if (selectedClub) {
+      setResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+    const q = searchQuery.trim();
+    if (q.length < 2 && !selectedTerritory) {
+      setResults([]);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      if (active) void executeSearch(q);
     }, 280);
     return () => {
       active = false;
       clearTimeout(timer);
     };
-  }, [searchQuery, selectedClub, showClaimBadge]);
+  }, [searchQuery, selectedClub, selectedTerritory]);
+
 
   if (selectedClub) {
     const status = selectedClub.fffNumber
@@ -180,12 +237,65 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
 
   return (
     <View style={styles.root}>
+      {/* Sélecteur rapide Outre-Mer / Territoire (Section 24) */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.territoryScroll}
+      >
+        <TouchableOpacity
+          style={[
+            styles.territoryPill,
+            !selectedTerritory && { backgroundColor: accent, borderColor: accent },
+          ]}
+          onPress={() => handleSelectTerritory(null)}
+        >
+          <ProDayText
+            variant="caption"
+            style={[
+              styles.territoryPillText,
+              !selectedTerritory && styles.territoryPillTextActive,
+            ]}
+          >
+            Tous / Métropole
+          </ProDayText>
+        </TouchableOpacity>
+
+        {OVERSEAS_TERRITORIES.map((t) => {
+          const isSelected = selectedTerritory === t.code;
+          return (
+            <TouchableOpacity
+              key={t.code}
+              style={[
+                styles.territoryPill,
+                isSelected && { backgroundColor: accent, borderColor: accent },
+              ]}
+              onPress={() => handleSelectTerritory(isSelected ? null : t.code)}
+            >
+              <ProDayText
+                variant="caption"
+                style={[
+                  styles.territoryPillText,
+                  isSelected && styles.territoryPillTextActive,
+                ]}
+              >
+                {t.shortName} ({t.code})
+              </ProDayText>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       <View style={styles.inputWrap}>
         <Icon name="search" size={18} color="rgba(255,255,255,0.45)" />
         <TextInput
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder={placeholder}
+          placeholder={
+            selectedTerritory
+              ? `Rechercher en ${OVERSEAS_TERRITORIES.find((t) => t.code === selectedTerritory)?.shortName || 'Outre-Mer'}...`
+              : placeholder
+          }
           placeholderTextColor="rgba(255,255,255,0.35)"
           style={styles.input}
           autoCorrect={false}
@@ -218,7 +328,6 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
               <PressableSpring
                 key={`${club.id}-${club.fffNumber}`}
                 onPress={() => {
-                  // Sélection immédiate (masque le dropdown) — enrichissement logo en arrière-plan.
                   onSelectClub(club);
                   if (club.fffNumber && !club.logoUrl) {
                     void publicClubDirectoryService
@@ -264,6 +373,146 @@ export const PublicClubAutocomplete: React.FC<Props> = ({
           })}
         </ScrollView>
       ) : null}
+
+      {/* Action Mon club n'apparaît pas (Section 24) */}
+      <TouchableOpacity
+        style={styles.unlistedClubBtn}
+        onPress={() => setCustomModalVisible(true)}
+      >
+        <Icon name="add" size={16} color={accent} />
+        <ProDayText variant="caption" style={[styles.unlistedClubText, { color: accent }]}>
+          Mon club n'apparaît pas (Métropole & Outre-Mer)
+        </ProDayText>
+      </TouchableOpacity>
+
+      {/* Modal Ajout Club Inconnu */}
+      <Modal
+        visible={customModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCustomModalVisible(false)}
+      >
+        <View style={styles.customModalOverlay}>
+          <View style={styles.customModalCard}>
+            <View style={styles.customModalHeader}>
+              <ProDayText variant="section" style={styles.customModalTitle}>
+                Ajouter un club non répertorié
+              </ProDayText>
+              <TouchableOpacity onPress={() => setCustomModalVisible(false)}>
+                <Icon name="close" size={20} color="rgba(255,255,255,0.6)" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 380 }} contentContainerStyle={{ gap: 12, paddingVertical: 8 }}>
+              <View>
+                <ProDayText variant="caption" style={styles.fieldLabel}>
+                  Nom officiel du club *
+                </ProDayText>
+                <TextInput
+                  style={styles.customInput}
+                  placeholder="Ex : FC Rivière des Roches"
+                  placeholderTextColor="rgba(255,255,255,0.35)"
+                  value={customName}
+                  onChangeText={setCustomName}
+                />
+              </View>
+
+              <View>
+                <ProDayText variant="caption" style={styles.fieldLabel}>
+                  Territoire / Département *
+                </ProDayText>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
+                  {OVERSEAS_TERRITORIES.map((t) => (
+                    <TouchableOpacity
+                      key={t.code}
+                      style={[
+                        styles.territoryChipSmall,
+                        customTerritory === t.code && { backgroundColor: accent, borderColor: accent },
+                      ]}
+                      onPress={() => setCustomTerritory(t.code)}
+                    >
+                      <ProDayText variant="caption" style={{ color: '#FFFFFF', fontSize: 11 }}>
+                        {t.shortName} ({t.code})
+                      </ProDayText>
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    style={[
+                      styles.territoryChipSmall,
+                      customTerritory === 'METRO' && { backgroundColor: accent, borderColor: accent },
+                    ]}
+                    onPress={() => setCustomTerritory('METRO')}
+                  >
+                    <ProDayText variant="caption" style={{ color: '#FFFFFF', fontSize: 11 }}>
+                      Métropole
+                    </ProDayText>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <ProDayText variant="caption" style={styles.fieldLabel}>
+                    Ville *
+                  </ProDayText>
+                  <TextInput
+                    style={styles.customInput}
+                    placeholder="Ex : Bras-Panon"
+                    placeholderTextColor="rgba(255,255,255,0.35)"
+                    value={customCity}
+                    onChangeText={setCustomCity}
+                  />
+                </View>
+                <View style={{ width: 100 }}>
+                  <ProDayText variant="caption" style={styles.fieldLabel}>
+                    Code Postal
+                  </ProDayText>
+                  <TextInput
+                    style={styles.customInput}
+                    placeholder="97412"
+                    placeholderTextColor="rgba(255,255,255,0.35)"
+                    value={customPostal}
+                    onChangeText={setCustomPostal}
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+
+              <View>
+                <ProDayText variant="caption" style={styles.fieldLabel}>
+                  Niveau / Division estimée
+                </ProDayText>
+                <TextInput
+                  style={styles.customInput}
+                  placeholder="Ex : Régionale 1, D1, Jeunes"
+                  placeholderTextColor="rgba(255,255,255,0.35)"
+                  value={customDivision}
+                  onChangeText={setCustomDivision}
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.customModalActions}>
+              <TouchableOpacity
+                style={styles.customCancelBtn}
+                onPress={() => setCustomModalVisible(false)}
+              >
+                <ProDayText variant="caption" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  Annuler
+                </ProDayText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.customSaveBtn, { backgroundColor: accent }]}
+                onPress={handleCreateCustomClub}
+              >
+                <ProDayText variant="caption" style={{ color: '#0F172A', fontWeight: '800' }}>
+                  Valider et continuer
+                </ProDayText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -343,6 +592,108 @@ function createStyles(accent: string) {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: 'rgba(255,255,255,0.08)',
+    },
+    territoryScroll: {
+      gap: 6,
+      paddingBottom: 4,
+    },
+    territoryPill: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radius.pill,
+      backgroundColor: 'rgba(255,255,255,0.08)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)',
+    },
+    territoryPillText: {
+      fontSize: 11,
+      color: 'rgba(255,255,255,0.7)',
+      fontWeight: '600',
+    },
+    territoryPillTextActive: {
+      color: '#0F172A',
+      fontWeight: '800',
+    },
+    unlistedClubBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      alignSelf: 'flex-start',
+    },
+    unlistedClubText: {
+      fontSize: 12,
+      fontWeight: '600',
+      textDecorationLine: 'underline',
+    },
+    customModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.75)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 16,
+    },
+    customModalCard: {
+      width: '100%',
+      maxWidth: 480,
+      backgroundColor: '#1E293B',
+      borderRadius: radius.xl,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.15)',
+    },
+    customModalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    customModalTitle: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    fieldLabel: {
+      color: 'rgba(255,255,255,0.7)',
+      fontSize: 12,
+      marginBottom: 4,
+    },
+    customInput: {
+      backgroundColor: 'rgba(255,255,255,0.06)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.15)',
+      borderRadius: radius.md,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      color: '#FFFFFF',
+      fontSize: 14,
+    },
+    territoryChipSmall: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: radius.sm,
+      backgroundColor: 'rgba(255,255,255,0.08)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)',
+    },
+    customModalActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: 12,
+      marginTop: 16,
+      paddingTop: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: 'rgba(255,255,255,0.1)',
+    },
+    customCancelBtn: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: radius.md,
+    },
+    customSaveBtn: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: radius.md,
     },
   });
 }

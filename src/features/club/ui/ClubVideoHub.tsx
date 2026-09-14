@@ -5,6 +5,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -14,6 +15,7 @@ import { PressableSpring } from '../../../components/motion';
 import { Icon } from '../../../components/ui/Icon';
 import type { IconName } from '../../../components/ui/iconNames';
 import { ProDayText } from '../../../components/ui/ProDayText';
+import { ProDayVideoPlayer } from '../../../components/video/ProDayVideoPlayer';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import { APPLE_TYPOGRAPHY } from '../../../theme/appleTypography';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
@@ -149,14 +151,25 @@ export function ClubVideoHub({
     return clips.filter((c) => c.type === clipFilter);
   }, [clips, clipFilter]);
 
+  const [playerModal, setPlayerModal] = useState<{
+    visible: boolean;
+    title: string;
+    streamUrl?: string;
+    opponent?: string;
+    isLive?: boolean;
+  }>({ visible: false, title: '' });
+
   const handlePlayClip = (clip: SmartClipItem) => {
     if (onPlayClip) {
       onPlayClip(clip.id);
     } else {
-      Alert.alert(
-        'Lecture du Clip IA',
-        `Lecture de "${clip.title}" (${clip.authorName}, ${clip.minute}) du match ${clip.matchTitle}.`,
-      );
+      setPlayerModal({
+        visible: true,
+        title: `${clip.title} — ${clip.authorName}`,
+        streamUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+        opponent: clip.matchTitle,
+        isLive: false,
+      });
     }
   };
 
@@ -384,7 +397,19 @@ export function ClubVideoHub({
           {videos.map((vid) => (
             <PressableSpring
               key={vid.id}
-              onPress={() => onPlayVideo?.(vid.id)}
+              onPress={() => {
+                if (onPlayVideo) {
+                  onPlayVideo(vid.id);
+                } else {
+                  setPlayerModal({
+                    visible: true,
+                    title: vid.title,
+                    streamUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                    opponent: vid.category,
+                    isLive: false,
+                  });
+                }
+              }}
               style={[styles.videoCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
               scaleTo={0.98}
             >
@@ -419,6 +444,36 @@ export function ClubVideoHub({
           ))}
         </View>
       ) : null}
+
+      {/* ProDay Video Player Modal */}
+      <Modal
+        visible={playerModal.visible}
+        animationType="slide"
+        onRequestClose={() => setPlayerModal({ visible: false, title: '' })}
+      >
+        <View style={styles.videoModalRoot}>
+          <View style={styles.videoModalHeader}>
+            <ProDayText style={styles.videoModalTitle}>
+              Diffusion VEO Club — {playerModal.title}
+            </ProDayText>
+            <TouchableOpacity
+              onPress={() => setPlayerModal({ visible: false, title: '' })}
+              style={styles.videoModalCloseBtn}
+            >
+              <Icon name="close" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.videoModalBody}>
+            <ProDayVideoPlayer
+              streamUrl={playerModal.streamUrl}
+              videoType="replay"
+              title={playerModal.title}
+              opponent={playerModal.opponent ?? 'Club'}
+              isLive={playerModal.isLive}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -630,5 +685,30 @@ const styles = StyleSheet.create({
   clipsCountText: {
     ...APPLE_TYPOGRAPHY.caption1,
     fontWeight: '600',
+  },
+  videoModalRoot: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  videoModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 54,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: '#0F172A',
+  },
+  videoModalTitle: {
+    ...APPLE_TYPOGRAPHY.headline,
+    color: '#FFFFFF',
+    flex: 1,
+    marginRight: 12,
+  },
+  videoModalCloseBtn: {
+    padding: 8,
+  },
+  videoModalBody: {
+    flex: 1,
   },
 });

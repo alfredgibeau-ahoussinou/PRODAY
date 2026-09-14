@@ -117,6 +117,24 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
     );
   };
 
+  const activeContacts = React.useMemo(() => {
+    const list: { id: string; name: string; isGroup: boolean; unread: boolean; initial: string }[] = [];
+    const seen = new Set<string>();
+    for (const t of threads) {
+      if (!t.participant_name || seen.has(t.participant_name)) continue;
+      seen.add(t.participant_name);
+      list.push({
+        id: t.id,
+        name: t.participant_name,
+        isGroup: t.thread_kind === 'team_group' || t.id.startsWith('team__'),
+        unread: Boolean(t.unread),
+        initial: t.participant_name.charAt(0).toUpperCase(),
+      });
+      if (list.length >= 8) break;
+    }
+    return list;
+  }, [threads]);
+
   return (
     <ScrollView
       contentContainerStyle={MESSAGES_CHAPTER_PAD}
@@ -135,6 +153,48 @@ export const MessagesInboxPage: React.FC<MessagesInboxPageProps> = ({
         loading={loading}
         variant={variant}
       />
+
+      {/* Rail Contacts Actifs Style Instagram */}
+      {activeContacts.length > 0 ? (
+        <View style={styles.storiesContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.storiesContent}
+          >
+            {activeContacts.map((c) => (
+              <PressableSpring
+                key={c.id}
+                onPress={() => onOpenThread(c.id)}
+                scaleTo={0.93}
+                haptic
+                style={styles.storyBubble}
+              >
+                <View
+                  style={[
+                    styles.storyRing,
+                    c.unread
+                      ? { borderColor: '#30D158', borderWidth: 2 }
+                      : { borderColor: 'rgba(255, 255, 255, 0.18)' },
+                  ]}
+                >
+                  <View style={styles.storyAvatarInner}>
+                    {c.isGroup ? (
+                      <Icon name="people" size={16} color="#FFFFFF" />
+                    ) : (
+                      <ProDayText style={styles.storyInitial}>{c.initial}</ProDayText>
+                    )}
+                  </View>
+                  <View style={styles.storyOnlineDot} />
+                </View>
+                <ProDayText style={styles.storyName} numberOfLines={1}>
+                  {c.name.split(' ')[0]}
+                </ProDayText>
+              </PressableSpring>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
 
       <MessageRequestsPanel
         pendingThreads={pendingRequestThreads}
@@ -278,5 +338,61 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.1,
+  },
+  storiesContainer: {
+    marginBottom: spacing.md,
+    marginTop: 2,
+  },
+  storiesContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingHorizontal: 2,
+    paddingVertical: 4,
+  },
+  storyBubble: {
+    alignItems: 'center',
+    gap: 5,
+    width: 62,
+  },
+  storyRing: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 2,
+    position: 'relative',
+  },
+  storyAvatarInner: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#1E202B',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storyInitial: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  storyOnlineDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#30D158',
+    borderWidth: 1.5,
+    borderColor: '#0E0E14',
+  },
+  storyName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94A3B8',
+    textAlign: 'center',
   },
 });

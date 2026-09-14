@@ -145,6 +145,7 @@ interface Props {
   compact?: boolean;
   divisionName?: string;
   onSelectTeam?: (row: StandingsRow) => void;
+  lightMode?: boolean;
 }
 
 export const CoachStandingsTable: React.FC<Props> = ({
@@ -152,6 +153,7 @@ export const CoachStandingsTable: React.FC<Props> = ({
   compact = false,
   divisionName = 'Régional 1 — Poule B (Saison 2026/2027)',
   onSelectTeam,
+  lightMode = false,
 }) => {
   const [filter, setFilter] = useState<'all' | 'home' | 'away'>('all');
   const [isAutoSync, setIsAutoSync] = useState(true);
@@ -166,17 +168,17 @@ export const CoachStandingsTable: React.FC<Props> = ({
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, lightMode && styles.cardLight]}>
       {/* Official Automated League Feed Status Bar (Apple Style) */}
       {!compact && (
-        <View style={styles.officialFeedBanner}>
+        <View style={[styles.officialFeedBanner, lightMode && styles.officialFeedBannerLight]}>
           <View style={styles.officialFeedLeft}>
             <View style={[styles.liveSyncDot, manualOverrideActive && styles.liveSyncDotManual]} />
             <View>
-              <Text style={styles.officialFeedTitle}>
+              <Text style={[styles.officialFeedTitle, lightMode && styles.textDark]}>
                 {manualOverrideActive ? 'Mode Manuel Actif (Contestation)' : 'Flux FFF / District Officiel en Direct'}
               </Text>
-              <Text style={styles.officialFeedSubtitle}>
+              <Text style={[styles.officialFeedSubtitle, lightMode && styles.textMutedDark]}>
                 {manualOverrideActive
                   ? 'Modifications locales autorisées · Synchronisation suspendue'
                   : `API FFF Synchronisée · Résultats homologués (${lastSyncTime})`}
@@ -203,9 +205,9 @@ export const CoachStandingsTable: React.FC<Props> = ({
 
       {/* Latest Official Validated Match Strip */}
       {!compact && (
-        <View style={styles.latestMatchStrip}>
+        <View style={[styles.latestMatchStrip, lightMode && styles.latestMatchStripLight]}>
           <MaterialCommunityIcons name="check-decagram" size={14} color="#C5A059" />
-          <Text style={styles.latestMatchText}>
+          <Text style={[styles.latestMatchText, lightMode && styles.textDark]}>
             Dernier résultat validé FFF : <Text style={styles.latestMatchBold}>FC ProDay 3 - 1 AS Montferrand</Text> (J16)
           </Text>
         </View>
@@ -215,33 +217,33 @@ export const CoachStandingsTable: React.FC<Props> = ({
         <View style={styles.headerLeft}>
           <MaterialCommunityIcons name="trophy-outline" size={18} color="#C5A059" />
           <View>
-            <Text style={styles.title}>Classement Officiel FFF</Text>
-            <Text style={styles.subtitle}>{divisionName}</Text>
+            <Text style={[styles.title, lightMode && styles.textDark]}>Classement Officiel FFF</Text>
+            <Text style={[styles.subtitle, lightMode && styles.textMutedDark]}>{divisionName}</Text>
           </View>
         </View>
 
         {!compact && (
-          <View style={styles.filterPills}>
+          <View style={[styles.filterPills, lightMode && styles.filterPillsLight]}>
             <TouchableOpacity
               activeOpacity={0.7}
               style={[styles.pill, filter === 'all' && styles.pillActive]}
               onPress={() => setFilter('all')}
             >
-              <Text style={[styles.pillText, filter === 'all' && styles.pillTextActive]}>Général</Text>
+              <Text style={[styles.pillText, lightMode && styles.textMutedDark, filter === 'all' && styles.pillTextActive]}>Général</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.7}
               style={[styles.pill, filter === 'home' && styles.pillActive]}
               onPress={() => setFilter('home')}
             >
-              <Text style={[styles.pillText, filter === 'home' && styles.pillTextActive]}>Dom.</Text>
+              <Text style={[styles.pillText, lightMode && styles.textMutedDark, filter === 'home' && styles.pillTextActive]}>Dom.</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.7}
               style={[styles.pill, filter === 'away' && styles.pillActive]}
               onPress={() => setFilter('away')}
             >
-              <Text style={[styles.pillText, filter === 'away' && styles.pillTextActive]}>Ext.</Text>
+              <Text style={[styles.pillText, lightMode && styles.textMutedDark, filter === 'away' && styles.pillTextActive]}>Ext.</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -250,16 +252,16 @@ export const CoachStandingsTable: React.FC<Props> = ({
       <ScrollView horizontal showsHorizontalScrollIndicator={false} bounces={false}>
         <View style={styles.tableContainer}>
           {/* Table Column Headers */}
-          <View style={styles.tableRowHeader}>
-            <Text style={[styles.th, styles.colRank]}>#</Text>
-            <Text style={[styles.th, styles.colClub]}>Club</Text>
-            <Text style={[styles.th, styles.colPoints]}>Pts</Text>
-            <Text style={[styles.th, styles.colStat]}>J</Text>
-            <Text style={[styles.th, styles.colStat]}>G</Text>
-            <Text style={[styles.th, styles.colStat]}>N</Text>
-            <Text style={[styles.th, styles.colStat]}>P</Text>
-            <Text style={[styles.th, styles.colStat]}>Diff</Text>
-            {!compact && <Text style={[styles.th, styles.colForm]}>Forme</Text>}
+          <View style={[styles.tableRowHeader, lightMode && styles.tableRowHeaderLight]}>
+            <Text style={[styles.th, styles.colRank, lightMode && styles.textMutedDark]}>#</Text>
+            <Text style={[styles.th, styles.colClub, lightMode && styles.textMutedDark]}>Club</Text>
+            <Text style={[styles.th, styles.colPoints, lightMode && styles.textMutedDark]}>Pts</Text>
+            <Text style={[styles.th, styles.colStat, lightMode && styles.textMutedDark]}>J</Text>
+            <Text style={[styles.th, styles.colStat, lightMode && styles.textMutedDark]}>G</Text>
+            <Text style={[styles.th, styles.colStat, lightMode && styles.textMutedDark]}>N</Text>
+            <Text style={[styles.th, styles.colStat, lightMode && styles.textMutedDark]}>P</Text>
+            <Text style={[styles.th, styles.colStat, lightMode && styles.textMutedDark]}>Diff</Text>
+            {!compact && <Text style={[styles.th, styles.colForm, lightMode && styles.textMutedDark]}>Forme</Text>}
           </View>
 
           {/* Table Rows */}
@@ -273,13 +275,14 @@ export const CoachStandingsTable: React.FC<Props> = ({
                 activeOpacity={0.8}
                 style={[
                   styles.tableRow,
-                  row.isCurrentTeam && styles.currentTeamRow,
+                  lightMode && styles.tableRowLight,
+                  row.isCurrentTeam && (lightMode ? styles.currentTeamRowLight : styles.currentTeamRow),
                 ]}
                 onPress={() => onSelectTeam?.(row)}
               >
                 {/* Rank Badge */}
-                <View style={[styles.rankBadge, isPromotion && styles.rankPromo, isRelegation && styles.rankReleg]}>
-                  <Text style={[styles.rankText, row.isCurrentTeam && styles.boldWhite]}>
+                <View style={[styles.rankBadge, lightMode && styles.rankBadgeLight, isPromotion && styles.rankPromo, isRelegation && styles.rankReleg]}>
+                  <Text style={[styles.rankText, lightMode && styles.textDark, row.isCurrentTeam && (lightMode ? styles.boldGold : styles.boldWhite)]}>
                     {row.rank}
                   </Text>
                 </View>
@@ -290,6 +293,7 @@ export const CoachStandingsTable: React.FC<Props> = ({
                     numberOfLines={1}
                     style={[
                       styles.clubNameText,
+                      lightMode && styles.textDark,
                       row.isCurrentTeam && styles.currentTeamText,
                     ]}
                   >
@@ -298,20 +302,20 @@ export const CoachStandingsTable: React.FC<Props> = ({
                 </View>
 
                 {/* Points */}
-                <Text style={[styles.td, styles.colPoints, styles.pointsText, row.isCurrentTeam && styles.boldGold]}>
+                <Text style={[styles.td, styles.colPoints, styles.pointsText, lightMode && styles.textDark, row.isCurrentTeam && styles.boldGold]}>
                   {row.points}
                 </Text>
 
                 {/* Stats: J, G, N, P, Diff */}
-                <Text style={[styles.td, styles.colStat]}>{row.played}</Text>
-                <Text style={[styles.td, styles.colStat]}>{row.won}</Text>
-                <Text style={[styles.td, styles.colStat]}>{row.drawn}</Text>
-                <Text style={[styles.td, styles.colStat]}>{row.lost}</Text>
+                <Text style={[styles.td, styles.colStat, lightMode && styles.textDark]}>{row.played}</Text>
+                <Text style={[styles.td, styles.colStat, lightMode && styles.textDark]}>{row.won}</Text>
+                <Text style={[styles.td, styles.colStat, lightMode && styles.textDark]}>{row.drawn}</Text>
+                <Text style={[styles.td, styles.colStat, lightMode && styles.textDark]}>{row.lost}</Text>
                 <Text
                   style={[
                     styles.td,
                     styles.colStat,
-                    row.goalDiff > 0 ? styles.diffPositive : row.goalDiff < 0 ? styles.diffNegative : null,
+                    row.goalDiff > 0 ? styles.diffPositive : row.goalDiff < 0 ? styles.diffNegative : (lightMode ? styles.textDark : null),
                   ]}
                 >
                   {row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}
@@ -342,18 +346,18 @@ export const CoachStandingsTable: React.FC<Props> = ({
       </ScrollView>
 
       {/* Legend Footer */}
-      <View style={styles.footerLegend}>
+      <View style={[styles.footerLegend, lightMode && styles.footerLegendLight]}>
         <View style={styles.legendItem}>
           <View style={[styles.legendBar, { backgroundColor: '#30D158' }]} />
-          <Text style={styles.legendLabel}>Montée N3</Text>
+          <Text style={[styles.legendLabel, lightMode && styles.textMutedDark]}>Montée N3</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendBar, { backgroundColor: '#0A84FF' }]} />
-          <Text style={styles.legendLabel}>Barrages</Text>
+          <Text style={[styles.legendLabel, lightMode && styles.textMutedDark]}>Barrages</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendBar, { backgroundColor: '#FF453A' }]} />
-          <Text style={styles.legendLabel}>Relégation R2</Text>
+          <Text style={[styles.legendLabel, lightMode && styles.textMutedDark]}>Relégation R2</Text>
         </View>
       </View>
     </View>
@@ -361,6 +365,43 @@ export const CoachStandingsTable: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
+  cardLight: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
+  },
+  officialFeedBannerLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  latestMatchStripLight: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
+  },
+  textDark: {
+    color: '#0F172A',
+  },
+  textMutedDark: {
+    color: '#64748B',
+  },
+  filterPillsLight: {
+    backgroundColor: '#F1F5F9',
+  },
+  tableRowHeaderLight: {
+    borderBottomColor: '#E2E8F0',
+  },
+  tableRowLight: {
+    borderBottomColor: '#F1F5F9',
+  },
+  currentTeamRowLight: {
+    backgroundColor: '#FEF9C3',
+    borderLeftColor: '#C5A059',
+  },
+  rankBadgeLight: {
+    backgroundColor: '#F1F5F9',
+  },
+  footerLegendLight: {
+    borderTopColor: '#E2E8F0',
+  },
   card: {
     backgroundColor: '#121217',
     borderRadius: 20,

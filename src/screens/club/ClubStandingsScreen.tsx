@@ -7,11 +7,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Modal,
   ScrollView,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useClubTheme } from '../../features/club/shell/ClubThemeContext';
 import { useClubLeagueId } from '../../features/club/hooks/useClubLeagueId';
 import { ClubBrandHeader } from '../../features/club/ui/ClubBrandHeader';
@@ -49,6 +53,26 @@ export function ClubStandingsScreen() {
   const [poolData, setPoolData] = useState<FrenchLeagueData | null>(null);
   const [loadingPool, setLoadingPool] = useState<boolean>(false);
 
+  // État des corrections manuelles systématiques (Page 19)
+  const [overrides, setOverrides] = useState<Record<string, {
+    points?: number;
+    played?: number;
+    won?: number;
+    drawn?: number;
+    lost?: number;
+    goal_diff?: number;
+    reason?: string;
+  }>>({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+  const [editPts, setEditPts] = useState('');
+  const [editPlayed, setEditPlayed] = useState('');
+  const [editWon, setEditWon] = useState('');
+  const [editDrawn, setEditDrawn] = useState('');
+  const [editLost, setEditLost] = useState('');
+  const [editDiff, setEditDiff] = useState('');
+  const [editReason, setEditReason] = useState('');
+
   const styles = useMemo(() => createStyles(tokens), [tokens]);
   const effectiveLeagueId = leagueId || 'r1_idf_b';
   const effectiveTeamName = clubTeamName || 'FC ProDay';
@@ -83,6 +107,38 @@ export function ClubStandingsScreen() {
     };
   }, [effectiveLeagueId, season]);
 
+  // Calcul du classement effectif intégrant les corrections manuelles (Page 19)
+  const effectiveStandings = useMemo(() => {
+    if (!poolData?.standings) return [];
+    const base = poolData.standings.map((team) => {
+      const ov = overrides[team.team_id];
+      if (!ov) return { ...team, isOverridden: false };
+      return {
+        ...team,
+        points: ov.points !== undefined ? ov.points : team.points,
+        played: ov.played !== undefined ? ov.played : team.played,
+        won: ov.won !== undefined ? ov.won : team.won,
+        drawn: ov.drawn !== undefined ? ov.drawn : team.drawn,
+        lost: ov.lost !== undefined ? ov.lost : team.lost,
+        goal_diff: ov.goal_diff !== undefined ? ov.goal_diff : team.goal_diff,
+        overrideReason: ov.reason,
+        isOverridden: true,
+      };
+    });
+
+    base.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      return b.goal_diff - a.goal_diff;
+    });
+
+    return base.map((item, idx) => ({
+      ...item,
+      rank: idx + 1,
+    }));
+  }, [poolData?.standings, overrides]);
+
+  const hasOverrides = Object.keys(overrides).length > 0;
+
   if (loading) {
     return (
       <View style={[styles.root, styles.centerFlex]}>
@@ -95,13 +151,13 @@ export function ClubStandingsScreen() {
   }
 
   // Équipe du club dans le classement de la poule
-  const myTeamRow = poolData?.standings.find(
+  const myTeamRow = effectiveStandings.find(
     (row) =>
       row.isMyTeam ||
       (teamId && row.team_id === teamId) ||
       row.name.toLowerCase().includes(effectiveTeamName.toLowerCase()) ||
       row.name.toLowerCase().includes('proday'),
-  ) ?? poolData?.standings[0];
+  ) ?? effectiveStandings[0];
 
   return (
     <View style={styles.root}>
@@ -174,6 +230,61 @@ export function ClubStandingsScreen() {
           contentContainerStyle={styles.scrollBody}
           showsVerticalScrollIndicator={false}
         >
+          {/* BARRE STATUT SYNCHRO FFF & CORRECTION MANUELLE (Page 19) */}
+          <View style={[styles.syncStatusBar, { backgroundColor: '#141822', borderColor: tokens.border }]}>
+            <View style={styles.syncStatusLeft}>
+              <View style={[styles.syncStatusIndicator, { backgroundColor: hasOverrides ? '#F59E0B' : '#10B981' }]} />
+              <View style={{ flex: 1 }}>
+                <ProDayText style={[styles.syncStatusTitle, { color: tokens.foreground }]}>
+                  {hasOverrides ? 'Correction Manuelle Active' : 'Synchro FFF Active (Repli Local)'}
+                </ProDayText>
+                <ProDayText style={[styles.syncStatusSubtitle, { color: tokens.muted }]}>
+                  {hasOverrides
+                    ? `${Object.keys(overrides).length} club(s) corrigé(s) manuellement`
+                    : 'Source officielle FFF · Données certifiées'}
+                </ProDayText>
+              </View>
+            </View>
+
+            <View style={styles.syncStatusActions}>
+              {hasOverrides ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    setOverrides({});
+                    Alert.alert('Réinitialisation', 'Le classement officiel FFF synchronisé a été rétabli.');
+                  }}
+                  style={[styles.resetSyncBtn, { borderColor: tokens.border }]}
+                >
+                  <ProDayText style={styles.resetSyncBtnText}>Rétablir FFF</ProDayText>
+                </TouchableOpacity>
+              ) : null}
+
+              <PressableSpring
+                onPress={() => {
+                  const initialTeam = effectiveStandings[0]?.team_id || '';
+                  setSelectedTeamId(initialTeam);
+                  const ov = overrides[initialTeam];
+                  const st = effectiveStandings.find((s) => s.team_id === initialTeam);
+                  setEditPts(String(ov?.points ?? st?.points ?? ''));
+                  setEditPlayed(String(ov?.played ?? st?.played ?? ''));
+                  setEditWon(String(ov?.won ?? st?.won ?? ''));
+                  setEditDrawn(String(ov?.drawn ?? st?.drawn ?? ''));
+                  setEditLost(String(ov?.lost ?? st?.lost ?? ''));
+                  setEditDiff(String(ov?.goal_diff ?? st?.goal_diff ?? ''));
+                  setEditReason(ov?.reason ?? '');
+                  setModalVisible(true);
+                }}
+                style={[styles.manualCorrectionBtn, { backgroundColor: tokens.accent }]}
+                scaleTo={0.96}
+              >
+                <Icon name="tune" size={13} color="#000000" />
+                <ProDayText style={styles.manualCorrectionBtnText}>
+                  Ajuster
+                </ProDayText>
+              </PressableSpring>
+            </View>
+          </View>
+
           {/* HERO CARD DU CLUB */}
           <View style={styles.heroClubCard}>
             <View style={styles.heroClubTop}>
@@ -321,7 +432,7 @@ export function ClubStandingsScreen() {
               </View>
 
               {/* Lignes du Tableau */}
-              {(poolData?.standings ?? []).map((row) => {
+              {effectiveStandings.map((row) => {
                 const isProDay =
                   row.isMyTeam ||
                   row.name.toLowerCase().includes('proday') ||
@@ -363,15 +474,22 @@ export function ClubStandingsScreen() {
                     </ProDayText>
 
                     <View style={styles.colTeam}>
-                      <ProDayText
-                        style={[
-                          styles.teamNameText,
-                          isProDay && { color: tokens.accent, fontWeight: '800' },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {row.name}
-                      </ProDayText>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <ProDayText
+                          style={[
+                            styles.teamNameText,
+                            isProDay && { color: tokens.accent, fontWeight: '800' },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {row.name}
+                        </ProDayText>
+                        {row.isOverridden ? (
+                          <View style={styles.overriddenBadge}>
+                            <ProDayText style={styles.overriddenBadgeText}>Corrigé</ProDayText>
+                          </View>
+                        ) : null}
+                      </View>
                       {isProDay ? (
                         <View style={styles.myTeamBadge}>
                           <ProDayText style={styles.myTeamBadgeText}>NOTRE CLUB</ProDayText>
@@ -539,6 +657,197 @@ export function ClubStandingsScreen() {
           />
         </ScrollView>
       )}
+
+      {/* MODAL CORRECTION MANUELLE DU CLASSEMENT (Page 19) */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+          <View style={[styles.modalBox, { backgroundColor: '#12151C', borderColor: tokens.border }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <ProDayText style={[styles.modalTitle, { color: tokens.foreground }]}>
+                  Correction Manuelle du Classement
+                </ProDayText>
+                <ProDayText style={[styles.modalSubtitle, { color: tokens.muted }]}>
+                  Ajustement administratif & pénalités FFF
+                </ProDayText>
+              </View>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Icon name="close" size={22} color={tokens.muted} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 420 }}>
+              {/* Sélecteur d'équipe */}
+              <ProDayText style={[styles.fieldLabel, { color: tokens.muted }]}>
+                Équipe à corriger
+              </ProDayText>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                {effectiveStandings.map((st) => (
+                  <TouchableOpacity
+                    key={st.team_id}
+                    onPress={() => {
+                      setSelectedTeamId(st.team_id);
+                      const ov = overrides[st.team_id];
+                      setEditPts(String(ov?.points ?? st.points));
+                      setEditPlayed(String(ov?.played ?? st.played));
+                      setEditWon(String(ov?.won ?? st.won));
+                      setEditDrawn(String(ov?.drawn ?? st.drawn));
+                      setEditLost(String(ov?.lost ?? st.lost));
+                      setEditDiff(String(ov?.goal_diff ?? st.goal_diff));
+                      setEditReason(ov?.reason ?? '');
+                    }}
+                    style={[
+                      styles.teamPickPill,
+                      selectedTeamId === st.team_id
+                        ? { backgroundColor: tokens.accent, borderColor: tokens.accent }
+                        : { backgroundColor: '#181C26', borderColor: tokens.border },
+                    ]}
+                  >
+                    <ProDayText
+                      style={[
+                        styles.teamPickText,
+                        selectedTeamId === st.team_id
+                          ? { color: '#000000', fontWeight: '700' }
+                          : { color: tokens.muted },
+                      ]}
+                    >
+                      {st.name}
+                    </ProDayText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {/* Ligne Points & Diff */}
+              <View style={styles.formRowFields}>
+                <View style={styles.formCol}>
+                  <ProDayText style={[styles.fieldLabel, { color: tokens.muted }]}>Points</ProDayText>
+                  <TextInput
+                    value={editPts}
+                    onChangeText={setEditPts}
+                    keyboardType="numeric"
+                    style={[styles.modalInput, { color: tokens.foreground, borderColor: tokens.border }]}
+                  />
+                </View>
+                <View style={styles.formCol}>
+                  <ProDayText style={[styles.fieldLabel, { color: tokens.muted }]}>Différence</ProDayText>
+                  <TextInput
+                    value={editDiff}
+                    onChangeText={setEditDiff}
+                    keyboardType="numeric"
+                    style={[styles.modalInput, { color: tokens.foreground, borderColor: tokens.border }]}
+                  />
+                </View>
+              </View>
+
+              {/* Ligne Matchs, V, N, D */}
+              <View style={styles.formRowFields}>
+                <View style={styles.formCol}>
+                  <ProDayText style={[styles.fieldLabel, { color: tokens.muted }]}>Joués</ProDayText>
+                  <TextInput
+                    value={editPlayed}
+                    onChangeText={setEditPlayed}
+                    keyboardType="numeric"
+                    style={[styles.modalInput, { color: tokens.foreground, borderColor: tokens.border }]}
+                  />
+                </View>
+                <View style={styles.formCol}>
+                  <ProDayText style={[styles.fieldLabel, { color: tokens.muted }]}>V</ProDayText>
+                  <TextInput
+                    value={editWon}
+                    onChangeText={setEditWon}
+                    keyboardType="numeric"
+                    style={[styles.modalInput, { color: tokens.foreground, borderColor: tokens.border }]}
+                  />
+                </View>
+                <View style={styles.formCol}>
+                  <ProDayText style={[styles.fieldLabel, { color: tokens.muted }]}>N</ProDayText>
+                  <TextInput
+                    value={editDrawn}
+                    onChangeText={setEditDrawn}
+                    keyboardType="numeric"
+                    style={[styles.modalInput, { color: tokens.foreground, borderColor: tokens.border }]}
+                  />
+                </View>
+                <View style={styles.formCol}>
+                  <ProDayText style={[styles.fieldLabel, { color: tokens.muted }]}>D</ProDayText>
+                  <TextInput
+                    value={editLost}
+                    onChangeText={setEditLost}
+                    keyboardType="numeric"
+                    style={[styles.modalInput, { color: tokens.foreground, borderColor: tokens.border }]}
+                  />
+                </View>
+              </View>
+
+              {/* Motif de correction */}
+              <View style={{ marginTop: 10 }}>
+                <ProDayText style={[styles.fieldLabel, { color: tokens.muted }]}>
+                  Motif de l'ajustement (ex: Pénalité FFF, forfait...)
+                </ProDayText>
+                <TextInput
+                  value={editReason}
+                  onChangeText={setEditReason}
+                  placeholder="Ex: -1 point suite à commission de discipline FFF"
+                  placeholderTextColor={tokens.muted}
+                  style={[styles.modalInput, { color: tokens.foreground, borderColor: tokens.border }]}
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalActionsRow}>
+              {overrides[selectedTeamId] ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    const next = { ...overrides };
+                    delete next[selectedTeamId];
+                    setOverrides(next);
+                    setModalVisible(false);
+                  }}
+                  style={[styles.deleteOverrideBtn, { borderColor: '#EF4444' }]}
+                >
+                  <ProDayText style={styles.deleteOverrideText}>Supprimer</ProDayText>
+                </TouchableOpacity>
+              ) : null}
+
+              <PressableSpring
+                onPress={() => {
+                  if (!selectedTeamId) return;
+                  const ptsNum = parseInt(editPts, 10);
+                  const playedNum = parseInt(editPlayed, 10);
+                  const wonNum = parseInt(editWon, 10);
+                  const drawnNum = parseInt(editDrawn, 10);
+                  const lostNum = parseInt(editLost, 10);
+                  const diffNum = parseInt(editDiff, 10);
+
+                  setOverrides((prev) => ({
+                    ...prev,
+                    [selectedTeamId]: {
+                      points: !isNaN(ptsNum) ? ptsNum : undefined,
+                      played: !isNaN(playedNum) ? playedNum : undefined,
+                      won: !isNaN(wonNum) ? wonNum : undefined,
+                      drawn: !isNaN(drawnNum) ? drawnNum : undefined,
+                      lost: !isNaN(lostNum) ? lostNum : undefined,
+                      goal_diff: !isNaN(diffNum) ? diffNum : undefined,
+                      reason: editReason.trim() || undefined,
+                    },
+                  }));
+                  setModalVisible(false);
+                }}
+                style={[styles.saveOverrideBtn, { backgroundColor: tokens.accent }]}
+                scaleTo={0.96}
+              >
+                <ProDayText style={styles.saveOverrideBtnText}>Appliquer</ProDayText>
+              </PressableSpring>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -982,6 +1291,168 @@ function createStyles(tokens: ClubThemeTokens) {
       color: tokens.muted,
       lineHeight: 16,
     },
+
+    // Barre Statut Synchro FFF (Page 19)
+    syncStatusBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 12,
+      borderRadius: clubRadius.md,
+      borderWidth: 1,
+      marginBottom: 12,
+      gap: 10,
+    },
+    syncStatusLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      flex: 1,
+    },
+    syncStatusIndicator: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    syncStatusTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    syncStatusSubtitle: {
+      fontSize: 11,
+      marginTop: 1,
+    },
+    syncStatusActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    resetSyncBtn: {
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    resetSyncBtnText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: tokens.muted,
+    },
+    manualCorrectionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+    },
+    manualCorrectionBtnText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#000000',
+    },
+    overriddenBadge: {
+      backgroundColor: 'rgba(245, 158, 11, 0.2)',
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+      borderRadius: 4,
+    },
+    overriddenBadgeText: {
+      fontSize: 9,
+      fontWeight: '700',
+      color: '#F59E0B',
+    },
+
+    // Modal Correction Manuelle
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.75)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 16,
+    },
+    modalBox: {
+      width: '100%',
+      maxWidth: 480,
+      maxHeight: '85%',
+      borderRadius: 20,
+      borderWidth: 1,
+      padding: 20,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 14,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+    },
+    modalSubtitle: {
+      fontSize: 12,
+      marginTop: 2,
+    },
+    fieldLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: 6,
+    },
+    modalInput: {
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      fontSize: 14,
+      backgroundColor: '#181C26',
+    },
+    teamPickPill: {
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderRadius: 8,
+      borderWidth: 1,
+      marginRight: 6,
+    },
+    teamPickText: {
+      fontSize: 12,
+    },
+    formRowFields: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 10,
+    },
+    formCol: {
+      flex: 1,
+    },
+    modalActionsRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: 10,
+      marginTop: 16,
+    },
+    deleteOverrideBtn: {
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    deleteOverrideText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: '#EF4444',
+    },
+    saveOverrideBtn: {
+      paddingHorizontal: 18,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    saveOverrideBtnText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: '#000000',
+    },
   });
 }
-

@@ -34,6 +34,7 @@ import {
   pickDirectorySearchPrefix,
   scorePublicClubMatch,
 } from '../utils/publicClubSearch';
+import { overseasClubsService } from './overseasClubs.service';
 import {
   directoryPayloadFromOfficial,
   officialFffClubFromDirectory,
@@ -234,6 +235,18 @@ export const publicClubDirectoryService = {
     } catch (err) {
       if (byFff.size === 0) throw err;
       console.warn('[publicClubDirectory] DOFA fallback:', err);
+    }
+
+    // Répertoire Outre-Mer (11 territoires DOM-TOM - Section 24)
+    try {
+      const omClubs = overseasClubsService.searchOverseasClubs(q);
+      for (const club of omClubs) {
+        if (club.fffNumber) {
+          putClub(club, true);
+        }
+      }
+    } catch (err) {
+      console.warn('[publicClubDirectory] overseas clubs lookup:', err);
     }
 
     const merged = Array.from(byFff.values());

@@ -36,6 +36,7 @@ import { PlayerFootballHubScreen } from '../screens/joueur/PlayerFootballHubScre
 import { PlayerProgressionScreen } from '../screens/joueur/PlayerProgressionScreen';
 import { PlayerSaisonScreen } from '../screens/joueur/PlayerSaisonScreen';
 import { JoueurPlusHubScreen } from '../screens/joueur/JoueurPlusHubScreen';
+import { ProDayMenuScreen } from '../screens/menu/ProDayMenuScreen';
 
 const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   home: HomeScreen,
@@ -50,7 +51,7 @@ const DEFAULT_SCREENS: Record<MainTabId, ComponentType> = {
   messages: MessagesScreen,
   profil: ProfilTabScreen,
   shop: ShopScreen,
-  plus: JoueurPlusHubScreen,
+  plus: ProDayMenuScreen,
 };
 
 /** Dock : Accueil · Matchs · Compétitions · Mes clubs · Vidéos · Profil. */

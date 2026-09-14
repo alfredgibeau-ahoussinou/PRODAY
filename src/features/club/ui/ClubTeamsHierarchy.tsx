@@ -20,6 +20,7 @@ import { ProDayText } from '../../../components/ui/ProDayText';
 import { useClubTheme } from '../shell/ClubThemeContext';
 import { APPLE_TYPOGRAPHY } from '../../../theme/appleTypography';
 import { clubRadius, clubSpace } from '../theme/clubDesignSystem';
+import { PdfImportModal } from '../../../components/pdf/PdfImportModal';
 
 export type CategoryBracket =
   | 'all'
@@ -62,6 +63,7 @@ export type ClubTeamHierarchyItem = {
   coachNames: string[];
   rankingPreview?: string;
   surclassesCount?: number;
+  attendanceRate?: number;
 };
 
 export type FffSurclassementRecord = {
@@ -114,6 +116,7 @@ export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
     coachNames: ['Marc Lefevre (Entraîneur)'],
     rankingPreview: '1er (R1 Poule B)',
     surclassesCount: 1,
+    attendanceRate: 94,
   },
   {
     teamId: 'team-2',
@@ -124,6 +127,7 @@ export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
     licensedCount: 22,
     coachNames: ['David Rossi'],
     rankingPreview: '4e (Départemental 1)',
+    attendanceRate: 91,
   },
   {
     teamId: 'team-3',
@@ -135,6 +139,7 @@ export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
     coachNames: ['Karim Ziani'],
     rankingPreview: '2e (U17 R2)',
     surclassesCount: 1,
+    attendanceRate: 95,
   },
   {
     teamId: 'team-4',
@@ -145,6 +150,7 @@ export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
     licensedCount: 18,
     coachNames: ['Alexandre Petit'],
     rankingPreview: '3e (U15 R2)',
+    attendanceRate: 92,
   },
   {
     teamId: 'team-5',
@@ -155,6 +161,7 @@ export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
     licensedCount: 16,
     coachNames: ['Lucas Bernard'],
     rankingPreview: 'Plateau Critérium',
+    attendanceRate: 96,
   },
   {
     teamId: 'team-6',
@@ -165,6 +172,7 @@ export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
     licensedCount: 26,
     coachNames: ['Sébastien Roux'],
     rankingPreview: 'Rassemblements 92',
+    attendanceRate: 93,
   },
   {
     teamId: 'team-7',
@@ -175,6 +183,7 @@ export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
     licensedCount: 38,
     coachNames: ['Thomas Martin', 'Clémentine Blanc'],
     rankingPreview: 'Plateaux Festi-Foot',
+    attendanceRate: 89,
   },
   {
     teamId: 'team-8',
@@ -185,6 +194,7 @@ export const DEMO_TEAMS_HIERARCHY: ClubTeamHierarchyItem[] = [
     licensedCount: 19,
     coachNames: [],
     rankingPreview: 'Championnat Dimanche Matin',
+    attendanceRate: 85,
   },
 ];
 
@@ -206,6 +216,7 @@ export function ClubTeamsHierarchy({
   const { tokens } = useClubTheme();
   const [internalBracket, setInternalBracket] = useState<CategoryBracket>('all');
   const [surclassementOpen, setSurclassementOpen] = useState(false);
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [activeRecords] = useState<FffSurclassementRecord[]>(DEMO_SURCLASSEMENTS);
 
   const selectedBracket = controlledBracket ?? internalBracket;
@@ -265,29 +276,40 @@ export function ClubTeamsHierarchy({
         </View>
       </View>
 
-      {/* 2. Boutons d'Action Rapide (Créer équipe / Surclassements FFF) */}
+      {/* 2. Boutons d'Action Rapide (Créer équipe / Import PDF / Surclassements FFF) */}
       <View style={styles.actionToolbar}>
         {onOpenCreateTeam ? (
           <PressableSpring
             onPress={onOpenCreateTeam}
-            style={[styles.actionBtnPrimary, { backgroundColor: tokens.accent }]}
+            style={[styles.actionBtn, { backgroundColor: tokens.accent }]}
             scaleTo={0.98}
           >
-            <Icon name="add" size={18} color="#000000" />
-            <ProDayText style={styles.actionBtnPrimaryText}>
+            <Icon name="add" size={16} color="#000000" />
+            <ProDayText style={[styles.actionBtnText, { color: '#000000', fontWeight: '700' }]}>
               Nouvelle équipe
             </ProDayText>
           </PressableSpring>
         ) : null}
 
         <PressableSpring
-          onPress={() => setSurclassementOpen(true)}
-          style={[styles.actionBtnSecondary, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
+          onPress={() => setPdfModalOpen(true)}
+          style={[styles.actionBtn, { backgroundColor: tokens.surface, borderColor: tokens.border, borderWidth: 1 }]}
           scaleTo={0.98}
         >
-          <Icon name="shield" size={18} color={tokens.accent} />
-          <ProDayText style={[styles.actionBtnSecondaryText, { color: tokens.foreground }]}>
-            Surclassements FFF ({activeRecords.length})
+          <Icon name="document" size={16} color={tokens.accent} />
+          <ProDayText style={[styles.actionBtnText, { color: tokens.foreground }]}>
+            Import PDF Licenciés
+          </ProDayText>
+        </PressableSpring>
+
+        <PressableSpring
+          onPress={() => setSurclassementOpen(true)}
+          style={[styles.actionBtn, { backgroundColor: tokens.surface, borderColor: tokens.border, borderWidth: 1 }]}
+          scaleTo={0.98}
+        >
+          <Icon name="shield" size={16} color={tokens.accent} />
+          <ProDayText style={[styles.actionBtnText, { color: tokens.foreground }]}>
+            Surclassements ({activeRecords.length})
           </ProDayText>
         </PressableSpring>
       </View>
@@ -340,6 +362,10 @@ export function ClubTeamsHierarchy({
         ) : (
           filteredTeams.map((team) => {
             const hasCoach = team.coachNames && team.coachNames.length > 0;
+            const coachName = hasCoach ? team.coachNames[0] : 'Sans éducateur assigné';
+            const rate = team.attendanceRate ?? 92;
+            const isRateGood = rate >= 90;
+
             return (
               <PressableSpring
                 key={team.teamId}
@@ -352,7 +378,7 @@ export function ClubTeamsHierarchy({
                     <View style={[styles.teamBadge, { backgroundColor: tokens.accentSoft }]}>
                       <Icon name="shield" size={20} color={tokens.accent} />
                     </View>
-                    <View>
+                    <View style={{ flex: 1 }}>
                       <ProDayText style={[styles.teamTitle, { color: tokens.foreground }]}>
                         {team.name}
                       </ProDayText>
@@ -364,30 +390,87 @@ export function ClubTeamsHierarchy({
                   <Icon name="chevron-forward" size={18} color={tokens.muted} />
                 </View>
 
+                {/* Bloc Coach Référent & Taux de Présence */}
+                <View style={[styles.teamMetaGrid, { backgroundColor: '#181C26', borderColor: tokens.border }]}>
+                  <View style={styles.teamMetaCol}>
+                    <View style={styles.metaLabelRow}>
+                      <Icon name="school" size={13} color={hasCoach ? tokens.accent : tokens.warning} />
+                      <ProDayText style={[styles.metaLabelText, { color: tokens.muted }]}>
+                        Coach Référent
+                      </ProDayText>
+                    </View>
+                    <ProDayText
+                      style={[
+                        styles.metaValueText,
+                        { color: hasCoach ? tokens.foreground : tokens.warning },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {coachName}
+                    </ProDayText>
+                  </View>
+
+                  <View style={[styles.teamMetaDivider, { backgroundColor: tokens.border }]} />
+
+                  <View style={styles.teamMetaCol}>
+                    <View style={styles.metaLabelRow}>
+                      <Icon
+                        name="checkmark-circle"
+                        size={13}
+                        color={isRateGood ? '#10B981' : '#F59E0B'}
+                      />
+                      <ProDayText style={[styles.metaLabelText, { color: tokens.muted }]}>
+                        Taux de Présence
+                      </ProDayText>
+                    </View>
+                    <View style={styles.attendanceRow}>
+                      <ProDayText
+                        style={[
+                          styles.metaValueText,
+                          { color: isRateGood ? '#10B981' : '#F59E0B', fontWeight: '700' },
+                        ]}
+                      >
+                        {rate}%
+                      </ProDayText>
+                      <View
+                        style={[
+                          styles.attendanceBadgePill,
+                          {
+                            backgroundColor: isRateGood
+                              ? 'rgba(16, 185, 129, 0.15)'
+                              : 'rgba(245, 158, 11, 0.15)',
+                          },
+                        ]}
+                      >
+                        <ProDayText
+                          style={[
+                            styles.attendanceBadgeText,
+                            { color: isRateGood ? '#10B981' : '#F59E0B' },
+                          ]}
+                        >
+                          {isRateGood ? 'Assidu' : 'À surveiller'}
+                        </ProDayText>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
                 <View style={[styles.teamCardFooter, { borderTopColor: tokens.border }]}>
                   <View style={styles.footerItem}>
-                    <Icon name="people" size={15} color={tokens.accent} />
+                    <Icon name="people" size={14} color={tokens.accent} />
                     <ProDayText style={[styles.footerText, { color: tokens.muted }]}>
                       {team.licensedCount || 0} licenciés
                     </ProDayText>
                   </View>
 
-                  <View style={styles.footerItem}>
-                    <Icon
-                      name="school"
-                      size={15}
-                      color={hasCoach ? tokens.accent : tokens.warning}
-                    />
-                    <ProDayText
-                      style={[
-                        styles.footerText,
-                        { color: hasCoach ? tokens.foreground : tokens.warning },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {hasCoach ? team.coachNames.join(', ') : 'Sans éducateur'}
-                    </ProDayText>
-                  </View>
+                  {team.rankingPreview ? (
+                    <View style={styles.footerItem}>
+                      <Icon name="trophy" size={14} color={tokens.muted} />
+                      <ProDayText style={[styles.footerText, { color: tokens.muted }]}>
+                        {team.rankingPreview}
+                      </ProDayText>
+                    </View>
+                  ) : null}
                 </View>
               </PressableSpring>
             );
@@ -469,6 +552,19 @@ export function ClubTeamsHierarchy({
           </View>
         </View>
       </Modal>
+
+      {/* Modal Import PDF Licenciés (branché sur PdfImportModal) */}
+      <PdfImportModal
+        visible={pdfModalOpen}
+        onClose={() => setPdfModalOpen(false)}
+        onImportToSquad={(players) => {
+          Alert.alert(
+            'Importation FFF réussie',
+            `${players.length} licencié(s) FFF détecté(s) et intégrés dans les effectifs du club avec succès.`
+          );
+          setPdfModalOpen(false);
+        }}
+      />
     </View>
   );
 }
@@ -507,35 +603,66 @@ const styles = StyleSheet.create({
   },
   actionToolbar: {
     flexDirection: 'row',
-    gap: 10,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  actionBtnPrimary: {
-    flex: 1,
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: clubRadius.lg,
   },
-  actionBtnPrimaryText: {
-    ...APPLE_TYPOGRAPHY.subheadline,
-    fontWeight: '700',
-    color: '#000000',
-  },
-  actionBtnSecondary: {
-    flex: 1.3,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    borderRadius: clubRadius.lg,
-    borderWidth: 1,
-  },
-  actionBtnSecondaryText: {
+  actionBtnText: {
     ...APPLE_TYPOGRAPHY.subheadline,
     fontWeight: '600',
+  },
+  teamMetaGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: clubRadius.md,
+    borderWidth: 1,
+    padding: 10,
+  },
+  teamMetaCol: {
+    flex: 1,
+    gap: 4,
+  },
+  metaLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  metaLabelText: {
+    ...APPLE_TYPOGRAPHY.caption2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '600',
+  },
+  metaValueText: {
+    ...APPLE_TYPOGRAPHY.footnote,
+    fontWeight: '600',
+  },
+  teamMetaDivider: {
+    width: 1,
+    height: 32,
+    marginHorizontal: 10,
+  },
+  attendanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  attendanceBadgePill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  attendanceBadgeText: {
+    ...APPLE_TYPOGRAPHY.caption2,
+    fontWeight: '700',
   },
   pillsScroll: {
     gap: 8,

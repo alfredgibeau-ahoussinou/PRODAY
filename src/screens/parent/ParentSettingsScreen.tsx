@@ -6,6 +6,7 @@ import {
   Switch,
   Alert,
   TextInput,
+  Linking,
 } from 'react-native';
 import { ProDayText } from '../../components/ui/ProDayText';
 import { useThemedScreen } from '../../hooks/useThemedScreen';
@@ -13,8 +14,10 @@ import { spacing, radius } from '../../theme/designTokens';
 import { useParentShell } from '../../navigation/parentShellContext';
 import { parentPortalService } from '../../services/parentPortal.service';
 import { parentalGuardianService } from '../../services/parentalGuardian.service';
+import { authService } from '../../services/auth.service';
 import { ParentalTimeLimitScreen } from '../ParentalTimeLimitScreen';
 import { ParentalActivityReportScreen } from '../ParentalActivityReportScreen';
+import { LanguageSettingControl } from '../../components/settings/LanguageSettingControl';
 import { useAuth } from '../../context/AuthContext';
 import { normalizeGuardianEmail } from '../../utils/guardianEmail';
 import type { ParentalEmergencyContact } from '../../models/ParentalSettings';
@@ -49,6 +52,35 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
   const [emPhone, setEmPhone] = useState('');
   const [emRelation, setEmRelation] = useState('');
   const [bonusBusy, setBonusBusy] = useState(false);
+  const [resetSending, setResetSending] = useState(false);
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      Alert.alert('Information', 'Aucune adresse e-mail associée à ce compte.');
+      return;
+    }
+    Alert.alert(
+      'Réinitialisation du mot de passe',
+      `Envoyer un e-mail de réinitialisation à ${email} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Envoyer',
+          onPress: async () => {
+            setResetSending(true);
+            try {
+              await authService.sendPasswordReset(email);
+              Alert.alert('Succès', `Un e-mail de réinitialisation a été envoyé à ${email}.`);
+            } catch (err) {
+              Alert.alert('Erreur', err instanceof Error ? err.message : 'Échec de l’envoi');
+            } finally {
+              setResetSending(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const emergency = useMemo(
     () => selected?.settings.emergency_contacts ?? [],
@@ -104,10 +136,81 @@ export const ParentSettingsScreen: React.FC<Props> = ({ onSignOut }) => {
   return (
     <ParentPageFrame identity={PARENT_PAGES.reglages}>
       <ScrollView contentContainerStyle={styles.content}>
+        {/* 1. PROFIL PARENT & COMPTE */}
+        <ParentSectionCard
+          title="Profil Parent & Compte"
+          subtitle="Identité et rôle légal ProDay"
+        >
+          <View style={styles.profileRow}>
+            <View style={[styles.avatarBox, { backgroundColor: c.brandSoft }]}>
+              <ProDayText variant="title" style={{ color: c.brand, fontWeight: '800' }}>
+                {(profile?.display_name || email || 'P').charAt(0).toUpperCase()}
+              </ProDayText>
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <ProDayText variant="body" style={{ fontWeight: '700' }}>
+                {profile?.display_name || 'Parent ProDay'}
+              </ProDayText>
+              <ProDayText variant="caption" muted>
+                {email || 'E-mail non renseigné'}
+              </ProDayText>
+              <View style={[styles.roleBadge, { backgroundColor: `${c.brand}20` }]}>
+                <ProDayText variant="caption" style={{ color: c.brand, fontWeight: '700', fontSize: 11 }}>
+                  Espace Suivi Parent · Responsable légal
+                </ProDayText>
+              </View>
+            </View>
+          </View>
+        </ParentSectionCard>
+
+        {/* 2. LANGUE DE L'APPLICATION */}
+        <ParentSectionCard
+          title="Langue & Région"
+          subtitle="Personnalisez la langue d’affichage de l’espace"
+        >
+          <LanguageSettingControl variant="card" />
+        </ParentSectionCard>
+
+        {/* 3. SÉCURITÉ DU COMPTE & CONDITIONS */}
+        <ParentSectionCard
+          title="Sécurité & Accès"
+          subtitle="Identifiants et protection des données"
+        >
+          <ParentActionButton
+            label={resetSending ? 'Envoi en cours…' : 'Réinitialiser mon mot de passe'}
+            icon="lock"
+            tone="ghost"
+            loading={resetSending}
+            onPress={handlePasswordReset}
+          />
+          <View style={styles.rowActions}>
+            <ParentActionButton
+              label="Conditions Générales (CGU)"
+              icon="document"
+              tone="ghost"
+              onPress={() => {
+                void Linking.openURL('https://proday.app/terms').catch(() => {
+                  Alert.alert('CGU ProDay', 'Consultez les conditions d’utilisation sur proday.app/terms');
+                });
+              }}
+            />
+            <ParentActionButton
+              label="Politique de Confidentialité"
+              icon="shield"
+              tone="ghost"
+              onPress={() => {
+                void Linking.openURL('https://proday.app/privacy').catch(() => {
+                  Alert.alert('Confidentialité', 'Politique de confidentialité disponible sur proday.app/privacy');
+                });
+              }}
+            />
+          </View>
+        </ParentSectionCard>
+
         {!selected ? (
           <ParentSectionCard title="Aucun enfant sélectionné">
             <ProDayText variant="body" muted>
-              Sélectionnez un enfant depuis l’accueil pour gérer les réglages.
+              Sélectionnez un enfant depuis l’accueil pour gérer les réglages de temps d'écran et de messagerie.
             </ProDayText>
           </ParentSectionCard>
         ) : (
@@ -429,5 +532,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     fontSize: 15,
+  },
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  avatarBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+    marginTop: 2,
   },
 });

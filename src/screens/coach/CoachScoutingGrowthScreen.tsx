@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  TextInput,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
@@ -89,8 +90,90 @@ const PLAYERS_GROWTH: PlayerGrowthReport[] = [
   },
 ];
 
+interface VoiceScoutNote {
+  id: string;
+  playerName: string;
+  category: string;
+  timestamp: string;
+  duration: string;
+  transcript: string;
+  tags: string[];
+  status: 'integrated' | 'pending';
+}
+
+const INITIAL_VOICE_NOTES: VoiceScoutNote[] = [
+  {
+    id: 'vn-1',
+    playerName: 'Yanis B.',
+    category: 'Match R1 (J16)',
+    timestamp: 'Hier · 16:42',
+    duration: '00:38',
+    transcript: "Superbe appel contre-appel à la 34e min. Première touche orientée vers l'intérieur remarquable. Attention : replacement défensif lent après perte haute.",
+    tags: ['Technique', 'Finition', 'Transition'],
+    status: 'integrated',
+  },
+  {
+    id: 'vn-2',
+    playerName: 'Thomas D.',
+    category: 'Entraînement - Rondo & Pressing',
+    timestamp: 'Mardi · 19:15',
+    duration: '00:45',
+    transcript: "Capacité d'orientation du corps avant la passe en progression sous pression. Volume de course impressionnant, leadership vocal confirmé.",
+    tags: ['Tactique', 'Athlétique', 'Mental'],
+    status: 'integrated',
+  },
+];
+
 export const CoachScoutingGrowthScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'opponents' | 'growth' | 'staff_channel'>('growth');
+  const [activeTab, setActiveTab] = useState<'growth' | 'vocal_scouting' | 'opponents' | 'staff_channel'>('growth');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [selectedPlayerName, setSelectedPlayerName] = useState('Yanis B.');
+  const [transcriptText, setTranscriptText] = useState(
+    "Observation terrain : Très bonne anticipation des trajectoires aériennes. Appui solide sur le pied gauche, orienter davantage le regard avant la relance."
+  );
+  const [selectedTags, setSelectedTags] = useState<string[]>(['Technique', 'Athlétique']);
+  const [voiceNotes, setVoiceNotes] = useState<VoiceScoutNote[]>(INITIAL_VOICE_NOTES);
+
+  const handleToggleRecord = () => {
+    if (!isRecording) {
+      setIsRecording(true);
+      setRecordingSeconds(1);
+    } else {
+      setIsRecording(false);
+      Alert.alert('Retranscription IA Terminée', 'Votre dictée audio a été transcrite par l’IA ProDay. Vous pouvez l’ajuster avant validation.');
+    }
+  };
+
+  const handleToggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleValidateVoiceNote = () => {
+    if (!transcriptText.trim()) {
+      Alert.alert('Texte vide', 'Veuillez dicter ou saisir une observation terrain.');
+      return;
+    }
+    const newNote: VoiceScoutNote = {
+      id: `vn-${Date.now()}`,
+      playerName: selectedPlayerName,
+      category: 'Observation terrain en direct',
+      timestamp: "À l'instant",
+      duration: isRecording ? `00:${recordingSeconds < 10 ? '0' : ''}${recordingSeconds}` : '00:32',
+      transcript: transcriptText.trim(),
+      tags: selectedTags.length > 0 ? selectedTags : ['Observation'],
+      status: 'integrated',
+    };
+    setVoiceNotes([newNote, ...voiceNotes]);
+    setIsRecording(false);
+    setRecordingSeconds(0);
+    Alert.alert(
+      'Note Vocale Validée & Intégrée',
+      `L'observation pour ${selectedPlayerName} a été intégrée avec succès dans son dossier joueur et son passeport de compétences.`
+    );
+  };
 
   const generateCertifiedDossier = (player: PlayerGrowthReport) => {
     Alert.alert(
@@ -116,7 +199,7 @@ export const CoachScoutingGrowthScreen: React.FC = () => {
             </View>
           </View>
           <Text style={styles.headerTitle}>Scouting, Bilan 360° & Marketplace</Text>
-          <Text style={styles.headerSubtitle}>Base adversaires, dossiers certifiés et canal staff</Text>
+          <Text style={styles.headerSubtitle}>Base adversaires, scouting vocal, dossiers certifiés et canal staff</Text>
         </View>
       </View>
 
@@ -127,7 +210,15 @@ export const CoachScoutingGrowthScreen: React.FC = () => {
           onPress={() => setActiveTab('growth')}
         >
           <Text style={[styles.segmentBtnText, activeTab === 'growth' && styles.segmentBtnTextActive]}>
-            Bilan 360° ({PLAYERS_GROWTH.length})
+            Bilan 360°
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentBtn, activeTab === 'vocal_scouting' && styles.segmentBtnActive]}
+          onPress={() => setActiveTab('vocal_scouting')}
+        >
+          <Text style={[styles.segmentBtnText, activeTab === 'vocal_scouting' && styles.segmentBtnTextActive]}>
+            Scouting Vocal
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -135,7 +226,7 @@ export const CoachScoutingGrowthScreen: React.FC = () => {
           onPress={() => setActiveTab('opponents')}
         >
           <Text style={[styles.segmentBtnText, activeTab === 'opponents' && styles.segmentBtnTextActive]}>
-            Base Adversaires
+            Adversaires
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -217,6 +308,159 @@ export const CoachScoutingGrowthScreen: React.FC = () => {
             </View>
           ))}
         </>
+      )}
+
+      {/* TAB: SCOUTING VOCAL (Page 8) */}
+      {activeTab === 'vocal_scouting' && (
+        <View style={styles.vocalSection}>
+          {/* Top Banner */}
+          <View style={styles.bannerVocal}>
+            <MaterialCommunityIcons name="microphone-message" size={22} color="#0A84FF" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bannerVocalTitle}>Scouting Vocal & Dictée Bord de Touche</Text>
+              <Text style={styles.bannerVocalText}>
+                Enregistrez vos observations terrain en direct. L'IA ProDay transcrit vos notes et les intègre instantanément au passeport du joueur.
+              </Text>
+            </View>
+          </View>
+
+          {/* Active Voice Recorder Card */}
+          <View style={styles.vocalRecorderCard}>
+            {/* Player Target Selector */}
+            <Text style={styles.vocalLabel}>Joueur ciblé par l'observation :</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.playerPickerRow} contentContainerStyle={{ gap: 8 }}>
+              {['Yanis B.', 'Lucas M.', 'Thomas D.', 'Collectif'].map((pName) => (
+                <TouchableOpacity
+                  key={pName}
+                  style={[
+                    styles.playerPickerPill,
+                    selectedPlayerName === pName && styles.playerPickerPillActive,
+                  ]}
+                  onPress={() => setSelectedPlayerName(pName)}
+                >
+                  <Text
+                    style={[
+                      styles.playerPickerPillText,
+                      selectedPlayerName === pName && styles.playerPickerPillTextActive,
+                    ]}
+                  >
+                    {pName}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            {/* Record / Stop Button */}
+            <View style={styles.recordActionCenter}>
+              <TouchableOpacity
+                style={[
+                  styles.recordBtn,
+                  isRecording ? styles.recordBtnActive : styles.recordBtnIdle,
+                ]}
+                activeOpacity={0.85}
+                onPress={handleToggleRecord}
+              >
+                <MaterialCommunityIcons
+                  name={isRecording ? 'stop-circle' : 'microphone'}
+                  size={32}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.recordBtnText}>
+                  {isRecording
+                    ? `Arrêter & Retranscrire (00:${recordingSeconds < 10 ? '0' : ''}${recordingSeconds})`
+                    : "Démarrer l'enregistrement vocal terrain"}
+                </Text>
+              </TouchableOpacity>
+              {isRecording && (
+                <View style={styles.recordingLivePill}>
+                  <View style={styles.recordingPulseDot} />
+                  <Text style={styles.recordingLiveText}>Enregistrement en direct · Micro bord de terrain ouvert</Text>
+                </View>
+              )}
+            </View>
+
+            {/* AI Transcript Box */}
+            <View style={styles.transcriptBox}>
+              <View style={styles.transcriptHeader}>
+                <View style={styles.transcriptLabelRow}>
+                  <MaterialCommunityIcons name="text-box-search-outline" size={16} color="#64D2FF" />
+                  <Text style={styles.transcriptTitle}>Retranscription IA ProDay</Text>
+                </View>
+                <View style={styles.editableBadge}>
+                  <Text style={styles.editableBadgeText}>Éditable</Text>
+                </View>
+              </View>
+              <TextInput
+                style={styles.transcriptInput}
+                multiline
+                value={transcriptText}
+                onChangeText={setTranscriptText}
+                placeholder="Dictez ou saisissez l'observation du joueur..."
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            {/* Tags Attribution */}
+            <Text style={styles.vocalLabel}>Catégorisation tactique & technique :</Text>
+            <View style={styles.tagWrap}>
+              {['Technique', 'Tactique', 'Athlétique', 'Mental', 'Finition', 'Transition', 'Pied faible'].map((tag) => {
+                const isSelected = selectedTags.includes(tag);
+                return (
+                  <TouchableOpacity
+                    key={tag}
+                    style={[styles.tagPill, isSelected && styles.tagPillActive]}
+                    onPress={() => handleToggleTag(tag)}
+                  >
+                    <Text style={[styles.tagPillText, isSelected && styles.tagPillTextActive]}>
+                      {tag}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Validate Button */}
+            <TouchableOpacity
+              style={styles.validateVocalBtn}
+              activeOpacity={0.85}
+              onPress={handleValidateVoiceNote}
+            >
+              <Ionicons name="checkmark-done-circle" size={18} color="#000000" />
+              <Text style={styles.validateVocalBtnText}>Valider & Intégrer au dossier joueur</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Section: Validated Field Notes History */}
+          <Text style={[styles.sectionTitle, { marginTop: 18 }]}>
+            Observations Validées & Intégrées aux Dossiers
+          </Text>
+          {voiceNotes.map((note) => (
+            <View key={note.id} style={styles.voiceNoteCard}>
+              <View style={styles.voiceNoteTop}>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.voiceNotePlayer}>{note.playerName}</Text>
+                    <View style={styles.integratedPill}>
+                      <Ionicons name="checkmark-circle" size={12} color="#30D158" />
+                      <Text style={styles.integratedPillText}>Dossier à jour</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.voiceNoteMeta}>
+                    {note.category} · {note.timestamp} · {note.duration}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.voiceNoteTranscript}>{note.transcript}</Text>
+              <View style={styles.voiceNoteTagsRow}>
+                {note.tags.map((t, idx) => (
+                  <View key={idx} style={styles.voiceNoteTag}>
+                    <Text style={styles.voiceNoteTagText}>{t}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
       )}
 
       {/* TAB 2: OPPONENT SCOUTING DATABASE */}
@@ -645,6 +889,274 @@ const styles = StyleSheet.create({
     color: '#D1D1D6',
     fontSize: 11,
     lineHeight: 16,
+    fontFamily: '-apple-system',
+  },
+  vocalSection: {
+    marginBottom: 20,
+  },
+  bannerVocal: {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: '#141418',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(10, 132, 255, 0.25)',
+    padding: 12,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  bannerVocalTitle: {
+    color: '#0A84FF',
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  bannerVocalText: {
+    color: '#8B8B9A',
+    fontSize: 10,
+    lineHeight: 14,
+    fontFamily: '-apple-system',
+    marginTop: 2,
+  },
+  vocalRecorderCard: {
+    backgroundColor: '#141418',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 14,
+    marginBottom: 12,
+  },
+  vocalLabel: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+    marginBottom: 8,
+  },
+  playerPickerRow: {
+    marginBottom: 14,
+  },
+  playerPickerPill: {
+    backgroundColor: '#1C1C22',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  playerPickerPillActive: {
+    backgroundColor: 'rgba(10, 132, 255, 0.15)',
+    borderColor: '#0A84FF',
+  },
+  playerPickerPillText: {
+    color: '#8B8B9A',
+    fontSize: 11,
+    fontWeight: '600',
+    fontFamily: '-apple-system',
+  },
+  playerPickerPillTextActive: {
+    color: '#0A84FF',
+    fontWeight: '700',
+  },
+  recordActionCenter: {
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  recordBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    width: '100%',
+  },
+  recordBtnIdle: {
+    backgroundColor: '#0A84FF',
+  },
+  recordBtnActive: {
+    backgroundColor: '#FF3B30',
+  },
+  recordBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  recordingLivePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  recordingPulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF3B30',
+  },
+  recordingLiveText: {
+    color: '#FF3B30',
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  transcriptBox: {
+    backgroundColor: '#1C1C22',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+    marginVertical: 12,
+  },
+  transcriptHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  transcriptLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  transcriptTitle: {
+    color: '#64D2FF',
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  editableBadge: {
+    backgroundColor: 'rgba(100, 210, 255, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  editableBadgeText: {
+    color: '#64D2FF',
+    fontSize: 9,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  transcriptInput: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: '-apple-system',
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  tagWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 14,
+  },
+  tagPill: {
+    backgroundColor: '#1C1C22',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  tagPillActive: {
+    backgroundColor: 'rgba(197, 160, 89, 0.2)',
+    borderColor: '#C5A059',
+  },
+  tagPillText: {
+    color: '#8B8B9A',
+    fontSize: 10,
+    fontWeight: '600',
+    fontFamily: '-apple-system',
+  },
+  tagPillTextActive: {
+    color: '#C5A059',
+    fontWeight: '700',
+  },
+  validateVocalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#C5A059',
+    borderRadius: 12,
+    paddingVertical: 12,
+  },
+  validateVocalBtnText: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  voiceNoteCard: {
+    backgroundColor: '#141418',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 12,
+    marginBottom: 10,
+  },
+  voiceNoteTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  voiceNotePlayer: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    fontFamily: '-apple-system',
+  },
+  integratedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(48, 209, 88, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  integratedPillText: {
+    color: '#30D158',
+    fontSize: 9,
+    fontWeight: '700',
+    fontFamily: '-apple-system',
+  },
+  voiceNoteMeta: {
+    color: '#8B8B9A',
+    fontSize: 10,
+    fontFamily: '-apple-system',
+    marginTop: 2,
+  },
+  voiceNoteTranscript: {
+    color: '#D1D1D6',
+    fontSize: 11,
+    lineHeight: 16,
+    fontFamily: '-apple-system',
+    marginBottom: 8,
+  },
+  voiceNoteTagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  voiceNoteTag: {
+    backgroundColor: '#1C1C22',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  voiceNoteTagText: {
+    color: '#8B8B9A',
+    fontSize: 9,
+    fontWeight: '600',
     fontFamily: '-apple-system',
   },
 });

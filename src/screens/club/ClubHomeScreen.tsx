@@ -279,24 +279,24 @@ export function ClubHomeScreen() {
           </ScrollView>
         </View>
 
-        {/* 2. BAROMÈTRE EXÉCUTIF EN TEMPS RÉEL (4 CARTES KPI) */}
+        {/* 2. TABLEAU DE BORD ADMIN — 4 WIDGETS CLÉS (PAGE 12 SPÉCIFICATIONS V4) */}
         <View style={styles.kpiGrid}>
           <PressableSpring
-            onPress={() => shellNav?.requestNav('players')}
+            onPress={() => shellNav?.requestNav('finances')}
             style={[styles.kpiCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
             scaleTo={0.98}
           >
             <View style={styles.kpiCardTop}>
-              <Icon name="people" size={16} color={tokens.accent} />
+              <Icon name="bag" size={16} color="#10B981" />
               <ProDayText style={[styles.kpiStatusBadge, { color: '#10B981' }]}>
-                100% Valide
+                Solvable
               </ProDayText>
             </View>
-            <ProDayText style={[styles.kpiNum, { color: tokens.foreground }]}>
-              {totalLicencies}
+            <ProDayText style={[styles.kpiNum, { color: '#10B981' }]}>
+              94 %
             </ProDayText>
             <ProDayText style={[styles.kpiLabel, { color: tokens.muted }]}>
-              Licenciés Actifs
+              Taux de Recouvrement
             </ProDayText>
           </PressableSpring>
 
@@ -315,45 +315,45 @@ export function ClubHomeScreen() {
               {totalEquipes}
             </ProDayText>
             <ProDayText style={[styles.kpiLabel, { color: tokens.muted }]}>
-              Équipes Engagées
+              Équipes Actives
             </ProDayText>
           </PressableSpring>
 
           <PressableSpring
-            onPress={() => shellNav?.requestNav('coaches')}
+            onPress={() => shellNav?.requestNav('matches')}
             style={[styles.kpiCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
             scaleTo={0.98}
           >
             <View style={styles.kpiCardTop}>
-              <Icon name="school" size={16} color={tokens.accent} />
+              <Icon name="trophy" size={16} color="#3B82F6" />
               <ProDayText style={[styles.kpiStatusBadge, { color: '#3B82F6' }]}>
-                BEF · BMF
+                Ce week-end
               </ProDayText>
             </View>
             <ProDayText style={[styles.kpiNum, { color: tokens.foreground }]}>
-              {totalStaff}
+              3
             </ProDayText>
             <ProDayText style={[styles.kpiLabel, { color: tokens.muted }]}>
-              Staff Technique
+              Prochains Matchs
             </ProDayText>
           </PressableSpring>
 
           <PressableSpring
-            onPress={() => shellNav?.requestNav('finances')}
+            onPress={() => shellNav?.requestNav('notifications')}
             style={[styles.kpiCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}
             scaleTo={0.98}
           >
             <View style={styles.kpiCardTop}>
-              <Icon name="bag" size={16} color={tokens.accent} />
-              <ProDayText style={[styles.kpiStatusBadge, { color: '#10B981' }]}>
-                À Jour
+              <Icon name="notifications" size={16} color="#F59E0B" />
+              <ProDayText style={[styles.kpiStatusBadge, { color: '#F59E0B' }]}>
+                Action requise
               </ProDayText>
             </View>
-            <ProDayText style={[styles.kpiNum, { color: '#10B981' }]}>
-              94 %
+            <ProDayText style={[styles.kpiNum, { color: '#F59E0B' }]}>
+              3
             </ProDayText>
             <ProDayText style={[styles.kpiLabel, { color: tokens.muted }]}>
-              Solvabilité Cotisations
+              Alertes Prioritaires
             </ProDayText>
           </PressableSpring>
         </View>

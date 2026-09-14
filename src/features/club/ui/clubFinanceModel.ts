@@ -197,4 +197,28 @@ export function defaultCotisationLabel(memberName?: string): string {
   return `Cotisation saison ${season}`;
 }
 
+/** Exporte le grand livre du club en CSV formaté pour l'expert-comptable / trésorier. */
+export function exportClubLedgerToCsv(entries: ClubFinanceEntry[]): string {
+  const headers = ['Date', 'Type', 'Libellé', 'Catégorie', 'Adhérent', 'Montant (€)', 'Statut'];
+  const lines: string[] = [headers.join(';')];
+
+  entries.forEach((e) => {
+    const isExp = isClubFinanceExpenseType(e.type);
+    const formattedDate = e.entry_date instanceof Date ? e.entry_date.toISOString().slice(0, 10) : String(e.entry_date);
+    const amount = `${isExp ? '-' : ''}${e.amount_eur.toFixed(2)}`;
+    const row = [
+      `"${formattedDate}"`,
+      `"${CLUB_FINANCE_TYPE_LABELS[e.type] || e.type}"`,
+      `"${(e.label || '').replace(/"/g, '""')}"`,
+      `"${(e.category || '').replace(/"/g, '""')}"`,
+      `"${(e.member_name || '').replace(/"/g, '""')}"`,
+      `"${amount}"`,
+      `"${e.status === 'active' ? 'Validé' : 'Annulé'}"`,
+    ];
+    lines.push(row.join(';'));
+  });
+
+  return lines.join('\r\n');
+}
+
 export type { ClubFinanceEntryType };
