@@ -262,6 +262,14 @@ function ClubAppShellInner({
     );
 
 
+  const clubBottomBarTab = useMemo((): MainTabId => {
+    const canonical = canonicalizeClubNav(navId);
+    if (canonical === 'plus') return 'plus';
+    if (canonical === 'teams' || canonical === 'players' || canonical === 'coaches') return 'recrutement';
+    if (canonical === 'calendar' || canonical === 'matches' || canonical === 'trainings' || canonical === 'events') return 'matchs';
+    return 'home';
+  }, [navId]);
+
   return (
     <ClubShellNavProvider
       requestNav={onSelect}
@@ -309,11 +317,17 @@ function ClubAppShellInner({
         </View>
 
         <ProDayBottomTabBar
-          activeTab={tabFromClubNav(navId)}
+          activeTab={clubBottomBarTab}
           onTabPress={(tab) => {
             onTabChange(tab);
-            const cNav = clubNavFromTab(tab);
-            onSelect(cNav);
+            if (tab === 'home') onSelect('today');
+            else if (tab === 'matchs') onSelect('matches');
+            else if (tab === 'recrutement') onSelect('teams');
+            else if (tab === 'plus') onSelect('plus');
+            else {
+              const cNav = clubNavFromTab(tab);
+              onSelect(cNav);
+            }
           }}
           unreadCount={0}
         />

@@ -1,16 +1,15 @@
 import React from 'react';
-import { HomeScreen } from '../screens/HomeScreen';
+import { PlayerHomeScreenV4 } from '../screens/joueur/PlayerHomeScreenV4';
+import { PlayerCalendarScreenV4 } from '../screens/joueur/PlayerCalendarScreenV4';
+import { PlayerMyCardScreenV4 } from '../screens/joueur/PlayerMyCardScreenV4';
 import { MercatoScreen } from '../screens/MercatoScreen';
-import { MatchsScreen } from '../screens/MatchsScreen';
 import { SponsorsScreen } from '../screens/SponsorsScreen';
-import { ProfilTabScreen } from '../screens/ProfilTabScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { FamilleTabScreen } from '../screens/FamilleTabScreen';
 import { FeedTabScreen } from '../screens/FeedTabScreen';
 import { ReelsScreen } from '../screens/ReelsScreen';
 import { CarpoolScreen } from '../screens/CarpoolScreen';
 import { ShopScreen } from '../screens/ShopScreen';
-import { JoueurPlusHubScreen } from '../screens/joueur/JoueurPlusHubScreen';
 import { ProDayMenuScreen } from '../screens/menu/ProDayMenuScreen';
 import { RetiredRoleScreen } from '../screens/RetiredRoleScreen';
 import { MAIN_TAB_ITEMS, type MainTabId } from './mainTabConfig';
@@ -18,9 +17,9 @@ import { MAIN_TAB_ITEMS, type MainTabId } from './mainTabConfig';
 export type { MainTabId } from './mainTabConfig';
 
 const TAB_SCREENS: Record<MainTabId, React.ComponentType> = {
-  home: HomeScreen,
+  home: PlayerHomeScreenV4,
   recrutement: MercatoScreen,
-  matchs: MatchsScreen,
+  matchs: PlayerCalendarScreenV4,
   covoiturage: CarpoolScreen,
   sante: RetiredRoleScreen,
   feed: FeedTabScreen,
@@ -28,7 +27,7 @@ const TAB_SCREENS: Record<MainTabId, React.ComponentType> = {
   reels: ReelsScreen,
   famille: FamilleTabScreen,
   messages: MessagesScreen,
-  profil: ProfilTabScreen,
+  profil: PlayerMyCardScreenV4,
   shop: ShopScreen,
   plus: ProDayMenuScreen,
 };

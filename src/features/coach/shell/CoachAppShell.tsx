@@ -295,6 +295,14 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
       wrapCoachPane(navId, renderCoachPane(navId, profile, toolItems, onSelect))
     );
 
+  const coachBottomBarTab = useMemo((): MainTabId => {
+    const canonical = canonicalizeCoachNav(navId);
+    if (canonical === 'plus') return 'plus';
+    if (canonical === 'equipe' || canonical === 'effectif' || canonical === 'gestion') return 'recrutement';
+    if (canonical === 'planning' || canonical === 'entrainements' || canonical === 'matchs' || canonical === 'match_center') return 'matchs';
+    return 'home';
+  }, [navId]);
+
   return (
     <CoachShellNavProvider requestNav={onSelect} openHelp={onOpenHelp} signOut={onSignOut}>
       <StatusBar style={tokens.isLight ? 'dark' : 'light'} />
@@ -325,11 +333,17 @@ function CoachAppShellInner({ activeTab, onTabChange }: Props) {
         </View>
 
         <ProDayBottomTabBar
-          activeTab={tabFromCoachNav(navId)}
+          activeTab={coachBottomBarTab}
           onTabPress={(tab) => {
             onTabChange(tab);
-            const cNav = coachNavFromTab(tab);
-            onSelect(cNav);
+            if (tab === 'home') onSelect('today');
+            else if (tab === 'matchs') onSelect('planning');
+            else if (tab === 'recrutement') onSelect('equipe');
+            else if (tab === 'plus') onSelect('plus');
+            else {
+              const cNav = coachNavFromTab(tab);
+              onSelect(cNav);
+            }
           }}
           unreadCount={0}
         />

@@ -17,6 +17,8 @@ import { useUnreadMessageCount } from '../../hooks/useUnreadMessages';
 import { VeoVideoHubScreen } from '../veo/VeoVideoHubScreen';
 import { NotificationsScreen } from '../NotificationsScreen';
 import { ChooseAppSpaceModal } from '../../components/appSpace/ChooseAppSpaceModal';
+import { ProfileScreen } from '../ProfileScreen';
+import { ParentSettingsScreen } from '../parent/ParentSettingsScreen';
 
 interface MenuItem {
   id: string;
@@ -42,6 +44,7 @@ export const ProDayMenuScreen: React.FC = () => {
   const [showVeoHub, setShowVeoHub] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSpaceModal, setShowSpaceModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const role = profile?.role || 'player';
 
@@ -50,7 +53,7 @@ export const ProDayMenuScreen: React.FC = () => {
   const openVeo = () => setShowVeoHub(true);
   const openMessages = () => tabNav?.setActiveTab('messages');
   const openCarpool = () => tabNav?.setActiveTab('covoiturage');
-  const openSettings = () => tabNav?.setActiveTab('profil');
+  const openSettings = () => setShowSettings(true);
 
   // Build sections according to Section 0.2 specification
   const getSections = (): MenuSection[] => {
@@ -406,6 +409,39 @@ export const ProDayMenuScreen: React.FC = () => {
 
   if (showNotifications) {
     return <NotificationsScreen onBack={() => setShowNotifications(false)} />;
+  }
+
+  if (showSettings) {
+    if (role === 'parent') {
+      return (
+        <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Math.max(insets.top, 12) }}>
+          <View style={{ paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity onPress={() => setShowSettings(false)}>
+              <Ionicons name="arrow-back" size={24} color="#0F172A" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: '#0F172A' }}>Paramètres du compte</Text>
+          </View>
+          <ParentSettingsScreen onSignOut={signOut} />
+        </View>
+      );
+    }
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Math.max(insets.top, 12) }}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <TouchableOpacity onPress={() => setShowSettings(false)}>
+            <Ionicons name="arrow-back" size={24} color="#0F172A" />
+          </TouchableOpacity>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: '#0F172A' }}>Paramètres du compte</Text>
+        </View>
+        {profile ? (
+          <ProfileScreen
+            profile={profile}
+            onRefresh={async () => {}}
+            onSignOut={async () => { void signOut(); }}
+          />
+        ) : null}
+      </View>
+    );
   }
 
   return (

@@ -33,6 +33,7 @@ import { clubRadius, clubSpace } from '../../features/club/theme/clubDesignSyste
 import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { CreateClubScreen } from '../CreateClubScreen';
 import { ShellAccountSection } from '../../components/shell/ShellAccountSection';
+import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
 
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
@@ -177,6 +178,13 @@ export function ClubHomeScreen() {
   return (
     <View style={styles.root}>
       <ClubChapterScroll refreshing={ws.refreshing} onRefresh={() => void ws.refresh()}>
+        {/* Section 0.8 bis: Barre de recherche pôle Club */}
+        <GlobalSearchBar
+          placeholder="Rechercher un membre, une équipe, un document…"
+          accent={tokens.accent}
+          style={{ marginBottom: 16 }}
+        />
+
         {/* 1. HERO COCKPIT EXÉCUTIF (APPLE OBSIDIAN GLASS) */}
         <View style={[styles.heroCard, { backgroundColor: tokens.surface, borderColor: tokens.border }]}>
           <LinearGradient

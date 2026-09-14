@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
   Platform,
   Image,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { playerRsvpService, type PlayerRsvpStatus } from '../../services/playerRsvp.service';
 import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
+import { useTabNavigation } from '../../context/TabNavigationContext';
+import { VeoVideoHubScreen } from '../veo/VeoVideoHubScreen';
 
 interface PlayerHomeScreenV4Props {
   onNavigateTab?: (tabId: string) => void;
@@ -24,10 +27,38 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
   onOpenVideoHub,
 }) => {
   const profile = useSessionProfile();
+  const tabNav = useTabNavigation();
   const userId = profile?.uid || 'player-demo';
 
   const [rsvp, setRsvp] = useState<PlayerRsvpStatus>('present');
   const [expandedNewsId, setExpandedNewsId] = useState<string | null>(null);
+  const [internalVideoHubOpen, setInternalVideoHubOpen] = useState(false);
+
+  const handleOpenVideo = () => {
+    if (onOpenVideoHub) {
+      onOpenVideoHub();
+    } else {
+      setInternalVideoHubOpen(true);
+    }
+  };
+
+  const handleNavigate = (dest: string) => {
+    if (onNavigateTab) {
+      onNavigateTab(dest);
+      return;
+    }
+    if (dest === 'tactics') {
+      tabNav?.openDashboard?.('smart_tactics');
+    } else if (dest === 'wellness') {
+      tabNav?.openDashboard?.('train');
+    } else if (dest === 'profil') {
+      tabNav?.setActiveTab?.('profil');
+    } else if (dest === 'matchs' || dest === 'calendar') {
+      tabNav?.setActiveTab?.('matchs');
+    } else if (dest === 'carpool') {
+      tabNav?.openCarpool?.();
+    }
+  };
 
   useEffect(() => {
     void playerRsvpService.getRsvp(userId, 'match-j17').then(setRsvp);
@@ -217,7 +248,11 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
         contentContainerStyle={styles.carouselScroll}
       >
         {/* Tuile 1: Note Match */}
-        <View style={styles.carouselTile}>
+        <TouchableOpacity
+          style={styles.carouselTile}
+          activeOpacity={0.85}
+          onPress={() => handleNavigate('profil')}
+        >
           <View style={styles.tileTopRow}>
             <Text style={styles.tileCategory}>NOTE DE MATCH</Text>
             <View style={styles.momBadge}>
@@ -226,10 +261,14 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
           </View>
           <Text style={styles.tileBigRating}>8.5<Text style={styles.tileBigRatingDenom}>/10</Text></Text>
           <Text style={styles.tileSub}>2 buts inscrits vs AS Meudon</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Tuile 2: Score équipe */}
-        <View style={styles.carouselTile}>
+        <TouchableOpacity
+          style={styles.carouselTile}
+          activeOpacity={0.85}
+          onPress={() => handleNavigate('matchs')}
+        >
           <View style={styles.tileTopRow}>
             <Text style={styles.tileCategory}>RÉSULTAT ÉQUIPE</Text>
             <View style={[styles.momBadge, { backgroundColor: '#DCFCE7' }]}>
@@ -238,24 +277,28 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
           </View>
           <Text style={styles.tileBigScore}>3 - 1</Text>
           <Text style={styles.tileSub}>+3 pts • 2e place au classement</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Tuile 3: Covoiturage */}
-        <View style={styles.carouselTile}>
+        <TouchableOpacity
+          style={styles.carouselTile}
+          activeOpacity={0.85}
+          onPress={() => handleNavigate('carpool')}
+        >
           <View style={styles.tileTopRow}>
             <Text style={styles.tileCategory}>COVOITURAGE J17</Text>
             <Ionicons name="car-outline" size={18} color="#0284C7" />
           </View>
           <Text style={styles.tileCarpoolNumber}>2 places</Text>
           <Text style={styles.tileSub}>Dispo avec Thomas • Départ 13:45</Text>
-        </View>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* 4. Raccourcis Pratique Sportive Fitness Park */}
       <View style={styles.fitnessGrid}>
         <TouchableOpacity
           style={styles.fitnessCard}
-          onPress={() => onNavigateTab?.('tactics')}
+          onPress={() => handleNavigate('tactics')}
         >
           <View style={[styles.fitnessIconCircle, { backgroundColor: '#E0F2FE' }]}>
             <Ionicons name="git-network-outline" size={22} color="#0284C7" />
@@ -266,7 +309,7 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
 
         <TouchableOpacity
           style={styles.fitnessCard}
-          onPress={() => onNavigateTab?.('wellness')}
+          onPress={() => handleNavigate('wellness')}
         >
           <View style={[styles.fitnessIconCircle, { backgroundColor: '#FEE2E2' }]}>
             <Ionicons name="fitness-outline" size={22} color="#DC2626" />
@@ -305,10 +348,10 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
               {isExpanded && (
                 <View style={styles.newsExpandedContent}>
                   <Text style={styles.newsFullText}>{news.fullContent}</Text>
-                  {news.tag === 'VIDÉO VEO' && onOpenVideoHub && (
+                  {news.tag === 'VIDÉO VEO' && (
                     <TouchableOpacity
                       style={styles.newsActionBtn}
-                      onPress={onOpenVideoHub}
+                      onPress={handleOpenVideo}
                     >
                       <Ionicons name="play-circle-outline" size={16} color="#FFFFFF" />
                       <Text style={styles.newsActionBtnText}>Ouvrir le lecteur VEO</Text>
@@ -331,6 +374,14 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
           );
         })}
       </View>
+
+      <Modal
+        visible={internalVideoHubOpen}
+        animationType="slide"
+        onRequestClose={() => setInternalVideoHubOpen(false)}
+      >
+        <VeoVideoHubScreen onBack={() => setInternalVideoHubOpen(false)} />
+      </Modal>
     </ScrollView>
   );
 };

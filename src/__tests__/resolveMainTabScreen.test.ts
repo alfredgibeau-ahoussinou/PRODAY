@@ -1,3 +1,31 @@
+jest.mock('../screens/joueur/PlayerHomeScreenV4', () => ({
+  PlayerHomeScreenV4: 'PlayerHomeScreenV4',
+}));
+jest.mock('../screens/joueur/PlayerCalendarScreenV4', () => ({
+  PlayerCalendarScreenV4: 'PlayerCalendarScreenV4',
+}));
+jest.mock('../screens/joueur/PlayerMyCardScreenV4', () => ({
+  PlayerMyCardScreenV4: 'PlayerMyCardScreenV4',
+}));
+jest.mock('../screens/coach/CoachHomeScreen', () => ({
+  CoachHomeScreen: 'CoachHomeScreen',
+}));
+jest.mock('../screens/coach/CoachTrainingPlannerScreen', () => ({
+  CoachTrainingPlannerScreen: 'CoachTrainingPlannerScreen',
+}));
+jest.mock('../screens/coach/CoachSquadScreen', () => ({
+  CoachSquadScreen: 'CoachSquadScreen',
+}));
+jest.mock('../screens/coach/CoachDynamicTacticsScreenV4', () => ({
+  CoachDynamicTacticsScreenV4: 'CoachDynamicTacticsScreenV4',
+}));
+jest.mock('../screens/club/ClubTeamsScreen', () => ({
+  ClubTeamsScreen: 'ClubTeamsScreen',
+}));
+jest.mock('../screens/club/ClubMatchesScreen', () => ({
+  ClubMatchesScreen: 'ClubMatchesScreen',
+}));
+
 jest.mock('../screens/HomeScreen', () => ({ HomeScreen: 'HomeScreen' }));
 jest.mock('../screens/MercatoScreen', () => ({ MercatoScreen: 'MercatoScreen' }));
 jest.mock('../screens/MatchsScreen', () => ({ MatchsScreen: 'MatchsScreen' }));
@@ -71,31 +99,33 @@ jest.mock('../screens/menu/ProDayMenuScreen', () => ({
 import { resolveMainTabScreen } from '../navigation/resolveMainTabScreen';
 
 describe('resolveMainTabScreen', () => {
-  it('mappe les 5 onglets shell club pro', () => {
+  it('mappe les onglets shell club pro', () => {
     expect(resolveMainTabScreen('home', 'club', 'pro')).toBe('ClubHomeScreen');
-    expect(resolveMainTabScreen('recrutement', 'club', 'pro')).toBe('ClubRecruitmentScreen');
-    expect(resolveMainTabScreen('matchs', 'club', 'pro')).toBe('ClubCalendarScreen');
+    expect(resolveMainTabScreen('recrutement', 'club', 'pro')).toBe('ClubTeamsScreen');
+    expect(resolveMainTabScreen('matchs', 'club', 'pro')).toBe('ClubMatchesScreen');
     expect(resolveMainTabScreen('messages', 'club', 'pro')).toBe('ClubCommunicationScreen');
     expect(resolveMainTabScreen('profil', 'club', 'pro')).toBe('ClubHubScreen');
+    expect(resolveMainTabScreen('plus', 'club', 'pro')).toBe('ProDayMenuScreen');
   });
 
   it('mappe le shell club amateur (portail + kanban + perf)', () => {
     expect(resolveMainTabScreen('home', 'club', 'amateur')).toBe('ClubHomeScreen');
-    expect(resolveMainTabScreen('recrutement', 'club', 'amateur')).toBe('ClubRecruitmentScreen');
-    expect(resolveMainTabScreen('matchs', 'club', 'amateur')).toBe('ClubCalendarScreen');
-    expect(resolveMainTabScreen('feed', 'club', 'amateur')).toBe('SmartTacticsPortalScreen');
+    expect(resolveMainTabScreen('recrutement', 'club', 'amateur')).toBe('ClubTeamsScreen');
+    expect(resolveMainTabScreen('matchs', 'club', 'amateur')).toBe('ClubMatchesScreen');
+    expect(resolveMainTabScreen('feed', 'club', 'amateur')).toBe('CoachDynamicTacticsScreenV4');
     expect(resolveMainTabScreen('profil', 'club', 'amateur')).toBe('ClubHubScreen');
+    expect(resolveMainTabScreen('plus', 'club', 'amateur')).toBe('ProDayMenuScreen');
   });
 
   it('utilise les écrans pro joueur hors rôle club', () => {
-    expect(resolveMainTabScreen('home', 'player', 'pro')).toBe('HomeScreen');
-    expect(resolveMainTabScreen('home', 'player', 'pro_player')).toBe('HomeScreen');
+    expect(resolveMainTabScreen('home', 'player', 'pro')).toBe('PlayerHomeScreenV4');
+    expect(resolveMainTabScreen('home', 'player', 'pro_player')).toBe('PlayerHomeScreenV4');
     expect(resolveMainTabScreen('recrutement', 'player', 'pro')).toBe('ProPlayerSquadScreen');
     expect(resolveMainTabScreen('reels', 'player', 'pro')).toBe('LazyReelsScreen');
     expect(resolveMainTabScreen('feed', 'player', 'pro')).toBe('PlayerSaisonScreen');
-    expect(resolveMainTabScreen('plus', 'player', 'pro')).toBe('JoueurPlusHubScreen');
-    expect(resolveMainTabScreen('matchs', 'player', 'pro')).toBe('MatchsScreen');
-    expect(resolveMainTabScreen('matchs', 'coach', 'pro')).toBe('MatchsScreen');
+    expect(resolveMainTabScreen('plus', 'player', 'pro')).toBe('ProDayMenuScreen');
+    expect(resolveMainTabScreen('matchs', 'player', 'pro')).toBe('PlayerCalendarScreenV4');
+    expect(resolveMainTabScreen('matchs', 'coach', 'pro')).toBe('CoachTrainingPlannerScreen');
   });
 
   it('mappe le shell supporter Accueil · Matchs · Compétitions · Clubs · Vidéos · Profil', () => {
@@ -119,25 +149,25 @@ describe('resolveMainTabScreen', () => {
     expect(resolveMainTabScreen('reels', 'parent', 'supporter')).toBe('SupporterVideosScreen');
     expect(resolveMainTabScreen('profil', 'parent', 'supporter')).toBe('SupporterProfileScreen');
     // Ne doit pas retomber sur l’ancien shell générique (Home / Feed / Reels).
-    expect(resolveMainTabScreen('home', 'parent', 'supporter')).not.toBe('HomeScreen');
+    expect(resolveMainTabScreen('home', 'parent', 'supporter')).not.toBe('PlayerHomeScreenV4');
     expect(resolveMainTabScreen('feed', 'parent', 'supporter')).not.toBe('FeedTabScreen');
     expect(resolveMainTabScreen('reels', 'parent', 'supporter')).not.toBe('LazyReelsScreen');
   });
 
   it('laisse les invités anonymes sur Discover/Auth (jamais scaffold supporter ni retired)', () => {
-    expect(resolveMainTabScreen('home', null, 'supporter')).toBe('HomeScreen');
-    expect(resolveMainTabScreen('profil', null, 'supporter')).toBe('ProfilTabScreen');
-    expect(resolveMainTabScreen('home', undefined, 'supporter')).toBe('HomeScreen');
-    expect(resolveMainTabScreen('home', null, 'sante')).toBe('HomeScreen');
-    expect(resolveMainTabScreen('profil', null, 'sante')).toBe('ProfilTabScreen');
-    expect(resolveMainTabScreen('home', null, 'amateur')).toBe('HomeScreen');
+    expect(resolveMainTabScreen('home', null, 'supporter')).toBe('PlayerHomeScreenV4');
+    expect(resolveMainTabScreen('profil', null, 'supporter')).toBe('PlayerMyCardScreenV4');
+    expect(resolveMainTabScreen('home', undefined, 'supporter')).toBe('PlayerHomeScreenV4');
+    expect(resolveMainTabScreen('home', null, 'sante')).toBe('PlayerHomeScreenV4');
+    expect(resolveMainTabScreen('profil', null, 'sante')).toBe('PlayerMyCardScreenV4');
+    expect(resolveMainTabScreen('home', null, 'amateur')).toBe('PlayerHomeScreenV4');
   });
 
   it('mappe le portail coach sur home', () => {
-    expect(resolveMainTabScreen('home', 'coach', 'pro')).toBe('CoachPortalScreen');
-    expect(resolveMainTabScreen('home', 'coach', 'amateur')).toBe('CoachPortalScreen');
-    expect(resolveMainTabScreen('matchs', 'coach', 'amateur')).toBe('MatchsScreen');
-    expect(resolveMainTabScreen('feed', 'coach', 'amateur')).toBe('SmartTacticsPortalScreen');
+    expect(resolveMainTabScreen('home', 'coach', 'pro')).toBe('CoachHomeScreen');
+    expect(resolveMainTabScreen('home', 'coach', 'amateur')).toBe('CoachHomeScreen');
+    expect(resolveMainTabScreen('matchs', 'coach', 'amateur')).toBe('CoachTrainingPlannerScreen');
+    expect(resolveMainTabScreen('feed', 'coach', 'amateur')).toBe('CoachDynamicTacticsScreenV4');
     expect(resolveMainTabScreen('feed', 'player', 'amateur')).toBe('PlayerSaisonScreen');
   });
 });

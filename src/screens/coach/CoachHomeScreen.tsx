@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { CoachStandingsTable } from '../../components/coach/CoachStandingsTable';
+import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
 
 interface Props {
   onNavigate?: (navId: string) => void;
@@ -59,6 +60,13 @@ export const CoachHomeScreen: React.FC<Props> = ({ onNavigate }) => {
           <MaterialCommunityIcons name="account-group-outline" size={18} color="#0F172A" />
         </TouchableOpacity>
       </View>
+
+      {/* Section 0.8 bis: Barre de recherche pôle Coach */}
+      <GlobalSearchBar
+        placeholder="Rechercher un joueur, une séance, un match…"
+        accent="#0284C7"
+        style={{ marginBottom: 16 }}
+      />
 
       {/* 2. Page 6 Specification: Bandeau d'alertes en tête (1 tap pour agir sur blessure/fatigue) */}
       <View style={styles.alertBannerCard}>
