@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +21,7 @@ import { NotificationsScreen } from '../NotificationsScreen';
 import { ChooseAppSpaceModal } from '../../components/appSpace/ChooseAppSpaceModal';
 import { ProfileScreen } from '../ProfileScreen';
 import { ParentSettingsScreen } from '../parent/ParentSettingsScreen';
+import { FITNESS_PARK, FITNESS_PARK_RADIUS } from '../../theme/fitnessParkTheme';
 
 interface MenuItem {
   id: string;
@@ -28,10 +31,11 @@ interface MenuItem {
   action: () => void;
   badge?: string | number;
   highlight?: boolean;
+  destructive?: boolean;
 }
 
 interface MenuSection {
-  title: string;
+  title?: string;
   items: MenuItem[];
 }
 
@@ -47,6 +51,7 @@ export const ProDayMenuScreen: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   const role = profile?.role || 'player';
+  const isPlayer = role === 'player';
 
   // Navigation handlers
   const openTab = (tab: any) => tabNav?.setActiveTab(tab);
@@ -55,7 +60,31 @@ export const ProDayMenuScreen: React.FC = () => {
   const openCarpool = () => tabNav?.setActiveTab('covoiturage');
   const openSettings = () => setShowSettings(true);
 
-  // Build sections according to Section 0.2 specification
+  const handleRateApp = () => {
+    Alert.alert('Noter ProDay', 'Merci pour votre soutien ! Vous allez être redirigé vers l’App Store.', [
+      { text: 'Plus tard', style: 'cancel' },
+      { text: 'Noter', onPress: () => {} },
+    ]);
+  };
+
+  const handleFaq = () => {
+    Alert.alert('Support & FAQ', 'Besoin d’aide ? Contactez support@proday.com ou consultez la documentation club.', [
+      { text: 'Fermer', style: 'cancel' },
+    ]);
+  };
+
+  const handleContact = () => {
+    void Linking.openURL('mailto:support@proday.com?subject=Contact%20ProDay');
+  };
+
+  const handleReportBug = () => {
+    Alert.alert('Signaler un problème', 'Un formulaire de rapport va s’ouvrir pour transmettre les détails aux équipes techniques.', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Signaler', onPress: () => {} },
+    ]);
+  };
+
+  // Build sections according to Fitness Park grouped cards
   const getSections = (): MenuSection[] => {
     if (role === 'coach') {
       return [
@@ -175,6 +204,7 @@ export const ProDayMenuScreen: React.FC = () => {
               id: 'logout',
               title: 'Déconnexion',
               icon: 'log-out-outline',
+              destructive: true,
               action: () => {
                 Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
                   { text: 'Annuler', style: 'cancel' },
@@ -293,6 +323,7 @@ export const ProDayMenuScreen: React.FC = () => {
               id: 'logout',
               title: 'Déconnexion',
               icon: 'log-out-outline',
+              destructive: true,
               action: () => {
                 Alert.alert('Déconnexion', 'Confirmer la déconnexion ?', [
                   { text: 'Annuler', style: 'cancel' },
@@ -305,90 +336,97 @@ export const ProDayMenuScreen: React.FC = () => {
       ];
     }
 
-    // Pôle Joueur par défaut
+    // Pôle Joueur Officiel Fitness Park (Image 1)
     return [
+      // Bloc 1: Profil & Activité
       {
-        title: 'Mon activité',
         items: [
           {
-            id: 'my_card',
-            title: 'Ma Carte Joueur',
-            subtitle: 'Carte gamifiée & statistiques complètes Sofascore',
-            icon: 'card',
-            action: () => openTab('profil'),
-            highlight: true,
-          },
-          {
-            id: 'calendar',
-            title: 'Calendrier & Convocations',
-            subtitle: 'Événements, matchs et réponses RSVP',
-            icon: 'calendar',
-            action: () => openTab('matchs'),
-          },
-          {
-            id: 'ai_coaching',
-            title: 'Coaching IA',
-            subtitle: 'Conseils personnalisés entre les séances',
-            icon: 'sparkles',
-            action: () => tabNav?.openDashboard?.('train_ai'),
-          },
-          {
-            id: 'veo_player',
-            title: 'Vidéo VEO',
-            subtitle: 'Diffusions en direct et replays autorisés',
-            icon: 'videocam',
-            action: openVeo,
-            highlight: true,
-          },
-        ],
-      },
-      {
-        title: 'Vie du club',
-        items: [
-          {
-            id: 'messages',
-            title: 'Messagerie Vestiaire & DM',
-            subtitle: 'Échanges d’équipe et directs',
-            icon: 'chatbubbles',
-            badge: unreadMessages > 0 ? unreadMessages : undefined,
-            action: openMessages,
-          },
-          {
-            id: 'carpool',
-            title: 'Covoiturage',
-            subtitle: 'Proposer ou trouver un trajet',
-            icon: 'car',
-            action: openCarpool,
-          },
-          {
-            id: 'notifications',
-            title: 'Notifications',
-            subtitle: 'Alertes convocation et résultats',
-            icon: 'notifications',
-            action: () => setShowNotifications(true),
-          },
-        ],
-      },
-      {
-        title: 'Mon compte',
-        items: [
-          {
-            id: 'settings',
-            title: 'Paramètres du compte',
-            icon: 'settings',
+            id: 'personal_info',
+            title: 'Informations personnelles',
+            icon: 'person-outline',
             action: openSettings,
           },
           {
+            id: 'my_card',
+            title: 'Ma Carte Joueur & Profil',
+            icon: 'card-outline',
+            action: () => openTab('profil'),
+          },
+          {
+            id: 'change_password',
+            title: 'Changer de mot de passe',
+            icon: 'lock-closed-outline',
+            action: openSettings,
+          },
+        ],
+      },
+      // Bloc 2: Abonnement & Paiements
+      {
+        items: [
+          {
+            id: 'subscription',
+            title: 'Licence & Cotisation',
+            icon: 'ribbon-outline',
+            action: openSettings,
+          },
+          {
+            id: 'invoices',
+            title: 'Paiements et factures',
+            icon: 'receipt-outline',
+            action: openSettings,
+          },
+          {
+            id: 'veo_hub',
+            title: 'Vidéo VEO & Replays',
+            icon: 'videocam-outline',
+            action: openVeo,
+          },
+        ],
+      },
+      // Bloc 3: Assistance & Application
+      {
+        items: [
+          {
+            id: 'rate_app',
+            title: "Noter l'application",
+            icon: 'star-outline',
+            action: handleRateApp,
+          },
+          {
+            id: 'faq',
+            title: 'Consulter la FAQ',
+            icon: 'help-circle-outline',
+            action: handleFaq,
+          },
+          {
+            id: 'contact',
+            title: 'Nous contacter',
+            icon: 'chatbubble-ellipses-outline',
+            action: handleContact,
+          },
+          {
+            id: 'report_issue',
+            title: 'Signaler un problème',
+            icon: 'alert-circle-outline',
+            action: handleReportBug,
+          },
+        ],
+      },
+      // Bloc 4: Espace & Déconnexion
+      {
+        items: [
+          {
             id: 'switch_space',
             title: 'Choisir mon espace',
-            subtitle: 'Comptes multi-rôles & pôle Suivi parent',
-            icon: 'swap-horizontal',
+            icon: 'swap-horizontal-outline',
             action: () => setShowSpaceModal(true),
           },
           {
             id: 'logout',
             title: 'Déconnexion',
             icon: 'log-out-outline',
+            destructive: true,
             action: () => {
               Alert.alert('Déconnexion', 'Confirmer la déconnexion ?', [
                 { text: 'Annuler', style: 'cancel' },
@@ -414,24 +452,24 @@ export const ProDayMenuScreen: React.FC = () => {
   if (showSettings) {
     if (role === 'parent') {
       return (
-        <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Math.max(insets.top, 12) }}>
-          <View style={{ paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ flex: 1, backgroundColor: FITNESS_PARK.bg, paddingTop: Math.max(insets.top, 12) }}>
+          <View style={{ paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: FITNESS_PARK.divider, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <TouchableOpacity onPress={() => setShowSettings(false)}>
-              <Ionicons name="arrow-back" size={24} color="#0F172A" />
+              <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: '#0F172A' }}>Paramètres du compte</Text>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#FFFFFF' }}>Paramètres du compte</Text>
           </View>
           <ParentSettingsScreen onSignOut={signOut} />
         </View>
       );
     }
     return (
-      <View style={{ flex: 1, backgroundColor: '#FFFFFF', paddingTop: Math.max(insets.top, 12) }}>
-        <View style={{ paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ flex: 1, backgroundColor: FITNESS_PARK.bg, paddingTop: Math.max(insets.top, 12) }}>
+        <View style={{ paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: FITNESS_PARK.divider, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <TouchableOpacity onPress={() => setShowSettings(false)}>
-            <Ionicons name="arrow-back" size={24} color="#0F172A" />
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: '#0F172A' }}>Paramètres du compte</Text>
+          <Text style={{ fontSize: 18, fontWeight: '800', color: '#FFFFFF' }}>Paramètres du compte</Text>
         </View>
         {profile ? (
           <ProfileScreen
@@ -446,14 +484,14 @@ export const ProDayMenuScreen: React.FC = () => {
 
   return (
     <View style={[styles.root, { paddingTop: Math.max(insets.top, 12) }]}>
-      {/* En-tête avec Recherche Globale en tête */}
+      {/* En-tête « Moi » Officiel Fitness Park */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Menu ProDay</Text>
+        <Text style={styles.headerTitle}>{isPlayer ? 'Moi' : 'Menu ProDay'}</Text>
         <Text style={styles.headerSubtitle}>
-          Tous les modules et fonctionnalités
+          {profile?.display_name || 'Profil sportif'} • {profile?.profile?.category || 'Seniors R2'}
         </Text>
         <View style={styles.searchWrap}>
-          <GlobalSearchBar placeholder="Rechercher une personne, une équipe, un module…" />
+          <GlobalSearchBar placeholder="Rechercher une rubrique, un module…" />
         </View>
       </View>
 
@@ -463,7 +501,9 @@ export const ProDayMenuScreen: React.FC = () => {
       >
         {sections.map((sec, secIdx) => (
           <View key={`sec-${secIdx}`} style={styles.sectionWrap}>
-            <Text style={styles.sectionHeading}>{sec.title}</Text>
+            {sec.title ? (
+              <Text style={styles.sectionHeading}>{sec.title}</Text>
+            ) : null}
             <View style={styles.sectionCard}>
               {sec.items.map((item, itemIdx) => {
                 const isLast = itemIdx === sec.items.length - 1;
@@ -472,23 +512,25 @@ export const ProDayMenuScreen: React.FC = () => {
                     key={item.id}
                     style={[styles.menuRow, !isLast && styles.menuRowBorder]}
                     onPress={item.action}
-                    activeOpacity={0.75}
+                    activeOpacity={0.7}
                   >
-                    <View
-                      style={[
-                        styles.iconBox,
-                        item.highlight && styles.iconBoxHighlight,
-                      ]}
-                    >
+                    <View style={styles.iconBox}>
                       <Ionicons
                         name={item.icon}
-                        size={18}
-                        color={item.highlight ? '#000000' : '#0F172A'}
+                        size={20}
+                        color={item.destructive ? '#EF4444' : '#CBD5E1'}
                       />
                     </View>
 
                     <View style={styles.rowDetails}>
-                      <Text style={styles.rowTitle}>{item.title}</Text>
+                      <Text
+                        style={[
+                          styles.rowTitle,
+                          item.destructive && styles.rowTitleDestructive,
+                        ]}
+                      >
+                        {item.title}
+                      </Text>
                       {item.subtitle ? (
                         <Text style={styles.rowSubtitle} numberOfLines={1}>
                           {item.subtitle}
@@ -504,8 +546,8 @@ export const ProDayMenuScreen: React.FC = () => {
 
                     <Ionicons
                       name="chevron-forward"
-                      size={16}
-                      color="#94A3B8"
+                      size={18}
+                      color="#64748B"
                     />
                   </TouchableOpacity>
                 );
@@ -527,23 +569,25 @@ export const ProDayMenuScreen: React.FC = () => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: FITNESS_PARK.bg,
   },
   header: {
     paddingHorizontal: 16,
     paddingBottom: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: FITNESS_PARK.bg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: FITNESS_PARK.divider,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#94A3B8',
+    marginTop: 2,
     marginBottom: 10,
   },
   searchWrap: {
@@ -554,57 +598,56 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   sectionWrap: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   sectionHeading: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: '#64748B',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     marginBottom: 8,
     marginLeft: 4,
   },
   sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
     overflow: 'hidden',
   },
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 14,
   },
   menuRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: FITNESS_PARK.divider,
   },
   iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+    width: 28,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  iconBoxHighlight: {
-    backgroundColor: '#00F59B',
   },
   rowDetails: {
     flex: 1,
   },
   rowTitle: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
+  },
+  rowTitleDestructive: {
+    color: '#EF4444',
   },
   rowSubtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: '#94A3B8',
     marginTop: 1,
   },
   badgeWrap: {

@@ -9,13 +9,15 @@ import {
   Image,
   Modal,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { prodayHaptics } from '../../utils/prodayHaptics';
 import { playerRsvpService, type PlayerRsvpStatus } from '../../services/playerRsvp.service';
 import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
 import { useTabNavigation } from '../../context/TabNavigationContext';
 import { VeoVideoHubScreen } from '../veo/VeoVideoHubScreen';
+import { FITNESS_PARK, FITNESS_PARK_RADIUS } from '../../theme/fitnessParkTheme';
 
 interface PlayerHomeScreenV4Props {
   onNavigateTab?: (tabId: string) => void;
@@ -105,35 +107,141 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
     },
   ];
 
+  const firstName = (profile?.display_name?.split(' ')[0] || 'Alfred').toUpperCase();
+  const category = profile?.profile?.category || 'SENIORS R2';
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. Header & Recherche Globale */}
-      <View style={styles.header}>
-        <View style={styles.greetingRow}>
-          <View>
-            <Text style={styles.greetingSub}>
-              {profile?.profile?.category || 'Seniors R2'} • FC ProDay
+      {/* 1. Header Athlétique Bleu Électrique Dégradé (Style Officiel Fitness Park) */}
+      <LinearGradient
+        colors={['#0044CC', '#002673', '#0B0F14']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.heroGradient}
+      >
+        <View style={styles.topProfileRow}>
+          {/* Avatar Cerclé de Blanc */}
+          <TouchableOpacity
+            style={styles.avatarWrap}
+            activeOpacity={0.8}
+            onPress={() => handleNavigate('profil')}
+          >
+            {profile?.avatar_url ? (
+              <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarInitials}>
+                  {firstName.charAt(0)}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Titre Hello Athlétique & Statut */}
+          <View style={styles.profileTextCol}>
+            <Text style={styles.helloTitle}>
+              HELLO {firstName}
             </Text>
-            <Text style={styles.greetingTitle}>
-              Bonjour, {profile?.display_name?.split(' ')[0] || 'Joueur'}
-            </Text>
+            <TouchableOpacity
+              style={styles.subChevronRow}
+              activeOpacity={0.7}
+              onPress={() => handleNavigate('profil')}
+            >
+              <Text style={styles.subStatusText}>
+                {category} • FC PRODAY
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color="#94A3B8" />
+            </TouchableOpacity>
           </View>
-          <View style={styles.fitnessShapeBadge}>
-            <Ionicons name="flame" size={16} color="#EA580C" />
-            <Text style={styles.fitnessShapeText}>Forme 92%</Text>
+
+          {/* Badge Espace Fitness Park (Classic / Gold) */}
+          <View style={styles.planBadge}>
+            <Text style={styles.planBadgeText}>CLASSIC</Text>
           </View>
         </View>
 
-        <GlobalSearchBar
-          placeholder="Rechercher joueurs, clubs, pages..."
-        />
+        {/* Barre de Recherche Globale intégrée au header */}
+        <View style={styles.searchBarWrapper}>
+          <GlobalSearchBar
+            placeholder="Rechercher joueurs, programmes, séances..."
+          />
+        </View>
+      </LinearGradient>
+
+      {/* 2. Section « REJOINS UN PROGRAMME » (Fitness Park Hero Workout Cards) */}
+      <View style={styles.sectionHeaderRow}>
+        <Text style={styles.athleticSectionTitle}>REJOINS UN PROGRAMME</Text>
+        <TouchableOpacity
+          onPress={() => handleNavigate('calendar')}
+          style={styles.seeAllRow}
+        >
+          <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+        </TouchableOpacity>
       </View>
 
-      {/* 2. Prochain Événement & Bandeau RSVP 1-Tap */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.programsScroll}
+      >
+        {/* Workout Card 1: HYROX / Derby Match */}
+        <TouchableOpacity
+          style={styles.programCard}
+          activeOpacity={0.9}
+          onPress={() => handleNavigate('calendar')}
+        >
+          <LinearGradient
+            colors={['rgba(0, 50, 150, 0.4)', 'rgba(11, 15, 20, 0.95)']}
+            style={styles.programCardGradient}
+          >
+            <View style={styles.programTopCapsule}>
+              <Text style={styles.programCapsuleText}>COMPÉTITION R2</Text>
+            </View>
+
+            <View style={styles.programBottomContent}>
+              <Text style={styles.programCardTitle}>
+                DERBY RETOUR : AS MEUDON
+              </Text>
+              <Text style={styles.programCardMeta}>
+                DIMANCHE 15:00 • DOMICILE • J17
+              </Text>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Workout Card 2: Hyrox Fondations Basics */}
+        <TouchableOpacity
+          style={[styles.programCard, { borderColor: '#1E2F48' }]}
+          activeOpacity={0.9}
+          onPress={() => handleNavigate('wellness')}
+        >
+          <LinearGradient
+            colors={['rgba(255, 140, 0, 0.35)', 'rgba(11, 15, 20, 0.95)']}
+            style={styles.programCardGradient}
+          >
+            <View style={[styles.programTopCapsule, { backgroundColor: 'rgba(255, 210, 0, 0.25)' }]}>
+              <Text style={[styles.programCapsuleText, { color: FITNESS_PARK.accentYellow }]}>
+                PRÉPA PHYSIQUE
+              </Text>
+            </View>
+
+            <View style={styles.programBottomContent}>
+              <Text style={styles.programCardTitle}>
+                HYROX FONDATIONS BASICS
+              </Text>
+              <Text style={styles.programCardMeta}>
+                1-4 • INTERMÉDIAIRE • 60 MIN
+              </Text>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* 3. Prochain Événement & Bandeau RSVP 1-Tap (Style Sombre Fitness Park) */}
       <View style={styles.nextEventCard}>
         <View style={styles.nextEventHeader}>
           <View style={styles.eventBadge}>
@@ -156,8 +264,8 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
           </View>
 
           <View style={styles.teamCol}>
-            <View style={[styles.teamLogoPlaceHolder, { backgroundColor: '#E2E8F0' }]}>
-              <Text style={[styles.teamLogoLetter, { color: '#0F172A' }]}>V</Text>
+            <View style={[styles.teamLogoPlaceHolder, { backgroundColor: '#1E2838' }]}>
+              <Text style={[styles.teamLogoLetter, { color: '#94A3B8' }]}>V</Text>
             </View>
             <Text style={styles.teamName}>FC Versailles</Text>
           </View>
@@ -177,7 +285,7 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
               <Ionicons
                 name="checkmark-circle"
                 size={16}
-                color={rsvp === 'present' ? '#FFFFFF' : '#16A34A'}
+                color={rsvp === 'present' ? '#FFFFFF' : '#10B981'}
               />
               <Text
                 style={[
@@ -199,7 +307,7 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
               <Ionicons
                 name="help-circle"
                 size={16}
-                color={rsvp === 'uncertain' ? '#FFFFFF' : '#D97706'}
+                color={rsvp === 'uncertain' ? '#FFFFFF' : '#F59E0B'}
               />
               <Text
                 style={[
@@ -221,7 +329,7 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
               <Ionicons
                 name="close-circle"
                 size={16}
-                color={rsvp === 'absent' ? '#FFFFFF' : '#DC2626'}
+                color={rsvp === 'absent' ? '#FFFFFF' : '#EF4444'}
               />
               <Text
                 style={[
@@ -236,7 +344,7 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
         </View>
       </View>
 
-      {/* 3. Carrousel Horizontal (Dernière note, Score, Covoiturage) */}
+      {/* 4. Carrousel Horizontal (Dernière note, Score, Covoiturage) */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Performances & Équipe</Text>
         <Text style={styles.sectionSub}>Dernière journée (J16)</Text>
@@ -271,8 +379,8 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
         >
           <View style={styles.tileTopRow}>
             <Text style={styles.tileCategory}>RÉSULTAT ÉQUIPE</Text>
-            <View style={[styles.momBadge, { backgroundColor: '#DCFCE7' }]}>
-              <Text style={[styles.momBadgeText, { color: '#16A34A' }]}>VICTOIRE</Text>
+            <View style={[styles.momBadge, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
+              <Text style={[styles.momBadgeText, { color: '#10B981' }]}>VICTOIRE</Text>
             </View>
           </View>
           <Text style={styles.tileBigScore}>3 - 1</Text>
@@ -287,21 +395,22 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
         >
           <View style={styles.tileTopRow}>
             <Text style={styles.tileCategory}>COVOITURAGE J17</Text>
-            <Ionicons name="car-outline" size={18} color="#0284C7" />
+            <Ionicons name="car-outline" size={18} color="#0066FF" />
           </View>
           <Text style={styles.tileCarpoolNumber}>2 places</Text>
           <Text style={styles.tileSub}>Dispo avec Thomas • Départ 13:45</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* 4. Raccourcis Pratique Sportive Fitness Park */}
+      {/* 5. Raccourcis Tactique & Santé */}
       <View style={styles.fitnessGrid}>
         <TouchableOpacity
           style={styles.fitnessCard}
           onPress={() => handleNavigate('tactics')}
+          activeOpacity={0.85}
         >
-          <View style={[styles.fitnessIconCircle, { backgroundColor: '#E0F2FE' }]}>
-            <Ionicons name="git-network-outline" size={22} color="#0284C7" />
+          <View style={[styles.fitnessIconCircle, { backgroundColor: 'rgba(0, 102, 255, 0.2)' }]}>
+            <Ionicons name="git-network-outline" size={22} color="#38BDF8" />
           </View>
           <Text style={styles.fitnessCardTitle}>Consignes tactiques</Text>
           <Text style={styles.fitnessCardSub}>Voir le plan de jeu</Text>
@@ -310,16 +419,17 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
         <TouchableOpacity
           style={styles.fitnessCard}
           onPress={() => handleNavigate('wellness')}
+          activeOpacity={0.85}
         >
-          <View style={[styles.fitnessIconCircle, { backgroundColor: '#FEE2E2' }]}>
-            <Ionicons name="fitness-outline" size={22} color="#DC2626" />
+          <View style={[styles.fitnessIconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.2)' }]}>
+            <Ionicons name="fitness-outline" size={22} color="#F87171" />
           </View>
           <Text style={styles.fitnessCardTitle}>Charge & Récupération</Text>
           <Text style={styles.fitnessCardSub}>Bilan de santé</Text>
         </TouchableOpacity>
       </View>
 
-      {/* 5. Fil d'actualité Club Dépliable */}
+      {/* 6. Fil d'actualité Club Dépliable */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Actualités du club</Text>
         <Text style={styles.sectionSub}>Déplier pour tout lire</Text>
@@ -353,7 +463,7 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
                       style={styles.newsActionBtn}
                       onPress={handleOpenVideo}
                     >
-                      <Ionicons name="play-circle-outline" size={16} color="#FFFFFF" />
+                      <Ionicons name="play-circle-outline" size={16} color="#0B0F14" />
                       <Text style={styles.newsActionBtnText}>Ouvrir le lecteur VEO</Text>
                     </TouchableOpacity>
                   )}
@@ -367,7 +477,7 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
                 <Ionicons
                   name={isExpanded ? 'chevron-up' : 'chevron-down'}
                   size={14}
-                  color="#0284C7"
+                  color={FITNESS_PARK.accentYellow}
                 />
               </View>
             </TouchableOpacity>
@@ -375,6 +485,7 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
         })}
       </View>
 
+      {/* Modal Hub Vidéo VEO */}
       <Modal
         visible={internalVideoHubOpen}
         animationType="slide"
@@ -389,58 +500,166 @@ export const PlayerHomeScreenV4: React.FC<PlayerHomeScreenV4Props> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: FITNESS_PARK.bg,
   },
   content: {
-    padding: 16,
     paddingBottom: 40,
     gap: 16,
   },
-  header: {
+  heroGradient: {
+    paddingTop: Platform.select({ ios: 16, android: 16, default: 20 }),
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    gap: 16,
+  },
+  topProfileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
-  greetingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  avatarWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    overflow: 'hidden',
+    backgroundColor: '#161F2C',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  greetingSub: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#1E2838',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitials: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  profileTextCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  helloTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    fontStyle: 'italic',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
-  greetingTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginTop: 2,
-  },
-  fitnessShapeBadge: {
+  subChevronRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFEDD5',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
+    marginTop: 2,
   },
-  fitnessShapeText: {
+  subStatusText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#EA580C',
+    color: '#CBD5E1',
+    letterSpacing: 0.2,
+  },
+  planBadge: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  planBadgeText: {
+    color: '#0B0F14',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  searchBarWrapper: {
+    marginTop: 4,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginTop: 4,
+  },
+  athleticSectionTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    fontStyle: 'italic',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  seeAllRow: {
+    padding: 4,
+  },
+  programsScroll: {
+    paddingHorizontal: 16,
+    gap: 14,
+  },
+  programCard: {
+    width: 280,
+    height: 170,
+    borderRadius: FITNESS_PARK_RADIUS.cardLarge,
+    overflow: 'hidden',
+    backgroundColor: FITNESS_PARK.surface,
+    borderWidth: 1,
+    borderColor: FITNESS_PARK.border,
+  },
+  programCardGradient: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'space-between',
+  },
+  programTopCapsule: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0, 102, 255, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  programCapsuleText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  programBottomContent: {
+    gap: 4,
+  },
+  programCardTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    fontStyle: 'italic',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  programCardMeta: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.2,
   },
   nextEventCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    marginHorizontal: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    borderColor: FITNESS_PARK.border,
     gap: 14,
   },
   nextEventHeader: {
@@ -449,20 +668,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   eventBadge: {
-    backgroundColor: '#0F172A',
+    backgroundColor: 'rgba(255, 210, 0, 0.15)',
+    borderWidth: 1,
+    borderColor: FITNESS_PARK.accentYellowBorder,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   eventBadgeText: {
-    color: '#FFFFFF',
+    color: FITNESS_PARK.accentYellow,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   eventCountdown: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: '#94A3B8',
   },
   matchupRow: {
     flexDirection: 'row',
@@ -479,9 +700,11 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0044CC',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   teamLogoLetter: {
     color: '#FFFFFF',
@@ -491,7 +714,7 @@ const styles = StyleSheet.create({
   teamName: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   vsCol: {
@@ -501,23 +724,23 @@ const styles = StyleSheet.create({
   vsText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#94A3B8',
+    color: '#64748B',
   },
   matchVenue: {
     fontSize: 10,
-    color: '#64748B',
+    color: '#94A3B8',
     marginTop: 4,
   },
   rsvpBannerContainer: {
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: FITNESS_PARK.divider,
     paddingTop: 12,
     gap: 8,
   },
   rsvpBannerTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
+    color: '#94A3B8',
   },
   rsvpButtonsRow: {
     flexDirection: 'row',
@@ -531,55 +754,56 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#1E2838',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#28374D',
   },
   rsvpBtnPresentActive: {
-    backgroundColor: '#16A34A',
-    borderColor: '#16A34A',
+    backgroundColor: '#10B981',
+    borderColor: '#10B981',
   },
   rsvpBtnUncertainActive: {
     backgroundColor: '#D97706',
     borderColor: '#D97706',
   },
   rsvpBtnAbsentActive: {
-    backgroundColor: '#DC2626',
-    borderColor: '#DC2626',
+    backgroundColor: '#EF4444',
+    borderColor: '#EF4444',
   },
   rsvpBtnText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#475569',
+    color: '#94A3B8',
   },
   rsvpBtnTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
   },
   sectionHeader: {
+    paddingHorizontal: 16,
     marginTop: 4,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   sectionSub: {
     fontSize: 12,
-    color: '#64748B',
+    color: '#94A3B8',
     marginTop: 1,
   },
   carouselScroll: {
+    paddingHorizontal: 16,
     gap: 12,
-    paddingRight: 16,
   },
   carouselTile: {
     width: 200,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
     gap: 6,
   },
   tileTopRow: {
@@ -590,10 +814,12 @@ const styles = StyleSheet.create({
   tileCategory: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#64748B',
+    color: '#94A3B8',
   },
   momBadge: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(255, 210, 0, 0.15)',
+    borderWidth: 1,
+    borderColor: FITNESS_PARK.accentYellowBorder,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -601,12 +827,12 @@ const styles = StyleSheet.create({
   momBadgeText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#D97706',
+    color: FITNESS_PARK.accentYellow,
   },
   tileBigRating: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#D97706',
+    color: FITNESS_PARK.accentYellow,
   },
   tileBigRatingDenom: {
     fontSize: 14,
@@ -616,28 +842,29 @@ const styles = StyleSheet.create({
   tileBigScore: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#16A34A',
+    color: '#10B981',
   },
   tileCarpoolNumber: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#0284C7',
+    color: '#38BDF8',
   },
   tileSub: {
     fontSize: 11,
-    color: '#64748B',
+    color: '#94A3B8',
   },
   fitnessGrid: {
     flexDirection: 'row',
+    paddingHorizontal: 16,
     gap: 12,
   },
   fitnessCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
     gap: 6,
   },
   fitnessIconCircle: {
@@ -651,21 +878,22 @@ const styles = StyleSheet.create({
   fitnessCardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   fitnessCardSub: {
     fontSize: 11,
-    color: '#64748B',
+    color: '#94A3B8',
   },
   newsList: {
+    paddingHorizontal: 16,
     gap: 10,
   },
   newsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
     gap: 6,
   },
   newsCardHeader: {
@@ -674,7 +902,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   newsBadge: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: 'rgba(0, 102, 255, 0.2)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -682,32 +910,32 @@ const styles = StyleSheet.create({
   newsBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#0284C7',
+    color: '#38BDF8',
   },
   newsDate: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#64748B',
   },
   newsTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   newsSummary: {
     fontSize: 12,
-    color: '#475569',
+    color: '#94A3B8',
     lineHeight: 17,
   },
   newsExpandedContent: {
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: FITNESS_PARK.divider,
     gap: 8,
   },
   newsFullText: {
     fontSize: 12,
-    color: '#334155',
+    color: '#CBD5E1',
     lineHeight: 18,
   },
   newsActionBtn: {
@@ -715,7 +943,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 6,
-    backgroundColor: '#0284C7',
+    backgroundColor: FITNESS_PARK.accentYellow,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -723,8 +951,8 @@ const styles = StyleSheet.create({
   },
   newsActionBtnText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#0B0F14',
   },
   newsFooter: {
     flexDirection: 'row',
@@ -735,7 +963,7 @@ const styles = StyleSheet.create({
   },
   newsToggleText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#0284C7',
+    fontWeight: '700',
+    color: FITNESS_PARK.accentYellow,
   },
 });

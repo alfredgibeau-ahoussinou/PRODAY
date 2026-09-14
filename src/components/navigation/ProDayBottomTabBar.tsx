@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,10 +8,12 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import type { MainTabId } from '../../navigation/mainTabConfig';
 import { prodayHaptics } from '../../utils/prodayHaptics';
+import { FITNESS_PARK } from '../../theme/fitnessParkTheme';
+import { PlayerQrPassModal } from '../player/PlayerQrPassModal';
 
 interface ProDayBottomTabBarProps {
   activeTab: MainTabId;
@@ -33,12 +35,12 @@ export const ProDayBottomTabBar: React.FC<ProDayBottomTabBarProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const profile = useSessionProfile();
-  const { width } = useWindowDimensions();
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const role = profile?.role || 'player';
   const isPlayer = role === 'player';
 
-  // Définition des 4 destinations exactes selon le tableau de la section 0.2
+  // Définition des 4 destinations exactes selon le style Fitness Park
   const destinations: NavDestination[] = React.useMemo(() => {
     if (role === 'coach') {
       return [
@@ -64,12 +66,12 @@ export const ProDayBottomTabBar: React.FC<ProDayBottomTabBarProps> = ({
         { id: 'plus', label: 'Menu', icon: 'grid-outline', iconActive: 'grid' },
       ];
     }
-    // Joueur par défaut (inspiré de Fitness Park)
+    // Joueur officiel Fitness Park (Accueil, Training, [QR PASS], Ma Carte, Moi)
     return [
       { id: 'home', label: 'Accueil', icon: 'home-outline', iconActive: 'home' },
-      { id: 'matchs', label: 'Calendrier', icon: 'calendar-outline', iconActive: 'calendar' },
+      { id: 'matchs', label: 'Training', icon: 'barbell-outline', iconActive: 'barbell' },
       { id: 'profil', label: 'Ma Carte', icon: 'card-outline', iconActive: 'card' },
-      { id: 'plus', label: 'Menu', icon: 'grid-outline', iconActive: 'grid' },
+      { id: 'plus', label: 'Moi', icon: 'person-outline', iconActive: 'person' },
     ];
   }, [role]);
 
@@ -78,83 +80,110 @@ export const ProDayBottomTabBar: React.FC<ProDayBottomTabBarProps> = ({
     onTabPress(tabId);
   };
 
+  const handleCenterPress = () => {
+    prodayHaptics.impactHeavy();
+    setShowQrModal(true);
+  };
+
+  const renderTab = (dest: NavDestination) => {
+    const isActive = activeTab === dest.id;
+    const showBadge = dest.id === 'plus' && unreadCount > 0;
+    const activeColor = isPlayer ? FITNESS_PARK.accentYellow : '#0F172A';
+    const inactiveColor = isPlayer ? FITNESS_PARK.textMuted : '#64748B';
+
+    return (
+      <TouchableOpacity
+        key={dest.id}
+        onPress={() => handlePress(dest.id)}
+        style={styles.tabItem}
+        activeOpacity={0.7}
+        accessibilityRole="tab"
+        accessibilityState={{ selected: isActive }}
+        accessibilityLabel={dest.label}
+      >
+        <View style={styles.iconContainer}>
+          <Ionicons
+            name={isActive ? dest.iconActive : dest.icon}
+            size={22}
+            color={isActive ? activeColor : inactiveColor}
+          />
+          {showBadge ? <View style={styles.badgeDot} /> : null}
+        </View>
+
+        <Text
+          style={[
+            styles.tabLabel,
+            {
+              color: isActive ? activeColor : inactiveColor,
+              fontWeight: isActive ? '800' : '500',
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {dest.label}
+        </Text>
+
+        {isActive ? (
+          <View
+            style={[
+              styles.activeIndicator,
+              { backgroundColor: activeColor },
+            ]}
+          />
+        ) : null}
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View
       style={[
         styles.root,
         {
           paddingBottom: Math.max(insets.bottom, 8),
-          backgroundColor: isPlayer ? '#0F172A' : '#FFFFFF',
-          borderTopColor: isPlayer ? '#1E293B' : '#E2E8F0',
+          backgroundColor: isPlayer ? FITNESS_PARK.dockBg : '#FFFFFF',
+          borderTopColor: isPlayer ? FITNESS_PARK.dockBorder : '#E2E8F0',
         },
       ]}
     >
       <View style={styles.barContainer}>
-        {destinations.map((dest) => {
-          const isActive = activeTab === dest.id;
-          const showBadge = dest.id === 'plus' && unreadCount > 0;
+        {/* Tab 1: Accueil */}
+        {renderTab(destinations[0])}
 
-          return (
-            <TouchableOpacity
-              key={dest.id}
-              onPress={() => handlePress(dest.id)}
-              style={styles.tabItem}
-              activeOpacity={0.7}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: isActive }}
-              accessibilityLabel={dest.label}
-            >
-              <View style={styles.iconContainer}>
-                <Ionicons
-                  name={isActive ? dest.iconActive : dest.icon}
-                  size={22}
-                  color={
-                    isActive
-                      ? isPlayer
-                        ? '#00F59B'
-                        : '#0F172A'
-                      : isPlayer
-                        ? '#94A3B8'
-                        : '#64748B'
-                  }
-                />
-                {showBadge ? (
-                  <View style={styles.badgeDot} />
-                ) : null}
-              </View>
+        {/* Tab 2: Training / Calendrier */}
+        {renderTab(destinations[1])}
 
-              <Text
-                style={[
-                  styles.tabLabel,
-                  {
-                    color: isActive
-                      ? isPlayer
-                        ? '#00F59B'
-                        : '#0F172A'
-                      : isPlayer
-                        ? '#94A3B8'
-                        : '#64748B',
-                    fontWeight: isActive ? '700' : '500',
-                  },
-                ]}
-                numberOfLines={1}
-              >
-                {dest.label}
-              </Text>
+        {/* Bouton Central Jaune Fitness Park (QR Pass / Accès Dématérialisé) */}
+        {isPlayer ? (
+          <TouchableOpacity
+            style={styles.centerQrWrap}
+            activeOpacity={0.85}
+            onPress={handleCenterPress}
+            accessibilityRole="button"
+            accessibilityLabel="Mon Pass QR"
+          >
+            <View style={styles.centerQrCircle}>
+              <MaterialCommunityIcons
+                name="qrcode-scan"
+                size={26}
+                color={FITNESS_PARK.dockCenterIcon}
+              />
+            </View>
+          </TouchableOpacity>
+        ) : null}
 
-              {/* Barre indicatrice sous l'onglet actif (style Apple/Fitness Park) */}
-              {isActive ? (
-                <View
-                  style={[
-                    styles.activeIndicator,
-                    { backgroundColor: isPlayer ? '#00F59B' : '#0F172A' },
-                  ]}
-                />
-              ) : null}
-            </TouchableOpacity>
-          );
-        })}
+        {/* Tab 3: Ma Carte / Équipe */}
+        {renderTab(destinations[2])}
+
+        {/* Tab 4: Moi / Menu */}
+        {renderTab(destinations[3])}
       </View>
+
+      {/* Modal du Pass Adhérent Dématérialisé */}
+      <PlayerQrPassModal
+        visible={showQrModal}
+        onClose={() => setShowQrModal(false)}
+      />
     </View>
   );
 };
@@ -163,11 +192,11 @@ const styles = StyleSheet.create({
   root: {
     width: '100%',
     borderTopWidth: 1,
-    elevation: 8,
+    elevation: 12,
     shadowColor: '#000000',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: -4 },
   },
   barContainer: {
     flexDirection: 'row',
@@ -175,6 +204,7 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     alignSelf: 'center',
     width: '100%',
+    alignItems: 'center',
   },
   tabItem: {
     flex: 1,
@@ -201,7 +231,7 @@ const styles = StyleSheet.create({
   },
   activeIndicator: {
     position: 'absolute',
-    bottom: 2,
+    bottom: 0,
     width: 16,
     height: 3,
     borderRadius: 1.5,
@@ -216,5 +246,33 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
     borderWidth: 1.5,
     borderColor: '#FFFFFF',
+  },
+  centerQrWrap: {
+    width: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -20,
+    zIndex: 10,
+  },
+  centerQrCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: FITNESS_PARK.accentYellow,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: FITNESS_PARK.bg,
+    ...Platform.select({
+      ios: {
+        shadowColor: FITNESS_PARK.accentYellow,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.5,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
 });

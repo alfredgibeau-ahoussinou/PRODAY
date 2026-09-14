@@ -8,6 +8,7 @@ import {
   Platform,
   Dimensions,
   Modal,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,8 +19,9 @@ import { userToProDayCard } from '../../utils/prodayFutCard';
 import type { ProDayPlayerCardData } from '../../models/ProDayCard';
 import { PlayerStoryExportModal } from '../../components/player/PlayerStoryExportModal';
 import { ProDayVideoPlayer } from '../../components/video/ProDayVideoPlayer';
+import { FITNESS_PARK, FITNESS_PARK_RADIUS } from '../../theme/fitnessParkTheme';
 
-type SofascoreTab = 'resume' | 'stats_saison' | 'matchs' | 'historique_ovr';
+type SofascoreTab = 'club_services' | 'resume' | 'stats_saison' | 'matchs' | 'historique_ovr';
 
 export const PlayerMyCardScreenV4: React.FC = () => {
   const profile = useSessionProfile();
@@ -57,9 +59,9 @@ export const PlayerMyCardScreenV4: React.FC = () => {
 
   const kpis = [
     { id: 'goals', label: 'Buts', value: '14', icon: 'football-outline', color: '#10B981', sub: '2e du champ.' },
-    { id: 'assists', label: 'Passes D', value: '8', icon: 'git-pull-request-outline', color: '#0EA5E9', sub: 'Top 5 ligue' },
-    { id: 'matches', label: 'Matchs joués', value: '18', icon: 'time-outline', color: '#8B5CF6', sub: '1 420 min' },
-    { id: 'rating', label: 'Note moyenne', value: '7.9', icon: 'star-outline', color: '#F59E0B', sub: 'Staff certifié' },
+    { id: 'assists', label: 'Passes D', value: '8', icon: 'git-pull-request-outline', color: '#38BDF8', sub: 'Top 5 ligue' },
+    { id: 'matches', label: 'Matchs joués', value: '18', icon: 'time-outline', color: '#A78BFA', sub: '1 420 min' },
+    { id: 'rating', label: 'Note moyenne', value: '7.9', icon: 'star-outline', color: FITNESS_PARK.accentYellow, sub: 'Staff certifié' },
     { id: 'attendance', label: 'Présence', value: '94%', icon: 'checkmark-done-outline', color: '#10B981', sub: '24/25 séances' },
   ];
 
@@ -156,13 +158,111 @@ export const PlayerMyCardScreenV4: React.FC = () => {
     { period: 'Objectif palier suivant', ovr: 89, delta: '+2', isFuture: true, note: 'Palier Maître de zone' },
   ];
 
+  const openCall = () => {
+    void Linking.openURL('tel:0145678900');
+  };
+
+  const openMap = () => {
+    const address = 'Complexe Sportif ProDay, 92100 Boulogne-Billancourt';
+    const url = Platform.select({
+      ios: `maps:0,0?q=${encodeURIComponent(address)}`,
+      android: `geo:0,0?q=${encodeURIComponent(address)}`,
+      default: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
+    });
+    if (url) void Linking.openURL(url);
+  };
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. Gamified FUT Card */}
+      {/* 1. Carte Club & Statut Adhérent (Style Officiel Fitness Park - Image 4) */}
+      <View style={styles.clubCardContainer}>
+        <View style={styles.clubHeaderRow}>
+          <View style={styles.clubLogoCircle}>
+            <Text style={styles.clubLogoText}>P</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.clubTitleRow}>
+              <Text style={styles.clubName}>FC PRODAY</Text>
+              <View style={styles.clubPillBadge}>
+                <Text style={styles.clubPillBadgeText}>ULTIMATE</Text>
+              </View>
+            </View>
+            <Text style={styles.clubAddress}>
+              Complexe Sportif ProDay • 92100 Boulogne
+            </Text>
+            <Text style={styles.clubHours}>
+              Ouvert lun-dim 06h - 23h • Équipe Seniors R2
+            </Text>
+          </View>
+        </View>
+
+        {/* Rangée de boutons contacts / réseaux sociaux (Image 4) */}
+        <View style={styles.socialChipsRow}>
+          <TouchableOpacity style={styles.contactChip} onPress={openCall} activeOpacity={0.8}>
+            <Ionicons name="call-outline" size={15} color="#FFFFFF" />
+            <Text style={styles.contactChipText}>Appeler</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.contactChip}
+            onPress={() => void Linking.openURL('https://instagram.com')}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="logo-instagram" size={15} color="#FFFFFF" />
+            <Text style={styles.contactChipText}>Instagram</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.contactChip}
+            onPress={() => void Linking.openURL('https://facebook.com')}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="logo-facebook" size={15} color="#FFFFFF" />
+            <Text style={styles.contactChipText}>Facebook</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.contactChip} onPress={openMap} activeOpacity={0.8}>
+            <Ionicons name="navigate-outline" size={15} color="#FFFFFF" />
+            <Text style={styles.contactChipText}>Itinéraire</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Services Cartes Club Fitness Park (Le Shop & VEO) */}
+        <View style={styles.clubServicesGrid}>
+          <TouchableOpacity
+            style={styles.clubServiceCard}
+            activeOpacity={0.85}
+            onPress={() => void Linking.openURL('https://proday.shop')}
+          >
+            <Ionicons name="shirt-outline" size={20} color={FITNESS_PARK.accentYellow} />
+            <Text style={styles.clubServiceTitle}>LE SHOP DU CLUB</Text>
+            <Text style={styles.clubServiceSub}>Maillots & Équipements</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.clubServiceCard}
+            activeOpacity={0.85}
+            onPress={() => {
+              prodayHaptics.impactMedium();
+              setSelectedVideoModal({
+                visible: true,
+                title: 'Caméra VEO Club en Direct',
+                streamUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+              });
+            }}
+          >
+            <Ionicons name="videocam-outline" size={20} color="#38BDF8" />
+            <Text style={styles.clubServiceTitle}>VIDÉO VEO CONNECTÉE</Text>
+            <Text style={styles.clubServiceSub}>Direct terrain d'honneur</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 2. Gamified FUT Card & Flex & Share */}
       <View style={styles.cardSection}>
         <PlayerCardReveal
           card={cardData}
@@ -176,12 +276,12 @@ export const PlayerMyCardScreenV4: React.FC = () => {
             setShowStoryModal(true);
           }}
         >
-          <Ionicons name="sparkles" size={17} color="#0F172A" />
+          <Ionicons name="sparkles" size={17} color="#0B0F14" />
           <Text style={styles.shareBtnText}>Flex & Share (Story 9:16 & Image HD)</Text>
         </TouchableOpacity>
       </View>
 
-      {/* 2. Sofascore-style Horizontal Tabs */}
+      {/* 3. Onglets Sofascore Style Fitness Park */}
       <View style={styles.tabsRail}>
         <TouchableOpacity
           style={[styles.tabChip, activeTab === 'resume' && styles.tabChipActive]}
@@ -220,7 +320,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
           }}
         >
           <Text style={[styles.tabChipText, activeTab === 'matchs' && styles.tabChipTextActive]}>
-            Match par match
+            Matchs & VEO
           </Text>
         </TouchableOpacity>
 
@@ -237,14 +337,14 @@ export const PlayerMyCardScreenV4: React.FC = () => {
               activeTab === 'historique_ovr' && styles.tabChipTextActive,
             ]}
           >
-            Historique OVR
+            Progression
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* 3. Tab Content */}
+      {/* 4. Contenu des Onglets */}
       <View style={styles.tabContentArea}>
-        {/* Onglet 1: Résumé (Grille stricte de 5 cases sans case vide orpheline) */}
+        {/* Onglet 1: Résumé (Grille 5 KPIs) */}
         {activeTab === 'resume' && (
           <View style={styles.kpiGrid}>
             {kpis.map((kpi, idx) => {
@@ -269,7 +369,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
           </View>
         )}
 
-        {/* Onglet 2: Stats de saison (Barres vs moyenne équipe) */}
+        {/* Onglet 2: Stats de saison */}
         {activeTab === 'stats_saison' && (
           <View style={styles.statsCard}>
             <View style={styles.statsHeader}>
@@ -306,7 +406,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
           </View>
         )}
 
-        {/* Onglet 3: Match par match (avec déclencheur VEO et clips IA) */}
+        {/* Onglet 3: Match par match & Replays VEO */}
         {activeTab === 'matchs' && (
           <View style={styles.matchList}>
             {matchHistory.map((m) => (
@@ -325,7 +425,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
                   <View style={styles.matchCardCenter}>
                     <Text style={styles.matchScore}>{m.score}</Text>
                     <View style={styles.ratingPill}>
-                      <Ionicons name="star" size={11} color="#F59E0B" />
+                      <Ionicons name="star" size={11} color={FITNESS_PARK.accentYellow} />
                       <Text style={styles.ratingText}>{m.rating}</Text>
                     </View>
                   </View>
@@ -343,7 +443,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
                           });
                         }}
                       >
-                        <Ionicons name="play" size={14} color="#FFFFFF" />
+                        <Ionicons name="play" size={14} color="#0B0F14" />
                         <Text style={styles.veoClipBtnText}>VEO</Text>
                       </TouchableOpacity>
                     ) : (
@@ -355,7 +455,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
                 {m.aiClips && m.aiClips.length > 0 && (
                   <View style={styles.aiClipsContainer}>
                     <View style={styles.aiClipsHeader}>
-                      <MaterialCommunityIcons name="auto-fix" size={12} color="#C5A059" />
+                      <MaterialCommunityIcons name="auto-fix" size={12} color={FITNESS_PARK.accentYellow} />
                       <Text style={styles.aiClipsTitle}>Clips IA découpés ({m.aiClips.length})</Text>
                     </View>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
@@ -372,7 +472,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
                             });
                           }}
                         >
-                          <Ionicons name="play" size={10} color="#C5A059" />
+                          <Ionicons name="play" size={10} color={FITNESS_PARK.accentYellow} />
                           <Text style={styles.clipChipText}>{clip.label}</Text>
                         </TouchableOpacity>
                       ))}
@@ -384,7 +484,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
           </View>
         )}
 
-        {/* Onglet 4: Historique OVR */}
+        {/* Onglet 4: Progression OVR */}
         {activeTab === 'historique_ovr' && (
           <View style={styles.ovrTimelineCard}>
             <View style={styles.ovrHeroRow}>
@@ -417,7 +517,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
                       <Text
                         style={[
                           styles.timelinePeriod,
-                          ms.isCurrent && { color: '#0F172A', fontWeight: '800' },
+                          ms.isCurrent && { color: '#FFFFFF', fontWeight: '800' },
                         ]}
                       >
                         {ms.period}
@@ -425,7 +525,7 @@ export const PlayerMyCardScreenV4: React.FC = () => {
                       <Text
                         style={[
                           styles.timelineOvr,
-                          ms.isCurrent && { color: '#0284C7' },
+                          ms.isCurrent && { color: FITNESS_PARK.accentYellow },
                         ]}
                       >
                         {ms.ovr} OVR
@@ -513,12 +613,118 @@ export const PlayerMyCardScreenV4: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: FITNESS_PARK.bg,
   },
   content: {
     padding: 16,
     paddingBottom: 40,
     gap: 16,
+  },
+  clubCardContainer: {
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: FITNESS_PARK.border,
+    gap: 14,
+  },
+  clubHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  clubLogoCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#0044CC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  clubLogoText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  clubTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  clubName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  clubPillBadge: {
+    backgroundColor: FITNESS_PARK.accentYellow,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  clubPillBadgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#0B0F14',
+    letterSpacing: 0.5,
+  },
+  clubAddress: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  clubHours: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  socialChipsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  contactChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#1E2838',
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#28374D',
+  },
+  contactChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  clubServicesGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 2,
+  },
+  clubServiceCard: {
+    flex: 1,
+    backgroundColor: '#1E2838',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#28374D',
+    gap: 4,
+  },
+  clubServiceTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginTop: 2,
+  },
+  clubServiceSub: {
+    fontSize: 10,
+    color: '#94A3B8',
   },
   cardSection: {
     alignItems: 'center',
@@ -529,7 +735,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: FITNESS_PARK.accentYellow,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -538,16 +744,16 @@ const styles = StyleSheet.create({
   },
   shareBtnText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontWeight: '800',
+    color: '#0B0F14',
   },
   tabsRail: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: FITNESS_PARK.surface,
     borderRadius: 12,
     padding: 4,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
     gap: 4,
   },
   tabChip: {
@@ -558,16 +764,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabChipActive: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#1E2838',
+    borderWidth: 1,
+    borderColor: FITNESS_PARK.accentYellow,
   },
   tabChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: '#94A3B8',
   },
   tabChipTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: FITNESS_PARK.accentYellow,
+    fontWeight: '800',
   },
   tabContentArea: {
     marginTop: 4,
@@ -579,11 +787,11 @@ const styles = StyleSheet.create({
   },
   kpiBox: {
     width: '48%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
     gap: 6,
   },
   kpiBoxFullWidth: {
@@ -597,7 +805,7 @@ const styles = StyleSheet.create({
   kpiLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#64748B',
+    color: '#94A3B8',
   },
   kpiValue: {
     fontSize: 26,
@@ -605,14 +813,14 @@ const styles = StyleSheet.create({
   },
   kpiSub: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#64748B',
   },
   statsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
     gap: 16,
   },
   statsHeader: {
@@ -620,13 +828,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: FITNESS_PARK.divider,
     paddingBottom: 10,
   },
   statsHeaderTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   statsLegend: {
     flexDirection: 'row',
@@ -637,18 +845,18 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#0284C7',
+    backgroundColor: '#0066FF',
   },
   legendDotSquad: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#CBD5E1',
+    backgroundColor: '#64748B',
     marginLeft: 6,
   },
   legendText: {
     fontSize: 11,
-    color: '#64748B',
+    color: '#94A3B8',
   },
   compareRow: {
     gap: 6,
@@ -660,17 +868,17 @@ const styles = StyleSheet.create({
   },
   compareName: {
     fontSize: 13,
-    color: '#334155',
+    color: '#CBD5E1',
     fontWeight: '500',
   },
   compareValue: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0284C7',
+    color: '#38BDF8',
   },
   compareBarContainer: {
     height: 10,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#1E2838',
     borderRadius: 5,
     overflow: 'hidden',
     position: 'relative',
@@ -680,24 +888,24 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#CBD5E1',
+    backgroundColor: '#334155',
   },
   compareBarPlayer: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#0284C7',
+    backgroundColor: '#0066FF',
   },
   matchList: {
     gap: 10,
   },
   matchCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
   },
   matchCardTopRow: {
     flexDirection: 'row',
@@ -708,7 +916,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: FITNESS_PARK.divider,
   },
   aiClipsHeader: {
     flexDirection: 'row',
@@ -719,16 +927,16 @@ const styles = StyleSheet.create({
   aiClipsTitle: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#64748B',
+    color: '#94A3B8',
     textTransform: 'uppercase',
   },
   clipChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: 'rgba(255, 210, 0, 0.15)',
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: FITNESS_PARK.accentYellowBorder,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -736,7 +944,7 @@ const styles = StyleSheet.create({
   clipChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#B45309',
+    color: FITNESS_PARK.accentYellow,
   },
   matchCardLeft: {
     flexDirection: 'row',
@@ -745,7 +953,7 @@ const styles = StyleSheet.create({
     flex: 1.5,
   },
   matchDayBadge: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#1E2838',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -753,16 +961,16 @@ const styles = StyleSheet.create({
   matchDayText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   matchOpponent: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   matchDate: {
     fontSize: 11,
-    color: '#64748B',
+    color: '#94A3B8',
   },
   matchCardCenter: {
     alignItems: 'center',
@@ -772,13 +980,15 @@ const styles = StyleSheet.create({
   matchScore: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#FFFFFF',
   },
   ratingPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: 'rgba(255, 210, 0, 0.15)',
+    borderWidth: 1,
+    borderColor: FITNESS_PARK.accentYellowBorder,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -786,7 +996,7 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#D97706',
+    color: FITNESS_PARK.accentYellow,
   },
   matchCardRight: {
     alignItems: 'flex-end',
@@ -796,26 +1006,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#0284C7',
+    backgroundColor: FITNESS_PARK.accentYellow,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
   },
   veoClipBtnText: {
     fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '800',
+    color: '#0B0F14',
   },
   noVeoText: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#64748B',
   },
   ovrTimelineCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: FITNESS_PARK.surface,
+    borderRadius: FITNESS_PARK_RADIUS.card,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: FITNESS_PARK.border,
     gap: 16,
   },
   ovrHeroRow: {
@@ -823,23 +1033,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: FITNESS_PARK.divider,
     paddingBottom: 14,
   },
   ovrHeroLabel: {
     fontSize: 12,
-    color: '#64748B',
+    color: '#94A3B8',
   },
   ovrHeroValue: {
     fontSize: 34,
     fontWeight: '900',
-    color: '#0284C7',
+    color: FITNESS_PARK.accentYellow,
   },
   ovrProgressionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#DCFCE7',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
@@ -847,7 +1059,7 @@ const styles = StyleSheet.create({
   ovrProgressionText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#16A34A',
+    color: '#10B981',
   },
   timelineList: {
     gap: 0,
@@ -864,21 +1076,21 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#0284C7',
+    backgroundColor: '#0066FF',
     marginTop: 4,
   },
   timelineDotCurrent: {
-    backgroundColor: '#10B981',
+    backgroundColor: FITNESS_PARK.accentYellow,
     borderWidth: 2,
-    borderColor: '#DCFCE7',
+    borderColor: '#FFFFFF',
   },
   timelineDotFuture: {
-    backgroundColor: '#CBD5E1',
+    backgroundColor: '#334155',
   },
   timelineLine: {
     width: 2,
     flex: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#28374D',
     minHeight: 28,
   },
   timelineInfo: {
@@ -893,7 +1105,7 @@ const styles = StyleSheet.create({
   },
   timelinePeriod: {
     fontSize: 13,
-    color: '#334155',
+    color: '#94A3B8',
     fontWeight: '600',
   },
   timelineOvr: {
@@ -907,7 +1119,7 @@ const styles = StyleSheet.create({
   },
   videoModalRoot: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0B0F14',
   },
   videoModalHeader: {
     flexDirection: 'row',
@@ -916,7 +1128,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: Platform.OS === 'ios' ? 54 : 20,
     paddingBottom: 12,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#161F2C',
   },
   videoModalTitle: {
     fontSize: 15,
