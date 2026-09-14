@@ -51,6 +51,7 @@
     "firebase:deploy:storage": "firebase deploy --only storage",
     "firebase:rules:test": "FIREBASE_EMULATORS_PATH=\"${FIREBASE_EMULATORS_PATH:-$PWD/.firebase-emulators}\" JAVA_HOME=\"${JAVA_HOME:-/opt/homebrew/opt/openjdk}\" PATH=\"$JAVA_HOME/bin:$PATH\" firebase emulators:exec --only firestore \"node scripts/firestore-rules.test.mjs\"",
     "beta:check": "node scripts/beta-readiness.mjs",
+    "release:check": "node scripts/release-check.mjs",
     "stripe:subscriptions:check": "node scripts/stripe-subscriptions-readiness.mjs",
     "beta:broadcast-ios": "node scripts/broadcast-beta-ios-pre-announcement.mjs",
     "docs:cv": "node scripts/generate-player-cv.mjs",

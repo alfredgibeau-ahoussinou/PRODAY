@@ -10,6 +10,27 @@ Les champs `ios.buildNumber` / `android.versionCode` dans `app.json` sont indica
 **GitHub :** [PRODAY](https://github.com/alfredgibeau-ahoussinou/PRODAY) (code) · [PRODAY-docs](https://github.com/alfredgibeau-ahoussinou/PRODAY-docs) (doc publique) · push : [GITHUB_AUTH.md](./GITHUB_AUTH.md).  
 **Branding store :** icône / splash / adaptive = `assets/branding/proday-app-icon.png`, `proday-splash.png`, `proday-adaptive-foreground.png` (identité P + ballon).
 
+## Notes de version — 1.0.10 build 20 (v4 — Spécifications Joueur Fitness Park, Coach & Club professionnels)
+
+Alignement intégral avec le cahier des charges v4 et validation complète (319 suites de tests passées à 100%, TypeScript 0 erreur) :
+
+- **Priorité Absolue VEO (Phase 1) & IA Vidéo (Phase 2)** :
+  - Intégration VEO native multi-modèles (Veo Cam 1, 2, 3 et 5G), détection HLS/MP4/embeds et lecteur universel `ProDayVideoPlayer`.
+  - Analyse vidéo par IA et Computer Vision : détection des buts, passes décisives, tirs, arrêts, découpage de clips personnalisés et injection dans le profil joueur.
+- **Navigation 4 Onglets Stricts & Menu Plein Écran** :
+  - Suppression intégrale des sidebars latérales au profit d'une barre basse 64px à 4 onglets par rôle et menu plein écran avec barre de recherche globale.
+- **Dualité Graphique & Ergonomie** :
+  - Espace Joueur inspiré de Fitness Park (cartes 16px, bandeau RSVP en 1-tap pastilles, carte FUT gamifiée avec 4 onglets Sofascore et clips VEO).
+  - Espaces Coach et Club au standard Apple SF Pro épuré (`#FFFFFF` surfaces, fond sobre, typographie anthracite).
+- **Tactique Dynamique en 6 Étapes Ordonnées** :
+  - Parcours coach guidé : Attaquants → Milieux → Défenseurs → Gardien → Remplaçants → Vue complète 2D du stade avec validation.
+- **Import PDF Structuré de Feuilles de Match (Page 28)** :
+  - Extraction de listes FFF et compositions avec détection des doublons et liaison immédiate au tableau tactique.
+- **Scouting Vocal & Dictée Bord de Touche (Page 8)** :
+  - Enregistrement audio terrain 1-tap, retranscription automatique par IA et intégration au passeport joueur.
+- **Annuaire Outre-Mer (Page 24)** :
+  - Couverture des 11 collectivités et territoires d'Outre-Mer et création rapide non bloquante.
+
 ## Notes de version — 1.0.10 build 19 (septembre 2026) — Certification Apple Store
 
 Revue intégrale et certification pré-production validée (314 suites de tests passées à 100%) :
