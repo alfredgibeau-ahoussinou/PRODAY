@@ -88,8 +88,8 @@ export const ProDayBottomTabBar: React.FC<ProDayBottomTabBarProps> = ({
   const renderTab = (dest: NavDestination) => {
     const isActive = activeTab === dest.id;
     const showBadge = dest.id === 'plus' && unreadCount > 0;
-    const activeColor = isPlayer ? FITNESS_PARK.accentYellow : '#0F172A';
-    const inactiveColor = isPlayer ? FITNESS_PARK.textMuted : '#64748B';
+    const activeColor = FITNESS_PARK.accentYellow;
+    const inactiveColor = FITNESS_PARK.textMuted;
 
     return (
       <TouchableOpacity
@@ -141,8 +141,8 @@ export const ProDayBottomTabBar: React.FC<ProDayBottomTabBarProps> = ({
         styles.root,
         {
           paddingBottom: Math.max(insets.bottom, 8),
-          backgroundColor: isPlayer ? FITNESS_PARK.dockBg : '#FFFFFF',
-          borderTopColor: isPlayer ? FITNESS_PARK.dockBorder : '#E2E8F0',
+          backgroundColor: FITNESS_PARK.dockBg,
+          borderTopColor: FITNESS_PARK.dockBorder,
         },
       ]}
     >
@@ -154,23 +154,21 @@ export const ProDayBottomTabBar: React.FC<ProDayBottomTabBarProps> = ({
         {renderTab(destinations[1])}
 
         {/* Bouton Central Jaune Fitness Park (QR Pass / Accès Dématérialisé) */}
-        {isPlayer ? (
-          <TouchableOpacity
-            style={styles.centerQrWrap}
-            activeOpacity={0.85}
-            onPress={handleCenterPress}
-            accessibilityRole="button"
-            accessibilityLabel="Mon Pass QR"
-          >
-            <View style={styles.centerQrCircle}>
-              <MaterialCommunityIcons
-                name="qrcode-scan"
-                size={26}
-                color={FITNESS_PARK.dockCenterIcon}
-              />
-            </View>
-          </TouchableOpacity>
-        ) : null}
+        <TouchableOpacity
+          style={styles.centerQrWrap}
+          activeOpacity={0.85}
+          onPress={handleCenterPress}
+          accessibilityRole="button"
+          accessibilityLabel="Mon Pass QR"
+        >
+          <View style={styles.centerQrCircle}>
+            <MaterialCommunityIcons
+              name="qrcode-scan"
+              size={26}
+              color={FITNESS_PARK.dockCenterIcon}
+            />
+          </View>
+        </TouchableOpacity>
 
         {/* Tab 3: Ma Carte / Équipe */}
         {renderTab(destinations[2])}

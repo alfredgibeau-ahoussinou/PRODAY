@@ -34,6 +34,7 @@ import type { ClubThemeTokens } from '../../features/club/theme/clubTokens';
 import { CreateClubScreen } from '../CreateClubScreen';
 import { ShellAccountSection } from '../../components/shell/ShellAccountSection';
 import { GlobalSearchBar } from '../../components/search/GlobalSearchBar';
+import { ChooseAppSpaceModal } from '../../components/appSpace/ChooseAppSpaceModal';
 
 export function ClubHomeScreen() {
   const profile = useSessionProfile();
@@ -41,6 +42,7 @@ export function ClubHomeScreen() {
   const { tokens, logoUrl } = useClubTheme();
   const ws = useClubWorkspace();
   const [createOpen, setCreateOpen] = useState(false);
+  const [showSpaceModal, setShowSpaceModal] = useState(false);
   const [busyMembershipId, setBusyMembershipId] = useState<string | null>(null);
 
   const onLogoUploaded = useCallback(() => {
@@ -241,6 +243,17 @@ export function ClubHomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.quickActionsRow}
           >
+            <PressableSpring
+              onPress={() => setShowSpaceModal(true)}
+              style={[styles.actionPill, { backgroundColor: 'rgba(255, 210, 0, 0.15)', borderColor: '#FFD200' }]}
+              scaleTo={0.96}
+            >
+              <Icon name="football" size={14} color="#FFD200" />
+              <ProDayText style={[styles.actionPillText, { color: '#FFD200', fontWeight: '800' }]}>
+                ⚡ Espace Joueur (Fitness Park)
+              </ProDayText>
+            </PressableSpring>
+
             <PressableSpring
               onPress={() => shellNav?.requestNav('communication')}
               style={[styles.actionPill, { backgroundColor: tokens.elevated, borderColor: tokens.border }]}
@@ -694,6 +707,11 @@ export function ClubHomeScreen() {
 
         <View style={{ height: 40 }} />
       </ClubChapterScroll>
+
+      <ChooseAppSpaceModal
+        visible={showSpaceModal}
+        onClose={() => setShowSpaceModal(false)}
+      />
     </View>
   );
 }
